@@ -1018,16 +1018,14 @@
   function checkHeight (height) {
     var $body = $root.find('.tab-panes');
     if (height && typeof height !== 'object') {
-      return height;
+      return height
     }
     // no height passed -> use last or 100
     height = parseInt($body[0].style.height, 10);
     if (!height && config$3.get('persistDrawer')) {
       height = config$3.get('height');
     }
-    return height
-      ? height
-      : 100
+    return height || 100
   }
 
   /**
@@ -1380,6 +1378,43 @@
   var methods; // method filters
   var $root$2;
   var initialized = false;
+  var methodLabels = {
+    alert: '<i class="fa fa-fw fa-lg fa-bullhorn"></i>Alerts',
+    error: '<i class="fa fa-fw fa-lg fa-times-circle"></i>Error',
+    warn: '<i class="fa fa-fw fa-lg fa-warning"></i>Warning',
+    info: '<i class="fa fa-fw fa-lg fa-info-circle"></i>Info',
+    other: '<i class="fa fa-fw fa-lg fa-sticky-note-o"></i>Other'
+  };
+  var sidebarHtml = '' +
+    '<div class="debug-sidebar show no-transition">' +
+      '<div class="sidebar-toggle">' +
+        '<div class="collapse">' +
+          '<i class="fa fa-caret-left"></i>' +
+          '<i class="fa fa-ellipsis-v"></i>' +
+          '<i class="fa fa-caret-left"></i>' +
+        '</div>' +
+        '<div class="expand">' +
+          '<i class="fa fa-caret-right"></i>' +
+          '<i class="fa fa-ellipsis-v"></i>' +
+          '<i class="fa fa-caret-right"></i>' +
+        '</div>' +
+      '</div>' +
+      '<div class="sidebar-content">' +
+        '<ul class="list-unstyled debug-filters">' +
+          '<li class="php-errors">' +
+            '<span><i class="fa fa-fw fa-lg fa-code"></i>PHP Errors</span>' +
+            '<ul class="list-unstyled">' +
+            '</ul>' +
+          '</li>' +
+          '<li class="channels">' +
+            '<span><i class="fa fa-fw fa-lg fa-list-ul"></i>Channels</span>' +
+            '<ul class="list-unstyled">' +
+            '</ul>' +
+          '</li>' +
+        '</ul>' +
+        '<button class="expand-all" style="display:none;"><i class="fa fa-lg fa-plus"></i> Exp All Groups</button>' +
+      '</div>' +
+    '</div>';
 
   function init$6 ($debugRoot) {
     var $debugTabLog = $debugRoot.find('> .tab-panes > .tab-primary');
@@ -1468,37 +1503,8 @@
   }
 
   function addMarkup$1 ($node) {
-    var $sidebar = $('<div class="debug-sidebar show no-transition"></div>');
+    var $sidebar = $(sidebarHtml);
     var $expAll = $node.find('.tab-panes > .tab-primary > .tab-body > .expand-all');
-    $sidebar.html(
-      '<div class="sidebar-toggle">' +
-        '<div class="collapse">' +
-          '<i class="fa fa-caret-left"></i>' +
-          '<i class="fa fa-ellipsis-v"></i>' +
-          '<i class="fa fa-caret-left"></i>' +
-        '</div>' +
-        '<div class="expand">' +
-          '<i class="fa fa-caret-right"></i>' +
-          '<i class="fa fa-ellipsis-v"></i>' +
-          '<i class="fa fa-caret-right"></i>' +
-        '</div>' +
-      '</div>' +
-      '<div class="sidebar-content">' +
-        '<ul class="list-unstyled debug-filters">' +
-          '<li class="php-errors">' +
-            '<span><i class="fa fa-fw fa-lg fa-code"></i>PHP Errors</span>' +
-            '<ul class="list-unstyled">' +
-            '</ul>' +
-          '</li>' +
-          '<li class="channels">' +
-            '<span><i class="fa fa-fw fa-lg fa-list-ul"></i>Channels</span>' +
-            '<ul class="list-unstyled">' +
-            '</ul>' +
-          '</li>' +
-        '</ul>' +
-        '<button class="expand-all" style="display:none;"><i class="fa fa-lg fa-plus"></i> Exp All Groups</button>' +
-      '</div>'
-    );
     $node.find('.tab-panes > .tab-primary > .tab-body').before($sidebar);
 
     phpErrorToggles($node);
@@ -1536,15 +1542,8 @@
     var $filters = $node.find('.debug-filters');
     var $entries = $node.find('> .tab-panes .m_alert, .group-body > *');
     var val;
-    var labels = {
-      alert: '<i class="fa fa-fw fa-lg fa-bullhorn"></i>Alerts',
-      error: '<i class="fa fa-fw fa-lg fa-times-circle"></i>Error',
-      warn: '<i class="fa fa-fw fa-lg fa-warning"></i>Warning',
-      info: '<i class="fa fa-fw fa-lg fa-info-circle"></i>Info',
-      other: '<i class="fa fa-fw fa-lg fa-sticky-note-o"></i>Other'
-    };
     var haveEntry;
-    for (val in labels) {
+    for (val in methodLabels) {
       haveEntry = val === 'other'
         ? $entries.not('.m_alert, .m_error, .m_warn, .m_info').length > 0
         : $entries.filter('.m_' + val).not('[data-channel="' + channelNameRoot + '.phpError"]').length > 0;
@@ -1558,7 +1557,7 @@
               value: val
             })
           ).append(
-            $('<span>').append(labels[val])
+            $('<span>').append(methodLabels[val])
           )
         )
       );
@@ -1590,6 +1589,18 @@
         '<input type="checkbox" checked data-toggle="error" value="fatal" />fatal <span class="badge">1</span>' +
         '</label></li>');
     }
+    moveErrorSummary($errorSummary, $togglesUl);
+    if ($togglesUl.children().length === 0) {
+      $togglesUl.parent().hide();
+    }
+    if (!haveFatal) {
+      $errorSummary.remove();
+    } else {
+      $errorSummary.find('h3').eq(1).remove();
+    }
+  }
+
+  function moveErrorSummary ($errorSummary, $togglesUl) {
     $errorSummary.find('label').each(function () {
       var $li = $(this).parent();
       var $checkbox = $(this).find('input');
@@ -1606,14 +1617,6 @@
     $errorSummary.find('ul').filter(function () {
       return $(this).children().length === 0
     }).remove();
-    if ($togglesUl.children().length === 0) {
-      $togglesUl.parent().hide();
-    }
-    if (!haveFatal) {
-      $errorSummary.remove();
-    } else {
-      $errorSummary.find('h3').eq(1).remove();
-    }
   }
 
   /**

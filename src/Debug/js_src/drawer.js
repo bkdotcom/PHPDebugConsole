@@ -131,7 +131,7 @@ function setHeight (height, viaUser) {
   // inacurate if document.doctype is null : $(window).height()
   //    aka document.documentElement.clientHeight
   var maxH = window.innerHeight - menuH - 50
-  height = checkHeight(height);
+  height = checkHeight(height)
   height = Math.min(height, maxH)
   height = Math.max(height, minH)
   $body.css('height', height)
@@ -143,14 +143,12 @@ function setHeight (height, viaUser) {
 function checkHeight (height) {
   var $body = $root.find('.tab-panes')
   if (height && typeof height !== 'object') {
-    return height;
+    return height
   }
   // no height passed -> use last or 100
   height = parseInt($body[0].style.height, 10)
   if (!height && config.get('persistDrawer')) {
     height = config.get('height')
   }
-  return height
-    ? height
-    : 100
+  return height || 100
 }

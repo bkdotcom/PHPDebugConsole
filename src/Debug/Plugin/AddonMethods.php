@@ -167,10 +167,10 @@ class AddonMethods implements SubscriberInterface
         $config = $names
             ? array()
             : $config;
-        if (!isset($this->channels['name'])) {
-            $channel = $this->createChannel($name, $config);
-            $this->channels[$name] = $channel;
+        if (!isset($this->channels[$name])) {
+            $this->channels[$name] = $this->createChannel($name, $config);
         }
+        $channel = $this->channels[$name];
         if ($names) {
             $channel = $channel->getChannel($names);
         }

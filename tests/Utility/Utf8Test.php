@@ -99,7 +99,7 @@ class Utf8Test extends \PHPUnit\Framework\TestCase
 
     public function testDump()
     {
-        $binary = \md5(\uniqid((string) \rand()), true);
+        $binary = base64_decode('TzipAdbGNF+DfyAwZrp7ew==');
         $strings = array(
             array("\xef\xbb\xbfPesky BOM",
                 '\u{feff}Pesky BOM'),

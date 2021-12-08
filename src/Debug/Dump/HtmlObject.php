@@ -78,14 +78,7 @@ class HtmlObject
                 . $this->methods->dump($abs)
                 . $this->dumpPhpDoc($abs)
             . '</dl>' . "\n";
-        // remove <dt>'s that have no <dd>'
-        $html = \preg_replace('#(?:<dt>(?:extends|implements|phpDoc)</dt>\n)+(<dt|</dl)#', '$1', $html);
-        $html = \str_replace(array(
-            ' data-attributes="null"',
-            ' data-inherited-from="null"',
-            ' title=""',
-        ), '', $html);
-        return $html;
+        return $this->cleanup($html);
     }
 
     /**
@@ -107,6 +100,25 @@ class HtmlObject
             ? 'a ' . $methods[0] . ' method'
             : \implode(' and ', $methods) . ' methods';
         return '<dd class="info magic">This object has ' . $methods . '</dd>' . "\n";
+    }
+
+    /**
+     * Remove empty tags and unneeded attributes
+     *
+     * @param string $html html fragment
+     *
+     * @return string html fragment
+     */
+    private function cleanup($html)
+    {
+        // remove <dt>'s that have no <dd>'
+        $html = \preg_replace('#(?:<dt>(?:extends|implements|phpDoc)</dt>\n)+(<dt|</dl)#', '$1', $html);
+        $html = \str_replace(array(
+            ' data-attributes="null"',
+            ' data-inherited-from="null"',
+            ' title=""',
+        ), '', $html);
+        return $html;
     }
 
     /**

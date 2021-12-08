@@ -95,6 +95,7 @@ class GuzzleMiddleware
             );
         }
         $func = $this->nextHandler;
+        $this->debug->time('Guzzle request');
         return $func($request, $options)->then(
             array($this, 'onFulfilled'),
             array($this, 'onRejected')
@@ -110,6 +111,7 @@ class GuzzleMiddleware
      */
     public function onFulfilled(ResponseInterface $response)
     {
+        $this->debug->timeEnd('Guzzle request');
         $this->debug->log('response headers', $this->buildResponseHeadersString($response), $this->debug->meta('redact'));
         if ($this->cfg['inclResponseBody']) {
             $body = $this->getBody($response);

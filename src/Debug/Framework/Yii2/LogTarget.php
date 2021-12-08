@@ -102,39 +102,44 @@ class LogTarget extends Target
     {
         $message = $this->normalizeMessage($message);
         $message = $this->messageMeta($message);
-        $args = array();
-        $debug = $message['channel'];
-        $method = $this->levelMap[$message['level']];
         if ($message['level'] === Logger::LEVEL_PROFILE_BEGIN) {
             // add to stack
             $this->profileStack[] = $message;
             return;
         }
+        $debug = $message['channel'];
+        $method = $this->levelMap[$message['level']];
+        $args = $this->handleMessageArgs($message);
+        \call_user_func_array(array($debug, $method), $args);
+    }
+
+    /**
+     * Get debug method args from message
+     *
+     * @param array $message key/value'd Yii log message
+     *
+     * @return array method args
+     */
+    private function handleMessageArgs($message)
+    {
+        $args = \array_filter(array(
+            \ltrim($message['category'] . ':', ':'),
+            $message['text'],
+        ));
         if ($message['level'] === Logger::LEVEL_PROFILE_END) {
             $messageBegin = \array_pop($this->profileStack);
-            $text = $messageBegin['category']
-                ? $messageBegin['category'] . ': ' . $messageBegin['text']
-                : $messageBegin['text'];
+            $text = \ltrim($messageBegin['category'] . ': ' . $messageBegin['text'], ': ');
             $duration = $message['timestamp'] - $messageBegin['timestamp'];
             $args = array($text, $duration);
-        }
-        if ($message['level'] === Logger::LEVEL_TRACE) {
-            $caption = $message['category']
-                ? $message['category'] . ': ' . $message['text']
-                : $message['text'];
+        } elseif ($message['level'] === Logger::LEVEL_TRACE) {
+            $caption = \ltrim($message['category'] . ': ' . $message['text'], ': ');
             $message['meta']['trace'] = $message['trace'];
             $args = array(false, $caption);
         }
-        if (empty($args)) {
-            if ($message['category']) {
-                $args[] = $message['category'] . ':';
-            }
-            $args[] = $message['text'];
-        }
         if ($message['meta']) {
-            $args[] = $debug->meta($message['meta']);
+            $args[] = $message['channel']->meta($message['meta']);
         }
-        \call_user_func_array(array($debug, $method), $args);
+        return $args;
     }
 
     /**
@@ -155,50 +160,110 @@ class LogTarget extends Target
         $namespace = $matches[1];
         $category = $matches[2];
         $message['category'] = $category;
-        if ($category === 'Application') {
-            $message['category'] = null;
-            $message['channel'] = $this->debug->getChannel('App');
-            return $message;
+        $method = 'messageMeta' . \ucfirst($category);
+        if (\method_exists($this, $method)) {
+            return $this->{$method}($message);
         }
-        if ($namespace === 'caching') {
-            $icon = 'fa fa-cube';
-            $message['category'] = null;
-            $message['channel'] = $this->debug->getChannel('Cache', array(
-                'channelIcon' => $icon,
-                // 'channelShow' => false,
-            ));
-            $message['meta']['icon'] = $icon;
-            return $message;
-        }
-        if ($category === 'Connection') {
-            $icon = 'fa fa-database';
-            $message['category'] = null;
-            $message['channel'] = $this->debug->getChannel('PDO', array(
-                'channelIcon' => $icon,
-                'channelShow' => false,
-            ));
-            return $message;
-        }
-        if ($category === 'Module') {
-            $icon = 'fa fa-puzzle-piece';
-            $message['channel'] = $this->debug->getChannel($category, array(
-                'channelIcon' => $icon,
-                // 'channelShow' => false,
-            ));
-            $message['meta']['icon'] = $icon;
-            return $message;
-        }
-        if ($category === 'View') {
-            $icon = 'fa fa-file-text-o';
-            $message['category'] = null;
-            $message['channel'] = $this->debug->getChannel($category, array(
-                'channelIcon' => $icon,
-                // 'channelShow' => false,
-            ));
-            $message['meta']['icon'] = $icon;
-            return $message;
+        $method = 'messageMeta' . \ucfirst($namespace);
+        if (\method_exists($this, $method)) {
+            return $this->{$method}($message);
         }
         $message['channel'] = $this->debug->getChannel('misc');
+        return $message;
+    }
+
+    /**
+     * Set meta infor for Application category
+     *
+     * @param array $message key/value'd Yii log message
+     *
+     * @return array updated message
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     */
+    private function messageMetaApplication($message)
+    {
+        $message['category'] = null;
+        $message['channel'] = $this->debug->getChannel('App');
+        return $message;
+    }
+
+    /**
+     * Set meta infor for Caching namespace
+     *
+     * @param array $message key/value'd Yii log message
+     *
+     * @return array updated message
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     */
+    private function messageMetaCaching($message)
+    {
+        $icon = 'fa fa-cube';
+        $message['category'] = null;
+        $message['channel'] = $this->debug->getChannel('Cache', array(
+            'channelIcon' => $icon,
+        ));
+        $message['meta']['icon'] = $icon;
+        return $message;
+    }
+
+    /**
+     * Set meta infor for Connection category
+     *
+     * @param array $message key/value'd Yii log message
+     *
+     * @return array updated message
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     */
+    private function messageMetaConnection($message)
+    {
+        $icon = 'fa fa-database';
+        $message['category'] = null;
+        $message['channel'] = $this->debug->getChannel('PDO', array(
+            'channelIcon' => $icon,
+            'channelShow' => false,
+        ));
+        return $message;
+    }
+
+    /**
+     * Set meta infor for Module category
+     *
+     * @param array $message key/value'd Yii log message
+     *
+     * @return array updated message
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     */
+    private function messageMetaModule($message)
+    {
+        $icon = 'fa fa-puzzle-piece';
+        $message['channel'] = $this->debug->getChannel($message['category'], array(
+            'channelIcon' => $icon,
+        ));
+        $message['meta']['icon'] = $icon;
+        return $message;
+    }
+
+    /**
+     * Set meta infor for View category
+     *
+     * @param array $message key/value'd Yii log message
+     *
+     * @return array updated message
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     */
+    private function messageMetaView($message)
+    {
+        $icon = 'fa fa-file-text-o';
+        $message['channel'] = $this->debug->getChannel($message['category'], array(
+            'channelIcon' => $icon,
+        ));
+        $message['category'] = null;
+        $message['meta']['icon'] = $icon;
         return $message;
     }
 

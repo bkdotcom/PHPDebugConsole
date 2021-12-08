@@ -57,7 +57,6 @@ class LogReqRes implements SubscriberInterface
             'channelSort' => 10,
             'nested' => false,
         ));
-
         $collectWas = $debug->setCfg('collect', true);
         $this->logRequest();    // headers, cookies, post
         $debug->setCfg('collect', $collectWas);
@@ -70,10 +69,7 @@ class LogReqRes implements SubscriberInterface
      */
     public function logRequest()
     {
-        if (\strpos($this->debug->getInterface(), 'http') !== 0) {
-            return;
-        }
-        if (!\array_filter($this->debug->getCfg('logRequestInfo', Debug::CONFIG_DEBUG))) {
+        if ($this->testLogRequest() === false) {
             return;
         }
         $this->debug->log(
@@ -106,10 +102,7 @@ class LogReqRes implements SubscriberInterface
      */
     public function logResponse()
     {
-        if (\strpos($this->debug->getInterface(), 'http') !== 0) {
-            return;
-        }
-        if (!$this->debug->getCfg('logResponse', Debug::CONFIG_DEBUG)) {
+        if ($this->testLogResponse() === false) {
             return;
         }
         $this->debug->log(
@@ -378,6 +371,30 @@ class LogReqRes implements SubscriberInterface
             return \implode("\n", $vals);
         }, $this->debug->getResponseHeaders());
         $this->debug->table('response headers', $headers);
+    }
+
+    /**
+     * Check if we should log request
+     *
+     * @return bool
+     */
+    private function testLogRequest()
+    {
+        $isHttp = \strpos($this->debug->getInterface(), 'http') === 0;
+        $logRequest = \count(\array_filter($this->debug->getCfg('logRequestInfo', Debug::CONFIG_DEBUG))) > 0;
+        return $isHttp && $logRequest;
+    }
+
+    /**
+     * Check if we should log response
+     *
+     * @return bool
+     */
+    private function testLogResponse()
+    {
+        $isHttp = \strpos($this->debug->getInterface(), 'http') === 0;
+        $logResponse = $this->debug->getCfg('logResponse', Debug::CONFIG_DEBUG);
+        return $isHttp && $logResponse;
     }
 
     /**

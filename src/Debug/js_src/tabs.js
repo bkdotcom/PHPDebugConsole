@@ -8,8 +8,8 @@ export function init ($delegateNode) {
   // config = $delegateNode.data('config').get()
   var $tabPanes = $delegateNode.find('.tab-panes')
   $delegateNode.find('nav .nav-link').each(function (i, tab) {
-    initTab($(tab), $tabPanes);
-  });
+    initTab($(tab), $tabPanes)
+  })
   $delegateNode.on('click', '[data-toggle=tab]', function () {
     show(this)
     return false

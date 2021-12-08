@@ -83,7 +83,7 @@ class ComposerScripts
      *
      * @return array
      */
-    private function installDependencies()
+    private static function installDependencies()
     {
         $info = array(
             'haveSlevomat' => false,

@@ -16,6 +16,7 @@ use bdk\Debug\LogEntry;
 use bdk\Debug\Plugin\Highlight;
 use bdk\Debug\Route\Html as RouteHtml;
 use bdk\ErrorHandler;
+use bdk\ErrorHandler\Error;
 
 /**
  * Output a summary of errors

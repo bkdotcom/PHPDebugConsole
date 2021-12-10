@@ -13,6 +13,7 @@
 namespace bdk\Debug\Collector;
 
 use bdk\Debug;
+use bdk\Debug\Collector\DatabaseTrait;
 use bdk\Debug\Collector\MySqli\MySqliStmt;
 use bdk\Debug\Collector\StatementInfo;
 use bdk\Debug\Plugin\Highlight;
@@ -28,6 +29,7 @@ use RuntimeException;
  */
 class MySqli extends mysqliBase
 {
+    use DatabaseTrait;
 
     public $connectionAttempted = false;
     protected $icon = 'fa fa-database';
@@ -73,19 +75,6 @@ class MySqli extends mysqliBase
     }
 
     /**
-     * Logs StatementInfo
-     *
-     * @param StatementInfo $info statement info instance
-     *
-     * @return void
-     */
-    public function addStatementInfo(StatementInfo $info)
-    {
-        $this->loggedStatements[] = $info;
-        $info->appendLog($this->debug);
-    }
-
-    /**
      * Turns on or off auto-committing database modification (begin transaction)
      *
      * @param bool $mode Whether to turn on auto-commit or not.
@@ -117,78 +106,6 @@ class MySqli extends mysqliBase
         $return = parent::commit($flags, $name);
         $this->debug->groupEnd($return);
         return $return;
-    }
-
-    /**
-     * Returns the accumulated execution time of statements
-     *
-     * @return float
-     */
-    public function getTimeSpent()
-    {
-        return \array_reduce($this->loggedStatements, function ($val, StatementInfo $info) {
-            return $val + $info->duration;
-        });
-    }
-
-    /**
-     * Returns the peak memory usage while performing statements
-     *
-     * @return int
-     */
-    public function getPeakMemoryUsage()
-    {
-        return \array_reduce($this->loggedStatements, function ($carry, StatementInfo $info) {
-            $mem = $info->memoryUsage;
-            return $mem > $carry
-                ? $mem
-                : $carry;
-        });
-    }
-
-    /**
-     * Returns the list of executed statements as StatementInfo objects
-     *
-     * @return StatementInfo[]
-     */
-    public function getLoggedStatements()
-    {
-        return $this->loggedStatements;
-    }
-
-    /**
-     * Debug::EVENT_OUTPUT subscriber
-     *
-     * @param Event $event Event instance
-     *
-     * @return void
-     */
-    public function onDebugOutput(Event $event)
-    {
-        $debug = $event->getSubject();
-        $debug->groupSummary(0);
-        \set_error_handler(function ($errno, $errstr) {
-            throw new RuntimeException($errstr, $errno);
-        }, E_ALL);
-        try {
-            $debug->groupCollapsed(
-                'MySqli info',
-                $this->host_info,
-                $debug->meta(array(
-                    'argsAsParams' => false,
-                    'icon' => $this->icon,
-                    'level' => 'info',
-                ))
-            );
-            $this->logRuntime($debug);
-            $debug->groupEnd(); // groupCollapsed
-        } catch (RuntimeException $e) {
-            $debug->group('MySqli Error', $debug->meta(array('level' => 'error')));
-            $debug->log('Connection Error');
-            $debug->groupEnd(); // groupCollapsed (opened in try)
-        }
-        \restore_error_handler();
-        $debug->groupEnd(); // groupSummary
     }
 
     /**
@@ -266,6 +183,42 @@ class MySqli extends mysqliBase
     }
 
     /**
+     * Debug::EVENT_OUTPUT subscriber
+     *
+     * @param Event $event Event instance
+     *
+     * @return void
+     */
+    public function onDebugOutput(Event $event)
+    {
+        $debug = $event->getSubject();
+        $debug->groupSummary(0);
+        \set_error_handler(function ($errno, $errstr) {
+            throw new RuntimeException($errstr, $errno);
+        }, E_ALL);
+        try {
+            $debug->groupCollapsed(
+                'MySqli info',
+                $this->host_info,
+                $debug->meta(array(
+                    'argsAsParams' => false,
+                    'icon' => $this->icon,
+                    'level' => 'info',
+                ))
+            );
+            $this->logRuntime($debug);
+            $debug->groupEnd(); // groupCollapsed
+        } catch (RuntimeException $e) {
+            $debug->group('MySqli Error', $debug->meta(array('level' => 'error')));
+            $debug->log('Connection Error');
+            $debug->groupEnd(); // MySqli Error
+            $debug->groupEnd(); // groupCollapsed (opened in try)
+        }
+        \restore_error_handler();
+        $debug->groupEnd(); // groupSummary
+    }
+
+    /**
      * Get current database / schema
      *
      * @return string|null
@@ -320,48 +273,6 @@ class MySqli extends mysqliBase
     }
 
     /**
-     * Log runtime information
-     *
-     * @param Debug $debug Debug instance
-     *
-     * @return void
-     */
-    private function logRuntime(Debug $debug)
-    {
-        $database = $this->currentDatabase();
-        if ($database) {
-            $debug->log('database', $database);
-        }
-        $debug->log('logged operations: ', \count($this->loggedStatements));
-        $debug->time('total time', $this->getTimeSpent());
-        $debug->log('max memory usage', $debug->utility->getBytes($this->getPeakMemoryUsage()));
-        $debug->log('server info', $this->statParsed());
-        if ($this->prettified() === false) {
-            $debug->info('install jdorn/sql-formatter to prettify logged sql statemeents');
-        }
-    }
-
-    /**
-     * Were attempts to prettify successful?
-     *
-     * @return bool
-     */
-    private function prettified()
-    {
-        $falseCount = 0;
-        foreach ($this->loggedStatements as $info) {
-            $prettified = $info->prettified;
-            if ($prettified === true) {
-                return true;
-            }
-            if ($prettified === false) {
-                $falseCount++;
-            }
-        }
-        return $falseCount === 0;
-    }
-
-    /**
      * Profiles a call to a mysqli method
      *
      * @param string $method PDO method
@@ -396,7 +307,7 @@ class MySqli extends mysqliBase
      *
      * @return array
      */
-    private function statParsed()
+    private function serverInfo()
     {
         $matches = array();
         \preg_match_all('#([^:]+): ([a-zA-Z0-9.]+)\s*#', $this->stat(), $matches);

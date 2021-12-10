@@ -13,6 +13,7 @@
 namespace bdk\Debug\Collector;
 
 use bdk\Debug;
+use bdk\Debug\Collector\DatabaseTrait;
 use bdk\Debug\Collector\Pdo\MethodSignatureCompatTrait;
 use bdk\Debug\Collector\StatementInfo;
 use bdk\Debug\Plugin\Highlight;
@@ -25,6 +26,7 @@ use PDOException;
  */
 class Pdo extends PdoBase
 {
+    use DatabaseTrait;
     use MethodSignatureCompatTrait;
 
     private $debug;
@@ -92,39 +94,6 @@ class Pdo extends PdoBase
     public function __set($name, $value)
     {
         $this->pdo->$name = $value;
-    }
-
-    /**
-     * Debug::EVENT_OUTPUT subscriber
-     *
-     * @param Event $event Event instance
-     *
-     * @return void
-     */
-    public function onDebugOutput(Event $event)
-    {
-        $debug = $event->getSubject();
-        $debug->groupSummary(0);
-
-        $nameParts = \explode('.', $debug->getCfg('channelName', Debug::CONFIG_DEBUG));
-        $driverName = $this->pdo->getAttribute(PdoBase::ATTR_DRIVER_NAME);
-
-        $groupParams = \array_filter(array(
-            \end($nameParts) . ' info',
-            $driverName,
-            $driverName !== 'sqlite'
-                ? $this->pdo->getAttribute(PdoBase::ATTR_CONNECTION_STATUS)
-                : null,
-            $debug->meta(array(
-                'argsAsParams' => false,
-                'icon' => $this->icon,
-                'level' => 'info',
-            ))
-        ));
-        \call_user_func_array(array($debug, 'groupCollapsed'), $groupParams);
-        $this->logRuntime($debug);
-        $debug->groupEnd(); // groupCollapsed
-        $debug->groupEnd(); // groupSummary
     }
 
     /**
@@ -311,53 +280,36 @@ class Pdo extends PdoBase
     }
 
     /**
-     * Logs StatementInfo
+     * Debug::EVENT_OUTPUT subscriber
      *
-     * @param StatementInfo $info statement info instance
+     * @param Event $event Event instance
      *
      * @return void
      */
-    public function addStatementInfo(StatementInfo $info)
+    public function onDebugOutput(Event $event)
     {
-        $this->loggedStatements[] = $info;
-        $info->appendLog($this->debug);
-    }
+        $debug = $event->getSubject();
+        $debug->groupSummary(0);
 
-    /**
-     * Returns the accumulated execution time of statements
-     *
-     * @return float
-     */
-    public function getTimeSpent()
-    {
-        return \array_reduce($this->loggedStatements, function ($val, StatementInfo $info) {
-            return $val + $info->duration;
-        });
-    }
+        $nameParts = \explode('.', $debug->getCfg('channelName', Debug::CONFIG_DEBUG));
+        $driverName = $this->pdo->getAttribute(PdoBase::ATTR_DRIVER_NAME);
 
-    /**
-     * Returns the peak memory usage while performing statements
-     *
-     * @return int
-     */
-    public function getPeakMemoryUsage()
-    {
-        return \array_reduce($this->loggedStatements, function ($carry, StatementInfo $info) {
-            $mem = $info->memoryUsage;
-            return $mem > $carry
-                ? $mem
-                : $carry;
-        });
-    }
-
-    /**
-     * Returns the list of executed statements as StatementInfo objects
-     *
-     * @return StatementInfo[]
-     */
-    public function getLoggedStatements()
-    {
-        return $this->loggedStatements;
+        $groupParams = \array_filter(array(
+            \end($nameParts) . ' info',
+            $driverName,
+            $driverName !== 'sqlite'
+                ? $this->pdo->getAttribute(PdoBase::ATTR_CONNECTION_STATUS)
+                : null,
+            $debug->meta(array(
+                'argsAsParams' => false,
+                'icon' => $this->icon,
+                'level' => 'info',
+            ))
+        ));
+        \call_user_func_array(array($debug, 'groupCollapsed'), $groupParams);
+        $this->logRuntime($debug);
+        $debug->groupEnd(); // groupCollapsed
+        $debug->groupEnd(); // groupSummary
     }
 
     /**
@@ -375,28 +327,6 @@ class Pdo extends PdoBase
             }
         } catch (PDOException $e) {
             // no such method
-        }
-    }
-
-    /**
-     * Log runtime information
-     *
-     * @param Debug $debug Debug instance
-     *
-     * @return void
-     */
-    private function logRuntime(Debug $debug)
-    {
-        $database = $this->currentDatabase();
-        if ($database) {
-            $debug->log('database', $database);
-        }
-        $debug->log('logged operations: ', \count($this->loggedStatements));
-        $debug->time('total time', $this->getTimeSpent());
-        $debug->log('max memory usage', $debug->utility->getBytes($this->getPeakMemoryUsage()));
-        $debug->log('server info', $this->serverInfo());
-        if ($this->prettified() === false) {
-            $debug->info('install jdorn/sql-formatter to prettify logged sql statemeents');
         }
     }
 
@@ -434,26 +364,6 @@ class Pdo extends PdoBase
             throw $exception;
         }
         return $result;
-    }
-
-    /**
-     * Were attempts to prettify successful?
-     *
-     * @return bool
-     */
-    private function prettified()
-    {
-        $falseCount = 0;
-        foreach ($this->loggedStatements as $info) {
-            $prettified = $info->prettified;
-            if ($prettified === true) {
-                return true;
-            }
-            if ($prettified === false) {
-                $falseCount++;
-            }
-        }
-        return $falseCount === 0;
     }
 
     /**

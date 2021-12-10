@@ -73,20 +73,18 @@ class HtmlString
      */
     public function dumpAsSubstitution($val, $opts)
     {
-        if ($val instanceof Abstraction) {
-            if ($val['typeMore'] === Abstracter::TYPE_STRING_BINARY) {
-                if (!$val['value']) {
-                    return 'Binary data not collected';
-                }
-                $str = $this->debug->utf8->dump($val['value']);
-                $diff = $val['strlen']
-                    ? $val['strlen'] - \strlen($val['value'])
-                    : 0;
-                if ($diff) {
-                    $str .= '[' . $diff . ' more bytes (not logged)]';
-                }
-                return $str;
+        if ($val instanceof Abstraction && $val['typeMore'] === Abstracter::TYPE_STRING_BINARY) {
+            if (!$val['value']) {
+                return 'Binary data not collected';
             }
+            $str = $this->debug->utf8->dump($val['value']);
+            $diff = $val['strlen']
+                ? $val['strlen'] - \strlen($val['value'])
+                : 0;
+            if ($diff) {
+                $str .= '[' . $diff . ' more bytes (not logged)]';
+            }
+            return $str;
         }
         // we do NOT wrap in <span>...  log('<a href="%s">link</a>', $url);
         $opts['tagName'] = null;
@@ -122,22 +120,16 @@ class HtmlString
     private function dumpAbs(Abstraction $abs)
     {
         if ($abs['typeMore'] === Abstracter::TYPE_STRING_CLASSNAME) {
-            $val = $this->html->markupIdentifier($abs['value']);
-            $parsed = $this->debug->html->parseTag($val);
-            $attribs = $this->html->getDumpOpt('attribs');
-            $attribs = $this->debug->arrayUtil->mergeDeep($attribs, $parsed['attribs']);
-            $this->html->setDumpOpt('attribs', $attribs);
-            return $parsed['innerhtml'];
+            return $this->dumpClassname($abs);
         }
         $strlenDumped = \strlen($abs['value']);
         $val = $this->dumpHelper($abs['value']);
-        if (
-            \in_array($abs['typeMore'], array(
-                Abstracter::TYPE_STRING_BASE64,
-                Abstracter::TYPE_STRING_JSON,
-                Abstracter::TYPE_STRING_SERIALIZED
-            ))
-        ) {
+        $typesEncoded = array(
+            Abstracter::TYPE_STRING_BASE64,
+            Abstracter::TYPE_STRING_JSON,
+            Abstracter::TYPE_STRING_SERIALIZED,
+        );
+        if (\in_array($abs['typeMore'], $typesEncoded)) {
             return $this->dumpEncoded($val, $abs);
         }
         if ($abs['typeMore'] === Abstracter::TYPE_STRING_BINARY) {
@@ -147,24 +139,53 @@ class HtmlString
             $val .= '<span class="maxlen">&hellip; ' . ($abs['strlen'] - $strlenDumped) . ' more bytes (not logged)</span>';
         }
         if ($abs['prettifiedTag']) {
-            $this->html->setDumpOpt('postDump', function ($dumped, $opts) use ($abs) {
-                $tagName = 'span';
-                if ($opts['tagName'] === 'td') {
-                    $tagName = 'td';
-                    $parsed = $this->debug->html->parseTag($dumped);
-                    $dumped = $this->debug->html->buildTag('span', $parsed['attribs'], $parsed['innerhtml']);
-                }
-                return $this->debug->html->buildTag(
-                    $tagName,
-                    array(
-                        'class' => 'value-container',
-                        'data-type' => $abs['type'],
-                    ),
-                    '<span class="prettified">(prettified)</span> ' . $dumped
-                );
-            });
+            $this->html->setDumpOpt('postDump', $this->buildPrettifiedPostDump($abs));
         }
         return $val;
+    }
+
+    /**
+     * Dump classname
+     *
+     * @param Abstraction $abs String abstraction
+     *
+     * @return string html fragment
+     */
+    private function dumpClassname(Abstraction $abs)
+    {
+        $val = $this->html->markupIdentifier($abs['value']);
+        $parsed = $this->debug->html->parseTag($val);
+        $attribs = $this->html->getDumpOpt('attribs');
+        $attribs = $this->debug->arrayUtil->mergeDeep($attribs, $parsed['attribs']);
+        $this->html->setDumpOpt('attribs', $attribs);
+        return $parsed['innerhtml'];
+    }
+
+    /**
+     * Add "prettified" tag to prettified value
+     *
+     * @param Abstraction $abs String abstraction
+     *
+     * @return Closure
+     */
+    private function buildPrettifiedPostDump(Abstraction $abs)
+    {
+        return function ($dumped, $opts) use ($abs) {
+            $tagName = 'span';
+            if ($opts['tagName'] === 'td') {
+                $tagName = 'td';
+                $parsed = $this->debug->html->parseTag($dumped);
+                $dumped = $this->debug->html->buildTag('span', $parsed['attribs'], $parsed['innerhtml']);
+            }
+            return $this->debug->html->buildTag(
+                $tagName,
+                array(
+                    'class' => 'value-container',
+                    'data-type' => $abs['type'],
+                ),
+                '<span class="prettified">(prettified)</span> ' . $dumped
+            );
+        };
     }
 
     /**
@@ -214,7 +235,7 @@ class HtmlString
      * Dump encoded string (base64, json, serialized)
      *
      * @param string      $val raw value dumped
-     * @param Abstraction $abs (optional) full abstraction
+     * @param Abstraction $abs full value abstraction
      *
      * @return string
      */
@@ -230,23 +251,7 @@ class HtmlString
             'valDecoded' => $this->html->dump($abs['valueDecoded']),
             'valRaw' => $this->debug->html->buildTag('span', $attribs, $val),
         );
-        if ($typeMore === Abstracter::TYPE_STRING_BASE64) {
-            $vals['labelDecoded'] = 'decoded';
-            $vals['labelRaw'] = 'base64';
-            if ($abs['strlen']) {
-                $vals['valRaw'] .= '<span class="maxlen">&hellip; ' . ($abs['strlen'] - \strlen($abs['value'])) . ' more bytes (not logged)</span>';
-            }
-        } elseif ($typeMore === Abstracter::TYPE_STRING_JSON) {
-            $vals['labelDecoded'] = 'decoded';
-            $vals['labelRaw'] = 'json';
-            if ($abs['prettified'] || $abs['strlen']) {
-                $abs['typeMore'] = null; // unset typeMore to prevent loop
-                $vals['valRaw'] = $this->html->dump($abs);
-            }
-        } elseif ($typeMore === Abstracter::TYPE_STRING_SERIALIZED) {
-            $vals['labelDecoded'] = 'unserialized';
-            $vals['labelRaw'] = 'serialized';
-        }
+        $vals = $this->dumpEncodedUpdateVals($vals, $abs);
         $val = $this->debug->html->buildTag(
             $this->html->getDumpOpt('tagName'),
             array(
@@ -267,6 +272,41 @@ class HtmlString
         );
         $this->html->setDumpOpt('tagName', null);
         return $this->debug->stringUtil->interpolate($val, $vals);
+    }
+
+    /**
+     * Set string interpolation context values]
+     *
+     * @param array       $vals context values for string interpolation
+     * @param Abstraction $abs  full value abstraction
+     *
+     * @return array
+     */
+    private function dumpEncodedUpdateVals($vals, Abstraction $abs)
+    {
+        $typeMore = $abs['typeMore'];
+        switch ($typeMore) {
+            case Abstracter::TYPE_STRING_BASE64:
+                $vals['labelDecoded'] = 'decoded';
+                $vals['labelRaw'] = 'base64';
+                if ($abs['strlen']) {
+                    $vals['valRaw'] .= '<span class="maxlen">&hellip; ' . ($abs['strlen'] - \strlen($abs['value'])) . ' more bytes (not logged)</span>';
+                }
+                break;
+            case Abstracter::TYPE_STRING_JSON:
+                $vals['labelDecoded'] = 'decoded';
+                $vals['labelRaw'] = 'json';
+                if ($abs['prettified'] || $abs['strlen']) {
+                    $abs['typeMore'] = null; // unset typeMore to prevent loop
+                    $vals['valRaw'] = $this->html->dump($abs);
+                }
+                break;
+            case Abstracter::TYPE_STRING_SERIALIZED:
+                $vals['labelDecoded'] = 'unserialized';
+                $vals['labelRaw'] = 'serialized';
+                break;
+        }
+        return $vals;
     }
 
     /**

@@ -12,13 +12,13 @@
 
 namespace bdk\Debug\Psr7lite;
 
-use InvalidArgumentException;
+use bdk\Debug\Psr7lite\StreamBase;
 use RuntimeException;
 
 /**
  * INTERNAL USE ONLY
  */
-class Stream
+class Stream extends StreamBase
 {
     /**
      * Resource modes.
@@ -31,8 +31,6 @@ class Stream
     const READABLE_MODES = '/r|a\+|ab\+|w\+|wb\+|x\+|xb\+|c\+|cb\+/';
     const WRITABLE_MODES = '/a|w|r\+|rb\+|rw|x|c/';
 
-    /** @var resource|closed-resource|null A resource reference */
-    private $resource;
     private $size;
     private $seekable;
     private $readable;
@@ -90,7 +88,7 @@ class Stream
      */
     public function __toString()
     {
-        if ($this->isOpenResource() === false) {
+        if ($this->isResourceOpen() === false) {
             return '';
         }
         try {
@@ -110,7 +108,7 @@ class Stream
     public function close()
     {
         if (isset($this->resource)) {
-            if ($this->isOpenResource() === true) {
+            if ($this->isResourceOpen() === true) {
                 /** @psalm-suppress PossiblyInvalidArgument we know resource is open */
                 \fclose($this->resource);
             }
@@ -151,7 +149,7 @@ class Stream
             return $this->size;
         }
 
-        if ($this->isOpenResource() === false) {
+        if ($this->isResourceOpen() === false) {
             return null;
         }
 
@@ -178,14 +176,13 @@ class Stream
      */
     public function tell()
     {
-        if ($this->isOpenResource() === false) {
-            throw new RuntimeException('Stream is detached');
+        if ($this->isResourceOpen() === false) {
+            throw new RuntimeException($this->strings['detached']);
         }
-
         /** @psalm-suppress PossiblyInvalidArgument we know resource is open */
         $result = \ftell($this->resource);
         if ($result === false) {
-            throw new RuntimeException('Unable to determine stream position');
+            throw new RuntimeException($this->strings['posUnknown']);
         }
         return $result;
     }
@@ -198,8 +195,8 @@ class Stream
      */
     public function eof()
     {
-        if ($this->isOpenResource() === false) {
-            throw new RuntimeException('Stream is detached');
+        if ($this->isResourceOpen() === false) {
+            throw new RuntimeException($this->strings['detached']);
         }
         /** @psalm-suppress PossiblyInvalidArgument we know resource is open */
         return \feof($this->resource);
@@ -233,17 +230,19 @@ class Stream
     public function seek($offset, $whence = SEEK_SET)
     {
         $whence = (int) $whence;
-
-        if ($this->isOpenResource() === false) {
-            throw new RuntimeException('Stream is detached');
+        if ($this->isResourceOpen() === false) {
+            throw new RuntimeException($this->strings['detached']);
         }
         if (!$this->seekable) {
-            throw new RuntimeException('Stream is not seekable');
+            throw new RuntimeException($this->strings['seekNonSeekable']);
         }
         /** @psalm-suppress PossiblyInvalidArgument we know resource is open */
         if (\fseek($this->resource, $offset, $whence) === -1) {
-            throw new RuntimeException('Unable to seek to stream position '
-                . $offset . ' with whence ' . \var_export($whence, true));
+            throw new RuntimeException(\sprintf(
+                $this->strings['seekFail'],
+                $offset,
+                \var_export($whence, true)
+            ));
         }
     }
 
@@ -284,11 +283,11 @@ class Stream
      */
     public function write($string)
     {
-        if ($this->isOpenResource() === false) {
-            throw new RuntimeException('Stream is detached');
+        if ($this->isResourceOpen() === false) {
+            throw new RuntimeException($this->strings['detached']);
         }
         if (!$this->writable) {
-            throw new RuntimeException('Cannot write to a non-writable stream');
+            throw new RuntimeException($this->strings['writeFailNonWritable']);
         }
 
         // We can't know the size after writing anything
@@ -296,7 +295,7 @@ class Stream
         /** @psalm-suppress PossiblyInvalidArgument we know resource is open */
         $result = \fwrite($this->resource, $string);
         if ($result === false) {
-            throw new RuntimeException('Unable to write to stream');
+            throw new RuntimeException($this->strings['writeFail']);
         }
         return $result;
     }
@@ -324,14 +323,14 @@ class Stream
      */
     public function read($length)
     {
-        if ($this->isOpenResource() === false) {
-            throw new RuntimeException('Stream is detached');
+        if ($this->isResourceOpen() === false) {
+            throw new RuntimeException($this->strings['detached']);
         }
         if (!$this->readable) {
-            throw new RuntimeException('Cannot read from non-readable stream');
+            throw new RuntimeException($this->strings['readFailNonReadable']);
         }
         if ($length < 0) {
-            throw new RuntimeException('Length parameter cannot be negative');
+            throw new RuntimeException($this->strings['readLengthNegative']);
         }
 
         if ($length === 0) {
@@ -341,7 +340,7 @@ class Stream
         /** @psalm-suppress PossiblyInvalidArgument we know resource is open */
         $string = \fread($this->resource, $length);
         if ($string === false) {
-            throw new RuntimeException('Unable to read from stream');
+            throw new RuntimeException($this->strings['readFail']);
         }
         return $string;
     }
@@ -355,8 +354,8 @@ class Stream
      */
     public function getContents()
     {
-        if ($this->isOpenResource() === false) {
-            throw new RuntimeException('Stream is detached');
+        if ($this->isResourceOpen() === false) {
+            throw new RuntimeException($this->strings['detached']);
         }
 
         $contents = false;
@@ -365,7 +364,7 @@ class Stream
             $contents = \stream_get_contents($this->resource);
         }
         if ($contents === false) {
-            throw new RuntimeException('Unable to read stream contents');
+            throw new RuntimeException($this->strings['readFail']);
         }
         return $contents;
     }
@@ -390,7 +389,7 @@ class Stream
         if (!isset($this->resource)) {
             return $key ? null : array();
         }
-        $streamMeta = $this->isOpenResource() === true
+        $streamMeta = $this->isResourceOpen() === true
             ? \stream_get_meta_data($this->resource)
             : array(); // not-a-resource (or closed)
         if ($key === null) {
@@ -402,101 +401,5 @@ class Stream
         return isset($streamMeta[$key])
             ? $streamMeta[$key]
             : null;
-    }
-
-    /**
-     * Return object class or value type
-     *
-     * @param mixed $value The value being type checked
-     *
-     * @return string
-     */
-    private function getTypeDebug($value)
-    {
-        return \is_object($value)
-            ? \get_class($value)
-            : \gettype($value);
-    }
-
-    /**
-     * Safely test if value is a file
-     *
-     * @param string $value The value to check
-     *
-     * @return bool
-     */
-    private function isFile($value)
-    {
-        return \is_string($value)
-            && \preg_match('#(://|[\r\n\x00])#', $value) !== 1
-            && \is_file($value);
-    }
-
-    /**
-     * Is resource open?
-     *
-     * @return bool
-     */
-    private function isOpenResource()
-    {
-        return isset($this->resource) && \is_resource($this->resource);
-    }
-
-    /**
-     * Set resource
-     *
-     * @param mixed $value Resource, filepath, or string content to wrap.
-     *
-     * @return void
-     *
-     * @throws InvalidArgumentException
-     * @throws RuntimeException
-     */
-    private function setResource($value)
-    {
-        if ($value === null) {
-            $this->resource = \fopen('php://temp', 'wb+');
-            return;
-        }
-        if (\is_resource($value)) {
-            $this->resource = $value;
-            return;
-        }
-        if ($this->isFile($value)) {
-            $this->setResourceFile($value);
-        }
-        if (\is_string($value)) {
-            $this->resource = \fopen('php://temp', 'wb+');
-            \fwrite($this->resource, $value);
-            \rewind($this->resource);
-            return;
-        }
-        throw new InvalidArgumentException(\sprintf(
-            'Expected resource, filename, or string. %s provided',
-            $this->getTypeDebug($value)
-        ));
-    }
-
-    /**
-     * Set resource to the specified file
-     *
-     * @param string $file filepath
-     *
-     * @return void
-     *
-     * @throws RuntimeException
-     */
-    private function setResourceFile($file)
-    {
-        \set_error_handler(function () {
-        });
-        $this->resource = \fopen($file, 'r');
-        \restore_error_handler();
-        if ($this->resource === false) {
-            throw new RuntimeException(\sprintf(
-                'The file %s cannot be opened.',
-                $file
-            ));
-        }
     }
 }

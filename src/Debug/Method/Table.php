@@ -350,18 +350,11 @@ class Table
     private function testArg($val)
     {
         if (\is_array($val)) {
-            if ($this->logEntry['args'] === array()) {
-                $this->logEntry['args'] = array($val);
-            } elseif (!$this->meta['columns']) {
-                $this->meta['columns'] = $val;
-            }
+            $this->testArgArray($val);
             return false;
         }
         if (\is_object($val)) {
-            // Traversable or other
-            if ($this->logEntry['args'] === array()) {
-                $this->logEntry['args'] = array($val);
-            }
+            $this->testArgObject($val);
             return false;
         }
         if (\is_string($val) && $this->meta['caption'] === null) {
@@ -370,6 +363,38 @@ class Table
         }
         return true;
     }
+
+    /**
+     * Should array argument be treated as table data or columns?
+     *
+     * @param array $val table() arg of type array
+     *
+     * @return void
+     */
+    private function testArgArray($val)
+    {
+        if ($this->logEntry['args'] === array()) {
+            $this->logEntry['args'] = array($val);
+        } elseif (!$this->meta['columns']) {
+            $this->meta['columns'] = $val;
+        }
+    }
+
+    /**
+     * Should object argument be treated as table data?
+     *
+     * @param array $val table() arg of type object
+     *
+     * @return void
+     */
+    private function testArgObject($val)
+    {
+        // Traversable or other
+        if ($this->logEntry['args'] === array()) {
+            $this->logEntry['args'] = array($val);
+        }
+    }
+
 
     /**
      * Update collected table info

@@ -236,33 +236,21 @@ class InternalEvents implements SubscriberInterface
         if (!\preg_match('#\b(html|json|sql|xml)\b#', $event['contentType'], $matches)) {
             return;
         }
-        $string = $event['value'];
-        $type = $matches[1];
-        $lang = $type;
-        if ($type === 'html') {
-            $lang = 'markup';
-        } elseif ($type === 'json') {
-            $string = $this->debug->stringUtil->prettyJson($string);
-        } elseif ($type === 'sql') {
-            $string = $this->debug->stringUtil->prettySql($string);
-        } elseif ($type === 'xml') {
-            $string = $this->debug->stringUtil->prettyXml($string);
-        }
+        $this->onPrettifyDo($event, $matches[1]);
+        $event['value'] = $this->debug->abstracter->crateWithVals($event['value'], array(
+            'attribs' => array(
+                'class' => 'highlight language-' . $event['highlightLang'],
+            ),
+            'addQuotes' => false,
+            'contentType' => $event['contentType'],
+            'prettified' => $event['isPrettified'],
+            'prettifiedTag' => $event['isPrettified'],
+            'visualWhiteSpace' => false,
+        ));
         if (!$this->highlightAdded) {
             $this->debug->addPlugin(new Highlight());
             $this->highlightAdded = true;
         }
-        $isPrettified = $string !== $event['value'];
-        $event['value'] = $this->debug->abstracter->crateWithVals($string, array(
-            'attribs' => array(
-                'class' => 'highlight language-' . $lang,
-            ),
-            'addQuotes' => false,
-            'contentType' => $event['contentType'],
-            'prettified' => $isPrettified,
-            'prettifiedTag' => $isPrettified,
-            'visualWhiteSpace' => false,
-        ));
         $event->stopPropagation();
     }
 
@@ -446,6 +434,37 @@ class InternalEvents implements SubscriberInterface
     private function forceErrorOutput(Error $error)
     {
         return $error->isFatal() && $this->debug->isCli() && $this->debug->getCfg('route') instanceof Stream;
+    }
+
+    /**
+     * Update event's value with prettified string
+     *
+     * @param Event  $event [description]
+     * @param [type] $type  [description]
+     *
+     * @return [type] [description]
+     */
+    private function onPrettifyDo(Event $event, $type)
+    {
+        $lang = $type;
+        $string = $event['value'];
+        switch ($type) {
+            case 'html':
+                $lang = 'markup';
+                break;
+            case 'json':
+                $string = $this->debug->stringUtil->prettyJson($string);
+                break;
+            case 'sql':
+                $string = $this->debug->stringUtil->prettySql($string);
+                break;
+            case 'xml':
+                $string = $this->debug->stringUtil->prettyXml($string);
+        }
+        $event['highlightLang'] = $lang;
+        $event['isPrettified'] = $string !== $event['value'];
+        $event['value'] = $string;
+        return $lang;
     }
 
     /**

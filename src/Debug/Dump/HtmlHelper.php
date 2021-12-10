@@ -70,6 +70,27 @@ class HtmlHelper
     }
 
     /**
+     * build php code snippet / context
+     *
+     * @param string[] $lines   lines of code
+     * @param int      $lineNum line number to highlight
+     *
+     * @return string
+     */
+    public function buildContext($lines, $lineNum)
+    {
+        return $this->debug->html->buildTag(
+            'pre',
+            array(
+                'class' => 'highlight line-numbers',
+                'data-line' => $lineNum,
+                'data-start' => \key($lines),
+            ),
+            '<code class="language-php">' . \htmlspecialchars(\implode($lines)) . '</code>'
+        );
+    }
+
+    /**
      * Wrap classname in span.classname
      * if namespaced additionally wrap namespace in span.namespace
      * If callable, also wrap with .t_operator and .t_identifier
@@ -240,26 +261,5 @@ class HtmlHelper
             ));
         }
         return $args;
-    }
-
-    /**
-     * build php code snippet / context
-     *
-     * @param string[] $lines   lines of code
-     * @param int      $lineNum line number to highlight
-     *
-     * @return string
-     */
-    private function buildContext($lines, $lineNum)
-    {
-        return $this->debug->html->buildTag(
-            'pre',
-            array(
-                'class' => 'highlight line-numbers',
-                'data-line' => $lineNum,
-                'data-start' => \key($lines),
-            ),
-            '<code class="language-php">' . \htmlspecialchars(\implode($lines)) . '</code>'
-        );
     }
 }

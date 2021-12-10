@@ -230,7 +230,7 @@ class Request extends Message
         if (!($uri instanceof UriInterface) && !($uri instanceof Uri)) {
             throw new InvalidArgumentException(\sprintf(
                 'Uri must be an instance of UriInterface or Uri, but %s provided.',
-                self::debugType($uri)
+                self::getTypeDebug($uri)
             ));
         }
         $new = clone $this;
@@ -254,7 +254,7 @@ class Request extends Message
         if (!\is_string($method)) {
             throw new InvalidArgumentException(\sprintf(
                 'HTTP method must be a string, but %s provided',
-                self::debugType($method)
+                self::getTypeDebug($method)
             ));
         }
         if ($method === '') {

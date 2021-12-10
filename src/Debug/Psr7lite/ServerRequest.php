@@ -297,7 +297,7 @@ class ServerRequest extends Request
         }
         throw new InvalidArgumentException(\sprintf(
             'Only accepts array, object and null, but %s provided.',
-            \gettype($data)
+            self::getTypeDebug($data)
         ));
     }
 
@@ -315,7 +315,7 @@ class ServerRequest extends Request
         if (!\is_array($uploadedFiles)) {
             throw new InvalidArgumentException(\sprintf(
                 'Uploaded files - expected array, but %s provided',
-                self::debugType($uploadedFiles)
+                self::getTypeDebug($uploadedFiles)
             ));
         }
         foreach ($uploadedFiles as $file) {

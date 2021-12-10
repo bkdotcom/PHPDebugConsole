@@ -13,8 +13,6 @@
 namespace bdk\Debug\Plugin;
 
 use bdk\Debug;
-use bdk\Debug\Abstraction\Abstracter;
-use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Component;
 
 /**
@@ -92,40 +90,6 @@ class LogFiles extends Component
     }
 
     /**
-     * Convert list of filepaths to a tree structure
-     *
-     * @param string[] $files          list of files
-     * @param array    $excludedCounts path => count array
-     * @param bool     $condense       whether to "condense" filepaths
-     *
-     * @return array
-     */
-    public function filesToTree($files, $excludedCounts = array(), $condense = false)
-    {
-        $tree = array();
-        foreach ($files as $filepath) {
-            $dirs = \explode('/', \trim($filepath, '/'));
-            $file = \array_pop($dirs);
-            if ($dirs) {
-                $dirs[0] = '/' . $dirs[0];
-            }
-            $node = &$this->getTreeNode($tree, $dirs);
-            $node[] = new Abstraction(Abstracter::TYPE_STRING, array(
-                'value' => $file,
-                'attribs' => array(
-                    'data-file' => $filepath,
-                ),
-            ));
-            unset($node);
-        }
-        $tree = $this->addExcludedToTree($tree, $excludedCounts);
-        if ($condense) {
-            $tree = $this->condenseTree($tree);
-        }
-        return $tree;
-    }
-
-    /**
      * Set files to display
      *
      * @param array $files list of files
@@ -135,122 +99,6 @@ class LogFiles extends Component
     public function setFiles($files)
     {
         $this->files = $files;
-    }
-
-    /**
-     * Insert 'xx omitted' info into file tree
-     *
-     * @param array $tree           file tree
-     * @param array $excludedCounts path => count array
-     *
-     * @return array modifed tree
-     */
-    private function addExcludedToTree($tree, $excludedCounts)
-    {
-        foreach ($excludedCounts as $path => $count) {
-            $dirs = \explode(DIRECTORY_SEPARATOR, $path);
-            // $dir[0] is ''
-            \array_shift($dirs);
-            $dirs[0] = '/' . $dirs[0];
-            if ($path === 'closure://function') {
-                $dirs = array($path);
-            }
-            $node = &$this->getTreeNode($tree, $dirs);
-            \array_unshift($node, new Abstraction(Abstracter::TYPE_STRING, array(
-                'value' => $count . ' omitted',
-                'attribs' => array(
-                    'class' => 'exclude-count',
-                ),
-            )));
-        }
-        return $tree;
-    }
-
-    /**
-     * Get tree node for given path
-     *
-     * @param array &$tree file tree
-     * @param array $path  path to traverse
-     *
-     * @return array reference to tree node
-     */
-    private function &getTreeNode(&$tree, $path)
-    {
-        $cur = &$tree;
-        foreach ($path as $subdir) {
-            if (!isset($cur[$subdir])) {
-                // we're adding a dir..
-                $cur[$subdir] = array();
-                $this->sortDir($cur);
-            }
-            $cur = &$cur[$subdir];
-        }
-        return $cur;
-    }
-
-    /**
-     * Reduce nesting
-     * If directory only has one child:
-     *    don't nest the child,
-     *    append child to dirname
-     *
-     * @param array $tree Tree array structure to process
-     *
-     * @return array
-     */
-    private function condenseTree($tree)
-    {
-        $out = array();
-        $stack = array(
-            array(
-                'src' => &$tree,
-                'out' => &$out,
-            ),
-        );
-        while ($stack) {
-            $cur = \array_shift($stack);
-            $this->condenseTreeFrame($cur, $stack);
-        }
-        return $out;
-    }
-
-    private function condenseTreeFrame($cur, &$stack)
-    {
-        foreach ($cur['src'] as $k => &$val) {
-            $keys = array($k);
-            while (\is_array($val)) {
-                if (\count($val) > 1) {
-                    break;
-                }
-                $vFirst = \current($val);
-                if (\is_array($vFirst) === false) {
-                    $isOmittedCount = \preg_match('/^\d+ omitted/', $vFirst) === 1;
-                    if ($isOmittedCount) {
-                        break;
-                    }
-                    $val = \implode('/', $keys) . '/' . $vFirst;
-                    if ($vFirst instanceof Abstraction) {
-                        $vFirst['value'] = $val;
-                        $val = $vFirst;
-                    }
-                    break;
-                }
-                $k = \key($val);
-                $val = &$val[$k];
-                $keys[] = $k;
-            }
-            if (!\is_array($val)) {
-                $cur['out'][] = $val;
-                continue;
-            }
-            $kOut = \implode('/', $keys);
-            // initialize output array
-            $cur['out'][$kOut] = array();
-            $stack[] = array(
-                'src' => &$val,
-                'out' => &$cur['out'][$kOut],
-            );
-        }
     }
 
     /**
@@ -353,7 +201,8 @@ class LogFiles extends Component
      */
     private function logFilesAsTree($files)
     {
-        $files = $this->filesToTree($files, $this->excludedCounts, $this->cfg['condense']);
+        $fileTree = new \bdk\Debug\Utility\FileTree();
+        $files = $fileTree->filesToTree($files, $this->excludedCounts, $this->cfg['condense']);
         $this->debug->log(
             $this->debug->abstracter->crateWithVals(
                 $files,
@@ -368,29 +217,5 @@ class LogFiles extends Component
                 'detectFiles' => true,
             ))
         );
-    }
-
-    /**
-     * sort files with directories first
-     *
-     * @param array $dir file & directory list
-     *
-     * @return void
-     */
-    private function sortDir(&$dir)
-    {
-        \uksort($dir, function ($keyA, $keyB) {
-            $aIsDir = \is_string($keyA);
-            $bIsDir = \is_string($keyB);
-            if ($aIsDir) {
-                return $bIsDir
-                    ? \strnatcasecmp($keyA, $keyB)
-                    : -1;
-            }
-            if ($bIsDir) {
-                return 1;
-            }
-            return \strnatcasecmp($keyA, $keyB);
-        });
     }
 }

@@ -268,7 +268,7 @@ class Message
         if (!\is_string($name)) {
             throw new InvalidArgumentException(\sprintf(
                 'Header name must be a string but "%s" provided.',
-                self::debugType($name)
+                self::getTypeDebug($name)
             ));
         }
         if ($name === '') {
@@ -304,7 +304,7 @@ class Message
         if (!\is_array($value)) {
             throw new InvalidArgumentException(\sprintf(
                 'The header field value only accepts string and array, but "%s" provided.',
-                self::debugType($value)
+                self::getTypeDebug($value)
             ));
         }
         if (empty($value)) {
@@ -334,7 +334,7 @@ class Message
         if (!\is_scalar($value) || \is_bool($value)) {
             throw new InvalidArgumentException(\sprintf(
                 'The header values only accept string and number, but "%s" provided.',
-                self::debugType($value)
+                self::getTypeDebug($value)
             ));
         }
 
@@ -360,15 +360,15 @@ class Message
     /**
      * Get the value's type
      *
-     * @param mixed $val Value to inspect
+     * @param mixed $value Value to inspect
      *
      * @return string
      */
-    protected static function debugType($val)
+    protected static function getTypeDebug($value)
     {
-        return \is_object($val)
-            ? \get_class($val)
-            : \gettype($val);
+        return \is_object($value)
+            ? \get_class($value)
+            : \gettype($value);
     }
 
     /**
@@ -452,7 +452,7 @@ class Message
             if (!\is_scalar($value) && $value !== null) {
                 throw new InvalidArgumentException(\sprintf(
                     'Header value must be scalar or null but %s provided.',
-                    self::debugType($value)
+                    self::getTypeDebug($value)
                 ));
             }
             return \trim((string) $value, " \t");

@@ -79,6 +79,61 @@ abstract class AbstractRoute extends Component implements RouteInterface
     }
 
     /**
+     * Process alerts
+     *
+     * By default we just output alerts like error(), info(), and warn() calls
+     *
+     * @return string
+     */
+    public function processAlerts()
+    {
+        $str = '';
+        foreach ($this->data['alerts'] as $logEntry) {
+            if ($this->channelTest($logEntry)) {
+                $str .= $this->processLogEntryViaEvent($logEntry);
+            }
+        }
+        return $str;
+    }
+
+    /**
+     * Process log entries
+     *
+     * @return string
+     */
+    public function processLog()
+    {
+        $str = '';
+        foreach ($this->data['log'] as $logEntry) {
+            if ($this->channelTest($logEntry)) {
+                $str .= $this->processLogEntryViaEvent($logEntry);
+            }
+        }
+        return $str;
+    }
+
+    /**
+     * Process summary
+     *
+     * @return string
+     */
+    public function processSummary()
+    {
+        $str = '';
+        $summaryData = $this->data['logSummary'];
+        if ($summaryData) {
+            \krsort($summaryData);
+            $summaryData = \call_user_func_array('array_merge', $summaryData);
+        }
+        foreach ($summaryData as $logEntry) {
+            if ($this->channelTest($logEntry)) {
+                $str .= $this->processLogEntryViaEvent($logEntry);
+            }
+        }
+        return $str;
+    }
+
+    /**
      * Output the log as text
      *
      * @param Event $event event object
@@ -89,12 +144,11 @@ abstract class AbstractRoute extends Component implements RouteInterface
     {
         $this->dump->crateRaw = false;
         $this->data = $this->debug->data->get();
-        $str = '';
-        $str .= $this->processAlerts();
-        $str .= $this->processSummary();
-        $str .= $this->processLog();
+        $event['return'] = ''
+            . $this->processAlerts()
+            . $this->processSummary()
+            . $this->processLog();
         $this->data = array();
-        $event['return'] .= $str;
         $this->dump->crateRaw = true;
     }
 
@@ -108,6 +162,18 @@ abstract class AbstractRoute extends Component implements RouteInterface
     public function processLogEntry(LogEntry $logEntry)
     {
         return $this->dump->processLogEntry($logEntry);
+    }
+
+    /**
+     * Set channel name regex used to test if log entry should be output
+     *
+     * @param string $regex channel regex
+     *
+     * @return void
+     */
+    public function setChannelRegex($regex)
+    {
+        $this->channelRegex = $regex;
     }
 
     /**
@@ -133,40 +199,6 @@ abstract class AbstractRoute extends Component implements RouteInterface
     }
 
     /**
-     * Process alerts
-     *
-     * By default we just output alerts like error(), info(), and warn() calls
-     *
-     * @return string
-     */
-    protected function processAlerts()
-    {
-        $str = '';
-        foreach ($this->data['alerts'] as $logEntry) {
-            if ($this->channelTest($logEntry)) {
-                $str .= $this->processLogEntryViaEvent($logEntry);
-            }
-        }
-        return $str;
-    }
-
-    /**
-     * Process log entries
-     *
-     * @return string
-     */
-    protected function processLog()
-    {
-        $str = '';
-        foreach ($this->data['log'] as $logEntry) {
-            if ($this->channelTest($logEntry)) {
-                $str .= $this->processLogEntryViaEvent($logEntry);
-            }
-        }
-        return $str;
-    }
-
-    /**
      * Publish Debug::EVENT_OUTPUT_LOG_ENTRY.
      * Return event['return'] if not empty
      * Otherwise, propagation not stopped, return result of processLogEntry()
@@ -187,27 +219,6 @@ abstract class AbstractRoute extends Component implements RouteInterface
             return $logEntry['return'];
         }
         return $this->processLogEntry($logEntry);
-    }
-
-    /**
-     * Process summary
-     *
-     * @return string
-     */
-    protected function processSummary()
-    {
-        $str = '';
-        $summaryData = $this->data['logSummary'];
-        if ($summaryData) {
-            \krsort($summaryData);
-            $summaryData = \call_user_func_array('array_merge', $summaryData);
-        }
-        foreach ($summaryData as $logEntry) {
-            if ($this->channelTest($logEntry)) {
-                $str .= $this->processLogEntryViaEvent($logEntry);
-            }
-        }
-        return $str;
     }
 
     /**
@@ -260,7 +271,7 @@ abstract class AbstractRoute extends Component implements RouteInterface
      * @param string $channelName     channelName to test
      * @param [type] $channelNameTest test string
      *
-     * @return [type] [description]
+     * @return bool
      */
     private function testChannelName($channelName, $channelNameTest)
     {

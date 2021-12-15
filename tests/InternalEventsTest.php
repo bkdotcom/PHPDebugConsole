@@ -87,7 +87,8 @@ class InternalEventsTest extends DebugTestFramework
         $this->emailCalled = true;
         $this->assertSame($this->debug->getCfg('emailTo'), $toAddr);
         $this->assertSame($this->expectedSubject, $subject);
-        $unserialized = $this->debug->getRoute('email')->unserializeLog($body, $this->debug);
+        // $unserialized = $this->debug->getRoute('email')->unserializeLog($body, $this->debug);
+        $unserialized = \bdk\Debug\Utility\SerializeLog::unserialize($body, $this->debug);
         $expect = array(
             'alerts' => $this->debug->data->get('alerts'),
             'log' => $this->debug->data->get('log'),

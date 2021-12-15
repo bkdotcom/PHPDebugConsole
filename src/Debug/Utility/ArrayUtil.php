@@ -226,7 +226,7 @@ class ArrayUtil
                 return -1;                              //   $a < $b
             }
         };
-        $what === 'val'
+        $what === 'value'
             ? \usort($array, $callback)
             : \uksort($array, $callback);
     }

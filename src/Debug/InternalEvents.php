@@ -439,10 +439,10 @@ class InternalEvents implements SubscriberInterface
     /**
      * Update event's value with prettified string
      *
-     * @param Event  $event [description]
-     * @param [type] $type  [description]
+     * @param Event  $event Event instance
+     * @param string $type  html, json, sql, or xml
      *
-     * @return [type] [description]
+     * @return string highlight lang
      */
     private function onPrettifyDo(Event $event, $type)
     {

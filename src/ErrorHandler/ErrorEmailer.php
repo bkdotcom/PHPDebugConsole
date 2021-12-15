@@ -12,6 +12,8 @@ namespace bdk\ErrorHandler;
 
 use bdk\ErrorHandler;
 use bdk\ErrorHandler\Error;
+use bdk\ErrorHandler\ErrorEmailerThrottle;
+use bdk\PubSub\Manager as EventManager;
 use bdk\PubSub\SubscriberInterface;
 
 /**
@@ -24,14 +26,16 @@ class ErrorEmailer implements SubscriberInterface
 
     /** @var array */
     protected $cfg = array();
-    protected $throttleData = array();
     protected $errTypes = array();  // populated onError
     protected $serverParams = array();
+    protected $throttle;
 
     /**
      * Constructor
      *
      * @param array $cfg config
+     *
+     * @SuppressWarnings(PHPMD.Superglobals)
      */
     public function __construct($cfg = array())
     {
@@ -44,14 +48,15 @@ class ErrorEmailer implements SubscriberInterface
             'emailMin' => 60,               // 0 = no throttle
             'emailThrottledSummary' => true,    // if errors have been throttled, should we email a summary email of throttled errors?
                                                 //    (first occurance of error is never throttled)
-            'emailThrottleFile' => __DIR__ . '/error_emails.json',
-            'emailThrottleRead' => array($this, 'throttleDataReader'),    // callable that returns throttle data
-            'emailThrottleWrite' => array($this, 'throttleDataWriter'),   // callable that writes throttle data.  receives single array param
             'emailTo' => !empty($this->serverParams['SERVER_ADMIN'])
                 ? $this->serverParams['SERVER_ADMIN']
                 : null,
             'emailTraceMask' => E_ERROR | E_WARNING | E_USER_ERROR | E_USER_NOTICE,
             'dateTimeFmt' => 'Y-m-d H:i:s T',
+            // throttle options
+            'emailThrottleFile' => __DIR__ . '/error_emails.json',
+            'emailThrottleRead' => null,    // callable that returns throttle data
+            'emailThrottleWrite' => null,   // callable that writes throttle data.  receives single array param
         );
         $this->setCfg($cfg);
     }
@@ -84,11 +89,12 @@ class ErrorEmailer implements SubscriberInterface
                 array('onErrorHighPri', PHP_INT_MAX),
                 array('onErrorLowPri', PHP_INT_MAX * -1),
             ),
+            EventManager::EVENT_PHP_SHUTDOWN => array('onPhpShutdown'),
         );
     }
 
     /**
-     * load throttle stats for passed error
+     * Add throttle stats to passed error
      *
      * @param Error $error Error instance
      *
@@ -96,8 +102,9 @@ class ErrorEmailer implements SubscriberInterface
      */
     public function onErrorHighPri(Error $error)
     {
-        $this->throttleDataRead();
-        $hash = $error['hash'];
+        if (!$this->throttle) {
+            $this->throttleInit();
+        }
         $error['email'] = ($error['type'] & $this->cfg['emailMask'])
             && $error['isFirstOccur']
             && $this->cfg['emailTo'];
@@ -109,8 +116,9 @@ class ErrorEmailer implements SubscriberInterface
         if (empty($this->errTypes)) {
             $this->errTypes = $error->getSubject()->get('errTypes');
         }
-        if (isset($this->throttleData['errors'][$hash])) {
-            $stats = \array_intersect_key($this->throttleData['errors'][$hash], $error['stats']);
+        $statsThrottle = $this->throttle->errorGet($error);
+        if ($statsThrottle) {
+            $stats = \array_intersect_key($statsThrottle, $error['stats']);
             $error['stats'] = \array_merge($error['stats'], $stats);
         }
     }
@@ -128,13 +136,33 @@ class ErrorEmailer implements SubscriberInterface
             $error['email'] = false;
         }
         if ($error['email'] && $this->cfg['emailMin'] > 0) {
-            $this->throttleDataSet($error);
-            $throttleSuccess = $this->throttleDataWrite();
+            $success = $this->throttle->errorAdd($error);
             $tsCutoff = \time() - $this->cfg['emailMin'] * 60;
-            $error['email'] = $throttleSuccess && $error['stats']['tsEmailed'] <= $tsCutoff;
+            $error['email'] = $success && $error['stats']['tsEmailed'] <= $tsCutoff;
         }
         if ($error['email']) {
             $this->emailErr($error);
+        }
+    }
+
+    /**
+     * Php shutdown event listener
+     * Send a summary of errors that have not occured recently, but have occured since notification
+     *
+     * @return void
+     */
+    public function onPhpShutdown()
+    {
+        if (!$this->throttle) {
+            return;
+        }
+        $summaryErrors = $this->throttle->getSummaryErrors();
+        if (\count($summaryErrors) > 0  && $this->cfg['emailThrottledSummary']) {
+            $this->email(
+                $this->cfg['emailTo'],
+                'Website Errors: ' . $this->serverParams['SERVER_NAME'],
+                $this->buildBodySummary($summaryErrors)
+            );
         }
     }
 
@@ -156,26 +184,16 @@ class ErrorEmailer implements SubscriberInterface
             $ret = isset($this->cfg[$mixed])
                 ? $this->cfg[$mixed]
                 : null;
-            $this->cfg[$mixed] = $newVal;
+            $mixed = array($mixed => $newVal);
         } elseif (\is_array($mixed)) {
             $ret = \array_intersect_key($this->cfg, $mixed);
-            $this->cfg = \array_merge($this->cfg, $mixed);
+        }
+        $this->cfg = \array_merge($this->cfg, $mixed);
+        if (isset($this->throttle)) {
+            $throttleCfg = $this->throttleCfg($mixed);
+            $this->throttle->setCfg($throttleCfg);
         }
         return $ret;
-    }
-
-    /**
-     * Clear throttle data
-     *
-     * @return void
-     */
-    public function throttleDataClear()
-    {
-        $this->throttleData = array(
-            'tsGarbageCollection' => \time(),
-            'errors' => array(),
-        );
-        $this->throttleDataWrite();
     }
 
     /**
@@ -184,6 +202,8 @@ class ErrorEmailer implements SubscriberInterface
      * @param Error $error Error instance
      *
      * @return string
+     *
+     * @SuppressWarnings(PHPMD.DevelopmentCodeFragment)
      */
     protected function backtraceStr(Error $error)
     {
@@ -191,7 +211,7 @@ class ErrorEmailer implements SubscriberInterface
         if (empty($backtrace) || \count($backtrace) < 2) {
             return '';
         }
-        if ($backtrace && $error['vars']) {
+        if ($error['vars']) {
             $backtrace[0]['vars'] = $error['vars'];
         }
         if ($this->cfg['emailBacktraceDumper']) {
@@ -212,13 +232,45 @@ class ErrorEmailer implements SubscriberInterface
     }
 
     /**
+     * Build error email body
+     *
+     * @param Error $error Error instance
+     *
+     * @return string
+     *
+     * @SuppressWarnings(PHPMD.Superglobals)
+     */
+    private function buildBodyError(Error $error)
+    {
+        $emailBody = ''
+            . 'datetime: ' . \date($this->cfg['dateTimeFmt']) . "\n"
+            . 'errormsg: ' . $error->getMessage() . "\n"
+            . 'errortype: ' . $error['type'] . ' (' . $error['typeStr'] . ')' . "\n"
+            . 'file: ' . $error['file'] . "\n"
+            . 'line: ' . $error['line'] . "\n"
+            . '';
+        if ($error->getSubject()->isCli === false) {
+            $emailBody .= ''
+                . 'remote_addr: ' . $this->serverParams['REMOTE_ADDR'] . "\n"
+                . 'http_host: ' . $this->serverParams['HTTP_HOST'] . "\n"
+                . 'referer: ' . (isset($this->serverParams['HTTP_REFERER']) ? $this->serverParams['HTTP_REFERER'] : 'null') . "\n"
+                . 'request_uri: ' . $this->serverParams['REQUEST_URI'] . "\n"
+                . '';
+        }
+        if (!empty($_POST)) {
+            $emailBody .= 'post params: ' . \var_export($_POST, true) . "\n";
+        }
+        return $emailBody;
+    }
+
+    /**
      * Build summary of errors that haven't occured in a while
      *
      * @param array $errors errors to include in summary
      *
      * @return string
      */
-    protected function buildSummaryBody($errors)
+    protected function buildBodySummary($errors)
     {
         $emailBody = '';
         foreach ($errors as $err) {
@@ -266,24 +318,7 @@ class ErrorEmailer implements SubscriberInterface
             $dateTimePrev = \date($this->cfg['dateTimeFmt'], $error['stats']['tsEmailed']) ?: '';
             $emailBody .= 'Error has occurred ' . $countSince . ' times since last email (' . $dateTimePrev . ').' . "\n\n";
         }
-        $emailBody .= ''
-            . 'datetime: ' . \date($this->cfg['dateTimeFmt']) . "\n"
-            . 'errormsg: ' . $error->getMessage() . "\n"
-            . 'errortype: ' . $error['type'] . ' (' . $error['typeStr'] . ')' . "\n"
-            . 'file: ' . $error['file'] . "\n"
-            . 'line: ' . $error['line'] . "\n"
-            . '';
-        if ($error->getSubject()->isCli === false) {
-            $emailBody .= ''
-                . 'remote_addr: ' . $this->serverParams['REMOTE_ADDR'] . "\n"
-                . 'http_host: ' . $this->serverParams['HTTP_HOST'] . "\n"
-                . 'referer: ' . (isset($this->serverParams['HTTP_REFERER']) ? $this->serverParams['HTTP_REFERER'] : 'null') . "\n"
-                . 'request_uri: ' . $this->serverParams['REQUEST_URI'] . "\n"
-                . '';
-        }
-        if (!empty($_POST)) {
-            $emailBody .= 'post params: ' . \var_export($_POST, true) . "\n";
-        }
+        $emailBody .= $this->buildBodyError($error);
         if ($error['type'] & $this->cfg['emailTraceMask']) {
             $backtraceStr = $this->backtraceStr($error);
             $emailBody .= "\n";
@@ -316,178 +351,37 @@ class ErrorEmailer implements SubscriberInterface
     }
 
     /**
-     * Write string to file / creates file if doesn't exist
+     * Get config options that apply to throttling
      *
-     * @param string $file filepath
-     * @param string $str  string to write
-     *
-     * @return int|false number of bytes written or false on error
-     */
-    protected function fileWrite($file, $str)
-    {
-        $return = false;
-        $dir = \dirname($file);
-        if (!\file_exists($dir)) {
-            \mkdir($dir, 0755, true);
-        }
-        if (\is_writable($file) || !\file_exists($file) && \is_writeable($dir)) {
-            $return = \file_put_contents($file, $str);
-        }
-        return $return;
-    }
-
-    /**
-     * Remove errors in throttleData that haven't occured recently
-     * If error(s) have occured since they were last emailed, a summary email may be sent
-     *
-     * @return void
-     */
-    protected function throttleDataGarbageCollection()
-    {
-        $sendEmailSummary = false;
-        $summaryErrors = array();
-        $tsNow     = \time();
-        $tsCutoff  = $tsNow - $this->cfg['emailMin'] * 60;
-        if ($this->throttleData['tsGarbageCollection'] > $tsCutoff) {
-            // we've recently performed garbage collection
-            return;
-        }
-        $this->throttleData['tsGarbageCollection'] = $tsNow;
-        foreach ($this->throttleData['errors'] as $k => $err) {
-            if ($err['tsEmailed'] > $tsCutoff) {
-                continue;
-            }
-            // it's been a while since this error was emailed
-            if ($err['emailedTo'] !== $this->cfg['emailTo']) {
-                // it was emailed to a different address
-                if ($err['countSince'] < 1 || $err['tsEmailed'] < $tsNow - 60 * 60 * 24) {
-                    unset($this->throttleData['errors'][$k]);
-                }
-                continue;
-            }
-            unset($this->throttleData['errors'][$k]);
-            if ($err['countSince'] > 0) {
-                $sendEmailSummary = $this->cfg['emailThrottledSummary'];
-                $summaryErrors[] = $err;
-            }
-        }
-        if ($sendEmailSummary) {
-            $this->email(
-                $this->cfg['emailTo'],
-                'Website Errors: ' . $this->serverParams['SERVER_NAME'],
-                $this->buildSummaryBody($summaryErrors)
-            );
-        }
-    }
-
-    /**
-     * Load & populate $this->throttleData if not alrady imported
-     *
-     * Uses cfg[emailThrottleRead] callable if set, otherwise, reads from cfg['emailThrottleFile']
-     *
-     * @return void
-     */
-    protected function throttleDataRead()
-    {
-        if ($this->throttleData) {
-            // already imported
-            return;
-        }
-        $throttleData = \is_callable($this->cfg['emailThrottleRead'])
-            ? \call_user_func($this->cfg['emailThrottleRead'])
-            : array();
-        if (!\is_array($throttleData)) {
-            $throttleData = array();
-        }
-        $this->throttleData = \array_merge(array(
-            'tsGarbageCollection' => \time(),
-            'errors' => array(),
-        ), $throttleData);
-    }
-
-    /**
-     * Read throttle data from file
-     *
-     * This is the default callable for reading throttle data
+     * @param array $cfg config options
      *
      * @return array
      */
-    protected function throttleDataReader()
+    private function throttleCfg($cfg = array())
     {
-        $throttleData = array();
-        $file = $this->cfg['emailThrottleFile'];
-        if ($file && \is_readable($file)) {
-            $throttleData = \file_get_contents($file);
-            $throttleData = \json_decode($throttleData, true);
+        $cfg = \array_intersect_key($cfg ?: $this->cfg, \array_flip(array(
+            'emailMin',
+            'emailThrottleFile',
+            'emailThrottleRead',
+            'emailThrottleWrite',
+            'emailTo',
+        )));
+        foreach (array('emailThrottleRead','emailThrottleWrite') as $key) {
+            if (isset($cfg[$key]) === false) {
+                unset($cfg[$key]);
+            }
         }
-        return $throttleData;
+        return $cfg;
     }
 
     /**
-     * Adds/Updates this error's throttle data
-     *
-     * @param Error $error Error instance
+     * Initialize throttle data
      *
      * @return void
      */
-    protected function throttleDataSet(Error $error)
+    private function throttleInit()
     {
-        $hash = $error['hash'];
-        $tsNow = \time();
-        $tsCutoff = $tsNow - $this->cfg['emailMin'] * 60;
-        if ($error['stats']['tsEmailed'] > $tsCutoff) {
-            // This error was recently emailed
-            $this->throttleData['errors'][$hash]['countSince']++;
-            return;
-        }
-        // hasn't been emailed recently
-        $this->throttleData['errors'][$hash] = array(
-            'file'       => $error['file'],
-            'line'       => $error['line'],
-            'errType'    => $error['type'],
-            'errMsg'     => $error['message'],
-            'tsEmailed'  => $tsNow,
-            'emailedTo'  => $this->cfg['emailTo'],
-            'countSince' => 0,
-        );
-    }
-
-    /**
-     * Export/Save/Write throttle data
-     *
-     * Uses cfg[emailThrottleWrite] callable if set, otherwise, writes to cfg['emailThrottleFile']
-     *
-     * @return bool
-     */
-    protected function throttleDataWrite()
-    {
-        $return = false;
-        $this->throttleDataGarbageCollection();
-        if (\is_callable($this->cfg['emailThrottleWrite'])) {
-            $return = \call_user_func($this->cfg['emailThrottleWrite'], $this->throttleData);
-            if (!$return) {
-                \error_log('ErrorEmailer: emailThrottleWrite() returned false');
-            }
-        }
-        return $return;
-    }
-
-    /**
-     * Write throttle data to file
-     *
-     * @param array $throttleData throttle data
-     *
-     * @return bool
-     */
-    protected function throttleDataWriter($throttleData)
-    {
-        $return = false;
-        if ($this->cfg['emailThrottleFile']) {
-            $wrote = $this->fileWrite($this->cfg['emailThrottleFile'], \json_encode($throttleData, JSON_PRETTY_PRINT));
-            if ($wrote !== false) {
-                $return = true;
-            }
-        }
-        return $return;
+        $cfg = $this->throttleCfg();
+        $this->throttle = new ErrorEmailerThrottle($cfg);
     }
 }

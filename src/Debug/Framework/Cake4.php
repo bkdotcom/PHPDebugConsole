@@ -145,7 +145,7 @@ class Cake4 extends BasePlugin
     /**
      * `Debug::EVENT_MIDDLEWARE` event subscriber
      *
-     * @param Event $event [description]
+     * @param Event $event Event instance
      *
      * @return void
      */

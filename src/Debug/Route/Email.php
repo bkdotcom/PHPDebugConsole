@@ -13,8 +13,6 @@
 namespace bdk\Debug\Route;
 
 use bdk\Debug;
-use bdk\Debug\Abstraction\Abstracter;
-use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Route\RouteInterface;
 use bdk\PubSub\Event;
@@ -78,73 +76,6 @@ class Email implements RouteInterface
     }
 
     /**
-     * serialize log for emailing
-     *
-     * @param array $data log data to serialize
-     *
-     * @return string
-     */
-    public static function serializeLog($data)
-    {
-        foreach (array('alerts','log','logSummary') as $what) {
-            foreach ($data[$what] as $i => $v) {
-                if ($what === 'logSummary') {
-                    foreach ($v as $i2 => $logEntry) {
-                        $data['logSummary'][$i][$i2] = \array_values($logEntry->export());
-                    }
-                    continue;
-                }
-                $data[$what][$i] = \array_values($v->export());
-            }
-        }
-        $str = \serialize($data);
-        if (\function_exists('gzdeflate')) {
-            $str = \gzdeflate($str);
-        }
-        $str = \chunk_split(\base64_encode($str), 124);
-        return "START DEBUG\n"
-            . $str    // chunk_split appends a "\r\n"
-            . 'END DEBUG';
-    }
-
-    /**
-     * Use to unserialize the log serialized by emailLog
-     *
-     * @param string $str   serialized log data
-     * @param Debug  $debug (optional) Debug instance
-     *
-     * @return array|false
-     *
-     * @SuppressWarnings(PHPMD.StaticAccess)
-     */
-    public static function unserializeLog($str, Debug $debug = null)
-    {
-        if (!$debug) {
-            $debug = Debug::getInstance();
-        }
-        $strStart = 'START DEBUG';
-        $strEnd = 'END DEBUG';
-        $regex = '/' . $strStart . '[\r\n]+(.+)[\r\n]+' . $strEnd . '/s';
-        $matches = array();
-        if (\preg_match($regex, $str, $matches)) {
-            $str = $matches[1];
-        }
-        $str = $debug->stringUtil->isBase64Encoded($str)
-            ? \base64_decode($str)
-            : false;
-        if ($str && \function_exists('gzinflate')) {
-            $strInflated = \gzinflate($str);
-            if ($strInflated) {
-                $str = $strInflated;
-            }
-        }
-        $data = self::unserializeSafe($str, array(
-            'bdk\\Debug\\Abstraction\\Abstraction',
-        ));
-        return self::unserializeLogLogEntrify($debug, $data);
-    }
-
-    /**
      * Build email body
      *
      * @return string
@@ -189,7 +120,7 @@ class Email implements RouteInterface
         $debugClass = \get_class($this->debug);
         $data['version'] = $debugClass::VERSION;
         \ksort($data);
-        return $body . self::serializeLog($data);
+        return $body . \bdk\Debug\Utility\SerializeLog::serialize($data);
     }
 
     /**
@@ -240,98 +171,5 @@ class Email implements RouteInterface
             $errorStr .= \sprintf(' Line %s: (%s) %s', $error['line'], $typeStr, $error['message']) . "\n";
         }
         return $errorStr;
-    }
-
-    /**
-     * Convert pre 3.0 serialized log entry args to 3.0
-     *
-     * Prior to to v3.0, abstractions were stored as an array
-     * Find these arrays and convert them to Abstraction objects
-     *
-     * @param array $args log entry args (unserialized)
-     *
-     * @return array
-     */
-    private static function unserializeLogBackward($args)
-    {
-        foreach ($args as $k => $v) {
-            if (!\is_array($v)) {
-                continue;
-            }
-            if (isset($v['debug']) && $v['debug'] === Abstracter::ABSTRACTION) {
-                $type = $v['type'];
-                unset($v['debug'], $v['type']);
-                if ($type === Abstracter::TYPE_OBJECT) {
-                    $v['properties'] = self::unserializeLogBackward($v['properties']);
-                }
-                $args[$k] = new Abstraction($type, $v);
-                continue;
-            }
-            $args[$k] = self::unserializeLogBackward($v);
-        }
-        return $args;
-    }
-
-    /**
-     * for unserialized log, Convert logEntry arrays to log entry objects
-     *
-     * @param Debug $debug Debug instance
-     * @param array $data  unserialized log data
-     *
-     * @return array log data
-     */
-    private static function unserializeLogLogEntrify(Debug $debug, $data)
-    {
-        $ver = isset($data['version'])
-            ? $data['version']
-            : '2.3' ;
-        $backward = \version_compare($ver, '3.0', '<');
-        foreach (array('alerts','log','logSummary') as $what) {
-            foreach ($data[$what] as $i => $v) {
-                if ($what === 'logSummary') {
-                    foreach ($v as $i2 => $v2) {
-                        if ($backward) {
-                            $v2[1] = self::unserializeLogBackward($v2[1]);
-                        }
-                        $data['logSummary'][$i][$i2] = new LogEntry($debug, $v2[0], $v2[1], $v2[2]);
-                    }
-                    continue;
-                }
-                if ($backward) {
-                    $v[1] = self::unserializeLogBackward($v[1]);
-                }
-                $data[$what][$i] = new LogEntry($debug, $v[0], $v[1], $v[2]);
-            }
-        }
-        return $data;
-    }
-
-    /**
-     * Unserialize while only allowing the specified classes to be unserialized
-     *
-     * @param string   $str            serialized string
-     * @param string[] $allowedClasses allowed class names
-     *
-     * @return mixed
-     */
-    private static function unserializeSafe($str, $allowedClasses = array())
-    {
-        if (\version_compare(PHP_VERSION, '7.0', '>=')) {
-            // 2nd param is PHP >= 7.0 (get a warning: unserialize() expects exactly 1 parameter, 2 given)
-            return \unserialize($str, array(
-                'allowed_classes' => $allowedClasses,
-            ));
-        }
-        // There's a possibility this pattern may be found inside a string (false positive)
-        $regex = '#[CO]:(\d+):"([\w\\\\]+)":\d+:#';
-        \preg_match_all($regex, $str, $matches, PREG_SET_ORDER);
-        foreach ($matches as $set) {
-            if (\strlen($set[2]) !== $set[1]) {
-                continue;
-            } elseif (!\in_array($set[2], $allowedClasses)) {
-                return false;
-            }
-        }
-        return \unserialize($str);
     }
 }

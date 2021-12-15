@@ -83,8 +83,8 @@ class Error extends Event
      */
     public function __construct(ErrorHandler $errHandler, $errType, $errMsg, $file, $line, $vars = array())
     {
-        $this->subject = $errHandler;
         unset($vars['GLOBALS']);
+        $this->subject = $errHandler;
         $this->values = array(
             'type'      => $errType,                    // int: aka severity / level
             'typeStr'   => self::$errTypes[$errType],   // string: friendly version of 'type'

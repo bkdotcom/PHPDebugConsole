@@ -10,7 +10,7 @@
  * @version   v3.0
  */
 
-namespace bdk\Debug\Route;
+namespace bdk\Debug\Route\Html;
 
 use bdk\Debug\LogEntry;
 use bdk\Debug\Plugin\Highlight;
@@ -21,7 +21,7 @@ use bdk\ErrorHandler\Error;
 /**
  * Output a summary of errors
  */
-class HtmlErrorSummary
+class ErrorSummary
 {
 
     protected $debug;

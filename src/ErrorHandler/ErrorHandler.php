@@ -21,6 +21,7 @@ use bdk\PubSub\Manager as EventManager;
  * Able to register multiple onError "callback" functions
  *
  * @property \bdk\Backtrace $backtrace Backtrace instance
+ * @property bool           $isCli
  */
 class ErrorHandler
 {

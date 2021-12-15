@@ -244,7 +244,7 @@ class StatementInfo extends Component
      * @param string $sql            SQL query
      * @param string $key            param key
      * @param string $value          param value
-     * @param string $quotationChars [description]
+     * @param string $quotationChars quotation characters
      *
      * @return string
      */

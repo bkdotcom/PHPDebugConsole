@@ -95,7 +95,7 @@ class ErrorLevel
      * @param array  $constants constant values (sans E_ALL)
      * @param string $phpVer    php version
      *
-     * @return [type] [description]
+     * @return int
      */
     private static function calculateEall($constants, $phpVer)
     {

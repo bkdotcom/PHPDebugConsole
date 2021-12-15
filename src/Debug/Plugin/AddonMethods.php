@@ -436,7 +436,7 @@ class AddonMethods implements SubscriberInterface
     /**
      * Validate plugin
      *
-     * @param [type] $plugin [description]
+     * @param AssetProviderInterface|SubscriberInterface $plugin PHPDebugCpnsole plugin
      *
      * @return void
      * @throws InvalidArgumentException

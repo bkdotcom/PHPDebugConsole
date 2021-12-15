@@ -124,6 +124,29 @@ class LogEnv implements SubscriberInterface
     }
 
     /**
+     * Log if common extensions are not loaded
+     *
+     * @return void
+     */
+    private function checkCommonExtensions()
+    {
+        $extensionsCheck = array('curl','mbstring');
+        foreach ($extensionsCheck as $extension) {
+            if (\extension_loaded($extension) === true) {
+                continue;
+            }
+            $this->debug->warn(
+                $extension . ' extension is not loaded',
+                $this->debug->meta(array(
+                    'detectFiles' => false,
+                    'file' => null,
+                    'line' => null,
+                ))
+            );
+        }
+    }
+
+    /**
      * Check request for probable sessionId cookie or query-param
      *
      * @return string|null
@@ -196,9 +219,76 @@ class LogEnv implements SubscriberInterface
         );
         $this->debug = $this->debug->rootInstance->getChannel('php', $channelOpts);
         $this->logPhpInfo();
-        $this->logPhpInfoEr();
+        $this->logPhpEr();
         $this->logServerVals();
         $this->debug = $debugWas;
+    }
+
+    /**
+     * Log Error Reporting settings if
+     * PHP's error reporting !== (E_ALL | E_STRICT)
+     * PHPDebugConsole is not logging (E_ALL | E_STRICT)
+     *
+     * @return void
+     */
+    private function logPhpEr()
+    {
+        if (!$this->debug->getCfg('logEnvInfo.errorReporting', Debug::CONFIG_DEBUG)) {
+            return;
+        }
+        $this->logPhpErPhp();
+        $this->logPhpErDebug();
+    }
+
+    /**
+     * Log Debug's errorReporting setting
+     *
+     * @return void
+     */
+    private function logPhpErDebug()
+    {
+        $msgLines = array();
+        $eAll = E_ALL | E_STRICT;
+        $errorReporting = $this->debug->errorHandler->errorReporting();
+        $errorReportingRaw = $this->debug->errorHandler->getCfg('errorReporting');
+        if ($errorReporting !== $eAll) {
+            $errReportingStr = $this->debug->errorLevel->toConstantString($errorReporting);
+            $msgLine = 'PHPDebugConsole\'s errorHandler is using a errorReporting value of '
+                . '`%c' . $errReportingStr . '%c`';
+            if ($errorReportingRaw === 'system') {
+                $msgLine = 'PHPDebugConsole\'s errorHandler is set to "system" (not all errors will be shown)';
+            } elseif ($errorReporting === \error_reporting()) {
+                $msgLine = 'PHPDebugConsole\'s errorHandler is also using a errorReporting value of '
+                    . '`%c' . $errReportingStr . '%c`';
+            }
+            $msgLines[] = $msgLine;
+        }
+        $msg = \implode("\n", $msgLines);
+        if ($msg) {
+            $this->logWithSubstitution($msg);
+        }
+    }
+
+    /**
+     * Log PHP's error_reporting setting
+     *
+     * @return void
+     */
+    private function logPhpErPhp()
+    {
+        $msgLines = array();
+        $eAll = E_ALL | E_STRICT;
+        if (\in_array(\error_reporting(), array(-1, $eAll)) === false) {
+            $errorReporting = $this->debug->errorHandler->errorReporting();
+            $msgLines[] = 'PHP\'s %cerror_reporting%c is set to `%c' . $this->debug->errorLevel->toConstantString() . '%c` rather than `%cE_ALL | E_STRICT%c`';
+            if ($errorReporting === $eAll) {
+                $msgLines[] = 'PHPDebugConsole is disregarding %cerror_reporting%c value (this is configurable)';
+            }
+        }
+        $msg = \implode("\n", $msgLines);
+        if ($msg) {
+            $this->logWithSubstitution($msg);
+        }
     }
 
     /**
@@ -219,86 +309,8 @@ class LogEnv implements SubscriberInterface
             'name' => 'expose_php',
             'valCompare' => false,
         ));
-        $extensionsCheck = array('curl','mbstring');
-        $extensionsCheck = \array_filter($extensionsCheck, function ($extension) {
-            return !\extension_loaded($extension);
-        });
-        if ($extensionsCheck) {
-            $this->debug->warn(
-                'These common extensions are not loaded:',
-                $extensionsCheck,
-                $this->debug->meta(array(
-                    'detectFiles' => false,
-                    'file' => null,
-                    'line' => null,
-                ))
-            );
-        }
+        $this->checkCommonExtensions();
         $this->logXdebug();
-    }
-
-    /**
-     * Log Error Reporting settings if
-     * PHP's error reporting !== (E_ALL | E_STRICT)
-     * PHPDebugConsole is not logging (E_ALL | E_STRICT)
-     *
-     * @return void
-     */
-    private function logPhpInfoEr()
-    {
-        if (!$this->debug->getCfg('logEnvInfo.errorReporting', Debug::CONFIG_DEBUG)) {
-            return;
-        }
-        $msgLines = $this->logPhpInfoErMsgLines();
-        if (!$msgLines) {
-            return;
-        }
-        $msgLines = \implode("\n", $msgLines);
-        $args = array($msgLines);
-        $styleMono = 'font-family:monospace; opacity:0.8;';
-        $styleReset = 'font-family:inherit; white-space:pre-wrap;';
-        $cCount = \substr_count($msgLines, '%c');
-        for ($i = 0; $i < $cCount; $i += 2) {
-            $args[] = $styleMono;
-            $args[] = $styleReset;
-        }
-        $args[] = $this->debug->meta(array(
-            'detectFiles' => false,
-            'file' => null,
-            'line' => null,
-        ));
-        \call_user_func_array(array($this->debug, 'warn'), $args);
-    }
-
-    /**
-     * Get the error reporting message lines
-     *
-     * @return array
-     */
-    private function logPhpInfoErMsgLines()
-    {
-        $msgLines = array();
-        $errorReportingRaw = $this->debug->errorHandler->getCfg('errorReporting');
-        $errorReporting = $this->debug->errorHandler->errorReporting();
-        if (\in_array(\error_reporting(), array(-1, E_ALL | E_STRICT)) === false) {
-            $msgLines[] = 'PHP\'s %cerror_reporting%c is set to `%c' . $this->debug->errorLevel->toConstantString() . '%c` rather than `%cE_ALL | E_STRICT%c`';
-            if ($errorReporting === (E_ALL | E_STRICT)) {
-                $msgLines[] = 'PHPDebugConsole is disregarding %cerror_reporting%c value (this is configurable)';
-            }
-        }
-        if ($errorReporting !== (E_ALL | E_STRICT)) {
-            $errReportingStr = $this->debug->errorLevel->toConstantString($errorReporting);
-            $msgLine = 'PHPDebugConsole\'s errorHandler is using a errorReporting value of '
-                . '`%c' . $errReportingStr . '%c`';
-            if ($errorReportingRaw === 'system') {
-                $msgLine = 'PHPDebugConsole\'s errorHandler is set to "system" (not all errors will be shown)';
-            } elseif ($errorReporting === \error_reporting()) {
-                $msgLine = 'PHPDebugConsole\'s errorHandler is also using a errorReporting value of '
-                    . '`%c' . $errReportingStr . '%c`';
-            }
-            $msgLines[] = $msgLine;
-        }
-        return $msgLines;
     }
 
     /**
@@ -439,9 +451,7 @@ class LogEnv implements SubscriberInterface
                 'valCompare' => false
             ),
         );
-        foreach ($settings as $setting) {
-            $this->assertSetting($setting);
-        }
+        \array_walk($settings, array($this, 'assertSetting'));
         $this->debug->log('session.cache_limiter', \ini_get('session.cache_limiter'));
         if (\session_module_name() === 'files') {
             // aka session.save_handler
@@ -503,6 +513,31 @@ class LogEnv implements SubscriberInterface
         }
         $this->debug->assert(false, '%cdate.timezone%c is not set', 'font-family:monospace;', '');
         $this->debug->log('date_default_timezone_get()', \date_default_timezone_get());
+    }
+
+    /**
+     * Log the message with style substitution
+     *
+     * @param string $msg Message with "%c wordsToMonospace %c"
+     *
+     * @return void
+     */
+    private function logWithSubstitution($msg)
+    {
+        $args = array($msg);
+        $styleMono = 'font-family:monospace; opacity:0.8;';
+        $styleReset = 'font-family:inherit; white-space:pre-wrap;';
+        $cCount = \substr_count($msg, '%c');
+        for ($i = 0; $i < $cCount; $i += 2) {
+            $args[] = $styleMono;
+            $args[] = $styleReset;
+        }
+        $args[] = $this->debug->meta(array(
+            'detectFiles' => false,
+            'file' => null,
+            'line' => null,
+        ));
+        \call_user_func_array(array($this->debug, 'warn'), $args);
     }
 
     /**

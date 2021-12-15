@@ -2,6 +2,7 @@
 
 namespace bdk\DebugTests\Plugin;
 
+use bdk\Debug\LogEntry;
 use bdk\DebugTests\DebugTestFramework;
 
 /**
@@ -21,7 +22,7 @@ class LogEnvTest extends DebugTestFramework
         $refDebug->setValue($onBootstrap, $this->debug);
         */
 
-        $refMethod = new \ReflectionMethod($logEnv, 'logPhpInfoEr');
+        $refMethod = new \ReflectionMethod($logEnv, 'logPhpEr');
         $refMethod->setAccessible(true);
 
         $this->debug->addPlugin($logEnv);
@@ -62,46 +63,62 @@ class LogEnvTest extends DebugTestFramework
             Test debug != all (= "system")
         */
         $this->debug->setCfg('errorReporting', 'system');
-        // $refMethod->invoke($onBootstrap);
-        // $logEnv->onPluginInit(new Event($this->debug));
         $refMethod->invoke($logEnv);
-        $this->testMethod(null, array(), array(
-            'entry' => array(
+        $log = $this->debug->data->get('log');
+        $log = \array_slice($log, -2);
+        $log = \array_map(function (LogEntry $logEntry) {
+            return $logEntry->export();
+        }, $log);
+        // echo 'log = ' . \json_encode($log, JSON_PRETTY_PRINT) . "\n";
+        $expect =  array(
+            array(
                 'method' => 'warn',
                 'args' => array(
-                    'PHP\'s %cerror_reporting%c is set to `%cE_ALL & ~E_STRICT%c` rather than `%cE_ALL | E_STRICT%c`' . "\n"
-                        . 'PHPDebugConsole\'s errorHandler is set to "system" (not all errors will be shown)',
+                    'PHP\'s %cerror_reporting%c is set to `%cE_ALL & ~E_STRICT%c` rather than `%cE_ALL | E_STRICT%c`',
                     'font-family:monospace; opacity:0.8;',
                     'font-family:inherit; white-space:pre-wrap;',
                     'font-family:monospace; opacity:0.8;',
                     'font-family:inherit; white-space:pre-wrap;',
                     'font-family:monospace; opacity:0.8;',
-                    'font-family:inherit; white-space:pre-wrap;',
+                    'font-family:inherit; white-space:pre-wrap;'
                 ),
                 'meta' => array(
                     'detectFiles' => false,
+                    'uncollapse' => true,
                     'file' => null,
                     'line' => null,
-                    'uncollapse' => true,
-                ),
+                )
             ),
-        ));
+            array(
+                'method' => 'warn',
+                'args' => array(
+                    'PHPDebugConsole\'s errorHandler is set to "system" (not all errors will be shown)'
+                ),
+                'meta' => array(
+                    'detectFiles' => false,
+                    'uncollapse' => true,
+                    'file' => null,
+                    'line' => null,
+                )
+            )
+        );
+        $this->assertSame($expect, $log);
 
         /*
             Test debug != all (but has same value as error_reporting)
         */
         $this->debug->setCfg('errorReporting', E_ALL & ~E_STRICT);
-        // $refMethod->invoke($onBootstrap);
-        // $logEnv->onPluginInit(new Event($this->debug));
         $refMethod->invoke($logEnv);
-        $this->testMethod(null, array(), array(
-            'entry' => array(
+        $log = $this->debug->data->get('log');
+        $log = \array_slice($log, -2);
+        $log = \array_map(function (LogEntry $logEntry) {
+            return $logEntry->export();
+        }, $log);
+        $expect =  array(
+            array(
                 'method' => 'warn',
                 'args' => array(
-                    'PHP\'s %cerror_reporting%c is set to `%cE_ALL & ~E_STRICT%c` rather than `%cE_ALL | E_STRICT%c`' . "\n"
-                        . 'PHPDebugConsole\'s errorHandler is also using a errorReporting value of `%cE_ALL & ~E_STRICT%c`',
-                    'font-family:monospace; opacity:0.8;',
-                    'font-family:inherit; white-space:pre-wrap;',
+                    'PHP\'s %cerror_reporting%c is set to `%cE_ALL & ~E_STRICT%c` rather than `%cE_ALL | E_STRICT%c`',
                     'font-family:monospace; opacity:0.8;',
                     'font-family:inherit; white-space:pre-wrap;',
                     'font-family:monospace; opacity:0.8;',
@@ -111,12 +128,27 @@ class LogEnvTest extends DebugTestFramework
                 ),
                 'meta' => array(
                     'detectFiles' => false,
+                    'uncollapse' => true,
                     'file' => null,
                     'line' => null,
-                    'uncollapse' => true,
-                ),
+                )
             ),
-        ));
+            array(
+                'method' => 'warn',
+                'args' => array(
+                    'PHPDebugConsole\'s errorHandler is also using a errorReporting value of `%cE_ALL & ~E_STRICT%c`',
+                    'font-family:monospace; opacity:0.8;',
+                    'font-family:inherit; white-space:pre-wrap;',
+                ),
+                'meta' => array(
+                    'detectFiles' => false,
+                    'uncollapse' => true,
+                    'file' => null,
+                    'line' => null,
+                )
+            )
+        );
+        $this->assertSame($expect, $log);
 
         /*
             Test debug != all (value different than error_reporting)
@@ -125,6 +157,7 @@ class LogEnvTest extends DebugTestFramework
         // $refMethod->invoke($onBootstrap);
         // $logEnv->onPluginInit(new Event($this->debug));
         $refMethod->invoke($logEnv);
+        /*
         $this->testMethod(null, array(), array(
             'entry' => array(
                 'method' => 'warn',
@@ -148,6 +181,47 @@ class LogEnvTest extends DebugTestFramework
                 ),
             ),
         ));
+        */
+        $log = $this->debug->data->get('log');
+        $log = \array_slice($log, -2);
+        $log = \array_map(function (LogEntry $logEntry) {
+            return $logEntry->export();
+        }, $log);
+        $expect =  array(
+            array(
+                'method' => 'warn',
+                'args' => array(
+                    'PHP\'s %cerror_reporting%c is set to `%cE_ALL & ~E_STRICT%c` rather than `%cE_ALL | E_STRICT%c`',
+                    'font-family:monospace; opacity:0.8;',
+                    'font-family:inherit; white-space:pre-wrap;',
+                    'font-family:monospace; opacity:0.8;',
+                    'font-family:inherit; white-space:pre-wrap;',
+                    'font-family:monospace; opacity:0.8;',
+                    'font-family:inherit; white-space:pre-wrap;',
+                ),
+                'meta' => array(
+                    'detectFiles' => false,
+                    'uncollapse' => true,
+                    'file' => null,
+                    'line' => null,
+                )
+            ),
+            array(
+                'method' => 'warn',
+                'args' => array(
+                    'PHPDebugConsole\'s errorHandler is using a errorReporting value of `%cE_ALL & ~E_STRICT & ~E_DEPRECATED%c`',
+                    'font-family:monospace; opacity:0.8;',
+                    'font-family:inherit; white-space:pre-wrap;',
+                ),
+                'meta' => array(
+                    'detectFiles' => false,
+                    'uncollapse' => true,
+                    'file' => null,
+                    'line' => null,
+                )
+            )
+        );
+        $this->assertSame($expect, $log);
 
         /*
             Reset

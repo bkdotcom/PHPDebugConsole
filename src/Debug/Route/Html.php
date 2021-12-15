@@ -14,6 +14,8 @@ namespace bdk\Debug\Route;
 
 use bdk\Debug;
 use bdk\Debug\AssetProviderInterface;
+use bdk\Debug\Route\Html\ErrorSummary;
+use bdk\Debug\Route\Html\Tabs;
 use bdk\PubSub\Event;
 
 /**
@@ -23,6 +25,7 @@ class Html extends AbstractRoute
 {
 
     protected $errorSummary;
+    protected $tabs;
     protected $cfg = array();
     private $assets = array(
         'css' => array(),
@@ -37,7 +40,8 @@ class Html extends AbstractRoute
     public function __construct(Debug $debug)
     {
         parent::__construct($debug);
-        $this->errorSummary = new HtmlErrorSummary($this, $debug->errorHandler);
+        $this->errorSummary = new ErrorSummary($this, $debug->errorHandler);
+        $this->tabs = new Tabs($this);
         $this->cfg = array(
             'css' => '',            // additional "override" css
             'drawer' => true,
@@ -243,11 +247,11 @@ class Html extends AbstractRoute
         )) . ">\n";
         $str .= $this->buildStyleTag();
         $str .= $this->buildScriptTag();
-        $str .= $this->buildHeaderTag();
+        $str .= $this->buildHeader();
         if ($this->cfg['outputScript']) {
             $str .= '<div class="loading">Loading <i class="fa fa-spinner fa-pulse fa-2x fa-fw" aria-hidden="true"></i></div>' . "\n";
         }
-        $str .= $this->buildTabPanes();
+        $str .= $this->tabs->buildTabPanes();
         $str .= '</div>' . "\n"; // close .debug
         $str = \preg_replace('#(<ul[^>]*>)\s+</ul>#', '$1</ul>', $str); // ugly, but want to be able to use :empty
         $str = \strtr($str, array(
@@ -290,12 +294,12 @@ class Html extends AbstractRoute
      *
      * @return string
      */
-    private function buildHeaderTag()
+    private function buildHeader()
     {
         return '<header class="debug-bar debug-menu-bar">'
             . 'PHPDebugConsole'
             . '<nav role="tablist"' . ($this->cfg['outputScript'] ? ' style="display:none;"' : '') . '>'
-                . $this->buildTabList()
+                . $this->tabs->buildTabList()
             . '</nav>'
             . '</header>' . "\n";
     }
@@ -332,126 +336,6 @@ class Html extends AbstractRoute
     }
 
     /**
-     * Build tab selection links
-     *
-     * @return string html
-     */
-    private function buildTabList()
-    {
-        $channels = $this->debug->getChannelsTop();
-        $channels = $this->sortTabChannels($channels);
-        if (\count($channels) < 2) {
-            return '';
-        }
-        $html = '';
-        foreach ($channels as $name => $instance) {
-            $isActive = false;
-            $nameTab = $name;
-            if ($instance === $this->debug) {
-                $isActive = true;
-                $nameTab = 'Log';
-            }
-            $target = '.' . $this->nameToClassname($name);
-            $channelIcon = $instance->getCfg('channelIcon', Debug::CONFIG_DEBUG);
-            if ($channelIcon && \strpos($channelIcon, '<') === false) {
-                $channelIcon = '<i class="' . $channelIcon . '"></i>';
-            }
-            $html .= $this->debug->html->buildTag(
-                'a',
-                array(
-                    'class' => array(
-                        'nav-link',
-                        $isActive ? 'active' : null,
-                    ),
-                    'data-target' => $target,
-                    'data-toggle' => 'tab',
-                    'role' => 'tab',
-                ),
-                $channelIcon . $nameTab
-            ) . "\n";
-        }
-        return $html;
-    }
-
-    /**
-     * Build tab panes/content
-     *
-     * @return string html
-     */
-    private function buildTabPanes()
-    {
-        $tabNames = \array_keys($this->debug->getChannelsTop());
-        $html = '<div class="tab-panes"' . ($this->cfg['outputScript'] ? ' style="display:none;"' : '') . '>' . "\n";
-        /*
-            Sort channel names.
-            We want "Request / Response" & "Files" to come first in case we're not outputting tab UI
-        */
-        $this->debug->arrayUtil->sortWithOrder(
-            $tabNames,
-            array('Request / Response', 'Files')
-        );
-        foreach ($tabNames as $name) {
-            $html .= $this->buildTabPane($name);
-        }
-        $html .= '</div>' . "\n"; // close .tab-panes
-        return $html;
-    }
-
-    /**
-     * Build primary log content
-     *
-     * @param string $name channel name
-     *
-     * @return string html
-     */
-    private function buildTabPane($name)
-    {
-        $this->channelRegex = '#^' . \preg_quote($name, '#') . '(\.|$)#';
-        $isActive = $name === $this->debug->getCfg('channelName', Debug::CONFIG_DEBUG);
-        $str = '<div' . $this->debug->html->buildAttribString(array(
-            'class' => array(
-                'tab-pane',
-                $isActive ? 'active' : null,
-                $isActive ? 'tab-primary' : null,
-                $this->nameToClassname($name),
-            ),
-            'data-options' => array(
-                'sidebar' => $this->cfg['sidebar'],
-            ),
-            'role' => 'tabpanel',
-        )) . ">\n";
-        $str .= '<div class="tab-body">' . "\n";
-
-        $str .= $this->processAlerts();
-        /*
-            If outputing script, initially hide the output..
-            this will help page load performance (fewer redraws)... by magnitudes
-        */
-        $str .= '<ul' . $this->debug->html->buildAttribString(array(
-            'class' => 'debug-log-summary group-body',
-        )) . ">\n" . $this->processSummary() . '</ul>' . "\n";
-        $str .= '<ul' . $this->debug->html->buildAttribString(array(
-            'class' => 'debug-log group-body',
-        )) . ">\n" . $this->processLog() . '</ul>' . "\n";
-
-        $str .= '</div>' . "\n"; // close .tab-body
-        $str .= '</div>' . "\n"; // close .tab-pane
-        return $str;
-    }
-
-    /**
-     * Translate channel name to classname
-     *
-     * @param string $name channelName
-     *
-     * @return string
-     */
-    private function nameToClassname($name)
-    {
-        return 'debug-tab-' . \preg_replace('/\W+/', '-', \strtolower($name));
-    }
-
-    /**
      * {@inheritDoc}
      */
     protected function postSetCfg($cfg = array(), $prev = array())
@@ -459,31 +343,5 @@ class Html extends AbstractRoute
         foreach (array('filepathCss', 'filepathScript') as $k) {
             $this->cfg[$k] = \preg_replace('#^\./?#', __DIR__ . '/../', $this->cfg[$k]);
         }
-    }
-
-    /**
-     * Sort channels by channelSort & channelName
-     *
-     * @param Debug[] $channels Debug instances
-     *
-     * @return Debug[]
-     */
-    private function sortTabChannels($channels)
-    {
-        \uasort($channels, function (Debug $channelA, Debug $channelB) {
-            $sortA = $channelA->getCfg('channelSort', Debug::CONFIG_DEBUG);
-            $sortB = $channelB->getCfg('channelSort', Debug::CONFIG_DEBUG);
-            $nameA = $channelA->getCfg('channelName', Debug::CONFIG_DEBUG);
-            $nameB = $channelB->getCfg('channelName', Debug::CONFIG_DEBUG);
-            // "root" channel should come first
-            if ($channelA === $this->debug) {
-                return -1;
-            }
-            if ($channelB === $this->debug) {
-                return 1;
-            }
-            return $sortB - $sortA ?: \strcasecmp($nameA, $nameB);
-        });
-        return $channels;
     }
 }

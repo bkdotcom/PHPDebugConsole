@@ -119,7 +119,7 @@ class WampCrate
     /**
      * Crate abstraction
      *
-     * @param Abstraction $abs [description]
+     * @param Abstraction $abs Abstraction instance
      *
      * @return Abstraction
      */

@@ -186,8 +186,8 @@ class FileTree
     /**
      * Walk branch to test for multiple branches
      *
-     * @param array $keys [description]
-     * @param array $val  [description]
+     * @param array $keys path/directories
+     * @param array $val  tree node
      *
      * @return array
      */

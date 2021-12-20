@@ -10,11 +10,11 @@
  * @version   v3.0
  */
 
-namespace bdk\Debug\Dump;
+namespace bdk\Debug\Dump\Html;
 
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
-use bdk\Debug\Dump\Html;
+use bdk\Debug\Dump\Html\Value as ValDumper;
 
 /**
  * Output object as HTML
@@ -26,16 +26,17 @@ class HtmlString
 
     protected $debug;
     protected $html;
+    protected $valDumper;
 
 	/**
      * Constructor
      *
-     * @param Html $html Dump\Html instance
+     * @param ValDumper $valDumper Dump\Html\Value instance
      */
-	public function __construct(Html $html)
+	public function __construct(ValDumper $valDumper)
 	{
-		$this->debug = $html->debug;
-        $this->html = $html;
+		$this->debug = $valDumper->debug;
+        $this->valDumper = $valDumper;
 	}
 
     /**
@@ -49,13 +50,13 @@ class HtmlString
     public function dump($val, Abstraction $abs = null)
     {
         if (\is_numeric($val)) {
-            $this->html->checkTimestamp($val);
+            $this->valDumper->checkTimestamp($val);
         }
         if ($this->detectFiles && $this->debug->utility->isFile($val)) {
-            $this->html->setDumpOpt('attribs.data-file', true);
+            $this->valDumper->setDumpOpt('attribs.data-file', true);
         }
-        if (!$this->html->getDumpOpt('addQuotes')) {
-            $this->html->setDumpOpt('attribs.class.__push__', 'no-quotes');
+        if (!$this->valDumper->getDumpOpt('addQuotes')) {
+            $this->valDumper->setDumpOpt('attribs.class.__push__', 'no-quotes');
         }
         if ($abs) {
             return $this->dumpAbs($abs);
@@ -73,22 +74,24 @@ class HtmlString
      */
     public function dumpAsSubstitution($val, $opts)
     {
-        if ($val instanceof Abstraction && $val['typeMore'] === Abstracter::TYPE_STRING_BINARY) {
-            if (!$val['value']) {
-                return 'Binary data not collected';
-            }
-            $str = $this->debug->utf8->dump($val['value']);
-            $diff = $val['strlen']
-                ? $val['strlen'] - \strlen($val['value'])
-                : 0;
-            if ($diff) {
-                $str .= '[' . $diff . ' more bytes (not logged)]';
-            }
-            return $str;
+        $isBinary = $val instanceof Abstraction && $val['typeMore'] === Abstracter::TYPE_STRING_BINARY;
+        if ($isBinary === false) {
+            // we do NOT wrap in <span>...  log('<a href="%s">link</a>', $url);
+            $opts['tagName'] = null;
+            return $this->valDumper->dump($val, $opts);
         }
-        // we do NOT wrap in <span>...  log('<a href="%s">link</a>', $url);
-        $opts['tagName'] = null;
-        return $this->html->dump($val, $opts);
+        // TYPE_STRING_BINARY
+        if (!$val['value']) {
+            return 'Binary data not collected';
+        }
+        $str = $this->debug->utf8->dump($val['value']);
+        $diff = $val['strlen']
+            ? $val['strlen'] - \strlen($val['value'])
+            : 0;
+        if ($diff) {
+            $str .= '[' . $diff . ' more bytes (not logged)]';
+        }
+        return $str;
     }
 
     /**
@@ -139,7 +142,7 @@ class HtmlString
             $val .= '<span class="maxlen">&hellip; ' . ($abs['strlen'] - $strlenDumped) . ' more bytes (not logged)</span>';
         }
         if ($abs['prettifiedTag']) {
-            $this->html->setDumpOpt('postDump', $this->buildPrettifiedPostDump($abs));
+            $this->valDumper->setDumpOpt('postDump', $this->buildPrettifiedPostDump($abs));
         }
         return $val;
     }
@@ -153,11 +156,11 @@ class HtmlString
      */
     private function dumpClassname(Abstraction $abs)
     {
-        $val = $this->html->markupIdentifier($abs['value']);
+        $val = $this->debug->getDump('html')->valDumper->markupIdentifier($abs['value']);
         $parsed = $this->debug->html->parseTag($val);
-        $attribs = $this->html->getDumpOpt('attribs');
+        $attribs = $this->valDumper->getDumpOpt('attribs');
         $attribs = $this->debug->arrayUtil->mergeDeep($attribs, $parsed['attribs']);
-        $this->html->setDumpOpt('attribs', $attribs);
+        $this->valDumper->setDumpOpt('attribs', $attribs);
         return $parsed['innerhtml'];
     }
 
@@ -198,9 +201,9 @@ class HtmlString
      */
     private function dumpBinary($val, Abstraction $abs)
     {
-        $tagName = $this->html->getDumpOpt('tagName');
-        $this->html->setDumpOpt('tagName', null);
-        $this->html->setDumpOpt('postDump', function ($dumped) use ($abs, $tagName) {
+        $tagName = $this->valDumper->getDumpOpt('tagName');
+        $this->valDumper->setDumpOpt('tagName', null);
+        $this->valDumper->setDumpOpt('postDump', function ($dumped) use ($abs, $tagName) {
             $lis = array();
             if ($abs['contentType']) {
                 $lis[] = '<li>mime type = <span class="t_string">' . $abs['contentType'] . '</span></li>';
@@ -241,19 +244,19 @@ class HtmlString
      */
     private function dumpEncoded($val, Abstraction $abs)
     {
-        $attribs = $this->html->getDumpOpt('attribs');
+        $attribs = $this->valDumper->getDumpOpt('attribs');
         $attribs['class'][] = 'no-quotes';
         $attribs['class'][] = 't_' . $abs['type'];
-        $typeMore = $abs['typeMore'];
+        $typeMore = $abs['typeMore']; // dumpEncodedUpdateVals may set to null
         $vals = array(
             'labelDecoded' => 'Decoded',
             'labelRaw' => 'Raw',
-            'valDecoded' => $this->html->dump($abs['valueDecoded']),
+            'valDecoded' => $this->valDumper->dump($abs['valueDecoded']),
             'valRaw' => $this->debug->html->buildTag('span', $attribs, $val),
         );
         $vals = $this->dumpEncodedUpdateVals($vals, $abs);
         $val = $this->debug->html->buildTag(
-            $this->html->getDumpOpt('tagName'),
+            $this->valDumper->getDumpOpt('tagName'),
             array(
                 'class' => 'string-encoded tabs-container',
                 'data-type' => $typeMore,
@@ -270,7 +273,7 @@ class HtmlString
                 . '{valDecoded}'
             . '</div>' . "\n"
         );
-        $this->html->setDumpOpt('tagName', null);
+        $this->valDumper->setDumpOpt('tagName', null);
         return $this->debug->stringUtil->interpolate($val, $vals);
     }
 
@@ -284,8 +287,7 @@ class HtmlString
      */
     private function dumpEncodedUpdateVals($vals, Abstraction $abs)
     {
-        $typeMore = $abs['typeMore'];
-        switch ($typeMore) {
+        switch ($abs['typeMore']) {
             case Abstracter::TYPE_STRING_BASE64:
                 $vals['labelDecoded'] = 'decoded';
                 $vals['labelRaw'] = 'base64';
@@ -298,7 +300,7 @@ class HtmlString
                 $vals['labelRaw'] = 'json';
                 if ($abs['prettified'] || $abs['strlen']) {
                     $abs['typeMore'] = null; // unset typeMore to prevent loop
-                    $vals['valRaw'] = $this->html->dump($abs);
+                    $vals['valRaw'] = $this->valDumper->dump($abs);
                 }
                 break;
             case Abstracter::TYPE_STRING_SERIALIZED:
@@ -318,7 +320,7 @@ class HtmlString
      */
     private function dumpHelper($val)
     {
-        $opts = $this->html->getDumpOpt();
+        $opts = $this->valDumper->getDumpOpt();
         $val = $this->debug->utf8->dump($val, array(
             'sanitizeNonBinary' => $opts['sanitize'],
             'useHtml' => true,

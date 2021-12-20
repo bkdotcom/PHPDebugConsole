@@ -105,7 +105,7 @@ class Config
     {
         $this->debug = $debug;
         $this->valuesPending['errorEmailer']['emailBacktraceDumper'] = function ($backtrace) {
-            return $this->debug->getDump('text')->dump($backtrace);
+            return $this->debug->getDump('text')->valDumper->dump($backtrace);
         };
     }
 

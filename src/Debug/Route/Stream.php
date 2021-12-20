@@ -42,8 +42,8 @@ class Stream extends AbstractRoute
     public function __construct(Debug $debug)
     {
         parent::__construct($debug);
-        if (!$this->dump) {
-            $this->dump = $debug->getDump('text');
+        if (!$this->dumper) {
+            $this->dumper = $debug->getDump('text');
         }
     }
 
@@ -166,7 +166,7 @@ class Stream extends AbstractRoute
         if (!$this->fileHandle) {
             return;
         }
-        $this->dump = $this->ansiCheck()
+        $this->dumper = $this->ansiCheck()
             ? $this->debug->getDump('textAnsi')
             : $this->debug->getDump('text');
     }

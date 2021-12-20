@@ -13,8 +13,7 @@
 namespace bdk\Debug\Dump;
 
 use bdk\Debug\Abstraction\Abstracter;
-use bdk\Debug\Abstraction\Abstraction;
-use bdk\Debug\Abstraction\AbstractObject;
+use bdk\Debug\Dump\TextValue;
 use bdk\Debug\LogEntry;
 
 /**
@@ -44,7 +43,6 @@ class Text extends Base
             'multiple' => ', ',
         ),
     );
-    protected $valDepth = 0;
 
     /**
      * Return log entry as text
@@ -70,6 +68,28 @@ class Text extends Base
     }
 
     /**
+     * Cooerce value to string
+     *
+     * @param mixed $val  value
+     * @param array $opts $options passed to dump
+     *
+     * @return string
+     */
+    public function substitutionAsString($val, $opts)
+    {
+        // function array dereferencing = php 5.4
+        $type = $this->debug->abstracter->getType($val)[0];
+        if ($type === Abstracter::TYPE_ARRAY) {
+            $count = \count($val);
+            return 'array(' . $count . ')';
+        }
+        if ($type === Abstracter::TYPE_OBJECT) {
+            return (string) $val;   // __toString or className
+        }
+        return $this->valDumper->dump($val, $opts);
+    }
+
+    /**
      * Convert all arguments to text and join them together.
      *
      * @param array $args arguments
@@ -84,7 +104,7 @@ class Text extends Base
             $typeMore2 = $typeMore === Abstracter::TYPE_ABSTRACTION
                 ? $v['typeMore']
                 : $typeMore;
-            $args[$i] = $this->dump($v, array(
+            $args[$i] = $this->valDumper->dump($v, array(
                 'addQuotes' => $i !== 0 || $typeMore2 === Abstracter::TYPE_STRING_NUMERIC,
                 'type' => $type,
                 'typeMore' => $typeMore,
@@ -110,209 +130,16 @@ class Text extends Base
     }
 
     /**
-     * Dump array as text
+     * Get value dumper
      *
-     * @param array $array Array to display
-     *
-     * @return string
-     *
-     * @SuppressWarnings(PHPMD.DevelopmentCodeFragment)
+     * @return \bdk\Debug\Dump\BaseValue
      */
-    protected function dumpArray($array)
+    protected function getValDumper()
     {
-        $isNested = $this->valDepth > 0;
-        $this->valDepth++;
-        $array = parent::dumpArray($array);
-        $str = \trim(\print_r($array, true));
-        $str = \preg_replace('#^Array\n\(#', 'array(', $str);
-        $str = \preg_replace('#^array\s*\(\s+\)#', 'array()', $str); // single-lineify empty array
-        if ($isNested) {
-            $str = \str_replace("\n", "\n    ", $str);
+        if (!$this->valDumper) {
+            $this->valDumper = new TextValue($this);
         }
-        return $str;
-    }
-
-    /**
-     * Dump boolean
-     *
-     * @param bool $val boolean value
-     *
-     * @return string
-     */
-    protected function dumpBool($val)
-    {
-        return $val ? 'true' : 'false';
-    }
-
-    /**
-     * Dump float value
-     *
-     * @param float $val float value
-     *
-     * @return float|string
-     */
-    protected function dumpFloat($val)
-    {
-        if ($val === Abstracter::TYPE_FLOAT_INF) {
-            return 'INF';
-        }
-        if ($val === Abstracter::TYPE_FLOAT_NAN) {
-            return 'NaN';
-        }
-        $date = $this->checkTimestamp($val);
-        return $date
-            ? '📅 ' . $val . ' (' . $date . ')'
-            : $val;
-    }
-
-    /**
-     * Dump null value
-     *
-     * @return string
-     */
-    protected function dumpNull()
-    {
-        return 'null';
-    }
-
-    /**
-     * Dump object as text
-     *
-     * @param Abstraction $abs Object Abstraction instance
-     *
-     * @return string
-     */
-    protected function dumpObject(Abstraction $abs)
-    {
-        if ($abs['isRecursion']) {
-            return $abs['className'] . ' *RECURSION*';
-        }
-        if ($abs['isExcluded']) {
-            return $abs['className'] . ' NOT INSPECTED';
-        }
-        $isNested = $this->valDepth > 0;
-        $this->valDepth++;
-        $str = $abs['className'] . "\n"
-            . $this->dumpObjectProperties($abs)
-            . $this->dumpObjectMethods($abs);
-        $str = \trim($str);
-        if ($isNested) {
-            $str = \str_replace("\n", "\n    ", $str);
-        }
-        return $str;
-    }
-
-    /**
-     * Dump object methods as text
-     *
-     * @param Abstraction $abs Object Abstraction instance
-     *
-     * @return string html
-     */
-    protected function dumpObjectMethods(Abstraction $abs)
-    {
-        $collectMethods = $abs['cfgFlags'] & AbstractObject::COLLECT_METHODS;
-        $outputMethods = $abs['cfgFlags'] & AbstractObject::OUTPUT_METHODS;
-        if (!$collectMethods || !$outputMethods) {
-            return '';
-        }
-        $str = '';
-        $counts = array(
-            'public' => 0,
-            'protected' => 0,
-            'private' => 0,
-            'magic' => 0,
-        );
-        foreach ($abs['methods'] as $info) {
-            $counts[ $info['visibility'] ] ++;
-        }
-        foreach ($counts as $vis => $count) {
-            if ($count > 0) {
-                $str .= '    ' . $vis . ': ' . $count . "\n";
-            }
-        }
-        $header = $str
-            ? 'Methods:'
-            : 'Methods: none!';
-        return '  ' . $header . "\n" . $str;
-    }
-
-    /**
-     * Dump object properties as text
-     *
-     * @param Abstraction $abs Object Abstraction instance
-     *
-     * @return string
-     */
-    protected function dumpObjectProperties(Abstraction $abs)
-    {
-        $str = '';
-        $propHeader = '';
-        if (isset($abs['methods']['__get'])) {
-            $str .= '    ✨ This object has a __get() method' . "\n";
-        }
-        foreach ($abs['properties'] as $name => $info) {
-            $name = \str_replace('debug.', '', $name);
-            $vis = (array) $info['visibility'];
-            foreach ($vis as $i => $v) {
-                if (\in_array($v, array('magic','magic-read','magic-write'))) {
-                    $vis[$i] = '✨ ' . $v;    // "sparkles" there is no magic-wand unicode char
-                } elseif ($v === 'private' && $info['inheritedFrom']) {
-                    $vis[$i] = '🔒 ' . $v;
-                }
-            }
-            $vis = \implode(' ', $vis);
-            $str .= $info['debugInfoExcluded']
-                ? '    (' . $vis . ' excluded) ' . $name . "\n"
-                : '    (' . $vis . ') ' . $name . ' = ' . $this->dump($info['value']) . "\n";
-        }
-        $propHeader = $str
-            ? 'Properties:'
-            : 'Properties: none!';
-        return '  ' . $propHeader . "\n" . $str;
-    }
-
-    /**
-     * Dump string
-     *
-     * @param string      $val string value
-     * @param Abstraction $abs (optional) full abstraction
-     *
-     * @return string
-     */
-    protected function dumpString($val, Abstraction $abs = null)
-    {
-        $addQuotes = $this->getDumpOpt('addQuotes');
-        if (\is_numeric($val)) {
-            $date = $this->checkTimestamp($val);
-            if ($addQuotes) {
-                $val = '"' . $val . '"';
-            }
-            return $date
-                ? '📅 ' . $val . ' (' . $date . ')'
-                : $val;
-        }
-        $val = $this->debug->utf8->dump($val);
-        if ($addQuotes) {
-            $val = '"' . $val . '"';
-        }
-        $diff = $abs && $abs['strlen']
-            ? $abs['strlen'] - \strlen($abs['value'])
-            : 0;
-        if ($diff) {
-            $val .= '[' . $diff . ' more bytes (not logged)]';
-        }
-        return $val;
-    }
-
-    /**
-     * Dump undefined
-     *
-     * @return string
-     */
-    protected function dumpUndefined()
-    {
-        return 'undefined';
+        return $this->valDumper;
     }
 
     /**
@@ -336,11 +163,11 @@ class Text extends Base
         $wrap = array('》','《');
         $args = $logEntry['args'];
         if ($logEntry->containsSubstitutions()) {
-            $args = $this->processSubstitutions($args, array(
+            $args = $this->substitution->process($args, array(
                 'replace' => true,
                 'style' => false,
             ));
-            $args[0] = $this->dump($args[0], array(
+            $args[0] = $this->valDumper->dump($args[0], array(
                 'addQuotes' => false,
             ));
         }
@@ -358,7 +185,7 @@ class Text extends Base
     {
         $args = $logEntry['args'];
         if ($logEntry->containsSubstitutions()) {
-            $args = $this->processSubstitutions($args, array(
+            $args = $this->substitution->process($args, array(
                 'replace' => true,
                 'style' => false,
             ));
@@ -398,10 +225,10 @@ class Text extends Base
         ), $logEntry['meta']);
         $label = \array_shift($args);
         if ($meta['isFuncName']) {
-            $label = $this->markupIdentifier($label);
+            $label = $this->valDumper->markupIdentifier($label);
         }
         foreach ($args as $k => $v) {
-            $args[$k] = $this->dump($v);
+            $args[$k] = $this->valDumper->dump($v);
         }
         $argStr = \implode(', ', $args);
         if (!$argStr) {
@@ -429,27 +256,5 @@ class Text extends Base
             \array_unshift($logEntry['args'], $meta['caption']);
         }
         return $this->buildArgString($logEntry['args']);
-    }
-
-    /**
-     * Cooerce value to string
-     *
-     * @param mixed $val  value
-     * @param array $opts $options passed to dump
-     *
-     * @return string
-     */
-    protected function substitutionAsString($val, $opts)
-    {
-        // function array dereferencing = php 5.4
-        $type = $this->debug->abstracter->getType($val)[0];
-        if ($type === Abstracter::TYPE_ARRAY) {
-            $count = \count($val);
-            return 'array(' . $count . ')';
-        }
-        if ($type === Abstracter::TYPE_OBJECT) {
-            return (string) $val;   // __toString or className
-        }
-        return $this->dump($val, $opts);
     }
 }

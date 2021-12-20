@@ -14,10 +14,9 @@ namespace bdk\Debug\Dump;
 
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
-use bdk\Debug\Abstraction\Abstraction;
-use bdk\Debug\Dump\HtmlObject;
-use bdk\Debug\Dump\HtmlString;
-use bdk\Debug\Dump\HtmlTable;
+use bdk\Debug\Dump\Html\Helper;
+use bdk\Debug\Dump\Html\Table;
+use bdk\Debug\Dump\Html\Value;
 use bdk\Debug\LogEntry;
 
 /**
@@ -38,15 +37,8 @@ class Html extends Base
     /** @var array LogEntry meta attribs */
     protected $logEntryAttribs = array();
 
-
     /** @var \bdk\Debug\Utility\Html */
     protected $html;
-
-    /** @var HtmlString string dumper */
-    protected $string;
-
-    /** @var HtmlObject */
-    protected $lazyObject;
 
     /** @var HtmlTable */
     protected $lazyTable;
@@ -59,116 +51,8 @@ class Html extends Base
     public function __construct(Debug $debug)
     {
         parent::__construct($debug);
-        $this->helper = new HtmlHelper($this, $debug);
+        $this->helper = new Helper($this);
         $this->html = $debug->html;
-        $this->string = new HtmlString($this);
-    }
-
-    /**
-     * Is value a timestamp?
-     * Add classname & title if so
-     *
-     * Extends Base
-     *
-     * @param mixed $val value to check
-     *
-     * @return string|false
-     */
-    public function checkTimestamp($val)
-    {
-        $date = parent::checkTimestamp($val);
-        if ($date) {
-            $this->setDumpOpt('postDump', function ($dumped, $opts) use ($val, $date) {
-                $attribs = array(
-                    'class' => array('timestamp', 'value-container'),
-                    'data-type' => $opts['type'],
-                    'title' => $date,
-                );
-                if ($opts['tagName'] === 'td') {
-                    $wrapped = $this->html->buildTag('span', $attribs, $val);
-                    return $this->html->buildTag(
-                        'td',
-                        array(
-                            'class' => 't_' . $opts['type']
-                        ),
-                        $wrapped
-                    );
-                }
-                return $this->html->buildTag('span', $attribs, $dumped);
-            });
-            return $date;
-        }
-        return false;
-    }
-
-    /**
-     * Dump value as html
-     *
-     * @param mixed $val  value to dump
-     * @param array $opts options for string values
-     *                      addQuotes, sanitize, visualWhitespace, etc
-     *
-     * @return string
-     */
-    public function dump($val, $opts = array())
-    {
-        $opts = $this->setDumpOptDefaults($val, $opts);
-        $val = parent::dump($val, $opts);
-        $this->dumpOptions['attribs']['class'][] = 't_' . $this->dumpOptions['type'];
-        if ($this->dumpOptions['typeMore'] !== null) {
-            $this->dumpOptions['attribs']['data-type-more'] = \trim($this->dumpOptions['typeMore']);
-        }
-        $tagName = $this->dumpOptions['tagName'];
-        if ($tagName === '__default__') {
-            $tagName = $this->dumpOptions['type'] === Abstracter::TYPE_OBJECT
-                ? 'div'
-                : 'span';
-        }
-        if ($tagName) {
-            $val = $this->html->buildTag($tagName, $this->dumpOptions['attribs'], $val);
-        }
-        if ($this->dumpOptions['postDump']) {
-            $val = \call_user_func($this->dumpOptions['postDump'], $val, $this->dumpOptions);
-        }
-        return $val;
-    }
-
-    /**
-     * Get "option" of value being dumped
-     *
-     * @param string $what (optional) name of option to get (ie sanitize, type, typeMore)
-     *
-     * @return mixed
-     */
-    public function getDumpOpt($what = null)
-    {
-        $val = parent::getDumpOpt($what);
-        if ($what === 'tagName' && $val === '__default__') {
-            $val = 'span';
-            if (parent::getDumpOpt('type') === Abstracter::TYPE_OBJECT) {
-                $val = 'div';
-            }
-        }
-        return $val;
-    }
-
-    /**
-     * Wrap classname in span.classname
-     * if namespaced additionally wrap namespace in span.namespace
-     * If callable, also wrap with .t_operator and .t_identifier
-     *
-     * Extends Base
-     *
-     * @param mixed  $val     classname or classname(::|->)name (method/property/const)
-     * @param string $tagName ("span") html tag to use
-     * @param array  $attribs (optional) additional html attributes for classname span
-     * @param bool   $wbr     (false)
-     *
-     * @return string
-     */
-    public function markupIdentifier($val, $tagName = 'span', $attribs = array(), $wbr = false)
-    {
-        return $this->helper->markupIdentifier($val, $tagName, $attribs, $wbr);
     }
 
     /**
@@ -186,7 +70,7 @@ class Html extends Base
         if (!isset($this->channels[$channelName]) && $channelName !== $this->channelNameRoot . '.phpError') {
             $this->channels[$channelName] = $logEntry->getSubject();
         }
-        $this->string->detectFiles = $meta['detectFiles'];
+        $this->valDumper->string->detectFiles = $meta['detectFiles'];
         $this->logEntryAttribs = $this->debug->arrayUtil->mergeDeep(array(
             'class' => array('m_' . $logEntry['method']),
             'data-channel' => $channelName !== $this->channelNameRoot
@@ -205,208 +89,35 @@ class Html extends Base
     }
 
     /**
-     * Set "option" of value being dumped
+     * Coerce value to string
      *
-     * @param array|string $what name of value to set (or key/value array)
-     * @param mixed        $val  value
+     * Extends Base
      *
-     * @return void
+     * @param mixed $val  value
+     * @param array $opts $options passed to dump
+     *
+     * @return string
      */
-    public function setDumpOpt($what, $val = null)
+    public function substitutionAsString($val, $opts)
     {
-        if ($what === 'attribs' && empty($val['class'])) {
-            // make sure class is set
-            $val['class'] = array();
+        // function array dereferencing = php 5.4
+        $type = $this->debug->abstracter->getType($val)[0];
+        if ($type === Abstracter::TYPE_STRING) {
+            return $this->valDumper->string->dumpAsSubstitution($val, $opts);
         }
-        parent::setDumpOpt($what, $val);
-    }
-
-    /**
-     * Dump array as html
-     *
-     * @param array $array array
-     *
-     * @return string html
-     */
-    protected function dumpArray($array)
-    {
-        if (empty($array)) {
+        if ($type === Abstracter::TYPE_ARRAY) {
+            $count = \count($val);
             return '<span class="t_keyword">array</span>'
-                . '<span class="t_punct">()</span>';
+                . '<span class="t_punct">(</span>' . $count . '<span class="t_punct">)</span>';
         }
-        $opts = \array_merge(array(
-            'asFileTree' => false,
-            'expand' => null,
-            'showListKeys' => true,
-        ), $this->getDumpOpt());
-        if ($opts['expand'] !== null) {
-            $this->setDumpOpt('attribs.data-expand', $opts['expand']);
+        if ($type === Abstracter::TYPE_OBJECT) {
+            $opts['tagName'] = null;
+            $toStr = (string) $val; // objects __toString or its classname
+            return $toStr === $val['className']
+                ? $this->valDumper->markupIdentifier($toStr)
+                : $this->valDumper->dump($toStr, $opts);
         }
-        if ($opts['asFileTree']) {
-            $this->setDumpOpt('attribs.class.__push__', 'array-file-tree');
-        }
-        $showKeys = $opts['showListKeys'] || !$this->debug->arrayUtil->isList($array);
-        $html = '<span class="t_keyword">array</span>'
-            . '<span class="t_punct">(</span>' . "\n"
-            . '<ul class="array-inner list-unstyled">' . "\n";
-        foreach ($array as $key => $val) {
-            $html .= $this->dumpArrayValue($key, $val, $showKeys);
-        }
-        $html .= '</ul>'
-            . '<span class="t_punct">)</span>';
-        return $html;
-    }
-
-    /**
-     * Dump an array key/value pair
-     *
-     * @param int|string $key     key
-     * @param mixed      $val     value
-     * @param bool       $withKey include key with value?
-     *
-     * @return string
-     */
-    private function dumpArrayValue($key, $val, $withKey)
-    {
-        return $withKey
-            ? "\t" . '<li>'
-                . $this->html->buildTag(
-                    'span',
-                    array(
-                        'class' => array(
-                            't_key',
-                            't_int' => \is_int($key),
-                        ),
-                    ),
-                    $this->dump($key, array('tagName' => null)) // don't wrap it
-                )
-                . '<span class="t_operator">=&gt;</span>'
-                . $this->dump($val)
-            . '</li>' . "\n"
-            : "\t" . $this->dump($val, array('tagName' => 'li')) . "\n";
-    }
-
-    /**
-     * Dump boolean
-     *
-     * @param bool $val boolean value
-     *
-     * @return string
-     */
-    protected function dumpBool($val)
-    {
-        return $val ? 'true' : 'false';
-    }
-
-    /**
-     * Dump "Callable" as html
-     *
-     * @param Abstraction $abs callable abstraction
-     *
-     * @return string
-     */
-    protected function dumpCallable(Abstraction $abs)
-    {
-        return (!$abs['hideType'] ? '<span class="t_type">callable</span> ' : '')
-            . $this->markupIdentifier($abs);
-    }
-
-    /**
-     * Dump "const" abstration as html
-     *
-     * Object constant or method param's default value
-     *
-     * @param Abstraction $abs const abstraction
-     *
-     * @return string
-     */
-    protected function dumpConst(Abstraction $abs)
-    {
-        $this->setDumpOpt('attribs.title', $abs['value']
-            ? 'value: ' . $this->debug->getDump('text')->dump($abs['value'])
-            : null);
-        return $this->markupIdentifier($abs['name']);
-    }
-
-    /**
-     * Dump float value
-     *
-     * @param float $val float value
-     *
-     * @return float|string
-     */
-    protected function dumpFloat($val)
-    {
-        $this->checkTimestamp($val);
-        if ($val === Abstracter::TYPE_FLOAT_INF) {
-            return 'INF';
-        }
-        if ($val === Abstracter::TYPE_FLOAT_NAN) {
-            return 'NaN';
-        }
-        return $val;
-    }
-
-    /**
-     * Dump null value
-     *
-     * @return string
-     */
-    protected function dumpNull()
-    {
-        return 'null';
-    }
-
-    /**
-     * Dump object as html
-     *
-     * @param Abstraction $abs Object Abstraction instance
-     *
-     * @return string
-     */
-    protected function dumpObject(Abstraction $abs)
-    {
-        /*
-            Were we debugged from inside or outside of the object?
-        */
-        $this->setDumpOpt('attribs.data-accessible', $abs['scopeClass'] === $abs['className']
-            ? 'private'
-            : 'public');
-        return $this->object->dump($abs);
-    }
-
-    /**
-     * Dump recursion (array recursion)
-     *
-     * @return string
-     */
-    protected function dumpRecursion()
-    {
-        $this->setDumpOpt('tagName', null); // don't wrap value span
-        return '<span class="t_keyword">array</span> <span class="t_recursion">*RECURSION*</span>';
-    }
-
-    /**
-     * Dump string
-     *
-     * @param string      $val string value
-     * @param Abstraction $abs (optional) full abstraction
-     *
-     * @return string
-     */
-    protected function dumpString($val, Abstraction $abs = null)
-    {
-        return $this->string->dump($val, $abs);
-    }
-
-    /**
-     * Dump undefined
-     *
-     * @return string
-     */
-    protected function dumpUndefined()
-    {
-        return '';
+        return $this->valDumper->dump($val);
     }
 
     /**
@@ -422,19 +133,6 @@ class Html extends Base
     }
 
     /**
-     * Getter for this->object
-     *
-     * @return HtmlObject
-     */
-    protected function getObject()
-    {
-        if (!$this->lazyObject) {
-            $this->lazyObject = new HtmlObject($this, $this->helper, $this->html);
-        }
-        return $this->lazyObject;
-    }
-
-    /**
      * Getter for this->table
      *
      * @return HtmlTable
@@ -442,9 +140,22 @@ class Html extends Base
     protected function getTable()
     {
         if (!$this->lazyTable) {
-            $this->lazyTable = new HtmlTable($this);
+            $this->lazyTable = new Table($this);
         }
         return $this->lazyTable;
+    }
+
+    /**
+     * Get value dumper
+     *
+     * @return \bdk\Debug\Dump\BaseValue
+     */
+    protected function getValDumper()
+    {
+        if (!$this->valDumper) {
+            $this->valDumper = new Value($this);
+        }
+        return $this->valDumper;
     }
 
     /**
@@ -459,11 +170,11 @@ class Html extends Base
         $args = $logEntry['args'];
         $meta = $logEntry['meta'];
         if ($logEntry->containsSubstitutions()) {
-            $args[0] = $this->dump($args[0], array(
+            $args[0] = $this->valDumper->dump($args[0], array(
                 'sanitize' => $meta['sanitizeFirst'],
                 'tagName' => null,
             ));
-            $args = $this->processSubstitutions($args, array(
+            $args = $this->substitution->process($args, array(
                 'replace' => true,
                 'sanitize' => $meta['sanitize'],
                 'style' => true,
@@ -488,7 +199,7 @@ class Html extends Base
             'role' => 'alert',
         ), $this->logEntryAttribs);
         $attribs['class'][] = 'alert-' . $meta['level'];
-        $html = $this->dump($args[0], array(
+        $html = $this->valDumper->dump($args[0], array(
             'sanitize' => $meta['sanitizeFirst'],
             'tagName' => null, // don't wrap value span
             'visualWhiteSpace' => false,
@@ -614,7 +325,7 @@ class Html extends Base
     {
         $label = \array_shift($args);
         if ($meta['isFuncName']) {
-            $label = $this->markupIdentifier($label);
+            $label = $this->valDumper->markupIdentifier($label);
         }
         $labelClasses = \implode(' ', \array_keys(\array_filter(array(
             'font-weight-bold' => $meta['boldLabel'],
@@ -625,7 +336,7 @@ class Html extends Base
 
         if ($args) {
             foreach ($args as $k => $v) {
-                $args[$k] = $this->dump($v);
+                $args[$k] = $this->valDumper->dump($v);
             }
             $argStr = \implode(', ', $args);
             $label .= $meta['argsAsParams']
@@ -679,34 +390,6 @@ class Html extends Base
     }
 
     /**
-     * Get dump options
-     *
-     * @param mixed $val  value being dumpted
-     * @param array $opts options for string values
-     *                      addQuotes, sanitize, visualWhitespace, etc
-     *
-     * @return array
-     */
-    private function setDumpOptDefaults($val, $opts)
-    {
-        $attribs = array(
-            'class' => array(),
-        );
-        if ($val instanceof Abstraction && \is_array($val['attribs'])) {
-            $attribs = \array_merge(
-                $attribs,
-                $val['attribs']
-            );
-        }
-        $opts = \array_merge(array(
-            'tagName' => '__default__',
-            'attribs' => $attribs,
-            'postDump' => null,
-        ), $opts);
-        return $opts;
-    }
-
-    /**
      * Set default meta values
      *
      * @param LogEntry $logEntry LogEntry instance
@@ -730,37 +413,5 @@ class Html extends Base
         }
         $logEntry->setMeta($meta);
         return $meta;
-    }
-
-    /**
-     * Coerce value to string
-     *
-     * Extends Base
-     *
-     * @param mixed $val  value
-     * @param array $opts $options passed to dump
-     *
-     * @return string
-     */
-    protected function substitutionAsString($val, $opts)
-    {
-        // function array dereferencing = php 5.4
-        $type = $this->debug->abstracter->getType($val)[0];
-        if ($type === Abstracter::TYPE_STRING) {
-            return $this->string->dumpAsSubstitution($val, $opts);
-        }
-        if ($type === Abstracter::TYPE_ARRAY) {
-            $count = \count($val);
-            return '<span class="t_keyword">array</span>'
-                . '<span class="t_punct">(</span>' . $count . '<span class="t_punct">)</span>';
-        }
-        if ($type === Abstracter::TYPE_OBJECT) {
-            $opts['tagName'] = null;
-            $toStr = (string) $val; // objects __toString or its classname
-            return $toStr === $val['className']
-                ? $this->markupIdentifier($toStr)
-                : $this->dump($toStr, $opts);
-        }
-        return $this->dump($val);
     }
 }

@@ -55,7 +55,7 @@ class Firephp extends AbstractRoute
     public function __construct(Debug $debug)
     {
         parent::__construct($debug);
-        $this->dump = $debug->getDump('base');
+        $this->dumper = $debug->getDump('base');
     }
 
     /**
@@ -67,7 +67,7 @@ class Firephp extends AbstractRoute
      */
     public function processLogEntries(Event $event)
     {
-        $this->dump->crateRaw = false;
+        $this->dumper->crateRaw = false;
         $this->outputEvent = $event;
         $this->data = $this->debug->data->get();
         $event['headers'][] = array('X-Wf-Protocol-1', 'http://meta.wildfirehq.org/Protocol/JsonStream/0.2');
@@ -92,7 +92,7 @@ class Firephp extends AbstractRoute
         ));
         $event['headers'][] = array('X-Wf-1-Index', $this->messageIndex);
         $this->data = array();
-        $this->dump->crateRaw = true;
+        $this->dumper->crateRaw = true;
     }
 
     /**
@@ -119,7 +119,7 @@ class Firephp extends AbstractRoute
         } elseif (\in_array($method, array('profileEnd','table','trace'))) {
             $value = $this->methodTabular($logEntry);
         } elseif (\count($args)) {
-            $this->dump->processLogEntry($logEntry);
+            $this->dumper->processLogEntry($logEntry);
             $value = $this->getValue($logEntry);
         }
         if ($this->messageIndex < self::MESSAGE_LIMIT) {
@@ -173,7 +173,7 @@ class Firephp extends AbstractRoute
             : 'error';
         $logEntry['firephpMeta']['Type'] = $this->firephpMethods[$method];
         if ($logEntry->containsSubstitutions()) {
-            $this->dump->processLogEntry($logEntry);
+            $this->dumper->processLogEntry($logEntry);
         }
         return $this->getValue($logEntry);
     }
@@ -191,7 +191,7 @@ class Firephp extends AbstractRoute
         if ($logEntry['method'] === 'trace') {
             $logEntry['firephpMeta']['Label'] = 'trace';
         }
-        $this->dump->processLogEntry($logEntry);
+        $this->dumper->processLogEntry($logEntry);
         $method = $logEntry['method'];
         if ($method === 'table') {
             $logEntry['firephpMeta']['Type'] = $this->firephpMethods['table'];
@@ -209,7 +209,7 @@ class Firephp extends AbstractRoute
                     $value[] = \array_merge(array($k), \array_values($row));
                 }
             }
-            return $this->dump->dump($value);
+            return $this->dumper->valDumper->dump($value);
         }
         $logEntry['firephpMeta']['Type'] = $this->firephpMethods['log'];
         return $this->getValue($logEntry);

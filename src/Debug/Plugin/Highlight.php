@@ -60,12 +60,14 @@ class Highlight implements AssetProviderInterface
                 './js/prism.js',
                 'Prism.manual = true;
                 (function(){
-                    $("body").on("enhanced.debug shown.debug", function (e) {
+                    $("body").on("enhanced.debug expanded.debug.group", function (e) {
                         var $target = $(e.target)
+                        var selector = ".highlight:visible"
                         if (e.type === "enhanced" && $target.hasClass("m_group")) {
                             return
                         }
-                        $target.find(".highlight:visible").removeClass("highlight").each(function () {
+                        // .add($target.filter(selector))
+                        $target.find(selector).removeClass("highlight").each(function () {
                             var $high = $(this)
                             var $pre
                             var classes = $high.attr("class").split(" ")

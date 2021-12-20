@@ -27,8 +27,8 @@ class Text extends AbstractRoute
     public function __construct(Debug $debug)
     {
         parent::__construct($debug);
-        if (!$this->dump) {
-            $this->dump = $debug->getDump('text');
+        if (!$this->dumper) {
+            $this->dumper = $debug->getDump('text');
         }
     }
 }

@@ -364,7 +364,7 @@ class SubstitutionTest extends DebugTestFramework
                         \array_unshift($test[0], false);
                     }
                     $test[0] = \array_map(function ($val) {
-                        return $this->debug->getDump('base')->dump($val);
+                        return $this->debug->getDump('base')->valDumper->dump($val);
                     }, $test[0]);
                     $test[1] = \in_array($method, array('error','warn'))
                         ? $this->file . ': ' . $this->line
@@ -393,7 +393,7 @@ class SubstitutionTest extends DebugTestFramework
                         ? 1
                         : 0;
                     $label = $argsSansMeta[$i];
-                    $label = $this->debug->getDump('base')->dump($label);
+                    $label = $this->debug->getDump('base')->valDumper->dump($label);
                     // $this->stderr('label', $label);
                     $label = \strtr($label, $replace);
                     // $label = strtr($label, array('\\u', 'foo'));

@@ -10,23 +10,23 @@
  * @version   v3.0
  */
 
-namespace bdk\Debug\Dump;
+namespace bdk\Debug\Dump\Html;
 
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
-use bdk\Debug\Dump\HtmlHelper;
-use bdk\Debug\Dump\HtmlObject;
+use bdk\Debug\Dump\Html\Helper;
+use bdk\Debug\Dump\Html\HtmlObject;
 use bdk\Debug\Utility\Html as HtmlUtil;
 
 /**
  * Dump object methods as HTML
  */
-class HtmlObjectMethods
+class ObjectMethods
 {
 
     protected $dumpObject;
-    protected $dumper;
+    protected $valDumper;
     protected $helper;
     protected $html;
     protected $opts = array();
@@ -35,13 +35,13 @@ class HtmlObjectMethods
      * Constructor
      *
      * @param HtmlObject $dumpObj Html dumper
-     * @param HtmlHelper $helper  Html dump helpers
+     * @param Helper     $helper  Html dump helpers
      * @param HtmlUtil   $html    Html methods
      */
-    public function __construct(HtmlObject $dumpObj, HtmlHelper $helper, HtmlUtil $html)
+    public function __construct(HtmlObject $dumpObj, Helper $helper, HtmlUtil $html)
     {
         $this->dumpObject = $dumpObj;
-        $this->dumper = $dumpObj->dumper;
+        $this->valDumper = $dumpObj->valDumper;
         $this->helper = $helper;
         $this->html = $html;
     }
@@ -119,7 +119,7 @@ class HtmlObjectMethods
                 . $this->dumpName($methodName, $info)
                 . $this->dumpParams($info['params'])
                 . ($methodName === '__toString'
-                    ? '<br />' . $this->dumper->dump($info['returnValue'])
+                    ? '<br />' . $this->valDumper->dump($info['returnValue'])
                     : '')
         ) . "\n";
     }
@@ -234,7 +234,7 @@ class HtmlObjectMethods
         if ($defaultValue === Abstracter::UNDEFINED) {
             return '';
         }
-        $parsed = $this->html->parseTag($this->dumper->dump($defaultValue));
+        $parsed = $this->html->parseTag($this->valDumper->dump($defaultValue));
         $parsed['attribs']['class'][] = 't_parameter-default';
         return ' <span class="t_operator">=</span> '
             . $this->html->buildTag(

@@ -74,7 +74,7 @@ class ChromeLogger extends AbstractRoute
     public function __construct(Debug $debug)
     {
         parent::__construct($debug);
-        $this->dump = $debug->getDump('base');
+        $this->dumper = $debug->getDump('base');
     }
 
     /**
@@ -86,7 +86,7 @@ class ChromeLogger extends AbstractRoute
      */
     public function processLogEntries(Event $event)
     {
-        $this->dump->crateRaw = false;
+        $this->dumper->crateRaw = false;
         $this->data = $this->debug->data->get();
         $this->buildJsonData();
         $max = $this->getMaxLength();
@@ -102,7 +102,7 @@ class ChromeLogger extends AbstractRoute
         }
         $this->data = array();
         $this->jsonData['rows'] = array();
-        $this->dump->crateRaw = true;
+        $this->dumper->crateRaw = true;
     }
 
     /**
@@ -110,7 +110,7 @@ class ChromeLogger extends AbstractRoute
      */
     public function processLogEntry(LogEntry $logEntry)
     {
-        $this->dump->processLogEntry($logEntry);
+        $this->dumper->processLogEntry($logEntry);
         $method = $logEntry['method'];
         $args = $logEntry['args'];
         $meta = $logEntry['meta'];

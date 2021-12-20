@@ -259,7 +259,7 @@ export function enhanceEntries ($node) {
     enhanceEntry($(this))
   })
   if (show) {
-    $node.show().trigger('shown.debug')
+    $node.show().trigger('expanded.debug.group')
   }
   processExpandQueue()
   if ($node.parent().hasClass('m_group') === false) {

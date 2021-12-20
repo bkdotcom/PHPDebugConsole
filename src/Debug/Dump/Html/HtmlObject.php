@@ -10,13 +10,14 @@
  * @version   v3.0
  */
 
-namespace bdk\Debug\Dump;
+namespace bdk\Debug\Dump\Html;
 
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
-use bdk\Debug\Dump\Html as Dumper;
-use bdk\Debug\Dump\HtmlHelper;
-use bdk\Debug\Dump\HtmlObjectMethods;
+use bdk\Debug\Dump\Html\Helper;
+use bdk\Debug\Dump\Html\ObjectMethods;
+use bdk\Debug\Dump\Html\ObjectProperties;
+use bdk\Debug\Dump\Html\Value as ValDumper;
 use bdk\Debug\Utility\Html as HtmlUtil;
 
 /**
@@ -25,7 +26,7 @@ use bdk\Debug\Utility\Html as HtmlUtil;
 class HtmlObject
 {
 
-    public $dumper;
+    public $valDumper;
     protected $helper;
     protected $html;
     protected $methods;
@@ -34,17 +35,17 @@ class HtmlObject
 	/**
      * Constructor
      *
-     * @param Dumper     $dumper     Dump\Html instance
-     * @param HtmlHelper $htmlHelper Html dump helpers
-     * @param HtmlUtil   $html       Html methods
+     * @param ValDumper $valDumper Dump\Html instance
+     * @param Helper    $helper    Html dump helpers
+     * @param HtmlUtil  $html      Html methods
      */
-	public function __construct(Dumper $dumper, HtmlHelper $htmlHelper, HtmlUtil $html)
+	public function __construct(ValDumper $valDumper, Helper $helper, HtmlUtil $html)
 	{
-        $this->dumper = $dumper;
-        $this->helper = $htmlHelper;
+        $this->valDumper = $valDumper;
+        $this->helper = $helper;
 		$this->html = $html;
-        $this->methods = new HtmlObjectMethods($this, $htmlHelper, $html);
-        $this->properties = new HtmlObjectProperties($this, $htmlHelper, $html);
+        $this->methods = new ObjectMethods($this, $helper, $html);
+        $this->properties = new ObjectProperties($this, $helper, $html);
 	}
 
     /**
@@ -137,7 +138,7 @@ class HtmlObject
         $str = '<dt class="attributes">attributes</dt>' . "\n";
         foreach ($attributes as $info) {
             $str .= '<dd class="attribute">'
-                . $this->dumper->markupIdentifier($info['name'])
+                . $this->valDumper->markupIdentifier($info['name'])
                 . $this->dumpAttributeArgs($info['arguments'])
                 . '</dd>' . "\n";
         }
@@ -162,7 +163,7 @@ class HtmlObject
                 $arg .= '<span class="t_parameter-name">' . \htmlspecialchars($name) . '</span>'
                     . '<span class="t_punct">:</span>';
             }
-            $arg .= $this->dumper->dump($value);
+            $arg .= $this->valDumper->dump($value);
             $args[$name] = $arg;
         }
         return '<span class="t_punct">(</span>'
@@ -182,7 +183,7 @@ class HtmlObject
     {
         $title = \trim($abs['phpDoc']['summary'] . "\n\n" . $abs['phpDoc']['desc']);
         $outPhpDoc = $abs['cfgFlags'] & AbstractObject::OUTPUT_PHPDOC;
-        return $this->dumper->markupIdentifier($abs['className'], 'span', array(
+        return $this->valDumper->markupIdentifier($abs['className'], 'span', array(
             'title' => $outPhpDoc
                 ? $title
                 : null,
@@ -248,7 +249,7 @@ class HtmlObject
             }, $modifiers))
             . ' <span class="t_identifier" title="' . \htmlspecialchars($title) . '">' . $name . '</span>'
             . ' <span class="t_operator">=</span> '
-            . $this->dumper->dump($info['value'])
+            . $this->valDumper->dump($info['value'])
         ) . "\n";
     }
 
@@ -263,7 +264,7 @@ class HtmlObject
     {
         return '<dt>extends</dt>' . "\n"
             . \implode(\array_map(function ($classname) {
-                return '<dd class="extends">' . $this->dumper->markupIdentifier($classname) . '</dd>' . "\n";
+                return '<dd class="extends">' . $this->valDumper->markupIdentifier($classname) . '</dd>' . "\n";
             }, $abs['extends']));
     }
 
@@ -278,7 +279,7 @@ class HtmlObject
     {
         return '<dt>implements</dt>' . "\n"
             . \implode(\array_map(function ($classname) {
-                return '<dd class="interface">' . $this->dumper->markupIdentifier($classname) . '</dd>' . "\n";
+                return '<dd class="interface">' . $this->valDumper->markupIdentifier($classname) . '</dd>' . "\n";
             }, $abs['implements']));
     }
 
@@ -389,7 +390,7 @@ class HtmlObject
             $val = \substr($val, 0, 100);
             $valAppend = '&hellip; <i>(' . ($len - 100) . ' more bytes)</i>';
         }
-        $valDumped = $this->dumper->dump($val);
+        $valDumped = $this->valDumper->dump($val);
         $parsed = $this->html->parseTag($valDumped);
         return $this->html->buildTag(
             'span',

@@ -127,13 +127,13 @@ class ErrorSummary
                 'columns' => array('file','line','function'),
                 'inclContext' => true,
                 'onBuildRow' => array(
-                    array($this->routeHtml->dump->helper, 'tableMarkupFunction'),
-                    array($this->routeHtml->dump->helper, 'tableAddContextRow'),
+                    array($this->routeHtml->dumper->helper, 'tableMarkupFunction'),
+                    array($this->routeHtml->dumper->helper, 'tableAddContextRow'),
                 ),
             )
         );
         $this->debug->methodTable->doTable($logEntry);
-        $table = $this->routeHtml->dump->table->build(
+        $table = $this->routeHtml->dumper->table->build(
             $logEntry['args'][0],
             $logEntry['meta']
         );

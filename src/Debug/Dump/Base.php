@@ -14,10 +14,8 @@ namespace bdk\Debug\Dump;
 
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
-use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Component;
 use bdk\Debug\LogEntry;
-use bdk\PubSub\Event;
 
 /**
  * Base output plugin
@@ -25,18 +23,7 @@ use bdk\PubSub\Event;
 class Base extends Component
 {
 
-    public $crateRaw = true;    // whether dump() should crate "raw" value
-                                //   when processing log this is set to false
-                                //   so not unecessarily re-crating arrays
     public $debug;
-    protected $simpleTypes = array(
-        Abstracter::TYPE_ARRAY,
-        Abstracter::TYPE_BOOL,
-        Abstracter::TYPE_FLOAT,
-        Abstracter::TYPE_INT,
-        Abstracter::TYPE_NULL,
-        Abstracter::TYPE_STRING,
-    );
     protected $alertStyles = array(
         'common' => 'padding: 5px;
             line-height: 26px;
@@ -56,10 +43,9 @@ class Base extends Component
             color: #8a6d3b;',
     );
     protected $channelNameRoot;
-    protected $dumpOptions = array();
-    protected $dumpOptStack = array();
-    private $subInfo = array();
-    private $subRegex;
+    protected $substitution;
+    protected $valDumper;
+    private $tableInfo = array();
 
     /**
      * Constructor
@@ -69,111 +55,9 @@ class Base extends Component
     public function __construct(Debug $debug)
     {
         $this->debug = $debug;
+        $this->substitution = new Substitution($this);
+        $this->valDumper = $this->getValDumper();
         $this->channelNameRoot = $this->debug->rootInstance->getCfg('channelName', Debug::CONFIG_DEBUG);
-        $logEntry = new LogEntry($debug, 'null');
-        $this->subRegex = $logEntry->subRegex;
-    }
-
-    /**
-     * Dump value
-     *
-     * @param mixed $val  value to dump
-     * @param array $opts options & info for string values
-     *
-     * @return mixed
-     */
-    public function dump($val, $opts = array())
-    {
-        $opts = \array_merge(array(
-            'addQuotes' => true,
-            'sanitize' => true,     // only applies to html
-            'type' => null,
-            'typeMore' => null,
-            'visualWhiteSpace' => true,
-        ), $opts);
-        if ($opts['type'] === null) {
-            list($opts['type'], $opts['typeMore']) = $this->debug->abstracter->getType($val);
-        }
-        if ($opts['typeMore'] === Abstracter::TYPE_RAW) {
-            if ($opts['type'] === Abstracter::TYPE_OBJECT || $this->crateRaw) {
-                $val = $this->debug->abstracter->crate($val, 'dump');
-            }
-            $opts['typeMore'] = null;
-        }
-        $this->dumpOptStack[] = $opts;
-        $method = 'dump' . \ucfirst($opts['type']);
-        $return = $opts['typeMore'] === Abstracter::TYPE_ABSTRACTION
-            ? $this->dumpAbstraction($val)
-            : $this->{$method}($val);
-        $this->dumpOptions = \array_pop($this->dumpOptStack);
-        return $return;
-    }
-
-    /**
-     * Get "option" of value being dumped
-     *
-     * @param string $what (optional) name of option to get (ie sanitize, type, typeMore)
-     *
-     * @return mixed
-     */
-    public function getDumpOpt($what = null)
-    {
-        $path = $what === null
-            ? '__end__'
-            : '__end__.' . $what;
-        return $this->debug->arrayUtil->pathGet($this->dumpOptStack, $path);
-    }
-
-    /**
-     * Extend me to format classname/constant, etc
-     *
-     * @param mixed $val classname or classname(::|->)name (method/property/const)
-     *
-     * @return string
-     */
-    public function markupIdentifier($val)
-    {
-        if ($val instanceof Abstraction) {
-            $val = $val['value'];
-            if (\is_array($val)) {
-                $val = $val[0] . '::' . $val[1];
-            }
-        }
-        return $val;
-    }
-
-    /**
-     * Split identifier into classname, operator, & identifier
-     *
-     * @param mixed $val classname or classname(::|->)name (method/property/const)
-     *
-     * @return array
-     */
-    public function parseIdentifier($val)
-    {
-        if ($val instanceof Abstraction) {
-            $val = $val['value'];
-        }
-        $parts = array(
-            'classname' => $val,
-            'operator' => '::',
-            'identifier' => '',
-        );
-        $regex = '/^(.+)(::|->)(.+)$/';
-        $matches = array();
-        if (\is_array($val)) {
-            $parts['classname'] = $val[0];
-            $parts['identifier'] = $val[1];
-        } elseif (\preg_match($regex, $val, $matches)) {
-            $parts['classname'] = $matches[1];
-            $parts['operator'] = $matches[2];
-            $parts['identifier'] = $matches[3];
-        } elseif (\preg_match('/^(.+)(\\\\\{closure\})$/', $val, $matches)) {
-            $parts['classname'] = $matches[1];
-            $parts['operator'] = '';
-            $parts['identifier'] = $matches[2];
-        }
-        return $parts;
     }
 
     /**
@@ -201,318 +85,43 @@ class Base extends Component
     }
 
     /**
-     * Set "option" of value being dumped
+     * Cooerce value to string
      *
-     * @param array|string $what name of value to set (or key/value array)
-     * @param mixed        $val  value
-     *
-     * @return void
-     */
-    public function setDumpOpt($what, $val = null)
-    {
-        if (\is_array($what)) {
-            $this->debug->arrayUtil->pathSet($this->dumpOptStack, '__end__', $what);
-            return;
-        }
-        $this->debug->arrayUtil->pathSet(
-            $this->dumpOptStack,
-            '__end__.' . $what,
-            $val
-        );
-    }
-
-    /**
-     * Is value a timestamp?
-     *
-     * @param mixed $val value to check
-     *
-     * @return string|false
-     */
-    protected function checkTimestamp($val)
-    {
-        $secs = 86400 * 90; // 90 days worth o seconds
-        $tsNow = \time();
-        if ($val > $tsNow - $secs && $val < $tsNow + $secs) {
-            return \date('Y-m-d H:i:s T', (int) $val);
-        }
-        return false;
-    }
-
-    /**
-     * Dump an abstraction
-     *
-     * @param Abstraction $abs Abstraction instance
-     *
-     * @return string|null
-     */
-    protected function dumpAbstraction(Abstraction $abs)
-    {
-        $type = $abs['type'];
-        $method = 'dump' . \ucfirst($type);
-        $opts = $this->getDumpOpt();
-        foreach (\array_keys($opts) as $k) {
-            if ($abs[$k] !== null) {
-                $opts[$k] = $abs[$k];
-            }
-        }
-        if ($abs['options']) {
-            $opts = \array_merge($opts, $abs['options']);
-        }
-        $opts['typeMore'] = $abs['typeMore'];
-        $this->setDumpOpt($opts);
-        if (\method_exists($this, $method) === false) {
-            $event = $this->debug->publishBubbleEvent(Debug::EVENT_DUMP_CUSTOM, new Event(
-                $abs,
-                array(
-                    'output' => $this,
-                    'return' => '',
-                    'typeMore' => $abs['typeMore'],
-                )
-            ));
-            $this->setDumpOpt('typeMore', $event['typeMore']);
-            return $event['return'];
-        }
-        return \in_array($type, $this->simpleTypes)
-            ? $this->{$method}($abs['value'], $abs)
-            : $this->{$method}($abs);
-    }
-
-    /**
-     * Dump array
-     *
-     * @param array $array array to dump
-     *
-     * @return array|string
-     */
-    protected function dumpArray($array)
-    {
-        foreach ($array as $key => $val) {
-            $array[$key] = $this->dump($val);
-        }
-        return $array;
-    }
-
-    /**
-     * Dump boolean
-     *
-     * @param bool $val boolean value
-     *
-     * @return bool|string
-     */
-    protected function dumpBool($val)
-    {
-        return $val;
-    }
-
-    /**
-     * Dump callable
-     *
-     * @param Abstraction $abs array/callable abstraction
-     *
-     * @return string
-     */
-    protected function dumpCallable(Abstraction $abs)
-    {
-        return (!$abs['hideType'] ? 'callable: ' : '')
-             . $this->markupIdentifier($abs);
-    }
-
-    /**
-     * Dump constant
-     *
-     * @param Abstraction $abs constant abstraction
-     *
-     * @return string
-     */
-    protected function dumpConst(Abstraction $abs)
-    {
-        return $abs['name'];
-    }
-
-    /**
-     * Dump float value
-     *
-     * @param float|int $val float value
-     *
-     * @return float|string
-     */
-    protected function dumpFloat($val)
-    {
-        $date = $this->checkTimestamp($val);
-        return $date
-            ? $val . ' (' . $date . ')'
-            : $val;
-    }
-
-    /**
-     * Dump integer value
-     *
-     * @param int $val integer value
-     *
-     * @return int|string
-     */
-    protected function dumpInt($val)
-    {
-        $val = $this->dumpFloat($val);
-        return \is_string($val)
-            ? $val
-            : (int) $val;
-    }
-
-    /**
-     * Dump non-inspected value (likely object)
-     *
-     * @return string
-     */
-    protected function dumpNotInspected()
-    {
-        return 'NOT INSPECTED';
-    }
-
-    /**
-     * Dump null value
-     *
-     * @return null|string
-     */
-    protected function dumpNull()
-    {
-        return null;
-    }
-
-    /**
-     * Dump object
-     *
-     * @param Abstraction $abs Object Abstraction instance
+     * @param mixed $val  value
+     * @param array $opts $options passed to dump
      *
      * @return string|array
      */
-    protected function dumpObject(Abstraction $abs)
+    public function substitutionAsString($val, $opts)
     {
-        if ($abs['isRecursion']) {
-            return '(object) ' . $abs['className'] . ' *RECURSION*';
-        }
-        if ($abs['isExcluded']) {
-            return '(object) ' . $abs['className'] . ' NOT INSPECTED';
-        }
-        return array(
-            '___class_name' => $abs['className'],
-        ) + (array) $this->dumpObjectProperties($abs);
-    }
-
-    /**
-     * Return array of object properties (name->value)
-     *
-     * @param Abstraction $abs Object Abstraction instance
-     *
-     * @return array|string
-     */
-    protected function dumpObjectProperties(Abstraction $abs)
-    {
-        $return = array();
-        foreach ($abs['properties'] as $name => $info) {
-            $vis = $this->dumpPropVis($info);
-            $name = '(' . $vis . ') ' . \str_replace('debug.', '', $name);
-            $return[$name] = $this->dump($info['value']);
-        }
-        return $return;
-    }
-
-    /**
-     * Dump property visibility
-     *
-     * @param array $info property info array
-     *
-     * @return string visibility
-     */
-    protected function dumpPropVis($info)
-    {
-        $vis = (array) $info['visibility'];
-        foreach ($vis as $i => $v) {
-            if (\in_array($v, array('magic','magic-read','magic-write'))) {
-                $vis[$i] = '✨ ' . $v;    // "sparkles": there is no magic-wand unicode char
-            } elseif ($v === 'private' && $info['inheritedFrom']) {
-                $vis[$i] = '🔒 ' . $v;
+        list($type, $typeMore) = $this->debug->abstracter->getType($val);
+        if ($type === Abstracter::TYPE_ARRAY) {
+            $count = \count($val);
+            if ($count) {
+                // replace with dummy array so browser console will display native Array(length)
+                $val = \array_fill(0, $count, 0);
             }
+            return $val;
         }
-        if ($info['debugInfoExcluded']) {
-            $vis[] = 'excluded';
+        if ($type === Abstracter::TYPE_OBJECT) {
+            return (string) $val;   // __toString or className
         }
-        return \implode(' ', $vis);
+        $opts['type'] = $type;
+        $opts['typeMore'] = $typeMore;
+        return $this->valDumper->dump($val, $opts);
     }
 
     /**
-     * Dump recursion (array recursion)
+     * Get value dumper
      *
-     * @return string
+     * @return \bdk\Debug\Dump\BaseValue
      */
-    protected function dumpRecursion()
+    protected function getValDumper()
     {
-        return 'array *RECURSION*';
-    }
-
-    /**
-     * Dump resource
-     *
-     * @param Abstraction $abs resource abstraction
-     *
-     * @return string
-     */
-    protected function dumpResource(Abstraction $abs)
-    {
-        return $abs['value'];
-    }
-
-    /**
-     * Dump string
-     *
-     * @param string      $val string value
-     * @param Abstraction $abs (optional) full abstraction
-     *
-     * @return string
-     */
-    protected function dumpString($val, Abstraction $abs = null)
-    {
-        if (\is_numeric($val)) {
-            $date = $this->checkTimestamp($val);
-            return $date
-                ? $val . ' (' . $date . ')'
-                : $val;
+        if (!$this->valDumper) {
+            $this->valDumper = new BaseValue($this);
         }
-        return $abs
-            ? $this->dumpStringAbs($abs)
-            : $this->debug->utf8->dump($val);
-    }
-
-    /**
-     * Dump string abstraction
-     *
-     * @param Abstraction $abs Abstraction instance
-     *
-     * @return string
-     */
-    private function dumpStringAbs(Abstraction $abs)
-    {
-        if ($abs['typeMore'] === Abstracter::TYPE_STRING_BINARY && !$abs['value']) {
-            return 'Binary data not collected';
-        }
-        $val = $this->debug->utf8->dump($abs['value']);
-        $diff = $abs['strlen']
-            ? $abs['strlen'] - \strlen($abs['value'])
-            : 0;
-        if ($diff) {
-            $val .= '[' . $diff . ' more bytes (not logged)]';
-        }
-        return $val;
-    }
-
-    /**
-     * Dump undefined
-     *
-     * @return string
-     */
-    protected function dumpUndefined()
-    {
-        return Abstracter::UNDEFINED;
+        return $this->valDumper;
     }
 
     /**
@@ -529,9 +138,9 @@ class Base extends Component
             $logEntry['method'] = \in_array($method, array('info','success'))
                 ? 'info'
                 : 'log';
-            $args = $this->processSubstitutions($logEntry['args']);
+            $args = $this->substitution->process($logEntry['args']);
             foreach ($args as $i => $arg) {
-                $args[$i] = $this->dump($arg);
+                $args[$i] = $this->valDumper->dump($arg);
             }
             $logEntry['args'] = $args;
             return null;
@@ -563,11 +172,11 @@ class Base extends Component
         $args = $logEntry['args'];
         if (\in_array($method, array('assert','clear','error','info','log','warn'))) {
             if ($logEntry->containsSubstitutions()) {
-                $args = $this->processSubstitutions($args);
+                $args = $this->substitution->process($args);
             }
         }
         foreach ($args as $i => $arg) {
-            $args[$i] = $this->dump($arg);
+            $args[$i] = $this->valDumper->dump($arg);
         }
         $logEntry['args'] = $args;
     }
@@ -583,7 +192,7 @@ class Base extends Component
     {
         $args = $logEntry['args'];
         foreach ($args as $i => $arg) {
-            $args[$i] = $this->dump($arg);
+            $args[$i] = $this->valDumper->dump($arg);
         }
         $logEntry['args'] = $args;
     }
@@ -610,10 +219,10 @@ class Base extends Component
         $logEntry['method'] = 'table';
         $forceArray = $logEntry->getMeta('forceArray', true);
         $undefinedAs = $logEntry->getMeta('undefinedAs', 'unset');
-        $tableInfo = $logEntry->getMeta('tableInfo');
+        $this->tableInfo = $logEntry->getMeta('tableInfo');
         $processRows = $undefinedAs !== Abstracter::UNDEFINED
             || $forceArray === false
-            || $tableInfo['haveObjRow'];
+            || $this->tableInfo['haveObjRow'];
         if (!$processRows) {
             return null;
         }
@@ -622,26 +231,27 @@ class Base extends Component
         }
         $rows = $logEntry['args'][0];
         foreach ($rows as $rowKey => $row) {
-            $rowInfo = isset($tableInfo['rows'][$rowKey])
-                ? $tableInfo['rows'][$rowKey]
-                : array();
-            $rows[$rowKey] = $this->methodTabularRow($row, $forceArray, $undefinedAs, $rowInfo);
+            $rows[$rowKey] = $this->methodTabularRow($row, $rowKey, $forceArray, $undefinedAs);
         }
         $logEntry['args'] = array($rows);
+        $this->tableInfo = array();
     }
 
     /**
      * Process table row
      *
-     * @param array $row         row
-     * @param bool  $forceArray  whether "scalar" rows should be wrapped in array
-     * @param mixed $undefinedAs how "undefined" should be represented
-     * @param array $rowInfo     row information (class, isScalar, etc)
+     * @param array      $row         row
+     * @param int|string $rowKey      row's key/index
+     * @param bool       $forceArray  whether "scalar" rows should be wrapped in array
+     * @param mixed      $undefinedAs how "undefined" should be represented
      *
      * @return array
      */
-    private function methodTabularRow($row, $forceArray, $undefinedAs, $rowInfo)
+    private function methodTabularRow($row, $rowKey, $forceArray, $undefinedAs)
     {
+        $rowInfo = isset($this->tableInfo['rows'][$rowKey])
+            ? $this->tableInfo['rows'][$rowKey]
+            : array();
         $rowInfo = \array_merge(
             array(
                 'class' => null,
@@ -684,151 +294,5 @@ class Base extends Component
             $row[$k] = $undefinedAs;
         }
         return $row;
-    }
-
-    /**
-     * Handle the not-well documented substitutions
-     *
-     * @param array $args    arguments
-     * @param array $options options
-     *
-     * @return array
-     *
-     * @see https://console.spec.whatwg.org/#formatter
-     * @see https://developer.mozilla.org/en-US/docs/Web/API/console#Using_string_substitutions
-     */
-    protected function processSubstitutions($args, $options = array())
-    {
-        if (!\is_string($args[0])) {
-            return $args;
-        }
-        $this->subInfo = array(
-            'args' => $args,
-            'index' => 0,
-            'options' => \array_merge(array(
-                'addQuotes' => false,
-                'replace' => false, // perform substitution, or just prep?
-                'sanitize' => true,
-                'style' => false,   // ie support %c
-            ), $options),
-            'typeCounts' => \array_fill_keys(\str_split('coOdifs'), 0),
-        );
-        $string = \preg_replace_callback($this->subRegex, array($this, 'processSubsCallback'), $args[0]);
-        $args = $this->subInfo['args'];
-        if (!$this->subInfo['options']['style']) {
-            $this->subInfo['typeCounts']['c'] = 0;
-        }
-        $hasSubs = \array_sum($this->subInfo['typeCounts']);
-        if ($hasSubs && $this->subInfo['options']['replace']) {
-            if ($this->subInfo['typeCounts']['c'] > 0) {
-                $string .= '</span>';
-            }
-            $args = \array_values($args);
-        }
-        $args[0] = $string;
-        return $args;
-    }
-
-    /**
-     * Process string substitution regex callback
-     *
-     * @param string[] $matches regex matches array
-     *
-     * @return string|mixed
-     *
-     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
-     */
-    private function processSubsCallback($matches)
-    {
-        $index = ++$this->subInfo['index'];
-        $replace = $matches[0];
-        if (!\array_key_exists($index, $this->subInfo['args'])) {
-            return $replace;
-        }
-        $arg = $this->subInfo['args'][$index];
-        $replacement = '';
-        $type = \substr($replace, -1);
-        if (\preg_match('/[difs]/', $type)) {
-            if ($type === 's') {
-                $arg = $this->substitutionAsString($arg, $this->subInfo['options']);
-            }
-            $replacement = $this->subReplacementDifs($arg, $replace);
-        } elseif ($type === 'c' && $this->subInfo['options']['style']) {
-            $replacement = $this->subReplacementC($arg);
-        } elseif (\preg_match('/[oO]/', $type)) {
-            $replacement = $this->dump($arg);
-        }
-        $this->subInfo['typeCounts'][$type] ++;
-        if ($this->subInfo['options']['replace']) {
-            unset($this->subInfo['args'][$index]);
-            return $replacement;
-        }
-        $this->subInfo['args'][$index] = $arg;
-        return $replace;
-    }
-
-    /**
-     * c (css) arg replacement
-     *
-     * @param string $arg css string
-     *
-     * @return string
-     */
-    private function subReplacementC($arg)
-    {
-        $replacement = '';
-        if ($this->subInfo['typeCounts']['c']) {
-            // close prev
-            $replacement = '</span>';
-        }
-        return $replacement . '<span' . $this->debug->html->buildAttribString(array(
-            'style' => $arg,
-        )) . '>';
-    }
-
-    /**
-     * d,i,f,s arg replacement
-     *
-     * @param array|string $arg    replacement value
-     * @param string       $format format (what's being replaced)
-     *
-     * @return array|string
-     */
-    private function subReplacementDifs($arg, $format)
-    {
-        $type = \substr($format, -1);
-        if ($type === 'i') {
-            $format = \substr_replace($format, 'd', -1, 1);
-        }
-        return \is_array($arg)
-            ? $arg
-            : \sprintf($format, $arg);
-    }
-
-    /**
-     * Cooerce value to string
-     *
-     * @param mixed $val  value
-     * @param array $opts $options passed to dump
-     *
-     * @return string|array
-     */
-    protected function substitutionAsString($val, $opts)
-    {
-        list($type, $typeMore) = $this->debug->abstracter->getType($val);
-        if ($type === Abstracter::TYPE_ARRAY) {
-            $count = \count($val);
-            if ($count) {
-                // replace with dummy array so browser console will display native Array(length)
-                $val = \array_fill(0, $count, 0);
-            }
-            return $val;
-        }
-        if ($type === Abstracter::TYPE_OBJECT) {
-            return (string) $val;   // __toString or className
-        }
-        $opts['type'] = $type;
-        $opts['typeMore'] = $typeMore;
-        return $this->dump($val, $opts);
     }
 }

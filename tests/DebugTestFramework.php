@@ -235,11 +235,11 @@ class DebugTestFramework extends DOMTestCase
                 ? 'null'
                 /*
                 : (isset($this->debug)
-                    ? $this->debug->getDump('text')->dump($val)
+                    ? $this->debug->getDump('text')->valDumper->dump($val)
                     : \str_replace('\n', "\n", \json_encode($val, JSON_PRETTY_PRINT))
                 );
                 */
-                : Debug::getInstance()->getDump('text')->dump($val);
+                : Debug::getInstance()->getDump('text')->valDumper->dump($val);
             if (\json_last_error() !== JSON_ERROR_NONE) {
                 $new = \var_export($val, true);
             }

@@ -42,7 +42,7 @@ abstract class AbstractRoute extends Component implements RouteInterface
         'channelsExclude' => array(),
     );
     protected $data = array();
-    protected $dump;
+    protected $dumper;
 
     /** @var array channelName => bool */
     private $shouldIncludeCache = array();
@@ -142,14 +142,14 @@ abstract class AbstractRoute extends Component implements RouteInterface
      */
     public function processLogEntries(Event $event)
     {
-        $this->dump->crateRaw = false;
+        $this->dumper->crateRaw = false;
         $this->data = $this->debug->data->get();
         $event['return'] = ''
             . $this->processAlerts()
             . $this->processSummary()
             . $this->processLog();
         $this->data = array();
-        $this->dump->crateRaw = true;
+        $this->dumper->crateRaw = true;
     }
 
     /**
@@ -161,7 +161,7 @@ abstract class AbstractRoute extends Component implements RouteInterface
      */
     public function processLogEntry(LogEntry $logEntry)
     {
-        return $this->dump->processLogEntry($logEntry);
+        return $this->dumper->processLogEntry($logEntry);
     }
 
     /**
@@ -193,9 +193,9 @@ abstract class AbstractRoute extends Component implements RouteInterface
      *
      * @return \bdk\Debug\Dump\Base
      */
-    protected function getDump()
+    protected function getDumper()
     {
-        return $this->dump;
+        return $this->dumper;
     }
 
     /**

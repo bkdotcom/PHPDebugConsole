@@ -61,7 +61,7 @@ class ServerLog extends ChromeLogger
      */
     public function processLogEntries(Event $event)
     {
-        $this->dump->crateRaw = false;
+        $this->dumper->crateRaw = false;
         $this->collectGarbage();
         $this->data = $this->debug->data->get();
         $this->buildJsonData();
@@ -79,7 +79,7 @@ class ServerLog extends ChromeLogger
         }
         $this->data = array();
         $this->jsonData['rows'] = array();
-        $this->dump->crateRaw = true;
+        $this->dumper->crateRaw = true;
     }
 
     /**

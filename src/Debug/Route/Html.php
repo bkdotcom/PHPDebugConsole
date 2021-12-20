@@ -53,7 +53,7 @@ class Html extends AbstractRoute
             'sidebar' => true,
             'tooltip' => true,
         );
-        $this->dump = $debug->getDump('html');
+        $this->dumper = $debug->getDump('html');
     }
 
     /**
@@ -147,7 +147,7 @@ class Html extends AbstractRoute
         if ($event['isTarget'] === false) {
             return;
         }
-        $this->dump->crateRaw = false;
+        $this->dumper->crateRaw = false;
         $this->data = $this->debug->data->get();
         // this could go in an extended processAlerts method
         $errorSummary = $this->errorSummary->build($this->debug->errorStats());
@@ -156,7 +156,7 @@ class Html extends AbstractRoute
         }
         $event['return'] .= $this->buildOutput();
         $this->data = array();
-        $this->dump->crateRaw = true;
+        $this->dumper->crateRaw = true;
     }
 
     /**
@@ -267,7 +267,7 @@ class Html extends AbstractRoute
      */
     protected function buildChannelTree()
     {
-        $channels = $this->dump->channels;
+        $channels = $this->dumper->channels;
         \ksort($channels, SORT_NATURAL | SORT_FLAG_CASE);
         $tree = array();
         foreach ($channels as $name => $channel) {

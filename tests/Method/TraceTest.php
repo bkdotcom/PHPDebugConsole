@@ -105,7 +105,7 @@ class TraceTest extends DebugTestFramework
                         $valuesExpect = \array_merge(array((string) $i), \array_values($trace[$i]));
                         $valuesExpect[1] = \is_null($valuesExpect[1]) ? 'null' : $valuesExpect[1];
                         $valuesExpect[2] = \is_null($valuesExpect[2]) ? 'null' : (string) $valuesExpect[2];
-                        $valuesExpect[3] = $this->debug->getDump('html')->markupIdentifier($valuesExpect[3], 'span', array(), true);
+                        $valuesExpect[3] = $this->debug->getDump('html')->valDumper->markupIdentifier($valuesExpect[3], 'span', array(), true);
                         $valuesActual = $matches[$i];
                         \array_shift($valuesActual);
                         $this->assertSame($valuesExpect, $valuesActual);
@@ -130,7 +130,7 @@ class TraceTest extends DebugTestFramework
                         return $row;
                     }, $trace);
                     $this->assertNotEmpty($traceExpect);
-                    $expect = 'trace = ' . $this->debug->getDump('text')->dump($traceExpect);
+                    $expect = 'trace = ' . $this->debug->getDump('text')->valDumper->dump($traceExpect);
                     $this->assertSame($expect, \trim($output));
                 },
                 // 'wamp' => @todo

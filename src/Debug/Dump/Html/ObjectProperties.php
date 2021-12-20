@@ -10,23 +10,23 @@
  * @version   v3.0
  */
 
-namespace bdk\Debug\Dump;
+namespace bdk\Debug\Dump\Html;
 
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
-use bdk\Debug\Dump\HtmlHelper;
-use bdk\Debug\Dump\HtmlObject;
+use bdk\Debug\Dump\Html\Helper;
+use bdk\Debug\Dump\Html\HtmlObject;
 use bdk\Debug\Utility\Html as HtmlUtil;
 
 /**
  * Dump object methods as HTML
  */
-class HtmlObjectProperties
+class ObjectProperties
 {
 
     protected $dumpObject;
-    protected $dumper;
+    protected $valDumper;
     protected $helper;
     protected $html;
 
@@ -37,10 +37,10 @@ class HtmlObjectProperties
      * @param HtmlHelper $helper  Html dump helpers
      * @param HtmlUtil   $html    Html methods
      */
-    public function __construct(HtmlObject $dumpObj, HtmlHelper $helper, HtmlUtil $html)
+    public function __construct(HtmlObject $dumpObj, Helper $helper, HtmlUtil $html)
     {
         $this->dumpObject = $dumpObj;
-        $this->dumper = $dumpObj->dumper;
+        $this->valDumper = $dumpObj->valDumper;
         $this->helper = $helper;
         $this->html = $html;
     }
@@ -127,7 +127,7 @@ class HtmlObjectProperties
         return $this->dumpModifiers($info)
             . ($info['isPrivateAncestor']
                 // wrapped in span for css rule `.private-ancestor > *`
-                ? ' <span>(' . $this->dumper->markupIdentifier($info['inheritedFrom'], 'i') . ')</span>'
+                ? ' <span>(' . $this->valDumper->markupIdentifier($info['inheritedFrom'], 'i') . ')</span>'
                 : '')
             . ($info['type']
                 ? ' ' . $this->helper->markupType($info['type'])
@@ -140,7 +140,7 @@ class HtmlObjectProperties
             ), $name)
             . ($info['value'] !== Abstracter::UNDEFINED
                 ? ' <span class="t_operator">=</span> '
-                    . $this->dumper->dump($info['value'])
+                    . $this->valDumper->dump($info['value'])
                 : '');
     }
 

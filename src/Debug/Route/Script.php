@@ -54,7 +54,7 @@ class Script extends AbstractRoute
     public function __construct(Debug $debug)
     {
         parent::__construct($debug);
-        $this->dump = $debug->getDump('base');
+        $this->dumper = $debug->getDump('base');
     }
 
     /**
@@ -67,7 +67,7 @@ class Script extends AbstractRoute
      */
     public function processlogEntries(Event $event)
     {
-        $this->dump->crateRaw = false;
+        $this->dumper->crateRaw = false;
         $this->data = $this->debug->data->get();
         $errorStats = $this->debug->errorStats();
         $serverParams = $this->debug->request->getServerParams();
@@ -102,7 +102,7 @@ class Script extends AbstractRoute
         $str .= '</script>' . "\n";
         $this->data = array();
         $event['return'] .= $str;
-        $this->dump->crateRaw = true;
+        $this->dumper->crateRaw = true;
     }
 
     /**
@@ -121,7 +121,7 @@ class Script extends AbstractRoute
                 'undefinedAs' => Abstracter::UNDEFINED,
             ));
         }
-        $this->dump->processLogEntry($logEntry);
+        $this->dumper->processLogEntry($logEntry);
         $method = $logEntry['method'];
         $args = $logEntry['args'];
         $meta = $logEntry['meta'];
@@ -132,7 +132,7 @@ class Script extends AbstractRoute
                 $args[] = \sprintf('%s: line %s', $meta['file'], $meta['line']);
             }
         } elseif ($method === 'table') {
-            $args = $this->dump->dump($args);
+            $args = $this->dumper->valDumper->dump($args);
         } elseif (!\in_array($method, $this->consoleMethods)) {
             $method = 'log';
         }

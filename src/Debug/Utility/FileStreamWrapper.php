@@ -608,23 +608,6 @@ class FileStreamWrapper
     }
 
     /**
-     * Check whether this file should be transformed
-     *
-     * @param string $file file path
-     *
-     * @return bool
-     */
-    public static function isTargeted($file)
-    {
-        foreach (static::$pathsExclude as $excludePath) {
-            if (\strpos($file, $excludePath . DIRECTORY_SEPARATOR) === 0) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /**
      * Get file resource
      *
      * @param string $file       File path
@@ -681,6 +664,23 @@ class FileStreamWrapper
         \fwrite($resource, $content);
         \rewind($resource);
         return $resource;
+    }
+
+    /**
+     * Check whether this file should be transformed
+     *
+     * @param string $file file path
+     *
+     * @return bool
+     */
+    private static function isTargeted($file)
+    {
+        foreach (static::$pathsExclude as $excludePath) {
+            if (\strpos($file, $excludePath . DIRECTORY_SEPARATOR) === 0) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**

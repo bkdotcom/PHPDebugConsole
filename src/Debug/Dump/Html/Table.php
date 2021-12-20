@@ -10,29 +10,29 @@
  * @version   v3.0
  */
 
-namespace bdk\Debug\Dump;
+namespace bdk\Debug\Dump\Html;
 
-use bdk\Debug\Dump\Html;
+use bdk\Debug\Dump\Html as Dumper;
 
 /**
  * build a table
  */
-class HtmlTable
+class Table
 {
 
     protected $debug;
-    protected $html;
-    protected $tableInfo;
+    protected $dumper;
+    protected $options;
 
     /**
      * Constructor
      *
-     * @param Html $html html dumper
+     * @param Dumper $dumper html dumper
      */
-    public function __construct(Html $html)
+    public function __construct(Dumper $dumper)
     {
-        $this->debug = $html->debug;
-        $this->html = $html;
+        $this->debug = $dumper->debug;
+        $this->dumper = $dumper;
     }
 
     /**
@@ -49,38 +49,36 @@ class HtmlTable
      */
     public function build($rows, $options = array())
     {
-        $options = \array_merge(array(
+        $this->options = \array_merge(array(
             'attribs' => array(),
             'caption' => '',
             'onBuildRow' => null,   // callable (or array of callables)
             'tableInfo' => array(),
         ), $options);
-        $this->tableInfo = $options['tableInfo'];
         return $this->debug->html->buildTag(
             'table',
-            $options['attribs'],
+            $this->options['attribs'],
             "\n"
-                . $this->buildCaption($options['caption'])
-                . $this->buildHeader($this->tableInfo['columns'])
-                . $this->buildbody($rows, $options)
-                . $this->buildFooter($this->tableInfo['columns'])
+                . $this->buildCaption()
+                . $this->buildHeader()
+                . $this->buildbody($rows)
+                . $this->buildFooter()
         );
     }
 
     /**
      * Builds table's body
      *
-     * @param array $rows    array of arrays or Traverssable
-     * @param array $options options
+     * @param array $rows array of arrays or Traverssable
      *
      * @return string
      */
-    protected function buildBody($rows, $options)
+    protected function buildBody($rows)
     {
         $tBody = '';
-        $options['onBuildRow'] = \is_callable($options['onBuildRow'])
-            ? array( $options['onBuildRow'] )
-            : (array) $options['onBuildRow'];
+        $this->options['onBuildRow'] = \is_callable($this->options['onBuildRow'])
+            ? array( $this->options['onBuildRow'] )
+            : (array) $this->options['onBuildRow'];
         foreach ($rows as $k => $row) {
             $rowInfo = \array_merge(
                 array(
@@ -88,16 +86,12 @@ class HtmlTable
                     'key' => null,
                     'summary' => null,
                 ),
-                isset($this->tableInfo['rows'][$k])
-                    ? $this->tableInfo['rows'][$k]
+                isset($this->options['tableInfo']['rows'][$k])
+                    ? $this->options['tableInfo']['rows'][$k]
                     : array()
             );
             $html = $this->buildRow($row, $rowInfo, $k);
-            foreach ($options['onBuildRow'] as $callable) {
-                if (\is_callable($callable)) {
-                    $html = $callable($html, $row, $rowInfo, $k);
-                }
-            }
+            // $html = $this->onBuildRow($html, $row, $rowInfo, $k);
             $tBody .= $html;
         }
         $tBody = \str_replace(' title=""', '', $tBody);
@@ -107,19 +101,17 @@ class HtmlTable
     /**
      * Build table caption
      *
-     * @param string $caption Table caption
-     *
      * @return string
      */
-    private function buildCaption($caption)
+    private function buildCaption()
     {
-        $caption = \htmlspecialchars($caption);
-        if ($this->tableInfo['class']) {
-            $class = $this->html->markupIdentifier(
-                $this->tableInfo['class'],
+        $caption = \htmlspecialchars($this->options['caption']);
+        if ($this->options['tableInfo']['class']) {
+            $class = $this->dumper->valDumper->markupIdentifier(
+                $this->options['tableInfo']['class'],
                 'span',
                 array(
-                    'title' => $this->tableInfo['summary'] ?: null,
+                    'title' => $this->options['tableInfo']['summary'] ?: null,
                 )
             );
             $caption = $caption
@@ -134,33 +126,30 @@ class HtmlTable
     /**
      * Builds table's tfoot
      *
-     * @param array $columns column info
-     *
      * @return string
      */
-    protected function buildFooter($columns)
+    protected function buildFooter()
     {
         $haveTotal = false;
         $cells = array();
-        foreach ($columns as $info) {
-            $colHasTotal = isset($info['total']);
-            $totalVal = $colHasTotal
-                ? $info['total']
-                : null;
+        foreach ($this->options['tableInfo']['columns'] as $colInfo) {
+            if (isset($colInfo['total']) === false) {
+                $cells[] = '<td></td>';
+                continue;
+            }
+            $totalVal = $colInfo['total'];
             if (\is_float($totalVal)) {
                 $totalVal = \round($totalVal, 6);
             }
-            $cells[] = $colHasTotal
-                ? $this->html->dump($totalVal, array('tagName' => 'td'))
-                : '<td></td>';
-            $haveTotal = $haveTotal || $colHasTotal;
+            $cells[] = $this->dumper->valDumper->dump($totalVal, array('tagName' => 'td'));
+            $haveTotal = true;
         }
         if (!$haveTotal) {
             return '';
         }
         return '<tfoot>' . "\n"
             . '<tr><td>&nbsp;</td>'
-                . ($this->tableInfo['haveObjRow'] ? '<td>&nbsp;</td>' : '')
+                . ($this->options['tableInfo']['haveObjRow'] ? '<td>&nbsp;</td>' : '')
                 . \implode('', $cells)
             . '</tr>' . "\n"
             . '</tfoot>' . "\n";
@@ -169,24 +158,22 @@ class HtmlTable
     /**
      * Returns table's thead
      *
-     * @param array $columns column info
-     *
      * @return string
      */
-    protected function buildHeader($columns)
+    protected function buildHeader()
     {
         $labels = array();
-        foreach ($columns as $colInfo) {
+        foreach ($this->options['tableInfo']['columns'] as $colInfo) {
             $label = $colInfo['key'];
             if (isset($colInfo['class'])) {
-                $label .= ' ' . $this->html->markupIdentifier($colInfo['class']);
+                $label .= ' ' . $this->dumper->valDumper->markupIdentifier($colInfo['class']);
             }
             $labels[] = $label;
         }
         return '<thead>' . "\n"
             . '<tr>'
-                . ($this->tableInfo['indexLabel'] ? '<th class="text-right">' . $this->tableInfo['indexLabel'] . '</th>' : '<th>&nbsp;</th>')
-                . ($this->tableInfo['haveObjRow'] ? '<th>&nbsp;</th>' : '')
+                . ($this->options['tableInfo']['indexLabel'] ? '<th class="text-right">' . $this->options['tableInfo']['indexLabel'] . '</th>' : '<th>&nbsp;</th>')
+                . ($this->options['tableInfo']['haveObjRow'] ? '<th>&nbsp;</th>' : '')
                 . '<th>' . \implode('</th><th scope="col">', $labels) . '</th>'
             . '</tr>' . "\n"
             . '</thead>' . "\n";
@@ -205,7 +192,7 @@ class HtmlTable
     {
         $str = '';
         $rowKey = $rowInfo['key'] ?: $rowKey;
-        $rowKeyParsed = $this->debug->html->parseTag($this->html->dump($rowKey));
+        $rowKeyParsed = $this->debug->html->parseTag($this->dumper->valDumper->dump($rowKey));
         $str .= '<tr>';
         /*
             Output key
@@ -221,9 +208,9 @@ class HtmlTable
         /*
             Output row's classname
         */
-        if ($this->tableInfo['haveObjRow']) {
+        if ($this->options['tableInfo']['haveObjRow']) {
             $str .= $rowInfo['class']
-                ? $this->html->markupIdentifier($rowInfo['class'], 'td', array(
+                ? $this->dumper->valDumper->markupIdentifier($rowInfo['class'], 'td', array(
                     'title' => $rowInfo['summary'] ?: null,
                 ))
                 : '<td class="t_undefined"></td>';
@@ -232,9 +219,29 @@ class HtmlTable
             Output values
         */
         foreach ($row as $v) {
-            $str .= $this->html->dump($v, array('tagName' => 'td'));
+            $str .= $this->dumper->valDumper->dump($v, array('tagName' => 'td'));
         }
         $str .= '</tr>' . "\n";
-        return $str;
+        return $this->onBuildRow($str, $row, $rowInfo, $rowKey);
+    }
+
+    /**
+     * Call any onBuildRow callbacks
+     *
+     * @param string     $html    built row
+     * @param mixed      $row     should be array or object abstraction
+     * @param array      $rowInfo row info / meta
+     * @param string|int $rowKey  row key
+     *
+     * @return string html fragment
+     */
+    private function onBuildRow($html, $row, $rowInfo, $rowKey)
+    {
+        foreach ($this->options['onBuildRow'] as $callable) {
+            if (\is_callable($callable)) {
+                $html = $callable($html, $row, $rowInfo, $rowKey);
+            }
+        }
+        return $html;
     }
 }

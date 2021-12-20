@@ -220,7 +220,7 @@ class ServerRequestBase extends Request
         foreach ($parts as $name => $value) {
             if ($value) {
                 $method = $methods[$name];
-                $uri->{$method}($value);
+                $uri = $uri->{$method}($value);
             }
         }
         return $uri;

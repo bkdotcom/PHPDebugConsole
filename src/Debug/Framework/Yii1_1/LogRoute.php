@@ -195,14 +195,7 @@ class LogRoute extends CLogRoute
         if ($haveTrace === false) {
             return $logEntry;
         }
-        $logEntry = $this->parseTrace($logEntry);
-        if (\strpos($logEntry['category'], 'system.caching') === 0) {
-            $logEntry['trace'] = array();
-        }
-        if (!$logEntry['trace']) {
-            $logEntry['level'] = CLogger::LEVEL_INFO;
-        }
-        return $logEntry;
+        return $this->parseTrace($logEntry);
     }
 
     /**
@@ -214,7 +207,142 @@ class LogRoute extends CLogRoute
      */
     protected function messageMeta(array $logEntry)
     {
+        $logEntry = $this->messageMetaTrace($logEntry);
+        $logEntry = $this->messageMetaCaller($logEntry);
+        $categoryFuncs = array(
+            'application' => 'messageMetaApplication',
+            'system.CModule' => 'messageMetaSystemCmodule',
+            '/^system\\.caching/' => 'messageMetaSystemCaching',
+            '/^system\\./' => 'messageMetaSystem',
+        );
+        foreach ($categoryFuncs as $match => $method) {
+            $isMatch = $match[0] === '/'
+                ? \preg_match($match, $logEntry['category'])
+                : $match === $logEntry['category'];
+            if ($isMatch) {
+                return $this->{$method}($logEntry);
+            }
+        }
+        return $logEntry;
+    }
 
+    /**
+     * Add file & line meta to error and warning
+     *
+     * @param array $logEntry key/valued Yii log entry
+     *
+     * @return array
+     */
+    private function messageMetaCaller(array $logEntry)
+    {
+        if (!\in_array($logEntry['level'], array(CLogger::LEVEL_ERROR, CLogger::LEVEL_WARNING))) {
+            return $logEntry;
+        }
+        if (\array_intersect_key($logEntry['meta'], \array_flip(array('file','line')))) {
+            return $logEntry;
+        }
+        $callerInfo = $this->getCallerInfo();
+        if ($callerInfo) {
+            $logEntry['meta']['file'] = $callerInfo['file'];
+            $logEntry['meta']['line'] = $callerInfo['line'];
+        }
+        return $logEntry;
+    }
+
+    /**
+     * Handle category: application
+     *
+     * @param array $logEntry key/valued Yii log entry
+     *
+     * @return array
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     */
+    private function messageMetaApplication(array $logEntry)
+    {
+        $logEntry['category'] = null;
+        $logEntry['channel'] = $this->debug->getChannel('app');
+        return $logEntry;
+    }
+
+    /**
+     * Handle category: system.xxx
+     *
+     * @param array $logEntry key/valued Yii log entry
+     *
+     * @return array
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     */
+    private function messageMetaSystem(array $logEntry)
+    {
+        $channelName = 'system misc';
+        $icon = 'fa fa-cogs';
+        $logEntry['channel'] = $this->debug->getChannel($channelName, array(
+            'icon' => $icon,
+        ));
+        $logEntry['meta']['icon'] = $icon;
+        return $logEntry;
+    }
+
+    /**
+     * Handle category: system.caching
+     *
+     * @param array $logEntry key/valued Yii log entry
+     *
+     * @return array
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     */
+    private function messageMetaSystemCaching(array $logEntry)
+    {
+        $channelName = \str_replace('system.caching.', '', $logEntry['category']);
+        $icon = 'fa fa-cube';
+        $logEntry['category'] = $channelName;
+        $logEntry['channel'] = $this->debug->getChannel($channelName, array(
+            'channelIcon' => $icon,
+            'channelShow' => false,
+        ));
+        $logEntry['message'] = \preg_replace('# (to|from) cache$#', '', $logEntry['message']);
+        $logEntry['meta']['icon'] = $icon;
+        $logEntry['trace'] = array();
+        if ($logEntry['level'] === CLogger::LEVEL_TRACE) {
+            $logEntry['level'] = CLogger::LEVEL_INFO;
+        }
+        return $logEntry;
+    }
+
+    /**
+     * Handle category: system.CModule
+     *
+     * @param array $logEntry key/valued Yii log entry
+     *
+     * @return array
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     */
+    private function messageMetaSystemCmodule(array $logEntry)
+    {
+        $channelName = 'CModule';
+        $icon = 'fa fa-puzzle-piece';
+        $logEntry['channel'] = $this->debug->getChannel($channelName, array(
+            'channelIcon' => $icon,
+            'channelShow' => false,
+        ));
+        $logEntry['meta']['icon'] = $icon;
+        return $logEntry;
+    }
+
+    /**
+     * If trace is pressent, set file & line meta
+     * If CLogger::LEVEL_ERROR, move trace to meta
+     *
+     * @param array $logEntry key/valued Yii log entry
+     *
+     * @return array
+     */
+    private function messageMetaTrace(array $logEntry)
+    {
         if ($logEntry['trace']) {
             $logEntry['meta']['file'] = $logEntry['trace'][0]['file'];
             $logEntry['meta']['line'] = $logEntry['trace'][0]['line'];
@@ -223,56 +351,6 @@ class LogRoute extends CLogRoute
                 unset($logEntry['trace']);
             }
         }
-        if (\in_array($logEntry['level'], array(CLogger::LEVEL_ERROR, CLogger::LEVEL_WARNING))) {
-            $callerInfo = $this->getCallerInfo();
-            if ($callerInfo) {
-                $logEntry['meta']['file'] = $callerInfo['file'];
-                $logEntry['meta']['line'] = $callerInfo['line'];
-            }
-        }
-        if (\strpos($logEntry['category'], 'system.') === 0) {
-            return $this->messageMetaSystem($logEntry);
-        }
-        if ($logEntry['category'] === 'application') {
-            $logEntry['category'] = null;
-            $logEntry['channel'] = $this->debug->getChannel('app');
-        }
-        return $logEntry;
-    }
-
-    /**
-     * Set meta values for system category messages
-     *
-     * @param array $logEntry key/valued Yii log entry
-     *
-     * @return array
-     */
-    private function messageMetaSystem(array $logEntry)
-    {
-        $icon = 'fa fa-cogs';
-        $channelName = 'system misc';
-        $channelOpts = array(
-            'icon' => $icon,
-        );
-        if (\strpos($logEntry['category'], 'system.caching.') === 0) {
-            $icon = 'fa fa-cube';
-            $channelName = \str_replace('system.caching.', '', $logEntry['category']);
-            $logEntry['category'] = $channelName;
-            $channelOpts = array(
-                'channelIcon' => $icon,
-                'channelShow' => false,
-            );
-            $logEntry['message'] = \preg_replace('# (to|from) cache$#', '', $logEntry['message']);
-        } elseif ($logEntry['category'] === 'system.CModule') {
-            $icon = 'fa fa-puzzle-piece';
-            $channelName = 'CModule';
-            $channelOpts = array(
-                'channelIcon' => $icon,
-                'channelShow' => false,
-            );
-        }
-        $logEntry['channel'] = $this->debug->getChannel($channelName, $channelOpts);
-        $logEntry['meta']['icon'] = $icon;
         return $logEntry;
     }
 
@@ -369,6 +447,7 @@ class LogRoute extends CLogRoute
     {
         if (\strpos($logEntry['message'], 'begin:') === 0) {
             // add to stack
+            $logEntry['message'] = \substr($logEntry['message'], 6);
             $this->stack[] = $logEntry;
             return;
         }
@@ -399,7 +478,7 @@ class LogRoute extends CLogRoute
         $logEntry['meta']['trace'] = $logEntry['trace'];
         $debug = $logEntry['channel'];
         $method = $this->levelMap[$logEntry['level']];
-        $args = array(false, $caption);
+        $args = array(false, $caption, $debug->meta($logEntry['meta']));
         \call_user_func_array(array($debug, $method), $args);
     }
 }

@@ -258,9 +258,11 @@ class ServerRequestBase extends Request
     private static function createUploadedFile($fileInfo)
     {
         if (\is_array($fileInfo['tmp_name'])) {
+            $files = array();
             $keys = \array_keys($fileInfo['tmp_name']);
-            return \array_map(function ($key) use ($fileInfo) {
-                return self::createUploadedFile([
+            // don't use array_map...  callback does not have access to self::createUploadedFile
+            foreach ($keys as $key) {
+                $files[$key] = self::createUploadedFile([
                     'tmp_name' => $fileInfo['tmp_name'][$key],
                     'size'     => $fileInfo['size'][$key],
                     'error'    => $fileInfo['error'][$key],
@@ -270,7 +272,8 @@ class ServerRequestBase extends Request
                         ? $fileInfo['full_path'][$key]
                         : null,
                 ]);
-            }, \array_combine($keys, $keys));
+            }
+            return $files;
         }
         return new UploadedFile(
             $fileInfo['tmp_name'],

@@ -113,7 +113,7 @@ class TraceTest extends DebugTestFramework
                         $regex = '/^(.+)(::|->)(.+)$/';
                         $valuesExpect[3] = \preg_match($regex, $function) || \strpos($function, '{closure}')
                             ? $this->debug->getDump('html')->valDumper->markupIdentifier($function, 'span', array(), true)
-                            : '<span class="t_identifier">' . \htmlspecialchars($row['function']) . '</span>';
+                            : '<span class="t_identifier">' . \htmlspecialchars($function) . '</span>';
                         $valuesActual = $matches[$i];
                         \array_shift($valuesActual);
                         echo $i . ': ' . print_r($valuesActual, true) . "\n";

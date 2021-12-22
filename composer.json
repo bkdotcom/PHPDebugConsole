@@ -26,6 +26,7 @@
 			"src/ErrorHandler/ErrorHandler.php"
 		],
 		"psr-4": {
+			"bdk\\Backtrace\\": "src/Backtrace/",
 			"bdk\\Container\\": "src/Container/",
 			"bdk\\Debug\\": "src/Debug/",
 			"bdk\\ErrorHandler\\": "src/ErrorHandler/",

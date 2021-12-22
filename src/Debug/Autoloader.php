@@ -30,6 +30,7 @@ class Autoloader
     {
         $this->psr4Map = array(
             'bdk\\Debug\\' => __DIR__,
+            'bdk\\Backtrace\\' => __DIR__ . '/../Backtrace',
             'bdk\\Container\\' => __DIR__ . '/../Container',
             'bdk\\ErrorHandler\\' => __DIR__ . '/../ErrorHandler',
             'bdk\\PubSub\\' => __DIR__ . '/../PubSub',

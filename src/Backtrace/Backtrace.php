@@ -11,6 +11,8 @@
 
 namespace bdk;
 
+use bdk\Backtrace\Normalizer;
+
 /**
  * Utility for getting backtrace
  *
@@ -23,13 +25,6 @@ class Backtrace
 {
     const INCL_ARGS = 1;
     const INCL_OBJECT = 2;
-
-    /**
-     * Cache whether non-namespaced functions are internal or not
-     *
-     * @var array
-     */
-    private static $internalFuncs = array();
 
     /**
      * @var array
@@ -234,14 +229,14 @@ class Backtrace
                 'file' => $exception->getFile(),
                 'line' => $exception->getLine(),
             ));
-            $backtrace = static::normalize($backtrace);
+            $backtrace = Normalizer::normalize($backtrace);
             return $backtrace;
         }
         $options = static::translateOptions($options);
         $backtrace = \debug_backtrace($options, $limit ? $limit + 2 : 0);
         if (\array_key_exists('file', \end($backtrace)) === true) {
             // We're NOT in shutdown
-            $backtrace = static::normalize($backtrace);
+            $backtrace = Normalizer::normalize($backtrace);
             $backtrace = static::removeInternalFrames($backtrace);
             return \array_slice($backtrace, 0, $limit ?: null);
         }
@@ -265,7 +260,7 @@ class Backtrace
             return false;
         }
         $backtrace = \array_reverse($backtrace);
-        $backtrace = static::normalize($backtrace);
+        $backtrace = Normalizer::normalize($backtrace);
         $backtrace = static::removeInternalFrames($backtrace);
         $backtrace = \array_slice($backtrace, 0, $limit ?: null);
         $error = \error_get_last();
@@ -322,35 +317,6 @@ class Backtrace
     }
 
     /**
-     * Test if frame is a non-namespaced internal function
-     * if so, it must be have a callable arg, such as
-     * array_map, array_walk, call_user_func, or call_user_func_array
-     *
-     * @param array $frame backtrace frame
-     *
-     * @return bool
-     */
-    private static function isInternal($frame)
-    {
-        if (isset($frame['class']) || empty($frame['function'])) {
-            return false;
-        }
-        $function = $frame['function'];
-        if (!isset(self::$internalFuncs[$function])) {
-            // avoid `function require() does not exit
-            $isInternal = true;
-            if (\in_array($function, array('require', 'require_once', 'include', 'include_once'))) {
-                $isInternal = false;
-            } elseif (\function_exists($function)) {
-                $refFunction = new \ReflectionFunction($function);
-                $isInternal = $refFunction->isInternal();
-            }
-            self::$internalFuncs[$function] = $isInternal;
-        }
-        return self::$internalFuncs[$function];
-    }
-
-    /**
      * Test if frame is skippable
      *
      * @param array $frame backtrace frame
@@ -368,116 +334,7 @@ class Backtrace
         if ($class === 'ReflectionMethod' && \in_array($frame['function'], array('invoke','invokeArgs'))) {
             return true;
         }
-        return self::isInternal($frame);
-    }
-
-    /**
-     * "Normalize" backtrace from debug_backtrace() or xdebug_get_function_stack();
-     *
-     * @param array $backtrace trace/stack from debug_backtrace() or xdebug_Get_function_stack()
-     *
-     * @return array
-     */
-    private static function normalize($backtrace)
-    {
-        $backtraceNew = array();
-        $frameDefault = array(
-            'args' => array(),
-            'evalLine' => null,
-            'file' => null,
-            'function' => null,     // function, Class::function, or Class->function
-            'line' => null,
-        );
-        $frameTemp = array(
-            'class' => null,
-            'include_filename' => null,
-            'params' => null,
-            'type' => null,
-        );
-        $count = \count($backtrace);
-        $backtrace[] = array(); // add a frame so backtrace[$i + 1] is always a thing
-        for ($i = 0; $i < $count; $i++) {
-            $frame = \array_merge($frameDefault, $frameTemp, $backtrace[$i]);
-            if (self::isInternal($frame)) {
-                // update previous frame's file & line
-                $backtraceNew[\count($backtraceNew) - 1]['file'] = $frame['file'];
-                $backtraceNew[\count($backtraceNew) - 1]['line'] = $frame['line'];
-                continue;
-            }
-            if ($frame['class'] === 'ReflectionMethod' && \in_array($frame['function'], array('invoke','invokeArgs'))) {
-                continue;
-            }
-            if ($frame['include_filename']) {
-                $backtraceNew[] = \array_merge($frameDefault, array(
-                    'file' => $frame['include_filename'],
-                    'line' => 0,
-                ));
-            }
-            $frame = self::normalizeFrame($frame, $backtrace[$i + 1]);
-            $frame = \array_intersect_key($frame, $frameDefault);
-            $backtraceNew[] = $frame;
-        }
-        return $backtraceNew;
-    }
-
-    /**
-     * Normalize frame
-     *
-     * Normalize file & line
-     * Normalize function: Combine class, type, & function
-     * Normalize args
-     *
-     * @param array $frame     current frame
-     * @param array $frameNext next frrame
-     *
-     * @return array
-     */
-    private static function normalizeFrame($frame, $frameNext)
-    {
-        /*
-            Normalize File
-        */
-        $regex = '/^(.+)\((\d+)\) : eval\(\)\'d code$/';
-        $matches = array();
-        if ($frame['file'] === null) {
-            // use file/line from next frame
-            $frame = \array_merge(
-                $frame,
-                \array_intersect_key($frameNext, \array_flip(array('file','line')))
-            );
-        } elseif (\preg_match($regex, $frame['file'], $matches)) {
-            // reported line = line within eval
-            // line inside paren is the line `eval` is on
-            $frame['evalLine'] = $frame['line'];
-            $frame['file'] = $matches[1];
-            $frame['line'] = (int) $matches[2];
-        }
-        /*
-            Normalize Function / unset if empty
-        */
-        $frame['type'] = \strtr($frame['type'] ?: '', array(
-            'dynamic' => '->',
-            'static' => '::',
-        ));
-        if ($frame['include_filename']) {
-            // xdebug_get_function_stack
-            $frame['function'] = 'include or require';
-        } elseif ($frame['function']) {
-            $frame['function'] = \preg_match('/\{closure\}$/', $frame['function'])
-                ? $frame['function']
-                : $frame['class'] . $frame['type'] . $frame['function'];
-        }
-        if (!$frame['function']) {
-            unset($frame['function']);
-        }
-        /*
-            Normalize Params
-        */
-        if ($frame['params']) {
-            // xdebug_get_function_stack
-            $frame['args'] = $frame['params'];
-        }
-        return $frame;
+        return Normalizer::isInternal($frame);
     }
 
     /**
@@ -529,6 +386,7 @@ class Backtrace
      * xdebug.collect_params ini must be set prior to running code to be backtraced for params (args) to be collected
      *
      * @return array|false
+     * @see    https://bugs.xdebug.org/view.php?id=695
      * @see    https://bugs.xdebug.org/view.php?id=1529
      * @see    https://xdebug.org/docs/all_settings#xdebug.collect_params
      */
@@ -539,25 +397,26 @@ class Backtrace
         }
         $stack = \xdebug_get_function_stack();
         $xdebugVer = \phpversion('xdebug');
-        if (\version_compare($xdebugVer, '2.6.0', '<')) {
-            $count = \count($stack);
-            for ($i = 0; $i < $count; $i++) {
-                $frame = $stack[$i];
-                $function = isset($frame['function'])
-                    ? $frame['function']
-                    : null;
-                if (!isset($frame['type']) && isset($frame['class'])) {
-                    // XDebug pre 2.1.1 doesn't set the call type key http://bugs.xdebug.org/view.php?id=695
-                    $stack[$i]['type'] = 'static';
-                }
-                if ($function === '__get') {
-                    // wrong file!
-                    $prev = $stack[$i - 1];
-                    $stack[$i]['file'] = isset($prev['include_filename'])
-                        ? $prev['include_filename']
-                        : $prev['file'];
-                }
+        if (\version_compare($xdebugVer, '2.6.0', '>=')) {
+            return $stack;
+        }
+        $count = \count($stack);
+        for ($i = 0; $i < $count; $i++) {
+            $frame = \array_merge(array(
+                'function' => null,
+            ), $stack[$i]);
+            if (!isset($frame['type']) && isset($frame['class'])) {
+                // XDebug pre 2.1.1 doesn't set the call type key http://bugs.xdebug.org/view.php?id=695
+                $stack[$i]['type'] = 'static';
             }
+            if ($frame['function'] !== '__get') {
+                continue;
+            }
+            // __get ... wrong file! - https://bugs.xdebug.org/view.php?id=1529
+            $prev = $stack[$i - 1];
+            $stack[$i]['file'] = isset($prev['include_filename'])
+                ? $prev['include_filename']
+                : $prev['file'];
         }
         return $stack;
     }

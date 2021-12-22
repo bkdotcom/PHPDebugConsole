@@ -57,6 +57,7 @@ class DebugTestFramework extends DOMTestCase
                 'definition',
                 'extends',
                 'implements',
+                'isAnonymous',
                 'isExcluded',
                 'isRecursion',
                 'methods',

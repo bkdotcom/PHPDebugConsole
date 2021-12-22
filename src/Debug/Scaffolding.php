@@ -149,7 +149,7 @@ class Scaffolding
     }
 
     /**
-     * Initialize autoloader, container, & config
+     * Initialize container, & config
      *
      * @param array $cfg passed cfg
      *

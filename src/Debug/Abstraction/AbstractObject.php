@@ -14,7 +14,7 @@ namespace bdk\Debug\Abstraction;
 
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
-use bdk\Debug\Abstraction\Abstraction;
+// use bdk\Debug\Abstraction\AbstractionObject;
 use bdk\Debug\Abstraction\AbstractObjectConstants;
 use bdk\Debug\Abstraction\AbstractObjectHelper;
 use bdk\Debug\Abstraction\AbstractObjectMethods;
@@ -59,6 +59,49 @@ class AbstractObject extends Component
     protected $properties;
 
     /**
+     * Default object abstraction values
+     *
+     * @var array Array of key/values
+     */
+    protected $values = array(
+        'type' => Abstracter::TYPE_OBJECT,
+        'attributes' => array(),
+        'cfgFlags' => 0,
+        'className' => '',
+        'constants' => array(),
+        'debugMethod' => '',
+        'definition' => array(
+            'fileName' => '',
+            'startLine' => 1,
+            'extensionName' => '',
+        ),
+        'extends' => array(),
+        'implements' => array(),
+        'isAnonymous' => false,
+        'isExcluded' => false,    // don't exclude if we're debugging directly
+        'isFinal' => false,
+        'isRecursion' => false,
+        'methods' => array(),   // if !collectMethods, may still get ['__toString']['returnValue']
+        'phpDoc' => array(
+            'desc' => null,
+            'summary' => null,
+            // additional tags
+        ),
+        'properties' => array(),
+        'scopeClass' => '',
+        'stringified' => null,
+        'traverseValues' => array(),    // populated if method is table && traversable
+        'viaDebugInfo' => false,
+        // these are temporary values available during abstraction
+        'collectPropertyValues' => true,
+        'fullyQualifyPhpDocType' => false,
+        'hist' => array(),
+        'isTraverseOnly' => false,
+        'propertyOverrideValues' => array(),
+        'reflector' => null,
+    );
+
+    /**
      * Constructor
      *
      * @param Abstracter $abstracter abstracter instance
@@ -95,69 +138,26 @@ class AbstractObject extends Component
         $reflector = $this->getReflector($obj);
         $interfaceNames = $reflector->getInterfaceNames();
         \sort($interfaceNames);
-        $abs = new Abstraction(Abstracter::TYPE_OBJECT, array(
-            'attributes' => array(),
+        $abs = new Abstraction(Abstracter::TYPE_OBJECT, \array_merge($this->values, array(
             'cfgFlags' => $this->getCfgFlags(),
             'className' => $reflector->getName(),
-            'constants' => array(),
             'debugMethod' => $method,
-            'definition' => array(
-                'fileName' => $reflector->getFileName(),
-                'startLine' => $reflector->getStartLine(),
-                'extensionName' => $reflector->getExtensionName(),
-            ),
-            'extends' => array(),
             'implements' => $interfaceNames,
             'isAnonymous' => PHP_VERSION_ID >= 70000 && $reflector->isAnonymous(),
             'isExcluded' => $hist && $this->isExcluded($obj),    // don't exclude if we're debugging directly
             'isFinal' => $reflector->isFinal(),
             'isRecursion' => \in_array($obj, $hist, true),
-            'methods' => array(),   // if !collectMethods, may still get ['__toString']['returnValue']
-            'phpDoc' => array(
-                'desc' => null,
-                'summary' => null,
-                // additional tags
-            ),
-            'properties' => array(),
             'scopeClass' => $this->getScopeClass($hist),
-            'stringified' => null,
-            'traverseValues' => array(),    // populated if method is table && traversable
             'viaDebugInfo' => $this->cfg['useDebugInfo'] && $reflector->hasMethod('__debugInfo'),
             // these are temporary values available during abstraction
-            'collectPropertyValues' => true,
             'fullyQualifyPhpDocType' => $this->cfg['fullyQualifyPhpDocType'],
             'hist' => $hist,
-            'isTraverseOnly' => false,
-            'propertyOverrideValues' => array(),
             'reflector' => $reflector,
-        ));
-        if ($abs['isRecursion']) {
-            return $this->absClean($abs);
-        }
+        )));
         $abs->setSubject($obj);
-        $abs['isTraverseOnly'] = $this->isTraverseOnly($abs);
-        /*
-            Debug::EVENT_OBJ_ABSTRACT_START subscriber may
-            set isExcluded
-            set collectPropertyValues (boolean)
-            set cfgFlags (int / bitmask)
-            set propertyOverrideValues
-            set stringified
-            set traverseValues
-        */
-        $this->debug->publishBubbleEvent(Debug::EVENT_OBJ_ABSTRACT_START, $abs, $this->debug);
-        if ($abs['isExcluded']) {
-            return $this->absClean($abs);
-        }
-        $this->addMisc($abs);
-        $this->constants->add($abs);
-        $this->methods->add($abs);
-        $this->properties->add($abs);
-        /*
-            Debug::EVENT_OBJ_ABSTRACT_END subscriber has free reign to modify abtraction array
-        */
-        $this->debug->publishBubbleEvent(Debug::EVENT_OBJ_ABSTRACT_END, $abs, $this->debug);
-        return $this->absClean($abs);
+        $this->doAbstraction($abs);
+        $this->absClean($abs);
+        return $abs;
     }
 
     /**
@@ -218,7 +218,7 @@ class AbstractObject extends Component
      *
      * @param Abstraction $abs Abstraction instance
      *
-     * @return Abstraction
+     * @return void
      */
     private function absClean(Abstraction $abs)
     {
@@ -226,7 +226,7 @@ class AbstractObject extends Component
             'collectPropertyValues',
             'fullyQualifyPhpDocType',
             'hist',
-            'isAnonymous',
+            // 'isAnonymous',
             'isTraverseOnly',
             'propertyOverrideValues',
             'reflector',
@@ -241,15 +241,13 @@ class AbstractObject extends Component
             $this->helper->sort($values['properties'], $this->cfg['objectSort']);
             $this->helper->sort($values['methods'], $this->cfg['objectSort']);
         }
-        return $abs
+        $abs
             ->setSubject(null)
             ->setValues($values);
     }
 
     /**
-     * Populate constants, extends, phpDoc, & traverseValues
-     *
-     * methods & properties added separately
+     * Populate attributes, extends, phpDoc, & traverseValues
      *
      * @param Abstraction $abs Abstraction instance
      *
@@ -293,6 +291,48 @@ class AbstractObject extends Component
         foreach ($obj as $k => $v) {
             $abs['traverseValues'][$k] = $this->abstracter->crate($v, $abs['debugMethod'], $abs['hist']);
         }
+    }
+
+    /**
+     * Add attributes, constants, properties, methods, constants, etc
+     *
+     * @param Abstraction $abs Abstraction instance
+     *
+     * @return void
+     */
+    private function doAbstraction(Abstraction $abs)
+    {
+        if ($abs['isRecursion']) {
+            return;
+        }
+        $reflector = $abs['reflector'];
+        $abs['definition'] = array(
+            'fileName' => $reflector->getFileName(),
+            'startLine' => $reflector->getStartLine(),
+            'extensionName' => $reflector->getExtensionName(),
+        );
+        $abs['isTraverseOnly'] = $this->isTraverseOnly($abs);
+        /*
+            Debug::EVENT_OBJ_ABSTRACT_START subscriber may
+            set isExcluded
+            set collectPropertyValues (boolean)
+            set cfgFlags (int / bitmask)
+            set propertyOverrideValues
+            set stringified
+            set traverseValues
+        */
+        $this->debug->publishBubbleEvent(Debug::EVENT_OBJ_ABSTRACT_START, $abs, $this->debug);
+        if ($abs['isExcluded']) {
+            return;
+        }
+        $this->addMisc($abs);
+        $this->constants->add($abs);
+        $this->methods->add($abs);
+        $this->properties->add($abs);
+        /*
+            Debug::EVENT_OBJ_ABSTRACT_END subscriber has free reign to modify abtraction array
+        */
+        $this->debug->publishBubbleEvent(Debug::EVENT_OBJ_ABSTRACT_END, $abs, $this->debug);
     }
 
     /**
@@ -362,18 +402,18 @@ class AbstractObject extends Component
                 break;
             }
         }
-        if ($i < 0) {
-            $backtrace = $this->debug->backtrace->get();
-            foreach ($backtrace as $i => $frame) {
-                if (!isset($frame['class']) || \strpos($frame['class'], __NAMESPACE__) !== 0) {
-                    break;
-                }
-            }
-            $className = isset($backtrace[$i]['class'])
-                ? $backtrace[$i]['class']
-                : null;
+        if ($i >= 0) {
+            return $className;
         }
-        return $className;
+        $backtrace = $this->debug->backtrace->get();
+        foreach ($backtrace as $i => $frame) {
+            if (!isset($frame['class']) || \strpos($frame['class'], __NAMESPACE__) !== 0) {
+                break;
+            }
+        }
+        return isset($backtrace[$i]['class'])
+            ? $backtrace[$i]['class']
+            : null;
     }
 
     /**
@@ -408,30 +448,15 @@ class AbstractObject extends Component
     }
 
     /**
-     * Is the passed object excluded from debugging?
+     * Is object included in blacklist?
      *
-     * @param object|string $obj object (or classname) to test
+     * @param object $obj Object to test
      *
      * @return bool
      */
-    private function isExcluded($obj)
+    private function isBlacklisted($obj)
     {
-        $classname = \is_object($obj)
-            ? \get_class($obj)
-            : $obj;
-        $whitelist = $this->cfg['objectsWhitelist'];
-        if ($whitelist !== null) {
-            // wildcard in whitelist?  we'll allow it
-            if (\array_intersect(array('*', $classname), $whitelist)) {
-                return false;
-            }
-            foreach ($whitelist as $class) {
-                if (\is_subclass_of($obj, $class)) {
-                    return false;
-                }
-            }
-            return true;
-        }
+        $classname = \get_class($obj);
         $blacklist = $this->cfg['objectsExclude'];
         if (\array_intersect(array('*', $classname), $blacklist)) {
             return true;
@@ -446,6 +471,20 @@ class AbstractObject extends Component
     }
 
     /**
+     * Is the passed object excluded from debugging?
+     *
+     * @param object $obj object (or classname) to test
+     *
+     * @return bool
+     */
+    private function isExcluded($obj)
+    {
+        return $this->cfg['objectsWhitelist'] !== null
+            ? $this->isWhitelisted($obj) === false
+            : $this->isBlacklisted($obj);
+    }
+
+    /**
      * Test if only need to populate traverseValues
      *
      * @param Abstraction $abs Abstraction instance
@@ -454,10 +493,34 @@ class AbstractObject extends Component
      */
     private function isTraverseOnly(Abstraction $abs)
     {
-        if ($abs['debugMethod'] === 'table' && \count($abs['hist']) < 2) {
-            $obj = $abs->getSubject();
-            if ($obj instanceof \Traversable) {
-                $abs['cfgFlags'] &= ~self::COLLECT_METHODS;  // set collect methods to "false"
+        if ($abs['debugMethod'] !== 'table' || \count($abs['hist']) >= 2) {
+            return false;
+        }
+        $obj = $abs->getSubject();
+        if ($obj instanceof \Traversable) {
+            $abs['cfgFlags'] &= ~self::COLLECT_METHODS;  // set collect methods to "false"
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Is object included in whitelist?
+     *
+     * @param object $obj Object to test
+     *
+     * @return bool
+     */
+    private function isWhitelisted($obj)
+    {
+        $classname = \get_class($obj);
+        $whitelist = $this->cfg['objectsWhitelist'];
+        // wildcard in whitelist?  we'll allow it
+        if (\array_intersect(array('*', $classname), $whitelist)) {
+            return true;
+        }
+        foreach ($whitelist as $class) {
+            if (\is_subclass_of($obj, $class)) {
                 return true;
             }
         }

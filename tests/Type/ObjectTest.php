@@ -125,6 +125,7 @@ EOD;
                             'definition',
                             'extends',
                             'implements',
+                            'isAnonymous',
                             'isExcluded',
                             'isFinal',
                             'isRecursion',

@@ -102,12 +102,21 @@ class TraceTest extends DebugTestFramework
                         . '</tr>#is', $output, $matches, PREG_SET_ORDER);
                     $count = \count($matches);
                     for ($i = 1; $i < $count; $i++) {
-                        $valuesExpect = \array_merge(array((string) $i), \array_values($trace[$i]));
+                        $valuesExpect = \array_merge(
+                            array((string) $i),
+                            \array_values($trace[$i])
+                        );
                         $valuesExpect[1] = \is_null($valuesExpect[1]) ? 'null' : $valuesExpect[1];
                         $valuesExpect[2] = \is_null($valuesExpect[2]) ? 'null' : (string) $valuesExpect[2];
-                        $valuesExpect[3] = $this->debug->getDump('html')->valDumper->markupIdentifier($valuesExpect[3], 'span', array(), true);
+
+                        $function = $valuesExpect[3];
+                        $regex = '/^(.+)(::|->)(.+)$/';
+                        $valuesExpect[3] = \preg_match($regex, $function) || \strpos($function, '{closure}')
+                            ? $this->debug->getDump('html')->valDumper->markupIdentifier($function, 'span', array(), true)
+                            : '<span class="t_identifier">' . \htmlspecialchars($row['function']) . '</span>';
                         $valuesActual = $matches[$i];
                         \array_shift($valuesActual);
+                        echo $i . ': ' . print_r($valuesActual, true) . "\n";
                         $this->assertSame($valuesExpect, $valuesActual);
                     }
                 },

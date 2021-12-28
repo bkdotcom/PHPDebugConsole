@@ -156,7 +156,7 @@ class HtmlString
      */
     private function dumpClassname(Abstraction $abs)
     {
-        $val = $this->debug->getDump('html')->valDumper->markupIdentifier($abs['value']);
+        $val = $this->valDumper->markupIdentifier($abs['value']);
         $parsed = $this->debug->html->parseTag($val);
         $attribs = $this->valDumper->getDumpOpt('attribs');
         $attribs = $this->debug->arrayUtil->mergeDeep($attribs, $parsed['attribs']);

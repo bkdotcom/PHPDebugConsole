@@ -325,7 +325,7 @@ class Html extends Base
     {
         $label = \array_shift($args);
         if ($meta['isFuncName']) {
-            $label = $this->valDumper->markupIdentifier($label);
+            $label = $this->valDumper->markupIdentifier($label, true);
         }
         $labelClasses = \implode(' ', \array_keys(\array_filter(array(
             'font-weight-bold' => $meta['boldLabel'],

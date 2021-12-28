@@ -13,10 +13,12 @@
 namespace bdk\Debug;
 
 use bdk\Container;
+use bdk\Container\ServiceProviderInterface;
 use bdk\Debug;
 use bdk\Debug\Route\RouteInterface;
 use bdk\Debug\ServiceProvider;
 use bdk\PubSub\Event;
+use ReflectionMethod;
 
 /**
  * Handle underlying Debug bootstraping and config
@@ -34,10 +36,15 @@ class Scaffolding
     /** @var \bdk\Debug */
     protected static $instance;
 
+    protected $internal;
+    protected static $methodDefaultArgs = array();
     protected $parentInstance;
     protected $rootInstance;
 
-    protected $internal;
+    protected $readOnly = array(
+        'parentInstance',
+        'rootInstance',
+    );
 
     /**
      * Constructor
@@ -51,6 +58,75 @@ class Scaffolding
             self::$instance = $this;
         }
         $this->bootstrap($cfg);
+    }
+
+    /**
+     * Magic method... inaccessible method called.
+     *
+     * If method not found in internal class, treat as a custom method.
+     *
+     * @param string $methodName Inaccessible method name
+     * @param array  $args       Arguments passed to method
+     *
+     * @return mixed
+     */
+    public function __call($methodName, $args)
+    {
+        $callable = array($this->internal, $methodName);
+        if (\is_callable($callable)) {
+            return \call_user_func_array($callable, $args);
+        }
+        $logEntry = new LogEntry(
+            $this,
+            $methodName,
+            $args
+        );
+        $this->internal->publishBubbleEvent(Debug::EVENT_CUSTOM_METHOD, $logEntry);
+        if ($logEntry['handled'] !== true) {
+            $logEntry->setMeta('isCustomMethod', true);
+            $this->internal->appendLog($logEntry);
+        }
+        return $logEntry['return'];
+    }
+
+    /**
+     * Magic method to allow us to call instance methods statically
+     *
+     * Prefix the instance method with an underscore ie
+     *    \bdk\Debug::_log('logged via static method');
+     *
+     * @param string $methodName Inaccessible method name
+     * @param array  $args       Arguments passed to method
+     *
+     * @return mixed
+     */
+    public static function __callStatic($methodName, $args)
+    {
+        $methodName = \ltrim($methodName, '_');
+        if (!self::$instance && $methodName === 'setCfg') {
+            /*
+                Treat as a special case
+                Want to initialize with the passed config vs initialize, then setCfg
+                ie _setCfg(array('route'=>'html')) via command line
+                we don't want to first initialize with default STDERR output
+            */
+            $cfg = \is_array($args[0])
+                ? $args[0]
+                : array($args[0] => $args[1]);
+            new static($cfg);
+            return;
+        }
+        if (!self::$instance) {
+            new static();
+        }
+        /*
+            Add 'statically' meta arg
+            Not all methods expect meta args... so make sure it comes after expected args
+        */
+        $defaultArgs = self::getMethodDefaultArgs($methodName);
+        $args = \array_replace($defaultArgs, $args);
+        $args[] = static::meta('statically');
+        return \call_user_func_array(array(self::$instance, $methodName), $args);
     }
 
     /**
@@ -146,6 +222,63 @@ class Scaffolding
                 $channel->config->set($cfg);
             }
         }
+    }
+
+    /**
+     * Update dependencies
+     *
+     * This is called during bootstrap and from Internal::onConfig
+     *    Internal::onConfig has higher priority than our own onConfig handler
+     *
+     * @param ServiceProviderInterface|callable|array $val dependency definitions
+     *
+     * @return array
+     */
+    public function onCfgServiceProvider($val)
+    {
+        $val = $this->serviceProviderToArray($val);
+        if (\is_array($val) === false) {
+            return $val;
+        }
+        $services = $this->container['services'];
+        foreach ($val as $k => $v) {
+            if (\in_array($k, $services)) {
+                $this->serviceContainer[$k] = $v;
+                unset($val[$k]);
+                continue;
+            }
+            $this->container[$k] = $v;
+        }
+        return $val;
+    }
+
+    /**
+     * Get Method's default argument list
+     *
+     * @param string $methodName Name of the method
+     *
+     * @return array
+     */
+    protected static function getMethodDefaultArgs($methodName)
+    {
+        if (isset(self::$methodDefaultArgs[$methodName])) {
+            return self::$methodDefaultArgs[$methodName];
+        }
+        if (\method_exists(self::$instance, $methodName) === false) {
+            return array();
+        }
+        $defaultArgs = array();
+        $refMethod = new ReflectionMethod(self::$instance, $methodName);
+        $params = $refMethod->getParameters();
+        foreach ($params as $refParameter) {
+            $name = $refParameter->getName();
+            $defaultArgs[$name] = $refParameter->isOptional()
+                ? $refParameter->getDefaultValue()
+                : null;
+        }
+        unset($defaultArgs['args']);
+        self::$methodDefaultArgs[$methodName] = $defaultArgs;
+        return $defaultArgs;
     }
 
     /**
@@ -302,6 +435,42 @@ class Scaffolding
         }
         if ($val->appendsHeaders()) {
             $this->internal->obStart();
+        }
+        return $val;
+    }
+
+    /**
+     * Convert serviceProvider to array of name => value
+     *
+     * @param ServiceProviderInterface|callable|array $val dependency definitions
+     *
+     * @return array
+     */
+    private function serviceProviderToArray($val)
+    {
+        $getContainerRawVals = function (Container $container) {
+            $keys = $container->keys();
+            $return = array();
+            foreach ($keys as $key) {
+                $return[$key] = $container->raw($key);
+            }
+            return $return;
+        };
+        if ($val instanceof ServiceProviderInterface) {
+            /*
+                convert to array
+            */
+            $containerTmp = new Container();
+            $containerTmp->registerProvider($val);
+            return $getContainerRawVals($containerTmp);
+        }
+        if (\is_callable($val)) {
+            /*
+                convert to array
+            */
+            $containerTmp = new Container();
+            \call_user_func($val, $containerTmp);
+            return $getContainerRawVals($containerTmp);
         }
         return $val;
     }

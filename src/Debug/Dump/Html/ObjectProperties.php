@@ -127,7 +127,7 @@ class ObjectProperties
         return $this->dumpModifiers($info)
             . ($info['isPrivateAncestor']
                 // wrapped in span for css rule `.private-ancestor > *`
-                ? ' <span>(' . $this->valDumper->markupIdentifier($info['inheritedFrom'], 'i') . ')</span>'
+                ? ' <span>(' . $this->valDumper->markupIdentifier($info['inheritedFrom'], false, 'i') . ')</span>'
                 : '')
             . ($info['type']
                 ? ' ' . $this->helper->markupType($info['type'])

@@ -106,21 +106,23 @@ class Table
     private function buildCaption()
     {
         $caption = \htmlspecialchars($this->options['caption']);
-        if ($this->options['tableInfo']['class']) {
-            $class = $this->dumper->valDumper->markupIdentifier(
-                $this->options['tableInfo']['class'],
-                'span',
-                array(
-                    'title' => $this->options['tableInfo']['summary'] ?: null,
-                )
-            );
-            $caption = $caption
-                ? $caption . ' (' . $class . ')'
-                : $class;
+        if (!$this->options['tableInfo']['class']) {
+            return $caption
+                ? '<caption>' . $caption . '</caption>' . "\n"
+                : '';
         }
-        return $caption
-            ? '<caption>' . $caption . '</caption>' . "\n"
-            : '';
+        $class = $this->dumper->valDumper->markupIdentifier(
+            $this->options['tableInfo']['class'],
+            false,
+            'span',
+            array(
+                'title' => $this->options['tableInfo']['summary'] ?: null,
+            )
+        );
+        $caption = $caption
+            ? $caption . ' (' . $class . ')'
+            : $class;
+        return '<caption>' . $caption . '</caption>' . "\n";
     }
 
     /**
@@ -210,7 +212,7 @@ class Table
         */
         if ($this->options['tableInfo']['haveObjRow']) {
             $str .= $rowInfo['class']
-                ? $this->dumper->valDumper->markupIdentifier($rowInfo['class'], 'td', array(
+                ? $this->dumper->valDumper->markupIdentifier($rowInfo['class'], false, 'td', array(
                     'title' => $rowInfo['summary'] ?: null,
                 ))
                 : '<td class="t_undefined"></td>';

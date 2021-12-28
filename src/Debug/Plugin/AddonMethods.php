@@ -38,6 +38,24 @@ class AddonMethods implements SubscriberInterface
     /** @var SplObjectHash */
     protected $registeredPlugins;
 
+    protected $methods = array(
+        'addPlugin',
+        'email',
+        'getChannel',
+        'getChannels',
+        'getChannelsTop',
+        'getDump',
+        'getHeaders',
+        'getInterface',
+        'getRoute',
+        'hasLog',
+        'isCli',
+        'prettify',
+        'removePlugin',
+        'setErrorCaller',
+        'writeToResponse',
+    );
+
     /**
      * Constructor
      */
@@ -66,23 +84,7 @@ class AddonMethods implements SubscriberInterface
     public function onCustomMethod(LogEntry $logEntry)
     {
         $method = $logEntry['method'];
-        $methods = array(
-            'addPlugin',
-            'email',
-            'getChannel',
-            'getChannels',
-            'getChannelsTop',
-            'getDump',
-            'getHeaders',
-            'getInterface',
-            'getRoute',
-            'hasLog',
-            'isCli',
-            'prettify',
-            'removePlugin',
-            'writeToResponse',
-        );
-        if (!\in_array($method, $methods)) {
+        if (!\in_array($method, $this->methods)) {
             return;
         }
         $this->debug = $logEntry->getSubject();
@@ -383,6 +385,31 @@ class AddonMethods implements SubscriberInterface
     }
 
     /**
+     * A wrapper for errorHandler->setErrorCaller
+     *
+     * @param array $caller (optional) null (default) determine automatically
+     *                      empty value (false, "", 0, array()) clear
+     *                      array manually set
+     *
+     * @return void
+     */
+    public function setErrorCaller($caller = null)
+    {
+        if ($caller === null) {
+            $caller = $this->debug->backtrace->getCallerInfo(1);
+            $caller = array(
+                'file' => $caller['file'],
+                'line' => $caller['line'],
+            );
+        }
+        if ($caller) {
+            // groupEnd will check depth and potentially clear errorCaller
+            $caller['groupDepth'] = $this->debug->methodGroup->getDepth();
+        }
+        $this->debug->errorHandler->setErrorCaller($caller);
+    }
+
+    /**
      * Appends debug output (if applicable) and/or adds headers (if applicable)
      *
      * You should call this at the end of the request/response cycle in your PSR-7 project,
@@ -512,17 +539,7 @@ class AddonMethods implements SubscriberInterface
         }
         $classname = 'bdk\\Debug\\' . \ucfirst($cat) . '\\' . \ucfirst($name);
         if (\class_exists($classname)) {
-            /** @var \bdk\Debug\Dump\Base|RouteInterface */
-            $val = new $classname($this->debug);
-            if ($val instanceof ConfigurableInterface) {
-                $cfg = $this->debug->getCfg($property, Debug::CONFIG_INIT);
-                $val->setCfg($cfg);
-            }
-            // update container
-            $this->debug->onCfgServiceProvider(array(
-                $property => $val,
-            ));
-            return $val;
+            return $this->setDumpRoute($property, $classname);
         }
         $caller = $this->debug->backtrace->getCallerInfo();
         $this->debug->errorHandler->handleError(
@@ -531,6 +548,29 @@ class AddonMethods implements SubscriberInterface
             $caller['file'],
             $caller['line']
         );
+    }
+
+    /**
+     * Instantiate dumper or route
+     *
+     * @param string $property  ServiceProvider key
+     * @param string $classname Classname to instantiate
+     *
+     * @return \bdk\Debug\Dump\Base|RouteInterface
+     */
+    private function setDumpRoute($property, $classname)
+    {
+        /** @var \bdk\Debug\Dump\Base|RouteInterface */
+        $val = new $classname($this->debug);
+        if ($val instanceof ConfigurableInterface) {
+            $cfg = $this->debug->getCfg($property, Debug::CONFIG_INIT);
+            $val->setCfg($cfg);
+        }
+        // update container
+        $this->debug->onCfgServiceProvider(array(
+            $property => $val,
+        ));
+        return $val;
     }
 
     /**

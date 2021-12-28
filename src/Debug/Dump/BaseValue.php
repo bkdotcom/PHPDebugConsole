@@ -410,12 +410,14 @@ class BaseValue extends Component
 
     /**
      * Split identifier into classname, operator, & identifier
+     * Identifier = classname, function, or property
      *
-     * @param mixed $val classname or classname(::|->)name (method/property/const)
+     * @param Abstraction|array|string $val        classname or classname(::|->)name (method/property/const)
+     * @param bool                     $asFunction (false)
      *
      * @return array
      */
-    protected function parseIdentifier($val)
+    protected function parseIdentifier($val, $asFunction = false)
     {
         if ($val instanceof Abstraction) {
             $val = $val['value'];
@@ -425,12 +427,11 @@ class BaseValue extends Component
             'operator' => '::',
             'identifier' => '',
         );
-        $regex = '/^(.+)(::|->)(.+)$/';
         $matches = array();
         if (\is_array($val)) {
             $parts['classname'] = $val[0];
             $parts['identifier'] = $val[1];
-        } elseif (\preg_match($regex, $val, $matches)) {
+        } elseif (\preg_match('/^(.+)(::|->)(.+)$/', $val, $matches)) {
             $parts['classname'] = $matches[1];
             $parts['operator'] = $matches[2];
             $parts['identifier'] = $matches[3];
@@ -438,6 +439,9 @@ class BaseValue extends Component
             $parts['classname'] = $matches[1];
             $parts['operator'] = '';
             $parts['identifier'] = $matches[2];
+        } elseif ($asFunction) {
+            $parts['classname'] = '';
+            $parts['identifier'] = $val;
         }
         return $parts;
     }

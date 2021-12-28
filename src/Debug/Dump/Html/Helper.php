@@ -34,7 +34,6 @@ class Helper
         '$this', 'false', 'mixed', 'static', 'self', 'true', 'void',
     );
 
-
     /**
      * Constructor
      *
@@ -162,10 +161,7 @@ class Helper
     public function tableMarkupFunction($html, $row)
     {
         if (isset($row['function'])) {
-            $regex = '/^(.+)(::|->)(.+)$/';
-            $replace = \preg_match($regex, $row['function']) || \strpos($row['function'], '{closure}')
-                ? $this->dumper->valDumper->markupIdentifier($row['function'], 'span', array(), true)
-                : '<span class="t_identifier">' . \htmlspecialchars($row['function']) . '</span>';
+            $replace = $this->dumper->valDumper->markupIdentifier($row['function'], true, 'span', array(), true);
             $replace = '<td class="col-function no-quotes t_string">' . $replace . '</td>';
             $html = \str_replace(
                 '<td class="t_string">' . \htmlspecialchars($row['function']) . '</td>',
@@ -218,7 +214,7 @@ class Helper
             $isArray = true;
             $type = \substr($type, 0, -2);
         }
-        if (!\in_array($type, $this->types)) {
+        if (\in_array($type, $this->types) === false) {
             $type = $this->dumper->valDumper->markupIdentifier($type);
         }
         if ($isArray) {

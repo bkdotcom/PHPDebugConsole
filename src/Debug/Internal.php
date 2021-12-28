@@ -54,6 +54,28 @@ class Internal implements SubscriberInterface
         $this->debug->eventManager->addSubscriberInterface($this);
     }
 
+
+    /**
+     * Does alert contain substitutions
+     *
+     * @param array $args alert arguments
+     *
+     * @return bool
+     */
+    public function alertHasSubstitutions(array $args)
+    {
+        /*
+            Create a temporary LogEntry so we can test if we passed substitutions
+        */
+        $logEntry = new LogEntry(
+            $this->debug,
+            __FUNCTION__,
+            $args
+        );
+        $levelsAllowed = array('danger','error','info','success','warn','warning');
+        return $logEntry->containsSubstitutions() && \array_key_exists(1, $args) && !\in_array($args[1], $levelsAllowed);
+    }
+
     /**
      * Set alert()'s alert level'\
      *

@@ -247,7 +247,9 @@ class ChromeLogger extends AbstractRoute
             $this->debug,
             'alert',
             array('Log abridged due to header size constraint'),
-            array('level' => 'info')
+            array(
+                'level' => 'info',
+            )
         ));
         $this->reduceDataSummary();
         /*

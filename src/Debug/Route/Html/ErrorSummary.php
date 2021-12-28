@@ -84,9 +84,7 @@ class ErrorSummary
         return new LogEntry(
             $this->routeHtml->debug->getChannel('phpError'),
             'alert',
-            array(
-                $summary
-            ),
+            array($summary),
             array(
                 'attribs' => array(
                     'class' => array(

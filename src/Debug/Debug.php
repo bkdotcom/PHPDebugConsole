@@ -15,13 +15,10 @@
 
 namespace bdk;
 
-use bdk\Container;
-use bdk\Container\ServiceProviderInterface;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Scaffolding;
 use bdk\ErrorHandler\Error;
-use ReflectionMethod;
 
 /**
  * Web-browser/javascript like console class for PHP
@@ -164,12 +161,6 @@ class Debug extends Scaffolding
         ),
     );
 
-    protected static $methodDefaultArgs = array();
-    protected $readOnly = array(
-        'parentInstance',
-        'rootInstance',
-    );
-
     /**
      * Constructor
      *
@@ -185,75 +176,6 @@ class Debug extends Scaffolding
             return '█████████';
         };
         parent::__construct($cfg);
-    }
-
-    /**
-     * Magic method... inaccessible method called.
-     *
-     * If method not found in internal class, treat as a custom method.
-     *
-     * @param string $methodName Inaccessible method name
-     * @param array  $args       Arguments passed to method
-     *
-     * @return mixed
-     */
-    public function __call($methodName, $args)
-    {
-        $callable = array($this->internal, $methodName);
-        if (\is_callable($callable)) {
-            return \call_user_func_array($callable, $args);
-        }
-        $logEntry = new LogEntry(
-            $this,
-            $methodName,
-            $args
-        );
-        $this->internal->publishBubbleEvent(self::EVENT_CUSTOM_METHOD, $logEntry);
-        if ($logEntry['handled'] !== true) {
-            $logEntry->setMeta('isCustomMethod', true);
-            $this->internal->appendLog($logEntry);
-        }
-        return $logEntry['return'];
-    }
-
-    /**
-     * Magic method to allow us to call instance methods statically
-     *
-     * Prefix the instance method with an underscore ie
-     *    \bdk\Debug::_log('logged via static method');
-     *
-     * @param string $methodName Inaccessible method name
-     * @param array  $args       Arguments passed to method
-     *
-     * @return mixed
-     */
-    public static function __callStatic($methodName, $args)
-    {
-        $methodName = \ltrim($methodName, '_');
-        if (!self::$instance && $methodName === 'setCfg') {
-            /*
-                Treat as a special case
-                Want to initialize with the passed config vs initialize, then setCfg
-                ie _setCfg(array('route'=>'html')) via command line
-                we don't want to first initialize with default STDERR output
-            */
-            $cfg = \is_array($args[0])
-                ? $args[0]
-                : array($args[0] => $args[1]);
-            new static($cfg);
-            return;
-        }
-        if (!self::$instance) {
-            new static();
-        }
-        /*
-            Add 'statically' meta arg
-            Not all methods expect meta args... so make sure it comes after expected args
-        */
-        $defaultArgs = self::getMethodDefaultArgs($methodName);
-        $args = \array_replace($defaultArgs, $args);
-        $args[] = self::meta('statically');
-        return \call_user_func_array(array(self::$instance, $methodName), $args);
     }
 
     /*
@@ -278,16 +200,7 @@ class Debug extends Scaffolding
     public function alert($message, $level = 'error', $dismissible = false)
     {
         $args = \func_get_args();
-        /*
-            Create a temporary LogEntry so we can test if we passed substitutions
-        */
-        $logEntry = new LogEntry(
-            $this,
-            __FUNCTION__,
-            $args
-        );
-        $levelsAllowed = array('danger','error','info','success','warn','warning');
-        $haveSubstitutions = $logEntry->containsSubstitutions() && \array_key_exists(1, $args) && !\in_array($args[1], $levelsAllowed);
+        $hasSubstitutions = $this->internal->alertHasSubstitutions($args);
         $logEntry = new LogEntry(
             $this,
             __FUNCTION__,
@@ -296,13 +209,9 @@ class Debug extends Scaffolding
                 'level' => 'error',
                 'dismissible' => false,
             ),
-            $haveSubstitutions
+            $hasSubstitutions
                 ? array()
-                : array(
-                    'message' => null,
-                    'level' => 'error',
-                    'dismissible' => false,
-                ),
+                : $this->getMethodDefaultArgs(__FUNCTION__),
             array('level','dismissible')
         );
         $this->internal->alertLevel($logEntry);
@@ -354,7 +263,7 @@ class Debug extends Scaffolding
      *
      * This method executes even if `collect` is false
      *
-     * @param int $flags A bitmask of options
+     * @param int $bitmask A bitmask of options
      *                     `self::CLEAR_ALERTS` : Clear alerts generated with `alert()`
      *                     `self::CLEAR_LOG` : **default** Clear log entries (excluding warn & error)
      *                     `self::CLEAR_LOG_ERRORS` : Clear log, warn, & error
@@ -367,16 +276,14 @@ class Debug extends Scaffolding
      *
      * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter
      */
-    public function clear($flags = self::CLEAR_LOG)
+    public function clear($bitmask = self::CLEAR_LOG)
     {
         $logEntry = new LogEntry(
             $this,
             __FUNCTION__,
             \func_get_args(),
             array(),
-            array(
-                'bitmask' => self::CLEAR_LOG,
-            ),
+            $this->getMethodDefaultArgs(__FUNCTION__),
             array('bitmask')
         );
         $this->methodClear->doClear($logEntry);
@@ -508,9 +415,9 @@ class Debug extends Scaffolding
         $logEntry = new LogEntry(
             $this,
             __FUNCTION__,
-            array(
-                $value,
-            )
+            \func_get_args(),
+            array(),
+            $this->getMethodDefaultArgs(__FUNCTION__)
         );
         $this->methodGroup->methodGroupEnd($logEntry);
     }
@@ -536,9 +443,7 @@ class Debug extends Scaffolding
             __FUNCTION__,
             \func_get_args(),
             array(),
-            array(
-                'priority' => 0,
-            ),
+            $this->getMethodDefaultArgs(__FUNCTION__),
             array('priority')
         );
         $this->methodGroup->methodGroupSummary($logEntry);
@@ -628,9 +533,7 @@ class Debug extends Scaffolding
             __FUNCTION__,
             \func_get_args(),
             array(),
-            array(
-                'name' => null,
-            ),
+            $this->getMethodDefaultArgs(__FUNCTION__),
             array('name')
         );
         $this->methodProfile->doProfile($logEntry);
@@ -654,9 +557,7 @@ class Debug extends Scaffolding
             __FUNCTION__,
             \func_get_args(),
             array(),
-            array(
-                'name' => null
-            ),
+            $this->getMethodDefaultArgs(__FUNCTION__),
             array('name')
         );
         $this->methodProfile->profileEnd($logEntry);
@@ -716,10 +617,7 @@ class Debug extends Scaffolding
             __FUNCTION__,
             \func_get_args(),
             array(),
-            array(
-                'label' => null,
-                'duration' => null,
-            )
+            $this->getMethodDefaultArgs(__FUNCTION__)
         );
         $this->methodTime->doTime($logEntry);
     }
@@ -795,9 +693,7 @@ class Debug extends Scaffolding
                 'precision' => 4,
                 'unit' => 'auto',
             ),
-            array(
-                'label' => null,
-            )
+            $this->getMethodDefaultArgs(__FUNCTION__)
         );
         $this->methodTime->timeLog($logEntry);
     }
@@ -831,10 +727,7 @@ class Debug extends Scaffolding
                 'sortable' => false,
                 'trace' => null,  // set to specify trace
             ),
-            array(
-                'inclContext' => false,
-                'caption' => 'trace',
-            ),
+            $this->getMethodDefaultArgs(__FUNCTION__),
             array(
                 'caption',
                 'inclContext',
@@ -934,34 +827,6 @@ class Debug extends Scaffolding
     }
 
     /**
-     * Update dependencies
-     *
-     * This is called during bootstrap and from Internal::onConfig
-     *    Internal::onConfig has higher priority than our own onConfig handler
-     *
-     * @param ServiceProviderInterface|callable|array $val dependency definitions
-     *
-     * @return array
-     */
-    public function onCfgServiceProvider($val)
-    {
-        $val = $this->serviceProviderToArray($val);
-        if (\is_array($val) === false) {
-            return $val;
-        }
-        $services = $this->container['services'];
-        foreach ($val as $k => $v) {
-            if (\in_array($k, $services)) {
-                $this->serviceContainer[$k] = $v;
-                unset($val[$k]);
-                continue;
-            }
-            $this->container[$k] = $v;
-        }
-        return $val;
-    }
-
-    /**
      * Return debug log output
      *
      * Publishes Debug::EVENT_OUTPUT event and returns event's 'return' value
@@ -1007,97 +872,5 @@ class Debug extends Scaffolding
     public function setCfg($path, $value = null)
     {
         return $this->config->set($path, $value);
-    }
-
-    /**
-     * A wrapper for errorHandler->setErrorCaller
-     *
-     * @param array $caller (optional) null (default) determine automatically
-     *                      empty value (false, "", 0, array()) clear
-     *                      array manually set
-     *
-     * @return void
-     */
-    public function setErrorCaller($caller = null)
-    {
-        if ($caller === null) {
-            $caller = $this->backtrace->getCallerInfo(1);
-            $caller = array(
-                'file' => $caller['file'],
-                'line' => $caller['line'],
-            );
-        }
-        if ($caller) {
-            // groupEnd will check depth and potentially clear errorCaller
-            $caller['groupDepth'] = $this->methodGroup->getDepth();
-        }
-        $this->errorHandler->setErrorCaller($caller);
-    }
-
-    /*
-        Non-Public methods
-    */
-
-    /**
-     * Get Method's default argument list
-     *
-     * @param string $methodName Name of the method
-     *
-     * @return array
-     */
-    private static function getMethodDefaultArgs($methodName)
-    {
-        if (isset(self::$methodDefaultArgs[$methodName])) {
-            return self::$methodDefaultArgs[$methodName];
-        }
-        if (\method_exists(self::$instance, $methodName) === false) {
-            return array();
-        }
-        $defaultArgs = array();
-        $refMethod = new ReflectionMethod(self::$instance, $methodName);
-        $params = $refMethod->getParameters();
-        foreach ($params as $refParameter) {
-            $defaultArgs[] = $refParameter->isOptional()
-                ? $refParameter->getDefaultValue()
-                : null;
-        }
-        self::$methodDefaultArgs[$methodName] = $defaultArgs;
-        return $defaultArgs;
-    }
-
-    /**
-     * Convert serviceProvider to array of name => value
-     *
-     * @param ServiceProviderInterface|callable|array $val dependency definitions
-     *
-     * @return array
-     */
-    private function serviceProviderToArray($val)
-    {
-        $getContainerRawVals = function (Container $container) {
-            $keys = $container->keys();
-            $return = array();
-            foreach ($keys as $key) {
-                $return[$key] = $container->raw($key);
-            }
-            return $return;
-        };
-        if ($val instanceof ServiceProviderInterface) {
-            /*
-                convert to array
-            */
-            $containerTmp = new Container();
-            $containerTmp->registerProvider($val);
-            return $getContainerRawVals($containerTmp);
-        }
-        if (\is_callable($val)) {
-            /*
-                convert to array
-            */
-            $containerTmp = new Container();
-            \call_user_func($val, $containerTmp);
-            return $getContainerRawVals($containerTmp);
-        }
-        return $val;
     }
 }

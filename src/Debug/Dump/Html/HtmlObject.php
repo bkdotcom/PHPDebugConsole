@@ -183,7 +183,7 @@ class HtmlObject
     {
         $title = \trim($abs['phpDoc']['summary'] . "\n\n" . $abs['phpDoc']['desc']);
         $outPhpDoc = $abs['cfgFlags'] & AbstractObject::OUTPUT_PHPDOC;
-        return $this->valDumper->markupIdentifier($abs['className'], 'span', array(
+        return $this->valDumper->markupIdentifier($abs['className'], false, 'span', array(
             'title' => $outPhpDoc
                 ? $title
                 : null,

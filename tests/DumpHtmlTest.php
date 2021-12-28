@@ -38,19 +38,19 @@ class DumpHtmlTest extends DebugTestFramework
         // test alt tag
         $this->assertSame(
             '<div class="classname">Foo</div>',
-            $valDumper->markupIdentifier('Foo', 'div')
+            $valDumper->markupIdentifier('Foo', false, 'div')
         );
 
         // test attribs
         $this->assertSame(
             '<span class="classname" title="test">Foo</span>',
-            $valDumper->markupIdentifier('Foo', 'span', array('title' => 'test'))
+            $valDumper->markupIdentifier('Foo', false, 'span', array('title' => 'test'))
         );
 
         // test wbr
         $this->assertSame(
             '<span class="classname"><span class="namespace">Foo\<wbr /></span>Bar</span><wbr /><span class="t_operator">-&gt;</span><span class="t_identifier">baz</span>',
-            $valDumper->markupIdentifier('Foo\\Bar->baz', 'span', null, true)
+            $valDumper->markupIdentifier('Foo\\Bar->baz', false, 'span', null, true)
         );
     }
 

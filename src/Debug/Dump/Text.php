@@ -225,7 +225,7 @@ class Text extends Base
         ), $logEntry['meta']);
         $label = \array_shift($args);
         if ($meta['isFuncName']) {
-            $label = $this->valDumper->markupIdentifier($label);
+            $label = $this->valDumper->markupIdentifier($label, true);
         }
         foreach ($args as $k => $v) {
             $args[$k] = $this->valDumper->dump($v);

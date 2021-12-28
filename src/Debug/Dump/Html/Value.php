@@ -158,21 +158,18 @@ class Value extends BaseValue
      * if namespaced additionally wrap namespace in span.namespace
      * If callable, also wrap with .t_operator and .t_identifier
      *
-     * @param mixed  $val     classname or classname(::|->)name (method/property/const)
-     * @param string $tagName ("span") html tag to use
-     * @param array  $attribs (optional) additional html attributes for classname span
-     * @param bool   $wbr     (false)
+     * @param mixed  $val        classname or classname(::|->)name (method/property/const)
+     * @param string $asFunction (false) specify we're marking up a function
+     * @param string $tagName    ("span") html tag to use
+     * @param array  $attribs    (optional) additional html attributes for classname span
+     * @param bool   $wbr        (false)
      *
      * @return string
      */
-    public function markupIdentifier($val, $tagName = 'span', $attribs = array(), $wbr = false)
+    public function markupIdentifier($val, $asFunction = false, $tagName = 'span', $attribs = array(), $wbr = false)
     {
-        $parts = $this->parseIdentifier($val);
-        $classname = '';
+        $parts = $this->parseIdentifier($val, $asFunction);
         $operator = '<span class="t_operator">' . \htmlspecialchars($parts['operator']) . '</span>';
-        $identifier = $parts['identifier']
-            ? '<span class="t_identifier">' . $parts['identifier'] . '</span>'
-            : '';
         if ($parts['classname']) {
             $classname = $parts['classname'];
             $idx = \strrpos($classname, '\\');
@@ -180,7 +177,7 @@ class Value extends BaseValue
                 $classname = '<span class="namespace">' . \str_replace('\\', '\\<wbr />', \substr($classname, 0, $idx + 1)) . '</span>'
                     . \substr($classname, $idx + 1);
             }
-            $classname = $this->debug->html->buildTag(
+            $parts['classname'] = $this->debug->html->buildTag(
                 $tagName,
                 $this->debug->arrayUtil->mergeDeep(array(
                     'class' => array('classname'),
@@ -188,8 +185,10 @@ class Value extends BaseValue
                 $classname
             ) . '<wbr />';
         }
-        $parts = \array_filter(array($classname, $identifier), 'strlen');
-        $html = \implode($operator, $parts);
+        $parts['identifier'] = $parts['identifier']
+            ? '<span class="t_identifier">' . $parts['identifier'] . '</span>'
+            : '';
+        $html = \implode($operator, \array_filter(array($parts['classname'], $parts['identifier']), 'strlen'));
         if ($wbr === false) {
             $html = \str_replace('<wbr />', '', $html);
         }

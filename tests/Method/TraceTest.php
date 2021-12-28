@@ -109,14 +109,16 @@ class TraceTest extends DebugTestFramework
                         $valuesExpect[1] = \is_null($valuesExpect[1]) ? 'null' : $valuesExpect[1];
                         $valuesExpect[2] = \is_null($valuesExpect[2]) ? 'null' : (string) $valuesExpect[2];
 
+                        /*
                         $function = $valuesExpect[3];
                         $regex = '/^(.+)(::|->)(.+)$/';
                         $valuesExpect[3] = \preg_match($regex, $function) || \strpos($function, '{closure}')
                             ? $this->debug->getDump('html')->valDumper->markupIdentifier($function, 'span', array(), true)
                             : '<span class="t_identifier">' . \htmlspecialchars($function) . '</span>';
+                        */
+                        $valuesExpect[3] = $this->debug->getDump('html')->valDumper->markupIdentifier($valuesExpect[3], true, 'span', array(), true);
                         $valuesActual = $matches[$i];
                         \array_shift($valuesActual);
-                        echo $i . ': ' . print_r($valuesActual, true) . "\n";
                         $this->assertSame($valuesExpect, $valuesActual);
                     }
                 },

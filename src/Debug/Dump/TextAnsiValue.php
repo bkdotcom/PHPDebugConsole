@@ -27,13 +27,14 @@ class TextAnsiValue extends TextValue
     /**
      * Add ansi escape sequences for classname type strings
      *
-     * @param mixed $val classname or classname(::|->)name (method/property/const)
+     * @param mixed $val        classname or classname(::|->)name (method/property/const)
+     * @param bool  $asFunction (false) specify we're marking up a function
      *
      * @return string
      */
-    public function markupIdentifier($val)
+    public function markupIdentifier($val, $asFunction = false)
     {
-        $parts = $this->parseIdentifier($val);
+        $parts = $this->parseIdentifier($val, $asFunction);
         $classname = '';
         $operator = $this->cfg['escapeCodes']['operator'] . $parts['operator'] . $this->escapeReset;
         $identifier = '';

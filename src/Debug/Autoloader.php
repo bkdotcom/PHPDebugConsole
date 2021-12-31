@@ -17,7 +17,6 @@ namespace bdk\Debug;
  */
 class Autoloader
 {
-
     protected $classMap = array();
     protected $psr4Map = array();
 

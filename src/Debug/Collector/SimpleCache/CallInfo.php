@@ -31,7 +31,6 @@ use Exception;
  */
 class CallInfo extends Component
 {
-
     protected $duration;
     protected $exception;
     protected $keyOrKeys;

@@ -19,5 +19,4 @@ use Symfony\Component\HttpKernel\Bundle\Bundle;
  */
 class BdkDebugBundle extends Bundle
 {
-
 }

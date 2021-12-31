@@ -29,7 +29,6 @@ use bdk\PubSub\SubscriberInterface;
  */
 class Internal implements SubscriberInterface
 {
-
     /**
      * duplicate/store frequently used cfg vals
      *

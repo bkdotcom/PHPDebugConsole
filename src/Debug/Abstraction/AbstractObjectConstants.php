@@ -24,7 +24,6 @@ use ReflectionClassConstant;
  */
 class AbstractObjectConstants
 {
-
     protected $abstracter;
     protected $helper;
 

@@ -21,7 +21,6 @@ use Illuminate\Support\Str;
  */
 class EventsSubscriber
 {
-
     /** @var Debug */
     protected $debug;
 

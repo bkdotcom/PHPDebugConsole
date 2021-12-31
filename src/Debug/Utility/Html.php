@@ -17,7 +17,6 @@ namespace bdk\Debug\Utility;
  */
 class Html
 {
-
     /** @var int whether to decode data attribute */
     const PARSE_ATTRIB_DATA = 1;
     /** @var int whether to explode class attribute */

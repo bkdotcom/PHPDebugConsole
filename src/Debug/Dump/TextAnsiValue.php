@@ -21,7 +21,6 @@ use bdk\Debug\Abstraction\AbstractObject;
  */
 class TextAnsiValue extends TextValue
 {
-
     public $escapeReset;
 
     /**

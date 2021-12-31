@@ -21,7 +21,6 @@ use Symfony\Component\HttpKernel\KernelEvents;
  */
 class EventServiceProvider extends BaseEventServiceProvider
 {
-
     protected $listen = [
         KernelEvents::REQUEST => [
             array(ServiceProvider::class, 'onRequest'),

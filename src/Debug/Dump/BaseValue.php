@@ -23,7 +23,6 @@ use bdk\PubSub\Event;
  */
 class BaseValue extends Component
 {
-
     public $debug;
     public $crateRaw = true;    // whether dump() should crate "raw" value
                                 //   when processing log this is set to false

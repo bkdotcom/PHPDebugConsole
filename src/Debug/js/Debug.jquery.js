@@ -6107,6 +6107,7 @@
       '.debug .fa-plus-square-o:before { content:"\\f0fe"; font-weight:400; }' +
       '.debug .fa-shield:before { content:"\\f3ed"; }' +
       '.debug .fa-square-o:before { content:"\\f0c8"; font-weight:400; }' +
+      '.debug .fa-user-o:before { content:"\\f007"; }' +
       '.debug .fa-warning:before { content:"\\f071"; }' +
       '.debug .fa.fa-github { font-family: "Font Awesome 5 Brands"; }'
   }, 'phpDebugConsole');

@@ -11,7 +11,6 @@ use Composer\Script\Event;
  */
 class ComposerScripts
 {
-
     /**
      * Require slevomat/coding-standard if dev mode & PHP >= 7.1
      *

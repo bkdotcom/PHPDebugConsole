@@ -20,7 +20,6 @@ namespace bdk\Debug\Utility;
  */
 class ErrorLevel
 {
-
     /**
      * Get error level constants understood by specified php version
      *

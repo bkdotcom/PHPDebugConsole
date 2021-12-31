@@ -33,7 +33,6 @@ use Swift_TransportException;
  */
 class SwiftMailerLogger implements Swift_Events_CommandListener, Swift_Events_ResponseListener, Swift_Events_SendListener, Swift_Events_TransportChangeListener, Swift_Events_TransportExceptionListener, Swift_Plugins_Logger
 {
-
     private $debug;
     protected $messages = array();
     protected $icon = 'fa fa-envelope-o';

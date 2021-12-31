@@ -23,7 +23,6 @@ use PDOStatement;
  */
 class Statement extends PDOStatement
 {
-
     protected $pdo;
     protected $boundParameters = array();
     protected $boundParameterTypes = array();

@@ -17,7 +17,6 @@ namespace bdk\Debug\Utility;
  */
 class StopWatch
 {
-
     protected $timers = array(
         'labels' => array(
             // label => array(accumulatedTime, lastStartedTime|null)

@@ -20,7 +20,6 @@ use bdk\Container\ServiceProviderInterface;
  */
 class ServiceProvider implements ServiceProviderInterface
 {
-
     /**
      * Register services and factories
      *

@@ -31,7 +31,6 @@ use bdk\Container\ServiceProviderInterface;
  */
 class Container implements \ArrayAccess
 {
-
     private $cfg = array(
         'allowOverride' => false,  // whether can update alreay built service
         'onInvoke' => null, // callable

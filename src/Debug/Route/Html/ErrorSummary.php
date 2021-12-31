@@ -23,7 +23,6 @@ use bdk\ErrorHandler\Error;
  */
 class ErrorSummary
 {
-
     protected $debug;
     protected $html;
     protected $errorHandler;

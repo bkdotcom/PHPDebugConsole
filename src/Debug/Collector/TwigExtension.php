@@ -21,7 +21,6 @@ use Twig\Profiler\Profile;
  */
 class TwigExtension extends ProfilerExtension
 {
-
     private $debug;
     protected $icon = 'fa fa-file-text-o';
 

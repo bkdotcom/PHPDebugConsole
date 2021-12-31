@@ -24,7 +24,6 @@ use Reflector;
  */
 class AbstractObjectHelper
 {
-
     private $phpDoc;
 
     /**

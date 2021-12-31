@@ -22,7 +22,6 @@ use bdk\Debug\Dump\BaseValue;
  */
 class TextValue extends BaseValue
 {
-
     protected $valDepth = 0;
 
     /**

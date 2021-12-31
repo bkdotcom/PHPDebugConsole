@@ -27,7 +27,6 @@ use Psr\Http\Server\RequestHandlerInterface;
  */
 class Middleware extends Component implements MiddlewareInterface
 {
-
     /**
      * @var Debug
      */

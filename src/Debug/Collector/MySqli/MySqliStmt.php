@@ -22,7 +22,6 @@ use mysqli_stmt as mysqliStmtBase;
  */
 class MySqliStmt extends mysqliStmtBase
 {
-
     private $query;
     private $mysqli;
     private $params = array();

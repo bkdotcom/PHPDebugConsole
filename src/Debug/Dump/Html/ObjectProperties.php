@@ -24,7 +24,6 @@ use bdk\Debug\Utility\Html as HtmlUtil;
  */
 class ObjectProperties
 {
-
     protected $dumpObject;
     protected $valDumper;
     protected $helper;

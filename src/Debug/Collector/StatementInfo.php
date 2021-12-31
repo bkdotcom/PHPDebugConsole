@@ -41,7 +41,6 @@ use Exception;
  */
 class StatementInfo extends Component
 {
-
     protected $debug;
     protected $duration;
     protected $exception;

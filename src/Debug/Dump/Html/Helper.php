@@ -20,7 +20,6 @@ use bdk\Debug\Dump\Html as Dumper;
  */
 class Helper
 {
-
     protected $debug;
     protected $dumper;
     protected $types = array(

@@ -24,7 +24,6 @@ use bdk\PubSub\SubscriberInterface;
  */
 class Redaction implements SubscriberInterface
 {
-
     /**
      * duplicate/store frequently used cfg vals
      *

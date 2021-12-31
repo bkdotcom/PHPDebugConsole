@@ -27,7 +27,6 @@ use Exception;
  */
 class LogReqRes implements SubscriberInterface
 {
-
     private $debug;
     private $headerStyle = 'display:block; font-size:110%; font-weight:bold; padding:0.25em 0.5em; text-indent:0; border-bottom:#31708f 1px solid; background: linear-gradient(0deg, rgba(0,0,0,0.1) 0%, rgba(255,255,255,0.1) 100%);';
 

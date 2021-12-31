@@ -20,7 +20,6 @@ use bdk\Debug\Abstraction\Abstraction;
  */
 class FileTree
 {
-
     /**
      * Convert list of filepaths to a tree structure
      *

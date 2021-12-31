@@ -22,7 +22,6 @@ use InvalidArgumentException;
  */
 class Response extends Message
 {
-
     /**
      * Map of standard HTTP status code/reason phrases
      *

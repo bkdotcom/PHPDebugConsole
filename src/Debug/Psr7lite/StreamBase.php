@@ -20,7 +20,6 @@ use RuntimeException;
  */
 class StreamBase
 {
-
     protected $strings = array(
         'detached' => 'Stream is detached',
         'fopenFail' => 'The file %s cannot be opened.',

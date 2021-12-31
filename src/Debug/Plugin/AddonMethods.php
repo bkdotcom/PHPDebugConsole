@@ -30,7 +30,6 @@ use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
  */
 class AddonMethods implements SubscriberInterface
 {
-
     private $debug;
 
     private $channels = array();

@@ -22,7 +22,6 @@ use bdk\PubSub\Event;
  */
 class Email implements RouteInterface
 {
-
     public $debug;
 
     /**

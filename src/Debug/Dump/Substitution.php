@@ -22,7 +22,6 @@ use bdk\Debug\LogEntry;
  */
 class Substitution
 {
-
     protected $debug;
     protected $dumper;
     private $subInfo = array();

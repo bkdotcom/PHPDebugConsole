@@ -9,7 +9,6 @@ use bdk\Backtrace;
  */
 class FindExit
 {
-
     private $classesSkip = array();
     private $depth = 0;
     private $funcStack = array(); // nested functions

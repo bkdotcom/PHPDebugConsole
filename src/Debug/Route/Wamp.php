@@ -30,7 +30,6 @@ use bdk\WampPublisher;
  */
 class Wamp implements RouteInterface
 {
-
     public $debug;
     public $requestId;
     public $topic = 'bdk.debug';

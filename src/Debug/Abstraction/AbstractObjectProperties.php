@@ -22,7 +22,6 @@ use ReflectionProperty;
  */
 class AbstractObjectProperties
 {
-
     protected $abstracter;
     protected $helper;
 

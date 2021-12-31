@@ -21,7 +21,6 @@ use JsonSerializable;
  */
 class LogEntry extends Event implements JsonSerializable
 {
-
     public $subRegex;
 
     /**

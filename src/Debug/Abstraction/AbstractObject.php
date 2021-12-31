@@ -31,7 +31,6 @@ use RuntimeException;
  */
 class AbstractObject extends Component
 {
-
     const COLLECT_ATTRIBUTES_CONST = 128;
     const COLLECT_ATTRIBUTES_METHOD = 2048;
     const COLLECT_ATTRIBUTES_OBJ = 32;

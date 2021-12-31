@@ -27,7 +27,6 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class HttpFoundationBridge
 {
-
     /**
      * Create a Psr7lite request object from HttpFoundation request
      *

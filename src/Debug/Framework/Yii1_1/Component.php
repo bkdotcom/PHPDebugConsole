@@ -38,7 +38,6 @@ use Yii;
  */
 class Component extends CApplicationComponent implements SubscriberInterface
 {
-
     public $debug;
     public $logRoute;
     public $yiiApp;

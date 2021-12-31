@@ -26,7 +26,6 @@ use Doctrine\DBAL\Logging\SQLLogger;
  */
 class DoctrineLogger implements SQLLogger
 {
-
     private $connection;
     private $debug;
 

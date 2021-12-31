@@ -27,7 +27,6 @@ use bdk\Debug\LogEntry;
  */
 class Html extends Base
 {
-
     /** @var HtmlHelper helper class */
     public $helper;
 

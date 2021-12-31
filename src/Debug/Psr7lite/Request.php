@@ -24,7 +24,6 @@ use Psr\Http\Message\UriInterface;
  */
 class Request extends Message
 {
-
     /** @var string */
     private $method = 'GET';
 

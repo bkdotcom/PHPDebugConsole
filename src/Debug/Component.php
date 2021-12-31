@@ -19,7 +19,6 @@ use bdk\Debug\ConfigurableInterface;
  */
 abstract class Component implements ConfigurableInterface
 {
-
     protected $cfg = array();
     protected $readOnly = array();
 

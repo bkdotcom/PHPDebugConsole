@@ -23,7 +23,6 @@ use bdk\PubSub\SubscriberInterface;
  */
 class ErrorEmailer implements SubscriberInterface
 {
-
     /** @var array */
     protected $cfg = array();
     protected $errTypes = array();  // populated onError

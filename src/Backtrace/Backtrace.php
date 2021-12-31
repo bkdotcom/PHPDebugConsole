@@ -89,7 +89,7 @@ class Backtrace
         /*
             Must get at least 13 frames to account for potential framework loggers
         */
-        $backtrace = \debug_backtrace($phpOptions, 13);
+        $backtrace = \debug_backtrace($phpOptions, 15);
         $count = \count($backtrace);
         for ($i = 1; $i < $count; $i++) {
             if (self::isSkippable($backtrace[$i])) {

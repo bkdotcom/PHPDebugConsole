@@ -34,7 +34,6 @@ use yii\base\Module as BaseModule;
  */
 class Module extends BaseModule implements SubscriberInterface, BootstrapInterface
 {
-
     /** @var \bdk\Debug */
     public $debug;
 

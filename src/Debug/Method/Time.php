@@ -19,7 +19,6 @@ use bdk\Debug\LogEntry;
  */
 class Time
 {
-
     /**
      * Start a timer identified by label
      *

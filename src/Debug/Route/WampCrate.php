@@ -22,7 +22,6 @@ use bdk\Debug\LogEntry;
  */
 class WampCrate
 {
-
     private $debug;
     private $detectFiles = false;
     private $foundFiles = array();

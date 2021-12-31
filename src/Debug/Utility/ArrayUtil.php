@@ -19,7 +19,6 @@ use bdk\Debug\Utility;
  */
 class ArrayUtil
 {
-
     /**
      * "dereference" array
      * returns a copy of the array with references removed

@@ -22,7 +22,6 @@ use bdk\Debug\LogEntry;
  */
 class Base extends Component
 {
-
     public $debug;
     protected $alertStyles = array(
         'common' => 'padding: 5px;

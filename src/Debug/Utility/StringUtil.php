@@ -20,7 +20,6 @@ use SqlFormatter;
  */
 class StringUtil
 {
-
     const IS_BASE64_LENGTH = 1;
     const IS_BASE64_CHAR_STAT = 2;
 

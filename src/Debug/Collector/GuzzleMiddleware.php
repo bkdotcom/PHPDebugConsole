@@ -25,7 +25,6 @@ use Psr\Http\Message\ResponseInterface;
  */
 class GuzzleMiddleware
 {
-
     private $debug;
     private $icon = 'fa fa-exchange';
     private $nextHandler;

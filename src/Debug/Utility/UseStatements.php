@@ -22,7 +22,6 @@ use ReflectionClass;
  */
 class UseStatements
 {
-
     protected static $cache = array();
     protected static $currentUse = null;
     protected static $categories = array(

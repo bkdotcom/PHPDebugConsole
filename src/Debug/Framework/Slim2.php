@@ -22,7 +22,6 @@ use Slim\Log;
  */
 class Slim2
 {
-
     private $debug;
     private $prevWriter;
 

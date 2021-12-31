@@ -27,7 +27,6 @@ use bdk\PubSub\Manager;
  */
 class FileStreamWrapper
 {
-
     const OUTPUT_ACCESS_MODE = 'rb+';
     const OUTPUT_DESTINATION = 'php://memory';
     const STREAM_OPEN_FOR_INCLUDE = 128;

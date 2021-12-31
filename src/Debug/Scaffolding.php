@@ -25,7 +25,6 @@ use ReflectionMethod;
  */
 class Scaffolding
 {
-
     /** @var \bdk\Debug\Config */
     protected $config;
 
@@ -124,7 +123,7 @@ class Scaffolding
             Not all methods expect meta args... so make sure it comes after expected args
         */
         $defaultArgs = self::getMethodDefaultArgs($methodName);
-        $args = \array_replace($defaultArgs, $args);
+        $args = \array_replace(\array_values($defaultArgs), $args);
         $args[] = static::meta('statically');
         return \call_user_func_array(array(self::$instance, $methodName), $args);
     }

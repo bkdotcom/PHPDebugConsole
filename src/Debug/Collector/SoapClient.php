@@ -24,7 +24,6 @@ use bdk\Debug\Plugin\Highlight;
  */
 class SoapClient extends \SoapClient
 {
-
     private $debug;
     protected $icon = 'fa fa-exchange';
 

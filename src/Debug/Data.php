@@ -19,7 +19,6 @@ use bdk\Debug;
  */
 class Data
 {
-
     private $debug;
     private $arrayUtil;
 

@@ -22,7 +22,6 @@ use bdk\PubSub\SubscriberInterface;
  */
 class LogEnv implements SubscriberInterface
 {
-
     private $debug;
 
     /**

@@ -24,7 +24,6 @@ use Psr\Http\Message\StreamInterface;
  */
 class Message
 {
-
     /**
      * @var StreamInterface|Stream
      */

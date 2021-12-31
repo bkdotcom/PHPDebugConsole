@@ -23,7 +23,6 @@ use bdk\PubSub\Event;
  */
 abstract class AbstractRoute extends Component implements RouteInterface
 {
-
     public $debug;
     protected $appendsHeaders = false;
     protected $channelName = null;

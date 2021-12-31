@@ -19,7 +19,6 @@ use bdk\Debug\Dump\Html as Dumper;
  */
 class Table
 {
-
     protected $debug;
     protected $dumper;
     protected $options;

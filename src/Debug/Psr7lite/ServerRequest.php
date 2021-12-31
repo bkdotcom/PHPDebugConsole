@@ -21,7 +21,6 @@ use bdk\Debug\Psr7lite\Stream;
  */
 class ServerRequest extends ServerRequestBase
 {
-
     /** @var array */
     private $attributes = array();
 

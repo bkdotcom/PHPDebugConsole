@@ -24,7 +24,6 @@ use bdk\ErrorHandler\Error;
  */
 class Scaffolding
 {
-
     /** @var array */
     protected $cfg = array();
 

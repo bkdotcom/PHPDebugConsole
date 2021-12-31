@@ -25,7 +25,6 @@ use Psr\Http\Message\UploadedFileInterface;
  */
 class ServerRequestBase extends Request
 {
-
     /**
      * Throw an exception if an unsupported argument type is provided.
      *

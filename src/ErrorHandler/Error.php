@@ -21,7 +21,6 @@ use bdk\PubSub\Event;
  */
 class Error extends Event
 {
-
     const CAT_DEPRECATED = 'deprecated';
     const CAT_ERROR = 'error';
     const CAT_NOTICE = 'notice';

@@ -23,7 +23,6 @@ use Psr\Log\LogLevel;
  */
 class Logger extends AbstractLogger
 {
-
     public $debug;
 
     protected $cfg = array(

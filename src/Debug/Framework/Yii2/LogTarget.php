@@ -21,7 +21,6 @@ use yii\log\Target;
  */
 class LogTarget extends Target
 {
-
     public $except = array(
         'yii\db\Command::query',
     );

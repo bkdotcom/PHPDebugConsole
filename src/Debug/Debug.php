@@ -58,7 +58,6 @@ use bdk\ErrorHandler\Error;
  */
 class Debug extends Scaffolding
 {
-
     const CLEAR_ALERTS = 1;
     const CLEAR_LOG = 2;
     const CLEAR_LOG_ERRORS = 4;

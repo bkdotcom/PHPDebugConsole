@@ -22,7 +22,6 @@ use bdk\PubSub\SubscriberInterface;
  */
 class ConfigEventSubscriber implements SubscriberInterface
 {
-
     protected $debug;
     private $isBootstrapped = false;
     private static $profilingEnabled = false;

@@ -27,7 +27,6 @@ use bdk\PubSub\Event;
  */
 class ChromeLogger extends AbstractRoute
 {
-
     const HEADER_NAME = 'X-ChromeLogger-Data';
 
     protected $appendsHeaders = true;

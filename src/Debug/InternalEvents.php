@@ -28,7 +28,6 @@ use bdk\PubSub\SubscriberInterface;
  */
 class InternalEvents implements SubscriberInterface
 {
-
     private $debug;
     private $highlightAdded = false;
 

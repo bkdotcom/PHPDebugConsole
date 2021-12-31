@@ -16,7 +16,6 @@ namespace bdk\Backtrace;
  */
 class Normalizer
 {
-
     private static $backtraceTemp = array();
 
     private static $frameDefault = array(

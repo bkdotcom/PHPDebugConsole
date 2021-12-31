@@ -28,7 +28,6 @@ use Serializable;
  */
 class Abstraction extends Event implements JsonSerializable, Serializable
 {
-
     /**
      * Constructor
      *

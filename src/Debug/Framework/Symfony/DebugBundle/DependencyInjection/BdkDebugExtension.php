@@ -24,7 +24,6 @@ use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
  */
 class BdkDebugExtension extends Extension implements PrependExtensionInterface
 {
-
     /**
      * {@inheritDoc}
      */

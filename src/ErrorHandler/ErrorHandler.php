@@ -25,7 +25,6 @@ use bdk\PubSub\Manager as EventManager;
  */
 class ErrorHandler extends Scaffolding
 {
-
     const EVENT_ERROR = 'errorHandler.error';
 
     /** @var EventManager */

@@ -21,7 +21,6 @@ use bdk\Debug\LogEntry;
  */
 class Text extends Base
 {
-
     protected $depth = 0;   // for keeping track of indentation
     protected $cfg = array(
         'prefixes' => array(

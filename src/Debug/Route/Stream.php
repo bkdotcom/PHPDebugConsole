@@ -21,7 +21,6 @@ use bdk\PubSub\Event;
  */
 class Stream extends AbstractRoute
 {
-
     protected $fileHandle;
     protected $cfg = array(
         'ansi' => 'default',        // default | true | false  (STDOUT & STDERR streams will default to true)

@@ -27,7 +27,6 @@ use RuntimeException;
  */
 class UploadedFile
 {
-
     /** @var string|null */
     private $clientFilename;
 

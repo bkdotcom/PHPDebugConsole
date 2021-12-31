@@ -22,7 +22,6 @@ use bdk\Debug\LogEntry;
  */
 class SerializeLog
 {
-
     protected static $debug;
     protected static $isLegacyData = false;
 

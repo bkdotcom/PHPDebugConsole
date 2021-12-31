@@ -19,7 +19,6 @@ use InvalidArgumentException;
  */
 class UriBase
 {
-
     const CHAR_SUB_DELIMS = '!\$&\'\(\)\*\+,;=';
     const CHAR_UNRESERVED = 'a-zA-Z0-9_\-\.~';
 

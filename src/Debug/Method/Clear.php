@@ -20,7 +20,6 @@ use bdk\Debug\LogEntry;
  */
 class Clear
 {
-
     private $data = array();
     private $debug;
     private $channelName = null;

@@ -20,7 +20,6 @@ use bdk\Debug\LogEntry;
  */
 class Count
 {
-
     private $counts = array();
 
     /**

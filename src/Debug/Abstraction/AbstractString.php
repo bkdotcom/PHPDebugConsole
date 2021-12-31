@@ -21,7 +21,6 @@ use finfo;
  */
 class AbstractString extends Component
 {
-
     protected $abstracter;
     protected $debug;
 

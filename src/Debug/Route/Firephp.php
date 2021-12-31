@@ -21,7 +21,6 @@ use bdk\PubSub\Event;
  */
 class Firephp extends AbstractRoute
 {
-
     const FIREPHP_PROTO_VER = '0.3';
     const MESSAGE_LIMIT = 99999;
 

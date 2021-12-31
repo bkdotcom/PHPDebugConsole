@@ -23,7 +23,6 @@ use bdk\PubSub\Event;
  */
 class Html extends AbstractRoute
 {
-
     protected $errorSummary;
     protected $tabs;
     protected $cfg = array();

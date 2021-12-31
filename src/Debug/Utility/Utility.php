@@ -22,7 +22,6 @@ use ReflectionObject;
  */
 class Utility
 {
-
     const IS_CALLABLE_ARRAY_ONLY = 1;
     const IS_CALLABLE_OBJ_ONLY = 2;
     const IS_CALLABLE_STRICT = 3;

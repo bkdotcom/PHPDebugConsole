@@ -20,7 +20,6 @@ use bdk\Debug\Abstraction\Abstraction;
  */
 class TableRow
 {
-
     const SCALAR = "\x00scalar\x00";
 
     private $row = null;

@@ -21,7 +21,6 @@ use bdk\Debug\Dump\Html\Value as ValDumper;
  */
 class HtmlString
 {
-
     public $detectFiles = false;
 
     protected $debug;

@@ -19,7 +19,6 @@ use bdk\Debug\AssetProviderInterface;
  */
 class Highlight implements AssetProviderInterface
 {
-
     /**
      * {@inheritDoc}
      *

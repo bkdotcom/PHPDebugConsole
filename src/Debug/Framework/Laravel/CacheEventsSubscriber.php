@@ -25,7 +25,6 @@ use Illuminate\Events\Dispatcher;
  */
 class CacheEventsSubscriber
 {
-
     /** @var array */
     protected $classMap = array(
         CacheHit::class => 'hit',

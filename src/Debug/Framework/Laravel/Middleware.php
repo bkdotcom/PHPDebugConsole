@@ -198,9 +198,14 @@ class Middleware
                 continue;
             }
         }
-        $this->debug->groupSummary();
-        $this->debug->log('Laravel auth', $this->authData);
-        $this->debug->groupEnd();
+        $debug = $this->debug->rootInstance->getChannel(
+            'User',
+            array(
+                'channelIcon' => 'fa fa-user-o',
+                'nested' => false,
+            )
+        );
+        $debug->log('Laravel auth', $this->authData);
         $this->authData = array();
     }
 
@@ -321,16 +326,22 @@ class Middleware
         if (!$this->shouldCollect('session', false)) {
             return;
         }
-        $this->debug->groupSummary();
-        $this->debug->log(
-            'session',
+        $debug = $this->debug->rootInstance->getChannel(
+            'Session',
+            array(
+                'channelIcon' => 'fa fa-suitcase',
+                'nested' => false,
+            )
+        );
+        $debug->log(
             $this->debug->abstracter->crateWithVals(
                 \get_class($this->container['session']),
                 array('typeMore' => Abstracter::TYPE_STRING_CLASSNAME)
-            ),
+            )
+        );
+        $debug->log(
             $this->container['session']->all()
         );
-        $this->debug->groupEnd();
     }
 
     /**

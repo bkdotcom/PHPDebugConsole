@@ -20,7 +20,6 @@ use bdk\Debug\ConfigurableInterface;
  */
 class Config
 {
-
     protected $debug;
     protected $debugPropChecked = array();
     protected $valuesPending = array();

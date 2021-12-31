@@ -26,7 +26,6 @@ use bdk\Debug\Dump\Html\HtmlString;
  */
 class Value extends BaseValue
 {
-
     /** @var HtmlString string dumper */
     public $string;
 

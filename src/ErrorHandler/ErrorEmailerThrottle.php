@@ -17,7 +17,6 @@ use bdk\ErrorHandler\Error;
  */
 class ErrorEmailerThrottle
 {
-
     protected $cfg = array();
     protected $data = array();
     protected $summaryErrors = array();

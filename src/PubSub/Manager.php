@@ -20,7 +20,6 @@ use bdk\PubSub\SubscriberInterface;
  */
 class Manager
 {
-
     const EVENT_PHP_SHUTDOWN = 'php.shutdown';
     const DEFAULT_PRIORITY = 0;
 

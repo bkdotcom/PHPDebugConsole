@@ -20,7 +20,6 @@ use bdk\Debug\LogEntry;
  */
 class TextAnsi extends Text
 {
-
     const ESCAPE_RESET = "\x00escapeReset\x00";
 
     protected $ansiCfg = array(

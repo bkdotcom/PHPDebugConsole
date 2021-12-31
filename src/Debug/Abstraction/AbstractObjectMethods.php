@@ -25,7 +25,6 @@ use ReflectionParameter;
  */
 class AbstractObjectMethods
 {
-
     protected $abstracter;
     protected $helper;
 

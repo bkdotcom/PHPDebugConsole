@@ -19,9 +19,11 @@ use bdk\Debug\Collector\StatementInfo;
 use bdk\Debug\Framework\Laravel\CacheEventsSubscriber;
 use bdk\Debug\Framework\Laravel\EventsSubscriber;
 use bdk\Debug\Framework\Laravel\Middleware;
+use bdk\Debug\LogEntry;
+use bdk\Debug\Method\TableRow;
 use bdk\Debug\Utility\ArrayUtil;
+use bdk\ErrorHandler\Error;
 use Illuminate\Contracts\Http\Kernel;
-use Illuminate\Database\Connection as DbConnection;
 use Illuminate\Database\DatabaseManager;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Support\ServiceProvider as BaseServiceProvider;
@@ -32,7 +34,6 @@ use Illuminate\View\View;
  */
 class ServiceProvider extends BaseServiceProvider
 {
-
     public $debug;
     protected $modelCounts = array();
     private $isLumen = false;
@@ -51,12 +52,12 @@ class ServiceProvider extends BaseServiceProvider
                 'session' => false,
             ),
             'filepathScript' => './js/Debug.jquery.js',
-            'onError' => function (\bdk\ErrorHandler\Error $error) {
+            'onError' => function (Error $error) {
                 $error['continueToPrevHandler'] = false; // forward error to Laravel Handler?
             },
         ));
         $this->debug = new Debug($config);
-        $this->debug->eventManager->subscribe(Debug::EVENT_LOG, function (Debug\LogEntry $logEntry) {
+        $this->debug->eventManager->subscribe(Debug::EVENT_LOG, function (LogEntry $logEntry) {
             if ($logEntry->getChannelName() === 'general.local') {
                 $logEntry->setMeta('channel', null);
             }
@@ -91,6 +92,82 @@ class ServiceProvider extends BaseServiceProvider
         $this->logViews();
         $this->registerLogHandler();
         $this->registerMiddleware();
+    }
+
+    /**
+     * Log model usage
+     *
+     * @return void
+     */
+    public function onOutput()
+    {
+        $debug = $this->debug->getChannel('Models', array(
+            'channelIcon' => 'fa fa-cubes',
+            'nested' => false,
+        ));
+        $tableInfoRows = array();
+        $modelCounts = $this->buildModelCountTable($tableInfoRows);
+        $debug->table('Model Usage', $modelCounts, $debug->meta(array(
+            'columnNames' => array(
+                TableRow::SCALAR => 'count',
+            ),
+            'detectFiles' => true,
+            'sortable' => true,
+            'tableInfo' => array(
+                'indexLabel' => 'model',
+                'rows' => $tableInfoRows
+            ),
+            'totalCols' => array(TableRow::SCALAR),
+        )));
+    }
+
+    /**
+     * Build DatabaseManager event handler
+     *
+     * @param Debug       $dbChannel  PHPDebugConsole channel
+     * @param string|null $msg        Group message
+     * @param bool        $isGroupEnd (false) groupEnd ?
+     *
+     * @return Closure
+     */
+    private function buildDbEventHandler(Debug $dbChannel, $msg, $isGroupEnd = false)
+    {
+        return function () use ($dbChannel, $msg, $isGroupEnd) {
+            if ($isGroupEnd === false) {
+                $dbChannel->group($msg);
+                return;
+            }
+            if ($msg) {
+                $dbChannel->log($msg);
+            }
+            $dbChannel->groupEnd();
+        };
+    }
+
+    /**
+     * Process the stored model counts for outputing as table
+     *
+     * @param array $tableInfoRows gets updated with tableInfo.rows for table
+     *
+     * @return array
+     */
+    private function buildModelCountTable(&$tableInfoRows)
+    {
+        $modelCounts = array();
+        $tableInfoRows = array();
+        foreach ($this->modelCounts as $class => $count) {
+            $ref = new \ReflectionClass($class);
+            $modelCounts[] = $count;
+            $tableInfoRows[] = array(
+                'key' => $this->debug->abstracter->crateWithVals($class, array(
+                    'typeMore' => Abstracter::TYPE_STRING_CLASSNAME,
+                    'attribs' => array(
+                        'data-file' => $ref->getFileName(),
+                    )
+                )),
+            );
+        }
+        return $modelCounts;
     }
 
     /**
@@ -140,44 +217,32 @@ class ServiceProvider extends BaseServiceProvider
      */
     private function dbSubscribe(DatabaseManager $dbManager, Debug $dbChannel)
     {
-        $dbManager->getEventDispatcher()->listen(
+        $eventDispatcher = $dbManager->getEventDispatcher();
+
+        $eventDispatcher->listen(
             \Illuminate\Database\Events\TransactionBeginning::class,
-            function () use ($dbChannel) {
-                $dbChannel->group('Begin Transaction');
-            }
+            $this->buildDbEventHandler($dbChannel, 'Begin Transaction')
         );
-        $dbManager->getEventDispatcher()->listen(
+        $eventDispatcher->listen(
             \Illuminate\Database\Events\TransactionCommitted::class,
-            function () use ($dbChannel) {
-                $dbChannel->groupEnd();
-            }
+            $this->buildDbEventHandler($dbChannel, null, true)
         );
-        $dbManager->getEventDispatcher()->listen(
+        $eventDispatcher->listen(
             \Illuminate\Database\Events\TransactionRolledBack::class,
-            function () use ($dbChannel) {
-                $dbChannel->log('rollback');
-                $dbChannel->groupEnd();
-            }
+            $this->buildDbEventHandler($dbChannel, 'rollback', true)
         );
 
-        $dbManager->getEventDispatcher()->listen(
+        $eventDispatcher->listen(
             'connection.*.beganTransaction',
-            function () use ($dbChannel) {
-                $dbChannel->group('Begin Transaction');
-            }
+            $this->buildDbEventHandler($dbChannel, 'Begin Transaction')
         );
-        $dbManager->getEventDispatcher()->listen(
+        $eventDispatcher->listen(
             'connection.*.committed',
-            function () use ($dbChannel) {
-                $dbChannel->groupEnd();
-            }
+            $this->buildDbEventHandler($dbChannel, null, true)
         );
-        $dbManager->getEventDispatcher()->listen(
+        $eventDispatcher->listen(
             'connection.*.rollingBack',
-            function () use ($dbChannel) {
-                $dbChannel->log('rollback');
-                $dbChannel->groupEnd();
-            }
+            $this->buildDbEventHandler($dbChannel, 'rollback', true)
         );
     }
 
@@ -299,38 +364,7 @@ class ServiceProvider extends BaseServiceProvider
                 $this->modelCounts[$class] = (int) ($this->modelCounts[$class] ?? 0) + 1;
             }
         });
-        $this->debug->eventManager->subscribe('debug.output', function () {
-            $debug = $this->debug->getChannel('Models', array(
-                'channelIcon' => 'fa fa-cubes',
-                'nested' => false,
-            ));
-            $modelCounts = array();
-            $tableInfoRows = array();
-            foreach ($this->modelCounts as $class => $count) {
-                $ref = new \ReflectionClass($class);
-                $modelCounts[] = $count;
-                $tableInfoRows[] = array(
-                    'key' => $this->debug->abstracter->crateWithVals($class, array(
-                        'typeMore' => Abstracter::TYPE_STRING_CLASSNAME,
-                        'attribs' => array(
-                            'data-file' => $ref->getFileName(),
-                        )
-                    )),
-                );
-            }
-            $debug->table('Model Usage', $modelCounts, $debug->meta(array(
-                'columnNames' => array(
-                    \bdk\Debug\Method\Table::SCALAR => 'count',
-                ),
-                'detectFiles' => true,
-                'sortable' => true,
-                'tableInfo' => array(
-                    'indexLabel' => 'model',
-                    'rows' => $tableInfoRows
-                ),
-                'totalCols' => array(\bdk\Debug\Method\Table::SCALAR),
-            )));
-        });
+        $this->debug->eventManager->subscribe(Debug::EVENT_OUTPUT, array($this, 'onOutput'));
     }
 
     /**
@@ -384,30 +418,7 @@ class ServiceProvider extends BaseServiceProvider
                     )
                 )
                 : null,
-            'params' => \call_user_func(function (View $view) {
-                $data = $view->getData();
-                /** @var bool|'type' */
-                $collectValues = $this->app['config']->get('phpDebugConsole.options.views.data');
-                if ($collectValues === true) {
-                    \ksort($data);
-                    return $data;
-                }
-                if ($collectValues === 'type') {
-                    foreach ($data as $k => $v) {
-                        $type = $this->debug->abstracter->getType($v)[0];
-                        $data[$k] = $type === 'object'
-                            ? $this->debug->abstracter->crateWithVals(\get_class($v), array(
-                                'typeMore' => Abstracter::TYPE_STRING_CLASSNAME,
-                            ))
-                            : $type;
-                    }
-                    \ksort($data);
-                    return $data;
-                }
-                $data = \array_keys($data);
-                \sort($data);
-                return $data;
-            }, $view),
+            'params' => \call_user_func(array($this, 'logViewParams'), $view),
             'type' => \is_object($path)
                 ? \get_class($view)
                 : (\substr($path, -10) === '.blade.php'
@@ -415,6 +426,41 @@ class ServiceProvider extends BaseServiceProvider
                     : \pathinfo($path, PATHINFO_EXTENSION)),
         ));
         $this->viewChannel->log('view', $info, $this->viewChannel->meta('detectFiles'));
+    }
+
+    /**
+     * Get view params (view data)
+     *
+     * @param View $view View instance
+     *
+     * @return array
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     */
+    private function logViewParams(View $view)
+    {
+        $data = $view->getData();
+        /** @var bool|'type' */
+        $collectValues = $this->app['config']->get('phpDebugConsole.options.views.data');
+        if ($collectValues === true) {
+            \ksort($data);
+            return $data;
+        }
+        if ($collectValues !== 'type') {
+            $data = \array_keys($data);
+            \sort($data);
+            return $data;
+        }
+        foreach ($data as $k => $v) {
+            $type = $this->debug->abstracter->getType($v)[0];
+            $data[$k] = $type === 'object'
+                ? $this->debug->abstracter->crateWithVals(\get_class($v), array(
+                    'typeMore' => Abstracter::TYPE_STRING_CLASSNAME,
+                ))
+                : $type;
+        }
+        \ksort($data);
+        return $data;
     }
 
     /**

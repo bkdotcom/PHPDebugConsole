@@ -40,7 +40,6 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 class Cake4 extends BasePlugin
 {
-
     private $debug;
     private $ignoreLogError = false;
     /** @var @var ErrorHandlerMiddleware */

@@ -25,7 +25,6 @@ use Reflector;
  */
 class PhpDoc
 {
-
     /** @var array */
     protected static $cache = array();
     protected static $parsers = array();
@@ -190,7 +189,7 @@ class PhpDoc
         if ($what instanceof ReflectionClass) {
             $str = 'class:' . $what->getName();
         } elseif ($what instanceof ReflectionClassConstant) {
-            $str = 'const:' . $what->getName();
+            $str = 'const:' . $what->getDeclaringClass()->getName() . '::' . $what->getName();
         } elseif ($what instanceof ReflectionMethod) {
             $str = 'method:' . $what->getDeclaringClass()->getName() . '::' . $what->getName() . '()';
         } elseif ($what instanceof ReflectionFunction) {
@@ -505,10 +504,8 @@ class PhpDoc
     {
         $lines = \explode("\n", (string) $desc);
         $leadingSpaces = array();
-        foreach ($lines as $line) {
-            if (\strlen($line)) {
-                $leadingSpaces[] = \strspn($line, ' ');
-            }
+        foreach (\array_filter($lines) as $line) {
+            $leadingSpaces[] = \strspn($line, ' ');
         }
         \array_shift($leadingSpaces);    // first line will always have zero leading spaces
         $trimLen = $leadingSpaces

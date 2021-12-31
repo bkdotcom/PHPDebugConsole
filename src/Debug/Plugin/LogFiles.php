@@ -20,7 +20,6 @@ use bdk\Debug\Component;
  */
 class LogFiles extends Component
 {
-
     private $excludedCounts = array();
     private $debug;
     private $files;

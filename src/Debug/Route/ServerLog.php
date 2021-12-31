@@ -23,7 +23,6 @@ use bdk\PubSub\Event;
  */
 class ServerLog extends ChromeLogger
 {
-
     const HEADER_NAME = 'X-ServerLog-Location';
 
     protected $cfg = array(

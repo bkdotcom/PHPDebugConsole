@@ -22,7 +22,6 @@ use Psr\Log\LoggerInterface;
  */
 class MonologHandler extends PsrHandler
 {
-
     /**
      * Constructor
      *

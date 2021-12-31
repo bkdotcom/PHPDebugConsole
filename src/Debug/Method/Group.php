@@ -25,7 +25,6 @@ use bdk\PubSub\SubscriberInterface;
  */
 class Group implements SubscriberInterface
 {
-
     public $debug;
 
     protected $log = array();

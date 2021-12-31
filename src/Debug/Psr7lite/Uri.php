@@ -20,7 +20,6 @@ use InvalidArgumentException;
  */
 class Uri extends UriBase
 {
-
     /** @var string Uri scheme. */
     private $scheme = '';
 

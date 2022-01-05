@@ -7,8 +7,8 @@ use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
-use bdk\Debug\Psr7lite\ServerRequest;
 use bdk\DebugTests\PolyFill\AssertionTrait;
+use bdk\HttpMessage\ServerRequest;
 use bdk\PubSub\Event;
 
 /**

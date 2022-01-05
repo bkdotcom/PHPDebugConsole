@@ -10,17 +10,18 @@
  * @version   v3.0
  */
 
-namespace bdk\Debug\Psr7lite;
+namespace bdk\HttpMessage;
 
-use bdk\Debug\Psr7lite\Message;
+use bdk\HttpMessage\Message;
 use InvalidArgumentException;
+use Psr\Http\Message\ResponseInterface;
 
 /**
- * INTERNAL USE ONLY
+ * Http Response
  *
  * @psalm-consistent-constructor
  */
-class Response extends Message
+class Response extends Message implements ResponseInterface
 {
     /**
      * Map of standard HTTP status code/reason phrases
@@ -192,6 +193,31 @@ class Response extends Message
     }
 
     /**
+     * Validate status code
+     *
+     * @param int $code Status Code
+     *
+     * @return void
+     *
+     * @throws InvalidArgumentException
+     */
+    private function assertCode($code)
+    {
+        if (!\is_int($code) && !\is_string($code)) {
+            throw new InvalidArgumentException(
+                'Status code has to be an integer'
+            );
+        }
+        $code = (int) $code;
+        if ($code < 100 || $code > 599) {
+            throw new InvalidArgumentException(\sprintf(
+                'Status code has to be an integer between 100 and 599. A status code of %d was given',
+                $code
+            ));
+        }
+    }
+
+    /**
      * Validate reason phrase
      *
      * @param string $phrase Reason phrase to test
@@ -234,18 +260,8 @@ class Response extends Message
      */
     private function filterCodePhrase($code, $phrase)
     {
-        if (!\is_int($code) && !\is_string($code)) {
-            throw new InvalidArgumentException(
-                'Status code has to be an integer'
-            );
-        }
+        $this->assertCode($code);
         $code = (int) $code;
-        if ($code < 100 || $code > 599) {
-            throw new InvalidArgumentException(\sprintf(
-                'Status code has to be an integer between 100 and 599. A status code of %d was given',
-                $code
-            ));
-        }
         if ($phrase === null || $phrase === '') {
             $phrase = \array_key_exists($code, self::$phrases)
                 ? self::$phrases[$code]

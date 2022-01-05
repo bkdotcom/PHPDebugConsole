@@ -10,15 +10,16 @@
  * @version   v3.0
  */
 
-namespace bdk\Debug\Psr7lite;
+namespace bdk\HttpMessage;
 
-use bdk\Debug\Psr7lite\StreamBase;
+use bdk\HttpMessage\StreamBase;
+use Psr\Http\Message\StreamInterface;
 use RuntimeException;
 
 /**
- * INTERNAL USE ONLY
+ * Psr\Http\Message\Stream implementation
  */
-class Stream extends StreamBase
+class Stream extends StreamBase implements StreamInterface
 {
     /**
      * Resource modes.
@@ -218,8 +219,9 @@ class Stream extends StreamBase
      * @param int $offset Stream offset
      * @param int $whence Specifies how the cursor position will be calculated
      *     based on the seek offset. Valid values are identical to the built-in
-     *     PHP $whence values for `fseek()`.  SEEK_SET: Set position equal to
-     *     offset bytes SEEK_CUR: Set position to current location plus offset
+     *     PHP $whence values for `fseek()`.
+     *     SEEK_SET: Set position equal to offset bytes
+     *     SEEK_CUR: Set position to current location plus offset
      *     SEEK_END: Set position to end-of-stream plus offset.
      *
      * @link   http://www.php.net/manual/en/function.fseek.php

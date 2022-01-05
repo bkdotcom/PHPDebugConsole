@@ -1,8 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit
-	bootstrap="tests/bootstrap.php"
-	testdox="true"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.3/phpunit.xsd"
+  bootstrap="tests/bootstrap.php"
+  colors="true"
+  testdox="true"
 >
+  <coverage processUncoveredFiles="true">
+    <include>
+      <directory suffix=".php">src</directory>
+    </include>
+    <report>
+      <clover outputFile="temp/coverage.xml"/>
+      <html outputDirectory="temp/coverage"/>
+      <text outputFile="php://stdout" showUncoveredFiles="true" showOnlySummary="true"/>
+    </report>
+    <exclude>
+      <file>src/Debug/ComposerScripts.php</file>
+      <directory>src/Backtrace</directory>
+      <directory>src/Debug/Framework</directory>
+      <directory>src/ErrorHandler</directory>
+      <directory>src/Psr7</directory>
+    </exclude>
+  </coverage>
   <testsuites>
     <testsuite name="Debug">
       <directory>tests</directory>

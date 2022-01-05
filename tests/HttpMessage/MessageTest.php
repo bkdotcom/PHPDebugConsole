@@ -1,9 +1,9 @@
 <?php
 
-namespace bdk\DebugTests\Psr7lite;
+namespace bdk\DebugTests\HttpMessage;
 
-use bdk\Debug\Psr7lite\Message;
-use bdk\Debug\Psr7lite\Stream;
+use bdk\HttpMessage\Message;
+use bdk\HttpMessage\Stream;
 use PHPUnit\Framework\TestCase;
 use ReflectionObject;
 use stdClass;
@@ -50,6 +50,13 @@ class MessageTest extends TestCase
         // Test - without
         $new3Message = $new2Message->withoutHeader('hello-world');
         $this->assertFalse($new3Message->hasHeader('hello-world'));
+
+        $message = new Message();
+        $messageNew = $message->withProtocolVersion(1.1);
+        $this->assertSame($message, $messageNew);
+
+        $messageNew = $message->withoutHeader('hello-world');
+        $this->assertSame($message, $messageNew);
     }
 
     public function testBodyMethods()
@@ -57,8 +64,11 @@ class MessageTest extends TestCase
         $resource = \fopen(TEST_DIR . '/assets/logo.png', 'r+');
         $stream = new Stream($resource);
         $message = new Message();
-        $newMessage = $message->withBody($stream);
-        $this->assertEquals($stream, $newMessage->getBody());
+        $messageNew = $message->withBody($stream);
+        $this->assertSame($stream, $messageNew->getBody());
+
+        $messageNew2 = $messageNew->withBody($stream);
+        $this->assertSame($messageNew, $messageNew2);
     }
 
     public function testSetHeaders()
@@ -114,6 +124,14 @@ class MessageTest extends TestCase
         $message->withHeader('hello-wo)rld', 'ok');
     }
 
+    public function testExceptionHeaderNameEmpty()
+    {
+        $this->expectException('InvalidArgumentException');
+        $message = new Message();
+        // Exception => empty string is not a valid header name
+        $message->withHeader('', 'ok');
+    }
+
     public function testExceptionHeaderName2()
     {
         $this->expectException('InvalidArgumentException');
@@ -122,7 +140,7 @@ class MessageTest extends TestCase
         $message->withHeader(['test'], 'ok');
     }
 
-    public function testExceptionHeaderValueBooolean()
+    public function testExceptionHeaderValueBoolean()
     {
         $this->expectException('InvalidArgumentException');
         $message = new Message();
@@ -136,6 +154,14 @@ class MessageTest extends TestCase
         $message = new Message();
         // Exception => The header field value only accepts string and array, but "NULL" provided.
         $message->withHeader('hello-world', null);
+    }
+
+    public function testExceptioneaderValueEmptyArray()
+    {
+        $this->expectException('InvalidArgumentException');
+        $message = new Message();
+        // Exception => The header field value only accepts string and non-array
+        $message->withHeader('hello-world', []);
     }
 
     public function testExceptionHeaderValueObject()

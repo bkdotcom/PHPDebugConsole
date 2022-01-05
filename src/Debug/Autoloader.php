@@ -32,7 +32,9 @@ class Autoloader
             'bdk\\Backtrace\\' => __DIR__ . '/../Backtrace',
             'bdk\\Container\\' => __DIR__ . '/../Container',
             'bdk\\ErrorHandler\\' => __DIR__ . '/../ErrorHandler',
+            'bdk\\HttpMessage\\' => __DIR__ . '/../HttpMessage',
             'bdk\\PubSub\\' => __DIR__ . '/../PubSub',
+            'Psr\\Http\\Message\\' => __DIR__ . '/../Psr7',
         );
         $this->classMap = array(
             'bdk\\Backtrace' => __DIR__ . '/../Backtrace/Backtrace.php',

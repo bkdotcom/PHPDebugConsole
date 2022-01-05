@@ -87,7 +87,7 @@ class StringUtil
     }
 
     /**
-     * Test if value is a json encoded  object or array
+     * Test if value is a json encoded object or array
      *
      * @param string $val value to test
      *
@@ -188,6 +188,8 @@ class StringUtil
      * @param string $sql SQL string to prettify
      *
      * @return string
+     *
+     * @see https://github.com/jdorn/sql-formatter
      */
     public static function prettySql($sql)
     {

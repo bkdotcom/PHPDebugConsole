@@ -167,7 +167,7 @@ class ServiceProvider implements ServiceProviderInterface
             /*
                 This can return Psr\Http\Message\ServerRequestInterface
             */
-            return \bdk\Debug\Psr7lite\ServerRequest::fromGlobals();
+            return \bdk\HttpMessage\ServerRequest::fromGlobals();
         };
         $container['response'] = null;
         $container['routeWamp'] = function (Container $container) {

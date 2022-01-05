@@ -337,7 +337,7 @@ class Utility
             }
             return;
         }
-        // \header($name . ': ' . $value);
+        \header($name . ': ' . $value);
     }
 
     /**
@@ -347,6 +347,8 @@ class Utility
      * @param string $format   DateInterval format string
      *
      * @return string
+     *
+     * @see https://www.php.net/manual/en/dateinterval.format.php
      */
     private static function formatDurationDateInterval($duration, $format)
     {
@@ -358,7 +360,7 @@ class Utility
         $sec = \round($sec, 6);
         if (\preg_match('/%[Ff]/', $format)) {
             $secWhole = \floor($sec);
-            $secFraction = $secWhole - $sec;
+            $secFraction = $sec - $secWhole;
             $sec = $secWhole;
             $micros = $secFraction * 1000000;
             $format = \strtr($format, array(
@@ -366,7 +368,6 @@ class Utility
                 '%f' => $micros,                    // Microseconds: w/o leading zeros
             ));
         }
-        $format = \preg_replace('/%[Ss]/', (string) $sec, $format);
         $dateInterval = new \DateInterval('PT0S');
         $dateInterval->h = (int) $hours;
         $dateInterval->i = (int) $min;

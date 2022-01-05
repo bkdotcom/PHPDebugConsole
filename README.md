@@ -37,7 +37,19 @@ It is installable and autoloadable via [Composer](https://getcomposer.org/) as [
 }
 ```
 
-Alternatively, [download a release](https://github.com/bkdotcom/PHPDebugConsole/releases) or clone this repository, then require `src/Debug/Debug.php`
+**installation without Composer**
+
+* [download a release](https://github.com/bkdotcom/PHPDebugConsole/releases) or clone this repository.
+* include Autoloader and Debug in your code
+
+```php
+// Step 1: include and register Autoloader
+require 'path-to/src/Debug/Autoloader.php';
+$autoloader = new \bdk\Debug\Autoloader();
+$autoloader->register();
+// Step 2:  include Debug.php
+require 'path-to/src/Debug/Debug.php';
+```
 
 See <http://www.bradkent.com/php/debug> for more information
 

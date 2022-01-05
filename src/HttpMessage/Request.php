@@ -10,19 +10,20 @@
  * @version   v3.0
  */
 
-namespace bdk\Debug\Psr7lite;
+namespace bdk\HttpMessage;
 
-use bdk\Debug\Psr7lite\Message;
-use bdk\Debug\Psr7lite\Uri;
+use bdk\HttpMessage\Message;
+use bdk\HttpMessage\Uri;
 use InvalidArgumentException;
+use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\UriInterface;
 
 /**
- * INTERNAL USE ONLY
+ * Http Requeset
  *
  * @psalm-consistent-constructor
  */
-class Request extends Message
+class Request extends Message implements RequestInterface
 {
     /** @var string */
     private $method = 'GET';
@@ -30,7 +31,7 @@ class Request extends Message
     /** @var string|null */
     private $requestTarget;
 
-    /** @var UriInterface|Uri */
+    /** @var UriInterface */
     private $uri;
 
     /**
@@ -56,8 +57,8 @@ class Request extends Message
     /**
      * Constructor
      *
-     * @param string                  $method The HTTP method associated with the request.
-     * @param UriInterface|Uri|string $uri    The URI associated with the request.
+     * @param string              $method The HTTP method associated with the request.
+     * @param UriInterface|string $uri    The URI associated with the request.
      *
      * @throws InvalidArgumentException
      */
@@ -67,8 +68,8 @@ class Request extends Message
         $this->method = \strtoupper($method);
         if (\is_string($uri) || $uri === null) {
             $uri = new Uri($uri);
-        } elseif (!($uri instanceof UriInterface) && !($uri instanceof Uri)) {
-            throw new InvalidArgumentException('uri must be a string or instance of UriInterface or Uri');
+        } elseif (!($uri instanceof UriInterface)) {
+            throw new InvalidArgumentException('uri must be a string or instance of UriInterface');
         }
         $this->uri = $uri;
     }
@@ -177,7 +178,7 @@ class Request extends Message
      *
      * This method MUST return a UriInterface instance.
      *
-     * @return UriInterface|Uri Returns a UriInterface instance
+     * @return UriInterface Returns a UriInterface instance
      *     representing the URI of the request.
      *
      * @see https://datatracker.ietf.org/doc/html/rfc3986#section-4.3
@@ -212,8 +213,8 @@ class Request extends Message
      * immutability of the message, and MUST return an instance that has the
      * new UriInterface instance.
      *
-     * @param UriInterface|Uri $uri          New request URI to use.
-     * @param bool             $preserveHost Preserve the original state of the Host header.
+     * @param UriInterface $uri          New request URI to use.
+     * @param bool         $preserveHost Preserve the original state of the Host header.
      *
      * @see https://datatracker.ietf.org/doc/html/rfc3986#section-4.3
      *
@@ -221,16 +222,10 @@ class Request extends Message
      *
      * @throws InvalidArgumentException
      */
-    public function withUri($uri, $preserveHost = false)
+    public function withUri(UriInterface $uri, $preserveHost = false)
     {
         if ($uri === $this->uri) {
             return $this;
-        }
-        if (!($uri instanceof UriInterface) && !($uri instanceof Uri)) {
-            throw new InvalidArgumentException(\sprintf(
-                'Uri must be an instance of UriInterface or Uri, but %s provided.',
-                self::getTypeDebug($uri)
-            ));
         }
         $new = clone $this;
         $new->uri = $uri;
@@ -272,12 +267,12 @@ class Request extends Message
      *    then Return the new Request with updated header
      *    otherwise return static
      *
-     * @param self             $new Request instance
-     * @param UriInterface|Uri $uri New request URI to use.
+     * @param self         $new Request instance
+     * @param UriInterface $uri New request URI to use.
      *
      * @return static
      */
-    private function updateHostHeader(self $new, $uri)
+    private function updateHostHeader(self $new, UriInterface $uri)
     {
         $host = $uri->getHost();
         if ($host === '') {

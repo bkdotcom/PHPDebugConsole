@@ -216,11 +216,8 @@ class Config
         /*
             Now set the values
         */
+        unset($configs['debug']); // debug uses a Debug::EVENT_CONFIG subscriber to set the value
         foreach ($configs as $debugProp => $cfg) {
-            if ($debugProp === 'debug') {
-                // debug uses a Debug::EVENT_CONFIG subscriber to set the value
-                continue;
-            }
             $this->setPropCfg($debugProp, $cfg);
         }
         return $return;
@@ -231,27 +228,41 @@ class Config
      *
      * @param string $debugProp  debug property name
      * @param array  $path       path/key
-     * @param bool   $forInit    Get values for bootstap (don't initialize obj)
+     * @param bool   $forInit    (false) Get values for bootstap (don't initialize obj)
      * @param bool   $delPending Delete pending values (if forInit)
      *
      * @return mixed
      */
     private function getPropCfg($debugProp, $path = array(), $forInit = false, $delPending = true)
     {
-        if ($debugProp === 'debug') {
-            return $this->debug->getCfg($path, Debug::CONFIG_DEBUG);
-        }
+        $val = null;
         if (isset($this->valuesPending[$debugProp])) {
             $val = $this->debug->arrayUtil->pathGet($this->valuesPending[$debugProp], $path);
             if ($delPending) {
                 unset($this->valuesPending[$debugProp]);
             }
-            if ($val !== null) {
-                return $val;
-            }
         }
+        return $val !== null
+            ? $val
+            : $this->getPropCfgFromObj($debugProp, $path, $forInit);
+    }
+
+    /**
+     * Get value from object
+     *
+     * @param string $debugProp debug property name
+     * @param array  $path      path/key
+     * @param bool   $forInit   (false) Get values for bootstap (don't initialize obj)
+     *
+     * @return mixed
+     */
+    private function getPropCfgFromObj($debugProp, $path = array(), $forInit = false)
+    {
         $obj = null;
         $matches = array();
+        if ($debugProp === 'debug') {
+            return $this->debug->getCfg($path, Debug::CONFIG_DEBUG);
+        }
         if (\in_array($debugProp, $this->invokedServices)) {
             $obj = $this->debug->{$debugProp};
         } elseif ($forInit) {
@@ -291,31 +302,33 @@ class Config
     {
         $return = array();
         foreach ($cfg as $k => $v) {
-            $translated = false;
-            foreach ($this->configKeys as $objName => $objKeys) {
-                if (\is_array($v)) {
-                    if ($k === $objName) {
-                        $return[$objName] = isset($return[$objName])
-                            ? \array_merge($return[$objName], $v)
-                            : $v;
-                        $translated = true;
-                        break;
-                    }
-                    if (isset($this->configKeys[$k])) {
-                        continue;
-                    }
-                }
-                if (\in_array($k, $objKeys)) {
-                    $return[$objName][$k] = $v;
-                    $translated = true;
-                    break;
-                }
+            if (isset($this->configKeys[$k]) && \is_array($v)) {
+                $return[$k] = isset($return[$k])
+                    ? \array_merge($return[$k], $v)
+                    : $v;
+                continue;
             }
-            if ($translated === false) {
-                $return['debug'][$k] = $v;
-            }
+            $topKey = $this->normalizeFindTop($k);
+            $return[$topKey][$k] = $v;
         }
         return $return;
+    }
+
+    /**
+     * Get top-most ("category") that config key belongs to
+     *
+     * @param string $key key belonging to service/category
+     *
+     * @return string top-level key
+     */
+    private function normalizeFindTop($key)
+    {
+        foreach ($this->configKeys as $objName => $objKeys) {
+            if (\in_array($key, $objKeys)) {
+                return $objName;
+            }
+        }
+        return 'debug';
     }
 
     /**
@@ -336,27 +349,15 @@ class Config
         if (\is_string($path)) {
             $path = \array_filter(\preg_split('#[\./]#', $path), 'strlen');
         }
-        if ($path === null || \count($path) === 0 || $path[0] === '*') {
+        if (\in_array($path, array(null, array()), true) || $path[0] === '*') {
             return array('*');
-        }
-        $found = false;
-        foreach ($this->configKeys as $objName => $objKeys) {
-            if ($path[0] === $objName) {
-                $found = true;
-                break;
-            }
-            if (\in_array($path[0], $objKeys)) {
-                $found = true;
-                \array_unshift($path, $objName);
-                break;
-            }
-        }
-        if (!$found) {
-            // we didn't find our key... assume debug
-            \array_unshift($path, 'debug');
         }
         if (\end($path) === '*') {
             \array_pop($path);
+        }
+        if (isset($this->configKeys[$path[0]]) === false) {
+            $top = $this->normalizeFindTop($path[0]);
+            \array_unshift($path, $top);
         }
         return $path;
     }

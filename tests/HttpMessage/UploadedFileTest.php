@@ -1,9 +1,9 @@
 <?php
 
-namespace bdk\DebugTests\Psr7lite;
+namespace bdk\DebugTests\HttpMessage;
 
-use bdk\Debug\Psr7lite\Stream;
-use bdk\Debug\Psr7lite\UploadedFile;
+use bdk\HttpMessage\Stream;
+use bdk\HttpMessage\UploadedFile;
 use PHPUnit\Framework\TestCase;
 use ReflectionObject;
 

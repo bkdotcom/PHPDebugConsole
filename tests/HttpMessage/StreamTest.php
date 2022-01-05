@@ -1,10 +1,10 @@
 <?php
 
-namespace bdk\DebugTests\Psr7lite;
+namespace bdk\DebugTests\HttpMessage;
 
-use bdk\Debug\Psr7lite\Stream;
 use bdk\DebugTests\PolyFill\AssertionTrait;
 use bdk\DebugTests\PolyFill\ExpectExceptionTrait;
+use bdk\HttpMessage\Stream;
 use PHPUnit\Framework\TestCase;
 use ReflectionObject;
 

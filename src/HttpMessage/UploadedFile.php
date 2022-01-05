@@ -10,11 +10,12 @@
  * @version   v3.0
  */
 
-namespace bdk\Debug\Psr7lite;
+namespace bdk\HttpMessage;
 
-use bdk\Debug\Psr7lite\Stream;
+use bdk\HttpMessage\Stream;
 use InvalidArgumentException;
 use Psr\Http\Message\StreamInterface;
+use Psr\Http\Message\UploadedFileInterface;
 use RuntimeException;
 
 /**
@@ -25,7 +26,7 @@ use RuntimeException;
  * state of the current instance and return an instance that contains the
  * changed state.
  */
-class UploadedFile
+class UploadedFile implements UploadedFileInterface
 {
     /** @var string|null */
     private $clientFilename;
@@ -59,7 +60,7 @@ class UploadedFile
     /** @var int|null */
     private $size;
 
-    /** @var StreamInterface|Stream|null */
+    /** @var StreamInterface|null */
     private $stream;
 
     /** @var string */
@@ -102,7 +103,7 @@ class UploadedFile
      * If the moveTo() method has been called previously, this method will raise
      * an exception.
      *
-     * @return Stream|StreamInterface Stream representation of the uploaded file.
+     * @return StreamInterface representation of the uploaded file.
      *
      * @throws RuntimeException in cases when no stream is available or can be
      *     created.
@@ -117,21 +118,8 @@ class UploadedFile
                 'The stream has been moved.'
             );
         }
-
         if (!$this->stream && $this->file) {
-            $errMsg = '';
-            \set_error_handler(function ($type, $msg) use (&$errMsg) {
-                $errMsg = $msg;
-            });
-            $resource = \fopen($this->file, 'r');
-            \restore_error_handler();
-            if (\is_resource($resource)) {
-                $this->stream = new Stream($resource);
-                return $this->stream;
-            }
-            throw new RuntimeException(
-                $errMsg ?: 'Unable to open ' . $this->file
-            );
+            $this->stream = $this->getStreamFromFile();
         }
         if (!$this->stream) {
             throw new RuntimeException(
@@ -367,6 +355,29 @@ class UploadedFile
     }
 
     /**
+     * Create Stream from filepath
+     *
+     * @return Stream
+     *
+     * @throws RuntimeException
+     */
+    private function getStreamFromFile()
+    {
+        $errMsg = '';
+        \set_error_handler(function ($type, $msg) use (&$errMsg) {
+            $errMsg = '(' . $type . ') ' . $msg;
+        });
+        $resource = \fopen($this->file, 'r');
+        \restore_error_handler();
+        if (\is_resource($resource)) {
+            return new Stream($resource);
+        }
+        throw new RuntimeException(
+            $errMsg ?: 'Unable to open ' . $this->file
+        );
+    }
+
+    /**
      * Test if no upload error
      *
      * @return bool
@@ -437,7 +448,7 @@ class UploadedFile
             }
             return;
         }
-        if ($streamOrFile instanceof Stream || $streamOrFile instanceof StreamInterface) {
+        if ($streamOrFile instanceof StreamInterface) {
             $this->stream = $streamOrFile;
             $this->size = $this->stream->getSize();
             return;

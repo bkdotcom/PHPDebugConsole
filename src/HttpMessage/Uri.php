@@ -10,15 +10,16 @@
  * @version   v3.0
  */
 
-namespace bdk\Debug\Psr7lite;
+namespace bdk\HttpMessage;
 
-use bdk\Debug\Psr7lite\UriBase;
+use bdk\HttpMessage\UriBase;
 use InvalidArgumentException;
+use Psr\Http\Message\UriInterface;
 
 /**
- * INTERNAL USE ONLY
+ * Value object representing a URI.
  */
-class Uri extends UriBase
+class Uri extends UriBase implements UriInterface
 {
     /** @var string Uri scheme. */
     private $scheme = '';

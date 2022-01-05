@@ -160,14 +160,16 @@ class Html
     /**
      * Parse string of attributes into a key => value array
      *
-     * @param string   $str     string to parse
-     * @param int|null $options bitmask of PARSE_ATTRIB_x flags
+     * @param string         $str     string to parse
+     * @param int|null|false $options bitmask of PARSE_ATTRIB_x flags
      *
      * @return array
      */
     public static function parseAttribString($str, $options = null)
     {
-        if ($options === null) {
+        if ($options === false) {
+            $options = 0;
+        } elseif ($options === null) {
             $options = self::PARSE_ATTRIB_CLASS | self::PARSE_ATTRIB_DATA | self::PARSE_ATTRIB_NUMERIC;
         }
         $attribs = array();

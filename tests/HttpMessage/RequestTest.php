@@ -1,10 +1,10 @@
 <?php
 
-namespace bdk\DebugTests\Psr7lite;
+namespace bdk\DebugTests\HttpMessage;
 
-use bdk\Debug\Psr7lite\Message;
-use bdk\Debug\Psr7lite\Request;
-use bdk\Debug\Psr7lite\Uri;
+use bdk\HttpMessage\Message;
+use bdk\HttpMessage\Request;
+use bdk\HttpMessage\Uri;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -57,13 +57,18 @@ class RequestTest extends TestCase
     {
         $request = new Request('GET', 'http://www.bradkent.com/');
 
+        $uriGoogle = new Uri('http://google.com');
+
         $newRequest = $request
             ->withMethod('POST')
-            ->withUri(new Uri('http://google.com'));
+            ->withUri($uriGoogle);
 
         $this->assertSame('POST', $newRequest->getMethod());
         $this->assertSame('/', $newRequest->getRequestTarget());
         $this->assertSame('google.com', $newRequest->getUri()->getHost());
+
+        $newRequestNoChange = $newRequest->withUri($uriGoogle);
+        $this->assertSame($newRequest, $newRequestNoChange);
 
         $new2Request = $newRequest->withRequestTarget('/newTarget/test/?q=1234');
         $this->assertSame('/newTarget/test/?q=1234', $new2Request->getRequestTarget());
@@ -100,6 +105,14 @@ class RequestTest extends TestCase
         // Exception => Unsupported HTTP method.
         //    It must be compatible with RFC-7231 request method
         new Request('GETX', 'http://www.bradkent.com/');
+    }
+
+    public function testExceptionMethod3()
+    {
+        $this->expectException('InvalidArgumentException');
+        // Exception => Unsupported HTTP method.
+        //    It must be compatible with RFC-7231 request method
+        new Request('', 'http://www.bradkent.com/');
     }
 
     public function testExceptionProtocolVersion()

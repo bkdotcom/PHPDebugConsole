@@ -1,8 +1,8 @@
 <?php
 
-namespace bdk\DebugTests\Psr7lite;
+namespace bdk\DebugTests\HttpMessage;
 
-use bdk\Debug\Psr7lite\Uri;
+use bdk\HttpMessage\Uri;
 use PHPUnit\Framework\TestCase;
 use ReflectionObject;
 
@@ -28,6 +28,16 @@ class UriTest extends TestCase
         // Test 2
         $uri = new Uri('http://example.com:8888/demo/#section-1');
         $this->assertSame((string) $uri, 'http://example.com:8888/demo/#section-1');
+
+        // Test 3  (leading / added to path)
+        $uri = new Uri('http://example.com');
+        $uri = $uri->withPath('test');
+        $this->assertSame((string) $uri, 'http://example.com/test');
+
+        // Test 3  (leading slashes trimmed)
+        $uri = new Uri();
+        $uri = $uri->withPath('///trimMe');
+        $this->assertSame((string) $uri, '/trimMe');
     }
 
     public function testProperties()
@@ -103,13 +113,11 @@ class UriTest extends TestCase
         $this->assertSame('test=123', $newUri->getQuery());
         $this->assertSame('1234', $newUri->getFragment());
 
-        unset($newUri);
-
         // Test 2
 
         $newUri = $uri->withScheme('http')
             ->withHost('127.0.0.1')
-            ->withPort(80)
+            ->withPort('80')
             ->withUserInfo('people')
             ->withPath('/天安門')
             ->withQuery('chineseChars=六四')
@@ -127,6 +135,33 @@ class UriTest extends TestCase
 
         $newUri = $uri->withHost('localhost');
         $this->assertSame('localhost', $newUri->getHost());
+
+        // Test 4 - should return existing instance if no update)
+        $newUri = $uri->withScheme('https');
+        $this->assertSame($uri, $newUri, 'not updating scheme should return existing uri obj');
+
+        // Test 5 - should return existing instance if no update)
+        $newUri = $newUri->withUserInfo('jack', '4321');
+        $newUri2 = $newUri->withUserInfo('jack', '4321');
+        $this->assertSame($newUri, $newUri2, 'not updating userInfo should return existing uri obj');
+
+        // Test 5 - should return existing instance if no update)
+        $newUri = $uri->withHost('www.example.com');
+        $this->assertSame($uri, $newUri, 'not updating host should return existing uri obj');
+
+        // Test 6 - should return existing instance if no update)
+        $newUri = $uri->withPath('');
+        $this->assertSame($uri, $newUri, 'not updating path should return existing uri obj');
+
+        // Test 7 - should return existing instance if no update)
+        $newUri = $uri->withQuery('test=123');
+        $newUri2 = $newUri->withQuery('test=123');
+        $this->assertSame($newUri, $newUri2, 'not updating query should return existing uri obj');
+
+        // Test 8 - should return existing instance if no update)
+        $newUri = $uri->withFragment('hash');
+        $newUri2 = $newUri->withFragment('hash');
+        $this->assertSame($newUri, $newUri2, 'not updating fragment should return existing uri obj');
     }
 
     public function testFilterPort()
@@ -141,6 +176,13 @@ class UriTest extends TestCase
     /*
         Exceptions
     */
+
+    public function testNonParsableUri()
+    {
+        $this->expectException('InvalidArgumentException');
+        // Exception => Uri must be a string, but integer provided.
+        new Uri('http:///example.com');
+    }
 
     public function testExceptionAssertString()
     {

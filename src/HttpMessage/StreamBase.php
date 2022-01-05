@@ -10,7 +10,7 @@
  * @version   v3.0
  */
 
-namespace bdk\Debug\Psr7lite;
+namespace bdk\HttpMessage;
 
 use InvalidArgumentException;
 use RuntimeException;

@@ -47,7 +47,7 @@ use bdk\ErrorHandler\Error;
  * @property Debug\Method\Table   $methodTable   lazy-loaded MethodTable instance
  * @property \bdk\Debug|null      $parentInstance parent "channel"
  * @property \Psr\Http\Message\ResponseInterface $response lazy-loaded ResponseInterface (set via writeToResponse)
- * @property Debug\Psr7lite\ServerRequest $request lazy-loaded ServerRequest
+ * @property HttpMessage\ServerRequest $request lazy-loaded ServerRequest
  * @property \bdk\Debug           $rootInstance  root "channel"
  * @property \bdk\Debug\Utility\StringUtil $stringUtil lazy-loaded string utilitys
  * @property Debug\Utility\StopWatch $stopWatch  lazy-loaded StopWatch instance

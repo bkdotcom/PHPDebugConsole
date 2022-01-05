@@ -1,5 +1,6 @@
 /src/Debug/.sass-cache
 /src/Debug/node_modules
+/temp
 /vendor
 .phpunit.result.cache
 composer.lock

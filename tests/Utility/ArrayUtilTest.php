@@ -11,12 +11,66 @@ use PHPUnit\Framework\TestCase;
 class ArrayUtilTest extends TestCase
 {
 
+    public function testCopy()
+    {
+        $foo = 'foo';
+        $bar = 'bar';
+        $array = array(
+            'foo' => &$foo,
+            'baz' => array(
+                'bar' => &$bar,
+            ),
+        );
+        $copy = ArrayUtil::copy($array);
+        $foo = 'foo2';
+        $bar = 'bar2';
+        $this->assertSame(array(
+            'foo' => 'foo',
+            'baz' => array(
+                'bar' => 'bar',   // no longer reference
+            ),
+        ), $copy);
+        $copy = ArrayUtil::copy($array, false);
+        $foo = 'foo3';
+        $bar = 'bar3';
+        $this->assertSame(array(
+            'foo' => 'foo2',
+            'baz' => array(
+                'bar' => 'bar3',  // is still a reference
+            ),
+        ), $copy);
+    }
+
     public function testIsList()
     {
         $this->assertFalse(ArrayUtil::isList('string'));
         $this->assertTrue(ArrayUtil::isList(array()));     // empty array = "list"
         $this->assertFalse(ArrayUtil::isList(array(3 => 'foo',2 => 'bar',1 => 'baz',0 => 'nope')));
         $this->assertTrue(ArrayUtil::isList(array(0 => 'nope',1 => 'baz',2 => 'bar',3 => 'foo')));
+    }
+
+    public function testMapRecursive()
+    {
+        $array = array(
+            'foo' => 1,
+            'bar' => null,
+            'baz' => array(
+                'ding' => 'bar',
+                'bar' => true,
+            ),
+        );
+        $expect = array(
+            'foo' => 'foo',
+            'bar' => 'foo',
+            'baz' => array(
+                'ding' => 'foo',
+                'bar' => 'foo',
+            ),
+        );
+        $array = ArrayUtil::mapRecursive(function ($val) {
+            return 'foo';
+        }, $array);
+        $this->assertSame($expect, $array);
     }
 
     /**

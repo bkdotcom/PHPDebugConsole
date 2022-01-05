@@ -4,17 +4,16 @@ namespace bdk\DebugTests\Plugin;
 
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Plugin\LogReqRes;
-use bdk\Debug\Psr7lite\ServerRequest;
-use bdk\Debug\Psr7lite\Stream;
-use bdk\Debug\Psr7lite\UploadedFile;
 use bdk\DebugTests\DebugTestFramework;
+use bdk\HttpMessage\ServerRequest;
+use bdk\HttpMessage\Stream;
+use bdk\HttpMessage\UploadedFile;
 
 /**
  * PHPUnit tests for Debug class
  */
 class LogReqResTest extends DebugTestFramework
 {
-
     public function testLogPost()
     {
         $logReqRes = new LogReqRes();

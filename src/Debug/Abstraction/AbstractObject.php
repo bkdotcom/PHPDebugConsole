@@ -447,29 +447,6 @@ class AbstractObject extends Component
     }
 
     /**
-     * Is object included in blacklist?
-     *
-     * @param object $obj Object to test
-     *
-     * @return bool
-     */
-    private function isBlacklisted($obj)
-    {
-        $classname = \get_class($obj);
-        $blacklist = $this->cfg['objectsExclude'];
-        if (\array_intersect(array('*', $classname), $blacklist)) {
-            return true;
-        }
-        // now test "instanceof"
-        foreach ($blacklist as $class) {
-            if (\is_subclass_of($obj, $class)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
      * Is the passed object excluded from debugging?
      *
      * @param object $obj object (or classname) to test
@@ -479,8 +456,30 @@ class AbstractObject extends Component
     private function isExcluded($obj)
     {
         return $this->cfg['objectsWhitelist'] !== null
-            ? $this->isWhitelisted($obj) === false
-            : $this->isBlacklisted($obj);
+            ? $this->isObjInList($obj, $this->cfg['objectsWhitelist']) === false
+            : $this->isObjInList($obj, $this->cfg['objectsExclude']);
+    }
+
+    /**
+     * Is object included in objectsWhitelist or objectsExclude  ??
+     *
+     * @param object $obj  object being tested
+     * @param array  $list classname list (may include *)
+     *
+     * @return bool
+     */
+    private function isObjInList($obj, $list)
+    {
+        $classname = \get_class($obj);
+        if (\array_intersect(array('*', $classname), $list)) {
+            return true;
+        }
+        foreach ($list as $class) {
+            if (\is_subclass_of($obj, $class)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -499,29 +498,6 @@ class AbstractObject extends Component
         if ($obj instanceof \Traversable) {
             $abs['cfgFlags'] &= ~self::COLLECT_METHODS;  // set collect methods to "false"
             return true;
-        }
-        return false;
-    }
-
-    /**
-     * Is object included in whitelist?
-     *
-     * @param object $obj Object to test
-     *
-     * @return bool
-     */
-    private function isWhitelisted($obj)
-    {
-        $classname = \get_class($obj);
-        $whitelist = $this->cfg['objectsWhitelist'];
-        // wildcard in whitelist?  we'll allow it
-        if (\array_intersect(array('*', $classname), $whitelist)) {
-            return true;
-        }
-        foreach ($whitelist as $class) {
-            if (\is_subclass_of($obj, $class)) {
-                return true;
-            }
         }
         return false;
     }

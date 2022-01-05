@@ -1,11 +1,11 @@
 <?php
 
-namespace bdk\DebugTests\Psr7lite;
+namespace bdk\DebugTests\HttpMessage;
 
-use bdk\Debug\Psr7lite\Message;
-use bdk\Debug\Psr7lite\Request;
-use bdk\Debug\Psr7lite\ServerRequest;
-use bdk\Debug\Psr7lite\UploadedFile;
+use bdk\HttpMessage\Message;
+use bdk\HttpMessage\Request;
+use bdk\HttpMessage\ServerRequest;
+use bdk\HttpMessage\UploadedFile;
 use PHPUnit\Framework\TestCase;
 use ReflectionObject;
 

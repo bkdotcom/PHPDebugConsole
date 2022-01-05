@@ -147,6 +147,7 @@ class LogRoute extends CLogRoute
             if (\in_array($backtrace[$i + 1]['function'], array('log','error','warn','warning'))) {
                 $callerInfo = $backtrace[$i + 1];
             }
+            break;
         }
         return $callerInfo;
     }

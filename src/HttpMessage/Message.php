@@ -10,22 +10,23 @@
  * @version   v3.0
  */
 
-namespace bdk\Debug\Psr7lite;
+namespace bdk\HttpMessage;
 
-use bdk\Debug\Psr7lite\Stream;
 use bdk\Debug\Utility\ArrayUtil;
+use bdk\HttpMessage\Stream;
 use InvalidArgumentException;
+use Psr\Http\Message\MessageInterface;
 use Psr\Http\Message\StreamInterface;
 
 /**
- * INTERNAL USE ONLY
+ * Http Message
  *
  * @psalm-consistent-constructor
  */
-class Message
+class Message implements MessageInterface
 {
     /**
-     * @var StreamInterface|Stream
+     * @var StreamInterface
      */
     private $body;
 
@@ -71,6 +72,7 @@ class Message
      */
     public function withProtocolVersion($version)
     {
+        $version = (string) $version;
         if ($version === $this->protocolVersion) {
             return $this;
         }
@@ -223,7 +225,7 @@ class Message
     /**
      * Gets the body of the message.
      *
-     * @return StreamInterface|Stream The body as a stream.
+     * @return StreamInterface The body as a stream.
      */
     public function getBody()
     {
@@ -236,16 +238,13 @@ class Message
     /**
      * Return an instance with the specified message body.
      *
-     * @param StreamInterface|Stream $body Body
+     * @param StreamInterface $body Body
      *
      * @return static
      * @throws \InvalidArgumentException
      */
-    public function withBody($body)
+    public function withBody(StreamInterface $body)
     {
-        if (!($body instanceof StreamInterface) && !($body instanceof Stream)) {
-            throw new \InvalidArgumentException('body must be an instance of StreamInterface');
-        }
         if ($body === $this->body) {
             return $this;
         }
@@ -448,12 +447,6 @@ class Message
     private function trimHeaderValues($values = array())
     {
         return \array_map(function ($value) {
-            if (!\is_scalar($value) && $value !== null) {
-                throw new InvalidArgumentException(\sprintf(
-                    'Header value must be scalar or null but %s provided.',
-                    self::getTypeDebug($value)
-                ));
-            }
             return \trim((string) $value, " \t");
         }, (array) $values);
     }

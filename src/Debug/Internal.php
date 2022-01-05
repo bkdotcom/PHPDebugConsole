@@ -14,7 +14,7 @@ namespace bdk\Debug;
 
 use bdk\Debug;
 use bdk\Debug\LogEntry;
-use bdk\Debug\Psr7lite\Response;
+use bdk\HttpMessage\Response;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
 

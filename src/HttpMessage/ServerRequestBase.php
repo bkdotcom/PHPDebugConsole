@@ -10,11 +10,11 @@
  * @version   v3.0
  */
 
-namespace bdk\Debug\Psr7lite;
+namespace bdk\HttpMessage;
 
-use bdk\Debug\Psr7lite\Request;
-use bdk\Debug\Psr7lite\UploadedFile;
-use bdk\Debug\Psr7lite\Uri;
+use bdk\HttpMessage\Request;
+use bdk\HttpMessage\UploadedFile;
+use bdk\HttpMessage\Uri;
 use InvalidArgumentException;
 use Psr\Http\Message\UploadedFileInterface;
 
@@ -228,7 +228,7 @@ class ServerRequestBase extends Request
     /**
      * Validate file is instance of UploadedFileInterface/UploadedFile
      *
-     * @param mixed $file File value to test
+     * @param UploadedFileInterface $file File value to test
      *
      * @return void
      *
@@ -236,15 +236,11 @@ class ServerRequestBase extends Request
      */
     private function assertUploadedFile($file)
     {
-        if ($file instanceof UploadedFileInterface) {
-            return;
+        if (!($file instanceof UploadedFileInterface)) {
+            throw new InvalidArgumentException(
+                'Invalid leaf in uploaded files structure'
+            );
         }
-        if ($file instanceof UploadedFile) {
-            return;
-        }
-        throw new InvalidArgumentException(
-            'Invalid leaf in uploaded files structure'
-        );
     }
 
     /**
@@ -257,22 +253,7 @@ class ServerRequestBase extends Request
     private static function createUploadedFile($fileInfo)
     {
         if (\is_array($fileInfo['tmp_name'])) {
-            $files = array();
-            $keys = \array_keys($fileInfo['tmp_name']);
-            // don't use array_map...  callback does not have access to self::createUploadedFile
-            foreach ($keys as $key) {
-                $files[$key] = self::createUploadedFile([
-                    'tmp_name' => $fileInfo['tmp_name'][$key],
-                    'size'     => $fileInfo['size'][$key],
-                    'error'    => $fileInfo['error'][$key],
-                    'name'     => $fileInfo['name'][$key],
-                    'type'     => $fileInfo['type'][$key],
-                    'full_path' => isset($fileInfo['full_path'][$key])
-                        ? $fileInfo['full_path'][$key]
-                        : null,
-                ]);
-            }
-            return $files;
+            return self::createUploadedFileArray($fileInfo);
         }
         return new UploadedFile(
             $fileInfo['tmp_name'],
@@ -287,20 +268,44 @@ class ServerRequestBase extends Request
     }
 
     /**
+     * Convert php's uploaded file array to UploadedFile[]
+     *
+     * @param array $fileInfo PHP's uploaded file info where each key is an array
+     *
+     * @return UploadedFile[]
+     */
+    private static function createUploadedFileArray($fileInfo)
+    {
+        $files = array();
+        $keys = \array_keys($fileInfo['tmp_name']);
+        // don't use array_map...  callback does not have access to self::createUploadedFile
+        foreach ($keys as $key) {
+            $files[$key] = self::createUploadedFile([
+                'tmp_name' => $fileInfo['tmp_name'][$key],
+                'size'     => $fileInfo['size'][$key],
+                'error'    => $fileInfo['error'][$key],
+                'name'     => $fileInfo['name'][$key],
+                'type'     => $fileInfo['type'][$key],
+                'full_path' => isset($fileInfo['full_path'][$key])
+                    ? $fileInfo['full_path'][$key]
+                    : null,
+            ]);
+        }
+        return $files;
+    }
+
+    /**
      * Convert php's upload-file info array to UploadedFile instance
      *
      * @param array $phpFile uploaded-file info
      *
-     * @return UploadedFileInterface|UploadedFile|array
+     * @return UploadedFileInterface|array
      *
      * @throws InvalidArgumentException
      */
     private static function fileFromGlobal($phpFile)
     {
         if ($phpFile instanceof UploadedFileInterface) {
-            return $phpFile;
-        }
-        if ($phpFile instanceof UploadedFile) {
             return $phpFile;
         }
         if (\is_array($phpFile)) {

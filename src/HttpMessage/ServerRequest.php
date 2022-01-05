@@ -10,16 +10,17 @@
  * @version   v3.0
  */
 
-namespace bdk\Debug\Psr7lite;
+namespace bdk\HttpMessage;
 
-use bdk\Debug\Psr7lite\Stream;
+use bdk\HttpMessage\Stream;
+use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * INTERNAL USE ONLY
+ * Http ServerRequest
  *
  * @psalm-consistent-constructor
  */
-class ServerRequest extends ServerRequestBase
+class ServerRequest extends ServerRequestBase implements ServerRequestInterface
 {
     /** @var array */
     private $attributes = array();
@@ -50,9 +51,9 @@ class ServerRequest extends ServerRequestBase
     /**
      * Constructor
      *
-     * @param string                                    $method       The HTTP method associated with the request.
-     * @param \Psr\Http\Message\UriInterface|Uri|string $uri          The URI associated with the request.
-     * @param array                                     $serverParams An array of Server API (SAPI) parameters with
+     * @param string              $method       The HTTP method associated with the request.
+     * @param UriInterface|string $uri          The URI associated with the request.
+     * @param array               $serverParams An array of Server API (SAPI) parameters with
      *     which to seed the generated request instance. (and headers)
      */
     public function __construct($method = 'GET', $uri = '', $serverParams = array())

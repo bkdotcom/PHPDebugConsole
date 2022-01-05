@@ -1,9 +1,9 @@
 <?php
 
-namespace bdk\DebugTests\Psr7lite;
+namespace bdk\DebugTests\HttpMessage;
 
-use bdk\Debug\Psr7lite\Message;
-use bdk\Debug\Psr7lite\Response;
+use bdk\HttpMessage\Message;
+use bdk\HttpMessage\Response;
 use PHPUnit\Framework\TestCase;
 
 /**

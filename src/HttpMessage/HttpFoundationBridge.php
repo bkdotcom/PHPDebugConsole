@@ -10,12 +10,12 @@
  * @version   v3.0
  */
 
-namespace bdk\Debug\Psr7lite;
+namespace bdk\HttpMessage;
 
-use bdk\Debug\Psr7lite\ServerRequest;
-use bdk\Debug\Psr7lite\Stream;
-use bdk\Debug\Psr7lite\UploadedFile;
-use bdk\Debug\Psr7lite\Uri;
+use bdk\HttpMessage\ServerRequest;
+use bdk\HttpMessage\Stream;
+use bdk\HttpMessage\UploadedFile;
+use bdk\HttpMessage\Uri;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\File\UploadedFile as HttpFoundationUploadedFile;
 use Symfony\Component\HttpFoundation\Request as HttpFoundationRequest;
@@ -23,12 +23,12 @@ use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
- * Factories for creating Psr7lite ServerRequest & Response from HttpFoundation objects
+ * Factories for creating ServerRequest & Response from HttpFoundation objects
  */
 class HttpFoundationBridge
 {
     /**
-     * Create a Psr7lite request object from HttpFoundation request
+     * Create a Psr7 request object from HttpFoundation request
      *
      * @param HttpFoundationRequest $request HttpFoundation\Request obj
      *

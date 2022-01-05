@@ -42,6 +42,44 @@ class Module extends BaseModule implements SubscriberInterface, BootstrapInterfa
 
     private $collectedEvents = array();
 
+    private $configDefault = array(
+        'channels' => array(
+            'events' => array(
+                'channelIcon' => 'fa fa-bell-o',
+                'nested' => false,
+            ),
+            'PDO' => array(
+                'channelIcon' => 'fa fa-database',
+                'channelShow' => false,
+            ),
+            'Session' => array(
+                'channelIcon' => 'fa fa-suitcase',
+                'nested' => false,
+            ),
+            'User' => array(
+                'channelIcon' => 'fa fa-user-o',
+                'nested' => false,
+            ),
+        ),
+        'logEnvInfo' => array(
+            'session' => false,
+        ),
+        'logFiles' => array(
+            'filesExclude' => array(
+                '/framework/',
+                '/protected/components/system/',
+                '/vendor/',
+            ),
+        ),
+        'yii' => array(
+            'events' => true,
+            'log' => true,
+            'pdo' => true,
+            'session' => true,
+            'user' => true,
+        ),
+    );
+
     /**
      * Constructor
      *
@@ -53,25 +91,7 @@ class Module extends BaseModule implements SubscriberInterface, BootstrapInterfa
      */
     public function __construct($id, $parent, $config = array())
     {
-        $debugRootInstance = Debug::getInstance(array(
-            'logEnvInfo' => array(
-                'session' => false,
-            ),
-            'logFiles' => array(
-                'filesExclude' => array(
-                    '/framework/',
-                    '/protected/components/system/',
-                    '/vendor/',
-                ),
-            ),
-            'yii' => array(
-                'events' => true,
-                'log' => true,
-                'pdo' => true,
-                'session' => true,
-                'user' => true,
-            ),
-        ));
+        $debugRootInstance = Debug::getInstance($this->configDefault);
         $debugRootInstance->setCfg($config);
         /*
             Debug instance may have already been instantiated
@@ -289,21 +309,17 @@ class Module extends BaseModule implements SubscriberInterface, BootstrapInterfa
                 // already wrapped
                 return;
             }
-            $channelName = 'PDO';
-            $pdoChannel = $this->debug->getChannel($channelName, array(
-                'channelIcon' => 'fa fa-database',
-                'channelShow' => false,
-            ));
+            $pdoChannel = $this->debug->getChannel('PDO');
             $connection->pdo = new Pdo($pdo, $pdoChannel);
         });
     }
 
     /**
-     * Output collected event info
+     * Get collectedEvents table rows
      *
-     * @return void
+     * @return array
      */
-    protected function logCollectedEvents()
+    private function getEventTableData()
     {
         $tableData = array();
         foreach ($this->collectedEvents as $info) {
@@ -323,7 +339,17 @@ class Module extends BaseModule implements SubscriberInterface, BootstrapInterfa
             }
             return $infoA['index'] - $infoB['index'];
         });
+        return $tableData;
+    }
 
+    /**
+     * Output collected event info
+     *
+     * @return void
+     */
+    protected function logCollectedEvents()
+    {
+        $tableData = $this->getEventTableData();
         foreach ($tableData as &$info) {
             unset($info['index']);
             $info['senderClass'] = $this->debug->abstracter->crateWithVals($info['senderClass'], array(
@@ -334,11 +360,7 @@ class Module extends BaseModule implements SubscriberInterface, BootstrapInterfa
             ));
         }
 
-        $channelOpts = array(
-            'channelIcon' => 'fa fa-bell-o',
-            'nested' => false,
-        );
-        $debug = $this->debug->rootInstance->getChannel('events', $channelOpts);
+        $debug = $this->debug->rootInstance->getChannel('events');
         $debug->table(\array_values($tableData));
     }
 
@@ -354,18 +376,13 @@ class Module extends BaseModule implements SubscriberInterface, BootstrapInterfa
         }
 
         $session = $this->module->get('session', false);
-
         if ($session === null) {
             return;
         }
 
         $session->open();
 
-        $channelOpts = array(
-            'channelIcon' => 'fa fa-suitcase',
-            'nested' => false,
-        );
-        $debug = $this->debug->rootInstance->getChannel('Session', $channelOpts);
+        $debug = $this->debug->rootInstance->getChannel('Session');
 
         $debug->log('session id', $session->id);
         $debug->log('session name', $session->name);
@@ -400,12 +417,23 @@ class Module extends BaseModule implements SubscriberInterface, BootstrapInterfa
             return;
         }
 
-        $channelOpts = array(
-            'channelIcon' => 'fa fa-user-o',
-            'nested' => false,
-        );
-        $debug = $this->debug->rootInstance->getChannel('User', $channelOpts);
+        $debug = $this->debug->rootInstance->getChannel('User');
 
+        $this->logUserIdentity($debug);
+        $this->logUserRoles($debug);
+        $this->logUserPermissions($debug);
+    }
+
+    /**
+     * Log user Identity attributes
+     *
+     * @param Debug $debug Debug instance
+     *
+     * @return void
+     */
+    private function logUserIdentity(Debug $debug)
+    {
+        $user = $this->module->get('user', false);
         $identityData = $user->identity->attributes;
         if ($user->identity instanceof Model) {
             $identityData = array();
@@ -415,35 +443,67 @@ class Module extends BaseModule implements SubscriberInterface, BootstrapInterfa
             }
         }
         $debug->table($identityData);
+    }
 
+    /**
+     * Log user permissions
+     *
+     * @param Debug $debug Debug instance
+     *
+     * @return void
+     */
+    private function logUserPermissions(Debug $debug)
+    {
         try {
             $authManager = Yii::$app->getAuthManager();
-
-            if ($authManager instanceof \yii\rbac\ManagerInterface) {
-                $roles = \array_map(function ($role) {
-                    return \get_object_vars($role);
-                }, $authManager->getRolesByUser($user->id));
-                $debug->table('roles', $roles, array(
-                    'name',
-                    'description',
-                    'ruleName',
-                    'data',
-                    'createdAt',
-                    'updatedAt'
-                ));
-
-                $permissions = \array_map(function ($permission) {
-                    return \get_object_vars($permission);
-                }, $authManager->getPermissionsByUser($user->id));
-                $debug->table('permissions', $permissions, array(
-                    'name',
-                    'description',
-                    'ruleName',
-                    'data',
-                    'createdAt:datetime',
-                    'updatedAt:datetime'
-                ));
+            if (!($authManager instanceof \yii\rbac\ManagerInterface)) {
+                return;
             }
+            $user = $this->module->get('user', false);
+
+            $permissions = \array_map(function ($permission) {
+                return \get_object_vars($permission);
+            }, $authManager->getPermissionsByUser($user->id));
+            $debug->table('permissions', $permissions, array(
+                'name',
+                'description',
+                'ruleName',
+                'data',
+                'createdAt:datetime',
+                'updatedAt:datetime'
+            ));
+        } catch (\Exception $e) {
+            $debug->error('Exception logging user permissions', $e);
+        }
+    }
+
+    /**
+     * Log User roles
+     *
+     * @param Debug $debug Debug instance
+     *
+     * @return void
+     */
+    private function logUserRoles(Debug $debug)
+    {
+        try {
+            $authManager = Yii::$app->getAuthManager();
+            if (!($authManager instanceof \yii\rbac\ManagerInterface)) {
+                return;
+            }
+            $user = $this->module->get('user', false);
+
+            $roles = \array_map(function ($role) {
+                return \get_object_vars($role);
+            }, $authManager->getRolesByUser($user->id));
+            $debug->table('roles', $roles, array(
+                'name',
+                'description',
+                'ruleName',
+                'data',
+                'createdAt',
+                'updatedAt'
+            ));
         } catch (\Exception $e) {
             $debug->error('Exception logging user info', $e);
         }

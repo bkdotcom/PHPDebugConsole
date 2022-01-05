@@ -127,7 +127,7 @@ class ServerRequest extends ServerRequestBase implements ServerRequestInterface
      *
      * @return static
      */
-    public function withCookieParams($cookies)
+    public function withCookieParams(array $cookies)
     {
         $new = clone $this;
         $new->cookie = $cookies;
@@ -149,7 +149,7 @@ class ServerRequest extends ServerRequestBase implements ServerRequestInterface
      *
      * @return static
      */
-    public function withQueryParams($get)
+    public function withQueryParams(array $get)
     {
         $new = clone $this;
         $new->get = $get;
@@ -177,7 +177,7 @@ class ServerRequest extends ServerRequestBase implements ServerRequestInterface
      * @return static
      * @throws InvalidArgumentException if an invalid structure is provided.
      */
-    public function withUploadedFiles($uploadedFiles)
+    public function withUploadedFiles(array $uploadedFiles)
     {
         $this->assertUploadedFiles($uploadedFiles);
         $new = clone $this;

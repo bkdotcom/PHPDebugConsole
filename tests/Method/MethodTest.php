@@ -11,7 +11,6 @@ use bdk\DebugTests\DebugTestFramework;
  */
 class MethodTest extends DebugTestFramework
 {
-
     /**
      * Test overriding a core method
      */

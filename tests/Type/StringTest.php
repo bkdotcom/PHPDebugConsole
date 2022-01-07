@@ -11,7 +11,6 @@ use bdk\DebugTests\DebugTestFramework;
  */
 class StringTest extends DebugTestFramework
 {
-
     public function providerTestMethod()
     {
         $ts = \time();

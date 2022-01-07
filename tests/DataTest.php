@@ -9,7 +9,6 @@ use bdk\DebugTests\DebugTestFramework;
  */
 class DataTest extends DebugTestFramework
 {
-
     public function testGetData()
     {
         $this->debug->info('token log entry 1');

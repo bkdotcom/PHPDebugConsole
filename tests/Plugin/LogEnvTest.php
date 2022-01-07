@@ -10,7 +10,6 @@ use bdk\DebugTests\DebugTestFramework;
  */
 class LogEnvTest extends DebugTestFramework
 {
-
     public function testLogPhpInfoEr()
     {
 

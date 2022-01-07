@@ -2,7 +2,6 @@
 
 namespace bdk\DebugTests\Collector;
 
-use bdk\Debug\LogEntry;
 use bdk\DebugTests\DebugTestFramework;
 
 /**
@@ -10,7 +9,6 @@ use bdk\DebugTests\DebugTestFramework;
  */
 class SimpleCacheTest extends DebugTestFramework
 {
-
     private static $cache;
 
     public static function setUpBeforeClass(): void

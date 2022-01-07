@@ -242,12 +242,12 @@ class PhpDoc
     /**
      * Find phpDoc in parent classes / interfaces
      *
-     * @param ReflectionMethod $reflector ReflectionMethod instance
-     * @param string           $what      'method' or 'property'
+     * @param Reflector $reflector Reflector interface
+     * @param string    $what      'method' or 'property'
      *
      * @return array
      */
-    private static function findInherited(ReflectionMethod $reflector, $what)
+    private static function findInherited(Reflector $reflector, $what)
     {
         $hasWhat = 'has' . \ucfirst($what);
         $getWhat = 'get' . \ucfirst($what);

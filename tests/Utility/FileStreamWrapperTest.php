@@ -88,23 +88,11 @@ class FileStreamWrapperTest extends TestCase
         $this->assertFalse(\is_dir(self::$tmpdir2));
     }
 
+    /*
     public function testStreamCast()
     {
-        $this->markTestSkipped(__METHOD__);
-        /*
-        if (!is_dir(self::$tmpdir)) {
-            mkdir(self::$tmpdir);
-        }
-        $fh = fopen(self::$tmpdir.'/tempfile', 'r+');
-        var_dump($fh);
-        $read   = array($fh);
-        $write  = null;
-        $except = null;
-        $numChangedStreams = stream_select($read, $write, $except, 0);
-        $this->assertTrue($numChangedStreams !== false);
-        fclose($fh);
-        */
     }
+    */
 
     public function testStreamClose()
     {
@@ -223,10 +211,12 @@ class FileStreamWrapperTest extends TestCase
         $this->assertTrue($success);
     }
 
+    /*
     public function testUrlStat()
     {
-        $this->markTestSkipped(__METHOD__);
+        $this->markTestSkipped('todo');
     }
+    */
 
     protected static function rmdir($dirPath)
     {

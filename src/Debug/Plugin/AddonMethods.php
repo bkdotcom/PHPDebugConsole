@@ -503,7 +503,6 @@ class AddonMethods implements SubscriberInterface
                 ? $cfgChannels[$name]
                 : array()
         );
-        // echo $name . ' = ' . print_r($config, true) . "\n";
         $cfg = $this->debug->getPropagateValues($cfg);
         // set channel values
         $cfg['debug']['channelIcon'] = null;

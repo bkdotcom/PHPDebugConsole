@@ -11,7 +11,6 @@ use bdk\DebugTests\DebugTestFramework;
  */
 class ResourceTest extends DebugTestFramework
 {
-
     public function providerTestMethod()
     {
         $fh = \fopen(__FILE__, 'r');

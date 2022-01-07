@@ -10,7 +10,6 @@ use PHPUnit\Framework\TestCase;
  */
 class ArrayUtilTest extends TestCase
 {
-
     public function testCopy()
     {
         $foo = 'foo';

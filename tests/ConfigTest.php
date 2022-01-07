@@ -10,7 +10,6 @@ use bdk\HttpMessage\ServerRequest;
  */
 class ConfigTest extends DebugTestFramework
 {
-
     /**
      * Test
      *

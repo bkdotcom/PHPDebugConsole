@@ -13,7 +13,6 @@ namespace bdk\DebugTests\Fixture;
  */
 class Test extends TestBase
 {
-
     /** constant documentation */
     const MY_CONSTANT = 'redefined in Test';
 

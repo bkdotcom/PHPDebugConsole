@@ -12,7 +12,6 @@ use bdk\DebugTests\DebugTestFramework;
  */
 class ObjectTest extends DebugTestFramework
 {
-
     public function providerTestMethod()
     {
         // val, html, text, script
@@ -613,12 +612,18 @@ EOD;
         );
     }
 
+    /**
+     * Test Anonymous classes
+     *
+     * @requires PHP >= 7.0
+     */
     public function testAnonymousClass()
     {
+        /*
         if (PHP_VERSION_ID < 70000) {
             $this->markTestSkipped('anonymous classes are a php 7.0 thing');
         }
-        // self::$allowError = true;
+        */
         $filepath = \realpath(__DIR__ . '/../Fixture/Anonymous.php');
         $anonymous = require $filepath;
         $this->testMethod(
@@ -686,11 +691,18 @@ EOD;
         );
     }
 
+    /**
+     * Test Promoted Params
+     *
+     * @requires PHP >= 8.0
+     */
     public function testPromotedParam()
     {
+        /*
         if (PHP_VERSION_ID < 80000) {
             $this->markTestSkipped('attributes classes are a php 8.0 thing');
         }
+        */
         $test = new \bdk\DebugTests\Fixture\Php80(42);
         $this->testMethod(
             'log',
@@ -714,11 +726,18 @@ EOD;
         );
     }
 
+    /**
+     * Test Php 8.1 features
+     *
+     * @requires PHP >= 8.1
+     */
     public function testPhp81()
     {
+        /*
         if (PHP_VERSION_ID < 80100) {
             $this->markTestSkipped('Test requires Php >= 8.1');
         }
+        */
         $test = new \bdk\DebugTests\Fixture\Php81(42);
         $this->testMethod(
             'log',
@@ -745,11 +764,18 @@ EOD;
         );
     }
 
+    /**
+     * Test Attributes
+     *
+     * @requires PHP >= 8.0
+     */
     public function testAttributes()
     {
+        /*
         if (PHP_VERSION_ID < 80000) {
             $this->markTestSkipped('attributes classes are a php 8.0 thing');
         }
+        */
         $test = new \bdk\DebugTests\Fixture\Php80(42);
         $this->testMethod(
             'log',

@@ -14,7 +14,6 @@ use ReflectionProperty;
  */
 class TableTest extends DebugTestFramework
 {
-
     /**
      * Test
      *
@@ -86,7 +85,7 @@ class TableTest extends DebugTestFramework
 <table class="sortable table-bordered">
 <caption>table caption</caption>
 <thead>
-<tr><th>&nbsp;</th><th>name</th><th scope="col">age</th><th scope="col">sex</th><th scope="col">Naughty</th><th scope="col">extracol</th></tr>
+<tr><th>&nbsp;</th><th scope="col">name</th><th scope="col">age</th><th scope="col">sex</th><th scope="col">Naughty</th><th scope="col">extracol</th></tr>
 </thead>
 <tbody>
 <tr><th class="t_int t_key text-right" scope="row">4</th><td class="t_string">Bob</td><td class="t_string" data-type-more="numeric">12</td><td class="t_string">M</td><td class="t_bool" data-type-more="false">false</td><td class="t_undefined"></td></tr>
@@ -311,7 +310,7 @@ EOD;
                         <table class="sortable table-bordered">
                         <caption>table caption</caption>
                         <thead>
-                        <tr><th>&nbsp;</th><th>name</th><th scope="col">extracol</th></tr>
+                        <tr><th>&nbsp;</th><th scope="col">name</th><th scope="col">extracol</th></tr>
                         </thead>
                         <tbody>
                         <tr><th class="t_int t_key text-right" scope="row">4</th><td class="t_string">Bob</td><td class="t_undefined"></td></tr>
@@ -385,7 +384,7 @@ EOD;
                         <table class="sortable table-bordered">
                         <caption>flat</caption>
                         <thead>
-                        <tr><th>&nbsp;</th><th>value</th></tr>
+                        <tr><th>&nbsp;</th><th scope="col">value</th></tr>
                         </thead>
                         <tbody>
                         <tr><th class="t_int t_key text-right" scope="row">0</th><td class="t_string">a</td></tr>
@@ -398,6 +397,8 @@ EOD;
                             <dt class="properties">properties</dt>
                             <dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="t_type">string</span> <span class="t_identifier">file</span> <span class="t_operator">=</span> <span class="t_string">' . __FILE__ . '</span></dd>
                             <dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="t_type">int</span> <span class="t_identifier">line</span> <span class="t_operator">=</span> <span class="t_int">%i</span></dd>
+                            '
+                            /*
                             <dt class="methods">methods</dt>' . "\n"
                             . (PHP_VERSION_ID >= 80000
                                 ? '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier">__invoke</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$foo</span></span><span class="t_punct">)</span></dd>
@@ -413,6 +414,8 @@ EOD;
                                     . (\version_compare(PHP_VERSION, '7.1', '>=') ? '<dd class="isStatic method public"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="t_identifier">fromCallable</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$callable</span></span><span class="t_punct">)</span></dd>' . "\n" : '')
                                     . '<dd class="method private"><span class="t_modifier_private">private</span> <span class="t_identifier">__construct</span><span class="t_punct">(</span><span class="t_punct">)</span></dd>'
                             ) . '
+                            */
+                            . '<dt class="methods">methods not collected</dt>
                             </dl>
                         </td></tr>
                         </tbody>
@@ -426,10 +429,13 @@ EOD;
                         [4] => Closure
                             Properties:
                                 (debug) file = "' . __FILE__ . '"
-                                (debug) line = %i
+                                (debug) line = %i'
+                            /*
                             Methods:
                                 public: ' . $dateTimePubMethods . '
                                 private: 1
+                            */
+                            . '
                     )',
                     'script' => 'console.table(['
                         . '"a",'
@@ -477,7 +483,7 @@ EOD;
                         <table class="sortable table-bordered">
                         <caption>traversable -o- traversables (<span class="classname" title="I implement Traversable!"><span class="namespace">bdk\DebugTests\Fixture\</span>TestTraversable</span>)</caption>
                         <thead>
-                        <tr><th>&nbsp;</th><th>&nbsp;</th><th>name</th><th scope="col">age</th><th scope="col">sex</th><th scope="col">Naughty</th><th scope="col">extracol</th></tr>
+                        <tr><th>&nbsp;</th><th>&nbsp;</th><th scope="col">name</th><th scope="col">age</th><th scope="col">sex</th><th scope="col">Naughty</th><th scope="col">extracol</th></tr>
                         </thead>
                         <tbody>
                         <tr><th class="t_int t_key text-right" scope="row">4</th><td class="classname" title="I implement Traversable!"><span class="namespace">bdk\DebugTests\Fixture\</span>TestTraversable</td><td class="t_string">Bob</td><td class="t_string" data-type-more="numeric">12</td><td class="t_string">M</td><td class="t_bool" data-type-more="false">false</td><td class="t_undefined"></td></tr>
@@ -524,36 +530,36 @@ EOD;
                         <table class="sortable table-bordered">
                         <caption>array -o- objects</caption>
                         <thead>
-                        <tr><th>&nbsp;</th><th>&nbsp;</th><th>age</th><th scope="col">extracol</th><th scope="col">name</th><th scope="col">Naughty</th><th scope="col">sex</th></tr>
+                        <tr><th>&nbsp;</th><th>&nbsp;</th><th scope="col">name</th><th scope="col">age</th><th scope="col">sex</th><th scope="col">Naughty</th><th scope="col">extracol</th></tr>
                         </thead>
                         <tbody>
-                        <tr><th class="t_int t_key text-right" scope="row">4</th><td class="classname">stdClass</td><td class="t_string" data-type-more="numeric">12</td><td class="t_undefined"></td><td class="t_string">Bob</td><td class="t_bool" data-type-more="false">false</td><td class="t_string">M</td></tr>
-                        <tr><th class="t_int t_key text-right" scope="row">2</th><td class="classname">stdClass</td><td class="t_string" data-type-more="numeric">10</td><td class="t_string">yes</td><td class="t_string">Sally</td><td class="t_bool" data-type-more="true">true</td><td class="t_string">F</td></tr>
+                        <tr><th class="t_int t_key text-right" scope="row">4</th><td class="classname">stdClass</td><td class="t_string">Bob</td><td class="t_string" data-type-more="numeric">12</td><td class="t_string">M</td><td class="t_bool" data-type-more="false">false</td><td class="t_undefined"></td></tr>
+                        <tr><th class="t_int t_key text-right" scope="row">2</th><td class="classname">stdClass</td><td class="t_string">Sally</td><td class="t_string" data-type-more="numeric">10</td><td class="t_string">F</td><td class="t_bool" data-type-more="true">true</td><td class="t_string">yes</td></tr>
                         </tbody>
                         </table>
                         </li>',
                     'text' => 'array -o- objects = array(
                         [4] => array(
                             [___class_name] => "stdClass"
-                            [age] => "12"
                             [name] => "Bob"
-                            [Naughty] => false
+                            [age] => "12"
                             [sex] => "M"
+                            [Naughty] => false
                             )
                         [2] => array(
                             [___class_name] => "stdClass"
-                            [age] => "10"
-                            [extracol] => "yes"
                             [name] => "Sally"
-                            [Naughty] => true
+                            [age] => "10"
                             [sex] => "F"
+                            [Naughty] => true
+                            [extracol] => "yes"
                         )
                     )',
-                    'script' => 'console.table({"4":{"___class_name":"stdClass","age":"12","extracol":undefined,"name":"Bob","Naughty":false,"sex":"M"},"2":{"___class_name":"stdClass","age":"10","extracol":"yes","name":"Sally","Naughty":true,"sex":"F"}});',
+                    'script' => 'console.table({"4":{"___class_name":"stdClass","name":"Bob","age":"12","sex":"M","Naughty":false,"extracol":undefined},"2":{"___class_name":"stdClass","name":"Sally","age":"10","sex":"F","Naughty":true,"extracol":"yes"}});',
                     'firephp' => 'X-Wf-1-1-1-7: 193|[{"Label":"array -o- objects","Type":"TABLE"},['
-                        . '["","___class_name","age","extracol","name","Naughty","sex"],'
-                        . '[4,"stdClass","12",null,"Bob",false,"M"],'
-                        . '[2,"stdClass","10","yes","Sally",true,"F"]]]|',
+                        . '["","___class_name","name","age","sex","Naughty","extracol"],'
+                        . '[4,"stdClass","Bob","12","M",false,null],'
+                        . '[2,"stdClass","Sally","10","F",true,"yes"]]]|',
                 ),
             ),
             // 11 rowsB (not all col values of same type)
@@ -568,7 +574,7 @@ EOD;
                         <table class="sortable table-bordered">
                         <caption>not all col values of same type</caption>
                         <thead>
-                        <tr><th>&nbsp;</th><th>date <span class="classname">DateTime</span></th><th scope="col">date2</th></tr>
+                        <tr><th>&nbsp;</th><th scope="col">date <span class="classname">DateTime</span></th><th scope="col">date2</th></tr>
                         </thead>
                         <tbody>
                         <tr><th class="t_int t_key text-right" scope="row">0</th><td class="t_string">1955-11-05T00:00:00%i</td><td class="t_string">not a datetime</td></tr>
@@ -626,7 +632,7 @@ EOD;
                     <table class="sortable table-bordered">
                     <caption>foo</caption>
                     <thead>
-                        <tr><th>&nbsp;</th><th>value</th></tr>
+                        <tr><th>&nbsp;</th><th scope="col">value</th></tr>
                     </thead>
                     <tbody>
                         <tr><th class="t_int t_key text-right" scope="row">0</th><td><span class="t_type">binary string</span>

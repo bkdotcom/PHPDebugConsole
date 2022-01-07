@@ -9,5 +9,4 @@ namespace bdk\DebugTests\Fixture;
  */
 final class TestFinal extends Test
 {
-
 }

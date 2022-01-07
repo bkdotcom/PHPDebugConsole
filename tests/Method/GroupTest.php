@@ -12,7 +12,6 @@ use bdk\PubSub\Event;
  */
 class GroupTest extends DebugTestFramework
 {
-
     /**
      * Test
      *

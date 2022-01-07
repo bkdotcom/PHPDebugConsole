@@ -13,7 +13,6 @@ use bdk\Debug\Utility\Utf8;
  */
 class Utf8Test extends \PHPUnit\Framework\TestCase
 {
-
     /**
      * Test
      *

@@ -11,7 +11,6 @@ use bdk\DebugTests\DebugTestFramework;
  */
 class ClearTest extends DebugTestFramework
 {
-
     /**
      * Test
      *

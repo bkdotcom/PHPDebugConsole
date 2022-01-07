@@ -12,7 +12,6 @@ use bdk\DebugTests\DebugTestFramework;
  */
 class ProfileTest extends DebugTestFramework
 {
-
     public function testProfile()
     {
 
@@ -94,7 +93,7 @@ class ProfileTest extends DebugTestFramework
                     <table class="sortable table-bordered">
                     <caption>Profile ' . (PHP_VERSION_ID >= 80100 ? '&#039;Profile 1&#039;' : '\'Profile 1\'') . ' Results</caption>
                     <thead>
-                        <tr><th>&nbsp;</th><th>calls</th><th scope="col">totalTime</th><th scope="col">ownTime</th></tr>
+                        <tr><th>&nbsp;</th><th scope="col">calls</th><th scope="col">totalTime</th><th scope="col">ownTime</th></tr>
                     </thead>
                     <tbody>
                         <tr><th class="t_callable t_key text-right" scope="row"><span class="classname"><span class="namespace">bdk\DebugTests\Method\</span>ProfileTest</span><span class="t_operator">::</span><span class="t_identifier">a</span></th><td class="t_int">1</td><td class="t_float">%f</td><td class="t_float">%f</td></tr>

@@ -10,7 +10,6 @@ namespace bdk\DebugTests\Fixture;
  */
 class TestVariadicByReference extends TestVariadic
 {
-
     /**
      * This method is private
      *

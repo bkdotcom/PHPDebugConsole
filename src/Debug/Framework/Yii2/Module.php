@@ -420,8 +420,7 @@ class Module extends BaseModule implements SubscriberInterface, BootstrapInterfa
         $debug = $this->debug->rootInstance->getChannel('User');
 
         $this->logUserIdentity($debug);
-        $this->logUserRoles($debug);
-        $this->logUserPermissions($debug);
+        $this->logUserRolesPermissions($debug);
     }
 
     /**
@@ -452,7 +451,7 @@ class Module extends BaseModule implements SubscriberInterface, BootstrapInterfa
      *
      * @return void
      */
-    private function logUserPermissions(Debug $debug)
+    private function logUserRolesPermissions(Debug $debug)
     {
         try {
             $authManager = Yii::$app->getAuthManager();
@@ -460,52 +459,25 @@ class Module extends BaseModule implements SubscriberInterface, BootstrapInterfa
                 return;
             }
             $user = $this->module->get('user', false);
-
-            $permissions = \array_map(function ($permission) {
-                return \get_object_vars($permission);
-            }, $authManager->getPermissionsByUser($user->id));
-            $debug->table('permissions', $permissions, array(
-                'name',
-                'description',
-                'ruleName',
-                'data',
-                'createdAt:datetime',
-                'updatedAt:datetime'
-            ));
-        } catch (\Exception $e) {
-            $debug->error('Exception logging user permissions', $e);
-        }
-    }
-
-    /**
-     * Log User roles
-     *
-     * @param Debug $debug Debug instance
-     *
-     * @return void
-     */
-    private function logUserRoles(Debug $debug)
-    {
-        try {
-            $authManager = Yii::$app->getAuthManager();
-            if (!($authManager instanceof \yii\rbac\ManagerInterface)) {
-                return;
-            }
-            $user = $this->module->get('user', false);
-
-            $roles = \array_map(function ($role) {
-                return \get_object_vars($role);
-            }, $authManager->getRolesByUser($user->id));
-            $debug->table('roles', $roles, array(
-                'name',
+            $cols = array(
                 'description',
                 'ruleName',
                 'data',
                 'createdAt',
                 'updatedAt'
-            ));
+            );
+            /*
+            $roles = \array_map(function ($role) {
+                return \get_object_vars($role);
+            }, $authManager->getRolesByUser($user->id));
+            $permissions = \array_map(function ($permission) {
+                return \get_object_vars($permission);
+            }, $authManager->getPermissionsByUser($user->id));
+            */
+            $debug->table('roles', $authManager->getRolesByUser($user->id), $cols);
+            $debug->table('permissions', $authManager->getPermissionsByUser($user->id), $cols);
         } catch (\Exception $e) {
-            $debug->error('Exception logging user info', $e);
+            $debug->error('Exception logging user roles and permissions', $e);
         }
     }
 

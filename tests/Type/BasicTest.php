@@ -10,7 +10,6 @@ use bdk\DebugTests\DebugTestFramework;
  */
 class BasicTest extends DebugTestFramework
 {
-
     public function providerTestMethod()
     {
         $ts = \time();

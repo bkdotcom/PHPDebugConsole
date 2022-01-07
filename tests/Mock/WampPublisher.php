@@ -6,7 +6,6 @@ use bdk\WampPublisher as BaseWampPublisher;
 
 class WampPublisher extends BaseWampPublisher
 {
-
     public $connected = true;
     public $messages = array();
 

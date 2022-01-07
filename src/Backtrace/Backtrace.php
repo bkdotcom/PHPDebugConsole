@@ -12,6 +12,7 @@
 namespace bdk;
 
 use bdk\Backtrace\Normalizer;
+use bdk\Backtrace\SkipInternal;
 
 /**
  * Utility for getting backtrace
@@ -27,12 +28,19 @@ class Backtrace
     const INCL_OBJECT = 2;
 
     /**
-     * @var array
+     * add a new namespace or classname to be used to determine when to
+     * stop iterrating over the backtrace when determining calling info
+     *
+     * @param array|string $classes classname(s)
+     * @param int          $level   "priority".  0 = will never skipp
+     *
+     * @return void
+     * @throws InvalidArgumentException
      */
-    private static $internalClasses = array(
-        'classes' => array(__CLASS__),
-        'regex' => '/^bdk\\\Backtrace\b$/',
-    );
+    public static function addInternalClass($classes, $level = 0)
+    {
+        SkipInternal::addInternalClass($classes, $level);
+    }
 
     /**
      * Helper method to get backtrace
@@ -49,7 +57,7 @@ class Backtrace
     public static function get($options = 0, $limit = 0, $exception = null)
     {
         $options = $options ?: 0;
-        $backtrace = self::getBacktrace($options, $limit, $exception);
+        $backtrace = static::getBacktrace($options, $limit, $exception);
         if (empty($backtrace)) {
             return array();
         }
@@ -87,48 +95,15 @@ class Backtrace
         */
         $phpOptions = static::translateOptions($options | self::INCL_OBJECT);
         /*
-            Must get at least 13 frames to account for potential framework loggers
+            Must get at least 15 frames to account for potential framework loggers
         */
         $backtrace = \debug_backtrace($phpOptions, 15);
-        $count = \count($backtrace);
-        for ($i = 1; $i < $count; $i++) {
-            if (self::isSkippable($backtrace[$i])) {
-                continue;
-            }
-            break;
-        }
-        $i--;
-        $i = \max($i, 1);
-        /*
-            file/line values may be missing... if frame called via core PHP function/method
-        */
-        for ($i = $i + $offset; $i < $count; $i++) {
-            if (isset($backtrace[$i]['line'])) {
-                break;
-            }
-        }
-        $return = static::getCallerInfoBuild(\array_slice($backtrace, $i));
+        $index = SkipInternal::getFirstIndex($backtrace, $offset);
+        $return = static::getCallerInfoBuild(\array_slice($backtrace, $index));
         if (!($options & self::INCL_OBJECT)) {
             unset($return['object']);
         }
         return $return;
-    }
-
-    /**
-     * add a new namespace or classname to be used to determine when to
-     * stop iterrating over the backtrace when determining calling info
-     *
-     * @param array|string $class classname(s)
-     *
-     * @return void
-     */
-    public static function addInternalClass($class)
-    {
-        self::$internalClasses['classes'] = \array_merge(self::$internalClasses['classes'], (array) $class);
-        self::$internalClasses['classes'] = \array_unique(self::$internalClasses['classes']);
-        self::$internalClasses['regex'] = '/^('
-            . \implode('|', \array_map('preg_quote', self::$internalClasses['classes']))
-            . ')\b/';
     }
 
     /**
@@ -237,13 +212,13 @@ class Backtrace
         if (\array_key_exists('file', \end($backtrace)) === true) {
             // We're NOT in shutdown
             $backtrace = Normalizer::normalize($backtrace);
-            $backtrace = static::removeInternalFrames($backtrace);
+            $backtrace = SkipInternal::removeInternalFrames($backtrace);
             return \array_slice($backtrace, 0, $limit ?: null);
         }
         /*
             We appear to be in shutdown - use xdebug
         */
-        return self::getBacktraceXdebug($limit);
+        return static::getBacktraceXdebug($limit);
     }
 
     /**
@@ -261,7 +236,7 @@ class Backtrace
         }
         $backtrace = \array_reverse($backtrace);
         $backtrace = Normalizer::normalize($backtrace);
-        $backtrace = static::removeInternalFrames($backtrace);
+        $backtrace = SkipInternal::removeInternalFrames($backtrace);
         $backtrace = \array_slice($backtrace, 0, $limit ?: null);
         $error = \error_get_last();
         if ($error !== null && $error['type'] & (E_ERROR | E_PARSE | E_COMPILE_ERROR | E_CORE_ERROR)) {
@@ -317,50 +292,6 @@ class Backtrace
     }
 
     /**
-     * Test if frame is skippable
-     *
-     * @param array $frame backtrace frame
-     *
-     * @return bool
-     */
-    private static function isSkippable($frame)
-    {
-        $class = isset($frame['class'])
-            ? $frame['class']
-            : '';
-        if (\preg_match(static::$internalClasses['regex'], $class)) {
-            return true;
-        }
-        if ($class === 'ReflectionMethod' && \in_array($frame['function'], array('invoke','invokeArgs'))) {
-            return true;
-        }
-        return Normalizer::isInternal($frame);
-    }
-
-    /**
-     * Remove internal frames from backtrace
-     *
-     * @param array $backtrace backtrace
-     *
-     * @return array
-     */
-    private static function removeInternalFrames($backtrace)
-    {
-        $count = \count($backtrace);
-        $i = 2;
-        for (; $i < $count; $i++) {
-            if (!\preg_match(static::$internalClasses['regex'], $backtrace[$i]['function'])) {
-                break;
-            }
-        }
-        if ($i === \count($backtrace) || $backtrace[$i - 1]['line'] !== 0) {
-            $i--;
-        }
-        $i = \max(0, $i);
-        return \array_slice($backtrace, $i);
-    }
-
-    /**
      * Convert our additive options to PHP's options
      *
      * @param int $options bitmask options
@@ -392,7 +323,7 @@ class Backtrace
      */
     private static function xdebugGetFunctionStack()
     {
-        if (self::isXdebugFuncStackAvail() === false) {
+        if (static::isXdebugFuncStackAvail() === false) {
             return false;
         }
         $stack = \xdebug_get_function_stack();

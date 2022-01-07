@@ -10,7 +10,6 @@ use PHPUnit\Framework\TestCase;
  */
 class StringUtilTest extends TestCase
 {
-
     /**
      * Test
      *
@@ -43,9 +42,32 @@ class StringUtilTest extends TestCase
         $this->assertSame($expect, StringUtil::isSerializedSafe($val));
     }
 
-    public function testIsXml()
+    public function getXml()
     {
         $xml = <<<'EOD'
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="http://www.SoapClient.com/xml/SQLDataSoap.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+  <SOAP-ENV:Body>
+    <ns1:ProcessSRL>
+      <SRLFile xsi:type="xsd:string">/xml/NEWS.SRI</SRLFile><RequestName xsi:type="xsd:string">yahoo</RequestName><key xsi:nil="true"/>
+    </ns1:ProcessSRL>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+EOD;
+        return $xml;
+    }
+
+    public function testIsXml()
+    {
+        $xml = $this->getXml();
+        $this->assertFalse(StringUtil::isXml(null));
+        $this->assertTrue(StringUtil::isXml($xml));
+    }
+
+    public function testPrettyXml()
+    {
+        $xml = $this->getXml();
+        $expect = <<<'EOD'
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="http://www.SoapClient.com/xml/SQLDataSoap.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
   <SOAP-ENV:Body>
@@ -56,14 +78,9 @@ class StringUtilTest extends TestCase
     </ns1:ProcessSRL>
   </SOAP-ENV:Body>
 </SOAP-ENV:Envelope>
+
 EOD;
-        $this->assertFalse(StringUtil::isXml(null));
-        $this->assertTrue(StringUtil::isXml($xml));
-    }
-
-    public function testPrettyXml()
-    {
-
+        $this->assertSame($expect, StringUtil::prettyXml($xml));
     }
 
     public function providerIsSerializedSafe()

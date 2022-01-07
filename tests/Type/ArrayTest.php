@@ -10,7 +10,6 @@ use bdk\DebugTests\DebugTestFramework;
  */
 class ArrayTest extends DebugTestFramework
 {
-
     public function providerTestMethod()
     {
 		// indented with tab

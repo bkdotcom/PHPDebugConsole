@@ -7,7 +7,6 @@ namespace bdk\DebugTests;
  */
 class LoggerTest extends DebugTestFramework
 {
-
     public function testLog()
     {
         $this->debug->logger->log('debug', 'good enough');

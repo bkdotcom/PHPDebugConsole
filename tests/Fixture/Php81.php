@@ -7,7 +7,6 @@ namespace bdk\DebugTests\Fixture;
  */
 class Php81
 {
-
     final public const FINAL_CONST = 'foo';
 
     public function __construct(

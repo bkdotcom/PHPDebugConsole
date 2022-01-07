@@ -109,7 +109,7 @@ class Text extends Base
                 'typeMore' => $typeMore,
                 'visualWhiteSpace' => $i !== 0,
             ));
-            $this->valDepth = 0;
+            $this->valDumper->setValDepth(0);
         }
         $glue = $this->cfg['glue']['multiple'];
         $glueAfterFirst = true;

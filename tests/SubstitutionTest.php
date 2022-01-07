@@ -10,7 +10,6 @@ use bdk\Debug\Abstraction\Abstracter;
  */
 class SubstitutionTest extends DebugTestFramework
 {
-
     public function testTypesBasic()
     {
         $this->doTestSubstitution(

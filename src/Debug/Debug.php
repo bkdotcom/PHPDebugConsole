@@ -721,7 +721,7 @@ class Debug extends Scaffolding
             array(
                 'columns' => array('file','line','function'),
                 'detectFiles' => true,
-                'inclArgs' => true, // incl arguments with context?
+                'inclArgs' => $inclContext, // incl arguments with context?
                                     //   may want to set meta['cfg']['objectsExclude'] = '*'
                 'sortable' => false,
                 'trace' => null,  // set to specify trace

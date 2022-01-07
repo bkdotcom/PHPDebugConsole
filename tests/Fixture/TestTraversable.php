@@ -7,7 +7,6 @@ namespace bdk\DebugTests\Fixture;
  */
 class TestTraversable implements \IteratorAggregate
 {
-
     private $data = array();
 
     /**

@@ -8,15 +8,18 @@ use mindplay\middleman\Dispatcher;
 
 /**
  * PHPUnit tests for Debug class
+ *
+ * @requires PHP >= 7.0
  */
 class MiddlewareTest extends DebugTestFramework
 {
-
     public function testMiddleware()
     {
+        /*
         if (\version_compare(PHP_VERSION, '7.0', '<')) {
             $this->markTestSkipped('MiddleWare requires PHP 7.0');
         }
+        */
         $this->debug->addPlugin($this->debug->getRoute('chromeLogger'));
         // $debugMiddleware = new Middleware($this->debug);
         $mockMiddleware = new MockMiddleware($this->debug);

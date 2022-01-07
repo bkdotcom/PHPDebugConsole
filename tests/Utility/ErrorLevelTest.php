@@ -9,7 +9,6 @@ use bdk\Debug\Utility\ErrorLevel;
  */
 class ErrorLevelTest extends \PHPUnit\Framework\TestCase
 {
-
     const E_ALL_54 = 32767;
     const E_ALL_53 = 30719; // doesn't include E_STRICT
     const E_ALL_52 = 6143;  // doesn't include E_STRICT

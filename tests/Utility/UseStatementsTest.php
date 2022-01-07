@@ -10,7 +10,6 @@ use PHPUnit\Framework\TestCase;
  */
 class UseStatementsTest extends TestCase
 {
-
     public function testUseStatements()
     {
         $source = '<?php

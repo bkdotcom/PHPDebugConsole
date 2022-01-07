@@ -77,10 +77,10 @@ class AbstractObject extends Component
         'extends' => array(),
         'implements' => array(),
         'isAnonymous' => false,
-        'isExcluded' => false,    // don't exclude if we're debugging directly
+        'isExcluded' => false,  // don't exclude if we're debugging directly
         'isFinal' => false,
         'isRecursion' => false,
-        'methods' => array(),   // if !collectMethods, may still get ['__toString']['returnValue']
+        'methods' => array(),  // if !collectMethods, may still get ['__toString']['returnValue']
         'phpDoc' => array(
             'desc' => null,
             'summary' => null,
@@ -89,7 +89,7 @@ class AbstractObject extends Component
         'properties' => array(),
         'scopeClass' => '',
         'stringified' => null,
-        'traverseValues' => array(),    // populated if method is table && traversable
+        'traverseValues' => array(),  // populated if method is table
         'viaDebugInfo' => false,
         // these are temporary values available during abstraction
         'collectPropertyValues' => true,
@@ -491,11 +491,8 @@ class AbstractObject extends Component
      */
     private function isTraverseOnly(Abstraction $abs)
     {
-        if ($abs['debugMethod'] !== 'table' || \count($abs['hist']) >= 2) {
-            return false;
-        }
-        $obj = $abs->getSubject();
-        if ($obj instanceof \Traversable) {
+        if ($abs['debugMethod'] === 'table' && \count($abs['hist']) < 2) {
+            $abs['cfgFlags'] &= ~self::COLLECT_CONSTANTS;  // set collect constants to "false"
             $abs['cfgFlags'] &= ~self::COLLECT_METHODS;  // set collect methods to "false"
             return true;
         }

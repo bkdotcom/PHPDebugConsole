@@ -25,6 +25,18 @@ class TextValue extends BaseValue
     protected $valDepth = 0;
 
     /**
+     * Used to reset valDepth
+     *
+     * @param string $depth value depth (used for indentation)
+     *
+     * @return void
+     */
+    public function setValDepth($depth = 0)
+    {
+        $this->valDepth = $depth;
+    }
+
+    /**
      * Dump array as text
      *
      * @param array $array Array to display

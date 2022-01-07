@@ -11,7 +11,6 @@ use bdk\DebugTests\DebugTestFramework;
  */
 class TraceTest extends DebugTestFramework
 {
-
     /**
      * Test
      *
@@ -91,7 +90,7 @@ class TraceTest extends DebugTestFramework
                     $trace = $logEntry['args'][0];
                     $this->assertStringContainsString('<caption>trace</caption>' . "\n"
                         . '<thead>' . "\n"
-                        . '<tr><th>&nbsp;</th><th>file</th><th scope="col">line</th><th scope="col">function</th></tr>' . "\n"
+                        . '<tr><th>&nbsp;</th><th scope="col">file</th><th scope="col">line</th><th scope="col">function</th></tr>' . "\n"
                         . '</thead>', $output);
                     $matches = array();
                     \preg_match_all('#<tr>'
@@ -184,7 +183,7 @@ class TraceTest extends DebugTestFramework
 <table class="table-bordered trace-context">
 <caption>trace</caption>
 <thead>
-<tr><th>&nbsp;</th><th>file</th><th scope="col">line</th><th scope="col">function</th></tr>
+<tr><th>&nbsp;</th><th scope="col">file</th><th scope="col">line</th><th scope="col">function</th></tr>
 </thead>
 <tbody>
 <tr class="expanded" data-toggle="next">

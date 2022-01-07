@@ -7,7 +7,6 @@ namespace bdk\DebugTests;
  */
 class DumpHtmlTest extends DebugTestFramework
 {
-
     /**
      * Test MarkupIdentifier
      */

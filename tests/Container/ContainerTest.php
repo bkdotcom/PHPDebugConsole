@@ -11,7 +11,6 @@ use PHPUnit\Framework\TestCase;
  */
 class ContainerTest extends TestCase
 {
-
     use \bdk\DebugTests\PolyFill\ExpectExceptionTrait;
 
     public function testConstructorParams()

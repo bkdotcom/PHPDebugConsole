@@ -9,7 +9,6 @@ use bdk\Debug;
  */
 class InternalEventsTest extends DebugTestFramework
 {
-
     private $emailCalled = false;
     private $expectedSubject = '';
 

@@ -10,7 +10,6 @@ use bdk\PubSub\Event;
  */
 class ChannelTest extends DebugTestFramework
 {
-
     /**
      * setUp is executed before each test
      *

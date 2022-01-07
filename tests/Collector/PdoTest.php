@@ -11,7 +11,6 @@ use bdk\DebugTests\DebugTestFramework;
  */
 class PdoTest extends DebugTestFramework
 {
-
     static private $pdo;
 
     public static function setUpBeforeClass(): void

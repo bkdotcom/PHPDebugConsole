@@ -15,7 +15,6 @@ namespace bdk\DebugTests\Fixture;
  */
 class TestBase
 {
-
     /** Inherited description */
     const INHERITED = 'defined in TestBase';
     const MY_CONSTANT = 'defined in TestBase';

@@ -11,7 +11,6 @@ use PHPUnit\Framework\TestCase;
  */
 class FileTreeTest extends TestCase
 {
-
     /**
      * Test
      *

@@ -9,7 +9,6 @@ namespace bdk\DebugTests\Fixture;
  */
 class TestVariadic extends Test
 {
-
     /**
      * This method is protected
      *

@@ -11,7 +11,6 @@ namespace bdk\DebugTests;
  */
 class ModifyTests
 {
-
     private $modifiedFiles = array();
     protected $dir;
 

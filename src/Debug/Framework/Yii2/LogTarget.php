@@ -56,7 +56,7 @@ class LogTarget extends Target
         } elseif ($debug === $debug->rootInstance) {
             $debug = $debug->getChannel('Yii');
         }
-        $debug->backtrace->addInternalClass('yii');
+        $debug->backtrace->addInternalClass('yii\\', 1);
         $this->debug = $debug;
         parent::__construct($config);
     }

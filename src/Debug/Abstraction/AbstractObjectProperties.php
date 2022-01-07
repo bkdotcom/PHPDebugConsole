@@ -119,6 +119,9 @@ class AbstractObjectProperties
      */
     public function add(Abstraction $abs)
     {
+        if ($abs['className'] === 'Closure') {
+            $this->addClosure($abs);
+        }
         if ($abs['isTraverseOnly']) {
             return;
         }
@@ -129,9 +132,6 @@ class AbstractObjectProperties
         if (\is_object($obj)) {
             $this->addDom($abs);
             $this->addDebug($abs); // use __debugInfo() values if useDebugInfo' && method exists
-            if ($abs['className'] === 'Closure') {
-                $this->addClosure($abs);
-            }
         }
         $this->crate($abs);
     }

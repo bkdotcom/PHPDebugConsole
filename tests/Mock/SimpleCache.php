@@ -9,7 +9,6 @@ use Psr\SimpleCache\CacheInterface;
  */
 class SimpleCache implements CacheInterface
 {
-
     /**
      * @var array
      */

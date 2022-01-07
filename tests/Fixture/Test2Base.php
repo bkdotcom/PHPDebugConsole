@@ -14,7 +14,6 @@ namespace bdk\DebugTests\Fixture;
  */
 class Test2Base
 {
-
     const WORD = 'bird';
 
     protected $magicReadProp = 'not null';

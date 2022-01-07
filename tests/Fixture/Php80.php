@@ -10,7 +10,6 @@ namespace bdk\DebugTests\Fixture;
 #[ExampleClassAttribute('foo', PHP_VERSION_ID, name:'bar')]
 class Php80
 {
-
     #[ExampleConstAttribute]
     private const FOO = 'foo';
 

@@ -262,7 +262,7 @@ class Table
      */
     private function processRowsGet()
     {
-        $rows = $this->debug->abstracter->crate($this->logEntry['args'][0], 'table');
+        $rows = $this->debug->abstracter->crate($this->logEntry['args'][0], $this->logEntry['method']);
         if ($this->debug->abstracter->isAbstraction($rows, Abstracter::TYPE_OBJECT)) {
             $this->meta['tableInfo']['class'] = $rows['className'];
             $this->meta['tableInfo']['summary'] = $rows['phpDoc']['summary'];

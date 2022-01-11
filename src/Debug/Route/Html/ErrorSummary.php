@@ -152,15 +152,15 @@ class ErrorSummary
         }
         $error = $this->errorHandler->get('lastError');
         $html = '<div class="error-fatal">'
-            . '<h3>' . $error['typeStr'] . '</h3>'
-            . '<ul class="list-unstyled no-indent">'
+            . '<h3>' . $error['typeStr'] . '</h3>' . "\n"
+            . '<ul class="list-unstyled no-indent">' . "\n"
             . $this->html->buildTag(
                 'li',
                 array(),
                 $error['isHtml']
                     ? $error['message']
                     : \htmlspecialchars($error['message'])
-            );
+            ) . "\n";
         $this->debug->addPlugin(new Highlight());
         $backtrace = $error['backtrace'];
         if (\is_array($backtrace) && \count($backtrace) > 1) {
@@ -223,7 +223,7 @@ class ErrorSummary
             return $this->buildInConsoleOneCat();
         }
         $html = '<h3>' . $this->buildInConsoleHeader() . '</h3>' . "\n";
-        $html .= '<ul class="list-unstyled">';
+        $html .= '<ul class="list-unstyled in-console">' . "\n";
         foreach ($this->stats['counts'] as $category => $vals) {
             if ($category === 'fatal' || !$vals['inConsole']) {
                 continue;
@@ -235,9 +235,9 @@ class ErrorSummary
                     'data-count' => $vals['inConsole'],
                 ),
                 $category . ': ' . $vals['inConsole']
-            );
+            ) . "\n";
         }
-        $html .= '</ul>';
+        $html .= '</ul>' . "\n";
         return $html;
     }
 
@@ -328,7 +328,7 @@ class ErrorSummary
             'There %s captured while not collecting debug log',
             $count === 1 ? 'was 1 error' : 'were ' . $count . ' errors'
         );
-        return '<h3>' . $header . '</h3>'
+        return '<h3>' . $header . '</h3>' . "\n"
             . '<ul class="list-unstyled">' . "\n"
             . \implode("\n", \array_map(function (Error $error) {
                 return \sprintf(
@@ -342,7 +342,7 @@ class ErrorSummary
                         : \htmlspecialchars($error['message'])
                 );
             }, $errors)) . "\n"
-            . '</ul>';
+            . '</ul>' . "\n";
     }
 
     /**

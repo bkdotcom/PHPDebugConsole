@@ -135,6 +135,7 @@ export function addMarkup ($node) {
   var $expAll = $node.find('.tab-panes > .tab-primary > .tab-body > .expand-all')
   $node.find('.tab-panes > .tab-primary > .tab-body').before($sidebar)
 
+  updateErrorSummary($node)
   phpErrorToggles($node)
   moveChannelToggles($node)
   addMethodToggles($node)
@@ -168,7 +169,7 @@ export function open ($node) {
 function addMethodToggles ($node) {
   var channelNameRoot = $node.data('channelNameRoot')
   var $filters = $node.find('.debug-filters')
-  var $entries = $node.find('> .tab-panes .m_alert, .group-body > *')
+  var $entries = $node.find('.tab-primary').find('> .tab-panes .m_alert, .group-body > *')
   var val
   var haveEntry
   for (val in methodLabels) {
@@ -206,43 +207,38 @@ function moveChannelToggles ($node) {
 }
 
 /**
- * Grab the error toggles from .tab-panes's error-summary move to sidebar
+ * Build php error toggles
  */
 function phpErrorToggles ($node) {
   var $togglesUl = $node.find('.debug-sidebar .php-errors ul')
-  var $errorSummary = $node.closest('.debug').find('.m_alert.error-summary')
-  var haveFatal = $errorSummary.hasClass('have-fatal')
-  if (haveFatal) {
-    $togglesUl.append('<li><label class="toggle active">' +
-      '<input type="checkbox" checked data-toggle="error" value="fatal" />fatal <span class="badge">1</span>' +
-      '</label></li>')
-  }
-  moveErrorSummary($errorSummary, $togglesUl)
-  if ($togglesUl.children().length === 0) {
-    $togglesUl.parent().hide()
-  }
-  if (!haveFatal) {
-    $errorSummary.remove()
-  } else {
-    $errorSummary.find('h3').eq(1).remove()
-  }
-}
-
-function moveErrorSummary ($errorSummary, $togglesUl) {
-  $errorSummary.find('label').each(function () {
-    var $li = $(this).parent()
-    var $checkbox = $(this).find('input')
-    var val = $checkbox.val()
+  var categories = ['fatal', 'error', 'warning', 'deprecated', 'notice', 'strict']
+  $.each(categories, function (i, category) {
+    var count = category === 'fatal'
+      ? $node.find('.m_alert.error-summary.have-fatal').length
+      : $node.find('.error-' + category).filter('.m_error,.m_warn').length
+    if (count === 0) {
+      return
+    }
     $togglesUl.append(
       $('<li>').append(
         $('<label class="toggle active">').html(
-          $checkbox[0].outerHTML + val + ' <span class="badge">' + $checkbox.data('count') + '</span>'
+          '<input type="checkbox" checked data-toggle="error" data-count="' + count + '" value="' + category + '" />' +
+          category + ' <span class="badge">' + count + '</span>'
         )
       )
     )
-    $li.remove()
   })
-  $errorSummary.find('ul').filter(function () {
-    return $(this).children().length === 0
-  }).remove()
+  if ($togglesUl.children().length === 0) {
+    $togglesUl.parent().hide()
+  }
+}
+
+function updateErrorSummary ($node) {
+  var $errorSummary = $node.closest('.debug').find('.m_alert.error-summary')
+  var $inConsole = $errorSummary.find('.in-console')
+  $inConsole.prev().remove()
+  $inConsole.remove()
+  if ($errorSummary.children().length === 0) {
+    $errorSummary.remove()
+  }
 }

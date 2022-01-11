@@ -53,35 +53,32 @@ class Value extends BaseValue
      *
      * Extends Base
      *
-     * @param mixed $val value to check
+     * @param mixed       $val value to check
+     * @param Abstraction $abs (optional) full abstraction
      *
      * @return string|false
      */
-    public function checkTimestamp($val)
+    public function checkTimestamp($val, Abstraction $abs = null)
     {
-        $date = parent::checkTimestamp($val);
-        if ($date) {
-            $this->setDumpOpt('postDump', function ($dumped, $opts) use ($val, $date) {
-                $attribs = array(
-                    'class' => array('timestamp', 'value-container'),
-                    'data-type' => $opts['type'],
-                    'title' => $date,
-                );
-                if ($opts['tagName'] === 'td') {
-                    $wrapped = $this->html->buildTag('span', $attribs, $val);
-                    return $this->html->buildTag(
-                        'td',
-                        array(
-                            'class' => 't_' . $opts['type']
-                        ),
-                        $wrapped
-                    );
-                }
-                return $this->html->buildTag('span', $attribs, $dumped);
-            });
-            return $date;
+        $date = parent::checkTimestamp($val, $abs);
+        if ($date === false) {
+            return false;
         }
-        return false;
+        $this->setDumpOpt('postDump', function ($dumped, $opts) use ($val, $date) {
+            $attribsContainer = array(
+                'class' => array('timestamp', 'value-container'),
+                'title' => $date,
+            );
+            if ($opts['tagName'] === 'td') {
+                return $this->html->buildTag(
+                    'td',
+                    $attribsContainer,
+                    $this->html->buildTag('span', $opts['attribs'], $val)
+                );
+            }
+            return $this->html->buildTag('span', $attribsContainer, $dumped);
+        });
+        return $date;
     }
 
     /**
@@ -304,19 +301,20 @@ class Value extends BaseValue
     /**
      * Dump float value
      *
-     * @param float $val float value
+     * @param float       $val float value
+     * @param Abstraction $abs (optional) full abstraction
      *
      * @return float|string
      */
-    protected function dumpFloat($val)
+    protected function dumpFloat($val, Abstraction $abs = null)
     {
-        $this->checkTimestamp($val);
         if ($val === Abstracter::TYPE_FLOAT_INF) {
             return 'INF';
         }
         if ($val === Abstracter::TYPE_FLOAT_NAN) {
             return 'NaN';
         }
+        $this->checkTimestamp($val, $abs);
         return $val;
     }
 

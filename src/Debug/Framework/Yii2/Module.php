@@ -418,9 +418,41 @@ class Module extends BaseModule implements SubscriberInterface, BootstrapInterfa
         }
 
         $debug = $this->debug->rootInstance->getChannel('User');
+        $debug->eventManager->subscribe(Debug::EVENT_LOG, function (LogEntry $logEntry) {
+            $captions = array('roles', 'permissions');
+            $isRolesPermissions = $logEntry['method'] === 'table' && \in_array($logEntry->getMeta('caption'), $captions);
+            if (!$isRolesPermissions) {
+                return;
+            }
+            // $logEntry['args'] = array($logEntry['args'][0]);
+        });
 
         $this->logUserIdentity($debug);
         $this->logUserRolesPermissions($debug);
+    }
+
+    /**
+     * Convert unix-timestamps to strings
+     *
+     * @param array $rows table rows
+     *
+     * @return array rows
+     */
+    private function tableTsToString($rows)
+    {
+        foreach ($rows as $i => $row) {
+            // echo '<pre>row = ' . \htmlspecialchars(\json_encode($row, JSON_PRETTY_PRINT)) . '</pre>';
+            $tsCols = array('createdAt', 'updatedAt');
+            $nonEmptyTsVals = \array_filter(\array_intersect_key($row, \array_flip($tsCols)));
+            foreach ($nonEmptyTsVals as $key => $val) {
+                $val = $val instanceof Abstraction
+                    ? $val['value']
+                    : $val;
+                $datetime = new \DateTime('@' . $val);
+                $rows[$i][$key] = \str_replace('+0000', '', $datetime->format('Y-m-d H:i:s T'));
+            }
+        }
+        return $rows;
     }
 
     /**
@@ -466,14 +498,6 @@ class Module extends BaseModule implements SubscriberInterface, BootstrapInterfa
                 'createdAt',
                 'updatedAt'
             );
-            /*
-            $roles = \array_map(function ($role) {
-                return \get_object_vars($role);
-            }, $authManager->getRolesByUser($user->id));
-            $permissions = \array_map(function ($permission) {
-                return \get_object_vars($permission);
-            }, $authManager->getPermissionsByUser($user->id));
-            */
             $debug->table('roles', $authManager->getRolesByUser($user->id), $cols);
             $debug->table('permissions', $authManager->getPermissionsByUser($user->id), $cols);
         } catch (\Exception $e) {

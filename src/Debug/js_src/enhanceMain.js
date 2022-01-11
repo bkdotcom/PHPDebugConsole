@@ -240,10 +240,13 @@ function channelsToTreeWalkPath (channel, path, channelTreeRef) {
   }
 }
 
+/**
+ * ErrorSummary should be considered deprecated
+ */
 function enhanceErrorSummary () {
   var $errorSummary = $root.find('.m_alert.error-summary')
   $errorSummary.find('h3:first-child').prepend(config.iconsMethods['.m_error'])
-  $errorSummary.find('li[class*=error-]').each(function () {
+  $errorSummary.find('.in-console li[class*=error-]').each(function () {
     var category = $(this).attr('class').replace('error-', '')
     var html = $(this).html()
     var htmlReplace = '<li><label>' +

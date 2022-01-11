@@ -654,7 +654,7 @@ EOD;
                                     <li><span class="t_key">password</span><span class="t_operator">=&gt;</span><span class="t_string">secret</span></li>
                                 </ul><span class="t_punct">)</span></span></div>
                             </td></tr>
-                        <tr><th class="t_int t_key text-right" scope="row">2</th><td class="t_int"><span class="timestamp value-container" data-type="int" title="' . \date(self::DATETIME_FORMAT, $time) . '">' . $time . '</span></td></tr>
+                        <tr><th class="t_int t_key text-right" scope="row">2</th><td class="timestamp value-container" title="' . \gmdate(self::DATETIME_FORMAT, $time) . '"><span class="t_int" data-type-more="timestamp">' . $time . '</span></td></tr>
                         <tr><th class="t_int t_key text-right" scope="row">3</th><td class="value-container" data-type="string"><span class="prettified">(prettified)</span> <span class="highlight language-xml no-quotes t_string">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot;?&gt;
                         &lt;fart/&gt;
                         </span></td></tr>
@@ -668,21 +668,21 @@ EOD;
                         "int": 42,
                         "password": "secret"
                     }
-                    [2] => 📅 ' . $time . ' (' . \date(self::DATETIME_FORMAT, $time) . ')
+                    [2] => 📅 ' . $time . ' (' . \gmdate(self::DATETIME_FORMAT, $time) . ')
                     [3] => <?xml version="1.0" encoding="UTF-8" standalone="no"?>
                     <fart/>
                 )',
                 'script' => 'console.table(['
                         . '"8f fb fd c0 da c5 e6 2d 5a 6c c5 c5 5b fe 2f 57",'
                         . '"{\n    \"poop\": \"\\\ud83d\\\udca9\",\n    \"int\": 42,\n    \"password\": \"secret\"\n}",'
-                        . '"' . $time . ' (' . \date(self::DATETIME_FORMAT, $time) . ')",'
+                        . '"' . $time . ' (' . \gmdate(self::DATETIME_FORMAT, $time) . ')",'
                         . '"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<fart/>\n"'
                         . ']);',
                 'firephp' => 'X-Wf-1-1-1-4: %d|[{"Label":"foo","Type":"TABLE"},['
                         . '["","value"],'
                         . '[0,"8f fb fd c0 da c5 e6 2d 5a 6c c5 c5 5b fe 2f 57"],'
                         . '[1,"{\n    \"poop\": \"\\\ud83d\\\udca9\",\n    \"int\": 42,\n    \"password\": \"secret\"\n}"],'
-                        . '[2,"' . $time . ' (' . \date(self::DATETIME_FORMAT, $time) . ')"],'
+                        . '[2,"' . $time . ' (' . \gmdate(self::DATETIME_FORMAT, $time) . ')"],'
                         . '[3,"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<fart/>\n"]'
                     . ']]|',
             )

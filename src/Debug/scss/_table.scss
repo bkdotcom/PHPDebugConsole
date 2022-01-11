@@ -54,6 +54,7 @@ table {
   }
   tbody th.t_int,
   td[data-type-more=numeric],
+  td.timestamp,
   td.t_int {
     text-align: right;
     white-space: nowrap;

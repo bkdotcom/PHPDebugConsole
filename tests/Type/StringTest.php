@@ -240,14 +240,14 @@ EOD;
                     'chromeLogger' => array(
                         array(
                             'timestamp',
-                            $ts . ' (' . \date(self::DATETIME_FORMAT, $ts) . ')',
+                            $ts . ' (' . \gmdate(self::DATETIME_FORMAT, $ts) . ')',
                         ),
                         null,
                         '',
                     ),
-                    'html' => '<li class="m_log"><span class="no-quotes t_string">timestamp</span> = <span class="timestamp value-container" data-type="string" title="' . \date(self::DATETIME_FORMAT, $ts) . '"><span class="t_string" data-type-more="numeric">' . $ts . '</span></span></li>',
-                    'script' => 'console.log("timestamp","' . $ts . ' (' . \date(self::DATETIME_FORMAT, $ts) . ')");',
-                    'text' => 'timestamp = 📅 "' . $ts . '" (' . \date(self::DATETIME_FORMAT, $ts) . ')',
+                    'html' => '<li class="m_log"><span class="no-quotes t_string">timestamp</span> = <span class="timestamp value-container" title="' . \gmdate(self::DATETIME_FORMAT, $ts) . '"><span class="t_string" data-type-more="timestamp">' . $ts . '</span></span></li>',
+                    'script' => 'console.log("timestamp","' . $ts . ' (' . \gmdate(self::DATETIME_FORMAT, $ts) . ')");',
+                    'text' => 'timestamp = 📅 "' . $ts . '" (' . \gmdate(self::DATETIME_FORMAT, $ts) . ')',
                 ),
             ),
 

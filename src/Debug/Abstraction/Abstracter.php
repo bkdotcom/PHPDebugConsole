@@ -46,6 +46,7 @@ class Abstracter extends Component
 
     /*
         "typeMore" values
+        (no constants for "true" & "false")
     */
     const TYPE_ABSTRACTION = 'abstraction';
     const TYPE_RAW = 'raw'; // raw object or array
@@ -58,6 +59,7 @@ class Abstracter extends Component
     const TYPE_STRING_LONG = 'maxLen';
     const TYPE_STRING_NUMERIC = 'numeric';
     const TYPE_STRING_SERIALIZED = 'serialized';
+    const TYPE_TIMESTAMP = 'timestamp';
 
     public $debug;
     public static $utility;
@@ -239,6 +241,8 @@ class Abstracter extends Component
                 return array(self::TYPE_BOOL, \json_encode($val));
             case self::TYPE_FLOAT:
                 return $this->getTypeFloat($val);
+            case self::TYPE_INT:
+                return $this->getTypeInt($val);
             case self::TYPE_OBJECT:
                 return $this->getTypeObject($val);
             case self::TYPE_RESOURCE:
@@ -286,16 +290,29 @@ class Abstracter extends Component
             return false;
         }
         list($type, $typeMore) = $this->getType($val);
-        if ($typeMore === self::TYPE_RAW) {
-            return array($type, $typeMore);
+        if ($type === self::TYPE_BOOL) {
+            return false;
         }
-        if ($type === self::TYPE_FLOAT && $typeMore) {
-            return array($type, $typeMore);
+        if (\in_array($typeMore, array(self::TYPE_ABSTRACTION, self::TYPE_STRING_NUMERIC))) {
+            return false;
         }
-        if ($type === self::TYPE_STRING && \in_array($typeMore, array(null, self::TYPE_STRING_NUMERIC), true) === false) {
-            return array($type, $typeMore);
-        }
-        return false;
+        return $typeMore
+            ? array($type, $typeMore)
+            : false;
+    }
+
+    /**
+     * Does value appear to be a unix timestamp?
+     *
+     * @param int|string|float $val Value to test
+     *
+     * @return bool
+     */
+    public function testTimestamp($val)
+    {
+        $secs = 86400 * 90; // 90 days worth o seconds
+        $tsNow = \time();
+        return $val > $tsNow - $secs && $val < $tsNow + $secs;
     }
 
     /**
@@ -355,8 +372,27 @@ class Abstracter extends Component
         } elseif (\is_nan($val)) {
             // using is_nan() func as comparing with NAN constant doesn't work
             $typeMore = self::TYPE_FLOAT_NAN;
+        } elseif ($this->testTimestamp($val)) {
+            $typeMore = self::TYPE_TIMESTAMP;
         }
         return array(self::TYPE_FLOAT, $typeMore);
+    }
+
+    /**
+     * Get Int's type & typeMore
+     *
+     * INF and NAN are considered "float"
+     *
+     * @param float $val float/INF/NAN
+     *
+     * @return array
+     */
+    private function getTypeInt($val)
+    {
+        $typeMore = $this->testTimestamp($val)
+            ? self::TYPE_TIMESTAMP
+            : null;
+        return array(self::TYPE_INT, $typeMore);
     }
 
     /**

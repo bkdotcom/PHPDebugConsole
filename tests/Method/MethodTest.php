@@ -51,7 +51,7 @@ class MethodTest extends DebugTestFramework
                     $this->assertSame(array(
                         'caption' => 'trace',
                         'detectFiles' => true,
-                        'inclArgs' => true,
+                        'inclArgs' => false,
                         'sortable' => false,
                         'tableInfo' => array(
                             'class' => null,
@@ -81,7 +81,7 @@ class MethodTest extends DebugTestFramework
                     array('something completely different'),
                     array(
                         'detectFiles' => true,
-                        'inclArgs' => true,
+                        'inclArgs' => false,
                         'format' => 'raw',
                         'foundFiles' => array(),
                     ),

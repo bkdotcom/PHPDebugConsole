@@ -101,18 +101,19 @@ class TextAnsiValue extends TextValue
     /**
      * Dump float value
      *
-     * @param float $val float value
+     * @param float       $val float value
+     * @param Abstraction $abs (optional) full abstraction
      *
      * @return float|string
      */
-    protected function dumpFloat($val)
+    protected function dumpFloat($val, Abstraction $abs = null)
     {
-        $date = $this->checkTimestamp($val);
         if ($val === Abstracter::TYPE_FLOAT_INF) {
             $val = 'INF';
         } elseif ($val === Abstracter::TYPE_FLOAT_NAN) {
             $val = 'NaN';
         }
+        $date = $this->checkTimestamp($val, $abs);
         $val = $this->cfg['escapeCodes']['numeric'] . $val . $this->escapeReset;
         return $date
             ? '📅 ' . $val . ' ' . $this->cfg['escapeCodes']['muted'] . '(' . $date . ')' . $this->escapeReset
@@ -250,7 +251,7 @@ class TextAnsiValue extends TextValue
     {
         $addQuotes = $this->getDumpOpt('addQuotes');
         if (\is_numeric($val)) {
-            return $this->dumpStringNumeric($val, $addQuotes);
+            return $this->dumpStringNumeric($val, $addQuotes, $abs);
         }
         $escapeCodes = $this->cfg['escapeCodes'];
         $ansiQuote = $escapeCodes['quote'] . '"' . $this->escapeReset;
@@ -272,15 +273,16 @@ class TextAnsiValue extends TextValue
     /**
      * Dump numeric string
      *
-     * @param string $val       numeric string value
-     * @param bool   $addQuotes whether to add quotes
+     * @param string      $val       numeric string value
+     * @param bool        $addQuotes whether to add quotes
+     * @param Abstraction $abs       (optional) full abstraction
      *
      * @return string
      */
-    private function dumpStringNumeric($val, $addQuotes)
+    private function dumpStringNumeric($val, $addQuotes, Abstraction $abs = null)
     {
         $escapeCodes = $this->cfg['escapeCodes'];
-        $date = $this->checkTimestamp($val);
+        $date = $this->checkTimestamp($val, $abs);
         $val = $escapeCodes['numeric'] . $val;
         if ($addQuotes) {
             $val = $escapeCodes['quote'] . '"'

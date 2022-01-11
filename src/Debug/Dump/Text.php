@@ -103,8 +103,10 @@ class Text extends Base
             $typeMore2 = $typeMore === Abstracter::TYPE_ABSTRACTION
                 ? $v['typeMore']
                 : $typeMore;
+            $isNumericString = $type === Abstracter::TYPE_STRING
+                && \in_array($typeMore2, array(Abstracter::TYPE_STRING_NUMERIC, Abstracter::TYPE_TIMESTAMP));
             $args[$i] = $this->valDumper->dump($v, array(
-                'addQuotes' => $i !== 0 || $typeMore2 === Abstracter::TYPE_STRING_NUMERIC,
+                'addQuotes' => $i !== 0 || $isNumericString,
                 'type' => $type,
                 'typeMore' => $typeMore,
                 'visualWhiteSpace' => $i !== 0,

@@ -132,19 +132,21 @@ class Html
         }
         $attribPairs = array();
         foreach ($attribs as $name => $value) {
-            $attribPairs[] = static::buildAttribNameValue($name, $value);
+            // buildAttribNameValue updates $name by reference
+            $nameVal = static::buildAttribNameValue($name, $value);
+            $attribPairs[$name] = $nameVal;
         }
         $attribPairs = \array_filter($attribPairs, 'strlen');
-        \sort($attribPairs);
+        \ksort($attribPairs);
         return \rtrim(' ' . \implode(' ', $attribPairs));
     }
 
     /**
      * Build an html tag
      *
-     * @param string       $tagName   tag name (ie "div" or "input")
-     * @param array|string $attribs   key/value attributes
-     * @param string       $innerhtml inner HTML if applicable
+     * @param string         $tagName   tag name (ie "div" or "input")
+     * @param array|string   $attribs   key/value attributes
+     * @param string|Closure $innerhtml inner HTML if applicable
      *
      * @return string
      */
@@ -152,6 +154,9 @@ class Html
     {
         $tagName = \strtolower($tagName);
         $attribStr = self::buildAttribString($attribs);
+        if ($innerhtml instanceof \Closure) {
+            $innerhtml = \call_user_func($innerhtml);
+        }
         return \in_array($tagName, self::$htmlEmptyTags)
             ? '<' . $tagName . $attribStr . ' />'
             : '<' . $tagName . $attribStr . '>' . $innerhtml . '</' . $tagName . '>';
@@ -228,8 +233,9 @@ class Html
      *
      * @return string
      */
-    private static function buildAttribNameValue($name, $value)
+    private static function buildAttribNameValue(&$name, $value)
     {
+        // buildAttribVal updates $name by reference
         $value = self::buildAttribVal($name, $value);
         if ($value === null) {
             return '';

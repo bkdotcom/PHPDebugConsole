@@ -177,8 +177,7 @@ class HtmlTest extends DebugTestFramework
     public function providerTestBuildTag()
     {
         return array(
-            // 0
-            array(
+            'selfClosing' => array(
                 'embed',
                 array(
                     'type' => 'video/webm',
@@ -189,15 +188,24 @@ class HtmlTest extends DebugTestFramework
                 null,
                 '<embed height="200" src="/media/cc0-videos/flower.mp4" type="video/webm" width="250" />',
             ),
-            // 1
-            array(
+            'innerHtml' => array(
                 'a',
                 array(
                     'href' => 'http://127.0.0.1/',
                     'title' => 'Pork & Beans',
                 ),
-                'Click Here!',
-                '<a href="http://127.0.0.1/" title="Pork &amp; Beans">Click Here!</a>',
+                '<i class="icon"></i> Click Here!',
+                '<a href="http://127.0.0.1/" title="Pork &amp; Beans"><i class="icon"></i> Click Here!</a>',
+            ),
+            'innerHtmlClosure' => array(
+                'div',
+                array(
+                    'class' => array('test', 'best')
+                ),
+                function () {
+                    return 'innerHtml';
+                },
+                '<div class="best test">innerHtml</div>',
             ),
         );
     }

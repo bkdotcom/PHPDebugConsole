@@ -90,10 +90,13 @@ class AbstractString extends Component
         if ($val === Abstracter::UNDEFINED) {
             return array(Abstracter::TYPE_UNDEFINED, null);       // not a native php type!
         }
-        if (\is_numeric($val)) {
-            return array(Abstracter::TYPE_STRING, Abstracter::TYPE_STRING_NUMERIC);
+        if (\is_numeric($val) === false) {
+            return $this->getTypeMore($val);
         }
-        return $this->getTypeMore($val);
+        $typeMore = $this->abstracter->testTimestamp($val)
+            ? Abstracter::TYPE_TIMESTAMP
+            : Abstracter::TYPE_STRING_NUMERIC;
+        return array(Abstracter::TYPE_STRING, $typeMore);
     }
 
     /**

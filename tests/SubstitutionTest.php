@@ -91,7 +91,7 @@ class SubstitutionTest extends DebugTestFramework
         $binary = \base64_decode('j/v9wNrF5i1abMXFW/4vVw==');
         $binaryStr = \trim(\chunk_split(\bin2hex($binary), 2, ' '));
         $time = \time();
-        $timeStr = \date(self::DATETIME_FORMAT, $time);
+        $timeStr = \gmdate(self::DATETIME_FORMAT, $time);
         $this->doTestSubstitution(
             'log',
             array(
@@ -109,7 +109,12 @@ class SubstitutionTest extends DebugTestFramework
                         '%s %s %s %s %s',
                         123.45,
                         42,
-                        $time,
+                        array(
+                            'debug' => Abstracter::ABSTRACTION,
+                            'type' => Abstracter::TYPE_INT,
+                            'typeMore' => Abstracter::TYPE_TIMESTAMP,
+                            'value' => $time,
+                        ),
                         '<i>boring</i>',
                         array(
                             'strlen' => 16,
@@ -137,7 +142,7 @@ class SubstitutionTest extends DebugTestFramework
                 'html' => '<li class="m_log"><span class="no-quotes t_string">'
                     . '<span class="t_float">123.45</span>'
                     . ' <span class="t_int">42</span>'
-                    . ' <span class="timestamp value-container" data-type="int" title="' . $timeStr . '"><span class="t_int">' . $time . '</span></span>'
+                    . ' <span class="timestamp value-container" title="' . $timeStr . '"><span class="t_int" data-type-more="timestamp">' . $time . '</span></span>'
                     . ' &lt;i&gt;boring&lt;/i&gt;'
                     . ' ' . $binaryStr
                     . '</span></li>',

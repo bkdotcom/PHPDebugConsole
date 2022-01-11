@@ -49,7 +49,7 @@ class HtmlString
     public function dump($val, Abstraction $abs = null)
     {
         if (\is_numeric($val)) {
-            $this->valDumper->checkTimestamp($val);
+            $this->valDumper->checkTimestamp($val, $abs);
         }
         if ($this->detectFiles && $this->debug->utility->isFile($val)) {
             $this->valDumper->setDumpOpt('attribs.data-file', true);

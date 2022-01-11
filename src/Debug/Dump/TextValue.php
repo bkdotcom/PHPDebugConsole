@@ -74,11 +74,12 @@ class TextValue extends BaseValue
     /**
      * Dump float value
      *
-     * @param float $val float value
+     * @param float       $val float value
+     * @param Abstraction $abs (optional) full abstraction
      *
      * @return float|string
      */
-    protected function dumpFloat($val)
+    protected function dumpFloat($val, Abstraction $abs = null)
     {
         if ($val === Abstracter::TYPE_FLOAT_INF) {
             return 'INF';
@@ -86,7 +87,7 @@ class TextValue extends BaseValue
         if ($val === Abstracter::TYPE_FLOAT_NAN) {
             return 'NaN';
         }
-        $date = $this->checkTimestamp($val);
+        $date = $this->checkTimestamp($val, $abs);
         return $date
             ? '📅 ' . $val . ' (' . $date . ')'
             : $val;
@@ -211,7 +212,7 @@ class TextValue extends BaseValue
     {
         $addQuotes = $this->getDumpOpt('addQuotes');
         if (\is_numeric($val)) {
-            $date = $this->checkTimestamp($val);
+            $date = $this->checkTimestamp($val, $abs);
             if ($addQuotes) {
                 $val = '"' . $val . '"';
             }

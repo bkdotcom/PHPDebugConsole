@@ -4,6 +4,7 @@ namespace bdk\DebugTests\Type;
 
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\DebugTests\DebugTestFramework;
+use DateTime;
 
 /**
  * PHPUnit tests for Debug class
@@ -13,11 +14,10 @@ class BasicTest extends DebugTestFramework
     public function providerTestMethod()
     {
         $ts = \time();
-        $datetime = \date(self::DATETIME_FORMAT, $ts);
+        $datetime = \gmdate(self::DATETIME_FORMAT, $ts);
         $test = new \bdk\DebugTests\Fixture\Test();
         return array(
-            // #0 : boolean
-            array(
+            'boolTrue' => array(
                 'log',
                 array(true),
                 array(
@@ -32,8 +32,7 @@ class BasicTest extends DebugTestFramework
                     ),
                 )
             ),
-            // #1
-            array(
+            'boolFalse' => array(
                 'log',
                 array(false),
                 array(
@@ -48,8 +47,7 @@ class BasicTest extends DebugTestFramework
                     ),
                 )
             ),
-            // #2 : null
-            array(
+            'null' => array(
                 'log',
                 array(null),
                 array(
@@ -64,8 +62,7 @@ class BasicTest extends DebugTestFramework
                     ),
                 ),
             ),
-            // #3 : INF
-            array(
+            'inf' => array(
                 'log',
                 array(INF),
                 array(
@@ -87,8 +84,7 @@ class BasicTest extends DebugTestFramework
                     ),
                 ),
             ),
-            // #4 : NAN
-            array(
+            'NaN' => array(
                 'log',
                 array(NAN),
                 array(
@@ -110,8 +106,7 @@ class BasicTest extends DebugTestFramework
                     ),
                 ),
             ),
-            // #5 : number
-            array(
+            'int' => array(
                 'log',
                 array(10),
                 array(
@@ -126,8 +121,68 @@ class BasicTest extends DebugTestFramework
                     ),
                 ),
             ),
-            // #6 : float
-            array(
+            'intTimestamp' => array(
+                'log',
+                array($ts),
+                array(
+                    'entry' => array(
+                        'method' => 'log',
+                        'args' => array(
+                            array(
+                                'debug' => Abstracter::ABSTRACTION,
+                                'type' => Abstracter::TYPE_INT,
+                                'typeMore' => Abstracter::TYPE_TIMESTAMP,
+                                'value' => $ts,
+                            ),
+                        ),
+                        'meta' => array(),
+                    ),
+                    'chromeLogger' => '[["' . $ts . ' (' . $datetime . ')"],null,""]',
+                    'html' => '<li class="m_log"><span class="timestamp value-container" title="' . $datetime . '"><span class="t_int" data-type-more="timestamp">' . $ts . '</span></span></li>',
+                    'script' => 'console.log("' . $ts . ' (' . $datetime . ')");',
+                    'streamAnsi' => "📅 \e[96m" . $ts . "\e[0m \e[38;5;250m(" . $datetime . ")\e[0m",
+                    'text' => '📅 ' . $ts . ' (' . $datetime . ')',
+                    'wamp' => array(
+                        'log',
+                        array(
+                            array(
+                                'debug' => Abstracter::ABSTRACTION,
+                                'type' => Abstracter::TYPE_INT,
+                                'typeMore' => Abstracter::TYPE_TIMESTAMP,
+                                'value' => $ts,
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+            'intTimestampForced' => array(
+                'log',
+                array(
+                    \bdk\Debug::getInstance()->abstracter->crateWithVals(strtotime('1985-10-26 09:00:00 PDT'), array(
+                        'typeMore' => Abstracter::TYPE_TIMESTAMP,
+                    )),
+                ),
+                array(
+                    // ·
+                    'chromeLogger' => '[["499190400 (1985-10-26 16:00:00 GMT)"],null,""]',
+                    'html' => '<li class="m_log"><span class="timestamp value-container" title="1985-10-26 16:00:00 GMT"><span class="t_int" data-type-more="timestamp">499190400</span></span></li>',
+                    'script' => 'console.log("499190400 (1985-10-26 16:00:00 GMT)");',
+                    'streamAnsi' => "📅 \e[96m499190400\e[0m \e[38;5;250m(1985-10-26 16:00:00 GMT)\e[0m",
+                    'text' => '📅 499190400 (1985-10-26 16:00:00 GMT)',
+                    'wamp' => array(
+                        'log',
+                        array(
+                            array(
+                                'debug' => Abstracter::ABSTRACTION,
+                                'type' => Abstracter::TYPE_INT,
+                                'typeMore' => Abstracter::TYPE_TIMESTAMP,
+                                'value' => 499190400,
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+            'float' => array(
                 'log',
                 array(10.10),
                 array(
@@ -142,40 +197,73 @@ class BasicTest extends DebugTestFramework
                     ),
                 ),
             ),
-            // #7 : (int) timestamp
-            array(
+            'stringNumeric' => array(
                 'log',
-                array($ts),
+                array('123.45'),
                 array(
-                    'chromeLogger' => '[["' . $ts . ' (' . $datetime . ')"],null,""]',
-                    'html' => '<li class="m_log"><span class="timestamp value-container" data-type="int" title="' . $datetime . '"><span class="t_int">' . $ts . '</span></span></li>',
-                    'script' => 'console.log("' . $ts . ' (' . $datetime . ')");',
-                    'streamAnsi' => "📅 \e[96m" . $ts . "\e[0m \e[38;5;250m(" . $datetime . ")\e[0m",
-                    'text' => '📅 ' . $ts . ' (' . $datetime . ')',
+                    'chromeLogger' => '[["123.45"],null,""]',
+                    'html' => '<li class="m_log"><span class="t_string" data-type-more="numeric">123.45</span></li>',
+                    'script' => 'console.log("123.45");',
+                    'streamAnsi' => "\e[38;5;250m\"\e[96m123.45\e[38;5;250m\"\e[0m",
+                    'text' => '"123.45"',
                     'wamp' => array(
                         'log',
-                        array($ts),
+                        array('123.45'),
                     ),
                 ),
             ),
-            // #8 : (string) timestamp
-            array(
+            'stringTimestamp' => array(
                 'log',
                 array((string) $ts),
                 array(
                     'chromeLogger' => '[["' . $ts . ' (' . $datetime . ')"],null,""]',
-                    'html' => '<li class="m_log"><span class="timestamp value-container" data-type="string" title="' . $datetime . '"><span class="t_string" data-type-more="numeric">' . $ts . '</span></span></li>',
+                    'html' => '<li class="m_log"><span class="timestamp value-container" title="' . $datetime . '"><span class="t_string" data-type-more="timestamp">' . $ts . '</span></span></li>',
                     'script' => 'console.log("' . $ts . ' (' . $datetime . ')");',
                     'streamAnsi' => "📅 \e[38;5;250m\"\e[96m" . $ts . "\e[38;5;250m\"\e[0m \e[38;5;250m(" . $datetime . ")\e[0m",
                     'text' => '📅 "' . $ts . '" (' . $datetime . ')',
                     'wamp' => array(
                         'log',
-                        array((string) $ts),
+                        array(
+                            array(
+                                'debug' => Abstracter::ABSTRACTION,
+                                'strlen' => null,
+                                'type' => Abstracter::TYPE_STRING,
+                                'typeMore' => Abstracter::TYPE_TIMESTAMP,
+                                'value' => (string) $ts,
+                            )
+                        ),
                     ),
                 ),
             ),
-            // #9 : (string) timestamp - crateWithVals
-            array(
+            'stringTimestampForced' => array(
+                'log',
+                array(
+                    \bdk\Debug::getInstance()->abstracter->crateWithVals((string) strtotime('1985-10-26 09:00:00 PDT'), array(
+                        'typeMore' => Abstracter::TYPE_TIMESTAMP,
+                    )),
+                ),
+                array(
+                    // ·
+                    'chromeLogger' => '[["499190400 (1985-10-26 16:00:00 GMT)"],null,""]',
+                    'html' => '<li class="m_log"><span class="timestamp value-container" title="1985-10-26 16:00:00 GMT"><span class="t_string" data-type-more="timestamp">499190400</span></span></li>',
+                    'script' => 'console.log("499190400 (1985-10-26 16:00:00 GMT)");',
+                    'streamAnsi' => "📅 \e[38;5;250m\"\e[96m499190400\e[38;5;250m\"\e[0m \e[38;5;250m(1985-10-26 16:00:00 GMT)\e[0m",
+                    'text' => '📅 "499190400" (1985-10-26 16:00:00 GMT)',
+                    'wamp' => array(
+                        'log',
+                        array(
+                            array(
+                                'debug' => Abstracter::ABSTRACTION,
+                                'strlen' => null,
+                                'type' => Abstracter::TYPE_STRING,
+                                'typeMore' => Abstracter::TYPE_TIMESTAMP,
+                                'value' => '499190400',
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+            'stringTimestampCrated' => array(
                 'log',
                 array(
                     \bdk\Debug::getInstance()->abstracter->crateWithVals((string) $ts, array(
@@ -186,7 +274,7 @@ class BasicTest extends DebugTestFramework
                 ),
                 array(
                     'chromeLogger' => '[["' . $ts . ' (' . $datetime . ')"],null,""]',
-                    'html' => '<li class="m_log"><span class="timestamp value-container" data-type="string" title="' . $datetime . '"><span class="t_string testaroo" data-type-more="numeric">' . $ts . '</span></span></li>',
+                    'html' => '<li class="m_log"><span class="timestamp value-container" title="' . $datetime . '"><span class="t_string testaroo" data-type-more="timestamp">' . $ts . '</span></span></li>',
                     'script' => 'console.log("' . $ts . ' (' . $datetime . ')");',
                     'streamAnsi' => "📅 \e[38;5;250m\"\e[96m" . $ts . "\e[38;5;250m\"\e[0m \e[38;5;250m(" . $datetime . ")\e[0m",
                     'text' => '📅 "' . $ts . '" (' . $datetime . ')',
@@ -202,15 +290,14 @@ class BasicTest extends DebugTestFramework
                                 'debug' => Abstracter::ABSTRACTION,
                                 'strlen' => null,
                                 'type' => Abstracter::TYPE_STRING,
-                                'typeMore' => Abstracter::TYPE_STRING_NUMERIC,
+                                'typeMore' => Abstracter::TYPE_TIMESTAMP,
                                 'value' => (string) $ts,
                             ),
                         ),
                     ),
                 ),
             ),
-            // #10 : undefined
-            array(
+            'undefined' => array(
                 'log',
                 array(Abstracter::UNDEFINED),
                 array(
@@ -225,8 +312,7 @@ class BasicTest extends DebugTestFramework
                     ),
                 ),
             ),
-            // #11 : callable
-            array(
+            'callable' => array(
                 'log',
                 array(array($test,'testBaseStatic')),
                 array(

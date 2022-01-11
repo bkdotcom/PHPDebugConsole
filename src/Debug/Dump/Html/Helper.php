@@ -186,8 +186,10 @@ class Helper
             $typeMore2 = $typeMore === Abstracter::TYPE_ABSTRACTION
                 ? $v['typeMore']
                 : $typeMore;
+            $isNumericString = $type === Abstracter::TYPE_STRING
+                && \in_array($typeMore2, array(Abstracter::TYPE_STRING_NUMERIC, Abstracter::TYPE_TIMESTAMP));
             $args[$i] = $this->dumper->valDumper->dump($v, array(
-                'addQuotes' => $i !== 0 || $typeMore2 === Abstracter::TYPE_STRING_NUMERIC,
+                'addQuotes' => $i !== 0 || $isNumericString,
                 'sanitize' => $i === 0
                     ? $meta['sanitizeFirst']
                     : $meta['sanitize'],

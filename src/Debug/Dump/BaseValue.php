@@ -17,6 +17,7 @@ use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Component;
 use bdk\Debug\Dump\Base as Dumper;
 use bdk\PubSub\Event;
+use DateTime;
 
 /**
  * Dump values
@@ -143,16 +144,18 @@ class BaseValue extends Component
     /**
      * Is value a timestamp?
      *
-     * @param mixed $val value to check
+     * @param mixed       $val value to check
+     * @param Abstraction $abs (optional) full abstraction
      *
      * @return string|false
      */
-    protected function checkTimestamp($val)
+    protected function checkTimestamp($val, Abstraction $abs = null)
     {
-        $secs = 86400 * 90; // 90 days worth o seconds
-        $tsNow = \time();
-        if ($val > $tsNow - $secs && $val < $tsNow + $secs) {
-            return \date('Y-m-d H:i:s T', (int) $val);
+        if ($abs && $abs['typeMore'] === Abstracter::TYPE_TIMESTAMP) {
+            $datetime = new DateTime('@' . (int) $val);
+            $datetimeStr = $datetime->format('Y-m-d H:i:s T');
+            $datetimeStr = \str_replace('GMT+0000', 'GMT', $datetimeStr);
+            return $datetimeStr;
         }
         return false;
     }
@@ -246,13 +249,14 @@ class BaseValue extends Component
     /**
      * Dump float value
      *
-     * @param float|int $val float value
+     * @param float|int   $val float value
+     * @param Abstraction $abs (optional) full abstraction
      *
      * @return float|string
      */
-    protected function dumpFloat($val)
+    protected function dumpFloat($val, Abstraction $abs = null)
     {
-        $date = $this->checkTimestamp($val);
+        $date = $this->checkTimestamp($val, $abs);
         return $date
             ? $val . ' (' . $date . ')'
             : $val;
@@ -261,13 +265,14 @@ class BaseValue extends Component
     /**
      * Dump integer value
      *
-     * @param int $val integer value
+     * @param int         $val integer value
+     * @param Abstraction $abs (optional) full abstraction
      *
      * @return int|string
      */
-    protected function dumpInt($val)
+    protected function dumpInt($val, Abstraction $abs = null)
     {
-        $val = $this->dumpFloat($val);
+        $val = $this->dumpFloat($val, $abs);
         return \is_string($val)
             ? $val
             : (int) $val;
@@ -387,7 +392,7 @@ class BaseValue extends Component
     protected function dumpString($val, Abstraction $abs = null)
     {
         if (\is_numeric($val)) {
-            $date = $this->checkTimestamp($val);
+            $date = $this->checkTimestamp($val, $abs);
             return $date
                 ? $val . ' (' . $date . ')'
                 : $val;

@@ -8,11 +8,12 @@ use mindplay\middleman\Dispatcher;
 
 /**
  * PHPUnit tests for Debug class
- *
- * @requires PHP >= 7.0
  */
 class MiddlewareTest extends DebugTestFramework
 {
+    /**
+     * @requires PHP >= 7.0
+     */
     public function testMiddleware()
     {
         /*

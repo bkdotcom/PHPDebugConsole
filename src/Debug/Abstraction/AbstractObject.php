@@ -170,6 +170,7 @@ class AbstractObject extends Component
     {
         $obj = $abs->getSubject();
         if ($obj instanceof \DateTime || $obj instanceof \DateTimeImmutable) {
+            $abs['isTraverseOnly'] = false;
             $abs['stringified'] = $obj->format(\DateTime::ISO8601);
         } elseif ($obj instanceof \mysqli) {
             $this->onStartMysqli($abs);

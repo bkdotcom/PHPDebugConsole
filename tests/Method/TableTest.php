@@ -142,7 +142,7 @@ EOD;
 
         return array(
             // 0 null
-            array(
+            'null' => array(
                 'table',
                 array(null),
                 array(
@@ -158,7 +158,7 @@ EOD;
                 ),
             ),
             // 1 empty array
-            array(
+            'emptyArray' => array(
                 'table',
                 array('arg1', array()),
                 array(
@@ -176,7 +176,7 @@ EOD;
                 ),
             ),
             // 2 not table material
-            array(
+            'string' => array(
                 'table',
                 array('arg1'),
                 array(
@@ -194,7 +194,7 @@ EOD;
                 ),
             ),
             // 3 not table material with label
-            array(
+            'notTabularWithLabel' => array(
                 'table',
                 array('arg1', 'arg2'),
                 array(
@@ -212,7 +212,7 @@ EOD;
                 ),
             ),
             // 4 superfluous args
-            array(
+            'superfluousArgs' => array(
                 'table',
                 array('arg1', 'arg2 is not logged', $rowsA, 'arg4 is not logged'),
                 array(
@@ -332,7 +332,7 @@ EOD;
                 ),
             ),
             // 7 flat
-            array(
+            'flat' => array(
                 'table',
                 array(
                     'flat',
@@ -455,7 +455,7 @@ EOD;
                 ),
             ),
             // 8 traversable
-            array(
+            'traversable' => array(
                 'table',
                 array(
                     'traversable',
@@ -469,7 +469,7 @@ EOD;
                 ),
             ),
             // 9 traversable -o- traversables
-            array(
+            'traversableOfTraversable' => array(
                 'table',
                 array(
                     'traversable -o- traversables',
@@ -516,7 +516,7 @@ EOD;
                 ),
             ),
             // 10 array -o- objects
-            array(
+            'arrayOfObjects' => array(
                 'table',
                 array(
                     'array -o- objects',
@@ -563,7 +563,7 @@ EOD;
                 ),
             ),
             // 11 rowsB (not all col values of same type)
-            array(
+            'differentTypes' => array(
                 'table',
                 array(
                     'not all col values of same type',

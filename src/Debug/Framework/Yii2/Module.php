@@ -424,7 +424,7 @@ class Module extends BaseModule implements SubscriberInterface, BootstrapInterfa
             if (!$isRolesPermissions) {
                 return;
             }
-            // $logEntry['args'] = array($logEntry['args'][0]);
+            $logEntry['args'] = array($this->tableTsToString($logEntry['args'][0]));
         });
 
         $this->logUserIdentity($debug);
@@ -441,7 +441,6 @@ class Module extends BaseModule implements SubscriberInterface, BootstrapInterfa
     private function tableTsToString($rows)
     {
         foreach ($rows as $i => $row) {
-            // echo '<pre>row = ' . \htmlspecialchars(\json_encode($row, JSON_PRETTY_PRINT)) . '</pre>';
             $tsCols = array('createdAt', 'updatedAt');
             $nonEmptyTsVals = \array_filter(\array_intersect_key($row, \array_flip($tsCols)));
             foreach ($nonEmptyTsVals as $key => $val) {

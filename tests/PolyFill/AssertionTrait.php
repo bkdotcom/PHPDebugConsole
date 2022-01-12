@@ -9,7 +9,6 @@ use PHPUnit\Framework\TestCase;
 
 trait AssertionTrait
 {
-
     public static function assertArraySubset($expected, $actual, $strict = false, $message = ''): void
     {
         if (\method_exists('\\PHPUnit\\Framework\\TestCase', __FUNCTION__)) {

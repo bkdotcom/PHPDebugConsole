@@ -20,7 +20,6 @@ use bdk\Debug\Collector\StatementInfo;
  */
 trait DatabaseTrait
 {
-
     /**
      * Logs StatementInfo
      *

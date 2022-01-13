@@ -15,6 +15,7 @@ namespace bdk\Debug;
 use bdk\Container;
 use bdk\Container\ServiceProviderInterface;
 use bdk\Debug;
+use bdk\Debug\LogEntry;
 use bdk\Debug\Route\RouteInterface;
 use bdk\Debug\ServiceProvider;
 use bdk\PubSub\Event;
@@ -35,7 +36,6 @@ class Scaffolding
     /** @var \bdk\Debug */
     protected static $instance;
 
-    protected $internal;
     protected static $methodDefaultArgs = array();
     protected $parentInstance;
     protected $rootInstance;
@@ -62,7 +62,7 @@ class Scaffolding
     /**
      * Magic method... inaccessible method called.
      *
-     * If method not found in internal class, treat as a custom method.
+     * Try custom method.
      *
      * @param string $methodName Inaccessible method name
      * @param array  $args       Arguments passed to method
@@ -71,19 +71,15 @@ class Scaffolding
      */
     public function __call($methodName, $args)
     {
-        $callable = array($this->internal, $methodName);
-        if (\is_callable($callable)) {
-            return \call_user_func_array($callable, $args);
-        }
         $logEntry = new LogEntry(
             $this,
             $methodName,
             $args
         );
-        $this->internal->publishBubbleEvent(Debug::EVENT_CUSTOM_METHOD, $logEntry);
+        $this->publishBubbleEvent(Debug::EVENT_CUSTOM_METHOD, $logEntry);
         if ($logEntry['handled'] !== true) {
             $logEntry->setMeta('isCustomMethod', true);
-            $this->internal->appendLog($logEntry);
+            $this->appendLog($logEntry);
         }
         return $logEntry['return'];
     }
@@ -138,16 +134,6 @@ class Scaffolding
      */
     public function __get($property)
     {
-        if (\in_array($property, array('config', 'internal'))) {
-            $caller = $this->backtrace->getCallerInfo();
-            $this->errorHandler->handleError(
-                E_USER_NOTICE,
-                'property "' . $property . '" is not accessible',
-                $caller['file'],
-                $caller['line']
-            );
-            return;
-        }
         if ($this->serviceContainer->has($property)) {
             return $this->serviceContainer[$property];
         }
@@ -169,9 +155,6 @@ class Scaffolding
      */
     public function __isset($property)
     {
-        if (\in_array($property, array('config', 'internal'))) {
-            return false;
-        }
         if ($this->serviceContainer->has($property)) {
             return true;
         }
@@ -216,7 +199,7 @@ class Scaffolding
         $channels = $this->getChannels(false, true);
         if ($channels) {
             $event['debug'] = $cfg;
-            $cfg = $this->internal->getPropagateValues($event->getValues());
+            $cfg = $this->container['pluginChannel']->getPropagateValues($event->getValues());
             foreach ($channels as $channel) {
                 $channel->config->set($cfg);
             }
@@ -225,9 +208,6 @@ class Scaffolding
 
     /**
      * Update dependencies
-     *
-     * This is called during bootstrap and from Internal::onConfig
-     *    Internal::onConfig has higher priority than our own onConfig handler
      *
      * @param ServiceProviderInterface|callable|array $val dependency definitions
      *
@@ -249,6 +229,101 @@ class Scaffolding
             $this->container[$k] = $v;
         }
         return $val;
+    }
+
+    /**
+     * Publish/Trigger/Dispatch event
+     * Event will get published on ancestor channels if propagation not stopped
+     *
+     * @param string $eventName Event name
+     * @param Event  $event     Event instance
+     * @param Debug  $debug     Specify Debug instance to start on.
+     *                            If not specified will check if getSubject returns Debug instance
+     *                            Fallback: this->debug
+     *
+     * @return Event
+     */
+    public function publishBubbleEvent($eventName, Event $event, Debug $debug = null)
+    {
+        if ($debug === null) {
+            $subject = $event->getSubject();
+            /** @var Debug */
+            $debug = $subject instanceof Debug
+                ? $subject
+                : $this;
+        }
+        do {
+            $debug->eventManager->publish($eventName, $event);
+            if (!$debug->parentInstance) {
+                break;
+            }
+            $debug = $debug->parentInstance;
+        } while (!$event->isPropagationStopped());
+        return $event;
+    }
+
+    /**
+     * Store the arguments
+     * if collect is false -> does nothing
+     * otherwise:
+     *   + abstracts values
+     *   + publishes Debug::EVENT_LOG event
+     *   + appends log (if event propagation not stopped)
+     *
+     * @param LogEntry $logEntry LogEntry instance
+     *
+     * @return bool whether or not entry got appended
+     */
+    protected function appendLog(LogEntry $logEntry)
+    {
+        if (!$this->cfg['collect'] && !$logEntry['forcePublish']) {
+            return false;
+        }
+        $cfgRestore = array();
+        if (isset($logEntry['meta']['cfg'])) {
+            $cfgRestore = $this->setCfg($logEntry['meta']['cfg']);
+            $logEntry->setMeta('cfg', null);
+        }
+        if (\count($logEntry['args']) === 1 && $this->utility->isThrowable($logEntry['args'][0])) {
+            $exception = $logEntry['args'][0];
+            $logEntry['args'][0] = $exception->getMessage();
+            $logEntry->setMeta(array(
+                'file' => $exception->getFile(),
+                'line' => $exception->getLine(),
+                'trace' => $this->backtrace->get(null, 0, $exception),
+            ));
+        }
+        $logEntry->crate();
+        $this->publishBubbleEvent(Debug::EVENT_LOG, $logEntry);
+        if ($cfgRestore) {
+            $this->setCfg($cfgRestore);
+        }
+        if ($logEntry['appendLog']) {
+            $this->data->appendLog($logEntry);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Determine default route
+     *
+     * @return string
+     */
+    protected function getDefaultRoute()
+    {
+        $interface = $this->getInterface();
+        if (\strpos($interface, 'ajax') !== false) {
+            return $this->getCfg('routeNonHtml', Debug::CONFIG_DEBUG);
+        }
+        if ($interface === 'http') {
+            $contentType = \implode(', ', $this->getResponseHeader('Content-Type'));
+            if ($contentType && \strpos($contentType, 'text/html') === false) {
+                return $this->getCfg('routeNonHtml', Debug::CONFIG_DEBUG);
+            }
+            return 'html';
+        }
+        return 'stream';
     }
 
     /**
@@ -281,6 +356,65 @@ class Scaffolding
     }
 
     /**
+     * Create config meta argument/value
+     *
+     * @param string|array $key key or array of key/values
+     * @param mixed        $val config value
+     *
+     * @return array
+     */
+    protected function metaCfg($key, $val)
+    {
+        if (\is_array($key)) {
+            return array(
+                'cfg' => $key,
+                'debug' => Debug::META,
+            );
+        }
+        if (\is_string($key)) {
+            return array(
+                'cfg' => array(
+                    $key => $val,
+                ),
+                'debug' => Debug::META,
+            );
+        }
+        // invalid cfg key / return empty meta array
+        return array('debug' => Debug::META);
+    }
+
+    /**
+     * Publish Debug::EVENT_OUTPUT
+     *    on all descendant channels
+     *    rootInstance
+     *    finally ourself
+     * This isn't outputing each channel, but for performing any per-channel "before output" activities
+     *
+     * @return string output
+     */
+    protected function publishOutputEvent()
+    {
+        $debug = $this;
+        $channels = $debug->getChannels(true);
+        if ($debug !== $debug->rootInstance) {
+            $channels[] = $debug->rootInstance;
+        }
+        $channels[] = $debug;
+        foreach ($channels as $channel) {
+            $event = $channel->eventManager->publish(
+                Debug::EVENT_OUTPUT,
+                $channel,
+                array(
+                    'headers' => array(),
+                    'isTarget' => $channel === $debug,
+                    'return' => '',
+                )
+            );
+        }
+        return $event['return'];
+    }
+
+    /**
      * Initialize container, & config
      *
      * @param array $cfg passed cfg
@@ -296,11 +430,11 @@ class Scaffolding
         $this->config = $this->container['config'];
         $this->container->setCfg('onInvoke', array($this->config, 'onContainerInvoke'));
         $this->serviceContainer->setCfg('onInvoke', array($this->config, 'onContainerInvoke'));
-        $this->internal = $this->container['internal'];
-        $this->eventManager->addSubscriberInterface($this->container['addonMethods']);
-        $this->addPlugin($this->container['configEventSubscriber']);
+        $this->eventManager->addSubscriberInterface($this->container['pluginManager']);
+        $this->addPlugin($this->container['pluginChannel']);
+        $this->addPlugin($this->container['configEvents']);
         $this->addPlugin($this->container['internalEvents']);
-        $this->addPlugin($this->container['redaction']);
+        $this->addPlugin($this->container['pluginRedaction']);
         $this->eventManager->subscribe(Debug::EVENT_CONFIG, array($this, 'onConfig'));
 
         $this->serviceContainer['errorHandler'];
@@ -310,7 +444,10 @@ class Scaffolding
         if (!$this->parentInstance) {
             // we're the root instance
             // this is the root instance
-            $this->data->set('requestId', $this->internal->requestId());
+            $this->addPlugin($this->serviceContainer['customMethodGeneral']);
+            $this->addPlugin($this->serviceContainer['customMethodReqRes']);
+
+            $this->data->set('requestId', $this->requestId());
             $this->data->set('entryCountInitial', $this->data->get('log/__count__'));
 
             $this->addPlugin($this->container['logEnv']);
@@ -433,7 +570,7 @@ class Scaffolding
             $this->container->offsetSet($containerName, $val);
         }
         if ($val->appendsHeaders()) {
-            $this->internal->obStart();
+            $this->obStart();
         }
         return $val;
     }

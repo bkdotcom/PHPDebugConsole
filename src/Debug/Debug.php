@@ -199,7 +199,7 @@ class Debug extends Scaffolding
     public function alert($message, $level = 'error', $dismissible = false)
     {
         $args = \func_get_args();
-        $hasSubstitutions = $this->internal->alertHasSubstitutions($args);
+        $hasSubstitutions = $this->methodHelper->alertHasSubstitutions($args);
         $logEntry = new LogEntry(
             $this,
             __FUNCTION__,
@@ -213,9 +213,9 @@ class Debug extends Scaffolding
                 : $this->getMethodDefaultArgs(__FUNCTION__),
             array('level','dismissible')
         );
-        $this->internal->alertLevel($logEntry);
+        $this->methodHelper->alertLevel($logEntry);
         $this->data->set('logDest', 'alerts');
-        $this->internal->appendLog($logEntry);
+        $this->appendLog($logEntry);
         $this->data->set('logDest', 'auto');
     }
 
@@ -254,7 +254,7 @@ class Debug extends Scaffolding
             $logEntry->setMeta('detectFiles', true);
         }
         $logEntry['args'] = $args;
-        $this->internal->appendLog($logEntry);
+        $this->appendLog($logEntry);
     }
 
     /**
@@ -288,7 +288,7 @@ class Debug extends Scaffolding
         $this->methodClear->doClear($logEntry);
         // even if cleared from within summary, let's log this in primary log
         $this->data->set('logDest', 'main');
-        $this->internal->appendLog($logEntry);
+        $this->appendLog($logEntry);
         $this->data->set('logDest', 'auto');
     }
 
@@ -348,7 +348,7 @@ class Debug extends Scaffolding
      */
     public function error()
     {
-        $this->internal->doError(__FUNCTION__, \func_get_args());
+        $this->methodHelper->doError(__FUNCTION__, \func_get_args());
     }
 
     /**
@@ -479,7 +479,7 @@ class Debug extends Scaffolding
      */
     public function info()
     {
-        $this->internal->appendLog(new LogEntry(
+        $this->appendLog(new LogEntry(
             $this,
             __FUNCTION__,
             \func_get_args()
@@ -500,7 +500,7 @@ class Debug extends Scaffolding
         $args = \func_get_args();
         if (\count($args) === 1) {
             if ($args[0] instanceof LogEntry) {
-                $this->internal->appendLog($args[0]);
+                $this->appendLog($args[0]);
                 return;
             }
             if ($args[0] instanceof Error) {
@@ -508,7 +508,7 @@ class Debug extends Scaffolding
                 return;
             }
         }
-        $this->internal->appendLog(new LogEntry(
+        $this->appendLog(new LogEntry(
             $this,
             __FUNCTION__,
             $args
@@ -587,7 +587,7 @@ class Debug extends Scaffolding
             \func_get_args()
         );
         $this->methodTable->doTable($logEntry);
-        $this->internal->appendLog($logEntry);
+        $this->appendLog($logEntry);
     }
 
     /**
@@ -643,7 +643,7 @@ class Debug extends Scaffolding
      */
     public function timeEnd($label = null, $log = true)
     {
-        $logEntry = $this->internal->timeLogEntry(__FUNCTION__, \func_get_args());
+        $logEntry = $this->methodHelper->timeLogEntry(__FUNCTION__, \func_get_args());
         return $this->methodTime->timeEnd($logEntry);
     }
 
@@ -668,7 +668,7 @@ class Debug extends Scaffolding
      */
     public function timeGet($label = null, $log = true)
     {
-        $logEntry = $this->internal->timeLogEntry(__FUNCTION__, \func_get_args());
+        $logEntry = $this->methodHelper->timeLogEntry(__FUNCTION__, \func_get_args());
         return $this->methodTime->timeGet($logEntry);
     }
 
@@ -732,7 +732,7 @@ class Debug extends Scaffolding
                 'inclContext',
             )
         );
-        $this->internal->doTrace($logEntry);
+        $this->methodHelper->doTrace($logEntry);
     }
 
     /**
@@ -746,7 +746,7 @@ class Debug extends Scaffolding
      */
     public function warn()
     {
-        $this->internal->doError(__FUNCTION__, \func_get_args());
+        $this->methodHelper->doError(__FUNCTION__, \func_get_args());
     }
 
     /*
@@ -764,7 +764,7 @@ class Debug extends Scaffolding
     public function getCfg($path = null, $opt = null)
     {
         if ($path === 'route' && $this->cfg['route'] === 'auto') {
-            return $this->internal->getDefaultRoute(); // returns string
+            return $this->getDefaultRoute(); // returns string
         }
         if ($opt === self::CONFIG_DEBUG) {
             return $this->arrayUtil->pathGet($this->cfg, $path);
@@ -817,7 +817,7 @@ class Debug extends Scaffolding
             return array('debug' => self::META);
         }
         if ($args[0] === 'cfg') {
-            return self::$instance->internal->metaCfg($args[1], $args[2]);
+            return self::$instance->metaCfg($args[1], $args[2]);
         }
         return array(
             $args[0] => $args[1],
@@ -839,20 +839,19 @@ class Debug extends Scaffolding
         $cfgRestore = $this->config->set($cfg);
         if (!$this->cfg['output']) {
             $this->config->set($cfgRestore);
-            $this->internal->obEnd();
+            $this->obEnd();
             return null;
         }
         $route = $this->getCfg('route');
         if (\is_string($route)) {
-            // Internal::onConfig will convert to route object
             $this->config->set('route', $route);
         }
-        $output = $this->internal->publishOutputEvent();
+        $output = $this->publishOutputEvent();
         if (!$this->parentInstance) {
             $this->data->set('outputSent', true);
         }
         $this->config->set($cfgRestore);
-        $this->internal->obEnd();
+        $this->obEnd();
         return $output;
     }
 

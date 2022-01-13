@@ -38,6 +38,8 @@ class ServiceProvider implements ServiceProviderInterface
         $container['services'] = array(
             'arrayUtil',
             'backtrace',
+            'customMethodGeneral',
+            'customMethodReqRes',
             'data',
             'errorHandler',
             'errorLevel',
@@ -59,9 +61,6 @@ class ServiceProvider implements ServiceProviderInterface
             $debug = $container['debug'];
             return new \bdk\Debug\Abstraction\Abstracter($debug, $debug->getCfg('abstracter', \bdk\Debug::CONFIG_INIT));
         };
-        $container['addonMethods'] = function () {
-            return new \bdk\Debug\Plugin\AddonMethods();
-        };
         $container['arrayUtil'] = function () {
             return new \bdk\Debug\Utility\ArrayUtil();
         };
@@ -78,9 +77,15 @@ class ServiceProvider implements ServiceProviderInterface
             $debug = $container['debug'];
             return new \bdk\Debug\Config($debug);
         };
-        $container['configEventSubscriber'] = function (Container $container) {
+        $container['configEvents'] = function (Container $container) {
             $debug = $container['debug'];
-            return new \bdk\Debug\ConfigEventSubscriber($debug);
+            return new \bdk\Debug\ConfigEvents($debug);
+        };
+        $container['customMethodGeneral'] = function () {
+            return new \bdk\Debug\Plugin\CustomMethod\General();
+        };
+        $container['customMethodReqRes'] = function () {
+            return new \bdk\Debug\Plugin\CustomMethod\ReqRes();
         };
         $container['data'] = function (Container $container) {
             $debug = $container['debug'];
@@ -111,10 +116,6 @@ class ServiceProvider implements ServiceProviderInterface
         };
         $container['html'] = function () {
             return new \bdk\Debug\Utility\Html();
-        };
-        $container['internal'] = function (Container $container) {
-            $debug = $container['debug'];
-            return new \bdk\Debug\Internal($debug);
         };
         $container['internalEvents'] = function (Container $container) {
             $debug = $container['debug'];
@@ -147,6 +148,10 @@ class ServiceProvider implements ServiceProviderInterface
             $debug = $container['debug'];
             return new \bdk\Debug\Method\Group($debug);
         };
+        $container['methodHelper'] = function (Container $container) {
+            $debug = $container['debug'];
+            return new \bdk\Debug\Method\Helper($debug);
+        };
         $container['methodProfile'] = function () {
             return new \bdk\Debug\Method\Profile();
         };
@@ -160,13 +165,17 @@ class ServiceProvider implements ServiceProviderInterface
             $debug = $container['debug'];
             return new \bdk\Debug\Psr15\Middleware($debug);
         };
-        $container['redaction'] = function () {
+        $container['pluginChannel'] = function () {
+            return new \bdk\Debug\Plugin\Channel();
+        };
+        $container['pluginManager'] = function () {
+            return new \bdk\Debug\Plugin\Manager();
+        };
+        $container['pluginRedaction'] = function () {
             return new \bdk\Debug\Plugin\Redaction();
         };
         $container['request'] = function () {
-            /*
-                This can return Psr\Http\Message\ServerRequestInterface
-            */
+            // Psr\Http\Message\ServerRequestInterface
             return \bdk\HttpMessage\ServerRequest::fromGlobals();
         };
         $container['response'] = null;

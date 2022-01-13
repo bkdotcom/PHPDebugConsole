@@ -20,10 +20,11 @@ use bdk\PubSub\SubscriberInterface;
 /**
  * Handle configuration changes
  */
-class ConfigEventSubscriber implements SubscriberInterface
+class ConfigEvents implements SubscriberInterface
 {
     protected $debug;
     private $isBootstrapped = false;
+    private $isConfigured = false;
     private static $profilingEnabled = false;
 
     /**
@@ -77,11 +78,14 @@ class ConfigEventSubscriber implements SubscriberInterface
     public function onConfig(Event $event)
     {
         $configs = $event->getValues();
+        if (isset($configs['routeStream']['stream'])) {
+            $this->debug->addPlugin($this->debug->getRoute('stream'));
+        }
         if (empty($configs['debug'])) {
             // no debug config values have changed
             return;
         }
-        $cfgDebug = $configs['debug'];
+        $cfgDebug = $this->onConfigInit($configs['debug']);
         $valActions = \array_intersect_key(array(
             'emailFrom' => array($this, 'onCfgEmail'),
             'emailFunc' => array($this, 'onCfgEmail'),
@@ -95,6 +99,7 @@ class ConfigEventSubscriber implements SubscriberInterface
             'onMiddleware' => array($this, 'onCfgOnMiddleware'),
             'onOutput' => array($this, 'onCfgOnOutput'),
             'route' => array($this, 'onCfgRoute'),
+            'serviceProvider' => array($this, 'onCfgServiceProvider'),
         ), $cfgDebug);
         foreach ($valActions as $key => $callable) {
             /** @psalm-suppress TooManyArguments */
@@ -374,5 +379,44 @@ class ConfigEventSubscriber implements SubscriberInterface
             $val = $this->debug->getRoute($val);
         }
         return $val;
+    }
+
+    /**
+     * Handle updates to serviceProvider here
+     * We need to clear serverParamCache
+     *
+     * @param mixed $val ServiceProvider value
+     *
+     * @return array
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     */
+    private function onCfgServiceProvider($val)
+    {
+        return $this->debug->onCfgServiceProvider($val);
+    }
+
+    /**
+     * Merge in default config values if not yet configured
+     *
+     * @param array $cfg Config vals being updated
+     *
+     * @return array
+     */
+    private function onConfigInit($cfg)
+    {
+        if ($this->isConfigured) {
+            return $cfg;
+        }
+        $this->isConfigured = true;
+        return \array_merge(
+            \array_diff_key(
+                // remove current collect & output values,
+                //   so don't trigger updates for existing values
+                $this->debug->getCfg(null, Debug::CONFIG_DEBUG),
+                \array_flip(array('collect','output'))
+            ),
+            $cfg
+        );
     }
 }

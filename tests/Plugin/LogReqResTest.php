@@ -28,15 +28,19 @@ class LogReqResTest extends DebugTestFramework
         $logRequestMeth = $reflect->getMethod('logRequest');
         $logRequestMeth->setAccessible(true);
 
-        // Internal caches serverParams (statically)...  use serverParamsRef to clear it
+        // customMethodReqRes caches serverParams..  use serverParamsRef to clear it
+        /*
         $debugRef = new \ReflectionObject($this->debug);
         $internalProp = $debugRef->getProperty('internal');
         $internalProp->setAccessible(true);
         $internal = $internalProp->getValue($this->debug);
-
         $internalRef = new \ReflectionObject($internal);
-        $serverParams = $internalRef->getProperty('serverParams');
-        $serverParams->setAccessible(true);
+        $serverParamsRef = $internalRef->getProperty('serverParams');
+        $serverParamsRef->setAccessible(true);
+        */
+        $reqResRef = new \ReflectionObject($this->debug->customMethodReqRes);
+        $serverParamsRef = $reqResRef->getProperty('serverParams');
+        $serverParamsRef->setAccessible(true);
 
         /*
             valid form post
@@ -172,7 +176,7 @@ class LogReqResTest extends DebugTestFramework
             Post with just uploadedFiles
         */
         $this->debug->data->set('log', array());
-        $serverParams->setValue($internal, array());
+        $serverParamsRef->setValue($this->debug->customMethodReqRes, array());
         $files = array(
             'foo' => new UploadedFile(
                 TEST_DIR . '/assets/logo.png',
@@ -286,7 +290,7 @@ class LogReqResTest extends DebugTestFramework
         /*
             Reset request
         */
-        $serverParams->setValue($internal, array());
+        $serverParamsRef->setValue($this->debug->customMethodReqRes, array());
         $this->debug->setCfg('serviceProvider', array(
             'request' => function () {
                 return ServerRequest::fromGlobals();

@@ -163,17 +163,15 @@ class DebugTestFramework extends DOMTestCase
         $subscribers = $this->debug->eventManager->getSubscribers(Debug::EVENT_CUSTOM_METHOD);
         foreach ($subscribers as $subscriber) {
             $subscriberObj = $subscriber[0];
-            if (!($subscriberObj instanceof  \bdk\Debug\Plugin\AddonMethods)) {
-                continue;
+            if ($subscriberObj instanceof  \bdk\Debug\Plugin\Manager) {
+                $registeredPlugins = $this->getPrivateProp($subscriberObj, 'registeredPlugins');
+                $registeredPlugins->removeAll($registeredPlugins);  // (ie SplObjectStorage->removeAll())
             }
-
-            $channelsRef = new \ReflectionProperty($subscriberObj, 'channels');
-            $channelsRef->setAccessible(true);
-            $channelsRef->setValue($subscriberObj, array());
-
-            $registeredPlugins = $this->getPrivateProp($subscriberObj, 'registeredPlugins');
-            $registeredPlugins->removeAll($registeredPlugins);  // (ie SplObjectStorage->removeAll())
-            break;
+            if ($subscriberObj instanceof  \bdk\Debug\Plugin\Channel) {
+                $channelsRef = new \ReflectionProperty($subscriberObj, 'channels');
+                $channelsRef->setAccessible(true);
+                $channelsRef->setValue($subscriberObj, array());
+            }
         }
 
         if (!isset($this->file)) {

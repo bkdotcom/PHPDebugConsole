@@ -117,6 +117,10 @@ class ServiceProvider implements ServiceProviderInterface
         $container['html'] = function () {
             return new \bdk\Debug\Utility\Html();
         };
+        $container['internal'] = function (Container $container) {
+            $debug = $container['debug'];
+            return new \bdk\Debug\Internal($debug);
+        };
         $container['internalEvents'] = function (Container $container) {
             $debug = $container['debug'];
             return new \bdk\Debug\InternalEvents($debug);

@@ -284,15 +284,6 @@ class Scaffolding
             $cfgRestore = $this->setCfg($logEntry['meta']['cfg']);
             $logEntry->setMeta('cfg', null);
         }
-        if (\count($logEntry['args']) === 1 && $this->utility->isThrowable($logEntry['args'][0])) {
-            $exception = $logEntry['args'][0];
-            $logEntry['args'][0] = $exception->getMessage();
-            $logEntry->setMeta(array(
-                'file' => $exception->getFile(),
-                'line' => $exception->getLine(),
-                'trace' => $this->backtrace->get(null, 0, $exception),
-            ));
-        }
         $logEntry->crate();
         $this->publishBubbleEvent(Debug::EVENT_LOG, $logEntry);
         if ($cfgRestore) {
@@ -303,27 +294,6 @@ class Scaffolding
             return true;
         }
         return false;
-    }
-
-    /**
-     * Determine default route
-     *
-     * @return string
-     */
-    protected function getDefaultRoute()
-    {
-        $interface = $this->getInterface();
-        if (\strpos($interface, 'ajax') !== false) {
-            return $this->getCfg('routeNonHtml', Debug::CONFIG_DEBUG);
-        }
-        if ($interface === 'http') {
-            $contentType = \implode(', ', $this->getResponseHeader('Content-Type'));
-            if ($contentType && \strpos($contentType, 'text/html') === false) {
-                return $this->getCfg('routeNonHtml', Debug::CONFIG_DEBUG);
-            }
-            return 'html';
-        }
-        return 'stream';
     }
 
     /**
@@ -356,65 +326,6 @@ class Scaffolding
     }
 
     /**
-     * Create config meta argument/value
-     *
-     * @param string|array $key key or array of key/values
-     * @param mixed        $val config value
-     *
-     * @return array
-     */
-    protected function metaCfg($key, $val)
-    {
-        if (\is_array($key)) {
-            return array(
-                'cfg' => $key,
-                'debug' => Debug::META,
-            );
-        }
-        if (\is_string($key)) {
-            return array(
-                'cfg' => array(
-                    $key => $val,
-                ),
-                'debug' => Debug::META,
-            );
-        }
-        // invalid cfg key / return empty meta array
-        return array('debug' => Debug::META);
-    }
-
-    /**
-     * Publish Debug::EVENT_OUTPUT
-     *    on all descendant channels
-     *    rootInstance
-     *    finally ourself
-     * This isn't outputing each channel, but for performing any per-channel "before output" activities
-     *
-     * @return string output
-     */
-    protected function publishOutputEvent()
-    {
-        $debug = $this;
-        $channels = $debug->getChannels(true);
-        if ($debug !== $debug->rootInstance) {
-            $channels[] = $debug->rootInstance;
-        }
-        $channels[] = $debug;
-        foreach ($channels as $channel) {
-            $event = $channel->eventManager->publish(
-                Debug::EVENT_OUTPUT,
-                $channel,
-                array(
-                    'headers' => array(),
-                    'isTarget' => $channel === $debug,
-                    'return' => '',
-                )
-            );
-        }
-        return $event['return'];
-    }
-
-    /**
      * Initialize container, & config
      *
      * @param array $cfg passed cfg
@@ -431,6 +342,8 @@ class Scaffolding
         $this->container->setCfg('onInvoke', array($this->config, 'onContainerInvoke'));
         $this->serviceContainer->setCfg('onInvoke', array($this->config, 'onContainerInvoke'));
         $this->eventManager->addSubscriberInterface($this->container['pluginManager']);
+        $this->addPlugin($this->serviceContainer['customMethodGeneral']);
+        $this->addPlugin($this->serviceContainer['customMethodReqRes']);
         $this->addPlugin($this->container['pluginChannel']);
         $this->addPlugin($this->container['configEvents']);
         $this->addPlugin($this->container['internalEvents']);
@@ -438,15 +351,11 @@ class Scaffolding
         $this->eventManager->subscribe(Debug::EVENT_CONFIG, array($this, 'onConfig'));
 
         $this->serviceContainer['errorHandler'];
-
         $this->config->set($cfg);
 
         if (!$this->parentInstance) {
             // we're the root instance
             // this is the root instance
-            $this->addPlugin($this->serviceContainer['customMethodGeneral']);
-            $this->addPlugin($this->serviceContainer['customMethodReqRes']);
-
             $this->data->set('requestId', $this->requestId());
             $this->data->set('entryCountInitial', $this->data->get('log/__count__'));
 

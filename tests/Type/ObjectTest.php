@@ -97,12 +97,10 @@ EOD;
         $abs1 = \bdk\Debug::getInstance()->abstracter->getAbstraction(new \bdk\DebugTests\Fixture\Test(), 'log');
         $cratedAbs1 = $crate->crate($abs1);
         $cratedAbs1 = $this->crate($cratedAbs1);
-        $cratedAbs1['scopeClass'] = null;
 
         $abs2 = \bdk\Debug::getInstance()->abstracter->getAbstraction(new \bdk\DebugTests\Fixture\Test2(), 'log');
         $cratedAbs2 = $crate->crate($abs2);
         $cratedAbs2 = $this->crate($cratedAbs2);
-        $cratedAbs2['scopeClass'] = null;
 
         return array(
             // 0
@@ -1063,5 +1061,14 @@ EOD;
             'Did not find expected recursion'
         );
         $this->debug->output();
+    }
+
+    public function testScope()
+    {
+        $obj = new \bdk\DebugTests\Fixture\ScopeTest();
+        $obj->callsDebug();
+        $logEntry = $this->debug->data->get('log/__end__');
+        $abs = $logEntry['args'][0];
+        $this->assertSame($abs['className'], $abs['scopeClass']);
     }
 }

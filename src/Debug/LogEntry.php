@@ -21,7 +21,22 @@ use JsonSerializable;
  */
 class LogEntry extends Event implements JsonSerializable
 {
-    public $subRegex;
+    /**
+     * Regular expression for determining if argument contains "substitutions"
+     *
+     * @var string
+     */
+    public $subRegex = '/%
+        (?:
+            [coO]|           # c: css, o: obj with max info, O: obj w generic info
+            [+-]?            # sign specifier
+            (?:[ 0]|\'.{1})? # padding specifier
+            -?               # alignment specifier
+            \d*              # width specifier
+            (?:\.\d+)?       # precision specifier
+            [difs]
+        )
+        /x';
 
     /**
      * Construct a log entry
@@ -41,41 +56,17 @@ class LogEntry extends Event implements JsonSerializable
     public function __construct(Debug $subject, $method, $args = array(), $meta = array(), $defaultArgs = array(), $argsToMeta = array())
     {
         $this->subject = $subject;
-        $this->subRegex = '/%'
-            . '(?:'
-            . '[coO]|'               // c: css, o: obj with max info, O: obj w generic info
-            . '[+-]?'                // sign specifier
-            . '(?:[ 0]|\'.{1})?'     // padding specifier
-            . '-?'                   // alignment specifier
-            . '\d*'                  // width specifier
-            . '(?:\.\d+)?'           // precision specifier
-            . '[difs]'
-            . ')'
-            . '/';
         $this->values = array(
             'method' => $method,
             'args' => $args ?: array(),
-            'meta' => array(),
+            'meta' => $meta,
             'numArgs' => 0,     // number of initial non-meta aargs passed (does not include added default values)
             'appendLog' => true,
             'return' => null,
         );
         $metaExtracted = $this->metaExtract($this->values['args']);
-        if ($defaultArgs) {
-            $count = \count($defaultArgs);
-            $args = \array_slice($this->values['args'], 0, $count);
-            $argsMore = \array_slice($this->values['args'], $count);
-            $args = \array_combine(
-                \array_keys($defaultArgs),
-                \array_replace(\array_values($defaultArgs), $args)
-            );
-            foreach ($argsToMeta as $k) {
-                $meta[$k] = $args[$k];
-                unset($args[$k]);
-            }
-            $this->values['args'] = \array_values($args + $argsMore);
-        }
-        $this->values['meta'] = \array_merge($meta, $metaExtracted);
+        $this->mergeDefaultArgs($defaultArgs, $argsToMeta);
+        $this->values['meta'] = \array_merge($this->values['meta'], $metaExtracted);
         $this->onSet($this->values);
     }
 
@@ -100,6 +91,15 @@ class LogEntry extends Event implements JsonSerializable
      */
     public function crate()
     {
+        if (\count($this->values['args']) === 1 && $this->subject->utility->isThrowable($this->values['args'][0])) {
+            $exception = $this->values['args'][0];
+            $this->values['args'][0] = $exception->getMessage();
+            $this->setMeta(array(
+                'file' => $exception->getFile(),
+                'line' => $exception->getLine(),
+                'trace' => $this->subject->backtrace->get(null, 0, $exception),
+            ));
+        }
         foreach ($this->values['args'] as $i => $val) {
             $this->values['args'][$i] = $this->subject->abstracter->crate($val, $this->values['method']);
         }
@@ -189,6 +189,34 @@ class LogEntry extends Event implements JsonSerializable
     }
 
     /**
+     * Merge default args with args
+     * Move args listed in argsToMeta to meta
+     *
+     * @param array $defaultArgs default arguments (key/value array)
+     * @param array $argsToMeta  move specified keys to meta
+     *
+     * @return void
+     */
+    private function mergeDefaultArgs($defaultArgs, $argsToMeta)
+    {
+        if (!$defaultArgs) {
+            return;
+        }
+        $count = \count($defaultArgs);
+        $args = \array_slice($this->values['args'], 0, $count);
+        $argsMore = \array_slice($this->values['args'], $count);
+        $args = \array_combine(
+            \array_keys($defaultArgs),
+            \array_replace(\array_values($defaultArgs), $args)
+        );
+        foreach ($argsToMeta as $k) {
+            $this->values['meta'][$k] = $args[$k];
+            unset($args[$k]);
+        }
+        $this->values['args'] = \array_values($args + $argsMore);
+    }
+
+    /**
      * Remove meta values from array
      *
      * @param array $array array such as an argument array
@@ -223,22 +251,34 @@ class LogEntry extends Event implements JsonSerializable
             return;
         }
         if (isset($values['meta']['attribs'])) {
-            if (!isset($values['meta']['attribs']['class'])) {
-                $this->values['meta']['attribs']['class'] = array();
-            } elseif (\is_string($values['meta']['attribs']['class'])) {
-                $this->values['meta']['attribs']['class'] = \explode(' ', $values['meta']['attribs']['class']);
-            }
+            $this->onSetMetaAttribs();
         }
-        if (\array_key_exists('channel', $values['meta'])) {
-            $channel = $values['meta']['channel'];
-            unset($this->values['meta']['channel']);
-            if ($channel === null) {
-                $this->subject = $this->subject->rootInstance;
-                return;
-            }
-            $this->subject = $this->subject->parentInstance
-                ? $this->subject->parentInstance->getChannel($channel)
-                : $this->subject->getChannel($channel);
+        if (\array_key_exists('channel', $values['meta']) === false) {
+            return;
+        }
+        // meta['channel'] exists
+        $channel = $values['meta']['channel'];
+        unset($this->values['meta']['channel']);
+        if ($channel === null) {
+            $this->subject = $this->subject->rootInstance;
+            return;
+        }
+        $this->subject = $this->subject->parentInstance
+            ? $this->subject->parentInstance->getChannel($channel)
+            : $this->subject->getChannel($channel);
+    }
+
+    /**
+     * We have meta['attribs']..   make sure attribs['class'] is set and is an array
+     *
+     * @return void
+     */
+    private function onSetMetaAttribs()
+    {
+        if (!isset($this->values['meta']['attribs']['class'])) {
+            $this->values['meta']['attribs']['class'] = array();
+        } elseif (\is_string($this->values['meta']['attribs']['class'])) {
+            $this->values['meta']['attribs']['class'] = \explode(' ', $this->values['meta']['attribs']['class']);
         }
     }
 }

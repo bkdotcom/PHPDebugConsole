@@ -14,7 +14,6 @@ namespace bdk\Debug\Abstraction;
 
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
-// use bdk\Debug\Abstraction\AbstractionObject;
 use bdk\Debug\Abstraction\AbstractObjectConstants;
 use bdk\Debug\Abstraction\AbstractObjectHelper;
 use bdk\Debug\Abstraction\AbstractObjectMethods;
@@ -405,14 +404,9 @@ class AbstractObject extends Component
         if ($i >= 0) {
             return $className;
         }
-        $backtrace = $this->debug->backtrace->get();
-        foreach ($backtrace as $i => $frame) {
-            if (!isset($frame['class']) || \strpos($frame['class'], __NAMESPACE__) !== 0) {
-                break;
-            }
-        }
-        return isset($backtrace[$i]['class'])
-            ? $backtrace[$i]['class']
+        $callerInfo = $this->debug->backtrace->getCallerInfo();
+        return isset($callerInfo['class'])
+            ? $callerInfo['class']
             : null;
     }
 

@@ -764,7 +764,7 @@ class Debug extends Scaffolding
     public function getCfg($path = null, $opt = null)
     {
         if ($path === 'route' && $this->cfg['route'] === 'auto') {
-            return $this->getDefaultRoute(); // returns string
+            return $this->container['internal']->getDefaultRoute(); // returns string
         }
         if ($opt === self::CONFIG_DEBUG) {
             return $this->arrayUtil->pathGet($this->cfg, $path);
@@ -817,7 +817,7 @@ class Debug extends Scaffolding
             return array('debug' => self::META);
         }
         if ($args[0] === 'cfg') {
-            return self::$instance->metaCfg($args[1], $args[2]);
+            return self::$instance->container['internal']->metaCfg($args[1], $args[2]);
         }
         return array(
             $args[0] => $args[1],
@@ -846,7 +846,7 @@ class Debug extends Scaffolding
         if (\is_string($route)) {
             $this->config->set('route', $route);
         }
-        $output = $this->publishOutputEvent();
+        $output = $this->container['internal']->publishOutputEvent();
         if (!$this->parentInstance) {
             $this->data->set('outputSent', true);
         }

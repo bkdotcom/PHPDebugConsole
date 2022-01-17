@@ -314,7 +314,7 @@ class InternalEvents implements SubscriberInterface
 
     /**
      * Check if php was shutdown via exit() or die()
-     * This check is only possible if xdebug is instaned & enabled
+     * This check is only possible if xdebug is installed & enabled
      *
      * @return void
      */
@@ -328,6 +328,7 @@ class InternalEvents implements SubscriberInterface
         }
         $lastError = $this->debug->errorHandler->getLastError();
         if ($lastError && ($lastError['type'] === E_PARSE || $lastError['exception'] instanceof \ParseError)) {
+            // parse error
             return;
         }
         $findExit = new FindExit(array(

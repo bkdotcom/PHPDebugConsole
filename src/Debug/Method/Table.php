@@ -76,9 +76,7 @@ class Table
                 $row = new TableRow($row);
             }
             $curRowKeys = $row->keys();
-            if (empty($colKeys)) {
-                $colKeys = $curRowKeys;
-            } elseif ($curRowKeys !== $colKeys) {
+            if ($curRowKeys !== $colKeys) {
                 $colKeys = self::colKeysMerge($curRowKeys, $colKeys);
             }
         }
@@ -394,7 +392,6 @@ class Table
         }
     }
 
-
     /**
      * Update collected table info
      *
@@ -406,29 +403,28 @@ class Table
      */
     private function updateTableInfo($rowKey, $rowValues, $rowInfo)
     {
+        $this->meta['tableInfo']['haveObjRow'] = $this->meta['tableInfo']['haveObjRow'] || $rowInfo['class'];
         foreach ($this->meta['totalCols'] as $key) {
             $this->meta['tableInfo']['columns'][$key]['total'] += $rowValues[$key];
         }
-        $this->meta['tableInfo']['haveObjRow'] = $this->meta['tableInfo']['haveObjRow'] || $rowInfo['class'];
-        $classes = $rowInfo['classes'];
+        foreach ($rowInfo['classes'] as $key => $class) {
+            if (!isset($this->meta['tableInfo']['columns'][$key]['class'])) {
+                $this->meta['tableInfo']['columns'][$key]['class'] = $class;
+            } elseif ($this->meta['tableInfo']['columns'][$key]['class'] !== $class) {
+                // column values not of the same type
+                $this->meta['tableInfo']['columns'][$key]['class'] = false;
+            }
+        }
         unset($rowInfo['classes']);
         $rowInfo = \array_filter($rowInfo, function ($val) {
             return $val !== null && $val !== false;
         });
         if ($rowInfo) {
+            // non-null/false values
             $rowInfoExisting = isset($this->meta['tableInfo']['rows'][$rowKey])
                 ? $this->meta['tableInfo']['rows'][$rowKey]
                 : array();
-            $this->meta['tableInfo']['rows'][$rowKey] = \array_merge($rowInfo, $rowInfoExisting);
-        }
-        foreach ($classes as $key => $class) {
-            if (!isset($this->meta['tableInfo']['columns'][$key]['class'])) {
-                $this->meta['tableInfo']['columns'][$key]['class'] = $class;
-            }
-            if ($this->meta['tableInfo']['columns'][$key]['class'] !== $class) {
-                // column values not of the same type
-                $this->meta['tableInfo']['columns'][$key]['class'] = false;
-            }
+            $this->meta['tableInfo']['rows'][$rowKey] = \array_merge($rowInfoExisting, $rowInfo);
         }
     }
 }

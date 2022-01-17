@@ -14,7 +14,7 @@ namespace bdk\Debug\Plugin\CustomMethod;
 
 use bdk\Debug;
 use bdk\Debug\ConfigurableInterface;
-use bdk\Debug\LogEntry;
+use bdk\Debug\Plugin\CustomMethodTrait;
 use bdk\PubSub\SubscriberInterface;
 
 /**
@@ -22,7 +22,7 @@ use bdk\PubSub\SubscriberInterface;
  */
 class General implements SubscriberInterface
 {
-    private $debug;
+    use CustomMethodTrait;
 
     protected $methods = array(
         'email',
@@ -45,25 +45,6 @@ class General implements SubscriberInterface
         return array(
             Debug::EVENT_CUSTOM_METHOD => 'onCustomMethod',
         );
-    }
-
-    /**
-     * Debug::EVENT_LOG event subscriber
-     *
-     * @param LogEntry $logEntry logEntry instance
-     *
-     * @return void
-     */
-    public function onCustomMethod(LogEntry $logEntry)
-    {
-        $method = $logEntry['method'];
-        if (!\in_array($method, $this->methods)) {
-            return;
-        }
-        $this->debug = $logEntry->getSubject();
-        $logEntry['handled'] = true;
-        $logEntry['return'] = \call_user_func_array(array($this, $method), $logEntry['args']);
-        $logEntry->stopPropagation();
     }
 
     /**

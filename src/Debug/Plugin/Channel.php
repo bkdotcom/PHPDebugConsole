@@ -13,7 +13,7 @@
 namespace bdk\Debug\Plugin;
 
 use bdk\Debug;
-use bdk\Debug\LogEntry;
+use bdk\Debug\Plugin\CustomMethodTrait;
 use bdk\PubSub\SubscriberInterface;
 
 /**
@@ -21,7 +21,7 @@ use bdk\PubSub\SubscriberInterface;
  */
 class Channel implements SubscriberInterface
 {
-    private $debug;
+    use CustomMethodTrait;
 
     private $channels = array();
 
@@ -40,25 +40,6 @@ class Channel implements SubscriberInterface
         return array(
             Debug::EVENT_CUSTOM_METHOD => 'onCustomMethod',
         );
-    }
-
-    /**
-     * Debug::EVENT_LOG event subscriber
-     *
-     * @param LogEntry $logEntry logEntry instance
-     *
-     * @return void
-     */
-    public function onCustomMethod(LogEntry $logEntry)
-    {
-        $method = $logEntry['method'];
-        if (!\in_array($method, $this->methods)) {
-            return;
-        }
-        $this->debug = $logEntry->getSubject();
-        $logEntry['handled'] = true;
-        $logEntry['return'] = \call_user_func_array(array($this, $method), $logEntry['args']);
-        $logEntry->stopPropagation();
     }
 
     /**

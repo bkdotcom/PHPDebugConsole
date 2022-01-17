@@ -15,7 +15,7 @@ namespace bdk\Debug\Plugin;
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
-use bdk\Debug\LogEntry;
+use bdk\Debug\Plugin\CustomMethodTrait;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
 
@@ -24,6 +24,8 @@ use bdk\PubSub\SubscriberInterface;
  */
 class Redaction implements SubscriberInterface
 {
+    use CustomMethodTrait;
+
     /**
      * duplicate/store frequently used cfg vals
      *
@@ -34,6 +36,9 @@ class Redaction implements SubscriberInterface
             // key => regex of key
         ),
         'redactReplace' => null,
+    );
+    protected $methods = array(
+        'redact',
     );
 
     /**
@@ -75,27 +80,6 @@ class Redaction implements SubscriberInterface
             $cfgDebug[$key] = $callable($cfgDebug[$key], $event);
         }
         $event['debug'] = \array_merge($event['debug'], $cfgDebug);
-    }
-
-    /**
-     * Debug::EVENT_LOG event subscriber
-     *
-     * @param LogEntry $logEntry logEntry instance
-     *
-     * @return void
-     */
-    public function onCustomMethod(LogEntry $logEntry)
-    {
-        $method = $logEntry['method'];
-        $methods = array(
-            'redact',
-        );
-        if (!\in_array($method, $methods)) {
-            return;
-        }
-        $logEntry['handled'] = true;
-        $logEntry['return'] = \call_user_func_array(array($this, $method), $logEntry['args']);
-        $logEntry->stopPropagation();
     }
 
     /**

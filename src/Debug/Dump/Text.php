@@ -97,7 +97,6 @@ class Text extends Base
      */
     protected function buildArgString($args)
     {
-        $numArgs = \count($args);
         foreach ($args as $i => $v) {
             list($type, $typeMore) = $this->debug->abstracter->getType($v);
             $typeMore2 = $typeMore === Abstracter::TYPE_ABSTRACTION
@@ -113,21 +112,33 @@ class Text extends Base
             ));
             $this->valDumper->setValDepth(0);
         }
+        return $this->buildArgStringGlue($args);
+    }
+
+    /**
+     * Implode/"glue" the arguments together
+     *
+     * @param array $args dumped arguments
+     *
+     * @return string
+     */
+    private function buildArgStringGlue($args)
+    {
         $glue = $this->cfg['glue']['multiple'];
         $glueAfterFirst = true;
-        if ($numArgs && \is_string($args[0])) {
+        $numArgs = \count($args);
+        if ($numArgs > 0 && \is_string($args[0])) {
             if (\preg_match('/[=:] ?$/', $args[0])) {
                 // first arg ends with "=" or ":"
                 $glueAfterFirst = false;
                 $args[0] = \rtrim($args[0]) . ' ';
-            } elseif (\count($args) === 2) {
+            } elseif ($numArgs === 2) {
                 $glue = $this->cfg['glue']['equal'];
             }
         }
-        if (!$glueAfterFirst) {
-            return $args[0] . \implode($glue, \array_slice($args, 1));
-        }
-        return \implode($glue, $args);
+        return $glueAfterFirst
+            ? \implode($glue, $args)
+            : $args[0] . \implode($glue, \array_slice($args, 1));
     }
 
     /**
@@ -211,18 +222,28 @@ class Text extends Base
             if ($this->depth > 0) {
                 $this->depth --;
             }
-            return;
+            return '';
         }
         if ($method === 'groupSummary') {
             return '=======';
         }
         $this->depth++;
+        return $this->methodGroupBuildOutput($logEntry);
+    }
+
+    /**
+     * Build group arguments
+     *
+     * @param LogEntry $logEntry logEntry instance
+     *
+     * @return string
+     */
+    private function methodGroupBuildOutput(LogEntry $logEntry)
+    {
         $args = $logEntry['args'];
         $meta = \array_merge(array(
             'argsAsParams' => true,
-            'boldLabel' => true,
             'isFuncName' => false,
-            'level' => null,
         ), $logEntry['meta']);
         $label = \array_shift($args);
         if ($meta['isFuncName']) {

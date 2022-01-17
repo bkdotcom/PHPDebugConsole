@@ -43,12 +43,12 @@ It is installable and autoloadable via [Composer](https://getcomposer.org/) as [
 * include Autoloader and Debug in your code
 
 ```php
-// Step 1: include and register Autoloader
+// Step 1: include and register our autoloader
 require 'path-to/src/Debug/Autoloader.php';
 $autoloader = new \bdk\Debug\Autoloader();
 $autoloader->register();
-// Step 2:  include Debug.php
-require 'path-to/src/Debug/Debug.php';
+// Step 2:  you can now instantiate and user Debug
+$debug = new \bdk\Debug();
 ```
 
 See <http://www.bradkent.com/php/debug> for more information

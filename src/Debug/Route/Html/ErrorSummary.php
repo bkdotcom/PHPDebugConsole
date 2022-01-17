@@ -286,7 +286,7 @@ class ErrorSummary
             );
         }
         return '<h3>' . $this->buildInConsoleOneCatHeader() . '</h3>' . "\n"
-            . '<ul class="list-unstyled">'
+            . '<ul class="list-unstyled in-console">'
                 . $this->html->buildTag(
                     'li',
                     array(

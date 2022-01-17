@@ -13,7 +13,7 @@
 namespace bdk\Debug\Plugin\CustomMethod;
 
 use bdk\Debug;
-use bdk\Debug\LogEntry;
+use bdk\Debug\Plugin\CustomMethodTrait;
 use bdk\HttpMessage\HttpFoundationBridge;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
@@ -26,7 +26,8 @@ use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
  */
 class ReqRes implements SubscriberInterface
 {
-    private $debug;
+    use CustomMethodTrait;
+
     private $serverParams = array();
 
     protected $methods = array(
@@ -204,25 +205,6 @@ class ReqRes implements SubscriberInterface
         if (isset($cfgDebug['serviceProvider'])) {
             $this->serverParams = array();
         }
-    }
-
-    /**
-     * Debug::EVENT_LOG event subscriber
-     *
-     * @param LogEntry $logEntry logEntry instance
-     *
-     * @return void
-     */
-    public function onCustomMethod(LogEntry $logEntry)
-    {
-        $method = $logEntry['method'];
-        if (!\in_array($method, $this->methods)) {
-            return;
-        }
-        $this->debug = $logEntry->getSubject();
-        $logEntry['handled'] = true;
-        $logEntry['return'] = \call_user_func_array(array($this, $method), $logEntry['args']);
-        $logEntry->stopPropagation();
     }
 
     /**

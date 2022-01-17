@@ -38,7 +38,6 @@ class Data
 
     protected $logRef;          // points to either log or logSummary[priority]
 
-
     /**
      * Constructor
      *

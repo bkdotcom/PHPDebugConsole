@@ -131,7 +131,9 @@ class SkipInternal
             }
         }
         self::$internalClasses['regex'] = '/^('
-            . \implode('|', \array_map('preg_quote', $classes))
+            . \implode('|', \array_map(function ($class) {
+                return \preg_quote($class, '/');
+            }, $classes))
             . ')\b/';
         return self::$internalClasses['regex'];
     }

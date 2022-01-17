@@ -185,9 +185,9 @@ class Debug extends Scaffolding
      * Display an alert at the top of the log
      *
      * Can use styling & substitutions.
-     * If using substitutijons, will need to pass $level & $dismissible as meta values
+     * If using substitutions, will need to pass $level & $dismissible as meta values
      *
-     * @param string $message     message
+     * @param string $message     message to be displayed
      * @param string $level       (error), info, success, warn
      *                               "danger" and "warning" are still accepted, however deprecated
      * @param bool   $dismissible (false) Whether to display a close icon/button

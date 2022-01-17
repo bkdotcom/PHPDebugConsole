@@ -357,16 +357,6 @@ class AbstractObjectMethods
     }
 
     /**
-     * This does nothing
-     *
-     * @return void
-     */
-    private function devNull()
-    {
-        \func_get_args();
-    }
-
-    /**
      * Get parameter details
      *
      * returns array of
@@ -644,7 +634,7 @@ class AbstractObjectMethods
         } catch (Exception $e) {
             // yes, __toString can throw exception..
             // example: SplFileObject->__toString will throw exception if file doesn't exist
-            $this->devNull($e);
+            return $val;
         }
         return $val;
     }

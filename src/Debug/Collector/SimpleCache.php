@@ -66,7 +66,6 @@ class SimpleCache implements CacheInterface
         return $this->profileCall($name, $args, false, $keys);
     }
 
-
     /**
      * {@inheritDoc}
      */

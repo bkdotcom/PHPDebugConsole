@@ -3,6 +3,7 @@
 namespace bdk\Debug\Utility;
 
 use bdk\Backtrace;
+use Reflector;
 
 /**
  * Attempt to find if shutdown via `exit` or `die`
@@ -46,21 +47,32 @@ class FindExit
         list($file, $lineStart, $phpSrcCode) = $this->getFrameSource($frame);
         $phpSrcCode = \preg_replace('/^\s*((public|private|protected|final)\s+)+/', '', $phpSrcCode);
         $tokens = $this->getTokens($phpSrcCode);
+        $this->searchTokenInit($frame);
+        $token = $this->searchTokens($tokens);
+        return $token
+            ? array(
+                'class' => $frame['class'],
+                'file' => $file,
+                'found' => $token[1],
+                'function' => $frame['function'],
+                'line' => $token[2] + $lineStart - 1,
+            )
+            : null;
+    }
+
+    /**
+     * Reset/Init depth, & function stack
+     *
+     * @param array $frame backtrace frame
+     *
+     * @return void
+     */
+    private function searchTokenInit($frame)
+    {
         $this->depth = 0; // keep track of bracket depth
         $this->funcStack = array();
         $this->function = $frame['function'];
         $this->inFunc = empty($frame['function']);
-        $token = $this->searchTokens($tokens);
-        if ($token) {
-            return array(
-                'class' => $frame['class'],
-                'file' => $file,
-                'function' => $frame['function'],
-                'found' => $token[1],
-                'line' => $token[2] + $lineStart - 1,
-            );
-        }
-        return null;
     }
 
     /**
@@ -77,10 +89,10 @@ class FindExit
             $token = $tokens[$i];
             if (!\is_array($token)) {
                 $continue = $this->handleStringToken($token);
-                if (!$continue) {
-                    return null;
+                if ($continue) {
+                    continue;
                 }
-                continue;
+                return null;
             }
             if ($token[0] === T_FUNCTION) {
                 $tokenNext = $tokens[$i + 1];
@@ -157,7 +169,7 @@ class FindExit
     {
         $backtrace = \xdebug_get_function_stack();
         $backtrace = \array_reverse($backtrace);
-        $found = false;
+        // $found = false;
         $frame = false;
         foreach ($backtrace as $frame) {
             $frame = \array_merge(array(
@@ -168,26 +180,14 @@ class FindExit
             if (\strpos($frame['function'], 'call_user_func:') === 0) {
                 continue;
             }
-            if (\in_array($frame['class'], $this->classesSkip) === false) {
-                $found = true;
+            if (\in_array($frame['class'], $this->classesSkip)) {
+                continue;
             }
-            if ($found) {
-                try {
-                    $reflection = isset($frame['class'])
-                        ? (new \ReflectionClass($frame['class']))->getMethod($frame['function'])
-                        : new \ReflectionFunction($frame['function']);
-                    if ($reflection->isInternal() === false) {
-                        break;
-                    }
-                } catch (\ReflectionException $e) {
-                    // {closure...} or {main}, etc
-                    continue;
-                }
+            if ($this->isFrameInternal($frame) === false) {
+                break;
             }
         }
-        return $found
-            ? $frame
-            : false;
+        return $frame;
     }
 
     /**
@@ -195,7 +195,7 @@ class FindExit
      *
      * @param array $frame backtrace frame
      *
-     * @return array
+     * @return array [$filepath, start-line, src]
      */
     private function getFrameSource($frame)
     {
@@ -214,24 +214,50 @@ class FindExit
             );
         }
         if (\preg_match('/^.*\{closure:(.+):(\d+)-(\d+)\}$/', $frame['function'], $matches)) {
-            $file = $matches[1];
-            $lineStart = (int) $matches[2];
-            $lineEnd = (int) $matches[3];
-            $php = \array_slice(
-                \file($file),
-                $lineStart - 1,
-                $lineEnd - $lineStart + 1
-            );
-            return array(
-                $file,
-                $lineStart,
-                \implode('', $php),
-            );
+            return $this->getFrameSourceClosure($matches[1], $matches[2], $matches[3]);
         }
-        $reflection = isset($frame['class'])
+        $reflector = isset($frame['class'])
             ? (new \ReflectionClass($frame['class']))->getMethod($frame['function'])
             : new \ReflectionFunction($frame['function']);
-        if ($reflection->isInternal()) {
+        return $this->getFrameSourceReflection($reflector);
+    }
+
+    /**
+     * Get the source code for a closure
+     *
+     * @param string $file      file path
+     * @param int    $lineStart start line
+     * @param int    $lineEnd   end line
+     *
+     * @return array [filepath, lineStart, src]
+     */
+    private function getFrameSourceClosure($file, $lineStart, $lineEnd)
+    {
+        // $file = $regexMatches[1];
+        // $lineStart = (int) $regexMatches[2];
+        // $lineEnd = (int) $regexMatches[3];
+        $php = \array_slice(
+            \file($file),
+            $lineStart - 1,
+            $lineEnd - $lineStart + 1
+        );
+        return array(
+            $file,
+            $lineStart,
+            \implode('', $php),
+        );
+    }
+
+    /**
+     * Get the source code for a function or class method
+     *
+     * @param Reflector $reflector Reflector instance
+     *
+     * @return array [filepath, lineStart, src]
+     */
+    private function getFrameSourceReflection(Reflector $reflector)
+    {
+        if ($reflector->isInternal()) {
             return array(
                 null,
                 0,
@@ -239,13 +265,13 @@ class FindExit
             );
         }
         $php = \array_slice(
-            \file($reflection->getFileName()),
-            $reflection->getStartLine() - 1,
-            $reflection->getEndLine() - $reflection->getStartLine() + 1
+            \file($reflector->getFileName()),
+            $reflector->getStartLine() - 1,
+            $reflector->getEndLine() - $reflector->getStartLine() + 1
         );
         return array(
-            $reflection->getFileName(),
-            $reflection->getStartLine(),
+            $reflector->getFileName(),
+            $reflector->getStartLine(),
             \implode('', $php),
         );
     }
@@ -273,5 +299,25 @@ class FindExit
             $tokens = \array_values($tokens);
         }
         return $tokens;
+    }
+
+    /**
+     * Is frame a core php function (vs use defined)
+     *
+     * @param array $frame backtrace frame
+     *
+     * @return bool
+     */
+    private function isFrameInternal($frame)
+    {
+        try {
+            $reflection = isset($frame['class'])
+                ? (new \ReflectionClass($frame['class']))->getMethod($frame['function'])
+                : new \ReflectionFunction($frame['function']);
+            return $reflection->isInternal();
+        } catch (\ReflectionException $e) {
+            // {closure...} or {main}, etc
+            return false;
+        }
     }
 }

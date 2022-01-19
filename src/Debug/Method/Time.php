@@ -12,6 +12,7 @@
 
 namespace bdk\Debug\Method;
 
+use bdk\Debug;
 use bdk\Debug\LogEntry;
 
 /**
@@ -138,6 +139,47 @@ class Time
         $logEntry['args'] = $args;
         $logEntry['meta'] = \array_diff_key($meta, \array_flip(array('precision','unit')));
         $debug->log($logEntry);
+    }
+
+    /**
+     * Create timeEnd & timeGet LogEntry
+     *
+     * @param Debug  $debug  Debug instance
+     * @param string $method 'timeEnd' or 'timeGet'
+     * @param array  $args   arguments passed to method
+     *
+     * @return LogEntry
+     */
+    public function timeLogEntry(Debug $debug, $method, $args)
+    {
+        $logEntry = new LogEntry(
+            $debug,
+            $method,
+            $args,
+            array(
+                'precision' => 4,
+                'silent' => false,
+                'template' => '%label: %time',
+                'unit' => 'auto',
+            ),
+            array(
+                'label' => null,
+                'log' => true,      // will convert to meta['silent']
+                'return' => 'auto',
+            ),
+            array('return')
+        );
+        if ($logEntry['numArgs'] === 1 && \is_bool($logEntry['args'][0])) {
+            // $log passed as single arg
+            $logEntry['args'][1] = $logEntry['args'][0];
+            $logEntry['args'][0] = null;
+        }
+        $logEntry->setMeta('silent', !$logEntry['args'][1] || $logEntry->getMeta('silent'));
+        if ($logEntry->getMeta('return') === 'auto') {
+            $logEntry->setMeta('return', $logEntry->getMeta('silent'));
+        }
+        unset($logEntry['args'][1]);
+        return $logEntry;
     }
 
     /**

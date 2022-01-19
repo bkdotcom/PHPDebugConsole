@@ -66,9 +66,7 @@ class Helper
     {
         $level = $logEntry->getMeta('level');
         $levelsAllowed = array('danger','error','info','success','warn','warning');
-        /*
-            Continue to allow bootstrap "levels"
-        */
+        // Continue to allow bootstrap "levels"
         $levelTrans = array(
             'danger' => 'error',
             'warning' => 'warn',
@@ -146,41 +144,5 @@ class Helper
         $logEntry['args'] = array($backtrace);
         $this->debug->methodTable->doTable($logEntry);
         $this->debug->log($logEntry);
-    }
-
-    /**
-     * Create timeEnd & timeGet LogEntry
-     *
-     * @param string $method 'timeEnd' or 'timeGet'
-     * @param array  $args   arguments passed to method
-     *
-     * @return LogEntry
-     */
-    public function timeLogEntry($method, $args)
-    {
-        $logEntry = new LogEntry(
-            $this->debug,
-            $method,
-            $args,
-            array(
-                'precision' => 4,
-                'silent' => false,
-                'template' => '%label: %time',
-                'unit' => 'auto',
-            ),
-            array(
-                'label' => null,
-                'log' => true,
-            )
-        );
-        list($label, $log) = $logEntry['args'];
-        $silent = !$log;
-        if ($logEntry['numArgs'] === 1 && \is_bool($label)) {
-            // $log passed as single arg
-            $silent = !$label;
-            $logEntry['args'] = array(null, $label);
-        }
-        $logEntry->setMeta('silent', $silent || $logEntry->getMeta('silent'));
-        return $logEntry;
     }
 }

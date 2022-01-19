@@ -192,7 +192,7 @@ class Debug extends Scaffolding
      *                               "danger" and "warning" are still accepted, however deprecated
      * @param bool   $dismissible (false) Whether to display a close icon/button
      *
-     * @return void
+     * @return $this
      *
      * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter
      */
@@ -213,10 +213,12 @@ class Debug extends Scaffolding
                 : $this->getMethodDefaultArgs(__FUNCTION__),
             array('level','dismissible')
         );
+        $logEntry['args'] = \array_values($logEntry['args']);
         $this->methodHelper->alertLevel($logEntry);
         $this->data->set('logDest', 'alerts');
         $this->appendLog($logEntry);
         $this->data->set('logDest', 'auto');
+        return $this;
     }
 
     /**
@@ -228,7 +230,7 @@ class Debug extends Scaffolding
      * @param mixed $msg,...   (optional) variable num of values to output if assertion fails
      *                           if none provided, will use calling file & line num
      *
-     * @return void
+     * @return $this
      *
      * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter
      */
@@ -242,7 +244,7 @@ class Debug extends Scaffolding
         $args = $logEntry['args'];
         $assertion = \array_shift($args);
         if ($assertion) {
-            return;
+            return $this;
         }
         if (!$args) {
             // add default message
@@ -255,6 +257,7 @@ class Debug extends Scaffolding
         }
         $logEntry['args'] = $args;
         $this->appendLog($logEntry);
+        return $this;
     }
 
     /**
@@ -265,13 +268,13 @@ class Debug extends Scaffolding
      * @param int $bitmask A bitmask of options
      *                     `self::CLEAR_ALERTS` : Clear alerts generated with `alert()`
      *                     `self::CLEAR_LOG` : **default** Clear log entries (excluding warn & error)
-     *                     `self::CLEAR_LOG_ERRORS` : Clear log, warn, & error
+     *                     `self::CLEAR_LOG_ERRORS` : Clear warn & error
      *                     `self::CLEAR_SUMMARY` : Clear summary entries (excluding warn & error)
-     *                     `self::CLEAR_SUMMARY_ERRORS` : Clear summary warn & error
-     *                     `self::CLEAR_ALL` :  clear all everything
+     *                     `self::CLEAR_SUMMARY_ERRORS` : Clear warn & error within summary groups
+     *                     `self::CLEAR_ALL` : Clear all log entries
      *                     `self::CLEAR_SILENT` : Don't add log entry
      *
-     * @return void
+     * @return $this
      *
      * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter
      */
@@ -290,13 +293,14 @@ class Debug extends Scaffolding
         $this->data->set('logDest', 'main');
         $this->appendLog($logEntry);
         $this->data->set('logDest', 'auto');
+        return $this;
     }
 
     /**
      * Log the number of times this has been called with the given label.
      *
      * Count is maintained even when `collect` is false
-     * If collect = false, `count()` will be performed "silently"
+     * If `collect` = false, `count()` will be performed "silently"
      *
      * @param mixed $label Label.  If omitted, logs the number of times `count()` has been called at this particular line.
      * @param int   $flags (optional) A bitmask of
@@ -319,13 +323,13 @@ class Debug extends Scaffolding
     /**
      * Resets the counter
      *
-     * Counter is reset even when debugging is disabled (ie collect = false).
+     * Counter is reset even when debugging is disabled (ie `collect` is false).
      *
      * @param mixed $label (optional) specify the counter to reset
      * @param int   $flags (optional) currently only one option :
      *                       \bdk\Debug::COUNT_NO_OUT` : don't output/log
      *
-     * @return void
+     * @return $this
      */
     public function countReset($label = 'default', $flags = 0)
     {
@@ -335,6 +339,7 @@ class Debug extends Scaffolding
             \func_get_args()
         );
         $this->methodCount->countReset($logEntry);
+        return $this;
     }
 
     /**
@@ -344,11 +349,12 @@ class Debug extends Scaffolding
      *
      * @param mixed $arg,... message / values
      *
-     * @return void
+     * @return $this
      */
     public function error()
     {
         $this->methodHelper->doError(__FUNCTION__, \func_get_args());
+        return $this;
     }
 
     /**
@@ -367,7 +373,7 @@ class Debug extends Scaffolding
      *
      * @param mixed $arg,... label / values
      *
-     * @return void
+     * @return $this
      */
     public function group()
     {
@@ -377,6 +383,7 @@ class Debug extends Scaffolding
             \func_get_args()
         );
         $this->methodGroup->methodGroup($logEntry);
+        return $this;
     }
 
     /**
@@ -386,7 +393,7 @@ class Debug extends Scaffolding
      *
      * @param mixed $arg,... label / values
      *
-     * @return void
+     * @return $this
      */
     public function groupCollapsed()
     {
@@ -396,18 +403,19 @@ class Debug extends Scaffolding
             \func_get_args()
         );
         $this->methodGroup->methodGroup($logEntry);
+        return $this;
     }
 
     /**
      * Close current group
      *
-     * Every call to `group()` and `groupCollapsed()` should be paired with `groupEnd()`
+     * Every call to `group()`, `groupCollapsed()`, and `groupSummary()` should be paired with `groupEnd()`
      *
      * The optional return value will be visible when the group is both expanded and collapsed.
      *
      * @param mixed $value (optional) "return" value
      *
-     * @return void
+     * @return $this
      */
     public function groupEnd($value = Abstracter::UNDEFINED)
     {
@@ -419,6 +427,7 @@ class Debug extends Scaffolding
             $this->getMethodDefaultArgs(__FUNCTION__)
         );
         $this->methodGroup->methodGroupEnd($logEntry);
+        return $this;
     }
 
     /**
@@ -427,11 +436,11 @@ class Debug extends Scaffolding
      * Debug methods called from within a groupSummary will appear at the top of the log.
      * Call `groupEnd()` to close the summary group
      *
-     * All groupSummary groups will appear together in a single group
+     * All groupSummary groups will appear together at the top of the output
      *
-     * @param int $priority (0) The higher the priority, the earlier it will appear.
+     * @param int $priority (0) The higher the priority, the earlier the group will appear in output
      *
-     * @return void
+     * @return $this
      *
      * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter
      */
@@ -446,6 +455,7 @@ class Debug extends Scaffolding
             array('priority')
         );
         $this->methodGroup->methodGroupSummary($logEntry);
+        return $this;
     }
 
     /**
@@ -453,12 +463,12 @@ class Debug extends Scaffolding
      *
      * This will only occur if `cfg['collect']` is currently `true`
      *
-     * @return void
+     * @return $this
      */
     public function groupUncollapse()
     {
         if (!$this->cfg['collect']) {
-            return;
+            return $this;
         }
         $logEntry = new LogEntry(
             $this,
@@ -466,6 +476,7 @@ class Debug extends Scaffolding
             \func_get_args()
         );
         $this->methodGroup->methodGroupUncollapse($logEntry);
+        return $this;
     }
 
     /**
@@ -475,7 +486,7 @@ class Debug extends Scaffolding
      *
      * @param mixed $arg,... message / values
      *
-     * @return void
+     * @return $this
      */
     public function info()
     {
@@ -484,6 +495,7 @@ class Debug extends Scaffolding
             __FUNCTION__,
             \func_get_args()
         ));
+        return $this;
     }
 
     /**
@@ -493,7 +505,7 @@ class Debug extends Scaffolding
      *
      * @param mixed $arg,... message / values
      *
-     * @return void
+     * @return $this
      */
     public function log()
     {
@@ -501,11 +513,11 @@ class Debug extends Scaffolding
         if (\count($args) === 1) {
             if ($args[0] instanceof LogEntry) {
                 $this->appendLog($args[0]);
-                return;
+                return $this;
             }
             if ($args[0] instanceof Error) {
                 $this->container['internalEvents']->onError($args[0]);
-                return;
+                return $this;
             }
         }
         $this->appendLog(new LogEntry(
@@ -513,19 +525,20 @@ class Debug extends Scaffolding
             __FUNCTION__,
             $args
         ));
+        return $this;
     }
 
     /**
      * Starts recording a performance profile
      *
-     * @param string $name Optional Profile name
+     * @param string $name Optional profile name
      *
-     * @return void
+     * @return $this
      */
     public function profile($name = null)
     {
         if (!$this->cfg['collect']) {
-            return;
+            return $this;
         }
         $logEntry = new LogEntry(
             $this,
@@ -536,6 +549,7 @@ class Debug extends Scaffolding
             array('name')
         );
         $this->methodProfile->doProfile($logEntry);
+        return $this;
     }
 
     /**
@@ -545,9 +559,9 @@ class Debug extends Scaffolding
      *  * if name is passed and it does not match the name of a profile being recorded, nothing will be done
      *  * if name is not passed, the most recently started profile is stopped (named, or non-named).
      *
-     * @param string $name Optional Profile name
+     * @param string $name Optional profile name
      *
-     * @return void
+     * @return $this
      */
     public function profileEnd($name = null)
     {
@@ -560,10 +574,11 @@ class Debug extends Scaffolding
             array('name')
         );
         $this->methodProfile->profileEnd($logEntry);
+        return $this;
     }
 
     /**
-     * Output array or object as a table
+     * Output an array or object as a table
      *
      * Accepts array of arrays or array of objects
      *
@@ -574,12 +589,12 @@ class Debug extends Scaffolding
      *
      * @param mixed $arg,... traversable, [option array], [caption] in no particular order
      *
-     * @return void
+     * @return $this
      */
     public function table()
     {
         if (!$this->cfg['collect']) {
-            return;
+            return $this;
         }
         $logEntry = new LogEntry(
             $this,
@@ -588,6 +603,7 @@ class Debug extends Scaffolding
         );
         $this->methodTable->doTable($logEntry);
         $this->appendLog($logEntry);
+        return $this;
     }
 
     /**
@@ -607,7 +623,7 @@ class Debug extends Scaffolding
      * @param string $label    unique label
      * @param float  $duration (optional) duration (in seconds).  Use this param to log a duration obtained externally.
      *
-     * @return void
+     * @return $this
      */
     public function time($label = null, $duration = null)
     {
@@ -619,10 +635,11 @@ class Debug extends Scaffolding
             $this->getMethodDefaultArgs(__FUNCTION__)
         );
         $this->methodTime->doTime($logEntry);
+        return $this;
     }
 
     /**
-     * Behaves like a stopwatch.. logs and returns running time
+     * Behaves like a stopwatch.. logs and (optionaly) returns running time
      *
      *    If label is passed, timer is "paused" (not ended/cleared)
      *    If label is not passed, timer is removed from timer stack
@@ -633,18 +650,24 @@ class Debug extends Scaffolding
      *    template: '%label: %time'
      *    unit: ('auto'), 'sec', 'ms', or 'us'
      *
-     * @param string $label (optional) unique label
-     * @param bool   $log   (true) log it, or return only
-     *                        if passed, takes precedence over silent meta val
+     * @param string $label  (optional) unique label
+     * @param bool   $log    (true) log it, or return only
+     *                         if passed, takes precedence over silent meta val
+     * @param bool   $return ('auto') whether to return the value (vs returning $this))
+     *                          'auto' : !$log
      *
-     * @return float|false The duration (in sec).
+     * @return $this|float|false The duration (in sec).
      *
      * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter
+     * @psalm-return ($return is true ? float|false : $this)
      */
-    public function timeEnd($label = null, $log = true)
+    public function timeEnd($label = null, $log = true, $return = false)
     {
-        $logEntry = $this->methodHelper->timeLogEntry(__FUNCTION__, \func_get_args());
-        return $this->methodTime->timeEnd($logEntry);
+        $logEntry = $this->methodTime->timeLogEntry($this, __FUNCTION__, \func_get_args());
+        $value = $this->methodTime->timeEnd($logEntry);
+        return $logEntry['meta']['return']
+            ? $value
+            : $this;
     }
 
     /**
@@ -658,18 +681,23 @@ class Debug extends Scaffolding
      *
      * This method does not have a web console API equivalent
      *
-     * @param string $label (optional) unique label
-     * @param bool   $log   (true) log it, or return only
-     *                        if passed, takes precedence over silent meta val
+     * @param string $label  (optional) unique label
+     * @param bool   $log    (true) log it
+     * @param bool   $return ('auto') whether to return the value (vs returning $this))
+     *                          'auto' : !$log
      *
-     * @return float|false The duration (in sec).  `false` if specified label does not exist
+     * @return $this|float|false The duration (in sec).  `false` if specified label does not exist
      *
      * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter
+     * @psalm-return ($return is true ? float|false : $this)
      */
-    public function timeGet($label = null, $log = true)
+    public function timeGet($label = null, $log = true, $return = 'auto')
     {
-        $logEntry = $this->methodHelper->timeLogEntry(__FUNCTION__, \func_get_args());
-        return $this->methodTime->timeGet($logEntry);
+        $logEntry = $this->methodTime->timeLogEntry($this, __FUNCTION__, \func_get_args());
+        $value = $this->methodTime->timeGet($logEntry);
+        return $logEntry['meta']['return']
+            ? $value
+            : $this;
     }
 
     /**
@@ -680,7 +708,7 @@ class Debug extends Scaffolding
      * @param string $label   (optional) unique label
      * @param mixed  $arg,... (optional) additional values to be logged with time
      *
-     * @return void
+     * @return $this
      */
     public function timeLog($label = null, $args = null)
     {
@@ -695,6 +723,7 @@ class Debug extends Scaffolding
             $this->getMethodDefaultArgs(__FUNCTION__)
         );
         $this->methodTime->timeLog($logEntry);
+        return $this;
     }
 
     /**
@@ -705,14 +734,14 @@ class Debug extends Scaffolding
      * @param bool   $inclContext Include code snippet
      * @param string $caption     (optional) Specify caption for the trace table
      *
-     * @return void
+     * @return $this
      *
      * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter
      */
     public function trace($inclContext = false, $caption = 'trace')
     {
         if (!$this->cfg['collect']) {
-            return;
+            return $this;
         }
         $logEntry = new LogEntry(
             $this,
@@ -733,6 +762,7 @@ class Debug extends Scaffolding
             )
         );
         $this->methodHelper->doTrace($logEntry);
+        return $this;
     }
 
     /**
@@ -742,11 +772,12 @@ class Debug extends Scaffolding
      *
      * @param mixed $arg,... message / values
      *
-     * @return void
+     * @return $this
      */
     public function warn()
     {
         $this->methodHelper->doError(__FUNCTION__, \func_get_args());
+        return $this;
     }
 
     /*
@@ -828,7 +859,7 @@ class Debug extends Scaffolding
     /**
      * Return debug log output
      *
-     * Publishes Debug::EVENT_OUTPUT event and returns event's 'return' value
+     * Publishes `Debug::EVENT_OUTPUT` event and returns event's 'return' value
      *
      * @param array $cfg Override any config values
      *

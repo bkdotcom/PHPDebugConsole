@@ -151,7 +151,9 @@ class LoggerTest extends DebugTestFramework
         $this->debug->logger->alert('Alert');
         $this->assertSame(array(
             'method' => 'alert',
-            'args' => array('Alert'),
+            'args' => array(
+                'Alert',
+            ),
             'meta' => array(
                 'dismissible' => false,
                 'level' => 'error',

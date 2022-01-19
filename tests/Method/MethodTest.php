@@ -202,9 +202,11 @@ class MethodTest extends DebugTestFramework
     {
         $message = 'Ballistic missle threat inbound to Hawaii.  <b>Seek immediate shelter</b>.  This is not a drill.';
         $messageEscaped = \htmlspecialchars($message);
-        $entry = array(
+        $entryExpect = array(
             'method' => 'alert',
-            'args' => array($message),
+            'args' => array(
+                $message,
+            ),
             'meta' => array(
                 'dismissible' => false,
                 'level' => 'error',
@@ -217,7 +219,7 @@ class MethodTest extends DebugTestFramework
                 // level error by default
             ),
             array(
-                'entry' => $entry,
+                'entry' => $entryExpect,
                 'chromeLogger' => array(
                     array(
                         '%c' . $message,
@@ -230,11 +232,11 @@ class MethodTest extends DebugTestFramework
                 'html' => '<div class="alert-error m_alert" role="alert">' . $messageEscaped . '</div>',
                 'script' => \str_replace('%c', '%%c', 'console.log(' . \json_encode('%c' . $message, JSON_UNESCAPED_SLASHES) . ',"padding: 5px; line-height: 26px; font-size: 125%; font-weight: bold; background-color: #ffbaba; border: 1px solid #d8000c; color: #d8000c;");'),
                 'text' => '》[Alert ⦻ error] ' . $message . '《',
-                'wamp' => $entry,
+                'wamp' => $entryExpect,
             )
         );
 
-        $entry['meta']['level'] = 'info';
+        $entryExpect['meta']['level'] = 'info';
         $style = 'padding: 5px; line-height: 26px; font-size: 125%; font-weight: bold; background-color: #d9edf7; border: 1px solid #bce8f1; color: #31708f;';
         $this->testMethod(
             'alert',
@@ -243,7 +245,7 @@ class MethodTest extends DebugTestFramework
                 $this->debug->meta('level', 'info'),
             ),
             array(
-                'entry' => $entry,
+                'entry' => $entryExpect,
                 'chromeLogger' => array(
                     array(
                         '%c' . $message,
@@ -256,11 +258,11 @@ class MethodTest extends DebugTestFramework
                 'html' => '<div class="alert-info m_alert" role="alert">' . $messageEscaped . '</div>',
                 'script' => \str_replace('%c', '%%c', 'console.info(' . \json_encode('%c' . $message, JSON_UNESCAPED_SLASHES) . ',"' . $style . '");'),
                 'text' => '》[Alert ℹ info] ' . $message . '《',
-                'wamp' => $entry,
+                'wamp' => $entryExpect,
             )
         );
 
-        $entry['meta']['level'] = 'success';
+        $entryExpect['meta']['level'] = 'success';
         $style = 'padding: 5px; line-height: 26px; font-size: 125%; font-weight: bold; background-color: #dff0d8; border: 1px solid #d6e9c6; color: #3c763d;';
         $this->testMethod(
             'alert',
@@ -269,7 +271,7 @@ class MethodTest extends DebugTestFramework
                 $this->debug->meta('level', 'success'),
             ),
             array(
-                'entry' => $entry,
+                'entry' => $entryExpect,
                 'chromeLogger' => array(
                     array(
                         '%c' . $message,
@@ -282,11 +284,11 @@ class MethodTest extends DebugTestFramework
                 'html' => '<div class="alert-success m_alert" role="alert">' . $messageEscaped . '</div>',
                 'script' => \str_replace('%c', '%%c', 'console.info(' . \json_encode('%c' . $message, JSON_UNESCAPED_SLASHES) . ',"' . $style . '");'),
                 'text' => '》[Alert ℹ success] ' . $message . '《',
-                'wamp' => $entry,
+                'wamp' => $entryExpect,
             )
         );
 
-        $entry['meta']['level'] = 'warn';
+        $entryExpect['meta']['level'] = 'warn';
         $style = 'padding: 5px; line-height: 26px; font-size: 125%; font-weight: bold; background-color: #fcf8e3; border: 1px solid #faebcc; color: #8a6d3b;';
         $this->testMethod(
             'alert',
@@ -295,7 +297,7 @@ class MethodTest extends DebugTestFramework
                 $this->debug->meta('level', 'warn'),
             ),
             array(
-                'entry' => $entry,
+                'entry' => $entryExpect,
                 'chromeLogger' => array(
                     array(
                         '%c' . $message,
@@ -308,7 +310,7 @@ class MethodTest extends DebugTestFramework
                 'html' => '<div class="alert-warn m_alert" role="alert">' . $messageEscaped . '</div>',
                 'script' => \str_replace('%c', '%%c', 'console.log(' . \json_encode('%c' . $message, JSON_UNESCAPED_SLASHES) . ',"' . $style . '");'),
                 'text' => '》[Alert ⚠ warn] ' . $message . '《',
-                'wamp' => $entry,
+                'wamp' => $entryExpect,
             )
         );
 
@@ -843,7 +845,9 @@ class MethodTest extends DebugTestFramework
                     'args' => array(
                         'time: %f μs',
                     ),
-                    'meta' => array(),
+                    'meta' => array(
+                        'return' => false,
+                    ),
                 )),
                 'chromeLogger' => \json_encode(array(
                     array(
@@ -863,7 +867,8 @@ class MethodTest extends DebugTestFramework
             'timeEnd',
             array(
                 'my label',
-                $this->debug->meta('silent'),
+                false, // don't log
+                // use default 'auto' value for 3rd param
             ),
             array(
                 'return' => '%f',
@@ -882,7 +887,9 @@ class MethodTest extends DebugTestFramework
                     'args' => array(
                         'my label: %f %ss',
                     ),
-                    'meta' => array(),
+                    'meta' => array(
+                        'return' => false,
+                    ),
                 )),
                 'chromeLogger' => \json_encode(array(
                     array(
@@ -919,7 +926,9 @@ class MethodTest extends DebugTestFramework
                 'entry' => \json_encode(array(
                     'method' => 'time',
                     'args' => array('blahmy labelblah%f %ssblah'),
-                    'meta' => array(),
+                    'meta' => array(
+                        'return' => false,
+                    ),
                 )),
                 'chromeLogger' => \json_encode(array(
                     array(
@@ -985,7 +994,9 @@ class MethodTest extends DebugTestFramework
                 'entry' => \json_encode(array(
                     'method' => 'time',
                     'args' => array('time: %f μs'),
-                    'meta' => array(),
+                    'meta' => array(
+                        'return' => false,
+                    ),
                 )),
                 'chromeLogger' => \json_encode(array(
                     array(
@@ -1011,7 +1022,9 @@ class MethodTest extends DebugTestFramework
                     'args' => array(
                         'my label: %f %ss',
                     ),
-                    'meta' => array(),
+                    'meta' => array(
+                        'return' => false,
+                    ),
                 )),
                 'chromeLogger' => \json_encode(array(
                     array(
@@ -1032,7 +1045,8 @@ class MethodTest extends DebugTestFramework
             'timeGet',
             array(
                 'my label',
-                $this->debug->meta('silent'),
+                false, // don't log
+                true,  // return value
             ),
             array(
                 'notLogged' => true,  // not logged because 2nd param = true
@@ -1056,7 +1070,9 @@ class MethodTest extends DebugTestFramework
                 'entry' => \json_encode(array(
                     'method' => 'time',
                     'args' => array('blahmy labelblah%f %ssblah'),
-                    'meta' => array(),
+                    'meta' => array(
+                        'return' => false,
+                    ),
                 )),
                 'chromeLogger' => \json_encode(array(
                     array(
@@ -1111,7 +1127,10 @@ class MethodTest extends DebugTestFramework
                 */
                 'entry' => \json_encode(array(
                     'method' => 'timeLog',
-                    'args' => array('time: ', '%f μs'),
+                    'args' => array(
+                        'time: ',
+                        '%f μs',
+                    ),
                     'meta' => array(),
                 )),
                 'chromeLogger' => \json_encode(array(
@@ -1147,7 +1166,11 @@ class MethodTest extends DebugTestFramework
                 */
                 'entry' => \json_encode(array(
                     'method' => 'timeLog',
-                    'args' => array('my label: ', '%f %ss', array('foo' => 'bar')),
+                    'args' => array(
+                        'my label: ',
+                        '%f %ss',
+                        array('foo' => 'bar'),
+                    ),
                     'meta' => array(),
                 )),
                 'chromeLogger' => \json_encode(array(

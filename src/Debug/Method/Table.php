@@ -415,16 +415,30 @@ class Table
                 $this->meta['tableInfo']['columns'][$key]['class'] = false;
             }
         }
+        $this->updateTableInfoRow($rowKey, $rowInfo);
+    }
+
+    /**
+     * Merge rowInfo into tableInfo['rows'][$rowKey]
+     *
+     * @param int|string $rowKey  row's key/index
+     * @param array      $rowInfo Row info
+     *
+     * @return void
+     */
+    private function updateTableInfoRow($rowKey, $rowInfo)
+    {
         unset($rowInfo['classes']);
         $rowInfo = \array_filter($rowInfo, function ($val) {
             return $val !== null && $val !== false;
         });
-        if ($rowInfo) {
-            // non-null/false values
-            $rowInfoExisting = isset($this->meta['tableInfo']['rows'][$rowKey])
-                ? $this->meta['tableInfo']['rows'][$rowKey]
-                : array();
-            $this->meta['tableInfo']['rows'][$rowKey] = \array_merge($rowInfoExisting, $rowInfo);
+        if (!$rowInfo) {
+            return;
         }
+        // non-null/false values
+        $rowInfoExisting = isset($this->meta['tableInfo']['rows'][$rowKey])
+            ? $this->meta['tableInfo']['rows'][$rowKey]
+            : array();
+        $this->meta['tableInfo']['rows'][$rowKey] = \array_merge($rowInfoExisting, $rowInfo);
     }
 }

@@ -100,18 +100,65 @@ class ErrorSummary
     }
 
     /**
+     * If lastError was fatal, output the error
+     *
+     * @return string
+     */
+    protected function buildFatal()
+    {
+        if (\array_sum($this->stats['counts']['fatal']) === 0) {
+            // no fatal errors
+            return '';
+        }
+        $error = $this->errorHandler->get('lastError');
+        return '<div class="error-fatal">'
+            . '<h3>' . $error['typeStr'] . '</h3>' . "\n"
+            . '<ul class="list-unstyled no-indent">' . "\n"
+            . $this->html->buildTag(
+                'li',
+                array(),
+                $error['isHtml']
+                    ? $error['message']
+                    : \htmlspecialchars($error['message'])
+            ) . "\n"
+            . $this->buildFatalMoreInfo($error)
+            . '</ul>'
+            . '</div>';
+    }
+
+    /**
+     * Build fata error's backtrace, not-avail message, or context
+     *
+     * @param Error $error Error instance
+     *
+     * @return string html snippet
+     */
+    protected function buildFatalMoreInfo(Error $error)
+    {
+        $this->debug->addPlugin(new Highlight());
+        $backtrace = $error['backtrace'];
+        if (\is_array($backtrace) && \count($backtrace) > 1) {
+            return $this->buildFatalBacktrace($backtrace);
+        } elseif ($backtrace === false) {
+            return '<li>Want to see a backtrace here?  Install <a target="_blank" href="https://xdebug.org/docs/install">xdebug</a> PHP extension.</li>' . "\n";
+        } elseif ($backtrace === null) {
+            return $this->buildFatalContext($error);
+        }
+    }
+
+    /**
      * Build backtrace table
      *
      * @param array $backtrace backtrace from error object
      *
      * @return string
      */
-    protected function buildBacktrace($backtrace)
+    protected function buildFatalBacktrace($backtrace)
     {
         // more than one trace frame
         // Don't inspect objects when dumping trace arguments...  potentially huge objects
-        $objectsExclude = $this->debug->getCfg('objectsExclude');
-        $this->debug->setCfg('objectsExclude', \array_merge($objectsExclude, array('*')));
+        $objectsExcludeBak = $this->debug->getCfg('objectsExclude');
+        $this->debug->setCfg('objectsExclude', \array_merge($objectsExcludeBak, array('*')));
         $logEntry = new LogEntry(
             $this->debug,
             'table',
@@ -130,49 +177,12 @@ class ErrorSummary
             )
         );
         $this->debug->methodTable->doTable($logEntry);
-        $table = $this->routeHtml->dumper->table->build(
+        // restore previous objectsExclude
+        $this->debug->setCfg('objectsExclude', $objectsExcludeBak);
+        return '<li class="m_trace" data-detect-files="true">' . $this->routeHtml->dumper->table->build(
             $logEntry['args'][0],
             $logEntry['meta']
-        );
-        // restore previous objectsExclude
-        $this->debug->setCfg('objectsExclude', $objectsExclude);
-        return '<li class="m_trace" data-detect-files="true">' . $table . '</li>';
-    }
-
-    /**
-     * If lastError was fatal, output the error
-     *
-     * @return string
-     */
-    protected function buildFatal()
-    {
-        if (\array_sum($this->stats['counts']['fatal']) === 0) {
-            // no fatal errors
-            return '';
-        }
-        $error = $this->errorHandler->get('lastError');
-        $html = '<div class="error-fatal">'
-            . '<h3>' . $error['typeStr'] . '</h3>' . "\n"
-            . '<ul class="list-unstyled no-indent">' . "\n"
-            . $this->html->buildTag(
-                'li',
-                array(),
-                $error['isHtml']
-                    ? $error['message']
-                    : \htmlspecialchars($error['message'])
-            ) . "\n";
-        $this->debug->addPlugin(new Highlight());
-        $backtrace = $error['backtrace'];
-        if (\is_array($backtrace) && \count($backtrace) > 1) {
-            $html .= $this->buildBacktrace($backtrace);
-        } elseif ($backtrace === false) {
-            $html .= '<li>Want to see a backtrace here?  Install <a target="_blank" href="https://xdebug.org/docs/install">xdebug</a> PHP extension.</li>';
-        } elseif ($backtrace === null) {
-            $html .= $this->buildFatalContext($error);
-        }
-        $html .= '</ul>'
-            . '</div>';
-        return $html;
+        ) . '</li>' . "\n";
     }
 
     /**
@@ -193,7 +203,7 @@ class ErrorSummary
                 'data-line' => $error['line'],
             ),
             \sprintf('%s (line %s)', $error['file'], $error['line'])
-        );
+        ) . "\n";
         $html .= '<li>' . $this->html->buildTag(
             'pre',
             array(
@@ -204,7 +214,7 @@ class ErrorSummary
             '<code class="language-php">'
                 . \htmlspecialchars(\implode($fileLines))
             . '</code>'
-        ) . '</li>';
+        ) . '</li>' . "\n";
         return $html;
     }
 
@@ -220,6 +230,7 @@ class ErrorSummary
         }
         $haveFatal = \array_sum($this->stats['counts']['fatal']) > 0;
         if (!$haveFatal && \count($this->stats['inConsoleCategories']) === 1) {
+            // only one category of error and it's not fatal
             return $this->buildInConsoleOneCat();
         }
         $html = '<h3>' . $this->buildInConsoleHeader() . '</h3>' . "\n";

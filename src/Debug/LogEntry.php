@@ -91,8 +91,9 @@ class LogEntry extends Event implements JsonSerializable
      */
     public function crate()
     {
-        if (\count($this->values['args']) === 1 && $this->subject->utility->isThrowable($this->values['args'][0])) {
-            $exception = $this->values['args'][0];
+        $firstArgVal = \reset($this->values['args']);
+        if ($this->subject->utility->isThrowable($firstArgVal)) {
+            $exception = $firstArgVal;
             $this->values['args'][0] = $exception->getMessage();
             $this->setMeta(array(
                 'file' => $exception->getFile(),
@@ -192,7 +193,7 @@ class LogEntry extends Event implements JsonSerializable
      * Merge default args with args
      * Move args listed in argsToMeta to meta
      *
-     * @param array $defaultArgs default arguments (key/value array)
+     * @param array $defaultArgs default arguments (key=>value array)
      * @param array $argsToMeta  move specified keys to meta
      *
      * @return void
@@ -233,7 +234,7 @@ class LogEntry extends Event implements JsonSerializable
                 unset($array[$i]);
             }
         }
-        $array = \array_values($array);
+        $array = \array_values($array); // update $array passed by reference
         $this->values['numArgs'] = \count($array);
         return $meta;
     }

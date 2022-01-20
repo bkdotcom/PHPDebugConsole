@@ -169,7 +169,6 @@ class FindExit
     {
         $backtrace = \xdebug_get_function_stack();
         $backtrace = \array_reverse($backtrace);
-        // $found = false;
         $frame = false;
         foreach ($backtrace as $frame) {
             $frame = \array_merge(array(
@@ -216,10 +215,15 @@ class FindExit
         if (\preg_match('/^.*\{closure:(.+):(\d+)-(\d+)\}$/', $frame['function'], $matches)) {
             return $this->getFrameSourceClosure($matches[1], $matches[2], $matches[3]);
         }
-        $reflector = isset($frame['class'])
-            ? (new \ReflectionClass($frame['class']))->getMethod($frame['function'])
-            : new \ReflectionFunction($frame['function']);
-        return $this->getFrameSourceReflection($reflector);
+        try {
+            $reflector = isset($frame['class'])
+                ? (new \ReflectionClass($frame['class']))->getMethod($frame['function'])
+                : new \ReflectionFunction($frame['function']);
+            return $this->getFrameSourceReflection($reflector);
+        } catch (\ReflectionException $e) {
+            // {closure...} or {main}, etc
+            return array($frame['file'], $frame['line'], '');
+        }
     }
 
     /**
@@ -233,9 +237,6 @@ class FindExit
      */
     private function getFrameSourceClosure($file, $lineStart, $lineEnd)
     {
-        // $file = $regexMatches[1];
-        // $lineStart = (int) $regexMatches[2];
-        // $lineEnd = (int) $regexMatches[3];
         $php = \array_slice(
             \file($file),
             $lineStart - 1,

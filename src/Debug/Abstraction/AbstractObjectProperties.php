@@ -126,7 +126,7 @@ class AbstractObjectProperties
             return;
         }
         $this->abs = $abs;
-        $this->addViaReflection($abs);
+        $this->addViaRef($abs);
         $this->addViaPhpDoc($abs); // magic properties documented via phpDoc
         $obj = $abs->getSubject();
         if (\is_object($obj)) {
@@ -233,11 +233,7 @@ class AbstractObjectProperties
                 continue;
             }
             $isPrivateAncestor = \in_array('private', (array) $info['visibility']) && $info['inheritedFrom'];
-            if ($isPrivateAncestor) {
-                // exempt from isExcluded
-                continue;
-            }
-            $properties[$name]['debugInfoExcluded'] = true;
+            $properties[$name]['debugInfoExcluded'] = $isPrivateAncestor === false;
         }
         $abs['debugInfo'] = $debugInfo;
         return $properties;
@@ -330,7 +326,7 @@ class AbstractObjectProperties
         if (!$haveMagic) {
             return;
         }
-        $this->addPhpDocIter($abs, $inheritedFrom);
+        $this->addViaPhpDocIter($abs, $inheritedFrom);
     }
 
     /**
@@ -362,13 +358,35 @@ class AbstractObjectProperties
     }
 
     /**
-     * Adds properties (via reflection) to abstraction
+     * Iterate over PhpDoc's magic properties & add to abstrction
+     *
+     * @param Abstraction $abs           Object Abstraction instance
+     * @param string|null $inheritedFrom Where the magic properties were found
+     *
+     * @return void
+     */
+    private function addViaPhpDocIter(Abstraction $abs, $inheritedFrom)
+    {
+        $properties = $abs['properties'];
+        $tags = \array_intersect_key($this->magicPhpDocTags, $abs['phpDoc']);
+        foreach ($tags as $tag => $vis) {
+            foreach ($abs['phpDoc'][$tag] as $phpDocProp) {
+                $name = $phpDocProp['name'];
+                $properties[$name] = $this->buildPropViaPhpDoc($abs, $phpDocProp, $inheritedFrom, $vis);
+            }
+            unset($abs['phpDoc'][$tag]);
+        }
+        $abs['properties'] = $properties;
+    }
+
+    /**
+     * Adds properties to abstraction via reflection
      *
      * @param Abstraction $abs Object Abstraction instance
      *
      * @return void
      */
-    private function addViaReflection(Abstraction $abs)
+    private function addViaRef(Abstraction $abs)
     {
         $refObject = $abs['reflector'];
         /*
@@ -390,32 +408,10 @@ class AbstractObjectProperties
                     $abs['properties'][$name]['originallyDeclared'] = $className;
                     continue;
                 }
-                $abs['properties'][$name] = $this->buildPropRef($abs, $refProperty);
+                $abs['properties'][$name] = $this->buildPropViaRef($abs, $refProperty);
             }
             $refObject = $refObject->getParentClass();
         }
-    }
-
-    /**
-     * Iterate over PhpDoc's magic properties & add to abstrction
-     *
-     * @param Abstraction $abs           Object Abstraction instance
-     * @param string|null $inheritedFrom Where the magic properties were found
-     *
-     * @return void
-     */
-    private function addPhpDocIter(Abstraction $abs, $inheritedFrom)
-    {
-        $properties = $abs['properties'];
-        $tags = \array_intersect_key($this->magicPhpDocTags, $abs['phpDoc']);
-        foreach ($tags as $tag => $vis) {
-            foreach ($abs['phpDoc'][$tag] as $phpDocProp) {
-                $name = $phpDocProp['name'];
-                $properties[$name] = $this->buildPropPhpDoc($abs, $phpDocProp, $inheritedFrom, $vis);
-            }
-            unset($abs['phpDoc'][$tag]);
-        }
-        $abs['properties'] = $properties;
     }
 
     /**
@@ -428,7 +424,7 @@ class AbstractObjectProperties
      *
      * @return array
      */
-    private function buildPropPhpDoc(Abstraction $abs, $phpDocProp, $inheritedFrom, $vis)
+    private function buildPropViaPhpDoc(Abstraction $abs, $phpDocProp, $inheritedFrom, $vis)
     {
         $name = $phpDocProp['name'];
         $existing = isset($abs['properties'][$name])
@@ -455,15 +451,9 @@ class AbstractObjectProperties
      *
      * @return array
      */
-    private function buildPropRef(Abstraction $abs, ReflectionProperty $refProperty)
+    private function buildPropViaRef(Abstraction $abs, ReflectionProperty $refProperty)
     {
-        $obj = $abs->getSubject();
-        $isInstance = \is_object($obj);
-        $className = $isInstance
-            ? \get_class($obj) // prop->class is equiv to getDeclaringClass
-            : $obj;
         $refProperty->setAccessible(true); // only accessible via reflection
-        // get type and desc from phpdoc
         $phpDoc = $this->helper->getPhpDocVar($refProperty); // phpDocVar
         /*
             getDeclaringClass returns "LAST-declared/overriden"
@@ -474,7 +464,7 @@ class AbstractObjectProperties
                 ? $this->helper->getAttributes($refProperty)
                 : array(),
             'desc' => $phpDoc['desc'],
-            'inheritedFrom' => $declaringClassName !== $className
+            'inheritedFrom' => $declaringClassName !== $abs['className']
                 ? $declaringClassName
                 : null,
             'isPromoted' =>  PHP_VERSION_ID >= 80000

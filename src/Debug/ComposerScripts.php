@@ -105,6 +105,7 @@ class ComposerScripts
         }
         if (\version_compare(PHP_VERSION, '7.2', '>=')) {
             \exec('composer require rarst/phpcs-cognitive-complexity --dev --no-scripts');
+            // doesn't register Rarst\PHPCS\CognitiveComplexity namespace to composer autoloader !!!
             $info['haveCognitiveC'] = true;
         }
         return $info;

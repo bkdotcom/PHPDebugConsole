@@ -19,6 +19,7 @@ use bdk\Debug\LogEntry;
 use bdk\PubSub\Event;
 use bdk\PubSub\Manager as EventManager;
 use bdk\PubSub\SubscriberInterface;
+use RuntimeException;
 
 /**
  * Group methods
@@ -27,28 +28,16 @@ class Group implements SubscriberInterface
 {
     public $debug;
 
-    protected $log = array();
-
     private $cleanupInfo = array(
         'stack' => array(),
         'stackCount' => 0,
     );
-    private $currentInfo = array(
-        'curDepth' => 0,
-        'minDepth' => 0,
-        'logEntries' => array(),
-    );
 
-    private $groupPriorityStack = array(); // array of priorities
-                                        //   used to return to the previous summary when groupEnd()ing out of a summary
-                                        //   this allows calling groupSummary() while in a groupSummary
-
-    private $groupStacks = array(
-        'main' => array(),  // array('channel' => Debug instance, 'collect' => bool)[]
-    );
-    private $groupStacksRef = null;    // points to $this->data['groupStacks'][x] (where x = 'main' or (int) priority)
+    protected $groupStack;
 
     private $inShutdown = false;
+
+    protected $log = array();
 
     /**
      * Constructor
@@ -59,7 +48,34 @@ class Group implements SubscriberInterface
     {
         $this->debug = $debug;
         $debug->eventManager->addSubscriberInterface($this);
-        $this->groupStacksRef = &$this->groupStacks['main'];
+        $this->groupStack = new \bdk\Debug\Method\GroupStack($debug);
+    }
+
+    /**
+     * Magic method... inaccessible method called.
+     *
+     * Try custom method.
+     *
+     * @param string $method Inaccessible method name
+     * @param array  $args   Arguments passed to method
+     *
+     * @return mixed
+     *
+     * @throws RuntimeException
+     */
+    public function __call($method, $args)
+    {
+        $methods = array(
+            'getCurrentGroups',
+            'getCurrentPriority',
+            'getDepth',
+            'reset',
+            'setLogDest',
+        );
+        if (\in_array($method, $methods) === false) {
+            throw new RuntimeException(__CLASS__ . '::' . $method . ' is inaccessable');
+        }
+        return \call_user_func_array(array($this->groupStack, $method), $args);
     }
 
     /**
@@ -73,10 +89,7 @@ class Group implements SubscriberInterface
     {
         $debug = $logEntry->getSubject();
         $collect = $debug->getCfg('collect', Debug::CONFIG_DEBUG);
-        \array_push($this->groupStacksRef, array(
-            'channel' => $debug,
-            'collect' => $collect,
-        ));
+        $this->groupStack->push($debug, $collect);
         if ($collect === false) {
             return;
         }
@@ -104,7 +117,7 @@ class Group implements SubscriberInterface
     public function methodGroupEnd(LogEntry $logEntry)
     {
         $this->debug = $logEntry->getSubject();
-        $haveOpen = $this->methodGroupEndGet();
+        $haveOpen = $this->groupStack->haveOpenGroup();
         if ($haveOpen === 2) {
             // we're closing a summary group
             $this->groupEndSummary($logEntry);
@@ -112,7 +125,7 @@ class Group implements SubscriberInterface
             $this->groupEndMain($logEntry);
         }
         $errorCaller = $this->debug->errorHandler->get('errorCaller');
-        if ($errorCaller && isset($errorCaller['groupDepth']) && $this->getDepth() < $errorCaller['groupDepth']) {
+        if ($errorCaller && isset($errorCaller['groupDepth']) && $this->groupStack->getDepth() < $errorCaller['groupDepth']) {
             $this->debug->errorHandler->setErrorCaller(false);
         }
     }
@@ -126,7 +139,7 @@ class Group implements SubscriberInterface
      */
     public function methodGroupSummary(LogEntry $logEntry)
     {
-        \array_push($this->groupPriorityStack, $logEntry['meta']['priority']);
+        $this->groupStack->pushPriority($logEntry['meta']['priority']);
         $this->debug->data->set('logDest', 'summary');
         $logEntry['appendLog'] = false;     // don't actually log
         $logEntry['forcePublish'] = true;   // publish the Debug::EVENT_LOG event (regardless of cfg.collect)
@@ -144,68 +157,13 @@ class Group implements SubscriberInterface
     public function methodGroupUncollapse(LogEntry $logEntry)
     {
         $debug = $logEntry->getSubject();
-        $groups = $this->getCurrentGroups('auto');
+        $groups = $this->groupStack->getCurrentGroups();
         foreach ($groups as $groupLogEntry) {
             $groupLogEntry['method'] = 'group';
         }
         $logEntry['appendLog'] = false;     // don't actually log
         $logEntry['forcePublish'] = true;   // publish the Debug::EVENT_LOG event (regardless of cfg.collect)
         $debug->log($logEntry);
-    }
-
-    /**
-     * Return the group & groupCollapsed ("ancestors")
-     *
-     * @param 'auto'|'main'|int $where 'auto', 'main' or summary priority
-     *
-     * @return LogEntry[] kwys are maintained
-     */
-    public function getCurrentGroups($where = 'auto')
-    {
-        if ($where === 'auto') {
-            $where = $this->getCurrentPriority();
-        }
-
-        $logEntries = $this->getCurrentGroupsInit($where);
-        /*
-            curDepth will fluctuate as we go back through log
-            minDepth will decrease as we work our way down/up the groups
-        */
-        for ($i = \count($logEntries) - 1; $i >= 0; $i--) {
-            if ($this->currentInfo['curDepth'] < 1) {
-                break;
-            }
-            $this->getCurrentGroupsPLE($logEntries[$i], $i);
-        }
-        return $this->currentInfo['logEntries'];
-    }
-
-    /**
-     * Get current group priority
-     *
-     * @return 'main'|int
-     */
-    public function getCurrentPriority()
-    {
-        $priority = \end($this->groupPriorityStack);
-        return $priority !== false
-            ? $priority
-            : 'main';
-    }
-
-    /**
-     * Calculate total group depth
-     *
-     * @return int
-     */
-    public function getDepth()
-    {
-        $depth = 0;
-        foreach ($this->groupStacks as $stack) {
-            $depth += \count($stack);
-        }
-        $depth += \count($this->groupPriorityStack);
-        return $depth;
     }
 
     /**
@@ -266,57 +224,6 @@ class Group implements SubscriberInterface
     }
 
     /**
-     * Clear specified stack
-     *
-     * @param string|ing $where 'main', 'summary', or `int`
-     *
-     * @return void
-     */
-    public function resetStack($where)
-    {
-        // typeCast to string so that 0 does not match 'main'
-        switch ((string) $where) {
-            case 'main':
-                $this->groupStacks['main'] = array();
-                $this->groupStacksRef = &$this->groupStacks['main'];
-                return;
-            case 'summary':
-                $this->groupPriorityStack = array();
-                $this->groupStacks = array(
-                    'main' => $this->groupStacks['main'],
-                );
-                $this->groupStacksRef = &$this->groupStacks['main'];
-                return;
-            default:
-                $this->groupStacks[$where] = array();
-                return;
-        }
-    }
-
-    /**
-     * Point groupStacksRef to specified stack
-     *
-     * @param string $where 'main' or 'summary'
-     *
-     * @return void
-     */
-    public function setLogDest($where)
-    {
-        switch ($where) {
-            case 'main':
-                $this->groupStacksRef = &$this->groupStacks['main'];
-                return;
-            case 'summary':
-                $priority = \end($this->groupPriorityStack);
-                if (!isset($this->groupStacks[$priority])) {
-                    $this->groupStacks[$priority] = array();
-                }
-                $this->groupStacksRef = &$this->groupStacks[$priority];
-                return;
-        }
-    }
-
-    /**
      * Automatic group/groupCollapsed arguments
      *
      * @param array $caller CallerInfo
@@ -364,10 +271,10 @@ class Group implements SubscriberInterface
             // we already closed
             return;
         }
-        $groupPriorityStack = \array_merge(array('main'), $this->groupPriorityStack);
-        while ($groupPriorityStack) {
-            $priority = \array_pop($groupPriorityStack);
-            $stack = $this->groupStacks[$priority];
+        $priorityStack = $this->groupStack->get();
+        while ($priorityStack) {
+            $priority = \array_pop($priorityStack);
+            $stack = $this->groupStack->get($priority);
             while ($stack) {
                 $info = \array_pop($stack);
                 $info['channel']->groupEnd();
@@ -380,53 +287,6 @@ class Group implements SubscriberInterface
     }
 
     /**
-     * getCurrentGroups: initialize
-     * sets `$this->currentInfo`
-     * returns logEntries to process
-     *
-     * @param 'main'|int $where 'main' or summary priority
-     *
-     * @return LogEntry[]
-     */
-    private function getCurrentGroupsInit($where)
-    {
-        $curDepth = 0;
-        foreach ($this->groupStacks[$where] as $group) {
-            $curDepth += (int) $group['collect'];
-        }
-        $this->currentInfo = array(
-            'curDepth' => $curDepth,
-            'minDepth' => $curDepth,
-            'logEntries' => array(),
-        );
-        return $where === 'main'
-            ? $this->debug->data->get(array('log'))
-            : $this->debug->data->get(array('logSummary', $where));
-    }
-
-    /**
-     * getCurrentGroups: Process LogEntry
-     *
-     * @param LogEntry $logEntry LogEntry instance
-     * @param int      $index    logEntry index
-     *
-     * @return void
-     */
-    private function getCurrentGroupsPLE(LogEntry $logEntry, $index)
-    {
-        $method = $logEntry['method'];
-        if (\in_array($method, array('group', 'groupCollapsed'))) {
-            $this->currentInfo['curDepth']--;
-        } elseif ($method === 'groupEnd') {
-            $this->currentInfo['curDepth']++;
-        }
-        if ($this->currentInfo['curDepth'] < $this->currentInfo['minDepth']) {
-            $this->currentInfo['minDepth']--;
-            $this->currentInfo['logEntries'][$index] = $logEntry;
-        }
-    }
-
-    /**
      * Close a regular group
      *
      * @param LogEntry $logEntry LogEntry instance
@@ -435,9 +295,9 @@ class Group implements SubscriberInterface
      */
     private function groupEndMain(LogEntry $logEntry)
     {
+        $this->groupStack->pop();
         $debug = $logEntry->getSubject();
         $returnValue = $logEntry['args'][0];
-        \array_pop($this->groupStacksRef);
         if ($returnValue !== Abstracter::UNDEFINED) {
             $debug->log(new LogEntry(
                 $debug,
@@ -458,34 +318,14 @@ class Group implements SubscriberInterface
      */
     private function groupEndSummary(LogEntry $logEntry)
     {
+        $this->groupStack->popPriority();
         $debug = $logEntry->getSubject();
-        $priorityClosing = \array_pop($this->groupPriorityStack);
-        // not really necessary to remove this empty placeholder, but lets keep things tidy
-        unset($this->groupStacks[$priorityClosing]);
         $debug->data->set('logDest', 'auto');
         $logEntry['appendLog'] = false;     // don't actually log
         $logEntry['args'] = array();
         $logEntry['forcePublish'] = true;   // Publish the Debug::EVENT_LOG event (regardless of cfg.collect)
         $logEntry->setMeta('closesSummary', true);
         $debug->log($logEntry);
-    }
-
-    /**
-     * Are we inside a group?
-     *
-     * @return int 2: group summary, 1: regular group, 0: not in group
-     */
-    private function methodGroupEndGet()
-    {
-        $groupStack = $this->groupStacksRef;
-        if ($this->groupPriorityStack && !$groupStack) {
-            // we're in top level of group summary
-            return 2;
-        }
-        if ($groupStack && \end($groupStack)['collect'] === $this->debug->getCfg('collect', Debug::CONFIG_DEBUG)) {
-            return 1;
-        }
-        return 0;
     }
 
     /**
@@ -553,7 +393,7 @@ class Group implements SubscriberInterface
     }
 
     /**
-     * Update groupStack stats durring onOutputCleanup
+     * Update groupStack stats durring onOutputCleanup / Process LogEntry
      *
      * @param int $index Log entry index
      *

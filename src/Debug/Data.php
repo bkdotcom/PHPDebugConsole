@@ -94,10 +94,10 @@ class Data
             $this->data = \array_merge($this->data, $path);
         }
         if (!$this->data['log']) {
-            $this->debug->methodGroup->resetStack('main');
+            $this->debug->methodGroup->reset('main');
         }
         if (!$this->data['logSummary']) {
-            $this->debug->methodGroup->resetStack('summary');
+            $this->debug->methodGroup->reset('summary');
         }
         $this->setLogDest();
     }

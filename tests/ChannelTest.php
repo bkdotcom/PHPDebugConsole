@@ -325,14 +325,15 @@ EOD;
             $temp = \preg_replace('/"(line)":\d+/', '"$1":""', $temp);
             $data[$what] = \json_decode($temp, true);
         }
-        $data['groupPriorityStack'] = $this->getSharedVar('reflectionProperties')['groupPriorityStack']->getValue($this->debug->methodGroup);
+        $groupStack = $this->getSharedVar('reflectionProperties')['groupStack'];
+        $data['groupPriorityStack'] = $this->getSharedVar('reflectionProperties')['groupPriorityStack']->getValue($groupStack);
         $data['groupStacks'] = \array_map(function ($stack) {
             foreach ($stack as $k2 => $info) {
                 $channelName = $info['channel']->getCfg('channelName');
                 $stack[$k2]['channel'] = $channelName;
             }
             return $stack;
-        }, $this->getSharedVar('reflectionProperties')['groupStacks']->getValue($this->debug->methodGroup));
+        }, $this->getSharedVar('reflectionProperties')['groupStacks']->getValue($groupStack));
         return $data;
     }
 }

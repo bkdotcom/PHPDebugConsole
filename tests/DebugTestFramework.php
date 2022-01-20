@@ -142,13 +142,18 @@ class DebugTestFramework extends DOMTestCase
         */
 
         $refProperties = &$this->getSharedVar('reflectionProperties');
+        if (!isset($refProperties['groupStack'])) {
+            $refProp = new \ReflectionProperty('bdk\\Debug\\Method\\Group', 'groupStack');
+            $refProp->setAccessible(true);
+            $refProperties['groupStack'] = $refProp->getValue($this->debug->methodGroup);
+        }
         if (!isset($refProperties['groupPriorityStack'])) {
-            $refProp = new \ReflectionProperty('bdk\\Debug\\Method\\Group', 'groupPriorityStack');
+            $refProp = new \ReflectionProperty('bdk\\Debug\\Method\\GroupStack', 'priorityStack');
             $refProp->setAccessible(true);
             $refProperties['groupPriorityStack'] = $refProp;
         }
         if (!isset($refProperties['groupStacks'])) {
-            $refProp = new \ReflectionProperty('bdk\\Debug\\Method\\Group', 'groupStacks');
+            $refProp = new \ReflectionProperty('bdk\\Debug\\Method\\GroupStack', 'groupStacks');
             $refProp->setAccessible(true);
             $refProperties['groupStacks'] = $refProp;
         }

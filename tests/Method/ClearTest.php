@@ -171,9 +171,10 @@ class ClearTest extends DebugTestFramework
                     $this->assertCount(2, $this->debug->data->get('logSummary/1'));   // group & error remain
                     $this->assertCount(6, $this->debug->data->get('log'));
 
+                    $groupStack = $this->getSharedVar('reflectionProperties')['groupStack'];
                     $groupStackCounts = \array_map(function ($stack) {
                         return \count($stack);
-                    }, $this->getSharedVar('reflectionProperties')['groupStacks']->getValue($this->debug->methodGroup));
+                    }, $this->getSharedVar('reflectionProperties')['groupStacks']->getValue($groupStack));
                     $this->assertSame(array(
                         'main' => 2,
                         0 => 0,
@@ -230,9 +231,10 @@ class ClearTest extends DebugTestFramework
                     $this->assertCount(3, $this->debug->data->get('logSummary/1'));
                     $this->assertCount(5, $this->debug->data->get('log'));
 
+                    $groupStack = $this->getSharedVar('reflectionProperties')['groupStack'];
                     $groupStackCounts = \array_map(function ($stack) {
                         return \count($stack);
-                    }, $this->getSharedVar('reflectionProperties')['groupStacks']->getValue($this->debug->methodGroup));
+                    }, $this->getSharedVar('reflectionProperties')['groupStacks']->getValue($groupStack));
                     $this->assertSame(array(
                         'main' => 2,
                         0 => 1,
@@ -288,9 +290,10 @@ class ClearTest extends DebugTestFramework
                     $this->assertCount(0, $this->debug->data->get('logSummary/0'));
                     $this->assertCount(1, $this->debug->data->get('logSummary/1'));   // group remains
                     $this->assertCount(3, $this->debug->data->get('log'));    // groups remain
+                    $groupStack = $this->getSharedVar('reflectionProperties')['groupStack'];
                     $groupStackCounts = \array_map(function ($stack) {
                         return \count($stack);
-                    }, $this->getSharedVar('reflectionProperties')['groupStacks']->getValue($this->debug->methodGroup));
+                    }, $this->getSharedVar('reflectionProperties')['groupStacks']->getValue($groupStack));
                     $this->assertSame(array(
                         'main' => 2,
                         0 => 0,
@@ -346,9 +349,10 @@ class ClearTest extends DebugTestFramework
                     $this->assertCount(0, $this->debug->data->get('logSummary/0'));
                     $this->assertCount(1, $this->debug->data->get('logSummary/1'));   // group remains
                     $this->assertCount(6, $this->debug->data->get('log'));
+                    $groupStack = $this->getSharedVar('reflectionProperties')['groupStack'];
                     $groupStackCounts = \array_map(function ($stack) {
                         return \count($stack);
-                    }, $this->getSharedVar('reflectionProperties')['groupStacks']->getValue($this->debug->methodGroup));
+                    }, $this->getSharedVar('reflectionProperties')['groupStacks']->getValue($groupStack));
                     $this->assertSame(array(
                         'main' => 2,
                         0 => 0,

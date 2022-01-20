@@ -33,11 +33,12 @@ class GroupTest extends DebugTestFramework
                     'meta' => array(),
                 ),
                 'custom' => function () {
+                    $groupStack = $this->getSharedVar('reflectionProperties')['groupStack'];
                     $this->assertSame(array(
                         'main' => array(
                             array('channel' => $this->debug, 'collect' => true),
                         ),
-                    ), $this->getSharedVar('reflectionProperties')['groupStacks']->getValue($this->debug->methodGroup));
+                    ), $this->getSharedVar('reflectionProperties')['groupStacks']->getValue($groupStack));
                 },
                 'chromeLogger' => array(
                     array('a','b','c'),
@@ -472,11 +473,12 @@ class GroupTest extends DebugTestFramework
             array(
                 'entry' => $entry,
                 'custom' => function () {
+                    $groupStack = $this->getSharedVar('reflectionProperties')['groupStack'];
                     $this->assertSame(array(
                         'main' => array(
                             0 => array('channel' => $this->debug, 'collect' => true),
                         ),
-                    ), $this->getSharedVar('reflectionProperties')['groupStacks']->getValue($this->debug->methodGroup));
+                    ), $this->getSharedVar('reflectionProperties')['groupStacks']->getValue($groupStack));
                 },
                 'chromeLogger' => array(
                     array('a','b','c'),
@@ -533,9 +535,10 @@ class GroupTest extends DebugTestFramework
         */
         $this->debug->group('a', 'b', 'c');
         $this->debug->groupEnd();
+        $groupStack = $this->getSharedVar('reflectionProperties')['groupStack'];
         $this->assertSame(array(
             'main' => array(),
-        ), $this->getSharedVar('reflectionProperties')['groupStacks']->getValue($this->debug->methodGroup));
+        ), $this->getSharedVar('reflectionProperties')['groupStacks']->getValue($groupStack));
         $log = $this->debug->data->get('log');
         $this->assertCount(2, $log);
         $this->assertSame(array(
@@ -673,17 +676,18 @@ class GroupTest extends DebugTestFramework
             collect some info before outputing
             confirm nothing has been closed yet
         */
-        $onOutputVals['groupPriorityStackA'] = $this->getSharedVar('reflectionProperties')['groupPriorityStack']->getValue($this->debug->methodGroup);
+        $groupStack = $this->getSharedVar('reflectionProperties')['groupStack'];
+        $onOutputVals['groupPriorityStackA'] = $this->getSharedVar('reflectionProperties')['groupPriorityStack']->getValue($groupStack);
         $onOutputVals['groupStacksA'] = \array_map(function ($stack) {
             return \count($stack);
-        }, $this->getSharedVar('reflectionProperties')['groupStacks']->getValue($this->debug->methodGroup));
-        $this->debug->eventManager->subscribe(Debug::EVENT_OUTPUT, function (Event $event) use (&$onOutputVals) {
+        }, $this->getSharedVar('reflectionProperties')['groupStacks']->getValue($groupStack));
+        $this->debug->eventManager->subscribe(Debug::EVENT_OUTPUT, function (Event $event) use (&$onOutputVals, $groupStack) {
             // At this point, log has been output.. all groups have been closed
             $debug = $event->getSubject();
-            $onOutputVals['groupPriorityStackB'] = $this->getSharedVar('reflectionProperties')['groupPriorityStack']->getValue($debug->methodGroup);
+            $onOutputVals['groupPriorityStackB'] = $this->getSharedVar('reflectionProperties')['groupPriorityStack']->getValue($groupStack);
             $onOutputVals['groupStacksB'] = \array_map(function ($stack) {
                 return \count($stack);
-            }, $this->getSharedVar('reflectionProperties')['groupStacks']->getValue($debug->methodGroup));
+            }, $this->getSharedVar('reflectionProperties')['groupStacks']->getValue($groupStack));
         }, -1);
 
         $output = $this->debug->output();

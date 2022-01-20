@@ -229,7 +229,7 @@ class Clear
             $curPriority = $this->debug->methodGroup->getCurrentPriority(); // 'main'|int
             foreach (\array_keys($this->data['logSummary']) as $priority) {
                 if ($priority !== $curPriority) {
-                    $this->debug->methodGroup->resetStack($priority);
+                    $this->debug->methodGroup->reset($priority);
                     $this->clearLogHelper($this->data['logSummary'][$priority], $clearErrors, array());
                     continue;
                 }

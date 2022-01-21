@@ -359,8 +359,10 @@ class Scaffolding
             $this->data->set('requestId', $this->requestId());
             $this->data->set('entryCountInitial', $this->data->get('log/__count__'));
 
-            $this->addPlugin($this->container['logEnv']);
-            $this->addPlugin($this->container['logReqRes']);
+            $this->addPlugin($this->container['pluginLogEnv']);
+            $this->addPlugin($this->container['pluginLogFiles']);
+            $this->addPlugin($this->container['pluginLogPhp']);
+            $this->addPlugin($this->container['pluginLogReqRes']);
         }
         $this->eventManager->publish(Debug::EVENT_BOOTSTRAP, $this);
     }

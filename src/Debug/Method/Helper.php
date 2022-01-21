@@ -15,7 +15,6 @@ namespace bdk\Debug\Method;
 use bdk\Backtrace;
 use bdk\Debug;
 use bdk\Debug\LogEntry;
-use bdk\Debug\Plugin\Highlight;
 
 /**
  * Helper methods
@@ -139,7 +138,7 @@ class Helper
         $logEntry->setMeta('trace', null);
         if ($backtrace && $inclContext) {
             $backtrace = $this->debug->backtrace->addContext($backtrace);
-            $this->debug->addPlugin(new Highlight());
+            $this->debug->addPlugin($this->debug->pluginHighlight);
         }
         $logEntry['args'] = array($backtrace);
         $this->debug->methodTable->doTable($logEntry);

@@ -8,23 +8,17 @@ use bdk\DebugTests\DebugTestFramework;
 /**
  * PHPUnit tests for Debug class
  */
-class LogEnvTest extends DebugTestFramework
+class LogPhpTest extends DebugTestFramework
 {
     public function testLogPhpInfoEr()
     {
 
-        $logEnv = new \bdk\Debug\Plugin\LogEnv();
+        $logPhp = new \bdk\Debug\Plugin\LogPhp();
 
-        /*
-        $refDebug = new \ReflectionProperty($onBootstrap, 'debug');
-        $refDebug->setAccessible(true);
-        $refDebug->setValue($onBootstrap, $this->debug);
-        */
-
-        $refMethod = new \ReflectionMethod($logEnv, 'logPhpEr');
+        $refMethod = new \ReflectionMethod($logPhp, 'logPhpEr');
         $refMethod->setAccessible(true);
 
-        $this->debug->addPlugin($logEnv);
+        $this->debug->addPlugin($logPhp);
 
         $this->debug->setCfg('logEnvInfo.errorReporting', true);
 
@@ -32,8 +26,7 @@ class LogEnvTest extends DebugTestFramework
             Test error_reporting != "all" but debug is "all"
         */
         \error_reporting(E_ALL & ~E_STRICT);
-        $refMethod->invoke($logEnv);
-        // $logEnv->onPluginInit(new Event($this->debug));
+        $refMethod->invoke($logPhp);
         $this->testMethod(null, array(), array(
             'entry' => array(
                 'method' => 'warn',
@@ -54,6 +47,7 @@ class LogEnvTest extends DebugTestFramework
                     'file' => null,
                     'line' => null,
                     'uncollapse' => true,
+                    'channel' => 'php',
                 ),
             ),
         ));
@@ -62,7 +56,7 @@ class LogEnvTest extends DebugTestFramework
             Test debug != all (= "system")
         */
         $this->debug->setCfg('errorReporting', 'system');
-        $refMethod->invoke($logEnv);
+        $refMethod->invoke($logPhp);
         $log = $this->debug->data->get('log');
         $log = \array_slice($log, -2);
         $log = \array_map(function (LogEntry $logEntry) {
@@ -86,6 +80,7 @@ class LogEnvTest extends DebugTestFramework
                     'uncollapse' => true,
                     'file' => null,
                     'line' => null,
+                    'channel' => 'php',
                 )
             ),
             array(
@@ -98,6 +93,7 @@ class LogEnvTest extends DebugTestFramework
                     'uncollapse' => true,
                     'file' => null,
                     'line' => null,
+                    'channel' => 'php',
                 )
             )
         );
@@ -107,7 +103,7 @@ class LogEnvTest extends DebugTestFramework
             Test debug != all (but has same value as error_reporting)
         */
         $this->debug->setCfg('errorReporting', E_ALL & ~E_STRICT);
-        $refMethod->invoke($logEnv);
+        $refMethod->invoke($logPhp);
         $log = $this->debug->data->get('log');
         $log = \array_slice($log, -2);
         $log = \array_map(function (LogEntry $logEntry) {
@@ -130,6 +126,7 @@ class LogEnvTest extends DebugTestFramework
                     'uncollapse' => true,
                     'file' => null,
                     'line' => null,
+                    'channel' => 'php',
                 )
             ),
             array(
@@ -144,6 +141,7 @@ class LogEnvTest extends DebugTestFramework
                     'uncollapse' => true,
                     'file' => null,
                     'line' => null,
+                    'channel' => 'php',
                 )
             )
         );
@@ -153,9 +151,7 @@ class LogEnvTest extends DebugTestFramework
             Test debug != all (value different than error_reporting)
         */
         $this->debug->setCfg('errorReporting', E_ALL & ~E_STRICT & ~E_DEPRECATED);
-        // $refMethod->invoke($onBootstrap);
-        // $logEnv->onPluginInit(new Event($this->debug));
-        $refMethod->invoke($logEnv);
+        $refMethod->invoke($logPhp);
         /*
         $this->testMethod(null, array(), array(
             'entry' => array(
@@ -203,6 +199,7 @@ class LogEnvTest extends DebugTestFramework
                     'uncollapse' => true,
                     'file' => null,
                     'line' => null,
+                    'channel' => 'php',
                 )
             ),
             array(
@@ -217,6 +214,7 @@ class LogEnvTest extends DebugTestFramework
                     'uncollapse' => true,
                     'file' => null,
                     'line' => null,
+                    'channel' => 'php',
                 )
             )
         );

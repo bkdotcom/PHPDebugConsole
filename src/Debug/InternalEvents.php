@@ -14,7 +14,6 @@ namespace bdk\Debug;
 
 use bdk\Debug;
 use bdk\Debug\LogEntry;
-use bdk\Debug\Plugin\Highlight;
 use bdk\Debug\Route\Stream;
 use bdk\Debug\Utility\FindExit;
 use bdk\ErrorHandler;
@@ -247,7 +246,7 @@ class InternalEvents implements SubscriberInterface
             'visualWhiteSpace' => false,
         ));
         if (!$this->highlightAdded) {
-            $this->debug->addPlugin(new Highlight());
+            $this->debug->addPlugin($this->debug->pluginHighlight);
             $this->highlightAdded = true;
         }
         $event->stopPropagation();

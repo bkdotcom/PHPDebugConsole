@@ -16,7 +16,6 @@ use bdk\Debug;
 use bdk\Debug\Collector\DatabaseTrait;
 use bdk\Debug\Collector\Pdo\MethodSignatureCompatTrait;
 use bdk\Debug\Collector\StatementInfo;
-use bdk\Debug\Plugin\Highlight;
 use bdk\PubSub\Event;
 use PDO as PdoBase;
 use PDOException;
@@ -54,8 +53,8 @@ class Pdo extends PdoBase
         $this->pdo = $pdo;
         $this->debug = $debug;
         $this->pdo->setAttribute(PdoBase::ATTR_STATEMENT_CLASS, array('bdk\Debug\Collector\Pdo\Statement', array($this)));
-        $this->debug->eventManager->subscribe(Debug::EVENT_OUTPUT, array($this, 'onDebugOutput'), 1);
-        $this->debug->addPlugin(new Highlight());
+        $debug->eventManager->subscribe(Debug::EVENT_OUTPUT, array($this, 'onDebugOutput'), 1);
+        $debug->addPlugin($debug->pluginHighlight);
     }
 
     /**
@@ -327,6 +326,7 @@ class Pdo extends PdoBase
             }
         } catch (PDOException $e) {
             // no such method
+            return null;
         }
     }
 

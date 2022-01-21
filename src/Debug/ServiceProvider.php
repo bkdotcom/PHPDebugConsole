@@ -50,6 +50,7 @@ class ServiceProvider implements ServiceProviderInterface
             'methodProfile',
             'methodTable',
             'methodTime',
+            'pluginHighlight',
             'request',
             'response',
             'stringUtil',
@@ -125,19 +126,6 @@ class ServiceProvider implements ServiceProviderInterface
             $debug = $container['debug'];
             return new \bdk\Debug\InternalEvents($debug);
         };
-        $container['logEnv'] = function () {
-            return new \bdk\Debug\Plugin\LogEnv();
-        };
-        $container['logFiles'] = function (Container $container) {
-            $debug = $container['debug'];
-            return new \bdk\Debug\Plugin\LogFiles(
-                $debug->getCfg('logFiles', \bdk\Debug::CONFIG_INIT),
-                $debug
-            );
-        };
-        $container['logReqRes'] = function () {
-            return new \bdk\Debug\Plugin\LogReqRes();
-        };
         $container['logger'] = function (Container $container) {
             $debug = $container['debug'];
             return new \bdk\Debug\Psr3\Logger($debug);
@@ -171,6 +159,25 @@ class ServiceProvider implements ServiceProviderInterface
         };
         $container['pluginChannel'] = function () {
             return new \bdk\Debug\Plugin\Channel();
+        };
+        $container['pluginHighlight'] = function () {
+            return new \bdk\Debug\Plugin\Highlight();
+        };
+        $container['pluginLogEnv'] = function () {
+            return new \bdk\Debug\Plugin\LogEnv();
+        };
+        $container['pluginLogFiles'] = function (Container $container) {
+            $debug = $container['debug'];
+            return new \bdk\Debug\Plugin\LogFiles(
+                $debug->getCfg('logFiles', \bdk\Debug::CONFIG_INIT),
+                $debug
+            );
+        };
+        $container['pluginLogPhp'] = function () {
+            return new \bdk\Debug\Plugin\LogPhp();
+        };
+        $container['pluginLogReqRes'] = function () {
+            return new \bdk\Debug\Plugin\LogReqRes();
         };
         $container['pluginManager'] = function () {
             return new \bdk\Debug\Plugin\Manager();

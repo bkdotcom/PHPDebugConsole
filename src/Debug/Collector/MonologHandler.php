@@ -13,6 +13,7 @@
 namespace bdk\Debug\Collector;
 
 use bdk\Debug;
+use InvalidArgumentException;
 use Monolog\Handler\PsrHandler;
 use Monolog\Logger;
 use Psr\Log\LoggerInterface;
@@ -29,7 +30,7 @@ class MonologHandler extends PsrHandler
      * @param int                   $level  The minimum logging level at which this handler will be triggered (See Monolog/Logger constants)
      * @param bool                  $bubble Whether the messages that are handled can bubble up the stack or not
      *
-     * @throws \InvalidArgumentException
+     * @throws InvalidArgumentException
      *
      * @SuppressWarnings(PHPMD.StaticAccess)
      */
@@ -44,7 +45,7 @@ class MonologHandler extends PsrHandler
             $this->logger = $debug;
         }
         if (!$this->logger) {
-            throw new \InvalidArgumentException('$debug must be instanceof bdk\Debug or Psr\Log\LoggerInterface');
+            throw new InvalidArgumentException('$debug must be instanceof bdk\Debug or Psr\Log\LoggerInterface');
         }
         parent::__construct($this->logger, $level, $bubble);
     }

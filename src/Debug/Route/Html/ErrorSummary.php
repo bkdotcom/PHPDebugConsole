@@ -13,7 +13,6 @@
 namespace bdk\Debug\Route\Html;
 
 use bdk\Debug\LogEntry;
-use bdk\Debug\Plugin\Highlight;
 use bdk\Debug\Route\Html as RouteHtml;
 use bdk\ErrorHandler;
 use bdk\ErrorHandler\Error;
@@ -135,7 +134,7 @@ class ErrorSummary
      */
     protected function buildFatalMoreInfo(Error $error)
     {
-        $this->debug->addPlugin(new Highlight());
+        $this->debug->addPlugin($this->debug->pluginHighlight);
         $backtrace = $error['backtrace'];
         if (\is_array($backtrace) && \count($backtrace) > 1) {
             return $this->buildFatalBacktrace($backtrace);

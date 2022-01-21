@@ -14,11 +14,12 @@ namespace bdk\Debug\Plugin;
 
 use bdk\Debug;
 use bdk\Debug\Component;
+use bdk\PubSub\SubscriberInterface;
 
 /**
  * Log files that were included during request
  */
-class LogFiles extends Component
+class LogFiles extends Component implements SubscriberInterface
 {
     private $excludedCounts = array();
     private $debug;
@@ -54,6 +55,29 @@ class LogFiles extends Component
             $debug = $debug->getChannel('Files', $channelOpts);
         }
         $this->debug = $debug;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getSubscriptions()
+    {
+        return array(
+            Debug::EVENT_OUTPUT => array('onOutput', PHP_INT_MAX),
+        );
+    }
+
+    /**
+     * Debug::EVENT_OUTPUT subscriber
+     *
+     * @return void
+     */
+    public function onOutput()
+    {
+        if (!$this->debug->getCfg('logEnvInfo.files', Debug::CONFIG_DEBUG)) {
+            return;
+        }
+        $this->output();
     }
 
     /**

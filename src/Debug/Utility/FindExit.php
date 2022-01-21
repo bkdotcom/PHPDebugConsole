@@ -7,6 +7,8 @@ use Reflector;
 
 /**
  * Attempt to find if shutdown via `exit` or `die`
+ *
+ * Requires xdebug and xdebug.mode develop
  */
 class FindExit
 {

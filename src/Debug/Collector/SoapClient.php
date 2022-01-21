@@ -15,7 +15,6 @@ namespace bdk\Debug\Collector;
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
-use bdk\Debug\Plugin\Highlight;
 
 /**
  * A replacement SoapClient which traces requests
@@ -49,7 +48,7 @@ class SoapClient extends \SoapClient
             $debug = $debug->getChannel('Soap', array('channelIcon' => $this->icon));
         }
         $this->debug = $debug;
-        $this->debug->addPlugin(new Highlight());
+        $debug->addPlugin($debug->pluginHighlight);
         $options['trace'] = true;
         parent::__construct($wsdl, $options);
     }

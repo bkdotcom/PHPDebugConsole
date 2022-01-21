@@ -15,6 +15,7 @@ namespace bdk\Debug\Abstraction;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
+use ReflectionFunction;
 use ReflectionProperty;
 
 /**
@@ -158,7 +159,7 @@ class AbstractObjectProperties
     private function addClosure(Abstraction $abs)
     {
         $obj = $abs->getSubject();
-        $ref = new \ReflectionFunction($obj);
+        $ref = new ReflectionFunction($obj);
         $abs['properties']['debug.file'] = static::buildPropValues(array(
             'type' => Abstracter::TYPE_STRING,
             'value' => $ref->getFileName(),

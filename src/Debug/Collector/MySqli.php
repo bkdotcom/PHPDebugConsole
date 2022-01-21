@@ -16,7 +16,6 @@ use bdk\Debug;
 use bdk\Debug\Collector\DatabaseTrait;
 use bdk\Debug\Collector\MySqli\MySqliStmt;
 use bdk\Debug\Collector\StatementInfo;
-use bdk\Debug\Plugin\Highlight;
 use bdk\PubSub\Event;
 use Exception;
 use mysqli as mysqliBase;
@@ -70,8 +69,8 @@ class MySqli extends mysqliBase
             $debug = $debug->getChannel('MySqli', array('channelIcon' => $this->icon));
         }
         $this->debug = $debug;
-        $this->debug->eventManager->subscribe(Debug::EVENT_OUTPUT, array($this, 'onDebugOutput'), 1);
-        $this->debug->addPlugin(new Highlight());
+        $debug->eventManager->subscribe(Debug::EVENT_OUTPUT, array($this, 'onDebugOutput'), 1);
+        $debug->addPlugin($debug->pluginHighlight);
     }
 
     /**

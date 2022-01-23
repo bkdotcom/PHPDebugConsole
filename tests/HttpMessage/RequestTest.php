@@ -78,6 +78,14 @@ class RequestTest extends TestCase
         // Preserve Host Header
         $this->assertSame('google.com', $new3Request->getHeaderLine('host'));
         $this->assertSame('www.test.com', $new3Request->getUri()->getHost());
+
+        $uri = new Uri('/somePath');
+        $request = $request->withUri($uri);
+        $this->assertSame('www.bradkent.com', $request->getHeaderLine('Host'));
+
+        $uri = new Uri('http://www.test.com:8080/somePath');
+        $request = $request->withUri($uri);
+        $this->assertSame('www.test.com:8080', $request->getHeaderLine('host'));
     }
 
     /*

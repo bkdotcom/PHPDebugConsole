@@ -72,6 +72,10 @@ class Request extends Message implements RequestInterface
             throw new InvalidArgumentException('uri must be a string or instance of UriInterface');
         }
         $this->uri = $uri;
+        // set host header if we have a hostname
+        $new = $this->updateHostHeader();
+        $headers = $new->getHeaders();
+        $this->setHeaders($headers);
     }
 
     /**
@@ -231,7 +235,7 @@ class Request extends Message implements RequestInterface
         $new->uri = $uri;
         return $preserveHost && $this->hasHeader('Host')
             ? $new
-            : $this->updateHostHeader($new, $uri);
+            : $new->updateHostHeader();
     }
 
     /**
@@ -267,13 +271,11 @@ class Request extends Message implements RequestInterface
      *    then Return the new Request with updated header
      *    otherwise return static
      *
-     * @param self         $new Request instance
-     * @param UriInterface $uri New request URI to use.
-     *
      * @return static
      */
-    private function updateHostHeader(self $new, UriInterface $uri)
+    private function updateHostHeader()
     {
+        $uri = $this->getUri();
         $host = $uri->getHost();
         if ($host === '') {
             return $this;
@@ -282,6 +284,6 @@ class Request extends Message implements RequestInterface
         if ($port !== null) {
             $host .= ':' . $port;
         }
-        return $new->withHeader('Host', $host);
+        return $this->withHeader('Host', $host);
     }
 }

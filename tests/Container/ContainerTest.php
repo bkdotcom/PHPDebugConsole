@@ -48,9 +48,18 @@ class ContainerTest extends TestCase
         $container['service'] = function () {
             return new Fixture\Service();
         };
+        $container['factory'] = $container->factory(function () {
+            return new Fixture\Service();
+        });
+
         $container->get('service');
         $this->assertInstanceOf('bdk\\DebugTests\\Container\\Fixture\\Service', $args[0]);
         $this->assertSame('service', $args[1]);
+        $this->assertSame($container, $args[2]);
+
+        $container->get('factory');
+        $this->assertInstanceOf('bdk\\DebugTests\\Container\\Fixture\\Service', $args[0]);
+        $this->assertSame('factory', $args[1]);
         $this->assertSame($container, $args[2]);
     }
 
@@ -76,8 +85,8 @@ class ContainerTest extends TestCase
         }
         $this->assertSame('Cannot update "service" after it has been instantiated.', $exceptionMessage);
         $args = array();
+        $container->setCfg('allowOverride', true);
         $container->setCfg(array(
-            'allowOverride' => true,
             'onInvoke' => function ($val, $id, Container $container) use (&$args) {
                 $args = \func_get_args();
             },
@@ -322,7 +331,7 @@ class ContainerTest extends TestCase
             return new Fixture\Service();
         };
 
-        unset($container['param'], $container['service']);
+        unset($container['undefined'], $container['param'], $container['service']);
         $this->assertFalse(isset($container['param']));
         $this->assertFalse(isset($container['service']));
         $this->assertFalse($container->has('param'));
@@ -348,11 +357,22 @@ class ContainerTest extends TestCase
     public function testRaw()
     {
         $container = new Container();
-        $serviceFactory = $container->factory(function () {
-            return 'foo';
+        $service = function () {
+            return 'service';
+        };
+        $container['service'] = $service;
+        $factory = $container->factory(function () {
+            return 'factory';
         });
-        $container['service'] = $serviceFactory;
-        $this->assertSame($serviceFactory, $container->raw('service'));
+        $container['factory'] = $factory;
+
+        $this->assertSame($service, $container->raw('service'));
+        $container['service'];
+        $this->assertSame($service, $container->raw('service'));
+
+        $this->assertSame($factory, $container->raw('factory'));
+        $container['factory'];
+        $this->assertSame($factory, $container->raw('factory'));
     }
 
     public function testRawAssertsValidKey()

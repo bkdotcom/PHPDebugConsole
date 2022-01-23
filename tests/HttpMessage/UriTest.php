@@ -15,8 +15,13 @@ class UriTest extends TestCase
 
     public function testConstruct()
     {
+        $uri = new Uri(null);
+        $this->assertTrue($uri instanceof Uri);
+        $this->assertSame('', (string) $uri);
+
         $uri = new Uri('http://jack:1234@example.com/demo/?test=5678&test2=90#section-1');
         $this->assertTrue($uri instanceof Uri);
+        $this->assertSame('http://jack:1234@example.com/demo/?test=5678&test2=90#section-1', (string) $uri);
     }
 
     public function testToString()

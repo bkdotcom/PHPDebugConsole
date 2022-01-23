@@ -35,7 +35,7 @@ class Manager
             As a convenience, make shutdown subscribeable
         */
         \register_shutdown_function(function () {
-            $this->publish(self::EVENT_PHP_SHUTDOWN);
+            $this->publish(self::EVENT_PHP_SHUTDOWN); // @codeCoverageIgnore
         });
     }
 

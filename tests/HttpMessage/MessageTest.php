@@ -64,6 +64,9 @@ class MessageTest extends TestCase
         $resource = \fopen(TEST_DIR . '/assets/logo.png', 'r+');
         $stream = new Stream($resource);
         $message = new Message();
+
+        $this->assertInstanceOf('bdk\\HttpMessage\\Stream', $message->getBody());
+
         $messageNew = $message->withBody($stream);
         $this->assertSame($stream, $messageNew->getBody());
 
@@ -75,12 +78,14 @@ class MessageTest extends TestCase
     {
         $message = new Message();
         $testArray = [
+            123 => ['value'],
             'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
             'Custom-Value' => '1234',
         ];
         $expectedArray = [
             'User-Agent' => ['Mozilla/5.0 (Windows NT 10.0; Win64; x64)'],
             'Custom-Value' => ['1234'],
+            123 => ['value'],
         ];
         $reflection = new ReflectionObject($message);
         $setHeaders = $reflection->getMethod('setHeaders');

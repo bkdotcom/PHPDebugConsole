@@ -12,8 +12,8 @@
       <directory suffix=".php">src</directory>
     </include>
     <report>
-      <clover outputFile="temp/coverage.xml"/>
-      <html outputDirectory="temp/coverage"/>
+      <clover outputFile="coverage/coverage.xml"/>
+      <html outputDirectory="coverage/html"/>
       <text outputFile="php://stdout" showUncoveredFiles="true" showOnlySummary="true"/>
     </report>
     <exclude>
@@ -22,6 +22,7 @@
       <directory>src/Debug/Framework</directory>
       <directory>src/ErrorHandler</directory>
       <directory>src/Psr7</directory>
+      <directory>src/PubSub</directory>
     </exclude>
   </coverage>
   -->

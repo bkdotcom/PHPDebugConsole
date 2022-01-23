@@ -31,6 +31,18 @@ class ResponseTest extends TestCase
         $this->assertSame('Internal Server Error', $new2Response->getReasonPhrase());
     }
 
+    public function testCodePhrase()
+    {
+        $this->assertSame('I\'m a teapot', Response::codePhrase('418'));
+    }
+
+    public function testEmptyPhrase()
+    {
+        $response = new Response(103, '');
+        $this->assertSame(103, $response->getStatusCode());
+        $this->assertSame('', $response->getReasonPhrase());
+    }
+
     /*
         Exceptions
     */

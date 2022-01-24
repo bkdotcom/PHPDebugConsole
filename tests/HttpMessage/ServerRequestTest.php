@@ -1,11 +1,12 @@
 <?php
 
-namespace bdk\DebugTests\HttpMessage;
+namespace bdk\Test\HttpMessage;
 
 use bdk\HttpMessage\Message;
 use bdk\HttpMessage\Request;
 use bdk\HttpMessage\ServerRequest;
 use bdk\HttpMessage\UploadedFile;
+use bdk\Test\PolyFill\ExpectExceptionTrait;
 use PHPUnit\Framework\TestCase;
 use ReflectionObject;
 
@@ -14,7 +15,7 @@ use ReflectionObject;
  */
 class ServerRequestTest extends TestCase
 {
-    use \bdk\DebugTests\PolyFill\ExpectExceptionTrait;
+    use ExpectExceptionTrait;
 
     public function testConstruct()
     {

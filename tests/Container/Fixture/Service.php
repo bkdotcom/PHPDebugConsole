@@ -1,6 +1,6 @@
 <?php
 
-namespace bdk\DebugTests\Container\Fixture;
+namespace bdk\Test\Container\Fixture;
 
 class Service
 {

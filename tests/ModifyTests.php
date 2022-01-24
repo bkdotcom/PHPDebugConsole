@@ -1,6 +1,6 @@
 <?php
 
-namespace bdk\DebugTests;
+namespace bdk\Test;
 
 /**
  * PHPDebugConsole supports php 5.4 - php 8.0

@@ -1,9 +1,11 @@
 <?php
 
-namespace bdk\DebugTests\HttpMessage;
+namespace bdk\Test\HttpMessage;
 
 use bdk\HttpMessage\Message;
 use bdk\HttpMessage\Stream;
+use bdk\Test\PolyFill\AssertionTrait;
+use bdk\Test\PolyFill\ExpectExceptionTrait;
 use PHPUnit\Framework\TestCase;
 use ReflectionObject;
 use stdClass;
@@ -13,8 +15,8 @@ use stdClass;
  */
 class MessageTest extends TestCase
 {
-    use \bdk\DebugTests\PolyFill\AssertionTrait;
-    use \bdk\DebugTests\PolyFill\ExpectExceptionTrait;
+    use AssertionTrait;
+    use ExpectExceptionTrait;
 
     public function testConstruct()
     {

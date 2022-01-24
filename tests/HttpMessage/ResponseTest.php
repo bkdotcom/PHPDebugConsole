@@ -1,9 +1,10 @@
 <?php
 
-namespace bdk\DebugTests\HttpMessage;
+namespace bdk\Test\HttpMessage;
 
 use bdk\HttpMessage\Message;
 use bdk\HttpMessage\Response;
+use bdk\Test\PolyFill\ExpectExceptionTrait;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -11,7 +12,7 @@ use PHPUnit\Framework\TestCase;
  */
 class ResponseTest extends TestCase
 {
-    use \bdk\DebugTests\PolyFill\ExpectExceptionTrait;
+    use ExpectExceptionTrait;
 
     public function testConstruct()
     {

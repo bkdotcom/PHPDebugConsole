@@ -1,9 +1,10 @@
 <?php
 
-namespace bdk\DebugTests\HttpMessage;
+namespace bdk\Test\HttpMessage;
 
 use bdk\HttpMessage\Stream;
 use bdk\HttpMessage\UploadedFile;
+use bdk\Test\PolyFill\ExpectExceptionTrait;
 use PHPUnit\Framework\TestCase;
 use ReflectionObject;
 
@@ -12,7 +13,7 @@ use ReflectionObject;
  */
 class UploadedFileTest extends TestCase
 {
-    use \bdk\DebugTests\PolyFill\ExpectExceptionTrait;
+    use ExpectExceptionTrait;
 
     public function testConstruct()
     {

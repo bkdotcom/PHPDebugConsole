@@ -1,6 +1,6 @@
 <?php
 
-namespace bdk\DebugTests\PolyFill;
+namespace bdk\Test\PolyFill;
 
 if (!\method_exists('\\PHPUnit\\Framework\\TestCase', 'expectException')) {
 

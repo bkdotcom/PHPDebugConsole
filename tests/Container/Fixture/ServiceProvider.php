@@ -1,6 +1,6 @@
 <?php
 
-namespace bdk\DebugTests\Container\Fixture;
+namespace bdk\Test\Container\Fixture;
 
 use bdk\Container;
 use bdk\Container\ServiceProviderInterface;

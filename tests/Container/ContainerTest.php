@@ -1,8 +1,9 @@
 <?php
 
-namespace bdk\DebugTests\Container;
+namespace bdk\Test\Container;
 
 use bdk\Container;
+use bdk\Test\PolyFill\ExpectExceptionTrait;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -11,7 +12,7 @@ use PHPUnit\Framework\TestCase;
  */
 class ContainerTest extends TestCase
 {
-    use \bdk\DebugTests\PolyFill\ExpectExceptionTrait;
+    use ExpectExceptionTrait;
 
     public function testConstructorParams()
     {
@@ -53,12 +54,12 @@ class ContainerTest extends TestCase
         });
 
         $container->get('service');
-        $this->assertInstanceOf('bdk\\DebugTests\\Container\\Fixture\\Service', $args[0]);
+        $this->assertInstanceOf('bdk\\Test\\Container\\Fixture\\Service', $args[0]);
         $this->assertSame('service', $args[1]);
         $this->assertSame($container, $args[2]);
 
         $container->get('factory');
-        $this->assertInstanceOf('bdk\\DebugTests\\Container\\Fixture\\Service', $args[0]);
+        $this->assertInstanceOf('bdk\\Test\\Container\\Fixture\\Service', $args[0]);
         $this->assertSame('factory', $args[1]);
         $this->assertSame($container, $args[2]);
     }
@@ -113,7 +114,7 @@ class ContainerTest extends TestCase
         $container['service'] = function () {
             return new Fixture\Service();
         };
-        $this->assertInstanceOf('bdk\\DebugTests\\Container\\Fixture\\Service', $container['service']);
+        $this->assertInstanceOf('bdk\\Test\\Container\\Fixture\\Service', $container['service']);
     }
 
     public function testWithGlobalFunctionName()
@@ -127,14 +128,14 @@ class ContainerTest extends TestCase
     {
         $container = new Container();
         $container['invokable'] = new Fixture\Invokable();
-        $this->assertInstanceOf('bdk\\DebugTests\\Container\\Fixture\\Service', $container['invokable']);
+        $this->assertInstanceOf('bdk\\Test\\Container\\Fixture\\Service', $container['invokable']);
     }
 
     public function testWithNonInvokableObject()
     {
         $container = new Container();
         $container['non_invokable'] = new Fixture\NonInvokable();
-        $this->assertInstanceOf('bdk\\DebugTests\\Container\\Fixture\\NonInvokable', $container['non_invokable']);
+        $this->assertInstanceOf('bdk\\Test\\Container\\Fixture\\NonInvokable', $container['non_invokable']);
     }
 
     public function testFactoryValuesDifferent()
@@ -145,10 +146,10 @@ class ContainerTest extends TestCase
         });
 
         $serviceOne = $container['service'];
-        $this->assertInstanceOf('bdk\\DebugTests\\Container\\Fixture\\Service', $serviceOne);
+        $this->assertInstanceOf('bdk\\Test\\Container\\Fixture\\Service', $serviceOne);
 
         $serviceTwo = $container['service'];
-        $this->assertInstanceOf('bdk\\DebugTests\\Container\\Fixture\\Service', $serviceTwo);
+        $this->assertInstanceOf('bdk\\Test\\Container\\Fixture\\Service', $serviceTwo);
 
         $this->assertNotSame($serviceOne, $serviceTwo);
     }
@@ -197,10 +198,10 @@ class ContainerTest extends TestCase
         $container['service'] = $service;
 
         $serviceOne = $container['service'];
-        $this->assertInstanceOf('bdk\\DebugTests\\Container\\Fixture\\Service', $serviceOne);
+        $this->assertInstanceOf('bdk\\Test\\Container\\Fixture\\Service', $serviceOne);
 
         $serviceTwo = $container['service'];
-        $this->assertInstanceOf('bdk\\DebugTests\\Container\\Fixture\\Service', $serviceTwo);
+        $this->assertInstanceOf('bdk\\Test\\Container\\Fixture\\Service', $serviceTwo);
 
         $this->assertSame($serviceOne, $serviceTwo);
     }
@@ -238,8 +239,8 @@ class ContainerTest extends TestCase
         $container['protected'] = $container->protect($closure);
         */
         $this->assertSame('value', $container->get('param'));
-        $this->assertInstanceOf('bdk\\DebugTests\\Container\\Fixture\\Service', $container->get('service'));
-        $this->assertInstanceOf('bdk\\DebugTests\\Container\\Fixture\\Service', $container->get('factory'));
+        $this->assertInstanceOf('bdk\\Test\\Container\\Fixture\\Service', $container->get('service'));
+        $this->assertInstanceOf('bdk\\Test\\Container\\Fixture\\Service', $container->get('factory'));
         $this->assertTrue(\method_exists($container->get('protected'), '__invoke'));
     }
 
@@ -287,8 +288,8 @@ class ContainerTest extends TestCase
         ), $container->keys());
         $this->assertSame('I was here first', $container->get('hereFirst'));
         $this->assertSame('foo', $container->get('string'));
-        $this->assertInstanceOf('bdk\\DebugTests\\Container\\Fixture\\Service', $container->get('service'));
-        $this->assertInstanceOf('bdk\\DebugTests\\Container\\Fixture\\Service', $container->get('factoryService'));
+        $this->assertInstanceOf('bdk\\Test\\Container\\Fixture\\Service', $container->get('service'));
+        $this->assertInstanceOf('bdk\\Test\\Container\\Fixture\\Service', $container->get('factoryService'));
         $this->assertSame($closure, $container->get('protected'));
     }
 
@@ -404,8 +405,8 @@ class ContainerTest extends TestCase
             'factory',
             'protected',
         ], $container->keys());
-        $this->assertInstanceOf('bdk\\DebugTests\\Container\\Fixture\\Service', $container['service']);
-        $this->assertInstanceOf('bdk\\DebugTests\\Container\\Fixture\\Service', $container['factory']);
+        $this->assertInstanceOf('bdk\\Test\\Container\\Fixture\\Service', $container['service']);
+        $this->assertInstanceOf('bdk\\Test\\Container\\Fixture\\Service', $container['factory']);
     }
 
     public function testDefiningNewServiceAfterInvoke()

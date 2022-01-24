@@ -1,8 +1,9 @@
 <?php
 
-namespace bdk\DebugTests\HttpMessage;
+namespace bdk\Test\HttpMessage;
 
 use bdk\HttpMessage\Uri;
+use bdk\Test\PolyFill\ExpectExceptionTrait;
 use PHPUnit\Framework\TestCase;
 use ReflectionObject;
 
@@ -11,7 +12,7 @@ use ReflectionObject;
  */
 class UriTest extends TestCase
 {
-    use \bdk\DebugTests\PolyFill\ExpectExceptionTrait;
+    use ExpectExceptionTrait;
 
     public function testConstruct()
     {

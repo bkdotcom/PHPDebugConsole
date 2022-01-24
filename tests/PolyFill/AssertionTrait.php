@@ -1,6 +1,6 @@
 <?php
 
-namespace bdk\DebugTests\PolyFill;
+namespace bdk\Test\PolyFill;
 
 use ArrayAccess;
 use PHPUnit\Framework\AssertionFailedError;

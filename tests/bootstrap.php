@@ -22,7 +22,7 @@ define('TEST_DIR', __DIR__);
 ini_set('xdebug.var_display_max_depth', 10);
 ini_set('xdebug.var_display_max_data', '-1');
 
-$modifyTests = new \bdk\DebugTests\ModifyTests();
+$modifyTests = new \bdk\Test\ModifyTests();
 $modifyTests->modify(__DIR__);
 
 /*
@@ -42,7 +42,7 @@ $modifyTests->modify(__DIR__);
     'serviceProvider' => array(
         'routeWamp' => function ($container) {
             $debug = $container['debug'];
-            return new \bdk\Debug\Route\Wamp($debug, new \bdk\DebugTests\Mock\WampPublisher());
+            return new \bdk\Debug\Route\Wamp($debug, new \bdk\Test\Debug\Mock\WampPublisher());
         },
     ),
     'onBootstrap' => function ($event) {

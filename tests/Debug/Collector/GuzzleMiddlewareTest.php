@@ -23,6 +23,9 @@ class GuzzleMiddlewareTest extends DebugTestFramework
 
     public static function setUpBeforeClass(): void
     {
+        if (\class_exists('GuzzleHttp\\Handler\\MockHandler') === false) {
+            return;
+        }
         $mockHandler = new MockHandler([
             new Response(200, ['X-Foo' => 'Bar'], 'Hello World'),
             new Response(202, ['Content-Length' => 0]),

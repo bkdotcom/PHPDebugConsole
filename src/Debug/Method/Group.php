@@ -200,6 +200,7 @@ class Group implements SubscriberInterface
         }
         $this->closeOpen();
         $data = $this->debug->data->get();
+        $data['log'] = \array_values($data['log']);
         $this->log = &$data['log'];
         $this->onOutputCleanup();
         $this->uncollapseErrors();

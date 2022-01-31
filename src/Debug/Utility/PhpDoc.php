@@ -13,8 +13,6 @@
 namespace bdk\Debug\Utility;
 
 use ReflectionClass;
-use ReflectionClassConstant;
-use ReflectionFunction;
 use ReflectionMethod;
 use ReflectionObject;
 use ReflectionProperty;
@@ -180,25 +178,16 @@ class PhpDoc
     private static function getHash($what)
     {
         if (\is_string($what)) {
-            return $what;
+            return \md5($what);
         }
-        if (!\is_object($what)) {
+        if (!($what instanceof Reflector)) {
             return null;
         }
-        $str = null;
-        if ($what instanceof ReflectionClass) {
-            $str = 'class:' . $what->getName();
-        } elseif ($what instanceof ReflectionClassConstant) {
-            $str = 'const:' . $what->getDeclaringClass()->getName() . '::' . $what->getName();
-        } elseif ($what instanceof ReflectionMethod) {
-            $str = 'method:' . $what->getDeclaringClass()->getName() . '::' . $what->getName() . '()';
-        } elseif ($what instanceof ReflectionFunction) {
-            $str = 'func:' . $what->getName() . '()';
-        } elseif ($what instanceof ReflectionProperty) {
-            $str = 'prop:' . $what->getDeclaringClass()->getName() . '::' . $what->getName();
-        } elseif (!($what instanceof Reflector)) {
-            $str = \get_class($what);
+        $str = \get_class($what) . ':';
+        if (\method_exists($what, 'getDeclaringClass')) {
+            $str .= $what->getDeclaringClass()->getName() . '::';
         }
+        $str .= $what->getName();
         return \md5($str);
     }
 
@@ -327,7 +316,7 @@ class PhpDoc
         foreach ($params as $i => $str) {
             \preg_match('/^(?:([^=]*?)\s)?([^\s=]+)(?:\s*=\s*(\S+))?$/', $str, $matches);
             $info = array(
-                'type' => self::typeEdit($matches[1]) ?: null,
+                'type' => self::typeNormalize($matches[1]) ?: null,
                 'name' => $matches[2],
             );
             if (!empty($matches[3])) {
@@ -344,6 +333,7 @@ class PhpDoc
      * @return array
      *
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
+     * @phpcs:disable SlevomatCodingStandard.Functions.FunctionLength.FunctionLength
      */
     protected static function parsers()
     {
@@ -366,7 +356,7 @@ class PhpDoc
                             $parsed['desc'] = null;
                         }
                     }
-                    $parsed['type'] = self::typeEdit($parsed['type']);
+                    $parsed['type'] = self::typeNormalize($parsed['type']);
                     return $parsed;
                 },
             ),
@@ -383,7 +373,7 @@ class PhpDoc
                 'callable' => function ($parsed) {
                     $parsed['param'] = self::parseParams($parsed['param']);
                     $parsed['static'] = $parsed['static'] !== null;
-                    $parsed['type'] = self::typeEdit($parsed['type']);
+                    $parsed['type'] = self::typeNormalize($parsed['type']);
                     return $parsed;
                 },
             ),
@@ -393,7 +383,7 @@ class PhpDoc
                 'regex' => '/^(?P<type>.*?)'
                     . '(?:\s+(?P<desc>.*))?$/s',
                 'callable' => function ($parsed) {
-                    $parsed['type'] = self::typeEdit($parsed['type']);
+                    $parsed['type'] = self::typeNormalize($parsed['type']);
                     return $parsed;
                 }
             ),
@@ -530,7 +520,7 @@ class PhpDoc
      *
      * @return string
      */
-    private static function typeEdit($type)
+    private static function typeNormalize($type)
     {
         $types = \preg_split('/\s*\|\s*/', (string) $type);
         foreach ($types as &$type) {

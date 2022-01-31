@@ -226,6 +226,22 @@ class Html
     }
 
     /**
+     * Remove "invalid" characters from id attribute
+     *
+     * @param string $id Id value
+     *
+     * @return string
+     */
+    public static function sanitizeId($id)
+    {
+        $id = \preg_replace('/^[^A-Za-z]+/', '', $id);
+        // note that ":" and "." are  allowed chars but not practical... removing
+        $id = \preg_replace('/[^a-zA-Z0-9_\-]+/', '_', $id);
+        $id = \preg_replace('/_+/', '_', $id);
+        return $id;
+    }
+
+    /**
      * Buile name="value"
      *
      * @param string $name  Attribute name

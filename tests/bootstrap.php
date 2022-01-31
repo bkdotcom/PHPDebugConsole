@@ -49,5 +49,15 @@ $modifyTests->modify(__DIR__);
         $debug = $event->getSubject();
         $wamp = $debug->getRoute('wamp');
         $debug->addPlugin($wamp);
+        $debug->eventManager->subscribe(\bdk\PubSub\Manager::EVENT_PHP_SHUTDOWN, function () {
+            $files = array(
+                __DIR__ . '/../tmp/logo_clone.png',
+            );
+            foreach ($files as $file) {
+                if (\is_file($file)) {
+                    \unlink($file);
+                }
+            }
+        });
     }
 ));

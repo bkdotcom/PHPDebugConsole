@@ -23,61 +23,6 @@ class DebugTestFramework extends DOMTestCase
     public static $allowError = false;
     public static $obLevels = 0;
 
-    protected function &getSharedVar($key)
-    {
-        static $values = array(
-            'reflectionMethods' => array(),
-            'reflectionProperties' => array(),
-        );
-        if (!isset($values[$key])) {
-            $values[$key] = null;
-        }
-        return $values[$key];
-    }
-
-    /**
-     * for given $var, check if it's abstraction type is of $type
-     *
-     * @param array  $var  abstracted $var
-     * @param string $type array, object, or resource
-     *
-     * @return bool
-     */
-    protected function checkAbstractionType($var, $type)
-    {
-        $return = false;
-        if (!$var instanceof Abstraction) {
-            return false;
-        }
-        if ($type === 'object') {
-            $keys = array(
-                'cfgFlags',
-                'className',
-                'constants',
-                'definition',
-                'extends',
-                'implements',
-                'isAnonymous',
-                'isExcluded',
-                'isRecursion',
-                'methods',
-                'phpDoc',
-                'properties',
-                'scopeClass',
-                'stringified',
-                'traverseValues',
-                'viaDebugInfo',
-            );
-            $keysMissing = \array_diff($keys, \array_keys($var->getValues()));
-            $return = $var['type'] === 'object'
-                && $var['className'] === 'stdClass'
-                && \count($keysMissing) == 0;
-        } elseif ($type === 'resource') {
-            $return = $var['type'] === 'resource' && isset($var['value']);
-        }
-        return $return;
-    }
-
     /**
      * setUp is executed before each test
      *
@@ -131,6 +76,7 @@ class DebugTestFramework extends DOMTestCase
         $this->debug->errorHandler->setData('errors', array());
         $this->debug->errorHandler->setData('errorCaller', array());
         $this->debug->errorHandler->setData('lastErrors', array());
+
         /*
         if (self::$haveWampPlugin === false) {
             $wamp = $this->debug->getRoute('wamp', true) === false
@@ -168,16 +114,24 @@ class DebugTestFramework extends DOMTestCase
         $subscribers = $this->debug->eventManager->getSubscribers(Debug::EVENT_CUSTOM_METHOD);
         foreach ($subscribers as $subscriber) {
             $subscriberObj = $subscriber[0];
+            /*
             if ($subscriberObj instanceof  \bdk\Debug\Plugin\Manager) {
                 $registeredPlugins = $this->getPrivateProp($subscriberObj, 'registeredPlugins');
+                // clear registeredPlugins... but we don't unsubscribe?!
                 $registeredPlugins->removeAll($registeredPlugins);  // (ie SplObjectStorage->removeAll())
             }
+            */
             if ($subscriberObj instanceof  \bdk\Debug\Plugin\Channel) {
                 $channelsRef = new \ReflectionProperty($subscriberObj, 'channels');
                 $channelsRef->setAccessible(true);
                 $channelsRef->setValue($subscriberObj, array());
             }
         }
+
+        // make sure we still have wamp plugin registered
+        $wamp = $this->debug->getRoute('wamp');
+        $wamp->wamp->messages = array();
+        $this->debug->addPlugin($wamp);
 
         if (!isset($this->file)) {
             /*
@@ -269,19 +223,31 @@ class DebugTestFramework extends DOMTestCase
         if (!$debug) {
             $debug = $this->debug;
         }
+        $wampMessages = $this->debug->getRoute('wamp')->wamp->messages;
         $backupRoute = $debug->getCfg('route');
         $regexLtrim = '#^\s+#m';
         foreach ($tests as $test => $expect) {
-            $debug->setCfg('route', $test);
-            $output = $debug->output();
-            $output = \preg_replace($regexLtrim, '', $output);
+            if ($test === 'wamp') {
+                $output = $wampMessages;
+            } else {
+                $debug->setCfg('route', $test);
+                $output = $debug->output();
+            }
+            if (\is_string($output)) {
+                $output = \preg_replace($regexLtrim, '', $output);
+            }
             if (\is_string($expect)) {
                 $expectContains = \preg_replace($regexLtrim, '', $expect);
                 if ($expectContains) {
                     $this->assertStringMatchesFormat('%A' . $expectContains . '%A', $output);
                 }
+            } elseif (\is_callable($expect)) {
+                \call_user_func($expect, $output);
+            } else {
+                $this->assertSame($expect, $output);
             }
         }
+        // note that this setting the route removes previous route plugins  (ie wamp)
         $debug->setCfg('route', $backupRoute);
     }
 
@@ -371,6 +337,61 @@ class DebugTestFramework extends DOMTestCase
         }
     }
 
+    protected function &getSharedVar($key)
+    {
+        static $values = array(
+            'reflectionMethods' => array(),
+            'reflectionProperties' => array(),
+        );
+        if (!isset($values[$key])) {
+            $values[$key] = null;
+        }
+        return $values[$key];
+    }
+
+    /**
+     * for given $var, check if it's abstraction type is of $type
+     *
+     * @param array  $var  abstracted $var
+     * @param string $type array, object, or resource
+     *
+     * @return bool
+     */
+    protected function checkAbstractionType($var, $type)
+    {
+        $return = false;
+        if (!$var instanceof Abstraction) {
+            return false;
+        }
+        if ($type === 'object') {
+            $keys = array(
+                'cfgFlags',
+                'className',
+                'constants',
+                'definition',
+                'extends',
+                'implements',
+                'isAnonymous',
+                'isExcluded',
+                'isRecursion',
+                'methods',
+                'phpDoc',
+                'properties',
+                'scopeClass',
+                'stringified',
+                'traverseValues',
+                'viaDebugInfo',
+            );
+            $keysMissing = \array_diff($keys, \array_keys($var->getValues()));
+            $return = $var['type'] === 'object'
+                && $var['className'] === 'stdClass'
+                && \count($keysMissing) == 0;
+        } elseif ($type === 'resource') {
+            $return = $var['type'] === 'resource' && isset($var['value']);
+        }
+        return $return;
+    }
+
     private function tstMethodPreTest($test, $expect, LogEntry $logEntry, $vals = array())
     {
         switch ($test) {
@@ -411,7 +432,7 @@ class DebugTestFramework extends DOMTestCase
      *
      * @param string $test route
      *
-     * @return \bdk\Debug\Route\RouteInterface
+     * @return \bdk\Debug\Route\RouteInterface|null
      */
     private function tstMethodRouteObj($test)
     {

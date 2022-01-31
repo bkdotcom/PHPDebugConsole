@@ -16,12 +16,10 @@ use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Collector\Pdo;
+use bdk\Debug\Framework\Yii1_1\ErrorLogger;
 use bdk\Debug\Framework\Yii1_1\LogRoute;
 use bdk\Debug\LogEntry;
-use bdk\ErrorHandler;
-use bdk\ErrorHandler\Error;
 use bdk\PubSub\Event;
-use bdk\PubSub\Manager as EventManager;
 use bdk\PubSub\SubscriberInterface;
 use CActiveRecord;
 use CApplicationComponent;
@@ -42,7 +40,6 @@ class Component extends CApplicationComponent implements SubscriberInterface
     public $logRoute;
     public $yiiApp;
 
-    protected $ignoredErrors = array();
     private $debugConfig = array(
         'logEnvInfo' => array(
             'session' => false,
@@ -80,14 +77,10 @@ class Component extends CApplicationComponent implements SubscriberInterface
         });
         $debugRootInstance->data->set('log', \array_values($logEntries));
 
-        $debugRootInstance->eventManager->addSubscriberInterface($this);
-        /*
-            Debug error handler may have been registered first -> reregister
-        */
-        $debugRootInstance->errorHandler->unregister();
-        $debugRootInstance->errorHandler->register();
-        $this->debug = $debugRootInstance->getChannel('Yii');
         $this->yiiApp = Yii::app();
+        $this->debug = $debugRootInstance->getChannel('Yii');
+        $debugRootInstance->eventManager->addSubscriberInterface($this);
+        $debugRootInstance->addPlugin(new ErrorLogger($this));
     }
 
     /**
@@ -114,15 +107,11 @@ class Component extends CApplicationComponent implements SubscriberInterface
     public function getSubscriptions()
     {
         return array(
-            Debug::EVENT_LOG => 'onDebugLog',
+            Debug::EVENT_CUSTOM_METHOD => 'onCustomMethod',
             Debug::EVENT_OBJ_ABSTRACT_START => 'onDebugObjAbstractStart',
             Debug::EVENT_OBJ_ABSTRACT_END => 'onDebugObjAbstractEnd',
             Debug::EVENT_OUTPUT => array('onDebugOutput', 1),
             Debug::EVENT_OUTPUT_LOG_ENTRY => 'onDebugOutputLogEntry',
-            ErrorHandler::EVENT_ERROR => array(
-                array('onErrorLow', -1),
-                array('onErrorHigh', 1),
-            ),
             'yii.componentInit' => 'onComponentInit',
         );
     }
@@ -176,23 +165,23 @@ class Component extends CApplicationComponent implements SubscriberInterface
      *
      * @return void
      */
-    public function onDebugLog(LogEntry $logEntry)
+    public function onCustomMethod(LogEntry $logEntry)
     {
         $debug = $logEntry->getSubject();
         $method = $logEntry['method'];
         $args = $logEntry['args'];
+        $arg0 = isset($args[0]) ? $args[0] : true;
         switch ($method) {
             case 'yiiRouteEnable':
-                $enable = isset($args[0]) ? $args[0] : true;
-                LogRoute::getInstance()->enabled = $enable;
+                $this->logRoute = $this->logRoute ?: LogRoute::getInstance();
+                $this->logRoute->enabled = $arg0;
                 $logEntry->stopPropagation();
-                $logEntry['appendLog'] = false;
+                $logEntry['handled'] = true;
                 break;
             case 'logPdo':
-                $collect = isset($args[0]) ? $args[0] : true;
-                $debug->getChannel('PDO')->setCfg('collect', $collect);
+                $debug->getChannel('PDO')->setCfg('collect', $arg0);
                 $logEntry->stopPropagation();
-                $logEntry['appendLog'] = false;
+                $logEntry['handled'] = true;
                 break;
         }
     }
@@ -206,7 +195,6 @@ class Component extends CApplicationComponent implements SubscriberInterface
      */
     public function onDebugOutput()
     {
-        $this->logIgnoredErrors();
         $this->logUser();
     }
 
@@ -276,48 +264,19 @@ class Component extends CApplicationComponent implements SubscriberInterface
     }
 
     /**
-     * Intercept minor framework issues and ignore them
+     * Config get wrapper
      *
-     * @param Error $error Error instance
+     * @param string $name    option name
+     * @param mixed  $default default vale
      *
-     * @return void
+     * @return bool
      */
-    public function onErrorHigh(Error $error)
+    public function shouldCollect($name, $default = false)
     {
-        if ($this->isIgnorableError($error)) {
-            $error->stopPropagation();          // don't log it now
-            $error['isSuppressed'] = true;
-            $this->ignoredErrors[] = $error['hash'];
-        }
-        if ($error['category'] !== Error::CAT_FATAL) {
-            /*
-                Don't pass error to Yii's handler... it will exit for #reasons
-            */
-            $error['continueToPrevHandler'] = false;
-        }
-    }
-
-    /**
-     * ErrorHandler::EVENT_ERROR event subscriber
-     *
-     * @param Error $error Error instance
-     *
-     * @return void
-     */
-    public function onErrorLow(Error $error)
-    {
-        if (!\class_exists('Yii') || !Yii::app()) {
-            return;
-        }
-        // Yii's handler will log the error.. we can ignore that
-        $this->logRoute->enabled = false;
-        if ($error['exception']) {
-            $this->yiiApp->handleException($error['exception']);
-        } elseif ($error['category'] === Error::CAT_FATAL) {
-            $this->republishShutdown();
-            $this->yiiApp->handleError($error['type'], $error['message'], $error['file'], $error['line']);
-        }
-        $this->logRoute->enabled = true;
+        $val = $this->debug->rootInstance->getCfg('yii.' . $name);
+        return $val !== null
+            ? $val
+            : $default;
     }
 
     /**
@@ -355,35 +314,6 @@ class Component extends CApplicationComponent implements SubscriberInterface
     }
 
     /**
-     * Test if error is a minor internal framework error
-     *
-     * @param Error $error Error instance
-     *
-     * @return bool
-     */
-    private function isIgnorableError(Error $error)
-    {
-        $ignorableCats = array(Error::CAT_DEPRECATED, Error::CAT_NOTICE, Error::CAT_STRICT);
-        if (\in_array($error['category'], $ignorableCats) === false) {
-            return false;
-        }
-        /*
-            "Ignore" minor internal framework errors
-        */
-        $pathsIgnore = array(
-            Yii::getPathOfAlias('system'),
-            Yii::getPathOfAlias('webroot') . '/protected/extensions',
-            Yii::getPathOfAlias('webroot') . '/protected/components',
-        );
-        foreach ($pathsIgnore as $pathIgnore) {
-            if (\strpos($error['file'], $pathIgnore) === 0) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
      * Log auth & access manager info
      *
      * @return void
@@ -415,36 +345,6 @@ class Component extends CApplicationComponent implements SubscriberInterface
         } catch (\Exception $e) {
             $debug->error('Exception logging user info');
         }
-    }
-
-    /**
-     * Log files we ignored
-     *
-     * @return void
-     */
-    private function logIgnoredErrors()
-    {
-        if ($this->shouldCollect('ignoredErrors') === false) {
-            return;
-        }
-        if (!$this->ignoredErrors) {
-            return;
-        }
-        $hashes = \array_unique($this->ignoredErrors);
-        $count = \count($hashes);
-        $debug = $this->debug;
-        $debug->groupSummary();
-        $debug->group(
-            $count === 1
-                ? '1 ignored error'
-                : $count . ' ignored errors'
-        );
-        foreach ($hashes as $hash) {
-            $error = $this->debug->errorHandler->get('error', $hash);
-            $debug->rootInstance->log($error);
-        }
-        $debug->groupEnd();
-        $debug->groupEnd();
     }
 
     /**
@@ -585,45 +485,6 @@ class Component extends CApplicationComponent implements SubscriberInterface
         $pdoPropObj = $dbRefObj->getProperty('_pdo');
         $pdoPropObj->setAccessible(true);
         $pdoPropObj->setValue($dbConnection, $pdoCollector);
-    }
-
-    /**
-     * Ensure all shutdown handlers are called
-     * Yii's error handler exits (for reasons)
-     * Exit within shutdown procedure (fatal error handler) = immediate exit
-     * Remedy
-     *  * unsubscribe the callables that have already been called
-     *  * re-publish the shutdown event
-     *  * finally: calling yii's error handler
-     *
-     * @return void
-     */
-    private function republishShutdown()
-    {
-        $eventManager = $this->debug->rootInstance->eventManager;
-        foreach ($eventManager->getSubscribers(EventManager::EVENT_PHP_SHUTDOWN) as $callable) {
-            $eventManager->unsubscribe(EventManager::EVENT_PHP_SHUTDOWN, $callable);
-            if (\is_array($callable) && $callable[0] === $this->debug->rootInstance->errorHandler) {
-                break;
-            }
-        }
-        $eventManager->publish(EventManager::EVENT_PHP_SHUTDOWN);
-    }
-
-    /**
-     * Config get wrapper
-     *
-     * @param string $name    option name
-     * @param mixed  $default default vale
-     *
-     * @return bool
-     */
-    protected function shouldCollect($name, $default = false)
-    {
-        $val = $this->debug->rootInstance->getCfg('yii.' . $name);
-        return $val !== null
-            ? $val
-            : $default;
     }
 
     /**

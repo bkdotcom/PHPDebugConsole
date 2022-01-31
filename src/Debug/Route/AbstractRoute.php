@@ -219,6 +219,9 @@ abstract class AbstractRoute extends Component implements RouteInterface
         );
         $logEntry['route'] = $this;
         $this->debug->publishBubbleEvent(Debug::EVENT_OUTPUT_LOG_ENTRY, $logEntry);
+        if ($logEntry['output'] === false) {
+            return '';
+        }
         if ($logEntry['return'] !== null) {
             return $logEntry['return'];
         }

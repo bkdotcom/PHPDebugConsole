@@ -120,8 +120,7 @@ class ArrayUtil
      */
     public static function pathGet(&$array, $path, $default = null)
     {
-        $path = self::pathToArray($path);
-        $path = \array_reverse($path);
+        $path = \array_reverse(self::pathToArray($path));
         while ($path) {
             $key = \array_pop($path);
             $arrayAccess = \is_array($array) || $array instanceof \ArrayAccess;
@@ -135,19 +134,12 @@ class ArrayUtil
             if ($key === '__count__') {
                 return \count($array);
             }
-            if ($key === '__end__') {
-                \end($array);
-                $path[] = \key($array);
-                continue;
-            }
             if ($key === '__pop__') {
                 $arrayNew = \array_pop($array);
                 $array = &$arrayNew;
                 continue;
             }
-            if ($key === '__reset__') {
-                \reset($array);
-                $path[] = \key($array);
+            if (self::specialKey($key, $path, $array)) {
                 continue;
             }
             return $default;
@@ -170,23 +162,10 @@ class ArrayUtil
      */
     public static function pathSet(&$array, $path, $val)
     {
-        $path = self::pathToArray($path);
-        $path = \array_reverse($path);
+        $path = \array_reverse(self::pathToArray($path));
         while ($path) {
             $key = \array_pop($path);
-            if ($key === '__end__') {
-                \end($array);
-                $path[] = \key($array);
-                continue;
-            }
-            if ($key === '__push__') {
-                $array[] = array();
-                $path[] = '__end__';
-                continue;
-            }
-            if ($key === '__reset__') {
-                \reset($array);
-                $path[] = \key($array);
+            if (self::specialKey($key, $path, $array)) {
                 continue;
             }
             if ($val === '__unset__' && empty($path)) {
@@ -228,6 +207,40 @@ class ArrayUtil
         $what === 'value'
             ? \usort($array, $callback)
             : \uksort($array, $callback);
+    }
+
+    /**
+     * Much like `array_splice` but for associative arrays
+     *
+     * @param array  $array       The input array
+     * @param string $key         "Offset" key.
+     * @param int    $length      How many values to remove
+     * @param mixed  $replacement [description]
+     *
+     * @return array removed values
+     */
+    public static function spliceAssoc(&$array, $key, $length = null, $replacement = array())
+    {
+        $offset = \array_search($key, \array_keys($array), true);
+        $count = \count($array);
+        if ($offset === false) {
+            // merge replacemnet onto end of array
+            $offset = $count;
+            $length = 0;
+        }
+        if ($length === null) {
+            $length = $count - $offset;
+        } elseif ($length < 0) {
+            $length = $count + $length - $offset;
+            $length = \max($length, 0);
+        }
+        $ret = \array_slice($array, $offset, $length);
+        $array = \array_merge(
+            \array_slice($array, 0, $offset, true),
+            (array) $replacement,
+            \array_slice($array, $offset + $length, null, true),
+        );
+        return $ret;
     }
 
     /**
@@ -278,5 +291,38 @@ class ArrayUtil
         return \is_array($path)
             ? $path
             : \array_filter(\preg_split('#[\./]#', (string) $path), 'strlen');
+    }
+
+    /**
+     * Handle special pathGet & pathSet keys
+     *
+     * Special keys
+     *    handled:  __end__, __push__, __reset__
+     *    not handled:  __count__, __pop__
+     *
+     * @param string $key   path key to test
+     * @param array  $path  the path
+     * @param array  $array the current array
+     *
+     * @return bool whether key was handled
+     */
+    private static function specialKey($key, &$path, &$array)
+    {
+        if ($key === '__end__') {
+            \end($array);
+            $path[] = \key($array);
+            return true;
+        }
+        if ($key === '__push__') {
+            $array[] = array();
+            $path[] = '__end__';
+            return true;
+        }
+        if ($key === '__reset__') {
+            \reset($array);
+            $path[] = \key($array);
+            return true;
+        }
+        return false;
     }
 }

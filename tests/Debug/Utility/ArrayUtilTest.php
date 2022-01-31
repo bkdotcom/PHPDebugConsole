@@ -10,6 +10,125 @@ use PHPUnit\Framework\TestCase;
  */
 class ArrayUtilTest extends TestCase
 {
+
+    /**
+     * @dataProvider providerSpliceAssoc
+     */
+    public function testSpliceAssoc($array, $key, $length, $replace, $expectReturn, $expectArray)
+    {
+        $return = ArrayUtil::spliceAssoc($array, $key, $length, $replace);
+        $this->assertSame($expectReturn, $return, 'return not as expected');
+        $this->assertSame($expectArray, $array, 'updated array not as expected');
+    }
+
+    public function providerSpliceAssoc()
+    {
+        return array(
+            'twoArgs' => array(
+                array('foo' => 'foo', 'zero', 'bar' => 'bar', 'baz' => 'baz'),
+                'bar',
+                null, // everything to end removed
+                null,
+                [
+                    'bar' => 'bar',
+                    'baz' => 'baz',
+                ],
+                [
+                    'foo' => 'foo',
+                    0 => 'zero',
+                ],
+            ),
+            'remove' => array(
+                array('foo' => 'foo', 'zero', 'bar' => 'bar', 'baz' => 'baz'),
+                'bar',
+                1,
+                null,
+                array(
+                    'bar' => 'bar',
+                ),
+                array('foo' => 'foo', 'zero', 'baz' => 'baz'),
+            ),
+            'insert' => array(
+                array('foo' => 'foo', 'zero', 'bar' => 'bar', 'baz' => 'baz'),
+                'bar',
+                0,
+                [
+                    'new' => 'value',
+                ],
+                [],
+                [
+                    'foo' => 'foo',
+                    0 => 'zero',
+                    'new' => 'value',
+                    'bar' => 'bar',
+                    'baz' => 'baz',
+                ],
+            ),
+            'removeInsert' => array(
+                array('foo' => 'foo', 'zero', 'bar' => 'bar', 'baz' => 'baz'),
+                'bar',
+                1,  // 1 value removed
+                'string',
+                [
+                    'bar' => 'bar',
+                ],
+                [
+                    'foo' => 'foo',
+                    0 => 'zero',
+                    1 => 'string',
+                    'baz' => 'baz',
+                ],
+            ),
+            'negLength' => array(
+                array('foo' => 'foo', 'zero', 'bar' => 'bar', 'baz' => 'baz'),
+                'bar',
+                -1,  // offset to end - 1 removed
+                array('bip', 'ding' => 'dong', 'foo' => 'new foo'),
+                [
+                    'bar' => 'bar',
+                ],
+                [
+                    'foo' => 'new foo',
+                    0 => 'zero',
+                    1 => 'bip',
+                    'ding' => 'dong',
+                    'baz' => 'baz',
+                ],
+            ),
+            'bigNegLength' => array(
+                // negative length goes beyond offset... don't remove anything
+                array('foo' => 'foo', 'zero', 'bar' => 'bar', 'baz' => 'baz'),
+                'bar',
+                -2,  // offset to end - 2 removed..  which will be zero
+                array('bip', 'ding' => 'dong', 'foo' => 'new foo'),
+                [],
+                [
+                    'foo' => 'new foo',
+                    0 => 'zero',
+                    1 => 'bip',
+                    'ding' => 'dong',
+                    'bar' => 'bar',
+                    'baz' => 'baz',
+                ],
+            ),
+            'keyNotFound' => array(
+                array('foo' => 'foo', 'zero', 'bar' => 'bar', 'baz' => 'baz'),
+                'notFound',
+                2,  //  0 will be removed because key not found
+                array('bip', 'ding' => 'dong'),
+                [],
+                [
+                    'foo' => 'foo',
+                    0 => 'zero',
+                    'bar' => 'bar',
+                    'baz' => 'baz',
+                    1 => 'bip',
+                    'ding' => 'dong',
+                ],
+            ),
+        );
+    }
+
     public function testCopy()
     {
         $foo = 'foo';
@@ -156,6 +275,14 @@ class ArrayUtilTest extends TestCase
                 ),
             ),
         ), $array);
+        // Test numeric keys
+        $array2 = array(
+            array('foo'),
+            array('bar'),
+            array('baz'),
+        );
+        $this->assertSame('foo', ArrayUtil::pathGet($array2, '0.0'));
+        $this->assertSame('bar', ArrayUtil::pathGet($array2, '1.0'));
     }
 
     public function testPathSet()

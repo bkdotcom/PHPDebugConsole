@@ -200,7 +200,7 @@ class GroupStack
     /**
      * Clear specified stack
      *
-     * @param string|ing $where 'main', 'summary', or `int`
+     * @param string|int $where 'main', 'summary', or `int`
      *
      * @return void
      */

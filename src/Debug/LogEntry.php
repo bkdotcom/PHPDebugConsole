@@ -169,24 +169,22 @@ class LogEntry extends Event implements JsonSerializable
      * Set meta value(s)
      * Value(s) get merged with existing values
      *
-     * @param mixed $key (string) key or (array) key/value array
-     * @param mixed $val value if updating a single key
+     * @param mixed $mixed (string) key or (array) key/value array
+     * @param mixed $val   value if updating a single key
      *
      * @return void
      */
-    public function setMeta($key, $val = null)
+    public function setMeta($mixed, $val = null)
     {
-        $meta = $key;
-        if (!\is_array($key)) {
+        if (!\is_array($mixed)) {
             if ($val === null) {
                 /** @psalm-suppress EmptyArrayAccess */
-                unset($this->values['meta'][$key]);
+                unset($this->values['meta'][$mixed]);
                 return;
             }
-            $meta = array($key => $val);
+            $mixed = array($mixed => $val);
         }
-        $meta = \array_merge($this->values['meta'], $meta);
-        $this->setValue('meta', $meta);
+        $this->setValue('meta', \array_merge($this->values['meta'], $mixed));
     }
 
     /**
@@ -251,14 +249,51 @@ class LogEntry extends Event implements JsonSerializable
         if (isset($values['meta']) === false) {
             return;
         }
-        if (isset($values['meta']['attribs'])) {
-            $this->onSetMetaAttribs();
+        if (isset($values['meta']['appendGroup'])) {
+            $this->values['meta']['appendGroup'] = $this->subject->html->sanitizeId($values['meta']['appendGroup']);
         }
-        if (\array_key_exists('channel', $values['meta']) === false) {
+        $this->onSetMetaAttribs();
+        if (\array_key_exists('channel', $values['meta'])) {
+            $this->onSetMetaChannel();
+        }
+    }
+
+    /**
+     * if we have 'attribs' make sure attribs['class'] is set and is an array
+     *
+     * @return void
+     */
+    private function onSetMetaAttribs()
+    {
+        $meta = $this->values['meta'];
+        if (isset($meta['id'])) {
+            // move 'id' to attribs
+            $meta['attribs']['id'] = $meta['id'];
+            unset($meta['id']);
+        }
+        if (isset($meta['attribs']) === false) {
             return;
         }
-        // meta['channel'] exists
-        $channel = $values['meta']['channel'];
+        if (!isset($meta['attribs']['class'])) {
+            $meta['attribs']['class'] = array();
+        } elseif (\is_string($meta['attribs']['class'])) {
+            $meta['attribs']['class'] = \explode(' ', $meta['attribs']['class']);
+        }
+        if (isset($meta['attribs']['id'])) {
+            $meta['attribs']['id'] = $this->subject->html->sanitizeId($meta['attribs']['id']);
+        }
+        $this->values['meta'] = $meta;
+    }
+
+    /**
+     * Handle meta['channel']
+     * Set this->subject from channel value
+     *
+     * @return void
+     */
+    private function onSetMetaChannel()
+    {
+        $channel = $this->values['meta']['channel'];
         unset($this->values['meta']['channel']);
         if ($channel === null) {
             $this->subject = $this->subject->rootInstance;
@@ -267,19 +302,5 @@ class LogEntry extends Event implements JsonSerializable
         $this->subject = $this->subject->parentInstance
             ? $this->subject->parentInstance->getChannel($channel)
             : $this->subject->getChannel($channel);
-    }
-
-    /**
-     * We have meta['attribs']..   make sure attribs['class'] is set and is an array
-     *
-     * @return void
-     */
-    private function onSetMetaAttribs()
-    {
-        if (!isset($this->values['meta']['attribs']['class'])) {
-            $this->values['meta']['attribs']['class'] = array();
-        } elseif (\is_string($this->values['meta']['attribs']['class'])) {
-            $this->values['meta']['attribs']['class'] = \explode(' ', $this->values['meta']['attribs']['class']);
-        }
     }
 }

@@ -130,13 +130,21 @@ class DebugTest extends DebugTestFramework
     public function testShutDownSubscribers()
     {
         $subscribers = \array_map(function ($val) {
-            return array(\get_class($val[0]), $val[1]);
+            if (\is_array($val)) {
+                return array(\get_class($val[0]), $val[1]);
+            }
+            if ($val instanceof \Closure) {
+                $abs = $this->debug->abstracter->crate($val);
+                return 'Closure(' . $abs['properties']['debug.file']['value'] . ')';
+            }
+            return \gettype($val);
         }, $this->debug->eventManager->getSubscribers(EventManager::EVENT_PHP_SHUTDOWN));
         $subscribersExpect = array(
             array('bdk\ErrorHandler', 'onShutdown'),
             array('bdk\Debug\InternalEvents', 'onShutdownHigh'),
             array('bdk\Debug\Method\Group', 'onShutdown'),
             array('bdk\Debug\InternalEvents', 'onShutdownHigh2'),
+            'Closure(' . TEST_DIR . '/bootstrap.php)',
             array('bdk\Debug\InternalEvents', 'onShutdownLow'),
             array('bdk\Debug\Route\Wamp', 'onShutdown'),
         );

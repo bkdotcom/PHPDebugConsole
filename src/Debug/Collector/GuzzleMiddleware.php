@@ -13,9 +13,12 @@
 namespace bdk\Debug\Collector;
 
 use bdk\Debug;
-use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Component;
+use bdk\Debug\LogEntry;
 use Exception;
 use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\Promise;
+use GuzzleHttp\RequestOptions;
 use Psr\Http\Message\MessageInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -23,13 +26,15 @@ use Psr\Http\Message\ResponseInterface;
 /**
  * PHPDebugConsole Middleware for Guzzle
  */
-class GuzzleMiddleware
+class GuzzleMiddleware extends Component
 {
     private $debug;
     private $icon = 'fa fa-exchange';
+    private $iconAsync = 'fa fa-random';
     private $nextHandler;
 
-    private $cfg = array(
+    protected $cfg = array(
+        'asyncResponseWithRequest' => true,
         'inclRequestBody' => false,
         'inclResponseBody' => false,
         'prettyRequestBody' => true,
@@ -48,12 +53,13 @@ class GuzzleMiddleware
      */
     public function __construct($cfg = array(), Debug $debug = null)
     {
-        $this->cfg = \array_merge($this->cfg, $cfg);
+        $this->setCfg($cfg);
         if (!$debug) {
             $debug = Debug::_getChannel('Guzzle', array('channelIcon' => $this->icon));
         } elseif ($debug === $debug->rootInstance) {
             $debug = $debug->getChannel('Guzzle', array('channelIcon' => $this->icon));
         }
+        $debug->eventManager->subscribe(Debug::EVENT_OUTPUT_LOG_ENTRY, array($this, 'onOutputLogEntry'));
         $this->debug = $debug;
     }
 
@@ -69,6 +75,24 @@ class GuzzleMiddleware
     }
 
     /**
+     * Subscribe to logEntry output... conditionaly output response group
+     *
+     * @param LogEntry $logEntry [description]
+     *
+     * @return void
+     */
+    public function onOutputLogEntry(LogEntry $logEntry)
+    {
+        if ($this->cfg['asyncResponseWithRequest'] !== true) {
+            return;
+        }
+        if ($logEntry->getMeta('asyncResponseGroup') !== true) {
+            return;
+        }
+        $logEntry['output'] = $logEntry['route'] instanceof \bdk\Debug\Route\Stream;
+    }
+
+    /**
      * Log Request Begin
      *
      * @param RequestInterface $request Guzzle request
@@ -78,73 +102,153 @@ class GuzzleMiddleware
      */
     public function onRequest(RequestInterface $request, array $options)
     {
+        $requestInfo = array(
+            'isAsyncronous' => empty($options[RequestOptions::SYNCHRONOUS]),
+            'requestId' => \spl_object_hash($request),
+            'request' => $request,
+        );
         $this->debug->groupCollapsed(
             'Guzzle',
             $request->getMethod(),
             (string) $request->getUri(),
-            $this->debug->meta('icon', $this->icon)
+            $this->debug->meta('icon', $this->icon),
+            $requestInfo['isAsyncronous']
+                ? $this->debug->meta('id', 'guzzle_' . $requestInfo['requestId'])
+                : $this->debug->meta()
         );
+        if ($requestInfo['isAsyncronous']) {
+            $this->debug->info('asyncronous', $this->debug->meta('icon', $this->iconAsync));
+        }
         $this->debug->log('request headers', $this->buildRequestHeadersString($request), $this->debug->meta('redact'));
         if ($this->cfg['inclRequestBody']) {
-            $body = $this->getBody($request);
             $this->debug->log(
                 'request body',
-                $body,
+                $this->getBody($request),
                 $this->debug->meta('redact')
             );
         }
+        if ($requestInfo['isAsyncronous']) {
+            $this->debug->groupEnd();
+        }
+        return $this->doRequest($request, $options, $requestInfo);
+    }
+
+    /**
+     * call nexthandler and register our fullfill and reject callbacks
+     *
+     * @param RequestInterface $request     Psr7 RequestInterface
+     * @param array            $options     Guzzle request options]
+     * @param array            $requestInfo Request info
+     *
+     * @return GuzzleHttp\Promise\PromiseInterface;
+     */
+    public function doRequest(RequestInterface $request, $options, $requestInfo)
+    {
+        // start timer
+        $this->debug->time('guzzle:' . $requestInfo['requestId']);
         $func = $this->nextHandler;
-        $this->debug->time('Guzzle request');
         return $func($request, $options)->then(
-            array($this, 'onFulfilled'),
-            array($this, 'onRejected')
+            function (ResponseInterface $response) use ($requestInfo) {
+                return $this->onFulfilled($response, $requestInfo);
+            },
+            function ($reason) use ($requestInfo) {
+                return $this->onRejected($reason, $requestInfo);
+            },
         );
     }
 
     /**
      * Fulfilled Request handler
      *
-     * @param ResponseInterface $response Guzzle response
+     * @param ResponseInterface $response    Guzzle response
+     * @param array             $requestInfo Request Information
      *
      * @return ResponseInterface
      */
-    public function onFulfilled(ResponseInterface $response)
+    public function onFulfilled(ResponseInterface $response, $requestInfo)
     {
-        $this->debug->timeEnd('Guzzle request');
-        $this->debug->log('response headers', $this->buildResponseHeadersString($response), $this->debug->meta('redact'));
+        $duration = $this->debug->timeEnd('guzzle:' . $requestInfo['requestId'], false);
+        $metaAppend = $requestInfo['isAsyncronous'] && $this->cfg['asyncResponseWithRequest']
+            ? $this->debug->meta('appendGroup', 'guzzle_' . $requestInfo['requestId'])
+            : $this->debug->meta();
+        // metaGroup:  if asyncronous, we should only output this for stream route
+        $metaGroup = $this->debug->meta();
+        if ($requestInfo['isAsyncronous']) {
+            $metaGroup = $this->debug->meta('asyncResponseGroup');
+            $this->asyncResponseGroup($requestInfo['request'], $response, $metaGroup);
+        }
+        $this->debug->time($duration, $metaAppend);
+        $this->debug->log('response headers', $this->buildResponseHeadersString($response), $this->debug->meta('redact'), $metaAppend);
         if ($this->cfg['inclResponseBody']) {
-            $body = $this->getBody($response);
             $this->debug->log(
                 'response body',
-                $body,
-                $this->debug->meta('redact')
+                $this->getBody($response),
+                $this->debug->meta('redact'),
+                $metaAppend
             );
         }
-        $this->debug->groupEnd();
+        $this->debug->groupEnd($metaGroup);
         return $response;
     }
 
     /**
      * Rejected Request handler
      *
-     * @param mixed $reason Reject reason
+     * @param mixed $reason      Reject reason
+     * @param array $requestInfo Request information
      *
      * @return GuzzleHttp\Promise\PromiseInterface;
      */
-    public function onRejected($reason)
+    public function onRejected($reason, $requestInfo)
     {
+        $duration = $this->debug->timeEnd('guzzle:' . $requestInfo['requestId'], false);
+        $metaAppend = $this->debug->meta();
+        // metaGroup:  if asyncronous, we should only output this for stream route
+        $metaGroup = $this->debug->meta();
         $response = null;
-        if ($reason instanceof Exception) {
-            $this->debug->warn($reason->getCode(), $reason->getMessage());
-        }
         if ($reason instanceof RequestException) {
             $response = $reason->getResponse();
         }
-        if ($response) {
-            $this->debug->log('response headers', $this->buildResponseHeadersString($response));
+        if ($requestInfo['isAsyncronous']) {
+            $metaAppend = $this->debug->meta('appendGroup', 'guzzle_' . $requestInfo['requestId']);
+            $metaGroup = $this->debug->meta('asyncResponseGroup');
+            $this->asyncResponseGroup($requestInfo['request'], $response, $metaGroup, true);
         }
-        $this->debug->groupEnd();
-        return \GuzzleHttp\Promise\rejection_for($reason);
+        if ($reason instanceof Exception) {
+            $this->debug->warn(\get_class($reason), $reason->getCode(), $reason->getMessage(), $metaAppend);
+        }
+        $this->debug->time($duration, $metaAppend);
+        if ($response) {
+            $this->debug->log('response headers', $this->buildResponseHeadersString($response), $this->debug->meta('redact'), $metaAppend);
+        }
+        $this->debug->groupEnd($metaGroup);
+        return Promise\rejection_for($reason);
+    }
+
+    /**
+     * Start a new group for asyncronous response
+     *
+     * @param RequestInterface       $request  RequestInterface
+     * @param ResponseInterface|null $response ResponseInterface (if available)
+     * @param array                  $meta     additional meta info
+     * @param bool                   $isError  (false) rejection?
+     *
+     * @return void
+     */
+    private function asyncResponseGroup(RequestInterface $request, $response, $meta, $isError = false)
+    {
+        $this->debug->groupCollapsed(
+            $isError
+                ? 'Guzzle Error'
+                : 'Guzzle Response',
+            $request->getMethod(),
+            (string) $request->getUri(),
+            $response
+                ? $response->getStatusCode()
+                : null,
+            $this->debug->meta('icon', $this->icon),
+            $meta
+        );
     }
 
     /**
@@ -192,7 +296,7 @@ class GuzzleMiddleware
      *
      * @param MessageInterface $msg request or response
      *
-     * @return Abstraction|string|null
+     * @return \bdk\Debug\Abstraction\Abstraction|string|null
      */
     private function getBody(MessageInterface $msg)
     {

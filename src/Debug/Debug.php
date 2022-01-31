@@ -661,7 +661,7 @@ class Debug extends Scaffolding
      * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter
      * @psalm-return ($return is true ? float|false : $this)
      */
-    public function timeEnd($label = null, $log = true, $return = false)
+    public function timeEnd($label = null, $log = true, $return = 'auto')
     {
         $logEntry = $this->methodTime->timeLogEntry($this, __FUNCTION__, \func_get_args());
         $value = $this->methodTime->timeEnd($logEntry);

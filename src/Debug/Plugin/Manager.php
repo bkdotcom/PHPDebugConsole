@@ -18,6 +18,7 @@ use bdk\Debug\Plugin\CustomMethodTrait;
 use bdk\Debug\Route\RouteInterface;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
+use InvalidArgumentException;
 use SplObjectStorage;
 
 /**
@@ -31,6 +32,7 @@ class Manager implements SubscriberInterface
     protected $registeredPlugins;
     protected $methods = array(
         'addPlugin',
+        'hasPlugin',
         'removePlugin',
     );
 
@@ -63,7 +65,7 @@ class Manager implements SubscriberInterface
     public function addPlugin($plugin)
     {
         $this->assertPlugin($plugin);
-        if ($this->registeredPlugins->contains($plugin)) {
+        if ($this->hasPlugin($plugin)) {
             return $this->debug;
         }
         if ($plugin instanceof AssetProviderInterface) {
@@ -82,6 +84,19 @@ class Manager implements SubscriberInterface
     }
 
     /**
+     * Test if we already have plugin
+     *
+     * @param SubscriberInterface $plugin Plugin to check
+     *
+     * @return bool
+     */
+    public function hasPlugin($plugin)
+    {
+        $this->assertPlugin($plugin);
+        return $this->registeredPlugins->contains($plugin);
+    }
+
+    /**
      * Remove plugin
      *
      * @param SubscriberInterface $plugin object implementing SubscriberInterface
@@ -95,7 +110,7 @@ class Manager implements SubscriberInterface
             $this->debug->rootInstance->getRoute('html')->removeAssetProvider($plugin);
         }
         if ($plugin instanceof SubscriberInterface) {
-            $this->debug->eventManager->RemoveSubscriberInterface($plugin);
+            $this->debug->eventManager->removeSubscriberInterface($plugin);
         }
         return $this;
     }
@@ -135,18 +150,16 @@ class Manager implements SubscriberInterface
      */
     private function assertPlugin($plugin)
     {
-        $isPlugin = false;
         if ($plugin instanceof AssetProviderInterface) {
-            $isPlugin = true;
+            return true;
         }
         if ($plugin instanceof SubscriberInterface) {
-            $isPlugin = true;
+            return true;
         }
-        if (!$isPlugin) {
-            $type = \is_object($plugin)
-                ? \get_class($plugin)
-                : \gettype($plugin);
-            throw new InvalidArgumentException('addPlugin expects \\bdk\\Debug\\AssetProviderInterface and/or \\bdk\\PubSub\\SubscriberInterface.  ' . $type . ' provided');
-        }
+        $backtrace = \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
+        $type = \is_object($plugin)
+            ? \get_class($plugin)
+            : \gettype($plugin);
+        throw new InvalidArgumentException($backtrace[1]['function'] . ' expects \\bdk\\Debug\\AssetProviderInterface and/or \\bdk\\PubSub\\SubscriberInterface.  ' . $type . ' provided');
     }
 }

@@ -111,7 +111,102 @@ class Data
      */
     public function appendLog(LogEntry $logEntry)
     {
+        $id = $logEntry->getMeta('appendGroup');
+        if ($id && $this->appendGroup($logEntry, $id)) {
+            return;
+        }
+        $attribs = $logEntry->getMeta('attribs');
+        if (isset($attribs['id'])) {
+            $id = $attribs['id'];
+            $this->logRef[$id] = $logEntry;
+            return;
+        }
         $this->logRef[] = $logEntry;
+    }
+
+    /**
+     * Append log entry to the specified group
+     *
+     * @param LogEntry   $logEntry LogEntry instance
+     * @param int|string $groupId  id/index of group LogEntry
+     *
+     * @return bool
+     */
+    private function appendGroup(LogEntry $logEntry, $groupId)
+    {
+        $where = $this->findLogEntry($groupId);
+        if ($where === false) {
+            return false;
+        }
+        $attribs = $logEntry->getMeta('attribs');
+        $insertId = isset($attribs['id'])
+            ? $attribs['id']
+            : 0;
+        $insert = array(
+            $insertId => $logEntry,
+        );
+        if (\is_int($where)) {
+            $closingId = $this->findGroupEnd($groupId, $this->data['logSummary'][$where]);
+            $this->debug->arrayUtil::spliceAssoc($this->data['logSummary'][$where], $closingId, 0, $insert);
+            return true;
+        }
+        $closingId = $this->findGroupEnd($groupId, $this->data[$where]);
+        $this->debug->arrayUtil->spliceAssoc($this->data[$where], $closingId, 0, $insert);
+        return true;
+    }
+
+    /**
+     * Find the groupEnd logEntry for the given group open id
+     *
+     * @param int|string $id         id/index of group LogEntry
+     * @param LogEntry[] $logEntries log entries
+     *
+     * @return int|false
+     */
+    private function findGroupEnd($id, $logEntries)
+    {
+        $depth = 0;
+        $inGroup = false;
+        foreach ($logEntries as $key => $logEntry) {
+            $inGroup = $inGroup || $key === $id;
+            if ($inGroup === false) {
+                continue;
+            }
+            $method = $logEntry['method'];
+            if (\in_array($method, array('group', 'groupCollapsed'))) {
+                $depth++;
+            } elseif ($method === 'groupEnd') {
+                $depth--;
+            }
+            if ($depth === 0) {
+                return $key;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Search for key'd logEntry in 'log', 'logSummary', & 'alerts'
+     *
+     * @param string $id logEntry id
+     *
+     * @return false|int|'log'|'alerts'
+     */
+    private function findLogEntry($id)
+    {
+        if (isset($this->data['log'][$id])) {
+            return 'log';
+        }
+        $priorities = \array_keys($this->data['logSummary']);
+        foreach ($priorities as $priority) {
+            if (isset($this->data['logSummary'][$id])) {
+                return $priority;
+            }
+        }
+        if (isset($this->data['alerts'][$id])) {
+            return 'alerts';
+        }
+        return false;
     }
 
     /**

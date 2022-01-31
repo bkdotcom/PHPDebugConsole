@@ -90,7 +90,7 @@ class ComposerScripts
         );
         $isCi = \filter_var(\getenv('CI'), FILTER_VALIDATE_BOOLEAN);
         if (\version_compare(PHP_VERSION, '5.5', '>=')) {
-            \exec('composer require guzzlehttp/guzzle ^6.5 --dev --no-scripts');
+            \exec('composer require guzzlehttp/guzzle --dev --no-scripts');
         }
         if (\version_compare(PHP_VERSION, '7.0', '>=')) {
             \exec('composer require psr/http-server-middleware --dev --no-scripts');

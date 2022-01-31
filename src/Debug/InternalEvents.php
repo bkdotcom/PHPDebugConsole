@@ -231,7 +231,7 @@ class InternalEvents implements SubscriberInterface
     public function onPrettify(Event $event)
     {
         $matches = array();
-        if (!\preg_match('#\b(html|json|sql|xml)\b#', $event['contentType'], $matches)) {
+        if (!\preg_match('#\b(html|json|sql|xml)\b#', (string) $event['contentType'], $matches)) {
             return;
         }
         $this->onPrettifyDo($event, $matches[1]);

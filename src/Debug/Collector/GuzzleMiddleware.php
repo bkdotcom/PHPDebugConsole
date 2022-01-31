@@ -153,7 +153,7 @@ class GuzzleMiddleware extends Component
             },
             function ($reason) use ($requestInfo) {
                 return $this->onRejected($reason, $requestInfo);
-            },
+            }
         );
     }
 

@@ -238,7 +238,7 @@ class ArrayUtil
         $array = \array_merge(
             \array_slice($array, 0, $offset, true),
             (array) $replacement,
-            \array_slice($array, $offset + $length, null, true),
+            \array_slice($array, $offset + $length, null, true)
         );
         return $ret;
     }

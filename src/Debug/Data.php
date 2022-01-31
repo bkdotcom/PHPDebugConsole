@@ -147,7 +147,7 @@ class Data
         );
         if (\is_int($where)) {
             $closingId = $this->findGroupEnd($groupId, $this->data['logSummary'][$where]);
-            $this->debug->arrayUtil::spliceAssoc($this->data['logSummary'][$where], $closingId, 0, $insert);
+            $this->debug->arrayUtil->spliceAssoc($this->data['logSummary'][$where], $closingId, 0, $insert);
             return true;
         }
         $closingId = $this->findGroupEnd($groupId, $this->data[$where]);

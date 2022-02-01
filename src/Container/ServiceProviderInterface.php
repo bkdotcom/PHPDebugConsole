@@ -19,7 +19,6 @@ use bdk\Container;
  */
 interface ServiceProviderInterface
 {
-
     /**
      * Registers services, factories, & values on the given container.
      *

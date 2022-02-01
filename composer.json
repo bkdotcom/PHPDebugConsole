@@ -70,6 +70,9 @@
 		"post-update-cmd": [
 			"bdk\\Debug\\ComposerScripts::postUpdate"
 		],
+		"cs" : [
+			"vendor/bin/phpcs -p --colors ./src"
+		],
 		"test" : [
 			"vendor/bin/phpunit"
 		],

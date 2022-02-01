@@ -15,10 +15,8 @@ namespace bdk\Debug\Collector\Pdo;
 if (PHP_VERSION_ID >= 50600) {
     require __DIR__ . '/MethodSignatureCompatTrait_php5.6.php';
 } else {
-
     trait MethodSignatureCompatTrait
     {
-
         /**
          * Executes an SQL statement, returning a result set as a PDOStatement object
          *
@@ -32,5 +30,4 @@ if (PHP_VERSION_ID >= 50600) {
             return $this->profileCall('query', $statement, \func_get_args());
         }
     }
-
 }

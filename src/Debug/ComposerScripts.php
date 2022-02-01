@@ -28,25 +28,24 @@ class ComposerScripts
             @see https://docs.travis-ci.com/user/environment-variables/#default-environment-variables
         */
         $haveSlevomat = false;
-        $haveCognitiveC = false;
+        // $haveCognitiveC = false;
         if ($event->isDevMode()) {
             $info = self::installDependencies();
             $haveSlevomat = $info['haveSlevomat'];
-            $haveCognitiveC = $info['haveCognitiveC'];
+            // $haveCognitiveC = $info['haveCognitiveC'];
         }
-        self::updatePhpcsXml($haveSlevomat, $haveCognitiveC);
+        self::updatePhpcsXml($haveSlevomat);
     }
 
     /**
      * update phpcs.xml.dist
      * convert relative dirs to absolute
      *
-     * @param bool $inclSlevomat  whether or not to include Slevomat sniffs
-     * @param bool $inclCognitive whether or not to include cognitiveComplexity sniffs
+     * @param bool $inclSlevomat Whether or not to include Slevomat sniffs
      *
      * @return void
      */
-    public static function updatePhpcsXml($inclSlevomat = true, $inclCognitive = true)
+    public static function updatePhpcsXml($inclSlevomat = true)
     {
         /*
             Comment/uncomment slevomat rule
@@ -66,9 +65,9 @@ class ComposerScripts
         $ruleCc = $matches[1];
         $regex = '#<!--\s*(' . \preg_quote($ruleCc) . ')\s*-->#s';
         $xml = \preg_replace($regex, '$1', $xml);
-        if (!$inclCognitive) {
-            \str_replace($ruleCc, '<!--' . $ruleCc . '-->', $xml);
-        }
+        // if (!$inclCognitive) {
+        //    \str_replace($ruleCc, '<!--' . $ruleCc . '-->', $xml);
+        // }
 
         \file_put_contents($phpcsPath, $xml);
 
@@ -86,7 +85,7 @@ class ComposerScripts
     {
         $info = array(
             'haveSlevomat' => false,
-            'haveCognitiveC' => false,
+            // 'haveCognitiveC' => false,
         );
         $isCi = \filter_var(\getenv('CI'), FILTER_VALIDATE_BOOLEAN);
         if (\version_compare(PHP_VERSION, '5.5', '>=')) {
@@ -103,11 +102,13 @@ class ComposerScripts
             \exec('composer require slevomat/coding-standard ^7.0.0 --dev --no-scripts');
             $info['haveSlevomat'] = true;
         }
+        /*
         if (\version_compare(PHP_VERSION, '7.2', '>=')) {
             \exec('composer require rarst/phpcs-cognitive-complexity --dev --no-scripts');
             // doesn't register Rarst\PHPCS\CognitiveComplexity namespace to composer autoloader !!!
             $info['haveCognitiveC'] = true;
         }
+        */
         return $info;
     }
 

@@ -17,7 +17,6 @@ namespace bdk\Debug;
  */
 interface ConfigurableInterface
 {
-
     /**
      * Get config value(s)
      *

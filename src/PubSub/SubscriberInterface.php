@@ -15,7 +15,6 @@ namespace bdk\PubSub;
 
 interface SubscriberInterface
 {
-
     /**
      * Return a list of event subscribers
      *

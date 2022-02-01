@@ -26,7 +26,6 @@ use bdk\PubSub\SubscriberInterface;
  */
 interface RouteInterface extends SubscriberInterface
 {
-
     /**
      * Does this route append headers?
      *

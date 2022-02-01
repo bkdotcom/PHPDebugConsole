@@ -17,7 +17,6 @@ namespace bdk\Debug;
  */
 interface AssetProviderInterface
 {
-
     /**
      * Returns an array with the following keys:
      *  * css: filename, css, or array thereof

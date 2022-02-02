@@ -6,16 +6,17 @@
   colors="true"
   testdox="true"
 >
-  <!--
   <coverage processUncoveredFiles="true">
     <include>
       <directory suffix=".php">src</directory>
     </include>
+    <!--
     <report>
       <clover outputFile="coverage/coverage.xml"/>
       <html outputDirectory="coverage/html"/>
       <text outputFile="php://stdout" showUncoveredFiles="true" showOnlySummary="true"/>
     </report>
+    -->
     <exclude>
       <file>src/Debug/ComposerScripts.php</file>
       <directory>src/Backtrace</directory>
@@ -25,7 +26,6 @@
       <directory>src/PubSub</directory>
     </exclude>
   </coverage>
-  -->
   <testsuites>
     <testsuite name="Debug">
       <directory>tests</directory>

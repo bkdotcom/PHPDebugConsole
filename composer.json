@@ -76,6 +76,9 @@
 		"test" : [
 			"vendor/bin/phpunit"
 		],
+		"coverage" : [
+			"vendor/bin/phpunit --coverage-clover coverage/clover.xml --coverage-html coverage/html"
+		],
 		"update-phpcs": [
 			"bdk\\Debug\\ComposerScripts::updatePhpCsXml"
 		]

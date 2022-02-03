@@ -45,7 +45,7 @@ class DebugTestFramework extends DOMTestCase
                     $error['continueToNormal'] = false;
                     return;
                 }
-                throw new \PHPUnit\Framework\Exception($event['message'], 500);
+                throw new \PHPUnit\Framework\Exception($error['message'] . ' @ ' . $error['file'] . ':' . $error['line'], 500);
             },
             'output' => true,
             'outputCss' => false,

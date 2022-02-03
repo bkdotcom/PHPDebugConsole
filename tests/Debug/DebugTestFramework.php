@@ -7,6 +7,7 @@ use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
+use bdk\ErrorHandler\Error;
 use bdk\HttpMessage\ServerRequest;
 use bdk\PubSub\Event;
 use bdk\Test\PolyFill\AssertionTrait;
@@ -39,9 +40,9 @@ class DebugTestFramework extends DOMTestCase
             'logEnvInfo' => false,
             'logRequestInfo' => false,
             'logRuntime' => true,
-            'onError' => function (Event $event) {
+            'onError' => function (Error $error) {
                 if (self::$allowError) {
-                    $event['continueToNormal'] = false;
+                    $error['continueToNormal'] = false;
                     return;
                 }
                 throw new \PHPUnit\Framework\Exception($event['message'], 500);

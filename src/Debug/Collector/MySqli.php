@@ -92,6 +92,26 @@ class MySqli extends mysqliBase
     }
 
     /**
+     * Initiates a transaction
+     *
+     * @param int    $flags A bitmask of MYSQLI_TRANS_START_* constants
+     * @param string $name  Savepoint name for the transaction
+     *
+     * @return bool
+     */
+    #[\ReturnTypeWillChange]
+    public function begin_transaction($flags = 0, $name = null)
+    {
+        $this->debug->group('transaction', $this->debug->meta(array(
+            'icon' => $this->debug->getCfg('channelIcon', Debug::CONFIG_DEBUG),
+        )));
+        return \call_user_func_array(
+            array($this, 'parent::' . __FUNCTION__),
+            \func_get_args()
+        );
+    }
+
+    /**
      * Commits the current transaction
      *
      * @param int    $flags A bitmask of MYSQLI_TRANS_COR_* constants
@@ -165,10 +185,7 @@ class MySqli extends mysqliBase
     public function rollBack($flags = 0, $name = null)
     {
         $return = parent::rollback($flags, $name);
-        $this->debug->log('rollback', $this->debug->meta(array(
-            'icon' => $this->debug->getCfg('channelIcon', Debug::CONFIG_DEBUG),
-        )));
-        $this->debug->groupEnd($return);
+        $this->debug->groupEnd('rolled back');
         return $return;
     }
 
@@ -221,6 +238,8 @@ class MySqli extends mysqliBase
      * Get current database / schema
      *
      * @return string|null
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod) -> called via DatabaseTrait
      */
     private function currentDatabase()
     {
@@ -305,6 +324,8 @@ class MySqli extends mysqliBase
      * `self::stat()`, but parsed
      *
      * @return array
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod) -> called via DatabaseTrait
      */
     private function serverInfo()
     {

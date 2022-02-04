@@ -15,7 +15,6 @@
 namespace bdk\Debug\Route;
 
 use bdk\Debug;
-use bdk\Debug\Abstraction\Abstracter;
 use bdk\PubSub\Event;
 
 /**
@@ -32,11 +31,13 @@ class ServerLog extends ChromeLogger
         'gcProb' => 0.10,               // (0-1) probability of running garbage collection
         'group' => true,                // contain/wrap log in a group?
         'lifetime' => 60,               // how long before can garbage collected (in seconds)
-        'logDir' => null,               // where to store the logs)
-                                        //   (defaults to DOCUMENT_ROOT . '/logs' )
-                                        //   (sys_get_temp_dir() . '/logs' when CLI ... where ServerLog doesn't make sense )
-        'urlTemplate' => '/logs/{filename}',
+        'logDir' => null,               // where to store the log
+                                        //   (defaults to DOCUMENT_ROOT . '/log' )
+                                        //   (sys_get_temp_dir() . '/log' when CLI ... where ServerLog doesn't make sense )
+        'urlTemplate' => '/log/{filename}',
     );
+
+    protected $filename = null;
 
     /**
      * Constructor
@@ -47,8 +48,8 @@ class ServerLog extends ChromeLogger
     {
         parent::__construct($debug);
         $this->cfg['logDir'] = $debug->isCli()
-            ? \sys_get_temp_dir() . '/logs'
-            : $debug->getServerParam('DOCUMENT_ROOT') . '/logs';
+            ? \sys_get_temp_dir() . '/log'
+            : $debug->getServerParam('DOCUMENT_ROOT') . '/log';
     }
 
     /**
@@ -65,12 +66,11 @@ class ServerLog extends ChromeLogger
         $this->data = $this->debug->data->get();
         $this->buildJsonData();
         if ($this->jsonData['rows']) {
-            $filename = $this->filename();
-            if ($this->writeLogFile($filename)) {
+            if ($this->writeLogFile()) {
                 $url = $this->debug->stringUtil->interpolate(
                     $this->cfg['urlTemplate'],
                     array(
-                        'filename' => $filename,
+                        'filename' => $this->filename(),
                     )
                 );
                 $event['headers'][] = array(self::HEADER_NAME, $url);
@@ -108,45 +108,32 @@ class ServerLog extends ChromeLogger
      */
     protected function filename()
     {
-        return $this->cfg['filenamePrefix']
-            . \gmdate('YmdHis')
-            . '_'
-            . $this->debug->data->get('requestId')
-            . '.json';
+        if (!$this->filename) {
+            $this->filename = $this->cfg['filenamePrefix']
+                . \gmdate('YmdHis')
+                . '_'
+                . $this->debug->data->get('requestId')
+                . '.json';
+        }
+        return $this->filename;
     }
 
     /**
-     * Handle INF, Nan, & "undefined"
-     *
-     * @param string $json Json string
+     * Return the local filepath where this request's log will be written
      *
      * @return string
      */
-    private function translateJsonValues($json)
+    protected function filepath()
     {
-        return \str_replace(
-            array(
-                \json_encode(Abstracter::TYPE_FLOAT_INF),
-                \json_encode(Abstracter::TYPE_FLOAT_NAN),
-                \json_encode(Abstracter::UNDEFINED),
-            ),
-            array(
-                '"INF"',
-                '"NaN"',
-                'null',
-            ),
-            $json
-        );
+        return $this->cfg['logDir'] . '/' . $this->filename();
     }
 
     /**
      * Write jsonData to file
      *
-     * @param string $filename filename
-     *
      * @return bool
      */
-    protected function writeLogFile($filename)
+    protected function writeLogFile()
     {
         $json = \json_encode($this->jsonData, JSON_UNESCAPED_SLASHES);
         $json = $this->translateJsonValues($json);
@@ -158,7 +145,7 @@ class ServerLog extends ChromeLogger
             \mkdir($logDir, 0755, true);
             \restore_error_handler();
         }
-        $localPath = $logDir . '/' . $filename;
+        $localPath = $this->filepath();
         if (\is_writeable($logDir) && \file_put_contents($localPath, $json) !== false) {
             return true;
         }

@@ -6,6 +6,17 @@
   colors="true"
   testdox="true"
 >
+  <php>
+    <env name="MYSQL_CONNECTION" value="mysql"/>
+    <env name="MYSQL_USERNAME" value="root"/>
+    <env name="MYSQL_DATABASE" value="test"/>
+    <env name="MYSQL_HOST" value="127.0.0.1" />
+    <!--
+    Port to be used for local tests.
+    On GitHub Actions, it will be overwritten by the port set in the workflow.
+    -->
+    <env name="MYSQL_PORT" value="3306" />
+  </php>
   <coverage processUncoveredFiles="true">
     <include>
       <directory suffix=".php">src</directory>

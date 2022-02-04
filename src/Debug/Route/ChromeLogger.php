@@ -202,19 +202,7 @@ class ChromeLogger extends AbstractRoute
     protected function encode($data)
     {
         $data = \json_encode($data, JSON_UNESCAPED_SLASHES);
-        $data = \str_replace(
-            array(
-                \json_encode(Abstracter::TYPE_FLOAT_INF),
-                \json_encode(Abstracter::TYPE_FLOAT_NAN),
-                \json_encode(Abstracter::UNDEFINED),
-            ),
-            array(
-                '"INF"',
-                '"NaN"',
-                'null',
-            ),
-            $data
-        );
+        $data = $this->translateJsonValues($data);
         return \base64_encode($data);
     }
 
@@ -346,5 +334,29 @@ class ChromeLogger extends AbstractRoute
         }
         \ksort($this->data['log']);
         $this->data['log'] = \array_values($this->data['log']);
+    }
+
+    /**
+     * Handle INF, Nan, & "undefined"
+     *
+     * @param string $json Json string
+     *
+     * @return string
+     */
+    protected function translateJsonValues($json)
+    {
+        return \str_replace(
+            array(
+                \json_encode(Abstracter::TYPE_FLOAT_INF),
+                \json_encode(Abstracter::TYPE_FLOAT_NAN),
+                \json_encode(Abstracter::UNDEFINED),
+            ),
+            array(
+                '"INF"',
+                '"NaN"',
+                'null',
+            ),
+            $json
+        );
     }
 }

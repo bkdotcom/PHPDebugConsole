@@ -69,7 +69,7 @@ class MySqliStmt extends mysqliStmtBase
     {
         $statementInfo = new StatementInfo($this->query, $this->params, $this->types);
         $return = $this->mysqli->connectionAttempted
-            ? parent::execute($params)
+            ? (PHP_VERSION_ID >= 80100 ? parent::execute($params) : parent::execute())
             : false;
         $exception = $this->mysqli->connectionAttempted
             ? null

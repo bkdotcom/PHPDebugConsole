@@ -57,6 +57,7 @@ class DebugTestFramework extends DOMTestCase
                     'GET',
                     null,
                     array(
+                        'DOCUMENT_ROOT' => TEST_DIR . '/../tmp',
                         'REQUEST_METHOD' => 'GET', // presence of REQUEST_METHOD = not cli
                         'REQUEST_TIME_FLOAT' => $_SERVER['REQUEST_TIME_FLOAT'],
                         'SERVER_ADMIN' => 'ttesterman@test.com',
@@ -322,6 +323,9 @@ class DebugTestFramework extends DOMTestCase
             'logEntry' => $logEntry,
         ));
         */
+        if (isset($tests['chromeLogger']) && !isset($tests['serverLog'])) {
+            $tests['serverLog'] = $tests['chromeLogger'];
+        }
         foreach ($tests as $test => $expect) {
             // $this->stderr('test', $test);
             $logEntryTemp = $logEntry
@@ -462,7 +466,7 @@ class DebugTestFramework extends DOMTestCase
     private function tstMethodOutput($test, $routeObj, LogEntry $logEntry, $expect)
     {
         $asString = \is_string($expect);
-        if (\in_array($test, array('chromeLogger','firephp','wamp'))) {
+        if (\in_array($test, array('chromeLogger','firephp','serverLog','wamp'))) {
             // remove data - sans the logEntry we're interested in
             $dataBackup = array(
                 'alerts' => $this->debug->data->get('alerts'),
@@ -515,6 +519,16 @@ class DebugTestFramework extends DOMTestCase
                     }
                     // entry is nested inside a group
                     $output = $headersNew[\count($headersNew) - 2];
+                    break;
+                case 'serverLog':
+                    $uri = $headers[0][1];
+                    $filepath = TEST_DIR . '/../tmp' . $uri;
+                    $json = \file_get_contents($filepath);
+                    $rows = \json_decode($json, true)['rows'];
+                    $output = $rows[\count($rows) - 2];
+                    if ($asString) {
+                        $output = \json_encode($output);
+                    }
                     break;
                 case 'wamp':
                     // $output = end($routeObj->wamp->messages);

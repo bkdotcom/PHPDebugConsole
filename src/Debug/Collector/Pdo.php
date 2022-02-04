@@ -256,10 +256,7 @@ class Pdo extends PdoBase
     public function rollBack()
     {
         $return = $this->pdo->rollBack();
-        $this->debug->log('rollback', $this->debug->meta(array(
-            'icon' => $this->debug->getCfg('channelIcon', Debug::CONFIG_DEBUG),
-        )));
-        $this->debug->groupEnd($return);
+        $this->debug->groupEnd('rolled back');
         return $return;
     }
 
@@ -287,14 +284,15 @@ class Pdo extends PdoBase
      */
     public function onDebugOutput(Event $event)
     {
-        $debug = $event->getSubject();
+        $debug = $this->debug;
         $debug->groupSummary(0);
 
         $nameParts = \explode('.', $debug->getCfg('channelName', Debug::CONFIG_DEBUG));
+        $name = \end($nameParts);
         $driverName = $this->pdo->getAttribute(PdoBase::ATTR_DRIVER_NAME);
 
         $groupParams = \array_filter(array(
-            \end($nameParts) . ' info',
+            ($name !== 'general' ? $name : 'PDO') . ' info',
             $driverName,
             $driverName !== 'sqlite'
                 ? $this->pdo->getAttribute(PdoBase::ATTR_CONNECTION_STATUS)
@@ -315,6 +313,8 @@ class Pdo extends PdoBase
      * Get current database / schema
      *
      * @return string|null
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod) -> called via DatabaseTrait
      */
     private function currentDatabase()
     {
@@ -370,6 +370,8 @@ class Pdo extends PdoBase
      * Return server information
      *
      * @return array
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod) -> called via DatabaseTrait
      */
     private function serverInfo()
     {

@@ -50,6 +50,10 @@ $modifyTests->modify(__DIR__);
         $wamp = $debug->getRoute('wamp');
         $debug->addPlugin($wamp);
         $debug->eventManager->subscribe(\bdk\PubSub\Manager::EVENT_PHP_SHUTDOWN, function () {
+            $files = \glob(TEST_DIR . '/../tmp/log/*.json');
+            foreach ($files as $filePath) {
+                \unlink($filePath);
+            }
             $files = array(
                 __DIR__ . '/../tmp/logo_clone.png',
             );

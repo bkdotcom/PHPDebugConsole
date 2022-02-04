@@ -4,6 +4,7 @@ namespace bdk\Test\Debug\Collector;
 
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\LogEntry;
+use bdk\PubSub\Event;
 use bdk\Test\Debug\DebugTestFramework;
 
 /**
@@ -11,7 +12,7 @@ use bdk\Test\Debug\DebugTestFramework;
  */
 class PdoTest extends DebugTestFramework
 {
-    private static $pdo;
+    private static $client;
 
     public static function setUpBeforeClass(): void
     {
@@ -27,13 +28,13 @@ class PdoTest extends DebugTestFramework
 EOD;
 
         $pdoBase = new \PDO('sqlite::memory:');
-        self::$pdo = new \bdk\Debug\Collector\Pdo($pdoBase);
-        self::$pdo->exec($createTableSql);
+        self::$client = new \bdk\Debug\Collector\Pdo($pdoBase);
+        self::$client->exec($createTableSql);
     }
 
     public function testExecute()
     {
-        $statement = self::$pdo->prepare('SELECT *
+        $statement = self::$client->prepare('SELECT *
             FROM `bob`
             WHERE e < :datetime');
         $datetime = '2020-12-04 22:00:00';
@@ -41,11 +42,7 @@ EOD;
         $statement->bindParam(':datetime', $datetime, \PDO::PARAM_STR);
         $statement->execute();
 
-        $logEntries = $this->debug->data->get('log');
-        $logEntries = \array_slice($logEntries, -8);
-        $logEntries = \array_map(function (LogEntry $logEntry) {
-            return $this->logEntryToArray($logEntry);
-        }, $logEntries);
+        $logEntries = $this->getLogEntries(8);
 
         $logEntriesExpect = array(
             array(
@@ -180,16 +177,184 @@ EOD;
             }
             $this->assertSame($valsExpect, $logEntries[$i]);
         }
-        /*
-        $this->testMethod(
-            null,
-            null,
-            array(
-                'entry' => function (LogEntry $logEntry) {
-                    var_dump($logEntry->getValues());
-                },
-            )
+        $this->assertIsString(self::$client->lastInsertId());
+    }
+
+    public function testExec()
+    {
+        $count = self::$client->exec('DELETE FROM `bob`');
+        $this->assertIsInt($count);
+
+        $logEntriesExpectJson = <<<'EOD'
+        [
+            {
+                "method": "groupCollapsed",
+                "args": ["DELETE FROM `bob`"],
+                "meta": {"boldLabel": false, "channel": "general.PDO", "icon": "fa fa-database"}
+            },
+            {
+                "method": "time",
+                "args": ["duration: 46.0148 \u03bcs"],
+                "meta": {"channel": "general.PDO"}
+            },
+            {
+                "method": "log",
+                "args": ["memory usage", "0 B"],
+                "meta": {"channel": "general.PDO"}
+            },
+            {
+                "method": "groupEnd",
+                "args": [],
+                "meta": {"channel": "general.PDO"}
+            }
+        ]
+EOD;
+        $logEntriesExpect = \json_decode($logEntriesExpectJson, true);
+
+        $logEntries = $this->getLogEntries();
+
+
+        // duration
+        $logEntriesExpect[1]['args'][0] = $logEntries[1]['args'][0];
+        // memory
+        $logEntriesExpect[2]['args'][1] = $logEntries[2]['args'][1];
+
+        $this->assertSame($logEntriesExpect, $logEntries);
+    }
+
+    public function testTransaction()
+    {
+        self::$client->beginTransaction();
+        self::$client->inTransaction();
+        self::$client->commit();
+        $logEntriesExpectJson = <<<'EOD'
+        [
+            {
+                "method": "group",
+                "args": ["transaction"],
+                "meta": {"channel": "general.PDO", "icon": "fa fa-database"}
+            },
+            {
+                "method": "groupEndValue",
+                "args": ["return", true ],
+                "meta": {"channel": "general.PDO"}
+            },
+            {
+                "method": "groupEnd",
+                "args": [],
+                "meta": {"channel": "general.PDO"}
+            }
+        ]
+EOD;
+        $this->assertSame(
+            \json_decode($logEntriesExpectJson, true),
+            $this->getLogEntries()
         );
-        */
+
+        self::$client->beginTransaction();
+        self::$client->rollback();
+        $logEntriesExpectJson = <<<'EOD'
+        [
+            {
+                "method": "group",
+                "args": ["transaction"],
+                "meta": {"channel": "general.PDO", "icon": "fa fa-database"}
+            },
+            {
+                "method": "groupEndValue",
+                "args": ["return", "rolled back"],
+                "meta": {"channel": "general.PDO"}
+            },
+            {
+                "method": "groupEnd",
+                "args": [],
+                "meta": {"channel": "general.PDO"}
+            }
+        ]
+EOD;
+        $this->assertSame(
+            \json_decode($logEntriesExpectJson, true),
+            $this->getLogEntries(3)
+        );
+    }
+
+
+    public function testDebugOutput()
+    {
+        self::$client->onDebugOutput(new Event($this->debug));
+        $logEntriesExpectJson = <<<'EOD'
+        [
+            {
+                "method": "groupCollapsed",
+                "args": ["PDO info", "sqlite"],
+                "meta": {"argsAsParams": false, "channel": "general.PDO", "icon": "fa fa-database", "level": "info"}
+            },
+            {
+                "method": "log",
+                "args": ["logged operations: ", 3],
+                "meta": {"channel": "general.PDO"}
+            },
+            {
+                "method": "time",
+                "args": ["total time: 2.28 ms"],
+                "meta": {"channel": "general.PDO"}
+            },
+            {
+                "method": "log",
+                "args": ["max memory usage", "280.73 kB"],
+                "meta": {"channel": "general.PDO"}
+            },
+            {
+                "method": "log",
+                "args": [
+                    "server info",
+                    {"Version": "3.36.0"}
+                ],
+                "meta": {"channel": "general.PDO"}
+            },
+            {
+                "method": "groupEnd",
+                "args": [],
+                "meta": {"channel": "general.PDO"}
+            }
+        ]
+EOD;
+        $logEntriesExpect = \json_decode($logEntriesExpectJson, true);
+
+        $logEntries = $this->getLogEntries(null, 'logSummary/0');
+        // duration
+        $logEntriesExpect[2]['args'][0] = $logEntries[2]['args'][0];
+        // memory
+        $logEntriesExpect[3]['args'][1] = $logEntries[3]['args'][1];
+        // server info
+        $logEntriesExpect[4]['args'][1] = $logEntries[4]['args'][1];
+        $this->assertSame($logEntriesExpect, $logEntries);
+    }
+
+    public function testMisc()
+    {
+        $this->assertIsString(self::$client->errorCode());
+        $this->assertIsArray(self::$client->errorInfo());
+        $this->assertSame("'1'' OR ''1''=''1'' --'", self::$client->quote("1' OR '1'='1' --"));
+    }
+
+    protected function getLogEntries($count = null, $where = 'log')
+    {
+        $logEntries = $this->debug->data->get($where);
+        if (\in_array($where, array('log','alerts')) || \preg_match('#^logSummary[\./]\d+$#', $where)) {
+            if ($count) {
+                $logEntries = \array_slice($logEntries, 0 - $count);
+            }
+            return \array_map(function (LogEntry $logEntry) {
+                return $this->logEntryToArray($logEntry);
+            }, $logEntries);
+        } elseif ($where === 'logSummary') {
+            foreach ($logEntries as $priority => $entries) {
+                $logEntries[$priority] = \array_map(function (LogEntry $logEntry) {
+                    return $this->logEntryToArray($logEntry);
+                }, $entries);
+            }
+            return $logEntries;
+        }
     }
 }

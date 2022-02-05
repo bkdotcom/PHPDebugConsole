@@ -44,6 +44,9 @@ EOD;
 
     public function testPrepareBindExecute()
     {
+        if (PHP_VERSION_ID < 50600) {
+            $this->markTestSkipped('Our MysqliStmt implementation requires PHP 5.6');
+        }
         $stmt = self::$client->prepare('INSERT INTO `bob` (`t`, `e`, `ct`) VALUES (?, ?, ?)');
         $stmt->bind_param('ssi', $text, $datetime, $int);
         $text = 'brad was here';
@@ -109,6 +112,9 @@ EOD;
 
     public function testTransaction()
     {
+        if (PHP_VERSION_ID < 50600) {
+            $this->markTestSkipped('Our MysqliStmt implementation requires PHP 5.6');
+        }
         self::$client->begin_transaction();
         self::$client->query('INSERT INTO `bob` (`t`) VALUES ("test")');
         self::$client->commit();
@@ -189,6 +195,9 @@ EOD;
 
     public function testRealQuery()
     {
+        if (PHP_VERSION_ID < 50600) {
+            $this->markTestSkipped('Our MysqliStmt implementation requires PHP 5.6');
+        }
         $success = self::$client->real_query('SELECT * from `bob`');
         if ($success) {
             do {
@@ -277,6 +286,9 @@ EOD;
 
     public function testMultiQuery()
     {
+        if (PHP_VERSION_ID < 50600) {
+            $this->markTestSkipped('Our MysqliStmt implementation requires PHP 5.6');
+        }
         $query = 'SELECT CURRENT_USER();';
         $query .= 'SELECT `t` from `bob` LIMIT 10';
 
@@ -384,6 +396,9 @@ EOD;
 
     public function testRollback()
     {
+        if (PHP_VERSION_ID < 50600) {
+            $this->markTestSkipped('Our MysqliStmt implementation requires PHP 5.6');
+        }
         self::$client->begin_transaction();
         self::$client->query('INSERT INTO `bob` (`t`) VALUES ("rollback test")');
         self::$client->rollback();
@@ -509,6 +524,9 @@ EOD;
 
     public function testDebugOutput()
     {
+        if (PHP_VERSION_ID < 50600) {
+            $this->markTestSkipped('Our MysqliStmt implementation requires PHP 5.6');
+        }
         self::$client->onDebugOutput(new Event($this->debug));
         $logEntriesExpectJson = <<<'EOD'
         [

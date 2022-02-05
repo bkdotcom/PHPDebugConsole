@@ -532,7 +532,7 @@ EOD;
         [
             {
                 "method": "groupCollapsed",
-                "args": ["MySqli info", "127.0.0.1 via TCP\/IP"],
+                "args": ["MySqli info", "Localhost via UNIX socket"],
                 "meta": {"argsAsParams": false, "icon": "fa fa-database", "level": "info"}
             },
             {
@@ -583,9 +583,15 @@ EOD;
         $logEntriesExpect = \json_decode($logEntriesExpectJson, true);
 
         $logEntries = $this->getLogEntries(null, 'logSummary/0');
+        // 'Localhost via UNIX socket' or 127.0.0.1 via TCP/IP
+        $logEntriesExpect[0]['args'][1] = $logEntries[0]['args'][1];
+        // total operations
         $logEntriesExpect[2]['args'][1] = $logEntries[2]['args'][1];
+        // duration
         $logEntriesExpect[3]['args'][0] = $logEntries[3]['args'][0];
+        // memory
         $logEntriesExpect[4]['args'][1] = $logEntries[4]['args'][1];
+        // server info
         $logEntriesExpect[5]['args'][1] = $logEntries[5]['args'][1];
         $this->assertSame($logEntriesExpect, $logEntries);
     }

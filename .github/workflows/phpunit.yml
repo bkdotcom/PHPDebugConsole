@@ -28,11 +28,13 @@ jobs:
       MYSQL_PASSWORD: root
     steps:
     - name: Set up MySQL
+      continue-on-error: true
       run: |
         sudo /etc/init.d/mysql start
         mysql -e 'CREATE DATABASE ${{ env.MYSQL_DATABASE }};' -u${{ env.MYSQL_USERNAME }} -p${{ env.MYSQL_PASSWORD }}
         mysql -e 'ALTER USER "${{ env.MYSQL_USERNAME }}"@"localhost" IDENTIFIED WITH mysql_native_password BY "${{ env.MYSQL_PASSWORD }}";' -u${{ env.MYSQL_USERNAME }} -p${{ env.MYSQL_PASSWORD }}
         mysql -e 'FLUSH PRIVILEGES;' -u${{ env.MYSQL_USERNAME }} -p${{ env.MYSQL_PASSWORD }}
+        mysqld --version
     - name: Checkout
       uses: actions/checkout@v2
     - name: Install PHP

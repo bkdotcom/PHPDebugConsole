@@ -44,7 +44,7 @@ EOD;
 
     public function testPrepareBindExecute()
     {
-        if (PHP_VERSION_ID < 50600) {
+        if (PHP_VERSION_ID < 70100) {
             $this->markTestSkipped('Our MysqliStmt implementation requires PHP 5.6');
         }
         $stmt = self::$client->prepare('INSERT INTO `bob` (`t`, `e`, `ct`) VALUES (?, ?, ?)');
@@ -112,7 +112,7 @@ EOD;
 
     public function testTransaction()
     {
-        if (PHP_VERSION_ID < 50600) {
+        if (PHP_VERSION_ID < 70100) {
             $this->markTestSkipped('Our MysqliStmt implementation requires PHP 5.6');
         }
         self::$client->begin_transaction();
@@ -195,7 +195,7 @@ EOD;
 
     public function testRealQuery()
     {
-        if (PHP_VERSION_ID < 50600) {
+        if (PHP_VERSION_ID < 70100) {
             $this->markTestSkipped('Our MysqliStmt implementation requires PHP 5.6');
         }
         $success = self::$client->real_query('SELECT * from `bob`');
@@ -286,7 +286,7 @@ EOD;
 
     public function testMultiQuery()
     {
-        if (PHP_VERSION_ID < 50600) {
+        if (PHP_VERSION_ID < 70100) {
             $this->markTestSkipped('Our MysqliStmt implementation requires PHP 5.6');
         }
         $query = 'SELECT CURRENT_USER();';
@@ -396,7 +396,7 @@ EOD;
 
     public function testRollback()
     {
-        if (PHP_VERSION_ID < 50600) {
+        if (PHP_VERSION_ID < 70100) {
             $this->markTestSkipped('Our MysqliStmt implementation requires PHP 5.6');
         }
         self::$client->begin_transaction();
@@ -524,7 +524,7 @@ EOD;
 
     public function testDebugOutput()
     {
-        if (PHP_VERSION_ID < 50600) {
+        if (PHP_VERSION_ID < 70100) {
             $this->markTestSkipped('Our MysqliStmt implementation requires PHP 5.6');
         }
         self::$client->onDebugOutput(new Event($this->debug));

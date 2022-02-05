@@ -7,7 +7,7 @@
   testdox="true"
 >
   <php>
-    <env name="MYSQL_HOST" value="127.0.0.1" />
+    <env name="MYSQL_HOST" value="localhost" />
     <env name="MYSQL_DATABASE" value="test" />
     <env name="MYSQL_USERNAME" value="root" />
     <env name="MYSQL_PASSWORD" value="root" />

@@ -16,6 +16,10 @@ class MysqliTest extends DebugTestFramework
 
     public static function setUpBeforeClass(): void
     {
+        if (PHP_VERSION_ID < 70100) {
+            return;
+        }
+
         $createDb = <<<'EOD'
         CREATE DATABASE IF NOT EXISTS `test`
         /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci */

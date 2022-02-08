@@ -36,7 +36,9 @@ EOD;
         )
 EOD;
 
-        \set_error_handler(function ($errType, $errMsg, $file, $line) {
+        $error = false;
+        \set_error_handler(function ($errType, $errMsg, $file, $line) use (&$error) {
+            $error = true;
             echo 'Error ' . $errMsg . "\n";
         });
         try {
@@ -48,9 +50,14 @@ EOD;
                 \getenv('MYSQL_PORT')
             );
         } catch (Exception $e) {
+            $error = true;
             echo 'Exception: ' . $e->getMessage() . "\n";
         }
         \restore_error_handler();
+
+        if ($error) {
+            return;
+        }
 
         self::$client->query($createDb);
         self::$client->query($createTable);

@@ -145,18 +145,21 @@ EOD;
     public function testStrings()
     {
         $parsed = PhpDoc::getParsed('\bdk\Test\Debug\Fixture\PhpDocInheritDoc');
-        $parsed = PhpDoc::getParsed('\bdk\Test\Debug\Fixture\PhpDocInheritDoc::SOME_CONSTANT');
-        $this->assertSame(array(
-            'summary' => null,
-            'desc' => null,
-            'var' => array(
-                array(
-                    'type' => 'string',
-                    'name' => 'SOME_CONSTANT',
-                    'desc' => 'constant description',
+        if (PHP_VERSION_ID >= 70100) {
+            // can only get constant phpdoc for php >= 7.1
+            $parsed = PhpDoc::getParsed('\bdk\Test\Debug\Fixture\PhpDocInheritDoc::SOME_CONSTANT');
+            $this->assertSame(array(
+                'summary' => null,
+                'desc' => null,
+                'var' => array(
+                    array(
+                        'type' => 'string',
+                        'name' => 'SOME_CONSTANT',
+                        'desc' => 'constant description',
+                    ),
                 ),
-            ),
-        ), $parsed);
+            ), $parsed);
+        }
         $parsed = PhpDoc::getParsed('\bdk\Test\Debug\Fixture\PhpDocInheritDoc::$someProperty');
         $this->assertSame(array(
             'summary' => null,

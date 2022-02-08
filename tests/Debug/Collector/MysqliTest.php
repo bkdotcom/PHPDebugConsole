@@ -16,9 +16,11 @@ class MysqliTest extends DebugTestFramework
 
     public static function setUpBeforeClass(): void
     {
+        /*
         if (PHP_VERSION_ID < 70100) {
             return;
         }
+        */
 
         $createDb = <<<'EOD'
         CREATE DATABASE IF NOT EXISTS `test`
@@ -34,16 +36,28 @@ EOD;
         )
 EOD;
 
-        self::$client = new MySqli(
-            \getenv('MYSQL_HOST'),
-            \getenv('MYSQL_USERNAME'),
-            \getenv('MYSQL_PASSWORD') ?: null,
-            \getenv('MYSQL_DATABASE'),
-            \getenv('MYSQL_PORT')
-        );
+        \set_error_handler(function ($errType, $errMsg, $file, $line) {
+            echo 'Error ' . $errMsg . "\n";
+        });
+        try {
+            self::$client = new MySqli(
+                \getenv('MYSQL_HOST'),
+                \getenv('MYSQL_USERNAME'),
+                \getenv('MYSQL_PASSWORD') ?: null,
+                \getenv('MYSQL_DATABASE'),
+                \getenv('MYSQL_PORT')
+            );
+        } catch (Exception $e) {
+            echo 'Exception: ' . $e->getMessage() . "\n";
+        }
+        \restore_error_handler();
 
         self::$client->query($createDb);
         self::$client->query($createTable);
+
+        $reflector = new \ReflectionProperty('bdk\\\Debug\\\Collector\\StatementInfo', 'constants');
+        $reflector->setAccessible(true);
+        $reflector->setValue(array());
     }
 
     public function testPrepareBindExecute()

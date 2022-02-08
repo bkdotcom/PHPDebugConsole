@@ -16,6 +16,11 @@ class Test2Base
 {
     const WORD = 'bird';
 
+    /**
+     * This property is important
+     *
+     * @var string
+     */
     protected $magicReadProp = 'not null';
 
     /**

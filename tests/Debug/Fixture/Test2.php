@@ -13,4 +13,8 @@ namespace bdk\Test\Debug\Fixture;
  */
 class Test2 extends Test2Base
 {
+    /**
+     * {@inheritDoc}
+     */
+    protected $magicReadProp = 'not null';
 }

@@ -177,7 +177,7 @@ class StatementInfo extends Component
      *
      * @return void
      */
-    public function setMemoryUsaage($memory)
+    public function setMemoryUsage($memory)
     {
         $this->memoryUsage = $memory;
     }
@@ -443,11 +443,14 @@ class StatementInfo extends Component
      */
     private function setConstants()
     {
-        /** @psalm-suppress ArgumentTypeCoercion ignore expects class-string */
-        $ref = new \ReflectionClass('PDO');
         $consts = array();
-        $constsAll = $ref->getConstants();
-        foreach ($constsAll as $name => $val) {
+        $pdoConsts = array();
+        /** @psalm-suppress ArgumentTypeCoercion ignore expects class-string */
+        if (\class_exists('PDO')) {
+            $ref = new \ReflectionClass('PDO');
+            $pdoConsts = $ref->getConstants();
+        }
+        foreach ($pdoConsts as $name => $val) {
             if (\strpos($name, 'PARAM_') === 0 && \strpos($name, 'PARAM_EVT_') !== 0) {
                 $consts[$val] = 'PDO::' . $name;
             }

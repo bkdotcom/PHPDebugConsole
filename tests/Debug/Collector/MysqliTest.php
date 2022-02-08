@@ -55,7 +55,7 @@ EOD;
         self::$client->query($createDb);
         self::$client->query($createTable);
 
-        $reflector = new \ReflectionProperty('bdk\\\Debug\\\Collector\\StatementInfo', 'constants');
+        $reflector = new \ReflectionProperty('bdk\\Debug\\Collector\\StatementInfo', 'constants');
         $reflector->setAccessible(true);
         $reflector->setValue(array());
     }

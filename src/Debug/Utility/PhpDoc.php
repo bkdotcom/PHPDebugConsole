@@ -408,17 +408,19 @@ class PhpDoc
             . '))?'
             . '$/';
         $matches = array();
-        \preg_match($regex, $string, $matches, PREG_UNMATCHED_AS_NULL);
-        if (isset($matches['method'])) {
+        \preg_match($regex, $string, $matches);
+        $defaults = \array_fill_keys(array('class','constant','property','method'), null);
+        $matches = \array_merge($defaults, $matches);
+        if ($matches['method']) {
             return new ReflectionMethod($matches['class'], $matches['method']);
         }
-        if (isset($matches['property'])) {
+        if ($matches['property']) {
             return new ReflectionProperty($matches['class'], $matches['property']);
         }
-        if (isset($matches['constant'])) {
+        if ($matches['constant']) {
             return new ReflectionClassConstant($matches['class'], $matches['constant']);
         }
-        if (isset($matches['class'])) {
+        if ($matches['class']) {
             return new ReflectionClass($matches['class']);
         }
         return null;

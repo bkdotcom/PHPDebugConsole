@@ -51,6 +51,7 @@ class ServerRequestTest extends TestCase
             'HTTP_HOST' => 'www.test.com:8080',
             'REQUEST_METHOD' => 'POST',
             'REQUEST_URI' => '/path?ding=dong',
+            'REQUEST_TIME_FLOAT' => $_SERVER['REQUEST_TIME_FLOAT'],
             'PHP_AUTH_USER' => 'billybob',
             'PHP_AUTH_PW' => '1234',
         );

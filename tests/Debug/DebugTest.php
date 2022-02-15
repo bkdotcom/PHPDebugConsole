@@ -198,9 +198,50 @@ class DebugTest extends DebugTestFramework
      *
      * @return void
      */
+    /*
     public function testOutput()
     {
+        $counts = array(
+            'bdk\\Debug\\Route\\ChromeLogger' => 0,
+            'bdk\\Debug\\Route\\Email' => 0,
+            'bdk\\Debug\\Route\\Firephp' => 0,
+            'bdk\\Debug\\Route\\Html' => 0,
+            'bdk\\Debug\\Route\\Script' => 0,
+            'bdk\\Debug\\Route\\ServerLog' => 0,
+            'bdk\\Debug\\Route\\Stream' => 0,
+            'bdk\\Debug\\Route\\Text' => 0,
+            'bdk\\Debug\\Route\\Wamp' => 0,
+        );
+        $this->debug->eventManager->subscribe(Debug::EVENT_OUTPUT_LOG_ENTRY, function (LogEntry $logEntry) use (&$counts) {
+            if ($logEntry->getMeta('countMe')) {
+                $route = \get_class($logEntry['route']);
+                if ($route === 'bdk\\Debug\\Route\\Html') {
+                    // echo \print_r(\debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 20), true) . "\n";
+                }
+                echo \sprintf(
+                    '%s %s %s %s',
+                    Debug::EVENT_OUTPUT_LOG_ENTRY,
+                    $route,
+                    $logEntry['method'],
+                    \json_encode($logEntry['args'])
+                ) . "\n";
+                // echo \json_encode(\debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10), JSON_PRETTY_PRINT) . "\n";
+                $counts[$route] ++;
+            }
+        });
+        // $this->debug->setCfg('route', 'ChromeLogger');
+        // $this->debug->obEnd();
+
+        $this->debugFoo = $this->debug->getChannel('foo');
+        $this->debugFoo->log('test this', $this->debug->meta('countMe'));
+
+        // echo 'debug route class = ' . print_r(get_class($this->debug->getCfg('route')), true) . "\n";
+        // echo 'debugfoo route class = ' . json_encode($this->debugFoo->getCfg('route')) . "\n";
+
+        $this->debugFoo->output();
+        echo \print_r($counts) . "\n";
     }
+    */
 
     /*
         setCfg tested in ConfigTest

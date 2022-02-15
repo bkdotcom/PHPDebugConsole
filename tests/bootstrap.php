@@ -35,6 +35,8 @@ $modifyTests->modify(__DIR__);
     'container' => array(
         'allowOverride' => true,
     ),
+    'logEnvInfo' => false,
+    'logRequestInfo' => false,
     'logResponse' => false,
     'objectsExclude' => array('PHPUnit_Framework_TestSuite', 'PHPUnit\Framework\TestSuite'),
     'enableProfiling' => true,

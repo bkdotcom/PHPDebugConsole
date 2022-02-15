@@ -197,12 +197,13 @@ class Scaffolding
             propagate updated vals to child channels
         */
         $channels = $this->getChannels(false, true);
-        if ($channels) {
-            $event['debug'] = $cfg;
-            $cfg = $this->container['pluginChannel']->getPropagateValues($event->getValues());
-            foreach ($channels as $channel) {
-                $channel->config->set($cfg);
-            }
+        if (empty($channels)) {
+            return;
+        }
+        $event['debug'] = $cfg;
+        $cfg = $this->container['pluginChannel']->getPropagateValues($event->getValues());
+        foreach ($channels as $channel) {
+            $channel->config->set($cfg);
         }
     }
 

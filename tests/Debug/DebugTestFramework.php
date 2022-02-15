@@ -39,6 +39,7 @@ class DebugTestFramework extends DOMTestCase
             'emailTo' => null,
             'logEnvInfo' => false,
             'logRequestInfo' => false,
+            'logResponse' => false,
             'logRuntime' => true,
             'onError' => function (Error $error) {
                 if (self::$allowError) {
@@ -123,11 +124,13 @@ class DebugTestFramework extends DOMTestCase
                 $registeredPlugins->removeAll($registeredPlugins);  // (ie SplObjectStorage->removeAll())
             }
             */
+            /*
             if ($subscriberObj instanceof  \bdk\Debug\Plugin\Channel) {
                 $channelsRef = new \ReflectionProperty($subscriberObj, 'channels');
                 $channelsRef->setAccessible(true);
                 $channelsRef->setValue($subscriberObj, array());
             }
+            */
         }
 
         // make sure we still have wamp plugin registered
@@ -531,7 +534,6 @@ class DebugTestFramework extends DOMTestCase
                     }
                     break;
                 case 'wamp':
-                    // $output = end($routeObj->wamp->messages);
                     $routeObj = $this->debug->getRoute('wamp');
                     // var_dump('get output:', $routeObj->wamp);
                     $messageIndex = \is_array($expect) && isset($expect['messageIndex'])
@@ -699,25 +701,14 @@ class DebugTestFramework extends DOMTestCase
      */
     protected function crate($val)
     {
-        if (\is_array($val)) {
-            if (\in_array(Abstracter::ABSTRACTION, $val, true)) {
-                // already arrayified abstraction... probably via wamp
-                // go ahead and sort
-                \ksort($val);
-                if ($val['type'] === 'object') {
-                    $val['methods'] = $this->crate($val['methods']);
-                }
-                return $val;
-            }
-            foreach ($val as $k => $v) {
-                $val[$k] = $this->crate($v);
-            }
-            return $val;
-        }
         if ($val instanceof Abstraction) {
             $val = $val->jsonSerialize();
             \ksort($val);
-            return $val;
+        }
+        if (\is_array($val)) {
+            foreach ($val as $k => $v) {
+                $val[$k] = $this->crate($v);
+            }
         }
         return $val;
     }

@@ -164,20 +164,18 @@ class ServerRequestBase extends Request
      * Get parsed body (POST data)
      *
      * @param string $contentType Content-Type header value
-     * @param string $rawBody     @internal for unit-testing
+     * @param string $input       ('php://input') specify input
      *
      * @return null|array
      */
-    protected static function postFromInput($contentType, $rawBody = null)
+    protected static function postFromInput($contentType, $input = 'php://input')
     {
         $contentType = \preg_replace('/\s*[;,].*$/', '', $contentType);
         $contentType = \strtolower($contentType);
-        if (self::isContentTypePareable($contentType) === false) {
+        if (self::isContentTypeParseable($contentType) === false) {
             return null;
         }
-        if ($rawBody === null) {
-            $rawBody = \file_get_contents('php://input');
-        }
+        $rawBody = \file_get_contents($input);
         if ($rawBody === '') {
             return null;
         }
@@ -344,7 +342,7 @@ class ServerRequestBase extends Request
      *
      * @return bool
      */
-    private static function isContentTypePareable($contentType)
+    private static function isContentTypeParseable($contentType)
     {
         $parsableTypes = array(
             'application/json',

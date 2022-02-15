@@ -44,6 +44,82 @@ class ServerRequestTest extends TestCase
         ), $serverRequest->getQueryParams());
     }
 
+    public function testFromGlobals()
+    {
+        $_SERVER = array(
+            'HTTP_CONTENT_TYPE' => 'application/json',
+            'HTTP_HOST' => 'www.test.com:8080',
+            'REQUEST_METHOD' => 'POST',
+            'REQUEST_URI' => '/path?ding=dong',
+            'PHP_AUTH_USER' => 'billybob',
+            'PHP_AUTH_PW' => '1234',
+        );
+        $_FILES = array(
+            'files1' => [
+                'name' => 'test1.jpg',
+                'type' => 'image/jpeg',
+                'tmp_name' => '/tmp/php1234.tmp',
+                'error' => UPLOAD_ERR_OK,
+                'size' => 100000,
+            ],
+
+            // <input type="file" name="files2[a]">
+            // <input type="file" name="files2[b]">
+
+            'files2' => [
+                'name' => [
+                    'a' => 'test2.jpg',
+                    'b' => 'test3.jpg',
+                ],
+                'type' => [
+                    'a' => 'image/jpeg',
+                    'b' => 'image/jpeg',
+                ],
+                'tmp_name' => [
+                    'a' => '/tmp/php1235.tmp',
+                    'b' => '/tmp/php1236.tmp',
+                ],
+                'error' => [
+                    'a' => UPLOAD_ERR_OK,
+                    'b' => UPLOAD_ERR_OK,
+                ],
+                'size' => [
+                    'a' => 100001,
+                    'b' => 100010,
+                ],
+            ],
+        );
+        ServerRequest::$inputStream = __DIR__ . '/input.json';
+        $request = ServerRequest::fromGlobals();
+        $this->assertSame(array('foo' => 'bar'), $request->getParsedBody());
+        $this->assertSame('http://www.test.com:8080/path?ding=dong', (string) $request->getUri());
+        $this->assertEquals(array(
+            'files1' => new UploadedFile(
+                '/tmp/php1234.tmp',
+                100000,
+                UPLOAD_ERR_OK,
+                'test1.jpg',
+                'image/jpeg'
+            ),
+            'files2' => array(
+                'a' => new UploadedFile(
+                    '/tmp/php1235.tmp',
+                    100001,
+                    UPLOAD_ERR_OK,
+                    'test2.jpg',
+                    'image/jpeg'
+                ),
+                'b' => new UploadedFile(
+                    '/tmp/php1236.tmp',
+                    100010,
+                    UPLOAD_ERR_OK,
+                    'test3.jpg',
+                    'image/jpeg'
+                ),
+            ),
+        ), $request->getUploadedFiles());
+    }
+
     public function testProperties()
     {
         $serverRequest = new ServerRequest();

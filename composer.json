@@ -57,7 +57,7 @@
 		"guzzlehttp/psr7": "^1.6",
 		"jdorn/sql-formatter": "^1.2",
 		"monolog/monolog": "^1.0",
-		"php-curl-class/php-curl-class": "^8.6",
+		"php-curl-class/php-curl-class": ">=8.6",
 		"phpunit/phpunit": ">=4.8.35",
 		"psr/log": "^1.0",
 		"psr/simple-cache": "^1.0",

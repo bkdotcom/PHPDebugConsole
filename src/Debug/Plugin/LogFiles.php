@@ -165,7 +165,7 @@ class LogFiles extends Component implements SubscriberInterface
     }
 
     /**
-     * Test if file contains searchstring
+     * Test if file contains search string
      *
      * @param string $file      filepath
      * @param string $searchStr searchstring

@@ -702,10 +702,10 @@ class GroupTest extends DebugTestFramework
             'main' => 0,
         ), $onOutputVals['groupStacksB']);
         $outputExpect = <<<'EOD'
-<div class="debug" data-channel-name-root="general" data-channels="{&quot;general&quot;:{&quot;options&quot;:{&quot;icon&quot;:&quot;fa fa-list-ul&quot;,&quot;show&quot;:true},&quot;channels&quot;:{}}}" data-options="{&quot;drawer&quot;:true,&quot;linkFilesTemplateDefault&quot;:null,&quot;tooltip&quot;:true}">
-    <header class="debug-bar debug-menu-bar">PHPDebugConsole<nav role="tablist"></nav></header>
+<div class="debug" data-channel-name-root="general" data-channels="%s" data-options="{&quot;drawer&quot;:true,&quot;linkFilesTemplateDefault&quot;:null,&quot;tooltip&quot;:true}">
+    <header class="debug-bar debug-menu-bar">PHPDebugConsole<nav role="tablist">%A</nav></header>
     <div class="tab-panes">
-        <div class="active debug-tab-general tab-pane tab-primary" data-options="{&quot;sidebar&quot;:true}" role="tabpanel">
+        %A<div class="active debug-tab-general tab-pane tab-primary" data-options="{&quot;sidebar&quot;:true}" role="tabpanel">
             <div class="tab-body">
                 <ul class="debug-log-summary group-body">
                     <li class="m_log"><span class="no-quotes t_string">in summary</span></li>
@@ -717,11 +717,11 @@ class GroupTest extends DebugTestFramework
                     </li>
                     <li class="m_info"><span class="no-quotes t_string">Built In %f %s</span></li>
                     <li class="m_info"><span class="no-quotes t_string">Peak Memory Usage <span title="Includes debug overhead">?&#x20dd;</span>: %f MB / %d %cB</span></li>
-                </ul>
+                %A</ul>
                 <ul class="debug-log group-body"></ul>
             </div>
         </div>
-    </div>
+    %A</div>
 </div>
 EOD;
         $outputExpect = \preg_replace('#^\s+#m', '', $outputExpect);

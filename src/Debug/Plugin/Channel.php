@@ -156,6 +156,11 @@ class Channel implements SubscriberInterface
             'onBootstrap',
             'route',
         )));
+        foreach ($cfg as $k => $v) {
+            if ($v === array()) {
+                unset($cfg[$k]);
+            }
+        }
         return $cfg;
     }
 

@@ -53,23 +53,30 @@ class Html extends AbstractRoute
             'tooltip' => true,
         );
         $this->dumper = $debug->getDump('html');
+        if ($this->cfg['filepathCss']) {
+            $this->addAsset('css', $this->cfg['filepathCss']);
+        }
+        if ($this->cfg['filepathScript']) {
+            $this->addAsset('script', $this->cfg['filepathScript']);
+        }
     }
 
     /**
      * Add/register css or javascript
      *
      * @param string $what  "css" or "script"
-     * @param string $mixed css, javascript, or filepath
+     * @param string $asset css, javascript, or filepath
      *
      * @return void
      */
-    public function addAsset($what, $mixed)
+    public function addAsset($what, $asset)
     {
-        if ($what === 'css') {
-            $this->assets['css'][] = $mixed;
-        } elseif ($what === 'script') {
-            $this->assets['script'][] = $mixed;
+        if (\preg_match('#[\r\n]#', $asset) !== 1) {
+            // single line... see if begins with "./""
+            $asset = \preg_replace('#^\./?#', __DIR__ . '/../', $asset);
         }
+        $this->assets[$what][] = $asset;
+        $this->assets[$what] = \array_unique($this->assets[$what]);
     }
 
     /**
@@ -89,28 +96,31 @@ class Html extends AbstractRoute
     }
 
     /**
+     * Return all assets or return assets of specific type ("css" or "script")
+     *
+     * @param string $what (optional) specify "css" or "script"
+     *
+     * @return array
+     */
+    public function getAssets($what = null)
+    {
+        if ($what === null) {
+            return $this->assets;
+        }
+        return isset($this->assets[$what])
+            ? $this->assets[$what]
+            : array();
+    }
+
+    /**
      * Return the log's CSS
      *
      * @return string
      */
     public function getCss()
     {
-        $return = '';
-        if ($this->cfg['filepathCss']) {
-            $return = \file_get_contents($this->cfg['filepathCss']);
-            if ($return === false) {
-                $return = '/* Unable to read filepathCss */';
-                $this->debug->alert('unable to read filepathCss');
-            }
-        }
-        /*
-            add "plugin" css
-        */
-        $return .= $this->buildAssetOutput($this->assets['css']);
-        if (!empty($this->cfg['css'])) {
-            $return .= $this->cfg['css'];
-        }
-        return $return;
+        return $this->buildAssetOutput($this->assets['css'])
+            . $this->cfg['css'];
     }
 
     /**
@@ -120,18 +130,7 @@ class Html extends AbstractRoute
      */
     public function getScript()
     {
-        $return = '';
-        if ($this->cfg['filepathScript']) {
-            $return = \file_get_contents($this->cfg['filepathScript']);
-            if ($return === false) {
-                $return = 'console.warn("PHPDebugConsole: unable to read filepathScript");';
-                $this->debug->alert('unable to read filepathScript');
-            }
-        }
-        /*
-            add "plugin" scripts
-        */
-        return $return . $this->buildAssetOutput($this->assets['script']);
+        return $this->buildAssetOutput($this->assets['script']);
     }
 
     /**
@@ -162,14 +161,18 @@ class Html extends AbstractRoute
      * Add/register css or javascript
      *
      * @param string $what  "css" or "script"
-     * @param string $mixed css, javascript, or filepath
+     * @param string $asset css, javascript, or filepath
      *
      * @return bool
      */
-    public function removeAsset($what, $mixed)
+    public function removeAsset($what, $asset)
     {
+        if (\preg_match('#[\r\n]#', $asset) !== 1) {
+            // single line... see if begins with "./""
+            $asset = \preg_replace('#^\./?#', __DIR__ . '/../', $asset);
+        }
         foreach ($this->assets[$what] as $k => $v) {
-            if ($mixed === $v) {
+            if ($v === $asset) {
                 unset($this->assets[$what][$k]);
                 $this->assets[$what] = \array_values($this->assets[$what]);
                 return true;
@@ -204,20 +207,20 @@ class Html extends AbstractRoute
     private function buildAssetOutput(array $assets)
     {
         $return = '';
-        $hashes = array();
         foreach ($assets as $asset) {
-            if (!\preg_match('#[\r\n]#', $asset)) {
-                // single line... potential filepath
-                $asset = \preg_replace('#^\./?#', __DIR__ . '/../', $asset);
-                if (\file_exists($asset)) {
-                    $asset = \file_get_contents($asset);
-                }
-            }
-            $hash = \md5($asset);
-            if (!\in_array($hash, $hashes)) {
+            if (\preg_match('#[\r\n]#', $asset)) {
                 $return .= $asset . "\n";
-                $hashes[] = $hash;
+                continue;
             }
+            // single line... potential filepath
+            if (\file_exists($asset)) {
+                $asset = \file_get_contents($asset);
+            }
+            if ($asset === false) {
+                $asset = '/* PHPDebugConsole: unable to read file ' . $asset . ' */';
+                $this->debug->alert('unable to read file ' . $asset);
+            }
+            $return .= $asset . "\n";
         }
         return $return;
     }

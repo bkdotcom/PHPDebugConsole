@@ -22,6 +22,9 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 class ServerRequest extends ServerRequestBase implements ServerRequestInterface
 {
+    /** @var string used for unit tests */
+    public static $inputStream = 'php://input';
+
     /** @var array */
     private $attributes = array();
 
@@ -88,7 +91,7 @@ class ServerRequest extends ServerRequestBase implements ServerRequestInterface
         $serverRequest = new static($method, $uri, $_SERVER);
         $contentType = $serverRequest->getHeaderLine('Content-Type');
         $parsedBody = $method !== 'GET'
-            ? self::postFromInput($contentType)
+            ? self::postFromInput($contentType, self::$inputStream)
             : null;
         $query = $uri->getQuery();
         $queryParams = $query !== ''

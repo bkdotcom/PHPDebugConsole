@@ -30,9 +30,8 @@ jobs:
     - name: Set up MySQL
       continue-on-error: true
       run: |
-        sudo /etc/init.d/mysql start
+        sudo /etc/init.d/mysql start --default-authentication-plugin=mysql_native_password"
         mysql -e 'CREATE DATABASE ${{ env.MYSQL_DATABASE }};' -u${{ env.MYSQL_USERNAME }} -p${{ env.MYSQL_PASSWORD }}
-        mysql -e 'SET PASSWORD FOR '${{ env.MYSQL_USERNAME }}'@'localhost' = PASSWORD("${{ env.MYSQL_PASSWORD }}");' -u${{ env.MYSQL_USERNAME }} -p${{ env.MYSQL_PASSWORD }}
         mysqld --version
     - name: Checkout
       uses: actions/checkout@v2

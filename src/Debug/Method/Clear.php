@@ -43,6 +43,9 @@ class Clear
         $this->channelRegex = '#^' . \preg_quote($this->channelName ?: '', '#') . '(\.|$)#';
         $this->isRootInstance = $this->debug->rootInstance === $this->debug;
         $bitmask = $logEntry['meta']['bitmask'];
+        if ($bitmask === Debug::CLEAR_SILENT) {
+            $bitmask = Debug::CLEAR_LOG | Debug::CLEAR_SILENT;
+        }
         $cleared = array();
         $cleared[] = $this->clearAlerts($bitmask);
         $cleared[] = $this->clearLog($bitmask);

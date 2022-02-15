@@ -52,6 +52,9 @@ class ServerRequestTest extends TestCase
             'REQUEST_METHOD' => 'POST',
             'REQUEST_URI' => '/path?ding=dong',
             'REQUEST_TIME_FLOAT' => $_SERVER['REQUEST_TIME_FLOAT'],
+            'SCRIPT_NAME' => isset($_SERVER['SCRIPT_NAME'])
+                ? $_SERVER['SCRIPT_NAME']
+                : null,
             'PHP_AUTH_USER' => 'billybob',
             'PHP_AUTH_PW' => '1234',
         );

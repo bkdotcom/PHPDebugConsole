@@ -74,7 +74,7 @@
 			"vendor/bin/phpcs -p --colors ./src"
 		],
 		"test" : [
-			"vendor/bin/phpunit"
+			"vendor/bin/phpunit -v"
 		],
 		"coverage" : [
 			"vendor/bin/phpunit --coverage-clover coverage/clover.xml --coverage-html coverage/html"

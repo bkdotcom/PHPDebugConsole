@@ -199,6 +199,9 @@ class AbstractObject extends Component
             $propsAlwaysAvail = array(
                 'client_info','client_version','connect_errno','connect_error','errno','error','stat'
             );
+            \set_error_handler(function () {
+                // ignore error
+            });
             $refObject = $abs['reflector'];
             foreach ($propsAlwaysAvail as $name) {
                 if (!isset($abs['properties'][$name])) {
@@ -207,6 +210,7 @@ class AbstractObject extends Component
                 }
                 $abs['properties'][$name]['value'] = $refObject->getProperty($name)->getValue($obj);
             }
+            \restore_error_handler();
         }
         $this->promoteParamDescs($abs);
     }

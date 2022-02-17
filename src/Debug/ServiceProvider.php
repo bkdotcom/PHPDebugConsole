@@ -50,6 +50,7 @@ class ServiceProvider implements ServiceProviderInterface
             'methodProfile',
             'methodTable',
             'methodTime',
+            'phpDoc',
             'pluginHighlight',
             'request',
             'response',
@@ -156,6 +157,9 @@ class ServiceProvider implements ServiceProviderInterface
         $container['middleware'] = function (Container $container) {
             $debug = $container['debug'];
             return new \bdk\Debug\Psr15\Middleware($debug);
+        };
+        $container['phpDoc'] = function () {
+            return new \bdk\Debug\Utility\PhpDoc();
         };
         $container['pluginChannel'] = function () {
             return new \bdk\Debug\Plugin\Channel();

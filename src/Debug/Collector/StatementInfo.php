@@ -70,7 +70,7 @@ class StatementInfo extends Component
         'timeStart',
         'types',
     );
-    protected static $constants;
+    protected static $constants = array();
 
     /**
      * @param string $sql    SQL
@@ -437,11 +437,27 @@ class StatementInfo extends Component
     }
 
     /**
-     * Set PDO constants as a static val => constName array
+     * Set PDO & Doctrine constants as a static val => constName array
      *
      * @return void
      */
     private function setConstants()
+    {
+        $this->setConstantsPdo();
+        if (\class_exists('Doctrine\\DBAL\\Connection')) {
+            self::$constants += array(
+                \Doctrine\DBAL\Connection::PARAM_INT_ARRAY => 'Doctrine\\DBAL\\Connection::PARAM_INT_ARRAY',
+                \Doctrine\DBAL\Connection::PARAM_STR_ARRAY => 'Doctrine\\DBAL\\Connection::PARAM_STR_ARRAY',
+            );
+        }
+    }
+
+    /**
+     * Set PDO constants as a static val => constName array
+     *
+     * @return void
+     */
+    private function setConstantsPdo()
     {
         $consts = array();
         $pdoConsts = array();
@@ -455,12 +471,6 @@ class StatementInfo extends Component
                 $consts[$val] = 'PDO::' . $name;
             }
         }
-        if (\class_exists('Doctrine\\DBAL\\Connection')) {
-            $consts += array(
-                \Doctrine\DBAL\Connection::PARAM_INT_ARRAY => 'Doctrine\\DBAL\\Connection::PARAM_INT_ARRAY',
-                \Doctrine\DBAL\Connection::PARAM_STR_ARRAY => 'Doctrine\\DBAL\\Connection::PARAM_STR_ARRAY',
-            );
-        }
-        self::$constants = $consts;
+        self::$constants += $consts;
     }
 }

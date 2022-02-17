@@ -118,7 +118,7 @@ class Abstracter extends Component
         $this->debug = $debug;  // we need debug instance so we can bubble events up channels
         $this->cfg['objectsExclude'][] = __NAMESPACE__;
         $this->abstractArray = new AbstractArray($this);
-        $this->abstractObject = new AbstractObject($this, new PhpDoc());
+        $this->abstractObject = new AbstractObject($this);
         $this->abstractString = new AbstractString($this);
         $this->setCfg(\array_merge($this->cfg, $cfg));
         self::$utility = $debug->utility;

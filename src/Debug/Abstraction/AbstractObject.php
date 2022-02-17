@@ -103,13 +103,12 @@ class AbstractObject extends Component
      * Constructor
      *
      * @param Abstracter $abstracter abstracter instance
-     * @param PhpDoc     $phpDoc     phpDoc instance
      */
-    public function __construct(Abstracter $abstracter, PhpDoc $phpDoc)
+    public function __construct(Abstracter $abstracter)
     {
         $this->abstracter = $abstracter;
         $this->debug = $abstracter->debug;
-        $this->helper = new AbstractObjectHelper($phpDoc);
+        $this->helper = new AbstractObjectHelper($this->debug->phpDoc);
         $this->constants = new AbstractObjectConstants($abstracter, $this->helper);
         $this->methods = new AbstractObjectMethods($abstracter, $this->helper);
         $this->properties = new AbstractObjectProperties($abstracter, $this->helper);

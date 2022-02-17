@@ -3,8 +3,9 @@
 namespace bdk\Test\Debug\Mock;
 
 use bdk\Debug;
-use GuzzleHttp\Psr7\Response;
-use GuzzleHttp\Psr7\Stream;
+use bdk\HttpMessage\Response;
+use bdk\HttpMessage\Stream;
+use Exception;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
@@ -34,10 +35,15 @@ class Middleware implements MiddlewareInterface
      * @param RequestHandlerInterface $handler [description]
      *
      * @return ResponseInterface
+     *
+     * @throws Exception
      */
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         $this->debug->log('running mock middleware');
+        if ($request->getAttribute('throwException')) {
+            throw new Exception('something went wrong');
+        }
         $msg = 'Hello';
         $stream = \fopen('php://temp', 'r+');
         \fwrite($stream, $msg);

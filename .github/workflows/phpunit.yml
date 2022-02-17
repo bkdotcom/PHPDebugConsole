@@ -30,7 +30,7 @@ jobs:
     - name: Set up MySQL
       continue-on-error: true
       run: |
-        sudo /etc/init.d/mysql start --default-authentication-plugin=mysql_native_password
+        sudo /etc/init.d/mysql start --default-auth=mysql_native_password
         mysql -e 'CREATE DATABASE ${{ env.MYSQL_DATABASE }};' -u${{ env.MYSQL_USERNAME }} -p${{ env.MYSQL_PASSWORD }}
         mysqld --version
     - name: Checkout

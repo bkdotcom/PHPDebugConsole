@@ -245,7 +245,7 @@ class ServerRequest extends ServerRequestBase implements ServerRequestInterface
     }
 
     /**
-     * Return an instance that removes the specified derived request attribute.
+     * Return an instance with the specified derived request attribute.
      *
      * @param string $name  attribute name
      * @param mixed  $value value

@@ -2,6 +2,7 @@
 
 namespace bdk\Test\Debug\Utility;
 
+use bdk\Debug;
 use bdk\Debug\Utility\PhpDoc;
 use PHPUnit\Framework\TestCase;
 
@@ -16,19 +17,21 @@ class PhpDocTest extends TestCase
         $reflector = new \ReflectionProperty('bdk\Debug\Utility\PhpDoc', 'cache');
         $reflector->setAccessible(true);
         $reflector->setValue(array());
+        /*
         $reflector = new \ReflectionProperty('bdk\Debug\Utility\PhpDoc', 'parsers');
         $reflector->setAccessible(true);
-        $reflector->setValue(array());
+        $reflector->setValue($this-array());
+        */
     }
 
     public function testInheritDoc()
     {
         $obj = new \bdk\Test\Debug\Fixture\Test2();
-        $phpDoc = PhpDoc::getParsed($obj);
+        $phpDoc = Debug::getInstance()->phpDoc->getParsed($obj);
         // echo 'parsed = ' . \json_encode($phpDoc, JSON_PRETTY_PRINT) . "\n";
 
         $obj = new \bdk\Test\Debug\Fixture\PhpDocInheritDoc();
-        $phpDoc = PhpDoc::getParsed($obj);
+        $phpDoc = Debug::getInstance()->phpDoc->getParsed($obj);
 
         $expectJson = <<<'EOD'
         {
@@ -128,7 +131,7 @@ class PhpDocTest extends TestCase
 EOD;
         $this->assertSame(\json_decode($expectJson, true), $phpDoc);
 
-        $phpDoc = PhpDoc::getParsed('\bdk\Test\Debug\Fixture\Test2::$magicReadProp');
+        $phpDoc = Debug::getInstance()->phpDoc->getParsed('\bdk\Test\Debug\Fixture\Test2::$magicReadProp');
         $this->assertSame(array(
             'summary' => 'This property is important',
             'desc' => null,
@@ -144,10 +147,10 @@ EOD;
 
     public function testStrings()
     {
-        $parsed = PhpDoc::getParsed('\bdk\Test\Debug\Fixture\PhpDocInheritDoc');
+        $parsed = Debug::getInstance()->phpDoc->getParsed('\bdk\Test\Debug\Fixture\PhpDocInheritDoc');
         if (PHP_VERSION_ID >= 70100) {
             // can only get constant phpdoc for php >= 7.1
-            $parsed = PhpDoc::getParsed('\bdk\Test\Debug\Fixture\PhpDocInheritDoc::SOME_CONSTANT');
+            $parsed = Debug::getInstance()->phpDoc->getParsed('\bdk\Test\Debug\Fixture\PhpDocInheritDoc::SOME_CONSTANT');
             $this->assertSame(array(
                 'summary' => null,
                 'desc' => null,
@@ -160,7 +163,7 @@ EOD;
                 ),
             ), $parsed);
         }
-        $parsed = PhpDoc::getParsed('\bdk\Test\Debug\Fixture\PhpDocInheritDoc::$someProperty');
+        $parsed = Debug::getInstance()->phpDoc->getParsed('\bdk\Test\Debug\Fixture\PhpDocInheritDoc::$someProperty');
         $this->assertSame(array(
             'summary' => null,
             'desc' => null,
@@ -172,7 +175,7 @@ EOD;
                 ),
             ),
         ), $parsed);
-        $parsed = PhpDoc::getParsed('\bdk\Test\Debug\Fixture\PhpDocInheritDoc::someMethod()');
+        $parsed = Debug::getInstance()->phpDoc->getParsed('\bdk\Test\Debug\Fixture\PhpDocInheritDoc::someMethod()');
         $this->assertSame(array(
             'summary' => 'Summary',
             'desc' => 'Description',
@@ -186,7 +189,7 @@ EOD;
          * @var string $comment phpdoc comment
          */
 EOD;
-        $parsed = PhpDoc::getParsed($comment);
+        $parsed = Debug::getInstance()->phpDoc->getParsed($comment);
         $this->assertSame(array(
             'summary' => null,
             'desc' => null,

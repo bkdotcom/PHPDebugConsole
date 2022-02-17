@@ -105,7 +105,7 @@ class Cake4 extends BasePlugin
             Insert our middleware to output PHPDebugConsole
         */
         $middleware->insertAfter(ErrorHandlerMiddleware::class, new Middleware($this->debug, array(
-            'catchException' => true,   // we'll catch it, pass to PHPDebugConsole's errorHandler and passit on to Cake's handler
+            'catchException' => true,   // we'll catch it, pass to PHPDebugConsole's errorHandler and pass it on to Cake's handler
             'onCaughtException' => function (Exception $e, ServerRequestInterface $request) {
                 return $this->errorHandlerMiddleW->handleException($e, $request);
             }

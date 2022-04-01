@@ -191,7 +191,7 @@ class Channel implements SubscriberInterface
             isset($cfg['debug']['channels'][$name])
                 ? $cfg['debug']['channels'][$name]
                 : array(),
-            $config,
+            $config
         );
         $cfg['debug']['channelName'] = $cfg['debug']['nested'] || $this->debug->parentInstance
             ? $channelNameCur . '.' . $name

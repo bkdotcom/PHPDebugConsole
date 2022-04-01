@@ -493,7 +493,7 @@ class MethodTest extends DebugTestFramework
             array(),
             array(
                 'html' => '<li class="m_log"></li>',
-            ),
+            )
         );
 
         $this->testMethod(

@@ -102,7 +102,7 @@ class HttpFoundationBridgeTest extends TestCase
                 $filesPhp['files1']['size'],
                 $filesPhp['files1']['error'],
                 $filesPhp['files1']['name'],
-                $filesPhp['files1']['type'],
+                $filesPhp['files1']['type']
             ),
             'files2' => array(
                 'a' => new UploadedFile(
@@ -110,14 +110,14 @@ class HttpFoundationBridgeTest extends TestCase
                     $filesPhp['files2']['size']['a'],
                     $filesPhp['files2']['error']['a'],
                     $filesPhp['files2']['name']['a'],
-                    $filesPhp['files2']['type']['a'],
+                    $filesPhp['files2']['type']['a']
                 ),
                 'b' => new UploadedFile(
                     $filesPhp['files2']['tmp_name']['b'],
                     $filesPhp['files2']['size']['b'],
                     $filesPhp['files2']['error']['b'],
                     $filesPhp['files2']['name']['b'],
-                    $filesPhp['files2']['type']['b'],
+                    $filesPhp['files2']['type']['b']
                 ),
             ),
             'noFile' => new UploadedFile(
@@ -125,7 +125,7 @@ class HttpFoundationBridgeTest extends TestCase
                 $filesPhp['noFile']['size'],
                 $filesPhp['noFile']['error'],
                 $filesPhp['noFile']['name'],
-                $filesPhp['noFile']['type'],
+                $filesPhp['noFile']['type']
             ),
         ), $request->getUploadedFiles());
     }
@@ -159,7 +159,7 @@ class HttpFoundationBridgeTest extends TestCase
         $foundationResponse = new BinaryFileResponse(
             TEST_DIR . '/assets/logo.png',
             200,
-            array('Content-Range' => 'bytes 200-1000/67589'),
+            array('Content-Range' => 'bytes 200-1000/67589')
         );
         $response = HttpFoundationBridge::createResponse($foundationResponse);
         $this->assertInstanceOf('bdk\\HttpMessage\\Response', $response);

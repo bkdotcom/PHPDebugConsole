@@ -84,7 +84,7 @@ class UploadedFileTest extends TestCase
             UPLOAD_ERR_OK,
             'logo.png',
             'image/png',
-            '/foo/bar/logo.png',
+            '/foo/bar/logo.png'
         );
 
         $this->assertSame(\filesize(TEST_DIR . '/assets/logo.png'), $uploadedFile->getSize());

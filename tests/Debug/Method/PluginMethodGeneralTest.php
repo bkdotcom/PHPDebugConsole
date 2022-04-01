@@ -225,7 +225,7 @@ class PluginMethodGeneralTest extends DebugTestFramework
         $this->debug->setErrorCaller($errorCaller);
         $this->assertSame(\array_merge(
             $errorCaller,
-            array('groupDepth' => 0),
+            array('groupDepth' => 0)
         ), $this->debug->errorHandler->get('errorCaller'));
     }
 

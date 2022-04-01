@@ -550,7 +550,7 @@ class ServerRequestTest extends TestCase
                 100000,
                 UPLOAD_ERR_OK,
                 'test1.jpg',
-                'image/jpeg',
+                'image/jpeg'
             ),
             'files1' => new UploadedFile(
                 '/tmp/php1234.tmp',
@@ -558,7 +558,7 @@ class ServerRequestTest extends TestCase
                 UPLOAD_ERR_OK,
                 'test1.jpg',
                 'image/jpeg',
-                '/sue/bob/test1.jpg',
+                '/sue/bob/test1.jpg'
             ),
             'files2' => array(
                 'a' => new UploadedFile(
@@ -567,7 +567,7 @@ class ServerRequestTest extends TestCase
                     UPLOAD_ERR_OK,
                     'test2.jpg',
                     'image/jpeg',
-                    '/sue/bob/test2.jpg',
+                    '/sue/bob/test2.jpg'
                 ),
                 'b' => new UploadedFile(
                     '/tmp/php1236.tmp',
@@ -575,7 +575,7 @@ class ServerRequestTest extends TestCase
                     UPLOAD_ERR_OK,
                     'test3.jpg',
                     'image/jpeg',
-                    '/sue/bob/test3.jpg',
+                    '/sue/bob/test3.jpg'
                 ),
             ),
             'files3' => array(
@@ -584,14 +584,14 @@ class ServerRequestTest extends TestCase
                     100100,
                     UPLOAD_ERR_OK,
                     'test4.jpg',
-                    'image/jpeg',
+                    'image/jpeg'
                 ),
                 1 => new UploadedFile(
                     '/tmp/php1238.tmp',
                     101000,
                     UPLOAD_ERR_OK,
                     'test5.jpg',
-                    'image/jpeg',
+                    'image/jpeg'
                 ),
             ),
             'files4' => array(
@@ -601,7 +601,7 @@ class ServerRequestTest extends TestCase
                         110000,
                         UPLOAD_ERR_OK,
                         'test6.png',
-                        'image/png',
+                        'image/png'
                     ),
                 ),
             ),

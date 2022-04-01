@@ -55,7 +55,7 @@ class SerializeLogTest extends DebugTestFramework
         $unserialized = SerializeLog::unserialize($serialized);
         $this->assertEquals(
             $expect,
-            $this->helper->deObjectifyData($unserialized),
+            $this->helper->deObjectifyData($unserialized)
         );
     }
 
@@ -310,7 +310,7 @@ EOD;
         $keysCompare = array('alerts', 'log','logSummary');
         $this->assertEquals(
             \array_intersect_key($expect, \array_flip($keysCompare)),
-            \array_intersect_key($this->helper->deObjectifyData($unserialized), \array_flip($keysCompare)),
+            \array_intersect_key($this->helper->deObjectifyData($unserialized), \array_flip($keysCompare))
         );
     }
 }

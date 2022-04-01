@@ -89,7 +89,7 @@ class UseStatements
         self::$useStatements = array();
 
         if (!\defined('T_NAME_QUALIFIED')) {
-            // PHP 8.0
+            // T_NAME_QUALIFIED introduced with PHP 8.0
             \define('T_NAME_QUALIFIED', 314);
         }
 
@@ -190,6 +190,7 @@ class UseStatements
                 switch ($token[0]) {
                     case T_STRING:
                     case T_NS_SEPARATOR:
+                    case T_NAME_QUALIFIED:
                         self::$namespace .= $token[1];
                         break;
                 }
@@ -206,6 +207,20 @@ class UseStatements
                 }
                 break;
         }
+    }
+
+    /**
+     * comma encountered... reset currentUse
+     *
+     * @return void
+     */
+    private static function recordTokenClass()
+    {
+        self::$currentUse = array(
+            'class' => self::$groupNamespace ?: '',
+            'alias' => '',
+        );
+        self::$recordPart = 'class';
     }
 
     /**
@@ -239,20 +254,6 @@ class UseStatements
     }
 
     /**
-     * comma encountered... reset currentUse
-     *
-     * @return void
-     */
-    private static function recordTokenClass()
-    {
-        self::$recordPart = 'class';
-        self::$currentUse = [
-            'class' => self::$groupNamespace ?: '',
-            'alias' => '',
-        ];
-    }
-
-    /**
      * Test if we should start "recording" use-statement info
      *
      * @param array|string $token token to test
@@ -280,10 +281,10 @@ class UseStatements
             case T_USE:
                 self::$record = 'class';
                 self::$recordPart = 'class';
-                self::$currentUse = [
+                self::$currentUse = array(
                     'class' => '',
                     'alias' => '',
-                ];
+                );
                 break;
         }
     }

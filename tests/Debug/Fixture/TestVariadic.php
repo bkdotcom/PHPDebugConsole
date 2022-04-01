@@ -19,6 +19,5 @@ class TestVariadic extends Test
      */
     public function methodVariadic($param1, ...$moreParams)
     {
-
     }
 }

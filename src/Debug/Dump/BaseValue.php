@@ -12,6 +12,7 @@
 
 namespace bdk\Debug\Dump;
 
+use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Component;
@@ -44,7 +45,7 @@ class BaseValue extends Component
     /**
      * Constructor
      *
-     * @param Dumper $dumper [description]
+     * @param Dumper $dumper "parent" dump class
      */
     public function __construct(Dumper $dumper)
     {

@@ -15,6 +15,7 @@ namespace bdk\Debug\Plugin\CustomMethod;
 use bdk\Debug;
 use bdk\Debug\Plugin\CustomMethodTrait;
 use bdk\HttpMessage\HttpFoundationBridge;
+use bdk\HttpMessage\Response;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
 use InvalidArgumentException;
@@ -31,6 +32,7 @@ class ReqRes implements SubscriberInterface
     private $serverParams = array();
 
     protected $methods = array(
+        'getHeaders',
         'getInterface',
         'getResponseCode',
         'getResponseHeader',
@@ -50,6 +52,18 @@ class ReqRes implements SubscriberInterface
             Debug::EVENT_CONFIG => array('onConfig', PHP_INT_MAX),
             Debug::EVENT_CUSTOM_METHOD => 'onCustomMethod',
         );
+    }
+
+    /**
+     * Get and clear debug headers that need to be output
+     *
+     * @return array headerName => value array
+     */
+    public function getHeaders()
+    {
+        $headers = $this->debug->data->get('headers');
+        $this->debug->data->set('headers', array());
+        return $headers;
     }
 
     /**
@@ -104,23 +118,22 @@ class ReqRes implements SubscriberInterface
      * Header value is pulled from PSR-7 response interface (if `Debug::writeToResponse()` is being used)
      * otherwise, value is pulled from emitted headers via `headers_list()`
      *
-     * @param string $header ('Content-Type') header to return
+     * @param string      $header    ('Content-Type') header to return
+     * @param null|string $delimiter (', ') if string, then join the header values
+     *                                 if null, return array
      *
-     * @return array
+     * @return array|string
      */
-    public function getResponseHeader($header = 'Content-Type')
+    public function getResponseHeader($header = 'Content-Type', $delimiter = ', ')
     {
-        $headers = $this->getResponseHeaders();
-        if (isset($headers['header'])) {
-            return $headers[$header];
-        }
         $header = \strtolower($header);
-        foreach ($headers as $k => $v) {
-            if ($header === \strtolower($k)) {
-                return $v;
-            }
-        }
-        return array();
+        $headers = \array_change_key_case($this->getResponseHeaders());
+        $values = isset($headers[$header])
+            ? $headers[$header]
+            : array();
+        return \is_string($delimiter)
+            ? \implode($delimiter, $values)
+            : $values;
     }
 
     /**
@@ -197,12 +210,7 @@ class ReqRes implements SubscriberInterface
     public function onConfig(Event $event)
     {
         $configs = $event->getValues();
-        if (empty($configs['debug'])) {
-            // no debug config values have changed
-            return;
-        }
-        $cfgDebug = $configs['debug'];
-        if (isset($cfgDebug['serviceProvider'])) {
+        if (isset($configs['debug']) && \array_key_exists('serviceProvider', $configs['debug'])) {
             $this->serverParams = array();
         }
     }
@@ -269,9 +277,9 @@ class ReqRes implements SubscriberInterface
             // reset the content length
             $response->headers->remove('Content-Length');
         }
-        $headers = $this->debug->getHeaders();
+        $headers = $this->getHeaders();
         foreach ($headers as $nameVal) {
-            $response = $response->headers->set($nameVal[0], $nameVal[1]);
+            $response->headers->set($nameVal[0], $nameVal[1]);
         }
         // update container
         $this->debug->onCfgServiceProvider(array(
@@ -297,7 +305,7 @@ class ReqRes implements SubscriberInterface
             $stream->write($debugOutput);
             $stream->rewind();
         }
-        $headers = $this->debug->getHeaders();
+        $headers = $this->getHeaders();
         foreach ($headers as $nameVal) {
             $response = $response->withHeader($nameVal[0], $nameVal[1]);
         }

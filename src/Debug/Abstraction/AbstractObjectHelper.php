@@ -153,10 +153,7 @@ class AbstractObjectHelper
      */
     public function resolvePhpDocType($type, Abstraction $abs)
     {
-        if (!$type) {
-            return $type;
-        }
-        if (!$abs['fullyQualifyPhpDocType']) {
+        if (!$type || !$abs['fullyQualifyPhpDocType']) {
             return $type;
         }
         $keywords = array(
@@ -239,16 +236,16 @@ class AbstractObjectHelper
             return $useStatements[$first] . \substr($type, \strlen($first));
         }
         $namespace = \substr($abs['className'], 0, \strrpos($abs['className'], '\\') ?: 0);
-        if ($namespace) {
-            /*
-                Truly relative?  Or, does PhpDoc omit '\' ?
-                Not 100% accurate, but check if absolute path exists
-                Otherwise assume relative to namespace
-            */
-            return \class_exists($type)
-                ? $type
-                : $namespace . '\\' . $type;
+        if (!$namespace) {
+            return $type;
         }
-        return $type;
+        /*
+            Truly relative?  Or, does PhpDoc omit '\' ?
+            Not 100% accurate, but check if absolute path exists
+            Otherwise assume relative to namespace
+        */
+        return \class_exists($type)
+            ? $type
+            : $namespace . '\\' . $type;
     }
 }

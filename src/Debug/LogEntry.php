@@ -58,7 +58,7 @@ class LogEntry extends Event implements JsonSerializable
         $this->subject = $subject;
         $this->values = array(
             'method' => $method,
-            'args' => $args ?: array(),
+            'args' => $args,
             'meta' => $meta,
             'numArgs' => 0,     // number of initial non-meta aargs passed (does not include added default values)
             'appendLog' => true,
@@ -92,7 +92,7 @@ class LogEntry extends Event implements JsonSerializable
     public function crate()
     {
         $firstArgVal = \reset($this->values['args']);
-        if ($this->subject->utility->isThrowable($firstArgVal)) {
+        if ($this->subject->php->isThrowable($firstArgVal)) {
             $exception = $firstArgVal;
             $this->values['args'][0] = $exception->getMessage();
             $this->setMeta(array(

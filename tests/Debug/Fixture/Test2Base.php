@@ -34,7 +34,6 @@ class Test2Base
     {
     }
 
-
     /**
      * magic method
      *

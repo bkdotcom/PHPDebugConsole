@@ -77,7 +77,7 @@ class GuzzleMiddleware extends Component
     /**
      * Subscribe to logEntry output... conditionaly output response group
      *
-     * @param LogEntry $logEntry [description]
+     * @param LogEntry $logEntry LogEntry instance
      *
      * @return void
      */

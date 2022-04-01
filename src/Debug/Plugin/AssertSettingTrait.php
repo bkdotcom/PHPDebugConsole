@@ -28,24 +28,28 @@ trait AssertSettingTrait
     {
         $setting = $this->assertSettingPrep(\array_merge(array(
             'filter' => FILTER_VALIDATE_BOOLEAN,
-            'msg' => '',
-            'name' => '',
+            'msg' => '',    // (optional) message displayed if assertion fails
+            'name' => '',   // ini name
             'operator' => '==',
             'valActual' => '__use_ini_val__',
             'valCompare' => true,
+            'addParams' => array(),
         ), $setting));
-        $assert = $setting['operator'] === '=='
-            ? $setting['valActual'] === $setting['valCompare']
-            : $setting['valActual'] !== $setting['valCompare'];
+        $assert = \is_array($setting['valCompare'])
+            ? \in_array($setting['valActual'], $setting['valCompare'], true)
+            : $this->debug->stringUtil->compare($setting['valActual'], $setting['valCompare'], $setting['operator']);
         $params = array(
             $assert,
-            '%c' . $setting['name'] . '%c ' . $setting['msg'],
+            $setting['name']
+                ? '%c' . $setting['name'] . '%c: ' . $setting['msg']
+                : $setting['msg'],
         );
         $cCount = \substr_count($params[1], '%c');
         for ($i = 0; $i < $cCount; $i += 2) {
             $params[] = 'font-family:monospace;';
             $params[] = '';
         }
+        $params = \array_merge($params, $setting['addParams']);
         \call_user_func_array(array($this->debug, 'assert'), $params);
     }
 
@@ -64,10 +68,12 @@ trait AssertSettingTrait
         $valFriendly = $setting['filter'] === FILTER_VALIDATE_BOOLEAN
             ? ($setting['valCompare'] ? 'enabled' : 'disabled')
             : $setting['valCompare'];
-        $msgDefault = $setting['operator'] === '=='
-            ? 'should be ' . $valFriendly
-            : 'should not be ' . $valFriendly;
-        $setting['msg'] = $setting['msg'] ?: $msgDefault;
+        if (!$setting['msg']) {
+            $msgDefault = $setting['operator'] === '=='
+                ? 'should be ' . $valFriendly
+                : 'should not be ' . $valFriendly;
+            $setting['msg'] = $msgDefault;
+        }
         return $setting;
     }
 }

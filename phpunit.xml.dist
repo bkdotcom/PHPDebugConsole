@@ -5,6 +5,9 @@
   bootstrap="tests/bootstrap.php"
   colors="true"
   testdox="true"
+  verbose="true"
+  beStrictAboutCoversAnnotation="false"
+  forceCoversAnnotation="true"
 >
   <php>
     <env name="MYSQL_HOST" value="localhost" />
@@ -38,8 +41,18 @@
     </exclude>
   </coverage>
   <testsuites>
+    <testsuite name="Container">
+      <directory>tests/Container</directory>
+    </testsuite>
+    <testsuite name="HttpMessage">
+      <directory>tests/HttpMessage</directory>
+    </testsuite>
+    <testsuite name="Utility">
+      <directory>tests/Debug/Utility</directory>
+    </testsuite>
     <testsuite name="Debug">
-      <directory>tests</directory>
+      <directory>tests/Debug</directory>
+      <exclude>tests/Debug/Utility</exclude>
     </testsuite>
   </testsuites>
 </phpunit>

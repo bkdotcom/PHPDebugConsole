@@ -7,7 +7,9 @@ use bdk\Debug\Abstraction\Abstracter;
 use bdk\Test\Debug\DebugTestFramework;
 
 /**
- * PHPUnit tests for Debug class
+ * PHPUnit tests for LogFiles plugin
+ *
+ * @covers \bdk\Debug\Plugin\LogFiles
  */
 class LogFilesTest extends DebugTestFramework
 {
@@ -26,7 +28,7 @@ class LogFilesTest extends DebugTestFramework
         $this->debug->pluginLogFiles->setFiles(array());
         $this->debug->pluginLogFiles->onOutput();
         $logEntries = $this->debug->data->get('log');
-        $logEntries = \array_map(array($this, 'logEntryToArray'), $logEntries);
+        $logEntries = $this->helper->deObjectifyData($logEntries);
         $this->assertSame(array(
             array(
                 'method' => 'info',
@@ -73,7 +75,7 @@ class LogFilesTest extends DebugTestFramework
         ));
         $this->debug->pluginLogFiles->onOutput();
         $logEntries = $this->debug->data->get('log');
-        $logEntries = \array_map(array($this, 'logEntryToArray'), $logEntries);
+        $logEntries = $this->helper->deObjectifyData($logEntries);
         $this->assertSame(array(
             array(
                 'method' => 'info',
@@ -161,7 +163,7 @@ class LogFilesTest extends DebugTestFramework
         $this->debug->pluginLogFiles->setCfg('asTree', false);
         $this->debug->pluginLogFiles->onOutput();
         $logEntries = $this->debug->data->get('log');
-        $logEntries = \array_map(array($this, 'logEntryToArray'), $logEntries);
+        $logEntries = $this->helper->deObjectifyData($logEntries);
         // echo json_encode($logEntries, JSON_PRETTY_PRINT) . "\n";
         $this->assertSame(array(
             array(

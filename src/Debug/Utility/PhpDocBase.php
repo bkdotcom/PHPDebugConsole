@@ -12,10 +12,10 @@
 
 namespace bdk\Debug\Utility;
 
+use bdk\Debug\Utility\Php;
 use ReflectionClass;
 use ReflectionClassConstant;
 use ReflectionMethod;
-use ReflectionObject;
 use ReflectionProperty;
 use Reflector;
 
@@ -36,14 +36,14 @@ class PhpDocBase
      */
     protected function getComment($what)
     {
-        $this->reflector = $this->getReflector($what);
+        $this->reflector = Php::getReflector($what);
         $docComment = $this->reflector
             ? \is_callable(array($this->reflector, 'getDocComment'))
                 ? $this->reflector->getDocComment()
                 : ''
             : $what;
         // remove opening "/**" and closing "*/"
-        $docComment = \preg_replace('#^\s*/\*\*(.+)\*/$#s', '$1', $docComment);
+        $docComment = \preg_replace('#^\s*/\*\*(.+)\*/$#s', '$1', (string) $docComment);
         // remove leading "*"s
         $docComment = \preg_replace('#^[ \t]*\*[ ]?#m', '', $docComment);
         return \trim($docComment);
@@ -79,16 +79,17 @@ class PhpDocBase
      */
     protected function getParentReflector(Reflector $reflector)
     {
-        if ($reflector instanceof ReflectionClass) {
-            return $this->getParentReflectorC($reflector);
-        }
         if ($reflector instanceof ReflectionMethod) {
-            return $this->getParentReflectorMp($reflector, 'method');
+            return $this->getParentReflectorMpc($reflector, 'method');
         }
         if ($reflector instanceof ReflectionProperty) {
-            return $this->getParentReflectorMp($reflector, 'property');
+            return $this->getParentReflectorMpc($reflector, 'property');
         }
-        return null;
+        if ($reflector instanceof ReflectionClassConstant) {
+            return $this->getParentReflectorMpc($reflector, 'constant');
+        }
+        // ReflectionClass  (incl ReflectionObject & ReflectionEnum)
+        return $this->getParentReflectorC($reflector);
     }
 
     /**
@@ -98,10 +99,10 @@ class PhpDocBase
      *
      * @return array
      */
-    protected function parseParams($paramStr)
+    protected function parseMethodParams($paramStr)
     {
         $params = $paramStr
-            ? self::parseParamsSplit($paramStr)
+            ? self::paramsSplit($paramStr)
             : array();
         $matches = array();
         foreach ($params as $i => $str) {
@@ -135,7 +136,7 @@ class PhpDocBase
     /**
      * Hash reflector name
      *
-     * @param Reflector $reflector [description]
+     * @param Reflector $reflector Reflector instance
      *
      * @return string
      */
@@ -161,7 +162,7 @@ class PhpDocBase
     /**
      * Find parent class reflector or first interface
      *
-     * @param ReflectionClass $reflector [description]
+     * @param ReflectionClass $reflector ReflectionClass instance
      *
      * @return ReflectionClass|null
      */
@@ -182,14 +183,17 @@ class PhpDocBase
      * Find method/property phpDoc in parent classes / interfaces
      *
      * @param Reflector $reflector Reflector interface
-     * @param string    $what      'method' or 'property'
+     * @param string    $what      'method' or 'property', or 'constant'
      *
      * @return Reflector|null
      */
-    private function getParentReflectorMp(Reflector $reflector, $what)
+    private function getParentReflectorMpc(Reflector $reflector, $what)
     {
         $hasWhat = 'has' . \ucfirst($what);
         $getWhat = 'get' . \ucfirst($what);
+        if ($what === 'constant') {
+            $getWhat = 'getReflectionConstant';  // php 7.1
+        }
         $name = $reflector->getName();
         $reflectionClass = $reflector->getDeclaringClass();
         $interfaces = $reflectionClass->getInterfaceNames();
@@ -207,34 +211,6 @@ class PhpDocBase
     }
 
     /**
-     * Returns reflector
-     *
-     * Accepts:
-     *   * object
-     *   * Reflector
-     *   * string  class
-     *   * string  class::method()
-     *   * string  class::$property
-     *   * string  class::CONSTANT
-     *
-     * @param mixed $what string|Reflector|object
-     *
-     * @return Reflector|null
-     */
-    private static function getReflector($what)
-    {
-        if ($what instanceof Reflector) {
-            return $what;
-        }
-        if (\is_object($what)) {
-            return new ReflectionObject($what);
-        }
-        return \is_string($what)
-            ? self::getReflectorFromString($what)
-            : null;
-    }
-
-    /**
      * Get the current classname
      *
      * @param Reflector $reflector Reflector instance
@@ -249,49 +225,13 @@ class PhpDocBase
     }
 
     /**
-     * String to Reflector
-     *
-     * @param string $string string representing class, method, property, or class constant
-     *
-     * @return Reflector|nul
-     */
-    private static function getReflectorFromString($string)
-    {
-        $regex = '/^'
-            . '(?P<class>[\w\\\]+)' // classname
-            . '(?:::(?:'
-                . '(?P<constant>\w+)|'       // constant
-                . '(?:\$(?P<property>\w+))|' // property
-                . '(?:(?P<method>\w+)\(\))|' // method
-            . '))?'
-            . '$/';
-        $matches = array();
-        \preg_match($regex, $string, $matches);
-        $defaults = \array_fill_keys(array('class','constant','property','method'), null);
-        $matches = \array_merge($defaults, $matches);
-        if ($matches['method']) {
-            return new ReflectionMethod($matches['class'], $matches['method']);
-        }
-        if ($matches['property']) {
-            return new ReflectionProperty($matches['class'], $matches['property']);
-        }
-        if ($matches['constant']) {
-            return new ReflectionClassConstant($matches['class'], $matches['constant']);
-        }
-        if ($matches['class']) {
-            return new ReflectionClass($matches['class']);
-        }
-        return null;
-    }
-
-    /**
-     * Split parameter string into individual params
+     * Split @method parameter string into individual params
      *
      * @param string $paramStr parameter string
      *
      * @return string[]
      */
-    private static function parseParamsSplit($paramStr)
+    private static function paramsSplit($paramStr)
     {
         $chars = \str_split($paramStr);
         $depth = 0;

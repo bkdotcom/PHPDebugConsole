@@ -259,6 +259,7 @@ class AbstractObjectProperties
         if (!$this->isDomObj($obj)) {
             return;
         }
+        // for php < 8.1
         $props = $this->addDomGetProps($obj);
         foreach ($props as $propName => $type) {
             $val = $obj->{$propName};
@@ -279,6 +280,8 @@ class AbstractObjectProperties
      * use print_r to get the property names
      * get_object_vars() doesn't work
      * var_dump may be overridden by xdebug...  and if xdebug v3 unable to disable at runtime
+     *
+     * PHP < 8.1
      *
      * @param object $obj DOMXXX instance
      *
@@ -539,12 +542,12 @@ class AbstractObjectProperties
     {
         $propName = $refProperty->getName();
         if (\array_key_exists($propName, $abs['propertyOverrideValues'])) {
-            $value = $abs['propertyOverrideValues'][$propName];
-            $propInfo['value'] = $value;
-            if (\is_array($value) && \array_intersect_key($value, static::$basePropInfo)) {
-                $propInfo = $value;
-            }
             $propInfo['valueFrom'] = 'debug';
+            $value = $abs['propertyOverrideValues'][$propName];
+            if (\is_array($value) && \array_intersect_key($value, static::$basePropInfo)) {
+                return \array_merge($propInfo, $value);
+            }
+            $propInfo['value'] = $value;
             return $propInfo;
         }
         $obj = $abs->getSubject();

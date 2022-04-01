@@ -6,10 +6,11 @@ use bdk\HttpMessage\Stream;
 use bdk\HttpMessage\UploadedFile;
 use bdk\Test\PolyFill\ExpectExceptionTrait;
 use PHPUnit\Framework\TestCase;
-use ReflectionObject;
+use ReflectionMethod;
+use ReflectionProperty;
 
 /**
- *
+ * @covers \bdk\HttpMessage\UploadedFile
  */
 class UploadedFileTest extends TestCase
 {
@@ -17,8 +18,7 @@ class UploadedFileTest extends TestCase
 
     public function testConstruct()
     {
-        // Test 1
-
+        // Test 1 (filepath)
         $uploadedFile = new UploadedFile(
             '/tmp/php1234.tmp', // source
             100000,             // size
@@ -29,11 +29,23 @@ class UploadedFileTest extends TestCase
 
         $this->assertTrue($uploadedFile instanceof UploadedFile);
 
-        // Test 2
+        // Test 2 (Stream)
         $resource = \fopen(TEST_DIR . '/assets/logo.png', 'r+');
         $stream = new Stream($resource);
         $uploadedFile = new UploadedFile($stream);
         $this->assertEquals($stream, $uploadedFile->getStream());
+
+        // Test 3 (resource)
+        $sourceFile = TEST_DIR . '/assets/logo.png';
+        $uploadedFile = new UploadedFile(
+            \fopen($sourceFile, 'r+'), // source
+            100000,             // size
+            UPLOAD_ERR_OK,      // error
+            'example1.jpg',     // name
+            'image/jpeg'        // type
+        );
+        $this->assertSame(\filesize($sourceFile), $uploadedFile->getSize());
+        $this->assertSame(\file_get_contents($sourceFile), $uploadedFile->getStream()->getContents());
     }
 
     public function testMoveToSapiCli()
@@ -52,9 +64,7 @@ class UploadedFileTest extends TestCase
             'logo.png',
             'image/png'
         );
-
         $uploadedFile->moveTo($targetPath);
-
         $this->assertTrue(\file_exists($targetPath));
 
         \unlink($targetPath);
@@ -73,12 +83,14 @@ class UploadedFileTest extends TestCase
             126,    // actual file size will be used
             UPLOAD_ERR_OK,
             'logo.png',
-            'image/png'
+            'image/png',
+            '/foo/bar/logo.png',
         );
 
         $this->assertSame(\filesize(TEST_DIR . '/assets/logo.png'), $uploadedFile->getSize());
         $this->assertSame(0, $uploadedFile->getError());
         $this->assertSame('logo.png', $uploadedFile->getClientFilename());
+        $this->assertSame('/foo/bar/logo.png', $uploadedFile->getClientFullPath());
         $this->assertSame('image/png', $uploadedFile->getClientMediaType());
         $this->assertSame('', $uploadedFile->getErrorMessage());
 
@@ -87,7 +99,7 @@ class UploadedFileTest extends TestCase
         $this->assertTrue($stream instanceof Stream);
     }
 
-    function testGetErrorMessage()
+    public function testGetErrorMessage()
     {
         $uploadedFile = new UploadedFile(
             TEST_DIR . '/assets/logo.png',
@@ -99,53 +111,52 @@ class UploadedFileTest extends TestCase
 
         $this->assertSame('', $uploadedFile->getErrorMessage());
 
-        $reflection = new ReflectionObject($uploadedFile);
-        $error = $reflection->getProperty('error');
-        $error->setAccessible(true);
+        $reflection = new ReflectionProperty($uploadedFile, 'error');
+        $reflection->setAccessible(true);
 
-        $error->setValue($uploadedFile, UPLOAD_ERR_INI_SIZE);
+        $reflection->setValue($uploadedFile, UPLOAD_ERR_INI_SIZE);
         $this->assertSame(
             'The uploaded file exceeds the upload_max_filesize directive in php.ini',
             $uploadedFile->getErrorMessage()
         );
 
-        $error->setValue($uploadedFile, UPLOAD_ERR_FORM_SIZE);
+        $reflection->setValue($uploadedFile, UPLOAD_ERR_FORM_SIZE);
         $this->assertSame(
             'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form.',
             $uploadedFile->getErrorMessage()
         );
 
-        $error->setValue($uploadedFile, UPLOAD_ERR_PARTIAL);
+        $reflection->setValue($uploadedFile, UPLOAD_ERR_PARTIAL);
         $this->assertSame(
             'The uploaded file was only partially uploaded.',
             $uploadedFile->getErrorMessage()
         );
 
-        $error->setValue($uploadedFile, UPLOAD_ERR_NO_FILE);
+        $reflection->setValue($uploadedFile, UPLOAD_ERR_NO_FILE);
         $this->assertSame(
             'No file was uploaded.',
             $uploadedFile->getErrorMessage()
         );
 
-        $error->setValue($uploadedFile, UPLOAD_ERR_NO_TMP_DIR);
+        $reflection->setValue($uploadedFile, UPLOAD_ERR_NO_TMP_DIR);
         $this->assertSame(
             'Missing a temporary folder.',
             $uploadedFile->getErrorMessage()
         );
 
-        $error->setValue($uploadedFile, UPLOAD_ERR_CANT_WRITE);
+        $reflection->setValue($uploadedFile, UPLOAD_ERR_CANT_WRITE);
         $this->assertSame(
             'Failed to write file to disk.',
             $uploadedFile->getErrorMessage()
         );
 
-        $error->setValue($uploadedFile, UPLOAD_ERR_EXTENSION);
+        $reflection->setValue($uploadedFile, UPLOAD_ERR_EXTENSION);
         $this->assertSame(
             'File upload stopped by extension.',
             $uploadedFile->getErrorMessage()
         );
 
-        $error->setValue($uploadedFile, 19890604);
+        $reflection->setValue($uploadedFile, 19890604);
         $this->assertSame(
             'Unknown upload error.',
             $uploadedFile->getErrorMessage()
@@ -159,33 +170,70 @@ class UploadedFileTest extends TestCase
     public function testExceptionArgumentIsInvalidSource()
     {
         $this->expectException('InvalidArgumentException');
-        // Exception => First argument accepts only a string or StreamInterface instance.
+        $this->expectExceptionMessage('Invalid stream or file provided for UploadedFile');
         new UploadedFile([]);
     }
 
-    public function testExceptionGetStreamStreamIsNotAvailable()
+    public function testExceptionInvalidError()
     {
-        $this->expectException('RuntimeException');
+        $this->expectException('InvalidArgumentException');
+        $this->expectExceptionMessage('Upload file error status must be an integer value and one of the "UPLOAD_ERR_*" constants.');
+        new UploadedFile(
+            '/tmp/php1234.tmp', // source
+            100000,             // size
+            666,      // error
+            'example1.jpg',     // name
+            'image/jpeg'        // type
+        );
+    }
 
-        // Test 1: Source is not a stream.
+    public function testExceptionInvalidSize()
+    {
+        $this->expectException('InvalidArgumentException');
+        $this->expectExceptionMessage('Upload file size must be an integer');
+        new UploadedFile(
+            '/tmp/php1234.tmp', // source
+            '100000',           // size
+            UPLOAD_ERR_OK,      // error
+            'example1.jpg',     // name
+            'image/jpeg'        // type
+        );
+    }
 
+    public function testExceptionInvalidFilename()
+    {
+        $this->expectException('InvalidArgumentException');
+        $this->expectExceptionMessage('Upload file clientFilename must be a string or null');
         $uploadedFile = new UploadedFile(
             '/tmp/php1234.tmp', // source
+            100000,             // size
+            UPLOAD_ERR_OK,      // error
+            true,               // name
+            'image/jpeg'        // type
+        );
+    }
+
+    public function testExceptionUnableToOpen()
+    {
+        $sourceFile = '/tmp/php1234.tmp';
+
+        $this->expectException('RuntimeException');
+        // $this->expectExceptionMessage('Unable to open ' . $sourceFile);
+
+        $uploadedFile = new UploadedFile(
+            $sourceFile,
             100000,             // size
             UPLOAD_ERR_OK,      // error
             'example1.jpg',     // name
             'image/jpeg'        // type
         );
-
-        // Exception => No stream is available or can be created.
         $uploadedFile->getStream();
     }
 
-    public function testExceptionGetStreamStreamIsMoved()
+    public function testExceptionGetStreamIsMoved()
     {
         $this->expectException('RuntimeException');
-
-        // Test 2: Stream has been moved, so can't find it using getStream().
+        $this->expectExceptionMessage('The stream has been moved.');
 
         $sourceFile = TEST_DIR . '/assets/logo.png';
         $cloneFile = self::getTestFilepath('logo_clone.png');
@@ -199,18 +247,58 @@ class UploadedFileTest extends TestCase
 
         $targetPath = self::getTestFilepath('logo_moved.png');
         $uploadedFile->moveTo($targetPath);
-
         $this->assertTrue(\file_exists($targetPath));
-
         \unlink($targetPath);
 
-        // Exception => The stream has been moved
         $uploadedFile->getStream();
+    }
+
+    public function testExceptionGetStreamNotAvailable()
+    {
+        $this->expectException('RuntimeException');
+        $this->expectExceptionMessage('No stream is available or can be created.');
+        $uploadedFile = new UploadedFile(
+            '/tmp/php1234.tmp',
+            100000,
+            UPLOAD_ERR_FORM_SIZE,
+            'logo.png',
+            'image/png'
+        );
+        $uploadedFile->getStream();
+    }
+
+    public function testExceptionMovePath1()
+    {
+        $this->expectException('InvalidArgumentException');
+        $this->expectExceptionMessage('Invalid path provided for move operation; must be a non-empty string');
+        $uploadedFile = new UploadedFile(
+            '/tmp/php1234.tmp',
+            100000,
+            UPLOAD_ERR_OK,
+            'logo.png',
+            'image/png'
+        );
+        $uploadedFile->moveTo(true);
+    }
+
+    public function testExceptionMovePath2()
+    {
+        $this->expectException('RuntimeException');
+        $this->expectExceptionMessage('The target path "some/bogus/path" is not writable.');
+        $uploadedFile = new UploadedFile(
+            '/tmp/php1234.tmp',
+            100000,
+            UPLOAD_ERR_OK,
+            'logo.png',
+            'image/png'
+        );
+        $uploadedFile->moveTo('some/bogus/path');
     }
 
     public function testExceptionMoveToFileIsMoved()
     {
         $this->expectException('RuntimeException');
+        $this->expectExceptionMessage('Cannot retrieve stream after it has already been moved');
 
         $uploadedFile = new UploadedFile(
             '/tmp/php1234.tmp',
@@ -220,10 +308,9 @@ class UploadedFileTest extends TestCase
             'image/png'
         );
 
-        $reflection = new ReflectionObject($uploadedFile);
-        $isMoved = $reflection->getProperty('isMoved');
-        $isMoved->setAccessible(true);
-        $isMoved->setValue($uploadedFile, true);
+        $reflection = new ReflectionProperty($uploadedFile, 'isMoved');
+        $reflection->setAccessible(true);
+        $reflection->setValue($uploadedFile, true);
 
         $targetPath = self::getTestFilepath('logo_moved.png');
 
@@ -231,9 +318,29 @@ class UploadedFileTest extends TestCase
         $uploadedFile->moveTo($targetPath);
     }
 
-    public function testExceptionMoveToTargetIsNotWritable()
+    public function testExceptionMoveToErrorUploaded()
     {
         $this->expectException('RuntimeException');
+        $this->expectExceptionMessage('Cannot retrieve stream due to upload error');
+
+        $uploadedFile = new UploadedFile(
+            '/tmp/php1234.tmp',
+            100000,
+            UPLOAD_ERR_FORM_SIZE,
+            'logo.png',
+            'image/png'
+        );
+
+        $targetPath = self::getTestFilepath('logo_moved.png');
+        $uploadedFile->moveTo($targetPath);
+    }
+
+    public function testExceptionMoveToTargetIsNotWritable()
+    {
+        $targetPath = TEST_DIR . '/tmp/folder-not-exists/test.png';
+
+        $this->expectException('RuntimeException');
+        $this->expectExceptionMessage('The target path "' . $targetPath . '" is not writable.');
 
         $uploadedFile = new UploadedFile(
             TEST_DIR . '/assets/logo.png',
@@ -244,12 +351,31 @@ class UploadedFileTest extends TestCase
         );
 
         // Exception => The target path "/tmp/folder-not-exists/test.png" is not writable.
-        $uploadedFile->moveTo(TEST_DIR . '/tmp/folder-not-exists/test.png');
+        $uploadedFile->moveTo($targetPath);
+    }
+
+    public function testExceptionMoveError()
+    {
+        $uploadedFile = new UploadedFile(
+            TEST_DIR . '/assets/logo.png',
+            100000,
+            UPLOAD_ERR_OK,
+            'logo.png',
+            'image/png'
+        );
+
+        $this->expectException('RuntimeException');
+        $reflection = new ReflectionMethod($uploadedFile, 'moveFile');
+        $reflection->setAccessible(true);
+        // Exception => The target path "/tmp/folder-not-exists/test.png" is not writable.
+        $reflection->invoke($uploadedFile, 'some/bogus/path');
     }
 
     public function testExceptionMoveToFileNotUploaded()
     {
+        $targetPath = self::getTestFilepath('logo_moved.png');
         $this->expectException('RuntimeException');
+        $this->expectExceptionMessage('Unable to move the file to ' . $targetPath);
 
         $uploadedFile = new UploadedFile(
             TEST_DIR . '/assets/logo.png',
@@ -260,12 +386,9 @@ class UploadedFileTest extends TestCase
             // 'mock-is-uploaded-file-false'
         );
 
-        $reflection = new ReflectionObject($uploadedFile);
-        $sapi = $reflection->getProperty('sapi');
-        $sapi->setAccessible(true);
-        $sapi->setValue($uploadedFile, 'apache');
-
-        $targetPath = self::getTestFilepath('logo_moved.png');
+        $reflection = new ReflectionProperty($uploadedFile, 'sapi');
+        $reflection->setAccessible(true);
+        $reflection->setValue($uploadedFile, 'apache');
         // Exception => not an uploaded file
         $uploadedFile->moveTo($targetPath);
     }

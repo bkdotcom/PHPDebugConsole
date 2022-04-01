@@ -3,12 +3,17 @@
 namespace bdk\Test\Debug\Collector;
 
 use bdk\Debug\Abstraction\Abstracter;
+use bdk\Debug\Collector\Pdo;
 use bdk\Debug\LogEntry;
 use bdk\PubSub\Event;
 use bdk\Test\Debug\DebugTestFramework;
 
 /**
  * PHPUnit tests for Debug class
+ *
+ * @covers \bdk\Debug\Collector\Pdo
+ * @covers \bdk\Debug\Collector\Pdo\Statement
+ * @covers \bdk\Debug\Collector\StatementInfo
  */
 class PdoTest extends DebugTestFramework
 {
@@ -28,7 +33,7 @@ class PdoTest extends DebugTestFramework
 EOD;
 
         $pdoBase = new \PDO('sqlite::memory:');
-        self::$client = new \bdk\Debug\Collector\Pdo($pdoBase);
+        self::$client = new Pdo($pdoBase);
         self::$client->exec($createTableSql);
     }
 
@@ -213,7 +218,6 @@ EOD;
 
         $logEntries = $this->getLogEntries();
 
-
         // duration
         $logEntriesExpect[1]['args'][0] = $logEntries[1]['args'][0];
         // memory
@@ -277,7 +281,6 @@ EOD;
             $this->getLogEntries(3)
         );
     }
-
 
     public function testDebugOutput()
     {
@@ -345,10 +348,14 @@ EOD;
             if ($count) {
                 $logEntries = \array_slice($logEntries, 0 - $count);
             }
+            /*
             return \array_map(function (LogEntry $logEntry) {
                 return $this->logEntryToArray($logEntry);
             }, $logEntries);
-        } elseif ($where === 'logSummary') {
+            */
+        }
+        /*
+        elseif ($where === 'logSummary') {
             foreach ($logEntries as $priority => $entries) {
                 $logEntries[$priority] = \array_map(function (LogEntry $logEntry) {
                     return $this->logEntryToArray($logEntry);
@@ -356,5 +363,7 @@ EOD;
             }
             return $logEntries;
         }
+        */
+        return $this->helper->deObjectifyData($logEntries);
     }
 }

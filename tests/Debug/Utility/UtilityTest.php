@@ -5,12 +5,45 @@ namespace bdk\Test\Debug\Utility;
 use bdk\Debug\Utility;
 use bdk\HttpMessage\Stream;
 use bdk\Test\Debug\DebugTestFramework;
+use bdk\Test\PolyFill\ExpectExceptionTrait;
 
 /**
  * PHPUnit tests for Utility class
+ *
+ * @covers \bdk\Debug\Utility
+ *
+ * @SuppressWarnings(PHPMD.StaticAccess)
  */
 class UtilityTest extends DebugTestFramework
 {
+    use ExpectExceptionTrait;
+
+    public function testEmitHeaders()
+    {
+        Utility::emitHeaders(array());
+        $this->assertSame(array(), $GLOBALS['collectedHeaders']);
+
+        Utility::emitHeaders(array(
+            'Location' => 'http://www.test.com/',
+            'Content-Security-Policy' => array(
+                'foo',
+                'bar',
+            ),
+            array('Content-Length', 1234),
+        ));
+        $this->assertSame(array(
+            array('Location: http://www.test.com/', true),
+            array('Content-Security-Policy: foo', true),
+            array('Content-Security-Policy: bar', false),
+            array('Content-Length: 1234', true),
+        ), $GLOBALS['collectedHeaders']);
+
+        $GLOBALS['headersSent'] = array(__FILE__, 42);
+        $this->expectException('RuntimeException');
+        $this->expectExceptionMessage('Headers already sent: ' . __FILE__ . ', line 42');
+        Utility::emitHeaders(array('foo' => 'bar'));
+    }
+
     public function testFormatDuration()
     {
         $this->assertSame('1:01:01.066000', Utility::formatDuration(3661.066, "%h:%I:%S.%F"));
@@ -28,30 +61,80 @@ class UtilityTest extends DebugTestFramework
 
     public function testGetBytes()
     {
-        $this->assertSame('1 kB', Utility::getBytes('1kb'));
+        $this->assertSame('1 PB', Utility::getBytes('1pb'));
+        $this->assertSame('1 TB', Utility::getBytes('1tb'));
+        $this->assertSame('1 GB', Utility::getBytes('1gb'));
+        $this->assertSame('1 MB', Utility::getBytes('1mb'));
+        $this->assertSame('1 kB', Utility::getBytes('1 kb'));
         $this->assertSame('1 kB', Utility::getBytes('1024'));
         $this->assertSame('1 kB', Utility::getBytes(1024));
+        $this->assertSame('123 B', Utility::getBytes('123 b'));
+        $this->assertSame('0 B', Utility::getBytes(0));
+        $this->assertSame('0 B', Utility::getBytes(0.5));
+
+        $this->assertSame(\pow(2, 50), Utility::getBytes('1pb', true));
+        $this->assertSame(\pow(2, 40), Utility::getBytes('1tb', true));
+        $this->assertSame(\pow(2, 30), Utility::getBytes('1gb', true));
+        $this->assertSame(\pow(2, 20), Utility::getBytes('1mb', true));
+        $this->assertSame(\pow(2, 10), Utility::getBytes('1kb', true));
+
+        $this->assertSame(false, Utility::getBytes('bob'));
     }
 
     /**
      * Test
      *
      * @return void
-     *
-     * @todo better test from cli
      */
     public function testGetEmittedHeader()
     {
-        $this->assertSame(array(), Utility::getEmittedHeader());
+        $GLOBALS['collectedHeaders'] = array();
+        $GLOBALS['headersSent'] = array();
+        Utility::emitHeaders(array(
+            'Content-Type' => 'application/json',
+            'Location' => 'http://www.test.com/',
+            'Content-Security-Policy' => array(
+                'foo',
+                'bar',
+            ),
+            array('Content-Length', 1234),
+        ));
+        $this->assertSame('application/json', Utility::getEmittedHeader());
+        $this->assertSame('foo, bar', Utility::getEmittedHeader('Content-Security-Policy'));
+        $this->assertSame(array('foo', 'bar'), Utility::getEmittedHeader('Content-Security-Policy', null));
+        $this->assertSame('', Utility::getEmittedHeader('Not-Sent'));
+        $this->assertSame(array(), Utility::getEmittedHeader('Not-Sent', null));
     }
 
-    public function testGetIncludedFiles()
+    /**
+     * Test
+     *
+     * @return void
+     */
+    public function testGetEmittedHeaders()
     {
-        $filesA = \get_included_files();
-        $filesB = Utility::getIncludedFiles();
-        \sort($filesA);
-        \sort($filesB);
-        $this->assertArraySubset($filesA, $filesB);
+        $GLOBALS['collectedHeaders'] = array();
+        $GLOBALS['headersSent'] = array();
+        Utility::emitHeaders(array(
+            'Location' => 'http://www.test.com/',
+            'Content-Security-Policy' => array(
+                'foo',
+                'bar',
+            ),
+            array('Content-Length', 1234),
+        ));
+        $this->assertSame(array(
+            'Location' => array(
+                'http://www.test.com/',
+            ),
+            'Content-Security-Policy' => array(
+                'foo',
+                'bar',
+            ),
+            'Content-Length' => array(
+                '1234',
+            ),
+        ), Utility::getEmittedHeaders());
     }
 
     public function testGetStreamContents()
@@ -62,6 +145,12 @@ class UtilityTest extends DebugTestFramework
         $this->assertSame('a test', $stream->getContents());
     }
 
+    public function testGitBranch()
+    {
+        $branch = Utility::gitBranch();
+        $this->assertTrue(\is_string($branch) || $branch === null);
+    }
+
     public function testIsFile()
     {
         $this->assertFalse(Utility::isFile(123));
@@ -70,54 +159,4 @@ class UtilityTest extends DebugTestFramework
         $this->assertFalse(Utility::isFile("\0foo.txt"));
         $this->assertFalse(Utility::isFile(__DIR__ . '/' . "\0foo.txt"));
     }
-
-    /**
-     * Test
-     *
-     * @return void
-     *
-     * @todo better test
-     */
-    public function testMemoryLimit()
-    {
-        $this->assertNotNull(Utility::memoryLimit());
-    }
-
-    /**
-     * Test
-     *
-     * @return array of serialized logs
-     */
-    /*
-    public function serializeLogProvider()
-    {
-        $log = array(
-            array('log', 'What rolls down stairs'),
-            array('info', 'alone or in pairs'),
-            array('warn', 'rolls over your neighbor\'s dog?'),
-        );
-        $serialized = Utility::serializeLog($log);
-        return array(
-            array($serialized, $log)
-        );
-    }
-    */
-
-    /**
-     * Test
-     *
-     * @param string $serialized   string provided by serializeLogProvider dataProvider
-     * @param array  $unserialized the unserialized array
-     *
-     * @return void
-     *
-     * @dataProvider serializeLogProvider
-     */
-    /*
-    public function testUnserializeLog($serialized, $unserialized)
-    {
-        $log = Utility::unserializeLog($serialized, $this->debug);
-        $this->assertSame($unserialized, $log);
-    }
-    */
 }

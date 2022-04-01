@@ -16,6 +16,8 @@ use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
+use bdk\Debug\Utility\Php;
+use bdk\Debug\Utility\StringUtil;
 
 /**
  * Serialize / compress / base64 encode log data
@@ -26,17 +28,18 @@ class SerializeLog
     protected static $isLegacyData = false;
 
     /**
-     * serialize log for emailing
+     * Serialize log for emailing
      *
-     * @param array $data log data to serialize
+     * @param Debug $debug debug instance
      *
      * @return string
      */
-    public static function serialize($data)
+    public static function serialize(Debug $debug)
     {
-        foreach (array('alerts','log','logSummary') as $cat) {
-            $data[$cat] = self::serializeCategory($cat, $data[$cat]);
-        }
+        $data = \array_merge(static::serializeGetData($debug), array(
+            'config' => static::serializeGetConfig($debug),
+            'version' => Debug::VERSION,
+        ));
         $str = \serialize($data);
         if (\function_exists('gzdeflate')) {
             $str = \gzdeflate($str);
@@ -50,19 +53,73 @@ class SerializeLog
     /**
      * Use to unserialize the log serialized by emailLog
      *
-     * @param string $str   serialized log data
-     * @param Debug  $debug (optional) Debug instance
+     * @param string $str serialized log data
      *
      * @return array|false
-     *
-     * @SuppressWarnings(PHPMD.StaticAccess)
      */
-    public static function unserialize($str, Debug $debug = null)
+    public static function unserialize($str)
+    {
+        $data = false;
+        $str = self::extractLog($str);
+        $str = self::unserializeDecode($str);
+        if ($str) {
+            $data = Php::unserializeSafe($str, array(
+                'bdk\\Debug\\Abstraction\\Abstraction',
+            ));
+        }
+        if (!$data) {
+            return false;
+        }
+        $data = \array_merge(array(
+            'version' => '2.3',
+        ), $data);
+        if (isset($data['rootChannel'])) {
+            $data['config']['channelName'] = $data['rootChannel'];
+            $data['config']['channels'] = array();
+            unset($data['rootChannel']);
+        }
+        return $data;
+    }
+
+    /**
+     * Import the config and data into the debug instance
+     *
+     * @param array $data  Unpacked / Unserialized log data
+     * @param Debug $debug (optional) Debug instance
+     *
+     * @return Debug
+     */
+    public static function import($data, Debug $debug = null)
     {
         if (!$debug) {
-            $debug = Debug::getInstance();
+            $debug = new Debug();
         }
+        self::$isLegacyData = \version_compare($data['version'], '3.0', '<');
         self::$debug = $debug;
+        // set config for any channels already present in debug
+        foreach (\array_intersect_key($debug->getChannels(true, true), $data['config']['channels']) as $fqn => $channel) {
+            $channel->setCfg($data['config']['channels'][$fqn]);
+        }
+        $debug->setCfg($data['config']);
+        unset($data['config'], $data['version']);
+        foreach (array('alerts','log','logSummary') as $cat) {
+            $data[$cat] = self::importCategory($cat, $data[$cat]);
+        }
+        foreach ($data as $k => $v) {
+            $debug->data->set($k, $v);
+        }
+        return $debug;
+    }
+
+    /**
+     * Extract serialized/encoded log data from between "START DEBUG" & "END DEBUG"
+     *
+     * @param string $str string containing serialized log
+     *
+     * @return string
+     */
+    private static function extractLog($str)
+    {
         $strStart = 'START DEBUG';
         $strEnd = 'END DEBUG';
         $regex = '/' . $strStart . '[\r\n]+(.+)[\r\n]+' . $strEnd . '/s';
@@ -70,11 +127,75 @@ class SerializeLog
         if (\preg_match($regex, $str, $matches)) {
             $str = $matches[1];
         }
-        $str = self::unserializeDecode($str);
-        $data = self::unserializeSafe($str, array(
-            'bdk\\Debug\\Abstraction\\Abstraction',
-        ));
-        return self::unserializeLogData($data);
+        return $str;
+    }
+
+    /**
+     * "unserialize" log data
+     *
+     * @param string $cat  ('alerts'|'log'|'logSummary')
+     * @param array  $data data to unserialize
+     *
+     * @return array
+     */
+    private static function importCategory($cat, $data)
+    {
+        foreach ($data as $i => $val) {
+            if ($cat !== 'logSummary') {
+                $data[$i] = self::importLogEntry($val);
+                continue;
+            }
+            foreach ($val as $priority => $val2) {
+                $data[$i][$priority] = self::importLogEntry($val2);
+            }
+        }
+        return $data;
+    }
+
+    /**
+     * Unserialzie Log entry
+     *
+     * @param array $vals method, args, & meta values
+     *
+     * @return LogEntry
+     */
+    private static function importLogEntry($vals)
+    {
+        if (self::$isLegacyData) {
+            $vals[1] = self::importLegacy($vals[1]);
+        }
+        return new LogEntry(self::$debug, $vals[0], $vals[1], $vals[2]);
+    }
+
+    /**
+     * Convert pre 3.0 serialized log entry args to 3.0
+     *
+     * Prior to to v3.0, abstractions were stored as an array
+     * Find these arrays and convert them to Abstraction objects
+     *
+     * @param array $vals values orproperties
+     *
+     * @return array
+     */
+    private static function importLegacy($vals)
+    {
+        foreach ($vals as $k => $v) {
+            if (!\is_array($v)) {
+                continue;
+            }
+            if (!isset($v['debug']) || $v['debug'] !== Abstracter::ABSTRACTION) {
+                $vals[$k] = self::importLegacy($v);
+                continue;
+            }
+            // we are an abstraction
+            $type = $v['type'];
+            unset($v['debug'], $v['type']);
+            if ($type === Abstracter::TYPE_OBJECT) {
+                $v['properties'] = self::importLegacy($v['properties']);
+            }
+            $vals[$k] = new Abstraction($type, $v);
+        }
+        return $vals;
     }
 
     /**
@@ -100,42 +221,51 @@ class SerializeLog
     }
 
     /**
-     * "unserialize" log data
+     * Get debug configuration
      *
-     * @param string $cat  ('alerts'|'log'|'logSummary')
-     * @param array  $data data to unserialize
+     * @param Debug $debug Debug instance
      *
      * @return array
      */
-    private static function unserializeCategory($cat, $data)
+    private static function serializeGetConfig(Debug $debug)
     {
-        foreach ($data as $i => $val) {
-            if ($cat !== 'logSummary') {
-                $data[$i] = self::unserializeLogEntry($val);
-                continue;
-            }
-            foreach ($val as $priority => $val2) {
-                $data[$i][$priority] = self::unserializeLogEntry($val2);
-            }
-        }
-        return $data;
+        $rootInstance = $debug->rootInstance;
+        $channelNameRoot = $rootInstance->getCfg('channelName', Debug::CONFIG_DEBUG);
+        $channels = \array_map(function (Debug $channel) use ($channelNameRoot) {
+            $channelName = $channel->getCfg('channelName', Debug::CONFIG_DEBUG);
+            return array(
+                'channelIcon' => $channel->getCfg('channelIcon', Debug::CONFIG_DEBUG),
+                'channelShow' => $channel->getCfg('channelShow', Debug::CONFIG_DEBUG),
+                'channelSort' => $channel->getCfg('channelSort', Debug::CONFIG_DEBUG),
+                'nested' => \strpos($channelName, $channelNameRoot . '.') === 0,
+            );
+        }, $rootInstance->getChannels(true, true));
+        return array(
+            'channelIcon' => $rootInstance->getCfg('channelIcon', Debug::CONFIG_DEBUG),
+            'channelName' => $channelNameRoot,
+            'channels' => $channels,
+            'logRuntime' => $rootInstance->getCfg('logRuntime', Debug::CONFIG_DEBUG),
+        );
     }
 
     /**
-     * for unserialized log, Convert logEntry arrays to log entry objects
+     * Get debug log data
      *
-     * @param array $data unserialized log data
+     * @param Debug $debug Debug instance
      *
-     * @return array log data
+     * @return array
      */
-    private static function unserializeLogData($data)
+    private static function serializeGetData(Debug $debug)
     {
-        $dataVer = isset($data['version'])
-            ? $data['version']
-            : '2.3' ;
-        self::$isLegacyData = \version_compare($dataVer, '3.0', '<');
+        $data = \array_intersect_key($debug->data->get(), \array_flip(array(
+            'alerts',
+            'log',
+            'logSummary',
+            'requestId',
+            'runtime',
+        )));
         foreach (array('alerts','log','logSummary') as $cat) {
-            $data[$cat] = self::unserializeCategory($cat, $data[$cat]);
+            $data[$cat] = self::serializeCategory($cat, $data[$cat]);
         }
         return $data;
     }
@@ -145,11 +275,11 @@ class SerializeLog
      *
      * @param string $str compressed / encoded log data
      *
-     * @return string
+     * @return string|false
      */
     private static function unserializeDecode($str)
     {
-        $str = self::$debug->stringUtil->isBase64Encoded($str)
+        $str = StringUtil::isBase64Encoded($str)
             ? \base64_decode($str)
             : false;
         if ($str && \function_exists('gzinflate')) {
@@ -159,79 +289,5 @@ class SerializeLog
             }
         }
         return $str;
-    }
-
-    /**
-     * Unserialzie Log entry
-     *
-     * @param array $vals method, args, & meta values
-     *
-     * @return LogEntry
-     */
-    private static function unserializeLogEntry($vals)
-    {
-        if (self::$isLegacyData) {
-            $vals[1] = self::unserializeLogLegacy($vals[1]);
-        }
-        return new LogEntry(self::$debug, $vals[0], $vals[1], $vals[2]);
-    }
-
-    /**
-     * Convert pre 3.0 serialized log entry args to 3.0
-     *
-     * Prior to to v3.0, abstractions were stored as an array
-     * Find these arrays and convert them to Abstraction objects
-     *
-     * @param array $args log entry args (unserialized)
-     *
-     * @return array
-     */
-    private static function unserializeLogLegacy($args)
-    {
-        foreach ($args as $k => $v) {
-            if (!\is_array($v)) {
-                continue;
-            }
-            if (isset($v['debug']) && $v['debug'] === Abstracter::ABSTRACTION) {
-                $type = $v['type'];
-                unset($v['debug'], $v['type']);
-                if ($type === Abstracter::TYPE_OBJECT) {
-                    $v['properties'] = self::unserializeLogLegacy($v['properties']);
-                }
-                $args[$k] = new Abstraction($type, $v);
-                continue;
-            }
-            $args[$k] = self::unserializeLogLegacy($v);
-        }
-        return $args;
-    }
-
-    /**
-     * Unserialize while only allowing the specified classes to be unserialized
-     *
-     * @param string   $str            serialized string
-     * @param string[] $allowedClasses allowed class names
-     *
-     * @return mixed
-     */
-    private static function unserializeSafe($str, $allowedClasses = array())
-    {
-        if (\version_compare(PHP_VERSION, '7.0', '>=')) {
-            // 2nd param is PHP >= 7.0 (get a warning: unserialize() expects exactly 1 parameter, 2 given)
-            return \unserialize($str, array(
-                'allowed_classes' => $allowedClasses,
-            ));
-        }
-        // There's a possibility this pattern may be found inside a string (false positive)
-        $regex = '#[CO]:(\d+):"([\w\\\\]+)":\d+:#';
-        \preg_match_all($regex, $str, $matches, PREG_SET_ORDER);
-        foreach ($matches as $set) {
-            if (\strlen($set[2]) !== $set[1]) {
-                continue;
-            } elseif (!\in_array($set[2], $allowedClasses)) {
-                return false;
-            }
-        }
-        return \unserialize($str);
     }
 }

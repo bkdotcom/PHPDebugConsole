@@ -100,13 +100,13 @@ class ConfigEvents implements SubscriberInterface
             'onOutput' => array($this, 'onCfgOnOutput'),
             'route' => array($this, 'onCfgRoute'),
             'serviceProvider' => array($this, 'onCfgServiceProvider'),
+            'enableProfiling' => array($this, 'onCfgEnableProfiling'),
         ), $cfgDebug);
         foreach ($valActions as $key => $callable) {
             /** @psalm-suppress TooManyArguments */
             $cfgDebug[$key] = $callable($cfgDebug[$key], $key, $event);
         }
         $event['debug'] = \array_merge($event['debug'], $cfgDebug);
-        $this->onCfgProfilingUpdate($cfgDebug);
     }
 
     /**
@@ -130,6 +130,36 @@ class ConfigEvents implements SubscriberInterface
             // also set for errorEmailer
             $errorEmailerCfg[$key] = $val;
             $event['errorEmailer'] = $errorEmailerCfg;
+        }
+        return $val;
+    }
+
+    /**
+     * Test if we need to enable profiling
+     *
+     * @param string $val   config value
+     * @param string $key   config param name
+     * @param Event  $event The config change event
+     *
+     * @return bool
+     */
+    private function onCfgEnableProfiling($val, $key, Event $event)
+    {
+        if (static::$profilingEnabled) {
+            // profiling already enabled
+            return $val;
+        }
+        $cfgAll = \array_merge(
+            $this->debug->getCfg(null, Debug::CONFIG_DEBUG),
+            $event['debug']
+        );
+        if ($cfgAll['enableProfiling'] && $cfgAll['collect']) {
+            static::$profilingEnabled = true;
+            FileStreamWrapper::setEventManager($this->debug->eventManager);
+            FileStreamWrapper::setPathsExclude(array(
+                __DIR__,
+            ));
+            FileStreamWrapper::register();
         }
         return $val;
     }
@@ -211,7 +241,6 @@ class ConfigEvents implements SubscriberInterface
     {
         if ($val === 'auto') {
             $serverParams = \array_merge(array(
-                'HTTP_ACCEPT' => null,
                 'HTTP_SOAPACTION' => null,
                 'HTTP_USER_AGENT' => '',
             ), $this->debug->request->getServerParams());
@@ -322,33 +351,6 @@ class ConfigEvents implements SubscriberInterface
             $this->debug->eventManager->subscribe(Debug::EVENT_MIDDLEWARE, $val);
         }
         return $val;
-    }
-
-    /**
-     * Test if we need to enable profiling
-     *
-     * @param array $cfgDebug Debug config values being updated
-     *
-     * @return void
-     */
-    private function onCfgProfilingUpdate($cfgDebug)
-    {
-        if (static::$profilingEnabled) {
-            // profiling already enabled
-            return;
-        }
-        $cfgAll = \array_merge(
-            $this->debug->getCfg(null, Debug::CONFIG_DEBUG),
-            $cfgDebug
-        );
-        if ($cfgAll['enableProfiling'] && $cfgAll['collect']) {
-            static::$profilingEnabled = true;
-            FileStreamWrapper::setEventManager($this->debug->eventManager);
-            FileStreamWrapper::setPathsExclude(array(
-                __DIR__,
-            ));
-            FileStreamWrapper::register();
-        }
     }
 
     /**

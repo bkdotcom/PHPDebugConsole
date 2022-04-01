@@ -18,7 +18,7 @@ use InvalidArgumentException;
  * INTERNAL USE ONLY
  * All the non-public Uri bits
  */
-class UriBase
+abstract class AbstractUri
 {
     const CHAR_SUB_DELIMS = '!\$&\'\(\)\*\+,;=';
     const CHAR_UNRESERVED = 'a-zA-Z0-9_\-\.~';
@@ -50,6 +50,7 @@ class UriBase
             return;
         }
         if (\filter_var($host, FILTER_VALIDATE_IP)) {
+            // only if php < 7.0
             return;
         }
         throw new InvalidArgumentException(\sprintf(
@@ -184,15 +185,15 @@ class UriBase
      */
     protected function parseUrl($url)
     {
-        if (PHP_VERSION_ID < 50500 && \strpos($url, '//') === 0) {
-            // php 5.4 chokes without the scheme
-            $parts = \parse_url('http:' . $url);
-            if ($parts) {
-                $parts['scheme'] = '';
-            }
-            return $parts;
+        if (PHP_VERSION_ID >= 50500 || \strpos($url, '//') !== 0) {
+            return \parse_url($url);
         }
-        return \parse_url($url);
+        // php 5.4 chokes without the scheme
+        $parts = \parse_url('http:' . $url);
+        if ($parts) {
+            $parts['scheme'] = '';
+        }
+        return $parts;
     }
 
     /**

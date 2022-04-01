@@ -90,7 +90,7 @@ class Time
     {
         $debug = $logEntry->getSubject();
         $label = $logEntry['args'][0];
-        $elapsed = $debug->stopWatch->get($label);
+        $elapsed = $debug->stopWatch->get($label, $label);
         if ($elapsed === false) {
             if ($logEntry->getMeta('silent') === false) {
                 $debug->log(new LogEntry(
@@ -119,7 +119,7 @@ class Time
         $args = $logEntry['args'];
         $meta = $logEntry['meta'];
         $label = $args[0];
-        $elapsed = $debug->stopWatch->get($label);
+        $elapsed = $debug->stopWatch->get($label, $label);
         if ($elapsed === false) {
             $debug->log(new LogEntry(
                 $debug,

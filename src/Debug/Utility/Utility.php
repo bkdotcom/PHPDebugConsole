@@ -14,18 +14,12 @@ namespace bdk\Debug;
 
 use Exception;
 use Psr\Http\Message\StreamInterface;
-use ReflectionClass;
-use ReflectionObject;
 
 /**
  * Utility methods
  */
 class Utility
 {
-    const IS_CALLABLE_ARRAY_ONLY = 1;
-    const IS_CALLABLE_OBJ_ONLY = 2;
-    const IS_CALLABLE_STRICT = 3;
-
     /**
      * Emit headers queued for output directly using `header()`
      *
@@ -39,14 +33,15 @@ class Utility
      * @return void
      * @throws \RuntimeException if headers already sent
      */
-    public function emitHeaders($headers)
+    public static function emitHeaders($headers)
     {
         if (!$headers) {
             return;
         }
         $file = '';
         $line = 0;
-        if (\headers_sent($file, $line)) {
+        // @phpcs:disable SlevomatCodingStandard.Namespaces.FullyQualifiedGlobalFunctions.NonFullyQualified
+        if (headers_sent($file, $line)) {
             throw new \RuntimeException('Headers already sent: ' . $file . ', line ' . $line);
         }
         foreach ($headers as $key => $val) {
@@ -54,7 +49,7 @@ class Utility
                 $key = $val[0];
                 $val = $val[1];
             }
-            $this->emitHeader($key, $val);
+            self::emitHeader($key, $val);
         }
     }
 
@@ -93,30 +88,6 @@ class Utility
     }
 
     /**
-     * Get friendly classname for given classname or object
-     * This is primarily useful for anonymous classes
-     *
-     * @param object|class-string $mixed Reflector instance, object, or classname
-     *
-     * @return string
-     */
-    public static function friendlyClassName($mixed)
-    {
-        $reflector = $mixed instanceof ReflectionClass
-            ? $mixed
-            : (\is_object($mixed)
-                ? new ReflectionObject($mixed)
-                : new ReflectionClass($mixed)
-            );
-        if (PHP_VERSION_ID < 70000 || $reflector->isAnonymous() === false) {
-            return $reflector->getName();
-        }
-        $parentClassRef = $reflector->getParentClass();
-        $extends = $parentClassRef ? $parentClassRef->getName() : null;
-        return ($extends ?: \current($reflector->getInterfaceNames()) ?: 'class') . '@anonymous';
-    }
-
-    /**
      * Convert size int into "1.23 kB" or vice versa
      *
      * @param int|string $size      bytes or similar to "1.23M"
@@ -138,7 +109,7 @@ class Utility
         $units = array('B','kB','MB','GB','TB','PB');
         $exp = (int) \floor(\log((float) $size, 1024));
         $pow = \pow(1024, $exp);
-        $size = (int) $pow === 0
+        $size = (int) $pow < 1
             ? '0 B'
             : \round($size / $pow, 2) . ' ' . $units[$exp];
         return $size;
@@ -147,12 +118,13 @@ class Utility
     /**
      * Returns sent/pending response header values for specified header
      *
-     * @param string $key       ('Content-Type') header to return
-     * @param string $delimiter Optional.  If specified, join values.  Otherwise, array is returned
+     * @param string      $key       ('Content-Type') header to return
+     * @param null|string $delimiter (', ') if string, then join the header values
+     *                                 if null, return array
      *
      * @return array|string
      */
-    public static function getEmittedHeader($key = 'Content-Type', $delimiter = null)
+    public static function getEmittedHeader($key = 'Content-Type', $delimiter = ', ')
     {
         $headers = static::getEmittedHeaders();
         $header = isset($headers[$key])
@@ -173,33 +145,14 @@ class Utility
      */
     public static function getEmittedHeaders()
     {
-        $list = \headers_list();
+        // @phpcs:disable SlevomatCodingStandard.Namespaces.FullyQualifiedGlobalFunctions.NonFullyQualified
+        $list = headers_list();
         $headers = array();
         foreach ($list as $header) {
             list($key, $value) = \explode(': ', $header, 2);
             $headers[$key][] = $value;
         }
         return $headers;
-    }
-
-    /**
-     * returns required/included files sorted by directory
-     *
-     * @return array
-     */
-    public static function getIncludedFiles()
-    {
-        $includedFiles = \get_included_files();
-        \usort($includedFiles, function ($valA, $valB) {
-            $valA = \str_replace('_', '0', $valA);
-            $valB = \str_replace('_', '0', $valB);
-            $dirA = \dirname($valA);
-            $dirB = \dirname($valB);
-            return $dirA === $dirB
-                ? \strnatcasecmp($valA, $valB)
-                : \strnatcasecmp($dirA, $dirB);
-        });
-        return $includedFiles;
     }
 
     /**
@@ -216,8 +169,10 @@ class Utility
             $body = (string) $stream; // __toString() is like getContents(), but without throwing exceptions
             $stream->seek($pos);
             return $body;
+            // @codeCoverageIgnoreStart
         } catch (Exception $e) {
             return '';
+            // @codeCoverageIgnoreEnd
         }
     }
 
@@ -230,51 +185,18 @@ class Utility
     {
         $redirect = \stripos(PHP_OS, 'WIN') !== 0
             ? '2>/dev/null'
-            : '2> nul';
+            : '2> nul';  // @codeCoverageIgnore
         $outputLines = array();
         $returnStatus = 0;
-        $matches = array();
+        // all branches are output
+        // current branch is preceeded with "*"
         \exec('git branch ' . $redirect, $outputLines, $returnStatus);
-        if ($returnStatus !== 0) {
-            return null;
-        }
         $allLines = \implode("\n", $outputLines);
+        $matches = array();
         \preg_match('#^\* (.+)$#m', $allLines, $matches);
-        if (!$matches) {
-            return null;
-        }
-        return $matches[1];
-    }
-
-    /**
-     * Test if value is callable
-     *
-     * @param string|array $val  value to check
-     * @param int          $opts bitmask of IS_CALLABLE_x constants
-     *                         default:  IS_CALLABLE_ARRAY_ONLY | IS_CALLABLE_OBJ_ONLY | IS_CALLABLE_STRICT
-     *                         IS_CALLABLE_ARRAY_ONLY
-     *                              must be array(x, 'method')
-     *                         IS_CALLABLE_OBJ_ONLY
-     *                              must be array(obj, 'methodName')
-     *                         IS_CALLABLE_STRICT
-     *
-     * @return bool
-     */
-    public static function isCallable($val, $opts = 0b111)
-    {
-        $syntaxOnly = ($opts & self::IS_CALLABLE_STRICT) !== self::IS_CALLABLE_STRICT;
-        if (\is_array($val) === false) {
-            return $opts & self::IS_CALLABLE_ARRAY_ONLY
-                ? false
-                : \is_callable($val, $syntaxOnly);
-        }
-        if (!isset($val[0])) {
-            return false;
-        }
-        if ($opts & self::IS_CALLABLE_OBJ_ONLY && \is_object($val[0]) === false) {
-            return false;
-        }
-        return \is_callable($val, $syntaxOnly);
+        return $matches
+            ? $matches[1]
+            : null;
     }
 
     /**
@@ -299,45 +221,26 @@ class Utility
     }
 
     /**
-     * Throwable is a PHP 7+ thing
-     *
-     * @param mixed $val Value to test
-     *
-     * @return bool
-     */
-    public static function isThrowable($val)
-    {
-        return $val instanceof \Error || $val instanceof \Exception;
-    }
-
-    /**
-     * Determine PHP's MemoryLimit
-     *
-     * @return string
-     */
-    public static function memoryLimit()
-    {
-        $iniVal = \trim(\ini_get('memory_limit') ?: \get_cfg_var('memory_limit'));
-        return $iniVal ?: '128M';
-    }
-
-    /**
      * Emit a header
      *
      * @param string       $name  Header name
      * @param string|array $value Header value(s)
      *
      * @return void
+     * @phpcs:disable SlevomatCodingStandard.Namespaces.FullyQualifiedGlobalFunctions.NonFullyQualified
      */
-    private function emitHeader($name, $value)
+    private static function emitHeader($name, $value)
     {
         if (\is_array($value)) {
+            $val = \array_shift($value);
+            header($name . ': ' . $val);
             foreach ($value as $val) {
-                \header($name . ': ' . $val);
+                // add (vs replace) the additional headers
+                header($name . ': ' . $val, false);
             }
             return;
         }
-        \header($name . ': ' . $value);
+        header($name . ': ' . $value);
     }
 
     /**
@@ -412,14 +315,12 @@ class Utility
      */
     private static function parseBytes($size)
     {
-        if (\is_int($size)) {
-            return $size;
-        }
         if (\preg_match('/^[\d,]+$/', $size)) {
             return (int) \str_replace(',', '', $size);
         }
         $matches = array();
-        if (\preg_match('/^([\d,.]+)\s?([kmgtp])b?$/i', $size, $matches)) {
+        if (\preg_match('/^([\d,.]+)\s?([kmgtp])?b?$/i', $size, $matches)) {
+            $matches = \array_replace(array('','',''), $matches);
             $size = (float) \str_replace(',', '', $matches[1]);
             switch (\strtolower($matches[2])) {
                 case 'p':

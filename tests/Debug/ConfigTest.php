@@ -7,9 +7,43 @@ use bdk\HttpMessage\ServerRequest;
 
 /**
  * PHPUnit tests for Debug class
+ *
+ * @covers \bdk\Debug\Config
+ * @covers \bdk\Debug\ConfigEvents
+ * @covers \bdk\Debug\Internal
+ * @covers \bdk\Debug\InternalEvents
+ * @covers \bdk\Debug\Plugin\AssertSettingTrait
+ * @covers \bdk\Debug\Plugin\LogEnv
+ * @covers \bdk\Debug\Plugin\Manager
+ * @covers \bdk\Debug\Plugin\Redaction
  */
 class ConfigTest extends DebugTestFramework
 {
+    public function testAssertSettingShouldNotBe()
+    {
+        $reflectionMethod = new \ReflectionMethod($this->debug->pluginLogPhp, 'assertSetting');
+        $reflectionMethod->setAccessible(true);
+        $fart = $reflectionMethod->invoke($this->debug->pluginLogPhp, array(
+            'filter' => FILTER_VALIDATE_INT,
+            'name' => 'testThing',
+            'operator' => '!=',
+            'valActual' => 666,
+            'valCompare' => 666,
+        ));
+        $this->helper->stderr('fart', $fart);
+        $this->assertSame(array(
+            'method' => 'assert',
+            'args' => array(
+                '%ctestThing%c: should not be 666',
+                'font-family:monospace;',
+                '',
+            ),
+            'meta' => array(
+                'channel' => 'php',
+            ),
+        ), $this->helper->logEntryToArray($this->debug->data->get('log/__end__')));
+    }
+
     /**
      * Test
      *
@@ -69,6 +103,7 @@ class ConfigTest extends DebugTestFramework
             'emailLog',
             'emailTo',
             'exitCheck',
+            'extensionsCheck',
             'headerMaxAll',
             'headerMaxPer',
             'logEnvInfo',
@@ -82,7 +117,7 @@ class ConfigTest extends DebugTestFramework
             'onOutput',
             'outputHeaders',
             'redactKeys',
-            'redactReplace',
+            // 'redactReplace',
             'route',
             'routeNonHtml',
             'serviceProvider',
@@ -185,7 +220,9 @@ class ConfigTest extends DebugTestFramework
      */
     public function testPending()
     {
-        $debug = new Debug();
+        $debug = new Debug(array(
+            'logResponse' => false,
+        ));
 
         $this->assertTrue($debug->getCfg('collectMethods'));
         $debug->setCfg('collectMethods', false);

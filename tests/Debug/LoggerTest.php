@@ -4,6 +4,10 @@ namespace bdk\Test\Debug;
 
 /**
  * PHPUnit tests for Debug class
+ *
+ * @covers \bdk\Debug\LogEntry
+ * @covers \bdk\Debug\Psr3\Logger
+ * @covers \bdk\Debug\ServiceProvider
  */
 class LoggerTest extends DebugTestFramework
 {
@@ -16,7 +20,7 @@ class LoggerTest extends DebugTestFramework
             'meta' => array(
                 'psr3level' => 'debug',
             ),
-        ), $this->logEntryToArray($this->debug->data->get('log/__end__')));
+        ), $this->helper->logEntryToArray($this->debug->data->get('log/__end__')));
     }
 
     public function testPlaceholders()
@@ -35,7 +39,7 @@ class LoggerTest extends DebugTestFramework
                 'glue' => ', ',
                 'psr3level' => 'debug',
             ),
-        ), $this->logEntryToArray($this->debug->data->get('log/__end__')));
+        ), $this->helper->logEntryToArray($this->debug->data->get('log/__end__')));
     }
 
     public function testEmergency()
@@ -52,7 +56,7 @@ class LoggerTest extends DebugTestFramework
             'method' => 'error',
             'args' => array('Emergency broadcast system'),
             'meta' => $metaExpect,
-        ), $this->logEntryToArray($this->debug->data->get('log/__end__')));
+        ), $this->helper->logEntryToArray($this->debug->data->get('log/__end__')));
     }
 
     public function testCritical()
@@ -69,12 +73,14 @@ class LoggerTest extends DebugTestFramework
             'method' => 'error',
             'args' => array('Critical test'),
             'meta' => $metaExpect,
-        ), $this->logEntryToArray($this->debug->data->get('log/__end__')));
+        ), $this->helper->logEntryToArray($this->debug->data->get('log/__end__')));
     }
 
     public function testExceptionContext()
     {
         parent::$allowError = true;
+        // prevent publishing wamp
+        // $this->debug->setCfg('output', false);
         $this->debug->logger->critical('Make an exception', array(
             'exception' => new \Exception('some exception'),
             'file' => __FILE__,
@@ -109,7 +115,7 @@ class LoggerTest extends DebugTestFramework
             'method' => 'error',
             'args' => array('Error test'),
             'meta' => $meta,
-        ), $this->logEntryToArray($this->debug->data->get('log/__end__')));
+        ), $this->helper->logEntryToArray($this->debug->data->get('log/__end__')));
     }
 
     public function testWarning()
@@ -126,7 +132,7 @@ class LoggerTest extends DebugTestFramework
             'method' => 'warn',
             'args' => array('You\'ve been warned'),
             'meta' => $meta,
-        ), $this->logEntryToArray($this->debug->data->get('log/__end__')));
+        ), $this->helper->logEntryToArray($this->debug->data->get('log/__end__')));
     }
 
     public function testNotice()
@@ -143,7 +149,7 @@ class LoggerTest extends DebugTestFramework
             'method' => 'warn',
             'args' => array('Final Notice'),
             'meta' => $meta,
-        ), $this->logEntryToArray($this->debug->data->get('log/__end__')));
+        ), $this->helper->logEntryToArray($this->debug->data->get('log/__end__')));
     }
 
     public function testAlert()
@@ -159,7 +165,7 @@ class LoggerTest extends DebugTestFramework
                 'level' => 'error',
                 'psr3level' => 'alert',
             ),
-        ), $this->logEntryToArray($this->debug->data->get('alerts/__end__')));
+        ), $this->helper->logEntryToArray($this->debug->data->get('alerts/__end__')));
     }
 
     public function testInfo()
@@ -171,7 +177,7 @@ class LoggerTest extends DebugTestFramework
             'meta' => array(
                 'psr3level' => 'info',
             ),
-        ), $this->logEntryToArray($this->debug->data->get('log/__end__')));
+        ), $this->helper->logEntryToArray($this->debug->data->get('log/__end__')));
     }
 
     public function testInfoWithTable()
@@ -213,7 +219,7 @@ class LoggerTest extends DebugTestFramework
                     'summary' => null,
                 ),
             ),
-        ), $this->logEntryToArray($this->debug->data->get('log/__end__')));
+        ), $this->helper->logEntryToArray($this->debug->data->get('log/__end__')));
     }
 
     public function testDebug()
@@ -225,7 +231,7 @@ class LoggerTest extends DebugTestFramework
             'meta' => array(
                 'psr3level' => 'debug',
             ),
-        ), $this->logEntryToArray($this->debug->data->get('log/__end__')));
+        ), $this->helper->logEntryToArray($this->debug->data->get('log/__end__')));
     }
 
     public function testDebugWithTable()
@@ -269,6 +275,6 @@ class LoggerTest extends DebugTestFramework
                     'summary' => null,
                 ),
             ),
-        ), $this->logEntryToArray($this->debug->data->get('log/__end__')));
+        ), $this->helper->logEntryToArray($this->debug->data->get('log/__end__')));
     }
 }

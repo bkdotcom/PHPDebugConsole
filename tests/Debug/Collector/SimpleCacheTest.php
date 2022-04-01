@@ -2,11 +2,15 @@
 
 namespace bdk\Test\Debug\Collector;
 
+use bdk\Debug\Collector\SimpleCache;
 use bdk\Test\Debug\DebugTestFramework;
 use bdk\Test\Debug\Mock\SimpleCache as SimpleCacheMock;
 
 /**
  * PHPUnit tests for Debug class
+ *
+ * @covers \bdk\Debug\Collector\SimpleCache
+ * @covers \bdk\Debug\Collector\SimpleCache\CallInfo
  */
 class SimpleCacheTest extends DebugTestFramework
 {
@@ -15,7 +19,7 @@ class SimpleCacheTest extends DebugTestFramework
     public static function setUpBeforeClass(): void
     {
         $simpleCache = new SimpleCacheMock();
-        self::$cache = new \bdk\Debug\Collector\SimpleCache($simpleCache);
+        self::$cache = new SimpleCache($simpleCache);
     }
 
     public function testGet()

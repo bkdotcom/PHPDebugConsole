@@ -5,13 +5,32 @@ namespace bdk\Test\Debug\Method;
 use bdk\Debug;
 use bdk\Debug\LogEntry;
 use bdk\PubSub\Event;
+use bdk\PubSub\Manager as EventManager;
 use bdk\Test\Debug\DebugTestFramework;
 use bdk\Test\Debug\Fixture;
+use bdk\Test\Debug\Mock;
+use bdk\Test\PolyFill\ExpectExceptionTrait;
+
+function myFunctionThatCallsGroup()
+{
+    Debug::_group();
+    Debug::_groupEnd();
+}
+
 /**
  * PHPUnit tests for Debug Group Methods
+ *
+ * @covers \bdk\Debug
+ * @covers \bdk\Debug\Dump\Base
+ * @covers \bdk\Debug\Dump\Html
+ * @covers \bdk\Debug\Dump\Text
+ * @covers \bdk\Debug\Method\Group
+ * @covers \bdk\Debug\Method\GroupStack
  */
 class GroupTest extends DebugTestFramework
 {
+    use ExpectExceptionTrait;
+
     /**
      * Test
      *
@@ -19,7 +38,6 @@ class GroupTest extends DebugTestFramework
      */
     public function testGroup()
     {
-
         // $test = new Fixture\Test();
         // $testBase = new Fixture\TestBase();
 
@@ -65,9 +83,33 @@ class GroupTest extends DebugTestFramework
             array('not logged'),
             array(
                 'notLogged' => true,
+                'return' => $this->debug,
                 'wamp' => false,
             )
         );
+    }
+
+    public function testGroupArgs()
+    {
+        $obj = (object) array('foo' => 'bar');
+        $objToString = new Fixture\Test('toStringVal');
+        $dateTime = new \DateTime('now');  // stringified
+        $this->debug->group('string', 42, null, false, $obj, $objToString, $dateTime);
+        $logEntry = $this->debug->data->get('log/0');
+        $logEntry = $this->helper->logEntryToArray($logEntry);
+        $this->assertSame(array(
+            'method' => 'group',
+            'args' => array(
+                'string',
+                42,
+                null,
+                false,
+                $this->helper->crate($this->debug->abstracter->crate($obj, 'group')),
+                'toStringVal',
+                $dateTime->format(\DateTime::ISO8601),
+            ),
+            'meta' => array(),
+        ), $logEntry);
     }
 
     public function testGroupHideIfEmpty()
@@ -149,7 +191,6 @@ class GroupTest extends DebugTestFramework
 
     public function testGroupUngroup()
     {
-
         // basic no children
         $this->debug->log('before group');
         $this->debug->group('shazam', $this->debug->meta('ungroup'));
@@ -173,7 +214,6 @@ class GroupTest extends DebugTestFramework
                 console.log("shazam2");
                 console.log("after group");',
         ));
-
 
         // single child (nested group)
         $this->debug->data->set('log', array());
@@ -205,7 +245,6 @@ class GroupTest extends DebugTestFramework
                 console.log("ungroup");
                 console.log("after group");',
         ));
-
 
         // Two children (log-entry + hideIfEmpty group)
         $this->debug->data->set('log', array());
@@ -240,58 +279,114 @@ class GroupTest extends DebugTestFramework
         ));
     }
 
-    public function testGroupNoArgs()
+    public function testGroupAutoArgs()
     {
-        $test = new Fixture\Test();
-        $testBase = new Fixture\TestBase();
+        $parent = new Fixture\CallerInfoParent();
+        $child = new Fixture\CallerInfoChild();
 
         /*
             Test default label
         */
-        $this->methodWithGroup('foo', 10);
-        $entry = array(
+        $child->extendMe('foo', 10);
+        $this->assertSame(array(
+            array(
+                'method' => 'group',
+                'args' => [
+                    'bdk\\Test\\Debug\\Fixture\\CallerInfoChild->extendMe',
+                    'foo',
+                    10,
+                ],
+                'meta' => array(
+                    'isFuncName' => true,
+                    'statically' => true,
+                ),
+            ),
+            array(
+                'method' => 'group',
+                'args' => [
+                    'bdk\\Test\\Debug\\Fixture\\CallerInfoParent->extendMe',
+                ],
+                'meta' => array(
+                    'isFuncName' => true,
+                    'statically' => true,
+                ),
+            ),
+        ), $this->helper->deObjectifyData(\array_slice($this->debug->data->get('log'), 0, 2)));
+
+        $this->debug->data->set('log', array());
+        $this->debug->getRoute('wamp')->wamp->messages = array();
+        $parent->extendMe('foo', 10);
+        $entryExpect = array(
             'method' => 'group',
-            'args' => array(
-                __CLASS__ . '->methodWithGroup',
+            'args' => [
+                'bdk\\Test\\Debug\\Fixture\\CallerInfoParent->extendMe',
                 'foo',
-                10
-            ),
+                10,
+            ],
             'meta' => array(
                 'isFuncName' => true,
+                'statically' => true,
             ),
         );
-        $classEncoded = \trim(\json_encode(__CLASS__), '"');
         $this->testMethod(
-            array(),    // test last called method
+            array('dataPath' => 'log/0'),
             array(),
             array(
-                'entry' => $entry,
+                'entry' => $entryExpect,
                 'chromeLogger' => array(
-                    array(
-                        __CLASS__ . '->methodWithGroup',
-                        'foo',
-                        10,
-                    ),
+                    array('bdk\\Test\\Debug\\Fixture\\CallerInfoParent->extendMe', 'foo', 10),
                     null,
                     'group',
                 ),
-                'firephp' => 'X-Wf-1-1-1-6: %d|[{"Collapsed":"false","Label":"' . $classEncoded . '->methodWithGroup","Type":"GROUP_START"},null]|',
+                'firephp' => 'X-Wf-1-1-1-7: 113|[{"Collapsed":"false","Label":"bdk\\\Test\\\Debug\\\Fixture\\\CallerInfoParent->extendMe","Type":"GROUP_START"},null]|',
                 'html' => '<li class="expanded m_group">
-                    <div class="group-header"><span class="font-weight-bold group-label"><span class="classname"><span class="namespace">' . __NAMESPACE__ . '\</span>GroupTest</span><span class="t_operator">-&gt;</span><span class="t_identifier">methodWithGroup</span>(</span><span class="t_string">foo</span>, <span class="t_int">10</span><span class="font-weight-bold group-label">)</span></div>
+                    <div class="group-header"><span class="font-weight-bold group-label"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>CallerInfoParent</span><span class="t_operator">-&gt;</span><span class="t_identifier">extendMe</span>(</span><span class="t_string">foo</span>, <span class="t_int">10</span><span class="font-weight-bold group-label">)</span></div>
                     <ul class="group-body">',
-                'script' => 'console.group("' . $classEncoded . '->methodWithGroup","foo",10);',
-                'text' => '▸ ' . __CLASS__ . '->methodWithGroup("foo", 10)',
-                'wamp' => $entry,
+                'script' => 'console.group("bdk\\\Test\\\Debug\\\Fixture\\\CallerInfoParent->extendMe","foo",10);',
+                'text' => '▸ bdk\Test\Debug\Fixture\CallerInfoParent->extendMe("foo", 10)',
+                'wamp' => $entryExpect + array('messageIndex' => 0),
             )
         );
 
         $this->debug->data->set('log', array());
+        $child->inherited('foo', 10);
+        $entryExpect = array(
+            'method' => 'group',
+            'args' => [
+                'bdk\\Test\\Debug\\Fixture\\CallerInfoChild->inherited',
+                'foo',
+                10,
+            ],
+            'meta' => array(
+                'isFuncName' => true,
+                'statically' => true,
+            ),
+        );
+        $this->assertSame($entryExpect, $this->helper->logEntryToArray($this->debug->data->get('log/0')));
+
+        $this->debug->data->set('log', array());
+        $parent->inherited('foo', 10);
+        $entryExpect = array(
+            'method' => 'group',
+            'args' => [
+                'bdk\\Test\\Debug\\Fixture\\CallerInfoParent->inherited',
+                'foo',
+                10,
+            ],
+            'meta' => array(
+                'isFuncName' => true,
+                'statically' => true,
+            ),
+        );
+        $this->assertSame($entryExpect, $this->helper->logEntryToArray($this->debug->data->get('log/0')));
+
+        $this->debug->data->set('log', array());
         $this->debug->getRoute('wamp')->wamp->messages = array();
-        $testBase->testBasePublic();
-        $entry = array(
+        Fixture\CallerInfoChild::staticParent();
+        $entryExpect = array(
             'method' => 'group',
             'args' => array(
-                'bdk\Test\Debug\Fixture\TestBase->testBasePublic'
+                'bdk\Test\Debug\Fixture\CallerInfoParent::staticParent'
             ),
             'meta' => array(
                 'isFuncName' => true,
@@ -302,98 +397,30 @@ class GroupTest extends DebugTestFramework
             array('dataPath' => 'log/0'),
             array(),
             array(
-                'entry' => $entry,
+                'entry' => $entryExpect,
                 'chromeLogger' => array(
-                    array('bdk\Test\Debug\Fixture\TestBase->testBasePublic'),
+                    array('bdk\Test\Debug\Fixture\CallerInfoParent::staticParent'),
                     null,
                     'group',
                 ),
-                'firephp' => 'X-Wf-1-1-1-7: 111|[{"Collapsed":"false","Label":"bdk\\\Test\\\Debug\\\Fixture\\\TestBase->testBasePublic","Type":"GROUP_START"},null]|',
+                'firephp' => 'X-Wf-1-1-1-9: 117|[{"Collapsed":"false","Label":"bdk\\\Test\\\Debug\\\Fixture\\\CallerInfoParent::staticParent","Type":"GROUP_START"},null]|',
                 'html' => '<li class="expanded m_group">
-                    <div class="group-header"><span class="font-weight-bold group-label"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>TestBase</span><span class="t_operator">-&gt;</span><span class="t_identifier">testBasePublic</span></span></div>
+                    <div class="group-header"><span class="font-weight-bold group-label"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>CallerInfoParent</span><span class="t_operator">::</span><span class="t_identifier">staticParent</span></span></div>
                     <ul class="group-body">',
-                'script' => 'console.group("bdk\\\Test\\\Debug\\\Fixture\\\TestBase->testBasePublic");',
-                'text' => '▸ bdk\Test\Debug\Fixture\TestBase->testBasePublic',
-                'wamp' => $entry + array('messageIndex' => 0),
-            )
-        );
-
-        $this->debug->data->set('log', array());
-        $this->debug->getRoute('wamp')->wamp->messages = array();
-        $test->testBasePublic();
-        $entry = array(
-            'method' => 'group',
-            'args' => array(
-                'bdk\Test\Debug\Fixture\Test->testBasePublic'
-            ),
-            'meta' => array(
-                'isFuncName' => true,
-                'statically' => true,
-            ),
-        );
-        $this->testMethod(
-            array('dataPath' => 'log/0'),
-            array(),
-            array(
-                'entry' => $entry,
-                'chromeLogger' => array(
-                    array('bdk\Test\Debug\Fixture\Test->testBasePublic'),
-                    null,
-                    'group',
-                ),
-                'firephp' => 'X-Wf-1-1-1-8: 107|[{"Collapsed":"false","Label":"bdk\\\Test\\\Debug\\\Fixture\\\Test->testBasePublic","Type":"GROUP_START"},null]|',
-                'html' => '<li class="expanded m_group">
-                    <div class="group-header"><span class="font-weight-bold group-label"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>Test</span><span class="t_operator">-&gt;</span><span class="t_identifier">testBasePublic</span></span></div>
-                    <ul class="group-body">',
-                'script' => 'console.group("bdk\\\Test\\\Debug\\\Fixture\\\Test->testBasePublic");',
-                'text' => '▸ bdk\Test\Debug\Fixture\Test->testBasePublic',
-                'wamp' => $entry + array('messageIndex' => 0),
-            )
-        );
-
-        // yes, we call Test... but static method is defined in TestBase
-        // .... PHP
-        $this->debug->data->set('log', array());
-        $this->debug->getRoute('wamp')->wamp->messages = array();
-        Fixture\Test::testBaseStatic();
-        $entry = array(
-            'method' => 'group',
-            'args' => array(
-                'bdk\Test\Debug\Fixture\TestBase::testBaseStatic'
-            ),
-            'meta' => array(
-                'isFuncName' => true,
-                'statically' => true,
-            ),
-        );
-        $this->testMethod(
-            array('dataPath' => 'log/0'),
-            array(),
-            array(
-                'entry' => $entry,
-                'chromeLogger' => array(
-                    array('bdk\Test\Debug\Fixture\TestBase::testBaseStatic'),
-                    null,
-                    'group',
-                ),
-                'firephp' => 'X-Wf-1-1-1-9: 111|[{"Collapsed":"false","Label":"bdk\\\Test\\\Debug\\\Fixture\\\TestBase::testBaseStatic","Type":"GROUP_START"},null]|',
-                'html' => '<li class="expanded m_group">
-                    <div class="group-header"><span class="font-weight-bold group-label"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>TestBase</span><span class="t_operator">::</span><span class="t_identifier">testBaseStatic</span></span></div>
-                    <ul class="group-body">',
-                'script' => 'console.group("bdk\\\Test\\\Debug\\\Fixture\\\TestBase::testBaseStatic");',
-                'text' => '▸ bdk\Test\Debug\Fixture\TestBase::testBaseStatic',
-                'wamp' => $entry + array('messageIndex' => 0),
+                'script' => 'console.group("bdk\\\Test\\\Debug\\\Fixture\\\CallerInfoParent::staticParent");',
+                'text' => '▸ bdk\Test\Debug\Fixture\CallerInfoParent::staticParent',
+                'wamp' => $entryExpect + array('messageIndex' => 0),
             )
         );
 
         // even if called with an arrow
         $this->debug->data->set('log', array());
         $this->debug->getRoute('wamp')->wamp->messages = array();
-        $test->testBaseStatic();
-        $entry = array(
+        $child->staticParent();
+        $entryExpect = array(
             'method' => 'group',
             'args' => array(
-                'bdk\Test\Debug\Fixture\TestBase::testBaseStatic'
+                'bdk\Test\Debug\Fixture\CallerInfoParent::staticParent'
             ),
             'meta' => array(
                 'isFuncName' => true,
@@ -404,21 +431,55 @@ class GroupTest extends DebugTestFramework
             array('dataPath' => 'log/0'),
             array(),
             array(
-                'entry' => $entry,
+                'entry' => $entryExpect,
                 'chromeLogger' => array(
-                    array('bdk\Test\Debug\Fixture\TestBase::testBaseStatic'),
+                    array('bdk\Test\Debug\Fixture\CallerInfoParent::staticParent'),
                     null,
                     'group',
                 ),
-                'firephp' => 'X-Wf-1-1-1-10: 111|[{"Collapsed":"false","Label":"bdk\\\Test\\\Debug\\\Fixture\\\TestBase::testBaseStatic","Type":"GROUP_START"},null]|',
+                'firephp' => 'X-Wf-1-1-1-10: 117|[{"Collapsed":"false","Label":"bdk\\\Test\\\Debug\\\Fixture\\\CallerInfoParent::staticParent","Type":"GROUP_START"},null]|',
                 'html' => '<li class="expanded m_group">
-                    <div class="group-header"><span class="font-weight-bold group-label"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>TestBase</span><span class="t_operator">::</span><span class="t_identifier">testBaseStatic</span></span></div>
+                    <div class="group-header"><span class="font-weight-bold group-label"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>CallerInfoParent</span><span class="t_operator">::</span><span class="t_identifier">staticParent</span></span></div>
                     <ul class="group-body">',
-                'script' => 'console.group("bdk\\\Test\\\Debug\\\Fixture\\\TestBase::testBaseStatic");',
-                'text' => '▸ bdk\Test\Debug\Fixture\TestBase::testBaseStatic',
-                'wamp' => $entry + array('messageIndex' => 0),
+                'script' => 'console.group("bdk\\\Test\\\Debug\\\Fixture\\\CallerInfoParent::staticParent");',
+                'text' => '▸ bdk\Test\Debug\Fixture\CallerInfoParent::staticParent',
+                'wamp' => $entryExpect + array('messageIndex' => 0),
             )
         );
+    }
+
+    public function testGroupAutoArgs2()
+    {
+        myfunctionThatCallsGroup();
+        $logEntries = $this->debug->data->get('log');
+
+        $this->assertSame(array(
+            'group - ' . __NAMESPACE__ . '\myFunctionThatCallsGroup',
+            'groupEnd',
+        ), $this->briefLogEntries());
+        $this->debug->data->set('log', array());
+
+        // test no backtrace info available when auto-populating group args
+        $child = new Fixture\CallerInfoChild();
+        $backtraceBackup = $this->debug->backtrace;
+        $this->debug->setCfg('serviceProvider', array(
+            'backtrace' => new Mock\Backtrace(),
+        ));
+        $this->debug->backtrace->setReturn(array(
+            'function' => null,
+            'file' => null,
+            'line' => null,
+        ));
+        $child->extendMe();
+        $this->assertSame(array(
+            'group - group',
+            'group - group',
+            'groupEnd',
+            'groupEnd',
+        ), $this->briefLogEntries());
+        $this->debug->setCfg('serviceProvider', array(
+            'backtrace' => $backtraceBackup,
+        ));
     }
 
     public function testGroupNotArgsAsParams()
@@ -518,6 +579,7 @@ class GroupTest extends DebugTestFramework
             array('not logged'),
             array(
                 'notLogged' => true,
+                'return' => $this->debug,
                 'wamp' => false,
             )
         );
@@ -544,9 +606,7 @@ class GroupTest extends DebugTestFramework
         $this->assertSame(array(
             array('group', array('a','b','c'), array()),
             array('groupEnd', array(), array()),
-        ), \array_map(function (LogEntry $logEntry) {
-            return $this->logEntryToArray($logEntry, false);
-        }, $log));
+        ), $this->helper->deObjectifyData($log, false));
 
         // reset log
         $this->debug->data->set('log', array());
@@ -671,7 +731,6 @@ class GroupTest extends DebugTestFramework
             $this->debug->group('inner group opened but not closed');
                 $this->debug->log('in inner');
 
-
         /*
             collect some info before outputing
             confirm nothing has been closed yet
@@ -754,21 +813,17 @@ EOD;
 
         $logSummary = $this->debug->data->get('logSummary/0');
         $this->assertSame(array(
-            array('group',array('group inside summary'), array()),
-            array('log',array('I\'m in the summary!'), array()),
-            array('groupEnd',array(), array()),
-            array('log',array('I\'m still in the summary!'), array()),
-            array('log',array('I\'m staying in the summary!'), array()),
-        ), \array_map(function (LogEntry $logEntry) {
-            return $this->logEntryToArray($logEntry, false);
-        }, $logSummary));
+            array('group', array('group inside summary'), array()),
+            array('log', array('I\'m in the summary!'), array()),
+            array('groupEnd', array(), array()),
+            array('log', array('I\'m still in the summary!'), array()),
+            array('log', array('I\'m staying in the summary!'), array()),
+        ), $this->helper->deObjectifyData($logSummary, false));
         $log = $this->debug->data->get('log');
         $this->assertSame(array(
             array('log',array('I\'m not in the summary'), array()),
             array('log',array('the end'), array()),
-        ), \array_map(function (LogEntry $logEntry) {
-            return $this->logEntryToArray($logEntry, false);
-        }, $log));
+        ), $this->helper->deObjectifyData($log, false));
     }
 
     /**
@@ -789,10 +844,142 @@ EOD;
         $this->assertSame('groupCollapsed', $log[1]['method']);
         $this->assertSame('group', $log[5]['method']); // groupCollapsed converted to group
         $this->assertCount(6, $log);    // assert that entry not added
+
+        $this->debug->data->set('log', array());
+        $this->debug->groupCollapsed('some group');
+        $this->debug->setCfg('collect', false);
+        $this->debug->groupUncollapse();
+        $this->assertSame(array(
+            'method' => 'groupCollapsed',
+            'args' => array('some group'),
+            'meta' => array(),
+        ), $this->helper->logEntryToArray($this->debug->data->get('log/0')));
+    }
+
+    public function testInaccessableMethod()
+    {
+        $this->expectException('RuntimeException');
+        $this->expectExceptionMessage('bdk\Debug\Method\Group::bogus is inaccessable');
+        $this->debug->methodGroup->bogus();
+    }
+
+    public function testGroupEndClearsErrorCaller()
+    {
+        $errorCaller = array(
+            'file' => '/path/to/file/to/blame.php',
+            'line' => 42,
+            'groupDepth' => 1,
+        );
+        $this->debug->group('testGroup');
+        $this->debug->setErrorCaller($errorCaller);
+        $this->assertSame($errorCaller, $this->debug->errorHandler->get('errorCaller'));
+        $this->debug->groupEnd();
+        $this->assertSame(array(), $this->debug->errorHandler->get('errorCaller'));
+
+        $this->debug->groupSummary();
+        $this->debug->setErrorCaller($errorCaller);
+        $this->assertSame($errorCaller, $this->debug->errorHandler->get('errorCaller'));
+        $this->debug->groupEnd();
+        $this->assertSame(array(), $this->debug->errorHandler->get('errorCaller'));
+    }
+
+    public function testGetSubscriptions()
+    {
+        $this->assertSame(array(
+            Debug::EVENT_OUTPUT => array('onOutput', PHP_INT_MAX),
+            EventManager::EVENT_PHP_SHUTDOWN => array('onShutdown', PHP_INT_MAX),
+        ), $this->debug->methodGroup->getSubscriptions());
+    }
+
+    public function testOnOutput()
+    {
+        $this->debug->group('left open');
+
+        // test that subchannel's doesn't process data if ('isTarget') isn't passed in event
+        $someChannel = $this->debug->getChannel('bob');
+        $someChannel->methodGroup->onOutput(new Event($someChannel));
+        $this->assertCount(1, $someChannel->data->get('log'));
+
+        $this->debug->output();
+        $this->assertCount(2, $this->debug->data->get('log'));
+    }
+
+    public function testUncollapseErrors()
+    {
+        $this->debug->log('logEntry');
+        $this->debug->groupCollapsed('a');
+        $this->debug->info('in group a');
+        $this->debug->groupCollapsed('a.1');
+        $this->debug->error('meh', $this->debug->meta('uncollapse', false));
+        $this->debug->groupEnd();
+        $this->debug->groupCollapsed('a.2');
+        $this->debug->error('oh noes');
+        $this->debug->groupEnd();
+        $this->debug->groupEnd();
+        $this->debug->output();
+        $this->assertSame(array(
+            'log - logEntry',
+            'group - a',
+            'info - in group a',
+            'groupCollapsed - a.1',
+            'error - meh',
+            'groupEnd',
+            'group - a.2',
+            'error - oh noes',
+            'groupEnd',
+            'groupEnd',
+        ), $this->briefLogEntries());
+    }
+
+    public function testOnShutdown()
+    {
+        $this->debug->setCfg(array(
+            'output' => false,
+        ));
+        $this->debug->group('left unopen');
+        $this->debug->eventManager->publish(EventManager::EVENT_PHP_SHUTDOWN);
+        $logEntries = $this->debug->data->get('log');
+        $logEntries = $this->helper->deObjectifyData($logEntries);
+        $this->assertCount(2, $logEntries);
+        $this->assertSame('groupEnd', $logEntries[1]['method']);
+    }
+
+    public function testCloseOpenNotCalledTwice()
+    {
+        $this->debug->setCfg(array(
+            'output' => false,
+        ));
+        $this->debug->group('left unopen');
+        $this->debug->eventManager->publish(EventManager::EVENT_PHP_SHUTDOWN);
+        $logEntries = $this->debug->data->get('log');
+        $this->assertCount(2, $logEntries);
+        $this->assertSame('groupEnd', $logEntries[1]['method']);
+
+        $this->debug->group('group added after shutdown');
+        $this->debug->eventManager->publish(EventManager::EVENT_PHP_SHUTDOWN);
+        $logEntries = $this->debug->data->get('log');
+        $this->assertCount(3, $logEntries);
     }
 
     private function methodWithGroup()
     {
         $this->debug->group();
+    }
+
+    private function briefLogEntries($logEntries = null)
+    {
+        $logEntries = $logEntries !== null
+            ? $logEntries
+            : $this->debug->data->get('log');
+        return \array_map(function (LogEntry $logEntry) {
+            $entry = \implode(
+                ' - ',
+                array(
+                    $logEntry['method'],
+                    \implode(', ', $logEntry['args']),
+                )
+            );
+            return \rtrim($entry, '- ');
+        }, $logEntries);
     }
 }

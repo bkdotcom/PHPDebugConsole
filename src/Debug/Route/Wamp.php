@@ -324,7 +324,6 @@ class Wamp implements RouteInterface
             return;
         }
         $this->metaPublished = true;
-        $debugClass = \get_class($this->debug);
         $this->processLogEntry(new LogEntry(
             $this->debug,
             'meta',
@@ -333,7 +332,7 @@ class Wamp implements RouteInterface
             ),
             array(
                 'channelNameRoot' => $this->debug->rootInstance->getCfg('channelName', Debug::CONFIG_DEBUG),
-                'debugVersion' => $debugClass::VERSION,
+                'debugVersion' => Debug::VERSION,
                 'drawer' => $this->debug->getCfg('routeHtml.drawer'),
                 'interface' => $this->debug->getInterface(),
                 'linkFilesTemplateDefault' => \strtr(

@@ -1,0 +1,1 @@
+0=foo&1=bar&2=baz&4=boom&dingle.berry=brown&a%20b=c&d+e=f&g h=i

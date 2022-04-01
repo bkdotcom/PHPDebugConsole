@@ -12,7 +12,7 @@
 
 namespace bdk\Debug\Utility;
 
-use bdk\Debug\Utility;
+use bdk\Debug\Utility\Php;
 
 /**
  * Array Utilities
@@ -182,6 +182,7 @@ class ArrayUtil
 
     /**
      * Sort array, using `$order`
+     * Keys will be preserved
      *
      * @param array  $array Array to sort
      * @param array  $order values that define order / should come first
@@ -189,23 +190,29 @@ class ArrayUtil
      *
      * @return void
      */
-    public static function sortWithOrder(&$array, $order, $what = 'value')
+    public static function sortWithOrder(&$array, $order = array(), $what = 'value')
     {
         $callback = function ($valA, $valB) use ($order) {
             $aPos = \array_search($valA, $order);
             $bPos = \array_search($valB, $order);
-            if ($aPos === false && $bPos === false) {   // both items are dont cares
-                return 0;
+            if ($aPos === $bPos) {
+                return \strnatcasecmp($valA, $valB);
             }
-            if ($aPos === false) {                      // $a is a dont care
-                return 1;                               //   $a > $b
+            if ($aPos === false) {   // $a is a dont care
+                return 1;            //   $a > $b
             }
-            if ($bPos === false) {                      // $b is a dont care
-                return -1;                              //   $a < $b
+            if ($bPos === false) {   // $b is a dont care
+                return -1;           //   $a < $b
             }
+            return $aPos < $bPos
+                ? -1
+                : 1;
         };
+        if (empty($order)) {
+            $callback = 'strnatcasecmp';
+        }
         $what === 'value'
-            ? \usort($array, $callback)
+            ? \uasort($array, $callback)
             : \uksort($array, $callback);
     }
 
@@ -215,7 +222,7 @@ class ArrayUtil
      * @param array  $array       The input array
      * @param string $key         "Offset" key.
      * @param int    $length      How many values to remove
-     * @param mixed  $replacement [description]
+     * @param mixed  $replacement replacement array
      *
      * @return array removed values
      */
@@ -254,7 +261,7 @@ class ArrayUtil
     private static function mergeDeepWalk($arrayDef, $array2)
     {
         foreach ($array2 as $k2 => $v2) {
-            if (!\is_array($v2) || Utility::isCallable($v2)) {
+            if (!\is_array($v2) || Php::isCallable($v2)) {
                 // not array or appears to be a callable
                 if (\is_int($k2) === false) {
                     $arrayDef[$k2] = $v2;
@@ -269,7 +276,7 @@ class ArrayUtil
                 $arrayDef[] = $v2;
                 continue;
             }
-            if (!isset($arrayDef[$k2]) || !\is_array($arrayDef[$k2]) || Utility::isCallable($arrayDef[$k2])) {
+            if (!isset($arrayDef[$k2]) || !\is_array($arrayDef[$k2]) || Php::isCallable($arrayDef[$k2])) {
                 $arrayDef[$k2] = $v2;
                 continue;
             }

@@ -28,7 +28,6 @@ class General implements SubscriberInterface
         'email',
         'errorStats',
         'getDump',
-        'getHeaders',
         'getRoute',
         'hasLog',
         'obEnd',
@@ -120,18 +119,6 @@ class General implements SubscriberInterface
     {
         /** @var \bdk\Debug\Dump\Base|bool */
         return $this->getDumpRoute('dump', $name, $checkOnly);
-    }
-
-    /**
-     * Get and clear headers that need to be output
-     *
-     * @return array headerName=>value array
-     */
-    public function getHeaders()
-    {
-        $headers = $this->debug->data->get('headers');
-        $this->debug->data->set('headers', array());
-        return $headers;
     }
 
     /**

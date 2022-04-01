@@ -4,12 +4,13 @@ namespace bdk\Test\Debug\Collector;
 
 use bdk\Debug\Collector\StatementInfo;
 use bdk\Debug\LogEntry;
-// use bdk\PubSub\Event;
 use bdk\Test\Debug\DebugTestFramework;
 use Exception;
 
 /**
  * Test Mysqli debug collector
+ *
+ * @covers \bdk\Debug\Collector\StatementInfo
  */
 class StatementInfoTest extends DebugTestFramework
 {
@@ -173,10 +174,14 @@ EOD;
             if ($count) {
                 $logEntries = \array_slice($logEntries, 0 - $count);
             }
+            /*
             return \array_map(function (LogEntry $logEntry) {
                 return $this->logEntryToArray($logEntry);
             }, $logEntries);
-        } elseif ($where === 'logSummary') {
+            */
+        }
+        /*
+        elseif ($where === 'logSummary') {
             foreach ($logEntries as $priority => $entries) {
                 $logEntries[$priority] = \array_map(function (LogEntry $logEntry) {
                     return $this->logEntryToArray($logEntry);
@@ -184,5 +189,7 @@ EOD;
             }
             return $logEntries;
         }
+        */
+        return $this->helper->deObjectifyData($logEntries);
     }
 }

@@ -12,6 +12,8 @@
 
 namespace bdk\Debug\Utility;
 
+use bdk\Debug\Utility\Utf8;
+
 /**
  * String "stream" used for analyzing/testing
  */
@@ -35,7 +37,7 @@ class Utf8Buffer
     /**
      * Constructor
      *
-     * @param [type] $string [description]
+     * @param string $string The string to analyze
      */
     public function __construct($string)
     {
@@ -49,7 +51,7 @@ class Utf8Buffer
             'calculated' => false,      // internal check if stats calculated
             'percentBinary' => 0,
             'mbStrlen' => 0,
-            'strlen' => \strlen($string),
+            'strlen' => Utf8::strlen($string),
         );
         $this->str = $string;
     }
@@ -179,14 +181,9 @@ class Utf8Buffer
      */
     public function read($length)
     {
-        if ($length < 0) {
-            throw new RuntimeException($this->strings['readLengthNegative']);
-        }
-        if ($length === 0) {
-            return '';
-        }
-
-        return \substr($this->str, $this->curI, $length);
+        return $length <= 0
+            ? ''
+            : \substr($this->str, $this->curI, $length);
     }
 
     /**
@@ -257,7 +254,7 @@ class Utf8Buffer
         $this->stats['percentBinary'] = $this->stats['strlen']
             ? ($this->stats['bytesControl'] + $this->stats['bytesOther']) / $this->stats['strlen'] * 100
             : 0;
-        if ($this->stats['strlen'] && \strlen($this->stats['blocks'][0][1]) === 0) {
+        if ($this->stats['strlen'] && Utf8::strlen($this->stats['blocks'][0][1]) === 0) {
             // first block was empty
             \array_shift($this->stats['blocks']);
         }
@@ -273,10 +270,9 @@ class Utf8Buffer
     private function getBytes($len)
     {
         $bytes = array();
+        $len = \min($len, $this->stats['strlen'] - $this->curI);
         for ($i = 0; $i < $len; $i++) {
-            $bytes[] = $this->curI + $i < $this->stats['strlen']
-                ? \ord($this->str[$this->curI + $i])
-                : null;
+            $bytes[] = \ord($this->str[$this->curI + $i]);
         }
         return $bytes;
     }
@@ -353,10 +349,10 @@ class Utf8Buffer
      */
     private function test2byteSeq()
     {
-        if ($this->curI + 1 >= $this->stats['strlen']) {
+        $bytes = $this->getBytes(2);
+        if (\count($bytes) !== 2) {
             return false;
         }
-        $bytes = $this->getBytes(2);
         return (($bytes[1] & 0xc0) !== 0x80
             || ($bytes[0] & 0xfe) === 0xc0  // overlong
         ) === false;
@@ -369,10 +365,10 @@ class Utf8Buffer
      */
     private function test3byteSeq()
     {
-        if ($this->curI + 2 >= $this->stats['strlen']) {
+        $bytes = $this->getBytes(3);
+        if (\count($bytes) !== 3) {
             return false;
         }
-        $bytes = $this->getBytes(3);
         return (($bytes[1] & 0xc0) !== 0x80
             || ($bytes[2] & 0xc0) !== 0x80
             || $bytes[0] === 0xe0
@@ -389,10 +385,10 @@ class Utf8Buffer
      */
     private function test4byteSeq()
     {
-        if ($this->curI + 3 >= $this->stats['strlen']) {
+        $bytes = $this->getBytes(4);
+        if (\count($bytes) !== 4) {
             return false;
         }
-        $bytes = $this->getBytes(4);
         return (($bytes[1] & 0xc0) !== 0x80
             || ($bytes[2] & 0xc0) !== 0x80
             || ($bytes[3] & 0xc0) !== 0x80

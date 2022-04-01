@@ -167,7 +167,9 @@ class AbstractString extends Component
                 : null,
             'typeMore' => Abstracter::TYPE_STRING_JSON,
             'valueDecoded' => array(),
-            'value' => $string,
+            'value' => $maxLen > -1
+                ? \substr($string, 0, $maxLen)
+                : $string,
         );
         $classes = $this->debug->arrayUtil->pathGet($crateVals, 'attribs.class', array());
         if (!\is_array($classes)) {

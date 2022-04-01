@@ -4,7 +4,6 @@ namespace bdk\Test\Debug;
 
 use bdk\CssXpath\DOMTestCase;
 use bdk\Debug;
-use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
 use bdk\ErrorHandler\Error;
@@ -23,6 +22,17 @@ class DebugTestFramework extends DOMTestCase
 
     public static $allowError = false;
     public static $obLevels = 0;
+    public $emailInfo = array();
+    protected $helper;
+
+    /**
+     * Constructor
+     */
+    public function __construct($name = null, array $data = array(), $dataName = '')
+    {
+        $this->helper = new \bdk\Test\Debug\Helper();
+        parent::__construct($name, $data, $dataName);
+    }
 
     /**
      * setUp is executed before each test
@@ -33,52 +43,7 @@ class DebugTestFramework extends DOMTestCase
     {
         self::$obLevels = \ob_get_level();
         self::$allowError = false;
-        $this->debug = Debug::getInstance(array(
-            'collect' => true,
-            'emailLog' => false,
-            'emailTo' => null,
-            'logEnvInfo' => false,
-            'logRequestInfo' => false,
-            'logResponse' => false,
-            'logRuntime' => true,
-            'onError' => function (Error $error) {
-                if (self::$allowError) {
-                    $error['continueToNormal'] = false;
-                    return;
-                }
-                throw new \PHPUnit\Framework\Exception($error['message'] . ' @ ' . $error['file'] . ':' . $error['line'], 500);
-            },
-            'output' => true,
-            'outputCss' => false,
-            'outputHeaders' => false,
-            'outputScript' => false,
-            'route' => 'html',
-            'serviceProvider' => array(
-                'request' => new ServerRequest(
-                    'GET',
-                    null,
-                    array(
-                        'DOCUMENT_ROOT' => TEST_DIR . '/../tmp',
-                        'REQUEST_METHOD' => 'GET', // presence of REQUEST_METHOD = not cli
-                        'REQUEST_TIME_FLOAT' => $_SERVER['REQUEST_TIME_FLOAT'],
-                        'SERVER_ADMIN' => 'ttesterman@test.com',
-                    )
-                ),
-            ),
-        ));
-        $resetValues = array(
-            'alerts'        => array(), // array of alerts.  alerts will be shown at top of output when possible
-            'counts'        => array(), // count method
-            'entryCountInitial' => 0,   // store number of log entries created during init
-            'log'           => array(),
-            'logSummary'    => array(),
-            'outputSent'    => false,
-        );
-        $this->debug->data->set($resetValues);
-        $this->debug->stopWatch->reset();
-        $this->debug->errorHandler->setData('errors', array());
-        $this->debug->errorHandler->setData('errorCaller', array());
-        $this->debug->errorHandler->setData('lastErrors', array());
+        $this->resetDebug();
 
         /*
         if (self::$haveWampPlugin === false) {
@@ -91,6 +56,11 @@ class DebugTestFramework extends DOMTestCase
         */
 
         $refProperties = &$this->getSharedVar('reflectionProperties');
+        if (!isset($refProperties['inShutdown'])) {
+            $refProp = new \ReflectionProperty('bdk\\Debug\\Method\\Group', 'inShutdown');
+            $refProp->setAccessible(true);
+            $refProperties['inShutdown'] = $refProp;
+        }
         if (!isset($refProperties['groupStack'])) {
             $refProp = new \ReflectionProperty('bdk\\Debug\\Method\\Group', 'groupStack');
             $refProp->setAccessible(true);
@@ -112,31 +82,25 @@ class DebugTestFramework extends DOMTestCase
             $refProperties['textDepth'] = $refProp;
         }
 
+        $refProperties['inShutdown']->setValue($this->debug->methodGroup, false);
         $refProperties['textDepth']->setValue($this->debug->getDump('text'), 0);
 
+        /*
         $subscribers = $this->debug->eventManager->getSubscribers(Debug::EVENT_CUSTOM_METHOD);
         foreach ($subscribers as $subscriber) {
-            $subscriberObj = $subscriber[0];
-            /*
-            if ($subscriberObj instanceof  \bdk\Debug\Plugin\Manager) {
-                $registeredPlugins = $this->getPrivateProp($subscriberObj, 'registeredPlugins');
-                // clear registeredPlugins... but we don't unsubscribe?!
-                $registeredPlugins->removeAll($registeredPlugins);  // (ie SplObjectStorage->removeAll())
-            }
-            */
-            /*
-            if ($subscriberObj instanceof  \bdk\Debug\Plugin\Channel) {
-                $channelsRef = new \ReflectionProperty($subscriberObj, 'channels');
-                $channelsRef->setAccessible(true);
-                $channelsRef->setValue($subscriberObj, array());
-            }
-            */
+            // $subscriberObj = $subscriber[0];
+            // if ($subscriberObj instanceof  \bdk\Debug\Plugin\Manager) {
+            //     $registeredPlugins = $this->helper->getPrivateProp($subscriberObj, 'registeredPlugins');
+            //     // clear registeredPlugins... but we don't unsubscribe?!
+            //     $registeredPlugins->removeAll($registeredPlugins);  // (ie SplObjectStorage->removeAll())
+            // }
+            // if ($subscriberObj instanceof  \bdk\Debug\Plugin\Channel) {
+            //     $channelsRef = new \ReflectionProperty($subscriberObj, 'channels');
+            //     $channelsRef->setAccessible(true);
+            //     $channelsRef->setValue($subscriberObj, array());
+            // }
         }
-
-        // make sure we still have wamp plugin registered
-        $wamp = $this->debug->getRoute('wamp');
-        $wamp->wamp->messages = array();
-        $this->debug->addPlugin($wamp);
+        */
 
         if (!isset($this->file)) {
             /*
@@ -179,39 +143,16 @@ class DebugTestFramework extends DOMTestCase
         foreach ($subscribers as $subscriber) {
             $this->debug->eventManager->unsubscribe(Debug::EVENT_OUTPUT_LOG_ENTRY, $subscriber);
         }
-        /*
-        while (\ob_get_level() > self::$obLevels) {
-            \ob_end_clean();
-        }
-        */
     }
 
-    /**
-     * Util to output to console / help in creation of tests
-     *
-     * @return void
-     */
-    public function stderr()
+    public function emailMock($to, $subject, $body, $addHeadersStr)
     {
-        $args = \array_map(function ($val) {
-            $new = $val === null
-                ? 'null'
-                /*
-                : (isset($this->debug)
-                    ? $this->debug->getDump('text')->valDumper->dump($val)
-                    : \str_replace('\n', "\n", \json_encode($val, JSON_PRETTY_PRINT))
-                );
-                */
-                : Debug::getInstance()->getDump('text')->valDumper->dump($val);
-            if (\json_last_error() !== JSON_ERROR_NONE) {
-                $new = \var_export($val, true);
-            }
-            return $new;
-        }, \func_get_args());
-        $glue = \func_num_args() > 2
-            ? ', '
-            : ' = ';
-        \fwrite(STDERR, \implode($glue, $args) . "\n");
+        $this->emailInfo = array(
+            'to' => $to,
+            'subject' => $subject,
+            'body' => $body,
+            'addHeadersStr' => $addHeadersStr,
+        );
     }
 
     /**
@@ -264,8 +205,7 @@ class DebugTestFramework extends DOMTestCase
     public function providerTestMethod()
     {
         return array(
-            array(
-            ),
+            array(),
         );
     }
 
@@ -318,7 +258,7 @@ class DebugTestFramework extends DOMTestCase
             );
         }
         /*
-        $this->stderr(array(
+        $this->helper->stderr(array(
             'method' => $method,
             'args' => $args,
             'count' => count($tests),
@@ -330,7 +270,7 @@ class DebugTestFramework extends DOMTestCase
             $tests['serverLog'] = $tests['chromeLogger'];
         }
         foreach ($tests as $test => $expect) {
-            // $this->stderr('test', $test);
+            // $this->helper->stderr('test', $test);
             $logEntryTemp = $logEntry
                 ? new LogEntry($logEntry->getSubject(), $logEntry['method'], $logEntry['args'], $logEntry['meta'])
                 : new LogEntry($this->debug, 'null');
@@ -360,17 +300,14 @@ class DebugTestFramework extends DOMTestCase
     /**
      * for given $var, check if it's abstraction type is of $type
      *
-     * @param array  $var  abstracted $var
-     * @param string $type array, object, or resource
+     * @param Abstraction $abs  Abstraction instance
+     * @param string      $type array, object, or resource
      *
-     * @return bool
+     * @return void
      */
-    protected function checkAbstractionType($var, $type)
+    protected function assertAbstractionType(Abstraction $abs, $type)
     {
-        $return = false;
-        if (!$var instanceof Abstraction) {
-            return false;
-        }
+        $isAbsType = false;
         if ($type === 'object') {
             $keys = array(
                 'cfgFlags',
@@ -390,14 +327,70 @@ class DebugTestFramework extends DOMTestCase
                 'traverseValues',
                 'viaDebugInfo',
             );
-            $keysMissing = \array_diff($keys, \array_keys($var->getValues()));
-            $return = $var['type'] === 'object'
-                && $var['className'] === 'stdClass'
+            $keysMissing = \array_diff($keys, \array_keys($abs->getValues()));
+            $isAbsType = $abs['type'] === 'object'
+                // && $var['className'] === 'stdClass'
                 && \count($keysMissing) == 0;
         } elseif ($type === 'resource') {
-            $return = $var['type'] === 'resource' && isset($var['value']);
+            $isAbsType = $abs['type'] === 'resource' && isset($abs['value']);
         }
-        return $return;
+        $this->assertTrue($isAbsType);
+    }
+
+    protected function resetDebug()
+    {
+        $this->debug = Debug::getInstance(array(
+            'collect' => true,
+            'emailFunc' => array($this, 'emailMock'),
+            'emailLog' => false,
+            'emailTo' => null,
+            'logEnvInfo' => false,
+            'logRequestInfo' => false,
+            'logResponse' => false,
+            'logRuntime' => true,
+            'onError' => function (Error $error) {
+                if (self::$allowError) {
+                    $error['continueToNormal'] = false;
+                    return;
+                }
+                throw new \PHPUnit\Framework\Exception($error['message'] . ' @ ' . $error['file'] . ':' . $error['line'], 500);
+            },
+            'output' => true,
+            'outputCss' => false,
+            'outputHeaders' => false,
+            'outputScript' => false,
+            'route' => 'html',
+            'serviceProvider' => array(
+                'request' => new ServerRequest(
+                    'GET',
+                    null,
+                    array(
+                        'DOCUMENT_ROOT' => TEST_DIR . '/../tmp',
+                        'REQUEST_METHOD' => 'GET', // presence of REQUEST_METHOD = not cli
+                        'REQUEST_TIME_FLOAT' => $_SERVER['REQUEST_TIME_FLOAT'],
+                        'SERVER_ADMIN' => 'ttesterman@test.com',
+                    )
+                ),
+            ),
+        ));
+        $resetValues = array(
+            'alerts'        => array(), // array of alerts.  alerts will be shown at top of output when possible
+            'counts'        => array(), // count method
+            'entryCountInitial' => 0,   // store number of log entries created during init
+            'log'           => array(),
+            'logSummary'    => array(),
+            'outputSent'    => false,
+        );
+        $this->debug->data->set($resetValues);
+        $this->debug->stopWatch->reset();
+        $this->debug->errorHandler->setData('errors', array());
+        $this->debug->errorHandler->setData('errorCaller', array());
+        $this->debug->errorHandler->setData('lastErrors', array());
+
+        // make sure we still have wamp plugin registered
+        $wamp = $this->debug->getRoute('wamp');
+        $wamp->wamp->messages = array();
+        $this->debug->addPlugin($wamp);
     }
 
     private function tstMethodPreTest($test, $expect, LogEntry $logEntry, $vals = array())
@@ -407,10 +400,10 @@ class DebugTestFramework extends DOMTestCase
                 if (\is_callable($expect)) {
                     \call_user_func($expect, $logEntry);
                 } elseif (\is_string($expect)) {
-                    $logEntryArray = $this->logEntryToArray($logEntry);
+                    $logEntryArray = $this->helper->logEntryToArray($logEntry);
                     $this->assertStringMatchesFormat($expect, \json_encode($logEntryArray), 'log entry does not match format');
                 } else {
-                    $logEntryArray = $this->logEntryToArray($logEntry);
+                    $logEntryArray = $this->helper->logEntryToArray($logEntry);
                     if (isset($expect['meta']['file']) && $expect['meta']['file'] === '*') {
                         unset($expect['meta']['file']);
                         unset($logEntryArray['meta']['file']);
@@ -543,7 +536,7 @@ class DebugTestFramework extends DOMTestCase
                         ? $routeObj->wamp->messages[$messageIndex]
                         : false;
                     if ($output) {
-                        $output['args'][1] = $this->crate($output['args'][1]); // sort abstraction values
+                        $output['args'][1] = $this->helper->crate($output['args'][1]); // sort abstraction values
                         \ksort($output['args'][2]); // sort meta
                         $output = \json_encode($output);
                         if (!$asString) {
@@ -568,8 +561,8 @@ class DebugTestFramework extends DOMTestCase
      *
      * @param string       $test         chromeLogger|firephp|wamp
      * @param LogEntry     $logEntry     LogEntry instance
-     * @param string|array $outputExpect [description]
-     * @param string|array $output       [description]
+     * @param string|array $outputExpect expected output
+     * @param string|array $output       actual output
      *
      * @return void
      */
@@ -637,79 +630,5 @@ class DebugTestFramework extends DOMTestCase
             $message .= "\nactual: " . \str_replace("\e", '\e', $output);
         }
         $this->assertStringMatchesFormat(\trim($outputExpect), \trim($output), $message);
-    }
-
-    protected function deObjectifyData($data)
-    {
-        foreach (array('alerts','log') as $what) {
-            if (!isset($data[$what])) {
-                continue;
-            }
-            foreach ($data[$what] as $i => $v) {
-                $data[$what][$i] = $this->logEntryToArray($v);
-            }
-        }
-        if (isset($data['logSummary'])) {
-            foreach ($data['logSummary'] as $i => $group) {
-                foreach ($group as $i2 => $v) {
-                    $data['logSummary'][$i][$i2] = $this->logEntryToArray($v);
-                }
-            }
-        }
-        return $data;
-    }
-
-    protected function getPrivateProp($obj, $prop)
-    {
-        $objRef = new \ReflectionObject($obj);
-        $propRef = $objRef->getProperty($prop);
-        $propRef->setAccessible(true);
-        return $propRef->getValue($obj);
-    }
-
-    /**
-     * convert log entry to array
-     *
-     * @param LogEntry $logEntry LogEntry instance
-     * @param bool     $withKeys Whether to return key => value or just list
-     *
-     * @return array|null
-     */
-    protected function logEntryToArray($logEntry, $withKeys = true)
-    {
-        if (!$logEntry || !($logEntry instanceof LogEntry)) {
-            return null;
-        }
-        $return = $logEntry->export();
-        // convert any abstractions to array via json_encode
-        // $return['args'] = \json_decode(\json_encode($return['args']), true);
-        $return['args'] = $this->crate($return['args']);
-        \ksort($return['meta']);
-        if (!$withKeys) {
-            return \array_values($return);
-        }
-        return $return;
-    }
-
-    /**
-     * Arrayify abstractions
-     * sort abtract values and meta values for consistency
-     *
-     * @param mixed $val args or value
-     *
-     * @return mixed
-     */
-    protected function crate($val)
-    {
-        if ($val instanceof Abstraction) {
-            $val = $val->jsonSerialize();
-            \ksort($val);
-        }
-        if (\is_array($val)) {
-            foreach ($val as $k => $v) {
-                $val[$k] = $this->crate($v);
-            }
-        }
-        return $val;
     }
 }

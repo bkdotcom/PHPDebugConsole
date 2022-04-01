@@ -38,7 +38,7 @@ class Value extends BaseValue
     /**
      * Constructor
      *
-     * @param Dumper $dumper [description]
+     * @param Dumper $dumper "parent" dump class
      */
     public function __construct(Dumper $dumper)
     {

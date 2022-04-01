@@ -42,13 +42,14 @@ class StopWatch
     /**
      * Get elapsed time
      *
-     * @param string $label timer label
+     * @param string $label     timer label
+     * @param string $labelUsed set to label used
      *
-     * @param-out string $label
+     * @param-out string $labelUsed
      *
      * @return float|false
      */
-    public function get(&$label = null)
+    public function get($label = null, &$labelUsed = null)
     {
         $elapsedMicro = false;
         if ($label === null) {
@@ -59,6 +60,7 @@ class StopWatch
         } elseif (isset($this->timers['labels'][$label])) {
             $elapsedMicro = $this->timers['labels'][$label];
         }
+        $labelUsed = $label;
         if ($elapsedMicro === false) {
             return false;
         }
@@ -116,16 +118,16 @@ class StopWatch
      */
     public function stop($label = null)
     {
-        $labelOrig = $label;
-        $elapsed = $this->get($label);
+        $labelOut = null;
+        $elapsed = $this->get($label, $labelOut);
         if ($elapsed === false) {
             return $elapsed;
         }
-        if ($labelOrig === null) {
+        if ($label === null) {
             \array_pop($this->timers['stack']);
             return $elapsed;
         }
-        $this->timers['labels'][$label] = array($elapsed, null);
+        $this->timers['labels'][$labelOut] = array($elapsed, null);
         return $elapsed;
     }
 }

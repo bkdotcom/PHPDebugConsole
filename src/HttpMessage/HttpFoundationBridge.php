@@ -43,11 +43,8 @@ class HttpFoundationBridge
             . ($query !== '' ? '?' . $query : '');
         $uri = new Uri($uri);
 
-        $bodyContent = $request->getContent(true);
-        $resource = \fopen('php://temp', 'wb+');
-        \fwrite($resource, $bodyContent);
-        \rewind($resource);
-        $stream = new Stream($resource);
+        $bodyContentResource = $request->getContent(true);
+        $stream = new Stream($bodyContentResource);
 
         $psr7request = new ServerRequest($request->getMethod(), $uri, $request->server->all());
         $psr7request = $psr7request

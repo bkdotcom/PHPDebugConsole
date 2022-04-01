@@ -62,7 +62,6 @@ class Abstracter extends Component
     const TYPE_TIMESTAMP = 'timestamp';
 
     public $debug;
-    public static $utility;
     protected $abstractArray;
     protected $abstractObject;
     protected $abstractString;
@@ -121,7 +120,6 @@ class Abstracter extends Component
         $this->abstractObject = new AbstractObject($this);
         $this->abstractString = new AbstractString($this);
         $this->setCfg(\array_merge($this->cfg, $cfg));
-        self::$utility = $debug->utility;
     }
 
     /**
@@ -349,7 +347,7 @@ class Abstracter extends Component
     {
         $type = self::TYPE_ARRAY;
         $typeMore = self::TYPE_RAW;  // needs abstracted (references removed / values abstracted if necessary)
-        if (\count($val) === 2 && self::$utility->isCallable($val)) {
+        if (\count($val) === 2 && $this->debug->php->isCallable($val)) {
             $type = self::TYPE_CALLABLE;
         }
         return array($type, $typeMore);
@@ -429,7 +427,7 @@ class Abstracter extends Component
             'integer' => self::TYPE_INT,
             'NULL' => self::TYPE_NULL,
             'resource (closed)' => self::TYPE_RESOURCE,
-            'unknown type' => self::TYPE_UNKNOWN,
+            'unknown type' => self::TYPE_UNKNOWN,  // closed resource < php 7.2
         );
         if (isset($map[$type])) {
             $type = $map[$type];
@@ -481,7 +479,7 @@ class Abstracter extends Component
             $cfg['stringMaxLen'] = \array_merge($prev['stringMaxLen'], $cfg['stringMaxLen']);
             $this->cfg['stringMaxLen'] = $cfg['stringMaxLen'];
         }
-        if (isset($cfg['stringMixLen'])) {
+        if (isset($cfg['stringMinLen'])) {
             $cfg['stringMinLen'] = \array_merge($prev['stringMinLen'], $cfg['stringMinLen']);
             $this->cfg['stringMinLen'] = $cfg['stringMinLen'];
         }

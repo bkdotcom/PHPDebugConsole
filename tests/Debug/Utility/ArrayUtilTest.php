@@ -7,10 +7,11 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * PHPUnit tests for Debug class
+ *
+ * @covers \bdk\Debug\Utility\ArrayUtil
  */
 class ArrayUtilTest extends TestCase
 {
-
     /**
      * @dataProvider providerSpliceAssoc
      */
@@ -218,7 +219,7 @@ class ArrayUtilTest extends TestCase
                 'hatchback' => 'array2 val',
                 'suv' => 'array2 val',
             ),
-            1 => array('bar'),
+            1 => array('bar','foo'),
         );
         $array3 = array(
             'trains' => array('maglev'),
@@ -319,6 +320,51 @@ class ArrayUtilTest extends TestCase
                     'itchy' => true,
                 ),
             ),
+        ), $array);
+    }
+
+    public function testSortWithOrder()
+    {
+        $array = array(
+            'a' => 'foo',
+            'c' => '10',
+            'b' => '9',
+            'd' => 'derp',
+        );
+        // sort by value
+        ArrayUtil::sortWithOrder($array, array('foo','derp'));
+        $this->assertSame(array(
+            'a' => 'foo',
+            'd' => 'derp',
+            'b' => '9',
+            'c' => '10',
+        ), $array);
+
+        // sort by key
+        ArrayUtil::sortWithOrder($array, array('b'), 'key');
+        $this->assertSame(array(
+            'b' => '9',
+            'a' => 'foo',
+            'c' => '10',
+            'd' => 'derp',
+        ), $array);
+
+        // sort by value
+        ArrayUtil::sortWithOrder($array);
+        $this->assertSame(array(
+            'b' => '9',
+            'c' => '10',
+            'd' => 'derp',
+            'a' => 'foo',
+        ), $array);
+
+        // sort by value
+        ArrayUtil::sortWithOrder($array, null, 'key');
+        $this->assertSame(array(
+            'a' => 'foo',
+            'b' => '9',
+            'c' => '10',
+            'd' => 'derp',
         ), $array);
     }
 }

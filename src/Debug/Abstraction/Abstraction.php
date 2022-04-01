@@ -41,9 +41,10 @@ class Abstraction extends Event implements JsonSerializable, Serializable
     }
 
     /**
-     * Serialize
+     * Serialize magic method
+     * (since php 7.4)
      *
-     * @return string
+     * @return array
      */
     public function __serialize()
     {

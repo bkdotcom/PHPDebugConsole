@@ -12,6 +12,8 @@
 
 namespace bdk\Debug\Utility;
 
+use bdk\Debug\Utility\Utf8;
+
 /**
  * Dump strings / "highlight" non-printing & whitespace characters
  */
@@ -93,21 +95,21 @@ class Utf8Dump
         if ($str === '') {
             return '';
         }
+        // echo $blockType . ' "' . \bin2hex($str) . '"' . "\n";
         switch ($blockType) {
-            case 'utf8':
-                return $this->options['sanitizeNonBinary']
-                    ? \htmlspecialchars($str)
-                    : $str;
             case 'utf8special':
                 return $this->dumpBlockSpecial($str);
             case 'utf8control':
             case 'other':
-                $str = $this->dumpBlockOther($str);
+                $str = $this->dumpBlockCtrlOther($str);
                 return $this->options['useHtml']
                     ? '<span class="binary">' . $str . '</span>'
                     : $str;
         }
-        return $str;
+        // default / 'utf8'
+        return $this->options['sanitizeNonBinary']
+            ? \htmlspecialchars($str)
+            : $str;
     }
 
     /**
@@ -136,7 +138,7 @@ class Utf8Dump
      *
      * @return string
      */
-    private function dumpBlockOther($str)
+    private function dumpBlockCtrlOther($str)
     {
         if ($this->options['prefix'] === false) {
             $str = \bin2hex($str);
@@ -150,35 +152,9 @@ class Utf8Dump
         }
         $chars = \str_split($str);
         foreach ($chars as $i => $char) {
-            $chars[$i] = $this->dumpBlockOtherChar($char);
+            $chars[$i] = $this->dumpCtrlOtherCharHtml($char);
         }
         return \implode('', $chars);
-    }
-
-    /**
-     * Dump "other" character
-     *
-     * @param string $char single (may be multi-byte) char
-     *
-     * @return string
-     */
-    private function dumpBlockOtherChar($char)
-    {
-        $ord = \ord($char);
-        $prefix = '\\x';
-        $hex = $prefix . \bin2hex($char); // could use dechex($ord), but would require padding
-        if (!isset($this->charDesc[$ord])) {
-            return $hex;
-        }
-        $isControl = $ord < 0x20 || $ord === 0x7f;
-        if ($isControl === false) {
-            return '<span title="' . $this->charDesc[$ord] . '">' . $hex . '</span>';
-        }
-        // lets use the control pictures
-        $chr = $ord === 0x7f
-            ? "\xe2\x90\xa1"            // "del" char
-            : "\xe2\x90" . \chr($ord + 128); // chars for 0x00 - 0x1F
-        return '<span class="c1-control" title="' . $this->charDesc[$ord] . ': ' . $hex . '">' . $chr . '</span>';
     }
 
     /**
@@ -192,7 +168,7 @@ class Utf8Dump
     {
         $strNew = '';
         $pos = 0; // ordUtf8 updates
-        $length = \strlen($str);
+        $length = Utf8::strlen($str);
         while ($pos < $length) {
             $char = '';
             $ord = $this->ordUtf8($str, $pos, $char);
@@ -213,6 +189,29 @@ class Utf8Dump
             $strNew .= '<a class="unicode" href="' . $url . '" target="unicode-table" title="' . $title . '">\u' . $ordHex . '</a>';
         }
         return $strNew;
+    }
+
+    /**
+     * Dump control and "other" character
+     *
+     * @param string $char single (may be multi-byte) char
+     *
+     * @return string
+     */
+    private function dumpCtrlOtherCharHtml($char)
+    {
+        $ord = \ord($char);
+        $prefix = '\\x';
+        $hex = $prefix . \bin2hex($char); // could use dechex($ord), but would require padding
+        if (!isset($this->charDesc[$ord])) {
+            // other
+            return $hex;
+        }
+        // lets use the control pictures
+        $chr = $ord === 0x7f
+            ? "\xe2\x90\xa1"            // "del" char
+            : "\xe2\x90" . \chr($ord + 128); // chars for 0x00 - 0x1F
+        return '<span class="c1-control" title="' . $this->charDesc[$ord] . ': ' . $hex . '">' . $chr . '</span>';
     }
 
     /**

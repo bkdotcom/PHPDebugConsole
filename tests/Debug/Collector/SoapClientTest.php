@@ -9,6 +9,8 @@ use bdk\Test\Debug\DebugTestFramework;
 
 /**
  * PHPUnit tests for Debug class
+ *
+ * @covers \bdk\Debug\Collector\SoapClient
  */
 class SoapClientTest extends DebugTestFramework
 {
@@ -24,9 +26,7 @@ class SoapClientTest extends DebugTestFramework
 
         $logEntries = $this->debug->data->get('log');
         $logEntries = \array_slice($logEntries, -8);
-        $logEntries = \array_map(function (LogEntry $logEntry) {
-            return $this->logEntryToArray($logEntry);
-        }, $logEntries);
+        $logEntries = $this->helper->deObjectifyData($logEntries);
 
         $logEntriesExpect = array(
             array(

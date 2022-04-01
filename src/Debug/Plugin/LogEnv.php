@@ -149,11 +149,13 @@ class LogEnv implements SubscriberInterface
     {
         $settings = array(
             array('name' => 'session.cookie_httponly'),
-            array('name' => 'session.cookie_lifetime',
+            array(
+                'name' => 'session.cookie_lifetime',
                 'filter' => FILTER_VALIDATE_INT,
                 'valCompare' => 0,
             ),
-            array('name' => 'session.name',
+            array(
+                'name' => 'session.name',
                 'filter' => FILTER_DEFAULT,
                 'valActual' => $namePassed ?: \ini_get('session.name'),
                 'valCompare' => 'PHPSESSID',

@@ -12,14 +12,14 @@
 
 namespace bdk\HttpMessage;
 
-use bdk\HttpMessage\UriBase;
+use bdk\HttpMessage\AbstractUri;
 use InvalidArgumentException;
 use Psr\Http\Message\UriInterface;
 
 /**
  * Value object representing a URI.
  */
-class Uri extends UriBase implements UriInterface
+class Uri extends AbstractUri implements UriInterface
 {
     /** @var string Uri scheme. */
     private $scheme = '';
@@ -210,8 +210,8 @@ class Uri extends UriBase implements UriInterface
      * The leading "?" character is not part of the query and will not be
      * included.
      *
-     * The value returned will be percent-encoded, but will not double-encode
-     * any characters.
+     * The value returned will be percent-encoded,
+     * but will not double-encode any characters.
      * see RFC 3986, Sections 2 and 3.4.
      *
      * As an example, if a value in a key/value pair of the query string should

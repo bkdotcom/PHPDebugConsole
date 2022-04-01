@@ -12,7 +12,9 @@
 
 namespace bdk\Debug\Utility;
 
+use bdk\Debug\Utility\ArrayUtil;
 use DOMDocument;
+use InvalidArgumentException;
 use SqlFormatter;
 
 /**
@@ -24,37 +26,74 @@ class StringUtil
     const IS_BASE64_CHAR_STAT = 2;
 
     protected static $domDocument;
+    private static $interpContext = array();
+    private static $interpIsArrayAccess = false;
+
+    /**
+     * Compare two values specifying operator
+     *
+     * By default, returns -1 if the first version is lower than the second,
+     *     0 if they are equal, and 1 if the second is lower.
+     *
+     * When specifying a non "strcmp" function for the optional operator
+     *   return true if the relationship is the one specified by the operator, false otherwise.
+     *
+     * @param mixed  $valA     Value A
+     * @param mixed  $valB     Value B
+     * @param string $operator Comparison operator
+     *
+     * @return int|bool
+     *
+     * @throws \InvalidArgumentException on invalid operator
+     */
+    public static function compare($valA, $valB, $operator = 'strnatcmp')
+    {
+        $operators = array(
+            'strcmp',
+            'strcasecmp',
+            'strnatcmp', null => 'strnatcmp',
+            'strnatcasecmp',
+            '===',
+            '==', 'eq' => '==', '=' => '==',
+            '!==',
+            '!=', 'ne' => '!=', '<>' => '!=',
+            '>=', 'ge' => '>=',
+            '<=', 'le' => '<=',
+            '>', 'gt' => '>',
+            '<', 'lt' => '<',
+        );
+        if (isset($operators[$operator]) && \is_numeric($operator) === false) {
+            // one of the aliases
+            $operator = $operators[$operator];
+        } elseif (\in_array($operator, $operators, true) === false) {
+            throw new InvalidArgumentException(__METHOD__ . ' - Invalid operator passed');
+        }
+        if (\in_array($operator, array('===', '!==')) === false) {
+            list($valA, $valB) = static::compareTypeJuggle($valA, $valB);
+        }
+        return static::doCompare($valA, $valB, $operator);
+    }
 
     /**
      * Interpolates context values into the message placeholders.
      *
-     * @param string|object $message      message (string, or obj with __toString)
-     * @param array|object  $context      optional array of key/values or object
-     *                                      if array: interpolated values get removed
-     * @param array         $placeholders gets set to the placeholders found in message
+     * @param string|Stringable $message      message (string, or obj with __toString)
+     * @param array|object      $context      optional key/value array or object
+     * @param array             $placeholders gets set to the placeholders found in message
      *
      * @return string
-     * @throws \RuntimeException if non-stringable object provided for $message
-     * @throws \InvalidArgumentException if $context not array or object
+     * @throws \InvalidArgumentException if $message or $context invalid
      */
     public static function interpolate($message, $context = array(), &$placeholders = array())
     {
-        // build a replacement array with braces around the context keys
-        if (!\is_array($context) && !\is_object($context)) {
-            throw new \InvalidArgumentException(
-                'Expected array or object for $context. ' . \gettype($context) . ' provided'
-            );
-        }
-        if (\is_object($message)) {
-            if (\method_exists($message, '__toString') === false) {
-                throw new \RuntimeException(__METHOD__ . ': ' . \get_class($message) . 'is not stringable');
-            }
-            $message = (string) $message;
-        }
+        static::interpolateAssertArgs($message, $context);
+        self::$interpContext = $context;
+        self::$interpIsArrayAccess = \is_array($context) || $context instanceof \ArrayAccess;
         $matches = array();
-        \preg_match_all('/\{([a-zA-Z0-9._-]+)\}/', $message, $matches);
+        \preg_match_all('/\{([a-zA-Z0-9._\\/-]+)\}/', (string) $message, $matches);
         $placeholders = \array_unique($matches[1]);
-        $replaceVals = self::interpolateValues($placeholders, $context);
+        $replaceVals = self::interpolateValues($placeholders);
+        self::$interpContext = array();
         return \strtr((string) $message, $replaceVals);
     }
 
@@ -194,7 +233,7 @@ class StringUtil
     public static function prettySql($sql)
     {
         if (!\class_exists('SqlFormatter')) {
-            return $sql;
+            return $sql; // @codeCoverageIgnore
         }
         // whitespace only, don't highlight
         $sql = SqlFormatter::format($sql, false);
@@ -229,21 +268,77 @@ class StringUtil
     }
 
     /**
-     * Test if character distribution is what we would expect for a bse 64 string
+     * Typecast values for comparison like Php 8 does it
+     *
+     * @param mixed $valA Value a
+     * @param mixed $valB Value b
+     *
+     * @return array $valA & $valB
+     *
+     * @link https://www.php.net/releases/8.0/en.php#saner-string-to-number-comparisons
+     */
+    private static function compareTypeJuggle($valA, $valB)
+    {
+        $isNumericA = \is_numeric($valA);
+        $isNumericB = \is_numeric($valB);
+        if ($isNumericA && $isNumericB) {
+            $valA = $valA * 1;
+            $valB = $valB * 1;
+        } elseif ($isNumericA && \is_string($valB)) {
+            $valA = (string) $valA;
+        } elseif ($isNumericB && \is_string($valA)) {
+            $valB = (string) $valB;
+        }
+        return array($valA, $valB);
+    }
+
+    /**
+     * Compare two values specifying operator
+     *
+     * @param mixed  $valA     Value A
+     * @param mixed  $valB     Value B
+     * @param string $operator (strcmp) Comparison operator
+     *
+     * @return bool
+     */
+    private static function doCompare($valA, $valB, $operator)
+    {
+        switch ($operator) {
+            case '==':
+                return $valA == $valB;
+            case '===':
+                return $valA === $valB;
+            case '!=':
+                return $valA != $valB;
+            case '!==':
+                return $valA !== $valB;
+            case '>=':
+                return $valA >= $valB;
+            case '<=':
+                return $valA <= $valB;
+            case '>':
+                return $valA >  $valB;
+            case '<':
+                return $valA <  $valB;
+        }
+        $ret = \call_user_func($operator, $valA, $valB);
+        $ret = \min(\max($ret, -1), 1);
+        return $ret;
+    }
+
+    /**
+     * Test if character distribution is what we would expect for a base 64 string
      * This is quite unreliable as encoding isn't random
      *
-     * @param string $val string alreadl striped of whitespace
+     * @param string $val string already striped of whitespace
      *
      * @return bool
      */
     private static function isBase64EncodedTestStats($val)
     {
         $count = 0;
-        $valNoPadding = \preg_replace('/=+$/', '', $val, -1, $count);
+        $valNoPadding = \preg_replace('/=+$/', '', $val, -2, $count);
         $strlen = \strlen($valNoPadding);
-        if ($strlen === 0) {
-            return false;
-        }
         if ($count > 0) {
             // if val ends with "=" it's pretty safe to assume base64
             return true;
@@ -290,21 +385,53 @@ class StringUtil
     }
 
     /**
+     * Test self::interpolate's $message and $context values
+     *
+     * @param string|Stringable $message message value to test
+     * @param array|object      $context context value to test
+     *
+     * @return void
+     *
+     * @throws \InvalidArgumentException
+     */
+    private static function interpolateAssertArgs($message, $context)
+    {
+        if (
+            \count(\array_filter(array(
+                \is_string($message),
+                \is_object($message) && \method_exists($message, '__toString'),
+            ))) === 0
+        ) {
+            throw new \InvalidArgumentException(\sprintf(
+                __NAMESPACE__ . '::interpolate()\'s $message expects string or Stringable object. %s provided.',
+                \is_object($message) ? \get_class($message) : \gettype($message)
+            ));
+        }
+        if (
+            \count(\array_filter(array(
+                \is_array($context),
+                \is_object($context),
+            ))) === 0
+        ) {
+            throw new \InvalidArgumentException(\sprintf(
+                __NAMESPACE__ . '::interpolate()\'s $context expects array or object for $context. %s provided.',
+                \gettype($context)
+            ));
+        }
+    }
+
+    /**
      * Get substitution values for `interpolate()`
      *
-     * @param array        $placeholders keys
-     * @param array|object $context      values
+     * @param array $placeholders keys
      *
      * @return string[] key->value array
      */
-    private static function interpolateValues($placeholders, $context)
+    private static function interpolateValues($placeholders)
     {
         $replace = array();
-        $isArrayAccess = \is_array($context) || $context instanceof \ArrayAccess;
-        foreach ($placeholders as $key) {
-            $val = $isArrayAccess
-                ? (isset($context[$key]) ? $context[$key] : null)
-                : (isset($context->{$key}) ? $context->{$key} : null);
+        foreach ($placeholders as $placeholder) {
+            $val = self::interpolateValue($placeholder);
             if (
                 \array_filter(array(
                     $val === null,
@@ -314,8 +441,28 @@ class StringUtil
             ) {
                 continue;
             }
-            $replace['{' . $key . '}'] = (string) $val;
+            $replace['{' . $placeholder . '}'] = (string) $val;
         }
         return $replace;
+    }
+
+    /**
+     * Pull placeholder value from context
+     *
+     * @param string $placeholder Placeholder from message
+     *
+     * @return mixed
+     */
+    private static function interpolateValue($placeholder)
+    {
+        $path = \array_filter(\preg_split('#[\./]#', $placeholder), 'strlen');
+        $key0 = $path[0];
+        $val = self::$interpIsArrayAccess
+            ? (isset(self::$interpContext[$key0]) ? self::$interpContext[$key0] : null)
+            : (isset(self::$interpContext->{$key0}) ? self::$interpContext->{$key0} : null);
+        if (\count($path) > 1) {
+            $val = ArrayUtil::pathGet($val, \array_slice($path, 1));
+        }
+        return $val;
     }
 }

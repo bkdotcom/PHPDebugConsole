@@ -225,6 +225,28 @@ class Table
     }
 
     /**
+     * Reduce each row to the columns specified
+     * Do this so we don't needlessly crate values that we won't output
+     *
+     * @param mixed $rows Table rows
+     *
+     * @return array
+     */
+    private function preCrate($rows)
+    {
+        if (\is_array($rows) === false || empty($this->meta['columns'])) {
+            return $rows;
+        }
+        $colFlip = \array_flip($this->meta['columns']);
+        foreach ($rows as $i => $row) {
+            if (\is_array($row)) {
+                $rows[$i] = \array_intersect_key($row, $colFlip);
+            }
+        }
+        return $rows;
+    }
+
+    /**
      * non-array
      * empty array
      * array
@@ -260,7 +282,11 @@ class Table
      */
     private function processRowsGet()
     {
-        $rows = $this->debug->abstracter->crate($this->logEntry['args'][0], $this->logEntry['method']);
+        $rows = $this->logEntry['args'][0];
+        if ($this->meta['inclContext'] === false) {
+            $rows = $this->preCrate($rows);
+        }
+        $rows = $this->debug->abstracter->crate($rows, $this->logEntry['method']);
         if ($this->debug->abstracter->isAbstraction($rows, Abstracter::TYPE_OBJECT)) {
             $this->meta['tableInfo']['class'] = $rows['className'];
             $this->meta['tableInfo']['summary'] = $rows['phpDoc']['summary'];

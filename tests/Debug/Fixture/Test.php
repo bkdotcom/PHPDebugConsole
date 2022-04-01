@@ -2,7 +2,7 @@
 
 namespace bdk\Test\Debug\Fixture;
 
-// \define('SOMECONSTANT', 'Constant value');
+use bdk\Debug\Abstraction\Abstraction;
 
 /**
  * PhpDoc Summary
@@ -126,8 +126,9 @@ class Test extends TestBase
     /**
      * This method is private
      *
-     * @param mixed $param1 first param (passed by ref)
-     * @param mixed $param2 second param (passed by ref)
+     * @param mixed               $param1     first param (passed by ref)
+     * @param \bdk\PubSub\Event[] $param2     second param (passed by ref)
+     * @param bool                $param3,... 3rd param not in method signature
      *
      * @return void
      */
@@ -138,7 +139,7 @@ class Test extends TestBase
     /**
      * This method is protected
      *
-     * @param mixed $param1 first param
+     * @param Abstraction[] $param1 first param
      *
      * @return void
      */

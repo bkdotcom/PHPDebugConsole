@@ -77,7 +77,7 @@ class LogPhp implements SubscriberInterface
             'name' => 'expose_php',
             'valCompare' => false,
         ));
-        $this->checkCommonExtensions();
+        $this->assertExtensions();
         $this->logXdebug();
     }
 
@@ -108,6 +108,7 @@ class LogPhp implements SubscriberInterface
             return;
         }
         $logServerKeys = $this->debug->getCfg('logServerKeys', Debug::CONFIG_DEBUG);
+        $serverParams = $this->debug->request->getServerParams();
         if ($this->debug->request->getMethod() !== 'GET') {
             $logServerKeys[] = 'REQUEST_METHOD';
         }
@@ -124,7 +125,6 @@ class LogPhp implements SubscriberInterface
             return;
         }
         $vals = \array_fill_keys($logServerKeys, Abstracter::UNDEFINED);
-        $serverParams = $this->debug->request->getServerParams();
         $serverParams = \array_intersect_key($serverParams, $vals);
         $vals = \array_merge($vals, $serverParams);
         \ksort($vals, SORT_NATURAL);
@@ -136,9 +136,9 @@ class LogPhp implements SubscriberInterface
      *
      * @return void
      */
-    private function checkCommonExtensions()
+    private function assertExtensions()
     {
-        $extensionsCheck = array('curl','mbstring');
+        $extensionsCheck = $this->debug->getCfg('extensionsCheck', Debug::CONFIG_DEBUG);
         foreach ($extensionsCheck as $extension) {
             if (\extension_loaded($extension) === true) {
                 continue;
@@ -152,6 +152,12 @@ class LogPhp implements SubscriberInterface
                 ))
             );
         }
+        $this->assertSetting(array(
+            'name' => 'mbstring.func_overload',
+            'filter' => FILTER_VALIDATE_INT,
+            'valCompare' => array(0, false),
+            'msg' => 'Multibyte string function overloading is enabled (is evil)',
+        ));
     }
 
     /**
@@ -242,7 +248,7 @@ class LogPhp implements SubscriberInterface
      */
     private function logPhpMemoryLimit()
     {
-        $memoryLimit = $this->debug->utility->memoryLimit();
+        $memoryLimit = $this->debug->php->memoryLimit();
         $memoryLimit === '-1'
             // overkill, but lets use assertSetting, which applies some styling
             ? $this->assertSetting(array(

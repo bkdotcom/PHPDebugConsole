@@ -19,6 +19,8 @@ use bdk\Debug\LogEntry;
 use bdk\PubSub\Event;
 use bdk\PubSub\Manager as EventManager;
 use bdk\PubSub\SubscriberInterface;
+use ReflectionFunction;
+use ReflectionMethod;
 use RuntimeException;
 
 /**
@@ -227,7 +229,7 @@ class Group implements SubscriberInterface
     /**
      * Automatic group/groupCollapsed arguments
      *
-     * @param array $caller CallerInfo
+     * @param array $caller Caller Info
      *
      * @return array
      */
@@ -241,12 +243,11 @@ class Group implements SubscriberInterface
         $function = null;
         $callerStartLine = 1;
         if ($caller['class']) {
-            $refClass = new \ReflectionClass($caller['class']);
-            $refMethod = $refClass->getMethod($caller['function']);
+            $refMethod = new ReflectionMethod($caller['class'], $caller['function']);
             $callerStartLine = $refMethod->getStartLine();
-            $function = $caller['class'] . $caller['type'] . $caller['function'];
+            $function = $caller['classCalled'] . $caller['type'] . $caller['function'];
         } elseif (!\in_array($caller['function'], array('include', 'include_once', 'require', 'require_once'))) {
-            $refFunction = new \ReflectionFunction($caller['function']);
+            $refFunction = new ReflectionFunction($caller['function']);
             $callerStartLine = $refFunction->getStartLine();
             $function = $caller['function'];
         }
@@ -463,6 +464,8 @@ class Group implements SubscriberInterface
 
     /**
      * Uncollapse groups containing errors.
+     *
+     * Occurs onOutput
      *
      * @return void
      */

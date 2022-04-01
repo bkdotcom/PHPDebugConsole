@@ -1,0 +1,316 @@
+<?php
+
+namespace bdk\Test\Debug\Utility;
+
+use bdk\Debug;
+use bdk\Debug\Utility\SerializeLog;
+use bdk\Test\Debug\DebugTestFramework;
+
+/**
+ * Test SerializeLog
+ *
+ * @covers \bdk\Debug\Plugin\Channel
+ * @covers \bdk\Debug\Utility\SerializeLog
+ */
+class SerializeLogTest extends DebugTestFramework
+{
+    public function testSerializeUnserialize()
+    {
+        $this->debug->alert('some alert');
+        $this->debug->groupSummary();
+        $this->debug->log('in summary');
+        $this->debug->groupEnd();
+        $this->debug->info('this is a test');
+        $serialized = SerializeLog::serialize($this->debug);
+        $unserialized = SerializeLog::unserialize($serialized);
+        $channelNameRoot = $this->debug->getCfg('channelName', Debug::CONFIG_DEBUG);
+        $expect = array(
+            'alerts' => $this->helper->deObjectifyData($this->debug->data->get('alerts'), false),
+            'config' => array(
+                'channelIcon' => $this->debug->getCfg('channelIcon', Debug::CONFIG_DEBUG),
+                'channelName' => $channelNameRoot,
+                'channels' => \array_map(function (Debug $channel) use ($channelNameRoot) {
+                    $channelName = $channel->getCfg('channelName', Debug::CONFIG_DEBUG);
+                    return array(
+                        'channelIcon' => $channel->getCfg('channelIcon', Debug::CONFIG_DEBUG),
+                        'channelShow' => $channel->getCfg('channelShow', Debug::CONFIG_DEBUG),
+                        'channelSort' => $channel->getCfg('channelSort', Debug::CONFIG_DEBUG),
+                        'nested' => \strpos($channelName, $channelNameRoot . '.') === 0,
+                    );
+                }, $this->debug->getChannels(true, true)),
+                'logRuntime' => $this->debug->getCfg('logRuntime'),
+            ),
+            'log' => $this->helper->deObjectifyData($this->debug->data->get('log'), false),
+            'logSummary' => $this->helper->deObjectifyData($this->debug->data->get('logSummary'), false),
+            'runtime' => $this->debug->data->get('runtime'),
+            'requestId' => $this->debug->data->get('requestId'),
+            'version' => Debug::VERSION,
+        );
+        $this->assertEquals(
+            $expect,
+            $this->helper->deObjectifyData($unserialized)
+        );
+        $debug = SerializeLog::import($unserialized);
+        $serialized = SerializeLog::serialize($debug);
+        $unserialized = SerializeLog::unserialize($serialized);
+        $this->assertEquals(
+            $expect,
+            $this->helper->deObjectifyData($unserialized),
+        );
+    }
+
+    public function testSerialieNotBase64()
+    {
+        $this->debug->alert('some alert');
+        $this->debug->groupSummary();
+        $this->debug->log('in summary');
+        $this->debug->groupEnd();
+        $serialized = SerializeLog::serialize($this->debug);
+        $strStart = 'START DEBUG';
+        $strEnd = 'END DEBUG';
+        $regex = '/' . $strStart . '[\r\n]+(.+)[\r\n]+' . $strEnd . '/s';
+        if (\preg_match($regex, $serialized, $matches)) {
+            $serialized = $matches[1];
+        }
+        $serialized = \base64_decode($serialized);
+        $unserialized = SerializeLog::unserialize($serialized);
+        $this->assertFalse($unserialized);
+    }
+
+    public function testUnserializeLogLegacy()
+    {
+        $serialized = <<<'EOD'
+START DEBUG
+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
+END DEBUG
+EOD;
+        $unserialized = SerializeLog::unserialize($serialized);
+        $expect = array(
+            'version' => '2.3',
+            'alerts' => array(
+                array(
+                    'alert',
+                    array('Alerty'),
+                    array(
+                        'class' => 'danger',
+                        'dismissible' => false,
+                    ),
+                ),
+            ),
+            'log' => array(
+                array(
+                    'log',
+                    array('hello world'),
+                    array(),
+                ),
+                array(
+                    'log',
+                    array(
+                        'some obj',
+                        array(
+                            'className' => 'stdClass',
+                            'collectMethods' => true,
+                            'constants' => array(),
+                            'debug' => "\x00debug\x00",
+                            'debugMethod' => 'log',
+                            'definition' => array(
+                                'fileName' => false,
+                                'startLine' => false,
+                                'extensionName' => 'Core',
+                            ),
+                            'extends' => array(),
+                            'implements' => array(),
+                            'isExcluded' => false,
+                            'isRecursion' => false,
+                            'methods' => array(),
+                            'phpDoc' => array(
+                                'summary' => null,
+                                'desc' => null,
+                            ),
+                            'properties' => array(
+                                'foo' => array(
+                                    'desc' => null,
+                                    'inheritedFrom' => null,
+                                    'isExcluded' => false,
+                                    'isStatic' => false,
+                                    'originallyDeclared' => null,
+                                    'overrides' => null,
+                                    'forceShow' => false,
+                                    'type' => null,
+                                    'value' => 'bar',
+                                    'valueFrom' => 'value',
+                                    'visibility' => 'public',
+                                ),
+                            ),
+                            'scopeClass' => 'bdk\Debug',
+                            'stringified' => null,
+                            'type' => 'object',
+                            'traverseValues' => array(),
+                            'viaDebugInfo' => false,
+                        ),
+                    ),
+                    array(),
+                ),
+            ),
+            'logSummary' => array(
+                array(
+                    array(
+                        'group',
+                        array('environment'),
+                        array(
+                            'hideIfEmpty' => true,
+                            'level' => 'info',
+                        ),
+                    ),
+                    array(
+                        'log',
+                        array(
+                            'PHP Version',
+                            '8.1.0',
+                        ),
+                        array(),
+                    ),
+                    array(
+                        'log',
+                        array(
+                            'ini location',
+                            '/usr/local/etc/php/8.1/php.ini',
+                        ),
+                        array(),
+                    ),
+                    array(
+                        'log',
+                        array(
+                            'memory_limit',
+                            '1 GB',
+                        ),
+                        array(),
+                    ),
+                    array(
+                        'log',
+                        array(
+                            'session.cache_limiter',
+                            'nocache',
+                        ),
+                        array(),
+                    ),
+                    array(
+                        'log',
+                        array(
+                            'session_save_path',
+                            '/var/tmp/',
+                        ),
+                        array(),
+                    ),
+                    array(
+                        'warn',
+                        array(
+                            'PHP\'s %cerror_reporting%c is set to `%cE_ALL | E_STRICT & ~E_DEPRECATED%c` rather than `%cE_ALL | E_STRICT%c`' . "\n"
+                                . 'PHPDebugConsole is disregarding %cerror_reporting%c value (this is configurable)',
+                            'font-family:monospace; opacity:0.8;',
+                            'font-family:inherit; white-space:pre-wrap;',
+                            'font-family:monospace; opacity:0.8;',
+                            'font-family:inherit; white-space:pre-wrap;',
+                            'font-family:monospace; opacity:0.8;',
+                            'font-family:inherit; white-space:pre-wrap;',
+                            'font-family:monospace; opacity:0.8;',
+                            'font-family:inherit; white-space:pre-wrap;',
+                        ),
+                        array(
+                            'file' => null,
+                            'line' => null,
+                        ),
+                    ),
+                    array(
+                        'log',
+                        array(
+                            '$_SERVER',
+                            array(
+                                'REMOTE_ADDR' => '127.0.0.1',
+                                'REQUEST_TIME' => '2022-03-21 03:19:25 UTC',
+                                'REQUEST_URI' => '/common/vendor/bdk/PHPDebugConsole/examples/ver23.php',
+                                'SERVER_ADDR' => '127.0.0.1',
+                                'SERVER_NAME' => '127.0.0.1',
+                            ),
+                        ),
+                        array(),
+                    ),
+                    array(
+                        'log',
+                        array(
+                            'request headers',
+                            array(
+                                'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+                                'Accept-Encoding' => 'gzip, deflate, br',
+                                'Accept-Language' => 'en-US,en;q=0.9',
+                                'Cache-Control' => 'max-age=0',
+                                'Connection' => 'keep-alive',
+                                'Cookie' => 'undefined=undefined; SESSIONID=hp5ln6mia3bjrgkjpsn8usta8b;',
+                                'Host' => '127.0.0.1',
+                                'Sec-Fetch-Dest' => 'document',
+                                'Sec-Fetch-Mode' => 'navigate',
+                                'Sec-Fetch-Site' => 'none',
+                                'Sec-Fetch-User' => '?1',
+                                'Upgrade-Insecure-Requests' => '1',
+                                'User-Agent' => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.83 Safari/537.36',
+                                'dnt' => '1',
+                                'sec-ch-ua' => '" Not A;Brand";v="99", "Chromium";v="99", "Google Chrome";v="99"',
+                                'sec-ch-ua-mobile' => '?0',
+                                'sec-ch-ua-platform' => '"macOS"',
+                                'sec-gpc' => '1',
+                            ),
+                        ),
+                        array(),
+                    ),
+                    array(
+                        'log',
+                        array(
+                            '$_COOKIE',
+                            array(
+                                'SESSIONID' => 'hp5ln6mia3bjrgkjpsn8usta8b',
+                                'undefined' => 'undefined',
+                            ),
+                        ),
+                        array(),
+                    ),
+                    array(
+                        'groupEnd',
+                        array(),
+                        array(),
+                    ),
+                ),
+            ),
+            'runtime' => array(),
+            'config' => array(
+                'channelName' => 'general',
+                'channels' => array(),
+            ),
+        );
+        $this->assertSame($expect, $unserialized);
+        $debug = SerializeLog::import($unserialized);
+        $serialized = SerializeLog::serialize($debug);
+        $unserialized = SerializeLog::unserialize($serialized);
+        $keysCompare = array('alerts', 'log','logSummary');
+        $this->assertEquals(
+            \array_intersect_key($expect, \array_flip($keysCompare)),
+            \array_intersect_key($this->helper->deObjectifyData($unserialized), \array_flip($keysCompare)),
+        );
+    }
+}

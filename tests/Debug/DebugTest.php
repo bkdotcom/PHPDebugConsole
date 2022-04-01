@@ -8,6 +8,11 @@ use bdk\PubSub\Manager as EventManager;
 
 /**
  * PHPUnit tests for Debug class
+ *
+ * @covers \bdk\Debug
+ * @covers \bdk\Debug\Data
+ * @covers \bdk\Debug\Internal
+ * @covers \bdk\Debug\Scaffolding
  */
 class DebugTest extends DebugTestFramework
 {
@@ -26,6 +31,7 @@ class DebugTest extends DebugTestFramework
         $args = array();
         $count = 0;
         $debug = new Debug(array(
+            'logResponse' => false,
             'onBootstrap' => function (\bdk\PubSub\Event $event) use (&$args, &$count) {
                 $count++;
                 $args = \func_get_args();
@@ -272,26 +278,13 @@ class DebugTest extends DebugTestFramework
         ), $errorCaller);
     }
 
-    public function testErrorCallerCleared()
-    {
-        $this->debug->group('test');
-        $this->debug->setErrorCaller(array('file' => 'test', 'line' => 42));
-        $this->debug->groupEnd();
-        $this->assertSame(array(), $this->debug->errorHandler->get('errorCaller'));
-
-        $this->debug->groupSummary();
-        $this->debug->setErrorCaller(array('file' => 'test', 'line' => 42));
-        $this->debug->groupEnd();
-        $this->assertSame(array(), $this->debug->errorHandler->get('errorCaller'));
-    }
-
     private function setErrorCallerHelper($static = false)
     {
         if ($static) {
             Debug::_setErrorCaller();
-        } else {
-            $this->debug->setErrorCaller();
+            return;
         }
+        $this->debug->setErrorCaller();
     }
 
     /**
@@ -301,7 +294,6 @@ class DebugTest extends DebugTestFramework
      */
     protected function destroyDebug()
     {
-
         $this->debugBackup = array(
             'debug' => array(),
             'eventManager' => array(),

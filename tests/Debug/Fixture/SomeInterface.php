@@ -11,7 +11,7 @@ namespace bdk\Test\Debug\Fixture;
  * @method void presto($foo, integer $int = 1, $bool = true, $null = null) I'm a magic method
  * @method static void prestoStatic(string $noDefault, $arr = array(), $opts=array('a'=>'ay','b'=>'bee')) I'm a static magic method
  *
- * @author  Brad Kent <bkfake-github@yahoo.com>
+ * @author  Brad Kent <bkfake-github@yahoo.com> Author desc is non-standard
  * @link    https://github.com/bkdotcom/PHPDebugConsole
  * @see     subclass::method()
  * @unknown Some phpdoc tag
@@ -19,9 +19,9 @@ namespace bdk\Test\Debug\Fixture;
 interface SomeInterface
 {
     /**
-     * Summary
+     * SomeInterface summary
      *
-     * Description
+     * SomeInterface description
      *
      * @return self
      */

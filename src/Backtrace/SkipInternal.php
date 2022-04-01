@@ -141,7 +141,7 @@ class SkipInternal
     /**
      * Determine level max and set regex
      *
-     * @param int|null $levelMax [description]
+     * @param int|null $levelMax maximum level
      *
      * @return int levelMax
      */

@@ -7,6 +7,16 @@ use bdk\PubSub\Event;
 
 /**
  * PHPUnit tests for Debug Channels
+ *
+ * @covers \bdk\Debug\Dump\Html\Helper
+ * @covers \bdk\Debug\Dump\Text
+ * @covers \bdk\Debug\Internal
+ * @covers \bdk\Debug\InternalEvents
+ * @covers \bdk\Debug\Method\Clear
+ * @covers \bdk\Debug\Plugin\Channel
+ * @covers \bdk\Debug\Route\Html
+ * @covers \bdk\Debug\Route\Html\ErrorSummary
+ * @covers \bdk\Debug\Route\Html\Tabs
  */
 class ChannelTest extends DebugTestFramework
 {
@@ -18,8 +28,7 @@ class ChannelTest extends DebugTestFramework
     public function setUp(): void
     {
         parent::setUp();
-        $this->debugFoo = $this->debug->getChannel('foo');
-        $this->debugFoo->setCfg(array(
+        $this->debugFoo = $this->debug->getChannel('foo', array(
             'outputCss' => false,
             'outputScript' => false,
         ));
@@ -27,11 +36,13 @@ class ChannelTest extends DebugTestFramework
 
     public function testInstance()
     {
-        $this->assertInstanceOf('bdk\\Debug', $this->debugFoo);
+        $this->assertInstanceOf('bdk\\Debug', $this->debug->getChannel('foo'));
     }
 
     public function testData()
     {
+        $info = array();
+        $data = $this->genLog($this->debug, null, $info);
         $dataExpect = array(
             'alerts' => array(
                 array('alert', array('main: alert'), array('dismissible' => false, 'level' => 'error')),
@@ -52,8 +63,8 @@ class ChannelTest extends DebugTestFramework
                     array('group', array('main: sum 0 / group 1 / group 2'), array()),
                     array('log', array('main: sum 0 / group 1 / group 2 / log'), array()),
                     array('log', array('foo: sum 0 / group 1 / group 2 / log'), array('channel' => 'general.foo')),
-                    array('error', array('main: error'), array('detectFiles' => true, 'file' => '', 'line' => '', 'uncollapse' => true,)),
-                    array('error', array('foo: error'), array('channel' => 'general.foo', 'detectFiles' => true, 'file' => '', 'line' => '', 'uncollapse' => true,)),
+                    array('error', array('main: error'), array('detectFiles' => true, 'file' => __FILE__, 'line' => $info['lines'][0], 'uncollapse' => true,)),
+                    array('error', array('foo: error'), array('channel' => 'general.foo', 'detectFiles' => true, 'file' => __FILE__, 'line' => $info['lines'][1], 'uncollapse' => true,)),
                     array('groupEnd', array(), array()),
                     array('groupEnd', array(), array('channel' => 'general.foo')),
                 ),
@@ -75,9 +86,11 @@ class ChannelTest extends DebugTestFramework
             ),
         );
 
+        // nothing actually cleared (bitmask = 0)
         $data = $this->genLog($this->debug);
         $this->assertSame($dataExpect, $data);
 
+        // nothing actually cleared (bitmask = 0)
         $data = $this->genLog($this->debugFoo);
         $this->assertSame($dataExpect, $data);
 
@@ -99,9 +112,9 @@ class ChannelTest extends DebugTestFramework
                         'general.foo',
                     ),
                     array(
-                        'bitmask' => 31,
+                        'bitmask' => Debug::CLEAR_ALL,
                         'channel' => 'general.foo',
-                        'file' => '',
+                        'file' => __FILE__,
                         'flags' => array(
                             'alerts' => true,
                             'log' => true,
@@ -110,7 +123,7 @@ class ChannelTest extends DebugTestFramework
                             'summaryErrors' => true,
                             'silent' => false,
                         ),
-                        'line' => '',
+                        'line' => $info['lines'][2],
                     ),
                 ),
                 array('groupEnd', array(), array('channel' => 'general.foo')),
@@ -120,7 +133,7 @@ class ChannelTest extends DebugTestFramework
                 0 => array(
                     array('group', array('main: sum 0 / group 1 / group 2'), array()),
                     array('log', array('main: sum 0 / group 1 / group 2 / log'), array()),
-                    array('error', array('main: error'), array('detectFiles' => true, 'file' => '', 'line' => '', 'uncollapse' => true)),
+                    array('error', array('main: error'), array('detectFiles' => true, 'file' => __FILE__, 'line' => $info['lines'][0], 'uncollapse' => true)),
                     array('groupEnd', array(), array()),
                 ),
                 1 => array(
@@ -138,7 +151,7 @@ class ChannelTest extends DebugTestFramework
                 ),
             ),
         );
-        $data = $this->genLog($this->debugFoo, \bdk\Debug::CLEAR_ALL);
+        $data = $this->genLog($this->debugFoo, Debug::CLEAR_ALL);
         $this->assertSame($dataFooClearedExpect, $data);
     }
 
@@ -146,7 +159,7 @@ class ChannelTest extends DebugTestFramework
     {
         $this->genLog();
         $htmlFoo = <<<EOD
-        <div class="debug" data-channel-name-root="general.foo" data-channels="{&quot;general&quot;:{&quot;options&quot;:{&quot;icon&quot;:null,&quot;show&quot;:true},&quot;channels&quot;:{&quot;foo&quot;:{&quot;options&quot;:{&quot;icon&quot;:null,&quot;show&quot;:true},&quot;channels&quot;:{}}}}}" data-options="{&quot;drawer&quot;:true,&quot;linkFilesTemplateDefault&quot;:null,&quot;tooltip&quot;:true}">
+        <div class="debug" data-channel-name-root="general.foo" data-channels="{&quot;general&quot;:{&quot;options&quot;:{&quot;icon&quot;:&quot;fa fa-list-ul&quot;,&quot;show&quot;:true},&quot;channels&quot;:{&quot;foo&quot;:{&quot;options&quot;:{&quot;icon&quot;:null,&quot;show&quot;:true},&quot;channels&quot;:{}}}}}" data-options="{&quot;drawer&quot;:true,&quot;linkFilesTemplateDefault&quot;:null,&quot;tooltip&quot;:true}">
             <header class="debug-bar debug-menu-bar">PHPDebugConsole<nav role="tablist"></nav></header>
             <div class="tab-panes">
                 <div class="active debug-tab-general-foo tab-pane tab-primary" data-options="{&quot;sidebar&quot;:true}" role="tabpanel">
@@ -257,7 +270,81 @@ EOD;
         $this->assertSame(2, $this->eventCounter['general.foo.debug.output']);
     }
 
-    protected function genLog(Debug $clearer = null, $bitmask = null)
+    public function testCreateChannel()
+    {
+        $channelsBack = $this->helper->getPrivateProp($this->debug->pluginChannel, 'channels');
+        $this->helper->setPrivateProp($this->debug->pluginChannel, 'channels', array());
+        $tabby = $this->debug->getChannel('tabby', array(
+            'channelIcon' => 'fa fa-tabby',
+            'nested' => false,
+        ));
+        $this->debug->getChannel('foo.bar', array(
+            'channelIcon' => 'fa fa-asterisk',
+        ));
+
+        $this->assertSame('tabby', $tabby->getCfg('channelName'));
+
+        // $this->helper->stderr($this->debug->getChannels());
+        $this->assertSame(array(
+            'foo'
+        ), \array_keys($this->debug->getChannels()));
+
+        // $this->helper->stderr($this->debug->getChannels(true));
+        $this->assertSame(array(
+            'general.foo',
+            'general.foo.bar',
+        ), \array_keys($this->debug->getChannels(true)));
+
+        // $this->helper->stderr($this->debug->getChannels(false, true));
+        $this->assertSame(array(
+            'tabby',
+            'foo',
+        ), \array_keys($this->debug->getChannels(false, true)));
+
+        // $this->helper->stderr($this->debug->getChannels(true, true));
+        $this->assertSame(array(
+            'tabby',
+            'general.foo',
+            'general.foo.bar',
+        ), \array_keys($this->debug->getChannels(true, true)));
+
+        $this->helper->setPrivateProp($this->debug->pluginChannel, 'channels', $channelsBack);
+    }
+
+    public function testGetChannel()
+    {
+        $this->debug->setCfg('channels', array(
+            'utensil' => array(
+                'channelIcon' => 'fa fa-utensil',
+                'channels' => array(
+                    'fork' => array(
+                        'channelIcon' => 'fa fa-fork',
+                    ),
+                )
+            )
+        ));
+
+        $channelsBack = $this->helper->getPrivateProp($this->debug->pluginChannel, 'channels');
+        $this->helper->setPrivateProp($this->debug->pluginChannel, 'channels', array());
+        $baz = $this->debug->getChannel('baz');
+        $baz->getChannel('general.foo.bar', array(
+            'channelIcon' => 'fa fa-asterisk',
+        ));
+        $foo = $this->debug->getChannel('foo');
+        $this->assertSame(null, $foo->getCfg('channelIcon'));
+        $bar = $foo->getChannel('bar');
+        $this->assertSame('fa fa-asterisk', $bar->getCfg('channelIcon'));
+
+        $bar = $this->debug->getChannel('general.foo.bar');
+        $this->assertSame('fa fa-asterisk', $bar->getCfg('channelIcon'));
+
+        $fork = $this->debug->getChannel('utensil.fork');
+        $this->assertSame('fa fa-fork', $fork->getCfg('channelIcon'));
+
+        $this->helper->setPrivateProp($this->debug->pluginChannel, 'channels', $channelsBack);
+    }
+
+    protected function genLog(Debug $clearer = null, $bitmask = null, &$info = array())
     {
         if (!$clearer) {
             $clearer = $this->debug;
@@ -267,6 +354,9 @@ EOD;
             'log' => array(),
             'logSummary' => array(),
         ));
+        $info = array(
+            'lines' => array(),
+        );
 
         $this->debug->log('main: log');
         $this->debug->group('main: group');
@@ -282,7 +372,9 @@ EOD;
                             $this->debug->log('main: sum 0 / group 1 / group 2 / log');
                             $this->debugFoo->log('foo: sum 0 / group 1 / group 2 / log');
                             $this->debug->error('main: error');
+                            $info['lines'][] = __LINE__ - 1;
                             $this->debugFoo->error('foo: error');
+                            $info['lines'][] = __LINE__ - 1;
                         $this->debug->groupEnd(); // main: sum 0 / group 1 / group 2
                         $this->debug->groupSummary(1);
                             $this->debugFoo->group('foo: sum 1 / group 1');
@@ -290,6 +382,7 @@ EOD;
                                     $this->debug->log('main: sum 1 / group 1 / group 2 / log');
                                     $this->debugFoo->log('foo: sum 1 / group 1 / group 2 / log');
                                     $clearer->clear($bitmask);
+                                    $info['lines'][] = __LINE__ - 1;
                                 $this->debug->groupEnd(); // main sum 1 / group 1 / group 2
                             $this->debugFoo->groupEnd(); // foo sum 1 / group 1
                         $this->debug->groupEnd(); // summary1
@@ -304,27 +397,7 @@ EOD;
             'log',
             'logSummary',
         )));
-        foreach (array('alerts','log','logSummary') as $what) {
-            if ($what === 'logSummary') {
-                foreach ($data['logSummary'] as $i => $group) {
-                    foreach ($group as $i2 => $v2) {
-                        $export = $v2->export();
-                        \ksort($export['meta']);
-                        $data['logSummary'][$i][$i2] = \array_values($export);
-                    }
-                }
-            } else {
-                foreach ($data[$what] as $i => $v) {
-                    $export = $v->export();
-                    \ksort($export['meta']);
-                    $data[$what][$i] = \array_values($export);
-                }
-            }
-            $temp = \json_encode($data[$what]);
-            $temp = \preg_replace('/"(file)":"[^",]+"/', '"$1":""', $temp);
-            $temp = \preg_replace('/"(line)":\d+/', '"$1":""', $temp);
-            $data[$what] = \json_decode($temp, true);
-        }
+        $data = $this->helper->deObjectifyData($data, false);
         $groupStack = $this->getSharedVar('reflectionProperties')['groupStack'];
         $data['groupPriorityStack'] = $this->getSharedVar('reflectionProperties')['groupPriorityStack']->getValue($groupStack);
         $data['groupStacks'] = \array_map(function ($stack) {

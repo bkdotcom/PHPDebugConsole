@@ -23,8 +23,66 @@ use Psr\Http\Message\UploadedFileInterface;
  *
  * @psalm-consistent-constructor
  */
-class ServerRequestBase extends Request
+abstract class AbstractServerRequest extends Request
 {
+    private static $parseStrOpts = array(
+        'convDot' => false,     // whether to convert '.' to '_'  (php's default is true)
+        'convSpace' => false,   // whether to convert ' ' to '_'  (php's default is true)
+    );
+
+    /**
+     * like PHP's parse_str()
+     *   key difference: by default this does not convert root key dots and spaces to '_'
+     *
+     * @param string $str  input string
+     * @param array  $opts parse options
+     *
+     * @return array
+     *
+     * @see https://github.com/api-platform/core/blob/main/src/Core/Util/RequestParser.php#L50
+     */
+    public static function parseStr($str, $opts = array())
+    {
+        $opts = \array_merge(self::$parseStrOpts, $opts);
+        $useParseStr = ($opts['convDot'] || \strpos($str, '.') === false)
+            && ($opts['convSpace'] || \strpos($str, ' ') === false);
+        if ($useParseStr) {
+            // there are no spaces or dots in serialized data
+            //   and/or we're not interested in converting them
+            // just use parse_str
+            $params = array();
+            \parse_str($str, $params);
+            return $params;
+        }
+        return self::parseStrCustom($str, $opts);
+    }
+
+    /**
+     * Set default parseStr option(s)
+     *
+     *    parseStrOpts('key', 'value')
+     *    parseStrOpts(array('k1'=>'v1', 'k2'=>'v2'))
+     *
+     * @param array|string $mixed key=>value array or key
+     * @param mixed        $val   new value
+     *
+     * @return void
+     */
+    public static function parseStrOpts($mixed, $val = null)
+    {
+        if (\is_string($mixed)) {
+            $mixed = array($mixed => $val);
+        }
+        if (\is_array($mixed) === false) {
+            throw new InvalidArgumentException(\sprintf(
+                'parseStrOpts expects string or array but %s provided.',
+                self::getTypeDebug($mixed)
+            ));
+        }
+        $mixed = \array_intersect_key($mixed, self::$parseStrOpts);
+        self::$parseStrOpts = \array_merge(self::$parseStrOpts, $mixed);
+    }
+
     /**
      * Throw an exception if an unsupported argument type is provided.
      *
@@ -61,12 +119,6 @@ class ServerRequestBase extends Request
      */
     protected function assertUploadedFiles($uploadedFiles)
     {
-        if (!\is_array($uploadedFiles)) {
-            throw new InvalidArgumentException(\sprintf(
-                'Uploaded files - expected array, but %s provided',
-                self::getTypeDebug($uploadedFiles)
-            ));
-        }
         foreach ($uploadedFiles as $file) {
             if (\is_array($file)) {
                 $this->assertUploadedFiles($file);
@@ -128,36 +180,6 @@ class ServerRequestBase extends Request
             }
         }
         return $headers;
-    }
-
-    /**
-     * like PHP's parse_str()
-     *   key difference: by default this does not convert root key dots and spaces to '_'
-     *
-     * @param string $str  input string
-     * @param array  $opts parse options
-     *
-     * @return array
-     *
-     * @see https://github.com/api-platform/core/blob/main/src/Core/Util/RequestParser.php#L50
-     */
-    protected static function parseStr($str, $opts = array())
-    {
-        $params = array();
-        $opts = \array_merge(array(
-            'convDot' => false,     // whether to convert '.' to '_'
-            'convSpace' => false,   // whether to convert ' ' to '_'
-        ), $opts);
-        $useParseStr = ($opts['convDot'] || \strpos($str, '.') === false)
-            && ($opts['convSpace'] || \strpos($str, ' ') === false);
-        if ($useParseStr) {
-            // there are no spaces or dots in serialized data
-            //   and/or we're not interested in converting them
-            // just use parse_str
-            \parse_str($str, $params);
-            return $params;
-        }
-        return self::parseStrCustom($str, $opts);
     }
 
     /**
@@ -448,7 +470,7 @@ class ServerRequestBase extends Request
      */
     private static function uriPathQueryFromGlobals()
     {
-        $path = null;
+        $path = '/';
         $query = null;
         if (isset($_SERVER['REQUEST_URI'])) {
             $exploded = \explode('?', $_SERVER['REQUEST_URI'], 2);
@@ -456,13 +478,14 @@ class ServerRequestBase extends Request
             // use array_shift to avoid testing if exploded[1] exists
             $path = \array_shift($exploded);
             $query = \array_shift($exploded); // string|null
-        }
-        if ($query === null && isset($_SERVER['QUERY_STRING'])) {
+        } elseif (isset($_SERVER['QUERY_STRING'])) {
             $query = $_SERVER['QUERY_STRING'];
         }
         return array(
             'path' => $path,
-            'query' => $query,
+            'query' => $query !== null
+                ? $query
+                : \http_build_query($_GET),
         );
     }
 }

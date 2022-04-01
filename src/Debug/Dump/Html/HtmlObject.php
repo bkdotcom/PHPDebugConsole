@@ -334,9 +334,15 @@ class HtmlObject
                 break;
             case 'link':
             case 'see':
-                $info = '<a href="' . $tagData['uri'] . '" target="_blank">'
-                    . \htmlspecialchars($tagData['desc'] ?: $tagData['uri'])
-                    . '</a>';
+                $desc = $tagData['desc'] ?: $tagData['uri'] ?: '';
+                if (isset($tagData['uri'])) {
+                    $info = '<a href="' . $tagData['uri'] . '" target="_blank">' . \htmlspecialchars($desc) . '</a>';
+                    break;
+                }
+                // see tag
+                $info = $this->valDumper->markupIdentifier($tagData['fqsen'])
+                    . ' <span class="phpdoc-desc">' . \htmlspecialchars($desc) . '</span>';
+                $info = \str_replace(' <span class="phpdoc-desc"></span>', '', $info);
                 break;
             default:
                 unset($tagData['tagName']);
@@ -363,6 +369,7 @@ class HtmlObject
             $html .= ' &lt;<a href="mailto:' . $tagData['email'] . '">' . $tagData['email'] . '</a>&gt;';
         }
         if ($tagData['desc']) {
+            // desc is non-standard for author tag
             $html .= ' ' . \htmlspecialchars($tagData['desc']);
         }
         return $html;

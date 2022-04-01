@@ -122,6 +122,7 @@ class UploadedFile implements UploadedFileInterface
             $this->stream = $this->getStreamFromFile();
         }
         if (!$this->stream) {
+            // ie error is not UPLOAD_ERR_OK
             throw new RuntimeException(
                 'No stream is available or can be created.'
             );
@@ -178,9 +179,7 @@ class UploadedFile implements UploadedFileInterface
         $dest = new Stream(\fopen($targetPath, 'w'));
         $bufferSize = (int) \pow(1024, 2); // 1 MB
         while (!$stream->eof()) {
-            if (!$dest->write($stream->read($bufferSize))) {
-                break;
-            }
+            $dest->write($stream->read($bufferSize));
         }
         $this->isMoved = true;
     }
@@ -313,7 +312,7 @@ class UploadedFile implements UploadedFileInterface
     }
 
     /**
-     * Validate client filename / filepath
+     * Validate client filename / filepath / mediaType
      *
      * @param string|null $value Reported filesize
      * @param string      $key   nNme of param being tested
@@ -417,7 +416,7 @@ class UploadedFile implements UploadedFileInterface
             if ($errMsg) {
                 $msg .= '(' . $errMsg . ')';
             }
-            throw new RuntimeException($errMsg);
+            throw new RuntimeException($msg);
         }
         return $this->isMoved;
     }

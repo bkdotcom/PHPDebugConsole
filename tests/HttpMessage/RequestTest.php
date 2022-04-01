@@ -9,7 +9,7 @@ use bdk\Test\PolyFill\ExpectExceptionTrait;
 use PHPUnit\Framework\TestCase;
 
 /**
- *
+ * @covers \bdk\HttpMessage\Request
  */
 class RequestTest extends TestCase
 {
@@ -122,14 +122,6 @@ class RequestTest extends TestCase
         // Exception => Unsupported HTTP method.
         //    It must be compatible with RFC-7231 request method
         new Request('', 'http://www.bradkent.com/');
-    }
-
-    public function testExceptionProtocolVersion()
-    {
-        $this->expectException('InvalidArgumentException');
-        $request = new Request('GET', 'http://www.bradkent.com/');
-        // Exception => Unsupported HTTP protocol version number.
-        $request->withProtocolVersion('1.5');
     }
 
     public function testExceptionRequestTargetContainSpaceCharacter()

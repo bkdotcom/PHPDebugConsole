@@ -3,11 +3,21 @@
 namespace bdk\Test\Debug\Type;
 
 use bdk\Debug;
+use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\LogEntry;
 use bdk\Test\Debug\DebugTestFramework;
 
 /**
  * PHPUnit tests for Debug class
+ *
+ * @covers \bdk\Debug\Abstraction\AbstractString
+ * @covers \bdk\Debug\Dump\Base
+ * @covers \bdk\Debug\Dump\BaseValue
+ * @covers \bdk\Debug\Dump\Html
+ * @covers \bdk\Debug\Dump\Html\HtmlString
+ * @covers \bdk\Debug\Dump\Text
+ * @covers \bdk\Debug\Dump\TextAnsiValue
+ * @covers \bdk\Debug\Dump\TextValue
  */
 class StringTest extends DebugTestFramework
 {
@@ -125,8 +135,7 @@ EOD;
             ))
         );
         return array(
-            // 0
-            array(
+            'basic' => array(
                 'log',
                 array(
                     'string', 'a "string"' . "\r\n\tline 2",
@@ -140,8 +149,7 @@ EOD;
                 ),
             ),
 
-            // 1
-            array(
+            'whitespace' => array(
                 'log',
                 array(
                     "\xef\xbb\xbfPesky <abbr title=\"Byte-Order-Mark\">BOM</abbr> and \x07 (a control char).",
@@ -156,8 +164,7 @@ EOD;
                 ),
             ),
 
-            // 2
-            array(
+            'nonPrintable' => array(
                 'log',
                 array(
                     "\tcontrol chars: \x07 \x1F \x7F\n",
@@ -182,8 +189,7 @@ EOD;
                 ),
             ),
 
-            // 3
-            array(
+            'numericInt' => array(
                 'log',
                 array('numeric string', '10'),
                 array(
@@ -216,8 +222,7 @@ EOD;
                 ),
             ),
 
-            // 4
-            array(
+            'numericFloat' => array(
                 'log',
                 array('numeric string', '10.10'),
                 array(
@@ -232,8 +237,7 @@ EOD;
                 ),
             ),
 
-            // 5
-            array(
+            'timestampString' => array(
                 'log',
                 array('timestamp', (string) $ts),
                 array(
@@ -251,8 +255,7 @@ EOD;
                 ),
             ),
 
-            // 6
-            array(
+            'long' => array(
                 'log',
                 array('long string', $longString, Debug::meta('cfg', 'stringMaxLen', 430)), // cut in middle of multi-byte char
                 array(
@@ -282,8 +285,7 @@ EOD;
                 )
             ),
 
-            // 7
-            array(
+            'base64' => array(
                 'log',
                 array(
                     \base64_encode(\file_get_contents(TEST_DIR . '/assets/logo.png')),
@@ -316,8 +318,7 @@ EOD;
                 ),
             ),
 
-            // 8
-            array(
+            'base64redact' => array(
                 'log',
                 array(
                     $base64snip2,
@@ -359,8 +360,36 @@ EOD;
                 )
             ),
 
-            // 9
-            array(
+            'jsonLong' => array(
+                'log',
+                array(
+                    \file_get_contents(TEST_DIR . '/../composer.json'),
+                    Debug::_meta('cfg', 'stringMaxLen', array('json' => array(0 => 123, 5000 => 5000))),
+                ),
+                array(
+                    'entry' => function (LogEntry $entry) {
+                        $json = \file_get_contents(TEST_DIR . '/../composer.json');
+                        $jsonPrettified = Debug::getInstance()->stringUtil->prettyJson($json);
+                        // $this->helper->stderr('jsonPrettified', $entry['args'][0]);
+                        $this->assertSame(\strlen($jsonPrettified), $entry['args'][0]['strlen']);
+                        $this->assertSame(\substr($jsonPrettified, 0, 123), $entry['args'][0]['value']);
+                    },
+                    'html' => function ($html) {
+                        $json = \file_get_contents(TEST_DIR . '/../composer.json');
+                        $jsonPrettified = Debug::getInstance()->stringUtil->prettyJson($json);
+                        $diff = \strlen($jsonPrettified) - 123;
+                        $this->assertStringContainsString('<span class="maxlen">&hellip; ' . $diff . ' more bytes (not logged)</span></span></span></div>', $html);
+                    },
+                    'text' => function ($text) {
+                        $json = \file_get_contents(TEST_DIR . '/../composer.json');
+                        $jsonPrettified = Debug::getInstance()->stringUtil->prettyJson($json);
+                        $diff = \strlen($jsonPrettified) - 123;
+                        $this->assertStringContainsString('[' . $diff . ' more bytes (not logged)]', $text);
+                    },
+                ),
+            ),
+
+            'dblEncodeTest' => array(
                 'log',
                 array(
                     '\u0000 / foo \\ bar',
@@ -369,6 +398,100 @@ EOD;
                     'script' => 'console.log(' . \json_encode('\u0000 / foo \\ bar', JSON_UNESCAPED_SLASHES) . ');',
                 ),
             ),
+
+            'classname' => array(
+                'log',
+                array(
+                    Debug::_getInstance()->abstracter->crateWithVals(
+                        'SomeNamespace\Classname',
+                        array('typeMore' => Abstracter::TYPE_STRING_CLASSNAME)
+                    ),
+                ),
+                array(
+                    'entry' => array(
+                        'method' => 'log',
+                        'args' => array(
+                            array(
+                                'debug' => Abstracter::ABSTRACTION,
+                                'strlen' => null,
+                                'type' => Abstracter::TYPE_STRING,
+                                'typeMore' => 'classname',
+                                'value' => 'SomeNamespace\Classname',
+                            )
+                        ),
+                        'meta' => array(),
+                    ),
+                    'html' => '<li class="m_log"><span class="classname no-quotes t_string" data-type-more="classname"><span class="namespace">SomeNamespace\</span>Classname</span></li>',
+                    'text' => 'SomeNamespace\Classname',
+                ),
+            ),
+
+            'serialized' => array(
+                'log',
+                array(
+                    \serialize(array('foo' => 'bar')),
+                ),
+                array(
+                    'entry' => array(
+                        'method' => 'log',
+                        'args' => array(
+                            array(
+                                'debug' => Abstracter::ABSTRACTION,
+                                'strlen' => null,
+                                'type' => Abstracter::TYPE_STRING,
+                                'typeMore' => Abstracter::TYPE_STRING_SERIALIZED,
+                                'value' => 'a:1:{s:3:"foo";s:3:"bar";}',
+                                'valueDecoded' => array(
+                                    'foo' => 'bar',
+                                ),
+                            )
+                        ),
+                        'meta' => array(),
+                    ),
+                    'html' => '<li class="m_log"><span class="string-encoded tabs-container" data-type="serialized">' . "\n"
+                        . '<nav role="tablist"><a class="nav-link" data-target=".string-raw" data-toggle="tab" role="tab">serialized</a><a class="active nav-link" data-target=".string-decoded" data-toggle="tab" role="tab">unserialized</a></nav>' . "\n"
+                        . '<div class="string-raw tab-pane" role="tabpanel"><span class="no-quotes t_string">a:1:{s:3:&quot;foo&quot;;s:3:&quot;bar&quot;;}</span></div>' . "\n"
+                        . '<div class="active string-decoded tab-pane" role="tabpanel"><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>' . "\n"
+                        . '<ul class="array-inner list-unstyled">' . "\n"
+                        . '<li><span class="t_key">foo</span><span class="t_operator">=&gt;</span><span class="t_string">bar</span></li>' . "\n"
+                        . '</ul><span class="t_punct">)</span></span></div>' . "\n"
+                        . '</span></li>',
+                )
+            ),
+
+            'notInspected' => array(
+                'log',
+                array(Abstracter::NOT_INSPECTED),
+                array(
+                    'entry' => array(
+                        'method' => 'log',
+                        'args' => array(
+                            Abstracter::NOT_INSPECTED,
+                        ),
+                        'meta' => array(),
+                    ),
+                    'html' => '<li class="m_log"><span class="t_notInspected">NOT INSPECTED</span></li>',
+                    'text' => 'NOT INSPECTED',
+                ),
+            ),
+
+            'recursion' => array(
+                'log',
+                array(Abstracter::RECURSION),
+                array(
+                    'entry' => array(
+                        'method' => 'log',
+                        'args' => array(
+                            Abstracter::RECURSION,
+                        ),
+                        'meta' => array(),
+                    ),
+                    // array assumed
+                    'html' => '<li class="m_log"><span class="t_keyword">array</span> <span class="t_recursion">*RECURSION*</span></li>',
+                    'text' => 'array *RECURSION*',
+                ),
+            ),
+
         );
     }
 }

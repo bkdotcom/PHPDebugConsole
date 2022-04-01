@@ -202,7 +202,25 @@ class HtmlString
     {
         $tagName = $this->valDumper->getDumpOpt('tagName');
         $this->valDumper->setDumpOpt('tagName', null);
-        $this->valDumper->setDumpOpt('postDump', function ($dumped) use ($abs, $tagName) {
+        $this->valDumper->setDumpOpt('postDump', $this->dumpBinaryPost($abs, $tagName));
+        $strLenDiff = $abs['strlen'] - \strlen($abs['value']);
+        if ($val && $strLenDiff) {
+            $val .= '<span class="maxlen">&hellip; ' . $strLenDiff . ' more bytes (not logged)</span>';
+        }
+        return $val;
+    }
+
+    /**
+     * Dump binary post data
+     *
+     * @param Abstraction $abs     String Abstraction
+     * @param string      $tagName html tag (ie div,td, or span)
+     *
+     * @return string
+     */
+    private function dumpBinaryPost(Abstraction $abs, $tagName)
+    {
+        return function ($dumped) use ($abs, $tagName) {
             $lis = array();
             if ($abs['contentType']) {
                 $lis[] = '<li>mime type = <span class="t_string">' . $abs['contentType'] . '</span></li>';
@@ -225,12 +243,7 @@ class HtmlString
                 $wrapped = '<td>' . $wrapped . '</td>';
             }
             return $wrapped;
-        });
-        $strLenDiff = $abs['strlen'] - \strlen($abs['value']);
-        if ($val && $strLenDiff) {
-            $val .= '<span class="maxlen">&hellip; ' . $strLenDiff . ' more bytes (not logged)</span>';
-        }
-        return $val;
+        };
     }
 
     /**

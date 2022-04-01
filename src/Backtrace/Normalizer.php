@@ -158,7 +158,7 @@ class Normalizer
      * Normalize Function Combine class, type, & function
      * unset if empty
      *
-     * @param array $frame [description]
+     * @param array $frame backtrace frame
      *
      * @return array
      */

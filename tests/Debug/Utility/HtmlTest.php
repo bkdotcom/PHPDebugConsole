@@ -7,6 +7,8 @@ use bdk\Test\Debug\DebugTestFramework;
 
 /**
  * PHPUnit tests for Debug class
+ *
+ * @covers \bdk\Debug\Utility\Html
  */
 class HtmlTest extends DebugTestFramework
 {
@@ -20,6 +22,7 @@ class HtmlTest extends DebugTestFramework
         $testStack = array(
             array(
                 'attribs' => array(
+                    'id' => 'unique identifier',
                     'src' => '/path/to/image.png',
                     'width' => 80,
                     'height' => '100',
@@ -36,6 +39,7 @@ class HtmlTest extends DebugTestFramework
                     'hidden' => false,
                     'foo' => false,     // not a valid boolean attrib - we'll not output regardless
                     'bar' => true,      // not a valid boolean attrib - we'll output anyhow : bar="bar"
+                    'baz' => null,
                     'AUTOCOMPLETE',     // autocomplete="on"
                     'disabled',         // disabled="disabled"
                     'draggable' => true,
@@ -60,6 +64,7 @@ class HtmlTest extends DebugTestFramework
                     . ' disabled="disabled"'
                     . ' draggable="true"'
                     . ' height="100"'
+                    . ' id="unique_identifier"'
                     . ' spellcheck="true"'
                     . ' src="/path/to/image.png"'
                     . ' style="display:inline-block;position:absolute;"'
@@ -78,6 +83,13 @@ class HtmlTest extends DebugTestFramework
                     'data-null' => null,    // not output
                 ),
                 'expect' => ' data-empty-array="[]" data-empty-obj="{}" data-empty-string="" data-false="false" data-null="null"',
+            ),
+            array(
+                'attribs' => array(
+                    'id' => null,
+                    'class' => 'foo bar',     // not output
+                ),
+                'expect' => ' class="bar foo"',
             ),
             array(
                 'attribs' => '',
@@ -159,12 +171,10 @@ class HtmlTest extends DebugTestFramework
     }
 
     /**
-     * @param string $tagName  tag name
-     * @param array  $attribs  tag attributes
-     * @param string innerhtml inner html
-     * @param string $expect   built tag
-     *
-     * @return void
+     * @param string $tagName   tag name
+     * @param array  $attribs   tag attributes
+     * @param string $innerhtml inner html
+     * @param string $expect    built tag
      *
      * @dataProvider providerTestBuildTag
      */
@@ -172,6 +182,18 @@ class HtmlTest extends DebugTestFramework
     {
         $tag = Html::buildTag($tagName, $attribs, $innerhtml);
         $this->assertSame($expect, $tag);
+    }
+
+    /**
+     * @param string $tag    Html tag to parse
+     * @param array  $expect expected return value
+     *
+     * @dataProvider providerTestParseTag
+     */
+    public function testParseTag($tag, $expect)
+    {
+        $parsed = Html::parseTag($tag);
+        $this->assertSame($expect, $parsed);
     }
 
     public function providerTestBuildTag()
@@ -210,12 +232,10 @@ class HtmlTest extends DebugTestFramework
         );
     }
 
-
     public function providerTestParseTag()
     {
         return array(
-            // 0
-            array(
+            'tagsAndEntities' => array(
                 'tag' => '<div class="test" ><i>stuff</i> &amp; things</div>',
                 'expect' => array(
                     'tagname' => 'div',
@@ -225,8 +245,7 @@ class HtmlTest extends DebugTestFramework
                     'innerhtml' => '<i>stuff</i> &amp; things',
                 ),
             ),
-            // 1
-            array(
+            'selfCloser' => array(
                 'tag' => '<input name="name" value="Billy" required/>',
                 'expect' => array(
                     'tagname' => 'input',
@@ -253,19 +272,5 @@ class HtmlTest extends DebugTestFramework
                 'expect' => false,
             ),
         );
-    }
-
-    /**
-     * @param string $tag    Html tag to parse
-     * @param array  $expect expected return value
-     *
-     * @return void
-     *
-     * @dataProvider providerTestParseTag
-     */
-    public function testParseTag($tag, $expect)
-    {
-        $parsed = Html::parseTag($tag);
-        $this->assertSame($expect, $parsed);
     }
 }

@@ -12,6 +12,7 @@
 
 namespace bdk\HttpMessage;
 
+use bdk\HttpMessage\AbstractServerRequest;
 use bdk\HttpMessage\Stream;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -20,7 +21,7 @@ use Psr\Http\Message\ServerRequestInterface;
  *
  * @psalm-consistent-constructor
  */
-class ServerRequest extends ServerRequestBase implements ServerRequestInterface
+class ServerRequest extends AbstractServerRequest implements ServerRequestInterface
 {
     /** @var string used for unit tests */
     public static $inputStream = 'php://input';
@@ -67,7 +68,9 @@ class ServerRequest extends ServerRequestBase implements ServerRequestInterface
         $this->get = $query !== ''
             ? self::parseStr($query)
             : array();
-        $this->server = $serverParams;
+        $this->server = \array_merge(array(
+            'REQUEST_METHOD' => $method,
+        ), $serverParams);
         $this->protocolVersion = isset($serverParams['SERVER_PROTOCOL'])
             ? \str_replace('HTTP/', '', $serverParams['SERVER_PROTOCOL'])
             : '1.1';
@@ -94,9 +97,7 @@ class ServerRequest extends ServerRequestBase implements ServerRequestInterface
             ? self::postFromInput($contentType, self::$inputStream)
             : null;
         $query = $uri->getQuery();
-        $queryParams = $query !== ''
-            ? self::parseStr($query)
-            : $_GET;
+        $queryParams = self::parseStr($query);
         return $serverRequest
             ->withBody(new Stream(\fopen('php://input', 'r+')))
             ->withCookieParams($_COOKIE)

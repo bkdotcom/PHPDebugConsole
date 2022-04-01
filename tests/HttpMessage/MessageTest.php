@@ -11,7 +11,7 @@ use ReflectionObject;
 use stdClass;
 
 /**
- *
+ * @covers \bdk\HttpMessage\Message
  */
 class MessageTest extends TestCase
 {
@@ -38,7 +38,10 @@ class MessageTest extends TestCase
     public function testWithMethods()
     {
         $message = $this->testSetHeaders();
-        $newMessage = $message->withProtocolVersion('2.0')->withHeader('hello-world', 'ok');
+        $newMessage = $message->withProtocolVersion('2.0')
+            ->withHeader('hello-world', 'old')
+            ->withHeader('hello-world', 'ok')
+            ->withHeader('host', 'test.com');
         $this->assertSame('2.0', $newMessage->getProtocolVersion());
         $this->assertEquals(['ok'], $newMessage->getHeader('hello-world'));
         $new2Message = $newMessage
@@ -49,6 +52,7 @@ class MessageTest extends TestCase
         $this->assertEquals(['ok', 'not-ok'], $new2Message->getHeader('hello-world'));
         $this->assertEquals(['okok'], $new2Message->getHeader('foo-bar'));
         $this->assertEquals(['2', '6.4'], $new2Message->getHeader('others'));
+        $this->assertSame('host', \array_keys($new2Message->getHeaders())[0]);
         // Test - without
         $new3Message = $new2Message->withoutHeader('hello-world');
         $this->assertFalse($new3Message->hasHeader('hello-world'));
@@ -155,7 +159,7 @@ class MessageTest extends TestCase
         $message->withHeader('hello-world', false);
     }
 
-    public function testExceptioneaderValueNull()
+    public function testExceptionHeaderValueNull()
     {
         $this->expectException('InvalidArgumentException');
         $message = new Message();
@@ -163,7 +167,7 @@ class MessageTest extends TestCase
         $message->withHeader('hello-world', null);
     }
 
-    public function testExceptioneaderValueEmptyArray()
+    public function testExceptionHeaderValueEmptyArray()
     {
         $this->expectException('InvalidArgumentException');
         $message = new Message();
@@ -201,5 +205,13 @@ class MessageTest extends TestCase
         // Exception => "This string contains many invisible spaces." is not valid header
         //    value, it must contains visible ASCII characters only.
         $message->withHeader('hello-world', 'This string contains many invisible spaces.');
+    }
+
+    public function testExceptionProtocolVersion()
+    {
+        $this->expectException('InvalidArgumentException');
+        $request = new Message();
+        // Exception => Unsupported HTTP protocol version number.
+        $request->withProtocolVersion('1.5');
     }
 }

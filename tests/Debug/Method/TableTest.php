@@ -11,6 +11,19 @@ use ReflectionProperty;
 
 /**
  * PHPUnit tests for Debug class
+ *
+ * @covers \bdk\Debug
+ * @covers \bdk\Debug\Abstraction\Abstracter
+ * @covers \bdk\Debug\Abstraction\AbstractObject
+ * @covers \bdk\Debug\Abstraction\AbstractObjectProperties
+ * @covers \bdk\Debug\Dump\Base
+ * @covers \bdk\Debug\Dump\Html\Helper
+ * @covers \bdk\Debug\Dump\Html\HtmlString
+ * @covers \bdk\Debug\Dump\Html\Table
+ * @covers \bdk\Debug\Dump\Html\Value
+ * @covers \bdk\Debug\Dump\Text
+ * @covers \bdk\Debug\Method\Table
+ * @covers \bdk\Debug\Method\TableRow
  */
 class TableTest extends DebugTestFramework
 {
@@ -21,9 +34,10 @@ class TableTest extends DebugTestFramework
      */
     public function testTableColKeys()
     {
-        $debugProp = new ReflectionProperty($this->debug->methodTable, 'debug');
-        $debugProp->setAccessible(true);
-        $debugProp->setValue($this->debug->methodTable, $this->debug);
+        // $debugProp = new ReflectionProperty($this->debug->methodTable, 'debug');
+        // $debugProp->setAccessible(true);
+        // $debugProp->setValue($this->debug->methodTable, $this->debug);
+        $this->helper->setPrivateProp($this->debug->methodTable, 'debug', $this->debug);
         $colKeysMeth = new ReflectionMethod($this->debug->methodTable, 'colKeys');
         $colKeysMeth->setAccessible(true);
         $array = array(
@@ -596,7 +610,53 @@ EOD;
                     'firephp' => 'X-Wf-1-1-1-8: 188|[{"Label":"not all col values of same type","Type":"TABLE"},[["","date","date2"],[0,"1955-11-05T00:00:00%i","not a datetime"],[1,"1985-10-26T00:00:00%i","2015-10-21T00:00:00%i"]]]|',
                 ),
             ),
-            //
+            'inclContext' => array(
+                'table',
+                array('table caption', $rowsA, Debug::meta('inclContext')),
+                array(
+                    'entry' => array(
+                        'method' => 'table',
+                        'args' => array($rowsAProcessed),
+                        'meta' => array(
+                            'caption' => 'table caption',
+                            'sortable' => true,
+                            'tableInfo' => array(
+                                'class' => null,
+                                'columns' => array(
+                                    array('key' => 'name'),
+                                    array('key' => 'age'),
+                                    array('key' => 'sex'),
+                                    array('key' => 'Naughty'),
+                                    array('key' => 'extracol'),
+                                ),
+                                'haveObjRow' => false,
+                                'indexLabel' => null,
+                                'rows' => array(
+                                    4 => array(
+                                        'args' => Abstracter::UNDEFINED,
+                                        'context' => Abstracter::UNDEFINED,
+                                    ),
+                                    2 => array(
+                                        'args' => Abstracter::UNDEFINED,
+                                        'context' => Abstracter::UNDEFINED,
+                                    ),
+                                ),
+                                'summary' => null,
+                            ),
+                            'inclContext' => true,
+                        ),
+                    ),
+                    /*
+                    'entry' => function ($entry) {
+                        echo 'rows = ' . json_encode($entry->getMeta('tableInfo'), JSON_PRETTY_PRINT) . "\n";
+                    },
+                    */
+                    'html' => \str_replace('table-bordered', 'table-bordered trace-context', $rowsAHtml),
+                    'text' => $rowsAText,
+                    'script' => $rowsAScript,
+                    'firephp' => $rowsAFirephp,
+                ),
+            ),
         );
     }
 
@@ -685,6 +745,19 @@ EOD;
                         . '[2,"' . $time . ' (' . \gmdate(self::DATETIME_FORMAT, $time) . ')"],'
                         . '[3,"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<fart/>\n"]'
                     . ']]|',
+            )
+        );
+    }
+
+    public function testCollectFalse()
+    {
+        $this->debug->setCfg('collect', false);
+        $this->testMethod(
+            'table',
+            array(),
+            array(
+                'notLogged' => true,
+                'return' => $this->debug,
             )
         );
     }

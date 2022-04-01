@@ -2,9 +2,7 @@
 
 namespace bdk\Test\Debug\Collector;
 
-// use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Collector\GuzzleMiddleware;
-// use bdk\Debug\LogEntry;
 use bdk\Test\Debug\DebugTestFramework;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
@@ -15,6 +13,9 @@ use GuzzleHttp\Psr7\Response;
 
 /**
  * PHPUnit tests for GuzzleMiddleware
+ *
+ * @covers \bdk\Debug\Data
+ * @covers \bdk\Debug\Collector\GuzzleMiddleware
  */
 class GuzzleMiddlewareTest extends DebugTestFramework
 {

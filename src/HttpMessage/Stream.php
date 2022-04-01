@@ -12,14 +12,14 @@
 
 namespace bdk\HttpMessage;
 
-use bdk\HttpMessage\StreamBase;
+use bdk\HttpMessage\AbstractStream;
 use Psr\Http\Message\StreamInterface;
 use RuntimeException;
 
 /**
  * Psr\Http\Message\Stream implementation
  */
-class Stream extends StreamBase implements StreamInterface
+class Stream extends AbstractStream implements StreamInterface
 {
     /**
      * Resource modes.
@@ -163,10 +163,9 @@ class Stream extends StreamBase implements StreamInterface
         $stats = \fstat($this->resource);
         if (isset($stats['size'])) {
             $this->size = $stats['size'];
-            return $this->size;
         }
 
-        return null;
+        return $this->size;
     }
 
     /**
@@ -334,7 +333,6 @@ class Stream extends StreamBase implements StreamInterface
         if ($length < 0) {
             throw new RuntimeException($this->strings['readLengthNegative']);
         }
-
         if ($length === 0) {
             return '';
         }

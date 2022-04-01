@@ -71,7 +71,7 @@ class InternalEvents implements SubscriberInterface
               "php.shutdown" log entry
         */
         return array(
-            Debug::EVENT_DUMP_CUSTOM => 'onDumpCustom',
+            Debug::EVENT_DUMP_CUSTOM => array('onDumpCustom', -1),
             Debug::EVENT_LOG => array('onLog', PHP_INT_MAX),
             Debug::EVENT_OUTPUT => array(
                 array('onOutput', 1),
@@ -116,11 +116,13 @@ class InternalEvents implements SubscriberInterface
     public function onDumpCustom(Event $event)
     {
         $abs = $event->getSubject();
-        if ($abs['return']) {
+        if ($event['return']) {
             // return already defined..   prev subscriber should have stopped propagation
             return;
         }
-        $event['return'] = \print_r($abs->getValues(), true);
+        $values = $abs->getValues();
+        \ksort($values);
+        $event['return'] = $event['output']->dump($values);
         $event['typeMore'] = 't_string';
     }
 
@@ -213,6 +215,7 @@ class InternalEvents implements SubscriberInterface
         $outputHeaders = $event->getSubject()->getCfg('outputHeaders', Debug::CONFIG_DEBUG);
         if (!$outputHeaders || !$headers) {
             $event->getSubject()->data->set('headers', \array_merge(
+                // ->getHeaders()
                 $event->getSubject()->data->get('headers'),
                 $headers
             ));
@@ -477,7 +480,7 @@ class InternalEvents implements SubscriberInterface
         if (!$vals) {
             $vals = array(
                 'memoryPeakUsage' => \memory_get_peak_usage(true),
-                'memoryLimit' => $this->debug->utility->memoryLimit(),
+                'memoryLimit' => $this->debug->php->memoryLimit(),
                 'runtime' => $this->debug->timeEnd('requestTime', false, true),
             );
             $this->debug->data->set('runtime', $vals);

@@ -276,7 +276,7 @@ abstract class AbstractRoute extends Component implements RouteInterface
      * Test if channel name matches test value
      *
      * @param string $channelName     channelName to test
-     * @param [type] $channelNameTest test string
+     * @param string $channelNameTest test string
      *
      * @return bool
      */

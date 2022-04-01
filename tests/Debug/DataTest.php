@@ -2,10 +2,13 @@
 
 namespace bdk\Test\Debug;
 
+use bdk\Debug\LogEntry;
 use bdk\Test\Debug\DebugTestFramework;
 
 /**
  * test data storage & retrieval
+ *
+ * @covers \bdk\Debug\Data
  */
 class DataTest extends DebugTestFramework
 {
@@ -21,6 +24,7 @@ class DataTest extends DebugTestFramework
         $this->assertSame(null, $this->debug->data->get('log/bogus'));
         $this->assertSame(null, $this->debug->data->get('log/bogus/more'));
         $this->assertSame(null, $this->debug->data->get('log/0/method/notArray'));
+        $this->assertArrayHasKey('log', $this->debug->data->get('/'));
     }
 
     public function testSetData()
@@ -36,5 +40,8 @@ class DataTest extends DebugTestFramework
         ));
         $this->assertSame(1, $this->debug->data->get('log/__count__'));
         $this->assertSame('bar', $this->debug->data->get('log/0/1/0'));
+        $this->debug->data->set('logDest', 'alerts');
+        $this->debug->data->appendLog(new LogEntry($this->debug, 'log', array('append to alerts')));
+        $this->assertSame('append to alerts', $this->debug->data->get('alerts/0/args/0'));
     }
 }

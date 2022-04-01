@@ -99,7 +99,7 @@ class Backtrace
         */
         $backtrace = \debug_backtrace($phpOptions, 15);
         $index = SkipInternal::getFirstIndex($backtrace, $offset);
-        $return = static::getCallerInfoBuild(\array_slice($backtrace, $index));
+        $return = static::callerInfoBuild(\array_slice($backtrace, $index));
         if (!($options & self::INCL_OBJECT)) {
             unset($return['object']);
         }
@@ -184,6 +184,70 @@ class Backtrace
     }
 
     /**
+     * Build callerInfo array from given backtrace segment
+     *
+     * @param array $backtrace backtrace
+     *
+     * @return array
+     */
+    private static function callerInfoBuild($backtrace)
+    {
+        $return = array(
+            'class' => null,         // where the method is defined
+            'classCalled' => null,   // parent::method()... this will be the parent class
+            'classContext' => null,  // child->method()
+            'file' => null,
+            'function' => null,
+            'line' => null,
+            'type' => null,
+        );
+        $numFrames = \count($backtrace);
+        $iFileLine = 0;
+        $iFunc = 1;
+        if (isset($backtrace[$iFunc])) {
+            $return = \array_merge($return, $backtrace[$iFunc]);
+            $return['classCalled'] = $return['class'];
+        }
+        if ($return['type'] === '->') {
+            $return['classContext'] = \get_class($backtrace[$iFunc]['object']);
+            $return = self::callerInfoClassCalled($return);
+        }
+        if (isset($backtrace[$iFileLine])) {
+            $return['file'] = $backtrace[$iFileLine]['file'];
+            $return['line'] = $backtrace[$iFileLine]['line'];
+        } elseif (isset($backtrace[$numFrames - 1])) {
+            $return['file'] = $backtrace[$numFrames - 1]['file'];
+            $return['line'] = 0;
+        }
+        return $return;
+    }
+
+    /**
+     * Instance method was called...  classCalled
+     *
+     * @param array $info Caller info
+     *
+     * @return array
+     */
+    private static function callerInfoClassCalled($info)
+    {
+        // parent::method()
+        //   class : classname of parent (or where method defined)
+        //   object : scope / context
+        $info['classCalled'] = $info['classContext'];
+        if ($info['classContext'] !== $info['class']) {
+            $reflector = new \ReflectionMethod($info['classContext'], $info['function']);
+            $classDeclared = $reflector->getDeclaringClass()->getName();
+            if ($classDeclared === $info['classContext']) {
+                // method is (re)declared in classContext, yet that's not what's being executed
+                // we must have called parent::method()
+                $info['classCalled'] = $info['class'];
+            }
+        }
+        return $info;
+    }
+
+    /**
      * Get backtrace from either passed exception,
      * debug_backtrace or xdebug_get_function_stack
      *
@@ -253,42 +317,6 @@ class Backtrace
         $key = \key($backtrace);
         unset($backtrace[$key]['function']);  // remove "{main}"
         return $backtrace;
-    }
-
-    /**
-     * Build callerInfo array from given backtrace segment
-     *
-     * @param array $backtrace backtrace
-     *
-     * @return array
-     */
-    private static function getCallerInfoBuild($backtrace)
-    {
-        $return = array(
-            'class' => null,
-            'file' => null,
-            'function' => null,
-            'line' => null,
-            'type' => null,
-        );
-        $numFrames = \count($backtrace);
-        $iLine = 0;
-        $iFunc = 1;
-        if (isset($backtrace[$iFunc])) {
-            $return = \array_merge($return, $backtrace[$iFunc]);
-            if ($return['type'] === '->') {
-                // class that debug_backtrace returns is the class the function is defined in vs the class that was called
-                $return['class'] = \get_class($backtrace[$iFunc]['object']);
-            }
-        }
-        if (isset($backtrace[$iLine])) {
-            $return['file'] = $backtrace[$iLine]['file'];
-            $return['line'] = $backtrace[$iLine]['line'];
-        } elseif (isset($backtrace[$numFrames - 1])) {
-            $return['file'] = $backtrace[$numFrames - 1]['file'];
-            $return['line'] = 0;
-        }
-        return $return;
     }
 
     /**

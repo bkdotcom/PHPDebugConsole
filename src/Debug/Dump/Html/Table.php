@@ -173,8 +173,12 @@ class Table
         }
         return '<thead>' . "\n"
             . '<tr>'
-                . ($this->options['tableInfo']['indexLabel'] ? '<th class="text-right">' . $this->options['tableInfo']['indexLabel'] . '</th>' : '<th>&nbsp;</th>')
-                . ($this->options['tableInfo']['haveObjRow'] ? '<th>&nbsp;</th>' : '')
+                . ($this->options['tableInfo']['indexLabel']
+                    ? '<th class="text-right">' . $this->options['tableInfo']['indexLabel'] . '</th>'
+                    : '<th>&nbsp;</th>')
+                . ($this->options['tableInfo']['haveObjRow']
+                    ? '<th>&nbsp;</th>'
+                    : '')
                 . '<th scope="col">' . \implode('</th><th scope="col">', $labels) . '</th>'
             . '</tr>' . "\n"
             . '</thead>' . "\n";

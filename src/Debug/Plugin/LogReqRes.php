@@ -114,7 +114,7 @@ class LogReqRes implements SubscriberInterface
             ))
         );
         $this->logResponseHeaders();
-        $contentType = \implode(', ', $this->debug->getResponseHeader('Content-Type'));
+        $contentType = $this->debug->getResponseHeader('Content-Type');
         if (!\preg_match('#\b(json|xml)\b#', $contentType)) {
             // we're not interested in logging response
             $this->debug->log(

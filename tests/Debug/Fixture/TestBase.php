@@ -11,7 +11,7 @@ namespace bdk\Test\Debug\Fixture;
  * @property-read boolean $magicReadProp Read Only!
  *
  * @method void presto($foo, integer $int = 1, $bool = true, $null = null) I'm a magic method
- * @method static void prestoStatic(string $noDefault, $arr = array(), $opts=array('a'=>'ay','b'=>'bee')) I'm a static magic method
+ * @method static void prestoStatic(string $noDefault, $arr = array(), $opts=array('a'=>'ay','b'=>'bee'), $val=self::MY_CONSTANT) I'm a static magic method
  */
 class TestBase
 {
@@ -68,5 +68,3 @@ class TestBase
         \bdk\Debug::_groupEnd();
     }
 }
-
-

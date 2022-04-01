@@ -234,6 +234,9 @@ class Html
      */
     public static function sanitizeId($id)
     {
+        if ($id === null) {
+            return $id;
+        }
         $id = \preg_replace('/^[^A-Za-z]+/', '', $id);
         // note that ":" and "." are  allowed chars but not practical... removing
         $id = \preg_replace('/[^a-zA-Z0-9_\-]+/', '_', $id);
@@ -277,6 +280,9 @@ class Html
             $val = true;
         }
         $key = \strtolower($key);
+        if ($key === 'id') {
+            return static::sanitizeId($val);
+        }
         switch (static::buildAttribValType($key, $val)) {
             case 'class':
                 return static::buildAttribValClass($val);

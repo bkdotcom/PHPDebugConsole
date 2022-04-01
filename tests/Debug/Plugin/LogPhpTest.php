@@ -3,17 +3,97 @@
 namespace bdk\Test\Debug\Plugin;
 
 use bdk\Debug\LogEntry;
+use bdk\Debug\Plugin\LogPhp;
+use bdk\HttpMessage\ServerRequest;
+use bdk\PubSub\Event;
 use bdk\Test\Debug\DebugTestFramework;
 
 /**
- * PHPUnit tests for Debug class
+ * PHPUnit tests for LogPhp plugin
+ *
+ * @covers \bdk\Debug\Plugin\LogPhp
+ * @covers \bdk\Debug\ServiceProvider
  */
 class LogPhpTest extends DebugTestFramework
 {
+    public function testLogPhpInfo()
+    {
+        $serverParams = \array_merge($this->debug->request->getServerParams(), array(
+            'CONTENT_LENGTH' => 1234,
+            'CONTENT_TYPE' => 'application/x-www-form-urlencoded',
+            'REQUEST_METHOD' => 'POST',
+        ));
+        $this->debug->setCfg(array(
+            'logEnvInfo' => true,
+            'serviceProvider' => array(
+                'request' => new ServerRequest(
+                    'POST',
+                    null,
+                    $serverParams
+                ),
+            ),
+        ));
+        // $this->helper->stderr('server', $this->debug->request->getServerParams());
+        $this->debug->pluginLogPhp->onPluginInit(new Event($this->debug));
+
+        $logEntries = $this->helper->deObjectifyData($this->debug->data->get('log'));
+        // $this->helper->stderr('logEntries', $logEntries);
+        $this->assertSame(array('PHP Version', PHP_VERSION), $logEntries[0]['args']);
+        $found = null;
+        foreach ($logEntries as $logEntry) {
+            if ($logEntry['args'][0] === '$_SERVER') {
+                $found = $logEntry;
+            }
+        }
+        // $this->helper->stdErr('found', $found);
+        $this->assertEquals(
+            \array_intersect_key($serverParams, $found['args'][1]),
+            \array_intersect_key($found['args'][1], $serverParams)
+        );
+
+        $this->debug->data->set('log', array());
+        unset(
+            $serverParams['CONTENT_LENGTH'],
+            $serverParams['CONTENT_TYPE'],
+            $serverParams['REQUEST_METHOD']
+        );
+        $this->debug->setCfg(array(
+            'logEnvInfo' => true,
+            'logServerKeys' => array(),
+            'extensionsCheck' => array('bogusExtension'),
+            'logRequestInfo' => true,
+            'serviceProvider' => array(
+                'request' => new ServerRequest(
+                    'GET',
+                    null,
+                    $serverParams
+                ),
+            ),
+        ));
+        $this->debug->pluginLogPhp->onPluginInit(new Event($this->debug));
+        $logEntries = $this->helper->deObjectifyData($this->debug->data->get('log'));
+        // $this->helper->stderr('logEntries', $logEntries);
+        $found = array(
+            'server' => false,
+            'bogusExtension' => false,
+        );
+        foreach ($logEntries as $logEntry) {
+            if ($found['server'] === false && $logEntry['args'][0] === '$_SERVER') {
+                $found['server'] = true;
+            }
+            if ($found['server'] === false && $logEntry['args'][0] === 'bogusExtension extension is not loaded') {
+                $found['bogusExtension'] = true;
+            }
+        }
+        $this->assertSame(array(
+            'server' => false,
+            'bogusExtension' => true,
+        ), $found);
+    }
+
     public function testLogPhpInfoEr()
     {
-
-        $logPhp = new \bdk\Debug\Plugin\LogPhp();
+        $logPhp = new LogPhp();
 
         $refMethod = new \ReflectionMethod($logPhp, 'logPhpEr');
         $refMethod->setAccessible(true);

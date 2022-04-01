@@ -2,11 +2,18 @@
 
 namespace bdk\Test\Debug\Route;
 
+use bdk\Debug;
 use bdk\Debug\Route\Wamp;
+use bdk\ErrorHandler;
+use bdk\ErrorHandler\Error;
+use bdk\PubSub\Manager as EventManager;
 use bdk\Test\Debug\DebugTestFramework;
 
 /**
  * Wamp route
+ *
+ * @covers \bdk\Debug\Route\Wamp
+ * @covers \bdk\Debug\Route\WampCrate
  */
 class WampTest extends DebugTestFramework
 {
@@ -29,12 +36,12 @@ class WampTest extends DebugTestFramework
     {
         $this->assertTrue(self::$wamp->isConnected());
         $subs = self::$wamp->getSubscriptions();
-        $this->assertArrayHasKey(\bdk\Debug::EVENT_BOOTSTRAP, $subs);
-        $this->assertArrayHasKey(\bdk\Debug::EVENT_CONFIG, $subs);
-        $this->assertArrayHasKey(\bdk\Debug::EVENT_LOG, $subs);
-        $this->assertArrayHasKey(\bdk\Debug::EVENT_PLUGIN_INIT, $subs);
-        $this->assertArrayHasKey(\bdk\ErrorHandler::EVENT_ERROR, $subs);
-        $this->assertArrayHasKey(\bdk\PubSub\Manager::EVENT_PHP_SHUTDOWN, $subs);
+        $this->assertArrayHasKey(Debug::EVENT_BOOTSTRAP, $subs);
+        $this->assertArrayHasKey(Debug::EVENT_CONFIG, $subs);
+        $this->assertArrayHasKey(Debug::EVENT_LOG, $subs);
+        $this->assertArrayHasKey(Debug::EVENT_PLUGIN_INIT, $subs);
+        $this->assertArrayHasKey(ErrorHandler::EVENT_ERROR, $subs);
+        $this->assertArrayHasKey(EventManager::EVENT_PHP_SHUTDOWN, $subs);
 
         self::$publisher->connected = false;
         $this->assertFalse(self::$wamp->isConnected());
@@ -67,7 +74,7 @@ class WampTest extends DebugTestFramework
             'format' => 'raw',
             'requestId' => $this->debug->data->get('requestId'),
             'channelNameRoot' => 'general',
-            'debugVersion' => \bdk\Debug::VERSION,
+            'debugVersion' => Debug::VERSION,
             'drawer' => true,
             'interface' => 'http',
             'linkFilesTemplateDefault' => null,
@@ -76,7 +83,7 @@ class WampTest extends DebugTestFramework
 
     public function testOnError()
     {
-        $error = new \bdk\ErrorHandler\Error($this->debug->errorHandler, E_WARNING, 'bogus error', __FILE__, 42);
+        $error = new Error($this->debug->errorHandler, E_WARNING, 'bogus error', __FILE__, 42);
         $this->debug->getRoute('wamp')->onError($error);
         $msg = $this->debug->getRoute('wamp')->wamp->messages[0];
         // echo \json_encode($msg, JSON_PRETTY_PRINT) . "\n";

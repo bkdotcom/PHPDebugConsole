@@ -7,7 +7,13 @@ use bdk\Debug\LogEntry;
 use bdk\Test\Debug\DebugTestFramework;
 
 /**
- * PHPUnit tests for Debug trace method
+ * PHPUnit tests for Debug::trace() method
+ *
+ * @covers \bdk\Debug
+ * @covers \bdk\Debug\Dump\Html\Helper
+ * @covers \bdk\Debug\Dump\Html\HtmlString
+ * @covers \bdk\Debug\Dump\Html\Table
+ * @covers \bdk\Debug\Method\Helper
  */
 class TraceTest extends DebugTestFramework
 {
@@ -146,16 +152,58 @@ class TraceTest extends DebugTestFramework
                 // 'wamp' => @todo
             )
         );
+    }
 
-        $this->debug->setCfg('collect', false);
-        $this->testMethod(
-            'trace',
-            array('log message'),
+    public function testTraceInvalidCaption()
+    {
+        $line = __LINE__ + 1;
+        $this->debug->trace(false, false);
+        $logEntryError = $this->debug->data->get('log/0');
+        $logEntryTrace = $this->debug->data->get('log/1');
+        $this->assertSame(array(
+            'method' => 'warn',
+            'args' => array('trace caption should be a string.  boolean provided'),
+            'meta' => array(
+                'detectFiles' => true,
+                'file' => __FILE__,
+                'line' => $line,
+                'uncollapse' => true,
+            ),
+        ), $this->helper->logEntryToArray($logEntryError));
+        $this->assertSame('trace', $logEntryTrace['method']);
+        $this->assertSame('trace', $logEntryTrace['meta']['caption']);
+
+        $line = __LINE__ + 1;
+        $this->debug->trace(false, (object) array());
+        $logEntryError = $this->debug->data->get('log/2');
+        // $logEntryTrace = $this->debug->data->get('log/3');
+        $this->assertSame(array(
+            'method' => 'warn',
+            'args' => array('trace caption should be a string.  stdClass provided'),
+            'meta' => array(
+                'detectFiles' => true,
+                'file' => __FILE__,
+                'line' => $line,
+                'uncollapse' => true,
+            ),
+        ), $this->helper->logEntryToArray($logEntryError));
+    }
+
+    public function testTraceProvided()
+    {
+        $frames = array(
             array(
-                'notLogged' => true,
-                'wamp' => false,
+                'file' => '/path/to/file.php',
+                'line' => 42,
+                'function' => 'Foo::bar',
             )
         );
+        $this->debug->trace($this->debug->meta(array(
+            'trace' => $frames,
+        )));
+        $this->assertSame(array(
+            $frames,
+        ), $this->debug->data->get('log/0/args'));
     }
 
     public function testTraceWithContext()
@@ -163,7 +211,7 @@ class TraceTest extends DebugTestFramework
         $this->testMethod(
             'trace',
             array(
-                true,   // inclTrace
+                true,   // inclContext
                 $this->debug->meta('cfg', 'objectsExclude', array('*')), // don't inspect any objects
             ),
             array(
@@ -194,6 +242,20 @@ EOD;
                     $expectContains = '</code></pre><hr />Arguments = <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>';
                     $this->assertStringContainsString($expectContains, $output);
                 },
+            )
+        );
+    }
+
+    public function testCollectFalse()
+    {
+        $this->debug->setCfg('collect', false);
+        $this->testMethod(
+            'trace',
+            array(),
+            array(
+                'notLogged' => true,
+                'return' => $this->debug,
+                'wamp' => false,
             )
         );
     }

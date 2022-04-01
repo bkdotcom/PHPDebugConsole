@@ -4,6 +4,8 @@ namespace bdk\Test\Debug\Plugin;
 
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Plugin\LogReqRes;
+// use bdk\Debug\Plugin\Redaction;
+use bdk\HttpMessage\Response;
 use bdk\HttpMessage\ServerRequest;
 use bdk\HttpMessage\Stream;
 use bdk\HttpMessage\UploadedFile;
@@ -11,9 +13,63 @@ use bdk\Test\Debug\DebugTestFramework;
 
 /**
  * PHPUnit tests for Debug class
+ *
+ * @covers \bdk\Debug\Plugin\LogReqRes
  */
 class LogReqResTest extends DebugTestFramework
 {
+    public function testLogRes()
+    {
+        $this->debug->pluginLogReqRes->logResponse();
+        $logEntries = $this->helper->deObjectifyData($this->debug->data->get('log'));
+        $this->assertSame(array(), $logEntries);
+
+        $this->debug->data->set('log', array());
+        $json = \json_encode(array('foo' => 'bar'));
+        $response = (new Response())
+            ->withHeader('Content-Type', 'application/json')
+            ->withBody(new Stream($json));
+        $this->debug->setCfg(array(
+            'logResponse' => 'auto',
+            'serviceProvider' => array(
+                'response' => $response
+            ),
+        ));
+        $this->debug->pluginLogReqRes->logResponse();
+        $logEntries = $this->helper->deObjectifyData($this->debug->data->get('log'));
+        $this->assertSame('Response', $logEntries[0]['args'][0]);
+        $this->assertSame('Request / Response', $logEntries[0]['meta']['channel']);
+        $this->assertSame('table', $logEntries[1]['method']);
+        $this->assertSame(array(
+            'Content-Type' => array('value' => 'application/json'),
+        ), $logEntries[1]['args'][0]);
+        $this->assertSame('response headers', $logEntries[1]['meta']['caption']);
+        $this->assertSame('{' . "\n"
+            . '    "foo": "bar"' . "\n"
+            . '}', $logEntries[2]['args'][4]['value']);
+        $this->assertSame(array(
+            'foo' => 'bar',
+        ), $logEntries[2]['args'][4]['valueDecoded']);
+
+        $this->debug->data->set('log', array());
+        $html = '<!DOCTYPE html><html><head><title>WebCo WebPage</title></head><body>Clever Response</body></html>';
+        $response = (new Response())
+            ->withHeader('Content-Type', 'text/html')
+            ->withBody(new Stream($html));
+        $this->debug->setCfg(array(
+            // 'logEnvInfo' => true,
+            'logResponse' => 'auto',
+            'serviceProvider' => array(
+                'response' => $response
+            ),
+        ));
+        $this->debug->pluginLogReqRes->logResponse();
+        $logEntries = $this->helper->deObjectifyData($this->debug->data->get('log'));
+        $this->assertSame('Not logging response body for Content-Type "text/html"', \end($logEntries)['args'][0]);
+
+        $this->debug->obEnd();
+    }
+
     public function testLogPost()
     {
         $logReqRes = new LogReqRes();
@@ -62,7 +118,7 @@ class LogReqResTest extends DebugTestFramework
                     'redact' => true,
                 ),
             ),
-            $this->logEntryToArray($this->debug->data->get('log/0'))
+            $this->helper->logEntryToArray($this->debug->data->get('log/0'))
         );
         $this->debug->data->set('log', array());
 
@@ -107,7 +163,7 @@ class LogReqResTest extends DebugTestFramework
                     'redact' => true,
                 )
             ),
-            $this->logEntryToArray($this->debug->data->get('log/0'))
+            $this->helper->logEntryToArray($this->debug->data->get('log/0'))
         );
         $this->debug->data->set('log', array());
 
@@ -137,7 +193,7 @@ class LogReqResTest extends DebugTestFramework
                     'uncollapse' => true,
                 ),
             ),
-            $this->logEntryToArray($this->debug->data->get('log/0'))
+            $this->helper->logEntryToArray($this->debug->data->get('log/0'))
         );
         $this->assertEquals(
             array(
@@ -168,7 +224,7 @@ class LogReqResTest extends DebugTestFramework
                     'redact' => true,
                 ),
             ),
-            $this->logEntryToArray($this->debug->data->get('log/1'))
+            $this->helper->logEntryToArray($this->debug->data->get('log/1'))
         );
         $this->debug->data->set('log', array());
 
@@ -212,7 +268,7 @@ class LogReqResTest extends DebugTestFramework
                     'channel' => 'Request / Response',
                 ),
             ),
-            $this->logEntryToArray($this->debug->data->get('log/1'))
+            $this->helper->logEntryToArray($this->debug->data->get('log/1'))
         );
         $this->debug->data->set('log', array());
 
@@ -237,7 +293,7 @@ class LogReqResTest extends DebugTestFramework
                     'uncollapse' => true,
                 ),
             ),
-            $this->logEntryToArray($this->debug->data->get('log/0'))
+            $this->helper->logEntryToArray($this->debug->data->get('log/0'))
         );
         $this->debug->data->set('log', array());
 
@@ -283,7 +339,7 @@ class LogReqResTest extends DebugTestFramework
                     'redact' => true,
                 ),
             ),
-            $this->logEntryToArray($this->debug->data->get('log/0'))
+            $this->helper->logEntryToArray($this->debug->data->get('log/0'))
         );
         $this->debug->data->set('log', array());
 

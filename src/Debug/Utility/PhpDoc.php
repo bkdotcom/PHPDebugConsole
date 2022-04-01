@@ -63,8 +63,15 @@ class PhpDoc extends PhpDocBase
             return $parsed;
         }
         if (\strtolower($comment) === '{@inheritdoc}') {
-            $parentReflector = $this->getParentReflector($this->reflector);
-            return $this->getParsed($parentReflector);
+            // phpDoc considers this non-standard
+            return $this->getParentParsed();
+        }
+        if (\strtolower($parsed['desc'] . $parsed['summary']) === '{@inheritdoc}') {
+            // phpDoc considers this non-standard
+            $parentParsed = $this->getParentParsed();
+            $parsed['summary'] = $parentParsed['summary'];
+            $parsed['desc'] = $parentParsed['desc'];
+            return $parsed;
         }
         if (!isset($parsed['desc'])) {
             return $parsed;
@@ -72,13 +79,18 @@ class PhpDoc extends PhpDocBase
         $parsed['desc'] = \preg_replace_callback(
             '/{@inheritdoc}/i',
             function () {
-                $parentReflector = $this->getParentReflector($this->reflector);
-                $parentParsed = $this->getParsed($parentReflector);
+                $parentParsed = $this->getParentParsed();
                 return $parentParsed['desc'];
             },
             $parsed['desc']
         );
         return $parsed;
+    }
+
+    private function getParentParsed()
+    {
+        $parentReflector = $this->getParentReflector($this->reflector);
+        return $this->getParsed($parentReflector);
     }
 
     /**
@@ -141,7 +153,7 @@ class PhpDoc extends PhpDocBase
         // assume that summary and desc won't be "0"..  remove empty value and merge
         return \array_merge($parsed, \array_filter(array(
             'summary' => \trim($split[0] . $split[1]),    // split[1] is the ".\n"
-            'desc' => \trim($split[2]),
+            'desc' => $this->trimDesc(\trim($split[2])),
         )));
     }
 
@@ -258,7 +270,7 @@ class PhpDoc extends PhpDocBase
                     . '(?:\s+(?P<desc>.*))?'
                     . '/s',
                 'callable' => function ($parsed) {
-                    $parsed['param'] = $this->parseParams($parsed['param']);
+                    $parsed['param'] = $this->parseMethodParams($parsed['param']);
                     $parsed['static'] = $parsed['static'] !== null;
                     $parsed['type'] = $this->typeNormalize($parsed['type']);
                     return $parsed;
@@ -279,7 +291,7 @@ class PhpDoc extends PhpDocBase
                 'parts' => array('name', 'email','desc'),
                 'regex' => '/^(?P<name>[^<]+)'
                     . '(?:\s+<(?P<email>\S*)>)?'
-                    . '(?:\s+(?P<desc>.*))?'
+                    . '(?:\s+(?P<desc>.*))?' // desc isn't part of the standard
                     . '$/s',
             ),
             array(

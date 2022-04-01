@@ -21,7 +21,7 @@ use bdk\Debug\Abstraction\AbstractObject;
  */
 class TextAnsiValue extends TextValue
 {
-    public $escapeReset;
+    public $escapeReset = "\e[0m";
 
     /**
      * Add ansi escape sequences for classname type strings

@@ -7,6 +7,13 @@ use bdk\Debug\Abstraction\Abstracter;
 
 /**
  * PHPUnit tests for Debug Methods
+ *
+ * @covers \bdk\Debug\Dump\Base
+ * @covers \bdk\Debug\Dump\Html
+ * @covers \bdk\Debug\Dump\Html\HtmlString
+ * @covers \bdk\Debug\Dump\Substitution
+ * @covers \bdk\Debug\Dump\Text
+ * @covers \bdk\Debug\Dump\TextAnsi
  */
 class SubstitutionTest extends DebugTestFramework
 {
@@ -351,7 +358,6 @@ class SubstitutionTest extends DebugTestFramework
                 \array_unshift($argsSansMeta, false);
             }
             foreach ($tests as $name => $test) {
-                // $this->stderr($method, $name, $test);
                 $foundArgs = false;
                 if (\is_array($test)) {
                     foreach ($test as $i => $val) {
@@ -398,7 +404,6 @@ class SubstitutionTest extends DebugTestFramework
                         : 0;
                     $label = $argsSansMeta[$i];
                     $label = $this->debug->getDump('base')->valDumper->dump($label);
-                    // $this->stderr('label', $label);
                     $label = \strtr($label, $replace);
                     // $label = strtr($label, array('\\u', 'foo'));
                     // $test = str_replace('{{label}}', $label, $test);
@@ -493,9 +498,7 @@ class SubstitutionTest extends DebugTestFramework
                     $test = \str_replace('{{args}}', $argStr, $test);
                 }
                 $tests[$name] = $test;
-                // $this->stderr('test', $name, $test);
             }
-            // $this->stderr('test', $name, $method, $args, $test);
             /*
             if ($method === 'alert') {
                 echo 'chromeLogger alert test ' . \print_r($tests['chromeLogger'], true) . "\n\n";

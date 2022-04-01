@@ -8,6 +8,10 @@ use bdk\Test\Debug\DebugTestFramework;
 
 /**
  * PHPUnit tests for Debug class
+ *
+ * @covers \bdk\Debug\Abstraction\Abstracter
+ * @covers \bdk\Debug\Dump\Html
+ * @covers \bdk\Debug\Dump\Text
  */
 class ResourceTest extends DebugTestFramework
 {

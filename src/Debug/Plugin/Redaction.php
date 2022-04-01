@@ -35,11 +35,23 @@ class Redaction implements SubscriberInterface
         'redactKeys' => array(
             // key => regex of key
         ),
-        'redactReplace' => null,
+        'redactReplace' => null, // closure
     );
     protected $methods = array(
         'redact',
     );
+
+    /**
+     * Constructor
+     */
+    public function __construct()
+    {
+        $this->cfg['redactReplace'] = function ($str, $key) {
+            // "use" our function params so things (ie phpmd) don't complain
+            array($str, $key);
+            return '█████████';
+        };
+    }
 
     /**
      * {@inheritDoc}
@@ -66,20 +78,16 @@ class Redaction implements SubscriberInterface
             // no debug config values have changed
             return;
         }
-        $cfgDebug = $configs['debug'];
-        $valActions = array(
+        $cfg = \array_intersect_key($configs['debug'], $this->cfg);
+        $valActions = \array_intersect_key(array(
             'redactKeys' => array($this, 'onCfgRedactKeys'),
-            'redactReplace' => function ($val) {
-                $this->cfg['redactReplace'] = $val;
-                return $val;
-            },
-        );
-        $valActions = \array_intersect_key($valActions, $cfgDebug);
+        ), $cfg);
+        $this->cfg = \array_merge($this->cfg, $cfg);
         foreach ($valActions as $key => $callable) {
             /** @psalm-suppress TooManyArguments */
-            $cfgDebug[$key] = $callable($cfgDebug[$key], $event);
+            $cfg[$key] = $callable($cfg[$key], $event);
         }
-        $event['debug'] = \array_merge($event['debug'], $cfgDebug);
+        $event['debug'] = \array_merge($event['debug'], $cfg);
     }
 
     /**

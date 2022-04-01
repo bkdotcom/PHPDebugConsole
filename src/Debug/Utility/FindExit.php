@@ -37,10 +37,10 @@ class FindExit
     public function find()
     {
         if (\extension_loaded('tokenizer') === false) {
-            return false;
+            return false; // @codeCoverageIgnore
         }
         if (Backtrace::isXdebugFuncStackAvail() === false) {
-            return false;
+            return false; // @codeCoverageIgnore
         }
         $frame = $this->getLastFrame();
         if (!$frame) {
@@ -223,8 +223,7 @@ class FindExit
                 : new \ReflectionFunction($frame['function']);
             return $this->getFrameSourceReflection($reflector);
         } catch (\ReflectionException $e) {
-            // {closure...} or {main}, etc
-            return array($frame['file'], $frame['line'], '');
+            return array($frame['file'], $frame['line'], ''); // @codeCoverageIgnore
         }
     }
 

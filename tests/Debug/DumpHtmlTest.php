@@ -4,6 +4,8 @@ namespace bdk\Test\Debug;
 
 /**
  * PHPUnit tests for Debug Methods
+ *
+ * @covers \bdk\Debug\Dump\Html
  */
 class DumpHtmlTest extends DebugTestFramework
 {

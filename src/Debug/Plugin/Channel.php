@@ -61,15 +61,19 @@ class Channel implements SubscriberInterface
             ? \preg_split('#(\.|(?<!\s)/(?!\s))#', $name)
             : $name;
         $name = \array_shift($names);
-        $config = $names
-            ? array()
-            : $config;
+        if ($name === $this->debug->rootInstance->getCfg('channelName', Debug::CONFIG_DEBUG)) {
+            return $names
+                ? $this->debug->rootInstance->getChannel($names, $config)
+                : $this->debug->rootInstance;
+        }
         if (!isset($this->channels[$name])) {
-            $this->channels[$name] = $this->createChannel($name, $config);
+            $this->channels[$name] = $this->createChannel($name, $names
+                ? array()
+                : $config);
         }
         $channel = $this->channels[$name];
         if ($names) {
-            $channel = $channel->getChannel($names);
+            $channel = $channel->getChannel($names, $config);
         }
         unset($config['nested']);
         if ($config) {
@@ -153,6 +157,7 @@ class Channel implements SubscriberInterface
         )));
         $cfg['debug'] = \array_diff_key($cfg['debug'], \array_flip(array(
             'channelIcon',
+            'channelName',
             'onBootstrap',
             'route',
         )));
@@ -172,25 +177,27 @@ class Channel implements SubscriberInterface
      *
      * @return array
      */
-    private function createChannel($name, &$config)
+    private function createChannel($name, $config)
     {
         $cfg = $this->debug->getCfg(null, Debug::CONFIG_INIT);
-        $cfgChannels = $cfg['debug']['channels'];
-        $config = \array_merge(
-            array('nested' => true),  // true = regular child channel, false = tab
-            $config,
-            isset($cfgChannels[$name])
-                ? $cfgChannels[$name]
-                : array()
-        );
+        $channelNameCur = $cfg['debug']['channelName'];
         $cfg = $this->getPropagateValues($cfg);
-        // set channel values
-        $cfg['debug']['channelIcon'] = null;
-        $cfg['debug']['channelName'] = $config['nested'] || $this->debug->parentInstance
-            ? $cfg['debug']['channelName'] . '.' . $name
+        $cfg['debug'] = \array_merge(
+            $cfg['debug'],
+            array(
+                'channelIcon' => null,
+                'nested' => true, // true = regular child channel, false = tab
+            ),
+            isset($cfg['debug']['channels'][$name])
+                ? $cfg['debug']['channels'][$name]
+                : array(),
+            $config,
+        );
+        $cfg['debug']['channelName'] = $cfg['debug']['nested'] || $this->debug->parentInstance
+            ? $channelNameCur . '.' . $name
             : $name;
         $cfg['debug']['parent'] = $this->debug;
-        unset($cfg['nested']);
+        unset($cfg['debug']['nested']);
         return new Debug($cfg);
     }
 }

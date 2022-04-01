@@ -8,13 +8,17 @@ use bdk\Debug\LogEntry;
 use bdk\Test\Debug\DebugTestFramework;
 
 /**
- * PHPUnit tests for Debug class
+ * PHPUnit tests for Debug::profile() method
+ *
+ * @covers \bdk\Debug
+ * @covers \bdk\Debug\Method\Profile
+ * @covers \bdk\Debug\ServiceProvider
+ * @covers \bdk\Debug\Dump\Html\Table
  */
 class ProfileTest extends DebugTestFramework
 {
     public function testProfile()
     {
-
         $this->debug->profile();
         $this->a();
         $this->debug->profileEnd();
@@ -123,6 +127,19 @@ class ProfileTest extends DebugTestFramework
                         [ownTime] => %f
                     )
                 )',
+            )
+        );
+    }
+
+    public function testCollectFalse()
+    {
+        $this->debug->setCfg('collect', false);
+        $this->testMethod(
+            'profile',
+            array(),
+            array(
+                'notLogged' => true,
+                'return' => $this->debug,
             )
         );
     }

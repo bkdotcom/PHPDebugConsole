@@ -17,6 +17,9 @@ use bdk\Debug\Utility\Utf8Dump;
 
 /**
  * Validate Utf8 / "highlight" non-utf8, control, & whitespace characters
+ *
+ * @link https://www.cl.cam.ac.uk/~mgk25/ucs/examples/UTF-8-test.txt
+ * @link http://www.i18nqa.com/debug/utf8-debug.html
  */
 class Utf8
 {
@@ -87,6 +90,20 @@ class Utf8
     }
 
     /**
+     * Get string's length in bytes
+     *
+     * @param string $string string to calculate
+     *
+     * @return int
+     */
+    public static function strlen($string)
+    {
+        return \function_exists('mb_strlen') && ((int) \ini_get('mbstring.func_overload') & 2)
+            ? \mb_strlen($string, '8bit')
+            : \strlen($string);
+    }
+
+    /**
      * Attempt to convert string to UTF-8 encoding
      *
      * @param string $str string to convert
@@ -96,16 +113,15 @@ class Utf8
     public static function toUtf8($str)
     {
         if (\extension_loaded('mbstring') === false || \function_exists('iconv') === false) {
-            return $str;
+            return $str; // @codeCoverageIgnore
         }
-        $encoding = \mb_detect_encoding($str, \mb_detect_order(), true);
+        // 'Windows-1252' detection only seems to work in PHP-8 ?
+        // we won't include... ISO-8859-1  too many false positive
+        $encodings = array('ASCII', 'UTF-8');
+        $encoding = \mb_detect_encoding($str, $encodings, true);
         if ($encoding === false) {
+            // Assume Windows-1252
             return self::toUtf8Unknown($str);
-        } elseif (!\in_array($encoding, array('ASCII','UTF-8'))) {
-            $strNew = \iconv($encoding, 'UTF-8', $str);
-            if ($strNew !== false) {
-                $str = $strNew;
-            }
         }
         return $str;
     }
@@ -168,10 +184,7 @@ class Utf8
      */
     private static function toUtf8Unknown($str)
     {
-        $strConv = false;
-        if (\function_exists('iconv')) {
-            $strConv = \iconv('cp1252', 'UTF-8', $str);
-        }
+        $strConv = \iconv('Windows-1252', 'UTF-8', $str);
         if ($strConv === false) {
             $strConv = \htmlentities($str, ENT_COMPAT);
             $strConv = \html_entity_decode($strConv, ENT_COMPAT, 'UTF-8');

@@ -5,7 +5,12 @@ namespace bdk\Test\Debug\Route;
 use bdk\Test\Debug\DebugTestFramework;
 
 /**
- * test data storage & retrieval
+ * Test Html route
+ *
+ * @covers \bdk\Debug
+ * @covers \bdk\Debug\Route\AbstractRoute
+ * @covers \bdk\Debug\Route\Html
+ * @covers \bdk\Debug\Plugin\Highlight
  */
 class HtmlTest extends DebugTestFramework
 {
@@ -52,7 +57,7 @@ class HtmlTest extends DebugTestFramework
         $this->assertSame($assets, $this->debug->routeHtml->getAssets());
 
         // test add/remove assetProvider
-        $highlight = new \bdk\Debug\PLugin\Highlight();
+        $highlight = new \bdk\Debug\Plugin\Highlight();
         $this->debug->routeHtml->addAssetProvider($highlight);
         $this->assertCount(2, $this->debug->routeHtml->getAssets('css'));
         $this->assertCount(3, $this->debug->routeHtml->getAssets('script'));

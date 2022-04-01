@@ -1,16 +1,20 @@
 <?php
 
-namespace bdk\Test\Debug\Fixture;
+namespace bdk\Test\Debug\Fixture\Utility;
 
 /**
  * {@inheritDoc}
  */
-class PhpDocInheritDoc implements SomeInterface
+class PhpDocNoParent
 {
-    /** @var string constant description */
+    /**
+     * {@inheritDoc}
+     */
     const SOME_CONSTANT = 'never change';
 
-    /** @var string property description */
+    /**
+     * {@inheritDoc}
+     */
     public $someProperty = 'St. James Place';
 
     /**

@@ -43,7 +43,7 @@ class Internal
             return $this->debug->getCfg('routeNonHtml', Debug::CONFIG_DEBUG);
         }
         if ($interface === 'http') {
-            $contentType = \implode(', ', $this->debug->getResponseHeader('Content-Type'));
+            $contentType = $this->debug->getResponseHeader('Content-Type');
             if ($contentType && \strpos($contentType, 'text/html') === false) {
                 return $this->debug->getCfg('routeNonHtml', Debug::CONFIG_DEBUG);
             }

@@ -169,7 +169,7 @@ class Logger extends AbstractLogger
         if (!isset($context['exception'])) {
             return false;
         }
-        if (!$this->debug->utility->isThrowable($context['exception'])) {
+        if (!$this->debug->php->isThrowable($context['exception'])) {
             return false;
         }
         $fatalLevels = array(

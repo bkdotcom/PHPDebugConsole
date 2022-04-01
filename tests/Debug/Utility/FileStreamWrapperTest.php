@@ -8,6 +8,8 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * PHPUnit tests for Debug class
+ *
+ * @covers \bdk\Debug\Utility\FileStreamWrapper
  */
 class FileStreamWrapperTest extends TestCase
 {

@@ -8,7 +8,8 @@ use PHPUnit\Framework\TestCase;
 use ReflectionObject;
 
 /**
- *
+ * @covers \bdk\HttpMessage\AbstractUri
+ * @covers \bdk\HttpMessage\Uri
  */
 class UriTest extends TestCase
 {
@@ -186,6 +187,7 @@ class UriTest extends TestCase
     public function testNonParsableUri()
     {
         $this->expectException('InvalidArgumentException');
+        $this->expectExceptionMessage('Unable to parse URI: http:///example.com');
         // Exception => Uri must be a string, but integer provided.
         new Uri('http:///example.com');
     }
@@ -193,21 +195,24 @@ class UriTest extends TestCase
     public function testExceptionAssertString()
     {
         $this->expectException('InvalidArgumentException');
+        $this->expectExceptionMessage('Uri must be a string, but stdClass provided.');
         // Exception => Uri must be a string, but integer provided.
-        new Uri(1234);
+        new Uri((object) [1234]);
     }
 
     public function testExceptionHost()
     {
         $this->expectException('InvalidArgumentException');
+        $this->expectExceptionMessage('"example_test.com" is not a valid host');
         $uri = new Uri();
         // Exception => "example_test.com" is not a valid host
-        $uri->withHost($uri, 'example_test.com');
+        $uri->withHost('example_test.com');
     }
 
     public function testExceptionWithPortInvalidVariableType()
     {
         $this->expectException('InvalidArgumentException');
+        $this->expectExceptionMessage('Port must be a int, but string provided.');
         $uri = new Uri();
         // Exception => Port must be an integer or a null value, but string provided.
         $uri->withPort('foo');
@@ -216,6 +221,7 @@ class UriTest extends TestCase
     public function testExceptionWithPortInvalidRangeNumer()
     {
         $this->expectException('InvalidArgumentException');
+        $this->expectExceptionMessage('Invalid port: 70000. Must be between 0 and 65535');
         $uri = new Uri();
         // Exception => Port number should be in a range of 0-65535, but 70000 provided.
         $uri->withPort(70000);

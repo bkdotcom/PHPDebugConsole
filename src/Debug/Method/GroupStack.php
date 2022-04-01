@@ -237,14 +237,14 @@ class GroupStack
         switch ($where) {
             case 'main':
                 $this->groupStacksRef = &$this->groupStacks['main'];
-                return;
+                break;
             case 'summary':
                 $priority = \end($this->priorityStack);
                 if (!isset($this->groupStacks[$priority])) {
                     $this->groupStacks[$priority] = array();
                 }
                 $this->groupStacksRef = &$this->groupStacks[$priority];
-                return;
+                break;
         }
     }
 

@@ -9,6 +9,8 @@ use PHPUnit\Framework\TestCase;
 /**
  * @author Igor Wiedler <igor@wiedler.ch>
  * @author BradKent <bkfake-github@yahoo.com>
+ *
+ * @covers \bdk\Container
  */
 class ContainerTest extends TestCase
 {

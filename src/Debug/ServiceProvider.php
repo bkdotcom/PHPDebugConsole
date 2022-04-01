@@ -158,6 +158,9 @@ class ServiceProvider implements ServiceProviderInterface
             $debug = $container['debug'];
             return new \bdk\Debug\Psr15\Middleware($debug);
         };
+        $container['php'] = function () {
+            return new \bdk\Debug\Utility\Php();
+        };
         $container['phpDoc'] = function () {
             return new \bdk\Debug\Utility\PhpDoc();
         };
@@ -197,8 +200,10 @@ class ServiceProvider implements ServiceProviderInterface
         $container['routeWamp'] = function (Container $container) {
             try {
                 $wampPublisher = $container['wampPublisher'];
+                // @codeCoverageIgnoreStart
             } catch (\RuntimeException $e) {
                 throw new \RuntimeException('Wamp route requires \bdk\WampPublisher, which must be installed separately');
+                // @codeCoverageIgnoreEnd
             }
             $debug = $container['debug'];
             return new \bdk\Debug\Route\Wamp($debug, $wampPublisher);
@@ -219,6 +224,7 @@ class ServiceProvider implements ServiceProviderInterface
             return new \bdk\Debug\Utility();
         };
         $container['wampPublisher'] = function (Container $container) {
+            // @codeCoverageIgnoreStart
             if (\class_exists('\\bdk\\WampPublisher') === false) {
                 throw new \RuntimeException('PHPDebugConsole does not include WampPublisher.  Install separately');
             }
@@ -226,6 +232,7 @@ class ServiceProvider implements ServiceProviderInterface
             return new \bdk\WampPublisher(
                 $debug->getCfg('wampPublisher', \bdk\Debug::CONFIG_INIT)
             );
+            // @codeCoverageIgnoreEnd
         };
     }
 }

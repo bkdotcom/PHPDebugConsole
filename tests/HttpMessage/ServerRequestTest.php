@@ -8,10 +8,12 @@ use bdk\HttpMessage\ServerRequest;
 use bdk\HttpMessage\UploadedFile;
 use bdk\Test\PolyFill\ExpectExceptionTrait;
 use PHPUnit\Framework\TestCase;
+use ReflectionMethod;
 use ReflectionObject;
 
 /**
- *
+ * @covers \bdk\HttpMessage\AbstractServerRequest
+ * @covers \bdk\HttpMessage\ServerRequest
  */
 class ServerRequestTest extends TestCase
 {
@@ -25,13 +27,60 @@ class ServerRequestTest extends TestCase
         $this->assertTrue($serverRequest instanceof ServerRequest);
     }
 
+    public function testAuthHeaders()
+    {
+        $serverRequest = new ServerRequest('GET', 'http://www.test.com/', array(
+            'REDIRECT_HTTP_AUTHORIZATION' => 'Basic ' . \base64_encode('username:password'),
+        ));
+        $this->assertSame(array(
+            'Host' => array('www.test.com'),
+            'Authorization' => array('Basic ' . \base64_encode('username:password')),
+        ), $serverRequest->getHeaders());
+
+        $digestVal = 'Digest username="Mufasa", realm="testrealm@host.com", nonce="dcd98b7102dd2f0e8b11d0f600bfb0c093", uri="/dir/index.html", qop=auth, nc=00000001, cnonce="0a4f113b", response="6629fae49393a05397450978507c4ef1", opaque="5ccc069c403ebaf9f0171e9517f40e41';
+        $serverRequest = new ServerRequest('GET', 'http://www.test.com/', array(
+            'PHP_AUTH_DIGEST' => $digestVal,
+        ));
+        $this->assertSame(array(
+            'Host' => array('www.test.com'),
+            'Authorization' => array($digestVal),
+        ), $serverRequest->getHeaders());
+    }
+
     public function testConstructWithUri()
     {
-        $serverRequest = new ServerRequest('GET', '/some/page?foo=bar&dingle.berry=brown');
+        $serverRequest = new ServerRequest(
+            'GET',
+            '/some/page?foo=bar&dingle.berry=brown&a%20b=c&d+e=f&g h=i',
+            array(
+                'SERVER_PROTOCOL' => 'HTTP/1.0',
+                'CONTENT_TYPE' => 'text/html',
+            )
+        );
         $this->assertSame(array(
             'foo' => 'bar',
             'dingle.berry' => 'brown',
+            'a b' => 'c',
+            'd e' => 'f',
+            'g h' => 'i',
         ), $serverRequest->getQueryParams());
+        $this->assertSame('1.0', $serverRequest->getProtocolVersion());
+        $this->assertSame('text/html', $serverRequest->getHeaderLine('Content-Type'));
+
+        // test options parsing works on constructor
+        ServerRequest::parseStrOpts('convSpace', true);
+        $serverRequest = new ServerRequest(
+            'GET',
+            '/some/page?foo=bar&dingle.berry=brown&a%20b=c&d+e=f&g h=i'
+        );
+        $this->assertSame(array(
+            'foo' => 'bar',
+            'dingle.berry' => 'brown',
+            'a_b' => 'c',
+            'd_e' => 'f',
+            'g_h' => 'i',
+        ), $serverRequest->getQueryParams());
+        ServerRequest::parseStrOpts('convSpace', false);
 
         /*
             Test new values replace
@@ -46,6 +95,8 @@ class ServerRequestTest extends TestCase
 
     public function testFromGlobals()
     {
+        $serverBackup = $_SERVER;
+        $getBackup = $_GET;
         $_SERVER = array(
             'HTTP_CONTENT_TYPE' => 'application/json',
             'HTTP_HOST' => 'www.test.com:8080',
@@ -122,6 +173,100 @@ class ServerRequestTest extends TestCase
                 ),
             ),
         ), $request->getUploadedFiles());
+        $_FILES = array();
+
+        $_SERVER['HTTPS'] = 'on';
+        $request = ServerRequest::fromGlobals();
+        $this->assertSame('https://www.test.com:8080/path?ding=dong', (string) $request->getUri());
+
+        // tets parse_url failure
+        $_SERVER = array(
+            'HTTP_HOST' => '/s?a=12&b=12.3.3.4:1233',
+            'SERVER_PORT' => '8080',
+            'QUERY_STRING' => 'ding=dong',
+        );
+        $request = ServerRequest::fromGlobals();
+        $this->assertSame('GET', $request->getMethod());
+        $this->assertSame('http:/?ding=dong', (string) $request->getUri());
+
+        $_SERVER = array(
+            'REQUEST_METHOD' => 'GET',
+            'SERVER_NAME' => 'somedomain',
+            'SERVER_PORT' => '8080',
+            // 'QUERY_STRING' => 'ding=dong',
+        );
+        $request = ServerRequest::fromGlobals();
+        $this->assertSame('http://somedomain:8080/', (string) $request->getUri());
+
+        $_SERVER = array(
+            'REQUEST_METHOD' => 'GET',
+            'SERVER_ADDR' => '192.168.100.42',
+            'SERVER_PORT' => '8080',
+            // 'QUERY_STRING' => 'ding=dong',
+        );
+        $_GET = array(
+            'foo' => 'bar',
+        );
+        $request = ServerRequest::fromGlobals();
+        $this->assertSame('http://192.168.100.42:8080/?foo=bar', (string) $request->getUri());
+
+        $_SERVER = $serverBackup;
+        $_GET = $getBackup;
+    }
+
+    public function testPostFromInput()
+    {
+        $serverRequest = new ServerRequest();
+        $reflectionMethod = new ReflectionMethod($serverRequest, 'postFromInput');
+        $reflectionMethod->setAccessible(true);
+
+        $parsed = $reflectionMethod->invokeArgs($serverRequest, array(
+            'application/unknown',
+        ));
+        $this->assertNull($parsed);
+
+        $parsed = $reflectionMethod->invokeArgs($serverRequest, array(
+            'application/json',
+        ));
+        $this->assertNull($parsed);
+
+        $parsed = $reflectionMethod->invokeArgs($serverRequest, array(
+            'application/x-www-form-urlencoded',
+            __DIR__ . '/input.txt'
+        ));
+        $this->assertSame(array(
+            0 => 'foo',
+            1 => 'bar',
+            2 => 'baz',
+            4 => 'boom',
+            'dingle.berry' => 'brown',
+            'a b' => 'c',
+            'd e' => 'f',
+            'g h' => 'i',
+        ), $parsed);
+
+        ServerRequest::parseStrOpts(array(
+            'convDot' => true,
+            'convSpace' => false,
+        ));
+        $parsed = $reflectionMethod->invokeArgs($serverRequest, array(
+            'application/x-www-form-urlencoded',
+            __DIR__ . '/input.txt'
+        ));
+        $this->assertSame(array(
+            0 => 'foo',
+            1 => 'bar',
+            2 => 'baz',
+            4 => 'boom',
+            'dingle_berry' => 'brown',
+            'a b' => 'c',
+            'd e' => 'f',
+            'g h' => 'i',
+        ), $parsed);
+        ServerRequest::parseStrOpts(array(
+            'convDot' => false,
+            'convSpace' => false,
+        ));
     }
 
     public function testProperties()
@@ -133,7 +278,9 @@ class ServerRequestTest extends TestCase
             'cookie' => array(),
             'get' => array(),
             'post' => null,
-            'server' => array(),
+            'server' => array(
+                'REQUEST_METHOD' => 'GET',
+            ),
             'files' => array(),
         );
 
@@ -153,7 +300,10 @@ class ServerRequestTest extends TestCase
 
         $serverRequest = new ServerRequest();
 
-        $this->assertSame([], $serverRequest->getServerParams());
+        $this->assertSame('GET', $serverRequest->getMethod());
+        $this->assertSame([
+            'REQUEST_METHOD' => 'GET',
+        ], $serverRequest->getServerParams());
         $this->assertSame([], $serverRequest->getCookieParams());
         $this->assertSame(null, $serverRequest->getParsedBody());
         $this->assertSame([], $serverRequest->getQueryParams());
@@ -168,8 +318,10 @@ class ServerRequestTest extends TestCase
             ->withAttribute('what', 'attribute')
             ->withUploadedFiles(self::mockFiles(1));
 
+        $this->assertSame('POST', $serverRequest->getMethod());
         $this->assertEquals(array(
             'what' => 'server',
+            'REQUEST_METHOD' => 'POST',
         ), $serverRequest->getServerParams());
         $this->assertEquals(array('what' => 'cookie'), $serverRequest->getCookieParams());
         $this->assertEquals(array('what' => 'post'), $serverRequest->getParsedBody());
@@ -200,7 +352,10 @@ class ServerRequestTest extends TestCase
             ->withAttribute('foo8', 'bar9')
             ->withUploadedFiles(self::mockFiles(2));
 
-        $this->assertEquals([], $new->getServerParams());
+        $this->assertSame('GET', $new->getMethod());
+        $this->assertEquals([
+            'REQUEST_METHOD' => 'GET',
+        ], $new->getServerParams());
         $this->assertEquals(['foo3' => 'bar3'], $new->getCookieParams());
         $this->assertEquals(['foo4' => 'bar4', 'foo5' => 'bar5'], $new->getParsedBody());
         $this->assertEquals(['foo6' => 'bar6', 'foo7' => 'bar7'], $new->getQueryParams());
@@ -222,24 +377,27 @@ class ServerRequestTest extends TestCase
         $new2 = $new->withoutAttribute('foo8');
 
         $this->assertEquals(null, $new2->getAttribute('foo8'));
+        $this->assertSame($new2, $new2->withoutAttribute('noSuch'));
     }
 
     /*
         Exceptions
     */
 
+    public function testExceptionUploadedFilesArray()
+    {
+        $this->expectException('TypeError');
+
+        $serverRequest = new ServerRequest();
+        $serverRequest->withUploadedFiles((object) []);
+    }
+
     public function testExceptionUploadedFiles()
     {
         $this->expectException('InvalidArgumentException');
+        $this->expectExceptionMessage('Invalid leaf in uploaded files structure');
 
-        $serverRequest = new ServerRequest('GET', 'https://example.com');
-
-        /*
-        $reflection = new ReflectionObject($serverRequest);
-        $assertUploadedFiles = $reflection->getMethod('assertUploadedFiles');
-        $assertUploadedFiles->setAccessible(true);
-        */
-
+        $serverRequest = new ServerRequest();
         // Exception => Invalid PSR-7 array structure for handling UploadedFile.
         $serverRequest->withUploadedFiles([
             [
@@ -248,32 +406,62 @@ class ServerRequestTest extends TestCase
         ]);
     }
 
+    public function testExceptionWithUploadedFile()
+    {
+        $this->expectException('InvalidArgumentException');
+        $this->expectExceptionMessage('Invalid value in files specification');
+        $files = [
+            'bogusFiles' => '/tmp/php1234.tmp',
+        ];
+        $serverRequest = new ServerRequest();
+        $reflectionMethod = new ReflectionMethod($serverRequest, 'filesFromGlobals');
+        $reflectionMethod->setAccessible(true);
+
+        $reflectionMethod->invokeArgs($serverRequest, array(
+            $files,
+        ));
+    }
+
     public function testExceptionParsedBody()
     {
         $this->expectException('InvalidArgumentException');
-        $serverRequest = new ServerRequest('GET', 'https://example.com');
+        $this->expectExceptionMessage('Only accepts array, object and null, but string provided.');
 
+        $serverRequest = new ServerRequest();
         // Exception => Only accepts array, object and null, but string provided.
         $serverRequest->withParsedBody('I am a string');
+    }
+
+    public function testExceptionParseStrOpts()
+    {
+        $this->expectException('InvalidArgumentException');
+        $this->expectExceptionMessage('parseStrOpts expects string or array but boolean provided.');
+        ServerRequest::parseStrOpts(false);
     }
 
     public function testParseUploadedFiles()
     {
         $files = [
+            'files0' => new UploadedFile(
+                '/tmp/php1234.tmp',
+                100000,
+                UPLOAD_ERR_OK,
+                'test1.jpg',
+                'image/jpeg'
+            ),
 
             // <input type="file" name="file1">
-
             'files1' => [
                 'name' => 'test1.jpg',
                 'type' => 'image/jpeg',
                 'tmp_name' => '/tmp/php1234.tmp',
                 'error' => UPLOAD_ERR_OK,
                 'size' => 100000,
+                'full_path' => '/sue/bob/test1.jpg',
             ],
 
             // <input type="file" name="files2[a]">
             // <input type="file" name="files2[b]">
-
             'files2' => [
                 'name' => [
                     'a' => 'test2.jpg',
@@ -295,11 +483,14 @@ class ServerRequestTest extends TestCase
                     'a' => 100001,
                     'b' => 100010,
                 ],
+                'full_path' => [
+                    'a' => '/sue/bob/test2.jpg',
+                    'b' => '/sue/bob/test3.jpg',
+                ],
             ],
 
             // <input type="file" name="files3[]">
             // <input type="file" name="files3[]">
-
             'files3' => [
                 'name' => [
                     0 => 'test4.jpg',
@@ -324,7 +515,6 @@ class ServerRequestTest extends TestCase
             ],
 
             // <input type="file" name="files4[foo][bar]">
-
             'files4' => [
                 'name' => [
                     'foo' => [
@@ -355,12 +545,20 @@ class ServerRequestTest extends TestCase
         ];
 
         $expectedFiles = array(
+            'files0' => new UploadedFile(
+                '/tmp/php1234.tmp',
+                100000,
+                UPLOAD_ERR_OK,
+                'test1.jpg',
+                'image/jpeg',
+            ),
             'files1' => new UploadedFile(
                 '/tmp/php1234.tmp',
                 100000,
                 UPLOAD_ERR_OK,
                 'test1.jpg',
-                'image/jpeg'
+                'image/jpeg',
+                '/sue/bob/test1.jpg',
             ),
             'files2' => array(
                 'a' => new UploadedFile(
@@ -368,14 +566,16 @@ class ServerRequestTest extends TestCase
                     100001,
                     UPLOAD_ERR_OK,
                     'test2.jpg',
-                    'image/jpeg'
+                    'image/jpeg',
+                    '/sue/bob/test2.jpg',
                 ),
                 'b' => new UploadedFile(
                     '/tmp/php1236.tmp',
                     100010,
                     UPLOAD_ERR_OK,
                     'test3.jpg',
-                    'image/jpeg'
+                    'image/jpeg',
+                    '/sue/bob/test3.jpg',
                 ),
             ),
             'files3' => array(
@@ -384,14 +584,14 @@ class ServerRequestTest extends TestCase
                     100100,
                     UPLOAD_ERR_OK,
                     'test4.jpg',
-                    'image/jpeg'
+                    'image/jpeg',
                 ),
                 1 => new UploadedFile(
                     '/tmp/php1238.tmp',
                     101000,
                     UPLOAD_ERR_OK,
                     'test5.jpg',
-                    'image/jpeg'
+                    'image/jpeg',
                 ),
             ),
             'files4' => array(
@@ -401,19 +601,17 @@ class ServerRequestTest extends TestCase
                         110000,
                         UPLOAD_ERR_OK,
                         'test6.png',
-                        'image/png'
+                        'image/png',
                     ),
                 ),
             ),
         );
 
         $serverRequest = new ServerRequest();
-        $reflection = new ReflectionObject($serverRequest);
+        $reflectionMethod = new ReflectionMethod($serverRequest, 'filesFromGlobals');
+        $reflectionMethod->setAccessible(true);
 
-        $filesFromGlobals = $reflection->getMethod('filesFromGlobals');
-        $filesFromGlobals->setAccessible(true);
-
-        $uploadedFiles = $filesFromGlobals->invokeArgs($serverRequest, array(
+        $uploadedFiles = $reflectionMethod->invokeArgs($serverRequest, array(
             $files,
         ));
 

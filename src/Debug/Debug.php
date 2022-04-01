@@ -27,7 +27,7 @@ use bdk\ErrorHandler\Error;
  * @method void email($toAddr, $subject, $body)
  * @method string getInterface()
  * @method string getResponseCode()
- * @method string getResponseHeader($header = 'Content-Type')
+ * @method array|string getResponseHeader($header = 'Content-Type', $delimiter = ', ')
  * @method array|string getResponseHeaders($asString = false)
  * @method mixed getServerParam($name, $default = null)
  * @method bool hasLog()
@@ -118,6 +118,7 @@ class Debug extends Scaffolding
                                 //   'onError':         email sent if error occured (unless output)
         'emailTo' => 'default', // will default to $_SERVER['SERVER_ADMIN'] if non-empty, null otherwise
         'exitCheck' => true,
+        'extensionsCheck' => array('curl', 'mbString'),
         'headerMaxAll' => 250000,
         'headerMaxPer' => null,
         'logEnvInfo' => array(      // may be set by passing a list
@@ -145,7 +146,7 @@ class Debug extends Scaffolding
         'redactKeys' => array(          // case-insensitive
             'password',
         ),
-        'redactReplace' => null,        // closure
+        // 'redactReplace'              // closure
         'route' => 'auto',              // 'auto', 'chromeLogger', 'firephp', 'html', 'serverLog', 'script', 'steam', 'text', or RouteInterface,
                                         //   if 'auto', will be determined automatically
                                         //   if null, no output (unless output plugin added manually)
@@ -169,11 +170,6 @@ class Debug extends Scaffolding
     {
         $this->cfg['errorMask'] = E_ERROR | E_PARSE | E_COMPILE_ERROR | E_CORE_ERROR
             | E_WARNING | E_USER_ERROR | E_RECOVERABLE_ERROR;
-        $this->cfg['redactReplace'] = function ($str, $key) {
-            // "use" our function params so things (ie phpmd) don't complain
-            array($str, $key);
-            return '█████████';
-        };
         parent::__construct($cfg);
     }
 

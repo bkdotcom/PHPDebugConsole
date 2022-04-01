@@ -19,10 +19,9 @@ use bdk\Debug\Abstraction\AbstractObjectHelper;
 use bdk\Debug\Abstraction\AbstractObjectMethods;
 use bdk\Debug\Abstraction\AbstractObjectProperties;
 use bdk\Debug\Component;
+use bdk\Debug\Data;
 use bdk\Debug\Utility\PhpDoc;
 use Error;
-use ReflectionClass;
-use ReflectionObject;
 use RuntimeException;
 
 /**
@@ -132,7 +131,7 @@ class AbstractObject extends Component
      */
     public function getAbstraction($obj, $method = null, $hist = array())
     {
-        $reflector = $this->getReflector($obj);
+        $reflector = $this->debug->php->getReflector($obj);
         $interfaceNames = $reflector->getInterfaceNames();
         \sort($interfaceNames);
         $abs = new Abstraction(Abstracter::TYPE_OBJECT, \array_merge($this->values, array(
@@ -172,11 +171,11 @@ class AbstractObject extends Component
             $abs['stringified'] = $obj->format(\DateTime::ISO8601);
         } elseif ($obj instanceof \mysqli) {
             $this->onStartMysqli($abs);
-        } elseif ($obj instanceof Debug) {
+        } elseif ($obj instanceof Data) {
             $abs['propertyOverrideValues']['data'] = Abstracter::NOT_INSPECTED;
         } elseif ($obj instanceof PhpDoc) {
             $abs['propertyOverrideValues']['cache'] = Abstracter::NOT_INSPECTED;
-        } elseif ($obj instanceof self) {
+        } elseif ($obj instanceof AbstractObjectMethods) {
             $abs['propertyOverrideValues']['methodCache'] = Abstracter::NOT_INSPECTED;
         } elseif ($abs['isAnonymous']) {
             $this->handleAnonymous($abs);
@@ -370,25 +369,6 @@ class AbstractObject extends Component
     }
 
     /**
-     * Get ReflectionObject or ReflectionClass instance
-     *
-     * @param object|string $obj Object (or classname)
-     *
-     * @return ReflectionObject|ReflectionClass
-     * @throws RuntimeException
-     */
-    private function getReflector($obj)
-    {
-        if (\is_object($obj)) {
-            return new ReflectionObject($obj);
-        }
-        if (\is_string($obj) && (\class_exists($obj) || \interface_exists($obj))) {
-            return new ReflectionClass($obj);
-        }
-        throw new RuntimeException(__METHOD__ . ' expects and object, className, or interfaceName');
-    }
-
-    /**
      * for nested objects (ie object is a property of an object), returns the parent class
      *
      * @param array $hist Array & object history
@@ -397,20 +377,13 @@ class AbstractObject extends Component
      */
     private function getScopeClass(&$hist)
     {
-        $className = null;
         for ($i = \count($hist) - 1; $i >= 0; $i--) {
             if (\is_object($hist[$i])) {
-                $className = \get_class($hist[$i]);
-                break;
+                return \get_class($hist[$i]);
             }
         }
-        if ($i >= 0) {
-            return $className;
-        }
         $callerInfo = $this->debug->backtrace->getCallerInfo();
-        return isset($callerInfo['class'])
-            ? $callerInfo['class']
-            : null;
+        return $callerInfo['classContext'];
     }
 
     /**
@@ -427,7 +400,7 @@ class AbstractObject extends Component
      */
     private function handleAnonymous(Abstraction $abs)
     {
-        $abs['className'] = $this->debug->utility->friendlyClassName($abs['reflector']);
+        $abs['className'] = $this->debug->php->friendlyClassName($abs['reflector']);
         $properties = $abs['properties'];
         $properties['debug.file'] = $this->properties->buildPropValues(array(
             'type' => Abstracter::TYPE_STRING,
@@ -511,7 +484,7 @@ class AbstractObject extends Component
             if so, don't collect property values
         */
         \set_error_handler(function ($errno, $errstr) {
-            throw new RuntimeException($errstr, $errno);
+            throw new RuntimeException($errstr, $errno); // @codeCoverageIgnore
         }, E_ALL);
         try {
             $mysqli = $abs->getSubject();

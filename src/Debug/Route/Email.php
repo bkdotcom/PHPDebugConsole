@@ -15,6 +15,7 @@ namespace bdk\Debug\Route;
 use bdk\Debug;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Route\RouteInterface;
+use bdk\Debug\Utility\SerializeLog;
 use bdk\PubSub\Event;
 
 /**
@@ -62,9 +63,11 @@ class Email implements RouteInterface
     public function processLogEntries(Event $event)
     {
         $debug = $event->getSubject();
-        $subject = $this->buildSubject();
-        $body = $this->buildBody();
-        $this->debug->email($debug->getCfg('emailTo', Debug::CONFIG_DEBUG), $subject, $body);
+        $this->debug->email(
+            $debug->getCfg('emailTo', Debug::CONFIG_DEBUG),
+            $this->buildSubject(),
+            $this->buildBody()
+        );
     }
 
     /**
@@ -99,27 +102,7 @@ class Email implements RouteInterface
         /*
             "attach" serialized log to body
         */
-        $data = \array_intersect_key($this->debug->data->get(), \array_flip(array(
-            'alerts',
-            'log',
-            'logSummary',
-            'requestId',
-            'runtime',
-        )));
-        $data['channelNameRoot'] = $this->debug->rootInstance->getCfg('channelName', Debug::CONFIG_DEBUG);
-        $data['channels'] = \array_map(function (Debug $channel) {
-            return array(
-                'channelIcon' => $channel->getCfg('channelIcon', Debug::CONFIG_DEBUG),
-                'channelShow' => $channel->getCfg('channelShow', Debug::CONFIG_DEBUG),
-            );
-        }, $this->debug->getChannels(true));
-        $data['config'] = array(
-            'logRuntime' => $this->debug->getCfg('logRuntime', Debug::CONFIG_DEBUG),
-        );
-        $debugClass = \get_class($this->debug);
-        $data['version'] = $debugClass::VERSION;
-        \ksort($data);
-        return $body . \bdk\Debug\Utility\SerializeLog::serialize($data);
+        return $body . SerializeLog::serialize($this->debug);
     }
 
     /**

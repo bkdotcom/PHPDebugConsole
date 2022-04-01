@@ -89,7 +89,7 @@ class LogFiles extends Component implements SubscriberInterface
     {
         $files = $this->files !== null
             ? $this->files
-            : $this->debug->utility->getIncludedFiles();
+            : $this->debug->php->getIncludedFiles();
 
         $countIncluded = \count($files);
         $files = $this->filter($files);

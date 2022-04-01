@@ -12,6 +12,9 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * PHPUnit tests for Debug middleware
+ *
+ * @covers \bdk\Debug\Psr15\Middleware
+ * @covers \bdk\Debug\Route\Html\ErrorSummary
  */
 class MiddlewareTest extends DebugTestFramework
 {
@@ -49,6 +52,13 @@ class MiddlewareTest extends DebugTestFramework
             // @requires does not work on 4.8.36  ?
             $this->markTestSkipped('MiddleWare requires PHP 7.0');
         }
+        /*
+        $this->debug->getRoute('wamp')->onConfig(new Event($this->debug, array(
+            'debug' => array(
+                'output' => false,
+            ),
+        )));
+        */
         parent::$allowError = true;
         $this->debug->middleware->setCfg(array(
             'catchException' => true,

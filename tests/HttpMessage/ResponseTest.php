@@ -8,7 +8,7 @@ use bdk\Test\PolyFill\ExpectExceptionTrait;
 use PHPUnit\Framework\TestCase;
 
 /**
- *
+ * @covers \bdk\HttpMessage\Response
  */
 class ResponseTest extends TestCase
 {

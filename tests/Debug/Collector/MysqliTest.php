@@ -9,6 +9,11 @@ use bdk\Test\Debug\DebugTestFramework;
 
 /**
  * Test Mysqli debug collector
+ *
+ * @covers \bdk\Debug\Abstraction\AbstractObject
+ * @covers \bdk\Debug\Collector\MySqli
+ * @covers \bdk\Debug\Collector\MySqli\MySqliStmt
+ * @covers \bdk\Debug\Collector\StatementInfo
  */
 class MysqliTest extends DebugTestFramework
 {
@@ -16,12 +21,6 @@ class MysqliTest extends DebugTestFramework
 
     public static function setUpBeforeClass(): void
     {
-        /*
-        if (PHP_VERSION_ID < 70100) {
-            return;
-        }
-        */
-
         $createDb = <<<'EOD'
         CREATE DATABASE IF NOT EXISTS `test`
         /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci */
@@ -62,14 +61,19 @@ EOD;
         self::$client->query($createDb);
         self::$client->query($createTable);
 
-        $reflector = new \ReflectionProperty('bdk\\Debug\\Collector\\StatementInfo', 'constants');
-        $reflector->setAccessible(true);
-        $reflector->setValue(array());
+        \bdk\Test\Debug\Helper::setPrivateProp('bdk\\Debug\\Collector\\StatementInfo', 'constants', array());
+    }
+
+    public function testDebugMysqliObj()
+    {
+        $this->debug->log('mysqli', new \mysqli());
+        $logEntry = $this->debug->data->get('log/__end__');
+        $this->assertTrue($logEntry instanceof \bdk\Debug\LogEntry);
     }
 
     public function testPrepareBindExecute()
     {
-        if (PHP_VERSION_ID < 70100) {
+        if (PHP_VERSION_ID < 50600) {
             $this->markTestSkipped('Our MysqliStmt implementation requires PHP 5.6');
         }
         $stmt = self::$client->prepare('INSERT INTO `bob` (`t`, `e`, `ct`) VALUES (?, ?, ?)');
@@ -139,7 +143,7 @@ EOD;
 
     public function testTransaction()
     {
-        if (PHP_VERSION_ID < 70100) {
+        if (PHP_VERSION_ID < 50600) {
             $this->markTestSkipped('Our MysqliStmt implementation requires PHP 5.6');
         }
         self::$client->begin_transaction();
@@ -222,7 +226,7 @@ EOD;
 
     public function testRealQuery()
     {
-        if (PHP_VERSION_ID < 70100) {
+        if (PHP_VERSION_ID < 50600) {
             $this->markTestSkipped('Our MysqliStmt implementation requires PHP 5.6');
         }
         $success = self::$client->real_query('SELECT * from `bob`');
@@ -313,7 +317,7 @@ EOD;
 
     public function testMultiQuery()
     {
-        if (PHP_VERSION_ID < 70100) {
+        if (PHP_VERSION_ID < 50600) {
             $this->markTestSkipped('Our MysqliStmt implementation requires PHP 5.6');
         }
         $query = 'SELECT CURRENT_USER();';
@@ -423,7 +427,7 @@ EOD;
 
     public function testRollback()
     {
-        if (PHP_VERSION_ID < 70100) {
+        if (PHP_VERSION_ID < 50600) {
             $this->markTestSkipped('Our MysqliStmt implementation requires PHP 5.6');
         }
         self::$client->begin_transaction();
@@ -551,7 +555,7 @@ EOD;
 
     public function testDebugOutput()
     {
-        if (PHP_VERSION_ID < 70100) {
+        if (PHP_VERSION_ID < 50600) {
             $this->markTestSkipped('Our MysqliStmt implementation requires PHP 5.6');
         }
         self::$client->onDebugOutput(new Event($this->debug));
@@ -630,10 +634,14 @@ EOD;
             if ($count) {
                 $logEntries = \array_slice($logEntries, 0 - $count);
             }
+            /*
             return \array_map(function (LogEntry $logEntry) {
                 return $this->logEntryToArray($logEntry);
             }, $logEntries);
-        } elseif ($where === 'logSummary') {
+            */
+        }
+        /*
+         elseif ($where === 'logSummary') {
             foreach ($logEntries as $priority => $entries) {
                 $logEntries[$priority] = \array_map(function (LogEntry $logEntry) {
                     return $this->logEntryToArray($logEntry);
@@ -641,5 +649,7 @@ EOD;
             }
             return $logEntries;
         }
+        */
+        return $this->helper->deObjectifyData($logEntries);
     }
 }

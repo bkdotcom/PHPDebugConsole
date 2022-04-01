@@ -8,6 +8,8 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * PHPUnit tests for Utility class
+ *
+ * @covers \bdk\Debug\Utility\FileTree
  */
 class FileTreeTest extends TestCase
 {
@@ -25,7 +27,7 @@ class FileTreeTest extends TestCase
         $excluded = array(
             '/var/www/excludedDir' => 2,
         );
-        $fileTreeUtil = new \bdk\Debug\Utility\FileTree();
+        $fileTreeUtil = new FileTree();
         $fileTree = $fileTreeUtil->filesToTree($files, $excluded, true);
         $expect = array(
             '/var/www' => array(

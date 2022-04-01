@@ -105,7 +105,7 @@ class ErrorEmailerThrottle
      * not occured since their cutoff
      * have occured since their last email
      *
-     * @return [type] [description]
+     * @return array
      */
     public function getSummaryErrors()
     {

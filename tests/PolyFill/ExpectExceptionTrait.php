@@ -6,7 +6,6 @@ if (!\method_exists('\\PHPUnit\\Framework\\TestCase', 'expectException')) {
 
     trait ExpectExceptionTrait
     {
-
         private $forwardCompatExpectedExceptionMessage = '';
         private $forwardCompatExpectedExceptionCode = null;
 
@@ -47,7 +46,6 @@ if (!\method_exists('\\PHPUnit\\Framework\\TestCase', 'expectException')) {
             $this->forwardCompatExpectedExceptionMessage = $message;
             parent::setExpectedException(parent::getExpectedException(), $this->forwardCompatExpectedExceptionMessage, $this->forwardCompatExpectedExceptionCode);
         }
-
 
         /**
          * @param string $exceptionName

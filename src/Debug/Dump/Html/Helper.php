@@ -130,7 +130,7 @@ class Helper
      */
     public function tableAddContextRow($html, $row, $rowInfo, $index)
     {
-        if (!$rowInfo['context']) {
+        if ($rowInfo['context'] === Abstracter::UNDEFINED) {
             return $html;
         }
         $html = \str_replace('<tr>', '<tr' . ($index === 0 ? ' class="expanded"' : '') . ' data-toggle="next">', $html);
@@ -142,7 +142,7 @@ class Helper
             . '</tr>' . "\n";
         $crateRawWas = $this->dumper->crateRaw;
         $this->dumper->crateRaw = true;
-        $args = $rowInfo['args']
+        $args = $rowInfo['args'] !== Abstracter::UNDEFINED
             ? '<hr />Arguments = ' . $this->dumper->valDumper->dump($rowInfo['args'])
             : '';
         $this->dumper->crateRaw = $crateRawWas;

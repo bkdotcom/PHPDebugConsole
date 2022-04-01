@@ -71,7 +71,7 @@ class AbstractArray
     }
 
     /**
-     * Returns an callable array(obj, 'method') abstraction
+     * Returns a callable array(obj, 'method') abstraction
      *
      * @param array $array array callable
      *
@@ -81,7 +81,7 @@ class AbstractArray
     {
         $className = \get_class($array[0]);
         if (PHP_VERSION_ID >= 70000 && \strpos($className, "@anonymous\0") !== false) {
-            $className = $this->abstracter->debug->utility->friendlyClassName($array[0]);
+            $className = $this->abstracter->debug->php->friendlyClassName($array[0]);
         }
         return new Abstraction(Abstracter::TYPE_CALLABLE, array(
             'value' => array($className, $array[1]),

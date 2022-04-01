@@ -72,7 +72,7 @@ class AbstractObjectConstants
     }
 
     /**
-     * Get constant arrays
+     * Get constant arrays  (php < 7.1)
      *
      * @param ReflectionClass $reflector ReflectionClass instance
      *
@@ -95,7 +95,7 @@ class AbstractObjectConstants
     }
 
     /**
-     * Get constant arrays via `getReflectionConstants` (php 7.1)
+     * Get constant arrays via `getReflectionConstants` (php >= 7.1)
      * This gets us visibility and access to phpDoc
      *
      * @param ReflectionClass $reflector ReflectionClass instance

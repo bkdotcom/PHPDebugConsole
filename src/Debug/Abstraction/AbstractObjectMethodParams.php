@@ -105,7 +105,7 @@ class AbstractObjectMethodParams
     }
 
     /**
-     * Get parameter details for phpDoc @param method
+     * Get parameter details for phpDoc @method param
      *
      * @param Abstraction $abs             Object Abstraction instance
      * @param array       $parsedMethodTag Parsed @method tag

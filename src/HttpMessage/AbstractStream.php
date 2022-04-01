@@ -18,7 +18,7 @@ use RuntimeException;
 /**
  * INTERNAL USE ONLY
  */
-class StreamBase
+abstract class AbstractStream
 {
     protected $strings = array(
         'detached' => 'Stream is detached',
@@ -97,6 +97,7 @@ class StreamBase
         }
         if ($this->isFile($value)) {
             $this->setResourceFile($value);
+            return;
         }
         if (\is_string($value)) {
             $this->resource = \fopen('php://temp', 'wb+');

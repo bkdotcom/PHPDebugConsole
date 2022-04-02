@@ -64,12 +64,14 @@ EOD;
         \bdk\Test\Debug\Helper::setPrivateProp('bdk\\Debug\\Collector\\StatementInfo', 'constants', array());
     }
 
+    /*
     public function testDebugMysqliObj()
     {
         $this->debug->log('mysqli', new \mysqli());
         $logEntry = $this->debug->data->get('log/__end__');
         $this->assertTrue($logEntry instanceof \bdk\Debug\LogEntry);
     }
+    */
 
     public function testPrepareBindExecute()
     {

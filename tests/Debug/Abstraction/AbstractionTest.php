@@ -46,8 +46,7 @@ class AbstractionTest extends TestCase
 
     public function testUnserialize()
     {
-        /*
-        $serialized = PHP_VERSION_ID >= 70000
+        $serialized = PHP_VERSION_ID >= 70400
             ? 'O:33:"bdk\Debug\Abstraction\Abstraction":2:{s:3:"foo";s:3:"bar";s:4:"type";s:6:"myType";}'
             : 'C:33:"bdk\Debug\Abstraction\Abstraction":50:{a:2:{s:3:"foo";s:3:"bar";s:4:"type";s:6:"myType";}}';
         $abs = \unserialize($serialized);
@@ -56,15 +55,6 @@ class AbstractionTest extends TestCase
             'foo' => 'bar',
             'type' => 'myType',
         ), $abs->getValues());
-        */
-        $abs = new Abstraction('myType', array('foo' => 'bar'));
-        $serialized = \serialize($abs);
-        echo 'serialized = ' . $serialized . "\n";
-        $unserialized = \unserialize($serialized);
-        $this->assertSame(array(
-            'foo' => 'bar',
-            'type' => 'myType',
-        ), $unserialized->getValues());
     }
 
     public function testSetSubject()
@@ -85,7 +75,7 @@ class AbstractionTest extends TestCase
     {
         $abs = new Abstraction('myType', array('foo' => 'bar'));
         $serialized = \serialize($abs);
-        $expect = PHP_VERSION_ID >= 70000
+        $expect = PHP_VERSION_ID >= 70400
             ? 'O:33:"bdk\Debug\Abstraction\Abstraction":2:{s:3:"foo";s:3:"bar";s:4:"type";s:6:"myType";}'
             : 'C:33:"bdk\Debug\Abstraction\Abstraction":50:{a:2:{s:3:"foo";s:3:"bar";s:4:"type";s:6:"myType";}}';
         $this->assertSame($expect, $serialized);

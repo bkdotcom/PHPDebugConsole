@@ -230,7 +230,7 @@ class Php
         if ($matches['property']) {
             return new ReflectionProperty($matches['class'], $matches['property']);
         }
-        if ($matches['constant']) {
+        if ($matches['constant'] && PHP_VERSION_ID >= 70100) {
             return new ReflectionClassConstant($matches['class'], $matches['constant']);
         }
         if ($matches['class']) {

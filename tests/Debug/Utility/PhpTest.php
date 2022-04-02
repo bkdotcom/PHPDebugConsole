@@ -51,7 +51,7 @@ class PhpTest extends TestCase
         $str = '\bdk\Test\Debug\Fixture\Test::methodPublic()';
         $this->assertInstanceOf('ReflectionMethod', Php::getReflector($str));
 
-        if (PHP_VERSION_ID < 70000) {
+        if (PHP_VERSION_ID < 70100) {
             return;
         }
 
@@ -149,12 +149,15 @@ class PhpTest extends TestCase
             return $return;
         }
         $anonymous = require TEST_DIR . '/Debug/Fixture/Anonymous.php';
-        return \array_merge($return, array(
-            'strConstant' => array('\bdk\Test\Debug\Fixture\Test::MY_CONSTANT', $fcnExpect),
+        $return = \array_merge($return, array(
             'anonymous' => array($anonymous['anonymous'], 'class@anonymous'),
             'anonymousExtends' => array($anonymous['stdClass'], 'stdClass@anonymous'),
             'anonymousImplements' => array($anonymous['implements'], 'IteratorAggregate@anonymous'),
         ));
+        if (PHP_VERSION_ID < 70100) {
+            return $return;
+        }
+        $return['strConstant'] = array('\bdk\Test\Debug\Fixture\Test::MY_CONSTANT', $fcnExpect);
         return $return;
     }
 

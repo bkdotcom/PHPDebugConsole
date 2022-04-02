@@ -55,6 +55,7 @@ EOD;
         \restore_error_handler();
 
         if ($error) {
+            self::$client = null;
             return;
         }
 
@@ -64,19 +65,20 @@ EOD;
         \bdk\Test\Debug\Helper::setPrivateProp('bdk\\Debug\\Collector\\StatementInfo', 'constants', array());
     }
 
-    /*
     public function testDebugMysqliObj()
     {
         $this->debug->log('mysqli', new \mysqli());
         $logEntry = $this->debug->data->get('log/__end__');
         $this->assertTrue($logEntry instanceof \bdk\Debug\LogEntry);
     }
-    */
 
     public function testPrepareBindExecute()
     {
         if (PHP_VERSION_ID < 50600) {
             $this->markTestSkipped('Our MysqliStmt implementation requires PHP 5.6');
+        }
+        if (self::$client === null) {
+            $this->markTestSkipped('Error initiating client');
         }
         $stmt = self::$client->prepare('INSERT INTO `bob` (`t`, `e`, `ct`) VALUES (?, ?, ?)');
         $stmt->bind_param('ssi', $text, $datetime, $int);
@@ -147,6 +149,9 @@ EOD;
     {
         if (PHP_VERSION_ID < 50600) {
             $this->markTestSkipped('Our MysqliStmt implementation requires PHP 5.6');
+        }
+        if (self::$client === null) {
+            $this->markTestSkipped('Error initiating client');
         }
         self::$client->begin_transaction();
         self::$client->query('INSERT INTO `bob` (`t`) VALUES ("test")');
@@ -232,6 +237,9 @@ EOD;
     {
         if (PHP_VERSION_ID < 50600) {
             $this->markTestSkipped('Our MysqliStmt implementation requires PHP 5.6');
+        }
+        if (self::$client === null) {
+            $this->markTestSkipped('Error initiating client');
         }
         $success = self::$client->real_query('SELECT * from `bob`');
         if ($success) {
@@ -323,6 +331,9 @@ EOD;
     {
         if (PHP_VERSION_ID < 50600) {
             $this->markTestSkipped('Our MysqliStmt implementation requires PHP 5.6');
+        }
+        if (self::$client === null) {
+            $this->markTestSkipped('Error initiating client');
         }
         $query = 'SELECT CURRENT_USER();';
         $query .= 'SELECT `t` from `bob` LIMIT 10';
@@ -433,6 +444,9 @@ EOD;
     {
         if (PHP_VERSION_ID < 50600) {
             $this->markTestSkipped('Our MysqliStmt implementation requires PHP 5.6');
+        }
+        if (self::$client === null) {
+            $this->markTestSkipped('Error initiating client');
         }
         self::$client->begin_transaction();
         self::$client->query('INSERT INTO `bob` (`t`) VALUES ("rollback test")');
@@ -561,6 +575,9 @@ EOD;
     {
         if (PHP_VERSION_ID < 50600) {
             $this->markTestSkipped('Our MysqliStmt implementation requires PHP 5.6');
+        }
+        if (self::$client === null) {
+            $this->markTestSkipped('Error initiating client');
         }
         self::$client->onDebugOutput(new Event($this->debug));
         $logEntriesExpectJson = <<<'EOD'

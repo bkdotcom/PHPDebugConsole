@@ -140,12 +140,14 @@ class HttpFoundationBridgeTest extends TestCase
         $this->assertSame(404, $response->getStatusCode());
         $responseHeaders = $response->getHeaders();
         $headersExpect = array('cache-control', 'date');
+        $cacheControlExpect = 'no-cache';
         if (PHP_VERSION_ID >= 50500) {
             $headersExpect[] = 'set-cookie';
             $this->assertStringStartsWith('type=chocolate%20chip; path=/; httponly', $responseHeaders['set-cookie'][0]);
+            $cacheControlExpect = 'no-cache, private';
         }
         $this->assertSame($headersExpect, \array_keys($responseHeaders));
-        $this->assertSame(array('no-cache, private'), $responseHeaders['cache-control']);
+        $this->assertSame(array($cacheControlExpect), $responseHeaders['cache-control']);
         $this->assertSame($html, (string) $response->getBody());
     }
 

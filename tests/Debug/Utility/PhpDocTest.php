@@ -4,6 +4,7 @@ namespace bdk\Test\Debug\Utility;
 
 use bdk\Debug;
 use bdk\Debug\Utility\PhpDoc;
+use bdk\Test\PolyFill\AssertionTrait;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -14,6 +15,8 @@ use PHPUnit\Framework\TestCase;
  */
 class PhpDocTest extends TestCase
 {
+    use AssertionTrait;
+
     public static function setUpBeforeClass(): void
     {
         // $reflector = new \ReflectionProperty('bdk\Debug\Utility\PhpDoc', 'cache');

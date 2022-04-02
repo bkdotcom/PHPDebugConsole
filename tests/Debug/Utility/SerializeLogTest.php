@@ -4,7 +4,9 @@ namespace bdk\Test\Debug\Utility;
 
 use bdk\Debug;
 use bdk\Debug\Utility\SerializeLog;
+use bdk\HttpMessage\ServerRequest;
 use bdk\Test\Debug\DebugTestFramework;
+use bdk\Test\PolyFill\AssertionTrait;
 
 /**
  * Test SerializeLog
@@ -14,20 +16,38 @@ use bdk\Test\Debug\DebugTestFramework;
  */
 class SerializeLogTest extends DebugTestFramework
 {
+    use AssertionTrait;
+
     public function testSerializeUnserialize()
     {
-        $this->debug->alert('some alert');
-        $this->debug->groupSummary();
-        $this->debug->log('in summary');
-        $this->debug->groupEnd();
-        $this->debug->info('this is a test');
-        $serialized = SerializeLog::serialize($this->debug);
+        $debug = new Debug(array(
+            'logResponse' => false,
+            'serviceProvider' => array(
+                'request' => new ServerRequest(
+                    'GET',
+                    null,
+                    array(
+                        'DOCUMENT_ROOT' => TEST_DIR . '/../tmp',
+                        'REQUEST_METHOD' => 'GET', // presence of REQUEST_METHOD = not cli
+                        'REQUEST_TIME_FLOAT' => $_SERVER['REQUEST_TIME_FLOAT'],
+                        'SERVER_ADMIN' => 'ttesterman@test.com',
+                    )
+                ),
+            ),
+        ));
+        $debug->alert('some alert');
+        $debug->groupSummary();
+        $debug->log('in summary');
+        $debug->groupEnd();
+        $debug->info('this is a test');
+        $serialized = SerializeLog::serialize($debug);
         $unserialized = SerializeLog::unserialize($serialized);
-        $channelNameRoot = $this->debug->getCfg('channelName', Debug::CONFIG_DEBUG);
+        $this->assertIsArray($unserialized);
+        $channelNameRoot = $debug->getCfg('channelName', Debug::CONFIG_DEBUG);
         $expect = array(
-            'alerts' => $this->helper->deObjectifyData($this->debug->data->get('alerts'), false),
+            'alerts' => $this->helper->deObjectifyData($debug->data->get('alerts'), false),
             'config' => array(
-                'channelIcon' => $this->debug->getCfg('channelIcon', Debug::CONFIG_DEBUG),
+                'channelIcon' => $debug->getCfg('channelIcon', Debug::CONFIG_DEBUG),
                 'channelName' => $channelNameRoot,
                 'channels' => \array_map(function (Debug $channel) use ($channelNameRoot) {
                     $channelName = $channel->getCfg('channelName', Debug::CONFIG_DEBUG);
@@ -37,13 +57,13 @@ class SerializeLogTest extends DebugTestFramework
                         'channelSort' => $channel->getCfg('channelSort', Debug::CONFIG_DEBUG),
                         'nested' => \strpos($channelName, $channelNameRoot . '.') === 0,
                     );
-                }, $this->debug->getChannels(true, true)),
-                'logRuntime' => $this->debug->getCfg('logRuntime'),
+                }, $debug->getChannels(true, true)),
+                'logRuntime' => $debug->getCfg('logRuntime'),
             ),
-            'log' => $this->helper->deObjectifyData($this->debug->data->get('log'), false),
-            'logSummary' => $this->helper->deObjectifyData($this->debug->data->get('logSummary'), false),
-            'runtime' => $this->debug->data->get('runtime'),
-            'requestId' => $this->debug->data->get('requestId'),
+            'log' => $this->helper->deObjectifyData($debug->data->get('log'), false),
+            'logSummary' => $this->helper->deObjectifyData($debug->data->get('logSummary'), false),
+            'runtime' => $debug->data->get('runtime'),
+            'requestId' => $debug->data->get('requestId'),
             'version' => Debug::VERSION,
         );
         $this->assertEquals(

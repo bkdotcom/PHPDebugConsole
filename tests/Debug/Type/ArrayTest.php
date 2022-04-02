@@ -31,7 +31,7 @@ class ArrayTest extends DebugTestFramework
     <li><span class="t_key">obj</span><span class="t_operator">=&gt;</span><div class="t_object" data-accessible="public"><span class="classname">stdClass</span>
         <dl class="object-inner">
         <dt class="properties">properties</dt>
-        <dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier">0</span> <span class="t_operator">=</span> <span class="t_int">42</span></dd>
+        <dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier">foo</span> <span class="t_operator">=</span> <span class="t_string">bar</span></dd>
         <dt class="methods">no methods</dt>
         </dl>
         </div></li>
@@ -45,7 +45,7 @@ array(
     [1] => "c"
     [obj] => stdClass
         Properties:
-        (public) 0 = 42
+        (public) foo = "bar"
         Methods: none!
 )
 EOD;
@@ -64,20 +64,20 @@ EOD;
                         'a',
                         'foo' => 'bar',
                         'c',
-                        'obj' => (object) array(42),
+                        'obj' => (object) array('foo' => 'bar'),
                     )
                 ),
                 array(
                     'html' => $arrayDumpHtml,
                     'text' => $arrayDumpText,
-                    'script' => 'console.log({"0":"a","foo":"bar","1":"c","obj":{"___class_name":"stdClass","(public) 0":42}});',
+                    'script' => 'console.log({"0":"a","foo":"bar","1":"c","obj":{"___class_name":"stdClass","(public) foo":"bar"}});',
                     'streamAnsi' => \str_replace('\e', "\e", '\e[38;5;45marray\e[38;5;245m(\e[0m' . "\n"
                         . '\e[38;5;245m[\e[96m0\e[38;5;245m]\e[38;5;130m => \e[0m\e[38;5;250m"\e[0ma\e[38;5;250m"\e[0m' . "\n"
                         . '\e[38;5;245m[\e[38;5;83mfoo\e[38;5;245m]\e[38;5;130m => \e[0m\e[38;5;250m"\e[0mbar\e[38;5;250m"\e[0m' . "\n"
                         . '\e[38;5;245m[\e[96m1\e[38;5;245m]\e[38;5;130m => \e[0m\e[38;5;250m"\e[0mc\e[38;5;250m"\e[0m' . "\n"
                         . '\e[38;5;245m[\e[38;5;83mobj\e[38;5;245m]\e[38;5;130m => \e[0m\e[1mstdClass\e[22m' . "\n"
                         . '\e[4mProperties:\e[24m' . "\n"
-                        . '\e[38;5;250m(public)\e[0m \e[38;5;83m0\e[0m \e[38;5;130m=\e[0m \e[96m42\e[0m' . "\n"
+                        . '\e[38;5;250m(public)\e[0m \e[38;5;83mfoo\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mbar\e[38;5;250m"\e[0m' . "\n"
                         . 'Methods: none!' . "\n"
                         . '\e[38;5;245m)\e[0m'),
                     // 'wamp' => @todo

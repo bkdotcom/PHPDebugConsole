@@ -221,6 +221,8 @@ EOD;
 
         // duration
         $logEntriesExpect[3]['args'][0] = $logEntries[3]['args'][0];
+        // memory usage
+        $logEntriesExpect[4]['args'][1] = $logEntries[4]['args'][1];
         $this->assertSame($logEntriesExpect, $logEntries);
     }
 

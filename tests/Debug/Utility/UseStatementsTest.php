@@ -14,6 +14,10 @@ class UseStatementsTest extends TestCase
 {
     public function testUseStatements()
     {
+        if (PHP_VERSION_ID < 70000) {
+            $this->markTestSkipped('Use statement curly bracket syntax requires php 7.0+');
+        }
+
         $reflectionClass = new \ReflectionClass('bdk\Test\Debug\Fixture\UseStatements');
         $useStatements = UseStatements::getUseStatements($reflectionClass);
 

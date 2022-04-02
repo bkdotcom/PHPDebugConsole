@@ -3,6 +3,7 @@
 namespace bdk\Test\Debug\Utility;
 
 use bdk\Debug\Utility\StopWatch;
+use bdk\Test\PolyFill\AssertionTrait;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -12,6 +13,7 @@ use PHPUnit\Framework\TestCase;
  */
 class StopWatchTest extends TestCase
 {
+    use AssertionTrait;
 
     public function testConstruct()
     {

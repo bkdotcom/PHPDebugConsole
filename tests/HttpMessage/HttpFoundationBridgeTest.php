@@ -138,11 +138,10 @@ class HttpFoundationBridgeTest extends TestCase
         $response = HttpFoundationBridge::createResponse($foundationResponse);
         $this->assertInstanceOf('bdk\\HttpMessage\\Response', $response);
         $this->assertSame(404, $response->getStatusCode());
-        $this->assertSame(array(
-            'cache-control' => array('no-cache, private'),
-            'date' => array($foundationResponse->headers->get('date')),
-            'set-cookie' => array('type=chocolate%20chip; path=/; httponly; samesite=lax'),
-        ), $response->getHeaders());
+        $responseHeaders = $response->getHeaders();
+        $this->assertSame(array('cache-control', 'date', 'set-cookie'), \array_keys($responseHeaders));
+        $this->assertSame(array('no-cache, private'), $responseHeaders['cache-control']);
+        $this->assertStringStartsWith('type=chocolate%20chip; path=/; httponly', $responseHeaders['set-cookie'][0]);
         $this->assertSame($html, (string) $response->getBody());
     }
 

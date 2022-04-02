@@ -119,6 +119,12 @@ abstract class AbstractServerRequest extends Request
      */
     protected function assertUploadedFiles($uploadedFiles)
     {
+        if (\is_array($uploadedFiles) === false) {
+            throw new InvalidArgumentException(\sprintf(
+                'UploadedFiles expects array, but %s provided.',
+                self::getTypeDebug($uploadedFiles)
+            ));
+        }
         foreach ($uploadedFiles as $file) {
             if (\is_array($file)) {
                 $this->assertUploadedFiles($file);

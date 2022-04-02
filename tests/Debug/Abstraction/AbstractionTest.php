@@ -1,6 +1,6 @@
 <?php
 
-namespace bdk\Test\Container;
+namespace bdk\Test\Debug\Abstraction;
 
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
@@ -46,7 +46,10 @@ class AbstractionTest extends TestCase
 
     public function testUnserialize()
     {
-        $abs = \unserialize('O:33:"bdk\Debug\Abstraction\Abstraction":2:{s:3:"foo";s:3:"bar";s:4:"type";s:6:"myType";}');
+        $serialized = PHP_VERSION_ID >= 70000
+            ? 'O:33:"bdk\Debug\Abstraction\Abstraction":2:{s:3:"foo";s:3:"bar";s:4:"type";s:6:"myType";}'
+            : 'C:33:"bdk\Debug\Abstraction\Abstraction":50:{a:2:{s:3:"foo";s:3:"bar";s:4:"type";s:6:"myType";}}';
+        $abs = \unserialize($serialized);
         $this->assertInstanceOf('bdk\Debug\Abstraction\Abstraction', $abs);
         $this->assertSame(array(
             'foo' => 'bar',
@@ -72,7 +75,10 @@ class AbstractionTest extends TestCase
     {
         $abs = new Abstraction('myType', array('foo' => 'bar'));
         $serialized = \serialize($abs);
-        $this->assertSame('O:33:"bdk\Debug\Abstraction\Abstraction":2:{s:3:"foo";s:3:"bar";s:4:"type";s:6:"myType";}', $serialized);
+        $expect = PHP_VERSION_ID >= 70000
+            ? 'O:33:"bdk\Debug\Abstraction\Abstraction":2:{s:3:"foo";s:3:"bar";s:4:"type";s:6:"myType";}'
+            : 'C:33:"bdk\Debug\Abstraction\Abstraction":50:{a:2:{s:3:"foo";s:3:"bar";s:4:"type";s:6:"myType";}}';
+        $this->assertSame($expect, $serialized);
     }
 
     public function testOnSet()

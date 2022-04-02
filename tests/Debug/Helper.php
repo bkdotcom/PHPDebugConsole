@@ -75,17 +75,11 @@ class Helper
         if ($data instanceof Abstraction) {
             return $this->crate($data);
         }
-        if (ArrayUtil::isList($data)) {
-            foreach ($data as $i => $v) {
-                $data[$i] = $this->deObjectifyData($v, $withKeys);
-            }
+        if (\is_array($data) === false) {
             return $data;
         }
-        foreach (array('alerts','log', 'logSummary') as $what) {
-            if (!isset($data[$what])) {
-                continue;
-            }
-            $data[$what] = $this->deObjectifyData($data[$what], $withKeys);
+        foreach ($data as $i => $v) {
+            $data[$i] = $this->deObjectifyData($v, $withKeys);
         }
         return $data;
     }

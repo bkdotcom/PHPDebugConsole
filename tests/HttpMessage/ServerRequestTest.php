@@ -386,8 +386,10 @@ class ServerRequestTest extends TestCase
 
     public function testExceptionUploadedFilesArray()
     {
-        $this->expectException('TypeError');
-
+        $this->expectException(PHP_VERSION_ID >= 70000
+            ? 'TypeError'
+            : 'InvalidArgumentException'
+        );
         $serverRequest = new ServerRequest();
         $serverRequest->withUploadedFiles((object) []);
     }

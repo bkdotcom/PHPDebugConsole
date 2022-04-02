@@ -506,28 +506,30 @@ class MethodTest extends DebugTestFramework
                 42
             )),
             array(
-                'entry' => array(
-                    'method' => 'error',
-                    'args' => array(
-                        'Warning:',
-                        'this is a warning',
-                        __FILE__ . ' (line 42)',
-                    ),
-                    'meta' => array(
-                        'channel' => 'general.phpError',
-                        'context' => null,
-                        'detectFiles' => true,
-                        'errorCat' => 'warning',
-                        'errorHash' => 'efb987f3831e86b617c4c0cee4cb9371',
-                        'errorType' => 2,
-                        'file' => __FILE__,
-                        'isSuppressed' => false,
-                        'line' => 42,
-                        'sanitize' => true,
-                        'trace' => null,
-                        'uncollapse' => true,
-                    ),
-                ),
+                'entry' => function (LogEntry $logEntry) {
+                    $this->assertSame(array(
+                        'method' => 'error',
+                        'args' => array(
+                            'Warning:',
+                            'this is a warning',
+                            __FILE__ . ' (line 42)',
+                        ),
+                        'meta' => array(
+                            'channel' => 'general.phpError',
+                            'context' => null,
+                            'detectFiles' => true,
+                            'errorCat' => 'warning',
+                            'errorHash' => $logEntry->getMeta('errorHash'),
+                            'errorType' => 2,
+                            'file' => __FILE__,
+                            'isSuppressed' => false,
+                            'line' => 42,
+                            'sanitize' => true,
+                            'trace' => null,
+                            'uncollapse' => true,
+                        ),
+                    ), $this->helper->logEntryToArray($logEntry));
+                }
             )
         );
 

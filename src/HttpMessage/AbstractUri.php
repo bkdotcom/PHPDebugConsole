@@ -244,10 +244,12 @@ abstract class AbstractUri
     private function isFqdn($host)
     {
         if (PHP_VERSION_ID >= 70000) {
-            return \filter_var($host, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME);
+            return \filter_var($host, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME) !== false;
         }
-        $regex = '/(?=^.{4,253}$)(^((?!-)[a-zA-Z0-9-]{0,62}[a-zA-Z0-9]\.)+[a-zA-Z]{2,63}$)/';
-        return \preg_match($regex, $host) === 1;
+        $regexPartialHostname = '(?!-)[a-zA-Z0-9-]{0,62}[a-zA-Z0-9]';
+        $regex1 = '/(?=^.{4,253}$)(^(' . $regexPartialHostname . '\.)+[a-zA-Z]{2,63}$)/';
+        $regex2 = '/^' . $regexPartialHostname . '$/';
+        return \preg_match($regex1, $host) === 1 || \preg_match($regex2, $host) === 1;
     }
 
     /**

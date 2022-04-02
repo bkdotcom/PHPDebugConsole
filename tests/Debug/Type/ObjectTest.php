@@ -463,7 +463,12 @@ EOD;
                 array(
                     'html' => function ($html) {
                         $expect = '<dt class="constants">constants</dt>' . "\n"
-                            . '<dd class="constant public"><span class="t_modifier_public">public</span> <span class="t_identifier" title="PhpDocImplements summary">SOME_CONSTANT</span> <span class="t_operator">=</span> <span class="t_string">never change</span></dd>' . "\n"
+                            . '<dd class="constant public"><span class="t_modifier_public">public</span> <span class="t_identifier"'
+                            . (PHP_VERSION_ID >= 70100
+                                ? ' title="PhpDocImplements summary"'
+                                : ''
+                            )
+                            .'>SOME_CONSTANT</span> <span class="t_operator">=</span> <span class="t_string">never change</span></dd>' . "\n"
                             . '<dt class="properties">properties</dt>' . "\n"
                             . '<dd class="property public"><span class="t_modifier_public">public</span> <span class="t_type">string</span> <span class="t_identifier" title="$someProperty summary: desc">someProperty</span> <span class="t_operator">=</span> <span class="t_string">St. James Place</span></dd>' . "\n"
                             . '<dd class="magic property"><span class="t_modifier_magic">magic</span> <span class="t_type">bool</span> <span class="t_identifier" title="I\'m avail via __get()">magicProp</span></dd>' . "\n"

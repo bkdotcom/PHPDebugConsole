@@ -23,14 +23,13 @@ class ConfigTest extends DebugTestFramework
     {
         $reflectionMethod = new \ReflectionMethod($this->debug->pluginLogPhp, 'assertSetting');
         $reflectionMethod->setAccessible(true);
-        $fart = $reflectionMethod->invoke($this->debug->pluginLogPhp, array(
+        $reflectionMethod->invoke($this->debug->pluginLogPhp, array(
             'filter' => FILTER_VALIDATE_INT,
             'name' => 'testThing',
             'operator' => '!=',
             'valActual' => 666,
             'valCompare' => 666,
         ));
-        $this->helper->stderr('fart', $fart);
         $this->assertSame(array(
             'method' => 'assert',
             'args' => array(

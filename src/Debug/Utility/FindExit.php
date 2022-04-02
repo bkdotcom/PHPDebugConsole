@@ -214,6 +214,8 @@ class FindExit
                 \file_get_contents($frame['file']),
             );
         }
+        // xdebug < 3.0: namespace\{closure}
+        // xdebug 3.0    namespace\{closure:filepath.php:48-55}
         if (\preg_match('/^.*\{closure:(.+):(\d+)-(\d+)\}$/', $frame['function'], $matches)) {
             return $this->getFrameSourceClosure($matches[1], $matches[2], $matches[3]);
         }

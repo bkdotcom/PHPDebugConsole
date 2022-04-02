@@ -336,12 +336,14 @@ class StringUtil
      */
     private static function isBase64EncodedTestStats($val)
     {
-        $count = 0;
-        $valNoPadding = \preg_replace('/=+$/', '', $val, -2, $count);
+        $valNoPadding = \rtrim($val, '=');
         $strlen = \strlen($valNoPadding);
-        if ($count > 0) {
+        if ($strlen < \strlen($val)) {
             // if val ends with "=" it's pretty safe to assume base64
             return true;
+        }
+        if ($strlen === 0) {
+            return false;
         }
         $stats = array(
             'lower' => array(\preg_match_all('/[a-z]/', $val), 40.626, 8),

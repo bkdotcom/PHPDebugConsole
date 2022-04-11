@@ -81,7 +81,7 @@ class Logger extends AbstractLogger
             return;
         }
         /*
-            Lets create a LogEntry obj to pass arround
+            Lets create a LogEntry obj to pass around
         */
         $logEntry = new LogEntry(
             $this->debug,
@@ -117,7 +117,7 @@ class Logger extends AbstractLogger
     {
         if (!\in_array($level, $this->validLevels())) {
             throw new InvalidArgumentException(\sprintf(
-                '%s is not a valid level',
+                '"%s" is not a valid level',
                 $level
             ));
         }
@@ -246,20 +246,9 @@ class Logger extends AbstractLogger
     private function setMeta(LogEntry $logEntry)
     {
         list($message, $context) = $logEntry['args'];
-        $haveException = isset($context['exception'])
-            && ($context['exception'] instanceof \Exception
-                || PHP_VERSION_ID >= 70000 && $context['exception'] instanceof \Throwable);
         $meta = \array_intersect_key($context, \array_flip(array('channel','file','line')));
         // remove meta from context
         $context = \array_diff_key($context, $meta);
-        if ($haveException) {
-            $exception = $context['exception'];
-            $meta = \array_merge(array(
-                'file' => $exception->getFile(),
-                'line' => $exception->getLine(),
-                'trace' => $this->debug->backtrace->get(null, 0, $exception),
-            ), $meta);
-        }
         $logEntry->setMeta($meta);
         $logEntry['args'] = array(
             $message,

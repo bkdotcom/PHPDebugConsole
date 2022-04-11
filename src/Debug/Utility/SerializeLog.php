@@ -103,7 +103,7 @@ class SerializeLog
         $debug->setCfg($data['config']);
         unset($data['config'], $data['version']);
         foreach (array('alerts','log','logSummary') as $cat) {
-            $data[$cat] = self::importCategory($cat, $data[$cat]);
+            $data[$cat] = self::importGroup($cat, $data[$cat]);
         }
         foreach ($data as $k => $v) {
             $debug->data->set($k, $v);
@@ -131,28 +131,6 @@ class SerializeLog
     }
 
     /**
-     * "unserialize" log data
-     *
-     * @param string $cat  ('alerts'|'log'|'logSummary')
-     * @param array  $data data to unserialize
-     *
-     * @return array
-     */
-    private static function importCategory($cat, $data)
-    {
-        foreach ($data as $i => $val) {
-            if ($cat !== 'logSummary') {
-                $data[$i] = self::importLogEntry($val);
-                continue;
-            }
-            foreach ($val as $priority => $val2) {
-                $data[$i][$priority] = self::importLogEntry($val2);
-            }
-        }
-        return $data;
-    }
-
-    /**
      * Unserialzie Log entry
      *
      * @param array $vals method, args, & meta values
@@ -164,7 +142,30 @@ class SerializeLog
         if (self::$isLegacyData) {
             $vals[1] = self::importLegacy($vals[1]);
         }
+        $vals = \array_replace(array('', array(), array()), $vals);
         return new LogEntry(self::$debug, $vals[0], $vals[1], $vals[2]);
+    }
+
+    /**
+     * "unserialize" log data
+     *
+     * @param string $cat  ('alerts'|'log'|'logSummary')
+     * @param array  $data data to unserialize
+     *
+     * @return array
+     */
+    private static function importGroup($cat, $data)
+    {
+        foreach ($data as $i => $val) {
+            if ($cat !== 'logSummary') {
+                $data[$i] = self::importLogEntry($val);
+                continue;
+            }
+            foreach ($val as $priority => $val2) {
+                $data[$i][$priority] = self::importLogEntry($val2);
+            }
+        }
+        return $data;
     }
 
     /**
@@ -196,28 +197,6 @@ class SerializeLog
             $vals[$k] = new Abstraction($type, $v);
         }
         return $vals;
-    }
-
-    /**
-     * "serialize" log data
-     *
-     * @param string $cat  ('alerts'|'log'|'logSummary')
-     * @param array  $data data to serialize
-     *
-     * @return array
-     */
-    private static function serializeCategory($cat, $data)
-    {
-        foreach ($data as $i => $val) {
-            if ($cat !== 'logSummary') {
-                $data[$i] = \array_values($val->export());
-                continue;
-            }
-            foreach ($val as $i2 => $val2) {
-                $data[$i][$i2] = \array_values($val2->export());
-            }
-        }
-        return $data;
     }
 
     /**
@@ -265,7 +244,30 @@ class SerializeLog
             'runtime',
         )));
         foreach (array('alerts','log','logSummary') as $cat) {
-            $data[$cat] = self::serializeCategory($cat, $data[$cat]);
+            $data[$cat] = self::serializeGroup($data[$cat]);
+        }
+        return $data;
+    }
+
+    /**
+     * "serialize" log data
+     *
+     * @param array $data data to serialize
+     *
+     * @return array
+     */
+    private static function serializeGroup($data)
+    {
+        foreach ($data as $i => $val) {
+            if (!($val instanceof LogEntry)) {
+                $data[$i] = static::serializeGroup($val);
+                continue;
+            }
+            $logEntryArray = $val->export();
+            if (empty($logEntryArray['meta'])) {
+                unset($logEntryArray['meta']);
+            }
+            $data[$i] = \array_values($logEntryArray);
         }
         return $data;
     }

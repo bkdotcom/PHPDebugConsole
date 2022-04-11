@@ -15,14 +15,14 @@ use bdk\ErrorHandler;
 use bdk\ErrorHandler\Error;
 
 /**
- * General-purpose error handler which supports fatal errors
+ * Serves as base class for ErrorHandler
  *
  * Able to register multiple onError "callback" functions
  *
  * @property \bdk\Backtrace $backtrace Backtrace instance
  * @property bool           $isCli
  */
-class Scaffolding
+Abstract class AbstractErrorHandler
 {
     /** @var array */
     protected $cfg = array();

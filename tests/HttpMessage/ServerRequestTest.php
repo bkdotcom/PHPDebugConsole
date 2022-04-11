@@ -179,7 +179,7 @@ class ServerRequestTest extends TestCase
         $request = ServerRequest::fromGlobals();
         $this->assertSame('https://www.test.com:8080/path?ding=dong', (string) $request->getUri());
 
-        // tets parse_url failure
+        // test parse_url failure
         $_SERVER = array(
             'HTTP_HOST' => '/s?a=12&b=12.3.3.4:1233',
             'SERVER_PORT' => '8080',
@@ -388,7 +388,7 @@ class ServerRequestTest extends TestCase
     {
         $this->expectException(PHP_VERSION_ID >= 70000
             ? 'TypeError'
-            : 'InvalidArgumentException'
+            : 'ErrorException'
         );
         $serverRequest = new ServerRequest();
         $serverRequest->withUploadedFiles((object) []);

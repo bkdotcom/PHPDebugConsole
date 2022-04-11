@@ -24,7 +24,7 @@ use ReflectionMethod;
 /**
  * Handle underlying Debug bootstraping and config
  */
-class Scaffolding
+class AbstractDebug
 {
     /** @var \bdk\Debug\Config */
     protected $config;

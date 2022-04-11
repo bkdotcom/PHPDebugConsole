@@ -152,8 +152,6 @@ class Helper
             return null;
         }
         $return = $logEntry->export();
-        // convert any abstractions to array via json_encode
-        // $return['args'] = \json_decode(\json_encode($return['args']), true);
         $return['args'] = $this->crate($return['args']);
         \ksort($return['meta']);
         if (!$withKeys) {

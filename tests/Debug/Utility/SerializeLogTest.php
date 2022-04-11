@@ -28,7 +28,7 @@ class SerializeLogTest extends DebugTestFramework
                     null,
                     array(
                         'DOCUMENT_ROOT' => TEST_DIR . '/../tmp',
-                        'REQUEST_METHOD' => 'GET', // presence of REQUEST_METHOD = not cli
+                        'REQUEST_METHOD' => 'GET',
                         'REQUEST_TIME_FLOAT' => $_SERVER['REQUEST_TIME_FLOAT'],
                         'SERVER_ADMIN' => 'ttesterman@test.com',
                     )
@@ -328,6 +328,16 @@ EOD;
         $serialized = SerializeLog::serialize($debug);
         $unserialized = SerializeLog::unserialize($serialized);
         $keysCompare = array('alerts', 'log','logSummary');
+        foreach ($expect['log'] as $i => $logEntryArray) {
+            if (empty($logEntryArray[2])) {
+                unset($expect['log'][$i][2]);
+            }
+        }
+        foreach ($expect['logSummary'][0] as $i => $logEntryArray) {
+            if (empty($logEntryArray[2])) {
+                unset($expect['logSummary'][0][$i][2]);
+            }
+        }
         $this->assertEquals(
             \array_intersect_key($expect, \array_flip($keysCompare)),
             \array_intersect_key($this->helper->deObjectifyData($unserialized), \array_flip($keysCompare))

@@ -9,6 +9,7 @@ use bdk\Test\Debug\DebugTestFramework;
 /**
  * PHPUnit tests for Debug class
  *
+ * @covers \bdk\Debug\Dump\BaseValue
  * @covers \bdk\Debug\Dump\Text
  * @covers \bdk\Debug\Dump\Html
  * @covers \bdk\Debug\Dump\TextAnsiValue

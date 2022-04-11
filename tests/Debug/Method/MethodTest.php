@@ -10,6 +10,7 @@ use bdk\Test\Debug\DebugTestFramework;
  * PHPUnit tests for Debug Methods
  *
  * @covers \bdk\Debug
+ * @covers \bdk\Debug\AbstractDebug
  * @covers \bdk\Debug\Abstraction\AbstractObjectProperties
  * @covers \bdk\Debug\Component
  * @covers \bdk\Debug\LogEntry

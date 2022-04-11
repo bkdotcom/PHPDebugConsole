@@ -87,6 +87,7 @@ class ConfigEvents implements SubscriberInterface
         }
         $cfgDebug = $this->onConfigInit($configs['debug']);
         $valActions = \array_intersect_key(array(
+            'channels' => array($this, 'onCfgChannels'),
             'emailFrom' => array($this, 'onCfgEmail'),
             'emailFunc' => array($this, 'onCfgEmail'),
             'emailTo' => array($this, 'onCfgEmail'),
@@ -95,9 +96,9 @@ class ConfigEvents implements SubscriberInterface
             'logRequestInfo' => array($this, 'onCfgList'),
             'logResponse' => array($this, 'onCfgLogResponse'),
             'onBootstrap' => array($this, 'onCfgOnBootstrap'),
-            'onLog' => array($this, 'onCfgOnLog'),
-            'onMiddleware' => array($this, 'onCfgOnMiddleware'),
-            'onOutput' => array($this, 'onCfgOnOutput'),
+            'onLog' => array($this, 'onCfgReplaceSubscriber'),
+            'onMiddleware' => array($this, 'onCfgReplaceSubscriber'),
+            'onOutput' => array($this, 'onCfgReplaceSubscriber'),
             'route' => array($this, 'onCfgRoute'),
             'serviceProvider' => array($this, 'onCfgServiceProvider'),
             'enableProfiling' => array($this, 'onCfgEnableProfiling'),
@@ -107,6 +108,41 @@ class ConfigEvents implements SubscriberInterface
             $cfgDebug[$key] = $callable($cfgDebug[$key], $key, $event);
         }
         $event['debug'] = \array_merge($event['debug'], $cfgDebug);
+    }
+
+    /**
+     * Handle "channels" config update
+     *
+     * Ensure that channels is a "tree" vs "flat"
+     *
+     * @param string $val channels config value
+     *
+     * @return array channels tree
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     */
+    private function onCfgChannels($val)
+    {
+        $tree = array();
+        foreach ($val as $name => $config) {
+            $ref = &$tree;
+            $path = \explode('.', $name);
+            $name = \array_pop($path);
+            foreach ($path as $k) {
+                if (!isset($ref[$k])) {
+                    $ref[$k] = array();
+                }
+                if (!isset($ref[$k]['channels'])) {
+                    $ref[$k]['channels'] = array();
+                }
+                $ref = &$ref[$k]['channels'];
+            }
+            if (!isset($ref[$name])) {
+                $ref[$name] = array();
+            }
+            $ref[$name] = \array_merge($ref[$name], $config);
+        }
+        return $tree;
     }
 
     /**
@@ -142,11 +178,19 @@ class ConfigEvents implements SubscriberInterface
      * @param Event  $event The config change event
      *
      * @return bool
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter
      */
     private function onCfgEnableProfiling($val, $key, Event $event)
     {
         if (static::$profilingEnabled) {
-            // profiling already enabled
+            // profiling currently enabled
+            if ($val === false) {
+                FileStreamWrapper::unregister();
+                static::$profilingEnabled = false;
+            }
             return $val;
         }
         $cfgAll = \array_merge(
@@ -282,73 +326,31 @@ class ConfigEvents implements SubscriberInterface
     }
 
     /**
-     * Handle "onLog" config update
+     * Handle "onLog", "onBootstrap", & "onMiddleware" config update
      *
-     * @param mixed $val config value
+     * Replace - not append - subscriber set via setCfg
      *
-     * @return mixed
-     *
-     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
-     */
-    private function onCfgOnLog($val)
-    {
-        /*
-            Replace - not append - subscriber set via setCfg
-        */
-        $prev = $this->debug->getCfg('onLog', Debug::CONFIG_DEBUG);
-        if ($prev) {
-            $this->debug->eventManager->unsubscribe(Debug::EVENT_LOG, $prev);
-        }
-        if ($val) {
-            $this->debug->eventManager->subscribe(Debug::EVENT_LOG, $val);
-        }
-        return $val;
-    }
-
-    /**
-     * Handle "onOutput" config update
-     *
-     * @param mixed $val config value
+     * @param callable $val  config value
+     * @param string   $name 'onLog', 'onOutput', or 'onMiddleware'
      *
      * @return mixed
      *
      * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
      */
-    private function onCfgOnOutput($val)
+    private function onCfgReplaceSubscriber($val, $name)
     {
-        /*
-            Replace - not append - subscriber set via setCfg
-        */
-        $prev = $this->debug->getCfg('onOutput', Debug::CONFIG_DEBUG);
+        $events = array(
+            'onLog' => Debug::EVENT_LOG,
+            'onOutput' => Debug::EVENT_OUTPUT,
+            'onMiddleware' => Debug::EVENT_MIDDLEWARE,
+        );
+        $event = $events[$name];
+        $prev = $this->debug->getCfg($name, Debug::CONFIG_DEBUG);
         if ($prev) {
-            $this->debug->eventManager->unsubscribe(Debug::EVENT_OUTPUT, $prev);
+            $this->debug->eventManager->unsubscribe($event, $prev);
         }
         if ($val) {
-            $this->debug->eventManager->subscribe(Debug::EVENT_OUTPUT, $val);
-        }
-        return $val;
-    }
-
-    /**
-     * Handle "onMiddleware" config update
-     *
-     * @param mixed $val config value
-     *
-     * @return mixed
-     *
-     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
-     */
-    private function onCfgOnMiddleware($val)
-    {
-        /*
-            Replace - not append - subscriber set via setCfg
-        */
-        $prev = $this->debug->getCfg('onMiddleware', Debug::CONFIG_DEBUG);
-        if ($prev) {
-            $this->debug->eventManager->unsubscribe(Debug::EVENT_MIDDLEWARE, $prev);
-        }
-        if ($val) {
-            $this->debug->eventManager->subscribe(Debug::EVENT_MIDDLEWARE, $val);
+            $this->debug->eventManager->subscribe($event, $val);
         }
         return $val;
     }

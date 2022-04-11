@@ -15,9 +15,9 @@
 
 namespace bdk;
 
+use bdk\Debug\AbstractDebug;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\LogEntry;
-use bdk\Debug\Scaffolding;
 use bdk\ErrorHandler\Error;
 
 /**
@@ -56,7 +56,7 @@ use bdk\ErrorHandler\Error;
  *
  * @psalm-consistent-constructor
  */
-class Debug extends Scaffolding
+class Debug extends AbstractDebug
 {
     const CLEAR_ALERTS = 1;
     const CLEAR_LOG = 2;
@@ -108,8 +108,10 @@ class Debug extends Scaffolding
                         // higher = first
                         // tabs with same sort will be sorted alphabetically
         'enableProfiling' => false,
-        // which error types appear as "error" in debug console... all other errors are "warn"
-        'errorMask' => 0,
+        'errorLogNormal' => false,   // whether php shoyld also log the error when debugging is active
+        'errorMask' => 0,       // which error types appear as "error" in debug console...
+                                //    all other errors are "warn"
+                                //    (default set in constructor)
         'emailFrom' => null,    // null = use php's default (php.ini: sendmail_from)
         'emailFunc' => 'mail',  // callable
         'emailLog' => false,    // Whether to email a debug log.  (requires 'collect' to also be true)

@@ -96,6 +96,7 @@ class ConfigTest extends DebugTestFramework
             'channelShow',
             'channelSort',
             'enableProfiling',
+            'errorLogNormal',
             'errorMask',
             'emailFrom',
             'emailFunc',
@@ -148,7 +149,19 @@ class ConfigTest extends DebugTestFramework
         $this->assertSame(false, $this->debug->getCfg('logRequestInfo/cookies'));
     }
 
-    public function testEmailTo()
+    /**
+     * Test
+     *
+     * @return void
+     */
+    public function testSetCfg()
+    {
+        $this->assertSame(null, $this->debug->setCfg('foo', 'bar'));
+        $this->assertSame('bar', $this->debug->setCfg('foo', 'baz'));
+        $this->assertSame('baz', $this->debug->getCfg('foo'));
+    }
+
+    public function testOnCfgEmail()
     {
         /*
             'emailTo' is currently set to null for tests..
@@ -177,19 +190,35 @@ class ConfigTest extends DebugTestFramework
         $this->assertSame('ttesterman@test.com', $this->debug->getCfg('emailTo'));
     }
 
-    /**
-     * Test
-     *
-     * @return void
-     */
-    public function testSetCfg()
+    public function testOnCfgChannels()
     {
-        $this->assertSame(null, $this->debug->setCfg('foo', 'bar'));
-        $this->assertSame('bar', $this->debug->setCfg('foo', 'baz'));
-        $this->assertSame('baz', $this->debug->getCfg('foo'));
+        $debug = new Debug(array(
+            'channels' => array(
+                'foo.bar' => array(
+                    'channelIcon' => 'someIcon'
+                ),
+            ),
+        ));
+        $this->assertSame(array(
+            'foo' => array(
+                'channels' => array(
+                    'bar' => array(
+                        'channelIcon' => 'someIcon',
+                    ),
+                ),
+            ),
+        ), $debug->getCfg('channels'));
     }
 
-    public function testInitKey()
+    public function testOnCfgEnableProfiling()
+    {
+        $enableProfilingWas = $this->debug->setCfg('enableProfiling', false);
+        $this->debug->setCfg('enableProfiling', true);
+        $this->assertTrue($this->debug->getCfg('enableProfiling'));
+        $this->debug->setCfg('enableProfiling', $enableProfilingWas);
+    }
+
+    public function testOnCfgKey()
     {
         $debug = new Debug(array(
             'key' => 'swordfish',
@@ -199,7 +228,7 @@ class ConfigTest extends DebugTestFramework
                     'GET',
                     null,
                     array(
-                        'REQUEST_METHOD' => 'GET', // presence of REQUEST_METHOD = not cli
+                        'REQUEST_METHOD' => 'GET',
                     )
                 ))
                     ->withQueryParams(array(
@@ -210,7 +239,104 @@ class ConfigTest extends DebugTestFramework
         $this->assertTrue($debug->getCfg('collect'));
         $this->assertTrue($debug->getCfg('output'));
         $debug->setCfg('output', false);
+
+        $debug = new Debug(array(
+            'key' => 'swordfish',
+            'logResponse' => false,
+            'serviceProvider' => array(
+                'request' => (new ServerRequest(
+                    'GET',
+                    null,
+                    array(
+                        'REQUEST_METHOD' => 'GET',
+                    )
+                ))
+                    ->withCookieParams(array(
+                        'debug' => 'swordfish',
+                    )),
+            ),
+        ));
+        $this->assertTrue($debug->getCfg('collect'));
+        $this->assertTrue($debug->getCfg('output'));
+        $debug->setCfg('output', false);
     }
+
+    public function testOnCfgList()
+    {
+        $this->debug->setCfg('logEnvInfo', array('files'));
+        $this->assertSame(array(
+            'errorReporting' => false,
+            'files' => true,
+            'gitInfo' => false,
+            'phpInfo' => false,
+            'serverVals' => false,
+            'session' => false,
+        ), $this->debug->getCfg('logEnvInfo'));
+    }
+
+    public function testOnCfgLogResponse()
+    {
+        $this->debug->setCfg('logResponse', 'auto');
+        $this->assertTrue($this->debug->getCfg('logResponse'));
+        $this->debug->obEnd();
+    }
+
+    public function testOnCfgOnBootstrap()
+    {
+        $called = false;
+        new Debug(array(
+            'onBootstrap' => function () use (&$called) {
+                $called = true;
+            },
+        ));
+        $this->assertTrue($called);
+
+        $called = false;
+        $this->debug->setCfg('onBootstrap', function () use (&$called) {
+            $called = true;
+        });
+        $this->assertTrue($called);
+    }
+
+    /**
+     * @dataProvider providerOnCfgReplaceSubscriber
+     */
+    public function testOnCfgReplaceSubscriber($name, $event)
+    {
+        $closure1 = function () {
+        };
+        $this->debug->setCfg($name, $closure1);
+        $closure2 = function () {
+            echo 'you suck!!!' . "\n";
+        };
+        $this->debug->setCfg($name, $closure2);
+        $closure1isSub = false;
+        $closure2isSub = false;
+        foreach ($this->debug->eventManager->getSubscribers($event) as $sub) {
+            if ($sub === $closure1) {
+                $closure1isSub = true;
+            }
+            if ($sub === $closure2) {
+                $closure2isSub = true;
+            }
+        }
+        $this->assertFalse($closure1isSub);
+        $this->assertTrue($closure2isSub);
+
+        $this->debug->setCfg($name, null);
+    }
+
+    /*
+    public function testOnCfgOnMiddleware()
+    {
+        $this->debug->setCfg('onMiddleware', function () {
+        });
+        $this->assertCount(1, $this->debug->eventManager->getSubscribers(Debug::EVENT_MIDDLEWARE));
+        $callable =  function () {};
+        $this->debug->setCfg('onMiddleware', $callable);
+        $this->assertSame(array($callable), $this->debug->eventManager->getSubscribers(Debug::EVENT_MIDDLEWARE));
+    }
+    */
 
     /**
      * Test config stores config values until class is instantiated
@@ -235,5 +361,14 @@ class ConfigTest extends DebugTestFramework
         $filepathScript = $debug->getCfg('filepathScript');
         $this->assertIsString($filepathScript);
         $this->assertTrue($debug->getRoute('html', true));
+    }
+
+    public function providerOnCfgReplaceSubscriber()
+    {
+        return array(
+            'onLog' => array('onLog', Debug::EVENT_LOG),
+            'onMiddleware' => array('onMiddleware', Debug::EVENT_MIDDLEWARE),
+            'onOutput' => array('onOutput', Debug::EVENT_OUTPUT),
+        );
     }
 }

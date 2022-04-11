@@ -21,6 +21,7 @@ use bdk\Test\Debug\DebugTestFramework;
  * @covers \bdk\Debug\Abstraction\AbstractObjectMethods
  * @covers \bdk\Debug\Abstraction\AbstractObjectProperties
  * @covers \bdk\Debug\Dump\Base
+ * @covers \bdk\Debug\Dump\BaseValue
  * @covers \bdk\Debug\Dump\Html
  * @covers \bdk\Debug\Dump\Html\Helper
  * @covers \bdk\Debug\Dump\Html\HtmlObject

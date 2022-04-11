@@ -38,6 +38,8 @@ class FileStreamWrapper
      */
     public $context;
 
+    protected static $isRegistered = false;
+
     /**
      * @var string[]
      */
@@ -64,6 +66,9 @@ class FileStreamWrapper
      */
     public static function register()
     {
+        if (static::$isRegistered) {
+            return;
+        }
         foreach (static::$protocols as $protocol) {
             $result = \stream_wrapper_unregister($protocol);
             if ($result === false) {
@@ -74,12 +79,34 @@ class FileStreamWrapper
                 throw new \UnexpectedValueException('Failed to register stream wrapper for ' . $protocol);
             }
         }
+        static::$isRegistered = true;
         /*
             Disable OPcache
                 a) want to make sure we modify required files
                 b) don't want to cache modified files
         */
         \ini_set('opcache.enable', '0');
+    }
+
+    /**
+     * Restore previous wrapper
+     *
+     * @return void
+     *
+     * @throws \UnexpectedValueException
+     */
+    public static function unregister()
+    {
+        if (static::$isRegistered === false) {
+            return;
+        }
+        foreach (static::$protocols as $protocol) {
+            $result = \stream_wrapper_restore($protocol);
+            if ($result === false) {
+                throw new \UnexpectedValueException('Failed to restore stream wrapper for ' . $protocol);
+            }
+        }
+        static::$isRegistered = false;
     }
 
     /**
@@ -694,22 +721,5 @@ class FileStreamWrapper
     {
         $including = (bool) ($options & static::STREAM_OPEN_FOR_INCLUDE);
         return static::isTargeted($file) && ($including || \in_array($file, static::$filesTransformed));
-    }
-
-    /**
-     * Restore previous wrapper
-     *
-     * @return void
-     *
-     * @throws \UnexpectedValueException
-     */
-    private static function unregister()
-    {
-        foreach (static::$protocols as $protocol) {
-            $result = \stream_wrapper_restore($protocol);
-            if ($result === false) {
-                throw new \UnexpectedValueException('Failed to restore stream wrapper for ' . $protocol);
-            }
-        }
     }
 }

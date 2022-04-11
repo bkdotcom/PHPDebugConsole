@@ -2,6 +2,9 @@
 
 namespace bdk\Test\Debug;
 
+use bdk\Debug;
+use bdk\Test\PolyFill\ExpectExceptionTrait;
+
 /**
  * PHPUnit tests for Debug class
  *
@@ -11,6 +14,14 @@ namespace bdk\Test\Debug;
  */
 class LoggerTest extends DebugTestFramework
 {
+    use ExpectExceptionTrait;
+
+    public function testConstruct()
+    {
+        $logger = new \bdk\Debug\Psr3\Logger();
+        $this->assertSame($this->debug, $logger->debug);
+    }
+
     public function testLog()
     {
         $this->debug->logger->log('debug', 'good enough');
@@ -79,8 +90,7 @@ class LoggerTest extends DebugTestFramework
     public function testExceptionContext()
     {
         parent::$allowError = true;
-        // prevent publishing wamp
-        // $this->debug->setCfg('output', false);
+
         $this->debug->logger->critical('Make an exception', array(
             'exception' => new \Exception('some exception'),
             'file' => __FILE__,
@@ -99,6 +109,59 @@ class LoggerTest extends DebugTestFramework
         $this->assertArraySubset($metaSubset, $this->debug->data->get('log/__end__/meta'));
         $backtrace = $this->debug->data->get('log/__end__/meta/trace');
         $this->assertIsArray($backtrace);
+
+        $this->debug->logger->critical('invalid exception', array(
+            'exception' => 'this is not an exception',
+        ));
+        $logEntryArray = $this->helper->logEntryToArray($this->debug->data->get('log/__end__'));
+        $this->assertSame(array(
+            'method' => 'error',
+            'args' => array(
+                'invalid exception',
+                array(
+                    'exception' => 'this is not an exception',
+                ),
+            ),
+            'meta' => array(
+                'detectFiles' => true,
+                'file' => __FILE__,
+                'glue' => ', ',
+                'line' => $logEntryArray['meta']['line'],
+                'psr3level' => 'critical',
+                'uncollapse' => true,
+            ),
+        ), $logEntryArray);
+
+        $exception = new \Exception('some exception');
+        $objStartClosure = function ($abs) {
+            // the exception structure is huge...  don't collect
+            $abs['isExcluded'] = true;
+        };
+        $this->debug->eventManager->subscribe(Debug::EVENT_OBJ_ABSTRACT_START, $objStartClosure);
+        $this->debug->logger->warning('low level', array(
+            'exception' => $exception,
+        ));
+        $this->debug->eventManager->unsubscribe(Debug::EVENT_OBJ_ABSTRACT_START, $objStartClosure);
+        $logEntryArray = $this->helper->logEntryToArray($this->debug->data->get('log/__end__'));
+        $this->assertSame('Exception', $logEntryArray['args'][1]['exception']['className']);
+        unset($logEntryArray['args'][1]['exception']);
+        $this->assertSame(array(
+            'method' => 'warn',
+            'args' => array(
+                'low level',
+                array(
+                    // we have removed the exception abstraction
+                ),
+            ),
+            'meta' => array(
+                'detectFiles' => true,
+                'file' => __FILE__,
+                'glue' => ', ',
+                'line' => $logEntryArray['meta']['line'],
+                'psr3level' => 'warning',
+                'uncollapse' => true,
+            ),
+        ), $logEntryArray);
     }
 
     public function testError()
@@ -276,5 +339,12 @@ class LoggerTest extends DebugTestFramework
                 ),
             ),
         ), $this->helper->logEntryToArray($this->debug->data->get('log/__end__')));
+    }
+
+    public function testExceptionInvalidLevel()
+    {
+        $this->expectException('InvalidArgumentException');
+        $this->expectExceptionMessage('"dang" is not a valid level');
+        $this->debug->logger->log('dang', 'this sucks');
     }
 }

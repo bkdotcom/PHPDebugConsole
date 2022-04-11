@@ -353,7 +353,8 @@ class DebugTestFramework extends DOMTestCase
                     $error['continueToNormal'] = false;
                     return;
                 }
-                throw new \PHPUnit\Framework\Exception($error['message'] . ' @ ' . $error['file'] . ':' . $error['line'], 500);
+                // throw new \PHPUnit\Framework\Exception($error['message'] . ' @ ' . $error['file'] . ':' . $error['line'], 500);
+                $error['throw'] = true;
             },
             'output' => true,
             'outputCss' => false,
@@ -366,7 +367,7 @@ class DebugTestFramework extends DOMTestCase
                     null,
                     array(
                         'DOCUMENT_ROOT' => TEST_DIR . '/../tmp',
-                        'REQUEST_METHOD' => 'GET', // presence of REQUEST_METHOD = not cli
+                        'REQUEST_METHOD' => 'GET',
                         'REQUEST_TIME_FLOAT' => $_SERVER['REQUEST_TIME_FLOAT'],
                         'SERVER_ADMIN' => 'ttesterman@test.com',
                     )

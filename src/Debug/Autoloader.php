@@ -65,17 +65,31 @@ class Autoloader
     protected function autoload($className)
     {
         $className = \ltrim($className, '\\'); // leading backslash _shouldn't_ have been passed
+        $filepath = $this->findClass($className);
+        if ($filepath) {
+            require $filepath;
+        }
+    }
+
+    /**
+     * Find file containing class
+     *
+     * @param string $className classname to find
+     *
+     * @return string|false
+     */
+    private function findClass($className)
+    {
         if (isset($this->classMap[$className])) {
-            require $this->classMap[$className];
-            return;
+            return $this->classMap[$className];
         }
         foreach ($this->psr4Map as $namespace => $dir) {
             if (\strpos($className, $namespace) === 0) {
                 $rel = \substr($className, \strlen($namespace));
                 $rel = \str_replace('\\', '/', $rel);
-                require $dir . '/' . $rel . '.php';
-                return;
+                return $dir . '/' . $rel . '.php';
             }
         }
+        return false;
     }
 }

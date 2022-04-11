@@ -10,8 +10,8 @@
 
 namespace bdk;
 
+use bdk\ErrorHandler\AbstractErrorHandler;
 use bdk\ErrorHandler\Error;
-use bdk\ErrorHandler\Scaffolding;
 use bdk\PubSub\Event;
 use bdk\PubSub\Manager as EventManager;
 
@@ -23,7 +23,7 @@ use bdk\PubSub\Manager as EventManager;
  * @property \bdk\Backtrace $backtrace Backtrace instance
  * @property bool           $isCli
  */
-class ErrorHandler extends Scaffolding
+class ErrorHandler extends AbstractErrorHandler
 {
     const EVENT_ERROR = 'errorHandler.error';
 
@@ -163,7 +163,8 @@ class ErrorHandler extends Scaffolding
      * @param int    $line    the line the error was raised in
      * @param array  $vars    active symbol table at point error occured
      *
-     * @return bool
+     * @return bool false: will be handled by standard PHP error handler
+     *              true: we "handled" / will not be handed by PHP error handler
      * @link   http://php.net/manual/en/function.set-error-handler.php
      * @link   http://php.net/manual/en/language.operators.errorcontrol.php
      */
@@ -175,7 +176,7 @@ class ErrorHandler extends Scaffolding
         if (!$this->isErrTypeHandled($errType)) {
             // not handled
             //   if cfg['errorReporting'] == 'system', error could simply be suppressed
-            // return false to continue to "normal" error handler
+            // return false to continue to "standard" error handler
             return $this->continueToPrevHandler($error);
         }
         $this->storeLastError($error);
@@ -373,14 +374,17 @@ class ErrorHandler extends Scaffolding
             return $error['continueToNormal'] === false;
         }
         if ($error['exception']) {
-            if (!$this->prevExceptionHandler) {
-                return $error['continueToNormal'] === false;
+            if ($this->prevExceptionHandler) {
+                /*
+                    re-throw exception vs calling handler directly
+                */
+                \restore_exception_handler();
+                throw $error['exception'];
             }
-            /*
-                re-throw exception vs calling handler directly
-            */
-            \restore_exception_handler();
-            throw $error['exception'];
+            if ($error['continueToNormal']) {
+                $error->log();
+            }
+            return $error['continueToNormal'] === false;
         }
         if (!$this->prevErrorHandler) {
             return $error['continueToNormal'] === false;

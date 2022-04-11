@@ -79,7 +79,7 @@ class InternalEvents implements SubscriberInterface
             ),
             Debug::EVENT_PRETTIFY => array('onPrettify', -1),
             Debug::EVENT_STREAM_WRAP => 'onStreamWrap',
-            ErrorHandler::EVENT_ERROR => 'onError',
+            ErrorHandler::EVENT_ERROR => array('onError', -1),
             EventManager::EVENT_PHP_SHUTDOWN => array(
                 array('onShutdownHigh', PHP_INT_MAX),
                 array('onShutdownHigh2', PHP_INT_MAX - 10),
@@ -384,7 +384,10 @@ class InternalEvents implements SubscriberInterface
             \sprintf('%s (line %s)', $error['file'], $error['line']),
             $meta
         );
-        $error['continueToNormal'] = false; // no need for PHP to log the error, we've captured it here
+        // We've captured the error and are logging / viewing it with debugger.
+        //    typically no reason for php to log the error...
+        //    This value can be overriden via 'errorLogNormal' config or via error event subscriber
+        $error['continueToNormal'] = $this->debug->getCfg('errorLogNormal', Debug::CONFIG_DEBUG);
         $error['inConsole'] = true;
         // Prevent ErrorHandler\ErrorEmailer from sending email.
         // Since we're collecting log info, we send email on shutdown

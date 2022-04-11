@@ -3,16 +3,15 @@
 namespace bdk\Test\Debug;
 
 use bdk\Debug;
-use bdk\Debug\LogEntry;
 use bdk\PubSub\Manager as EventManager;
 
 /**
  * PHPUnit tests for Debug class
  *
  * @covers \bdk\Debug
+ * @covers \bdk\Debug\AbstractDebug
  * @covers \bdk\Debug\Data
  * @covers \bdk\Debug\Internal
- * @covers \bdk\Debug\Scaffolding
  */
 class DebugTest extends DebugTestFramework
 {

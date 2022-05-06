@@ -323,6 +323,35 @@ class ArrayUtilTest extends TestCase
         ), $array);
     }
 
+    public function testSearchRecursive()
+    {
+        $array = array(
+            'toys' => array(
+                'nerf' => array(
+                    'ball',
+                    'gun',
+                ),
+                'car' => array(
+                    'hotwheel',
+                    'matchbox',
+                    'rc'
+                )
+            ),
+            'games' => array(
+                'connect4',
+                'monopoly',
+            ),
+            'yoyos' => array(
+                'Duncan',
+                'yomega',
+            )
+        );
+        $this->assertSame(false, ArrayUtil::searchRecursive('notfound', $array));
+        $this->assertSame(false, ArrayUtil::searchRecursive('car', $array));
+        $this->assertSame(array('toys','car'), ArrayUtil::searchRecursive('car', $array, true));
+        $this->assertSame(array('toys','car',2), ArrayUtil::searchRecursive('rc', $array));
+    }
+
     public function testSortWithOrder()
     {
         $array = array(

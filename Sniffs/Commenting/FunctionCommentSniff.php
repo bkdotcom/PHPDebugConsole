@@ -22,7 +22,6 @@ use PHP_CodeSniffer\Standards\Squiz\Sniffs\Commenting\FunctionCommentSniff as Sq
  */
 class FunctionCommentSniff extends SquizFunctionCommentSniff
 {
-
     /**
      * The current PHP version.
      *

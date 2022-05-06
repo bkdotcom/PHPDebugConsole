@@ -13,9 +13,9 @@
 namespace bdk\Debug\Dump;
 
 use bdk\Debug;
+use bdk\Debug\AbstractComponent;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
-use bdk\Debug\Component;
 use bdk\Debug\Dump\Base as Dumper;
 use bdk\PubSub\Event;
 use DateTime;
@@ -23,7 +23,7 @@ use DateTime;
 /**
  * Dump values
  */
-class BaseValue extends Component
+class BaseValue extends AbstractComponent
 {
     public $debug;
     public $crateRaw = true;    // whether dump() should crate "raw" value

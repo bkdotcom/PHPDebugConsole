@@ -115,7 +115,7 @@ class PluginMethodReqResTest extends DebugTestFramework
     public function testGetServerParam()
     {
         $this->assertSame(null, $this->debug->getServerParam('REMOTE_ADDR'));
-        $this->assertSame('ttesterman@test.com', $this->debug->getServerParam('SERVER_ADMIN'));
+        $this->assertSame('testAdmin@test.com', $this->debug->getServerParam('SERVER_ADMIN'));
     }
 
     public function testIsCli()

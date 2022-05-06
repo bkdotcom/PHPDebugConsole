@@ -24,20 +24,22 @@ use bdk\ErrorHandler\Error;
  * Web-browser/javascript like console class for PHP
  *
  * @method Abstraction|string prettify(string $string, string $contentType)
- * @method void email($toAddr, $subject, $body)
+ * @method bool email($toAddr, $subject, $body)
  * @method string getInterface()
  * @method string getResponseCode()
  * @method array|string getResponseHeader($header = 'Content-Type', $delimiter = ', ')
  * @method array|string getResponseHeaders($asString = false)
  * @method mixed getServerParam($name, $default = null)
  * @method bool hasLog()
+ * @method void obEnd()
+ * @method void obStart()
  * @method mixed redact($val, $key = null)
  * @method string requestId()
+ * @method void setErrorCaller(array $callerInfo)
  *
  * @property Abstracter           $abstracter    lazy-loaded Abstracter instance
  * @property \bdk\Debug\Utility\ArrayUtil $arrayUtil lazy-loaded array utilitys
  * @property \bdk\Backtrace       $backtrace     lazy-loaded Backtrace instance
- * @property \bdk\ErrorHandler\ErrorEmailer $errorEmailer lazy-loaded ErrorEmailer instance
  * @property \bdk\ErrorHandler    $errorHandler  lazy-loaded ErrorHandler instance
  * @property \bdk\PubSub\Manager  $eventManager  lazy-loaded Event Manager instance
  * @property Debug\Utility\Html   $html          lazy=loaded Html Utility instance

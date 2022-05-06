@@ -53,7 +53,6 @@ class ConfigTest extends DebugTestFramework
         $configKeys = array(
             'abstracter',
             'debug',
-            'errorEmailer',
             'errorHandler',
             'routeHtml',
             'routeStream',
@@ -147,6 +146,8 @@ class ConfigTest extends DebugTestFramework
         \sort($keysActual);
         $this->assertSame($debugKeys, $keysActual);
         $this->assertSame(false, $this->debug->getCfg('logRequestInfo/cookies'));
+
+        $this->assertSame(null, $this->debug->getCfg('dumpNonExistent'));
     }
 
     /**
@@ -172,8 +173,9 @@ class ConfigTest extends DebugTestFramework
             test setting to 'default'
         */
         $this->debug->setCfg('emailTo', 'default');
-        $this->assertSame('ttesterman@test.com', $this->debug->getCfg('emailTo'));
-        $this->assertSame('ttesterman@test.com', $this->debug->getCfg('errorEmailer.emailTo'));
+        $this->assertSame('testAdmin@test.com', $this->debug->getCfg('emailTo'));
+        $this->assertSame('testAdmin@test.com', $this->debug->getCfg('errorHandler.emailer.emailTo'));
+
         /*
             updating the request obj will not update the default email!!
             this is intentional
@@ -187,7 +189,15 @@ class ConfigTest extends DebugTestFramework
                 )
             ),
         ));
-        $this->assertSame('ttesterman@test.com', $this->debug->getCfg('emailTo'));
+        $this->assertSame('testAdmin@test.com', $this->debug->getCfg('emailTo'));
+    }
+
+    public function testSetDeepShortcut()
+    {
+        $format = 'm/d/Y h:i:s a';
+        $this->debug->setCfg('dateTimeFmt', $format);
+        $this->assertSame($format, $this->debug->getCfg('errorHandler/emailer/dateTimeFmt'));
+        $this->assertSame($format, $this->debug->getCfg('dateTimeFmt'));
     }
 
     public function testOnCfgChannels()

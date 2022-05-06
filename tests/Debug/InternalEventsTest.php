@@ -226,7 +226,6 @@ class InternalEventsTest extends DebugTestFramework
         $this->assertFalse($error['inConsole']);
     }
 
-
     public function testPrettify()
     {
         $reflector = new \ReflectionProperty($this->debug->internalEvents, 'highlightAdded');

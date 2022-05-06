@@ -31,11 +31,18 @@ class Normalizer
      *
      * @var array
      */
-    private static $internalFuncs = array();
+    private static $internalFuncs = array(
+        'require' => false,
+        'require_once' => false,
+        'include' => false,
+        'include_once' => false,
+        'trigger_error' => false,
+        'user_error' => false,
+    );
 
     /**
      * Test if frame is a non-namespaced internal function
-     * if so, it must be have a callable arg, such as
+     * if so, it must have a callable arg, such as
      * array_map, array_walk, call_user_func, or call_user_func_array
      *
      * @param array $frame backtrace frame
@@ -51,9 +58,7 @@ class Normalizer
         if (!isset(self::$internalFuncs[$function])) {
             // avoid `function require() does not exit
             $isInternal = true;
-            if (\in_array($function, array('require', 'require_once', 'include', 'include_once'))) {
-                $isInternal = false;
-            } elseif (\function_exists($function)) {
+            if (\function_exists($function)) {
                 $refFunction = new \ReflectionFunction($function);
                 $isInternal = $refFunction->isInternal();
             }

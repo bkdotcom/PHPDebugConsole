@@ -15,7 +15,6 @@ use PHP_CodeSniffer\Standards\Squiz\Sniffs\Commenting\VariableCommentSniff as Sq
 
 class VariableCommentSniff extends SquizVariableCommentSniff
 {
-
     /**
      * Called to process class member vars.
      *

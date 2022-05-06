@@ -25,6 +25,32 @@ class DebugTest extends DebugTestFramework
         $this->assertSame(0, $returnVal, 'Failed to init Debug without composer');
     }
 
+    public function testBootstrap()
+    {
+        $debug = new Debug(array(
+            'container' => array(),
+            'serviceProvider' => 'invalid',
+        ));
+        $this->assertInstanceOf('bdk\\Debug', $debug);
+    }
+
+    public function testMagicGet()
+    {
+        $this->assertNull($this->debug->noSuchProp);
+    }
+
+    public function testMagicIsset()
+    {
+        $this->assertTrue(isset($this->debug->errorHandler));
+    }
+
+    public function testMagicCall()
+    {
+        $this->destroyDebug();
+        $this->assertFalse(\bdk\Debug::_getCfg('collect'));
+        $this->restoreDebug();
+    }
+
     public function testOnBootstrap()
     {
         $args = array();
@@ -39,6 +65,37 @@ class DebugTest extends DebugTestFramework
         $this->assertSame(1, $count);
         $this->assertInstanceOf('bdk\PubSub\Event', $args[0]);
         $this->assertSame($debug, $args[0]->getSubject());
+    }
+
+    public function testOnConfig()
+    {
+        $this->debug->setCfg(array());
+        $this->assertTrue(true);
+    }
+
+    public function testOnCfgRoute()
+    {
+        $containerRef = new \ReflectionProperty($this->debug, 'container');
+        $containerRef->setAccessible(true);
+        $container = $containerRef->getValue($this->debug);
+        unset($container['routeFirephp']);
+
+        $this->debug->setCfg('route', new \bdk\Debug\Route\Firephp($this->debug));
+        $this->assertInstanceOf('bdk\\Debug\\Route\\Firephp', $container['routeFirephp']);
+        $this->debug->obEnd();
+    }
+
+    public function testPublishBubbleEvent()
+    {
+        $val = new \bdk\Debug\Abstraction\Abstraction('someCustomValueType', array('foo' => '<b>bar&baz</b>'));
+        $expect = '<span class="t_someCustomValueType" data-type-more="t_string"><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
+<ul class="array-inner list-unstyled">
+\t<li><span class="t_key">foo</span><span class="t_operator">=&gt;</span><span class="t_string">&lt;b&gt;bar&amp;baz&lt;/b&gt;</span></li>
+\t<li><span class="t_key">type</span><span class="t_operator">=&gt;</span><span class="t_string">someCustomValueType</span></li>
+</ul><span class="t_punct">)</span></span></span>';
+        $expect = \str_replace('\\t', "\t", $expect);
+        $dumped = $this->debug->getDump('html')->valDumper->dump($val);
+        $this->assertSame($expect, $dumped);
     }
 
     public function testPhpError()
@@ -125,6 +182,11 @@ class DebugTest extends DebugTestFramework
         }
 
         $this->restoreDebug();
+
+        $this->destroyDebug();
+        Debug::_setCfg('collect', false);
+        $this->assertFalse(Debug::getInstance()->getCfg('collect'));
+        $this->restoreDebug();
     }
 
     /**
@@ -145,8 +207,8 @@ class DebugTest extends DebugTestFramework
             return \gettype($val);
         }, $this->debug->eventManager->getSubscribers(EventManager::EVENT_PHP_SHUTDOWN));
         $subscribersExpect = array(
-            array('bdk\ErrorHandler', 'onShutdown'),
             array('bdk\Debug\InternalEvents', 'onShutdownHigh'),
+            array('bdk\ErrorHandler', 'onShutdown'),
             array('bdk\Debug\Method\Group', 'onShutdown'),
             array('bdk\Debug\InternalEvents', 'onShutdownHigh2'),
             'Closure(' . TEST_DIR . '/bootstrap.php)',
@@ -251,6 +313,17 @@ class DebugTest extends DebugTestFramework
     /*
         setCfg tested in ConfigTest
     */
+
+    public function testServiceProviderToArray()
+    {
+        $this->debug->setCfg('serviceProvider', function (\bdk\Container $container) {
+            $container['foo'] = 'bar';
+        });
+        $this->assertSame('bar', $this->debug->foo);
+
+        $this->debug->setCfg('serviceProvider', new \bdk\Test\Debug\Fixture\ServiceProvider());
+        $this->assertSame('bar2', $this->debug->foo);
+    }
 
     /**
      * Test

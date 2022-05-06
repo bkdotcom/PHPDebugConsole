@@ -18,7 +18,6 @@ use PHP_CodeSniffer\Standards\Squiz\Sniffs\Commenting\FunctionCommentThrowTagSni
  */
 class FunctionCommentThrowTagSniff extends SquizFunctionCommentThrowTagSniff
 {
-
     /**
      * Processes this test, when one of its tokens is encountered.
      *

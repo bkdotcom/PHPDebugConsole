@@ -93,7 +93,7 @@ class Wamp implements RouteInterface
             Debug::EVENT_CONFIG => 'onConfig',
             Debug::EVENT_LOG => array('onLog', PHP_INT_MAX * -1),
             Debug::EVENT_PLUGIN_INIT => 'init',
-            ErrorHandler::EVENT_ERROR => 'onError',    // assumes errorhandler is using same dispatcher.. as should be
+            ErrorHandler::EVENT_ERROR => array('onError', -1),    // assumes errorhandler is using same dispatcher.. as should be
             EventManager::EVENT_PHP_SHUTDOWN => array('onShutdown', PHP_INT_MAX * -1),
         );
     }

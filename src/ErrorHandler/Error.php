@@ -110,7 +110,7 @@ class Error extends Event
     }
 
     /**
-     * Return as ErrorException
+     * Return as ErrorException (or caught exception)
      *
      * If error is an uncaught exception, the original Exception will be returned
      *
@@ -135,19 +135,28 @@ class Error extends Event
     }
 
     /**
-     * Get the plain text error message
+     * Get the message html-escaped
      *
-     * (error[message] may be html)
+     * @return string html
+     */
+    public function getMessageHtml()
+    {
+        $message = $this->values['message'];
+        return $this->values['isHtml']
+            ? $message
+            : \htmlspecialchars($message);
+    }
+
+    /**
+     * Get the plain text error message
      *
      * @return string
      */
-    public function getMessage()
+    public function getMessageText()
     {
         $message = $this->values['message'];
-        if ($this->values['isHtml']) {
-            $message = \strip_tags($message);
-            $message = \htmlspecialchars_decode($message);
-        }
+        $message = \strip_tags($message);
+        $message = \htmlspecialchars_decode($message);
         return $message;
     }
 
@@ -236,6 +245,20 @@ class Error extends Event
     }
 
     /**
+     * Get human-friendly error type
+     *
+     * @param int $type E_xx constant value
+     *
+     * @return string
+     */
+    public static function typeStr($type)
+    {
+        return isset(self::$errTypes[$type])
+            ? self::$errTypes[$type]
+            : '';
+    }
+
+    /**
      * Generate hash used to uniquely identify this error
      *
      * @return string hash
@@ -263,16 +286,20 @@ class Error extends Event
      */
     protected static function getCategory($errType)
     {
+        $return = null;
         foreach (self::$errCategories as $category => $errTypes) {
             if (\in_array($errType, $errTypes)) {
-                return $category;
+                $return = $category;
+                break;
             }
         }
-        return null;
+        return $return;
     }
 
     /**
-     * Sets isHtml and modifies message
+     * isHtml?  More like "allowHtml"
+     *
+     * We only allow html_errors if html_errors ini value is tru and non-user error
      *
      * @return bool
      */
@@ -287,7 +314,7 @@ class Error extends Event
      * Get initial `isSuppressed` value
      *
      * @param int       $errType       The level of the error
-     * @param self|null $prevOccurance previous ccurance of current error
+     * @param self|null $prevOccurance previous occurrence of current error
      *
      * @return bool
      */
@@ -319,7 +346,7 @@ class Error extends Event
             'message' => $this->isHtml()
                 ? \str_replace('<a ', '<a target="phpRef" ', $this->values['message'])
                 : $this->values['message'],
-            'continueToNormal' => $this->setContinueToNormal($errType, $isSuppressed === false && !$prevOccurance),
+            'continueToNormal' => $this->setContinueToNormal($isSuppressed, $prevOccurance === null),
             'hash' => $hash,
             'isFirstOccur' => !$prevOccurance,
             'isHtml' => $this->isHtml(),
@@ -339,25 +366,25 @@ class Error extends Event
     /**
      * Set continueToNormal flag
      *
-     * @param int  $errType          the level of the error
-     * @param bool $continueToNormal if not suppressed and no prev occurance
+     * @param bool $isSuppressed     Whether error is suppressed
+     * @param bool $isFirstOccurance Whether this is errors' first occurance durring this request
      *
      * @return bool
      */
-    private function setContinueToNormal($errType, $continueToNormal)
+    private function setContinueToNormal($isSuppressed, $isFirstOccurance)
     {
-        if ($continueToNormal === false || \in_array($errType, array(E_USER_ERROR, E_RECOVERABLE_ERROR)) === false) {
-            return $continueToNormal && $this->subject->isCli === false;
+        $continueToNormal = $isSuppressed === false && $isFirstOccurance;
+        if ($continueToNormal === false || $this->values['category'] !== self::CAT_ERROR) {
+            return $continueToNormal;
         }
+        // we are a user error
         switch ($this->subject->getCfg('onEUserError')) {
             case 'continue':
                 return false;
             case 'log':
                 return false;
             case 'normal':
-                // force continueToNormal
-                // for a userError, php will log error and script will halt
-                return $this->subject->isCli === false;
+                return true;
         }
         return $continueToNormal;
     }

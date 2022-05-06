@@ -199,7 +199,7 @@ class Data
         }
         $priorities = \array_keys($this->data['logSummary']);
         foreach ($priorities as $priority) {
-            if (isset($this->data['logSummary'][$id])) {
+            if (isset($this->data['logSummary'][$priority][$id])) {
                 return $priority;
             }
         }

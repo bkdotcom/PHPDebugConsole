@@ -45,6 +45,7 @@ class ErrorHandler extends AbstractErrorHandler
      */
     public function __construct(EventManager $eventManager, $cfg = array())
     {
+        parent::__construct();
         $this->eventManager = $eventManager;
         $this->cfg = array(
             'continueToPrevHandler' => true,    // whether to continue to previously defined handler (if there is/was a prev handler)
@@ -53,16 +54,32 @@ class ErrorHandler extends AbstractErrorHandler
             'errorReporting' => E_ALL | E_STRICT,   // what errors are handled by handler? bitmask or "system" to use runtime value
                                                     //   note that if using "system", suppressed errors (via @ operator) will not be handled (we'll still handle fatal category)
             'errorThrow' => 0,          // bitmask: error types that should converted to ErrorException and thrown
-            'onError' => null,          // shortcut for subscribing to errorHandler.error Event
+            'onError' => null,          // callable : shortcut for subscribing to errorHandler.error Event
                                         //   will receive error Event object
+            'onFirstError' => null,     // callable : called on first error..   usefull for lazy-loading subscriberInterface
             'onEUserError' => 'normal', // only applicable if we're not continuing to a prev error handler
                                     // (continueToPrevHandler = false, there's no previous handler, or propagation stopped)
-                                    //   'continue' : forces error[continueToNormal] = false (script will continue)
-                                    //   'log' : if propagation not stopped, call error_log()
-                                    //         continue script execution
-                                    //   'normal' : forces error[continueToNormal] = true;
+                                    //   'continue' : sets error[continueToNormal] = false
+                                    //         script will continue
+                                    //         error will not be sent to error log
+                                    //   'log' : sets error[continueToNormal] = false
+                                    //         script will continue
+                                    //         if propagation not stopped, call error_log()
+                                    //   'normal' : sets error[continueToNormal] = true;
+                                    //         php will log error
+                                    //         script will hault
                                     //   null : use error's error[continueToNormal] value
+                                    //         continueToNormal true -> log
+                                    //         continueToNormal false -> continue
             'suppressNever' => E_ERROR | E_PARSE | E_RECOVERABLE_ERROR | E_USER_ERROR,
+            // emailer options
+            'enableEmailer' => false,
+            'emailer' => array(),
+            // stats options
+            'enableStats' => false,
+            'stats' => array(
+                'errorStatsFile' => __DIR__ . '/error_stats.json',
+            ),
         );
         // Initialize self::$instance if not set
         //    so that self::getInstance() will always return original instance
@@ -148,7 +165,8 @@ class ErrorHandler extends AbstractErrorHandler
     {
         if (!isset(self::$instance)) {
             return false;
-        } elseif ($cfg) {
+        }
+        if ($cfg) {
             self::$instance->setCfg($cfg);
         }
         return self::$instance;
@@ -180,6 +198,9 @@ class ErrorHandler extends AbstractErrorHandler
             return $this->continueToPrevHandler($error);
         }
         $this->storeLastError($error);
+        if (empty($this->data['errors'])) {
+            $this->onFirstError($error);
+        }
         $this->data['errors'][ $error['hash'] ] = $error;
         if (!$error['isSuppressed']) {
             // only clear error caller via non-suppressed error
@@ -189,6 +210,21 @@ class ErrorHandler extends AbstractErrorHandler
             $this->throwError($error);
         }
         return $this->continueToPrevHandler($error);
+    }
+
+    /**
+     * Called on first error
+     *
+     * @param Error $error Error instance
+     *
+     * @return void
+     */
+    protected function onFirstError(Error $error)
+    {
+        $this->enableStatsEmailer(true);
+        if ($this->cfg['onFirstError']) {
+            $this->cfg['onFirstError']($error);
+        }
     }
 
     /**
@@ -232,15 +268,18 @@ class ErrorHandler extends AbstractErrorHandler
     public function onShutdown(Event $event)
     {
         $this->inShutdown = true;
-        if ($this->registered === false) {
-            return;
-        }
         $error = $event['error'] ?: \error_get_last();
-        if (!$error) {
+        if ($this->registered === false || !$error) {
             return;
         }
-        $isFatal = ($error['type'] & (E_ERROR | E_PARSE | E_COMPILE_ERROR | E_CORE_ERROR)) === $error['type'];
-        if ($isFatal === false) {
+        if (\is_array($error)) {
+            $error = \array_merge(array(
+                'vars' => array(),
+            ), $error);
+            $error = $this->cfg['errorFactory']($this, $error['type'], $error['message'], $error['file'], $error['line'], $error['vars']);
+        }
+        if ($error->isFatal() === false) {
+            $event['error'] = $error;
             return;
         }
         $this->handleError(
@@ -248,9 +287,7 @@ class ErrorHandler extends AbstractErrorHandler
             $error['message'],
             $error['file'],
             $error['line'],
-            isset($error['vars'])
-                ? $error['vars']
-                : array()
+            $error['vars']
         );
         /*
             Attach fatal error to event
@@ -323,7 +360,7 @@ class ErrorHandler extends AbstractErrorHandler
                 'file' => $caller['file'],
                 'line' => $caller['line'],
             );
-        } elseif (empty($caller)) {
+        } elseif (empty($caller) === true) {
             // clear errorCaller
             $caller = array();
         }
@@ -379,6 +416,7 @@ class ErrorHandler extends AbstractErrorHandler
                     re-throw exception vs calling handler directly
                 */
                 \restore_exception_handler();
+                $this->data['uncaughtException'] = null;
                 throw $error['exception'];
             }
             if ($error['continueToNormal']) {
@@ -439,11 +477,19 @@ class ErrorHandler extends AbstractErrorHandler
      */
     protected function handleUserError(Error $error)
     {
-        if (\in_array($error['type'], array(E_USER_ERROR, E_RECOVERABLE_ERROR)) === false) {
+        if ($error['category'] !== Error::CAT_ERROR) {
             return;
         }
         if ($this->cfg['onEUserError'] === 'log' && !$error->isPropagationStopped()) {
             $error->log();
+            return;
         }
+        if ($this->cfg['onEUserError'] !== null) {
+            return;
+        }
+        if ($error['continueToNormal']) {
+            $error->log();
+        }
+        $error['continueToNormal'] = false;
     }
 }

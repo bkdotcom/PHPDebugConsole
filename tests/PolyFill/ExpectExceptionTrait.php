@@ -3,7 +3,6 @@
 namespace bdk\Test\PolyFill;
 
 if (!\method_exists('\\PHPUnit\\Framework\\TestCase', 'expectException')) {
-
     trait ExpectExceptionTrait
     {
         private $forwardCompatExpectedExceptionMessage = '';

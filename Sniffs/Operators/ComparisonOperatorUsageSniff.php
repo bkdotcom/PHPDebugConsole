@@ -21,7 +21,6 @@ use PHP_CodeSniffer\Util\Tokens;
  */
 class ComparisonOperatorUsageSniff implements Sniff
 {
-
     /**
      * A list of tokenizers this sniff supports.
      *
@@ -64,7 +63,6 @@ class ComparisonOperatorUsageSniff implements Sniff
         ],
     ];
 
-
     /**
      * Registers the token types that this sniff wishes to listen to.
      *
@@ -80,7 +78,6 @@ class ComparisonOperatorUsageSniff implements Sniff
             T_FOR,
         ];
     }
-
 
     /**
      * Process the tokens that this sniff is listening for.

@@ -53,7 +53,7 @@ class General implements SubscriberInterface
      * @param string $subject subject
      * @param string $body    body
      *
-     * @return void
+     * @return bool
      */
     public function email($toAddr, $subject, $body)
     {
@@ -62,7 +62,7 @@ class General implements SubscriberInterface
         if ($fromAddr) {
             $addHeadersStr .= 'From: ' . $fromAddr;
         }
-        \call_user_func(
+        return \call_user_func(
             $this->debug->getCfg('emailFunc', Debug::CONFIG_DEBUG),
             $toAddr,
             $subject,
@@ -257,7 +257,7 @@ class General implements SubscriberInterface
         }
         $classname = 'bdk\\Debug\\' . \ucfirst($cat) . '\\' . \ucfirst($name);
         if (\class_exists($classname)) {
-            return $this->setDumpRoute($property, $classname);
+            return $this->getDumpRouteInit($property, $classname);
         }
         $caller = $this->debug->backtrace->getCallerInfo();
         $this->debug->errorHandler->handleError(
@@ -266,6 +266,7 @@ class General implements SubscriberInterface
             $caller['file'],
             $caller['line']
         );
+        return false;
     }
 
     /**
@@ -276,7 +277,7 @@ class General implements SubscriberInterface
      *
      * @return \bdk\Debug\Dump\Base|RouteInterface
      */
-    private function setDumpRoute($property, $classname)
+    private function getDumpRouteInit($property, $classname)
     {
         /** @var \bdk\Debug\Dump\Base|RouteInterface */
         $val = new $classname($this->debug);

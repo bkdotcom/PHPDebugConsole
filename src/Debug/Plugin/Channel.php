@@ -151,7 +151,6 @@ class Channel implements SubscriberInterface
     public function getPropagateValues($cfg)
     {
         $cfg = \array_diff_key($cfg, \array_flip(array(
-            'errorEmailer',
             'errorHandler',
             'routeStream',
         )));

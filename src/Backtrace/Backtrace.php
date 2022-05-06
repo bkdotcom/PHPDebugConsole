@@ -32,7 +32,7 @@ class Backtrace
      * stop iterrating over the backtrace when determining calling info
      *
      * @param array|string $classes classname(s)
-     * @param int          $level   "priority".  0 = will never skipp
+     * @param int          $level   "priority".  0 = will never skip
      *
      * @return void
      * @throws InvalidArgumentException
@@ -262,6 +262,7 @@ class Backtrace
         if ($exception instanceof \ParseError) {
             return array();
         }
+        $limit = $limit ?: null;
         if ($exception) {
             $backtrace = $exception->getTrace();
             \array_unshift($backtrace, array(
@@ -269,7 +270,7 @@ class Backtrace
                 'line' => $exception->getLine(),
             ));
             $backtrace = Normalizer::normalize($backtrace);
-            return $backtrace;
+            return \array_slice($backtrace, 0, $limit);
         }
         $options = static::translateOptions($options);
         $backtrace = \debug_backtrace($options, $limit ? $limit + 2 : 0);
@@ -277,7 +278,7 @@ class Backtrace
             // We're NOT in shutdown
             $backtrace = Normalizer::normalize($backtrace);
             $backtrace = SkipInternal::removeInternalFrames($backtrace);
-            return \array_slice($backtrace, 0, $limit ?: null);
+            return \array_slice($backtrace, 0, $limit);
         }
         /*
             We appear to be in shutdown - use xdebug

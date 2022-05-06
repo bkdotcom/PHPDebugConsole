@@ -13,13 +13,13 @@
 namespace bdk\Debug\Plugin;
 
 use bdk\Debug;
-use bdk\Debug\Component;
+use bdk\Debug\AbstractComponent;
 use bdk\PubSub\SubscriberInterface;
 
 /**
  * Log files that were included during request
  */
-class LogFiles extends Component implements SubscriberInterface
+class LogFiles extends AbstractComponent implements SubscriberInterface
 {
     private $excludedCounts = array();
     private $debug;

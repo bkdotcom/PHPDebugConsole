@@ -3,7 +3,7 @@
 namespace bdk\Test\Debug;
 
 /**
- * @covers \bdk\Debug\Component
+ * @covers \bdk\Debug\AbstractComponent
  */
 class ComponentTest extends DebugTestFramework
 {

@@ -12,21 +12,22 @@ namespace bdk\ErrorHandler;
 
 use bdk\Backtrace;
 use bdk\ErrorHandler;
+use bdk\ErrorHandler\AbstractComponent;
 use bdk\ErrorHandler\Error;
+use bdk\ErrorHandler\Plugin\Emailer;
+use bdk\ErrorHandler\Plugin\Stats;
 
 /**
  * Serves as base class for ErrorHandler
  *
  * Able to register multiple onError "callback" functions
  *
- * @property \bdk\Backtrace $backtrace Backtrace instance
- * @property bool           $isCli
+ * @property \bdk\Backtrace                 $backtrace Backtrace instance
+ * @property \bdk\ErrorHandler\Plugin\Stats $stats     Stats instance
+ * @property bool                           $isCli
  */
-Abstract class AbstractErrorHandler
+abstract class AbstractErrorHandler extends AbstractComponent
 {
-    /** @var array */
-    protected $cfg = array();
-
     /** @var array */
     protected $data = array(
         'errorCaller'   => array(),
@@ -39,93 +40,18 @@ Abstract class AbstractErrorHandler
     /** @var Backtrace */
     private $backtrace;
 
+    /** @var Emailer */
+    private $emailer;
+
+    /** @var Stats */
+    private $stats;
+
     /**
      * Temp store error exception caught/triggered inside __toString
      *
      * @var \Exception|\Throwable|null
      */
     private $toStringException = null;
-
-    /**
-     * Magic method to get inaccessible / undefined properties
-     * Lazy load child classes
-     *
-     * @param string $property property name
-     *
-     * @return mixed property value
-     */
-    public function __get($property)
-    {
-        /*
-            Check getter method
-        */
-        $getter = 'get' . \ucfirst($property);
-        if (\method_exists($this, $getter)) {
-            return $this->{$getter}();
-        }
-        if (\preg_match('/^is[A-Z]/', $property) && \method_exists($this, $property)) {
-            return $this->{$property}();
-        }
-        return null;
-    }
-
-    /**
-     * Retrieve a configuration value
-     *
-     * @param string $key what to get
-     *
-     * @return mixed
-     */
-    public function getCfg($key = null)
-    {
-        if (!\strlen($key)) {
-            return $this->cfg;
-        }
-        if (isset($this->cfg[$key])) {
-            return $this->cfg[$key];
-        }
-        return null;
-    }
-
-    /**
-     * Set one or more config values
-     *
-     *    `setCfg('key', 'value')`
-     *    `setCfg(array('k1'=>'v1', 'k2'=>'v2'))`
-     *
-     * @param string|array $mixed  key=>value array or key
-     * @param mixed        $newVal value
-     *
-     * @return mixed old value(s)
-     */
-    public function setCfg($mixed, $newVal = null)
-    {
-        $ret = null;
-        $values = array();
-        if (\is_string($mixed)) {
-            $key = $mixed;
-            $ret = isset($this->cfg[$key])
-                ? $this->cfg[$key]
-                : null;
-            $values = array(
-                $key => $newVal,
-            );
-        } elseif (\is_array($mixed)) {
-            $ret = \array_intersect_key($this->cfg, $mixed);
-            $values = $mixed;
-        }
-        if (isset($values['onError'])) {
-            /*
-                Replace - not append - subscriber set via setCfg
-            */
-            if ($this->cfg['onError'] !== null) {
-                $this->eventManager->unsubscribe(ErrorHandler::EVENT_ERROR, $this->cfg['onError']);
-            }
-            $this->eventManager->subscribe(ErrorHandler::EVENT_ERROR, $values['onError']);
-        }
-        $this->cfg = \array_merge($this->cfg, $values);
-        return $ret;
-    }
 
     /**
      * Check for anonymous class notation
@@ -147,6 +73,48 @@ Abstract class AbstractErrorHandler
                 ? (\get_parent_class($matches[0]) ?: \key(\class_implements($matches[0])) ?: 'class') . '@anonymous'
                 : $matches[0];
         }, $message);
+    }
+
+    /**
+     * Check enableEmailer & enableStats cfg values and enable
+     *
+     * Called
+     *   * on first error (passes haveError = true)
+     *   * post
+     *
+     * @param bool $haveError true when called via onFirstError
+     *
+     * @return void
+     */
+    protected function enableStatsEmailer($haveError = false)
+    {
+        if ($haveError === false && empty($this->data['errors'])) {
+            // no reason to instantiate or subscribe
+            return;
+        }
+        $errorSubscribers = $this->eventManager->getSubscribers(ErrorHandler::EVENT_ERROR);
+        if ($this->cfg['enableEmailer'] && !\in_array(array($this->getEmailer(), 'onErrorHighPri'), $errorSubscribers, true)) {
+            $this->cfg['enableStats'] = true;
+            $this->eventManager->addSubscriberInterface($this->emailer);
+        }
+        if ($this->cfg['enableStats'] && !\in_array(array($this->getStats(), 'onErrorHighPri'), $errorSubscribers, true)) {
+            $this->eventManager->addSubscriberInterface($this->stats);
+        }
+    }
+
+    /**
+     * Get Backtrace instance
+     *
+     * @return Backtrace
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     */
+    protected function getBacktrace()
+    {
+        if (!$this->backtrace) {
+            $this->backtrace = new Backtrace();
+        }
+        return $this->backtrace;
     }
 
     /**
@@ -180,6 +148,79 @@ Abstract class AbstractErrorHandler
     }
 
     /**
+     * Get Emailer instance
+     *
+     * @return Emailer
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     */
+    protected function getEmailer()
+    {
+        if ($this->emailer === null) {
+            $this->emailer = new Emailer($this->cfg['emailer']);
+        }
+        return $this->emailer;
+    }
+
+    /**
+     * Get Stats instance
+     *
+     * @return Stats
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     */
+    protected function getStats()
+    {
+        if ($this->stats === null) {
+            $this->stats = new Stats($this->cfg['stats']);
+        }
+        return $this->stats;
+    }
+
+    /**
+     * Handle updated onError
+     *
+     * @param callable|null $onError new onError value
+     * @param callable|null $prev    previous onError value
+     *
+     * @return void
+     */
+    protected function onCfgOnError($onError, $prev)
+    {
+        /*
+            Replace - not append - subscriber set via setCfg
+        */
+        if ($prev !== null) {
+            $this->eventManager->unsubscribe(ErrorHandler::EVENT_ERROR, $prev);
+        }
+        if ($onError) {
+            $this->eventManager->subscribe(ErrorHandler::EVENT_ERROR, $onError);
+        }
+    }
+
+    /**
+     * Handle updated cfg values
+     *
+     * @param array $cfg  new config values
+     * @param array $prev previous config values
+     *
+     * @return void
+     */
+    protected function postSetCfg($cfg = array(), $prev = array())
+    {
+        if (isset($this->emailer) && isset($cfg['emailer'])) {
+            $this->emailer->setCfg($cfg['emailer']);
+        }
+        if (isset($this->stats) && isset($cfg['stats'])) {
+            $this->stats->setCfg($cfg['stats']);
+        }
+        $this->enableStatsEmailer();
+        if (\array_key_exists('onError', $cfg)) {
+            $this->onCfgOnError($cfg['onError'], $prev['onError']);
+        }
+    }
+
+    /**
      * Store last error
      *
      * We store up to two errors...  so that we can return last suppressed error (if desired)
@@ -209,10 +250,7 @@ Abstract class AbstractErrorHandler
      */
     protected function throwError(Error $error)
     {
-        if ($error['isSuppressed']) {
-            return;
-        }
-        if ($error->isFatal()) {
+        if ($error['isSuppressed'] || $error->isFatal()) {
             return;
         }
         if ($error['throw']) {
@@ -263,40 +301,9 @@ Abstract class AbstractErrorHandler
     }
 
     /**
-     * Get Backtrace instance
-     *
-     * @return Backtrace
-     *
-     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
-     */
-    private function getBacktrace()
-    {
-        if (!$this->backtrace) {
-            $this->backtrace = new Backtrace();
-        }
-        return $this->backtrace;
-    }
-
-    /**
-     * Is script running from command line (or cron)?
-     *
-     * @return bool
-     *
-     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
-     */
-    private function isCli()
-    {
-        $argv = isset($_SERVER['argv'])
-            ? $_SERVER['argv']
-            : null;
-        $query = isset($_SERVER['QUERY_STRING'])
-            ? $_SERVER['QUERY_STRING']
-            : null;
-        return $argv && \implode('+', $argv) !== $query;
-    }
-
-    /**
      * Look through backtrace to see if error via __toString -> trigger_error
+     *
+     * Only utilized by PHP < 7.4
      *
      * @param Error                 $error     Error instance
      * @param \Throwable|\Exception $exception Exception

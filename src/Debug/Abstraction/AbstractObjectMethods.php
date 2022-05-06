@@ -243,7 +243,7 @@ class AbstractObjectMethods
     }
 
     /**
-     * Add Methods from abstra
+     * Add methods from reflection
      *
      * @return void
      */

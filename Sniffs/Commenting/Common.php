@@ -4,7 +4,6 @@ namespace bdk\Sniffs\Commenting;
 
 class Common
 {
-
     /**
      * An array of variable types for param/var we will check.
      *

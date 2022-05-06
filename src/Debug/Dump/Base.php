@@ -13,14 +13,14 @@
 namespace bdk\Debug\Dump;
 
 use bdk\Debug;
+use bdk\Debug\AbstractComponent;
 use bdk\Debug\Abstraction\Abstracter;
-use bdk\Debug\Component;
 use bdk\Debug\LogEntry;
 
 /**
  * Base output plugin
  */
-class Base extends Component
+class Base extends AbstractComponent
 {
     public $debug;
     protected $alertStyles = array(

@@ -8,11 +8,11 @@
  * @version   v3.1
  */
 
-namespace bdk\ErrorHandler;
+namespace bdk\ErrorHandler\Plugin;
 
 use bdk\ErrorHandler;
+use bdk\ErrorHandler\AbstractComponent;
 use bdk\ErrorHandler\Error;
-use bdk\ErrorHandler\ErrorEmailerThrottle;
 use bdk\PubSub\Manager as EventManager;
 use bdk\PubSub\SubscriberInterface;
 
@@ -21,24 +21,18 @@ use bdk\PubSub\SubscriberInterface;
  *
  * Emails an error report on error and throttles said email so does not excessively send email
  */
-class ErrorEmailer implements SubscriberInterface
+class Emailer extends AbstractComponent implements SubscriberInterface
 {
-    /** @var array */
-    protected $cfg = array();
-    protected $errTypes = array();  // populated onError
-    protected $serverParams = array();
-    protected $throttle;
+    private $stats = null;
 
     /**
      * Constructor
      *
      * @param array $cfg config
-     *
-     * @SuppressWarnings(PHPMD.Superglobals)
      */
     public function __construct($cfg = array())
     {
-        $this->serverParams = $_SERVER;
+        parent::__construct();
         $this->cfg = array(
             'emailBacktraceDumper' => null, // callable that receives backtrace array & returns string
             'emailFrom' => null,            // null = use php's default (php.ini: sendmail_from)
@@ -52,30 +46,8 @@ class ErrorEmailer implements SubscriberInterface
                 : null,
             'emailTraceMask' => E_ERROR | E_WARNING | E_USER_ERROR | E_USER_NOTICE,
             'dateTimeFmt' => 'Y-m-d H:i:s T',
-            // throttle options
-            'emailThrottleFile' => __DIR__ . '/error_emails.json',
-            'emailThrottleRead' => null,    // callable that returns throttle data
-            'emailThrottleWrite' => null,   // callable that writes throttle data.  receives single array param
         );
         $this->setCfg($cfg);
-    }
-
-    /**
-     * Retrieve a configuration value
-     *
-     * @param string $key what to get
-     *
-     * @return mixed
-     */
-    public function getCfg($key = null)
-    {
-        if (!\strlen($key)) {
-            return $this->cfg;
-        }
-        if (isset($this->cfg[$key])) {
-            return $this->cfg[$key];
-        }
-        return null;
     }
 
     /**
@@ -85,15 +57,17 @@ class ErrorEmailer implements SubscriberInterface
     {
         return array(
             ErrorHandler::EVENT_ERROR => array(
-                array('onErrorHighPri', PHP_INT_MAX),
-                array('onErrorLowPri', PHP_INT_MAX * -1),
+                array('onErrorHighPri', PHP_INT_MAX - 1),
+                array('onErrorLowPri', PHP_INT_MAX * -1 + 1),
             ),
-            EventManager::EVENT_PHP_SHUTDOWN => array('onPhpShutdown'),
+            EventManager::EVENT_PHP_SHUTDOWN => 'onPhpShutdown',
         );
     }
 
     /**
-     * Add throttle stats to passed error
+     * Initialize error's email' (bool) value
+     *
+     * This function should come after stats added to error
      *
      * @param Error $error Error instance
      *
@@ -101,29 +75,25 @@ class ErrorEmailer implements SubscriberInterface
      */
     public function onErrorHighPri(Error $error)
     {
-        if (!$this->throttle) {
-            $this->throttleInit();
-        }
         $error['email'] = ($error['type'] & $this->cfg['emailMask'])
             && $error['isFirstOccur']
             && $this->cfg['emailTo'];
-        $error['stats'] = array(
-            'tsEmailed'  => 0,
-            'countSince' => 0,
-            'emailedTo'  => '',
-        );
-        if (empty($this->errTypes)) {
-            $this->errTypes = $error->getSubject()->get('errTypes');
-        }
-        $statsThrottle = $this->throttle->errorGet($error);
-        if ($statsThrottle) {
-            $stats = \array_intersect_key($statsThrottle, $error['stats']);
-            $error['stats'] = \array_merge($error['stats'], $stats);
+        $error['stats'] = \array_merge(array(
+            'email' => array(
+                'countSince' => 0,
+                'emailedTo'  => null,
+                'timestamp'  => null,
+            ),
+        ), $error['stats']);
+        $tsCutoff = \time() - $this->cfg['emailMin'] * 60;
+        if ($error['stats']['email']['timestamp'] > $tsCutoff) {
+            // This error was recently emailed
+            $error['stats']['email']['countSince']++;
         }
     }
 
     /**
-     * Email error
+     * Conditionally email error
      *
      * @param Error $error Error instance
      *
@@ -131,16 +101,20 @@ class ErrorEmailer implements SubscriberInterface
      */
     public function onErrorLowPri(Error $error)
     {
+        if ($this->stats === null) {
+            $this->stats = $error->getSubject()->stats;
+        }
         if ($error['throw']) {
             $error['email'] = false;
         }
         if ($error['email'] && $this->cfg['emailMin'] > 0) {
-            $success = $this->throttle->errorAdd($error);
             $tsCutoff = \time() - $this->cfg['emailMin'] * 60;
-            $error['email'] = $success && $error['stats']['tsEmailed'] <= $tsCutoff;
+            $error['email'] = $error['stats']['email']['timestamp'] <= $tsCutoff;
         }
         if ($error['email']) {
             $this->emailErr($error);
+            $error['stats']['email']['emailedTo'] = $this->cfg['emailTo'];
+            $error['stats']['email']['timestamp'] = \time();
         }
     }
 
@@ -152,47 +126,23 @@ class ErrorEmailer implements SubscriberInterface
      */
     public function onPhpShutdown()
     {
-        if (!$this->throttle) {
+        if ($this->cfg['emailThrottledSummary'] === false) {
             return;
         }
-        $summaryErrors = $this->throttle->getSummaryErrors();
-        if (\count($summaryErrors) > 0  && $this->cfg['emailThrottledSummary']) {
-            $this->email(
-                $this->cfg['emailTo'],
-                'Website Errors: ' . $this->serverParams['SERVER_NAME'],
-                $this->buildBodySummary($summaryErrors)
-            );
+        if ($this->stats === null) {
+            return;
         }
-    }
-
-    /**
-     * Set one or more config values
-     *
-     *    setCfg('key', 'value')
-     *    setCfg(array('k1'=>'v1', 'k2'=>'v2'))
-     *
-     * @param string|array $mixed  key=>value array or key
-     * @param mixed        $newVal value
-     *
-     * @return mixed old value(s)
-     */
-    public function setCfg($mixed, $newVal = null)
-    {
-        $ret = null;
-        if (\is_string($mixed)) {
-            $ret = isset($this->cfg[$mixed])
-                ? $this->cfg[$mixed]
-                : null;
-            $mixed = array($mixed => $newVal);
-        } elseif (\is_array($mixed)) {
-            $ret = \array_intersect_key($this->cfg, $mixed);
+        $summaryErrors = $this->stats->getSummaryErrors();
+        if (\count($summaryErrors) === 0) {
+            return;
         }
-        $this->cfg = \array_merge($this->cfg, $mixed);
-        if (isset($this->throttle)) {
-            $throttleCfg = $this->throttleCfg($mixed);
-            $this->throttle->setCfg($throttleCfg);
-        }
-        return $ret;
+        $this->email(
+            $this->cfg['emailTo'],
+            $this->isCli
+                ? 'Server Errors: ' . \implode(' ', $this->serverParams['argv'])
+                : 'Website Errors: ' . $this->serverParams['SERVER_NAME'],
+            $this->buildBodySummary($summaryErrors)
+        );
     }
 
     /**
@@ -241,23 +191,29 @@ class ErrorEmailer implements SubscriberInterface
      */
     private function buildBodyError(Error $error)
     {
-        $emailBody = ''
-            . 'datetime: ' . \date($this->cfg['dateTimeFmt']) . "\n"
-            . 'errormsg: ' . $error->getMessage() . "\n"
-            . 'errortype: ' . $error['type'] . ' (' . $error['typeStr'] . ')' . "\n"
-            . 'file: ' . $error['file'] . "\n"
-            . 'line: ' . $error['line'] . "\n"
-            . '';
-        if ($error->getSubject()->isCli === false) {
-            $emailBody .= ''
-                . 'remote_addr: ' . $this->serverParams['REMOTE_ADDR'] . "\n"
-                . 'http_host: ' . $this->serverParams['HTTP_HOST'] . "\n"
-                . 'referer: ' . (isset($this->serverParams['HTTP_REFERER']) ? $this->serverParams['HTTP_REFERER'] : 'null') . "\n"
-                . 'request_uri: ' . $this->serverParams['REQUEST_URI'] . "\n"
-                . '';
+        $emailBody = \implode("\n", array(
+            'datetime: ' . \date($this->cfg['dateTimeFmt']),
+            'type: ' . $error['type'] . ' (' . $error['typeStr'] . ')',
+            'message: ' . $error->getMessageText(),
+            'file: ' . $error['file'],
+            'line: ' . $error['line'],
+        )) . "\n";
+        if ($this->isCli === false) {
+            $emailBody .= \implode("\n", array(
+                'remote_addr: ' . $this->serverParams['REMOTE_ADDR'],
+                'http_host: ' . $this->serverParams['HTTP_HOST'],
+                'referer: ' . (isset($this->serverParams['HTTP_REFERER']) ? $this->serverParams['HTTP_REFERER'] : 'null'),
+                'request_uri: ' . $this->serverParams['REQUEST_URI'],
+            )) . "\n";
         }
         if (!empty($_POST)) {
             $emailBody .= 'post params: ' . \var_export($_POST, true) . "\n";
+        }
+        if ($error['type'] & $this->cfg['emailTraceMask']) {
+            $backtraceStr = $this->backtraceStr($error);
+            $emailBody .= "\n" . ($backtraceStr
+                ? 'backtrace: ' . $backtraceStr
+                : 'no backtrace');
         }
         return $emailBody;
     }
@@ -272,13 +228,14 @@ class ErrorEmailer implements SubscriberInterface
     protected function buildBodySummary($errors)
     {
         $emailBody = '';
-        foreach ($errors as $err) {
-            $dateLastEmailed = \date($this->cfg['dateTimeFmt'], $err['tsEmailed']) ?: '??';
+        foreach ($errors as $errStats) {
+            $dateLastEmailed = \date($this->cfg['dateTimeFmt'], $errStats['email']['timestamp']) ?: '??';
+            $info = $errStats['info'];
             $emailBody .= ''
-                . 'File: ' . $err['file'] . "\n"
-                . 'Line: ' . $err['line'] . "\n"
-                . 'Error: ' . $this->errTypes[ $err['errType'] ] . ': ' . $err['errMsg'] . "\n"
-                . 'Has occured ' . $err['countSince'] . ' times since ' . $dateLastEmailed . "\n\n";
+                . 'File: ' . $info['file'] . "\n"
+                . 'Line: ' . $info['line'] . "\n"
+                . 'Error: ' . Error::typeStr($info['type']) . ': ' . $info['message'] . "\n"
+                . 'Has occured ' . $errStats['email']['countSince'] . ' times since ' . $dateLastEmailed . "\n\n";
         }
         return $emailBody;
     }
@@ -311,20 +268,13 @@ class ErrorEmailer implements SubscriberInterface
      */
     protected function emailErr(Error $error)
     {
-        $countSince = $error['stats']['countSince'];
+        $countSince = $error['stats']['email']['countSince'];
         $emailBody = '';
         if (!empty($countSince)) {
-            $dateTimePrev = \date($this->cfg['dateTimeFmt'], $error['stats']['tsEmailed']) ?: '';
+            $dateTimePrev = \date($this->cfg['dateTimeFmt'], $error['stats']['email']['timestamp']) ?: '';
             $emailBody .= 'Error has occurred ' . $countSince . ' times since last email (' . $dateTimePrev . ').' . "\n\n";
         }
         $emailBody .= $this->buildBodyError($error);
-        if ($error['type'] & $this->cfg['emailTraceMask']) {
-            $backtraceStr = $this->backtraceStr($error);
-            $emailBody .= "\n";
-            $emailBody .= $backtraceStr
-                ? 'backtrace: ' . $backtraceStr
-                : 'no backtrace';
-        }
         $this->email(
             $this->cfg['emailTo'],
             $this->getSubject($error),
@@ -341,46 +291,11 @@ class ErrorEmailer implements SubscriberInterface
      */
     private function getSubject(Error $error)
     {
-        $countSince = $error['stats']['countSince'];
-        $subject = $error->getSubject()->isCli
+        $countSince = $error['stats']['email']['countSince'];
+        $subject = $this->isCli
             ? 'Error: ' . \implode(' ', $this->serverParams['argv'])
             : 'Website Error: ' . $this->serverParams['SERVER_NAME'];
-        $subject .= ': ' . $error->getMessage() . ($countSince ? ' (' . $countSince . 'x)' : '');
+        $subject .= ': ' . $error->getMessageText() . ($countSince ? ' (' . $countSince . 'x)' : '');
         return $subject;
-    }
-
-    /**
-     * Get config options that apply to throttling
-     *
-     * @param array $cfg config options
-     *
-     * @return array
-     */
-    private function throttleCfg($cfg = array())
-    {
-        $cfg = \array_intersect_key($cfg ?: $this->cfg, \array_flip(array(
-            'emailMin',
-            'emailThrottleFile',
-            'emailThrottleRead',
-            'emailThrottleWrite',
-            'emailTo',
-        )));
-        foreach (array('emailThrottleRead','emailThrottleWrite') as $key) {
-            if (isset($cfg[$key]) === false) {
-                unset($cfg[$key]);
-            }
-        }
-        return $cfg;
-    }
-
-    /**
-     * Initialize throttle data
-     *
-     * @return void
-     */
-    private function throttleInit()
-    {
-        $cfg = $this->throttleCfg();
-        $this->throttle = new ErrorEmailerThrottle($cfg);
     }
 }

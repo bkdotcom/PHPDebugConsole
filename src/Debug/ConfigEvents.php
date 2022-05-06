@@ -78,14 +78,7 @@ class ConfigEvents implements SubscriberInterface
     public function onConfig(Event $event)
     {
         $configs = $event->getValues();
-        if (isset($configs['routeStream']['stream'])) {
-            $this->debug->addPlugin($this->debug->getRoute('stream'));
-        }
-        if (empty($configs['debug'])) {
-            // no debug config values have changed
-            return;
-        }
-        $cfgDebug = $this->onConfigInit($configs['debug']);
+        $cfgDebug = $this->onConfigInit($configs);
         $valActions = \array_intersect_key(array(
             'channels' => array($this, 'onCfgChannels'),
             'emailFrom' => array($this, 'onCfgEmail'),
@@ -107,7 +100,7 @@ class ConfigEvents implements SubscriberInterface
             /** @psalm-suppress TooManyArguments */
             $cfgDebug[$key] = $callable($cfgDebug[$key], $key, $event);
         }
-        $event['debug'] = \array_merge($event['debug'], $cfgDebug);
+        $event['debug'] = \array_merge($event['debug'] ?: array(), $cfgDebug);
     }
 
     /**
@@ -148,6 +141,10 @@ class ConfigEvents implements SubscriberInterface
     /**
      * Handle "emailTo" config update
      *
+     *   * emailFrom
+     *   * emailFunc
+     *   * emailTo
+     *
      * @param string $val   config value
      * @param string $key   config param name
      * @param Event  $event The config change event
@@ -158,15 +155,21 @@ class ConfigEvents implements SubscriberInterface
      */
     private function onCfgEmail($val, $key, Event $event)
     {
-        if ($val === 'default' && $key === 'emailTo') {
+        if ($key === 'emailTo' && $val === 'default') {
             $val = $this->debug->getServerParam('SERVER_ADMIN');
         }
-        $errorEmailerCfg = $event['errorEmailer'];
+        $errorHandlerCfg = isset($event['errorHandler'])
+            ? $event['errorHandler']
+            : array();
+        $errorEmailerCfg = isset($errorHandlerCfg['emailer'])
+            ? $errorHandlerCfg['emailer']
+            : array();
         if (!isset($errorEmailerCfg[$key])) {
             // also set for errorEmailer
             $errorEmailerCfg[$key] = $val;
-            $event['errorEmailer'] = $errorEmailerCfg;
         }
+        $errorHandlerCfg['emailer'] = $errorEmailerCfg;
+        $event['errorHandler'] = $errorHandlerCfg;
         return $val;
     }
 
@@ -366,7 +369,6 @@ class ConfigEvents implements SubscriberInterface
      */
     private function onCfgRoute($val)
     {
-
         if ($this->isBootstrapped) {
             /*
                 Only need to worry about previous route if we're bootstrapped
@@ -403,14 +405,25 @@ class ConfigEvents implements SubscriberInterface
     /**
      * Merge in default config values if not yet configured
      *
-     * @param array $cfg Config vals being updated
+     * @param array $configs Config vals being updated
      *
      * @return array
      */
-    private function onConfigInit($cfg)
+    private function onConfigInit($configs)
     {
-        if ($this->isConfigured) {
-            return $cfg;
+        $configs = \array_merge(array(
+            'debug' => array(),
+            'errorHandler' => array(),
+        ), $configs);
+        $cfgDebug = $configs['debug'];
+        if (isset($configs['routeStream']['stream'])) {
+            $this->debug->addPlugin($this->debug->getRoute('stream'));
+        }
+        if (\array_key_exists('onEUserError', $configs['errorHandler'])) {
+            $this->explicitlySet['onEUserError'] = true;
+        }
+        if (empty($cfgDebug) || $this->isConfigured) {
+            return $cfgDebug;
         }
         $this->isConfigured = true;
         return \array_merge(
@@ -420,7 +433,7 @@ class ConfigEvents implements SubscriberInterface
                 $this->debug->getCfg(null, Debug::CONFIG_DEBUG),
                 \array_flip(array('collect','output'))
             ),
-            $cfg
+            $cfgDebug
         );
     }
 }

@@ -28,13 +28,6 @@ class Helper
             }
             return $frame;
         }, $backtrace);
-        /*
-        $str = \print_r($backtrace, true);
-        $output = true || self::isCli()
-            ? $str . "\n"
-            : '<pre>' . \htmlspecialchars($str) . '</pre>';
-        \fwrite(STDERR, $output);
-        */
     }
 
     /**
@@ -103,18 +96,15 @@ class Helper
      * Is script running from command line (or cron)?
      *
      * @return bool
-     *
-     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
      */
     public static function isCli()
     {
-        $argv = isset($_SERVER['argv'])
-            ? $_SERVER['argv']
-            : null;
-        $query = isset($_SERVER['QUERY_STRING'])
-            ? $_SERVER['QUERY_STRING']
-            : null;
-        return $argv && \implode('+', $argv) !== $query;
+        $valsDefault = array(
+            'argv' => null,
+            'QUERY_STRING' => null,
+        );
+        $vals = \array_merge($valsDefault, \array_intersect_key($_SERVER, $valsDefault));
+        return $vals['argv'] && \implode('+', $vals['argv']) !== $vals['QUERY_STRING'];
     }
 
     /**
@@ -182,9 +172,11 @@ class Helper
                     $arg = 'object: ' . \get_class($arg);
                 }
             } elseif ($type === 'string') {
-                $arg = '"' . \print_r($arg, true) . '"';
+                // $arg = '"' . \print_r($arg, true) . '"';
+                continue;
             } elseif (\in_array($type, array('boolean', 'double', 'integer', 'null'))) {
-                $arg = \json_encode($arg);
+                // $arg = \json_encode($arg);
+                continue;
             } else {
                 $arg = $type;
             }

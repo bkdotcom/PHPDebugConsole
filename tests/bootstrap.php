@@ -93,7 +93,7 @@ $debug = \bdk\Debug::getInstance(array(
     'container' => array(
         'allowOverride' => true,
     ),
-    'emailFrom' => 'ttesterman@test.com',
+    'emailFrom' => 'testFrom@test.com',
     'enableProfiling' => true,
     'exitCheck' => false,
     'fullyQualifyPhpDocType' => true,
@@ -103,7 +103,7 @@ $debug = \bdk\Debug::getInstance(array(
     'objectsExclude' => array('PHPUnit_Framework_TestSuite', 'PHPUnit\Framework\TestSuite'),
     'route' => 'html',
     'errorHandler' => array(
-        'onEUserError' => 'normal',
+        // 'onEUserError' => 'continue',
     ),
     'serviceProvider' => array(
         'routeWamp' => function ($container) {

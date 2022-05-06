@@ -12,7 +12,7 @@ use bdk\Test\Debug\DebugTestFramework;
  * @covers \bdk\Debug
  * @covers \bdk\Debug\AbstractDebug
  * @covers \bdk\Debug\Abstraction\AbstractObjectProperties
- * @covers \bdk\Debug\Component
+ * @covers \bdk\Debug\AbstractComponent
  * @covers \bdk\Debug\LogEntry
  * @covers \bdk\Debug\Dump\Base
  * @covers \bdk\Debug\Dump\Html
@@ -214,6 +214,25 @@ class MethodTest extends DebugTestFramework
                 'wamp' => $entry,
             )
         );
+    }
+
+    public function testMethodSetsCfg()
+    {
+        $this->debug->log(new \bdk\Test\Debug\Fixture\Test(), $this->debug->meta('cfg', 'collectMethods', false));
+        $collectMethods = $this->debug->data->get('log/__end__/args/0/cfgFlags') & \bdk\Debug\Abstraction\AbstractObject::COLLECT_METHODS;
+        $this->assertSame(0, $collectMethods);
+        $this->assertCount(2, $this->debug->data->get('log/__end__/args/0/methods'));
+        $this->assertTrue($this->debug->getCfg('collectMethods'));
+    }
+
+    public function testMethodDefaultArgNotOptional()
+    {
+        // covers AbstractDebug::getMethodDefaultArgs
+        $refProp = new \ReflectionProperty('bdk\Debug\AbstractDebug', 'methodDefaultArgs');
+        $refProp->setAccessible(true);
+        $refProp->setValue(array());
+        $this->debug->alert('test');
+        $this->assertSame('alert', $this->debug->data->get('alerts/__end__/method'));
     }
 
     /*

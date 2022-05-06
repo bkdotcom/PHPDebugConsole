@@ -12,7 +12,7 @@
 
 namespace bdk\Debug\Collector\SimpleCache;
 
-use bdk\Debug\Component;
+use bdk\Debug\AbstractComponent;
 use Exception;
 
 /**
@@ -29,7 +29,7 @@ use Exception;
  * @property-read float     $timeEnd
  * @property-read float     $timeStart
  */
-class CallInfo extends Component
+class CallInfo extends AbstractComponent
 {
     protected $duration;
     protected $exception;

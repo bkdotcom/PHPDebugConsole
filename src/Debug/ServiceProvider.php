@@ -93,25 +93,25 @@ class ServiceProvider implements ServiceProviderInterface
             $debug = $container['debug'];
             return new \bdk\Debug\Data($debug);
         };
-        $container['errorEmailer'] = function (Container $container) {
-            $debug = $container['debug'];
-            return new \bdk\ErrorHandler\ErrorEmailer($debug->getCfg('errorEmailer', \bdk\Debug::CONFIG_INIT));
-        };
         $container['errorLevel'] = function () {
             return new \bdk\Debug\Utility\ErrorLevel();
         };
         $container['errorHandler'] = function (Container $container) {
             $debug = $container['debug'];
             $existingInstance = \bdk\ErrorHandler::getInstance();
+            $cfg = \array_merge(array(
+                'onEUserError' => null, // don't halt script / log E_USER_ERROR to system_log when 'continueToNormal'
+                'emailer' => array(
+                    'emailBacktraceDumper' => function ($backtrace) use ($debug) {
+                        return $debug->getDump('text')->valDumper->dump($backtrace);
+                    },
+                ),
+            ), $debug->getCfg('errorHandler', \bdk\Debug::CONFIG_INIT));
             if ($existingInstance) {
+                $existingInstance->setCfg($cfg);
                 return $existingInstance;
             }
-            $errorHandler = new \bdk\ErrorHandler($debug->eventManager);
-            /*
-                log E_USER_ERROR to system_log without halting script
-            */
-            $errorHandler->setCfg('onEUserError', 'log');
-            return $errorHandler;
+            return new \bdk\ErrorHandler($debug->eventManager, $cfg);
         };
         $container['eventManager'] = function () {
             return new \bdk\PubSub\Manager();

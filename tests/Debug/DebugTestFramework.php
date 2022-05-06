@@ -369,7 +369,7 @@ class DebugTestFramework extends DOMTestCase
                         'DOCUMENT_ROOT' => TEST_DIR . '/../tmp',
                         'REQUEST_METHOD' => 'GET',
                         'REQUEST_TIME_FLOAT' => $_SERVER['REQUEST_TIME_FLOAT'],
-                        'SERVER_ADMIN' => 'ttesterman@test.com',
+                        'SERVER_ADMIN' => 'testAdmin@test.com',
                     )
                 ),
             ),

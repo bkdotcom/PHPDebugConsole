@@ -26,6 +26,9 @@ function myFunctionThatCallsGroup()
  * @covers \bdk\Debug\Dump\Text
  * @covers \bdk\Debug\Method\Group
  * @covers \bdk\Debug\Method\GroupStack
+ *
+ * @covers \bdk\Debug\Route\Firephp
+ * @covers \bdk\Debug\Route\Script
  */
 class GroupTest extends DebugTestFramework
 {

@@ -13,16 +13,15 @@
 namespace bdk\Debug\Abstraction;
 
 use bdk\Debug;
+use bdk\Debug\AbstractComponent;
 use bdk\Debug\Abstraction\AbstractArray;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
-use bdk\Debug\Component;
-use bdk\Debug\Utility\PhpDoc;
 
 /**
  * Store array/object/resource info
  */
-class Abstracter extends Component
+class Abstracter extends AbstractComponent
 {
     const ABSTRACTION = "\x00debug\x00";
     const NOT_INSPECTED = "\x00notInspected\x00";

@@ -41,14 +41,6 @@ class InternalEvents implements SubscriberInterface
         if ($debug->parentInstance) {
             return;
         }
-        $this->debug->errorHandler->eventManager->subscribe(ErrorHandler::EVENT_ERROR, array(function () {
-            // this closure lazy-loads the subscriber object
-            return $this->debug->errorEmailer;
-        }, 'onErrorHighPri'), PHP_INT_MAX);
-        $this->debug->errorHandler->eventManager->subscribe(ErrorHandler::EVENT_ERROR, array(function () {
-            // this closure lazy-loads the subscriber object
-            return $this->debug->errorEmailer;
-        }, 'onErrorLowPri'), PHP_INT_MAX * -1);
     }
 
     /**
@@ -362,19 +354,6 @@ class InternalEvents implements SubscriberInterface
         $method = $error['type'] & $this->debug->getCfg('errorMask', Debug::CONFIG_DEBUG)
             ? 'error'
             : 'warn';
-        $meta = $this->debug->meta(array(
-            'context' => $error['category'] === 'fatal' && $error['backtrace'] === null
-                ? $error['context']
-                : null,
-            'errorCat' => $error['category'],
-            'errorHash' => $error['hash'],
-            'errorType' => $error['type'],
-            'file' => $error['file'],
-            'isSuppressed' => $error['isSuppressed'], // set via event subscriber vs "@"" code prefix
-            'line' => $error['line'],
-            'sanitize' => $error['isHtml'] === false,
-            'trace' => $error['backtrace'],
-        ));
         /*
             specify rootInstance as there's nothing to prevent calling Internal::onError() directly (from aanother instance)
         */
@@ -382,14 +361,26 @@ class InternalEvents implements SubscriberInterface
             $error['typeStr'] . ':',
             $error['message'],
             \sprintf('%s (line %s)', $error['file'], $error['line']),
-            $meta
+            $this->debug->meta(array(
+                'context' => $error['category'] === 'fatal' && $error['backtrace'] === null
+                    ? $error['context']
+                    : null,
+                'errorCat' => $error['category'],
+                'errorHash' => $error['hash'],
+                'errorType' => $error['type'],
+                'file' => $error['file'],
+                'isSuppressed' => $error['isSuppressed'], // set via event subscriber vs "@"" code prefix
+                'line' => $error['line'],
+                'sanitize' => $error['isHtml'] === false,
+                'trace' => $error['backtrace'],
+            ))
         );
         // We've captured the error and are logging / viewing it with debugger.
         //    typically no reason for php to log the error...
         //    This value can be overriden via 'errorLogNormal' config or via error event subscriber
         $error['continueToNormal'] = $this->debug->getCfg('errorLogNormal', Debug::CONFIG_DEBUG);
         $error['inConsole'] = true;
-        // Prevent ErrorHandler\ErrorEmailer from sending email.
+        // Prevent ErrorHandler\Plugin\Emailer from sending email.
         // Since we're collecting log info, we send email on shutdown
         $error['email'] = false;
     }
@@ -515,7 +506,7 @@ class InternalEvents implements SubscriberInterface
         if ($emailLog === 'onError') {
             // see if we handled any unsupressed errors of types specified with emailMask
             $errors = $this->debug->errorHandler->get('errors');
-            $emailMask = $this->debug->errorEmailer->getCfg('emailMask');
+            $emailMask = $this->debug->errorHandler->emailer->getCfg('emailMask');
             $emailableErrors = \array_filter($errors, function ($error) use ($emailMask) {
                 return !$error['isSuppressed'] && ($error['type'] & $emailMask);
             });

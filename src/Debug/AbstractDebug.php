@@ -474,11 +474,9 @@ class AbstractDebug
             $this->addPlugin($val);
         }
         $classname = \get_class($val);
-        $prefix = __NAMESPACE__ . '\\Debug\\Route\\';
-        $containerName = \strpos($classname, $prefix) === 0
-            ? 'route' . \substr($classname, \strlen($prefix))
-            : null;
-        if ($containerName && !$this->container->has($containerName)) {
+        $prefix = __NAMESPACE__ . '\\Route\\';
+        $containerName = 'route' . \substr($classname, \strlen($prefix));
+        if (\strpos($classname, $prefix) === 0 && !$this->container->has($containerName)) {
             $this->container->offsetSet($containerName, $val);
         }
         if ($val->appendsHeaders()) {

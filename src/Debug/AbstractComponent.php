@@ -17,7 +17,7 @@ use bdk\Debug\ConfigurableInterface;
 /**
  * Base "component" methods
  */
-abstract class Component implements ConfigurableInterface
+abstract class AbstractComponent implements ConfigurableInterface
 {
     protected $cfg = array();
     protected $readOnly = array();
@@ -31,12 +31,11 @@ abstract class Component implements ConfigurableInterface
      */
     public function __get($prop)
     {
-        $getter = 'get' . \ucfirst($prop);
+        $getter = \preg_match('/^is[A-Z]/', $prop)
+            ? $prop
+            : 'get' . \ucfirst($prop);
         if (\method_exists($this, $getter)) {
             return $this->{$getter}();
-        }
-        if (\preg_match('/^is[A-Z]/', $prop) && \method_exists($this, $prop)) {
-            return $this->{$prop}();
         }
         if (\in_array($prop, $this->readOnly)) {
             return $this->{$prop};

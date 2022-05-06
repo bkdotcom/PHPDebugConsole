@@ -58,7 +58,6 @@ class Cake4 extends BasePlugin
      */
     public function bootstrap(PluginApplicationInterface $app): void
     {
-
         $this->app = $app;
 
         // Add constants, load configuration defaults.

@@ -42,7 +42,7 @@ class ServiceProviderTest extends DebugTestFramework
         ));
 
         $this->assertInstanceOf('\bdk\Backtrace', $debug->backtrace);
-        $this->assertInstanceOf('\bdk\ErrorHandler\ErrorEmailer', $debug->errorEmailer);
+        // $this->assertInstanceOf('\bdk\ErrorHandler\ErrorEmailer', $debug->errorEmailer);
         $this->assertInstanceOf('\bdk\ErrorHandler', $debug->errorHandler);
         $this->assertInstanceOf('\bdk\Debug\Utility\Html', $debug->html);
         $this->assertInstanceOf('\bdk\Debug\Method\Clear', $debug->methodClear);

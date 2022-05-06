@@ -160,6 +160,7 @@ class LogEntry extends Event implements JsonSerializable
      *
      * @return array
      */
+    #[\ReturnTypeWillChange]
     public function jsonSerialize()
     {
         return $this->export();

@@ -13,12 +13,12 @@
 namespace bdk\Debug\Abstraction;
 
 use bdk\Debug;
+use bdk\Debug\AbstractComponent;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\AbstractObjectConstants;
 use bdk\Debug\Abstraction\AbstractObjectHelper;
 use bdk\Debug\Abstraction\AbstractObjectMethods;
 use bdk\Debug\Abstraction\AbstractObjectProperties;
-use bdk\Debug\Component;
 use bdk\Debug\Data;
 use bdk\Debug\Utility\PhpDoc;
 use Error;
@@ -27,7 +27,7 @@ use RuntimeException;
 /**
  * Abstracter:  Methods used to abstract objects
  */
-class AbstractObject extends Component
+class AbstractObject extends AbstractComponent
 {
     const COLLECT_ATTRIBUTES_CONST = 128;
     const COLLECT_ATTRIBUTES_METHOD = 2048;

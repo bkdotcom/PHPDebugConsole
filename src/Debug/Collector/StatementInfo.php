@@ -13,9 +13,9 @@
 namespace bdk\Debug\Collector;
 
 use bdk\Debug;
+use bdk\Debug\AbstractComponent;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
-use bdk\Debug\Component;
 use Closure;
 use Exception;
 
@@ -39,9 +39,10 @@ use Exception;
  * @property-read float     $timeStart
  * @property-read array     $types
  */
-class StatementInfo extends Component
+class StatementInfo extends AbstractComponent
 {
     protected $debug;
+
     protected $duration;
     protected $exception;
     protected $isSuccess;
@@ -278,7 +279,7 @@ class StatementInfo extends Component
                 CREATE(?:\sTEMPORARY)?\s+TABLE(?:\sIF\sNOT\sEXISTS)?\s+\S+|
                 DELETE.*?FROM\s+\S+|
                 INSERT(?:\s+(?:LOW_PRIORITY|DELAYED|HIGH_PRIORITY|IGNORE|INTO))*\s+\S+|
-                SELECT\s+(?P<select>.*)\s+FROM\s+\S+|
+                SELECT\s+(?P<select>.*?)\s+FROM\s+\S+|
                 UPDATE\s+\S+
             )(?P<more>.*)/imsx';
         $matches = array();

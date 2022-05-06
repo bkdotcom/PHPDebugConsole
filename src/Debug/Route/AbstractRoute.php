@@ -13,7 +13,7 @@
 namespace bdk\Debug\Route;
 
 use bdk\Debug;
-use bdk\Debug\Component;
+use bdk\Debug\AbstractComponent;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Route\RouteInterface;
 use bdk\PubSub\Event;
@@ -21,7 +21,7 @@ use bdk\PubSub\Event;
 /**
  * Base output plugin
  */
-abstract class AbstractRoute extends Component implements RouteInterface
+abstract class AbstractRoute extends AbstractComponent implements RouteInterface
 {
     public $debug;
     protected $appendsHeaders = false;

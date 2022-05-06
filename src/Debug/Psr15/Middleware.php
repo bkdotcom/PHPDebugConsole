@@ -13,7 +13,7 @@
 namespace bdk\Debug\Psr15;
 
 use bdk\Debug;
-use bdk\Debug\Component;
+use bdk\Debug\AbstractComponent;
 use Exception;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -25,7 +25,7 @@ use Psr\Http\Server\RequestHandlerInterface;
  * This will delegate to the rest of the middleware stack unconditionally,
  *   then decorates the Response with Debug output/headers.
  */
-class Middleware extends Component implements MiddlewareInterface
+class Middleware extends AbstractComponent implements MiddlewareInterface
 {
     /**
      * @var Debug

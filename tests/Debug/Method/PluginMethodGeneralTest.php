@@ -22,19 +22,19 @@ class PluginMethodGeneralTest extends DebugTestFramework
             // 'emailLog' => 'always',
             // 'emailTo' => 'test@email.com', // need an email address to email to!
             // 'output' => false,  // email only sent if not outputing
-            'emailFrom' => 'ttesterman@test.com',
+            'emailFrom' => 'testAdmin@test.com',
             // 'emailFunc' => array($this, 'emailMock'),
         ));
         */
-        $to = 'fred@test.com';
+        $toAddr = 'fred@test.com';
         $subject = 'that thing you requested';
         $body = 'Here it is';
-        $this->debug->email($to, $subject, $body);
+        $this->debug->email($toAddr, $subject, $body);
         $this->assertSame(array(
-            'to' => $to,
+            'to' => $toAddr,
             'subject' => $subject,
             'body' => $body,
-            'addHeadersStr' => 'From: ttesterman@test.com',
+            'addHeadersStr' => 'From: testFrom@test.com',
         ), $this->emailInfo);
     }
 

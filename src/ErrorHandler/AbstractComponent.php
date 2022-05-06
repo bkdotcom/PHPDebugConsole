@@ -1,0 +1,156 @@
+<?php
+
+/**
+ * @package   bdk\ErrorHandler
+ * @author    Brad Kent <bkfake-github@yahoo.com>
+ * @license   http://opensource.org/licenses/MIT MIT
+ * @copyright 2014-2022 Brad Kent
+ * @version   v3.1
+ */
+
+namespace bdk\ErrorHandler;
+
+/**
+ * Base "component" methods
+ */
+class AbstractComponent
+{
+    /** @var array */
+    protected $cfg = array();
+    protected $readOnly = array();
+    protected $serverParams = array();
+
+    /**
+     * Constructor
+     *
+     * @SuppressWarnings(PHPMD.Superglobals)
+     */
+    public function __construct()
+    {
+        $this->serverParams = $_SERVER;
+    }
+
+    /**
+     * Magic getter
+     * Get inaccessible / undefined properties
+     * Lazy load child classes
+     *
+     * @param string $prop property to get
+     *
+     * @return mixed
+     */
+    public function __get($prop)
+    {
+        $getter = \preg_match('/^is[A-Z]/', $prop)
+            ? $prop
+            : 'get' . \ucfirst($prop);
+        if (\method_exists($this, $getter)) {
+            return $this->{$getter}();
+        }
+        if (\in_array($prop, $this->readOnly)) {
+            return $this->{$prop};
+        }
+        return null;
+    }
+
+    /**
+     * Magic isset
+     *
+     * @param string $prop property to check
+     *
+     * @return bool
+     */
+    public function __isset($prop)
+    {
+        return isset($this->{$prop});
+    }
+
+    /**
+     * Retrieve a configuration value
+     *
+     * @param array|string $path what to get
+     *
+     * @return mixed
+     */
+    public function getCfg($path = null)
+    {
+        $path = \is_array($path)
+            ? $path
+            : \array_filter(\preg_split('#[\./]#', (string) $path), 'strlen');
+        $return = $this->cfg;
+        $path = \array_reverse($path);
+        while ($path) {
+            $key = \array_pop($path);
+            if (isset($return[$key])) {
+                $return = $return[$key];
+                continue;
+            }
+            return null;
+        }
+        return $return;
+    }
+
+    /**
+     * Set one or more config values
+     *
+     *    setCfg('key', 'value')
+     *    setCfg(array('k1'=>'v1', 'k2'=>'v2'))
+     *
+     * Calls self::postSetCfg() with new values and previous values
+     *
+     * @param string|array $mixed key=>value array or key
+     * @param mixed        $val   new value
+     *
+     * @return mixed old value(s)
+     */
+    public function setCfg($mixed, $val = null)
+    {
+        $prev = null;
+        $prevArray = array();
+        if (\is_string($mixed)) {
+            $prev = isset($this->cfg[$mixed])
+                ? $this->cfg[$mixed]
+                : null;
+            $prevArray = array($mixed => $prev);
+            $mixed = array($mixed => $val);
+        } elseif (\is_array($mixed)) {
+            $prev = \array_intersect_key($this->cfg, $mixed);
+        }
+        $this->cfg = \array_replace_recursive($this->cfg, $mixed);
+        $this->postSetCfg($mixed, $prevArray ?: $prev);
+        return $prev;
+    }
+
+    /**
+     * Called by setCfg
+     *
+     * extend me to perform class specific config operations
+     *
+     * @param array $cfg  new config values
+     * @param array $prev previous config values
+     *
+     * @return void
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     */
+    protected function postSetCfg($cfg = array(), $prev = array())
+    {
+    }
+
+    /**
+     * Is script running from command line (or cron)?
+     *
+     * @return bool
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     */
+    protected function isCli()
+    {
+        $valsDefault = array(
+            'argv' => null,
+            'QUERY_STRING' => null,
+        );
+        $vals = \array_merge($valsDefault, \array_intersect_key($this->serverParams, $valsDefault));
+        return $vals['argv'] && \implode('+', $vals['argv']) !== $vals['QUERY_STRING'];
+    }
+}

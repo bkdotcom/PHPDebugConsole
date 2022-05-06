@@ -181,6 +181,36 @@ class ArrayUtil
     }
 
     /**
+     * Searches array structure for value and returns the path to the first match
+     *
+     * @param mixed $value    value to search for (needle)
+     * @param array $array    array structure to search (haystack)
+     * @param bool  $inclKeys (false) whether to also match keys
+     *
+     * @return array|false Returns empty array if value not found
+     */
+    public static function searchRecursive($value, $array, $inclKeys = false)
+    {
+        $key = \array_search($value, $array, true);
+        if ($key !== false) {
+            return array($key);
+        }
+        if ($inclKeys && \array_key_exists($value, $array)) {
+            return array($value);
+        }
+        foreach ($array as $key => $val) {
+            if (\is_array($val) === false) {
+                continue;
+            }
+            $pathTest = self::searchRecursive($value, $val, $inclKeys);
+            if ($pathTest) {
+                return \array_merge(array($key), $pathTest);
+            }
+        }
+        return false;
+    }
+
+    /**
      * Sort array, using `$order`
      * Keys will be preserved
      *

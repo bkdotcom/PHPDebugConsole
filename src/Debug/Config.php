@@ -55,28 +55,32 @@ class Config
             'stringMinLen',
             'useDebugInfo',
         ),
-        'errorEmailer' => array(
-            'emailBacktraceDumper',
-            // 'emailFrom',
-            // 'emailFunc',
-            'emailMask',
-            'emailMin',
-            'emailThrottledSummary',
-            'emailThrottleFile',
-            'emailThrottleRead',
-            'emailThrottleWrite',
-            // 'emailTo',
-            'emailTraceMask',
-            // 'dateTimeFmt',
-        ),
         'errorHandler' => array(
             'continueToPrevHandler',
             'errorFactory',
             'errorReporting',
             'errorThrow',
             'onError',
+            'onFirstError',
             'onEUserError',
             'suppressNever',
+            'enableEmailer',
+            'emailer' => array(
+                'dateTimeFmt',
+                'emailBacktraceDumper',
+                // 'emailFrom',
+                // 'emailFunc',
+                'emailMask',
+                'emailMin',
+                'emailThrottledSummary',
+                'emailTraceMask',
+                // 'emailTo',
+            ),
+            'enableStats',
+            'stats' => array(
+                'dataStoreFactory',
+                'errorStatsFile',
+            ),
         ),
         'routeHtml' => array(
             'css',
@@ -103,9 +107,6 @@ class Config
     public function __construct(Debug $debug)
     {
         $this->debug = $debug;
-        $this->valuesPending['errorEmailer']['emailBacktraceDumper'] = function ($backtrace) {
-            return $this->debug->getDump('text')->valDumper->dump($backtrace);
-        };
     }
 
     /**
@@ -165,7 +166,7 @@ class Config
      *
      * Triggers a `Debug::EVENT_CONFIG` event that contains all changed values
      *
-     * @param array|string $path  path or array of values
+     * @param array|string $path  (string) path or array of values
      * @param mixed        $value if setting via path, this is the value
      *
      * @return mixed previous value(s)
@@ -272,14 +273,10 @@ class Config
             $what = $matches[2];
             $func = 'get' . \ucfirst($cat);
             $obj = $this->debug->{$func}($what);
-        } elseif (isset($this->debug->{$debugProp})) {
-            $obj = $this->debug->{$debugProp};
         }
-        if ($obj) {
-            $path = \implode('/', $path);
-            return $obj->getCfg($path);
-        }
-        return null;
+        return $obj
+            ? $obj->getCfg(\implode('/', $path))
+            : null; // not invoked or invalid dump/route
     }
 
     /**
@@ -288,12 +285,18 @@ class Config
      * converts
      *   array(
      *      'collectMethods' => false,
+     *      'emailMask' => 123,
      *   )
      * to
      *   array(
      *       'abstracter' => array(
      *           'collectMethods' => false,
-     *       )
+     *       ),
+     *       'errorHandler' => array(
+     *           'emailer' => array(
+     *               'emailMask' => 123,
+     *           ),
+     *       ),
      *   )
      *
      * @param array $cfg config array
@@ -303,34 +306,22 @@ class Config
     private function normalizeArray($cfg)
     {
         $return = array();
-        foreach ($cfg as $k => $v) {
-            if (isset($this->configKeys[$k]) && \is_array($v)) {
-                $return[$k] = isset($return[$k])
-                    ? \array_merge($return[$k], $v)
-                    : $v;
-                continue;
+        foreach ($cfg as $path => $v) {
+            $ref = &$return;
+            $path = isset($this->configKeys[$path])
+                ? array($path)
+                : $this->normalizePath($path);
+            foreach ($path as $k) {
+                if (!isset($ref[$k])) {
+                    $ref[$k] = array();
+                }
+                $ref = &$ref[$k];
             }
-            $topKey = $this->normalizeFindTop($k);
-            $return[$topKey][$k] = $v;
+            $ref = \is_array($v)
+                ? \array_merge($ref, $v)
+                : $v;
         }
         return $return;
-    }
-
-    /**
-     * Get top-most ("category") that config key belongs to
-     *
-     * @param string $key key belonging to service/category
-     *
-     * @return string top-level key
-     */
-    private function normalizeFindTop($key)
-    {
-        foreach ($this->configKeys as $objName => $objKeys) {
-            if (\in_array($key, $objKeys)) {
-                return $objName;
-            }
-        }
-        return 'debug';
     }
 
     /**
@@ -342,7 +333,7 @@ class Config
      *
      * 'class' may be debug
      *
-     * @param array|string $path path
+     * @param array|string|null $path path
      *
      * @return array
      */
@@ -357,15 +348,37 @@ class Config
         if (\end($path) === '*') {
             \array_pop($path);
         }
-        if (isset($this->configKeys[$path[0]]) === false) {
-            $top = $this->normalizeFindTop($path[0]);
-            \array_unshift($path, $top);
-        }
-        return $path;
+        return isset($this->configKeys[$path[0]])
+            ? $path
+            : $this->normalizePathFind($path);
     }
 
     /**
-     * Set debug property value(s)
+     * Find config key's full path in this->configKeys
+     *
+     * @param array $path Config path
+     *
+     * @return array
+     */
+    private function normalizePathFind($path)
+    {
+        if (\count($path) > 1) {
+            \array_unshift($path, 'debug');
+            return $path;
+        }
+        $pathNew = $this->debug->arrayUtil->searchRecursive($path[0], $this->configKeys, true);
+        $pathNew =  $pathNew
+            ? $pathNew
+            : \array_merge(array('debug'), $path);
+        if (\end($pathNew) !== \end($path)) {
+            \array_pop($pathNew);
+            $pathNew[] = \end($path);
+        }
+        return $pathNew;
+    }
+
+    /**
+     * Set debug service config value(s)
      *
      * @param string $debugProp debug property name
      * @param array  $cfg       property config values

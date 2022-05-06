@@ -13,7 +13,7 @@
 namespace bdk\Debug\Collector;
 
 use bdk\Debug;
-use bdk\Debug\Component;
+use bdk\Debug\AbstractComponent;
 use bdk\Debug\LogEntry;
 use Exception;
 use GuzzleHttp\Exception\RequestException;
@@ -26,7 +26,7 @@ use Psr\Http\Message\ResponseInterface;
 /**
  * PHPDebugConsole Middleware for Guzzle
  */
-class GuzzleMiddleware extends Component
+class GuzzleMiddleware extends AbstractComponent
 {
     private $debug;
     private $icon = 'fa fa-exchange';

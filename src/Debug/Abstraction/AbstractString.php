@@ -12,14 +12,14 @@
 
 namespace bdk\Debug\Abstraction;
 
+use bdk\Debug\AbstractComponent;
 use bdk\Debug\Abstraction\Abstracter;
-use bdk\Debug\Component;
 use finfo;
 
 /**
  * Abstracter:  Methods used to abstract objects
  */
-class AbstractString extends Component
+class AbstractString extends AbstractComponent
 {
     protected $abstracter;
     protected $debug;

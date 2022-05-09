@@ -4,7 +4,7 @@
  * @package   bdk\ErrorHandler
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2021 Brad Kent
+ * @copyright 2014-2022 Brad Kent
  * @version   v3.1
  */
 
@@ -409,17 +409,7 @@ class ErrorHandler extends AbstractErrorHandler
             return $error['continueToNormal'] === false;
         }
         if ($error['exception']) {
-            if ($this->prevExceptionHandler) {
-                /*
-                    re-throw exception vs calling handler directly
-                */
-                \restore_exception_handler();
-                $this->data['uncaughtException'] = null;
-                throw $error['exception'];
-            }
-            if ($error['continueToNormal']) {
-                $error->log();
-            }
+            $this->continueToPrevHandlerException($error);
             return $error['continueToNormal'] === false;
         }
         if (!$this->prevErrorHandler) {
@@ -433,6 +423,29 @@ class ErrorHandler extends AbstractErrorHandler
             $error['line'],
             $error['vars']
         );
+    }
+
+    /**
+     * Restore previous excption handler and re-throw or log exception
+     *
+     * @param Error $error Error instance
+     *
+     * @return void
+     * @throws \Exception
+     */
+    private function continueToPrevHandlerException(Error $error)
+    {
+        if ($this->prevExceptionHandler) {
+            /*
+                re-throw exception vs calling handler directly
+            */
+            \restore_exception_handler();
+            $this->data['uncaughtException'] = null;
+            throw $error['exception'];
+        }
+        if ($error['continueToNormal']) {
+            $error->log();
+        }
     }
 
     /**

@@ -273,6 +273,8 @@ class Config
             $what = $matches[2];
             $func = 'get' . \ucfirst($cat);
             $obj = $this->debug->{$func}($what);
+        } elseif (isset($this->debug->{$debugProp})) {
+            $obj = $this->debug->{$debugProp};
         }
         return $obj
             ? $obj->getCfg(\implode('/', $path))

@@ -18,17 +18,7 @@ class AbstractComponent
     /** @var array */
     protected $cfg = array();
     protected $readOnly = array();
-    protected $serverParams = array();
-
-    /**
-     * Constructor
-     *
-     * @SuppressWarnings(PHPMD.Superglobals)
-     */
-    public function __construct()
-    {
-        $this->serverParams = $_SERVER;
-    }
+    protected $setCfgMergeCallable = 'array_replace_recursive';
 
     /**
      * Magic getter
@@ -62,13 +52,13 @@ class AbstractComponent
      */
     public function __isset($prop)
     {
-        return isset($this->{$prop});
+        return \in_array($prop, $this->readOnly) && isset($this->{$prop});
     }
 
     /**
      * Retrieve a configuration value
      *
-     * @param array|string $path what to get
+     * @param array|string $path (optional) what to get
      *
      * @return mixed
      */
@@ -98,10 +88,10 @@ class AbstractComponent
      *
      * Calls self::postSetCfg() with new values and previous values
      *
-     * @param string|array $mixed key=>value array or key
+     * @param array|string $mixed key=>value array or key
      * @param mixed        $val   new value
      *
-     * @return mixed old value(s)
+     * @return mixed previous value(s)
      */
     public function setCfg($mixed, $val = null)
     {
@@ -116,7 +106,7 @@ class AbstractComponent
         } elseif (\is_array($mixed)) {
             $prev = \array_intersect_key($this->cfg, $mixed);
         }
-        $this->cfg = \array_replace_recursive($this->cfg, $mixed);
+        $this->cfg = \call_user_func($this->setCfgMergeCallable, $this->cfg, $mixed);
         $this->postSetCfg($mixed, $prevArray ?: $prev);
         return $prev;
     }
@@ -135,22 +125,5 @@ class AbstractComponent
      */
     protected function postSetCfg($cfg = array(), $prev = array())
     {
-    }
-
-    /**
-     * Is script running from command line (or cron)?
-     *
-     * @return bool
-     *
-     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
-     */
-    protected function isCli()
-    {
-        $valsDefault = array(
-            'argv' => null,
-            'QUERY_STRING' => null,
-        );
-        $vals = \array_merge($valsDefault, \array_intersect_key($this->serverParams, $valsDefault));
-        return $vals['argv'] && \implode('+', $vals['argv']) !== $vals['QUERY_STRING'];
     }
 }

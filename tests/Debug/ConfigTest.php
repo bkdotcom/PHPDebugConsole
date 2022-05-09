@@ -16,6 +16,7 @@ use bdk\HttpMessage\ServerRequest;
  * @covers \bdk\Debug\Plugin\LogEnv
  * @covers \bdk\Debug\Plugin\Manager
  * @covers \bdk\Debug\Plugin\Redaction
+ * @covers \bdk\Debug\Route\Stream
  */
 class ConfigTest extends DebugTestFramework
 {
@@ -371,6 +372,14 @@ class ConfigTest extends DebugTestFramework
         $filepathScript = $debug->getCfg('filepathScript');
         $this->assertIsString($filepathScript);
         $this->assertTrue($debug->getRoute('html', true));
+    }
+
+    public function testNotInvokedOrPending()
+    {
+        $debug = new Debug(array(
+            'logEnvInfo' => false,
+        ));
+        $this->assertSame('visibility', $debug->getCfg('abstracter.objectSort'));
     }
 
     public function providerOnCfgReplaceSubscriber()

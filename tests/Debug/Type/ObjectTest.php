@@ -114,7 +114,7 @@ bdk\Test\Debug\Fixture\Test2
 EOD;
 
         $wamp = \bdk\Debug::getInstance()->getRoute('wamp');
-        $wampRef = new \ReflectionObject($wamp);
+        // $wampRef = new \ReflectionObject($wamp);
         $crate = new \bdk\Debug\Route\WampCrate(\bdk\Debug::getInstance());
 
         $abs1 = \bdk\Debug::getInstance()->abstracter->getAbstraction(new \bdk\Test\Debug\Fixture\Test(), 'log');

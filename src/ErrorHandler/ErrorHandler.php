@@ -21,7 +21,6 @@ use bdk\PubSub\Manager as EventManager;
  * Able to register multiple onError "callback" functions
  *
  * @property \bdk\Backtrace $backtrace Backtrace instance
- * @property bool           $isCli
  */
 class ErrorHandler extends AbstractErrorHandler
 {
@@ -45,7 +44,6 @@ class ErrorHandler extends AbstractErrorHandler
      */
     public function __construct(EventManager $eventManager, $cfg = array())
     {
-        parent::__construct();
         $this->eventManager = $eventManager;
         $this->cfg = array(
             'continueToPrevHandler' => true,    // whether to continue to previously defined handler (if there is/was a prev handler)

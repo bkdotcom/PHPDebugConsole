@@ -13,97 +13,12 @@
 namespace bdk\Debug;
 
 use bdk\Debug\ConfigurableInterface;
+use bdk\ErrorHandler\AbstractComponent as BaseAbstractComponent;
 
 /**
  * Base "component" methods
  */
-abstract class AbstractComponent implements ConfigurableInterface
+abstract class AbstractComponent extends BaseAbstractComponent implements ConfigurableInterface
 {
-    protected $cfg = array();
-    protected $readOnly = array();
-
-    /**
-     * Magic getter
-     *
-     * @param string $prop property to get
-     *
-     * @return mixed
-     */
-    public function __get($prop)
-    {
-        $getter = \preg_match('/^is[A-Z]/', $prop)
-            ? $prop
-            : 'get' . \ucfirst($prop);
-        if (\method_exists($this, $getter)) {
-            return $this->{$getter}();
-        }
-        if (\in_array($prop, $this->readOnly)) {
-            return $this->{$prop};
-        }
-        return null;
-    }
-
-    /**
-     * Get config value(s)
-     *
-     * @param string $key (optional) what to get
-     *
-     * @return mixed
-     */
-    public function getCfg($key = null)
-    {
-        if ($key === null || $key === '') {
-            return $this->cfg;
-        }
-        return isset($this->cfg[$key])
-            ? $this->cfg[$key]
-            : null;
-    }
-
-    /**
-     * Set one or more config values
-     *
-     *    setCfg('key', 'value')
-     *    setCfg(array('k1'=>'v1', 'k2'=>'v2'))
-     *
-     * Calls self::postSetCfg() with new values and previous values
-     *
-     * @param array|string $mixed key=>value array or key
-     * @param mixed        $val   new value
-     *
-     * @return mixed returns previous value(s)
-     */
-    public function setCfg($mixed, $val = null)
-    {
-        $prev = null;
-        $prevArray = array();
-        if (\is_string($mixed)) {
-            $prev = isset($this->cfg[$mixed])
-                ? $this->cfg[$mixed]
-                : null;
-            $prevArray = array($mixed => $prev);
-            $mixed = array($mixed => $val);
-        } elseif (\is_array($mixed)) {
-            $prev = \array_intersect_key($this->cfg, $mixed);
-        }
-        $this->cfg = \array_merge($this->cfg, $mixed);
-        $this->postSetCfg($mixed, $prevArray ?: $prev);
-        return $prev;
-    }
-
-    /**
-     * Called by setCfg
-     *
-     * extend me to perform class specific config operations
-     *
-     * @param array $cfg  new config values
-     * @param array $prev previous config values
-     *
-     * @return void
-     *
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-     */
-    protected function postSetCfg($cfg = array(), $prev = array())
-    {
-    }
+    protected $setCfgMergeCallable = 'array_merge';
 }

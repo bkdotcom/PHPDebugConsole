@@ -20,19 +20,24 @@ use bdk\PubSub\SubscriberInterface;
  * Email error details on error
  *
  * Emails an error report on error and throttles said email so does not excessively send email
+ *
+ * @property bool $isCli
  */
 class Emailer extends AbstractComponent implements SubscriberInterface
 {
     private $stats = null;
+    protected $serverParams = array();
 
     /**
      * Constructor
      *
      * @param array $cfg config
+     *
+     * @SuppressWarnings(PHPMD.Superglobals)
      */
     public function __construct($cfg = array())
     {
-        parent::__construct();
+        $this->serverParams = $_SERVER;
         $this->cfg = array(
             'emailBacktraceDumper' => null, // callable that receives backtrace array & returns string
             'emailFrom' => null,            // null = use php's default (php.ini: sendmail_from)
@@ -297,5 +302,22 @@ class Emailer extends AbstractComponent implements SubscriberInterface
             : 'Website Error: ' . $this->serverParams['SERVER_NAME'];
         $subject .= ': ' . $error->getMessageText() . ($countSince ? ' (' . $countSince . 'x)' : '');
         return $subject;
+    }
+
+    /**
+     * Is script running from command line (or cron)?
+     *
+     * @return bool
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     */
+    protected function isCli()
+    {
+        $valsDefault = array(
+            'argv' => null,
+            'QUERY_STRING' => null,
+        );
+        $vals = \array_merge($valsDefault, \array_intersect_key($this->serverParams, $valsDefault));
+        return $vals['argv'] && \implode('+', $vals['argv']) !== $vals['QUERY_STRING'];
     }
 }

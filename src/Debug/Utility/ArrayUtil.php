@@ -87,6 +87,7 @@ class ArrayUtil
 
     /**
      * Recursively merge arrays
+     * Numeric keyed values append the array as `array_merge` does
      *
      * @param array $arrayDef   default array
      * @param array $array2,... array to merge

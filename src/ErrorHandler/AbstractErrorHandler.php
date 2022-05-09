@@ -24,7 +24,6 @@ use bdk\ErrorHandler\Plugin\Stats;
  *
  * @property \bdk\Backtrace                 $backtrace Backtrace instance
  * @property \bdk\ErrorHandler\Plugin\Stats $stats     Stats instance
- * @property bool                           $isCli
  */
 abstract class AbstractErrorHandler extends AbstractComponent
 {

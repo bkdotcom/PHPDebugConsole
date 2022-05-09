@@ -15,6 +15,7 @@ use bdk\Test\PolyFill\ExpectExceptionTrait;
  *
  * @covers \bdk\Debug\InternalEvents
  * @covers \bdk\Debug\Route\Email
+ * @covers \bdk\Debug\Route\Stream
  */
 class InternalEventsTest extends DebugTestFramework
 {

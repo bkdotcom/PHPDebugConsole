@@ -208,7 +208,8 @@ class ArrayUtilTest extends TestCase
                 'sedan' => array('family','luxury'),
                 'suv' => array('boxy','good'),
             ),
-            1 => array('foo'),
+            1 => array('bar'),
+            'typeMismatch' => 'not array'
         );
         $array2 = array(
             'boats' => array('speed','house'),
@@ -219,7 +220,8 @@ class ArrayUtilTest extends TestCase
                 'hatchback' => 'array2 val',
                 'suv' => 'array2 val',
             ),
-            1 => array('bar','foo'),
+            1 => array('foo','bar','baz'),
+            'typeMismatch' => array('array'),
         );
         $array3 = array(
             'trains' => array('maglev'),
@@ -233,7 +235,8 @@ class ArrayUtilTest extends TestCase
                 'sedan' => array('family','luxury'),
                 'suv' => 'array2 val',
             ),
-            1 => array('foo','bar'),
+            1 => array('bar','foo','baz'),
+            'typeMismatch' => array('array'),
             'boats' => array('speed','house'),
         );
         $arrayOut = ArrayUtil::mergeDeep($array1, $array2, $array3);

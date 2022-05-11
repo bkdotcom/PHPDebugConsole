@@ -53,12 +53,8 @@ class Html extends AbstractRoute
             'tooltip' => true,
         );
         $this->dumper = $debug->getDump('html');
-        if ($this->cfg['filepathCss']) {
-            $this->addAsset('css', $this->cfg['filepathCss']);
-        }
-        if ($this->cfg['filepathScript']) {
-            $this->addAsset('script', $this->cfg['filepathScript']);
-        }
+        $this->addAsset('css', $this->cfg['filepathCss']);
+        $this->addAsset('script', $this->cfg['filepathScript']);
     }
 
     /**
@@ -71,11 +67,7 @@ class Html extends AbstractRoute
      */
     public function addAsset($what, $asset)
     {
-        if (\preg_match('#[\r\n]#', $asset) !== 1) {
-            // single line... see if begins with "./""
-            $asset = \preg_replace('#^\./?#', __DIR__ . '/../', $asset);
-        }
-        $this->assets[$what][] = $asset;
+        $this->assets[$what][] = $this->normalizeAssetPath($asset);
         $this->assets[$what] = \array_unique($this->assets[$what]);
     }
 
@@ -167,10 +159,7 @@ class Html extends AbstractRoute
      */
     public function removeAsset($what, $asset)
     {
-        if (\preg_match('#[\r\n]#', $asset) !== 1) {
-            // single line... see if begins with "./""
-            $asset = \preg_replace('#^\./?#', __DIR__ . '/../', $asset);
-        }
+        $asset = $this->normalizeAssetPath($asset);
         foreach ($this->assets[$what] as $k => $v) {
             if ($v === $asset) {
                 unset($this->assets[$what][$k]);
@@ -345,12 +334,33 @@ class Html extends AbstractRoute
     }
 
     /**
+     * Convert "./" relative path to absolute
+     *
+     * @param string $asset css, javascript, or filepath
+     *
+     * @return string
+     */
+    private function normalizeAssetPath($asset)
+    {
+        return \preg_match('#[\r\n]#', $asset) !== 1
+            ? \preg_replace('#^\./?#', __DIR__ . '/../', $asset) // single line... see if begins with "./""
+            : $asset;
+    }
+
+    /**
      * {@inheritDoc}
      */
     protected function postSetCfg($cfg = array(), $prev = array())
     {
-        foreach (array('filepathCss', 'filepathScript') as $k) {
-            $this->cfg[$k] = \preg_replace('#^\./?#', __DIR__ . '/../', $this->cfg[$k]);
+        $assetTypes = array(
+            'filepathCss' => 'css',
+            'filepathScript' => 'script',
+        );
+        $assetValues = \array_intersect_key($cfg, $assetTypes);
+        foreach ($assetValues as $k => $v) {
+            $type = $assetTypes[$k];
+            $this->removeAsset($type, $prev[$k]);
+            $this->addAsset($type, $v);
         }
     }
 }

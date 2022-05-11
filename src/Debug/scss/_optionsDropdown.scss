@@ -2,7 +2,7 @@
 // max-height only applies to content (border-box is ignored)
 // therefore we need to apply border & padding to a nested div
 
-#debug-options-toggle {
+.debug-options-toggle {
   position: relative;
   top: -1px;
 }

@@ -85,17 +85,20 @@ class Php
      *   * string  class::$property
      *   * string  class::CONSTANT
      *
-     * @param Reflector|object|string $mixed Reflector, object, or string
+     * @param object|string $mixed      object, or string
+     * @param bool          $returnSelf (false) if passed obj is a Reflector, return it
      *
      * @return Reflector|null
      */
-    public static function getReflector($mixed)
+    public static function getReflector($mixed, $returnSelf = false)
     {
-        if ($mixed instanceof Reflector) {
+        if ($mixed instanceof Reflector && $returnSelf) {
             return $mixed;
-        } elseif (\is_object($mixed)) {
+        }
+        if (\is_object($mixed)) {
             return new ReflectionObject($mixed);
-        } elseif (\is_string($mixed)) {
+        }
+        if (\is_string($mixed)) {
             return static::getReflectorFromString($mixed);
         }
         return null;

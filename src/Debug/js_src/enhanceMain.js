@@ -14,7 +14,7 @@ var $root
 export function init ($debugRoot) {
   $root = $debugRoot
   config = $root.data('config').get()
-  $root.find('.debug-menu-bar').append($('<div />', { class: 'float-right' }))
+  updateMenuBar()
   addChannelToggles()
   addExpandAll()
   addNoti($('body'))
@@ -26,6 +26,17 @@ export function init ($debugRoot) {
   addErrorIcons()
   $root.find('.loading').hide()
   $root.addClass('enhanced')
+}
+
+function updateMenuBar () {
+  var $menuBar = $root.find('.debug-menu-bar')
+  var nav = $menuBar.find('nav').length
+    ? $menuBar.find('nav')[0].outerHTML
+    : ''
+  $menuBar.html('<span><i class="fa fa-bug"></i> PHPDebugConsole</span>' +
+    nav +
+    '<div class="float-right"></div>'
+  )
 }
 
 function addChannelToggles () {

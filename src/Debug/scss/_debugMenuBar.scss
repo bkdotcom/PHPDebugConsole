@@ -14,8 +14,16 @@
     border-radius: 0;
     border-top-width: 0;
     border-bottom-width: 0;
+    &.close {
+      font-size: 21px;
+      font-weight: 300;
+    }
   }
   .float-right {
+    position: absolute;
+    top: 0;
+    right: 6px;
+    line-height: 23px;
     button {
       height: 18px;
       border: 0;
@@ -29,6 +37,9 @@
   }
 }
 .debug-error-counts {
+  position: relative;
+  top: -2px;
+  font-size: 0.78em;
   .badge {
     padding: 0 0.4em 0 0.25em;
     color: inherit;
@@ -39,67 +50,53 @@
 }
 
 &.debug-enhanced-ui {
-  .debug-bar {
-    border-top: 1px solid $border-color;
-    border-bottom: 1px solid $border-color;
-    color: $grey-text;
-    padding: 0 6px;
-    background: $lite-grey;
-    font-size: 16px;
-    margin-bottom: 0;
+}
 
-    a,
-    button,
-    label {
-      &:focus,
-      &:hover {
-        color: #333;
-        text-decoration: none;
+.debug-bar {
+  border-top: 1px solid $border-color;
+  border-bottom: 1px solid $border-color;
+  color: $grey-text;
+  padding: 0 6px;
+  background: $lite-grey;
+  font-size: 16px;
+  margin-bottom: 0;
+
+  a,
+  button,
+  label {
+    &:focus,
+    &:hover {
+      color: #333;
+      text-decoration: none;
+    }
+  }
+
+  nav {
+    margin-left: 20px;
+    line-height: 23px;
+    a {
+      line-height: 23px;
+      &.has-assert {
+        line-height: 22px;
+        border-bottom: $color-tab-assert-border solid 2px;
+      }
+      &.has-warn {
+        line-height: 22px;
+        border-bottom: $color-tab-warn-border solid 2px;
+      }
+      &.has-error {
+        line-height: 22px;
+        border-bottom: $color-tab-error-border solid 2px;
+      }
+      &.active {
+        line-height: 22px;
+        border-bottom: $color-tab-active-border solid 2px;
       }
     }
+  }
 
-    nav {
-      margin-left: 20px;
-      line-height: 23px;
-      a {
-        line-height: 23px;
-        &.has-assert {
-          line-height: 22px;
-          border-bottom: $color-tab-assert-border solid 2px;
-        }
-        &.has-warn {
-          line-height: 22px;
-          border-bottom: $color-tab-warn-border solid 2px;
-        }
-        &.has-error {
-          line-height: 22px;
-          border-bottom: $color-tab-error-border solid 2px;
-        }
-        &.active {
-          line-height: 22px;
-          border-bottom: $color-tab-active-border solid 2px;
-        }
-      }
-    }
-
-    button.close {
-      font-size: 21px;
-      font-weight: 300;
-    }
-    .float-right {
-      position: absolute;
-      top: 0;
-      right: 6px;
-    }
-    .debug-error-counts {
-      position: relative;
-      top: -2px;
-      font-size: 0.78em;
-    }
-
-    > span {
-      display: inline-block;
-      line-height: 23px;
-    }
+  > span {
+    display: inline-block;
+    line-height: 23px;
   }
 }

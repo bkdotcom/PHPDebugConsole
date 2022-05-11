@@ -11,7 +11,7 @@ export function init ($debugRoot) {
 
   addDropdown()
 
-  $('#debug-options-toggle')
+  $root.find('.debug-options-toggle')
     .on('click', onDebugOptionsToggle)
 
   $('input[name=debugCookie]')
@@ -37,7 +37,8 @@ export function init ($debugRoot) {
 
 function addDropdown () {
   var $menuBar = $root.find('.debug-menu-bar')
-  $menuBar.find('.float-right').prepend('<button id="debug-options-toggle" type="button" data-toggle="debug-options" aria-label="Options" aria-haspopup="true" aria-expanded="false">' +
+  var id = $('.debug-options').length + 1;
+  $menuBar.find('.float-right').prepend('<button class="debug-options-toggle" type="button" data-toggle="debug-options" aria-label="Options" aria-haspopup="true" aria-expanded="false">' +
       '<i class="fa fa-ellipsis-v fa-fw"></i>' +
     '</button>'
   )
@@ -47,8 +48,8 @@ function addDropdown () {
         '<label><input type="checkbox" name="persistDrawer" /> Keep Open/Closed</label>' +
         '<label><input type="checkbox" name="linkFiles" /> Create file links</label>' +
         '<div class="form-group">' +
-          '<label for="linkFilesTemplate">Link Template</label>' +
-          '<input name="linkFilesTemplate" id="linkFilesTemplate" />' +
+          '<label for="linkFilesTemplate_' + id + '">Link Template</label>' +
+          '<input id="linkFilesTemplate_' + id + '" name="linkFilesTemplate" />' +
         '</div>' +
         '<hr class="dropdown-divider" />' +
         '<a href="http://www.bradkent.com/php/debug" target="_blank">Documentation</a>' +
@@ -81,7 +82,8 @@ function onDebugCookieChange () {
 }
 
 function onDebugOptionsToggle (e) {
-  var isVis = $('.debug-options').is('.show')
+  var isVis = $(this).closest('.debug-bar').find('.debug-options').is('.show')
+  $root = $(this).closest('.debug');
   isVis
     ? close()
     : open()

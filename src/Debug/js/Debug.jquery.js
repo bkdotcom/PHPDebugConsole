@@ -896,7 +896,7 @@
       return
     }
 
-    $root.addClass('debug-drawer debug-enhanced-ui');
+    $root.addClass('debug-drawer debug-enhanced-ui'); // debug-enhanced-ui class is deprecated
 
     addMarkup();
 
@@ -937,19 +937,14 @@
   }
 
   function addMarkup () {
-    var $menuBar = $('.debug-menu-bar');
+    var $menuBar = $root.find('.debug-menu-bar');
     $menuBar.before(
       '<div class="debug-pull-tab" title="Open PHPDebugConsole"><i class="fa fa-bug"></i><i class="fa fa-spinner fa-pulse"></i> PHP</div>' +
       '<div class="debug-resize-handle"></div>'
     );
-    $menuBar.html('<span><i class="fa fa-bug"></i> PHPDebugConsole</span>' +
-      $menuBar.find('nav')[0].outerHTML +
-      '<div class="float-right">' +
-        '<button type="button" class="close" data-dismiss="debug-drawer" aria-label="Close">' +
-          '<span aria-hidden="true">&times;</span>' +
-        '</button>' +
-      '</div>'
-    );
+    $menuBar.find('.float-right').append('<button type="button" class="close" data-dismiss="debug-drawer" aria-label="Close">' +
+        '<span aria-hidden="true">&times;</span>' +
+      '</button>');
   }
 
   function open () {
@@ -1259,7 +1254,7 @@
 
     addDropdown();
 
-    $('#debug-options-toggle')
+    $root$1.find('.debug-options-toggle')
       .on('click', onDebugOptionsToggle);
 
     $('input[name=debugCookie]')
@@ -1285,7 +1280,8 @@
 
   function addDropdown () {
     var $menuBar = $root$1.find('.debug-menu-bar');
-    $menuBar.find('.float-right').prepend('<button id="debug-options-toggle" type="button" data-toggle="debug-options" aria-label="Options" aria-haspopup="true" aria-expanded="false">' +
+    var id = $('.debug-options').length + 1;
+    $menuBar.find('.float-right').prepend('<button class="debug-options-toggle" type="button" data-toggle="debug-options" aria-label="Options" aria-haspopup="true" aria-expanded="false">' +
         '<i class="fa fa-ellipsis-v fa-fw"></i>' +
       '</button>'
     );
@@ -1295,8 +1291,8 @@
           '<label><input type="checkbox" name="persistDrawer" /> Keep Open/Closed</label>' +
           '<label><input type="checkbox" name="linkFiles" /> Create file links</label>' +
           '<div class="form-group">' +
-            '<label for="linkFilesTemplate">Link Template</label>' +
-            '<input name="linkFilesTemplate" id="linkFilesTemplate" />' +
+            '<label for="linkFilesTemplate_' + id + '">Link Template</label>' +
+            '<input id="linkFilesTemplate_' + id + '" name="linkFilesTemplate" />' +
           '</div>' +
           '<hr class="dropdown-divider" />' +
           '<a href="http://www.bradkent.com/php/debug" target="_blank">Documentation</a>' +
@@ -1329,7 +1325,8 @@
   }
 
   function onDebugOptionsToggle (e) {
-    var isVis = $('.debug-options').is('.show');
+    var isVis = $(this).closest('.debug-bar').find('.debug-options').is('.show');
+    $root$1 = $(this).closest('.debug');
     isVis
       ? close$1()
       : open$1();
@@ -1625,7 +1622,7 @@
   function init$7 ($debugRoot) {
     $root$3 = $debugRoot;
     config$6 = $root$3.data('config').get();
-    $root$3.find('.debug-menu-bar').append($('<div />', { class: 'float-right' }));
+    updateMenuBar();
     addChannelToggles();
     addExpandAll();
     addNoti($('body'));
@@ -1637,6 +1634,17 @@
     addErrorIcons();
     $root$3.find('.loading').hide();
     $root$3.addClass('enhanced');
+  }
+
+  function updateMenuBar () {
+    var $menuBar = $root$3.find('.debug-menu-bar');
+    var nav = $menuBar.find('nav').length
+      ? $menuBar.find('nav')[0].outerHTML
+      : '';
+    $menuBar.html('<span><i class="fa fa-bug"></i> PHPDebugConsole</span>' +
+      nav +
+      '<div class="float-right"></div>'
+    );
   }
 
   function addChannelToggles () {

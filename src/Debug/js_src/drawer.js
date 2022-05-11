@@ -21,7 +21,7 @@ export function init ($debugRoot) {
     return
   }
 
-  $root.addClass('debug-drawer debug-enhanced-ui')
+  $root.addClass('debug-drawer debug-enhanced-ui') // debug-enhanced-ui class is deprecated
 
   addMarkup()
 
@@ -62,19 +62,14 @@ function enableScrollLock ($node) {
 }
 
 function addMarkup () {
-  var $menuBar = $('.debug-menu-bar')
+  var $menuBar = $root.find('.debug-menu-bar')
   $menuBar.before(
     '<div class="debug-pull-tab" title="Open PHPDebugConsole"><i class="fa fa-bug"></i><i class="fa fa-spinner fa-pulse"></i> PHP</div>' +
     '<div class="debug-resize-handle"></div>'
   )
-  $menuBar.html('<span><i class="fa fa-bug"></i> PHPDebugConsole</span>' +
-    $menuBar.find('nav')[0].outerHTML +
-    '<div class="float-right">' +
-      '<button type="button" class="close" data-dismiss="debug-drawer" aria-label="Close">' +
-        '<span aria-hidden="true">&times;</span>' +
-      '</button>' +
-    '</div>'
-  )
+  $menuBar.find('.float-right').append('<button type="button" class="close" data-dismiss="debug-drawer" aria-label="Close">' +
+      '<span aria-hidden="true">&times;</span>' +
+    '</button>')
 }
 
 function open () {

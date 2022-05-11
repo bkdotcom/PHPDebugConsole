@@ -36,7 +36,7 @@ class PhpDocBase
      */
     protected function getComment($what)
     {
-        $this->reflector = Php::getReflector($what);
+        $this->reflector = Php::getReflector($what, true);
         $docComment = $this->reflector
             ? \is_callable(array($this->reflector, 'getDocComment'))
                 ? $this->reflector->getDocComment()

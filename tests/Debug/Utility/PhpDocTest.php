@@ -28,9 +28,6 @@ class PhpDocTest extends TestCase
     public function testConstruct()
     {
         $phpDoc = new PhpDoc();
-        // $reflector = new \ReflectionProperty($phpDoc, 'parsers');
-        // $reflector->setAccessible(true);
-        // $parsers = $reflector->getValue($phpDoc);
         $parsers = \bdk\Test\Debug\Helper::getPrivateProp($phpDoc, 'parsers');
         $this->assertIsArray($parsers);
         $this->assertNotEmpty($parsers, 'Parsers is empty');
@@ -38,10 +35,6 @@ class PhpDocTest extends TestCase
 
     public function testGetParsedObject()
     {
-        // $obj = new \bdk\Test\Debug\Fixture\Test2();
-        // $phpDoc = Debug::getInstance()->phpDoc->getParsed($obj);
-        // echo 'parsed = ' . \json_encode($phpDoc, JSON_PRETTY_PRINT) . "\n";
-
         $obj = new \bdk\Test\Debug\Fixture\Utility\PhpDocImplements();
         $parsed = Debug::getInstance()->phpDoc->getParsed($obj);
         $expectJson = <<<'EOD'

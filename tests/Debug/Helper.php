@@ -14,12 +14,12 @@ use ReflectionProperty;
  */
 class Helper
 {
-    public static function backtrace($limit = 0)
+    public static function backtrace($limit = 0, $return = false)
     {
         $backtrace = $limit
             ? \array_slice(\debug_backtrace(0, $limit + 1), 1)
             : \array_slice(\debug_backtrace(0), 0, -8);
-        return \array_map(function ($frame) {
+        $backtrace =  \array_map(function ($frame) {
             if (isset($frame['args'])) {
                 $frame['args'] = self::backtraceArgs($frame['args']);
             }
@@ -28,6 +28,10 @@ class Helper
             }
             return $frame;
         }, $backtrace);
+        if ($return) {
+            return $backtrace;
+        }
+        self::stderr($backtrace);
     }
 
     /**

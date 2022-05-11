@@ -41,7 +41,7 @@ class Php
      */
     public static function friendlyClassName($mixed)
     {
-        $reflector = static::getReflector($mixed);
+        $reflector = static::getReflector($mixed, true);
         if ($reflector && \method_exists($reflector, 'getDeclaringClass')) {
             $reflector = $reflector->getDeclaringClass();
         }

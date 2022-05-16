@@ -124,6 +124,10 @@ EOD;
         $unserialized = SerializeLog::unserialize($serialized);
         $expect = array(
             'version' => '2.3',
+            'config' => array(
+                'channels' => array(),
+                'channelName' => 'general',
+            ),
             'alerts' => array(
                 array(
                     'alert',
@@ -319,8 +323,8 @@ EOD;
             ),
             'runtime' => array(),
             'config' => array(
-                'channelName' => 'general',
                 'channels' => array(),
+                'channelName' => 'general',
             ),
         );
         $this->assertSame($expect, $unserialized);

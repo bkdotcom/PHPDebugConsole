@@ -373,7 +373,7 @@ class Html
         if (isset($values[$key])) {
             return $value
                 ? $values[$key][0]
-                : $values[$key[1]];
+                : $values[$key][1];
         }
         return $value
             ? $key // even if not a recognized boolean attribute

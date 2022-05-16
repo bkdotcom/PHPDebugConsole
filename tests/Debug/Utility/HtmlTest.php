@@ -40,7 +40,8 @@ class HtmlTest extends DebugTestFramework
                     'foo' => false,     // not a valid boolean attrib - we'll not output regardless
                     'bar' => true,      // not a valid boolean attrib - we'll output anyhow : bar="bar"
                     'baz' => null,
-                    'AUTOCOMPLETE',     // autocomplete="on"
+                    'AUTOCOMPLETE',       // autocomplete="on"
+                    'translate' => false, // translate="no"
                     'disabled',         // disabled="disabled"
                     'draggable' => true,
                     'spellcheck',
@@ -69,6 +70,7 @@ class HtmlTest extends DebugTestFramework
                     . ' src="/path/to/image.png"'
                     . ' style="display:inline-block;position:absolute;"'
                     . ' title="Pork &amp; Beans"'
+                    . ' translate="no"'
                     . ' value=""'
                     . ' width="80"',
             ),

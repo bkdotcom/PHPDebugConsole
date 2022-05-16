@@ -51,7 +51,7 @@ class Channel implements SubscriberInterface
      * @param string $name   channel name
      * @param array  $config channel specific configuration
      *
-     * @return static new or existing `Debug` instance
+     * @return \bdk\Debug new or existing `Debug` instance
      */
     public function getChannel($name, $config = array())
     {
@@ -90,7 +90,7 @@ class Channel implements SubscriberInterface
      * @param bool $allDescendants (false) include all descendants?
      * @param bool $inclTop        (false) whether to incl topmost channels (ie "tabs")
      *
-     * @return static[] Does not include self
+     * @return \bdk\Debug[] Does not include self
      */
     public function getChannels($allDescendants = false, $inclTop = false)
     {
@@ -121,7 +121,9 @@ class Channel implements SubscriberInterface
     /**
      * Get the topmost channels (ie "tabs")
      *
-     * @return static[]
+     * (includes the general/root channel)
+     *
+     * @return \bdk\Debug[]
      */
     public function getChannelsTop()
     {

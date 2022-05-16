@@ -142,7 +142,7 @@ function createFileLink (string, remove, foundFiles) {
   if (!matches.length) {
     return
   }
-  $replace = remove
+  $replace = remove || $string.find('.fa-external-link').length
     ? $('<span>', {
       html: html
     })

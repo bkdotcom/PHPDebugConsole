@@ -196,11 +196,13 @@ class Helper
      */
     public static function stderr()
     {
-        $args = \array_map(function ($val) {
+        $isCli = self::isCli();
+        $dumper = Debug::getInstance()->getDump($isCli ? 'textAnsi' : 'text');
+        $args = \array_map(function ($val) use ($dumper) {
             $new = 'null';
             if ($val !== null) {
-                $new = Debug::getInstance()->getDump('textAnsi')->valDumper->dump($val);
-                Debug::getInstance()->getDump('textAnsi')->valDumper->setValDepth(0);
+                $new = $dumper->valDumper->dump($val);
+                $dumper->valDumper->setValDepth(0);
             }
             if (\json_last_error() !== JSON_ERROR_NONE) {
                 $new = \var_export($val, true);
@@ -210,6 +212,12 @@ class Helper
         $glue = \func_num_args() > 2
             ? ', '
             : ' = ';
-        \fwrite(STDERR, \implode($glue, $args) . "\n");
+        $outStr = \implode($glue, $args);
+        \fwrite(
+            $isCli ? STDERR : STDOUT,
+            $isCli
+                ? $outStr . "\n"
+                : '<pre>' . \htmlspecialchars($outStr) . '</pre>'
+        );
     }
 }

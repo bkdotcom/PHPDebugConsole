@@ -33,14 +33,15 @@ class Tabs
     {
         $channels = $this->debug->getChannelsTop();
         \uasort($channels, array($this, 'sortChannelCallback'));
-        if (\count($channels) < 2) {
-            return '';
-        }
-        $html = '';
+        $tabs = array();
         foreach ($channels as $instance) {
-            $html .= $this->buildTab($instance);
+            if ($instance->getCfg('output', Debug::CONFIG_DEBUG)) {
+                $tabs[] = $this->buildTab($instance);
+            }
         }
-        return $html;
+        return \count($tabs) > 1
+            ? \implode('', $tabs)
+            : '';
     }
 
     /**
@@ -62,6 +63,9 @@ class Tabs
         );
         $html = '<div class="tab-panes"' . ($this->route->getCfg('outputScript') ? ' style="display:none;"' : '') . '>' . "\n";
         foreach ($channels as $instance) {
+            if ($instance->getCfg('output', Debug::CONFIG_DEBUG) === false) {
+                continue;
+            }
             $html .= $this->buildTabPane($instance);
         }
         $html .= '</div>' . "\n"; // close .tab-panes
@@ -160,12 +164,10 @@ class Tabs
             If outputing script, initially hide the output..
             this will help page load performance (fewer redraws)... by magnitudes
         */
-        $str .= '<ul' . $this->debug->html->buildAttribString(array(
-            'class' => 'debug-log-summary group-body',
-        )) . ">\n" . $this->route->processSummary() . '</ul>' . "\n";
-        $str .= '<ul' . $this->debug->html->buildAttribString(array(
-            'class' => 'debug-log group-body',
-        )) . ">\n" . $this->route->processLog() . '</ul>' . "\n";
+        $str .= '<ul class="debug-log-summary group-body">' . "\n"
+            . $this->route->processSummary() . '</ul>' . "\n";
+        $str .= '<ul class="debug-log group-body">' . "\n"
+            . $this->route->processLog() . '</ul>' . "\n";
 
         $str .= '</div>' . "\n"; // close .tab-body
         $str .= '</div>' . "\n"; // close .tab-pane

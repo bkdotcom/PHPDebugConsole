@@ -437,7 +437,7 @@
     if (!matches.length) {
       return
     }
-    $replace = remove
+    $replace = remove || $string.find('.fa-external-link').length
       ? $('<span>', {
         html: html
       })
@@ -1049,6 +1049,11 @@
   ];
 
   function init$4 ($delegateNode) {
+    var $debugTabLog = $delegateNode.find('> .tab-panes > .tab-primary');
+    if ($debugTabLog.length === 0 || $debugTabLog.data('options').sidebar === false) {
+      // no sidebar -> no filtering
+      return
+    }
     applyFilter($delegateNode);
     $delegateNode.on('change', 'input[type=checkbox]', onCheckboxChange);
     $delegateNode.on('change', 'input[data-toggle=error]', onToggleErrorChange);
@@ -1269,11 +1274,11 @@
       .on('change', onPersistDrawerChange)
       .prop('checked', config$4.get('persistDrawer'));
 
-    $('input[name=linkFiles]')
+    $root$1.find('input[name=linkFiles]')
       .on('change', onLinkFilesChange)
       .prop('checked', config$4.get('linkFiles')).trigger('change');
 
-    $('input[name=linkFilesTemplate]')
+    $root$1.find('input[name=linkFilesTemplate]')
       .on('change', onLinkFilesTemplateChange)
       .val(config$4.get('linkFilesTemplate'));
   }

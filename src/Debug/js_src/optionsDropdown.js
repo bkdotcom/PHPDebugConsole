@@ -26,18 +26,18 @@ export function init ($debugRoot) {
     .on('change', onPersistDrawerChange)
     .prop('checked', config.get('persistDrawer'))
 
-  $('input[name=linkFiles]')
+  $root.find('input[name=linkFiles]')
     .on('change', onLinkFilesChange)
     .prop('checked', config.get('linkFiles')).trigger('change')
 
-  $('input[name=linkFilesTemplate]')
+  $root.find('input[name=linkFilesTemplate]')
     .on('change', onLinkFilesTemplateChange)
     .val(config.get('linkFilesTemplate'))
 }
 
 function addDropdown () {
   var $menuBar = $root.find('.debug-menu-bar')
-  var id = $('.debug-options').length + 1;
+  var id = $('.debug-options').length + 1
   $menuBar.find('.float-right').prepend('<button class="debug-options-toggle" type="button" data-toggle="debug-options" aria-label="Options" aria-haspopup="true" aria-expanded="false">' +
       '<i class="fa fa-ellipsis-v fa-fw"></i>' +
     '</button>'
@@ -83,7 +83,7 @@ function onDebugCookieChange () {
 
 function onDebugOptionsToggle (e) {
   var isVis = $(this).closest('.debug-bar').find('.debug-options').is('.show')
-  $root = $(this).closest('.debug');
+  $root = $(this).closest('.debug')
   isVis
     ? close()
     : open()

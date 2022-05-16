@@ -28,6 +28,36 @@ class SerializeLog
     protected static $isLegacyData = false;
 
     /**
+     * Import the config and data into the debug instance
+     *
+     * @param array $data  Unpacked / Unserialized log data
+     * @param Debug $debug (optional) Debug instance
+     *
+     * @return Debug
+     */
+    public static function import($data, Debug $debug = null)
+    {
+        if (!$debug) {
+            $debug = new Debug();
+        }
+        self::$isLegacyData = \version_compare($data['version'], '3.0', '<');
+        self::$debug = $debug;
+        // set config for any channels already present in debug
+        foreach (\array_intersect_key($debug->getChannels(true, true), $data['config']['channels']) as $fqn => $channel) {
+            $channel->setCfg($data['config']['channels'][$fqn]);
+        }
+        $debug->setCfg($data['config']);
+        unset($data['config'], $data['version']);
+        foreach (array('alerts','log','logSummary') as $cat) {
+            $data[$cat] = self::importGroup($cat, $data[$cat]);
+        }
+        foreach ($data as $k => $v) {
+            $debug->data->set($k, $v);
+        }
+        return $debug;
+    }
+
+    /**
      * Serialize log for emailing
      *
      * @param Debug $debug debug instance
@@ -72,6 +102,9 @@ class SerializeLog
         }
         $data = \array_merge(array(
             'version' => '2.3',
+            'config' => array(
+                'channels' => array(),
+            ),
         ), $data);
         if (isset($data['rootChannel'])) {
             $data['config']['channelName'] = $data['rootChannel'];
@@ -79,36 +112,6 @@ class SerializeLog
             unset($data['rootChannel']);
         }
         return $data;
-    }
-
-    /**
-     * Import the config and data into the debug instance
-     *
-     * @param array $data  Unpacked / Unserialized log data
-     * @param Debug $debug (optional) Debug instance
-     *
-     * @return Debug
-     */
-    public static function import($data, Debug $debug = null)
-    {
-        if (!$debug) {
-            $debug = new Debug();
-        }
-        self::$isLegacyData = \version_compare($data['version'], '3.0', '<');
-        self::$debug = $debug;
-        // set config for any channels already present in debug
-        foreach (\array_intersect_key($debug->getChannels(true, true), $data['config']['channels']) as $fqn => $channel) {
-            $channel->setCfg($data['config']['channels'][$fqn]);
-        }
-        $debug->setCfg($data['config']);
-        unset($data['config'], $data['version']);
-        foreach (array('alerts','log','logSummary') as $cat) {
-            $data[$cat] = self::importGroup($cat, $data[$cat]);
-        }
-        foreach ($data as $k => $v) {
-            $debug->data->set($k, $v);
-        }
-        return $debug;
     }
 
     /**
@@ -139,11 +142,15 @@ class SerializeLog
      */
     private static function importLogEntry($vals)
     {
+        $vals = \array_replace(array('', array(), array()), $vals);
         if (self::$isLegacyData) {
             $vals[1] = self::importLegacy($vals[1]);
         }
-        $vals = \array_replace(array('', array(), array()), $vals);
-        return new LogEntry(self::$debug, $vals[0], $vals[1], $vals[2]);
+        $logEntry = new LogEntry(self::$debug, $vals[0], $vals[1], $vals[2]);
+        if (self::$isLegacyData && $vals[0] === 'table') {
+            self::$debug->methodTable->doTable($logEntry);
+        }
+        return $logEntry;
     }
 
     /**
@@ -181,7 +188,7 @@ class SerializeLog
     private static function importLegacy($vals)
     {
         foreach ($vals as $k => $v) {
-            if (!\is_array($v)) {
+            if (\is_array($v) === false) {
                 continue;
             }
             if (!isset($v['debug']) || $v['debug'] !== Abstracter::ABSTRACTION) {
@@ -193,10 +200,36 @@ class SerializeLog
             unset($v['debug'], $v['type']);
             if ($type === Abstracter::TYPE_OBJECT) {
                 $v['properties'] = self::importLegacy($v['properties']);
+                $v = self::importLegacyObj($v);
             }
             $vals[$k] = new Abstraction($type, $v);
         }
         return $vals;
+    }
+
+    /**
+     * Convert legacy object abstraction data
+     *
+     * @param array $abs Abstraction values
+     *
+     * @return array
+     */
+    private static function importLegacyObj($abs)
+    {
+        $abs['phpDoc']['desc'] = $abs['phpDoc']['description'];
+        unset($abs['phpDoc']['description']);
+        foreach ($abs['methods'] as $name => $meth) {
+            $meth['phpDoc']['desc'] = $meth['phpDoc']['description'];
+            unset($meth['phpDoc']['description']);
+            $abs['methods'][$name] = $meth;
+        }
+        $basePropInfoRef = new \ReflectionProperty('bdk\Debug\Abstraction\AbstractObjectProperties', 'basePropInfo');
+        $basePropInfoRef->setAccessible(true);
+        $basePropInfo = $basePropInfoRef->getValue();
+        foreach ($abs['properties'] as $name => $prop) {
+            $abs['properties'][$name] = \array_merge($basePropInfo, $prop);
+        }
+        return $abs;
     }
 
     /**

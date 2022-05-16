@@ -181,6 +181,11 @@ EOD;
                                     'value' => 'bar',
                                     'valueFrom' => 'value',
                                     'visibility' => 'public',
+                                    // import merges in default values
+                                    // 'attributes' => array(),
+                                    // 'debugInfoExcluded' => false,
+                                    // 'isPromoted' => false,
+                                    // 'isReadOnly' => false,
                                 ),
                             ),
                             'scopeClass' => 'bdk\Debug',
@@ -329,6 +334,16 @@ EOD;
         );
         $this->assertSame($expect, $unserialized);
         $debug = SerializeLog::import($unserialized);
+        // import merged default values
+        $expect['log'][1][1][1]['properties']['foo'] = \array_merge(
+            $expect['log'][1][1][1]['properties']['foo'],
+            array(
+                'attributes' => array(),
+                'debugInfoExcluded' => false,
+                'isPromoted' => false,
+                'isReadOnly' => false,
+            )
+        );
         $serialized = SerializeLog::serialize($debug);
         $unserialized = SerializeLog::unserialize($serialized);
         $keysCompare = array('alerts', 'log','logSummary');

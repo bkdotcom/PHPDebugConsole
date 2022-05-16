@@ -216,12 +216,11 @@ class SerializeLog
      */
     private static function importLegacyObj($abs)
     {
-        $abs['phpDoc']['desc'] = $abs['phpDoc']['description'];
-        unset($abs['phpDoc']['description']);
+        $baseMethodInfoRef = new \ReflectionProperty('bdk\Debug\Abstraction\AbstractObjectMethods', 'baseMethodInfo');
+        $baseMethodInfoRef->setAccessible(true);
+        $baseMethodInfo = $baseMethodInfoRef->getValue();
         foreach ($abs['methods'] as $name => $meth) {
-            $meth['phpDoc']['desc'] = $meth['phpDoc']['description'];
-            unset($meth['phpDoc']['description']);
-            $abs['methods'][$name] = $meth;
+            $abs['methods'][$name] = \array_merge($baseMethodInfo, $meth);
         }
         $basePropInfoRef = new \ReflectionProperty('bdk\Debug\Abstraction\AbstractObjectProperties', 'basePropInfo');
         $basePropInfoRef->setAccessible(true);

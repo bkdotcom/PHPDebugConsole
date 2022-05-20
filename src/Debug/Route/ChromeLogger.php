@@ -159,9 +159,6 @@ class ChromeLogger extends AbstractRoute
         $this->processAlerts();
         $this->processSummary();
         $this->processLog();
-        if (empty($this->jsonData['rows'])) {
-            return;
-        }
         $request = $this->debug->request;
         $serverParams = $request->getServerParams();
         $info = array('PHP', isset($serverParams['REQUEST_METHOD'])
@@ -169,11 +166,7 @@ class ChromeLogger extends AbstractRoute
             : '$: ' . \implode(' ', $serverParams['argv'])
         );
         if (!$this->cfg['group']) {
-            \array_unshift($this->jsonData['rows'], array(
-                $info,
-                null,
-                'info',
-            ));
+            \array_unshift($this->jsonData['rows'], array($info, null, 'info'));
             return;
         }
         \array_unshift($this->jsonData['rows'], array($info, null, 'groupCollapsed'));
@@ -217,7 +210,6 @@ class ChromeLogger extends AbstractRoute
             $this->debug->utility->getBytes($this->debug->getCfg('headerMaxAll', Debug::CONFIG_DEBUG), true),
             $this->debug->utility->getBytes($this->debug->getCfg('headerMaxPer', Debug::CONFIG_DEBUG), true),
         ));
-        $maxVals[] = 0;
         return \min($maxVals);
     }
 
@@ -254,7 +246,7 @@ class ChromeLogger extends AbstractRoute
         */
         $strlen = $this->calcHeaderSize();
         $avail = $max - $strlen;
-        if ($avail > 2048) {
+        if ($avail > 128) {
             // we've got enough room to fill with additional entries
             $this->reduceDataFill($max, $logBack);
         }
@@ -317,7 +309,9 @@ class ChromeLogger extends AbstractRoute
             $method = $logEntry['method'];
             if ($method === 'groupEnd') {
                 $depth++;
-            } elseif (\in_array($method, array('group', 'groupCollapsed'))) {
+            // @phpcs:disable SlevomatCodingStandard.Namespaces.FullyQualifiedGlobalFunctions.NonFullyQualified
+            // https://bugs.xdebug.org/view.php?id=2095
+            } elseif (in_array($method, array('group', 'groupCollapsed'))) {
                 $depth--;
             } elseif ($groupOnly) {
                 continue;

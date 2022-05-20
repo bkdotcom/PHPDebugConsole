@@ -116,7 +116,9 @@ class HtmlTest extends DebugTestFramework
         $testStack = array(
             array(
                 'params' => array(''),
-                'expect' => array(),
+                'expect' => array(
+                    'class' => array(),
+                ),
             ),
             array(
                 'params' => array(
@@ -252,6 +254,7 @@ class HtmlTest extends DebugTestFramework
                 'expect' => array(
                     'tagname' => 'input',
                     'attribs' => array(
+                        'class' => array(),
                         'name' => 'name',
                         'required' => true,
                         'value' => 'Billy',
@@ -259,16 +262,18 @@ class HtmlTest extends DebugTestFramework
                     'innerhtml' => null,
                 ),
             ),
-            // 2
+            // 0
             array(
                 'tag' => '</ hr>',
                 'expect' => array(
                     'tagname' => 'hr',
-                    'attribs' => array(),
+                    'attribs' => array(
+                        'class' => array(),
+                    ),
                     'innerhtml' => null,
                 ),
             ),
-            // 3
+            // 1
             array(
                 'tag' => 'not a tag',
                 'expect' => false,

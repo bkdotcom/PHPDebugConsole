@@ -178,6 +178,10 @@ class Html
             $options = self::PARSE_ATTRIB_CLASS | self::PARSE_ATTRIB_DATA | self::PARSE_ATTRIB_NUMERIC;
         }
         $attribs = array();
+        if ($options & self::PARSE_ATTRIB_CLASS) {
+            // if "parsing" class attribute, always include it
+            $attribs['class'] = array();
+        }
         $regexAttribs = '/\b([\w\-]+)\b(?: \s*=\s*(["\'])(.*?)\\2 | \s*=\s*(\S+) )?/xs';
         \preg_match_all($regexAttribs, $str, $matches);
         $names = \array_map('strtolower', $matches[1]);
@@ -442,11 +446,13 @@ class Html
     }
 
     /**
-     * Convert class attribute value to array of classes
+     * Convert bool enum attribute value to bool
      *
      * @param string $val enum attribute value
      *
      * @return bool
+     *
+     * @see self::$htmlBoolAttrEnum
      */
     private static function parseAttribBoolEnum($val)
     {
@@ -495,7 +501,7 @@ class Html
     }
 
     /**
-     * Convert class attribute value to array of classes
+     * Convert numeric attribute value to float/int
      *
      * @param string $val    enum attribute value
      * @param bool   $decode whether to decode

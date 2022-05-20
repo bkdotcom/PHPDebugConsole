@@ -41,6 +41,14 @@ class SimpleCache implements CacheInterface
         $this->limit = $this->shorthandToBytes($limit);
     }
 
+    public function nonInterfaceMethod($arg1 = null)
+    {
+        if ($arg1 === 'throw') {
+            throw new \RuntimeException('something went wrong');
+        }
+        return null;
+    }
+
     public function get($key, $default = null)
     {
         $this->resetLastGetInfo($key);

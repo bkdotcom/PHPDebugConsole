@@ -52,47 +52,9 @@ class Pdo extends PdoBase
         }
         $this->pdo = $pdo;
         $this->debug = $debug;
-        $this->pdo->setAttribute(PdoBase::ATTR_STATEMENT_CLASS, array('bdk\Debug\Collector\Pdo\Statement', array($this)));
+        $this->setAttribute(PdoBase::ATTR_STATEMENT_CLASS, array('bdk\Debug\Collector\Pdo\Statement', array($this)));
         $debug->eventManager->subscribe(Debug::EVENT_OUTPUT, array($this, 'onDebugOutput'), 1);
         $debug->addPlugin($debug->pluginHighlight);
-    }
-
-    /**
-     * Magic method... inaccessible method called.
-     *
-     * @param string $name method name
-     * @param array  $args method arguments
-     *
-     * @return mixed
-     */
-    public function __call($name, $args)
-    {
-        return \call_user_func_array(array($this->pdo, $name), $args);
-    }
-
-    /**
-     * Magic Getter
-     *
-     * @param string $name property to get
-     *
-     * @return mixed
-     */
-    public function __get($name)
-    {
-        return $this->pdo->{$name};
-    }
-
-    /**
-     * Magic setter
-     *
-     * @param string $name  property to set
-     * @param mixed  $value property value
-     *
-     * @return void
-     */
-    public function __set($name, $value)
-    {
-        $this->pdo->$name = $value;
     }
 
     /**

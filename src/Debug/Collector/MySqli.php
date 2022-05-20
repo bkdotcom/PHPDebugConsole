@@ -33,6 +33,8 @@ class MySqli extends mysqliBase
     public $connectionAttempted = false;
     protected $icon = 'fa fa-database';
     protected $loggedStatements = array();
+    protected $autocommit = true;
+    protected $savepoints = array();
     private $debug;
 
     /**
@@ -83,11 +85,8 @@ class MySqli extends mysqliBase
     #[\ReturnTypeWillChange]
     public function autocommit($mode)
     {
-        if ($mode === false) {
-            $this->debug->group('transaction', $this->debug->meta(array(
-                'icon' => $this->debug->getCfg('channelIcon', Debug::CONFIG_DEBUG),
-            )));
-        }
+        $this->autocommit = $mode;
+        $this->debug->info('autocommit', $mode);
         return parent::autocommit($mode);
     }
 
@@ -102,13 +101,25 @@ class MySqli extends mysqliBase
     #[\ReturnTypeWillChange]
     public function begin_transaction($flags = 0, $name = null)
     {
-        $this->debug->group('transaction', $this->debug->meta(array(
-            'icon' => $this->debug->getCfg('channelIcon', Debug::CONFIG_DEBUG),
-        )));
-        return \call_user_func_array(
-            array($this, 'parent::' . __FUNCTION__),
-            \func_get_args()
-        );
+        $return = $name === null
+            ? parent::begin_transaction($flags)
+            : parent::begin_transaction($flags, $name);
+        if ($return === false) {
+            $this->debug->warn($this->error);
+            return $return;
+        }
+        $this->savepoints = $name
+            ? array($name)
+            : array();
+        $groupArgs = \array_filter(array(
+            'transaction',
+            $name,
+            $this->debug->meta(array(
+                'icon' => $this->debug->getCfg('channelIcon', Debug::CONFIG_DEBUG),
+            )),
+        ));
+        \call_user_func_array(array($this->debug, 'group'), $groupArgs);
+        return $return;
     }
 
     /**
@@ -122,7 +133,17 @@ class MySqli extends mysqliBase
     #[\ReturnTypeWillChange]
     public function commit($flags = 0, $name = null)
     {
-        $return = parent::commit($flags, $name);
+        $return = $name === null
+            ? parent::commit($flags)
+            : parent::commit($flags, $name);
+        if ($return === false) {
+            $this->debug->warn($this->error);
+            return $return;
+        }
+        $this->savepoints = array();
+        if ($name !== null) {
+            $this->debug->warn('passing $name param to mysqli::commit() does nothing!');
+        }
         $this->debug->groupEnd($return);
         return $return;
     }
@@ -174,18 +195,74 @@ class MySqli extends mysqliBase
     }
 
     /**
-     *  Rolls back current transaction
+     * {@inheritDoc}
+     */
+    #[\ReturnTypeWillChange]
+    public function release_savepoint($name)
+    {
+        $return = parent::release_savepoint($name);
+        $index = \array_search($name, $this->savepoints);
+        if ($return === false) {
+            $this->debug->warn($this->error);
+            return $return;
+        }
+        if ($index !== false) {
+            unset($this->savepoints[$index]);
+            $this->savepoints = \array_values($this->savepoints);
+        }
+        return $return;
+    }
+
+    /**
+     * Rolls back current transaction
      *
      * @param int    $flags A bitmask of MYSQLI_TRANS_COR_* constants.
-     * @param string $name  If provided then ROLLBACK/name/ is executed.
+     * @param string $name  If provided then ROLLBACK /name/ is executed.
      *
      * @return bool
      */
     #[\ReturnTypeWillChange]
     public function rollBack($flags = 0, $name = null)
     {
-        $return = parent::rollback($flags, $name);
+        $return = $name === null
+            ? parent::rollback($flags)
+            : parent::rollback($flags, $name);
+        if ($return === false) {
+            $this->debug->warn($this->error);
+            return $return;
+        }
+        $this->savepoints = array();
+        if ($name !== null) {
+            $this->debug->warn(
+                'passing $name param to %cmysqli::rollback()%c does not %cROLLBACK TO name%c as you would expect!',
+                'font-family: monospace;',
+                '',
+                'font-family: monospace;',
+                ''
+            );
+        }
         $this->debug->groupEnd('rolled back');
+        return $return;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    #[\ReturnTypeWillChange]
+    public function savepoint($name)
+    {
+        $return = parent::savepoint($name);
+        if (!$return) {
+            $this->debug->warn($this->error);
+            return $return;
+        }
+        $index = \array_search($name, $this->savepoints);
+        if ($index !== false) {
+            unset($this->savepoints[$index]);
+            $this->savepoints = \array_values($this->savepoints);
+        }
+        $this->savepoints[] = $name;
+        $this->debug->info('savepoint', $name);
         return $return;
     }
 

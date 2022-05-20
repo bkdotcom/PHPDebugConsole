@@ -61,6 +61,7 @@ class SimpleCache implements CacheInterface
      */
     public function __call($name, $args)
     {
+        // we'll just pass the first arg since we don't know what we're dealing with
         $keys = !empty($args[0])
             ? $args[0]
             : null;
@@ -88,7 +89,7 @@ class SimpleCache implements CacheInterface
      */
     public function delete($key)
     {
-        return $this->profileCall('delete', \func_get_args(), true, $key);
+        return $this->profileCall('delete', \func_get_args(), false, $key);
     }
 
     /**
@@ -185,8 +186,15 @@ class SimpleCache implements CacheInterface
     {
         $this->loggedActions[] = $info;
         $duration = $this->debug->utility->formatDuration($info->duration);
+        $keyOrKeys = $info->keyOrKeys === null
+            ? ''
+            : \json_encode($info->keyOrKeys);
+        $message = \sprintf('%s(%s) took %s', $info->method, $keyOrKeys, $duration);
+        if ($info->isSuccess === false) {
+            $message .= ' (return false)';
+        }
         $this->debug->log(
-            $info->method . '(' . \json_encode($info->keyOrKeys) . ') took ' . $duration,
+            $message,
             $this->debug->meta('icon', $this->icon)
         );
     }

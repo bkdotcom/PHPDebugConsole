@@ -70,7 +70,7 @@ class ServerLog extends ChromeLogger
                 $url = $this->debug->stringUtil->interpolate(
                     $this->cfg['urlTemplate'],
                     array(
-                        'filename' => $this->filename(),
+                        'filename' => $this->getFilename(),
                     )
                 );
                 $event['headers'][] = array(self::HEADER_NAME, $url);
@@ -95,7 +95,7 @@ class ServerLog extends ChromeLogger
         $now = \time();
         foreach ($files as $filePath) {
             $age = $now - \filemtime($filePath);
-            if ($age > $this->cfg['lifetime']) {
+            if ($age >= $this->cfg['lifetime']) {
                 \unlink($filePath);
             }
         }
@@ -106,7 +106,7 @@ class ServerLog extends ChromeLogger
      *
      * @return string
      */
-    protected function filename()
+    protected function getFilename()
     {
         if (!$this->filename) {
             $this->filename = $this->cfg['filenamePrefix']
@@ -123,9 +123,9 @@ class ServerLog extends ChromeLogger
      *
      * @return string
      */
-    protected function filepath()
+    protected function getFilepath()
     {
-        return $this->cfg['logDir'] . '/' . $this->filename();
+        return $this->cfg['logDir'] . '/' . $this->getFilename();
     }
 
     /**
@@ -145,7 +145,7 @@ class ServerLog extends ChromeLogger
             \mkdir($logDir, 0755, true);
             \restore_error_handler();
         }
-        $localPath = $this->filepath();
+        $localPath = $this->getFilepath();
         if (\is_writeable($logDir) && \file_put_contents($localPath, $json) !== false) {
             return true;
         }

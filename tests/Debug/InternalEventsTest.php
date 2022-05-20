@@ -350,6 +350,10 @@ WHERE·
         $this->debug->setCfg(array(
             'output' => true,
             'exitCheck' => true,
+            'outputHeaders' => true,
+            'onOutput' => function (Event $event) {
+                $event['headers'][] = array('x-debug-text', 'success');
+            },
         ));
         $closure = function () {
             $this->debug->log('in shutdown');
@@ -359,6 +363,7 @@ WHERE·
         $this->debug->eventManager->subscribe(EventManager::EVENT_PHP_SHUTDOWN, $closure);
         $this->debug->eventManager->publish(EventManager::EVENT_PHP_SHUTDOWN);
         $this->debug->eventManager->unSubscribe(EventManager::EVENT_PHP_SHUTDOWN, $closure);
+        $this->debug->setCfg('onOutput', null);
         $output = \ob_get_clean();
 
         $logEntriesExpect = array(
@@ -386,7 +391,6 @@ WHERE·
         );
 
         if (\bdk\Backtrace::isXdebugFuncStackAvail()) {
-            $this->markTestSkipped('requires xdebug_get_function_stack()');
             \array_unshift($logEntriesExpect, array(
                 'method' => 'warn',
                 'args' => array(
@@ -406,6 +410,9 @@ WHERE·
         $logEntries = $this->debug->data->get('log');
         $logEntries = $this->helper->deObjectifyData($logEntries);
         $this->assertSame($logEntriesExpect, $logEntries);
+        $this->assertSame(array(
+            'x-debug-text: success',
+        ), \bdk\Debug\headers_list());
     }
 
     public function assertContainsSerializedLog($string)

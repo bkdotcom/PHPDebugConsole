@@ -217,7 +217,7 @@ class Helper
             $isCli ? STDERR : STDOUT,
             $isCli
                 ? $outStr . "\n"
-                : '<pre>' . \htmlspecialchars($outStr) . '</pre>'
+                : '<pre>' . "\e[0m" . \htmlspecialchars($outStr) . '</pre>'
         );
     }
 }

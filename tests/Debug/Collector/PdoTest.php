@@ -2,9 +2,9 @@
 
 namespace bdk\Test\Debug\Collector;
 
+use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Collector\Pdo;
-use bdk\Debug\LogEntry;
 use bdk\PubSub\Event;
 use bdk\Test\Debug\DebugTestFramework;
 
@@ -35,6 +35,77 @@ EOD;
         $pdoBase = new \PDO('sqlite::memory:');
         self::$client = new Pdo($pdoBase);
         self::$client->exec($createTableSql);
+        self::$client->exec('INSERT INTO `bob` (k, t, e) VALUES ("test", "test", "2022-05-18 13:10:00")');
+    }
+
+    public static function tearDownAfterClass(): void
+    {
+        $debug = \bdk\Debug::getInstance();
+        $debug->getChannel('PDO')
+            ->eventManager->unSubscribe(Debug::EVENT_OUTPUT, array(self::$client, 'onDebugOutput'));
+    }
+
+    public function testConstruct()
+    {
+        $pdoBase = new \PDO('sqlite::memory:');
+        $pdoClient = new Pdo($pdoBase);
+        $attrVal = $pdoClient->getAttribute(\PDO::ATTR_STATEMENT_CLASS);
+        $this->debug->getChannel('PDO')
+            ->eventManager->unsubscribe(Debug::EVENT_OUTPUT, array($pdoClient, 'onDebugOutput'));
+        $this->assertSame('bdk\Debug\Collector\Pdo\Statement', $attrVal[0]);
+    }
+
+    public function testBindColumn()
+    {
+        $stmt = self::$client->prepare('SELECT * FROM `bob`');
+        $stmt->execute();
+        $dateTime = null;
+        $stmt->bindColumn('e', $dateTime);
+        $vals = array();
+        while ($stmt->fetch(\PDO::FETCH_BOUND)) {
+           $vals[] = $dateTime;
+        }
+        $this->assertSame(array(
+            '2022-05-18 13:10:00',
+        ), $vals);
+    }
+
+    public function testMergeParams()
+    {
+        $stmt = self::$client->prepare('SELECT *
+            FROM `bob`
+            WHERE e = :datetime');
+        $stmt->execute(array(
+            'datetime' => '2022-05-18 13:10:00',
+        ));
+        $statements = self::$client->getLoggedStatements();
+        $stmtInfo = \end($statements);
+        $this->assertSame(array(
+            'datetime' => '2022-05-18 13:10:00',
+        ), $stmtInfo->params);
+    }
+
+    public function testBindValue()
+    {
+        $stmt = self::$client->prepare('SELECT *
+            FROM `bob`
+            WHERE e = :datetime');
+        $datetime = '2022-05-18 13:10:00';
+        // $text = null;
+        // $stmt->bindValue('t', $text, \PDO::PARAM_STR);
+        $stmt->bindValue(':datetime', $datetime, \PDO::PARAM_STR);
+        $stmt->execute();
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+        // \bdk\Test\Debug\Helper::stderr('errorInfo', $stmt->errorInfo());
+        // \bdk\Test\Debug\Helper::stderr('log data', $this->helper->deObjectifyData($this->debug->data->get('log')));
+        $this->assertSame(array(
+            'k' => 'test',
+            'v' => null,
+            't' => 'test',
+            'e' => '2022-05-18 13:10:00',
+            'ct' => $row['ct'],  // may be 0 or "0"
+            'KEY' => null,
+        ), $row);
     }
 
     public function testExecute()
@@ -159,7 +230,7 @@ EOD;
                 'method' => 'log',
                 'args' => array(
                     'rowCount',
-                    0,
+                    1,
                 ),
                 'meta' => array(
                     'channel' => 'general.PDO',
@@ -294,7 +365,7 @@ EOD;
             },
             {
                 "method": "log",
-                "args": ["logged operations: ", 3],
+                "args": ["logged operations: ", 7],
                 "meta": {"channel": "general.PDO"}
             },
             {

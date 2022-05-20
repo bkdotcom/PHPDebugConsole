@@ -10,6 +10,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * Test FindExit utility
  *
+ * @covers \bdk\Debug\InternalEvents
  * @covers \bdk\Debug\Utility\FindExit
  */
 class FindExitTest extends TestCase

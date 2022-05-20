@@ -145,6 +145,12 @@ class DebugTestFramework extends DOMTestCase
         }
     }
 
+    public static function tearDownAfterClass(): void
+    {
+        $GLOBALS['collectedHeaders'] = array();
+        $GLOBALS['headersSent'] = array();
+    }
+
     public function emailMock($to, $subject, $body, $addHeadersStr)
     {
         $this->emailInfo = array(

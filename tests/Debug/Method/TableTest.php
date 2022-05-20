@@ -24,6 +24,7 @@ use ReflectionProperty;
  * @covers \bdk\Debug\Dump\Text
  * @covers \bdk\Debug\Method\Table
  * @covers \bdk\Debug\Method\TableRow
+ * @covers \bdk\Debug\Route\Firephp
  */
 class TableTest extends DebugTestFramework
 {

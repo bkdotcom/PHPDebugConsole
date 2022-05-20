@@ -27,7 +27,7 @@ var preFilterCallbacks = [
 
 export function init ($delegateNode) {
   var $debugTabLog = $delegateNode.find('> .tab-panes > .tab-primary')
-  if ($debugTabLog.length === 0 || $debugTabLog.data('options').sidebar === false) {
+  if ($debugTabLog.length > 0 && $debugTabLog.data('options').sidebar === false) {
     // no sidebar -> no filtering
     return
   }
@@ -41,6 +41,7 @@ export function init ($delegateNode) {
 }
 
 function onCheckboxChange () {
+  console.warn('onCheckboxChange', $this)
   var $this = $(this)
   var isChecked = $this.is(':checked')
   var $nested = $this.closest('label').next('ul').find('input')

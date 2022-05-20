@@ -10,6 +10,7 @@ use bdk\Test\Debug\DebugTestFramework;
  *
  * @covers \bdk\Debug
  * @covers \bdk\Debug\Method\Helper
+ * @covers \bdk\Debug\Route\Firephp
  */
 class AlertTest extends DebugTestFramework
 {

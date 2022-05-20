@@ -395,11 +395,11 @@ WHERE·
                 'method' => 'warn',
                 'args' => array(
                     'Potentialy shutdown via exit: ',
-                    '/Users/bkent/Dropbox/htdocs/common/vendor/bdk/PHPDebugConsole/tests/Debug/InternalEventsTest.php (line ' . $exitLine . ')',
+                    __FILE__ . ' (line ' . $exitLine . ')',
                 ),
                 'meta' => array(
                     'detectFiles' => true,
-                    'file' => '/Users/bkent/Dropbox/htdocs/common/vendor/bdk/PHPDebugConsole/tests/Debug/InternalEventsTest.php',
+                    'file' => __FILE__,
                     'line' => $exitLine,
                     'uncollapse' => true,
                 ),

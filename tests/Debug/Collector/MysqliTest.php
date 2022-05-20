@@ -404,10 +404,6 @@ EOD;
 
         $result1 = self::$client->begin_transaction();
         $result2 = self::$client->savepoint('Sally');
-        $result3 = self::$client->release_savepoint('Sally');
-        $this->assertTrue($result1);
-        $this->assertTrue($result2);
-        $this->assertTrue($result3);
         $logEntry = $this->helper->logEntryToArray($this->debug->data->get('log/__end__'));
         $this->assertSame(array(
             'method' => 'info',
@@ -416,9 +412,17 @@ EOD;
                 'channel' => 'general.MySqli',
             ),
         ), $logEntry);
+        $result3 = self::$client->release_savepoint('Sally');
+        $this->assertTrue($result1);
+        $this->assertTrue($result2);
+        $this->assertTrue($result3);
 
         $result4 = self::$client->release_savepoint('Sally');
         $line = __LINE__ - 1;
+        if (PHP_VERSION_ID < 70000) {
+            $this->assertTrue($result4);
+            return;
+        }
         $this->assertFalse($result4);
         $logEntry = $this->helper->logEntryToArray($this->debug->data->get('log/__end__'));
         $this->assertSame(array(
@@ -742,6 +746,9 @@ EOD;
 
         // duration
         $logEntriesExpect[3]['args'][0] = $logEntries[3]['args'][0];
+        // memory usage
+        $logEntriesExpect[4]['args'][1] = $logEntries[4]['args'][1];
+
         $logEntriesExpect[7]['meta']['file'] = $logEntries[7]['meta']['file'];
         $logEntriesExpect[7]['meta']['line'] = $logEntries[7]['meta']['line'];
         $this->assertSame($logEntriesExpect, $logEntries);

@@ -202,6 +202,13 @@ class MySqli extends mysqliBase
     {
         $return = parent::release_savepoint($name);
         $index = \array_search($name, $this->savepoints);
+        if (PHP_VERSION_ID < 70000) {
+            $this->debug->warn(
+                'mysqli::release_savepoint on PHP < 7.0 just calls %cSAVEPOINT `Sally`%c',
+                'font-family: monospace;',
+                ''
+            );
+        }
         if ($return === false) {
             $this->debug->warn($this->error);
             return $return;
@@ -209,6 +216,9 @@ class MySqli extends mysqliBase
         if ($index !== false) {
             unset($this->savepoints[$index]);
             $this->savepoints = \array_values($this->savepoints);
+        }
+        if (PHP_VERSION_ID < 70000) {
+            $this->savepoints[] = $name;
         }
         return $return;
     }

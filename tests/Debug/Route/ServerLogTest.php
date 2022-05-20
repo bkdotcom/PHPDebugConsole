@@ -36,7 +36,9 @@ class ServerLogTest extends DebugTestFramework
     public function testCollectGarbage()
     {
         $serverLog = $this->debug->getRoute('serverLog');
-        $event = new \bdk\PubSub\Event($this->debug);
+        $event = new \bdk\PubSub\Event($this->debug, array(
+            'headers' => array(),
+        ));
 
         $serverLog->setCfg('gcProb', 1);
         $serverLog->setCfg('lifetime', 0);

@@ -39,7 +39,7 @@ EOD;
         $error = false;
         \set_error_handler(function ($errType, $errMsg, $file, $line) use (&$error) {
             $error = true;
-            echo 'Error ' . $errMsg . "\n";
+            echo sprintf('Error %s - %s:%s', $errMsg, $file, $line) . "\n";
         });
         try {
             self::$client = new MySqli(
@@ -49,10 +49,11 @@ EOD;
                 \getenv('MYSQL_DATABASE'),
                 \getenv('MYSQL_PORT')
             );
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $error = true;
-            echo 'Exception: ' . $e->getMessage() . "\n";
+            echo __METHOD__ . ' Exception: ' . $e->getMessage() . "\n";
         }
+
         \restore_error_handler();
 
         if ($error) {
@@ -68,9 +69,11 @@ EOD;
 
     public static function tearDownAfterClass(): void
     {
-        $debug = Debug::getInstance();
-        $debug->getChannel('MySqli')
-            ->eventManager->unSubscribe(Debug::EVENT_OUTPUT, array(self::$client, 'onDebugOutput'));
+        if (self::$client) {
+            $debug = Debug::getInstance();
+            $debug->getChannel('MySqli')
+                ->eventManager->unSubscribe(Debug::EVENT_OUTPUT, array(self::$client, 'onDebugOutput'));
+        }
     }
 
     public function testConstruct()

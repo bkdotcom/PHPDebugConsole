@@ -19,6 +19,7 @@ use bdk\Test\Debug\DebugTestFramework;
 class MysqliTest extends DebugTestFramework
 {
     private static $client;
+    private static $error = false;
 
     public static function setUpBeforeClass(): void
     {
@@ -57,7 +58,7 @@ EOD;
         \restore_error_handler();
 
         if ($error) {
-            self::$client = null;
+            self::$error = true;
             return;
         }
 
@@ -835,7 +836,7 @@ EOD;
         if (PHP_VERSION_ID < 50600) {
             $this->markTestSkipped('Our MysqliStmt implementation requires PHP 5.6');
         }
-        if (self::$client === null) {
+        if (self::$error === true) {
             $this->markTestSkipped('Error initiating client');
         }
     }

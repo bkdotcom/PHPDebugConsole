@@ -65,9 +65,7 @@ class SoapClient extends \SoapClient
 
         $xmlResponse = parent::__doRequest($request, $location, $action, $version, $oneWay);
         if ($this->__getLastRequest() === null) {
-            $lastRequestRef = new \ReflectionProperty('SoapClient', '__last_request');
-            $lastRequestRef->setAccessible(true);
-            $lastRequestRef->setValue($this, $request);
+            $this->setLastRequest($request);
         }
         $xmlRequest = $this->getDebugXmlRequest($action);
 
@@ -182,5 +180,23 @@ class SoapClient extends \SoapClient
                 'redact' => true,
             ))
         );
+    }
+
+    /**
+     * Set last request so that getLastRequest will return it
+     *
+     * @param string $request XML REQUEST
+     *
+     * @return void
+     */
+    private function setLastRequest($request)
+    {
+        if (PHP_VERSION_ID >= 80000) {
+            $lastRequestRef = new \ReflectionProperty('SoapClient', '__last_request');
+            $lastRequestRef->setAccessible(true);
+            $lastRequestRef->setValue($this, $request);
+            return;
+        }
+        $this->__last_request = $request;
     }
 }

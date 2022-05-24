@@ -179,7 +179,7 @@ function buildChannelLis (channels, nameRoot, checkedChannels, prepend) {
       channelName,
       value,
       isChecked,
-      false,
+      channelName === nameRoot,
       channel.options
     )
     if (Object.keys(channel.channels).length) {

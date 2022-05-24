@@ -41,7 +41,6 @@ export function init ($delegateNode) {
 }
 
 function onCheckboxChange () {
-  console.warn('onCheckboxChange', $this)
   var $this = $(this)
   var isChecked = $this.is(':checked')
   var $nested = $this.closest('label').next('ul').find('input')

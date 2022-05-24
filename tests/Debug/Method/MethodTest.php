@@ -371,6 +371,9 @@ class MethodTest extends DebugTestFramework
                 'text' => '⦻ a string, array(), stdClass
                     Properties: none!
                     Methods: none!, Resource id #%i: stream',
+                'streamAnsi' => "\e[38;5;9m⦻ a string\e[38;5;245m, \e[38;5;9m\e[38;5;45marray\e[38;5;245m(\e[38;5;9m\e[38;5;245m)\e[38;5;9m\e[38;5;245m, \e[38;5;9m\e[1mstdClass\e[22m\e[0m
+                    \e[38;5;9m  Properties: none!\e[0m
+                    \e[38;5;9m  Methods: none!\e[38;5;245m, \e[38;5;9mResource id #%d: stream\e[0m",
             )
         );
         \fclose($resource);

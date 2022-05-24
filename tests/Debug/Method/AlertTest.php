@@ -9,6 +9,7 @@ use bdk\Test\Debug\DebugTestFramework;
  * PHPUnit tests for Debug::time() methods
  *
  * @covers \bdk\Debug
+ * @covers \bdk\Debug\Dump\TextAnsi
  * @covers \bdk\Debug\Method\Helper
  * @covers \bdk\Debug\Route\Firephp
  */
@@ -53,6 +54,7 @@ class AlertTest extends DebugTestFramework
                 'html' => '<div class="alert-error m_alert" role="alert">' . $messageEscaped . '</div>',
                 'script' => \str_replace('%c', '%%c', 'console.log(' . \json_encode('%c' . $message, JSON_UNESCAPED_SLASHES) . ',"padding: 5px; line-height: 26px; font-size: 125%; font-weight: bold; background-color: #ffbaba; border: 1px solid #d8000c; color: #d8000c;");'),
                 'text' => '》[Alert ⦻ error] ' . $message . '《',
+                'streamAnsi' => "\e[38;5;88;48;5;203;1;4m》[Alert ⦻ error] " . $message . "《\e[0m",
                 'wamp' => $entryExpect,
             )
         );

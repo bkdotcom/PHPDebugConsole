@@ -1064,7 +1064,6 @@
   }
 
   function onCheckboxChange () {
-    console.warn('onCheckboxChange', $this);
     var $this = $(this);
     var isChecked = $this.is(':checked');
     var $nested = $this.closest('label').next('ul').find('input');
@@ -1793,7 +1792,7 @@
         channelName,
         value,
         isChecked,
-        false,
+        channelName === nameRoot,
         channel.options
       );
       if (Object.keys(channel.channels).length) {

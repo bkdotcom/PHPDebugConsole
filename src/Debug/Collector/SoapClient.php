@@ -64,6 +64,11 @@ class SoapClient extends \SoapClient
         $this->dom->formatOutput = true;
 
         $xmlResponse = parent::__doRequest($request, $location, $action, $version, $oneWay);
+        if ($this->__getLastRequest() === null) {
+            $lastRequestRef = new \ReflectionProperty('SoapClient', '__last_request');
+            $lastRequestRef->setAccessible(true);
+            $lastRequestRef->setValue($this, $request);
+        }
         $xmlRequest = $this->getDebugXmlRequest($action);
 
         $this->debug->groupCollapsed('soap', $action, $this->debug->meta('icon', $this->icon));

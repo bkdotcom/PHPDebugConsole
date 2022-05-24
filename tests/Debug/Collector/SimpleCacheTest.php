@@ -93,8 +93,6 @@ class SimpleCacheTest extends DebugTestFramework
         );
     }
 
-
-
     public function testClear()
     {
         self::$cache->clear();
@@ -202,10 +200,18 @@ class SimpleCacheTest extends DebugTestFramework
 
     public function testGetLoggedActions()
     {
+        $loggedActions = self::$cache->getLoggedActions();
         $this->assertContainsOnly(
             'bdk\\Debug\\Collector\\SimpleCache\\CallInfo',
-            self::$cache->getLoggedActions()
+            $loggedActions
         );
+        $this->assertSame(array(
+            'duration',
+            'exception',
+            'memoryUsage',
+            'method',
+            'keyOrKeys',
+        ), \array_keys(\reset($loggedActions)->__debugInfo()));
     }
 
     public function testHas()

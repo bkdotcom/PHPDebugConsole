@@ -34,6 +34,31 @@ class DebugTest extends DebugTestFramework
         $this->assertInstanceOf('bdk\\Debug', $debug);
     }
 
+    public function testGetDefaultRoute()
+    {
+        $GLOBALS['collectedHeaders'] = array(
+            array('Content-Type: text/html', false),
+        );
+        $route = $this->debug->internal->getDefaultRoute();
+        $this->assertSame('html', $route);
+
+
+        $GLOBALS['collectedHeaders'] = array(
+            array('Content-Type: image/jpeg', false),
+        );
+        $route = $this->debug->internal->getDefaultRoute();
+        $this->assertSame('serverLog', $route);
+
+        $this->debug->setCfg('serviceProvider', array(
+            'request' => new \bdk\HttpMessage\ServerRequest('GET', null, array(
+                'HTTP_X_REQUESTED_WITH' => 'XMLHttpRequest',
+            )),
+        ));
+
+        $route = $this->debug->internal->getDefaultRoute();
+        $this->assertSame('serverLog', $route);
+    }
+
     public function testMagicGet()
     {
         $this->assertNull($this->debug->noSuchProp);

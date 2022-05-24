@@ -88,11 +88,11 @@ class SoapClient extends \SoapClient
     {
         $this->dom->loadXML($this->__getLastRequest());
         if (!$action) {
-            $envelope = $this->dom->childNodes[0];
-            $body = $envelope->childNodes[0]->localName !== 'Header'
-                ? $envelope->childNodes[0]
-                : $envelope->childNodes[1];
-            $action = $body->childNodes[0]->localName;
+            $envelope = $this->dom->childNodes->item(0);
+            $body = $envelope->childNodes->item(0)->localName !== 'Header'
+                ? $envelope->childNodes->item(0)
+                : $envelope->childNodes->item(1);
+            $action = $body->childNodes->item(0)->localName;
         }
         return $this->dom->saveXML();
     }
@@ -118,7 +118,7 @@ class SoapClient extends \SoapClient
         $fault = $this->dom->getElementsByTagNameNS('http://schemas.xmlsoap.org/soap/envelope/', 'Fault');
         if ($fault->length) {
             $vals = array();
-            foreach ($fault[0]->childNodes as $node) {
+            foreach ($fault->item(0)->childNodes as $node) {
                 $vals[$node->localName] = $node->nodeValue;
             }
             $this->debug->warn('soapFault', $vals);

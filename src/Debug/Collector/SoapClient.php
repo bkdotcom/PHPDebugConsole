@@ -191,7 +191,7 @@ class SoapClient extends \SoapClient
      */
     private function setLastRequest($request)
     {
-        if (PHP_VERSION_ID >= 80000) {
+        if (PHP_VERSION_ID >= 80100) {
             $lastRequestRef = new \ReflectionProperty('SoapClient', '__last_request');
             $lastRequestRef->setAccessible(true);
             $lastRequestRef->setValue($this, $request);

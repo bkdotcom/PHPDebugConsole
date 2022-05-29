@@ -1942,11 +1942,74 @@
     }
   }
 
+  function getNodeType ($node) {
+    var matches = $node.prop('class').match(/t_(\w+)|(timestamp|string-encoded)/);
+    var type;
+    var typeMore = $node.data('typeMore');
+    if (matches === null) {
+      if ($node.hasClass('show-more-container')) {
+        return ['string', null]
+      }
+      if ($node.hasClass('value-container')) {
+        if ($node.find('> li:last-child > .binary').length) {
+          typeMore = 'binary';
+        }
+        return [$node.data('type'), typeMore]
+      }
+      return null
+    }
+    for (var i = 1, count = matches.length; i < count; i++) {
+      if (matches[i] !== undefined) {
+        type = matches[i];
+      }
+    }
+    if (type === 'timestamp') {
+      type = $node.find('> span').prop('class').replace('t_', '');
+      typeMore = 'timestamp';
+    } else if (type === 'string-encoded') {
+      type = 'string';
+      typeMore = $node.data('type');
+    }
+    return type
+      ? [type, typeMore]
+      : null
+  }
+
+  function buildCollapsedReturnVal ($return) {
+    var type = getNodeType($return);
+    var typeMore;
+    if (type) {
+      typeMore = type[1];
+      type = type[0];
+    }
+    if (['bool','callable','const','float','int','null','resource','unknown'].indexOf(type) > -1 || ['numeric','timestamp'].indexOf(typeMore) > -1) {
+      return $return[0].outerHTML
+    }
+    if (type === 'string') {
+      if (typeMore === 'classname') {
+        return $return[0].outerHTML
+      }
+      if ($return[0].innerHTML.indexOf("\n") < 0) {
+        return $return[0].outerHTML
+      }
+      if (typeMore) {
+        return '<span><span class="t_keyword">string</span> (' + typeMore + ')</span>'
+      }
+    }
+    if (type === 'object') {
+      return $return.find('> .classname, > [data-toggle] > .classname')[0].outerHTML
+    }
+    if (type === 'array' && $return[0].textContent === 'array()') {
+      return $return[0].outerHTML.replace('t_array', 't_array expanded')
+    }
+    return '<span class="t_keyword">' + type + '</span>'
+  }
+
   function collapseGroupObject ($wrap, $toggle, immediate, eventNameDone) {
     var $groupEndValue = $wrap.find('> .group-body > .m_groupEndValue > :last-child');
     if ($groupEndValue.length && $toggle.find('.group-label').last().nextAll().length === 0) {
       $toggle.find('.group-label').last()
-        .after('<span class="t_operator"> : </span>' + $groupEndValue[0].outerHTML);
+        .after('<span class="t_operator"> : </span>' + buildCollapsedReturnVal($groupEndValue));
     }
     if (immediate) {
       collapseGroupObjectDone($wrap, $toggle, eventNameDone);

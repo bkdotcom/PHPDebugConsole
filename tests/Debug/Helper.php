@@ -119,14 +119,28 @@ class Helper
      * @param mixed  $val  new value
      *
      * @return mixed
+     *
+     * @throws \RuntimeException
      */
     public static function setPrivateProp($obj, $prop, $val)
     {
-        $propRef = new ReflectionProperty($obj, $prop);
-        $propRef->setAccessible(true);
-        \is_string($obj) || $propRef->isStatic()
-            ? $propRef->setValue($val)
-            : $propRef->setValue($obj, $val);
+        $refProp = null;
+        $ref = new \ReflectionClass($obj);
+        do {
+            if ($ref->hasProperty($prop)) {
+                $refProp = $ref->getProperty($prop);
+                break;
+            }
+            $ref = $ref->getParentClass();
+        } while ($ref);
+        if ($refProp === null) {
+            throw new \RuntimeException(\sprintf('Property %s::$%s does not exist', \get_class($obj), $prop));
+        }
+        // $refProp = new ReflectionProperty($obj, $prop);
+        $refProp->setAccessible(true);
+        \is_string($obj) || $refProp->isStatic()
+            ? $refProp->setValue($val)
+            : $refProp->setValue($obj, $val);
     }
 
     /**
@@ -160,7 +174,7 @@ class Helper
             $type = \strtolower(\gettype($arg));
             if ($type === 'array') {
                 $count = \count($arg);
-                if ($count === 2 && \array_keys($arg) === [0, 1] && \is_object($arg[0])) {
+                if ($count === 2 && \array_keys($arg) === [0, 1] && \is_object($arg[0]) && \is_string($args[1])) {
                     $arg = 'callable: [' . \get_class($arg[0]) . ', ' . $arg[1] . ']';
                 } elseif ($depth < 2) {
                     $arg = self::backtraceArgs($arg, $depth + 1);
@@ -202,6 +216,7 @@ class Helper
             $new = 'null';
             if ($val !== null) {
                 $new = $dumper->valDumper->dump($val);
+                $dumper->valDumper->escapeReset = "\e[0m";
                 $dumper->valDumper->setValDepth(0);
             }
             if (\json_last_error() !== JSON_ERROR_NONE) {
@@ -217,7 +232,7 @@ class Helper
             $isCli ? STDERR : STDOUT,
             $isCli
                 ? $outStr . "\n"
-                : '<pre>' . "\e[0m" . \htmlspecialchars($outStr) . '</pre>'
+                : '<pre>' . \htmlspecialchars($outStr) . '</pre>'
         );
     }
 }

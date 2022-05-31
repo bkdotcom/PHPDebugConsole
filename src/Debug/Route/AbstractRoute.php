@@ -137,7 +137,7 @@ abstract class AbstractRoute extends AbstractComponent implements RouteInterface
      *
      * @param Event $event event object
      *
-     * @return string|void
+     * @return void
      */
     public function processLogEntries(Event $event)
     {

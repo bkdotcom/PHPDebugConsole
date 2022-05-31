@@ -60,27 +60,22 @@ export function collapse ($node, immediate) {
   }
 }
 
+function findFirstDefined (list) {
+  for (var i = 0, count = list.length; i < count; i++) {
+    if (list[i] !== undefined) {
+      return list[i]
+    }
+  }
+}
+
 function getNodeType ($node) {
   var matches = $node.prop('class').match(/t_(\w+)|(timestamp|string-encoded)/)
   var type
   var typeMore = $node.data('typeMore')
   if (matches === null) {
-    if ($node.hasClass('show-more-container')) {
-      return ['string', null]
-    }
-    if ($node.hasClass('value-container')) {
-      if ($node.find('> li:last-child > .binary').length) {
-        typeMore = 'binary'
-      }
-      return [$node.data('type'), typeMore]
-    }
-    return null
+    return getNodeTypeNoMatch($node)
   }
-  for (var i = 1, count = matches.length; i < count; i++) {
-    if (matches[i] !== undefined) {
-      type = matches[i]
-    }
-  }
+  type = findFirstDefined(matches.slice(1))
   if (type === 'timestamp') {
     type = $node.find('> span').prop('class').replace('t_', '')
     typeMore = 'timestamp'
@@ -90,29 +85,35 @@ function getNodeType ($node) {
   }
   return type
     ? [type, typeMore]
-    : null
+    : ['unknown', null]
 }
 
-function buildCollapsedReturnVal ($return) {
-  var type = getNodeType($return)
+function getNodeTypeNoMatch ($node) {
   var typeMore
-  if (type) {
-    typeMore = type[1]
-    type = type[0]
+  if ($node.hasClass('show-more-container')) {
+    return ['string', null]
   }
+  if ($node.hasClass('value-container')) {
+    if ($node.find('> li:last-child > .binary').length) {
+      typeMore = 'binary'
+    }
+    return [$node.data('type'), typeMore]
+  }
+  return ['unknown', null]
+}
+
+/**
+ * Build the value displayed when group is collapsed
+ */
+function buildReturnVal ($return) {
+  var type = getNodeType($return)
+  var typeMore = type[1]
+  type = type[0]
   if (['bool','callable','const','float','int','null','resource','unknown'].indexOf(type) > -1 || ['numeric','timestamp'].indexOf(typeMore) > -1) {
     return $return[0].outerHTML
   }
   if (type === 'string') {
-    if (typeMore === 'classname') {
-      return $return[0].outerHTML
-    }
-    if ($return[0].innerHTML.indexOf("\n") < 0) {
-      return $return[0].outerHTML
-    }
-    if (typeMore) {
-      return '<span><span class="t_keyword">string</span> (' + typeMore + ')</span>'
-    }
+    return buildReturnValString($return, typeMore)
   }
   if (type === 'object') {
     return $return.find('> .classname, > [data-toggle] > .classname')[0].outerHTML
@@ -123,11 +124,24 @@ function buildCollapsedReturnVal ($return) {
   return '<span class="t_keyword">' + type + '</span>'
 }
 
+function buildReturnValString ($return, typeMore) {
+  if (typeMore === 'classname') {
+    return $return[0].outerHTML
+  }
+  if ($return[0].innerHTML.indexOf("\n") < 0) {
+    return $return[0].outerHTML
+  }
+  if (typeMore) {
+    return '<span><span class="t_keyword">string</span> (' + typeMore + ')</span>'
+  }
+  return '<span class="t_keyword">string</span>'
+}
+
 function collapseGroupObject ($wrap, $toggle, immediate, eventNameDone) {
   var $groupEndValue = $wrap.find('> .group-body > .m_groupEndValue > :last-child')
   if ($groupEndValue.length && $toggle.find('.group-label').last().nextAll().length === 0) {
     $toggle.find('.group-label').last()
-      .after('<span class="t_operator"> : </span>' + buildCollapsedReturnVal($groupEndValue))
+      .after('<span class="t_operator"> : </span>' + buildReturnVal($groupEndValue))
   }
   if (immediate) {
     collapseGroupObjectDone($wrap, $toggle, eventNameDone)

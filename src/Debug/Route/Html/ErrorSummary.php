@@ -138,11 +138,11 @@ class ErrorSummary
         $backtrace = $error['backtrace'];
         if (\is_array($backtrace) && \count($backtrace) > 1) {
             return $this->buildFatalBacktrace($backtrace);
-        } elseif ($backtrace === false) {
-            return '<li>Want to see a backtrace here?  Install <a target="_blank" href="https://xdebug.org/docs/install">xdebug</a> PHP extension.</li>' . "\n";
-        } elseif ($backtrace === null) {
-            return $this->buildFatalContext($error);
         }
+        if ($backtrace === false) {
+            return '<li>Want to see a backtrace here?  Install <a target="_blank" href="https://xdebug.org/docs/install">xdebug</a> PHP extension.</li>' . "\n";
+        }
+        return $this->buildFatalContext($error);
     }
 
     /**
@@ -185,7 +185,7 @@ class ErrorSummary
     }
 
     /**
-     * Build backtrace
+     * Build lines surrounding fatal error
      *
      * @param Error $error Error instance
      *

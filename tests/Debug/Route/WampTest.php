@@ -3,6 +3,7 @@
 namespace bdk\Test\Debug\Route;
 
 use bdk\Debug;
+use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Route\Wamp;
 use bdk\ErrorHandler;
 use bdk\ErrorHandler\Error;
@@ -30,6 +31,68 @@ class WampTest extends DebugTestFramework
     public function testAppendsHeaders()
     {
         $this->assertFalse($this->debug->getRoute('wamp')->appendsHeaders());
+    }
+
+    public function testCrateAbstraction()
+    {
+        $base64 = 'j/v9wNrF5i1abMXFW/4vVw==';
+        $binary = \base64_decode($base64);
+        $this->testMethod(
+            'log',
+            array(
+                $this->debug->abstracter->crateWithVals(array('foo' => 'bar')),
+                $binary,
+                \json_encode(array('foo' => 'bar',42,true,false,null)),
+                '',
+                __FILE__,
+                $this->debug->meta('detectFiles'),
+            ),
+            array(
+                'wamp' => array(
+                    'log',
+                    array(
+                        array(
+                            'debug' => Abstracter::ABSTRACTION,
+                            'type' => Abstracter::TYPE_ARRAY,
+                            'value' => array('foo' => 'bar'),
+                        ),
+                        array(
+                            'debug' => Abstracter::ABSTRACTION,
+                            'strlen' => 16,
+                            'strlenValue' => 16,
+                            'type' => Abstracter::TYPE_STRING,
+                            'typeMore' => Abstracter::TYPE_STRING_BINARY,
+                            'value' => '_b64_:' . $base64,
+                        ),
+                        array(
+                            'addQuotes' => false,
+                            'attribs' => array('class' => array('highlight','language-json')),
+                            'contentType' => 'application/json',
+                            'debug' => Abstracter::ABSTRACTION,
+                            'prettified' => true,
+                            'prettifiedTag' => true,
+                            'strlen' => null,
+                            'type' => Abstracter::TYPE_STRING,
+                            'typeMore' => Abstracter::TYPE_STRING_JSON,
+                            'value' => \json_encode(array('foo' => 'bar',42,true,false,null), JSON_PRETTY_PRINT),
+                            'valueDecoded' => array(
+                                'foo' => 'bar',42,true,false,null,
+                                '__debug_key_order__' => array('foo',0,1,2,3),
+                            ),
+                            'visualWhiteSpace' => false,
+                        ),
+                        '',
+                        __FILE__,
+                    ),
+                    array(
+                        'detectFiles' => true,
+                        'foundFiles' => array(
+                            __FILE__,
+                        ),
+                    )
+                ),
+            ),
+        );
     }
 
     public function testGetSubscriptions()

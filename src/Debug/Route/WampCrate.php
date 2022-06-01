@@ -47,22 +47,20 @@ class WampCrate
      *     in practice this seems to only be an issue with int/numeric keys
      *     store key order if needed
      *
-     * @param mixed $mixed       value to crate
-     * @param bool  $detectFiles Should we test if strings are filepaths?
+     * @param mixed $mixed value to crate
      *
      * @return array|string
      */
-    public function crate($mixed, $detectFiles = false)
+    public function crate($mixed)
     {
-        $this->detectFiles = $detectFiles;
+        if ($mixed instanceof Abstraction) {
+            return $this->crateAbstraction($mixed);
+        }
         if (\is_array($mixed)) {
             return $this->crateArray($mixed);
         }
         if (\is_string($mixed)) {
             return $this->crateString($mixed);
-        }
-        if ($mixed instanceof Abstraction) {
-            return $this->crateAbstraction($mixed);
         }
         return $mixed;
     }
@@ -76,8 +74,8 @@ class WampCrate
      */
     public function crateLogEntry(LogEntry $logEntry)
     {
-        $detectFiles = $logEntry->getMeta('detectFiles', false);
-        $args = $this->crate($logEntry['args'], $detectFiles);
+        $this->detectFiles = $logEntry->getMeta('detectFiles', false);
+        $args = $this->crate($logEntry['args']);
         $meta = $logEntry['meta'];
         if (!empty($meta['trace'])) {
             $logEntryTmp = new LogEntry(
@@ -97,7 +95,7 @@ class WampCrate
                 'trace' => $logEntryTmp['args'][0],
             ));
         }
-        if ($detectFiles) {
+        if ($this->detectFiles) {
             $meta['foundFiles'] = $this->foundFiles();
         }
         return array($args, $meta);

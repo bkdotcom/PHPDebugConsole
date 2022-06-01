@@ -4,7 +4,6 @@ namespace bdk\Test\Debug\Collector;
 
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Collector\SoapClient;
-use bdk\Debug\LogEntry;
 use bdk\Test\Debug\DebugTestFramework;
 
 /**
@@ -14,11 +13,23 @@ use bdk\Test\Debug\DebugTestFramework;
  */
 class SoapClientTest extends DebugTestFramework
 {
+    protected $wsdl = 'http://www.SoapClient.com/xml/SQLDataSoap.wsdl';
+    protected static $client;
+
+    protected function getClient()
+    {
+        if (self::$client) {
+            return self::$client;
+        }
+        self::$client = new SoapClient($this->wsdl, array(
+            // 'connection_timeout' => 5,
+        ));
+        return self::$client;
+    }
+
     public function testSoapCall()
     {
-        $wsdl = 'http://www.SoapClient.com/xml/SQLDataSoap.wsdl';
-        $soapClient = new SoapClient($wsdl);
-
+        $soapClient = $this->getClient();
         $soapClient->processSRL(
             '/xml/NEWS.SRI',
             'yahoo'
@@ -154,8 +165,7 @@ class SoapClientTest extends DebugTestFramework
 
     public function testDoRequest()
     {
-        $wsdl = 'http://www.SoapClient.com/xml/SQLDataSoap.wsdl';
-        $soapClient = new SoapClient($wsdl);
+        $soapClient = $this->getClient();
 
         $request = '<?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="http://www.SoapClient.com/xml/SQLDataSoap.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
@@ -169,7 +179,11 @@ class SoapClientTest extends DebugTestFramework
 </SOAP-ENV:Envelope>
 ';
 
-        $soapClient->__doRequest($request, $wsdl, '', SOAP_1_1);
+        try {
+            $soapClient->__doRequest($request, $this->wsdl, '', SOAP_1_1);
+        } catch (\Exception $e) {
+            $this->helper->stderr(\get_class($e), $e->getMessage());
+        }
 
         $logEntries = $this->debug->data->get('log');
         $logEntries = $this->helper->deObjectifyData($logEntries);
@@ -195,6 +209,7 @@ class SoapClientTest extends DebugTestFramework
                         . 'Content-Type: text/xml; charset=utf-8' . "\r\n"
                         . 'SOAPAction: ""' . "\r\n"
                         . 'Content-Length: %d' . "\r\n"
+                        . '%a' // Cookie ??
                         . "\r\n",
                 ),
                 'meta' => array(

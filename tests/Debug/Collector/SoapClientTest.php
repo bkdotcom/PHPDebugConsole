@@ -22,7 +22,7 @@ class SoapClientTest extends DebugTestFramework
             return self::$client;
         }
         self::$client = new SoapClient($this->wsdl, array(
-            // 'connection_timeout' => 5,
+            'connection_timeout' => 20,
         ));
         return self::$client;
     }
@@ -182,7 +182,10 @@ class SoapClientTest extends DebugTestFramework
         try {
             $soapClient->__doRequest($request, $this->wsdl, '', SOAP_1_1);
         } catch (\Exception $e) {
-            $this->helper->stderr(\get_class($e), $e->getMessage());
+            $message = $e->getMessage();
+            if (\strpos($message, 'Operation timed out') !== false) {
+                $this->markTestSkipped($message);
+            }
         }
 
         $logEntries = $this->debug->data->get('log');
@@ -209,7 +212,7 @@ class SoapClientTest extends DebugTestFramework
                         . 'Content-Type: text/xml; charset=utf-8' . "\r\n"
                         . 'SOAPAction: ""' . "\r\n"
                         . 'Content-Length: %d' . "\r\n"
-                        . '%a' // Cookie ??
+                        . '%A' // Cookie ??
                         . "\r\n",
                 ),
                 'meta' => array(

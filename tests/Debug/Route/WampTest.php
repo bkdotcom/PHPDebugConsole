@@ -91,7 +91,7 @@ class WampTest extends DebugTestFramework
                         ),
                     )
                 ),
-            ),
+            )
         );
     }
 

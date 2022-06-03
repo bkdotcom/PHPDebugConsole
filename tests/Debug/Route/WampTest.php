@@ -33,6 +33,56 @@ class WampTest extends DebugTestFramework
         $this->assertFalse($this->debug->getRoute('wamp')->appendsHeaders());
     }
 
+    public function testErrorWithTrace()
+    {
+        $frames = array(
+            array(
+                'file' => '/path/to/file.php',
+                'line' => 42,
+                'function' => 'Foo::bar',
+            )
+        );
+        $this->testMethod(
+            'error',
+            array('Fatal Error', 'trace', __FILE__, $this->debug->meta('trace', $frames)),
+            array(
+                'wamp' => array(
+                    'error',
+                    array('Fatal Error', 'trace'),
+                    array(
+                        'caption' => 'trace',
+                        'detectFiles' => true,
+                        'file' => $this->file,
+                        'foundFiles' => array(
+                            __FILE__,
+                        ),
+                        'line' => $this->line,
+                        'tableInfo' => array(
+                            'class' => null,
+                            'columns' => array(
+                                array(
+                                    'key' => 'file',
+                                ),
+                                array(
+                                    'key' => 'line',
+                                ),
+                                array(
+                                    'key' => 'function',
+                                ),
+                            ),
+                            'haveObjRow' => false,
+                            'indexLabel' => null,
+                            'rows' => array(),
+                            'summary' => null
+                        ),
+                        'trace' => $frames,
+                        'uncollapse' => true,
+                    ),
+                ),
+            )
+        );
+    }
+
     public function testCrateAbstraction()
     {
         $base64 = 'j/v9wNrF5i1abMXFW/4vVw==';
@@ -40,7 +90,7 @@ class WampTest extends DebugTestFramework
         $this->testMethod(
             'log',
             array(
-                $this->debug->abstracter->crateWithVals(array('foo' => 'bar')),
+                $this->debug->abstracter->crateWithVals(array("\x00" . 'foo' => 'bar')),
                 $binary,
                 \json_encode(array('foo' => 'bar',42,true,false,null)),
                 '',
@@ -54,7 +104,7 @@ class WampTest extends DebugTestFramework
                         array(
                             'debug' => Abstracter::ABSTRACTION,
                             'type' => Abstracter::TYPE_ARRAY,
-                            'value' => array('foo' => 'bar'),
+                            'value' => array('_b64_:AGZvbw==' => 'bar'),
                         ),
                         array(
                             'debug' => Abstracter::ABSTRACTION,
@@ -89,7 +139,7 @@ class WampTest extends DebugTestFramework
                         'foundFiles' => array(
                             __FILE__,
                         ),
-                    )
+                    ),
                 ),
             )
         );

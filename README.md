@@ -42,7 +42,7 @@ It is installable and autoloadable via [Composer](https://getcomposer.org/) as [
 ```json
 {
     "require": {
-        "bdk/debug": "~3.0",
+        "bdk/debug": "3.0b1",
     }
 }
 ```
@@ -119,6 +119,7 @@ $monolog->critical('all your base are belong to them');
 ![Build Status](https://img.shields.io/github/workflow/status/bkdotcom/PHPDebugConsole/PHPUnit.svg?logo=github)
 [![Codacy Score](https://img.shields.io/codacy/grade/e950849edfd9463b993386080d39875e/master.svg?logo=codacy)](https://app.codacy.com/gh/bkdotcom/PHPDebugConsole/dashboard)
 [![Maintainability](https://img.shields.io/codeclimate/maintainability/bkdotcom/PHPDebugConsole.svg?logo=codeclimate)](https://codeclimate.com/github/bkdotcom/PHPDebugConsole)
+[![Coverage](https://img.shields.io/codeclimate/coverage-letter/bkdotcom/PHPDebugConsole?logo=codeclimate)](https://codeclimate.com/github/bkdotcom/PHPDebugConsole)
 
 ## Changelog
 

@@ -750,8 +750,9 @@ class Debug extends AbstractDebug
             array(
                 'columns' => array('file','line','function'),
                 'detectFiles' => true,
-                'inclArgs' => $inclContext, // incl arguments with context?
-                                    //   may want to set meta['cfg']['objectsExclude'] = '*'
+                'inclArgs' => null,  // incl arguments with context?
+                                     // will default to $inclContext
+                                     //   may want to set meta['cfg']['objectsExclude'] = '*'
                 'sortable' => false,
                 'trace' => null,  // set to specify trace
             ),
@@ -761,6 +762,9 @@ class Debug extends AbstractDebug
                 'inclContext',
             )
         );
+        if ($logEntry->getMeta('inclArgs') === null) {
+            $logEntry->setMeta('inclArgs', $logEntry->getMeta('inclContext'));
+        }
         $this->methodHelper->doTrace($logEntry);
         return $this;
     }

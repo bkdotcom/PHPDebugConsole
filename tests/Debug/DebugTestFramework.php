@@ -24,6 +24,8 @@ class DebugTestFramework extends DOMTestCase
     public static $obLevels = 0;
     public $emailInfo = array();
     protected $helper;
+    protected $file;
+    protected $line;
 
     /**
      * Constructor

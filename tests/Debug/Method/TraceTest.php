@@ -2,6 +2,7 @@
 
 namespace bdk\Test\Debug\Method;
 
+use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\LogEntry;
 use bdk\Test\Debug\DebugTestFramework;
@@ -198,12 +199,55 @@ class TraceTest extends DebugTestFramework
                 'function' => 'Foo::bar',
             )
         );
-        $this->debug->trace($this->debug->meta(array(
-            'trace' => $frames,
-        )));
-        $this->assertSame(array(
-            $frames,
-        ), $this->debug->data->get('log/0/args'));
+        $metaExpect = array(
+            'caption' => 'trace',
+            'detectFiles' => true,
+            'inclArgs' => false,
+            'sortable' => false,
+            'tableInfo' => array(
+                'class' => null,
+                'columns' => array(
+                    array('key' => 'file'),
+                    array('key' => 'line'),
+                    array('key' => 'function'),
+                ),
+                'haveObjRow' => false,
+                'indexLabel' => null,
+                'rows' => array(),
+                'summary' => null,
+            ),
+        );
+        $this->testMethod(
+            'trace',
+            array($this->debug->meta('trace', $frames)),
+            array(
+                'entry' => array(
+                    'method' => 'trace',
+                    'args' => array($frames),
+                    'meta' => $metaExpect,
+                ),
+                'wamp' => array(
+                    'trace',
+                    array(
+                        array(
+                            array(
+                                'file' => '/path/to/file.php',
+                                'line' => 42,
+                                'function' => 'Foo::bar',
+                                '__debug_key_order__' => array(
+                                    'file',
+                                    'line',
+                                    'function',
+                                ),
+                            ),
+                        ),
+                    ),
+                    \array_merge(array(
+                        'foundFiles' => array(),
+                    ), $metaExpect),
+                )
+            )
+        );
     }
 
     public function testTraceWithContext()

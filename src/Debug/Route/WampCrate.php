@@ -77,7 +77,7 @@ class WampCrate
         $this->detectFiles = $logEntry->getMeta('detectFiles', false);
         $args = $this->crate($logEntry['args']);
         $meta = $logEntry['meta'];
-        if (!empty($meta['trace'])) {
+        if ($logEntry['method'] === 'error' && !empty($meta['trace'])) {
             $logEntryTmp = new LogEntry(
                 $this->debug,
                 'trace',
@@ -88,7 +88,7 @@ class WampCrate
                 )
             );
             $this->debug->methodTable->doTable($logEntryTmp);
-            unset($args[2]);
+            unset($args[2]); // error's filepath argument
             $meta = \array_merge($meta, array(
                 'caption' => 'trace',
                 'tableInfo' => $logEntryTmp['meta']['tableInfo'],

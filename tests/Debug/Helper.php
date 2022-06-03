@@ -228,11 +228,10 @@ class Helper
             ? ', '
             : ' = ';
         $outStr = \implode($glue, $args);
-        \fwrite(
-            $isCli ? STDERR : STDOUT,
-            $isCli
-                ? $outStr . "\n"
-                : '<pre>' . \htmlspecialchars($outStr) . '</pre>'
-        );
+        if ($isCli) {
+            \fwrite(STDERR, $outStr . "\n");
+            return;
+        }
+        echo '<pre>' . \htmlspecialchars($outStr) . '</pre>';
     }
 }

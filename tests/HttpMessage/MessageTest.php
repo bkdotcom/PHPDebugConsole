@@ -8,7 +8,6 @@ use bdk\Test\PolyFill\AssertionTrait;
 use bdk\Test\PolyFill\ExpectExceptionTrait;
 use PHPUnit\Framework\TestCase;
 use ReflectionObject;
-use stdClass;
 
 /**
  * @covers \bdk\HttpMessage\Message
@@ -17,6 +16,8 @@ class MessageTest extends TestCase
 {
     use AssertionTrait;
     use ExpectExceptionTrait;
+    use DataProviderTrait;
+    use FactoryTrait;
 
     public function testConstruct()
     {
@@ -24,6 +25,7 @@ class MessageTest extends TestCase
         $this->assertTrue($message instanceof Message);
     }
 
+    /*
     public function testGetMethods()
     {
         $message = $this->testSetHeaders();
@@ -34,7 +36,9 @@ class MessageTest extends TestCase
         // Test - has
         $this->assertTrue($message->hasHeader('user-agent'));
     }
+    */
 
+    /*
     public function testWithMethods()
     {
         $message = $this->testSetHeaders();
@@ -52,7 +56,7 @@ class MessageTest extends TestCase
         $this->assertEquals(['ok', 'not-ok'], $new2Message->getHeader('hello-world'));
         $this->assertEquals(['okok'], $new2Message->getHeader('foo-bar'));
         $this->assertEquals(['2', '6.4'], $new2Message->getHeader('others'));
-        $this->assertSame('host', \array_keys($new2Message->getHeaders())[0]);
+        $this->assertSame('Host', \array_keys($new2Message->getHeaders())[0]);
         // Test - without
         $new3Message = $new2Message->withoutHeader('hello-world');
         $this->assertFalse($new3Message->hasHeader('hello-world'));
@@ -64,6 +68,7 @@ class MessageTest extends TestCase
         $messageNew = $message->withoutHeader('hello-world');
         $this->assertSame($message, $messageNew);
     }
+    */
 
     public function testBodyMethods()
     {
@@ -127,6 +132,7 @@ class MessageTest extends TestCase
         Exceptions
     */
 
+    /*
     public function testExceptionHeaderName()
     {
         $this->expectException('InvalidArgumentException');
@@ -134,7 +140,9 @@ class MessageTest extends TestCase
         // Exception => "hello-wo)rld" is not valid header name, it must be an RFC 7230 compatible string.
         $message->withHeader('hello-wo)rld', 'ok');
     }
+    */
 
+    /*
     public function testExceptionHeaderNameEmpty()
     {
         $this->expectException('InvalidArgumentException');
@@ -197,6 +205,7 @@ class MessageTest extends TestCase
         // Exception => The header values only accept string and number, but "boolean" provided.
         $message->withHeader('hello-world', $testArr);
     }
+    */
 
     public function testExceptionHeaderValueInvalidString()
     {
@@ -207,6 +216,7 @@ class MessageTest extends TestCase
         $message->withHeader('hello-world', 'This string contains many invisible spaces.');
     }
 
+    /*
     public function testExceptionProtocolVersion()
     {
         $this->expectException('InvalidArgumentException');
@@ -214,4 +224,249 @@ class MessageTest extends TestCase
         // Exception => Unsupported HTTP protocol version number.
         $request->withProtocolVersion('1.5');
     }
+    */
+
+    public function testWithHeaderRejectsMultipleHostValues()
+    {
+        $this->expectException('InvalidArgumentException');
+        $this->factory()->createRequest('GET', '')
+            ->withHeader('Host', ['a.com', 'b.com']);
+    }
+
+    public function testWithAddedHeaderRejectsAdditionalHost()
+    {
+        $this->expectException('InvalidArgumentException');
+        $this->factory()->createRequest('GET', '')
+            ->withHeader('Host', ['a.com'])
+            ->withAddedHeader('host', 'b.com');
+    }
+
+    public function testWithAddedHeaderRejectsMultipleHostValues()
+    {
+        $this->expectException('InvalidArgumentException');
+        $this->factory()->createRequest('GET', '')
+            ->withAddedHeader('Host', ['a.com', 'b.com']);
+    }
+
+    /**
+     * @param $version
+     *
+     * @dataProvider validProtocolVersions
+     */
+    public function testAcceptsValidProtocolVersion($version)
+    {
+        $message = $this->factory()->createRequest('GET', '')
+            ->withProtocolVersion($version);
+        $this->assertEquals($version, $message->getProtocolVersion());
+    }
+
+    /**
+     * @param mixed $version
+     *
+     * @dataProvider invalidProtocolVersions
+     */
+    public function testWithInvalidProtocolVersionThrowsException($version)
+    {
+        $this->expectException('InvalidArgumentException');
+        $this->factory()->createRequest('GET', '')
+            ->withProtocolVersion($version)->getProtocolVersion();
+    }
+
+    /**
+     * @param $name
+     *
+     * @dataProvider validHeaderNames
+     */
+    public function testWithoutHeader($name)
+    {
+        $value = \base64_encode(\random_bytes(12));
+        $message = $this->factory()->createRequest('GET', '')
+            ->withHeader($name, $value)
+            ->withoutHeader($name);
+
+        $this->assertFalse($message->hasHeader(\strtolower($name)));
+        $this->assertEquals([], $message->getHeader($name));
+
+        // test removing non-existant
+        $message = $message->withoutHeader($name);
+        $this->assertFalse($message->hasHeader(\strtolower($name)));
+        $this->assertEquals([], $message->getHeader($name));
+    }
+
+    /**
+     * @param $name
+     *
+     * @dataProvider validHeaderNames
+     */
+    public function testWithHeaderAcceptsValidHeaderNames($name)
+    {
+        $value = \base64_encode(\random_bytes(12));
+        $message = $this->factory()->createRequest('GET', '')
+            ->withHeader($name, $value);
+        $this->assertTrue($message->hasHeader(\strtolower($name)));
+        $this->assertEquals($value, $message->getHeaderLine($name));
+    }
+
+    /**
+     * @param $name
+     *
+     * @dataProvider validHeaderNames
+     */
+    public function testWithAddedHeaderAcceptsValidHeaderNames($name)
+    {
+        $value = \base64_encode(\random_bytes(12));
+        $message = $this->factory()->createRequest('GET', '')
+            ->withAddedHeader($name, $value);
+        $this->assertTrue($message->hasHeader(\strtolower($name)));
+        $this->assertEquals($value, $message->getHeaderLine($name));
+    }
+
+    /**
+     * @param $name
+     *
+     * @dataProvider invalidHeaderNames
+     */
+    public function testInvalidHeaderNameThrowsException($name)
+    {
+        $this->expectException('InvalidArgumentException');
+        $value = \base64_encode(\random_bytes(12));
+        $this->factory()->createRequest('GET', '')
+            ->withHeader($name, $value);
+    }
+
+    /**
+     * @param $name
+     *
+     * @dataProvider invalidHeaderNames
+     */
+    public function testInvalidAddedHeaderNameThrowException($name)
+    {
+        $this->expectException('InvalidArgumentException');
+        $value = \base64_encode(\random_bytes(12));
+        $this->factory()->createRequest('GET', '')
+            ->withAddedHeader($name, $value);
+    }
+
+    /**
+     * @param $value
+     *
+     * @dataProvider validHeaderValues
+     */
+    public function testWithHeaderAcceptValidValues($value)
+    {
+        $message = $this->factory()->createRequest('GET', '')
+            ->withHeader('header', 'oldValue')
+            ->withHeader('header', $value);
+        $this->assertEquals($value, $message->getHeaderLine('header'));
+    }
+
+    /**
+     * @param $value
+     *
+     * @dataProvider validHeaderValues
+     */
+    public function testWithAddedHeaderAcceptsValidValues($value)
+    {
+        $message = $this->factory()->createRequest('GET', '')
+            ->withAddedHeader('header', $value);
+        $this->assertEquals($value, $message->getHeaderLine('header'));
+    }
+
+    /**
+     * @param mixed $value
+     *
+     * @dataProvider invalidHeaderValues
+     */
+    public function testWithHeaderRejectsInvalidValues($value)
+    {
+        $this->expectException('InvalidArgumentException');
+        $this->factory()->createRequest('GET', '')
+            ->withHeader('header', $value);
+    }
+
+    /**
+     * @param mixed $value
+     *
+     * @dataProvider invalidHeaderValues
+     */
+    public function testWithHeaderRejectsInvalidArrayValues($value)
+    {
+        $this->expectException('InvalidArgumentException');
+        $this->factory()->createRequest('GET', '')
+            ->withHeader('header', [$value]);
+    }
+
+    /**
+     * @param mixed $value
+     *
+     * @dataProvider invalidHeaderValues
+     */
+    public function testWithAddedHeaderRejectsInvalidValues($value)
+    {
+        $this->expectException('InvalidArgumentException');
+        $this->factory()->createRequest('GET', '')
+            ->withAddedHeader('header', $value);
+    }
+
+    /**
+     * @param mixed $value
+     *
+     * @dataProvider invalidHeaderValues
+     */
+    public function testWithAddedHeaderRejectsInvalidArrayValues($value)
+    {
+        $this->expectException('InvalidArgumentException');
+        $this->factory()->createRequest('GET', '')
+            ->withAddedHeader('header', [$value]);
+    }
+
+    /**
+     * @param string $name
+     *
+     * @dataProvider hostHeaderVariations
+     */
+    public function testHostHeaderNameGetsNormalized($name)
+    {
+        $value = \md5(\random_bytes(12)) . '.com';
+        $headers = $this->factory()->createRequest('GET', '')
+            ->withHeader($name, $value)
+            ->getHeaders();
+
+        $this->assertArrayHasKey('Host', $headers);
+        $this->assertSame([$value], $headers['Host']);
+
+        if ($name !== 'Host') {
+            $this->assertArrayNotHasKey($name, $headers);
+        }
+    }
+
+    /**
+     * @param $name
+     * @param $value
+     *
+     * @dataProvider headersWithInjectionVectors
+     */
+    /*
+    public function testWithHeaderRejectsHeadersWithCrlfVectors($name, $value)
+    {
+        $this->expectException('InvalidArgumentException');
+        $this->factory()->createRequest('GET', '')
+            ->withHeader($name, $value);
+    }
+    */
+
+    /**
+     * @param $name
+     * @param $value
+     *
+     * @dataProvider headersWithInjectionVectors
+     */
+    /*
+    public function testWithAddedHeaderRejectsHeadersWithCrlfVectors($name, $value)
+    {
+        $this->expectException('InvalidArgumentException');
+        $message = $this->factory()->createRequest('GET', '')
+            ->withAddedHeader($name, $value);
+    }
+    */
 }

@@ -14,6 +14,8 @@ use ReflectionObject;
 class UriTest extends TestCase
 {
     use ExpectExceptionTrait;
+    use DataProviderTrait;
+    use FactoryTrait;
 
     public function testConstruct()
     {
@@ -137,6 +139,8 @@ class UriTest extends TestCase
         $this->assertSame(null, $newUri->getPort());
         $this->assertSame('chineseChars=%E5%85%AD%E5%9B%9B', $newUri->getQuery());
         $this->assertSame('19890604', $newUri->getFragment());
+        $newUri = $newUri->withPort(80);
+        $this->assertSame(null, $newUri->getPort());
 
         // Test 3 - assert that 'localhost' is a valid host
 
@@ -184,6 +188,7 @@ class UriTest extends TestCase
         Exceptions
     */
 
+    /*
     public function testNonParsableUri()
     {
         $this->expectException('InvalidArgumentException');
@@ -225,5 +230,142 @@ class UriTest extends TestCase
         $uri = new Uri();
         // Exception => Port number should be in a range of 0-65535, but 70000 provided.
         $uri->withPort(70000);
+    }
+    */
+
+    /**
+     * @param string $input
+     *
+     * @dataProvider validUris
+     */
+    public function testValidUrisFormsArePreserved($input)
+    {
+        $uri = $this->factory()->createUri($input);
+        $this->assertSame($input, (string) $uri);
+    }
+
+    /**
+     * @param string $scheme
+     *
+     * @dataProvider validUriSchemes
+     */
+    public function testValidSchemesAreAccepted($scheme)
+    {
+        $uri = $this->factory()->createUri()->withScheme($scheme);
+        $this->assertSame($scheme, $uri->getScheme());
+    }
+
+    /**
+     * @param string $input
+     * @param string $path
+     * @param string $query
+     * @param string $fragment
+     * @param string $output
+     *
+     * @dataProvider uriComponents
+     */
+    public function testUriComponentsEncoding($input, $path, $query, $fragment, $output)
+    {
+        $uri = $this->factory()->createUri($input);
+        $this->assertSame($path, $uri->getPath());
+        $this->assertSame($query, $uri->getQuery());
+        $this->assertSame($fragment, $uri->getFragment());
+        $this->assertSame($output, (string) $uri);
+    }
+
+    /**
+     * @param mixed $uri
+     *
+     * @dataProvider invalidUris
+     */
+    public function testInvalidUrisAreRejected($uri)
+    {
+        $this->expectException('InvalidArgumentException');
+        $this->factory()->createUri($uri);
+    }
+
+    /**
+     * @param mixed $scheme
+     *
+     * @dataProvider invalidUriSchemes
+     */
+    public function testWithSchemeRejectsInvalid($scheme)
+    {
+        $this->expectException('InvalidArgumentException');
+        $uri = $this->factory()->createUri()->withScheme($scheme);
+        $uri->getScheme();
+    }
+
+    /**
+     * @param mixed $user
+     * @param mixed $password
+     *
+     * @dataProvider invalidUriUserInfos
+     */
+    public function testWithUserInfoRejectsInvalid($user, $password)
+    {
+        $this->expectException('InvalidArgumentException');
+        $uri = $this->factory()->createUri()->withUserInfo($user, $password);
+        $uri->getUserInfo();
+    }
+
+    /**
+     * @param mixed $host
+     *
+     * @dataProvider invalidUriHosts
+     */
+    public function testWithHostRejectsInvalid($host)
+    {
+        $this->expectException('InvalidArgumentException');
+        $uri = $this->factory()->createUri()->withHost($host);
+        $uri->getHost();
+    }
+
+    /**
+     * @param mixed $port
+     *
+     * @dataProvider invalidUriPorts
+     */
+    public function testWithPortRejectsInvalid($port)
+    {
+        $this->expectException('InvalidArgumentException');
+        $uri = $this->factory()->createUri()->withPort($port);
+        $uri->getPort();
+    }
+
+    /**
+     * @param mixed $path
+     *
+     * @dataProvider invalidUriPaths
+     */
+    public function testWithPathRejectsInvalid($path)
+    {
+        $this->expectException('InvalidArgumentException');
+        $uri = $this->factory()->createUri()->withPath($path);
+        $uri->getPath();
+    }
+
+    /**
+     * @param mixed $query
+     *
+     * @dataProvider invalidUriQueries
+     */
+    public function testWithQueryRejectsInvalidValues($query)
+    {
+        $this->expectException('InvalidArgumentException');
+        $uri = $this->factory()->createUri()->withQuery($query);
+        $uri->getQuery();
+    }
+
+    /**
+     * @param mixed $fragment
+     *
+     * @dataProvider invalidUriFragments
+     */
+    public function testWithFragmentRejectsInvalidValues($fragment)
+    {
+        $this->expectException('InvalidArgumentException');
+        $uri = $this->factory()->createUri()->withFragment($fragment);
+        $uri->getFragment();
     }
 }

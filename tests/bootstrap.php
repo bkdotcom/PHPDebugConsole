@@ -133,9 +133,10 @@ $debug = \bdk\Debug::getInstance(array(
 ));
 
 $debug->eventManager->subscribe(\bdk\Debug::EVENT_STREAM_WRAP, function (\bdk\PubSub\Event $event) {
+    if (\strpos($event['filepath'], 'StreamTest') !== false) {
+        $event->stopPropagation();
+    }
     if (\strpos($event['filepath'], 'PHPDebugConsole/tests') === false) {
         $event->stopPropagation();
-        // return;
     }
-    // echo 'wrapping ' . $event['filepath'] . "\n";
-});
+}, PHP_INT_MAX);

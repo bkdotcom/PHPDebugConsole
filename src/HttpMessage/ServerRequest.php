@@ -133,6 +133,7 @@ class ServerRequest extends AbstractServerRequest implements ServerRequestInterf
      */
     public function withCookieParams(array $cookies)
     {
+        $this->assertCookieParams($cookies);
         $new = clone $this;
         $new->cookie = $cookies;
         return $new;
@@ -155,6 +156,7 @@ class ServerRequest extends AbstractServerRequest implements ServerRequestInterf
      */
     public function withQueryParams(array $get)
     {
+        $this->assertQueryParams($get);
         $new = clone $this;
         $new->get = $get;
         return $new;
@@ -255,6 +257,7 @@ class ServerRequest extends AbstractServerRequest implements ServerRequestInterf
      */
     public function withAttribute($name, $value)
     {
+        $this->assertAttributeName($name);
         $new = clone $this;
         $new->attributes[$name] = $value;
         return $new;
@@ -269,6 +272,9 @@ class ServerRequest extends AbstractServerRequest implements ServerRequestInterf
      */
     public function withoutAttribute($name)
     {
+        if ($this->assertAttributeName($name, false) === false) {
+            return $this;
+        }
         if (\array_key_exists($name, $this->attributes) === false) {
             return $this;
         }

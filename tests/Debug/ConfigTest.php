@@ -17,6 +17,7 @@ use bdk\HttpMessage\ServerRequest;
  * @covers \bdk\Debug\Plugin\Manager
  * @covers \bdk\Debug\Plugin\Redaction
  * @covers \bdk\Debug\Route\Stream
+ * @covers \bdk\Debug\Utility\FileStreamWrapper
  */
 class ConfigTest extends DebugTestFramework
 {

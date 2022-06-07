@@ -1957,7 +1957,7 @@
     if (matches === null) {
       return getNodeTypeNoMatch($node)
     }
-    type = findFirstDefined(matches.slice(1));
+    type = findFirstDefined(matches.slice(1)) || 'unknown';
     if (type === 'timestamp') {
       type = $node.find('> span').prop('class').replace('t_', '');
       typeMore = 'timestamp';
@@ -1965,23 +1965,18 @@
       type = 'string';
       typeMore = $node.data('type');
     }
-    return type
-      ? [type, typeMore]
-      : ['unknown', null]
+    return [type, typeMore]
   }
 
   function getNodeTypeNoMatch ($node) {
-    var typeMore;
+    var type = $node.data('type') || 'unknown';
+    var typeMore = null;
     if ($node.hasClass('show-more-container')) {
-      return ['string', null]
+      type = 'string';
+    } else if ($node.hasClass('value-container') && $node.find('> li:last-child > .binary').length) {
+      typeMore = 'binary';
     }
-    if ($node.hasClass('value-container')) {
-      if ($node.find('> li:last-child > .binary').length) {
-        typeMore = 'binary';
-      }
-      return [$node.data('type'), typeMore]
-    }
-    return ['unknown', null]
+    return [type, typeMore]
   }
 
   /**
@@ -2013,12 +2008,14 @@
     if ($return[0].innerHTML.indexOf("\n") < 0) {
       return $return[0].outerHTML
     }
-    if (typeMore) {
-      return '<span><span class="t_keyword">string</span> (' + typeMore + ')</span>'
-    }
-    return '<span class="t_keyword">string</span>'
+    return typeMore
+      ? '<span><span class="t_keyword">string</span> (' + typeMore + ')</span>'
+      : '<span class="t_keyword">string</span>'
   }
 
+  /**
+   * Collapse group or object
+   */
   function collapseGroupObject ($wrap, $toggle, immediate, eventNameDone) {
     var $groupEndValue = $wrap.find('> .group-body > .m_groupEndValue > :last-child');
     if ($groupEndValue.length && $toggle.find('.group-label').last().nextAll().length === 0) {
@@ -2026,8 +2023,7 @@
         .after('<span class="t_operator"> : </span>' + buildReturnVal($groupEndValue));
     }
     if (immediate) {
-      collapseGroupObjectDone($wrap, $toggle, eventNameDone);
-      return
+      return collapseGroupObjectDone($wrap, $toggle, eventNameDone)
     }
     $toggle.next().slideUp('fast', function () {
       collapseGroupObjectDone($wrap, $toggle, eventNameDone);
@@ -2087,6 +2083,10 @@
       return
     }
     // group, object, & next
+    expandGroupObjNext($toggle, $classTarget, $evtTarget, icon, eventNameDone);
+  }
+
+  function expandGroupObjNext ($toggle, $classTarget, $evtTarget, icon, eventNameDone) {
     $toggle.next().slideDown('fast', function () {
       var $groupEndValue = $(this).find('> .m_groupEndValue');
       if ($groupEndValue.length) {

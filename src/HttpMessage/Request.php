@@ -35,26 +35,6 @@ class Request extends Message implements RequestInterface
     private $uri;
 
     /**
-     * https://datatracker.ietf.org/doc/html/rfc7231
-     *
-     * @var array
-     */
-    protected $validMethods = array(
-        'HEAD', // Asks for a response identical to that of a GET request,
-                // but without the response body.
-        'GET',  // Requests a representation of the specified resource
-                // Requests using GET should only retrieve data.
-        'POST', // The POST method is used to submit an entity to the specified resource,
-                // often causing a change in state or side effects on the server.
-        'PUT', // replaces all current representations of the target resource with the request payload.
-        'DELETE', // deletes the specified resource.
-        'PATCH', // Used to apply partial modifications to a resource.
-        'CONNECT', // Establishes a tunnel to the server identified by the target resource.
-        'OPTIONS', // Used to describe the communication options for the target resource.
-        'TRACE', // Performs a message loop-back test along the path to the target resource.
-    );
-
-    /**
      * Constructor
      *
      * @param string              $method The HTTP method associated with the request.
@@ -160,20 +140,32 @@ class Request extends Message implements RequestInterface
     /**
      * Return an instance with the provided HTTP method.
      *
-     * While HTTP method names are typically all uppercase characters, HTTP
-     * method names are case-sensitive and thus implementations SHOULD NOT
-     * modify the given string.
+     * Standard methods include:
+     *   HEAD:  Asks for a response identical to that of a GET request,
+     *            but without the response body.
+     *   GET:   Requests a representation of the specified resource
+     *            Requests using GET should only retrieve data.
+     *   POST:  Submit an entity to the specified resource,
+     *            Often causing a change in state or side effects on the server.
+     *   PUT:  Replaces all current representations of the target resource with the request payload.
+     *   DELETE:  Deletes the specified resource.
+     *   PATCH:  Used to apply partial modifications to a resource.
+     *   CONNECT:  Establishes a tunnel to the server identified by the target resource.
+     *   OPTIONS:  Used to describe the communication options for the target resource.
+     *   TRACE:  Performs a message loop-back test along the path to the target resource.
      *
      * @param string $method Case-sensitive method.
      *
      * @return static
      * @throws InvalidArgumentException for invalid HTTP methods.
+     *
+     * @see https://datatracker.ietf.org/doc/html/rfc7231
      */
     public function withMethod($method)
     {
         $this->assertMethod($method);
         $new = clone $this;
-        $new->method = \strtoupper($method);
+        $new->method = $method;
         return $new;
     }
 
@@ -239,7 +231,18 @@ class Request extends Message implements RequestInterface
     }
 
     /**
-     * Check out whether a method defined in RFC 7231 request methods.
+     * {@inheritDoc}
+     */
+    public function withoutHeader($name)
+    {
+        $new = parent::withoutHeader($name);
+        return \strtolower($name) === 'host'
+            ? $new->updateHostHeader()
+            : $new;
+    }
+
+    /**
+     * Assert valid method
      *
      * @param string $method Http methods
      *
@@ -249,7 +252,7 @@ class Request extends Message implements RequestInterface
      */
     private function assertMethod($method)
     {
-        if (!\is_string($method)) {
+        if (\is_string($method) === false) {
             throw new InvalidArgumentException(\sprintf(
                 'HTTP method must be a string, but %s provided',
                 self::getTypeDebug($method)
@@ -258,11 +261,8 @@ class Request extends Message implements RequestInterface
         if ($method === '') {
             throw new InvalidArgumentException('Method must be a non-empty string.');
         }
-        if (!\in_array(\strtoupper($method), $this->validMethods)) {
-            throw new InvalidArgumentException(\sprintf(
-                'Unsupported HTTP method. It must be compatible with RFC-7231 request method, but "%s" provided.',
-                $method
-            ));
+        if (\preg_match('/^[a-z]+$/i', $method) !== 1) {
+            throw new InvalidArgumentException('Method name must contain only ASCII alpha characters');
         }
     }
 

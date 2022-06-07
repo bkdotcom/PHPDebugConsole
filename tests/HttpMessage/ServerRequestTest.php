@@ -18,6 +18,8 @@ use ReflectionObject;
 class ServerRequestTest extends TestCase
 {
     use ExpectExceptionTrait;
+    use DataProviderTrait;
+    use FactoryTrait;
 
     public function testConstruct()
     {
@@ -86,10 +88,10 @@ class ServerRequestTest extends TestCase
             Test new values replace
         */
         $serverRequest = $serverRequest->withQueryParams(array(
-            'new' => true,
+            'new' => 'new',
         ));
         $this->assertSame(array(
-            'new' => true,
+            'new' => 'new',
         ), $serverRequest->getQueryParams());
     }
 
@@ -378,6 +380,7 @@ class ServerRequestTest extends TestCase
 
         $this->assertEquals(null, $new2->getAttribute('foo8'));
         $this->assertSame($new2, $new2->withoutAttribute('noSuch'));
+        $this->assertSame($new2, $new2->withoutAttribute(false));
     }
 
     /*
@@ -386,12 +389,16 @@ class ServerRequestTest extends TestCase
 
     public function testExceptionUploadedFilesArray()
     {
-        $this->expectException(PHP_VERSION_ID >= 70000
-            ? 'TypeError'
-            : 'ErrorException'
-        );
+        // $value = (object) [];
+        $value = 'not array';
+        $exceptionClass = \is_array($value)
+            ? 'InvalidArgumentException'
+            : (PHP_VERSION_ID >= 70000
+                ? 'TypeError'
+                : 'ErrorException');
+        $this->expectException($exceptionClass);
         $serverRequest = new ServerRequest();
-        $serverRequest->withUploadedFiles((object) []);
+        $serverRequest->withUploadedFiles($value);
     }
 
     public function testExceptionUploadedFiles()
@@ -655,5 +662,93 @@ class ServerRequestTest extends TestCase
                 ),
             );
         }
+    }
+
+    /**
+     * @param $value
+     *
+     * @dataProvider validQueryParams
+     */
+    public function testWithQueryParamsAcceptsValidValues($value)
+    {
+        $params = null;
+        \parse_str($value, $params);
+        $request = $this->factory()->createServerRequest('GET', '')
+            ->withQueryParams($params);
+        $this->assertSame($params, $request->getQueryParams());
+    }
+
+    /**
+     * @param $value
+     *
+     * @dataProvider invalidQueryParams
+     */
+    public function testWithQueryParamsRejectsInvalidValues($value)
+    {
+        $exceptionClass = \is_array($value)
+            ? 'InvalidArgumentException'
+            : (PHP_VERSION_ID >= 70000
+                ? 'TypeError'
+                : 'ErrorException');
+        $this->expectException($exceptionClass);
+        $this->factory()->createServerRequest('GET', '')
+            ->withQueryParams($value);
+    }
+
+    /**
+     * @param $value
+     *
+     * @dataProvider validCookieParams
+     */
+    public function testWithCookieParamsAcceptsValidValues($value)
+    {
+        $request = $this->factory()->createServerRequest('GET', '')
+            ->withCookieParams($value);
+        $this->assertSame($value, $request->getCookieParams());
+    }
+
+    /**
+     * @param $value
+     *
+     * @dataProvider invalidCookieParams
+     */
+    public function testWithCookieParamsRejectsInvalidValues($value)
+    {
+        $exceptionClass = \is_array($value)
+            ? 'InvalidArgumentException'
+            : (PHP_VERSION_ID >= 70000
+                ? 'TypeError'
+                : 'ErrorException');
+        $this->expectException($exceptionClass);
+        $this->factory()->createServerRequest('GET', '')
+            ->withCookieParams($value);
+        // $request->getCookieParams();
+    }
+
+    /**
+     * @param $name
+     * @param $value
+     *
+     * @dataProvider validAttributeNamesAndValues
+     */
+    public function testWithAttributeAcceptsValidNamesAndValues($name, $value)
+    {
+        $request = $this->factory()->createServerRequest('GET', '')
+            ->withAttribute($name, $value);
+        $this->assertSame($value, $request->getAttribute($name));
+    }
+
+    /**
+     * @param $name
+     * @param $value
+     *
+     * @dataProvider invalidAttributeNamesAndValues
+     */
+    public function testWithAttributeAcceptsRejectsInvalidValues($name, $value)
+    {
+        $this->expectException('InvalidArgumentException');
+        $this->factory()->createServerRequest('GET', '')
+            ->withAttribute($name, $value);
+        // $request->getAttributes();
     }
 }

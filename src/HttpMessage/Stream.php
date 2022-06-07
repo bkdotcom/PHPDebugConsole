@@ -14,6 +14,7 @@ namespace bdk\HttpMessage;
 
 use bdk\HttpMessage\AbstractStream;
 use Psr\Http\Message\StreamInterface;
+use InvalidArgumentException;
 use RuntimeException;
 
 /**
@@ -321,6 +322,7 @@ class Stream extends AbstractStream implements StreamInterface
      * @return string Returns the data read from the stream, or an empty string
      *     if no bytes are available.
      * @throws RuntimeException if an error occurs.
+     * @throws InvalidArgumentException if negative length specified
      */
     public function read($length)
     {
@@ -331,7 +333,7 @@ class Stream extends AbstractStream implements StreamInterface
             throw new RuntimeException($this->strings['readFailNonReadable']);
         }
         if ($length < 0) {
-            throw new RuntimeException($this->strings['readLengthNegative']);
+            throw new InvalidArgumentException($this->strings['readLengthNegative']);
         }
         if ($length === 0) {
             return '';
@@ -386,20 +388,17 @@ class Stream extends AbstractStream implements StreamInterface
      */
     public function getMetadata($key = null)
     {
-        if (!isset($this->resource)) {
-            return $key ? null : array();
+        if ($this->isResourceOpen() === false) {
+            return $key !== null
+                ? null
+                : array();
         }
-        $streamMeta = $this->isResourceOpen() === true
-            ? \stream_get_meta_data($this->resource)
-            : array(); // not-a-resource (or closed)
+        $meta = $this->customMetadata + \stream_get_meta_data($this->resource);
         if ($key === null) {
-            return $this->customMetadata + $streamMeta;
+            return $meta;
         }
-        if (isset($this->customMetadata[$key])) {
-            return $this->customMetadata[$key];
-        }
-        return isset($streamMeta[$key])
-            ? $streamMeta[$key]
+        return isset($meta[$key])
+            ? $meta[$key]
             : null;
     }
 }

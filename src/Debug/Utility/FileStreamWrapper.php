@@ -425,7 +425,10 @@ class FileStreamWrapper
      */
     public function stream_open($path, $mode, $options, &$openedPath)
     {
-        if (\preg_match('/[rx]/', $mode) && \file_exists($path) === false) {
+        if (\strpos($mode, 'r') !== false && \file_exists($path) === false) {
+            return false;
+        }
+        if (\strpos($mode, 'x') !== false && \file_exists($path)) {
             return false;
         }
         static::unregister();

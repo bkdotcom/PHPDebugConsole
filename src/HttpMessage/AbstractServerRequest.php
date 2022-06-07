@@ -67,6 +67,8 @@ abstract class AbstractServerRequest extends Request
      * @param mixed        $val   new value
      *
      * @return void
+     *
+     * @throws InvalidArgumentException
      */
     public static function parseStrOpts($mixed, $val = null)
     {
@@ -81,6 +83,78 @@ abstract class AbstractServerRequest extends Request
         }
         $mixed = \array_intersect_key($mixed, self::$parseStrOpts);
         self::$parseStrOpts = \array_merge(self::$parseStrOpts, $mixed);
+    }
+
+    /**
+     * Assert valid attribute name
+     *
+     * @param string $name  Attribute name
+     * @param bool   $throw (false) Whether to throw InvalidArgumentException
+     *
+     * @return bool
+     * @throws InvalidArgumentException if $throw === true
+     */
+    protected function assertAttributeName($name, $throw = true)
+    {
+        if (\is_string($name) || \is_numeric($name)) {
+            return true;
+        }
+        if ($throw) {
+            throw new InvalidArgumentException(\sprintf(
+                'Attribute name must be a string, but %s provided.',
+                self::getTypeDebug($name)
+            ));
+        }
+        return false;
+    }
+
+    /**
+     * Assert valid cookie parameters
+     *
+     * @param array $cookies Cookie parameters
+     *
+     * @return void
+     * @throws InvalidArgumentException
+     *
+     * @see https://httpwg.org/http-extensions/draft-ietf-httpbis-rfc6265bis.html#name-syntax
+     */
+    protected function assertCookieParams($cookies)
+    {
+        $nameRegex = '/^[!#-+\--:<-[\]-~]+$/';
+        \array_walk($cookies, function ($value, $name) use ($nameRegex) {
+            if (\preg_match($nameRegex, $name) !== 1) {
+                throw new InvalidArgumentException(\sprintf(
+                    'Invalid cookie name specified: %s',
+                    $name
+                ));
+            }
+            if (\is_string($value) === false && \is_numeric($value) === false) {
+                throw new InvalidArgumentException(\sprintf(
+                    'Cookie value must be a string, but %s provided.',
+                    self::getTypeDebug($value)
+                ));
+            }
+        });
+    }
+
+    /**
+     * Assert valid query parameters
+     *
+     * @param array $get Query parameters
+     *
+     * @return void
+     * @throws InvalidArgumentException
+     */
+    protected function assertQueryParams($get)
+    {
+        \array_walk_recursive($get, function ($value) {
+            if (\is_string($value) === false) {
+                throw new InvalidArgumentException(\sprintf(
+                    'Query param value must be a string, but %s provided.',
+                    self::getTypeDebug($value)
+                ));
+            }
+        });
     }
 
     /**

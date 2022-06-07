@@ -238,7 +238,6 @@ class Response extends Message implements ResponseInterface
                 'Reason-phrase must be a string'
             );
         }
-
         // Don't allow control characters (incl \r & \n)
         if (\preg_match('#[^\P{C}\t]#u', $phrase, $matches, PREG_OFFSET_CAPTURE) === 1) {
             throw new InvalidArgumentException(\sprintf(

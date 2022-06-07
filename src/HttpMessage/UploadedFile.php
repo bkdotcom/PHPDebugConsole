@@ -82,8 +82,8 @@ class UploadedFile implements UploadedFileInterface
     {
         $this->assertSize($size);
         $this->assertError($error);
-        $this->assertStringOrNull($clientFilename, 'clientFilename');
-        $this->assertStringOrNull($clientMediaType, 'clientMediaType');
+        $this->assertClientFilename($clientFilename);
+        $this->assertClientMediaType($clientMediaType);
         $this->assertStringOrNull($clientFullPath, 'clientFullPath');
 
         $this->size = $size;
@@ -279,6 +279,53 @@ class UploadedFile implements UploadedFileInterface
     }
 
     /**
+     * Assert valid client filename
+     *
+     * @param string|null $filename filename to validate
+     *
+     * @return void
+     * @throws InvalidArgumentException
+     */
+    private function assertClientFilename($filename)
+    {
+        $this->assertStringOrNull($filename, 'clientFilename');
+        if ($filename === null) {
+            return;
+        }
+        if (\preg_match('#[/\r\n\x00]#', $filename)) {
+            throw new InvalidArgumentException(\sprintf('Invalid client file name provided: ', $filename));
+        }
+    }
+
+    /**
+     * Assert valid client filename
+     *
+     * @param string|null $type Content/Media type to validate
+     *
+     * @return void
+     * @throws InvalidArgumentException
+     */
+    private function assertClientMediaType($type)
+    {
+        $this->assertStringOrNull($type, 'clientMediaType');
+        if ($type === null) {
+            return;
+        }
+        // https://stackoverflow.com/a/48046041/1646086
+        // https://en.wikipedia.org/wiki/Media_type#Standards_tree
+        $regex = '#^'
+            . '(?P<type>\w+)'
+            . '/'
+            . '(?P<subtype>[-.\w]+)'
+            . '(?P<suffix>\+[-.\w]+)?'
+            . '(\s*;\s*(?P<param>\w+)\s*=\s*(?P<val>\S+))*'
+            . '$#' ;
+        if (\preg_match($regex, $type) !== 1) {
+            throw new InvalidArgumentException(\sprintf('Invalid media type specified: %s', $type));
+        }
+    }
+
+    /**
      * Validate uploaded file error
      *
      * @param int $error one of the UPLOAD_ERR_* constants
@@ -305,10 +352,10 @@ class UploadedFile implements UploadedFileInterface
      */
     private function assertSize($size)
     {
-        if ($size === null || \is_int($size)) {
+        if ($size === null || \is_int($size) && $size > -1) {
             return;
         }
-        throw new InvalidArgumentException('Upload file size must be an integer');
+        throw new InvalidArgumentException('Upload file size must be a positive integer');
     }
 
     /**

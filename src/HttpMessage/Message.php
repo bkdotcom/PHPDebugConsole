@@ -49,9 +49,12 @@ class Message implements MessageInterface
      * @var array
      */
     protected $validProtocolVers = array(
+        '0.9',
         '1.0',
         '1.1',
+        '2',
         '2.0',
+        '3',
         '3.0',
     );
 
@@ -72,11 +75,11 @@ class Message implements MessageInterface
      */
     public function withProtocolVersion($version)
     {
+        $this->assertProtocolVersion($version);
         $version = (string) $version;
         if ($version === $this->protocolVersion) {
             return $this;
         }
-        $this->assertProtocolVersion($version);
         $new = clone $this;
         $new->protocolVersion = $version;
         return $new;
@@ -159,6 +162,8 @@ class Message implements MessageInterface
     public function withHeader($name, $value)
     {
         $this->assertHeaderName($name);
+        $name = $this->normalizeHeaderName($name);
+        $this->assertHeaderValue($value);
         $value = $this->normalizeHeaderValue($value);
         $nameLower = \strtolower($name);
         $new = clone $this;
@@ -170,13 +175,7 @@ class Message implements MessageInterface
         $new->headerNames[$nameLower] = $name;
         $new->headers[$name] = $value;
         if ($nameLower === 'host') {
-            // Ensure Host is the first header.
-            // See: https://datatracker.ietf.org/doc/html/rfc7230#section-5.4
-            ArrayUtil::sortWithOrder(
-                $new->headers,
-                array($name),
-                'key'
-            );
+            $new->afterUpdateHost();
         }
         return $new;
     }
@@ -197,6 +196,8 @@ class Message implements MessageInterface
      */
     public function withAddedHeader($name, $value)
     {
+        // assert before using as array key (which will typecast)
+        $this->assertHeaderName($name);
         $new = clone $this;
         $new->setHeaders(array(
             $name => $value,
@@ -254,6 +255,30 @@ class Message implements MessageInterface
     }
 
     /**
+     * Assert only one Host value / sort Host header to beginning
+     *
+     * @return void
+     *
+     * @throws InvalidArgumentException
+     */
+    private function afterUpdateHost()
+    {
+        $this->headers['Host'] = \array_unique($this->headers['Host']);
+        if (\count($this->headers['Host']) > 1) {
+            throw new InvalidArgumentException(
+                'Only one Host header is allowed.'
+            );
+        }
+        // Ensure Host is the first header.
+        // See: https://datatracker.ietf.org/doc/html/rfc7230#section-5.4
+        ArrayUtil::sortWithOrder(
+            $this->headers,
+            array('Host'),
+            'key'
+        );
+    }
+
+    /**
      * Test valid header name
      *
      * @param string $name header name
@@ -263,9 +288,9 @@ class Message implements MessageInterface
      */
     private function assertHeaderName($name)
     {
-        if (!\is_string($name)) {
+        if (\is_string($name) === false && \is_numeric($name) === false) {
             throw new InvalidArgumentException(\sprintf(
-                'Header name must be a string but "%s" provided.',
+                'Header name must be a string but %s provided.',
                 self::getTypeDebug($name)
             ));
         }
@@ -278,7 +303,7 @@ class Message implements MessageInterface
             digit  => 0-9
             others => !#$%&\'*+-.^_`|~
         */
-        if (!\preg_match('/^[a-zA-Z0-9!#$%&\'*+-.^_`|~]+$/', $name)) {
+        if (\preg_match('/^[a-zA-Z0-9!#$%&\'*+-.^_`|~]+$/', (string) $name) !== 1) {
             throw new InvalidArgumentException(\sprintf(
                 '"%s" is not valid header name, it must be an RFC 7230 compatible string.',
                 $name
@@ -294,14 +319,14 @@ class Message implements MessageInterface
      * @return void
      * @throws InvalidArgumentException
      */
-    private function assertHeaderValue($value = null)
+    private function assertHeaderValue($value)
     {
         if (\is_scalar($value) && !\is_bool($value)) {
             $value = array((string) $value);
         }
         if (!\is_array($value)) {
             throw new InvalidArgumentException(\sprintf(
-                'The header field value only accepts string and array, but "%s" provided.',
+                'The header field value only accepts string and array, but %s provided.',
                 self::getTypeDebug($value)
             ));
         }
@@ -329,9 +354,9 @@ class Message implements MessageInterface
         if ($value === '') {
             return;
         }
-        if (!\is_scalar($value) || \is_bool($value)) {
+        if (\is_string($value) === false && \is_numeric($value) === false) {
             throw new InvalidArgumentException(\sprintf(
-                'The header values only accept string and number, but "%s" provided.',
+                'The header values only accept string and number, but %s provided.',
                 self::getTypeDebug($value)
             ));
         }
@@ -356,6 +381,31 @@ class Message implements MessageInterface
     }
 
     /**
+     * Check out whether a protocol version number is supported.
+     *
+     * @param string $version HTTP protocol version.
+     *
+     * @return void
+     *
+     * @throws InvalidArgumentException
+     */
+    private function assertProtocolVersion($version)
+    {
+        if (!\is_numeric($version)) {
+            throw new InvalidArgumentException(\sprintf(
+                'Unsupported HTTP protocol version number. %s provided.',
+                self::getTypeDebug($version)
+            ));
+        }
+        if (!\in_array((string) $version, $this->validProtocolVers, true)) {
+            throw new InvalidArgumentException(\sprintf(
+                'Unsupported HTTP protocol version number. "%s" provided.',
+                $version
+            ));
+        }
+    }
+
+    /**
      * Get the value's type
      *
      * @param mixed $value Value to inspect
@@ -370,22 +420,19 @@ class Message implements MessageInterface
     }
 
     /**
-     * Check out whether a protocol version number is supported.
+     * Normalize header name
      *
-     * @param string $version HTTP protocol version.
+     * @param string $name header name
      *
-     * @return void
-     *
+     * @return array
      * @throws InvalidArgumentException
      */
-    private function assertProtocolVersion($version)
+    private function normalizeHeaderName($name)
     {
-        if (!\in_array($version, $this->validProtocolVers)) {
-            throw new InvalidArgumentException(\sprintf(
-                'Unsupported HTTP protocol version number. "%s" provided.',
-                $version
-            ));
-        }
+        $nameLower = \strtolower($name);
+        return $nameLower === 'host'
+            ? 'Host'
+            : $name;
     }
 
     /**
@@ -398,7 +445,6 @@ class Message implements MessageInterface
      */
     private function normalizeHeaderValue($value)
     {
-        $this->assertHeaderValue($value);
         return \array_values($this->trimHeaderValues($value));
     }
 
@@ -418,15 +464,19 @@ class Message implements MessageInterface
                 $name = (string) $name;
             }
             $this->assertHeaderName($name);
+            $name = $this->normalizeHeaderName($name);
+            $this->assertHeaderValue($value);
             $values = $this->normalizeHeaderValue($value);
             $nameLower = \strtolower($name);
             if (isset($this->headerNames[$nameLower])) {
                 $name = $this->headerNames[$nameLower];
-                $this->headers[$name] = \array_merge($this->headers[$name], $values);
-                continue;
+                $values = \array_merge($this->headers[$name], $values);
             }
             $this->headerNames[$nameLower] = $name;
             $this->headers[$name] = $values;
+            if ($nameLower === 'host') {
+                $this->afterUpdateHost();
+            }
         }
     }
 

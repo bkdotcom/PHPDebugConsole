@@ -34,6 +34,7 @@
     -->
     <exclude>
       <file>src/Debug/ComposerScripts.php</file>
+      <file>src/HttpMessage/Factory.php</file>
       <directory>src/Backtrace</directory>
       <directory>src/Debug/Framework</directory>
       <directory>src/ErrorHandler</directory>

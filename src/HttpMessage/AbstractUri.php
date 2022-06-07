@@ -60,6 +60,25 @@ abstract class AbstractUri
     }
 
     /**
+     * Assert valid scheme
+     *
+     * @param string $scheme Scheme to validate
+     *
+     * @return void
+     * @throws InvalidArgumentException
+     */
+    protected function assertScheme($scheme)
+    {
+        $this->assertString($scheme, 'scheme');
+        if (\preg_match('/^[a-z][-a-z0-9.+]*$/i', $scheme) !== 1) {
+            throw new InvalidArgumentException(\sprintf(
+                'Invalid scheme:  %s',
+                $scheme
+            ));
+        }
+    }
+
+    /**
      * Throw exception if invalid value.
      *
      * @param string $value The value to check.
@@ -71,7 +90,7 @@ abstract class AbstractUri
      */
     protected function assertString($value, $what = '')
     {
-        if (!\is_string($value)) {
+        if (\is_string($value) === false) {
             throw new InvalidArgumentException(\sprintf(
                 '%s must be a string, but %s provided.',
                 \ucfirst($what),
@@ -91,17 +110,16 @@ abstract class AbstractUri
     protected static function createUriPath($authority, $path)
     {
         if ($path === '') {
-            return '';
+            return $path;
         }
         if ($path[0] !== '/' && $authority !== '') {
             // If the path is rootless and an authority is present,
             // the path MUST be prefixed by "/"
-            return '/' . $path;
-        }
-        if (isset($path[1]) && $path[1] === '/' && $authority === '') {
+            $path = '/' . $path;
+        } elseif (\substr($path, 0, 2) === '//' && $authority === '') {
             // If the path is starting with more than one "/" and no authority is present,
             // starting slashes MUST be reduced to one.
-            return '/' . \ltrim($path, '/');
+            $path = '/' . \ltrim($path, '/');
         }
         return $path;
     }
@@ -140,9 +158,7 @@ abstract class AbstractUri
             $port = (int) $port;
         }
         $this->assertPort($port);
-        return self::isNonStandardPort($this->getScheme(), $port)
-            ? $port
-            : null;
+        return $port;
     }
 
     /**
@@ -158,6 +174,19 @@ abstract class AbstractUri
         $encodePattern = '%(?![A-Fa-f0-9]{2})';
         $regex = '/(?:[^' . self::CHAR_UNRESERVED . self::CHAR_SUB_DELIMS . $specPattern . ']+|' . $encodePattern . ')/';
         return $this->regexEncode($regex, $str);
+    }
+
+    /**
+     * Is a given port standard for the given scheme?
+     *
+     * @param string $scheme Scheme
+     * @param int    $port   Port
+     *
+     * @return bool
+     */
+    protected static function isStandardPort($scheme, $port)
+    {
+        return isset(self::$schemes[$scheme]) && $port === self::$schemes[$scheme];
     }
 
     /**
@@ -177,13 +206,43 @@ abstract class AbstractUri
     }
 
     /**
-     * Parse URL with fix for php 5.4
+     * Parse URL (multi-byte safe)
      *
      * @param string $url The URL to parse.
      *
      * @return array|false
      */
     protected function parseUrl($url)
+    {
+        if (PHP_VERSION_ID >= 80000) {
+            return \parse_url($url);
+        }
+        // parse_url is not multi-byte safe...
+        //  url encode the url  then decode the individual parts
+        $chars = '!*\'();:@&=$,/?#[]';
+        $entities = \str_split(\urlencode($chars), 3);
+        $chars = \str_split($chars);
+        $urlEnc = \str_replace($entities, $chars, \urlencode($url));
+        $parts = $this->parseUrlPatched($urlEnc);
+        if (!$parts) {
+            return $parts;
+        }
+        foreach ($parts as $name => $value) {
+            $parts[$name] = \is_string($value)
+                ? \urldecode(\str_replace($chars, $entities, $value))
+                : $value;
+        }
+        return $parts;
+    }
+
+    /**
+     * Parse URL that may or may not contain schema
+     *
+     * @param string $url The URL to parse.
+     *
+     * @return array|false
+     */
+    private function parseUrlPatched($url)
     {
         if (PHP_VERSION_ID >= 50500 || \strpos($url, '//') !== 0) {
             return \parse_url($url);
@@ -213,7 +272,7 @@ abstract class AbstractUri
                 $this->getTypeDebug($port)
             ));
         }
-        if ($port < 0 || $port > 0xffff) {
+        if ($port < 1 || $port > 0xffff) {
             throw new InvalidArgumentException(\sprintf('Invalid port: %d. Must be between 0 and 65535', $port));
         }
     }
@@ -250,19 +309,6 @@ abstract class AbstractUri
         $regex1 = '/(?=^.{4,253}$)(^(' . $regexPartialHostname . '\.)+[a-zA-Z]{2,63}$)/';
         $regex2 = '/^' . $regexPartialHostname . '$/';
         return \preg_match($regex1, $host) === 1 || \preg_match($regex2, $host) === 1;
-    }
-
-    /**
-     * Is a given port non-standard for the current scheme?
-     *
-     * @param string $scheme Scheme
-     * @param int    $port   Port
-     *
-     * @return bool
-     */
-    private static function isNonStandardPort($scheme, $port)
-    {
-        return !isset(self::$schemes[$scheme]) || $port !== self::$schemes[$scheme];
     }
 
     /**

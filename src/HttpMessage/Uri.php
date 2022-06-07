@@ -119,8 +119,9 @@ class Uri extends AbstractUri implements UriInterface
         if ($this->userInfo !== '') {
             $authority = $this->userInfo . '@' . $authority;
         }
-        if ($this->port !== null) {
-            $authority .= ':' . $this->port;
+        $port = $this->getPort();
+        if ($port !== null) {
+            $authority .= ':' . $port;
         }
         return $authority;
     }
@@ -169,7 +170,9 @@ class Uri extends AbstractUri implements UriInterface
      */
     public function getPort()
     {
-        return $this->port;
+        return $this->isStandardPort($this->scheme, $this->port)
+            ? null
+            : $this->port;
     }
 
     /**
@@ -262,7 +265,7 @@ class Uri extends AbstractUri implements UriInterface
      */
     public function withScheme($scheme)
     {
-        $this->assertString($scheme, 'scheme');
+        $this->assertScheme($scheme);
         $scheme = self::lowercase($scheme);
         if ($scheme === $this->scheme) {
             return $this;
@@ -435,18 +438,24 @@ class Uri extends AbstractUri implements UriInterface
      */
     private function setUrlParts($urlParts)
     {
-        $partFilters = array(
+        $asserts = \array_intersect_key(array(
+            'scheme' => 'assertScheme',
+        ), $urlParts);
+        $filters = \array_intersect_key(array(
             'scheme' => 'lowercase',
             'host' => 'lowercase',
             'port' => 'filterPort',
             'path' => 'filterPath',
             'query' => 'filterQueryAndFragment',
             'fragment' => 'filterQueryAndFragment',
-        );
-        foreach ($partFilters as $part => $filter) {
-            if (isset($urlParts[$part])) {
-                $this->{$part} = $this->{$filter}($urlParts[$part]);
-            }
+        ), $urlParts);
+        foreach ($asserts as $part => $method) {
+            $val = $urlParts[$part];
+            $this->{$method}($val);
+        }
+        foreach ($filters as $part => $method) {
+            $val = $urlParts[$part];
+            $this->{$part} = $this->{$method}($val);
         }
         if (isset($urlParts['user'])) {
             $this->userInfo = $urlParts['user'];

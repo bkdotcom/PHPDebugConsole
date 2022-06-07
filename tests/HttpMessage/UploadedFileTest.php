@@ -15,6 +15,8 @@ use ReflectionProperty;
 class UploadedFileTest extends TestCase
 {
     use ExpectExceptionTrait;
+    use DataProviderTrait;
+    use FactoryTrait;
 
     public function testConstruct()
     {
@@ -163,54 +165,11 @@ class UploadedFileTest extends TestCase
         );
     }
 
-    /*
-        Exceptions
-    */
-
     public function testExceptionArgumentIsInvalidSource()
     {
         $this->expectException('InvalidArgumentException');
         $this->expectExceptionMessage('Invalid stream or file provided for UploadedFile');
         new UploadedFile([]);
-    }
-
-    public function testExceptionInvalidError()
-    {
-        $this->expectException('InvalidArgumentException');
-        $this->expectExceptionMessage('Upload file error status must be an integer value and one of the "UPLOAD_ERR_*" constants.');
-        new UploadedFile(
-            '/tmp/php1234.tmp', // source
-            100000,             // size
-            666,      // error
-            'example1.jpg',     // name
-            'image/jpeg'        // type
-        );
-    }
-
-    public function testExceptionInvalidSize()
-    {
-        $this->expectException('InvalidArgumentException');
-        $this->expectExceptionMessage('Upload file size must be an integer');
-        new UploadedFile(
-            '/tmp/php1234.tmp', // source
-            '100000',           // size
-            UPLOAD_ERR_OK,      // error
-            'example1.jpg',     // name
-            'image/jpeg'        // type
-        );
-    }
-
-    public function testExceptionInvalidFilename()
-    {
-        $this->expectException('InvalidArgumentException');
-        $this->expectExceptionMessage('Upload file clientFilename must be a string or null');
-        $uploadedFile = new UploadedFile(
-            '/tmp/php1234.tmp', // source
-            100000,             // size
-            UPLOAD_ERR_OK,      // error
-            true,               // name
-            'image/jpeg'        // type
-        );
     }
 
     public function testExceptionUnableToOpen()
@@ -391,6 +350,116 @@ class UploadedFileTest extends TestCase
         $reflection->setValue($uploadedFile, 'apache');
         // Exception => not an uploaded file
         $uploadedFile->moveTo($targetPath);
+    }
+
+    /**
+     * @param $status
+     *
+     * @dataProvider invalidFileUploadErrorStatuses
+     */
+    public function testSettingInvalidErrorRaisesException($error)
+    {
+        $this->expectException('InvalidArgumentException');
+        $resource = \fopen('php://temp', 'wb+');
+        $stream = $this->factory()->createStreamFromResource($resource);
+        $this->factory()->createUploadedFile($stream, 0, $error);
+    }
+
+    /**
+     * @param int $code
+     *
+     * @dataProvider fileUploadErrorCodes
+     */
+    public function testNonOkErrorCodeRaisesExceptionOnGetStream($code)
+    {
+        $this->expectException('RuntimeException');
+        $filepath = \tempnam(\sys_get_temp_dir(), 'source');
+        $stream = $this->factory()->createStreamFromFile($filepath);
+        $uploadedFile = $this->factory()->createUploadedFile($stream, 100, $code);
+        $uploadedFile->getStream();
+    }
+
+    /**
+     * @param int $code
+     *
+     * @dataProvider fileUploadErrorCodes
+     */
+    public function testNonOkErrorCodeRaisesExceptionOnMoveTo($code)
+    {
+        $this->expectException('RuntimeException');
+        $filepath = \tempnam(\sys_get_temp_dir(), 'source');
+        $stream = $this->factory()->createStreamFromFile($filepath);
+        $uploadedFile = $this->factory()->createUploadedFile($stream, 100, $code);
+        $uploadedFile->moveTo('/tmp/foo');
+    }
+
+    /**
+     * @param $size
+     *
+     * @dataProvider invalidFileSizes
+     */
+    public function testSettingInvalidFileSizeThrowException($size)
+    {
+        $this->expectException('InvalidArgumentException');
+        $resource = \fopen('php://temp', 'wb+');
+        $stream = $this->factory()->createStreamFromResource($resource);
+        $this->factory()->createUploadedFile($stream, $size, UPLOAD_ERR_OK);
+    }
+
+    /**
+     * @param $fileName
+     *
+     * @dataProvider invalidFileNames
+     */
+    public function testInvalidClientFileNamesThrowException($fileName)
+    {
+        $this->expectException('InvalidArgumentException');
+        $resource = \fopen('php://temp', 'wb+');
+        $stream = $this->factory()->createStreamFromResource($resource);
+        $this->factory()->createUploadedFile($stream, 0, UPLOAD_ERR_OK, $fileName);
+    }
+
+    /**
+     * @param $mediaType
+     *
+     * @dataProvider validMediaTypes
+     */
+    public function testValidMediaTypesAreAccepted($mediaType)
+    {
+        $resource = \fopen('php://temp', 'wb+');
+        $stream = $this->factory()->createStreamFromResource($resource);
+        $file = $this->factory()->createUploadedFile($stream, 0, UPLOAD_ERR_OK, 'foobar.baz', $mediaType);
+        $this->assertSame($mediaType, $file->getClientMediaType());
+    }
+
+    /**
+     * @param $mediaType
+     *
+     * @dataProvider invalidMediaTypes
+     */
+    public function testInvalidClientMediaTypeRaiseAnException($mediaType)
+    {
+        $this->expectException('InvalidArgumentException');
+        $resource = \fopen('php://temp', 'wb+');
+        $stream = $this->factory()->createStreamFromResource($resource);
+        $this->factory()->createUploadedFile($stream, 0, UPLOAD_ERR_OK, 'foobar.baz', $mediaType);
+    }
+
+    /**
+     * @param $path
+     *
+     * @dataProvider invalidTargetPaths
+     */
+    public function testMovingToInvalidPathThrowsException($path)
+    {
+        $this->expectException('InvalidArgumentException');
+
+        $resource = \fopen('php://temp', 'wb+');
+        $stream = $this->factory()->createStreamFromResource($resource);
+        $stream->write('Foo bar!');
+
+        $upload = $this->factory()->createUploadedFile($stream, 0, UPLOAD_ERR_OK);
+        $upload->moveTo($path);
     }
 
     /**

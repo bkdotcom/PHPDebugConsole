@@ -232,6 +232,6 @@ class Helper
             \fwrite(STDERR, $outStr . "\n");
             return;
         }
-        echo '<pre>' . \htmlspecialchars($outStr) . '</pre>';
+        echo '<pre>' . \htmlspecialchars($outStr) . '</pre>' . "\n";
     }
 }

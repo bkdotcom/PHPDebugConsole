@@ -5,6 +5,7 @@ namespace bdk\Test\HttpMessage;
 use bdk\HttpMessage\Message;
 use bdk\HttpMessage\Request;
 use bdk\HttpMessage\Uri;
+use bdk\Test\PolyFill\AssertionTrait;
 use bdk\Test\PolyFill\ExpectExceptionTrait;
 use PHPUnit\Framework\TestCase;
 
@@ -13,17 +14,20 @@ use PHPUnit\Framework\TestCase;
  */
 class RequestTest extends TestCase
 {
+    use AssertionTrait;
     use ExpectExceptionTrait;
+    use DataProviderTrait;
+    use FactoryTrait;
 
     public function testConstruct()
     {
-        $request = new Request('GET', '', '', [], '1.1');
+        $request = $this->factory()->createRequest('GET', '', '', [], '1.1');
 
         $this->assertTrue($request instanceof Request);
         $this->assertTrue($request instanceof Message);
 
-        $uri = new Uri('https://www.example.com');
-        $request = new Request('GET', $uri, '', [], '1.1');
+        $uri = $this->factory()->createUri('https://www.example.com');
+        $request = $this->factory()->createRequest('GET', $uri, '', [], '1.1');
 
         $this->assertSame('www.example.com', $request->getUri()->getHost());
     }
@@ -32,7 +36,7 @@ class RequestTest extends TestCase
     {
         // Test 1
 
-        $request = new Request('POST', 'http://www.bradkent.com/php/debug/?test=test');
+        $request = $this->factory()->createRequest('POST', 'http://www.bradkent.com/php/debug/?test=test');
 
         $this->assertSame('/php/debug/?test=test', $request->getRequestTarget());
         $this->assertSame('POST', $request->getMethod());
@@ -49,16 +53,16 @@ class RequestTest extends TestCase
 
         // Test 2
 
-        $request = new Request('GET', 'http://www.bradkent.com/');
+        $request = $this->factory()->createRequest('GET', 'http://www.bradkent.com/');
 
         $this->assertSame('/', $request->getRequestTarget());
     }
 
     public function testWithMethods()
     {
-        $request = new Request('GET', 'http://www.bradkent.com/');
+        $request = $this->factory()->createRequest('GET', 'http://www.bradkent.com/');
 
-        $uriGoogle = new Uri('http://google.com');
+        $uriGoogle = $this->factory()->createUri('http://google.com');
 
         $newRequest = $request
             ->withMethod('POST')
@@ -74,6 +78,7 @@ class RequestTest extends TestCase
         $new2Request = $newRequest->withRequestTarget('/newTarget/test/?q=1234');
         $this->assertSame('/newTarget/test/?q=1234', $new2Request->getRequestTarget());
 
+        /*
         $new3Request = $new2Request->withUri(new Uri('https://www.test.com'), true);
 
         // Preserve Host Header
@@ -87,6 +92,94 @@ class RequestTest extends TestCase
         $uri = new Uri('http://www.test.com:8080/somePath');
         $request = $request->withUri($uri);
         $this->assertSame('www.test.com:8080', $request->getHeaderLine('host'));
+        */
+    }
+
+    public function testHostHeaderFromUri()
+    {
+        $request = $this->factory()->createRequest('GET', 'http://example.com');
+        $this->assertArrayHasKey('Host', $request->getHeaders());
+        $this->assertSame(['example.com'], $request->getHeader('host'));
+        $this->assertSame('example.com', $request->getHeaderLine('host'));
+    }
+
+    public function testHostHeaderWithPortFromUri()
+    {
+        $request = $this->factory()->createRequest('GET', 'http://foo.com:8124/bar');
+        $this->assertArrayHasKey('Host', $request->getHeaders());
+        $this->assertEquals('foo.com:8124', $request->getHeaderLine('host'));
+    }
+
+    public function testHostHeaderWithoutStandardPortFromUri()
+    {
+        $request = $this->factory()->createRequest('GET', 'http://example.com:80');
+        $this->assertArrayHasKey('Host', $request->getHeaders());
+        $this->assertContains('example.com', $request->getHeader('Host'));
+    }
+
+    public function testWithUriUpdatesHostHeader()
+    {
+        $request1 = $this->factory()->createRequest('GET', 'http://foo.com/baz?bar=bam');
+        $this->assertEquals('foo.com', $request1->getHeaderLine('host'));
+
+        $request2 = $request1->withUri($this->factory()->createUri('http://www.baz.com/bar'));
+        $this->assertEquals('www.baz.com', $request2->getHeaderLine('host'));
+    }
+
+    public function testWithUriUpdatesHostHeaderWithPort()
+    {
+        $request1 = $this->factory()->createRequest('GET', 'http://foo.com:8124/bar');
+        $this->assertEquals('foo.com:8124', $request1->getHeaderLine('host'));
+
+        $request2 = $request1->withUri($this->factory()->createUri('http://foo.com:8125/bar'));
+        $this->assertEquals('foo.com:8125', $request2->getHeaderLine('host'));
+    }
+
+    public function testWithUriNotUpdateHostIfHostless()
+    {
+        $request = $this->factory()->createRequest('GET', 'http://www.bradkent.com/')
+            ->withUri($this->factory()->createUri('/somePath'));
+        $this->assertSame('www.bradkent.com', $request->getHeaderLine('Host'));
+    }
+
+    public function testWithUriPreserveHost()
+    {
+        $host = \md5(\random_bytes(12)) . '.com';
+        $request = $this->factory()->createRequest('GET', '')
+            ->withHeader('Host', $host);
+        $this->assertEquals($host, $request->getHeaderLine('host'));
+
+        $request = $request->withUri($this->factory()->createUri('http://www.foo.com/bar'), true);
+        $this->assertEquals($host, $request->getHeaderLine('host'));
+    }
+
+    public function testWithoutHeaderUpdatesHostFromUri()
+    {
+        $request1 = $this->factory()->createRequest('GET', 'http://www.example.com');
+        $this->assertEquals('www.example.com', $request1->getHeaderLine('host'));
+
+        $request2 = $request1->withoutHeader('host');
+        $this->assertArrayHasKey('Host', $request2->getHeaders());
+        $this->assertStringContainsString('www.example.com', $request2->getHeaderLine('Host'));
+    }
+
+    public function testNoHostHeader()
+    {
+        $request = $this->factory()->createRequest('GET', '');
+        $this->assertFalse($request->hasHeader('host'));
+    }
+
+    public function testNoHostHeaderIfHostlessUri()
+    {
+        $request = $this->factory()->createRequest('GET', '/test?a');
+        $this->assertFalse($request->hasHeader('host'));
+    }
+
+    public function testWithHeaderUpdatesHost()
+    {
+        $request = $this->factory()->createRequest('GET', 'http://www.example.com')
+            ->withHeader('Host', 'www.test.com');
+        $this->assertSame('www.test.com', $request->getHeaderLine('host'));
     }
 
     /*
@@ -100,10 +193,12 @@ class RequestTest extends TestCase
         new Request('GET', array());
     }
 
+
+    /*
     public function testExceptionMethod1()
     {
         $this->expectException('InvalidArgumentException');
-        $request = new Request('GET', 'http://www.bradkent.com/');
+        $request = $this->factory()->createRequest('GET', 'http://www.bradkent.com/');
         // Exception => HTTP method must be a string.
         $request->withMethod(['POST']);
     }
@@ -123,6 +218,7 @@ class RequestTest extends TestCase
         //    It must be compatible with RFC-7231 request method
         new Request('', 'http://www.bradkent.com/');
     }
+    */
 
     public function testExceptionRequestTargetContainSpaceCharacter()
     {
@@ -138,5 +234,17 @@ class RequestTest extends TestCase
         $request = new Request('GET', 'http://www.bradkent.com/');
         // Exception => A request target must be a string.
         $request->withRequestTarget(['foo' => 'bar']);
+    }
+
+    /**
+     * @param mixed $version
+     *
+     * @dataProvider invalidRequestMethods
+     */
+    public function testWithMethodInvalidThrowsException($method)
+    {
+        $this->expectException('InvalidArgumentException');
+        $this->factory()->createRequest('GET', '')
+            ->withMethod($method);
     }
 }

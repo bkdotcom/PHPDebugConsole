@@ -250,7 +250,7 @@ abstract class AbstractUri
         // php 5.4 chokes without the scheme
         $parts = \parse_url('http:' . $url);
         if ($parts) {
-            $parts['scheme'] = '';
+            unset($parts['scheme']);
         }
         return $parts;
     }

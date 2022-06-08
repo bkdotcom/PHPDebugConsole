@@ -198,7 +198,11 @@ abstract class AbstractServerRequest extends Request
                 $this->assertUploadedFiles($file);
                 continue;
             }
-            $this->assertUploadedFile($file);
+            if (!($file instanceof UploadedFileInterface)) {
+                throw new InvalidArgumentException(
+                    'Invalid leaf in uploaded files structure'
+                );
+            }
         }
     }
 
@@ -317,24 +321,6 @@ abstract class AbstractServerRequest extends Request
             }
         }
         return $uri;
-    }
-
-    /**
-     * Validate file is instance of UploadedFileInterface/UploadedFile
-     *
-     * @param UploadedFileInterface $file File value to test
-     *
-     * @return void
-     *
-     * @throws InvalidArgumentException if any leaf is not an UploadedFileInterface instance.
-     */
-    private function assertUploadedFile($file)
-    {
-        if (!($file instanceof UploadedFileInterface)) {
-            throw new InvalidArgumentException(
-                'Invalid leaf in uploaded files structure'
-            );
-        }
     }
 
     /**

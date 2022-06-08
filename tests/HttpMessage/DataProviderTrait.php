@@ -6,6 +6,23 @@ use stdClass;
 
 trait DataProviderTrait
 {
+    /**
+     * Generate a random string
+     *
+     * @param int $length (70) length between 1 and 70 inclusive
+     *
+     * @return string
+     */
+    public function randomBytes($length = 70)
+    {
+        $length = min($length, 70);
+        $length = max($length, 1);
+        return \sha1(
+            \rand(0, 32000) . \microtime(true) .  \uniqid('', true),
+            true // binary
+        );
+    }
+
     public function invalidProtocolVersions()
     {
         return [

@@ -374,7 +374,7 @@ class StreamTest extends TestCase
     protected function tempFileName()
     {
         try {
-            $rand = \md5(\time() . \random_bytes(12));
+            $rand = \md5($this->randomBytes(12));
             return \tempnam(\sys_get_temp_dir(), 'psr-7') . '.' . $rand;
         } catch (Exception $e) {
             \error_log($e->getMessage());

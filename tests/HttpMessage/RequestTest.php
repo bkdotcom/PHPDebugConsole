@@ -144,7 +144,7 @@ class RequestTest extends TestCase
 
     public function testWithUriPreserveHost()
     {
-        $host = \md5(\random_bytes(12)) . '.com';
+        $host = \md5($this->randomBytes(12)) . '.com';
         $request = $this->factory()->createRequest('GET', '')
             ->withHeader('Host', $host);
         $this->assertEquals($host, $request->getHeaderLine('host'));
@@ -192,7 +192,6 @@ class RequestTest extends TestCase
         // Exception => URI should be a string or an instance of UriInterface, but array provided.
         new Request('GET', array());
     }
-
 
     /*
     public function testExceptionMethod1()

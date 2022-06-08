@@ -279,7 +279,7 @@ class MessageTest extends TestCase
      */
     public function testWithoutHeader($name)
     {
-        $value = \base64_encode(\random_bytes(12));
+        $value = \base64_encode($this->randomBytes(12));
         $message = $this->factory()->createRequest('GET', '')
             ->withHeader($name, $value)
             ->withoutHeader($name);
@@ -300,7 +300,7 @@ class MessageTest extends TestCase
      */
     public function testWithHeaderAcceptsValidHeaderNames($name)
     {
-        $value = \base64_encode(\random_bytes(12));
+        $value = \base64_encode($this->randomBytes(12));
         $message = $this->factory()->createRequest('GET', '')
             ->withHeader($name, $value);
         $this->assertTrue($message->hasHeader(\strtolower($name)));
@@ -314,7 +314,7 @@ class MessageTest extends TestCase
      */
     public function testWithAddedHeaderAcceptsValidHeaderNames($name)
     {
-        $value = \base64_encode(\random_bytes(12));
+        $value = \base64_encode($this->randomBytes(12));
         $message = $this->factory()->createRequest('GET', '')
             ->withAddedHeader($name, $value);
         $this->assertTrue($message->hasHeader(\strtolower($name)));
@@ -329,7 +329,7 @@ class MessageTest extends TestCase
     public function testInvalidHeaderNameThrowsException($name)
     {
         $this->expectException('InvalidArgumentException');
-        $value = \base64_encode(\random_bytes(12));
+        $value = \base64_encode($this->randomBytes(12));
         $this->factory()->createRequest('GET', '')
             ->withHeader($name, $value);
     }
@@ -342,7 +342,7 @@ class MessageTest extends TestCase
     public function testInvalidAddedHeaderNameThrowException($name)
     {
         $this->expectException('InvalidArgumentException');
-        $value = \base64_encode(\random_bytes(12));
+        $value = \base64_encode($this->randomBytes(12));
         $this->factory()->createRequest('GET', '')
             ->withAddedHeader($name, $value);
     }
@@ -427,7 +427,7 @@ class MessageTest extends TestCase
      */
     public function testHostHeaderNameGetsNormalized($name)
     {
-        $value = \md5(\random_bytes(12)) . '.com';
+        $value = \md5($this->randomBytes(12)) . '.com';
         $headers = $this->factory()->createRequest('GET', '')
             ->withHeader($name, $value)
             ->getHeaders();

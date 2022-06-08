@@ -42,7 +42,6 @@ class DebugTest extends DebugTestFramework
         $route = $this->debug->internal->getDefaultRoute();
         $this->assertSame('html', $route);
 
-
         $GLOBALS['collectedHeaders'] = array(
             array('Content-Type: image/jpeg', false),
         );

@@ -462,7 +462,13 @@ class ErrorHandler extends AbstractErrorHandler
      */
     protected function errorFactory(self $handler, $errType, $errMsg, $file, $line, $vars = array())
     {
-        return new Error($handler, $errType, $errMsg, $file, $line, $vars);
+        return new Error($handler, array(
+            'type' => $errType,
+            'message' => $errMsg,
+            'file' => $file,
+            'line' => $line,
+            'vars' => $vars,
+        ));
     }
 
     /**

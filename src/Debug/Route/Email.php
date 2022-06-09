@@ -147,10 +147,12 @@ class Email implements RouteInterface
                 $errorStr .= $error['file'] . ':' . "\n";
                 $lastFile = $error['file'];
             }
-            $typeStr = $error['type'] === E_STRICT
-                ? 'Strict'
-                : $error['typeStr'];
-            $errorStr .= \sprintf(' Line %s: (%s) %s', $error['line'], $typeStr, $error['message']) . "\n";
+            $errorStr .= \sprintf(
+                ' Line %s: (%s) %s',
+                $error['line'],
+                $error['typeStr'],
+                $error['message']
+            ) . "\n";
         }
         return $errorStr;
     }

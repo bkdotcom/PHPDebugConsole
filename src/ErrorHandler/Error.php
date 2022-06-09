@@ -12,6 +12,7 @@ namespace bdk\ErrorHandler;
 
 use bdk\ErrorHandler;
 use bdk\PubSub\Event;
+use InvalidArgumentException;
 
 /**
  * Error object
@@ -49,10 +50,10 @@ class Error extends Event
         E_USER_WARNING      => 'User Warning',
         E_USER_NOTICE       => 'User Notice',
         E_ALL               => 'E_ALL',             // listed here for completeness
-        E_STRICT            => 'Runtime Notice (E_STRICT)', // php 5.0 :  2048
-        E_RECOVERABLE_ERROR => 'Recoverable Error',         // php 5.2 :  4096
-        E_DEPRECATED        => 'Deprecated',                // php 5.3 :  8192
-        E_USER_DEPRECATED   => 'User Deprecated',           // php 5.3 : 16384
+        E_STRICT            => 'Strict',            // php 5.0 :  2048
+        E_RECOVERABLE_ERROR => 'Recoverable Error', // php 5.2 :  4096
+        E_DEPRECATED        => 'Deprecated',        // php 5.3 :  8192
+        E_USER_DEPRECATED   => 'User Deprecated',   // php 5.3 : 16384
     );
     protected static $userErrors = array(
         E_USER_DEPRECATED,
@@ -71,41 +72,61 @@ class Error extends Event
     protected $backtrace = null;
 
     /**
+     * @var array Array of key/values
+     */
+    protected $values = array(
+        'type'      => null,        // int: The severity / level / one of the E_* constants
+        'message'   => '',          // The error message
+        'file'      => null,        // Filepath the error was raised in
+        'line'      => null,        // Line the error was raised in
+        'vars'      => array(),     // Active symbol table at point error occured
+        'category'  => null,
+        'continueToNormal' => null, // let PHP do its thing (log error / exit if E_USER_ERROR)
+        'continueToPrevHandler' => true,
+        'exception'     => null,
+        'hash'          => null,
+        'isFirstOccur'  => true,
+        'isHtml'        => false,
+        'isSuppressed'  => false,
+        'throw'         => false,   // whether to throw as exception (fatal errors never throw)
+        'typeStr'       => '',      // friendly version of 'type'
+    );
+
+    /**
      * Constructor
      *
      * @param ErrorHandler $errHandler ErrorHandler instance
-     * @param int          $errType    the level of the error
-     * @param string       $errMsg     the error message
-     * @param string       $file       filepath the error was raised in
-     * @param string       $line       the line the error was raised in
-     * @param array        $vars       active symbol table at point error occured
+     * @param array        $values     Initial values
+     *                                   must include type, message, file, & line
+     *                                   optional:  vars
      */
-    public function __construct(ErrorHandler $errHandler, $errType, $errMsg, $file, $line, $vars = array())
+    public function __construct(ErrorHandler $errHandler, array $values)
     {
-        unset($vars['GLOBALS']);
+        $this->assertValues($values);
         $this->subject = $errHandler;
-        $this->values = array(
-            'type'      => $errType,                    // int: aka severity / level
-            'typeStr'   => self::$errTypes[$errType],   // string: friendly version of 'type'
-            'category'  => $this->getCategory($errType),
-            'message'   => $errMsg,
-            'file'      => $file,
-            'line'      => $line,
-            'vars'      => $vars,
-            'continueToNormal' => null, // aka, let PHP do its thing (log error / exit if E_USER_ERROR)
-            'continueToPrevHandler' => $errHandler->getCfg('continueToPrevHandler'),
-            'exception'     => $errHandler->get('uncaughtException'),  // non-null if error is uncaught-exception
-            'hash'          => null,    // populated below
-            'isFirstOccur'  => true,    // populated below
-            'isHtml'        => false,   // populated below
-            'isSuppressed'  => false,   // populated below
-            'throw'         => false,   // populated below (fatal errors never thrown)
+        $this->values = \array_merge(
+            $this->values,
+            $this->defaultValues($values),
+            $values,
+            array(
+                'message' => $this->isHtml()
+                    ? \str_replace('<a ', '<a target="phpRef" ', $this->values['message'])
+                    : $this->values['message'],
+            )
         );
-        $this->setAdditionalValues();
+        unset($this->values['vars']['GLOBALS']);
         $errorCaller = $errHandler->get('errorCaller');
         if ($errorCaller) {
             $errorCallerVals = \array_intersect_key($errorCaller, \array_flip(array('file','line')));
             $this->values = \array_merge($this->values, $errorCallerVals);
+        }
+        if (\in_array($this->values['type'], array(E_ERROR, E_USER_ERROR)) && $this->values['exception'] === null) {
+            // will return empty unless xdebug extension installed/enabled
+            $this->subject->backtrace->addInternalClass(array(
+                'bdk\\ErrorHandler',
+                'bdk\\PubSub',
+            ));
+            $this->backtrace = $this->subject->backtrace->get();
         }
     }
 
@@ -259,6 +280,61 @@ class Error extends Event
     }
 
     /**
+     * Validate error values
+     *
+     * @param array $values Initial error values
+     *
+     * @return void
+     *
+     * @throws InvalidArgumentException
+     */
+    private function assertValues($values)
+    {
+        $keysMustHave = array('type', 'message', 'file', 'line');
+        $keys = \array_keys($values);
+        if (\array_intersect($keysMustHave, $keys) !== $keysMustHave) {
+            throw new InvalidArgumentException('Error values must include: ' . \implode(', ', $keysMustHave));
+        }
+        if (\array_key_exists($values['type'], self::$errTypes) === false) {
+            throw new InvalidArgumentException('invalid error type specified');
+        }
+        if (\array_key_exists('vars', $values) && \is_array($values['vars']) === false) {
+            throw new InvalidArgumentException('Error vars must be an array');
+        }
+    }
+
+    /**
+     * Get default values
+     *
+     * @param array $values Initial / primary values
+     *
+     * @return array
+     */
+    private function defaultValues($values)
+    {
+        $this->values = \array_merge(
+            $this->values,
+            $values
+        );
+        $errType = $this->values['type'];
+        $hash = $this->hash();
+        $prevOccurance = $this->subject->get('error', $hash);
+        $isSuppressed = $this->isSuppressed($errType, $prevOccurance);
+        return array(
+            'category' => $this->getCategory($errType),
+            'continueToNormal' => $this->setContinueToNormal($isSuppressed, $prevOccurance === null),
+            'continueToPrevHandler' => $this->subject->getCfg('continueToPrevHandler'),
+            'exception' => $this->subject->get('uncaughtException'),  // non-null if error is uncaught-exception
+            'hash' => $hash,
+            'isFirstOccur' => !$prevOccurance,
+            'isHtml' => $this->isHtml(),
+            'isSuppressed' => $isSuppressed,
+            'throw' => $this->isFatal() === false && ($errType & $this->subject->getCfg('errorThrow')) === $errType,
+            'typeStr' => self::$errTypes[$errType],
+        );
+    }
+
+    /**
      * Generate hash used to uniquely identify this error
      *
      * @return string hash
@@ -329,38 +405,6 @@ class Error extends Event
             return false;
         }
         return \error_reporting() === 0;
-    }
-
-    /**
-     * Set additional values for constructor
-     *
-     * @return void
-     */
-    private function setAdditionalValues()
-    {
-        $errType = $this->values['type'];
-        $hash = $this->hash();
-        $prevOccurance = $this->subject->get('error', $hash);
-        $isSuppressed = $this->isSuppressed($errType, $prevOccurance);
-        $this->values = \array_merge($this->values, array(
-            'message' => $this->isHtml()
-                ? \str_replace('<a ', '<a target="phpRef" ', $this->values['message'])
-                : $this->values['message'],
-            'continueToNormal' => $this->setContinueToNormal($isSuppressed, $prevOccurance === null),
-            'hash' => $hash,
-            'isFirstOccur' => !$prevOccurance,
-            'isHtml' => $this->isHtml(),
-            'isSuppressed' => $isSuppressed,
-            'throw' => $this->isFatal() === false && ($errType & $this->subject->getCfg('errorThrow')) === $errType,
-        ));
-        if (\in_array($errType, array(E_ERROR, E_USER_ERROR)) && $this->values['exception'] === null) {
-            // will return empty unless xdebug extension installed/enabled
-            $this->subject->backtrace->addInternalClass(array(
-                'bdk\\ErrorHandler',
-                'bdk\\PubSub',
-            ));
-            $this->backtrace = $this->subject->backtrace->get();
-        }
     }
 
     /**

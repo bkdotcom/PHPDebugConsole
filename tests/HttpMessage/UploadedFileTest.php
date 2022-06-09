@@ -360,9 +360,8 @@ class UploadedFileTest extends TestCase
     public function testSettingInvalidErrorRaisesException($error)
     {
         $this->expectException('InvalidArgumentException');
-        $resource = \fopen('php://temp', 'wb+');
-        $stream = $this->factory()->createStreamFromResource($resource);
-        $this->factory()->createUploadedFile($stream, 0, $error);
+        $stream = $this->createStream();
+        $this->createUploadedFile($stream, 0, $error);
     }
 
     /**
@@ -374,9 +373,9 @@ class UploadedFileTest extends TestCase
     {
         $this->expectException('RuntimeException');
         $filepath = \tempnam(\sys_get_temp_dir(), 'source');
-        $stream = $this->factory()->createStreamFromFile($filepath);
-        $uploadedFile = $this->factory()->createUploadedFile($stream, 100, $code);
-        $uploadedFile->getStream();
+        $stream = $this->createStream($filepath);
+        $uploadedFile = $this->createUploadedFile($stream, 100, $code)
+            ->getStream();
     }
 
     /**
@@ -388,9 +387,9 @@ class UploadedFileTest extends TestCase
     {
         $this->expectException('RuntimeException');
         $filepath = \tempnam(\sys_get_temp_dir(), 'source');
-        $stream = $this->factory()->createStreamFromFile($filepath);
-        $uploadedFile = $this->factory()->createUploadedFile($stream, 100, $code);
-        $uploadedFile->moveTo('/tmp/foo');
+        $stream = $this->createStream($filepath);
+        $uploadedFile = $this->createUploadedFile($stream, 100, $code)
+            ->moveTo('/tmp/foo');
     }
 
     /**
@@ -401,9 +400,8 @@ class UploadedFileTest extends TestCase
     public function testSettingInvalidFileSizeThrowException($size)
     {
         $this->expectException('InvalidArgumentException');
-        $resource = \fopen('php://temp', 'wb+');
-        $stream = $this->factory()->createStreamFromResource($resource);
-        $this->factory()->createUploadedFile($stream, $size, UPLOAD_ERR_OK);
+        $stream = $this->createStream();
+        $this->createUploadedFile($stream, $size, UPLOAD_ERR_OK);
     }
 
     /**
@@ -414,9 +412,8 @@ class UploadedFileTest extends TestCase
     public function testInvalidClientFileNamesThrowException($fileName)
     {
         $this->expectException('InvalidArgumentException');
-        $resource = \fopen('php://temp', 'wb+');
-        $stream = $this->factory()->createStreamFromResource($resource);
-        $this->factory()->createUploadedFile($stream, 0, UPLOAD_ERR_OK, $fileName);
+        $stream = $this->createStream();
+        $this->createUploadedFile($stream, 0, UPLOAD_ERR_OK, $fileName);
     }
 
     /**
@@ -426,9 +423,8 @@ class UploadedFileTest extends TestCase
      */
     public function testValidMediaTypesAreAccepted($mediaType)
     {
-        $resource = \fopen('php://temp', 'wb+');
-        $stream = $this->factory()->createStreamFromResource($resource);
-        $file = $this->factory()->createUploadedFile($stream, 0, UPLOAD_ERR_OK, 'foobar.baz', $mediaType);
+        $stream = $this->createStream();
+        $file = $this->createUploadedFile($stream, 0, UPLOAD_ERR_OK, 'foobar.baz', $mediaType);
         $this->assertSame($mediaType, $file->getClientMediaType());
     }
 
@@ -440,9 +436,8 @@ class UploadedFileTest extends TestCase
     public function testInvalidClientMediaTypeRaiseAnException($mediaType)
     {
         $this->expectException('InvalidArgumentException');
-        $resource = \fopen('php://temp', 'wb+');
-        $stream = $this->factory()->createStreamFromResource($resource);
-        $this->factory()->createUploadedFile($stream, 0, UPLOAD_ERR_OK, 'foobar.baz', $mediaType);
+        $stream = $this->createStream();
+        $this->createUploadedFile($stream, 0, UPLOAD_ERR_OK, 'foobar.baz', $mediaType);
     }
 
     /**
@@ -454,11 +449,10 @@ class UploadedFileTest extends TestCase
     {
         $this->expectException('InvalidArgumentException');
 
-        $resource = \fopen('php://temp', 'wb+');
-        $stream = $this->factory()->createStreamFromResource($resource);
+        $stream = $this->createStream();
         $stream->write('Foo bar!');
 
-        $upload = $this->factory()->createUploadedFile($stream, 0, UPLOAD_ERR_OK);
+        $upload = $this->createUploadedFile($stream, 0, UPLOAD_ERR_OK);
         $upload->moveTo($path);
     }
 

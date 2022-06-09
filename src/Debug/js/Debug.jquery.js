@@ -6086,8 +6086,7 @@
         onDepLoaded(dep);
         deps.splice(i, 1); // remove it
         continue
-      }
-      if (dep.status !== 'loading' && !checkOnly) {
+      } else if (dep.status !== 'loading' && !checkOnly) {
         dep.status = 'loading';
         addDep(dep);
       }

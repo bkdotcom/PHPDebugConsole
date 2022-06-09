@@ -23,7 +23,7 @@ class ServerRequestTest extends TestCase
 
     public function testConstruct()
     {
-        $serverRequest = new ServerRequest();
+        $serverRequest = $this->createServerRequest();
         $this->assertTrue($serverRequest instanceof Message);
         $this->assertTrue($serverRequest instanceof Request);
         $this->assertTrue($serverRequest instanceof ServerRequest);
@@ -31,7 +31,7 @@ class ServerRequestTest extends TestCase
 
     public function testAuthHeaders()
     {
-        $serverRequest = new ServerRequest('GET', 'http://www.test.com/', array(
+        $serverRequest = $this->createServerRequest('GET', 'http://www.test.com/', array(
             'REDIRECT_HTTP_AUTHORIZATION' => 'Basic ' . \base64_encode('username:password'),
         ));
         $this->assertSame(array(
@@ -40,7 +40,7 @@ class ServerRequestTest extends TestCase
         ), $serverRequest->getHeaders());
 
         $digestVal = 'Digest username="Mufasa", realm="testrealm@host.com", nonce="dcd98b7102dd2f0e8b11d0f600bfb0c093", uri="/dir/index.html", qop=auth, nc=00000001, cnonce="0a4f113b", response="6629fae49393a05397450978507c4ef1", opaque="5ccc069c403ebaf9f0171e9517f40e41';
-        $serverRequest = new ServerRequest('GET', 'http://www.test.com/', array(
+        $serverRequest = $this->createServerRequest('GET', 'http://www.test.com/', array(
             'PHP_AUTH_DIGEST' => $digestVal,
         ));
         $this->assertSame(array(
@@ -51,7 +51,7 @@ class ServerRequestTest extends TestCase
 
     public function testConstructWithUri()
     {
-        $serverRequest = new ServerRequest(
+        $serverRequest = $this->createServerRequest(
             'GET',
             '/some/page?foo=bar&dingle.berry=brown&a%20b=c&d+e=f&g h=i',
             array(
@@ -71,7 +71,7 @@ class ServerRequestTest extends TestCase
 
         // test options parsing works on constructor
         ServerRequest::parseStrOpts('convSpace', true);
-        $serverRequest = new ServerRequest(
+        $serverRequest = $this->createServerRequest(
             'GET',
             '/some/page?foo=bar&dingle.berry=brown&a%20b=c&d+e=f&g h=i'
         );
@@ -151,7 +151,7 @@ class ServerRequestTest extends TestCase
         $this->assertSame(array('foo' => 'bar'), $request->getParsedBody());
         $this->assertSame('http://www.test.com:8080/path?ding=dong', (string) $request->getUri());
         $this->assertEquals(array(
-            'files1' => new UploadedFile(
+            'files1' => $this->createUploadedFile(
                 '/tmp/php1234.tmp',
                 100000,
                 UPLOAD_ERR_OK,
@@ -159,14 +159,14 @@ class ServerRequestTest extends TestCase
                 'image/jpeg'
             ),
             'files2' => array(
-                'a' => new UploadedFile(
+                'a' => $this->createUploadedFile(
                     '/tmp/php1235.tmp',
                     100001,
                     UPLOAD_ERR_OK,
                     'test2.jpg',
                     'image/jpeg'
                 ),
-                'b' => new UploadedFile(
+                'b' => $this->createUploadedFile(
                     '/tmp/php1236.tmp',
                     100010,
                     UPLOAD_ERR_OK,
@@ -218,7 +218,7 @@ class ServerRequestTest extends TestCase
 
     public function testPostFromInput()
     {
-        $serverRequest = new ServerRequest();
+        $serverRequest = $this->createServerRequest();
         $reflectionMethod = new ReflectionMethod($serverRequest, 'postFromInput');
         $reflectionMethod->setAccessible(true);
 
@@ -273,7 +273,7 @@ class ServerRequestTest extends TestCase
 
     public function testProperties()
     {
-        $serverRequest = new ServerRequest();
+        $serverRequest = $this->createServerRequest();
 
         $properties = array(
             'attributes' => array(),
@@ -299,9 +299,7 @@ class ServerRequestTest extends TestCase
     public function testGetMethods()
     {
         // Test 1
-
-        $serverRequest = new ServerRequest();
-
+        $serverRequest = $this->createServerRequest();
         $this->assertSame('GET', $serverRequest->getMethod());
         $this->assertSame([
             'REQUEST_METHOD' => 'GET',
@@ -313,7 +311,7 @@ class ServerRequestTest extends TestCase
         $this->assertSame([], $serverRequest->getAttributes());
 
         // Test 2
-        $serverRequest = (new ServerRequest('POST', '', array('what' => 'server')))
+        $serverRequest = $this->createServerRequest('POST', '', array('what' => 'server'))
             ->withCookieParams(array('what' => 'cookie'))
             ->withParsedBody(array('what' => 'post'))
             ->withQueryParams(array('what' => 'get'))
@@ -331,7 +329,7 @@ class ServerRequestTest extends TestCase
         $this->assertEquals(array('what' => 'attribute'), $serverRequest->getAttributes());
         $this->assertEquals(
             array(
-                'file1' => new UploadedFile(
+                'file1' => $this->createUploadedFile(
                     '/tmp/php1234.tmp',
                     100000,
                     UPLOAD_ERR_OK,
@@ -345,9 +343,7 @@ class ServerRequestTest extends TestCase
 
     public function testWithMethods()
     {
-        $serverRequest = new ServerRequest();
-
-        $new = $serverRequest
+        $new = $this->createServerRequest()
             ->withCookieParams(['foo3' => 'bar3'])
             ->withParsedBody(['foo4' => 'bar4', 'foo5' => 'bar5'])
             ->withQueryParams(['foo6' => 'bar6', 'foo7' => 'bar7'])
@@ -365,7 +361,7 @@ class ServerRequestTest extends TestCase
 
         $this->assertEquals(
             array(
-                'file2' => new UploadedFile(
+                'file2' => $this->createUploadedFile(
                     '/tmp/php1235',
                     123456,
                     UPLOAD_ERR_OK,
@@ -397,22 +393,20 @@ class ServerRequestTest extends TestCase
                 ? 'TypeError'
                 : 'ErrorException');
         $this->expectException($exceptionClass);
-        $serverRequest = new ServerRequest();
-        $serverRequest->withUploadedFiles($value);
+        $this->createServerRequest()
+            ->withUploadedFiles($value);
     }
 
     public function testExceptionUploadedFiles()
     {
         $this->expectException('InvalidArgumentException');
-        $this->expectExceptionMessage('Invalid leaf in uploaded files structure');
-
-        $serverRequest = new ServerRequest();
-        // Exception => Invalid PSR-7 array structure for handling UploadedFile.
-        $serverRequest->withUploadedFiles([
-            [
-                ['files' => ''],
-            ],
-        ]);
+        $this->expectExceptionMessage('Invalid file in uploaded files structure. Expected UploadedFileInterface, but ');
+        $this->createServerRequest()
+            ->withUploadedFiles([
+                [
+                    ['files' => ''],
+                ],
+            ]);
     }
 
     public function testExceptionWithUploadedFile()
@@ -422,10 +416,9 @@ class ServerRequestTest extends TestCase
         $files = [
             'bogusFiles' => '/tmp/php1234.tmp',
         ];
-        $serverRequest = new ServerRequest();
+        $serverRequest = $this->createServerRequest();
         $reflectionMethod = new ReflectionMethod($serverRequest, 'filesFromGlobals');
         $reflectionMethod->setAccessible(true);
-
         $reflectionMethod->invokeArgs($serverRequest, array(
             $files,
         ));
@@ -436,9 +429,9 @@ class ServerRequestTest extends TestCase
         $this->expectException('InvalidArgumentException');
         $this->expectExceptionMessage('Only accepts array, object and null, but string provided.');
 
-        $serverRequest = new ServerRequest();
         // Exception => Only accepts array, object and null, but string provided.
-        $serverRequest->withParsedBody('I am a string');
+        $serverRequest = $this->createServerRequest()
+            ->withParsedBody('I am a string');
     }
 
     public function testExceptionParseStrOpts()
@@ -451,7 +444,7 @@ class ServerRequestTest extends TestCase
     public function testParseUploadedFiles()
     {
         $files = [
-            'files0' => new UploadedFile(
+            'files0' => $this->createUploadedFile(
                 '/tmp/php1234.tmp',
                 100000,
                 UPLOAD_ERR_OK,
@@ -554,14 +547,14 @@ class ServerRequestTest extends TestCase
         ];
 
         $expectedFiles = array(
-            'files0' => new UploadedFile(
+            'files0' => $this->createUploadedFile(
                 '/tmp/php1234.tmp',
                 100000,
                 UPLOAD_ERR_OK,
                 'test1.jpg',
                 'image/jpeg'
             ),
-            'files1' => new UploadedFile(
+            'files1' => $this->createUploadedFile(
                 '/tmp/php1234.tmp',
                 100000,
                 UPLOAD_ERR_OK,
@@ -570,7 +563,7 @@ class ServerRequestTest extends TestCase
                 '/sue/bob/test1.jpg'
             ),
             'files2' => array(
-                'a' => new UploadedFile(
+                'a' => $this->createUploadedFile(
                     '/tmp/php1235.tmp',
                     100001,
                     UPLOAD_ERR_OK,
@@ -578,7 +571,7 @@ class ServerRequestTest extends TestCase
                     'image/jpeg',
                     '/sue/bob/test2.jpg'
                 ),
-                'b' => new UploadedFile(
+                'b' => $this->createUploadedFile(
                     '/tmp/php1236.tmp',
                     100010,
                     UPLOAD_ERR_OK,
@@ -588,14 +581,14 @@ class ServerRequestTest extends TestCase
                 ),
             ),
             'files3' => array(
-                0 => new UploadedFile(
+                0 => $this->createUploadedFile(
                     '/tmp/php1237.tmp',
                     100100,
                     UPLOAD_ERR_OK,
                     'test4.jpg',
                     'image/jpeg'
                 ),
-                1 => new UploadedFile(
+                1 => $this->createUploadedFile(
                     '/tmp/php1238.tmp',
                     101000,
                     UPLOAD_ERR_OK,
@@ -605,7 +598,7 @@ class ServerRequestTest extends TestCase
             ),
             'files4' => array(
                 'foo' => array(
-                    'bar' => new UploadedFile(
+                    'bar' => $this->createUploadedFile(
                         '/tmp/php1239',
                         110000,
                         UPLOAD_ERR_OK,
@@ -616,7 +609,7 @@ class ServerRequestTest extends TestCase
             ),
         );
 
-        $serverRequest = new ServerRequest();
+        $serverRequest = $this->createServerRequest();
         $reflectionMethod = new ReflectionMethod($serverRequest, 'filesFromGlobals');
         $reflectionMethod->setAccessible(true);
 
@@ -642,7 +635,7 @@ class ServerRequestTest extends TestCase
     {
         if ($item === 1) {
             return array(
-                'file1' => new UploadedFile(
+                'file1' => self::createUploadedFile(
                     '/tmp/php1234.tmp',
                     100000,
                     UPLOAD_ERR_OK,
@@ -653,7 +646,7 @@ class ServerRequestTest extends TestCase
         }
         if ($item === 2) {
             return array(
-                'file2' => new UploadedFile(
+                'file2' => self::createUploadedFile(
                     '/tmp/php1235',
                     123456,
                     UPLOAD_ERR_OK,
@@ -673,7 +666,7 @@ class ServerRequestTest extends TestCase
     {
         $params = null;
         \parse_str($value, $params);
-        $request = $this->factory()->createServerRequest('GET', '')
+        $request = $this->createServerRequest()
             ->withQueryParams($params);
         $this->assertSame($params, $request->getQueryParams());
     }
@@ -691,7 +684,7 @@ class ServerRequestTest extends TestCase
                 ? 'TypeError'
                 : 'ErrorException');
         $this->expectException($exceptionClass);
-        $this->factory()->createServerRequest('GET', '')
+        $this->createServerRequest()
             ->withQueryParams($value);
     }
 
@@ -702,7 +695,7 @@ class ServerRequestTest extends TestCase
      */
     public function testWithCookieParamsAcceptsValidValues($value)
     {
-        $request = $this->factory()->createServerRequest('GET', '')
+        $request = $this->createServerRequest()
             ->withCookieParams($value);
         $this->assertSame($value, $request->getCookieParams());
     }
@@ -720,9 +713,8 @@ class ServerRequestTest extends TestCase
                 ? 'TypeError'
                 : 'ErrorException');
         $this->expectException($exceptionClass);
-        $this->factory()->createServerRequest('GET', '')
+        $this->createServerRequest()
             ->withCookieParams($value);
-        // $request->getCookieParams();
     }
 
     /**
@@ -733,7 +725,7 @@ class ServerRequestTest extends TestCase
      */
     public function testWithAttributeAcceptsValidNamesAndValues($name, $value)
     {
-        $request = $this->factory()->createServerRequest('GET', '')
+        $request = $this->createServerRequest()
             ->withAttribute($name, $value);
         $this->assertSame($value, $request->getAttribute($name));
     }
@@ -747,8 +739,7 @@ class ServerRequestTest extends TestCase
     public function testWithAttributeAcceptsRejectsInvalidValues($name, $value)
     {
         $this->expectException('InvalidArgumentException');
-        $this->factory()->createServerRequest('GET', '')
+        $this->createServerRequest()
             ->withAttribute($name, $value);
-        // $request->getAttributes();
     }
 }

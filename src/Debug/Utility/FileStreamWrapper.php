@@ -70,14 +70,7 @@ class FileStreamWrapper
             return;
         }
         foreach (static::$protocols as $protocol) {
-            $result = \stream_wrapper_unregister($protocol);
-            if ($result === false) {
-                throw new \UnexpectedValueException('Failed to unregister stream wrapper for ' . $protocol);
-            }
-            $result = \stream_wrapper_register($protocol, \get_called_class());
-            if ($result === false) {
-                throw new \UnexpectedValueException('Failed to register stream wrapper for ' . $protocol);
-            }
+            self::registerProtocol($protocol);
         }
         static::$isRegistered = true;
         /*
@@ -710,6 +703,27 @@ class FileStreamWrapper
             }
         }
         return true;
+    }
+
+    /**
+     * Register stream wrapper for the specified protocol
+     *
+     * First unregisters current protocol
+     *
+     * @param string $protocol Protocol such as "file" or "phar"
+     *
+     * @return void
+     */
+    private static function registerProtocol($protocol)
+    {
+        $result = \stream_wrapper_unregister($protocol);
+        if ($result === false) {
+            throw new \UnexpectedValueException('Failed to unregister stream wrapper for ' . $protocol);
+        }
+        $result = \stream_wrapper_register($protocol, \get_called_class());
+        if ($result === false) {
+            throw new \UnexpectedValueException('Failed to register stream wrapper for ' . $protocol);
+        }
     }
 
     /**

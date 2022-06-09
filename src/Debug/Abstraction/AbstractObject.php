@@ -195,21 +195,7 @@ class AbstractObject extends AbstractComponent
         if ($obj instanceof \Exception && isset($abs['properties']['xdebug_message'])) {
             $abs['properties']['xdebug_message']['debugInfoExcluded'] = true;
         } elseif ($obj instanceof \mysqli && !$abs['collectPropertyValues']) {
-            $propsAlwaysAvail = array(
-                'client_info','client_version','connect_errno','connect_error','errno','error','stat'
-            );
-            \set_error_handler(function () {
-                // ignore error
-            });
-            $refObject = $abs['reflector'];
-            foreach ($propsAlwaysAvail as $name) {
-                if (!isset($abs['properties'][$name])) {
-                    // stat property may be missing in php 7.4??
-                    continue;
-                }
-                $abs['properties'][$name]['value'] = $refObject->getProperty($name)->getValue($obj);
-            }
-            \restore_error_handler();
+            $this->onEndMysqli($abs);
         }
         $this->promoteParamDescs($abs);
     }
@@ -468,6 +454,33 @@ class AbstractObject extends AbstractComponent
             return true;
         }
         return false;
+    }
+
+    /**
+     * Add mysqli property values
+     *
+     * @param Abstraction $abs Abstraction instance
+     *
+     * @return void
+     */
+    private function onEndMysqli(Abstraction $abs)
+    {
+        $obj = $abs->getSubject();
+        $propsAlwaysAvail = array(
+            'client_info','client_version','connect_errno','connect_error','errno','error','stat'
+        );
+        \set_error_handler(function () {
+            // ignore error
+        });
+        $refObject = $abs['reflector'];
+        foreach ($propsAlwaysAvail as $name) {
+            if (!isset($abs['properties'][$name])) {
+                // stat property may be missing in php 7.4??
+                continue;
+            }
+            $abs['properties'][$name]['value'] = $refObject->getProperty($name)->getValue($obj);
+        }
+        \restore_error_handler();
     }
 
     /**

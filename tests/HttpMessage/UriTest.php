@@ -184,55 +184,6 @@ class UriTest extends TestCase
         $this->assertSame(80, $uri->getPort());
     }
 
-    /*
-        Exceptions
-    */
-
-    /*
-    public function testNonParsableUri()
-    {
-        $this->expectException('InvalidArgumentException');
-        $this->expectExceptionMessage('Unable to parse URI: http:///example.com');
-        // Exception => Uri must be a string, but integer provided.
-        new Uri('http:///example.com');
-    }
-
-    public function testExceptionAssertString()
-    {
-        $this->expectException('InvalidArgumentException');
-        $this->expectExceptionMessage('Uri must be a string, but stdClass provided.');
-        // Exception => Uri must be a string, but integer provided.
-        new Uri((object) [1234]);
-    }
-
-    public function testExceptionHost()
-    {
-        $this->expectException('InvalidArgumentException');
-        $this->expectExceptionMessage('"example_test.com" is not a valid host');
-        $uri = new Uri();
-        // Exception => "example_test.com" is not a valid host
-        $uri->withHost('example_test.com');
-    }
-
-    public function testExceptionWithPortInvalidVariableType()
-    {
-        $this->expectException('InvalidArgumentException');
-        $this->expectExceptionMessage('Port must be a int, but string provided.');
-        $uri = new Uri();
-        // Exception => Port must be an integer or a null value, but string provided.
-        $uri->withPort('foo');
-    }
-
-    public function testExceptionWithPortInvalidRangeNumer()
-    {
-        $this->expectException('InvalidArgumentException');
-        $this->expectExceptionMessage('Invalid port: 70000. Must be between 0 and 65535');
-        $uri = new Uri();
-        // Exception => Port number should be in a range of 0-65535, but 70000 provided.
-        $uri->withPort(70000);
-    }
-    */
-
     /**
      * @param string $input
      *
@@ -240,7 +191,7 @@ class UriTest extends TestCase
      */
     public function testValidUrisFormsArePreserved($input)
     {
-        $uri = $this->factory()->createUri($input);
+        $uri = $this->createUri($input);
         $this->assertSame($input, (string) $uri);
     }
 
@@ -251,7 +202,7 @@ class UriTest extends TestCase
      */
     public function testValidSchemesAreAccepted($scheme)
     {
-        $uri = $this->factory()->createUri()->withScheme($scheme);
+        $uri = $this->createUri()->withScheme($scheme);
         $this->assertSame($scheme, $uri->getScheme());
     }
 
@@ -266,7 +217,7 @@ class UriTest extends TestCase
      */
     public function testUriComponentsEncoding($input, $path, $query, $fragment, $output)
     {
-        $uri = $this->factory()->createUri($input);
+        $uri = $this->createUri($input);
         $this->assertSame($path, $uri->getPath());
         $this->assertSame($query, $uri->getQuery());
         $this->assertSame($fragment, $uri->getFragment());
@@ -281,7 +232,7 @@ class UriTest extends TestCase
     public function testInvalidUrisAreRejected($uri)
     {
         $this->expectException('InvalidArgumentException');
-        $this->factory()->createUri($uri);
+        $this->createUri($uri);
     }
 
     /**
@@ -292,7 +243,7 @@ class UriTest extends TestCase
     public function testWithSchemeRejectsInvalid($scheme)
     {
         $this->expectException('InvalidArgumentException');
-        $uri = $this->factory()->createUri()->withScheme($scheme);
+        $uri = $this->createUri()->withScheme($scheme);
         $uri->getScheme();
     }
 
@@ -305,7 +256,7 @@ class UriTest extends TestCase
     public function testWithUserInfoRejectsInvalid($user, $password)
     {
         $this->expectException('InvalidArgumentException');
-        $uri = $this->factory()->createUri()->withUserInfo($user, $password);
+        $uri = $this->createUri()->withUserInfo($user, $password);
         $uri->getUserInfo();
     }
 
@@ -317,7 +268,7 @@ class UriTest extends TestCase
     public function testWithHostRejectsInvalid($host)
     {
         $this->expectException('InvalidArgumentException');
-        $uri = $this->factory()->createUri()->withHost($host);
+        $uri = $this->createUri()->withHost($host);
         $uri->getHost();
     }
 
@@ -329,7 +280,7 @@ class UriTest extends TestCase
     public function testWithPortRejectsInvalid($port)
     {
         $this->expectException('InvalidArgumentException');
-        $uri = $this->factory()->createUri()->withPort($port);
+        $uri = $this->createUri()->withPort($port);
         $uri->getPort();
     }
 
@@ -341,7 +292,7 @@ class UriTest extends TestCase
     public function testWithPathRejectsInvalid($path)
     {
         $this->expectException('InvalidArgumentException');
-        $uri = $this->factory()->createUri()->withPath($path);
+        $uri = $this->createUri()->withPath($path);
         $uri->getPath();
     }
 
@@ -353,7 +304,7 @@ class UriTest extends TestCase
     public function testWithQueryRejectsInvalidValues($query)
     {
         $this->expectException('InvalidArgumentException');
-        $uri = $this->factory()->createUri()->withQuery($query);
+        $uri = $this->createUri()->withQuery($query);
         $uri->getQuery();
     }
 
@@ -365,7 +316,7 @@ class UriTest extends TestCase
     public function testWithFragmentRejectsInvalidValues($fragment)
     {
         $this->expectException('InvalidArgumentException');
-        $uri = $this->factory()->createUri()->withFragment($fragment);
+        $uri = $this->createUri()->withFragment($fragment);
         $uri->getFragment();
     }
 }

@@ -193,17 +193,14 @@ abstract class AbstractServerRequest extends Request
      */
     protected function assertUploadedFiles($uploadedFiles)
     {
-        foreach ($uploadedFiles as $file) {
-            if (\is_array($file)) {
-                $this->assertUploadedFiles($file);
-                continue;
+        \array_walk_recursive($uploadedFiles, function ($val) {
+            if (!($val instanceof UploadedFileInterface)) {
+                throw new InvalidArgumentException(\sprintf(
+                    'Invalid file in uploaded files structure. Expected UploadedFileInterface, but %s provided',
+                    self::getTypeDebug($val)
+                ));
             }
-            if (!($file instanceof UploadedFileInterface)) {
-                throw new InvalidArgumentException(
-                    'Invalid leaf in uploaded files structure'
-                );
-            }
-        }
+        });
     }
 
     /**

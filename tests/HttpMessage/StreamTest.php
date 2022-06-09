@@ -81,7 +81,7 @@ class StreamTest extends TestCase
 
     public function testToString()
     {
-        $stream = $this->factory()->createStreamFromResource(\fopen('php://temp', 'r+'));
+        $stream = $this->createStream();
         $stream->write('Foo Bar');
 
         $this->assertSame('Foo Bar', (string) $stream);
@@ -99,7 +99,7 @@ class StreamTest extends TestCase
         $this->assertSame(123, $stream->getSize());
 
         $resource = \fopen(TEST_DIR . '/assets/logo.png', 'r+');
-        $stream = $this->factory()->createStreamFromResource($resource);
+        $stream = $this->createStream($resource);
         $this->assertSame(\filesize(TEST_DIR . '/assets/logo.png'), $stream->getSize());
         $stream->close();
     }
@@ -107,7 +107,7 @@ class StreamTest extends TestCase
     public function testGetMetadata()
     {
         $resource = \fopen(TEST_DIR . '/assets/logo.png', 'r+');
-        $stream = $this->factory()->createStreamFromResource($resource);
+        $stream = $this->createStream($resource);
         $expectedMeta = [
             'blocked' => true,
             'eof' => false,
@@ -135,7 +135,7 @@ class StreamTest extends TestCase
     public function testSeekAndRewind()
     {
         $resource = \fopen(TEST_DIR . '/assets/logo.png', 'r+');
-        $stream = $this->factory()->createStreamFromResource($resource);
+        $stream = $this->createStream($resource);
         $stream->seek(10);
         $this->assertSame(10, $stream->tell());
         $stream->rewind();
@@ -145,7 +145,7 @@ class StreamTest extends TestCase
 
     public function testReadAndWrite()
     {
-        $stream = $this->factory()->createStreamFromResource(\fopen('php://temp', 'r+'));
+        $stream = $this->createStream(); // \fopen('php://temp', 'r+')
         $stream->write('Foo Bar');
         $stream->rewind();
         $this->assertSame('Foo ', $stream->read(4));
@@ -171,7 +171,7 @@ class StreamTest extends TestCase
     {
         $this->expectException('RuntimeException');
         $this->expectExceptionMessage('Stream is detached');
-        $stream = $this->factory()->createStreamFromResource(\fopen('php://temp', 'r+'));
+        $stream = $this->createStream();    // \fopen('php://temp', 'r+')
         $stream->close();
         $stream->eof();
     }
@@ -180,7 +180,7 @@ class StreamTest extends TestCase
     {
         $this->expectException('RuntimeException');
         $this->expectExceptionMessage('Stream is detached');
-        $stream = $this->factory()->createStreamFromResource(\fopen('php://temp', 'r+'));
+        $stream = $this->createStream();    // \fopen('php://temp', 'r+')
         $stream->write('Foo Bar');
         $stream->rewind();
         $stream->close();
@@ -192,7 +192,7 @@ class StreamTest extends TestCase
     {
         $this->expectException('RuntimeException');
         $this->expectExceptionMessage('Unable to read from stream');
-        $stream = $this->factory()->createStreamFromResource(\fopen('php://temp', 'r+'));
+        $stream = $this->createStream();    // \fopen('php://temp', 'r+')
         $stream->write('Foo Bar');
         $stream->rewind();
 
@@ -205,7 +205,7 @@ class StreamTest extends TestCase
     {
         $this->expectException('RuntimeException');
         $this->expectExceptionMessage('Stream is detached');
-        $stream = $this->factory()->createStreamFromResource(\fopen('php://temp', 'r+'));
+        $stream = $this->createStream();    // \fopen('php://temp', 'r+')
         $stream->write('Foo Bar');
         $stream->close();
         $stream->read(2);
@@ -215,7 +215,7 @@ class StreamTest extends TestCase
     {
         $this->expectException('RuntimeException');
         $this->expectExceptionMessage('Unable to read from non-readable stream');
-        $stream = $this->factory()->createStreamFromResource(\fopen(TEST_DIR . '/assets/logo.png', 'a'));
+        $stream = $this->createStream(\fopen(TEST_DIR . '/assets/logo.png', 'a'));
         $stream->read(100);
     }
 
@@ -223,7 +223,7 @@ class StreamTest extends TestCase
     {
         $this->expectException('InvalidArgumentException');
         $this->expectExceptionMessage('Length parameter cannot be negative');
-        $stream = $this->factory()->createStreamFromResource(\fopen('php://temp', 'r+'));
+        $stream = $this->createStream();    // \fopen('php://temp', 'r+')
         $stream->write('Foo Bar');
         $stream->read(-10);
     }
@@ -248,7 +248,7 @@ class StreamTest extends TestCase
     {
         $this->expectException('RuntimeException');
         $this->expectExceptionMessage('Stream is detached');
-        $stream = $this->factory()->createStreamFromResource(\fopen('php://temp', 'r+'));
+        $stream = $this->createStream();    // \fopen('php://temp', 'r+')
         $stream->close();
         // Exception => Stream does not exist.
         $stream->seek(10);
@@ -258,7 +258,7 @@ class StreamTest extends TestCase
     {
         $this->expectException('RuntimeException');
         $this->expectExceptionMessage('Stream is not seekable');
-        $stream = $this->factory()->createStreamFromResource(\fopen('php://temp', 'r'));
+        $stream = $this->createStream();    // \fopen('php://temp', 'r')
         \bdk\Test\Debug\Helper::setPrivateProp($stream, 'seekable', false);
         $stream->seek(10);
     }
@@ -267,8 +267,8 @@ class StreamTest extends TestCase
     {
         $this->expectException('RuntimeException');
         $this->expectExceptionMessage('Unable to seek to stream position 10 with whence 0');
-        $stream = $this->factory()->createStreamFromResource(\fopen('php://temp', 'r'));
-        $stream->seek(10);
+        $this->createStream()   // \fopen('php://temp', 'r')
+            ->seek(10);
     }
 
     public function testExceptionSetResourceFileError()
@@ -276,7 +276,7 @@ class StreamTest extends TestCase
         $this->expectException('RuntimeException');
         $this->expectExceptionMessage('The file some/readonly/file cannot be opened.');
 
-        $stream = $this->factory()->createStreamFromResource(\fopen('php://temp', 'r+'));
+        $stream = $this->createStream();    // \fopen('php://temp', 'r+')
         $stream->write('Foo Bar');
 
         $reflectionMethod = new ReflectionMethod($stream, 'setResourceFile');
@@ -288,7 +288,7 @@ class StreamTest extends TestCase
     {
         $this->expectException('RuntimeException');
         $this->expectExceptionMessage('Stream is detached');
-        $stream = $this->factory()->createStreamFromResource(\fopen('php://temp', 'r+'));
+        $stream = $this->createStream();    // \fopen('php://temp', 'r+')
         $stream->close();
         $stream->tell();
     }
@@ -297,7 +297,7 @@ class StreamTest extends TestCase
     {
         $this->expectException('RuntimeException');
         $this->expectExceptionMessage('Stream is detached');
-        $stream = $this->factory()->createStreamFromResource(\fopen('php://temp', 'r+'));
+        $stream = $this->createStream();    // \fopen('php://temp', 'r+')
         $stream->close();
         $stream->write('Foo Bar');
     }
@@ -311,7 +311,7 @@ class StreamTest extends TestCase
     {
         $name = $this->tempFileName();
         $handle = \fopen($name, $mode);
-        $stream = $this->factory()->createStreamFromResource($handle);
+        $stream = $this->createStream($handle);
         $this->assertFalse($stream->isReadable());
         $stream->close();
     }
@@ -324,7 +324,7 @@ class StreamTest extends TestCase
     public function testIsWritableReturnsFalseIfStreamIsNotWritable($mode)
     {
         $handle = \fopen('php://memory', $mode);
-        $stream = $this->factory()->createStreamFromResource($handle);
+        $stream = $this->createStream($handle);
         $this->assertFalse($stream->isWritable());
         $stream->close();
     }
@@ -337,7 +337,7 @@ class StreamTest extends TestCase
     public function testPassingInvalidStreamResourceToConstructorThrowsException($handle)
     {
         $this->expectException('InvalidArgumentException');
-        $this->factory()->createStreamFromResource($handle);
+        $this->createStream($handle);
     }
 
     /**
@@ -349,8 +349,8 @@ class StreamTest extends TestCase
     {
         $this->expectException('RuntimeException');
         $handle = \fopen('php://memory', $mode);
-        $stream = $this->factory()->createStreamFromResource($handle);
-        $stream->write('bar');
+        $this->createStream($handle)
+            ->write('bar');
     }
 
     /**
@@ -367,8 +367,8 @@ class StreamTest extends TestCase
             \file_put_contents($name, 'MODE: ' . $mode);
         }
         $handle = \fopen($name, $mode);
-        $stream = $this->factory()->createStreamFromResource($handle);
-        $stream->getContents();
+        $this->createStream($handle)
+            ->getContents();
     }
 
     protected function tempFileName()

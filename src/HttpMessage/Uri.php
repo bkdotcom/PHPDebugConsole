@@ -49,7 +49,7 @@ class Uri extends AbstractUri implements UriInterface
      *
      * @throws InvalidArgumentException
      */
-    public function __construct($uri = '')
+    public function __construct($uri = null)
     {
         if ($uri === null) {
             $uri = '';

@@ -4,6 +4,7 @@ namespace bdk\Test\Debug\Method;
 
 use bdk\Debug;
 use bdk\Debug\LogEntry;
+use bdk\ErrorHandler\Error;
 use bdk\Test\Debug\DebugTestFramework;
 
 /**
@@ -521,13 +522,14 @@ class MethodTest extends DebugTestFramework
 
         $this->testMethod(
             'log',
-            array(new \bdk\ErrorHandler\Error(
-                $this->debug->errorHandler,
-                E_WARNING,
-                'this is a warning',
-                __FILE__,
-                42
-            )),
+            array(
+                new Error($this->debug->errorHandler, array(
+                    'type' => E_WARNING,
+                    'message' => 'this is a warning',
+                    'file' => __FILE__,
+                    'line' => 42,
+                )),
+            ),
             array(
                 'entry' => function (LogEntry $logEntry) {
                     $this->assertSame(array(

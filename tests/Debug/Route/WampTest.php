@@ -196,7 +196,12 @@ class WampTest extends DebugTestFramework
 
     public function testOnError()
     {
-        $error = new Error($this->debug->errorHandler, E_WARNING, 'bogus error', __FILE__, 42);
+        $error = new Error($this->debug->errorHandler, array(
+            'type' => E_WARNING,
+            'message' => 'bogus error',
+            'file' => __FILE__,
+            'line' => 42,
+        ));
         $this->debug->getRoute('wamp')->onError($error);
         $msg = $this->debug->getRoute('wamp')->wamp->messages[0];
         // echo \json_encode($msg, JSON_PRETTY_PRINT) . "\n";

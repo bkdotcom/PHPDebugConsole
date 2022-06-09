@@ -21,7 +21,7 @@ class MessageTest extends TestCase
 
     public function testConstruct()
     {
-        $message = new Message();
+        $message = $this->createMessage();
         $this->assertTrue($message instanceof Message);
     }
 
@@ -73,8 +73,8 @@ class MessageTest extends TestCase
     public function testBodyMethods()
     {
         $resource = \fopen(TEST_DIR . '/assets/logo.png', 'r+');
-        $stream = new Stream($resource);
-        $message = new Message();
+        $stream = $this->createStream($resource);
+        $message = $this->createMessage();
 
         $this->assertInstanceOf('bdk\\HttpMessage\\Stream', $message->getBody());
 
@@ -87,7 +87,7 @@ class MessageTest extends TestCase
 
     public function testSetHeaders()
     {
-        $message = new Message();
+        $message = $this->createMessage();
         $testArray = [
             123 => ['value'],
             'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
@@ -109,14 +109,14 @@ class MessageTest extends TestCase
 
     public function testWithAddedHeaderArrayValueAndKeys()
     {
-        $message = new Message();
-        $message = $message->withAddedHeader('content-type', [
-            'foo' => 'text/html',
-        ]);
-        $message = $message->withAddedHeader('content-type', [
-            'foo' => 'text/plain',
-            'bar' => 'application/json',
-        ]);
+        $message = $this->createMessage()
+            ->withAddedHeader('content-type', [
+                'foo' => 'text/html',
+            ])
+            ->withAddedHeader('content-type', [
+                'foo' => 'text/plain',
+                'bar' => 'application/json',
+            ]);
 
         $headerLine = $message->getHeaderLine('content-type');
         $this->assertStringContainsString('text/html', $headerLine);
@@ -132,111 +132,24 @@ class MessageTest extends TestCase
         Exceptions
     */
 
-    /*
-    public function testExceptionHeaderName()
-    {
-        $this->expectException('InvalidArgumentException');
-        $message = new Message();
-        // Exception => "hello-wo)rld" is not valid header name, it must be an RFC 7230 compatible string.
-        $message->withHeader('hello-wo)rld', 'ok');
-    }
-    */
-
-    /*
-    public function testExceptionHeaderNameEmpty()
-    {
-        $this->expectException('InvalidArgumentException');
-        $message = new Message();
-        // Exception => empty string is not a valid header name
-        $message->withHeader('', 'ok');
-    }
-
-    public function testExceptionHeaderName2()
-    {
-        $this->expectException('InvalidArgumentException');
-        $message = new Message();
-        // Exception => "hello-wo)rld" is not valid header name, it must be an RFC 7230 compatible string.
-        $message->withHeader(['test'], 'ok');
-    }
-
-    public function testExceptionHeaderValueBoolean()
-    {
-        $this->expectException('InvalidArgumentException');
-        $message = new Message();
-        // Exception => The header field value only accepts string and array, but "boolean" provided.
-        $message->withHeader('hello-world', false);
-    }
-
-    public function testExceptionHeaderValueNull()
-    {
-        $this->expectException('InvalidArgumentException');
-        $message = new Message();
-        // Exception => The header field value only accepts string and array, but "NULL" provided.
-        $message->withHeader('hello-world', null);
-    }
-
-    public function testExceptionHeaderValueEmptyArray()
-    {
-        $this->expectException('InvalidArgumentException');
-        $message = new Message();
-        // Exception => The header field value only accepts string and non-array
-        $message->withHeader('hello-world', []);
-    }
-
-    public function testExceptionHeaderValueObject()
-    {
-        $this->expectException('InvalidArgumentException');
-        $message = new Message();
-        $mockObject = new stdClass();
-        $mockObject->test = 1;
-        // Exception => The header field value only accepts string and array, but "object" provided.
-        $message->withHeader('hello-world', $mockObject);
-    }
-
-    public function testExceptionHeaderValueArray()
-    {
-        $this->expectException('InvalidArgumentException');
-        // An invalid type is inside the array.
-        $testArr = array(
-            'test',
-            true
-        );
-        $message = new Message();
-        // Exception => The header values only accept string and number, but "boolean" provided.
-        $message->withHeader('hello-world', $testArr);
-    }
-    */
-
     public function testExceptionHeaderValueInvalidString()
     {
         $this->expectException('InvalidArgumentException');
-        $message = new Message();
-        // Exception => "This string contains many invisible spaces." is not valid header
-        //    value, it must contains visible ASCII characters only.
-        $message->withHeader('hello-world', 'This string contains many invisible spaces.');
+        $this->createMessage()
+            ->withHeader('hello-world', 'This string contains many invisible spaces.');
     }
-
-    /*
-    public function testExceptionProtocolVersion()
-    {
-        $this->expectException('InvalidArgumentException');
-        $request = new Message();
-        // Exception => Unsupported HTTP protocol version number.
-        $request->withProtocolVersion('1.5');
-    }
-    */
 
     public function testWithHeaderRejectsMultipleHostValues()
     {
         $this->expectException('InvalidArgumentException');
-        $this->factory()->createRequest('GET', '')
+        $this->createMessage()
             ->withHeader('Host', ['a.com', 'b.com']);
     }
 
     public function testWithAddedHeaderRejectsAdditionalHost()
     {
         $this->expectException('InvalidArgumentException');
-        $this->factory()->createRequest('GET', '')
+        $this->createMessage()
             ->withHeader('Host', ['a.com'])
             ->withAddedHeader('host', 'b.com');
     }
@@ -244,7 +157,7 @@ class MessageTest extends TestCase
     public function testWithAddedHeaderRejectsMultipleHostValues()
     {
         $this->expectException('InvalidArgumentException');
-        $this->factory()->createRequest('GET', '')
+        $this->createMessage()
             ->withAddedHeader('Host', ['a.com', 'b.com']);
     }
 
@@ -255,7 +168,7 @@ class MessageTest extends TestCase
      */
     public function testAcceptsValidProtocolVersion($version)
     {
-        $message = $this->factory()->createRequest('GET', '')
+        $message = $this->createMessage()
             ->withProtocolVersion($version);
         $this->assertEquals($version, $message->getProtocolVersion());
     }
@@ -268,7 +181,7 @@ class MessageTest extends TestCase
     public function testWithInvalidProtocolVersionThrowsException($version)
     {
         $this->expectException('InvalidArgumentException');
-        $this->factory()->createRequest('GET', '')
+        $this->createMessage()
             ->withProtocolVersion($version)->getProtocolVersion();
     }
 
@@ -280,7 +193,7 @@ class MessageTest extends TestCase
     public function testWithoutHeader($name)
     {
         $value = \base64_encode($this->randomBytes(12));
-        $message = $this->factory()->createRequest('GET', '')
+        $message = $this->createMessage()
             ->withHeader($name, $value)
             ->withoutHeader($name);
 
@@ -301,7 +214,7 @@ class MessageTest extends TestCase
     public function testWithHeaderAcceptsValidHeaderNames($name)
     {
         $value = \base64_encode($this->randomBytes(12));
-        $message = $this->factory()->createRequest('GET', '')
+        $message = $this->createMessage()
             ->withHeader($name, $value);
         $this->assertTrue($message->hasHeader(\strtolower($name)));
         $this->assertEquals($value, $message->getHeaderLine($name));
@@ -315,7 +228,7 @@ class MessageTest extends TestCase
     public function testWithAddedHeaderAcceptsValidHeaderNames($name)
     {
         $value = \base64_encode($this->randomBytes(12));
-        $message = $this->factory()->createRequest('GET', '')
+        $message = $this->createMessage()
             ->withAddedHeader($name, $value);
         $this->assertTrue($message->hasHeader(\strtolower($name)));
         $this->assertEquals($value, $message->getHeaderLine($name));
@@ -330,7 +243,7 @@ class MessageTest extends TestCase
     {
         $this->expectException('InvalidArgumentException');
         $value = \base64_encode($this->randomBytes(12));
-        $this->factory()->createRequest('GET', '')
+        $this->createMessage()
             ->withHeader($name, $value);
     }
 
@@ -343,7 +256,7 @@ class MessageTest extends TestCase
     {
         $this->expectException('InvalidArgumentException');
         $value = \base64_encode($this->randomBytes(12));
-        $this->factory()->createRequest('GET', '')
+        $this->createMessage()
             ->withAddedHeader($name, $value);
     }
 
@@ -354,7 +267,7 @@ class MessageTest extends TestCase
      */
     public function testWithHeaderAcceptValidValues($value)
     {
-        $message = $this->factory()->createRequest('GET', '')
+        $message = $this->createMessage()
             ->withHeader('header', 'oldValue')
             ->withHeader('header', $value);
         $this->assertEquals($value, $message->getHeaderLine('header'));
@@ -367,7 +280,7 @@ class MessageTest extends TestCase
      */
     public function testWithAddedHeaderAcceptsValidValues($value)
     {
-        $message = $this->factory()->createRequest('GET', '')
+        $message = $this->createMessage()
             ->withAddedHeader('header', $value);
         $this->assertEquals($value, $message->getHeaderLine('header'));
     }
@@ -380,7 +293,7 @@ class MessageTest extends TestCase
     public function testWithHeaderRejectsInvalidValues($value)
     {
         $this->expectException('InvalidArgumentException');
-        $this->factory()->createRequest('GET', '')
+        $this->createMessage()
             ->withHeader('header', $value);
     }
 
@@ -392,7 +305,7 @@ class MessageTest extends TestCase
     public function testWithHeaderRejectsInvalidArrayValues($value)
     {
         $this->expectException('InvalidArgumentException');
-        $this->factory()->createRequest('GET', '')
+        $this->createMessage()
             ->withHeader('header', [$value]);
     }
 
@@ -404,7 +317,7 @@ class MessageTest extends TestCase
     public function testWithAddedHeaderRejectsInvalidValues($value)
     {
         $this->expectException('InvalidArgumentException');
-        $this->factory()->createRequest('GET', '')
+        $this->createMessage()
             ->withAddedHeader('header', $value);
     }
 
@@ -416,7 +329,7 @@ class MessageTest extends TestCase
     public function testWithAddedHeaderRejectsInvalidArrayValues($value)
     {
         $this->expectException('InvalidArgumentException');
-        $this->factory()->createRequest('GET', '')
+        $this->createMessage()
             ->withAddedHeader('header', [$value]);
     }
 
@@ -428,7 +341,7 @@ class MessageTest extends TestCase
     public function testHostHeaderNameGetsNormalized($name)
     {
         $value = \md5($this->randomBytes(12)) . '.com';
-        $headers = $this->factory()->createRequest('GET', '')
+        $headers = $this->createMessage()
             ->withHeader($name, $value)
             ->getHeaders();
 
@@ -450,7 +363,7 @@ class MessageTest extends TestCase
     public function testWithHeaderRejectsHeadersWithCrlfVectors($name, $value)
     {
         $this->expectException('InvalidArgumentException');
-        $this->factory()->createRequest('GET', '')
+        $this->createMessage()
             ->withHeader($name, $value);
     }
     */
@@ -465,7 +378,7 @@ class MessageTest extends TestCase
     public function testWithAddedHeaderRejectsHeadersWithCrlfVectors($name, $value)
     {
         $this->expectException('InvalidArgumentException');
-        $message = $this->factory()->createRequest('GET', '')
+        $message = $this->createMessage()
             ->withAddedHeader($name, $value);
     }
     */

@@ -158,8 +158,13 @@ class InternalEventsTest extends DebugTestFramework
 
     public function testErrorForceErrorOutput()
     {
-        $error = new Error($this->debug->errorHandler, E_ERROR, 'fatality', __FILE__, __LINE__);
-        $line = __LINE__ - 1;
+        $error = new Error($this->debug->errorHandler, array(
+            'type' => E_ERROR,
+            'message' => 'fatality',
+            'file' => __FILE__,
+            'line' => __LINE__,
+        ));
+        $line = __LINE__ - 2;
         // cli
         // stream
         $this->debug->setCfg(array(
@@ -207,7 +212,12 @@ class InternalEventsTest extends DebugTestFramework
             'collect' => false,
             'output' => true,
         ));
-        $error = new Error($this->debug->errorHandler, E_NOTICE, 'Hi error', __FILE__, __LINE__);
+        $error = new Error($this->debug->errorHandler, array(
+            'type' => E_NOTICE,
+            'message' => 'Hi error',
+            'file' => __FILE__,
+            'line' => __LINE__,
+        ));
         $this->debug->internalEvents->onError($error);
         $this->assertSame(0, $this->debug->data->get('log/__count__'));
         $this->assertFalse($error['email']);
@@ -220,7 +230,12 @@ class InternalEventsTest extends DebugTestFramework
             'collect' => false,
             'output' => false,
         ));
-        $error = new Error($this->debug->errorHandler, E_NOTICE, 'Hi error', __FILE__, __LINE__);
+        $error = new Error($this->debug->errorHandler, array(
+            'type' => E_NOTICE,
+            'message' => 'Hi error',
+            'file' => __FILE__,
+            'line' => __LINE__,
+        ));
         $this->debug->internalEvents->onError($error);
         $this->assertSame(0, $this->debug->data->get('log/__count__'));
         $this->assertArrayNotHasKey('error', $error);

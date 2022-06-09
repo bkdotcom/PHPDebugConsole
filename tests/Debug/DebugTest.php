@@ -138,7 +138,7 @@ class DebugTest extends DebugTestFramework
                 __FILE__ . ' (line ' . $lastError['line'] . ')',
             )
             : array(
-                'Runtime Notice (E_STRICT):',
+                'Strict:',
                 $errMsg,
                 __FILE__ . ' (line ' . $lastError['line'] . ')',
             );

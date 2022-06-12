@@ -5,7 +5,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2022 Brad Kent
- * @version   v3.4
+ * @version   v3.2
  */
 
 namespace bdk\ErrorHandler;
@@ -102,18 +102,9 @@ class Error extends Event
      */
     public function __construct(ErrorHandler $errHandler, array $values)
     {
-        $this->assertValues($values);
         $this->subject = $errHandler;
-        $this->values = \array_merge(
-            $this->values,
-            $this->defaultValues($values),
-            $values,
-            array(
-                'message' => $this->isHtml()
-                    ? \str_replace('<a ', '<a target="phpRef" ', $this->values['message'])
-                    : $this->values['message'],
-            )
-        );
+        $this->assertValues($values);
+        $this->setValues($values);
         unset($this->values['vars']['GLOBALS']);
         $errorCaller = $errHandler->get('errorCaller');
         if ($errorCaller) {
@@ -266,6 +257,38 @@ class Error extends Event
     }
 
     /**
+     * {@inheritDoc}
+     */
+    public function setValues(array $values = array())
+    {
+        $this->setValuesInit($values);
+        $errType = $values['type'];
+        $hash = $this->hash($values);
+        $prevOccurance = $this->subject->get('error', $hash);
+        $isSuppressed = $this->isSuppressed($prevOccurance);
+        $this->values = \array_merge(
+            $this->values,
+            array(
+                'continueToNormal' => $this->setContinueToNormal($isSuppressed, $prevOccurance === null),
+                'continueToPrevHandler' => $this->subject->getCfg('continueToPrevHandler'),
+                'throw' => $this->isFatal() === false && ($errType & $this->subject->getCfg('errorThrow')) === $errType,
+            ),
+            $values,
+            array(
+                'category' => $this->values['category'],
+                'hash' => $hash,
+                'isFirstOccur' => !$prevOccurance,
+                'isHtml' => $this->isHtml(),
+                'isSuppressed' => $isSuppressed,
+                'typeStr' => self::$errTypes[$errType],
+                'message' => $this->isHtml()
+                    ? \str_replace('<a ', '<a target="phpRef" ', $this->values['message'])
+                    : $this->values['message'],
+            )
+        );
+    }
+
+    /**
      * Get human-friendly error type
      *
      * @param int $type E_xx constant value
@@ -293,45 +316,15 @@ class Error extends Event
         $keysMustHave = array('type', 'message', 'file', 'line');
         $keys = \array_keys($values);
         if (\array_intersect($keysMustHave, $keys) !== $keysMustHave) {
-            throw new InvalidArgumentException('Error values must include: ' . \implode(', ', $keysMustHave));
+            throw new InvalidArgumentException('Error values must include: type, message, file, & line');
         }
-        if (\array_key_exists($values['type'], self::$errTypes) === false) {
+        $validTypes = \array_diff_key(self::$errTypes, \array_flip(array(E_ALL)));
+        if (\array_key_exists($values['type'], $validTypes) === false) {
             throw new InvalidArgumentException('invalid error type specified');
         }
         if (\array_key_exists('vars', $values) && \is_array($values['vars']) === false) {
             throw new InvalidArgumentException('Error vars must be an array');
         }
-    }
-
-    /**
-     * Get default values
-     *
-     * @param array $values Initial / primary values
-     *
-     * @return array
-     */
-    private function defaultValues($values)
-    {
-        $this->values = \array_merge(
-            $this->values,
-            $values
-        );
-        $errType = $this->values['type'];
-        $hash = $this->hash();
-        $prevOccurance = $this->subject->get('error', $hash);
-        $isSuppressed = $this->isSuppressed($errType, $prevOccurance);
-        return array(
-            'category' => $this->getCategory($errType),
-            'continueToNormal' => $this->setContinueToNormal($isSuppressed, $prevOccurance === null),
-            'continueToPrevHandler' => $this->subject->getCfg('continueToPrevHandler'),
-            'exception' => $this->subject->get('uncaughtException'),  // non-null if error is uncaught-exception
-            'hash' => $hash,
-            'isFirstOccur' => !$prevOccurance,
-            'isHtml' => $this->isHtml(),
-            'isSuppressed' => $isSuppressed,
-            'throw' => $this->isFatal() === false && ($errType & $this->subject->getCfg('errorThrow')) === $errType,
-            'typeStr' => self::$errTypes[$errType],
-        );
     }
 
     /**
@@ -389,17 +382,17 @@ class Error extends Event
     /**
      * Get initial `isSuppressed` value
      *
-     * @param int       $errType       The level of the error
      * @param self|null $prevOccurance previous occurrence of current error
      *
      * @return bool
      */
-    private function isSuppressed($errType, self $prevOccurance = null)
+    private function isSuppressed($prevOccurance = null)
     {
         if ($prevOccurance && !$prevOccurance['isSuppressed']) {
             // if any instance of this error was not supprssed, reflect that
             return false;
         }
+        $errType = $this->values['type'];
         if (($this->subject->getCfg('suppressNever') & $errType) === $errType) {
             // never suppress tyis type
             return false;
@@ -431,5 +424,26 @@ class Error extends Event
                 return true;
         }
         return $continueToNormal;
+    }
+
+    /**
+     * Set the core values (type, message, file, line)
+     *
+     * @param array $values values being set
+     *
+     * @return void
+     */
+    private function setValuesInit($values)
+    {
+        $errType = $values['type'];
+        $category = $this->getCategory($errType);
+        $this->values = \array_merge(
+            $this->values,
+            array(
+                'category' => $category,
+                'exception' => $this->subject->get('uncaughtException'),  // non-null if error is uncaught-exception
+            ),
+            $values
+        );
     }
 }

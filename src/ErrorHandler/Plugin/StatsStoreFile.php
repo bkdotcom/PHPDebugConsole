@@ -5,7 +5,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2022 Brad Kent
- * @version   v3.4
+ * @version   v3.2
  */
 
 namespace bdk\ErrorHandler\Plugin;
@@ -143,7 +143,12 @@ class StatsStoreFile extends AbstractComponent implements StatsStoreInterface
             }
         }
         if ($return === false) {
-            \error_log(__METHOD__ . ': error writing data');
+            \error_log(\sprintf(
+                __METHOD__ . ': error writing data %s',
+                $this->cfg['errorStatsFile']
+                    ? 'to ' . $this->cfg['errorStatsFile']
+                    : '(no errorStatsFile specified)'
+            ));
         }
         return $return;
     }

@@ -113,10 +113,6 @@ class Error extends Event
         }
         if (\in_array($this->values['type'], array(E_ERROR, E_USER_ERROR)) && $this->values['exception'] === null) {
             // will return empty unless xdebug extension installed/enabled
-            $this->subject->backtrace->addInternalClass(array(
-                'bdk\\ErrorHandler',
-                'bdk\\PubSub',
-            ));
             $this->backtrace = $this->subject->backtrace->get();
         }
     }

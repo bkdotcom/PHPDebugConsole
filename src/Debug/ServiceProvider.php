@@ -71,7 +71,6 @@ class ServiceProvider implements ServiceProviderInterface
             $backtrace = $debug->errorHandler->backtrace;
             $backtrace->addInternalClass(array(
                 'bdk\\Debug',
-                'bdk\\PubSub\\',
             ));
             return $backtrace;
         };

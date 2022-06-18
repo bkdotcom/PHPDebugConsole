@@ -112,6 +112,10 @@ abstract class AbstractErrorHandler extends AbstractComponent
     {
         if (!$this->backtrace) {
             $this->backtrace = new Backtrace();
+            $this->backtrace->addInternalClass(array(
+                'bdk\\ErrorHandler',
+                'bdk\\PubSub\\',
+            ));
         }
         return $this->backtrace;
     }

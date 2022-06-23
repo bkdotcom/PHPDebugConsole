@@ -22,6 +22,30 @@ class ServerRequestTest extends TestCase
     use DataProviderTrait;
     use FactoryTrait;
 
+    static $errorHandler;
+
+    /**
+     * setUp is executed before each test
+     *
+     * @return void
+     */
+    public function setUp(): void
+    {
+        self::$errorHandler = \set_error_handler(function ($type, $msg) {
+            throw new \RuntimeException($msg);
+        });
+    }
+
+    /**
+     * tearDown is executed after each test
+     *
+     * @return void
+     */
+    public function tearDown(): void
+    {
+        set_error_handler(self::$errorHandler);
+    }
+
     public function testConstruct()
     {
         $serverRequest = $this->createServerRequest();
@@ -393,10 +417,12 @@ class ServerRequestTest extends TestCase
             : (PHP_VERSION_ID >= 70000
                 ? 'TypeError'
                 : 'RuntimeException');
+        /*
         \set_error_handler(function ($type, $msg) {
             \restore_error_handler();
             throw new \RuntimeException($msg);
         });
+        */
         $this->expectException($exceptionClass);
         $this->createServerRequest()
             ->withUploadedFiles($value);
@@ -687,10 +713,12 @@ class ServerRequestTest extends TestCase
             : (PHP_VERSION_ID >= 70000
                 ? 'TypeError'
                 : 'RuntimeException');
+        /*
         \set_error_handler(function ($type, $msg) {
             \restore_error_handler();
             throw new \RuntimeException($msg);
         });
+        */
         $this->expectException($exceptionClass);
         $this->createServerRequest()
             ->withQueryParams($value);
@@ -720,10 +748,12 @@ class ServerRequestTest extends TestCase
             : (PHP_VERSION_ID >= 70000
                 ? 'TypeError'
                 : 'RuntimeException');
+        /*
         \set_error_handler(function ($type, $msg) {
             \restore_error_handler();
             throw new \RuntimeException($msg);
         });
+        */
         $this->expectException($exceptionClass);
         $this->createServerRequest()
             ->withCookieParams($value);

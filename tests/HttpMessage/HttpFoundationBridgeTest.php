@@ -97,13 +97,7 @@ class HttpFoundationBridgeTest extends TestCase
             'how' => 'posted',
         ), $request->getParsedBody());
         $this->assertEquals(array(
-            'files1' => new UploadedFile(
-                $filesPhp['files1']['tmp_name'],
-                $filesPhp['files1']['size'],
-                $filesPhp['files1']['error'],
-                $filesPhp['files1']['name'],
-                $filesPhp['files1']['type']
-            ),
+            'files1' => new UploadedFile($filesPhp['files1']),
             'files2' => array(
                 'a' => new UploadedFile(
                     $filesPhp['files2']['tmp_name']['a'],
@@ -120,13 +114,7 @@ class HttpFoundationBridgeTest extends TestCase
                     $filesPhp['files2']['type']['b']
                 ),
             ),
-            'noFile' => new UploadedFile(
-                $filesPhp['noFile']['tmp_name'],
-                $filesPhp['noFile']['size'],
-                $filesPhp['noFile']['error'],
-                $filesPhp['noFile']['name'],
-                $filesPhp['noFile']['type']
-            ),
+            'noFile' => new UploadedFile($filesPhp['noFile']),
         ), $request->getUploadedFiles());
     }
 
@@ -138,6 +126,7 @@ class HttpFoundationBridgeTest extends TestCase
         $response = HttpFoundationBridge::createResponse($foundationResponse);
         $this->assertInstanceOf('bdk\\HttpMessage\\Response', $response);
         $this->assertSame(404, $response->getStatusCode());
+        $this->assertSame('Not Found', $response->getReasonPhrase());
         $responseHeaders = $response->getHeaders();
         $headersExpect = array('cache-control', 'date');
         $cacheControlExpect = 'no-cache';

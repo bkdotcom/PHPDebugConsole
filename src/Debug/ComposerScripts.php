@@ -28,11 +28,9 @@ class ComposerScripts
             @see https://docs.travis-ci.com/user/environment-variables/#default-environment-variables
         */
         $haveSlevomat = false;
-        // $haveCognitiveC = false;
         if ($event->isDevMode()) {
             $info = self::installDependencies();
             $haveSlevomat = $info['haveSlevomat'];
-            // $haveCognitiveC = $info['haveCognitiveC'];
         }
         self::updatePhpcsXml($haveSlevomat);
     }
@@ -60,6 +58,7 @@ class ComposerScripts
             \str_replace($ruleSlevomat, '<!--' . $ruleSlevomat . '-->', $xml);
         }
 
+        /*
         $regexFind = '#(<rule ref="[^"]+CognitiveComplexity/ruleset.xml".*?</rule>)#is';
         \preg_match($regexFind, $xml, $matches);
         $ruleCc = $matches[1];
@@ -68,6 +67,7 @@ class ComposerScripts
         // if (!$inclCognitive) {
         //    \str_replace($ruleCc, '<!--' . $ruleCc . '-->', $xml);
         // }
+        */
 
         \file_put_contents($phpcsPath, $xml);
 
@@ -85,7 +85,6 @@ class ComposerScripts
     {
         $info = array(
             'haveSlevomat' => false,
-            // 'haveCognitiveC' => false,
         );
         $isCi = \filter_var(\getenv('CI'), FILTER_VALIDATE_BOOLEAN);
         if (\version_compare(PHP_VERSION, '5.5', '>=')) {
@@ -98,17 +97,10 @@ class ComposerScripts
         if ($isCi) {
             return $info;
         }
-        if (\version_compare(PHP_VERSION, '7.1', '>=')) {
-            \exec('composer require slevomat/coding-standard ^7.0.0 --dev --no-scripts');
+        if (\version_compare(PHP_VERSION, '7.2', '>=')) {
+            \exec('composer require slevomat/coding-standard ^8.0.0 --dev --no-scripts');
             $info['haveSlevomat'] = true;
         }
-        /*
-        if (\version_compare(PHP_VERSION, '7.2', '>=')) {
-            \exec('composer require rarst/phpcs-cognitive-complexity --dev --no-scripts');
-            // doesn't register Rarst\PHPCS\CognitiveComplexity namespace to composer autoloader !!!
-            $info['haveCognitiveC'] = true;
-        }
-        */
         return $info;
     }
 

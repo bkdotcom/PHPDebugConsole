@@ -13,6 +13,7 @@ use ReflectionObject;
 
 /**
  * @covers \bdk\HttpMessage\AbstractServerRequest
+ * @covers \bdk\HttpMessage\AssertionTrait
  * @covers \bdk\HttpMessage\ServerRequest
  */
 class ServerRequestTest extends TestCase
@@ -391,7 +392,11 @@ class ServerRequestTest extends TestCase
             ? 'InvalidArgumentException'
             : (PHP_VERSION_ID >= 70000
                 ? 'TypeError'
-                : 'ErrorException');
+                : 'RuntimeException');
+        \set_error_handler(function ($type, $msg) {
+            \restore_error_handler();
+            throw new \RuntimeException($msg);
+        });
         $this->expectException($exceptionClass);
         $this->createServerRequest()
             ->withUploadedFiles($value);
@@ -427,9 +432,8 @@ class ServerRequestTest extends TestCase
     public function testExceptionParsedBody()
     {
         $this->expectException('InvalidArgumentException');
-        $this->expectExceptionMessage('Only accepts array, object and null, but string provided.');
+        $this->expectExceptionMessage('ParsedBody must be array, object, or null, but string provided.');
 
-        // Exception => Only accepts array, object and null, but string provided.
         $serverRequest = $this->createServerRequest()
             ->withParsedBody('I am a string');
     }
@@ -682,7 +686,11 @@ class ServerRequestTest extends TestCase
             ? 'InvalidArgumentException'
             : (PHP_VERSION_ID >= 70000
                 ? 'TypeError'
-                : 'ErrorException');
+                : 'RuntimeException');
+        \set_error_handler(function ($type, $msg) {
+            \restore_error_handler();
+            throw new \RuntimeException($msg);
+        });
         $this->expectException($exceptionClass);
         $this->createServerRequest()
             ->withQueryParams($value);
@@ -711,7 +719,11 @@ class ServerRequestTest extends TestCase
             ? 'InvalidArgumentException'
             : (PHP_VERSION_ID >= 70000
                 ? 'TypeError'
-                : 'ErrorException');
+                : 'RuntimeException');
+        \set_error_handler(function ($type, $msg) {
+            \restore_error_handler();
+            throw new \RuntimeException($msg);
+        });
         $this->expectException($exceptionClass);
         $this->createServerRequest()
             ->withCookieParams($value);

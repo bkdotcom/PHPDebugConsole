@@ -21,13 +21,13 @@ class UploadedFileTest extends TestCase
     public function testConstruct()
     {
         // Test 1 (filepath)
-        $uploadedFile = new UploadedFile(
-            '/tmp/php1234.tmp', // source
-            100000,             // size
-            UPLOAD_ERR_OK,      // error
-            'example1.jpg',     // name
-            'image/jpeg'        // type
-        );
+        $uploadedFile = new UploadedFile(array(
+            'tmp_name' => '/tmp/php1234.tmp', // source
+            'size' => 100000,             // size
+            'error' => UPLOAD_ERR_OK,     // error
+            'name' => 'example1.jpg',     // name
+            'type' => 'image/jpeg'        // type
+        ));
 
         $this->assertTrue($uploadedFile instanceof UploadedFile);
 
@@ -59,7 +59,7 @@ class UploadedFileTest extends TestCase
         // Clone a sample file for testing MoveTo method.
         $this->assertTrue(\copy($sourceFile, $cloneFile));
 
-        $uploadedFile = new UploadedFile(
+        $uploadedFile = $this->createUploadedFile(
             $cloneFile,
             100000,
             UPLOAD_ERR_OK,
@@ -80,7 +80,7 @@ class UploadedFileTest extends TestCase
         // Clone a sample file for testing MoveTo method.
         $this->assertTrue(\copy($sourceFile, $cloneFile));
 
-        $uploadedFile = new UploadedFile(
+        $uploadedFile = $this->createUploadedFile(
             $cloneFile,
             126,    // actual file size will be used
             UPLOAD_ERR_OK,
@@ -103,7 +103,7 @@ class UploadedFileTest extends TestCase
 
     public function testGetErrorMessage()
     {
-        $uploadedFile = new UploadedFile(
+        $uploadedFile = $this->createUploadedFile(
             TEST_DIR . '/assets/logo.png',
             100000,
             UPLOAD_ERR_OK,
@@ -169,7 +169,7 @@ class UploadedFileTest extends TestCase
     {
         $this->expectException('InvalidArgumentException');
         $this->expectExceptionMessage('Invalid stream or file provided for UploadedFile');
-        new UploadedFile([]);
+        new UploadedFile();
     }
 
     public function testExceptionUnableToOpen()
@@ -179,7 +179,7 @@ class UploadedFileTest extends TestCase
         $this->expectException('RuntimeException');
         // $this->expectExceptionMessage('Unable to open ' . $sourceFile);
 
-        $uploadedFile = new UploadedFile(
+        $uploadedFile = $this->createUploadedFile(
             $sourceFile,
             100000,             // size
             UPLOAD_ERR_OK,      // error
@@ -202,7 +202,7 @@ class UploadedFileTest extends TestCase
 
         $resource = \fopen($cloneFile, 'r+');
         $stream = new Stream($resource);
-        $uploadedFile = new UploadedFile($stream);
+        $uploadedFile = $this->createUploadedFile($stream);
 
         $targetPath = self::getTestFilepath('logo_moved.png');
         $uploadedFile->moveTo($targetPath);
@@ -216,7 +216,7 @@ class UploadedFileTest extends TestCase
     {
         $this->expectException('RuntimeException');
         $this->expectExceptionMessage('No stream is available or can be created.');
-        $uploadedFile = new UploadedFile(
+        $uploadedFile = $this->createUploadedFile(
             '/tmp/php1234.tmp',
             100000,
             UPLOAD_ERR_FORM_SIZE,
@@ -230,7 +230,7 @@ class UploadedFileTest extends TestCase
     {
         $this->expectException('InvalidArgumentException');
         $this->expectExceptionMessage('Invalid path provided for move operation; must be a non-empty string');
-        $uploadedFile = new UploadedFile(
+        $uploadedFile = $this->createUploadedFile(
             '/tmp/php1234.tmp',
             100000,
             UPLOAD_ERR_OK,
@@ -244,7 +244,7 @@ class UploadedFileTest extends TestCase
     {
         $this->expectException('RuntimeException');
         $this->expectExceptionMessage('The target path "some/bogus/path" is not writable.');
-        $uploadedFile = new UploadedFile(
+        $uploadedFile = $this->createUploadedFile(
             '/tmp/php1234.tmp',
             100000,
             UPLOAD_ERR_OK,
@@ -259,7 +259,7 @@ class UploadedFileTest extends TestCase
         $this->expectException('RuntimeException');
         $this->expectExceptionMessage('Cannot retrieve stream after it has already been moved');
 
-        $uploadedFile = new UploadedFile(
+        $uploadedFile = $this->createUploadedFile(
             '/tmp/php1234.tmp',
             100000,
             UPLOAD_ERR_OK,
@@ -282,7 +282,7 @@ class UploadedFileTest extends TestCase
         $this->expectException('RuntimeException');
         $this->expectExceptionMessage('Cannot retrieve stream due to upload error');
 
-        $uploadedFile = new UploadedFile(
+        $uploadedFile = $this->createUploadedFile(
             '/tmp/php1234.tmp',
             100000,
             UPLOAD_ERR_FORM_SIZE,
@@ -301,7 +301,7 @@ class UploadedFileTest extends TestCase
         $this->expectException('RuntimeException');
         $this->expectExceptionMessage('The target path "' . $targetPath . '" is not writable.');
 
-        $uploadedFile = new UploadedFile(
+        $uploadedFile = $this->createUploadedFile(
             TEST_DIR . '/assets/logo.png',
             100000,
             UPLOAD_ERR_OK,
@@ -315,7 +315,7 @@ class UploadedFileTest extends TestCase
 
     public function testExceptionMoveError()
     {
-        $uploadedFile = new UploadedFile(
+        $uploadedFile = $this->createUploadedFile(
             TEST_DIR . '/assets/logo.png',
             100000,
             UPLOAD_ERR_OK,
@@ -336,7 +336,7 @@ class UploadedFileTest extends TestCase
         $this->expectException('RuntimeException');
         $this->expectExceptionMessage('Unable to move the file to ' . $targetPath);
 
-        $uploadedFile = new UploadedFile(
+        $uploadedFile = $this->createUploadedFile(
             TEST_DIR . '/assets/logo.png',
             100000,
             UPLOAD_ERR_OK,

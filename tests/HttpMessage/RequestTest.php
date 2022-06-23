@@ -10,6 +10,7 @@ use bdk\Test\PolyFill\ExpectExceptionTrait;
 use PHPUnit\Framework\TestCase;
 
 /**
+ * @covers \bdk\HttpMessage\AssertionTrait
  * @covers \bdk\HttpMessage\Request
  */
 class RequestTest extends TestCase

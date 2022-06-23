@@ -145,7 +145,7 @@ class StreamTest extends TestCase
 
     public function testReadAndWrite()
     {
-        $stream = $this->createStream(); // \fopen('php://temp', 'r+')
+        $stream = $this->createStream();
         $stream->write('Foo Bar');
         $stream->rewind();
         $this->assertSame('Foo ', $stream->read(4));
@@ -171,7 +171,7 @@ class StreamTest extends TestCase
     {
         $this->expectException('RuntimeException');
         $this->expectExceptionMessage('Stream is detached');
-        $stream = $this->createStream();    // \fopen('php://temp', 'r+')
+        $stream = $this->createStream();
         $stream->close();
         $stream->eof();
     }
@@ -180,7 +180,7 @@ class StreamTest extends TestCase
     {
         $this->expectException('RuntimeException');
         $this->expectExceptionMessage('Stream is detached');
-        $stream = $this->createStream();    // \fopen('php://temp', 'r+')
+        $stream = $this->createStream();
         $stream->write('Foo Bar');
         $stream->rewind();
         $stream->close();
@@ -192,11 +192,11 @@ class StreamTest extends TestCase
     {
         $this->expectException('RuntimeException');
         $this->expectExceptionMessage('Unable to read from stream');
-        $stream = $this->createStream();    // \fopen('php://temp', 'r+')
+        $stream = $this->createStream();
         $stream->write('Foo Bar');
         $stream->rewind();
 
-        \bdk\Test\Debug\Helper::setPrivateProp($stream, 'readable', false);
+        self::setPrivateProp($stream, 'readable', false);
         // Exception => Unable to read stream contents.
         $stream->getContents();
     }
@@ -205,7 +205,7 @@ class StreamTest extends TestCase
     {
         $this->expectException('RuntimeException');
         $this->expectExceptionMessage('Stream is detached');
-        $stream = $this->createStream();    // \fopen('php://temp', 'r+')
+        $stream = $this->createStream();
         $stream->write('Foo Bar');
         $stream->close();
         $stream->read(2);
@@ -223,7 +223,7 @@ class StreamTest extends TestCase
     {
         $this->expectException('InvalidArgumentException');
         $this->expectExceptionMessage('Length parameter cannot be negative');
-        $stream = $this->createStream();    // \fopen('php://temp', 'r+')
+        $stream = $this->createStream();
         $stream->write('Foo Bar');
         $stream->read(-10);
     }
@@ -240,7 +240,6 @@ class StreamTest extends TestCase
         $stream = new Stream($resource);
         \unlink($fileCopy);
         $foo = $stream->read(100);
-        \bdk\Test\Debug\Helper::stderr('foo', $foo);
     }
     */
 
@@ -248,7 +247,7 @@ class StreamTest extends TestCase
     {
         $this->expectException('RuntimeException');
         $this->expectExceptionMessage('Stream is detached');
-        $stream = $this->createStream();    // \fopen('php://temp', 'r+')
+        $stream = $this->createStream();
         $stream->close();
         // Exception => Stream does not exist.
         $stream->seek(10);
@@ -258,8 +257,8 @@ class StreamTest extends TestCase
     {
         $this->expectException('RuntimeException');
         $this->expectExceptionMessage('Stream is not seekable');
-        $stream = $this->createStream();    // \fopen('php://temp', 'r')
-        \bdk\Test\Debug\Helper::setPrivateProp($stream, 'seekable', false);
+        $stream = $this->createStream();
+        self::setPrivateProp($stream, 'seekable', false);
         $stream->seek(10);
     }
 
@@ -267,7 +266,7 @@ class StreamTest extends TestCase
     {
         $this->expectException('RuntimeException');
         $this->expectExceptionMessage('Unable to seek to stream position 10 with whence 0');
-        $this->createStream()   // \fopen('php://temp', 'r')
+        $this->createStream()
             ->seek(10);
     }
 
@@ -276,7 +275,7 @@ class StreamTest extends TestCase
         $this->expectException('RuntimeException');
         $this->expectExceptionMessage('The file some/readonly/file cannot be opened.');
 
-        $stream = $this->createStream();    // \fopen('php://temp', 'r+')
+        $stream = $this->createStream();
         $stream->write('Foo Bar');
 
         $reflectionMethod = new ReflectionMethod($stream, 'setResourceFile');
@@ -288,7 +287,7 @@ class StreamTest extends TestCase
     {
         $this->expectException('RuntimeException');
         $this->expectExceptionMessage('Stream is detached');
-        $stream = $this->createStream();    // \fopen('php://temp', 'r+')
+        $stream = $this->createStream();
         $stream->close();
         $stream->tell();
     }
@@ -297,7 +296,7 @@ class StreamTest extends TestCase
     {
         $this->expectException('RuntimeException');
         $this->expectExceptionMessage('Stream is detached');
-        $stream = $this->createStream();    // \fopen('php://temp', 'r+')
+        $stream = $this->createStream();
         $stream->close();
         $stream->write('Foo Bar');
     }
@@ -380,5 +379,40 @@ class StreamTest extends TestCase
             \error_log($e->getMessage());
             return '';
         }
+    }
+
+    /**
+     * Set inaccessable property value via reflection
+     *
+     * @param object $obj  object instance
+     * @param string $prop property name
+     * @param mixed  $val  new value
+     *
+     * @return mixed
+     *
+     * @throws \RuntimeException
+     */
+    public static function setPrivateProp($obj, $prop, $val)
+    {
+        $refProp = null;
+        $ref = new \ReflectionClass($obj);
+        do {
+            if ($ref->hasProperty($prop)) {
+                $refProp = $ref->getProperty($prop);
+                break;
+            }
+            $ref = $ref->getParentClass();
+        } while ($ref);
+        if ($refProp === null) {
+            throw new \RuntimeException(\sprintf(
+                'Property %s::$%s does not exist',
+                \get_class($obj),
+                $prop
+            ));
+        }
+        $refProp->setAccessible(true);
+        \is_string($obj) || $refProp->isStatic()
+            ? $refProp->setValue($val)
+            : $refProp->setValue($obj, $val);
     }
 }

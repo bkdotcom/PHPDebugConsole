@@ -10,6 +10,7 @@ use PHPUnit\Framework\TestCase;
 use ReflectionObject;
 
 /**
+ * @covers \bdk\HttpMessage\AssertionTrait
  * @covers \bdk\HttpMessage\Message
  */
 class MessageTest extends TestCase

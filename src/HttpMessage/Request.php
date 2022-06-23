@@ -1,13 +1,13 @@
 <?php
 
 /**
- * This file is part of PHPDebugConsole
+ * This file is part of HttpMessage
  *
- * @package   PHPDebugConsole
+ * @package   bdk/http-message
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2022 Brad Kent
- * @version   v3.0
+ * @version   v1.0
  */
 
 namespace bdk\HttpMessage;
@@ -239,31 +239,6 @@ class Request extends Message implements RequestInterface
         return \strtolower($name) === 'host'
             ? $new->updateHostHeader()
             : $new;
-    }
-
-    /**
-     * Assert valid method
-     *
-     * @param string $method Http methods
-     *
-     * @return void
-     *
-     * @throws InvalidArgumentException
-     */
-    private function assertMethod($method)
-    {
-        if (\is_string($method) === false) {
-            throw new InvalidArgumentException(\sprintf(
-                'HTTP method must be a string, but %s provided',
-                self::getTypeDebug($method)
-            ));
-        }
-        if ($method === '') {
-            throw new InvalidArgumentException('Method must be a non-empty string.');
-        }
-        if (\preg_match('/^[a-z]+$/i', $method) !== 1) {
-            throw new InvalidArgumentException('Method name must contain only ASCII alpha characters');
-        }
     }
 
     /**

@@ -164,6 +164,7 @@ trait DataProviderTrait
     public function validHeaderValues()
     {
         return [
+            [1234],
             ['text/plain'],
             ['PHP 9.1'],
             ['text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8'],
@@ -764,13 +765,13 @@ trait DataProviderTrait
     public function invalidQueryParams()
     {
         return [
-            [['a' => null]],
-            [['a' => 1]],
-            [['a' => 1.1]],
-            [['a' => false]],
-            [['a' => new stdClass()]],
-            [[1 => new stdClass()]],
-            [['x' => function () {}]],
+            'not array' => [new stdClass()],
+            'null' => [['a' => null]],
+            'int' => [['a' => 1]],
+            'float' => [['a' => 1.1]],
+            'bool' => [['a' => false]],
+            'object' => [['a' => new stdClass()]],
+            'lambda' => [['x' => function () {}]],
         ];
     }
 
@@ -786,21 +787,20 @@ trait DataProviderTrait
             // [['value']],
             'value bool' => [['a' => false]],
             'value object' => [['obj' => new stdClass()]],
-            'value function' => [['x' => function () {}]],
+            'value lambda' => [['x' => function () {}]],
         ];
     }
 
     public function invalidUploadedFiles()
     {
         return [
-            [[null]],
-            [['file']],
-            [[1]],
-            [[1.0]],
-            [[false]],
-            [[new stdClass()]],
-            [[function () {}]],
-            [[99 => new stdClass()]],
+            'null' => [[null]],
+            'string' => [['file']],
+            'int' => [[1]],
+            'float' => [[1.1]],
+            'bool' => [[false]],
+            'obj' => [[new stdClass()]],
+            'lambda' => [[function () {}]],
         ];
     }
 
@@ -896,6 +896,15 @@ trait DataProviderTrait
         return $nonWritable;
     }
 
+    public function statusPhrases()
+    {
+        return [
+            ['500', null, 'Internal Server Error'],
+            [103, '', ''],
+            [200, "tab\ttab", "tab\ttab"],
+        ];
+    }
+
     public function invalidStatusCodes()
     {
         return [
@@ -914,13 +923,13 @@ trait DataProviderTrait
     public function invalidReasonPhrases()
     {
         return [
+            'nl'      => ["Custom reason phrase\n\rThe next line"],
             'true'    => [true],
             'false'   => [false],
             'array'   => [[200]],
             'object'  => [(object) ['reasonPhrase' => 'Ok']],
             'integer' => [99],
             'float'   => [400.5],
-            // 'null'    => [null],
             'lambda'  => [function () {}],
         ];
     }

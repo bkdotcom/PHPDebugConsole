@@ -1,13 +1,13 @@
 <?php
 
 /**
- * This file is part of PHPDebugConsole
+ * This file is part of HttpMessage
  *
- * @package   PHPDebugConsole
+ * @package   bdk/http-message
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2022 Brad Kent
- * @version   v3.0
+ * @version   v1.0
  */
 
 namespace bdk\HttpMessage;
@@ -19,7 +19,7 @@ use InvalidArgumentException;
 use Psr\Http\Message\UploadedFileInterface;
 
 /**
- * INTERNAL USE ONLY
+ * Extended by ServerRequest
  *
  * @psalm-consistent-constructor
  */
@@ -83,124 +83,6 @@ abstract class AbstractServerRequest extends Request
         }
         $mixed = \array_intersect_key($mixed, self::$parseStrOpts);
         self::$parseStrOpts = \array_merge(self::$parseStrOpts, $mixed);
-    }
-
-    /**
-     * Assert valid attribute name
-     *
-     * @param string $name  Attribute name
-     * @param bool   $throw (false) Whether to throw InvalidArgumentException
-     *
-     * @return bool
-     * @throws InvalidArgumentException if $throw === true
-     */
-    protected function assertAttributeName($name, $throw = true)
-    {
-        if (\is_string($name) || \is_numeric($name)) {
-            return true;
-        }
-        if ($throw) {
-            throw new InvalidArgumentException(\sprintf(
-                'Attribute name must be a string, but %s provided.',
-                self::getTypeDebug($name)
-            ));
-        }
-        return false;
-    }
-
-    /**
-     * Assert valid cookie parameters
-     *
-     * @param array $cookies Cookie parameters
-     *
-     * @return void
-     * @throws InvalidArgumentException
-     *
-     * @see https://httpwg.org/http-extensions/draft-ietf-httpbis-rfc6265bis.html#name-syntax
-     */
-    protected function assertCookieParams($cookies)
-    {
-        $nameRegex = '/^[!#-+\--:<-[\]-~]+$/';
-        \array_walk($cookies, function ($value, $name) use ($nameRegex) {
-            if (\preg_match($nameRegex, $name) !== 1) {
-                throw new InvalidArgumentException(\sprintf(
-                    'Invalid cookie name specified: %s',
-                    $name
-                ));
-            }
-            if (\is_string($value) === false && \is_numeric($value) === false) {
-                throw new InvalidArgumentException(\sprintf(
-                    'Cookie value must be a string, but %s provided.',
-                    self::getTypeDebug($value)
-                ));
-            }
-        });
-    }
-
-    /**
-     * Assert valid query parameters
-     *
-     * @param array $get Query parameters
-     *
-     * @return void
-     * @throws InvalidArgumentException
-     */
-    protected function assertQueryParams($get)
-    {
-        \array_walk_recursive($get, function ($value) {
-            if (\is_string($value) === false) {
-                throw new InvalidArgumentException(\sprintf(
-                    'Query param value must be a string, but %s provided.',
-                    self::getTypeDebug($value)
-                ));
-            }
-        });
-    }
-
-    /**
-     * Throw an exception if an unsupported argument type is provided.
-     *
-     * @param array|object|null $data The deserialized body data. This will
-     *     typically be in an array or object.
-     *
-     * @return void
-     *
-     * @throws InvalidArgumentException
-     */
-    protected function assertParsedBody($data)
-    {
-        if (
-            $data === null ||
-            \is_array($data) ||
-            \is_object($data)
-        ) {
-            return;
-        }
-        throw new InvalidArgumentException(\sprintf(
-            'Only accepts array, object and null, but %s provided.',
-            self::getTypeDebug($data)
-        ));
-    }
-
-    /**
-     * Recursively validate the structure in an uploaded files array.
-     *
-     * @param array $uploadedFiles uploaded files tree
-     *
-     * @return void
-     *
-     * @throws InvalidArgumentException if any leaf is not an UploadedFileInterface instance.
-     */
-    protected function assertUploadedFiles($uploadedFiles)
-    {
-        \array_walk_recursive($uploadedFiles, function ($val) {
-            if (!($val instanceof UploadedFileInterface)) {
-                throw new InvalidArgumentException(\sprintf(
-                    'Invalid file in uploaded files structure. Expected UploadedFileInterface, but %s provided',
-                    self::getTypeDebug($val)
-                ));
-            }
-        });
     }
 
     /**
@@ -332,16 +214,7 @@ abstract class AbstractServerRequest extends Request
         if (\is_array($fileInfo['tmp_name'])) {
             return self::createUploadedFileArray($fileInfo);
         }
-        return new UploadedFile(
-            $fileInfo['tmp_name'],
-            (int) $fileInfo['size'],
-            (int) $fileInfo['error'],
-            $fileInfo['name'],
-            $fileInfo['type'],
-            isset($fileInfo['full_path'])
-                ? $fileInfo['full_path']
-                : null
-        );
+        return new UploadedFile($fileInfo);
     }
 
     /**
@@ -479,22 +352,21 @@ abstract class AbstractServerRequest extends Request
      */
     private static function uriHostPortFromGlobals()
     {
-        $host = null;
-        $port = null;
-        if (isset($_SERVER['HTTP_HOST'])) {
-            list($host, $port) = self::uriHostPortFromHttpHost($_SERVER['HTTP_HOST']);
-        } elseif (isset($_SERVER['SERVER_NAME'])) {
-            $host = $_SERVER['SERVER_NAME'];
-        } elseif (isset($_SERVER['SERVER_ADDR'])) {
-            $host = $_SERVER['SERVER_ADDR'];
-        }
-        if ($port === null && isset($_SERVER['SERVER_PORT'])) {
-            $port = $_SERVER['SERVER_PORT'];
-        }
-        return array(
-            'host' => $host,
-            'port' => $port,
+        $hostPort = array(
+            'host' => null,
+            'port' => null,
         );
+        if (isset($_SERVER['HTTP_HOST'])) {
+            $hostPort = self::uriHostPortFromHttpHost($_SERVER['HTTP_HOST']);
+        } elseif (isset($_SERVER['SERVER_NAME'])) {
+            $hostPort['host'] = $_SERVER['SERVER_NAME'];
+        } elseif (isset($_SERVER['SERVER_ADDR'])) {
+            $hostPort['host'] = $_SERVER['SERVER_ADDR'];
+        }
+        if ($hostPort['port'] === null && isset($_SERVER['SERVER_PORT'])) {
+            $hostPort['port'] = $_SERVER['SERVER_PORT'];
+        }
+        return $hostPort;
     }
 
     /**
@@ -507,15 +379,13 @@ abstract class AbstractServerRequest extends Request
     private static function uriHostPortFromHttpHost($httpHost)
     {
         $url = 'http://' . $httpHost;
-        $parts = \parse_url($url);
-        if ($parts === false) {
-            return [null, null];
-        }
-        $parts = \array_merge(array(
+        $partsDefault = array(
             'host' => null,
             'port' => null,
-        ), $parts);
-        return array($parts['host'], $parts['port']);
+        );
+        $parts = \parse_url($url) ?: array();
+        $parts = \array_merge($partsDefault, $parts);
+        return \array_intersect_key($parts, $partsDefault);
     }
 
     /**

@@ -1,25 +1,28 @@
 <?php
 
 /**
- * This file is part of PHPDebugConsole
+ * This file is part of HttpMessage
  *
- * @package   PHPDebugConsole
+ * @package   bdk/http-message
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2022 Brad Kent
- * @version   v3.0
+ * @version   v1.0
  */
 
 namespace bdk\HttpMessage;
 
-use InvalidArgumentException;
+use bdk\HttpMessage\AssertionTrait;
 
 /**
- * INTERNAL USE ONLY
+ * Extended by Uri
+ *
  * All the non-public Uri bits
  */
 abstract class AbstractUri
 {
+    use AssertionTrait;
+
     const CHAR_SUB_DELIMS = '!\$&\'\(\)\*\+,;=';
     const CHAR_UNRESERVED = 'a-zA-Z0-9_\-\.~';
 
@@ -28,76 +31,6 @@ abstract class AbstractUri
         'http' => 80,
         'https' => 443,
     );
-
-    /**
-     * Throw exception if invalid host string.
-     *
-     * @param string $host The host string to of a URI.
-     *
-     * @return void
-     *
-     * @throws InvalidArgumentException
-     */
-    protected function assertHost($host)
-    {
-        $this->assertString($host, 'host');
-        if (\in_array($host, array('','localhost'), true)) {
-            // An empty host value is equivalent to removing the host.
-            // No validation required
-            return;
-        }
-        if ($this->isFqdn($host)) {
-            return;
-        }
-        if (\filter_var($host, FILTER_VALIDATE_IP)) {
-            // only if php < 7.0
-            return;
-        }
-        throw new InvalidArgumentException(\sprintf(
-            '"%s" is not a valid host',
-            $host
-        ));
-    }
-
-    /**
-     * Assert valid scheme
-     *
-     * @param string $scheme Scheme to validate
-     *
-     * @return void
-     * @throws InvalidArgumentException
-     */
-    protected function assertScheme($scheme)
-    {
-        $this->assertString($scheme, 'scheme');
-        if (\preg_match('/^[a-z][-a-z0-9.+]*$/i', $scheme) !== 1) {
-            throw new InvalidArgumentException(\sprintf(
-                'Invalid scheme:  %s',
-                $scheme
-            ));
-        }
-    }
-
-    /**
-     * Throw exception if invalid value.
-     *
-     * @param string $value The value to check.
-     * @param string $what  The name of the value.
-     *
-     * @return void
-     *
-     * @throws InvalidArgumentException
-     */
-    protected function assertString($value, $what = '')
-    {
-        if (\is_string($value) === false) {
-            throw new InvalidArgumentException(\sprintf(
-                '%s must be a string, but %s provided.',
-                \ucfirst($what),
-                $this->getTypeDebug($value)
-            ));
-        }
-    }
 
     /**
      * Create path component of Uri
@@ -253,62 +186,6 @@ abstract class AbstractUri
             unset($parts['scheme']);
         }
         return $parts;
-    }
-
-    /**
-     * Throw exception if invalid port value
-     *
-     * @param int $port port value
-     *
-     * @return void
-     *
-     * @throws InvalidArgumentException
-     */
-    private function assertPort($port)
-    {
-        if (!\is_int($port)) {
-            throw new InvalidArgumentException(\sprintf(
-                'Port must be a int, but %s provided.',
-                $this->getTypeDebug($port)
-            ));
-        }
-        if ($port < 1 || $port > 0xffff) {
-            throw new InvalidArgumentException(\sprintf('Invalid port: %d. Must be between 0 and 65535', $port));
-        }
-    }
-
-    /**
-     * Get the value's type
-     *
-     * @param mixed $value Value to inspect
-     *
-     * @return string
-     */
-    private static function getTypeDebug($value)
-    {
-        return \is_object($value)
-            ? \get_class($value)
-            : \gettype($value);
-    }
-
-    /**
-     * Test if hostname is a fully-qualified domain naim
-     *
-     * @param string $host Hostname to test
-     *
-     * @return bool
-     *
-     * @see https://www.regextester.com/103452
-     */
-    private function isFqdn($host)
-    {
-        if (PHP_VERSION_ID >= 70000) {
-            return \filter_var($host, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME) !== false;
-        }
-        $regexPartialHostname = '(?!-)[a-zA-Z0-9-]{0,62}[a-zA-Z0-9]';
-        $regex1 = '/(?=^.{4,253}$)(^(' . $regexPartialHostname . '\.)+[a-zA-Z]{2,63}$)/';
-        $regex2 = '/^' . $regexPartialHostname . '$/';
-        return \preg_match($regex1, $host) === 1 || \preg_match($regex2, $host) === 1;
     }
 
     /**

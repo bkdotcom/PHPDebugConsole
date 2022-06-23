@@ -1,18 +1,18 @@
 <?php
 
 /**
- * This file is part of PHPDebugConsole
+ * This file is part of HttpMessage
  *
- * @package   PHPDebugConsole
+ * @package   bdk/http-message
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2022 Brad Kent
- * @version   v3.0
+ * @version   v1.0
  */
 
 namespace bdk\HttpMessage;
 
-use bdk\Debug\Utility\ArrayUtil;
+use bdk\HttpMessage\AssertionTrait;
 use bdk\HttpMessage\Stream;
 use InvalidArgumentException;
 use Psr\Http\Message\MessageInterface;
@@ -25,6 +25,8 @@ use Psr\Http\Message\StreamInterface;
  */
 class Message implements MessageInterface
 {
+    use AssertionTrait;
+
     /**
      * @var StreamInterface
      */
@@ -164,7 +166,7 @@ class Message implements MessageInterface
         $this->assertHeaderName($name);
         $name = $this->normalizeHeaderName($name);
         $this->assertHeaderValue($value);
-        $value = $this->normalizeHeaderValue($value);
+        $values = $this->normalizeHeaderValue($value);
         $nameLower = \strtolower($name);
         $new = clone $this;
         if (isset($new->headerNames[$nameLower])) {
@@ -173,7 +175,7 @@ class Message implements MessageInterface
             unset($new->headers[$namePrev]);
         }
         $new->headerNames[$nameLower] = $name;
-        $new->headers[$name] = $value;
+        $new->headers[$name] = $values;
         if ($nameLower === 'host') {
             $new->afterUpdateHost();
         }
@@ -271,152 +273,12 @@ class Message implements MessageInterface
         }
         // Ensure Host is the first header.
         // See: https://datatracker.ietf.org/doc/html/rfc7230#section-5.4
-        ArrayUtil::sortWithOrder(
-            $this->headers,
-            array('Host'),
-            'key'
-        );
-    }
-
-    /**
-     * Test valid header name
-     *
-     * @param string $name header name
-     *
-     * @return void
-     * @throws InvalidArgumentException
-     */
-    private function assertHeaderName($name)
-    {
-        if (\is_string($name) === false && \is_numeric($name) === false) {
-            throw new InvalidArgumentException(\sprintf(
-                'Header name must be a string but %s provided.',
-                self::getTypeDebug($name)
-            ));
-        }
-        if ($name === '') {
-            throw new InvalidArgumentException('Header name can not be empty.');
-        }
-        /*
-            see https://datatracker.ietf.org/doc/html/rfc7230#section-3.2.6
-            alpha  => a-zA-Z
-            digit  => 0-9
-            others => !#$%&\'*+-.^_`|~
-        */
-        if (\preg_match('/^[a-zA-Z0-9!#$%&\'*+-.^_`|~]+$/', (string) $name) !== 1) {
-            throw new InvalidArgumentException(\sprintf(
-                '"%s" is not valid header name, it must be an RFC 7230 compatible string.',
-                $name
-            ));
-        }
-    }
-
-    /**
-     * Test valid header value
-     *
-     * @param array|string $value header value
-     *
-     * @return void
-     * @throws InvalidArgumentException
-     */
-    private function assertHeaderValue($value)
-    {
-        if (\is_scalar($value) && !\is_bool($value)) {
-            $value = array((string) $value);
-        }
-        if (!\is_array($value)) {
-            throw new InvalidArgumentException(\sprintf(
-                'The header field value only accepts string and array, but %s provided.',
-                self::getTypeDebug($value)
-            ));
-        }
-        if (empty($value)) {
-            throw new InvalidArgumentException(
-                'Header value can not be empty array.'
+        if (isset($this->headers['Host'])) {
+            $this->headers = \array_replace(
+                array('Host' => $this->headers['Host']),
+                $this->headers
             );
         }
-        foreach ($value as $item) {
-            $this->assertHeaderValueLine($item);
-        }
-    }
-
-    /**
-     * Validate header value
-     *
-     * @param mixed $value Header value to test
-     *
-     * @return void
-     *
-     * @throws InvalidArgumentException
-     */
-    private function assertHeaderValueLine($value)
-    {
-        if ($value === '') {
-            return;
-        }
-        if (\is_string($value) === false && \is_numeric($value) === false) {
-            throw new InvalidArgumentException(\sprintf(
-                'The header values only accept string and number, but %s provided.',
-                self::getTypeDebug($value)
-            ));
-        }
-
-        /*
-            https://www.rfc-editor.org/rfc/rfc7230.txt (page.25)
-
-            field-content = field-vchar [ 1*( SP / HTAB ) field-vchar ]
-            field-vchar   = VCHAR / obs-text
-            obs-text      = %x80-FF (character range outside ASCII.)
-                             NOT ALLOWED
-            SP            = space
-            HTAB          = horizontal tab
-            VCHAR         = any visible [USASCII] character. (x21-x7e)
-        */
-        if (!\preg_match('/^[ \t\x21-\x7e]+$/', (string) $value)) {
-            throw new InvalidArgumentException(\sprintf(
-                '"%s" is not valid header value, it must contains visible ASCII characters only.',
-                $value
-            ));
-        }
-    }
-
-    /**
-     * Check out whether a protocol version number is supported.
-     *
-     * @param string $version HTTP protocol version.
-     *
-     * @return void
-     *
-     * @throws InvalidArgumentException
-     */
-    private function assertProtocolVersion($version)
-    {
-        if (!\is_numeric($version)) {
-            throw new InvalidArgumentException(\sprintf(
-                'Unsupported HTTP protocol version number. %s provided.',
-                self::getTypeDebug($version)
-            ));
-        }
-        if (!\in_array((string) $version, $this->validProtocolVers, true)) {
-            throw new InvalidArgumentException(\sprintf(
-                'Unsupported HTTP protocol version number. "%s" provided.',
-                $version
-            ));
-        }
-    }
-
-    /**
-     * Get the value's type
-     *
-     * @param mixed $value Value to inspect
-     *
-     * @return string
-     */
-    protected static function getTypeDebug($value)
-    {
-        return \is_object($value)
-            ? \get_class($value)
-            : \gettype($value);
     }
 
     /**
@@ -436,16 +298,26 @@ class Message implements MessageInterface
     }
 
     /**
-     * Trim header value(s)
+     * Trims whitespace from the header value(s).
+     *
+     * Spaces and tabs ought to be excluded by parsers when extracting the field value from a header field.
+     *
+     * header-field = field-name ":" OWS field-value OWS
+     * OWS          = *( SP / HTAB )
      *
      * @param string|array $value header value
      *
-     * @return array
-     * @throws InvalidArgumentException
+     * @return string[] Trimmed header values
+     *
+     * @see https://datatracker.ietf.org/doc/html/rfc7230#section-3.2.4
      */
     private function normalizeHeaderValue($value)
     {
-        return \array_values($this->trimHeaderValues($value));
+        $values = (array) $value;
+        $values = \array_map(function ($value) {
+            return \trim((string) $value, " \t");
+        }, $values);
+        return \array_values($values);
     }
 
     /**
@@ -457,7 +329,7 @@ class Message implements MessageInterface
      */
     protected function setHeaders($headers = array())
     {
-        foreach ($headers as $name => $value) {
+        \array_walk($headers, function ($value, $name) {
             if (\is_int($name)) {
                 // Numeric array keys are converted to int by PHP but having a header name '123' is not forbidden by the spec
                 // and also allowed in withHeader(). So we need to cast it to string again for the following assertion to pass.
@@ -477,27 +349,6 @@ class Message implements MessageInterface
             if ($nameLower === 'host') {
                 $this->afterUpdateHost();
             }
-        }
-    }
-
-    /**
-     * Trims whitespace from the header values.
-     *
-     * Spaces and tabs ought to be excluded by parsers when extracting the field value from a header field.
-     *
-     * header-field = field-name ":" OWS field-value OWS
-     * OWS          = *( SP / HTAB )
-     *
-     * @param string[] $values Header values
-     *
-     * @return string[] Trimmed header values
-     *
-     * @see https://datatracker.ietf.org/doc/html/rfc7230#section-3.2.4
-     */
-    private function trimHeaderValues($values = array())
-    {
-        return \array_map(function ($value) {
-            return \trim((string) $value, " \t");
-        }, (array) $values);
+        });
     }
 }

@@ -134,9 +134,12 @@ class Helper
             $ref = $ref->getParentClass();
         } while ($ref);
         if ($refProp === null) {
-            throw new \RuntimeException(\sprintf('Property %s::$%s does not exist', \get_class($obj), $prop));
+            throw new \RuntimeException(\sprintf(
+                'Property %s::$%s does not exist',
+                \get_class($obj),
+                $prop
+            ));
         }
-        // $refProp = new ReflectionProperty($obj, $prop);
         $refProp->setAccessible(true);
         \is_string($obj) || $refProp->isStatic()
             ? $refProp->setValue($val)

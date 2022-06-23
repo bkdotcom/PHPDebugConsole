@@ -1,13 +1,13 @@
 <?php
 
 /**
- * This file is part of PHPDebugConsole
+ * This file is part of HttpMessage
  *
- * @package   PHPDebugConsole
+ * @package   bdk/http-message
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2022 Brad Kent
- * @version   v3.0
+ * @version   v1.0
  */
 
 namespace bdk\HttpMessage;
@@ -71,8 +71,8 @@ class HttpFoundationBridge
     public static function createResponse(HttpFoundationResponse $response)
     {
         $statusCode = $response->getStatusCode();
-        $reasonPhrase = isset($response->statusTexts[$statusCode])
-            ? $response->statusTexts[$statusCode]
+        $reasonPhrase = isset(HttpFoundationResponse::$statusTexts[$statusCode])
+            ? HttpFoundationResponse::$statusTexts[$statusCode]
             : null;
         $protocolVersion = $response->getProtocolVersion();
         $stream = self::createResponseStream($response);
@@ -144,22 +144,18 @@ class HttpFoundationBridge
      */
     private static function getFiles($uploadedFiles)
     {
-        $files = [];
-        foreach ($uploadedFiles as $key => $value) {
+        return \array_map(function ($value) {
             if ($value === null) {
-                $files[$key] = new UploadedFile(
+                return new UploadedFile(
                     null,
                     0,
                     UPLOAD_ERR_NO_FILE
                 );
-                continue;
             }
             if ($value instanceof HttpFoundationUploadedFile) {
-                $files[$key] = self::createUploadedFile($value);
-                continue;
+                return self::createUploadedFile($value);
             }
-            $files[$key] = self::getFiles($value);
-        }
-        return $files;
+            return self::getFiles($value);
+        }, $uploadedFiles);
     }
 }

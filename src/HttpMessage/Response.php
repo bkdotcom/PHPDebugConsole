@@ -1,19 +1,18 @@
 <?php
 
 /**
- * This file is part of PHPDebugConsole
+ * This file is part of HttpMessage
  *
- * @package   PHPDebugConsole
+ * @package   bdk/http-message
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2022 Brad Kent
- * @version   v3.0
+ * @version   v1.0
  */
 
 namespace bdk\HttpMessage;
 
 use bdk\HttpMessage\Message;
-use InvalidArgumentException;
 use Psr\Http\Message\ResponseInterface;
 
 /**
@@ -193,61 +192,6 @@ class Response extends Message implements ResponseInterface
     }
 
     /**
-     * Validate status code
-     *
-     * @param int $code Status Code
-     *
-     * @return void
-     *
-     * @throws InvalidArgumentException
-     */
-    private function assertCode($code)
-    {
-        if (!\is_int($code) && !\is_string($code)) {
-            throw new InvalidArgumentException(
-                'Status code has to be an integer'
-            );
-        }
-        $code = (int) $code;
-        if ($code < 100 || $code > 599) {
-            throw new InvalidArgumentException(\sprintf(
-                'Status code has to be an integer between 100 and 599. A status code of %d was given',
-                $code
-            ));
-        }
-    }
-
-    /**
-     * Validate reason phrase
-     *
-     * @param string $phrase Reason phrase to test
-     *
-     * @return void
-     *
-     * @see https://datatracker.ietf.org/doc/html/rfc7230#section-3.1.2
-     *
-     * @throws InvalidArgumentException
-     */
-    private function assertReasonPhrase($phrase)
-    {
-        if ($phrase === '') {
-            return;
-        }
-        if (!\is_string($phrase)) {
-            throw new InvalidArgumentException(
-                'Reason-phrase must be a string'
-            );
-        }
-        // Don't allow control characters (incl \r & \n)
-        if (\preg_match('#[^\P{C}\t]#u', $phrase, $matches, PREG_OFFSET_CAPTURE) === 1) {
-            throw new InvalidArgumentException(\sprintf(
-                'Reason phrase contains a prohibited character at position %s.',
-                $matches[0][1]
-            ));
-        }
-    }
-
-    /**
      * Filter/validate code and reason-phrase
      *
      * @param int    $code   Status Code
@@ -259,7 +203,7 @@ class Response extends Message implements ResponseInterface
      */
     private function filterCodePhrase($code, $phrase)
     {
-        $this->assertCode($code);
+        $this->assertStatusCode($code);
         $code = (int) $code;
         if ($phrase === null || $phrase === '') {
             $phrase = \array_key_exists($code, self::$phrases)

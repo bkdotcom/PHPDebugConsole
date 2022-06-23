@@ -19,12 +19,13 @@
                 <element value="public constants" />
                 <element value="protected constants" />
                 <element value="private constants" />
+                <element value="enum cases" />
                 <element value="public static properties, public properties" />
                 <element value="protected properties, protected static properties, private properties, private static properties" />
-                <element value="constructor " />
+                <element value="constructor" />
                 <element value="destructor, magic methods" />
-                <element value="public methods, public static methods, static constructors, public abstract methods, public static abstract methods" />
-                <element value="protected methods, protected static methods, private methods, private static methods, protected abstract methods, protected static abstract methods" />
+                <element value="public methods, public static methods, static constructors, public abstract methods, public static abstract methods, public static final methods, public final methods" />
+                <element value="protected methods, protected static methods, private methods, private static methods, protected abstract methods, protected static abstract methods, protected static final methods, protected final methods" />
             </property>
         </properties>
     </rule>

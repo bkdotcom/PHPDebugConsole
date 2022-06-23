@@ -1,13 +1,13 @@
 <?php
 
 /**
- * This file is part of PHPDebugConsole
+ * This file is part of HttpMessage
  *
- * @package   PHPDebugConsole
+ * @package   bdk/http-message
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2022 Brad Kent
- * @version   v3.0
+ * @version   v1.0
  */
 
 namespace bdk\HttpMessage;
@@ -69,31 +69,50 @@ class UploadedFile implements UploadedFileInterface
     /**
      * Constructor
      *
-     * @param mixed  $streamOrFile    Stream, Resouce, or filepath
-     * @param int    $size            Size in bytes
-     * @param int    $error           one of the UPLOAD_ERR_* constants
-     * @param string $clientFilename  client file name
-     * @param string $clientMediaType client mime type
-     * @param string $clientFullPath  client full path (as of php 8.1)
+     *    __construct(array $fileInfo)
+     *    __construct($streamOrFile, $size = null, $error = UPLOAD_ERR_OK, $clientFilename = null, $clientMediaType = null, $clientFullPath = null)
+     *
+     * @param array $values Uploaded file values as populated in $_FILES array
+     *                          null|string|resource|StreamInterface tmp_name  filepath, resource, or StreamInterface
+     *                          int    size      Size in bytes
+     *                          int    error     one of the UPLOAD_ERR_* constants
+     *                          string name      client file name
+     *                          string type      client mime type
+     *                          string full_path client full path (as of php 8.1)
      *
      * @throws InvalidArgumentException
+     *
+     * @see https://www.php.net/manual/en/features.file-upload.post-method.php
      */
-    public function __construct($streamOrFile, $size = null, $error = UPLOAD_ERR_OK, $clientFilename = null, $clientMediaType = null, $clientFullPath = null)
+    public function __construct($values = array())
     {
-        $this->assertSize($size);
-        $this->assertError($error);
-        $this->assertClientFilename($clientFilename);
-        $this->assertClientMediaType($clientMediaType);
-        $this->assertStringOrNull($clientFullPath, 'clientFullPath');
+        $defaultValues = array(
+            'tmp_name' => null,
+            'size' => null,
+            'error' => UPLOAD_ERR_OK,
+            'name' => null,
+            'type' => null,
+            'full_path' => null,
+        );
+        if (\is_array($values) === false) {
+            $values = \array_combine(\array_slice(\array_keys($defaultValues), 0, \func_num_args()), \func_get_args());
+        }
+        $values = \array_merge($defaultValues, $values);
 
-        $this->size = $size;
-        $this->error = $error;
-        $this->clientFilename = $clientFilename;
-        $this->clientFullPath = $clientFullPath;
-        $this->clientMediaType = $clientMediaType;
+        $this->assertSize($values['size']);
+        $this->assertError($values['error']);
+        $this->assertClientFilename($values['name']);
+        $this->assertClientMediaType($values['type']);
+        $this->assertStringOrNull($values['full_path'], 'clientFullPath');
+
+        $this->size = $values['size'];
+        $this->error = $values['error'];
+        $this->clientFilename = $values['name'];
+        $this->clientFullPath = $values['full_path'];
+        $this->clientMediaType = $values['type'];
 
         if ($this->isOk()) {
-            $this->setStreamOrFile($streamOrFile);
+            $this->setStream($values['tmp_name']);
         }
     }
 
@@ -114,18 +133,14 @@ class UploadedFile implements UploadedFileInterface
     public function getStream()
     {
         if ($this->isMoved) {
-            throw new RuntimeException(
-                'The stream has been moved.'
-            );
+            throw new RuntimeException('The stream has been moved.');
         }
         if (!$this->stream && $this->file) {
             $this->stream = $this->getStreamFromFile();
         }
         if (!$this->stream) {
             // ie error is not UPLOAD_ERR_OK
-            throw new RuntimeException(
-                'No stream is available or can be created.'
-            );
+            throw new RuntimeException('No stream is available or can be created.');
         }
         return $this->stream;
     }
@@ -456,42 +471,36 @@ class UploadedFile implements UploadedFileInterface
             : \move_uploaded_file($this->file, $targetPath);
         \restore_error_handler();
         if ($this->isMoved === false) {
-            $msg = \sprintf(
-                'Unable to move the file to %s',
-                $targetPath
-            );
-            if ($errMsg) {
-                $msg .= '(' . $errMsg . ')';
-            }
-            throw new RuntimeException($msg);
+            throw new RuntimeException(\rtrim(\sprintf(
+                'Unable to move the file to %s (%s)',
+                $targetPath,
+                $errMsg
+            ), ' ()'));
         }
         return $this->isMoved;
     }
 
     /**
-     * Depending on the value set file or stream variable
+     * Set the file's stream
      *
-     * @param mixed $streamOrFile filepath, resource, or Stream
+     * @param string|resource|StreamInterface $streamOrFile filepath, resource, or StreamInterface
      *
      * @return void
      *
      * @throws InvalidArgumentException
      */
-    private function setStreamOrFile($streamOrFile)
+    private function setStream($streamOrFile)
     {
         if (\is_string($streamOrFile)) {
             $this->file = $streamOrFile;
-            if (\file_exists($streamOrFile)) {
-                $this->size = \filesize($streamOrFile);
+            if (\file_exists($this->file)) {
+                $this->size = \filesize($this->file);
             }
             return;
         }
         if (\is_resource($streamOrFile)) {
             $this->stream = new Stream($streamOrFile);
-            $stats = \fstat($streamOrFile);
-            if (isset($stats['size'])) {
-                $this->size = $stats['size'];
-            }
+            $this->size = $this->stream->getSize();
             return;
         }
         if ($streamOrFile instanceof StreamInterface) {

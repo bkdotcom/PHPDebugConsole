@@ -8,28 +8,20 @@ use bdk\Test\PolyFill\ExpectExceptionTrait;
 use PHPUnit\Framework\TestCase;
 
 /**
+ * @covers \bdk\HttpMessage\AssertionTrait
  * @covers \bdk\HttpMessage\Response
  */
 class ResponseTest extends TestCase
 {
+    use DataProviderTrait;
     use ExpectExceptionTrait;
+    use FactoryTrait;
 
     public function testConstruct()
     {
         $response = new Response();
-
         $this->assertTrue($response instanceof Response);
         $this->assertTrue($response instanceof Message);
-
-        $newResponse = $response->withStatus(555, 'Custom reason phrase');
-
-        $this->assertSame(555, $newResponse->getStatusCode());
-        $this->assertSame('Custom reason phrase', $newResponse->getReasonPhrase());
-
-        $new2Response = $newResponse->withStatus(500);
-
-        $this->assertSame(500, $new2Response->getStatusCode());
-        $this->assertSame('Internal Server Error', $new2Response->getReasonPhrase());
     }
 
     public function testCodePhrase()
@@ -37,45 +29,46 @@ class ResponseTest extends TestCase
         $this->assertSame('I\'m a teapot', Response::codePhrase('418'));
     }
 
-    public function testEmptyPhrase()
+    /**
+     * @param mixed  $code         status code to test
+     * @param mixed  $phrase       phrase to test
+     * @param string $phraseExpect expected phrase
+     *
+     * @dataProvider statusPhrases
+     */
+    public function testStatusPhrases($code, $phrase, $phraseExpect)
     {
-        $response = new Response(103, '');
-        $this->assertSame(103, $response->getStatusCode());
-        $this->assertSame('', $response->getReasonPhrase());
+        $response = $this->createResponse($code, $phrase);
+        $response->withStatus($code, $phrase);
+        $this->assertSame((int) $code, $response->getStatusCode());
+        $this->assertSame($phraseExpect, $response->getReasonPhrase());
     }
 
     /*
         Exceptions
     */
 
-    public function testExceptionStatusInvalidRange()
+    /**
+     * @param mixed $statusCode status code to test
+     *
+     * @dataProvider invalidStatusCodes
+     */
+    public function testRejectInvalidStatusCode($statusCode)
     {
         $this->expectException('InvalidArgumentException');
-        // Exception => Status code should be in a range of 100-599, but 600 provided.
-        new Response(600);
+        $response = $this->createResponse();
+        $response->withStatus($statusCode, 'Custom reason phrase');
     }
 
-    public function testExceptionStatusInvalidType()
+    /**
+     * @param mixed $reasonPhrase reason phrase to test
+     *
+     * @dataProvider invalidReasonPhrases
+     */
+    public function testRejectInvalidReasonPhrase($reasonPhrase)
     {
         $this->expectException('InvalidArgumentException');
-        $response = new Response();
-        // Exception => Status code should be an integer value, but bool provided.
-        $response->withStatus(false, 'Custom reason phrase');
-    }
-
-    public function testExceptionReasonPhraseInvalidType()
-    {
-        $this->expectException('InvalidArgumentException');
-        $response = new Response();
-        // Exception => Reason phrase must be a string, but integer provided.
-        $response->withStatus(200, 12345678);
-    }
-
-    public function testExceptionReasonPhraseProhibitedCharacter()
-    {
-        $this->expectException('InvalidArgumentException');
-        $response = new Response();
-        // Exception => Reason phrase contains "\r" that is considered as a prohibited character.
-        $response->withStatus(200, "Custom reason phrase\n\rThe next line");
+        $response = $this->createResponse();
+        $response->withStatus(200, $reasonPhrase);
     }
 }

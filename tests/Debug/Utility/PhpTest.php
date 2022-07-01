@@ -18,7 +18,8 @@ class PhpTest extends TestCase
     use AssertionTrait;
 
     /**
-     * [testFriendlyClassName description]
+     * @param string $input
+     * @param string $expect
      *
      * @dataProvider providerFriendlyClassName
      */
@@ -60,8 +61,6 @@ class PhpTest extends TestCase
     }
 
     /**
-     * [testIsCallable description]
-     *
      * @dataProvider providerIsCallable
      */
     public function testIsCallable($input, $flags, $isCallable)
@@ -168,32 +167,46 @@ class PhpTest extends TestCase
         };
         $invokable = new \bdk\Test\Container\Fixture\Invokable();
         $return = array(
-            // These all fail because by IS_CALLABLE_ARRAY_ONLY is used by default
-            'defaultFlagsFunc' => array('header', null, false),
-            'defaultFlagsfuncNs' => array('\bdk\Debug\Utility\header', null, false),
-            'defaultFlagsMethod' => array('\bdk\Debug\Php::isCallable', null, false),
-            // IS_CALLABLE_OBJ_ONLY is used by default
-            'defaultFlagsArrayClassname' => array(array('\bdk\Debug\Utility\Php','isCallable'), null, false),
-            'defaultFlagsArrayObj' => array(array(new Php(), 'isCallable'), null, true),
-            'defaultFlagsArrayEmpty' => array(array(), null, false),
-            // Test that flags don't apply for Closure and invokable
-            'defaultFlagsClosure' => array($closure, null, true),
-            'defaultFlagsInvokable' => array($invokable, null, true),
+            // closure
+            'closure' => array($closure, null, true),
 
-            // disable IS_CALLABLE_OBJ_ONLY
-            'arrayOnlyArrayClassname' => array(array('\bdk\Debug\Utility\Php','isCallable'), Php::IS_CALLABLE_ARRAY_ONLY, true),
+            // invokable
+            'invokable' => array($invokable, null, true),
 
-            // Disable IS_CALLABLE_ARRAY_ONLY and they succeed
-            'noOnlyFunc' => array('header', 0, true),
-            'noOnlyFuncBogus' => array('wompwomp', 0, false),
-            'noOnlyFuncNs' => array('\bdk\Debug\header', 0, true),
-            'noOnlyMethod' => array('\bdk\Debug\Utility\Php::isCallable', 0, true),
+            // function
+            'func' => array('header', null, true),
+            'funcArrayOnly' => array('header', Php::IS_CALLABLE_ARRAY_ONLY, false),
+            'funcNamespaceArrayOnly' => array('\bdk\Debug\Utility\header', Php::IS_CALLABLE_ARRAY_ONLY, false),
+            'funcNamespace' => array('\bdk\Debug\header', null, true),
+            'funcNamespaceNoSunchSyntaxOnly' => array('bogus\wompwomp', Php::IS_CALLABLE_SYNTAX_ONLY, true),
+            'funcNoSuch' => array('wompwomp', null, false),
+            'funcNoSunchSyntaxOnly' => array('wompwomp', Php::IS_CALLABLE_SYNTAX_ONLY, false),
 
-            // Test that IS_CALLABLE_SYNTAX_ONLY doesn't work on non-namespaced string
-            'syntaxOnlyFunc' => array('wompwomp', Php::IS_CALLABLE_SYNTAX_ONLY, false),
-            // But syntax only does work here
-            'syntaxOnlyFuncNs' => array('bogus\wompwomp', Php::IS_CALLABLE_SYNTAX_ONLY, true),
-            'syntaxOnlyMethod' => array('bogus::wompwomp', Php::IS_CALLABLE_SYNTAX_ONLY, true),
+            // string
+            'static' => array('\bdk\Debug\Utility\Php::isCallable', null, true),
+            'staticNoSuch' => array('\notAClass::method', null, false),
+            'staticObjOnly' => array('\bdk\Debug\Php::isCallable', Php::IS_CALLABLE_OBJ_ONLY, false),
+            'staticSyntaxOnly' => array('bogus::wompwomp', Php::IS_CALLABLE_SYNTAX_ONLY, true),
+
+            // array - invalid
+            'arrayEmpty' => array(array(), null, false),
+
+            // array - classname
+            'class' => array(array('\bdk\Debug\Utility\Php','isCallable'), null, true),
+            'classObjOnly' => array(array('\bdk\Debug\Utility\Php','isCallable'), Php::IS_CALLABLE_OBJ_ONLY, false),
+            'classInvalid' => array(array('some string', 'string'), Php::IS_CALLABLE_SYNTAX_ONLY, false),
+            'classSyntaxOnly' => array(array('could\\be\\class', 'string'), Php::IS_CALLABLE_SYNTAX_ONLY, true),
+            'classNoSuch' => array(array('could\\be\\class', 'string'), null, false),
+            'classNoSuchMethod' => array(array('\bdk\Debug\Utility\Php', 'noSuchMethod'), null, false),
+            'classNoSunchMethodHasCallStatic' => array(array('\bdk\Test\Container\Fixture\Invokable', 'noSuchMethod'), null, true),
+            'classNoSuchMethodNoCall' => array(array('\bdk\Test\Container\Fixture\Invokable', 'noSuchMethod'), Php::IS_CALLABLE_NO_CALL, false),
+
+            // array - object
+            'object' => array(array(new Php(), 'isCallable'), null, true),
+            'objectSyntaxOnly' => array(array($invokable, 'noSuchMethod'), Php::IS_CALLABLE_SYNTAX_ONLY, true),
+            'objectNoSuchMethod' => array(array($invokable, 'noSuchMethod'), null, true),
+            'objectNoSuchMethodNoCall' => array(array($invokable, 'noSuchMethod'), Php::IS_CALLABLE_NO_CALL, false),
+            'objectInvalidMethodToken' => array(array($invokable, 'some string'), null, false),
         );
         if (PHP_VERSION_ID >= 80100) {
             $callables = require __DIR__ . '/firstClassCallable.php';

@@ -292,7 +292,7 @@ class ArrayUtil
     private static function mergeDeepWalk($arrayDef, $array2)
     {
         foreach ($array2 as $k2 => $v2) {
-            if (!\is_array($v2) || Php::isCallable($v2)) {
+            if (!\is_array($v2) || Php::isCallable($v2, Php::IS_CALLABLE_ARRAY_ONLY)) {
                 // not array or appears to be a callable
                 if (\is_int($k2) === false) {
                     $arrayDef[$k2] = $v2;
@@ -307,7 +307,7 @@ class ArrayUtil
                 $arrayDef[] = $v2;
                 continue;
             }
-            if (!isset($arrayDef[$k2]) || !\is_array($arrayDef[$k2]) || Php::isCallable($arrayDef[$k2])) {
+            if (!isset($arrayDef[$k2]) || !\is_array($arrayDef[$k2]) || Php::isCallable($arrayDef[$k2], Php::IS_CALLABLE_ARRAY_ONLY)) {
                 $arrayDef[$k2] = $v2;
                 continue;
             }

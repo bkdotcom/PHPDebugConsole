@@ -28,6 +28,7 @@ class Php
     const IS_CALLABLE_ARRAY_ONLY = 1;
     const IS_CALLABLE_OBJ_ONLY = 2;
     const IS_CALLABLE_SYNTAX_ONLY = 4;
+    const IS_CALLABLE_NO_CALL = 8; // don't test for __call / __callStatic methods
 
     public static $allowedClasses = array();
 
@@ -105,43 +106,45 @@ class Php
     }
 
     /**
-     * Test if value is callable
+     * Test if value is "callable"
+     *
+     * Like php's is_callable but
+     *   * more options
+     *   * stricter syntaxOnly option (test valid string labels)
+     *   * does not test against current context
+     *   * does not trigger autoloader
      *
      * @param string|array $val  value to check
      * @param int          $opts bitmask of IS_CALLABLE_x constants
-     *                         default:  IS_CALLABLE_ARRAY_ONLY | IS_CALLABLE_OBJ_ONLY
      *                         IS_CALLABLE_ARRAY_ONLY
      *                             must be array(x, 'method')
      *                             (does not apply for Closure and invokable obj)
      *                         IS_CALLABLE_OBJ_ONLY
-     *                             must be array(obj, 'methodName')
+     *                             if array, first value must be object
      *                             (does not apply for Closure and invokable obj)
      *                         IS_CALLABLE_SYNTAX_ONLY
      *                             strict by default... set to flag for syntax only
      *                             (non-namespaced strings will always be strict)
+     *                         IS_CALLABLE_NO_CALL
+     *                             don't test for __call / __callStatic method
      *
      * @return bool
      */
-    public static function isCallable($val, $opts = 0b011)
+    public static function isCallable($val, $opts = 0)
     {
-        if (\is_object($val) && \method_exists($val, '__invoke')) {
-            // Closure && method with __invoke
-            return true;
+        if (\is_object($val)) {
+            // test if Closure or obj with __invoke
+            return \is_callable($val);
+        }
+        if (\is_array($val)) {
+            return self::isCallableArray($val, $opts);
+        }
+        if ($opts & self::IS_CALLABLE_ARRAY_ONLY) {
+            return false;
         }
         $syntaxOnly = \is_string($val) && !\preg_match('/(::|\\\)/', $val)
-            ? false // string without namespace do a full check
+            ? false // string without namespace: do a full check
             : ($opts & self::IS_CALLABLE_SYNTAX_ONLY) === self::IS_CALLABLE_SYNTAX_ONLY;
-        if (\is_array($val) === false) {
-            return $opts & self::IS_CALLABLE_ARRAY_ONLY
-                ? false
-                : \is_callable($val, $syntaxOnly);
-        }
-        if (!isset($val[0])) {
-            return false;
-        }
-        if ($opts & self::IS_CALLABLE_OBJ_ONLY && \is_object($val[0]) === false) {
-            return false;
-        }
         return \is_callable($val, $syntaxOnly);
     }
 
@@ -240,6 +243,83 @@ class Php
             return new ReflectionClass($matches['class']);
         }
         return null;
+    }
+
+    /**
+     * Test if array is a callable
+     *
+     * We will ignore current context
+     *
+     * @param array $val  array to test
+     * @param int   $opts bitmask of IS_CALLABLE_x constants
+     *
+     * @return bool
+     */
+    private static function isCallableArray(array $val, $opts)
+    {
+        if (\is_callable($val, true) === false) {
+            return false;
+        }
+        $regexLabel = '/^[a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*$/';
+        if (\preg_match($regexLabel, $val[1]) !== 1) {
+            return false;
+        }
+        if (\is_object($val[0])) {
+            return self::isCallableArrayObj($val, $opts);
+        }
+        if ($opts & self::IS_CALLABLE_OBJ_ONLY) {
+            return false;
+        }
+        return self::isCallableArrayString($val, $opts);
+    }
+
+    /**
+     * Test if array(obj, 'method') is callable
+     *
+     * @param array $val  array to test
+     * @param int   $opts bitmask of IS_CALLABLE_x constants
+     *
+     * @return bool
+     */
+    private static function isCallableArrayObj(array $val, $opts)
+    {
+        if ($opts & self::IS_CALLABLE_SYNTAX_ONLY) {
+            return true;
+        }
+        if (\method_exists($val[0], $val[1])) {
+            return true;
+        }
+        return $opts & self::IS_CALLABLE_NO_CALL
+            ? false
+            : \method_exists($val[0], '__call');
+    }
+
+    /**
+     * Test if array('string', 'method') is callable
+     *
+     * @param array $val  array to test
+     * @param int   $opts bitmask of IS_CALLABLE_x constants
+     *
+     * @return bool
+     */
+    private static function isCallableArrayString(array $val, $opts)
+    {
+        if ($opts & self::IS_CALLABLE_SYNTAX_ONLY) {
+            // is_callable syntaxOnly only tested if 1st val is obj or string
+            //    we'll test that string is a valid label
+            $regexClass = '/^(\\\\?[a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*)+$/';
+            return \preg_match($regexClass, $val[0]) === 1;
+        }
+        if (\class_exists($val[0], false) === false) {
+            // test if class exists before calling method_exists to avoid autoload attempt
+            return false;
+        }
+        if (\method_exists($val[0], $val[1])) {
+            return true;
+        }
+        return $opts & self::IS_CALLABLE_NO_CALL
+            ? false
+            : \method_exists($val[0], '__callStatic');
     }
 
     /**

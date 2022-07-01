@@ -17,6 +17,7 @@ use bdk\Debug\AbstractComponent;
 use bdk\Debug\Abstraction\AbstractArray;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
+use bdk\Debug\Utility\Php;
 
 /**
  * Store array/object/resource info
@@ -346,7 +347,7 @@ class Abstracter extends AbstractComponent
     {
         $type = self::TYPE_ARRAY;
         $typeMore = self::TYPE_RAW;  // needs abstracted (references removed / values abstracted if necessary)
-        if (\count($val) === 2 && $this->debug->php->isCallable($val)) {
+        if (\count($val) === 2 && $this->debug->php->isCallable($val, Php::IS_CALLABLE_OBJ_ONLY)) {
             $type = self::TYPE_CALLABLE;
         }
         return array($type, $typeMore);

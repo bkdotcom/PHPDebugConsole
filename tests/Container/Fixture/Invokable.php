@@ -11,4 +11,12 @@ class Invokable
 
         return $service;
     }
+
+    public function __call($method, $args)
+    {
+    }
+
+    public static function __callStatic($method, $args)
+    {
+    }
 }

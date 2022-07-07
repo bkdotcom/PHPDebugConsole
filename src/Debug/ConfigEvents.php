@@ -230,7 +230,7 @@ class ConfigEvents implements SubscriberInterface
         if ($val === null || $this->debug->isCli()) {
             return $val;
         }
-        $request = $this->debug->request;
+        $request = $this->debug->serverRequest;
         $cookieParams = $request->getCookieParams();
         $queryParams = $request->getQueryParams();
         $requestKey = null;
@@ -290,7 +290,7 @@ class ConfigEvents implements SubscriberInterface
             $serverParams = \array_merge(array(
                 'HTTP_SOAPACTION' => null,
                 'HTTP_USER_AGENT' => '',
-            ), $this->debug->request->getServerParams());
+            ), $this->debug->serverRequest->getServerParams());
             $val = \count(
                 \array_filter(array(
                     \strpos($this->debug->getInterface(), 'http') !== false,

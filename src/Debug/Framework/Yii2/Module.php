@@ -197,7 +197,7 @@ class Module extends BaseModule implements SubscriberInterface, BootstrapInterfa
      */
     public function onErrorHigh(Error $error)
     {
-        if (\in_array($error['category'], array(Error::CAT_DEPRECATED, Error::CAT_NOTICE, Error::CAT_STRICT))) {
+        if (\in_array($error['category'], array(Error::CAT_DEPRECATED, Error::CAT_NOTICE, Error::CAT_STRICT), true)) {
             /*
                 "Ignore" minor internal framework errors
             */
@@ -420,7 +420,7 @@ class Module extends BaseModule implements SubscriberInterface, BootstrapInterfa
         $debug = $this->debug->rootInstance->getChannel('User');
         $debug->eventManager->subscribe(Debug::EVENT_LOG, function (LogEntry $logEntry) {
             $captions = array('roles', 'permissions');
-            $isRolesPermissions = $logEntry['method'] === 'table' && \in_array($logEntry->getMeta('caption'), $captions);
+            $isRolesPermissions = $logEntry['method'] === 'table' && \in_array($logEntry->getMeta('caption'), $captions, true);
             if (!$isRolesPermissions) {
                 return;
             }

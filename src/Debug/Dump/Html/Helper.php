@@ -113,7 +113,7 @@ class Helper
         $types = \implode('<span class="t_punct">|</span>', $types);
         $attribs = \array_filter($attribs);
         if ($attribs) {
-            $type = $this->debug->html->buildtag('span', $attribs, $types);
+            $types = $this->debug->html->buildTag('span', $attribs, $types);
         }
         return $types;
     }
@@ -187,7 +187,7 @@ class Helper
                 ? $v['typeMore']
                 : $typeMore;
             $isNumericString = $type === Abstracter::TYPE_STRING
-                && \in_array($typeMore2, array(Abstracter::TYPE_STRING_NUMERIC, Abstracter::TYPE_TIMESTAMP));
+                && \in_array($typeMore2, array(Abstracter::TYPE_STRING_NUMERIC, Abstracter::TYPE_TIMESTAMP), true);
             $args[$i] = $this->dumper->valDumper->dump($v, array(
                 'addQuotes' => $i !== 0 || $isNumericString,
                 'sanitize' => $i === 0
@@ -215,7 +215,7 @@ class Helper
             $isArray = true;
             $type = \substr($type, 0, -2);
         }
-        if (\in_array($type, $this->types) === false) {
+        if (\in_array($type, $this->types, true) === false) {
             $type = $this->dumper->valDumper->markupIdentifier($type);
         }
         if ($isArray) {

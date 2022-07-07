@@ -183,7 +183,7 @@ class ConfigTest extends DebugTestFramework
             this is intentional
         */
         $this->debug->setCfg('serviceProvider', array(
-            'request' => new ServerRequest(
+            'serverRequest' => new ServerRequest(
                 'GET',
                 null,
                 array(
@@ -236,7 +236,7 @@ class ConfigTest extends DebugTestFramework
             'key' => 'swordfish',
             'logResponse' => false,
             'serviceProvider' => array(
-                'request' => (new ServerRequest(
+                'serverRequest' => (new ServerRequest(
                     'GET',
                     null,
                     array(
@@ -256,7 +256,7 @@ class ConfigTest extends DebugTestFramework
             'key' => 'swordfish',
             'logResponse' => false,
             'serviceProvider' => array(
-                'request' => (new ServerRequest(
+                'serverRequest' => (new ServerRequest(
                     'GET',
                     null,
                     array(

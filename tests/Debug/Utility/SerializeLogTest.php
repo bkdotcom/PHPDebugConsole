@@ -23,7 +23,7 @@ class SerializeLogTest extends DebugTestFramework
         $debug = new Debug(array(
             'logResponse' => false,
             'serviceProvider' => array(
-                'request' => new ServerRequest(
+                'serverRequest' => new ServerRequest(
                     'GET',
                     null,
                     array(

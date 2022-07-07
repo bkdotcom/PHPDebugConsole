@@ -176,12 +176,12 @@ class FindExit
             $frame = \array_merge(array(
                 'class' => null,
                 'file' => null,
-                'function' => null,
+                'function' => '',
             ), $frame);
             if (\strpos($frame['function'], 'call_user_func:') === 0) {
                 continue;
             }
-            if (\in_array($frame['class'], $this->classesSkip)) {
+            if (\in_array($frame['class'], $this->classesSkip, true)) {
                 continue;
             }
             if ($this->isFrameInternal($frame) === false) {

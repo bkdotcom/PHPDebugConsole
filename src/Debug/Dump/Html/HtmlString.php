@@ -131,7 +131,7 @@ class HtmlString
             Abstracter::TYPE_STRING_JSON,
             Abstracter::TYPE_STRING_SERIALIZED,
         );
-        if (\in_array($abs['typeMore'], $typesEncoded)) {
+        if (\in_array($abs['typeMore'], $typesEncoded, true)) {
             return $this->dumpEncoded($val, $abs);
         }
         if ($abs['typeMore'] === Abstracter::TYPE_STRING_BINARY) {

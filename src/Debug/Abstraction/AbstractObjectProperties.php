@@ -233,7 +233,7 @@ class AbstractObjectProperties
                 unset($debugInfo[$name]);
                 continue;
             }
-            $isPrivateAncestor = \in_array('private', (array) $info['visibility']) && $info['inheritedFrom'];
+            $isPrivateAncestor = \in_array('private', (array) $info['visibility'], true) && $info['inheritedFrom'];
             $properties[$name]['debugInfoExcluded'] = $isPrivateAncestor === false;
         }
         $abs['debugInfo'] = $debugInfo;

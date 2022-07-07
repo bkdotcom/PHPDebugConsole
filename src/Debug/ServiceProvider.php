@@ -52,8 +52,8 @@ class ServiceProvider implements ServiceProviderInterface
             'methodTime',
             'phpDoc',
             'pluginHighlight',
-            'request',
             'response',
+            'serverRequest',
             'stringUtil',
             'utf8',
             'utility',
@@ -191,10 +191,6 @@ class ServiceProvider implements ServiceProviderInterface
         $container['pluginRedaction'] = function () {
             return new \bdk\Debug\Plugin\Redaction();
         };
-        $container['request'] = function () {
-            // Psr\Http\Message\ServerRequestInterface
-            return \bdk\HttpMessage\ServerRequest::fromGlobals();
-        };
         $container['response'] = null;
         $container['routeWamp'] = function (Container $container) {
             try {
@@ -206,6 +202,10 @@ class ServiceProvider implements ServiceProviderInterface
             }
             $debug = $container['debug'];
             return new \bdk\Debug\Route\Wamp($debug, $wampPublisher);
+        };
+        $container['serverRequest'] = function () {
+            // Psr\Http\Message\ServerRequestInterface
+            return \bdk\HttpMessage\ServerRequest::fromGlobals();
         };
         $container['stringUtil'] = function () {
             return new \bdk\Debug\Utility\StringUtil();

@@ -224,8 +224,8 @@ class ArrayUtil
     public static function sortWithOrder(&$array, $order = array(), $what = 'value')
     {
         $callback = function ($valA, $valB) use ($order) {
-            $aPos = \array_search($valA, $order);
-            $bPos = \array_search($valB, $order);
+            $aPos = \array_search($valA, $order, true);
+            $bPos = \array_search($valB, $order, true);
             if ($aPos === $bPos) {
                 return \strnatcasecmp($valA, $valB);
             }
@@ -292,14 +292,14 @@ class ArrayUtil
     private static function mergeDeepWalk($arrayDef, $array2)
     {
         foreach ($array2 as $k2 => $v2) {
-            if (!\is_array($v2) || Php::isCallable($v2, Php::IS_CALLABLE_ARRAY_ONLY)) {
+            if (\is_array($v2) === false || Php::isCallable($v2, Php::IS_CALLABLE_ARRAY_ONLY)) {
                 // not array or appears to be a callable
                 if (\is_int($k2) === false) {
                     $arrayDef[$k2] = $v2;
                     continue;
                 }
                 // append int-key'd values if not already in_array
-                if (\in_array($v2, $arrayDef)) {
+                if (\in_array($v2, $arrayDef, true)) {
                     // already in array
                     continue;
                 }
@@ -307,7 +307,7 @@ class ArrayUtil
                 $arrayDef[] = $v2;
                 continue;
             }
-            if (!isset($arrayDef[$k2]) || !\is_array($arrayDef[$k2]) || Php::isCallable($arrayDef[$k2], Php::IS_CALLABLE_ARRAY_ONLY)) {
+            if (isset($arrayDef[$k2]) === false || \is_array($arrayDef[$k2]) === false || Php::isCallable($arrayDef[$k2], Php::IS_CALLABLE_ARRAY_ONLY)) {
                 $arrayDef[$k2] = $v2;
                 continue;
             }

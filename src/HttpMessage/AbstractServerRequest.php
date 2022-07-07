@@ -301,7 +301,7 @@ abstract class AbstractServerRequest extends Request
             'application/x-www-form-urlencoded',
             'multipart/form-data',
         );
-        return \in_array($contentType, $parsableTypes);
+        return \in_array($contentType, $parsableTypes, true);
     }
 
     /**

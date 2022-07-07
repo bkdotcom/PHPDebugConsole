@@ -108,8 +108,8 @@ class LogPhp implements SubscriberInterface
             return;
         }
         $logServerKeys = $this->debug->getCfg('logServerKeys', Debug::CONFIG_DEBUG);
-        $serverParams = $this->debug->request->getServerParams();
-        if ($this->debug->request->getMethod() !== 'GET') {
+        $serverParams = $this->debug->serverRequest->getServerParams();
+        if ($this->debug->serverRequest->getMethod() !== 'GET') {
             $logServerKeys[] = 'REQUEST_METHOD';
         }
         if (isset($serverParams['CONTENT_LENGTH'])) {
@@ -198,7 +198,7 @@ class LogPhp implements SubscriberInterface
     {
         $msgLines = array();
         $eAll = E_ALL | E_STRICT;
-        if (\in_array(\error_reporting(), array(-1, $eAll)) === false) {
+        if (\in_array(\error_reporting(), array(-1, $eAll), true) === false) {
             $errorReporting = $this->debug->errorHandler->errorReporting();
             $msgLines[] = 'PHP\'s %cerror_reporting%c is set to `%c' . $this->debug->errorLevel->toConstantString() . '%c` rather than `%cE_ALL | E_STRICT%c`';
             if ($errorReporting === $eAll) {

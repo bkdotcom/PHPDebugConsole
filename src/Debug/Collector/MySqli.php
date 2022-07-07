@@ -201,7 +201,7 @@ class MySqli extends mysqliBase
     public function release_savepoint($name)
     {
         $return = parent::release_savepoint($name);
-        $index = \array_search($name, $this->savepoints);
+        $index = \array_search($name, $this->savepoints, true);
         if (PHP_VERSION_ID < 70000) {
             $this->debug->warn(
                 'mysqli::release_savepoint on PHP < 7.0 just calls %cSAVEPOINT `Sally`%c',
@@ -266,7 +266,7 @@ class MySqli extends mysqliBase
             $this->debug->warn($this->error);
             return $return;
         }
-        $index = \array_search($name, $this->savepoints);
+        $index = \array_search($name, $this->savepoints, true);
         if ($index !== false) {
             unset($this->savepoints[$index]);
             $this->savepoints = \array_values($this->savepoints);

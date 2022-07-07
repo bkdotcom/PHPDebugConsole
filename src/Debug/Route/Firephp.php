@@ -72,7 +72,7 @@ class Firephp extends AbstractRoute
         $event['headers'][] = array('X-Wf-Protocol-1', 'http://meta.wildfirehq.org/Protocol/JsonStream/0.2');
         $event['headers'][] = array('X-Wf-1-Plugin-1', 'http://meta.firephp.org/Wildfire/Plugin/FirePHP/Library-FirePHPCore/' . self::FIREPHP_PROTO_VER);
         $event['headers'][] = array('X-Wf-1-Structure-1', 'http://meta.firephp.org/Wildfire/Structure/FirePHP/FirebugConsole/0.1');
-        $request = $this->debug->request;
+        $request = $this->debug->serverRequest;
         $serverParams = $request->getServerParams();
         $heading = isset($serverParams['REQUEST_METHOD'])
             ? $serverParams['REQUEST_METHOD'] . ' ' . $this->debug->redact((string) $request->getUri())
@@ -109,13 +109,13 @@ class Firephp extends AbstractRoute
         $value = null;
         if ($method === 'alert') {
             $value = $this->methodAlert($logEntry);
-        } elseif (\in_array($method, array('group','groupCollapsed'))) {
+        } elseif (\in_array($method, array('group','groupCollapsed'), true)) {
             $logEntry['firephpMeta']['Label'] = $args[0];
             $logEntry['firephpMeta']['Collapsed'] = $method === 'groupCollapsed'
                 // yes, strings
                 ? 'true'
                 : 'false';
-        } elseif (\in_array($method, array('profileEnd','table','trace'))) {
+        } elseif (\in_array($method, array('profileEnd','table','trace'), true)) {
             $value = $this->methodTabular($logEntry);
         } elseif (\count($args)) {
             $this->dumper->processLogEntry($logEntry);

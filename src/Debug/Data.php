@@ -65,7 +65,7 @@ class Data
             return $data;
         }
         $data = $this->arrayUtil->pathGet($this->data, $path);
-        return \is_array($data) && \in_array($path, array('logSummary'))
+        return \is_array($data) && \in_array($path, array('logSummary'), true)
             ? $this->arrayUtil->copy($data, false)
             : $data;
     }
@@ -173,7 +173,7 @@ class Data
                 continue;
             }
             $method = $logEntry['method'];
-            if (\in_array($method, array('group', 'groupCollapsed'))) {
+            if (\in_array($method, array('group', 'groupCollapsed'), true)) {
                 $depth++;
             } elseif ($method === 'groupEnd') {
                 $depth--;

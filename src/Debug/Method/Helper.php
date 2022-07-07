@@ -51,7 +51,9 @@ class Helper
             $args
         );
         $levelsAllowed = array('danger','error','info','success','warn','warning');
-        return $logEntry->containsSubstitutions() && \array_key_exists(1, $args) && !\in_array($args[1], $levelsAllowed);
+        return $logEntry->containsSubstitutions()
+            && \array_key_exists(1, $args)
+            && \in_array($args[1], $levelsAllowed, true) === false;
     }
 
     /**
@@ -72,7 +74,7 @@ class Helper
         );
         if (isset($levelTrans[$level])) {
             $level = $levelTrans[$level];
-        } elseif (!\in_array($level, $levelsAllowed)) {
+        } elseif (\in_array($level, $levelsAllowed, true) === false) {
             $level = 'error';
         }
         $logEntry->setMeta('level', $level);

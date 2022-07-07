@@ -31,7 +31,7 @@ trait CustomMethodTrait
     public function onCustomMethod(LogEntry $logEntry)
     {
         $method = $logEntry['method'];
-        if (!\in_array($method, $this->methods)) {
+        if (\in_array($method, $this->methods, true) === false) {
             return;
         }
         $this->debug = $logEntry->getSubject();

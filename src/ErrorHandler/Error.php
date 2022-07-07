@@ -111,7 +111,7 @@ class Error extends Event
             $errorCallerVals = \array_intersect_key($errorCaller, \array_flip(array('file','line')));
             $this->values = \array_merge($this->values, $errorCallerVals);
         }
-        if (\in_array($this->values['type'], array(E_ERROR, E_USER_ERROR)) && $this->values['exception'] === null) {
+        if (\in_array($this->values['type'], array(E_ERROR, E_USER_ERROR), true) && $this->values['exception'] === null) {
             // will return empty unless xdebug extension installed/enabled
             $this->backtrace = $this->subject->backtrace->get();
         }
@@ -353,7 +353,7 @@ class Error extends Event
     {
         $return = null;
         foreach (self::$errCategories as $category => $errTypes) {
-            if (\in_array($errType, $errTypes)) {
+            if (\in_array($errType, $errTypes, true)) {
                 $return = $category;
                 break;
             }
@@ -371,7 +371,7 @@ class Error extends Event
     private function isHtml()
     {
         return \filter_var(\ini_get('html_errors'), FILTER_VALIDATE_BOOLEAN)
-            && !\in_array($this->values['type'], static::$userErrors)
+            && \in_array($this->values['type'], static::$userErrors, true) === false
             && !$this->values['exception'];
     }
 

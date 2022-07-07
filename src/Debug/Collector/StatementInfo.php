@@ -379,7 +379,6 @@ class StatementInfo extends AbstractComponent
      */
     protected function performQueryAnalysis()
     {
-        $matches = array();
         \array_map(array($this, 'performQueryAnalysisTest'), array(
             array(\preg_match('/^\s*SELECT\s*`?[a-zA-Z0-9]*`?\.?\*/i', $this->sql) === 1,
                 'Use %cSELECT *%c only if you need all columns from table',
@@ -394,6 +393,7 @@ class StatementInfo extends AbstractComponent
                 'The %cSELECT%c statement has no %cWHERE%c clause and could examine many more rows than intended',
             ),
             function () {
+                $matches = array();
                 return \preg_match('/LIKE\s+[\'"](%.*?)[\'"]/i', $this->sql, $matches)
                     ? 'An argument has a leading wildcard character: %c' . $matches[1] . '%c and cannot use an index if one exists.'
                     : false;

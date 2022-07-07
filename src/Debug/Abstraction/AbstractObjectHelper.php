@@ -171,7 +171,7 @@ class AbstractObjectHelper
                 $isArray = true;
                 $type = \substr($type, 0, -2);
             }
-            if (\in_array($type, $keywords)) {
+            if (\in_array($type, $keywords, true)) {
                 continue;
             }
             $type = $this->resolvePhpDocTypeClass($type, $abs);
@@ -186,7 +186,8 @@ class AbstractObjectHelper
     /**
      * Sorts constant/property/method array by visibility or name
      *
-     * @param array $array array to sort
+     * @param array  $array array to sort
+     * @param string $order ("visibility")|"name"
      *
      * @return void
      */
@@ -214,7 +215,7 @@ class AbstractObjectHelper
                 $vis = \is_array($info['visibility'])
                     ? $info['visibility'][0]
                     : $info['visibility'];
-                $sortData['vis'][$name] = \array_search($vis, $sortVisOrder);
+                $sortData['vis'][$name] = \array_search($vis, $sortVisOrder, true);
             }
             \array_multisort($sortData['vis'], $sortData['name'], $array);
         }

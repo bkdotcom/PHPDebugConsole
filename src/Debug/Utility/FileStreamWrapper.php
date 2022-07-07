@@ -358,7 +358,7 @@ class FileStreamWrapper
             // phpunit 9.5.5 issue ??
             $operation = LOCK_EX;
         }
-        if (!\in_array($operation, $validOperations)) {
+        if (\in_array($operation, $validOperations, true) === false) {
             return false;
         }
         return \flock($this->resource, $operation);
@@ -713,6 +713,8 @@ class FileStreamWrapper
      * @param string $protocol Protocol such as "file" or "phar"
      *
      * @return void
+     *
+     * @throws \UnexpectedValueException
      */
     private static function registerProtocol($protocol)
     {
@@ -737,6 +739,6 @@ class FileStreamWrapper
     private static function shouldTransform($file, $options)
     {
         $including = (bool) ($options & static::STREAM_OPEN_FOR_INCLUDE);
-        return static::isTargeted($file) && ($including || \in_array($file, static::$filesTransformed));
+        return static::isTargeted($file) && ($including || \in_array($file, static::$filesTransformed, true));
     }
 }

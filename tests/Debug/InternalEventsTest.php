@@ -169,7 +169,7 @@ class InternalEventsTest extends DebugTestFramework
         // stream
         $this->debug->setCfg(array(
             'serviceProvider' => array(
-                'request' => new \bdk\HttpMessage\ServerRequest('GET', '', array(
+                'serverRequest' => new \bdk\HttpMessage\ServerRequest('GET', '', array(
                     'argv' => array('foo','bar'),
                 )),
             ),

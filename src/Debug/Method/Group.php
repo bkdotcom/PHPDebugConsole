@@ -74,7 +74,7 @@ class Group implements SubscriberInterface
             'reset',
             'setLogDest',
         );
-        if (\in_array($method, $methods) === false) {
+        if (\in_array($method, $methods, true) === false) {
             throw new RuntimeException(__CLASS__ . '::' . $method . ' is inaccessable');
         }
         return \call_user_func_array(array($this->groupStack, $method), $args);
@@ -246,7 +246,7 @@ class Group implements SubscriberInterface
             $refMethod = new ReflectionMethod($caller['class'], $caller['function']);
             $callerStartLine = $refMethod->getStartLine();
             $function = $caller['classCalled'] . $caller['type'] . $caller['function'];
-        } elseif (!\in_array($caller['function'], array('include', 'include_once', 'require', 'require_once'))) {
+        } elseif (\in_array($caller['function'], array('include', 'include_once', 'require', 'require_once'), true) === false) {
             $refFunction = new ReflectionFunction($caller['function']);
             $callerStartLine = $refFunction->getStartLine();
             $function = $caller['function'];
@@ -406,7 +406,7 @@ class Group implements SubscriberInterface
         $logEntry = $this->log[$index];
         $method = $logEntry['method'];
         $stackCount = $this->cleanupInfo['stackCount'];
-        if (\in_array($method, array('group', 'groupCollapsed'))) {
+        if (\in_array($method, array('group', 'groupCollapsed'), true)) {
             $this->cleanupInfo['stack'][] = array(
                 'childCount' => 0,  // includes any child groups
                 'groupCount' => 0,

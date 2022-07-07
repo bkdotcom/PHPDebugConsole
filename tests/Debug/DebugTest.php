@@ -49,7 +49,7 @@ class DebugTest extends DebugTestFramework
         $this->assertSame('serverLog', $route);
 
         $this->debug->setCfg('serviceProvider', array(
-            'request' => new \bdk\HttpMessage\ServerRequest('GET', null, array(
+            'serverRequest' => new \bdk\HttpMessage\ServerRequest('GET', null, array(
                 'HTTP_X_REQUESTED_WITH' => 'XMLHttpRequest',
             )),
         ));

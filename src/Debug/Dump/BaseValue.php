@@ -190,7 +190,7 @@ class BaseValue extends AbstractComponent
             $this->setDumpOpt('typeMore', $event['typeMore']);
             return $event['return'];
         }
-        return \in_array($type, $this->simpleTypes)
+        return \in_array($type, $this->simpleTypes, true)
             ? $this->{$method}($abs['value'], $abs)
             : $this->{$method}($abs);
     }
@@ -348,7 +348,7 @@ class BaseValue extends AbstractComponent
     {
         $vis = (array) $info['visibility'];
         foreach ($vis as $i => $v) {
-            if (\in_array($v, array('magic','magic-read','magic-write'))) {
+            if (\in_array($v, array('magic','magic-read','magic-write'), true)) {
                 $vis[$i] = '✨ ' . $v;    // "sparkles": there is no magic-wand unicode char
             } elseif ($v === 'private' && $info['inheritedFrom']) {
                 $vis[$i] = '🔒 ' . $v;

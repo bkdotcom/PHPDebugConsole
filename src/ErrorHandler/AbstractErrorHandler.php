@@ -92,11 +92,11 @@ abstract class AbstractErrorHandler extends AbstractComponent
             return;
         }
         $errorSubscribers = $this->eventManager->getSubscribers(ErrorHandler::EVENT_ERROR);
-        if ($this->cfg['enableEmailer'] && !\in_array(array($this->getEmailer(), 'onErrorHighPri'), $errorSubscribers, true)) {
+        if ($this->cfg['enableEmailer'] && \in_array(array($this->getEmailer(), 'onErrorHighPri'), $errorSubscribers, true) === false) {
             $this->cfg['enableStats'] = true;
             $this->eventManager->addSubscriberInterface($this->emailer);
         }
-        if ($this->cfg['enableStats'] && !\in_array(array($this->getStats(), 'onErrorHighPri'), $errorSubscribers, true)) {
+        if ($this->cfg['enableStats'] && \in_array(array($this->getStats(), 'onErrorHighPri'), $errorSubscribers, true) === false) {
             $this->eventManager->addSubscriberInterface($this->stats);
         }
     }
@@ -323,7 +323,7 @@ abstract class AbstractErrorHandler extends AbstractComponent
         for ($i = 1; $i < $count; $i++) {
             if (
                 isset($backtrace[$i - 1]['function'])
-                && \in_array($backtrace[$i - 1]['function'], array('trigger_error', 'user_error'))
+                && \in_array($backtrace[$i - 1]['function'], array('trigger_error', 'user_error'), true)
                 && \strpos($backtrace[$i]['function'], '->__toString') !== false
             ) {
                 $error->stopPropagation();

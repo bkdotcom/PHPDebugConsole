@@ -817,6 +817,10 @@
     addIcons$1($group); // custom data-icon
     addIcons$1($toggle); // expand/collapse
     $toggle.attr('data-toggle', 'group');
+    $toggle.find('.t_array, .t_object').each(function () {
+      $(this).data('expand', false);
+      enhanceValue($group, this);
+    });
     $.each(['level-error', 'level-info', 'level-warn'], function (i, classname) {
       var $toggleIcon;
       if ($group.hasClass(classname)) {

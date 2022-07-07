@@ -264,7 +264,10 @@ class UploadedFile implements UploadedFileInterface
 
     /**
      * Retrieve the full_path sent by the client.
-     * pull_path is new as of PHP 8.1 and passed by client when uploading a directory
+     *
+     * NOT DEFINED IN INTERFACE
+     *
+     * full_path is new as of PHP 8.1 and passed by client when uploading a directory
      *
      * Do not trust the value returned by this method. A client could send
      * a malicious filename with the intention to corrupt or hack your

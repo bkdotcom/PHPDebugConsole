@@ -190,7 +190,7 @@ class SkipInternal
         if (\preg_match(static::$internalClasses['regex'], $class)) {
             return true;
         }
-        if ($class === 'ReflectionMethod' && \in_array($frame['function'], array('invoke','invokeArgs'))) {
+        if ($class === 'ReflectionMethod' && \in_array($frame['function'], array('invoke','invokeArgs'), true)) {
             return true;
         }
         return static::isSubclassOfInternal($frame, $levelMax);

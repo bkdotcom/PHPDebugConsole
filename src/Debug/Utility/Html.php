@@ -157,7 +157,7 @@ class Html
         if ($innerhtml instanceof \Closure) {
             $innerhtml = \call_user_func($innerhtml);
         }
-        return \in_array($tagName, self::$htmlEmptyTags)
+        return \in_array($tagName, self::$htmlEmptyTags, true)
             ? '<' . $tagName . $attribStr . ' />'
             : '<' . $tagName . $attribStr . '>' . $innerhtml . '</' . $tagName . '>';
     }
@@ -263,7 +263,7 @@ class Html
         if ($value === null) {
             return '';
         }
-        if ($value === '' && \in_array($name, array('class', 'style'))) {
+        if ($value === '' && \in_array($name, array('class', 'style'), true)) {
             return '';
         }
         return $name . '="' . \htmlspecialchars($value) . '"';
@@ -366,7 +366,7 @@ class Html
      */
     private static function buildAttribValBool($key, $value = true)
     {
-        if (\in_array($key, self::$htmlBoolAttrEnum)) {
+        if (\in_array($key, self::$htmlBoolAttrEnum, true)) {
             return \json_encode($value);
         }
         $values = array(
@@ -433,10 +433,10 @@ class Html
         if (\substr($name, 0, 5) === 'data-') {
             return self::parseAttribData($val, $options & self::PARSE_ATTRIB_DATA);
         }
-        if (\in_array($name, self::$htmlBoolAttr)) {
+        if (\in_array($name, self::$htmlBoolAttr, true)) {
             return true;
         }
-        if (\in_array($name, self::$htmlBoolAttrEnum)) {
+        if (\in_array($name, self::$htmlBoolAttrEnum, true)) {
             return self::parseAttribBoolEnum($val);
         }
         if (\is_numeric($val)) {
@@ -457,7 +457,7 @@ class Html
     private static function parseAttribBoolEnum($val)
     {
         $val = \strtolower($val);
-        return \in_array($val, array('true','false'))
+        return \in_array($val, array('true','false'), true)
             ? $val === 'true'
             : false;
     }

@@ -370,7 +370,7 @@ class DebugTestFramework extends DOMTestCase
             'outputScript' => false,
             'route' => 'html',
             'serviceProvider' => array(
-                'request' => new ServerRequest(
+                'serverRequest' => new ServerRequest(
                     'GET',
                     null,
                     array(

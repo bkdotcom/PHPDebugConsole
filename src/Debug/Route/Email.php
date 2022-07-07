@@ -84,7 +84,7 @@ class Email implements RouteInterface
      */
     private function buildBody()
     {
-        $request = $this->debug->request;
+        $request = $this->debug->serverRequest;
         $serverParams = $request->getServerParams();
         $body = (isset($serverParams['REQUEST_METHOD'])
             ? 'Request: ' . $serverParams['REQUEST_METHOD'] . ' ' . $this->debug->redact((string) $request->getUri())
@@ -115,7 +115,7 @@ class Email implements RouteInterface
         $subject = 'Debug Log';
         $subjectMore = '';
         $haveError = (bool) $this->debug->errorHandler->getLastError();
-        $serverParams = $this->debug->request->getServerParams();
+        $serverParams = $this->debug->serverRequest->getServerParams();
         if (!empty($serverParams['HTTP_HOST'])) {
             $subjectMore .= ' ' . $serverParams['HTTP_HOST'];
         }

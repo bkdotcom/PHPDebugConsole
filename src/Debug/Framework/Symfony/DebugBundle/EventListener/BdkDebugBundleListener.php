@@ -147,11 +147,7 @@ class BdkDebugBundleListener implements EventSubscriberInterface
             return;
         }
 
-        if (
-            ($response->headers->has('Content-Type') && \strpos($response->headers->get('Content-Type'), 'html') === false)
-            || $request->getRequestFormat() !== 'html'
-            || \stripos($response->headers->get('Content-Disposition'), 'attachment;') !== false
-        ) {
+        if ($this->isResponseHtml($event) === false) {
             return;
         }
 
@@ -170,5 +166,21 @@ class BdkDebugBundleListener implements EventSubscriberInterface
         if ($abs['debugMethod'] === 'error' && $abs['className'] === 'ErrorException') {
             $abs['isExcluded'] = true;
         }
+    }
+
+    /**
+     * Is response HTML?
+     *
+     * @param ResponseEvent $event ResponseEvent
+     *
+     * @return bool
+     */
+    private function isResponseHtml(ResponseEvent $event)
+    {
+        $response = $event->getResponse();
+        $request = $event->getRequest();
+        $responseTypeIsHtml = $response->headers->has('Content-Type') === false || \strpos($response->headers->get('Content-Type'), 'html') !== false;
+        return ($responseTypeIsHtml || $request->getRequestFormat() === 'html')
+            && \stripos($response->headers->get('Content-Disposition'), 'attachment;') === false;
     }
 }

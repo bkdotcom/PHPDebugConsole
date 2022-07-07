@@ -140,7 +140,7 @@ class AbstractDebug
         if ($this->container->has($property)) {
             return $this->container[$property];
         }
-        if (\in_array($property, $this->readOnly)) {
+        if (\in_array($property, $this->readOnly, true)) {
             return $this->{$property};
         }
         return null;
@@ -161,7 +161,7 @@ class AbstractDebug
         if ($this->container->has($property)) {
             return true;
         }
-        return \in_array($property, $this->readOnly);
+        return \in_array($property, $this->readOnly, true);
     }
 
     /**
@@ -222,7 +222,7 @@ class AbstractDebug
         }
         $services = $this->container['services'];
         foreach ($val as $k => $v) {
-            if (\in_array($k, $services)) {
+            if (\in_array($k, $services, true)) {
                 $this->serviceContainer[$k] = $v;
                 unset($val[$k]);
                 continue;

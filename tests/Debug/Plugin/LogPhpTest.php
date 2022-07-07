@@ -18,7 +18,7 @@ class LogPhpTest extends DebugTestFramework
 {
     public function testLogPhpInfo()
     {
-        $serverParams = \array_merge($this->debug->request->getServerParams(), array(
+        $serverParams = \array_merge($this->debug->serverRequest->getServerParams(), array(
             'CONTENT_LENGTH' => 1234,
             'CONTENT_TYPE' => 'application/x-www-form-urlencoded',
             'REQUEST_METHOD' => 'POST',
@@ -26,14 +26,13 @@ class LogPhpTest extends DebugTestFramework
         $this->debug->setCfg(array(
             'logEnvInfo' => true,
             'serviceProvider' => array(
-                'request' => new ServerRequest(
+                'serverRequest' => new ServerRequest(
                     'POST',
                     null,
                     $serverParams
                 ),
             ),
         ));
-        // $this->helper->stderr('server', $this->debug->request->getServerParams());
         $this->debug->pluginLogPhp->onPluginInit(new Event($this->debug));
 
         $logEntries = $this->helper->deObjectifyData($this->debug->data->get('log'));
@@ -63,7 +62,7 @@ class LogPhpTest extends DebugTestFramework
             'extensionsCheck' => array('bogusExtension'),
             'logRequestInfo' => true,
             'serviceProvider' => array(
-                'request' => new ServerRequest(
+                'serverRequest' => new ServerRequest(
                     'GET',
                     null,
                     $serverParams

@@ -183,7 +183,7 @@ class ReqRes implements SubscriberInterface
     public function getServerParam($name, $default = null)
     {
         if (!$this->serverParams) {
-            $this->serverParams = $this->debug->request->getServerParams();
+            $this->serverParams = $this->debug->serverRequest->getServerParams();
         }
         return \array_key_exists($name, $this->serverParams)
             ? $this->serverParams[$name]

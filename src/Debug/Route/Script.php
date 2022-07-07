@@ -69,7 +69,7 @@ class Script extends AbstractRoute
         $this->dumper->crateRaw = false;
         $this->data = $this->debug->data->get();
         $errorStats = $this->debug->errorStats();
-        $serverParams = $this->debug->request->getServerParams();
+        $serverParams = $this->debug->serverRequest->getServerParams();
         $errorStr = '';
         if ($errorStats['inConsole']) {
             $errorStr = 'Errors: ';
@@ -114,7 +114,7 @@ class Script extends AbstractRoute
     public function processLogEntry(LogEntry $logEntry)
     {
         $method = $logEntry['method'];
-        if (\in_array($method, array('table', 'trace'))) {
+        if (\in_array($method, array('table', 'trace'), true)) {
             $logEntry->setMeta(array(
                 'forceArray' => false,
                 'undefinedAs' => Abstracter::UNDEFINED,
@@ -126,13 +126,13 @@ class Script extends AbstractRoute
         $meta = $logEntry['meta'];
         if ($method === 'assert') {
             \array_unshift($args, false);
-        } elseif (\in_array($method, array('error','warn'))) {
+        } elseif (\in_array($method, array('error','warn'), true)) {
             if (isset($meta['file'])) {
                 $args[] = \sprintf('%s: line %s', $meta['file'], $meta['line']);
             }
         } elseif ($method === 'table') {
             $args = $this->dumper->valDumper->dump($args);
-        } elseif (!\in_array($method, $this->consoleMethods)) {
+        } elseif (\in_array($method, $this->consoleMethods, true) === false) {
             $method = 'log';
         }
         $args = \json_encode($args, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);

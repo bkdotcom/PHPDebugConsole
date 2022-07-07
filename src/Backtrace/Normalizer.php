@@ -119,7 +119,7 @@ class Normalizer
             self::$backtraceTemp[$count - 1]['line'] = $frame['line'];
             return false;
         }
-        if ($frame['class'] === 'ReflectionMethod' && \in_array($frame['function'], array('invoke','invokeArgs'))) {
+        if ($frame['class'] === 'ReflectionMethod' && \in_array($frame['function'], array('invoke','invokeArgs'), true)) {
             return false;
         }
         if ($frame['include_filename']) {

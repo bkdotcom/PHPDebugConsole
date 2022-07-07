@@ -87,6 +87,11 @@ class PhpDoc extends PhpDocBase
         return $parsed;
     }
 
+    /**
+     * Get parent method/property/etc's parsed docblock
+     *
+     * @return array
+     */
     private function getParentParsed()
     {
         $parentReflector = $this->getParentReflector($this->reflector);
@@ -104,7 +109,7 @@ class PhpDoc extends PhpDocBase
     {
         $parser = array();
         foreach ($this->parsers as $parser) {
-            if (\in_array($tag, $parser['tags'])) {
+            if (\in_array($tag, $parser['tags'], true)) {
                 break;
             }
         }
@@ -211,7 +216,7 @@ class PhpDoc extends PhpDocBase
             $value = \preg_replace('/\n\s*\*\s*/', "\n", $value);
             $value = \trim($value);
             $value = $this->parseTag($match['tag'], $value, $elementName);
-            if (\in_array($match['tag'], $singleTags)) {
+            if (\in_array($match['tag'], $singleTags, true)) {
                 $return[ $match['tag'] ] = $value;
                 continue;
             }

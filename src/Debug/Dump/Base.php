@@ -74,10 +74,10 @@ class Base extends AbstractComponent
         if ($method === 'alert') {
             return $this->methodAlert($logEntry);
         }
-        if (\in_array($method, array('group', 'groupCollapsed', 'groupEnd', 'groupSummary'))) {
+        if (\in_array($method, array('group', 'groupCollapsed', 'groupEnd', 'groupSummary'), true)) {
             return $this->methodGroup($logEntry);
         }
-        if (\in_array($method, array('profileEnd','table','trace'))) {
+        if (\in_array($method, array('profileEnd','table','trace'), true)) {
             return $this->methodTabular($logEntry);
         }
         return $this->methodDefault($logEntry);
@@ -134,7 +134,7 @@ class Base extends AbstractComponent
     {
         $method = $logEntry->getMeta('level');
         if ($logEntry->containsSubstitutions()) {
-            $logEntry['method'] = \in_array($method, array('info','success'))
+            $logEntry['method'] = \in_array($method, array('info','success'), true)
                 ? 'info'
                 : 'log';
             $args = $this->substitution->process($logEntry['args']);
@@ -169,7 +169,7 @@ class Base extends AbstractComponent
     {
         $method = $logEntry['method'];
         $args = $logEntry['args'];
-        if (\in_array($method, array('assert','clear','error','info','log','warn'))) {
+        if (\in_array($method, array('assert','clear','error','info','log','warn'), true)) {
             if ($logEntry->containsSubstitutions()) {
                 $args = $this->substitution->process($args);
             }

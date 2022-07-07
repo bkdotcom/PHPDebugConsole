@@ -314,7 +314,7 @@ class SerializeLog
     private static function unserializeDecode($str)
     {
         $str = StringUtil::isBase64Encoded($str)
-            ? \base64_decode($str)
+            ? \base64_decode($str, true)
             : false;
         if ($str && \function_exists('gzinflate')) {
             $strInflated = \gzinflate($str);

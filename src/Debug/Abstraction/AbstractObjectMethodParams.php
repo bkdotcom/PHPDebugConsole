@@ -289,7 +289,7 @@ class AbstractObjectMethodParams
             return Abstracter::UNDEFINED;
         }
         $defaultValue = $param['defaultValue'];
-        if (\in_array($defaultValue, array('true','false','null'))) {
+        if (\in_array($defaultValue, array('true','false','null'), true)) {
             return \json_decode($defaultValue);
         }
         if (\is_numeric($defaultValue)) {

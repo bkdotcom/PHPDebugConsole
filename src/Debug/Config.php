@@ -264,7 +264,7 @@ class Config
         if ($debugProp === 'debug') {
             return $this->debug->getCfg($path, Debug::CONFIG_DEBUG);
         }
-        if (\in_array($debugProp, $this->invokedServices)) {
+        if (\in_array($debugProp, $this->invokedServices, true)) {
             $obj = $this->debug->{$debugProp};
         } elseif ($forInit) {
             return array();
@@ -391,7 +391,7 @@ class Config
     {
         $obj = null;
         $matches = array();
-        if (\in_array($debugProp, $this->invokedServices)) {
+        if (\in_array($debugProp, $this->invokedServices, true)) {
             $obj = $this->debug->{$debugProp};
         } elseif (\preg_match('/^(dump|route)(.+)$/', $debugProp, $matches)) {
             $cat = $matches[1];

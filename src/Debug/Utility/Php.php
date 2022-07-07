@@ -51,7 +51,9 @@ class Php
         }
         // anonymous class
         $parentClassRef = $reflector->getParentClass();
-        $extends = $parentClassRef ? $parentClassRef->getName() : null;
+        $extends = $parentClassRef
+            ? $parentClassRef->getName()
+            : null;
         return ($extends ?: \current($reflector->getInterfaceNames()) ?: 'class') . '@anonymous';
     }
 
@@ -368,7 +370,7 @@ class Php
     private static function unserializeSafeModifyMatch($matches, $offsets, &$offset)
     {
         $offset = $offsets['full'] + \strlen($matches['full']);
-        if (\strlen($matches['classname']) !== (int) $matches['strlen'] || \in_array($matches['classname'], self::$allowedClasses)) {
+        if (\strlen($matches['classname']) !== (int) $matches['strlen'] || \in_array($matches['classname'], self::$allowedClasses, true)) {
             return $matches['full'];
         }
         if ($matches['type'] === 'O') {

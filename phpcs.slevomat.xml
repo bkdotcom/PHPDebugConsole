@@ -12,6 +12,7 @@
     <config name="installed_paths" value="vendor/slevomat/coding-standard" />
 
     <rule ref="SlevomatCodingStandard.Arrays" />
+
     <rule ref="SlevomatCodingStandard.Classes.ClassStructure">
         <properties>
             <property name="groups" type="array">
@@ -31,6 +32,7 @@
     </rule>
     <rule ref="SlevomatCodingStandard.Classes.TraitUseDeclaration" />
     <rule ref="SlevomatCodingStandard.Classes.UselessLateStaticBinding" />
+
     <rule ref="SlevomatCodingStandard.Commenting.ForbiddenComments">
         <properties>
             <property name="forbiddenCommentPatterns" type="array">
@@ -38,10 +40,14 @@
             </property>
         </properties>
     </rule>
+
     <rule ref="SlevomatCodingStandard.ControlStructures.LanguageConstructWithParentheses" />
     <rule ref="SlevomatCodingStandard.ControlStructures.NewWithParentheses" />
     <rule ref="SlevomatCodingStandard.ControlStructures.UselessIfConditionWithReturn" />
     <rule ref="SlevomatCodingStandard.ControlStructures.UselessTernaryOperator" />
+
+    <rule ref="SlevomatCodingStandard.Exceptions.DeadCatch" />
+
     <rule ref="SlevomatCodingStandard.Functions.UnusedInheritedVariablePassedToClosure" />
     <rule ref="SlevomatCodingStandard.Functions.UselessParameterDefaultValue" />
     <rule ref="SlevomatCodingStandard.Functions.FunctionLength">
@@ -49,6 +55,8 @@
             <property name="maxLinesLength" value="25" />
         </properties>
     </rule>
+    <rule ref="SlevomatCodingStandard.Functions.StrictCall" />
+
     <rule ref="SlevomatCodingStandard.Namespaces.AlphabeticallySortedUses" />
     <rule ref="SlevomatCodingStandard.Namespaces.FullyQualifiedGlobalFunctions" />
     <rule ref="SlevomatCodingStandard.Namespaces.UnusedUses" />
@@ -59,6 +67,7 @@
     <rule ref="SlevomatCodingStandard.PHP.UselessParentheses" />
     <rule ref="SlevomatCodingStandard.PHP.UselessSemicolon" />
     <rule ref="SlevomatCodingStandard.Variables.DuplicateAssignmentToVariable" />
+    <rule ref="SlevomatCodingStandard.Variables.UnusedVariable" />
     <rule ref="SlevomatCodingStandard.Variables.UselessVariable" />
     <!--
     <rule ref="SlevomatCodingStandard.Functions.StaticClosure" />

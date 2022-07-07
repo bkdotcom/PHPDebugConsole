@@ -131,7 +131,7 @@ class Clear
         $errorsNotCleared = \array_unique($errorsNotCleared);
         $errors = $this->debug->errorHandler->get('errors');
         foreach ($errors as $error) {
-            if (!\in_array($error['hash'], $errorsNotCleared)) {
+            if (\in_array($error['hash'], $errorsNotCleared, true) === false) {
                 $error['inConsole'] = false;
             }
         }
@@ -149,7 +149,7 @@ class Clear
     {
         $errorsNotCleared = array();
         foreach ($log as $k => $logEntry) {
-            if (!\in_array($logEntry['method'], array('error','warn'))) {
+            if (\in_array($logEntry['method'], array('error','warn'), true) === false) {
                 continue;
             }
             $clear2 = $clear;
@@ -207,7 +207,7 @@ class Clear
             foreach ($log as $k => $logEntry) {
                 $channelName = $logEntry->getChannelName();
                 $channelMatch = !$this->channelName || $channelName === $this->channelName;
-                if (\in_array($logEntry['method'], $keep) || !$channelMatch) {
+                if (\in_array($logEntry['method'], $keep, true) || !$channelMatch) {
                     $entriesKeep[$k] = $logEntry;
                 }
             }

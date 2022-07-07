@@ -29,14 +29,14 @@ class PluginMethodReqResTest extends DebugTestFramework
     public function testGetInterface()
     {
         $this->debug->setCfg('serviceProvider', array(
-            'request' => new ServerRequest('GET', null, array(
+            'serverRequest' => new ServerRequest('GET', null, array(
                 // 'REQUEST_METHOD' => 'GET',
             )),
         ));
         $this->assertSame('http', $this->debug->getInterface());
 
         $this->debug->setCfg('serviceProvider', array(
-            'request' => new ServerRequest('GET', null, array(
+            'serverRequest' => new ServerRequest('GET', null, array(
                 'HTTP_X_REQUESTED_WITH' => 'XMLHttpRequest',
                 // 'REQUEST_METHOD' => 'GET',
             )),
@@ -44,7 +44,7 @@ class PluginMethodReqResTest extends DebugTestFramework
         $this->assertSame('http ajax', $this->debug->getInterface());
 
         $this->debug->setCfg('serviceProvider', array(
-            'request' => new ServerRequest('GET', null, array(
+            'serverRequest' => new ServerRequest('GET', null, array(
                 'PATH' => '.',
                 'argv' => array('phpunit'),
             )),
@@ -52,7 +52,7 @@ class PluginMethodReqResTest extends DebugTestFramework
         $this->assertSame('cli', $this->debug->getInterface());
 
         $this->debug->setCfg('serviceProvider', array(
-            'request' => new ServerRequest('GET', null, array(
+            'serverRequest' => new ServerRequest('GET', null, array(
                 'argv' => array('phpunit'),
             )),
         ));

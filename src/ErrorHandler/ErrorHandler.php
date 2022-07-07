@@ -211,21 +211,6 @@ class ErrorHandler extends AbstractErrorHandler
     }
 
     /**
-     * Called on first error
-     *
-     * @param Error $error Error instance
-     *
-     * @return void
-     */
-    protected function onFirstError(Error $error)
-    {
-        $this->enableStatsEmailer(true);
-        if ($this->cfg['onFirstError']) {
-            $this->cfg['onFirstError']($error);
-        }
-    }
-
-    /**
      * Handle uncaught exceptions
      *
      * This isn't strictly necesssary...  uncaught exceptions are a fatal error, which we can handle...
@@ -508,5 +493,20 @@ class ErrorHandler extends AbstractErrorHandler
             $error->log();
         }
         $error['continueToNormal'] = false;
+    }
+
+    /**
+     * Called on first error
+     *
+     * @param Error $error Error instance
+     *
+     * @return void
+     */
+    protected function onFirstError(Error $error)
+    {
+        $this->enableStatsEmailer(true);
+        if ($this->cfg['onFirstError']) {
+            $this->cfg['onFirstError']($error);
+        }
     }
 }

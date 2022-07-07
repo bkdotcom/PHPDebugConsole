@@ -68,7 +68,7 @@ class LogEnv implements SubscriberInterface
         $namesFound = array();
         $useCookies = \filter_var(\ini_get('session.use_cookies'), FILTER_VALIDATE_BOOLEAN);
         if ($useCookies) {
-            $cookies = $this->debug->request->getCookieParams();
+            $cookies = $this->debug->serverRequest->getCookieParams();
             $keys = \array_keys($cookies);
             $namesFound = \array_intersect($names, $keys);
         }
@@ -77,7 +77,7 @@ class LogEnv implements SubscriberInterface
         }
         $useOnlyCookies = \filter_var(\ini_get('session.use_only_cookies'), FILTER_VALIDATE_BOOLEAN);
         if ($useOnlyCookies === false) {
-            $queryParams = $this->debug->request->getQueryParams();
+            $queryParams = $this->debug->serverRequest->getQueryParams();
             $keys = \array_keys($queryParams);
             $namesFound = \array_intersect($names, $keys);
         }

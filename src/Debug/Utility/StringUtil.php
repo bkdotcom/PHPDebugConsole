@@ -68,7 +68,7 @@ class StringUtil
         } elseif (\in_array($operator, $operators, true) === false) {
             throw new InvalidArgumentException(__METHOD__ . ' - Invalid operator passed');
         }
-        if (\in_array($operator, array('===', '!==')) === false) {
+        if (\in_array($operator, array('===', '!=='), true) === false) {
             list($valA, $valB) = static::compareTypeJuggle($valA, $valB);
         }
         return static::doCompare($valA, $valB, $operator);

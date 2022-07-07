@@ -280,7 +280,7 @@ class GroupStack
     private function getCurrentGroupsPLE(LogEntry $logEntry, $index)
     {
         $method = $logEntry['method'];
-        if (\in_array($method, array('group', 'groupCollapsed'))) {
+        if (\in_array($method, array('group', 'groupCollapsed'), true)) {
             $this->currentInfo['curDepth']--;
         } elseif ($method === 'groupEnd') {
             $this->currentInfo['curDepth']++;

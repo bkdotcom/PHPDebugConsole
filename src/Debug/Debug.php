@@ -49,7 +49,7 @@ use bdk\ErrorHandler\Error;
  * @property Debug\Method\Table   $methodTable   lazy-loaded MethodTable instance
  * @property \bdk\Debug|null      $parentInstance parent "channel"
  * @property \Psr\Http\Message\ResponseInterface $response lazy-loaded ResponseInterface (set via writeToResponse)
- * @property HttpMessage\ServerRequest $request lazy-loaded ServerRequest
+ * @property HttpMessage\ServerRequest $serverRequest lazy-loaded ServerRequest
  * @property \bdk\Debug           $rootInstance  root "channel"
  * @property \bdk\Debug\Utility\StringUtil $stringUtil lazy-loaded string utilitys
  * @property Debug\Utility\StopWatch $stopWatch  lazy-loaded StopWatch instance
@@ -657,7 +657,6 @@ class Debug extends AbstractDebug
      *                          'auto' : !$log
      *
      * @return $this|float|false The duration (in sec).
-     *
      * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter
      * @psalm-return ($return is true ? float|false : $this)
      */
@@ -687,7 +686,6 @@ class Debug extends AbstractDebug
      *                          'auto' : !$log
      *
      * @return $this|float|false The duration (in sec).  `false` if specified label does not exist
-     *
      * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter
      * @psalm-return ($return is true ? float|false : $this)
      */

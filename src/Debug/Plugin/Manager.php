@@ -151,10 +151,10 @@ class Manager implements SubscriberInterface
     private function assertPlugin($plugin)
     {
         if ($plugin instanceof AssetProviderInterface) {
-            return true;
+            return;
         }
         if ($plugin instanceof SubscriberInterface) {
-            return true;
+            return;
         }
         $backtrace = \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
         $type = \is_object($plugin)

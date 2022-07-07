@@ -279,7 +279,7 @@ class Wamp implements RouteInterface
         ), $logEntry['meta']);
         if ($logEntry->getSubject() !== $this->debug) {
             $meta['channel'] = $logEntry->getChannelName();
-            if (!\in_array($meta['channel'], $this->channelNames)) {
+            if (\in_array($meta['channel'], $this->channelNames, true) === false) {
                 $meta['channelIcon'] = $logEntry->getSubject()->getCfg('channelIcon', Debug::CONFIG_DEBUG);
                 $meta['channelShow'] = $logEntry->getSubject()->getCfg('channelShow', Debug::CONFIG_DEBUG);
                 $meta['channelSort'] = $logEntry->getSubject()->getCfg('channelSort', Debug::CONFIG_DEBUG);
@@ -359,9 +359,9 @@ class Wamp implements RouteInterface
             'HTTP_HOST' => null,
             'HTTPS' => null,
             'REMOTE_ADDR' => null,
-            'REQUEST_METHOD' => $this->debug->request->getMethod(),
+            'REQUEST_METHOD' => $this->debug->serverRequest->getMethod(),
             'REQUEST_TIME' => null,
-            'REQUEST_URI' => $this->debug->request->getRequestTarget(),
+            'REQUEST_URI' => $this->debug->serverRequest->getRequestTarget(),
             'SERVER_ADDR' => null,
             'SERVER_NAME' => null,
         );
@@ -369,7 +369,7 @@ class Wamp implements RouteInterface
             array(
                 'argv' => array(),
             ),
-            $this->debug->request->getServerParams(),
+            $this->debug->serverRequest->getServerParams(),
             $metaVals
         );
         foreach (\array_keys($metaVals) as $k) {

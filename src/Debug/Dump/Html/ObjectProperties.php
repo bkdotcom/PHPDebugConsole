@@ -97,7 +97,7 @@ class ObjectProperties
     protected function dumpProperty($name, $info, $opts)
     {
         $vis = (array) $info['visibility'];
-        $info['isPrivateAncestor'] = \in_array('private', $vis) && $info['inheritedFrom'];
+        $info['isPrivateAncestor'] = \in_array('private', $vis, true) && $info['inheritedFrom'];
         return $this->html->buildTag(
             'dd',
             array(

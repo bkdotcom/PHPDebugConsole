@@ -115,7 +115,7 @@ class Logger extends AbstractLogger
      */
     protected function assertValidLevel($level)
     {
-        if (!\in_array($level, $this->validLevels())) {
+        if (\in_array($level, $this->validLevels(), true) === false) {
             throw new InvalidArgumentException(\sprintf(
                 '"%s" is not a valid level',
                 $level
@@ -134,7 +134,7 @@ class Logger extends AbstractLogger
     private function checkTableContext(LogEntry $logEntry, $context)
     {
         if (
-            \in_array($logEntry['method'], array('info','log'))
+            \in_array($logEntry['method'], array('info','log'), true)
             && isset($context['table'])
             && \is_array($context['table'])
         ) {
@@ -178,7 +178,7 @@ class Logger extends AbstractLogger
             LogLevel::CRITICAL,
             LogLevel::ERROR,
         );
-        if (!\in_array($level, $fatalLevels)) {
+        if (\in_array($level, $fatalLevels, true) === false) {
             return false;
         }
         $exception = $context['exception'];

@@ -115,7 +115,7 @@ class ChromeLogger extends AbstractRoute
         $meta = $logEntry['meta'];
         if ($method === 'assert') {
             \array_unshift($args, false);
-        } elseif (!\in_array($method, $this->consoleMethods)) {
+        } elseif (\in_array($method, $this->consoleMethods, true) === false) {
             $method = 'log';
         }
         $this->jsonData['rows'][] = array(
@@ -159,7 +159,7 @@ class ChromeLogger extends AbstractRoute
         $this->processAlerts();
         $this->processSummary();
         $this->processLog();
-        $request = $this->debug->request;
+        $request = $this->debug->serverRequest;
         $serverParams = $request->getServerParams();
         $info = array('PHP', isset($serverParams['REQUEST_METHOD'])
             ? $serverParams['REQUEST_METHOD'] . ' ' . $this->debug->redact((string) $request->getUri())
@@ -236,7 +236,7 @@ class ChromeLogger extends AbstractRoute
         */
         $logBack = array();
         foreach ($this->data['log'] as $i => $logEntry) {
-            if (!\in_array($logEntry['method'], array('assert','error','warn'))) {
+            if (\in_array($logEntry['method'], array('assert','error','warn'), true) === false) {
                 unset($this->data['log'][$i]);
                 $logBack[$i] = $logEntry;
             }
@@ -311,7 +311,7 @@ class ChromeLogger extends AbstractRoute
                 $depth++;
             // @phpcs:disable SlevomatCodingStandard.Namespaces.FullyQualifiedGlobalFunctions.NonFullyQualified
             // https://bugs.xdebug.org/view.php?id=2095
-            } elseif (in_array($method, array('group', 'groupCollapsed'))) {
+            } elseif (in_array($method, array('group', 'groupCollapsed'), true)) {
                 $depth--;
             } elseif ($groupOnly) {
                 continue;

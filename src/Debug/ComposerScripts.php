@@ -116,7 +116,6 @@ class ComposerScripts
         /*
             convert relative paths to absolute
         */
-        $matches = array();
         $regex = '#(<config name="installed_paths" value=")([^"]+)#';
         $xml = \preg_replace_callback($regex, function ($matches) {
             $baseDir = \realpath(__DIR__ . '/../..') . '/';

@@ -118,7 +118,7 @@ class AbstractString extends AbstractComponent
             'value' => $maxLen > -1
                 ? \substr($string, 0, $maxLen)
                 : $string,
-            'valueDecoded' => $this->abstracter->crate(\base64_decode($string)),
+            'valueDecoded' => $this->abstracter->crate(\base64_decode($string, true)),
         );
         return new Abstraction(Abstracter::TYPE_STRING, $absValues);
     }
@@ -175,7 +175,7 @@ class AbstractString extends AbstractComponent
         if (!\is_array($classes)) {
             $classes = \explode(' ', $classes);
         }
-        if (!\in_array('language-json', $classes)) {
+        if (\in_array('language-json', $classes, true) === false) {
             $abstraction = $this->debug->prettify($string, 'application/json');
             $absValues = $abstraction->getValues();
         }

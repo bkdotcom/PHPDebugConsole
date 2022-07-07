@@ -13,7 +13,7 @@ namespace bdk\ErrorHandler\Plugin;
 use bdk\ErrorHandler\Error;
 
 /**
- *
+ * Interface for storing and retrieving error statistics
  */
 interface StatsStoreInterface
 {

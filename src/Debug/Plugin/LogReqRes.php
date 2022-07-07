@@ -83,9 +83,9 @@ class LogReqRes implements SubscriberInterface
         $this->debug->alert(
             '%c%s%c %s',
             'font-weight:bold;',
-            $this->debug->request->getMethod(),
+            $this->debug->serverRequest->getMethod(),
             '',
-            $this->debug->request->getRequestTarget(),
+            $this->debug->serverRequest->getRequestTarget(),
             $this->debug->meta('level', 'info')
         );
         $this->logRequestHeaders();
@@ -135,7 +135,7 @@ class LogReqRes implements SubscriberInterface
     private function getRequestBodyContents()
     {
         try {
-            $stream = $this->debug->request->getBody();
+            $stream = $this->debug->serverRequest->getBody();
             $pos = $stream->tell();
             $body = (string) $stream; // __toString() is like getContents(), but without throwing exceptions
             $stream->seek($pos);
@@ -157,7 +157,7 @@ class LogReqRes implements SubscriberInterface
         if (!$this->debug->getCfg('logRequestInfo.files', Debug::CONFIG_DEBUG)) {
             return;
         }
-        $files = $this->debug->request->getUploadedFiles();
+        $files = $this->debug->serverRequest->getUploadedFiles();
         if (!$files) {
             return;
         }
@@ -183,12 +183,12 @@ class LogReqRes implements SubscriberInterface
         if (!$this->debug->getCfg('logRequestInfo.post', Debug::CONFIG_DEBUG)) {
             return;
         }
-        $request = $this->debug->request;
+        $request = $this->debug->serverRequest;
         $method = $request->getMethod();
 
         // don't expect a request body for these methods
         $noBodyMethods = array('CONNECT','GET','HEAD','OPTIONS','TRACE');
-        $expectBody = !\in_array($request->getMethod(), $noBodyMethods);
+        $expectBody = \in_array($request->getMethod(), $noBodyMethods, true) === false;
         if ($expectBody === false) {
             return;
         }
@@ -213,7 +213,7 @@ class LogReqRes implements SubscriberInterface
     {
         $havePostVals = false;
         $isCorrectContentType = $this->testPostContentType($contentType);
-        $post = $this->debug->request->getParsedBody();
+        $post = $this->debug->serverRequest->getParsedBody();
         if (!$isCorrectContentType) {
             $this->debug->warn(
                 'It appears ' . $contentType . ' was posted with the wrong Content-Type' . "\n"
@@ -249,7 +249,7 @@ class LogReqRes implements SubscriberInterface
                 $this->debug->prettify($input, $contentType),
                 $this->debug->meta('redact')
             );
-        } elseif (!$this->debug->request->getUploadedFiles()) {
+        } elseif (!$this->debug->serverRequest->getUploadedFiles()) {
             $this->debug->warn(
                 $method . ' request with no body',
                 $this->debug->meta(array(
@@ -280,7 +280,7 @@ class LogReqRes implements SubscriberInterface
                 ));
             }
             return $val;
-        }, $this->debug->request->getCookieParams());
+        }, $this->debug->serverRequest->getCookieParams());
         \ksort($cookieVals, SORT_NATURAL);
         if ($cookieVals) {
             $this->debug->table('$_COOKIE', $cookieVals, $this->debug->meta('redact'));
@@ -307,9 +307,9 @@ class LogReqRes implements SubscriberInterface
                 ));
             }
             return $val;
-        }, $this->debug->request->getHeaders());
+        }, $this->debug->serverRequest->getHeaders());
         if (isset($headers['Authorization']) && \strpos($headers['Authorization'], 'Basic') === 0) {
-            $auth = \base64_decode(\str_replace('Basic ', '', $headers['Authorization']));
+            $auth = \base64_decode(\str_replace('Basic ', '', $headers['Authorization']), true);
             $userpass = \explode(':', $auth);
             $headers['Authorization'] = 'Basic █████████ (base64\'d ' . $userpass[0] . ':█████)';
         }
@@ -408,12 +408,12 @@ class LogReqRes implements SubscriberInterface
      */
     private function testPostContentType(&$contentType)
     {
-        $contentTypeRaw = $this->debug->request->getHeaderLine('Content-Type');
+        $contentTypeRaw = $this->debug->serverRequest->getHeaderLine('Content-Type');
         if ($contentTypeRaw) {
             // remove charset/encoding if pressent
             $contentType = \preg_replace('/\s*[;,].*$/', '', $contentTypeRaw);
         }
-        if (!$this->debug->request->getParsedBody()) {
+        if (!$this->debug->serverRequest->getParsedBody()) {
             // nothing in $_POST means it can't be wrong
             return true;
         }

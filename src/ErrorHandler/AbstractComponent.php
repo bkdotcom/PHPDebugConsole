@@ -37,7 +37,7 @@ class AbstractComponent
         if (\method_exists($this, $getter)) {
             return $this->{$getter}();
         }
-        if (\in_array($prop, $this->readOnly)) {
+        if (\in_array($prop, $this->readOnly, true)) {
             return $this->{$prop};
         }
         return null;
@@ -52,7 +52,7 @@ class AbstractComponent
      */
     public function __isset($prop)
     {
-        return \in_array($prop, $this->readOnly) && isset($this->{$prop});
+        return \in_array($prop, $this->readOnly, true) && isset($this->{$prop});
     }
 
     /**

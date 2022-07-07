@@ -139,12 +139,12 @@ class LogRoute extends CLogRoute
         $backtrace = \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 13);
         foreach ($backtrace as $i => $frame) {
             $method = $frame['class'] . '::' . $frame['function'];
-            if (!\in_array($method, array('CLogger::log', 'YiiBase::log'))) {
+            if (\in_array($method, array('CLogger::log', 'YiiBase::log'), true) === false) {
                 continue;
             }
             $callerInfo = $frame;
             // check if log called by some other wrapper method
-            if (\in_array($backtrace[$i + 1]['function'], array('log','error','warn','warning'))) {
+            if (\in_array($backtrace[$i + 1]['function'], array('log','error','warn','warning'), true)) {
                 $callerInfo = $backtrace[$i + 1];
             }
             break;
@@ -236,7 +236,7 @@ class LogRoute extends CLogRoute
      */
     private function messageMetaCaller(array $logEntry)
     {
-        if (!\in_array($logEntry['level'], array(CLogger::LEVEL_ERROR, CLogger::LEVEL_WARNING))) {
+        if (\in_array($logEntry['level'], array(CLogger::LEVEL_ERROR, CLogger::LEVEL_WARNING), true) === false) {
             return $logEntry;
         }
         if (\array_intersect_key($logEntry['meta'], \array_flip(array('file','line')))) {

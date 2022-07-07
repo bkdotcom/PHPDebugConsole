@@ -216,7 +216,7 @@ class Table
                     ? $columnNames[$key]
                     : $key
             );
-            if (\in_array($key, $this->meta['totalCols'])) {
+            if (\in_array($key, $this->meta['totalCols'], true)) {
                 $colInfo['total'] = null;
             }
             $columns[$key] = $colInfo;

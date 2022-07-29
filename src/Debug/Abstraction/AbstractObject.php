@@ -219,7 +219,7 @@ class AbstractObject extends AbstractComponent
             array(
                 'cfgFlags' => $cfgFlags,
             ),
-            $values,
+            $values
         );
     }
 

@@ -64,7 +64,7 @@ class PhpDoc extends PhpDocBase
      *
      * @return string[]
      */
-    protected static function extractTypeFromBody(string $body)
+    protected static function extractTypeFromBody($body)
     {
         $type = '';
         $nestingLevel = 0;

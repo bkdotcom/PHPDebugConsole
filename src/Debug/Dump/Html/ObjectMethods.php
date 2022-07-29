@@ -54,19 +54,19 @@ class ObjectMethods
      */
     public function dump(Abstraction $abs)
     {
-        if (!($abs['cfgFlags'] & AbstractObject::OUTPUT_METHODS)) {
+        if (!($abs['cfgFlags'] & AbstractObject::METHOD_OUTPUT)) {
             // we're not outputting methods
             return '';
         }
         $str = $this->dumpMethodsLabel($abs);
-        if (!($abs['cfgFlags'] & AbstractObject::COLLECT_METHODS)) {
+        if (!($abs['cfgFlags'] & AbstractObject::METHOD_COLLECT)) {
             return $str;
         }
         $this->opts = array(
-            'outAttributesMethod' => $abs['cfgFlags'] & AbstractObject::OUTPUT_ATTRIBUTES_METHOD,
-            'outAttributesParam' => $abs['cfgFlags'] & AbstractObject::OUTPUT_ATTRIBUTES_PARAM,
-            'outMethodDesc' => $abs['cfgFlags'] & AbstractObject::OUTPUT_METHOD_DESC,
-            'outPhpDoc' => $abs['cfgFlags'] & AbstractObject::OUTPUT_PHPDOC,
+            'methodAttributeOutput' => $abs['cfgFlags'] & AbstractObject::METHOD_ATTRIBUTE_OUTPUT,
+            'methodDescOutput' => $abs['cfgFlags'] & AbstractObject::METHOD_DESC_OUTPUT,
+            'paramAttributeOutput' => $abs['cfgFlags'] & AbstractObject::PARAM_ATTRIBUTE_OUTPUT,
+            'phpDocOutput' => $abs['cfgFlags'] & AbstractObject::PHPDOC_OUTPUT,
         );
         $methods = $abs['methods'];
         $magicMethods = \array_intersect(array('__call','__callStatic'), \array_keys($methods));
@@ -94,8 +94,8 @@ class ObjectMethods
         $label = \count($abs['methods']) > 0
             ? 'methods'
             : 'no methods';
-        if (!($abs['cfgFlags'] & AbstractObject::COLLECT_METHODS)) {
-            $label = 'methods not collected';
+        if (!($abs['cfgFlags'] & AbstractObject::METHOD_COLLECT)) {
+            $label = 'methods <i>not collected</i>';
         }
         return '<dt class="methods">' . $label . '</dt>' . "\n";
     }
@@ -114,11 +114,11 @@ class ObjectMethods
             'dd',
             $this->methodAttribs($info),
             $this->dumpModifiers($info) . ' '
-                . $this->dumpReturnType($info) . ' '
                 . $this->dumpName($methodName, $info)
                 . $this->dumpParams($info['params'])
+                . $this->dumpReturnType($info)
                 . ($methodName === '__toString'
-                    ? '<br />' . $this->valDumper->dump($info['returnValue'])
+                    ? '<br />' . "\n" . $this->valDumper->dump($info['returnValue'])
                     : '')
         ) . "\n";
     }
@@ -157,9 +157,9 @@ class ObjectMethods
             'span',
             array(
                 'class' => 't_identifier',
-                'title' => $this->opts['outPhpDoc']
+                'title' => $this->opts['phpDocOutput']
                     ? \trim($info['phpDoc']['summary']
-                        . ($this->opts['outMethodDesc']
+                        . ($this->opts['methodDescOutput']
                             ? "\n\n" . $info['phpDoc']['desc']
                             : ''))
                     : '',
@@ -199,7 +199,7 @@ class ObjectMethods
                 'isPromoted' => $info['isPromoted'],
                 'parameter' => true,
             ),
-            'data-attributes' => $this->opts['outAttributesParam']
+            'data-attributes' => $this->opts['paramAttributeOutput']
                 ? ($info['attributes'] ?: null)
                 : null,
         )) . '>';
@@ -210,7 +210,7 @@ class ObjectMethods
             'span',
             array(
                 'class' => 't_parameter-name',
-                'title' => $this->opts['outPhpDoc']
+                'title' => $this->opts['phpDocOutput']
                     ? $info['desc']
                     : '',
             ),
@@ -252,9 +252,12 @@ class ObjectMethods
      */
     protected function dumpReturnType($info)
     {
-        return ''
+        if ($info['return']['type'] === null) {
+            return '';
+        }
+        return '<span class="t_punct t_colon">:</span> '
             . $this->helper->markupType($info['return']['type'], array(
-                'title' => $this->opts['outPhpDoc']
+                'title' => $this->opts['phpDocOutput']
                     ? $info['return']['desc']
                     : '',
             ));
@@ -278,7 +281,7 @@ class ObjectMethods
                 'isStatic' => $info['isStatic'],
                 'method' => true,
             ),
-            'data-attributes' => $this->opts['outAttributesMethod']
+            'data-attributes' => $this->opts['methodAttributeOutput']
                 ? ($info['attributes'] ?: null)
                 : null,
             'data-deprecated-desc' => isset($info['phpDoc']['deprecated'])

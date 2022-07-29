@@ -140,6 +140,7 @@ EOD;
                         'attribs' => array(
                             'class' => array('highlight', 'language-sql'),
                         ),
+                        'brief' => false,
                         'contentType' => 'application/sql',
                         'debug' => Abstracter::ABSTRACTION,
                         'prettified' => true,

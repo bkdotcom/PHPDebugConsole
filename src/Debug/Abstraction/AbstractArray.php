@@ -20,7 +20,7 @@ use bdk\Debug\Abstraction\Abstraction;
  */
 class AbstractArray
 {
-	protected $abstracter;
+    protected $abstracter;
 
     /**
      * Constructor

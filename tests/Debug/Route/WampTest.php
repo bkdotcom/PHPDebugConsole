@@ -107,6 +107,7 @@ class WampTest extends DebugTestFramework
                             'value' => array('_b64_:AGZvbw==' => 'bar'),
                         ),
                         array(
+                            'brief' => false,
                             'debug' => Abstracter::ABSTRACTION,
                             'strlen' => 16,
                             'strlenValue' => 16,
@@ -117,6 +118,7 @@ class WampTest extends DebugTestFramework
                         array(
                             'addQuotes' => false,
                             'attribs' => array('class' => array('highlight','language-json')),
+                            'brief' => false,
                             'contentType' => 'application/json',
                             'debug' => Abstracter::ABSTRACTION,
                             'prettified' => true,

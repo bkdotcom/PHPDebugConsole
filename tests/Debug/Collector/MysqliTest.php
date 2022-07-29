@@ -148,6 +148,7 @@ EOD;
                                 "language-sql"
                             ]
                         },
+                        "brief": false,
                         "contentType": "application\/sql",
                         "debug": "\u0000debug\u0000",
                         "prettified": true,
@@ -249,7 +250,7 @@ EOD;
             {
                 "method": "log",
                 "args": [
-                    {"addQuotes": false, "attribs": {"class": ["highlight", "language-sql"] }, "contentType": "application\/sql", "debug": "\u0000debug\u0000", "prettified": true, "prettifiedTag": false, "strlen": null, "type": "string", "typeMore": null, "value": "INSERT INTO `bob` (`t`, `e`, `ct`) \nVALUES \n  (?, ?, ?)", "visualWhiteSpace": false }
+                    {"addQuotes": false, "attribs": {"class": ["highlight", "language-sql"] }, "brief": false, "contentType": "application\/sql", "debug": "\u0000debug\u0000", "prettified": true, "prettifiedTag": false, "strlen": null, "type": "string", "typeMore": null, "value": "INSERT INTO `bob` (`t`, `e`, `ct`) \nVALUES \n  (?, ?, ?)", "visualWhiteSpace": false }
                 ],
                 "meta": {"attribs": {"class": ["no-indent"] }, "channel": "general.MySqli"}
             },
@@ -593,6 +594,7 @@ EOD;
                             "attribs": {
                                 "class": ["highlight", "language-sql"]
                             },
+                            "brief": false,
                             "contentType": "application\/sql",
                             "debug": "\u0000debug\u0000",
                             "prettified": true,
@@ -683,6 +685,7 @@ EOD;
                         "attribs": {
                             "class": ["highlight", "language-sql"]
                         },
+                        "brief": false,
                         "contentType": "application/sql",
                         "debug": "\u0000debug\u0000",
                         "prettified": true,

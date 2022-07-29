@@ -54,8 +54,8 @@ class ObjectProperties
     public function dump(Abstraction $abs)
     {
         $opts = array(
-            'outAttributes' => $abs['cfgFlags'] & AbstractObject::OUTPUT_ATTRIBUTES_PROP,
-            'outPhpDoc' => $abs['cfgFlags'] & AbstractObject::OUTPUT_PHPDOC,
+            'attributeOutput' => $abs['cfgFlags'] & AbstractObject::PROP_ATTRIBUTE_OUTPUT,
+            'phpDocOutput' => $abs['cfgFlags'] & AbstractObject::PHPDOC_OUTPUT,
         );
         $magicMethods = \array_intersect(array('__get','__set'), \array_keys($abs['methods']));
         $str = $this->dumpPropertiesLabel($abs);
@@ -90,7 +90,7 @@ class ObjectProperties
      *
      * @param string $name property name
      * @param array  $info property info
-     * @param array  $opts options (currently just outputAttributes)
+     * @param array  $opts options (currently just attributeOutput)
      *
      * @return string html fragment
      */
@@ -102,7 +102,7 @@ class ObjectProperties
             'dd',
             array(
                 'class' => $this->propertyClasses($info),
-                'data-attributes' => $opts['outAttributes']
+                'data-attributes' => $opts['attributeOutput']
                     ? ($info['attributes'] ?: null)
                     : null,
                 'data-inherited-from' => $info['inheritedFrom'],
@@ -116,7 +116,7 @@ class ObjectProperties
      *
      * @param string $name property name
      * @param array  $info property info
-     * @param array  $opts options (currently just outputAttributes)
+     * @param array  $opts options (currently just attributeOutput)
      *
      * @return string html fragment
      */
@@ -133,7 +133,7 @@ class ObjectProperties
                 : '') . ' '
             . $this->html->buildTag('span', array(
                 'class' => 't_identifier',
-                'title' => $opts['outPhpDoc']
+                'title' => $opts['phpDocOutput']
                     ? $info['desc']
                     : '',
             ), $name)

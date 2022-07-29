@@ -16,6 +16,7 @@ use bdk\Test\Debug\DebugTestFramework;
  * @covers \bdk\Debug\AbstractComponent
  * @covers \bdk\Debug\LogEntry
  * @covers \bdk\Debug\Dump\Base
+ * @covers \bdk\Debug\Dump\BaseValue
  * @covers \bdk\Debug\Dump\Html
  * @covers \bdk\Debug\Dump\Html\Helper
  * @covers \bdk\Debug\Dump\Text
@@ -219,11 +220,11 @@ class MethodTest extends DebugTestFramework
 
     public function testMethodSetsCfg()
     {
-        $this->debug->log(new \bdk\Test\Debug\Fixture\Test(), $this->debug->meta('cfg', 'collectMethods', false));
-        $collectMethods = $this->debug->data->get('log/__end__/args/0/cfgFlags') & \bdk\Debug\Abstraction\AbstractObject::COLLECT_METHODS;
-        $this->assertSame(0, $collectMethods);
+        $this->debug->log(new \bdk\Test\Debug\Fixture\Test(), $this->debug->meta('cfg', 'methodCollect', false));
+        $methodCollect = $this->debug->data->get('log/__end__/args/0/cfgFlags') & \bdk\Debug\Abstraction\AbstractObject::METHOD_COLLECT;
+        $this->assertSame(0, $methodCollect);
         $this->assertCount(2, $this->debug->data->get('log/__end__/args/0/methods'));
-        $this->assertTrue($this->debug->getCfg('collectMethods'));
+        $this->assertTrue($this->debug->getCfg('methodCollect'));
     }
 
     public function testMethodDefaultArgNotOptional()

@@ -60,30 +60,36 @@ class ConfigTest extends DebugTestFramework
             'routeStream',
         );
         $abstracterKeys = array(
-            'cacheMethods',
-            'collectAttributesConst',
-            'collectAttributesMethod',
-            'collectAttributesObj',
-            'collectAttributesParam',
-            'collectAttributesProp',
-            'collectConstants',
-            'collectMethods',
-            'collectPhpDoc',
+            'brief',
+            'caseAttributeCollect',
+            'caseAttributeOutput',
+            'caseCollect',
+            'caseOutput',
+            'constAttributeCollect',
+            'constAttributeOutput',
+            'constCollect',
+            'constOutput',
             'fullyQualifyPhpDocType',
+            'methodAttributeCollect',
+            'methodAttributeOutput',
+            'methodCache',
+            'methodCollect',
+            'methodDescOutput',
+            'methodOutput',
+            'objAttributeCollect',
+            'objAttributeOutput',
             'objectsExclude',
             'objectSort',
             'objectsWhitelist',
-            'outputAttributesConst',
-            'outputAttributesMethod',
-            'outputAttributesObj',
-            'outputAttributesParam',
-            'outputAttributesProp',
-            'outputConstants',
-            'outputMethodDesc',
-            'outputMethods',
-            'outputPhpDoc',
+            'paramAttributeCollect',
+            'paramAttributeOutput',
+            'phpDocCollect',
+            'phpDocOutput',
+            'propAttributeCollect',
+            'propAttributeOutput',
             'stringMaxLen',
             'stringMinLen',
+            'toStringOutput',
             'useDebugInfo',
         );
         $debugKeys = array(
@@ -138,8 +144,15 @@ class ConfigTest extends DebugTestFramework
         $keysActual = \array_keys($this->debug->getCfg('debug'));
         \sort($keysActual);
         $this->assertSame($debugKeys, $keysActual);
-        $this->assertSame($abstracterKeys, \array_keys($this->debug->getCfg('abstracter')));
-        $this->assertSame($abstracterKeys, \array_keys($this->debug->getCfg('abstracter/*')));
+
+        $keysActual = \array_keys($this->debug->getCfg('abstracter'));
+        \sort($keysActual, SORT_STRING | SORT_FLAG_CASE);
+        $this->assertSame($abstracterKeys, $keysActual);
+
+        $keysActual = \array_keys($this->debug->getCfg('abstracter/*'));
+        \sort($keysActual, SORT_STRING | SORT_FLAG_CASE);
+        $this->assertSame($abstracterKeys, $keysActual);
+
         $this->assertIsBool($this->debug->getCfg('output'));       // debug/output
 
         $this->assertSame($configKeys, \array_keys($this->debug->getCfg()));
@@ -361,11 +374,11 @@ class ConfigTest extends DebugTestFramework
             'logResponse' => false,
         ));
 
-        $this->assertTrue($debug->getCfg('collectMethods'));
-        $debug->setCfg('collectMethods', false);
-        $this->assertFalse($debug->getCfg('collectMethods'));
+        $this->assertTrue($debug->getCfg('methodCollect'));
+        $debug->setCfg('methodCollect', false);
+        $this->assertFalse($debug->getCfg('methodCollect'));
         $debug->abstracter;
-        $this->assertFalse($debug->abstracter->getCfg('collectMethods'));
+        $this->assertFalse($debug->abstracter->getCfg('methodCollect'));
 
         // routeHtml should not yet be loaded
         $this->assertFalse($debug->getRoute('html', true));

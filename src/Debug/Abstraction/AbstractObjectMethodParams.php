@@ -89,7 +89,7 @@ class AbstractObjectMethodParams
             : 0;
         for ($i = \count($params); $i < $phpDocCount; $i++) {
             $phpDocParam = $phpDoc['param'][$i];
-            $name = '$' . $phpDocParam['name'];
+            $name = '$' . \ltrim($phpDocParam['name'], '$');
             if (\substr($name, -4) === ',...') {
                 $name = '...' . \substr($name, 0, -4);
             }
@@ -136,7 +136,7 @@ class AbstractObjectMethodParams
     private function getParamsReflection(ReflectionMethod $refMethod, $phpDoc)
     {
         $params = array();
-        $collectAttributes = $this->abs['cfgFlags'] & AbstractObject::COLLECT_ATTRIBUTES_PARAM;
+        $collectAttribute = $this->abs['cfgFlags'] & AbstractObject::PARAM_ATTRIBUTE_COLLECT;
         \set_error_handler(function () {
             // suppressing "Use of undefined constant STDERR" type notice
             // encountered on
@@ -150,7 +150,7 @@ class AbstractObjectMethodParams
                 'type' => null,
             ), isset($phpDoc['param'][$i]) ? $phpDoc['param'][$i] : array());
             $params[] = $this->buildParamValues(array(
-                'attributes' => $collectAttributes
+                'attributes' => $collectAttribute
                     ? $this->helper->getAttributes($refParameter)
                     : array(),
                 'defaultValue' => $this->getParamDefaultVal($refParameter),

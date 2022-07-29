@@ -22,16 +22,6 @@ class Helper
 {
     protected $debug;
     protected $dumper;
-    protected $types = array(
-        // scalar
-        Abstracter::TYPE_BOOL, Abstracter::TYPE_FLOAT, Abstracter::TYPE_INT, Abstracter::TYPE_STRING,
-        // compound
-        Abstracter::TYPE_ARRAY, Abstracter::TYPE_CALLABLE, Abstracter::TYPE_OBJECT, 'iterable',
-        // "special"
-        Abstracter::TYPE_NULL, Abstracter::TYPE_RESOURCE,
-        // other
-        '$this', 'false', 'mixed', 'static', 'self', 'true', 'void',
-    );
 
     /**
      * Constructor
@@ -106,16 +96,17 @@ class Helper
      */
     public function markupType($type, $attribs = array())
     {
-        $types = \preg_split('/\s*\|\s*/', (string) $type);
-        foreach ($types as $i => $type) {
-            $types[$i] = $this->markupTypePart($type);
-        }
-        $types = \implode('<span class="t_punct">|</span>', $types);
+        $regex = '/(?:(\$this|[-\w\[\]\'"\\\\]+:?)|([\(\)<>\{\},\|&]))/';
+        $type = \preg_replace_callback($regex, function ($matches) {
+            return $matches[1]
+                ? $this->markupTypePart($matches[1])
+                : '<span class="t_punct">' . $matches[2] . '</span>';
+        }, $type);
         $attribs = \array_filter($attribs);
         if ($attribs) {
-            $types = $this->debug->html->buildTag('span', $attribs, $types);
+            $type = $this->debug->html->buildTag('span', $attribs, $type);
         }
-        return $types;
+        return $type;
     }
 
     /**
@@ -215,7 +206,19 @@ class Helper
             $isArray = true;
             $type = \substr($type, 0, -2);
         }
-        if (\in_array($type, $this->types, true) === false) {
+        if (\is_numeric($type)) {
+            return '<span class="t_type">' . $type . '</span>';
+        }
+        if (\substr($type, -1) === ':') {
+            // array "shape" key
+            $type = \trim($type, ':\'"');
+            return '<span class="t_string">' . $type . '</span><span class="t_punct">:</span>';
+        }
+        if (\preg_match('/^[\'"]/', $type)) {
+            $type = \trim($type, '\'"');
+            return '<span class="t_string t_type">' . $type . '</span>';
+        }
+        if (\in_array($type, $this->debug->phpDoc->types, true) === false) {
             $type = $this->dumper->valDumper->markupIdentifier($type);
         }
         if ($isArray) {

@@ -22,6 +22,7 @@ use bdk\Debug\Abstraction\AbstractObjectProperties;
 use bdk\Debug\Data;
 use bdk\Debug\Utility\PhpDoc;
 use Error;
+use ReflectionEnum;
 use RuntimeException;
 
 /**
@@ -29,27 +30,77 @@ use RuntimeException;
  */
 class AbstractObject extends AbstractComponent
 {
-    const COLLECT_ATTRIBUTES_CONST = 128;
-    const COLLECT_ATTRIBUTES_METHOD = 2048;
-    const COLLECT_ATTRIBUTES_OBJ = 32;
-    const COLLECT_ATTRIBUTES_PARAM = 8192;
-    const COLLECT_ATTRIBUTES_PROP = 512;
-    const COLLECT_CONSTANTS = 1;
-    const COLLECT_METHODS = 2;
-    const COLLECT_PHPDOC = 32768;
-    const OUTPUT_ATTRIBUTES_CONST = 256;
-    const OUTPUT_ATTRIBUTES_METHOD = 4096;
-    const OUTPUT_ATTRIBUTES_OBJ = 64;
-    const OUTPUT_ATTRIBUTES_PARAM = 16384;
-    const OUTPUT_ATTRIBUTES_PROP = 1024;
-    const OUTPUT_CONSTANTS = 4;
-    const OUTPUT_METHOD_DESC = 16;
-    const OUTPUT_METHODS = 8;
-    const OUTPUT_PHPDOC = 65536;
+    // GENERAL
+    const PHPDOC_COLLECT = 1; // 2^0
+    const PHPDOC_OUTPUT = 2;  // 2^1
+    const OBJ_ATTRIBUTE_COLLECT = 4;
+    const OBJ_ATTRIBUTE_OUTPUT = 8;
+    const TO_STRING_OUTPUT = 16; // 2^4
+    const BRIEF = 4194304; // 2^22
+
+    // CONSTANTS
+    const CONST_COLLECT = 32;
+    const CONST_OUTPUT = 64;
+    const CONST_ATTRIBUTE_COLLECT = 128;
+    const CONST_ATTRIBUTE_OUTPUT = 256; // 2^8
+
+    // CASE
+    const CASE_COLLECT = 512;
+    const CASE_OUTPUT = 1024;
+    const CASE_ATTRIBUTE_COLLECT = 2048;
+    const CASE_ATTRIBUTE_OUTPUT = 4096; // 2^12
+
+    // PROPERTIES
+    const PROP_ATTRIBUTE_COLLECT = 8192;
+    const PROP_ATTRIBUTE_OUTPUT = 16384; // 2^14
+
+    // METHODS
+    const METHOD_COLLECT = 32768;
+    const METHOD_OUTPUT = 65536;
+    const METHOD_ATTRIBUTE_COLLECT = 131072;
+    const METHOD_ATTRIBUTE_OUTPUT = 262144;
+    const METHOD_DESC_OUTPUT = 524288;
+    const PARAM_ATTRIBUTE_COLLECT = 1048576;
+    const PARAM_ATTRIBUTE_OUTPUT = 2097152; // 2^21
+
+    public static $cfgFlags = array(
+        // GENERAL
+        'phpDocCollect' => self::PHPDOC_COLLECT,
+        'phpDocOutput' => self::PHPDOC_OUTPUT,
+        'objAttributeCollect' => self::OBJ_ATTRIBUTE_COLLECT,
+        'objAttributeOutput' => self::OBJ_ATTRIBUTE_OUTPUT,
+        'toStringOutput' => self::TO_STRING_OUTPUT,
+        'brief' => self::BRIEF,
+
+        // CONSTANTS
+        'constCollect' => self::CONST_COLLECT,
+        'constOutput' => self::CONST_OUTPUT,
+        'constAttributeCollect' => self::CONST_ATTRIBUTE_COLLECT,
+        'constAttributeOutput' => self::CONST_ATTRIBUTE_OUTPUT,
+
+        // CASE
+        'caseCollect' => self::CASE_COLLECT,
+        'caseOutput' => self::CASE_OUTPUT,
+        'caseAttributeCollect' => self::CASE_ATTRIBUTE_COLLECT,
+        'caseAttributeOutput' => self::CASE_ATTRIBUTE_OUTPUT,
+
+        // PROPERTIES
+        'propAttributeCollect' => self::PROP_ATTRIBUTE_COLLECT,
+        'propAttributeOutput' => self::PROP_ATTRIBUTE_OUTPUT,
+
+        // METHODS
+        'methodCollect' => self::METHOD_COLLECT,
+        'methodOutput' => self::METHOD_OUTPUT,
+        'methodAttributeCollect' => self::METHOD_ATTRIBUTE_COLLECT,
+        'methodAttributeOutput' => self::METHOD_ATTRIBUTE_OUTPUT,
+        'methodDescOutput' => self::METHOD_DESC_OUTPUT,
+        'paramAttributeCollect' => self::PARAM_ATTRIBUTE_COLLECT,
+        'paramAttributeOutput' => self::PARAM_ATTRIBUTE_OUTPUT,
+    );
 
     public $helper;
 
-	protected $abstracter;
+    protected $abstracter;
     protected $debug;
     protected $constants;
     protected $methods;
@@ -60,7 +111,7 @@ class AbstractObject extends AbstractComponent
      *
      * @var array Array of key/values
      */
-    protected $values = array(
+    protected static $values = array(
         'type' => Abstracter::TYPE_OBJECT,
         'attributes' => array(),
         'cfgFlags' => 0,
@@ -78,7 +129,7 @@ class AbstractObject extends AbstractComponent
         'isExcluded' => false,  // don't exclude if we're debugging directly
         'isFinal' => false,
         'isRecursion' => false,
-        'methods' => array(),  // if !collectMethods, may still get ['__toString']['returnValue']
+        'methods' => array(),  // if !methodCollect, may still get ['__toString']['returnValue']
         'phpDoc' => array(
             'desc' => null,
             'summary' => null,
@@ -89,13 +140,6 @@ class AbstractObject extends AbstractComponent
         'stringified' => null,
         'traverseValues' => array(),  // populated if method is table
         'viaDebugInfo' => false,
-        // these are temporary values available during abstraction
-        'collectPropertyValues' => true,
-        'fullyQualifyPhpDocType' => false,
-        'hist' => array(),
-        'isTraverseOnly' => false,
-        'propertyOverrideValues' => array(),
-        'reflector' => null,
     );
 
     /**
@@ -132,13 +176,10 @@ class AbstractObject extends AbstractComponent
     public function getAbstraction($obj, $method = null, $hist = array())
     {
         $reflector = $this->debug->php->getReflector($obj);
-        $interfaceNames = $reflector->getInterfaceNames();
-        \sort($interfaceNames);
-        $abs = new Abstraction(Abstracter::TYPE_OBJECT, \array_merge($this->values, array(
+        $abs = new Abstraction(Abstracter::TYPE_OBJECT, \array_merge(self::$values, array(
             'cfgFlags' => $this->getCfgFlags(),
             'className' => $reflector->getName(),
             'debugMethod' => $method,
-            'implements' => $interfaceNames,
             'isAnonymous' => PHP_VERSION_ID >= 70000 && $reflector->isAnonymous(),
             'isExcluded' => $hist && $this->isExcluded($obj),    // don't exclude if we're debugging directly
             'isFinal' => $reflector->isFinal(),
@@ -146,14 +187,40 @@ class AbstractObject extends AbstractComponent
             'scopeClass' => $this->getScopeClass($hist),
             'viaDebugInfo' => $this->cfg['useDebugInfo'] && $reflector->hasMethod('__debugInfo'),
             // these are temporary values available during abstraction
+            'collectPropertyValues' => true,
             'fullyQualifyPhpDocType' => $this->cfg['fullyQualifyPhpDocType'],
             'hist' => $hist,
+            'isTraverseOnly' => false,
+            'propertyOverrideValues' => array(),
             'reflector' => $reflector,
         )));
+        $abs['hist'][] = $obj;
         $abs->setSubject($obj);
         $this->doAbstraction($abs);
         $this->absClean($abs);
         return $abs;
+    }
+
+    /**
+     * Get the default object abstraction values
+     *
+     * @param array $values values to apply
+     *
+     * @return array
+     */
+    public static function buildObjValues($values = array())
+    {
+        $cfgFlags = \array_reduce(self::$cfgFlags, function ($carry, $val) {
+            return $carry | $val;
+        }, 0);
+        $cfgFlags &= ~self::BRIEF;
+        return \array_merge(
+            self::$values,
+            array(
+                'cfgFlags' => $cfgFlags,
+            ),
+            $values,
+        );
     }
 
     /**
@@ -166,7 +233,7 @@ class AbstractObject extends AbstractComponent
     public function onStart(Abstraction $abs)
     {
         $obj = $abs->getSubject();
-        if ($obj instanceof \DateTime || $obj instanceof \DateTimeImmutable) {
+        if ($obj instanceof \DateTimeInterface) {
             $abs['isTraverseOnly'] = false;
             $abs['stringified'] = $obj->format(\DateTime::ISO8601);
         } elseif ($obj instanceof \mysqli) {
@@ -219,7 +286,7 @@ class AbstractObject extends AbstractComponent
             'reflector',
         );
         $values = \array_diff_key($abs->getValues(), \array_flip($keysTemp));
-        if (!($abs['cfgFlags'] & self::COLLECT_PHPDOC)) {
+        if (!($abs['cfgFlags'] & self::PHPDOC_COLLECT)) {
             $values['phpDoc']['desc'] = null;
             $values['phpDoc']['summary'] = null;
         }
@@ -234,22 +301,83 @@ class AbstractObject extends AbstractComponent
     }
 
     /**
+     * Add enum's case's @var desc (if exists) to phpDoc
+     *
+     * @param Abstraction $abs Abstraction instance
+     *
+     * @return void
+     */
+    private function addEnumCasePhpDoc($abs)
+    {
+        if (!($abs['cfgFlags'] & self::PHPDOC_COLLECT)) {
+            return;
+        }
+        $reflector = $abs['reflector'];
+        if (!($reflector instanceof ReflectionEnum)) {
+            return;
+        }
+        $name = $reflector->getProperty('name')->getValue($abs->getSubject());
+        $caseReflector = $reflector->getCase($name);
+        $desc = $this->helper->getPhpDocVar($caseReflector)['desc'];
+        if ($desc) {
+            $abs['phpDoc'] = \array_merge($abs['phpDoc'], array(
+                'desc' => \trim($abs['phpDoc']['summary'] . "\n" . $abs['phpDoc']['desc']),
+                'summary' => $desc,
+            ));
+        }
+    }
+
+    /**
+     * Populate definition, implements, & isTraverseOnly and Enum name
+     *
+     * Added before we check isExcluded
+     *
+     * @param Abstraction $abs Abstraction instance
+     *
+     * @return void
+     */
+    private function addMisc1(Abstraction $abs)
+    {
+        $reflector = $abs['reflector'];
+        $abs['definition'] = array(
+            // note that for a Closure object, this likely isn't the info we want...
+            //   will be populated with where the where the closure is defined
+            //   from AbstractObjectProperties::addClosure
+            'fileName' => $reflector->getFileName(),
+            'startLine' => $reflector->getStartLine(),
+            'extensionName' => $reflector->getExtensionName(),
+        );
+
+        $interfaceNames = $reflector->getInterfaceNames();
+        \sort($interfaceNames);
+        $abs['implements'] = $interfaceNames;
+
+        if ($abs['isRecursion'] && \in_array('UnitEnum', $abs['implements'], true)) {
+            $abs['properties']['name'] = array(
+                'value' => $abs->getSubject()->name,
+            );
+        }
+        $abs['isTraverseOnly'] = $this->isTraverseOnly($abs);
+    }
+
+    /**
      * Populate attributes, extends, phpDoc, & traverseValues
      *
      * @param Abstraction $abs Abstraction instance
      *
      * @return void
      */
-    private function addMisc(Abstraction $abs)
+    private function addMisc2(Abstraction $abs)
     {
         $reflector = $abs['reflector'];
         $abs['phpDoc'] = $this->helper->getPhpDoc($reflector);
+        $this->addEnumCasePhpDoc($abs);
         if ($abs['isTraverseOnly']) {
             \ksort($abs['phpDoc']);
             $this->addTraverseValues($abs);
             return;
         }
-        if ($abs['cfgFlags'] & self::COLLECT_ATTRIBUTES_OBJ) {
+        if ($abs['cfgFlags'] & self::OBJ_ATTRIBUTE_COLLECT) {
             $abs['attributes'] = $this->helper->getAttributes($reflector);
         }
         while ($reflector = $reflector->getParentClass()) {
@@ -289,16 +417,10 @@ class AbstractObject extends AbstractComponent
      */
     private function doAbstraction(Abstraction $abs)
     {
+        $this->addMisc1($abs);
         if ($abs['isRecursion']) {
             return;
         }
-        $reflector = $abs['reflector'];
-        $abs['definition'] = array(
-            'fileName' => $reflector->getFileName(),
-            'startLine' => $reflector->getStartLine(),
-            'extensionName' => $reflector->getExtensionName(),
-        );
-        $abs['isTraverseOnly'] = $this->isTraverseOnly($abs);
         /*
             Debug::EVENT_OBJ_ABSTRACT_START subscriber may
             set isExcluded
@@ -312,8 +434,9 @@ class AbstractObject extends AbstractComponent
         if ($abs['isExcluded']) {
             return;
         }
-        $this->addMisc($abs);
+        $this->addMisc2($abs);
         $this->constants->add($abs);
+        $this->constants->addCases($abs);
         $this->methods->add($abs);
         $this->properties->add($abs);
         /*
@@ -329,26 +452,7 @@ class AbstractObject extends AbstractComponent
      */
     private function getCfgFlags()
     {
-        $flags = array(
-            'collectAttributesConst' => self::COLLECT_ATTRIBUTES_CONST,
-            'collectAttributesMethod' => self::COLLECT_ATTRIBUTES_METHOD,
-            'collectAttributesObj' => self::COLLECT_ATTRIBUTES_OBJ,
-            'collectAttributesParam' => self::COLLECT_ATTRIBUTES_PARAM,
-            'collectAttributesProp' => self::COLLECT_ATTRIBUTES_PROP,
-            'collectConstants' => self::COLLECT_CONSTANTS,
-            'collectMethods' => self::COLLECT_METHODS,
-            'collectPhpDoc' => self::COLLECT_PHPDOC,
-            'outputAttributesConst' => self::OUTPUT_ATTRIBUTES_CONST,
-            'outputAttributesMethod' => self::OUTPUT_ATTRIBUTES_METHOD,
-            'outputAttributesObj' => self::OUTPUT_ATTRIBUTES_OBJ,
-            'outputAttributesParam' => self::OUTPUT_ATTRIBUTES_PARAM,
-            'outputAttributesProp' => self::OUTPUT_ATTRIBUTES_PROP,
-            'outputConstants' => self::OUTPUT_CONSTANTS,
-            'outputMethodDesc' => self::OUTPUT_METHOD_DESC,
-            'outputMethods' => self::OUTPUT_METHODS,
-            'outputPhpDoc' => self::OUTPUT_PHPDOC,
-        );
-        $flagVals = \array_intersect_key($flags, \array_filter($this->cfg));
+        $flagVals = \array_intersect_key(self::$cfgFlags, \array_filter($this->cfg));
         return \array_reduce($flagVals, function ($carry, $val) {
             return $carry | $val;
         }, 0);
@@ -448,9 +552,9 @@ class AbstractObject extends AbstractComponent
      */
     private function isTraverseOnly(Abstraction $abs)
     {
-        if ($abs['debugMethod'] === 'table' && \count($abs['hist']) < 2) {
-            $abs['cfgFlags'] &= ~self::COLLECT_CONSTANTS;  // set collect constants to "false"
-            $abs['cfgFlags'] &= ~self::COLLECT_METHODS;  // set collect methods to "false"
+        if ($abs['debugMethod'] === 'table' && \count($abs['hist']) < 4) {
+            $abs['cfgFlags'] &= ~self::CONST_COLLECT;  // set collect constants to "false"
+            $abs['cfgFlags'] &= ~self::METHOD_COLLECT;  // set collect methods to "false"
             return true;
         }
         return false;

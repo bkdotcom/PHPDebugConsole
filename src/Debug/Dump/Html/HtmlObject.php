@@ -31,21 +31,22 @@ class HtmlObject
     protected $methods;
     protected $properties;
 
-	/**
+    /**
      * Constructor
      *
      * @param ValDumper $valDumper Dump\Html instance
      * @param Helper    $helper    Html dump helpers
      * @param HtmlUtil  $html      Html methods
      */
-	public function __construct(ValDumper $valDumper, Helper $helper, HtmlUtil $html)
-	{
+    public function __construct(ValDumper $valDumper, Helper $helper, HtmlUtil $html)
+    {
         $this->valDumper = $valDumper;
         $this->helper = $helper;
-		$this->html = $html;
+        $this->html = $html;
+        $this->constants = new ObjectConstants($this, $helper, $html);
         $this->methods = new ObjectMethods($this, $helper, $html);
         $this->properties = new ObjectProperties($this, $helper, $html);
-	}
+    }
 
     /**
      * Dump object
@@ -54,17 +55,18 @@ class HtmlObject
      *
      * @return string html fragment
      */
-	public function dump(Abstraction $abs)
-	{
+    public function dump(Abstraction $abs)
+    {
         $classname = $this->dumpClassname($abs);
         if ($abs['isRecursion']) {
-            return $classname
-                . ' <span class="t_recursion">*RECURSION*</span>';
+            return $classname . "\n" . '<span class="t_recursion">*RECURSION*</span>';
         }
         if ($abs['isExcluded']) {
             return $this->dumpToString($abs)
-                . $classname . "\n"
-                . '<span class="excluded">NOT INSPECTED</span>';
+                . $classname . "\n" . '<span class="excluded">NOT INSPECTED</span>';
+        }
+        if (($abs['cfgFlags'] & AbstractObject::BRIEF) && \in_array('UnitEnum', $abs['implements'], true)) {
+            return $classname;
         }
         $html = $this->dumpToString($abs)
             . $classname . "\n"
@@ -73,7 +75,8 @@ class HtmlObject
                 . $this->dumpExtends($abs)
                 . $this->dumpImplements($abs)
                 . $this->dumpAttributes($abs)
-                . $this->dumpConstants($abs)
+                . $this->constants->dumpConstants($abs)
+                . $this->constants->dumpCases($abs)
                 . $this->properties->dump($abs)
                 . $this->methods->dump($abs)
                 . $this->dumpPhpDoc($abs)
@@ -124,14 +127,14 @@ class HtmlObject
     /**
      * Dump object attributes
      *
-     * @param Abstraction $abs object "abstraction"
+     * @param Abstraction $abs Object Abstraction instance
      *
      * @return string html fragment
      */
     protected function dumpAttributes(Abstraction $abs)
     {
         $attributes = $abs['attributes'];
-        if (!$attributes || !($abs['cfgFlags'] & AbstractObject::OUTPUT_ATTRIBUTES_OBJ)) {
+        if (!$attributes || !($abs['cfgFlags'] & AbstractObject::OBJ_ATTRIBUTE_OUTPUT)) {
             return '';
         }
         $str = '<dt class="attributes">attributes</dt>' . "\n";
@@ -160,7 +163,7 @@ class HtmlObject
             $arg = '';
             if (\is_string($name)) {
                 $arg .= '<span class="t_parameter-name">' . \htmlspecialchars($name) . '</span>'
-                    . '<span class="t_punct">:</span>';
+                    . '<span class="t_punct t_colon">:</span>';
             }
             $arg .= $this->valDumper->dump($value);
             $args[$name] = $arg;
@@ -174,88 +177,35 @@ class HtmlObject
      * Dump classname of object
      * Classname may be wrapped in a span that includes phpDoc summary / desc
      *
-     * @param Abstraction $abs object "abstraction"
+     * @param Abstraction $abs Object Abstraction instance
      *
      * @return string html fragment
      */
     protected function dumpClassname(Abstraction $abs)
     {
-        $title = \trim($abs['phpDoc']['summary'] . "\n\n" . $abs['phpDoc']['desc']);
-        $outPhpDoc = $abs['cfgFlags'] & AbstractObject::OUTPUT_PHPDOC;
+        $phpDocOutput = $abs['cfgFlags'] & AbstractObject::PHPDOC_OUTPUT;
+        $title = $phpDocOutput
+            ? \trim($abs['phpDoc']['summary'] . "\n\n" . $abs['phpDoc']['desc'])
+            : null;
+        if (\in_array('UnitEnum', $abs['implements'], true)) {
+            return $this->html->buildTag(
+                'span',
+                \array_filter(array(
+                    'class' => 't_const',
+                    'title' => $title,
+                )),
+                $this->valDumper->markupIdentifier($abs['className'] . '::' . $abs['properties']['name']['value'])
+            );
+        }
         return $this->valDumper->markupIdentifier($abs['className'], false, 'span', array(
-            'title' => $outPhpDoc
-                ? $title
-                : null,
+            'title' => $title,
         ));
-    }
-
-    /**
-     * Dump object constants
-     *
-     * @param Abstraction $abs object "abstraction"
-     *
-     * @return string html fragment
-     */
-    protected function dumpConstants(Abstraction $abs)
-    {
-        $constants = $abs['constants'];
-        $opts = array(
-            'outAttributes' => $abs['cfgFlags'] & AbstractObject::OUTPUT_ATTRIBUTES_CONST,
-            'outConstants' => $abs['cfgFlags'] & AbstractObject::OUTPUT_CONSTANTS,
-            'outPhpDoc' => $abs['cfgFlags'] & AbstractObject::OUTPUT_PHPDOC,
-        );
-        if (!$constants || !$opts['outConstants']) {
-            return '';
-        }
-        $html = '<dt class="constants">constants</dt>' . "\n";
-        foreach ($constants as $name => $info) {
-            $html .= $this->dumpConstant($name, $info, $opts);
-        }
-        return $html;
-    }
-
-    /**
-     * Dump Constant
-     *
-     * @param string $name Constant's name
-     * @param array  $info Constant info
-     * @param array  $opts Output options
-     *
-     * @return string html fragment
-     */
-    protected function dumpConstant($name, $info, $opts)
-    {
-        $modifiers = \array_keys(\array_filter(array(
-            $info['visibility'] => true,
-            'final' => $info['isFinal'],
-        )));
-        $title = $opts['outPhpDoc']
-            ? (string) $info['desc']
-            : '';
-        return $this->html->buildTag(
-            'dd',
-            array(
-                'class' => \array_merge(
-                    array('constant'),
-                    $modifiers
-                ),
-                'data-attributes' => $opts['outAttributes'] && $info['attributes']
-                    ? $info['attributes']
-                    : null,
-            ),
-            \implode(' ', \array_map(function ($modifier) {
-                return '<span class="t_modifier_' . $modifier . '">' . $modifier . '</span>';
-            }, $modifiers))
-            . ' <span class="t_identifier" title="' . \htmlspecialchars($title) . '">' . $name . '</span>'
-            . ' <span class="t_operator">=</span> '
-            . $this->valDumper->dump($info['value'])
-        ) . "\n";
     }
 
     /**
      * Dump classnames of classes obj extends
      *
-     * @param Abstraction $abs object "abstraction"
+     * @param Abstraction $abs Object Abstraction instance
      *
      * @return string html fragment
      */
@@ -270,7 +220,7 @@ class HtmlObject
     /**
      * Dump classnames of interfaces obj extends
      *
-     * @param Abstraction $abs object "abstraction"
+     * @param Abstraction $abs Object Abstraction instance
      *
      * @return string html fragment
      */
@@ -299,7 +249,7 @@ class HtmlObject
     /**
      * Dump object's phpDoc info
      *
-     * @param Abstraction $abs object "abstraction"
+     * @param Abstraction $abs Object Abstraction instance
      *
      * @return string html fragment
      */
@@ -425,7 +375,7 @@ class HtmlObject
         $val = $abs['className'];
         if ($abs['stringified']) {
             $val = $abs['stringified'];
-        } elseif (isset($abs['methods']['__toString']['returnValue'])) {
+        } elseif (($abs['cfgFlags'] & AbstractObject::TO_STRING_OUTPUT) && isset($abs['methods']['__toString']['returnValue'])) {
             $val = $abs['methods']['__toString']['returnValue'];
         }
         if ($val instanceof Abstraction) {

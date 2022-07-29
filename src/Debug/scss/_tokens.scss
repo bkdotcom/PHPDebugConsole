@@ -96,7 +96,8 @@ $color-stringified: rgba(0, 200, 200, 0.6);
 
 .excluded,
 .t_notInspected,
-.t_recursion {
+.t_recursion,
+.t_unknown {
   font-weight: bold;
   color: $color-recursion;
 }

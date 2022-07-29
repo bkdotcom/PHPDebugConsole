@@ -24,7 +24,7 @@ class InternalEventsTest extends DebugTestFramework
     public function testDumpCustom()
     {
         $val = new Abstraction('someCustomValueType', array('foo' => '<b>bar&baz</b>'));
-        $expect = '<span class="t_someCustomValueType" data-type-more="t_string"><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
+        $expect = '<span class="t_someCustomValueType"><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
 <ul class="array-inner list-unstyled">
 \t<li><span class="t_key">foo</span><span class="t_operator">=&gt;</span><span class="t_string">&lt;b&gt;bar&amp;baz&lt;/b&gt;</span></li>
 \t<li><span class="t_key">type</span><span class="t_operator">=&gt;</span><span class="t_string">someCustomValueType</span></li>
@@ -35,6 +35,7 @@ class InternalEventsTest extends DebugTestFramework
 
         $callable = function (Event $event) {
             $event['return'] = '<span>woo</span>';
+            $this->assertIsObject($event['valDumper']);
         };
         $this->debug->eventManager->subscribe(Debug::EVENT_DUMP_CUSTOM, $callable);
         $dumped = $this->debug->getDump('html')->valDumper->dump($val);
@@ -264,6 +265,7 @@ class InternalEventsTest extends DebugTestFramework
                     ),
                 ),
                 'addQuotes' => false,
+                'brief' => false,
                 'contentType' => 'text/html',
                 'prettified' => false,
                 'prettifiedTag' => false,
@@ -286,6 +288,7 @@ class InternalEventsTest extends DebugTestFramework
                     ),
                 ),
                 'addQuotes' => false,
+                'brief' => false,
                 'contentType' => 'application/json',
                 'prettified' => true,
                 'prettifiedTag' => true,
@@ -313,6 +316,7 @@ WHERE·
                     ),
                 ),
                 'addQuotes' => false,
+                'brief' => false,
                 'contentType' => 'application/sql',
                 'prettified' => true,
                 'prettifiedTag' => true,
@@ -343,6 +347,7 @@ WHERE·
                     ),
                 ),
                 'addQuotes' => false,
+                'brief' => false,
                 'contentType' => 'application/xml',
                 'prettified' => true,
                 'prettifiedTag' => true,

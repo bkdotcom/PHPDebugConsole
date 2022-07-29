@@ -3,6 +3,7 @@
 namespace bdk\Test\Debug\Utility;
 
 use bdk\Debug;
+use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Utility\SerializeLog;
 use bdk\HttpMessage\ServerRequest;
 use bdk\Test\Debug\DebugTestFramework;
@@ -152,7 +153,7 @@ EOD;
                             'className' => 'stdClass',
                             'collectMethods' => true,
                             'constants' => array(),
-                            'debug' => "\x00debug\x00",
+                            'debug' => Abstracter::ABSTRACTION,
                             'debugMethod' => 'log',
                             'definition' => array(
                                 'fileName' => false,
@@ -190,7 +191,7 @@ EOD;
                             ),
                             'scopeClass' => 'bdk\Debug',
                             'stringified' => null,
-                            'type' => 'object',
+                            'type' => Abstracter::TYPE_OBJECT,
                             'traverseValues' => array(),
                             'viaDebugInfo' => false,
                         ),
@@ -334,7 +335,24 @@ EOD;
         );
         $this->assertSame($expect, $unserialized);
         $debug = SerializeLog::import($unserialized);
-        // import merged default values
+
+
+        /*
+            Now test that imported log serializes as expected
+        */
+
+        unset($expect['log'][1][1][1]['collectMethods']);
+        // serialized did not include these values
+        $expect['log'][1][1][1] = \array_merge(
+            $expect['log'][1][1][1],
+            array(
+                'attributes' => array(),
+                'cfgFlags' => 4194303,
+                'isAnonymous' => false,
+                'isFinal' => false,
+            )
+        );
+        // serialized did not include these values
         $expect['log'][1][1][1]['properties']['foo'] = \array_merge(
             $expect['log'][1][1][1]['properties']['foo'],
             array(
@@ -344,6 +362,7 @@ EOD;
                 'isReadOnly' => false,
             )
         );
+
         $serialized = SerializeLog::serialize($debug);
         $unserialized = SerializeLog::unserialize($serialized);
         $keysCompare = array('alerts', 'log','logSummary');

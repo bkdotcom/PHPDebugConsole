@@ -313,9 +313,14 @@ class DebugTestFramework extends DOMTestCase
      *
      * @return void
      */
-    protected function assertAbstractionType(Abstraction $abs, $type)
+    protected function assertAbstractionType(Abstraction $abs, $type = null)
     {
         $isAbsType = false;
+        if (empty($abs['type'])) {
+            $this->assertTrue($isAbsType);
+            return;
+        }
+        $type = $type ?: $abs['type'];
         if ($type === 'object') {
             $keys = array(
                 'cfgFlags',

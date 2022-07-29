@@ -70,6 +70,7 @@ class StatementInfoTest extends DebugTestFramework
                         "attribs": {
                             "class": ["highlight", "language-sql"]
                         },
+                        "brief": false,
                         "contentType": "application\/sql",
                         "debug": "\u0000debug\u0000",
                         "prettified": true,

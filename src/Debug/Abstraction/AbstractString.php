@@ -48,27 +48,24 @@ class AbstractString extends AbstractComponent
      */
     public function getAbstraction($string, $typeMore, $crateVals)
     {
-        if ($typeMore === Abstracter::TYPE_STRING_BASE64) {
-            return $this->getAbstractionBase64($string);
+        $absValues = $this->absValuesInit($string, $typeMore);
+        switch ($typeMore) {
+            case Abstracter::TYPE_STRING_BASE64:
+                $absValues = $this->getAbsValuesBase64($absValues);
+                break;
+            case Abstracter::TYPE_STRING_BINARY:
+                $absValues = $this->getAbsValuesBinary($absValues);
+                break;
+            case Abstracter::TYPE_STRING_JSON:
+                $absValues = $this->getAbsValuesJson($absValues, $crateVals);
+                break;
+            case Abstracter::TYPE_STRING_SERIALIZED:
+                $absValues = $this->getAbsValuesSerialized($absValues);
+                break;
+            default:
+                $absValues['value'] = $this->debug->utf8->strcut($string, 0, $absValues['maxlen']);
         }
-        if ($typeMore === Abstracter::TYPE_STRING_BINARY) {
-            return $this->getAbstractionBinary($string);
-        }
-        if ($typeMore === Abstracter::TYPE_STRING_JSON) {
-            return $this->getAbstractionJson($string, $crateVals);
-        }
-        $strLen = \strlen($string);
-        $maxLen = $this->getMaxLen('other', $strLen);
-        $absValues = array(
-            'strlen' => $maxLen > -1 && $strLen > $maxLen
-                ? $strLen
-                : null,
-            'typeMore' => $typeMore,
-            'value' => $this->debug->utf8->strcut($string, 0, $maxLen),
-        );
-        if ($typeMore === Abstracter::TYPE_STRING_SERIALIZED) {
-            $absValues['valueDecoded'] = $this->abstracter->crate(\unserialize($string));
-        }
+        $absValues = $this->absValuesFinish($absValues);
         return new Abstraction(Abstracter::TYPE_STRING, $absValues);
     }
 
@@ -81,14 +78,13 @@ class AbstractString extends AbstractComponent
      */
     public function getType($val)
     {
-        if ($val === Abstracter::NOT_INSPECTED) {
-            return array(Abstracter::TYPE_NOT_INSPECTED, null);   // not a native php type!
-        }
-        if ($val === Abstracter::RECURSION) {
-            return array(Abstracter::TYPE_RECURSION, null);       // not a native php type!
-        }
-        if ($val === Abstracter::UNDEFINED) {
-            return array(Abstracter::TYPE_UNDEFINED, null);       // not a native php type!
+        $debugVals = array(
+            Abstracter::NOT_INSPECTED => Abstracter::TYPE_NOT_INSPECTED,
+            Abstracter::RECURSION => Abstracter::TYPE_RECURSION,
+            Abstracter::UNDEFINED => Abstracter::TYPE_UNDEFINED,
+        );
+        if (isset($debugVals[$val])) {
+            return array($debugVals[$val], null);
         }
         if (\is_numeric($val) === false) {
             return $this->getTypeMore($val);
@@ -100,89 +96,141 @@ class AbstractString extends AbstractComponent
     }
 
     /**
+     * Remove temporary values.
+     * Further trim value if "brief"
+     *
+     * @param array $absValues Abstraction values
+     *
+     * @return array
+     */
+    private function absValuesFinish(array $absValues)
+    {
+        $typeMore = $absValues['typeMore'];
+        if ($absValues['brief'] && $typeMore !== Abstracter::TYPE_STRING_BINARY) {
+            $matches = array();
+            $regex = '/^([^\r\n]{1,' . ($absValues['maxlen'] ?: 128) . '})/';
+            \preg_match($regex, $absValues['value'], $matches);
+            $absValues['value'] = $matches[1];
+        }
+        if ($absValues['strlen'] === \strlen($absValues['value']) && $typeMore !== Abstracter::TYPE_STRING_BINARY) {
+            // including strlen indicates that value was truncated
+            //   (strlen is always provided for binary)
+            $absValues['strlen'] = null;
+        }
+        unset($absValues['maxlen'], $absValues['valueRaw']);
+        return $absValues;
+    }
+
+    /**
+     * Get a string abstraction..
+     *
+     * Ie a string and meta info
+     *
+     * @param string $string   string value
+     * @param string $typeMore ie, 'base64', 'json', 'numeric', etc
+     *
+     * @return array
+     */
+    protected function absValuesInit($string, $typeMore)
+    {
+        $maxLenCats = array(
+            Abstracter::TYPE_STRING_BASE64 => 'base64',
+            Abstracter::TYPE_STRING_BINARY => 'binary',
+            Abstracter::TYPE_STRING_JSON => 'json',
+            Abstracter::TYPE_STRING_SERIALIZED => 'other',
+        );
+        $maxLenCat = isset($maxLenCats[$typeMore])
+            ? $maxLenCats[$typeMore]
+            : 'other';
+        $strlen = \strlen($string);
+        $maxlen = $this->getMaxLen($maxLenCat, $strlen);
+        return array(
+            'brief' => $this->cfg['brief'],
+            'strlen' => $strlen,
+            'typeMore' => $typeMore,
+            'value' => $maxlen > -1
+                ? \substr($string, 0, $maxlen)
+                : $string,
+            'maxlen' => $maxlen, // temporary
+            'valueRaw' => $string, // temporary
+        );
+    }
+
+    /**
      * Get base64 abstraction
      *
-     * @param string $string base64 encoded string
+     * @param array $absValues Abstraction values
      *
-     * @return Abstraction
+     * @return array
      */
-    private function getAbstractionBase64($string)
+    private function getAbsValuesBase64($absValues)
     {
-        $strLen = \strlen($string);
-        $maxLen = $this->getMaxLen('base64', $strLen);
-        $absValues = array(
-            'strlen' => $maxLen > -1 && $strLen > $maxLen
-                ? $strLen
-                : null,
-            'typeMore' => Abstracter::TYPE_STRING_BASE64,
-            'value' => $maxLen > -1
-                ? \substr($string, 0, $maxLen)
-                : $string,
-            'valueDecoded' => $this->abstracter->crate(\base64_decode($string, true)),
-        );
-        return new Abstraction(Abstracter::TYPE_STRING, $absValues);
+        $absValues['valueDecoded'] = $this->cfg['brief']
+            ? null
+            : $this->abstracter->crate(\base64_decode($absValues['valueRaw'], true));
+        return $absValues;
     }
 
     /**
      * Get binary abstraction
      *
-     * @param string $string binary string
+     * @param array $absValues Abstraction values
      *
-     * @return Abstraction
+     * @return array
      */
-    private function getAbstractionBinary($string)
+    private function getAbsValuesBinary($absValues)
     {
-        $strLen = \strlen($string);
-        $maxLen = $this->getMaxLen('binary', $strLen);
-        $absValues = array(
-            'strlen' => $strLen, // store length regardless if we're truncating
-            'typeMore' => Abstracter::TYPE_STRING_BINARY,
-            'value' => $maxLen > -1
-                ? \substr($string, 0, $maxLen)
-                : $string,
-        );
+        // is string long enough to try to determine the mime type?
         $strLenMime = $this->cfg['stringMinLen']['contentType'];
-        if ($strLenMime > -1 && $strLen > $strLenMime) {
+        if ($strLenMime > -1 && $absValues['strlen'] > $strLenMime) {
             $finfo = new finfo(FILEINFO_MIME_TYPE);
-            $absValues['contentType'] = $finfo->buffer($string);
+            $absValues['contentType'] = $finfo->buffer($absValues['valueRaw']);
         }
-        return new Abstraction(Abstracter::TYPE_STRING, $absValues);
+        return $absValues;
     }
 
     /**
      * Get json abstraction
      *
-     * @param string $string    json
-     * @param array  $crateVals crate values
+     * @param array $absValues Abstraction values
+     * @param array $crateVals crate values
      *
-     * @return Abstraction
+     * @return array
      */
-    private function getAbstractionJson($string, $crateVals)
+    private function getAbsValuesJson($absValues, $crateVals)
     {
-        $strLen = \strlen($string);
-        $maxLen = $this->getMaxLen('json', $strLen);
-        $absValues = array(
-            'strlen' => $maxLen > -1 && $strLen > $maxLen
-                ? $strLen
-                : null,
-            'typeMore' => Abstracter::TYPE_STRING_JSON,
-            'valueDecoded' => array(),
-            'value' => $maxLen > -1
-                ? \substr($string, 0, $maxLen)
-                : $string,
-        );
+        if ($this->cfg['brief']) {
+            $absValues['valueDecoded'] = null;
+            return $absValues;
+        }
         $classes = $this->debug->arrayUtil->pathGet($crateVals, 'attribs.class', array());
-        if (!\is_array($classes)) {
+        if (\is_array($classes) === false) {
             $classes = \explode(' ', $classes);
         }
         if (\in_array('language-json', $classes, true) === false) {
-            $abstraction = $this->debug->prettify($string, 'application/json');
+            $abstraction = $this->debug->prettify($absValues['valueRaw'], 'application/json');
             $absValues = $abstraction->getValues();
         }
         if (empty($absValues['valueDecoded'])) {
-            $absValues['valueDecoded'] = $this->abstracter->crate(\json_decode($string, true));
+            $absValues['valueDecoded'] = $this->abstracter->crate(\json_decode($absValues['valueRaw'], true));
         }
-        return new Abstraction(Abstracter::TYPE_STRING, $absValues);
+        return $absValues;
+    }
+
+    /**
+     * Get abstraction for serialized string
+     *
+     * @param array $absValues Abstraction values
+     *
+     * @return Abstraction
+     */
+    private function getAbsValuesSerialized($absValues)
+    {
+        $absValues['value'] = $this->debug->utf8->strcut($absValues['valueRaw'], 0, $absValues['maxlen']);
+        $absValues['valueDecoded'] = $this->cfg['brief']
+            ? null
+            : $this->abstracter->crate(\unserialize($absValues['valueRaw']));
+        return $absValues;
     }
 
     /**
@@ -196,16 +244,16 @@ class AbstractString extends AbstractComponent
     private function getMaxLen($cat, $strlen)
     {
         $stringMaxLen = $this->cfg['stringMaxLen'];
-        $maxLen = \array_key_exists($cat, $stringMaxLen)
+        $maxlen = \array_key_exists($cat, $stringMaxLen)
             ? $stringMaxLen[$cat]
             : $stringMaxLen['other'];
-        if (!\is_array($maxLen)) {
-            return $maxLen !== null
-                ? $maxLen
+        if (!\is_array($maxlen)) {
+            return $maxlen !== null
+                ? $maxlen
                 : -1;
         }
         $len = -1;
-        foreach ($maxLen as $breakpoint => $lenNew) {
+        foreach ($maxlen as $breakpoint => $lenNew) {
             if ($breakpoint > $strlen) {
                 break;
             }
@@ -238,8 +286,8 @@ class AbstractString extends AbstractComponent
             $typeMore = Abstracter::TYPE_STRING_BINARY;
             return array(Abstracter::TYPE_STRING, $typeMore);
         }
-        $maxLen = $this->getMaxLen('other', $strLen);
-        if ($maxLen > -1 && $strLen > $maxLen) {
+        $maxlen = $this->getMaxLen('other', $strLen);
+        if ($maxlen > -1 && $strLen > $maxlen) {
             $typeMore = Abstracter::TYPE_STRING_LONG;
         }
         return array(Abstracter::TYPE_STRING, $typeMore);

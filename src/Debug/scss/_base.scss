@@ -56,7 +56,7 @@ button {
 code {
   padding: 2px 4px;
   background-color: transparent;
-  font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
+  font-family: Menlo, Monaco, Consolas, "Courier New", monospace !important;
 }
 pre code {
   display: block;

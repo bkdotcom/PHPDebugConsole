@@ -58,6 +58,14 @@ class PhpTest extends TestCase
 
         $str = '\bdk\Test\Debug\Fixture\Test::MY_CONSTANT';
         $this->assertInstanceOf('ReflectionClassConstant', Php::getReflector($str));
+
+        if (PHP_VERSION_ID < 80100) {
+            return;
+        }
+        $this->assertInstanceOf('ReflectionEnum', Php::getReflector(\bdk\Test\Debug\Fixture\Enum\MealsBacked::DINNER));
+
+        $str = '\bdk\Test\Debug\Fixture\Enum\MealsBacked::DINNER';
+        $this->assertInstanceOf('ReflectionEnumBackedCase', Php::getReflector($str));
     }
 
     /**

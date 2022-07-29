@@ -381,6 +381,18 @@ class Value extends BaseValue
     }
 
     /**
+     * Dump Abstraction::TYPE_UNKNOWN
+     *
+     * @param Abstraction $abs resource abstraction
+     *
+     * @return string
+     */
+    protected function dumpUnknown(Abstraction $abs)
+    {
+        return 'unknown type';
+    }
+
+    /**
      * Getter for this->object
      *
      * @return HtmlObject

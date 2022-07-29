@@ -189,7 +189,7 @@ EOD;
                 ),
             ),
 
-            'numericInt' => array(
+            'numeric.int' => array(
                 'log',
                 array('numeric string', '10'),
                 array(
@@ -222,7 +222,7 @@ EOD;
                 ),
             ),
 
-            'numericFloat' => array(
+            'numeric.float' => array(
                 'log',
                 array('numeric string', '10.10'),
                 array(
@@ -234,24 +234,6 @@ EOD;
                     'html' => '<li class="m_log"><span class="no-quotes t_string">numeric string</span> = <span class="t_string" data-type-more="numeric">10.10</span></li>',
                     'script' => 'console.log("numeric string","10.10");',
                     'text' => 'numeric string = "10.10"',
-                ),
-            ),
-
-            'timestampString' => array(
-                'log',
-                array('timestamp', (string) $ts),
-                array(
-                    'chromeLogger' => array(
-                        array(
-                            'timestamp',
-                            $ts . ' (' . \gmdate(self::DATETIME_FORMAT, $ts) . ')',
-                        ),
-                        null,
-                        '',
-                    ),
-                    'html' => '<li class="m_log"><span class="no-quotes t_string">timestamp</span> = <span class="timestamp value-container" title="' . \gmdate(self::DATETIME_FORMAT, $ts) . '"><span class="t_string" data-type-more="timestamp">' . $ts . '</span></span></li>',
-                    'script' => 'console.log("timestamp","' . $ts . ' (' . \gmdate(self::DATETIME_FORMAT, $ts) . ')");',
-                    'text' => 'timestamp = 📅 "' . $ts . '" (' . \gmdate(self::DATETIME_FORMAT, $ts) . ')',
                 ),
             ),
 
@@ -292,7 +274,7 @@ EOD;
                 ),
                 array(
                     'entry' => function (LogEntry $logEntry) use ($base64snip) {
-                        $jsonExpect = '{"method":"log","args":[{"strlen":10852,"typeMore":"base64","value":' . \json_encode($base64snip) . ',"valueDecoded":{"strlen":%d,"typeMore":"binary","value":"","contentType":"%s","type":"string","debug":"\u0000debug\u0000"},"type":"string","debug":"\u0000debug\u0000"}],"meta":[]}';
+                        $jsonExpect = '{"method":"log","args":[{"brief":false,"strlen":10852,"typeMore":"base64","value":' . \json_encode($base64snip) . ',"valueDecoded":{"brief":false,"strlen":%d,"typeMore":"binary","value":"","contentType":"%s","type":"string","debug":"\u0000debug\u0000"},"type":"string","debug":"\u0000debug\u0000"}],"meta":[]}';
                         $jsonified = \json_encode($logEntry);
                         $this->assertStringMatchesFormat($jsonExpect, $jsonified);
                     },
@@ -303,12 +285,12 @@ EOD;
                         null,
                         ''
                     ),
-                    'html' => '<li class="m_log"><span class="string-encoded tabs-container" data-type="base64">' . "\n"
+                    'html' => '<li class="m_log"><span class="string-encoded tabs-container" data-type-more="base64">' . "\n"
                         . '<nav role="tablist"><a class="nav-link" data-target=".string-raw" data-toggle="tab" role="tab">base64</a><a class="active nav-link" data-target=".string-decoded" data-toggle="tab" role="tab">decoded</a></nav>' . "\n"
                         . '<div class="string-raw tab-pane" role="tabpanel"><span class="no-quotes t_string">' . $base64snip . '</span><span class="maxlen">&hellip; 10696 more bytes (not logged)</span></div>' . "\n"
-                        . '<div class="active string-decoded tab-pane" role="tabpanel"><span class="t_type">binary string</span>' . "\n"
-                        . '<ul class="list-unstyled value-container" data-type="string">' . "\n"
-                        . '<li>mime type = <span class="t_string">%s</span></li>' . "\n"
+                        . '<div class="active string-decoded tab-pane" role="tabpanel"><span class="t_keyword">string</span><span class="text-muted">(binary)</span>' . "\n"
+                        . '<ul class="list-unstyled value-container" data-type="string" data-type-more="binary">' . "\n"
+                        . '<li>mime type = <span class="content-type t_string">%s</span></li>' . "\n"
                         . '<li>size = <span class="t_int">%d</span></li>' . "\n"
                         . '<li>Binary data not collected</li>' . "\n"
                         . '</ul></div>' . "\n"
@@ -318,7 +300,23 @@ EOD;
                 ),
             ),
 
-            'base64redact' => array(
+            'base64.brief' => array(
+                'group',
+                array(
+                    \base64_encode(\file_get_contents(TEST_DIR . '/assets/logo.png')),
+                ),
+                array(
+                    'entry' => function (LogEntry $logEntry) {
+                    },
+                    'html' => '<li class="expanded m_group">
+                        <div class="group-header"><span class="font-weight-bold group-label"><span class="t_keyword">string</span><span class="text-muted">(base64)</span><span class="t_punct colon">:</span> <span class="t_string" data-type-more="base64"><span class="no-quotes t_string">'
+                            . \substr(\base64_encode(\file_get_contents(TEST_DIR . '/assets/logo.png')), 0, 156)
+                            . '</span><span class="maxlen">&hellip; 10696 more bytes (not logged)</span></span></span></div>
+                        <ul class="group-body">',
+                ),
+            ),
+
+            'base64.redact' => array(
                 'log',
                 array(
                     $base64snip2,
@@ -326,7 +324,7 @@ EOD;
                 ),
                 array(
                     'entry' => function (LogEntry $logEntry) use ($base64snip2) {
-                        $jsonExpect = '{"method":"log","args":[{"strlen":null,"typeMore":"base64","value":"' . $base64snip2 . '","valueDecoded":{"strlen":null,"typeMore":"json","valueDecoded":{"poop":"\ud83d\udca9","int":42,"password":"\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588"},"value":"{\n    \"poop\": \"\\\\ud83d\\\\udca9\",\n    \"int\": 42,\n    \"password\": \"\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\"\n}","type":"string","attribs":{"class":["highlight","language-json"]},"addQuotes":false,"contentType":"application\/json","prettified":true,"prettifiedTag":true,"visualWhiteSpace":false,"debug":"\u0000debug\u0000"},"type":"string","debug":"\u0000debug\u0000"}],"meta":{"redact":true}}';
+                        $jsonExpect = '{"method":"log","args":[{"brief":false,"strlen":null,"typeMore":"base64","value":"' . $base64snip2 . '","valueDecoded":{"brief":false,"strlen":null,"typeMore":"json","value":"{\n    \"poop\": \"\\\\ud83d\\\\udca9\",\n    \"int\": 42,\n    \"password\": \"\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\"\n}","valueDecoded":{"poop":"\ud83d\udca9","int":42,"password":"\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588"},"type":"string","attribs":{"class":["highlight","language-json"]},"addQuotes":false,"contentType":"application\/json","prettified":true,"prettifiedTag":true,"visualWhiteSpace":false,"debug":"\u0000debug\u0000"},"type":"string","debug":"\u0000debug\u0000"}],"meta":{"redact":true}}';
                         $jsonified = \json_encode($logEntry);
                         $this->assertSame($jsonExpect, $jsonified);
                     },
@@ -337,10 +335,10 @@ EOD;
                         null,
                         '',
                     ),
-                    'html' => '<li class="m_log"><span class="string-encoded tabs-container" data-type="base64">' . "\n"
+                    'html' => '<li class="m_log"><span class="string-encoded tabs-container" data-type-more="base64">' . "\n"
                         . '<nav role="tablist"><a class="nav-link" data-target=".string-raw" data-toggle="tab" role="tab">base64</a><a class="active nav-link" data-target=".string-decoded" data-toggle="tab" role="tab">decoded</a></nav>' . "\n"
                         . '<div class="string-raw tab-pane" role="tabpanel"><span class="no-quotes t_string">' . $base64snip2 . '</span></div>' . "\n"
-                        . '<div class="active string-decoded tab-pane" role="tabpanel"><span class="string-encoded tabs-container" data-type="json">' . "\n"
+                        . '<div class="active string-decoded tab-pane" role="tabpanel"><span class="string-encoded tabs-container" data-type-more="json">' . "\n"
                             . '<nav role="tablist"><a class="nav-link" data-target=".string-raw" data-toggle="tab" role="tab">json</a><a class="active nav-link" data-target=".string-decoded" data-toggle="tab" role="tab">decoded</a></nav>' . "\n"
                             . '<div class="string-raw tab-pane" role="tabpanel"><span class="value-container" data-type="string"><span class="prettified">(prettified)</span> <span class="highlight language-json no-quotes t_string">{' . "\n"
                                 . '&quot;poop&quot;: &quot;\ud83d\udca9&quot;,' . "\n"
@@ -360,7 +358,88 @@ EOD;
                 )
             ),
 
-            'jsonLong' => array(
+            'binary' => array(
+                'log',
+                array(
+                    \base64_decode('j/v9wNrF5i1abMXFW/4vVw==', true),
+                ),
+                array(
+                    'entry' => array(
+                        'method' => 'log',
+                        'args' => array(
+                            array(
+                                'debug' => Abstracter::ABSTRACTION,
+                                'brief' => false,
+                                'strlen' => 16,
+                                'type' => Abstracter::TYPE_STRING,
+                                'typeMore' => Abstracter::TYPE_STRING_BINARY,
+                                'value' => \base64_decode('j/v9wNrF5i1abMXFW/4vVw==', true),
+                            ),
+                        ),
+                        'meta' => array(),
+                    ),
+                    'html' => '<li class="m_log"><span class="t_keyword">string</span><span class="text-muted">(binary)</span>
+                        <ul class="list-unstyled value-container" data-type="string" data-type-more="binary">
+                        <li>size = <span class="t_int">16</span></li>
+                        <li class="t_string"><span class="binary">8f fb fd c0 da c5 e6 2d 5a 6c c5 c5 5b fe 2f 57</span></li>
+                        </ul></li>',
+                ),
+            ),
+
+            'binary.brief' => array(
+                'group',
+                array(
+                    \base64_decode('j/v9wNrF5i1abMXFW/4vVw==', true),
+                ),
+                array(
+                    'entry' => array(
+                        'method' => 'group',
+                        'args' => array(
+                            array(
+                                'debug' => Abstracter::ABSTRACTION,
+                                'brief' => true,
+                                'strlen' => 16,
+                                'type' => Abstracter::TYPE_STRING,
+                                'typeMore' => Abstracter::TYPE_STRING_BINARY,
+                                'value' => \base64_decode('j/v9wNrF5i1abMXFW/4vVw==', true),
+                            ),
+                        ),
+                        'meta' => array(),
+                    ),
+                    'html' => '<li class="expanded m_group">
+                        <div class="group-header"><span class="font-weight-bold group-label"><span class="binary">8f fb fd c0 da c5 e6 2d 5a 6c c5 c5 5b fe 2f 57</span></span></div>
+                        <ul class="group-body">',
+                ),
+            ),
+
+            'binary.brief.contentType' => array(
+                'group',
+                array(
+                    \file_get_contents(TEST_DIR . '/assets/logo.png'),
+                ),
+                array(
+                    'entry' => array(
+                        'method' => 'group',
+                        'args' => array(
+                            array(
+                                'debug' => Abstracter::ABSTRACTION,
+                                'brief' => true,
+                                'strlen' => \filesize(TEST_DIR . '/assets/logo.png'),
+                                'type' => Abstracter::TYPE_STRING,
+                                'typeMore' => Abstracter::TYPE_STRING_BINARY,
+                                'contentType' => 'application/octet-stream',
+                                'value' => '',
+                            ),
+                        ),
+                        'meta' => array(),
+                    ),
+                    'html' => '<li class="expanded m_group">
+                        <div class="group-header"><span class="font-weight-bold group-label"><span class="t_keyword">string</span><span class="text-muted">(application/octet-stream)</span><span class="t_punct colon">:</span> 7.95 kB</span></div>
+                        <ul class="group-body">',
+                ),
+            ),
+
+            'json.long' => array(
                 'log',
                 array(
                     \file_get_contents(TEST_DIR . '/../composer.json'),
@@ -389,40 +468,47 @@ EOD;
                 ),
             ),
 
-            'dblEncodeTest' => array(
+            'json.brief' => array(
+                'group',
+                array(
+                    \json_encode(array(
+                        'poop' => '💩',
+                        'int' => 42,
+                        'password' => 'secret',
+                    )),
+                    Debug::meta('redact'),
+                ),
+                array(
+                    'entry' => array(
+                        'method' => 'group',
+                        'args' => array(
+                            array(
+                                'debug' => Abstracter::ABSTRACTION,
+                                'brief' => true,
+                                'strlen' => null,
+                                'type' => Abstracter::TYPE_STRING,
+                                'typeMore' => Abstracter::TYPE_STRING_JSON,
+                                'value' => '{"poop":"\ud83d\udca9","int":42,"password":"█████████"}',
+                                'valueDecoded' => null,
+                            )
+                        ),
+                        'meta' => array(
+                            'redact' => true,
+                        ),
+                    ),
+                    'html' => '<li class="expanded m_group">
+                        <div class="group-header"><span class="font-weight-bold group-label"><span class="t_string" data-type-more="json"><span class="no-quotes t_string">{&quot;poop&quot;:&quot;\ud83d\udca9&quot;,&quot;int&quot;:42,&quot;password&quot;:&quot;█████████&quot;}</span></span></span></div>
+                        <ul class="group-body">',
+                )
+            ),
+
+            'dblEncode' => array(
                 'log',
                 array(
                     '\u0000 / foo \\ bar',
                 ),
                 array(
                     'script' => 'console.log(' . \json_encode('\u0000 / foo \\ bar', JSON_UNESCAPED_SLASHES) . ');',
-                ),
-            ),
-
-            'classname' => array(
-                'log',
-                array(
-                    Debug::_getInstance()->abstracter->crateWithVals(
-                        'SomeNamespace\Classname',
-                        array('typeMore' => Abstracter::TYPE_STRING_CLASSNAME)
-                    ),
-                ),
-                array(
-                    'entry' => array(
-                        'method' => 'log',
-                        'args' => array(
-                            array(
-                                'debug' => Abstracter::ABSTRACTION,
-                                'strlen' => null,
-                                'type' => Abstracter::TYPE_STRING,
-                                'typeMore' => 'classname',
-                                'value' => 'SomeNamespace\Classname',
-                            )
-                        ),
-                        'meta' => array(),
-                    ),
-                    'html' => '<li class="m_log"><span class="classname no-quotes t_string" data-type-more="classname"><span class="namespace">SomeNamespace\</span>Classname</span></li>',
-                    'text' => 'SomeNamespace\Classname',
                 ),
             ),
 
@@ -437,6 +523,7 @@ EOD;
                         'args' => array(
                             array(
                                 'debug' => Abstracter::ABSTRACTION,
+                                'brief' => false,
                                 'strlen' => null,
                                 'type' => Abstracter::TYPE_STRING,
                                 'typeMore' => Abstracter::TYPE_STRING_SERIALIZED,
@@ -448,7 +535,7 @@ EOD;
                         ),
                         'meta' => array(),
                     ),
-                    'html' => '<li class="m_log"><span class="string-encoded tabs-container" data-type="serialized">' . "\n"
+                    'html' => '<li class="m_log"><span class="string-encoded tabs-container" data-type-more="serialized">' . "\n"
                         . '<nav role="tablist"><a class="nav-link" data-target=".string-raw" data-toggle="tab" role="tab">serialized</a><a class="active nav-link" data-target=".string-decoded" data-toggle="tab" role="tab">unserialized</a></nav>' . "\n"
                         . '<div class="string-raw tab-pane" role="tabpanel"><span class="no-quotes t_string">a:1:{s:3:&quot;foo&quot;;s:3:&quot;bar&quot;;}</span></div>' . "\n"
                         . '<div class="active string-decoded tab-pane" role="tabpanel"><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>' . "\n"
@@ -458,40 +545,32 @@ EOD;
                         . '</span></li>',
                 )
             ),
-
-            'notInspected' => array(
-                'log',
-                array(Abstracter::NOT_INSPECTED),
+            'serialized.brief' => array(
+                'group',
+                array(
+                    \serialize(array('foo' => 'bar')),
+                ),
                 array(
                     'entry' => array(
-                        'method' => 'log',
+                        'method' => 'group',
                         'args' => array(
-                            Abstracter::NOT_INSPECTED,
+                            array(
+                                'debug' => Abstracter::ABSTRACTION,
+                                'brief' => true,
+                                'strlen' => null,
+                                'type' => Abstracter::TYPE_STRING,
+                                'typeMore' => Abstracter::TYPE_STRING_SERIALIZED,
+                                'value' => 'a:1:{s:3:"foo";s:3:"bar";}',
+                                'valueDecoded' => null,
+                            )
                         ),
                         'meta' => array(),
                     ),
-                    'html' => '<li class="m_log"><span class="t_notInspected">NOT INSPECTED</span></li>',
-                    'text' => 'NOT INSPECTED',
-                ),
+                    'html' => '<li class="expanded m_group">
+                        <div class="group-header"><span class="font-weight-bold group-label"><span class="t_string" data-type-more="serialized"><span class="no-quotes t_string">a:1:{s:3:&quot;foo&quot;;s:3:&quot;bar&quot;;}</span></span></span></div>
+                        <ul class="group-body">',
+                )
             ),
-
-            'recursion' => array(
-                'log',
-                array(Abstracter::RECURSION),
-                array(
-                    'entry' => array(
-                        'method' => 'log',
-                        'args' => array(
-                            Abstracter::RECURSION,
-                        ),
-                        'meta' => array(),
-                    ),
-                    // array assumed
-                    'html' => '<li class="m_log"><span class="t_keyword">array</span> <span class="t_recursion">*RECURSION*</span></li>',
-                    'text' => 'array *RECURSION*',
-                ),
-            ),
-
         );
     }
 }

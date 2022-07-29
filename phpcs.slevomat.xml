@@ -41,6 +41,8 @@
         </properties>
     </rule>
 
+    <rule ref="SlevomatCodingStandard.Complexity.Cognitive" />
+
     <rule ref="SlevomatCodingStandard.ControlStructures.LanguageConstructWithParentheses" />
     <rule ref="SlevomatCodingStandard.ControlStructures.NewWithParentheses" />
     <rule ref="SlevomatCodingStandard.ControlStructures.UselessIfConditionWithReturn" />
@@ -69,6 +71,20 @@
     <rule ref="SlevomatCodingStandard.Variables.DuplicateAssignmentToVariable" />
     <rule ref="SlevomatCodingStandard.Variables.UnusedVariable" />
     <rule ref="SlevomatCodingStandard.Variables.UselessVariable" />
+
+    <rule ref="SlevomatCodingStandard.Files.FileLength">
+        <properties>
+            <property name="maxLinesLength" value="250" />
+        </properties>
+    </rule>
+    <!--
+    <rule ref="SlevomatCodingStandard.Classes.ClassLength">
+        <properties>
+            <property name="maxLinesLength" value="250" />
+        </properties>
+    </rule>
+    -->
+
     <!--
     <rule ref="SlevomatCodingStandard.Functions.StaticClosure" />
 

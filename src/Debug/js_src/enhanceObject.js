@@ -23,11 +23,9 @@ function addIcons ($node) {
       prepend = matches[1] === 'p'
       v = matches[2]
     }
-    if (prepend) {
-      $node.find(selector).prepend(v)
-    } else {
-      $node.find(selector).append(v)
-    }
+    prepend
+      ? $node.find(selector).prepend(v)
+      : $node.find(selector).append(v)
   })
 }
 
@@ -36,7 +34,7 @@ function addIcons ($node) {
  * Minimal DOM manipulation -> apply to all descendants
  */
 export function enhance ($node) {
-  $node.find('> .classname').each(function () {
+  $node.find('> .classname, > .t_const').each(function () {
     var $classname = $(this)
     var $target = $classname.next()
     var isEnhanced = $classname.data('toggle') === 'object'
@@ -45,6 +43,9 @@ export function enhance ($node) {
       return
     }
     if (isEnhanced) {
+      return
+    }
+    if ($target.length === 0) {
       return
     }
     $classname.wrap('<span data-toggle="object"></span>')
@@ -77,6 +78,7 @@ export function enhanceInner ($nodeObj) {
         }
       })
     })
+    postToggle($nodeObj)
   }
   $inner.find('> .private, > .protected')
     .filter('.magic, .magic-read, .magic-write')
@@ -126,7 +128,8 @@ function visToggles ($inner, accessible) {
 function toggleInterface (toggle) {
   var $toggle = $(toggle)
   var iface = $toggle.data('interface')
-  var $methods = $toggle.closest('.t_object').find('> .object-inner > dd[data-implements=' + iface + ']')
+  var $obj = $toggle.closest('.t_object')
+  var $methods = $obj.find('> .object-inner > dd[data-implements=' + iface + ']')
   if ($toggle.is('.toggle-off')) {
     $toggle.addClass('toggle-on').removeClass('toggle-off')
     $methods.show()
@@ -134,6 +137,7 @@ function toggleInterface (toggle) {
     $toggle.addClass('toggle-off').removeClass('toggle-on')
     $methods.hide()
   }
+  postToggle($obj)
 }
 
 /**
@@ -143,7 +147,8 @@ function toggleVis (toggle) {
   // console.log('toggleVis', toggle)
   var $toggle = $(toggle)
   var vis = $toggle.data('vis')
-  var $objInner = $toggle.closest('.object-inner')
+  var $obj = $toggle.closest('.t_object')
+  var $objInner = $obj.find('> .object-inner')
   var $toggles = $objInner.find('[data-toggle=vis][data-vis=' + vis + ']')
   var $nodes = $objInner.find('.' + vis)
   var show = $toggle.hasClass('toggle-off')
@@ -154,13 +159,10 @@ function toggleVis (toggle) {
     ))
     .addClass(show ? 'toggle-on' : 'toggle-off')
     .removeClass(show ? 'toggle-off' : 'toggle-on')
-  if (!show) {
-    // hide for this and all descendants
-    $nodes.hide()
-    return
-  }
-  // show for this and all descendants
-  toggleVisNodes($nodes)
+  show
+    ? toggleVisNodes($nodes) // show for this and all descendants
+    : $nodes.hide() // hide for this and all descendants
+  postToggle($obj, true)
 }
 
 function toggleVisNodes ($nodes) {
@@ -181,5 +183,18 @@ function toggleVisNodes ($nodes) {
     if (show) {
       $node.show()
     }
+  })
+}
+
+function postToggle ($obj, allDescendants) {
+  var selector = allDescendants
+    ? '.object-inner > dt'
+    : '> .object-inner > dt'
+  $obj.find(selector).each(function (i, dt) {
+    var $dds = $(dt).nextUntil('dt')
+    var $ddsVis = $dds.filter(function (index, node) {
+      return $(node).css('display') !== 'none'
+    })
+    $(dt).toggleClass('text-muted', $dds.length > 0 && $ddsVis.length === 0)
   })
 }

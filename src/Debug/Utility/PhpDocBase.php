@@ -128,9 +128,21 @@ class PhpDocBase
      */
     protected function typeNormalize($type)
     {
-        $types = \preg_split('/\s*\|\s*/', (string) $type);
-        $types = \array_map(array($this, 'typeNormalizeSingle'), $types);
-        return \implode('|', $types) ?: null;
+        if (\in_array($type, array('',null), true)) {
+            return null;
+        }
+        return \preg_replace_callback('/\b(boolean|integer|self)\b/', function ($matches) {
+            switch ($matches[1]) {
+                case 'boolean':
+                    return 'bool';
+                case 'integer':
+                    return 'int';
+                case 'self':
+                    return $this->reflector
+                        ? $this->getReflectorsClassname($this->reflector)
+                        : 'self';
+            }
+        }, $type);
     }
 
     /**
@@ -258,41 +270,5 @@ class PhpDocBase
         }
         $params[] = \trim(\substr($paramStr, $startPos, $pos + 1 - $startPos));
         return $params;
-    }
-
-    /**
-     * Convert "boolean" & "integer" to "bool" & "int", self[], etc
-     *
-     * @param string $type type hint
-     *
-     * @return string
-     *
-     * @SuppressWarnings(PHPMD.UnusedPrivateMethod) -> called via typeNormalize
-     */
-    private function typeNormalizeSingle($type)
-    {
-        $isArray = false;
-        if (\substr($type, -2) === '[]') {
-            $isArray = true;
-            $type = \substr($type, 0, -2);
-        }
-        switch ($type) {
-            case 'boolean':
-                $type = 'bool';
-                break;
-            case 'integer':
-                $type = 'int';
-                break;
-            case 'self':
-                if (!$this->reflector) {
-                    break;
-                }
-                $type = $this->getReflectorsClassname($this->reflector);
-                break;
-        }
-        if ($isArray) {
-            $type .= '[]';
-        }
-        return $type;
     }
 }

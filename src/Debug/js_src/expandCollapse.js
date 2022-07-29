@@ -81,18 +81,18 @@ function getNodeType ($node) {
     typeMore = 'timestamp'
   } else if (type === 'string-encoded') {
     type = 'string'
-    typeMore = $node.data('type')
+    typeMore = $node.data('typeMore')
   }
   return [type, typeMore]
 }
 
 function getNodeTypeNoMatch ($node) {
   var type = $node.data('type') || 'unknown'
-  var typeMore = null
+  var typeMore = $node.data('typeMore')
   if ($node.hasClass('show-more-container')) {
     type = 'string'
-  } else if ($node.hasClass('value-container') && $node.find('> li:last-child > .binary').length) {
-    typeMore = 'binary'
+  } else if ($node.hasClass('value-container') && $node.find('.content-type').length) {
+    typeMore = $node.find('.content-type').text()
   }
   return [type, typeMore]
 }
@@ -104,14 +104,14 @@ function buildReturnVal ($return) {
   var type = getNodeType($return)
   var typeMore = type[1]
   type = type[0]
-  if (['bool','callable','const','float','int','null','resource','unknown'].indexOf(type) > -1 || ['numeric','timestamp'].indexOf(typeMore) > -1) {
+  if (['bool', 'callable', 'const', 'float', 'int', 'null', 'resource', 'unknown'].indexOf(type) > -1 || ['numeric', 'timestamp'].indexOf(typeMore) > -1) {
     return $return[0].outerHTML
   }
   if (type === 'string') {
     return buildReturnValString($return, typeMore)
   }
   if (type === 'object') {
-    return $return.find('> .classname, > [data-toggle] > .classname')[0].outerHTML
+    return $return.find('> .classname, > [data-toggle] > .classname, > .t_const, > [data-toggle] > .t_const')[0].outerHTML
   }
   if (type === 'array' && $return[0].textContent === 'array()') {
     return $return[0].outerHTML.replace('t_array', 't_array expanded')
@@ -123,12 +123,11 @@ function buildReturnValString ($return, typeMore) {
   if (typeMore === 'classname') {
     return $return[0].outerHTML
   }
-  if ($return[0].innerHTML.indexOf("\n") < 0) {
-    return $return[0].outerHTML
-  }
   return typeMore
-    ? '<span><span class="t_keyword">string</span> (' + typeMore + ')</span>'
-    : '<span class="t_keyword">string</span>'
+    ? '<span><span class="t_keyword">string</span><span class="text-muted">(' + typeMore + ')</span></span>'
+    : ($return[0].innerHTML.indexOf('\n') < 0
+      ? $return[0].outerHTML
+      : '<span class="t_keyword">string</span>')
 }
 
 /**

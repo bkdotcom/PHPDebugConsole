@@ -66,31 +66,15 @@ class Abstracter extends AbstractComponent
     protected $abstractObject;
     protected $abstractString;
     protected $cfg = array(
-        'cacheMethods' => true,
-        'collectAttributesConst' => true,
-        'collectAttributesMethod' => true,
-        'collectAttributesObj' => true,
-        'collectAttributesParam' => true,
-        'collectAttributesProp' => true,
-        'collectConstants' => true,
-        'collectMethods' => true,
-        'collectPhpDoc' => true, // description & summary
+        'brief' => false, // collect & output less details
         'fullyQualifyPhpDocType' => false,
+        'methodCache' => true,
         'objectsExclude' => array(
             // __NAMESPACE__ added in constructor
             'DOMNode',
         ),
         'objectSort' => 'visibility',   // none, visibility, or name
         'objectsWhitelist' => null,     // will be used if array
-        'outputAttributesConst' => true,
-        'outputAttributesMethod' => true,
-        'outputAttributesObj' => true,
-        'outputAttributesParam' => true,
-        'outputAttributesProp' => true,
-        'outputConstants' => true,
-        'outputMethodDesc' => true,     // (or just summary)
-        'outputMethods' => true,
-        'outputPhpDoc' => true,
         'stringMaxLen' => array(
             'base64' => 156, // 2 lines of chunk_split'ed
             'binary' => array(
@@ -119,6 +103,16 @@ class Abstracter extends AbstractComponent
         $this->abstractArray = new AbstractArray($this);
         $this->abstractObject = new AbstractObject($this);
         $this->abstractString = new AbstractString($this);
+        $this->cfg = \array_merge(
+            $this->cfg,
+            \array_fill_keys(
+                \array_keys(AbstractObject::$cfgFlags),
+                true
+            ),
+            array(
+                'brief' => false,
+            )
+        );
         $this->setCfg(\array_merge($this->cfg, $cfg));
     }
 
@@ -495,15 +489,18 @@ class Abstracter extends AbstractComponent
      */
     private function setCfgDependencies($cfg)
     {
-        $strCfgKeys = array(
+        $keysAll = array(
+            'brief',
+        );
+        $keysStr = array(
             'stringMaxLen',
             'stringMinLen',
         );
-        $strCfg = \array_intersect_key($cfg, \array_flip($strCfgKeys));
+        $strCfg = \array_intersect_key($cfg, \array_flip($keysAll) + \array_flip($keysStr));
         if ($strCfg) {
             $this->abstractString->setCfg($strCfg);
         }
-        $objCfg = \array_diff_key($cfg, \array_flip($strCfgKeys));
+        $objCfg = \array_diff_key($cfg, \array_flip($keysStr));
         if ($objCfg) {
             $this->abstractObject->setCfg($objCfg);
         }

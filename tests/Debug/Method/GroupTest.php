@@ -3,6 +3,7 @@
 namespace bdk\Test\Debug\Method;
 
 use bdk\Debug;
+USE bdk\Debug\Abstraction\AbstractObject;
 use bdk\Debug\LogEntry;
 use bdk\PubSub\Event;
 use bdk\PubSub\Manager as EventManager;
@@ -97,9 +98,29 @@ class GroupTest extends DebugTestFramework
         $obj = (object) array('foo' => 'bar');
         $objToString = new Fixture\Test('toStringVal');
         $dateTime = new \DateTime('now');  // stringified
-        $this->debug->group('string', 42, null, false, $obj, $objToString, $dateTime);
+        $this->debug->group(
+            'string',
+            42,
+            null,
+            false,
+            $obj,
+            $objToString,
+            $dateTime
+        );
         $logEntry = $this->debug->data->get('log/0');
         $logEntry = $this->helper->logEntryToArray($logEntry);
+        $cfgAbsBak = $this->debug->abstracter->setCfg(array(
+            'brief' => true,
+            'caseCollect' => false,
+            'constCollect' => false,
+            'methodCollect' => false,
+            'objAttributeCollect' => false,
+            'propAttributeCollect' => false,
+            'toStringOutput' => false,
+        ));
+        $objExpect = $this->helper->crate($this->debug->abstracter->crate($obj, 'group'));
+        $this->debug->abstracter->setCfg($cfgAbsBak);
+        /*
         $this->assertSame(array(
             'method' => 'group',
             'args' => array(
@@ -107,12 +128,24 @@ class GroupTest extends DebugTestFramework
                 42,
                 null,
                 false,
-                $this->helper->crate($this->debug->abstracter->crate($obj, 'group')),
+                $objExpect,
                 'toStringVal',
                 $dateTime->format(\DateTime::ISO8601),
             ),
             'meta' => array(),
         ), $logEntry);
+        */
+        $this->assertSame('string', $logEntry['args'][0]);
+        $this->assertSame(42, $logEntry['args'][1]);
+        $this->assertSame(null, $logEntry['args'][2]);
+        $this->assertSame(false, $logEntry['args'][3]);
+        $this->assertSame($objExpect, $logEntry['args'][4]);
+        $this->assertTrue(($logEntry['args'][5]['cfgFlags'] & AbstractObject::BRIEF) === AbstractObject::BRIEF);
+        $this->assertSame(array(
+            'returnValue' => 'toStringVal',
+            'visibility' => 'public',
+        ), $logEntry['args'][5]['methods']['__toString']);
+        $this->assertTrue(($logEntry['args'][6]['cfgFlags'] & AbstractObject::BRIEF) === AbstractObject::BRIEF);
     }
 
     public function testGroupHideIfEmpty()

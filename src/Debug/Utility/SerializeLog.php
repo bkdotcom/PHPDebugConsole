@@ -15,6 +15,7 @@ namespace bdk\Debug\Utility;
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Abstraction\AbstractObject;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Utility\Php;
 use bdk\Debug\Utility\StringUtil;
@@ -216,6 +217,13 @@ class SerializeLog
      */
     private static function importLegacyObj($abs)
     {
+        $abs = AbstractObject::buildObjValues($abs);
+        if (isset($abs['collectMethods'])) {
+            if ($abs['collectMethods'] === false) {
+                $abs['cfgFlags'] &= ~AbstractObject::METHOD_COLLECT;
+            }
+            unset($abs['collectMethods']);
+        }
         $baseMethodInfoRef = new \ReflectionProperty('bdk\Debug\Abstraction\AbstractObjectMethods', 'baseMethodInfo');
         $baseMethodInfoRef->setAccessible(true);
         $baseMethodInfo = $baseMethodInfoRef->getValue();

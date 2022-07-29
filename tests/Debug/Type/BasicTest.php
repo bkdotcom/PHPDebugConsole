@@ -2,6 +2,7 @@
 
 namespace bdk\Test\Debug\Type;
 
+use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Test\Debug\DebugTestFramework;
 
@@ -9,8 +10,10 @@ use bdk\Test\Debug\DebugTestFramework;
  * PHPUnit tests for Debug class
  *
  * @covers \bdk\Debug\Abstraction\Abstracter
+ * @covers \bdk\Debug\Abstraction\AbstractString
  * @covers \bdk\Debug\Dump\BaseValue
  * @covers \bdk\Debug\Dump\Html
+ * @covers \bdk\Debug\Dump\Html\HtmlString
  * @covers \bdk\Debug\Dump\Html\Value
  * @covers \bdk\Debug\Dump\Text
  * @covers \bdk\Debug\Dump\TextAnsi
@@ -24,8 +27,22 @@ class BasicTest extends DebugTestFramework
         $ts = \time();
         $datetime = \gmdate(self::DATETIME_FORMAT, $ts);
         $test = new \bdk\Test\Debug\Fixture\Test();
+
+        $fhOpen = \fopen(__FILE__, 'r');
+        $resourceOpenEntryExpect = array(
+            'method' => 'log',
+            'args' => array(
+                array(
+                    'debug' => Abstracter::ABSTRACTION,
+                    'type' => Abstracter::TYPE_RESOURCE,
+                    'value' => \print_r($fhOpen, true) . ': stream',
+                ),
+            ),
+            'meta' => array(),
+        );
+
         return array(
-            'boolTrue' => array(
+            'bool.true' => array(
                 'log',
                 array(true),
                 array(
@@ -40,7 +57,7 @@ class BasicTest extends DebugTestFramework
                     ),
                 )
             ),
-            'boolFalse' => array(
+            'bool.false' => array(
                 'log',
                 array(false),
                 array(
@@ -55,22 +72,135 @@ class BasicTest extends DebugTestFramework
                     ),
                 )
             ),
-            'null' => array(
+
+            'callable' => array(
                 'log',
-                array(null),
+                array(array($test,'testBaseStatic')),
                 array(
-                    'chromeLogger' => '[[null],null,""]',
-                    'html' => '<li class="m_log"><span class="t_null">null</span></li>',
-                    'script' => 'console.log(null);',
-                    'streamAnsi' => "\e[38;5;250mnull\e[0m",
-                    'text' => 'null',
+                    'chromeLogger' => '[["callable: bdk\\\Test\\\Debug\\\Fixture\\\Test::testBaseStatic"],null,""]',
+                    'html' => '<li class="m_log"><span class="t_callable"><span class="t_type">callable</span> <span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>Test</span><span class="t_operator">::</span><span class="t_identifier">testBaseStatic</span></span></li>',
+                    'script' => 'console.log("callable: bdk\\\Test\\\Debug\\\Fixture\\\Test::testBaseStatic");',
+                    'streamAnsi' => "callable: \e[38;5;250mbdk\Test\Debug\Fixture\\\e[0m\e[1mTest\e[22m\e[38;5;130m::\e[0m\e[1mtestBaseStatic\e[22m",
+                    'text' => 'callable: bdk\Test\Debug\Fixture\Test::testBaseStatic',
                     'wamp' => array(
                         'log',
-                        array(null),
+                        array(
+                            array(
+                                'debug' => Abstracter::ABSTRACTION,
+                                'type' => Abstracter::TYPE_CALLABLE,
+                                'value' => array(
+                                    'bdk\Test\Debug\Fixture\Test',
+                                    'testBaseStatic',
+                                ),
+                            ),
+                        ),
                     ),
                 ),
             ),
-            'inf' => array(
+
+            'classname' => array(
+                'log',
+                array(
+                    Debug::_getInstance()->abstracter->crateWithVals(
+                        'SomeNamespace\Classname',
+                        array('typeMore' => Abstracter::TYPE_STRING_CLASSNAME)
+                    ),
+                ),
+                array(
+                    'entry' => array(
+                        'method' => 'log',
+                        'args' => array(
+                            array(
+                                'debug' => Abstracter::ABSTRACTION,
+                                'brief' => false,
+                                'strlen' => null,
+                                'type' => Abstracter::TYPE_STRING,
+                                'typeMore' => Abstracter::TYPE_STRING_CLASSNAME,
+                                'value' => 'SomeNamespace\Classname',
+                            )
+                        ),
+                        'meta' => array(),
+                    ),
+                    'html' => '<li class="m_log"><span class="classname no-quotes t_string" data-type-more="classname"><span class="namespace">SomeNamespace\</span>Classname</span></li>',
+                    'text' => 'SomeNamespace\Classname',
+                ),
+            ),
+
+            'closure' => array(
+                'log',
+                array(
+                    function ($foo, $bar) {
+                        return $foo . $bar;
+                    },
+                ),
+                array(
+                    'entry' => function ($logEntry) {
+                        $objAbs = $logEntry['args'][0];
+                        $this->assertAbstractionType($objAbs);
+                        $values = $objAbs->getValues();
+                        $this->assertSame('Closure', $values['className']);
+                        $line = __LINE__ - 10;
+                        $this->assertSame(array(
+                            'fileName' => __FILE__,
+                            'startLine' => $line,
+                            'extensionName' => false,
+                        ), $values['definition']);
+                        \array_walk($values['properties'], function ($propInfo, $propName) use ($line) {
+                            // echo \json_encode($propInfo, JSON_PRETTY_PRINT);
+                            $values = array_intersect_key($propInfo, \array_flip(array(
+                                'value',
+                                'valueFrom',
+                                'visibility',
+                            )));
+                            switch ($propName) {
+                                case 'debug.file':
+                                    $this->assertSame(array(
+                                        'value' => __FILE__,
+                                        'valueFrom' => 'debug',
+                                        'visibility' => 'debug',
+                                    ), $values);
+                                    break;
+                                case 'debug.line':
+                                    $this->assertSame(array(
+                                        'value' => $line,
+                                        'valueFrom' => 'debug',
+                                        'visibility' => 'debug',
+                                    ), $values);
+                                    break;
+                            }
+                        });
+                    },
+                    'html' => '<li class="m_log"><div class="t_object" data-accessible="public"><span class="classname">Closure</span>
+                        <dl class="object-inner">
+                        <dt class="t_modifier_final">final</dt>
+                        <dt class="properties">properties</dt>
+                        <dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="t_type">string</span> <span class="t_identifier">file</span> <span class="t_operator">=</span> <span class="t_string">' . __FILE__ . '</span></dd>
+                        <dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="t_type">int</span> <span class="t_identifier">line</span> <span class="t_operator">=</span> <span class="t_int">%d</span></dd>
+                        <dt class="methods">methods</dt>
+                        <dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier">__invoke</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$foo</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_parameter-name">$bar</span></span><span class="t_punct">)</span></dd>
+                        %a
+                        <dd class="method private"><span class="t_modifier_private">private</span> <span class="t_identifier">__construct</span><span class="t_punct">(</span><span class="t_punct">)</span></dd>
+                        </dl>
+                        </div></li>',
+                ),
+            ),
+
+            'float' => array(
+                'log',
+                array(10.10),
+                array(
+                    'chromeLogger' => '[[10.1],null,""]',
+                    'html' => '<li class="m_log"><span class="t_float">10.1</span></li>',
+                    'script' => 'console.log(10.1);',
+                    'streamAnsi' => "\e[96m10.1\e[0m",
+                    'text' => '10.1',
+                    'wamp' => array(
+                        'log',
+                        array(10.1),
+                    ),
+                ),
+            ),
+            'float.inf' => array(
                 'log',
                 array(INF),
                 array(
@@ -92,7 +222,7 @@ class BasicTest extends DebugTestFramework
                     ),
                 ),
             ),
-            'NaN' => array(
+            'float.NaN' => array(
                 'log',
                 array(NAN),
                 array(
@@ -114,6 +244,7 @@ class BasicTest extends DebugTestFramework
                     ),
                 ),
             ),
+
             'int' => array(
                 'log',
                 array(10),
@@ -129,7 +260,90 @@ class BasicTest extends DebugTestFramework
                     ),
                 ),
             ),
-            'intTimestamp' => array(
+
+            'null' => array(
+                'log',
+                array(null),
+                array(
+                    'chromeLogger' => '[[null],null,""]',
+                    'html' => '<li class="m_log"><span class="t_null">null</span></li>',
+                    'script' => 'console.log(null);',
+                    'streamAnsi' => "\e[38;5;250mnull\e[0m",
+                    'text' => 'null',
+                    'wamp' => array(
+                        'log',
+                        array(null),
+                    ),
+                ),
+            ),
+
+            'resource.open' => array(
+                'log',
+                array($fhOpen),
+                array(
+                    'custom' => function () use ($fhOpen) {
+                        \fclose($fhOpen);
+                    },
+                    'entry' => $resourceOpenEntryExpect,
+                    'chromeLogger' => '[["Resource id #' . (int) $fhOpen . ': stream"],null,""]',
+                    'html' => '<li class="m_log"><span class="t_resource">Resource id #' . (int) $fhOpen . ': stream</span></li>',
+                    'script' => 'console.log("Resource id #' . (int) $fhOpen . ': stream");',
+                    'text' => 'Resource id #' . (int) $fhOpen . ': stream',
+                    'wamp' => \json_decode(\json_encode($resourceOpenEntryExpect), true),
+                )
+            ),
+
+            'string.numeric' => array(
+                'log',
+                array('123.45'),
+                array(
+                    'chromeLogger' => '[["123.45"],null,""]',
+                    'html' => '<li class="m_log"><span class="t_string" data-type-more="numeric">123.45</span></li>',
+                    'script' => 'console.log("123.45");',
+                    'streamAnsi' => "\e[38;5;250m\"\e[96m123.45\e[38;5;250m\"\e[0m",
+                    'text' => '"123.45"',
+                    'wamp' => array(
+                        'log',
+                        array('123.45'),
+                    ),
+                ),
+            ),
+
+            'timestamp.float' => array(
+                'log',
+                array($ts + 0.1),
+                array(
+                    'entry' => array(
+                        'method' => 'log',
+                        'args' => array(
+                            array(
+                                'debug' => Abstracter::ABSTRACTION,
+                                'type' => Abstracter::TYPE_FLOAT,
+                                'typeMore' => Abstracter::TYPE_TIMESTAMP,
+                                'value' => $ts + 0.1,
+                            ),
+                        ),
+                        'meta' => array(),
+                    ),
+                    'chromeLogger' => '[["' . ($ts + 0.1) . ' (' . $datetime . ')"],null,""]',
+                    'html' => '<li class="m_log"><span class="timestamp value-container" title="' . $datetime . '"><span class="t_float" data-type-more="timestamp">' . ($ts + 0.1) . '</span></span></li>',
+                    'script' => 'console.log("' . ($ts + 0.1) . ' (' . $datetime . ')");',
+                    'streamAnsi' => "📅 \e[96m" . ($ts + 0.1) . "\e[0m \e[38;5;250m(" . $datetime . ")\e[0m",
+                    'text' => '📅 ' . ($ts + 0.1) . ' (' . $datetime . ')',
+                    'wamp' => array(
+                        'log',
+                        array(
+                            array(
+                                'debug' => Abstracter::ABSTRACTION,
+                                'type' => Abstracter::TYPE_FLOAT,
+                                'typeMore' => Abstracter::TYPE_TIMESTAMP,
+                                'value' => $ts + 0.1,
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+            'timestamp.int' => array(
                 'log',
                 array($ts),
                 array(
@@ -163,10 +377,10 @@ class BasicTest extends DebugTestFramework
                     ),
                 ),
             ),
-            'intTimestampForced' => array(
+            'timestamp.int.forced' => array(
                 'log',
                 array(
-                    \bdk\Debug::getInstance()->abstracter->crateWithVals(strtotime('1985-10-26 09:00:00 PDT'), array(
+                    Debug::getInstance()->abstracter->crateWithVals(\strtotime('1985-10-26 09:00:00 PDT'), array(
                         'typeMore' => Abstracter::TYPE_TIMESTAMP,
                     )),
                 ),
@@ -189,71 +403,7 @@ class BasicTest extends DebugTestFramework
                     ),
                 ),
             ),
-            'float' => array(
-                'log',
-                array(10.10),
-                array(
-                    'chromeLogger' => '[[10.1],null,""]',
-                    'html' => '<li class="m_log"><span class="t_float">10.1</span></li>',
-                    'script' => 'console.log(10.1);',
-                    'streamAnsi' => "\e[96m10.1\e[0m",
-                    'text' => '10.1',
-                    'wamp' => array(
-                        'log',
-                        array(10.1),
-                    ),
-                ),
-            ),
-            'floatTimestamp' => array(
-                'log',
-                array($ts + 0.1),
-                array(
-                    'entry' => array(
-                        'method' => 'log',
-                        'args' => array(
-                            array(
-                                'debug' => Abstracter::ABSTRACTION,
-                                'type' => Abstracter::TYPE_FLOAT,
-                                'typeMore' => Abstracter::TYPE_TIMESTAMP,
-                                'value' => $ts + 0.1,
-                            ),
-                        ),
-                        'meta' => array(),
-                    ),
-                    'chromeLogger' => '[["' . ($ts + 0.1) . ' (' . $datetime . ')"],null,""]',
-                    'html' => '<li class="m_log"><span class="timestamp value-container" title="' . $datetime . '"><span class="t_float" data-type-more="timestamp">' . ($ts + 0.1) . '</span></span></li>',
-                    'script' => 'console.log("' . ($ts + 0.1) . ' (' . $datetime . ')");',
-                    'streamAnsi' => "📅 \e[96m" . ($ts + 0.1) . "\e[0m \e[38;5;250m(" . $datetime . ")\e[0m",
-                    'text' => '📅 ' . ($ts + 0.1) . ' (' . $datetime . ')',
-                    'wamp' => array(
-                        'log',
-                        array(
-                            array(
-                                'debug' => Abstracter::ABSTRACTION,
-                                'type' => Abstracter::TYPE_FLOAT,
-                                'typeMore' => Abstracter::TYPE_TIMESTAMP,
-                                'value' => ($ts + 0.1),
-                            ),
-                        ),
-                    ),
-                ),
-            ),
-            'stringNumeric' => array(
-                'log',
-                array('123.45'),
-                array(
-                    'chromeLogger' => '[["123.45"],null,""]',
-                    'html' => '<li class="m_log"><span class="t_string" data-type-more="numeric">123.45</span></li>',
-                    'script' => 'console.log("123.45");',
-                    'streamAnsi' => "\e[38;5;250m\"\e[96m123.45\e[38;5;250m\"\e[0m",
-                    'text' => '"123.45"',
-                    'wamp' => array(
-                        'log',
-                        array('123.45'),
-                    ),
-                ),
-            ),
-            'stringTimestamp' => array(
+            'timestamp.string' => array(
                 'log',
                 array((string) $ts),
                 array(
@@ -266,6 +416,7 @@ class BasicTest extends DebugTestFramework
                         'log',
                         array(
                             array(
+                                'brief' => false,
                                 'debug' => Abstracter::ABSTRACTION,
                                 'strlen' => null,
                                 'type' => Abstracter::TYPE_STRING,
@@ -276,10 +427,10 @@ class BasicTest extends DebugTestFramework
                     ),
                 ),
             ),
-            'stringTimestampForced' => array(
+            'timestamp.string.forced' => array(
                 'log',
                 array(
-                    \bdk\Debug::getInstance()->abstracter->crateWithVals((string) strtotime('1985-10-26 09:00:00 PDT'), array(
+                    Debug::getInstance()->abstracter->crateWithVals((string) \strtotime('1985-10-26 09:00:00 PDT'), array(
                         'typeMore' => Abstracter::TYPE_TIMESTAMP,
                     )),
                 ),
@@ -293,6 +444,7 @@ class BasicTest extends DebugTestFramework
                         'log',
                         array(
                             array(
+                                'brief' => false,
                                 'debug' => Abstracter::ABSTRACTION,
                                 'strlen' => null,
                                 'type' => Abstracter::TYPE_STRING,
@@ -303,10 +455,10 @@ class BasicTest extends DebugTestFramework
                     ),
                 ),
             ),
-            'stringTimestampCrated' => array(
+            'timestamp.string.crated' => array(
                 'log',
                 array(
-                    \bdk\Debug::getInstance()->abstracter->crateWithVals((string) $ts, array(
+                    Debug::getInstance()->abstracter->crateWithVals((string) $ts, array(
                         'attribs' => array(
                             'class' => 'testaroo', // also test that converted to array
                         )
@@ -327,6 +479,7 @@ class BasicTest extends DebugTestFramework
                                         'testaroo',
                                     ),
                                 ),
+                                'brief' => false,
                                 'debug' => Abstracter::ABSTRACTION,
                                 'strlen' => null,
                                 'type' => Abstracter::TYPE_STRING,
@@ -335,6 +488,38 @@ class BasicTest extends DebugTestFramework
                             ),
                         ),
                     ),
+                ),
+            ),
+
+            'notInspected' => array(
+                'log',
+                array(Abstracter::NOT_INSPECTED),
+                array(
+                    'entry' => array(
+                        'method' => 'log',
+                        'args' => array(
+                            Abstracter::NOT_INSPECTED,
+                        ),
+                        'meta' => array(),
+                    ),
+                    'html' => '<li class="m_log"><span class="t_notInspected">NOT INSPECTED</span></li>',
+                    'text' => 'NOT INSPECTED',
+                ),
+            ),
+            'recursion' => array(
+                'log',
+                array(Abstracter::RECURSION),
+                array(
+                    'entry' => array(
+                        'method' => 'log',
+                        'args' => array(
+                            Abstracter::RECURSION,
+                        ),
+                        'meta' => array(),
+                    ),
+                    // array assumed
+                    'html' => '<li class="m_log"><span class="t_keyword">array</span> <span class="t_recursion">*RECURSION*</span></li>',
+                    'text' => 'array *RECURSION*',
                 ),
             ),
             'undefined' => array(
@@ -355,42 +540,26 @@ class BasicTest extends DebugTestFramework
             'unknown' => array(
                 'log',
                 array(
-                    \bdk\Debug::getInstance()->abstracter->crateWithVals('mysteryVal', array(
+                    Debug::getInstance()->abstracter->crateWithVals('mysteryVal', array(
                         'type' => Abstracter::TYPE_UNKNOWN,
                     )),
                 ),
                 array(
-                    'html' => '<li class="m_log"><span class="t_unknown" data-type-more="t_string"><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>' . "\n"
-                        . '<ul class="array-inner list-unstyled">' . "\n"
-                        . '<li><span class="t_key">strlen</span><span class="t_operator">=&gt;</span><span class="t_null">null</span></li>' . "\n"
-                        . '<li><span class="t_key">type</span><span class="t_operator">=&gt;</span><span class="t_string">unknown</span></li>' . "\n"
-                        . '<li><span class="t_key">typeMore</span><span class="t_operator">=&gt;</span><span class="t_null">null</span></li>' . "\n"
-                        . '<li><span class="t_key">value</span><span class="t_operator">=&gt;</span><span class="t_string">mysteryVal</span></li>' . "\n"
-                        . '</ul><span class="t_punct">)</span></span></span></li>',
-                ),
-            ),
-            'callable' => array(
-                'log',
-                array(array($test,'testBaseStatic')),
-                array(
-                    'chromeLogger' => '[["callable: bdk\\\Test\\\Debug\\\Fixture\\\Test::testBaseStatic"],null,""]',
-                    'html' => '<li class="m_log"><span class="t_callable"><span class="t_type">callable</span> <span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>Test</span><span class="t_operator">::</span><span class="t_identifier">testBaseStatic</span></span></li>',
-                    'script' => 'console.log("callable: bdk\\\Test\\\Debug\\\Fixture\\\Test::testBaseStatic");',
-                    'streamAnsi' => "callable: \e[38;5;250mbdk\Test\Debug\Fixture\\\e[0m\e[1mTest\e[22m\e[38;5;130m::\e[0m\e[1mtestBaseStatic\e[22m",
-                    'text' => 'callable: bdk\Test\Debug\Fixture\Test::testBaseStatic',
-                    'wamp' => array(
-                        'log',
-                        array(
+                    'entry' => array(
+                        'method' => 'log',
+                        'args' => array(
                             array(
+                                'brief' => false, // crateWithVals... initially treated as string
                                 'debug' => Abstracter::ABSTRACTION,
-                                'type' => Abstracter::TYPE_CALLABLE,
-                                'value' => array(
-                                    'bdk\Test\Debug\Fixture\Test',
-                                    'testBaseStatic',
-                                ),
+                                'strlen' => null,
+                                'type' => Abstracter::TYPE_UNKNOWN,
+                                'typeMore' => null,
+                                'value' => 'mysteryVal',
                             ),
                         ),
+                        'meta' => array(),
                     ),
+                    'html' => '<li class="m_log"><span class="t_unknown">unknown type</span></li>',
                 ),
             ),
         );
@@ -407,7 +576,7 @@ class BasicTest extends DebugTestFramework
         $src = 'success';
         $ref = &$src;
         $this->debug->log('ref', $ref);
-        $src = 'fail';
+        // $src = 'fail';
         $output = $this->debug->output();
         $this->assertStringContainsString('success', $output);
     }

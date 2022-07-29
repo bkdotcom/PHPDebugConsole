@@ -15,7 +15,9 @@ use ReflectionProperty;
  * @covers \bdk\Debug
  * @covers \bdk\Debug\Abstraction\Abstracter
  * @covers \bdk\Debug\Abstraction\AbstractObject
+ * @covers \bdk\Debug\Abstraction\AbstractObjectConstants
  * @covers \bdk\Debug\Abstraction\AbstractObjectProperties
+ * @covers \bdk\Debug\Abstraction\AbstractObjectMethods
  * @covers \bdk\Debug\Dump\Base
  * @covers \bdk\Debug\Dump\Html\Helper
  * @covers \bdk\Debug\Dump\Html\HtmlString
@@ -409,6 +411,7 @@ EOD;
                         <tr><th class="t_int t_key text-right" scope="row">4</th><td class="t_object" data-accessible="public"><span class="classname">Closure</span>
                             <dl class="object-inner">
                             <dt class="t_modifier_final">final</dt>
+                            <dt class="constants">constants <i>not collected</i></dt>
                             <dt class="properties">properties</dt>
                             <dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="t_type">string</span> <span class="t_identifier">file</span> <span class="t_operator">=</span> <span class="t_string">' . __FILE__ . '</span></dd>
                             <dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="t_type">int</span> <span class="t_identifier">line</span> <span class="t_operator">=</span> <span class="t_int">%i</span></dd>
@@ -430,7 +433,7 @@ EOD;
                                     . '<dd class="method private"><span class="t_modifier_private">private</span> <span class="t_identifier">__construct</span><span class="t_punct">(</span><span class="t_punct">)</span></dd>'
                             ) . '
                             */
-                            . '<dt class="methods">methods not collected</dt>
+                            . '<dt class="methods">methods <i>not collected</i></dt>
                             </dl>
                         </td></tr>
                         </tbody>
@@ -696,12 +699,12 @@ EOD;
                         <tr><th>&nbsp;</th><th scope="col">value</th></tr>
                     </thead>
                     <tbody>
-                        <tr><th class="t_int t_key text-right" scope="row">0</th><td><span class="t_type">binary string</span>
-                            <ul class="list-unstyled value-container" data-type="string">
+                        <tr><th class="t_int t_key text-right" scope="row">0</th><td><span class="t_keyword">string</span><span class="text-muted">(binary)</span>
+                            <ul class="list-unstyled value-container" data-type="string" data-type-more="binary">
                                 <li>size = <span class="t_int">16</span></li>
                                 <li class="t_string"><span class="binary">' . $binaryStr . '</span></li>
                             </ul></td></tr>
-                        <tr><th class="t_int t_key text-right" scope="row">1</th><td class="string-encoded tabs-container" data-type="json">
+                        <tr><th class="t_int t_key text-right" scope="row">1</th><td class="string-encoded tabs-container" data-type-more="json">
                             <nav role="tablist"><a class="nav-link" data-target=".string-raw" data-toggle="tab" role="tab">json</a><a class="active nav-link" data-target=".string-decoded" data-toggle="tab" role="tab">decoded</a></nav>
                             <div class="string-raw tab-pane" role="tabpanel"><span class="value-container" data-type="string"><span class="prettified">(prettified)</span> <span class="highlight language-json no-quotes t_string">{
                                 &quot;poop&quot;: &quot;\ud83d\udca9&quot;,

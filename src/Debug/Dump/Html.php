@@ -322,9 +322,9 @@ class Html extends Base
     private function methodGroupHeader($args, $meta)
     {
         $label = \array_shift($args);
-        if ($meta['isFuncName']) {
-            $label = $this->valDumper->markupIdentifier($label, true);
-        }
+        $label = $meta['isFuncName']
+            ? $this->valDumper->markupIdentifier($label, true)
+            : \preg_replace('#^<span class="t_string">(.+)</span>$#s', '$1', $this->valDumper->dump($label));
         $labelClasses = \implode(' ', \array_keys(\array_filter(array(
             'font-weight-bold' => $meta['boldLabel'],
             'group-label' => true,

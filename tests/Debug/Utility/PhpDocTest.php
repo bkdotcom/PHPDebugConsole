@@ -255,90 +255,113 @@ EOD;
         ), $parsed);
     }
 
-    public function testStrings()
+    public function dataProviderComments()
     {
-        $comment = <<<'EOD'
-        /**
-         * @var string $comment phpdoc comment
-         */
-EOD;
-        $parsed = Debug::getInstance()->phpDoc->getParsed($comment);
-        $this->assertSame(array(
-            'summary' => null,
-            'desc' => null,
-            'var' => array(
+        return array(
+            'basic' => array(
+                '/**
+                 * @var string $comment phpdoc comment
+                 */',
                 array(
-                    'type' => 'string',
-                    'name' => 'comment',
-                    'desc' => 'phpdoc comment'
+                    'summary' => null,
+                    'desc' => null,
+                    'var' => array(
+                        array(
+                            'type' => 'string',
+                            'name' => 'comment',
+                            'desc' => 'phpdoc comment'
+                        ),
+                    ),
                 ),
             ),
-        ), $parsed);
-
-        $comment = <<<'EOD'
-        /**
-         * @method boolean magicMethod()
-         */
-EOD;
-        $parsed = Debug::getInstance()->phpDoc->getParsed($comment);
-        $this->assertSame(array(
-            'summary' => null,
-            'desc' => null,
             'method' => array(
+                '/**
+                 * @method boolean magicMethod()
+                 */',
                 array(
-                    'static' => false,
-                    'type' => 'bool',
-                    'name' => 'magicMethod',
-                    'param' => array(),
+                    'summary' => null,
                     'desc' => null,
+                    'method' => array(
+                        array(
+                            'static' => false,
+                            'type' => 'bool',
+                            'name' => 'magicMethod',
+                            'param' => array(),
+                            'desc' => null,
+                        ),
+                    ),
                 ),
             ),
-        ), $parsed);
-
-        $comment = <<<'EOD'
-        /**
-         * @param string comment
-         */
-EOD;
-        $parsed = Debug::getInstance()->phpDoc->getParsed($comment);
-        $this->assertSame(array(
-            'summary' => null,
-            'desc' => null,
-            'param' => array(
+            'missing $' => array(
+                '/**
+                 * @param string comment
+                 */',
                 array(
-                    'type' => 'string',
-                    'name' => 'comment',
+                    'summary' => null,
                     'desc' => null,
+                    'param' => array(
+                        array(
+                            'type' => 'string',
+                            'name' => 'comment',
+                            'desc' => null,
+                        ),
+                    ),
                 ),
             ),
-        ), $parsed);
-
-        $comment = <<<'EOD'
-        /**
-         * Ding.
-         *    Indented
-         *    Indented 2
-         *
-         * @param integer[] $number Some number
-         *                    does things
-         * @return self
-         */
-EOD;
-        $parsed = Debug::getInstance()->phpDoc->getParsed($comment);
-        $this->assertSame(array(
-            'summary' => 'Ding.',
-            'desc' => "Indented\nIndented 2",
-            'param' => array(
+            'missing $ 2' => array(
+                '/**
+                 * @param string comment here
+                 */',
                 array(
-                    'type' => 'int[]',
-                    'name' => 'number',
-                    'desc' => "Some number\ndoes things",
+                    'summary' => null,
+                    'desc' => null,
+                    'param' => array(
+                        array(
+                            'type' => 'string',
+                            'name' => null,
+                            'desc' => 'comment here',
+                        ),
+                    ),
                 ),
             ),
-            'return' => array(
-                'type' => 'self',
-                'desc' => null,
+            'multi lines' => array(
+                '/**
+                 * Ding.
+                 *    Indented
+                 *    Indented 2
+                 *
+                 * @param integer[] $number Some number
+                 *                    does things
+                 * @return self
+                 */',
+                array(
+                    'summary' => 'Ding.',
+                    'desc' => "Indented\nIndented 2",
+                    'param' => array(
+                        array(
+                            'type' => 'int[]',
+                            'name' => '$number',
+                            'desc' => "Some number\ndoes things",
+                        ),
+                    ),
+                    'return' => array(
+                        'type' => 'self',
+                        'desc' => null,
+                    ),
+                ),
             ),
-        ), $parsed);
+        );
+    }
+
+    /**
+     * @param string $comment
+     * @param array  $expect
+     *
+     * @dataProvider dataProviderComments
+     */
+    public function testStrings($comment, $expect)
+    {
+        $parsed = Debug::getInstance()->phpDoc->getParsed($comment);
+        $this->assertSame($expect, $parsed);
     }
 }

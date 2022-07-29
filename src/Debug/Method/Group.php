@@ -95,7 +95,7 @@ class Group implements SubscriberInterface
         if ($collect === false) {
             return;
         }
-        if (!$logEntry['args']) {
+        if ($logEntry['args'] === array()) {
             // give a default label
             $logEntry['args'] = array( 'group' );
             $caller = $this->debug->backtrace->getCallerInfo(0, Backtrace::INCL_ARGS);
@@ -105,8 +105,17 @@ class Group implements SubscriberInterface
                 $logEntry->setMeta('isFuncName', true);
             }
         }
-        $this->stringifyArgs($logEntry);
+        $cfgAbsBak = $debug->abstracter->setCfg(array(
+            'brief' => true,
+            'caseCollect' => false,
+            'constCollect' => false,
+            'methodCollect' => false,
+            'objAttributeCollect' => false,
+            'propAttributeCollect' => false,
+            'toStringOutput' => false,
+        ));
         $debug->log($logEntry);
+        $debug->abstracter->setCfg($cfgAbsBak);
     }
 
     /**
@@ -428,38 +437,6 @@ class Group implements SubscriberInterface
         }
         $this->cleanupInfo['stack'][$stackCount - 1]['childCount']++;
         return false;
-    }
-
-    /**
-     * Use string representation for group args if available
-     *
-     * @param LogEntry $logEntry LogEntry instance
-     *
-     * @return void
-     */
-    private function stringifyArgs(LogEntry $logEntry)
-    {
-        $abstracter = $this->debug->abstracter;
-        $args = $logEntry['args'];
-        foreach ($args as $k => $v) {
-            /*
-                doGroupStringify is called before appendLog.
-                values have not yet been abstracted.
-                abstract now
-            */
-            $typeInfo = $abstracter->getType($v);
-            if ($typeInfo[0] !== Abstracter::TYPE_OBJECT) {
-                continue;
-            }
-            $v = $abstracter->crate($v, $logEntry['method']);
-            if ($v['stringified']) {
-                $v = $v['stringified'];
-            } elseif (isset($v['methods']['__toString']['returnValue'])) {
-                $v = $v['methods']['__toString']['returnValue'];
-            }
-            $args[$k] = $v;
-        }
-        $logEntry['args'] = $args;
     }
 
     /**

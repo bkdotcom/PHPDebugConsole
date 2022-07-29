@@ -9,6 +9,7 @@ use bdk\Test\Debug\DebugTestFramework;
  * PHPUnit tests for Debug::time() methods
  *
  * @covers \bdk\Debug
+ * @covers \bdk\Debug\Dump\Base
  * @covers \bdk\Debug\Dump\TextAnsi
  * @covers \bdk\Debug\Method\Helper
  * @covers \bdk\Debug\Route\Firephp

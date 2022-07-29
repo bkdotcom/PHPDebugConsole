@@ -78,11 +78,10 @@ class AbstractObjectMethods
             return;
         }
         $this->abs = $abs;
-        if (!($abs['cfgFlags'] & AbstractObject::COLLECT_METHODS)) {
-            $this->addMethodsMin();
-            return;
-        }
-        $this->addMethodsFull();
+        $abs['cfgFlags'] & AbstractObject::METHOD_COLLECT
+            ? $this->addMethodsFull()
+            : $this->addMethodsMin();
+        $this->addFinish();
     }
 
     /**
@@ -105,7 +104,7 @@ class AbstractObjectMethods
     private function addMethodsFull()
     {
         $abs = $this->abs;
-        if ($this->abstracter->getCfg('cacheMethods') && isset(static::$methodCache[$abs['className']])) {
+        if ($this->abstracter->getCfg('methodCache') && isset(static::$methodCache[$abs['className']])) {
             $abs['methods'] = static::$methodCache[$abs['className']];
             $this->addFinish();
             return;
@@ -116,7 +115,6 @@ class AbstractObjectMethods
         if ($abs['className'] !== 'Closure') {
             static::$methodCache[$abs['className']] = $abs['methods'];
         }
-        $this->addFinish();
     }
 
     /**
@@ -130,7 +128,7 @@ class AbstractObjectMethods
         $obj = $abs->getSubject();
         if (\method_exists($obj, '__toString')) {
             $abs['methods']['__toString'] = array(
-                'returnValue' => $this->toString(),
+                'returnValue' => null, // set via addFinish()
                 'visibility' => 'public',
             );
         }
@@ -154,11 +152,10 @@ class AbstractObjectMethods
         if (isset($abs['methods']['__toString'])) {
             $abs['methods']['__toString']['returnValue'] = $this->toString();
         }
-        $collectPhpDoc = $this->abs['cfgFlags'] & AbstractObject::COLLECT_PHPDOC;
-        if ($collectPhpDoc) {
+        $phpDocCollect = $this->abs['cfgFlags'] & AbstractObject::PHPDOC_COLLECT;
+        if ($phpDocCollect) {
             return;
         }
-        // remove PhpDoc desc and summary
         foreach ($abs['methods'] as $name => $method) {
             $method['phpDoc']['desc'] = null;
             $method['phpDoc']['summary'] = null;
@@ -180,9 +177,11 @@ class AbstractObjectMethods
         $abs = $this->abs;
         $interfaceMethods = array(
             'ArrayAccess' => array('offsetExists','offsetGet','offsetSet','offsetUnset'),
+            'BackedEnum' => array('from', 'tryFrom'),
             'Countable' => array('count'),
             'Iterator' => array('current','key','next','rewind','valid'),
             'IteratorAggregate' => array('getIterator'),
+            'UnitEnum' => array('cases'),
         );
         $interfaces = \array_intersect($abs['implements'], \array_keys($interfaceMethods));
         foreach ($interfaces as $interface) {
@@ -311,7 +310,7 @@ class AbstractObjectMethods
         $phpDoc = $this->helper->getPhpDoc($refMethod);
         \ksort($phpDoc);
         $info = $this->buildMethodValues(array(
-            'attributes' => $this->abs['cfgFlags'] & AbstractObject::COLLECT_ATTRIBUTES_METHOD
+            'attributes' => $this->abs['cfgFlags'] & AbstractObject::METHOD_ATTRIBUTE_COLLECT
                 ? $this->helper->getAttributes($refMethod)
                 : array(),
             'inheritedFrom' => $declaringClassName !== $className
@@ -348,7 +347,7 @@ class AbstractObjectMethods
         if (!empty($phpDoc['return'])) {
             $return = \array_merge($return, $phpDoc['return']);
             $return['type'] = $this->helper->resolvePhpDocType($return['type'], $this->abs);
-            if (!($this->abs['cfgFlags'] & AbstractObject::COLLECT_PHPDOC)) {
+            if (!($this->abs['cfgFlags'] & AbstractObject::PHPDOC_COLLECT)) {
                 $return['desc'] = null;
             }
         } elseif (PHP_VERSION_ID >= 70000) {
@@ -370,7 +369,7 @@ class AbstractObjectMethods
             return null;
         }
         $obj = $abs->getSubject();
-        if (!\is_object($obj)) {
+        if (\is_object($obj) === false) {
             return null;
         }
         $val = null;

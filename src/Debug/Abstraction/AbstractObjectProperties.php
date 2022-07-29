@@ -160,6 +160,11 @@ class AbstractObjectProperties
     {
         $obj = $abs->getSubject();
         $ref = new ReflectionFunction($obj);
+        $abs['definition'] = array(
+            'fileName' => $ref->getFileName(),
+            'startLine' => $ref->getStartLine(),
+            'extensionName' => $ref->getExtensionName(),
+        );
         $abs['properties']['debug.file'] = static::buildPropValues(array(
             'type' => Abstracter::TYPE_STRING,
             'value' => $ref->getFileName(),
@@ -256,7 +261,7 @@ class AbstractObjectProperties
         if ($abs['properties']) {
             return;
         }
-        if (!$this->isDomObj($obj)) {
+        if ($this->isDomObj($obj) === false) {
             return;
         }
         // for php < 8.1
@@ -464,7 +469,7 @@ class AbstractObjectProperties
         */
         $declaringClassName = $refProperty->getDeclaringClass()->getName();
         $propInfo = static::buildPropValues(array(
-            'attributes' => $abs['cfgFlags'] & AbstractObject::COLLECT_ATTRIBUTES_PROP
+            'attributes' => $abs['cfgFlags'] & AbstractObject::PROP_ATTRIBUTE_COLLECT
                 ? $this->helper->getAttributes($refProperty)
                 : array(),
             'desc' => $phpDoc['desc'],
@@ -496,12 +501,11 @@ class AbstractObjectProperties
      */
     private function crate(Abstraction $abs)
     {
-        $abs['hist'][] = $abs->getSubject();
         $properties = $this->abs['properties'];
-        $collectPhpDoc = $abs['cfgFlags'] & AbstractObject::COLLECT_PHPDOC;
+        $phpDocCollect = $abs['cfgFlags'] & AbstractObject::PHPDOC_COLLECT;
         foreach ($properties as $name => $info) {
             $info['value'] = $this->abstracter->crate($info['value'], $abs['debugMethod'], $abs['hist']);
-            if (!$collectPhpDoc) {
+            if (!$phpDocCollect) {
                 $info['desc'] = null;
             }
             $properties[$name] = $info;

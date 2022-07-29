@@ -167,9 +167,9 @@ class TextAnsiValue extends TextValue
      */
     protected function dumpObjectMethods(Abstraction $abs)
     {
-        $collectMethods = $abs['cfgFlags'] & AbstractObject::COLLECT_METHODS;
-        $outputMethods = $abs['cfgFlags'] & AbstractObject::OUTPUT_METHODS;
-        if (!$collectMethods || !$outputMethods) {
+        $methodCollect = $abs['cfgFlags'] & AbstractObject::METHOD_COLLECT;
+        $methodOutput = $abs['cfgFlags'] & AbstractObject::METHOD_OUTPUT;
+        if (!$methodCollect || !$methodOutput) {
             return '';
         }
         $counts = array(

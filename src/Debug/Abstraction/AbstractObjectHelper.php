@@ -156,10 +156,6 @@ class AbstractObjectHelper
         if (!$type || !$abs['fullyQualifyPhpDocType']) {
             return $type;
         }
-        $keywords = array(
-            'array','bool','callable','float','int','iterable','null','object','self','string',
-            '$this','false','mixed','resource','static','true','void',
-        );
         $types = \preg_split('#\s*\|\s*#', $type);
         foreach ($types as $i => $type) {
             if (\strpos($type, '\\') === 0) {
@@ -171,7 +167,7 @@ class AbstractObjectHelper
                 $isArray = true;
                 $type = \substr($type, 0, -2);
             }
-            if (\in_array($type, $keywords, true)) {
+            if (\in_array($type, $this->phpDoc->types, true)) {
                 continue;
             }
             $type = $this->resolvePhpDocTypeClass($type, $abs);

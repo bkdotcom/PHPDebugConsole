@@ -61,7 +61,7 @@ trait AssertionTrait
     }
 
     /*
-    	Message assertions
+        Message assertions
     */
 
     /**
@@ -181,7 +181,7 @@ trait AssertionTrait
     }
 
     /*
-		Request assertions
+        Request assertions
     */
 
     /**
@@ -205,7 +205,7 @@ trait AssertionTrait
     }
 
     /*
-    	ServerRequest assertions
+        ServerRequest assertions
     */
 
     /**
@@ -316,7 +316,7 @@ trait AssertionTrait
     }
 
     /*
-    	Response assertions
+        Response assertions
     */
 
     /**
@@ -356,13 +356,13 @@ trait AssertionTrait
      */
     protected function assertStatusCode($code)
     {
-    	if (\is_string($code) && \preg_match('/^\d+$/', $code)) {
-	        $code = (int) $code;
-    	}
+        if (\is_string($code) && \preg_match('/^\d+$/', $code)) {
+            $code = (int) $code;
+        }
         if (\is_int($code) === false) {
             throw new InvalidArgumentException(\sprintf(
                 'Status code must to be an integer, but %s provided',
-				self::getTypeDebug($code)
+                self::getTypeDebug($code)
             ));
         }
         if ($code < 100 || $code > 599) {

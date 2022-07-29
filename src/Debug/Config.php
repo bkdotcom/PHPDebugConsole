@@ -29,30 +29,36 @@ class Config
             // any key not found falls under 'debug'...
         ),
         'abstracter' => array(
-            'cacheMethods',
-            'collectAttributesConst',
-            'collectAttributesMethod',
-            'collectAttributesObj',
-            'collectAttributesParam',
-            'collectAttributesProp',
-            'collectConstants',
-            'collectMethods',
-            'collectPhpDoc',
+            'brief',
+            'caseAttributeCollect',
+            'caseAttributeOutput',
+            'caseCollect',
+            'caseOutput',
+            'constAttributeCollect',
+            'constAttributeOutput',
+            'constCollect',
+            'constOutput',
             'fullyQualifyPhpDocType',
+            'methodAttributeCollect',
+            'methodAttributeOutput',
+            'methodCache',
+            'methodCollect',
+            'methodDescOutput',
+            'methodOutput',
+            'objAttributeObj',
+            'objAttributeOutput',
             'objectsExclude',
             'objectSort',
             'objectsWhitelist',
-            'outputAttributesConst',
-            'outputAttributesMethod',
-            'outputAttributesObj',
-            'outputAttributesParam',
-            'outputAttributesProp',
-            'outputConstants',
-            'outputMethodDesc',
-            'outputMethods',
-            'outputPhpDoc',
+            'paramAttributeCollect',
+            'paramAttributeOutput',
+            'phpDocCollect',
+            'phpDocOutput',
+            'propAttributeCollect',
+            'propAttributeOutput',
             'stringMaxLen',
             'stringMinLen',
+            'toStringOutput',
             'useDebugInfo',
         ),
         'errorHandler' => array(
@@ -286,13 +292,13 @@ class Config
      *
      * converts
      *   array(
-     *      'collectMethods' => false,
+     *      'methodCollect' => false,
      *      'emailMask' => 123,
      *   )
      * to
      *   array(
      *       'abstracter' => array(
-     *           'collectMethods' => false,
+     *           'methodCollect' => false,
      *       ),
      *       'errorHandler' => array(
      *           'emailer' => array(

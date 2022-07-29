@@ -199,6 +199,7 @@ class PluginMethodGeneralTest extends DebugTestFramework
                     ),
                 ),
                 'addQuotes' => false,
+                'brief' => false,
                 'contentType' => 'application/json',
                 'prettified' => true,
                 'prettifiedTag' => true,

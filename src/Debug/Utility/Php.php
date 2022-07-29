@@ -15,10 +15,12 @@ namespace bdk\Debug\Utility;
 use Exception;
 use ReflectionClass;
 use ReflectionClassConstant;
+use ReflectionEnum;
 use ReflectionMethod;
 use ReflectionObject;
 use ReflectionProperty;
 use Reflector;
+use UnitEnum;
 
 /**
  * Php language utilities
@@ -97,6 +99,9 @@ class Php
     {
         if ($mixed instanceof Reflector && $returnSelf) {
             return $mixed;
+        }
+        if ($mixed instanceof UnitEnum) {
+            return new ReflectionEnum($mixed);
         }
         if (\is_object($mixed)) {
             return new ReflectionObject($mixed);
@@ -209,10 +214,11 @@ class Php
      * String to Reflector
      *
      * Accepts:
-     *   * 'class'
-     *   * 'class::method()'
-     *   * 'class::$property'
-     *   * 'class::CONSTANT'
+     *   * 'class'              ReflectionClass
+     *   * 'class::method()'    ReflectionMethod
+     *   * 'class::$property'   ReflectionProperty
+     *   * 'class::CONSTANT'    ReflectionClassConstant (if Php >= 7.1)
+     *   * 'enum::CASE'         ReflectionEnumUnitCase
      *
      * @param string $string string representing class, method, property, or class constant
      *
@@ -237,6 +243,9 @@ class Php
         }
         if ($matches['property']) {
             return new ReflectionProperty($matches['class'], $matches['property']);
+        }
+        if ($matches['constant'] && PHP_VERSION_ID >= 80100 && \enum_exists($matches['class'])) {
+            return (new ReflectionEnum($matches['class']))->getCase($matches['constant']);
         }
         if ($matches['constant'] && PHP_VERSION_ID >= 70100) {
             return new ReflectionClassConstant($matches['class'], $matches['constant']);

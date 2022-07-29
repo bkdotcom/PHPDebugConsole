@@ -118,7 +118,7 @@ li[class*=m_] > .t_array.array-file-tree > .array-inner {
   > .object-inner {
     > .t_modifier_final {
       color: $error-fg;
-      background-color: lighten($error-bg, 5%);
+      background-color: lighten($error-bg, 10%);
       border-bottom: solid 1px $error-fg;
       padding: 0.25em 0.25em 1px;
     }
@@ -146,7 +146,7 @@ li[class*=m_] > .t_array.array-file-tree > .array-inner {
         border-bottom: 0;
       }
     }
-    > .t_punct {
+    > .t_punct:not(.t_colon) {
       opacity: 1;
       font-weight: bold;
       color: inherit;

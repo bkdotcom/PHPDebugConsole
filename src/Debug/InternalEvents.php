@@ -114,8 +114,7 @@ class InternalEvents implements SubscriberInterface
         }
         $values = $abs->getValues();
         \ksort($values);
-        $event['return'] = $event['output']->dump($values);
-        $event['typeMore'] = 't_string';
+        $event['return'] = $event['valDumper']->dump($values);
     }
 
     /**

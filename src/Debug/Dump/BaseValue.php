@@ -182,12 +182,11 @@ class BaseValue extends AbstractComponent
             $event = $this->debug->publishBubbleEvent(Debug::EVENT_DUMP_CUSTOM, new Event(
                 $abs,
                 array(
-                    'output' => $this,
+                    'valDumper' => $this,
                     'return' => '',
-                    'typeMore' => $abs['typeMore'],
                 )
             ));
-            $this->setDumpOpt('typeMore', $event['typeMore']);
+            $this->setDumpOpt('typeMore', $abs['typeMore']);
             return $event['return'];
         }
         return \in_array($type, $this->simpleTypes, true)
@@ -411,6 +410,20 @@ class BaseValue extends AbstractComponent
     protected function dumpUndefined()
     {
         return Abstracter::UNDEFINED;
+    }
+
+    /**
+     * Dump Abstraction::TYPE_UNKNOWN
+     *
+     * @param Abstraction $abs resource abstraction
+     *
+     * @return array|string
+     */
+    protected function dumpUnknown(Abstraction $abs)
+    {
+        $values = $abs->getValues();
+        \ksort($values);
+        return $values;
     }
 
     /**

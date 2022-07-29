@@ -112,7 +112,7 @@ class DebugTest extends DebugTestFramework
     public function testPublishBubbleEvent()
     {
         $val = new \bdk\Debug\Abstraction\Abstraction('someCustomValueType', array('foo' => '<b>bar&baz</b>'));
-        $expect = '<span class="t_someCustomValueType" data-type-more="t_string"><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
+        $expect = '<span class="t_someCustomValueType"><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
 <ul class="array-inner list-unstyled">
 \t<li><span class="t_key">foo</span><span class="t_operator">=&gt;</span><span class="t_string">&lt;b&gt;bar&amp;baz&lt;/b&gt;</span></li>
 \t<li><span class="t_key">type</span><span class="t_operator">=&gt;</span><span class="t_string">someCustomValueType</span></li>

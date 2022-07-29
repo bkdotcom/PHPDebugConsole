@@ -17,6 +17,16 @@ namespace bdk\Debug\Utility;
  */
 class PhpDoc extends PhpDocBase
 {
+    public $types = array(
+        'array','bool','callable','float','int','iterable','null','object','string',
+        '$this','self','static',
+        'array-key','double','false','mixed','non-empty-array','resource','scalar','true','void',
+        'key-of', 'value-of',
+        'callable-string', 'class-string', 'literal-string', 'numeric-string', 'non-empty-string',
+        'negative-int', 'positive-int',
+        'int-mask', 'int-mask-of',
+    );
+
     /** @var string[] */
     protected static $cache = array();
     protected $parsers = array();
@@ -50,41 +60,33 @@ class PhpDoc extends PhpDocBase
     }
 
     /**
-     * Replace "{@inheritDoc}""
+     * @param string $body tag content
      *
-     * @param array  $parsed  Parsed PhpDoc comment
-     * @param string $comment raw comment (asterisks removed)
-     *
-     * @return array Parsed PhpDoc comment
+     * @return string[]
      */
-    private function replaceInheritDoc($parsed, $comment)
+    protected static function extractTypeFromBody(string $body)
     {
-        if (!$this->reflector) {
-            return $parsed;
+        $type = '';
+        $nestingLevel = 0;
+        for ($i = 0, $iMax = \strlen($body); $i < $iMax; $i++) {
+            $char = $body[$i];
+            if ($nestingLevel === 0 && \trim($char) === '') {
+                break;
+            }
+            $type .= $char;
+            if (\in_array($char, array('<', '(', '[', '{'), true)) {
+                $nestingLevel++;
+                continue;
+            }
+            if (\in_array($char, array('>', ')', ']', '}'), true)) {
+                $nestingLevel--;
+                continue;
+            }
         }
-        if (\strtolower($comment) === '{@inheritdoc}') {
-            // phpDoc considers this non-standard
-            return $this->getParentParsed();
-        }
-        if (\strtolower($parsed['desc'] . $parsed['summary']) === '{@inheritdoc}') {
-            // phpDoc considers this non-standard
-            $parentParsed = $this->getParentParsed();
-            $parsed['summary'] = $parentParsed['summary'];
-            $parsed['desc'] = $parentParsed['desc'];
-            return $parsed;
-        }
-        if (!isset($parsed['desc'])) {
-            return $parsed;
-        }
-        $parsed['desc'] = \preg_replace_callback(
-            '/{@inheritdoc}/i',
-            function () {
-                $parentParsed = $this->getParentParsed();
-                return $parentParsed['desc'];
-            },
-            $parsed['desc']
+        return array(
+            'type' => $type,
+            'desc' => \trim(\substr($body, \strlen($type))),
         );
-        return $parsed;
     }
 
     /**
@@ -172,25 +174,31 @@ class PhpDoc extends PhpDocBase
      *         parameters:  defaultValue key only returned if defined.
      *                      defaultValue is not parsed
      *
-     * @param string $tag         tag type
+     * @param string $tagName     tag name/type
      * @param string $tagStr      tag values (ie "[Type] [name] [<description>]")
      * @param string $elementName class, property, method, or constant name if available
      *
      * @return array
      */
-    private function parseTag($tag, $tagStr = '', $elementName = null)
+    private function parseTag($tagName, $tagStr = '', $elementName = null)
     {
-        $parsed = array();
-        $parser = $this->getTagParser($tag);
-        $matches = array();
-        \preg_match($parser['regex'], $tagStr, $matches);
-        foreach ($parser['parts'] as $part) {
-            $parsed[$part] = isset($matches[$part]) && $matches[$part] !== ''
-                ? \trim($matches[$part])
-                : null;
+        $parser = \array_merge(array(
+            'parts' => array(),
+            'regex' => null,
+            'callable' => array(),
+        ), $this->getTagParser($tagName));
+        $parsed = \array_fill_keys($parser['parts'], null);
+        if (isset($parser['regex'])) {
+            $matches = array();
+            \preg_match($parser['regex'], $tagStr, $matches);
+            foreach ($parser['parts'] as $part) {
+                $parsed[$part] = isset($matches[$part]) && $matches[$part] !== ''
+                    ? \trim($matches[$part])
+                    : null;
+            }
         }
-        if (isset($parser['callable'])) {
-            $parsed = \call_user_func($parser['callable'], $parsed, $tag, $elementName);
+        foreach ((array) $parser['callable'] as $callable) {
+            $parsed = \array_merge($parsed, \call_user_func($callable, $tagStr, $tagName, $parsed, $elementName));
         }
         $parsed['desc'] = $this->trimDesc($parsed['desc']);
         return $parsed;
@@ -226,6 +234,44 @@ class PhpDoc extends PhpDocBase
     }
 
     /**
+     * Replace "{@inheritDoc}""
+     *
+     * @param array  $parsed  Parsed PhpDoc comment
+     * @param string $comment raw comment (asterisks removed)
+     *
+     * @return array Parsed PhpDoc comment
+     */
+    private function replaceInheritDoc($parsed, $comment)
+    {
+        if (!$this->reflector) {
+            return $parsed;
+        }
+        if (\strtolower($comment) === '{@inheritdoc}') {
+            // phpDoc considers this non-standard
+            return $this->getParentParsed();
+        }
+        if (\strtolower($parsed['desc'] . $parsed['summary']) === '{@inheritdoc}') {
+            // phpDoc considers this non-standard
+            $parentParsed = $this->getParentParsed();
+            $parsed['summary'] = $parentParsed['summary'];
+            $parsed['desc'] = $parentParsed['desc'];
+            return $parsed;
+        }
+        if (!isset($parsed['desc'])) {
+            return $parsed;
+        }
+        $parsed['desc'] = \preg_replace_callback(
+            '/{@inheritdoc}/i',
+            function () {
+                $parentParsed = $this->getParentParsed();
+                return $parentParsed['desc'];
+            },
+            $parsed['desc']
+        );
+        return $parsed;
+    }
+
+    /**
      * Get the tag parsers
      *
      * @return void
@@ -239,30 +285,10 @@ class PhpDoc extends PhpDocBase
             array(
                 'tags' => array('param','property','property-read', 'property-write', 'var'),
                 'parts' => array('type','name','desc'),
-                'regex' => '/^'
-                    . '(?:(?P<type>[^\$].*?)\s+)?'
-                    . '(?:&?\$?(?P<name>\S+)\s+)?'
-                    . '(?P<desc>.*)?'
-                    . '$/s',
-                'callable' => function ($parsed, $tag, $name) {
-                    if (\strpos($parsed['desc'], ' ') === false) {
-                        // desc is single "word"
-                        if (!$parsed['type']) {
-                            $parsed['type'] = $parsed['desc'];
-                            $parsed['desc'] = null;
-                        } elseif (!$parsed['name']) {
-                            $parsed['name'] = \ltrim($parsed['desc'], '&$');
-                            $parsed['desc'] = null;
-                        }
-                    }
-                    if ($tag === 'var' && $name !== null && $parsed['name'] !== $name) {
-                        // name mismatch
-                        $parsed['desc'] = \trim($parsed['name'] . ' ' . $parsed['desc']);
-                        $parsed['name'] = $name;
-                    }
-                    $parsed['type'] = $this->typeNormalize($parsed['type']);
-                    return $parsed;
-                },
+                'callable' => array(
+                    array($this, 'extractTypeFromBody'),
+                    array($this, 'tagParam'),
+                ),
             ),
             array(
                 'tags' => array('method'),
@@ -274,7 +300,7 @@ class PhpDoc extends PhpDocBase
                     . '\((?P<param>((?>[^()]+)|(?R))*)\)'  // see http://php.net/manual/en/regexp.reference.recursive.php
                     . '(?:\s+(?P<desc>.*))?'
                     . '/s',
-                'callable' => function ($parsed) {
+                'callable' => function ($tagStr, $tagName, $parsed) {
                     $parsed['param'] = $this->parseMethodParams($parsed['param']);
                     $parsed['static'] = $parsed['static'] !== null;
                     $parsed['type'] = $this->typeNormalize($parsed['type']);
@@ -286,7 +312,7 @@ class PhpDoc extends PhpDocBase
                 'parts' => array('type','desc'),
                 'regex' => '/^(?P<type>.*?)'
                     . '(?:\s+(?P<desc>.*))?$/s',
-                'callable' => function ($parsed) {
+                'callable' => function ($tagStr, $tagName, $parsed) {
                     $parsed['type'] = $this->typeNormalize($parsed['type']);
                     return $parsed;
                 }
@@ -320,6 +346,59 @@ class PhpDoc extends PhpDocBase
                 'regex' => '/^(?P<desc>.*?)$/s',
             ),
         );
+    }
+
+    /**
+     * Test is string appears to start with a variable name
+     *
+     * @param string $str Stringto test
+     *
+     * @return bool
+     */
+    private static function strStartsWithVariable($str)
+    {
+        return \strpos($str, '$') === 0
+           || \strpos($str, '&$') === 0
+           || \strpos($str, '...$') === 0
+           || \strpos($str, '&...$') === 0;
+    }
+
+    /**
+     * clean up parsed tag
+     * 'param','property','property-read', 'property-write', 'var'
+     *
+     * @param string $tagStr      phpDoc tag body
+     * @param string $tagName     phpDoc tag name
+     * @param array  $parsed      type, name, & desc
+     * @param string $elementName name of element tag attached to
+     *
+     * @return array
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter
+     */
+    private function tagParam($tagStr, $tagName, $parsed, $elementName)
+    {
+        if (self::strStartsWithVariable($parsed['desc'])) {
+            \preg_match('/^(\S*)/', $parsed['desc'], $matches);
+            $parsed['name'] = $matches[1];
+            $parsed['desc'] = \preg_replace('/^\S*\s+/', '', $parsed['desc']);
+        }
+        if ($tagName !== 'param' && $parsed['name'] !== null) {
+            $parsed['name'] = \ltrim($parsed['name'], '&$');
+        }
+        if ($tagName === 'param' && $parsed['name'] === null && \strpos($parsed['desc'], ' ') === false) {
+            $parsed['name'] = $parsed['desc'];
+            $parsed['desc'] = null;
+        }
+        if ($tagName === 'var' && $elementName !== null && $parsed['name'] !== $elementName) {
+            // name mismatch
+            $parsed['desc'] = \trim($parsed['name'] . ' ' . $parsed['desc']);
+            $parsed['name'] = $elementName;
+        }
+        $parsed['type'] = $this->typeNormalize($parsed['type']);
+        return $parsed;
     }
 
     /**

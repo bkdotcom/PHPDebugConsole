@@ -247,7 +247,7 @@ class AbstractString extends AbstractComponent
         $maxlen = \array_key_exists($cat, $stringMaxLen)
             ? $stringMaxLen[$cat]
             : $stringMaxLen['other'];
-        if (!\is_array($maxlen)) {
+        if (\is_array($maxlen) === false) {
             return $maxlen !== null
                 ? $maxlen
                 : -1;

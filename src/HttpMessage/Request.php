@@ -112,7 +112,7 @@ class Request extends Message implements RequestInterface
      */
     public function withRequestTarget($requestTarget)
     {
-        if (!\is_string($requestTarget)) {
+        if (\is_string($requestTarget) === false) {
             throw new InvalidArgumentException(
                 'Request target must be a string.'
             );

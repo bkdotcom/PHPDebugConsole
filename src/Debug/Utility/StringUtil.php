@@ -134,10 +134,10 @@ class StringUtil
      */
     public static function isJson($val)
     {
-        if (!\is_string($val)) {
+        if (\is_string($val) === false) {
             return false;
         }
-        if (!\preg_match('/^(\[.+\]|\{.+\})$/s', $val)) {
+        if (\preg_match('/^(\[.+\]|\{.+\})$/s', $val) !== 1) {
             return false;
         }
         \json_decode($val);
@@ -154,7 +154,7 @@ class StringUtil
      */
     public static function isSerializedSafe($val)
     {
-        if (!\is_string($val)) {
+        if (\is_string($val) === false) {
             return false;
         }
         $isSerialized = false;
@@ -186,7 +186,7 @@ class StringUtil
      */
     public static function isXml($str)
     {
-        if (!\is_string($str)) {
+        if (\is_string($str) === false) {
             return false;
         }
         \libxml_use_internal_errors(true);
@@ -232,7 +232,7 @@ class StringUtil
      */
     public static function prettySql($sql)
     {
-        if (!\class_exists('SqlFormatter')) {
+        if (\class_exists('SqlFormatter') === false) {
             return $sql; // @codeCoverageIgnore
         }
         // whitespace only, don't highlight

@@ -285,7 +285,7 @@ class AbstractObjectMethodParams
      */
     private function phpDocParamValue($param, $className = null)
     {
-        if (!\array_key_exists('defaultValue', $param)) {
+        if (\array_key_exists('defaultValue', $param) === false) {
             return Abstracter::UNDEFINED;
         }
         $defaultValue = $param['defaultValue'];

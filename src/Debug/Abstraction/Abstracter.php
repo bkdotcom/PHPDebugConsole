@@ -465,7 +465,7 @@ class Abstracter extends AbstractComponent
             $cfg['objectsExclude'] = $this->cfg['objectsExclude'];
         }
         if (isset($cfg['stringMaxLen'])) {
-            if (!\is_array($cfg['stringMaxLen'])) {
+            if (\is_array($cfg['stringMaxLen']) === false) {
                 $cfg['stringMaxLen'] = array(
                     'other' => $cfg['stringMaxLen'],
                 );

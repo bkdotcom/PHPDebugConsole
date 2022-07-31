@@ -122,7 +122,7 @@ class Helper
     public function doTrace(LogEntry $logEntry)
     {
         $caption = $logEntry->getMeta('caption');
-        if (!\is_string($caption)) {
+        if (\is_string($caption) === false) {
             $this->debug->warn(\sprintf(
                 'trace caption should be a string.  %s provided',
                 \is_object($caption)

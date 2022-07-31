@@ -845,7 +845,7 @@ class Debug extends AbstractDebug
             $args[0]['debug'] = self::META;
             return $args[0];
         }
-        if (!\is_string($args[0])) {
+        if (\is_string($args[0]) === false) {
             // invalid / return empty meta array
             return array('debug' => self::META);
         }

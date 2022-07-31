@@ -143,7 +143,7 @@ class FileTree
     {
         foreach ($cur['src'] as $k => &$val) {
             list($keys, $val) = $this->walkBranch(array($k), $val);
-            if (!\is_array($val)) {
+            if (\is_array($val) === false) {
                 // leaf (file)
                 $cur['out'][] = $val;
                 continue;

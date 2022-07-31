@@ -54,7 +54,7 @@ class Substitution
      */
     public function process($args, $options = array())
     {
-        if (!\is_string($args[0])) {
+        if (\is_string($args[0]) === false) {
             return $args;
         }
         $this->subInfo = array(
@@ -97,7 +97,7 @@ class Substitution
     {
         $index = ++$this->subInfo['index'];
         $replace = $matches[0];
-        if (!\array_key_exists($index, $this->subInfo['args'])) {
+        if (\array_key_exists($index, $this->subInfo['args']) === false) {
             return $replace;
         }
         $arg = $this->subInfo['args'][$index];

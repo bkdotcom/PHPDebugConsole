@@ -257,7 +257,7 @@ class HtmlObject
     {
         $str = '<dt>phpDoc</dt>' . "\n";
         foreach ($abs['phpDoc'] as $tagName => $values) {
-            if (!\is_array($values)) {
+            if (\is_array($values) === false) {
                 continue;
             }
             foreach ($values as $tagData) {

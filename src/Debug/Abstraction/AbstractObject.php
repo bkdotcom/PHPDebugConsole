@@ -233,7 +233,9 @@ class AbstractObject extends AbstractComponent
     public function onStart(Abstraction $abs)
     {
         $obj = $abs->getSubject();
-        if ($obj instanceof \DateTimeInterface) {
+        if ($obj instanceof \DateTime || $obj instanceof \DateTimeImmutable) {
+            // check for both DateTime and DateTimeImmutable
+            //   DateTimeInterface (and DateTimeImmutable) not available until Php 5.5
             $abs['isTraverseOnly'] = false;
             $abs['stringified'] = $obj->format(\DateTime::ISO8601);
         } elseif ($obj instanceof \mysqli) {

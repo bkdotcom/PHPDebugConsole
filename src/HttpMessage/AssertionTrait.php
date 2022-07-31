@@ -102,7 +102,7 @@ trait AssertionTrait
      */
     private function assertHeaderValue($value)
     {
-        if (\is_scalar($value) && !\is_bool($value)) {
+        if (\is_scalar($value) && \is_bool($value) === false) {
             $value = array((string) $value);
         }
         if (\is_array($value) === false) {
@@ -418,7 +418,7 @@ trait AssertionTrait
      */
     protected function assertPort($port)
     {
-        if (!\is_int($port)) {
+        if (\is_int($port) === false) {
             throw new InvalidArgumentException(\sprintf(
                 'Port must be a int, but %s provided.',
                 $this->getTypeDebug($port)

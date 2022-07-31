@@ -177,7 +177,7 @@ class LogEntry extends Event implements JsonSerializable
      */
     public function setMeta($mixed, $val = null)
     {
-        if (!\is_array($mixed)) {
+        if (\is_array($mixed) === false) {
             if ($val === null) {
                 /** @psalm-suppress EmptyArrayAccess */
                 unset($this->values['meta'][$mixed]);

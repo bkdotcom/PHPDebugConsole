@@ -88,7 +88,7 @@ class UseStatements
         self::$recordPart = null;
         self::$useStatements = array();
 
-        if (!\defined('T_NAME_QUALIFIED')) {
+        if (\defined('T_NAME_QUALIFIED') === false) {
             // T_NAME_QUALIFIED introduced with PHP 8.0
             \define('T_NAME_QUALIFIED', 314);
         }
@@ -133,7 +133,7 @@ class UseStatements
         $file = \fopen($file, 'r');
         $line = 0;
         $source = '';
-        while (!\feof($file)) {
+        while (\feof($file) === false) {
             ++$line;
             if ($line >= $startLine) {
                 break;
@@ -168,7 +168,7 @@ class UseStatements
      */
     private static function recordToken($token)
     {
-        if (!\is_array($token)) {
+        if (\is_array($token) === false) {
             self::recordTokenString($token);
             return;
         }

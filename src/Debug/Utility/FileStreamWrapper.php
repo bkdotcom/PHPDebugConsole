@@ -601,7 +601,7 @@ class FileStreamWrapper
     public function url_stat($path, $flags)
     {
         static::unregister();
-        if (!\file_exists($path)) {
+        if (\file_exists($path) === false) {
             static::register();
             return false;
         }

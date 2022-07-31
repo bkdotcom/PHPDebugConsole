@@ -354,7 +354,7 @@ class UploadedFile implements UploadedFileInterface
      */
     private function assertError($error)
     {
-        if (\is_int($error) === false || !\array_key_exists($error, $this->errors)) {
+        if (\is_int($error) === false || \array_key_exists($error, $this->errors) === false) {
             throw new InvalidArgumentException('Upload file error status must be an integer value and one of the "UPLOAD_ERR_*" constants.');
         }
     }
@@ -406,10 +406,10 @@ class UploadedFile implements UploadedFileInterface
      */
     private function assertTargetPath($targetPath)
     {
-        if (!\is_string($targetPath) || $targetPath === '') {
+        if (\is_string($targetPath) === false || $targetPath === '') {
             throw new InvalidArgumentException('Invalid path provided for move operation; must be a non-empty string');
         }
-        if (!\is_writable(\dirname($targetPath))) {
+        if (\is_writable(\dirname($targetPath)) === false) {
             // Throw exception if the $targetPath specified is invalid.
             throw new RuntimeException(\sprintf(
                 'The target path "%s" is not writable.',

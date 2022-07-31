@@ -208,7 +208,7 @@ class Utility
      */
     public static function isFile($val)
     {
-        if (!\is_string($val)) {
+        if (\is_string($val) === false) {
             return false;
         }
         /*

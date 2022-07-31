@@ -149,7 +149,7 @@ class Php
         if ($opts & self::IS_CALLABLE_ARRAY_ONLY) {
             return false;
         }
-        $syntaxOnly = \is_string($val) && !\preg_match('/(::|\\\)/', $val)
+        $syntaxOnly = \is_string($val) && \preg_match('/(::|\\\)/', $val) !== 1
             ? false // string without namespace: do a full check
             : ($opts & self::IS_CALLABLE_SYNTAX_ONLY) === self::IS_CALLABLE_SYNTAX_ONLY;
         return \is_callable($val, $syntaxOnly);

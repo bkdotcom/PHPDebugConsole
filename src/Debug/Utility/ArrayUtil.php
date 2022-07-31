@@ -51,7 +51,7 @@ class ArrayUtil
      */
     public static function isList($val)
     {
-        if (!\is_array($val)) {
+        if (\is_array($val) === false) {
             return false;
         }
         // iterate over keys more efficient than `$val === array_values($val)`

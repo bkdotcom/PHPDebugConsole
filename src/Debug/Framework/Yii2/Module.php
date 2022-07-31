@@ -259,7 +259,7 @@ class Module extends BaseModule implements SubscriberInterface, BootstrapInterfa
             $this->module->getVersion() returns the application "module" version vs framework version ¯\_(ツ)_/¯
         */
         $yiiVersion = Yii::getVersion();  // Framework version
-        if (!\version_compare($yiiVersion, '2.0.14', '>=')) {
+        if (\version_compare($yiiVersion, '2.0.14', '<')) {
             return;
         }
         YiiEvent::on('*', '*', function (YiiEvent $event) {

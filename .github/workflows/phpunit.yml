@@ -55,7 +55,9 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-php-
     - name: Install dependencies
-      run: composer install --prefer-dist --no-progress
+      run: |
+        composer --version
+        composer install --prefer-dist --no-progress
     - name: Unit test
       run: composer run test
     - name: Publish code coverage

@@ -89,7 +89,7 @@ class FindExit
         $count = \count($tokens);
         for ($i = 0; $i < $count; $i++) {
             $token = $tokens[$i];
-            if (!\is_array($token)) {
+            if (\is_array($token) === false) {
                 $continue = $this->handleStringToken($token);
                 if ($continue) {
                     continue;
@@ -298,7 +298,7 @@ class FindExit
             : \token_get_all($source);
         if ($inclWhitespace === false) {
             $tokens = \array_filter($tokens, function ($token) {
-                return !\is_array($token) || $token[0] !== T_WHITESPACE;
+                return \is_array($token) === false || $token[0] !== T_WHITESPACE;
             });
             $tokens = \array_values($tokens);
         }

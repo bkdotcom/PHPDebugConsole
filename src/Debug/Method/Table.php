@@ -67,7 +67,7 @@ class Table
      */
     private static function colKeys($rows)
     {
-        if (!\is_array($rows)) {
+        if (\is_array($rows) === false) {
             return array();
         }
         $colKeys = array();
@@ -106,7 +106,7 @@ class Table
             if ($position !== false) {
                 $segment = \array_splice($colKeys, 0, (int) $position + 1);
                 \array_splice($newKeys, \count($newKeys), 0, $segment);
-            } elseif (!\in_array($curKey, $newKeys, true)) {
+            } elseif (\in_array($curKey, $newKeys, true) === false) {
                 \array_push($newKeys, $curKey);
             }
         }
@@ -261,7 +261,7 @@ class Table
             return;
         }
         $rows = $this->processRowsGet();
-        if (!\is_array($rows)) {
+        if (\is_array($rows) === false) {
             return;
         }
         foreach ($rows as $rowKey => $row) {

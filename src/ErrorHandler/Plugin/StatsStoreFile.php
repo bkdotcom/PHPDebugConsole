@@ -165,10 +165,10 @@ class StatsStoreFile extends AbstractComponent implements StatsStoreInterface
     {
         $return = false;
         $dir = \dirname($file);
-        if (!\file_exists($dir)) {
+        if (\file_exists($dir) === false) {
             \mkdir($dir, 0755, true);
         }
-        if (\is_writable($file) || !\file_exists($file) && \is_writeable($dir)) {
+        if (\is_writable($file) || \file_exists($file) === false && \is_writeable($dir)) {
             $return = \file_put_contents($file, $str);
         }
         return $return;

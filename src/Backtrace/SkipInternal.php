@@ -52,7 +52,7 @@ class SkipInternal
         if (\is_int($level) === false) {
             throw new InvalidArgumentException(\sprintf('level must be an integer'));
         }
-        if (!\is_array($classes)) {
+        if (\is_array($classes) === false) {
             $classes = array($classes => $level);
         }
         foreach ($classes as $key => $val) {

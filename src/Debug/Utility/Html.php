@@ -401,7 +401,7 @@ class Html
      */
     private static function buildAttribValClass($values)
     {
-        if (!\is_array($values)) {
+        if (\is_array($values) === false) {
             $values = \explode(' ', $values);
         }
         $values = \array_map(function ($key, $val) {

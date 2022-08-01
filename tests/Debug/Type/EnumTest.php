@@ -3,6 +3,7 @@
 namespace bdk\Test\Debug\Type;
 
 use bdk\Debug;
+use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\LogEntry;
 use bdk\Test\Debug\DebugTestFramework;
 
@@ -36,6 +37,7 @@ class EnumTest extends DebugTestFramework
                     'entry' => function (LogEntry $logEntry) {
                         $abs = $logEntry['args'][0];
                         $this->assertAbstractionType($abs);
+                        $this->assertSame(Abstracter::TYPE_OBJECT, $abs['type']);
                         $this->assertSame(array(
                             'BREAKFAST' => array(
                                 'attributes' => array(),
@@ -87,6 +89,8 @@ class EnumTest extends DebugTestFramework
                             <dd class="isReadOnly property public"><span class="t_modifier_public">public</span> <span class="t_modifier_readonly">readonly</span> <span class="t_type">string</span> <span class="t_identifier">name</span> <span class="t_operator">=</span> <span class="t_string">DINNER</span></dd>
                             <dt class="methods">methods</dt>
                             <dd class="isStatic method public" data-implements="UnitEnum"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="t_identifier">cases</span><span class="t_punct">(</span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">array</span></dd>
+                            <dd class="isStatic method public"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="t_identifier">prepare</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$meal</span> <span class="t_operator">=</span> <span class="t_object t_parameter-default" data-accessible="public"><span class="t_const" title="The most important meal
+                                Meals PHPDoc"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\Enum\</span>Meals</span><span class="t_operator">::</span><span class="t_identifier">BREAKFAST</span></span></span></span><span class="t_punct">)</span></dd>
                             </dl>
                             </div></dd>
                         <dd class="constant public"><span class="t_modifier_public">public</span> <span class="t_identifier">REGULAR_CONSTANT</span> <span class="t_operator">=</span> <span class="t_string">test</span></dd>
@@ -98,6 +102,8 @@ class EnumTest extends DebugTestFramework
                         <dd class="isReadOnly property public"><span class="t_modifier_public">public</span> <span class="t_modifier_readonly">readonly</span> <span class="t_type">string</span> <span class="t_identifier">name</span> <span class="t_operator">=</span> <span class="t_string">BREAKFAST</span></dd>
                         <dt class="methods">methods</dt>
                         <dd class="isStatic method public" data-implements="UnitEnum"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="t_identifier">cases</span><span class="t_punct">(</span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">array</span></dd>
+                        <dd class="isStatic method public"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="t_identifier">prepare</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$meal</span> <span class="t_operator">=</span> <span class="t_object t_parameter-default" data-accessible="public"><span class="t_const" title="The most important meal
+                            Meals PHPDoc"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\Enum\</span>Meals</span><span class="t_operator">::</span><span class="t_identifier">BREAKFAST</span></span></span></span><span class="t_punct">)</span></dd>
                         </dl>
                         </div></li>',
                 ),

@@ -772,7 +772,7 @@ EOD;
             // @requires not working in 4.8.36
             $this->markTestSkipped('anonymous classes are a php 7.0 thing');
         }
-        $filepath = \realpath(__DIR__ . '/../Fixture/Anonymous.php');
+        $filepath = TEST_DIR . '/Debug/Fixture/Anonymous.php';
         $line = 6;
         $anonymous = require $filepath;
         $this->testMethod(

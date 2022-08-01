@@ -107,12 +107,6 @@ class Group implements SubscriberInterface
         }
         $cfgAbsBak = $debug->abstracter->setCfg(array(
             'brief' => true,
-            'caseCollect' => false,
-            'constCollect' => false,
-            'methodCollect' => false,
-            'objAttributeCollect' => false,
-            'propAttributeCollect' => false,
-            'toStringOutput' => false,
         ));
         $debug->log($logEntry);
         $debug->abstracter->setCfg($cfgAbsBak);

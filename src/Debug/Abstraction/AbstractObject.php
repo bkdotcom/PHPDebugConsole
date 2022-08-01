@@ -282,7 +282,6 @@ class AbstractObject extends AbstractComponent
             'collectPropertyValues',
             'fullyQualifyPhpDocType',
             'hist',
-            // 'isAnonymous',
             'isTraverseOnly',
             'propertyOverrideValues',
             'reflector',
@@ -455,9 +454,18 @@ class AbstractObject extends AbstractComponent
     private function getCfgFlags()
     {
         $flagVals = \array_intersect_key(self::$cfgFlags, \array_filter($this->cfg));
-        return \array_reduce($flagVals, function ($carry, $val) {
+        $bitmask = \array_reduce($flagVals, function ($carry, $val) {
             return $carry | $val;
         }, 0);
+        if ($bitmask & self::BRIEF) {
+            $bitmask &= ~self::CASE_COLLECT;
+            $bitmask &= ~self::CONST_COLLECT;
+            $bitmask &= ~self::METHOD_COLLECT;
+            $bitmask &= ~self::OBJ_ATTRIBUTE_COLLECT;
+            $bitmask &= ~self::PROP_ATTRIBUTE_COLLECT;
+            $bitmask &= ~self::TO_STRING_OUTPUT;
+        }
+        return $bitmask;
     }
 
     /**

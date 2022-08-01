@@ -18,6 +18,7 @@ use bdk\Debug\Abstraction\AbstractObject;
 use bdk\Debug\Abstraction\AbstractObjectHelper;
 use ReflectionMethod;
 use ReflectionParameter;
+use UnitEnum;
 
 /**
  * Get method parameter info
@@ -25,6 +26,7 @@ use ReflectionParameter;
 class AbstractObjectMethodParams
 {
     protected $abs;
+    protected $abstracter;
     protected $helper;
 
     private static $baseParamInfo = array(
@@ -40,10 +42,12 @@ class AbstractObjectMethodParams
     /**
      * Constructor
      *
-     * @param AbstractObjectHelper $helper helper class
+     * @param Abstracter           $abstracter Abstracter
+     * @param AbstractObjectHelper $helper     helper class
      */
-    public function __construct(AbstractObjectHelper $helper)
+    public function __construct(Abstracter $abstracter, AbstractObjectHelper $helper)
     {
+        $this->abstracter = $abstracter;
         $this->helper = $helper;
     }
 
@@ -179,7 +183,9 @@ class AbstractObjectMethodParams
         $defaultValue = Abstracter::UNDEFINED;
         if ($refParameter->isDefaultValueAvailable()) {
             $defaultValue = $refParameter->getDefaultValue();
-            if (PHP_VERSION_ID >= 50406 && $refParameter->isDefaultValueConstant()) {
+            if ($defaultValue instanceof UnitEnum) {
+                $defaultValue = $this->abstracter->crate($defaultValue, $this->abs['debugMethod']);
+            } elseif (PHP_VERSION_ID >= 50406 && $refParameter->isDefaultValueConstant()) {
                 /*
                     getDefaultValueConstantName() :
                         php may return something like self::CONSTANT_NAME

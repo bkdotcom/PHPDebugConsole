@@ -442,7 +442,7 @@ trait AssertionTrait
         $this->assertString($scheme, 'scheme');
         if (\preg_match('/^[a-z][-a-z0-9.+]*$/i', $scheme) !== 1) {
             throw new InvalidArgumentException(\sprintf(
-                'Invalid scheme:  %s',
+                'Invalid scheme: "%s"',
                 $scheme
             ));
         }

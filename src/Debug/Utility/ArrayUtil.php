@@ -87,7 +87,6 @@ class ArrayUtil
 
     /**
      * Recursively merge arrays
-     * Numeric keyed values append the array as `array_merge` does
      *
      * @param array $arrayDef   default array
      * @param array $array2,... array to merge
@@ -298,12 +297,11 @@ class ArrayUtil
                     $arrayDef[$k2] = $v2;
                     continue;
                 }
-                // append int-key'd values if not already in_array
+                // append int-key'd values if not already in array
                 if (\in_array($v2, $arrayDef, true)) {
-                    // already in array
                     continue;
                 }
-                // append it
+                // unique value -> append it
                 $arrayDef[] = $v2;
                 continue;
             }

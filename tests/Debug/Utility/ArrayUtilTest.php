@@ -22,6 +22,65 @@ class ArrayUtilTest extends TestCase
         $this->assertSame($expectArray, $array, 'updated array not as expected');
     }
 
+    public function mergeDeepProvider()
+    {
+        return array(
+            0 => array(
+                array(
+                    'planes' => 'array1 val',
+                    'trains' => array('electric','diesel',),
+                    'callable' => array($this, 'testIsList'),
+                    'automobiles' => array(
+                        'hatchback' => array(),
+                        'sedan' => array('family','luxury'),
+                        'suv' => array('boxy','good'),
+                    ),
+                    1 => array('bar'),
+                    'typeMismatch' => 'not array'
+                ),
+                array(
+                    'boats' => array('speed','house'),
+                    'callable' => array($this, __FUNCTION__),
+                    'trains' => array('steam',),
+                    'planes' => 'array2 val',
+                    'automobiles' => array(
+                        'hatchback' => 'array2 val',
+                        'suv' => 'array2 val',
+                    ),
+                    1 => array('foo','bar','baz'),
+                    'typeMismatch' => array('array'),
+                ),
+                array(
+                    'trains' => array('maglev'),
+                ),
+                array(
+                    'planes' => 'array2 val',
+                    'trains' => array('electric','diesel','steam','maglev'),
+                    'callable' => array($this, __FUNCTION__), // callable was replaced vs appending
+                    'automobiles' => array(
+                        'hatchback' => 'array2 val',
+                        'sedan' => array('family','luxury'),
+                        'suv' => 'array2 val',
+                    ),
+                    1 => array('bar','foo','baz'),
+                    'typeMismatch' => array('array'),
+                    'boats' => array('speed','house'),
+                ),
+            ),
+            /*
+            1 => array(
+                array('orange', 'banana', 'apple', 'raspberry'),
+                array('pineapple', 4 => 'cherry'),
+                array('grape'),
+                ArrayUtil::MERGE_INT_KEY_REPLACE,
+                array(
+                    'grape', 'banana', 'apple', 'raspberry', 'cherry',
+                )
+            )
+            */
+        );
+    }
+
     public function providerSpliceAssoc()
     {
         return array(
@@ -193,54 +252,16 @@ class ArrayUtilTest extends TestCase
     }
 
     /**
-     * Test
-     *
-     * @return void
+     * @dataProvider mergeDeepProvider
      */
-    public function testMergeDeep()
+    public function testMergeDeep($argsAndExpect)
     {
-        $array1 = array(
-            'planes' => 'array1 val',
-            'trains' => array('electric','diesel',),
-            'callable' => array($this, 'testIsList'),
-            'automobiles' => array(
-                'hatchback' => array(),
-                'sedan' => array('family','luxury'),
-                'suv' => array('boxy','good'),
-            ),
-            1 => array('bar'),
-            'typeMismatch' => 'not array'
+        $argsAndExpect = \func_get_args();
+        $expect = \array_pop($argsAndExpect);
+        $this->assertSame(
+            $expect,
+            \call_user_func_array('bdk\Debug\Utility\ArrayUtil::mergeDeep', $argsAndExpect)
         );
-        $array2 = array(
-            'boats' => array('speed','house'),
-            'callable' => array($this, __FUNCTION__),
-            'trains' => array('steam',),
-            'planes' => 'array2 val',
-            'automobiles' => array(
-                'hatchback' => 'array2 val',
-                'suv' => 'array2 val',
-            ),
-            1 => array('foo','bar','baz'),
-            'typeMismatch' => array('array'),
-        );
-        $array3 = array(
-            'trains' => array('maglev'),
-        );
-        $arrayExpect = array(
-            'planes' => 'array2 val',
-            'trains' => array('electric','diesel','steam','maglev'),
-            'callable' => array($this, __FUNCTION__), // callable was replaced vs appending
-            'automobiles' => array(
-                'hatchback' => 'array2 val',
-                'sedan' => array('family','luxury'),
-                'suv' => 'array2 val',
-            ),
-            1 => array('bar','foo','baz'),
-            'typeMismatch' => array('array'),
-            'boats' => array('speed','house'),
-        );
-        $arrayOut = ArrayUtil::mergeDeep($array1, $array2, $array3);
-        $this->assertSame($arrayExpect, $arrayOut);
     }
 
     /**

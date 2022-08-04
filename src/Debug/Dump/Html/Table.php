@@ -104,7 +104,7 @@ class Table
      */
     private function buildCaption()
     {
-        $caption = \htmlspecialchars($this->options['caption']);
+        $caption = \htmlspecialchars((string) $this->options['caption']);
         if (!$this->options['tableInfo']['class']) {
             return $caption
                 ? '<caption>' . $caption . '</caption>' . "\n"

@@ -193,28 +193,19 @@ class ErrorSummary
      */
     private function buildFatalContext(Error $error)
     {
-        $fileLines = $error['context'];
-        $html .= $this->html->buildTag(
-            'li',
-            array(
-                'class' => 't_string no-quotes',
-                'data-file' => $error['file'],
-                'data-line' => $error['line'],
-            ),
-            \sprintf('%s (line %s)', $error['file'], $error['line'])
-        ) . "\n";
-        $html .= '<li>' . $this->html->buildTag(
-            'pre',
-            array(
-                'class' => 'highlight line-numbers',
-                'data-alert' => $error['line'],
-                'data-line' => \key($fileLines),
-            ),
-            '<code class="language-php">'
-                . \htmlspecialchars(\implode($fileLines))
-            . '</code>'
-        ) . '</li>' . "\n";
-        return $html;
+        return ''
+            . $this->html->buildTag(
+                'li',
+                array(
+                    'class' => 't_string no-quotes',
+                    'data-file' => $error['file'],
+                    'data-line' => $error['line'],
+                ),
+                \sprintf('%s (line %s)', $error['file'], $error['line'])
+            ) . "\n"
+            . '<li>'
+                . $this->routeHtml->dumper->helper->buildContext($error['context'], $error['line'])
+            . '</li>' . "\n";
     }
 
     /**

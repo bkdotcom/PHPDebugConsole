@@ -82,7 +82,9 @@ class Helper
                 'data-line' => $lineNum,
                 'data-start' => \key($lines),
             ),
-            '<code class="language-php">' . \htmlspecialchars(\implode($lines)) . '</code>'
+            '<code class="language-php">'
+                . \htmlspecialchars(\implode($lines))
+            . '</code>'
         );
     }
 

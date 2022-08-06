@@ -93,8 +93,9 @@ class ServerRequest extends AbstractServerRequest implements ServerRequestInterf
         $files = self::filesFromGlobals($_FILES);
         $serverRequest = new static($method, $uri, $_SERVER);
         $contentType = $serverRequest->getHeaderLine('Content-Type');
+        // note: php://input not available with content-type = "multipart/form-data".
         $parsedBody = $method !== 'GET'
-            ? self::postFromInput($contentType, self::$inputStream)
+            ? self::postFromInput($contentType, self::$inputStream) ?: $_POST
             : null;
         $query = $uri->getQuery();
         $queryParams = self::parseStr($query);

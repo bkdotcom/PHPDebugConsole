@@ -166,7 +166,9 @@ class LogReqRes implements SubscriberInterface
                 'error' => $uploadedFile->getError(),
                 'name' => $uploadedFile->getClientFilename(),
                 'size' => $uploadedFile->getSize(),
-                'tmp_name' => $uploadedFile->getStream()->getMetadata('uri'),
+                'tmp_name' => $uploadedFile->getError() === UPLOAD_ERR_OK
+                    ? $uploadedFile->getStream()->getMetadata('uri')
+                    : '',
                 'type' => $uploadedFile->getClientMediaType(),
             );
         }, $files);

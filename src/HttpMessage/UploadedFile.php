@@ -254,12 +254,12 @@ class UploadedFile implements UploadedFileInterface
      * a malicious filename with the intention to corrupt or hack your
      * application.
      *
-     * @return string|null The filename sent by the client or null if none
-     *     was provided.
+     * @return string|null The filename sent by the client
+     *   or null if none was provided.
      */
     public function getClientFilename()
     {
-        return $this->clientFilename;
+        return $this->clientFilename ?: null;
     }
 
     /**
@@ -273,12 +273,12 @@ class UploadedFile implements UploadedFileInterface
      * a malicious filename with the intention to corrupt or hack your
      * application.
      *
-     * @return string|null The full-path sent by the client or null if none
-     *     was provided.
+     * @return string|null The full-path sent by the client
+     *   or null if none was provided.
      */
     public function getClientFullPath()
     {
-        return $this->clientFullPath;
+        return $this->clientFullPath ?: null;
     }
 
     /**
@@ -288,12 +288,12 @@ class UploadedFile implements UploadedFileInterface
      * a malicious media type with the intention to corrupt or hack your
      * application.
      *
-     * @return string|null The media type sent by the client or null if none
-     *     was provided.
+     * @return string|null The media type sent by the client
+     *   or null if none was provided.
      */
     public function getClientMediaType()
     {
-        return $this->clientMediaType;
+        return $this->clientMediaType ?: null;
     }
 
     /**
@@ -311,7 +311,7 @@ class UploadedFile implements UploadedFileInterface
             return;
         }
         if (\preg_match('#[/\r\n\x00]#', $filename)) {
-            throw new InvalidArgumentException(\sprintf('Invalid client file name provided: ', $filename));
+            throw new InvalidArgumentException(\sprintf('Invalid client file name provided: "%s"', $filename));
         }
     }
 
@@ -326,7 +326,7 @@ class UploadedFile implements UploadedFileInterface
     private function assertClientMediaType($type)
     {
         $this->assertStringOrNull($type, 'clientMediaType');
-        if ($type === null) {
+        if ($type === null || $type === '') {
             return;
         }
         // https://stackoverflow.com/a/48046041/1646086
@@ -339,7 +339,7 @@ class UploadedFile implements UploadedFileInterface
             . '(\s*;\s*(?P<param>\w+)\s*=\s*(?P<val>\S+))*'
             . '$#' ;
         if (\preg_match($regex, $type) !== 1) {
-            throw new InvalidArgumentException(\sprintf('Invalid media type specified: %s', $type));
+            throw new InvalidArgumentException(\sprintf('Invalid media type specified: "%s"', $type));
         }
     }
 

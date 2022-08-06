@@ -142,10 +142,12 @@ abstract class AbstractServerRequest extends Request
     /**
      * Get parsed body (POST data)
      *
+     * Note: this will return null if content-type = "multipart/form-data" and input = "php://input"
+     *
      * @param string $contentType Content-Type header value
      * @param string $input       ('php://input') specify input
      *
-     * @return null|array
+     * @return array|null
      */
     protected static function postFromInput($contentType, $input = 'php://input')
     {
@@ -299,7 +301,7 @@ abstract class AbstractServerRequest extends Request
         $parsableTypes = array(
             'application/json',
             'application/x-www-form-urlencoded',
-            'multipart/form-data',
+            'multipart/form-data', // would be parsable... but php doesn't make available
         );
         return \in_array($contentType, $parsableTypes, true);
     }

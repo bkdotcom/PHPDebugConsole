@@ -74,15 +74,11 @@ class ArrayUtil
      */
     public static function mapRecursive($callback, $input)
     {
-        $return = array();
-        foreach ($input as $key => $val) {
-            if (\is_array($val)) {
-                $return[$key] = self::mapRecursive($callback, $val);
-                continue;
-            }
-            $return[$key] = $callback($val);
-        }
-        return $return;
+        return \array_map(function ($val) use ($callback) {
+            return \is_array($val)
+                ? self::mapRecursive($callback, $val)
+                : $callback($val);
+        }, $input);
     }
 
     /**

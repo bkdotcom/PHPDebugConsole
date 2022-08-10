@@ -517,6 +517,7 @@
 
   var config$2;
   var toExpandQueue = [];
+  var processingQueue = false;
 
   function init$2 ($root) {
     config$2 = $root.data('config').get();
@@ -889,9 +890,14 @@
   }
 
   function processExpandQueue () {
+    if (processingQueue) {
+      return
+    }
+    processingQueue = true;
     while (toExpandQueue.length) {
       toExpandQueue.shift().debugEnhance('expand');
     }
+    processingQueue = false;
   }
 
   var $root, config$3, origH, origPageY;

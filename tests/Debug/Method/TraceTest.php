@@ -112,8 +112,8 @@ class TraceTest extends DebugTestFramework
                             array((string) $i),
                             \array_values($trace[$i])
                         );
-                        $valuesExpect[1] = \is_null($valuesExpect[1]) ? 'null' : $valuesExpect[1];
-                        $valuesExpect[2] = \is_null($valuesExpect[2]) ? 'null' : (string) $valuesExpect[2];
+                        $valuesExpect[1] = $valuesExpect[1] === null ? 'null' : $valuesExpect[1];
+                        $valuesExpect[2] = $valuesExpect[2] === null ? 'null' : (string) $valuesExpect[2];
 
                         /*
                         $function = $valuesExpect[3];

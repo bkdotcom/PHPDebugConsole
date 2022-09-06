@@ -22,11 +22,14 @@ class OAuthTest extends DebugTestFramework
 
     public static function setUpBeforeClass(): void
     {
-        self::$oauthDebug = new OAuth(self::$consumerKey, self::$consumerSecret, OAUTH_SIG_METHOD_HMACSHA1, OAUTH_AUTH_TYPE_AUTHORIZATION);
+        if (\class_exists('OAuth')) {
+            self::$oauthDebug = new OAuth(self::$consumerKey, self::$consumerSecret, OAUTH_SIG_METHOD_HMACSHA1, OAUTH_AUTH_TYPE_AUTHORIZATION);
+        }
     }
 
     public function testGetAccessToken()
     {
+        $this->assertOauth();
         $response = self::$oauthDebug->getAccessToken(self::$accessTokenUrl, '', '', OAUTH_HTTP_METHOD_POST);
         $this->assertSame(array(
             'oauth_token' => 'access_token',
@@ -129,6 +132,7 @@ class OAuthTest extends DebugTestFramework
 
     public function testGetAccessTokenException()
     {
+        $this->assertOauth();
         $e = null;
         $line = __LINE__ + 2;
         try {
@@ -155,6 +159,7 @@ class OAuthTest extends DebugTestFramework
 
     public function testGetRequestToken()
     {
+        $this->assertOauth();
         $response = self::$oauthDebug->getRequestToken(self::$requestTokenUrl, 'http://www.bradkent.com/', OAUTH_HTTP_METHOD_GET);
         $this->assertSame(array(
             'oauth_token' => 'request_token',
@@ -270,6 +275,7 @@ class OAuthTest extends DebugTestFramework
 
     public function testGetRequestTokenException()
     {
+        $this->assertOauth();
         $e = null;
         $line = __LINE__ + 2;
         try {
@@ -296,6 +302,7 @@ class OAuthTest extends DebugTestFramework
 
     public function testFetch()
     {
+        $this->assertOauth();
         $return = self::$oauthDebug->fetch(self::$oauthEndpoint, array('foo' => 'bar'), OAUTH_HTTP_METHOD_POST);
         $this->assertIsBool($return);
         $this->assertLogEntries(array(
@@ -413,6 +420,7 @@ class OAuthTest extends DebugTestFramework
 
     public function testFetchParamsViaSbs()
     {
+        $this->assertOauth();
         $oauth = new OAuth(self::$consumerKey, self::$consumerSecret, OAUTH_SIG_METHOD_HMACSHA1, OAUTH_AUTH_TYPE_URI);
         $return = $oauth->fetch(self::$oauthEndpoint, array('foo' => 'bar'), OAUTH_HTTP_METHOD_POST);
         $this->assertIsBool($return);
@@ -446,6 +454,7 @@ class OAuthTest extends DebugTestFramework
 
     public function testFetchException()
     {
+        $this->assertOauth();
         $e = null;
         $line = __LINE__ + 2;
         try {
@@ -468,5 +477,12 @@ class OAuthTest extends DebugTestFramework
             ),
         ), \array_slice($logEntries, -2, 1)[0]);
         $this->assertInstanceOf('OAuthException', $e);
+    }
+
+    protected function assertOauth()
+    {
+        if (\class_exists('OAuth') === false) {
+            $this->markTestSkipped('OAuth not avail');
+        }
     }
 }

@@ -22,7 +22,7 @@ class OAuthTest extends DebugTestFramework
 
     public static function setUpBeforeClass(): void
     {
-        self::$oauthDebug = new Oauth(self::$consumerKey, self::$consumerSecret, OAUTH_SIG_METHOD_HMACSHA1, OAUTH_AUTH_TYPE_AUTHORIZATION);
+        self::$oauthDebug = new OAuth(self::$consumerKey, self::$consumerSecret, OAUTH_SIG_METHOD_HMACSHA1, OAUTH_AUTH_TYPE_AUTHORIZATION);
     }
 
     public function testGetAccessToken()
@@ -419,7 +419,7 @@ class OAuthTest extends DebugTestFramework
 
     public function testFetchParamsViaSbs()
     {
-        $oauth = new Oauth(self::$consumerKey, self::$consumerSecret, OAUTH_SIG_METHOD_HMACSHA1, OAUTH_AUTH_TYPE_URI);
+        $oauth = new OAuth(self::$consumerKey, self::$consumerSecret, OAUTH_SIG_METHOD_HMACSHA1, OAUTH_AUTH_TYPE_URI);
         $return = $oauth->fetch(self::$oauthEndpoint, array('foo' => 'bar'), OAUTH_HTTP_METHOD_POST);
         $this->assertIsBool($return);
         $this->assertLogEntries(array(

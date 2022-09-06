@@ -39,7 +39,7 @@ jobs:
       uses: shivammathur/setup-php@v2 # https://github.com/marketplace/actions/setup-php-action
       with:
         php-version: ${{ matrix.php-version }}
-        extensions: intl, mysqli
+        extensions: intl, mysqli, oauth
         ini-values: "post_max_size=256M, memory_limit=512M"
         coverage: xdebug #optional
     - name: Check PHP Version

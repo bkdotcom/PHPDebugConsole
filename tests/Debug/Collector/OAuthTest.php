@@ -100,7 +100,7 @@ class OAuthTest extends DebugTestFramework
                     \implode("\r\n", array(
                         'HTTP/1.%d 200 OK',
                         'Host: 127.0.0.1:8080',
-                        'Date: %s GMT',
+                        'Date: %s',
                         'Connection: close',
                         'Content-Type: application/x-www-form-urlencoded',
                     )),

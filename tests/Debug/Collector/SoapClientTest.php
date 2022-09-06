@@ -115,7 +115,7 @@ class SoapClientTest extends DebugTestFramework
                     'HTTP/1.1 200 OK' . "\r\n"
                         // . 'Content-Length: %d' . "\r\n"
                         . 'Host: 127.0.0.1:8080' . "\r\n"
-                        . 'Date: %s GMT' . "\r\n"
+                        . 'Date: %s' . "\r\n"
                         . 'Connection: close' . "\r\n"
                         . 'Content-Type: text/xml; charset="utf-8"' . "\r\n"
                         // . 'Set-Cookie: SessionId=%s;path=/;expires=%s GMT;Version=1; secure; HttpOnly' . "\r\n"
@@ -265,7 +265,7 @@ class SoapClientTest extends DebugTestFramework
                         // . 'Content-Length: 664' . "\r\n"
                         // . 'Set-Cookie: SessionId=%s;path=/;expires=%s GMT;Version=1; secure; HttpOnly' . "\r\n"
                         // . 'Server: SQLData-Server/%s Microsoft-HTTPAPI/2.0' . "\r\n"
-                        . 'Date: %s GMT' . "\r\n"
+                        . 'Date: %s' . "\r\n"
                         . 'Connection: close' . "\r\n"
                         . 'Content-Type: text/xml; charset="utf-8"' . "\r\n"
                 ),

@@ -19,6 +19,9 @@ $debug = \bdk\Debug::getInstance(array(
 \chdir($serverParams['DOCUMENT_ROOT']);
 
 \header_remove('X-Powered-By');
+if (PHP_VERSION_ID < 70000) {
+    \header('Date: ' . \gmdate('D, d M Y H:i:s \G\M\T'));  // Thu, 21 Dec 2000 16:01:07 +0200
+}
 
 $path = \ltrim($requestUri->getPath(), '/');
 $realpath = \realpath($path);

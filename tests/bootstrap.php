@@ -155,6 +155,7 @@ function startHttpd()
     $descriptorSpec = array(
         0 => ['pipe', 'r'],  // stdin is a pipe that the child will read from
         1 => ['pipe', 'w'],
+        // 2 => ['file', __DIR__ . '/phpd.log.txt'],
         2 => ['pipe', 'w'],
         // 1 => \fopen('php://temp/maxmemory:' . (1024 * 1024), 'w+'),
         // 2 => array('file', __DIR__ . '/phpd.log.txt'), // stderr is a file to write to

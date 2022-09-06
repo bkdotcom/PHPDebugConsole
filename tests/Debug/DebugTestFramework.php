@@ -354,9 +354,11 @@ class DebugTestFramework extends DOMTestCase
     {
         $this->assertCount(\count($expect), $actual);
         $actual = $this->helper->deObjectifyData($actual);
-        foreach ($expect as $i => $logEntryExpectArray) {
-            $expect = \var_export($logEntryExpectArray, true);
-            $this->assertStringMatchesFormat($expect, \var_export($actual[$i], true), 'LogEntry ' . $i . ' does not match');
+        foreach ($expect as $i => $expectArr) {
+            $actualArr = $actual[$i];
+            $expectStr = \preg_replace('/=>\s*\n\s*array/', '=> array', \var_export($expectArr, true));
+            $actualStr = \preg_replace('/=>\s*\n\s*array/', '=> array', \var_export($actualArr, true));
+            $this->assertStringMatchesFormat($expectStr, $actualStr, 'LogEntry ' . $i . ' does not match');
         }
     }
 

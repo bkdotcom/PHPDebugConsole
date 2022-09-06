@@ -61,14 +61,16 @@ class SoapClientTest extends DebugTestFramework
                 'method' => 'log',
                 'args' => array(
                     'request headers',
-                    'POST /soap/wsdl HTTP/1.1' . "\r\n"
-                        . 'Host: 127.0.0.1:8080' . "\r\n"
-                        . 'Connection: Keep-Alive' . "\r\n"
-                        . 'User-Agent: PHP-SOAP/' . PHP_VERSION . "\r\n"
-                        . 'Content-Type: text/xml; charset=utf-8' . "\r\n"
-                        . 'SOAPAction: "http://127.0.0.1:8080/soap/SQLDataSRL"' . "\r\n"
-                        . 'Content-Length: %d' . "\r\n"
-                        . '' . "\r\n",
+                    implode("%A\n", array(
+                        'POST /soap/wsdl HTTP/1.1',
+                        'Host: 127.0.0.1:8080',
+                        'Connection: Keep-Alive',
+                        'User-Agent: PHP-SOAP/' . PHP_VERSION,
+                        'Content-Type: text/xml; charset=utf-8',
+                        'SOAPAction: "http://127.0.0.1:8080/soap/SQLDataSRL"',
+                        'Content-Length: %d',
+                        '',
+                    )),
                 ),
                 'meta' => array(
                     'channel' => 'general.Soap',
@@ -112,15 +114,17 @@ class SoapClientTest extends DebugTestFramework
                 'method' => 'log',
                 'args' => array(
                     'response headers',
-                    'HTTP/1.1 200 OK' . "\r\n"
+                    \implode("%A\n", array(
+                        'HTTP/1.1 200 OK',
                         // . 'Content-Length: %d' . "\r\n"
-                        . 'Host: 127.0.0.1:8080' . "\r\n"
-                        . 'Date: %s' . "\r\n"
-                        . 'Connection: close' . "\r\n"
-                        . 'Content-Type: text/xml; charset="utf-8"' . "\r\n"
+                        'Host: 127.0.0.1:8080',
+                        // 'Date: %s',
+                        'Connection: close',
+                        'Content-Type: text/xml; charset="utf-8"',
+                        '',
                         // . 'Set-Cookie: SessionId=%s;path=/;expires=%s GMT;Version=1; secure; HttpOnly' . "\r\n"
                         // . 'Server: SQLData-Server/%s Microsoft-HTTPAPI/2.0' . "\r\n"
-                        . '',
+                    )),
                 ),
                 'meta' => array(
                     'channel' => 'general.Soap',
@@ -208,15 +212,16 @@ class SoapClientTest extends DebugTestFramework
                 'method' => 'log',
                 'args' => array(
                     'request headers',
-                    'POST /soap/wsdl HTTP/1.1' . "\r\n"
-                        . 'Host: 127.0.0.1:8080' . "\r\n"
-                        . 'Connection: Keep-Alive' . "\r\n"
-                        . 'User-Agent: PHP-SOAP/' . PHP_VERSION . "\r\n"
-                        . 'Content-Type: text/xml; charset=utf-8' . "\r\n"
-                        . 'SOAPAction: ""' . "\r\n"
-                        . 'Content-Length: %d' . "\r\n"
-                        . '%A' // Cookie ??
-                        . "\r\n",
+                    \implode("%A\n", array(
+                        'POST /soap/wsdl HTTP/1.1',
+                        'Host: 127.0.0.1:8080',
+                        'Connection: Keep-Alive',
+                        'User-Agent: PHP-SOAP/' . PHP_VERSION,
+                        'Content-Type: text/xml; charset=utf-8',
+                        'SOAPAction: ""',
+                        'Content-Length: %d',
+                        '',
+                    )),
                 ),
                 'meta' => array(
                     'channel' => 'general.Soap',
@@ -260,14 +265,17 @@ class SoapClientTest extends DebugTestFramework
                 'method' => 'log',
                 'args' => array(
                     'response headers',
-                    'HTTP/1.1 200 OK' . "\r\n"
-                        . 'Host: 127.0.0.1:8080' . "\r\n"
+                    implode("%A\n", array(
+                        'HTTP/1.1 200 OK',
+                        'Host: 127.0.0.1:8080',
                         // . 'Content-Length: 664' . "\r\n"
                         // . 'Set-Cookie: SessionId=%s;path=/;expires=%s GMT;Version=1; secure; HttpOnly' . "\r\n"
                         // . 'Server: SQLData-Server/%s Microsoft-HTTPAPI/2.0' . "\r\n"
-                        . 'Date: %s' . "\r\n"
-                        . 'Connection: close' . "\r\n"
-                        . 'Content-Type: text/xml; charset="utf-8"' . "\r\n"
+                        // 'Date: %s',
+                        'Connection: close',
+                        'Content-Type: text/xml; charset="utf-8"',
+                        '',
+                    )),
                 ),
                 'meta' => array(
                     'channel' => 'general.Soap',

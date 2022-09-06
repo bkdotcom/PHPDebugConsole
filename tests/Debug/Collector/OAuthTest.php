@@ -27,7 +27,7 @@ class OAuthTest extends DebugTestFramework
 
     public function testGetAccessToken()
     {
-        $response = self::$oauthDebug->getAccessToken(self::$accessTokenUrl);
+        $response = self::$oauthDebug->getAccessToken(self::$accessTokenUrl, '', '', OAUTH_HTTP_METHOD_POST);
         $this->assertSame(array(
             'oauth_token' => 'access_token',
             'oauth_token_secret' => 'access_token_secret',
@@ -97,12 +97,10 @@ class OAuthTest extends DebugTestFramework
                 'method' => 'log',
                 'args' => array(
                     'response headers',
-                    \implode("\r\n", array(
+                    \implode('%A', array(
                         'HTTP/1.%d 200 OK',
-                        'Host: 127.0.0.1:8080',
-                        'Date: %s',
-                        'Connection: close',
                         'Content-Type: application/x-www-form-urlencoded',
+                        '',
                     )),
                 ),
                 'meta' => array(
@@ -240,12 +238,10 @@ class OAuthTest extends DebugTestFramework
                 'method' => 'log',
                 'args' => array(
                     'response headers',
-                    \implode("\r\n", array(
+                    \implode('%A', array(
                         'HTTP/1.%d 200 OK',
-                        'Host: 127.0.0.1:8080',
-                        'Date: %s',
-                        'Connection: close',
                         'Content-Type: application/x-www-form-urlencoded',
+                        '',
                     )),
                 ),
                 'meta' => array(
@@ -313,7 +309,6 @@ class OAuthTest extends DebugTestFramework
                 ),
                 'meta' => array('channel' => 'general.OAuth'),
             ),
-
             array(
                 'method' => 'time',
                 'args' => array(
@@ -321,7 +316,6 @@ class OAuthTest extends DebugTestFramework
                 ),
                 'meta' => array('channel' => 'general.OAuth'),
             ),
-
             array(
                 'method' => 'log',
                 'args' => array(
@@ -360,8 +354,10 @@ class OAuthTest extends DebugTestFramework
                 'method' => 'log',
                 'args' => array(
                     'request headers',
-                    'Authorization: OAuth oauth_consumer_key="key",oauth_signature_method="HMAC-SHA1",oauth_nonce="%s",oauth_timestamp="%d",oauth_version="1.0",oauth_signature="%s"' . "\r\n"
-                        . 'Content-Type: application/x-www-form-urlencoded',
+                    implode('%A' . "\n", array(
+                        'Authorization: OAuth oauth_consumer_key="key",oauth_signature_method="HMAC-SHA1",oauth_nonce="%s",oauth_timestamp="%d",oauth_version="1.0",oauth_signature="%s"',
+                        'Content-Type: application/x-www-form-urlencoded',
+                    )),
                 ),
                 'meta' => array(
                     'channel' => 'general.OAuth',
@@ -384,12 +380,10 @@ class OAuthTest extends DebugTestFramework
                 'method' => 'log',
                 'args' => array(
                     'response headers',
-                    \implode("\r\n", array(
+                    \implode('%A', array(
                         'HTTP/1.%d 200 OK',
-                        'Host: 127.0.0.1:8080',
-                        'Date: %s',
-                        'Connection: close',
                         'Content-Type: application/x-www-form-urlencoded',
+                        '',
                     )),
                 ),
                 'meta' => array(

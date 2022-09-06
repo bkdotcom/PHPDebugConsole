@@ -18,11 +18,10 @@ $debug = \bdk\Debug::getInstance(array(
 
 \chdir($serverParams['DOCUMENT_ROOT']);
 
+\header_remove('X-Powered-By');
+
 $path = \ltrim($requestUri->getPath(), '/');
 $realpath = \realpath($path);
-
-// $debug->log('path', $path);
-// $debug->log('realpath', $realpath);
 
 if ($realpath && \is_dir($realpath)) {
     foreach (['index.php', 'index.html'] as $file) {
@@ -73,5 +72,3 @@ foreach ($extensions as $ext => $contentType) {
 
 \header('HTTP/1.1 404 Not Found');
 echo '404 Not Found';
-// echo '<pre>' . \htmlspecialchars(\print_r($_SERVER, true)) . '</pre>';
-return;

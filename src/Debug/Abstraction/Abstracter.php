@@ -84,7 +84,7 @@ class Abstracter extends AbstractComponent
         ),
         'stringMinLen' => array(
             'contentType' => 256, // try to determine content-type of binary string
-            'encoded' => 16, // test if bas64, json, or serialized (-1 = don't check)
+            'encoded' => 16, // test if base64, json, or serialized (-1 = don't check)
         ),
         'useDebugInfo' => true,
     );

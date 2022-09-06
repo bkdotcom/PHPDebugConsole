@@ -35,7 +35,7 @@ Browser/javascript like console class for PHP
 
 ## Installation
 
-This library requires PHP 5.4 (function array dereferencing, closure $this support) or later and has no userland dependencies.
+This library supports PHP 5.4 - 8.1 and has no userland dependencies.
 
 It is installable and autoloadable via [Composer](https://getcomposer.org/) as [bdk/debug](https://packagist.org/packages/bdk/debug).
 

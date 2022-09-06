@@ -73,12 +73,12 @@ class UploadedFile implements UploadedFileInterface
      *    __construct($streamOrFile, $size = null, $error = UPLOAD_ERR_OK, $clientFilename = null, $clientMediaType = null, $clientFullPath = null)
      *
      * @param array $values Uploaded file values as populated in $_FILES array
-     *                          null|string|resource|StreamInterface tmp_name  filepath, resource, or StreamInterface
-     *                          int    size      Size in bytes
-     *                          int    error     one of the UPLOAD_ERR_* constants
-     *                          string name      client file name
-     *                          string type      client mime type
-     *                          string full_path client full path (as of php 8.1)
+     *    null|string|resource|StreamInterface tmp_name  filepath, resource, or StreamInterface
+     *    int    size      Size in bytes
+     *    int    error     one of the UPLOAD_ERR_* constants
+     *    string name      client file name
+     *    string type      client mime type
+     *    string full_path client full path (as of php 8.1)
      *
      * @throws InvalidArgumentException
      *
@@ -180,10 +180,10 @@ class UploadedFile implements UploadedFileInterface
      */
     public function moveTo($targetPath)
     {
-        $this->validateActive();
+        $this->validateCanMove();
         $this->assertTargetPath($targetPath);
         if ($this->file !== null) {
-            $this->moveFile($targetPath);
+            $this->isMoved = $this->moveFile($targetPath);
             return;
         }
         $stream = $this->getStream();
@@ -242,9 +242,7 @@ class UploadedFile implements UploadedFileInterface
         if ($this->error === UPLOAD_ERR_OK) {
             return '';
         }
-        return \array_key_exists($this->error, $this->errors)
-            ? $this->errors[$this->error]
-            : 'Unknown upload error.';
+        return $this->errors[$this->error];
     }
 
     /**
@@ -469,18 +467,18 @@ class UploadedFile implements UploadedFileInterface
         \set_error_handler(function ($type, $msg) use (&$errMsg) {
             $errMsg = $msg;
         });
-        $this->isMoved = $this->sapi === 'cli'
+        $success = $this->sapi === 'cli'
             ? \rename($this->file, $targetPath)
             : \move_uploaded_file($this->file, $targetPath);
         \restore_error_handler();
-        if ($this->isMoved === false) {
+        if ($success === false) {
             throw new RuntimeException(\rtrim(\sprintf(
                 'Unable to move the file to %s (%s)',
                 $targetPath,
                 $errMsg
             ), ' ()'));
         }
-        return $this->isMoved;
+        return $success;
     }
 
     /**
@@ -512,7 +510,7 @@ class UploadedFile implements UploadedFileInterface
             return;
         }
         throw new InvalidArgumentException(
-            'Invalid stream or file provided for UploadedFile'
+            'Invalid file, resource, or StreamInterface provided for UploadedFile'
         );
     }
 
@@ -520,13 +518,13 @@ class UploadedFile implements UploadedFileInterface
      * @return void
      * @throws \RuntimeException if is moved or not ok
      */
-    private function validateActive()
+    private function validateCanMove()
     {
         if ($this->isOk() === false) {
-            throw new RuntimeException('Cannot retrieve stream due to upload error');
+            throw new RuntimeException('Cannot move upload due to upload error: ' . $this->getErrorMessage());
         }
         if ($this->isMoved) {
-            throw new RuntimeException('Cannot retrieve stream after it has already been moved');
+            throw new RuntimeException('Cannot move upload after it has already been moved (#reasons)');
         }
     }
 }

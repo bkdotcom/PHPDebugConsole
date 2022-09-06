@@ -427,14 +427,14 @@ EOD;
                                 'strlen' => \filesize(TEST_DIR . '/assets/logo.png'),
                                 'type' => Abstracter::TYPE_STRING,
                                 'typeMore' => Abstracter::TYPE_STRING_BINARY,
-                                'contentType' => 'application/octet-stream',
+                                'contentType' => 'image/png',
                                 'value' => '',
                             ),
                         ),
                         'meta' => array(),
                     ),
                     'html' => '<li class="expanded m_group">
-                        <div class="group-header"><span class="font-weight-bold group-label"><span class="t_keyword">string</span><span class="text-muted">(application/octet-stream)</span><span class="t_punct colon">:</span> 7.95 kB</span></div>
+                        <div class="group-header"><span class="font-weight-bold group-label"><span class="t_keyword">string</span><span class="text-muted">(image/png)</span><span class="t_punct colon">:</span> 7.95 kB</span></div>
                         <ul class="group-body">',
                 ),
             ),

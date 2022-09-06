@@ -158,17 +158,19 @@ class UploadedFileTest extends TestCase
             $uploadedFile->getErrorMessage()
         );
 
+        /*
         $reflection->setValue($uploadedFile, 19890604);
         $this->assertSame(
             'Unknown upload error.',
             $uploadedFile->getErrorMessage()
         );
+        */
     }
 
     public function testExceptionArgumentIsInvalidSource()
     {
         $this->expectException('InvalidArgumentException');
-        $this->expectExceptionMessage('Invalid stream or file provided for UploadedFile');
+        $this->expectExceptionMessage('Invalid file, resource, or StreamInterface provided for UploadedFile');
         new UploadedFile();
     }
 
@@ -257,7 +259,7 @@ class UploadedFileTest extends TestCase
     public function testExceptionMoveToFileIsMoved()
     {
         $this->expectException('RuntimeException');
-        $this->expectExceptionMessage('Cannot retrieve stream after it has already been moved');
+        $this->expectExceptionMessage('Cannot move upload after it has already been moved (#reasons)');
 
         $uploadedFile = $this->createUploadedFile(
             '/tmp/php1234.tmp',
@@ -280,7 +282,7 @@ class UploadedFileTest extends TestCase
     public function testExceptionMoveToErrorUploaded()
     {
         $this->expectException('RuntimeException');
-        $this->expectExceptionMessage('Cannot retrieve stream due to upload error');
+        $this->expectExceptionMessage('Cannot move upload due to upload error: The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form.');
 
         $uploadedFile = $this->createUploadedFile(
             '/tmp/php1234.tmp',

@@ -22,6 +22,8 @@ class GuzzleMiddlewareTest extends DebugTestFramework
     private static $client;
     private static $middleware;
 
+    private $url = 'http://example.com/';
+
     public static function setUpBeforeClass(): void
     {
         if (\class_exists('GuzzleHttp\\Handler\\MockHandler') === false) {
@@ -56,7 +58,7 @@ class GuzzleMiddlewareTest extends DebugTestFramework
         if (PHP_VERSION_ID < 50500) {
             $this->markTestSkipped('guzzle middleware is php 5.5+');
         }
-        self::$client->request('GET', 'http://example.com/');
+        self::$client->request('GET', $this->url);
         $this->outputTest(array(
             'html' => '<li class="m_group" data-channel="general.Guzzle" data-icon="fa fa-exchange">
                 <div class="group-header">%sGuzzle(%sGET%shttp://example.com/%s)</span></div>
@@ -85,7 +87,7 @@ class GuzzleMiddlewareTest extends DebugTestFramework
                         'args' => array(
                             'Guzzle',
                             'GET',
-                            'http://example.com/',
+                            $this->url,
                         ),
                     ),
                     array(
@@ -143,7 +145,7 @@ class GuzzleMiddlewareTest extends DebugTestFramework
         if (PHP_VERSION_ID < 50500) {
             $this->markTestSkipped('guzzle middleware is php 5.5+');
         }
-        self::$client->requestAsync('GET', 'http://example.com/')->wait();
+        self::$client->requestAsync('GET', $this->url)->wait();
         $this->outputTest(array(
             'html' => '<li class="m_group" data-channel="general.Guzzle" data-icon="fa fa-exchange" id="guzzle%s">
                 <div class="group-header">%sGuzzle(%sGET%shttp://example.com/%s)</span></div>
@@ -174,7 +176,7 @@ class GuzzleMiddlewareTest extends DebugTestFramework
                         'args' => array(
                             'Guzzle',
                             'GET',
-                            'http://example.com/',
+                            $this->url,
                         ),
                         'meta' => array(
                             'icon' => 'fa fa-exchange',
@@ -276,7 +278,7 @@ class GuzzleMiddlewareTest extends DebugTestFramework
         }
         self::$middleware->setCfg('asyncResponseWithRequest', false);
         // $this->debug->getRoute('wamp')->wamp->messages = array();
-        self::$client->requestAsync('GET', 'http://example.com/')->wait();
+        self::$client->requestAsync('GET', $this->url)->wait();
         $this->outputTest(array(
             'html' => '<li class="m_group" data-channel="general.Guzzle" data-icon="fa fa-exchange" id="guzzle_%s">
                     <div class="group-header">%sGuzzle(%sGET%shttp://example.com/%s)</span></div>
@@ -309,7 +311,7 @@ class GuzzleMiddlewareTest extends DebugTestFramework
         }
         self::$middleware->setCfg('asyncResponseWithRequest', true);
         try {
-            self::$client->request('GET', 'http://example.com/');
+            self::$client->request('GET', $this->url);
         } catch (\Exception $e) {
             1 + 1;
         }

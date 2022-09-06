@@ -46,7 +46,7 @@ class GuzzleMiddleware extends AbstractComponent
      *
      * @param array $cfg   configuration
      * @param Debug $debug (optional) Specify PHPDebugConsole instance
-     *                       if not passed, will create Guzzle channnel on singleton instance
+     *                       if not passed, will create Guzzle channel on singleton instance
      *                       if root channel is specified, will create a Guzzle channel
      *
      * @SuppressWarnings(PHPMD.StaticAccess)

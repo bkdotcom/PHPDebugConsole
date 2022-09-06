@@ -40,7 +40,7 @@ EOD;
         $error = false;
         \set_error_handler(function ($errType, $errMsg, $file, $line) use (&$error) {
             $error = true;
-            echo sprintf('Error %s - %s:%s', $errMsg, $file, $line) . "\n";
+            echo \sprintf('Error %s - %s:%s', $errMsg, $file, $line) . "\n";
         });
         try {
             self::$client = new MySqli(
@@ -842,31 +842,5 @@ EOD;
         if (self::$error === true) {
             $this->markTestSkipped('Error initiating client');
         }
-    }
-
-    protected function getLogEntries($count = null, $where = 'log')
-    {
-        $logEntries = $this->debug->data->get($where);
-        if (\in_array($where, array('log','alerts')) || \preg_match('#^logSummary[\./]\d+$#', $where)) {
-            if ($count) {
-                $logEntries = \array_slice($logEntries, 0 - $count);
-            }
-            /*
-            return \array_map(function (LogEntry $logEntry) {
-                return $this->logEntryToArray($logEntry);
-            }, $logEntries);
-            */
-        }
-        /*
-         elseif ($where === 'logSummary') {
-            foreach ($logEntries as $priority => $entries) {
-                $logEntries[$priority] = \array_map(function (LogEntry $logEntry) {
-                    return $this->logEntryToArray($logEntry);
-                }, $entries);
-            }
-            return $logEntries;
-        }
-        */
-        return $this->helper->deObjectifyData($logEntries);
     }
 }

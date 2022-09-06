@@ -350,6 +350,27 @@ class DebugTestFramework extends DOMTestCase
         $this->assertTrue($isAbsType);
     }
 
+    protected function assertLogEntries($expect, $actual)
+    {
+        $this->assertCount(\count($expect), $actual);
+        $actual = $this->helper->deObjectifyData($actual);
+        foreach ($expect as $i => $logEntryExpectArray) {
+            $expect = \var_export($logEntryExpectArray, true);
+            $this->assertStringMatchesFormat($expect, \var_export($actual[$i], true), 'LogEntry ' . $i . ' does not match');
+        }
+    }
+
+    protected function getLogEntries($count = null, $where = 'log')
+    {
+        $logEntries = $this->debug->data->get($where);
+        if (\in_array($where, array('log','alerts'), true) || \preg_match('#^logSummary[\./]\d+$#', $where)) {
+            if ($count) {
+                $logEntries = \array_slice($logEntries, 0 - $count);
+            }
+        }
+        return $this->helper->deObjectifyData($logEntries);
+    }
+
     protected function resetDebug()
     {
         $this->debug = Debug::getInstance(array(

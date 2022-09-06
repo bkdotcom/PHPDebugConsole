@@ -5,7 +5,7 @@ import * as fileLinks from './FileLinks.js'
 
 var config
 var toExpandQueue = []
-var processingQueue = false;
+var processingQueue = false
 
 export function init ($root) {
   config = $root.data('config').get()
@@ -381,9 +381,9 @@ function processExpandQueue () {
   if (processingQueue) {
     return
   }
-  processingQueue = true;
+  processingQueue = true
   while (toExpandQueue.length) {
     toExpandQueue.shift().debugEnhance('expand')
   }
-  processingQueue = false;
+  processingQueue = false
 }

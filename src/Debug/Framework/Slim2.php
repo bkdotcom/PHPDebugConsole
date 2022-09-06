@@ -29,7 +29,7 @@ class Slim2
      * Constructor
      *
      * @param Debug  $debug      (optional) Specify PHPDebugConsole instance
-     *                             if not passed, will create Slim channnel on singleton instance
+     *                             if not passed, will create Slim channel on singleton instance
      *                             if root channel is specified, will create a Slim channel
      * @param object $prevWriter (optional) previous slim logWriter if desired to continue writing to existing writer
      *

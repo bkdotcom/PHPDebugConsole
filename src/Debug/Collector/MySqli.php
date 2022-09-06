@@ -47,7 +47,7 @@ class MySqli extends mysqliBase
      * @param int    $port     port number
      * @param string $socket   socket or named pipe that should be used
      * @param Debug  $debug    (optional) Specify PHPDebugConsole instance
-     *                           if not passed, will create MySqli channnel on singleton instance
+     *                           if not passed, will create MySqli channel on singleton instance
      *                           if root channel is specified, will create a MySqli channel
      *
      * @SuppressWarnings(PHPMD.StaticAccess)

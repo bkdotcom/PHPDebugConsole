@@ -149,7 +149,7 @@ class Utility
         $list = headers_list();
         $headers = array();
         foreach ($list as $header) {
-            list($key, $value) = \explode(': ', $header, 2);
+            list($key, $value) = \array_replace(array('',''), \explode(': ', $header, 2));
             $headers[$key][] = $value;
         }
         return $headers;

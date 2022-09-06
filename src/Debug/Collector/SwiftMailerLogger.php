@@ -44,7 +44,7 @@ class SwiftMailerLogger implements Swift_Events_CommandListener, Swift_Events_Re
      * Constructor
      *
      * @param Debug $debug (optional) Specify PHPDebugConsole instance
-     *                         if not passed, will create Slim channnel on singleton instance
+     *                         if not passed, will create Slim channel on singleton instance
      *                         if root channel is specified, will create a SwiftMailer channel
      *
      * @SuppressWarnings(PHPMD.StaticAccess)

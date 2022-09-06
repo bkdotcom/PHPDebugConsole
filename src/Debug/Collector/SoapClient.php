@@ -19,7 +19,9 @@ use bdk\Debug\Abstraction\Abstraction;
 /**
  * A replacement SoapClient which traces requests
  *
- * It's not possible to implement as a decorator as we need to make sure options['trace'] is true
+ * It's not possible to implement as a decorator
+ *   * we need to override __doRequest
+ *   * we need to make sure options['trace'] is true (can set trace property via reflection)
  */
 class SoapClient extends \SoapClient
 {
@@ -35,7 +37,7 @@ class SoapClient extends \SoapClient
      * @param string $wsdl    URI of the WSDL file or NULL if working in non-WSDL mode.
      * @param array  $options Array of options
      * @param Debug  $debug   (optional) Specify PHPDebugConsole instance
-     *                            if not passed, will create Soap channnel on singleton instance
+     *                            if not passed, will create Soap channel on singleton instance
      *                            if root channel is specified, will create a Soap channel
      *
      * @SuppressWarnings(PHPMD.StaticAccess)
@@ -64,9 +66,7 @@ class SoapClient extends \SoapClient
         $this->dom->formatOutput = true;
 
         $xmlResponse = parent::__doRequest($request, $location, $action, $version, $oneWay);
-        if ($this->__getLastRequest() === null) {
-            $this->setLastRequest($request);
-        }
+        $this->setLastRequest($request);
         $xmlRequest = $this->getDebugXmlRequest($action);
 
         $this->debug->groupCollapsed('soap', $action, $this->debug->meta('icon', $this->icon));
@@ -191,6 +191,9 @@ class SoapClient extends \SoapClient
      */
     private function setLastRequest($request)
     {
+        if ($this->__getLastRequest() !== null) {
+            return;
+        }
         if (PHP_VERSION_ID >= 80100) {
             $lastRequestRef = new \ReflectionProperty('SoapClient', '__last_request');
             $lastRequestRef->setAccessible(true);

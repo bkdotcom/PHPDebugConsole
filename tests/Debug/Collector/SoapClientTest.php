@@ -13,7 +13,8 @@ use bdk\Test\Debug\DebugTestFramework;
  */
 class SoapClientTest extends DebugTestFramework
 {
-    protected $wsdl = 'http://www.SoapClient.com/xml/SQLDataSoap.wsdl';
+    // protected $wsdl = 'http://www.SoapClient.com/xml/SQLDataSoap.wsdl';
+    protected $wsdl = 'http://127.0.0.1:8080/soap/wsdl';
     protected static $client;
 
     protected function getClient()
@@ -22,6 +23,7 @@ class SoapClientTest extends DebugTestFramework
             return self::$client;
         }
         self::$client = new SoapClient($this->wsdl, array(
+            'cache_wsdl' => WSDL_CACHE_NONE,
             'connection_timeout' => 20,
         ));
         return self::$client;
@@ -48,7 +50,7 @@ class SoapClientTest extends DebugTestFramework
                 'method' => 'groupCollapsed',
                 'args' => array(
                     'soap',
-                    'http://soapclient.com/SQLDataSRL',
+                    'http://127.0.0.1:8080/soap/SQLDataSRL',
                 ),
                 'meta' => array(
                     'channel' => 'general.Soap',
@@ -56,16 +58,15 @@ class SoapClientTest extends DebugTestFramework
                 ),
             ),
             array(
-                'asString' => true,
                 'method' => 'log',
                 'args' => array(
                     'request headers',
-                    'POST /xml/SQLDataSoap.wsdl HTTP/1.1' . "\r\n"
-                        . 'Host: www.soapclient.com' . "\r\n"
+                    'POST /soap/wsdl HTTP/1.1' . "\r\n"
+                        . 'Host: 127.0.0.1:8080' . "\r\n"
                         . 'Connection: Keep-Alive' . "\r\n"
                         . 'User-Agent: PHP-SOAP/' . PHP_VERSION . "\r\n"
                         . 'Content-Type: text/xml; charset=utf-8' . "\r\n"
-                        . 'SOAPAction: "http://soapclient.com/SQLDataSRL"' . "\r\n"
+                        . 'SOAPAction: "http://127.0.0.1:8080/soap/SQLDataSRL"' . "\r\n"
                         . 'Content-Length: %d' . "\r\n"
                         . '' . "\r\n",
                 ),
@@ -108,16 +109,17 @@ class SoapClientTest extends DebugTestFramework
                 ),
             ),
             array(
-                'asString' => true,
                 'method' => 'log',
                 'args' => array(
                     'response headers',
                     'HTTP/1.1 200 OK' . "\r\n"
-                        . 'Content-Length: %d' . "\r\n"
-                        . 'Content-Type: text/xml; charset="utf-8"' . "\r\n"
-                        . 'Set-Cookie: SessionId=%s;path=/;expires=%s GMT;Version=1; secure; HttpOnly' . "\r\n"
-                        . 'Server: SQLData-Server/%s Microsoft-HTTPAPI/2.0' . "\r\n"
+                        // . 'Content-Length: %d' . "\r\n"
+                        . 'Host: 127.0.0.1:8080' . "\r\n"
                         . 'Date: %s GMT' . "\r\n"
+                        . 'Connection: close' . "\r\n"
+                        . 'Content-Type: text/xml; charset="utf-8"' . "\r\n"
+                        // . 'Set-Cookie: SessionId=%s;path=/;expires=%s GMT;Version=1; secure; HttpOnly' . "\r\n"
+                        // . 'Server: SQLData-Server/%s Microsoft-HTTPAPI/2.0' . "\r\n"
                         . '',
                 ),
                 'meta' => array(
@@ -137,7 +139,7 @@ class SoapClientTest extends DebugTestFramework
                         'debug' => Abstracter::ABSTRACTION,
                         'type' => Abstracter::TYPE_STRING,
                         'value' => '<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tns="http://www.SoapClient.com/xml/SQLDataSoap.wsdl" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/">
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="http://www.SoapClient.com/xml/SQLDataSoap.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
   <SOAP-ENV:Body>
     <mns:ProcessSRLResponse xmlns:mns="http://www.SoapClient.com/xml/SQLDataSoap.xsd" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
       <return xsi:type="xsd:string"/>
@@ -203,12 +205,11 @@ class SoapClientTest extends DebugTestFramework
                 ),
             ),
             array(
-                'asString' => true,
                 'method' => 'log',
                 'args' => array(
                     'request headers',
-                    'POST /xml/SQLDataSoap.wsdl HTTP/1.1' . "\r\n"
-                        . 'Host: www.SoapClient.com' . "\r\n"
+                    'POST /soap/wsdl HTTP/1.1' . "\r\n"
+                        . 'Host: 127.0.0.1:8080' . "\r\n"
                         . 'Connection: Keep-Alive' . "\r\n"
                         . 'User-Agent: PHP-SOAP/' . PHP_VERSION . "\r\n"
                         . 'Content-Type: text/xml; charset=utf-8' . "\r\n"
@@ -256,16 +257,17 @@ class SoapClientTest extends DebugTestFramework
                 ),
             ),
             array(
-                'asString' => true,
                 'method' => 'log',
                 'args' => array(
                     'response headers',
                     'HTTP/1.1 200 OK' . "\r\n"
-                        . 'Content-Length: 664' . "\r\n"
+                        . 'Host: 127.0.0.1:8080' . "\r\n"
+                        // . 'Content-Length: 664' . "\r\n"
+                        // . 'Set-Cookie: SessionId=%s;path=/;expires=%s GMT;Version=1; secure; HttpOnly' . "\r\n"
+                        // . 'Server: SQLData-Server/%s Microsoft-HTTPAPI/2.0' . "\r\n"
+                        . 'Date: %s GMT' . "\r\n"
+                        . 'Connection: close' . "\r\n"
                         . 'Content-Type: text/xml; charset="utf-8"' . "\r\n"
-                        . 'Set-Cookie: SessionId=%s;path=/;expires=%s GMT;Version=1; secure; HttpOnly' . "\r\n"
-                        . 'Server: SQLData-Server/%s Microsoft-HTTPAPI/2.0' . "\r\n"
-                        . 'Date: %s GMT' . "\r\n",
                 ),
                 'meta' => array(
                     'channel' => 'general.Soap',
@@ -284,7 +286,7 @@ class SoapClientTest extends DebugTestFramework
                         'debug' => Abstracter::ABSTRACTION,
                         'type' => Abstracter::TYPE_STRING,
                         'value' => '<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tns="http://www.SoapClient.com/xml/SQLDataSoap.wsdl" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/">
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="http://www.SoapClient.com/xml/SQLDataSoap.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
   <SOAP-ENV:Body>
     <mns:ProcessSRLResponse xmlns:mns="http://www.SoapClient.com/xml/SQLDataSoap.xsd" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
       <return xsi:type="xsd:string"/>
@@ -313,18 +315,5 @@ class SoapClientTest extends DebugTestFramework
         );
 
         $this->assertLogEntries($logEntriesExpect, $logEntries);
-    }
-
-    protected function assertLogEntries($logEntriesExpect, $logEntries)
-    {
-        foreach ($logEntriesExpect as $i => $valsExpect) {
-            $asString = !empty($valsExpect['asString']);
-            unset($valsExpect['asString']);
-            if ($asString) {
-                $this->assertStringMatchesFormat(\json_encode($valsExpect), \json_encode($logEntries[$i]));
-                continue;
-            }
-            $this->assertSame($valsExpect, $logEntries[$i]);
-        }
     }
 }

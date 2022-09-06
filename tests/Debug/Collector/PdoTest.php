@@ -412,30 +412,4 @@ EOD;
         $this->assertIsArray(self::$client->errorInfo());
         $this->assertSame("'1'' OR ''1''=''1'' --'", self::$client->quote("1' OR '1'='1' --"));
     }
-
-    protected function getLogEntries($count = null, $where = 'log')
-    {
-        $logEntries = $this->debug->data->get($where);
-        if (\in_array($where, array('log','alerts')) || \preg_match('#^logSummary[\./]\d+$#', $where)) {
-            if ($count) {
-                $logEntries = \array_slice($logEntries, 0 - $count);
-            }
-            /*
-            return \array_map(function (LogEntry $logEntry) {
-                return $this->logEntryToArray($logEntry);
-            }, $logEntries);
-            */
-        }
-        /*
-        elseif ($where === 'logSummary') {
-            foreach ($logEntries as $priority => $entries) {
-                $logEntries[$priority] = \array_map(function (LogEntry $logEntry) {
-                    return $this->logEntryToArray($logEntry);
-                }, $entries);
-            }
-            return $logEntries;
-        }
-        */
-        return $this->helper->deObjectifyData($logEntries);
-    }
 }

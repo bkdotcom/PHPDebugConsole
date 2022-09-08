@@ -148,20 +148,26 @@ $debug->eventManager->subscribe(\bdk\Debug::EVENT_STREAM_WRAP, function (\bdk\Pu
 
 function startHttpd()
 {
-    $cmd = 'php -S 127.0.0.1:8080 -t docroot frontController.php';
+    // php 7.0 seems to e borked.
+    // unable to specify -t docroot  and -f frontController.php
+    //     frontController ignored
+    \chdir('tests/docroot');
+    $cmd = 'php -S 127.0.0.1:8080 frontController.php';
     // $cmd .= '; pid=$!; echo $pid;';  // ' wait $pid; code=$?; echo $code; exit $code';
     // $cmd = '{ (' . $cmd . ') <&3 3<&- 3>/dev/null & } 3<&0';
     // $cmd .= '; pid=$!; echo "sad" $pid >&3; wait $pid; code=$?; echo $code >&3; exit $code';
     $descriptorSpec = array(
         0 => ['pipe', 'r'],  // stdin is a pipe that the child will read from
         1 => ['pipe', 'w'],
-        // 2 => ['file', __DIR__ . '/phpd.log.txt'],
         2 => ['pipe', 'w'],
-        // 1 => \fopen('php://temp/maxmemory:' . (1024 * 1024), 'w+'),
-        // 2 => array('file', __DIR__ . '/phpd.log.txt'), // stderr is a file to write to
-        // 2 => \fopen('php://temp/maxmemory:' . (1024 * 1024), 'w+'),  // stdout is a pipe that the child will write to
-        // 3 => ['pipe', 'w'],
     );
     $pipes = array();
-    return \proc_open($cmd, $descriptorSpec, $pipes, __DIR__);
+    $resource = \proc_open($cmd, $descriptorSpec, $pipes);
+    fclose($pipes[0]);
+    \stream_set_blocking($pipes[1], false);
+    \stream_set_blocking($pipes[2], false);
+    \usleep(250000); // wait .25 sec for server to get going
+    // echo '1: ' . \stream_get_contents($pipes[1]) . "\n";
+    echo \stream_get_contents($pipes[2]) . "\n";
+    return $resource;
 }

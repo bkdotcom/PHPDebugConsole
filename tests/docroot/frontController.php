@@ -1,10 +1,12 @@
 <?php
 
 /**
- * php -S 127.0.0.1:8080 -t docroot frontController.php > phpd.log 2>&1 &
+ * php -S 127.0.0.1:8080 f frontController.php
+ *
+ * don't specify docroot from command line... php 7.0 borks
  */
 
-require __DIR__ . '/../vendor/autoload.php';
+require __DIR__ . '/../../vendor/autoload.php';
 
 $serverRequest = \bdk\HttpMessage\ServerRequest::fromGlobals();
 $serverParams = $serverRequest->getServerParams();
@@ -41,15 +43,14 @@ if ($realpath && \is_file($realpath)) {
         || $realpath === __FILE__
     ) {
         // disallowed file
-        \header('HTTP/1.1 404 Not Found');
-        echo '404 Not Found';
+        notFound();
         return;
     }
     if (\strtolower(\substr($realpath, -4)) === '.php') {
         include $realpath;
         return;
     }
-    // asset file; serve from filesystem
+    // serve from filesystem
     return false;
 }
 
@@ -68,10 +69,17 @@ foreach ($extensions as $ext => $contentType) {
     if ($realpath === false) {
         continue;
     }
-    \header('Content-Type:' . $contentType);
+    \header('Content-Type: ' . $contentType);
     include $realpath;
     return;
 }
 
-\header('HTTP/1.1 404 Not Found');
-echo '404 Not Found';
+notFound();
+
+function notFound()
+{
+    \header('HTTP/1.1 404 Not Found');
+    echo '<h1>404 Not Found</h1>';
+    // echo '<pre>' . htmlspecialchars(var_export($_SERVER, true)) . '</pre>';
+}
+

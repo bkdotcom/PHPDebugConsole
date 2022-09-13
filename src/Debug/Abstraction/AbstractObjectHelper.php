@@ -198,7 +198,7 @@ class AbstractObjectHelper
             foreach (\array_keys($array) as $name) {
                 $sortData[$name] = $name === '__construct'
                     ? '0'
-                    : $name;
+                    : \strtolower($name);
             }
             \array_multisort($sortData, $array);
         } elseif ($order === 'visibility') {
@@ -207,7 +207,7 @@ class AbstractObjectHelper
             foreach ($array as $name => $info) {
                 $sortData['name'][$name] = $name === '__construct'
                     ? '0'     // always place __construct at the top
-                    : $name;
+                    : \strtolower($name);
                 $vis = \is_array($info['visibility'])
                     ? $info['visibility'][0]
                     : $info['visibility'];

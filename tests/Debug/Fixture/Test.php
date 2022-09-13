@@ -11,6 +11,7 @@ use bdk\Debug\Abstraction\Abstraction;
  *
  * @link http://www.bradkent.com/php/debug PHPDebugConsole Homepage
  */
+#[\AllowDynamicProperties]
 class Test extends TestBase
 {
     /** constant documentation */
@@ -31,6 +32,9 @@ class Test extends TestBase
      */
     public $propPublic = 'redefined in Test (public)';
 
+    private $debug;
+    private $instance;
+
     /**
      * Private Property.
      *
@@ -42,6 +46,7 @@ class Test extends TestBase
 
     private $propNoDebug = 'not included in __debugInfo';
 
+    private $toString;
     private $toStrThrow;
 
     /**

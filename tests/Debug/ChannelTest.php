@@ -20,6 +20,9 @@ use bdk\PubSub\Event;
  */
 class ChannelTest extends DebugTestFramework
 {
+    protected $debugFoo;
+    protected $eventCounter = array();
+
     /**
      * setUp is executed before each test
      *

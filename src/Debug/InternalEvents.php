@@ -15,7 +15,6 @@ namespace bdk\Debug;
 use bdk\Debug;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Route\Stream;
-use bdk\Debug\Utility\FindExit;
 use bdk\ErrorHandler;
 use bdk\ErrorHandler\Error;
 use bdk\PubSub\Event;
@@ -324,7 +323,8 @@ class InternalEvents implements SubscriberInterface
             // parse error
             return;
         }
-        $findExit = new FindExit(array(
+        $findExit = $this->debug->findExit;
+        $findExit->setSkipClasses(array(
             __CLASS__,
             \get_class($this->debug->eventManager),
         ));

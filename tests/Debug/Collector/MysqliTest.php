@@ -113,6 +113,90 @@ EOD;
         ), $logEntry);
     }
 
+    public function testExecuteQuery()
+    {
+        $this->assertPhpClient();
+        if (PHP_VERSION_ID < 80200) {
+            $this->markTestSkipped('execute_query is php 8.2+');
+        }
+        $result = self::$client->execute_query(
+            'INSERT INTO `bob` (`t`, `e`, `ct`) VALUES (?, ?, ?)',
+            [
+                'brad was here',
+                \gmdate('Y-m-d H:i:s'),
+                42,
+            ]
+        );
+        $this->assertTrue($result);
+        $logEntriesExpectJson = <<<EOD
+        [
+            {
+                "method": "groupCollapsed",
+                "args": ["INSERT INTO `bob`\u2026"],
+                "meta": {"boldLabel": false, "channel": "general.MySqli", "icon": "fa fa-database"}
+            },
+            {
+                "method": "log",
+                "args": [
+                    {
+                        "addQuotes": false,
+                        "attribs": {
+                            "class": [
+                                "highlight",
+                                "language-sql"
+                            ]
+                        },
+                        "brief": false,
+                        "contentType": "application\/sql",
+                        "debug": "\u0000debug\u0000",
+                        "prettified": true,
+                        "prettifiedTag": false,
+                        "strlen": null,
+                        "type": "string",
+                        "typeMore": null,
+                        "value": "INSERT INTO `bob` (`t`, `e`, `ct`) \\nVALUES \\n  (?, ?, ?)",
+                        "visualWhiteSpace": false
+                    }
+                ],
+                "meta": {
+                    "attribs": {"class": ["no-indent"]},
+                    "channel": "general.MySqli"
+                }
+            },
+            {
+                "method": "log",
+                "args": ["parameters", [
+                    "brad was here",
+                    "%s",
+                    42
+                ]],
+                "meta": {"channel": "general.MySqli"}
+            },
+            {
+                "method": "time",
+                "args": ["duration: %s"],
+                "meta": {"channel": "general.MySqli"}
+            },
+            {
+                "method": "log",
+                "args": ["memory usage", "%s"],
+                "meta": {"channel": "general.MySqli"}
+            },
+            {
+                "method": "log",
+                "args": ["rowCount", 1],
+                "meta": {"channel": "general.MySqli"}
+            },
+            {
+                "method": "groupEnd",
+                "args": [],
+                "meta": {"channel": "general.MySqli"}
+            }
+        ]
+EOD;
+        $this->assertLogEntries($logEntriesExpectJson, $this->getLogEntries());
+    }
+
     public function testMultiQuery()
     {
         $this->assertPhpClient();
@@ -121,6 +205,7 @@ EOD;
         $query .= 'SELECT `t` from `bob` LIMIT 10';
 
         self::$client->multi_query($query);
+        $line = __LINE__ - 1;
         do {
             $result = self::$client->store_result();
             if ($result) {
@@ -130,7 +215,7 @@ EOD;
             }
         } while (self::$client->more_results() && self::$client->next_result());
 
-        $logEntriesExpectJson = <<<'EOD'
+        $logEntriesExpectJson = <<<EOD
         [
             {
                 "method": "groupCollapsed",
@@ -156,7 +241,7 @@ EOD;
                         "strlen": null,
                         "type": "string",
                         "typeMore": null,
-                        "value": "SELECT \n  CURRENT_USER(); \nSELECT \n  `t` \nfrom \n  `bob` \nLIMIT \n  10",
+                        "value": "SELECT \\n  CURRENT_USER(); \\nSELECT \\n  `t` \\nfrom \\n  `bob` \\nLIMIT \\n  10",
                         "visualWhiteSpace": false
                     }
                 ],
@@ -167,18 +252,18 @@ EOD;
             },
             {
                 "method": "time",
-                "args": ["duration: 403.8811 \u03bcs"],
+                "args": ["duration: %s"],
                 "meta": {"channel": "general.MySqli"}
             },
             {
                 "method": "log",
-                "args": ["memory usage", "16.03 kB"],
+                "args": ["memory usage", "%s"],
                 "meta": {"channel": "general.MySqli"}
             },
             {
                 "method": "warn",
                 "args": [
-                    "The %cSELECT%c statement has no %cWHERE%c clause and could examine many more rows than intended",
+                    "The %%cSELECT%%c statement has no %%cWHERE%%c clause and could examine many more rows than intended",
                     "font-family:monospace",
                     "",
                     "font-family:monospace",
@@ -187,19 +272,19 @@ EOD;
                 "meta": {
                     "channel": "general.MySqli",
                     "detectFiles": true,
-                    "file": "\/Users\/bkent\/Dropbox\/htdocs\/common\/vendor\/bdk\/PHPDebugConsole\/tests\/Debug\/Collector\/MysqliTest.php",
-                    "line": 196,
+                    "file": "%s",
+                    "line": {$line},
                     "uncollapse": false
                 }
             },
             {
                 "method": "warn",
-                "args": ["%cLIMIT%c without %cORDER BY%c causes non-deterministic results", "font-family:monospace", "", "font-family:monospace", ""],
+                "args": ["%%cLIMIT%%c without %%cORDER BY%%c causes non-deterministic results", "font-family:monospace", "", "font-family:monospace", ""],
                 "meta": {
                     "channel": "general.MySqli",
                     "detectFiles": true,
-                    "file": "\/Users\/bkent\/Dropbox\/htdocs\/common\/vendor\/bdk\/PHPDebugConsole\/tests\/Debug\/Collector\/MysqliTest.php",
-                    "line": 196,
+                    "file": "%s",
+                    "line": {$line},
                     "uncollapse": false
                 }
             },
@@ -210,17 +295,7 @@ EOD;
             }
         ]
 EOD;
-        $logEntriesExpect = \json_decode($logEntriesExpectJson, true);
-
-        $logEntries = $this->getLogEntries(9);
-        // duration & mem usage
-        $logEntriesExpect[2]['args'][0] = $logEntries[2]['args'][0];
-        $logEntriesExpect[3]['args'][1] = $logEntries[3]['args'][1];
-        $logEntriesExpect[4]['meta']['file'] = __FILE__;
-        $logEntriesExpect[4]['meta']['line'] = $logEntries[4]['meta']['line'];
-        $logEntriesExpect[5]['meta']['file'] = __FILE__;
-        $logEntriesExpect[5]['meta']['line'] = $logEntries[5]['meta']['line'];
-        $this->assertSame($logEntriesExpect, $logEntries);
+        $this->assertLogEntries($logEntriesExpectJson, $this->getLogEntries(9));
     }
 
     public function testDebugMysqliObj()
@@ -259,7 +334,7 @@ EOD;
                 "args": [
                     [
                         {"value": "brad was here", "type": "s"},
-                        {"value": "{{datetime}}", "type": "s"},
+                        {"value": "%s", "type": "s"},
                         {"value": 42, "type": "i"}
                     ]
                 ],
@@ -267,12 +342,12 @@ EOD;
             },
             {
                 "method": "time",
-                "args": ["duration: 2.47 ms"],
+                "args": ["duration: %s"],
                 "meta": {"channel": "general.MySqli"}
             },
             {
                 "method": "log",
-                "args": ["memory usage", "0 B"],
+                "args": ["memory usage", "%s"],
                 "meta": {"channel": "general.MySqli"}
             },
             {
@@ -287,16 +362,7 @@ EOD;
             }
         ]
 EOD;
-        $logEntriesExpectJson = str_replace('{{datetime}}', $datetime, $logEntriesExpectJson);
-        $logEntriesExpect = \json_decode($logEntriesExpectJson, true);
-
-        $logEntries = $this->getLogEntries(8);
-
-        // duration
-        $logEntriesExpect[3]['args'][0] = $logEntries[3]['args'][0];
-        // memory usage
-        $logEntriesExpect[4]['args'][1] = $logEntries[4]['args'][1];
-        $this->assertSame($logEntriesExpect, $logEntries);
+        $this->assertLogEntries($logEntriesExpectJson, $this->getLogEntries(8));
     }
 
     public function testRealQuery()
@@ -304,20 +370,16 @@ EOD;
         $this->assertPhpClient();
 
         $success = self::$client->real_query('SELECT * from `bob`');
+        $line = __LINE__ - 1;
         if ($success) {
             do {
                 $result = self::$client->store_result();
                 if ($result) {
-                    /*
-                    while ($row = $result->fetch_assoc()) {
-                        print_r($row);
-                    }
-                    */
                     $result->free();
                 }
             } while (self::$client->more_results() && self::$client->next_result());
         }
-        $logEntriesExpectJson = <<<'EOD'
+        $logEntriesExpectJson = <<<EOD
         [
             {
                 "method": "groupCollapsed",
@@ -326,29 +388,29 @@ EOD;
             },
             {
                 "method": "time",
-                "args": ["duration: 403.8811 \u03bcs"],
+                "args": ["duration: %s"],
                 "meta": {"channel": "general.MySqli"}
             },
             {
                 "method": "log",
-                "args": ["memory usage", "16.03 kB"],
+                "args": ["memory usage", "%s"],
                 "meta": {"channel": "general.MySqli"}
             },
             {
                 "method": "warn",
-                "args": ["Use %cSELECT *%c only if you need all columns from table", "font-family:monospace", ""],
+                "args": ["Use %%cSELECT *%%c only if you need all columns from table", "font-family:monospace", ""],
                 "meta": {
                     "channel": "general.MySqli",
                     "detectFiles": true,
-                    "file": "\/Users\/bkent\/Dropbox\/htdocs\/common\/vendor\/bdk\/PHPDebugConsole\/tests\/Debug\/Collector\/MysqliTest.php",
-                    "line": 196,
+                    "file": "%s",
+                    "line": {$line},
                     "uncollapse": false
                 }
             },
             {
                 "method": "warn",
                 "args": [
-                    "The %cSELECT%c statement has no %cWHERE%c clause and could examine many more rows than intended",
+                    "The %%cSELECT%%c statement has no %%cWHERE%%c clause and could examine many more rows than intended",
                     "font-family:monospace",
                     "",
                     "font-family:monospace",
@@ -357,8 +419,8 @@ EOD;
                 "meta": {
                     "channel": "general.MySqli",
                     "detectFiles": true,
-                    "file": "\/Users\/bkent\/Dropbox\/htdocs\/common\/vendor\/bdk\/PHPDebugConsole\/tests\/Debug\/Collector\/MysqliTest.php",
-                    "line": 196,
+                    "file": "%s",
+                    "line": {$line},
                     "uncollapse": false
                 }
             },
@@ -375,18 +437,7 @@ EOD;
         ]
 
 EOD;
-        $logEntriesExpect = \json_decode($logEntriesExpectJson, true);
-
-        $logEntries = $this->getLogEntries(9);
-
-        // duration & mem usage
-        $logEntriesExpect[1]['args'][0] = $logEntries[1]['args'][0];
-        $logEntriesExpect[2]['args'][1] = $logEntries[2]['args'][1];
-        $logEntriesExpect[3]['meta']['file'] = __FILE__;
-        $logEntriesExpect[3]['meta']['line'] = $logEntries[3]['meta']['line'];
-        $logEntriesExpect[4]['meta']['file'] = __FILE__;
-        $logEntriesExpect[4]['meta']['line'] = $logEntries[4]['meta']['line'];
-        $this->assertSame($logEntriesExpect, $logEntries);
+        $this->assertLogEntries($logEntriesExpectJson, $this->getLogEntries(9));
     }
 
     public function testRealConnect()
@@ -472,14 +523,7 @@ EOD;
                 }
             ]
 EOD;
-        $logEntriesExpect = \json_decode($logEntriesExpectJson, true);
-
-        $logEntries = $this->getLogEntries(2);
-
-        // duration & mem usage
-        // $logEntriesExpect[3]['args'][0] = $logEntries[3]['args'][0];
-        // $logEntriesExpect[4]['args'][1] = $logEntries[4]['args'][1];
-        $this->assertSame($logEntriesExpect, $logEntries);
+        $this->assertLogEntries($logEntriesExpectJson, $this->getLogEntries(2));
     }
 
     /*
@@ -610,12 +654,12 @@ EOD;
                 },
                 {
                     "method": "time",
-                    "args": ["duration: 281.0955 \u03bcs"],
+                    "args": ["duration: %s"],
                     "meta": {"channel": "general.MySqli"}
                 },
                 {
                     "method": "log",
-                    "args": ["memory usage", "0 B"],
+                    "args": ["memory usage", "%s"],
                     "meta": {"channel": "general.MySqli"}
                 },
                 {
@@ -640,15 +684,7 @@ EOD;
                 }
             ]
 EOD;
-        $logEntriesExpect = \json_decode($logEntriesExpectJson, true);
-
-        $logEntries = $this->getLogEntries(9);
-
-        // duration
-        $logEntriesExpect[3]['args'][0] = $logEntries[3]['args'][0];
-        // memory usage
-        $logEntriesExpect[4]['args'][1] = $logEntries[4]['args'][1];
-        $this->assertSame($logEntriesExpect, $logEntries);
+        $this->assertLogEntries($logEntriesExpectJson, $this->getLogEntries(9));
     }
 
     public function testTransactionNamed()
@@ -658,7 +694,8 @@ EOD;
         self::$client->begin_transaction(MYSQLI_TRANS_START_READ_WRITE, 'Billy');
         self::$client->query('INSERT INTO `bob` (`t`) VALUES ("test")');
         self::$client->commit(0, 'Billy');
-        $logEntriesExpectJson = <<<'EOD'
+        $line = __LINE__ - 1;
+        $logEntriesExpectJson = <<<EOD
         [
             {
                 "method": "group",
@@ -693,7 +730,7 @@ EOD;
                         "strlen": null,
                         "type": "string",
                         "typeMore": null,
-                        "value": "INSERT INTO `bob` (`t`) \nVALUES \n  (\"test\")",
+                        "value": "INSERT INTO `bob` (`t`) \\nVALUES \\n  (\"test\")",
                         "visualWhiteSpace": false
                     }
                 ],
@@ -706,12 +743,12 @@ EOD;
             },
             {
                 "method": "time",
-                "args": ["duration: 253.9158 \u03bcs"],
+                "args": ["duration: %s"],
                 "meta": {"channel": "general.MySqli"}
             },
             {
                 "method": "log",
-                "args": ["memory usage", "0 B"],
+                "args": ["memory usage", "%s"],
                 "meta": {"channel": "general.MySqli"}
             },
             {
@@ -726,12 +763,12 @@ EOD;
             },
             {
                 "method": "warn",
-                "args": ["passing $name param to mysqli::commit() does nothing!"],
+                "args": ["passing \$name param to mysqli::commit() does nothing!"],
                 "meta": {
                     "channel": "general.MySqli",
                     "detectFiles": true,
-                    "file": "",
-                    "line": null,
+                    "file": "%s",
+                    "line": $line,
                     "uncollapse": true
                 }
             },
@@ -747,18 +784,7 @@ EOD;
             }
         ]
 EOD;
-        $logEntriesExpect = \json_decode($logEntriesExpectJson, true);
-
-        $logEntries = $this->getLogEntries();
-
-        // duration
-        $logEntriesExpect[3]['args'][0] = $logEntries[3]['args'][0];
-        // memory usage
-        $logEntriesExpect[4]['args'][1] = $logEntries[4]['args'][1];
-
-        $logEntriesExpect[7]['meta']['file'] = $logEntries[7]['meta']['file'];
-        $logEntriesExpect[7]['meta']['line'] = $logEntries[7]['meta']['line'];
-        $this->assertSame($logEntriesExpect, $logEntries);
+        $this->assertLogEntries($logEntriesExpectJson, $this->getLogEntries());
     }
 
     public function testDebugOutput()
@@ -770,7 +796,7 @@ EOD;
         [
             {
                 "method": "groupCollapsed",
-                "args": ["MySqli info", "Localhost via UNIX socket"],
+                "args": ["MySqli info", "%s"],
                 "meta": {"argsAsParams": false, "icon": "fa fa-database", "level": "info"}
             },
             {
@@ -780,17 +806,17 @@ EOD;
             },
             {
                 "method": "log",
-                "args": ["logged operations: ", 4 ],
+                "args": ["logged operations: ", 4],
                 "meta": []
             },
             {
                 "method": "time",
-                "args": ["total time: 5.244 ms"],
+                "args": ["total time: %s"],
                 "meta": []
             },
             {
                 "method": "log",
-                "args": ["max memory usage", "280.79 kB"],
+                "args": ["max memory usage", "%s"],
                 "meta": []
             },
             {
@@ -819,19 +845,12 @@ EOD;
         ]
 EOD;
         $logEntriesExpect = \json_decode($logEntriesExpectJson, true);
-
         $logEntries = $this->getLogEntries(null, 'logSummary/0');
-        // 'Localhost via UNIX socket' or 127.0.0.1 via TCP/IP
-        $logEntriesExpect[0]['args'][1] = $logEntries[0]['args'][1];
         // total operations
         $logEntriesExpect[2]['args'][1] = $logEntries[2]['args'][1];
-        // duration
-        $logEntriesExpect[3]['args'][0] = $logEntries[3]['args'][0];
-        // memory
-        $logEntriesExpect[4]['args'][1] = $logEntries[4]['args'][1];
         // server info
         $logEntriesExpect[5]['args'][1] = $logEntries[5]['args'][1];
-        $this->assertSame($logEntriesExpect, $logEntries);
+        $this->assertLogEntries($logEntriesExpect, $logEntries);
     }
 
     protected function assertPhpClient()

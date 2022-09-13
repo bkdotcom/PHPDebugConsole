@@ -22,6 +22,9 @@ use bdk\Debug\LogEntry;
  */
 class Base extends AbstractComponent
 {
+    public $crateRaw = true;    // whether dump() should crate "raw" value
+                                //   when processing log this is set to false
+                                //   so not unecessarily re-crating arrays
     public $debug;
     protected $alertStyles = array(
         'common' => 'padding: 5px;

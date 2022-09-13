@@ -115,6 +115,9 @@ class ServiceProvider implements ServiceProviderInterface
         $container['eventManager'] = function () {
             return new \bdk\PubSub\Manager();
         };
+        $container['findExit'] = function () {
+            return new \bdk\Debug\Utility\FindExit();
+        };
         $container['html'] = function () {
             return new \bdk\Debug\Utility\Html();
         };

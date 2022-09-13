@@ -26,9 +26,6 @@ use DateTime;
 class BaseValue extends AbstractComponent
 {
     public $debug;
-    public $crateRaw = true;    // whether dump() should crate "raw" value
-                                //   when processing log this is set to false
-                                //   so not unecessarily re-crating arrays
 
     protected $dumper;
     protected $dumpOptions = array();
@@ -74,7 +71,7 @@ class BaseValue extends AbstractComponent
             list($opts['type'], $opts['typeMore']) = $this->debug->abstracter->getType($val);
         }
         if ($opts['typeMore'] === Abstracter::TYPE_RAW) {
-            if ($opts['type'] === Abstracter::TYPE_OBJECT || $this->crateRaw) {
+            if ($opts['type'] === Abstracter::TYPE_OBJECT || $this->dumper->crateRaw) {
                 $val = $this->debug->abstracter->crate($val, 'dump');
             }
             $opts['typeMore'] = null;

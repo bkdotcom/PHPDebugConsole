@@ -21,4 +21,13 @@ class CallerInfoParent
         \bdk\Debug::_group();
         \bdk\Debug::_groupEnd();
     }
+
+    public function sensitiveParam(
+        #[\SensitiveParameter]
+        $secret,
+        $sauce
+    ) {
+        \bdk\Debug::_group();
+        \bdk\Debug::_groupEnd();
+    }
 }

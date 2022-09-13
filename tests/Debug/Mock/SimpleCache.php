@@ -24,6 +24,8 @@ class SimpleCache implements CacheInterface
      */
     protected $size = 0;
 
+    protected $lastGetInfo;
+
     /**
      * Constructor
      *

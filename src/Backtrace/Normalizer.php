@@ -32,10 +32,11 @@ class Normalizer
      * @var array
      */
     private static $internalFuncs = array(
-        'require' => false,
-        'require_once' => false,
+        '{closure}' => false,
         'include' => false,
         'include_once' => false,
+        'require' => false,
+        'require_once' => false,
         'trigger_error' => false,
         'user_error' => false,
     );
@@ -55,6 +56,9 @@ class Normalizer
             return false;
         }
         $function = $frame['function'];
+        if (\preg_match('/^.*\{closure:(.+):(\d+)-(\d+)\}$/', $frame['function'])) {
+            return false;
+        }
         if (!isset(self::$internalFuncs[$function])) {
             // avoid `function require() does not exit
             $isInternal = true;

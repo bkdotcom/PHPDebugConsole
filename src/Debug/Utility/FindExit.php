@@ -25,8 +25,7 @@ class FindExit
      */
     public function __construct($classesSkip = array())
     {
-        $classesSkip[] = __CLASS__;
-        $this->classesSkip = $classesSkip;
+        $this->setSkipClasses($classesSkip);
     }
 
     /**
@@ -48,7 +47,7 @@ class FindExit
         }
         list($file, $lineStart, $phpSrcCode) = $this->getFrameSource($frame);
         $phpSrcCode = \preg_replace('/^\s*((public|private|protected|final)\s+)+/', '', $phpSrcCode);
-        $tokens = $this->getTokens($phpSrcCode);
+        $tokens = $this->getTokens($phpSrcCode, true, false);
         $this->searchTokenInit($frame);
         $token = $this->searchTokens($tokens);
         return $token
@@ -60,6 +59,59 @@ class FindExit
                 'line' => $token[2] + $lineStart - 1,
             )
             : null;
+    }
+
+    /**
+     * Get tokens for given source
+     *
+     * @param string $source         php source
+     * @param bool   $parse          parse
+     * @param bool   $inclWhitespace include whitespace tokens?
+     * @param int    $startLine      (1) start line number
+     *
+     * @return array|false
+     */
+    public static function getTokens($source, $parse = true, $inclWhitespace = true, $startLine = 1)
+    {
+        $addOpen = \strpos($source, '<?php') === false;
+        if ($addOpen) {
+            $source = '<?php ' . $source;
+        }
+        try {
+            $tokens = \defined('TOKEN_PARSE') && $parse
+                ? \token_get_all($source, TOKEN_PARSE)
+                : \token_get_all($source);
+        } catch (\ParseError $e) {
+            return false;
+        }
+        if ($addOpen) {
+            \array_shift($tokens);
+        }
+        $tokens = \array_filter($tokens, function ($token) use ($inclWhitespace) {
+            return $inclWhitespace || \is_array($token) === false || $token[0] !== T_WHITESPACE;
+        });
+        $tokens = \array_map(function ($token) use ($startLine) {
+            if (\is_array($token) === false) {
+                return $token;
+            }
+            $token[2] = $token[2] + $startLine - 1;
+            return $token;
+        }, $tokens);
+        return \array_values($tokens);
+    }
+
+    /**
+     * Set the classes that should be skipped when going through backtrace
+     *
+     * @param strjing|array $classes Classnames to bypass
+     *
+     * @return void
+     */
+    public function setSkipClasses($classes)
+    {
+        $classes = (array) $classes;
+        $classes[] = __CLASS__;
+        $this->classesSkip = $classes;
     }
 
     /**
@@ -281,32 +333,7 @@ class FindExit
     }
 
     /**
-     * Get tokens for given source
-     *
-     * @param string $source         php source
-     * @param bool   $inclWhitespace include whitespace frames?
-     *
-     * @return array
-     */
-    private function getTokens($source, $inclWhitespace = false)
-    {
-        if (\strpos($source, '<?php') === false) {
-            $source = '<?php ' . $source;
-        }
-        $tokens = \defined('TOKEN_PARSE')
-            ? \token_get_all($source, TOKEN_PARSE)
-            : \token_get_all($source);
-        if ($inclWhitespace === false) {
-            $tokens = \array_filter($tokens, function ($token) {
-                return \is_array($token) === false || $token[0] !== T_WHITESPACE;
-            });
-            $tokens = \array_values($tokens);
-        }
-        return $tokens;
-    }
-
-    /**
-     * Is frame a core php function (vs use defined)
+     * Is frame a core php function (vs user defined)
      *
      * @param array $frame backtrace frame
      *

@@ -242,25 +242,98 @@ class Group implements SubscriberInterface
         if (isset($caller['function']) === false) {
             return $args;
         }
-        // default args if first call inside function... and debugGroup is likely first call
-        $function = null;
-        $callerStartLine = 1;
-        if ($caller['class']) {
+        $file = null;
+        $function = $caller['function'];
+        $functionStartLine = 1;
+        if (\preg_match('/\{closure\}$/', $caller['function'])) {
+            $function = '{closure}';
+        } elseif ($caller['class']) {
             $refMethod = new ReflectionMethod($caller['class'], $caller['function']);
-            $callerStartLine = $refMethod->getStartLine();
+            $functionStartLine = $refMethod->getStartLine();
+            $file = $refMethod->getFileName();
             $function = $caller['classCalled'] . $caller['type'] . $caller['function'];
         } elseif (\in_array($caller['function'], array('include', 'include_once', 'require', 'require_once'), true) === false) {
             $refFunction = new ReflectionFunction($caller['function']);
-            $callerStartLine = $refFunction->getStartLine();
-            $function = $caller['function'];
+            $functionStartLine = $refFunction->getStartLine();
+            $file = $refFunction->getFileName();
         }
-        if ($function && $caller['line'] <= $callerStartLine + 2) {
+        if ($this->autoArgsTest($file, $functionStartLine, $caller['line']) || $this->autoArgsTestClosure($caller)) {
             $args[] = $function;
             $args = \array_merge($args, $caller['args']);
             // php < 7.0 debug_backtrace args are references!
             $args = $this->debug->arrayUtil->copy($args, false);
         }
         return $args;
+    }
+
+    /**
+     * Test if called group/groupCollapsed is the first statement of a function/method
+     *
+     * @param string $file              [description]
+     * @param int    $functionStartLine [description]
+     * @param int    $callerLine        [description]
+     *
+     * @return bool
+     */
+    private function autoArgsTest($file, $functionStartLine, $callerLine)
+    {
+        if ($file === null) {
+            return false;
+        }
+        if ($callerLine <= $functionStartLine + 2) {
+            /*
+                function closeEnough()   // functionStartLine
+                {                        //
+                    \bdk\Debug::group(); // functionStartLine + 2
+            */
+            return true;
+        }
+        /*
+            We could have a multi line function signature
+            function multiLine (  // functionStartLine
+                string $foo,
+                array $bar
+            ) {
+                \bdk\Debug::group();
+        */
+        $length = $callerLine - $functionStartLine + 1;
+        $lines = $this->debug->backtrace->getFileLines($file, $functionStartLine, $length);
+        $lines = \implode('', $lines);
+        $tokens = $this->debug->findExit->getTokens($lines, false, false, $functionStartLine);
+        $foundOpen = false;
+        $lineFirstStatement = null;
+        foreach ($tokens as $token) {
+            if ($token === '{') {
+                $foundOpen = true;
+                continue;
+            }
+            if ($foundOpen && \is_array($token)) {
+                $lineFirstStatement = $token[2];
+                break;
+            }
+        }
+        return $callerLine === $lineFirstStatement;
+    }
+
+    /**
+     * Perform a rudamentary test to check if group is first statement within {closure}
+     *
+     * @param array $caller caller info
+     *
+     * @return bool
+     */
+    private function autoArgsTestClosure($caller)
+    {
+        if (\preg_match('/\{closure\}$/', $caller['function']) !== 1) {
+            return false;
+        }
+        $lines = $this->debug->backtrace->getFileLines($caller['file'], $caller['line'] - 1, 1);
+        $lines = \implode('', $lines);
+        $tokens = $this->debug->findExit->getTokens($lines, false, false, $caller['line'] - 1);
+        return \end($tokens) === '{'
+            && \count(\array_filter($tokens, function ($token) {
+                return \is_array($token) && $token[0] === T_FUNCTION;
+            }));
     }
 
     /**

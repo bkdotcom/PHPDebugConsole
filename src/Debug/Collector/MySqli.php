@@ -14,6 +14,7 @@ namespace bdk\Debug\Collector;
 
 use bdk\Debug;
 use bdk\Debug\Collector\DatabaseTrait;
+use bdk\Debug\Collector\MySqli\ExecuteQueryTrait;
 use bdk\Debug\Collector\MySqli\MySqliStmt;
 use bdk\Debug\Collector\StatementInfo;
 use bdk\PubSub\Event;
@@ -29,6 +30,7 @@ use RuntimeException;
 class MySqli extends mysqliBase
 {
     use DatabaseTrait;
+    use ExecuteQueryTrait;
 
     public $connectionAttempted = false;
     protected $icon = 'fa fa-database';
@@ -395,7 +397,10 @@ class MySqli extends mysqliBase
             $this->addStatementInfo($info);
             return false;
         }
-        $return = \call_user_func_array(array('parent', $method), $args);
+        if ($method === 'execute_query') {
+            $info->setParams($args[1]);
+        }
+        $return = \call_user_func_array(array('mysqli', $method), $args);
         $exception = !$return
             ? new Exception($this->error, $this->errno)
             : null;

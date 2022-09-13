@@ -13,6 +13,7 @@
 namespace bdk\Debug\Plugin;
 
 use bdk\Debug;
+use bdk\Debug\AbstractComponent;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Plugin\CustomMethodTrait;
@@ -22,7 +23,7 @@ use bdk\PubSub\SubscriberInterface;
 /**
  * Add additional public methods to debug instance
  */
-class Redaction implements SubscriberInterface
+class Redaction extends AbstractComponent implements SubscriberInterface
 {
     use CustomMethodTrait;
 
@@ -31,7 +32,7 @@ class Redaction implements SubscriberInterface
      *
      * @var array
      */
-    private $cfg = array(
+    protected $cfg = array(
         'redactKeys' => array(
             // key => regex of key
         ),
@@ -46,7 +47,7 @@ class Redaction implements SubscriberInterface
      */
     public function __construct()
     {
-        $this->cfg['redactReplace'] = function ($str, $key) {
+        $this->cfg['redactReplace'] = function ($str, $key = null) {
             // "use" our function params so things (ie phpmd) don't complain
             array($str, $key);
             return '█████████';

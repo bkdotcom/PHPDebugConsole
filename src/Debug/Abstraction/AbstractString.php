@@ -42,11 +42,11 @@ class AbstractString extends AbstractComponent
      *
      * @param string $string    string value
      * @param string $typeMore  ie, 'base64', 'json', 'numeric', etc
-     * @param array  $crateVals create values
+     * @param array  $crateVals crate values
      *
      * @return Abstraction
      */
-    public function getAbstraction($string, $typeMore, $crateVals)
+    public function getAbstraction($string, $typeMore = null, $crateVals = array())
     {
         $absValues = $this->absValuesInit($string, $typeMore);
         switch ($typeMore) {

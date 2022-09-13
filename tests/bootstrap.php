@@ -151,6 +151,7 @@ function startHttpd()
     // php 7.0 seems to e borked.
     // unable to specify -t docroot  and -f frontController.php
     //     frontController ignored
+    $dirWas = \getcwd();
     \chdir('tests/docroot');
     $cmd = 'php -S 127.0.0.1:8080 frontController.php';
     // $cmd .= '; pid=$!; echo $pid;';  // ' wait $pid; code=$?; echo $code; exit $code';
@@ -163,11 +164,12 @@ function startHttpd()
     );
     $pipes = array();
     $resource = \proc_open($cmd, $descriptorSpec, $pipes);
-    fclose($pipes[0]);
+    \fclose($pipes[0]);
     \stream_set_blocking($pipes[1], false);
     \stream_set_blocking($pipes[2], false);
     \usleep(250000); // wait .25 sec for server to get going
     // echo '1: ' . \stream_get_contents($pipes[1]) . "\n";
     echo \stream_get_contents($pipes[2]) . "\n";
+    \chdir($dirWas);
     return $resource;
 }

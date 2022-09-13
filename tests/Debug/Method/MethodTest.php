@@ -365,6 +365,11 @@ class MethodTest extends DebugTestFramework
                 'firephp' => 'X-Wf-1-1-1-3: %d|[{"File":"%s","Label":"a string","Line":%d,"Type":"ERROR"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
                 'html' => '<li class="m_error" data-detect-files="true" data-file="' . \realpath(__DIR__ . '/../DebugTestFramework.php') . '" data-line="%d"><span class="no-quotes t_string">a string</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>, <div class="t_object" data-accessible="public"><span class="classname">stdClass</span>
                     <dl class="object-inner">
+                    ' . (PHP_VERSION_ID >= 80200
+                        ? '<dt class="attributes">attributes</dt>
+                            <dd class="attribute"><span class="classname">AllowDynamicProperties</span></dd>'
+                        : ''
+                    ) . '
                     <dt class="properties">no properties</dt>
                     <dt class="methods">no methods</dt>
                     </dl>
@@ -438,6 +443,11 @@ class MethodTest extends DebugTestFramework
                 'firephp' => 'X-Wf-1-1-1-5: %d|[{"Label":"a string","Type":"INFO"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
                 'html' => '<li class="m_info"><span class="no-quotes t_string">a string</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>, <div class="t_object" data-accessible="public"><span class="classname">stdClass</span>
                     <dl class="object-inner">
+                    ' . (PHP_VERSION_ID >= 80200
+                        ? '<dt class="attributes">attributes</dt>
+                            <dd class="attribute"><span class="classname">AllowDynamicProperties</span></dd>'
+                        : ''
+                    ) . '
                     <dt class="properties">no properties</dt>
                     <dt class="methods">no methods</dt>
                     </dl>
@@ -498,6 +508,11 @@ class MethodTest extends DebugTestFramework
                 'firephp' => 'X-Wf-1-1-1-5: %d|[{"Label":"a string","Type":"LOG"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
                 'html' => '<li class="m_log"><span class="no-quotes t_string">a string</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>, <div class="t_object" data-accessible="public"><span class="classname">stdClass</span>
                     <dl class="object-inner">
+                    ' . (PHP_VERSION_ID >= 80200
+                        ? '<dt class="attributes">attributes</dt>
+                            <dd class="attribute"><span class="classname">AllowDynamicProperties</span></dd>'
+                        : ''
+                    ) . '
                     <dt class="properties">no properties</dt>
                     <dt class="methods">no methods</dt>
                     </dl>
@@ -625,6 +640,11 @@ class MethodTest extends DebugTestFramework
                 'firephp' => 'X-Wf-1-1-1-5: %d|[{"File":"' . \realpath(__DIR__ . '/../DebugTestFramework.php') . '","Label":"a string","Line":%d,"Type":"WARN"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
                 'html' => '<li class="m_warn" data-detect-files="true" data-file="' . \realpath(__DIR__ . '/../DebugTestFramework.php') . '" data-line="%d"><span class="no-quotes t_string">a string</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>, <div class="t_object" data-accessible="public"><span class="classname">stdClass</span>
                     <dl class="object-inner">
+                    ' . (PHP_VERSION_ID >= 80200
+                        ? '<dt class="attributes">attributes</dt>
+                            <dd class="attribute"><span class="classname">AllowDynamicProperties</span></dd>'
+                        : ''
+                    ) . '
                     <dt class="properties">no properties</dt>
                     <dt class="methods">no methods</dt>
                     </dl>

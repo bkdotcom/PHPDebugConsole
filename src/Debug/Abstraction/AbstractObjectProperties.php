@@ -23,7 +23,12 @@ use ReflectionProperty;
  */
 class AbstractObjectProperties
 {
+    /** @var Abstraction */
+    protected $abs;
+
+    /** @var Abstracter */
     protected $abstracter;
+
     protected $helper;
 
     private static $basePropInfo = array(

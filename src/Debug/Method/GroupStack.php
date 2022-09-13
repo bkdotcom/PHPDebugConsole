@@ -16,7 +16,7 @@ use bdk\Debug;
 use bdk\Debug\LogEntry;
 
 /**
- * Group methods
+ * Keep track of group nesting
  */
 class GroupStack
 {

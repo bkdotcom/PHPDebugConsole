@@ -23,21 +23,25 @@ class ArrayTest extends DebugTestFramework
     public function providerTestMethod()
     {
 		// indented with tab
-        $arrayDumpHtml = <<<'EOD'
-<li class="m_log"><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
-<ul class="array-inner list-unstyled">
-	<li><span class="t_int t_key">0</span><span class="t_operator">=&gt;</span><span class="t_string">a</span></li>
-	<li><span class="t_key">foo</span><span class="t_operator">=&gt;</span><span class="t_string">bar</span></li>
-	<li><span class="t_int t_key">1</span><span class="t_operator">=&gt;</span><span class="t_string">c</span></li>
-    <li><span class="t_key">obj</span><span class="t_operator">=&gt;</span><div class="t_object" data-accessible="public"><span class="classname">stdClass</span>
-        <dl class="object-inner">
-        <dt class="properties">properties</dt>
-        <dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier">foo</span> <span class="t_operator">=</span> <span class="t_string">bar</span></dd>
-        <dt class="methods">no methods</dt>
-        </dl>
-        </div></li>
-</ul><span class="t_punct">)</span></span></li>
-EOD;
+        $arrayDumpHtml = '
+            <li class="m_log"><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
+            <ul class="array-inner list-unstyled">
+            	<li><span class="t_int t_key">0</span><span class="t_operator">=&gt;</span><span class="t_string">a</span></li>
+            	<li><span class="t_key">foo</span><span class="t_operator">=&gt;</span><span class="t_string">bar</span></li>
+            	<li><span class="t_int t_key">1</span><span class="t_operator">=&gt;</span><span class="t_string">c</span></li>
+                <li><span class="t_key">obj</span><span class="t_operator">=&gt;</span><div class="t_object" data-accessible="public"><span class="classname">stdClass</span>
+                    <dl class="object-inner">
+                    ' . (PHP_VERSION_ID >= 80200
+                        ? '<dt class="attributes">attributes</dt>
+                            <dd class="attribute"><span class="classname">AllowDynamicProperties</span></dd>'
+                        : ''
+                    ) . '
+                    <dt class="properties">properties</dt>
+                    <dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier">foo</span> <span class="t_operator">=</span> <span class="t_string">bar</span></dd>
+                    <dt class="methods">no methods</dt>
+                    </dl>
+                    </div></li>
+            </ul><span class="t_punct">)</span></span></li>';
 		// indented with 4 spaces
 		$arrayDumpText = <<<'EOD'
 array(
@@ -225,12 +229,6 @@ EOD;
                         array(
                             'foo' => 'bar',
                             'val' => Abstracter::RECURSION,
-                            /*
-                            '__debug_key_order__' => array(
-                                'foo',
-                                'val',
-                            )
-                            */
                         ),
                     ),
                     array(),

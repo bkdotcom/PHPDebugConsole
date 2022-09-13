@@ -150,7 +150,7 @@ class Debug extends AbstractDebug
         'redactKeys' => array(          // case-insensitive
             'password',
         ),
-        // 'redactReplace'              // closure
+        // 'redactReplace'              // closure (default defined in PLugin/Redaction)
         'route' => 'auto',              // 'auto', 'chromeLogger', 'firephp', 'html', 'serverLog', 'script', 'steam', 'text', or RouteInterface,
                                         //   if 'auto', will be determined automatically
                                         //   if null, no output (unless output plugin added manually)

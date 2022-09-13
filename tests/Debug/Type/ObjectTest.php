@@ -58,8 +58,6 @@ class ObjectTest extends DebugTestFramework
 bdk\Test\Debug\Fixture\Test
   Properties:
     ✨ This object has a __get() method
-    (public) debug = bdk\Debug NOT INSPECTED
-    (public) instance = bdk\Test\Debug\Fixture\Test *RECURSION*
     (public) propPublic = "redefined in Test (public)"
     (public) propStatic = "I'm Static"
     (public) someArray = array(
@@ -69,12 +67,14 @@ bdk\Test\Debug\Fixture\Test
         [bool] => true
         [obj] => null
     )
-    (public) toString = "abracadabra"
     (protected ✨ magic-read) magicReadProp = "not null"
     (protected) propProtected = "defined only in TestBase (protected)"
+    (private) debug = bdk\Debug NOT INSPECTED
+    (private) instance = bdk\Test\Debug\Fixture\Test *RECURSION*
     (private excluded) propNoDebug
     (private) propPrivate = "redefined in Test (private) (alternate value via __debugInfo)"
     (🔒 private) testBasePrivate = "defined in TestBase (private)"
+    (private) toString = "abracadabra"
     (private) toStrThrow = 0
     (✨ magic excluded) magicProp
     (debug) debugValue = "This property is debug only"
@@ -89,8 +89,6 @@ EOD;
 \e[38;5;250mbdk\Test\Debug\Fixture\\e[0m\e[1mTest\e[22m
     \e[4mProperties:\e[24m
         \e[38;5;250m✨ This object has a __get() method\e[0m
-        \e[38;5;250m(public)\e[0m \e[38;5;83mdebug\e[0m \e[38;5;130m=\e[0m \e[38;5;9mNOT INSPECTED\e[0m
-        \e[38;5;250m(public)\e[0m \e[38;5;83minstance\e[0m \e[38;5;130m=\e[0m \e[38;5;9m*RECURSION*\e[0m
         \e[38;5;250m(public)\e[0m \e[38;5;83mpropPublic\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mredefined in Test (public)\e[38;5;250m"\e[0m
         \e[38;5;250m(public)\e[0m \e[38;5;83mpropStatic\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mI'm Static\e[38;5;250m"\e[0m
         \e[38;5;250m(public)\e[0m \e[38;5;83msomeArray\e[0m \e[38;5;130m=\e[0m \e[38;5;45marray\e[38;5;245m(\e[0m
@@ -100,12 +98,14 @@ EOD;
             \e[38;5;245m[\e[38;5;83mbool\e[38;5;245m]\e[38;5;130m => \e[0m\e[32mtrue\e[0m
             \e[38;5;245m[\e[38;5;83mobj\e[38;5;245m]\e[38;5;130m => \e[0m\e[38;5;250mnull\e[0m
         \e[38;5;245m)\e[0m
-        \e[38;5;250m(public)\e[0m \e[38;5;83mtoString\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mabracadabra\e[38;5;250m"\e[0m
         \e[38;5;250m(protected ✨ magic-read)\e[0m \e[38;5;83mmagicReadProp\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mnot null\e[38;5;250m"\e[0m
         \e[38;5;250m(protected)\e[0m \e[38;5;83mpropProtected\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mdefined only in TestBase (protected)\e[38;5;250m"\e[0m
+        \e[38;5;250m(private)\e[0m \e[38;5;83mdebug\e[0m \e[38;5;130m=\e[0m \e[38;5;9mNOT INSPECTED\e[0m
+        \e[38;5;250m(private)\e[0m \e[38;5;83minstance\e[0m \e[38;5;130m=\e[0m \e[38;5;9m*RECURSION*\e[0m
         \e[38;5;250m(private excluded)\e[0m \e[38;5;83mpropNoDebug\e[0m
         \e[38;5;250m(private)\e[0m \e[38;5;83mpropPrivate\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mredefined in Test (private) (alternate value via __debugInfo)\e[38;5;250m"\e[0m
         \e[38;5;250m(🔒 private)\e[0m \e[38;5;83mtestBasePrivate\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mdefined in TestBase (private)\e[38;5;250m"\e[0m
+        \e[38;5;250m(private)\e[0m \e[38;5;83mtoString\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mabracadabra\e[38;5;250m"\e[0m
         \e[38;5;250m(private)\e[0m \e[38;5;83mtoStrThrow\e[0m \e[38;5;130m=\e[0m \e[96m0\e[0m
         \e[38;5;250m(✨ magic excluded)\e[0m \e[38;5;83mmagicProp\e[0m
         \e[38;5;250m(debug)\e[0m \e[38;5;83mdebugValue\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mThis property is debug only\e[38;5;250m"\e[0m
@@ -202,10 +202,6 @@ EOD;
                         $expect = \implode("\n", array(
                             '<dt class="properties">properties <span class="text-muted">(via __debugInfo)</span></dt>',
                             '<dd class="info magic">This object has a <code>__get</code> method</dd>',
-                            '<dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier">debug</span> <span class="t_operator">=</span> <div class="t_object" data-accessible="public"><span class="classname"><span class="namespace">bdk\</span>Debug</span>',
-                            '<span class="excluded">NOT INSPECTED</span></div></dd>',
-                            '<dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier">instance</span> <span class="t_operator">=</span> <div class="t_object" data-accessible="private"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>Test</span>',
-                            '<span class="t_recursion">*RECURSION*</span></div></dd>',
                             '<dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier" title="Public Property.">propPublic</span> <span class="t_operator">=</span> <span class="t_string">redefined in Test (public)</span></dd>',
                             '<dd class="isStatic property public"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="t_identifier">propStatic</span> <span class="t_operator">=</span> <span class="t_string">I\'m Static</span></dd>',
                             '<dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier">someArray</span> <span class="t_operator">=</span> <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>',
@@ -216,12 +212,16 @@ EOD;
                             "\t" . '<li><span class="t_key">bool</span><span class="t_operator">=&gt;</span><span class="t_bool" data-type-more="true">true</span></li>',
                             "\t" . '<li><span class="t_key">obj</span><span class="t_operator">=&gt;</span><span class="t_null">null</span></li>',
                             '</ul><span class="t_punct">)</span></span></dd>',
-                            '<dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier">toString</span> <span class="t_operator">=</span> <span class="t_string">abracadabra</span></dd>',
                             '<dd class="inherited magic-read property protected" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_protected">protected</span> <span class="t_modifier_magic-read">magic-read</span> <span class="t_type">bool</span> <span class="t_identifier" title="Read Only!">magicReadProp</span> <span class="t_operator">=</span> <span class="t_string">not null</span></dd>',
                             '<dd class="inherited property protected" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_protected">protected</span> <span class="t_identifier">propProtected</span> <span class="t_operator">=</span> <span class="t_string">defined only in TestBase (protected)</span></dd>',
+                            '<dd class="private property"><span class="t_modifier_private">private</span> <span class="t_identifier">debug</span> <span class="t_operator">=</span> <div class="t_object" data-accessible="public"><span class="classname"><span class="namespace">bdk\</span>Debug</span>',
+                            '<span class="excluded">NOT INSPECTED</span></div></dd>',
+                            '<dd class="private property"><span class="t_modifier_private">private</span> <span class="t_identifier">instance</span> <span class="t_operator">=</span> <div class="t_object" data-accessible="private"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>Test</span>',
+                            '<span class="t_recursion">*RECURSION*</span></div></dd>',
                             '<dd class="debuginfo-excluded private property"><span class="t_modifier_private">private</span> <span class="t_identifier">propNoDebug</span> <span class="t_operator">=</span> <span class="t_string">not included in __debugInfo</span></dd>',
                             '<dd class="debuginfo-value private property"><span class="t_modifier_private">private</span> <span class="t_type">string</span> <span class="t_identifier" title="Private Property.">propPrivate</span> <span class="t_operator">=</span> <span class="t_string">redefined in Test (private) (alternate value via __debugInfo)</span></dd>',
                             '<dd class="inherited private private-ancestor property" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_private">private</span> <span>(<i class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>TestBase</i>)</span> <span class="t_type">string</span> <span class="t_identifier" title="Inherited desc">testBasePrivate</span> <span class="t_operator">=</span> <span class="t_string">defined in TestBase (private)</span></dd>',
+                            '<dd class="private property"><span class="t_modifier_private">private</span> <span class="t_identifier">toString</span> <span class="t_operator">=</span> <span class="t_string">abracadabra</span></dd>',
                             '<dd class="private property"><span class="t_modifier_private">private</span> <span class="t_identifier">toStrThrow</span> <span class="t_operator">=</span> <span class="t_int">0</span></dd>',
                             '<dd class="debuginfo-excluded inherited magic property" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_magic">magic</span> <span class="t_type">bool</span> <span class="t_identifier" title="I\'m avail via __get()">magicProp</span></dd>',
                             '<dd class="debuginfo-value property"><span class="t_modifier_debug">debug</span> <span class="t_identifier">debugValue</span> <span class="t_operator">=</span> <span class="t_string">This property is debug only</span></dd>',
@@ -231,7 +231,7 @@ EOD;
                             $expect = \str_replace('\'', '&#039;', $expect);
                         }
                         // echo 'expect = ' . $expect . "\n";
-                        // echo 'html = ' . $str . "\n";
+                        // echo 'actual = ' . $str . "\n";
                         $this->assertStringContainsString($expect, $str);
 
                         // methods
@@ -261,8 +261,7 @@ EOD;
                         }
 
                         // echo 'expect = ' . $expect . "\n";
-                        // echo 'str = ' . $str . "\n";
-
+                        // echo 'actual = ' . $str . "\n";
                         $this->assertStringContainsString($expect, $str);
 
                         // phpdoc
@@ -272,7 +271,7 @@ EOD;
                             '</dl>',
                         )), $str);
                     },
-                    'script' => 'console.log({"___class_name":"bdk\\\Test\\\Debug\\\Fixture\\\Test","(public) debug":"(object) bdk\\\Debug NOT INSPECTED","(public) instance":"(object) bdk\\\Test\\\Debug\\\Fixture\\\Test *RECURSION*","(public) propPublic":"redefined in Test (public)","(public) propStatic":"I\'m Static","(public) someArray":{"int":123,"numeric":"123","string":"cheese","bool":true,"obj":null},"(public) toString":"abracadabra","(protected ✨ magic-read) magicReadProp":"not null","(protected) propProtected":"defined only in TestBase (protected)","(private excluded) propNoDebug":"not included in __debugInfo","(private) propPrivate":"redefined in Test (private) (alternate value via __debugInfo)","(🔒 private) testBasePrivate":"defined in TestBase (private)","(private) toStrThrow":0,"(✨ magic excluded) magicProp":undefined,"(debug) debugValue":"This property is debug only"});',
+                    'script' => 'console.log({"___class_name":"bdk\\\Test\\\Debug\\\Fixture\\\Test","(public) propPublic":"redefined in Test (public)","(public) propStatic":"I\'m Static","(public) someArray":{"int":123,"numeric":"123","string":"cheese","bool":true,"obj":null},"(protected ✨ magic-read) magicReadProp":"not null","(protected) propProtected":"defined only in TestBase (protected)","(private) debug":"(object) bdk\\\Debug NOT INSPECTED","(private) instance":"(object) bdk\\\Test\\\Debug\\\Fixture\\\Test *RECURSION*","(private excluded) propNoDebug":"not included in __debugInfo","(private) propPrivate":"redefined in Test (private) (alternate value via __debugInfo)","(🔒 private) testBasePrivate":"defined in TestBase (private)","(private) toString":"abracadabra","(private) toStrThrow":0,"(✨ magic excluded) magicProp":undefined,"(debug) debugValue":"This property is debug only"});',
                     'streamAnsi' => $ansi,
                     'text' => $text,
                     'wamp' => array(
@@ -338,7 +337,6 @@ EOD;
 
                         // echo 'expect = ' . $expect . "\n";
                         // echo 'str = ' . $str . "\n";
-
                         $this->assertStringContainsString($expect, $str);
                     },
                     'script' => 'console.log({"___class_name":"bdk\\\Test\\\Debug\\\Fixture\\\Test2","(protected ✨ magic-read) magicReadProp":"not null","(✨ magic) magicProp":undefined});',
@@ -514,6 +512,7 @@ EOD;
                 'log',
                 array(
                     new \bdk\Test\Debug\Fixture\Test(),
+                    Debug::meta('cfg', 'objectSort', 'name'),
                 ),
                 array(
                     'entry' => function (LogEntry $entry) {
@@ -524,19 +523,19 @@ EOD;
                         ), \array_keys($entry['args'][0]['constants']));
                         $this->assertSame(array(
                             'debug',
+                            'debugValue',
                             'instance',
+                            'magicProp',
+                            'magicReadProp',
+                            'propNoDebug',
+                            'propPrivate',
+                            'propProtected',
                             'propPublic',
                             'propStatic',
                             'someArray',
-                            'toString',
-                            'magicReadProp',
-                            'propProtected',
-                            'propNoDebug',
-                            'propPrivate',
                             'testBasePrivate',
+                            'toString',
                             'toStrThrow',
-                            'magicProp',
-                            'debugValue',
                         ), \array_keys($entry['args'][0]['properties']));
                         $this->assertSame(array(
                             '__construct',
@@ -544,13 +543,13 @@ EOD;
                             '__debugInfo',
                             '__get',
                             '__toString',
-                            'methodPublic',
-                            'testBasePublic',
-                            'testBaseStatic',
-                            'methodProtected',
                             'methodPrivate',
+                            'methodProtected',
+                            'methodPublic',
                             'presto',
                             'prestoStatic',
+                            'testBasePublic',
+                            'testBaseStatic',
                         ), \array_keys($entry['args'][0]['methods']));
                     },
                 ),
@@ -1194,13 +1193,13 @@ EOD;
     public function testRecursiveObjectProp1()
     {
         $test = new \bdk\Test\Debug\Fixture\Test();
-        $test->prop = array();
-        $test->prop[] = &$test->prop;
+        $test->propPublic = array();
+        $test->propPublic[] = &$test->propPublic;
         $this->debug->log('test', $test);
         $abstraction = $this->debug->data->get('log/0/args/1');
         $this->assertEquals(
             Abstracter::RECURSION,
-            $abstraction['properties']['prop']['value'][0],
+            $abstraction['properties']['propPublic']['value'][0],
             'Did not find expected recursion'
         );
         $output = $this->debug->output();
@@ -1240,12 +1239,12 @@ EOD;
     public function testRecursiveObjectProp3()
     {
         $test = new \bdk\Test\Debug\Fixture\Test();
-        $test->prop = array( &$test );
+        $test->propPublic = array( &$test );
         $this->debug->log('test', $test);
         $abstraction = $this->debug->data->get('log/0/args/1');
         $this->assertEquals(
             true,
-            $abstraction['properties']['prop']['value'][0]['isRecursion'],
+            $abstraction['properties']['propPublic']['value'][0]['isRecursion'],
             'Did not find expected recursion'
         );
         $this->debug->output();
@@ -1260,8 +1259,8 @@ EOD;
     {
         $testOa = new \bdk\Test\Debug\Fixture\Test();
         $testOb = new \bdk\Test\Debug\Fixture\Test();
-        $testOa->prop = 'this is object a';
-        $testOb->prop = 'this is object b';
+        $testOa->propPublic = 'this is object a';
+        $testOb->propPublic = 'this is object b';
         $testOa->ob = $testOb;
         $testOb->oa = $testOa;
         $this->debug->log('test_oa', $testOa);

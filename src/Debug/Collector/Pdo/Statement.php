@@ -55,7 +55,7 @@ class Statement extends PDOStatement
         $this->boundParameters[$column] = $param;
         $this->boundParameterTypes[$column] = $type;
         $args = \array_merge(array($column, &$param), \array_slice(\func_get_args(), 2));
-        return \call_user_func_array(array('parent', 'bindColumn'), $args);
+        return \call_user_func_array(array('PDOStatement', 'bindColumn'), $args);
     }
 
     /**
@@ -79,7 +79,7 @@ class Statement extends PDOStatement
         $this->boundParameters[$parameter] = $variable;
         $this->boundParameterTypes[$parameter] = $dataType;
         $args = \array_merge(array($parameter, &$variable), \array_slice(\func_get_args(), 2));
-        return \call_user_func_array(array('parent', 'bindParam'), $args);
+        return \call_user_func_array(array('PDOStatement', 'bindParam'), $args);
     }
 
     /**
@@ -99,7 +99,7 @@ class Statement extends PDOStatement
     {
         $this->boundParameters[$parameter] = $value;
         $this->boundParameterTypes[$parameter] = $dataType;
-        return \call_user_func_array(array('parent', 'bindValue'), \func_get_args());
+        return \call_user_func_array(array('PDOStatement', 'bindValue'), \func_get_args());
     }
 
     /**

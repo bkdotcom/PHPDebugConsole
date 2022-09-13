@@ -195,7 +195,9 @@ class Abstracter extends AbstractComponent
             case self::TYPE_FLOAT:
                 return $this->getAbstractionFloat($val, $typeMore);
             case self::TYPE_OBJECT:
-                return $this->abstractObject->getAbstraction($val, $method, $hist);
+                return $val instanceof \SensitiveParameterValue
+                    ? $this->abstractString->getAbstraction($this->debug->pluginRedaction->getCfg('redactReplace')('redacted'))
+                    : $this->abstractObject->getAbstraction($val, $method, $hist);
             case self::TYPE_RESOURCE:
                 return new Abstraction($type, array(
                     'value' => \print_r($val, true) . ': ' . \get_resource_type($val),

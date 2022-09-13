@@ -22,7 +22,10 @@ class DebugTestFramework extends DOMTestCase
 
     public static $allowError = false;
     public static $obLevels = 0;
+
+    public $debug;
     public $emailInfo = array();
+
     protected $helper;
     protected $file;
     protected $line;
@@ -352,13 +355,26 @@ class DebugTestFramework extends DOMTestCase
 
     protected function assertLogEntries($expect, $actual)
     {
+        if (is_string($expect)) {
+            // assume json
+            $expect = \json_decode($expect, true);
+            if ($expect === null) {
+                throw new \Exception(\json_last_error(). ': ' . \json_last_error_msg());
+            }
+        }
+
         $this->assertCount(\count($expect), $actual);
         $actual = $this->helper->deObjectifyData($actual);
         foreach ($expect as $i => $expectArr) {
             $actualArr = $actual[$i];
-            $expectStr = \preg_replace('/=>\s*\n\s*array/', '=> array', \var_export($expectArr, true));
-            $actualStr = \preg_replace('/=>\s*\n\s*array/', '=> array', \var_export($actualArr, true));
-            $this->assertStringMatchesFormat($expectStr, $actualStr, 'LogEntry ' . $i . ' does not match');
+            $expectStr = \preg_replace('/=>\s*\n\s*array /', '=> array', \var_export($expectArr, true));
+            $actualStr = \preg_replace('/=>\s*\n\s*array /', '=> array', \var_export($actualArr, true));
+            try {
+                $this->assertStringMatchesFormat($expectStr, $actualStr, 'LogEntry ' . $i . ' does not match');
+            } catch (\Exception $e) {
+                // echo 'actual = ' . $actualStr . "\n";
+                throw $e;
+            }
         }
     }
 

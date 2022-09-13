@@ -184,6 +184,18 @@ class StatementInfo extends AbstractComponent
     }
 
     /**
+     * Set bound params
+     *
+     * @param array $params parameter values
+     *
+     * @return void
+     */
+    public function setParams($params = array())
+    {
+        $this->params = $params;
+    }
+
+    /**
      * Returns the exception's code
      *
      * @return int|string

@@ -3,7 +3,8 @@
 namespace bdk\Test\Debug\Method;
 
 use bdk\Debug;
-USE bdk\Debug\Abstraction\AbstractObject;
+use bdk\Debug\Abstraction\Abstracter;
+use bdk\Debug\Abstraction\AbstractObject;
 use bdk\Debug\LogEntry;
 use bdk\PubSub\Event;
 use bdk\PubSub\Manager as EventManager;
@@ -320,6 +321,11 @@ class GroupTest extends DebugTestFramework
         $parent = new Fixture\CallerInfoParent();
         $child = new Fixture\CallerInfoChild();
 
+        $someClosure = function ($arg) {
+            \bdk\Debug::_group();
+            \bdk\Debug::_groupEnd();
+        };
+
         /*
             Test default label
         */
@@ -480,6 +486,56 @@ class GroupTest extends DebugTestFramework
                 'script' => 'console.group("bdk\\\Test\\\Debug\\\Fixture\\\CallerInfoParent::staticParent");',
                 'text' => '▸ bdk\Test\Debug\Fixture\CallerInfoParent::staticParent',
                 'wamp' => $entryExpect + array('messageIndex' => 0),
+            )
+        );
+
+        $this->debug->data->set('log', array());
+        $child->sensitiveParam('swordfish', 'thousand island');
+        $entryExpect = array(
+            'method' => 'group',
+            'args' => array(
+                'bdk\Test\Debug\Fixture\CallerInfoChild->sensitiveParam',
+                array(
+                    'brief' => true,
+                    'debug' => Abstracter::ABSTRACTION,
+                    'strlen' => null,
+                    'type' => Abstracter::TYPE_STRING,
+                    'typeMore' => null,
+                    'value' => '█████████',
+                ),
+                'thousand island'
+            ),
+            'meta' => array(
+                'isFuncName' => true,
+                'statically' => true,
+            ),
+        );
+        $this->testMethod(
+            array('dataPath' => 'log/0'),
+            array(),
+            array(
+                'entry' => $entryExpect,
+            )
+        );
+
+        $this->debug->data->set('log', array());
+        $someClosure('flapjack');
+        $entryExpect = array(
+            'method' => 'group',
+            'args' => array(
+                '{closure}',
+                'flapjack'
+            ),
+            'meta' => array(
+                'isFuncName' => true,
+                'statically' => true,
+            ),
+        );
+        $this->testMethod(
+            array('dataPath' => 'log/0'),
+            array(),
+            array(
+                'entry' => $entryExpect,
             )
         );
     }

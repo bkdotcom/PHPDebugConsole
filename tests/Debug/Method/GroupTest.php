@@ -495,14 +495,16 @@ class GroupTest extends DebugTestFramework
             'method' => 'group',
             'args' => array(
                 'bdk\Test\Debug\Fixture\CallerInfoChild->sensitiveParam',
-                array(
-                    'brief' => true,
-                    'debug' => Abstracter::ABSTRACTION,
-                    'strlen' => null,
-                    'type' => Abstracter::TYPE_STRING,
-                    'typeMore' => null,
-                    'value' => '█████████',
-                ),
+                PHP_VERSION_ID >= 80200
+                    ? array(
+                        'brief' => true,
+                        'debug' => Abstracter::ABSTRACTION,
+                        'strlen' => null,
+                        'type' => Abstracter::TYPE_STRING,
+                        'typeMore' => null,
+                        'value' => '█████████',
+                    )
+                    : 'swordfish',
                 'thousand island'
             ),
             'meta' => array(

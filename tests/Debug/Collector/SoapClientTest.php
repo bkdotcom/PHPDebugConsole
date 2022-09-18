@@ -88,11 +88,10 @@ class SoapClientTest extends DebugTestFramework
             $this->markTestSkipped('PHP < 7.0 raises E_ERROR instead of throwing exception');
         }
         $soapFault = null;
-        $line = __LINE__ + 2;
+        $line = __LINE__ + 3;
         try {
-            $client = new \bdk\Debug\Collector\SoapClient($this->wsdl . '404', array(
-                'exceptions' => true,
-            ));
+            $options = array('exceptions' => true);
+            new \bdk\Debug\Collector\SoapClient($this->wsdl . '404', $options);
         } catch (\SoapFault $soapFault) {
         }
         $logEntries = $this->getLogEntries();

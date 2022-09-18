@@ -233,7 +233,6 @@ class LogPhp implements SubscriberInterface
                 array(
                     'options' => array(
                         'showListKeys' => false,
-                        // 'expand' => true,
                     ),
                 )
             ),

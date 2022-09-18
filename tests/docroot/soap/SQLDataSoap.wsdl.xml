@@ -7,6 +7,29 @@
   <types>
     <schema targetNamespace='http://www.SoapClient.com/xml/SQLDataSoap.xsd'
       xmlns='http://www.w3.org/2001/XMLSchema'>
+      <xsd:complexType name="SomeType">
+        <xsd:annotation>
+          <xsd:documentation>Retrieves a list of SKU's with low inventory qty</xsd:documentation>
+          <xsd:appinfo xmlns:inf="http://127.0.0.1:8080/soap/wsdl"/>
+        </xsd:annotation>
+        <xsd:sequence>
+          <xsd:element name="thing" minOccurs="1" maxOccurs="1" type="xsd:string">
+            <xsd:annotation>
+              <xsd:documentation/>
+              <xsd:appinfo xmlns:inf="http://127.0.0.1:8080/soap/wsdl">
+                <inf:min/><inf:max/>
+                <inf:callInfo>
+                  <inf:callName>bradWasHere</inf:callName>
+                  <inf:requiredInput>Yes</inf:requiredInput>
+                </inf:callInfo>
+              </xsd:appinfo>
+            </xsd:annotation>
+          </xsd:element>
+          <xsd:element name="qty" minOccurs="1" maxOccurs="1" type="xsd:float"><xsd:annotation><xsd:documentation/><xsd:appinfo xmlns:inf="http://127.0.0.1:8080/soap/wsdl"><inf:callInfo><inf:callName>bradWasHere</inf:callName><inf:requiredInput>Yes</inf:requiredInput></inf:callInfo></xsd:appinfo></xsd:annotation></xsd:element>
+          <xsd:element name="price" minOccurs="0" maxOccurs="1" type="xsd:int"><xsd:annotation><xsd:documentation/><xsd:appinfo xmlns:inf="http://127.0.0.1:8080/soap/wsdl"><inf:default>1</inf:default><inf:min/><inf:max/><inf:callInfo><inf:callName>bradWasHere</inf:callName><inf:requiredInput>No</inf:requiredInput></inf:callInfo></xsd:appinfo></xsd:annotation></xsd:element>
+          <xsd:element name="isGift" minOccurs="0" maxOccurs="1" type="xsd:boolean"><xsd:annotation><xsd:documentation/><xsd:appinfo xmlns:inf="http://127.0.0.1:8080/soap/wsdl"><inf:min/><inf:max/><inf:callInfo><inf:callName>bradWasHere</inf:callName><inf:requiredInput>No</inf:requiredInput></inf:callInfo></xsd:appinfo></xsd:annotation></xsd:element>
+        </xsd:sequence>
+      </xsd:complexType>
     </schema>
   </types>
   <message name='ProcessSRL'>

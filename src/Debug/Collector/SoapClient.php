@@ -15,6 +15,9 @@ namespace bdk\Debug\Collector;
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
+use Exception;
+use SoapClient as SoapClientBase;
+use SoapFault;
 
 /**
  * A replacement SoapClient which traces requests
@@ -23,7 +26,7 @@ use bdk\Debug\Abstraction\Abstraction;
  *   * we need to override __doRequest
  *   * we need to make sure options['trace'] is true (can set trace property via reflection)
  */
-class SoapClient extends \SoapClient
+class SoapClient extends SoapClientBase
 {
     private $debug;
     protected $icon = 'fa fa-exchange';
@@ -34,13 +37,20 @@ class SoapClient extends \SoapClient
     /**
      * Constructor
      *
+     * new options:
+     *    list_functions: (false)
+     *    list_types: (false)
+     *
      * @param string $wsdl    URI of the WSDL file or NULL if working in non-WSDL mode.
      * @param array  $options Array of options
      * @param Debug  $debug   (optional) Specify PHPDebugConsole instance
      *                            if not passed, will create Soap channel on singleton instance
      *                            if root channel is specified, will create a Soap channel
      *
+     * @throws Exception
+     *
      * @SuppressWarnings(PHPMD.StaticAccess)
+     * @phpcs:disable Generic.CodeAnalysis.EmptyStatement.DetectedCatch
      */
     public function __construct($wsdl, $options = array(), Debug $debug = null)
     {
@@ -50,9 +60,42 @@ class SoapClient extends \SoapClient
             $debug = $debug->getChannel('Soap', array('channelIcon' => $this->icon));
         }
         $this->debug = $debug;
+        $this->dom = new \DOMDocument();
+        $this->dom->preserveWhiteSpace = false;
+        $this->dom->formatOutput = true;
         $debug->addPlugin($debug->pluginHighlight);
         $options['trace'] = true;
-        parent::__construct($wsdl, $options);
+        $exception = null;
+        try {
+            parent::__construct($wsdl, $options);
+        } catch (Exception $exception) {
+            // rethrow below
+        }
+        $this->logConstruct($wsdl, $options, $exception);
+        if ($exception) {
+            throw $exception;
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @phpcs:disable Generic.CodeAnalysis.EmptyStatement.DetectedCatch
+     */
+    #[\ReturnTypeWillChange]
+    public function __call($name, $args)
+    {
+        $exception = null;
+        try {
+            $return = parent::__call($name, $args);
+        } catch (SoapFault $exception) {
+            // we'll rethrow bellow
+        }
+        $this->logReqRes($name, $exception);
+        if ($exception) {
+            throw $exception;
+        }
+        return $return;
     }
 
     /**
@@ -61,32 +104,70 @@ class SoapClient extends \SoapClient
     #[\ReturnTypeWillChange]
     public function __doRequest($request, $location, $action, $version, $oneWay = 0)
     {
-        $this->dom = new \DOMDocument();
-        $this->dom->preserveWhiteSpace = false;
-        $this->dom->formatOutput = true;
-
         $xmlResponse = parent::__doRequest($request, $location, $action, $version, $oneWay);
         $this->setLastRequest($request);
-        $xmlRequest = $this->getDebugXmlRequest($action);
-
-        $this->debug->groupCollapsed('soap', $action, $this->debug->meta('icon', $this->icon));
-        $this->logRequest($xmlRequest);
-        $this->logResponse($xmlResponse);
-        $this->debug->groupEnd();
-
+        $this->setLastResponse($xmlResponse);
+        $backtrace = \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
+        $prevFrame = \end($backtrace);
+        if ($prevFrame['function'] !== '__call') {
+            // __doRequest called directly
+            $this->logReqRes($action, null, true);
+        }
         return $xmlResponse;
+    }
+
+    /**
+     * Get defined types keyed by name
+     *
+     * @return array
+     */
+    private function debugGetFunctions()
+    {
+        return \array_map(function ($val) {
+            $matches = null;
+            if (\preg_match('/^(\w+) (.+)$/s', $val, $matches)) {
+                $val = $matches[2] . ': ' . $matches[1];
+            }
+            return $val;
+        }, $this->__getFunctions());
+    }
+
+    /**
+     * Get defined types keyed by name
+     *
+     * @return array
+     */
+    private function debugGetTypes()
+    {
+        $types = array();
+        $matches = null;
+        foreach ($this->__getTypes() as $val) {
+            $val = \preg_replace('/\bboolean\b/', 'bool', $val);
+            if (\preg_match('/^struct ([^{]+) (.+)$/s', $val, $matches)) {
+                $key = $matches[1];
+                $types[$key] = 'struct ' . $matches[2];
+                continue;
+            }
+            $types[] = $val;
+        }
+        \ksort($types);
+        return $types;
     }
 
     /**
      * Get whitespace formatted request xml
      *
-     * @param string $action The SOAP action
+     * @param string $action Populated with  SOAP action
      *
-     * @return string XML
+     * @return string|null XML
      */
-    private function getDebugXmlRequest(&$action)
+    private function debugGetXmlRequest(&$action)
     {
-        $this->dom->loadXML($this->__getLastRequest());
+        $requestXml = $this->__getLastRequest();
+        if (!$requestXml) {
+            return null;
+        }
+        $this->dom->loadXML($requestXml);
         if (!$action) {
             $envelope = $this->dom->childNodes->item(0);
             $body = $envelope->childNodes->item(0)->localName !== 'Header'
@@ -100,57 +181,112 @@ class SoapClient extends \SoapClient
     /**
      * Get whitespace formatted response xml
      *
-     * @param string $response XML response
+     * @param mixed $faultInfo Populated with Fault info
      *
-     * @return string XML
+     * @return string|null XML
      */
-    private function getDebugXmlResponse($response)
+    private function debugGetXmlResponse(&$faultInfo)
     {
-        if (!$response) {
-            return '';
+        $responseXml = $this->__getLastResponse();
+        if (!$responseXml) {
+            return null;
         }
-        $this->dom->loadXML($response);
-        $xmlResponse = $this->dom->saveXML();
+        $this->dom->loadXML($responseXml);
+
         /*
-            determine if soapFault
-            a bit tricky from within __doRequest
+        SOAP_1_1 :
+            namespace:  "http://schemas.xmlsoap.org/soap/envelope/"
+            prefix:  "SOAP-ENV"
+                faultcode / faultstring / faultactor / detail
+        SOAP_1_2 :
+            namespace:  "http://www.w3.org/2003/05/soap-envelope"
+            prefix:  "env"
+                Code / Reason / Detail
         */
-        $fault = $this->dom->getElementsByTagNameNS('http://schemas.xmlsoap.org/soap/envelope/', 'Fault');
+
+        $prefix = $this->dom->childNodes->item(0)->prefix;
+        $soapVer = $prefix === 'env'
+            ? SOAP_1_2
+            : SOAP_1_1;
+        $fault = $this->dom->getElementsByTagName('Fault');
         if ($fault->length) {
-            $vals = array();
-            foreach ($fault->item(0)->childNodes as $node) {
-                $vals[$node->localName] = $node->nodeValue;
-            }
-            $this->debug->warn('soapFault', $vals);
+            $fault = $fault->item(0);
+            $faultInfo = $soapVer === SOAP_1_2
+                ? array(
+                    'code' => $fault->getElementsByTagName('Code')->item(0)->textContent,
+                    'reason' => $fault->getElementsByTagName('Reason')->item(0)->textContent,
+                )
+                : array(
+                    'code' => $fault->getElementsByTagName('faultcode')->item(0)->textContent,
+                    'reason' => $fault->getElementsByTagName('faultstring')->item(0)->textContent,
+                );
         }
-        return $xmlResponse;
+        return $this->dom->saveXML();
     }
 
     /**
-     * Log request headers and body
+     * Log constructor
      *
-     * @param string $xmlRequest XML
+     * @param string         $wsdl      URI of the WSDL file or NULL if working in non-WSDL mode.
+     * @param array          $options   Array of options
+     * @param Exception|null $exception Exception (if thrown)
      *
      * @return void
      */
-    private function logRequest($xmlRequest)
+    private function logConstruct($wsdl, $options, Exception $exception = null)
     {
-        $this->debug->log('request headers', $this->__getLastRequestHeaders(), $this->debug->meta('redact'));
-        $this->logXml('request body', $xmlRequest);
+        $this->debug->groupCollapsed('SoapClient::__construct', $wsdl ?: 'non-WSDL mode', $this->debug->meta('icon', $this->icon));
+        if ($wsdl && !empty($options['list_functions'])) {
+            $this->debug->log(
+                'functions',
+                $this->debug->abstracter->crateWithVals(
+                    $this->debugGetFunctions(),
+                    array(
+                        'options' => array(
+                            'showListKeys' => false,
+                        ),
+                    )
+                )
+            );
+        }
+        if ($wsdl && !empty($options['list_types'])) {
+            $this->debug->log('types', $this->debugGetTypes());
+        }
+        if ($exception) {
+            $this->debug->warn(\get_class($exception), \trim($exception->getMessage()));
+        }
+        $this->debug->groupEnd();
     }
 
     /**
-     * Log response headers and body
+     * Log SOAP request and response
      *
-     * @param string $xmlResponse XML
+     * @param string         $action         Soap action
+     * @param Exception|null $exception      Caught exception
+     * @param bool           $logParsedFault Whether to add log entry for found Fault
      *
      * @return void
      */
-    private function logResponse($xmlResponse)
+    private function logReqRes($action, Exception $exception = null, $logParsedFault = false)
     {
-        $this->debug->log('response headers', $this->__getLastResponseHeaders(), $this->debug->meta('redact'));
-        $xmlResponse = $this->getDebugXmlResponse($xmlResponse);
-        $this->logXml('response body', $xmlResponse);
+        $fault = null;
+        $xmlRequest = $this->debugGetXmlRequest($action);
+        $xmlResponse = $this->debugGetXmlResponse($fault);
+        $this->debug->groupCollapsed('soap', $action, $this->debug->meta('icon', $this->icon));
+        if ($xmlRequest) {
+            $this->debug->log('request headers', $this->__getLastRequestHeaders(), $this->debug->meta('redact'));
+            $this->logXml('request body', $xmlRequest);
+        }
+        if ($xmlResponse) {
+            $this->debug->log('response headers', $this->__getLastResponseHeaders(), $this->debug->meta('redact'));
+            $this->logXml('response body', $xmlResponse);
+        }
+        if ($exception) {
+            $this->debug->warn(\get_class($exception), \trim($exception->getMessage()));
+        } elseif ($logParsedFault && $fault) {
+            $this->debug->warn('SoapFault', $fault['reason']);
+        }
+        $this->debug->groupEnd();
     }
 
     /**
@@ -183,23 +319,32 @@ class SoapClient extends \SoapClient
     }
 
     /**
-     * Set last request so that getLastRequest will return it
+     * Set last request so that __getLastRequest() avail from within __doRequest
      *
-     * @param string $request XML REQUEST
+     * @param string $request XML request
      *
      * @return void
      */
     private function setLastRequest($request)
     {
-        if ($this->__getLastRequest() !== null) {
-            return;
-        }
-        if (PHP_VERSION_ID >= 80100) {
-            $lastRequestRef = new \ReflectionProperty('SoapClient', '__last_request');
-            $lastRequestRef->setAccessible(true);
-            $lastRequestRef->setValue($this, $request);
-            return;
-        }
-        $this->__last_request = $request;
+        // php 8.1+ requires reflection for #reasons... just use it for all versions
+        $lastRequestRef = new \ReflectionProperty('SoapClient', '__last_request');
+        $lastRequestRef->setAccessible(true);
+        $lastRequestRef->setValue($this, $request);
+    }
+
+    /**
+     * Set last response so that __getLastResponse() avail from within __doRequest
+     *
+     * @param string $response XML response
+     *
+     * @return void
+     */
+    private function setLastResponse($response)
+    {
+        // php 8.1+ requires reflection for #reasons... just use it for all versions
+        $lastResponseRef = new \ReflectionProperty('SoapClient', '__last_response');
+        $lastResponseRef->setAccessible(true);
+        $lastResponseRef->setValue($this, $response);
     }
 }

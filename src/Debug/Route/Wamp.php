@@ -361,7 +361,7 @@ class Wamp implements RouteInterface
             'REMOTE_ADDR' => null,
             'REQUEST_METHOD' => $this->debug->serverRequest->getMethod(),
             'REQUEST_TIME' => null,
-            'REQUEST_URI' => $this->debug->serverRequest->getRequestTarget(),
+            'REQUEST_URI' => \urldecode($this->debug->serverRequest->getRequestTarget()),
             'SERVER_ADDR' => null,
             'SERVER_NAME' => null,
         );

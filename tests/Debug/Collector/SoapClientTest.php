@@ -17,16 +17,97 @@ class SoapClientTest extends DebugTestFramework
     protected $wsdl = 'http://127.0.0.1:8080/soap/wsdl';
     protected static $client;
 
-    protected function getClient()
+    public function testConstruct()
     {
-        if (self::$client) {
-            return self::$client;
+        $client = new \bdk\Debug\Collector\SoapClient(
+            $this->wsdl,
+            array(
+                'list_functions' => true,
+                'list_types' => true,
+                'cache_wsdl' => WSDL_CACHE_NONE,
+            ),
+            $this->debug
+        );
+        $this->assertLogEntries(array(
+            array(
+                'method' => 'groupCollapsed',
+                'args' => array(
+                    'SoapClient::__construct',
+                    $this->wsdl,
+                ),
+                'meta' => array(
+                    'channel' => 'general.Soap',
+                    'icon' => 'fa fa-exchange',
+                ),
+            ),
+            array(
+                'method' => 'log',
+                'args' => array(
+                    'functions',
+                    array(
+                        'debug' => Abstracter::ABSTRACTION,
+                        'options' => array(
+                            'showListKeys' => false,
+                        ),
+                        'type' => Abstracter::TYPE_ARRAY,
+                        'value' => array(
+                            'ProcessSRL(string $SRLFile, string $RequestName, string $key): string',
+                            'ProcessSRL2(string $SRLFile, string $RequestName, string $key1, string $key2): string',
+                            'ProcessSQL(string $DataSource, string $SQLStatement, string $UserName, string $Password): string',
+                        ),
+                    ),
+                ),
+                'meta' => array('channel' => 'general.Soap'),
+            ),
+            array(
+                'method' => 'log',
+                'args' => array(
+                    'types',
+                    array(
+                        'SomeType' => 'struct {' . "\n"
+                            . ' string thing;' . "\n"
+                            . ' float qty;' . "\n"
+                            . ' int price;' . "\n"
+                            . ' bool isGift;' . "\n"
+                            . '}',
+                    ),
+                ),
+                'meta' => array('channel' => 'general.Soap'),
+            ),
+            array(
+                'method' => 'groupEnd',
+                'args' => array(),
+                'meta' => array('channel' => 'general.Soap'),
+            ),
+        ), $this->getLogEntries());
+    }
+
+    public function testConstructException()
+    {
+        $soapFault = null;
+        $line = __LINE__ + 2;
+        try {
+            $client = new \bdk\Debug\Collector\SoapClient($this->wsdl . '404');
+        } catch (\SoapFault $soapFault) {
         }
-        self::$client = new SoapClient($this->wsdl, array(
-            'cache_wsdl' => WSDL_CACHE_NONE,
-            'connection_timeout' => 20,
-        ));
-        return self::$client;
+        $logEntries = $this->getLogEntries();
+        $count = \count($logEntries);
+        $logEntry = $logEntries[$count - 2];
+        $this->assertSame(array(
+            'method' => 'warn',
+            'args' => array(
+                'SoapFault',
+                'SOAP-ERROR: Parsing WSDL: Couldn\'t load from \'' . $this->wsdl . '404\' : failed to load external entity "' . $this->wsdl . '404"',
+            ),
+            'meta' => array(
+                'channel' => 'general.Soap',
+                'detectFiles' => true,
+                'file' => __FILE__,
+                'line' => $line,
+                'uncollapse' => true,
+            ),
+        ), $logEntry);
+        $this->assertInstanceOf('SoapFault', $soapFault);
     }
 
     public function testSoapCall()
@@ -50,7 +131,7 @@ class SoapClientTest extends DebugTestFramework
                 'method' => 'groupCollapsed',
                 'args' => array(
                     'soap',
-                    'http://127.0.0.1:8080/soap/SQLDataSRL',
+                    'processSRL',
                 ),
                 'meta' => array(
                     'channel' => 'general.Soap',
@@ -174,13 +255,74 @@ class SoapClientTest extends DebugTestFramework
         $this->assertLogEntries($logEntriesExpect, $logEntries);
     }
 
+    public function testSoapCallException()
+    {
+        $exception = null;
+        $line = __LINE__ + 3;
+        try {
+            $soapClient = $this->getClient();
+            $soapClient->noSuchAction('wompwomp');
+        } catch (\SoapFault $exception) {
+        }
+        $logEntries = $this->getLogEntries();
+        $count = \count($logEntries);
+        $logEntry = $logEntries[$count - 2];
+        $this->assertSame(array(
+            'method' => 'warn',
+            'args' => array(
+                'SoapFault',
+                'Function ("noSuchAction") is not a valid method for this service',
+            ),
+            'meta' => array(
+                'channel' => 'general.Soap',
+                'detectFiles' => true,
+                'file' => __FILE__,
+                'line' => $line,
+                'uncollapse' => true,
+            ),
+        ), $logEntry);
+        $this->assertInstanceOf('SoapFault', $exception);
+    }
+
+    public function testSoapCallResponseFault()
+    {
+        $exception = null;
+        $line = __LINE__ + 3;
+        try {
+            $soapClient = $this->getClient();
+            $soapClient->processSRL(
+                'faultMe',
+                'yahoo'
+            );
+        } catch (\SoapFault $exception) {
+        }
+        $logEntries = $this->getLogEntries();
+        $count = \count($logEntries);
+        $logEntry = $logEntries[$count - 2];
+        $this->assertSame(array(
+            'method' => 'warn',
+            'args' => array(
+                'SoapFault',
+                'This is a test',
+            ),
+            'meta' => array(
+                'channel' => 'general.Soap',
+                'detectFiles' => true,
+                'file' => __FILE__,
+                'line' => $line,
+                'uncollapse' => true,
+            ),
+        ), $logEntry);
+        $this->assertInstanceOf('SoapFault', $exception);
+    }
+
     public function testDoRequest()
     {
         $request = '<?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="http://www.SoapClient.com/xml/SQLDataSoap.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
   <SOAP-ENV:Body>
     <ns1:ProcessSRL>
-      <SRLFile xsi:type="xsd:string">/xml/NEWS.SRI</SRLFile>
+      <SRLFile xsi:type="xsd:string">faultMe</SRLFile>
       <RequestName xsi:type="xsd:string">yahoo</RequestName>
       <key xsi:nil="true"/>
     </ns1:ProcessSRL>
@@ -188,6 +330,7 @@ class SoapClientTest extends DebugTestFramework
 </SOAP-ENV:Envelope>
 ';
 
+        $line = __LINE__ + 3;
         try {
             $soapClient = $this->getClient();
             $soapClient->__doRequest($request, $this->wsdl, '', SOAP_1_1);
@@ -243,7 +386,7 @@ class SoapClientTest extends DebugTestFramework
 <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="http://www.SoapClient.com/xml/SQLDataSoap.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
   <SOAP-ENV:Body>
     <ns1:ProcessSRL>
-      <SRLFile xsi:type="xsd:string">/xml/NEWS.SRI</SRLFile>
+      <SRLFile xsi:type="xsd:string">faultMe</SRLFile>
       <RequestName xsi:type="xsd:string">yahoo</RequestName>
       <key xsi:nil="true"/>
     </ns1:ProcessSRL>
@@ -296,9 +439,10 @@ class SoapClientTest extends DebugTestFramework
                         'value' => '<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="http://www.SoapClient.com/xml/SQLDataSoap.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
   <SOAP-ENV:Body>
-    <mns:ProcessSRLResponse xmlns:mns="http://www.SoapClient.com/xml/SQLDataSoap.xsd" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
-      <return xsi:type="xsd:string"/>
-    </mns:ProcessSRLResponse>
+    <SOAP-ENV:Fault>
+      <SOAP-ENV:faultcode>test</SOAP-ENV:faultcode>
+      <SOAP-ENV:faultstring>This is a test</SOAP-ENV:faultstring>
+    </SOAP-ENV:Fault>
   </SOAP-ENV:Body>
 </SOAP-ENV:Envelope>
 ',
@@ -314,6 +458,20 @@ class SoapClientTest extends DebugTestFramework
                 ),
             ),
             array(
+                'method' => 'warn',
+                'args' => array(
+                    'SoapFault',
+                    'This is a test',
+                ),
+                'meta' => array(
+                    'channel' => 'general.Soap',
+                    'detectFiles' => true,
+                    'file' => __FILE__,
+                    'line' => $line,
+                    'uncollapse' => true,
+                ),
+            ),
+            array(
                 'method' => 'groupEnd',
                 'args' => array(),
                 'meta' => array(
@@ -323,5 +481,18 @@ class SoapClientTest extends DebugTestFramework
         );
 
         $this->assertLogEntries($logEntriesExpect, $logEntries);
+    }
+
+    protected function getClient()
+    {
+        if (self::$client) {
+            return self::$client;
+        }
+        self::$client = new SoapClient($this->wsdl, array(
+            'cache_wsdl' => WSDL_CACHE_NONE,
+            'connection_timeout' => 20,
+        ));
+        $this->debug->data->set('log', array());
+        return self::$client;
     }
 }

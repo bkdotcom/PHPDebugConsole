@@ -62,7 +62,7 @@ jobs:
       run: composer run test
     - name: Publish code coverage
       uses: paambaati/codeclimate-action@v3.0.0
-      if: matrix.php-version == '8.1'
+      if: matrix.php-version == '8.2'
       continue-on-error: true
       env:
         CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
@@ -71,6 +71,6 @@ jobs:
         coverageCommand: vendor/bin/phpunit --coverage-clover coverage/clover.xml
         coverageLocations: coverage/clover.xml:clover
     - name: Coverage summary
-      if: matrix.php-version == '8.1'
+      if: matrix.php-version == '8.2'
       continue-on-error: true
       run: php -f tests/coverageChecker.php -- coverage/clover.xml

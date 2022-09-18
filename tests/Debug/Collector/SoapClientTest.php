@@ -290,10 +290,7 @@ class SoapClientTest extends DebugTestFramework
         $line = __LINE__ + 3;
         try {
             $soapClient = $this->getClient();
-            $soapClient->processSRL(
-                'faultMe',
-                'yahoo'
-            );
+            $soapClient->processSRL('faultMe', 'yahoo');
         } catch (\SoapFault $exception) {
         }
         $logEntries = $this->getLogEntries();

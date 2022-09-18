@@ -327,10 +327,13 @@ class SoapClient extends SoapClientBase
      */
     private function setLastRequest($request)
     {
-        // php 8.1+ requires reflection for #reasons... just use it for all versions
-        $lastRequestRef = new \ReflectionProperty('SoapClient', '__last_request');
-        $lastRequestRef->setAccessible(true);
-        $lastRequestRef->setValue($this, $request);
+        if (PHP_VERSION_ID >= 80100) {
+            $lastRequestRef = new \ReflectionProperty('SoapClient', '__last_request');
+            $lastRequestRef->setAccessible(true);
+            $lastRequestRef->setValue($this, $request);
+            return;
+        }
+        $this->__last_request = $request;
     }
 
     /**
@@ -342,9 +345,12 @@ class SoapClient extends SoapClientBase
      */
     private function setLastResponse($response)
     {
-        // php 8.1+ requires reflection for #reasons... just use it for all versions
-        $lastResponseRef = new \ReflectionProperty('SoapClient', '__last_response');
-        $lastResponseRef->setAccessible(true);
-        $lastResponseRef->setValue($this, $response);
+        if (PHP_VERSION_ID >= 80100) {
+            $lastResponseRef = new \ReflectionProperty('SoapClient', '__last_response');
+            $lastResponseRef->setAccessible(true);
+            $lastResponseRef->setValue($this, $response);
+            return;
+        }
+        $this->__last_response = $response;
     }
 }

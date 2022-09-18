@@ -209,7 +209,9 @@ class LogEnv implements SubscriberInterface
                 Note:  There is a side-effect.
                 session_id() will  continue to return the id
             */
-            \session_abort();
+            if (PHP_VERSION_ID >= 50600) {
+                \session_abort();
+            }
             \session_name($namePrev);
             unset($_SESSION);
         }

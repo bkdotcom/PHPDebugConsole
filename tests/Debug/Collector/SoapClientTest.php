@@ -146,7 +146,7 @@ class SoapClientTest extends DebugTestFramework
                 'method' => 'log',
                 'args' => array(
                     'request headers',
-                    implode("%A\n", array(
+                    \implode("%A\n", array(
                         'POST /soap/wsdl HTTP/1.1',
                         'Host: 127.0.0.1:8080',
                         'Connection: Keep-Alive',
@@ -255,6 +255,12 @@ class SoapClientTest extends DebugTestFramework
                 ),
             ),
         );
+        if (PHP_VERSION_ID < 50500) {
+            // removee request headers and body from php 5.4
+            // #reasons
+            // ¯\_(ツ)_/¯
+            \array_splice($logEntriesExpect, 1, 2);
+        }
 
         $this->assertLogEntries($logEntriesExpect, $logEntries);
     }
@@ -409,7 +415,7 @@ class SoapClientTest extends DebugTestFramework
                 'method' => 'log',
                 'args' => array(
                     'response headers',
-                    implode("%A\n", array(
+                    \implode("%A\n", array(
                         'HTTP/1.1 200 OK',
                         'Host: 127.0.0.1:8080',
                         // . 'Content-Length: 664' . "\r\n"

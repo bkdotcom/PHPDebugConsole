@@ -363,8 +363,12 @@ class DebugTestFramework extends DOMTestCase
             }
         }
 
-        $this->assertCount(\count($expect), $actual);
         $actual = $this->helper->deObjectifyData($actual);
+        $this->assertCount(
+            \count($expect),
+            $actual,
+            'count actual (' . \count($actual) . ') does not match count expected (' . \count($expect) . ') : ' . \preg_replace('/=>\s*\n\s*array /', '=> array', \var_export($actual, true))
+        );
         foreach ($expect as $i => $expectArr) {
             $actualArr = $actual[$i];
             $expectStr = \preg_replace('/=>\s*\n\s*array /', '=> array', \var_export($expectArr, true));

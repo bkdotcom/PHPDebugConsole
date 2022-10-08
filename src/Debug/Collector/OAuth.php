@@ -56,7 +56,7 @@ class OAuth extends OAuthBase
     {
         $return = $this->profileCall(__FUNCTION__, \func_get_args());
         if ($this->debug) {
-            $this->debugger->groupCollapsed(__FUNCTION__, $this->getHttpMethod(), $protectedResourceUrl);
+            $this->debugger->groupCollapsed('OAuth::' . __FUNCTION__, $this->getHttpMethod(), $protectedResourceUrl);
             $this->logRequest($protectedResourceUrl);
             $this->debugger->groupEnd();
         }
@@ -73,7 +73,7 @@ class OAuth extends OAuthBase
     {
         $return = $this->profileCall(__FUNCTION__, \func_get_args());
         if ($this->debug) {
-            $this->debugger->groupCollapsed(__FUNCTION__, $this->getHttpMethod(), $accessTokenUrl);
+            $this->debugger->groupCollapsed('OAuth::' . __FUNCTION__, $this->getHttpMethod(), $accessTokenUrl);
             $this->logRequest($accessTokenUrl);
             $this->debugger->groupEnd();
         }
@@ -90,7 +90,7 @@ class OAuth extends OAuthBase
     {
         $return = $this->profileCall(__FUNCTION__, \func_get_args());
         if ($this->debug) {
-            $this->debugger->groupCollapsed(__FUNCTION__, $this->getHttpMethod(), $requestTokenUrl);
+            $this->debugger->groupCollapsed('OAuth::' . __FUNCTION__, $this->getHttpMethod(), $requestTokenUrl);
             $this->debugger->log('callback url', $callbackUrl);
             $this->logRequest($requestTokenUrl);
             $this->debugger->groupEnd();

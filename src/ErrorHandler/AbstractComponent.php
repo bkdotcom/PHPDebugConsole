@@ -67,6 +67,10 @@ class AbstractComponent
         $path = \is_array($path)
             ? $path
             : \array_filter(\preg_split('#[\./]#', (string) $path), 'strlen');
+        $first = \reset($path);
+        if ($first && \is_object($this->{$first}) && \method_exists($this->{$first}, 'getCfg')) {
+            return $this->{$first}->getCfg(\array_slice($path, 1));
+        }
         $return = $this->cfg;
         $path = \array_reverse($path);
         while ($path) {

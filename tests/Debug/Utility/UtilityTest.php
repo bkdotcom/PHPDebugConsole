@@ -151,6 +151,15 @@ class UtilityTest extends DebugTestFramework
         $this->assertTrue(\is_string($branch) || $branch === null);
     }
 
+    /**
+     * @dataProvider httpMethodHasBodyProvider
+     */
+    public function testHttpMethodHasBody($method, $hasBodyExpect)
+    {
+        $hasBody = Utility::httpMethodHasBody($method);
+        $this->assertSame($hasBodyExpect, $hasBody);
+    }
+
     public function testIsFile()
     {
         $this->assertFalse(Utility::isFile(123));
@@ -158,5 +167,20 @@ class UtilityTest extends DebugTestFramework
         // is_file() expects parameter 1 to be a valid path, string given
         $this->assertFalse(Utility::isFile("\0foo.txt"));
         $this->assertFalse(Utility::isFile(__DIR__ . '/' . "\0foo.txt"));
+    }
+
+    public function httpMethodHasBodyProvider()
+    {
+        return array(
+            'CUSTOM' => array('CUSTOM', true),
+            'POST' => array('POST', true),
+            'PUT' => array('PUT', true),
+            'CONNECT' => array('CONNECT', false),
+            'DELETE' => array('DELETE', false),
+            'GET' => array('GET', false),
+            'HEAD' => array('HEAD', false),
+            'OPTIONS' => array('OPTIONS', false),
+            'TRACE' => array('TRACE', false),
+        );
     }
 }

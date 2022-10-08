@@ -200,6 +200,20 @@ class Utility
     }
 
     /**
+     * Does specified http method generally have a request body
+     *
+     * @param string $method http method (such as 'GET' or 'POST')
+     *
+     * @return bool
+     */
+    public static function httpMethodHasBody($method)
+    {
+        // don't expect a request body for these methods
+        $noBodyMethods = array('CONNECT','DELETE','GET','HEAD','OPTIONS','TRACE');
+        return \in_array($method, $noBodyMethods, true) === false;
+    }
+
+    /**
      * "Safely" test if value is a file
      *
      * @param string $val value to test

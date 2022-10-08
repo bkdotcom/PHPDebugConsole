@@ -119,14 +119,7 @@ class GuzzleMiddleware extends AbstractComponent
         if ($requestInfo['isAsyncronous']) {
             $this->debug->info('asyncronous', $this->debug->meta('icon', $this->iconAsync));
         }
-        $this->debug->log('request headers', $this->buildRequestHeadersString($request), $this->debug->meta('redact'));
-        if ($this->cfg['inclRequestBody']) {
-            $this->debug->log(
-                'request body',
-                $this->getBody($request),
-                $this->debug->meta('redact')
-            );
-        }
+        $this->logRequest($request);
         if ($requestInfo['isAsyncronous']) {
             $this->debug->groupEnd();
         }
@@ -300,17 +293,14 @@ class GuzzleMiddleware extends AbstractComponent
      */
     private function getBody(MessageInterface $msg)
     {
-        $bodySize = $msg->getBody()->getSize();
-        if ($bodySize === 0) {
-            return null;
-        }
+        $bodyStream = $msg->getBody();
         $contentType = $msg->getHeader('Content-Type');
         $contentType = $contentType
             ? $contentType[0]
             : null;
-        $body = $this->debug->utility->getStreamContents($msg->getBody());
+        $body = $this->debug->utility->getStreamContents($bodyStream);
         if (\strlen($body) === 0) {
-            return null;
+            return '';
         }
         $prettify = $msg instanceof RequestInterface
             ? $this->cfg['prettyRequestBody']
@@ -318,5 +308,31 @@ class GuzzleMiddleware extends AbstractComponent
         return $prettify
             ? $this->debug->prettify($body, $contentType)
             : $body;
+    }
+
+    /**
+     * Log reqeust headers and reqeust body
+     *
+     * @param RequestInterface $request Request
+     *
+     * @return void
+     */
+    protected function logRequest(RequestInterface $request)
+    {
+        $method = $request->getMethod();
+        $this->debug->log('request headers', $this->buildRequestHeadersString($request), $this->debug->meta('redact'));
+        if ($this->cfg['inclRequestBody'] === false) {
+            return;
+        }
+        $body = $this->getBody($request);
+        $methodHasBody = $this->debug->utility->httpMethodHasBody($method);
+        if ($methodHasBody === false && $body === '') {
+            return;
+        }
+        $this->debug->log(
+            'request body',
+            $body,
+            $this->debug->meta('redact')
+        );
     }
 }

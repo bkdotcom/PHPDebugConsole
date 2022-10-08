@@ -2,6 +2,7 @@
 
 namespace bdk\Test\Debug\Collector;
 
+use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Collector\GuzzleMiddleware;
 use bdk\Test\Debug\DebugTestFramework;
 use GuzzleHttp\Client;
@@ -58,13 +59,28 @@ class GuzzleMiddlewareTest extends DebugTestFramework
         if (PHP_VERSION_ID < 50500) {
             $this->markTestSkipped('guzzle middleware is php 5.5+');
         }
-        self::$client->request('GET', $this->url);
+        self::$client->request(
+            'GET',
+            $this->url,
+            array(
+                'json' => array('foo' => 'bar'),
+            )
+        );
         $this->outputTest(array(
             'html' => '<li class="m_group" data-channel="general.Guzzle" data-icon="fa fa-exchange">
                 <div class="group-header">%sGuzzle(%sGET%shttp://example.com/%s)</span></div>
                 <ul class="group-body">
                     <li class="m_log" data-channel="general.Guzzle">%srequest headers</span> = <span class="t_string">GET / HTTP/1.1%A</li>
-                    <li class="m_log" data-channel="general.Guzzle">%srequest body</span> = <span class="t_null">null</span></li>
+                    <li class="m_log" data-channel="general.Guzzle"><span class="no-quotes t_string">request body</span> = <span class="string-encoded tabs-container" data-type-more="json">
+                        <nav role="tablist"><a class="nav-link" data-target=".string-raw" data-toggle="tab" role="tab">json</a><a class="active nav-link" data-target=".string-decoded" data-toggle="tab" role="tab">decoded</a></nav>
+                        <div class="string-raw tab-pane" role="tabpanel"><span class="value-container" data-type="string"><span class="prettified">(prettified)</span> <span class="highlight language-json no-quotes t_string">{
+                        &quot;foo&quot;: &quot;bar&quot;
+                        }</span></span></div>
+                        <div class="active string-decoded tab-pane" role="tabpanel"><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
+                        <ul class="array-inner list-unstyled">
+                        <li><span class="t_key">foo</span><span class="t_operator">=&gt;</span><span class="t_string">bar</span></li>
+                        </ul><span class="t_punct">)</span></span></div>
+                        </span></li>
                     <li class="m_time" data-channel="general.Guzzle"><span class="no-quotes t_string">time: %f %s</span></li>
                     <li class="m_log" data-channel="general.Guzzle"><span class="no-quotes t_string">response headers</span> = <span class="t_string">HTTP/ 1.1 200 OK<span class="ws_r"></span><span class="ws_n"></span>
                     X-Foo: Bar</span></li>
@@ -101,7 +117,30 @@ class GuzzleMiddlewareTest extends DebugTestFramework
                         'method' => 'log',
                         'args' => array(
                             'request body',
-                            null,
+                            array(
+                                'addQuotes' => false,
+                                'attribs' => array(
+                                    'class' => array(
+                                        'highlight',
+                                        'language-json',
+                                    ),
+                                ),
+                                'brief' => false,
+                                'contentType' => 'application/json',
+                                'debug' => Abstracter::ABSTRACTION,
+                                'prettified' => true,
+                                'prettifiedTag' => true,
+                                'strlen' => null,
+                                'type' => Abstracter::TYPE_STRING,
+                                'typeMore' => Abstracter::TYPE_STRING_JSON,
+                                'value' => '{' . "\n"
+                                    . '    "foo": "bar"' . "\n"
+                                    . '}',
+                                'valueDecoded' => array(
+                                    'foo' => 'bar',
+                                ),
+                                'visualWhiteSpace' => false,
+                            ),
                         ),
                     ),
                     array(
@@ -130,7 +169,7 @@ class GuzzleMiddlewareTest extends DebugTestFramework
                         'args' => array(),
                     ),
                 );
-                $this->assertSame($expect, $messages);
+                $this->assertSame($expect, $this->helper->deObjectifyData($messages));
             },
         ));
     }
@@ -152,11 +191,10 @@ class GuzzleMiddlewareTest extends DebugTestFramework
                 <ul class="group-body">
                     <li class="m_info" data-channel="general.Guzzle" data-icon="fa fa-random"><span class="no-quotes t_string">asyncronous</span></li>
                     <li class="m_log" data-channel="general.Guzzle">%srequest headers</span> = <span class="t_string">GET / HTTP/1.1%A</li>
-                    <li class="m_log" data-channel="general.Guzzle">%srequest body</span> = <span class="t_null">null</span></li>
                     <li class="m_time" data-channel="general.Guzzle"><span class="no-quotes t_string">time: %f %s</span></li>
                     <li class="m_log" data-channel="general.Guzzle"><span class="no-quotes t_string">response headers</span> = <span class="t_string">HTTP/ 1.1 202 Accepted<span class="ws_r"></span><span class="ws_n"></span>
                     Content-Length: 0</span></li>
-                    <li class="m_log" data-channel="general.Guzzle"><span class="no-quotes t_string">response body</span> = <span class="t_null">null</span></li>
+                    <li class="m_log" data-channel="general.Guzzle"><span class="no-quotes t_string">response body</span> = <span class="t_string"></span></li>
                 </ul>
                 </li>',
             'wamp' => function ($messages) {
@@ -208,6 +246,7 @@ class GuzzleMiddlewareTest extends DebugTestFramework
                             'channel' => 'general.Guzzle',
                         ),
                     ),
+                    /*
                     3 => array(
                         'method' => 'log',
                         'args' => array(
@@ -219,28 +258,29 @@ class GuzzleMiddlewareTest extends DebugTestFramework
                             'channel' => 'general.Guzzle',
                         ),
                     ),
-                    4 => array(
+                    */
+                    3 => array(
                         'method' => 'groupEnd',
                         'args' => array(),
                         'meta' => array(
                             'channel' => 'general.Guzzle',
                         ),
                     ),
-                    5 => array(
+                    4 => array(
                         'method' => 'time',
                         'args' => array(
-                            $messages[5]['args'][0],
+                            $messages[4]['args'][0],
                         ),
                         'meta' => array(
                             'appendGroup' => $id,
                             'channel' => 'general.Guzzle',
                         ),
                     ),
-                    6 => array(
+                    5 => array(
                         'method' => 'log',
                         'args' => array(
                             'response headers',
-                            $messages[6]['args'][1],
+                            $messages[5]['args'][1],
                         ),
                         'meta' => array(
                             'redact' => true,
@@ -248,11 +288,11 @@ class GuzzleMiddlewareTest extends DebugTestFramework
                             'channel' => 'general.Guzzle',
                         ),
                     ),
-                    7 => array(
+                    6 => array(
                         'method' => 'log',
                         'args' => array(
                             'response body',
-                            null,
+                            '',
                         ),
                         'meta' => array(
                             'redact' => true,
@@ -285,7 +325,6 @@ class GuzzleMiddlewareTest extends DebugTestFramework
                     <ul class="group-body">
                         <li class="m_info" data-channel="general.Guzzle" data-icon="fa fa-random"><span class="no-quotes t_string">asyncronous</span></li>
                         <li class="m_log" data-channel="general.Guzzle">%srequest headers</span> = <span class="t_string">GET / HTTP/1.1%A</li>
-                        <li class="m_log" data-channel="general.Guzzle">%srequest body</span> = <span class="t_null">null</span></li>
                     </ul>
                 </li>
                 <li class="m_group" data-channel="general.Guzzle" data-icon="fa fa-exchange">
@@ -320,7 +359,6 @@ class GuzzleMiddlewareTest extends DebugTestFramework
                     <div class="group-header">%sGuzzle(%sGET%shttp://example.com/%s)</span></div>
                     <ul class="group-body">
                         <li class="m_log" data-channel="general.Guzzle"><span class="no-quotes t_string">request headers</span> = <span class="t_string">GET / HTTP/1.1%A</li>
-                        <li class="m_log" data-channel="general.Guzzle"><span class="no-quotes t_string">request body</span> = <span class="t_null">null</span></li>
                         <li class="m_warn" data-channel="general.Guzzle" data-detect-files="true" data-file="%s" data-line="%s"><span class="no-quotes t_string">GuzzleHttp\Exception\RequestException</span>, <span class="t_int">0</span>, <span class="t_string">Error Communicating with Server</span></li>
                         <li class="m_time" data-channel="general.Guzzle"><span class="no-quotes t_string">time: %f %s</span></li>
                     </ul>

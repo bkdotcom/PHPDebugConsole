@@ -70,7 +70,7 @@ class LogReqResTest extends DebugTestFramework
         $this->debug->obEnd();
     }
 
-    public function testLogPost()
+    public function testLogPostOrInput()
     {
         $logReqRes = new LogReqRes();
         $this->debug->addPlugin($logReqRes);
@@ -79,21 +79,11 @@ class LogReqResTest extends DebugTestFramework
         $this->debug->setCfg('logRequestInfo', true);
 
         $reflect = new \ReflectionObject($logReqRes);
-        $logPostMeth = $reflect->getMethod('logPost');
+        $logPostMeth = $reflect->getMethod('logPostOrInput');
         $logPostMeth->setAccessible(true);
         $logRequestMeth = $reflect->getMethod('logRequest');
         $logRequestMeth->setAccessible(true);
 
-        // customMethodReqRes caches serverParams..  use serverParamsRef to clear it
-        /*
-        $debugRef = new \ReflectionObject($this->debug);
-        $internalProp = $debugRef->getProperty('internal');
-        $internalProp->setAccessible(true);
-        $internal = $internalProp->getValue($this->debug);
-        $internalRef = new \ReflectionObject($internal);
-        $serverParamsRef = $internalRef->getProperty('serverParams');
-        $serverParamsRef->setAccessible(true);
-        */
         $reqResRef = new \ReflectionObject($this->debug->customMethodReqRes);
         $serverParamsRef = $reqResRef->getProperty('serverParams');
         $serverParamsRef->setAccessible(true);
@@ -139,8 +129,6 @@ class LogReqResTest extends DebugTestFramework
                 'method' => 'log',
                 'args' => array(
                     'php://input',
-                    // 'font-style: italic; opacity: 0.8;',
-                    // '(prettified)',
                     array(
                         'addQuotes' => false,
                         'attribs' => array(
@@ -201,8 +189,6 @@ class LogReqResTest extends DebugTestFramework
                 'method' => 'log',
                 'args' => array(
                     'php://input',
-                    // 'font-style: italic; opacity: 0.8;',
-                    // '(prettified)',
                     array(
                         'addQuotes' => false,
                         'attribs' => array(
@@ -233,44 +219,136 @@ class LogReqResTest extends DebugTestFramework
         /*
             Post with just uploadedFiles
         */
-        $this->debug->data->set('log', array());
         $serverParamsRef->setValue($this->debug->customMethodReqRes, array());
-        $files = array(
-            'foo' => new UploadedFile(
-                TEST_DIR . '/assets/logo.png',
-                10000,
-                UPLOAD_ERR_OK,
-                'logo.png',
-                'image/png'
-            ),
-        );
         $this->debug->rootInstance->setCfg('serviceProvider', array(
-            'serverRequest' => function () use ($files) {
+            'serverRequest' => function () {
                 $request = new ServerRequest('POST', null, array(
                     'REQUEST_METHOD' => 'POST',
                 ));
-                return $request->withUploadedFiles($files);
+                return $request->withUploadedFiles(array(
+                    'foo' => new UploadedFile(
+                        TEST_DIR . '/assets/logo.png',
+                        10000,
+                        UPLOAD_ERR_OK,
+                        'logo.png',
+                        'image/png'
+                    )))
+                    ->withCookieParams(array('SESSIONID' => '123'))
+                    ->withHeader('X-Test', '123')
+                    ->withHeader('Authorization', 'Basic ' . \base64_encode('fred:1234'));
             },
         ));
-        // $this->clearServerParamCache();
         $logRequestMeth->invoke($logReqRes);
-        $this->assertSame(
+        $this->assertLogEntries(
             array(
-                'method' => 'log',
-                'args' => array('$_FILES', array(
-                    'foo' => array(
-                        'error' => UPLOAD_ERR_OK,
-                        'name' => 'logo.png',
-                        'size' => \filesize(TEST_DIR . '/assets/logo.png'),
-                        'tmp_name' => TEST_DIR . '/assets/logo.png',
-                        'type' => 'image/png',
+                array(
+                    'method' => 'table',
+                    'args' => array(
+                        array(
+                            'Authorization' => array(
+                                'value' => 'Basic █████████ (base64\'d fred:█████)',
+                            ),
+                            'X-Test' => array(
+                                'value' => array(
+                                    'attribs' => array(
+                                        'class' => array('text-left'),
+                                    ),
+                                    'brief' => false,
+                                    'debug' => Abstracter::ABSTRACTION,
+                                    'strlen' => null,
+                                    'type' => Abstracter::TYPE_STRING,
+                                    'typeMore' => Abstracter::TYPE_STRING_NUMERIC,
+                                    'value' => '123',
+                                ),
+                            ),
+                        ),
                     ),
-                )),
-                'meta' => array(
-                    'channel' => 'Request / Response',
+                    'meta' => array(
+                        'caption' => 'request headers',
+                        'channel' => 'Request / Response',
+                        'redact' => true,
+                        'sortable' => true,
+                        'tableInfo' => array(
+                            'class' => null,
+                            'columns' => array(
+                                array(
+                                    'key' => 'value',
+                                ),
+                            ),
+                            'haveObjRow' => false,
+                            'indexLabel' => null,
+                            'rows' => array(
+                                'Authorization' => array(
+                                    'isScalar' => true,
+                                ),
+                                'X-Test' => array(
+                                    'isScalar' => true,
+                                ),
+                            ),
+                            'summary' => null,
+                        ),
+
+                    ),
+                ),
+                array(
+                    'method' => 'table',
+                    'args' => array(
+                        array(
+                            'SESSIONID' => array(
+                                'value' => array(
+                                    'attribs' => array(
+                                        'class' => array('text-left'),
+                                    ),
+                                    'brief' => false,
+                                    'debug' => Abstracter::ABSTRACTION,
+                                    'strlen' => null,
+                                    'type' => Abstracter::TYPE_STRING,
+                                    'typeMore' => Abstracter::TYPE_STRING_NUMERIC,
+                                    'value' => '123',
+                                ),
+                            ),
+                        ),
+                    ),
+                    'meta' => array(
+                        'caption' => '$_COOKIE',
+                        'channel' => 'Request / Response',
+                        'redact' => true,
+                        'sortable' => true,
+                        'tableInfo' => array(
+                            'class' => null,
+                            'columns' => array(
+                                array(
+                                    'key' => 'value',
+                                ),
+                            ),
+                            'haveObjRow' => false,
+                            'indexLabel' => null,
+                            'rows' => array(
+                                'SESSIONID' => array(
+                                    'isScalar' => true,
+                                ),
+                            ),
+                            'summary' => null,
+                        ),
+                    ),
+                ),
+                array(
+                    'method' => 'log',
+                    'args' => array('$_FILES', array(
+                        'foo' => array(
+                            'error' => UPLOAD_ERR_OK,
+                            'name' => 'logo.png',
+                            'size' => \filesize(TEST_DIR . '/assets/logo.png'),
+                            'tmp_name' => TEST_DIR . '/assets/logo.png',
+                            'type' => 'image/png',
+                        ),
+                    )),
+                    'meta' => array(
+                        'channel' => 'Request / Response',
+                    ),
                 ),
             ),
-            $this->helper->logEntryToArray($this->debug->data->get('log/1'))
+            $this->helper->deObjectifyData(\array_slice($this->debug->data->get('log'), 1))
         );
         $this->debug->data->set('log', array());
 
@@ -340,6 +418,35 @@ class LogReqResTest extends DebugTestFramework
                 'meta' => array(
                     'channel' => 'Request / Response',
                     'redact' => true,
+                ),
+            ),
+            $this->helper->logEntryToArray($this->debug->data->get('log/0'))
+        );
+        $this->debug->data->set('log', array());
+
+        /*
+            Get with body
+        */
+        $requestBody = \json_encode(array('foo' => 'bar=bazy'));
+        $this->debug->setCfg('serviceProvider', array(
+            'serverRequest' => function () use ($requestBody) {
+                $request = new ServerRequest('GET');
+                return $request
+                    ->withHeader('Content-Type', 'application/json')
+                    ->withBody(new Stream($requestBody));
+            },
+        ));
+        $logPostMeth->invoke($logReqRes);
+        $this->assertEquals(
+            array(
+                'method' => 'warn',
+                'args' => array('GET request with body'),
+                'meta' => array(
+                    'channel' => 'Request / Response',
+                    'detectFiles' => false,
+                    'file' => null,
+                    'line' => null,
+                    'uncollapse' => true,
                 ),
             ),
             $this->helper->logEntryToArray($this->debug->data->get('log/0'))

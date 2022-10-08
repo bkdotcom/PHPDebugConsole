@@ -39,7 +39,7 @@ class OAuthTest extends DebugTestFramework
             array(
                 'method' => 'groupCollapsed',
                 'args' => array(
-                    'getAccessToken',
+                    'OAuth::getAccessToken',
                     'POST',
                     self::$accessTokenUrl,
                 ),
@@ -169,7 +169,7 @@ class OAuthTest extends DebugTestFramework
             array(
                 'method' => 'groupCollapsed',
                 'args' => array(
-                    'getRequestToken',
+                    'OAuth::getRequestToken',
                     'GET',
                     self::$requestTokenUrl,
                 ),
@@ -310,7 +310,7 @@ class OAuthTest extends DebugTestFramework
             array(
                 'method' => 'groupCollapsed',
                 'args' => array(
-                    'fetch',
+                    'OAuth::fetch',
                     'POST',
                     'http://127.0.0.1:8080/oauth/echo',
                 ),

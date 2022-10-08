@@ -15,7 +15,6 @@ namespace bdk\Debug\Plugin;
 use bdk\Debug;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
-use Exception;
 
 /**
  * Log Request/Response
@@ -90,7 +89,7 @@ class LogReqRes implements SubscriberInterface
         );
         $this->logRequestHeaders();
         $this->logRequestCookies();
-        $this->logPost();
+        $this->logPostOrInput();
         $this->logFiles();
     }
 
@@ -128,24 +127,6 @@ class LogReqRes implements SubscriberInterface
     }
 
     /**
-     * Get request body contents without affecting stream pointer
-     *
-     * @return string
-     */
-    private function getRequestBodyContents()
-    {
-        try {
-            $stream = $this->debug->serverRequest->getBody();
-            $pos = $stream->tell();
-            $body = (string) $stream; // __toString() is like getContents(), but without throwing exceptions
-            $stream->seek($pos);
-            return $body;
-        } catch (Exception $e) {
-            return '';
-        }
-    }
-
-    /**
      * Log $_FILES
      *
      * If using ServerRequestInterface, will log result of `getUploadedFiles()`
@@ -176,31 +157,63 @@ class LogReqRes implements SubscriberInterface
     }
 
     /**
+     * Log php://input
+     *
+     * @param string $method      Http method
+     * @param string $contentType Content-Type value
+     *
+     * @return void
+     */
+    private function logInput($method, $contentType)
+    {
+        // Not POST, empty $_POST, or not application/x-www-form-urlencoded or multipart/form-data
+        $request = $this->debug->serverRequest;
+        $input = $this->debug->utility->getStreamContents($request->getBody());
+        $methodHasBody = $this->debug->utility->httpMethodHasBody($method);
+        $logInput = $input
+            || $methodHasBody
+            || $request->getHeaderLine('Content-Length')
+            || $request->getHeaderLine('Transfer-Encoding');
+        if ($logInput === false) {
+            return;
+        }
+        $meta = $this->debug->meta(array(
+            'detectFiles' => false,
+            'file' => null,
+            'line' => null,
+        ));
+        if ($input) {
+            if ($methodHasBody === false) {
+                $this->debug->warn($method . ' request with body', $meta);
+            }
+            $this->debug->log(
+                'php://input',
+                $this->debug->prettify($input, $contentType),
+                $this->debug->meta('redact')
+            );
+        } elseif (!$request->getUploadedFiles()) {
+            $this->debug->warn($method . ' request with no body', $meta);
+        }
+    }
+
+    /**
      * Log $_POST or php://input
      *
      * @return void
      */
-    private function logPost()
+    private function logPostOrInput()
     {
         if (!$this->debug->getCfg('logRequestInfo.post', Debug::CONFIG_DEBUG)) {
             return;
         }
         $request = $this->debug->serverRequest;
         $method = $request->getMethod();
-
-        // don't expect a request body for these methods
-        $noBodyMethods = array('CONNECT','GET','HEAD','OPTIONS','TRACE');
-        $expectBody = \in_array($request->getMethod(), $noBodyMethods, true) === false;
-        if ($expectBody === false) {
-            return;
-        }
         $contentType = $request->getHeaderLine('Content-Type');
-        $havePostVals = false;
-        if ($method === 'POST') {
-            $havePostVals = $this->logPostMethod($contentType);
-        }
-        if (!$havePostVals) {
-            $this->logPostNoVals($method, $contentType);
+        $havePostVals = $method === 'POST'
+            ? $this->logPostMethod($contentType)
+            : false;
+        if ($havePostVals === false) {
+            $this->logInput($method, $contentType);
         }
     }
 
@@ -231,36 +244,6 @@ class LogReqRes implements SubscriberInterface
             $this->debug->log('$_POST', $post, $this->debug->meta('redact'));
         }
         return $havePostVals;
-    }
-
-    /**
-     * Log info when expected $_POST not avail
-     *
-     * @param string $method      Http method
-     * @param string $contentType Content-Type value
-     *
-     * @return void
-     */
-    private function logPostNoVals($method, $contentType)
-    {
-        // Not POST, empty $_POST, or not application/x-www-form-urlencoded or multipart/form-data
-        $input = $this->getRequestBodyContents();
-        if ($input) {
-            $this->debug->log(
-                'php://input',
-                $this->debug->prettify($input, $contentType),
-                $this->debug->meta('redact')
-            );
-        } elseif (!$this->debug->serverRequest->getUploadedFiles()) {
-            $this->debug->warn(
-                $method . ' request with no body',
-                $this->debug->meta(array(
-                    'detectFiles' => false,
-                    'file' => null,
-                    'line' => null,
-                ))
-            );
-        }
     }
 
     /**
@@ -425,7 +408,7 @@ class LogReqRes implements SubscriberInterface
             if we detect php://input is json or XML, then must have been
             posted with wrong Content-Type
         */
-        $input = $this->getRequestBodyContents();
+        $input = $this->debug->utility->getStreamContents($this->debug->serverRequest->getBody());
         $json = \json_decode($input, true);
         $isJson = \json_last_error() === JSON_ERROR_NONE && \is_array($json);
         if ($isJson) {

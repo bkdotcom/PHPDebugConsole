@@ -190,7 +190,7 @@ function debugEnhanceInit ($node, arg1) {
 function debugEnhanceDefault ($node) {
   $node.each(function () {
     var $self = $(this)
-    if ($self.is('.debug')) {
+    if ($self.hasClass('debug')) {
       // console.warn('debugEnhance() : .debug')
       $self.find('.debug-menu-bar > nav, .tab-panes').show()
       $self.find('.tab-pane.active')
@@ -198,11 +198,11 @@ function debugEnhanceDefault ($node) {
         .debugEnhance()
       return
     }
-    if ($self.is('.filter-hidden')) {
+    if ($self.hasClass('filter-hidden') && $self.hasClass('m_group') === false) {
       return
     }
     // console.group('debugEnhance')
-    if ($self.is('.group-body')) {
+    if ($self.hasClass('group-body')) {
       enhanceEntries.enhanceEntries($self)
     } else if ($self.is('li, div') && $self.prop('class').match(/\bm_/) !== null) {
       // logEntry  (alerts use <div>)

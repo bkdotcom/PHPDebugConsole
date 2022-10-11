@@ -537,6 +537,65 @@
     $root.on('expanded.debug.array expanded.debug.group expanded.debug.object', onExpanded);
   }
 
+  /**
+   * Enhance log entries inside .group-body
+   */
+  function enhanceEntries ($node) {
+    // console.log('enhanceEntries', $node[0])
+    var $parent = $node.parent();
+    var show = !$parent.hasClass('m_group') || $parent.hasClass('expanded');
+    // temporarily hide when enhancing... minimize redraws
+    $node.hide();
+    $node.children().each(function () {
+      enhanceEntry($(this));
+    });
+    if (show) {
+      $node.show().trigger('expanded.debug.group');
+    }
+    processExpandQueue();
+    if ($node.parent().hasClass('m_group') === false) {
+      // only add .enhanced to root .group-body
+      $node.addClass('enhanced');
+    }
+  }
+
+  /**
+   * Enhance a single log entry
+   * we don't enhance strings by default (add showmore).. needs to be visible to calc height
+   */
+  function enhanceEntry ($entry) {
+    // console.log('enhanceEntry', $entry[0])
+    if ($entry.hasClass('enhanced')) {
+      return
+    } else if ($entry.hasClass('m_group')) {
+      enhanceGroup($entry);
+    } else if ($entry.hasClass('filter-hidden')) {
+      return
+    } else if ($entry.is('.m_table, .m_trace')) {
+      enhanceEntryTabular($entry);
+    } else {
+      enhanceEntryDefault($entry);
+    }
+    $entry.addClass('enhanced');
+    $entry.trigger('enhanced.debug');
+  }
+
+  function enhanceValue ($entry, node) {
+    var $node = $(node);
+    if ($node.is('.t_array')) {
+      enhanceArray($node);
+    } else if ($node.is('.t_object')) {
+      enhance($node);
+    } else if ($node.is('table')) {
+      makeSortable($node);
+    } else if ($node.is('.t_string')) {
+      create($entry, $node);
+    } else if ($node.is('.string-encoded.tabs-container')) {
+      // console.warn('enhanceStringEncoded', $node)
+      enhanceValue($node, $node.find('> .tab-pane.active > *'));
+    }
+  }
+
   function onClickShowLess () {
     var $container = $(this).closest('.show-more-container');
     $container.find('.show-more-wrapper')
@@ -759,48 +818,6 @@
     return expand || $node.hasClass('array-file-tree')
   }
 
-  /**
-   * Enhance log entries inside .group-body
-   */
-  function enhanceEntries ($node) {
-    // console.warn('enhanceEntries', $node[0])
-    var $parent = $node.parent();
-    var show = !$parent.hasClass('m_group') || $parent.hasClass('expanded');
-    // temporarily hide when enhancing... minimize redraws
-    $node.hide();
-    $node.children().each(function () {
-      enhanceEntry($(this));
-    });
-    if (show) {
-      $node.show().trigger('expanded.debug.group');
-    }
-    processExpandQueue();
-    if ($node.parent().hasClass('m_group') === false) {
-      // only add .enhanced to root .group-body
-      $node.addClass('enhanced');
-    }
-  }
-
-  /**
-   * Enhance a single log entry
-   * we don't enhance strings by default (add showmore).. needs to be visible to calc height
-   */
-  function enhanceEntry ($entry) {
-    if ($entry.is('.enhanced, .filter-hidden')) {
-      return
-    }
-    // console.log('enhanceEntry', $entry[0])
-    if ($entry.is('.m_group')) {
-      enhanceGroup($entry);
-    } else if ($entry.is('.m_table, .m_trace')) {
-      enhanceEntryTabular($entry);
-    } else {
-      enhanceEntryDefault($entry);
-    }
-    $entry.addClass('enhanced');
-    $entry.trigger('enhanced.debug');
-  }
-
   function enhanceEntryDefault ($entry) {
     // regular log-type entry
     if ($entry.data('file')) {
@@ -845,10 +862,11 @@
         $toggle.prepend($toggleIcon); // move icon
       }
     });
-    // $toggle.removeClass('level-error level-info level-warn')
+    /*
     if ($group.hasClass('filter-hidden')) {
       return
     }
+    */
     if (
       $group.hasClass('expanded') ||
       $target.find('.m_error, .m_warn').not('.filter-hidden').not('[data-uncollapse=false]').length
@@ -870,22 +888,6 @@
       $container = $stringWrap.wrap('<div class="show-more-container"></div>').parent();
       $container.append('<button type="button" class="show-more"><i class="fa fa-caret-down"></i> More</button>');
       $container.append('<button type="button" class="show-less" style="display:none;"><i class="fa fa-caret-up"></i> Less</button>');
-    }
-  }
-
-  function enhanceValue ($entry, node) {
-    var $node = $(node);
-    if ($node.is('.t_array')) {
-      enhanceArray($node);
-    } else if ($node.is('.t_object')) {
-      enhance($node);
-    } else if ($node.is('table')) {
-      makeSortable($node);
-    } else if ($node.is('.t_string')) {
-      create($entry, $node);
-    } else if ($node.is('.string-encoded.tabs-container')) {
-      // console.warn('enhanceStringEncoded', $node)
-      enhanceValue($node, $node.find('> .tab-pane.active > *'));
     }
   }
 
@@ -1933,11 +1935,6 @@
     });
   }
 
-  function onClickToggle () {
-    toggle(this);
-    return false
-  }
-
   /**
    * Collapse an array, group, or object
    *
@@ -1965,6 +1962,57 @@
     } else if (what === 'next') {
       collapseNext($toggle, immediate, eventNameDone);
     }
+  }
+
+  function expand ($node) {
+    var icon = config$7.iconsExpand.collapse;
+    var isToggle = $node.is('[data-toggle]');
+    var what = isToggle
+      ? $node.data('toggle')
+      : ($node.find('> *[data-toggle]').data('toggle') || ($node.attr('class').match(/\bt_(\w+)/) || []).pop());
+    var $wrap = isToggle
+      ? $node.parent()
+      : $node;
+    var $toggle = isToggle
+      ? $node
+      : $wrap.find('> *[data-toggle]');
+    var $classTarget = what === 'next' // node that get's "expanded" class
+      ? $toggle
+      : $wrap;
+    var $evtTarget = what === 'next' // node we trigger events on
+      ? $toggle.next()
+      : $wrap;
+    var eventNameDone = 'expanded.debug.' + what;
+    // trigger while still hidden!
+    //    no redraws
+    $evtTarget.trigger('expand.debug.' + what);
+    if (what === 'array') {
+      $classTarget.addClass('expanded');
+      $evtTarget.trigger(eventNameDone);
+      return
+    }
+    // group, object, & next
+    expandGroupObjNext($toggle, $classTarget, $evtTarget, icon, eventNameDone);
+  }
+
+  function toggle (node) {
+    var $node = $(node);
+    var isToggle = $node.is('[data-toggle]');
+    var what = isToggle
+      ? $node.data('toggle')
+      : $node.find('> *[data-toggle]').data('toggle');
+    var $wrap = isToggle
+      ? $node.parent()
+      : $node;
+    var isExpanded = what === 'next'
+      ? $node.hasClass('expanded')
+      : $wrap.hasClass('expanded');
+    if (what === 'group' && $wrap.hasClass('.empty')) {
+      return
+    }
+    isExpanded
+      ? collapse($node)
+      : expand($node);
   }
 
   function findFirstDefined (list) {
@@ -2079,37 +2127,6 @@
     $toggle.next().trigger(eventNameDone);
   }
 
-  function expand ($node) {
-    var icon = config$7.iconsExpand.collapse;
-    var isToggle = $node.is('[data-toggle]');
-    var what = isToggle
-      ? $node.data('toggle')
-      : ($node.find('> *[data-toggle]').data('toggle') || ($node.attr('class').match(/\bt_(\w+)/) || []).pop());
-    var $wrap = isToggle
-      ? $node.parent()
-      : $node;
-    var $toggle = isToggle
-      ? $node
-      : $wrap.find('> *[data-toggle]');
-    var $classTarget = what === 'next' // node that get's "expanded" class
-      ? $toggle
-      : $wrap;
-    var $evtTarget = what === 'next' // node we trigger events on
-      ? $toggle.next()
-      : $wrap;
-    var eventNameDone = 'expanded.debug.' + what;
-    // trigger while still hidden!
-    //    no redraws
-    $evtTarget.trigger('expand.debug.' + what);
-    if (what === 'array') {
-      $classTarget.addClass('expanded');
-      $evtTarget.trigger(eventNameDone);
-      return
-    }
-    // group, object, & next
-    expandGroupObjNext($toggle, $classTarget, $evtTarget, icon, eventNameDone);
-  }
-
   function expandGroupObjNext ($toggle, $classTarget, $evtTarget, icon, eventNameDone) {
     $toggle.next().slideDown('fast', function () {
       var $groupEndValue = $(this).find('> .m_groupEndValue');
@@ -2143,24 +2160,42 @@
   }
 
   /**
+   * Does group have any visible children
+   *
+   * @param $group .m_group jQuery obj
+   *
+   * @return bool
+   */
+  function groupHasVis ($group) {
+    var $children = $group.find('> .group-body > *');
+    var $entry;
+    var count;
+    var i;
+    for (i = 0, count = $children.length; i < count; i++) {
+      $entry = $children.eq(i);
+      if ($entry.hasClass('filter-hidden')) {
+        if ($entry.hasClass('m_group') === false) {
+          continue
+        }
+        if (groupHasVis($entry)) {
+          return true
+        }
+        continue
+      }
+      if ($entry.is('.m_group.hide-if-empty.empty')) {
+        continue
+      }
+      return true
+    }
+  }
+
+  /**
    * Update expand/collapse icon and nested error/warn icon
    */
   function groupUpdate ($group) {
     var selector = '> i:last-child';
     var $toggle = $group.find('> .group-header');
-    var haveVis = $group.find('> .group-body > *').filter(function () {
-      /*
-        We return true only if visible
-      */
-      var $this = $(this);
-      if ($this.hasClass('filter-hidden')) {
-        return false
-      }
-      if ($this.is('.m_group.hide-if-empty.empty')) {
-        return false
-      }
-      return true
-    }).length > 0;
+    var haveVis = groupHasVis($group);
     var icon = groupErrorIconGet($group);
     var isExpanded = $group.hasClass('expanded');
     // console.log('groupUpdate', $toggle.text(), icon, haveVis)
@@ -2187,24 +2222,9 @@
     });
   }
 
-  function toggle (node) {
-    var $node = $(node);
-    var isToggle = $node.is('[data-toggle]');
-    var what = isToggle
-      ? $node.data('toggle')
-      : $node.find('> *[data-toggle]').data('toggle');
-    var $wrap = isToggle
-      ? $node.parent()
-      : $node;
-    var isExpanded = what === 'next'
-      ? $node.hasClass('expanded')
-      : $wrap.hasClass('expanded');
-    if (what === 'group' && $wrap.hasClass('.empty')) {
-      return
-    }
-    isExpanded
-      ? collapse($node)
-      : expand($node);
+  function onClickToggle () {
+    toggle(this);
+    return false
   }
 
   /**
@@ -6312,7 +6332,7 @@
   function debugEnhanceDefault ($node) {
     $node.each(function () {
       var $self = $(this);
-      if ($self.is('.debug')) {
+      if ($self.hasClass('debug')) {
         // console.warn('debugEnhance() : .debug')
         $self.find('.debug-menu-bar > nav, .tab-panes').show();
         $self.find('.tab-pane.active')
@@ -6320,11 +6340,11 @@
           .debugEnhance();
         return
       }
-      if ($self.is('.filter-hidden')) {
+      if ($self.hasClass('filter-hidden') && $self.hasClass('m_group') === false) {
         return
       }
       // console.group('debugEnhance')
-      if ($self.is('.group-body')) {
+      if ($self.hasClass('group-body')) {
         enhanceEntries($self);
       } else if ($self.is('li, div') && $self.prop('class').match(/\bm_/) !== null) {
         // logEntry  (alerts use <div>)

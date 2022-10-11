@@ -25,6 +25,65 @@ export function init ($root) {
   $root.on('expanded.debug.array expanded.debug.group expanded.debug.object', onExpanded)
 }
 
+/**
+ * Enhance log entries inside .group-body
+ */
+export function enhanceEntries ($node) {
+  // console.log('enhanceEntries', $node[0])
+  var $parent = $node.parent()
+  var show = !$parent.hasClass('m_group') || $parent.hasClass('expanded')
+  // temporarily hide when enhancing... minimize redraws
+  $node.hide()
+  $node.children().each(function () {
+    enhanceEntry($(this))
+  })
+  if (show) {
+    $node.show().trigger('expanded.debug.group')
+  }
+  processExpandQueue()
+  if ($node.parent().hasClass('m_group') === false) {
+    // only add .enhanced to root .group-body
+    $node.addClass('enhanced')
+  }
+}
+
+/**
+ * Enhance a single log entry
+ * we don't enhance strings by default (add showmore).. needs to be visible to calc height
+ */
+export function enhanceEntry ($entry) {
+  // console.log('enhanceEntry', $entry[0])
+  if ($entry.hasClass('enhanced')) {
+    return
+  } else if ($entry.hasClass('m_group')) {
+    enhanceGroup($entry)
+  } else if ($entry.hasClass('filter-hidden')) {
+    return
+  } else if ($entry.is('.m_table, .m_trace')) {
+    enhanceEntryTabular($entry)
+  } else {
+    enhanceEntryDefault($entry)
+  }
+  $entry.addClass('enhanced')
+  $entry.trigger('enhanced.debug')
+}
+
+export function enhanceValue ($entry, node) {
+  var $node = $(node)
+  if ($node.is('.t_array')) {
+    enhanceArray($node)
+  } else if ($node.is('.t_object')) {
+    enhanceObject.enhance($node)
+  } else if ($node.is('table')) {
+    tableSort.makeSortable($node)
+  } else if ($node.is('.t_string')) {
+    fileLinks.create($entry, $node)
+  } else if ($node.is('.string-encoded.tabs-container')) {
+    // console.warn('enhanceStringEncoded', $node)
+    enhanceValue($node, $node.find('> .tab-pane.active > *'))
+  }
+}
+
 function onClickShowLess () {
   var $container = $(this).closest('.show-more-container')
   $container.find('.show-more-wrapper')
@@ -247,48 +306,6 @@ function enhanceArrayIsExpanded ($node) {
   return expand || $node.hasClass('array-file-tree')
 }
 
-/**
- * Enhance log entries inside .group-body
- */
-export function enhanceEntries ($node) {
-  // console.warn('enhanceEntries', $node[0])
-  var $parent = $node.parent()
-  var show = !$parent.hasClass('m_group') || $parent.hasClass('expanded')
-  // temporarily hide when enhancing... minimize redraws
-  $node.hide()
-  $node.children().each(function () {
-    enhanceEntry($(this))
-  })
-  if (show) {
-    $node.show().trigger('expanded.debug.group')
-  }
-  processExpandQueue()
-  if ($node.parent().hasClass('m_group') === false) {
-    // only add .enhanced to root .group-body
-    $node.addClass('enhanced')
-  }
-}
-
-/**
- * Enhance a single log entry
- * we don't enhance strings by default (add showmore).. needs to be visible to calc height
- */
-export function enhanceEntry ($entry) {
-  if ($entry.is('.enhanced, .filter-hidden')) {
-    return
-  }
-  // console.log('enhanceEntry', $entry[0])
-  if ($entry.is('.m_group')) {
-    enhanceGroup($entry)
-  } else if ($entry.is('.m_table, .m_trace')) {
-    enhanceEntryTabular($entry)
-  } else {
-    enhanceEntryDefault($entry)
-  }
-  $entry.addClass('enhanced')
-  $entry.trigger('enhanced.debug')
-}
-
 function enhanceEntryDefault ($entry) {
   // regular log-type entry
   if ($entry.data('file')) {
@@ -333,10 +350,11 @@ function enhanceGroup ($group) {
       $toggle.prepend($toggleIcon) // move icon
     }
   })
-  // $toggle.removeClass('level-error level-info level-warn')
+  /*
   if ($group.hasClass('filter-hidden')) {
     return
   }
+  */
   if (
     $group.hasClass('expanded') ||
     $target.find('.m_error, .m_warn').not('.filter-hidden').not('[data-uncollapse=false]').length
@@ -358,22 +376,6 @@ function enhanceLongString ($node) {
     $container = $stringWrap.wrap('<div class="show-more-container"></div>').parent()
     $container.append('<button type="button" class="show-more"><i class="fa fa-caret-down"></i> More</button>')
     $container.append('<button type="button" class="show-less" style="display:none;"><i class="fa fa-caret-up"></i> Less</button>')
-  }
-}
-
-export function enhanceValue ($entry, node) {
-  var $node = $(node)
-  if ($node.is('.t_array')) {
-    enhanceArray($node)
-  } else if ($node.is('.t_object')) {
-    enhanceObject.enhance($node)
-  } else if ($node.is('table')) {
-    tableSort.makeSortable($node)
-  } else if ($node.is('.t_string')) {
-    fileLinks.create($entry, $node)
-  } else if ($node.is('.string-encoded.tabs-container')) {
-    // console.warn('enhanceStringEncoded', $node)
-    enhanceValue($node, $node.find('> .tab-pane.active > *'))
   }
 }
 

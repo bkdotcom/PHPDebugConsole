@@ -26,11 +26,6 @@ export function init ($delegateNode) {
   })
 }
 
-function onClickToggle () {
-  toggle(this)
-  return false
-}
-
 /**
  * Collapse an array, group, or object
  *
@@ -58,6 +53,57 @@ export function collapse ($node, immediate) {
   } else if (what === 'next') {
     collapseNext($toggle, immediate, eventNameDone)
   }
+}
+
+export function expand ($node) {
+  var icon = config.iconsExpand.collapse
+  var isToggle = $node.is('[data-toggle]')
+  var what = isToggle
+    ? $node.data('toggle')
+    : ($node.find('> *[data-toggle]').data('toggle') || ($node.attr('class').match(/\bt_(\w+)/) || []).pop())
+  var $wrap = isToggle
+    ? $node.parent()
+    : $node
+  var $toggle = isToggle
+    ? $node
+    : $wrap.find('> *[data-toggle]')
+  var $classTarget = what === 'next' // node that get's "expanded" class
+    ? $toggle
+    : $wrap
+  var $evtTarget = what === 'next' // node we trigger events on
+    ? $toggle.next()
+    : $wrap
+  var eventNameDone = 'expanded.debug.' + what
+  // trigger while still hidden!
+  //    no redraws
+  $evtTarget.trigger('expand.debug.' + what)
+  if (what === 'array') {
+    $classTarget.addClass('expanded')
+    $evtTarget.trigger(eventNameDone)
+    return
+  }
+  // group, object, & next
+  expandGroupObjNext($toggle, $classTarget, $evtTarget, icon, eventNameDone)
+}
+
+export function toggle (node) {
+  var $node = $(node)
+  var isToggle = $node.is('[data-toggle]')
+  var what = isToggle
+    ? $node.data('toggle')
+    : $node.find('> *[data-toggle]').data('toggle')
+  var $wrap = isToggle
+    ? $node.parent()
+    : $node
+  var isExpanded = what === 'next'
+    ? $node.hasClass('expanded')
+    : $wrap.hasClass('expanded')
+  if (what === 'group' && $wrap.hasClass('.empty')) {
+    return
+  }
+  isExpanded
+    ? collapse($node)
+    : expand($node)
 }
 
 function findFirstDefined (list) {
@@ -172,37 +218,6 @@ function collapseNextDone ($toggle, eventNameDone) {
   $toggle.next().trigger(eventNameDone)
 }
 
-export function expand ($node) {
-  var icon = config.iconsExpand.collapse
-  var isToggle = $node.is('[data-toggle]')
-  var what = isToggle
-    ? $node.data('toggle')
-    : ($node.find('> *[data-toggle]').data('toggle') || ($node.attr('class').match(/\bt_(\w+)/) || []).pop())
-  var $wrap = isToggle
-    ? $node.parent()
-    : $node
-  var $toggle = isToggle
-    ? $node
-    : $wrap.find('> *[data-toggle]')
-  var $classTarget = what === 'next' // node that get's "expanded" class
-    ? $toggle
-    : $wrap
-  var $evtTarget = what === 'next' // node we trigger events on
-    ? $toggle.next()
-    : $wrap
-  var eventNameDone = 'expanded.debug.' + what
-  // trigger while still hidden!
-  //    no redraws
-  $evtTarget.trigger('expand.debug.' + what)
-  if (what === 'array') {
-    $classTarget.addClass('expanded')
-    $evtTarget.trigger(eventNameDone)
-    return
-  }
-  // group, object, & next
-  expandGroupObjNext($toggle, $classTarget, $evtTarget, icon, eventNameDone)
-}
-
 function expandGroupObjNext ($toggle, $classTarget, $evtTarget, icon, eventNameDone) {
   $toggle.next().slideDown('fast', function () {
     var $groupEndValue = $(this).find('> .m_groupEndValue')
@@ -236,24 +251,42 @@ function groupErrorIconGet ($group) {
 }
 
 /**
+ * Does group have any visible children
+ *
+ * @param $group .m_group jQuery obj
+ *
+ * @return bool
+ */
+function groupHasVis ($group) {
+  var $children = $group.find('> .group-body > *')
+  var $entry
+  var count
+  var i
+  for (i = 0, count = $children.length; i < count; i++) {
+    $entry = $children.eq(i)
+    if ($entry.hasClass('filter-hidden')) {
+      if ($entry.hasClass('m_group') === false) {
+        continue
+      }
+      if (groupHasVis($entry)) {
+        return true
+      }
+      continue
+    }
+    if ($entry.is('.m_group.hide-if-empty.empty')) {
+      continue
+    }
+    return true
+  }
+}
+
+/**
  * Update expand/collapse icon and nested error/warn icon
  */
 function groupUpdate ($group) {
   var selector = '> i:last-child'
   var $toggle = $group.find('> .group-header')
-  var haveVis = $group.find('> .group-body > *').filter(function () {
-    /*
-      We return true only if visible
-    */
-    var $this = $(this)
-    if ($this.hasClass('filter-hidden')) {
-      return false
-    }
-    if ($this.is('.m_group.hide-if-empty.empty')) {
-      return false
-    }
-    return true
-  }).length > 0
+  var haveVis = groupHasVis($group)
   var icon = groupErrorIconGet($group)
   var isExpanded = $group.hasClass('expanded')
   // console.log('groupUpdate', $toggle.text(), icon, haveVis)
@@ -280,22 +313,7 @@ function iconUpdate ($toggle, classNameNew) {
   })
 }
 
-export function toggle (node) {
-  var $node = $(node)
-  var isToggle = $node.is('[data-toggle]')
-  var what = isToggle
-    ? $node.data('toggle')
-    : $node.find('> *[data-toggle]').data('toggle')
-  var $wrap = isToggle
-    ? $node.parent()
-    : $node
-  var isExpanded = what === 'next'
-    ? $node.hasClass('expanded')
-    : $wrap.hasClass('expanded')
-  if (what === 'group' && $wrap.hasClass('.empty')) {
-    return
-  }
-  isExpanded
-    ? collapse($node)
-    : expand($node)
+function onClickToggle () {
+  toggle(this)
+  return false
 }

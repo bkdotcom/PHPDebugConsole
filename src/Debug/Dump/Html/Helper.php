@@ -135,7 +135,7 @@ class Helper
             . '</tr>' . "\n";
         $crateRawWas = $this->dumper->crateRaw;
         $this->dumper->crateRaw = true;
-        $args = $rowInfo['args'] !== Abstracter::UNDEFINED
+        $args = \is_array($rowInfo['args']) && \count($rowInfo['args']) > 0
             ? '<hr />Arguments = ' . $this->dumper->valDumper->dump($rowInfo['args'])
             : '';
         $this->dumper->crateRaw = $crateRawWas;

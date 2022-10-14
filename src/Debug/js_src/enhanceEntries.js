@@ -328,6 +328,9 @@ function enhanceEntryTabular ($entry) {
       enhanceValue($entry, this)
     })
   }
+  // table may have a expand collapse row that's initially expanded
+  //   trigger expanded event  (so, trace context args are enhanced, etc)
+  $entry.find('tbody > tr.expanded').next().trigger('expanded.debug.next')
   tableSort.makeSortable($entry.find('> table'))
 }
 

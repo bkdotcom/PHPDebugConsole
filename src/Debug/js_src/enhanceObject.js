@@ -38,7 +38,7 @@ export function enhance ($node) {
     var $classname = $(this)
     var $target = $classname.next()
     var isEnhanced = $classname.data('toggle') === 'object'
-    if ($target.is('.t_recursion, .excluded')) {
+    if ($target.is('.t_maxDepth, .t_recursion, .excluded')) {
       $classname.addClass('empty')
       return
     }

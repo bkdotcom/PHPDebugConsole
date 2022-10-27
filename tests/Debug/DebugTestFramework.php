@@ -655,7 +655,7 @@ class DebugTestFramework extends DOMTestCase
             if (isset($outputExpect['contains'])) {
                 $message = "\e[1m" . $test . " doesn't contain\e[0m";
                 if ($test === 'streamAnsi') {
-                    $message .= "\nactual: " . \str_replace(array("\e","\n"), array('\e','\n'), $output);
+                    $message .= "\nactual: " . \str_replace("\e", '\e', $output);
                 }
                 if (\is_string($output)) {
                     $this->assertStringContainsString($outputExpect['contains'], $output, $message);
@@ -683,8 +683,8 @@ class DebugTestFramework extends DOMTestCase
         $outputExpect = \str_replace("\r", '[\\r]', $outputExpect);
         $message = "\e[1m" . $test . " not same\e[0m";
         if ($test === 'streamAnsi') {
-            $message .= "\nexpect: " . \str_replace(array("\e", "\n"), array('\e', '\n'), $outputExpect) . "\n";
-            $message .= "\nactual: " . \str_replace(array("\e", "\n"), array('\e', '\n'), $output);
+            $message .= "\nexpect: " . \str_replace("\e", '\e', $outputExpect) . "\n";
+            $message .= "\nactual: " . \str_replace("\e", '\e', $output);
         }
         $this->assertStringMatchesFormat(\trim($outputExpect), \trim($output), $message);
     }

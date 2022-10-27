@@ -252,9 +252,12 @@ function enhanceArray ($node) {
   if ($.trim($arrayInner.html()).length < 1) {
     // empty array -> don't add expand/collapse
     $node.addClass('expanded').find('br').hide()
+    /*
     if ($node.hasClass('max-depth') === false) {
       return
     }
+    */
+    return
   }
   enhanceArrayAddMarkup($node)
   $.each(config.iconsArray, function (selector, v) {

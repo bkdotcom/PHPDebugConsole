@@ -154,11 +154,30 @@ class ErrorSummary
      */
     protected function buildFatalBacktrace($backtrace)
     {
-        // more than one trace frame
-        // Don't inspect objects when dumping trace arguments...  potentially huge objects
-        $objectsExcludeBak = $this->debug->getCfg('objectsExclude');
-        $this->debug->setCfg('objectsExclude', \array_merge($objectsExcludeBak, array('*')));
-        $logEntry = new LogEntry(
+        $cfgWas = $this->debug->setCfg(array(
+            'maxDepth' => 0,
+            // Don't inspect objects when dumping trace arguments...  potentially huge objects
+            'objectsExclude' => array('*'),
+        ));
+        $logEntry = $this->buildFatalBacktraceLogEntry($backtrace);
+        $this->debug->methodTable->doTable($logEntry);
+        $this->debug->setCfg($cfgWas);
+        return '<li class="m_trace" data-detect-files="true">' . $this->routeHtml->dumper->table->build(
+            $logEntry['args'][0],
+            $logEntry['meta']
+        ) . '</li>' . "\n";
+    }
+
+    /**
+     * Create temporary LogEntry used by buildFatalBacktrace
+     *
+     * @param array $backtrace backtrace from error object
+     *
+     * @return LogEntry
+     */
+    private function buildFatalBacktraceLogEntry($backtrace)
+    {
+        return new LogEntry(
             $this->debug,
             'table',
             array($backtrace),
@@ -175,13 +194,6 @@ class ErrorSummary
                 ),
             )
         );
-        $this->debug->methodTable->doTable($logEntry);
-        // restore previous objectsExclude
-        $this->debug->setCfg('objectsExclude', $objectsExcludeBak);
-        return '<li class="m_trace" data-detect-files="true">' . $this->routeHtml->dumper->table->build(
-            $logEntry['args'][0],
-            $logEntry['meta']
-        ) . '</li>' . "\n";
     }
 
     /**

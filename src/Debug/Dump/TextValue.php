@@ -115,6 +115,9 @@ class TextValue extends BaseValue
         if ($abs['isRecursion']) {
             return $abs['className'] . ' *RECURSION*';
         }
+        if ($abs['isMaxDepth']) {
+            return $abs['className'] . ' *MAX DEPTH*';
+        }
         if ($abs['isExcluded']) {
             return $abs['className'] . ' NOT INSPECTED';
         }

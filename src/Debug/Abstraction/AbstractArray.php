@@ -12,15 +12,20 @@
 
 namespace bdk\Debug\Abstraction;
 
+use bdk\Debug\AbstractComponent;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 
 /**
  * Abstracter:  Methods used de=refrence and store arrays
  */
-class AbstractArray
+class AbstractArray extends AbstractComponent
 {
     protected $abstracter;
+
+    protected $cfg = array(
+        'maxDepth' => 0,
+    );
 
     /**
      * Constructor
@@ -45,6 +50,13 @@ class AbstractArray
     {
         if (\in_array($array, $hist, true)) {
             return Abstracter::RECURSION;
+        }
+        if ($this->cfg['maxDepth'] && \count($hist) === $this->cfg['maxDepth']) {
+            return new Abstraction(Abstracter::TYPE_ARRAY, array(
+                'options' => array(
+                    'isMaxDepth' => true,
+                ),
+            ));
         }
         $hist[] = $array;
         $return = array();

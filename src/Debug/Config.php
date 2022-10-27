@@ -39,6 +39,7 @@ class Config
             'constCollect',
             'constOutput',
             'fullyQualifyPhpDocType',
+            'maxDepth',
             'methodAttributeCollect',
             'methodAttributeOutput',
             'methodCache',

@@ -223,7 +223,7 @@ class MethodTest extends DebugTestFramework
         $this->debug->log(new \bdk\Test\Debug\Fixture\Test(), $this->debug->meta('cfg', 'methodCollect', false));
         $methodCollect = $this->debug->data->get('log/__end__/args/0/cfgFlags') & \bdk\Debug\Abstraction\AbstractObject::METHOD_COLLECT;
         $this->assertSame(0, $methodCollect);
-        $this->assertCount(2, $this->debug->data->get('log/__end__/args/0/methods'));
+        $this->assertCount(3, $this->debug->data->get('log/__end__/args/0/methods'));
         $this->assertTrue($this->debug->getCfg('methodCollect'));
     }
 

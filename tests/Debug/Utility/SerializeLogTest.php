@@ -12,6 +12,7 @@ use bdk\Test\PolyFill\AssertionTrait;
 /**
  * Test SerializeLog
  *
+ * @covers \bdk\Debug\Abstraction\AbstractObject
  * @covers \bdk\Debug\Plugin\Channel
  * @covers \bdk\Debug\Utility\SerializeLog
  */
@@ -350,6 +351,7 @@ EOD;
                 'cfgFlags' => 4194303,
                 'isAnonymous' => false,
                 'isFinal' => false,
+                'cases' => array(),
             )
         );
         // serialized did not include these values

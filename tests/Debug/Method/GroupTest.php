@@ -23,6 +23,7 @@ function myFunctionThatCallsGroup()
  * PHPUnit tests for Debug Group Methods
  *
  * @covers \bdk\Debug
+ * @covers \bdk\Debug\Abstraction\Abstracter
  * @covers \bdk\Debug\Dump\Base
  * @covers \bdk\Debug\Dump\Html
  * @covers \bdk\Debug\Dump\Text

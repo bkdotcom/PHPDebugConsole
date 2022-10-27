@@ -12,6 +12,7 @@ use bdk\Test\Debug\DebugTestFramework;
  *
  * @covers \bdk\Debug\Abstraction\AbstractObject
  * @covers \bdk\Debug\Abstraction\AbstractObjectConstants
+ * @covers \bdk\Debug\Abstraction\AbstractObjectMethodParams
  * @covers \bdk\Debug\Dump\Html\HtmlObject
  * @covers \bdk\Debug\Dump\Html\ObjectConstants
  */

@@ -39,6 +39,19 @@ class TestBase
     }
 
     /**
+     * set magic method
+     *
+     * @param string $key what we're setting
+     * @param mixed  $val value
+     *
+     * @return void
+     */
+    public function __set($key, $val)
+    {
+        $this->{$key} = $val;
+    }
+
+    /**
      * call magic method
      *
      * @param string $name Method being called

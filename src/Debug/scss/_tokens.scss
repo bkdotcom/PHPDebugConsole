@@ -95,6 +95,7 @@ $color-stringified: rgba(0, 200, 200, 0.6);
 .t_punct { color: $color-punct; }
 
 .excluded,
+.t_maxDepth,
 .t_notInspected,
 .t_recursion,
 .t_unknown {

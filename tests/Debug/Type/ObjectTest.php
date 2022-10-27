@@ -79,7 +79,7 @@ bdk\Test\Debug\Fixture\Test
     (✨ magic excluded) magicProp
     (debug) debugValue = "This property is debug only"
   Methods:
-    public: 8
+    public: 9
     protected: 1
     private: 1
     magic: 2
@@ -100,8 +100,8 @@ EOD;
         \e[38;5;245m)\e[0m
         \e[38;5;250m(protected ✨ magic-read)\e[0m \e[38;5;83mmagicReadProp\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mnot null\e[38;5;250m"\e[0m
         \e[38;5;250m(protected)\e[0m \e[38;5;83mpropProtected\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mdefined only in TestBase (protected)\e[38;5;250m"\e[0m
-        \e[38;5;250m(private)\e[0m \e[38;5;83mdebug\e[0m \e[38;5;130m=\e[0m \e[38;5;9mNOT INSPECTED\e[0m
-        \e[38;5;250m(private)\e[0m \e[38;5;83minstance\e[0m \e[38;5;130m=\e[0m \e[38;5;9m*RECURSION*\e[0m
+        \e[38;5;250m(private)\e[0m \e[38;5;83mdebug\e[0m \e[38;5;130m=\e[0m \e[38;5;250mbdk\\e[0m\e[1mDebug\e[22m \e[38;5;9mNOT INSPECTED\e[0m
+        \e[38;5;250m(private)\e[0m \e[38;5;83minstance\e[0m \e[38;5;130m=\e[0m \e[38;5;250mbdk\Test\Debug\Fixture\\e[0m\e[1mTest\e[22m \e[38;5;196m*RECURSION*\e[0m
         \e[38;5;250m(private excluded)\e[0m \e[38;5;83mpropNoDebug\e[0m
         \e[38;5;250m(private)\e[0m \e[38;5;83mpropPrivate\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mredefined in Test (private) (alternate value via __debugInfo)\e[38;5;250m"\e[0m
         \e[38;5;250m(🔒 private)\e[0m \e[38;5;83mtestBasePrivate\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mdefined in TestBase (private)\e[38;5;250m"\e[0m
@@ -110,7 +110,7 @@ EOD;
         \e[38;5;250m(✨ magic excluded)\e[0m \e[38;5;83mmagicProp\e[0m
         \e[38;5;250m(debug)\e[0m \e[38;5;83mdebugValue\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mThis property is debug only\e[38;5;250m"\e[0m
     \e[4mMethods:\e[24m
-        public\e[38;5;245m:\e[0m \e[96m8\e[0m
+        public\e[38;5;245m:\e[0m \e[96m9\e[0m
         protected\e[38;5;245m:\e[0m \e[96m1\e[0m
         private\e[38;5;245m:\e[0m \e[96m1\e[0m
         magic\e[38;5;245m:\e[0m \e[96m2\e[0m
@@ -201,7 +201,7 @@ EOD;
                         // properties
                         $expect = \implode("\n", array(
                             '<dt class="properties">properties <span class="text-muted">(via __debugInfo)</span></dt>',
-                            '<dd class="info magic">This object has a <code>__get</code> method</dd>',
+                            '<dd class="info magic">This object has <code>__get</code> and <code>__set</code> methods</dd>',
                             '<dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier" title="Public Property.">propPublic</span> <span class="t_operator">=</span> <span class="t_string">redefined in Test (public)</span></dd>',
                             '<dd class="isStatic property public"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="t_identifier">propStatic</span> <span class="t_operator">=</span> <span class="t_string">I\'m Static</span></dd>',
                             '<dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier">someArray</span> <span class="t_operator">=</span> <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>',
@@ -244,6 +244,7 @@ EOD;
                             '<dd class="inherited method public" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_public">public</span> <span class="t_identifier" title="call magic method">__call</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="Method being called">$name</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_type">array</span> <span class="t_parameter-name" title="Arguments passed">$args</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">mixed</span></dd>',
                             '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier" title="magic method">__debugInfo</span><span class="t_punct">(</span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span title="property=&gt;value array"><span class="t_type">array</span></span></dd>',
                             '<dd class="inherited method public" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_public">public</span> <span class="t_identifier" title="get magic method">__get</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="what we\'re getting">$key</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">mixed</span></dd>',
+                            '<dd class="inherited method public" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_public">public</span> <span class="t_identifier" title="set magic method">__set</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="what we\'re setting">$key</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_type">mixed</span> <span class="t_parameter-name" title="value">$val</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span></dd>',
                             '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier" title="toString magic method">__toString</span><span class="t_punct">(</span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">string</span><br />',
                                 '<span class="t_string">abracadabra</span></dd>',
                             '<dd class="isDeprecated isFinal method public" data-deprecated-desc="this method is bad and should feel bad"><span class="t_modifier_final">final</span> <span class="t_modifier_public">public</span> <span class="t_identifier" title="This method is public">methodPublic</span><span class="t_punct">(</span><span class="parameter"><span class="t_type"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>SomeClass</span></span> <span class="t_parameter-name" title="first param',
@@ -542,6 +543,7 @@ EOD;
                             '__call',
                             '__debugInfo',
                             '__get',
+                            '__set',
                             '__toString',
                             'methodPrivate',
                             'methodProtected',
@@ -1185,6 +1187,73 @@ EOD;
         $this->assertSame('debugInfo', $props['propPrivate']['valueFrom']);
     }
 
+    public function testMaxDepth()
+    {
+        /*
+        $foo = $this->debug->abstracter->crateWithVals(
+            (object) array('beans')
+        )->getValues();
+        var_dump($foo);
+        */
+        $this->testMethod(
+            'log',
+            array(
+                'array',
+                array(
+                    'foo' => 'bar',
+                    'tooDeep' => (object) array('beans'),
+                    'ding' => 'dong',
+                ),
+                $this->debug->meta('cfg', 'maxDepth', 1),
+            ),
+            array(
+                'entry' => array(
+                    'method' => 'log',
+                    'args' => array(
+                        'array',
+                        array(
+                            'foo' => 'bar',
+                            'tooDeep' => $this->debug->abstracter->crateWithVals(
+                                (object) array('beans'),
+                                array(
+                                    'attributes' => array(),
+                                    'debugMethod' => 'log',
+                                    'definition' => array(
+                                        'fileName' => '',
+                                        'startLine' => 1,
+                                        'extensionName' => '',
+                                    ),
+                                    'isMaxDepth' => true,
+                                    'properties' => array(),
+                                )
+                            )->jsonSerialize(),
+                            'ding' => 'dong',
+                        ),
+                    ),
+                    'meta' => array(),
+                ),
+                'html' => '<li class="m_log"><span class="no-quotes t_string">array</span> = <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
+                    <ul class="array-inner list-unstyled">
+                    <li><span class="t_key">foo</span><span class="t_operator">=&gt;</span><span class="t_string">bar</span></li>
+                    <li><span class="t_key">tooDeep</span><span class="t_operator">=&gt;</span><div class="t_object" data-accessible="public"><span class="classname">stdClass</span>
+                        <span class="t_maxDepth">*MAX DEPTH*</span></div></li>
+                    <li><span class="t_key">ding</span><span class="t_operator">=&gt;</span><span class="t_string">dong</span></li>
+                    </ul><span class="t_punct">)</span></span></li>',
+                'script' => 'console.log("array",{"foo":"bar","tooDeep":"(object) stdClass *MAX DEPTH*","ding":"dong"});',
+                'streamAnsi' => \str_replace('\e', "\e", 'array \e[38;5;245m=\e[0m \e[38;5;45marray\e[38;5;245m(\e[0m' . "\n"
+                    . '\e[38;5;245m[\e[38;5;83mfoo\e[38;5;245m]\e[38;5;130m => \e[0m\e[38;5;250m"\e[0mbar\e[38;5;250m"\e[0m' . "\n"
+                    . '\e[38;5;245m[\e[38;5;83mtooDeep\e[38;5;245m]\e[38;5;130m => \e[0m\e[1mstdClass\e[22m \e[38;5;196m*MAX DEPTH*\e[0m' . "\n"
+                    . '\e[38;5;245m[\e[38;5;83mding\e[38;5;245m]\e[38;5;130m => \e[0m\e[38;5;250m"\e[0mdong\e[38;5;250m"\e[0m' . "\n"
+                    . '\e[38;5;245m)\e[0m'),
+                'text' => 'array = array(
+                    [foo] => "bar"
+                    [tooDeep] => stdClass *MAX DEPTH*
+                    [ding] => "dong"
+                    )',
+            )
+        );
+    }
+
     /**
      * v 1.0 = fatal error
      *
@@ -1206,9 +1275,9 @@ EOD;
         $select = '.m_log
             > .t_object > .object-inner
             > .property
-            > .t_array .array-inner > li'
-            // > .t_array
-            . '> .t_recursion';
+            > .t_array .array-inner > li
+            > .t_array
+            > .t_recursion';
         $this->assertSelectCount($select, 1, $output);
     }
 

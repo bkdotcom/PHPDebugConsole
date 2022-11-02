@@ -350,6 +350,32 @@ EOD;
                     ),
                 ),
             ),
+            'complexType 1' => array(
+                '/**
+                * @return array{title: string, value: string, short: false} Very clear description
+                */',
+                array(
+                    'summary' => null,
+                    'desc' => null,
+                    'return' => array(
+                        'type' => 'array{title: string, value: string, short: false}',
+                        'desc' => 'Very clear description',
+                    ),
+                ),
+            ),
+            'complexType 2' => array(
+                '/**
+                * @return array<array{title: string, value: string, short: false}> mumbo jumbo
+                */',
+                array(
+                    'summary' => null,
+                    'desc' => null,
+                    'return' => array(
+                        'type' => 'array<array{title: string, value: string, short: false}>',
+                        'desc' => 'mumbo jumbo',
+                    ),
+                ),
+            ),
         );
     }
 

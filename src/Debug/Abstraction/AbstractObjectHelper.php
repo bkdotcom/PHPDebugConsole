@@ -156,6 +156,10 @@ class AbstractObjectHelper
         if (!$type || !$abs['fullyQualifyPhpDocType']) {
             return $type;
         }
+        if (\preg_match('/array[<([{]/', $type)) {
+            // type contains "complex" array type... don't deal with parsing
+            return $type;
+        }
         $types = \preg_split('#\s*\|\s*#', $type);
         foreach ($types as $i => $type) {
             if (\strpos($type, '\\') === 0) {

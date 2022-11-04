@@ -360,6 +360,9 @@ class PhpDoc extends PhpDocBase
      */
     private static function strStartsWithVariable($str)
     {
+        if ($str === null) {
+            return false;
+        }
         return \strpos($str, '$') === 0
            || \strpos($str, '&$') === 0
            || \strpos($str, '...$') === 0

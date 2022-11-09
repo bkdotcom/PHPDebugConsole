@@ -299,6 +299,7 @@ trait DataProviderTrait
     public function validUriSchemes()
     {
         $schemes = [
+            '', // same as removing scheme
             'aaa',
             'aaas',
             'about',

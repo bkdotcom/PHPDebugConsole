@@ -1,7 +1,7 @@
 <?php
 
 /**
- * php -S 127.0.0.1:8080 f frontController.php
+ * php -S 127.0.0.1:8080 frontController.php
  *
  * don't specify docroot from command line... php 7.0 borks
  */

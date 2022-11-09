@@ -440,6 +440,9 @@ trait AssertionTrait
     protected function assertScheme($scheme)
     {
         $this->assertString($scheme, 'scheme');
+        if ($scheme === '') {
+            return;
+        }
         if (\preg_match('/^[a-z][-a-z0-9.+]*$/i', $scheme) !== 1) {
             throw new InvalidArgumentException(\sprintf(
                 'Invalid scheme: "%s"',

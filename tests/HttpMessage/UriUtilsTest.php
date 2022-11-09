@@ -11,7 +11,7 @@ use PHPUnit\Framework\TestCase;
  */
 class UriUtilsTest extends TestCase
 {
-    private const RFC3986_BASE = 'http://a/b/c/d;p?q';
+    const RFC3986_BASE = 'http://a/b/c/d;p?q';
 
     /**
      * @dataProvider isCrossOriginProvider

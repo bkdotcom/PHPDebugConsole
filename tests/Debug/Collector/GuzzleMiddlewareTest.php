@@ -67,7 +67,7 @@ class GuzzleMiddlewareTest extends DebugTestFramework
             )
         );
         $this->outputTest(array(
-            'html' => '<li class="m_group" data-channel="general.Guzzle" data-icon="fa fa-exchange">
+            'html' => '<li class="m_group" data-channel="general.Guzzle" data-icon="fa fa-exchange" id="guzzle_%s">
                 <div class="group-header">%sGuzzle(%sGET%shttp://example.com/%s)</span></div>
                 <ul class="group-body">
                     <li class="m_log" data-channel="general.Guzzle">%srequest headers</span> = <span class="t_string">GET / HTTP/1.1%A</li>
@@ -82,7 +82,7 @@ class GuzzleMiddlewareTest extends DebugTestFramework
                         </ul><span class="t_punct">)</span></span></div>
                         </span></li>
                     <li class="m_time" data-channel="general.Guzzle"><span class="no-quotes t_string">time: %f %s</span></li>
-                    <li class="m_log" data-channel="general.Guzzle"><span class="no-quotes t_string">response headers</span> = <span class="t_string">HTTP/ 1.1 200 OK<span class="ws_r"></span><span class="ws_n"></span>
+                    <li class="m_log" data-channel="general.Guzzle"><span class="no-quotes t_string">response headers</span> = <span class="t_string">HTTP/1.1 200 OK<span class="ws_r"></span><span class="ws_n"></span>
                     X-Foo: Bar</span></li>
                     <li class="m_log" data-channel="general.Guzzle"><span class="no-quotes t_string">response body</span> = <span class="t_string">Hello World</span></li>
                 </ul>
@@ -192,7 +192,7 @@ class GuzzleMiddlewareTest extends DebugTestFramework
                     <li class="m_info" data-channel="general.Guzzle" data-icon="fa fa-random"><span class="no-quotes t_string">asyncronous</span></li>
                     <li class="m_log" data-channel="general.Guzzle">%srequest headers</span> = <span class="t_string">GET / HTTP/1.1%A</li>
                     <li class="m_time" data-channel="general.Guzzle"><span class="no-quotes t_string">time: %f %s</span></li>
-                    <li class="m_log" data-channel="general.Guzzle"><span class="no-quotes t_string">response headers</span> = <span class="t_string">HTTP/ 1.1 202 Accepted<span class="ws_r"></span><span class="ws_n"></span>
+                    <li class="m_log" data-channel="general.Guzzle"><span class="no-quotes t_string">response headers</span> = <span class="t_string">HTTP/1.1 202 Accepted<span class="ws_r"></span><span class="ws_n"></span>
                     Content-Length: 0</span></li>
                     <li class="m_log" data-channel="general.Guzzle"><span class="no-quotes t_string">response body</span> = <span class="t_string"></span></li>
                 </ul>
@@ -331,7 +331,7 @@ class GuzzleMiddlewareTest extends DebugTestFramework
                     <div class="group-header">%sGuzzle Response(%sGET%shttp://example.com/%s)</span></div>
                     <ul class="group-body">
                         <li class="m_time" data-channel="general.Guzzle"><span class="no-quotes t_string">time: %f %s</span></li>
-                        <li class="m_log" data-channel="general.Guzzle"><span class="no-quotes t_string">response headers</span> = <span class="t_string">HTTP/ 1.1 200 OK</span></li>
+                        <li class="m_log" data-channel="general.Guzzle"><span class="no-quotes t_string">response headers</span> = <span class="t_string">HTTP/1.1 200 OK</span></li>
                         <li class="m_log" data-channel="general.Guzzle"><span class="no-quotes t_string">response body</span> = <span class="t_string">Test</span></li>
                 </ul>
                 </li>',
@@ -355,7 +355,7 @@ class GuzzleMiddlewareTest extends DebugTestFramework
             1 + 1;
         }
         $this->outputTest(array(
-            'html' => '<li class="expanded m_group" data-channel="general.Guzzle" data-icon="fa fa-exchange">
+            'html' => '<li class="expanded m_group" data-channel="general.Guzzle" data-icon="fa fa-exchange" id="guzzle_%s">
                     <div class="group-header">%sGuzzle(%sGET%shttp://example.com/%s)</span></div>
                     <ul class="group-body">
                         <li class="m_log" data-channel="general.Guzzle"><span class="no-quotes t_string">request headers</span> = <span class="t_string">GET / HTTP/1.1%A</li>

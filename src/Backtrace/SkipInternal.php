@@ -181,7 +181,7 @@ class SkipInternal
         $class = null;
         if ($frame['class']) {
             $class = $frame['class'];
-        } elseif (\preg_match('/^(.+)(::|->)/', $frame['function'], $matches)) {
+        } elseif (\preg_match('/^(.+)(::|->)/', (string) $frame['function'], $matches)) {
             $class = $matches[1];
         }
         if (!$class) {

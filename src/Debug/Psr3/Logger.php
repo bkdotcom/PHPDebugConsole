@@ -14,6 +14,7 @@ namespace bdk\Debug\Psr3;
 
 use bdk\Debug;
 use bdk\Debug\LogEntry;
+use bdk\Debug\Psr3\MethodSignatureCompatTrait;
 use Psr\Log\AbstractLogger;
 use Psr\Log\InvalidArgumentException;
 use Psr\Log\LogLevel;
@@ -23,6 +24,9 @@ use Psr\Log\LogLevel;
  */
 class Logger extends AbstractLogger
 {
+    // define the log method with the appropriate method signature
+    use MethodSignatureCompatTrait;
+
     public $debug;
 
     protected $cfg = array(
@@ -59,49 +63,6 @@ class Logger extends AbstractLogger
             'Monolog\\Logger',
             'Psr\\Log\\AbstractLogger',
         ));
-    }
-
-    /**
-     * Logs with an arbitrary level.
-     *
-     * @param mixed         $level   debug, info, notice, warning, error, critical, alert, emergency
-     * @param string|object $message message
-     * @param array         $context array
-     *
-     * @return void
-     * @throws InvalidArgumentException If invalid level.
-     */
-    public function log($level, $message, array $context = array())
-    {
-        $this->assertValidLevel($level);
-        /*
-            Check if logging exception
-        */
-        if ($this->handleException($level, $context)) {
-            return;
-        }
-        /*
-            Lets create a LogEntry obj to pass around
-        */
-        $logEntry = new LogEntry(
-            $this->debug,
-            $this->cfg['levelMap'][$level],
-            array(
-                $message,
-                $context,
-            ),
-            array(
-                'psr3level' => $level,
-            )
-        );
-        $this->setMeta($logEntry);
-        $this->setArgs($logEntry);
-        $args = $logEntry['args'];
-        $args[] = $this->debug->meta($logEntry['meta']);
-        \call_user_func_array(
-            array($logEntry->getSubject(), $logEntry['method']),
-            $args
-        );
     }
 
     /**
@@ -154,6 +115,49 @@ class Logger extends AbstractLogger
             )));
             $logEntry->setMeta($meta);
         }
+    }
+
+    /**
+     * Logs with an arbitrary level.
+     *
+     * @param mixed              $level   debug, info, notice, warning, error, critical, alert, emergency
+     * @param string|\Stringable $message message
+     * @param array              $context array
+     *
+     * @return void
+     * @throws InvalidArgumentException If invalid level.
+     */
+    protected function doLog($level, $message, array $context = array())
+    {
+        $this->assertValidLevel($level);
+        /*
+            Check if logging exception
+        */
+        if ($this->handleException($level, $context)) {
+            return;
+        }
+        /*
+            Lets create a LogEntry obj to pass around
+        */
+        $logEntry = new LogEntry(
+            $this->debug,
+            $this->cfg['levelMap'][$level],
+            array(
+                (string) $message,
+                $context,
+            ),
+            array(
+                'psr3level' => $level,
+            )
+        );
+        $this->setMeta($logEntry);
+        $this->setArgs($logEntry);
+        $args = $logEntry['args'];
+        $args[] = $this->debug->meta($logEntry['meta']);
+        \call_user_func_array(
+            array($logEntry->getSubject(), $logEntry['method']),
+            $args
+        );
     }
 
     /**

@@ -22,44 +22,10 @@ $refParameters = $refMethod->getParameters();
 
 if ($refMethod->hasReturnType()) {
     // psr/log 3.0
-    trait MethodSignatureCompatTrait
-    {
-        /**
-         * Logs with an arbitrary level.
-         *
-         * @param mixed              $level   debug, info, notice, warning, error, critical, alert, emergency
-         * @param string|\Stringable $message message
-         * @param mixed[]            $context array
-         *
-         * @return void
-         *
-         * @throws \Psr\Log\InvalidArgumentException
-         */
-        public function log($level, string|\Stringable $message, array $context = array()): void
-        {
-            $this->doLog($level, $message, $context);
-        }
-    }
+    require __DIR__ . '/MethodSignatureCompatTrait_3.php';
 } elseif ($refParameters[1]->hasType()) {
     // psr/log 2.0
-    trait MethodSignatureCompatTrait
-    {
-        /**
-         * Logs with an arbitrary level.
-         *
-         * @param mixed              $level   debug, info, notice, warning, error, critical, alert, emergency
-         * @param string|\Stringable $message message
-         * @param mixed[]            $context array
-         *
-         * @return void
-         *
-         * @throws \Psr\Log\InvalidArgumentException
-         */
-        public function log($level, string|\Stringable $message, array $context = array())
-        {
-            $this->doLog($level, $message, $context);
-        }
-    }
+    require __DIR__ . '/MethodSignatureCompatTrait_2.php';
 } else {
     // psr/log 1.0
     trait MethodSignatureCompatTrait
@@ -81,4 +47,3 @@ if ($refMethod->hasReturnType()) {
         }
     }
 }
-

@@ -20,10 +20,10 @@ $refClass = new \ReflectionClass('Psr\Log\LoggerInterface');
 $refMethod = $refClass->getMethod('log');
 $refParameters = $refMethod->getParameters();
 
-if ($refMethod->hasReturnType()) {
+if (\method_exists($refMethod, 'hasReturnType') && $refMethod->hasReturnType()) {
     // psr/log 3.0
     require __DIR__ . '/MethodSignatureCompatTrait_3.php';
-} elseif ($refParameters[1]->hasType()) {
+} elseif (\method_exists($refParameters[1], 'hasType') && $refParameters[1]->hasType()) {
     // psr/log 2.0
     require __DIR__ . '/MethodSignatureCompatTrait_2.php';
 } else {

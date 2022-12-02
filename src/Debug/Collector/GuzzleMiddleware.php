@@ -15,7 +15,7 @@ namespace bdk\Debug\Collector;
 use bdk\Debug;
 use bdk\Debug\AbstractComponent;
 use bdk\Debug\LogEntry;
-use Exception;
+use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Promise;
 use GuzzleHttp\RequestOptions;
@@ -29,15 +29,16 @@ use Psr\Http\Message\ResponseInterface;
 class GuzzleMiddleware extends AbstractComponent
 {
     private $debug;
-    private $icon = 'fa fa-exchange';
-    private $iconAsync = 'fa fa-random';
     private $nextHandler;
     private $onRedirectOrig;
 
     protected $cfg = array(
         'asyncResponseWithRequest' => true,
+        'icon' => 'fa fa-exchange',
+        'iconAsync' => 'fa fa-random',
         'inclRequestBody' => false,
         'inclResponseBody' => false,
+        'label' => 'Guzzle',
         'prettyRequestBody' => true,
         'prettyResponseBody' => true,
     );
@@ -56,9 +57,9 @@ class GuzzleMiddleware extends AbstractComponent
     {
         $this->setCfg($cfg);
         if (!$debug) {
-            $debug = Debug::_getChannel('Guzzle', array('channelIcon' => $this->icon));
+            $debug = Debug::_getChannel($this->cfg['label'], array('channelIcon' => $this->cfg['icon']));
         } elseif ($debug === $debug->rootInstance) {
-            $debug = $debug->getChannel('Guzzle', array('channelIcon' => $this->icon));
+            $debug = $debug->getChannel($this->cfg['label'], array('channelIcon' => $this->cfg['icon']));
         }
         $debug->eventManager->subscribe(Debug::EVENT_OUTPUT_LOG_ENTRY, array($this, 'onOutputLogEntry'));
         $this->debug = $debug;
@@ -134,11 +135,11 @@ class GuzzleMiddleware extends AbstractComponent
             $options['allow_redirects']['on_redirect'] = array($this, 'onRedirect');
         }
         $this->debug->groupCollapsed(
-            'Guzzle',
+            $this->cfg['label'],
             $request->getMethod(),
             (string) $request->getUri(),
             $this->debug->meta(array(
-                'icon' => $this->icon,
+                'icon' => $this->cfg['icon'],
                 'id' => 'guzzle_' . $requestInfo['requestId'],
             ))
         );
@@ -172,15 +173,17 @@ class GuzzleMiddleware extends AbstractComponent
     /**
      * Rejected Request handler
      *
-     * @param RequestException $reason      Reject reason
-     * @param array            $requestInfo Request information
+     * @param GuzzleException $reason      Reject reason
+     * @param array           $requestInfo Request information
      *
      * @return GuzzleHttp\Promise\PromiseInterface;
      */
-    public function onRejected(RequestException $reason, array $requestInfo)
+    public function onRejected(GuzzleException $reason, array $requestInfo)
     {
         $metaGroup = $this->debug->meta();
-        $response = $reason->getResponse();
+        $response = $reason instanceof RequestException
+            ? $reason->getResponse()
+            : null;
         if ($requestInfo['isAsyncronous']) {
             $metaGroup = $this->debug->meta('asyncResponseGroup');
             $this->asyncResponseGroup($requestInfo['request'], $response, $metaGroup, true);
@@ -203,15 +206,15 @@ class GuzzleMiddleware extends AbstractComponent
     private function asyncResponseGroup(RequestInterface $request, $response, $meta, $isError = false)
     {
         $this->debug->groupCollapsed(
-            $isError
-                ? 'Guzzle Error'
-                : 'Guzzle Response',
+            $this->cfg['label'] . ' ' . ($isError
+                ? 'Error'
+                : 'Response'),
             $request->getMethod(),
             (string) $request->getUri(),
             $response
                 ? $response->getStatusCode()
                 : null,
-            $this->debug->meta('icon', $this->icon),
+            $this->debug->meta('icon', $this->cfg['icon']),
             $meta
         );
     }
@@ -257,7 +260,7 @@ class GuzzleMiddleware extends AbstractComponent
             function (ResponseInterface $response) use ($requestInfo) {
                 return $this->onFulfilled($response, $requestInfo);
             },
-            function (RequestException $reason) use ($requestInfo) {
+            function (GuzzleException $reason) use ($requestInfo) {
                 return $this->onRejected($reason, $requestInfo);
             }
         );
@@ -292,7 +295,7 @@ class GuzzleMiddleware extends AbstractComponent
     }
 
     /**
-     * Log reqeust headers and reqeust body
+     * Log request headers and request body
      *
      * @param RequestInterface $request     Request
      * @param array            $requestInfo Request information
@@ -303,7 +306,7 @@ class GuzzleMiddleware extends AbstractComponent
     {
         $method = $request->getMethod();
         if ($requestInfo['isAsyncronous']) {
-            $this->debug->info('asyncronous', $this->debug->meta('icon', $this->iconAsync));
+            $this->debug->info('asyncronous', $this->debug->meta('icon', $this->cfg['iconAsync']));
         }
         $this->debug->log('request headers', $this->buildHeadersString($request), $this->debug->meta('redact'));
         if ($this->cfg['inclRequestBody'] === false) {
@@ -322,21 +325,21 @@ class GuzzleMiddleware extends AbstractComponent
     }
 
     /**
-     * Log reqeust headers and reqeust body
+     * Log request headers and request body
      *
-     * @param ResponseInterface $response     Response
-     * @param array             $requestInfo  Request information
-     * @param Exception         $rejectReason Response exception
+     * @param ResponseInterface|null $response     Response
+     * @param array                  $requestInfo  Request information
+     * @param GuzzleException        $rejectReason Response exception
      *
      * @return void
      */
-    protected function logResponse(ResponseInterface $response = null, array $requestInfo = array(), Exception $rejectReason = null)
+    protected function logResponse(ResponseInterface $response = null, array $requestInfo = array(), GuzzleException $rejectReason = null)
     {
         $duration = $this->debug->timeEnd('guzzle:' . $requestInfo['requestId'], false);
         $metaAppend = $requestInfo['isAsyncronous'] && $this->cfg['asyncResponseWithRequest']
             ? $this->debug->meta('appendGroup', 'guzzle_' . $requestInfo['requestId'])
             : $this->debug->meta();
-        if ($rejectReason instanceof Exception) {
+        if ($rejectReason instanceof GuzzleException) {
             $message = \preg_replace('/ response:\n.*$/s', '', $rejectReason->getMessage());
             $this->debug->warn(\get_class($rejectReason), $rejectReason->getCode(), $message, $metaAppend);
         }

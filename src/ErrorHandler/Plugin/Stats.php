@@ -17,7 +17,7 @@ use bdk\ErrorHandler\Plugin\StatsStoreFile;
 use bdk\PubSub\SubscriberInterface;
 
 /**
- * Keep track of when errors were last emailed
+ * Keep track of when errors were last emailed or other
  *
  * @property array $summaryErrors
  */

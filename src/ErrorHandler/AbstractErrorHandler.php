@@ -79,7 +79,7 @@ abstract class AbstractErrorHandler extends AbstractComponent
      *
      * Called
      *   * on first error (passes haveError = true)
-     *   * post
+     *   * postSetCfg
      *
      * @param bool $haveError true when called via onFirstError
      *

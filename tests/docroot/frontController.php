@@ -12,11 +12,13 @@ $serverRequest = \bdk\HttpMessage\ServerRequest::fromGlobals();
 $serverParams = $serverRequest->getServerParams();
 $requestUri = $serverRequest->getUri();
 
-$debug = \bdk\Debug::getInstance(array(
-    'collect' => true,
-    'output' => true,
-    'route' => 'wamp',
-));
+if (\class_exists('bdk\\Debug')) {
+    $debug = new \bdk\Debug(array(
+        'collect' => true,
+        'output' => true,
+        'route' => 'wamp',
+    ));
+}
 
 \chdir($serverParams['DOCUMENT_ROOT']);
 
@@ -82,4 +84,3 @@ function notFound()
     echo '<h1>404 Not Found</h1>';
     // echo '<pre>' . htmlspecialchars(var_export($_SERVER, true)) . '</pre>';
 }
-

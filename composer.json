@@ -69,25 +69,32 @@
         "twig/twig": "^1.0"
     },
     "scripts": {
-        "post-update-cmd": [
-            "bdk\\Debug\\ComposerScripts::postUpdate"
-        ],
-        "cs" : [
-            "vendor/bin/phpcs -p --colors ./src"
-        ],
-        "test" : [
-            "vendor/bin/phpunit -v"
-        ],
         "coverage" : [
             "vendor/bin/phpunit -v --coverage-clover coverage/clover.xml --coverage-html coverage/html",
             "php -f tests/coverageChecker.php -- coverage/clover.xml"
         ],
+        "cs" : [
+            "vendor/bin/phpcs -p --colors ./src"
+        ],
+        "post-update-cmd": [
+            "bdk\\Debug\\ComposerScripts::postUpdate"
+        ],
+        "test" : [
+            "vendor/bin/phpunit -v"
+        ],
         "update-phpcs": [
             "bdk\\Debug\\ComposerScripts::updatePhpCsXml"
+        ],
+        "webserver": [
+            "cd tests/docroot; php -S 127.0.0.1:8080 frontController.php; cd ../.."
         ]
     },
     "scripts-descriptions": {
-        "update-phpcs": "update phpcs.xml.dist & phpcs.slevomat.xml"
+        "cpverage": "analyze code coverage",
+        "cs": "check coding standards",
+        "test": "run unit tests",
+        "update-phpcs": "update phpcs.xml.dist & phpcs.slevomat.xml",
+        "webserver": "run php's internal webserver"
     },
     "extra": {
         "laravel": {

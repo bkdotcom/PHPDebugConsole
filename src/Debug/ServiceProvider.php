@@ -59,14 +59,14 @@ class ServiceProvider implements ServiceProviderInterface
             'utility',
         );
 
-        $container['abstracter'] = function (Container $container) {
+        $container['abstracter'] = static function (Container $container) {
             $debug = $container['debug'];
             return new \bdk\Debug\Abstraction\Abstracter($debug, $debug->getCfg('abstracter', \bdk\Debug::CONFIG_INIT));
         };
-        $container['arrayUtil'] = function () {
+        $container['arrayUtil'] = static function () {
             return new \bdk\Debug\Utility\ArrayUtil();
         };
-        $container['backtrace'] = function (Container $container) {
+        $container['backtrace'] = static function (Container $container) {
             $debug = $container['debug'];
             $backtrace = $debug->errorHandler->backtrace;
             $backtrace->addInternalClass(array(
@@ -74,34 +74,34 @@ class ServiceProvider implements ServiceProviderInterface
             ));
             return $backtrace;
         };
-        $container['config'] = function (Container $container) {
+        $container['config'] = static function (Container $container) {
             $debug = $container['debug'];
             return new \bdk\Debug\Config($debug);
         };
-        $container['configEvents'] = function (Container $container) {
+        $container['configEvents'] = static function (Container $container) {
             $debug = $container['debug'];
             return new \bdk\Debug\ConfigEvents($debug);
         };
-        $container['customMethodGeneral'] = function () {
+        $container['customMethodGeneral'] = static function () {
             return new \bdk\Debug\Plugin\CustomMethod\General();
         };
-        $container['customMethodReqRes'] = function () {
+        $container['customMethodReqRes'] = static function () {
             return new \bdk\Debug\Plugin\CustomMethod\ReqRes();
         };
-        $container['data'] = function (Container $container) {
+        $container['data'] = static function (Container $container) {
             $debug = $container['debug'];
             return new \bdk\Debug\Data($debug);
         };
-        $container['errorLevel'] = function () {
+        $container['errorLevel'] = static function () {
             return new \bdk\Debug\Utility\ErrorLevel();
         };
-        $container['errorHandler'] = function (Container $container) {
+        $container['errorHandler'] = static function (Container $container) {
             $debug = $container['debug'];
             $existingInstance = \bdk\ErrorHandler::getInstance();
             $cfg = \array_merge(array(
                 'onEUserError' => null, // don't halt script / log E_USER_ERROR to system_log when 'continueToNormal'
                 'emailer' => array(
-                    'emailBacktraceDumper' => function ($backtrace) use ($debug) {
+                    'emailBacktraceDumper' => static function ($backtrace) use ($debug) {
                         return $debug->getDump('text')->valDumper->dump($backtrace);
                     },
                 ),
@@ -112,90 +112,90 @@ class ServiceProvider implements ServiceProviderInterface
             }
             return new \bdk\ErrorHandler($debug->eventManager, $cfg);
         };
-        $container['eventManager'] = function () {
+        $container['eventManager'] = static function () {
             return new \bdk\PubSub\Manager();
         };
-        $container['findExit'] = function () {
+        $container['findExit'] = static function () {
             return new \bdk\Debug\Utility\FindExit();
         };
-        $container['html'] = function () {
+        $container['html'] = static function () {
             return new \bdk\Debug\Utility\Html();
         };
-        $container['internal'] = function (Container $container) {
+        $container['internal'] = static function (Container $container) {
             $debug = $container['debug'];
             return new \bdk\Debug\Internal($debug);
         };
-        $container['internalEvents'] = function (Container $container) {
+        $container['internalEvents'] = static function (Container $container) {
             $debug = $container['debug'];
             return new \bdk\Debug\InternalEvents($debug);
         };
-        $container['logger'] = function (Container $container) {
+        $container['logger'] = static function (Container $container) {
             $debug = $container['debug'];
             return new \bdk\Debug\Psr3\Logger($debug);
         };
-        $container['methodClear'] = function () {
+        $container['methodClear'] = static function () {
             return new \bdk\Debug\Method\Clear();
         };
-        $container['methodCount'] = function () {
+        $container['methodCount'] = static function () {
             return new \bdk\Debug\Method\Count();
         };
-        $container['methodGroup'] = function (Container $container) {
+        $container['methodGroup'] = static function (Container $container) {
             $debug = $container['debug'];
             return new \bdk\Debug\Method\Group($debug);
         };
-        $container['methodHelper'] = function (Container $container) {
+        $container['methodHelper'] = static function (Container $container) {
             $debug = $container['debug'];
             return new \bdk\Debug\Method\Helper($debug);
         };
-        $container['methodProfile'] = function () {
+        $container['methodProfile'] = static function () {
             return new \bdk\Debug\Method\Profile();
         };
-        $container['methodTable'] = function () {
+        $container['methodTable'] = static function () {
             return new \bdk\Debug\Method\Table();
         };
-        $container['methodTime'] = function () {
+        $container['methodTime'] = static function () {
             return new \bdk\Debug\Method\Time();
         };
-        $container['middleware'] = function (Container $container) {
+        $container['middleware'] = static function (Container $container) {
             $debug = $container['debug'];
             return new \bdk\Debug\Psr15\Middleware($debug);
         };
-        $container['php'] = function () {
+        $container['php'] = static function () {
             return new \bdk\Debug\Utility\Php();
         };
-        $container['phpDoc'] = function () {
+        $container['phpDoc'] = static function () {
             return new \bdk\Debug\Utility\PhpDoc();
         };
-        $container['pluginChannel'] = function () {
+        $container['pluginChannel'] = static function () {
             return new \bdk\Debug\Plugin\Channel();
         };
-        $container['pluginHighlight'] = function () {
+        $container['pluginHighlight'] = static function () {
             return new \bdk\Debug\Plugin\Highlight();
         };
-        $container['pluginLogEnv'] = function () {
+        $container['pluginLogEnv'] = static function () {
             return new \bdk\Debug\Plugin\LogEnv();
         };
-        $container['pluginLogFiles'] = function (Container $container) {
+        $container['pluginLogFiles'] = static function (Container $container) {
             $debug = $container['debug'];
             return new \bdk\Debug\Plugin\LogFiles(
                 $debug->getCfg('logFiles', \bdk\Debug::CONFIG_INIT),
                 $debug
             );
         };
-        $container['pluginLogPhp'] = function () {
+        $container['pluginLogPhp'] = static function () {
             return new \bdk\Debug\Plugin\LogPhp();
         };
-        $container['pluginLogReqRes'] = function () {
+        $container['pluginLogReqRes'] = static function () {
             return new \bdk\Debug\Plugin\LogReqRes();
         };
-        $container['pluginManager'] = function () {
+        $container['pluginManager'] = static function () {
             return new \bdk\Debug\Plugin\Manager();
         };
-        $container['pluginRedaction'] = function () {
+        $container['pluginRedaction'] = static function () {
             return new \bdk\Debug\Plugin\Redaction();
         };
         $container['response'] = null;
-        $container['routeWamp'] = function (Container $container) {
+        $container['routeWamp'] = static function (Container $container) {
             try {
                 $wampPublisher = $container['wampPublisher'];
                 // @codeCoverageIgnoreStart
@@ -206,26 +206,26 @@ class ServiceProvider implements ServiceProviderInterface
             $debug = $container['debug'];
             return new \bdk\Debug\Route\Wamp($debug, $wampPublisher);
         };
-        $container['serverRequest'] = function () {
+        $container['serverRequest'] = static function () {
             // Psr\Http\Message\ServerRequestInterface
             return \bdk\HttpMessage\ServerRequest::fromGlobals();
         };
-        $container['stringUtil'] = function () {
+        $container['stringUtil'] = static function () {
             return new \bdk\Debug\Utility\StringUtil();
         };
-        $container['stopWatch'] = function (Container $container) {
+        $container['stopWatch'] = static function (Container $container) {
             $debug = $container['debug'];
             return new \bdk\Debug\Utility\StopWatch(array(
                 'requestTime' => $debug->getServerParam('REQUEST_TIME_FLOAT'),
             ));
         };
-        $container['utf8'] = function () {
+        $container['utf8'] = static function () {
             return new \bdk\Debug\Utility\Utf8();
         };
-        $container['utility'] = function () {
+        $container['utility'] = static function () {
             return new \bdk\Debug\Utility();
         };
-        $container['wampPublisher'] = function (Container $container) {
+        $container['wampPublisher'] = static function (Container $container) {
             // @codeCoverageIgnoreStart
             if (\class_exists('\\bdk\\WampPublisher') === false) {
                 throw new \RuntimeException('PHPDebugConsole does not include WampPublisher.  Install separately');

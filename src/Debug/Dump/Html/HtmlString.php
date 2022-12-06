@@ -103,7 +103,7 @@ class HtmlString
     public function visualWhiteSpace($str)
     {
         // display \r, \n, & \t
-        $str = \preg_replace_callback('/(\r\n|\r|\n)/', function ($matches) {
+        $str = \preg_replace_callback('/(\r\n|\r|\n)/', static function ($matches) {
             $search = array("\r","\n");
             $replace = array('<span class="ws_r"></span>','<span class="ws_n"></span>' . "\n");
             return \str_replace($search, $replace, $matches[1]);
@@ -306,7 +306,7 @@ class HtmlString
         $attribs['class'][] = 'no-quotes';
         $attribs['class'][] = 't_' . $abs['type'];
         if ($abs['typeMore'] === Abstracter::TYPE_STRING_BASE64 && $abs['brief']) {
-            $this->valDumper->setDumpOpt('postDump', function ($dumped) {
+            $this->valDumper->setDumpOpt('postDump', static function ($dumped) {
                 return '<span class="t_keyword">string</span><span class="text-muted">(base64)</span><span class="t_punct colon">:</span> ' . $dumped;
             });
         }

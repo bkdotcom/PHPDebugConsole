@@ -139,7 +139,7 @@ class ServerLog extends ChromeLogger
         $json = $this->translateJsonValues($json);
         $logDir = $this->cfg['logDir'];
         if (\file_exists($logDir) === false) {
-            \set_error_handler(function () {
+            \set_error_handler(static function () {
                 // ignore error
             });
             \mkdir($logDir, 0755, true);

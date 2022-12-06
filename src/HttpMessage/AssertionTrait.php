@@ -305,7 +305,7 @@ trait AssertionTrait
      */
     protected function assertUploadedFiles($uploadedFiles)
     {
-        \array_walk_recursive($uploadedFiles, function ($val) {
+        \array_walk_recursive($uploadedFiles, static function ($val) {
             if (!($val instanceof UploadedFileInterface)) {
                 throw new InvalidArgumentException(\sprintf(
                     'Invalid file in uploaded files structure. Expected UploadedFileInterface, but %s provided',

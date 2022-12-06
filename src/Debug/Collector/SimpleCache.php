@@ -206,7 +206,7 @@ class SimpleCache implements CacheInterface
      */
     public function getTimeSpent()
     {
-        $time = \array_reduce($this->loggedActions, function ($val, CallInfo $info) {
+        $time = \array_reduce($this->loggedActions, static function ($val, CallInfo $info) {
             return $val + $info->duration;
         });
         return \round($time, 6);
@@ -219,7 +219,7 @@ class SimpleCache implements CacheInterface
      */
     public function getPeakMemoryUsage()
     {
-        return \array_reduce($this->loggedActions, function ($carry, CallInfo $info) {
+        return \array_reduce($this->loggedActions, static function ($carry, CallInfo $info) {
             $mem = $info->memoryUsage;
             return $mem > $carry
                 ? $mem

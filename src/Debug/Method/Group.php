@@ -331,7 +331,7 @@ class Group implements SubscriberInterface
         $lines = \implode('', $lines);
         $tokens = $this->debug->findExit->getTokens($lines, false, false, $caller['line'] - 1);
         return \end($tokens) === '{'
-            && \count(\array_filter($tokens, function ($token) {
+            && \count(\array_filter($tokens, static function ($token) {
                 return \is_array($token) && $token[0] === T_FUNCTION;
             }));
     }

@@ -33,7 +33,7 @@ class Stats extends AbstractComponent implements SubscriberInterface
     public function __construct($cfg = array())
     {
         $this->cfg = array(
-            'dataStoreFactory' => function () {
+            'dataStoreFactory' => static function () {
                 return new StatsStoreFile();
             }
         );

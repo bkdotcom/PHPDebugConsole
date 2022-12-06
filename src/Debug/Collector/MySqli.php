@@ -298,7 +298,7 @@ class MySqli extends mysqliBase
     {
         $debug = $event->getSubject();
         $debug->groupSummary(0);
-        \set_error_handler(function ($errno, $errstr) {
+        \set_error_handler(static function ($errno, $errstr) {
             throw new RuntimeException($errstr, $errno);
         }, E_ALL);
         try {
@@ -423,7 +423,7 @@ class MySqli extends mysqliBase
     {
         $matches = array();
         \preg_match_all('#([^:]+): ([a-zA-Z0-9.]+)\s*#', $this->stat(), $matches);
-        $serverInfo = \array_map(function ($val) {
+        $serverInfo = \array_map(static function ($val) {
             /** @psalm-suppress InvalidOperand */
             return $val * 1;
         }, \array_combine($matches[1], $matches[2]));

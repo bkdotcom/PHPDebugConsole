@@ -40,7 +40,7 @@ trait DatabaseTrait
      */
     public function getTimeSpent()
     {
-        return \array_reduce($this->loggedStatements, function ($val, StatementInfo $info) {
+        return \array_reduce($this->loggedStatements, static function ($val, StatementInfo $info) {
             return $val + $info->duration;
         });
     }
@@ -52,7 +52,7 @@ trait DatabaseTrait
      */
     public function getPeakMemoryUsage()
     {
-        return \array_reduce($this->loggedStatements, function ($carry, StatementInfo $info) {
+        return \array_reduce($this->loggedStatements, static function ($carry, StatementInfo $info) {
             $mem = $info->memoryUsage;
             return $mem > $carry
                 ? $mem

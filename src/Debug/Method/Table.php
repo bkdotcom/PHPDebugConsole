@@ -293,10 +293,10 @@ class Table
             $rows = $rows['traverseValues']
                 ? $rows['traverseValues']
                 : \array_map(
-                    function ($info) {
+                    static function ($info) {
                         return $info['value'];
                     },
-                    \array_filter($rows['properties'], function ($prop) {
+                    \array_filter($rows['properties'], static function ($prop) {
                         return $prop['visibility'] === 'public';
                     })
                 );
@@ -455,7 +455,7 @@ class Table
     private function updateTableInfoRow($rowKey, $rowInfo)
     {
         unset($rowInfo['classes']);
-        $rowInfo = \array_filter($rowInfo, function ($val) {
+        $rowInfo = \array_filter($rowInfo, static function ($val) {
             return $val !== null && $val !== false;
         });
         if (!$rowInfo) {

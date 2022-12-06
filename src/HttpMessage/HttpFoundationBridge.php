@@ -105,7 +105,7 @@ class HttpFoundationBridge
         }
         $stream = new Stream(\fopen('php://temp', 'wb+'));
         if ($response instanceof StreamedResponse || $response instanceof BinaryFileResponse) {
-            \ob_start(function ($buffer) use ($stream) {
+            \ob_start(static function ($buffer) use ($stream) {
                 $stream->write($buffer);
                 return '';
             });
@@ -144,7 +144,7 @@ class HttpFoundationBridge
      */
     private static function getFiles($uploadedFiles)
     {
-        return \array_map(function ($value) {
+        return \array_map(static function ($value) {
             if ($value === null) {
                 return new UploadedFile(
                     null,

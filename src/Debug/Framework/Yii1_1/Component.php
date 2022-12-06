@@ -72,7 +72,7 @@ class Component extends CApplicationComponent implements SubscriberInterface
             (already output to wamp & real-time) routes
         */
         $logEntries = $debugRootInstance->data->get('log');
-        $logEntries = \array_filter($logEntries, function (LogEntry $logEntry) {
+        $logEntries = \array_filter($logEntries, static function (LogEntry $logEntry) {
             return $logEntry->getChannelName() !== 'Session';
         });
         $debugRootInstance->data->set('log', \array_values($logEntries));
@@ -238,7 +238,7 @@ class Component extends CApplicationComponent implements SubscriberInterface
             $refProp = $refObj->getProperty('_models');
             $refProp->setAccessible(true);
             $abs['propertyOverrideValues'] = array(
-                '_models' => \array_map(function ($val) {
+                '_models' => \array_map(static function ($val) {
                     return \get_class($val) . ' (not inspected)';
                 }, $refProp->getValue($obj)),
             );

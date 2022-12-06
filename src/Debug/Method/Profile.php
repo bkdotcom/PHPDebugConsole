@@ -174,10 +174,10 @@ class Profile
             $this->popStack();
         }
         // sort by totalTime descending
-        \uasort($this->data, function ($valA, $valB) {
+        \uasort($this->data, static function ($valA, $valB) {
             return $valA['totalTime'] < $valB['totalTime'] ? 1 : -1;
         });
-        $data =  \array_map(function ($row) {
+        $data =  \array_map(static function ($row) {
             $row['totalTime'] = \round($row['totalTime'], 6);
             $row['ownTime'] = \round($row['ownTime'], 6);
             return $row;

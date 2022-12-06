@@ -168,7 +168,7 @@ class StringUtil
             $isSerialized = \preg_match('/[OC]:\d+:"((?!stdClass)[^"])*":\d+:/', $matches[1]) !== 1;
         }
         if ($isSerialized) {
-            \set_error_handler(function () {
+            \set_error_handler(static function () {
                 // ignore unserialize errors
             });
             $isSerialized = \unserialize($val) !== false;

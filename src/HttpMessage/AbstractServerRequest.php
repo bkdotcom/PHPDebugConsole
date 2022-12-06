@@ -323,7 +323,7 @@ abstract class AbstractServerRequest extends Request
         $str = \str_replace('%5B', '[', $str);
         $str = \preg_replace_callback(
             '/(^|(?<=&))[^=[&]+/',
-            function ($matches) {
+            static function ($matches) {
                 return \bin2hex(\urldecode($matches[0]));
             },
             $str
@@ -339,7 +339,7 @@ abstract class AbstractServerRequest extends Request
         if ($opts['convSpace']) {
             $replace[' '] = '_';
         }
-        $keys = \array_map(function ($key) use ($replace) {
+        $keys = \array_map(static function ($key) use ($replace) {
             return \strtr(\hex2bin($key), $replace);
         }, \array_keys($params));
         return \array_combine($keys, $params);

@@ -52,12 +52,12 @@ class ServiceProvider extends BaseServiceProvider
                 'session' => false,
             ),
             'filepathScript' => './js/Debug.jquery.js',
-            'onError' => function (Error $error) {
+            'onError' => static function (Error $error) {
                 $error['continueToPrevHandler'] = false; // forward error to Laravel Handler?
             },
         ));
         $this->debug = new Debug($config);
-        $this->debug->eventManager->subscribe(Debug::EVENT_LOG, function (LogEntry $logEntry) {
+        $this->debug->eventManager->subscribe(Debug::EVENT_LOG, static function (LogEntry $logEntry) {
             if ($logEntry->getChannelName() === 'general.local') {
                 $logEntry->setMeta('channel', null);
             }
@@ -132,7 +132,7 @@ class ServiceProvider extends BaseServiceProvider
      */
     private function buildDbEventHandler(Debug $dbChannel, $msg, $isGroupEnd = false)
     {
-        return function () use ($dbChannel, $msg, $isGroupEnd) {
+        return static function () use ($dbChannel, $msg, $isGroupEnd) {
             if ($isGroupEnd === false) {
                 $dbChannel->group($msg);
                 return;

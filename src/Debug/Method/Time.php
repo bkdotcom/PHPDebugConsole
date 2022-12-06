@@ -49,7 +49,7 @@ class Time
             'template' => '%label: %time',
             'unit' => 'auto',
         ), $logEntry['meta']);
-        $floats = \array_filter($args, function ($val) {
+        $floats = \array_filter($args, static function ($val) {
             return \is_float($val);
         });
         $args = \array_values(\array_diff_key($args, $floats));

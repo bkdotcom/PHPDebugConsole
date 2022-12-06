@@ -234,7 +234,7 @@ abstract class AbstractErrorHandler extends AbstractComponent
      */
     protected function storeLastError(Error $error)
     {
-        $this->data['lastErrors'] = \array_filter($this->data['lastErrors'], function (Error $error) {
+        $this->data['lastErrors'] = \array_filter($this->data['lastErrors'], static function (Error $error) {
             return !$error['isSuppressed'];
         });
         $this->data['lastErrors'] = \array_slice($this->data['lastErrors'], 0, 1);

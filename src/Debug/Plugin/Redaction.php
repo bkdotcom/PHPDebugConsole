@@ -47,7 +47,7 @@ class Redaction extends AbstractComponent implements SubscriberInterface
      */
     public function __construct()
     {
-        $this->cfg['redactReplace'] = function ($str, $key = null) {
+        $this->cfg['redactReplace'] = static function ($str, $key = null) {
             // "use" our function params so things (ie phpmd) don't complain
             array($str, $key);
             return '█████████';

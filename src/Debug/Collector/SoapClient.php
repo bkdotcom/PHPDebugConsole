@@ -123,7 +123,7 @@ class SoapClient extends SoapClientBase
      */
     private function debugGetFunctions()
     {
-        return \array_map(function ($val) {
+        return \array_map(static function ($val) {
             $matches = null;
             if (\preg_match('/^(\w+) (.+)$/s', $val, $matches)) {
                 $val = $matches[2] . ': ' . $matches[1];

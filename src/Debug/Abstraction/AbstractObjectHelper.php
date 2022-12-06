@@ -48,7 +48,7 @@ class AbstractObjectHelper
         if (PHP_VERSION_ID < 80000) {
             return array();
         }
-        return \array_map(function (ReflectionAttribute $attribute) {
+        return \array_map(static function (ReflectionAttribute $attribute) {
             return array(
                 'name' => $attribute->getName(),
                 'arguments' => $attribute->getArguments(),

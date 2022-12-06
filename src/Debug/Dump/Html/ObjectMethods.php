@@ -138,7 +138,7 @@ class ObjectMethods
             'static' => $info['isStatic'],
         )));
         return ''
-            . \implode(' ', \array_map(function ($modifier) {
+            . \implode(' ', \array_map(static function ($modifier) {
                     return '<span class="t_modifier_' . $modifier . '">' . $modifier . '</span>';
             }, $modifiers));
     }

@@ -314,7 +314,7 @@ class Message implements MessageInterface
     private function normalizeHeaderValue($value)
     {
         $values = (array) $value;
-        $values = \array_map(function ($value) {
+        $values = \array_map(static function ($value) {
             return \trim((string) $value, " \t");
         }, $values);
         return \array_values($values);

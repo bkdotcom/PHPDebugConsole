@@ -135,7 +135,7 @@ class Email implements RouteInterface
     {
         $errorStr = '';
         $errors = $this->debug->errorHandler->get('errors');
-        \uasort($errors, function ($err1, $err2) {
+        \uasort($errors, static function ($err1, $err2) {
             return \strcmp($err1['file'] . $err1['line'], $err2['file'] . $err2['line']);
         });
         $lastFile = '';

@@ -67,7 +67,7 @@ class Php
     public static function getIncludedFiles()
     {
         $includedFiles = \get_included_files();
-        \usort($includedFiles, function ($valA, $valB) {
+        \usort($includedFiles, static function ($valA, $valB) {
             $valA = \str_replace('_', '0', $valA);
             $valB = \str_replace('_', '0', $valB);
             $dirA = \dirname($valA);

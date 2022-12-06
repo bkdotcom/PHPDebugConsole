@@ -331,7 +331,7 @@ class ErrorSummary
         );
         return '<h3>' . $header . '</h3>' . "\n"
             . '<ul class="list-unstyled">' . "\n"
-            . \implode("\n", \array_map(function (Error $error) {
+            . \implode("\n", \array_map(static function (Error $error) {
                 return \sprintf(
                     '<li class="error-%s">%s: %s (line %s): %s</li>',
                     $error['category'],

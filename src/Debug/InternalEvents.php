@@ -506,7 +506,7 @@ class InternalEvents implements SubscriberInterface
             // see if we handled any unsupressed errors of types specified with emailMask
             $errors = $this->debug->errorHandler->get('errors');
             $emailMask = $this->debug->errorHandler->emailer->getCfg('emailMask');
-            $emailableErrors = \array_filter($errors, function ($error) use ($emailMask) {
+            $emailableErrors = \array_filter($errors, static function ($error) use ($emailMask) {
                 return !$error['isSuppressed'] && ($error['type'] & $emailMask);
             });
             return !empty($emailableErrors);

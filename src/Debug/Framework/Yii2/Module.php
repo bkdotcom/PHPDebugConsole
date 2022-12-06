@@ -99,7 +99,7 @@ class Module extends BaseModule implements SubscriberInterface, BootstrapInterfa
             (already output to wamp & real-time) routes
         */
         $logEntries = $debugRootInstance->data->get('log');
-        $logEntries = \array_filter($logEntries, function (LogEntry $logEntry) {
+        $logEntries = \array_filter($logEntries, static function (LogEntry $logEntry) {
             return $logEntry->getChannelName() !== 'Session';
         });
         $debugRootInstance->data->set('log', \array_values($logEntries));
@@ -332,7 +332,7 @@ class Module extends BaseModule implements SubscriberInterface, BootstrapInterfa
             $tableData[$key] = $info;
         }
 
-        \usort($tableData, function ($infoA, $infoB) {
+        \usort($tableData, static function ($infoA, $infoB) {
             $cmp = \strcmp($infoA['senderClass'], $infoB['senderClass']);
             if ($cmp) {
                 return $cmp;

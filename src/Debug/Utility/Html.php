@@ -404,7 +404,7 @@ class Html
         if (\is_array($values) === false) {
             $values = \explode(' ', $values);
         }
-        $values = \array_map(function ($key, $val) {
+        $values = \array_map(static function ($key, $val) {
             return \is_bool($val)
                 ? ($val ?  $key : null)
                 : $val;

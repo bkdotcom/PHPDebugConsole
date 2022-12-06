@@ -184,7 +184,7 @@ class ErrorLevel
         $flagsOn = \count($flagsOn) > 1 && $flagsOff
             ? '( ' . \implode(' | ', $flagsOn) . ' )'
             : \implode(' | ', $flagsOn);
-        $flagsOff = \implode('', \array_map(function ($flag) {
+        $flagsOff = \implode('', \array_map(static function ($flag) {
             return ' & ~' . $flag;
         }, $flagsOff));
         return $flagsOn . $flagsOff;

@@ -494,7 +494,7 @@ class AbstractDebug
      */
     private function serviceProviderToArray($val)
     {
-        $getContainerRawVals = function (Container $container) {
+        $getContainerRawVals = static function (Container $container) {
             $keys = $container->keys();
             $return = array();
             foreach ($keys as $key) {

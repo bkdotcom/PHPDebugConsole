@@ -210,7 +210,7 @@ class AbstractObject extends AbstractComponent
      */
     public static function buildObjValues($values = array())
     {
-        $cfgFlags = \array_reduce(self::$cfgFlags, function ($carry, $val) {
+        $cfgFlags = \array_reduce(self::$cfgFlags, static function ($carry, $val) {
             return $carry | $val;
         }, 0);
         $cfgFlags &= ~self::BRIEF;
@@ -454,7 +454,7 @@ class AbstractObject extends AbstractComponent
     private function getCfgFlags()
     {
         $flagVals = \array_intersect_key(self::$cfgFlags, \array_filter($this->cfg));
-        $bitmask = \array_reduce($flagVals, function ($carry, $val) {
+        $bitmask = \array_reduce($flagVals, static function ($carry, $val) {
             return $carry | $val;
         }, 0);
         if ($bitmask & self::BRIEF) {
@@ -583,7 +583,7 @@ class AbstractObject extends AbstractComponent
         $propsAlwaysAvail = array(
             'client_info','client_version','connect_errno','connect_error','errno','error','stat'
         );
-        \set_error_handler(function () {
+        \set_error_handler(static function () {
             // ignore error
         });
         $refObject = $abs['reflector'];
@@ -610,7 +610,7 @@ class AbstractObject extends AbstractComponent
             test if stat() throws an error (ie "Property access is not allowed yet")
             if so, don't collect property values
         */
-        \set_error_handler(function ($errno, $errstr) {
+        \set_error_handler(static function ($errno, $errstr) {
             throw new RuntimeException($errstr, $errno); // @codeCoverageIgnore
         }, E_ALL);
         try {

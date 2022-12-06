@@ -198,7 +198,7 @@ abstract class AbstractUri
      */
     private static function regexEncode($regex, $str)
     {
-        return \preg_replace_callback($regex, function ($matches) {
+        return \preg_replace_callback($regex, static function ($matches) {
             return \rawurlencode($matches[0]);
         }, $str);
     }

@@ -426,7 +426,7 @@ class UploadedFile implements UploadedFileInterface
     private function getStreamFromFile()
     {
         $errMsg = '';
-        \set_error_handler(function ($type, $msg) use (&$errMsg) {
+        \set_error_handler(static function ($type, $msg) use (&$errMsg) {
             $errMsg = '(' . $type . ') ' . $msg;
         });
         $resource = \fopen($this->file, 'r');
@@ -464,7 +464,7 @@ class UploadedFile implements UploadedFileInterface
     private function moveFile($targetPath)
     {
         $errMsg = '';
-        \set_error_handler(function ($type, $msg) use (&$errMsg) {
+        \set_error_handler(static function ($type, $msg) use (&$errMsg) {
             $errMsg = $msg;
         });
         $success = $this->sapi === 'cli'

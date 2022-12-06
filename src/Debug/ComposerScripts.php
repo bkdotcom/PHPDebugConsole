@@ -117,7 +117,7 @@ class ComposerScripts
             convert relative paths to absolute
         */
         $regex = '#(<config name="installed_paths" value=")([^"]+)#';
-        $xml = \preg_replace_callback($regex, function ($matches) {
+        $xml = \preg_replace_callback($regex, static function ($matches) {
             $baseDir = \realpath(__DIR__ . '/../..') . '/';
             $paths = \preg_split('/,\s*/', $matches[2]);
             foreach ($paths as $i => $path) {

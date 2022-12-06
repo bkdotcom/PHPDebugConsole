@@ -275,7 +275,7 @@ class ChromeLogger extends AbstractRoute
             'session.cache_limiter',
             'session_save_path',
         );
-        $summaryRemoveRegex = '/^(' . \implode('|', \array_map(function ($val) {
+        $summaryRemoveRegex = '/^(' . \implode('|', \array_map(static function ($val) {
             return \preg_quote($val, '/');
         }, $summaryRemove)) . ')/';
         foreach ($this->data['logSummary'] as $priority => $logEntries) {

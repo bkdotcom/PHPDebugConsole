@@ -141,7 +141,7 @@ class AbstractObjectMethodParams
     {
         $params = array();
         $collectAttribute = $this->abs['cfgFlags'] & AbstractObject::PARAM_ATTRIBUTE_COLLECT;
-        \set_error_handler(function () {
+        \set_error_handler(static function () {
             // suppressing "Use of undefined constant STDERR" type notice
             // encountered on
             //    $refParameter->getDefaultValue()

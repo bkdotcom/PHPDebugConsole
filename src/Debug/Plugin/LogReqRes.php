@@ -142,7 +142,7 @@ class LogReqRes implements SubscriberInterface
         if (!$files) {
             return;
         }
-        $files = $this->debug->arrayUtil->mapRecursive(function ($uploadedFile) {
+        $files = $this->debug->arrayUtil->mapRecursive(static function ($uploadedFile) {
             return array(
                 'error' => $uploadedFile->getError(),
                 'name' => $uploadedFile->getClientFilename(),
@@ -351,7 +351,7 @@ class LogReqRes implements SubscriberInterface
      */
     private function logResponseHeaders()
     {
-        $headers = \array_map(function ($vals) {
+        $headers = \array_map(static function ($vals) {
             return \implode("\n", $vals);
         }, $this->debug->getResponseHeaders());
         $this->debug->table('response headers', $headers);

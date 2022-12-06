@@ -122,7 +122,7 @@ abstract class AbstractStream
      */
     protected function setResourceFile($file)
     {
-        \set_error_handler(function () {
+        \set_error_handler(static function () {
         });
         $this->resource = \fopen($file, 'r');
         \restore_error_handler();

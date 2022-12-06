@@ -89,10 +89,10 @@ class FindExit
         if ($addOpen) {
             \array_shift($tokens);
         }
-        $tokens = \array_filter($tokens, function ($token) use ($inclWhitespace) {
+        $tokens = \array_filter($tokens, static function ($token) use ($inclWhitespace) {
             return $inclWhitespace || \is_array($token) === false || $token[0] !== T_WHITESPACE;
         });
-        $tokens = \array_map(function ($token) use ($startLine) {
+        $tokens = \array_map(static function ($token) use ($startLine) {
             if (\is_array($token) === false) {
                 return $token;
             }

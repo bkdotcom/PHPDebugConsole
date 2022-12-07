@@ -90,7 +90,7 @@
         ]
     },
     "scripts-descriptions": {
-        "cpverage": "analyze code coverage",
+        "coverage": "analyze code coverage",
         "cs": "check coding standards",
         "test": "run unit tests",
         "update-phpcs": "update phpcs.xml.dist & phpcs.slevomat.xml",

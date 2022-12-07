@@ -229,7 +229,11 @@ class AbstractString extends AbstractComponent
         $absValues['value'] = $this->debug->utf8->strcut($absValues['valueRaw'], 0, $absValues['maxlen']);
         $absValues['valueDecoded'] = $this->cfg['brief']
             ? null
-            : $this->abstracter->crate(\unserialize($absValues['valueRaw']));
+            : $this->abstracter->crate(
+                // using unserializeSafe for good measure
+                //   only safe-to-decode values should have made it this far
+                $this->debug->php->unserializeSafe($absValues['valueRaw'])
+            );
         return $absValues;
     }
 

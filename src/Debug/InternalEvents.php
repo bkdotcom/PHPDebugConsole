@@ -127,6 +127,7 @@ class InternalEvents implements SubscriberInterface
     public function onError(Error $error)
     {
         if ($error['throw']) {
+            // subscriber should have stopped error propagation
             return;
         }
         $cfgWas = $this->forceErrorOutput($error)

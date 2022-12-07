@@ -104,14 +104,20 @@ class SoapClient extends SoapClientBase
     #[\ReturnTypeWillChange]
     public function __doRequest($request, $location, $action, $version, $oneWay = 0)
     {
-        $xmlResponse = parent::__doRequest($request, $location, $action, $version, $oneWay);
+        $exception = null;
+        try {
+            $xmlResponse = parent::__doRequest($request, $location, $action, $version, $oneWay);
+        } catch (SoapFault $e) {
+            // we'll rethrow bellow
+        }
         $this->setLastRequest($request);
         $this->setLastResponse($xmlResponse);
-        $backtrace = \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
-        $prevFrame = \end($backtrace);
-        if ($prevFrame['function'] !== '__call') {
+        if ($this->isViaCall() === false) {
             // __doRequest called directly
-            $this->logReqRes($action, null, true);
+            $this->logReqRes($action, $exception, true);
+        }
+        if ($exception) {
+            throw $exception;
         }
         return $xmlResponse;
     }
@@ -167,7 +173,11 @@ class SoapClient extends SoapClientBase
         if (!$requestXml) {
             return null;
         }
+        \set_error_handler(static function () {
+            // suppress DOMDocument::loadXML warnings
+        });
         $this->dom->loadXML($requestXml);
+        \restore_error_handler();
         if (!$action) {
             $envelope = $this->dom->childNodes->item(0);
             $body = $envelope->childNodes->item(0)->localName !== 'Header'
@@ -225,6 +235,28 @@ class SoapClient extends SoapClientBase
     }
 
     /**
+     * Check if __call is in backtracew
+     *
+     * @return bool
+     */
+    private function isViaCall()
+    {
+        $backtrace = \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10);
+        foreach ($backtrace as $frame) {
+            $frame = \array_merge(array(
+                'function' => null,
+                'class' => null,
+                'type' => null,
+            ), $frame);
+            $func = $frame['class'] . $frame['type'] . $frame['function'];
+            if ($func === 'SoapClient->__call') {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Log constructor
      *
      * @param string         $wsdl      URI of the WSDL file or NULL if working in non-WSDL mode.
@@ -277,8 +309,11 @@ class SoapClient extends SoapClientBase
             $this->debug->log('request headers', $this->__getLastRequestHeaders(), $this->debug->meta('redact'));
             $this->logXml('request body', $xmlRequest);
         }
+        $responseHeaders = $this->__getLastResponseHeaders();
+        if ($responseHeaders) {
+            $this->debug->log('response headers', $responseHeaders, $this->debug->meta('redact'));
+        }
         if ($xmlResponse) {
-            $this->debug->log('response headers', $this->__getLastResponseHeaders(), $this->debug->meta('redact'));
             $this->logXml('response body', $xmlResponse);
         }
         if ($exception) {

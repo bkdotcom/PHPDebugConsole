@@ -85,7 +85,7 @@ class Error extends Event
         'continueToPrevHandler' => true,
         'exception'     => null,
         'hash'          => null,
-        'isFirstOccur'  => true,
+        'isFirstOccur'  => true,    // per error  (ie a error inside a loop, or inside a functon called multiple times)
         'isHtml'        => false,
         'isSuppressed'  => false,
         'throw'         => false,   // whether to throw as exception (fatal errors never throw)

@@ -144,7 +144,7 @@ class HtmlStringEncoded
                 ),
                 'role' => 'tabpanel',
             ),
-            $tabBody,
+            $tabBody
         ) . "\n";
     }
 

@@ -47,7 +47,7 @@ class ObjectTest extends DebugTestFramework
 
         // Code Coverage:
         // clear the method cache so that we inspect the methods during the tests
-        $this->helper->setPrivateProp('bdk\Debug\Abstraction\AbstractObjectMethods', 'methodCache', array());
+        $this->helper->setProp('bdk\Debug\Abstraction\AbstractObjectMethods', 'methodCache', array());
     }
 
     public function providerTestMethod()

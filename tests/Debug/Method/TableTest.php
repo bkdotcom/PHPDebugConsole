@@ -40,7 +40,7 @@ class TableTest extends DebugTestFramework
         // $debugProp = new ReflectionProperty($this->debug->methodTable, 'debug');
         // $debugProp->setAccessible(true);
         // $debugProp->setValue($this->debug->methodTable, $this->debug);
-        $this->helper->setPrivateProp($this->debug->methodTable, 'debug', $this->debug);
+        $this->helper->setProp($this->debug->methodTable, 'debug', $this->debug);
         $colKeysMeth = new ReflectionMethod($this->debug->methodTable, 'colKeys');
         $colKeysMeth->setAccessible(true);
         $array = array(
@@ -705,13 +705,13 @@ EOD;
                                 <li class="t_string"><span class="binary">' . $binaryStr . '</span></li>
                             </ul></td></tr>
                         <tr><th class="t_int t_key text-right" scope="row">1</th><td class="string-encoded tabs-container" data-type-more="json">
-                            <nav role="tablist"><a class="nav-link" data-target=".string-raw" data-toggle="tab" role="tab">json</a><a class="active nav-link" data-target=".string-decoded" data-toggle="tab" role="tab">decoded</a></nav>
-                            <div class="string-raw tab-pane" role="tabpanel"><span class="value-container" data-type="string"><span class="prettified">(prettified)</span> <span class="highlight language-json no-quotes t_string">{
+                            <nav role="tablist"><a class="nav-link" data-target=".tab-1" data-toggle="tab" role="tab">json</a><a class="active nav-link" data-target=".tab-2" data-toggle="tab" role="tab">decoded</a></nav>
+                            <div class="tab-1 tab-pane" role="tabpanel"><span class="value-container" data-type="string"><span class="prettified">(prettified)</span> <span class="highlight language-json no-quotes t_string">{
                                 &quot;poop&quot;: &quot;\ud83d\udca9&quot;,
                                 &quot;int&quot;: 42,
                                 &quot;password&quot;: &quot;secret&quot;
                             }</span></span></div>
-                            <div class="active string-decoded tab-pane" role="tabpanel"><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
+                            <div class="active tab-2 tab-pane" role="tabpanel"><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
                                 <ul class="array-inner list-unstyled">
                                     <li><span class="t_key">poop</span><span class="t_operator">=&gt;</span><span class="t_string">💩</span></li>
                                     <li><span class="t_key">int</span><span class="t_operator">=&gt;</span><span class="t_int">42</span></li>

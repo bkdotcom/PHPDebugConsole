@@ -26,7 +26,7 @@ if (\method_exists($refMethod, 'hasReturnType') && $refMethod->hasReturnType()) 
 } elseif (\method_exists($refParameters[1], 'hasType') && $refParameters[1]->hasType()) {
     // psr/log 2.0
     require __DIR__ . '/MethodSignatureCompatTrait_2.php';
-} else {
+} elseif (\trait_exists(__NAMESPACE__ . '\\MethodSignatureCompatTrait', false) === false) {
     // psr/log 1.0
     trait MethodSignatureCompatTrait
     {

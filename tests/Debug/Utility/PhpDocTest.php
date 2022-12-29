@@ -22,13 +22,13 @@ class PhpDocTest extends TestCase
         // $reflector = new \ReflectionProperty('bdk\Debug\Utility\PhpDoc', 'cache');
         // $reflector->setAccessible(true);
         // $reflector->setValue(array());
-        \bdk\Test\Debug\Helper::setPrivateProp('bdk\Debug\Utility\PhpDoc', 'cache', array());
+        \bdk\Test\Debug\Helper::setProp('bdk\Debug\Utility\PhpDoc', 'cache', array());
     }
 
     public function testConstruct()
     {
         $phpDoc = new PhpDoc();
-        $parsers = \bdk\Test\Debug\Helper::getPrivateProp($phpDoc, 'parsers');
+        $parsers = \bdk\Test\Debug\Helper::getProp($phpDoc, 'parsers');
         $this->assertIsArray($parsers);
         $this->assertNotEmpty($parsers, 'Parsers is empty');
     }

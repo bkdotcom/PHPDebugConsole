@@ -21,7 +21,7 @@ class RedactionTest extends DebugTestFramework
                 'x-api-key',
             ),
         ));
-        $cfg = $this->helper->getPrivateProp($this->debug->pluginRedaction, 'cfg');
+        $cfg = $this->helper->getProp($this->debug->pluginRedaction, 'cfg');
         $this->assertSame(array(
             'password',
             'x-api-key',
@@ -38,6 +38,24 @@ class RedactionTest extends DebugTestFramework
             ))
         );
         return array(
+            'url' => array(
+                'log',
+                array(
+                    'https://joe:secret@test.com/?zig=zag&password=snusnu&foo=bar',
+                    Debug::meta('redact'),
+                ),
+                array(
+                    'entry' => array(
+                        'method' => 'log',
+                        'args' => array(
+                            'https://joe:█████████@test.com/?zig=zag&password=█████████&foo=bar'
+                        ),
+                        'meta' => array(
+                            'redact' => true,
+                        )
+                    ),
+                )
+            ),
             'base64' => array(
                 'log',
                 array(

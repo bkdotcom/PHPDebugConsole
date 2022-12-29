@@ -207,6 +207,10 @@ class Redaction extends AbstractComponent implements SubscriberInterface
         if (\is_string($key) && \array_key_exists($key, $this->cfg['redactKeys'])) {
             return \call_user_func($this->cfg['redactReplace'], $val, $key);
         }
+        $val = \preg_replace_callback('#(https?://\w+:)(\w+)(@)#', function ($matches) {
+            $replacement = \call_user_func($this->cfg['redactReplace'], $matches[2]);
+            return $matches[1] . $replacement . $matches[3];
+        }, $val);
         foreach ($this->cfg['redactKeys'] as $key => $regex) {
             $val = \preg_replace_callback($regex, function ($matches) use ($key) {
                 $matches = \array_filter($matches, 'strlen');

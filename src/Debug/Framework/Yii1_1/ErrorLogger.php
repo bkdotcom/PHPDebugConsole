@@ -85,6 +85,7 @@ class ErrorLogger implements SubscriberInterface
         if ($this->isIgnorableError($error)) {
             $error->stopPropagation();          // don't log it now
             $error['isSuppressed'] = true;
+            $error['continueToNormal'] = false;
             $this->ignoredErrors[] = $error['hash'];
         }
         if ($error['category'] !== Error::CAT_FATAL) {

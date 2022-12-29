@@ -14,7 +14,9 @@ namespace bdk\Debug\Dump\Html;
 
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Dump\Html\HtmlStringEncoded;
 use bdk\Debug\Dump\Html\Value as ValDumper;
+use RuntimeException;
 
 /**
  * Output object as HTML
@@ -23,9 +25,12 @@ class HtmlString
 {
     public $detectFiles = false;
 
-    protected $debug;
-    protected $html;
-    protected $valDumper;
+    public $debug;
+    public $valDumper;
+
+    protected $lazy = array(
+        'dumpEncoded' => null,
+    );
 
     /**
      * Constructor
@@ -36,6 +41,30 @@ class HtmlString
     {
         $this->debug = $valDumper->debug;
         $this->valDumper = $valDumper;
+    }
+
+    /**
+     * Magic method to get inaccessible / undefined properties
+     * Lazy load child classes
+     *
+     * @param string $property property name
+     *
+     * @return mixed property value
+     *
+     * @throws RuntimeException if no getter defined
+     */
+    public function __get($property)
+    {
+        if (isset($this->lazy[$property])) {
+            return $this->lazy[$property];
+        }
+        $getter = 'get' . \ucfirst($property);
+        if (!\method_exists($this, $getter)) {
+            throw new RuntimeException('Access to undefined property: ' . __CLASS__ . '::' . $property);
+        }
+        $val = $this->{$getter}();
+        $this->lazy[$property] = $val;
+        return $val;
     }
 
     /**
@@ -94,6 +123,23 @@ class HtmlString
     }
 
     /**
+     * Is value encoded (ie base64, json, or serialized)
+     *
+     * @param mixed $val string value (or abstraction)
+     *
+     * @return bool
+     */
+    public function isEncoded($val)
+    {
+        $typesEncoded = array(
+            Abstracter::TYPE_STRING_BASE64,
+            Abstracter::TYPE_STRING_JSON,
+            Abstracter::TYPE_STRING_SERIALIZED,
+        );
+        return $val instanceof Abstraction && \in_array($val['typeMore'], $typesEncoded, true);
+    }
+
+    /**
      * Add whitespace markup
      *
      * @param string $str string which to add whitespace html markup
@@ -125,13 +171,8 @@ class HtmlString
             return $this->dumpClassname($abs);
         }
         $val = $this->dumpHelper($abs['value']);
-        $typesEncoded = array(
-            Abstracter::TYPE_STRING_BASE64,
-            Abstracter::TYPE_STRING_JSON,
-            Abstracter::TYPE_STRING_SERIALIZED,
-        );
-        if (\in_array($abs['typeMore'], $typesEncoded, true)) {
-            return $this->dumpEncoded($val, $abs);
+        if ($this->isEncoded($abs)) {
+            return $this->dumpEncoded->dump($val, $abs);
         }
         if ($abs['typeMore'] === Abstracter::TYPE_STRING_BINARY) {
             return $this->dumpBinary($val, $abs);
@@ -256,104 +297,6 @@ class HtmlString
     }
 
     /**
-     * Dump encoded string (base64, json, serialized)
-     *
-     * @param string      $val raw value dumped
-     * @param Abstraction $abs full value abstraction
-     *
-     * @return string
-     */
-    private function dumpEncoded($val, Abstraction $abs)
-    {
-        $vals = $this->dumpEncodedInitVals($val, $abs);
-        $vals = $this->dumpEncodedUpdateVals($vals, $abs);
-        if ($abs['brief']) {
-            return $vals['valRaw'];
-        }
-        $val = $this->debug->html->buildTag(
-            $this->valDumper->getDumpOpt('tagName'),
-            array(
-                'class' => 'string-encoded tabs-container',
-                'data-type-more' => $abs['typeMore'], // dumpEncodedUpdateVals may set to null,
-            ),
-            "\n"
-            . '<nav role="tablist">'
-                . '<a class="nav-link" data-target=".string-raw" data-toggle="tab" role="tab">{labelRaw}</a>'
-                . '<a class="active nav-link" data-target=".string-decoded" data-toggle="tab" role="tab">{labelDecoded}</a>'
-            . '</nav>' . "\n"
-            . '<div class="string-raw tab-pane" role="tabpanel">'
-                . '{valRaw}'
-            . '</div>' . "\n"
-            . '<div class="active string-decoded tab-pane" role="tabpanel">'
-                . '{valDecoded}'
-            . '</div>' . "\n"
-        );
-        $this->valDumper->setDumpOpt('tagName', null);
-        return $this->debug->stringUtil->interpolate($val, $vals);
-    }
-
-    /**
-     * Dump encoded string (base64, json, serialized)
-     *
-     * @param string      $val raw value dumped
-     * @param Abstraction $abs full value abstraction
-     *
-     * @return string
-     */
-    private function dumpEncodedInitVals($val, Abstraction $abs)
-    {
-        $attribs = $this->valDumper->getDumpOpt('attribs');
-        $attribs['class'][] = 'no-quotes';
-        $attribs['class'][] = 't_' . $abs['type'];
-        if ($abs['typeMore'] === Abstracter::TYPE_STRING_BASE64 && $abs['brief']) {
-            $this->valDumper->setDumpOpt('postDump', static function ($dumped) {
-                return '<span class="t_keyword">string</span><span class="text-muted">(base64)</span><span class="t_punct colon">:</span> ' . $dumped;
-            });
-        }
-        return array(
-            'labelDecoded' => 'Decoded',
-            'labelRaw' => 'Raw',
-            'valDecoded' => $this->valDumper->dump($abs['valueDecoded']),
-            'valRaw' => $this->debug->html->buildTag('span', $attribs, $val),
-        );
-    }
-
-    /**
-     * Set string interpolation context values]
-     *
-     * @param array       $vals context values for string interpolation
-     * @param Abstraction $abs  full value abstraction
-     *
-     * @return array
-     */
-    private function dumpEncodedUpdateVals($vals, Abstraction $abs)
-    {
-        switch ($abs['typeMore']) {
-            case Abstracter::TYPE_STRING_BASE64:
-                $vals['labelDecoded'] = 'decoded';
-                $vals['labelRaw'] = 'base64';
-                if ($abs['strlen']) {
-                    $vals['valRaw'] .= '<span class="maxlen">&hellip; ' . ($abs['strlen'] - \strlen($abs['value'])) . ' more bytes (not logged)</span>';
-                }
-                break;
-            case Abstracter::TYPE_STRING_JSON:
-                $vals['labelDecoded'] = 'decoded';
-                $vals['labelRaw'] = 'json';
-                if ($abs['prettified'] || $abs['strlen']) {
-                    $abs['typeMore'] = null; // unset typeMore to prevent loop
-                    $vals['valRaw'] = $this->valDumper->dump($abs);
-                    $abs['typeMore'] = 'json';
-                }
-                break;
-            case Abstracter::TYPE_STRING_SERIALIZED:
-                $vals['labelDecoded'] = 'unserialized';
-                $vals['labelRaw'] = 'serialized';
-                break;
-        }
-        return $vals;
-    }
-
-    /**
      * Sanitize and dump string.
      *
      * @param string $val string value to dump
@@ -371,5 +314,18 @@ class HtmlString
             $val = $this->visualWhiteSpace($val);
         }
         return $val;
+    }
+
+    /**
+     * lazy load HtmlStringEncoded instance
+     *
+     * @return HtmlStringEncoded
+     */
+    protected function getDumpEncoded()
+    {
+        if (isset($this->lazy['dumpEncoded'])) {
+            return $this->lazy['dumpEncoded'];
+        }
+        return new HtmlStringEncoded($this);
     }
 }

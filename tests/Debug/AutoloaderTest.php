@@ -32,7 +32,7 @@ class AutoloaderTest extends DebugTestFramework
 
     public function testAutoloadClassMap()
     {
-        $classMap = $this->helper->getPrivateProp(static::$autoloader, 'classMap');
+        $classMap = $this->helper->getProp(static::$autoloader, 'classMap');
         $autoloadMethod = new \ReflectionMethod(static::$autoloader, 'autoload');
         $autoloadMethod->setAccessible(true);
         foreach (\array_keys($classMap) as $class) {

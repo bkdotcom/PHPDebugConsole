@@ -15,12 +15,20 @@ use bdk\Test\Debug\DebugTestFramework;
  * @covers \bdk\Debug\Dump\BaseValue
  * @covers \bdk\Debug\Dump\Html
  * @covers \bdk\Debug\Dump\Html\HtmlString
+ * @covers \bdk\Debug\Dump\Html\HtmlStringEncoded
  * @covers \bdk\Debug\Dump\Text
  * @covers \bdk\Debug\Dump\TextAnsiValue
  * @covers \bdk\Debug\Dump\TextValue
  */
 class StringTest extends DebugTestFramework
 {
+    public static function setUpBeforeClass(): void
+    {
+        $debug = Debug::getInstance();
+        $htmlString = $debug->getDump('html')->valDumper->string;
+        \bdk\Test\Debug\Helper::setProp($htmlString, 'lazy', array());
+    }
+
     public function providerTestMethod()
     {
         $ts = \time();
@@ -286,9 +294,9 @@ EOD;
                         ''
                     ),
                     'html' => '<li class="m_log"><span class="string-encoded tabs-container" data-type-more="base64">' . "\n"
-                        . '<nav role="tablist"><a class="nav-link" data-target=".string-raw" data-toggle="tab" role="tab">base64</a><a class="active nav-link" data-target=".string-decoded" data-toggle="tab" role="tab">decoded</a></nav>' . "\n"
-                        . '<div class="string-raw tab-pane" role="tabpanel"><span class="no-quotes t_string">' . $base64snip . '</span><span class="maxlen">&hellip; 10696 more bytes (not logged)</span></div>' . "\n"
-                        . '<div class="active string-decoded tab-pane" role="tabpanel"><span class="t_keyword">string</span><span class="text-muted">(binary)</span>' . "\n"
+                        . '<nav role="tablist"><a class="nav-link" data-target=".tab-1" data-toggle="tab" role="tab">base64</a><a class="active nav-link" data-target=".tab-2" data-toggle="tab" role="tab">decoded</a></nav>' . "\n"
+                        . '<div class="tab-1 tab-pane" role="tabpanel"><span class="no-quotes t_string">' . $base64snip . '</span><span class="maxlen">&hellip; 10696 more bytes (not logged)</span></div>' . "\n"
+                        . '<div class="active tab-2 tab-pane" role="tabpanel"><span class="t_keyword">string</span><span class="text-muted">(binary)</span>' . "\n"
                         . '<ul class="list-unstyled value-container" data-type="string" data-type-more="binary">' . "\n"
                         . '<li>mime type = <span class="content-type t_string">%s</span></li>' . "\n"
                         . '<li>size = <span class="t_int">%d</span></li>' . "\n"
@@ -335,24 +343,21 @@ EOD;
                         null,
                         '',
                     ),
-                    'html' => '<li class="m_log"><span class="string-encoded tabs-container" data-type-more="base64">' . "\n"
-                        . '<nav role="tablist"><a class="nav-link" data-target=".string-raw" data-toggle="tab" role="tab">base64</a><a class="active nav-link" data-target=".string-decoded" data-toggle="tab" role="tab">decoded</a></nav>' . "\n"
-                        . '<div class="string-raw tab-pane" role="tabpanel"><span class="no-quotes t_string">' . $base64snip2 . '</span></div>' . "\n"
-                        . '<div class="active string-decoded tab-pane" role="tabpanel"><span class="string-encoded tabs-container" data-type-more="json">' . "\n"
-                            . '<nav role="tablist"><a class="nav-link" data-target=".string-raw" data-toggle="tab" role="tab">json</a><a class="active nav-link" data-target=".string-decoded" data-toggle="tab" role="tab">decoded</a></nav>' . "\n"
-                            . '<div class="string-raw tab-pane" role="tabpanel"><span class="value-container" data-type="string"><span class="prettified">(prettified)</span> <span class="highlight language-json no-quotes t_string">{' . "\n"
-                                . '&quot;poop&quot;: &quot;\ud83d\udca9&quot;,' . "\n"
-                                . '&quot;int&quot;: 42,' . "\n"
-                                . '&quot;password&quot;: &quot;█████████&quot;' . "\n"
-                                . '}</span></span></div>' . "\n"
-                            . '<div class="active string-decoded tab-pane" role="tabpanel"><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>' . "\n"
-                                . '<ul class="array-inner list-unstyled">' . "\n"
-                                . '<li><span class="t_key">poop</span><span class="t_operator">=&gt;</span><span class="t_string">💩</span></li>' . "\n"
-                                . '<li><span class="t_key">int</span><span class="t_operator">=&gt;</span><span class="t_int">42</span></li>' . "\n"
-                                . '<li><span class="t_key">password</span><span class="t_operator">=&gt;</span><span class="t_string">█████████</span></li>' . "\n"
-                                . '</ul><span class="t_punct">)</span></span></div>' . "\n"
-                        . '</span></div>' . "\n"
-                        . '</span></li>',
+                    'html' => '<li class="m_log"><span class="string-encoded tabs-container" data-type-more="base64">
+                        <nav role="tablist"><a class="nav-link" data-target=".tab-1" data-toggle="tab" role="tab">base64</a><a class="nav-link" data-target=".tab-2" data-toggle="tab" role="tab">json</a><a class="active nav-link" data-target=".tab-3" data-toggle="tab" role="tab">decoded</a></nav>
+                        <div class="tab-1 tab-pane" role="tabpanel"><span class="no-quotes t_string">' . $base64snip2 . '</span></div>
+                        <div class="tab-2 tab-pane" role="tabpanel"><span class="value-container" data-type="string"><span class="prettified">(prettified)</span> <span class="highlight language-json no-quotes t_string">{
+                            &quot;poop&quot;: &quot;\ud83d\udca9&quot;,
+                            &quot;int&quot;: 42,
+                            &quot;password&quot;: &quot;█████████&quot;
+                        }</span></span></div>
+                        <div class="active tab-3 tab-pane" role="tabpanel"><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
+                            <ul class="array-inner list-unstyled">
+                                <li><span class="t_key">poop</span><span class="t_operator">=&gt;</span><span class="t_string">💩</span></li>
+                                <li><span class="t_key">int</span><span class="t_operator">=&gt;</span><span class="t_int">42</span></li>
+                                <li><span class="t_key">password</span><span class="t_operator">=&gt;</span><span class="t_string">█████████</span></li>
+                            </ul><span class="t_punct">)</span></span></div>
+                        </span></li>',
                     'script' => 'console.log("' . $base64snip2 . '");',
                     'text' => $base64snip2,
                 )
@@ -536,9 +541,9 @@ EOD;
                         'meta' => array(),
                     ),
                     'html' => '<li class="m_log"><span class="string-encoded tabs-container" data-type-more="serialized">' . "\n"
-                        . '<nav role="tablist"><a class="nav-link" data-target=".string-raw" data-toggle="tab" role="tab">serialized</a><a class="active nav-link" data-target=".string-decoded" data-toggle="tab" role="tab">unserialized</a></nav>' . "\n"
-                        . '<div class="string-raw tab-pane" role="tabpanel"><span class="no-quotes t_string">a:1:{s:3:&quot;foo&quot;;s:3:&quot;bar&quot;;}</span></div>' . "\n"
-                        . '<div class="active string-decoded tab-pane" role="tabpanel"><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>' . "\n"
+                        . '<nav role="tablist"><a class="nav-link" data-target=".tab-1" data-toggle="tab" role="tab">serialized</a><a class="active nav-link" data-target=".tab-2" data-toggle="tab" role="tab">unserialized</a></nav>' . "\n"
+                        . '<div class="tab-1 tab-pane" role="tabpanel"><span class="no-quotes t_string">a:1:{s:3:&quot;foo&quot;;s:3:&quot;bar&quot;;}</span></div>' . "\n"
+                        . '<div class="active tab-2 tab-pane" role="tabpanel"><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>' . "\n"
                         . '<ul class="array-inner list-unstyled">' . "\n"
                         . '<li><span class="t_key">foo</span><span class="t_operator">=&gt;</span><span class="t_string">bar</span></li>' . "\n"
                         . '</ul><span class="t_punct">)</span></span></div>' . "\n"

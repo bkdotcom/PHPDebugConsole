@@ -15,6 +15,7 @@ namespace bdk\Debug\Collector;
 use bdk\Debug;
 use bdk\Debug\AbstractComponent;
 use bdk\Debug\LogEntry;
+use GuzzleHttp;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Promise;
@@ -22,6 +23,7 @@ use GuzzleHttp\RequestOptions;
 use Psr\Http\Message\MessageInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\UriInterface;
 
 /**
  * PHPDebugConsole Middleware for Guzzle
@@ -101,22 +103,22 @@ class GuzzleMiddleware extends AbstractComponent
      *
      * @param RequestInterface  $request  Request
      * @param ResponseInterface $response Response
-     * @param string            $uriNew   The new location
+     * @param UriInterface      $uriNew   The new location
      *
      * @return void
      */
-    public function onRedirect(RequestInterface $request, ResponseInterface $response, $uriNew)
+    public function onRedirect(RequestInterface $request, ResponseInterface $response, UriInterface $uriNew)
     {
         $this->debug->info('redirect', $response->getStatusCode(), (string) $uriNew);
         if ($this->onRedirectOrig) {
-            \call_user_func($this->onRedirectOrig, $request, $response, $uriNew);
+            ($this->onRedirectOrig)($request, $response, $uriNew);
         }
     }
 
     /**
      * Log Request Begin
      *
-     * @param RequestInterface $request Guzzle request
+     * @param RequestInterface $request Request
      * @param array            $options opts
      *
      * @return GuzzleHttp\Promise\PromiseInterface;
@@ -128,11 +130,16 @@ class GuzzleMiddleware extends AbstractComponent
             'requestId' => \spl_object_hash($request),
             'request' => $request,
         );
-        $this->onRedirectOrig = isset($options['allow_redirects']['on_redirect'])
-            ? $options['allow_redirects']['on_redirect']
-            : null;
-        if ($requestInfo['isAsyncronous'] === false) {
-            $options['allow_redirects']['on_redirect'] = array($this, 'onRedirect');
+        if ($options['allow_redirects'] === true) {
+            $options['allow_redirects'] = GuzzleHttp\RedirectMiddleware::$defaultSettings;
+        }
+        if ($options['allow_redirects']) {
+            $this->onRedirectOrig = isset($options['allow_redirects']['on_redirect'])
+                ? $options['allow_redirects']['on_redirect']
+                : null;
+            if ($requestInfo['isAsyncronous'] === false) {
+                $options['allow_redirects']['on_redirect'] = array($this, 'onRedirect');
+            }
         }
         $this->debug->groupCollapsed(
             $this->cfg['label'],
@@ -141,6 +148,7 @@ class GuzzleMiddleware extends AbstractComponent
             $this->debug->meta(array(
                 'icon' => $this->cfg['icon'],
                 'id' => 'guzzle_' . $requestInfo['requestId'],
+                'redact' => true,
             ))
         );
         $this->logRequest($request, $requestInfo);
@@ -153,7 +161,7 @@ class GuzzleMiddleware extends AbstractComponent
     /**
      * Fulfilled Request handler
      *
-     * @param ResponseInterface $response    Guzzle response
+     * @param ResponseInterface $response    Response
      * @param array             $requestInfo Request Information
      *
      * @return ResponseInterface
@@ -190,7 +198,7 @@ class GuzzleMiddleware extends AbstractComponent
         }
         $this->logResponse($response, $requestInfo, $reason);
         $this->debug->groupEnd($metaGroup);
-        return Promise\rejection_for($reason);
+        return Promise\Create::rejectionFor($reason);
     }
 
     /**
@@ -246,7 +254,7 @@ class GuzzleMiddleware extends AbstractComponent
      * call nexthandler and register our fullfill and reject callbacks
      *
      * @param RequestInterface $request     Psr7 RequestInterface
-     * @param array            $options     Guzzle request options]
+     * @param array            $options     Guzzle request options
      * @param array            $requestInfo Request info
      *
      * @return GuzzleHttp\Promise\PromiseInterface;

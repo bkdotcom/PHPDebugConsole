@@ -71,6 +71,7 @@
     "scripts": {
         "coverage" : [
             "vendor/bin/phpunit -v --coverage-clover coverage/clover.xml --coverage-html coverage/html",
+            "cp tests/htmlCoverageCustom.css coverage/html/_css/custom.css",
             "php -f tests/coverageChecker.php -- coverage/clover.xml"
         ],
         "cs" : [
@@ -108,5 +109,10 @@
         "bdk/debug-wamp-client": "Client to display logging published via PHPDebugConsole's WAMP plugin",
         "psr/log": "PSR-3 : Common interface for logging libraries",
         "jdorn/sql-formatter": "A PHP class for formatting and highlighting SQL statements"
+    },
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": false
+        }
     }
 }

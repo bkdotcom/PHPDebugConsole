@@ -7,7 +7,7 @@ use bdk\HttpMessage\UriUtils;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @covers bdk\CurlHttpMessage\UriUtils
+ * @covers bdk\HttpMessage\UriUtils
  */
 class UriUtilsTest extends TestCase
 {

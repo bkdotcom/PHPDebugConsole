@@ -94,7 +94,10 @@ class PhpCurlClass extends Curl
             'Curl',
             $this->getHttpMethod($options),
             $options['CURLOPT_URL'],
-            $this->debug->meta('icon', $this->icon)
+            $this->debug->meta(array(
+                'icon' => $this->icon,
+                'redact' => true,
+            ))
         );
         $this->debug->log('options', $options);
         $return = parent::exec($ch);

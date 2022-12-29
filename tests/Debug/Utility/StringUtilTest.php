@@ -166,7 +166,7 @@ WHERE·
         // $reflector = new ReflectionProperty('bdk\Debug\Utility\StringUtil', 'domDocument');
         // $reflector->setAccessible(true);
         // $reflector->setValue(null, null);
-        \bdk\Test\Debug\Helper::setPrivateProp('bdk\Debug\Utility\StringUtil', 'domDocument', null);
+        \bdk\Test\Debug\Helper::setProp('bdk\Debug\Utility\StringUtil', 'domDocument', null);
 
         $this->assertSame('', StringUtil::prettyXml(''));
 

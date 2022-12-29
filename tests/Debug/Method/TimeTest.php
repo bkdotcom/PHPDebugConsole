@@ -22,7 +22,7 @@ class TimeTest extends DebugTestFramework
         $this->debug->time();
         $this->debug->time('some label');
 
-        $timers = $this->helper->getPrivateProp($this->debug->stopWatch, 'timers');
+        $timers = $this->helper->getProp($this->debug->stopWatch, 'timers');
         $this->assertIsFloat($timers['stack'][0]);
         $this->assertIsFloat($timers['labels']['some label'][1]);
 
@@ -45,7 +45,7 @@ class TimeTest extends DebugTestFramework
             array(),
             array(
                 'custom' => function () {
-                    $timers = $this->helper->getPrivateProp($this->debug->stopWatch, 'timers');
+                    $timers = $this->helper->getProp($this->debug->stopWatch, 'timers');
                     $this->assertCount(0, $timers['stack']);
                 },
                 'entry' => \json_encode(array(
@@ -153,7 +153,7 @@ class TimeTest extends DebugTestFramework
             )
         );
 
-        $timers = $this->helper->getPrivateProp($this->debug->stopWatch, 'timers');
+        $timers = $this->helper->getProp($this->debug->stopWatch, 'timers');
         $this->assertIsFloat($timers['labels']['my label'][0]);
         $this->assertNull($timers['labels']['my label'][1]);
 
@@ -185,7 +185,7 @@ class TimeTest extends DebugTestFramework
             array(
                 'custom' => function () {
                     // test stack is still 1
-                    $timers = $this->helper->getPrivateProp($this->debug->stopWatch, 'timers');
+                    $timers = $this->helper->getProp($this->debug->stopWatch, 'timers');
                     $this->assertCount(1, $timers['stack']);
                 },
                 /*
@@ -263,7 +263,7 @@ class TimeTest extends DebugTestFramework
             )
         );
 
-        $timers = $this->helper->getPrivateProp($this->debug->stopWatch, 'timers');
+        $timers = $this->helper->getProp($this->debug->stopWatch, 'timers');
         $this->assertSame(0, $timers['labels']['my label'][0]);
         // test not paused
         $this->assertNotNull($timers['labels']['my label'][1]);

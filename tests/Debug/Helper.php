@@ -89,7 +89,7 @@ class Helper
      *
      * @return mixed
      */
-    public static function getPrivateProp($obj, $prop)
+    public static function getProp($obj, $prop)
     {
         $propRef = new ReflectionProperty($obj, $prop);
         $propRef->setAccessible(true);
@@ -122,7 +122,7 @@ class Helper
      *
      * @throws \RuntimeException
      */
-    public static function setPrivateProp($obj, $prop, $val)
+    public static function setProp($obj, $prop, $val)
     {
         $refProp = null;
         $ref = new \ReflectionClass($obj);

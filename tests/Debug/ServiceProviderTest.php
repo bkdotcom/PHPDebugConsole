@@ -35,7 +35,7 @@ class ServiceProviderTest extends DebugTestFramework
         // $reflectionProperty = new \ReflectionProperty('\bdk\ErrorHandler', 'instance');
         // $reflectionProperty->setAccessible(true);
         // $reflectionProperty->setValue(null);
-        $this->helper->setPrivateProp('\bdk\ErrorHandler', 'instance', null);
+        $this->helper->setProp('\bdk\ErrorHandler', 'instance', null);
 
         $debug = new Debug(array(
             'logResponse' => false,

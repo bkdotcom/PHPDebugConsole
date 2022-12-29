@@ -58,7 +58,7 @@ class InternalEventsTest extends DebugTestFramework
             'output' => false,  // email only sent if not outputing
         ));
 
-        $container = $this->helper->getPrivateProp($this->debug, 'container');
+        $container = $this->helper->getProp($this->debug, 'container');
         $internalEvents = $container['internalEvents'];
 
         //

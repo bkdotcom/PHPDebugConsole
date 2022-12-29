@@ -72,11 +72,11 @@ class GuzzleMiddlewareTest extends DebugTestFramework
                 <ul class="group-body">
                     <li class="m_log" data-channel="general.Guzzle">%srequest headers</span> = <span class="t_string">GET / HTTP/1.1%A</li>
                     <li class="m_log" data-channel="general.Guzzle"><span class="no-quotes t_string">request body</span> = <span class="string-encoded tabs-container" data-type-more="json">
-                        <nav role="tablist"><a class="nav-link" data-target=".string-raw" data-toggle="tab" role="tab">json</a><a class="active nav-link" data-target=".string-decoded" data-toggle="tab" role="tab">decoded</a></nav>
-                        <div class="string-raw tab-pane" role="tabpanel"><span class="value-container" data-type="string"><span class="prettified">(prettified)</span> <span class="highlight language-json no-quotes t_string">{
+                        <nav role="tablist"><a class="nav-link" data-target=".tab-1" data-toggle="tab" role="tab">json</a><a class="active nav-link" data-target=".tab-2" data-toggle="tab" role="tab">decoded</a></nav>
+                        <div class="tab-1 tab-pane" role="tabpanel"><span class="value-container" data-type="string"><span class="prettified">(prettified)</span> <span class="highlight language-json no-quotes t_string">{
                         &quot;foo&quot;: &quot;bar&quot;
                         }</span></span></div>
-                        <div class="active string-decoded tab-pane" role="tabpanel"><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
+                        <div class="active tab-2 tab-pane" role="tabpanel"><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
                         <ul class="array-inner list-unstyled">
                         <li><span class="t_key">foo</span><span class="t_operator">=&gt;</span><span class="t_string">bar</span></li>
                         </ul><span class="t_punct">)</span></span></div>
@@ -218,6 +218,7 @@ class GuzzleMiddlewareTest extends DebugTestFramework
                         ),
                         'meta' => array(
                             'icon' => 'fa fa-exchange',
+                            'redact' => true,
                             'attribs' => array(
                                 'id' => $id,
                                 'class' => array(),

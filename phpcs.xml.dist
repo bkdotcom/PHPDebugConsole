@@ -3,6 +3,8 @@
 
     <description>PSR-12 plus commenting</description>
 
+    <autoload>./vendor/autoload.php</autoload>
+
     <exclude-pattern>*.js</exclude-pattern>
     <exclude-pattern>*/src/Debug/css/*</exclude-pattern>
     <exclude-pattern>*/src/Debug/node_modules/*</exclude-pattern>

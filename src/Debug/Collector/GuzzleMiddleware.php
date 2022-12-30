@@ -111,7 +111,7 @@ class GuzzleMiddleware extends AbstractComponent
     {
         $this->debug->info('redirect', $response->getStatusCode(), (string) $uriNew);
         if ($this->onRedirectOrig) {
-            ($this->onRedirectOrig)($request, $response, $uriNew);
+            \call_user_func($this->onRedirectOrig, $request, $response, $uriNew);
         }
     }
 

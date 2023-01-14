@@ -128,7 +128,9 @@ class Component extends CApplicationComponent implements SubscriberInterface
         /*
             Since Yii doesn't use namespaces, we can usually use Debug::_log()
         */
-        \class_alias('bdk\Debug', 'Debug');
+        if (\class_exists('Debug') === false) {
+            \class_alias('bdk\Debug', 'Debug');
+        }
 
         $this->addDebugProp();
         $this->collectLog();

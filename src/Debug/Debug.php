@@ -87,7 +87,7 @@ class Debug extends AbstractDebug
     const EVENT_STREAM_WRAP = 'debug.streamWrap';
 
     const META = "\x00meta\x00";
-    const VERSION = '3.0.0-b3';
+    const VERSION = '3.0.2';
 
     protected $cfg = array(
         'collect'   => false,

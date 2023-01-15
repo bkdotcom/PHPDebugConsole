@@ -49,10 +49,10 @@ class HtmlStringEncoded
     public function dump($val, Abstraction $abs)
     {
         if ($abs['brief']) {
-            $vals = $this->tabValues($val, $abs);
+            $vals = $this->tabValues($abs);
             return $vals['valRaw'];
         }
-        $tabs = $this->buildTabsAndPanes($val, $abs);
+        $tabs = $this->buildTabsAndPanes($abs);
         $html = $this->debug->html->buildTag(
             $this->valDumper->getDumpOpt('tagName'),
             array(
@@ -72,12 +72,11 @@ class HtmlStringEncoded
     /**
      * [dumpEncodedGetTabs description]
      *
-     * @param string      $val raw value dumped
      * @param Abstraction $abs full value abstraction
      *
      * @return array
      */
-    private function buildTabsAndPanes($val, Abstraction $abs)
+    private function buildTabsAndPanes(Abstraction $abs)
     {
         $tabs = array(
             'tabs' => array(),
@@ -85,11 +84,10 @@ class HtmlStringEncoded
         );
         $index = 1;
         do {
-            $vals = $this->tabValues($val, $abs);
+            $vals = $this->tabValues($abs);
             $tabs['tabs'][] = $this->buildTab($vals['labelRaw'], $index);
             $tabs['panes'][] = $this->buildTabPane($vals['valRaw'], $index);
             $index++;
-            $val = $abs['value'];
             $abs = $abs['valueDecoded'];
         } while ($abs instanceof Abstraction && $this->htmlString->isEncoded($abs));
         $tabs['tabs'][] = $this->buildTab($vals['labelDecoded'], $index, true);
@@ -151,12 +149,11 @@ class HtmlStringEncoded
     /**
      * Dump encoded string (base64, json, serialized)
      *
-     * @param string      $val raw value dumped
      * @param Abstraction $abs full value abstraction
      *
      * @return string
      */
-    private function tabValues($val, Abstraction $abs)
+    private function tabValues(Abstraction $abs)
     {
         $attribs = $this->valDumper->getDumpOpt('attribs');
         $attribs['class'][] = 'no-quotes';
@@ -169,8 +166,11 @@ class HtmlStringEncoded
         $vals = array(
             'labelDecoded' => 'decoded',
             'labelRaw' => 'raw',
-            // 'valDecoded' => $this->valDumper->dump($abs['valueDecoded']),
-            'valRaw' => $this->debug->html->buildTag('span', $attribs, $val),
+            'valRaw' => $this->debug->html->buildTag(
+                'span',
+                $attribs,
+                $this->valDumper->dump($abs['value'], array('tagName' => null)),
+            ),
         );
         return $this->tabValuesFinish($vals, $abs);
     }

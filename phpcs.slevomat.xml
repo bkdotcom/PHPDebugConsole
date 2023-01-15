@@ -59,6 +59,9 @@
             <property name="maxLinesLength" value="25" />
         </properties>
     </rule>
+    <rule ref="SlevomatCodingStandard.Functions.DisallowTrailingCommaInCall" />
+    <rule ref="SlevomatCodingStandard.Functions.DisallowTrailingCommaInClosureUse" />
+    <rule ref="SlevomatCodingStandard.Functions.DisallowTrailingCommaInDeclaration" />
     <rule ref="SlevomatCodingStandard.Functions.StaticClosure" />
     <rule ref="SlevomatCodingStandard.Functions.StrictCall" />
 

@@ -169,7 +169,7 @@ class HtmlStringEncoded
             'valRaw' => $this->debug->html->buildTag(
                 'span',
                 $attribs,
-                $this->valDumper->dump($abs['value'], array('tagName' => null)),
+                $this->valDumper->dump($abs['value'], array('tagName' => null))
             ),
         );
         return $this->tabValuesFinish($vals, $abs);

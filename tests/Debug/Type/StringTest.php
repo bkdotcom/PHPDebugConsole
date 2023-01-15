@@ -375,7 +375,7 @@ EOD;
                 ),
                 array(
                     'entry' => function (LogEntry $logEntry) use ($base64snip3) {
-                        $jsonExpect = '{"method":"log","args":[{"brief":false,"strlen":null,"typeMore":"base64","value":"' . $base64snip3 . '","valueDecoded":{"brief":false,"strlen":null,"typeMore":"serialized","value":"a:3:{s:4:\"poop\";s:4:\"\ud83d\udca9\";s:3:\"int\";i:42;s:8:\"password\";s:6:\"secret\";}","valueDecoded":{"poop":"\ud83d\udca9","int":42,"password":"\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588"},"type":"string","debug":"\u0000debug\u0000"},"type":"string","debug":"\u0000debug\u0000"}],"meta":{"redact":true}}';
+                        $jsonExpect = '{"method":"log","args":[{"brief":false,"strlen":null,"typeMore":"base64","value":"YTozOntzOjQ6InBvb3AiO3M6NDoi8J+SqSI7czozOiJpbnQiO2k6NDI7czo4OiJwYXNzd29yZCI7czo2OiJzZWNyZXQiO30=","valueDecoded":{"brief":false,"strlen":null,"typeMore":"serialized","value":"a:3:{s:4:\"poop\";s:4:\"\ud83d\udca9\";s:3:\"int\";i:42;s:8:\"password\";s:6:\"\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\";}","valueDecoded":{"poop":"\ud83d\udca9","int":42,"password":"\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588"},"type":"string","debug":"\u0000debug\u0000"},"type":"string","debug":"\u0000debug\u0000"}],"meta":{"redact":true}}';
                         $jsonified = \json_encode($logEntry);
                         $this->assertSame($jsonExpect, $jsonified);
                     },
@@ -389,7 +389,7 @@ EOD;
                     'html' => '<li class="m_log"><span class="string-encoded tabs-container" data-type-more="base64">
                         <nav role="tablist"><a class="nav-link" data-target=".tab-1" data-toggle="tab" role="tab">base64</a><a class="nav-link" data-target=".tab-2" data-toggle="tab" role="tab">serialized</a><a class="active nav-link" data-target=".tab-3" data-toggle="tab" role="tab">unserialized</a></nav>
                         <div class="tab-1 tab-pane" role="tabpanel"><span class="no-quotes t_string">' . $base64snip3 . '</span></div>
-                        <div class="tab-2 tab-pane" role="tabpanel"><span class="no-quotes t_string">a:3:{s:4:&quot;poop&quot;;s:4:&quot;💩&quot;;s:3:&quot;int&quot;;i:42;s:8:&quot;password&quot;;s:6:&quot;secret&quot;;}</span></div>
+                        <div class="tab-2 tab-pane" role="tabpanel"><span class="no-quotes t_string">a:3:{s:4:&quot;poop&quot;;s:4:&quot;💩&quot;;s:3:&quot;int&quot;;i:42;s:8:&quot;password&quot;;s:6:&quot;█████████&quot;;}</span></div>
                         <div class="active tab-3 tab-pane" role="tabpanel"><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
                             <ul class="array-inner list-unstyled">
                                 <li><span class="t_key">poop</span><span class="t_operator">=&gt;</span><span class="t_string">💩</span></li>

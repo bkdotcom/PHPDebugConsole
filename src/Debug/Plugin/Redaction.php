@@ -182,12 +182,16 @@ class Redaction extends AbstractComponent implements SubscriberInterface
      */
     private function redactBuildRegex($key)
     {
+        $strlen = \strlen($key);
         return '#(?:'
             // xml
             . '<(?:\w+:)?' . $key . '\b.*?>\s*([^<]*?)\s*</(?:\w+:)?' . $key . '>'
             . '|'
             // json
             . \json_encode($key) . '\s*:\s*"([^"]*?)"'
+            . '|'
+            // serialized
+            . 's:' . $strlen . ':"' . $key . '";s:\d+:"(.*?)";'
             . '|'
             // url encoded
             . '\b' . $key . '=([^\s&]+\b)'

@@ -30,9 +30,10 @@ class PhpCurlClass extends Curl
     private $debug;
     private $icon = 'fa fa-exchange';
     private $debugOptions = array(
-        'inclResponseBody' => false,
-        'prettyResponseBody' => true,
         'inclInfo' => false,
+        'inclResponseBody' => false,
+        'label' => 'Curl',
+        'prettyResponseBody' => true,
         'verbose' => false,
     );
     private $reflection = array();
@@ -56,14 +57,14 @@ class PhpCurlClass extends Curl
     {
         $this->debugOptions = \array_merge($this->debugOptions, $options);
         if (!$debug) {
-            $debug = Debug::_getChannel('Curl', array('channelIcon' => $this->icon));
+            $debug = Debug::_getChannel($this->debugOptions['label'], array('channelIcon' => $this->icon));
         } elseif ($debug === $debug->rootInstance) {
-            $debug = $debug->getChannel('Curl', array('channelIcon' => $this->icon));
+            $debug = $debug->getChannel($this->debugOptions['label'], array('channelIcon' => $this->icon));
         }
         $this->debug = $debug;
         $this->buildConstLookup();
         parent::__construct();
-        if ($options['verbose']) {
+        if ($this->debugOptions['verbose']) {
             $this->verbose(true, \fopen('php://temp', 'rw'));
         }
         /*
@@ -91,7 +92,7 @@ class PhpCurlClass extends Curl
     {
         $options = $this->buildOptionsDebug();
         $this->debug->groupCollapsed(
-            'Curl',
+            $this->debugOptions['label'],
             $this->getHttpMethod($options),
             $options['CURLOPT_URL'],
             $this->debug->meta(array(
@@ -99,6 +100,7 @@ class PhpCurlClass extends Curl
                 'redact' => true,
             ))
         );
+        $this->debug->time($this->debugOptions['label']);
         $this->debug->log('options', $options);
         $return = parent::exec($ch);
         $verboseOutput = null;
@@ -212,6 +214,9 @@ class PhpCurlClass extends Curl
      */
     private function logRequestResponse($verboseOutput, $options)
     {
+        $duration = $this->debug->timeEnd($this->debugOptions['label'], false);
+        $this->debug->log('request headers', $this->rawRequestHeaders, $this->debug->meta('redact'));
+        // Curl provides no means to get the request body
         if ($this->error) {
             $this->debug->backtrace->addInternalClass('Curl\\');
             $this->debug->warn($this->errorCode, $this->errorMessage);
@@ -220,8 +225,7 @@ class PhpCurlClass extends Curl
             \preg_match_all('/^(Location:|URI: )(.*?)\r\n/im', $this->rawResponseHeaders, $matches);
             $this->debug->log('Redirect(s)', $matches[2]);
         }
-        $this->debug->log('request headers', $this->rawRequestHeaders, $this->debug->meta('redact'));
-        // Curl provides no means to get the request body
+        $this->debug->time($duration);
         $this->debug->log('response headers', $this->rawResponseHeaders, $this->debug->meta('redact'));
         if ($this->debugOptions['inclResponseBody']) {
             $this->debug->log(

@@ -39,31 +39,26 @@ class MonologHandler extends PsrHandler
         if (!$debug) {
             $debug = Debug::getInstance();
         }
+        $logger = null;
         if ($debug instanceof Debug) {
-            $this->logger = $debug->logger;
+            $logger = $debug->logger;
         } elseif ($debug instanceof LoggerInterface) {
-            $this->logger = $debug;
+            $logger = $debug;
         }
-        if (!$this->logger) {
+        if ($logger === null) {
             throw new InvalidArgumentException('$debug must be instanceof bdk\Debug or Psr\Log\LoggerInterface');
         }
-        parent::__construct($this->logger, $level, $bubble);
+        parent::__construct($logger, $level, $bubble);
     }
 
     /**
      * {@inheritDoc}
      */
-    public function handle(array $record): bool
+    public function handle(array $record)
     {
-        if (!$this->isHandling($record)) {
-            return false;
-        }
-        $msg = $this->formatter
-            ? $this->formatter->format($record)
-            : $record['message'];
         $this->logger->log(
             \strtolower($record['level_name']),
-            $msg,
+            $record['message'],
             $record['context'] + array('channel' => $record['channel'])
         );
         return $this->bubble === false;

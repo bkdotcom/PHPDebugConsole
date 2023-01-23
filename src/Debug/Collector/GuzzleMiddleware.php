@@ -38,6 +38,7 @@ class GuzzleMiddleware extends AbstractComponent
         'asyncResponseWithRequest' => true,
         'icon' => 'fa fa-exchange',
         'iconAsync' => 'fa fa-random',
+        'idPrefix' => 'guzzle_',
         'inclRequestBody' => false,
         'inclResponseBody' => false,
         'label' => 'Guzzle',
@@ -91,6 +92,10 @@ class GuzzleMiddleware extends AbstractComponent
             return;
         }
         if ($logEntry->getMeta('asyncResponseGroup') !== true) {
+            return;
+        }
+        if ($logEntry->getMeta('middlewareId') !== \spl_object_hash($this)) {
+            // processed by a different middleware instance
             return;
         }
         $logEntry['output'] = $logEntry['route'] instanceof \bdk\Debug\Route\Stream;
@@ -147,7 +152,7 @@ class GuzzleMiddleware extends AbstractComponent
             (string) $request->getUri(),
             $this->debug->meta(array(
                 'icon' => $this->cfg['icon'],
-                'id' => 'guzzle_' . $requestInfo['requestId'],
+                'id' => $this->cfg['idPrefix'] . $requestInfo['requestId'],
                 'redact' => true,
             ))
         );
@@ -168,13 +173,16 @@ class GuzzleMiddleware extends AbstractComponent
      */
     public function onFulfilled(ResponseInterface $response, array $requestInfo)
     {
-        $metaGroup = $this->debug->meta();
+        $meta = $this->debug->meta();
         if ($requestInfo['isAsyncronous']) {
-            $metaGroup = $this->debug->meta('asyncResponseGroup');
-            $this->asyncResponseGroup($requestInfo['request'], $response, $metaGroup);
+            $meta = $this->debug->meta(array(
+                'asyncResponseGroup' => true,
+                'middlewareId' => \spl_object_hash($this),
+            ));
+            $this->asyncResponseGroup($requestInfo['request'], $response, $meta);
         }
         $this->logResponse($response, $requestInfo);
-        $this->debug->groupEnd($metaGroup);
+        $this->debug->groupEnd($meta);
         return $response;
     }
 
@@ -188,16 +196,19 @@ class GuzzleMiddleware extends AbstractComponent
      */
     public function onRejected(GuzzleException $reason, array $requestInfo)
     {
-        $metaGroup = $this->debug->meta();
+        $meta = $this->debug->meta();
         $response = $reason instanceof RequestException
             ? $reason->getResponse()
             : null;
         if ($requestInfo['isAsyncronous']) {
-            $metaGroup = $this->debug->meta('asyncResponseGroup');
-            $this->asyncResponseGroup($requestInfo['request'], $response, $metaGroup, true);
+            $meta = $this->debug->meta(array(
+                'asyncResponseGroup' => true,
+                'middlewareId' => \spl_object_hash($this),
+            ));
+            $this->asyncResponseGroup($requestInfo['request'], $response, $meta, true);
         }
         $this->logResponse($response, $requestInfo, $reason);
-        $this->debug->groupEnd($metaGroup);
+        $this->debug->groupEnd($meta);
         return Promise\Create::rejectionFor($reason);
     }
 
@@ -262,7 +273,7 @@ class GuzzleMiddleware extends AbstractComponent
     protected function doRequest(RequestInterface $request, array $options, array $requestInfo)
     {
         // start timer
-        $this->debug->time('guzzle:' . $requestInfo['requestId']);
+        $this->debug->time($this->cfg['label'] . ':' . $requestInfo['requestId']);
         $func = $this->nextHandler;
         return $func($request, $options)->then(
             function (ResponseInterface $response) use ($requestInfo) {
@@ -343,9 +354,9 @@ class GuzzleMiddleware extends AbstractComponent
      */
     protected function logResponse(ResponseInterface $response = null, array $requestInfo = array(), GuzzleException $rejectReason = null)
     {
-        $duration = $this->debug->timeEnd('guzzle:' . $requestInfo['requestId'], false);
+        $duration = $this->debug->timeEnd($this->cfg['label'] . ':' . $requestInfo['requestId'], false);
         $metaAppend = $requestInfo['isAsyncronous'] && $this->cfg['asyncResponseWithRequest']
-            ? $this->debug->meta('appendGroup', 'guzzle_' . $requestInfo['requestId'])
+            ? $this->debug->meta('appendGroup', $this->cfg['idPrefix'] . $requestInfo['requestId'])
             : $this->debug->meta();
         if ($rejectReason instanceof GuzzleException) {
             $message = \preg_replace('/ response:\n.*$/s', '', $rejectReason->getMessage());

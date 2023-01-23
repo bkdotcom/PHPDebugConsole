@@ -195,8 +195,14 @@ class DebugTestFramework extends DOMTestCase
             }
             if (\is_string($expect)) {
                 $expectContains = \preg_replace($regexLtrim, '', $expect);
-                if ($expectContains) {
-                    $this->assertStringMatchesFormat('%A' . $expectContains . '%A', $output);
+                try {
+                    if ($expectContains) {
+                        $this->assertStringMatchesFormat('%A' . $expectContains . '%A', $output);
+                    }
+                } catch (\Exception $e) {
+                    // \bdk\Test\Debug\Helper::stderr('expect', $expectContains);
+                    // \bdk\Test\Debug\Helper::stderr('actual', $output);
+                    throw $e;
                 }
             } elseif (\is_callable($expect)) {
                 \call_user_func($expect, $output);

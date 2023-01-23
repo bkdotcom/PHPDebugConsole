@@ -10,7 +10,6 @@ use bdk\PubSub\Manager as EventManager;
  *
  * @covers \bdk\Debug
  * @covers \bdk\Debug\AbstractDebug
- * @covers \bdk\Debug\Data
  * @covers \bdk\Debug\Internal
  */
 class DebugTest extends DebugTestFramework

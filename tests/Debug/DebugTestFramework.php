@@ -200,8 +200,8 @@ class DebugTestFramework extends DOMTestCase
                         $this->assertStringMatchesFormat('%A' . $expectContains . '%A', $output);
                     }
                 } catch (\Exception $e) {
-                    // \bdk\Test\Debug\Helper::stderr('expect', $expectContains);
-                    // \bdk\Test\Debug\Helper::stderr('actual', $output);
+                    $this->helper->stderr('expect', $expectContains);
+                    $this->helper->stderr('actual', $output);
                     throw $e;
                 }
             } elseif (\is_callable($expect)) {

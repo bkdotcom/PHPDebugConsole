@@ -208,7 +208,7 @@ class PhpCurlClassTest extends DebugTestFramework
             // 'verbose' => true,
         ), $this->debug);
         $userAgent = $curl->getOpt(CURLOPT_USERAGENT);
-        $response = $curl->get($this->baseUrl . '/echo?headers[]=Invalid');
+        $response = $curl->get($this->baseUrl . '/echo?headers[]=HTTP/1.1');
         $this->outputTest(array(
             'html' => '<li class="expanded m_group" data-channel="general.Curl" data-icon="fa fa-exchange">
                     <div class="group-header">%sCurl(%sGET%s' . $this->baseUrl . '/echo%s)</span></div>
@@ -225,13 +225,13 @@ class PhpCurlClassTest extends DebugTestFramework
                                     %A</li>
                                 <li><span class="t_key">CURLOPT_RETURNTRANSFER</span><span class="t_operator">=&gt;</span><span class="t_bool" data-type-more="true">true</span></li>
                                 <li><span class="t_key">CURLOPT_TIMEOUT</span><span class="t_operator">=&gt;</span><span class="t_int">30</span></li>
-                                <li><span class="t_key">CURLOPT_URL</span><span class="t_operator">=&gt;</span><span class="t_string">http://127.0.0.1:8080/echo?headers[]=Invalid</span></li>
+                                <li><span class="t_key">CURLOPT_URL</span><span class="t_operator">=&gt;</span><span class="t_string">http://127.0.0.1:8080/echo?headers[]=HTTP/1.1</span></li>
                                 <li><span class="t_key">CURLOPT_USERAGENT</span><span class="t_operator">=&gt;</span><span class="t_string">' . $userAgent . '</span></li>
                             </ul><span class="t_punct">)</span></span></li>
                         <li class="m_log" data-channel="general.Curl">%srequest headers</span> = <span class="t_string">GET /echo%s HTTP/1.1%A</li>
-                        <li class="m_warn" data-channel="general.Curl" data-detect-files="true" data-file="' . __FILE__ . '" data-line="%d"><span class="t_int">8</span>, <span class="t_string">Weird server reply (CURLE_WEIRD_SERVER_REPLY): Header without colon</span></li>
+                        <li class="m_warn" data-channel="general.Curl" data-detect-files="true" data-file="' . __FILE__ . '" data-line="%d"><span class="t_int">%d</span>, <span class="t_string">Unsupported protocol (CURLE_UNSUPPORTED_PROTOCOL): Unsupported HTTP version in response</span></li>
                         <li class="m_time" data-channel="general.Curl"><span class="no-quotes t_string">time: %f %s</span></li>
-                        <li class="m_log" data-channel="general.Curl"><span class="no-quotes t_string">response headers</span> = <span class="t_string">HTTP/1.1 200 OK%a</span></li>
+                        <li class="m_log" data-channel="general.Curl"><span class="no-quotes t_string">response headers</span> = <span class="t_string">%A</span></li>
                         <li class="m_log" data-channel="general.Curl"><span class="no-quotes t_string">response body</span> = <span class="t_null">null</span></li>
                     </ul>
                 </li>',

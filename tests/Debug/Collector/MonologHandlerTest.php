@@ -14,6 +14,8 @@ use Psr\Log\LogLevel;
  */
 class MonologHandlerTest extends DebugTestFramework
 {
+    use ExpectExceptionTrait;
+
     /**
      * @doesNotPerformAssertions
      */

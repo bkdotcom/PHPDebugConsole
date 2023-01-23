@@ -34,7 +34,7 @@ class MonologHandler extends PsrHandler
      *
      * @SuppressWarnings(PHPMD.StaticAccess)
      */
-    public function __construct($debug = null, $level = Logger::DEBUG, bool $bubble = true)
+    public function __construct($debug = null, $level = Logger::DEBUG, $bubble = true)
     {
         if (!$debug) {
             $debug = Debug::getInstance();

@@ -4,6 +4,7 @@ namespace bdk\Test\Debug\Collector;
 
 use bdk\Debug\Collector\MonologHandler;
 use bdk\Test\Debug\DebugTestFramework;
+use bdk\Test\PolyFill\ExpectExceptionTrait;
 use Monolog\Logger;
 use Psr\Log\LogLevel;
 

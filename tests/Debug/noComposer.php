@@ -8,8 +8,6 @@ require __DIR__ . '/../../src/Debug/Autoloader.php';
 $autoloader = new \bdk\Debug\Autoloader();
 $autoloader->register();
 
-require __DIR__ . '/../../src/Debug/Debug.php';
-
 $debug = new \bdk\Debug(array(
     'collect' => true,
     'output' => false,

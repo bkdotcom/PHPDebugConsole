@@ -28,17 +28,19 @@ class Autoloader
     public function register()
     {
         $this->psr4Map = array(
-            'bdk\\Debug\\' => __DIR__,
             'bdk\\Backtrace\\' => __DIR__ . '/../Backtrace',
             'bdk\\Container\\' => __DIR__ . '/../Container',
+            'bdk\\Debug\\' => __DIR__,
             'bdk\\ErrorHandler\\' => __DIR__ . '/../ErrorHandler',
             'bdk\\HttpMessage\\' => __DIR__ . '/../HttpMessage',
             'bdk\\PubSub\\' => __DIR__ . '/../PubSub',
+            'bdk\\Test\\Debug\\' => __DIR__ . '/../../tests/Debug',
             'Psr\\Http\\Message\\' => __DIR__ . '/../Psr7',
         );
         $this->classMap = array(
             'bdk\\Backtrace' => __DIR__ . '/../Backtrace/Backtrace.php',
             'bdk\\Container' => __DIR__ . '/../Container/Container.php',
+            'bdk\\Debug' => __DIR__ . '/Debug.php',
             'bdk\\Debug\\Utility' => __DIR__ . '/Utility/Utility.php',
             'bdk\\ErrorHandler' => __DIR__ . '/../ErrorHandler/ErrorHandler.php',
         );

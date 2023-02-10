@@ -41,16 +41,18 @@ class ErrorLevelTest extends TestCase
      */
     public static function providerErrorLevel()
     {
+        /*
         \bdk\Test\Debug\Helper::stderr(array(
             'error_reporting' => \error_reporting(),
             'expect' => ErrorLevel::toConstantString(\error_reporting()),
             'actual' => ErrorLevel::toConstantString(null, null, true),
         ));
+        */
         return array(
             /*
                 Test "current" error_reporting
             */
-            // array(null, null, ErrorLevel::toConstantString(\error_reporting())),
+            array(null, null, ErrorLevel::toConstantString(\error_reporting())),
 
             /*
                 PHP >= 5.4

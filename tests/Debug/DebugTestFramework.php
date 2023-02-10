@@ -9,6 +9,7 @@ use bdk\Debug\LogEntry;
 use bdk\ErrorHandler\Error;
 use bdk\HttpMessage\ServerRequest;
 use bdk\PubSub\Event;
+use bdk\Test\Debug\Helper;
 use bdk\Test\PolyFill\AssertionTrait;
 
 /**
@@ -35,7 +36,7 @@ class DebugTestFramework extends DOMTestCase
      */
     public function __construct($name = null, array $data = array(), $dataName = '')
     {
-        self::$helper = new \bdk\Test\Debug\Helper();
+        self::$helper = new Helper();
         parent::__construct($name, $data, $dataName);
     }
 
@@ -380,7 +381,7 @@ class DebugTestFramework extends DOMTestCase
             }
         }
 
-        $actual = (self::$helper)::deObjectifyData($actual);
+        $actual = Helper::deObjectifyData($actual);
         self::assertCount(
             \count($expect),
             $actual,

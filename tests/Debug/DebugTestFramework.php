@@ -23,10 +23,10 @@ class DebugTestFramework extends DOMTestCase
     public static $allowError = false;
     public static $obLevels = 0;
 
-    public $debug;
+    public static $debug;
     public $emailInfo = array();
 
-    protected $helper;
+    protected static $helper;
     protected $file;
     protected $line;
 
@@ -35,8 +35,19 @@ class DebugTestFramework extends DOMTestCase
      */
     public function __construct($name = null, array $data = array(), $dataName = '')
     {
-        $this->helper = new \bdk\Test\Debug\Helper();
+        self::$helper = new \bdk\Test\Debug\Helper();
         parent::__construct($name, $data, $dataName);
+    }
+
+    public function __get($name)
+    {
+        if ($name === 'helper') {
+            return self::$helper;
+        }
+        if ($name === 'debug') {
+            return self::$debug;
+        }
+        throw new RuntimeException('Access to unavailable property ' . __CLASS__ . '::' . $name);
     }
 
     /**
@@ -46,8 +57,8 @@ class DebugTestFramework extends DOMTestCase
      */
     public function setUp(): void
     {
-        self::$obLevels = \ob_get_level();
         self::$allowError = false;
+        self::$obLevels = \ob_get_level();
         $this->resetDebug();
 
         /*
@@ -219,7 +230,7 @@ class DebugTestFramework extends DOMTestCase
      *
      * @return array
      */
-    public function providerTestMethod()
+    public static function providerTestMethod()
     {
         return array(
             array(),
@@ -322,11 +333,11 @@ class DebugTestFramework extends DOMTestCase
      *
      * @return void
      */
-    protected function assertAbstractionType(Abstraction $abs, $type = null)
+    protected static function assertAbstractionType(Abstraction $abs, $type = null)
     {
         $isAbsType = false;
         if (empty($abs['type'])) {
-            $this->assertTrue($isAbsType);
+            self::assertTrue($isAbsType);
             return;
         }
         $type = $type ?: $abs['type'];
@@ -356,12 +367,12 @@ class DebugTestFramework extends DOMTestCase
         } elseif ($type === 'resource') {
             $isAbsType = $abs['type'] === 'resource' && isset($abs['value']);
         }
-        $this->assertTrue($isAbsType);
+        self::assertTrue($isAbsType);
     }
 
-    protected function assertLogEntries($expect, $actual)
+    protected static function assertLogEntries($expect, $actual)
     {
-        if (is_string($expect)) {
+        if (\is_string($expect)) {
             // assume json
             $expect = \json_decode($expect, true);
             if ($expect === null) {
@@ -369,8 +380,8 @@ class DebugTestFramework extends DOMTestCase
             }
         }
 
-        $actual = $this->helper->deObjectifyData($actual);
-        $this->assertCount(
+        $actual = self::$helper::deObjectifyData($actual);
+        self::assertCount(
             \count($expect),
             $actual,
             'count actual (' . \count($actual) . ') does not match count expected (' . \count($expect) . ') : ' . \preg_replace('/=>\s*\n\s*array /', '=> array', \var_export($actual, true))
@@ -380,7 +391,7 @@ class DebugTestFramework extends DOMTestCase
             $expectStr = \preg_replace('/=>\s*\n\s*array /', '=> array', \var_export($expectArr, true));
             $actualStr = \preg_replace('/=>\s*\n\s*array /', '=> array', \var_export($actualArr, true));
             try {
-                $this->assertStringMatchesFormat($expectStr, $actualStr, 'LogEntry ' . $i . ' does not match');
+                self::assertStringMatchesFormat($expectStr, $actualStr, 'LogEntry ' . $i . ' does not match');
             } catch (\Exception $e) {
                 // echo 'actual = ' . $actualStr . "\n";
                 throw $e;
@@ -401,7 +412,7 @@ class DebugTestFramework extends DOMTestCase
 
     protected function resetDebug()
     {
-        $this->debug = Debug::getInstance(array(
+        self::$debug = Debug::getInstance(array(
             'collect' => true,
             'emailFunc' => array($this, 'emailMock'),
             'emailLog' => false,
@@ -525,7 +536,7 @@ class DebugTestFramework extends DOMTestCase
     private function tstMethodOutput($test, $routeObj, LogEntry $logEntry, $expect)
     {
         $asString = \is_string($expect);
-        if (\in_array($test, array('chromeLogger','firephp','serverLog','wamp'))) {
+        if (\in_array($test, array('chromeLogger','firephp','serverLog','wamp'), true)) {
             // remove data - sans the logEntry we're interested in
             $dataBackup = array(
                 'alerts' => $this->debug->data->get('alerts'),

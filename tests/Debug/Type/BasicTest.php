@@ -22,11 +22,11 @@ use bdk\Test\Debug\DebugTestFramework;
  */
 class BasicTest extends DebugTestFramework
 {
-    public function providerTestMethod()
+    public static function providerTestMethod()
     {
         $ts = \time();
         $datetime = \gmdate(self::DATETIME_FORMAT, $ts);
-        $test = new \bdk\Test\Debug\Fixture\Test();
+        $test = new \bdk\Test\Debug\Fixture\TestObj();
 
         $fhOpen = \fopen(__FILE__, 'r');
         $resourceOpenEntryExpect = array(
@@ -77,11 +77,11 @@ class BasicTest extends DebugTestFramework
                 'log',
                 array(array($test,'testBaseStatic')),
                 array(
-                    'chromeLogger' => '[["callable: bdk\\\Test\\\Debug\\\Fixture\\\Test::testBaseStatic"],null,""]',
-                    'html' => '<li class="m_log"><span class="t_callable"><span class="t_type">callable</span> <span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>Test</span><span class="t_operator">::</span><span class="t_identifier">testBaseStatic</span></span></li>',
-                    'script' => 'console.log("callable: bdk\\\Test\\\Debug\\\Fixture\\\Test::testBaseStatic");',
-                    'streamAnsi' => "callable: \e[38;5;250mbdk\Test\Debug\Fixture\\\e[0m\e[1mTest\e[22m\e[38;5;130m::\e[0m\e[1mtestBaseStatic\e[22m",
-                    'text' => 'callable: bdk\Test\Debug\Fixture\Test::testBaseStatic',
+                    'chromeLogger' => '[["callable: bdk\\\Test\\\Debug\\\Fixture\\\TestObj::testBaseStatic"],null,""]',
+                    'html' => '<li class="m_log"><span class="t_callable"><span class="t_type">callable</span> <span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>TestObj</span><span class="t_operator">::</span><span class="t_identifier">testBaseStatic</span></span></li>',
+                    'script' => 'console.log("callable: bdk\\\Test\\\Debug\\\Fixture\\\TestObj::testBaseStatic");',
+                    'streamAnsi' => "callable: \e[38;5;250mbdk\Test\Debug\Fixture\\\e[0m\e[1mTestObj\e[22m\e[38;5;130m::\e[0m\e[1mtestBaseStatic\e[22m",
+                    'text' => 'callable: bdk\Test\Debug\Fixture\TestObj::testBaseStatic',
                     'wamp' => array(
                         'log',
                         array(
@@ -89,7 +89,7 @@ class BasicTest extends DebugTestFramework
                                 'debug' => Abstracter::ABSTRACTION,
                                 'type' => Abstracter::TYPE_CALLABLE,
                                 'value' => array(
-                                    'bdk\Test\Debug\Fixture\Test',
+                                    'bdk\Test\Debug\Fixture\TestObj',
                                     'testBaseStatic',
                                 ),
                             ),
@@ -129,39 +129,39 @@ class BasicTest extends DebugTestFramework
             'closure' => array(
                 'log',
                 array(
-                    function ($foo, $bar) {
+                    static function ($foo, $bar) {
                         return $foo . $bar;
                     },
                 ),
                 array(
-                    'entry' => function ($logEntry) {
+                    'entry' => static function ($logEntry) {
                         $objAbs = $logEntry['args'][0];
-                        $this->assertAbstractionType($objAbs);
+                        self::assertAbstractionType($objAbs);
                         $values = $objAbs->getValues();
-                        $this->assertSame('Closure', $values['className']);
+                        self::assertSame('Closure', $values['className']);
                         $line = __LINE__ - 10;
-                        $this->assertSame(array(
+                        self::assertSame(array(
                             'fileName' => __FILE__,
                             'startLine' => $line,
                             'extensionName' => false,
                         ), $values['definition']);
-                        \array_walk($values['properties'], function ($propInfo, $propName) use ($line) {
+                        \array_walk($values['properties'], static function ($propInfo, $propName) use ($line) {
                             // echo \json_encode($propInfo, JSON_PRETTY_PRINT);
-                            $values = array_intersect_key($propInfo, \array_flip(array(
+                            $values = \array_intersect_key($propInfo, \array_flip(array(
                                 'value',
                                 'valueFrom',
                                 'visibility',
                             )));
                             switch ($propName) {
                                 case 'debug.file':
-                                    $this->assertSame(array(
+                                    self::assertSame(array(
                                         'value' => __FILE__,
                                         'valueFrom' => 'debug',
                                         'visibility' => 'debug',
                                     ), $values);
                                     break;
                                 case 'debug.line':
-                                    $this->assertSame(array(
+                                    self::assertSame(array(
                                         'value' => $line,
                                         'valueFrom' => 'debug',
                                         'visibility' => 'debug',
@@ -281,7 +281,7 @@ class BasicTest extends DebugTestFramework
                 'log',
                 array($fhOpen),
                 array(
-                    'custom' => function () use ($fhOpen) {
+                    'custom' => static function () use ($fhOpen) {
                         \fclose($fhOpen);
                     },
                     'entry' => $resourceOpenEntryExpect,
@@ -578,6 +578,6 @@ class BasicTest extends DebugTestFramework
         $this->debug->log('ref', $ref);
         // $src = 'fail';
         $output = $this->debug->output();
-        $this->assertStringContainsString('success', $output);
+        self::assertStringContainsString('success', $output);
     }
 }

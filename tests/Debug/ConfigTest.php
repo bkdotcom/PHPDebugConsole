@@ -396,7 +396,7 @@ class ConfigTest extends DebugTestFramework
         $this->assertSame('visibility', $debug->getCfg('abstracter.objectSort'));
     }
 
-    public function providerOnCfgReplaceSubscriber()
+    public static function providerOnCfgReplaceSubscriber()
     {
         return array(
             'onLog' => array('onLog', Debug::EVENT_LOG),

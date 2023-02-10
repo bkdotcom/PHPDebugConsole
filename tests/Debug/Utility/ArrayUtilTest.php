@@ -13,23 +13,23 @@ use PHPUnit\Framework\TestCase;
 class ArrayUtilTest extends TestCase
 {
     /**
-     * @dataProvider providerSpliceAssoc
+     * @dataProvider spliceAssocProvider
      */
     public function testSpliceAssoc($array, $key, $length, $replace, $expectReturn, $expectArray)
     {
         $return = ArrayUtil::spliceAssoc($array, $key, $length, $replace);
-        $this->assertSame($expectReturn, $return, 'return not as expected');
-        $this->assertSame($expectArray, $array, 'updated array not as expected');
+        self::assertSame($expectReturn, $return, 'return not as expected');
+        self::assertSame($expectArray, $array, 'updated array not as expected');
     }
 
-    public function mergeDeepProvider()
+    public static function mergeDeepProvider()
     {
         return array(
             0 => array(
                 array(
                     'planes' => 'array1 val',
                     'trains' => array('electric','diesel',),
-                    'callable' => array($this, 'testIsList'),
+                    'callable' => array(__CLASS__, 'testIsList'),
                     'automobiles' => array(
                         'hatchback' => array(),
                         'sedan' => array('family','luxury'),
@@ -40,7 +40,7 @@ class ArrayUtilTest extends TestCase
                 ),
                 array(
                     'boats' => array('speed','house'),
-                    'callable' => array($this, __FUNCTION__),
+                    'callable' => array(__CLASS__, __FUNCTION__),
                     'trains' => array('steam',),
                     'planes' => 'array2 val',
                     'automobiles' => array(
@@ -56,7 +56,7 @@ class ArrayUtilTest extends TestCase
                 array(
                     'planes' => 'array2 val',
                     'trains' => array('electric','diesel','steam','maglev'),
-                    'callable' => array($this, __FUNCTION__), // callable was replaced vs appending
+                    'callable' => array(__CLASS__, __FUNCTION__), // callable was replaced vs appending
                     'automobiles' => array(
                         'hatchback' => 'array2 val',
                         'sedan' => array('family','luxury'),
@@ -81,7 +81,7 @@ class ArrayUtilTest extends TestCase
         );
     }
 
-    public function providerSpliceAssoc()
+    public static function spliceAssocProvider()
     {
         return array(
             'twoArgs' => array(
@@ -202,7 +202,7 @@ class ArrayUtilTest extends TestCase
         $copy = ArrayUtil::copy($array);
         $foo = 'foo2';
         $bar = 'bar2';
-        $this->assertSame(array(
+        self::assertSame(array(
             'foo' => 'foo',
             'baz' => array(
                 'bar' => 'bar',   // no longer reference
@@ -211,7 +211,7 @@ class ArrayUtilTest extends TestCase
         $copy = ArrayUtil::copy($array, false);
         $foo = 'foo3';
         $bar = 'bar3';
-        $this->assertSame(array(
+        self::assertSame(array(
             'foo' => 'foo2',
             'baz' => array(
                 'bar' => 'bar3',  // is still a reference
@@ -221,10 +221,10 @@ class ArrayUtilTest extends TestCase
 
     public function testIsList()
     {
-        $this->assertFalse(ArrayUtil::isList('string'));
-        $this->assertTrue(ArrayUtil::isList(array()));     // empty array = "list"
-        $this->assertFalse(ArrayUtil::isList(array(3 => 'foo',2 => 'bar',1 => 'baz',0 => 'nope')));
-        $this->assertTrue(ArrayUtil::isList(array(0 => 'nope',1 => 'baz',2 => 'bar',3 => 'foo')));
+        self::assertFalse(ArrayUtil::isList('string'));
+        self::assertTrue(ArrayUtil::isList(array()));     // empty array = "list"
+        self::assertFalse(ArrayUtil::isList(array(3 => 'foo',2 => 'bar',1 => 'baz',0 => 'nope')));
+        self::assertTrue(ArrayUtil::isList(array(0 => 'nope',1 => 'baz',2 => 'bar',3 => 'foo')));
     }
 
     public function testMapRecursive()
@@ -248,7 +248,7 @@ class ArrayUtilTest extends TestCase
         $array = ArrayUtil::mapRecursive(function ($val) {
             return 'foo';
         }, $array);
-        $this->assertSame($expect, $array);
+        self::assertSame($expect, $array);
     }
 
     /**
@@ -258,7 +258,7 @@ class ArrayUtilTest extends TestCase
     {
         $argsAndExpect = \func_get_args();
         $expect = \array_pop($argsAndExpect);
-        $this->assertSame(
+        self::assertSame(
             $expect,
             \call_user_func_array('bdk\Debug\Utility\ArrayUtil::mergeDeep', $argsAndExpect)
         );
@@ -281,19 +281,19 @@ class ArrayUtilTest extends TestCase
                 ),
             ),
         );
-        $this->assertSame(true, ArrayUtil::pathGet($array, 'surfaces.bed.comfy'));
-        $this->assertSame(false, ArrayUtil::pathGet($array, 'surfaces.rock.comfy'));
-        $this->assertSame(null, ArrayUtil::pathGet($array, 'surfaces.bed.comfy.foo'));
-        $this->assertSame(null, ArrayUtil::pathGet($array, 'surfaces.bed.comfy.0'));
-        $this->assertSame(array('comfy' => true), ArrayUtil::pathGet($array, 'surfaces.bed'));
-        $this->assertSame(null, ArrayUtil::pathGet($array, 'surfaces.bed.foo'));
-        $this->assertSame(2, ArrayUtil::pathGet($array, 'surfaces.__count__'));
-        $this->assertSame(false, ArrayUtil::pathGet($array, 'surfaces.__end__.comfy'));
-        $this->assertSame(true, ArrayUtil::pathGet($array, 'surfaces.__reset__.comfy'));
-        $this->assertSame(null, ArrayUtil::pathGet($array, 'surfaces.sofa.comfy'));
-        $this->assertSame(false, ArrayUtil::pathGet($array, array('surfaces','__end__','comfy')));
-        $this->assertSame(false, ArrayUtil::pathGet($array, '__reset__/__pop__/comfy'));
-        $this->assertSame(array(
+        self::assertSame(true, ArrayUtil::pathGet($array, 'surfaces.bed.comfy'));
+        self::assertSame(false, ArrayUtil::pathGet($array, 'surfaces.rock.comfy'));
+        self::assertSame(null, ArrayUtil::pathGet($array, 'surfaces.bed.comfy.foo'));
+        self::assertSame(null, ArrayUtil::pathGet($array, 'surfaces.bed.comfy.0'));
+        self::assertSame(array('comfy' => true), ArrayUtil::pathGet($array, 'surfaces.bed'));
+        self::assertSame(null, ArrayUtil::pathGet($array, 'surfaces.bed.foo'));
+        self::assertSame(2, ArrayUtil::pathGet($array, 'surfaces.__count__'));
+        self::assertSame(false, ArrayUtil::pathGet($array, 'surfaces.__end__.comfy'));
+        self::assertSame(true, ArrayUtil::pathGet($array, 'surfaces.__reset__.comfy'));
+        self::assertSame(null, ArrayUtil::pathGet($array, 'surfaces.sofa.comfy'));
+        self::assertSame(false, ArrayUtil::pathGet($array, array('surfaces','__end__','comfy')));
+        self::assertSame(false, ArrayUtil::pathGet($array, '__reset__/__pop__/comfy'));
+        self::assertSame(array(
             'surfaces' => array(
                 'bed' => array(
                     'comfy' => true,
@@ -306,8 +306,8 @@ class ArrayUtilTest extends TestCase
             array('bar'),
             array('baz'),
         );
-        $this->assertSame('foo', ArrayUtil::pathGet($array2, '0.0'));
-        $this->assertSame('bar', ArrayUtil::pathGet($array2, '1.0'));
+        self::assertSame('foo', ArrayUtil::pathGet($array2, '0.0'));
+        self::assertSame('bar', ArrayUtil::pathGet($array2, '1.0'));
     }
 
     public function testPathSet()
@@ -329,7 +329,7 @@ class ArrayUtilTest extends TestCase
         ArrayUtil::pathSet($array, 'surfaces.__end__.__push__', 'pushed');
         ArrayUtil::pathSet($array, 'surfaces.__push__.itchy', true);
 
-        $this->assertSame(array(
+        self::assertSame(array(
             'surfaces' => array(
                 'bed' => array(
                     // 'comfy' => true,  // we unset comfy
@@ -370,10 +370,10 @@ class ArrayUtilTest extends TestCase
                 'yomega',
             )
         );
-        $this->assertSame(false, ArrayUtil::searchRecursive('notfound', $array));
-        $this->assertSame(false, ArrayUtil::searchRecursive('car', $array));
-        $this->assertSame(array('toys','car'), ArrayUtil::searchRecursive('car', $array, true));
-        $this->assertSame(array('toys','car',2), ArrayUtil::searchRecursive('rc', $array));
+        self::assertSame(false, ArrayUtil::searchRecursive('notfound', $array));
+        self::assertSame(false, ArrayUtil::searchRecursive('car', $array));
+        self::assertSame(array('toys','car'), ArrayUtil::searchRecursive('car', $array, true));
+        self::assertSame(array('toys','car',2), ArrayUtil::searchRecursive('rc', $array));
     }
 
     public function testSortWithOrder()
@@ -386,7 +386,7 @@ class ArrayUtilTest extends TestCase
         );
         // sort by value
         ArrayUtil::sortWithOrder($array, array('foo','derp'));
-        $this->assertSame(array(
+        self::assertSame(array(
             'a' => 'foo',
             'd' => 'derp',
             'b' => '9',
@@ -395,7 +395,7 @@ class ArrayUtilTest extends TestCase
 
         // sort by key
         ArrayUtil::sortWithOrder($array, array('b'), 'key');
-        $this->assertSame(array(
+        self::assertSame(array(
             'b' => '9',
             'a' => 'foo',
             'c' => '10',
@@ -404,7 +404,7 @@ class ArrayUtilTest extends TestCase
 
         // sort by value
         ArrayUtil::sortWithOrder($array);
-        $this->assertSame(array(
+        self::assertSame(array(
             'b' => '9',
             'c' => '10',
             'd' => 'derp',
@@ -413,7 +413,7 @@ class ArrayUtilTest extends TestCase
 
         // sort by value
         ArrayUtil::sortWithOrder($array, null, 'key');
-        $this->assertSame(array(
+        self::assertSame(array(
             'a' => 'foo',
             'b' => '9',
             'c' => '10',

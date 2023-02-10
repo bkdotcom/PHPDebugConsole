@@ -236,6 +236,9 @@ class Backtrace
         //   object : scope / context
         $info['classCalled'] = $info['classContext'];
         if ($info['classContext'] !== $info['class']) {
+            if ($info['function'] === '{closure}') {
+                return $info;
+            }
             $reflector = new \ReflectionMethod($info['classContext'], $info['function']);
             $classDeclared = $reflector->getDeclaringClass()->getName();
             if ($classDeclared === $info['classContext']) {

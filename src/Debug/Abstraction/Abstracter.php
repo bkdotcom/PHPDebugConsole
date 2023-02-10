@@ -343,7 +343,7 @@ class Abstracter extends AbstractComponent
     {
         $type = self::TYPE_ARRAY;
         $typeMore = self::TYPE_RAW;  // needs abstracted (references removed / values abstracted if necessary)
-        if (\count($val) === 2 && $this->debug->php->isCallable($val, Php::IS_CALLABLE_OBJ_ONLY)) {
+        if (\count($val) === 2 && $this->debug->php->isCallable($val, Php::IS_CALLABLE_ARRAY_ONLY)) {
             $type = self::TYPE_CALLABLE;
         }
         return array($type, $typeMore);

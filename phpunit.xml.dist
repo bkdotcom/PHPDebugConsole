@@ -49,16 +49,16 @@
     <testsuite name="Container">
       <directory>tests/Container</directory>
     </testsuite>
+    <testsuite name="Debug">
+      <directory>tests/Debug</directory>
+      <exclude>tests/Debug/AutoloaderTest.php</exclude>
+      <exclude>tests/Debug/Utility</exclude>
+    </testsuite>
     <testsuite name="HttpMessage">
       <directory>tests/HttpMessage</directory>
     </testsuite>
     <testsuite name="Utility">
       <directory>tests/Debug/Utility</directory>
-    </testsuite>
-    <testsuite name="Debug">
-      <directory>tests/Debug</directory>
-      <exclude>tests/Debug/AutoloaderTest.php</exclude>
-      <exclude>tests/Debug/Utility</exclude>
     </testsuite>
   </testsuites>
 </phpunit>

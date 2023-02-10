@@ -3,9 +3,10 @@
 namespace bdk\Test\Debug\Utility;
 
 use bdk\Debug\Utility\StringUtil;
+use bdk\Test\Debug\Fixture\Test2Base;
+use bdk\Test\Debug\Fixture\TestObj;
 use bdk\Test\PolyFill\ExpectExceptionTrait;
 use PHPUnit\Framework\TestCase;
-use ReflectionProperty;
 
 /**
  * PHPUnit tests for Utility class
@@ -35,48 +36,49 @@ class StringUtilTest extends TestCase
         $ret = $operator !== null
             ? StringUtil::compare($valA, $valB, $operator)
             : StringUtil::compare($valA, $valB);
-        $this->assertSame($expect, $ret);
+        self::assertSame($expect, $ret);
     }
 
     public function testCompareException()
     {
-        $this->expectException('InvalidArgumentException');
-        $this->expectExceptionMessage('bdk\Debug\Utility\StringUtil::compare - Invalid operator passed');
+        self::expectException('InvalidArgumentException');
+        self::expectExceptionMessage('bdk\Debug\Utility\StringUtil::compare - Invalid operator passed');
         StringUtil::compare('1', '2', '3');
     }
 
     public function testInterpolate()
     {
-        $message = '{user.name} was {where}. {obj} {notReplaced}';
+        $message = '{user.name} was {where}. {obj} {null} {notReplaced}';
         $values = array(
-            'where' => 'here',
-            'obj' => new \bdk\Test\Debug\Fixture\Test('toStringVal'),
+            'null' => null,
+            'obj' => new TestObj('toStringVal'),
             'user' => array(
                 'name' => 'Brad',
-            )
+            ),
+            'where' => 'here',
         );
         $placeholders = array();
         $return = StringUtil::interpolate($message, $values, $placeholders);
-        $this->assertSame('Brad was here. toStringVal {notReplaced}', $return);
-        $this->assertSame(array('user.name','where','obj','notReplaced'), $placeholders);
+        self::assertSame('Brad was here. toStringVal  {notReplaced}', $return);
+        self::assertSame(array('user.name','where','obj','null','notReplaced'), $placeholders);
 
-        $message = new \bdk\Test\Debug\Fixture\Test($message);
+        $message = new TestObj($message);
         $return = StringUtil::interpolate($message, (object) $values, $placeholders);
-        $this->assertSame('Brad was here. toStringVal {notReplaced}', $return);
-        $this->assertSame(array('user.name','where','obj','notReplaced'), $placeholders);
+        self::assertSame('Brad was here. toStringVal {null} {notReplaced}', $return);
+        self::assertSame(array('user.name','where','obj','null','notReplaced'), $placeholders);
     }
 
     public function testInterpolateInvalidMessage()
     {
-        $this->expectException('InvalidArgumentException');
-        $this->expectExceptionMessage('bdk\Debug\Utility::interpolate()\'s $message expects string or Stringable object. boolean provided.');
+        self::expectException('InvalidArgumentException');
+        self::expectExceptionMessage('bdk\Debug\Utility::interpolate()\'s $message expects string or Stringable object. boolean provided.');
         StringUtil::interpolate(false, 'string');
     }
 
     public function testInterpolateInvalidContext()
     {
-        $this->expectException('InvalidArgumentException');
-        $this->expectExceptionMessage('bdk\Debug\Utility::interpolate()\'s $context expects array or object for $context. string provided.');
+        self::expectException('InvalidArgumentException');
+        self::expectExceptionMessage('bdk\Debug\Utility::interpolate()\'s $context expects array or object for $context. string provided.');
         StringUtil::interpolate('message', 'string');
     }
 
@@ -92,16 +94,16 @@ class StringUtilTest extends TestCase
      */
     public function testIsBase64Encoded($val, $expect)
     {
-        $this->assertSame($expect, StringUtil::isBase64Encoded($val));
+        self::assertSame($expect, StringUtil::isBase64Encoded($val));
     }
 
     public function testIsJson()
     {
-        $this->assertFalse(StringUtil::isJson(null));
+        self::assertFalse(StringUtil::isJson(null));
         // tis json, but it's not an obj or list
-        $this->assertFalse(StringUtil::isJson('"string"'));
-        $this->assertTrue(StringUtil::isJson('[42]'));
-        $this->assertTrue(StringUtil::isJson('{"foo":"bar"}'));
+        self::assertFalse(StringUtil::isJson('"string"'));
+        self::assertTrue(StringUtil::isJson('[42]'));
+        self::assertTrue(StringUtil::isJson('{"foo":"bar"}'));
     }
 
     /**
@@ -114,7 +116,7 @@ class StringUtilTest extends TestCase
      */
     public function testIsSerializedSafe($val, $expect)
     {
-        $this->assertSame($expect, StringUtil::isSerializedSafe($val));
+        self::assertSame($expect, StringUtil::isSerializedSafe($val));
     }
 
     public function getXml()
@@ -133,15 +135,15 @@ EOD;
 
     public function testIsXml()
     {
-        $xml = $this->getXml();
-        $this->assertFalse(StringUtil::isXml(null));
-        $this->assertTrue(StringUtil::isXml($xml));
+        $xml = self::getXml();
+        self::assertFalse(StringUtil::isXml(null));
+        self::assertTrue(StringUtil::isXml($xml));
     }
 
     public function testPrettyJson()
     {
         $data = array('foo','bar');
-        $this->assertSame(
+        self::assertSame(
             \json_encode($data, JSON_PRETTY_PRINT),
             StringUtil::prettyJson(\json_encode($data))
         );
@@ -150,7 +152,7 @@ EOD;
     public function testPrettySql()
     {
         $sql = 'SELECT * FROM table WHERE col = "val"';
-        $this->assertEquals(
+        self::assertEquals(
             \str_replace('·', ' ', 'SELECT·
   *·
 FROM·
@@ -163,12 +165,9 @@ WHERE·
 
     public function testPrettyXml()
     {
-        // $reflector = new ReflectionProperty('bdk\Debug\Utility\StringUtil', 'domDocument');
-        // $reflector->setAccessible(true);
-        // $reflector->setValue(null, null);
         \bdk\Test\Debug\Helper::setProp('bdk\Debug\Utility\StringUtil', 'domDocument', null);
 
-        $this->assertSame('', StringUtil::prettyXml(''));
+        self::assertSame('', StringUtil::prettyXml(''));
 
         $xml = $this->getXml();
         $expect = <<<'EOD'
@@ -184,10 +183,10 @@ WHERE·
 </SOAP-ENV:Envelope>
 
 EOD;
-        $this->assertSame($expect, StringUtil::prettyXml($xml));
+        self::assertSame($expect, StringUtil::prettyXml($xml));
     }
 
-    public function providerCompare()
+    public static function providerCompare()
     {
         // =, ==, ===, <>, != !== >= <= > <
         return array(
@@ -251,7 +250,7 @@ EOD;
         );
     }
 
-    public function providerIsBase64Encoded()
+    public static function providerIsBase64Encoded()
     {
         $base64Str = \base64_encode(\chunk_split(\str_repeat('zippity do dah', 50)));
 
@@ -268,7 +267,7 @@ EOD;
         );
     }
 
-    public function providerIsSerializedSafe()
+    public static function providerIsSerializedSafe()
     {
         return array(
             // 0
@@ -293,12 +292,12 @@ EOD;
             ),
             // 4
             array(
-                \serialize($this),
+                \serialize(new Test2Base()),
                 false,
             ),
             // 5
             array(
-                \serialize(array('notSafe' => $this)),
+                \serialize(array('notSafe' => new Test2Base())),
                 false,
             ),
         );

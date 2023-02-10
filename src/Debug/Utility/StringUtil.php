@@ -459,11 +459,18 @@ class StringUtil
     {
         $path = \array_filter(\preg_split('#[\./]#', $placeholder), 'strlen');
         $key0 = $path[0];
+        $noValue = "\x00noValue\x00";
         $val = self::$interpIsArrayAccess
-            ? (isset(self::$interpContext[$key0]) ? self::$interpContext[$key0] : null)
-            : (isset(self::$interpContext->{$key0}) ? self::$interpContext->{$key0} : null);
+            ? (\array_key_exists($key0, self::$interpContext) ? self::$interpContext[$key0] : $noValue)
+            : (isset(self::$interpContext->{$key0}) ? self::$interpContext->{$key0} : $noValue);
         if (\count($path) > 1) {
-            $val = ArrayUtil::pathGet($val, \array_slice($path, 1));
+            $val = ArrayUtil::pathGet($val, \array_slice($path, 1), $noValue);
+        }
+        if ($val === $noValue) {
+            return null;
+        }
+        if ($val === null) {
+            return '';
         }
         return $val;
     }

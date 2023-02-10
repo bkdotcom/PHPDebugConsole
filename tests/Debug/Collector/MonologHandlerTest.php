@@ -181,9 +181,7 @@ class MonologHandlerTest extends DebugTestFramework
         ), $this->helper->logEntryToArray($this->debug->data->get('log/__end__')));
     }
 
-
-
-    public function methodProvider()
+    public static function methodProvider()
     {
         return array(
             'emergency' => array('emergency', 'error', array('monolog emergency')),

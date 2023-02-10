@@ -16,7 +16,7 @@ use bdk\Test\Debug\DebugTestFramework;
  */
 class AlertTest extends DebugTestFramework
 {
-    public function providerTestMethod()
+    public static function providerTestMethod()
     {
         $return = array();
 

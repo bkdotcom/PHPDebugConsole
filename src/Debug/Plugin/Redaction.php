@@ -40,6 +40,7 @@ class Redaction extends AbstractComponent implements SubscriberInterface
     );
     protected $methods = array(
         'redact',
+        'redactHeaders',
     );
 
     /**
@@ -48,8 +49,7 @@ class Redaction extends AbstractComponent implements SubscriberInterface
     public function __construct()
     {
         $this->cfg['redactReplace'] = static function ($str, $key = null) {
-            // "use" our function params so things (ie phpmd) don't complain
-            array($str, $key);
+            array($str, $key); // phpmd suppress
             return '█████████';
         };
     }
@@ -114,6 +114,106 @@ class Redaction extends AbstractComponent implements SubscriberInterface
     }
 
     /**
+     * Redact headers
+     *
+     * @param array|string $headers Parsed headers or header block
+     *
+     * @return array|string
+     */
+    public function redactHeaders($headers)
+    {
+        $isString = \is_string($headers);
+        if ($isString) {
+            list($startLine, $headers) = $this->parseHeaders($headers);
+        }
+        foreach ($headers as $name => $values) {
+            foreach ($values as $i => $value) {
+                $headers[$name][$i] = $this->redactHeaderValue($name, $value);
+            }
+        }
+        if ($isString) {
+            $headers = $this->buildHeaderBlock($headers, $startLine);
+        }
+        return $headers;
+    }
+
+    /**
+     * Redact a single header value
+     *
+     * @param string $name  Header name
+     * @param string $value Header value
+     *
+     * @return string
+     */
+    public function redactHeaderValue($name, $value)
+    {
+        if (\in_array($name, array('Authorization', 'Proxy-Authorization'), true) === false) {
+            return $this->redactString($value, $name);
+        }
+        $redactedBlock = '█████████';
+        if (\strpos($value, 'Basic') === 0) {
+            $auth = \base64_decode(\str_replace('Basic ', '', $value), true);
+            $userpass = \explode(':', $auth);
+            return 'Basic ' . $redactedBlock . ' (base64\'d ' . $userpass[0] . ':█████)';
+        }
+        if (\strpos($value, 'Digest') === 0) {
+            return \preg_replace('/(response="?)([^,"]*)("?)/', '$1' . $redactedBlock . '$3', $value);
+        }
+        if (\strpos($value, 'OAuth') === 0) {
+            return \preg_replace('/(oauth_signature="?)([^,"]*)("?)/', '$1' . $redactedBlock . '$3', $value);
+        }
+        // Bearer or any unknown auth type
+        return \preg_replace('/^(\S+ ).+$/', '$1' . $redactedBlock, $value);
+    }
+
+    /**
+     * Convert header name -> values to string
+     *
+     * @param array<string, string[]> $headers   Parsed headers
+     * @param string|null             $startLine request / status line
+     *
+     * @return string
+     */
+    private function buildHeaderBlock($headers, $startLine = null)
+    {
+        $lines = array();
+        if ($startLine) {
+            $lines[] = $startLine;
+        }
+        foreach ($headers as $name => $values) {
+            foreach ($values as $value) {
+                $lines[] = $name . ': ' . $value;
+            }
+        }
+        return \implode("\r\n", $lines);
+    }
+
+    /**
+     * Build Regex that will search for key=val in string
+     *
+     * @param string $key key to redact
+     *
+     * @return string
+     */
+    private function buildRegex($key)
+    {
+        $strlen = \strlen($key);
+        return '#(?:'
+            // xml
+            . '<(?:\w+:)?' . $key . '\b.*?>\s*([^<]*?)\s*</(?:\w+:)?' . $key . '>'
+            . '|'
+            // json
+            . \json_encode($key) . '\s*:\s*"([^"]*?)"'
+            . '|'
+            // serialized
+            . 's:' . $strlen . ':"' . $key . '";s:\d+:"(.*?)";'
+            . '|'
+            // url encoded
+            . '\b' . $key . '=([^\s&]+\b)'
+            . ')#i';
+    }
+
+    /**
      * Handle "redactKeys" config update
      *
      * @param mixed $val config value
@@ -126,10 +226,39 @@ class Redaction extends AbstractComponent implements SubscriberInterface
     {
         $keys = array();
         foreach ($val as $key) {
-            $keys[$key] = $this->redactBuildRegex($key);
+            $keys[$key] = $this->buildRegex($key);
         }
         $this->cfg['redactKeys'] = $keys;
         return $val;
+    }
+
+    /**
+     * Parse header block in to name -> values
+     *
+     * @param string $headers Header blocks
+     *
+     * @return array<string, string[]>
+     */
+    private function parseHeaders($headers)
+    {
+        $headerLines = \explode("\r\n", \trim($headers));
+        $startLine = null;
+        $headers = array();
+        foreach ($headerLines as $i => $line) {
+            if ($i === 0 && \strpos($line, ':') === false) {
+                $startLine = $line;
+                continue;
+            }
+            list($name, $value) = \array_replace(array(null, null), \explode(':', $line, 2));
+            $name = \trim($name);
+            if (isset($headers[$name]) === false) {
+                $headers[$name] = array();
+            }
+            $headers[$name][] = $value !== null
+                ? \trim($value)
+                : null;
+        }
+        return array($startLine, $headers);
     }
 
     /**
@@ -171,31 +300,6 @@ class Redaction extends AbstractComponent implements SubscriberInterface
             $array[$k] = $this->redact($v, $k);
         }
         return $array;
-    }
-
-    /**
-     * Build Regex that will search for key=val in string
-     *
-     * @param string $key key to redact
-     *
-     * @return string
-     */
-    private function redactBuildRegex($key)
-    {
-        $strlen = \strlen($key);
-        return '#(?:'
-            // xml
-            . '<(?:\w+:)?' . $key . '\b.*?>\s*([^<]*?)\s*</(?:\w+:)?' . $key . '>'
-            . '|'
-            // json
-            . \json_encode($key) . '\s*:\s*"([^"]*?)"'
-            . '|'
-            // serialized
-            . 's:' . $strlen . ':"' . $key . '";s:\d+:"(.*?)";'
-            . '|'
-            // url encoded
-            . '\b' . $key . '=([^\s&]+\b)'
-            . ')#i';
     }
 
     /**

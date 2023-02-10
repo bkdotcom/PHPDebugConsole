@@ -21,7 +21,7 @@ class UtilityTest extends DebugTestFramework
     public function testEmitHeaders()
     {
         Utility::emitHeaders(array());
-        $this->assertSame(array(), $GLOBALS['collectedHeaders']);
+        self::assertSame(array(), $GLOBALS['collectedHeaders']);
 
         Utility::emitHeaders(array(
             'Location' => 'http://www.test.com/',
@@ -31,7 +31,7 @@ class UtilityTest extends DebugTestFramework
             ),
             array('Content-Length', 1234),
         ));
-        $this->assertSame(array(
+        self::assertSame(array(
             array('Location: http://www.test.com/', true),
             array('Content-Security-Policy: foo', true),
             array('Content-Security-Policy: bar', false),
@@ -39,46 +39,46 @@ class UtilityTest extends DebugTestFramework
         ), $GLOBALS['collectedHeaders']);
 
         $GLOBALS['headersSent'] = array(__FILE__, 42);
-        $this->expectException('RuntimeException');
-        $this->expectExceptionMessage('Headers already sent: ' . __FILE__ . ', line 42');
+        self::expectException('RuntimeException');
+        self::expectExceptionMessage('Headers already sent: ' . __FILE__ . ', line 42');
         Utility::emitHeaders(array('foo' => 'bar'));
     }
 
     public function testFormatDuration()
     {
-        $this->assertSame('1:01:01.066000', Utility::formatDuration(3661.066, "%h:%I:%S.%F"));
-        $this->assertSame('1h 01m 01s', Utility::formatDuration(3661));
-        $this->assertSame('30m 30s', Utility::formatDuration(1830));
-        $this->assertSame('33 sec', Utility::formatDuration(33));
-        $this->assertSame('123 ms', Utility::formatDuration(0.123));
-        $this->assertSame('123 μs', Utility::formatDuration(0.000123));
+        self::assertSame('1:01:01.066000', Utility::formatDuration(3661.066, "%h:%I:%S.%F"));
+        self::assertSame('1h 01m 01s', Utility::formatDuration(3661));
+        self::assertSame('30m 30s', Utility::formatDuration(1830));
+        self::assertSame('33 sec', Utility::formatDuration(33));
+        self::assertSame('123 ms', Utility::formatDuration(0.123));
+        self::assertSame('123 μs', Utility::formatDuration(0.000123));
 
-        $this->assertSame('123 μs', Utility::formatDuration(0.000123, 'us'));
-        $this->assertSame('1234 ms', Utility::formatDuration(1.234, 'ms'));
-        $this->assertSame('66 sec', Utility::formatDuration(66, 's'));
-        $this->assertSame('66 sec', Utility::formatDuration(66, 'sec'));
+        self::assertSame('123 μs', Utility::formatDuration(0.000123, 'us'));
+        self::assertSame('1234 ms', Utility::formatDuration(1.234, 'ms'));
+        self::assertSame('66 sec', Utility::formatDuration(66, 's'));
+        self::assertSame('66 sec', Utility::formatDuration(66, 'sec'));
     }
 
     public function testGetBytes()
     {
-        $this->assertSame('1 PB', Utility::getBytes('1pb'));
-        $this->assertSame('1 TB', Utility::getBytes('1tb'));
-        $this->assertSame('1 GB', Utility::getBytes('1gb'));
-        $this->assertSame('1 MB', Utility::getBytes('1mb'));
-        $this->assertSame('1 kB', Utility::getBytes('1 kb'));
-        $this->assertSame('1 kB', Utility::getBytes('1024'));
-        $this->assertSame('1 kB', Utility::getBytes(1024));
-        $this->assertSame('123 B', Utility::getBytes('123 b'));
-        $this->assertSame('0 B', Utility::getBytes(0));
-        $this->assertSame('0 B', Utility::getBytes(0.5));
+        self::assertSame('1 PB', Utility::getBytes('1pb'));
+        self::assertSame('1 TB', Utility::getBytes('1tb'));
+        self::assertSame('1 GB', Utility::getBytes('1gb'));
+        self::assertSame('1 MB', Utility::getBytes('1mb'));
+        self::assertSame('1 kB', Utility::getBytes('1 kb'));
+        self::assertSame('1 kB', Utility::getBytes('1024'));
+        self::assertSame('1 kB', Utility::getBytes(1024));
+        self::assertSame('123 B', Utility::getBytes('123 b'));
+        self::assertSame('0 B', Utility::getBytes(0));
+        self::assertSame('0 B', Utility::getBytes(0.5));
 
-        $this->assertSame(\pow(2, 50), Utility::getBytes('1pb', true));
-        $this->assertSame(\pow(2, 40), Utility::getBytes('1tb', true));
-        $this->assertSame(\pow(2, 30), Utility::getBytes('1gb', true));
-        $this->assertSame(\pow(2, 20), Utility::getBytes('1mb', true));
-        $this->assertSame(\pow(2, 10), Utility::getBytes('1kb', true));
+        self::assertSame(\pow(2, 50), Utility::getBytes('1pb', true));
+        self::assertSame(\pow(2, 40), Utility::getBytes('1tb', true));
+        self::assertSame(\pow(2, 30), Utility::getBytes('1gb', true));
+        self::assertSame(\pow(2, 20), Utility::getBytes('1mb', true));
+        self::assertSame(\pow(2, 10), Utility::getBytes('1kb', true));
 
-        $this->assertSame(false, Utility::getBytes('bob'));
+        self::assertSame(false, Utility::getBytes('bob'));
     }
 
     /**
@@ -99,11 +99,11 @@ class UtilityTest extends DebugTestFramework
             ),
             array('Content-Length', 1234),
         ));
-        $this->assertSame('application/json', Utility::getEmittedHeader());
-        $this->assertSame('foo, bar', Utility::getEmittedHeader('Content-Security-Policy'));
-        $this->assertSame(array('foo', 'bar'), Utility::getEmittedHeader('Content-Security-Policy', null));
-        $this->assertSame('', Utility::getEmittedHeader('Not-Sent'));
-        $this->assertSame(array(), Utility::getEmittedHeader('Not-Sent', null));
+        self::assertSame('application/json', Utility::getEmittedHeader());
+        self::assertSame('foo, bar', Utility::getEmittedHeader('Content-Security-Policy'));
+        self::assertSame(array('foo', 'bar'), Utility::getEmittedHeader('Content-Security-Policy', null));
+        self::assertSame('', Utility::getEmittedHeader('Not-Sent'));
+        self::assertSame(array(), Utility::getEmittedHeader('Not-Sent', null));
     }
 
     /**
@@ -123,7 +123,7 @@ class UtilityTest extends DebugTestFramework
             ),
             array('Content-Length', 1234),
         ));
-        $this->assertSame(array(
+        self::assertSame(array(
             'Location' => array(
                 'http://www.test.com/',
             ),
@@ -141,35 +141,35 @@ class UtilityTest extends DebugTestFramework
     {
         $stream = new Stream('this is a test');
         $stream->seek(8);
-        $this->assertSame('this is a test', Utility::getStreamContents($stream));
-        $this->assertSame('a test', $stream->getContents());
+        self::assertSame('this is a test', Utility::getStreamContents($stream));
+        self::assertSame('a test', $stream->getContents());
     }
 
     public function testGitBranch()
     {
         $branch = Utility::gitBranch();
-        $this->assertTrue(\is_string($branch) || $branch === null);
+        self::assertTrue(\is_string($branch) || $branch === null);
     }
 
     /**
-     * @dataProvider httpMethodHasBodyProvider
+     * @dataProvider providerHttpMethodHasBody
      */
     public function testHttpMethodHasBody($method, $hasBodyExpect)
     {
         $hasBody = Utility::httpMethodHasBody($method);
-        $this->assertSame($hasBodyExpect, $hasBody);
+        self::assertSame($hasBodyExpect, $hasBody);
     }
 
     public function testIsFile()
     {
-        $this->assertFalse(Utility::isFile(123));
-        $this->assertTrue(Utility::isFile(__FILE__));
+        self::assertFalse(Utility::isFile(123));
+        self::assertTrue(Utility::isFile(__FILE__));
         // is_file() expects parameter 1 to be a valid path, string given
-        $this->assertFalse(Utility::isFile("\0foo.txt"));
-        $this->assertFalse(Utility::isFile(__DIR__ . '/' . "\0foo.txt"));
+        self::assertFalse(Utility::isFile("\0foo.txt"));
+        self::assertFalse(Utility::isFile(__DIR__ . '/' . "\0foo.txt"));
     }
 
-    public function httpMethodHasBodyProvider()
+    public static function providerHttpMethodHasBody()
     {
         return array(
             'CUSTOM' => array('CUSTOM', true),

@@ -29,8 +29,8 @@ class PhpDocTest extends TestCase
     {
         $phpDoc = new PhpDoc();
         $parsers = \bdk\Test\Debug\Helper::getProp($phpDoc, 'parsers');
-        $this->assertIsArray($parsers);
-        $this->assertNotEmpty($parsers, 'Parsers is empty');
+        self::assertIsArray($parsers);
+        self::assertNotEmpty($parsers, 'Parsers is empty');
     }
 
     public function testGetParsedObject()
@@ -133,16 +133,16 @@ class PhpDocTest extends TestCase
             ]
         }
 EOD;
-        $this->assertSame(\json_decode($expectJson, true), $parsed);
+        self::assertSame(\json_decode($expectJson, true), $parsed);
 
         $parsed = Debug::getInstance()->phpDoc->getParsed('\bdk\Test\Debug\Fixture\Utility\PhpDocImplements');
-        $this->assertSame(\json_decode($expectJson, true), $parsed);
+        self::assertSame(\json_decode($expectJson, true), $parsed);
 
         $parsed = Debug::getInstance()->phpDoc->getParsed('\bdk\Test\Debug\Fixture\Utility\PhpDocExtends');
-        $this->assertSame(\json_decode($expectJson, true), $parsed);
+        self::assertSame(\json_decode($expectJson, true), $parsed);
 
         $parsed = Debug::getInstance()->phpDoc->getParsed('\bdk\Test\Debug\Fixture\Utility\PhpDocNoParent');
-        $this->assertSame(array(
+        self::assertSame(array(
             'summary' => null,
             'desc' => null,
         ), $parsed);
@@ -151,7 +151,7 @@ EOD;
     public function testGetParsedMethod()
     {
         $parsed = Debug::getInstance()->phpDoc->getParsed('\bdk\Test\Debug\Fixture\Utility\PhpDocImplements::someMethod()');
-        $this->assertSame(array(
+        self::assertSame(array(
             'summary' => 'SomeInterface summary',
             'desc' => 'SomeInterface description',
             'return' => array(
@@ -161,7 +161,7 @@ EOD;
         ), $parsed);
 
         $parsed = Debug::getInstance()->phpDoc->getParsed('\bdk\Test\Debug\Fixture\Utility\PhpDocExtends::someMethod2()');
-        $this->assertSame(array(
+        self::assertSame(array(
             'summary' => 'PhpDocImplements summary',
             'desc' => 'PhpDocImplements desc',
             'return' => array(
@@ -171,7 +171,7 @@ EOD;
         ), $parsed);
 
         $parsed = Debug::getInstance()->phpDoc->getParsed('\bdk\Test\Debug\Fixture\Utility\PhpDocExtends::someMethod3()');
-        $this->assertSame(array(
+        self::assertSame(array(
             'summary' => 'PhpDocExtends summary',
             'desc' => 'PhpDocExtends desc / PhpDocImplements desc',
             /*
@@ -183,7 +183,7 @@ EOD;
         ), $parsed);
 
         $parsed = Debug::getInstance()->phpDoc->getParsed('\bdk\Test\Debug\Fixture\Utility\PhpDocNoParent::someMethod()');
-        $this->assertSame(array(
+        self::assertSame(array(
             'summary' => null,
             'desc' => null,
         ), $parsed);
@@ -192,7 +192,7 @@ EOD;
     public function testGetParsedProperty()
     {
         $phpDoc = Debug::getInstance()->phpDoc->getParsed('\bdk\Test\Debug\Fixture\Test2::$magicReadProp');
-        $this->assertSame(array(
+        self::assertSame(array(
             'summary' => 'This property is important',
             'desc' => null,
             'var' => array(
@@ -205,7 +205,7 @@ EOD;
         ), $phpDoc);
 
         $parsed = Debug::getInstance()->phpDoc->getParsed('\bdk\Test\Debug\Fixture\Utility\PhpDocImplements::$someProperty');
-        $this->assertSame(array(
+        self::assertSame(array(
             'summary' => '$someProperty summary',
             'desc' => null,
             'var' => array(
@@ -221,11 +221,11 @@ EOD;
     public function testGetParsedConstant()
     {
         if (PHP_VERSION_ID < 70100) {
-            $this->markTestSkipped('ReflectionConstant is PHP >= 7.1');
+            self::markTestSkipped('ReflectionConstant is PHP >= 7.1');
         }
         $reflector = new \ReflectionClassConstant('\bdk\Test\Debug\Fixture\Utility\PhpDocExtends', 'SOME_CONSTANT');
         $parsed = Debug::getInstance()->phpDoc->getParsed($reflector);
-        $this->assertSame(array(
+        self::assertSame(array(
             'summary' => 'PhpDocImplements summary',
             'desc' => null,
             /*
@@ -240,7 +240,7 @@ EOD;
         ), $parsed);
 
         $parsed = Debug::getInstance()->phpDoc->getParsed('\bdk\Test\Debug\Fixture\Utility\PhpDocExtends::SOME_CONSTANT');
-        $this->assertSame(array(
+        self::assertSame(array(
             'summary' => 'PhpDocImplements summary',
             'desc' => null,
             /*
@@ -255,7 +255,7 @@ EOD;
         ), $parsed);
     }
 
-    public function dataProviderComments()
+    public static function dataProviderComments()
     {
         return array(
             'basic' => array(
@@ -388,6 +388,6 @@ EOD;
     public function testStrings($comment, $expect)
     {
         $parsed = Debug::getInstance()->phpDoc->getParsed($comment);
-        $this->assertSame($expect, $parsed);
+        self::assertSame($expect, $parsed);
     }
 }

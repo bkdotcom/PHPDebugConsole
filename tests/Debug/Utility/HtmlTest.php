@@ -104,7 +104,7 @@ class HtmlTest extends DebugTestFramework
         );
         foreach ($testStack as $test) {
             $ret = Html::buildAttribString($test['attribs']);
-            $this->assertSame($test['expect'], $ret);
+            self::assertSame($test['expect'], $ret);
         }
     }
 
@@ -170,7 +170,7 @@ class HtmlTest extends DebugTestFramework
         );
         foreach ($testStack as $test) {
             $ret = \call_user_func_array('bdk\\Debug\\Utility\Html::parseAttribString', $test['params']);
-            $this->assertSame($test['expect'], $ret);
+            self::assertSame($test['expect'], $ret);
         }
     }
 
@@ -185,7 +185,7 @@ class HtmlTest extends DebugTestFramework
     public function testBuildTag($tagName, $attribs, $innerhtml, $expect)
     {
         $tag = Html::buildTag($tagName, $attribs, $innerhtml);
-        $this->assertSame($expect, $tag);
+        self::assertSame($expect, $tag);
     }
 
     /**
@@ -197,10 +197,10 @@ class HtmlTest extends DebugTestFramework
     public function testParseTag($tag, $expect)
     {
         $parsed = Html::parseTag($tag);
-        $this->assertSame($expect, $parsed);
+        self::assertSame($expect, $parsed);
     }
 
-    public function providerTestBuildTag()
+    public static function providerTestBuildTag()
     {
         return array(
             'selfClosing' => array(
@@ -236,7 +236,7 @@ class HtmlTest extends DebugTestFramework
         );
     }
 
-    public function providerTestParseTag()
+    public static function providerTestParseTag()
     {
         return array(
             'tagsAndEntities' => array(

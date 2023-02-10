@@ -59,7 +59,7 @@ class OAuthTest extends DebugTestFramework
                     array(
                         'oauth_consumer_key' => 'key',
                         'oauth_nonce' => '%s',
-                        'oauth_signature' => '%s',
+                        'oauth_signature' => '█████████',
                         'oauth_signature_method' => 'HMAC-SHA1',
                         'oauth_timestamp' => array(
                             'brief' => false,
@@ -89,7 +89,7 @@ class OAuthTest extends DebugTestFramework
                 'method' => 'log',
                 'args' => array(
                     'request headers',
-                    'Authorization: OAuth oauth_consumer_key="key",oauth_signature_method="HMAC-SHA1",oauth_nonce="%s",oauth_timestamp="%d",oauth_version="1.0",oauth_signature="%s"',
+                    'Authorization: OAuth oauth_consumer_key="key",oauth_signature_method="HMAC-SHA1",oauth_nonce="%s",oauth_timestamp="%d",oauth_version="1.0",oauth_signature="█████████"',
                 ),
                 'meta' => array(
                     'channel' => 'general.OAuth',
@@ -198,7 +198,7 @@ class OAuthTest extends DebugTestFramework
                         'oauth_callback' => 'http://www.bradkent.com/',
                         'oauth_consumer_key' => 'key',
                         'oauth_nonce' => '%s',
-                        'oauth_signature' => '%s',
+                        'oauth_signature' => '█████████',
                         'oauth_signature_method' => 'HMAC-SHA1',
                         'oauth_timestamp' => array(
                             'brief' => false,
@@ -232,7 +232,7 @@ class OAuthTest extends DebugTestFramework
                 'method' => 'log',
                 'args' => array(
                     'request headers',
-                    'Authorization: OAuth oauth_callback="http%3A%2F%2Fwww.bradkent.com%2F",oauth_consumer_key="key",oauth_signature_method="HMAC-SHA1",oauth_nonce="%s",oauth_timestamp="%d",oauth_version="1.0",oauth_signature="%s"',
+                    'Authorization: OAuth oauth_callback="http%3A%2F%2Fwww.bradkent.com%2F",oauth_consumer_key="key",oauth_signature_method="HMAC-SHA1",oauth_nonce="%s",oauth_timestamp="%d",oauth_version="1.0",oauth_signature="█████████"',
                 ),
                 'meta' => array(
                     'channel' => 'general.OAuth',
@@ -330,7 +330,7 @@ class OAuthTest extends DebugTestFramework
                     array(
                         'oauth_consumer_key' => 'key',
                         'oauth_nonce' => '%s',
-                        'oauth_signature' => '%s',
+                        'oauth_signature' => '█████████',
                         'oauth_signature_method' => 'HMAC-SHA1',
                         'oauth_timestamp' => array(
                             'brief' => false,
@@ -362,7 +362,7 @@ class OAuthTest extends DebugTestFramework
                 'args' => array(
                     'request headers',
                     implode('%A' . "\n", array(
-                        'Authorization: OAuth oauth_consumer_key="key",oauth_signature_method="HMAC-SHA1",oauth_nonce="%s",oauth_timestamp="%d",oauth_version="1.0",oauth_signature="%s"',
+                        'Authorization: OAuth oauth_consumer_key="key",oauth_signature_method="HMAC-SHA1",oauth_nonce="%s",oauth_timestamp="%d",oauth_version="1.0",oauth_signature="█████████"',
                         'Content-Type: application/x-www-form-urlencoded',
                     )),
                 ),
@@ -432,7 +432,7 @@ class OAuthTest extends DebugTestFramework
                     array(
                         'oauth_consumer_key' => 'key',
                         'oauth_nonce' => '%s',
-                        'oauth_signature' => '%s',
+                        'oauth_signature' => '█████████',
                         'oauth_signature_method' => 'HMAC-SHA1',
                         'oauth_timestamp' => array(
                             'brief' => false,

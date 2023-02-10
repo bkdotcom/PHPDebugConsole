@@ -347,7 +347,7 @@ class ErrorSummary
     }
 
     /**
-     * Get all unsupressed errors that were not logged in console
+     * Get all unsuppressed errors that were not logged in console
      *
      * @return Error[]
      */

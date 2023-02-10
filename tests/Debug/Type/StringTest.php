@@ -29,7 +29,7 @@ class StringTest extends DebugTestFramework
         \bdk\Test\Debug\Helper::setProp($htmlString, 'lazy', array());
     }
 
-    public function providerTestMethod()
+    public static function providerTestMethod()
     {
         $ts = \time();
         $longString = <<<'EOD'
@@ -288,7 +288,7 @@ EOD;
                     'entry' => function (LogEntry $logEntry) use ($base64snip) {
                         $jsonExpect = '{"method":"log","args":[{"brief":false,"strlen":10852,"typeMore":"base64","value":' . \json_encode($base64snip) . ',"valueDecoded":{"brief":false,"strlen":%d,"typeMore":"binary","value":"","contentType":"%s","type":"string","debug":"\u0000debug\u0000"},"type":"string","debug":"\u0000debug\u0000"}],"meta":[]}';
                         $jsonified = \json_encode($logEntry);
-                        $this->assertStringMatchesFormat($jsonExpect, $jsonified);
+                        self::assertStringMatchesFormat($jsonExpect, $jsonified);
                     },
                     'chromeLogger' => array(
                         array(
@@ -338,7 +338,7 @@ EOD;
                     'entry' => function (LogEntry $logEntry) use ($base64snip2) {
                         $jsonExpect = '{"method":"log","args":[{"brief":false,"strlen":null,"typeMore":"base64","value":"' . $base64snip2 . '","valueDecoded":{"brief":false,"strlen":null,"typeMore":"json","value":"{\n    \"poop\": \"\\\\ud83d\\\\udca9\",\n    \"int\": 42,\n    \"password\": \"\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\"\n}","valueDecoded":{"poop":"\ud83d\udca9","int":42,"password":"\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588"},"type":"string","attribs":{"class":["highlight","language-json"]},"addQuotes":false,"contentType":"application\/json","prettified":true,"prettifiedTag":true,"visualWhiteSpace":false,"debug":"\u0000debug\u0000"},"type":"string","debug":"\u0000debug\u0000"}],"meta":{"redact":true}}';
                         $jsonified = \json_encode($logEntry);
-                        $this->assertSame($jsonExpect, $jsonified);
+                        self::assertSame($jsonExpect, $jsonified);
                     },
                     'chromeLogger' => array(
                         array(
@@ -377,7 +377,7 @@ EOD;
                     'entry' => function (LogEntry $logEntry) use ($base64snip3) {
                         $jsonExpect = '{"method":"log","args":[{"brief":false,"strlen":null,"typeMore":"base64","value":"YTozOntzOjQ6InBvb3AiO3M6NDoi8J+SqSI7czozOiJpbnQiO2k6NDI7czo4OiJwYXNzd29yZCI7czo2OiJzZWNyZXQiO30=","valueDecoded":{"brief":false,"strlen":null,"typeMore":"serialized","value":"a:3:{s:4:\"poop\";s:4:\"\ud83d\udca9\";s:3:\"int\";i:42;s:8:\"password\";s:6:\"\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\";}","valueDecoded":{"poop":"\ud83d\udca9","int":42,"password":"\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588"},"type":"string","debug":"\u0000debug\u0000"},"type":"string","debug":"\u0000debug\u0000"}],"meta":{"redact":true}}';
                         $jsonified = \json_encode($logEntry);
-                        $this->assertSame($jsonExpect, $jsonified);
+                        self::assertSame($jsonExpect, $jsonified);
                     },
                     'chromeLogger' => array(
                         array(
@@ -490,24 +490,24 @@ EOD;
                     Debug::_meta('cfg', 'stringMaxLen', array('json' => array(0 => 123, 5000 => 5000))),
                 ),
                 array(
-                    'entry' => function (LogEntry $entry) {
+                    'entry' => static function (LogEntry $entry) {
                         $json = \file_get_contents(TEST_DIR . '/../composer.json');
                         $jsonPrettified = Debug::getInstance()->stringUtil->prettyJson($json);
                         // $this->helper->stderr('jsonPrettified', $entry['args'][0]);
-                        $this->assertSame(\strlen($jsonPrettified), $entry['args'][0]['strlen']);
-                        $this->assertSame(\substr($jsonPrettified, 0, 123), $entry['args'][0]['value']);
+                        self::assertSame(\strlen($jsonPrettified), $entry['args'][0]['strlen']);
+                        self::assertSame(\substr($jsonPrettified, 0, 123), $entry['args'][0]['value']);
                     },
-                    'html' => function ($html) {
+                    'html' => static function ($html) {
                         $json = \file_get_contents(TEST_DIR . '/../composer.json');
                         $jsonPrettified = Debug::getInstance()->stringUtil->prettyJson($json);
                         $diff = \strlen($jsonPrettified) - 123;
-                        $this->assertStringContainsString('<span class="maxlen">&hellip; ' . $diff . ' more bytes (not logged)</span></span></span></div>', $html);
+                        self::assertStringContainsString('<span class="maxlen">&hellip; ' . $diff . ' more bytes (not logged)</span></span></span></div>', $html);
                     },
-                    'text' => function ($text) {
+                    'text' => static function ($text) {
                         $json = \file_get_contents(TEST_DIR . '/../composer.json');
                         $jsonPrettified = Debug::getInstance()->stringUtil->prettyJson($json);
                         $diff = \strlen($jsonPrettified) - 123;
-                        $this->assertStringContainsString('[' . $diff . ' more bytes (not logged)]', $text);
+                        self::assertStringContainsString('[' . $diff . ' more bytes (not logged)]', $text);
                     },
                 ),
             ),

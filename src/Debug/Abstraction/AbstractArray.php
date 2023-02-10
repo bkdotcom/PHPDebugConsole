@@ -79,7 +79,9 @@ class AbstractArray
      */
     public function getCallableAbstraction($array)
     {
-        $className = \get_class($array[0]);
+        $className = \is_object($array[0])
+            ? \get_class($array[0])
+            : $array[0];
         if (PHP_VERSION_ID >= 70000 && \strpos($className, "@anonymous\0") !== false) {
             $className = $this->abstracter->debug->php->friendlyClassName($array[0]);
         }

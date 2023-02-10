@@ -14,7 +14,7 @@ class UriUtilsTest extends TestCase
     const RFC3986_BASE = 'http://a/b/c/d;p?q';
 
     /**
-     * @dataProvider isCrossOriginProvider
+     * @dataProvider providerIsCrossOrigin
      */
     public function testIsCrossOrigin($uri1, $uri2, $expect)
     {
@@ -22,7 +22,7 @@ class UriUtilsTest extends TestCase
     }
 
     /**
-     * @dataProvider resolveProvider
+     * @dataProvider providerResolve
      */
     public function testResolveUri($base, $rel, $expect)
     {
@@ -38,7 +38,7 @@ class UriUtilsTest extends TestCase
         self::assertSame($expect, (string) UriUtils::resolve($base, $targetUri));
     }
 
-    public function isCrossOriginProvider()
+    public static function providerIsCrossOrigin()
     {
         return [
             ['http://example.com/123', 'http://example.com/', false],
@@ -60,7 +60,7 @@ class UriUtilsTest extends TestCase
         ];
     }
 
-    public function resolveProvider()
+    public static function providerResolve()
     {
         return [
             [self::RFC3986_BASE, 'g:h',           'g:h'],

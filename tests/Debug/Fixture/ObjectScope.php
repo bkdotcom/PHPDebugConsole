@@ -4,7 +4,7 @@ namespace bdk\Test\Debug\Fixture;
 
 use bdk\Debug;
 
-class ScopeTest
+class ObjectScope
 {
     public function callsDebug()
     {

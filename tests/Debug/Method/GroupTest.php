@@ -43,9 +43,6 @@ class GroupTest extends DebugTestFramework
      */
     public function testGroup()
     {
-        // $test = new Fixture\Test();
-        // $testBase = new Fixture\TestBase();
-
         $this->testMethod(
             'group',
             array('a','b','c'),
@@ -97,7 +94,7 @@ class GroupTest extends DebugTestFramework
     public function testGroupArgs()
     {
         $obj = (object) array('foo' => 'bar');
-        $objToString = new Fixture\Test('toStringVal');
+        $objToString = new Fixture\TestObj('toStringVal');
         $dateTime = new \DateTime('now');  // stringified
         $this->debug->group(
             'string',

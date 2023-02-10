@@ -266,7 +266,6 @@ class LogReqResTest extends DebugTestFramework
                     'meta' => array(
                         'caption' => 'request headers',
                         'channel' => 'Request / Response',
-                        'redact' => true,
                         'sortable' => true,
                         'tableInfo' => array(
                             'class' => null,

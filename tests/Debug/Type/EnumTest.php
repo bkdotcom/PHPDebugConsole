@@ -17,7 +17,7 @@ use bdk\Test\Debug\DebugTestFramework;
  */
 class EnumTest extends DebugTestFramework
 {
-    public function providerTestMethod()
+    public static function providerTestMethod()
     {
         $isEnumSupported = PHP_VERSION_ID >= 80100;
         if ($isEnumSupported === false) {
@@ -34,11 +34,11 @@ class EnumTest extends DebugTestFramework
                     \bdk\Test\Debug\Fixture\Enum\Meals::BREAKFAST,
                 ),
                 array(
-                    'entry' => function (LogEntry $logEntry) {
+                    'entry' => static function (LogEntry $logEntry) {
                         $abs = $logEntry['args'][0];
-                        $this->assertAbstractionType($abs);
-                        $this->assertSame(Abstracter::TYPE_OBJECT, $abs['type']);
-                        $this->assertSame(array(
+                        self::assertAbstractionType($abs);
+                        self::assertSame(Abstracter::TYPE_OBJECT, $abs['type']);
+                        self::assertSame(array(
                             'BREAKFAST' => array(
                                 'attributes' => array(),
                                 'desc' => 'The most important meal',
@@ -116,10 +116,10 @@ class EnumTest extends DebugTestFramework
                     Debug::meta('cfg', 'caseCollect', false),
                 ),
                 array(
-                    'entry' => function (LogEntry $logEntry) {
+                    'entry' => static function (LogEntry $logEntry) {
                         $abs = $logEntry['args'][0];
-                        $this->assertIsArray($abs['cases']);
-                        $this->assertEmpty($abs['cases']);
+                        self::assertIsArray($abs['cases']);
+                        self::assertEmpty($abs['cases']);
                     },
                     'html' => '%a<dt class="cases">cases <i>not collected</i></dt>%a',
                 )
@@ -132,16 +132,15 @@ class EnumTest extends DebugTestFramework
                     Debug::meta('cfg', 'caseOutput', false),
                 ),
                 array(
-                    'entry' => function (LogEntry $logEntry) {
+                    'entry' => static function (LogEntry $logEntry) {
                         $abs = $logEntry['args'][0];
-                        $this->assertIsArray($abs['cases']);
-                        $this->assertCount(3, $abs['cases']);
+                        self::assertIsArray($abs['cases']);
+                        self::assertCount(3, $abs['cases']);
                     },
                     'html' => '%a<dd class="constant public"><span class="t_modifier_public">public</span> <span class="t_identifier">REGULAR_CONSTANT</span> <span class="t_operator">=</span> <span class="t_string">test</span></dd>
                         <dt class="properties">properties</dt>%a',
                 )
             ),
-
 
             'backed' => array(
                 'log',
@@ -149,10 +148,10 @@ class EnumTest extends DebugTestFramework
                     \bdk\Test\Debug\Fixture\Enum\MealsBacked::BREAKFAST,
                 ),
                 array(
-                    'entry' => function (LogEntry $logEntry) {
+                    'entry' => static function (LogEntry $logEntry) {
                         $abs = $logEntry['args'][0];
-                        $this->assertAbstractionType($abs);
-                        $this->assertSame(array(
+                        self::assertAbstractionType($abs);
+                        self::assertSame(array(
                             'BREAKFAST' => array(
                                 'attributes' => array(),
                                 'desc' => null,

@@ -31,7 +31,7 @@ class ErrorLevelTest extends TestCase
      */
     public function testToConstantString($input, $phpVer, $expect, $explicitStrict = true)
     {
-        $this->assertSame($expect, ErrorLevel::toConstantString($input, $phpVer, $explicitStrict));
+        self::assertSame($expect, ErrorLevel::toConstantString($input, $phpVer, $explicitStrict));
     }
 
     /**
@@ -39,7 +39,7 @@ class ErrorLevelTest extends TestCase
      *
      * @return array[]
      */
-    public function providerErrorLevel()
+    public static function providerErrorLevel()
     {
         return array(
             /*

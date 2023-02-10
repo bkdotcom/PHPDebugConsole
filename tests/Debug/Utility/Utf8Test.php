@@ -27,7 +27,7 @@ class Utf8Test extends \PHPUnit\Framework\TestCase
         $buffer = new Utf8Buffer($str);
         $stats1 = $buffer->analyze();
         $stats2 = $buffer->analyze();
-        $this->assertSame(array(
+        self::assertSame(array(
             'blocks' => array(
                 array(
                     'utf8special',
@@ -46,7 +46,7 @@ class Utf8Test extends \PHPUnit\Framework\TestCase
             'mbStrlen' => 10,
             'strlen' => 12,
         ), $stats1);
-        $this->assertSame($stats1, $stats2);
+        self::assertSame($stats1, $stats2);
     }
 
     /**
@@ -60,7 +60,7 @@ class Utf8Test extends \PHPUnit\Framework\TestCase
      */
     public function testDump($input, $outputExpect, $opts = array())
     {
-        $this->assertSame($outputExpect, Utf8::dump($input, $opts));
+        self::assertSame($outputExpect, Utf8::dump($input, $opts));
     }
 
     /**
@@ -78,7 +78,7 @@ class Utf8Test extends \PHPUnit\Framework\TestCase
      */
     public function testIsUtf8($input, $isUtf8)
     {
-        $this->assertSame($isUtf8, Utf8::isUtf8($input));
+        self::assertSame($isUtf8, Utf8::isUtf8($input));
     }
 
     /**
@@ -93,8 +93,8 @@ class Utf8Test extends \PHPUnit\Framework\TestCase
         $utf8Dump = new Utf8Dump();
         $reflector = new \ReflectionMethod($utf8Dump, 'ordUtf8');
         $reflector->setAccessible(true);
-        $this->assertSame(97, $reflector->invoke($utf8Dump, 'a'));
-        $this->AssertSame(128169, $reflector->invoke($utf8Dump, '💩'));
+        self::assertSame(97, $reflector->invoke($utf8Dump, 'a'));
+        self::AssertSame(128169, $reflector->invoke($utf8Dump, '💩'));
     }
 
     /**
@@ -109,7 +109,7 @@ class Utf8Test extends \PHPUnit\Framework\TestCase
      */
     public function testStrCut($input, $startPos, $endPos, $outputExpect)
     {
-        $this->assertSame($outputExpect, Utf8::strCut($input, $startPos, $endPos));
+        self::assertSame($outputExpect, Utf8::strCut($input, $startPos, $endPos));
     }
 
     /**
@@ -126,10 +126,10 @@ class Utf8Test extends \PHPUnit\Framework\TestCase
     {
         $output = Utf8::toUtf8($input);
         $output = \htmlentities($output, 0, 'UTF-8');
-        $this->assertSame($outputExpect, $output);
+        self::assertSame($outputExpect, $output);
     }
 
-    public function providerDump()
+    public static function providerDump()
     {
         $binary = \base64_decode('TzipAdbGNF+DfyAwZrp7ew==');
         return array(
@@ -336,7 +336,7 @@ class Utf8Test extends \PHPUnit\Framework\TestCase
         );
     }
 
-    public function providerIsUtf8()
+    public static function providerIsUtf8()
     {
         return array(
             'plainAscii' => array('Plain Jane', true),
@@ -349,7 +349,7 @@ class Utf8Test extends \PHPUnit\Framework\TestCase
         );
     }
 
-    public function providerStrCut()
+    public static function providerStrCut()
     {
         // 1-byte, 2-byte, 3-type, 4-byte
         $str = 'A©︙💩';
@@ -379,7 +379,7 @@ class Utf8Test extends \PHPUnit\Framework\TestCase
         );
     }
 
-    public function providerToUtf8()
+    public static function providerToUtf8()
     {
         return array(
             'ascii' => array('plain',

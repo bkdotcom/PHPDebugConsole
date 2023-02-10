@@ -12,7 +12,7 @@ use bdk\Debug\Abstraction\Abstraction;
  * @link http://www.bradkent.com/php/debug PHPDebugConsole Homepage
  */
 #[\AllowDynamicProperties]
-class Test extends TestBase
+class TestObj extends TestBase
 {
     /** constant documentation */
     const MY_CONSTANT = 'redefined in Test';

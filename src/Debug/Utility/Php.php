@@ -130,8 +130,7 @@ class Php
      *                             if array, first value must be object
      *                             (does not apply for Closure and invokable obj)
      *                         IS_CALLABLE_SYNTAX_ONLY
-     *                             strict by default... set to flag for syntax only
-     *                             (non-namespaced strings will always be strict)
+     *                             non-namespaced strings will ignore this flag and do full check
      *                         IS_CALLABLE_NO_CALL
      *                             don't test for __call / __callStatic method
      *
@@ -141,7 +140,7 @@ class Php
     {
         if (\is_object($val)) {
             // test if Closure or obj with __invoke
-            return \is_callable($val);
+            return \is_callable($val, false);
         }
         if (\is_array($val)) {
             return self::isCallableArray($val, $opts);

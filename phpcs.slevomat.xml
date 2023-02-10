@@ -30,6 +30,7 @@
             </property>
         </properties>
     </rule>
+    <rule ref="SlevomatCodingStandard.Classes.MethodSpacing" />
     <rule ref="SlevomatCodingStandard.Classes.TraitUseDeclaration" />
     <rule ref="SlevomatCodingStandard.Classes.UselessLateStaticBinding" />
 

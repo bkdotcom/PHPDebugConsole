@@ -306,7 +306,8 @@ class SoapClient extends SoapClientBase
         $xmlResponse = $this->debugGetXmlResponse($fault);
         $this->debug->groupCollapsed('soap', $action, $this->debug->meta('icon', $this->icon));
         if ($xmlRequest) {
-            $this->debug->log('request headers', $this->__getLastRequestHeaders(), $this->debug->meta('redact'));
+            $headers = $this->__getLastRequestHeaders();
+            $this->debug->log('request headers', $this->debug->redactHeaders($headers));
             $this->logXml('request body', $xmlRequest);
         }
         $responseHeaders = $this->__getLastResponseHeaders();

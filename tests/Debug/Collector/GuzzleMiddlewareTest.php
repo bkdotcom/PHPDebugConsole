@@ -221,7 +221,6 @@ class GuzzleMiddlewareTest extends DebugTestFramework
                             $messages[2]['args'][1],
                         ),
                         'meta' => array(
-                            'redact' => true,
                             'channel' => 'general.Guzzle',
                         ),
                     ),
@@ -262,7 +261,6 @@ class GuzzleMiddlewareTest extends DebugTestFramework
                             $messages[5]['args'][1],
                         ),
                         'meta' => array(
-                            'redact' => true,
                             'appendGroup' => $id,
                             'channel' => 'general.Guzzle',
                         ),

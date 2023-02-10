@@ -59,7 +59,7 @@
         "jdorn/sql-formatter": "^1.2",
         "monolog/monolog": "^1.0",
         "php-curl-class/php-curl-class": ">=8.6",
-        "phpunit/phpunit": ">=4.8.35",
+        "phpunit/phpunit": "^4.0 | ^5.0 | ^6.0 | ^7.0 | ^8.0 | ^9.0",
         "psr/log": "^1.0 | ^2.0 | ^3.0",
         "psr/simple-cache": "^1.0",
         "slim/slim": "^2.0",
@@ -75,7 +75,7 @@
             "php -f tests/coverageChecker.php -- coverage/clover.xml"
         ],
         "cs" : [
-            "vendor/bin/phpcs -p --colors ./src"
+            "vendor/bin/phpcs -p -s --colors ./src"
         ],
         "post-update-cmd": [
             "bdk\\Debug\\ComposerScripts::postUpdate"

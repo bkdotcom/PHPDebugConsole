@@ -253,9 +253,9 @@ class GuzzleMiddleware extends AbstractComponent
                 . ' HTTP/' . $message->getProtocolVersion() . "\r\n"
             : 'HTTP/' . $message->getProtocolVersion()
                 . ' ' . $message->getStatusCode()
-                . ' ' . $message->getReasonPhrase()
-                . "\r\n";
-        foreach ($message->getHeaders() as $name => $values) {
+                . ' ' . $message->getReasonPhrase() . "\r\n";
+        $headers = $this->debug->redactHeaders($message->getHeaders());
+        foreach ($headers as $name => $values) {
             $result .= $name . ': ' . \implode(', ', $values) . "\r\n";
         }
         return \rtrim($result);
@@ -327,7 +327,7 @@ class GuzzleMiddleware extends AbstractComponent
         if ($requestInfo['isAsyncronous']) {
             $this->debug->info('asyncronous', $this->debug->meta('icon', $this->cfg['iconAsync']));
         }
-        $this->debug->log('request headers', $this->buildHeadersString($request), $this->debug->meta('redact'));
+        $this->debug->log('request headers', $this->buildHeadersString($request));
         if ($this->cfg['inclRequestBody'] === false) {
             return;
         }
@@ -366,7 +366,7 @@ class GuzzleMiddleware extends AbstractComponent
         if (!$response) {
             return;
         }
-        $this->debug->log('response headers', $this->buildHeadersString($response), $this->debug->meta('redact'), $metaAppend);
+        $this->debug->log('response headers', $this->buildHeadersString($response), $metaAppend);
         if ($this->cfg['inclResponseBody']) {
             $this->debug->log(
                 'response body',

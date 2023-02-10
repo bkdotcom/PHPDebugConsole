@@ -215,7 +215,7 @@ class PhpCurlClass extends Curl
     private function logRequestResponse($verboseOutput, $options)
     {
         $duration = $this->debug->timeEnd($this->debugOptions['label'], false);
-        $this->debug->log('request headers', $this->rawRequestHeaders, $this->debug->meta('redact'));
+        $this->debug->log('request headers', $this->debug->redactHeaders($this->rawRequestHeaders));
         // Curl provides no means to get the request body
         if ($this->error) {
             $this->debug->backtrace->addInternalClass('Curl\\');

@@ -282,6 +282,8 @@ class LogReqRes implements SubscriberInterface
         if ($this->debug->getCfg('logRequestInfo.headers', Debug::CONFIG_DEBUG) === false) {
             return;
         }
+        $headers = $this->debug->serverRequest->getHeaders();
+        $headers = $this->debug->redactHeaders($headers);
         $headers = \array_map(function ($vals) {
             $val = \join(', ', $vals);
             if (\is_numeric($val)) {
@@ -292,15 +294,10 @@ class LogReqRes implements SubscriberInterface
                 ));
             }
             return $val;
-        }, $this->debug->serverRequest->getHeaders());
-        if (isset($headers['Authorization']) && \strpos($headers['Authorization'], 'Basic') === 0) {
-            $auth = \base64_decode(\str_replace('Basic ', '', $headers['Authorization']), true);
-            $userpass = \explode(':', $auth);
-            $headers['Authorization'] = 'Basic █████████ (base64\'d ' . $userpass[0] . ':█████)';
-        }
+        }, $headers);
         if ($headers) {
             \ksort($headers, SORT_NATURAL);
-            $this->debug->table('request headers', $headers, $this->debug->meta('redact'));
+            $this->debug->table('request headers', $headers);
         }
     }
 

@@ -20,7 +20,7 @@ use bdk\Test\Debug\DebugTestFramework;
  */
 class ArrayTest extends DebugTestFramework
 {
-    public function providerTestMethod()
+    public static function providerTestMethod()
     {
 		// indented with tab
         $arrayDumpHtml = '
@@ -147,7 +147,7 @@ EOD;
         $this->debug->log('testA', $testA);
         $testVal = 'fail';
         $output = $this->debug->output();
-        $this->assertStringContainsString('success', $output);
+        self::assertStringContainsString('success', $output);
     }
 
     public function testGetAbstraction()
@@ -200,7 +200,7 @@ EOD;
         $testA['val'] = &$testA;
         $this->debug->log('testA', $testA);
         $output = $this->debug->output();
-        $this->assertStringContainsString('t_recursion', $output);
+        self::assertStringContainsString('t_recursion', $output);
         $this->testMethod(
             'log',
             array($testA),
@@ -217,8 +217,8 @@ EOD;
                 ),
                 'firephp' => 'X-Wf-1-1-1-37: 56|[{"Type":"LOG"},{"foo":"bar","val":"array *RECURSION*"}]|',
                 'html' => function ($strHtml) {
-                    $this->assertSelectEquals('.array-inner > li > .t_keyword', 'array', true, $strHtml);
-                    $this->assertSelectEquals('.array-inner > li > .t_recursion', '*RECURSION*', true, $strHtml);
+                    self::assertSelectEquals('.array-inner > li > .t_keyword', 'array', true, $strHtml);
+                    self::assertSelectEquals('.array-inner > li > .t_recursion', '*RECURSION*', true, $strHtml);
                 },
                 'script' => 'console.log({"foo":"bar","val":"array *RECURSION*"});',
                 'streamAnsi' => array('contains' => "    \e[38;5;245m[\e[38;5;83mval\e[38;5;245m]\e[38;5;130m => \e[0m\e[38;5;45marray \e[38;5;196m*RECURSION*\e[0m"),

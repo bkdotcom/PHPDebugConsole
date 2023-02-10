@@ -211,15 +211,18 @@ class Table
         $columnNames = $this->meta['columnNames'];
         $keys = $this->meta['columns'] ?: self::colKeys($this->logEntry['args'][0]);
         foreach ($keys as $key) {
-            $colInfo = array(
+            $columns[$key] = array(
                 'key' => isset($columnNames[$key])
                     ? $columnNames[$key]
                     : $key
             );
-            if (\in_array($key, $this->meta['totalCols'], true)) {
-                $colInfo['total'] = null;
+        }
+        foreach ($this->meta['totalCols'] as $i => $key) {
+            if (isset($columns[$key]) === false) {
+                unset($this->meta['totalCols'][$i]);
+                continue;
             }
-            $columns[$key] = $colInfo;
+            $columns[$key]['total'] = null;
         }
         $this->meta['tableInfo']['columns'] = $columns;
     }

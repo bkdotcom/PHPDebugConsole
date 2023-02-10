@@ -99,7 +99,7 @@ class ErrorHandler extends AbstractErrorHandler
     {
         $errorReporting = $this->cfg['errorReporting'] === 'system'
             ? \error_reporting() // note:  will return 0 if error suppression is active in call stack (via @ operator)
-                                //  our shutdown function unsupresses fatal errors
+                                //  our shutdown function unsuppresses fatal errors
             : $this->cfg['errorReporting'];
         if ($errorReporting === -1) {
             $errorReporting = E_ALL | E_STRICT;
@@ -255,22 +255,24 @@ class ErrorHandler extends AbstractErrorHandler
         if ($this->registered === false || !$error) {
             return;
         }
-        if (\is_array($error)) {
-            $error = \array_merge(array(
-                'vars' => array(),
-            ), $error);
-            $error = $this->cfg['errorFactory']($this, $error['type'], $error['message'], $error['file'], $error['line'], $error['vars']);
-        }
-        if ($error->isFatal() === false) {
-            $event['error'] = $error;
+        $errArr = $error instanceof Error
+            ? $error->getValues()
+            : $error;
+        $errArr = \array_merge(array(
+            'vars' => array(),
+        ), $errArr);
+        // create temporary error object to use isFatal
+        $errObj = $this->cfg['errorFactory']($this, $errArr['type'], $errArr['message'], $errArr['file'], $errArr['line'], $errArr['vars']);
+        if ($errObj->isFatal() === false) {
+            $event['error'] = $errObj;
             return;
         }
         $this->handleError(
-            $error['type'],
-            $error['message'],
-            $error['file'],
-            $error['line'],
-            $error['vars']
+            $errArr['type'],
+            $errArr['message'],
+            $errArr['file'],
+            $errArr['line'],
+            $errArr['vars']
         );
         /*
             Attach fatal error to event

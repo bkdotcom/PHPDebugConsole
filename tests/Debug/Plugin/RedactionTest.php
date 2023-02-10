@@ -21,7 +21,7 @@ class RedactionTest extends DebugTestFramework
                 'x-api-key',
             ),
         ));
-        $cfg = self::$helper::getProp($this->debug->pluginRedaction, 'cfg');
+        $cfg = $this->helper::getProp($this->debug->pluginRedaction, 'cfg');
         self::assertSame(array(
             'password',
             'x-api-key',
@@ -83,7 +83,7 @@ class RedactionTest extends DebugTestFramework
                 ),
                 array(
                     'entry' => static function (LogEntry $logEntry) {
-                        $logEntry = self::$helper::logEntryToArray($logEntry);
+                        $logEntry = (self::$helper)::logEntryToArray($logEntry);
                         $obj = $logEntry['args'][0];
                         self::assertSame(null, $obj['stringified']);
                         self::assertSame('foo=bar&password=█████████&ding=dong', $obj['methods']['__toString']['returnValue']);

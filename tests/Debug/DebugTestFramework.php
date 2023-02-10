@@ -380,7 +380,7 @@ class DebugTestFramework extends DOMTestCase
             }
         }
 
-        $actual = self::$helper::deObjectifyData($actual);
+        $actual = (self::$helper)::deObjectifyData($actual);
         self::assertCount(
             \count($expect),
             $actual,

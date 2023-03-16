@@ -4,6 +4,7 @@ namespace bdk\Test\Debug\Utility;
 
 use bdk\Debug;
 use bdk\Debug\Utility\PhpDoc;
+use bdk\Test\Debug\Helper;
 use bdk\Test\PolyFill\AssertionTrait;
 use PHPUnit\Framework\TestCase;
 
@@ -22,13 +23,13 @@ class PhpDocTest extends TestCase
         // $reflector = new \ReflectionProperty('bdk\Debug\Utility\PhpDoc', 'cache');
         // $reflector->setAccessible(true);
         // $reflector->setValue(array());
-        \bdk\Test\Debug\Helper::setProp('bdk\Debug\Utility\PhpDoc', 'cache', array());
+        Helper::setProp('bdk\Debug\Utility\PhpDoc', 'cache', array());
     }
 
     public function testConstruct()
     {
         $phpDoc = new PhpDoc();
-        $parsers = \bdk\Test\Debug\Helper::getProp($phpDoc, 'parsers');
+        $parsers = Helper::getProp($phpDoc, 'parsers');
         self::assertIsArray($parsers);
         self::assertNotEmpty($parsers, 'Parsers is empty');
     }

@@ -21,7 +21,7 @@ class RedactionTest extends DebugTestFramework
                 'x-api-key',
             ),
         ));
-        $cfg = self::$helper::getProp($this->debug->pluginRedaction, 'cfg');
+        $cfg = $this->helper->getProp($this->debug->pluginRedaction, 'cfg');
         self::assertSame(array(
             'password',
             'x-api-key',

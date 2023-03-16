@@ -170,7 +170,7 @@ class Redaction extends AbstractComponent implements SubscriberInterface
         if (\strpos($value, 'Basic') === 0) {
             $auth = \base64_decode(\str_replace('Basic ', '', $value), true);
             $userpass = \explode(':', $auth);
-            $replacementShort = \mb_substr(self::REPLACEMENT, 0, 5);
+            $replacementShort = \mb_substr(self::REPLACEMENT, 0, 5, 'UTF-8');
             return 'Basic ' . self::REPLACEMENT . ' (base64\'d ' . $userpass[0] . ':' . $replacementShort . ')';
         }
         if (\strpos($value, 'Digest') === 0) {

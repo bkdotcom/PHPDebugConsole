@@ -274,7 +274,7 @@ class StatementInfo extends AbstractComponent
             . ')*$)/';
         do {
             $sql = \preg_replace($matchRule, $value, $sql, 1);
-        } while (\mb_substr_count($sql, $key));
+        } while (\mb_substr_count($sql, $key, 'UTF-8'));
         return $sql;
     }
 

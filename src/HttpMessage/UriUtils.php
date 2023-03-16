@@ -118,7 +118,10 @@ class UriUtils
     }
 
     /**
-     * Parse URL that may or may not contain schema
+     * Parse URL with latest `parse_url` fixes / behavior
+     *
+     * PHP < 8.0 : return empty query and fragment
+     * PHP < 5.5 : handle urls that don't have schema
      *
      * @param string $url The URL to parse.
      *
@@ -126,15 +129,48 @@ class UriUtils
      */
     private static function parseUrlPatched($url)
     {
-        if (PHP_VERSION_ID >= 50500 || \strpos($url, '//') !== 0) {
+        if (PHP_VERSION_ID >= 80000) {
             return \parse_url($url);
         }
-        // php 5.4 chokes without the scheme
-        $parts = \parse_url('http:' . $url);
-        if ($parts) {
+        $hasTempScheme = false;
+        if (PHP_VERSION_ID < 50500 && \strpos($url, '//') === 0) {
+            // php 5.4 chokes without the scheme
+            $hasTempScheme = true;
+            $url = 'http:' . $url;
+        }
+        $parts = \parse_url($url);
+        if ($parts === false) {
+            return false;
+        }
+        if ($hasTempScheme) {
             unset($parts['scheme']);
         }
-        return $parts;
+        return self::parseUrlAddEmpty($parts, $url);
+    }
+
+    /**
+     * PHP < 8.0 does not return query & fragment if empty
+     *
+     * @param array  $parts Url components from `parse_url`
+     * @param string $url   Unparsed url
+     *
+     * @return array
+     */
+    private static function parseUrlAddEmpty($parts, $url)
+    {
+        $default = array(
+            'scheme' => null,
+            'host' => null,
+            'port' => null,
+            'user' => null,
+            'pass' => null,
+            'path' => null,
+            'query' => \strpos($url, '?') !== false ? '' : null,
+            'fragment' => \strpos($url, '#') !== false ? '' : null,
+        );
+        return \array_filter(\array_merge($default, $parts), static function ($val) {
+            return $val !== null;
+        });
     }
 
     /**

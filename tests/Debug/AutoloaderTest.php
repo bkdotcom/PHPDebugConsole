@@ -20,14 +20,14 @@ class AutoloaderTest extends DebugTestFramework
     {
         $countPre = \count(\spl_autoload_functions());
         static::$autoloader->register();
-        $this->assertSame($countPre + 1, \count(\spl_autoload_functions()));
+        self::assertSame($countPre + 1, \count(\spl_autoload_functions()));
     }
 
     public function testUnregsiter()
     {
         $countPre = \count(\spl_autoload_functions());
         static::$autoloader->unregister();
-        $this->assertSame($countPre - 1, \count(\spl_autoload_functions()));
+        self::assertSame($countPre - 1, \count(\spl_autoload_functions()));
     }
 
     public function testAutoloadClassMap()
@@ -35,12 +35,15 @@ class AutoloaderTest extends DebugTestFramework
         $classMap = $this->helper->getProp(static::$autoloader, 'classMap');
         $autoloadMethod = new \ReflectionMethod(static::$autoloader, 'autoload');
         $autoloadMethod->setAccessible(true);
+        $findClassMethod = new \ReflectionMethod(static::$autoloader, 'findClass');
+        $findClassMethod->setAccessible(true);
         foreach (\array_keys($classMap) as $class) {
+            self::assertNotFalse($findClassMethod->invoke(static::$autoloader, $class));
             if (\class_exists($class, false)) {
                 continue;
             }
             $autoloadMethod->invoke(static::$autoloader, $class);
-            $this->assertTrue(\class_exists($class, false));
+            self::assertTrue(\class_exists($class, false));
         }
     }
 
@@ -52,12 +55,15 @@ class AutoloaderTest extends DebugTestFramework
         );
         $autoloadMethod = new \ReflectionMethod(static::$autoloader, 'autoload');
         $autoloadMethod->setAccessible(true);
+        $findClassMethod = new \ReflectionMethod(static::$autoloader, 'findClass');
+        $findClassMethod->setAccessible(true);
         foreach ($classes as $class) {
+            self::assertNotFalse($findClassMethod->invoke(static::$autoloader, $class));
             if (\class_exists($class, false)) {
                 continue;
             }
             $autoloadMethod->invoke(static::$autoloader, $class);
-            $this->assertTrue(\class_exists($class, false));
+            self::assertTrue(\class_exists($class, false));
         }
     }
 
@@ -67,6 +73,6 @@ class AutoloaderTest extends DebugTestFramework
         $autoloadMethod->setAccessible(true);
         $class = 'ding\\dang';
         $autoloadMethod->invoke(static::$autoloader, $class);
-        $this->assertFalse(\class_exists($class, false));
+        self::assertFalse(\class_exists($class, false));
     }
 }

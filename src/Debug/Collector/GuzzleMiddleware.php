@@ -249,7 +249,7 @@ class GuzzleMiddleware extends AbstractComponent
     {
         $result = $message instanceof RequestInterface
             ? \trim($message->getMethod()
-                . ' ' . $message->getRequestTarget())
+                . ' ' . $this->debug->redact($message->getRequestTarget()))
                 . ' HTTP/' . $message->getProtocolVersion() . "\r\n"
             : 'HTTP/' . $message->getProtocolVersion()
                 . ' ' . $message->getStatusCode()

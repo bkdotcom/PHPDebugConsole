@@ -438,11 +438,11 @@ class DebugTestFramework extends DOMTestCase
             'serviceProvider' => array(
                 'serverRequest' => new ServerRequest(
                     'GET',
-                    null,
+                    'http://test.example.com/noun/id/verb',
                     array(
                         'DOCUMENT_ROOT' => TEST_DIR . '/../tmp',
                         'REQUEST_METHOD' => 'GET',
-                        'REQUEST_TIME_FLOAT' => $_SERVER['REQUEST_TIME_FLOAT'],
+                        'REQUEST_TIME_FLOAT' => \microtime(true),
                         'SERVER_ADMIN' => 'testAdmin@test.com',
                     )
                 ),
@@ -455,6 +455,7 @@ class DebugTestFramework extends DOMTestCase
             'log'           => array(),
             'logSummary'    => array(),
             'outputSent'    => false,
+            'runtime'       => array(),
         );
         $this->debug->data->set($resetValues);
         $this->debug->stopWatch->reset();

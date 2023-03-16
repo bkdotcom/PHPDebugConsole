@@ -414,7 +414,7 @@ class BaseValue extends AbstractComponent
      *
      * @param Abstraction $abs resource abstraction
      *
-     * @return array|string
+     * @return array
      */
     protected function dumpUnknown(Abstraction $abs)
     {

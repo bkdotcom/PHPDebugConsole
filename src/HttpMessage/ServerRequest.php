@@ -101,7 +101,7 @@ class ServerRequest extends AbstractServerRequest implements ServerRequestInterf
         $queryParams = self::parseStr($query);
         return $serverRequest
             ->withBody(new Stream(
-                PHP_VERSION_ID < 60600
+                PHP_VERSION_ID < 50600
                     ? \stream_get_contents(\fopen('php://input', 'r+')) // prev 5.6 is not seekable / read once
                     : \fopen('php://input', 'r+')
             ))

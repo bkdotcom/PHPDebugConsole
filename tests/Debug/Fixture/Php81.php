@@ -3,7 +3,7 @@
 namespace bdk\Test\Debug\Fixture;
 
 /**
- * Test Php 8.0 features
+ * Test Php 8.1 features
  */
 class Php81
 {

@@ -73,7 +73,7 @@ EOD;
         if (self::$client) {
             $debug = Debug::getInstance();
             $debug->getChannel('MySqli')
-                ->eventManager->unSubscribe(Debug::EVENT_OUTPUT, array(self::$client, 'onDebugOutput'));
+                ->eventManager->unsubscribe(Debug::EVENT_OUTPUT, array(self::$client, 'onDebugOutput'));
         }
     }
 

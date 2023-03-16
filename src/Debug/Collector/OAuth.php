@@ -13,6 +13,8 @@
 namespace bdk\Debug\Collector;
 
 use bdk\Debug;
+use bdk\Debug\Plugin\Redaction;
+use bdk\HttpMessage\UriUtils;
 use Oauth as OAuthBase;
 use OAuthException;
 
@@ -139,7 +141,7 @@ class OAuth extends OAuthBase
     {
         $parts = \array_merge(array(
             'query' => '',
-        ), \parse_url($this->getLastResponseInfo()['url']));
+        ), UriUtils::parseUrl($this->getLastResponseInfo()['url']));
         $queryParams = array();
         \parse_str($parts['query'], $queryParams);
         return $queryParams;
@@ -233,7 +235,7 @@ class OAuth extends OAuthBase
             $oauthParams = \array_intersect_key($sbsParsed + $this->getQueryParams(), \array_flip($oauthParamKeys));
         }
         if (isset($oauthParams['oauth_signature'])) {
-            $oauthParams['oauth_signature'] = '█████████';
+            $oauthParams['oauth_signature'] = Redaction::REPLACEMENT;
         }
         \ksort($oauthParams);
         return $oauthParams;

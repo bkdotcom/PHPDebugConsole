@@ -13,6 +13,7 @@
 namespace bdk\HttpMessage;
 
 use bdk\HttpMessage\AbstractUri;
+use bdk\HttpMessage\UriUtils;
 use InvalidArgumentException;
 use Psr\Http\Message\UriInterface;
 
@@ -58,7 +59,7 @@ class Uri extends AbstractUri implements UriInterface
         if ($uri === '') {
             return;
         }
-        $parts = $this->parseUrl($uri);
+        $parts = UriUtils::parseUrl($uri);
         if ($parts === false) {
             throw new InvalidArgumentException('Unable to parse URI: ' . $uri);
         }
@@ -442,12 +443,12 @@ class Uri extends AbstractUri implements UriInterface
             'scheme' => 'assertScheme',
         ), $urlParts);
         $filters = \array_intersect_key(array(
-            'scheme' => 'lowercase',
-            'host' => 'lowercase',
-            'port' => 'filterPort',
-            'path' => 'filterPath',
-            'query' => 'filterQueryAndFragment',
             'fragment' => 'filterQueryAndFragment',
+            'host' => 'lowercase',
+            'path' => 'filterPath',
+            'port' => 'filterPort',
+            'query' => 'filterQueryAndFragment',
+            'scheme' => 'lowercase',
         ), $urlParts);
         foreach ($asserts as $part => $method) {
             $val = $urlParts[$part];

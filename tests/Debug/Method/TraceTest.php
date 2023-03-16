@@ -2,7 +2,6 @@
 
 namespace bdk\Test\Debug\Method;
 
-use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\LogEntry;
 use bdk\Test\Debug\DebugTestFramework;
@@ -34,7 +33,7 @@ class TraceTest extends DebugTestFramework
 
         $this->testMethod(
             array(
-                'dataPath' => 'log/0'
+                'dataPath' => 'log/0',
             ),
             array(),
             array(
@@ -178,7 +177,7 @@ class TraceTest extends DebugTestFramework
         $this->debug->trace(false, (object) array());
         $logEntryError = $this->debug->data->get('log/2');
         // $logEntryTrace = $this->debug->data->get('log/3');
-        $this->assertSame(array(
+        self::assertSame(array(
             'method' => 'warn',
             'args' => array('trace caption should be a string.  stdClass provided'),
             'meta' => array(
@@ -197,7 +196,7 @@ class TraceTest extends DebugTestFramework
                 'file' => '/path/to/file.php',
                 'line' => 42,
                 'function' => 'Foo::bar',
-            )
+            ),
         );
         $metaExpect = array(
             'caption' => 'trace',
@@ -245,7 +244,7 @@ class TraceTest extends DebugTestFramework
                     \array_merge(array(
                         'foundFiles' => array(),
                     ), $metaExpect),
-                )
+                ),
             )
         );
     }

@@ -8,6 +8,8 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * @covers bdk\HttpMessage\UriUtils
+ *
+ * @phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedKeys.IncorrectKeyOrder
  */
 class UriUtilsTest extends TestCase
 {
@@ -19,6 +21,21 @@ class UriUtilsTest extends TestCase
     public function testIsCrossOrigin($uri1, $uri2, $expect)
     {
         self::assertSame($expect, UriUtils::isCrossOrigin(new Uri($uri1), new Uri($uri2)));
+    }
+
+    /**
+     * @dataProvider providerParseUrl
+     */
+    public function testParseUrl($url, $expect)
+    {
+        $previousLcType = \setlocale(LC_CTYPE, '0');
+        \setlocale(LC_CTYPE, 'en_GB');
+
+        $parts = UriUtils::parseUrl($url);
+
+        \setlocale(LC_CTYPE, $previousLcType);
+
+        self::assertSame($expect, $parts);
     }
 
     /**
@@ -58,6 +75,39 @@ class UriUtilsTest extends TestCase
             ['https://example.com/123', 'https://example.com:444/', true],
             ['https://example.com:443/123', 'https://example.com:444/', true],
         ];
+    }
+
+    public static function providerParseUrl()
+    {
+        // chars from parseUrl with %" \
+        $chars = '!*\'();:@&=$,/?#[]%" \\';
+        return array(
+            array('https://user:pass@example.com:80/path/È/💩/page.html?foo=bar&zip=zap#fragment', array(
+                'scheme' => 'https',
+                'host' => 'example.com',
+                'port' => '80',
+                'user' => 'user',
+                'pass' => 'pass',
+                'path' => '/path/È/💩/page.html',
+                'query' => 'foo=bar&zip=zap',
+                'fragment' => 'fragment',
+            )),
+            'encodedChars' => array('http://mydomain.com/' . \rawurlencode($chars), array(
+                'scheme' => 'http',
+                'host' => 'mydomain.com',
+                'path' => '/' . \rawurlencode($chars),
+            )),
+            'invalid' => array('http:///example.com', false),
+            'mixed' => array('/%È21%25È3*%(', array(
+                'path' => '/%È21%25È3*%(',
+            )),
+            'specialChars' => array('//example.com/' . $chars, array(
+                'host' => 'example.com',
+                'path' => '/' . \substr($chars, 0, \strpos($chars, '?')),
+                'query' => '',
+                'fragment' => '[]%" \\',
+            )),
+        );
     }
 
     public static function providerResolve()

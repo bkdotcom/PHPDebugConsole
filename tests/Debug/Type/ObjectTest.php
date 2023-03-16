@@ -1057,7 +1057,7 @@ EOD;
         };
         $this->debug->eventManager->subscribe(Debug::EVENT_OBJ_ABSTRACT_START, $callable);
         $abs = $this->debug->abstracter->getAbstraction((object) array('foo' => 'bar'));
-        $this->debug->eventManager->unSubscribe(Debug::EVENT_OBJ_ABSTRACT_START, $callable);
+        $this->debug->eventManager->unsubscribe(Debug::EVENT_OBJ_ABSTRACT_START, $callable);
 
         self::assertSame(Abstracter::UNDEFINED, $abs['properties']['foo']['value']);
     }
@@ -1069,7 +1069,7 @@ EOD;
         };
         $this->debug->eventManager->subscribe(Debug::EVENT_OBJ_ABSTRACT_START, $callable);
         $abs = $this->debug->abstracter->getAbstraction((object) array('foo' => 'bar'));
-        $this->debug->eventManager->unSubscribe(Debug::EVENT_OBJ_ABSTRACT_START, $callable);
+        $this->debug->eventManager->unsubscribe(Debug::EVENT_OBJ_ABSTRACT_START, $callable);
 
         self::assertSame('new value', $abs['properties']['foo']['value']);
         self::assertSame('debug', $abs['properties']['foo']['valueFrom']);
@@ -1082,7 +1082,7 @@ EOD;
         };
         $this->debug->eventManager->subscribe(Debug::EVENT_OBJ_ABSTRACT_START, $callable);
         $abs = $this->debug->abstracter->getAbstraction((object) array('foo' => 'bar'));
-        $this->debug->eventManager->unSubscribe(Debug::EVENT_OBJ_ABSTRACT_START, $callable);
+        $this->debug->eventManager->unsubscribe(Debug::EVENT_OBJ_ABSTRACT_START, $callable);
 
         self::assertSame('I describe foo', $abs['properties']['foo']['desc']);
         self::assertSame('new value', $abs['properties']['foo']['value']);
@@ -1095,7 +1095,7 @@ EOD;
         };
         $this->debug->eventManager->subscribe(Debug::EVENT_OBJ_ABSTRACT_START, $callable);
         $abs = $this->debug->abstracter->getAbstraction($test);
-        $this->debug->eventManager->unSubscribe(Debug::EVENT_OBJ_ABSTRACT_START, $callable);
+        $this->debug->eventManager->unsubscribe(Debug::EVENT_OBJ_ABSTRACT_START, $callable);
 
         self::assertSame('new value', $abs['properties']['propPrivate']['value']);
         self::assertSame('debug', $abs['properties']['propPrivate']['valueFrom']);

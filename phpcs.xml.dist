@@ -41,9 +41,7 @@
         <exclude name="Generic.Arrays.DisallowShortArraySyntax.Found" />
         <exclude name="Generic.Classes.OpeningBraceSameLine.BraceOnNewLine" />
         <exclude name="Generic.CodeAnalysis.AssignmentInCondition.FoundInWhileCondition" />
-        <exclude name="Generic.CodeAnalysis.EmptyStatement.DetectedCATCH" />
-
-        <!-- better suited for phpmd -->
+        <exclude name="Generic.CodeAnalysis.EmptyStatement.DetectedCatch" />
         <exclude name="Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass" />
         <exclude name="Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClassAfterLastUsed" />
         <exclude name="Generic.CodeAnalysis.UnusedFunctionParameter.FoundInImplementedInterfaceAfterLastUsed" />

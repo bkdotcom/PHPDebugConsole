@@ -10,6 +10,27 @@ use Psr\Http\Message\UriInterface;
 class UriUtils
 {
     /**
+     * Determines if two Uri's should be considered cross-origin
+     *
+     * @param UriInterface $uri1 Uri 1
+     * @param UriInterface $uri2 Uri2
+     *
+     * @return bool
+     */
+    public static function isCrossOrigin(UriInterface $uri1, UriInterface $uri2)
+    {
+        if (\strcasecmp($uri1->getHost(), $uri2->getHost()) !== 0) {
+            return true;
+        }
+
+        if ($uri1->getScheme() !== $uri2->getScheme()) {
+            return true;
+        }
+
+        return self::computePort($uri1) !== self::computePort($uri2);
+    }
+
+    /**
      * Converts the relative URI into a new URI that is resolved against the base URI.
      *
      * @param UriInterface $base Base URI
@@ -63,24 +84,23 @@ class UriUtils
     }
 
     /**
-     * Determines two Uri's should be considered cross-origin
+     * Parse URL (multi-byte safe)
      *
-     * @param UriInterface $uri1 Uri 1
-     * @param UriInterface $uri2 Uri2
+     * @param string $url The URL to parse.
      *
-     * @return bool
+     * @return array|false
      */
-    public static function isCrossOrigin(UriInterface $uri1, UriInterface $uri2)
+    public static function parseUrl($url)
     {
-        if (\strcasecmp($uri1->getHost(), $uri2->getHost()) !== 0) {
-            return true;
-        }
-
-        if ($uri1->getScheme() !== $uri2->getScheme()) {
-            return true;
-        }
-
-        return self::computePort($uri1) !== self::computePort($uri2);
+        // reserved chars
+        $chars = '!*\'();:@&=$,/?#[]';
+        $entities = \str_split(\urlencode($chars), 3);
+        $chars = \str_split($chars);
+        $urlEnc = \str_replace($entities, $chars, \urlencode($url));
+        $parts = self::parseUrlPatched($urlEnc);
+        return $parts
+            ? \array_map('urldecode', $parts)
+            : $parts;
     }
 
     /**
@@ -95,6 +115,26 @@ class UriUtils
             return $port;
         }
         return $uri->getScheme() === 'https' ? 443 : 80;
+    }
+
+    /**
+     * Parse URL that may or may not contain schema
+     *
+     * @param string $url The URL to parse.
+     *
+     * @return array|false
+     */
+    private static function parseUrlPatched($url)
+    {
+        if (PHP_VERSION_ID >= 50500 || \strpos($url, '//') !== 0) {
+            return \parse_url($url);
+        }
+        // php 5.4 chokes without the scheme
+        $parts = \parse_url('http:' . $url);
+        if ($parts) {
+            unset($parts['scheme']);
+        }
+        return $parts;
     }
 
     /**

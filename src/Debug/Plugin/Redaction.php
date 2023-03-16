@@ -27,6 +27,8 @@ class Redaction extends AbstractComponent implements SubscriberInterface
 {
     use CustomMethodTrait;
 
+    const REPLACEMENT = '█████████';
+
     /**
      * duplicate/store frequently used cfg vals
      *
@@ -37,6 +39,7 @@ class Redaction extends AbstractComponent implements SubscriberInterface
             // key => regex of key
         ),
         'redactReplace' => null, // closure
+        'redactStrings' => array(),
     );
     protected $methods = array(
         'redact',
@@ -50,8 +53,21 @@ class Redaction extends AbstractComponent implements SubscriberInterface
     {
         $this->cfg['redactReplace'] = static function ($str, $key = null) {
             array($str, $key); // phpmd suppress
-            return '█████████';
+            return self::REPLACEMENT;
         };
+    }
+
+    /**
+     * Add new search string and optional replacement value
+     *
+     * @param string $search  Search string
+     * @param string $replace Optional replacement
+     *
+     * @return void
+     */
+    public function addSearchReplace($search, $replace = null)
+    {
+        $this->cfg['redactStrings'][$search] = $replace;
     }
 
     /**
@@ -82,6 +98,7 @@ class Redaction extends AbstractComponent implements SubscriberInterface
         $cfg = \array_intersect_key($configs['debug'], $this->cfg);
         $valActions = \array_intersect_key(array(
             'redactKeys' => array($this, 'onCfgRedactKeys'),
+            'redactStrings' => array($this, 'onCfgRedactStrings'),
         ), $cfg);
         $this->cfg = \array_merge($this->cfg, $cfg);
         foreach ($valActions as $key => $callable) {
@@ -150,20 +167,20 @@ class Redaction extends AbstractComponent implements SubscriberInterface
         if (\in_array($name, array('Authorization', 'Proxy-Authorization'), true) === false) {
             return $this->redactString($value, $name);
         }
-        $redactedBlock = '█████████';
         if (\strpos($value, 'Basic') === 0) {
             $auth = \base64_decode(\str_replace('Basic ', '', $value), true);
             $userpass = \explode(':', $auth);
-            return 'Basic ' . $redactedBlock . ' (base64\'d ' . $userpass[0] . ':█████)';
+            $replacementShort = \mb_substr(self::REPLACEMENT, 0, 5);
+            return 'Basic ' . self::REPLACEMENT . ' (base64\'d ' . $userpass[0] . ':' . $replacementShort . ')';
         }
         if (\strpos($value, 'Digest') === 0) {
-            return \preg_replace('/(response="?)([^,"]*)("?)/', '$1' . $redactedBlock . '$3', $value);
+            return \preg_replace('/(response="?)([^,"]*)("?)/', '$1' . self::REPLACEMENT . '$3', $value);
         }
         if (\strpos($value, 'OAuth') === 0) {
-            return \preg_replace('/(oauth_signature="?)([^,"]*)("?)/', '$1' . $redactedBlock . '$3', $value);
+            return \preg_replace('/(oauth_signature="?)([^,"]*)("?)/', '$1' . self::REPLACEMENT . '$3', $value);
         }
         // Bearer or any unknown auth type
-        return \preg_replace('/^(\S+ ).+$/', '$1' . $redactedBlock, $value);
+        return \preg_replace('/^(\S+ ).+$/', '$1' . self::REPLACEMENT, $value);
     }
 
     /**
@@ -229,6 +246,27 @@ class Redaction extends AbstractComponent implements SubscriberInterface
             $keys[$key] = $this->buildRegex($key);
         }
         $this->cfg['redactKeys'] = $keys;
+        return $val;
+    }
+
+    /**
+     * Handle "redactStrings" config update
+     *
+     * @param mixed $val config value
+     *
+     * @return mixed
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     */
+    private function onCfgRedactStrings($val)
+    {
+        $strings = array();
+        foreach ($val as $k => $v) {
+            \is_int($k)
+                ? $strings[$v] = null
+                : $strings[$k] = $v;
+        }
+        $this->cfg['redactStrings'] = $strings;
         return $val;
     }
 
@@ -326,6 +364,12 @@ class Redaction extends AbstractComponent implements SubscriberInterface
                 $replacement = \call_user_func($this->cfg['redactReplace'], $substr, $key);
                 return \str_replace($substr, $replacement, $matches[0]);
             }, $val);
+        }
+        foreach ($this->cfg['redactStrings'] as $search => $replace) {
+            $replace = $replace !== null
+                ? $replace
+                : self::REPLACEMENT;
+            $val = \str_replace($search, $replace, $val);
         }
         return $val;
     }

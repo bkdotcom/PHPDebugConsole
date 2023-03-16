@@ -27,7 +27,7 @@ class SimpleCacheTest extends DebugTestFramework
     {
         $debug = \bdk\Debug::getInstance();
         $debug->getChannel('SimpleCache')
-            ->eventManager->unSubscribe(Debug::EVENT_OUTPUT, array(self::$cache, 'onDebugOutput'));
+            ->eventManager->unsubscribe(Debug::EVENT_OUTPUT, array(self::$cache, 'onDebugOutput'));
     }
 
     public function testCall()

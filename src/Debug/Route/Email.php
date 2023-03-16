@@ -84,13 +84,10 @@ class Email implements RouteInterface
      */
     private function buildBody()
     {
-        $request = $this->debug->serverRequest;
-        $serverParams = $request->getServerParams();
-        $body = (isset($serverParams['REQUEST_METHOD'])
-            ? 'Request: ' . $serverParams['REQUEST_METHOD'] . ' ' . $this->debug->redact((string) $request->getUri())
-            : 'Command: ' . \implode(' ', $serverParams['argv'])
-        ) . "\n\n";
-
+        $body = $this->debug->isCli()
+            ? 'Command: ' . \implode(' ', $this->debug->getServerParam('argv', array()))
+            : 'Request: ' . $this->debug->serverRequest->getMethod()
+                . ' ' . $this->debug->redact((string) $this->debug->serverRequest->getUri());
         /*
             List errors that occured
         */

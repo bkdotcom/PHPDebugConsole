@@ -52,6 +52,7 @@ class ServiceProvider implements ServiceProviderInterface
             'methodTime',
             'phpDoc',
             'pluginHighlight',
+            'pluginRedaction',
             'response',
             'serverRequest',
             'stringUtil',

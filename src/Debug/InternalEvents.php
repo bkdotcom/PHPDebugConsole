@@ -473,8 +473,8 @@ class InternalEvents implements SubscriberInterface
         $vals = $this->debug->data->get('runtime');
         if (!$vals) {
             $vals = array(
-                'memoryPeakUsage' => \memory_get_peak_usage(true),
                 'memoryLimit' => $this->debug->php->memoryLimit(),
+                'memoryPeakUsage' => \memory_get_peak_usage(true),
                 'runtime' => $this->debug->timeEnd('requestTime', false, true),
             );
             $this->debug->data->set('runtime', $vals);

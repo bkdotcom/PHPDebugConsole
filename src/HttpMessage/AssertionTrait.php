@@ -40,7 +40,7 @@ trait AssertionTrait
             return;
         }
         throw new InvalidArgumentException(\sprintf(
-            '%s must be a string, but %s provided.',
+            '%s must be a string, %s provided.',
             \ucfirst($what),
             $this->getTypeDebug($value)
         ));
@@ -107,7 +107,7 @@ trait AssertionTrait
         }
         if (\is_array($value) === false) {
             throw new InvalidArgumentException(\sprintf(
-                'The header field value only accepts string and array, but %s provided.',
+                'The header field value only accepts string and array, %s provided.',
                 self::getTypeDebug($value)
             ));
         }
@@ -289,7 +289,7 @@ trait AssertionTrait
             return;
         }
         throw new InvalidArgumentException(\sprintf(
-            'ParsedBody must be array, object, or null, but %s provided.',
+            'ParsedBody must be array, object, or null. %s provided.',
             self::getTypeDebug($data)
         ));
     }
@@ -308,7 +308,7 @@ trait AssertionTrait
         \array_walk_recursive($uploadedFiles, static function ($val) {
             if (!($val instanceof UploadedFileInterface)) {
                 throw new InvalidArgumentException(\sprintf(
-                    'Invalid file in uploaded files structure. Expected UploadedFileInterface, but %s provided',
+                    'Invalid file in uploaded files structure. Expected UploadedFileInterface, %s provided',
                     self::getTypeDebug($val)
                 ));
             }
@@ -361,7 +361,7 @@ trait AssertionTrait
         }
         if (\is_int($code) === false) {
             throw new InvalidArgumentException(\sprintf(
-                'Status code must to be an integer, but %s provided',
+                'Status code must to be an integer, %s provided.',
                 self::getTypeDebug($code)
             ));
         }
@@ -420,7 +420,7 @@ trait AssertionTrait
     {
         if (\is_int($port) === false) {
             throw new InvalidArgumentException(\sprintf(
-                'Port must be a int, but %s provided.',
+                'Port must be a int, %s provided.',
                 $this->getTypeDebug($port)
             ));
         }

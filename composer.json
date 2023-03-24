@@ -42,7 +42,7 @@
         }
     },
     "replace": {
-        "bdk/backtrace": "2.1",
+        "bdk/backtrace": "2.1.1",
         "bdk/errorhandler": "3.2",
         "bdk/http-message": "1.0",
         "bdk/pubsub": "2.4",

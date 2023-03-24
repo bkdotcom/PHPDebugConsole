@@ -7,6 +7,7 @@ export function init ($root) {
   $root.on('config.debug.updated', function (e, changedOpt) {
     e.stopPropagation()
     if (changedOpt === 'linkFilesTemplate') {
+      config = $root.data('config').get()
       update($root)
     }
   })
@@ -82,6 +83,7 @@ function createFileLinksStrings ($entry, $strings, remove) {
 }
 
 function createFileLinkDataFile ($entry, remove) {
+  // console.warn('createFileLinkDataFile', $entry)
   $entry.find('> .file-link').remove()
   if (remove) {
     return
@@ -128,12 +130,12 @@ function createFileLinksTrace ($entry, remove) {
 }
 
 function createFileLink (string, remove, foundFiles) {
-  // console.log('createFileLink', $(string).text())
   var $replace
   var $string = $(string)
   var attrs = string.attributes
-  var html = $.trim($string.html())
+  var text = $.trim($string.text())
   var matches = createFileLinkMatches($string, foundFiles)
+  var isUpdate = remove !== true && $string.hasClass('file-link')
   if ($string.closest('.m_trace').length) {
     // not recurssion...  will end up calling createFileLinksTrace
     create($string.closest('.m_trace'))
@@ -142,34 +144,57 @@ function createFileLink (string, remove, foundFiles) {
   if (!matches.length) {
     return
   }
-  $replace = remove || $string.find('.fa-external-link').length
-    ? $('<span>', {
-      html: html
+  if (remove) {
+    $replace = $('<span>', {
+      text: text
     })
-    : $('<a>', {
+    $string.removeClass('file-link') // remove so doesn't get added to $replace
+  } else if (isUpdate) {
+    $replace = $string
+    $replace.prop('href', buildFileLink(matches[1], matches[2]))
+  } else {
+    $replace = $('<a>', {
       class: 'file-link',
       href: buildFileLink(matches[1], matches[2]),
-      html: html + ' <i class="fa fa-external-link"></i>',
+      html: text + ' <i class="fa fa-external-link"></i>',
       title: 'Open in editor'
     })
+  }
+  /*
+  console.warn('createFileLink', {
+    remove: remove,
+    isUpdate: isUpdate,
+    matches: matches,
+    // stringOuterHTML: string.outerHTML,
+    stringText: text,
+    replace: $replace[0].outerHTML
+  })
+  */
   /*
     attrs is not a plain object, but an array of attribute nodes
     which contain both the name and value
   */
-  $.each(attrs, function () {
-    var name = this.name
-    if (['html', 'href', 'title'].indexOf(name) > -1) {
-      return // continue
-    }
-    if (name === 'class') {
-      $replace.addClass(this.value)
-      return // continue
-    }
-    $replace.attr(name, this.value)
-  })
+  if (isUpdate === false) {
+    $.each(attrs, function () {
+      if (typeof this === 'undefined') {
+        return // continue
+      }
+      var name = this.name
+      if (['html', 'href', 'title'].indexOf(name) > -1) {
+        return // continue
+      }
+      if (name === 'class') {
+        $replace.addClass(this.value)
+        $string.removeClass('t_string')
+        return // continue
+      }
+      $replace.attr(name, this.value)
+      $string.removeAttr(name)
+    })
+  }
   if ($string.is('td, th, li')) {
     $string.html(remove
-      ? html
+      ? text
       : $replace
     )
     return
@@ -179,15 +204,15 @@ function createFileLink (string, remove, foundFiles) {
 
 function createFileLinkMatches ($string, foundFiles) {
   var matches = []
-  var html = $.trim($string.html())
+  var text = $.trim($string.text())
   if ($string.data('file')) {
     // filepath specified in data-file attr
     return typeof $string.data('file') === 'boolean'
-      ? [null, html, 1]
+      ? [null, text, 1]
       : [null, $string.data('file'), $string.data('line') || 1]
   }
-  if (foundFiles.indexOf(html) === 0) {
-    return [null, html, 1]
+  if (foundFiles.indexOf(text) === 0) {
+    return [null, text, 1]
   }
   if ($string.parent('.property.debug-value').find('> .t_identifier').text().match(/^file$/)) {
     // object with file .debug-value
@@ -200,7 +225,7 @@ function createFileLinkMatches ($string, foundFiles) {
       var val = $.trim($valNode[0].innerText)
       matches[prop] = val
     })
-    return [null, html, matches.line]
+    return [null, text, matches.line]
   }
-  return html.match(/^(\/.+\.php)(?: \(line (\d+)\))?$/) || []
+  return text.match(/^(\/.+\.php)(?: \(line (\d+)\))?$/) || []
 }

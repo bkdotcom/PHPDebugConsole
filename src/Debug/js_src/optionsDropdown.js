@@ -37,7 +37,6 @@ export function init ($debugRoot) {
 
 function addDropdown () {
   var $menuBar = $root.find('.debug-menu-bar')
-  var id = $('.debug-options').length + 1
   $menuBar.find('.float-right').prepend('<button class="debug-options-toggle" type="button" data-toggle="debug-options" aria-label="Options" aria-haspopup="true" aria-expanded="false">' +
       '<i class="fa fa-ellipsis-v fa-fw"></i>' +
     '</button>'
@@ -48,8 +47,8 @@ function addDropdown () {
         '<label><input type="checkbox" name="persistDrawer" /> Keep Open/Closed</label>' +
         '<label><input type="checkbox" name="linkFiles" /> Create file links</label>' +
         '<div class="form-group">' +
-          '<label for="linkFilesTemplate_' + id + '">Link Template</label>' +
-          '<input id="linkFilesTemplate_' + id + '" name="linkFilesTemplate" />' +
+          '<label for="linkFilesTemplate">Link Template</label>' +
+          '<input id="linkFilesTemplate" name="linkFilesTemplate" />' +
         '</div>' +
         '<hr class="dropdown-divider" />' +
         '<a href="http://www.bradkent.com/php/debug" target="_blank">Documentation</a>' +
@@ -92,7 +91,7 @@ function onDebugOptionsToggle (e) {
 
 function onLinkFilesChange () {
   var isChecked = $(this).prop('checked')
-  var $formGroup = $('#linkFilesTemplate').closest('.form-group')
+  var $formGroup = $(this).closest('.debug-options').find('input[name=linkFilesTemplate]').closest('.form-group')
   isChecked
     ? $formGroup.slideDown()
     : $formGroup.slideUp()

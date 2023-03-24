@@ -66,15 +66,15 @@ class ServerLog extends ChromeLogger
         $this->data = $this->debug->data->get();
         $this->buildJsonData();
         if ($this->jsonData['rows']) {
-            if ($this->writeLogFile()) {
-                $url = $this->debug->stringUtil->interpolate(
+            $url = $this->writeLogFile()
+                ? $this->debug->stringUtil->interpolate(
                     $this->cfg['urlTemplate'],
                     array(
                         'filename' => $this->getFilename(),
                     )
-                );
-                $event['headers'][] = array(self::HEADER_NAME, $url);
-            }
+                )
+                : 'error writing log';
+            $event['headers'][] = array(self::HEADER_NAME, $url);
         }
         $this->data = array();
         $this->jsonData['rows'] = array();

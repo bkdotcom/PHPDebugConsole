@@ -101,7 +101,7 @@ class Manager implements SubscriberInterface
      *
      * @param SubscriberInterface $plugin object implementing SubscriberInterface
      *
-     * @return $this
+     * @return Debug
      */
     public function removePlugin(SubscriberInterface $plugin)
     {
@@ -112,7 +112,7 @@ class Manager implements SubscriberInterface
         if ($plugin instanceof SubscriberInterface) {
             $this->debug->eventManager->removeSubscriberInterface($plugin);
         }
-        return $this;
+        return $this->debug;
     }
 
     /**

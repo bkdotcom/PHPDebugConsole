@@ -87,7 +87,7 @@ class Debug extends AbstractDebug
     const EVENT_STREAM_WRAP = 'debug.streamWrap';
 
     const META = "\x00meta\x00";
-    const VERSION = '3.0.2';
+    const VERSION = '3.0.4';
 
     protected $cfg = array(
         'collect'   => false,
@@ -185,7 +185,7 @@ class Debug extends AbstractDebug
      * Display an alert at the top of the log
      *
      * Can use styling & substitutions.
-     * If using substitutions, will need to pass $level & $dismissible as meta values
+     * If using substitutions, will need to pass `$level` & `$dismissible` as meta values
      *
      * @param string $message     message to be displayed
      * @param string $level       (error), info, success, warn
@@ -389,7 +389,7 @@ class Debug extends AbstractDebug
     /**
      * Create a new inline group
      *
-     * Unline group(), groupCollapsed(), will initially be collapsed
+     * Unline `group()`, `groupCollapsed()`, will initially be collapsed
      *
      * @param mixed $arg,... label / values
      *

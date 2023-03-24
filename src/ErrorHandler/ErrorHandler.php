@@ -4,7 +4,7 @@
  * @package   bdk\ErrorHandler
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2023 Brad Kent
  * @version   v3.2
  */
 
@@ -76,7 +76,7 @@ class ErrorHandler extends AbstractErrorHandler
             // stats options
             'enableStats' => false,
             'stats' => array(
-                'errorStatsFile' => __DIR__ . '/error_stats.json',
+                'errorStatsFile' => __DIR__ . '/Plugin/error_stats.json',
             ),
         );
         // Initialize self::$instance if not set

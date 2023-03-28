@@ -98,7 +98,7 @@ class ComposerScripts
             return $info;
         }
         if (\version_compare(PHP_VERSION, '7.2', '>=')) {
-            \exec('composer require slevomat/coding-standard ^8.3.0 --dev --no-scripts');
+            \exec('composer require slevomat/coding-standard ^8.9.0 --dev --no-scripts');
             $info['haveSlevomat'] = true;
         }
         return $info;

@@ -7,7 +7,7 @@ namespace bdk\Test\Debug\Fixture;
  *
  * Variadic: PHP >= 5.6
  */
-class TestVariadic extends Test
+class TestVariadic extends TestObj
 {
     /**
      * This method is protected

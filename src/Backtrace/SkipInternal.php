@@ -131,7 +131,7 @@ class SkipInternal
             }
         }
         self::$internalClasses['regex'] = '/^('
-            . \implode('|', \array_map(function ($class) {
+            . \implode('|', \array_map(static function ($class) {
                 return \preg_quote($class, '/');
             }, $classes))
             . ')\b/';
@@ -181,7 +181,7 @@ class SkipInternal
         $class = null;
         if ($frame['class']) {
             $class = $frame['class'];
-        } elseif (\preg_match('/^(.+)(::|->)/', $frame['function'], $matches)) {
+        } elseif (\preg_match('/^(.+)(::|->)/', (string) $frame['function'], $matches)) {
             $class = $matches[1];
         }
         if (!$class) {

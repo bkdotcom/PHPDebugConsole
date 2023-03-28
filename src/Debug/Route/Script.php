@@ -69,7 +69,6 @@ class Script extends AbstractRoute
         $this->dumper->crateRaw = false;
         $this->data = $this->debug->data->get();
         $errorStats = $this->debug->errorStats();
-        $serverParams = $this->debug->serverRequest->getServerParams();
         $errorStr = '';
         if ($errorStats['inConsole']) {
             $errorStr = 'Errors: ';
@@ -85,9 +84,10 @@ class Script extends AbstractRoute
             'groupCollapsed',
             array(
                 'PHP',
-                (isset($serverParams['REQUEST_METHOD']) && isset($serverParams['REQUEST_URI'])
-                    ? $serverParams['REQUEST_METHOD'] . ' ' . $serverParams['REQUEST_URI']
-                    : ''),
+                $this->debug->isCli()
+                    ? '$: ' . \implode(' ', $this->debug->getServerParam('argv', array()))
+                    : $this->debug->serverRequest->getMethod()
+                        . ' ' . $this->debug->redact((string) $this->debug->serverRequest->getUri()),
                 $errorStr,
             )
         ));

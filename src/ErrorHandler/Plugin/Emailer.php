@@ -4,7 +4,7 @@
  * @package   bdk\ErrorHandler
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2023 Brad Kent
  * @version   v3.2
  */
 
@@ -25,6 +25,7 @@ use bdk\PubSub\SubscriberInterface;
  */
 class Emailer extends AbstractComponent implements SubscriberInterface
 {
+    /** @var bdk\ErrorHandler\Plugin\Stats */
     private $stats = null;
     protected $serverParams = array();
 
@@ -70,7 +71,7 @@ class Emailer extends AbstractComponent implements SubscriberInterface
     }
 
     /**
-     * Initialize error's email' (bool) value
+     * Initialize error's email (bool) value
      *
      * This function should come after stats added to error
      *

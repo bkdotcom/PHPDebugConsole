@@ -48,7 +48,7 @@ class AbstractObjectHelper
         if (PHP_VERSION_ID < 80000) {
             return array();
         }
-        return \array_map(function (ReflectionAttribute $attribute) {
+        return \array_map(static function (ReflectionAttribute $attribute) {
             return array(
                 'name' => $attribute->getName(),
                 'arguments' => $attribute->getArguments(),
@@ -154,6 +154,10 @@ class AbstractObjectHelper
     public function resolvePhpDocType($type, Abstraction $abs)
     {
         if (!$type || !$abs['fullyQualifyPhpDocType']) {
+            return $type;
+        }
+        if (\preg_match('/array[<([{]/', $type)) {
+            // type contains "complex" array type... don't deal with parsing
             return $type;
         }
         $types = \preg_split('#\s*\|\s*#', $type);

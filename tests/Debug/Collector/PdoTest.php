@@ -42,7 +42,7 @@ EOD;
     {
         $debug = \bdk\Debug::getInstance();
         $debug->getChannel('PDO')
-            ->eventManager->unSubscribe(Debug::EVENT_OUTPUT, array(self::$client, 'onDebugOutput'));
+            ->eventManager->unsubscribe(Debug::EVENT_OUTPUT, array(self::$client, 'onDebugOutput'));
     }
 
     public function testConstruct()

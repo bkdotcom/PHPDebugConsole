@@ -3,6 +3,7 @@
 namespace bdk\Test\Debug\Utility;
 
 use bdk\Debug\Utility\Php;
+use bdk\Test\Debug\Fixture\TestObj;
 use bdk\Test\PolyFill\AssertionTrait;
 use PHPUnit\Framework\TestCase;
 
@@ -25,7 +26,7 @@ class PhpTest extends TestCase
      */
     public function testFriendlyClassName($input, $expect)
     {
-        $this->assertSame($expect, Php::friendlyClassName($input));
+        self::assertSame($expect, Php::friendlyClassName($input));
     }
 
     public function testGetIncludedFiles()
@@ -34,38 +35,38 @@ class PhpTest extends TestCase
         $filesB = Php::getIncludedFiles();
         \sort($filesA);
         \sort($filesB);
-        $this->assertArraySubset($filesA, $filesB);
+        self::assertArraySubset($filesA, $filesB);
     }
 
     public function testGetReflector()
     {
-        $this->assertNull(Php::getReflector(123));
+        self::assertNull(Php::getReflector(123));
 
-        $this->assertNull(Php::getReflector('food()'));
+        self::assertNull(Php::getReflector('food()'));
 
-        $strClassname = 'bdk\Test\Debug\Fixture\Test';
-        $this->assertInstanceOf('ReflectionClass', Php::getReflector($strClassname));
+        $strClassname = 'bdk\Test\Debug\Fixture\TestObj';
+        self::assertInstanceOf('ReflectionClass', Php::getReflector($strClassname));
 
-        $str = '\bdk\Test\Debug\Fixture\Test::$someArray';
-        $this->assertInstanceOf('ReflectionProperty', Php::getReflector($str));
+        $str = '\bdk\Test\Debug\Fixture\TestObj::$someArray';
+        self::assertInstanceOf('ReflectionProperty', Php::getReflector($str));
 
-        $str = '\bdk\Test\Debug\Fixture\Test::methodPublic()';
-        $this->assertInstanceOf('ReflectionMethod', Php::getReflector($str));
+        $str = '\bdk\Test\Debug\Fixture\TestObj::methodPublic()';
+        self::assertInstanceOf('ReflectionMethod', Php::getReflector($str));
 
         if (PHP_VERSION_ID < 70100) {
             return;
         }
 
-        $str = '\bdk\Test\Debug\Fixture\Test::MY_CONSTANT';
-        $this->assertInstanceOf('ReflectionClassConstant', Php::getReflector($str));
+        $str = '\bdk\Test\Debug\Fixture\TestObj::MY_CONSTANT';
+        self::assertInstanceOf('ReflectionClassConstant', Php::getReflector($str));
 
         if (PHP_VERSION_ID < 80100) {
             return;
         }
-        $this->assertInstanceOf('ReflectionEnum', Php::getReflector(\bdk\Test\Debug\Fixture\Enum\MealsBacked::DINNER));
+        self::assertInstanceOf('ReflectionEnum', Php::getReflector(\bdk\Test\Debug\Fixture\Enum\MealsBacked::DINNER));
 
         $str = '\bdk\Test\Debug\Fixture\Enum\MealsBacked::DINNER';
-        $this->assertInstanceOf('ReflectionEnumBackedCase', Php::getReflector($str));
+        self::assertInstanceOf('ReflectionEnumBackedCase', Php::getReflector($str));
     }
 
     /**
@@ -73,7 +74,7 @@ class PhpTest extends TestCase
      */
     public function testIsCallable($input, $flags, $isCallable)
     {
-        $this->assertSame(
+        self::assertSame(
             $isCallable,
             $flags !== null
                 ? Php::isCallable($input, $flags)
@@ -83,8 +84,8 @@ class PhpTest extends TestCase
 
     public function testIsThrowable()
     {
-        $this->assertTrue(Php::isThrowable(new \Exception('thrown')));
-        $this->assertFalse(Php::isThrowable((object) array('stdObj')));
+        self::assertTrue(Php::isThrowable(new \Exception('thrown')));
+        self::assertFalse(Php::isThrowable((object) array('stdObj')));
     }
 
     /**
@@ -96,7 +97,7 @@ class PhpTest extends TestCase
      */
     public function testMemoryLimit()
     {
-        $this->assertNotNull(Php::memoryLimit());
+        self::assertNotNull(Php::memoryLimit());
     }
 
     public function testUnserializeSafe()
@@ -109,7 +110,7 @@ class PhpTest extends TestCase
         ));
 
         // allow everything
-        $this->assertEquals(array(
+        self::assertEquals(array(
             'before' => 'foo',
             'stdClass' => (object) array('foo' => 'bar'),
             'obj' => new \bdk\Test\Debug\Fixture\TestTraversable(array('foo' => 'bar')),
@@ -118,7 +119,7 @@ class PhpTest extends TestCase
 
         // disable all (stdClass still allowed)
         $serialized = 'a:5:{s:6:"before";s:3:"foo";s:8:"stdClass";O:8:"stdClass":1:{s:3:"foo";s:3:"bar";}s:12:"serializable";C:35:"bdk\Test\Debug\Fixture\Serializable":13:{Brad was here}s:3:"obj";O:38:"bdk\Test\Debug\Fixture\TestTraversable":1:{s:4:"data";a:1:{s:3:"foo";s:3:"bar";}}s:5:"after";s:3:"bar";}';
-        $this->assertEquals(array(
+        self::assertEquals(array(
             'before' => 'foo',
             'stdClass' => (object) array('foo' => 'bar'),
             'serializable' => \unserialize('O:22:"__PHP_Incomplete_Class":2:{s:27:"__PHP_Incomplete_Class_Name";s:35:"bdk\Test\Debug\Fixture\Serializable";s:17:"__serialized_data";s:13:"Brad was here";}'),
@@ -132,23 +133,23 @@ class PhpTest extends TestCase
             'stdClass' => (object) array('foo' => 'bar'),
             'after' => 'bar',
         ));
-        $this->assertEquals(array(
+        self::assertEquals(array(
             'before' => 'foo',
             'stdClass' => (object) array('foo' => 'bar'),
             'after' => 'bar',
         ), Php::unserializeSafe($serialized, false));
     }
 
-    public function providerFriendlyClassName()
+    public static function providerFriendlyClassName()
     {
-        $fcnExpect = 'bdk\Test\Debug\Fixture\Test';
-        $obj = new \bdk\Test\Debug\Fixture\Test();
-        $strClassname = 'bdk\Test\Debug\Fixture\Test';
+        $fcnExpect = 'bdk\Test\Debug\Fixture\TestObj';
+        $obj = new TestObj();
+        $strClassname = 'bdk\Test\Debug\Fixture\TestObj';
         $return = array(
             'obj' => array($obj, $fcnExpect),
             'strClassname' => array($strClassname, $fcnExpect),
-            'strProperty' => array('\bdk\Test\Debug\Fixture\Test::$someArray', $fcnExpect),
-            'strMethod' => array('\bdk\Test\Debug\Fixture\Test::methodPublic()', $fcnExpect),
+            'strProperty' => array('\bdk\Test\Debug\Fixture\TestObj::$someArray', $fcnExpect),
+            'strMethod' => array('\bdk\Test\Debug\Fixture\TestObj::methodPublic()', $fcnExpect),
             'reflectionClass' => array(new \ReflectionClass($strClassname), $fcnExpect),
             'reflectionObject' => array(new \ReflectionObject($obj), $fcnExpect),
         );
@@ -164,13 +165,13 @@ class PhpTest extends TestCase
         if (PHP_VERSION_ID < 70100) {
             return $return;
         }
-        $return['strConstant'] = array('\bdk\Test\Debug\Fixture\Test::MY_CONSTANT', $fcnExpect);
+        $return['strConstant'] = array('\bdk\Test\Debug\Fixture\TestObj::MY_CONSTANT', $fcnExpect);
         return $return;
     }
 
-    public function providerIsCallable()
+    public static function providerIsCallable()
     {
-        $closure = function ($foo) {
+        $closure = static function ($foo) {
             echo $foo;
         };
         $invokable = new \bdk\Test\Container\Fixture\Invokable();

@@ -40,7 +40,7 @@ class TableTest extends DebugTestFramework
         // $debugProp = new ReflectionProperty($this->debug->methodTable, 'debug');
         // $debugProp->setAccessible(true);
         // $debugProp->setValue($this->debug->methodTable, $this->debug);
-        $this->helper->setPrivateProp($this->debug->methodTable, 'debug', $this->debug);
+        $this->helper->setProp($this->debug->methodTable, 'debug', $this->debug);
         $colKeysMeth = new ReflectionMethod($this->debug->methodTable, 'colKeys');
         $colKeysMeth->setAccessible(true);
         $array = array(
@@ -62,7 +62,7 @@ class TableTest extends DebugTestFramework
     /**
      * @return array
      */
-    public function providerTestMethod()
+    public static function providerTestMethod()
     {
         $rowsA = array(
             // note different order of keys / not all rows have all cols
@@ -131,34 +131,39 @@ EOD;
         $rowsAScript = 'console.table({"4":{"name":"Bob","age":"12","sex":"M","Naughty":false,"extracol":undefined},"2":{"name":"Sally","age":"10","sex":"F","Naughty":true,"extracol":"yes"}});';
         $rowsAFirephp = 'X-Wf-1-1-1-3: %d|[{"Label":"table caption","Type":"TABLE"},[["","name","age","sex","Naughty","extracol"],[4,"Bob","12","M",false,null],[2,"Sally","10","F",true,"yes"]]]|';
 
+        /*
         $dateTimePubMethods = 3;
         if (\version_compare(PHP_VERSION, '7.1', '>=')) {
             $dateTimePubMethods = 5;
         } elseif (\version_compare(PHP_VERSION, '7.0', '>=')) {
             $dateTimePubMethods = 4;
         }
+        */
 
         $vals = array(
             'datetime' => new \DateTime('2233-03-22'),
             'resource' => \fopen(__FILE__, 'r'),
-            'callable' => array($this, __FUNCTION__),
-            'closure' => function ($foo) {
+            'callable' => array(__CLASS__, __FUNCTION__),
+            'closure' => static function ($foo) {
                 echo $foo;
             },
         );
         $abstracter = Debug::getInstance()->abstracter;
         foreach ($vals as $k => $raw) {
             $crated = $abstracter->crate($raw, 'table');
+            if ($crated instanceof Abstraction) {
+                $crated = $crated->jsonSerialize();
+                if ($crated['type'] === 'object') {
+                    $crated['scopeClass'] = __class__;
+                }
+            }
             $vals[$k] = array(
                 'raw' => $raw,
-                'crated' => $crated instanceof Abstraction
-                    ? $crated->jsonSerialize()
-                    : $crated,
+                'crated' => $crated,
             );
         }
 
         return array(
-            // 0 null
             'null' => array(
                 'table',
                 array(null),
@@ -174,7 +179,7 @@ EOD;
                     'firephp' => 'X-Wf-1-1-1-1: 21|[{"Type":"LOG"},null]|',
                 ),
             ),
-            // 1 empty array
+
             'emptyArray' => array(
                 'table',
                 array('arg1', array()),
@@ -192,7 +197,7 @@ EOD;
                     'firephp' => 'X-Wf-1-1-1-2: %d|[{"Label":"arg1","Type":"LOG"},[]]|',
                 ),
             ),
-            // 2 not table material
+
             'string' => array(
                 'table',
                 array('arg1'),
@@ -210,7 +215,7 @@ EOD;
                     'firephp' => 'X-Wf-1-1-1-2: %d|[{"Type":"LOG"},"arg1"]|',
                 ),
             ),
-            // 3 not table material with label
+
             'notTabularWithLabel' => array(
                 'table',
                 array('arg1', 'arg2'),
@@ -228,7 +233,7 @@ EOD;
                     'firephp' => 'X-Wf-1-1-1-2: %d|[{"Label":"arg1","Type":"LOG"},"arg2"]|',
                 ),
             ),
-            // 4 superfluous args
+
             'superfluousArgs' => array(
                 'table',
                 array('arg1', 'arg2 is not logged', $rowsA, 'arg4 is not logged'),
@@ -261,6 +266,7 @@ EOD;
                     'firephp' => \str_replace('table caption', 'arg1', $rowsAFirephp),
                 ),
             ),
+
             // 5 rowsA
             array(
                 'table',
@@ -294,6 +300,7 @@ EOD;
                     'firephp' => $rowsAFirephp,
                 ),
             ),
+
             // 6 rowsA - specify columns
             array(
                 'table',
@@ -348,7 +355,7 @@ EOD;
                     'firephp' => 'X-Wf-1-1-1-20: %d|[{"Label":"table caption","Type":"TABLE"},[["","name","extracol"],[4,"Bob",null],[2,"Sally","yes"]]]|',
                 ),
             ),
-            // 7 flat
+
             'flat' => array(
                 'table',
                 array(
@@ -415,25 +422,7 @@ EOD;
                             <dt class="properties">properties</dt>
                             <dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="t_type">string</span> <span class="t_identifier">file</span> <span class="t_operator">=</span> <span class="t_string">' . __FILE__ . '</span></dd>
                             <dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="t_type">int</span> <span class="t_identifier">line</span> <span class="t_operator">=</span> <span class="t_int">%i</span></dd>
-                            '
-                            /*
-                            <dt class="methods">methods</dt>' . "\n"
-                            . (PHP_VERSION_ID >= 80000
-                                ? '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier">__invoke</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$foo</span></span><span class="t_punct">)</span></dd>
-                                    <dd class="isStatic method public"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="t_type"><span class="classname">Closure</span></span> <span class="t_identifier">bind</span><span class="t_punct">(</span><span class="parameter"><span class="t_type"><span class="classname">Closure</span></span> <span class="t_parameter-name">$closure</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_type">object</span> <span class="t_parameter-name">$newThis</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_type">object</span><span class="t_punct">|</span><span class="t_type">string</span><span class="t_punct">|</span><span class="t_type">null</span> <span class="t_parameter-name">$newScope</span> <span class="t_operator">=</span> <span class="t_parameter-default t_string">static</span></span><span class="t_punct">)</span></dd>
-                                    <dd class="method public"><span class="t_modifier_public">public</span> <span class="t_type"><span class="classname">Closure</span></span> <span class="t_identifier">bindTo</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">object</span> <span class="t_parameter-name">$newThis</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_type">object</span><span class="t_punct">|</span><span class="t_type">string</span><span class="t_punct">|</span><span class="t_type">null</span> <span class="t_parameter-name">$newScope</span> <span class="t_operator">=</span> <span class="t_parameter-default t_string">static</span></span><span class="t_punct">)</span></dd>
-                                    <dd class="method public"><span class="t_modifier_public">public</span> <span class="t_type">mixed</span> <span class="t_identifier">call</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">object</span> <span class="t_parameter-name">$newThis</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_type">mixed</span> <span class="t_parameter-name">...$args</span></span><span class="t_punct">)</span></dd>
-                                    <dd class="isStatic method public"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="t_type"><span class="classname">Closure</span></span> <span class="t_identifier">fromCallable</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">callable</span> <span class="t_parameter-name">$callback</span></span><span class="t_punct">)</span></dd>
-                                    <dd class="method private"><span class="t_modifier_private">private</span> <span class="t_identifier">__construct</span><span class="t_punct">(</span><span class="t_punct">)</span></dd>'
-                                : '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier">__invoke</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$foo</span></span><span class="t_punct">)</span></dd>
-                                    <dd class="isStatic method public"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="t_identifier">bind</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$closure</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_parameter-name">$newthis</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_parameter-name">$newscope</span></span><span class="t_punct">)</span></dd>
-                                    <dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier">bindTo</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$newthis</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_parameter-name">$newscope</span></span><span class="t_punct">)</span></dd>
-                                    ' . (\version_compare(PHP_VERSION, '7.0', '>=') ? '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier">call</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$newthis</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_parameter-name">...$parameters</span></span><span class="t_punct">)</span></dd>' . "\n" : '')
-                                    . (\version_compare(PHP_VERSION, '7.1', '>=') ? '<dd class="isStatic method public"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="t_identifier">fromCallable</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$callable</span></span><span class="t_punct">)</span></dd>' . "\n" : '')
-                                    . '<dd class="method private"><span class="t_modifier_private">private</span> <span class="t_identifier">__construct</span><span class="t_punct">(</span><span class="t_punct">)</span></dd>'
-                            ) . '
-                            */
-                            . '<dt class="methods">methods <i>not collected</i></dt>
+                            <dt class="methods">methods <i>not collected</i></dt>
                             </dl>
                         </td></tr>
                         </tbody>
@@ -447,13 +436,7 @@ EOD;
                         [4] => Closure
                             Properties:
                                 (debug) file = "' . __FILE__ . '"
-                                (debug) line = %i'
-                            /*
-                            Methods:
-                                public: ' . $dateTimePubMethods . '
-                                private: 1
-                            */
-                            . '
+                                (debug) line = %i
                     )',
                     'script' => 'console.table(['
                         . '"a",'
@@ -472,7 +455,7 @@ EOD;
                     . ']]|',
                 ),
             ),
-            // 8 traversable
+
             'traversable' => array(
                 'table',
                 array(
@@ -486,7 +469,7 @@ EOD;
                     'firephp' => 'X-Wf-1-1-1-5: 149|[{"Label":"traversable","Type":"TABLE"},[["","name","age","sex","Naughty","extracol"],[4,"Bob","12","M",false,null],[2,"Sally","10","F",true,"yes"]]]|',
                 ),
             ),
-            // 9 traversable -o- traversables
+
             'traversableOfTraversable' => array(
                 'table',
                 array(
@@ -533,7 +516,7 @@ EOD;
                         . '[2,"bdk\\\Test\\\Debug\\\Fixture\\\TestTraversable","Sally","10","F",true,"yes"]]]|',
                 ),
             ),
-            // 10 array -o- objects
+
             'arrayOfObjects' => array(
                 'table',
                 array(
@@ -580,7 +563,7 @@ EOD;
                         . '[2,"stdClass","Sally","10","F",true,"yes"]]]|',
                 ),
             ),
-            // 11 rowsB (not all col values of same type)
+
             'differentTypes' => array(
                 'table',
                 array(
@@ -614,6 +597,7 @@ EOD;
                     'firephp' => 'X-Wf-1-1-1-8: 188|[{"Label":"not all col values of same type","Type":"TABLE"},[["","date","date2"],[0,"1955-11-05T00:00:00%i","not a datetime"],[1,"1985-10-26T00:00:00%i","2015-10-21T00:00:00%i"]]]|',
                 ),
             ),
+
             'inclContext' => array(
                 'table',
                 array('table caption', $rowsA, Debug::meta('inclContext')),
@@ -650,11 +634,6 @@ EOD;
                             'inclContext' => true,
                         ),
                     ),
-                    /*
-                    'entry' => function ($entry) {
-                        echo 'rows = ' . json_encode($entry->getMeta('tableInfo'), JSON_PRETTY_PRINT) . "\n";
-                    },
-                    */
                     'html' => \str_replace('table-bordered', 'table-bordered trace-context', $rowsAHtml),
                     'text' => $rowsAText,
                     'script' => $rowsAScript,
@@ -705,13 +684,13 @@ EOD;
                                 <li class="t_string"><span class="binary">' . $binaryStr . '</span></li>
                             </ul></td></tr>
                         <tr><th class="t_int t_key text-right" scope="row">1</th><td class="string-encoded tabs-container" data-type-more="json">
-                            <nav role="tablist"><a class="nav-link" data-target=".string-raw" data-toggle="tab" role="tab">json</a><a class="active nav-link" data-target=".string-decoded" data-toggle="tab" role="tab">decoded</a></nav>
-                            <div class="string-raw tab-pane" role="tabpanel"><span class="value-container" data-type="string"><span class="prettified">(prettified)</span> <span class="highlight language-json no-quotes t_string">{
+                            <nav role="tablist"><a class="nav-link" data-target=".tab-1" data-toggle="tab" role="tab">json</a><a class="active nav-link" data-target=".tab-2" data-toggle="tab" role="tab">decoded</a></nav>
+                            <div class="tab-1 tab-pane" role="tabpanel"><span class="value-container" data-type="string"><span class="prettified">(prettified)</span> <span class="highlight language-json no-quotes t_string">{
                                 &quot;poop&quot;: &quot;\ud83d\udca9&quot;,
                                 &quot;int&quot;: 42,
                                 &quot;password&quot;: &quot;secret&quot;
                             }</span></span></div>
-                            <div class="active string-decoded tab-pane" role="tabpanel"><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
+                            <div class="active tab-2 tab-pane" role="tabpanel"><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
                                 <ul class="array-inner list-unstyled">
                                     <li><span class="t_key">poop</span><span class="t_operator">=&gt;</span><span class="t_string">💩</span></li>
                                     <li><span class="t_key">int</span><span class="t_operator">=&gt;</span><span class="t_int">42</span></li>

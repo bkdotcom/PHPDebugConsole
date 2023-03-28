@@ -102,7 +102,7 @@ class Helper
         $type = \preg_replace_callback($regex, function ($matches) {
             return $matches[1]
                 ? $this->markupTypePart($matches[1])
-                : '<span class="t_punct">' . $matches[2] . '</span>';
+                : '<span class="t_punct">' . \htmlspecialchars($matches[2]) . '</span>';
         }, $type);
         $attribs = \array_filter($attribs);
         if ($attribs) {

@@ -65,7 +65,7 @@ EOD;
         self::$client->query($createDb);
         self::$client->query($createTable);
 
-        \bdk\Test\Debug\Helper::setPrivateProp('bdk\\Debug\\Collector\\StatementInfo', 'constants', array());
+        \bdk\Test\Debug\Helper::setProp('bdk\\Debug\\Collector\\StatementInfo', 'constants', array());
     }
 
     public static function tearDownAfterClass(): void
@@ -73,7 +73,7 @@ EOD;
         if (self::$client) {
             $debug = Debug::getInstance();
             $debug->getChannel('MySqli')
-                ->eventManager->unSubscribe(Debug::EVENT_OUTPUT, array(self::$client, 'onDebugOutput'));
+                ->eventManager->unsubscribe(Debug::EVENT_OUTPUT, array(self::$client, 'onDebugOutput'));
         }
     }
 

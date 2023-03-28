@@ -5,6 +5,7 @@ namespace bdk\Test\Debug\Collector;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Collector\GuzzleMiddleware;
 use bdk\Test\Debug\DebugTestFramework;
+use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Handler\MockHandler;
@@ -15,39 +16,11 @@ use GuzzleHttp\Psr7\Response;
 /**
  * PHPUnit tests for GuzzleMiddleware
  *
- * @covers \bdk\Debug\Data
  * @covers \bdk\Debug\Collector\GuzzleMiddleware
  */
 class GuzzleMiddlewareTest extends DebugTestFramework
 {
-    private static $client;
-    private static $middleware;
-
     private $url = 'http://example.com/';
-
-    public static function setUpBeforeClass(): void
-    {
-        if (\class_exists('GuzzleHttp\\Handler\\MockHandler') === false) {
-            return;
-        }
-        $mockHandler = new MockHandler([
-            new Response(200, ['X-Foo' => 'Bar'], 'Hello World'),
-            new Response(202, ['Content-Length' => 0]),
-            new Response(200, [], 'Test'),
-            new RequestException('Error Communicating with Server', new Request('GET', 'test')),
-        ]);
-        self::$middleware = new GuzzleMiddleware(array(
-            'asyncResponseWithRequest' => true,
-            'inclRequestBody' => true,
-            'inclResponseBody' => true,
-        ));
-
-        $handlerStack = HandlerStack::create($mockHandler);
-        $handlerStack->push(self::$middleware, 'PHPDebugConsole');
-        self::$client = new Client([
-            'handler' => $handlerStack,
-        ]);
-    }
 
     /**
      * Test plain 'ol request'
@@ -59,42 +32,43 @@ class GuzzleMiddlewareTest extends DebugTestFramework
         if (PHP_VERSION_ID < 50500) {
             $this->markTestSkipped('guzzle middleware is php 5.5+');
         }
-        self::$client->request(
+        $client = $this->getClient(array(
+            new Response(200, ['X-Foo' => 'Bar'], 'Hello World'),
+        ));
+        $response = $client->request(
             'GET',
             $this->url,
             array(
                 'json' => array('foo' => 'bar'),
             )
         );
+        $this->assertInstanceOf('Psr\\Http\\Message\\ResponseInterface', $response);
         $this->outputTest(array(
-            'html' => '<li class="m_group" data-channel="general.Guzzle" data-icon="fa fa-exchange">
+            'html' => '<li class="m_group" data-channel="general.Guzzle" data-icon="fa fa-exchange" id="guzzle_%s">
                 <div class="group-header">%sGuzzle(%sGET%shttp://example.com/%s)</span></div>
                 <ul class="group-body">
                     <li class="m_log" data-channel="general.Guzzle">%srequest headers</span> = <span class="t_string">GET / HTTP/1.1%A</li>
                     <li class="m_log" data-channel="general.Guzzle"><span class="no-quotes t_string">request body</span> = <span class="string-encoded tabs-container" data-type-more="json">
-                        <nav role="tablist"><a class="nav-link" data-target=".string-raw" data-toggle="tab" role="tab">json</a><a class="active nav-link" data-target=".string-decoded" data-toggle="tab" role="tab">decoded</a></nav>
-                        <div class="string-raw tab-pane" role="tabpanel"><span class="value-container" data-type="string"><span class="prettified">(prettified)</span> <span class="highlight language-json no-quotes t_string">{
+                        <nav role="tablist"><a class="nav-link" data-target=".tab-1" data-toggle="tab" role="tab">json</a><a class="active nav-link" data-target=".tab-2" data-toggle="tab" role="tab">decoded</a></nav>
+                        <div class="tab-1 tab-pane" role="tabpanel"><span class="value-container" data-type="string"><span class="prettified">(prettified)</span> <span class="highlight language-json no-quotes t_string">{
                         &quot;foo&quot;: &quot;bar&quot;
                         }</span></span></div>
-                        <div class="active string-decoded tab-pane" role="tabpanel"><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
+                        <div class="active tab-2 tab-pane" role="tabpanel"><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
                         <ul class="array-inner list-unstyled">
                         <li><span class="t_key">foo</span><span class="t_operator">=&gt;</span><span class="t_string">bar</span></li>
                         </ul><span class="t_punct">)</span></span></div>
                         </span></li>
                     <li class="m_time" data-channel="general.Guzzle"><span class="no-quotes t_string">time: %f %s</span></li>
-                    <li class="m_log" data-channel="general.Guzzle"><span class="no-quotes t_string">response headers</span> = <span class="t_string">HTTP/ 1.1 200 OK<span class="ws_r"></span><span class="ws_n"></span>
+                    <li class="m_log" data-channel="general.Guzzle"><span class="no-quotes t_string">response headers</span> = <span class="t_string">HTTP/1.1 200 OK<span class="ws_r"></span><span class="ws_n"></span>
                     X-Foo: Bar</span></li>
                     <li class="m_log" data-channel="general.Guzzle"><span class="no-quotes t_string">response body</span> = <span class="t_string">Hello World</span></li>
                 </ul>
                 </li>',
             'wamp' => function ($messages) {
-                $messages = \array_map(function ($message) {
-                    // unset($message['args'][2]['requestId']);
-                    // unset($message['args'][2]['format']);
+                $messages = \array_map(static function ($message) {
                     return array(
                         'method' => $message['args'][0],
                         'args' => $message['args'][1],
-                        // 'meta' => $message['args'][2],
                     );
                 }, $messages);
                 $expect = array(
@@ -184,7 +158,11 @@ class GuzzleMiddlewareTest extends DebugTestFramework
         if (PHP_VERSION_ID < 50500) {
             $this->markTestSkipped('guzzle middleware is php 5.5+');
         }
-        self::$client->requestAsync('GET', $this->url)->wait();
+        $client = $this->getClient(array(
+            new Response(202, ['Content-Length' => 0]),
+        ));
+        $response = $client->requestAsync('GET', $this->url)->wait();
+        $this->assertInstanceOf('Psr\\Http\\Message\\ResponseInterface', $response);
         $this->outputTest(array(
             'html' => '<li class="m_group" data-channel="general.Guzzle" data-icon="fa fa-exchange" id="guzzle%s">
                 <div class="group-header">%sGuzzle(%sGET%shttp://example.com/%s)</span></div>
@@ -192,13 +170,13 @@ class GuzzleMiddlewareTest extends DebugTestFramework
                     <li class="m_info" data-channel="general.Guzzle" data-icon="fa fa-random"><span class="no-quotes t_string">asyncronous</span></li>
                     <li class="m_log" data-channel="general.Guzzle">%srequest headers</span> = <span class="t_string">GET / HTTP/1.1%A</li>
                     <li class="m_time" data-channel="general.Guzzle"><span class="no-quotes t_string">time: %f %s</span></li>
-                    <li class="m_log" data-channel="general.Guzzle"><span class="no-quotes t_string">response headers</span> = <span class="t_string">HTTP/ 1.1 202 Accepted<span class="ws_r"></span><span class="ws_n"></span>
+                    <li class="m_log" data-channel="general.Guzzle"><span class="no-quotes t_string">response headers</span> = <span class="t_string">HTTP/1.1 202 Accepted<span class="ws_r"></span><span class="ws_n"></span>
                     Content-Length: 0</span></li>
                     <li class="m_log" data-channel="general.Guzzle"><span class="no-quotes t_string">response body</span> = <span class="t_string"></span></li>
                 </ul>
                 </li>',
             'wamp' => function ($messages) {
-                $messages = \array_map(function ($message) {
+                $messages = \array_map(static function ($message) {
                     unset($message['args'][2]['requestId']);
                     unset($message['args'][2]['format']);
                     return array(
@@ -218,6 +196,7 @@ class GuzzleMiddlewareTest extends DebugTestFramework
                         ),
                         'meta' => array(
                             'icon' => 'fa fa-exchange',
+                            'redact' => true,
                             'attribs' => array(
                                 'id' => $id,
                                 'class' => array(),
@@ -242,7 +221,6 @@ class GuzzleMiddlewareTest extends DebugTestFramework
                             $messages[2]['args'][1],
                         ),
                         'meta' => array(
-                            'redact' => true,
                             'channel' => 'general.Guzzle',
                         ),
                     ),
@@ -283,7 +261,6 @@ class GuzzleMiddlewareTest extends DebugTestFramework
                             $messages[5]['args'][1],
                         ),
                         'meta' => array(
-                            'redact' => true,
                             'appendGroup' => $id,
                             'channel' => 'general.Guzzle',
                         ),
@@ -316,9 +293,13 @@ class GuzzleMiddlewareTest extends DebugTestFramework
         if (PHP_VERSION_ID < 50500) {
             $this->markTestSkipped('guzzle middleware is php 5.5+');
         }
-        self::$middleware->setCfg('asyncResponseWithRequest', false);
-        // $this->debug->getRoute('wamp')->wamp->messages = array();
-        self::$client->requestAsync('GET', $this->url)->wait();
+        $client = $this->getClient(array(
+            new Response(200, [], 'Test'),
+        ), array(
+            'asyncResponseWithRequest' => false,
+        ));
+        $response = $client->requestAsync('GET', $this->url)->wait();
+        $this->assertInstanceOf('Psr\\Http\\Message\\ResponseInterface', $response);
         $this->outputTest(array(
             'html' => '<li class="m_group" data-channel="general.Guzzle" data-icon="fa fa-exchange" id="guzzle_%s">
                     <div class="group-header">%sGuzzle(%sGET%shttp://example.com/%s)</span></div>
@@ -331,7 +312,7 @@ class GuzzleMiddlewareTest extends DebugTestFramework
                     <div class="group-header">%sGuzzle Response(%sGET%shttp://example.com/%s)</span></div>
                     <ul class="group-body">
                         <li class="m_time" data-channel="general.Guzzle"><span class="no-quotes t_string">time: %f %s</span></li>
-                        <li class="m_log" data-channel="general.Guzzle"><span class="no-quotes t_string">response headers</span> = <span class="t_string">HTTP/ 1.1 200 OK</span></li>
+                        <li class="m_log" data-channel="general.Guzzle"><span class="no-quotes t_string">response headers</span> = <span class="t_string">HTTP/1.1 200 OK</span></li>
                         <li class="m_log" data-channel="general.Guzzle"><span class="no-quotes t_string">response body</span> = <span class="t_string">Test</span></li>
                 </ul>
                 </li>',
@@ -339,23 +320,27 @@ class GuzzleMiddlewareTest extends DebugTestFramework
     }
 
     /**
-     * Test rejected request
+     * Test syncronous rejected request
      *
      * @return void
      */
-    public function testRejected()
+    public function testSyncRejected()
     {
         if (PHP_VERSION_ID < 50500) {
             $this->markTestSkipped('guzzle middleware is php 5.5+');
         }
-        self::$middleware->setCfg('asyncResponseWithRequest', true);
+        $caught = false;
         try {
-            self::$client->request('GET', $this->url);
-        } catch (\Exception $e) {
-            1 + 1;
+            $client = $this->getClient(array(
+                new RequestException('Error Communicating with Server', new Request('GET', 'test')),
+            ));
+            $client->request('GET', $this->url);
+        } catch (Exception $e) {
+            $caught = true;
         }
+        $this->assertTrue($caught);
         $this->outputTest(array(
-            'html' => '<li class="expanded m_group" data-channel="general.Guzzle" data-icon="fa fa-exchange">
+            'html' => '<li class="expanded m_group" data-channel="general.Guzzle" data-icon="fa fa-exchange" id="guzzle_%s">
                     <div class="group-header">%sGuzzle(%sGET%shttp://example.com/%s)</span></div>
                     <ul class="group-body">
                         <li class="m_log" data-channel="general.Guzzle"><span class="no-quotes t_string">request headers</span> = <span class="t_string">GET / HTTP/1.1%A</li>
@@ -364,5 +349,58 @@ class GuzzleMiddlewareTest extends DebugTestFramework
                     </ul>
                 </li>',
         ));
+    }
+
+    /**
+     * Test syncronous rejected request
+     *
+     * @return void
+     */
+    public function testAsyncRejected()
+    {
+        if (PHP_VERSION_ID < 50500) {
+            $this->markTestSkipped('guzzle middleware is php 5.5+');
+        }
+        $caught = false;
+        try {
+            $client = $this->getClient(array(
+                new RequestException('Error Communicating with Server', new Request('GET', 'test')),
+            ));
+
+            $client->requestAsync('GET', $this->url)->wait();
+        } catch (Exception $e) {
+            $caught = true;
+        }
+        $this->assertTrue($caught);
+        $this->outputTest(array(
+            'html' => '<li class="expanded m_group" data-channel="general.Guzzle" data-icon="fa fa-exchange" id="guzzle_%s">
+                    <div class="group-header">%sGuzzle(%sGET%shttp://example.com/%s)</span></div>
+                    <ul class="group-body">
+                        <li class="m_info" data-channel="general.Guzzle" data-icon="fa fa-random"><span class="no-quotes t_string">asyncronous</span></li>
+                        <li class="m_log" data-channel="general.Guzzle"><span class="no-quotes t_string">request headers</span> = <span class="t_string">GET / HTTP/1.1%A</li>
+                        <li class="m_warn" data-channel="general.Guzzle" data-detect-files="true" data-file="%s" data-line="%s"><span class="no-quotes t_string">GuzzleHttp\Exception\RequestException</span>, <span class="t_int">0</span>, <span class="t_string">Error Communicating with Server</span></li>
+                        <li class="m_time" data-channel="general.Guzzle"><span class="no-quotes t_string">time: %f %s</span></li>
+                    </ul>
+                </li>',
+        ));
+    }
+
+    function getClient($queue = array(), $middlewareOpts = array())
+    {
+        $client = new Client([
+            'allow_redirects' => true,
+            'cookies' => true,
+            'verify' => false,
+            'handler' => MockHandler::createWithMiddleware($queue),
+        ]);
+        $handlerStack = $client->getConfig('handler');
+        $middlewareOpts = \array_merge(array(
+            'asyncResponseWithRequest' => true,
+            'inclRequestBody' => true,
+            'inclResponseBody' => true,
+        ), $middlewareOpts);
+        $middleware = new GuzzleMiddleware($middlewareOpts);
+        $handlerStack->unshift($middleware);
+        return $client;
     }
 }

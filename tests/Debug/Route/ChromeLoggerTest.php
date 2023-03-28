@@ -42,16 +42,16 @@ class ChromeLoggerTest extends DebugTestFramework
             'route' => 'chromeLogger',
         ));
         $this->debug->output();
-        $header = \base64_decode($this->debug->getHeaders()[0][1]);
+        $header = \base64_decode($this->debug->getHeaders()[0][1], true);
         $rows = \json_decode($header, true)['rows'];
-        $this->assertSame(array(
+        self::assertSame(array(
             array(
                 array(
                     'chromeLogger: unable to abridge log to 128 B',
                 ),
                 null,
                 'warn',
-            )
+            ),
         ), $rows);
     }
 
@@ -78,13 +78,13 @@ class ChromeLoggerTest extends DebugTestFramework
         ), 'Populations');
 
         $this->debug->output();
-        $header = \base64_decode($this->debug->getHeaders()[0][1]);
+        $header = \base64_decode($this->debug->getHeaders()[0][1], true);
         $rows = \json_decode($header, true)['rows'];
         $this->assertSame(array(
             array(
                 array(
                     'PHP',
-                    'GET ',
+                    'GET ' . (string) $this->debug->serverRequest->getUri(),
                 ),
                 null,
                 'info',
@@ -134,13 +134,13 @@ class ChromeLoggerTest extends DebugTestFramework
         $this->debug->groupEnd();
 
         $this->debug->output();
-        $header = \base64_decode($this->debug->getHeaders()[0][1]);
+        $header = \base64_decode($this->debug->getHeaders()[0][1], true);
         $rows = \json_decode($header, true)['rows'];
         $this->assertSame(array(
             array(
                 array(
                     'PHP',
-                    'GET ',
+                    'GET ' . (string) $this->debug->serverRequest->getUri(),
                 ),
                 null,
                 'info',
@@ -171,6 +171,38 @@ class ChromeLoggerTest extends DebugTestFramework
                 null,
                 '',
             ),
+            array(
+                array(),
+                null,
+                'groupEnd',
+            ),
+        ), $rows);
+    }
+
+    public function testViaCli()
+    {
+        $this->debug->setCfg(array(
+            'route' => 'chromeLogger',
+            'serviceProvider' => array(
+                'serverRequest' => new \bdk\HttpMessage\ServerRequest('GET', '', array(
+                    'argv' => array('foo','bar'),
+                )),
+            ),
+        ));
+        $this->debug->output();
+        $header = \base64_decode($this->debug->getHeaders()[0][1], true);
+        $rows = \json_decode($header, true)['rows'];
+        \array_splice($rows, 1, 2, array());
+        self::assertSame(array(
+            array(
+                array(
+                    'PHP',
+                    '$: foo bar',
+                ),
+                null,
+                'groupCollapsed',
+            ),
+            // extracted entries
             array(
                 array(),
                 null,

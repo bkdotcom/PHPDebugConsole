@@ -169,7 +169,7 @@ class ObjectConstants
                     ? $info['attributes']
                     : null,
             ),
-            \implode(' ', \array_map(function ($modifier) {
+            \implode(' ', \array_map(static function ($modifier) {
                 return '<span class="t_modifier_' . $modifier . '">' . $modifier . '</span>';
             }, $modifiers))
             . ' <span class="t_identifier" title="' . \htmlspecialchars($title) . '">' . $name . '</span>'

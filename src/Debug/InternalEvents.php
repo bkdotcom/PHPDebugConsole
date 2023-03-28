@@ -127,6 +127,7 @@ class InternalEvents implements SubscriberInterface
     public function onError(Error $error)
     {
         if ($error['throw']) {
+            // subscriber should have stopped error propagation
             return;
         }
         $cfgWas = $this->forceErrorOutput($error)
@@ -472,8 +473,8 @@ class InternalEvents implements SubscriberInterface
         $vals = $this->debug->data->get('runtime');
         if (!$vals) {
             $vals = array(
-                'memoryPeakUsage' => \memory_get_peak_usage(true),
                 'memoryLimit' => $this->debug->php->memoryLimit(),
+                'memoryPeakUsage' => \memory_get_peak_usage(true),
                 'runtime' => $this->debug->timeEnd('requestTime', false, true),
             );
             $this->debug->data->set('runtime', $vals);
@@ -503,10 +504,10 @@ class InternalEvents implements SubscriberInterface
             return true;
         }
         if ($emailLog === 'onError') {
-            // see if we handled any unsupressed errors of types specified with emailMask
+            // see if we handled any unsuppressed errors of types specified with emailMask
             $errors = $this->debug->errorHandler->get('errors');
             $emailMask = $this->debug->errorHandler->emailer->getCfg('emailMask');
-            $emailableErrors = \array_filter($errors, function ($error) use ($emailMask) {
+            $emailableErrors = \array_filter($errors, static function ($error) use ($emailMask) {
                 return !$error['isSuppressed'] && ($error['type'] & $emailMask);
             });
             return !empty($emailableErrors);

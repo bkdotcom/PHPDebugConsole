@@ -176,6 +176,11 @@ class FunctionCommentSniff extends SquizFunctionCommentSniff
                 continue;
             }
 
+            $param['varNorm'] = $param['var'];
+            if (\substr($param['var'], 0, 3) === '...') {
+                $param['varNorm'] = substr($param['var'], 3);
+            }
+
             // Check the param type value.
             $typeNames          = \explode('|', $param['type']);
             $suggestedTypeNames = [];
@@ -320,7 +325,7 @@ class FunctionCommentSniff extends SquizFunctionCommentSniff
                 continue;
             }
 
-            $foundParams[] = $param['var'];
+            $foundParams[] = $param['varNorm'];
 
             // Check number of spaces after the type.
             $this->checkSpacingAfterParamType($phpcsFile, $param, $maxType);
@@ -328,7 +333,7 @@ class FunctionCommentSniff extends SquizFunctionCommentSniff
             // Make sure the param name is correct.
             if (isset($realParams[$pos]) === true) {
                 $realName = $realParams[$pos]['name'];
-                if ($realName !== $param['var']) {
+                if ($realName !== $param['varNorm']) {
                     $code = 'ParamNameNoMatch';
                     $data = [
                         $param['var'],
@@ -336,7 +341,7 @@ class FunctionCommentSniff extends SquizFunctionCommentSniff
                     ];
 
                     $error = 'Doc comment for parameter %s does not match ';
-                    if (\strtolower($param['var']) === \strtolower($realName)) {
+                    if (\strtolower($param['varNorm']) === \strtolower($realName)) {
                         $error .= 'case of ';
                         $code   = 'ParamNameNoCaseMatch';
                     }

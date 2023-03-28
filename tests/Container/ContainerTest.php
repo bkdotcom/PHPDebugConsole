@@ -157,7 +157,7 @@ class ContainerTest extends TestCase
     }
 
     /**
-     * @dataProvider badServiceDefinitionProvider
+     * @dataProvider providerBadServiceDefinition
      */
     public function testFactoryFailsForInvalidServiceDefinitions($service)
     {
@@ -169,7 +169,7 @@ class ContainerTest extends TestCase
     }
 
     /**
-     * @dataProvider serviceDefinitionProvider
+     * @dataProvider providerServiceDefinition
      */
     public function testProtect($service)
     {
@@ -180,7 +180,7 @@ class ContainerTest extends TestCase
     }
 
     /**
-     * @dataProvider badServiceDefinitionProvider
+     * @dataProvider providerBadServiceDefinition
      */
     public function testProtectFailsForInvalidServiceDefinitions($service)
     {
@@ -192,7 +192,7 @@ class ContainerTest extends TestCase
     }
 
     /**
-     * @dataProvider serviceDefinitionProvider
+     * @dataProvider providerServiceDefinition
      */
     public function testServiceValuesSame($service)
     {
@@ -468,7 +468,7 @@ class ContainerTest extends TestCase
     /**
      * Provider for invalid service definitions.
      */
-    public function badServiceDefinitionProvider()
+    public static function providerBadServiceDefinition()
     {
         return [
             [123],
@@ -479,7 +479,7 @@ class ContainerTest extends TestCase
     /**
      * Provider for service definitions.
      */
-    public function serviceDefinitionProvider()
+    public static function providerServiceDefinition()
     {
         return [
             [function ($value) {

@@ -167,7 +167,7 @@ class FileTree
      */
     private function sortDir(&$dir)
     {
-        \uksort($dir, function ($keyA, $keyB) {
+        \uksort($dir, static function ($keyA, $keyB) {
             $aIsDir = \is_string($keyA);
             $bIsDir = \is_string($keyB);
             if ($aIsDir) {

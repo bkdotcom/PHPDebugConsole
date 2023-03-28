@@ -5,7 +5,6 @@ namespace bdk\Test\Debug;
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
-use bdk\Debug\Utility\ArrayUtil;
 use bdk\ErrorHandler\Error;
 use ReflectionProperty;
 
@@ -19,7 +18,7 @@ class Helper
         $backtrace = $limit
             ? \array_slice(\debug_backtrace(0, $limit + 1), 1)
             : \array_slice(\debug_backtrace(0), 0, -8);
-        $backtrace =  \array_map(function ($frame) {
+        $backtrace =  \array_map(static function ($frame) {
             if (isset($frame['args'])) {
                 $frame['args'] = self::backtraceArgs($frame['args']);
             }
@@ -42,7 +41,7 @@ class Helper
      *
      * @return mixed
      */
-    public function crate($val)
+    public static function crate($val)
     {
         if ($val instanceof Abstraction) {
             $val = $val->jsonSerialize();
@@ -50,7 +49,7 @@ class Helper
         }
         if (\is_array($val)) {
             foreach ($val as $k => $v) {
-                $val[$k] = $this->crate($v);
+                $val[$k] = self::crate($v);
             }
         }
         return $val;
@@ -64,19 +63,19 @@ class Helper
      *
      * @return array
      */
-    public function deObjectifyData($data, $withKeys = true)
+    public static function deObjectifyData($data, $withKeys = true)
     {
         if ($data instanceof LogEntry) {
-            return $this->logEntryToArray($data, $withKeys);
+            return self::logEntryToArray($data, $withKeys);
         }
         if ($data instanceof Abstraction) {
-            return $this->crate($data);
+            return self::crate($data);
         }
         if (\is_array($data) === false) {
             return $data;
         }
         foreach ($data as $i => $v) {
-            $data[$i] = $this->deObjectifyData($v, $withKeys);
+            $data[$i] = self::deObjectifyData($v, $withKeys);
         }
         return $data;
     }
@@ -89,7 +88,7 @@ class Helper
      *
      * @return mixed
      */
-    public static function getPrivateProp($obj, $prop)
+    public static function getProp($obj, $prop)
     {
         $propRef = new ReflectionProperty($obj, $prop);
         $propRef->setAccessible(true);
@@ -122,7 +121,7 @@ class Helper
      *
      * @throws \RuntimeException
      */
-    public static function setPrivateProp($obj, $prop, $val)
+    public static function setProp($obj, $prop, $val)
     {
         $refProp = null;
         $ref = new \ReflectionClass($obj);
@@ -154,7 +153,7 @@ class Helper
      *
      * @return array|null
      */
-    public function logEntryToArray($logEntry, $withKeys = true)
+    public static function logEntryToArray($logEntry, $withKeys = true)
     {
         if (\is_array($logEntry) && \array_keys($logEntry) === array('method','args','meta')) {
             return $logEntry;
@@ -163,7 +162,7 @@ class Helper
             return null;
         }
         $return = $logEntry->export();
-        $return['args'] = $this->crate($return['args']);
+        $return['args'] = self::crate($return['args']);
         \ksort($return['meta']);
         if (!$withKeys) {
             return \array_values($return);
@@ -195,7 +194,7 @@ class Helper
             } elseif ($type === 'string') {
                 // $arg = '"' . \print_r($arg, true) . '"';
                 continue;
-            } elseif (\in_array($type, array('boolean', 'double', 'integer', 'null'))) {
+            } elseif (\in_array($type, array('boolean', 'double', 'integer', 'null'), true)) {
                 // $arg = \json_encode($arg);
                 continue;
             } else {

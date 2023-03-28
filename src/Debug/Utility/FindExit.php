@@ -46,10 +46,12 @@ class FindExit
             return false;
         }
         list($file, $lineStart, $phpSrcCode) = $this->getFrameSource($frame);
-        $phpSrcCode = \preg_replace('/^\s*((public|private|protected|final)\s+)+/', '', $phpSrcCode);
+        $phpSrcCode = \preg_replace('/^\s*((public|private|protected|final|static)\s+)+/', '', $phpSrcCode);
         $tokens = $this->getTokens($phpSrcCode, true, false);
         $this->searchTokenInit($frame);
-        $token = $this->searchTokens($tokens);
+        $token = $tokens
+            ? $this->searchTokens($tokens)
+            : null;
         return $token
             ? array(
                 'class' => $frame['class'],
@@ -87,10 +89,10 @@ class FindExit
         if ($addOpen) {
             \array_shift($tokens);
         }
-        $tokens = \array_filter($tokens, function ($token) use ($inclWhitespace) {
+        $tokens = \array_filter($tokens, static function ($token) use ($inclWhitespace) {
             return $inclWhitespace || \is_array($token) === false || $token[0] !== T_WHITESPACE;
         });
-        $tokens = \array_map(function ($token) use ($startLine) {
+        $tokens = \array_map(static function ($token) use ($startLine) {
             if (\is_array($token) === false) {
                 return $token;
             }

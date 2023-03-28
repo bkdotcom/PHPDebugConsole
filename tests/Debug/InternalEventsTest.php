@@ -41,7 +41,7 @@ class InternalEventsTest extends DebugTestFramework
         $this->debug->eventManager->subscribe(Debug::EVENT_DUMP_CUSTOM, $callable);
         $dumped = $this->debug->getDump('html')->valDumper->dump($val);
         $this->assertSame('<span class="t_someCustomValueType"><span>woo</span></span>', $dumped);
-        $this->debug->eventManager->unSubscribe(Debug::EVENT_DUMP_CUSTOM, $callable);
+        $this->debug->eventManager->unsubscribe(Debug::EVENT_DUMP_CUSTOM, $callable);
     }
 
     /**
@@ -59,7 +59,7 @@ class InternalEventsTest extends DebugTestFramework
             'output' => false,  // email only sent if not outputing
         ));
 
-        $container = $this->helper->getPrivateProp($this->debug, 'container');
+        $container = $this->helper->getProp($this->debug, 'container');
         $internalEvents = $container['internalEvents'];
 
         //
@@ -383,7 +383,7 @@ WHERE·
         \ob_start();
         $this->debug->eventManager->subscribe(EventManager::EVENT_PHP_SHUTDOWN, $closure);
         $this->debug->eventManager->publish(EventManager::EVENT_PHP_SHUTDOWN);
-        $this->debug->eventManager->unSubscribe(EventManager::EVENT_PHP_SHUTDOWN, $closure);
+        $this->debug->eventManager->unsubscribe(EventManager::EVENT_PHP_SHUTDOWN, $closure);
         $this->debug->setCfg('onOutput', null);
         $output = \ob_get_clean();
 

@@ -609,7 +609,7 @@ class FileStreamWrapper
             /*
                 Temporary error handler to discard errors in silent mode
             */
-            \set_error_handler(function () {
+            \set_error_handler(static function () {
             });
             try {
                 $result = $flags & STREAM_URL_STAT_LINK

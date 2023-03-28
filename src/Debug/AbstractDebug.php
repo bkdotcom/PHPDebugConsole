@@ -348,7 +348,7 @@ class AbstractDebug
         $this->addPlugin($this->container['pluginChannel']);
         $this->addPlugin($this->container['configEvents']);
         $this->addPlugin($this->container['internalEvents']);
-        $this->addPlugin($this->container['pluginRedaction']);
+        $this->addPlugin($this->serviceContainer['pluginRedaction']);
         $this->eventManager->subscribe(Debug::EVENT_CONFIG, array($this, 'onConfig'));
 
         $this->serviceContainer['errorHandler'];
@@ -356,7 +356,6 @@ class AbstractDebug
 
         if (!$this->parentInstance) {
             // we're the root instance
-            // this is the root instance
             $this->data->set('requestId', $this->requestId());
             $this->data->set('entryCountInitial', $this->data->get('log/__count__'));
 
@@ -494,7 +493,7 @@ class AbstractDebug
      */
     private function serviceProviderToArray($val)
     {
-        $getContainerRawVals = function (Container $container) {
+        $getContainerRawVals = static function (Container $container) {
             $keys = $container->keys();
             $return = array();
             foreach ($keys as $key) {

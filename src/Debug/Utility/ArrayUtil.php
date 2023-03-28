@@ -74,7 +74,7 @@ class ArrayUtil
      */
     public static function mapRecursive($callback, $input)
     {
-        return \array_map(function ($val) use ($callback) {
+        return \array_map(static function ($val) use ($callback) {
             return \is_array($val)
                 ? self::mapRecursive($callback, $val)
                 : $callback($val);
@@ -212,13 +212,13 @@ class ArrayUtil
      *
      * @param array  $array Array to sort
      * @param array  $order values that define order / should come first
-     * @param string $what  ("value") or "key" - Specify if should sort by value or key
+     * @param string $what  ("value") or "key" - Whether to sort sort by value or key
      *
      * @return void
      */
     public static function sortWithOrder(&$array, $order = array(), $what = 'value')
     {
-        $callback = function ($valA, $valB) use ($order) {
+        $callback = static function ($valA, $valB) use ($order) {
             $aPos = \array_search($valA, $order, true);
             $bPos = \array_search($valB, $order, true);
             if ($aPos === $bPos) {

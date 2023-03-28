@@ -98,7 +98,7 @@ class ComposerScripts
             return $info;
         }
         if (\version_compare(PHP_VERSION, '7.2', '>=')) {
-            \exec('composer require slevomat/coding-standard ^8.3.0 --dev --no-scripts');
+            \exec('composer require slevomat/coding-standard ^8.9.0 --dev --no-scripts');
             $info['haveSlevomat'] = true;
         }
         return $info;
@@ -117,7 +117,7 @@ class ComposerScripts
             convert relative paths to absolute
         */
         $regex = '#(<config name="installed_paths" value=")([^"]+)#';
-        $xml = \preg_replace_callback($regex, function ($matches) {
+        $xml = \preg_replace_callback($regex, static function ($matches) {
             $baseDir = \realpath(__DIR__ . '/../..') . '/';
             $paths = \preg_split('/,\s*/', $matches[2]);
             foreach ($paths as $i => $path) {

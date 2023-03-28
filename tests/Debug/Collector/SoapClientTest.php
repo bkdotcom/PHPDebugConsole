@@ -154,12 +154,10 @@ class SoapClientTest extends DebugTestFramework
                         'Content-Type: text/xml; charset=utf-8',
                         'SOAPAction: "http://127.0.0.1:8080/soap/SQLDataSRL"',
                         'Content-Length: %d',
-                        '',
                     )),
                 ),
                 'meta' => array(
                     'channel' => 'general.Soap',
-                    'redact' => true,
                 ),
             ),
             array(
@@ -370,12 +368,10 @@ class SoapClientTest extends DebugTestFramework
                         'Content-Type: text/xml; charset=utf-8',
                         'SOAPAction: ""',
                         'Content-Length: %d',
-                        '',
                     )),
                 ),
                 'meta' => array(
                     'channel' => 'general.Soap',
-                    'redact' => true,
                 ),
             ),
             array(

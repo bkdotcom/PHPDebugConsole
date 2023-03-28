@@ -344,7 +344,7 @@ class Pdo extends PdoBase
             : '';
         $matches = array();
         \preg_match_all('/([^:]+): ([a-zA-Z0-9.]+)\s*/', $serverInfo, $matches);
-        $serverInfo = \array_map(function ($val) {
+        $serverInfo = \array_map(static function ($val) {
             /** @psalm-suppress InvalidOperand */
             return $val * 1;
         }, \array_combine($matches[1], $matches[2]));

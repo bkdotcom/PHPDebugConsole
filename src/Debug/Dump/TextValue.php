@@ -245,4 +245,17 @@ class TextValue extends BaseValue
     {
         return 'undefined';
     }
+
+    /**
+     * Dump Abstraction::TYPE_UNKNOWN
+     *
+     * @param Abstraction $abs resource abstraction
+     *
+     * @return string
+     */
+    protected function dumpUnknown(Abstraction $abs)
+    {
+        $values = parent::dumpUnknown($abs);
+        return 'unknown: ' . \print_r($values['value'], true);
+    }
 }

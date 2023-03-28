@@ -100,7 +100,7 @@ class HtmlObject
         if (!$methods) {
             return '';
         }
-        $methods = \array_map(function ($method) {
+        $methods = \array_map(static function ($method) {
             return '<code>' . $method . '</code>';
         }, $methods);
         $methods = \count($methods) === 1

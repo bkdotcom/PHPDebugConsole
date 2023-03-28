@@ -62,7 +62,7 @@ class ChromeLogger extends AbstractRoute
     protected $jsonData = array(
         'version' => Debug::VERSION,
         'columns' => array('log', 'backtrace', 'type'),
-        'rows' => array()
+        'rows' => array(),
     );
 
     /**
@@ -143,7 +143,7 @@ class ChromeLogger extends AbstractRoute
                 array('chromeLogger: unable to abridge log to ' . $this->debug->utility->getBytes($max)),
                 null,
                 'warn',
-            )
+            ),
         );
         return $this->encode($this->jsonData);
     }
@@ -159,17 +159,16 @@ class ChromeLogger extends AbstractRoute
         $this->processAlerts();
         $this->processSummary();
         $this->processLog();
-        $request = $this->debug->serverRequest;
-        $serverParams = $request->getServerParams();
-        $info = array('PHP', isset($serverParams['REQUEST_METHOD'])
-            ? $serverParams['REQUEST_METHOD'] . ' ' . $this->debug->redact((string) $request->getUri())
-            : '$: ' . \implode(' ', $serverParams['argv'])
+        $heading = array('PHP', $this->debug->isCli()
+            ? '$: ' . \implode(' ', $this->debug->getServerParam('argv', array()))
+            : $this->debug->serverRequest->getMethod()
+                . ' ' . $this->debug->redact((string) $this->debug->serverRequest->getUri()),
         );
         if (!$this->cfg['group']) {
-            \array_unshift($this->jsonData['rows'], array($info, null, 'info'));
+            \array_unshift($this->jsonData['rows'], array($heading, null, 'info'));
             return;
         }
-        \array_unshift($this->jsonData['rows'], array($info, null, 'groupCollapsed'));
+        \array_unshift($this->jsonData['rows'], array($heading, null, 'groupCollapsed'));
         \array_push($this->jsonData['rows'], array(array(), null, 'groupEnd'));
     }
 
@@ -275,7 +274,7 @@ class ChromeLogger extends AbstractRoute
             'session.cache_limiter',
             'session_save_path',
         );
-        $summaryRemoveRegex = '/^(' . \implode('|', \array_map(function ($val) {
+        $summaryRemoveRegex = '/^(' . \implode('|', \array_map(static function ($val) {
             return \preg_quote($val, '/');
         }, $summaryRemove)) . ')/';
         foreach ($this->data['logSummary'] as $priority => $logEntries) {

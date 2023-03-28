@@ -250,7 +250,7 @@ class SerializeLog
     {
         $rootInstance = $debug->rootInstance;
         $channelNameRoot = $rootInstance->getCfg('channelName', Debug::CONFIG_DEBUG);
-        $channels = \array_map(function (Debug $channel) use ($channelNameRoot) {
+        $channels = \array_map(static function (Debug $channel) use ($channelNameRoot) {
             $channelName = $channel->getCfg('channelName', Debug::CONFIG_DEBUG);
             return array(
                 'channelIcon' => $channel->getCfg('channelIcon', Debug::CONFIG_DEBUG),

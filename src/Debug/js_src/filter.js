@@ -26,11 +26,14 @@ var preFilterCallbacks = [
 ]
 
 export function init ($delegateNode) {
+  /*
   var $debugTabLog = $delegateNode.find('> .tab-panes > .tab-primary')
   if ($debugTabLog.length > 0 && $debugTabLog.data('options').sidebar === false) {
     // no sidebar -> no filtering
+    //    documentation uses non-sidebar filtering
     return
   }
+  */
   applyFilter($delegateNode)
   $delegateNode.on('change', 'input[type=checkbox]', onCheckboxChange)
   $delegateNode.on('change', 'input[data-toggle=error]', onToggleErrorChange)

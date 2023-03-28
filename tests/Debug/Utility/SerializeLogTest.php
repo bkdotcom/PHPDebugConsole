@@ -31,7 +31,7 @@ class SerializeLogTest extends DebugTestFramework
                     array(
                         'DOCUMENT_ROOT' => TEST_DIR . '/../tmp',
                         'REQUEST_METHOD' => 'GET',
-                        'REQUEST_TIME_FLOAT' => $_SERVER['REQUEST_TIME_FLOAT'],
+                        'REQUEST_TIME_FLOAT' => \microtime(true),
                         'SERVER_ADMIN' => 'testAdmin@test.com',
                     )
                 ),

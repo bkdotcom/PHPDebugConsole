@@ -275,8 +275,8 @@ EOD;
 
     public function testCreateChannel()
     {
-        $channelsBack = $this->helper->getPrivateProp($this->debug->pluginChannel, 'channels');
-        $this->helper->setPrivateProp($this->debug->pluginChannel, 'channels', array());
+        $channelsBack = $this->helper->getProp($this->debug->pluginChannel, 'channels');
+        $this->helper->setProp($this->debug->pluginChannel, 'channels', array());
         $tabby = $this->debug->getChannel('tabby', array(
             'channelIcon' => 'fa fa-tabby',
             'nested' => false,
@@ -311,7 +311,7 @@ EOD;
             'general.foo.bar',
         ), \array_keys($this->debug->getChannels(true, true)));
 
-        $this->helper->setPrivateProp($this->debug->pluginChannel, 'channels', $channelsBack);
+        $this->helper->setProp($this->debug->pluginChannel, 'channels', $channelsBack);
     }
 
     public function testGetChannel()
@@ -327,8 +327,8 @@ EOD;
             )
         ));
 
-        $channelsBack = $this->helper->getPrivateProp($this->debug->pluginChannel, 'channels');
-        $this->helper->setPrivateProp($this->debug->pluginChannel, 'channels', array());
+        $channelsBack = $this->helper->getProp($this->debug->pluginChannel, 'channels');
+        $this->helper->setProp($this->debug->pluginChannel, 'channels', array());
         $baz = $this->debug->getChannel('baz');
         $baz->getChannel('general.foo.bar', array(
             'channelIcon' => 'fa fa-asterisk',
@@ -344,7 +344,7 @@ EOD;
         $fork = $this->debug->getChannel('utensil.fork');
         $this->assertSame('fa fa-fork', $fork->getCfg('channelIcon'));
 
-        $this->helper->setPrivateProp($this->debug->pluginChannel, 'channels', $channelsBack);
+        $this->helper->setProp($this->debug->pluginChannel, 'channels', $channelsBack);
     }
 
     protected function genLog(Debug $clearer = null, $bitmask = null, &$info = array())

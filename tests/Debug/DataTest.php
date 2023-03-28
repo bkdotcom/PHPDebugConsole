@@ -12,6 +12,12 @@ use bdk\Test\Debug\DebugTestFramework;
  */
 class DataTest extends DebugTestFramework
 {
+    public function testConstruct()
+    {
+        $debug = new \bdk\Debug();
+        $this->assertInstanceOf('bdk\\Debug\\Data', $debug->data);
+    }
+
     public function testGetData()
     {
         $this->debug->info('token log entry 1');
@@ -145,12 +151,25 @@ class DataTest extends DebugTestFramework
         $this->debug->data->set(array(
             'log' => array(
                 array('info', array('bar'), array()),
-            )
+            ),
         ));
         $this->assertSame(1, $this->debug->data->get('log/__count__'));
         $this->assertSame('bar', $this->debug->data->get('log/0/1/0'));
         $this->debug->data->set('logDest', 'alerts');
         $this->debug->data->appendLog(new LogEntry($this->debug, 'log', array('append to alerts')));
         $this->assertSame('append to alerts', $this->debug->data->get('alerts/0/args/0'));
+    }
+
+    /**
+     * codebase currently doesn't ever use this... but it *could*
+     *
+     * @return void
+     */
+    public function testSetLogDestAutoSummary()
+    {
+        $this->debug->groupSummary();  // put ourself in a summary
+        $this->debug->data->set('logDest', 'auto');
+        $this->debug->data->appendLog(new LogEntry($this->debug, 'log', array('testSetLogDestAutoSummary')));
+        self::assertSame('testSetLogDestAutoSummary', $this->debug->data->get('logSummary/0/0/args/0'));
     }
 }

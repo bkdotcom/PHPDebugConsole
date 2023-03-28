@@ -84,13 +84,10 @@ class Email implements RouteInterface
      */
     private function buildBody()
     {
-        $request = $this->debug->serverRequest;
-        $serverParams = $request->getServerParams();
-        $body = (isset($serverParams['REQUEST_METHOD'])
-            ? 'Request: ' . $serverParams['REQUEST_METHOD'] . ' ' . $this->debug->redact((string) $request->getUri())
-            : 'Command: ' . \implode(' ', $serverParams['argv'])
-        ) . "\n\n";
-
+        $body = $this->debug->isCli()
+            ? 'Command: ' . \implode(' ', $this->debug->getServerParam('argv', array()))
+            : 'Request: ' . $this->debug->serverRequest->getMethod()
+                . ' ' . $this->debug->redact((string) $this->debug->serverRequest->getUri());
         /*
             List errors that occured
         */
@@ -135,7 +132,7 @@ class Email implements RouteInterface
     {
         $errorStr = '';
         $errors = $this->debug->errorHandler->get('errors');
-        \uasort($errors, function ($err1, $err2) {
+        \uasort($errors, static function ($err1, $err2) {
             return \strcmp($err1['file'] . $err1['line'], $err2['file'] . $err2['line']);
         });
         $lastFile = '';

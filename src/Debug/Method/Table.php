@@ -211,15 +211,18 @@ class Table
         $columnNames = $this->meta['columnNames'];
         $keys = $this->meta['columns'] ?: self::colKeys($this->logEntry['args'][0]);
         foreach ($keys as $key) {
-            $colInfo = array(
+            $columns[$key] = array(
                 'key' => isset($columnNames[$key])
                     ? $columnNames[$key]
                     : $key
             );
-            if (\in_array($key, $this->meta['totalCols'], true)) {
-                $colInfo['total'] = null;
+        }
+        foreach ($this->meta['totalCols'] as $i => $key) {
+            if (isset($columns[$key]) === false) {
+                unset($this->meta['totalCols'][$i]);
+                continue;
             }
-            $columns[$key] = $colInfo;
+            $columns[$key]['total'] = null;
         }
         $this->meta['tableInfo']['columns'] = $columns;
     }
@@ -293,10 +296,10 @@ class Table
             $rows = $rows['traverseValues']
                 ? $rows['traverseValues']
                 : \array_map(
-                    function ($info) {
+                    static function ($info) {
                         return $info['value'];
                     },
-                    \array_filter($rows['properties'], function ($prop) {
+                    \array_filter($rows['properties'], static function ($prop) {
                         return $prop['visibility'] === 'public';
                     })
                 );
@@ -455,7 +458,7 @@ class Table
     private function updateTableInfoRow($rowKey, $rowInfo)
     {
         unset($rowInfo['classes']);
-        $rowInfo = \array_filter($rowInfo, function ($val) {
+        $rowInfo = \array_filter($rowInfo, static function ($val) {
             return $val !== null && $val !== false;
         });
         if (!$rowInfo) {

@@ -157,7 +157,7 @@ class ObjectProperties
             'readonly' => $info['isReadOnly'],
             'static' => $info['isStatic'],
         ))));
-        $modifiers = \array_map(function ($modifier) {
+        $modifiers = \array_map(static function ($modifier) {
             return '<span class="t_modifier_' . $modifier . '">' . $modifier . '</span>';
         }, $modifiers);
         return \implode(' ', $modifiers);

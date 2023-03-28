@@ -22,7 +22,6 @@ use bdk\PubSub\Event;
 class Firephp extends AbstractRoute
 {
     const FIREPHP_PROTO_VER = '0.3';
-    const MESSAGE_LIMIT = 99999;
 
     protected $appendsHeaders = true;
 
@@ -32,16 +31,17 @@ class Firephp extends AbstractRoute
             'events',
             'files',
         ),
+        'messageLimit' => 99999,
     );
     protected $firephpMethods = array(
-        'log' => 'LOG',
-        'info' => 'INFO',
-        'warn' => 'WARN',
         'error' => 'ERROR',
-        'table' => 'TABLE',
         'group' => 'GROUP_START',
         'groupCollapsed' => 'GROUP_START',
         'groupEnd' => 'GROUP_END',
+        'info' => 'INFO',
+        'log' => 'LOG',
+        'table' => 'TABLE',
+        'warn' => 'WARN',
     );
     protected $messageIndex = 0;
     protected $outputEvent;
@@ -72,11 +72,11 @@ class Firephp extends AbstractRoute
         $event['headers'][] = array('X-Wf-Protocol-1', 'http://meta.wildfirehq.org/Protocol/JsonStream/0.2');
         $event['headers'][] = array('X-Wf-1-Plugin-1', 'http://meta.firephp.org/Wildfire/Plugin/FirePHP/Library-FirePHPCore/' . self::FIREPHP_PROTO_VER);
         $event['headers'][] = array('X-Wf-1-Structure-1', 'http://meta.firephp.org/Wildfire/Structure/FirePHP/FirebugConsole/0.1');
-        $request = $this->debug->serverRequest;
-        $serverParams = $request->getServerParams();
-        $heading = isset($serverParams['REQUEST_METHOD'])
-            ? $serverParams['REQUEST_METHOD'] . ' ' . $this->debug->redact((string) $request->getUri())
-            : '$: ' . \implode(' ', $serverParams['argv']);
+        // FirePHP in a CLI environment??  Sure, why not.
+        $heading = $this->debug->isCli()
+            ? '$: ' . \implode(' ', $this->debug->getServerParam('argv', array()))
+            : $this->debug->serverRequest->getMethod()
+                . ' ' . $this->debug->redact((string) $this->debug->serverRequest->getUri());
         $this->processLogEntryViaEvent(new LogEntry(
             $this->debug,
             'groupCollapsed',
@@ -121,12 +121,12 @@ class Firephp extends AbstractRoute
             $this->dumper->processLogEntry($logEntry);
             $value = $this->getValue($logEntry);
         }
-        if ($this->messageIndex < self::MESSAGE_LIMIT) {
+        if ($this->messageIndex < $this->cfg['messageLimit']) {
             $this->setFirephpHeader($logEntry['firephpMeta'], $value);
-        } elseif ($this->messageIndex === self::MESSAGE_LIMIT) {
+        } elseif ($this->messageIndex === $this->cfg['messageLimit']) {
             $this->setFirephpHeader(
                 array('Type' => $this->firephpMethods['warn']),
-                'FirePhp\'s limit of ' . \number_format(self::MESSAGE_LIMIT) . ' messages reached!'
+                'FirePhp\'s limit of ' . \number_format($this->cfg['messageLimit']) . ' messages reached!'
             );
         }
     }
@@ -167,9 +167,7 @@ class Firephp extends AbstractRoute
             'success' => 'info',
             'warn' => 'warn',
         );
-        $method = isset($levelToMethod[$level])
-            ? $levelToMethod[$level]
-            : 'error';
+        $method = $levelToMethod[$level];
         $logEntry['firephpMeta']['Type'] = $this->firephpMethods[$method];
         if ($logEntry->containsSubstitutions()) {
             $this->dumper->processLogEntry($logEntry);
@@ -187,31 +185,23 @@ class Firephp extends AbstractRoute
     private function methodTabular(LogEntry $logEntry)
     {
         $logEntry->setMeta('undefinedAs', 'null');
-        if ($logEntry['method'] === 'trace') {
-            $logEntry['firephpMeta']['Label'] = 'trace';
-        }
         $this->dumper->processLogEntry($logEntry);
-        $method = $logEntry['method'];
-        if ($method === 'table') {
-            $logEntry['firephpMeta']['Type'] = $this->firephpMethods['table'];
-            $caption = $logEntry->getMeta('caption');
-            if ($caption) {
-                $logEntry['firephpMeta']['Label'] = $caption;
-            }
-            $firephpTable = true;
-            $args = $logEntry['args'];
-            $value = $args[0];
-            if ($firephpTable) {
-                $value = array();
-                $value[] = \array_merge(array(''), \array_keys(\current($args[0])));
-                foreach ($args[0] as $k => $row) {
-                    $value[] = \array_merge(array($k), \array_values($row));
-                }
-            }
-            return $this->dumper->valDumper->dump($value);
+        $logEntry['firephpMeta']['Type'] = $this->firephpMethods['table'];
+        $caption = $logEntry->getMeta('caption');
+        if ($caption) {
+            $logEntry['firephpMeta']['Label'] = $caption;
         }
-        $logEntry['firephpMeta']['Type'] = $this->firephpMethods['log'];
-        return $this->getValue($logEntry);
+        $firephpTable = true;
+        $args = $logEntry['args'];
+        $value = $args[0];
+        if ($firephpTable) {
+            $value = array();
+            $value[] = \array_merge(array(''), \array_keys(\current($args[0])));
+            foreach ($args[0] as $k => $row) {
+                $value[] = \array_merge(array($k), \array_values($row));
+            }
+        }
+        return $this->dumper->valDumper->dump($value);
     }
 
     /**

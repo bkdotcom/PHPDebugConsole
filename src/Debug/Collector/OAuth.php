@@ -13,6 +13,8 @@
 namespace bdk\Debug\Collector;
 
 use bdk\Debug;
+use bdk\Debug\Plugin\Redaction;
+use bdk\HttpMessage\UriUtils;
 use Oauth as OAuthBase;
 use OAuthException;
 
@@ -139,7 +141,7 @@ class OAuth extends OAuthBase
     {
         $parts = \array_merge(array(
             'query' => '',
-        ), \parse_url($this->getLastResponseInfo()['url']));
+        ), UriUtils::parseUrl($this->getLastResponseInfo()['url']));
         $queryParams = array();
         \parse_str($parts['query'], $queryParams);
         return $queryParams;
@@ -189,7 +191,7 @@ class OAuth extends OAuthBase
         // values available in the headers or elsewhere
         $this->debugger->log('OAuth Parameters', $this->oauthParams(), $this->debugger->meta('cfg', 'abstracter.stringMinLen.encoded', -1));
         $this->debugger->log('additional info', $this->additionalInfo($url));
-        $this->debugger->log('request headers', $debugInfo['headers_sent'], $this->debugger->meta('icon', 'fa fa-arrow-right'));
+        $this->debugger->log('request headers', $this->debugger->redactHeaders($debugInfo['headers_sent']), $this->debugger->meta('icon', 'fa fa-arrow-right'));
         if (isset($debugInfo['body_sent'])) {
             $this->debugger->log('request body', $debugInfo['body_sent'], $this->debugger->meta(array(
                 'icon' => 'fa fa-arrow-right',
@@ -231,6 +233,9 @@ class OAuth extends OAuthBase
             $sbsParsed = array();
             \parse_str(\urldecode($debugInfo['sbs']), $sbsParsed);
             $oauthParams = \array_intersect_key($sbsParsed + $this->getQueryParams(), \array_flip($oauthParamKeys));
+        }
+        if (isset($oauthParams['oauth_signature'])) {
+            $oauthParams['oauth_signature'] = Redaction::REPLACEMENT;
         }
         \ksort($oauthParams);
         return $oauthParams;

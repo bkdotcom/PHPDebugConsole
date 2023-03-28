@@ -30,6 +30,7 @@
             </property>
         </properties>
     </rule>
+    <rule ref="SlevomatCodingStandard.Classes.MethodSpacing" />
     <rule ref="SlevomatCodingStandard.Classes.TraitUseDeclaration" />
     <rule ref="SlevomatCodingStandard.Classes.UselessLateStaticBinding" />
 
@@ -48,7 +49,9 @@
     <rule ref="SlevomatCodingStandard.ControlStructures.UselessIfConditionWithReturn" />
     <rule ref="SlevomatCodingStandard.ControlStructures.UselessTernaryOperator" />
 
-    <rule ref="SlevomatCodingStandard.Exceptions.DeadCatch" />
+    <rule ref="SlevomatCodingStandard.Exceptions.DeadCatch">
+        <exclude name="SlevomatCodingStandard.Exceptions.DeadCatch.CatchAfterThrowableCatch" />
+    </rule>
 
     <rule ref="SlevomatCodingStandard.Functions.UnusedInheritedVariablePassedToClosure" />
     <rule ref="SlevomatCodingStandard.Functions.UselessParameterDefaultValue" />
@@ -57,11 +60,19 @@
             <property name="maxLinesLength" value="25" />
         </properties>
     </rule>
+    <rule ref="SlevomatCodingStandard.Functions.DisallowTrailingCommaInCall" />
+    <rule ref="SlevomatCodingStandard.Functions.DisallowTrailingCommaInClosureUse" />
+    <rule ref="SlevomatCodingStandard.Functions.DisallowTrailingCommaInDeclaration" />
+    <rule ref="SlevomatCodingStandard.Functions.StaticClosure" />
     <rule ref="SlevomatCodingStandard.Functions.StrictCall" />
 
     <rule ref="SlevomatCodingStandard.Namespaces.AlphabeticallySortedUses" />
     <rule ref="SlevomatCodingStandard.Namespaces.FullyQualifiedGlobalFunctions" />
-    <rule ref="SlevomatCodingStandard.Namespaces.UnusedUses" />
+    <rule ref="SlevomatCodingStandard.Namespaces.UnusedUses">
+        <properties>
+            <property name="searchAnnotations" value="true" />
+        </properties>
+    </rule>
     <rule ref="SlevomatCodingStandard.Namespaces.UseDoesNotStartWithBackslash" />
     <rule ref="SlevomatCodingStandard.Namespaces.UselessAlias" />
     <rule ref="SlevomatCodingStandard.PHP.OptimizedFunctionsWithoutUnpacking" />

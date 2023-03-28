@@ -22,7 +22,7 @@ class TextTest extends DebugTestFramework
     public function testProcessLogEntries()
     {
         $route = $this->debug->getRoute('text');
-        \bdk\Test\Debug\Helper::setPrivateProp($route, 'shouldIncludeCache', array());
+        \bdk\Test\Debug\Helper::setProp($route, 'shouldIncludeCache', array());
         $this->debug->alert('This will self destruct');
         $this->outputTest(array(
             'text' => 'This will self destruct',
@@ -32,7 +32,7 @@ class TextTest extends DebugTestFramework
     public function testProcessLogEntriesExplicitChannels()
     {
         $route = $this->debug->getRoute('text');
-        \bdk\Test\Debug\Helper::setPrivateProp($route, 'shouldIncludeCache', array());
+        \bdk\Test\Debug\Helper::setProp($route, 'shouldIncludeCache', array());
         $route->setCfg('channels', array('general'));
         $this->debug->alert('Alert 2');
         $event = new \bdk\PubSub\Event();
@@ -43,7 +43,7 @@ class TextTest extends DebugTestFramework
     public function testProcessLogEntriesWildCardChannels()
     {
         $route = $this->debug->getRoute('text');
-        \bdk\Test\Debug\Helper::setPrivateProp($route, 'shouldIncludeCache', array());
+        \bdk\Test\Debug\Helper::setProp($route, 'shouldIncludeCache', array());
         $route->setCfg('channels', array('general*'));
         $this->debug->alert('Alert 3');
         $event = new \bdk\PubSub\Event();

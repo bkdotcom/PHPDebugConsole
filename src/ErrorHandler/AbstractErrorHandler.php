@@ -4,7 +4,7 @@
  * @package   bdk\ErrorHandler
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2023 Brad Kent
  * @version   v3.2
  */
 
@@ -79,7 +79,7 @@ abstract class AbstractErrorHandler extends AbstractComponent
      *
      * Called
      *   * on first error (passes haveError = true)
-     *   * post
+     *   * postSetCfg
      *
      * @param bool $haveError true when called via onFirstError
      *
@@ -234,7 +234,7 @@ abstract class AbstractErrorHandler extends AbstractComponent
      */
     protected function storeLastError(Error $error)
     {
-        $this->data['lastErrors'] = \array_filter($this->data['lastErrors'], function (Error $error) {
+        $this->data['lastErrors'] = \array_filter($this->data['lastErrors'], static function (Error $error) {
             return !$error['isSuppressed'];
         });
         $this->data['lastErrors'] = \array_slice($this->data['lastErrors'], 0, 1);

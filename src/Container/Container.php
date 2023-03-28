@@ -80,7 +80,7 @@ class Container implements \ArrayAccess
      * Marks a callable as being a factory service.
      * A new instance will be returned each time it is accessed
      *
-     *     $container['someFactory'] = $container->factory(function () {
+     *     $container['someFactory'] = $container->factory(static function () {
      *       return new FactoryThing();
      *     });
      *
@@ -263,7 +263,7 @@ class Container implements \ArrayAccess
      *
      * This is useful when you want to store a callable as a value.
      *
-     *     $container['some_func'] = $container->protect(function () {
+     *     $container['some_func'] = $container->protect(static function () {
      *       return rand();
      *     });
      *

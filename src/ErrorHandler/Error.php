@@ -4,7 +4,7 @@
  * @package   bdk\ErrorHandler
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2023 Brad Kent
  * @version   v3.2
  */
 
@@ -85,7 +85,7 @@ class Error extends Event
         'continueToPrevHandler' => true,
         'exception'     => null,
         'hash'          => null,
-        'isFirstOccur'  => true,
+        'isFirstOccur'  => true,    // per error  (ie a error inside a loop, or inside a functon called multiple times)
         'isHtml'        => false,
         'isSuppressed'  => false,
         'throw'         => false,   // whether to throw as exception (fatal errors never throw)
@@ -111,7 +111,7 @@ class Error extends Event
             $errorCallerVals = \array_intersect_key($errorCaller, \array_flip(array('file','line')));
             $this->values = \array_merge($this->values, $errorCallerVals);
         }
-        if (\in_array($this->values['type'], array(E_ERROR, E_USER_ERROR), true) && $this->values['exception'] === null) {
+        if ($this->backtrace === null && \in_array($this->values['type'], array(E_ERROR, E_USER_ERROR), true) && $this->values['exception'] === null) {
             // will return empty unless xdebug extension installed/enabled
             $this->backtrace = $this->subject->backtrace->get();
         }
@@ -441,5 +441,22 @@ class Error extends Event
             ),
             $values
         );
+        if ($this->isFatal()) {
+            $count = 0;
+            // fatal message may contain trace info...
+            //   this occurs if fatal encountered in shutdown
+            $this->values['message'] = \preg_replace(
+                '/ in \S+\nStack trace:\n(#\d+ .+\n)+  thrown/',
+                '',
+                $this->values['message'],
+                -1,
+                $count
+            );
+            if ($count) {
+                // don't try to get trace info.
+                $this->backtrace = array();
+                $this->values['exception'] = null;
+            }
+        }
     }
 }

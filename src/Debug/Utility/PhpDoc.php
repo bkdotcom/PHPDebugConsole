@@ -85,7 +85,7 @@ class PhpDoc extends PhpDocBase
         }
         return array(
             'type' => $type,
-            'desc' => \trim(\substr($body, \strlen($type))),
+            'desc' => \trim(\substr($body, \strlen($type))) ?: null,
         );
     }
 
@@ -312,10 +312,13 @@ class PhpDoc extends PhpDocBase
                 'parts' => array('type','desc'),
                 'regex' => '/^(?P<type>.*?)'
                     . '(?:\s+(?P<desc>.*))?$/s',
-                'callable' => function ($tagStr, $tagName, $parsed) {
-                    $parsed['type'] = $this->typeNormalize($parsed['type']);
-                    return $parsed;
-                }
+                'callable' => array(
+                    array($this, 'extractTypeFromBody'),
+                    function ($tagStr, $tagName, $parsed) {
+                        $parsed['type'] = $this->typeNormalize($parsed['type']);
+                        return $parsed;
+                    },
+                ),
             ),
             array(
                 'tags' => array('author'),
@@ -357,6 +360,9 @@ class PhpDoc extends PhpDocBase
      */
     private static function strStartsWithVariable($str)
     {
+        if ($str === null) {
+            return false;
+        }
         return \strpos($str, '$') === 0
            || \strpos($str, '&$') === 0
            || \strpos($str, '...$') === 0

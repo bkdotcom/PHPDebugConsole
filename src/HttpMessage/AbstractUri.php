@@ -139,56 +139,6 @@ abstract class AbstractUri
     }
 
     /**
-     * Parse URL (multi-byte safe)
-     *
-     * @param string $url The URL to parse.
-     *
-     * @return array|false
-     */
-    protected function parseUrl($url)
-    {
-        if (PHP_VERSION_ID >= 80000) {
-            return \parse_url($url);
-        }
-        // parse_url is not multi-byte safe...
-        //  url encode the url  then decode the individual parts
-        $chars = '!*\'();:@&=$,/?#[]';
-        $entities = \str_split(\urlencode($chars), 3);
-        $chars = \str_split($chars);
-        $urlEnc = \str_replace($entities, $chars, \urlencode($url));
-        $parts = $this->parseUrlPatched($urlEnc);
-        if (!$parts) {
-            return $parts;
-        }
-        foreach ($parts as $name => $value) {
-            $parts[$name] = \is_string($value)
-                ? \urldecode(\str_replace($chars, $entities, $value))
-                : $value;
-        }
-        return $parts;
-    }
-
-    /**
-     * Parse URL that may or may not contain schema
-     *
-     * @param string $url The URL to parse.
-     *
-     * @return array|false
-     */
-    private function parseUrlPatched($url)
-    {
-        if (PHP_VERSION_ID >= 50500 || \strpos($url, '//') !== 0) {
-            return \parse_url($url);
-        }
-        // php 5.4 chokes without the scheme
-        $parts = \parse_url('http:' . $url);
-        if ($parts) {
-            unset($parts['scheme']);
-        }
-        return $parts;
-    }
-
-    /**
      * Call rawurlencode on on match
      *
      * @param string $regex Regular expression
@@ -198,7 +148,7 @@ abstract class AbstractUri
      */
     private static function regexEncode($regex, $str)
     {
-        return \preg_replace_callback($regex, function ($matches) {
+        return \preg_replace_callback($regex, static function ($matches) {
             return \rawurlencode($matches[0]);
         }, $str);
     }

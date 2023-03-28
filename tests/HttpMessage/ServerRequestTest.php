@@ -425,7 +425,7 @@ class ServerRequestTest extends TestCase
     public function testExceptionUploadedFiles()
     {
         $this->expectException('InvalidArgumentException');
-        $this->expectExceptionMessage('Invalid file in uploaded files structure. Expected UploadedFileInterface, but ');
+        $this->expectExceptionMessage('Invalid file in uploaded files structure. Expected UploadedFileInterface, string provided');
         $this->createServerRequest()
             ->withUploadedFiles([
                 [
@@ -452,7 +452,7 @@ class ServerRequestTest extends TestCase
     public function testExceptionParsedBody()
     {
         $this->expectException('InvalidArgumentException');
-        $this->expectExceptionMessage('ParsedBody must be array, object, or null, but string provided.');
+        $this->expectExceptionMessage('ParsedBody must be array, object, or null. string provided.');
 
         $serverRequest = $this->createServerRequest()
             ->withParsedBody('I am a string');
@@ -461,7 +461,7 @@ class ServerRequestTest extends TestCase
     public function testExceptionParseStrOpts()
     {
         $this->expectException('InvalidArgumentException');
-        $this->expectExceptionMessage('parseStrOpts expects string or array but boolean provided.');
+        $this->expectExceptionMessage('parseStrOpts expects string or array. boolean provided.');
         ServerRequest::parseStrOpts(false);
     }
 

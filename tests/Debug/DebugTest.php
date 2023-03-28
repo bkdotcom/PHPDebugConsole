@@ -10,7 +10,6 @@ use bdk\PubSub\Manager as EventManager;
  *
  * @covers \bdk\Debug
  * @covers \bdk\Debug\AbstractDebug
- * @covers \bdk\Debug\Data
  * @covers \bdk\Debug\Internal
  */
 class DebugTest extends DebugTestFramework
@@ -341,13 +340,13 @@ class DebugTest extends DebugTestFramework
 
     public function testServiceProviderToArray()
     {
-        $this->debug->setCfg('serviceProvider', function (\bdk\Container $container) {
+        $this->debug->setCfg('serviceProvider', static function (\bdk\Container $container) {
             $container['foo'] = 'bar';
         });
-        $this->assertSame('bar', $this->debug->foo);
+        self::assertSame('bar', $this->debug->foo);
 
         $this->debug->setCfg('serviceProvider', new \bdk\Test\Debug\Fixture\ServiceProvider());
-        $this->assertSame('bar2', $this->debug->foo);
+        self::assertSame('bar2', $this->debug->foo);
     }
 
     /**

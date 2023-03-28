@@ -19,7 +19,7 @@ use bdk\Debug\Route\RouteInterface;
 use bdk\PubSub\Event;
 
 /**
- * Base output plugin
+ * Base route plugin
  */
 abstract class AbstractRoute extends AbstractComponent implements RouteInterface
 {

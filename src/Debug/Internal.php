@@ -98,6 +98,9 @@ class Internal
         }
         $channels[] = $debug;
         foreach ($channels as $channel) {
+            if ($channel->getCfg('output', Debug::CONFIG_DEBUG) === false) {
+                continue;
+            }
             $event = $channel->eventManager->publish(
                 Debug::EVENT_OUTPUT,
                 $channel,

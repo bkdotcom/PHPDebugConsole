@@ -27,7 +27,7 @@ abstract class AbstractStream
         'readFail' => 'Unable to read from stream',
         'readFailNonReadable' => 'Unable to read from non-readable stream',
         'readLengthNegative' => 'Length parameter cannot be negative',
-        'resourceInvalidType' => 'Expected resource, filename, or string. %s provided',
+        'resourceInvalidType' => 'Expected resource, filename, or string. %s provided.',
         'seekFail' => 'Unable to seek to stream position %s with whence %s',
         'seekNonSeekable' => 'Stream is not seekable',
         'writeFail' => 'Unable to write to stream',
@@ -122,7 +122,7 @@ abstract class AbstractStream
      */
     protected function setResourceFile($file)
     {
-        \set_error_handler(function () {
+        \set_error_handler(static function () {
         });
         $this->resource = \fopen($file, 'r');
         \restore_error_handler();

@@ -155,12 +155,16 @@ class LogRoute extends CLogRoute
     /**
      * Are we excluding category?
      *
-     * @param string $category log category
+     * @param array $logEntry raw/indexed Yii log entry
      *
      * @return bool
      */
-    protected function isExcluded($category)
+    protected function isExcluded(array $logEntry)
     {
+        $category = $logEntry[2];
+        if (\strpos($category, 'system.db') === 0 && \preg_match('/^(Opening|Closing)/', $logEntry[0])) {
+            return false;
+        }
         foreach ($this->except as $exceptCat) {
             //  If found, we skip
             if (\trim(\strtolower($exceptCat)) === \trim(\strtolower($category))) {
@@ -372,9 +376,13 @@ class LogRoute extends CLogRoute
         // remove the trace info from the message
         $logEntry['message'] = \rtrim(\preg_replace($regex, '', $logEntry['message']));
         foreach ($matches as $line) {
+            $file = $line[1];
+            if (\strpos($file, __DIR__) === 0) {
+                continue;
+            }
             $logEntry['trace'][] = array(
-                'file' => $line[1],
-                'line' => $line[2] * 1,
+                'file' => $file,
+                'line' => (int) $line[2],
             );
         }
         return $logEntry;
@@ -393,7 +401,7 @@ class LogRoute extends CLogRoute
     {
         try {
             foreach ($logs as $message) {
-                if ($this->isExcluded($message[2])) {
+                if ($this->isExcluded($message)) {
                     continue;
                 }
                 $this->processLogEntry($message);
@@ -421,8 +429,11 @@ class LogRoute extends CLogRoute
             return;
         }
         if ($logEntry['level'] === CLogger::LEVEL_TRACE) {
-            $this->processLogEntryTrace($logEntry);
-            return;
+            if (\count($logEntry['trace']) > 1) {
+                $this->processLogEntryTrace($logEntry);
+                return;
+            }
+            $logEntry['level'] = CLogger::LEVEL_INFO;
         }
         $args = array();
         $debug = $logEntry['channel'];

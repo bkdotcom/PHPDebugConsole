@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2022 Brad Kent
+Copyright (c) 2023 Brad Kent
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -19,3 +19,10 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+Includes other software released under the MIT license:
+- PrismJS/prism,  Copyright 2012 Lea Verou
+- psr/http-message, Copyright 2014 PHP Framework Interoperability Group
+
+Portions of this software derived from other works
+- https://github.com/symfony/event-dispatcher

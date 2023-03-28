@@ -8,6 +8,7 @@ use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
 use bdk\Debug\LogEntry;
 use bdk\Test\Debug\DebugTestFramework;
+use bdk\Test\Debug\Fixture\TestObj;
 
 /**
  * PHPUnit tests for Debug class
@@ -47,15 +48,13 @@ class ObjectTest extends DebugTestFramework
 
         // Code Coverage:
         // clear the method cache so that we inspect the methods during the tests
-        $this->helper->setPrivateProp('bdk\Debug\Abstraction\AbstractObjectMethods', 'methodCache', array());
+        self::$helper->setProp('bdk\Debug\Abstraction\AbstractObjectMethods', 'methodCache', array());
     }
 
-    public function providerTestMethod()
+    public static function providerTestMethod()
     {
-        // val, html, text, script
-
         $text = <<<'EOD'
-bdk\Test\Debug\Fixture\Test
+bdk\Test\Debug\Fixture\TestObj
   Properties:
     ✨ This object has a __get() method
     (public) propPublic = "redefined in Test (public)"
@@ -70,7 +69,7 @@ bdk\Test\Debug\Fixture\Test
     (protected ✨ magic-read) magicReadProp = "not null"
     (protected) propProtected = "defined only in TestBase (protected)"
     (private) debug = bdk\Debug NOT INSPECTED
-    (private) instance = bdk\Test\Debug\Fixture\Test *RECURSION*
+    (private) instance = bdk\Test\Debug\Fixture\TestObj *RECURSION*
     (private excluded) propNoDebug
     (private) propPrivate = "redefined in Test (private) (alternate value via __debugInfo)"
     (🔒 private) testBasePrivate = "defined in TestBase (private)"
@@ -86,7 +85,7 @@ bdk\Test\Debug\Fixture\Test
 EOD;
 
         $ansi = <<<'EOD'
-\e[38;5;250mbdk\Test\Debug\Fixture\\e[0m\e[1mTest\e[22m
+\e[38;5;250mbdk\Test\Debug\Fixture\\e[0m\e[1mTestObj\e[22m
     \e[4mProperties:\e[24m
         \e[38;5;250m✨ This object has a __get() method\e[0m
         \e[38;5;250m(public)\e[0m \e[38;5;83mpropPublic\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mredefined in Test (public)\e[38;5;250m"\e[0m
@@ -101,7 +100,7 @@ EOD;
         \e[38;5;250m(protected ✨ magic-read)\e[0m \e[38;5;83mmagicReadProp\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mnot null\e[38;5;250m"\e[0m
         \e[38;5;250m(protected)\e[0m \e[38;5;83mpropProtected\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mdefined only in TestBase (protected)\e[38;5;250m"\e[0m
         \e[38;5;250m(private)\e[0m \e[38;5;83mdebug\e[0m \e[38;5;130m=\e[0m \e[38;5;250mbdk\\e[0m\e[1mDebug\e[22m \e[38;5;9mNOT INSPECTED\e[0m
-        \e[38;5;250m(private)\e[0m \e[38;5;83minstance\e[0m \e[38;5;130m=\e[0m \e[38;5;250mbdk\Test\Debug\Fixture\\e[0m\e[1mTest\e[22m \e[38;5;196m*RECURSION*\e[0m
+        \e[38;5;250m(private)\e[0m \e[38;5;83minstance\e[0m \e[38;5;130m=\e[0m \e[38;5;250mbdk\Test\Debug\Fixture\\e[0m\e[1mTestObj\e[22m \e[38;5;196m*RECURSION*\e[0m
         \e[38;5;250m(private excluded)\e[0m \e[38;5;83mpropNoDebug\e[0m
         \e[38;5;250m(private)\e[0m \e[38;5;83mpropPrivate\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mredefined in Test (private) (alternate value via __debugInfo)\e[38;5;250m"\e[0m
         \e[38;5;250m(🔒 private)\e[0m \e[38;5;83mtestBasePrivate\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mdefined in TestBase (private)\e[38;5;250m"\e[0m
@@ -128,62 +127,65 @@ bdk\Test\Debug\Fixture\Test2
     magic: 1
 EOD;
 
-        $crate = new \bdk\Debug\Route\WampCrate(\bdk\Debug::getInstance());
+        $crate = new \bdk\Debug\Route\WampCrate(Debug::getInstance());
 
-        $abs1 = Debug::getInstance()->abstracter->getAbstraction(new \bdk\Test\Debug\Fixture\Test(), 'log');
+        $abs1 = Debug::getInstance()->abstracter->getAbstraction(new TestObj(), 'log');
         $cratedAbs1 = $crate->crate($abs1);
-        $cratedAbs1 = $this->helper->crate($cratedAbs1);
+        $cratedAbs1 = \bdk\Test\Debug\Helper::crate($cratedAbs1);
+        // as provider method is static, but test is not static...
+        //   we need to populate "scopeClass"
+        $cratedAbs1['scopeClass'] = __CLASS__;
 
         $abs2 = Debug::getInstance()->abstracter->getAbstraction(new \bdk\Test\Debug\Fixture\Test2(), 'log');
         $cratedAbs2 = $crate->crate($abs2);
-        $cratedAbs2 = $this->helper->crate($cratedAbs2);
-
+        $cratedAbs2 = \bdk\Test\Debug\Helper::crate($cratedAbs2);
+        $cratedAbs2['scopeClass'] = __CLASS__;
 
         return array(
             // 0
             array(
                 'log',
                 array(
-                    new \bdk\Test\Debug\Fixture\Test(),
+                    new TestObj(),
                 ),
                 array(
-                    'entry' => function ($logEntry) {
+                    'entry' => static function (LogEntry $logEntry) {
                         $objAbs = $logEntry['args'][0];
-                        $this->assertAbstractionType($objAbs);
+                        self::assertAbstractionType($objAbs);
                     },
-                    'html' => function ($str) {
-                        $this->assertStringStartsWith(
+                    'html' => static function ($str) {
+                        self::assertStringStartsWith(
                             '<li class="m_log"><div class="t_object" data-accessible="public">'
                             . '<span class="t_string t_stringified" title="__toString()">abracadabra</span>' . "\n"
                             . '<span class="classname" title="PhpDoc Summary' . "\n"
                             . "\n"
-                            . 'PhpDoc Description"><span class="namespace">bdk\Test\Debug\Fixture\</span>Test</span>',
+                            . 'PhpDoc Description"><span class="namespace">bdk\Test\Debug\Fixture\</span>TestObj</span>',
                             $str
                         );
-                        $this->assertSelectCount('dl.object-inner', 1, $str);
+                        self::assertSelectCount('dl.object-inner', 1, $str);
 
                         // extends
-                        $this->assertStringContainsString('<dt>extends</dt>' . "\n" .
+                        self::assertStringContainsString('<dt>extends</dt>' . "\n" .
                             '<dd class="extends"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>TestBase</span></dd>', $str);
 
                         // implements
                         if (\defined('HHVM_VERSION')) {
-                            $this->assertStringContainsString(\implode("\n", array(
+                            self::assertStringContainsString(\implode("\n", array(
                                 '<dt>implements</dt>',
                                 '<dd class="interface"><span class="classname">Stringish</span></dd>',
                                 '<dd class="interface"><span class="classname">XHPChild</span></dd>',
                             )), $str);
                         } elseif (PHP_VERSION_ID >= 80000) {
-                            $this->assertStringContainsString(\implode("\n", array(
+                            self::assertStringContainsString(\implode("\n", array(
                                 '<dt>implements</dt>',
                                 '<dd class="interface"><span class="classname">Stringable</span></dd>',
                             )), $str);
                         } else {
-                            $this->assertStringNotContainsString('<dt>implements</dt>', $str);
+                            self::assertStringNotContainsString('<dt>implements</dt>', $str);
                         }
 
                         // constants
-                        $this->assertStringContainsString(
+                        self::assertStringContainsString(
                             '<dt class="constants">constants</dt>' . "\n"
                             . '<dd class="constant public"><span class="t_modifier_public">public</span> <span class="t_identifier"'
                                 . (PHP_VERSION_ID >= 70100
@@ -216,7 +218,7 @@ EOD;
                             '<dd class="inherited property protected" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_protected">protected</span> <span class="t_identifier">propProtected</span> <span class="t_operator">=</span> <span class="t_string">defined only in TestBase (protected)</span></dd>',
                             '<dd class="private property"><span class="t_modifier_private">private</span> <span class="t_identifier">debug</span> <span class="t_operator">=</span> <div class="t_object" data-accessible="public"><span class="classname"><span class="namespace">bdk\</span>Debug</span>',
                             '<span class="excluded">NOT INSPECTED</span></div></dd>',
-                            '<dd class="private property"><span class="t_modifier_private">private</span> <span class="t_identifier">instance</span> <span class="t_operator">=</span> <div class="t_object" data-accessible="private"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>Test</span>',
+                            '<dd class="private property"><span class="t_modifier_private">private</span> <span class="t_identifier">instance</span> <span class="t_operator">=</span> <div class="t_object" data-accessible="private"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>TestObj</span>',
                             '<span class="t_recursion">*RECURSION*</span></div></dd>',
                             '<dd class="debuginfo-excluded private property"><span class="t_modifier_private">private</span> <span class="t_identifier">propNoDebug</span> <span class="t_operator">=</span> <span class="t_string">not included in __debugInfo</span></dd>',
                             '<dd class="debuginfo-value private property"><span class="t_modifier_private">private</span> <span class="t_type">string</span> <span class="t_identifier" title="Private Property.">propPrivate</span> <span class="t_operator">=</span> <span class="t_string">redefined in Test (private) (alternate value via __debugInfo)</span></dd>',
@@ -232,7 +234,7 @@ EOD;
                         }
                         // echo 'expect = ' . $expect . "\n";
                         // echo 'actual = ' . $str . "\n";
-                        $this->assertStringContainsString($expect, $str);
+                        self::assertStringContainsString($expect, $str);
 
                         // methods
                         $expect = \implode("\n", array(
@@ -263,16 +265,16 @@ EOD;
 
                         // echo 'expect = ' . $expect . "\n";
                         // echo 'actual = ' . $str . "\n";
-                        $this->assertStringContainsString($expect, $str);
+                        self::assertStringContainsString($expect, $str);
 
                         // phpdoc
-                        $this->assertStringContainsString(\implode("\n", array(
+                        self::assertStringContainsString(\implode("\n", array(
                             '<dt>phpDoc</dt>',
                             '<dd class="phpdoc phpdoc-link"><span class="phpdoc-tag">link</span><span class="t_operator">:</span> <a href="http://www.bradkent.com/php/debug" target="_blank">PHPDebugConsole Homepage</a></dd>',
                             '</dl>',
                         )), $str);
                     },
-                    'script' => 'console.log({"___class_name":"bdk\\\Test\\\Debug\\\Fixture\\\Test","(public) propPublic":"redefined in Test (public)","(public) propStatic":"I\'m Static","(public) someArray":{"int":123,"numeric":"123","string":"cheese","bool":true,"obj":null},"(protected ✨ magic-read) magicReadProp":"not null","(protected) propProtected":"defined only in TestBase (protected)","(private) debug":"(object) bdk\\\Debug NOT INSPECTED","(private) instance":"(object) bdk\\\Test\\\Debug\\\Fixture\\\Test *RECURSION*","(private excluded) propNoDebug":"not included in __debugInfo","(private) propPrivate":"redefined in Test (private) (alternate value via __debugInfo)","(🔒 private) testBasePrivate":"defined in TestBase (private)","(private) toString":"abracadabra","(private) toStrThrow":0,"(✨ magic excluded) magicProp":undefined,"(debug) debugValue":"This property is debug only"});',
+                    'script' => 'console.log({"___class_name":"bdk\\\Test\\\Debug\\\Fixture\\\TestObj","(public) propPublic":"redefined in Test (public)","(public) propStatic":"I\'m Static","(public) someArray":{"int":123,"numeric":"123","string":"cheese","bool":true,"obj":null},"(protected ✨ magic-read) magicReadProp":"not null","(protected) propProtected":"defined only in TestBase (protected)","(private) debug":"(object) bdk\\\Debug NOT INSPECTED","(private) instance":"(object) bdk\\\Test\\\Debug\\\Fixture\\\TestObj *RECURSION*","(private excluded) propNoDebug":"not included in __debugInfo","(private) propPrivate":"redefined in Test (private) (alternate value via __debugInfo)","(🔒 private) testBasePrivate":"defined in TestBase (private)","(private) toString":"abracadabra","(private) toStrThrow":0,"(✨ magic excluded) magicProp":undefined,"(debug) debugValue":"This property is debug only"});',
                     'streamAnsi' => $ansi,
                     'text' => $text,
                     'wamp' => array(
@@ -287,12 +289,12 @@ EOD;
             array(
                 'log',
                 array(
-                    new \bdk\Test\Debug\Fixture\Test('This is the song that never ends.  Yes, it goes on and on my friend.  Some people started singing it not knowing what it was.  And they\'ll never stop singing it forever just because.  This is the song that never ends...'),
+                    new TestObj('This is the song that never ends.  Yes, it goes on and on my friend.  Some people started singing it not knowing what it was.  And they\'ll never stop singing it forever just because.  This is the song that never ends...'),
                     Debug::meta('cfg', 'stringMaxLen', 150),   // this will store abstracted/truncated value...     test that "more bytes" is calculated correctly
                 ),
                 array(
-                    'html' => function ($str) {
-                        $this->assertStringContainsString('<span class="t_string t_string_trunc t_stringified" title="__toString()">This is the song that never ends.  Yes, it goes on and on my friend.  Some people started singing it&hellip; <i>(119 more bytes)</i></span>', $str);
+                    'html' => static function ($str) {
+                        self::assertStringContainsString('<span class="t_string t_string_trunc t_stringified" title="__toString()">This is the song that never ends.  Yes, it goes on and on my friend.  Some people started singing it&hellip; <i>(119 more bytes)</i></span>', $str);
                     }
                 ),
             ),
@@ -303,7 +305,7 @@ EOD;
                     new \bdk\Test\Debug\Fixture\Test2(),
                 ),
                 array(
-                    'html' => function ($str) {
+                    'html' => static function ($str) {
                         // properties
                         $expect = \implode("\n", array(
                             '<dt class="properties">properties</dt>',
@@ -314,7 +316,7 @@ EOD;
                         if (PHP_VERSION_ID >= 80100) {
                             $expect = \str_replace('\'', '&#039;', $expect);
                         }
-                        $this->assertStringContainsString($expect, $str);
+                        self::assertStringContainsString($expect, $str);
 
                         // methods
                         $constName = \defined('HHVM_VERSION')
@@ -338,7 +340,7 @@ EOD;
 
                         // echo 'expect = ' . $expect . "\n";
                         // echo 'str = ' . $str . "\n";
-                        $this->assertStringContainsString($expect, $str);
+                        self::assertStringContainsString($expect, $str);
                     },
                     'script' => 'console.log({"___class_name":"bdk\\\Test\\\Debug\\\Fixture\\\Test2","(protected ✨ magic-read) magicReadProp":"not null","(✨ magic) magicProp":undefined});',
                     'text' => $text2,
@@ -353,24 +355,24 @@ EOD;
             'phpDocCollectFalse' => array(
                 'log',
                 array(
-                    new \bdk\Test\Debug\Fixture\Test(),
+                    new TestObj(),
                     Debug::meta('cfg', 'phpDocCollect', false),
                 ),
                 array(
-                    'entry' => function (LogEntry $logEntry) {
+                    'entry' => static function (LogEntry $logEntry) {
                         $objAbs = $logEntry['args'][0];
-                        $this->assertSame(
+                        self::assertSame(
                             array('desc' => null, 'summary' => null),
                             \array_intersect_key($objAbs['phpDoc'], \array_flip(array('desc','summary')))
                         );
                         foreach ($objAbs['constants'] as $const) {
-                            $this->assertNull($const['desc']);
+                            self::assertNull($const['desc']);
                         }
                         foreach ($objAbs['properties'] as $name => $prop) {
-                            $this->assertNull($prop['desc']);
+                            self::assertNull($prop['desc']);
                         }
                         foreach ($objAbs['methods'] as $name => $method) {
-                            $this->assertSame(
+                            self::assertSame(
                                 array('desc' => null, 'summary' => null),
                                 \array_intersect_key($method['phpDoc'], \array_flip(array('desc','summary')))
                             );
@@ -381,14 +383,14 @@ EOD;
             'phpDocOutputFalse' => array(
                 'log',
                 array(
-                    new \bdk\Test\Debug\Fixture\Test(),
+                    new TestObj(),
                     Debug::meta('cfg', 'phpDocOutput', false),
                 ),
                 array(
-                    'entry' => function (LogEntry $logEntry) {
+                    'entry' => static function (LogEntry $logEntry) {
                         // quick confirm that was collected
                         $objAbs = $logEntry['args'][0];
-                        $this->assertSame(
+                        self::assertSame(
                             array(
                                 'desc' => 'PhpDoc Description',
                                 'summary' => 'PhpDoc Summary',
@@ -396,44 +398,44 @@ EOD;
                             \array_intersect_key($objAbs['phpDoc'], \array_flip(array('desc','summary')))
                         );
                     },
-                    'html' => function ($html, LogEntry $logEntry) {
+                    'html' => static function ($html, LogEntry $logEntry) {
                         \preg_match_all('/title="([^"]+)"/s', $html, $matches);
                         $matches = \array_diff($matches[1], array(
                             '__toString()',
                             'value: &quot;defined in TestBase&quot;',
                         ));
-                        $this->assertEmpty($matches, 'Html should not contain phpDoc summary & descriptions');
+                        self::assertEmpty($matches, 'Html should not contain phpDoc summary & descriptions');
                     }
                 ),
             ),
             'methodCollectFalse' => array(
                 'log',
                 array(
-                    new \bdk\Test\Debug\Fixture\Test(),
+                    new TestObj(),
                     Debug::meta('cfg', array(
                         'methodCollect' => false,
                     )),
                 ),
                 array(
-                    'entry' => function ($logEntry) {
+                    'entry' => static function (LogEntry $logEntry) {
                         $objAbs = $logEntry['args'][0];
                         $values = $objAbs->getValues();
-                        $this->assertFalse(($values['cfgFlags'] & AbstractObject::METHOD_COLLECT) === AbstractObject::METHOD_COLLECT);
-                        $this->assertTrue(($values['cfgFlags'] & AbstractObject::METHOD_OUTPUT) === AbstractObject::METHOD_OUTPUT);
+                        self::assertFalse(($values['cfgFlags'] & AbstractObject::METHOD_COLLECT) === AbstractObject::METHOD_COLLECT);
+                        self::assertTrue(($values['cfgFlags'] & AbstractObject::METHOD_OUTPUT) === AbstractObject::METHOD_OUTPUT);
                     },
-                    'html' => function ($str) {
-                        $this->assertStringContainsString(\implode("\n", array(
+                    'html' => static function ($str) {
+                        self::assertStringContainsString(\implode("\n", array(
                             '<dt class="methods">methods <i>not collected</i></dt>',
                             '<dt>phpDoc</dt>',
                         )), $str);
                     },
-                    'streamAnsi' => function ($str) {
-                        $containsMethods = preg_match('/methods/i', $str) === 1;
-                        $this->assertFalse($containsMethods, 'Output should not contain methods');
+                    'streamAnsi' => static function ($str) {
+                        $containsMethods = \preg_match('/methods/i', $str) === 1;
+                        self::assertFalse($containsMethods, 'Output should not contain methods');
                     },
-                    'text' => function ($str) {
-                        $containsMethods = preg_match('/methods/i', $str) === 1;
-                        $this->assertFalse($containsMethods, 'Output should not contain methods');
+                    'text' => static function ($str) {
+                        $containsMethods = \preg_match('/methods/i', $str) === 1;
+                        self::assertFalse($containsMethods, 'Output should not contain methods');
                     }
                 ),
             ),
@@ -444,14 +446,14 @@ EOD;
                     new \bdk\Test\Debug\Fixture\Utility\PhpDocExtends(),
                 ),
                 array(
-                    'html' => function ($html) {
+                    'html' => static function ($html) {
                         $expect = '<dt class="constants">constants</dt>' . "\n"
                             . '<dd class="constant public"><span class="t_modifier_public">public</span> <span class="t_identifier"'
                             . (PHP_VERSION_ID >= 70100
                                 ? ' title="PhpDocImplements summary"'
                                 : ''
                             )
-                            .'>SOME_CONSTANT</span> <span class="t_operator">=</span> <span class="t_string">never change</span></dd>' . "\n"
+                            . '>SOME_CONSTANT</span> <span class="t_operator">=</span> <span class="t_string">never change</span></dd>' . "\n"
                             . '<dt class="properties">properties</dt>' . "\n"
                             . '<dd class="property public"><span class="t_modifier_public">public</span> <span class="t_type">string</span> <span class="t_identifier" title="$someProperty summary: desc">someProperty</span> <span class="t_operator">=</span> <span class="t_string">St. James Place</span></dd>' . "\n"
                             . '<dd class="magic property"><span class="t_modifier_magic">magic</span> <span class="t_type">bool</span> <span class="t_identifier" title="I\'m avail via __get()">magicProp</span></dd>' . "\n"
@@ -471,7 +473,7 @@ EOD;
                         }
                         // echo 'expect = ' . $expect . "\n";
                         // echo 'html = ' . $html . "\n";
-                        $this->assertStringContainsString($expect, $html);
+                        self::assertStringContainsString($expect, $html);
                     },
                 ),
             ),
@@ -482,15 +484,15 @@ EOD;
                     new \bdk\Test\Debug\Fixture\ArrayDocs(),
                 ),
                 array(
-                    'html' => function ($html) {
+                    'html' => static function ($html) {
                         // echo 'html = ' . $html . "\n";
                         $expect = \trim(\preg_replace('/^\s+/m', '', '
                             <li class="m_log"><div class="t_object" data-accessible="public"><span class="classname" title="&quot;Array Shapes&quot; and &quot;General Arrays&quot;"><span class="namespace">bdk\Test\Debug\Fixture\</span>ArrayDocs</span>
                             <dl class="object-inner">
                             <dt class="properties">properties</dt>
-                            <dd class="property public"><span class="t_modifier_public">public</span> <span class="t_type"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>non-empty-array</span></span><span class="t_punct"><</span><span class="t_type">string</span><span class="t_punct">,</span> <span class="t_type">array</span><span class="t_punct"><</span><span class="t_type">int</span><span class="t_punct">,</span> <span class="t_type">int</span><span class="t_punct">|</span><span class="t_type"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>string</span></span><span class="t_punct">></span><span class="t_punct">|</span><span class="t_type">int</span><span class="t_punct">|</span><span class="t_type"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>string</span></span><span class="t_punct">></span><span class="t_type"><span class="t_punct">[]</span></span> <span class="t_identifier" title="General Description">general</span> <span class="t_operator">=</span> <span class="t_null">null</span></dd>
+                            <dd class="property public"><span class="t_modifier_public">public</span> <span class="t_type">non-empty-array</span><span class="t_punct">&lt;</span><span class="t_type">string</span><span class="t_punct">,</span> <span class="t_type">array</span><span class="t_punct">&lt;</span><span class="t_type">int</span><span class="t_punct">,</span> <span class="t_type">int</span><span class="t_punct">|</span><span class="t_type">string</span><span class="t_punct">&gt;</span><span class="t_punct">|</span><span class="t_type">int</span><span class="t_punct">|</span><span class="t_type">string</span><span class="t_punct">&gt;</span><span class="t_type"><span class="t_punct">[]</span></span> <span class="t_identifier" title="General Description">general</span> <span class="t_operator">=</span> <span class="t_null">null</span></dd>
                             <dd class="property public"><span class="t_modifier_public">public</span> <span class="t_type">null</span><span class="t_punct">|</span><span class="t_type"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>"literal"</span></span><span class="t_punct">|</span><span class="t_type"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>123</span></span> <span class="t_identifier" title="Union test">literal</span> <span class="t_operator">=</span> <span class="t_null">null</span></dd>
-                            <dd class="property public"><span class="t_modifier_public">public</span> <span class="t_type"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>array</span></span><span class="t_punct">{</span><span class="t_string">name</span><span class="t_punct">:</span> <span class="t_type">string</span><span class="t_punct">,</span> <span class="t_string">value</span><span class="t_punct">:</span> <span class="t_type">positive-int</span><span class="t_punct">|</span><span class="t_type"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>string</span></span><span class="t_punct">,</span> <span class="t_string">foo</span><span class="t_punct">:</span> <span class="t_type"><span class="classname">bar</span></span><span class="t_punct">,</span> <span class="t_string">number</span><span class="t_punct">:</span> <span class="t_type">42</span><span class="t_punct">,</span> <span class="t_string">string</span><span class="t_punct">:</span> <span class="t_string t_type">theory</span><span class="t_punct">}</span> <span class="t_identifier" title="Shape Description">shape</span> <span class="t_operator">=</span> <span class="t_null">null</span></dd>
+                            <dd class="property public"><span class="t_modifier_public">public</span> <span class="t_type">array</span><span class="t_punct">{</span><span class="t_string">name</span><span class="t_punct">:</span> <span class="t_type">string</span><span class="t_punct">,</span> <span class="t_string">value</span><span class="t_punct">:</span> <span class="t_type">positive-int</span><span class="t_punct">|</span><span class="t_type">string</span><span class="t_punct">,</span> <span class="t_string">foo</span><span class="t_punct">:</span> <span class="t_type"><span class="classname">bar</span></span><span class="t_punct">,</span> <span class="t_string">number</span><span class="t_punct">:</span> <span class="t_type">42</span><span class="t_punct">,</span> <span class="t_string">string</span><span class="t_punct">:</span> <span class="t_string t_type">theory</span><span class="t_punct">}</span> <span class="t_identifier" title="Shape Description">shape</span> <span class="t_operator">=</span> <span class="t_null">null</span></dd>
                             <dt class="methods">methods</dt>
                             <dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier" title="Method description">myMethod</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">int</span><span class="t_punct">|</span><span class="t_type">string</span> <span class="t_parameter-name" title="I&#039;m a description">$foo</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span></dd>
                             <dt>phpDoc</dt>
@@ -504,7 +506,7 @@ EOD;
                         }
                         // echo 'expect = ' . $expect . "\n";
                         // echo 'actual = ' . $html . "\n";
-                        $this->assertStringContainsString($expect, $html);
+                        self::assertStringContainsString($expect, $html);
                     },
                 ),
             ),
@@ -512,17 +514,17 @@ EOD;
             'sortByName' => array(
                 'log',
                 array(
-                    new \bdk\Test\Debug\Fixture\Test(),
+                    new TestObj(),
                     Debug::meta('cfg', 'objectSort', 'name'),
                 ),
                 array(
-                    'entry' => function (LogEntry $entry) {
+                    'entry' => static function (LogEntry $entry) {
                         // echo print_r($entry->getValues(), true) . "\n";
-                        $this->assertSame(array(
+                        self::assertSame(array(
                             'INHERITED',
                             'MY_CONSTANT',
                         ), \array_keys($entry['args'][0]['constants']));
-                        $this->assertSame(array(
+                        self::assertSame(array(
                             'debug',
                             'debugValue',
                             'instance',
@@ -538,7 +540,7 @@ EOD;
                             'toString',
                             'toStrThrow',
                         ), \array_keys($entry['args'][0]['properties']));
-                        $this->assertSame(array(
+                        self::assertSame(array(
                             '__construct',
                             '__call',
                             '__debugInfo',
@@ -567,17 +569,17 @@ EOD;
     public function testDereferenceObject()
     {
         $testVal = 'success A';
-        $testO = new \bdk\Test\Debug\Fixture\Test();
+        $testO = new TestObj();
         $testO->propPublic = &$testVal;
         $this->debug->log('test_o', $testO);
         $testVal = 'success B';
         $this->debug->log('test_o', $testO);
         $testVal = 'fail';
         $output = $this->debug->output();
-        $this->assertStringContainsString('success A', $output);
-        $this->assertStringContainsString('success B', $output);
-        $this->assertStringNotContainsString('fail', $output);
-        $this->assertSame('fail', $testO->propPublic);   // prop should be 'fail' at this point
+        self::assertStringContainsString('success A', $output);
+        self::assertStringContainsString('success B', $output);
+        self::assertStringNotContainsString('fail', $output);
+        self::assertSame('fail', $testO->propPublic);   // prop should be 'fail' at this point
     }
 
     /**
@@ -589,12 +591,12 @@ EOD;
     {
         // mostly tested via logTest, infoTest, warnTest, errorTest....
         // test object inheritance
-        $test = new \bdk\Test\Debug\Fixture\Test();
+        $test = new TestObj();
         $abs = $this->debug->abstracter->getAbstraction($test);
 
-        $this->assertSame('object', $abs['type']);
-        $this->assertSame('bdk\Test\Debug\Fixture\Test', $abs['className']);
-        $this->assertSame(
+        self::assertSame('object', $abs['type']);
+        self::assertSame('bdk\Test\Debug\Fixture\TestObj', $abs['className']);
+        self::assertSame(
             array('bdk\Test\Debug\Fixture\TestBase'),
             $abs['extends']
         );
@@ -604,8 +606,8 @@ EOD;
         } elseif (PHP_VERSION_ID >= 80000) {
             $expect = array('Stringable');
         }
-        $this->assertSame($expect, $abs['implements']);
-        $this->assertSame(
+        self::assertSame($expect, $abs['implements']);
+        self::assertSame(
             array(
                 'INHERITED' => array(
                     'attributes' => array(),
@@ -628,21 +630,21 @@ EOD;
             ),
             $abs['constants']
         );
-        $this->assertArraySubset(
+        self::assertArraySubset(
             array(
                 'desc' => 'PhpDoc Description',
                 'summary' => 'PhpDoc Summary',
             ),
             $abs['phpDoc']
         );
-        $this->assertTrue($abs['viaDebugInfo']);
+        self::assertTrue($abs['viaDebugInfo']);
 
         //    Properties
-        // $this->assertArrayNotHasKey('propNoDebug', $abs['properties']);
-        $this->assertTrue($abs['properties']['propNoDebug']['debugInfoExcluded']);
-        $this->assertTrue($abs['properties']['debug']['value']['isExcluded']);
-        $this->assertTrue($abs['properties']['instance']['value']['isRecursion']);
-        $this->assertArraySubset(
+        // self::assertArrayNotHasKey('propNoDebug', $abs['properties']);
+        self::assertTrue($abs['properties']['propNoDebug']['debugInfoExcluded']);
+        self::assertTrue($abs['properties']['debug']['value']['isExcluded']);
+        self::assertTrue($abs['properties']['instance']['value']['isRecursion']);
+        self::assertArraySubset(
             array(
                 'attributes' => array(),
                 'isPromoted' => false,
@@ -654,7 +656,7 @@ EOD;
             ),
             $abs['properties']['propPublic']
         );
-        $this->assertArraySubset(
+        self::assertArraySubset(
             array(
                 'isPromoted' => false,
                 'valueFrom' => 'value',
@@ -663,7 +665,7 @@ EOD;
             ),
             $abs['properties']['someArray']
         );
-        $this->assertArraySubset(
+        self::assertArraySubset(
             array(
                 'isPromoted' => false,
                 'visibility' => 'protected',
@@ -675,7 +677,7 @@ EOD;
             ),
             $abs['properties']['propProtected']
         );
-        $this->assertArraySubset(
+        self::assertArraySubset(
             array(
                 'attributes' => array(),
                 'inheritedFrom' => null,
@@ -688,7 +690,7 @@ EOD;
             ),
             $abs['properties']['propPrivate']
         );
-        $this->assertArraySubset(
+        self::assertArraySubset(
             array(
                 'attributes' => array(),
                 'inheritedFrom' => 'bdk\Test\Debug\Fixture\TestBase',
@@ -701,7 +703,7 @@ EOD;
             ),
             $abs['properties']['testBasePrivate']
         );
-        $this->assertArraySubset(
+        self::assertArraySubset(
             array(
                 'attributes' => array(),
                 'isPromoted' => false,
@@ -712,9 +714,9 @@ EOD;
         );
 
         //    Methods
-        $this->assertArrayNotHasKey('testBasePrivate', $abs['methods']);
-        $this->assertTrue($abs['methods']['methodPublic']['isDeprecated']);
-        $this->assertSame(
+        self::assertArrayNotHasKey('testBasePrivate', $abs['methods']);
+        self::assertTrue($abs['methods']['methodPublic']['isDeprecated']);
+        self::assertSame(
             array(
                 'attributes' => array(),
                 'implements' => null,
@@ -771,7 +773,7 @@ EOD;
     {
         if (PHP_VERSION_ID < 70000) {
             // @requires not working in 4.8.36
-            $this->markTestSkipped('anonymous classes are a php 7.0 thing');
+            self::markTestSkipped('anonymous classes are a php 7.0 thing');
         }
         $filepath = TEST_DIR . '/Debug/Fixture/Anonymous.php';
         $line = 6;
@@ -833,12 +835,12 @@ EOD;
                 $domNode,
             ),
             array(
-                'entry' => function (LogEntry $entry) {
+                'entry' => static function (LogEntry $entry) {
                     $arg0 = $entry['args'][0];
-                    $this->assertSame('DOMDocument', $arg0['className']);
+                    self::assertSame('DOMDocument', $arg0['className']);
 
                     $arg1 = $entry['args'][1];
-                    $this->assertSame('DOMElement', $arg1['className']);
+                    self::assertSame('DOMElement', $arg1['className']);
                     // echo json_encode($this->helper->logEntryToArray($entry), JSON_PRETTY_PRINT) . "\n";
                 },
             )
@@ -854,7 +856,7 @@ EOD;
     {
         if (PHP_VERSION_ID < 80000) {
             // @requires not working in 4.8.36
-            $this->markTestSkipped('attributes classes are a php 8.0 thing');
+            self::markTestSkipped('attributes classes are a php 8.0 thing');
         }
         $test = new \bdk\Test\Debug\Fixture\Php80(42);
         $this->testMethod(
@@ -863,20 +865,20 @@ EOD;
                 $test,
             ),
             array(
-                'entry' => function (LogEntry $logEntry) {
+                'entry' => static function (LogEntry $logEntry) {
                     $abs = $logEntry['args'][0];
-                    $this->assertTrue($abs['properties']['arg1']['isPromoted']);
-                    $this->assertTrue($abs['methods']['__construct']['params'][0]['isPromoted']);
-                    $this->assertSame('Attributed & promoted param', $abs['properties']['arg1']['desc']);
+                    self::assertTrue($abs['properties']['arg1']['isPromoted']);
+                    self::assertTrue($abs['methods']['__construct']['params'][0]['isPromoted']);
+                    self::assertSame('Attributed & promoted param', $abs['properties']['arg1']['desc']);
                 },
-                'html' => function ($html) {
+                'html' => static function ($html) {
                     $propExpect = \str_replace('\\', '\\\\', '<dd class="isPromoted property public" data-attributes="[{&quot;name&quot;:&quot;bdk\\Test\\Debug\\Fixture\\ExampleParamAttribute&quot;,&quot;arguments&quot;:[]}]"><span class="t_modifier_public">public</span> <span class="t_type">int</span> <span class="t_identifier" title="Attributed &amp; promoted param">arg1</span> <span class="t_operator">=</span> <span class="t_int">42</span></dd>');
                     $methExpect = \str_replace('\\', '\\\\', '<span class="isPromoted parameter" data-attributes="[{&quot;name&quot;:&quot;bdk\\Test\\Debug\\Fixture\\ExampleParamAttribute&quot;,&quot;arguments&quot;:[]}]"><span class="t_type">int</span> <span class="t_parameter-name" title="Attributed &amp; promoted param">$arg1</span></span>');
                     $attrExpect = '<dt class="attributes">attributes</dt>' . "\n"
                         . '<dd class="attribute"><span class="classname"><span class="namespace">bdk\\Test\\Debug\\Fixture\\</span>ExampleClassAttribute</span><span class="t_punct">(</span><span class="t_string">foo</span><span class="t_punct">,</span> <span class="t_int">' . PHP_VERSION_ID . '</span><span class="t_punct">,</span> <span class="t_parameter-name">name</span><span class="t_punct t_colon">:</span><span class="t_string">bar</span><span class="t_punct">)</span></dd>';
-                    $this->assertStringContainsString($propExpect, $html);
-                    $this->assertStringContainsString($methExpect, $html);
-                    $this->assertStringContainsString($attrExpect, $html);
+                    self::assertStringContainsString($propExpect, $html);
+                    self::assertStringContainsString($methExpect, $html);
+                    self::assertStringContainsString($attrExpect, $html);
                 },
             )
         );
@@ -891,7 +893,7 @@ EOD;
     {
         if (PHP_VERSION_ID < 80100) {
             // @requires not working in 4.8.36
-            $this->markTestSkipped('Test requires Php >= 8.1');
+            self::markTestSkipped('Test requires Php >= 8.1');
         }
         $test = new \bdk\Test\Debug\Fixture\Php81(42);
         $this->testMethod(
@@ -900,20 +902,20 @@ EOD;
                 $test,
             ),
             array(
-                'entry' => function (LogEntry $logEntry) {
+                'entry' => static function (LogEntry $logEntry) {
                     $abs = $logEntry['args'][0];
-                    $this->assertTrue($abs['properties']['title']['isReadOnly']);
-                    $this->assertTrue($abs['constants']['FINAL_CONST']['isFinal']);
+                    self::assertTrue($abs['properties']['title']['isReadOnly']);
+                    self::assertTrue($abs['constants']['FINAL_CONST']['isFinal']);
 
-                    // $this->assertTrue($abs['methods']['__construct']['params'][0]['isPromoted']);
-                    // $this->assertSame('Attributed & promoted param', $abs['properties']['arg1']['desc']);
+                    // self::assertTrue($abs['methods']['__construct']['params'][0]['isPromoted']);
+                    // self::assertSame('Attributed & promoted param', $abs['properties']['arg1']['desc']);
                 },
-                'html' => function ($html) {
+                'html' => static function ($html) {
                     $constExpect = '<dd class="constant final public"><span class="t_modifier_public">public</span> <span class="t_modifier_final">final</span> <span class="t_identifier">FINAL_CONST</span> <span class="t_operator">=</span> <span class="t_string">foo</span></dd>';
-                    $this->assertStringContainsString($constExpect, $html);
+                    self::assertStringContainsString($constExpect, $html);
 
                     $propExpect = '<dd class="isPromoted isReadOnly property public"><span class="t_modifier_public">public</span> <span class="t_modifier_readonly">readonly</span> <span class="t_type">string</span> <span class="t_identifier">title</span> <span class="t_operator">=</span> <span class="t_string" data-type-more="numeric">42</span></dd>';
-                    $this->assertStringContainsString($propExpect, $html);
+                    self::assertStringContainsString($propExpect, $html);
                 },
             )
         );
@@ -928,7 +930,7 @@ EOD;
     {
         if (PHP_VERSION_ID < 80000) {
             // @requires not working in 4.8.36
-            $this->markTestSkipped('attributes classes are a php 8.0 thing');
+            self::markTestSkipped('attributes classes are a php 8.0 thing');
         }
         $test = new \bdk\Test\Debug\Fixture\Php80(42);
         $this->testMethod(
@@ -937,10 +939,10 @@ EOD;
                 $test,
             ),
             array(
-                'entry' => function (LogEntry $logEntry) {
+                'entry' => static function (LogEntry $logEntry) {
                     $abs = $logEntry['args'][0];
                     $attribNamespace = 'bdk\\Test\\Debug\\Fixture\\';
-                    $this->assertSame(
+                    self::assertSame(
                         array(
                             array(
                                 'name' =>  $attribNamespace . 'ExampleClassAttribute',
@@ -953,7 +955,7 @@ EOD;
                         ),
                         $abs['attributes']
                     );
-                    $this->assertSame(
+                    self::assertSame(
                         array(
                             array(
                                 'name' =>  $attribNamespace . 'ExampleConstAttribute',
@@ -962,7 +964,7 @@ EOD;
                         ),
                         $abs['constants']['FOO']['attributes']
                     );
-                    $this->assertSame(
+                    self::assertSame(
                         array(
                             array(
                                 'name' =>  $attribNamespace . 'ExampleMethodAttribute',
@@ -971,7 +973,7 @@ EOD;
                         ),
                         $abs['methods']['__construct']['attributes']
                     );
-                    $this->assertSame(
+                    self::assertSame(
                         array(
                             array(
                                 'name' =>  $attribNamespace . 'ExampleParamAttribute',
@@ -980,7 +982,7 @@ EOD;
                         ),
                         $abs['methods']['__construct']['params'][0]['attributes']
                     );
-                    $this->assertSame(
+                    self::assertSame(
                         // this property (and it's attributes came via parameter promotion)
                         array(
                             array(
@@ -990,7 +992,7 @@ EOD;
                         ),
                         $abs['properties']['arg1']['attributes']
                     );
-                    $this->assertSame(
+                    self::assertSame(
                         array(
                             array(
                                 'name' =>  $attribNamespace . 'ExamplePropAttribute',
@@ -1017,8 +1019,8 @@ EOD;
                 new \bdk\Test\Debug\Fixture\TestFinal(),
             ),
             array(
-                'entry' => function (LogEntry $logEntry) {
-                    $this->assertTrue($logEntry['args'][0]['isFinal']);
+                'entry' => static function (LogEntry $logEntry) {
+                    self::assertTrue($logEntry['args'][0]['isFinal']);
                 },
                 'html' => array(
                     'contains' => '<dt class="t_modifier_final">final</dt>' . "\n",
@@ -1034,7 +1036,7 @@ EOD;
         }
         $testVar = new \bdk\Test\Debug\Fixture\TestVariadic();
         $abs = $this->debug->abstracter->getAbstraction($testVar);
-        $this->assertSame('...$moreParams', $abs['methods']['methodVariadic']['params'][1]['name']);
+        self::assertSame('...$moreParams', $abs['methods']['methodVariadic']['params'][1]['name']);
     }
 
     public function testVariadicByReference()
@@ -1047,34 +1049,34 @@ EOD;
         }
         $testVarByRef = new \bdk\Test\Debug\Fixture\TestVariadicByReference();
         $abs = $this->debug->abstracter->getAbstraction($testVarByRef);
-        $this->assertSame('&...$moreParams', $abs['methods']['methodVariadicByReference']['params'][1]['name']);
+        self::assertSame('&...$moreParams', $abs['methods']['methodVariadicByReference']['params'][1]['name']);
     }
 
     public function testCollectPropertyValues()
     {
-        $callable = function (Abstraction $abs) {
+        $callable = static function (Abstraction $abs) {
             $abs['collectPropertyValues'] = false;
         };
         $this->debug->eventManager->subscribe(Debug::EVENT_OBJ_ABSTRACT_START, $callable);
         $abs = $this->debug->abstracter->getAbstraction((object) array('foo' => 'bar'));
-        $this->debug->eventManager->unSubscribe(Debug::EVENT_OBJ_ABSTRACT_START, $callable);
+        $this->debug->eventManager->unsubscribe(Debug::EVENT_OBJ_ABSTRACT_START, $callable);
 
-        $this->assertSame(Abstracter::UNDEFINED, $abs['properties']['foo']['value']);
+        self::assertSame(Abstracter::UNDEFINED, $abs['properties']['foo']['value']);
     }
 
     public function testPropertyOverrideValues()
     {
-        $callable = function (Abstraction $abs) {
+        $callable = static function (Abstraction $abs) {
             $abs['propertyOverrideValues']['foo'] = 'new value';
         };
         $this->debug->eventManager->subscribe(Debug::EVENT_OBJ_ABSTRACT_START, $callable);
         $abs = $this->debug->abstracter->getAbstraction((object) array('foo' => 'bar'));
-        $this->debug->eventManager->unSubscribe(Debug::EVENT_OBJ_ABSTRACT_START, $callable);
+        $this->debug->eventManager->unsubscribe(Debug::EVENT_OBJ_ABSTRACT_START, $callable);
 
-        $this->assertSame('new value', $abs['properties']['foo']['value']);
-        $this->assertSame('debug', $abs['properties']['foo']['valueFrom']);
+        self::assertSame('new value', $abs['properties']['foo']['value']);
+        self::assertSame('debug', $abs['properties']['foo']['valueFrom']);
 
-        $callable = function (Abstraction $abs) {
+        $callable = static function (Abstraction $abs) {
             $abs['propertyOverrideValues']['foo'] = array(
                 'desc' => 'I describe foo',
                 'value' => 'new value',
@@ -1082,23 +1084,23 @@ EOD;
         };
         $this->debug->eventManager->subscribe(Debug::EVENT_OBJ_ABSTRACT_START, $callable);
         $abs = $this->debug->abstracter->getAbstraction((object) array('foo' => 'bar'));
-        $this->debug->eventManager->unSubscribe(Debug::EVENT_OBJ_ABSTRACT_START, $callable);
+        $this->debug->eventManager->unsubscribe(Debug::EVENT_OBJ_ABSTRACT_START, $callable);
 
-        $this->assertSame('I describe foo', $abs['properties']['foo']['desc']);
-        $this->assertSame('new value', $abs['properties']['foo']['value']);
-        $this->assertSame('debug', $abs['properties']['foo']['valueFrom']);
+        self::assertSame('I describe foo', $abs['properties']['foo']['desc']);
+        self::assertSame('new value', $abs['properties']['foo']['value']);
+        self::assertSame('debug', $abs['properties']['foo']['valueFrom']);
 
         // __debugInfo + override
-        $test = new \bdk\Test\Debug\Fixture\Test();
-        $callable = function (Abstraction $abs) {
+        $test = new TestObj();
+        $callable = static function (Abstraction $abs) {
             $abs['propertyOverrideValues']['propPrivate'] = 'new value';
         };
         $this->debug->eventManager->subscribe(Debug::EVENT_OBJ_ABSTRACT_START, $callable);
         $abs = $this->debug->abstracter->getAbstraction($test);
-        $this->debug->eventManager->unSubscribe(Debug::EVENT_OBJ_ABSTRACT_START, $callable);
+        $this->debug->eventManager->unsubscribe(Debug::EVENT_OBJ_ABSTRACT_START, $callable);
 
-        $this->assertSame('new value', $abs['properties']['propPrivate']['value']);
-        $this->assertSame('debug', $abs['properties']['propPrivate']['valueFrom']);
+        self::assertSame('new value', $abs['properties']['propPrivate']['value']);
+        self::assertSame('debug', $abs['properties']['propPrivate']['valueFrom']);
     }
 
     /**
@@ -1174,17 +1176,17 @@ EOD;
      */
     public function testDebugInfo()
     {
-        $test = new \bdk\Test\Debug\Fixture\Test();
+        $test = new TestObj();
         $this->debug->log('test', $test);
         $abstraction = $this->debug->data->get('log/0/args/1');
         $props = $abstraction['properties'];
-        $this->assertArrayNotHasKey('propHidden', $props, 'propHidden shouldn\'t be debugged');
+        self::assertArrayNotHasKey('propHidden', $props, 'propHidden shouldn\'t be debugged');
         // debugValue
-        $this->assertSame('This property is debug only', $props['debugValue']['value']);
-        $this->assertEquals('debug', $props['debugValue']['visibility']);
+        self::assertSame('This property is debug only', $props['debugValue']['value']);
+        self::assertEquals('debug', $props['debugValue']['visibility']);
         // propPrivate
-        $this->assertStringEndsWith('(alternate value via __debugInfo)', $props['propPrivate']['value']);
-        $this->assertSame('debugInfo', $props['propPrivate']['valueFrom']);
+        self::assertStringEndsWith('(alternate value via __debugInfo)', $props['propPrivate']['value']);
+        self::assertSame('debugInfo', $props['propPrivate']['valueFrom']);
     }
 
     public function testMaxDepth()
@@ -1261,12 +1263,12 @@ EOD;
      */
     public function testRecursiveObjectProp1()
     {
-        $test = new \bdk\Test\Debug\Fixture\Test();
+        $test = new TestObj();
         $test->propPublic = array();
         $test->propPublic[] = &$test->propPublic;
         $this->debug->log('test', $test);
         $abstraction = $this->debug->data->get('log/0/args/1');
-        $this->assertEquals(
+        self::assertEquals(
             Abstracter::RECURSION,
             $abstraction['properties']['propPublic']['value'][0],
             'Did not find expected recursion'
@@ -1278,7 +1280,7 @@ EOD;
             > .t_array .array-inner > li
             > .t_array
             > .t_recursion';
-        $this->assertSelectCount($select, 1, $output);
+        self::assertSelectCount($select, 1, $output);
     }
 
     /**
@@ -1288,11 +1290,11 @@ EOD;
      */
     public function testRecursiveObjectProp2()
     {
-        $test = new \bdk\Test\Debug\Fixture\Test();
+        $test = new TestObj();
         $test->propPublic = &$test;
         $this->debug->log('test', $test);
         $abstraction = $this->debug->data->get('log/0/args/1');
-        $this->assertEquals(
+        self::assertEquals(
             true,
             $abstraction['properties']['propPublic']['value']['isRecursion'],
             'Did not find expected recursion'
@@ -1307,11 +1309,11 @@ EOD;
      */
     public function testRecursiveObjectProp3()
     {
-        $test = new \bdk\Test\Debug\Fixture\Test();
+        $test = new TestObj();
         $test->propPublic = array( &$test );
         $this->debug->log('test', $test);
         $abstraction = $this->debug->data->get('log/0/args/1');
-        $this->assertEquals(
+        self::assertEquals(
             true,
             $abstraction['properties']['propPublic']['value'][0]['isRecursion'],
             'Did not find expected recursion'
@@ -1326,15 +1328,15 @@ EOD;
      */
     public function testCrossRefObjects()
     {
-        $testOa = new \bdk\Test\Debug\Fixture\Test();
-        $testOb = new \bdk\Test\Debug\Fixture\Test();
+        $testOa = new TestObj();
+        $testOb = new TestObj();
         $testOa->propPublic = 'this is object a';
         $testOb->propPublic = 'this is object b';
         $testOa->ob = $testOb;
         $testOb->oa = $testOa;
         $this->debug->log('test_oa', $testOa);
         $abstraction = $this->debug->data->get('log/0/args/1');
-        $this->assertEquals(
+        self::assertEquals(
             true,
             $abstraction['properties']['ob']['value']['properties']['oa']['value']['isRecursion'],
             'Did not find expected recursion'
@@ -1344,10 +1346,10 @@ EOD;
 
     public function testScope()
     {
-        $obj = new \bdk\Test\Debug\Fixture\ScopeTest();
+        $obj = new \bdk\Test\Debug\Fixture\ObjectScope();
         $obj->callsDebug();
         $logEntry = $this->debug->data->get('log/__end__');
         $abs = $logEntry['args'][0];
-        $this->assertSame($abs['className'], $abs['scopeClass']);
+        self::assertSame($abs['className'], $abs['scopeClass']);
     }
 }

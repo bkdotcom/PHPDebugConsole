@@ -15,13 +15,21 @@ use bdk\Test\Debug\DebugTestFramework;
  * @covers \bdk\Debug\Dump\BaseValue
  * @covers \bdk\Debug\Dump\Html
  * @covers \bdk\Debug\Dump\Html\HtmlString
+ * @covers \bdk\Debug\Dump\Html\HtmlStringEncoded
  * @covers \bdk\Debug\Dump\Text
  * @covers \bdk\Debug\Dump\TextAnsiValue
  * @covers \bdk\Debug\Dump\TextValue
  */
 class StringTest extends DebugTestFramework
 {
-    public function providerTestMethod()
+    public static function setUpBeforeClass(): void
+    {
+        $debug = Debug::getInstance();
+        $htmlString = $debug->getDump('html')->valDumper->string;
+        \bdk\Test\Debug\Helper::setProp($htmlString, 'lazy', array());
+    }
+
+    public static function providerTestMethod()
     {
         $ts = \time();
         $longString = <<<'EOD'
@@ -126,13 +134,17 @@ EOD;
             0,
             156
         );
-        // $base64snip2 = 'eyJwb29wIjoiXHVkODNkXHVkY2E5IiwiaW50Ijo0MiwicGFzc3dvcmQiOiJzZWNyZXQifQ==';
+
+        $array = array(
+            'poop' => '💩',
+            'int' => 42,
+            'password' => 'secret',
+        );
         $base64snip2 = \base64_encode(
-            \json_encode(array(
-                'poop' => '💩',
-                'int' => 42,
-                'password' => 'secret',
-            ))
+            \json_encode($array)
+        );
+        $base64snip3 = \base64_encode(
+            \serialize($array)
         );
         return array(
             'basic' => array(
@@ -276,7 +288,7 @@ EOD;
                     'entry' => function (LogEntry $logEntry) use ($base64snip) {
                         $jsonExpect = '{"method":"log","args":[{"brief":false,"strlen":10852,"typeMore":"base64","value":' . \json_encode($base64snip) . ',"valueDecoded":{"brief":false,"strlen":%d,"typeMore":"binary","value":"","contentType":"%s","type":"string","debug":"\u0000debug\u0000"},"type":"string","debug":"\u0000debug\u0000"}],"meta":[]}';
                         $jsonified = \json_encode($logEntry);
-                        $this->assertStringMatchesFormat($jsonExpect, $jsonified);
+                        self::assertStringMatchesFormat($jsonExpect, $jsonified);
                     },
                     'chromeLogger' => array(
                         array(
@@ -286,9 +298,9 @@ EOD;
                         ''
                     ),
                     'html' => '<li class="m_log"><span class="string-encoded tabs-container" data-type-more="base64">' . "\n"
-                        . '<nav role="tablist"><a class="nav-link" data-target=".string-raw" data-toggle="tab" role="tab">base64</a><a class="active nav-link" data-target=".string-decoded" data-toggle="tab" role="tab">decoded</a></nav>' . "\n"
-                        . '<div class="string-raw tab-pane" role="tabpanel"><span class="no-quotes t_string">' . $base64snip . '</span><span class="maxlen">&hellip; 10696 more bytes (not logged)</span></div>' . "\n"
-                        . '<div class="active string-decoded tab-pane" role="tabpanel"><span class="t_keyword">string</span><span class="text-muted">(binary)</span>' . "\n"
+                        . '<nav role="tablist"><a class="nav-link" data-target=".tab-1" data-toggle="tab" role="tab">base64</a><a class="active nav-link" data-target=".tab-2" data-toggle="tab" role="tab">decoded</a></nav>' . "\n"
+                        . '<div class="tab-1 tab-pane" role="tabpanel"><span class="no-quotes t_string">' . $base64snip . '</span><span class="maxlen">&hellip; 10696 more bytes (not logged)</span></div>' . "\n"
+                        . '<div class="active tab-2 tab-pane" role="tabpanel"><span class="t_keyword">string</span><span class="text-muted">(binary)</span>' . "\n"
                         . '<ul class="list-unstyled value-container" data-type="string" data-type-more="binary">' . "\n"
                         . '<li>mime type = <span class="content-type t_string">%s</span></li>' . "\n"
                         . '<li>size = <span class="t_int">%d</span></li>' . "\n"
@@ -316,7 +328,7 @@ EOD;
                 ),
             ),
 
-            'base64.redact' => array(
+            'base64.json.redact' => array(
                 'log',
                 array(
                     $base64snip2,
@@ -326,7 +338,7 @@ EOD;
                     'entry' => function (LogEntry $logEntry) use ($base64snip2) {
                         $jsonExpect = '{"method":"log","args":[{"brief":false,"strlen":null,"typeMore":"base64","value":"' . $base64snip2 . '","valueDecoded":{"brief":false,"strlen":null,"typeMore":"json","value":"{\n    \"poop\": \"\\\\ud83d\\\\udca9\",\n    \"int\": 42,\n    \"password\": \"\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\"\n}","valueDecoded":{"poop":"\ud83d\udca9","int":42,"password":"\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588"},"type":"string","attribs":{"class":["highlight","language-json"]},"addQuotes":false,"contentType":"application\/json","prettified":true,"prettifiedTag":true,"visualWhiteSpace":false,"debug":"\u0000debug\u0000"},"type":"string","debug":"\u0000debug\u0000"}],"meta":{"redact":true}}';
                         $jsonified = \json_encode($logEntry);
-                        $this->assertSame($jsonExpect, $jsonified);
+                        self::assertSame($jsonExpect, $jsonified);
                     },
                     'chromeLogger' => array(
                         array(
@@ -335,26 +347,58 @@ EOD;
                         null,
                         '',
                     ),
-                    'html' => '<li class="m_log"><span class="string-encoded tabs-container" data-type-more="base64">' . "\n"
-                        . '<nav role="tablist"><a class="nav-link" data-target=".string-raw" data-toggle="tab" role="tab">base64</a><a class="active nav-link" data-target=".string-decoded" data-toggle="tab" role="tab">decoded</a></nav>' . "\n"
-                        . '<div class="string-raw tab-pane" role="tabpanel"><span class="no-quotes t_string">' . $base64snip2 . '</span></div>' . "\n"
-                        . '<div class="active string-decoded tab-pane" role="tabpanel"><span class="string-encoded tabs-container" data-type-more="json">' . "\n"
-                            . '<nav role="tablist"><a class="nav-link" data-target=".string-raw" data-toggle="tab" role="tab">json</a><a class="active nav-link" data-target=".string-decoded" data-toggle="tab" role="tab">decoded</a></nav>' . "\n"
-                            . '<div class="string-raw tab-pane" role="tabpanel"><span class="value-container" data-type="string"><span class="prettified">(prettified)</span> <span class="highlight language-json no-quotes t_string">{' . "\n"
-                                . '&quot;poop&quot;: &quot;\ud83d\udca9&quot;,' . "\n"
-                                . '&quot;int&quot;: 42,' . "\n"
-                                . '&quot;password&quot;: &quot;█████████&quot;' . "\n"
-                                . '}</span></span></div>' . "\n"
-                            . '<div class="active string-decoded tab-pane" role="tabpanel"><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>' . "\n"
-                                . '<ul class="array-inner list-unstyled">' . "\n"
-                                . '<li><span class="t_key">poop</span><span class="t_operator">=&gt;</span><span class="t_string">💩</span></li>' . "\n"
-                                . '<li><span class="t_key">int</span><span class="t_operator">=&gt;</span><span class="t_int">42</span></li>' . "\n"
-                                . '<li><span class="t_key">password</span><span class="t_operator">=&gt;</span><span class="t_string">█████████</span></li>' . "\n"
-                                . '</ul><span class="t_punct">)</span></span></div>' . "\n"
-                        . '</span></div>' . "\n"
-                        . '</span></li>',
+                    'html' => '<li class="m_log"><span class="string-encoded tabs-container" data-type-more="base64">
+                        <nav role="tablist"><a class="nav-link" data-target=".tab-1" data-toggle="tab" role="tab">base64</a><a class="nav-link" data-target=".tab-2" data-toggle="tab" role="tab">json</a><a class="active nav-link" data-target=".tab-3" data-toggle="tab" role="tab">decoded</a></nav>
+                        <div class="tab-1 tab-pane" role="tabpanel"><span class="no-quotes t_string">' . $base64snip2 . '</span></div>
+                        <div class="tab-2 tab-pane" role="tabpanel"><span class="value-container" data-type="string"><span class="prettified">(prettified)</span> <span class="highlight language-json no-quotes t_string">{
+                            &quot;poop&quot;: &quot;\ud83d\udca9&quot;,
+                            &quot;int&quot;: 42,
+                            &quot;password&quot;: &quot;█████████&quot;
+                        }</span></span></div>
+                        <div class="active tab-3 tab-pane" role="tabpanel"><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
+                            <ul class="array-inner list-unstyled">
+                                <li><span class="t_key">poop</span><span class="t_operator">=&gt;</span><span class="t_string">💩</span></li>
+                                <li><span class="t_key">int</span><span class="t_operator">=&gt;</span><span class="t_int">42</span></li>
+                                <li><span class="t_key">password</span><span class="t_operator">=&gt;</span><span class="t_string">█████████</span></li>
+                            </ul><span class="t_punct">)</span></span></div>
+                        </span></li>',
                     'script' => 'console.log("' . $base64snip2 . '");',
                     'text' => $base64snip2,
+                )
+            ),
+
+            'base64.serialized.redact' => array(
+                'log',
+                array(
+                    $base64snip3,
+                    Debug::meta('redact'),
+                ),
+                array(
+                    'entry' => function (LogEntry $logEntry) use ($base64snip3) {
+                        $jsonExpect = '{"method":"log","args":[{"brief":false,"strlen":null,"typeMore":"base64","value":"YTozOntzOjQ6InBvb3AiO3M6NDoi8J+SqSI7czozOiJpbnQiO2k6NDI7czo4OiJwYXNzd29yZCI7czo2OiJzZWNyZXQiO30=","valueDecoded":{"brief":false,"strlen":null,"typeMore":"serialized","value":"a:3:{s:4:\"poop\";s:4:\"\ud83d\udca9\";s:3:\"int\";i:42;s:8:\"password\";s:6:\"\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\";}","valueDecoded":{"poop":"\ud83d\udca9","int":42,"password":"\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588"},"type":"string","debug":"\u0000debug\u0000"},"type":"string","debug":"\u0000debug\u0000"}],"meta":{"redact":true}}';
+                        $jsonified = \json_encode($logEntry);
+                        self::assertSame($jsonExpect, $jsonified);
+                    },
+                    'chromeLogger' => array(
+                        array(
+                            $base64snip3,
+                        ),
+                        null,
+                        '',
+                    ),
+                    'html' => '<li class="m_log"><span class="string-encoded tabs-container" data-type-more="base64">
+                        <nav role="tablist"><a class="nav-link" data-target=".tab-1" data-toggle="tab" role="tab">base64</a><a class="nav-link" data-target=".tab-2" data-toggle="tab" role="tab">serialized</a><a class="active nav-link" data-target=".tab-3" data-toggle="tab" role="tab">unserialized</a></nav>
+                        <div class="tab-1 tab-pane" role="tabpanel"><span class="no-quotes t_string">' . $base64snip3 . '</span></div>
+                        <div class="tab-2 tab-pane" role="tabpanel"><span class="no-quotes t_string">a:3:{s:4:&quot;poop&quot;;s:4:&quot;💩&quot;;s:3:&quot;int&quot;;i:42;s:8:&quot;password&quot;;s:6:&quot;█████████&quot;;}</span></div>
+                        <div class="active tab-3 tab-pane" role="tabpanel"><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
+                            <ul class="array-inner list-unstyled">
+                                <li><span class="t_key">poop</span><span class="t_operator">=&gt;</span><span class="t_string">💩</span></li>
+                                <li><span class="t_key">int</span><span class="t_operator">=&gt;</span><span class="t_int">42</span></li>
+                                <li><span class="t_key">password</span><span class="t_operator">=&gt;</span><span class="t_string">█████████</span></li>
+                            </ul><span class="t_punct">)</span></span></div>
+                        </span></li>',
+                    'script' => 'console.log("' . $base64snip3 . '");',
+                    'text' => $base64snip3,
                 )
             ),
 
@@ -446,24 +490,24 @@ EOD;
                     Debug::_meta('cfg', 'stringMaxLen', array('json' => array(0 => 123, 5000 => 5000))),
                 ),
                 array(
-                    'entry' => function (LogEntry $entry) {
+                    'entry' => static function (LogEntry $entry) {
                         $json = \file_get_contents(TEST_DIR . '/../composer.json');
                         $jsonPrettified = Debug::getInstance()->stringUtil->prettyJson($json);
                         // $this->helper->stderr('jsonPrettified', $entry['args'][0]);
-                        $this->assertSame(\strlen($jsonPrettified), $entry['args'][0]['strlen']);
-                        $this->assertSame(\substr($jsonPrettified, 0, 123), $entry['args'][0]['value']);
+                        self::assertSame(\strlen($jsonPrettified), $entry['args'][0]['strlen']);
+                        self::assertSame(\substr($jsonPrettified, 0, 123), $entry['args'][0]['value']);
                     },
-                    'html' => function ($html) {
+                    'html' => static function ($html) {
                         $json = \file_get_contents(TEST_DIR . '/../composer.json');
                         $jsonPrettified = Debug::getInstance()->stringUtil->prettyJson($json);
                         $diff = \strlen($jsonPrettified) - 123;
-                        $this->assertStringContainsString('<span class="maxlen">&hellip; ' . $diff . ' more bytes (not logged)</span></span></span></div>', $html);
+                        self::assertStringContainsString('<span class="maxlen">&hellip; ' . $diff . ' more bytes (not logged)</span></span></span></div>', $html);
                     },
-                    'text' => function ($text) {
+                    'text' => static function ($text) {
                         $json = \file_get_contents(TEST_DIR . '/../composer.json');
                         $jsonPrettified = Debug::getInstance()->stringUtil->prettyJson($json);
                         $diff = \strlen($jsonPrettified) - 123;
-                        $this->assertStringContainsString('[' . $diff . ' more bytes (not logged)]', $text);
+                        self::assertStringContainsString('[' . $diff . ' more bytes (not logged)]', $text);
                     },
                 ),
             ),
@@ -536,9 +580,9 @@ EOD;
                         'meta' => array(),
                     ),
                     'html' => '<li class="m_log"><span class="string-encoded tabs-container" data-type-more="serialized">' . "\n"
-                        . '<nav role="tablist"><a class="nav-link" data-target=".string-raw" data-toggle="tab" role="tab">serialized</a><a class="active nav-link" data-target=".string-decoded" data-toggle="tab" role="tab">unserialized</a></nav>' . "\n"
-                        . '<div class="string-raw tab-pane" role="tabpanel"><span class="no-quotes t_string">a:1:{s:3:&quot;foo&quot;;s:3:&quot;bar&quot;;}</span></div>' . "\n"
-                        . '<div class="active string-decoded tab-pane" role="tabpanel"><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>' . "\n"
+                        . '<nav role="tablist"><a class="nav-link" data-target=".tab-1" data-toggle="tab" role="tab">serialized</a><a class="active nav-link" data-target=".tab-2" data-toggle="tab" role="tab">unserialized</a></nav>' . "\n"
+                        . '<div class="tab-1 tab-pane" role="tabpanel"><span class="no-quotes t_string">a:1:{s:3:&quot;foo&quot;;s:3:&quot;bar&quot;;}</span></div>' . "\n"
+                        . '<div class="active tab-2 tab-pane" role="tabpanel"><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>' . "\n"
                         . '<ul class="array-inner list-unstyled">' . "\n"
                         . '<li><span class="t_key">foo</span><span class="t_operator">=&gt;</span><span class="t_string">bar</span></li>' . "\n"
                         . '</ul><span class="t_punct">)</span></span></div>' . "\n"

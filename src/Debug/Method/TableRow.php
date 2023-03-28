@@ -178,10 +178,10 @@ class TableRow
             return $abs['methods']['__toString']['returnValue'];
         }
         $values = \array_map(
-            function ($info) {
+            static function ($info) {
                 return $info['value'];
             },
-            \array_filter($abs['properties'], function ($prop) {
+            \array_filter($abs['properties'], static function ($prop) {
                 return $prop['visibility'] === 'public';
             })
         );

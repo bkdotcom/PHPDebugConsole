@@ -1,5 +1,9 @@
 <?php
 
+namespace bdk\Test;
+
+require __DIR__ . '/CurlHttpMessage/bootstrap.php';
+
 namespace bdk\Debug;
 
 $GLOBALS['collectedHeaders'] = array();

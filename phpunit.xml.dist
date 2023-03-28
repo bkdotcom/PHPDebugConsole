@@ -49,6 +49,9 @@
     <testsuite name="Container">
       <directory>tests/Container</directory>
     </testsuite>
+    <testsuite name="CurlHttpMessage">
+      <directory>tests/CurlHttpMessage</directory>
+    </testsuite>
     <testsuite name="Debug">
       <directory>tests/Debug</directory>
       <exclude>tests/Debug/AutoloaderTest.php</exclude>
@@ -56,6 +59,15 @@
     </testsuite>
     <testsuite name="HttpMessage">
       <directory>tests/HttpMessage</directory>
+    </testsuite>
+    <testsuite name="Promise">
+      <directory>tests/Promise</directory>
+    </testsuite>
+    <testsuite name="Slack">
+      <directory>tests/Slack</directory>
+    </testsuite>
+    <testsuite name="Teams">
+      <directory>tests/Teams</directory>
     </testsuite>
     <testsuite name="Utility">
       <directory>tests/Debug/Utility</directory>

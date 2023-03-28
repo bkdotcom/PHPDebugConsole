@@ -26,3 +26,4 @@ Includes other software released under the MIT license:
 
 Portions of this software derived from other works
 - https://github.com/symfony/event-dispatcher
+- https://github.com/guzzle/guzzle

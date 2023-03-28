@@ -23,15 +23,20 @@
             "src/Container/Container.php",
             "src/Debug/Debug.php",
             "src/Debug/Utility/Utility.php",
-            "src/ErrorHandler/ErrorHandler.php"
+            "src/ErrorHandler/ErrorHandler.php",
+            "src/Promise/Promise.php"
         ],
         "psr-4": {
             "bdk\\Backtrace\\": "src/Backtrace/",
             "bdk\\Container\\": "src/Container/",
+            "bdk\\CurlHttpMessage\\": "src/CurlHttpMessage/",
             "bdk\\Debug\\": "src/Debug/",
             "bdk\\ErrorHandler\\": "src/ErrorHandler/",
             "bdk\\HttpMessage\\": "src/HttpMessage/",
+            "bdk\\Promise\\": "src/Promise/",
             "bdk\\PubSub\\": "src/PubSub/",
+            "bdk\\Slack\\": "src/Slack/",
+            "bdk\\Teams\\": "src/Teams/",
             "Psr\\Http\\Message\\": "src/Psr7/"
         }
     },
@@ -43,9 +48,13 @@
     },
     "replace": {
         "bdk/backtrace": "2.1.1",
+        "bdk/curl-http-message": "1.0",
         "bdk/errorhandler": "3.2",
         "bdk/http-message": "1.0",
+        "bdk/promise": "1.0",
         "bdk/pubsub": "2.4",
+        "bdk/slack": "1.0",
+        "bdk/teams": "1.0",
         "psr/http-message": "1.0.1"
     },
     "require": {

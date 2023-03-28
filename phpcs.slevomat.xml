@@ -42,7 +42,12 @@
         </properties>
     </rule>
 
-    <rule ref="SlevomatCodingStandard.Complexity.Cognitive" />
+    <rule ref="SlevomatCodingStandard.Complexity.Cognitive">
+        <properties>
+            <property name="warningThreshold" value="6" />
+            <property name="errorThreshold" value="10" />
+        </properties>
+    </rule>
 
     <rule ref="SlevomatCodingStandard.ControlStructures.LanguageConstructWithParentheses" />
     <rule ref="SlevomatCodingStandard.ControlStructures.NewWithParentheses" />

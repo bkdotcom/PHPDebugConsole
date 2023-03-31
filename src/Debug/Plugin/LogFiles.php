@@ -204,6 +204,7 @@ class LogFiles extends AbstractComponent implements SubscriberInterface
         $this->debug->log(
             $files,
             $this->debug->meta(array(
+                'cfg' => array('maxDepth' => 0),
                 'detectFiles' => true,
             ))
         );
@@ -226,6 +227,7 @@ class LogFiles extends AbstractComponent implements SubscriberInterface
     {
         $fileTree = new \bdk\Debug\Utility\FileTree();
         $files = $fileTree->filesToTree($files, $this->excludedCounts, $this->cfg['condense']);
+        $maxDepthWas = $this->debug->setCfg('maxDepth', 0);
         $this->debug->log(
             $this->debug->abstracter->crateWithVals(
                 $files,
@@ -240,5 +242,6 @@ class LogFiles extends AbstractComponent implements SubscriberInterface
                 'detectFiles' => true,
             ))
         );
+        $this->debug->setCfg('maxDepth', $maxDepthWas);
     }
 }

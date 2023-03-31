@@ -37,6 +37,12 @@ class Abstraction extends Event implements JsonSerializable, Serializable
     public function __construct($type, $values = array())
     {
         $values['type'] = $type;
+        if ($type !== Abstracter::TYPE_OBJECT && \array_key_exists('value', $values) === false) {
+            // make sure non-object gets value
+            $values['value'] = $type === Abstracter::TYPE_ARRAY
+                ? array()
+                : null;
+        }
         $this->setValues($values);
     }
 

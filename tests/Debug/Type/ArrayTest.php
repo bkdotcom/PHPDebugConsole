@@ -12,6 +12,7 @@ use bdk\Test\Debug\DebugTestFramework;
  * @covers \bdk\Debug\Dump\BaseValue
  * @covers \bdk\Debug\Dump\Text
  * @covers \bdk\Debug\Dump\Html
+ * @covers \bdk\Debug\Dump\Html\Value
  * @covers \bdk\Debug\Dump\TextAnsiValue
  * @covers \bdk\Debug\Dump\TextValue
  * @covers \bdk\Debug\Abstraction\Abstracter
@@ -175,6 +176,60 @@ EOD;
                     [1] => "bar"
                 )',
                 'script' => 'console.log(["foo","bar"]);',
+            )
+        );
+    }
+
+    public function testMaxDepth()
+    {
+        $this->testMethod(
+            'log',
+            array(
+                'array',
+                array(
+                    'foo' => 'bar',
+                    'tooDeep' => array(),
+                    'ding' => 'dong',
+                ),
+                $this->debug->meta('cfg', 'maxDepth', 1),
+            ),
+            array(
+                'entry' => array(
+                    'method' => 'log',
+                    'args' => array(
+                        'array',
+                        array(
+                            'foo' => 'bar',
+                            'tooDeep' => array(
+                                'debug' => Abstracter::ABSTRACTION,
+                                'options' => array(
+                                    'isMaxDepth' => true,
+                                ),
+                                'type' => Abstracter::TYPE_ARRAY,
+                                'value' => array(),
+                            ),
+                            'ding' => 'dong',
+                        ),
+                    ),
+                    'meta' => array(),
+                ),
+                'html' => '<li class="m_log"><span class="no-quotes t_string">array</span> = <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
+                    <ul class="array-inner list-unstyled">
+                    <li><span class="t_key">foo</span><span class="t_operator">=&gt;</span><span class="t_string">bar</span></li>
+                    <li><span class="t_key">tooDeep</span><span class="t_operator">=&gt;</span><span class="max-depth t_array"><span class="t_keyword">array</span> <span class="t_maxDepth">*MAX DEPTH*</span></span></li>
+                    <li><span class="t_key">ding</span><span class="t_operator">=&gt;</span><span class="t_string">dong</span></li>
+                    </ul><span class="t_punct">)</span></span></li>',
+                'script' => 'console.log("array",{"foo":"bar","tooDeep":"array *MAX DEPTH*","ding":"dong"});',
+                'streamAnsi' => \str_replace('\e', "\e", 'array \e[38;5;245m=\e[0m \e[38;5;45marray\e[38;5;245m(\e[0m' . "\n"
+                    . '\e[38;5;245m[\e[38;5;83mfoo\e[38;5;245m]\e[38;5;130m => \e[0m\e[38;5;250m"\e[0mbar\e[38;5;250m"\e[0m' . "\n"
+                    . '\e[38;5;245m[\e[38;5;83mtooDeep\e[38;5;245m]\e[38;5;130m => \e[0m\e[38;5;45marray \e[38;5;196m*MAX DEPTH*\e[0m' . "\n"
+                    . '\e[38;5;245m[\e[38;5;83mding\e[38;5;245m]\e[38;5;130m => \e[0m\e[38;5;250m"\e[0mdong\e[38;5;250m"\e[0m' . "\n"
+                    . '\e[38;5;245m)\e[0m'),
+                'text' => 'array = array(
+                    [foo] => "bar"
+                    [tooDeep] => array *MAX DEPTH*
+                    [ding] => "dong"
+                    )',
             )
         );
     }

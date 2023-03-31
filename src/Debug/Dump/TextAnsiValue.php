@@ -64,6 +64,11 @@ class TextAnsiValue extends TextValue
         $isNested = $this->valDepth > 0;
         $this->valDepth++;
         $escapeCodes = $this->cfg['escapeCodes'];
+        if ($this->getDumpOpt('isMaxDepth')) {
+            return $this->cfg['escapeCodes']['keyword'] . 'array '
+                . $this->cfg['escapeCodes']['recursion'] . '*MAX DEPTH*'
+                . $this->escapeReset;
+        }
         $str = $escapeCodes['keyword'] . 'array' . $escapeCodes['punct'] . '(' . $this->escapeReset . "\n";
         foreach ($array as $k => $v) {
             $escapeKey = \is_int($k)
@@ -72,8 +77,7 @@ class TextAnsiValue extends TextValue
             $str .= '    '
                 . $escapeCodes['punct'] . '[' . $escapeKey . $k . $escapeCodes['punct'] . ']'
                 . $escapeCodes['operator'] . ' => ' . $this->escapeReset
-                . $this->dump($v)
-                . "\n";
+                . $this->dump($v) . "\n";
         }
         $str .= $this->cfg['escapeCodes']['punct'] . ')' . $this->escapeReset;
         if (!$array) {
@@ -139,16 +143,20 @@ class TextAnsiValue extends TextValue
      */
     protected function dumpObject(Abstraction $abs)
     {
+        $className = $this->markupIdentifier($abs['className']);
         $escapeCodes = $this->cfg['escapeCodes'];
         if ($abs['isRecursion']) {
-            return $escapeCodes['excluded'] . '*RECURSION*' . $this->escapeReset;
+            return $className . ' ' . $escapeCodes['recursion'] . '*RECURSION*' . $this->escapeReset;
+        }
+        if ($abs['isMaxDepth']) {
+            return $className . ' ' . $escapeCodes['recursion'] . '*MAX DEPTH*' . $this->escapeReset;
         }
         if ($abs['isExcluded']) {
-            return $escapeCodes['excluded'] . 'NOT INSPECTED' . $this->escapeReset;
+            return $className . ' ' . $escapeCodes['excluded'] . 'NOT INSPECTED' . $this->escapeReset;
         }
         $isNested = $this->valDepth > 0;
         $this->valDepth++;
-        $str = $this->markupIdentifier($abs['className']) . "\n"
+        $str = $className . "\n"
             . $this->dumpObjectProperties($abs)
             . $this->dumpObjectMethods($abs);
         $str = \trim($str);

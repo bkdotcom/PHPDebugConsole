@@ -39,9 +39,9 @@ class Abstracter extends AbstractComponent
     const TYPE_RESOURCE = 'resource';
     const TYPE_STRING = 'string';
     const TYPE_CONST = 'const'; // non-native type (Abstraction: we store name and value)
-    const TYPE_UNDEFINED = 'undefined'; // non-native type
     const TYPE_NOT_INSPECTED = 'notInspected'; // non-native type
     const TYPE_RECURSION = 'recursion'; // non-native type
+    const TYPE_UNDEFINED = 'undefined'; // non-native type
     const TYPE_UNKNOWN = 'unknown'; // non-native type
 
     /*
@@ -68,6 +68,7 @@ class Abstracter extends AbstractComponent
     protected $cfg = array(
         'brief' => false, // collect & output less details
         'fullyQualifyPhpDocType' => false,
+        'maxDepth' => 0, // value < 1 : no max-depth
         'methodCache' => true,
         'objectsExclude' => array(
             // __NAMESPACE__ added in constructor
@@ -491,20 +492,24 @@ class Abstracter extends AbstractComponent
      */
     private function setCfgDependencies($cfg)
     {
-        $keysAll = array(
-            'brief',
+        $keysArr = array(
+            'maxDepth',
         );
         $keysStr = array(
             'stringMaxLen',
             'stringMinLen',
         );
-        $strCfg = \array_intersect_key($cfg, \array_flip($keysAll) + \array_flip($keysStr));
-        if ($strCfg) {
-            $this->abstractString->setCfg($strCfg);
+        $arrCfg = \array_intersect_key($cfg, \array_flip($keysArr));
+        if ($arrCfg) {
+            $this->abstractArray->setCfg($arrCfg);
         }
         $objCfg = \array_diff_key($cfg, \array_flip($keysStr));
         if ($objCfg) {
             $this->abstractObject->setCfg($objCfg);
+        }
+        $strCfg = \array_intersect_key($cfg, \array_flip(array('brief')) + \array_flip($keysStr));
+        if ($strCfg) {
+            $this->abstractString->setCfg($strCfg);
         }
     }
 }

@@ -200,15 +200,21 @@ class Value extends BaseValue
      */
     protected function dumpArray($array)
     {
+        $opts = \array_merge(array(
+            'asFileTree' => false,
+            'expand' => null,
+            'isMaxDepth' => false,
+            'showListKeys' => true,
+        ), $this->getDumpOpt());
+        if ($opts['isMaxDepth']) {
+            $this->setDumpOpt('attribs.class.__push__', 'max-depth');
+            return '<span class="t_keyword">array</span>'
+                . ' <span class="t_maxDepth">*MAX DEPTH*</span>';
+        }
         if (empty($array)) {
             return '<span class="t_keyword">array</span>'
                 . '<span class="t_punct">()</span>';
         }
-        $opts = \array_merge(array(
-            'asFileTree' => false,
-            'expand' => null,
-            'showListKeys' => true,
-        ), $this->getDumpOpt());
         if ($opts['expand'] !== null) {
             $this->setDumpOpt('attribs.data-expand', $opts['expand']);
         }
@@ -353,7 +359,7 @@ class Value extends BaseValue
      */
     protected function dumpRecursion()
     {
-        $this->setDumpOpt('tagName', null); // don't wrap value span
+        $this->setDumpOpt('type', Abstracter::TYPE_ARRAY);
         return '<span class="t_keyword">array</span> <span class="t_recursion">*RECURSION*</span>';
     }
 

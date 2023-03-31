@@ -517,8 +517,7 @@ class BasicTest extends DebugTestFramework
                         ),
                         'meta' => array(),
                     ),
-                    // array assumed
-                    'html' => '<li class="m_log"><span class="t_keyword">array</span> <span class="t_recursion">*RECURSION*</span></li>',
+                    'html' => '<li class="m_log"><span class="t_array"><span class="t_keyword">array</span> <span class="t_recursion">*RECURSION*</span></span></li>',
                     'text' => 'array *RECURSION*',
                 ),
             ),

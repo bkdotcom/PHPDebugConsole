@@ -62,6 +62,9 @@ class HtmlObject
         if ($abs['isRecursion']) {
             return $classname . "\n" . '<span class="t_recursion">*RECURSION*</span>';
         }
+        if ($abs['isMaxDepth']) {
+            return $classname . "\n" . '<span class="t_maxDepth">*MAX DEPTH*</span>';
+        }
         if ($abs['isExcluded']) {
             return $this->dumpToString($abs)
                 . $classname . "\n" . '<span class="excluded">NOT INSPECTED</span>';
@@ -188,6 +191,7 @@ class HtmlObject
         $title = $phpDocOutput
             ? \trim($abs['phpDoc']['summary'] . "\n\n" . $abs['phpDoc']['desc'])
             : null;
+        $title = $title ?: null;
         if (\in_array('UnitEnum', $abs['implements'], true)) {
             return $this->html->buildTag(
                 'span',

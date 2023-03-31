@@ -114,6 +114,7 @@ class AbstractObject extends AbstractComponent
     protected static $values = array(
         'type' => Abstracter::TYPE_OBJECT,
         'attributes' => array(),
+        'cases' => array(), // enum cases
         'cfgFlags' => 0,
         'className' => '',
         'constants' => array(),
@@ -183,6 +184,7 @@ class AbstractObject extends AbstractComponent
             'isAnonymous' => PHP_VERSION_ID >= 70000 && $reflector->isAnonymous(),
             'isExcluded' => $hist && $this->isExcluded($obj),    // don't exclude if we're debugging directly
             'isFinal' => $reflector->isFinal(),
+            'isMaxDepth' => $this->cfg['maxDepth'] && \count($hist) === $this->cfg['maxDepth'],
             'isRecursion' => \in_array($obj, $hist, true),
             'scopeClass' => $this->getScopeClass($hist),
             'viaDebugInfo' => $this->cfg['useDebugInfo'] && $reflector->hasMethod('__debugInfo'),
@@ -418,6 +420,9 @@ class AbstractObject extends AbstractComponent
      */
     private function doAbstraction(Abstraction $abs)
     {
+        if ($abs['isMaxDepth']) {
+            return;
+        }
         $this->addMisc1($abs);
         if ($abs['isRecursion']) {
             return;

@@ -200,6 +200,9 @@ class BaseValue extends AbstractComponent
      */
     protected function dumpArray($array)
     {
+        if ($this->getDumpOpt('isMaxDepth')) {
+            return 'array *MAX DEPTH*';
+        }
         foreach ($array as $key => $val) {
             $array[$key] = $this->dump($val);
         }
@@ -306,6 +309,9 @@ class BaseValue extends AbstractComponent
     {
         if ($abs['isRecursion']) {
             return '(object) ' . $abs['className'] . ' *RECURSION*';
+        }
+        if ($abs['isMaxDepth']) {
+            return '(object) ' . $abs['className'] . ' *MAX DEPTH*';
         }
         if ($abs['isExcluded']) {
             return '(object) ' . $abs['className'] . ' NOT INSPECTED';

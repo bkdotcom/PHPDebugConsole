@@ -11,7 +11,7 @@ use bdk\Test\Debug\DebugTestFramework;
 use Psr\Http\Message\RequestInterface;
 
 /**
- * Test Text
+ * Test Slack route
  *
  * @covers \bdk\Debug\Route\Slack
  */
@@ -66,6 +66,8 @@ class SlackTest extends DebugTestFramework
             },
         ]);
 
+        $webhookUrl = 'https://hooks.slack.com/services/bogus-webhook-url';
+
         $this->debug->addPlugin($this->debug->getRoute('slack'));
         $this->debug->getRoute('slack')->setCfg(array(
             'channel' => '#slack-integration-test',
@@ -76,7 +78,7 @@ class SlackTest extends DebugTestFramework
             },
             'throttleMin' => 0,
             'token' => 'bogus-token',
-            'webhookUrl' => 'https://hooks.slack.com/services/bogus-webhook-url',
+            'webhookUrl' => $webhookUrl,
         ));
 
         $this->debug->errorHandler->handleError(E_ERROR, 'everything is awesome', __FILE__, __LINE__);
@@ -180,18 +182,9 @@ class SlackTest extends DebugTestFramework
                         'ts' => $microtime,
                     ))));
             },
-            /*
-            static function (RequestInterface $request) use (&$requests) {
-                $requests[] = $request;
-                return (new Response())
-                    ->withHeader('Content-Type', 'application/json')
-                    ->withBody(new Stream(\json_encode(array(
-                        'success' => true,
-                        'ts' => \microtime(true),
-                    ))));
-            },
-            */
         ]);
+
+        $webhookUrl = 'https://hooks.slack.com/services/bogus-webhook-url';
 
         $this->debug->addPlugin($this->debug->getRoute('slack'));
         $this->debug->getRoute('slack')->setCfg(array(
@@ -203,14 +196,14 @@ class SlackTest extends DebugTestFramework
             },
             'throttleMin' => 0,
             'token' => null,
-            'webhookUrl' => 'https://hooks.slack.com/services/bogus-webhook-url',
+            'webhookUrl' => $webhookUrl,
         ));
 
         $this->debug->errorHandler->handleError(E_WARNING, 'everything is awesome', __FILE__, __LINE__);
         $line = __LINE__ - 1;
 
         self::assertCount(1, $requests);
-        self::assertSame('https://hooks.slack.com/services/bogus-webhook-url', (string) $requests[0]->getUri());
+        self::assertSame($webhookUrl, (string) $requests[0]->getUri());
         self::assertSame('application/json; charset=utf-8', $requests[0]->getHeaderLine('Content-Type'));
         self::assertSame(array(
             'blocks' => array(
@@ -278,6 +271,8 @@ class SlackTest extends DebugTestFramework
             },
         ]);
 
+        $webhookUrl = 'https://hooks.slack.com/services/bogus-webhook-url';
+
         $this->debug->addPlugin($this->debug->getRoute('slack'));
         $this->debug->getRoute('slack')->setCfg(array(
             'channel' => null,
@@ -288,7 +283,7 @@ class SlackTest extends DebugTestFramework
             },
             'throttleMin' => 0,
             'token' => null,
-            'webhookUrl' => 'https://hooks.slack.com/services/bogus-webhook-url',
+            'webhookUrl' => $webhookUrl,
         ));
         $this->debug->errorHandler->eventManager->subscribe(ErrorHandler::EVENT_ERROR, array($this, 'onErrorThrow'));
         $this->debug->errorHandler->eventManager->subscribe(ErrorHandler::EVENT_ERROR, array($this, 'onError'), -2);

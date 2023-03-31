@@ -9,7 +9,7 @@ use bdk\Test\Debug\DebugTestFramework;
 use Psr\Http\Message\RequestInterface;
 
 /**
- * Test Text
+ * Test Teams route
  *
  * @covers \bdk\Debug\Route\Teams
  *
@@ -51,6 +51,8 @@ class TeamsTest extends DebugTestFramework
             },
         ]);
 
+        $webhookUrl = 'https://qwerty.webhook.office.com/webhookb2/blah/blah/blah';
+
         $this->debug->addPlugin($this->debug->getRoute('teams'));
         $this->debug->getRoute('teams')->setCfg(array(
             'onClientInit' => static function ($client) use ($mock) {
@@ -59,7 +61,7 @@ class TeamsTest extends DebugTestFramework
                 $stack->setHandler($mock);
             },
             'throttleMin' => 0,
-            'webhookUrl' => 'https://qwerty.webhook.office.com/webhookb2/blah/blah/blah',
+            'webhookUrl' => $webhookUrl,
         ));
 
         $this->debug->errorHandler->handleError(E_ERROR, 'everything is awesome', __FILE__, __LINE__);
@@ -203,6 +205,8 @@ class TeamsTest extends DebugTestFramework
             },
         ]);
 
+        $webhookUrl = 'https://qwerty.webhook.office.com/webhookb2/blah/blah/blah';
+
         $this->debug->addPlugin($this->debug->getRoute('teams'));
         $this->debug->getRoute('teams')->setCfg(array(
             'onClientInit' => static function ($client) use ($mock) {
@@ -211,7 +215,7 @@ class TeamsTest extends DebugTestFramework
                 $stack->setHandler($mock);
             },
             'throttleMin' => 0,
-            'webhookUrl' => 'https://qwerty.webhook.office.com/webhookb2/blah/blah/blah',
+            'webhookUrl' => $webhookUrl,
         ));
 
         $this->debug->errorHandler->handleError(E_WARNING, 'yikes', __FILE__, __LINE__);

@@ -325,6 +325,10 @@ class Client
             }
         }
 
+        if ($request->hasHeader('User-Agent') === false) {
+            $request = $request->withHeader('User-Agent', $options['curl'][CURLOPT_USERAGENT]);
+        }
+
         if ($options['body']) {
             $request = $this->factory->withBody($request, $options['body']);
         }

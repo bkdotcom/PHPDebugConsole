@@ -90,7 +90,6 @@ class Table
                     : array()
             );
             $html = $this->buildRow($row, $rowInfo, $k);
-            // $html = $this->onBuildRow($html, $row, $rowInfo, $k);
             $tBody .= $html;
         }
         $tBody = \str_replace(' title=""', '', $tBody);

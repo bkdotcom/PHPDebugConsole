@@ -221,7 +221,7 @@ class Profile
         $this->trace = \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
         $stackCount = \count($this->trace) - \count($this->rootStack) - 1;
         $stackCountInternal = \count($this->funcStack);
-        $class = isset($this->trace[1]['class']) ? $this->trace[1]['class'] : null;
+        $class = isset($this->trace[1]['class']) ? $this->trace[1]['class'] : '';
         if ($stackCount === 0 && $this->data) {
             $function = \ltrim($class . '::' . $this->trace[1]['function'], ':');
             if ($function !== $this->rootStack[0]) {
@@ -327,7 +327,7 @@ class Profile
         }
         $diff = $stackCount - $stackCountInternal;
         for ($i = $diff; $i > 0; $i--) {
-            $class = isset($this->trace[$i]['class']) ? $this->trace[$i]['class'] : null;
+            $class = isset($this->trace[$i]['class']) ? $this->trace[$i]['class'] : '';
             if (\preg_match($this->nsIgnoreRegex, $class)) {
                 break;
             }

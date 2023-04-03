@@ -36,9 +36,14 @@ class Table
         $this->logEntry = $logEntry;
         $this->debug = $logEntry->getSubject();
 
+        $cfg = $logEntry->getMeta('cfg', array());
         $cfgRestore = array();
-        if (isset($logEntry['meta']['cfg'])) {
-            $cfgRestore = $this->debug->setCfg($logEntry['meta']['cfg']);
+        $maxDepth = $this->debug->getCfg('maxDepth');
+        if (\in_array($maxDepth, array(1,2), true)) {
+            $cfg['maxDepth'] = 3;
+        }
+        if ($cfg) {
+            $cfgRestore = $this->debug->setCfg($cfg);
             $logEntry->setMeta('cfg', null);
         }
 

@@ -25,5 +25,6 @@ Includes other software released under the MIT license:
 - psr/http-message, Copyright 2014 PHP Framework Interoperability Group
 
 Portions of this software derived from other works
+- https://github.com/silexphp/Pimple
 - https://github.com/symfony/event-dispatcher
 - https://github.com/guzzle/guzzle

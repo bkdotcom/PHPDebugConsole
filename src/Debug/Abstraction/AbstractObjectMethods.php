@@ -105,7 +105,6 @@ class AbstractObjectMethods
     {
         if ($this->abstracter->getCfg('methodCache') && isset(static::$methodCache[$abs['className']])) {
             $abs['methods'] = static::$methodCache[$abs['className']];
-            $this->addFinish($abs);
             return;
         }
         $briefBak = $this->abstracter->debug->setCfg('brief', true);

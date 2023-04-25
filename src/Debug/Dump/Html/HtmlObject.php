@@ -188,6 +188,7 @@ class HtmlObject
         $title = $phpDocOutput
             ? \trim($abs['phpDoc']['summary'] . "\n\n" . $abs['phpDoc']['desc'])
             : null;
+        $title = $title ?: null;
         if (\in_array('UnitEnum', $abs['implements'], true)) {
             return $this->html->buildTag(
                 'span',

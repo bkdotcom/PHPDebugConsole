@@ -43,7 +43,9 @@ class EnumTest extends DebugTestFramework
                             'BREAKFAST' => array(
                                 'attributes' => array(),
                                 'desc' => 'The most important meal',
+                                'isFinal' => false,
                                 'value' => null,
+                                'visibility' => 'public',
                             ),
                             'LUNCH' => array(
                                 'attributes' => array(
@@ -53,13 +55,17 @@ class EnumTest extends DebugTestFramework
                                     ),
                                 ),
                                 'desc' => null,
+                                'isFinal' => false,
                                 'value' => null,
+                                'visibility' => 'public',
                             ),
                             'DINNER' => array(
                                 'attributes' => array(),
                                 'desc' => null,
+                                'isFinal' => false,
                                 'value' => null,
-                            )
+                                'visibility' => 'public',
+                            ),
                         ), $abs['cases']);
                     },
                     'html' => '<li class="m_log"><div class="t_object" data-accessible="public"><span class="t_const" title="The most important meal
@@ -156,18 +162,24 @@ class EnumTest extends DebugTestFramework
                             'BREAKFAST' => array(
                                 'attributes' => array(),
                                 'desc' => null,
+                                'isFinal' => false,
                                 'value' => 'breakfast',
+                                'visibility' => 'public',
                             ),
                             'LUNCH' => array(
                                 'attributes' => array(),
                                 'desc' => null,
+                                'isFinal' => false,
                                 'value' => 'lunch',
+                                'visibility' => 'public',
                             ),
                             'DINNER' => array(
                                 'attributes' => array(),
                                 'desc' => null,
+                                'isFinal' => false,
                                 'value' => 'dinner',
-                            )
+                                'visibility' => 'public',
+                            ),
                         ), $abs['cases']);
                     },
                     'html' => '<li class="m_log"><div class="t_object" data-accessible="public"><span class="t_const"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\Enum\</span>MealsBacked</span><span class="t_operator">::</span><span class="t_identifier">BREAKFAST</span></span>

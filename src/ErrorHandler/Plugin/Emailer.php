@@ -235,13 +235,20 @@ class Emailer extends AbstractComponent implements SubscriberInterface
     {
         $emailBody = '';
         foreach ($errors as $errStats) {
-            $dateLastEmailed = \date($this->cfg['dateTimeFmt'], $errStats['email']['timestamp']) ?: '??';
+            $countSinceLine = isset($errStats['email'])
+                ? \sprintf(
+                    'Has occured %s times since %s' . "\n",
+                    $errStats['email']['countSince'],
+                    \date($this->cfg['dateTimeFmt'], $errStats['email']['timestamp'])
+                )
+                : '';
             $info = $errStats['info'];
             $emailBody .= ''
                 . 'File: ' . $info['file'] . "\n"
                 . 'Line: ' . $info['line'] . "\n"
                 . 'Error: ' . Error::typeStr($info['type']) . ': ' . $info['message'] . "\n"
-                . 'Has occured ' . $errStats['email']['countSince'] . ' times since ' . $dateLastEmailed . "\n\n";
+                . $countSinceLine
+                . "\n";
         }
         return $emailBody;
     }

@@ -88,10 +88,18 @@ class Data
             $this->setLogDest($value);
             return;
         }
-        if (\is_string($path)) {
+        $setLogDest = true;
+        if (\is_string($path) || \func_num_args() === 2) {
+            $key = \is_array($path)
+                ? $path[0]
+                : $path;
+            $setLogDest = \in_array($key, array('alerts', 'log', 'logSummary'), true);
             $this->arrayUtil->pathSet($this->data, $path, $value);
         } elseif (\is_array($path)) {
             $this->data = \array_merge($this->data, $path);
+        }
+        if ($setLogDest === false) {
+            return;
         }
         if (!$this->data['log']) {
             $this->debug->methodGroup->reset('main');

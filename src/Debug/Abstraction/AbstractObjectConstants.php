@@ -168,9 +168,11 @@ class AbstractObjectConstants
             'desc' => $this->phpDocCollect
                 ? $this->helper->getPhpDocVar($refCase)['desc']
                 : null,
+            'isFinal' => $refCase->isFinal(),
             'value' => $refCase instanceof ReflectionEnumBackedCase
                 ? $refCase->getBackingValue()
                 : null,
+            'visibility' => $this->helper->getVisibility($refCase),
         );
     }
 

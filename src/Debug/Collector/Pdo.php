@@ -263,7 +263,7 @@ class Pdo extends PdoBase
                 'argsAsParams' => false,
                 'icon' => $this->icon,
                 'level' => 'info',
-            ))
+            )),
         ));
         \call_user_func_array(array($debug, 'groupCollapsed'), $groupParams);
         $this->logRuntime($debug);

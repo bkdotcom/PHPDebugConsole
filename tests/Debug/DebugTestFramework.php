@@ -701,10 +701,16 @@ class DebugTestFramework extends DOMTestCase
         $output = \str_replace("\r", '[\\r]', $output);
         $outputExpect = \str_replace("\r", '[\\r]', $outputExpect);
         $message = "\e[1m" . $test . " not same\e[0m";
-        if ($test === 'streamAnsi') {
-            $message .= "\nexpect: " . \str_replace("\e", '\e', $outputExpect) . "\n";
-            $message .= "\nactual: " . \str_replace("\e", '\e', $output);
+        try {
+            $this->assertStringMatchesFormat(\trim($outputExpect), \trim($output), $message);
+        } catch (\Exception $e) {
+            echo $test . ':' . "\n";
+            echo $test === 'textAnsi'
+                ? 'expect: ' . \str_replace("\e", '\e', $outputExpect) . "\n"
+                    . 'actual: ' . \str_replace("\e", '\e', $output) . "\n"
+                : 'expect: ' . $outputExpect . "\n"
+                    . 'actual: ' . $output . "\n";
+            throw new \PHPUnit\Framework\AssertionFailedError($test . ' has failed');
         }
-        $this->assertStringMatchesFormat(\trim($outputExpect), \trim($output), $message);
     }
 }

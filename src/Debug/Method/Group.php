@@ -97,7 +97,7 @@ class Group implements SubscriberInterface
         }
         if ($logEntry['args'] === array()) {
             // give a default label
-            $logEntry['args'] = array( 'group' );
+            $logEntry['args'] = array('group');
             $caller = $this->debug->backtrace->getCallerInfo(0, Backtrace::INCL_ARGS);
             $args = $this->autoArgs($caller);
             if ($args) {
@@ -420,9 +420,9 @@ class Group implements SubscriberInterface
                     // dummy / root group
                     //  eliminates need to test if entry has parent group
                     'childCount' => 0,
-                    'groupCount' => 0,
                     'depth' => 0,
-                )
+                    'groupCount' => 0,
+                ),
             ),
             'stackCount' => 1,
         );
@@ -485,11 +485,11 @@ class Group implements SubscriberInterface
         if (\in_array($method, array('group', 'groupCollapsed'), true)) {
             $this->cleanupInfo['stack'][] = array(
                 'childCount' => 0,  // includes any child groups
+                'depth' => $stackCount,
                 'groupCount' => 0,
                 'index' => $index,
                 'indexEnd' => null,
                 'meta' => $logEntry['meta'],
-                'depth' => $stackCount,
             );
             $this->cleanupInfo['stack'][$stackCount - 1]['childCount']++;
             $this->cleanupInfo['stack'][$stackCount - 1]['groupCount']++;

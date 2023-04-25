@@ -120,8 +120,8 @@ class StatementInfo extends AbstractComponent
         $this->debug = $debug;
         $label = $this->getGroupLabel();
         $debug->groupCollapsed($label, $debug->meta(array(
-            'icon' => $debug->getCfg('channelIcon', Debug::CONFIG_DEBUG),
             'boldLabel' => false,
+            'icon' => $debug->getCfg('channelIcon', Debug::CONFIG_DEBUG),
         )));
         $this->logQuery($label);
         $this->logParams();
@@ -238,9 +238,9 @@ class StatementInfo extends AbstractComponent
         }
         $sql = $this->sql;
         $cleanBackRefCharMap = array(
-            '%' => '%%',
             '$' => '$%',
-            '\\' => '\\%'
+            '%' => '%%',
+            '\\' => '\\%',
         );
         foreach ($this->params as $k => $v) {
             $backRefSafeV = \strtr($v, $cleanBackRefCharMap);

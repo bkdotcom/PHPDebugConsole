@@ -43,6 +43,7 @@ class Abstraction extends Event implements JsonSerializable, Serializable
                 ? array()
                 : null;
         }
+        \ksort($values);
         $this->setValues($values);
     }
 
@@ -150,6 +151,7 @@ class Abstraction extends Event implements JsonSerializable, Serializable
         }
         if (!isset($values['attribs']['class'])) {
             $this->values['attribs']['class'] = array();
+            \ksort($this->values['attribs']);
         } elseif (\is_string($values['attribs']['class'])) {
             $this->values['attribs']['class'] = \explode(' ', $values['attribs']['class']);
         }

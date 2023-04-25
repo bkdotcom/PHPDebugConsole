@@ -32,28 +32,28 @@ class Error extends Event
     protected static $errCategories = array(
         self::CAT_DEPRECATED => array( E_DEPRECATED, E_USER_DEPRECATED ),
         self::CAT_ERROR      => array( E_USER_ERROR, E_RECOVERABLE_ERROR ),
+        self::CAT_FATAL      => array( E_ERROR, E_PARSE, E_COMPILE_ERROR, E_CORE_ERROR ),
         self::CAT_NOTICE     => array( E_NOTICE, E_USER_NOTICE ),
         self::CAT_STRICT     => array( E_STRICT ),
         self::CAT_WARNING    => array( E_WARNING, E_CORE_WARNING, E_COMPILE_WARNING, E_USER_WARNING ),
-        self::CAT_FATAL      => array( E_ERROR, E_PARSE, E_COMPILE_ERROR, E_CORE_ERROR ),
     );
     protected static $errTypes = array(
-        E_ERROR             => 'Fatal Error',       // handled via shutdown function
-        E_WARNING           => 'Warning',
-        E_PARSE             => 'Parsing Error',     // handled via shutdown function
-        E_NOTICE            => 'Notice',
-        E_CORE_ERROR        => 'Core Error',        // handled via shutdown function
-        E_CORE_WARNING      => 'Core Warning',      // handled?
+        E_ALL               => 'E_ALL',             // listed here for completeness
         E_COMPILE_ERROR     => 'Compile Error',     // handled via shutdown function
         E_COMPILE_WARNING   => 'Compile Warning',   // handled?
-        E_USER_ERROR        => 'User Error',
-        E_USER_WARNING      => 'User Warning',
-        E_USER_NOTICE       => 'User Notice',
-        E_ALL               => 'E_ALL',             // listed here for completeness
-        E_STRICT            => 'Strict',            // php 5.0 :  2048
-        E_RECOVERABLE_ERROR => 'Recoverable Error', // php 5.2 :  4096
+        E_CORE_ERROR        => 'Core Error',        // handled via shutdown function
+        E_CORE_WARNING      => 'Core Warning',      // handled?
         E_DEPRECATED        => 'Deprecated',        // php 5.3 :  8192
+        E_ERROR             => 'Fatal Error',       // handled via shutdown function
+        E_NOTICE            => 'Notice',
+        E_PARSE             => 'Parsing Error',     // handled via shutdown function
+        E_RECOVERABLE_ERROR => 'Recoverable Error', // php 5.2 :  4096
+        E_STRICT            => 'Strict',            // php 5.0 :  2048
         E_USER_DEPRECATED   => 'User Deprecated',   // php 5.3 : 16384
+        E_USER_ERROR        => 'User Error',
+        E_USER_NOTICE       => 'User Notice',
+        E_USER_WARNING      => 'User Warning',
+        E_WARNING           => 'Warning',
     );
     protected static $userErrors = array(
         E_USER_DEPRECATED,
@@ -74,7 +74,7 @@ class Error extends Event
     /**
      * @var array Array of key/values
      */
-    protected $values = array(
+    protected $values = array( // phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
         'type'      => null,        // int: The severity / level / one of the E_* constants
         'message'   => '',          // The error message
         'file'      => null,        // Filepath the error was raised in
@@ -108,7 +108,7 @@ class Error extends Event
         unset($this->values['vars']['GLOBALS']);
         $errorCaller = $errHandler->get('errorCaller');
         if ($errorCaller) {
-            $errorCallerVals = \array_intersect_key($errorCaller, \array_flip(array('file','line')));
+            $errorCallerVals = \array_intersect_key($errorCaller, \array_flip(array('file', 'line')));
             $this->values = \array_merge($this->values, $errorCallerVals);
         }
         if ($this->backtrace === null && \in_array($this->values['type'], array(E_ERROR, E_USER_ERROR), true) && $this->values['exception'] === null) {
@@ -276,10 +276,10 @@ class Error extends Event
                 'isFirstOccur' => !$prevOccurance,
                 'isHtml' => $this->isHtml(),
                 'isSuppressed' => $isSuppressed,
-                'typeStr' => self::$errTypes[$errType],
                 'message' => $this->isHtml()
                     ? \str_replace('<a ', '<a target="phpRef" ', $this->values['message'])
                     : $this->values['message'],
+                'typeStr' => self::$errTypes[$errType],
             )
         );
     }

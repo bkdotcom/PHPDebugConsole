@@ -31,7 +31,7 @@ class Html
      *
      * @var array
      */
-    public static $htmlEmptyTags = array('area','base','br','col','embed','hr','img','input','link','meta','param','source','track','wbr');
+    public static $htmlEmptyTags = array('area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr');
 
     /**
      * Used by parseAttribString
@@ -213,6 +213,7 @@ class Html
         $regexTag2 = '#^<(?:\/\s*)?([^\s>]+)(.*?)\/?>$#s';
         $tag = \trim($tag);
         if (\preg_match($regexTag, $tag, $matches)) {
+            // phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
             return array(
                 'tagname' => $matches[1],
                 'attribs' => self::parseAttribString($matches[2], $options),
@@ -220,6 +221,7 @@ class Html
             );
         }
         if (\preg_match($regexTag2, $tag, $matches)) {
+            // phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
             return array(
                 'tagname' => $matches[1],
                 'attribs' => self::parseAttribString($matches[2], $options),
@@ -457,7 +459,7 @@ class Html
     private static function parseAttribBoolEnum($val)
     {
         $val = \strtolower($val);
-        return \in_array($val, array('true','false'), true)
+        return \in_array($val, array('true', 'false'), true)
             ? $val === 'true'
             : false;
     }

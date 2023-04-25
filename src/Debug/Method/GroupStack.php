@@ -22,8 +22,8 @@ class GroupStack
 {
     private $currentInfo = array(
         'curDepth' => 0,
-        'minDepth' => 0,
         'logEntries' => array(),
+        'minDepth' => 0,
     );
 
     private $debug;
@@ -264,8 +264,8 @@ class GroupStack
         }
         $this->currentInfo = array(
             'curDepth' => $curDepth,
-            'minDepth' => $curDepth,
             'logEntries' => array(),
+            'minDepth' => $curDepth,
         );
     }
 

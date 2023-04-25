@@ -107,7 +107,7 @@ class GroupTest extends DebugTestFramework
             $dateTime
         );
         $logEntry = $this->debug->data->get('log/0');
-        $logEntry = $this->helper->logEntryToArray($logEntry);
+        $logEntryArray = $this->helper->logEntryToArray($logEntry);
         $cfgAbsBak = $this->debug->abstracter->setCfg(array(
             'brief' => true,
             'caseCollect' => false,
@@ -134,17 +134,17 @@ class GroupTest extends DebugTestFramework
             'meta' => array(),
         ), $logEntry);
         */
-        $this->assertSame('string', $logEntry['args'][0]);
-        $this->assertSame(42, $logEntry['args'][1]);
-        $this->assertSame(null, $logEntry['args'][2]);
-        $this->assertSame(false, $logEntry['args'][3]);
-        $this->assertSame($objExpect, $logEntry['args'][4]);
-        $this->assertTrue(($logEntry['args'][5]['cfgFlags'] & AbstractObject::BRIEF) === AbstractObject::BRIEF);
+        $this->assertSame('string', $logEntryArray['args'][0]);
+        $this->assertSame(42, $logEntryArray['args'][1]);
+        $this->assertSame(null, $logEntryArray['args'][2]);
+        $this->assertSame(false, $logEntryArray['args'][3]);
+        $this->assertSame($objExpect, $logEntryArray['args'][4]);
+        $this->assertTrue(($logEntryArray['args'][5]['cfgFlags'] & AbstractObject::BRIEF) === AbstractObject::BRIEF);
         $this->assertSame(array(
             'returnValue' => 'toStringVal',
             'visibility' => 'public',
         ), $logEntry['args'][5]['methods']['__toString']);
-        $this->assertTrue(($logEntry['args'][6]['cfgFlags'] & AbstractObject::BRIEF) === AbstractObject::BRIEF);
+        $this->assertTrue(($logEntryArray['args'][6]['cfgFlags'] & AbstractObject::BRIEF) === AbstractObject::BRIEF);
     }
 
     public function testGroupHideIfEmpty()
@@ -817,6 +817,7 @@ class GroupTest extends DebugTestFramework
 
         This also tests that the values returned by getData have been dereferenced
         */
+        $groupStack = $this->getSharedVar('reflectionProperties')['groupStack'];
 
         $this->debug->groupSummary(1);
             $this->debug->log('in summary');
@@ -827,7 +828,6 @@ class GroupTest extends DebugTestFramework
             collect some info before outputing
             confirm nothing has been closed yet
         */
-        $groupStack = $this->getSharedVar('reflectionProperties')['groupStack'];
         $onOutputVals['groupPriorityStackA'] = $this->getSharedVar('reflectionProperties')['groupPriorityStack']->getValue($groupStack);
         $onOutputVals['groupStacksA'] = \array_map(function ($stack) {
             return \count($stack);

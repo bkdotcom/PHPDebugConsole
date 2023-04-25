@@ -7,6 +7,7 @@ use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Utility\SerializeLog;
 use bdk\HttpMessage\ServerRequest;
 use bdk\Test\Debug\DebugTestFramework;
+use bdk\Test\Debug\Fixture\TestObj;
 use bdk\Test\PolyFill\AssertionTrait;
 
 /**
@@ -23,6 +24,7 @@ class SerializeLogTest extends DebugTestFramework
     public function testSerializeUnserialize()
     {
         $debug = new Debug(array(
+            'collect' => true,
             'logResponse' => false,
             'serviceProvider' => array(
                 'serverRequest' => new ServerRequest(
@@ -40,18 +42,19 @@ class SerializeLogTest extends DebugTestFramework
         $debug->alert('some alert');
         $debug->groupSummary();
         $debug->log('in summary');
+        $debug->log(new TestObj());
         $debug->groupEnd();
         $debug->info('this is a test');
         $serialized = SerializeLog::serialize($debug);
         $unserialized = SerializeLog::unserialize($serialized);
-        $this->assertIsArray($unserialized);
+        self::assertIsArray($unserialized);
         $channelNameRoot = $debug->getCfg('channelName', Debug::CONFIG_DEBUG);
         $expect = array(
             'alerts' => $this->helper->deObjectifyData($debug->data->get('alerts'), false),
             'config' => array(
                 'channelIcon' => $debug->getCfg('channelIcon', Debug::CONFIG_DEBUG),
                 'channelName' => $channelNameRoot,
-                'channels' => \array_map(function (Debug $channel) use ($channelNameRoot) {
+                'channels' => \array_map(static function (Debug $channel) use ($channelNameRoot) {
                     $channelName = $channel->getCfg('channelName', Debug::CONFIG_DEBUG);
                     return array(
                         'channelIcon' => $channel->getCfg('channelIcon', Debug::CONFIG_DEBUG),
@@ -62,20 +65,22 @@ class SerializeLogTest extends DebugTestFramework
                 }, $debug->getChannels(true, true)),
                 'logRuntime' => $debug->getCfg('logRuntime'),
             ),
-            'log' => $this->helper->deObjectifyData($debug->data->get('log'), false),
-            'logSummary' => $this->helper->deObjectifyData($debug->data->get('logSummary'), false),
+            'log' => $this->helper->deObjectifyData($debug->data->get('log'), false, true),
+            'logSummary' => $this->helper->deObjectifyData($debug->data->get('logSummary'), false, true),
             'runtime' => $debug->data->get('runtime'),
             'requestId' => $debug->data->get('requestId'),
             'version' => Debug::VERSION,
         );
-        $this->assertEquals(
+        self::assertEquals(
             $expect,
             $this->helper->deObjectifyData($unserialized)
         );
         $debug = SerializeLog::import($unserialized);
+        $objAbs = $debug->data->get('logSummary.0.1.args.0');
+        self::assertInstanceOf('bdk\\Debug\\Abstraction\\Abstraction', $objAbs);
         $serialized = SerializeLog::serialize($debug);
         $unserialized = SerializeLog::unserialize($serialized);
-        $this->assertEquals(
+        self::assertEquals(
             $expect,
             $this->helper->deObjectifyData($unserialized)
         );
@@ -96,7 +101,7 @@ class SerializeLogTest extends DebugTestFramework
         }
         $serialized = \base64_decode($serialized);
         $unserialized = SerializeLog::unserialize($serialized);
-        $this->assertFalse($unserialized);
+        self::assertFalse($unserialized);
     }
 
     public function testUnserializeLogLegacy()
@@ -125,11 +130,11 @@ END DEBUG
 EOD;
         $unserialized = SerializeLog::unserialize($serialized);
         $expect = array(
-            'version' => '2.3',
             'config' => array(
                 'channels' => array(),
                 'channelName' => 'general',
             ),
+            'version' => '2.3',
             'alerts' => array(
                 array(
                     'alert',
@@ -334,9 +339,9 @@ EOD;
                 'channelName' => 'general',
             ),
         );
-        $this->assertSame($expect, $unserialized);
-        $debug = SerializeLog::import($unserialized);
+        self::assertSame($expect, $unserialized);
 
+        $debug = SerializeLog::import($unserialized);
 
         /*
             Now test that imported log serializes as expected
@@ -367,6 +372,7 @@ EOD;
 
         $serialized = SerializeLog::serialize($debug);
         $unserialized = SerializeLog::unserialize($serialized);
+
         $keysCompare = array('alerts', 'log','logSummary');
         foreach ($expect['log'] as $i => $logEntryArray) {
             if (empty($logEntryArray[2])) {
@@ -378,7 +384,7 @@ EOD;
                 unset($expect['logSummary'][0][$i][2]);
             }
         }
-        $this->assertEquals(
+        self::assertEquals(
             \array_intersect_key($expect, \array_flip($keysCompare)),
             \array_intersect_key($this->helper->deObjectifyData($unserialized), \array_flip($keysCompare))
         );

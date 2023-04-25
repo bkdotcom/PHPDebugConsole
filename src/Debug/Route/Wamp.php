@@ -176,7 +176,7 @@ class Wamp implements RouteInterface
                     'class' => $error['type'] & $this->debug->getCfg('errorMask', Debug::CONFIG_DEBUG)
                         ? 'error'
                         : 'warn',
-                )
+                ),
             )
         ));
     }
@@ -228,7 +228,6 @@ class Wamp implements RouteInterface
      *
      * @return void
      *
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter
      */
     public function processLogEntries(Event $event = null)
@@ -360,9 +359,9 @@ class Wamp implements RouteInterface
     private function publishMetaGet()
     {
         $metaVals = array(
-            'processId' => \getmypid(),
-            'HTTP_HOST' => null,
             'HTTPS' => null,
+            'HTTP_HOST' => null,
+            'processId' => \getmypid(),
             'REMOTE_ADDR' => null,
             'REQUEST_METHOD' => $this->debug->serverRequest->getMethod(),
             'REQUEST_TIME' => null,

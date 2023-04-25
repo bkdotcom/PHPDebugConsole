@@ -107,12 +107,12 @@ class Component extends CApplicationComponent implements SubscriberInterface
     public function getSubscriptions()
     {
         return array(
+            'yii.componentInit' => 'onComponentInit',
             Debug::EVENT_CUSTOM_METHOD => 'onCustomMethod',
-            Debug::EVENT_OBJ_ABSTRACT_START => 'onDebugObjAbstractStart',
             Debug::EVENT_OBJ_ABSTRACT_END => 'onDebugObjAbstractEnd',
+            Debug::EVENT_OBJ_ABSTRACT_START => 'onDebugObjAbstractStart',
             Debug::EVENT_OUTPUT => array('onDebugOutput', 1),
             Debug::EVENT_OUTPUT_LOG_ENTRY => 'onDebugOutputLogEntry',
-            'yii.componentInit' => 'onComponentInit',
         );
     }
 

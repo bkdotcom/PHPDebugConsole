@@ -14,7 +14,7 @@ class AbstractionTest extends TestCase
     public function testConstruct()
     {
         $abs = new Abstraction('myType');
-        $this->assertInstanceOf('\bdk\PubSub\Event', $abs);
+        $this->assertInstanceOf('bdk\PubSub\Event', $abs);
         $this->assertSame('myType', $abs['type']);
         $abs = new Abstraction('myType', array('foo' => 'bar'));
         $this->assertSame('myType', $abs->getValue('type'));

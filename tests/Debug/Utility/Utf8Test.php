@@ -31,7 +31,7 @@ class Utf8Test extends \PHPUnit\Framework\TestCase
             'blocks' => array(
                 array(
                     'utf8special',
-                    "\xef\xbb\xbf"
+                    "\xef\xbb\xbf",
                 ),
                 array(
                     'utf8',
@@ -42,8 +42,8 @@ class Utf8Test extends \PHPUnit\Framework\TestCase
             'bytesOther' => 0,
             'bytesSpecial' => 3,
             'bytesUtf8' => 9,
-            'percentBinary' => 0,
             'mbStrlen' => 10,
+            'percentBinary' => 0,
             'strlen' => 12,
         ), $stats1);
         self::assertSame($stats1, $stats2);

@@ -25,19 +25,19 @@ class TextAnsi extends Text
     protected $ansiCfg = array(
         'ansi' => 'default',    // default | true | false  (STDOUT & STDERR streams will default to true)
         'escapeCodes' => array(
+            'arrayKey' => "\e[38;5;83m",    // yellow
             'excluded' => "\e[38;5;9m",     // red
             'false' => "\e[91m",            // red
             'keyword' => "\e[38;5;45m",     // blue
-            'arrayKey' => "\e[38;5;83m",    // yellow
             'maxlen' => "\e[30;48;5;41m",   // light green background
             'muted' => "\e[38;5;250m",      // dark grey
             'numeric' => "\e[96m",          // blue
             'operator' => "\e[38;5;130m",   // green
-            'punct' => "\e[38;5;245m",      // grey  (brackets)
             'property' => "\e[38;5;83m",    // yellow
+            'punct' => "\e[38;5;245m",      // grey  (brackets)
             'quote' => "\e[38;5;250m",      // grey
-            'true' => "\e[32m",             // green
             'recursion' => "\e[38;5;196m",  // red
+            'true' => "\e[32m",             // green
         ),
         'escapeCodesLevels' => array(
             'error' => "\e[38;5;88;48;5;203;1;4m",
@@ -51,8 +51,8 @@ class TextAnsi extends Text
             'warn' => "\e[38;5;148m",
         ),
         'glue' => array(
-            'multiple' => "\e[38;5;245m, \x00escapeReset\x00",
             'equal' => " \e[38;5;245m=\x00escapeReset\x00 ",
+            'multiple' => "\e[38;5;245m, \x00escapeReset\x00",
         ),
         'stream' => 'php://stderr',   // filepath/uri/resource
     );

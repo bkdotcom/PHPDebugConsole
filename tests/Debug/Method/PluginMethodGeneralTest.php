@@ -52,19 +52,19 @@ class PluginMethodGeneralTest extends DebugTestFramework
         $this->debug->errorHandler->handleError(E_NOTICE, 'we tried to warn you', __FILE__, __LINE__);
 
         $this->assertSame(array(
+            'counts' => array(
+                'deprecated' => array('inConsole' => 0, 'notInConsole' => 0, 'suppressed' => 0, ),
+                'error'      => array('inConsole' => 0, 'notInConsole' => 0, 'suppressed' => 0, ),
+                'fatal'      => array('inConsole' => 0, 'notInConsole' => 0, 'suppressed' => 0, ),
+                'notice'     => array('inConsole' => 0, 'notInConsole' => 1, 'suppressed' => 0, ),
+                'strict'     => array('inConsole' => 0, 'notInConsole' => 0, 'suppressed' => 0, ),
+                'warning'    => array('inConsole' => 1, 'notInConsole' => 0, 'suppressed' => 0, ),
+            ),
             'inConsole' => 1,
             'inConsoleCategories' => array(
                 'warning',
             ),
             'notInConsole' => 1,
-            'counts' => array(
-                'fatal'      => array('inConsole' => 0, 'notInConsole' => 0, 'suppressed' => 0, ),
-                'error'      => array('inConsole' => 0, 'notInConsole' => 0, 'suppressed' => 0, ),
-                'warning'    => array('inConsole' => 1, 'notInConsole' => 0, 'suppressed' => 0, ),
-                'deprecated' => array('inConsole' => 0, 'notInConsole' => 0, 'suppressed' => 0, ),
-                'notice'     => array('inConsole' => 0, 'notInConsole' => 1, 'suppressed' => 0, ),
-                'strict'     => array('inConsole' => 0, 'notInConsole' => 0, 'suppressed' => 0, ),
-            ),
         ), $this->debug->errorStats());
     }
 

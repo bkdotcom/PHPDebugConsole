@@ -235,7 +235,7 @@ class Php
             . '$/';
         $matches = array();
         \preg_match($regex, $string, $matches);
-        $defaults = \array_fill_keys(array('class','constant','property','method'), null);
+        $defaults = \array_fill_keys(array('class', 'constant', 'property', 'method'), null);
         $matches = \array_merge($defaults, $matches);
         if ($matches['method']) {
             return new ReflectionMethod($matches['class'], $matches['method']);

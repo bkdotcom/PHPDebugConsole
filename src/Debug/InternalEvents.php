@@ -74,7 +74,7 @@ class InternalEvents implements SubscriberInterface
             EventManager::EVENT_PHP_SHUTDOWN => array(
                 array('onShutdownHigh', PHP_INT_MAX),
                 array('onShutdownHigh2', PHP_INT_MAX - 10),
-                array('onShutdownLow', PHP_INT_MAX * -1)
+                array('onShutdownLow', PHP_INT_MAX * -1),
             ),
         );
     }
@@ -230,10 +230,10 @@ class InternalEvents implements SubscriberInterface
         }
         $this->onPrettifyDo($event, $matches[1]);
         $event['value'] = $this->debug->abstracter->crateWithVals($event['value'], array(
+            'addQuotes' => false,
             'attribs' => array(
                 'class' => 'highlight language-' . $event['highlightLang'],
             ),
-            'addQuotes' => false,
             'contentType' => $event['contentType'],
             'prettified' => $event['isPrettified'],
             'prettifiedTag' => $event['isPrettified'],

@@ -49,6 +49,7 @@ class AbstractObjectHelper
             return array();
         }
         return \array_map(static function (ReflectionAttribute $attribute) {
+            // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
             return array(
                 'name' => $attribute->getName(),
                 'arguments' => $attribute->getArguments(),
@@ -81,8 +82,8 @@ class AbstractObjectHelper
         $name = $reflector->name;
         $phpDoc = $this->phpDoc->getParsed($reflector);
         $info = array(
-            'type' => null,
             'desc' => $phpDoc['summary'],
+            'type' => null,
         );
         if (!isset($phpDoc['var'])) {
             return $info;

@@ -116,9 +116,9 @@ abstract class AbstractServerRequest extends Request
     {
         $headers = array();
         $keysSansHttp = array(
-            'CONTENT_TYPE'   => 'Content-Type',
             'CONTENT_LENGTH' => 'Content-Length',
             'CONTENT_MD5'    => 'Content-Md5',
+            'CONTENT_TYPE'   => 'Content-Type',
         );
         $auth = $this->getAuthorizationHeader($serverParams);
         if ($auth) {
@@ -189,11 +189,11 @@ abstract class AbstractServerRequest extends Request
             self::uriPathQueryFromGlobals()
         );
         $methods = array(
-            'scheme' => 'withScheme',
             'host' => 'withHost',
-            'port' => 'withPort',
             'path' => 'withPath',
+            'port' => 'withPort',
             'query' => 'withQuery',
+            'scheme' => 'withScheme',
         );
         foreach ($parts as $name => $value) {
             if ($value) {
@@ -233,14 +233,14 @@ abstract class AbstractServerRequest extends Request
         // don't use array_map...  callback does not have access to self::createUploadedFile
         foreach ($keys as $key) {
             $files[$key] = self::createUploadedFile([
-                'tmp_name' => $fileInfo['tmp_name'][$key],
-                'size'     => $fileInfo['size'][$key],
                 'error'    => $fileInfo['error'][$key],
-                'name'     => $fileInfo['name'][$key],
-                'type'     => $fileInfo['type'][$key],
                 'full_path' => isset($fileInfo['full_path'][$key])
                     ? $fileInfo['full_path'][$key]
                     : null,
+                'name'     => $fileInfo['name'][$key],
+                'size'     => $fileInfo['size'][$key],
+                'tmp_name' => $fileInfo['tmp_name'][$key],
+                'type'     => $fileInfo['type'][$key],
             ]);
         }
         return $files;

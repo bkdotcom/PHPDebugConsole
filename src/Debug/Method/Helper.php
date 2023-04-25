@@ -50,7 +50,7 @@ class Helper
             __FUNCTION__,
             $args
         );
-        $levelsAllowed = array('danger','error','info','success','warn','warning');
+        $levelsAllowed = array('danger', 'error', 'info', 'success', 'warn', 'warning');
         return $logEntry->containsSubstitutions()
             && \array_key_exists(1, $args)
             && \in_array($args[1], $levelsAllowed, true) === false;
@@ -66,7 +66,7 @@ class Helper
     public function alertLevel(LogEntry $logEntry)
     {
         $level = $logEntry->getMeta('level');
-        $levelsAllowed = array('danger','error','info','success','warn','warning');
+        $levelsAllowed = array('danger', 'error', 'info', 'success', 'warn', 'warning');
         // Continue to allow bootstrap "levels"
         $levelTrans = array(
             'danger' => 'error',

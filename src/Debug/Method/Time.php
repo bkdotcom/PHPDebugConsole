@@ -125,7 +125,7 @@ class Time
                 $debug,
                 __FUNCTION__,
                 array('Timer \'' . $label . '\' does not exist'),
-                \array_diff_key($meta, \array_flip(array('precision','unit')))
+                \array_diff_key($meta, \array_flip(array('precision', 'unit')))
             ));
             return;
         }
@@ -137,7 +137,7 @@ class Time
         $args[0] = $label . ': ';
         \array_splice($args, 1, 0, $elapsed);
         $logEntry['args'] = $args;
-        $logEntry['meta'] = \array_diff_key($meta, \array_flip(array('precision','unit')));
+        $logEntry['meta'] = \array_diff_key($meta, \array_flip(array('precision', 'unit')));
         $debug->log($logEntry);
     }
 
@@ -210,7 +210,7 @@ class Time
             $debug,
             'time',
             array($str),
-            \array_diff_key($meta, \array_flip(array('precision','silent','template','unit')))
+            \array_diff_key($meta, \array_flip(array('precision', 'silent', 'template', 'unit')))
         ));
     }
 }

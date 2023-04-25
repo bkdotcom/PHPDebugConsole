@@ -361,7 +361,7 @@ class HtmlObject
                     !$abs['stringified'] ? '__toString()' : null,
                     // ie a timestamp will have a human readable date in title
                     isset($parsed['attribs']['title']) ? $parsed['attribs']['title'] : null,
-                )))
+                ))),
             ),
             $parsed['innerhtml'] . $valAppend
         ) . "\n";

@@ -90,9 +90,8 @@ class Debug extends AbstractDebug
     const VERSION = '3.0.4';
 
     protected $cfg = array(
-        'collect'   => false,
-        'key'       => null,
-        'output'    => false,           // output the log?
+        'channelIcon' => 'fa fa-list-ul',
+        'channelName' => 'general', // channel or tab name
         'channels' => array(
             /*
             channelName => array(
@@ -103,17 +102,11 @@ class Debug extends AbstractDebug
             )
             */
         ),
-        'channelIcon' => 'fa fa-list-ul',
-        'channelName' => 'general',     // channel or tab name
-        'channelShow' => true,          // wheter initially filtered or not
+        'channelShow' => true, // whether initially filtered or not
         'channelSort' => 0, // if non-nested channel (tab), sort order
-                        // higher = first
-                        // tabs with same sort will be sorted alphabetically
-        'enableProfiling' => false,
-        'errorLogNormal' => false,   // whether php shoyld also log the error when debugging is active
-        'errorMask' => 0,       // which error types appear as "error" in debug console...
-                                //    all other errors are "warn"
-                                //    (default set in constructor)
+                            //   higher = first
+                            //   tabs with same sort will be sorted alphabetically
+        'collect'   => false,
         'emailFrom' => null,    // null = use php's default (php.ini: sendmail_from)
         'emailFunc' => 'mail',  // callable
         'emailLog' => false,    // Whether to email a debug log.  (requires 'collect' to also be true)
@@ -121,11 +114,17 @@ class Debug extends AbstractDebug
                                 //   true or 'always':  email sent (if log is not output)
                                 //   'onError':         email sent if error occured (unless output)
         'emailTo' => 'default', // will default to $_SERVER['SERVER_ADMIN'] if non-empty, null otherwise
+        'enableProfiling' => false,
+        'errorLogNormal' => false, // whether php shoyld also log the error when debugging is active
+        'errorMask' => 0,       // which error types appear as "error" in debug console...
+                                //   all other errors are "warn"
+                                //   (default set in constructor)
         'exitCheck' => true,
         'extensionsCheck' => array('curl', 'mbString'),
         'headerMaxAll' => 250000,
         'headerMaxPer' => null,
-        'logEnvInfo' => array(      // may be set by passing a list
+        'key' => null,
+        'logEnvInfo' => array(  // may be set by passing a list
             'errorReporting' => true,
             'files' => true,
             'gitInfo' => true,
@@ -143,17 +142,18 @@ class Debug extends AbstractDebug
         'logResponseMaxLen' => '1 MB',
         'logRuntime' => true,
         'logServerKeys' => array('REMOTE_ADDR','REQUEST_TIME','REQUEST_URI','SERVER_ADDR','SERVER_NAME'),
-        'onBootstrap' => null,          // callable
-        'onLog' => null,                // callable
-        'onOutput' => null,             // callable
-        'outputHeaders' => true,        // ie, ChromeLogger and/or firePHP headers
-        'redactKeys' => array(          // case-insensitive
+        'onBootstrap' => null,      // callable
+        'onLog' => null,            // callable
+        'onOutput' => null,         // callable
+        'output'    => false,       // output the log?
+        'outputHeaders' => true,    // ie, ChromeLogger and/or firePHP headers
+        'redactKeys' => array(      // case-insensitive
             'password',
         ),
-        // 'redactReplace'              // closure (default defined in PLugin/Redaction)
-        'route' => 'auto',              // 'auto', 'chromeLogger', 'firephp', 'html', 'serverLog', 'script', 'steam', 'text', or RouteInterface,
-                                        //   if 'auto', will be determined automatically
-                                        //   if null, no output (unless output plugin added manually)
+        // 'redactReplace'          // closure (default defined in Plugin/Redaction)
+        'route' => 'auto',          // 'auto', 'chromeLogger', 'firephp', 'html', 'serverLog', 'script', 'steam', 'text', or RouteInterface,
+                                    //   if 'auto', will be determined automatically
+                                    //   if null, no output (unless output plugin added manually)
         'routeNonHtml' => 'serverLog',
         'serviceProvider' => array(), // ServiceProviderInterface, array, or callable that receives Container as param
         'sessionName' => null,  // if logging session data (see logEnvInfo), optionally specify session name
@@ -161,7 +161,7 @@ class Debug extends AbstractDebug
             // wampPuglisher
             //    required if using Wamp route
             //    must be installed separately
-            'realm' => 'debug'
+            'realm' => 'debug',
         ),
     );
 
@@ -193,8 +193,6 @@ class Debug extends AbstractDebug
      * @param bool   $dismissible (false) Whether to display a close icon/button
      *
      * @return $this
-     *
-     * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter
      */
     public function alert($message, $level = 'error', $dismissible = false)
     {
@@ -205,13 +203,13 @@ class Debug extends AbstractDebug
             __FUNCTION__,
             $args,
             array(
-                'level' => 'error',
                 'dismissible' => false,
+                'level' => 'error',
             ),
             $hasSubstitutions
                 ? array()
                 : $this->getMethodDefaultArgs(__FUNCTION__),
-            array('level','dismissible')
+            array('level', 'dismissible')
         );
         $logEntry['args'] = \array_values($logEntry['args']);
         $this->methodHelper->alertLevel($logEntry);
@@ -231,8 +229,6 @@ class Debug extends AbstractDebug
      *                           if none provided, will use calling file & line num
      *
      * @return $this
-     *
-     * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter
      */
     public function assert($assertion, $msg = null)
     {
@@ -275,8 +271,6 @@ class Debug extends AbstractDebug
      *                     `self::CLEAR_SILENT` : Don't add log entry
      *
      * @return $this
-     *
-     * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter
      */
     public function clear($bitmask = self::CLEAR_LOG)
     {
@@ -441,8 +435,6 @@ class Debug extends AbstractDebug
      * @param int $priority (0) The higher the priority, the earlier the group will appear in output
      *
      * @return $this
-     *
-     * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter
      */
     public function groupSummary($priority = 0)
     {
@@ -657,7 +649,7 @@ class Debug extends AbstractDebug
      *                          'auto' : !$log
      *
      * @return $this|float|false The duration (in sec).
-     * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter
+     *
      * @psalm-return ($return is true ? float|false : $this)
      */
     public function timeEnd($label = null, $log = true, $return = 'auto')
@@ -686,7 +678,7 @@ class Debug extends AbstractDebug
      *                          'auto' : !$log
      *
      * @return $this|float|false The duration (in sec).  `false` if specified label does not exist
-     * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter
+     *
      * @psalm-return ($return is true ? float|false : $this)
      */
     public function timeGet($label = null, $log = true, $return = 'auto')
@@ -733,8 +725,6 @@ class Debug extends AbstractDebug
      * @param string $caption     (optional) Specify caption for the trace table
      *
      * @return $this
-     *
-     * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter
      */
     public function trace($inclContext = false, $caption = 'trace')
     {

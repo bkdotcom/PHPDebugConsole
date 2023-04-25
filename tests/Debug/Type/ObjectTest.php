@@ -227,7 +227,7 @@ EOD;
                             '<dd class="private property"><span class="t_modifier_private">private</span> <span class="t_identifier">toStrThrow</span> <span class="t_operator">=</span> <span class="t_int">0</span></dd>',
                             '<dd class="debuginfo-excluded inherited magic property" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_magic">magic</span> <span class="t_type">bool</span> <span class="t_identifier" title="I\'m avail via __get()">magicProp</span></dd>',
                             '<dd class="debuginfo-value property"><span class="t_modifier_debug">debug</span> <span class="t_identifier">debugValue</span> <span class="t_operator">=</span> <span class="t_string">This property is debug only</span></dd>',
-                            '<dt class="methods">methods</dt>'
+                            '<dt class="methods">methods</dt>',
                         ));
                         if (PHP_VERSION_ID >= 80100) {
                             $expect = \str_replace('\'', '&#039;', $expect);
@@ -283,7 +283,7 @@ EOD;
                             $cratedAbs1,
                         ),
                     ),
-                )
+                ),
             ),
             // 1
             array(
@@ -295,7 +295,7 @@ EOD;
                 array(
                     'html' => static function ($str) {
                         self::assertStringContainsString('<span class="t_string t_string_trunc t_stringified" title="__toString()">This is the song that never ends.  Yes, it goes on and on my friend.  Some people started singing it&hellip; <i>(119 more bytes)</i></span>', $str);
-                    }
+                    },
                 ),
             ),
             // 2
@@ -368,10 +368,10 @@ EOD;
                         foreach ($objAbs['constants'] as $const) {
                             self::assertNull($const['desc']);
                         }
-                        foreach ($objAbs['properties'] as $name => $prop) {
+                        foreach ($objAbs['properties'] as $prop) {
                             self::assertNull($prop['desc']);
                         }
-                        foreach ($objAbs['methods'] as $name => $method) {
+                        foreach ($objAbs['methods'] as $method) {
                             self::assertSame(
                                 array('desc' => null, 'summary' => null),
                                 \array_intersect_key($method['phpDoc'], \array_flip(array('desc','summary')))
@@ -405,7 +405,7 @@ EOD;
                             'value: &quot;defined in TestBase&quot;',
                         ));
                         self::assertEmpty($matches, 'Html should not contain phpDoc summary & descriptions');
-                    }
+                    },
                 ),
             ),
             'methodCollectFalse' => array(
@@ -436,7 +436,7 @@ EOD;
                     'text' => static function ($str) {
                         $containsMethods = \preg_match('/methods/i', $str) === 1;
                         self::assertFalse($containsMethods, 'Output should not contain methods');
-                    }
+                    },
                 ),
             ),
             // 3
@@ -667,13 +667,13 @@ EOD;
         );
         self::assertArraySubset(
             array(
-                'isPromoted' => false,
-                'visibility' => 'protected',
-                'value' => 'defined only in TestBase (protected)',
                 'inheritedFrom' => 'bdk\Test\Debug\Fixture\TestBase',
-                'overrides' => null,
+                'isPromoted' => false,
                 'originallyDeclared' => 'bdk\Test\Debug\Fixture\TestBase',
+                'overrides' => null,
+                'value' => 'defined only in TestBase (protected)',
                 'valueFrom' => 'value',
+                'visibility' => 'protected',
             ),
             $abs['properties']['propProtected']
         );

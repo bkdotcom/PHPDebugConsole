@@ -208,9 +208,9 @@ class SimpleCacheTest extends DebugTestFramework
         $this->assertSame(array(
             'duration',
             'exception',
+            'keyOrKeys',
             'memoryUsage',
             'method',
-            'keyOrKeys',
         ), \array_keys(\reset($loggedActions)->__debugInfo()));
     }
 

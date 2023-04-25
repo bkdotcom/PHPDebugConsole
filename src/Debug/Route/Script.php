@@ -126,7 +126,7 @@ class Script extends AbstractRoute
         $meta = $logEntry['meta'];
         if ($method === 'assert') {
             \array_unshift($args, false);
-        } elseif (\in_array($method, array('error','warn'), true)) {
+        } elseif (\in_array($method, array('error', 'warn'), true)) {
             if (isset($meta['file'])) {
                 $args[] = \sprintf('%s: line %s', $meta['file'], $meta['line']);
             }

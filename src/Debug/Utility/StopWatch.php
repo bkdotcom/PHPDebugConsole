@@ -35,7 +35,7 @@ class StopWatch
             0,
             isset($vals['requestTime'])
                 ? $vals['requestTime']
-                : $_SERVER['REQUEST_TIME_FLOAT']
+                : $_SERVER['REQUEST_TIME_FLOAT'],
         );
     }
 

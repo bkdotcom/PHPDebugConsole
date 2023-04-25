@@ -180,6 +180,7 @@ class TextAnsiValue extends TextValue
         if (!$methodCollect || !$methodOutput) {
             return '';
         }
+        // phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
         $counts = array(
             'public' => 0,
             'protected' => 0,

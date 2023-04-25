@@ -228,8 +228,8 @@ class Html extends AbstractRoute
         $str = '<div' . $this->debug->html->buildAttribString(array(
             'class' => 'debug',
             // channel list gets built as log processed...  we'll str_replace this...
-            'data-channels' => '{{channels}}',
             'data-channel-name-root' => $this->channelNameRoot,
+            'data-channels' => '{{channels}}',
             'data-options' => array(
                 'drawer' => $this->cfg['drawer'],
                 'linkFilesTemplateDefault' => $lftDefault ?: null,
@@ -274,11 +274,11 @@ class Html extends AbstractRoute
                         ? $channels[$pathFq]
                         : $channelRoot->getChannel($pathFq);
                     $ref[$k] = array(
+                        'channels' => array(),
                         'options' => array(
                             'icon' => $channel->getCfg('channelIcon', Debug::CONFIG_DEBUG),
                             'show' => $channel->getCfg('channelShow', Debug::CONFIG_DEBUG),
                         ),
-                        'channels' => array(),
                     );
                 }
                 $ref = &$ref[$k]['channels'];

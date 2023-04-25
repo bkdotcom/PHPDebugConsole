@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * @covers bdk\HttpMessage\UriUtils
  *
- * @phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedKeys.IncorrectKeyOrder
+ * @phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
  */
 class UriUtilsTest extends TestCase
 {

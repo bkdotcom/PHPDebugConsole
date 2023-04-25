@@ -365,8 +365,8 @@ class Html extends Base
         $meta = $this->debug->arrayUtil->mergeDeep(array(
             'attribs' => array(
                 'class' => \array_keys(\array_filter(array(
-                    'table-bordered' => true,
                     'sortable' => $logEntry->getMeta('sortable'),
+                    'table-bordered' => true,
                     'trace-context' => $logEntry->getMeta('inclContext'),
                 ))),
             ),

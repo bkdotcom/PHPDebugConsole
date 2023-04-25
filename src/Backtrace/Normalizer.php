@@ -32,13 +32,13 @@ class Normalizer
      * @var array
      */
     private static $internalFuncs = array(
-        '{closure}' => false,
         'include' => false,
         'include_once' => false,
         'require' => false,
         'require_once' => false,
         'trigger_error' => false,
         'user_error' => false,
+        '{closure}' => false,
     );
 
     /**
@@ -123,7 +123,7 @@ class Normalizer
             self::$backtraceTemp[$count - 1]['line'] = $frame['line'];
             return false;
         }
-        if ($frame['class'] === 'ReflectionMethod' && \in_array($frame['function'], array('invoke','invokeArgs'), true)) {
+        if ($frame['class'] === 'ReflectionMethod' && \in_array($frame['function'], array('invoke', 'invokeArgs'), true)) {
             return false;
         }
         if ($frame['include_filename']) {
@@ -151,7 +151,7 @@ class Normalizer
             // use file/line from next frame
             $frame = \array_merge(
                 $frame,
-                \array_intersect_key($frameNext, \array_flip(array('file','line')))
+                \array_intersect_key($frameNext, \array_flip(array('file', 'line')))
             );
         } elseif (\preg_match($regex, $frame['file'], $matches)) {
             // reported line = line within eval

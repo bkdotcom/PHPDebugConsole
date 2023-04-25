@@ -72,7 +72,6 @@ class UriUtils
             ? $relPath
             : \substr($base->getPath(), 0, $lastSlashPos + 1) . $relPath;
         if ($relPath[0] === '/') {
-            // \bdk\Test\Debug\Helper::stderr('rel path slash');
             $targetPath = $relPath;
         } elseif ($base->getAuthority() !== '' && $base->getPath() === '') {
             $targetPath = '/' . $relPath;
@@ -158,6 +157,7 @@ class UriUtils
      */
     private static function parseUrlAddEmpty($parts, $url)
     {
+        // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
         $default = array(
             'scheme' => null,
             'host' => null,
@@ -203,7 +203,7 @@ class UriUtils
         if ($path[0] === '/' && (!isset($pathNew[0]) || $pathNew[0] !== '/')) {
             // Re-add the leading slash if necessary for cases like "/.."
             $pathNew = '/' . $pathNew;
-        } elseif ($pathNew !== '' && \in_array($segment, array('.','..'), true)) {
+        } elseif ($pathNew !== '' && \in_array($segment, array('.', '..'), true)) {
             // Add the trailing slash if necessary
             // If pathNew is not empty, then $segment must be set and is the last segment from the foreach
             $pathNew .= '/';

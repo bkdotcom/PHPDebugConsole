@@ -28,11 +28,11 @@ class LogRoute extends CLogRoute
     private $debug;
 
     private $levelMap = array(
-        CLogger::LEVEL_INFO => 'log',
-        CLogger::LEVEL_WARNING => 'warn',
         CLogger::LEVEL_ERROR => 'error',
-        CLogger::LEVEL_TRACE => 'trace',
+        CLogger::LEVEL_INFO => 'log',
         CLogger::LEVEL_PROFILE => 'time',
+        CLogger::LEVEL_TRACE => 'trace',
+        CLogger::LEVEL_WARNING => 'warn',
     );
 
     /**
@@ -46,7 +46,7 @@ class LogRoute extends CLogRoute
      *                                  We exclude system.db categories... handled via pdo wrapper
      */
     protected $except = array(
-        '/^system\.db\./'
+        '/^system\.db\./',
     );
 
     /**
@@ -144,7 +144,7 @@ class LogRoute extends CLogRoute
             }
             $callerInfo = $frame;
             // check if log called by some other wrapper method
-            if (\in_array($backtrace[$i + 1]['function'], array('log','error','warn','warning'), true)) {
+            if (\in_array($backtrace[$i + 1]['function'], array('log', 'error', 'warn', 'warning'), true)) {
                 $callerInfo = $backtrace[$i + 1];
             }
             break;
@@ -188,7 +188,7 @@ class LogRoute extends CLogRoute
     protected function normalizeMessage(array $logEntry)
     {
         $logEntry = \array_combine(
-            array('message','level','category','time'),
+            array('message', 'level', 'category', 'time'),
             $logEntry
         );
         $logEntry = \array_merge($logEntry, array(
@@ -215,10 +215,10 @@ class LogRoute extends CLogRoute
         $logEntry = $this->messageMetaTrace($logEntry);
         $logEntry = $this->messageMetaCaller($logEntry);
         $categoryFuncs = array(
+            '/^system\\./' => 'messageMetaSystem',
+            '/^system\\.caching/' => 'messageMetaSystemCaching',
             'application' => 'messageMetaApplication',
             'system.CModule' => 'messageMetaSystemCmodule',
-            '/^system\\.caching/' => 'messageMetaSystemCaching',
-            '/^system\\./' => 'messageMetaSystem',
         );
         foreach ($categoryFuncs as $match => $method) {
             $isMatch = $match[0] === '/'
@@ -243,7 +243,7 @@ class LogRoute extends CLogRoute
         if (\in_array($logEntry['level'], array(CLogger::LEVEL_ERROR, CLogger::LEVEL_WARNING), true) === false) {
             return $logEntry;
         }
-        if (\array_intersect_key($logEntry['meta'], \array_flip(array('file','line')))) {
+        if (\array_intersect_key($logEntry['meta'], \array_flip(array('file', 'line')))) {
             return $logEntry;
         }
         $callerInfo = $this->getCallerInfo();
@@ -486,7 +486,7 @@ class LogRoute extends CLogRoute
         $caption = $logEntry['category']
             ? $logEntry['category'] . ': ' . $logEntry['message']
             : $logEntry['message'];
-        $logEntry['meta']['columns'] = array('file','line');
+        $logEntry['meta']['columns'] = array('file', 'line');
         $logEntry['meta']['trace'] = $logEntry['trace'];
         $debug = $logEntry['channel'];
         $method = $this->levelMap[$logEntry['level']];

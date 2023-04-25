@@ -347,9 +347,9 @@ class StringUtil
         }
         $stats = array(
             'lower' => array(\preg_match_all('/[a-z]/', $val), 40.626, 8),
-            'upper' => array(\preg_match_all('/[A-Z]/', $val), 40.625, 8),
             'num' => array(\preg_match_all('/[0-9]/', $val), 15.625, 8),
             'other' => array(\preg_match_all('/[+\/]/', $val), 3.125, 5),
+            'upper' => array(\preg_match_all('/[A-Z]/', $val), 40.625, 8),
         );
         foreach ($stats as $stat) {
             $per = $stat[0] * 100 / $strlen;

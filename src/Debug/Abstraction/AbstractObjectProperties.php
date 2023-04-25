@@ -35,6 +35,8 @@ class AbstractObjectProperties
         'attributes' => array(),
         'debugInfoExcluded' => false,   // true if not included in __debugInfo
         'desc' => null,                 // from phpDoc
+        'forceShow' => false,           // initially show the property/value (even if protected or private)
+                                        //   if value is an array, expand it
         'inheritedFrom' => null,        // populated only if inherited
                                         //   not populated if extended/redefined
         'isPromoted' => false,
@@ -43,8 +45,6 @@ class AbstractObjectProperties
         'originallyDeclared' => null,   // populated only if originally declared in ancestor
         'overrides' => null,            // previous ancestor where property is defined
                                         //   populated only if we're overriding
-        'forceShow' => false,           // initially show the property/value (even if protected or private)
-                                        //   if value is an array, expand it
         'type' => null,
         'value' => Abstracter::UNDEFINED,
         'valueFrom' => 'value',         // 'value' | 'debugInfo' | 'debug'
@@ -117,7 +117,7 @@ class AbstractObjectProperties
     }
 
     /**
-     * Add property info/values to abstraction
+     * Add property instance info/values to abstraction
      *
      * @param Abstraction $abs Object Abstraction instance
      *
@@ -166,9 +166,9 @@ class AbstractObjectProperties
         $obj = $abs->getSubject();
         $ref = new ReflectionFunction($obj);
         $abs['definition'] = array(
+            'extensionName' => $ref->getExtensionName(),
             'fileName' => $ref->getFileName(),
             'startLine' => $ref->getStartLine(),
-            'extensionName' => $ref->getExtensionName(),
         );
         $abs['properties']['debug.file'] = static::buildPropValues(array(
             'type' => Abstracter::TYPE_STRING,
@@ -337,10 +337,9 @@ class AbstractObjectProperties
             $inheritedFrom = $this->addViaPhpDocInherit($abs);
             $haveMagic = $inheritedFrom !== null;
         }
-        if (!$haveMagic) {
-            return;
+        if ($haveMagic) {
+            $this->addViaPhpDocIter($abs, $inheritedFrom);
         }
-        $this->addViaPhpDocIter($abs, $inheritedFrom);
     }
 
     /**
@@ -360,7 +359,6 @@ class AbstractObjectProperties
             if (!$tagIntersect) {
                 continue;
             }
-            // $haveMagic = true;
             $inheritedFrom = $reflector->getName();
             $abs['phpDoc'] = \array_merge(
                 $abs['phpDoc'],
@@ -448,8 +446,8 @@ class AbstractObjectProperties
             $existing ?: self::$basePropInfo,
             array(
                 'desc' => $phpDocProp['desc'],
-                'type' => $this->helper->resolvePhpDocType($phpDocProp['type'], $abs),
                 'inheritedFrom' => $inheritedFrom,
+                'type' => $this->helper->resolvePhpDocType($phpDocProp['type'], $abs),
                 'visibility' => $existing
                     ? array($existing['visibility'], $vis)
                     : $vis,
@@ -488,7 +486,7 @@ class AbstractObjectProperties
                 ? $refProperty->isReadOnly()
                 : false,
             'isStatic' => $refProperty->isStatic(),
-            'type' => $this->getPropType($phpDoc['type'], $refProperty),
+            'type' => $this->getPropType($phpDoc['type'], $refProperty, $abs),
             'visibility' => $this->helper->getVisibility($refProperty),
         ));
         if ($abs['collectPropertyValues']) {
@@ -506,7 +504,7 @@ class AbstractObjectProperties
      */
     private function crate(Abstraction $abs)
     {
-        $properties = $this->abs['properties'];
+        $properties = $abs['properties'];
         $phpDocCollect = $abs['cfgFlags'] & AbstractObject::PHPDOC_COLLECT;
         foreach ($properties as $name => $info) {
             $info['value'] = $this->abstracter->crate($info['value'], $abs['debugMethod'], $abs['hist']);
@@ -524,12 +522,13 @@ class AbstractObjectProperties
      *
      * @param string             $phpDocType  Type specified in phpDoc block
      * @param ReflectionProperty $refProperty ReflectionProperty instance
+     * @param Abstraction        $abs         Object Abstraction instance
      *
      * @return string|null
      */
-    private function getPropType($phpDocType, ReflectionProperty $refProperty)
+    private function getPropType($phpDocType, ReflectionProperty $refProperty, Abstraction $abs)
     {
-        $type = $this->helper->resolvePhpDocType($phpDocType, $this->abs);
+        $type = $this->helper->resolvePhpDocType($phpDocType, $abs);
         if ($type !== null) {
             return $type;
         }
@@ -585,7 +584,7 @@ class AbstractObjectProperties
     /**
      * Determine propInfo['overrides'] value
      *
-     * This is the classname of previous ancestor where property is defined
+     * This is the class-name of previous ancestor where property is defined
      *
      * @param ReflectionProperty $refProperty Reflection Property
      * @param array              $propInfo    Property Info

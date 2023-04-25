@@ -119,8 +119,8 @@ class LogFilesTest extends DebugTestFramework
                                 ),
                                 array(
                                     'attribs' => array(
-                                        'data-file' => '/var/www/bootstrap.php',
                                         'class' => array(),
+                                        'data-file' => '/var/www/bootstrap.php',
                                     ),
                                     'debug' => Abstracter::ABSTRACTION,
                                     'type' => 'string',
@@ -128,8 +128,8 @@ class LogFilesTest extends DebugTestFramework
                                 ),
                                 array(
                                     'attribs' => array(
-                                        'data-file' => '/var/www/index.php',
                                         'class' => array(),
+                                        'data-file' => '/var/www/index.php',
                                     ),
                                     'debug' => Abstracter::ABSTRACTION,
                                     'type' => 'string',

@@ -30,6 +30,7 @@ class Logger extends AbstractLogger
     public $debug;
 
     protected $cfg = array(
+        // phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
         'levelMap' => array(
             LogLevel::EMERGENCY => 'error',
             LogLevel::ALERT => 'alert',
@@ -95,7 +96,7 @@ class Logger extends AbstractLogger
     private function checkTableContext(LogEntry $logEntry, $context)
     {
         if (
-            \in_array($logEntry['method'], array('info','log'), true)
+            \in_array($logEntry['method'], array('info', 'log'), true)
             && isset($context['table'])
             && \is_array($context['table'])
         ) {
@@ -250,7 +251,7 @@ class Logger extends AbstractLogger
     private function setMeta(LogEntry $logEntry)
     {
         list($message, $context) = $logEntry['args'];
-        $meta = \array_intersect_key($context, \array_flip(array('channel','file','line')));
+        $meta = \array_intersect_key($context, \array_flip(array('channel', 'file', 'line')));
         // remove meta from context
         $context = \array_diff_key($context, $meta);
         $logEntry->setMeta($meta);

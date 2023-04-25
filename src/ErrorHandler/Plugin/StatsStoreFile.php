@@ -29,8 +29,8 @@ class StatsStoreFile extends AbstractComponent implements StatsStoreInterface
     public function __construct($cfg = array())
     {
         $this->cfg = array(
-            'ttl' => 3600, // any errors that haven't occurred in this timespan are subject to garbage collection
             'errorStatsFile' => __DIR__ . '/error_stats.json',
+            'ttl' => 3600, // any errors that haven't occurred in this timespan are subject to garbage collection
         );
         $this->setCfg($cfg);
         $this->dataRead();
@@ -45,15 +45,15 @@ class StatsStoreFile extends AbstractComponent implements StatsStoreInterface
         $tsNow = \time();
         if (isset($this->data['errors'][$hash]) === false) {
             $this->data['errors'][$hash] = array(
+                'count' => 1,
                 'info' => array(
-                    'type' => $error['type'],
-                    'message'  => $error['message'],
                     'file'    => $error['file'],
                     'line'    => $error['line'],
+                    'message'  => $error['message'],
+                    'type' => $error['type'],
                 ),
                 'tsAdded' => $tsNow,
                 'tsLastOccur' => $tsNow,
-                'count' => 1,
             );
         }
         $this->data['errors'][$hash] = \array_merge(
@@ -90,8 +90,8 @@ class StatsStoreFile extends AbstractComponent implements StatsStoreInterface
     public function flush()
     {
         $this->data = array(
-            'tsGarbageCollection' => \time(),
             'errors' => array(),
+            'tsGarbageCollection' => \time(),
         );
         $this->dataWrite();
     }
@@ -120,8 +120,8 @@ class StatsStoreFile extends AbstractComponent implements StatsStoreInterface
             $data = \json_decode($data, true);
         }
         $this->data = \array_merge(array(
-            'tsGarbageCollection' => \time(),
             'errors' => array(),
+            'tsGarbageCollection' => \time(),
         ), $data ?: array());
     }
 

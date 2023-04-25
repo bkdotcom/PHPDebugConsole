@@ -81,13 +81,13 @@ class General implements SubscriberInterface
     public function errorStats()
     {
         $stats = array(
+            'counts' => \array_fill_keys(
+                array('deprecated','error','fatal','notice','strict','warning'),
+                array('inConsole' => 0, 'notInConsole' => 0, 'suppressed' => 0)
+            ),
             'inConsole' => 0,
             'inConsoleCategories' => array(),
             'notInConsole' => 0,
-            'counts' => \array_fill_keys(
-                array('fatal','error','warning','deprecated','notice','strict'),
-                array('inConsole' => 0, 'notInConsole' => 0, 'suppressed' => 0)
-            )
         );
         foreach ($this->debug->errorHandler->get('errors') as $error) {
             $category = $error['category'];
@@ -202,8 +202,8 @@ class General implements SubscriberInterface
             Debug::EVENT_PRETTIFY,
             $this->debug,
             array(
-                'value' => $string,
                 'contentType' => $contentType,
+                'value' => $string,
             )
         );
         return $event['value'];

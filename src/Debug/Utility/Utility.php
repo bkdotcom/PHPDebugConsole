@@ -40,7 +40,7 @@ class Utility
         }
         $file = '';
         $line = 0;
-        // @phpcs:disable SlevomatCodingStandard.Namespaces.FullyQualifiedGlobalFunctions.NonFullyQualified
+        // phpcs:ignore SlevomatCodingStandard.Namespaces.FullyQualifiedGlobalFunctions.NonFullyQualified
         if (headers_sent($file, $line)) {
             throw new \RuntimeException('Headers already sent: ' . $file . ', line ' . $line);
         }
@@ -106,7 +106,7 @@ class Utility
         if ($returnInt) {
             return (int) $size;
         }
-        $units = array('B','kB','MB','GB','TB','PB');
+        $units = array('B', 'kB', 'MB', 'GB', 'TB', 'PB');
         $exp = (int) \floor(\log((float) $size, 1024));
         $pow = \pow(1024, $exp);
         $size = (int) $pow < 1
@@ -145,11 +145,11 @@ class Utility
      */
     public static function getEmittedHeaders()
     {
-        // @phpcs:disable SlevomatCodingStandard.Namespaces.FullyQualifiedGlobalFunctions.NonFullyQualified
+        // phpcs:ignore SlevomatCodingStandard.Namespaces.FullyQualifiedGlobalFunctions.NonFullyQualified
         $list = headers_list();
         $headers = array();
         foreach ($list as $header) {
-            list($key, $value) = \array_replace(array('',''), \explode(': ', $header, 2));
+            list($key, $value) = \array_replace(array('', ''), \explode(': ', $header, 2));
             $headers[$key][] = $value;
         }
         return $headers;
@@ -209,7 +209,7 @@ class Utility
     public static function httpMethodHasBody($method)
     {
         // don't expect a request body for these methods
-        $noBodyMethods = array('CONNECT','DELETE','GET','HEAD','OPTIONS','TRACE');
+        $noBodyMethods = array('CONNECT', 'DELETE', 'GET', 'HEAD', 'OPTIONS', 'TRACE');
         return \in_array($method, $noBodyMethods, true) === false;
     }
 
@@ -334,7 +334,7 @@ class Utility
         }
         $matches = array();
         if (\preg_match('/^([\d,.]+)\s?([kmgtp])?b?$/i', $size, $matches)) {
-            $matches = \array_replace(array('','',''), $matches);
+            $matches = \array_replace(array('', '', ''), $matches);
             $size = (float) \str_replace(',', '', $matches[1]);
             switch (\strtolower($matches[2])) {
                 case 'p':

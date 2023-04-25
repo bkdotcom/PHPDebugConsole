@@ -43,8 +43,8 @@ class ConfigEvents implements SubscriberInterface
     public function getSubscriptions()
     {
         return array(
-            Debug::EVENT_CONFIG => array('onConfig', PHP_INT_MAX),
             Debug::EVENT_BOOTSTRAP => array('onBootstrap', PHP_INT_MAX * -1),
+            Debug::EVENT_CONFIG => array('onConfig', PHP_INT_MAX),
         );
     }
 
@@ -344,8 +344,8 @@ class ConfigEvents implements SubscriberInterface
     {
         $events = array(
             'onLog' => Debug::EVENT_LOG,
-            'onOutput' => Debug::EVENT_OUTPUT,
             'onMiddleware' => Debug::EVENT_MIDDLEWARE,
+            'onOutput' => Debug::EVENT_OUTPUT,
         );
         $event = $events[$name];
         $prev = $this->debug->getCfg($name, Debug::CONFIG_DEBUG);
@@ -431,7 +431,7 @@ class ConfigEvents implements SubscriberInterface
                 // remove current collect & output values,
                 //   so don't trigger updates for existing values
                 $this->debug->getCfg(null, Debug::CONFIG_DEBUG),
-                \array_flip(array('collect','output'))
+                \array_flip(array('collect', 'output'))
             ),
             $cfgDebug
         );

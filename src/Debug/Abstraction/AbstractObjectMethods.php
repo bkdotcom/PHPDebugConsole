@@ -43,8 +43,8 @@ class AbstractObjectMethods
             'summary' => null,
         ),
         'return' => array(
-            'type' => null,
             'desc' => null,
+            'type' => null,
         ),
         'visibility' => 'public',  // public | private | protected | magic
     );
@@ -265,7 +265,6 @@ class AbstractObjectMethods
             }
             unset($info['phpDoc']['param']);
             unset($info['phpDoc']['return']);
-            \ksort($info['phpDoc']);
             $methodName = $refMethod->getName();
             $methods[$methodName] = $info;
         }
@@ -277,7 +276,7 @@ class AbstractObjectMethods
      *
      * @param Abstraction $abs           Object Abstraction instance
      * @param array       $phpDocMethod  parsed phpdoc method info
-     * @param string      $inheritedFrom classname or null
+     * @param string      $inheritedFrom class-name or null
      *
      * @return array
      */
@@ -313,7 +312,7 @@ class AbstractObjectMethods
     private function buildMethodRef(Abstraction $abs, ReflectionMethod $refMethod)
     {
         $obj = $abs->getSubject();
-        // get_class() returns "raw" classname
+        // get_class() returns "raw" class-name
         //     could be stdClass@anonymous/filepath.php:6$2e
         // $abs['className'] is a "friendly" name ... just stdClass@anonymous
         $className = \is_object($obj)

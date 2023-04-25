@@ -15,7 +15,7 @@ namespace bdk\Debug\Route;
 use bdk\ErrorHandler\Error;
 
 /**
- *
+ * common "shouldSend" method
  */
 trait ErrorThrottleTrait
 {

@@ -5,7 +5,7 @@ namespace bdk\Teams;
 use OutOfBoundsException;
 
 /**
- *
+ * Item interface
  */
 interface ItemInterface
 {

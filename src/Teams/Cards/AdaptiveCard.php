@@ -89,7 +89,7 @@ class AdaptiveCard extends AbstractCard
      */
     public function getMessage()
     {
-        // phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedKeys.IncorrectKeyOrder
+        // phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
         return array(
             'type' => 'message',
             'attachments' => array(
@@ -100,6 +100,7 @@ class AdaptiveCard extends AbstractCard
                 ),
             ),
         );
+        // @phpcs:enable
     }
 
     /**

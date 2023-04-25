@@ -25,7 +25,7 @@ class ContainerTest extends AbstractTestCaseWith
             new Image('http://example.com/cat.jpg'),
             new TextBlock('meow'),
         )))->withHeight(Enums::HEIGHT_AUTO);
-        // phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedKeys.IncorrectKeyOrder
+        // phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
         self::assertSame(array(
             'type' => 'Container',
             'height' => Enums::HEIGHT_AUTO,
@@ -66,7 +66,7 @@ class ContainerTest extends AbstractTestCaseWith
             ->withRequires(array(
                 'foo' => 1.2,
             ));
-        // phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedKeys.IncorrectKeyOrder
+        // phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
         self::assertSame(array(
             'type' => 'Container',
             'backgroundImage' => array(

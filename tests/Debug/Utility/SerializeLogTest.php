@@ -353,10 +353,11 @@ EOD;
             $expect['log'][1][1][1],
             array(
                 'attributes' => array(),
+                'cases' => array(),
                 'cfgFlags' => 4194303,
                 'isAnonymous' => false,
                 'isFinal' => false,
-                'cases' => array(),
+                // 'isMaxDepth' => false,
             )
         );
         // serialized did not include these values

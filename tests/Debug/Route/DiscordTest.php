@@ -13,7 +13,7 @@ use Psr\Http\Message\RequestInterface;
  *
  * @covers \bdk\Debug\Route\Discord
  *
- * @phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedKeys.IncorrectKeyOrder
+ * @phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
  */
 class DiscordTest extends DebugTestFramework
 {
@@ -72,7 +72,7 @@ class DiscordTest extends DebugTestFramework
         $json = \json_decode((string) $requests[0]->getBody(), true);
         self::assertSame(array(
             'content' => ':no_entry: **Fatal Error**' . "\n"
-                . 'GET http://test.example.com/noun/id/verb' ."\n"
+                . 'GET http://test.example.com/noun/id/verb' . "\n"
                 . 'everything is awesome' . "\n"
                 . __FILE__ . ' (line ' . $line . ')',
         ), $json);

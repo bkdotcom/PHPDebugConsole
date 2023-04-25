@@ -33,7 +33,7 @@ class HeroCard extends AbstractCard
      */
     public function getMessage()
     {
-        // phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedKeys.IncorrectKeyOrder
+        // @phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
         return array(
             'type' => 'message',
             'attachments' => array(
@@ -41,6 +41,7 @@ class HeroCard extends AbstractCard
                 'content' => self::normalizeContent($this->fields),
             ),
         );
+        // @phpcs:enable
     }
 
     /**
@@ -59,6 +60,7 @@ class HeroCard extends AbstractCard
     public function withAddedButton($type, $title, $value)
     {
         self::assertEnumValue($type, 'ACTION_TYPE_', 'type');
+        // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
         return $this->withAdded('buttons', array(
             'type' => $type,
             'title' => $title,

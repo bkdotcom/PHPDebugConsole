@@ -12,6 +12,8 @@ use bdk\Test\Teams\Fixture\Stringable;
 
 /**
  * @covers \bdk\Teams\Elements\TableCell
+ *
+ * @phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
  */
 class TableCellTest extends AbstractTestCaseWith
 {
@@ -29,7 +31,6 @@ class TableCellTest extends AbstractTestCaseWith
             false,
             null,
         ));
-        // phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedKeys.IncorrectKeyOrder
         self::assertSame(array(
             'type' => 'TableCell',
             'items' => array(
@@ -75,7 +76,6 @@ class TableCellTest extends AbstractTestCaseWith
         $tableCell = new TableCell(
             (new TextBlock('foo'))->withWeight(Enums::FONT_WEIGHT_BOLDER)
         );
-        // phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedKeys.IncorrectKeyOrder
         self::assertSame(array(
             'type' => 'TableCell',
             'items' => array(
@@ -104,7 +104,6 @@ class TableCellTest extends AbstractTestCaseWith
             ->withSelectAction(new OpenUrl('http://example.com'))
             ->withStyle(Enums::CONTAINER_STYLE_DEFAULT)
             ->withVerticalContentAlignment(Enums::VERTICAL_ALIGNMENT_TOP);
-        // phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedKeys.IncorrectKeyOrder
         self::assertSame(array(
             'type' => 'TableCell',
             'backgroundImage' => array(

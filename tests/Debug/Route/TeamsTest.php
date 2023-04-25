@@ -13,7 +13,7 @@ use Psr\Http\Message\RequestInterface;
  *
  * @covers \bdk\Debug\Route\Teams
  *
- * @phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedKeys.IncorrectKeyOrder
+ * @phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
  */
 class TeamsTest extends DebugTestFramework
 {

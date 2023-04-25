@@ -35,7 +35,7 @@ class ImageTest extends AbstractTestCaseWith
             ->withSize(Enums::IMAGE_SIZE_AUTO)
             ->withStyle(Enums::IMAGE_STYLE_DEFAULT)
             ->withWidth('50px');
-        // phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedKeys.IncorrectKeyOrder
+        // phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
         self::assertSame(array(
             'type' => 'Image',
             'altText' => 'No image for you',

@@ -9,6 +9,8 @@ use bdk\Test\Teams\AbstractTestCaseWith;
 
 /**
  * @covers \bdk\Teams\Cards\HeroCard
+ *
+ * @phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
  */
 class HeroCardTest extends AbstractTestCaseWith
 {
@@ -23,7 +25,6 @@ class HeroCardTest extends AbstractTestCaseWith
             ->withText('text')
             ->withTitle('title')
             ->withSubtitle('subtitle');
-        // phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedKeys.IncorrectKeyOrder
         self::assertSame(array(
             'type' => 'message',
             'attachments' => array(

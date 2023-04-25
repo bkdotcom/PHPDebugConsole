@@ -10,7 +10,7 @@ use bdk\Test\Teams\AbstractTestCaseWith;
 /**
  * @covers \bdk\Teams\Elements\Table
  *
- * @phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedKeys.IncorrectKeyOrder
+ * @phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
  */
 class TableTest extends AbstractTestCaseWith
 {
@@ -110,7 +110,6 @@ class TableTest extends AbstractTestCaseWith
             ->withAddedRow(new TableRow())
             ->withShowGridLines()
             ->withVerticalCellContentAlignment(Enums::VERTICAL_ALIGNMENT_TOP);
-        // phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedKeys.IncorrectKeyOrder
         self::assertSame(array(
             'type' => 'Table',
             'columns' => array(

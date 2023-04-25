@@ -16,7 +16,7 @@ class TextRunTest extends AbstractTestCaseWith
     public function testConstruct()
     {
         $textRun = new TextRun('hello world');
-        // phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedKeys.IncorrectKeyOrder
+        // phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
         self::assertSame(array(
             'type' => 'TextRun',
             'text' => 'hello world',
@@ -37,7 +37,7 @@ class TextRunTest extends AbstractTestCaseWith
             ->withStrikethrough()
             ->withUnderline()
             ->withWeight(Enums::FONT_WEIGHT_DEFAULT);
-        // phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedKeys.IncorrectKeyOrder
+        // phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
         self::assertSame(array(
             'type' => 'TextRun',
             'color' => Enums::COLOR_DEFAULT,

@@ -39,7 +39,7 @@ class Table
         $cfg = $logEntry->getMeta('cfg', array());
         $cfgRestore = array();
         $maxDepth = $this->debug->getCfg('maxDepth');
-        if (\in_array($maxDepth, array(1,2), true)) {
+        if (\in_array($maxDepth, array(1, 2), true)) {
             $cfg['maxDepth'] = 3;
         }
         if ($cfg) {

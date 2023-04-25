@@ -9,7 +9,7 @@ use bdk\Test\Teams\AbstractTestCaseWith;
 /**
  * @covers \bdk\Teams\Elements\FactSet
  *
- * @phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedKeys.IncorrectKeyOrder
+ * @phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
  */
 class FactSetTest extends AbstractTestCaseWith
 {

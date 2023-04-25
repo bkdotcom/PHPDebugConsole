@@ -665,6 +665,7 @@ class BlockFactory
      * @return void
      *
      * @throws InvalidArgumentException
+     * @throws OutOfBoundsException
      */
     private static function assertElements(array $elements, $where = 'actions')
     {
@@ -697,7 +698,6 @@ class BlockFactory
             ? 25
             : 10;
         $elementCount = \count($elements);
-        // \bdk\Test\Debug\Helper::stderr($where, $max, $elementCount);
         if ($elementCount === 0) {
             throw new OutOfBoundsException(\sprintf('At least one element is require for %s block', $where));
         } elseif ($elementCount > $max) {
@@ -756,9 +756,13 @@ class BlockFactory
     /**
      * Normalize checkbox, radio, or select options
      *
-     * @param array $options checkbox, radio, overflow, or select block element
+     * @param array  $options checkbox, radio, overflow, or select block element
+     * @param int    $max     Maximum number of allowed options
+     * @param string $where   Name of element options belong to
      *
      * @return array
+     *
+     * @throws OutOfBoundsException
      */
     private static function normalizeOptions(array $options, $max, $where)
     {
@@ -776,12 +780,12 @@ class BlockFactory
      * Normaliee a single option "object"
      *
      * @param array|string    $option option text/value
-     * @param int|string|null $k      The option's array key...
+     * @param int|string|null $key    The option's array key...
      *                                   if a string, it will used as the option's text (label)
      *
      * @return [type] [description]
      */
-    private static function normalizeOption($option, $k = null)
+    private static function normalizeOption($option, $key = null)
     {
         // Overflow, select, and multi-select menus can only use plain_text
         // radio buttons and checkboxes can use mrkdwn text objects.
@@ -797,8 +801,8 @@ class BlockFactory
                 'value' => $option,
             );
         }
-        if (\is_string($k)) {
-            $option['text'] = $k;
+        if (\is_string($key)) {
+            $option['text'] = $key;
         }
         if (isset($option['text']) && \is_array($option['text']) === false) {
             $option['text'] = array(

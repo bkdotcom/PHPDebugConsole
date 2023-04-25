@@ -163,7 +163,7 @@ final class Utils
             static function ($value, $index) use (&$results) {
                 $results[$index] = $value;
             },
-            // @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter
+            // @phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
             static function ($reason, $index, PromiseInterface $aggregate) {
                 $aggregate->reject($reason);
             }

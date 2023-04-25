@@ -40,7 +40,7 @@ class OpenUrlTest extends AbstractTestCaseWith
             ->withTitle('click here')
             ->withIconUrl('http://example.com/icon.png')
             ->withStyle(Enums::ACTION_STYLE_DEFAULT);
-        // phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedKeys.IncorrectKeyOrder
+        // phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
         self::assertSame(array(
             'type' => 'Action.OpenUrl',
             'iconUrl' => 'http://example.com/icon.png',

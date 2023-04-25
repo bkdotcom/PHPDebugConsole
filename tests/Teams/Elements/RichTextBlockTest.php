@@ -10,7 +10,7 @@ use bdk\Test\Teams\AbstractTestCaseWith;
 /**
  * @covers \bdk\Teams\Elements\RichTextBlock
  *
- * @phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedKeys.IncorrectKeyOrder
+ * @phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
  */
 class RichTextBlockTest extends AbstractTestCaseWith
 {

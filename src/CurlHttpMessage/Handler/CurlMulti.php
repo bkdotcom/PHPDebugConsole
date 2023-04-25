@@ -160,8 +160,6 @@ class CurlMulti extends Curl
      * @return void
      *
      * @throws \RuntimeException
-     *
-     * @phpcs:disable SlevomatCodingStandard.Namespaces.FullyQualifiedGlobalFunctions.NonFullyQualified
      */
     protected function init()
     {
@@ -171,6 +169,7 @@ class CurlMulti extends Curl
         }
         foreach ($this->options['curlMulti'] as $option => $value) {
             // A warning is raised in case of a wrong option.
+            // phpcs:ignore SlevomatCodingStandard.Namespaces.FullyQualifiedGlobalFunctions.NonFullyQualified
             curl_multi_setopt($this->multiHandle, $option, $value);
         }
     }

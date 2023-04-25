@@ -127,7 +127,7 @@ class Section extends AbstractItem
                 'image' => null,
                 'title' => null,
             ), $image);
-            $image = \array_intersect_key($image, \array_flip(array('image','title')));
+            $image = \array_intersect_key($image, \array_flip(array('image', 'title')));
             self::assertUrl($image['image']);
             $new->fields['images'][] = self::normalizeContent($image);
         }

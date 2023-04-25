@@ -33,10 +33,8 @@ class SlackMessage implements JsonSerializable
 {
     /**
      * @var array<string, mixed>
-     *
-     * @phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedKeys.IncorrectKeyOrder
      */
-    protected $dataDefault = array(
+    protected $dataDefault = array( // phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
         'attachments' => array(),
         'blocks' => array(),
         'mrkdwn' => true,

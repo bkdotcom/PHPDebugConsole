@@ -12,6 +12,8 @@ use bdk\Test\Teams\AbstractTestCaseWith;
 
 /**
  * @covers \bdk\Teams\Elements\ColumnSet
+ *
+ * @phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
  */
 class ColumnSetTest extends AbstractTestCaseWith
 {
@@ -31,7 +33,6 @@ class ColumnSetTest extends AbstractTestCaseWith
             ->withMinHeight('42px')
             ->withSelectAction(new OpenUrl('http://example.com'))
             ->withStyle(Enums::CONTAINER_STYLE_DEFAULT);
-        // phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedKeys.IncorrectKeyOrder
         self::assertSame(array(
             'type' => 'ColumnSet',
             'bleed' => true,

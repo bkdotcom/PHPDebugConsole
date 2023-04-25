@@ -9,6 +9,8 @@ use bdk\Test\Teams\AbstractTestCaseWith;
 
 /**
  * @covers \bdk\Teams\Elements\ActionSet
+ *
+ * @phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
  */
 class ActionSetTest extends AbstractTestCaseWith
 {
@@ -28,7 +30,6 @@ class ActionSetTest extends AbstractTestCaseWith
             new ShowCard(),
             new OpenUrl('http://example.com/'),
         ));
-        // phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedKeys.IncorrectKeyOrder
         self::assertSame(array(
             'type' => 'ActionSet',
             'actions' => array(

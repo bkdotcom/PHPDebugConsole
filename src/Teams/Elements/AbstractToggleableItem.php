@@ -7,7 +7,7 @@ namespace bdk\Teams\Elements;
 use bdk\Teams\AbstractExtendableItem;
 
 /**
- *
+ * The base object off of which "toggleable" items are built
  */
 class AbstractToggleableItem extends AbstractExtendableItem
 {

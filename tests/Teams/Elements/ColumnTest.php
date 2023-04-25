@@ -14,6 +14,8 @@ use bdk\Test\Teams\AbstractTestCaseWith;
  * @covers \bdk\Teams\AbstractExtendableItem
  * @covers \bdk\Teams\Elements\AbstractToggleableItem
  * @covers \bdk\Teams\Elements\Column
+ *
+ * @phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
  */
 class ColumnTest extends AbstractTestCaseWith
 {
@@ -23,7 +25,6 @@ class ColumnTest extends AbstractTestCaseWith
             new TextBlock('foo'),
             new TextBlock('bar'),
         ));
-        // phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedKeys.IncorrectKeyOrder
         self::assertSame(array(
             'type' => 'Column',
             'items' => array(
@@ -62,7 +63,6 @@ class ColumnTest extends AbstractTestCaseWith
             ->withStyle(Enums::CONTAINER_STYLE_DEFAULT)
             ->withVerticalContentAlignment(Enums::VERTICAL_ALIGNMENT_TOP)
             ->withWidth('50px');
-        // phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedKeys.IncorrectKeyOrder
         self::assertSame(array(
             'type' => 'Column',
             'backgroundImage' => array(

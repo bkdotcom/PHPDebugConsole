@@ -18,6 +18,8 @@ class Table extends AbstractElement
 {
     /**
      * Constructor
+     *
+     * @param iterable|TableRow[] $rows Table rows
      */
     public function __construct($rows = array())
     {

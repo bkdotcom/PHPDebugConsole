@@ -5,7 +5,7 @@ namespace bdk\Teams\Cards;
 use JsonSerializable;
 
 /**
- *
+ * Card interface
  */
 interface CardInterface extends JsonSerializable
 {

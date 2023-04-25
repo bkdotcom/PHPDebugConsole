@@ -97,7 +97,7 @@ class SlackCommand
         if (\abs(\time() - (int) $timestamp) > 60) {
             throw new RuntimeException('Request timestamp out of bounds');
         }
-        $version = \array_replace(array(null,null), \explode('=', $signature, 2))[0];
+        $version = \array_replace(array(null, null), \explode('=', $signature, 2))[0];
         if ($version !== self::SIGNING_SIGNATURE_VERSION) {
             throw new RuntimeException('Unrecognized signature version');
         }

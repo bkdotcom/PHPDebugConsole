@@ -12,6 +12,8 @@ use bdk\Test\Teams\AbstractTestCaseWith;
 /**
  * @covers \bdk\Teams\Cards\AbstractCard
  * @covers \bdk\Teams\Cards\AdaptiveCard
+ *
+ * @phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
  */
 class AdaptiveCardTest extends AbstractTestCaseWith
 {
@@ -32,7 +34,6 @@ class AdaptiveCardTest extends AbstractTestCaseWith
         $card = (new AdaptiveCard())
             ->withAddedAction(new ShowCard())
             ->withAddedElement(new \bdk\Teams\Elements\TextBlock('test block 1'));
-        // phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedKeys.IncorrectKeyOrder
         $expect = array(
             'type' => 'message',
             'attachments' => array(

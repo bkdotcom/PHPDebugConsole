@@ -228,7 +228,7 @@ class CurlReqResOptions
         );
 
         // response headers
-        // @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter
+        // @phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
         $options[CURLOPT_HEADERFUNCTION] = function ($curl, $data) use ($curlReqRes) {
             $response = $curlReqRes->getResponse();
             $headerLine = \trim($data);

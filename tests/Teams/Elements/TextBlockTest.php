@@ -29,7 +29,7 @@ class TextBlockTest extends AbstractTestCaseWith
     public function testConstruct()
     {
         $textBlock = new TextBlock(new Stringable('hello world'));
-        // phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedKeys.IncorrectKeyOrder
+        // phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
         self::assertSame(array(
             'type' => 'TextBlock',
             'text' => 'hello world',
@@ -55,7 +55,7 @@ class TextBlockTest extends AbstractTestCaseWith
             ->withIsVisible()
             ->withSeparator()
             ->withSpacing(Enums::SPACING_DEFAULT);
-        // phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedKeys.IncorrectKeyOrder
+        // phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
         self::assertSame(array(
             'type' => 'TextBlock',
             'color' => Enums::COLOR_DEFAULT,

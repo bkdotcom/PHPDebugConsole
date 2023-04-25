@@ -320,7 +320,6 @@ class Client
 
         foreach ($options['defaultHeaders'] as $name => $val) {
             if ($request->hasHeader($name) === false) {
-                // \bdk\Test\Debug\Helper::stderr('  updating header');
                 $request = $request->withHeader($name, $val);
             }
         }

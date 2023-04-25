@@ -131,8 +131,8 @@ class CurlHttpMessageMiddleware extends AbstractComponent
         $options = $curlReqRes->getOptions();
         $requestInfo = array(
             'isAsyncronous' => $options['isAsyncronous'],
-            'requestId' => \spl_object_hash($request),
             'request' => $request,
+            'requestId' => \spl_object_hash($request),
         );
         $this->onRedirectOrig = $options['onRedirect'];
         if ($requestInfo['isAsyncronous'] === false) {

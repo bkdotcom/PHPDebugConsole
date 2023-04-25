@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace bdk\Slack;
 
 use bdk\CurlHttpMessage\Client;
-use bdk\Slack\SlackMessage;
 
 /**
  * Base class for SlackApi & SlackWebhook

@@ -9,7 +9,7 @@ use bdk\Test\Teams\AbstractTestCaseWith;
 /**
  * @covers \bdk\Teams\Actions\ShowCard
  *
- * @phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedKeys.IncorrectKeyOrder
+ * @phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
  */
 class ShowCardTest extends AbstractTestCaseWith
 {

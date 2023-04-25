@@ -89,7 +89,7 @@ final class Each
             $iterable,
             $concurrency,
             $onFulfilled,
-            // @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter
+            // @phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
             static function ($reason, $index, PromiseInterface $aggregate) {
                 $aggregate->reject($reason);
             }

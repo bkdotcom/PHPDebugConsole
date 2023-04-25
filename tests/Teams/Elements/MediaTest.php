@@ -17,7 +17,7 @@ class MediaTest extends AbstractTestCaseWith
             // 'http://example.com/cat.mp4',
             new MediaSource('http://example.com/cat.mp4', 'video/mp4'),
         ]);
-        // phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedKeys.IncorrectKeyOrder
+        // phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
         self::assertSame(array(
             'type' => 'Media',
             'sources' => array(
@@ -41,7 +41,7 @@ class MediaTest extends AbstractTestCaseWith
             ->withAddedSource(new MediaSource('http://example.com/cat4.mp4', 'video/mp4'))
             ->withAltText('Cat videos!')
             ->withPoster('http://example.com/cat.png');
-        // phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedKeys.IncorrectKeyOrder
+        // phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
         self::assertSame(array(
             'type' => 'Media',
             'altText' => 'Cat videos!',

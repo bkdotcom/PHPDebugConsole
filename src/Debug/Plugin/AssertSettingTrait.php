@@ -27,13 +27,13 @@ trait AssertSettingTrait
     protected function assertSetting($setting)
     {
         $setting = $this->assertSettingPrep(\array_merge(array(
+            'addParams' => array(),
             'filter' => FILTER_VALIDATE_BOOLEAN,
             'msg' => '',    // (optional) message displayed if assertion fails
             'name' => '',   // ini name
             'operator' => '==',
             'valActual' => '__use_ini_val__',
             'valCompare' => true,
-            'addParams' => array(),
         ), $setting));
         $assert = \is_array($setting['valCompare'])
             ? \in_array($setting['valActual'], $setting['valCompare'], true)

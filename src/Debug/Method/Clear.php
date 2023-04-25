@@ -149,7 +149,7 @@ class Clear
     {
         $errorsNotCleared = array();
         foreach ($log as $k => $logEntry) {
-            if (\in_array($logEntry['method'], array('error','warn'), true) === false) {
+            if (\in_array($logEntry['method'], array('error', 'warn'), true) === false) {
                 continue;
             }
             $clear2 = $clear;
@@ -201,7 +201,7 @@ class Clear
     {
         $keep = $clearErrors
             ? array()
-            : array('error','warn');
+            : array('error', 'warn');
         if ($keep || $this->channelName) {
             // we need to go through and filter based on method and/or channel
             foreach ($log as $k => $logEntry) {
@@ -288,21 +288,22 @@ class Clear
     {
         $bitmask = $logEntry['meta']['bitmask'];
         $callerInfo = $this->debug->backtrace->getCallerInfo();
+        // phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
         $logEntry->setValues(array(
             'method' => 'clear',
             'args' => $args,
             'meta' =>  \array_merge(array(
-                'file' => $callerInfo['file'],
-                'line' => $callerInfo['line'],
                 'bitmask' => $bitmask,
+                'file' => $callerInfo['file'],
                 'flags' => array(
                     'alerts' => (bool) ($bitmask & Debug::CLEAR_ALERTS),
                     'log' => (bool) ($bitmask & Debug::CLEAR_LOG),
                     'logErrors' => (bool) ($bitmask & Debug::CLEAR_LOG_ERRORS),
+                    'silent' => (bool) ($bitmask & Debug::CLEAR_SILENT),
                     'summary' => (bool) ($bitmask & Debug::CLEAR_SUMMARY),
                     'summaryErrors' => (bool) ($bitmask & Debug::CLEAR_SUMMARY_ERRORS),
-                    'silent' => (bool) ($bitmask & Debug::CLEAR_SILENT),
                 ),
+                'line' => $callerInfo['line'],
             ), $logEntry['meta']),
             'appendLog' => $args && !($bitmask & Debug::CLEAR_SILENT),
             'forcePublish' => (bool) $args,   // publish event even if collect = false

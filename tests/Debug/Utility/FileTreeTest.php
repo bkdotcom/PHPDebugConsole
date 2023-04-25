@@ -33,33 +33,33 @@ class FileTreeTest extends TestCase
             '/var/www' => array(
                 'excludedDir' => array(
                     array(
-                        'value' => '2 omitted',
                         'attribs' => array(
                             'class' => array(
                                 'exclude-count',
                             ),
                         ),
                         'type' => 'string',
+                        'value' => '2 omitted',
                         'debug' => Abstracter::ABSTRACTION,
                     ),
                 ),
                 array(
-                    'value' => 'bootstrap.php',
                     'attribs' => array(
-                        'data-file' =>  '/var/www/bootstrap.php',
                         'class' =>  [],
+                        'data-file' =>  '/var/www/bootstrap.php',
                     ),
                     'type' => 'string',
-                    'debug' => Abstracter::ABSTRACTION
+                    'value' => 'bootstrap.php',
+                    'debug' => Abstracter::ABSTRACTION,
                 ),
                 array(
-                    'value' => 'index.php',
                     'attribs' => array(
-                        'data-file' => '/var/www/index.php',
                         'class' =>  [],
+                        'data-file' => '/var/www/index.php',
                     ),
                     'type' => 'string',
-                    'debug' => Abstracter::ABSTRACTION
+                    'value' => 'index.php',
+                    'debug' => Abstracter::ABSTRACTION,
                 ),
             ),
         );

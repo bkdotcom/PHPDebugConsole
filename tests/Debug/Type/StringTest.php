@@ -269,14 +269,15 @@ EOD;
                         . '<span class="t_string" data-type-more="maxLen">'
                             . \str_replace("\n", '<span class="ws_n"></span>' . "\n", $longStringExpect)
                             . '<span class="maxlen">&hellip; 1778 more bytes (not logged)</span>'
-                        . '</span></li>'),
+                        . '</span></li>'
+                    ),
                     'script' => 'console.log("long string",' . \json_encode($longStringExpect . '[1778 more bytes (not logged)]') . ');',
                     'streamAnsi' => "long string \e[38;5;245m=\e[0m \e[38;5;250m\"\e[0m"
                         . $longStringExpect
                         . "\e[38;5;250m\"\e[0m"
                         . "\e[30;48;5;41m[1778 more bytes (not logged)]\e[0m",
                     'text' => 'long string = "' . $longStringExpect . '"[1778 more bytes (not logged)]',
-                )
+                ),
             ),
 
             'base64' => array(
@@ -285,8 +286,8 @@ EOD;
                     \base64_encode(\file_get_contents(TEST_DIR . '/assets/logo.png')),
                 ),
                 array(
-                    'entry' => function (LogEntry $logEntry) use ($base64snip) {
-                        $jsonExpect = '{"method":"log","args":[{"brief":false,"strlen":10852,"typeMore":"base64","value":' . \json_encode($base64snip) . ',"valueDecoded":{"brief":false,"strlen":%d,"typeMore":"binary","value":"","contentType":"%s","type":"string","debug":"\u0000debug\u0000"},"type":"string","debug":"\u0000debug\u0000"}],"meta":[]}';
+                    'entry' => static function (LogEntry $logEntry) use ($base64snip) {
+                        $jsonExpect = '{"method":"log","args":[{"brief":false,"strlen":10852,"type":"string","typeMore":"base64","value":' . \json_encode($base64snip) . ',"valueDecoded":{"brief":false,"contentType":"%s","strlen":%d,"type":"string","typeMore":"binary","value":"","debug":"\u0000debug\u0000"},"debug":"\u0000debug\u0000"}],"meta":[]}';
                         $jsonified = \json_encode($logEntry);
                         self::assertStringMatchesFormat($jsonExpect, $jsonified);
                     },
@@ -295,7 +296,7 @@ EOD;
                             $base64snip . '[10696 more bytes (not logged)]',
                         ),
                         null,
-                        ''
+                        '',
                     ),
                     'html' => '<li class="m_log"><span class="string-encoded tabs-container" data-type-more="base64">' . "\n"
                         . '<nav role="tablist"><a class="nav-link" data-target=".tab-1" data-toggle="tab" role="tab">base64</a><a class="active nav-link" data-target=".tab-2" data-toggle="tab" role="tab">decoded</a></nav>' . "\n"
@@ -318,7 +319,7 @@ EOD;
                     \base64_encode(\file_get_contents(TEST_DIR . '/assets/logo.png')),
                 ),
                 array(
-                    'entry' => function (LogEntry $logEntry) {
+                    'entry' => static function (LogEntry $logEntry) {
                     },
                     'html' => '<li class="expanded m_group">
                         <div class="group-header"><span class="font-weight-bold group-label"><span class="t_keyword">string</span><span class="text-muted">(base64)</span><span class="t_punct colon">:</span> <span class="t_string" data-type-more="base64"><span class="no-quotes t_string">'
@@ -335,8 +336,8 @@ EOD;
                     Debug::meta('redact'),
                 ),
                 array(
-                    'entry' => function (LogEntry $logEntry) use ($base64snip2) {
-                        $jsonExpect = '{"method":"log","args":[{"brief":false,"strlen":null,"typeMore":"base64","value":"' . $base64snip2 . '","valueDecoded":{"brief":false,"strlen":null,"typeMore":"json","value":"{\n    \"poop\": \"\\\\ud83d\\\\udca9\",\n    \"int\": 42,\n    \"password\": \"\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\"\n}","valueDecoded":{"poop":"\ud83d\udca9","int":42,"password":"\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588"},"type":"string","attribs":{"class":["highlight","language-json"]},"addQuotes":false,"contentType":"application\/json","prettified":true,"prettifiedTag":true,"visualWhiteSpace":false,"debug":"\u0000debug\u0000"},"type":"string","debug":"\u0000debug\u0000"}],"meta":{"redact":true}}';
+                    'entry' => static function (LogEntry $logEntry) use ($base64snip2) {
+                        $jsonExpect = '{"method":"log","args":[{"brief":false,"strlen":null,"type":"string","typeMore":"base64","value":"' . $base64snip2 . '","valueDecoded":{"addQuotes":false,"attribs":{"class":["highlight","language-json"]},"brief":false,"contentType":"application\/json","prettified":true,"prettifiedTag":true,"strlen":null,"type":"string","typeMore":"json","value":"{\n    \"poop\": \"\\\\ud83d\\\\udca9\",\n    \"int\": 42,\n    \"password\": \"\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\"\n}","valueDecoded":{"poop":"\ud83d\udca9","int":42,"password":"\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588"},"visualWhiteSpace":false,"debug":"\u0000debug\u0000"},"debug":"\u0000debug\u0000"}],"meta":{"redact":true}}';
                         $jsonified = \json_encode($logEntry);
                         self::assertSame($jsonExpect, $jsonified);
                     },
@@ -364,7 +365,7 @@ EOD;
                         </span></li>',
                     'script' => 'console.log("' . $base64snip2 . '");',
                     'text' => $base64snip2,
-                )
+                ),
             ),
 
             'base64.serialized.redact' => array(
@@ -374,8 +375,8 @@ EOD;
                     Debug::meta('redact'),
                 ),
                 array(
-                    'entry' => function (LogEntry $logEntry) use ($base64snip3) {
-                        $jsonExpect = '{"method":"log","args":[{"brief":false,"strlen":null,"typeMore":"base64","value":"YTozOntzOjQ6InBvb3AiO3M6NDoi8J+SqSI7czozOiJpbnQiO2k6NDI7czo4OiJwYXNzd29yZCI7czo2OiJzZWNyZXQiO30=","valueDecoded":{"brief":false,"strlen":null,"typeMore":"serialized","value":"a:3:{s:4:\"poop\";s:4:\"\ud83d\udca9\";s:3:\"int\";i:42;s:8:\"password\";s:6:\"\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\";}","valueDecoded":{"poop":"\ud83d\udca9","int":42,"password":"\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588"},"type":"string","debug":"\u0000debug\u0000"},"type":"string","debug":"\u0000debug\u0000"}],"meta":{"redact":true}}';
+                    'entry' => static function (LogEntry $logEntry) use ($base64snip3) {
+                        $jsonExpect = '{"method":"log","args":[{"brief":false,"strlen":null,"type":"string","typeMore":"base64","value":"' . $base64snip3 . '","valueDecoded":{"brief":false,"strlen":null,"type":"string","typeMore":"serialized","value":"a:3:{s:4:\"poop\";s:4:\"\ud83d\udca9\";s:3:\"int\";i:42;s:8:\"password\";s:6:\"\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\";}","valueDecoded":{"poop":"\ud83d\udca9","int":42,"password":"\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588"},"debug":"\u0000debug\u0000"},"debug":"\u0000debug\u0000"}],"meta":{"redact":true}}';
                         $jsonified = \json_encode($logEntry);
                         self::assertSame($jsonExpect, $jsonified);
                     },
@@ -399,7 +400,7 @@ EOD;
                         </span></li>',
                     'script' => 'console.log("' . $base64snip3 . '");',
                     'text' => $base64snip3,
-                )
+                ),
             ),
 
             'binary' => array(
@@ -534,7 +535,7 @@ EOD;
                                 'typeMore' => Abstracter::TYPE_STRING_JSON,
                                 'value' => '{"poop":"\ud83d\udca9","int":42,"password":"█████████"}',
                                 'valueDecoded' => null,
-                            )
+                            ),
                         ),
                         'meta' => array(
                             'redact' => true,
@@ -543,7 +544,7 @@ EOD;
                     'html' => '<li class="expanded m_group">
                         <div class="group-header"><span class="font-weight-bold group-label"><span class="t_string" data-type-more="json"><span class="no-quotes t_string">{&quot;poop&quot;:&quot;\ud83d\udca9&quot;,&quot;int&quot;:42,&quot;password&quot;:&quot;█████████&quot;}</span></span></span></div>
                         <ul class="group-body">',
-                )
+                ),
             ),
 
             'dblEncode' => array(
@@ -575,7 +576,7 @@ EOD;
                                 'valueDecoded' => array(
                                     'foo' => 'bar',
                                 ),
-                            )
+                            ),
                         ),
                         'meta' => array(),
                     ),
@@ -587,7 +588,7 @@ EOD;
                         . '<li><span class="t_key">foo</span><span class="t_operator">=&gt;</span><span class="t_string">bar</span></li>' . "\n"
                         . '</ul><span class="t_punct">)</span></span></div>' . "\n"
                         . '</span></li>',
-                )
+                ),
             ),
             'serialized.brief' => array(
                 'group',
@@ -606,14 +607,14 @@ EOD;
                                 'typeMore' => Abstracter::TYPE_STRING_SERIALIZED,
                                 'value' => 'a:1:{s:3:"foo";s:3:"bar";}',
                                 'valueDecoded' => null,
-                            )
+                            ),
                         ),
                         'meta' => array(),
                     ),
                     'html' => '<li class="expanded m_group">
                         <div class="group-header"><span class="font-weight-bold group-label"><span class="t_string" data-type-more="serialized"><span class="no-quotes t_string">a:1:{s:3:&quot;foo&quot;;s:3:&quot;bar&quot;;}</span></span></span></div>
                         <ul class="group-body">',
-                )
+                ),
             ),
         );
     }

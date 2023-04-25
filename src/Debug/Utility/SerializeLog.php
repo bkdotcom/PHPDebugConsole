@@ -49,7 +49,7 @@ class SerializeLog
         }
         $debug->setCfg($data['config']);
         unset($data['config'], $data['version']);
-        foreach (array('alerts','log','logSummary') as $cat) {
+        foreach (array('alerts', 'log', 'logSummary') as $cat) {
             $data[$cat] = self::importGroup($cat, $data[$cat]);
         }
         foreach ($data as $k => $v) {
@@ -102,10 +102,10 @@ class SerializeLog
             return false;
         }
         $data = \array_merge(array(
-            'version' => '2.3',
             'config' => array(
                 'channels' => array(),
             ),
+            'version' => '2.3',
         ), $data);
         if (isset($data['rootChannel'])) {
             $data['config']['channelName'] = $data['rootChannel'];
@@ -141,7 +141,7 @@ class SerializeLog
      *
      * @return LogEntry
      */
-    private static function importLogEntry($vals)
+    private static function importLogEntry(array $vals)
     {
         $vals = \array_replace(array('', array(), array()), $vals);
         if (self::$isLegacyData) {
@@ -186,7 +186,7 @@ class SerializeLog
      *
      * @return array
      */
-    private static function importLegacy($vals)
+    private static function importLegacy(array $vals)
     {
         foreach ($vals as $k => $v) {
             if (\is_array($v) === false) {
@@ -211,32 +211,28 @@ class SerializeLog
     /**
      * Convert legacy object abstraction data
      *
-     * @param array $abs Abstraction values
+     * @param array $absValues Abstraction values
      *
      * @return array
      */
-    private static function importLegacyObj($abs)
+    private static function importLegacyObj(array $absValues)
     {
-        $abs = AbstractObject::buildObjValues($abs);
-        if (isset($abs['collectMethods'])) {
-            if ($abs['collectMethods'] === false) {
-                $abs['cfgFlags'] &= ~AbstractObject::METHOD_COLLECT;
+        $absValues = AbstractObject::buildObjValues($absValues);
+        if (isset($absValues['collectMethods'])) {
+            if ($absValues['collectMethods'] === false) {
+                $absValues['cfgFlags'] &= ~AbstractObject::METHOD_COLLECT;
             }
-            unset($abs['collectMethods']);
+            unset($absValues['collectMethods']);
         }
-        $baseMethodInfoRef = new \ReflectionProperty('bdk\Debug\Abstraction\AbstractObjectMethods', 'baseMethodInfo');
-        $baseMethodInfoRef->setAccessible(true);
-        $baseMethodInfo = $baseMethodInfoRef->getValue();
-        foreach ($abs['methods'] as $name => $meth) {
-            $abs['methods'][$name] = \array_merge($baseMethodInfo, $meth);
+        $baseMethodInfo = \bdk\Debug\Abstraction\AbstractObjectMethods::buildMethodValues();
+        foreach ($absValues['methods'] as $name => $meth) {
+            $absValues['methods'][$name] = \array_merge($baseMethodInfo, $meth);
         }
-        $basePropInfoRef = new \ReflectionProperty('bdk\Debug\Abstraction\AbstractObjectProperties', 'basePropInfo');
-        $basePropInfoRef->setAccessible(true);
-        $basePropInfo = $basePropInfoRef->getValue();
-        foreach ($abs['properties'] as $name => $prop) {
-            $abs['properties'][$name] = \array_merge($basePropInfo, $prop);
+        $basePropInfo = \bdk\Debug\Abstraction\AbstractObjectProperties::buildPropValues();
+        foreach ($absValues['properties'] as $name => $prop) {
+            $absValues['properties'][$name] = \array_merge($basePropInfo, $prop);
         }
-        return $abs;
+        return $absValues;
     }
 
     /**
@@ -283,7 +279,7 @@ class SerializeLog
             'requestId',
             'runtime',
         )));
-        foreach (array('alerts','log','logSummary') as $cat) {
+        foreach (array('alerts', 'log', 'logSummary') as $cat) {
             $data[$cat] = self::serializeGroup($data[$cat]);
         }
         return $data;
@@ -296,7 +292,7 @@ class SerializeLog
      *
      * @return array
      */
-    private static function serializeGroup($data)
+    private static function serializeGroup(array $data)
     {
         foreach ($data as $i => $val) {
             if (!($val instanceof LogEntry)) {

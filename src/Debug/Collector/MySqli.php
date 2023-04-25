@@ -57,6 +57,7 @@ class MySqli extends mysqliBase
     public function __construct($host = null, $username = null, $passwd = null, $dbname = null, $port = null, $socket = null, Debug $debug = null)
     {
         $params = \func_num_args()
+            // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
             ? array(
                 'host' => $host,
                 'username' => $username,
@@ -358,6 +359,7 @@ class MySqli extends mysqliBase
             parent::__construct();
             return;
         }
+        // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
         $paramsDefault = array(
             'host' => \ini_get('mysqli.default_host'),
             'username' => \ini_get('mysqli.default_user'),

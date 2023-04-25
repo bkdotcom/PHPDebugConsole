@@ -30,8 +30,8 @@ class EmailTest extends DebugTestFramework
         $this->assertStringContainsString($stringExpect, $this->emailInfo['body']);
         $data = \bdk\Debug\Utility\SerializeLog::unserialize($this->emailInfo['body']);
         $this->assertSame(array(
-            'version',
             'config',
+            'version',
             'alerts',
             'log',
             'logSummary',

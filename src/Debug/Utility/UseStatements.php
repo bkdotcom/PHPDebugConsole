@@ -217,8 +217,8 @@ class UseStatements
     private static function recordTokenClass()
     {
         self::$currentUse = array(
-            'class' => self::$groupNamespace ?: '',
             'alias' => '',
+            'class' => self::$groupNamespace ?: '',
         );
         self::$recordPart = 'class';
     }
@@ -282,8 +282,8 @@ class UseStatements
                 self::$record = 'class';
                 self::$recordPart = 'class';
                 self::$currentUse = array(
-                    'class' => '',
                     'alias' => '',
+                    'class' => '',
                 );
                 break;
         }

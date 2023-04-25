@@ -78,7 +78,7 @@ bdk\Test\Debug\Fixture\TestObj
     (✨ magic excluded) magicProp
     (debug) debugValue = "This property is debug only"
   Methods:
-    public: 8
+    public: 9
     protected: 1
     private: 1
     magic: 2
@@ -99,8 +99,8 @@ EOD;
         \e[38;5;245m)\e[0m
         \e[38;5;250m(protected ✨ magic-read)\e[0m \e[38;5;83mmagicReadProp\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mnot null\e[38;5;250m"\e[0m
         \e[38;5;250m(protected)\e[0m \e[38;5;83mpropProtected\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mdefined only in TestBase (protected)\e[38;5;250m"\e[0m
-        \e[38;5;250m(private)\e[0m \e[38;5;83mdebug\e[0m \e[38;5;130m=\e[0m \e[38;5;9mNOT INSPECTED\e[0m
-        \e[38;5;250m(private)\e[0m \e[38;5;83minstance\e[0m \e[38;5;130m=\e[0m \e[38;5;9m*RECURSION*\e[0m
+        \e[38;5;250m(private)\e[0m \e[38;5;83mdebug\e[0m \e[38;5;130m=\e[0m \e[38;5;250mbdk\\e[0m\e[1mDebug\e[22m \e[38;5;9mNOT INSPECTED\e[0m
+        \e[38;5;250m(private)\e[0m \e[38;5;83minstance\e[0m \e[38;5;130m=\e[0m \e[38;5;250mbdk\Test\Debug\Fixture\\e[0m\e[1mTestObj\e[22m \e[38;5;196m*RECURSION*\e[0m
         \e[38;5;250m(private excluded)\e[0m \e[38;5;83mpropNoDebug\e[0m
         \e[38;5;250m(private)\e[0m \e[38;5;83mpropPrivate\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mredefined in Test (private) (alternate value via __debugInfo)\e[38;5;250m"\e[0m
         \e[38;5;250m(🔒 private)\e[0m \e[38;5;83mtestBasePrivate\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mdefined in TestBase (private)\e[38;5;250m"\e[0m
@@ -109,7 +109,7 @@ EOD;
         \e[38;5;250m(✨ magic excluded)\e[0m \e[38;5;83mmagicProp\e[0m
         \e[38;5;250m(debug)\e[0m \e[38;5;83mdebugValue\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mThis property is debug only\e[38;5;250m"\e[0m
     \e[4mMethods:\e[24m
-        public\e[38;5;245m:\e[0m \e[96m8\e[0m
+        public\e[38;5;245m:\e[0m \e[96m9\e[0m
         protected\e[38;5;245m:\e[0m \e[96m1\e[0m
         private\e[38;5;245m:\e[0m \e[96m1\e[0m
         magic\e[38;5;245m:\e[0m \e[96m2\e[0m
@@ -203,7 +203,7 @@ EOD;
                         // properties
                         $expect = \implode("\n", array(
                             '<dt class="properties">properties <span class="text-muted">(via __debugInfo)</span></dt>',
-                            '<dd class="info magic">This object has a <code>__get</code> method</dd>',
+                            '<dd class="info magic">This object has <code>__get</code> and <code>__set</code> methods</dd>',
                             '<dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier" title="Public Property.">propPublic</span> <span class="t_operator">=</span> <span class="t_string">redefined in Test (public)</span></dd>',
                             '<dd class="isStatic property public"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="t_identifier">propStatic</span> <span class="t_operator">=</span> <span class="t_string">I\'m Static</span></dd>',
                             '<dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier">someArray</span> <span class="t_operator">=</span> <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>',
@@ -227,7 +227,7 @@ EOD;
                             '<dd class="private property"><span class="t_modifier_private">private</span> <span class="t_identifier">toStrThrow</span> <span class="t_operator">=</span> <span class="t_int">0</span></dd>',
                             '<dd class="debuginfo-excluded inherited magic property" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_magic">magic</span> <span class="t_type">bool</span> <span class="t_identifier" title="I\'m avail via __get()">magicProp</span></dd>',
                             '<dd class="debuginfo-value property"><span class="t_modifier_debug">debug</span> <span class="t_identifier">debugValue</span> <span class="t_operator">=</span> <span class="t_string">This property is debug only</span></dd>',
-                            '<dt class="methods">methods</dt>'
+                            '<dt class="methods">methods</dt>',
                         ));
                         if (PHP_VERSION_ID >= 80100) {
                             $expect = \str_replace('\'', '&#039;', $expect);
@@ -246,6 +246,7 @@ EOD;
                             '<dd class="inherited method public" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_public">public</span> <span class="t_identifier" title="call magic method">__call</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="Method being called">$name</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_type">array</span> <span class="t_parameter-name" title="Arguments passed">$args</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">mixed</span></dd>',
                             '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier" title="magic method">__debugInfo</span><span class="t_punct">(</span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span title="property=&gt;value array"><span class="t_type">array</span></span></dd>',
                             '<dd class="inherited method public" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_public">public</span> <span class="t_identifier" title="get magic method">__get</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="what we\'re getting">$key</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">mixed</span></dd>',
+                            '<dd class="inherited method public" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_public">public</span> <span class="t_identifier" title="set magic method">__set</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="what we\'re setting">$key</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_type">mixed</span> <span class="t_parameter-name" title="value">$val</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span></dd>',
                             '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier" title="toString magic method">__toString</span><span class="t_punct">(</span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">string</span><br />',
                                 '<span class="t_string">abracadabra</span></dd>',
                             '<dd class="isDeprecated isFinal method public" data-deprecated-desc="this method is bad and should feel bad"><span class="t_modifier_final">final</span> <span class="t_modifier_public">public</span> <span class="t_identifier" title="This method is public">methodPublic</span><span class="t_punct">(</span><span class="parameter"><span class="t_type"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>SomeClass</span></span> <span class="t_parameter-name" title="first param',
@@ -282,7 +283,7 @@ EOD;
                             $cratedAbs1,
                         ),
                     ),
-                )
+                ),
             ),
             // 1
             array(
@@ -294,7 +295,7 @@ EOD;
                 array(
                     'html' => static function ($str) {
                         self::assertStringContainsString('<span class="t_string t_string_trunc t_stringified" title="__toString()">This is the song that never ends.  Yes, it goes on and on my friend.  Some people started singing it&hellip; <i>(119 more bytes)</i></span>', $str);
-                    }
+                    },
                 ),
             ),
             // 2
@@ -367,10 +368,10 @@ EOD;
                         foreach ($objAbs['constants'] as $const) {
                             self::assertNull($const['desc']);
                         }
-                        foreach ($objAbs['properties'] as $name => $prop) {
+                        foreach ($objAbs['properties'] as $prop) {
                             self::assertNull($prop['desc']);
                         }
-                        foreach ($objAbs['methods'] as $name => $method) {
+                        foreach ($objAbs['methods'] as $method) {
                             self::assertSame(
                                 array('desc' => null, 'summary' => null),
                                 \array_intersect_key($method['phpDoc'], \array_flip(array('desc','summary')))
@@ -404,7 +405,7 @@ EOD;
                             'value: &quot;defined in TestBase&quot;',
                         ));
                         self::assertEmpty($matches, 'Html should not contain phpDoc summary & descriptions');
-                    }
+                    },
                 ),
             ),
             'methodCollectFalse' => array(
@@ -435,7 +436,7 @@ EOD;
                     'text' => static function ($str) {
                         $containsMethods = \preg_match('/methods/i', $str) === 1;
                         self::assertFalse($containsMethods, 'Output should not contain methods');
-                    }
+                    },
                 ),
             ),
             // 3
@@ -544,6 +545,7 @@ EOD;
                             '__call',
                             '__debugInfo',
                             '__get',
+                            '__set',
                             '__toString',
                             'methodPrivate',
                             'methodProtected',
@@ -665,13 +667,13 @@ EOD;
         );
         self::assertArraySubset(
             array(
-                'isPromoted' => false,
-                'visibility' => 'protected',
-                'value' => 'defined only in TestBase (protected)',
                 'inheritedFrom' => 'bdk\Test\Debug\Fixture\TestBase',
-                'overrides' => null,
+                'isPromoted' => false,
                 'originallyDeclared' => 'bdk\Test\Debug\Fixture\TestBase',
+                'overrides' => null,
+                'value' => 'defined only in TestBase (protected)',
                 'valueFrom' => 'value',
+                'visibility' => 'protected',
             ),
             $abs['properties']['propProtected']
         );
@@ -1208,9 +1210,8 @@ EOD;
         $select = '.m_log
             > .t_object > .object-inner
             > .property
-            > .t_array .array-inner > li'
-            // > .t_array
-            . '> .t_recursion';
+            > .t_array .array-inner > li
+            > .t_recursion';
         self::assertSelectCount($select, 1, $output);
     }
 

@@ -40,93 +40,93 @@ class PhpDocTest extends TestCase
         $parsed = Debug::getInstance()->phpDoc->getParsed($obj);
         $expectJson = <<<'EOD'
         {
-            "summary": "Implement me!",
-            "desc": null,
-            "property": [
+            "author": [
                 {
-                    "type": "bool",
-                    "name": "magicProp",
-                    "desc": "I'm avail via __get()"
+                    "desc": "Author desc is non-standard",
+                    "email": "bkfake-github@yahoo.com",
+                    "name": "Brad Kent"
                 }
             ],
-            "property-read": [
+            "desc": null,
+            "link": [
                 {
-                    "type": "bool",
-                    "name": "magicReadProp",
-                    "desc": "Read Only!"
+                    "desc": null,
+                    "uri": "https:\/\/github.com\/bkdotcom\/PHPDebugConsole"
                 }
             ],
             "method": [
                 {
-                    "static": false,
-                    "type": "void",
+                    "desc": "I'm a magic method",
                     "name": "presto",
                     "param": [
                         {
-                            "type": null,
-                            "name": "$foo"
+                            "name": "$foo",
+                            "type": null
                         },
                         {
-                            "type": "int",
+                            "defaultValue": "1",
                             "name": "$int",
-                            "defaultValue": "1"
+                            "type": "int"
                         },
                         {
-                            "type": null,
+                            "defaultValue": "true",
                             "name": "$bool",
-                            "defaultValue": "true"
+                            "type": null
                         },
                         {
-                            "type": null,
+                            "defaultValue": "null",
                             "name": "$null",
-                            "defaultValue": "null"
+                            "type": null
                         }
                     ],
-                    "desc": "I'm a magic method"
+                    "static": false,
+                    "type": "void"
                 },
                 {
-                    "static": true,
-                    "type": "void",
+                    "desc": "I'm a static magic method",
                     "name": "prestoStatic",
                     "param": [
                         {
-                            "type": "string",
-                            "name": "$noDefault"
+                            "name": "$noDefault",
+                            "type": "string"
                         },
                         {
-                            "type": null,
+                            "defaultValue": "array()",
                             "name": "$arr",
-                            "defaultValue": "array()"
+                            "type": null
                         },
                         {
-                            "type": null,
+                            "defaultValue": "array('a'=>'ay','b'=>'bee')",
                             "name": "$opts",
-                            "defaultValue": "array('a'=>'ay','b'=>'bee')"
+                            "type": null
                         }
                     ],
-                    "desc": "I'm a static magic method"
+                    "static": true,
+                    "type": "void"
                 }
             ],
-            "author": [
+            "property": [
                 {
-                    "name": "Brad Kent",
-                    "email": "bkfake-github@yahoo.com",
-                    "desc": "Author desc is non-standard"
+                    "desc": "I'm avail via __get()",
+                    "name": "magicProp",
+                    "type": "bool"
                 }
             ],
-            "link": [
+            "property-read": [
                 {
-                    "uri": "https:\/\/github.com\/bkdotcom\/PHPDebugConsole",
-                    "desc": null
+                    "desc": "Read Only!",
+                    "name": "magicReadProp",
+                    "type": "bool"
                 }
             ],
             "see": [
                 {
-                    "uri": null,
+                    "desc": null,
                     "fqsen": "subclass::method()",
-                    "desc": null
+                    "uri": null
                 }
             ],
+            "summary": "Implement me!",
             "unknown": [
                 {
                     "desc": "Some phpdoc tag"
@@ -144,8 +144,8 @@ EOD;
 
         $parsed = Debug::getInstance()->phpDoc->getParsed('\bdk\Test\Debug\Fixture\Utility\PhpDocNoParent');
         self::assertSame(array(
-            'summary' => null,
             'desc' => null,
+            'summary' => null,
         ), $parsed);
     }
 
@@ -153,28 +153,28 @@ EOD;
     {
         $parsed = Debug::getInstance()->phpDoc->getParsed('\bdk\Test\Debug\Fixture\Utility\PhpDocImplements::someMethod()');
         self::assertSame(array(
-            'summary' => 'SomeInterface summary',
             'desc' => 'SomeInterface description',
             'return' => array(
-                'type' => 'bdk\Test\Debug\Fixture\SomeInterface',
                 'desc' => null,
+                'type' => 'bdk\Test\Debug\Fixture\SomeInterface',
             ),
+            'summary' => 'SomeInterface summary',
         ), $parsed);
 
         $parsed = Debug::getInstance()->phpDoc->getParsed('\bdk\Test\Debug\Fixture\Utility\PhpDocExtends::someMethod2()');
         self::assertSame(array(
-            'summary' => 'PhpDocImplements summary',
             'desc' => 'PhpDocImplements desc',
             'return' => array(
-                'type' => 'void',
                 'desc' => null,
+                'type' => 'void',
             ),
+            'summary' => 'PhpDocImplements summary',
         ), $parsed);
 
         $parsed = Debug::getInstance()->phpDoc->getParsed('\bdk\Test\Debug\Fixture\Utility\PhpDocExtends::someMethod3()');
         self::assertSame(array(
-            'summary' => 'PhpDocExtends summary',
             'desc' => 'PhpDocExtends desc / PhpDocImplements desc',
+            'summary' => 'PhpDocExtends summary',
             /*
             'return' => array(
                 'type' => 'void',
@@ -185,8 +185,8 @@ EOD;
 
         $parsed = Debug::getInstance()->phpDoc->getParsed('\bdk\Test\Debug\Fixture\Utility\PhpDocNoParent::someMethod()');
         self::assertSame(array(
-            'summary' => null,
             'desc' => null,
+            'summary' => null,
         ), $parsed);
     }
 
@@ -194,26 +194,26 @@ EOD;
     {
         $phpDoc = Debug::getInstance()->phpDoc->getParsed('\bdk\Test\Debug\Fixture\Test2::$magicReadProp');
         self::assertSame(array(
-            'summary' => 'This property is important',
             'desc' => null,
+            'summary' => 'This property is important',
             'var' => array(
                 array(
-                    'type' => 'string',
-                    'name' => 'magicReadProp',
                     'desc' => '',
+                    'name' => 'magicReadProp',
+                    'type' => 'string',
                 ),
             ),
         ), $phpDoc);
 
         $parsed = Debug::getInstance()->phpDoc->getParsed('\bdk\Test\Debug\Fixture\Utility\PhpDocImplements::$someProperty');
         self::assertSame(array(
-            'summary' => '$someProperty summary',
             'desc' => null,
+            'summary' => '$someProperty summary',
             'var' => array(
                 array(
-                    'type' => 'string',
-                    'name' => 'someProperty',
                     'desc' => 'desc',
+                    'name' => 'someProperty',
+                    'type' => 'string',
                 ),
             ),
         ), $parsed);
@@ -227,8 +227,8 @@ EOD;
         $reflector = new \ReflectionClassConstant('\bdk\Test\Debug\Fixture\Utility\PhpDocExtends', 'SOME_CONSTANT');
         $parsed = Debug::getInstance()->phpDoc->getParsed($reflector);
         self::assertSame(array(
-            'summary' => 'PhpDocImplements summary',
             'desc' => null,
+            'summary' => 'PhpDocImplements summary',
             /*
             'var' => array(
                 array(
@@ -242,8 +242,8 @@ EOD;
 
         $parsed = Debug::getInstance()->phpDoc->getParsed('\bdk\Test\Debug\Fixture\Utility\PhpDocExtends::SOME_CONSTANT');
         self::assertSame(array(
-            'summary' => 'PhpDocImplements summary',
             'desc' => null,
+            'summary' => 'PhpDocImplements summary',
             /*
             'var' => array(
                 array(
@@ -256,7 +256,7 @@ EOD;
         ), $parsed);
     }
 
-    public static function dataProviderComments()
+    public static function providerComments()
     {
         return array(
             'basic' => array(
@@ -264,13 +264,13 @@ EOD;
                  * @var string $comment phpdoc comment
                  */',
                 array(
-                    'summary' => null,
                     'desc' => null,
+                    'summary' => null,
                     'var' => array(
                         array(
-                            'type' => 'string',
+                            'desc' => 'phpdoc comment',
                             'name' => 'comment',
-                            'desc' => 'phpdoc comment'
+                            'type' => 'string',
                         ),
                     ),
                 ),
@@ -280,17 +280,17 @@ EOD;
                  * @method boolean magicMethod()
                  */',
                 array(
-                    'summary' => null,
                     'desc' => null,
                     'method' => array(
                         array(
-                            'static' => false,
-                            'type' => 'bool',
+                            'desc' => null,
                             'name' => 'magicMethod',
                             'param' => array(),
-                            'desc' => null,
+                            'static' => false,
+                            'type' => 'bool',
                         ),
                     ),
+                    'summary' => null,
                 ),
             ),
             'missing $' => array(
@@ -298,15 +298,15 @@ EOD;
                  * @param string comment
                  */',
                 array(
-                    'summary' => null,
                     'desc' => null,
                     'param' => array(
                         array(
-                            'type' => 'string',
-                            'name' => 'comment',
                             'desc' => null,
+                            'name' => 'comment',
+                            'type' => 'string',
                         ),
                     ),
+                    'summary' => null,
                 ),
             ),
             'missing $ 2' => array(
@@ -314,15 +314,15 @@ EOD;
                  * @param string comment here
                  */',
                 array(
-                    'summary' => null,
                     'desc' => null,
                     'param' => array(
                         array(
-                            'type' => 'string',
-                            'name' => null,
                             'desc' => 'comment here',
+                            'name' => null,
+                            'type' => 'string',
                         ),
                     ),
+                    'summary' => null,
                 ),
             ),
             'multi lines' => array(
@@ -336,19 +336,19 @@ EOD;
                  * @return self
                  */',
                 array(
-                    'summary' => 'Ding.',
                     'desc' => "Indented\nIndented 2",
                     'param' => array(
                         array(
-                            'type' => 'int[]',
-                            'name' => '$number',
                             'desc' => "Some number\ndoes things",
+                            'name' => '$number',
+                            'type' => 'int[]',
                         ),
                     ),
                     'return' => array(
-                        'type' => 'self',
                         'desc' => null,
+                        'type' => 'self',
                     ),
+                    'summary' => 'Ding.',
                 ),
             ),
             'complexType 1' => array(
@@ -356,12 +356,12 @@ EOD;
                 * @return array{title: string, value: string, short: false} Very clear description
                 */',
                 array(
-                    'summary' => null,
                     'desc' => null,
                     'return' => array(
-                        'type' => 'array{title: string, value: string, short: false}',
                         'desc' => 'Very clear description',
+                        'type' => 'array{title: string, value: string, short: false}',
                     ),
+                    'summary' => null,
                 ),
             ),
             'complexType 2' => array(
@@ -369,12 +369,12 @@ EOD;
                 * @return array<array{title: string, value: string, short: false}> mumbo jumbo
                 */',
                 array(
-                    'summary' => null,
                     'desc' => null,
                     'return' => array(
-                        'type' => 'array<array{title: string, value: string, short: false}>',
                         'desc' => 'mumbo jumbo',
+                        'type' => 'array<array{title: string, value: string, short: false}>',
                     ),
+                    'summary' => null,
                 ),
             ),
         );
@@ -384,7 +384,7 @@ EOD;
      * @param string $comment
      * @param array  $expect
      *
-     * @dataProvider dataProviderComments
+     * @dataProvider providerComments
      */
     public function testStrings($comment, $expect)
     {

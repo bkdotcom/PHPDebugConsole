@@ -76,6 +76,7 @@ class Slim2
      */
     protected function levelToMethod($level)
     {
+        // phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
         $map = array(
             Log::EMERGENCY => 'error',
             Log::ALERT => 'alert',

@@ -109,13 +109,13 @@ class Firephp extends AbstractRoute
         $value = null;
         if ($method === 'alert') {
             $value = $this->methodAlert($logEntry);
-        } elseif (\in_array($method, array('group','groupCollapsed'), true)) {
+        } elseif (\in_array($method, array('group', 'groupCollapsed'), true)) {
             $logEntry['firephpMeta']['Label'] = $args[0];
             $logEntry['firephpMeta']['Collapsed'] = $method === 'groupCollapsed'
                 // yes, strings
                 ? 'true'
                 : 'false';
-        } elseif (\in_array($method, array('profileEnd','table','trace'), true)) {
+        } elseif (\in_array($method, array('profileEnd', 'table', 'trace'), true)) {
             $value = $this->methodTabular($logEntry);
         } elseif (\count($args)) {
             $this->dumper->processLogEntry($logEntry);

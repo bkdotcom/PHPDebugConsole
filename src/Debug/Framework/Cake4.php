@@ -107,7 +107,7 @@ class Cake4 extends BasePlugin
             'catchException' => true,   // we'll catch it, pass to PHPDebugConsole's errorHandler and pass it on to Cake's handler
             'onCaughtException' => function (Exception $e, ServerRequestInterface $request) {
                 return $this->errorHandlerMiddleW->handleException($e, $request);
-            }
+            },
         )));
         $mwRef = new \ReflectionObject($middleware);
         $queueRef = $mwRef->getProperty('queue');
@@ -174,6 +174,7 @@ class Cake4 extends BasePlugin
             $name = $event->getName();
             if (!isset($events[$name])) {
                 $events[$name] = array(
+                    'count' => 0,
                     'name' => $name,
                     'subject' => $debug->abstracter->crateWithVals(
                         \get_class($event->getSubject()),
@@ -181,7 +182,6 @@ class Cake4 extends BasePlugin
                             'typeMore' => Abstracter::TYPE_STRING_CLASSNAME,
                         )
                     ),
-                    'count' => 0
                 );
             }
             $events[$name]['count'] ++;

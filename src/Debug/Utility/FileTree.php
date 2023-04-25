@@ -40,10 +40,10 @@ class FileTree
             }
             $node = &$this->getTreeNode($tree, $dirs);
             $node[] = new Abstraction(Abstracter::TYPE_STRING, array(
-                'value' => $file,
                 'attribs' => array(
                     'data-file' => $filepath,
                 ),
+                'value' => $file,
             ));
             unset($node);
         }
@@ -74,10 +74,10 @@ class FileTree
             }
             $node = &$this->getTreeNode($tree, $dirs);
             \array_unshift($node, new Abstraction(Abstracter::TYPE_STRING, array(
-                'value' => $count . ' omitted',
                 'attribs' => array(
                     'class' => 'exclude-count',
                 ),
+                'value' => $count . ' omitted',
             )));
         }
         return $tree;
@@ -120,8 +120,8 @@ class FileTree
         $out = array();
         $stack = array(
             array(
-                'src' => &$tree,
                 'out' => &$out,
+                'src' => &$tree,
             ),
         );
         while ($stack) {
@@ -152,8 +152,8 @@ class FileTree
             // initialize output array
             $cur['out'][$kOut] = array();
             $stack[] = array(
-                'src' => &$val,
                 'out' => &$cur['out'][$kOut],
+                'src' => &$val,
             );
         }
     }

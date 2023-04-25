@@ -76,7 +76,7 @@ class Table
     {
         $tBody = '';
         $this->options['onBuildRow'] = \is_callable($this->options['onBuildRow'])
-            ? array( $this->options['onBuildRow'] )
+            ? array($this->options['onBuildRow'])
             : (array) $this->options['onBuildRow'];
         foreach ($rows as $k => $row) {
             $rowInfo = \array_merge(

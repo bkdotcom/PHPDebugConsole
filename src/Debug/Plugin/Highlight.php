@@ -53,7 +53,7 @@ class Highlight implements AssetProviderInterface
                 }
                 .debug pre[class*="language-"].line-numbers {
                     padding-left: 3.8em;
-                }'
+                }',
             ),
             'script' => array(
                 './js/prism.js',

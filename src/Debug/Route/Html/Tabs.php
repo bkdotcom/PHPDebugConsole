@@ -122,8 +122,8 @@ class Tabs
             'a',
             array(
                 'class' => array(
-                    'nav-link' => true,
                     'active' => $isActive,
+                    'nav-link' => true,
                 ),
                 'data-target' => '.' . $this->nameToClassname($name),
                 'data-toggle' => 'tab',
@@ -147,10 +147,10 @@ class Tabs
         $this->route->setChannelRegex('#^' . \preg_quote($name, '#') . '(\.|$)#');
         $str = '<div' . $this->debug->html->buildAttribString(array(
             'class' => array(
+                $this->nameToClassname($name) => true,
                 'active' => $isActive,
-                'tab-pane',
+                'tab-pane' => true,
                 'tab-primary' => $isActive,
-                $this->nameToClassname($name),
             ),
             'data-options' => array(
                 'sidebar' => $this->route->getCfg('sidebar'),

@@ -37,6 +37,13 @@ class Abstraction extends Event implements JsonSerializable, Serializable
     public function __construct($type, $values = array())
     {
         $values['type'] = $type;
+        if (\array_key_exists('value', $values) === false && $type !== Abstracter::TYPE_OBJECT) {
+            // make sure non-object gets value
+            $values['value'] = $type === Abstracter::TYPE_ARRAY
+                ? array()
+                : null;
+        }
+        \ksort($values);
         $this->setValues($values);
     }
 
@@ -144,6 +151,7 @@ class Abstraction extends Event implements JsonSerializable, Serializable
         }
         if (!isset($values['attribs']['class'])) {
             $this->values['attribs']['class'] = array();
+            \ksort($this->values['attribs']);
         } elseif (\is_string($values['attribs']['class'])) {
             $this->values['attribs']['class'] = \explode(' ', $values['attribs']['class']);
         }

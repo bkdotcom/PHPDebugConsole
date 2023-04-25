@@ -69,7 +69,7 @@ class ObjectMethods
             'phpDocOutput' => $abs['cfgFlags'] & AbstractObject::PHPDOC_OUTPUT,
         );
         $methods = $abs['methods'];
-        $magicMethods = \array_intersect(array('__call','__callStatic'), \array_keys($methods));
+        $magicMethods = \array_intersect(array('__call', '__callStatic'), \array_keys($methods));
         $str .= $this->dumpObject->magicMethodInfo($magicMethods);
         foreach ($methods as $methodName => $info) {
             $str .= $this->dumpMethod($methodName, $info);
@@ -132,6 +132,7 @@ class ObjectMethods
      */
     protected function dumpModifiers($info)
     {
+        // phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
         $modifiers = \array_keys(\array_filter(array(
             'final' => $info['isFinal'],
             $info['visibility'] => true,

@@ -50,7 +50,6 @@ class SoapClient extends SoapClientBase
      * @throws Exception
      *
      * @SuppressWarnings(PHPMD.StaticAccess)
-     * @phpcs:disable Generic.CodeAnalysis.EmptyStatement.DetectedCatch
      */
     public function __construct($wsdl, $options = array(), Debug $debug = null)
     {
@@ -79,8 +78,6 @@ class SoapClient extends SoapClientBase
 
     /**
      * {@inheritDoc}
-     *
-     * @phpcs:disable Generic.CodeAnalysis.EmptyStatement.DetectedCatch
      */
     #[\ReturnTypeWillChange]
     public function __call($name, $args)
@@ -89,7 +86,7 @@ class SoapClient extends SoapClientBase
         try {
             $return = parent::__call($name, $args);
         } catch (SoapFault $exception) {
-            // we'll rethrow bellow
+            // we'll rethrow below
         }
         $this->logReqRes($name, $exception);
         if ($exception) {
@@ -244,8 +241,8 @@ class SoapClient extends SoapClientBase
         $backtrace = \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10);
         foreach ($backtrace as $frame) {
             $frame = \array_merge(array(
-                'function' => null,
                 'class' => null,
+                'function' => null,
                 'type' => null,
             ), $frame);
             $func = $frame['class'] . $frame['type'] . $frame['function'];
@@ -338,11 +335,11 @@ class SoapClient extends SoapClientBase
         $this->debug->log(
             $label,
             new Abstraction(Abstracter::TYPE_STRING, array(
-                'value' => $xml,
+                'addQuotes' => false,
                 'attribs' => array(
                     'class' => 'highlight language-xml',
                 ),
-                'addQuotes' => false,
+                'value' => $xml,
                 'visualWhiteSpace' => false,
             )),
             $this->debug->meta(array(

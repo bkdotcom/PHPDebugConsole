@@ -132,8 +132,8 @@ class GuzzleMiddleware extends AbstractComponent
     {
         $requestInfo = array(
             'isAsyncronous' => empty($options[RequestOptions::SYNCHRONOUS]),
-            'requestId' => \spl_object_hash($request),
             'request' => $request,
+            'requestId' => \spl_object_hash($request),
         );
         if ($options['allow_redirects'] === true) {
             $options['allow_redirects'] = GuzzleHttp\RedirectMiddleware::$defaultSettings;

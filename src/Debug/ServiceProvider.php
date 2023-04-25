@@ -100,12 +100,12 @@ class ServiceProvider implements ServiceProviderInterface
             $debug = $container['debug'];
             $existingInstance = \bdk\ErrorHandler::getInstance();
             $cfg = \array_merge(array(
-                'onEUserError' => null, // don't halt script / log E_USER_ERROR to system_log when 'continueToNormal'
                 'emailer' => array(
                     'emailBacktraceDumper' => static function ($backtrace) use ($debug) {
                         return $debug->getDump('text')->valDumper->dump($backtrace);
                     },
                 ),
+                'onEUserError' => null, // don't halt script / log E_USER_ERROR to system_log when 'continueToNormal'
             ), $debug->getCfg('errorHandler', \bdk\Debug::CONFIG_INIT));
             if ($existingInstance) {
                 $existingInstance->setCfg($cfg);

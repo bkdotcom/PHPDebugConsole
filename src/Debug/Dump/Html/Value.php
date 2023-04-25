@@ -244,8 +244,8 @@ class Value extends BaseValue
                     'span',
                     array(
                         'class' => array(
-                            't_key',
                             't_int' => \is_int($key),
+                            't_key' => true,
                         ),
                     ),
                     $this->dump($key, array('tagName' => null)) // don't wrap it
@@ -426,9 +426,9 @@ class Value extends BaseValue
             );
         }
         $opts = \array_merge(array(
-            'tagName' => '__default__',
             'attribs' => $attribs,
             'postDump' => null,
+            'tagName' => '__default__',
         ), $opts);
         return $opts;
     }

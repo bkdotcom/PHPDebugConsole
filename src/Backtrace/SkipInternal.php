@@ -193,7 +193,7 @@ class SkipInternal
         if (\in_array($frame['function'], array('__call', '__callStatic'), true)) {
             return true;
         }
-        if ($class === 'ReflectionMethod' && \in_array($frame['function'], array('invoke','invokeArgs'), true)) {
+        if ($class === 'ReflectionMethod' && \in_array($frame['function'], array('invoke', 'invokeArgs'), true)) {
             return true;
         }
         return static::isSubclassOfInternal($frame, $levelMax);

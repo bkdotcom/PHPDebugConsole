@@ -57,11 +57,11 @@ class LogEntry extends Event implements JsonSerializable
     {
         $this->subject = $subject;
         $this->values = array(
-            'method' => $method,
+            'appendLog' => true,
             'args' => $args,
             'meta' => $meta,
+            'method' => $method,
             'numArgs' => 0,     // number of initial non-meta aargs passed (does not include added default values)
-            'appendLog' => true,
             'return' => null,
         );
         $metaExtracted = $this->metaExtract($this->values['args']);
@@ -113,6 +113,7 @@ class LogEntry extends Event implements JsonSerializable
      */
     public function export()
     {
+        // phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
         $return = array(
             'method' => $this->values['method'],
             'args' => $this->values['args'],

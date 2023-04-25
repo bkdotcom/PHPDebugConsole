@@ -124,10 +124,10 @@ class OAuth extends OAuthBase
     private function getDebugInfo()
     {
         return \array_merge(array(
-            'headers_sent' => '',
-            'headers_recv' => '',
             'body_recv' => null,
             'body_sent' => null,
+            'headers_recv' => '',
+            'headers_sent' => '',
             'sbs' => '',
         ), $this->debugInfo ?: array());
     }
@@ -162,8 +162,8 @@ class OAuth extends OAuthBase
             // "sbs" may be only key remaining
         )));
         $lastResponseInfo = \array_merge(array(
-            'size_download' => 0,
             'download_content_length' => 0,
+            'size_download' => 0,
             'url' => $url,
         ), $this->getLastResponseInfo() ?: array());
         $lastResponseInfo = \array_diff_key($lastResponseInfo, \array_filter(array(

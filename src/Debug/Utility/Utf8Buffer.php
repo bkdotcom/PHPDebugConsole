@@ -22,14 +22,14 @@ class Utf8Buffer
     private $curI;
     private $stats = array();
     private static $special = array(
-        'regex' => array(
-            '#[^\S \r\n\t]#u',        // with /u modifier, \s is equivalent to \p{Z}
-            '#[^\P{C}\r\n\t]#u',      // invisible control characters and unused code points. (includes zwsp & BOM)
-        ),
         'chars' => array(
             "\xef\xbf\xbd",  // "Replacement Character"
             // "\xe2\x80\x8b",  // zero-width Space (included in \p{Cf})
             // "\xef\xbb\xbf",  // UTF-8 BOM        (included in \p{Cf})
+        ),
+        'regex' => array(
+            '#[^\S \r\n\t]#u',        // with /u modifier, \s is equivalent to \p{Z}
+            '#[^\P{C}\r\n\t]#u',      // invisible control characters and unused code points. (includes zwsp & BOM)
         ),
     );
     private $str = '';
@@ -49,8 +49,8 @@ class Utf8Buffer
             'bytesSpecial' => 0,        // special UTF-8
             'bytesUtf8' => 0,           // includes ASCII
             'calculated' => false,      // internal check if stats calculated
-            'percentBinary' => 0,
             'mbStrlen' => 0,
+            'percentBinary' => 0,
             'strlen' => Utf8::strlen($string),
         );
         $this->str = $string;

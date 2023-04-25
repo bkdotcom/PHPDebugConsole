@@ -23,6 +23,10 @@ class Text extends Base
 {
     protected $depth = 0;   // for keeping track of indentation
     protected $cfg = array(
+        'glue' => array(
+            'equal' => ' = ',
+            'multiple' => ', ',
+        ),
         'prefixes' => array(
             'assert' => '≠ ',
             'clear' => '⌦ ',
@@ -36,10 +40,6 @@ class Text extends Base
             'time' => '⏱ ',
             'timeLog' => '⏱ ',
             'warn' => '⚠ ',
-        ),
-        'glue' => array(
-            'equal' => ' = ',
-            'multiple' => ', ',
         ),
     );
 
@@ -172,7 +172,7 @@ class Text extends Base
         );
         $prefix = $this->cfg['prefixes'][$levelToMethod[$level]];
         $prefix = '[Alert ' . $prefix . $level . '] ';
-        $wrap = array('》','《');
+        $wrap = array('》', '《');
         $args = $logEntry['args'];
         if ($logEntry->containsSubstitutions()) {
             $args = $this->substitution->process($args, array(

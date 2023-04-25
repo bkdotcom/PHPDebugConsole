@@ -31,6 +31,7 @@ class ErrorLevel
     {
         $phpVer = $phpVer ?: PHP_VERSION;
         $phpVer = self::normalizePhpVer($phpVer);
+        // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
         $constants = array(
             'E_ERROR' => 1,
             'E_WARNING' => 2,
@@ -70,8 +71,8 @@ class ErrorLevel
             : $errorReportingLevel;
         $allConstants = self::getConstants($phpVer); // includes E_ALL
         $flags = array(
-            'on' => \array_keys(self::filterConstantsByLevel($allConstants, $errorReportingLevel)), // excludes E_ALL
             'off' => array(),
+            'on' => \array_keys(self::filterConstantsByLevel($allConstants, $errorReportingLevel)), // excludes E_ALL
         );
         $eAll = $allConstants['E_ALL'];
         unset($allConstants['E_ALL']);
@@ -139,8 +140,8 @@ class ErrorLevel
     private static function getNegateFlags($errorReportingLevel, $allConstants, $eAll, $explicitStrict)
     {
         $flags = array(
-            'on' => array('E_ALL'),
             'off' => array(),
+            'on' => array('E_ALL'),
         );
         foreach ($allConstants as $constName => $constValue) {
             $isExplicit = $explicitStrict && $constName === 'E_STRICT';

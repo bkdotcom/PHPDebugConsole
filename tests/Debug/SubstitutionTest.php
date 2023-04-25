@@ -294,7 +294,7 @@ class SubstitutionTest extends DebugTestFramework
             '',
             '<b>sub bold</b>',
             'extra',
-            $this->debug->meta('sanitizeFirst', false)
+            $this->debug->meta('sanitizeFirst', false),
         );
 
         $this->doTestSubstitution(
@@ -377,13 +377,13 @@ class SubstitutionTest extends DebugTestFramework
                     $test[0] = \array_map(function ($val) {
                         return $this->debug->getDump('base')->valDumper->dump($val);
                     }, $test[0]);
-                    $test[1] = \in_array($method, array('error','warn'))
+                    $test[1] = \in_array($method, array('error','warn'), true)
                         ? $this->file . ': ' . $this->line
                         : null;
-                    $test[2] = \in_array($method, array('alert','log'))
+                    $test[2] = \in_array($method, array('alert','log'), true)
                         ? ''
                         : $method;
-                } elseif ($name === 'entry') {
+                } elseif ($name === 'entry' && \is_array($test)) {
                     $test['method'] = $method;
                     if ($method === 'alert') {
                         $test['meta']['dismissible'] = false;
@@ -477,9 +477,9 @@ class SubstitutionTest extends DebugTestFramework
                     $prefixes = array(
                         'alert' => '',
                         'assert' => '≠ ',
-                        'log' => '',
                         'error' => '⦻ ',
                         'info' => 'ℹ ',
+                        'log' => '',
                         'warn' => '⚠ ',
                     );
                     $test = $prefixes[$method] . $test;
@@ -500,11 +500,6 @@ class SubstitutionTest extends DebugTestFramework
                 }
                 $tests[$name] = $test;
             }
-            /*
-            if ($method === 'alert') {
-                echo 'chromeLogger alert test ' . \print_r($tests['chromeLogger'], true) . "\n\n";
-            }
-            */
             $this->testMethod($method, $args, $tests);
             if ($method === 'assert') {
                 \array_shift($args);

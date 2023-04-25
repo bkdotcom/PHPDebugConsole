@@ -12,6 +12,7 @@ use bdk\Test\Debug\DebugTestFramework;
  * @covers \bdk\Debug\Dump\BaseValue
  * @covers \bdk\Debug\Dump\Text
  * @covers \bdk\Debug\Dump\Html
+ * @covers \bdk\Debug\Dump\Html\Value
  * @covers \bdk\Debug\Dump\TextAnsiValue
  * @covers \bdk\Debug\Dump\TextValue
  * @covers \bdk\Debug\Abstraction\Abstracter

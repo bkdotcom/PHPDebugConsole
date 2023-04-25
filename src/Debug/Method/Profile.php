@@ -123,7 +123,7 @@ class Profile
         $name = $logEntry['meta']['name'];
         $args = array( $name !== null
             ? 'profileEnd: No such Profile: ' . $name
-            : 'profileEnd: Not currently profiling'
+            : 'profileEnd: Not currently profiling',
         );
         if (isset($this->instances[$name])) {
             $instance = $this->instances[$name];
@@ -140,19 +140,19 @@ class Profile
                 $tableInfo['rows'][$k]['key'] = new Abstraction(
                     Abstracter::TYPE_CALLABLE,
                     array(
-                        'value' => $k,
                         'hideType' => true, // don't output 'callable'
+                        'value' => $k,
                     )
                 );
             }
             $caption = 'Profile \'' . $name . '\' Results';
             $args = array($caption, 'no data');
             if ($data) {
-                $args = array( $data );
+                $args = array($data);
                 $logEntry->setMeta(array(
                     'caption' => $caption,
-                    'totalCols' => array('ownTime'),
                     'tableInfo' => $tableInfo,
+                    'totalCols' => array('ownTime'),
                 ));
             }
             unset($this->instances[$name]);
@@ -235,7 +235,7 @@ class Profile
         $conditionsMet = \array_filter(array(
             $stackCount < 1,
             $stackCount === $stackCountInternal,        // no change in stack
-            \preg_match($this->nsIgnoreRegex, $class)
+            \preg_match($this->nsIgnoreRegex, $class),
         ));
         if ($conditionsMet) {
             $this->timeLastTick = \microtime(true);
@@ -298,10 +298,11 @@ class Profile
     {
         $this->funcStack[] = array(
             'function' => $funcName,
-            'tsStart' => $this->timeLastTick,
             'subTime' => 0,         // how much time spent in nested functions
+            'tsStart' => $this->timeLastTick,
         );
         if (!isset($this->data[$funcName])) {
+            // phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
             $this->data[$funcName] = array(
                 'calls' => 0,
                 'totalTime' => 0,   // time spent in function and nested func

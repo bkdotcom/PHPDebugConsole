@@ -63,39 +63,39 @@ class AbstractObject extends AbstractComponent
     const PARAM_ATTRIBUTE_COLLECT = 1048576;
     const PARAM_ATTRIBUTE_OUTPUT = 2097152; // 2^21
 
-    public static $cfgFlags = array(
+    public static $cfgFlags = array(  // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
         // GENERAL
-        'phpDocCollect' => self::PHPDOC_COLLECT,
-        'phpDocOutput' => self::PHPDOC_OUTPUT,
+        'brief' => self::BRIEF,
         'objAttributeCollect' => self::OBJ_ATTRIBUTE_COLLECT,
         'objAttributeOutput' => self::OBJ_ATTRIBUTE_OUTPUT,
+        'phpDocCollect' => self::PHPDOC_COLLECT,
+        'phpDocOutput' => self::PHPDOC_OUTPUT,
         'toStringOutput' => self::TO_STRING_OUTPUT,
-        'brief' => self::BRIEF,
-
-        // CONSTANTS
-        'constCollect' => self::CONST_COLLECT,
-        'constOutput' => self::CONST_OUTPUT,
-        'constAttributeCollect' => self::CONST_ATTRIBUTE_COLLECT,
-        'constAttributeOutput' => self::CONST_ATTRIBUTE_OUTPUT,
 
         // CASE
-        'caseCollect' => self::CASE_COLLECT,
-        'caseOutput' => self::CASE_OUTPUT,
         'caseAttributeCollect' => self::CASE_ATTRIBUTE_COLLECT,
         'caseAttributeOutput' => self::CASE_ATTRIBUTE_OUTPUT,
+        'caseCollect' => self::CASE_COLLECT,
+        'caseOutput' => self::CASE_OUTPUT,
+
+        // CONSTANTS
+        'constAttributeCollect' => self::CONST_ATTRIBUTE_COLLECT,
+        'constAttributeOutput' => self::CONST_ATTRIBUTE_OUTPUT,
+        'constCollect' => self::CONST_COLLECT,
+        'constOutput' => self::CONST_OUTPUT,
+
+        // METHODS
+        'methodAttributeCollect' => self::METHOD_ATTRIBUTE_COLLECT,
+        'methodAttributeOutput' => self::METHOD_ATTRIBUTE_OUTPUT,
+        'methodCollect' => self::METHOD_COLLECT,
+        'methodDescOutput' => self::METHOD_DESC_OUTPUT,
+        'methodOutput' => self::METHOD_OUTPUT,
+        'paramAttributeCollect' => self::PARAM_ATTRIBUTE_COLLECT,
+        'paramAttributeOutput' => self::PARAM_ATTRIBUTE_OUTPUT,
 
         // PROPERTIES
         'propAttributeCollect' => self::PROP_ATTRIBUTE_COLLECT,
         'propAttributeOutput' => self::PROP_ATTRIBUTE_OUTPUT,
-
-        // METHODS
-        'methodCollect' => self::METHOD_COLLECT,
-        'methodOutput' => self::METHOD_OUTPUT,
-        'methodAttributeCollect' => self::METHOD_ATTRIBUTE_COLLECT,
-        'methodAttributeOutput' => self::METHOD_ATTRIBUTE_OUTPUT,
-        'methodDescOutput' => self::METHOD_DESC_OUTPUT,
-        'paramAttributeCollect' => self::PARAM_ATTRIBUTE_COLLECT,
-        'paramAttributeOutput' => self::PARAM_ATTRIBUTE_OUTPUT,
     );
 
     public $helper;
@@ -111,7 +111,7 @@ class AbstractObject extends AbstractComponent
      *
      * @var array Array of key/values
      */
-    protected static $values = array(
+    protected static $values = array(  // phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
         'type' => Abstracter::TYPE_OBJECT,
         'attributes' => array(),
         'cfgFlags' => 0,
@@ -176,24 +176,29 @@ class AbstractObject extends AbstractComponent
     public function getAbstraction($obj, $method = null, $hist = array())
     {
         $reflector = $this->debug->php->getReflector($obj);
-        $abs = new Abstraction(Abstracter::TYPE_OBJECT, \array_merge(self::$values, array(
-            'cfgFlags' => $this->getCfgFlags(),
-            'className' => $reflector->getName(),
-            'debugMethod' => $method,
-            'isAnonymous' => PHP_VERSION_ID >= 70000 && $reflector->isAnonymous(),
-            'isExcluded' => $hist && $this->isExcluded($obj),    // don't exclude if we're debugging directly
-            'isFinal' => $reflector->isFinal(),
-            'isRecursion' => \in_array($obj, $hist, true),
-            'scopeClass' => $this->getScopeClass($hist),
-            'viaDebugInfo' => $this->cfg['useDebugInfo'] && $reflector->hasMethod('__debugInfo'),
-            // these are temporary values available during abstraction
-            'collectPropertyValues' => true,
-            'fullyQualifyPhpDocType' => $this->cfg['fullyQualifyPhpDocType'],
-            'hist' => $hist,
-            'isTraverseOnly' => false,
-            'propertyOverrideValues' => array(),
-            'reflector' => $reflector,
-        )));
+        $abs = new Abstraction(Abstracter::TYPE_OBJECT, \array_merge(
+            self::$values,
+            array(
+                'cfgFlags' => $this->getCfgFlags(),
+                'className' => $reflector->getName(),
+                'debugMethod' => $method,
+                'isAnonymous' => PHP_VERSION_ID >= 70000 && $reflector->isAnonymous(),
+                'isExcluded' => $hist && $this->isExcluded($obj),    // don't exclude if we're debugging directly
+                'isFinal' => $reflector->isFinal(),
+                'isRecursion' => \in_array($obj, $hist, true),
+                'scopeClass' => $this->getScopeClass($hist),
+                'viaDebugInfo' => $this->cfg['useDebugInfo'] && $reflector->hasMethod('__debugInfo'),
+            ),
+            array(
+                // these are temporary values available during abstraction
+                'collectPropertyValues' => true,
+                'fullyQualifyPhpDocType' => $this->cfg['fullyQualifyPhpDocType'],
+                'hist' => $hist,
+                'isTraverseOnly' => false,
+                'propertyOverrideValues' => array(),
+                'reflector' => $reflector,
+            )
+        ));
         $abs['hist'][] = $obj;
         $abs->setSubject($obj);
         $this->doAbstraction($abs);

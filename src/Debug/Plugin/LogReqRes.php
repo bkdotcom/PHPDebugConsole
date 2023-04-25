@@ -35,8 +35,8 @@ class LogReqRes implements SubscriberInterface
     public function getSubscriptions()
     {
         return array(
-            Debug::EVENT_PLUGIN_INIT => 'onPluginInit',
             Debug::EVENT_OUTPUT => array('logResponse', PHP_INT_MAX),
+            Debug::EVENT_PLUGIN_INIT => 'onPluginInit',
         );
     }
 

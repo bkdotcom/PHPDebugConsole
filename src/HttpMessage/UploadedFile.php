@@ -86,6 +86,7 @@ class UploadedFile implements UploadedFileInterface
      */
     public function __construct($values = array())
     {
+        // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
         $defaultValues = array(
             'tmp_name' => null,
             'size' => null,

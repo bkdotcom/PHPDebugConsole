@@ -247,8 +247,8 @@ class Middleware
         $uri = \reset($methods) . ' ' . $route->uri();
 
         $info = \array_merge(array(
-            'uri' => $uri ?: null,
             'middleware' => $route->middleware(),
+            'uri' => $uri ?: null,
         ), $route->getAction());
         $info['middleware'] = $this->debug->abstracter->crateWithVals($info['middleware'], array(
             'options' => array(

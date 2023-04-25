@@ -12,6 +12,7 @@ use bdk\Test\Debug\DebugTestFramework;
  *
  * @covers \bdk\Debug\Abstraction\AbstractObject
  * @covers \bdk\Debug\Abstraction\AbstractObjectConstants
+ * @covers \bdk\Debug\Abstraction\AbstractObjectMethodParams
  * @covers \bdk\Debug\Dump\Html\HtmlObject
  * @covers \bdk\Debug\Dump\Html\ObjectConstants
  */
@@ -26,7 +27,7 @@ class EnumTest extends DebugTestFramework
             );
         }
 
-        // $regexTrim = '#^\s+#m';
+        // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
         return array(
             'basic' => array(
                 'log',
@@ -139,7 +140,7 @@ class EnumTest extends DebugTestFramework
                     },
                     'html' => '%a<dd class="constant public"><span class="t_modifier_public">public</span> <span class="t_identifier">REGULAR_CONSTANT</span> <span class="t_operator">=</span> <span class="t_string">test</span></dd>
                         <dt class="properties">properties</dt>%a',
-                )
+                ),
             ),
 
             'backed' => array(

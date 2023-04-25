@@ -67,8 +67,8 @@ class EventsSubscriber
             $groupParams = array($matches[1], $matches[2]);
         }
         $groupParams[] = $this->debug->meta(array(
-            'icon' => $this->icon,
             'argsAsParams' => false,
+            'icon' => $this->icon,
         ));
         $this->debug->groupCollapsed(...$groupParams); // php 5.6+
         $this->logPayload($payload);

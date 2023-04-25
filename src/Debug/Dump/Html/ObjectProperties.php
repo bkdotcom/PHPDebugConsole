@@ -57,7 +57,7 @@ class ObjectProperties
             'attributeOutput' => $abs['cfgFlags'] & AbstractObject::PROP_ATTRIBUTE_OUTPUT,
             'phpDocOutput' => $abs['cfgFlags'] & AbstractObject::PHPDOC_OUTPUT,
         );
-        $magicMethods = \array_intersect(array('__get','__set'), \array_keys($abs['methods']));
+        $magicMethods = \array_intersect(array('__get', '__set'), \array_keys($abs['methods']));
         $str = $this->dumpPropertiesLabel($abs);
         $str .= $this->dumpObject->magicMethodInfo($magicMethods);
         foreach ($abs['properties'] as $name => $info) {

@@ -15,7 +15,6 @@ namespace bdk\Debug\Dump\Html;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Dump\Html\HtmlString;
-use bdk\Debug\Dump\Html\Value as ValDumper;
 
 /**
  * Output "encoded" string (ie base64, json, or serialized)
@@ -70,7 +69,7 @@ class HtmlStringEncoded
     }
 
     /**
-     * [dumpEncodedGetTabs description]
+     * Build tabs and panes
      *
      * @param Abstraction $abs full value abstraction
      *
@@ -79,8 +78,8 @@ class HtmlStringEncoded
     private function buildTabsAndPanes(Abstraction $abs)
     {
         $tabs = array(
-            'tabs' => array(),
             'panes' => array(),
+            'tabs' => array(),
         );
         $index = 1;
         do {
@@ -96,7 +95,7 @@ class HtmlStringEncoded
     }
 
     /**
-     * [buildTab description]
+     * Built tab link
      *
      * @param string $tab      Tab label
      * @param int    $index    Tab index
@@ -111,7 +110,7 @@ class HtmlStringEncoded
             array(
                 'class' => array(
                     'active' => $isActive,
-                    'nav-link',
+                    'nav-link' => true,
                 ),
                 'data-target' => '.tab-' . $index,
                 'data-toggle' => 'tab',
@@ -122,7 +121,7 @@ class HtmlStringEncoded
     }
 
     /**
-     * [buildTabPane description]
+     * Build tab pane
      *
      * @param string $tabBody  Tab body
      * @param int    $index    Tab index
@@ -137,8 +136,8 @@ class HtmlStringEncoded
             array(
                 'class' => array(
                     'active' => $isActive,
-                    'tab-' . $index,
-                    'tab-pane',
+                    'tab-' . $index => true,
+                    'tab-pane' => true,
                 ),
                 'role' => 'tabpanel',
             ),

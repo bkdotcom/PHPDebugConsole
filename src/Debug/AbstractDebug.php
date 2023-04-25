@@ -280,9 +280,10 @@ class AbstractDebug
         if (!$this->cfg['collect'] && !$logEntry['forcePublish']) {
             return false;
         }
+        $cfg = $logEntry->getMeta('cfg');
         $cfgRestore = array();
-        if (isset($logEntry['meta']['cfg'])) {
-            $cfgRestore = $this->setCfg($logEntry['meta']['cfg']);
+        if ($cfg) {
+            $cfgRestore = $this->setCfg($cfg);
             $logEntry->setMeta('cfg', null);
         }
         $logEntry->crate();

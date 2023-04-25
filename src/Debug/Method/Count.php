@@ -106,8 +106,8 @@ class Count
             $flags = $args[0];
         }
         return array(
-            'label' => $label,
             'flags' => $flags,
+            'label' => $label,
         );
     }
 

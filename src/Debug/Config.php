@@ -25,9 +25,6 @@ class Config
     protected $valuesPending = array();
     protected $invokedServices = array();
     protected $configKeys = array(
-        'debug' => array(
-            // any key not found falls under 'debug'...
-        ),
         'abstracter' => array(
             'brief',
             'caseAttributeCollect',
@@ -60,6 +57,9 @@ class Config
             'stringMinLen',
             'toStringOutput',
             'useDebugInfo',
+        ),
+        'debug' => array(
+            // any key not found falls under 'debug'...
         ),
         'errorHandler' => array(
             'continueToPrevHandler',
@@ -102,7 +102,7 @@ class Config
         'routeStream' => array(
             'ansi',
             'stream',
-        )
+        ),
     );
 
     /**

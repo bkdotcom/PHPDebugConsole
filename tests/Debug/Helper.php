@@ -58,15 +58,16 @@ class Helper
     /**
      * Convert data log log entries into simple arrays
      *
-     * @param array $data     log data
-     * @param bool  $withKeys whether log entries should be returned with keys or as a list
+     * @param array $data          log data
+     * @param bool  $withKeys      whether log entries should be returned with keys or as a list
+     * @param bool  $dropEmptyMeta whether to omit meta if empty
      *
      * @return array
      */
-    public static function deObjectifyData($data, $withKeys = true)
+    public static function deObjectifyData($data, $withKeys = true, $dropEmptyMeta = false)
     {
         if ($data instanceof LogEntry) {
-            return self::logEntryToArray($data, $withKeys);
+            return self::logEntryToArray($data, $withKeys, $dropEmptyMeta);
         }
         if ($data instanceof Abstraction) {
             return self::crate($data);
@@ -75,7 +76,7 @@ class Helper
             return $data;
         }
         foreach ($data as $i => $v) {
-            $data[$i] = self::deObjectifyData($v, $withKeys);
+            $data[$i] = self::deObjectifyData($v, $withKeys, $dropEmptyMeta);
         }
         return $data;
     }
@@ -153,7 +154,7 @@ class Helper
      *
      * @return array|null
      */
-    public static function logEntryToArray($logEntry, $withKeys = true)
+    public static function logEntryToArray($logEntry, $withKeys = true, $dropEmptyMeta = false)
     {
         if (\is_array($logEntry) && \array_keys($logEntry) === array('method','args','meta')) {
             return $logEntry;
@@ -164,6 +165,9 @@ class Helper
         $return = $logEntry->export();
         $return['args'] = self::crate($return['args']);
         \ksort($return['meta']);
+        if ($dropEmptyMeta && empty($return['meta'])) {
+            unset($return['meta']);
+        }
         if (!$withKeys) {
             return \array_values($return);
         }
@@ -214,16 +218,17 @@ class Helper
     {
         $isCli = self::isCli();
         $dumper = Debug::getInstance()->getDump($isCli ? 'textAnsi' : 'text');
-        $args = \array_map(function ($val) use ($dumper) {
-            $new = 'null';
-            if ($val !== null) {
-                $new = $dumper->valDumper->dump($val);
+        $args = \array_map(static function ($val) use ($dumper, $isCli) {
+            $new = $dumper->valDumper->dump($val);
+            if ($isCli) {
                 $dumper->valDumper->escapeReset = "\e[0m";
-                $dumper->valDumper->setValDepth(0);
             }
+            $dumper->valDumper->setValDepth(0);
+            /*
             if (\json_last_error() !== JSON_ERROR_NONE) {
                 $new = \var_export($val, true);
             }
+            */
             return $new;
         }, \func_get_args());
         $glue = \func_num_args() > 2
@@ -234,6 +239,19 @@ class Helper
             \fwrite(STDERR, $outStr . "\n");
             return;
         }
-        echo '<pre>' . \htmlspecialchars($outStr) . '</pre>' . "\n";
+        echo '<pre style="margin:.25em;">' . \htmlspecialchars($outStr) . '</pre>' . "\n";
+    }
+
+    private function varDump($val)
+    {
+        \ini_set('xdebug.var_display_max_depth', 8);
+        \ob_start();
+        \var_dump($val);
+        $new = \ob_get_clean();
+        $new = \preg_replace('/^\S+:\d+[\r\n]/', '', $new);
+        $new = \preg_replace('/=>\n\s+/', '=> ', $new);
+        $new = \preg_replace('/string\(\d+\) /', '', $new);
+        $new = \preg_replace('/array\(0\) \{\n\s*\}/', 'array()', $new);
+        return \trim($new);
     }
 }

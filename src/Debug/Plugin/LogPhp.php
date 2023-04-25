@@ -153,10 +153,10 @@ class LogPhp implements SubscriberInterface
             );
         }
         $this->assertSetting(array(
-            'name' => 'mbstring.func_overload',
             'filter' => FILTER_VALIDATE_INT,
-            'valCompare' => array(0, false),
             'msg' => 'Multibyte string function overloading is enabled (is evil)',
+            'name' => 'mbstring.func_overload',
+            'valCompare' => array(0, false),
         ));
     }
 
@@ -251,11 +251,11 @@ class LogPhp implements SubscriberInterface
         $memoryLimit === '-1'
             // overkill, but lets use assertSetting, which applies some styling
             ? $this->assertSetting(array(
+                'msg' => 'should not be -1 (no limit)',
                 'name' => 'memory_limit',
+                'operator' => '!=',
                 'valActual' => '-1',
                 'valCompare' => '-1',
-                'operator' => '!=',
-                'msg' => 'should not be -1 (no limit)',
             ))
             : $this->debug->log('memory_limit', $this->debug->utility->getBytes($memoryLimit));
     }

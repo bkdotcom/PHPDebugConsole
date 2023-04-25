@@ -146,12 +146,12 @@ class AbstractString extends AbstractComponent
         $maxlen = $this->getMaxLen($maxLenCat, $strlen);
         return array(
             'brief' => $this->cfg['brief'],
+            'maxlen' => $maxlen, // temporary
             'strlen' => $strlen,
             'typeMore' => $typeMore,
             'value' => $maxlen > -1
                 ? \substr($string, 0, $maxlen)
                 : $string,
-            'maxlen' => $maxlen, // temporary
             'valueRaw' => $string, // temporary
         );
     }

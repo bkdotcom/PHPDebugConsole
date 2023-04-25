@@ -45,6 +45,7 @@ class ErrorHandler extends AbstractErrorHandler
     public function __construct(EventManager $eventManager, $cfg = array())
     {
         $this->eventManager = $eventManager;
+        // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
         $this->cfg = array(
             'continueToPrevHandler' => true,    // whether to continue to previously defined handler (if there is/was a prev handler)
                                                 //   prev handler will not be called if error event propagation stopped
@@ -54,7 +55,6 @@ class ErrorHandler extends AbstractErrorHandler
             'errorThrow' => 0,          // bitmask: error types that should converted to ErrorException and thrown
             'onError' => null,          // callable : shortcut for subscribing to errorHandler.error Event
                                         //   will receive error Event object
-            'onFirstError' => null,     // callable : called on first error..   usefull for lazy-loading subscriberInterface
             'onEUserError' => 'normal', // only applicable if we're not continuing to a prev error handler
                                     // (continueToPrevHandler = false, there's no previous handler, or propagation stopped)
                                     //   'continue' : sets error[continueToNormal] = false
@@ -69,10 +69,11 @@ class ErrorHandler extends AbstractErrorHandler
                                     //   null : use error's error[continueToNormal] value
                                     //         continueToNormal true -> log
                                     //         continueToNormal false -> continue
+            'onFirstError' => null,     // callable : called on first error..   usefull for lazy-loading subscriberInterface
             'suppressNever' => E_ERROR | E_PARSE | E_RECOVERABLE_ERROR | E_USER_ERROR,
             // emailer options
-            'enableEmailer' => false,
             'emailer' => array(),
+            'enableEmailer' => false,
             // stats options
             'enableStats' => false,
             'stats' => array(
@@ -449,6 +450,7 @@ class ErrorHandler extends AbstractErrorHandler
      */
     protected function errorFactory(self $handler, $errType, $errMsg, $file, $line, $vars = array())
     {
+        // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
         return new Error($handler, array(
             'type' => $errType,
             'message' => $errMsg,

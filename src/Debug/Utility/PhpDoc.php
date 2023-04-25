@@ -84,8 +84,8 @@ class PhpDoc extends PhpDocBase
             }
         }
         return array(
-            'type' => $type,
             'desc' => \trim(\substr($body, \strlen($type))) ?: null,
+            'type' => $type,
         );
     }
 
@@ -131,8 +131,8 @@ class PhpDoc extends PhpDocBase
     private function parseComment($comment)
     {
         $parsed = array(
-            'summary' => null,
             'desc' => null,
+            'summary' => null,
         );
         $elementName = $this->reflector ? $this->reflector->getName() : null;
         $matches = array();
@@ -156,12 +156,14 @@ class PhpDoc extends PhpDocBase
             summary ends with empty whiteline or "." followed by \n
         */
         $split = \preg_split('/(\.[\r\n]+|[\r\n]{2})/', $comment, 2, PREG_SPLIT_DELIM_CAPTURE);
-        $split = \array_replace(array('','',''), $split);
+        $split = \array_replace(array('', '', ''), $split);
         // assume that summary and desc won't be "0"..  remove empty value and merge
-        return \array_merge($parsed, \array_filter(array(
-            'summary' => \trim($split[0] . $split[1]),    // split[1] is the ".\n"
+        $parsed = \array_merge($parsed, \array_filter(array(
             'desc' => $this->trimDesc(\trim($split[2])),
+            'summary' => \trim($split[0] . $split[1]),    // split[1] is the ".\n"
         )));
+        \ksort($parsed);
+        return $parsed;
     }
 
     /**
@@ -183,9 +185,9 @@ class PhpDoc extends PhpDocBase
     private function parseTag($tagName, $tagStr = '', $elementName = null)
     {
         $parser = \array_merge(array(
+            'callable' => array(),
             'parts' => array(),
             'regex' => null,
-            'callable' => array(),
         ), $this->getTagParser($tagName));
         $parsed = \array_fill_keys($parser['parts'], null);
         if (isset($parser['regex'])) {
@@ -201,6 +203,7 @@ class PhpDoc extends PhpDocBase
             $parsed = \array_merge($parsed, \call_user_func($callable, $tagStr, $tagName, $parsed, $elementName));
         }
         $parsed['desc'] = $this->trimDesc($parsed['desc']);
+        \ksort($parsed);
         return $parsed;
     }
 
@@ -283,15 +286,20 @@ class PhpDoc extends PhpDocBase
     {
         $this->parsers = array(
             array(
-                'tags' => array('param','property','property-read', 'property-write', 'var'),
-                'parts' => array('type','name','desc'),
                 'callable' => array(
                     array($this, 'extractTypeFromBody'),
                     array($this, 'tagParam'),
                 ),
+                'parts' => array('type','name','desc'),
+                'tags' => array('param','property','property-read', 'property-write', 'var'),
             ),
             array(
-                'tags' => array('method'),
+                'callable' => function ($tagStr, $tagName, $parsed) {
+                    $parsed['param'] = $this->parseMethodParams($parsed['param']);
+                    $parsed['static'] = $parsed['static'] !== null;
+                    $parsed['type'] = $this->typeNormalize($parsed['type']);
+                    return $parsed;
+                },
                 'parts' => array('static', 'type', 'name', 'param', 'desc'),
                 'regex' => '/'
                     . '(?:(?P<static>static)\s+)?'
@@ -300,18 +308,9 @@ class PhpDoc extends PhpDocBase
                     . '\((?P<param>((?>[^()]+)|(?R))*)\)'  // see http://php.net/manual/en/regexp.reference.recursive.php
                     . '(?:\s+(?P<desc>.*))?'
                     . '/s',
-                'callable' => function ($tagStr, $tagName, $parsed) {
-                    $parsed['param'] = $this->parseMethodParams($parsed['param']);
-                    $parsed['static'] = $parsed['static'] !== null;
-                    $parsed['type'] = $this->typeNormalize($parsed['type']);
-                    return $parsed;
-                },
+                'tags' => array('method'),
             ),
             array(
-                'tags' => array('return', 'throws'),
-                'parts' => array('type','desc'),
-                'regex' => '/^(?P<type>.*?)'
-                    . '(?:\s+(?P<desc>.*))?$/s',
                 'callable' => array(
                     array($this, 'extractTypeFromBody'),
                     function ($tagStr, $tagName, $parsed) {
@@ -319,34 +318,38 @@ class PhpDoc extends PhpDocBase
                         return $parsed;
                     },
                 ),
+                'parts' => array('type','desc'),
+                'regex' => '/^(?P<type>.*?)'
+                    . '(?:\s+(?P<desc>.*))?$/s',
+                'tags' => array('return', 'throws'),
             ),
             array(
-                'tags' => array('author'),
                 'parts' => array('name', 'email','desc'),
                 'regex' => '/^(?P<name>[^<]+)'
                     . '(?:\s+<(?P<email>\S*)>)?'
                     . '(?:\s+(?P<desc>.*))?' // desc isn't part of the standard
                     . '$/s',
+                'tags' => array('author'),
             ),
             array(
-                'tags' => array('link'),
                 'parts' => array('uri', 'desc'),
                 'regex' => '/^(?P<uri>\S+)'
                     . '(?:\s+(?P<desc>.*))?$/s',
+                'tags' => array('link'),
             ),
             array(
-                'tags' => array('see'),
                 'parts' => array('uri', 'fqsen', 'desc'),
                 'regex' => '/^(?:'
                     . '(?P<uri>https?:\/\/\S+)|(?P<fqsen>\S+)'
                     . ')'
                     . '(?:\s+(?P<desc>.*))?$/s',
+                'tags' => array('see'),
             ),
             array(
                 // default
-                'tags' => array(),
                 'parts' => array('desc'),
                 'regex' => '/^(?P<desc>.*?)$/s',
+                'tags' => array(),
             ),
         );
     }

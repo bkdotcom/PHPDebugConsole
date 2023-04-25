@@ -115,6 +115,7 @@ class DebugTest extends DebugTestFramework
 <ul class="array-inner list-unstyled">
 \t<li><span class="t_key">foo</span><span class="t_operator">=&gt;</span><span class="t_string">&lt;b&gt;bar&amp;baz&lt;/b&gt;</span></li>
 \t<li><span class="t_key">type</span><span class="t_operator">=&gt;</span><span class="t_string">someCustomValueType</span></li>
+\t<li><span class="t_key">value</span><span class="t_operator">=&gt;</span><span class="t_null">null</span></li>
 </ul><span class="t_punct">)</span></span></span>';
         $expect = \str_replace('\\t', "\t", $expect);
         $dumped = $this->debug->getDump('html')->valDumper->dump($val);

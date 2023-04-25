@@ -64,7 +64,7 @@ class RedactionTest extends DebugTestFramework
                 ),
                 array(
                     'entry' => static function (LogEntry $logEntry) use ($base64snip) {
-                        $jsonExpect = '{"method":"log","args":[{"brief":false,"strlen":null,"typeMore":"base64","value":"' . $base64snip . '","valueDecoded":{"brief":false,"strlen":null,"typeMore":"json","value":"{\n    \"poop\": \"\\\\ud83d\\\\udca9\",\n    \"int\": 42,\n    \"password\": \"\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\"\n}","valueDecoded":{"poop":"\ud83d\udca9","int":42,"password":"\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588"},"type":"string","attribs":{"class":["highlight","language-json"]},"addQuotes":false,"contentType":"application\/json","prettified":true,"prettifiedTag":true,"visualWhiteSpace":false,"debug":"\u0000debug\u0000"},"type":"string","debug":"\u0000debug\u0000"}],"meta":{"redact":true}}';
+                        $jsonExpect = '{"method":"log","args":[{"brief":false,"strlen":null,"type":"string","typeMore":"base64","value":"' . $base64snip . '","valueDecoded":{"addQuotes":false,"attribs":{"class":["highlight","language-json"]},"brief":false,"contentType":"application\/json","prettified":true,"prettifiedTag":true,"strlen":null,"type":"string","typeMore":"json","value":"{\n    \"poop\": \"\\\\ud83d\\\\udca9\",\n    \"int\": 42,\n    \"password\": \"\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\"\n}","valueDecoded":{"poop":"\ud83d\udca9","int":42,"password":"\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588"},"visualWhiteSpace":false,"debug":"\u0000debug\u0000"},"debug":"\u0000debug\u0000"}],"meta":{"redact":true}}';
                         $jsonified = \json_encode($logEntry);
                         self::assertSame($jsonExpect, $jsonified);
                     },
@@ -87,10 +87,6 @@ class RedactionTest extends DebugTestFramework
                         $obj = $logEntry['args'][0];
                         self::assertSame(null, $obj['stringified']);
                         self::assertSame('foo=bar&password=█████████&ding=dong', $obj['methods']['__toString']['returnValue']);
-                        // $this->helper->stderr($logEntry);
-                        // $jsonExpect = '{"method":"log","args":[{"strlen":null,"typeMore":"base64","value":"' . $base64snip . '","valueDecoded":{"strlen":null,"typeMore":"json","valueDecoded":{"poop":"\ud83d\udca9","int":42,"password":"\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588"},"value":"{\n    \"poop\": \"\\\\ud83d\\\\udca9\",\n    \"int\": 42,\n    \"password\": \"\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\"\n}","type":"string","attribs":{"class":["highlight","language-json"]},"addQuotes":false,"contentType":"application\/json","prettified":true,"prettifiedTag":true,"visualWhiteSpace":false,"debug":"\u0000debug\u0000"},"type":"string","debug":"\u0000debug\u0000"}],"meta":{"redact":true}}';
-                        // $jsonified = \json_encode($logEntry);
-                        // $this->assertSame($jsonExpect, $jsonified);
                     },
                 ),
             ),

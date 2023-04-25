@@ -141,9 +141,9 @@ class BasicTest extends DebugTestFramework
                         self::assertSame('Closure', $values['className']);
                         $line = __LINE__ - 10;
                         self::assertSame(array(
+                            'extensionName' => false,
                             'fileName' => __FILE__,
                             'startLine' => $line,
-                            'extensionName' => false,
                         ), $values['definition']);
                         \array_walk($values['properties'], static function ($propInfo, $propName) use ($line) {
                             // echo \json_encode($propInfo, JSON_PRETTY_PRINT);

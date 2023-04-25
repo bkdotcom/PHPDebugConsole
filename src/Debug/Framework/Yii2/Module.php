@@ -264,14 +264,13 @@ class Module extends BaseModule implements SubscriberInterface, BootstrapInterfa
         }
         YiiEvent::on('*', '*', function (YiiEvent $event) {
             $this->collectedEvents[] = array(
+                'eventClass' => \get_class($event),
                 'index' => \count($this->collectedEvents),
-                // 'time' => \microtime(true),
+                'isStatic' => \is_object($event->sender) === false,
+                'name' => $event->name,
                 'senderClass' => \is_object($event->sender)
                     ? \get_class($event->sender)
                     : $event->sender,
-                'name' => $event->name,
-                'eventClass' => \get_class($event),
-                'isStatic' => \is_object($event->sender) === false,
             );
         });
     }
@@ -495,7 +494,7 @@ class Module extends BaseModule implements SubscriberInterface, BootstrapInterfa
                 'ruleName',
                 'data',
                 'createdAt',
-                'updatedAt'
+                'updatedAt',
             );
             $debug->table('roles', $authManager->getRolesByUser($user->id), $cols);
             $debug->table('permissions', $authManager->getPermissionsByUser($user->id), $cols);

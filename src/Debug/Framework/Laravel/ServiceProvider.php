@@ -48,10 +48,10 @@ class ServiceProvider extends BaseServiceProvider
         $this->mergeConfigFrom(__DIR__ . '/config.php', 'phpDebugConsole');
 
         $config = ArrayUtil::mergeDeep($this->app['config']->get('phpDebugConsole'), array(
+            'filepathScript' => './js/Debug.jquery.js',
             'logEnvInfo' => array(
                 'session' => false,
             ),
-            'filepathScript' => './js/Debug.jquery.js',
             'onError' => static function (Error $error) {
                 $error['continueToPrevHandler'] = false; // forward error to Laravel Handler?
             },
@@ -115,7 +115,7 @@ class ServiceProvider extends BaseServiceProvider
             'sortable' => true,
             'tableInfo' => array(
                 'indexLabel' => 'model',
-                'rows' => $tableInfoRows
+                'rows' => $tableInfoRows,
             ),
             'totalCols' => array(TableRow::SCALAR),
         )));
@@ -160,10 +160,10 @@ class ServiceProvider extends BaseServiceProvider
             $modelCounts[] = $count;
             $tableInfoRows[] = array(
                 'key' => $this->debug->abstracter->crateWithVals($class, array(
-                    'typeMore' => Abstracter::TYPE_STRING_CLASSNAME,
                     'attribs' => array(
                         'data-file' => $ref->getFileName(),
-                    )
+                    ),
+                    'typeMore' => Abstracter::TYPE_STRING_CLASSNAME,
                 )),
             );
         }
@@ -408,6 +408,7 @@ class ServiceProvider extends BaseServiceProvider
 
         $info = \array_filter(array(
             'name' => $name,
+            'params' => \call_user_func(array($this, 'logViewParams'), $view),
             'path' => $pathStr
                 ? $this->debug->abstracter->crateWithVals(
                     \ltrim(\str_replace(\base_path(), '', $pathStr), '/'),
@@ -418,7 +419,6 @@ class ServiceProvider extends BaseServiceProvider
                     )
                 )
                 : null,
-            'params' => \call_user_func(array($this, 'logViewParams'), $view),
             'type' => \is_object($path)
                 ? \get_class($view)
                 : (\substr($path, -10) === '.blade.php'

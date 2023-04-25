@@ -19,6 +19,7 @@ use bdk\Debug\Utility\Utf8;
  */
 class Utf8Dump
 {
+    // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
     private $charDesc = array(
         0x00 => 'NUL',
         0x01 => 'SOH (start of heading)',

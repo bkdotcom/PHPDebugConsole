@@ -59,6 +59,7 @@ class ChromeLogger extends AbstractRoute
     /**
      * @var array header data
      */
+    // phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
     protected $jsonData = array(
         'version' => Debug::VERSION,
         'columns' => array('log', 'backtrace', 'type'),
@@ -235,7 +236,7 @@ class ChromeLogger extends AbstractRoute
         */
         $logBack = array();
         foreach ($this->data['log'] as $i => $logEntry) {
-            if (\in_array($logEntry['method'], array('assert','error','warn'), true) === false) {
+            if (\in_array($logEntry['method'], array('assert', 'error', 'warn'), true) === false) {
                 unset($this->data['log'][$i]);
                 $logBack[$i] = $logEntry;
             }
@@ -308,8 +309,8 @@ class ChromeLogger extends AbstractRoute
             $method = $logEntry['method'];
             if ($method === 'groupEnd') {
                 $depth++;
-            // @phpcs:disable SlevomatCodingStandard.Namespaces.FullyQualifiedGlobalFunctions.NonFullyQualified
             // https://bugs.xdebug.org/view.php?id=2095
+            // phpcs:ignore SlevomatCodingStandard.Namespaces.FullyQualifiedGlobalFunctions.NonFullyQualified
             } elseif (in_array($method, array('group', 'groupCollapsed'), true)) {
                 $depth--;
             } elseif ($groupOnly) {

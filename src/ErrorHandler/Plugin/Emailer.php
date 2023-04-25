@@ -40,6 +40,7 @@ class Emailer extends AbstractComponent implements SubscriberInterface
     {
         $this->serverParams = $_SERVER;
         $this->cfg = array(
+            'dateTimeFmt' => 'Y-m-d H:i:s T',
             'emailBacktraceDumper' => null, // callable that receives backtrace array & returns string
             'emailFrom' => null,            // null = use php's default (php.ini: sendmail_from)
             'emailFunc' => 'mail',
@@ -51,7 +52,6 @@ class Emailer extends AbstractComponent implements SubscriberInterface
                 ? $this->serverParams['SERVER_ADMIN']
                 : null,
             'emailTraceMask' => E_ERROR | E_WARNING | E_USER_ERROR | E_USER_NOTICE,
-            'dateTimeFmt' => 'Y-m-d H:i:s T',
         );
         $this->setCfg($cfg);
     }

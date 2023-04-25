@@ -14,11 +14,13 @@ class AbstractionTest extends TestCase
     public function testConstruct()
     {
         $abs = new Abstraction('myType');
-        $this->assertInstanceOf('\bdk\PubSub\Event', $abs);
+        $this->assertInstanceOf('bdk\PubSub\Event', $abs);
         $this->assertSame('myType', $abs['type']);
         $abs = new Abstraction('myType', array('foo' => 'bar'));
         $this->assertSame('myType', $abs->getValue('type'));
         $this->assertSame('bar', $abs->getValue('foo'));
+        $abs = new Abstraction(Abstracter::TYPE_ARRAY);
+        $this->assertSame(array(), $abs->getValue('value'));
     }
 
     public function testToString()
@@ -68,7 +70,7 @@ class AbstractionTest extends TestCase
     {
         $abs = new Abstraction('myType', array('foo' => 'bar'));
         $json = \json_encode($abs);
-        $this->assertSame('{"foo":"bar","type":"myType","debug":"\u0000debug\u0000"}', $json);
+        $this->assertSame('{"foo":"bar","type":"myType","value":null,"debug":"\u0000debug\u0000"}', $json);
     }
 
     public function testSerialize()
@@ -76,8 +78,8 @@ class AbstractionTest extends TestCase
         $abs = new Abstraction('myType', array('foo' => 'bar'));
         $serialized = \serialize($abs);
         $expect = PHP_VERSION_ID >= 70400
-            ? 'O:33:"bdk\Debug\Abstraction\Abstraction":2:{s:3:"foo";s:3:"bar";s:4:"type";s:6:"myType";}'
-            : 'C:33:"bdk\Debug\Abstraction\Abstraction":50:{a:2:{s:3:"foo";s:3:"bar";s:4:"type";s:6:"myType";}}';
+            ? 'O:33:"bdk\Debug\Abstraction\Abstraction":3:{s:3:"foo";s:3:"bar";s:4:"type";s:6:"myType";s:5:"value";N;}'
+            : 'C:33:"bdk\Debug\Abstraction\Abstraction":64:{a:3:{s:3:"foo";s:3:"bar";s:4:"type";s:6:"myType";s:5:"value";N;}}';
         $this->assertSame($expect, $serialized);
     }
 

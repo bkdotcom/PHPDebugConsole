@@ -108,12 +108,13 @@ class PhpDocBase
         foreach ($params as $i => $str) {
             \preg_match('/^(?:([^=]*?)\s)?([^\s=]+)(?:\s*=\s*(\S+))?$/', $str, $matches);
             $info = array(
-                'type' => $this->typeNormalize($matches[1]),
                 'name' => $matches[2],
+                'type' => $this->typeNormalize($matches[1]),
             );
             if (!empty($matches[3])) {
                 $info['defaultValue'] = $matches[3];
             }
+            \ksort($info);
             $params[$i] = $info;
         }
         return $params;
@@ -128,7 +129,7 @@ class PhpDocBase
      */
     protected function typeNormalize($type)
     {
-        if (\in_array($type, array('',null), true)) {
+        if (\in_array($type, array('', null), true)) {
             return null;
         }
         return \preg_replace_callback('/\b(boolean|integer|self)\b/', function ($matches) {

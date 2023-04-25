@@ -36,7 +36,7 @@ class Stats extends AbstractComponent implements SubscriberInterface
             'dataStoreFactory' => function () {
                 $cfgDataStore = \array_diff_key($this->cfg, array('dataStoreFactory' => null));
                 return new StatsStoreFile($cfgDataStore);
-            }
+            },
         );
         $this->setCfg(\array_merge($this->cfg, $cfg));
     }
@@ -100,9 +100,9 @@ class Stats extends AbstractComponent implements SubscriberInterface
     public function onErrorHighPri(Error $error)
     {
         $error['stats'] = array(
+            'count' => 1,
             'tsAdded' => \time(),
             'tsLastOccur' => null,
-            'count' => 1,
         );
         $errorStats = $this->dataStore->findByError($error);
         if ($errorStats) {

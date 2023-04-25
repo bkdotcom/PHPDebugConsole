@@ -163,10 +163,10 @@ class Table
         */
         $this->meta = $this->debug->arrayUtil->mergeDeep(array(
             'caption' => null,
-            'columns' => array(),
             'columnNames' => array(
                 TableRow::SCALAR => 'value',
             ),
+            'columns' => array(),
             'inclContext' => false, // for trace tables
             'sortable' => true,
             'tableInfo' => array(
@@ -214,7 +214,7 @@ class Table
             $columns[$key] = array(
                 'key' => isset($columnNames[$key])
                     ? $columnNames[$key]
-                    : $key
+                    : $key,
             );
         }
         foreach ($this->meta['totalCols'] as $i => $key) {

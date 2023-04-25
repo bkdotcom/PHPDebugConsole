@@ -32,10 +32,6 @@ class ErrorSummary
             'header' => 'Deprecated',
             'msg' => 'There were %d deprecated notices',
         ),
-        'strict' => array(
-            'header' => 'Strict',
-            'msg' => 'There were %d strict errors',
-        ),
         'error' => array(
             'header' => 'Errors',
             'msg' => 'There were %d errors',
@@ -43,6 +39,10 @@ class ErrorSummary
         'notice' => array(
             'header' => 'Notices',
             'msg' => 'There were %d notices',
+        ),
+        'strict' => array(
+            'header' => 'Strict',
+            'msg' => 'There were %d strict errors',
         ),
         'warning' => array(
             'header' => 'Warnings',

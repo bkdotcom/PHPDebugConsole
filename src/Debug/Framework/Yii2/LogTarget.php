@@ -31,12 +31,12 @@ class LogTarget extends Target
 
     private $levelMap = array(
         Logger::LEVEL_ERROR => 'error',
-        Logger::LEVEL_WARNING => 'warn',
         Logger::LEVEL_INFO => 'log',
-        Logger::LEVEL_TRACE => 'trace',
         Logger::LEVEL_PROFILE => 'log',
         Logger::LEVEL_PROFILE_BEGIN => 'log',
         Logger::LEVEL_PROFILE_END => 'time',
+        Logger::LEVEL_TRACE => 'trace',
+        Logger::LEVEL_WARNING => 'warn',
     );
 
     private $profileStack = array();
@@ -289,7 +289,7 @@ class LogTarget extends Target
             'category',
             'timestamp',
             'trace',
-            'memory'
+            'memory',
         ), $message);
         if ($message['level'] === Logger::LEVEL_TRACE && empty($message['trace'])) {
             $message['level'] = Logger::LEVEL_INFO;

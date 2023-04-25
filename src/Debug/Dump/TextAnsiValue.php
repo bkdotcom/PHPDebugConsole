@@ -72,8 +72,7 @@ class TextAnsiValue extends TextValue
             $str .= '    '
                 . $escapeCodes['punct'] . '[' . $escapeKey . $k . $escapeCodes['punct'] . ']'
                 . $escapeCodes['operator'] . ' => ' . $this->escapeReset
-                . $this->dump($v)
-                . "\n";
+                . $this->dump($v) . "\n";
         }
         $str .= $this->cfg['escapeCodes']['punct'] . ')' . $this->escapeReset;
         if (!$array) {
@@ -139,16 +138,17 @@ class TextAnsiValue extends TextValue
      */
     protected function dumpObject(Abstraction $abs)
     {
+        $className = $this->markupIdentifier($abs['className']);
         $escapeCodes = $this->cfg['escapeCodes'];
         if ($abs['isRecursion']) {
-            return $escapeCodes['excluded'] . '*RECURSION*' . $this->escapeReset;
+            return $className . ' ' . $escapeCodes['recursion'] . '*RECURSION*' . $this->escapeReset;
         }
         if ($abs['isExcluded']) {
-            return $escapeCodes['excluded'] . 'NOT INSPECTED' . $this->escapeReset;
+            return $className . ' ' . $escapeCodes['excluded'] . 'NOT INSPECTED' . $this->escapeReset;
         }
         $isNested = $this->valDepth > 0;
         $this->valDepth++;
-        $str = $this->markupIdentifier($abs['className']) . "\n"
+        $str = $className . "\n"
             . $this->dumpObjectProperties($abs)
             . $this->dumpObjectMethods($abs);
         $str = \trim($str);
@@ -172,6 +172,7 @@ class TextAnsiValue extends TextValue
         if (!$methodCollect || !$methodOutput) {
             return '';
         }
+        // phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
         $counts = array(
             'public' => 0,
             'protected' => 0,

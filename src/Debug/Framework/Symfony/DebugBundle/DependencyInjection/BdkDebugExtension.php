@@ -61,8 +61,8 @@ class BdkDebugExtension extends Extension implements PrependExtensionInterface
         $container->prependExtensionConfig('monolog', array(
             'handlers' => array(
                 'phpDebugConsole' => array(
-                    'type' => 'service',
                     'id' => 'monologHandler',
+                    'type' => 'service',
                 ),
             ),
         ));

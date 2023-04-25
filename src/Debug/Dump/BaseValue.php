@@ -179,8 +179,8 @@ class BaseValue extends AbstractComponent
             $event = $this->debug->publishBubbleEvent(Debug::EVENT_DUMP_CUSTOM, new Event(
                 $abs,
                 array(
-                    'valDumper' => $this,
                     'return' => '',
+                    'valDumper' => $this,
                 )
             ));
             $this->setDumpOpt('typeMore', $abs['typeMore']);
@@ -344,7 +344,7 @@ class BaseValue extends AbstractComponent
     {
         $vis = (array) $info['visibility'];
         foreach ($vis as $i => $v) {
-            if (\in_array($v, array('magic','magic-read','magic-write'), true)) {
+            if (\in_array($v, array('magic', 'magic-read', 'magic-write'), true)) {
                 $vis[$i] = '✨ ' . $v;    // "sparkles": there is no magic-wand unicode char
             } elseif ($v === 'private' && $info['inheritedFrom']) {
                 $vis[$i] = '🔒 ' . $v;
@@ -439,8 +439,8 @@ class BaseValue extends AbstractComponent
         }
         $parts = array(
             'classname' => $val,
-            'operator' => '::',
             'identifier' => '',
+            'operator' => '::',
         );
         $matches = array();
         if (\is_array($val)) {

@@ -150,22 +150,22 @@ class LogEnv implements SubscriberInterface
         $settings = array(
             array('name' => 'session.cookie_httponly'),
             array(
-                'name' => 'session.cookie_lifetime',
                 'filter' => FILTER_VALIDATE_INT,
+                'name' => 'session.cookie_lifetime',
                 'valCompare' => 0,
             ),
             array(
-                'name' => 'session.name',
                 'filter' => FILTER_DEFAULT,
+                'msg' => 'should not be PHPSESSID (just as %cexpose_php%c should be disabled)',
+                'name' => 'session.name',
+                'operator' => '!=',
                 'valActual' => $namePassed ?: \ini_get('session.name'),
                 'valCompare' => 'PHPSESSID',
-                'operator' => '!=',
-                'msg' => 'should not be PHPSESSID (just as %cexpose_php%c should be disabled)',
             ),
             array('name' => 'session.use_only_cookies'),
             array('name' => 'session.use_strict_mode'),
             array('name' => 'session.use_trans_sid',
-                'valCompare' => false
+                'valCompare' => false,
             ),
         );
         \array_walk($settings, array($this, 'assertSetting'));

@@ -150,8 +150,8 @@ class HtmlString
     {
         // display \r, \n, & \t
         $str = \preg_replace_callback('/(\r\n|\r|\n)/', static function ($matches) {
-            $search = array("\r","\n");
-            $replace = array('<span class="ws_r"></span>','<span class="ws_n"></span>' . "\n");
+            $search = array("\r", "\n");
+            $replace = array('<span class="ws_r"></span>', '<span class="ws_n"></span>' . "\n");
             return \str_replace($search, $replace, $matches[1]);
         }, $str);
         $str = \str_replace("\t", '<span class="ws_t">' . "\t" . '</span>', $str);

@@ -75,9 +75,9 @@ class CallInfo extends AbstractComponent
         return array(
             'duration' => $this->duration,
             'exception' => $this->exception,
+            'keyOrKeys' => $this->keyOrKeys,
             'memoryUsage' => $this->memoryUsage,
             'method' => $this->method,
-            'keyOrKeys' => $this->keyOrKeys,
         );
     }
 

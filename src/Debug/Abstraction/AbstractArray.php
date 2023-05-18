@@ -46,7 +46,7 @@ class AbstractArray extends AbstractComponent
      *
      * @return array|string
      */
-    public function crate($array, $method = null, $hist = array())
+    public function crate(array $array, $method = null, array $hist = array())
     {
         if (\in_array($array, $hist, true)) {
             return Abstracter::RECURSION;
@@ -75,7 +75,7 @@ class AbstractArray extends AbstractComponent
      *
      * @return Abstraction
      */
-    public function getAbstraction(&$array, $method = null, $hist = array())
+    public function getAbstraction(array &$array, $method = null, array $hist = array())
     {
         return new Abstraction(Abstracter::TYPE_ARRAY, array(
             'value' => $this->crate($array, $method, $hist),
@@ -89,7 +89,7 @@ class AbstractArray extends AbstractComponent
      *
      * @return Abstraction
      */
-    public function getCallableAbstraction($array)
+    public function getCallableAbstraction(array $array)
     {
         $className = \is_object($array[0])
             ? \get_class($array[0])

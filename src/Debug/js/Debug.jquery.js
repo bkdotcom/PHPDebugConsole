@@ -501,6 +501,10 @@
         $replace.attr(name, this.value);
         $string.removeAttr(name);
       });
+      if (attrs.style) {
+        // why is this necessary?
+        $replace.attr('style', attrs.style.value);
+      }
     }
     if ($string.is('td, th, li')) {
       $string.html(remove
@@ -5912,7 +5916,7 @@
     $ref.data('titleOrig', title);
     if (title === 'Deprecated') {
       title = tippyContentDeprecated($ref, title);
-    } else if (title === 'Inherited') {
+    } else if (['Inherited', 'Private ancestor'].indexOf(title) > -1) {
       title = tippyContentInherited($ref, title);
     } else if (title === 'Open in editor') {
       title = '<i class="fa fa-pencil"></i> ' + title;
@@ -5931,13 +5935,16 @@
 
   function tippyContentInherited ($ref, title) {
     var titleMore = $ref.parent().data('inheritedFrom');
-    if (titleMore) {
-      titleMore = '<span class="classname">' +
-        titleMore.replace(/^(.*\\)(.+)$/, '<span class="namespace">$1</span>$2') +
-        '</span>';
-      title = 'Inherited from ' + titleMore;
+    if (typeof titleMore === 'undefined') {
+      return title
     }
-    return title
+    title = title === 'Inherited'
+      ? 'Inherited from'
+      : title + '<br />defined in';
+    titleMore = '<span class="classname">' +
+      titleMore.replace(/^(.*\\)(.+)$/, '<span class="namespace">$1</span>$2') +
+      '</span>';
+    return title + ' ' + titleMore
   }
 
   function tippyOnHide (instance) {
@@ -6217,9 +6224,9 @@
       '> .method > .parameter.isPromoted': '<i class="fa fa-arrow-up" title="Promoted"></i>',
       '> .method > .parameter[data-attributes]': '<i class="fa fa-hashtag" title="Attributes"></i>',
       '> *[data-attributes]': '<i class="fa fa-hashtag" title="Attributes"></i>',
+      '> .private-ancestor': '<i class="fa fa-lock" title="Private ancestor"></i>',
       '> .property.debuginfo-value': '<i class="fa fa-eye" title="via __debugInfo()"></i>',
       '> .property.debuginfo-excluded': '<i class="fa fa-eye-slash" title="not included in __debugInfo"></i>',
-      '> .property.private-ancestor': '<i class="fa fa-lock" title="private ancestor"></i>',
       '> .property.isPromoted': '<i class="fa fa-arrow-up" title="Promoted"></i>',
       '> .property > .t_modifier_magic': '<i class="fa fa-magic" title="magic property"></i>',
       '> .property > .t_modifier_magic-read': '<i class="fa fa-magic" title="magic property"></i>',

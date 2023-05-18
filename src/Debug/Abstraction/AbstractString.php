@@ -63,7 +63,9 @@ class AbstractString extends AbstractComponent
                 $absValues = $this->getAbsValuesSerialized($absValues);
                 break;
             default:
-                $absValues['value'] = $this->debug->utf8->strcut($string, 0, $absValues['maxlen']);
+                if ($absValues['maxlen'] > -1) {
+                    $absValues['value'] = $this->debug->utf8->strcut($string, 0, $absValues['maxlen']);
+                }
         }
         $absValues = $this->absValuesFinish($absValues);
         return new Abstraction(Abstracter::TYPE_STRING, $absValues);

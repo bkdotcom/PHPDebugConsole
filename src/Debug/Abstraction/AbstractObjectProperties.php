@@ -400,30 +400,32 @@ class AbstractObjectProperties
      */
     private function addViaRef(Abstraction $abs)
     {
-        $refObject = $abs['reflector'];
         /*
             We trace our ancestory to learn where properties are inherited from
         */
-        while ($refObject) {
-            $className = $refObject->getName();
-            $properties = $refObject->getProperties();
-            while ($properties) {
-                $refProperty = \array_shift($properties);
+        $reflector = $abs['reflector'];
+        $properties = $abs['properties'];
+        while ($reflector) {
+            $className = $reflector->getName();
+            $refProperties = $reflector->getProperties();
+            while ($refProperties) {
+                $refProperty = \array_shift($refProperties);
                 $name = $refProperty->getName();
-                if (isset($abs['properties'][$name])) {
+                if (isset($properties[$name])) {
                     // already have info... we're in an ancestor
-                    $abs['properties'][$name]['overrides'] = $this->propOverrides(
+                    $properties[$name]['overrides'] = $this->propOverrides(
                         $refProperty,
-                        $abs['properties'][$name],
+                        $properties[$name],
                         $className
                     );
-                    $abs['properties'][$name]['originallyDeclared'] = $className;
+                    $properties[$name]['originallyDeclared'] = $className;
                     continue;
                 }
-                $abs['properties'][$name] = $this->buildPropViaRef($abs, $refProperty);
+                $properties[$name] = $this->buildPropViaRef($abs, $refProperty);
             }
-            $refObject = $refObject->getParentClass();
+            $reflector = $reflector->getParentClass();
         }
+        $abs['properties'] = $properties;
     }
 
     /**
@@ -465,8 +467,8 @@ class AbstractObjectProperties
      */
     private function buildPropViaRef(Abstraction $abs, ReflectionProperty $refProperty)
     {
-        $refProperty->setAccessible(true); // only accessible via reflection
         $phpDoc = $this->helper->getPhpDocVar($refProperty); // phpDocVar
+        $refProperty->setAccessible(true); // only accessible via reflection
         /*
             getDeclaringClass returns "LAST-declared/overriden"
         */

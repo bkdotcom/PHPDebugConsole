@@ -20,7 +20,7 @@ use bdk\Debug\Dump\Html\HtmlObject;
 use bdk\Debug\Utility\Html as HtmlUtil;
 
 /**
- * Dump object methods as HTML
+ * Dump object properties as HTML
  */
 class ObjectProperties
 {
@@ -33,7 +33,7 @@ class ObjectProperties
      * Constructor
      *
      * @param HtmlObject $dumpObj Html dumper
-     * @param HtmlHelper $helper  Html dump helpers
+     * @param Helper     $helper  Html dump helpers
      * @param HtmlUtil   $html    Html methods
      */
     public function __construct(HtmlObject $dumpObj, Helper $helper, HtmlUtil $html)
@@ -58,35 +58,35 @@ class ObjectProperties
             'phpDocOutput' => $abs['cfgFlags'] & AbstractObject::PHPDOC_OUTPUT,
         );
         $magicMethods = \array_intersect(array('__get', '__set'), \array_keys($abs['methods']));
-        $str = $this->dumpPropertiesLabel($abs);
-        $str .= $this->dumpObject->magicMethodInfo($magicMethods);
+        $html = '<dt class="properties">' . $this->dumpPropertiesLabel($abs) . '</dt>' . "\n";
+        $html .= $this->dumpObject->magicMethodInfo($magicMethods);
         foreach ($abs['properties'] as $name => $info) {
-            $str .= $this->dumpProperty($name, $info, $opts) . "\n";
+            $html .= $this->dumpProperty($name, $info, $opts) . "\n";
         }
-        return $str;
+        return $html;
     }
 
     /**
-     * Returns <dt class="properties">properties</dt>
+     * get property "header"
      *
      * @param Abstraction $abs Object Abstraction instance
      *
-     * @return string html fragment
+     * @return string plain text
      */
     protected function dumpPropertiesLabel(Abstraction $abs)
     {
-        $label = 'no properties';
-        if (\count($abs['properties'])) {
-            $label = 'properties';
-            if ($abs['viaDebugInfo']) {
-                $label .= ' <span class="text-muted">(via __debugInfo)</span>';
-            }
+        if (\count($abs['properties']) === 0) {
+            return 'no properties';
         }
-        return '<dt class="properties">' . $label . '</dt>' . "\n";
+        $label = 'properties';
+        if ($abs['viaDebugInfo']) {
+            $label .= ' <span class="text-muted">(via __debugInfo)</span>';
+        }
+        return $label;
     }
 
     /**
-     * Dump object property as HTML
+     * Dump property as HTML
      *
      * @param string $name property name
      * @param array  $info property info
@@ -94,35 +94,38 @@ class ObjectProperties
      *
      * @return string html fragment
      */
-    protected function dumpProperty($name, $info, $opts)
+    protected function dumpProperty($name, array $info, array $opts)
     {
         $vis = (array) $info['visibility'];
         $info['isPrivateAncestor'] = \in_array('private', $vis, true) && $info['inheritedFrom'];
         return $this->html->buildTag(
             'dd',
             array(
-                'class' => $this->propertyClasses($info),
+                'class' => $this->getCssClasses($info),
                 'data-attributes' => $opts['attributeOutput']
                     ? ($info['attributes'] ?: null)
                     : null,
                 'data-inherited-from' => $info['inheritedFrom'],
             ),
-            $this->dumpPropertyInner($name, $info, $opts)
+            $this->dumpInner($name, $info, $opts)
         );
     }
 
     /**
      * Build property inner html
      *
-     * @param string $name property name
-     * @param array  $info property info
+     * @param string $name Property name
+     * @param array  $info Property info
      * @param array  $opts options (currently just attributeOutput)
      *
      * @return string html fragment
      */
-    private function dumpPropertyInner($name, $info, $opts)
+    protected function dumpInner($name, array $info, array $opts)
     {
         $name = \str_replace('debug.', '', $name);
+        $title = $opts['phpDocOutput']
+            ? (string) $info['desc']
+            : '';
         return $this->dumpModifiers($info)
             . ($info['isPrivateAncestor']
                 // wrapped in span for css rule `.private-ancestor > *`
@@ -133,9 +136,7 @@ class ObjectProperties
                 : '') . ' '
             . $this->html->buildTag('span', array(
                 'class' => 't_identifier',
-                'title' => $opts['phpDocOutput']
-                    ? $info['desc']
-                    : '',
+                'title' => $title,
             ), $name)
             . ($info['value'] !== Abstracter::UNDEFINED
                 ? ' <span class="t_operator">=</span> '
@@ -144,13 +145,13 @@ class ObjectProperties
     }
 
     /**
-     * Dump property modifiers
+     * Dump "modifiers"
      *
-     * @param array $info property info
+     * @param array $info Abstraction info
      *
      * @return string html fragment
      */
-    private function dumpModifiers($info)
+    protected function dumpModifiers(array $info)
     {
         $modifiers = (array) $info['visibility'];
         $modifiers = \array_merge($modifiers, \array_keys(\array_filter(array(
@@ -164,13 +165,13 @@ class ObjectProperties
     }
 
     /**
-     * Get a list of css classnames for property markup
+     * Get list of css classnames
      *
-     * @param array $info property info
+     * @param array $info Abstraction info
      *
      * @return string[]
      */
-    protected function propertyClasses($info)
+    protected function getCssClasses(array $info)
     {
         $vis = (array) $info['visibility'];
         $classes = \array_keys(\array_filter(array(

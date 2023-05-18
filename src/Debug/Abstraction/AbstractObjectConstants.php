@@ -67,7 +67,7 @@ class AbstractObjectConstants
         while ($reflector) {
             PHP_VERSION_ID >= 70100
                 ? $this->addConstantsReflection($reflector)
-                : $this->addConstants($reflector);
+                : $this->addConstantsLegacy($reflector);
             $reflector = $reflector->getParentClass();
         }
         foreach ($this->constants as $name => $info) {
@@ -84,7 +84,7 @@ class AbstractObjectConstants
      *
      * @return void
      */
-    public function addCases($abs)
+    public function addCases(Abstraction $abs)
     {
         $abs['cases'] = array();
         if ($abs['isTraverseOnly']) {
@@ -113,7 +113,7 @@ class AbstractObjectConstants
      *
      * @return void
      */
-    private function addConstants(ReflectionClass $reflector)
+    private function addConstantsLegacy(ReflectionClass $reflector)
     {
         foreach ($reflector->getConstants() as $name => $value) {
             if (isset($this->constants[$name])) {

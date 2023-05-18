@@ -229,7 +229,7 @@ class InternalEvents implements SubscriberInterface
             return;
         }
         $this->onPrettifyDo($event, $matches[1]);
-        $event['value'] = $this->debug->abstracter->crateWithVals($event['value'], array(
+        $event['value'] = $event->getSubject()->abstracter->crateWithVals($event['value'], array(
             'addQuotes' => false,
             'attribs' => array(
                 'class' => 'highlight language-' . $event['highlightLang'],

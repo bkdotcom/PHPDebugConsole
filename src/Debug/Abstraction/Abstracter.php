@@ -423,7 +423,7 @@ class Abstracter extends AbstractComponent
             'integer' => self::TYPE_INT,
             'NULL' => self::TYPE_NULL,
             'resource (closed)' => self::TYPE_RESOURCE,
-            'unknown type' => self::TYPE_UNKNOWN,  // closed resource < php 7.2
+            'unknown type' => self::TYPE_UNKNOWN,  // closed resource (php < 7.2)
         );
         if (isset($map[$type])) {
             $type = $map[$type];

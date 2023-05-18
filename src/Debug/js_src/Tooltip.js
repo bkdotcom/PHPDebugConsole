@@ -32,7 +32,7 @@ function tippyContent (reference) {
   $ref.data('titleOrig', title)
   if (title === 'Deprecated') {
     title = tippyContentDeprecated($ref, title)
-  } else if (title === 'Inherited') {
+  } else if (['Inherited', 'Private ancestor'].indexOf(title) > -1) {
     title = tippyContentInherited($ref, title)
   } else if (title === 'Open in editor') {
     title = '<i class="fa fa-pencil"></i> ' + title
@@ -51,13 +51,16 @@ function tippyContentDeprecated ($ref, title) {
 
 function tippyContentInherited ($ref, title) {
   var titleMore = $ref.parent().data('inheritedFrom')
-  if (titleMore) {
-    titleMore = '<span class="classname">' +
-      titleMore.replace(/^(.*\\)(.+)$/, '<span class="namespace">$1</span>$2') +
-      '</span>'
-    title = 'Inherited from ' + titleMore
+  if (typeof titleMore === 'undefined') {
+    return title
   }
-  return title
+  title = title === 'Inherited'
+    ? 'Inherited from'
+    : title + '<br />defined in'
+  titleMore = '<span class="classname">' +
+    titleMore.replace(/^(.*\\)(.+)$/, '<span class="namespace">$1</span>$2') +
+    '</span>'
+  return title + ' ' + titleMore
 }
 
 function tippyOnHide (instance) {

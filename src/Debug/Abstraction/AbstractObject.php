@@ -213,7 +213,7 @@ class AbstractObject extends AbstractComponent
      *
      * @return array
      */
-    public static function buildObjValues($values = array())
+    public static function buildObjValues(array $values = array())
     {
         $cfgFlags = \array_reduce(self::$cfgFlags, static function ($carry, $val) {
             return $carry | $val;
@@ -313,7 +313,7 @@ class AbstractObject extends AbstractComponent
      *
      * @return void
      */
-    private function addEnumCasePhpDoc($abs)
+    private function addEnumCasePhpDoc(Abstraction $abs)
     {
         if (!($abs['cfgFlags'] & self::PHPDOC_COLLECT)) {
             return;
@@ -480,7 +480,7 @@ class AbstractObject extends AbstractComponent
      *
      * @return null|string
      */
-    private function getScopeClass(&$hist)
+    private function getScopeClass(array &$hist)
     {
         for ($i = \count($hist) - 1; $i >= 0; $i--) {
             if (\is_object($hist[$i])) {
@@ -544,7 +544,7 @@ class AbstractObject extends AbstractComponent
      *
      * @return bool
      */
-    private function isObjInList($obj, $list)
+    private function isObjInList($obj, array $list)
     {
         $classname = \get_class($obj);
         if (\array_intersect(array('*', $classname), $list)) {

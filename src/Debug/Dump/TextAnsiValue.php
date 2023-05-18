@@ -212,15 +212,17 @@ class TextAnsiValue extends TextValue
                 . "\n";
         }
         foreach ($abs['properties'] as $name => $info) {
-            $vis = $this->dumpPropVis($info);
-            $str .= '    ' . $this->cfg['escapeCodes']['muted'] . '(' . $vis . ')' . $this->escapeReset
-                . ' ' . $this->cfg['escapeCodes']['property'] . $name . $this->escapeReset
-                . ($info['debugInfoExcluded']
-                    ? ''
-                    : ' '
-                        . $this->cfg['escapeCodes']['operator'] . '=' . $this->escapeReset . ' '
-                        . $this->dump($info['value'])
-                ) . "\n";
+            $vis = $this->cfg['escapeCodes']['muted'] . '(' . $this->dumpPropVis($info) . ')' . $this->escapeReset;
+            $name = $this->cfg['escapeCodes']['property'] . $name . $this->escapeReset;
+            $val = $info['debugInfoExcluded']
+                ? ''
+                : \sprintf(
+                    ' %s=%s %s',
+                    $this->cfg['escapeCodes']['operator'],
+                    $this->escapeReset,
+                    $this->dump($info['value'])
+                );
+            $str .= '    ' . $vis . ' ' . $name . $val . "\n";
         }
         $header = $str
             ? "\e[4mProperties:\e[24m"

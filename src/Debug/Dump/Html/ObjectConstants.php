@@ -88,16 +88,16 @@ class ObjectConstants
     public function dumpConstants(Abstraction $abs)
     {
         $constants = $abs['constants'];
-        $cfg = array(
+        $opts = array(
             'attributeOutput' => $abs['cfgFlags'] & AbstractObject::CONST_ATTRIBUTE_OUTPUT,
             'constCollect' => $abs['cfgFlags'] & AbstractObject::CONST_COLLECT,
             'constOutput' => $abs['cfgFlags'] & AbstractObject::CONST_OUTPUT,
             'phpDocOutput' => $abs['cfgFlags'] & AbstractObject::PHPDOC_OUTPUT,
         );
-        if (!$cfg['constOutput']) {
+        if (!$opts['constOutput']) {
             return '';
         }
-        if (!$cfg['constCollect']) {
+        if (!$opts['constCollect']) {
             return '<dt class="constants">constants <i>not collected</i></dt>' . "\n";
         }
         if (!$constants) {
@@ -105,7 +105,7 @@ class ObjectConstants
         }
         $html = '<dt class="constants">constants</dt>' . "\n";
         foreach ($constants as $name => $info) {
-            $html .= $this->dumpConstant($name, $info, $cfg);
+            $html .= $this->dumpConstant($name, $info, $opts) . "\n";
         }
         return $html;
     }
@@ -141,21 +141,21 @@ class ObjectConstants
     }
 
     /**
-     * Dump Constant
+     * Dump constant as HTML
      *
      * @param string $name Constant's name
      * @param array  $info Constant info
-     * @param array  $cfg  Constant config vals
+     * @param array  $opts options
      *
      * @return string html fragment
      */
-    protected function dumpConstant($name, $info, $cfg)
+    protected function dumpConstant($name, array $info, array $opts)
     {
         $modifiers = \array_keys(\array_filter(array(
             $info['visibility'] => true,
             'final' => $info['isFinal'],
         )));
-        $title = $cfg['phpDocOutput']
+        $title = $opts['phpDocOutput']
             ? (string) $info['desc']
             : '';
         return $this->html->buildTag(
@@ -165,7 +165,7 @@ class ObjectConstants
                     array('constant'),
                     $modifiers
                 ),
-                'data-attributes' => $cfg['attributeOutput'] && $info['attributes']
+                'data-attributes' => $opts['attributeOutput'] && $info['attributes']
                     ? $info['attributes']
                     : null,
             ),
@@ -175,6 +175,6 @@ class ObjectConstants
             . ' <span class="t_identifier" title="' . \htmlspecialchars($title) . '">' . $name . '</span>'
             . ' <span class="t_operator">=</span> '
             . $this->valDumper->dump($info['value'])
-        ) . "\n";
+        );
     }
 }

@@ -48,6 +48,7 @@ class StringUtil
      */
     public static function compare($valA, $valB, $operator = 'strnatcmp')
     {
+        // phpcs:ignore SlevomatCodingStandard.Arrays.DisallowPartiallyKeyed.DisallowedPartiallyKeyed
         $operators = array(
             'strcmp',
             'strcasecmp',

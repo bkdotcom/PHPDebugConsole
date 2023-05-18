@@ -191,6 +191,10 @@ function createFileLink (string, remove, foundFiles) {
       $replace.attr(name, this.value)
       $string.removeAttr(name)
     })
+    if (attrs.style) {
+      // why is this necessary?
+      $replace.attr('style', attrs.style.value)
+    }
   }
   if ($string.is('td, th, li')) {
     $string.html(remove

@@ -200,15 +200,15 @@ class Value extends BaseValue
      */
     protected function dumpArray($array)
     {
-        if (empty($array)) {
-            return '<span class="t_keyword">array</span>'
-                . '<span class="t_punct">()</span>';
-        }
         $opts = \array_merge(array(
             'asFileTree' => false,
             'expand' => null,
             'showListKeys' => true,
         ), $this->getDumpOpt());
+        if (empty($array)) {
+            return '<span class="t_keyword">array</span>'
+                . '<span class="t_punct">()</span>';
+        }
         if ($opts['expand'] !== null) {
             $this->setDumpOpt('attribs.data-expand', $opts['expand']);
         }

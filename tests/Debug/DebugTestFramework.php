@@ -705,10 +705,10 @@ class DebugTestFramework extends DOMTestCase
             $this->assertStringMatchesFormat(\trim($outputExpect), \trim($output), $message);
         } catch (\Exception $e) {
             echo $test . ':' . "\n";
-            echo $test === 'textAnsi'
-                ? 'expect: ' . \str_replace("\e", '\e', $outputExpect) . "\n"
-                    . 'actual: ' . \str_replace("\e", '\e', $output) . "\n"
-                : 'expect: ' . $outputExpect . "\n"
+            echo $test === 'streamAnsi'
+                ? 'expect: ' . \str_replace("\e", '\e', $outputExpect) . "\n\n"
+                    . 'actual: ' . \str_replace("\e", '\e', $output) . "\n\n"
+                : 'expect: ' . $outputExpect . "\n\n"
                     . 'actual: ' . $output . "\n";
             throw new \PHPUnit\Framework\AssertionFailedError($test . ' has failed');
         }

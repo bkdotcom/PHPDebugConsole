@@ -182,18 +182,11 @@ class TextValue extends BaseValue
         }
         foreach ($abs['properties'] as $name => $info) {
             $name = \str_replace('debug.', '', $name);
-            $vis = (array) $info['visibility'];
-            foreach ($vis as $i => $v) {
-                if (\in_array($v, array('magic', 'magic-read', 'magic-write'), true)) {
-                    $vis[$i] = '✨ ' . $v;    // "sparkles" there is no magic-wand unicode char
-                } elseif ($v === 'private' && $info['inheritedFrom']) {
-                    $vis[$i] = '🔒 ' . $v;
-                }
-            }
-            $vis = \implode(' ', $vis);
-            $str .= $info['debugInfoExcluded']
-                ? '    (' . $vis . ' excluded) ' . $name . "\n"
-                : '    (' . $vis . ') ' . $name . ' = ' . $this->dump($info['value']) . "\n";
+            $vis = $this->dumpPropVis($info);
+            $val = $info['debugInfoExcluded']
+                ? ''
+                : ' = ' . $this->dump($info['value']);
+            $str .= '    (' . $vis . ') ' . $name . $val . "\n";
         }
         $propHeader = $str
             ? 'Properties:'

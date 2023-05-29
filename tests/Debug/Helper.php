@@ -6,6 +6,7 @@ use bdk\Debug;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
 use bdk\ErrorHandler\Error;
+use bdk\PubSub\ValueStore;
 use ReflectionProperty;
 
 /**
@@ -72,6 +73,9 @@ class Helper
         if ($data instanceof Abstraction) {
             return self::crate($data);
         }
+        if ($data instanceof ValueStore) {
+            return $data->getValues();
+        }
         if (\is_array($data) === false) {
             return $data;
         }
@@ -94,21 +98,6 @@ class Helper
         $propRef = new ReflectionProperty($obj, $prop);
         $propRef->setAccessible(true);
         return $propRef->getValue($obj);
-    }
-
-    /**
-     * Is script running from command line (or cron)?
-     *
-     * @return bool
-     */
-    public static function isCli()
-    {
-        $valsDefault = array(
-            'argv' => null,
-            'QUERY_STRING' => null,
-        );
-        $vals = \array_merge($valsDefault, \array_intersect_key($_SERVER, $valsDefault));
-        return $vals['argv'] && \implode('+', $vals['argv']) !== $vals['QUERY_STRING'];
     }
 
     /**
@@ -216,41 +205,20 @@ class Helper
      */
     public static function stderr()
     {
-        $isCli = self::isCli();
-        $dumper = Debug::getInstance()->getDump($isCli ? 'textAnsi' : 'text');
-        $args = \array_map(static function ($val) use ($dumper, $isCli) {
-            $new = $dumper->valDumper->dump($val);
-            if ($isCli) {
-                $dumper->valDumper->escapeReset = "\e[0m";
-            }
-            $dumper->valDumper->setValDepth(0);
-            /*
-            if (\json_last_error() !== JSON_ERROR_NONE) {
-                $new = \var_export($val, true);
-            }
-            */
-            return $new;
-        }, \func_get_args());
-        $glue = \func_num_args() > 2
-            ? ', '
-            : ' = ';
-        $outStr = \implode($glue, $args);
-        if ($isCli) {
-            \fwrite(STDERR, $outStr . "\n");
-            return;
-        }
-        echo '<pre style="margin:.25em;">' . \htmlspecialchars($outStr) . '</pre>' . "\n";
+        \bdk\Debug::varDump(\func_get_args());
     }
 
-    private function varDump($val)
+    private static function varDump($val)
     {
         \ini_set('xdebug.var_display_max_depth', 8);
         \ob_start();
         \var_dump($val);
         $new = \ob_get_clean();
-        $new = \preg_replace('/^\S+:\d+[\r\n]/', '', $new);
+        $new = \preg_replace('/^<pre[^>]*>\n(.*)<\/pre>$/is', '$1', $new);
+        $new = \preg_replace('/^(\S+:\d+[\r\n]|<small>.*?<\/small>)/s', '', $new);
         $new = \preg_replace('/=>\n\s+/', '=> ', $new);
-        $new = \preg_replace('/string\(\d+\) /', '', $new);
+        $new = \preg_replace('/(string\(\d+\)|<small>string<\/small>) /', '', $new);
+        $new = \preg_replace('/<i>\(length=\d+\)<\/i>/', '', $new);
         $new = \preg_replace('/array\(0\) \{\n\s*\}/', 'array()', $new);
         return \trim($new);
     }

@@ -450,6 +450,7 @@ class DebugTestFramework extends DOMTestCase
         ));
         $resetValues = array(
             'alerts'        => array(), // array of alerts.  alerts will be shown at top of output when possible
+            'classDefinitions' => array(),
             'counts'        => array(), // count method
             'entryCountInitial' => 0,   // store number of log entries created during init
             'log'           => array(),
@@ -462,6 +463,7 @@ class DebugTestFramework extends DOMTestCase
         $this->debug->errorHandler->setData('errors', array());
         $this->debug->errorHandler->setData('errorCaller', array());
         $this->debug->errorHandler->setData('lastErrors', array());
+        $this->helper->setProp($this->debug->abstracter->abstractObject->class, 'default', null);
 
         // make sure we still have wamp plugin registered
         $wamp = $this->debug->getRoute('wamp');

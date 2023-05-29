@@ -34,6 +34,7 @@ class General implements SubscriberInterface
         'obStart',
         'prettify',
         'setErrorCaller',
+        'varDump',
     );
 
     /**
@@ -232,6 +233,36 @@ class General implements SubscriberInterface
             $caller['groupDepth'] = $this->debug->methodGroup->getDepth();
         }
         $this->debug->errorHandler->setErrorCaller($caller);
+    }
+
+    /**
+     * Dump values to output
+     *
+     * @param mixed $arg,... message / values
+     *
+     * @return void
+     */
+    public function varDump()
+    {
+        $isCli = $this->debug->isCli(false);
+        $dumper = $this->debug->getDump($isCli ? 'textAnsi' : 'text');
+        $args = \array_map(static function ($val) use ($dumper, $isCli) {
+            $new = $dumper->valDumper->dump($val);
+            if ($isCli) {
+                $dumper->valDumper->escapeReset = "\e[0m";
+            }
+            $dumper->valDumper->setValDepth(0);
+            return $new;
+        }, \func_get_args());
+        $glue = \func_num_args() > 2
+            ? ', '
+            : ' = ';
+        $outStr = \implode($glue, $args);
+        if ($isCli) {
+            \fwrite(STDERR, $outStr . "\n");
+            return;
+        }
+        echo '<pre style="margin:.25em;">' . $outStr . '</pre>' . "\n";
     }
 
     /**

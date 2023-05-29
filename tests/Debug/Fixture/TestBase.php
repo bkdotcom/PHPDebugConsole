@@ -13,6 +13,7 @@ namespace bdk\Test\Debug\Fixture;
  * @method void presto($foo, integer $int = 1, $bool = true, $null = null) I'm a magic method
  * @method static void prestoStatic(string $noDefault, $arr = array(), $opts=array('a'=>'ay','b'=>'bee'), $val=self::MY_CONSTANT) I'm a static magic method
  */
+#[\AllowDynamicProperties]
 class TestBase
 {
     /** Inherited description */
@@ -26,6 +27,14 @@ class TestBase
     private $propPrivate = 'defined in TestBase (private)';
     protected $propProtected = 'defined only in TestBase (protected)';
     protected $magicReadProp = 'not null';
+
+    /**
+     * Constructor
+     */
+    public function __construct()
+    {
+        $this->baseDynamic = 'duo';
+    }
 
     /**
      * get magic method

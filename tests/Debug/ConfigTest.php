@@ -73,7 +73,6 @@ class ConfigTest extends DebugTestFramework
             'maxDepth',
             'methodAttributeCollect',
             'methodAttributeOutput',
-            'methodCache',
             'methodCollect',
             'methodDescOutput',
             'methodOutput',

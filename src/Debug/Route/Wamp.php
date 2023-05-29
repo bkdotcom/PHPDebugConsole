@@ -27,6 +27,11 @@ use bdk\WampPublisher;
 
 /**
  * PHPDebugConsole plugin for routing debug messages thru WAMP router
+ *
+ * Additional methods sent:
+ *    endOutput
+ *    errorNotConsoled
+ *    meta
  */
 class Wamp implements RouteInterface
 {
@@ -276,6 +281,7 @@ class Wamp implements RouteInterface
             'format' => 'raw',
             'requestId' => $this->requestId,
         ), $logEntry['meta']);
+        $classesNew = array();
         if ($logEntry->getSubject() !== $this->debug) {
             $meta['channel'] = $logEntry->getChannelName();
             if (\in_array($meta['channel'], $this->channelNames, true) === false) {
@@ -288,8 +294,24 @@ class Wamp implements RouteInterface
         if ($logEntry['return']) {
             $args = $logEntry['return'];
         } elseif ($meta['format'] === 'raw') {
-            list($args, $metaTmp) = $this->crate->crateLogEntry($logEntry);
-            $meta = \array_merge($meta, $metaTmp);
+            list($args, $metaNew, $classesNew) = $this->crate->crateLogEntry($logEntry);
+            $meta = \array_merge($meta, $metaNew);
+        }
+        if ($classesNew) {
+            $classDefinitions = array();
+            foreach ($classesNew as $classKey) {
+                $classDefinitions[$classKey] = $this->debug->data->get('classDefinitions/' . $classKey);
+            }
+            $this->processLogEntry(new LogEntry(
+                $this->debug,
+                'meta',
+                array(
+                    array(
+                        'classDefinitions' => $classDefinitions,
+                    ),
+                ),
+                $meta
+            ));
         }
         $this->wamp->publish($this->topic, array($logEntry['method'], $args, $meta));
     }
@@ -358,7 +380,8 @@ class Wamp implements RouteInterface
      */
     private function publishMetaGet()
     {
-        $metaVals = array(
+        $default = array(
+            'argv' => array(),
             'HTTPS' => null,
             'HTTP_HOST' => null,
             'processId' => \getmypid(),
@@ -369,20 +392,16 @@ class Wamp implements RouteInterface
             'SERVER_ADDR' => null,
             'SERVER_NAME' => null,
         );
-        $serverParams = \array_merge(
-            array(
-                'argv' => array(),
-            ),
-            $this->debug->serverRequest->getServerParams(),
-            $metaVals
+        $metaVals = \array_merge(
+            $default,
+            $this->debug->serverRequest->getServerParams()
         );
-        foreach (\array_keys($metaVals) as $k) {
-            $metaVals[$k] = $serverParams[$k];
-        }
+        $metaVals = \array_intersect_key($metaVals, $default);
         if ($this->debug->isCli()) {
             $metaVals['REQUEST_METHOD'] = null;
-            $metaVals['REQUEST_URI'] = '$: ' . \implode(' ', $serverParams['argv']);
+            $metaVals['REQUEST_URI'] = '$: ' . \implode(' ', $metaVals['argv']);
         }
+        unset($metaVals['argv']);
         return $metaVals;
     }
 }

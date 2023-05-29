@@ -16,11 +16,14 @@ use bdk\Test\Debug\Fixture\TestObj;
  * @covers \bdk\Debug\Abstraction\Abstracter
  * @covers \bdk\Debug\Abstraction\Abstraction
  * @covers \bdk\Debug\Abstraction\AbstractObject
+ * @covers \bdk\Debug\Abstraction\AbstractObjectClass
  * @covers \bdk\Debug\Abstraction\AbstractObjectConstants
  * @covers \bdk\Debug\Abstraction\AbstractObjectHelper
  * @covers \bdk\Debug\Abstraction\AbstractObjectMethodParams
  * @covers \bdk\Debug\Abstraction\AbstractObjectMethods
  * @covers \bdk\Debug\Abstraction\AbstractObjectProperties
+ * @covers \bdk\Debug\Abstraction\AbstractObjectSubscriber
+ * @covers \bdk\Debug\Abstraction\ObjectAbstraction
  * @covers \bdk\Debug\Dump\Base
  * @covers \bdk\Debug\Dump\BaseValue
  * @covers \bdk\Debug\Dump\Html
@@ -37,26 +40,14 @@ use bdk\Test\Debug\Fixture\TestObj;
  */
 class ObjectTest extends DebugTestFramework
 {
-    /**
-     * setUp is executed before each test
-     *
-     * @return void
-     */
-    public function setUp(): void
-    {
-        parent::setUp();
-
-        // Code Coverage:
-        // clear the method cache so that we inspect the methods during the tests
-        self::$helper->setProp('bdk\Debug\Abstraction\AbstractObjectMethods', 'methodCache', array());
-    }
-
     public static function providerTestMethod()
     {
         $text = <<<'EOD'
 bdk\Test\Debug\Fixture\TestObj
   Properties:
     ✨ This object has a __get() method
+    (public) baseDynamic = "duo"
+    (public) dynamic = "dynomite!"
     (public) propPublic = "redefined in Test (public)"
     (public) propStatic = "I'm Static"
     (public) someArray = array(
@@ -66,7 +57,8 @@ bdk\Test\Debug\Fixture\TestObj
         [bool] => true
         [obj] => null
     )
-    (protected ✨ magic-read) magicReadProp = "not null"
+    (✨ magic excluded) magicProp
+    (✨ magic-read protected) magicReadProp = "not null"
     (protected) propProtected = "defined only in TestBase (protected)"
     (private) debug = bdk\Debug NOT INSPECTED
     (private) instance = bdk\Test\Debug\Fixture\TestObj *RECURSION*
@@ -75,7 +67,6 @@ bdk\Test\Debug\Fixture\TestObj
     (🔒 private) testBasePrivate = "defined in TestBase (private)"
     (private) toString = "abracadabra"
     (private) toStrThrow = 0
-    (✨ magic excluded) magicProp
     (debug) debugValue = "This property is debug only"
   Methods:
     public: 9
@@ -88,6 +79,8 @@ EOD;
 \e[38;5;250mbdk\Test\Debug\Fixture\\e[0m\e[1mTestObj\e[22m
     \e[4mProperties:\e[24m
         \e[38;5;250m✨ This object has a __get() method\e[0m
+        \e[38;5;250m(public)\e[0m \e[38;5;83mbaseDynamic\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mduo\e[38;5;250m"\e[0m
+        \e[38;5;250m(public)\e[0m \e[38;5;83mdynamic\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mdynomite!\e[38;5;250m"\e[0m
         \e[38;5;250m(public)\e[0m \e[38;5;83mpropPublic\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mredefined in Test (public)\e[38;5;250m"\e[0m
         \e[38;5;250m(public)\e[0m \e[38;5;83mpropStatic\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mI'm Static\e[38;5;250m"\e[0m
         \e[38;5;250m(public)\e[0m \e[38;5;83msomeArray\e[0m \e[38;5;130m=\e[0m \e[38;5;45marray\e[38;5;245m(\e[0m
@@ -97,7 +90,8 @@ EOD;
             \e[38;5;245m[\e[38;5;83mbool\e[38;5;245m]\e[38;5;130m => \e[0m\e[32mtrue\e[0m
             \e[38;5;245m[\e[38;5;83mobj\e[38;5;245m]\e[38;5;130m => \e[0m\e[38;5;250mnull\e[0m
         \e[38;5;245m)\e[0m
-        \e[38;5;250m(protected ✨ magic-read)\e[0m \e[38;5;83mmagicReadProp\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mnot null\e[38;5;250m"\e[0m
+        \e[38;5;250m(✨ magic excluded)\e[0m \e[38;5;83mmagicProp\e[0m
+        \e[38;5;250m(✨ magic-read protected)\e[0m \e[38;5;83mmagicReadProp\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mnot null\e[38;5;250m"\e[0m
         \e[38;5;250m(protected)\e[0m \e[38;5;83mpropProtected\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mdefined only in TestBase (protected)\e[38;5;250m"\e[0m
         \e[38;5;250m(private)\e[0m \e[38;5;83mdebug\e[0m \e[38;5;130m=\e[0m \e[38;5;250mbdk\\e[0m\e[1mDebug\e[22m \e[38;5;9mNOT INSPECTED\e[0m
         \e[38;5;250m(private)\e[0m \e[38;5;83minstance\e[0m \e[38;5;130m=\e[0m \e[38;5;250mbdk\Test\Debug\Fixture\\e[0m\e[1mTestObj\e[22m \e[38;5;196m*RECURSION*\e[0m
@@ -106,7 +100,6 @@ EOD;
         \e[38;5;250m(🔒 private)\e[0m \e[38;5;83mtestBasePrivate\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mdefined in TestBase (private)\e[38;5;250m"\e[0m
         \e[38;5;250m(private)\e[0m \e[38;5;83mtoString\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mabracadabra\e[38;5;250m"\e[0m
         \e[38;5;250m(private)\e[0m \e[38;5;83mtoStrThrow\e[0m \e[38;5;130m=\e[0m \e[96m0\e[0m
-        \e[38;5;250m(✨ magic excluded)\e[0m \e[38;5;83mmagicProp\e[0m
         \e[38;5;250m(debug)\e[0m \e[38;5;83mdebugValue\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mThis property is debug only\e[38;5;250m"\e[0m
     \e[4mMethods:\e[24m
         public\e[38;5;245m:\e[0m \e[96m9\e[0m
@@ -120,8 +113,8 @@ EOD;
 bdk\Test\Debug\Fixture\Test2
   Properties:
     ✨ This object has a __get() method
-    (protected ✨ magic-read) magicReadProp = "not null"
     (✨ magic) magicProp = undefined
+    (✨ magic-read protected) magicReadProp = "not null"
   Methods:
     public: 3
     magic: 1
@@ -142,8 +135,7 @@ EOD;
         $cratedAbs2['scopeClass'] = __CLASS__;
 
         return array(
-            // 0
-            array(
+            'testObj' => array(
                 'log',
                 array(
                     new TestObj(),
@@ -187,7 +179,7 @@ EOD;
                         // constants
                         self::assertStringContainsString(
                             '<dt class="constants">constants</dt>' . "\n"
-                            . '<dd class="constant public"><span class="t_modifier_public">public</span> <span class="t_identifier"'
+                            . '<dd class="constant inherited public" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_public">public</span> <span class="t_identifier"'
                                 . (PHP_VERSION_ID >= 70100
                                     ? ' title="Inherited description"'
                                     : ''
@@ -204,6 +196,8 @@ EOD;
                         $expect = \implode("\n", array(
                             '<dt class="properties">properties <span class="text-muted">(via __debugInfo)</span></dt>',
                             '<dd class="info magic">This object has <code>__get</code> and <code>__set</code> methods</dd>',
+                            '<dd class="isDynamic property public"><span class="t_modifier_public">public</span> <span class="t_identifier">baseDynamic</span> <span class="t_operator">=</span> <span class="t_string">duo</span></dd>',
+                            '<dd class="isDynamic property public"><span class="t_modifier_public">public</span> <span class="t_identifier">dynamic</span> <span class="t_operator">=</span> <span class="t_string">dynomite!</span></dd>',
                             '<dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier" title="Public Property.">propPublic</span> <span class="t_operator">=</span> <span class="t_string">redefined in Test (public)</span></dd>',
                             '<dd class="isStatic property public"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="t_identifier">propStatic</span> <span class="t_operator">=</span> <span class="t_string">I\'m Static</span></dd>',
                             '<dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier">someArray</span> <span class="t_operator">=</span> <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>',
@@ -214,25 +208,27 @@ EOD;
                             "\t" . '<li><span class="t_key">bool</span><span class="t_operator">=&gt;</span><span class="t_bool" data-type-more="true">true</span></li>',
                             "\t" . '<li><span class="t_key">obj</span><span class="t_operator">=&gt;</span><span class="t_null">null</span></li>',
                             '</ul><span class="t_punct">)</span></span></dd>',
-                            '<dd class="inherited magic-read property protected" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_protected">protected</span> <span class="t_modifier_magic-read">magic-read</span> <span class="t_type">bool</span> <span class="t_identifier" title="Read Only!">magicReadProp</span> <span class="t_operator">=</span> <span class="t_string">not null</span></dd>',
+                            '<dd class="debuginfo-excluded inherited magic property" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_magic">magic</span> <span class="t_type">bool</span> <span class="t_identifier" title="I\'m avail via __get()">magicProp</span></dd>',
+                            '<dd class="inherited magic-read property protected" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_magic-read">magic-read</span> <span class="t_modifier_protected">protected</span> <span class="t_type">bool</span> <span class="t_identifier" title="Read Only!">magicReadProp</span> <span class="t_operator">=</span> <span class="t_string">not null</span></dd>',
                             '<dd class="inherited property protected" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_protected">protected</span> <span class="t_identifier">propProtected</span> <span class="t_operator">=</span> <span class="t_string">defined only in TestBase (protected)</span></dd>',
                             '<dd class="private property"><span class="t_modifier_private">private</span> <span class="t_identifier">debug</span> <span class="t_operator">=</span> <div class="t_object" data-accessible="public"><span class="classname"><span class="namespace">bdk\</span>Debug</span>',
                             '<span class="excluded">NOT INSPECTED</span></div></dd>',
-                            '<dd class="private property"><span class="t_modifier_private">private</span> <span class="t_identifier">instance</span> <span class="t_operator">=</span> <div class="t_object" data-accessible="private"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>TestObj</span>',
+                            '<dd class="private property"><span class="t_modifier_private">private</span> <span class="t_identifier">instance</span> <span class="t_operator">=</span> <div class="t_object" data-accessible="private"><span class="classname" title="PhpDoc Summary',
+                            '',
+                            'PhpDoc Description"><span class="namespace">bdk\Test\Debug\Fixture\</span>TestObj</span>',
                             '<span class="t_recursion">*RECURSION*</span></div></dd>',
                             '<dd class="debuginfo-excluded private property"><span class="t_modifier_private">private</span> <span class="t_identifier">propNoDebug</span> <span class="t_operator">=</span> <span class="t_string">not included in __debugInfo</span></dd>',
                             '<dd class="debuginfo-value private property"><span class="t_modifier_private">private</span> <span class="t_type">string</span> <span class="t_identifier" title="Private Property.">propPrivate</span> <span class="t_operator">=</span> <span class="t_string">redefined in Test (private) (alternate value via __debugInfo)</span></dd>',
-                            '<dd class="inherited private private-ancestor property" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_private">private</span> <span>(<i class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>TestBase</i>)</span> <span class="t_type">string</span> <span class="t_identifier" title="Inherited desc">testBasePrivate</span> <span class="t_operator">=</span> <span class="t_string">defined in TestBase (private)</span></dd>',
+                            '<dd class="private private-ancestor property" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_private">private</span> <span class="t_type">string</span> <span class="t_identifier" title="Inherited desc">testBasePrivate</span> <span class="t_operator">=</span> <span class="t_string">defined in TestBase (private)</span></dd>',
                             '<dd class="private property"><span class="t_modifier_private">private</span> <span class="t_identifier">toString</span> <span class="t_operator">=</span> <span class="t_string">abracadabra</span></dd>',
                             '<dd class="private property"><span class="t_modifier_private">private</span> <span class="t_identifier">toStrThrow</span> <span class="t_operator">=</span> <span class="t_int">0</span></dd>',
-                            '<dd class="debuginfo-excluded inherited magic property" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_magic">magic</span> <span class="t_type">bool</span> <span class="t_identifier" title="I\'m avail via __get()">magicProp</span></dd>',
                             '<dd class="debuginfo-value property"><span class="t_modifier_debug">debug</span> <span class="t_identifier">debugValue</span> <span class="t_operator">=</span> <span class="t_string">This property is debug only</span></dd>',
                             '<dt class="methods">methods</dt>',
                         ));
                         if (PHP_VERSION_ID >= 80100) {
                             $expect = \str_replace('\'', '&#039;', $expect);
                         }
-                        // echo 'expect = ' . $expect . "\n";
+                        // echo 'expect = ' . $expect . "\n\n";
                         // echo 'actual = ' . $str . "\n";
                         self::assertStringContainsString($expect, $str);
 
@@ -253,10 +249,10 @@ EOD;
                                 'two-line description!">$param1</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_type">array</span> <span class="t_parameter-name" title="second param">$param2</span> <span class="t_operator">=</span> <span class="t_array t_parameter-default"><span class="t_keyword">array</span><span class="t_punct">()</span></span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span></dd>',
                             '<dd class="inherited method public" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_public">public</span> <span class="t_identifier">testBasePublic</span><span class="t_punct">(</span><span class="t_punct">)</span></dd>',
                             '<dd class="inherited isStatic method public" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="t_identifier">testBaseStatic</span><span class="t_punct">(</span><span class="t_punct">)</span></dd>',
-                            '<dd class="method protected"><span class="t_modifier_protected">protected</span> <span class="t_identifier" title="This method is protected">methodProtected</span><span class="t_punct">(</span><span class="parameter"><span class="t_type"><span class="classname"><span class="namespace">bdk\Debug\Abstraction\</span>Abstraction</span><span class="t_punct">[]</span></span> <span class="t_parameter-name" title="first param">$param1</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span></dd>',
-                            '<dd class="method private"><span class="t_modifier_private">private</span> <span class="t_identifier" title="This method is private">methodPrivate</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">mixed</span> <span class="t_parameter-name" title="first param (passed by ref)">&amp;$param1</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_type"><span class="classname"><span class="namespace">bdk\PubSub\</span>Event</span><span class="t_punct">[]</span></span> <span class="t_parameter-name" title="second param (passed by ref)">&amp;$param2</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_type">bool</span> <span class="t_parameter-name" title="3rd param not in method signature">...$param3</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span></dd>',
                             '<dd class="inherited magic method" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_magic">magic</span> <span class="t_identifier" title="I\'m a magic method">presto</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$foo</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_type">int</span> <span class="t_parameter-name">$int</span> <span class="t_operator">=</span> <span class="t_int t_parameter-default">1</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_parameter-name">$bool</span> <span class="t_operator">=</span> <span class="t_bool t_parameter-default" data-type-more="true">true</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_parameter-name">$null</span> <span class="t_operator">=</span> <span class="t_null t_parameter-default">null</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span></dd>',
                             '<dd class="inherited isStatic magic method" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_magic">magic</span> <span class="t_modifier_static">static</span> <span class="t_identifier" title="I\'m a static magic method">prestoStatic</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name">$noDefault</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_parameter-name">$arr</span> <span class="t_operator">=</span> <span class="t_array t_parameter-default"><span class="t_keyword">array</span><span class="t_punct">()</span></span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_parameter-name">$opts</span> <span class="t_operator">=</span> <span class="t_parameter-default t_string">array(\'a\'=&gt;\'ay\',\'b\'=&gt;\'bee\')</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_parameter-name">$val</span> <span class="t_operator">=</span> <span class="t_const t_parameter-default" title="value: &quot;defined in TestBase&quot;"><span class="classname">self</span><span class="t_operator">::</span><span class="t_identifier">MY_CONSTANT</span></span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span></dd>',
+                            '<dd class="method protected"><span class="t_modifier_protected">protected</span> <span class="t_identifier" title="This method is protected">methodProtected</span><span class="t_punct">(</span><span class="parameter"><span class="t_type"><span class="classname"><span class="namespace">bdk\Debug\Abstraction\</span>Abstraction</span><span class="t_punct">[]</span></span> <span class="t_parameter-name" title="first param">$param1</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span></dd>',
+                            '<dd class="method private"><span class="t_modifier_private">private</span> <span class="t_identifier" title="This method is private">methodPrivate</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">mixed</span> <span class="t_parameter-name" title="first param (passed by ref)">&amp;$param1</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_type"><span class="classname"><span class="namespace">bdk\PubSub\</span>Event</span><span class="t_punct">[]</span></span> <span class="t_parameter-name" title="second param (passed by ref)">&amp;$param2</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_type">bool</span> <span class="t_parameter-name" title="3rd param not in method signature">...$param3</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span></dd>',
                             '<dt>phpDoc</dt>',
                         ));
                         if (PHP_VERSION_ID >= 80100) {
@@ -274,7 +270,7 @@ EOD;
                             '</dl>',
                         )), $str);
                     },
-                    'script' => 'console.log({"___class_name":"bdk\\\Test\\\Debug\\\Fixture\\\TestObj","(public) propPublic":"redefined in Test (public)","(public) propStatic":"I\'m Static","(public) someArray":{"int":123,"numeric":"123","string":"cheese","bool":true,"obj":null},"(protected ✨ magic-read) magicReadProp":"not null","(protected) propProtected":"defined only in TestBase (protected)","(private) debug":"(object) bdk\\\Debug NOT INSPECTED","(private) instance":"(object) bdk\\\Test\\\Debug\\\Fixture\\\TestObj *RECURSION*","(private excluded) propNoDebug":"not included in __debugInfo","(private) propPrivate":"redefined in Test (private) (alternate value via __debugInfo)","(🔒 private) testBasePrivate":"defined in TestBase (private)","(private) toString":"abracadabra","(private) toStrThrow":0,"(✨ magic excluded) magicProp":undefined,"(debug) debugValue":"This property is debug only"});',
+                    'script' => 'console.log({"___class_name":"bdk\\\\Test\\\\Debug\\\\Fixture\\\\TestObj","(public) baseDynamic":"duo","(public) dynamic":"dynomite!","(public) propPublic":"redefined in Test (public)","(public) propStatic":"I\'m Static","(public) someArray":{"int":123,"numeric":"123","string":"cheese","bool":true,"obj":null},"(✨ magic excluded) magicProp":undefined,"(✨ magic-read protected) magicReadProp":"not null","(protected) propProtected":"defined only in TestBase (protected)","(private) debug":"(object) bdk\\\\Debug NOT INSPECTED","(private) instance":"(object) bdk\\\\Test\\\\Debug\\\\Fixture\\\\TestObj *RECURSION*","(private excluded) propNoDebug":"not included in __debugInfo","(private) propPrivate":"redefined in Test (private) (alternate value via __debugInfo)","(🔒 private) testBasePrivate":"defined in TestBase (private)","(private) toString":"abracadabra","(private) toStrThrow":0,"(debug) debugValue":"This property is debug only"});',
                     'streamAnsi' => $ansi,
                     'text' => $text,
                     'wamp' => array(
@@ -285,8 +281,7 @@ EOD;
                     ),
                 ),
             ),
-            // 1
-            array(
+            'stringMaxLen' => array(
                 'log',
                 array(
                     new TestObj('This is the song that never ends.  Yes, it goes on and on my friend.  Some people started singing it not knowing what it was.  And they\'ll never stop singing it forever just because.  This is the song that never ends...'),
@@ -298,25 +293,26 @@ EOD;
                     },
                 ),
             ),
-            // 2
-            array(
+            'test2' => array(
                 'log',
                 array(
                     new \bdk\Test\Debug\Fixture\Test2(),
                 ),
                 array(
-                    'html' => static function ($str) {
+                    'html' => static function ($html) {
                         // properties
                         $expect = \implode("\n", array(
                             '<dt class="properties">properties</dt>',
                             '<dd class="info magic">This object has a <code>__get</code> method</dd>',
-                            '<dd class="inherited magic-read property protected" data-inherited-from="bdk\Test\Debug\Fixture\Test2Base"><span class="t_modifier_protected">protected</span> <span class="t_modifier_magic-read">magic-read</span> <span class="t_type">bool</span> <span class="t_identifier" title="Read Only!">magicReadProp</span> <span class="t_operator">=</span> <span class="t_string">not null</span></dd>',
                             '<dd class="inherited magic property" data-inherited-from="bdk\Test\Debug\Fixture\Test2Base"><span class="t_modifier_magic">magic</span> <span class="t_type">bool</span> <span class="t_identifier" title="I\'m avail via __get()">magicProp</span></dd>',
+                            '<dd class="inherited magic-read property protected" data-inherited-from="bdk\Test\Debug\Fixture\Test2Base"><span class="t_modifier_magic-read">magic-read</span> <span class="t_modifier_protected">protected</span> <span class="t_type">bool</span> <span class="t_identifier" title="Read Only!">magicReadProp</span> <span class="t_operator">=</span> <span class="t_string">not null</span></dd>',
                         ));
                         if (PHP_VERSION_ID >= 80100) {
                             $expect = \str_replace('\'', '&#039;', $expect);
                         }
-                        self::assertStringContainsString($expect, $str);
+                        // echo 'expect = ' . $expect . "\n";
+                        // echo 'actual = ' . $html . "\n";
+                        self::assertStringContainsString($expect, $html);
 
                         // methods
                         $constName = \defined('HHVM_VERSION')
@@ -340,9 +336,9 @@ EOD;
 
                         // echo 'expect = ' . $expect . "\n";
                         // echo 'str = ' . $str . "\n";
-                        self::assertStringContainsString($expect, $str);
+                        self::assertStringContainsString($expect, $html);
                     },
-                    'script' => 'console.log({"___class_name":"bdk\\\Test\\\Debug\\\Fixture\\\Test2","(protected ✨ magic-read) magicReadProp":"not null","(✨ magic) magicProp":undefined});',
+                    'script' => 'console.log({"___class_name":"bdk\\\\Test\\\\Debug\\\\Fixture\\\\Test2","(✨ magic) magicProp":undefined,"(✨ magic-read protected) magicReadProp":"not null"});',
                     'text' => $text2,
                     'wamp' => array(
                         'log',
@@ -362,7 +358,11 @@ EOD;
                     'entry' => static function (LogEntry $logEntry) {
                         $objAbs = $logEntry['args'][0];
                         self::assertSame(
-                            array('desc' => null, 'summary' => null),
+                            // we collect the classes's php doc regardless of config
+                            array(
+                                'desc' => 'PhpDoc Description',
+                                'summary' => 'PhpDoc Summary',
+                            ),
                             \array_intersect_key($objAbs['phpDoc'], \array_flip(array('desc','summary')))
                         );
                         foreach ($objAbs['constants'] as $const) {
@@ -439,8 +439,7 @@ EOD;
                     },
                 ),
             ),
-            // 3
-            array(
+            'phpDocExtends' => array(
                 'log',
                 array(
                     new \bdk\Test\Debug\Fixture\Utility\PhpDocExtends(),
@@ -520,13 +519,16 @@ EOD;
                 array(
                     'entry' => static function (LogEntry $entry) {
                         // echo print_r($entry->getValues(), true) . "\n";
+                        $abs = $entry['args'][0];
                         self::assertSame(array(
                             'INHERITED',
                             'MY_CONSTANT',
-                        ), \array_keys($entry['args'][0]['constants']));
+                        ), \array_keys($abs['constants']));
                         self::assertSame(array(
+                            'baseDynamic',
                             'debug',
                             'debugValue',
+                            'dynamic',
                             'instance',
                             'magicProp',
                             'magicReadProp',
@@ -539,7 +541,7 @@ EOD;
                             'testBasePrivate',
                             'toString',
                             'toStrThrow',
-                        ), \array_keys($entry['args'][0]['properties']));
+                        ), \array_keys($abs['properties']));
                         self::assertSame(array(
                             '__construct',
                             '__call',
@@ -554,7 +556,7 @@ EOD;
                             'prestoStatic',
                             'testBasePublic',
                             'testBaseStatic',
-                        ), \array_keys($entry['args'][0]['methods']));
+                        ), \array_keys($abs['methods']));
                     },
                 ),
             ),
@@ -602,7 +604,7 @@ EOD;
         );
         $expect = array();
         if (\defined('HHVM_VERSION')) {
-            $expect = array('Stringish','XHPChild'); // hhvm-3.25 has XHPChild
+            $expect = array('Stringish', 'XHPChild'); // hhvm-3.25 has XHPChild
         } elseif (PHP_VERSION_ID >= 80000) {
             $expect = array('Stringable');
         }
@@ -611,6 +613,7 @@ EOD;
             array(
                 'INHERITED' => array(
                     'attributes' => array(),
+                    'declaredLast' => 'bdk\Test\Debug\Fixture\TestBase',
                     'desc' => PHP_VERSION_ID >= 70100
                         ? 'Inherited description'
                         : null,
@@ -620,6 +623,7 @@ EOD;
                 ),
                 'MY_CONSTANT' => array(
                     'attributes' => array(),
+                    'declaredLast' => 'bdk\Test\Debug\Fixture\TestObj',
                     'desc' => PHP_VERSION_ID >= 70100
                         ? 'constant documentation'
                         : null,
@@ -646,10 +650,29 @@ EOD;
         self::assertTrue($abs['properties']['instance']['value']['isRecursion']);
         self::assertArraySubset(
             array(
+                'declaredLast' => null,
+                'declaredOrig' => null,
+                'declaredPrev' => null,
+                'value' => 'duo',
+            ),
+            $abs['properties']['baseDynamic']
+        );
+        self::assertArraySubset(
+            array(
+                'declaredLast' => null,
+                'declaredOrig' => null,
+                'declaredPrev' => null,
+                'value' => 'dynomite!',
+            ),
+            $abs['properties']['dynamic']
+        );
+        self::assertArraySubset(
+            array(
                 'attributes' => array(),
+                'declaredLast' => 'bdk\Test\Debug\Fixture\TestObj',
+                'declaredOrig' => 'bdk\Test\Debug\Fixture\TestBase',
+                'declaredPrev' => 'bdk\Test\Debug\Fixture\TestBase',
                 'isPromoted' => false,
-                'originallyDeclared' => 'bdk\Test\Debug\Fixture\TestBase',
-                'overrides' => 'bdk\Test\Debug\Fixture\TestBase',
                 'value' => 'redefined in Test (public)',
                 'valueFrom' => 'value',
                 'visibility' => 'public',
@@ -667,10 +690,10 @@ EOD;
         );
         self::assertArraySubset(
             array(
-                'inheritedFrom' => 'bdk\Test\Debug\Fixture\TestBase',
+                'declaredLast' => 'bdk\Test\Debug\Fixture\TestBase',
+                'declaredOrig' => 'bdk\Test\Debug\Fixture\TestBase',
+                'declaredPrev' => null,
                 'isPromoted' => false,
-                'originallyDeclared' => 'bdk\Test\Debug\Fixture\TestBase',
-                'overrides' => null,
                 'value' => 'defined only in TestBase (protected)',
                 'valueFrom' => 'value',
                 'visibility' => 'protected',
@@ -680,10 +703,10 @@ EOD;
         self::assertArraySubset(
             array(
                 'attributes' => array(),
-                'inheritedFrom' => null,
+                'declaredLast' => 'bdk\Test\Debug\Fixture\TestObj',
+                'declaredOrig' => 'bdk\Test\Debug\Fixture\TestBase',
+                'declaredPrev' => 'bdk\Test\Debug\Fixture\TestBase',
                 'isPromoted' => false,
-                'originallyDeclared' => 'bdk\Test\Debug\Fixture\TestBase',
-                'overrides' => 'bdk\Test\Debug\Fixture\TestBase',
                 'value' => 'redefined in Test (private) (alternate value via __debugInfo)',
                 'valueFrom' => 'debugInfo',
                 'visibility' => 'private',
@@ -693,10 +716,10 @@ EOD;
         self::assertArraySubset(
             array(
                 'attributes' => array(),
-                'inheritedFrom' => 'bdk\Test\Debug\Fixture\TestBase',
+                'declaredLast' => 'bdk\Test\Debug\Fixture\TestBase',
+                'declaredOrig' => 'bdk\Test\Debug\Fixture\TestBase',
+                'declaredPrev' => null,
                 'isPromoted' => false,
-                'originallyDeclared' => null,
-                'overrides' => null,
                 'value' => 'defined in TestBase (private)',
                 'valueFrom' => 'value',
                 'visibility' => 'private',
@@ -706,6 +729,9 @@ EOD;
         self::assertArraySubset(
             array(
                 'attributes' => array(),
+                'declaredLast' => null,
+                'declaredOrig' => null,
+                'declaredPrev' => null,
                 'isPromoted' => false,
                 'value' => 'This property is debug only',
                 'valueFrom' => 'debugInfo',
@@ -719,8 +745,8 @@ EOD;
         self::assertSame(
             array(
                 'attributes' => array(),
+                'declaredLast' => 'bdk\Test\Debug\Fixture\TestObj',
                 'implements' => null,
-                'inheritedFrom' => null,
                 'isAbstract' => false,
                 'isDeprecated' => true,
                 'isFinal' => true,
@@ -775,9 +801,10 @@ EOD;
             // @requires not working in 4.8.36
             self::markTestSkipped('anonymous classes are a php 7.0 thing');
         }
-        $filepath = TEST_DIR . '/Debug/Fixture/Anonymous.php';
-        $line = 6;
+        $fixtureDir = TEST_DIR . '/Debug/Fixture';
+        $filepath = $fixtureDir . '/Anonymous.php';
         $anonymous = require $filepath;
+        $line = 26;
         $this->testMethod(
             'log',
             array(
@@ -785,12 +812,12 @@ EOD;
                 $anonymous['stdClass'],
             ),
             array(
-                // 'entry' => $entry,
                 'chromeLogger' => array(
                     array(
                         'anonymous',
                         array(
                             '___class_name' => 'stdClass@anonymous',
+                            '(public) thing' => 'hammer',
                             '(debug) file' => $filepath,
                             '(debug) line' => $line,
                         ),
@@ -798,29 +825,230 @@ EOD;
                     null,
                     '',
                 ),
-                'firephp' => 'X-Wf-1-1-1-%d: %d|[{"Label":"anonymous","Type":"LOG"},{"___class_name":"stdClass@anonymous","(debug) file":"' . $filepath . '","(debug) line":' . $line . '}]|',
+                'firephp' => 'X-Wf-1-1-1-%d: %d|[{"Label":"anonymous","Type":"LOG"},{"___class_name":"stdClass@anonymous","(public) thing":"hammer","(debug) file":"' . $filepath . '","(debug) line":' . $line . '}]|',
                 'html' => '<li class="m_log"><span class="no-quotes t_string">anonymous</span> = <div class="t_object" data-accessible="public"><span class="classname">stdClass@anonymous</span>
                     <dl class="object-inner">
                     <dt>extends</dt>
                         <dd class="extends"><span class="classname">stdClass</span></dd>
+                    ' . (PHP_VERSION_ID >= 80200
+                        ? '<dt class="attributes">attributes</dt>
+                            <dd class="attribute"><span class="classname">AllowDynamicProperties</span></dd>'
+                        : '') . '
+                    <dt class="constants">constants</dt>
+                        <dd class="constant public"><span class="t_modifier_public">public</span> <span class="t_identifier">TWELVE</span> <span class="t_operator">=</span> <span class="t_int">12</span></dd>
                     <dt class="properties">properties</dt>
+                        <dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier">thing</span> <span class="t_operator">=</span> <span class="t_string">hammer</span></dd>
                         <dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="t_type">string</span> <span class="t_identifier">file</span> <span class="t_operator">=</span> <span class="t_string">' . $filepath . '</span></dd>
                         <dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="t_type">int</span> <span class="t_identifier">line</span> <span class="t_operator">=</span> <span class="t_int">' . $line . '</span></dd>
                     <dt class="methods">methods</dt>
                         <dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier" title="Anonymous method">myMethod</span><span class="t_punct">(</span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span></dd>
                     </dl>
                     </div></li>',
-                'script' => 'console.log("anonymous",{"___class_name":"stdClass@anonymous","(debug) file":"' . $filepath . '","(debug) line":' . $line . '});',
+                'script' => 'console.log("anonymous",{"___class_name":"stdClass@anonymous","(public) thing":"hammer","(debug) file":"' . $filepath . '","(debug) line":' . $line . '});',
                 'text' => 'anonymous = stdClass@anonymous
                     Properties:
+                    (public) thing = "hammer"
                     (debug) file = "%s/PHPDebugConsole/tests/Debug/Fixture/Anonymous.php"
                     (debug) line = %d
                     Methods:
                     public: 1',
-                // 'wamp' => $entry,
+            )
+        );
+        $this->testMethod(
+            'log',
+            array(
+                'anonymous',
+                $anonymous['anonymous'],
+            ),
+            array(
+                'entry' => static function (LogEntry $logEntry) use ($filepath) {
+                    $abs = $logEntry['args'][1];
+
+                    self::assertArraySubset(array(
+                        'className' => "\x00default\x00",
+                        'definition' => array(
+                            'extensionName' => false,
+                            'fileName' => '',
+                            'startLine' => 1,
+                        ),
+                    ), $abs->getClassValues());
+                    self::assertArraySubset(array(
+                        'className' => 'class@anonymous',
+                        'definition' => array(
+                            'extensionName' => false,
+                            'fileName' => $filepath,
+                            'startLine' => 6,
+                        ),
+                    ), $abs->getValues());
+
+                    self::assertSame(array(
+                        'A',
+                    ), \array_keys($abs['constants']));
+                    self::assertSame(array(
+                        'b',
+                        'debug.file',
+                        'debug.line',
+                    ), \array_keys($abs['properties']));
+                    self::assertSame(array(
+                        'anon',
+                    ), \array_keys($abs['methods']));
+                },
+            )
+        );
+
+        $this->testMethod(
+            'log',
+            array(
+                'anonymous',
+                $anonymous['test1'],
+            ),
+            array(
+                'entry' => static function (LogEntry $logEntry) use ($filepath, $fixtureDir) {
+                    $abs = $logEntry['args'][1];
+
+                    self::assertArraySubset(array(
+                        'className' => 'bdk\\Test\\Debug\\Fixture\\AnonBase',
+                        'definition' => array(
+                            'extensionName' => false,
+                            'fileName' => $fixtureDir . '/AnonBase.php',
+                            'startLine' => 8,
+                        ),
+                    ), $abs->getClassValues());
+                    self::assertArraySubset(array(
+                        'className' => 'bdk\\Test\\Debug\\Fixture\\AnonBase@anonymous',
+                        'definition' => array(
+                            'extensionName' => false,
+                            'fileName' => $filepath,
+                            'startLine' => 45,
+                        ),
+                    ), $abs->getValues());
+
+                    self::assertSame(array(
+                        'ONE',
+                        'PRIVATE_CONST',
+                    ), \array_keys($abs->getClassValues()['constants']));
+                    self::assertSame(array(
+                        'pro',
+                        'foo',
+                    ), \array_keys($abs->getClassValues()['properties']));
+                    self::assertSame(array(
+                        'test',
+                    ), \array_keys($abs->getClassValues()['methods']));
+
+                    self::assertSame(array(
+                        'pro',
+                        'foo',
+                    ), \array_keys($abs->getClassValues()['properties']));
+                    self::assertSame(array('test'), \array_keys($abs->getClassValues()['methods']));
+
+                    self::assertArraySubset(
+                        array(
+                            'value' => 1,
+                        ),
+                        $abs['constants']['ONE']
+                    );
+                    self::assertArraySubset(
+                        array(
+                            'value' => 3.14159265359,
+                        ),
+                        $abs['constants']['PI']
+                    );
+
+                    self::assertSame(array(
+                        'color',
+                        'pro',
+                        'debug.file',
+                        'debug.line',
+                    ), \array_keys($abs->getInstanceValues()['properties']));
+                    self::assertArraySubset(
+                        array(
+                            'attributes' => array(),
+                            'declaredLast' => 'bdk\Test\Debug\Fixture\AnonBase',
+                            'declaredOrig' => 'bdk\Test\Debug\Fixture\AnonBase',
+                            'declaredPrev' => null,
+                            'isPromoted' => false,
+                            'value' => 'bar',
+                            'valueFrom' => 'value',
+                            'visibility' => 'private',
+                        ),
+                        $abs['properties']['foo']
+                    );
+                    self::assertArraySubset(
+                        array(
+                            'attributes' => array(),
+                            'declaredLast' => 'bdk\Test\Debug\Fixture\AnonBase@anonymous',
+                            'declaredOrig' => 'bdk\Test\Debug\Fixture\AnonBase@anonymous',
+                            'declaredPrev' => null,
+                            'isPromoted' => false,
+                            'value' => 'red',
+                            'valueFrom' => 'value',
+                            'visibility' => 'public',
+                        ),
+                        $abs['properties']['color']
+                    );
+
+                    self::assertArraySubset(
+                        array(
+                            'declaredLast' => 'bdk\Test\Debug\Fixture\AnonBase',
+                        ),
+                        $abs['methods']['test']
+                    );
+                    self::assertArraySubset(
+                        array(
+                            'declaredLast' => 'bdk\Test\Debug\Fixture\AnonBase@anonymous',
+                        ),
+                        $abs['methods']['test1']
+                    );
+                },
+            )
+        );
+        $this->testMethod(
+            'log',
+            array(
+                'anonymous',
+                $anonymous['test2'],
+            ),
+            array(
+                'entry' => static function (LogEntry $logEntry) use ($filepath, $fixtureDir) {
+                    $abs = $logEntry['args'][1];
+
+                    self::assertArraySubset(array(
+                        'className' => 'bdk\\Test\\Debug\\Fixture\\AnonBase',
+                        'definition' => array(
+                            'extensionName' => false,
+                            'fileName' => $fixtureDir . '/AnonBase.php',
+                            'startLine' => 8,
+                        ),
+                    ), $abs->getClassValues());
+                    self::assertArraySubset(array(
+                        'className' => 'bdk\\Test\\Debug\\Fixture\\AnonBase@anonymous',
+                        'definition' => array(
+                            'extensionName' => false,
+                            'fileName' => $filepath,
+                            'startLine' => 56,
+                        ),
+                    ), $abs->getValues());
+
+                    self::assertSame(array(
+                        'ONE',
+                        'PRIVATE_CONST',
+                    ), \array_keys($abs->getClassValues()['constants']));
+                    self::assertSame(array(
+                        'pro',
+                        'foo',
+                    ), \array_keys($abs->getClassValues()['properties']));
+                    self::assertSame(array(
+                        'test',
+                    ), \array_keys($abs->getClassValues()['methods']));
+                },
             )
         );
         // anonymous callable tested via ArrayTest
+        self::assertSame(array(
+            'stdClass',
+            "\x00default\x00",
+            'bdk\Test\Debug\Fixture\AnonBase',
+        ), \array_keys($this->debug->data->get('classDefinitions')));
     }
 
     public function testDom()
@@ -856,7 +1084,7 @@ EOD;
     {
         if (PHP_VERSION_ID < 80000) {
             // @requires not working in 4.8.36
-            self::markTestSkipped('attributes classes are a php 8.0 thing');
+            self::markTestSkipped('promoted params are a php 8.0 thing');
         }
         $test = new \bdk\Test\Debug\Fixture\Php80(42);
         $this->testMethod(
@@ -911,7 +1139,7 @@ EOD;
                     // self::assertSame('Attributed & promoted param', $abs['properties']['arg1']['desc']);
                 },
                 'html' => static function ($html) {
-                    $constExpect = '<dd class="constant final public"><span class="t_modifier_public">public</span> <span class="t_modifier_final">final</span> <span class="t_identifier">FINAL_CONST</span> <span class="t_operator">=</span> <span class="t_string">foo</span></dd>';
+                    $constExpect = '<dd class="constant isFinal public"><span class="t_modifier_public">public</span> <span class="t_modifier_final">final</span> <span class="t_identifier">FINAL_CONST</span> <span class="t_operator">=</span> <span class="t_string">foo</span></dd>';
                     self::assertStringContainsString($constExpect, $html);
 
                     $propExpect = '<dd class="isPromoted isReadOnly property public"><span class="t_modifier_public">public</span> <span class="t_modifier_readonly">readonly</span> <span class="t_type">string</span> <span class="t_identifier">title</span> <span class="t_operator">=</span> <span class="t_string" data-type-more="numeric">42</span></dd>';
@@ -1104,72 +1332,6 @@ EOD;
     }
 
     /**
-     * Test
-     *
-     * @return void
-     */
-    /*
-    public function testGetAbstraction()
-    {
-    }
-    */
-
-    /**
-     * Test
-     *
-     * @return void
-     */
-    /*
-    public function testGetMethods()
-    {
-    }
-    */
-
-    /**
-     * Test
-     *
-     * @return void
-     */
-    /*
-    public function testGetParams()
-    {
-    }
-    */
-
-    /**
-     * Test
-     *
-     * @return void
-     */
-    /*
-    public function testParamTypeHint()
-    {
-    }
-    */
-
-    /**
-     * Test
-     *
-     * @return void
-     */
-    /*
-    public function testGetProperties()
-    {
-    }
-    */
-
-    /**
-     * Test
-     *
-     * @return void
-     */
-    /*
-    public function testParseDocComment()
-    {
-    }
-    */
-
-    /**
      * test handling __debugInfo magic method
      *
      * @return void
@@ -1215,20 +1377,13 @@ EOD;
                         'array',
                         array(
                             'foo' => 'bar',
-                            'tooDeep' => $this->debug->abstracter->crateWithVals(
+                            'tooDeep' => \array_diff_key($this->debug->abstracter->crateWithVals(
                                 (object) array('beans'),
                                 array(
-                                    'attributes' => array(),
                                     'debugMethod' => 'log',
-                                    'definition' => array(
-                                        'fileName' => '',
-                                        'startLine' => 1,
-                                        'extensionName' => '',
-                                    ),
                                     'isMaxDepth' => true,
-                                    'properties' => array(),
                                 )
-                            )->jsonSerialize(),
+                            )->jsonSerialize(), \array_flip(array('properties'))),
                             'ding' => 'dong',
                         ),
                     ),
@@ -1310,7 +1465,7 @@ EOD;
     public function testRecursiveObjectProp3()
     {
         $test = new TestObj();
-        $test->propPublic = array( &$test );
+        $test->propPublic = array(&$test);
         $this->debug->log('test', $test);
         $abstraction = $this->debug->data->get('log/0/args/1');
         self::assertEquals(

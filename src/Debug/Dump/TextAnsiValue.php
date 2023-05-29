@@ -220,6 +220,7 @@ class TextAnsiValue extends TextValue
                 . "\n";
         }
         foreach ($abs['properties'] as $name => $info) {
+            $info['isInherited'] = $info['declaredLast'] && $info['declaredLast'] !== $abs['className'];
             $vis = $this->cfg['escapeCodes']['muted'] . '(' . $this->dumpPropVis($info) . ')' . $this->escapeReset;
             $name = $this->cfg['escapeCodes']['property'] . $name . $this->escapeReset;
             $val = $info['debugInfoExcluded']

@@ -84,6 +84,7 @@ class ConfigEvents implements SubscriberInterface
             'emailFrom' => array($this, 'onCfgEmail'),
             'emailFunc' => array($this, 'onCfgEmail'),
             'emailTo' => array($this, 'onCfgEmail'),
+            'enableProfiling' => array($this, 'onCfgEnableProfiling'),
             'key' => array($this, 'onCfgKey'),
             'logEnvInfo' => array($this, 'onCfgList'),
             'logRequestInfo' => array($this, 'onCfgList'),
@@ -94,7 +95,6 @@ class ConfigEvents implements SubscriberInterface
             'onOutput' => array($this, 'onCfgReplaceSubscriber'),
             'route' => array($this, 'onCfgRoute'),
             'serviceProvider' => array($this, 'onCfgServiceProvider'),
-            'enableProfiling' => array($this, 'onCfgEnableProfiling'),
         ), $cfgDebug);
         foreach ($valActions as $key => $callable) {
             /** @psalm-suppress TooManyArguments */

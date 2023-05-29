@@ -39,7 +39,6 @@ class Config
             'maxDepth',
             'methodAttributeCollect',
             'methodAttributeOutput',
-            'methodCache',
             'methodCollect',
             'methodDescOutput',
             'methodOutput',

@@ -11,11 +11,13 @@ use bdk\Test\Debug\DebugTestFramework;
  * @covers \bdk\Debug\Abstraction\Abstracter
  * @covers \bdk\Debug\Abstraction\AbstractArray
  * @covers \bdk\Debug\Abstraction\AbstractObject
+ * @covers \bdk\Debug\Abstraction\AbstractObjectClass
  * @covers \bdk\Debug\Abstraction\AbstractObjectConstants
  * @covers \bdk\Debug\Abstraction\AbstractObjectHelper
  * @covers \bdk\Debug\Abstraction\AbstractObjectMethodParams
  * @covers \bdk\Debug\Abstraction\AbstractObjectMethods
  * @covers \bdk\Debug\Abstraction\AbstractObjectProperties
+ * @covers \bdk\Debug\Abstraction\AbstractObjectSubscriber
  * @covers \bdk\Debug\Abstraction\AbstractString
  * @covers \bdk\Debug\Dump\Html
  * @covers \bdk\Debug\Dump\Html\Helper

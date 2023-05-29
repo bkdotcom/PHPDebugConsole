@@ -443,6 +443,7 @@ WHERE·
         $channelNameRoot = $rootInstance->getCfg('channelName', Debug::CONFIG_DEBUG);
         $expect = array(
             'alerts' => $this->helper->deObjectifyData($this->debug->data->get('alerts'), false),
+            'classDefinitions' => $this->helper->deObjectifyData($this->debug->data->get('classDefinitions'), false),
             'log' => $this->helper->deObjectifyData($this->debug->data->get('log'), false),
             'logSummary' => $this->helper->deObjectifyData($this->debug->data->get('logSummary'), false),
             'requestId' => $this->debug->data->get('requestId'),

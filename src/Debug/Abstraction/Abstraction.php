@@ -14,8 +14,6 @@ namespace bdk\Debug\Abstraction;
 
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\PubSub\Event;
-use JsonSerializable;
-use Serializable;
 
 /**
  * Abstraction
@@ -26,7 +24,7 @@ use Serializable;
  *   resource
  *   other/custom
  */
-class Abstraction extends Event implements JsonSerializable, Serializable
+class Abstraction extends Event
 {
     /**
      * Constructor
@@ -48,17 +46,6 @@ class Abstraction extends Event implements JsonSerializable, Serializable
     }
 
     /**
-     * Serialize magic method
-     * (since php 7.4)
-     *
-     * @return array
-     */
-    public function __serialize()
-    {
-        return $this->values;
-    }
-
-    /**
      * Return stringified value
      *
      * @return string
@@ -68,40 +55,7 @@ class Abstraction extends Event implements JsonSerializable, Serializable
         $val = isset($this->values['value'])
             ? $this->values['value']
             : '';
-        if ($this->values['type'] === Abstracter::TYPE_OBJECT) {
-            $val = $this->values['className'];
-            if ($this->values['stringified']) {
-                $val = $this->values['stringified'];
-            } elseif (isset($this->values['methods']['__toString']['returnValue'])) {
-                $val = $this->values['methods']['__toString']['returnValue'];
-            }
-        }
         return (string) $val;
-    }
-
-    /**
-     * Unserialize
-     *
-     * @param array $data serialized data
-     *
-     * @return void
-     */
-    public function __unserialize($data)
-    {
-        $this->values = $data;
-    }
-
-    /**
-     * Set abstraction's subject
-     *
-     * @param mixed $subject (null) Subject omit or set to null to remove subject
-     *
-     * @return self
-     */
-    public function setSubject($subject = null)
-    {
-        $this->subject = $subject;
-        return $this;
     }
 
     /**
@@ -116,25 +70,16 @@ class Abstraction extends Event implements JsonSerializable, Serializable
     }
 
     /**
-     * Implements Serializable
+     * Set abstraction's subject
      *
-     * @return string
+     * @param mixed $subject (null) Subject omit or set to null to remove subject
+     *
+     * @return self
      */
-    public function serialize()
+    public function setSubject($subject = null)
     {
-        return \serialize($this->__serialize());
-    }
-
-    /**
-     * Implements Serializable
-     *
-     * @param string $data serialized data
-     *
-     * @return void
-     */
-    public function unserialize($data)
-    {
-        $this->__unserialize(\unserialize($data));
+        $this->subject = $subject;
+        return $this;
     }
 
     /**

@@ -332,6 +332,7 @@ class BaseValue extends AbstractComponent
     {
         $return = array();
         foreach ($abs['properties'] as $name => $info) {
+            $info['isInherited'] = $info['declaredLast'] && $info['declaredLast'] !== $abs['className'];
             $vis = $this->dumpPropVis($info);
             $name = '(' . $vis . ') ' . \str_replace('debug.', '', $name);
             $return[$name] = $this->dump($info['value']);
@@ -352,7 +353,7 @@ class BaseValue extends AbstractComponent
         foreach ($vis as $i => $v) {
             if (\in_array($v, array('magic', 'magic-read', 'magic-write'), true)) {
                 $vis[$i] = '✨ ' . $v;    // "sparkles": there is no magic-wand unicode char
-            } elseif ($v === 'private' && $info['inheritedFrom']) {
+            } elseif ($v === 'private' && $info['isInherited']) {
                 $vis[$i] = '🔒 ' . $v;
             }
         }

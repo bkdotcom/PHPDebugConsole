@@ -16,6 +16,7 @@ use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
+use bdk\Debug\Abstraction\ObjectAbstraction;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Utility\Php;
 use bdk\Debug\Utility\StringUtil;
@@ -96,6 +97,8 @@ class SerializeLog
         if ($str) {
             $data = Php::unserializeSafe($str, array(
                 'bdk\\Debug\\Abstraction\\Abstraction',
+                'bdk\\Debug\\Abstraction\\ObjectAbstraction',
+                'bdk\\PubSub\\ValueStore',
             ));
         }
         if (!$data) {
@@ -144,9 +147,7 @@ class SerializeLog
     private static function importLogEntry(array $vals)
     {
         $vals = \array_replace(array('', array(), array()), $vals);
-        if (self::$isLegacyData) {
-            $vals[1] = self::importLegacy($vals[1]);
-        }
+        $vals[1] = self::importLegacy($vals[1]);
         $logEntry = new LogEntry(self::$debug, $vals[0], $vals[1], $vals[2]);
         if (self::$isLegacyData && $vals[0] === 'table') {
             self::$debug->methodTable->doTable($logEntry);
@@ -188,24 +189,23 @@ class SerializeLog
      */
     private static function importLegacy(array $vals)
     {
-        foreach ($vals as $k => $v) {
-            if (\is_array($v) === false) {
-                continue;
+        return \array_map(static function ($val) {
+            if (\is_array($val) === false) {
+                return $val;
             }
-            if (!isset($v['debug']) || $v['debug'] !== Abstracter::ABSTRACTION) {
-                $vals[$k] = self::importLegacy($v);
-                continue;
+            if (!isset($val['debug']) || $val['debug'] !== Abstracter::ABSTRACTION) {
+                return self::importLegacy($val);
             }
             // we are an abstraction
-            $type = $v['type'];
-            unset($v['debug'], $v['type']);
-            if ($type === Abstracter::TYPE_OBJECT) {
-                $v['properties'] = self::importLegacy($v['properties']);
-                $v = self::importLegacyObj($v);
+            $type = $val['type'];
+            unset($val['debug'], $val['type']);
+            if ($type !== Abstracter::TYPE_OBJECT) {
+                return new Abstraction($type, $val);
             }
-            $vals[$k] = new Abstraction($type, $v);
-        }
-        return $vals;
+            $val['properties'] = self::importLegacy($val['properties']);
+            $val = self::importLegacyObj($val);
+            return new ObjectAbstraction($val);
+        }, $vals);
     }
 
     /**
@@ -218,12 +218,6 @@ class SerializeLog
     private static function importLegacyObj(array $absValues)
     {
         $absValues = AbstractObject::buildObjValues($absValues);
-        if (isset($absValues['collectMethods'])) {
-            if ($absValues['collectMethods'] === false) {
-                $absValues['cfgFlags'] &= ~AbstractObject::METHOD_COLLECT;
-            }
-            unset($absValues['collectMethods']);
-        }
         $baseMethodInfo = \bdk\Debug\Abstraction\AbstractObjectMethods::buildMethodValues();
         foreach ($absValues['methods'] as $name => $meth) {
             $absValues['methods'][$name] = \array_merge($baseMethodInfo, $meth);
@@ -231,6 +225,36 @@ class SerializeLog
         $basePropInfo = \bdk\Debug\Abstraction\AbstractObjectProperties::buildPropValues();
         foreach ($absValues['properties'] as $name => $prop) {
             $absValues['properties'][$name] = \array_merge($basePropInfo, $prop);
+        }
+        return self::onImportObj($absValues);
+    }
+
+    /**
+     * Convert values
+     *
+     * @param array $absValues Object abstraction values
+     *
+     * @return array
+     */
+    private static function onImportObj($absValues)
+    {
+        if (isset($absValues['collectMethods'])) {
+            if ($absValues['collectMethods'] === false) {
+                $absValues['cfgFlags'] &= ~AbstractObject::METHOD_COLLECT;
+            }
+            unset($absValues['collectMethods']);
+        }
+        if (\array_key_exists('inheritedFrom', $absValues)) {
+            $absValues['declaredLast'] === $absValues['inheritedFrom'];
+            unset($absValues['inheritedFrom']);
+        }
+        if (\array_key_exists('overrides', $absValues)) {
+            $absValues['declaredPrev'] === $absValues['overrides'];
+            unset($absValues['overrides']);
+        }
+        if (\array_key_exists('originallyDeclared', $absValues)) {
+            $absValues['declaredOrig'] === $absValues['originallyDeclared'];
+            unset($absValues['originallyDeclared']);
         }
         return $absValues;
     }
@@ -274,6 +298,7 @@ class SerializeLog
     {
         $data = \array_intersect_key($debug->data->get(), \array_flip(array(
             'alerts',
+            'classDefinitions',
             'log',
             'logSummary',
             'requestId',

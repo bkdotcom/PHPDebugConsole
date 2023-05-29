@@ -33,6 +33,7 @@ class EmailTest extends DebugTestFramework
             'config',
             'version',
             'alerts',
+            'classDefinitions',
             'log',
             'logSummary',
             'requestId',

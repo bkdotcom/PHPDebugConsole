@@ -24,6 +24,7 @@ class Data
 
     protected $data = array(
         'alerts'            => array(), // alert entries.  alerts will be shown at top of output when possible
+        'classDefinitions'  => array(),
         'entryCountInitial' => 0,       // store number of log entries created during init
         'headers'           => array(), // headers that need to be output (ie chromeLogger & firePhp)
         'isObCache'         => false,

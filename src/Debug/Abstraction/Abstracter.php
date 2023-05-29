@@ -61,15 +61,20 @@ class Abstracter extends AbstractComponent
     const TYPE_STRING_SERIALIZED = 'serialized';
     const TYPE_TIMESTAMP = 'timestamp';
 
-    public $debug;
     protected $abstractArray;
     protected $abstractObject;
     protected $abstractString;
+    protected $debug;
+    protected $readOnly = array(
+        'abstractArray',
+        'abstractObject',
+        'abstractString',
+        'debug',
+    );
     protected $cfg = array(
         'brief' => false, // collect & output less details
         'fullyQualifyPhpDocType' => false,
         'maxDepth' => 0, // value < 1 : no max-depth
-        'methodCache' => true,
         'objectsExclude' => array(
             // __NAMESPACE__ added in constructor
             'DOMNode',

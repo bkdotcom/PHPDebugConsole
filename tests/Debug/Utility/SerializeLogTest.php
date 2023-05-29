@@ -16,6 +16,8 @@ use bdk\Test\PolyFill\AssertionTrait;
  * @covers \bdk\Debug\Abstraction\AbstractObject
  * @covers \bdk\Debug\Plugin\Channel
  * @covers \bdk\Debug\Utility\SerializeLog
+ *
+ * @phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
  */
 class SerializeLogTest extends DebugTestFramework
 {
@@ -51,6 +53,10 @@ class SerializeLogTest extends DebugTestFramework
         $channelNameRoot = $debug->getCfg('channelName', Debug::CONFIG_DEBUG);
         $expect = array(
             'alerts' => $this->helper->deObjectifyData($debug->data->get('alerts'), false),
+            'classDefinitions' => array(
+                'bdk\\Test\\Debug\\Fixture\\TestObj' => $debug->abstracter->crate(new TestObj())->getClassValues(),
+                "\x00default\x00" => $this->helper->getProp($debug->abstracter->abstractObject->class, 'values'),
+            ),
             'config' => array(
                 'channelIcon' => $debug->getCfg('channelIcon', Debug::CONFIG_DEBUG),
                 'channelName' => $channelNameRoot,
@@ -78,6 +84,10 @@ class SerializeLogTest extends DebugTestFramework
         $debug = SerializeLog::import($unserialized);
         $objAbs = $debug->data->get('logSummary.0.1.args.0');
         self::assertInstanceOf('bdk\\Debug\\Abstraction\\Abstraction', $objAbs);
+        self::assertSame(
+            $debug->data->get(array('classDefinitions', 'bdk\\Test\\Debug\\Fixture\\TestObj')),
+            $this->helper->getProp($objAbs, 'class')
+        );
         $serialized = SerializeLog::serialize($debug);
         $unserialized = SerializeLog::unserialize($serialized);
         self::assertEquals(
@@ -129,7 +139,7 @@ vf82PC0/5P3tKK09to3tv68PqIV7c2yvnmNj41ZHwujtjsbu95VaCc2MQ7dTNV5cSalHWCuEm11NJQAB
 END DEBUG
 EOD;
         $unserialized = SerializeLog::unserialize($serialized);
-        $expect = array(
+        $expectUnserialized = array(
             'config' => array(
                 'channels' => array(),
                 'channelName' => 'general',
@@ -339,7 +349,7 @@ EOD;
                 'channelName' => 'general',
             ),
         );
-        self::assertSame($expect, $unserialized);
+        self::assertSame($expectUnserialized, $unserialized);
 
         $debug = SerializeLog::import($unserialized);
 
@@ -347,17 +357,17 @@ EOD;
             Now test that imported log serializes as expected
         */
 
+        $expect = $expectUnserialized;
+
         unset($expect['log'][1][1][1]['collectMethods']);
         // serialized did not include these values
         $expect['log'][1][1][1] = \array_merge(
             $expect['log'][1][1][1],
             array(
-                'attributes' => array(),
-                'cases' => array(),
                 'cfgFlags' => 4194303,
+                'isMaxDepth' => false,
+                'sort' => '',
                 'isAnonymous' => false,
-                'isFinal' => false,
-                // 'isMaxDepth' => false,
             )
         );
         // serialized did not include these values
@@ -365,6 +375,9 @@ EOD;
             $expect['log'][1][1][1]['properties']['foo'],
             array(
                 'attributes' => array(),
+                'declaredLast' => null,
+                'declaredPrev' => null,
+                'declaredOrig' => null,
                 'debugInfoExcluded' => false,
                 'isPromoted' => false,
                 'isReadOnly' => false,

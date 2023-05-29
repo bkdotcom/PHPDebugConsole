@@ -12,14 +12,12 @@
 
 namespace bdk\Debug\Abstraction;
 
-use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
-use bdk\Debug\Abstraction\AbstractObject;
-use bdk\Debug\Abstraction\AbstractObjectHelper;
 use ReflectionClass;
 use ReflectionClassConstant;
 use ReflectionEnumBackedCase;
 use ReflectionEnumUnitCase;
+use UnitEnum;
 
 /**
  * Get object constant info
@@ -36,13 +34,12 @@ class AbstractObjectConstants
     /**
      * Constructor
      *
-     * @param Abstracter           $abstracter abstracter instance
-     * @param AbstractObjectHelper $helper     helper class
+     * @param AbstractObject $abstractObject Object abstracter
      */
-    public function __construct(Abstracter $abstracter, AbstractObjectHelper $helper)
+    public function __construct(AbstractObject $abstractObject)
     {
-        $this->abstracter = $abstracter;
-        $this->helper = $helper;
+        $this->abstracter = $abstractObject->abstracter;
+        $this->helper = $abstractObject->helper;
     }
 
     /**
@@ -54,9 +51,6 @@ class AbstractObjectConstants
      */
     public function add(Abstraction $abs)
     {
-        if ($abs['isTraverseOnly']) {
-            return;
-        }
         if (!($abs['cfgFlags'] & AbstractObject::CONST_COLLECT)) {
             return;
         }
@@ -70,10 +64,6 @@ class AbstractObjectConstants
                 : $this->addConstantsLegacy($reflector);
             $reflector = $reflector->getParentClass();
         }
-        foreach ($this->constants as $name => $info) {
-            // crate constant values to catch recursion
-            $this->constants[$name]['value'] = $this->abstracter->crate($info['value'], $abs['debugMethod'], $abs['hist']);
-        }
         $abs['constants'] = $this->constants;
     }
 
@@ -86,14 +76,10 @@ class AbstractObjectConstants
      */
     public function addCases(Abstraction $abs)
     {
-        $abs['cases'] = array();
-        if ($abs['isTraverseOnly']) {
-            return;
-        }
         if (!($abs['cfgFlags'] & AbstractObject::CASE_COLLECT)) {
             return;
         }
-        if (\in_array('UnitEnum', $abs['implements'], true) === false) {
+        if ($abs->getSubject() instanceof UnitEnum === false) {
             return;
         }
         $this->attributeCollect = ($abs['cfgFlags'] & AbstractObject::CASE_ATTRIBUTE_COLLECT) === AbstractObject::CASE_ATTRIBUTE_COLLECT;
@@ -104,6 +90,31 @@ class AbstractObjectConstants
             $cases[$name] = $this->getCaseRefInfo($refCase);
         }
         $abs['cases'] = $cases;
+    }
+
+    /**
+     * Collect constant values that are Enums
+     *
+     * attempting to do this at the class level leads to recursion
+     *
+     * @param Abstraction $abs Object Abstraction instance
+     *
+     * @return void
+     */
+    public function addConstantEnumValues(Abstraction $abs)
+    {
+        if (PHP_VERSION_ID < 80100) {
+            return;
+        }
+        $reflector = $abs['reflector'];
+        foreach ($reflector->getReflectionConstants() as $refConstant) {
+            $value = $refConstant->getValue();
+            if (!($value instanceof UnitEnum) || $refConstant->isEnumCase()) {
+                continue;
+            }
+            $name = $refConstant->getName();
+            $abs['constants'][$name]['value'] = $this->abstracter->crate($value, $abs['debugMethod'], $abs['hist']);
+        }
     }
 
     /**
@@ -185,17 +196,23 @@ class AbstractObjectConstants
      */
     private function getConstantRefInfo(ReflectionClassConstant $refConstant)
     {
+        $value = $refConstant->getValue();
+        if ($value instanceof UnitEnum) {
+            // storing enum value at class level leads to recursion
+            $value = null;
+        }
         return array(
             'attributes' => $this->attributeCollect
                 ? $this->helper->getAttributes($refConstant)
                 : array(),
+            'declaredLast' => $this->helper->getClassName($refConstant->getDeclaringClass()),
             'desc' => $this->phpDocCollect
                 ? $this->helper->getPhpDocVar($refConstant)['desc']
                 : null,
             'isFinal' => PHP_VERSION_ID >= 80100
                 ? $refConstant->isFinal()
                 : false,
-            'value' => $refConstant->getValue(),
+            'value' => $value,
             'visibility' => $this->helper->getVisibility($refConstant),
         );
     }

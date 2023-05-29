@@ -140,9 +140,10 @@ class GroupTest extends DebugTestFramework
         $this->assertSame(false, $logEntryArray['args'][3]);
         $this->assertSame($objExpect, $logEntryArray['args'][4]);
         $this->assertTrue(($logEntryArray['args'][5]['cfgFlags'] & AbstractObject::BRIEF) === AbstractObject::BRIEF);
+        // phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
         $this->assertSame(array(
-            'returnValue' => 'toStringVal',
             'visibility' => 'public',
+            'returnValue' => 'toStringVal',
         ), $logEntry['args'][5]['methods']['__toString']);
         $this->assertTrue(($logEntryArray['args'][6]['cfgFlags'] & AbstractObject::BRIEF) === AbstractObject::BRIEF);
     }

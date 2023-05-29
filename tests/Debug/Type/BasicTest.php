@@ -41,6 +41,20 @@ class BasicTest extends DebugTestFramework
             'meta' => array(),
         );
 
+        $fhClosed = \fopen(__FILE__, 'r');
+        $resourceClosedEntryExpect = array(
+            'method' => 'log',
+            'args' => array(
+                array(
+                    'debug' => Abstracter::ABSTRACTION,
+                    'type' => Abstracter::TYPE_RESOURCE,
+                    'value' => \print_r($fhClosed, true) . ': stream',
+                ),
+            ),
+            'meta' => array(),
+        );
+
+
         return array(
             'bool.true' => array(
                 'log',
@@ -277,6 +291,19 @@ class BasicTest extends DebugTestFramework
                 ),
             ),
 
+            'resource.closed`' => array(
+                'log',
+                array($fhClosed),
+                array(
+                    'entry' => $resourceClosedEntryExpect,
+                    'chromeLogger' => '[["Resource id #' . (int) $fhClosed . ': stream"],null,""]',
+                    'html' => '<li class="m_log"><span class="t_resource">Resource id #' . (int) $fhClosed . ': stream</span></li>',
+                    'script' => 'console.log("Resource id #' . (int) $fhClosed . ': stream");',
+                    'text' => 'Resource id #' . (int) $fhClosed . ': stream',
+                    'wamp' => \json_decode(\json_encode($resourceClosedEntryExpect), true),
+                ),
+            ),
+
             'resource.open' => array(
                 'log',
                 array($fhOpen),
@@ -290,7 +317,7 @@ class BasicTest extends DebugTestFramework
                     'script' => 'console.log("Resource id #' . (int) $fhOpen . ': stream");',
                     'text' => 'Resource id #' . (int) $fhOpen . ': stream',
                     'wamp' => \json_decode(\json_encode($resourceOpenEntryExpect), true),
-                )
+                ),
             ),
 
             'string.numeric' => array(

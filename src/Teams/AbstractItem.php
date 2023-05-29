@@ -47,7 +47,7 @@ class AbstractItem implements ItemInterface
     /**
      * {@inheritDoc}
      */
-    public function getContent($version)
+    public function getContent($version) // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
     {
         return array(
             'type' => $this->type,

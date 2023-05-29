@@ -105,6 +105,7 @@ class ObjectConstants
         }
         $html = '<dt class="constants">constants</dt>' . "\n";
         foreach ($constants as $name => $info) {
+            $info['isInherited'] = $info['declaredLast'] && $info['declaredLast'] !== $abs['className'];
             $html .= $this->dumpConstant($name, $info, $opts) . "\n";
         }
         return $html;
@@ -151,30 +152,95 @@ class ObjectConstants
      */
     protected function dumpConstant($name, array $info, array $opts)
     {
-        $modifiers = \array_keys(\array_filter(array(
-            $info['visibility'] => true,
-            'final' => $info['isFinal'],
-        )));
+        $vis = (array) $info['visibility'];
+        $info['isPrivateAncestor'] = \in_array('private', $vis, true) && $info['isInherited'];
+        if ($info['isPrivateAncestor']) {
+            $info['isInherited'] = false;
+        }
+        return $this->html->buildTag(
+            'dd',
+            $this->getAttribs($info, $opts),
+            $this->dumpInner($name, $info, $opts)
+        );
+    }
+
+    /**
+     * Build constant inner html
+     *
+     * @param string $name Constant name
+     * @param array  $info Constant info
+     * @param array  $opts options
+     *
+     * @return string html fragment
+     */
+    protected function dumpInner($name, array $info, array $opts)
+    {
         $title = $opts['phpDocOutput']
             ? (string) $info['desc']
             : '';
-        return $this->html->buildTag(
-            'dd',
-            array(
-                'class' => \array_merge(
-                    array('constant'),
-                    $modifiers
-                ),
-                'data-attributes' => $opts['attributeOutput'] && $info['attributes']
-                    ? $info['attributes']
-                    : null,
-            ),
-            \implode(' ', \array_map(static function ($modifier) {
-                return '<span class="t_modifier_' . $modifier . '">' . $modifier . '</span>';
-            }, $modifiers))
-            . ' <span class="t_identifier" title="' . \htmlspecialchars($title) . '">' . $name . '</span>'
-            . ' <span class="t_operator">=</span> '
-            . $this->valDumper->dump($info['value'])
+        $parts = \array_filter(array(
+            $this->dumpModifiers($info),
+            '<span class="t_identifier" title="' . \htmlspecialchars($title) . '">' . $name . '</span>',
+            '<span class="t_operator">=</span> ' . $this->valDumper->dump($info['value']),
+        ));
+        return \implode(' ', $parts);
+    }
+
+    /**
+     * Dump "modifiers"
+     *
+     * @param array $info Abstraction info
+     *
+     * @return string html fragment
+     */
+    protected function dumpModifiers(array $info)
+    {
+        $modifiers = $this->getModifiers($info);
+        return \implode(' ', \array_map(static function ($modifier) {
+            return '<span class="t_modifier_' . $modifier . '">' . $modifier . '</span>';
+        }, $modifiers));
+    }
+
+    /**
+     * Get html attributes
+     *
+     * @param array $info Abstraction info
+     * @param array $opts options
+     *
+     * @return array
+     */
+    protected function getAttribs(array $info, array $opts)
+    {
+        $visClasses = \array_diff((array) $info['visibility'], array('debug'));
+        $classes = \array_keys(\array_filter(array(
+            'constant' => true,
+            'inherited' => $info['isInherited'],
+            'isFinal' => $info['isFinal'],
+            'private-ancestor' => $info['isPrivateAncestor'],
+        )));
+        return array(
+            'class' => \array_merge($classes, $visClasses),
+            'data-attributes' => $opts['attributeOutput'] && $info['attributes']
+                ? $info['attributes']
+                : null,
+            'data-inherited-from' => $info['isInherited'] || $info['isPrivateAncestor']
+                ? $info['declaredLast']
+                : null,
         );
+    }
+
+    /**
+     * Get "modifiers"
+     *
+     * @param array $info Abstraction info
+     *
+     * @return string[]
+     */
+    protected function getModifiers(array $info)
+    {
+        $modifiers = (array) $info['visibility'];
+        return \array_merge($modifiers, \array_keys(\array_filter(array(
+            'final' => $info['isFinal'],
+        ))));
     }
 }

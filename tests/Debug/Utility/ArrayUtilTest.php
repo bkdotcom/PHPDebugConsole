@@ -219,6 +219,45 @@ class ArrayUtilTest extends TestCase
         ), $copy);
     }
 
+    public function testDiffAssocRecursive()
+    {
+        $diff = ArrayUtil::diffAssocRecursive(
+            array(
+                'colors' => array(
+                    'a' => 'green',
+                    'b' => 'brown',
+                    'c' => 'blue',
+                    'red',
+                ),
+                'foo' => array(
+                    'zip' => 'zap',
+                ),
+            ),
+            array(
+                'colors' => array(
+                    'a' => 'green',
+                    'yellow',
+                    'red',
+                ),
+                'foo' => array(
+                    'zip' => 'zap',
+                ),
+            ),
+            array(
+                'colors' => array(
+                    'b' => 'burgandy',
+                    'c' => 'blue',
+                ),
+            )
+        );
+        self::assertSame(array(
+            'colors' => array(
+                'b' => 'brown',
+                'red',
+            ),
+        ), $diff);
+    }
+
     public function testIsList()
     {
         self::assertFalse(ArrayUtil::isList('string'));

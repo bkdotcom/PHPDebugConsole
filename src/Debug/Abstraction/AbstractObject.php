@@ -15,15 +15,12 @@ namespace bdk\Debug\Abstraction;
 use bdk\Debug;
 use bdk\Debug\AbstractComponent;
 use bdk\Debug\Abstraction\Abstracter;
-use bdk\Debug\Abstraction\AbstractObjectConstants;
 use bdk\Debug\Abstraction\AbstractObjectHelper;
-use bdk\Debug\Abstraction\AbstractObjectMethods;
 use bdk\Debug\Abstraction\AbstractObjectProperties;
-use bdk\Debug\Data;
-use bdk\Debug\Utility\PhpDoc;
-use Error;
+use bdk\Debug\Abstraction\ObjectAbstraction;
 use ReflectionEnum;
 use RuntimeException;
+use UnitEnum;
 
 /**
  * Abstracter:  Methods used to abstract objects
@@ -98,46 +95,54 @@ class AbstractObject extends AbstractComponent
         'propAttributeOutput' => self::PROP_ATTRIBUTE_OUTPUT,
     );
 
-    public $helper;
-
     protected $abstracter;
-    protected $debug;
+    protected $class;
     protected $constants;
+    protected $debug;
+    protected $helper;
     protected $methods;
     protected $properties;
+    protected $readOnly = array(
+        'abstracter',
+        'class',
+        'constants',
+        'debug',
+        'helper',
+        'methods',
+        'properties',
+    );
 
     /**
      * Default object abstraction values
+     *
+     *    stored separately:
+     *      attributes
+     *      cases  (enum cases)
+     *      constants
+     *      definition
+     *         extensionName
+     *         fileName
+     *         startLine
+     *      extends
+     *      implements
+     *      isFinal
+     *      methods
+     *      phpDoc
      *
      * @var array Array of key/values
      */
     protected static $values = array(  // phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
         'type' => Abstracter::TYPE_OBJECT,
-        'attributes' => array(),
-        'cases' => array(),
         'cfgFlags' => 0,
         'className' => '',
-        'constants' => array(),
         'debugMethod' => '',
-        'definition' => array(
-            'fileName' => '',
-            'startLine' => 1,
-            'extensionName' => '',
-        ),
-        'extends' => array(),
-        'implements' => array(),
         'isAnonymous' => false,
         'isExcluded' => false,  // don't exclude if we're debugging directly
-        'isFinal' => false,
+        'isMaxDepth' => false,
         'isRecursion' => false,
-        'methods' => array(),  // if !methodCollect, may still get ['__toString']['returnValue']
-        'phpDoc' => array(
-            'desc' => null,
-            'summary' => null,
-            // additional tags
-        ),
         'properties' => array(),
         'scopeClass' => '',
+        'sort' => '',  // cfg.objectSort
         'stringified' => null,
         'traverseValues' => array(),  // populated if method is table
         'viaDebugInfo' => false,
@@ -153,15 +158,16 @@ class AbstractObject extends AbstractComponent
         $this->abstracter = $abstracter;
         $this->debug = $abstracter->debug;
         $this->helper = new AbstractObjectHelper($this->debug->phpDoc);
-        $this->constants = new AbstractObjectConstants($abstracter, $this->helper);
-        $this->methods = new AbstractObjectMethods($abstracter, $this->helper);
-        $this->properties = new AbstractObjectProperties($abstracter, $this->helper);
+        $this->constants = new AbstractObjectConstants($this);
+        $this->methods = new AbstractObjectMethods($this);
+        $this->properties = new AbstractObjectProperties($this);
+        $this->class = new AbstractObjectClass($this);
         if ($abstracter->debug->parentInstance) {
             // we only need to subscribe to these events from root channel
             return;
         }
-        $abstracter->debug->eventManager->subscribe(Debug::EVENT_OBJ_ABSTRACT_START, array($this, 'onStart'));
-        $abstracter->debug->eventManager->subscribe(Debug::EVENT_OBJ_ABSTRACT_END, array($this, 'onEnd'));
+        $subscriber = new AbstractObjectSubscriber($this);
+        $abstracter->debug->eventManager->addSubscriberInterface($subscriber);
     }
 
     /**
@@ -174,21 +180,21 @@ class AbstractObject extends AbstractComponent
      * @return Abstraction
      * @throws RuntimeException
      */
-    public function getAbstraction($obj, $method = null, $hist = array())
+    public function getAbstraction($obj, $method = null, array $hist = array())
     {
         $reflector = $this->debug->php->getReflector($obj);
-        $abs = new Abstraction(Abstracter::TYPE_OBJECT, \array_merge(
+        $abs = new ObjectAbstraction(\array_merge(
             self::$values,
             array(
                 'cfgFlags' => $this->getCfgFlags(),
-                'className' => $reflector->getName(),
+                'className' => $this->helper->getClassName($reflector),
                 'debugMethod' => $method,
                 'isAnonymous' => PHP_VERSION_ID >= 70000 && $reflector->isAnonymous(),
                 'isExcluded' => $hist && $this->isExcluded($obj),    // don't exclude if we're debugging directly
-                'isFinal' => $reflector->isFinal(),
                 'isMaxDepth' => $this->cfg['maxDepth'] && \count($hist) === $this->cfg['maxDepth'],
                 'isRecursion' => \in_array($obj, $hist, true),
                 'scopeClass' => $this->getScopeClass($hist),
+                'sort' => $this->cfg['objectSort'],
                 'viaDebugInfo' => $this->cfg['useDebugInfo'] && $reflector->hasMethod('__debugInfo'),
             ),
             array(
@@ -205,6 +211,7 @@ class AbstractObject extends AbstractComponent
         $abs->setSubject($obj);
         $this->doAbstraction($abs);
         $this->absClean($abs);
+        $abs->setEditMode(ObjectAbstraction::EDIT_OFF);
         return $abs;
     }
 
@@ -231,52 +238,6 @@ class AbstractObject extends AbstractComponent
     }
 
     /**
-     * Debug::EVENT_OBJ_ABSTRACT_START event subscriber
-     *
-     * @param Abstraction $abs Abstraction instance
-     *
-     * @return void
-     */
-    public function onStart(Abstraction $abs)
-    {
-        $obj = $abs->getSubject();
-        if ($obj instanceof \DateTime || $obj instanceof \DateTimeImmutable) {
-            // check for both DateTime and DateTimeImmutable
-            //   DateTimeInterface (and DateTimeImmutable) not available until Php 5.5
-            $abs['isTraverseOnly'] = false;
-            $abs['stringified'] = $obj->format(\DateTime::ISO8601);
-        } elseif ($obj instanceof \mysqli) {
-            $this->onStartMysqli($abs);
-        } elseif ($obj instanceof Data) {
-            $abs['propertyOverrideValues']['data'] = Abstracter::NOT_INSPECTED;
-        } elseif ($obj instanceof PhpDoc) {
-            $abs['propertyOverrideValues']['cache'] = Abstracter::NOT_INSPECTED;
-        } elseif ($obj instanceof AbstractObjectMethods) {
-            $abs['propertyOverrideValues']['methodCache'] = Abstracter::NOT_INSPECTED;
-        } elseif ($abs['isAnonymous']) {
-            $this->handleAnonymous($abs);
-        }
-    }
-
-    /**
-     * Debug::EVENT_OBJ_ABSTRACT_END event subscriber
-     *
-     * @param Abstraction $abs Abstraction instance
-     *
-     * @return void
-     */
-    public function onEnd(Abstraction $abs)
-    {
-        $obj = $abs->getSubject();
-        if ($obj instanceof \Exception && isset($abs['properties']['xdebug_message'])) {
-            $abs['properties']['xdebug_message']['debugInfoExcluded'] = true;
-        } elseif ($obj instanceof \mysqli && !$abs['collectPropertyValues']) {
-            $this->onEndMysqli($abs);
-        }
-        $this->promoteParamDescs($abs);
-    }
-
-    /**
      * Sort things and remove temporary values
      *
      * @param Abstraction $abs Abstraction instance
@@ -293,16 +254,7 @@ class AbstractObject extends AbstractComponent
             'propertyOverrideValues',
             'reflector',
         );
-        $values = \array_diff_key($abs->getValues(), \array_flip($keysTemp));
-        if (!($abs['cfgFlags'] & self::PHPDOC_COLLECT)) {
-            $values['phpDoc']['desc'] = null;
-            $values['phpDoc']['summary'] = null;
-        }
-        if (!$abs['isRecursion'] && !$abs['isExcluded']) {
-            $this->helper->sort($values['constants'], $this->cfg['objectSort']);
-            $this->helper->sort($values['properties'], $this->cfg['objectSort']);
-            $this->helper->sort($values['methods'], $this->cfg['objectSort']);
-        }
+        $values = \array_diff_key($abs->getInstanceValues(), \array_flip($keysTemp));
         $abs
             ->setSubject(null)
             ->setValues($values);
@@ -336,68 +288,6 @@ class AbstractObject extends AbstractComponent
     }
 
     /**
-     * Populate definition, implements, & isTraverseOnly and Enum name
-     *
-     * Added before we check isExcluded
-     *
-     * @param Abstraction $abs Abstraction instance
-     *
-     * @return void
-     */
-    private function addMisc1(Abstraction $abs)
-    {
-        $reflector = $abs['reflector'];
-        $abs['definition'] = array(
-            // note that for a Closure object, this likely isn't the info we want...
-            //   will be populated with where the where the closure is defined
-            //   from AbstractObjectProperties::addClosure
-            'fileName' => $reflector->getFileName(),
-            'startLine' => $reflector->getStartLine(),
-            'extensionName' => $reflector->getExtensionName(),
-        );
-
-        $interfaceNames = $reflector->getInterfaceNames();
-        \sort($interfaceNames);
-        $abs['implements'] = $interfaceNames;
-
-        if ($abs['isRecursion'] && \in_array('UnitEnum', $abs['implements'], true)) {
-            $abs['properties']['name'] = array(
-                'value' => $abs->getSubject()->name,
-            );
-        }
-        $abs['isTraverseOnly'] = $this->isTraverseOnly($abs);
-    }
-
-    /**
-     * Populate attributes, extends, phpDoc, & traverseValues
-     *
-     * @param Abstraction $abs Abstraction instance
-     *
-     * @return void
-     */
-    private function addMisc2(Abstraction $abs)
-    {
-        $reflector = $abs['reflector'];
-        $abs['phpDoc'] = $this->helper->getPhpDoc($reflector);
-        $this->addEnumCasePhpDoc($abs);
-        if ($abs['isTraverseOnly']) {
-            \ksort($abs['phpDoc']);
-            $this->addTraverseValues($abs);
-            return;
-        }
-        if ($abs['cfgFlags'] & self::OBJ_ATTRIBUTE_COLLECT) {
-            $abs['attributes'] = $this->helper->getAttributes($reflector);
-        }
-        while ($reflector = $reflector->getParentClass()) {
-            if ($abs['phpDoc'] === array('summary' => null, 'desc' => null)) {
-                $abs['phpDoc'] = $this->helper->getPhpDoc($reflector);
-            }
-            $abs['extends'][] = $reflector->getName();
-        }
-        \ksort($abs['phpDoc']);
-    }
-
-    /**
      * Populate rows or columns (traverseValues) if we're outputing as a table
      *
      * @param Abstraction $abs Abstraction instance
@@ -425,13 +315,19 @@ class AbstractObject extends AbstractComponent
      */
     private function doAbstraction(Abstraction $abs)
     {
+        $this->class->add($abs);
         if ($abs['isMaxDepth']) {
             return;
         }
-        $this->addMisc1($abs);
         if ($abs['isRecursion']) {
+            if ($abs->getSubject() instanceof UnitEnum) {
+                $abs['properties']['name'] = array(
+                    'value' => $abs->getSubject()->name,
+                );
+            }
             return;
         }
+        $abs['isTraverseOnly'] = $this->isTraverseOnly($abs);
         /*
             Debug::EVENT_OBJ_ABSTRACT_START subscriber may
             set isExcluded
@@ -445,11 +341,15 @@ class AbstractObject extends AbstractComponent
         if ($abs['isExcluded']) {
             return;
         }
-        $this->addMisc2($abs);
-        $this->constants->add($abs);
-        $this->constants->addCases($abs);
-        $this->methods->add($abs);
+        $this->addEnumCasePhpDoc($abs);
+        if ($abs['isTraverseOnly']) {
+            $this->addTraverseValues($abs);
+        }
+        $this->constants->addConstantEnumValues($abs);
         $this->properties->add($abs);
+        if (isset($abs['methods']['__toString'])) {
+            $abs['methods']['__toString']['returnValue'] = $this->methods->toString($abs);
+        }
         /*
             Debug::EVENT_OBJ_ABSTRACT_END subscriber has free reign to modify abtraction array
         */
@@ -494,37 +394,6 @@ class AbstractObject extends AbstractComponent
         }
         $callerInfo = $this->debug->backtrace->getCallerInfo();
         return $callerInfo['classContext'];
-    }
-
-    /**
-     * Make anonymous class more user friendly
-     *
-     *  * adjust classname
-     *  * add file & line debug properties
-     *
-     * Where is this anonymous class notation documented?
-     *
-     * @param Abstraction $abs Abstraction instance
-     *
-     * @return void
-     */
-    private function handleAnonymous(Abstraction $abs)
-    {
-        $abs['className'] = $this->debug->php->friendlyClassName($abs['reflector']);
-        $properties = $abs['properties'];
-        $properties['debug.file'] = $this->properties->buildPropValues(array(
-            'type' => Abstracter::TYPE_STRING,
-            'value' => $abs['definition']['fileName'],
-            'valueFrom' => 'debug',
-            'visibility' => 'debug',
-        ));
-        $properties['debug.line'] = $this->properties->buildPropValues(array(
-            'type' => Abstracter::TYPE_INT,
-            'value' => (int) $abs['definition']['startLine'],
-            'valueFrom' => 'debug',
-            'visibility' => 'debug',
-        ));
-        $abs['properties'] = $properties;
     }
 
     /**
@@ -578,79 +447,5 @@ class AbstractObject extends AbstractComponent
             return true;
         }
         return false;
-    }
-
-    /**
-     * Add mysqli property values
-     *
-     * @param Abstraction $abs Abstraction instance
-     *
-     * @return void
-     */
-    private function onEndMysqli(Abstraction $abs)
-    {
-        $obj = $abs->getSubject();
-        $propsAlwaysAvail = array(
-            'client_info','client_version','connect_errno','connect_error','errno','error','stat'
-        );
-        \set_error_handler(static function () {
-            // ignore error
-        });
-        $refObject = $abs['reflector'];
-        foreach ($propsAlwaysAvail as $name) {
-            if (!isset($abs['properties'][$name])) {
-                // stat property may be missing in php 7.4??
-                continue;
-            }
-            $abs['properties'][$name]['value'] = $refObject->getProperty($name)->getValue($obj);
-        }
-        \restore_error_handler();
-    }
-
-    /**
-     * Test if we can collect mysqli property values
-     *
-     * @param Abstraction $abs Abstraction instance
-     *
-     * @return void
-     */
-    private function onStartMysqli(Abstraction $abs)
-    {
-        /*
-            test if stat() throws an error (ie "Property access is not allowed yet")
-            if so, don't collect property values
-        */
-        \set_error_handler(static function ($errno, $errstr) {
-            throw new RuntimeException($errstr, $errno); // @codeCoverageIgnore
-        }, E_ALL);
-        try {
-            $mysqli = $abs->getSubject();
-            $mysqli->stat();
-        } catch (Error $e) {
-            $abs['collectPropertyValues'] = false;
-        } catch (RuntimeException $e) {
-            $abs['collectPropertyValues'] = false;
-        }
-        \restore_error_handler();
-    }
-
-    /**
-     * Reuse the phpDoc description from promoted __construct params
-     *
-     * @param Abstraction $abs Abstraction instance
-     *
-     * @return void
-     */
-    private function promoteParamDescs(Abstraction $abs)
-    {
-        if (isset($abs['methods']['__construct']) === false) {
-            return;
-        }
-        foreach ($abs['methods']['__construct']['params'] as $info) {
-            if ($info['isPromoted'] && $info['desc']) {
-                $paramName = \substr($info['name'], 1); // toss the "$"
-                $abs['properties'][$paramName]['desc'] = $info['desc'];
-            }
-        }
     }
 }

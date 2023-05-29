@@ -13,16 +13,12 @@
 
 namespace bdk\PubSub;
 
-use ArrayAccess;
-use ArrayIterator;
-use IteratorAggregate;
-
 /**
  * Event
  *
  * Events are passed to event subscribres/listeners
  */
-class Event implements ArrayAccess, IteratorAggregate
+class Event extends ValueStore
 {
     /**
      * @var bool Whether event subscribers should be called
@@ -33,11 +29,6 @@ class Event implements ArrayAccess, IteratorAggregate
      * @var mixed Event subject: usually object or callable
      */
     protected $subject = null;
-
-    /**
-     * @var array Array of key/values
-     */
-    protected $values = array();
 
     /**
      * Construct an event with optional subject and values
@@ -78,40 +69,6 @@ class Event implements ArrayAccess, IteratorAggregate
     }
 
     /**
-     * Get value by key.
-     *
-     * @param string $key Value name
-     *
-     * @return mixed
-     */
-    public function getValue($key)
-    {
-        return $this->offsetGet($key);
-    }
-
-    /**
-     * Get all stored values
-     *
-     * @return array
-     */
-    public function getValues()
-    {
-        return $this->values;
-    }
-
-    /**
-     * Does specified key have a value?
-     *
-     * @param string $key Value name
-     *
-     * @return bool
-     */
-    public function hasValue($key)
-    {
-        return \array_key_exists($key, $this->values);
-    }
-
-    /**
      * Has propagation been stopped?
      *
      * If stopped, no further event subscribers will be called
@@ -126,37 +83,6 @@ class Event implements ArrayAccess, IteratorAggregate
     }
 
     /**
-     * Set event value
-     *
-     * @param string $key   Value name
-     * @param mixed  $value Value
-     *
-     * @return $this
-     */
-    public function setValue($key, $value)
-    {
-        $this->values[$key] = $value;
-        $this->onSet(array(
-            $key => $value,
-        ));
-        return $this;
-    }
-
-    /**
-     * Clears existing values and sets new values
-     *
-     * @param array $values key=>value array of values
-     *
-     * @return $this
-     */
-    public function setValues(array $values = array())
-    {
-        $this->values = $values;
-        $this->onSet($values);
-        return $this;
-    }
-
-    /**
      * Stops the propagation of the event
      *
      * No further event subscribers will be called
@@ -166,88 +92,5 @@ class Event implements ArrayAccess, IteratorAggregate
     public function stopPropagation()
     {
         $this->propagationStopped = true;
-    }
-
-    /**
-     * ArrayAccess hasValue.
-     *
-     * @param string $key Array key
-     *
-     * @return bool
-     */
-    #[\ReturnTypeWillChange]
-    public function offsetExists($key)
-    {
-        return isset($this->values[$key]);
-    }
-
-    /**
-     * ArrayAccess getValue.
-     *
-     * @param string $key Array key
-     *
-     * @return mixed
-     */
-    #[\ReturnTypeWillChange]
-    public function &offsetGet($key)
-    {
-        if ($this->hasValue($key)) {
-            return $this->values[$key];
-        }
-        $null = null;
-        return $null;
-    }
-
-    /**
-     * ArrayAccess setValue
-     *
-     * @param string $key   Array key to set
-     * @param mixed  $value Value
-     *
-     * @return void
-     */
-    #[\ReturnTypeWillChange]
-    public function offsetSet($key, $value)
-    {
-        $this->setValue($key, $value);
-    }
-
-    /**
-     * ArrayAccess interface
-     *
-     * @param string $key Array key
-     *
-     * @return void
-     */
-    #[\ReturnTypeWillChange]
-    public function offsetUnset($key)
-    {
-        unset($this->values[$key]);
-    }
-
-    /**
-     * IteratorAggregate interface
-     *
-     * Iterate over the object like an array.
-     *
-     * @return ArrayIterator
-     */
-    #[\ReturnTypeWillChange]
-    public function getIterator()
-    {
-        return new ArrayIterator($this->values);
-    }
-
-    /**
-     * Extend me to perform action after setting value/values
-     *
-     * @param array $values key => values  being set
-     *
-     * @return void
-     *
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-     */
-    protected function onSet($values = array())
-    {
     }
 }

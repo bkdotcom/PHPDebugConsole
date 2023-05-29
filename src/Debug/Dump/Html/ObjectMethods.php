@@ -72,7 +72,8 @@ class ObjectMethods
         $magicMethods = \array_intersect(array('__call', '__callStatic'), \array_keys($methods));
         $str .= $this->dumpObject->magicMethodInfo($magicMethods);
         foreach ($methods as $methodName => $info) {
-            $str .= $this->dumpMethod($methodName, $info);
+            $info['isInherited'] = $info['declaredLast'] && $info['declaredLast'] !== $abs['className'];
+            $str .= $this->dumpMethod($methodName, $info) . "\n";
         }
         $str = \str_replace(array(
             ' data-deprecated-desc="null"',
@@ -112,7 +113,7 @@ class ObjectMethods
     {
         return $this->html->buildTag(
             'dd',
-            $this->methodAttribs($info),
+            $this->getAttribs($info),
             $this->dumpModifiers($info) . ' '
                 . $this->dumpName($methodName, $info)
                 . $this->dumpParams($info['params'])
@@ -120,7 +121,7 @@ class ObjectMethods
                 . ($methodName === '__toString'
                     ? '<br />' . "\n" . $this->valDumper->dump($info['returnValue'])
                     : '')
-        ) . "\n";
+        );
     }
 
     /**
@@ -138,10 +139,9 @@ class ObjectMethods
             $info['visibility'] => true,
             'static' => $info['isStatic'],
         )));
-        return ''
-            . \implode(' ', \array_map(static function ($modifier) {
-                    return '<span class="t_modifier_' . $modifier . '">' . $modifier . '</span>';
-            }, $modifiers));
+        return \implode(' ', \array_map(static function ($modifier) {
+            return '<span class="t_modifier_' . $modifier . '">' . $modifier . '</span>';
+        }, $modifiers));
     }
 
     /**
@@ -195,31 +195,23 @@ class ObjectMethods
      */
     protected function dumpParam($info)
     {
-        $html = '<span' . $this->html->buildAttribString(array(
-            'class' => array(
-                'isPromoted' => $info['isPromoted'],
-                'parameter' => true,
-            ),
-            'data-attributes' => $this->opts['paramAttributeOutput']
-                ? ($info['attributes'] ?: null)
-                : null,
-        )) . '>';
-        if (!empty($info['type'])) {
-            $html .= $this->helper->markupType($info['type']) . ' ';
-        }
-        $html .= $this->html->buildTag(
+        return $this->html->buildTag(
             'span',
             array(
-                'class' => 't_parameter-name',
-                'title' => $this->opts['phpDocOutput']
-                    ? $info['desc']
-                    : '',
+                'class' => array(
+                    'isPromoted' => $info['isPromoted'],
+                    'parameter' => true,
+                ),
+                'data-attributes' => $this->opts['paramAttributeOutput']
+                    ? ($info['attributes'] ?: null)
+                    : null,
             ),
-            \htmlspecialchars($info['name'])
+            (!empty($info['type'])
+                ? $this->helper->markupType($info['type']) . ' '
+                : '')
+                . $this->dumpParamName($info)
+                . $this->dumpParamDefault($info['defaultValue'])
         );
-        $html .= $this->dumpParamDefault($info['defaultValue']);
-        $html .= '</span>';
-        return $html;
     }
 
     /**
@@ -234,14 +226,33 @@ class ObjectMethods
         if ($defaultValue === Abstracter::UNDEFINED) {
             return '';
         }
-        $parsed = $this->html->parseTag($this->valDumper->dump($defaultValue));
-        $parsed['attribs']['class'][] = 't_parameter-default';
         return ' <span class="t_operator">=</span> '
-            . $this->html->buildTag(
-                'span',
-                $parsed['attribs'],
-                $parsed['innerhtml']
-            );
+            . $this->valDumper->dump($defaultValue, array(
+                'attribs' => array(
+                    'class' => array('t_parameter-default'),
+                ),
+            ));
+    }
+
+    /**
+     * Dump method parameter name
+     *
+     * @param array $info Param info
+     *
+     * @return string html snippet
+     */
+    protected function dumpParamName(array $info)
+    {
+        return $this->html->buildTag(
+            'span',
+            array(
+                'class' => 't_parameter-name',
+                'title' => $this->opts['phpDocOutput']
+                    ? $info['desc']
+                    : '',
+            ),
+            \htmlspecialchars($info['name'])
+        );
     }
 
     /**
@@ -265,18 +276,18 @@ class ObjectMethods
     }
 
     /**
-     * Get attributes for method markup
+     * Get html attributes
      *
-     * @param array $info method info
+     * @param array $info Abstraction info
      *
      * @return array
      */
-    private function methodAttribs($info)
+    private function getAttribs(array $info)
     {
         return array(
             'class' => array(
                 $info['visibility'] => true,
-                'inherited' => (bool) $info['inheritedFrom'],
+                'inherited' => $info['isInherited'],
                 'isDeprecated' => $info['isDeprecated'],
                 'isFinal' => $info['isFinal'],
                 'isStatic' => $info['isStatic'],
@@ -289,7 +300,9 @@ class ObjectMethods
                 ? $info['phpDoc']['deprecated'][0]['desc']
                 : null,
             'data-implements' => $info['implements'],
-            'data-inherited-from' => $info['inheritedFrom'],
+            'data-inherited-from' => $info['isInherited']
+                ? $info['declaredLast']
+                : null,
         );
     }
 }

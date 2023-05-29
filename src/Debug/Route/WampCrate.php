@@ -25,6 +25,8 @@ class WampCrate
     private $debug;
     private $detectFiles = false;
     private $foundFiles = array();
+    private $classesCrated = array();
+    private $classesNew = array();
 
     /**
      * Constructor
@@ -74,6 +76,7 @@ class WampCrate
      */
     public function crateLogEntry(LogEntry $logEntry)
     {
+        $this->classesNew = array();
         $this->detectFiles = $logEntry->getMeta('detectFiles', false);
         $args = $this->crate($logEntry['args']);
         $meta = $logEntry['meta'];
@@ -98,7 +101,7 @@ class WampCrate
         if ($this->detectFiles) {
             $meta['foundFiles'] = $this->foundFiles();
         }
-        return array($args, $meta);
+        return array($args, $meta, $this->classesNew);
     }
 
     /**
@@ -202,8 +205,18 @@ class WampCrate
     private function crateObject(Abstraction $abs)
     {
         $info = $abs->jsonSerialize();
-        foreach ($info['properties'] as $k => $propInfo) {
-            $info['properties'][$k]['value'] = $this->crate($propInfo['value']);
+        $classKey = $info['classDefinition'];
+        if (\in_array($classKey, $this->classesCrated, true) === false) {
+            $this->classesNew[] = $classKey;
+            $this->classesCrated[] = $classKey;
+        }
+        $properties = isset($info['properties'])
+            ? $info['properties']
+            : array();
+        foreach ($properties as $k => $propInfo) {
+            if (isset($propInfo['value'])) {
+                $info['properties'][$k]['value'] = $this->crate($propInfo['value']);
+            }
         }
         if (isset($info['methods']['__toString'])) {
             $info['methods']['__toString'] = $this->crate($info['methods']['__toString']);

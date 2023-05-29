@@ -185,6 +185,7 @@ class TextValue extends BaseValue
         }
         foreach ($abs['properties'] as $name => $info) {
             $name = \str_replace('debug.', '', $name);
+            $info['isInherited'] = $info['declaredLast'] && $info['declaredLast'] !== $abs['className'];
             $vis = $this->dumpPropVis($info);
             $val = $info['debugInfoExcluded']
                 ? ''

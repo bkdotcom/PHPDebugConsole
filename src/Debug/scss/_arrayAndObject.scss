@@ -10,6 +10,7 @@ $color-magic: #f80e;
 $color-private: #00000082;
 $color-protected: #000000c6;
 $color-public: inherit;
+$color-warning: #F00;
 
 $color-static: #da0d87ee;
 $color-final: #f00e;
@@ -153,15 +154,17 @@ li[class*=m_] > .t_array.array-file-tree > .array-inner {
     }
     i.fa-clone { color: #999; }
   }
-  .property {
-    &.private-ancestor:not(:hover) {
-      > * { opacity: 0.5; }
-      > .fa-lock,
-      > .fa-clone,
-      > .t_modifier_private {
-        opacity: 1;
-      }
+
+  .private-ancestor:not(:hover) {
+    > * { opacity: 0.5; }
+    > .fa-lock,
+    > .t_modifier_private {
+      opacity: 1;
     }
+  }
+
+  i.fa-warning {
+    color: $color-warning;
   }
 
   i.fa-eye {

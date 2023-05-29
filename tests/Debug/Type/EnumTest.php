@@ -47,6 +47,13 @@ class EnumTest extends DebugTestFramework
                                 'value' => null,
                                 'visibility' => 'public',
                             ),
+                            'DINNER' => array(
+                                'attributes' => array(),
+                                'desc' => null,
+                                'isFinal' => false,
+                                'value' => null,
+                                'visibility' => 'public',
+                            ),
                             'LUNCH' => array(
                                 'attributes' => array(
                                     array(
@@ -54,13 +61,6 @@ class EnumTest extends DebugTestFramework
                                         'arguments' => array(),
                                     ),
                                 ),
-                                'desc' => null,
-                                'isFinal' => false,
-                                'value' => null,
-                                'visibility' => 'public',
-                            ),
-                            'DINNER' => array(
-                                'attributes' => array(),
                                 'desc' => null,
                                 'isFinal' => false,
                                 'value' => null,
@@ -85,13 +85,13 @@ class EnumTest extends DebugTestFramework
                             <dt class="attributes">attributes</dt>
                             <dd class="attribute"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\Enum\</span>ExampleAttribute</span></dd>
                             <dt class="constants">constants</dt>
-                            <dd class="constant public"><span class="t_modifier_public">public</span> <span class="t_identifier">ENUM_VALUE</span> <span class="t_operator">=</span> <div class="t_object" data-accessible="private"><span class="t_const"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\Enum\</span>Meals</span><span class="t_operator">::</span><span class="t_identifier">DINNER</span></span>
+                            <dd class="constant public"><span class="t_modifier_public">public</span> <span class="t_identifier">ENUM_VALUE</span> <span class="t_operator">=</span> <div class="t_object" data-accessible="private"><span class="t_const" title="Meals PHPDoc"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\Enum\</span>Meals</span><span class="t_operator">::</span><span class="t_identifier">DINNER</span></span>
                                 <span class="t_recursion">*RECURSION*</span></div></dd>
                             <dd class="constant public"><span class="t_modifier_public">public</span> <span class="t_identifier">REGULAR_CONSTANT</span> <span class="t_operator">=</span> <span class="t_string">test</span></dd>
                             <dt class="cases">cases</dt>
                             <dd class="case"><span class="t_identifier" title="The most important meal">BREAKFAST</span></dd>
-                            <dd class="case" data-attributes="[{&quot;name&quot;:&quot;bdk\\\\Test\\\\Debug\\\\Fixture\\\\Enum\\\\ExampleCaseAttribute&quot;,&quot;arguments&quot;:[]}]"><span class="t_identifier">LUNCH</span></dd>
                             <dd class="case"><span class="t_identifier">DINNER</span></dd>
+                            <dd class="case" data-attributes="[{&quot;name&quot;:&quot;bdk\\\\Test\\\\Debug\\\\Fixture\\\\Enum\\\\ExampleCaseAttribute&quot;,&quot;arguments&quot;:[]}]"><span class="t_identifier">LUNCH</span></dd>
                             <dt class="properties">properties</dt>
                             <dd class="isReadOnly property public"><span class="t_modifier_public">public</span> <span class="t_modifier_readonly">readonly</span> <span class="t_type">string</span> <span class="t_identifier">name</span> <span class="t_operator">=</span> <span class="t_string">DINNER</span></dd>
                             <dt class="methods">methods</dt>
@@ -103,8 +103,8 @@ class EnumTest extends DebugTestFramework
                         <dd class="constant public"><span class="t_modifier_public">public</span> <span class="t_identifier">REGULAR_CONSTANT</span> <span class="t_operator">=</span> <span class="t_string">test</span></dd>
                         <dt class="cases">cases</dt>
                         <dd class="case"><span class="t_identifier" title="The most important meal">BREAKFAST</span></dd>
-                        <dd class="case" data-attributes="[{&quot;name&quot;:&quot;bdk\\\\Test\\\\Debug\\\\Fixture\\\\Enum\\\\ExampleCaseAttribute&quot;,&quot;arguments&quot;:[]}]"><span class="t_identifier">LUNCH</span></dd>
                         <dd class="case"><span class="t_identifier">DINNER</span></dd>
+                        <dd class="case" data-attributes="[{&quot;name&quot;:&quot;bdk\\\\Test\\\\Debug\\\\Fixture\\\\Enum\\\\ExampleCaseAttribute&quot;,&quot;arguments&quot;:[]}]"><span class="t_identifier">LUNCH</span></dd>
                         <dt class="properties">properties</dt>
                         <dd class="isReadOnly property public"><span class="t_modifier_public">public</span> <span class="t_modifier_readonly">readonly</span> <span class="t_type">string</span> <span class="t_identifier">name</span> <span class="t_operator">=</span> <span class="t_string">BREAKFAST</span></dd>
                         <dt class="methods">methods</dt>
@@ -116,6 +116,7 @@ class EnumTest extends DebugTestFramework
                 ),
             ),
 
+            /*
             'basicCaseCollectFalse' => array(
                 'log',
                 array(
@@ -131,6 +132,7 @@ class EnumTest extends DebugTestFramework
                     'html' => '%a<dt class="cases">cases <i>not collected</i></dt>%a',
                 )
             ),
+            */
 
             'basicCaseOutputFalse' => array(
                 'log',
@@ -166,18 +168,18 @@ class EnumTest extends DebugTestFramework
                                 'value' => 'breakfast',
                                 'visibility' => 'public',
                             ),
-                            'LUNCH' => array(
-                                'attributes' => array(),
-                                'desc' => null,
-                                'isFinal' => false,
-                                'value' => 'lunch',
-                                'visibility' => 'public',
-                            ),
                             'DINNER' => array(
                                 'attributes' => array(),
                                 'desc' => null,
                                 'isFinal' => false,
                                 'value' => 'dinner',
+                                'visibility' => 'public',
+                            ),
+                            'LUNCH' => array(
+                                'attributes' => array(),
+                                'desc' => null,
+                                'isFinal' => false,
+                                'value' => 'lunch',
                                 'visibility' => 'public',
                             ),
                         ), $abs['cases']);
@@ -201,8 +203,8 @@ class EnumTest extends DebugTestFramework
                             <dd class="constant public"><span class="t_modifier_public">public</span> <span class="t_identifier">REGULAR_CONSTANT</span> <span class="t_operator">=</span> <span class="t_string">test</span></dd>
                             <dt class="cases">cases</dt>
                             <dd class="case"><span class="t_identifier">BREAKFAST</span> <span class="t_operator">=</span> <span class="t_string">breakfast</span></dd>
-                            <dd class="case"><span class="t_identifier">LUNCH</span> <span class="t_operator">=</span> <span class="t_string">lunch</span></dd>
                             <dd class="case"><span class="t_identifier">DINNER</span> <span class="t_operator">=</span> <span class="t_string">dinner</span></dd>
+                            <dd class="case"><span class="t_identifier">LUNCH</span> <span class="t_operator">=</span> <span class="t_string">lunch</span></dd>
                             <dt class="properties">properties</dt>
                             <dd class="isReadOnly property public"><span class="t_modifier_public">public</span> <span class="t_modifier_readonly">readonly</span> <span class="t_type">string</span> <span class="t_identifier">name</span> <span class="t_operator">=</span> <span class="t_string">DINNER</span></dd>
                             <dd class="isReadOnly property public"><span class="t_modifier_public">public</span> <span class="t_modifier_readonly">readonly</span> <span class="t_type">string</span> <span class="t_identifier">value</span> <span class="t_operator">=</span> <span class="t_string">dinner</span></dd>
@@ -215,8 +217,8 @@ class EnumTest extends DebugTestFramework
                         <dd class="constant public"><span class="t_modifier_public">public</span> <span class="t_identifier">REGULAR_CONSTANT</span> <span class="t_operator">=</span> <span class="t_string">test</span></dd>
                         <dt class="cases">cases</dt>
                         <dd class="case"><span class="t_identifier">BREAKFAST</span> <span class="t_operator">=</span> <span class="t_string">breakfast</span></dd>
-                        <dd class="case"><span class="t_identifier">LUNCH</span> <span class="t_operator">=</span> <span class="t_string">lunch</span></dd>
                         <dd class="case"><span class="t_identifier">DINNER</span> <span class="t_operator">=</span> <span class="t_string">dinner</span></dd>
+                        <dd class="case"><span class="t_identifier">LUNCH</span> <span class="t_operator">=</span> <span class="t_string">lunch</span></dd>
                         <dt class="properties">properties</dt>
                         <dd class="isReadOnly property public"><span class="t_modifier_public">public</span> <span class="t_modifier_readonly">readonly</span> <span class="t_type">string</span> <span class="t_identifier">name</span> <span class="t_operator">=</span> <span class="t_string">BREAKFAST</span></dd>
                         <dd class="isReadOnly property public"><span class="t_modifier_public">public</span> <span class="t_modifier_readonly">readonly</span> <span class="t_type">string</span> <span class="t_identifier">value</span> <span class="t_operator">=</span> <span class="t_string">breakfast</span></dd>

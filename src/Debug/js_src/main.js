@@ -45,6 +45,7 @@ var config = new Config({
     '> .private-ancestor': '<i class="fa fa-lock" title="Private ancestor"></i>',
     '> .property.debuginfo-value': '<i class="fa fa-eye" title="via __debugInfo()"></i>',
     '> .property.debuginfo-excluded': '<i class="fa fa-eye-slash" title="not included in __debugInfo"></i>',
+    '> .property.isDynamic': '<i class="fa fa-warning" title="Dynamic"></i>',
     '> .property.isPromoted': '<i class="fa fa-arrow-up" title="Promoted"></i>',
     '> .property > .t_modifier_magic': '<i class="fa fa-magic" title="magic property"></i>',
     '> .property > .t_modifier_magic-read': '<i class="fa fa-magic" title="magic property"></i>',

@@ -12,9 +12,11 @@
 
 namespace bdk\Debug\Abstraction;
 
+use bdk\Debug\Utility\Php as PhpUtil;
 use bdk\Debug\Utility\PhpDoc;
 use bdk\Debug\Utility\UseStatements;
 use ReflectionAttribute;
+use ReflectionClass;
 use ReflectionNamedType;
 use ReflectionType;
 use Reflector;
@@ -55,6 +57,20 @@ class AbstractObjectHelper
                 'arguments' => $attribute->getArguments(),
             );
         }, $reflector->getAttributes());
+    }
+
+    /**
+     * Get the "friendly" class-name
+     *
+     * @param ReflectionClass $reflector ReflectionClass instance
+     *
+     * @return string
+     */
+    public function getClassName(ReflectionClass $reflector)
+    {
+        return $reflector->isAnonymous()
+            ? PhpUtil::friendlyClassName($reflector)
+            : $reflector->getName();
     }
 
     /**
@@ -182,44 +198,6 @@ class AbstractObjectHelper
             $types[$i] = $type;
         }
         return \implode('|', $types);
-    }
-
-    /**
-     * Sorts constant/property/method array by visibility or name
-     *
-     * @param array  $array array to sort
-     * @param string $order ("visibility")|"name"
-     *
-     * @return void
-     */
-    public function sort(&$array, $order = 'visibility')
-    {
-        if (!$array) {
-            return;
-        }
-        if ($order === 'name') {
-            // rather than a simple key sort, use array_multisort so that __construct is always first
-            $sortData = array();
-            foreach (\array_keys($array) as $name) {
-                $sortData[$name] = $name === '__construct'
-                    ? '0'
-                    : \strtolower($name);
-            }
-            \array_multisort($sortData, $array);
-        } elseif ($order === 'visibility') {
-            $sortVisOrder = array('public', 'protected', 'private', 'magic', 'magic-read', 'magic-write', 'debug');
-            $sortData = array();
-            foreach ($array as $name => $info) {
-                $sortData['name'][$name] = $name === '__construct'
-                    ? '0'     // always place __construct at the top
-                    : \strtolower($name);
-                $vis = \is_array($info['visibility'])
-                    ? $info['visibility'][0]
-                    : $info['visibility'];
-                $sortData['vis'][$name] = \array_search($vis, $sortVisOrder, true);
-            }
-            \array_multisort($sortData['vis'], $sortData['name'], $array);
-        }
     }
 
     /**

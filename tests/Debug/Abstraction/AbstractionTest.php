@@ -4,6 +4,7 @@ namespace bdk\Test\Debug\Abstraction;
 
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Abstraction\ObjectAbstraction;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -30,7 +31,7 @@ class AbstractionTest extends TestCase
         $abs['value'] = 'someVal';
         $this->assertSame('someVal', (string) $abs);
 
-        $abs = new Abstraction(Abstracter::TYPE_OBJECT, array(
+        $abs = new ObjectAbstraction(array(
             'className' => 'myNamespace\myClass',
             'stringified' => null,
         ));

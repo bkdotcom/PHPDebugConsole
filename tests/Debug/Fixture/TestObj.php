@@ -63,6 +63,8 @@ class TestObj extends TestBase
         $this->toStrThrow = $toStrThrow;
         $this->toString = $toString;
         $this->instance = $this;
+        $this->dynamic = 'dynomite!';
+        parent::__construct();
     }
 
     /**

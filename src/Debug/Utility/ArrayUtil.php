@@ -42,6 +42,44 @@ class ArrayUtil
     }
 
     /**
+     * Recursively compare arrays
+     *
+     * Returns an array containing all the values from array that are not present in any of the other arrays.
+     *
+     * @param array $array      array to compare from
+     * @param array $arrays,... arrays to compare against
+     *
+     * @return array
+     */
+    public static function diffAssocRecursive($array, $arrays)
+    {
+        $arrays = \func_get_args();
+        \array_shift($arrays);
+        while ($arrays) {
+            $array2 = \array_shift($arrays);
+            $diff = array();
+            foreach ($array as $key => $value) {
+                if (\array_key_exists($key, $array2) === false) {
+                    $diff[$key] = $value;
+                    continue;
+                }
+                if (\is_array($value) && \is_array($array2[$key])) {
+                    $value = self::diffAssocRecursive($value, $array2[$key]);
+                    if ($value) {
+                        $diff[$key] = $value;
+                    }
+                    continue;
+                }
+                if ($value !== $array2[$key]) {
+                    $diff[$key] = $value;
+                }
+            }
+            $array = $diff;
+        }
+        return $diff;
+    }
+
+    /**
      * Is passed argument a simple array with all-integer keys in sequence from 0 to n?
      * empty array returns true
      *

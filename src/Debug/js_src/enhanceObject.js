@@ -150,7 +150,10 @@ function toggleVis (toggle) {
   var $obj = $toggle.closest('.t_object')
   var $objInner = $obj.find('> .object-inner')
   var $toggles = $objInner.find('[data-toggle=vis][data-vis=' + vis + ']')
-  var $nodes = $objInner.find('.' + vis)
+  var selector = vis === 'inherited'
+    ? '.inherited, .private-ancestor'
+    : '.' + vis
+  var $nodes = $objInner.find(selector)
   var show = $toggle.hasClass('toggle-off')
   $toggles
     .html($toggle.html().replace(
@@ -160,8 +163,8 @@ function toggleVis (toggle) {
     .addClass(show ? 'toggle-on' : 'toggle-off')
     .removeClass(show ? 'toggle-off' : 'toggle-on')
   show
-    ? toggleVisNodes($nodes) // show for this and all descendants
-    : $nodes.hide() // hide for this and all descendants
+    ? toggleVisNodes($nodes) // show for this and all descendants.. unless hidden by other toggle
+    : $nodes.hide() // simply hide for this and all descendants
   postToggle($obj, true)
 }
 
@@ -172,10 +175,12 @@ function toggleVisNodes ($nodes) {
     var show = true
     $objInner.find('> .vis-toggles [data-toggle]').each(function () {
       var $toggle = $(this)
+      var isOn = $toggle.hasClass('toggle-on')
       var vis = $toggle.data('vis')
-      var isOn = $toggle.is('.toggle-on')
-      // if any applicable test is false, don't show it
-      if (!isOn && $node.hasClass(vis)) {
+      var filter = vis === 'inherited'
+        ? '.inherited, .private-ancestor'
+        : '.' + vis
+      if (!isOn && $node.filter(filter).length === 1) {
         show = false
         return false // break
       }

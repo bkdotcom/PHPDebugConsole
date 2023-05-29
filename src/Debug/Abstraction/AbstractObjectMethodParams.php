@@ -15,7 +15,6 @@ namespace bdk\Debug\Abstraction;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
-use bdk\Debug\Abstraction\AbstractObjectHelper;
 use ReflectionMethod;
 use ReflectionParameter;
 use UnitEnum;
@@ -42,13 +41,12 @@ class AbstractObjectMethodParams
     /**
      * Constructor
      *
-     * @param Abstracter           $abstracter Abstracter
-     * @param AbstractObjectHelper $helper     helper class
+     * @param AbstractObject $abstractObject Object abstracter
      */
-    public function __construct(Abstracter $abstracter, AbstractObjectHelper $helper)
+    public function __construct(AbstractObject $abstractObject)
     {
-        $this->abstracter = $abstracter;
-        $this->helper = $helper;
+        $this->abstracter = $abstractObject->abstracter;
+        $this->helper = $abstractObject->helper;
     }
 
     /**

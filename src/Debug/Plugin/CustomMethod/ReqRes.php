@@ -69,9 +69,11 @@ class ReqRes implements SubscriberInterface
     /**
      * Returns cli, cron, ajax, or http
      *
+     * @param bool $usePsr7 (true) Use ServerRequest attached to Debug instance?
+     *
      * @return string cli | "cli cron" | http | "http ajax"
      */
-    public function getInterface()
+    public function getInterface($usePsr7 = true)
     {
         /*
             notes:
@@ -82,16 +84,26 @@ class ReqRes implements SubscriberInterface
                 we used to check for getServerParam['REQUEST_METHOD'] === null
                     not particularly psr7 friendly
         */
-        if ($this->getServerParam('HTTP_X_REQUESTED_WITH') === 'XMLHttpRequest') {
+        $serverParamsDefault = array(
+            'argv' => null,
+            'HTTP_X_REQUESTED_WITH' => null,
+            'PATH' => null,
+            'QUERY_STRING' => null,
+            'TERM' => null,
+        );
+        $serverParams = $usePsr7
+            ? $this->debug->serverRequest->getServerParams()
+            : $_SERVER;
+        $serverParams = \array_merge($serverParamsDefault, $serverParams);
+        if ($serverParams['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
             return 'http ajax';
         }
-        $argv = $this->getServerParam('argv');
-        $isCliOrCron = $argv && \implode('+', $argv) !== $this->getServerParam('QUERY_STRING');
-        if (!$isCliOrCron) {
+        $isCliOrCron = $serverParams['argv'] && \implode('+', $serverParams['argv']) !== $serverParams['QUERY_STRING'];
+        if ($isCliOrCron === false) {
             return 'http';
         }
         // TERM is a linux/unix thing
-        return $this->getServerParam('TERM') !== null || $this->getServerParam('PATH') !== null
+        return $serverParams['TERM'] !== null || $serverParams['PATH'] !== null
             ? 'cli'
             : 'cli cron';
     }
@@ -193,11 +205,13 @@ class ReqRes implements SubscriberInterface
     /**
      * Is this a Command Line Interface request?
      *
+     * @param bool $usePsr7 (true) Use ServerRequest attached to Debug instance?
+     *
      * @return bool
      */
-    public function isCli()
+    public function isCli($usePsr7 = true)
     {
-        return \strpos($this->getInterface(), 'cli') === 0;
+        return \strpos($this->getInterface($usePsr7), 'cli') === 0;
     }
 
     /**

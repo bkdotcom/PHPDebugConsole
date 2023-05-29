@@ -61,6 +61,8 @@ class ObjectProperties
         $html = '<dt class="properties">' . $this->dumpPropertiesLabel($abs) . '</dt>' . "\n";
         $html .= $this->dumpObject->magicMethodInfo($magicMethods);
         foreach ($abs['properties'] as $name => $info) {
+            $info['className'] = $abs['className'];
+            $info['isInherited'] = $info['declaredLast'] && $info['declaredLast'] !== $abs['className'];
             $html .= $this->dumpProperty($name, $info, $opts) . "\n";
         }
         return $html;
@@ -90,23 +92,20 @@ class ObjectProperties
      *
      * @param string $name property name
      * @param array  $info property info
-     * @param array  $opts options (currently just attributeOutput)
+     * @param array  $opts options
      *
      * @return string html fragment
      */
     protected function dumpProperty($name, array $info, array $opts)
     {
         $vis = (array) $info['visibility'];
-        $info['isPrivateAncestor'] = \in_array('private', $vis, true) && $info['inheritedFrom'];
+        $info['isPrivateAncestor'] = \in_array('private', $vis, true) && $info['isInherited'];
+        if ($info['isPrivateAncestor']) {
+            $info['isInherited'] = false;
+        }
         return $this->html->buildTag(
             'dd',
-            array(
-                'class' => $this->getCssClasses($info),
-                'data-attributes' => $opts['attributeOutput']
-                    ? ($info['attributes'] ?: null)
-                    : null,
-                'data-inherited-from' => $info['inheritedFrom'],
-            ),
+            $this->getAttribs($info, $opts),
             $this->dumpInner($name, $info, $opts)
         );
     }
@@ -126,22 +125,17 @@ class ObjectProperties
         $title = $opts['phpDocOutput']
             ? (string) $info['desc']
             : '';
-        return $this->dumpModifiers($info)
-            . ($info['isPrivateAncestor']
-                // wrapped in span for css rule `.private-ancestor > *`
-                ? ' <span>(' . $this->valDumper->markupIdentifier($info['inheritedFrom'], false, 'i') . ')</span>'
-                : '')
-            . ($info['type']
-                ? ' ' . $this->helper->markupType($info['type'])
-                : '') . ' '
-            . $this->html->buildTag('span', array(
-                'class' => 't_identifier',
-                'title' => $title,
-            ), $name)
-            . ($info['value'] !== Abstracter::UNDEFINED
-                ? ' <span class="t_operator">=</span> '
-                    . $this->valDumper->dump($info['value'])
-                : '');
+        $parts = \array_filter(array(
+            $this->dumpModifiers($info),
+            $info['type']
+                ? $this->helper->markupType($info['type'])
+                : '',
+            '<span class="t_identifier" title="' . \htmlspecialchars($title) . '">' . $name . '</span>',
+            $info['value'] !== Abstracter::UNDEFINED
+                ? '<span class="t_operator">=</span> ' . $this->valDumper->dump($info['value'])
+                : '',
+        ));
+        return \implode(' ', $parts);
     }
 
     /**
@@ -153,41 +147,62 @@ class ObjectProperties
      */
     protected function dumpModifiers(array $info)
     {
-        $modifiers = (array) $info['visibility'];
-        $modifiers = \array_merge($modifiers, \array_keys(\array_filter(array(
-            'readonly' => $info['isReadOnly'],
-            'static' => $info['isStatic'],
-        ))));
-        $modifiers = \array_map(static function ($modifier) {
+        $modifiers = $this->getModifiers($info);
+        return \implode(' ', \array_map(static function ($modifier) {
             return '<span class="t_modifier_' . $modifier . '">' . $modifier . '</span>';
-        }, $modifiers);
-        return \implode(' ', $modifiers);
+        }, $modifiers));
     }
 
     /**
-     * Get list of css classnames
+     * Get html attributes
      *
      * @param array $info Abstraction info
+     * @param array $opts options
      *
-     * @return string[]
+     * @return array
      */
-    protected function getCssClasses(array $info)
+    protected function getAttribs(array $info, array $opts)
     {
-        $vis = (array) $info['visibility'];
+        $visClasses = \array_diff((array) $info['visibility'], array('debug'));
         $classes = \array_keys(\array_filter(array(
             'debug-value' => $info['valueFrom'] === 'debug',
             'debuginfo-excluded' => $info['debugInfoExcluded'],
             'debuginfo-value' => $info['valueFrom'] === 'debugInfo',
             'forceShow' => $info['forceShow'],
-            'inherited' => $info['inheritedFrom'],
+            'inherited' => $info['isInherited'],
+            'isDynamic' => $info['declaredLast'] === null
+                && $info['valueFrom'] === 'value'
+                && $info['className'] !== 'stdClass',
             'isPromoted' => $info['isPromoted'],
             'isReadOnly' => $info['isReadOnly'],
             'isStatic' => $info['isStatic'],
             'private-ancestor' => $info['isPrivateAncestor'],
             'property' => true,
         )));
-        $classes = \array_merge($classes, $vis);
-        $classes = \array_diff($classes, array('debug'));
-        return $classes;
+        return array(
+            'class' => \array_merge($classes, $visClasses),
+            'data-attributes' => $opts['attributeOutput'] && $info['attributes']
+                ? $info['attributes']
+                : null,
+            'data-inherited-from' => $info['isInherited'] || $info['isPrivateAncestor']
+                ? $info['declaredLast']
+                : null,
+        );
+    }
+
+    /**
+     * Get "modifiers"
+     *
+     * @param array $info Abstraction info
+     *
+     * @return string[]
+     */
+    protected function getModifiers(array $info)
+    {
+        $modifiers = (array) $info['visibility'];
+        return \array_merge($modifiers, \array_keys(\array_filter(array(
+            'readonly' => $info['isReadOnly'],
+            'static' => $info['isStatic'],
+        ))));
     }
 }

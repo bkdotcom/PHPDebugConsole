@@ -312,7 +312,9 @@ class Redaction extends AbstractComponent implements SubscriberInterface
             $abs['properties'] = $this->redact($abs['properties']);
             $abs['stringified'] = $this->redact($abs['stringified']);
             if (isset($abs['methods']['__toString']['returnValue'])) {
-                $abs['methods']['__toString']['returnValue'] = $this->redact($abs['methods']['__toString']['returnValue']);
+                $methods = $abs->getValue('methods');
+                $methods['__toString']['returnValue'] = $this->redact($abs['methods']['__toString']['returnValue']);
+                $abs->setValue('methods', $methods);
             }
             return $abs;
         }

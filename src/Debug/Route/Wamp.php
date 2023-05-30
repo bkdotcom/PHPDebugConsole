@@ -358,7 +358,8 @@ class Wamp implements RouteInterface
      */
     private function publishMetaGet()
     {
-        $metaVals = array(
+        $default = array(
+            'argv' => array(),
             'HTTPS' => null,
             'HTTP_HOST' => null,
             'processId' => \getmypid(),
@@ -369,20 +370,16 @@ class Wamp implements RouteInterface
             'SERVER_ADDR' => null,
             'SERVER_NAME' => null,
         );
-        $serverParams = \array_merge(
-            array(
-                'argv' => array(),
-            ),
-            $this->debug->serverRequest->getServerParams(),
-            $metaVals
+        $metaVals = \array_merge(
+            $default,
+            $this->debug->serverRequest->getServerParams()
         );
-        foreach (\array_keys($metaVals) as $k) {
-            $metaVals[$k] = $serverParams[$k];
-        }
+        $metaVals = \array_intersect_key($metaVals, $default);
         if ($this->debug->isCli()) {
             $metaVals['REQUEST_METHOD'] = null;
-            $metaVals['REQUEST_URI'] = '$: ' . \implode(' ', $serverParams['argv']);
+            $metaVals['REQUEST_URI'] = '$: ' . \implode(' ', $metaVals['argv']);
         }
+        unset($metaVals['argv']);
         return $metaVals;
     }
 }

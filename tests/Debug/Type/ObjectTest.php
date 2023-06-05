@@ -184,7 +184,7 @@ EOD;
                                     ? ' title="Inherited description"'
                                     : ''
                                 ) . '>INHERITED</span> <span class="t_operator">=</span> <span class="t_string">defined in TestBase</span></dd>' . "\n"
-                            . '<dd class="constant public"><span class="t_modifier_public">public</span> <span class="t_identifier"'
+                            . '<dd class="constant overrides public" data-declared-prev="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_public">public</span> <span class="t_identifier"'
                                 . (PHP_VERSION_ID >= 70100
                                     ? ' title="constant documentation"'
                                     : ''
@@ -198,7 +198,7 @@ EOD;
                             '<dd class="info magic">This object has <code>__get</code> and <code>__set</code> methods</dd>',
                             '<dd class="isDynamic property public"><span class="t_modifier_public">public</span> <span class="t_identifier">baseDynamic</span> <span class="t_operator">=</span> <span class="t_string">duo</span></dd>',
                             '<dd class="isDynamic property public"><span class="t_modifier_public">public</span> <span class="t_identifier">dynamic</span> <span class="t_operator">=</span> <span class="t_string">dynomite!</span></dd>',
-                            '<dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier" title="Public Property.">propPublic</span> <span class="t_operator">=</span> <span class="t_string">redefined in Test (public)</span></dd>',
+                            '<dd class="overrides property public" data-declared-prev="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_public">public</span> <span class="t_identifier" title="Public Property.">propPublic</span> <span class="t_operator">=</span> <span class="t_string">redefined in Test (public)</span></dd>',
                             '<dd class="isStatic property public"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="t_identifier">propStatic</span> <span class="t_operator">=</span> <span class="t_string">I\'m Static</span></dd>',
                             '<dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier">someArray</span> <span class="t_operator">=</span> <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>',
                             '<ul class="array-inner list-unstyled">',
@@ -218,7 +218,7 @@ EOD;
                             'PhpDoc Description"><span class="namespace">bdk\Test\Debug\Fixture\</span>TestObj</span>',
                             '<span class="t_recursion">*RECURSION*</span></div></dd>',
                             '<dd class="debuginfo-excluded private property"><span class="t_modifier_private">private</span> <span class="t_identifier">propNoDebug</span> <span class="t_operator">=</span> <span class="t_string">not included in __debugInfo</span></dd>',
-                            '<dd class="debuginfo-value private property"><span class="t_modifier_private">private</span> <span class="t_type">string</span> <span class="t_identifier" title="Private Property.">propPrivate</span> <span class="t_operator">=</span> <span class="t_string">redefined in Test (private) (alternate value via __debugInfo)</span></dd>',
+                            '<dd class="debuginfo-value overrides private property" data-declared-prev="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_private">private</span> <span class="t_type">string</span> <span class="t_identifier" title="Private Property.">propPrivate</span> <span class="t_operator">=</span> <span class="t_string">redefined in Test (private) (alternate value via __debugInfo)</span></dd>',
                             '<dd class="private private-ancestor property" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_private">private</span> <span class="t_type">string</span> <span class="t_identifier" title="Inherited desc">testBasePrivate</span> <span class="t_operator">=</span> <span class="t_string">defined in TestBase (private)</span></dd>',
                             '<dd class="private property"><span class="t_modifier_private">private</span> <span class="t_identifier">toString</span> <span class="t_operator">=</span> <span class="t_string">abracadabra</span></dd>',
                             '<dd class="private property"><span class="t_modifier_private">private</span> <span class="t_identifier">toStrThrow</span> <span class="t_operator">=</span> <span class="t_int">0</span></dd>',
@@ -236,7 +236,7 @@ EOD;
                         $expect = \implode("\n", array(
                             '<dt class="methods">methods</dt>',
                             '<dd class="info magic">This object has a <code>__call</code> method</dd>',
-                            '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier" title="Constructor',
+                            '<dd class="method overrides public" data-declared-prev="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_public">public</span> <span class="t_identifier" title="Constructor',
                             '',
                             'Constructor description">__construct</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="value __toString will return;">$toString</span> <span class="t_operator">=</span> <span class="t_parameter-default t_string">abracadabra</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_type">int</span> <span class="t_parameter-name" title="0: don\'t, 1: throw, 2: throw &amp; catch">$toStrThrow</span> <span class="t_operator">=</span> <span class="t_int t_parameter-default">0</span></span><span class="t_punct">)</span></dd>',
                             '<dd class="inherited method public" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_public">public</span> <span class="t_identifier" title="call magic method">__call</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="Method being called">$name</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_type">array</span> <span class="t_parameter-name" title="Arguments passed">$args</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">mixed</span></dd>',
@@ -245,7 +245,7 @@ EOD;
                             '<dd class="inherited method public" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_public">public</span> <span class="t_identifier" title="set magic method">__set</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="what we\'re setting">$key</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_type">mixed</span> <span class="t_parameter-name" title="value">$val</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span></dd>',
                             '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier" title="toString magic method">__toString</span><span class="t_punct">(</span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">string</span><br />',
                                 '<span class="t_string">abracadabra</span></dd>',
-                            '<dd class="isDeprecated isFinal method public" data-deprecated-desc="this method is bad and should feel bad"><span class="t_modifier_final">final</span> <span class="t_modifier_public">public</span> <span class="t_identifier" title="This method is public">methodPublic</span><span class="t_punct">(</span><span class="parameter"><span class="t_type"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>SomeClass</span></span> <span class="t_parameter-name" title="first param',
+                            '<dd class="isDeprecated isFinal method public" data-deprecated-desc="this method is bad and should feel bad"><span class="t_modifier_final">final</span> <span class="t_modifier_public">public</span> <span class="t_identifier" title="This method is public">methodPublic</span><span class="t_punct">(</span><span class="parameter"><span class="t_type"><span class="classname">SomeClass</span></span> <span class="t_parameter-name" title="first param',
                                 'two-line description!">$param1</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_type">array</span> <span class="t_parameter-name" title="second param">$param2</span> <span class="t_operator">=</span> <span class="t_array t_parameter-default"><span class="t_keyword">array</span><span class="t_punct">()</span></span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span></dd>',
                             '<dd class="inherited method public" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_public">public</span> <span class="t_identifier">testBasePublic</span><span class="t_punct">(</span><span class="t_punct">)</span></dd>',
                             '<dd class="inherited isStatic method public" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="t_identifier">testBaseStatic</span><span class="t_punct">(</span><span class="t_punct">)</span></dd>',
@@ -259,7 +259,7 @@ EOD;
                             $expect = \str_replace('\'', '&#039;', $expect);
                         }
 
-                        // echo 'expect = ' . $expect . "\n";
+                        // echo 'expect = ' . $expect . "\n\n";
                         // echo 'actual = ' . $str . "\n";
                         self::assertStringContainsString($expect, $str);
 
@@ -447,31 +447,31 @@ EOD;
                 array(
                     'html' => static function ($html) {
                         $expect = '<dt class="constants">constants</dt>' . "\n"
-                            . '<dd class="constant public"><span class="t_modifier_public">public</span> <span class="t_identifier"'
+                            . '<dd class="constant overrides public" data-declared-prev="bdk\Test\Debug\Fixture\Utility\PhpDocImplements"><span class="t_modifier_public">public</span> <span class="t_identifier"'
                             . (PHP_VERSION_ID >= 70100
                                 ? ' title="PhpDocImplements summary"'
                                 : ''
                             )
                             . '>SOME_CONSTANT</span> <span class="t_operator">=</span> <span class="t_string">never change</span></dd>' . "\n"
                             . '<dt class="properties">properties</dt>' . "\n"
-                            . '<dd class="property public"><span class="t_modifier_public">public</span> <span class="t_type">string</span> <span class="t_identifier" title="$someProperty summary: desc">someProperty</span> <span class="t_operator">=</span> <span class="t_string">St. James Place</span></dd>' . "\n"
+                            . '<dd class="overrides property public" data-declared-prev="bdk\Test\Debug\Fixture\Utility\PhpDocImplements"><span class="t_modifier_public">public</span> <span class="t_type">string</span> <span class="t_identifier" title="$someProperty summary: desc">someProperty</span> <span class="t_operator">=</span> <span class="t_string">St. James Place</span></dd>' . "\n"
                             . '<dd class="magic property"><span class="t_modifier_magic">magic</span> <span class="t_type">bool</span> <span class="t_identifier" title="I\'m avail via __get()">magicProp</span></dd>' . "\n"
                             . '<dd class="magic-read property"><span class="t_modifier_magic-read">magic-read</span> <span class="t_type">bool</span> <span class="t_identifier" title="Read Only!">magicReadProp</span></dd>' . "\n"
                             . '<dt class="methods">methods</dt>' . "\n"
-                            . '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier" title="SomeInterface summary' . "\n"
+                            . '<dd class="method overrides public" data-declared-prev="bdk\Test\Debug\Fixture\Utility\PhpDocImplements"><span class="t_modifier_public">public</span> <span class="t_identifier" title="SomeInterface summary' . "\n"
                             . '' . "\n"
-                            . 'SomeInterface description">someMethod</span><span class="t_punct">(</span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\Utility\bdk\Test\Debug\Fixture\</span>SomeInterface</span></span></dd>' . "\n"
-                            . '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier" title="PhpDocImplements summary' . "\n"
+                            . 'SomeInterface description">someMethod</span><span class="t_punct">(</span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>SomeInterface</span></span></dd>' . "\n"
+                            . '<dd class="method overrides public" data-declared-prev="bdk\Test\Debug\Fixture\Utility\PhpDocImplements"><span class="t_modifier_public">public</span> <span class="t_identifier" title="PhpDocImplements summary' . "\n"
                             . '' . "\n"
                             . 'PhpDocImplements desc">someMethod2</span><span class="t_punct">(</span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span></dd>' . "\n"
-                            . '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier" title="PhpDocExtends summary' . "\n"
+                            . '<dd class="method overrides public" data-declared-prev="bdk\Test\Debug\Fixture\Utility\PhpDocImplements"><span class="t_modifier_public">public</span> <span class="t_identifier" title="PhpDocExtends summary' . "\n"
                             . '' . "\n"
                             . 'PhpDocExtends desc / PhpDocImplements desc">someMethod3</span><span class="t_punct">(</span><span class="t_punct">)</span></dd>';
                         if (PHP_VERSION_ID >= 80100) {
                             $expect = \str_replace('\'', '&#039;', $expect);
                         }
-                        // echo 'expect = ' . $expect . "\n";
-                        // echo 'html = ' . $html . "\n";
+                        // echo 'expect = ' . $expect . "\n\n";
+                        // echo 'actual = ' . $html . "\n";
                         self::assertStringContainsString($expect, $html);
                     },
                 ),
@@ -490,7 +490,7 @@ EOD;
                             <dl class="object-inner">
                             <dt class="properties">properties</dt>
                             <dd class="property public"><span class="t_modifier_public">public</span> <span class="t_type">non-empty-array</span><span class="t_punct">&lt;</span><span class="t_type">string</span><span class="t_punct">,</span> <span class="t_type">array</span><span class="t_punct">&lt;</span><span class="t_type">int</span><span class="t_punct">,</span> <span class="t_type">int</span><span class="t_punct">|</span><span class="t_type">string</span><span class="t_punct">&gt;</span><span class="t_punct">|</span><span class="t_type">int</span><span class="t_punct">|</span><span class="t_type">string</span><span class="t_punct">&gt;</span><span class="t_type"><span class="t_punct">[]</span></span> <span class="t_identifier" title="General Description">general</span> <span class="t_operator">=</span> <span class="t_null">null</span></dd>
-                            <dd class="property public"><span class="t_modifier_public">public</span> <span class="t_type">null</span><span class="t_punct">|</span><span class="t_type"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>"literal"</span></span><span class="t_punct">|</span><span class="t_type"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>123</span></span> <span class="t_identifier" title="Union test">literal</span> <span class="t_operator">=</span> <span class="t_null">null</span></dd>
+                            <dd class="property public"><span class="t_modifier_public">public</span> <span class="t_type">null</span><span class="t_punct">|</span><span class="t_string t_type">literal</span><span class="t_punct">|</span><span class="t_type">123</span> <span class="t_identifier" title="Union test">literal</span> <span class="t_operator">=</span> <span class="t_null">null</span></dd>
                             <dd class="property public"><span class="t_modifier_public">public</span> <span class="t_type">array</span><span class="t_punct">{</span><span class="t_string">name</span><span class="t_punct">:</span> <span class="t_type">string</span><span class="t_punct">,</span> <span class="t_string">value</span><span class="t_punct">:</span> <span class="t_type">positive-int</span><span class="t_punct">|</span><span class="t_type">string</span><span class="t_punct">,</span> <span class="t_string">foo</span><span class="t_punct">:</span> <span class="t_type"><span class="classname">bar</span></span><span class="t_punct">,</span> <span class="t_string">number</span><span class="t_punct">:</span> <span class="t_type">42</span><span class="t_punct">,</span> <span class="t_string">string</span><span class="t_punct">:</span> <span class="t_string t_type">theory</span><span class="t_punct">}</span> <span class="t_identifier" title="Shape Description">shape</span> <span class="t_operator">=</span> <span class="t_null">null</span></dd>
                             <dt class="methods">methods</dt>
                             <dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier" title="Method description">myMethod</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">int</span><span class="t_punct">|</span><span class="t_type">string</span> <span class="t_parameter-name" title="I&#039;m a description">$foo</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span></dd>
@@ -614,6 +614,8 @@ EOD;
                 'INHERITED' => array(
                     'attributes' => array(),
                     'declaredLast' => 'bdk\Test\Debug\Fixture\TestBase',
+                    'declaredOrig' => 'bdk\Test\Debug\Fixture\TestBase',
+                    'declaredPrev' => null,
                     'desc' => PHP_VERSION_ID >= 70100
                         ? 'Inherited description'
                         : null,
@@ -624,6 +626,8 @@ EOD;
                 'MY_CONSTANT' => array(
                     'attributes' => array(),
                     'declaredLast' => 'bdk\Test\Debug\Fixture\TestObj',
+                    'declaredOrig' => 'bdk\Test\Debug\Fixture\TestBase',
+                    'declaredPrev' => 'bdk\Test\Debug\Fixture\TestBase',
                     'desc' => PHP_VERSION_ID >= 70100
                         ? 'constant documentation'
                         : null,
@@ -746,6 +750,8 @@ EOD;
             array(
                 'attributes' => array(),
                 'declaredLast' => 'bdk\Test\Debug\Fixture\TestObj',
+                'declaredOrig' => 'bdk\Test\Debug\Fixture\TestObj',
+                'declaredPrev' => null,
                 'implements' => null,
                 'isAbstract' => false,
                 'isDeprecated' => true,
@@ -759,7 +765,7 @@ EOD;
                         'isOptional' => false,
                         'isPromoted' => false,
                         'name' => '$param1',
-                        'type' => 'bdk\\Test\\Debug\\Fixture\\SomeClass',
+                        'type' => 'SomeClass',
                     ),
                     array(
                         'attributes' => array(),
@@ -928,18 +934,12 @@ EOD;
                         'PRIVATE_CONST',
                     ), \array_keys($abs->getClassValues()['constants']));
                     self::assertSame(array(
-                        'pro',
                         'foo',
+                        'pro',
                     ), \array_keys($abs->getClassValues()['properties']));
                     self::assertSame(array(
                         'test',
                     ), \array_keys($abs->getClassValues()['methods']));
-
-                    self::assertSame(array(
-                        'pro',
-                        'foo',
-                    ), \array_keys($abs->getClassValues()['properties']));
-                    self::assertSame(array('test'), \array_keys($abs->getClassValues()['methods']));
 
                     self::assertArraySubset(
                         array(
@@ -1034,8 +1034,8 @@ EOD;
                         'PRIVATE_CONST',
                     ), \array_keys($abs->getClassValues()['constants']));
                     self::assertSame(array(
-                        'pro',
                         'foo',
+                        'pro',
                     ), \array_keys($abs->getClassValues()['properties']));
                     self::assertSame(array(
                         'test',
@@ -1353,12 +1353,6 @@ EOD;
 
     public function testMaxDepth()
     {
-        /*
-        $foo = $this->debug->abstracter->crateWithVals(
-            (object) array('beans')
-        )->getValues();
-        var_dump($foo);
-        */
         $this->testMethod(
             'log',
             array(

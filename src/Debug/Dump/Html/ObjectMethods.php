@@ -231,6 +231,7 @@ class ObjectMethods
                 'attribs' => array(
                     'class' => array('t_parameter-default'),
                 ),
+                'tagName' => 'span',
             ));
     }
 
@@ -284,6 +285,7 @@ class ObjectMethods
      */
     private function getAttribs(array $info)
     {
+        $overrides = $info['isInherited'] === false && $info['declaredPrev'];
         return array(
             'class' => array(
                 $info['visibility'] => true,
@@ -292,9 +294,13 @@ class ObjectMethods
                 'isFinal' => $info['isFinal'],
                 'isStatic' => $info['isStatic'],
                 'method' => true,
+                'overrides' => $overrides,
             ),
             'data-attributes' => $this->opts['methodAttributeOutput']
                 ? ($info['attributes'] ?: null)
+                : null,
+            'data-declared-prev' => $overrides
+                ? $info['declaredPrev']
                 : null,
             'data-deprecated-desc' => isset($info['phpDoc']['deprecated'])
                 ? $info['phpDoc']['deprecated'][0]['desc']

@@ -15,21 +15,14 @@ namespace bdk\Debug\Abstraction;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
+use ReflectionClass;
 use ReflectionProperty;
 
 /**
  * Get object property info
  */
-class AbstractObjectProperties
+class AbstractObjectProperties extends AbstractObjectInheritable
 {
-    /** @var Abstraction */
-    protected $abs;
-
-    /** @var Abstracter */
-    protected $abstracter;
-
-    protected $helper;
-
     private static $basePropInfo = array(
         'attributes' => array(),
         'debugInfoExcluded' => false,   // true if not included in __debugInfo
@@ -102,17 +95,6 @@ class AbstractObjectProperties
         'property-read' => 'magic-read',
         'property-write' => 'magic-write',
     );
-
-    /**
-     * Constructor
-     *
-     * @param AbstractObject $abstractObject Object abstracter
-     */
-    public function __construct(AbstractObject $abstractObject)
-    {
-        $this->abstracter = $abstractObject->abstracter;
-        $this->helper = $abstractObject->helper;
-    }
 
     /**
      * Add property instance info/values to abstraction
@@ -309,33 +291,32 @@ class AbstractObjectProperties
      */
     private function addValues(Abstraction $abs)
     {
-        $reflector = $abs['reflector'];
         $properties = $abs['properties'];
         $valuedProps = array();
-        while ($reflector) {
+        $this->traverseAncestors($abs['reflector'], function (ReflectionClass $reflector) use ($abs, &$properties, &$valuedProps) {
             $className = $this->helper->getClassName($reflector);
             $refProperties = $reflector->getProperties();
             while ($refProperties) {
-                $refProperty = \array_shift($refProperties);
+                $refProperty = \array_pop($refProperties);
                 $name = $refProperty->getName();
                 if (\in_array($name, $valuedProps, true)) {
                     continue;
                 }
                 $valuedProps[] = $name;
                 $propInfo = isset($properties[$name])
-                    ? array()   // defined in class
+                    ? $properties[$name]   // defined in class
                     : $this->buildPropViaRef($abs, $refProperty);
-                if ($refProperty->isDefault()) {
+                if ($abs['isAnonymous'] && $refProperty->isDefault() && $className === $abs['className']) {
                     // Necessary for anonymous classes
-                    $propInfo['declaredLast'] = $className;
+                    // $propInfo['declaredLast'] = $className;
+                    $propInfo = $this->updateDeclarationVals($propInfo, $refProperty, $className);
                 }
                 if ($abs['collectPropertyValues']) {
                     $propInfo = $this->addValue($propInfo, $abs, $refProperty);
                 }
                 $properties[$name] = $propInfo;
             }
-            $reflector = $reflector->getParentClass();
-        }
+        });
         $abs['properties'] = $properties;
     }
 
@@ -387,8 +368,7 @@ class AbstractObjectProperties
         $declaredLast = $abs['className'];
         $phpDoc = $this->helper->getPhpDoc($abs['reflector']);
         $haveMagic = \array_intersect_key($phpDoc, $this->magicPhpDocTags);
-        $obj = $abs->getSubject();
-        if (!$haveMagic && \method_exists($obj, '__get')) {
+        if (!$haveMagic && $abs['reflector']->hasMethod('__get')) {
             // phpDoc doesn't contain any @property tags
             // we've got __get method:  check if parent classes have @property tags
             $declaredLast = $this->addViaPhpDocInherit($abs);
@@ -460,29 +440,24 @@ class AbstractObjectProperties
         /*
             We trace our lineage to learn where properties are inherited from
         */
-        $reflector = $abs['reflector'];
         $properties = $abs['properties'];
-        while ($reflector) {
+        $this->traverseAncestors($abs['reflector'], function (ReflectionClass $reflector) use ($abs, &$properties) {
             $className = $this->helper->getClassName($reflector);
             $refProperties = $reflector->getProperties();
             while ($refProperties) {
-                $refProperty = \array_shift($refProperties);
-                $name = $refProperty->getName();
-                if (isset($properties[$name])) {
-                    // already have info... we're in an ancestor
-                    $info = $properties[$name];
-                    $properties[$name]['declaredPrev'] = $this->declaredPrev(
-                        $info,
-                        $className,
-                        $abs['className']
-                    );
-                    $properties[$name]['declaredOrig'] = $className;
+                $refProperty = \array_pop($refProperties);
+                if ($refProperty->isDefault() === false) {
                     continue;
                 }
-                $properties[$name] = $this->buildPropViaRef($abs, $refProperty);
+                $name = $refProperty->getName();
+                $info = isset($properties[$name])
+                    ? $properties[$name]
+                    : $this->buildPropViaRef($abs, $refProperty);
+                $info = $this->updateDeclarationVals($info, $refProperty, $className);
+                $properties[$name] = $info;
             }
-            $reflector = $reflector->getParentClass();
-        }
+        });
+        \ksort($properties);
         $abs['properties'] = $properties;
     }
 
@@ -530,18 +505,20 @@ class AbstractObjectProperties
         /*
             getDeclaringClass returns "LAST-declared/overriden"
         */
-        $declaringClassName = $this->helper->getClassName($refProperty->getDeclaringClass());
-        $isDynamic = $refProperty->isDefault() === false;
+        // $declaringClassName = $this->helper->getClassName($refProperty->getDeclaringClass());
+        // $isDynamic = $refProperty->isDefault() === false;
         return static::buildPropValues(array(
             'attributes' => $abs['cfgFlags'] & AbstractObject::PROP_ATTRIBUTE_COLLECT
                 ? $this->helper->getAttributes($refProperty)
                 : array(),
+            /*
             'declaredLast' => $isDynamic
                 ? null
                 : $declaringClassName,
             'declaredOrig' => $isDynamic // we will update this value as we process ancestor classes
                 ? null
                 : $declaringClassName,
+            */
             'desc' => $phpDoc['desc'],
             'isPromoted' =>  PHP_VERSION_ID >= 80000
                 ? $refProperty->isPromoted()
@@ -607,24 +584,5 @@ class AbstractObjectProperties
     private function isDomObj($obj)
     {
         return $obj instanceof \DOMNode || $obj instanceof \DOMNodeList;
-    }
-
-    /**
-     * Determine propInfo['declaredPrev'] value
-     *
-     * This is the class-name of previous ancestor where property is defined
-     *
-     * @param array  $propInfo     Property Info
-     * @param string $className    className of ancestor class being inspected
-     * @param string $classNameAbs className of object being inspected
-     *
-     * @return string|null
-     */
-    private function declaredPrev($propInfo, $className, $classNameAbs)
-    {
-        $isInherited = $propInfo['declaredLast'] && $propInfo['declaredLast'] !== $classNameAbs;
-        return $isInherited === false && empty($propInfo['declaredPrev'])
-            ? $className
-            : null;
     }
 }

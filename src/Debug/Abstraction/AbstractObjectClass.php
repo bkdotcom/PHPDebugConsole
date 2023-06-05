@@ -12,7 +12,6 @@
 
 namespace bdk\Debug\Abstraction;
 
-use bdk\Debug\Abstraction\ObjectAbstraction;
 use bdk\PubSub\ValueStore;
 
 /**
@@ -35,6 +34,7 @@ class AbstractObjectClass
     protected static $values = array(
         'attributes' => array(),
         'cases' => array(),
+        'cfgFlags' => 0,
         'className' => "\x00default\x00",
         'constants' => array(),
         'definition' => array(
@@ -68,88 +68,20 @@ class AbstractObjectClass
     }
 
     /**
-     * Collect class info
+     * Get Class abstraction
      *
-     * @param ObjectAbstraction $abs Object abstraction instance
+     * @param object $obj  Object being abstracted
+     * @param array  $info values already collected
      *
-     * @return void
+     * @return Abstraction
      */
-    public function add(ObjectAbstraction $abs)
+    public function getAbstraction($obj, array $info = array())
     {
-        $className = $abs['className'];
-        if ($abs['isAnonymous']) {
-            if ($abs['reflector']->getParentClass() === false) {
-                $abs->setClass($this->getDefault());
-                return;
-            }
-            $className = $abs['reflector']->getParentClass()->getName();
-        }
-        $dataPath = array(
-            'classDefinitions',
-            $className,
-        );
-        $classValueStore = $this->debug->data->get($dataPath);
-        if ($classValueStore) {
-            $abs->setClass($classValueStore);
-            return;
-        }
-        if ($abs['isMaxDepth'] || $abs['isExcluded']) {
-            $abs->setClass($this->getDefault());
-            return;
-        }
-        $classValueStore = $this->doClass($abs);
-        $this->debug->data->set($dataPath, $classValueStore);
-    }
+        $abs = $this->getAbstractionInit($info);
+        $abs->setSubject($obj);
+        $abs['fullyQualifyPhpDocType'] = $info['fullyQualifyPhpDocType'];
+        $abs['reflector'] = $info['reflector'];
 
-    /**
-     * Collect class attributes
-     *
-     * @param ObjectAbstraction $abs Object abstraction instance
-     *
-     * @return void
-     */
-    public function addAttributes(ObjectAbstraction $abs)
-    {
-        $reflector = $abs['reflector'];
-        $abs['attributes'] = $abs['cfgFlags'] & AbstractObject::OBJ_ATTRIBUTE_COLLECT
-            ? $this->helper->getAttributes($reflector)
-            : array();
-    }
-
-    /**
-     * Collect "definition" info
-     *
-     * @param ObjectAbstraction $abs Object abstraction instance
-     *
-     * @return void
-     */
-    public function addDefinition(ObjectAbstraction $abs)
-    {
-        $reflector = $abs['reflector'];
-        $abs['definition'] = array(
-            // note that for a Closure object, this likely isn't the info we want...
-            //   AbstractObjectProperties::addClosure will will set the instance definition info
-            'extensionName' => $reflector->getExtensionName(),
-            'fileName' => $reflector->getFileName(),
-            'startLine' => $reflector->getStartLine(),
-        );
-    }
-
-    /**
-     * @param ObjectAbstraction $abs Object abstraction instance
-     *
-     * @return ValueStore
-     */
-    private function doClass(ObjectAbstraction $abs)
-    {
-        $reflectorOrig = $abs['reflector'];
-        if ($abs['isAnonymous']) {
-            $abs['reflector'] = $abs['reflector']->getParentClass();
-        }
-        $initValues = $this->doClassInitValues($abs);
-        $classValueStore = new ValueStore($initValues);
-        $abs->setClass($classValueStore);
-        $abs->setEditMode(ObjectAbstraction::EDIT_CLASS);
         $this->addDefinition($abs);
         $this->addAttributes($abs);
         $this->constants->addCases($abs);
@@ -157,41 +89,49 @@ class AbstractObjectClass
         $this->methods->add($abs);
         $this->properties->addClass($abs);
         if ($abs['className'] === 'Closure') {
-            // __incoke us "unique" per instance
+            // __incoke is "unique" per instance
             $abs['methods']['__invoke'] = array();
         }
-        $abs->setEditMode(ObjectAbstraction::EDIT_INSTANCE);
-        $abs['reflector'] = $reflectorOrig;
-        return $classValueStore;
+
+        unset($abs['fullyQualifyPhpDocType']);
+        unset($abs['reflector']);
+        return $abs;
     }
 
     /**
-     * Get initial class values
+     * Get class ValueStore obj
      *
-     * @param ObjectAbstraction $abs Object abstraction instance
+     * @param object $obj  object being abstracted
+     * @param array  $info Instance abstraction info
      *
-     * @return array
+     * @return ValueStore
      */
-    private function doClassInitValues(ObjectAbstraction $abs)
+    public function getValueStore($obj, array $info)
     {
-        $reflector = $abs['reflector'];
-        $interfaceNames = $reflector->getInterfaceNames();
-        \sort($interfaceNames);
-        $values = \array_merge(self::$values, array(
-            'className' => $reflector->getName(),
-            'implements' => $interfaceNames,
-            'isFinal' => $reflector->isFinal(),
-            'phpDoc' => $this->helper->getPhpDoc($reflector),
-        ));
-        while ($reflector = $reflector->getParentClass()) {
-            if ($values['phpDoc'] === array('desc' => null, 'summary' => null)) {
-                $values['phpDoc'] = $this->helper->getPhpDoc($reflector);
+        $className = $info['className'];
+        $reflector = $info['reflector'];
+        if ($info['isAnonymous']) {
+            if ($reflector->getParentClass() === false) {
+                return $this->getValueStoreDefault();
             }
-            $values['extends'][] = $reflector->getName();
+            $reflector = $reflector->getParentClass();
+            $className = $reflector->getName();
+            $info['reflector'] = $reflector;
         }
-        unset($values['phpDoc']['method']);
-        // magic properties removed via AbstractObjectProperties::addViaPhpDocIter
-        return $values;
+        $dataPath = array('classDefinitions', $className);
+        $valueStore = $this->debug->data->get($dataPath);
+        if ($valueStore) {
+            return $valueStore;
+        }
+        $skip = \array_filter(array($info['isMaxDepth'], $info['isExcluded']));
+        if ($skip) {
+            return $this->getValueStoreDefault();
+        }
+        $abs = $this->getAbstraction($obj, $info);
+        $valueStore = new ValueStore($abs->getValues());
+        unset($valueStore['type']);
+        $this->debug->data->set($dataPath, $valueStore);
+        return $valueStore;
     }
 
     /**
@@ -199,7 +139,7 @@ class AbstractObjectClass
      *
      * @return ValueStore
      */
-    private function getDefault()
+    public function getValueStoreDefault()
     {
         if (self::$default) {
             return self::$default;
@@ -212,5 +152,72 @@ class AbstractObjectClass
             $key,
         ), $classValueStore);
         return $classValueStore;
+    }
+
+    /**
+     * Collect class attributes
+     *
+     * @param ValueStore $abs Object abstraction instance
+     *
+     * @return void
+     */
+    public function addAttributes(ValueStore $abs)
+    {
+        $reflector = $abs['reflector'];
+        $abs['attributes'] = $abs['cfgFlags'] & AbstractObject::OBJ_ATTRIBUTE_COLLECT
+            ? $this->helper->getAttributes($reflector)
+            : array();
+    }
+
+    /**
+     * Collect "definition" values
+     *
+     * @param ValueStore $abs Object abstraction instance
+     *
+     * @return void
+     */
+    public function addDefinition(ValueStore $abs)
+    {
+        $reflector = $abs['reflector'];
+        $abs['definition'] = array(
+            // note that for a Closure object, this likely isn't the info we want...
+            //   AbstractObjectProperties::addClosure will will set the instance definition info
+            'extensionName' => $reflector->getExtensionName(),
+            'fileName' => $reflector->getFileName(),
+            'startLine' => $reflector->getStartLine(),
+        );
+    }
+
+    /**
+     * Initialize class abstraction
+     *
+     * @param array $info values already collected
+     *
+     * @return Absttraction
+     */
+    protected function getAbstractionInit(array $info)
+    {
+        $reflector = $info['reflector'];
+        $interfaceNames = $reflector->getInterfaceNames();
+        \sort($interfaceNames);
+        $values = \array_merge(
+            self::$values,
+            array(
+                'cfgFlags' => $info['cfgFlags'],
+                'className' => $reflector->getName(),
+                'implements' => $interfaceNames,
+                'isFinal' => $reflector->isFinal(),
+                'phpDoc' => $this->helper->getPhpDoc($reflector),
+            )
+        );
+        while ($reflector = $reflector->getParentClass()) {
+            if ($values['phpDoc'] === array('desc' => null, 'summary' => null)) {
+                $values['phpDoc'] = $this->helper->getPhpDoc($reflector);
+            }
+            $values['extends'][] = $reflector->getName();
+        }
+        unset($values['phpDoc']['method']);
+        // magic properties removed via AbstractObjectProperties::addViaPhpDocIter
+        return new Abstraction(Abstracter::TYPE_OBJECT, $values);
     }
 }

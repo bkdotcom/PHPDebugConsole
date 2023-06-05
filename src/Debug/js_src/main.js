@@ -36,6 +36,7 @@ var config = new Config({
     '> .t_modifier_final': '<i class="fa fa-hand-stop-o"></i>',
     '> .info.magic': '<i class="fa fa-fw fa-magic"></i>',
     '> .inherited': '<i class="fa fa-fw fa-clone" title="Inherited"></i>',
+    '> .overrides': '<i class="fa fa-fw fa-repeat" title="Overrides"></i>',
     '> .method.isDeprecated': '<i class="fa fa-fw fa-arrow-down" title="Deprecated"></i>',
     '> .method > .t_modifier_magic': '<i class="fa fa-magic" title="magic method"></i>',
     '> .method > .t_modifier_final': '<i class="fa fa-hand-stop-o"></i>',

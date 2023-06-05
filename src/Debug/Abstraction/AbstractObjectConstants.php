@@ -22,25 +22,22 @@ use UnitEnum;
 /**
  * Get object constant info
  */
-class AbstractObjectConstants
+class AbstractObjectConstants extends AbstractObjectInheritable
 {
-    protected $abstracter;
-    protected $helper;
-
     private $constants = array();
     private $attributeCollect = true;
     private $phpDocCollect = true;
 
-    /**
-     * Constructor
-     *
-     * @param AbstractObject $abstractObject Object abstracter
-     */
-    public function __construct(AbstractObject $abstractObject)
-    {
-        $this->abstracter = $abstractObject->abstracter;
-        $this->helper = $abstractObject->helper;
-    }
+    private static $baseConstInfo = array(
+        'attributes' => array(),
+        'declaredLast' => null,
+        'declaredOrig' => null,
+        'declaredPrev' => null,
+        'desc' => null,
+        'isFinal' => false,
+        'value' => null,
+        'visibility' => 'public',
+    );
 
     /**
      * Add object's constants to abstraction
@@ -57,13 +54,14 @@ class AbstractObjectConstants
         $this->constants = array();
         $this->attributeCollect = ($abs['cfgFlags'] & AbstractObject::CONST_ATTRIBUTE_COLLECT) === AbstractObject::CONST_ATTRIBUTE_COLLECT;
         $this->phpDocCollect = ($abs['cfgFlags'] & AbstractObject::PHPDOC_COLLECT) === AbstractObject::PHPDOC_COLLECT;
-        $reflector = $abs['reflector'];
-        while ($reflector) {
+        /*
+            We trace our lineage to learn where constants are inherited from
+        */
+        $this->traverseAncestors($abs['reflector'], function (ReflectionClass $reflector) {
             PHP_VERSION_ID >= 70100
                 ? $this->addConstantsReflection($reflector)
                 : $this->addConstantsLegacy($reflector);
-            $reflector = $reflector->getParentClass();
-        }
+        });
         $abs['constants'] = $this->constants;
     }
 
@@ -126,17 +124,13 @@ class AbstractObjectConstants
      */
     private function addConstantsLegacy(ReflectionClass $reflector)
     {
+        $className = $this->helper->getClassName($reflector);
         foreach ($reflector->getConstants() as $name => $value) {
-            if (isset($this->constants[$name])) {
-                continue;
-            }
-            $this->constants[$name] = array(
-                'attributes' => array(),
-                'desc' => null,
-                'isFinal' => false,
-                'value' => $value,
-                'visibility' => 'public',
-            );
+            $info = isset($this->constants[$name])
+                ? $this->constants[$name]
+                : \array_merge(static::$baseConstInfo, array('value' => $value));
+            $info = $this->updateDeclarationVals($info, null, $className);
+            $this->constants[$name] = $info;
         }
     }
 
@@ -150,16 +144,18 @@ class AbstractObjectConstants
      */
     private function addConstantsReflection(ReflectionClass $reflector)
     {
+        $className = $this->helper->getClassName($reflector);
         foreach ($reflector->getReflectionConstants() as $refConstant) {
             $name = $refConstant->getName();
-            if (isset($this->constants[$name])) {
-                continue;
-            }
             if (PHP_VERSION_ID >= 80100 && $refConstant->isEnumCase()) {
                 // getReflectionConstants also returns enum cases... which we don't want
                 continue;
             }
-            $this->constants[$name] = $this->getConstantRefInfo($refConstant);
+            $info = isset($this->constants[$name])
+                ? $this->constants[$name]
+                : $this->getConstantRefInfo($refConstant);
+            $info = $this->updateDeclarationVals($info, $refConstant, $className);
+            $this->constants[$name] = $info;
         }
     }
 
@@ -201,11 +197,10 @@ class AbstractObjectConstants
             // storing enum value at class level leads to recursion
             $value = null;
         }
-        return array(
+        return \array_merge(static::$baseConstInfo, array(
             'attributes' => $this->attributeCollect
                 ? $this->helper->getAttributes($refConstant)
                 : array(),
-            'declaredLast' => $this->helper->getClassName($refConstant->getDeclaringClass()),
             'desc' => $this->phpDocCollect
                 ? $this->helper->getPhpDocVar($refConstant)['desc']
                 : null,
@@ -214,6 +209,6 @@ class AbstractObjectConstants
                 : false,
             'value' => $value,
             'visibility' => $this->helper->getVisibility($refConstant),
-        );
+        ));
     }
 }

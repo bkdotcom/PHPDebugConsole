@@ -221,11 +221,10 @@ class AbstractObjectHelper
         }
         /*
             Truly relative?  Or, does PhpDoc omit '\' ?
-            Not 100% accurate, but check if absolute path exists
-            Otherwise assume relative to namespace
+            Not 100% accurate, but check if assumed namespace'd class exists
         */
-        return \class_exists($type)
-            ? $type
-            : $namespace . '\\' . $type;
+        return \class_exists($namespace . '\\' . $type)
+            ? $namespace . '\\' . $type
+            : $type;
     }
 }

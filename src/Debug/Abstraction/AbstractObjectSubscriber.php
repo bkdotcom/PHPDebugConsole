@@ -94,6 +94,9 @@ class AbstractObjectSubscriber implements SubscriberInterface
         } elseif ($obj instanceof mysqli && !$abs['collectPropertyValues']) {
             $this->onEndMysqli($abs);
         }
+        if (isset($abs['methods']['__toString'])) {
+            $abs['methods']['__toString']['returnValue'] = $this->abstractObject->methods->toString($abs);
+        }
         $this->promoteParamDescs($abs);
     }
 

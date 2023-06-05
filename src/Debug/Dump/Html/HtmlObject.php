@@ -122,6 +122,7 @@ class HtmlObject
         $html = \preg_replace('#(?:<dt>(?:extends|implements|phpDoc)</dt>\n)+(<dt|</dl)#', '$1', $html);
         $html = \str_replace(array(
             ' data-attributes="null"',
+            ' data-declared-prev="null"',
             ' data-inherited-from="null"',
             ' title=""',
         ), '', $html);

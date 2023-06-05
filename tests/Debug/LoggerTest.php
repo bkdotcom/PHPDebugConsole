@@ -143,7 +143,7 @@ class LoggerTest extends DebugTestFramework
         ));
         $this->debug->eventManager->unsubscribe(Debug::EVENT_OBJ_ABSTRACT_START, $objStartClosure);
         $logEntryArray = $this->helper->logEntryToArray($this->debug->data->get('log/__end__'));
-        $this->assertSame('Exception', $logEntryArray['args'][1]['exception']['className']);
+        $this->assertSame('Exception', $logEntryArray['args'][1]['exception']['classDefinition']);
         unset($logEntryArray['args'][1]['exception']);
         $this->assertSame(array(
             'method' => 'warn',

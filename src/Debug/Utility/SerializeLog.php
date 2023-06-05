@@ -16,6 +16,8 @@ use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
+use bdk\Debug\Abstraction\AbstractObjectMethods;
+use bdk\Debug\Abstraction\AbstractObjectProperties;
 use bdk\Debug\Abstraction\ObjectAbstraction;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Utility\Php;
@@ -204,7 +206,8 @@ class SerializeLog
             }
             $val['properties'] = self::importLegacy($val['properties']);
             $val = self::importLegacyObj($val);
-            return new ObjectAbstraction($val);
+            $valueStore = self::$debug->abstracter->abstractObject->class->getValueStoreDefault();
+            return new ObjectAbstraction($valueStore, $val);
         }, $vals);
     }
 
@@ -218,11 +221,11 @@ class SerializeLog
     private static function importLegacyObj(array $absValues)
     {
         $absValues = AbstractObject::buildObjValues($absValues);
-        $baseMethodInfo = \bdk\Debug\Abstraction\AbstractObjectMethods::buildMethodValues();
+        $baseMethodInfo = AbstractObjectMethods::buildMethodValues();
         foreach ($absValues['methods'] as $name => $meth) {
             $absValues['methods'][$name] = \array_merge($baseMethodInfo, $meth);
         }
-        $basePropInfo = \bdk\Debug\Abstraction\AbstractObjectProperties::buildPropValues();
+        $basePropInfo = AbstractObjectProperties::buildPropValues();
         foreach ($absValues['properties'] as $name => $prop) {
             $absValues['properties'][$name] = \array_merge($basePropInfo, $prop);
         }

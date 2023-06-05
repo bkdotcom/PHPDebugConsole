@@ -16,20 +16,21 @@ use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
 use bdk\Debug\Abstraction\AbstractObjectMethodParams;
 use Exception;
+use ReflectionClass;
 use ReflectionMethod;
 
 /**
  * Get object method info
  */
-class AbstractObjectMethods
+class AbstractObjectMethods extends AbstractObjectInheritable
 {
-    protected $abstracter;
-    protected $helper;
     protected $params;
 
     private static $baseMethodInfo = array(
         'attributes' => array(),
         'declaredLast' => null,
+        'declaredOrig' => null,
+        'declaredPrev' => null,
         'implements' => null,
         'isAbstract' => false,
         'isDeprecated' => false,
@@ -54,8 +55,7 @@ class AbstractObjectMethods
      */
     public function __construct(AbstractObject $abstractObject)
     {
-        $this->abstracter = $abstractObject->abstracter;
-        $this->helper = $abstractObject->helper;
+        parent::__construct($abstractObject);
         $this->params = new AbstractObjectMethodParams($abstractObject);
     }
 
@@ -259,18 +259,27 @@ class AbstractObjectMethods
     private function addViaReflection(Abstraction $abs)
     {
         $methods = array();
-        foreach ($abs['reflector']->getMethods() as $refMethod) {
-            $info = $this->buildMethodRef($abs, $refMethod);
-            $isInherited = $info['declaredLast'] && $info['declaredLast'] !== $abs['className'];
-            if ($info['visibility'] === 'private' && $isInherited) {
-                // getMethods() returns parent's private methods (#reasons)..  we'll skip it
-                continue;
+        $this->traverseAncestors($abs['reflector'], function (ReflectionClass $reflector) use ($abs, &$methods) {
+            $className = $this->helper->getClassName($reflector);
+            $refMethods = $reflector->getMethods();
+            while ($refMethods) {
+                $refMethod = \array_pop($refMethods);
+                $name = $refMethod->getName();
+                $info = isset($methods[$name])
+                    ? $methods[$name]
+                    : $this->buildMethodRef($abs, $refMethod);
+                $info = $this->updateDeclarationVals($info, $refMethod, $className);
+                $isInherited = $info['declaredLast'] && $info['declaredLast'] !== $abs['className'];
+                if ($info['visibility'] === 'private' && $isInherited) {
+                    // getMethods() returns parent's private methods (#reasons)..  we'll skip it
+                    continue;
+                }
+                unset($info['phpDoc']['param']);
+                unset($info['phpDoc']['return']);
+                $methods[$name] = $info;
             }
-            unset($info['phpDoc']['param']);
-            unset($info['phpDoc']['return']);
-            $methodName = $refMethod->getName();
-            $methods[$methodName] = $info;
-        }
+        });
+        \ksort($methods);
         $abs['methods'] = $methods;
     }
 
@@ -314,14 +323,11 @@ class AbstractObjectMethods
      */
     private function buildMethodRef(Abstraction $abs, ReflectionMethod $refMethod)
     {
-        // getDeclaringClass() returns LAST-declared/overridden
-        $declaringClassName = $this->helper->getClassName($refMethod->getDeclaringClass());
         $phpDoc = $this->helper->getPhpDoc($refMethod);
         return $this->buildMethodValues(array(
             'attributes' => $abs['cfgFlags'] & AbstractObject::METHOD_ATTRIBUTE_COLLECT
                 ? $this->helper->getAttributes($refMethod)
                 : array(),
-            'declaredLast' => $declaringClassName,
             'isAbstract' => $refMethod->isAbstract(),
             'isDeprecated' => $refMethod->isDeprecated() || isset($phpDoc['deprecated']),
             'isFinal' => $refMethod->isFinal(),

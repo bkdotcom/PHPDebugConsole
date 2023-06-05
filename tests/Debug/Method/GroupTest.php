@@ -139,13 +139,13 @@ class GroupTest extends DebugTestFramework
         $this->assertSame(null, $logEntryArray['args'][2]);
         $this->assertSame(false, $logEntryArray['args'][3]);
         $this->assertSame($objExpect, $logEntryArray['args'][4]);
-        $this->assertTrue(($logEntryArray['args'][5]['cfgFlags'] & AbstractObject::BRIEF) === AbstractObject::BRIEF);
+        $this->assertTrue(($logEntry['args'][5]['cfgFlags'] & AbstractObject::BRIEF) === AbstractObject::BRIEF);
         // phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
         $this->assertSame(array(
             'visibility' => 'public',
             'returnValue' => 'toStringVal',
         ), $logEntry['args'][5]['methods']['__toString']);
-        $this->assertTrue(($logEntryArray['args'][6]['cfgFlags'] & AbstractObject::BRIEF) === AbstractObject::BRIEF);
+        $this->assertTrue(($logEntry['args'][6]['cfgFlags'] & AbstractObject::BRIEF) === AbstractObject::BRIEF);
     }
 
     public function testGroupHideIfEmpty()

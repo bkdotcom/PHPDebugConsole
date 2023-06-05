@@ -18,6 +18,7 @@ use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\AbstractObjectHelper;
 use bdk\Debug\Abstraction\AbstractObjectProperties;
 use bdk\Debug\Abstraction\ObjectAbstraction;
+use ReflectionClass;
 use ReflectionEnum;
 use RuntimeException;
 use UnitEnum;
@@ -148,6 +149,15 @@ class AbstractObject extends AbstractComponent
         'viaDebugInfo' => false,
     );
 
+    protected static $keysTemp = array(
+        'collectPropertyValues',
+        'fullyQualifyPhpDocType',
+        'hist',
+        'isTraverseOnly',
+        'propertyOverrideValues',
+        'reflector',
+    );
+
     /**
      * Constructor
      *
@@ -171,47 +181,25 @@ class AbstractObject extends AbstractComponent
     }
 
     /**
-     * returns information about an object
+     * Returns information about an object
      *
      * @param object|string $obj    Object (or classname) to inspect
      * @param string        $method Method requesting abstraction
      * @param array         $hist   (@internal) array & object history
      *
-     * @return Abstraction
+     * @return ObjectAbstraction
      * @throws RuntimeException
      */
     public function getAbstraction($obj, $method = null, array $hist = array())
     {
         $reflector = $this->debug->php->getReflector($obj);
-        $abs = new ObjectAbstraction(\array_merge(
-            self::$values,
-            array(
-                'cfgFlags' => $this->getCfgFlags(),
-                'className' => $this->helper->getClassName($reflector),
-                'debugMethod' => $method,
-                'isAnonymous' => PHP_VERSION_ID >= 70000 && $reflector->isAnonymous(),
-                'isExcluded' => $hist && $this->isExcluded($obj),    // don't exclude if we're debugging directly
-                'isMaxDepth' => $this->cfg['maxDepth'] && \count($hist) === $this->cfg['maxDepth'],
-                'isRecursion' => \in_array($obj, $hist, true),
-                'scopeClass' => $this->getScopeClass($hist),
-                'sort' => $this->cfg['objectSort'],
-                'viaDebugInfo' => $this->cfg['useDebugInfo'] && $reflector->hasMethod('__debugInfo'),
-            ),
-            array(
-                // these are temporary values available during abstraction
-                'collectPropertyValues' => true,
-                'fullyQualifyPhpDocType' => $this->cfg['fullyQualifyPhpDocType'],
-                'hist' => $hist,
-                'isTraverseOnly' => false,
-                'propertyOverrideValues' => array(),
-                'reflector' => $reflector,
-            )
-        ));
-        $abs['hist'][] = $obj;
+        $values = $this->getAbstractionValues($reflector, $obj, $method, $hist);
+        $classValueStore = $this->class->getValueStore($obj, $values);
+        $abs = new ObjectAbstraction($classValueStore, $values);
         $abs->setSubject($obj);
+        $abs['hist'][] = $obj;
         $this->doAbstraction($abs);
         $this->absClean($abs);
-        $abs->setEditMode(ObjectAbstraction::EDIT_OFF);
         return $abs;
     }
 
@@ -246,22 +234,14 @@ class AbstractObject extends AbstractComponent
      */
     private function absClean(Abstraction $abs)
     {
-        $keysTemp = array(
-            'collectPropertyValues',
-            'fullyQualifyPhpDocType',
-            'hist',
-            'isTraverseOnly',
-            'propertyOverrideValues',
-            'reflector',
-        );
-        $values = \array_diff_key($abs->getInstanceValues(), \array_flip($keysTemp));
+        $values = \array_diff_key($abs->getInstanceValues(), \array_flip(self::$keysTemp));
         $abs
             ->setSubject(null)
             ->setValues($values);
     }
 
     /**
-     * Add enum's case's @var desc (if exists) to phpDoc
+     * Add enum case's @var desc (if exists) to phpDoc
      *
      * @param Abstraction $abs Abstraction instance
      *
@@ -315,7 +295,6 @@ class AbstractObject extends AbstractComponent
      */
     private function doAbstraction(Abstraction $abs)
     {
-        $this->class->add($abs);
         if ($abs['isMaxDepth']) {
             return;
         }
@@ -347,13 +326,49 @@ class AbstractObject extends AbstractComponent
         }
         $this->constants->addConstantEnumValues($abs);
         $this->properties->add($abs);
-        if (isset($abs['methods']['__toString'])) {
-            $abs['methods']['__toString']['returnValue'] = $this->methods->toString($abs);
-        }
         /*
-            Debug::EVENT_OBJ_ABSTRACT_END subscriber has free reign to modify abtraction array
+            Debug::EVENT_OBJ_ABSTRACT_END subscriber has free reign to modify abtraction values
         */
         $this->debug->publishBubbleEvent(Debug::EVENT_OBJ_ABSTRACT_END, $abs, $this->debug);
+    }
+
+    /**
+     * Returns information about an object
+     *
+     * @param ReflectionClass $reflector Reflection instance
+     * @param object|string   $obj       Object (or classname) to inspect
+     * @param string          $method    Method requesting abstraction
+     * @param array           $hist      (@internal) array & object history
+     *
+     * @return ObjectAbstraction
+     * @throws RuntimeException
+     */
+    protected function getAbstractionValues(ReflectionClass $reflector, $obj, $method = null, array $hist = array())
+    {
+        return \array_merge(
+            self::$values,
+            array(
+                'cfgFlags' => $this->getCfgFlags(),
+                'className' => $this->helper->getClassName($reflector),
+                'debugMethod' => $method,
+                'isAnonymous' => PHP_VERSION_ID >= 70000 && $reflector->isAnonymous(),
+                'isExcluded' => $hist && $this->isExcluded($obj),    // don't exclude if we're debugging directly
+                'isMaxDepth' => $this->cfg['maxDepth'] && \count($hist) === $this->cfg['maxDepth'],
+                'isRecursion' => \in_array($obj, $hist, true),
+                'scopeClass' => $this->getScopeClass($hist),
+                'sort' => $this->cfg['objectSort'],
+                'viaDebugInfo' => $this->cfg['useDebugInfo'] && $reflector->hasMethod('__debugInfo'),
+            ),
+            array(
+                // these are temporary values available during abstraction
+                'collectPropertyValues' => true,
+                'fullyQualifyPhpDocType' => $this->cfg['fullyQualifyPhpDocType'],
+                'hist' => $hist,
+                'isTraverseOnly' => false,
+                'propertyOverrideValues' => array(),
+                'reflector' => $reflector,
+            )
+        );
     }
 
     /**

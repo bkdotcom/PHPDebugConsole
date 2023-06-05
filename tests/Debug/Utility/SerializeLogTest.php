@@ -362,17 +362,19 @@ EOD;
         unset($expect['log'][1][1][1]['collectMethods']);
         // serialized did not include these values
         $expect['log'][1][1][1] = \array_merge(
-            $expect['log'][1][1][1],
             array(
+                'attributes' => array(),
+                'cases' => array(),
                 'cfgFlags' => 4194303,
+                'isAnonymous' => false,
+                'isFinal' => false,
                 'isMaxDepth' => false,
                 'sort' => '',
-                'isAnonymous' => false,
-            )
+            ),
+            $expect['log'][1][1][1]
         );
         // serialized did not include these values
         $expect['log'][1][1][1]['properties']['foo'] = \array_merge(
-            $expect['log'][1][1][1]['properties']['foo'],
             array(
                 'attributes' => array(),
                 'declaredLast' => null,
@@ -381,7 +383,8 @@ EOD;
                 'debugInfoExcluded' => false,
                 'isPromoted' => false,
                 'isReadOnly' => false,
-            )
+            ),
+            $expect['log'][1][1][1]['properties']['foo']
         );
 
         $serialized = SerializeLog::serialize($debug);
@@ -400,7 +403,10 @@ EOD;
         }
         self::assertEquals(
             \array_intersect_key($expect, \array_flip($keysCompare)),
-            \array_intersect_key($this->helper->deObjectifyData($unserialized), \array_flip($keysCompare))
+            \array_intersect_key(
+                $this->helper->deObjectifyData($unserialized, true, false, true),
+                \array_flip($keysCompare)
+            )
         );
     }
 }

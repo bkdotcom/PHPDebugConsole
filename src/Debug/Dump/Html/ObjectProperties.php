@@ -164,6 +164,7 @@ class ObjectProperties
     protected function getAttribs(array $info, array $opts)
     {
         $visClasses = \array_diff((array) $info['visibility'], array('debug'));
+        $overrides = $info['isInherited'] === false && $info['declaredPrev'];
         $classes = \array_keys(\array_filter(array(
             'debug-value' => $info['valueFrom'] === 'debug',
             'debuginfo-excluded' => $info['debugInfoExcluded'],
@@ -176,6 +177,7 @@ class ObjectProperties
             'isPromoted' => $info['isPromoted'],
             'isReadOnly' => $info['isReadOnly'],
             'isStatic' => $info['isStatic'],
+            'overrides' => $overrides,
             'private-ancestor' => $info['isPrivateAncestor'],
             'property' => true,
         )));
@@ -183,6 +185,9 @@ class ObjectProperties
             'class' => \array_merge($classes, $visClasses),
             'data-attributes' => $opts['attributeOutput'] && $info['attributes']
                 ? $info['attributes']
+                : null,
+            'data-declared-prev' => $overrides
+                ? $info['declaredPrev']
                 : null,
             'data-inherited-from' => $info['isInherited'] || $info['isPrivateAncestor']
                 ? $info['declaredLast']

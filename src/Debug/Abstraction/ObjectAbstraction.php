@@ -15,29 +15,25 @@ namespace bdk\Debug\Abstraction;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Utility\ArrayUtil;
 use bdk\PubSub\ValueStore;
-use Exception;
 
 /**
  * Object Abstraction
  */
 class ObjectAbstraction extends Abstraction
 {
-    const EDIT_CLASS = 'class';
-    const EDIT_INSTANCE = 'instance';
-    const EDIT_OFF = 'off';
-
     private $class;
-    private $editMode = self::EDIT_INSTANCE;
 
     private $sortableValues = array('attributes', 'cases', 'constants', 'methods', 'properties');
 
     /**
      * Constructor
      *
-     * @param array $values abtraction values
+     * @param ValueStore $class  class values
+     * @param array      $values abtraction values
      */
-    public function __construct($values = array())
+    public function __construct(ValueStore $class, $values = array())
     {
+        $this->class = $class;
         parent::__construct(Abstracter::TYPE_OBJECT, $values);
     }
 
@@ -46,7 +42,7 @@ class ObjectAbstraction extends Abstraction
      */
     public function __serialize()
     {
-        return $this->values + array('class' => $this->class);
+        return $this->getInstanceValues() + array('class' => $this->class);
     }
 
     /**
@@ -56,7 +52,7 @@ class ObjectAbstraction extends Abstraction
      */
     public function __toString()
     {
-        $val = $this->values['className'];
+        $val = $this->offsetGet('className');
         if ($this->values['stringified']) {
             $val = $this->values['stringified'];
         } elseif (isset($this->values['methods']['__toString']['returnValue'])) {
@@ -70,9 +66,7 @@ class ObjectAbstraction extends Abstraction
      */
     public function __unserialize($data)
     {
-        $this->class = isset($data['class'])
-            ? $data['class']
-            : null;
+        $this->class = $data['class'];
         unset($data['class']);
         $this->values = $data;
     }
@@ -85,41 +79,10 @@ class ObjectAbstraction extends Abstraction
     #[\ReturnTypeWillChange]
     public function jsonSerialize()
     {
-        return $this->values + array(
+        return $this->getInstanceValues() + array(
             'classDefinition' => $this->class['className'],
             'debug' => Abstracter::ABSTRACTION,
         );
-    }
-
-
-    /**
-     * Set class value instance
-     *
-     * @param ValueStore $class ValueStore instance for storing/retrieving class values
-     *
-     * @return void
-     */
-    public function setClass(ValueStore $class)
-    {
-        $this->class = $class;
-    }
-
-    /**
-     * Modify where setValues, setValue, offsetSet write values
-     * Modify how offsetGet returns
-     *
-     * @param EDIT_x $mode One of the EDIT_x constants
-     *
-     * @return void
-     *
-     * @throws Exception
-     */
-    public function setEditMode($mode = self::EDIT_INSTANCE)
-    {
-        if ($mode === self::EDIT_CLASS && $this->class === null) {
-            throw new Exception(\sprintf('setEditMode(%s) requires that setClass be called first'));
-        }
-        $this->editMode = $mode;
     }
 
     /**
@@ -140,9 +103,7 @@ class ObjectAbstraction extends Abstraction
      */
     public function getClassValues()
     {
-        return $this->class
-            ? $this->class->getValues()
-            : array();
+        return $this->class->getValues();
     }
 
     /**
@@ -152,23 +113,10 @@ class ObjectAbstraction extends Abstraction
      */
     public function getInstanceValues()
     {
-        return $this->values;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function setValues(array $values = array())
-    {
-        if ($this->editMode === self::EDIT_CLASS) {
-            $this->class->setValues($values);
-            return $this;
-        }
-        $values = ArrayUtil::diffAssocRecursive(
-            $values,
+        return ArrayUtil::diffAssocRecursive(
+            $this->values,
             $this->getClassValues()
         );
-        return parent::setValues($values);
     }
 
     /**
@@ -189,33 +137,13 @@ class ObjectAbstraction extends Abstraction
     #[\ReturnTypeWillChange]
     public function &offsetGet($key)
     {
-        if ($this->editMode === self::EDIT_CLASS && $this->class->hasValue($key)) {
-            $val =& $this->class[$key];
-            return $val;
-        }
         $value = $this->getCombinedValue($key);
         if (\in_array($key, $this->sortableValues, true)) {
             $this->sort($value, $this->values['sort']);
         }
-        if ($this->editMode === self::EDIT_INSTANCE) {
-            // update our local and return it as a reference
-            $this->values[$key] = $value;
-            return $this->values[$key];
-        }
-        return $value;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    #[\ReturnTypeWillChange]
-    public function offsetSet($key, $value)
-    {
-        if ($this->editMode === self::EDIT_CLASS) {
-            $this->class[$key] = $value;
-            return;
-        }
-        parent::offsetSet($key, $value);
+        // update our local and return it as a reference
+        $this->values[$key] = $value;
+        return $this->values[$key];
     }
 
     /**
@@ -230,16 +158,10 @@ class ObjectAbstraction extends Abstraction
         $value = isset($this->values[$key])
             ? $this->values[$key]
             : null;
-        $classVal = null;
-        if (
-            \in_array($key, $this->sortableValues, true)
+        $classVal = \in_array($key, $this->sortableValues, true)
             && ($this->values['isRecursion'] || $this->values['isExcluded'])
-        ) {
-            // don't inherit
-            $classVal = array();
-        } elseif (isset($this->class)) {
-            $classVal = $this->class[$key];
-        }
+                ? array() // don't inherit
+                : $this->class[$key];
         if ($value !== null) {
             return \is_array($classVal)
                 ? \array_replace_recursive($classVal, $value)

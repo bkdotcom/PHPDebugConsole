@@ -3,6 +3,7 @@
 namespace bdk\Test\Debug;
 
 use bdk\Debug;
+use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
 use bdk\ErrorHandler\Error;
@@ -42,15 +43,17 @@ class Helper
      *
      * @return mixed
      */
-    public static function crate($val)
+    public static function crate($val, $mergeWithClass = false)
     {
         if ($val instanceof Abstraction) {
-            $val = $val->jsonSerialize();
+            $val = $mergeWithClass
+                ? $val->getValues() + array('debug' => Abstracter::ABSTRACTION)
+                : $val->jsonSerialize();
             \ksort($val);
         }
         if (\is_array($val)) {
             foreach ($val as $k => $v) {
-                $val[$k] = self::crate($v);
+                $val[$k] = self::crate($v, $mergeWithClass);
             }
         }
         return $val;
@@ -65,13 +68,13 @@ class Helper
      *
      * @return array
      */
-    public static function deObjectifyData($data, $withKeys = true, $dropEmptyMeta = false)
+    public static function deObjectifyData($data, $withKeys = true, $dropEmptyMeta = false, $mergeWithClass = false)
     {
         if ($data instanceof LogEntry) {
-            return self::logEntryToArray($data, $withKeys, $dropEmptyMeta);
+            return self::logEntryToArray($data, $withKeys, $dropEmptyMeta, $mergeWithClass);
         }
         if ($data instanceof Abstraction) {
-            return self::crate($data);
+            return self::crate($data, $mergeWithClass);
         }
         if ($data instanceof ValueStore) {
             return $data->getValues();
@@ -80,7 +83,7 @@ class Helper
             return $data;
         }
         foreach ($data as $i => $v) {
-            $data[$i] = self::deObjectifyData($v, $withKeys, $dropEmptyMeta);
+            $data[$i] = self::deObjectifyData($v, $withKeys, $dropEmptyMeta, $mergeWithClass);
         }
         return $data;
     }
@@ -143,7 +146,7 @@ class Helper
      *
      * @return array|null
      */
-    public static function logEntryToArray($logEntry, $withKeys = true, $dropEmptyMeta = false)
+    public static function logEntryToArray($logEntry, $withKeys = true, $dropEmptyMeta = false, $mergeWithClass = false)
     {
         if (\is_array($logEntry) && \array_keys($logEntry) === array('method','args','meta')) {
             return $logEntry;
@@ -152,7 +155,7 @@ class Helper
             return null;
         }
         $return = $logEntry->export();
-        $return['args'] = self::crate($return['args']);
+        $return['args'] = self::crate($return['args'], $mergeWithClass);
         \ksort($return['meta']);
         if ($dropEmptyMeta && empty($return['meta'])) {
             unset($return['meta']);

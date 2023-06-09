@@ -305,7 +305,7 @@ class AbstractObjectProperties extends AbstractObjectInheritable
                 $valuedProps[] = $name;
                 $propInfo = isset($properties[$name])
                     ? $properties[$name]   // defined in class
-                    : $this->buildPropViaRef($abs, $refProperty);
+                    : $this->buildViaRef($abs, $refProperty);
                 if ($abs['isAnonymous'] && $refProperty->isDefault() && $className === $abs['className']) {
                     // Necessary for anonymous classes
                     // $propInfo['declaredLast'] = $className;
@@ -366,7 +366,7 @@ class AbstractObjectProperties extends AbstractObjectInheritable
     private function addViaPhpDoc(Abstraction $abs)
     {
         $declaredLast = $abs['className'];
-        $phpDoc = $this->helper->getPhpDoc($abs['reflector']);
+        $phpDoc = $this->helper->getPhpDoc($abs['reflector'], $abs['fullyQualifyPhpDocType']);
         $haveMagic = \array_intersect_key($phpDoc, $this->magicPhpDocTags);
         if (!$haveMagic && $abs['reflector']->hasMethod('__get')) {
             // phpDoc doesn't contain any @property tags
@@ -391,7 +391,7 @@ class AbstractObjectProperties extends AbstractObjectInheritable
         $declaredLast = $abs['className'];
         $reflector = $abs['reflector'];
         while ($reflector = $reflector->getParentClass()) {
-            $parsed = $this->helper->getPhpDoc($reflector);
+            $parsed = $this->helper->getPhpDoc($reflector, $abs['fullyQualifyPhpDocType']);
             $tagIntersect = \array_intersect_key($parsed, $this->magicPhpDocTags);
             if ($tagIntersect === array()) {
                 continue;
@@ -421,7 +421,7 @@ class AbstractObjectProperties extends AbstractObjectInheritable
         foreach ($tags as $tag => $vis) {
             foreach ($abs['phpDoc'][$tag] as $phpDocProp) {
                 $name = $phpDocProp['name'];
-                $properties[$name] = $this->buildPropViaPhpDoc($abs, $phpDocProp, $declaredLast, $vis);
+                $properties[$name] = $this->buildViaPhpDoc($abs, $phpDocProp, $declaredLast, $vis);
             }
             unset($abs['phpDoc'][$tag]);
         }
@@ -452,7 +452,7 @@ class AbstractObjectProperties extends AbstractObjectInheritable
                 $name = $refProperty->getName();
                 $info = isset($properties[$name])
                     ? $properties[$name]
-                    : $this->buildPropViaRef($abs, $refProperty);
+                    : $this->buildViaRef($abs, $refProperty);
                 $info = $this->updateDeclarationVals($info, $refProperty, $className);
                 $properties[$name] = $info;
             }
@@ -471,7 +471,7 @@ class AbstractObjectProperties extends AbstractObjectInheritable
      *
      * @return array
      */
-    private function buildPropViaPhpDoc(Abstraction $abs, $phpDocProp, $declaredLast, $vis)
+    private function buildViaPhpDoc(Abstraction $abs, $phpDocProp, $declaredLast, $vis)
     {
         $name = $phpDocProp['name'];
         $existing = isset($abs['properties'][$name])
@@ -482,7 +482,7 @@ class AbstractObjectProperties extends AbstractObjectInheritable
             array(
                 'declaredLast' => $declaredLast,
                 'desc' => $phpDocProp['desc'],
-                'type' => $this->helper->resolvePhpDocType($phpDocProp['type'], $abs),
+                'type' => $phpDocProp['type'],
                 'visibility' => $existing
                     ? array($vis, $existing['visibility']) // we want "magic" visibility first
                     : $vis,
@@ -498,27 +498,17 @@ class AbstractObjectProperties extends AbstractObjectInheritable
      *
      * @return array
      */
-    private function buildPropViaRef(Abstraction $abs, ReflectionProperty $refProperty)
+    private function buildViaRef(Abstraction $abs, ReflectionProperty $refProperty)
     {
-        $phpDoc = $this->helper->getPhpDocVar($refProperty); // phpDocVar
+        $phpDoc = $this->helper->getPhpDocVar($refProperty, $abs['fullyQualifyPhpDocType']);
         $refProperty->setAccessible(true); // only accessible via reflection
         /*
             getDeclaringClass returns "LAST-declared/overriden"
         */
-        // $declaringClassName = $this->helper->getClassName($refProperty->getDeclaringClass());
-        // $isDynamic = $refProperty->isDefault() === false;
         return static::buildPropValues(array(
             'attributes' => $abs['cfgFlags'] & AbstractObject::PROP_ATTRIBUTE_COLLECT
                 ? $this->helper->getAttributes($refProperty)
                 : array(),
-            /*
-            'declaredLast' => $isDynamic
-                ? null
-                : $declaringClassName,
-            'declaredOrig' => $isDynamic // we will update this value as we process ancestor classes
-                ? null
-                : $declaringClassName,
-            */
             'desc' => $phpDoc['desc'],
             'isPromoted' =>  PHP_VERSION_ID >= 80000
                 ? $refProperty->isPromoted()
@@ -527,7 +517,7 @@ class AbstractObjectProperties extends AbstractObjectInheritable
                 ? $refProperty->isReadOnly()
                 : false,
             'isStatic' => $refProperty->isStatic(),
-            'type' => $this->getPropType($phpDoc['type'], $refProperty, $abs),
+            'type' => $this->getPropType($phpDoc['type'], $refProperty),
             'visibility' => $this->helper->getVisibility($refProperty),
         ));
     }
@@ -559,15 +549,13 @@ class AbstractObjectProperties extends AbstractObjectInheritable
      *
      * @param string             $phpDocType  Type specified in phpDoc block
      * @param ReflectionProperty $refProperty ReflectionProperty instance
-     * @param Abstraction        $abs         Object Abstraction instance
      *
      * @return string|null
      */
-    private function getPropType($phpDocType, ReflectionProperty $refProperty, Abstraction $abs)
+    private function getPropType($phpDocType, ReflectionProperty $refProperty)
     {
-        $type = $this->helper->resolvePhpDocType($phpDocType, $abs);
-        if ($type !== null) {
-            return $type;
+        if ($phpDocType !== null) {
+            return $phpDocType;
         }
         return PHP_VERSION_ID >= 70400
             ? $this->helper->getTypeString($refProperty->getType())

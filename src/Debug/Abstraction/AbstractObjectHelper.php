@@ -14,7 +14,6 @@ namespace bdk\Debug\Abstraction;
 
 use bdk\Debug\Utility\Php as PhpUtil;
 use bdk\Debug\Utility\PhpDoc;
-use bdk\Debug\Utility\UseStatements;
 use ReflectionAttribute;
 use ReflectionClass;
 use ReflectionNamedType;
@@ -76,32 +75,34 @@ class AbstractObjectHelper
     /**
      * Get parsed PhpDoc
      *
-     * @param Reflector $reflector Reflector instance
+     * @param Reflector $reflector              Reflector instance
+     * @param bool      $fullyQualifyPhpDocType Whether to further parse / resolve types
      *
      * @return array
      */
-    public function getPhpDoc(Reflector $reflector)
+    public function getPhpDoc(Reflector $reflector, $fullyQualifyPhpDocType = false)
     {
-        return $this->phpDoc->getParsed($reflector);
+        return $this->phpDoc->getParsed($reflector, $fullyQualifyPhpDocType);
     }
 
     /**
      * Get type and description from phpDoc comment for Constant or Property
      *
-     * @param Reflector $reflector ReflectionProperty or ReflectionClassConstant property object
+     * @param Reflector $reflector              ReflectionProperty or ReflectionClassConstant property object
+     * @param bool      $fullyQualifyPhpDocType Whether to further parse / resolve types
      *
      * @return array
      */
-    public function getPhpDocVar(Reflector $reflector)
+    public function getPhpDocVar(Reflector $reflector, $fullyQualifyPhpDocType = false)
     {
         /** @psalm-suppress NoInterfaceProperties */
         $name = $reflector->name;
-        $phpDoc = $this->phpDoc->getParsed($reflector);
+        $phpDoc = $this->getPhpDoc($reflector, $fullyQualifyPhpDocType);
         $info = array(
             'desc' => $phpDoc['summary'],
             'type' => null,
         );
-        if (!isset($phpDoc['var'])) {
+        if (isset($phpDoc['var']) === false) {
             return $info;
         }
         /*
@@ -156,75 +157,5 @@ class AbstractObjectHelper
         return $type instanceof ReflectionNamedType
             ? $type->getName()
             : (string) $type;
-    }
-
-    /**
-     * Fully quallify type-hint
-     *
-     * This is only performed if `fullyQualifyPhpDocType` = true
-     *
-     * @param string|null $type Type-hint string from phpDoc (may be or'd with '|')
-     * @param Abstraction $abs  Abstraction instance
-     *
-     * @return string|null
-     */
-    public function resolvePhpDocType($type, Abstraction $abs)
-    {
-        if (!$type || !$abs['fullyQualifyPhpDocType']) {
-            return $type;
-        }
-        if (\preg_match('/array[<([{]/', $type)) {
-            // type contains "complex" array type... don't deal with parsing
-            return $type;
-        }
-        $types = \preg_split('#\s*\|\s*#', $type);
-        foreach ($types as $i => $type) {
-            if (\strpos($type, '\\') === 0) {
-                $types[$i] = \substr($type, 1);
-                continue;
-            }
-            $isArray = false;
-            if (\substr($type, -2) === '[]') {
-                $isArray = true;
-                $type = \substr($type, 0, -2);
-            }
-            if (\in_array($type, $this->phpDoc->types, true)) {
-                continue;
-            }
-            $type = $this->resolvePhpDocTypeClass($type, $abs);
-            if ($isArray) {
-                $type .= '[]';
-            }
-            $types[$i] = $type;
-        }
-        return \implode('|', $types);
-    }
-
-    /**
-     * Check type-hint in use statements, and whether relative or absolute
-     *
-     * @param string      $type Type-hint string
-     * @param Abstraction $abs  Abstraction instance
-     *
-     * @return string
-     */
-    private function resolvePhpDocTypeClass($type, Abstraction $abs)
-    {
-        $first = \substr($type, 0, \strpos($type, '\\') ?: 0) ?: $type;
-        $useStatements = UseStatements::getUseStatements($abs['reflector'])['class'];
-        if (isset($useStatements[$first])) {
-            return $useStatements[$first] . \substr($type, \strlen($first));
-        }
-        $namespace = \substr($abs['className'], 0, \strrpos($abs['className'], '\\') ?: 0);
-        if (!$namespace) {
-            return $type;
-        }
-        /*
-            Truly relative?  Or, does PhpDoc omit '\' ?
-            Not 100% accurate, but check if assumed namespace'd class exists
-        */
-        return \class_exists($namespace . '\\' . $type)
-            ? $namespace . '\\' . $type
-            : $type;
     }
 }

@@ -209,7 +209,7 @@ class AbstractObjectMethods extends AbstractObjectInheritable
     private function addViaPhpDoc(Abstraction $abs)
     {
         $declaredLast = $abs['className'];
-        $phpDoc = $this->helper->getPhpDoc($abs['reflector']);
+        $phpDoc = $this->helper->getPhpDoc($abs['reflector'], $abs['fullyQualifyPhpDocType']);
         if (
             empty($phpDoc['method'])
             && \array_intersect_key($abs['methods'], \array_flip(array('__call', '__callStatic')))
@@ -240,7 +240,7 @@ class AbstractObjectMethods extends AbstractObjectInheritable
         $phpDoc = array();
         $reflector = $abs['reflector'];
         while ($reflector = $reflector->getParentClass()) {
-            $phpDoc = $this->helper->getPhpDoc($reflector);
+            $phpDoc = $this->helper->getPhpDoc($reflector, $abs['fullyQualifyPhpDocType']);
             if (isset($phpDoc['method'])) {
                 $declaredLast = $reflector->getName();
                 break;
@@ -287,27 +287,27 @@ class AbstractObjectMethods extends AbstractObjectInheritable
      * Build magic method info
      *
      * @param Abstraction $abs          Object Abstraction instance
-     * @param array       $phpDocMethod parsed phpdoc method info
+     * @param array       $phpDoc       parsed phpdoc method info
      * @param string      $declaredLast class-name or null
      *
      * @return array
      */
-    private function buildMethodPhpDoc(Abstraction $abs, $phpDocMethod, $declaredLast)
+    private function buildMethodPhpDoc(Abstraction $abs, $phpDoc, $declaredLast)
     {
         $className = $declaredLast
             ? $declaredLast
             : $abs['className'];
         return $this->buildMethodValues(array(
             'declaredLast' => $declaredLast,
-            'isStatic' => $phpDocMethod['static'],
-            'params' => $this->params->getParamsPhpDoc($abs, $phpDocMethod, $className),
+            'isStatic' => $phpDoc['static'],
+            'params' => $this->params->getParamsPhpDoc($abs, $phpDoc, $className),
             'phpDoc' => array(
                 'desc' => null,
-                'summary' => $phpDocMethod['desc'],
+                'summary' => $phpDoc['desc'],
             ),
             'return' => array(
                 'desc' => null,
-                'type' => $this->helper->resolvePhpDocType($phpDocMethod['type'], $abs),
+                'type' => $phpDoc['type'],
             ),
             'visibility' => 'magic',
         ));
@@ -323,7 +323,7 @@ class AbstractObjectMethods extends AbstractObjectInheritable
      */
     private function buildMethodRef(Abstraction $abs, ReflectionMethod $refMethod)
     {
-        $phpDoc = $this->helper->getPhpDoc($refMethod);
+        $phpDoc = $this->helper->getPhpDoc($refMethod, $abs['fullyQualifyPhpDocType']);
         return $this->buildMethodValues(array(
             'attributes' => $abs['cfgFlags'] & AbstractObject::METHOD_ATTRIBUTE_COLLECT
                 ? $this->helper->getAttributes($refMethod)
@@ -334,7 +334,7 @@ class AbstractObjectMethods extends AbstractObjectInheritable
             'isStatic' => $refMethod->isStatic(),
             'params' => $this->params->getParams($abs, $refMethod, $phpDoc),
             'phpDoc' => $phpDoc,
-            'return' => $this->getReturn($abs, $refMethod, $phpDoc),
+            'return' => $this->getReturn($refMethod, $phpDoc),
             'visibility' => $this->helper->getVisibility($refMethod),
         ));
     }
@@ -342,21 +342,19 @@ class AbstractObjectMethods extends AbstractObjectInheritable
     /**
      * Get return type & desc
      *
-     * @param Abstraction      $abs       Object Abstraction instance
      * @param ReflectionMethod $refMethod ReflectionMethod
      * @param array            $phpDoc    parsed phpDoc param info
      *
      * @return array
      */
-    private function getReturn(Abstraction $abs, ReflectionMethod $refMethod, $phpDoc)
+    private function getReturn(ReflectionMethod $refMethod, array $phpDoc)
     {
         $return = array(
             'desc' => null,
             'type' => null,
         );
-        if (!empty($phpDoc['return'])) {
+        if (isset($phpDoc['return']['type'])) {
             $return = \array_merge($return, $phpDoc['return']);
-            $return['type'] = $this->helper->resolvePhpDocType($return['type'], $abs);
         } elseif (PHP_VERSION_ID >= 70000) {
             $return['type'] = $this->helper->getTypeString($refMethod->getReturnType());
         }

@@ -14,6 +14,7 @@ use bdk\Test\PolyFill\AssertionTrait;
  * Test SerializeLog
  *
  * @covers \bdk\Debug\Abstraction\AbstractObject
+ * @covers \bdk\Debug\Abstraction\ObjectAbstraction
  * @covers \bdk\Debug\Plugin\Channel
  * @covers \bdk\Debug\Utility\SerializeLog
  *

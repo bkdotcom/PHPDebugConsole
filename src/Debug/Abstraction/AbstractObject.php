@@ -18,8 +18,10 @@ use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\AbstractObjectHelper;
 use bdk\Debug\Abstraction\AbstractObjectProperties;
 use bdk\Debug\Abstraction\ObjectAbstraction;
+use bdk\Debug\Utility\Reflection;
 use ReflectionClass;
 use ReflectionEnum;
+use ReflectionEnumUnitCase;
 use RuntimeException;
 use UnitEnum;
 
@@ -192,7 +194,10 @@ class AbstractObject extends AbstractComponent
      */
     public function getAbstraction($obj, $method = null, array $hist = array())
     {
-        $reflector = $this->debug->php->getReflector($obj);
+        $reflector = Reflection::getReflector($obj);
+        if ($reflector instanceof ReflectionEnumUnitCase) {
+            $reflector = $reflector->getEnum();
+        }
         $values = $this->getAbstractionValues($reflector, $obj, $method, $hist);
         $classValueStore = $this->class->getValueStore($obj, $values);
         $abs = new ObjectAbstraction($classValueStore, $values);
@@ -256,7 +261,7 @@ class AbstractObject extends AbstractComponent
         if (!($reflector instanceof ReflectionEnum)) {
             return;
         }
-        $name = $reflector->getProperty('name')->getValue($abs->getSubject());
+        $name = $abs->getSubject()->name;
         $caseReflector = $reflector->getCase($name);
         $desc = $this->helper->getPhpDocVar($caseReflector)['desc'];
         if ($desc) {

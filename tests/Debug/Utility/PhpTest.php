@@ -38,37 +38,6 @@ class PhpTest extends TestCase
         self::assertArraySubset($filesA, $filesB);
     }
 
-    public function testGetReflector()
-    {
-        self::assertNull(Php::getReflector(123));
-
-        self::assertNull(Php::getReflector('food()'));
-
-        $strClassname = 'bdk\Test\Debug\Fixture\TestObj';
-        self::assertInstanceOf('ReflectionClass', Php::getReflector($strClassname));
-
-        $str = '\bdk\Test\Debug\Fixture\TestObj::$someArray';
-        self::assertInstanceOf('ReflectionProperty', Php::getReflector($str));
-
-        $str = '\bdk\Test\Debug\Fixture\TestObj::methodPublic()';
-        self::assertInstanceOf('ReflectionMethod', Php::getReflector($str));
-
-        if (PHP_VERSION_ID < 70100) {
-            return;
-        }
-
-        $str = '\bdk\Test\Debug\Fixture\TestObj::MY_CONSTANT';
-        self::assertInstanceOf('ReflectionClassConstant', Php::getReflector($str));
-
-        if (PHP_VERSION_ID < 80100) {
-            return;
-        }
-        self::assertInstanceOf('ReflectionEnum', Php::getReflector(\bdk\Test\Debug\Fixture\Enum\MealsBacked::DINNER));
-
-        $str = '\bdk\Test\Debug\Fixture\Enum\MealsBacked::DINNER';
-        self::assertInstanceOf('ReflectionEnumBackedCase', Php::getReflector($str));
-    }
-
     /**
      * @dataProvider providerIsCallable
      */

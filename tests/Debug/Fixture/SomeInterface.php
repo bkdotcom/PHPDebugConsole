@@ -2,6 +2,8 @@
 
 namespace bdk\Test\Debug\Fixture;
 
+use foo\bar\baz;
+
 /**
  * Implement me!
  *
@@ -19,11 +21,37 @@ namespace bdk\Test\Debug\Fixture;
 interface SomeInterface
 {
     /**
+     * Interface summary
+     */
+    const SOME_CONSTANT = 'dingle';
+
+    /**
      * SomeInterface summary
      *
-     * SomeInterface description
+     * Tests that self resolves to fully qualified SomeInterface
      *
      * @return self
      */
     public function someMethod();
+
+    /**
+     * SomeInterface summary
+     *
+     * @return InterfaceReturn
+     */
+    public function someMethod2();
+
+    /**
+     * Test that baz resolves to foo\bar\baz
+     *
+     * @return baz
+     */
+    public function someMethod4();
+
+    /**
+     * Test that TestObj resolves to bdk\Test\Debug\Fixture\TestObj
+     *
+     * @return TestObj
+     */
+    public function someMethod5();
 }

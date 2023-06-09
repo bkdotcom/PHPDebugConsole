@@ -12,11 +12,8 @@
 
 namespace bdk\Debug\Utility;
 
-use bdk\Debug\Utility\Php;
-use ReflectionClass;
-use ReflectionClassConstant;
-use ReflectionMethod;
-use ReflectionProperty;
+use bdk\Debug\Utility\Reflection;
+use bdk\Debug\Utility\UseStatements;
 use Reflector;
 
 /**
@@ -24,19 +21,25 @@ use Reflector;
  */
 class PhpDocBase
 {
+    const FULLY_QUALIFY = 1;
+    const FULLY_QUALIFY_AUTOLOAD = 2;
+
     /** @var Reflector */
     protected $reflector;
+
+    protected $className = null;
+    protected $fullyQualifyType = 0;
 
     /**
      * Get comment contents
      *
-     * @param Reflector|object|string $what Object, Reflector, or doc-block string or
+     * @param Reflector|object|string $what Object, Reflector, className, or doc-block string
      *
      * @return string
      */
     protected function getComment($what)
     {
-        $this->reflector = Php::getReflector($what, true);
+        $this->reflector = Reflection::getReflector($what, true);
         $docComment = $this->reflector
             ? \is_callable(array($this->reflector, 'getDocComment'))
                 ? $this->reflector->getDocComment()
@@ -54,7 +57,7 @@ class PhpDocBase
      *
      * Generate an identifier for what we're parsing
      *
-     * @param mixed $what Object or Reflector
+     * @param mixed $what classname, object, or Reflector
      *
      * @return string|null
      */
@@ -64,32 +67,10 @@ class PhpDocBase
             return \md5($what);
         }
         if ($what instanceof Reflector) {
-            return self::getHashFromReflector($what);
+            return Reflection::hash($what);
         }
         $str = \is_object($what) ? \get_class($what) : \gettype($what);
         return \md5($str);
-    }
-
-    /**
-     * Find "parent" phpDoc
-     *
-     * @param Reflector $reflector Reflector interface
-     *
-     * @return Reflector|null
-     */
-    protected function getParentReflector(Reflector $reflector)
-    {
-        if ($reflector instanceof ReflectionMethod) {
-            return $this->getParentReflectorMpc($reflector, 'method');
-        }
-        if ($reflector instanceof ReflectionProperty) {
-            return $this->getParentReflectorMpc($reflector, 'property');
-        }
-        if ($reflector instanceof ReflectionClassConstant) {
-            return $this->getParentReflectorMpc($reflector, 'constant');
-        }
-        // ReflectionClass  (incl ReflectionObject & ReflectionEnum)
-        return $this->getParentReflectorC($reflector);
     }
 
     /**
@@ -132,109 +113,48 @@ class PhpDocBase
         if (\in_array($type, array('', null), true)) {
             return null;
         }
-        return \preg_replace_callback('/\b(boolean|integer|self)\b/', function ($matches) {
-            switch ($matches[1]) {
-                case 'boolean':
-                    return 'bool';
-                case 'integer':
-                    return 'int';
-                case 'self':
-                    return $this->reflector
-                        ? $this->getReflectorsClassname($this->reflector)
-                        : 'self';
-            }
-        }, $type);
+        if (\preg_match('/array[<([{]/', $type)) {
+            // type contains "complex" array type... don't deal with parsing
+            return $type;
+        }
+        $types = \preg_split('#\s*\|\s*#', $type);
+        foreach ($types as $i => $type) {
+            $types[$i] = $this->typeNormalizeSingle($type);
+        }
+        return \implode('|', $types);
     }
 
     /**
-     * Hash reflector name
+     * Normalize individual part of type
      *
-     * @param Reflector $reflector Reflector instance
+     * @param string $type type hint
      *
      * @return string
      */
-    private static function getHashFromReflector(Reflector $reflector)
+    private function typeNormalizeSingle($type)
     {
-        $str = '';
-        $name = $reflector->getName();
-        if (\method_exists($reflector, 'getDeclaringClass')) {
-            $str .= $reflector->getDeclaringClass()->getName() . '::';
+        if (\strpos($type, '\\') === 0) {
+            return \substr($type, 1);
         }
-        if ($reflector instanceof ReflectionClass) {
-            $str = $name;
-        } elseif ($reflector instanceof ReflectionMethod) {
-            $str .= $name .= '()';
-        } elseif ($reflector instanceof ReflectionProperty) {
-            $str .= '$' . $name;
-        } elseif ($reflector instanceof ReflectionClassConstant) {
-            $str .= $name;
+        $isArray = false;
+        if (\substr($type, -2) === '[]') {
+            $isArray = true;
+            $type = \substr($type, 0, -2);
         }
-        return \md5($str);
-    }
-
-    /**
-     * Find parent class reflector or first interface
-     *
-     * @param ReflectionClass $reflector ReflectionClass instance
-     *
-     * @return ReflectionClass|null
-     */
-    private function getParentReflectorC(ReflectionClass $reflector)
-    {
-        $parentReflector = $reflector->getParentClass();
-        if ($parentReflector) {
-            return $parentReflector;
+        $translate = array(
+            'boolean' => 'bool',
+            'integer' => 'int',
+            'self' => $this->className,
+        );
+        if (isset($translate[$type])) {
+            $type = $translate[$type];
+        } elseif ($this->fullyQualifyType && \in_array($type, $this->types, true) === false) {
+            $type = $this->resolvePhpDocTypeClass($type);
         }
-        $interfaces = $reflector->getInterfaceNames();
-        foreach ($interfaces as $className) {
-            return new ReflectionClass($className);
+        if ($isArray) {
+            $type .= '[]';
         }
-        return null;
-    }
-
-    /**
-     * Find method/property phpDoc in parent classes / interfaces
-     *
-     * @param Reflector $reflector Reflector interface
-     * @param string    $what      'method' or 'property', or 'constant'
-     *
-     * @return Reflector|null
-     */
-    private function getParentReflectorMpc(Reflector $reflector, $what)
-    {
-        $hasWhat = 'has' . \ucfirst($what);
-        $getWhat = 'get' . \ucfirst($what);
-        if ($what === 'constant') {
-            $getWhat = 'getReflectionConstant';  // php 7.1
-        }
-        $name = $reflector->getName();
-        $reflectionClass = $reflector->getDeclaringClass();
-        $interfaces = $reflectionClass->getInterfaceNames();
-        foreach ($interfaces as $className) {
-            $reflectionInterface = new ReflectionClass($className);
-            if ($reflectionInterface->{$hasWhat}($name)) {
-                return $reflectionInterface->{$getWhat}($name);
-            }
-        }
-        $parentClass = $reflectionClass->getParentClass();
-        if ($parentClass && $parentClass->{$hasWhat}($name)) {
-            return $parentClass->{$getWhat}($name);
-        }
-        return null;
-    }
-
-    /**
-     * Get the current classname
-     *
-     * @param Reflector $reflector Reflector instance
-     *
-     * @return string
-     */
-    private function getReflectorsClassname(Reflector $reflector)
-    {
-        return \method_exists($reflector, 'getDeclaringClass')
-            ? $reflector->getDeclaringClass()->getName()
-            : $reflector->getName();
+        return $type;
     }
 
     /**
@@ -271,5 +191,35 @@ class PhpDocBase
         }
         $params[] = \trim(\substr($paramStr, $startPos, $pos + 1 - $startPos));
         return $params;
+    }
+
+    /**
+     * Check type-hint in use statements, and whether relative or absolute
+     *
+     * @param string $type Type-hint
+     *
+     * @return string
+     */
+    private function resolvePhpDocTypeClass($type)
+    {
+        $first = \substr($type, 0, \strpos($type, '\\') ?: 0) ?: $type;
+        $className = $this->className;
+        $classReflector = Reflection::getReflector($className, true);
+        $useStatements = UseStatements::getUseStatements($classReflector)['class'];
+        if (isset($useStatements[$first])) {
+            return $useStatements[$first] . \substr($type, \strlen($first));
+        }
+        $namespace = \substr($className, 0, \strrpos($className, '\\') ?: 0);
+        if (!$namespace) {
+            return $type;
+        }
+        /*
+            Truly relative?  Or, does PhpDoc omit '\' ?
+            Not 100% accurate, but check if assumed namespace'd class exists
+        */
+        $autoload = $this->fullyQualifyType & self::FULLY_QUALIFY_AUTOLOAD === self::FULLY_QUALIFY_AUTOLOAD;
+        return \class_exists($namespace . '\\' . $type, $autoload)
+            ? $namespace . '\\' . $type
+            : $type;
     }
 }

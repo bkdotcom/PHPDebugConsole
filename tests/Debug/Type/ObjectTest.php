@@ -19,6 +19,7 @@ use bdk\Test\Debug\Fixture\TestObj;
  * @covers \bdk\Debug\Abstraction\AbstractObjectClass
  * @covers \bdk\Debug\Abstraction\AbstractObjectConstants
  * @covers \bdk\Debug\Abstraction\AbstractObjectHelper
+ * @covers \bdk\Debug\Abstraction\AbstractObjectInheritable
  * @covers \bdk\Debug\Abstraction\AbstractObjectMethodParams
  * @covers \bdk\Debug\Abstraction\AbstractObjectMethods
  * @covers \bdk\Debug\Abstraction\AbstractObjectProperties
@@ -460,10 +461,8 @@ EOD;
                             . '<dt class="methods">methods</dt>' . "\n"
                             . '<dd class="method overrides public" data-declared-prev="bdk\Test\Debug\Fixture\Utility\PhpDocImplements"><span class="t_modifier_public">public</span> <span class="t_identifier" title="SomeInterface summary' . "\n"
                             . '' . "\n"
-                            . 'SomeInterface description">someMethod</span><span class="t_punct">(</span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>SomeInterface</span></span></dd>' . "\n"
-                            . '<dd class="method overrides public" data-declared-prev="bdk\Test\Debug\Fixture\Utility\PhpDocImplements"><span class="t_modifier_public">public</span> <span class="t_identifier" title="PhpDocImplements summary' . "\n"
-                            . '' . "\n"
-                            . 'PhpDocImplements desc">someMethod2</span><span class="t_punct">(</span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span></dd>' . "\n"
+                            . 'Tests that self resolves to fully qualified SomeInterface">someMethod</span><span class="t_punct">(</span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>SomeInterface</span></span></dd>' . "\n"
+                            . '<dd class="method overrides public" data-declared-prev="bdk\Test\Debug\Fixture\Utility\PhpDocImplements"><span class="t_modifier_public">public</span> <span class="t_identifier" title="SomeInterface summary">someMethod2</span><span class="t_punct">(</span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span></dd>' . "\n"
                             . '<dd class="method overrides public" data-declared-prev="bdk\Test\Debug\Fixture\Utility\PhpDocImplements"><span class="t_modifier_public">public</span> <span class="t_identifier" title="PhpDocExtends summary' . "\n"
                             . '' . "\n"
                             . 'PhpDocExtends desc / PhpDocImplements desc">someMethod3</span><span class="t_punct">(</span><span class="t_punct">)</span></dd>';

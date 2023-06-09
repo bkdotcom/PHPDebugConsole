@@ -4,6 +4,7 @@ namespace bdk\Test\Debug\Utility;
 
 use bdk\Debug;
 use bdk\Debug\Utility\PhpDoc;
+use bdk\Debug\Utility\Reflection;
 use bdk\Test\Debug\Helper;
 use bdk\Test\PolyFill\AssertionTrait;
 use PHPUnit\Framework\TestCase;
@@ -20,9 +21,6 @@ class PhpDocTest extends TestCase
 
     public static function setUpBeforeClass(): void
     {
-        // $reflector = new \ReflectionProperty('bdk\Debug\Utility\PhpDoc', 'cache');
-        // $reflector->setAccessible(true);
-        // $reflector->setValue(array());
         Helper::setProp('bdk\Debug\Utility\PhpDoc', 'cache', array());
     }
 
@@ -37,7 +35,6 @@ class PhpDocTest extends TestCase
     public function testGetParsedObject()
     {
         $obj = new \bdk\Test\Debug\Fixture\Utility\PhpDocImplements();
-        $parsed = Debug::getInstance()->phpDoc->getParsed($obj);
         $expectJson = <<<'EOD'
         {
             "author": [
@@ -134,10 +131,12 @@ class PhpDocTest extends TestCase
             ]
         }
 EOD;
+
+        $parsed = Debug::getInstance()->phpDoc->getParsed($obj);
         self::assertSame(\json_decode($expectJson, true), $parsed);
 
         $parsed = Debug::getInstance()->phpDoc->getParsed('\bdk\Test\Debug\Fixture\Utility\PhpDocImplements');
-        self::assertSame(\json_decode($expectJson, true), $parsed);
+        self::assertSame(\json_decode($expectJson, true), $parsed, true);
 
         $parsed = Debug::getInstance()->phpDoc->getParsed('\bdk\Test\Debug\Fixture\Utility\PhpDocExtends');
         self::assertSame(\json_decode($expectJson, true), $parsed);
@@ -149,45 +148,85 @@ EOD;
         ), $parsed);
     }
 
-    public function testGetParsedMethod()
+    public static function providerMethod()
     {
-        $parsed = Debug::getInstance()->phpDoc->getParsed('\bdk\Test\Debug\Fixture\Utility\PhpDocImplements::someMethod()');
-        self::assertSame(array(
-            'desc' => 'SomeInterface description',
-            'return' => array(
-                'desc' => null,
-                'type' => 'bdk\Test\Debug\Fixture\SomeInterface',
+        return array(
+            'someMethod' => array(
+                '\bdk\Test\Debug\Fixture\Utility\PhpDocImplements::someMethod()',
+                array(
+                    'desc' => 'Tests that self resolves to fully qualified SomeInterface',
+                    'return' => array(
+                        'desc' => null,
+                        'type' => 'bdk\Test\Debug\Fixture\SomeInterface',
+                    ),
+                    'summary' => 'SomeInterface summary',
+                ),
             ),
-            'summary' => 'SomeInterface summary',
-        ), $parsed);
-
-        $parsed = Debug::getInstance()->phpDoc->getParsed('\bdk\Test\Debug\Fixture\Utility\PhpDocExtends::someMethod2()');
-        self::assertSame(array(
-            'desc' => 'PhpDocImplements desc',
-            'return' => array(
-                'desc' => null,
-                'type' => 'void',
+            'someMethod2' => array(
+                '\bdk\Test\Debug\Fixture\Utility\PhpDocImplements::someMethod2()',
+                array(
+                    'desc' => null,
+                    'return' => array(
+                        'desc' => null,
+                        'type' => 'Ding\\Dang',
+                    ),
+                    'summary' => 'SomeInterface summary',
+                ),
             ),
-            'summary' => 'PhpDocImplements summary',
-        ), $parsed);
-
-        $parsed = Debug::getInstance()->phpDoc->getParsed('\bdk\Test\Debug\Fixture\Utility\PhpDocExtends::someMethod3()');
-        self::assertSame(array(
-            'desc' => 'PhpDocExtends desc / PhpDocImplements desc',
-            'summary' => 'PhpDocExtends summary',
-            /*
-            'return' => array(
-                'type' => 'void',
-                'desc' => null,
+            'someMethod3' => array(
+                '\bdk\Test\Debug\Fixture\Utility\PhpDocExtends::someMethod3()',
+                array(
+                    'desc' => 'PhpDocExtends desc / PhpDocImplements desc',
+                    'return' => array(
+                        'desc' => null,
+                        'type' => null,
+                    ),
+                    'summary' => 'PhpDocExtends summary',
+                ),
             ),
-            */
-        ), $parsed);
+            'someMethod4' => array(
+                '\bdk\Test\Debug\Fixture\Utility\PhpDocExtends::someMethod4()',
+                array(
+                    'desc' => null,
+                    'return' => array(
+                        'desc' => null,
+                        'type' => 'foo\\bar\\baz',
+                    ),
+                    'summary' => 'Test that baz resolves to foo\bar\baz',
+                ),
+            ),
+            'someMethod5' => array(
+                '\bdk\Test\Debug\Fixture\Utility\PhpDocExtends::someMethod5()',
+                array(
+                    'desc' => null,
+                    'return' => array(
+                        'desc' => null,
+                        'type' => 'bdk\\Test\\Debug\\Fixture\\TestObj',
+                    ),
+                    'summary' => 'Test that TestObj resolves to bdk\Test\Debug\Fixture\TestObj',
+                ),
+            ),
+            'noParent' => array(
+                '\bdk\Test\Debug\Fixture\Utility\PhpDocNoParent::someMethod()',
+                array(
+                    'desc' => null,
+                    'return' => array(
+                        'desc' => null,
+                        'type' => null,
+                    ),
+                    'summary' => null,
+                ),
+            ),
+        );
+    }
 
-        $parsed = Debug::getInstance()->phpDoc->getParsed('\bdk\Test\Debug\Fixture\Utility\PhpDocNoParent::someMethod()');
-        self::assertSame(array(
-            'desc' => null,
-            'summary' => null,
-        ), $parsed);
+    /**
+     * @dataProvider providerMethod
+     */
+    public function testGetParsedMethod($what, $expect)
+    {
+        $parsed = Debug::getInstance()->phpDoc->getParsed($what, PhpDoc::FULLY_QUALIFY | PhpDoc::FULLY_QUALIFY_AUTOLOAD);
+        self::assertSame($expect, $parsed);
     }
 
     public function testGetParsedProperty()
@@ -224,39 +263,21 @@ EOD;
         if (PHP_VERSION_ID < 70100) {
             self::markTestSkipped('ReflectionConstant is PHP >= 7.1');
         }
-        $reflector = new \ReflectionClassConstant('\bdk\Test\Debug\Fixture\Utility\PhpDocExtends', 'SOME_CONSTANT');
+        $reflector = Reflection::getReflector('bdk\Test\Debug\Fixture\Utility\PhpDocExtends::SOME_CONSTANT');
         $parsed = Debug::getInstance()->phpDoc->getParsed($reflector);
         self::assertSame(array(
             'desc' => null,
             'summary' => 'PhpDocImplements summary',
-            /*
-            'var' => array(
-                array(
-                    'type' => 'string',
-                    'name' => 'SOME_CONSTANT',
-                    'desc' => 'constant description',
-                ),
-            ),
-            */
         ), $parsed);
 
         $parsed = Debug::getInstance()->phpDoc->getParsed('\bdk\Test\Debug\Fixture\Utility\PhpDocExtends::SOME_CONSTANT');
         self::assertSame(array(
             'desc' => null,
             'summary' => 'PhpDocImplements summary',
-            /*
-            'var' => array(
-                array(
-                    'type' => 'string',
-                    'name' => 'SOME_CONSTANT',
-                    'desc' => 'constant description',
-                ),
-            ),
-            */
         ), $parsed);
     }
 
-    public static function providerComments()
+    public static function providerStrings()
     {
         return array(
             'basic' => array(
@@ -306,6 +327,10 @@ EOD;
                             'type' => 'string',
                         ),
                     ),
+                    'return' => array(
+                        'desc' => null,
+                        'type' => null,
+                    ),
                     'summary' => null,
                 ),
             ),
@@ -321,6 +346,10 @@ EOD;
                             'name' => null,
                             'type' => 'string',
                         ),
+                    ),
+                    'return' => array(
+                        'desc' => null,
+                        'type' => null,
                     ),
                     'summary' => null,
                 ),
@@ -384,7 +413,7 @@ EOD;
      * @param string $comment
      * @param array  $expect
      *
-     * @dataProvider providerComments
+     * @dataProvider providerStrings
      */
     public function testStrings($comment, $expect)
     {

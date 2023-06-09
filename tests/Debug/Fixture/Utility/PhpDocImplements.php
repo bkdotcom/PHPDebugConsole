@@ -29,9 +29,9 @@ class PhpDocImplements implements SomeInterface
     }
 
     /**
-     * PhpDocImplements summary
+     * {@inheritDoc}
      *
-     * PhpDocImplements desc
+     * @return \Ding\Dang
      */
     public function someMethod2()
     {
@@ -43,6 +43,20 @@ class PhpDocImplements implements SomeInterface
      * PhpDocImplements desc
      */
     public function someMethod3()
+    {
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function someMethod4()
+    {
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function someMethod5()
     {
     }
 }

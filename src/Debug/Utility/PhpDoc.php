@@ -12,6 +12,9 @@
 
 namespace bdk\Debug\Utility;
 
+use bdk\Debug\Utility\Reflection;
+use ReflectionMethod;
+
 /**
  * Get and parse phpDoc block
  */
@@ -42,19 +45,26 @@ class PhpDoc extends PhpDocBase
     /**
      * Rudimentary doc-block parsing
      *
-     * @param string|object|Reflector $what doc-block string, object, or Reflector instance
+     * @param string|object|Reflector $what             doc-block string, object, or Reflector instance
+     * @param int                     $fullyQualifyType Whether to further parse / resolve types
      *
      * @return array
      */
-    public function getParsed($what)
+    public function getParsed($what, $fullyQualifyType = 0)
     {
+        $this->fullyQualifyType = $fullyQualifyType;
         $hash = $this->getHash($what);
         if (isset(self::$cache[$hash])) {
             return self::$cache[$hash];
         }
         $comment = $this->getComment($what);
+        $this->className = $this->reflector
+            ? Reflection::classname($this->reflector)
+            : null;
         $parsed = $this->parseComment($comment);
-        $parsed = $this->replaceInheritDoc($parsed, $comment);
+        $parsed = \array_merge($this->parseGetDefaults($parsed), $parsed);
+        $parsed = \array_merge($parsed, $this->replaceInheritDoc($parsed, $comment));
+        \ksort($parsed);
         self::$cache[$hash] = $parsed;
         return $parsed;
     }
@@ -96,8 +106,8 @@ class PhpDoc extends PhpDocBase
      */
     private function getParentParsed()
     {
-        $parentReflector = $this->getParentReflector($this->reflector);
-        return $this->getParsed($parentReflector);
+        $parentReflector = Reflection::getParentReflector($this->reflector);
+        return $this->getParsed($parentReflector, $this->fullyQualifyType);
     }
 
     /**
@@ -130,22 +140,53 @@ class PhpDoc extends PhpDocBase
      */
     private function parseComment($comment)
     {
-        $parsed = array(
-            'desc' => null,
-            'summary' => null,
-        );
         $elementName = $this->reflector ? $this->reflector->getName() : null;
         $matches = array();
+        $parsedTags = array();
         if (\preg_match('/^@/m', $comment, $matches, PREG_OFFSET_CAPTURE)) {
             // we have tags
             $pos = $matches[0][1];
             $strTags = \substr($comment, $pos);
-            $parsed = \array_merge($parsed, $this->parseTags($strTags, $elementName));
+            $parsedTags = $this->parseTags($strTags, $elementName);
             // remove tags from comment
             $comment = $pos > 0
                 ? \substr($comment, 0, $pos - 1)
                 : '';
         }
+        return \array_merge($parsedTags, $this->parseDescSummary($comment));
+    }
+
+    /**
+     * Get default values
+     *
+     * @param array $parsedTags Parsed tags
+     *
+     * @return array
+     */
+    private function parseGetDefaults(array $parsedTags)
+    {
+        $default = array(
+            'desc' => null,
+            'summary' => null,
+        );
+        if ($this->reflector instanceof ReflectionMethod || !empty($parsedTags['param'])) {
+            $default['return'] = array(
+                'desc' => null,
+                'type' => null,
+            );
+        }
+        return $default;
+    }
+
+    /**
+     * Split description and summary
+     *
+     * @param string $comment Beginning of doc comment
+     *
+     * @return array desc and/or summary (or empty array)
+     */
+    private function parseDescSummary($comment)
+    {
         /*
             Do some string replacement
         */
@@ -158,12 +199,10 @@ class PhpDoc extends PhpDocBase
         $split = \preg_split('/(\.[\r\n]+|[\r\n]{2})/', $comment, 2, PREG_SPLIT_DELIM_CAPTURE);
         $split = \array_replace(array('', '', ''), $split);
         // assume that summary and desc won't be "0"..  remove empty value and merge
-        $parsed = \array_merge($parsed, \array_filter(array(
+        return \array_filter(array(
             'desc' => $this->trimDesc(\trim($split[2])),
             'summary' => \trim($split[0] . $split[1]),    // split[1] is the ".\n"
-        )));
-        \ksort($parsed);
-        return $parsed;
+        ));
     }
 
     /**

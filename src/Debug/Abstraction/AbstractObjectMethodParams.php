@@ -100,7 +100,7 @@ class AbstractObjectMethodParams
                 'desc' => $phpDocParam['desc'],
                 'isOptional' => true,
                 'name' => $name,
-                'type' => $this->helper->resolvePhpDocType($phpDocParam['type'], $this->abs),
+                'type' => $phpDocParam['type'],
             ));
         }
         return $params;
@@ -122,7 +122,7 @@ class AbstractObjectMethodParams
             return $this->buildParamValues(array(
                 'defaultValue' => $this->phpDocParamValue($phpDocParam, $className),
                 'name' => $phpDocParam['name'],
-                'type' => $this->helper->resolvePhpDocType($phpDocParam['type'], $this->abs),
+                'type' => $phpDocParam['type'],
             ));
         }, $parsedMethodTag['param']);
     }
@@ -226,7 +226,7 @@ class AbstractObjectMethodParams
      * Get param typehint
      *
      * @param ReflectionParameter $refParameter reflectionParameter
-     * @param string|null         $phpDocType   type via phpDoc
+     * @param string|null         $phpDocType   param's phpdoc type
      *
      * @return string|null
      */
@@ -234,7 +234,7 @@ class AbstractObjectMethodParams
     {
         $matches = array();
         if ($phpDocType !== null) {
-            return $this->helper->resolvePhpDocType($phpDocType, $this->abs);
+            return $phpDocType;
         }
         if (PHP_VERSION_ID >= 70000) {
             return $this->helper->getTypeString($refParameter->getType());

@@ -207,12 +207,12 @@ class AbstractObjectClass
                 'className' => $reflector->getName(),
                 'implements' => $interfaceNames,
                 'isFinal' => $reflector->isFinal(),
-                'phpDoc' => $this->helper->getPhpDoc($reflector),
+                'phpDoc' => $this->helper->getPhpDoc($reflector, $info['fullyQualifyPhpDocType']),
             )
         );
         while ($reflector = $reflector->getParentClass()) {
             if ($values['phpDoc'] === array('desc' => null, 'summary' => null)) {
-                $values['phpDoc'] = $this->helper->getPhpDoc($reflector);
+                $values['phpDoc'] = $this->helper->getPhpDoc($reflector, $info['fullyQualifyPhpDocType']);
             }
             $values['extends'][] = $reflector->getName();
         }

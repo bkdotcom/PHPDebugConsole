@@ -343,9 +343,6 @@ class StringUtil
             // if val ends with "=" it's pretty safe to assume base64
             return true;
         }
-        if ($strlen === 0) {
-            return false;
-        }
         $stats = array(
             'lower' => array(\preg_match_all('/[a-z]/', $val), 40.626, 8),
             'num' => array(\preg_match_all('/[0-9]/', $val), 15.625, 8),

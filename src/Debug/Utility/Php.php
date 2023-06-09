@@ -12,15 +12,8 @@
 
 namespace bdk\Debug\Utility;
 
+use bdk\Debug\Utility\Reflection;
 use Exception;
-use ReflectionClass;
-use ReflectionClassConstant;
-use ReflectionEnum;
-use ReflectionMethod;
-use ReflectionObject;
-use ReflectionProperty;
-use Reflector;
-use UnitEnum;
 
 /**
  * Php language utilities
@@ -44,7 +37,7 @@ class Php
      */
     public static function friendlyClassName($mixed)
     {
-        $reflector = static::getReflector($mixed, true);
+        $reflector = Reflection::getReflector($mixed, true);
         if ($reflector && \method_exists($reflector, 'getDeclaringClass')) {
             $reflector = $reflector->getDeclaringClass();
         }
@@ -77,39 +70,6 @@ class Php
                 : \strnatcasecmp($dirA, $dirB);
         });
         return $includedFiles;
-    }
-
-    /**
-     * Get Reflector for given value
-     *
-     * Accepts:
-     *   * object
-     *   * Reflector
-     *   * string  class
-     *   * string  class::method()
-     *   * string  class::$property
-     *   * string  class::CONSTANT
-     *
-     * @param object|string $mixed      object, or string
-     * @param bool          $returnSelf (false) if passed obj is a Reflector, return it
-     *
-     * @return Reflector|null
-     */
-    public static function getReflector($mixed, $returnSelf = false)
-    {
-        if ($mixed instanceof Reflector && $returnSelf) {
-            return $mixed;
-        }
-        if ($mixed instanceof UnitEnum) {
-            return new ReflectionEnum($mixed);
-        }
-        if (\is_object($mixed)) {
-            return new ReflectionObject($mixed);
-        }
-        if (\is_string($mixed)) {
-            return static::getReflectorFromString($mixed);
-        }
-        return null;
     }
 
     /**
@@ -207,52 +167,6 @@ class Php
         }
         $serialized = self::unserializeSafeModify($serialized);
         return \unserialize($serialized);
-    }
-
-    /**
-     * String to Reflector
-     *
-     * Accepts:
-     *   * 'class'              ReflectionClass
-     *   * 'class::method()'    ReflectionMethod
-     *   * 'class::$property'   ReflectionProperty
-     *   * 'class::CONSTANT'    ReflectionClassConstant (if Php >= 7.1)
-     *   * 'enum::CASE'         ReflectionEnumUnitCase
-     *
-     * @param string $string string representing class, method, property, or class constant
-     *
-     * @return Reflector|null
-     */
-    private static function getReflectorFromString($string)
-    {
-        $regex = '/^'
-            . '(?P<class>[\w\\\]+)' // classname
-            . '(?:::(?:'
-                . '(?P<constant>\w+)|'       // constant
-                . '(?:\$(?P<property>\w+))|' // property
-                . '(?:(?P<method>\w+)\(\))|' // method
-            . '))?'
-            . '$/';
-        $matches = array();
-        \preg_match($regex, $string, $matches);
-        $defaults = \array_fill_keys(array('class', 'constant', 'property', 'method'), null);
-        $matches = \array_merge($defaults, $matches);
-        if ($matches['method']) {
-            return new ReflectionMethod($matches['class'], $matches['method']);
-        }
-        if ($matches['property']) {
-            return new ReflectionProperty($matches['class'], $matches['property']);
-        }
-        if ($matches['constant'] && PHP_VERSION_ID >= 80100 && \enum_exists($matches['class'])) {
-            return (new ReflectionEnum($matches['class']))->getCase($matches['constant']);
-        }
-        if ($matches['constant'] && PHP_VERSION_ID >= 70100) {
-            return new ReflectionClassConstant($matches['class'], $matches['constant']);
-        }
-        if ($matches['class']) {
-            return new ReflectionClass($matches['class']);
-        }
-        return null;
     }
 
     /**

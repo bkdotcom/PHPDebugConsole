@@ -13,7 +13,6 @@
 namespace bdk\Debug\Abstraction;
 
 use ReflectionClass;
-use Reflector;
 
 /**
  * Base class for collecting constants, properties, & methods
@@ -39,32 +38,39 @@ abstract class AbstractObjectInheritable
     /**
      * Pass reflector and each parent class reflector to callable
      *
-     * @param ReflectionClass $reflector [description]
-     * @param callable        $callable  [description]
+     * @param ReflectionClass $reflector      ReflectionClass instance
+     * @param callable        $callable       callable to be invoked on each parent
+     * @param bool            $inclInterfaces (false) Whether to also iterate over interfaces
      *
      * @return void
      */
-    protected function traverseAncestors(ReflectionClass $reflector, callable $callable)
+    protected function traverseAncestors(ReflectionClass $reflector, callable $callable, $inclInterfaces = false)
     {
+        $interfaces = $reflector->getInterfaceNames();
         while ($reflector) {
             $callable($reflector);
             $reflector = $reflector->getParentClass();
+        }
+        if ($inclInterfaces === false) {
+            return;
+        }
+        foreach ($interfaces as $className) {
+            $reflector = new ReflectionClass($className);
+            $callable($reflector);
         }
     }
 
     /**
      * Set/update declaredLast, declaredPrev, & declaredOrig
      *
-     * @param array     $info      constant/method/property info
-     * @param Reflector $reflector constant/method/property reflector
-     * @param [type]    $className class or ancestor-class being iterated
+     * @param array  $info               constant/method/property info
+     * @param string $declaringClassName class where declared
+     * @param string $className          class or ancestor-class being iterated
      *
      * @return array updated info
      */
-    protected function updateDeclarationVals(array $info, Reflector $reflector, $className)
+    protected function updateDeclarationVals(array $info, $declaringClassName, $className)
     {
-        $declaringClassName = $this->helper->getClassName($reflector->getDeclaringClass());
-        // $foo = $reflector instanceof \ReflectionClassConstant;
         if ($info['declaredLast'] === null) {
             $info['declaredLast'] = $declaringClassName;
             $info['declaredOrig'] = $declaringClassName;

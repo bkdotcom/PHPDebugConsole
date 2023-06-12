@@ -18,8 +18,8 @@ class Helper
     public static function backtrace($limit = 0, $return = false)
     {
         $backtrace = $limit
-            ? \array_slice(\debug_backtrace(0, $limit + 1), 1)
-            : \array_slice(\debug_backtrace(0), 0, -8);
+            ? \array_slice(\debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS), 0, $limit + 1)
+            : \array_slice(\debug_backtrace(), 0, -8);
         $backtrace =  \array_map(static function ($frame) {
             if (isset($frame['args'])) {
                 $frame['args'] = self::backtraceArgs($frame['args']);

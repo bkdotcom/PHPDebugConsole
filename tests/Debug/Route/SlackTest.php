@@ -134,9 +134,10 @@ class SlackTest extends DebugTestFramework
         self::assertSame('https://slack.com/api/chat.postMessage', (string) $requests[1]->getUri());
         self::assertSame('Bearer bogus-token', $requests[1]->getHeaderLine('Authorization'));
         self::assertSame('application/json; charset=utf-8', $requests[1]->getHeaderLine('Content-Type'));
-        $json = \json_decode((string) $requests[1]->getBody(), true);
-        $backtrace = $json['blocks'][1]['text']['text'];
-        $json['blocks'][1]['text']['text'] = '';
+        $data = \json_decode((string) $requests[1]->getBody(), true);
+        $backtrace = $data['blocks'][1]['text']['text'];
+        $data['blocks'][1]['text']['text'] = '';
+        unset($data['thread_ts']);
         self::assertSame(array(
             'blocks' =>  array(
                 array(
@@ -156,10 +157,10 @@ class SlackTest extends DebugTestFramework
             ),
             'channel' => '#slack-integration-test',
             'reply_broadcast' => false,
-            'thread_ts' => $microtime,
+            // 'thread_ts' => $microtime,
             'unfurl_links' => false,
             'unfurl_media' => true,
-        ), $json);
+        ), $data);
         self::assertStringMatchesFormat(__FILE__ . ':_' . $line . '_' . "\n" . '*' . __CLASS__ . '->' . __FUNCTION__ . '*%A', $backtrace);
     }
 

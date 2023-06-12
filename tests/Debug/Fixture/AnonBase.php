@@ -8,7 +8,6 @@ namespace bdk\Test\Debug\Fixture;
 class AnonBase extends \stdClass
 {
     const ONE = 1;
-    private const PRIVATE_CONST = 'dont look at me';
 
     protected $pro = 'gram';
     private $foo = 'bar';

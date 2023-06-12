@@ -217,7 +217,7 @@ class PhpDocBase
             Truly relative?  Or, does PhpDoc omit '\' ?
             Not 100% accurate, but check if assumed namespace'd class exists
         */
-        $autoload = $this->fullyQualifyType & self::FULLY_QUALIFY_AUTOLOAD === self::FULLY_QUALIFY_AUTOLOAD;
+        $autoload = ($this->fullyQualifyType & self::FULLY_QUALIFY_AUTOLOAD) === self::FULLY_QUALIFY_AUTOLOAD;
         return \class_exists($namespace . '\\' . $type, $autoload)
             ? $namespace . '\\' . $type
             : $type;

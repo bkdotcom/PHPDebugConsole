@@ -10,11 +10,6 @@ use bdk\Test\Debug\Fixture\SomeInterface;
 class PhpDocImplements implements SomeInterface
 {
     /**
-     * PhpDocImplements summary
-     */
-    const SOME_CONSTANT = 'never change';
-
-    /**
      * $someProperty summary
      *
      * @var string $someProperty desc

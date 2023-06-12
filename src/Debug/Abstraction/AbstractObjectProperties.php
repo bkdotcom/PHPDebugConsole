@@ -309,7 +309,11 @@ class AbstractObjectProperties extends AbstractObjectInheritable
                 if ($abs['isAnonymous'] && $refProperty->isDefault() && $className === $abs['className']) {
                     // Necessary for anonymous classes
                     // $propInfo['declaredLast'] = $className;
-                    $propInfo = $this->updateDeclarationVals($propInfo, $refProperty, $className);
+                    $propInfo = $this->updateDeclarationVals(
+                        $propInfo,
+                        $this->helper->getClassName($refProperty->getDeclaringClass()),
+                        $className
+                    );
                 }
                 if ($abs['collectPropertyValues']) {
                     $propInfo = $this->addValue($propInfo, $abs, $refProperty);
@@ -453,7 +457,11 @@ class AbstractObjectProperties extends AbstractObjectInheritable
                 $info = isset($properties[$name])
                     ? $properties[$name]
                     : $this->buildViaRef($abs, $refProperty);
-                $info = $this->updateDeclarationVals($info, $refProperty, $className);
+                $info = $this->updateDeclarationVals(
+                    $info,
+                    $this->helper->getClassName($refProperty->getDeclaringClass()),
+                    $className
+                );
                 $properties[$name] = $info;
             }
         });

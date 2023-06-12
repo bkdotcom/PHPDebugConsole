@@ -59,7 +59,9 @@ class ReflectionTest extends TestCase
         $implements = new \bdk\Test\Debug\Fixture\Utility\PhpDocImplements();
         $interfaceClassName = 'bdk\\Test\\Debug\\Fixture\\SomeInterface';
 
-        return array(
+        $extends = new \bdk\Test\Debug\Fixture\Utility\PHpDocExtends();
+
+        $tests = array(
             'noParent' => array(
                 new ReflectionClass('bdk\\Test\\Debug\\Fixture\\TestBase'),
                 static function ($parent) {
@@ -77,13 +79,6 @@ class ReflectionTest extends TestCase
                 new ReflectionObject($testObj),
                 static function (ReflectionClass $parent) use ($declaringClassName) {
                     self::assertSame($declaringClassName, $parent->getName());
-                },
-            ),
-            'reflectionConstant' => array(
-                new ReflectionClassConstant($testObj, 'MY_CONSTANT'),
-                static function (ReflectionClassConstant $parent) use ($declaringClassName) {
-                    self::assertSame('MY_CONSTANT', $parent->getName());
-                    self::assertSame($declaringClassName, $parent->getDeclaringClass()->getName());
                 },
             ),
             'reflectionMethod' => array(
@@ -115,13 +110,6 @@ class ReflectionTest extends TestCase
                     self::assertSame($interfaceClassName, $parent->getName());
                 },
             ),
-            'reflectionImplementsConstant' => array(
-                new ReflectionClassConstant($implements, 'SOME_CONSTANT'),
-                static function (ReflectionClassConstant $parent) use ($interfaceClassName) {
-                    self::assertSame('SOME_CONSTANT', $parent->getName());
-                    self::assertSame($interfaceClassName, $parent->getDeclaringClass()->getName());
-                },
-            ),
             'reflectionImplementsMethod' => array(
                 new ReflectionMethod($implements, 'someMethod'),
                 static function (ReflectionMethod $parent) use ($interfaceClassName) {
@@ -136,6 +124,29 @@ class ReflectionTest extends TestCase
                 },
             ),
         );
+
+        if (PHP_VERSION_ID <= 70100) {
+            return $tests;
+        }
+
+        $tests = \array_merge($tests, array(
+            'reflectionConstant' => array(
+                new ReflectionClassConstant($testObj, 'MY_CONSTANT'),
+                static function (ReflectionClassConstant $parent) use ($declaringClassName) {
+                    self::assertSame('MY_CONSTANT', $parent->getName());
+                    self::assertSame($declaringClassName, $parent->getDeclaringClass()->getName());
+                },
+            ),
+            'reflectionImplementsConstant' => array(
+                new ReflectionClassConstant($extends, 'SOME_CONSTANT'),
+                static function (ReflectionClassConstant $parent) use ($interfaceClassName) {
+                    self::assertSame('SOME_CONSTANT', $parent->getName());
+                    self::assertSame($interfaceClassName, $parent->getDeclaringClass()->getName());
+                },
+            ),
+        ));
+
+        return $tests;
     }
 
     public function providerTests()
@@ -268,7 +279,7 @@ class ReflectionTest extends TestCase
         );
 
         if (PHP_VERSION_ID < 70100) {
-            return;
+            return $tests;
         }
 
         $tests['constantString'] = array(
@@ -289,7 +300,7 @@ class ReflectionTest extends TestCase
         );
 
         if (PHP_VERSION_ID < 80100) {
-            return;
+            return $tests;
         }
 
         $tests = \array_merge($tests, array(

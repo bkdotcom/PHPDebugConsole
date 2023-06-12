@@ -61,7 +61,7 @@ class AbstractObjectConstants extends AbstractObjectInheritable
             PHP_VERSION_ID >= 70100
                 ? $this->addConstantsReflection($reflector)
                 : $this->addConstantsLegacy($reflector);
-        });
+        }, true);
         $abs['constants'] = $this->constants;
     }
 
@@ -129,7 +129,8 @@ class AbstractObjectConstants extends AbstractObjectInheritable
             $info = isset($this->constants[$name])
                 ? $this->constants[$name]
                 : \array_merge(static::$baseConstInfo, array('value' => $value));
-            $info = $this->updateDeclarationVals($info, null, $className);
+            // no reflection... unable to determine declaredLast & declaredPrev
+            $info['declaredOrig'] = $className;
             $this->constants[$name] = $info;
         }
     }
@@ -154,7 +155,11 @@ class AbstractObjectConstants extends AbstractObjectInheritable
             $info = isset($this->constants[$name])
                 ? $this->constants[$name]
                 : $this->getConstantRefInfo($refConstant);
-            $info = $this->updateDeclarationVals($info, $refConstant, $className);
+            $info = $this->updateDeclarationVals(
+                $info,
+                $this->helper->getClassName($refConstant->getDeclaringClass()),
+                $className
+            );
             $this->constants[$name] = $info;
         }
     }

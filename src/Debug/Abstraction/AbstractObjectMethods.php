@@ -268,7 +268,11 @@ class AbstractObjectMethods extends AbstractObjectInheritable
                 $info = isset($methods[$name])
                     ? $methods[$name]
                     : $this->buildMethodRef($abs, $refMethod);
-                $info = $this->updateDeclarationVals($info, $refMethod, $className);
+                $info = $this->updateDeclarationVals(
+                    $info,
+                    $this->helper->getClassName($refMethod->getDeclaringClass()),
+                    $className
+                );
                 $isInherited = $info['declaredLast'] && $info['declaredLast'] !== $abs['className'];
                 if ($info['visibility'] === 'private' && $isInherited) {
                     // getMethods() returns parent's private methods (#reasons)..  we'll skip it

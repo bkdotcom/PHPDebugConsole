@@ -16,10 +16,10 @@ use OutOfBoundsException;
  */
 class BlockFactory
 {
-    public const COLOR_DANGER = 'danger'; // red
-    public const COLOR_DEFAULT = '#dddddd';
-    public const COLOR_GOOD = 'good'; // green
-    public const COLOR_WARNING = 'warning'; // yellow
+    const COLOR_DANGER = 'danger'; // red
+    const COLOR_DEFAULT = '#dddddd';
+    const COLOR_GOOD = 'good'; // green
+    const COLOR_WARNING = 'warning'; // yellow
 
     /**
      * Actions block

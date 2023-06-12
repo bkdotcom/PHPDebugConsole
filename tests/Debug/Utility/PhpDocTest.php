@@ -267,13 +267,13 @@ EOD;
         $parsed = Debug::getInstance()->phpDoc->getParsed($reflector);
         self::assertSame(array(
             'desc' => null,
-            'summary' => 'PhpDocImplements summary',
+            'summary' => 'Interface summary',
         ), $parsed);
 
         $parsed = Debug::getInstance()->phpDoc->getParsed('\bdk\Test\Debug\Fixture\Utility\PhpDocExtends::SOME_CONSTANT');
         self::assertSame(array(
             'desc' => null,
-            'summary' => 'PhpDocImplements summary',
+            'summary' => 'Interface summary',
         ), $parsed);
     }
 

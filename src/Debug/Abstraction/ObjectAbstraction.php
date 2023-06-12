@@ -188,7 +188,7 @@ class ObjectAbstraction extends Abstraction
         foreach ($array as $name => $info) {
             if ($name === '__construct') {
                 // always place __construct at the top
-                $sortData['name'][$name] = 0;
+                $sortData['name'][$name] = -1;
                 $sortData['vis'][$name] = 0;
                 continue;
             }

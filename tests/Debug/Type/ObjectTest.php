@@ -178,20 +178,14 @@ EOD;
                         }
 
                         // constants
-                        self::assertStringContainsString(
-                            '<dt class="constants">constants</dt>' . "\n"
-                            . '<dd class="constant inherited public" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_public">public</span> <span class="t_identifier"'
-                                . (PHP_VERSION_ID >= 70100
-                                    ? ' title="Inherited description"'
-                                    : ''
-                                ) . '>INHERITED</span> <span class="t_operator">=</span> <span class="t_string">defined in TestBase</span></dd>' . "\n"
-                            . '<dd class="constant overrides public" data-declared-prev="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_public">public</span> <span class="t_identifier"'
-                                . (PHP_VERSION_ID >= 70100
-                                    ? ' title="constant documentation"'
-                                    : ''
-                                ) . '>MY_CONSTANT</span> <span class="t_operator">=</span> <span class="t_string">redefined in Test</span></dd>',
-                            $str
-                        );
+                        $expect = PHP_VERSION_ID >= 70100
+                            ? '<dt class="constants">constants</dt>' . "\n"
+                                . '<dd class="constant inherited public" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_public">public</span> <span class="t_identifier" title="Inherited description">INHERITED</span> <span class="t_operator">=</span> <span class="t_string">defined in TestBase</span></dd>' . "\n"
+                                . '<dd class="constant overrides public" data-declared-prev="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_public">public</span> <span class="t_identifier" title="constant documentation">MY_CONSTANT</span> <span class="t_operator">=</span> <span class="t_string">redefined in Test</span></dd>'
+                            : '<dt class="constants">constants</dt>' . "\n"
+                                . '<dd class="constant public"><span class="t_modifier_public">public</span> <span class="t_identifier">INHERITED</span> <span class="t_operator">=</span> <span class="t_string">defined in TestBase</span></dd>' . "\n"
+                                . '<dd class="constant public"><span class="t_modifier_public">public</span> <span class="t_identifier">MY_CONSTANT</span> <span class="t_operator">=</span> <span class="t_string">redefined in Test</span></dd>';
+                        self::assertStringContainsString($expect, $str);
 
                         // properties
                         $expect = \implode("\n", array(
@@ -446,14 +440,31 @@ EOD;
                     new \bdk\Test\Debug\Fixture\Utility\PhpDocExtends(),
                 ),
                 array(
+                    'entry' => static function (LogEntry $logEntry) {
+                        $abs = $logEntry['args'][0];
+                        self::assertSame(array(
+                            'attributes' => array(),
+                            'declaredLast' => PHP_VERSION_ID >= 70100
+                                ? 'bdk\Test\Debug\Fixture\Utility\PhpDocExtends'
+                                : null,
+                            'declaredOrig' => 'bdk\Test\Debug\Fixture\SomeInterface',
+                            'declaredPrev' => PHP_VERSION_ID >= 70100
+                                ? 'bdk\Test\Debug\Fixture\SomeInterface'
+                                : null,
+                            'desc' => PHP_VERSION_ID >= 70100
+                                ? 'Interface summary'
+                                : null,
+                            'isFinal' => false,
+                            'value' => 'never change',
+                            'visibility' => 'public',
+                        ), $abs['constants']['SOME_CONSTANT']);
+                    },
                     'html' => static function ($html) {
                         $expect = '<dt class="constants">constants</dt>' . "\n"
-                            . '<dd class="constant overrides public" data-declared-prev="bdk\Test\Debug\Fixture\Utility\PhpDocImplements"><span class="t_modifier_public">public</span> <span class="t_identifier"'
                             . (PHP_VERSION_ID >= 70100
-                                ? ' title="PhpDocImplements summary"'
-                                : ''
-                            )
-                            . '>SOME_CONSTANT</span> <span class="t_operator">=</span> <span class="t_string">never change</span></dd>' . "\n"
+                                ? '<dd class="constant overrides public" data-declared-prev="bdk\Test\Debug\Fixture\SomeInterface"><span class="t_modifier_public">public</span> <span class="t_identifier" title="Interface summary">SOME_CONSTANT</span> <span class="t_operator">=</span> <span class="t_string">never change</span></dd>'
+                                : '<dd class="constant public"><span class="t_modifier_public">public</span> <span class="t_identifier">SOME_CONSTANT</span> <span class="t_operator">=</span> <span class="t_string">never change</span></dd>'
+                            ) . "\n"
                             . '<dt class="properties">properties</dt>' . "\n"
                             . '<dd class="overrides property public" data-declared-prev="bdk\Test\Debug\Fixture\Utility\PhpDocImplements"><span class="t_modifier_public">public</span> <span class="t_type">string</span> <span class="t_identifier" title="$someProperty summary: desc">someProperty</span> <span class="t_operator">=</span> <span class="t_string">St. James Place</span></dd>' . "\n"
                             . '<dd class="magic property"><span class="t_modifier_magic">magic</span> <span class="t_type">bool</span> <span class="t_identifier" title="I\'m avail via __get()">magicProp</span></dd>' . "\n"
@@ -608,35 +619,40 @@ EOD;
             $expect = array('Stringable');
         }
         self::assertSame($expect, $abs['implements']);
-        self::assertSame(
-            array(
-                'INHERITED' => array(
-                    'attributes' => array(),
-                    'declaredLast' => 'bdk\Test\Debug\Fixture\TestBase',
-                    'declaredOrig' => 'bdk\Test\Debug\Fixture\TestBase',
-                    'declaredPrev' => null,
-                    'desc' => PHP_VERSION_ID >= 70100
-                        ? 'Inherited description'
-                        : null,
-                    'isFinal' => false,
-                    'value' => 'defined in TestBase',
-                    'visibility' => 'public',
-                ),
-                'MY_CONSTANT' => array(
-                    'attributes' => array(),
-                    'declaredLast' => 'bdk\Test\Debug\Fixture\TestObj',
-                    'declaredOrig' => 'bdk\Test\Debug\Fixture\TestBase',
-                    'declaredPrev' => 'bdk\Test\Debug\Fixture\TestBase',
-                    'desc' => PHP_VERSION_ID >= 70100
-                        ? 'constant documentation'
-                        : null,
-                    'isFinal' => false,
-                    'value' => 'redefined in Test',
-                    'visibility' => 'public',
-                ),
+
+        self::assertSame(array(
+            'INHERITED' => array(
+                'attributes' => array(),
+                'declaredLast' => PHP_VERSION_ID >= 70100
+                    ? 'bdk\Test\Debug\Fixture\TestBase'
+                    : null,
+                'declaredOrig' => 'bdk\Test\Debug\Fixture\TestBase',
+                'declaredPrev' => null,
+                'desc' => PHP_VERSION_ID >= 70100
+                    ? 'Inherited description'
+                    : null,
+                'isFinal' => false,
+                'value' => 'defined in TestBase',
+                'visibility' => 'public',
             ),
-            $abs['constants']
-        );
+            'MY_CONSTANT' => array(
+                'attributes' => array(),
+                'declaredLast' => PHP_VERSION_ID >= 70100
+                    ? 'bdk\Test\Debug\Fixture\TestObj'
+                    : null,
+                'declaredOrig' => 'bdk\Test\Debug\Fixture\TestBase',
+                'declaredPrev' => PHP_VERSION_ID >= 70100
+                    ? 'bdk\Test\Debug\Fixture\TestBase'
+                    : null,
+                'desc' => PHP_VERSION_ID >= 70100
+                    ? 'constant documentation'
+                    : null,
+                'isFinal' => false,
+                'value' => 'redefined in Test',
+                'visibility' => 'public',
+            ),
+        ), $abs['constants']);
+
         self::assertArraySubset(
             array(
                 'desc' => 'PhpDoc Description',
@@ -930,7 +946,7 @@ EOD;
 
                     self::assertSame(array(
                         'ONE',
-                        'PRIVATE_CONST',
+                        // 'PRIVATE_CONST',
                     ), \array_keys($abs->getClassValues()['constants']));
                     self::assertSame(array(
                         'foo',
@@ -1030,7 +1046,7 @@ EOD;
 
                     self::assertSame(array(
                         'ONE',
-                        'PRIVATE_CONST',
+                        // 'PRIVATE_CONST',
                     ), \array_keys($abs->getClassValues()['constants']));
                     self::assertSame(array(
                         'foo',

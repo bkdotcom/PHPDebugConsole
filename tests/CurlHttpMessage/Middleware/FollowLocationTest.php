@@ -14,6 +14,7 @@ use bdk\CurlHttpMessage\Handler\Mock as MockHandler;
 use bdk\CurlHttpMessage\Middleware\FollowLocation;
 use bdk\Promise;
 use bdk\Test\CurlHttpMessage\TestCase;
+use bdk\Test\PolyFill\ExpectExceptionTrait;
 use Psr\Http\Message\RequestInterface;
 
 /**
@@ -21,6 +22,8 @@ use Psr\Http\Message\RequestInterface;
  */
 class FollowLocationTest extends TestCase
 {
+    use ExpectExceptionTrait;
+
     public function testIgnoresNonRedirects()
     {
         /*

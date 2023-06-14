@@ -7,6 +7,7 @@ use bdk\Promise\FulfilledPromise;
 use bdk\Promise\PromiseInterface;
 use bdk\Promise\RejectedPromise;
 use bdk\Test\Promise\PropertyHelper;
+use bdk\Test\PolyFill\ExpectExceptionTrait;
 use Exception;
 use PHPUnit\Framework\TestCase;
 
@@ -16,6 +17,8 @@ use PHPUnit\Framework\TestCase;
  */
 class UtilsTest extends TestCase
 {
+    use ExpectExceptionTrait;
+
     protected $classes = array(
         'AggregateException' => 'bdk\\Promise\\Exception\\AggregateException',
         'RejectionException' => 'bdk\\Promise\\Exception\\RejectionException',

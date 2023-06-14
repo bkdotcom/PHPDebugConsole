@@ -5,6 +5,7 @@ namespace bdk\Test\Slack;
 use bdk\HttpMessage\ServerRequest;
 use bdk\HttpMessage\Stream;
 use bdk\Slack\SlackCommand;
+use bdk\Test\PolyFill\ExpectExceptionTrait;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -12,6 +13,8 @@ use PHPUnit\Framework\TestCase;
  */
 class SlackCommandTest extends TestCase
 {
+    use ExpectExceptionTrait;
+
     const SIGNING_SECRET = 'twinkieweinersandwich';
 
     public function testHandled()
@@ -70,8 +73,8 @@ class SlackCommandTest extends TestCase
             'signingSecret' => self::SIGNING_SECRET,
         ]);
         $request = $this->buildRequest();
-        self::expectException('RuntimeException');
-        self::expectExceptionMessage('Unable to handle command: myCommand');
+        $this->expectException('RuntimeException');
+        $this->expectExceptionMessage('Unable to handle command: myCommand');
         $slackCommand->handle($request);
     }
 
@@ -81,8 +84,8 @@ class SlackCommandTest extends TestCase
             'signingSecret' => self::SIGNING_SECRET,
         ]);
         $request = $this->buildRequest()->withoutHeader('X-Slack-Signature');
-        self::expectException('RuntimeException');
-        self::expectExceptionMessage('Unsigned request');
+        $this->expectException('RuntimeException');
+        $this->expectExceptionMessage('Unsigned request');
         $slackCommand->handle($request);
     }
 
@@ -92,8 +95,8 @@ class SlackCommandTest extends TestCase
             'signingSecret' => self::SIGNING_SECRET,
         ]);
         $request = $this->buildRequest()->withHeader('X-Slack-Request-Timestamp', time() + 61);
-        self::expectException('RuntimeException');
-        self::expectExceptionMessage('Request timestamp out of bounds');
+        $this->expectException('RuntimeException');
+        $this->expectExceptionMessage('Request timestamp out of bounds');
         $slackCommand->handle($request);
     }
 
@@ -107,8 +110,8 @@ class SlackCommandTest extends TestCase
         $signatureParts = \explode('=', $signature, 2);
         $signature = 'v1=' . $signatureParts[1];
         $request = $request->withHeader('X-Slack-Signature', $signature);
-        self::expectException('RuntimeException');
-        self::expectExceptionMessage('Unrecognized signature version');
+        $this->expectException('RuntimeException');
+        $this->expectExceptionMessage('Unrecognized signature version');
         $slackCommand->handle($request);
     }
 
@@ -119,8 +122,8 @@ class SlackCommandTest extends TestCase
         ]);
         $request = $this->buildRequest()
             ->withHeader('X-Slack-Signature', 'v0=invalid');
-        self::expectException('RuntimeException');
-        self::expectExceptionMessage('Invalid signature');
+        $this->expectException('RuntimeException');
+        $this->expectExceptionMessage('Invalid signature');
         $slackCommand->handle($request);
     }
 

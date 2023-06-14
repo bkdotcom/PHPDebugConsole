@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 namespace bdk\Teams\Cards;
 
 use bdk\Teams\Section;
@@ -144,7 +142,7 @@ class MessageCard extends AbstractCard
      *
      * @return CustomCard
      */
-    public function withImage(string $imageUrl, $title = null)
+    public function withImage($imageUrl, $title = null)
     {
         return $this->withImages([$imageUrl], $title);
     }

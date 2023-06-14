@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 namespace bdk\Slack;
 
 use Psr\Http\Message\ServerRequestInterface;
@@ -109,8 +107,32 @@ class SlackCommand
         ));
         $computedSignature = $version . '=' . \hash_hmac('sha256', $baseString, $this->cfg['signingSecret']);
 
-        if (\hash_equals($computedSignature, $signature) === false) {
+        if ($this->hashEquals($computedSignature, $signature) === false) {
             throw new RuntimeException('Invalid signature');
         }
+    }
+
+    /**
+     * Polyfill for hash_equals
+     *
+     * @param string $str1 The string of known length to compare against
+     * @param string $str2 The user-supplied string
+     *
+     * @return bool
+     */
+    private function hashEquals($str1, $str2)
+    {
+        if (\function_exists('hash_equals')) {
+            return \hash_equals($str1, $str2);
+        }
+        if (\strlen($str1) != \strlen($str2)) {
+            return false;
+        }
+        $res = $str1 ^ $str2;
+        $ret = 0;
+        for ($i = \strlen($res) - 1; $i >= 0; $i--) {
+            $ret |= \ord($res[$i]);
+        }
+        return !$ret;
     }
 }

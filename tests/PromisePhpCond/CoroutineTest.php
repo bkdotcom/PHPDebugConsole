@@ -1,6 +1,6 @@
 <?php
 
-namespace bdk\Test\Promise;
+namespace bdk\Test\PromisePhpCond;
 
 use bdk\Promise;
 use bdk\Promise\Coroutine;
@@ -9,6 +9,7 @@ use bdk\Promise\FulfilledPromise;
 use bdk\Promise\PromiseInterface;
 use bdk\Promise\RejectedPromise;
 use bdk\Test\Promise\PropertyHelper;
+use bdk\Test\PolyFill\AssertionTrait;
 use Exception;
 use OutOfBoundsException;
 use PHPUnit\Framework\TestCase;
@@ -18,6 +19,8 @@ use PHPUnit\Framework\TestCase;
  */
 class CoroutineTest extends TestCase
 {
+    use AssertionTrait;
+
     protected static $classes = array(
         'Coroutine' => 'bdk\\Promise\\Coroutine',
         'OutOfBoundsException' => 'OutOfBoundsException',
@@ -173,7 +176,6 @@ class CoroutineTest extends TestCase
         if (\defined('HHVM_VERSION')) {
             self::markTestIncomplete('Broken on HHVM.');
         }
-
         $promise = Coroutine::of(static function () {
             $value = yield new FulfilledPromise('a');
             yield $value . 'b';

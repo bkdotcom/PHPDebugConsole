@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 namespace bdk\Teams\Elements;
 
 use bdk\Teams\Enums;

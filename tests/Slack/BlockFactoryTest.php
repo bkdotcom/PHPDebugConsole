@@ -3,6 +3,7 @@
 namespace bdk\Test\Slack;
 
 use bdk\Slack\BlockFactory;
+use bdk\Test\PolyFill\ExpectExceptionTrait;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -10,6 +11,8 @@ use PHPUnit\Framework\TestCase;
  */
 class BlockFactoryTest extends TestCase
 {
+    use ExpectExceptionTrait;
+
     protected static $blockFactory;
 
     public static function setUpBeforeClass(): void
@@ -23,10 +26,10 @@ class BlockFactoryTest extends TestCase
     public function testMethods($method, $args, $expect)
     {
         if (isset($expect['expectException'])) {
-            self::expectException($expect['expectException']);
+            $this->expectException($expect['expectException']);
         }
         if (isset($expect['expectExceptionMessage'])) {
-            self::expectExceptionMessage($expect['expectExceptionMessage']);
+            $this->expectExceptionMessage($expect['expectExceptionMessage']);
         }
         $block = \call_user_func_array([self::$blockFactory, $method], $args);
         self::assertSame($expect, $block);
@@ -35,7 +38,7 @@ class BlockFactoryTest extends TestCase
     public static function methodProvider()
     {
         $blockFactory = new BlockFactory();
-        $methods = [
+        return [
             'actions' => [
                 'actions',
                 [
@@ -766,8 +769,5 @@ class BlockFactoryTest extends TestCase
             ],
 
         ];
-        foreach ($methods as $testName => $args) {
-            yield $testName => $args;
-        }
     }
 }

@@ -151,6 +151,9 @@ class CurlHttpMessageMiddlewareTest extends DebugTestFramework
      */
     public function testAsyncronous()
     {
+        if (PHP_VERSION_ID < 50500) {
+            self::markTestSkipped('requires php 5.5 (yield)');
+        }
         $client = $this->getClient(array(
             (new Response(202, ''))->withHeader('Content-Length', 0),
         ), true);
@@ -283,6 +286,10 @@ class CurlHttpMessageMiddlewareTest extends DebugTestFramework
      */
     public function testAsyncronousSeparate()
     {
+        if (PHP_VERSION_ID < 50500) {
+            self::markTestSkipped('requires php 5.5 (yield)');
+        }
+
         $client = $this->getClient(array(
             (new Response(200, ''))->withBody(new Stream('Test')),
         ), true, array(
@@ -345,6 +352,9 @@ class CurlHttpMessageMiddlewareTest extends DebugTestFramework
      */
     public function testAsyncRejected()
     {
+        if (PHP_VERSION_ID < 50500) {
+            self::markTestSkipped('requires php 5.5 (yield)');
+        }
         $client = $this->getClient(array(
             new RequestException('Error Communicating with Server', new Request('GET', 'test')),
         ), true);

@@ -39,8 +39,8 @@ class UtilityTest extends DebugTestFramework
         ), $GLOBALS['collectedHeaders']);
 
         $GLOBALS['headersSent'] = array(__FILE__, 42);
-        self::expectException('RuntimeException');
-        self::expectExceptionMessage('Headers already sent: ' . __FILE__ . ', line 42');
+        $this->expectException('RuntimeException');
+        $this->expectExceptionMessage('Headers already sent: ' . __FILE__ . ', line 42');
         Utility::emitHeaders(array('foo' => 'bar'));
     }
 

@@ -1,13 +1,12 @@
 <?php
 
-declare(strict_types=1);
-
 namespace bdk\CurlHttpMessage;
 
 use bdk\CurlHttpMessage\CurlReqResOptions;
 use bdk\CurlHttpMessage\Exception\NetworkException;
 use bdk\CurlHttpMessage\Exception\RequestException;
 use bdk\Promise;
+use ErrorException;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
@@ -69,9 +68,12 @@ class CurlReqRes
             return;
         }
         if ($this->curlHandle) {
-            \curl_close($this->curlHandle);
+            try {
+                \curl_close($this->curlHandle);
+            } catch (ErrorException $e) {
+                // ignore exception
+            }
             $this->curlHandle = null;
-            return;
         }
     }
 
@@ -102,6 +104,10 @@ class CurlReqRes
             $this->setCurlHandle(null);
         }
 
+        if ($this->errno === CURLE_OK && \strpos($this->error, 'Failed to connect') === 0) {
+            // php < 7.0 ?
+            $this->errno = CURLE_COULDNT_CONNECT;
+        }
         if ($this->errno !== CURLE_OK) {
             return $this->finishError();
         }

@@ -89,9 +89,9 @@ class TableRow
             if (isset($value['stringified'])) {
                 $this->info['classes'][$name] = $value['className'];
                 $value = $value['stringified'];
-            } elseif (isset($value['__toString']['returnValue'])) {
+            } elseif (isset($value['methods']['__toString']['returnValue'])) {
                 $this->info['classes'][$name] = $value['className'];
-                $value = $value['__toString']['returnValue'];
+                $value = $value['methods']['__toString']['returnValue'];
             }
         }
         return $value;

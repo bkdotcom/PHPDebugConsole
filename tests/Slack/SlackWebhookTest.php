@@ -6,6 +6,7 @@ use bdk\CurlHttpMessage\Factory;
 use bdk\CurlHttpMessage\Handler\Mock as MockHandler;
 use bdk\Slack\SlackMessage;
 use bdk\Slack\SlackWebhook;
+use bdk\Test\PolyFill\AssertionTrait;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\RequestInterface;
 
@@ -15,6 +16,8 @@ use Psr\Http\Message\RequestInterface;
  */
 class SlackWebhookTest extends TestCase
 {
+    use AssertionTrait;
+
     private $mockHandler;
     private $factory;
 

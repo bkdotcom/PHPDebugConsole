@@ -4,6 +4,7 @@ namespace bdk\Test\Slack;
 
 use bdk\Slack\BlockFactory;
 use bdk\Slack\SlackMessage;
+use bdk\Test\PolyFill\ExpectExceptionTrait;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -12,6 +13,8 @@ use PHPUnit\Framework\TestCase;
  */
 class SlackMessageTest extends TestCase
 {
+    use ExpectExceptionTrait;
+
     public function testConstrutor()
     {
         $slackMessage = new SlackMessage([
@@ -48,7 +51,7 @@ class SlackMessageTest extends TestCase
 
     public function testWithDataThrowsException()
     {
-        self::expectException('InvalidArgumentException');
+        $this->expectException('InvalidArgumentException');
         $slackMessage = new SlackMessage([
             'foo' => 'bar',
         ]);
@@ -202,7 +205,7 @@ class SlackMessageTest extends TestCase
     public function testWithValueThrowsException()
     {
         $slackMessage = new SlackMessage();
-        self::expectException('InvalidArgumentException');
+        $this->expectException('InvalidArgumentException');
         $slackMessage->withValue('foo', 'bar');
     }
 
@@ -219,7 +222,7 @@ class SlackMessageTest extends TestCase
     public function testCallUnknown()
     {
         $slackMessage = new SlackMessage();
-        self::expectException('BadMethodCallException');
+        $this->expectException('BadMethodCallException');
         $slackMessage->wat();
     }
 
@@ -377,8 +380,8 @@ class SlackMessageTest extends TestCase
             ],
         ];
         foreach ($methods as $method => $args) {
-            $args = \array_merge([$method], $args);
-            yield $method => $args;
+            $methods[$method] = \array_merge([$method], $args);
         }
+        return $methods;
     }
 }

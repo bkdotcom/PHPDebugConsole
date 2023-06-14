@@ -7,6 +7,7 @@ use bdk\HttpMessage\Response;
 use bdk\HttpMessage\Stream;
 use bdk\Teams\Cards\MessageCard;
 use bdk\Teams\TeamsWebhook;
+use bdk\Test\PolyFill\AssertionTrait;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\RequestInterface;
 
@@ -15,6 +16,8 @@ use Psr\Http\Message\RequestInterface;
  */
 class TeamsWebhookTest extends TestCase
 {
+    use AssertionTrait;
+
     private $mockHandler;
 
     /**

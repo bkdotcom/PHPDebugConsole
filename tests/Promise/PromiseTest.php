@@ -6,6 +6,8 @@ use bdk\Promise;
 use bdk\Promise\Exception\CancellationException;
 use bdk\Promise\Exception\RejectionException;
 use bdk\Promise\RejectedPromise;
+use bdk\Test\PolyFill\AssertionTrait;
+use bdk\Test\PolyFill\ExpectExceptionTrait;
 use bdk\Test\Promise\Fixture\ExtendsPromise;
 use bdk\Test\Promise\Fixture\Thenable;
 use Exception;
@@ -18,6 +20,9 @@ use UnexpectedValueException;
  */
 class PromiseTest extends TestCase
 {
+    use AssertionTrait;
+    use ExpectExceptionTrait;
+
     protected $classes = array(
         'BadMethodCallException' => 'BadMethodCallException',
         'CancellationException' => 'bdk\\Promise\\Exception\\CancellationException',

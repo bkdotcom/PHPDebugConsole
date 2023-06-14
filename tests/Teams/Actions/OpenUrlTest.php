@@ -4,6 +4,7 @@ namespace bdk\Test\Teams\Actions;
 
 use bdk\Teams\Actions\OpenUrl;
 use bdk\Teams\Enums;
+use bdk\Test\PolyFill\ExpectExceptionTrait;
 use bdk\Test\Teams\AbstractTestCaseWith;
 
 /**
@@ -12,6 +13,8 @@ use bdk\Test\Teams\AbstractTestCaseWith;
  */
 class OpenUrlTest extends AbstractTestCaseWith
 {
+    use ExpectExceptionTrait;
+
     public function testConstruct()
     {
         $openUrl = new OpenUrl('http://www.bradkent.com/');
@@ -23,13 +26,13 @@ class OpenUrlTest extends AbstractTestCaseWith
 
     public function testConstructInvalidType()
     {
-        self::expectException('InvalidArgumentException');
+        $this->expectException('InvalidArgumentException');
         $openUrl = new OpenUrl(false);
     }
 
     public function testConstructInvalidUrl()
     {
-        self::expectException('InvalidArgumentException');
+        $this->expectException('InvalidArgumentException');
         $openUrl = new OpenUrl('bogus');
     }
 
@@ -53,8 +56,8 @@ class OpenUrlTest extends AbstractTestCaseWith
     public function testGetContentException()
     {
         $openUrl = new OpenUrl();
-        self::expectException('RuntimeException');
-        self::expectExceptionMessage('OpenUrl url is required');
+        $this->expectException('RuntimeException');
+        $this->expectExceptionMessage('OpenUrl url is required');
         $openUrl->getContent(1.2);
     }
 

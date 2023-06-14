@@ -5,6 +5,7 @@ namespace bdk\Test\Debug\Method;
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\LogEntry;
 use bdk\Test\Debug\DebugTestFramework;
 use ReflectionMethod;
 use ReflectionProperty;
@@ -154,7 +155,7 @@ EOD;
             if ($crated instanceof Abstraction) {
                 $crated = $crated->jsonSerialize();
                 if ($crated['type'] === 'object') {
-                    $crated['scopeClass'] = __class__;
+                    $crated['scopeClass'] = __CLASS__;
                 }
             }
             $vals[$k] = array(
@@ -163,7 +164,7 @@ EOD;
             );
         }
 
-        return array(
+        $tests = array(
             'null' => array(
                 'table',
                 array(null),
@@ -641,6 +642,8 @@ EOD;
                 ),
             ),
         );
+
+        return $tests;
     }
 
     public function testSpecialValues()

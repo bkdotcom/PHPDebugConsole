@@ -67,7 +67,7 @@ class AbstractObjectHelper
      */
     public function getClassName(ReflectionClass $reflector)
     {
-        return $reflector->isAnonymous()
+        return PHP_VERSION_ID >= 70000 && $reflector->isAnonymous()
             ? PhpUtil::friendlyClassName($reflector)
             : $reflector->getName();
     }

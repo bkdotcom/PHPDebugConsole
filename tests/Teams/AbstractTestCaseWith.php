@@ -1,9 +1,8 @@
 <?php
 
-declare(strict_types=1);
-
 namespace bdk\Test\Teams;
 
+use bdk\Test\PolyFill\ExpectExceptionTrait;
 use Exception;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
@@ -14,6 +13,8 @@ use ReflectionMethod;
  */
 abstract class AbstractTestCaseWith extends TestCase
 {
+    use ExpectExceptionTrait;
+
     protected static $testedSchemaProps = array();
     protected static $testedWithMethods = array();
     protected static $definitions = array();
@@ -49,7 +50,7 @@ abstract class AbstractTestCaseWith extends TestCase
         self::$testedWithMethods[$method] = true;
         $obj = static::itemFactory();
         if ($isException) {
-            self::expectException('InvalidArgumentException');
+            $this->expectException('InvalidArgumentException');
         }
         $objNew = \call_user_func(array($obj, $method), $val);
         self::assertNotSame($obj, $objNew);
@@ -65,10 +66,10 @@ abstract class AbstractTestCaseWith extends TestCase
         self::$testedWithMethods[$method] = true;
         $obj = static::itemFactory();
         if ($isException) {
-            self::expectException('InvalidArgumentException');
+            $this->expectException('InvalidArgumentException');
         }
         if ($exceptionMessage !== null) {
-            self::expectExceptionMessage($exceptionMessage);
+            $this->expectExceptionMessage($exceptionMessage);
         }
         $objNew = \call_user_func_array(array($obj, $method), $args);
         self::assertNotSame($obj, $objNew);
@@ -85,7 +86,7 @@ abstract class AbstractTestCaseWith extends TestCase
     {
         $obj = static::itemFactory();
         if ($expect === 'OutOfBoundsException') {
-            self::expectException('OutOfBoundsException');
+            $this->expectException('OutOfBoundsException');
             $obj->get($prop);
         }
         self::assertNotSame('never this', $obj->get($prop));
@@ -116,8 +117,9 @@ abstract class AbstractTestCaseWith extends TestCase
 
     public static function providerWith()
     {
-        $withCases = static::withTestCases();
         $keys = array();
+        $tests = array();
+        $withCases = static::withTestCases();
         foreach ($withCases as $vals) {
             $vals = \array_replace(array(
                 '',
@@ -133,12 +135,13 @@ abstract class AbstractTestCaseWith extends TestCase
             $keys[$key] = isset($keys[$key])
                 ? $keys[$key] + 1
                 : 1;
-            $keyYield = $keys[$key] > 1
+            $key = $keys[$key] > 1
                 ? $key . ' ' . $keys[$key]
                 : $key;
             $vals[0] = $method;
-            yield $keyYield => $vals;
+            $tests[$key] = $vals;
         }
+        return $tests;
     }
 
     /**
@@ -150,39 +153,40 @@ abstract class AbstractTestCaseWith extends TestCase
         $obj = static::itemFactory();
         $type = $obj->get('type');
         if ($type === null) {
-            yield array(true, true);
-            return;
+            return array(
+                array(true, true),
+            );
         }
+        $tests = array();
         foreach (self::$definitions[$type] as $name => $info) {
             if ($name === 'type' || \in_array($name, static::$unsupportedAttributes, true)) {
                 continue;
             }
             // \bdk\Test\Debug\Helper::stderr($name, $info);
             if (\in_array($info['type'], array('array','object'), true)) {
-                yield $name . ' empty array' => array($name, array(), $info['isRequired']);
+                $tests[$name . ' empty array'] = array($name, array(), $info['isRequired']);
             } else {
-                yield $name . ' null' => array($name, null, $info['isRequired']);
+                $tests[$name . ' null'] = array($name, null, $info['isRequired']);
             }
             if (isset($info['type']) && $info['type'] === 'boolean') {
                 self::$testedSchemaProps[$name] = true;
-                yield $name . ' true' => array($name, true);
-                yield $name . ' false' => array($name, false);
-                yield $name . ' exception' => array($name, 'foo', true);
+                $tests[$name . ' true'] = array($name, true);
+                $tests[$name . ' false'] = array($name, false);
+                $tests[$name . ' exception'] = array($name, 'foo', true);
                 continue;
             }
             if (isset($info['type']) && $info['type'] === 'string') {
                 if (\in_array($name, array('text','title','subtitle'), true)) {
                     self::$testedSchemaProps[$name] = true;
-                    yield $name . ' string' => array($name, 'some string');
-                    // yield $name . ' null' => array($name, null, $info['isRequired']);
-                    yield $name . ' exception' => array($name, array('nope'), true);
+                    $tests[$name . ' string'] = array($name, 'some string');
+                    $tests[$name . ' exception'] = array($name, array('nope'), true);
                     continue;
                 }
                 if (isset($info['format']) && $info['format'] === 'uri-reference') {
                     self::$testedSchemaProps[$name] = true;
-                    yield $name . ' url' => array($name, 'http://example.com/');
-                    yield $name . ' exception' => array($name, '/cat.jpg', true);
-                    yield $name . ' type exception' => array($name, false, true);
+                    $tests[$name . ' url'] = array($name, 'http://example.com/');
+                    $tests[$name . ' exception'] = array($name, '/cat.jpg', true);
+                    $tests[$name . ' type exception'] = array($name, false, true);
                     continue;
                 }
             }
@@ -190,28 +194,26 @@ abstract class AbstractTestCaseWith extends TestCase
             if (isset($info['enum'])) {
                 self::$testedSchemaProps[$name] = true;
                 foreach ($info['enum'] as $val) {
-                    yield $name . ' ' . $val => array($name, $val);
+                    $tests[$name . ' ' . $val] = array($name, $val);
                 }
-                // yield $name . ' null' => array($name, null, $info['isRequired']);
-                yield $name . ' exception' => array($name, 'foo', true);
+                $tests[$name . ' exception'] = array($name, 'foo', true);
                 continue;
             }
             if (isset($info['anyOf'])) {
                 foreach ($info['anyOf'] as $of) {
                     if (isset($of['type']) && $of['type'] === 'boolean') {
                         self::$testedSchemaProps[$name] = true;
-                        yield $name . ' true' => array($name, true);
-                        yield $name . ' false' => array($name, false);
-                        yield $name . ' exception' => array($name, 'foo', true);
+                        $tests[$name . ' true'] = array($name, true);
+                        $tests[$name . ' false'] = array($name, false);
+                        $tests[$name . ' exception'] = array($name, 'foo', true);
                         continue;
                     }
                     if (isset($of['type']) && $of['type'] === 'string') {
-                        // yield $name . ' null' => array($name, null, $info['isRequired']);
                         if (isset($of['format']) && $of['format'] === 'uri-reference') {
                             self::$testedSchemaProps[$name] = true;
-                            yield $name . ' url' => array($name, 'http://example.com/');
-                            yield $name . ' type exception' => array($name, false, true);
-                            yield $name . ' exception' => array($name, '/cat.jpg', true);
+                            $tests[$name . ' url'] = array($name, 'http://example.com/');
+                            $tests[$name . ' type exception'] = array($name, false, true);
+                            $tests[$name . ' exception'] = array($name, '/cat.jpg', true);
                         }
                     }
                     if (isset($of['$ref'])) {
@@ -227,16 +229,14 @@ abstract class AbstractTestCaseWith extends TestCase
                             if (isset($of['enum'])) {
                                 self::$testedSchemaProps[$name] = true;
                                 foreach ($of['enum'] as $val) {
-                                    yield $name . ' ' . $val => array($name, $val);
+                                    $tests[$name . ' ' . $val] = array($name, $val);
                                 }
-                                // yield $name . ' null' => array($name, null);
-                                yield $name . ' exception' => array($name, 'foo', true);
+                                $tests[$name . ' exception'] = array($name, 'foo', true);
                                 continue;
                             }
                         }
                     }
                 }
-                // yield $name . ' null' => array($name, null, $info['isRequired']);
                 continue;
             } // anyOf
             if (isset($info['$ref'])) {
@@ -252,20 +252,19 @@ abstract class AbstractTestCaseWith extends TestCase
                     if (isset($of['enum'])) {
                         self::$testedSchemaProps[$name] = true;
                         foreach ($of['enum'] as $val) {
-                            yield $name . ' ' . $val => array($name, $val);
+                            $tests[$name . ' ' . $val] = array($name, $val);
                         }
-                        // yield $name . ' null' => array($name, null);
-                        yield $name . ' exception' => array($name, 'foo', true);
+                        $tests[$name . ' exception'] = array($name, 'foo', true);
                     }
                 }
                 continue;
             } // $ref
-            // \bdk\Test\Debug\Helper::stderr($name, $info);
         }
         if (empty(self::$testedSchemaProps)) {
             // provide at least one test
-            yield array(true, true);
+            $tests[] = array(true, true);
         }
+        return $tests;
     }
 
     /**

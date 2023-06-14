@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 namespace bdk\Teams;
 
 use bdk\Teams\ItemInterface;
@@ -286,9 +284,14 @@ trait CardUtilityTrait
             $refClass = new ReflectionClass('bdk\\Teams\\Enums');
             self::$constants = $refClass->getConstants();
         }
-        return \array_filter(self::$constants, static function ($key) use ($prefix) {
-            return \strpos($key, $prefix) === 0;
-        }, ARRAY_FILTER_USE_KEY);
+        // array_filter / ARRAY_FILTER_USE_KEY is php 5.6
+        $filteredByKey = array();
+        foreach (self::$constants as $key => $value) {
+            if (\strpos($key, $prefix) === 0) {
+                $filteredByKey[$key] = $value;
+            }
+        }
+        return $filteredByKey;
     }
 
     /**

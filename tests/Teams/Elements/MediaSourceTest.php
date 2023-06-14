@@ -3,6 +3,7 @@
 namespace bdk\Test\Teams\Elements;
 
 use bdk\Teams\Elements\MediaSource;
+use bdk\Test\PolyFill\ExpectExceptionTrait;
 use bdk\Test\Teams\AbstractTestCaseWith;
 
 /**
@@ -10,6 +11,8 @@ use bdk\Test\Teams\AbstractTestCaseWith;
  */
 class MediaSourceTest extends AbstractTestCaseWith
 {
+    use ExpectExceptionTrait;
+
     public function testConstruct()
     {
         $mediaSource = new MediaSource('http://example.com/cat.mp4', 'video/mp4');
@@ -21,7 +24,7 @@ class MediaSourceTest extends AbstractTestCaseWith
 
     public function testConstructException()
     {
-        self::expectException('InvalidArgumentException');
+        $this->expectException('InvalidArgumentException');
         $mediaSource = new MediaSource('bogus url', 'video/mp4');
     }
 
@@ -39,16 +42,16 @@ class MediaSourceTest extends AbstractTestCaseWith
     public function testGetContentNoMimeType()
     {
         $mediaSource = new MediaSource('http://example.com/cat.mp4');
-        self::expectException('RuntimeException');
-        self::expectExceptionMessage('MediaSource mimeType is required');
+        $this->expectException('RuntimeException');
+        $this->expectExceptionMessage('MediaSource mimeType is required');
         $mediaSource->getContent(1.2);
     }
 
     public function testGetContentNoUrl()
     {
         $mediaSource = new MediaSource(null, 'video/mp4');
-        self::expectException('RuntimeException');
-        self::expectExceptionMessage('MediaSource url is required');
+        $this->expectException('RuntimeException');
+        $this->expectExceptionMessage('MediaSource url is required');
         $mediaSource->getContent(1.2);
     }
 

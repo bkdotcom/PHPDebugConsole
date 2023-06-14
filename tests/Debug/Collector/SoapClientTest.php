@@ -84,8 +84,8 @@ class SoapClientTest extends DebugTestFramework
 
     public function testConstructException()
     {
-        if (PHP_VERSION_ID < 70000) {
-            $this->markTestSkipped('PHP < 7.0 raises E_ERROR instead of throwing exception');
+        if (PHP_VERSION_ID < 70100) {
+            $this->markTestSkipped('PHP <= 7.0 raises E_ERROR instead of throwing exception');
         }
         $soapFault = null;
         $line = __LINE__ + 3;

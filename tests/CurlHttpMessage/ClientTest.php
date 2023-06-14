@@ -6,6 +6,8 @@ use bdk\CurlHttpMessage\Client;
 use bdk\CurlHttpMessage\Handler\Mock as MockHandler;
 use bdk\Test\CurlHttpMessage\Fixture\JsonSerializable;
 use bdk\Test\CurlHttpMessage\TestCase;
+use bdk\Test\PolyFill\AssertionTrait;
+use bdk\Test\PolyFill\ExpectExceptionTrait;
 
 /**
  * @covers \bdk\CurlHttpMessage\Client
@@ -14,6 +16,9 @@ use bdk\Test\CurlHttpMessage\TestCase;
  */
 class ClientTest extends TestCase
 {
+    use AssertionTrait;
+    use ExpectExceptionTrait;
+
     public function testGetStack()
     {
         $client = new Client();
@@ -564,7 +569,7 @@ class ClientTest extends TestCase
             [
                 'foo' => 'bar bam',
                 'baz' => ['boo' => 'qux'],
-            ],
+            ]
         );
         $last = $mock->getLastRequest();
         self::assertSame(

@@ -34,7 +34,7 @@ class Teams extends AbstractRoute
     use ErrorThrottleTrait;
 
     protected $cfg = array(
-        'errorMask' => E_ERROR | E_PARSE | E_COMPILE_ERROR | E_WARNING | E_USER_ERROR,
+        'errorMask' => 0,
         'onClientInit' => null,
         'throttleMin' => 60, // 0 = no throttle
         'webhookUrl' => null, // default pulled from TEAMS_WEBHOOK_URL env var
@@ -52,6 +52,7 @@ class Teams extends AbstractRoute
     {
         parent::__construct($debug);
         $this->cfg = \array_merge($this->cfg, array(
+            'errorMask' => E_ERROR | E_PARSE | E_COMPILE_ERROR | E_WARNING | E_USER_ERROR,
             'webhookUrl' => \getenv('TEAMS_WEBHOOK_URL'),
         ));
         $debug->errorHandler->setCfg('enableStats', true);

@@ -3,6 +3,7 @@
 namespace bdk\Test\Promise;
 
 use bdk\Promise\Exception\AggregateException;
+use bdk\Test\PolyFill\AssertionTrait;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -11,6 +12,8 @@ use PHPUnit\Framework\TestCase;
  */
 class AggregateExceptionTest extends TestCase
 {
+    use AssertionTrait;
+
     public function testMessageAndReason()
     {
         $e = new AggregateException('foo', ['baz', 'bar']);

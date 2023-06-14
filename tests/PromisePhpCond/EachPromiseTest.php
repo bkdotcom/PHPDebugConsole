@@ -1,6 +1,6 @@
 <?php
 
-namespace bdk\Test\Promise;
+namespace bdk\Test\PromisePhpCond;
 
 use ArrayIterator;
 use bdk\Promise;

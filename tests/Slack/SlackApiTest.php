@@ -6,6 +6,8 @@ use bdk\CurlHttpMessage\Factory;
 use bdk\CurlHttpMessage\Handler\Mock as MockHandler;
 use bdk\Slack\SlackApi;
 use bdk\Slack\SlackMessage;
+use bdk\Test\PolyFill\AssertionTrait;
+use bdk\Test\PolyFill\ExpectExceptionTrait;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\RequestInterface;
 
@@ -14,6 +16,9 @@ use Psr\Http\Message\RequestInterface;
  */
 class SlackApiTest extends TestCase
 {
+    use AssertionTrait;
+    use ExpectExceptionTrait;
+
     private $mockHandler;
     private $factory;
 
@@ -63,7 +68,7 @@ class SlackApiTest extends TestCase
     public function testUnknownMethod()
     {
         $api = $this->buildClient();
-        self::expectException('BadMethodCallException');
+        $this->expectException('BadMethodCallException');
         $message = new SlackMessage([]);
         $api->chatSomething();
     }
@@ -161,9 +166,9 @@ class SlackApiTest extends TestCase
             ],
         ];
         foreach ($methods as $method => $args) {
-            $args = \array_merge([$method], $args);
-            yield $method => $args;
+            $methods[$method] = \array_merge([$method], $args);
         }
+        return $methods;
     }
 
     private function buildClient()

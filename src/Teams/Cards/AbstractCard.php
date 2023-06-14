@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 namespace bdk\Teams\Cards;
 
 use bdk\Teams\AbstractItem;

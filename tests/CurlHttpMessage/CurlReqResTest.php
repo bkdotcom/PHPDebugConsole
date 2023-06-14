@@ -5,12 +5,15 @@ namespace bdk\Test\CurlHttpMessage;
 use bdk\CurlHttpMessage\Exception\RequestException;
 use bdk\Promise;
 use bdk\Test\CurlHttpMessage\TestCase;
+use bdk\Test\PolyFill\AssertionTrait;
 
 /**
  * @covers \bdk\CurlHttpMessage\CurlReqRes
  */
 class CurlReqResTest extends TestCase
 {
+    use AssertionTrait;
+
     public function testConstruct()
     {
         $request = $this->factory->request('GET', 'http://example.com');

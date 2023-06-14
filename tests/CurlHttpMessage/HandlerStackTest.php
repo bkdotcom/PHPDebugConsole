@@ -7,12 +7,15 @@ namespace bdk\Test\CurlHttpMessage;
 
 use bdk\CurlHttpMessage\HandlerStack;
 use bdk\Test\CurlHttpMessage\TestCase;
+use bdk\Test\PolyFill\ExpectExceptionTrait;
 
 /**
  * @covers \bdk\CurlHttpMessage\HandlerStack
  */
 class HandlerStackTest extends TestCase
 {
+    use ExpectExceptionTrait;
+
     public function testSetsHandlerInConstructor()
     {
         $callable = static function () {};

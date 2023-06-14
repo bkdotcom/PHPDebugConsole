@@ -7,6 +7,7 @@ use bdk\Teams\Actions\ShowCard;
 use bdk\Teams\Elements\TableCell;
 use bdk\Teams\Elements\TextBlock;
 use bdk\Teams\Enums;
+use bdk\Test\PolyFill\ExpectExceptionTrait;
 use bdk\Test\Teams\AbstractTestCaseWith;
 use bdk\Test\Teams\Fixture\Stringable;
 
@@ -17,6 +18,8 @@ use bdk\Test\Teams\Fixture\Stringable;
  */
 class TableCellTest extends AbstractTestCaseWith
 {
+    use ExpectExceptionTrait;
+
     protected static $withMethods = array(
         'rtl?' => 'withRtl',
     );
@@ -146,8 +149,8 @@ class TableCellTest extends AbstractTestCaseWith
     public function testGetContentException()
     {
         $tableCell = new TableCell();
-        self::expectException('RuntimeException');
-        self::expectExceptionMessage('TableCell items is empty');
+        $this->expectException('RuntimeException');
+        $this->expectExceptionMessage('TableCell items is empty');
         $tableCell->getContent(1.5);
     }
 

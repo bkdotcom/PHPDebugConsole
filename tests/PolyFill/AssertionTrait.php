@@ -164,6 +164,9 @@ trait AssertionTrait
 
     private static function polyAssertMatchesRegularExpression($pattern, $string, $message = ''): void
     {
-        throw new AssertionFailedError('assertMatchesRegularExpression not yet implemented');
+        if (\preg_match($pattern, $string) !== 1) {
+            throw new AssertionFailedError($message ?: 'String does not match pattern');
+        }
+        TestCase::assertTrue(true);
     }
 }

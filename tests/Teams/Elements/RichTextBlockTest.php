@@ -5,6 +5,7 @@ namespace bdk\Test\Teams\Elements;
 use bdk\Teams\Elements\RichTextBlock;
 use bdk\Teams\Elements\TextRun;
 use bdk\Teams\Enums;
+use bdk\Test\PolyFill\ExpectExceptionTrait;
 use bdk\Test\Teams\AbstractTestCaseWith;
 
 /**
@@ -14,6 +15,8 @@ use bdk\Test\Teams\AbstractTestCaseWith;
  */
 class RichTextBlockTest extends AbstractTestCaseWith
 {
+    use ExpectExceptionTrait;
+
     public function testConstruct()
     {
         $rtb = new RichTextBlock(array(
@@ -35,7 +38,7 @@ class RichTextBlockTest extends AbstractTestCaseWith
 
     public function testConstructException()
     {
-        self::expectException('InvalidArgumentException');
+        $this->expectException('InvalidArgumentException');
         new RichTextBlock(array(
             3.14,
         ));
@@ -44,7 +47,7 @@ class RichTextBlockTest extends AbstractTestCaseWith
     public function testGetContentEmptyInlines()
     {
         $rtb = new RichTextBlock();
-        self::expectException('RuntimeException');
+        $this->expectException('RuntimeException');
         $rtb->getContent(1.2);
     }
 

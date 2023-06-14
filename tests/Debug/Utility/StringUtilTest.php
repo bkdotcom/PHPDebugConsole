@@ -41,8 +41,8 @@ class StringUtilTest extends TestCase
 
     public function testCompareException()
     {
-        self::expectException('InvalidArgumentException');
-        self::expectExceptionMessage('bdk\Debug\Utility\StringUtil::compare - Invalid operator passed');
+        $this->expectException('InvalidArgumentException');
+        $this->expectExceptionMessage('bdk\Debug\Utility\StringUtil::compare - Invalid operator passed');
         StringUtil::compare('1', '2', '3');
     }
 
@@ -70,15 +70,15 @@ class StringUtilTest extends TestCase
 
     public function testInterpolateInvalidMessage()
     {
-        self::expectException('InvalidArgumentException');
-        self::expectExceptionMessage('bdk\Debug\Utility::interpolate()\'s $message expects string or Stringable object. boolean provided.');
+        $this->expectException('InvalidArgumentException');
+        $this->expectExceptionMessage('bdk\Debug\Utility::interpolate()\'s $message expects string or Stringable object. boolean provided.');
         StringUtil::interpolate(false, 'string');
     }
 
     public function testInterpolateInvalidContext()
     {
-        self::expectException('InvalidArgumentException');
-        self::expectExceptionMessage('bdk\Debug\Utility::interpolate()\'s $context expects array or object for $context. string provided.');
+        $this->expectException('InvalidArgumentException');
+        $this->expectExceptionMessage('bdk\Debug\Utility::interpolate()\'s $context expects array or object for $context. string provided.');
         StringUtil::interpolate('message', 'string');
     }
 

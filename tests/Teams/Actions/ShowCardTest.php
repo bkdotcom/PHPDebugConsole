@@ -4,6 +4,7 @@ namespace bdk\Test\Teams\Actions;
 
 use bdk\Teams\Actions\ShowCard;
 use bdk\Teams\Cards\AdaptiveCard;
+use bdk\Test\PolyFill\ExpectExceptionTrait;
 use bdk\Test\Teams\AbstractTestCaseWith;
 
 /**
@@ -13,6 +14,8 @@ use bdk\Test\Teams\AbstractTestCaseWith;
  */
 class ShowCardTest extends AbstractTestCaseWith
 {
+    use ExpectExceptionTrait;
+
     public function testGetContent()
     {
         $showCard = (new ShowCard())

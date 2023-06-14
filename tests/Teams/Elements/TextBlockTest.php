@@ -4,6 +4,7 @@ namespace bdk\Test\Teams\Elements;
 
 use bdk\Teams\Elements\TextBlock;
 use bdk\Teams\Enums;
+use bdk\Test\PolyFill\ExpectExceptionTrait;
 use bdk\Test\Teams\AbstractTestCaseWith;
 use bdk\Test\Teams\Fixture\Stringable;
 
@@ -16,6 +17,8 @@ use bdk\Test\Teams\Fixture\Stringable;
  */
 class TextBlockTest extends AbstractTestCaseWith
 {
+    use ExpectExceptionTrait;
+
     public static function setUpBeforeClass(): void
     {
         // clear cached enums
@@ -79,8 +82,8 @@ class TextBlockTest extends AbstractTestCaseWith
     public function testGetContentException()
     {
         $textBlock = new TextBlock();
-        self::expectException('RuntimeException');
-        self::expectExceptionMessage('TextBlock text is required');
+        $this->expectException('RuntimeException');
+        $this->expectExceptionMessage('TextBlock text is required');
         $textBlock->getContent(1.2);
     }
 

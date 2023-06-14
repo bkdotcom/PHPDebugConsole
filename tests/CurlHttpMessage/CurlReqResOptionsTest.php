@@ -1,6 +1,6 @@
 <?php
 
-namespace bdk\Test\CurlHttpMessage\Middleware;
+namespace bdk\Test\CurlHttpMessage;
 
 use bdk\CurlHttpMessage\Factory;
 use bdk\HttpMessage\Response;
@@ -71,6 +71,11 @@ class CurlReqResOptionsTest extends TestCase
         self::assertInstanceOf($this->classes['Response'], $response);
 
         $curlOptions = $curlReqRes->getOptions()['curl'];
+        foreach ($curlOptions as $k => $v) {
+            if ($v === 0) {
+                $curlOptions[$k] = false;
+            }
+        }
         $subset = \array_replace($curlOptions, array(
             CURLOPT_URL => (string) $uri->withFragment(''),
             CURLOPT_FOLLOWLOCATION => false, // handled through middleware
@@ -110,6 +115,11 @@ class CurlReqResOptionsTest extends TestCase
         self::assertInstanceOf($this->classes['Response'], $response);
 
         $curlOptions = $curlReqRes->getOptions()['curl'];
+        foreach ($curlOptions as $k => $v) {
+            if ($v === 0) {
+                $curlOptions[$k] = false;
+            }
+        }
         $subset = \array_replace($curlOptions, array(
             CURLOPT_CUSTOMREQUEST => 'POST',
             CURLOPT_URL => (string) $uri->withFragment(''),
@@ -136,6 +146,10 @@ class CurlReqResOptionsTest extends TestCase
 
     public function testHead()
     {
+        if (PHP_VERSION_ID < 70400) {
+            self::markTestSkipped('PHP\'s built in server (ver < 7.4) does not handle HEAD request');
+        }
+
         // $handler = new CurlHandler();
         $uri = new Uri($this->baseUrl . '/echo');
         $request = $this->factory->request('HEAD', $uri);

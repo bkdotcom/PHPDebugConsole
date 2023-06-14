@@ -4,6 +4,7 @@ namespace bdk\Test\Handler;
 
 use bdk\CurlHttpMessage\Handler\Mock as MockHandler;
 use bdk\Test\CurlHttpMessage\TestCase;
+use bdk\Test\PolyFill\ExpectExceptionTrait;
 use Exception;
 use Psr\Http\Message\RequestInterface;
 
@@ -12,6 +13,8 @@ use Psr\Http\Message\RequestInterface;
  */
 class MockTest extends TestCase
 {
+    use ExpectExceptionTrait;
+
     public function testReturnsMockResponse()
     {
         $res = $this->factory->response();

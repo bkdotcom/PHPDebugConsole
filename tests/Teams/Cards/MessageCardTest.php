@@ -4,6 +4,7 @@ namespace bdk\Test\Teams\Cards;
 
 use bdk\Teams\Cards\MessageCard;
 use bdk\Teams\Section;
+use bdk\Test\PolyFill\ExpectExceptionTrait;
 use bdk\Test\Teams\AbstractTestCaseWith;
 
 /**
@@ -12,6 +13,8 @@ use bdk\Test\Teams\AbstractTestCaseWith;
  */
 class MessageCardTest extends AbstractTestCaseWith
 {
+    use ExpectExceptionTrait;
+
     public function testConstruct()
     {
         $card = new MessageCard('title', 'text');
@@ -25,8 +28,8 @@ class MessageCardTest extends AbstractTestCaseWith
 
     public function testConstructException()
     {
-        self::expectException('InvalidArgumentException');
-        self::expectExceptionMessage('bdk\Teams\Cards\MessageCard::__construct expects a string, numeric, stringable obj, or null. boolean provided.');
+        $this->expectException('InvalidArgumentException');
+        $this->expectExceptionMessage('bdk\Teams\Cards\MessageCard::__construct expects a string, numeric, stringable obj, or null. boolean provided.');
         new MessageCard(true, false);
     }
 

@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 namespace bdk\CurlHttpMessage\Handler;
 
 use bdk\CurlHttpMessage\CurlReqRes;

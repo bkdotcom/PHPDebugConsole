@@ -5,15 +5,23 @@ namespace bdk\Test\CurlHttpMessage\Handler;
 use bdk\CurlHttpMessage\Handler\CurlMulti;
 use bdk\Promise;
 use bdk\Test\CurlHttpMessage\TestCase;
+use bdk\Test\PolyFill\ExpectExceptionTrait;
 
 /**
  * @covers bdk\CurlHttpMessage\Handler\CurlMulti
  */
 class CurlMultiTest extends TestCase
 {
+    use ExpectExceptionTrait;
+
     public function testCanAddCustomCurlOptions()
     {
+        if (PHP_VERSION_ID < 50500) {
+            self::markTestSkipped('CURLMOPT_MAXCONNECTS is php >= 5.5');
+        }
+        // we overload curl_multi_setopt in test bootstrap to save option to GLOBALS
         $curlMulti = new CurlMulti([
+            // CURLMOPT_MAXCONNECTS = curl 7.16.3 (php 5.5+)
             'curlMulti' => [CURLMOPT_MAXCONNECTS => 5],
         ]);
         $request = $this->factory->request('GET', $this->baseUrl . '/echo');

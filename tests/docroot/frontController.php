@@ -8,10 +8,6 @@
 
 require __DIR__ . '/../../vendor/autoload.php';
 
-$serverRequest = \bdk\HttpMessage\ServerRequest::fromGlobals();
-$serverParams = $serverRequest->getServerParams();
-$requestUri = $serverRequest->getUri();
-
 if (\class_exists('bdk\\Debug')) {
     $debug = new \bdk\Debug(array(
         'collect' => true,
@@ -19,6 +15,10 @@ if (\class_exists('bdk\\Debug')) {
         'route' => 'wamp',
     ));
 }
+
+$serverRequest = \bdk\HttpMessage\ServerRequest::fromGlobals();
+$serverParams = $serverRequest->getServerParams();
+$requestUri = $serverRequest->getUri();
 
 \chdir($serverParams['DOCUMENT_ROOT']);
 

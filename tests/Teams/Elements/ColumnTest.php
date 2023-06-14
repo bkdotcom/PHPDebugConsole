@@ -7,6 +7,7 @@ use bdk\Teams\Actions\ShowCard;
 use bdk\Teams\Elements\Column;
 use bdk\Teams\Elements\TextBlock;
 use bdk\Teams\Enums;
+use bdk\Test\PolyFill\ExpectExceptionTrait;
 use bdk\Test\Teams\AbstractTestCaseWith;
 
 /**
@@ -19,6 +20,8 @@ use bdk\Test\Teams\AbstractTestCaseWith;
  */
 class ColumnTest extends AbstractTestCaseWith
 {
+    use ExpectExceptionTrait;
+
     public function testConstruct()
     {
         $column = new Column(array(
@@ -103,7 +106,7 @@ class ColumnTest extends AbstractTestCaseWith
     public function testGetContentNoItems()
     {
         $column = new Column();
-        self::expectException('RuntimeException');
+        $this->expectException('RuntimeException');
         $column->getContent(1.2);
     }
 

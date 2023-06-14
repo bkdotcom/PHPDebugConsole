@@ -8,6 +8,7 @@ use bdk\Teams\Elements\Column;
 use bdk\Teams\Elements\ColumnSet;
 use bdk\Teams\Elements\TextBlock;
 use bdk\Teams\Enums;
+use bdk\Test\PolyFill\ExpectExceptionTrait;
 use bdk\Test\Teams\AbstractTestCaseWith;
 
 /**
@@ -17,6 +18,8 @@ use bdk\Test\Teams\AbstractTestCaseWith;
  */
 class ColumnSetTest extends AbstractTestCaseWith
 {
+    use ExpectExceptionTrait;
+
     public function testContentGet()
     {
         $columnSet = (new ColumnSet())
@@ -68,8 +71,8 @@ class ColumnSetTest extends AbstractTestCaseWith
     public function testContentGetException()
     {
         $columnSet = new ColumnSet();
-        self::expectException('RuntimeException');
-        self::expectExceptionMessage('ColumnSet columns is empty');
+        $this->expectException('RuntimeException');
+        $this->expectExceptionMessage('ColumnSet columns is empty');
         $columnSet->getContent(1.2);
     }
 

@@ -30,7 +30,7 @@ class Slack extends AbstractRoute
 
     protected $cfg = array(
         'channel' => null, // default pulled from SLACK_CHANNEL env var
-        'errorMask' => E_ERROR | E_PARSE | E_COMPILE_ERROR | E_WARNING | E_USER_ERROR,
+        'errorMask' => 0,
         'onClientInit' => null,
         'throttleMin' => 60, // 0 = no throttle
         'token' => null, // default pulled from SLACK_TOKEN env var
@@ -51,6 +51,7 @@ class Slack extends AbstractRoute
         parent::__construct($debug);
         $this->cfg = \array_merge($this->cfg, array(
             'channel' => \getenv('SLACK_CHANNEL'),
+            'errorMask' => E_ERROR | E_PARSE | E_COMPILE_ERROR | E_WARNING | E_USER_ERROR,
             'token' => \getenv('SLACK_TOKEN'),
             'webhookUrl' => \getenv('SLACK_WEBHOOK_URL'),
         ));

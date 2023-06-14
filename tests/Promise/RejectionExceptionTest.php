@@ -3,6 +3,7 @@
 namespace bdk\Test\Promise;
 
 use bdk\Promise\Exception\RejectionException;
+use bdk\Test\PolyFill\AssertionTrait;
 use bdk\Test\Promise\Fixture\JsonSerializable;
 use bdk\Test\Promise\Fixture\Stringable;
 use PHPUnit\Framework\TestCase;
@@ -12,6 +13,8 @@ use PHPUnit\Framework\TestCase;
  */
 class RejectionExceptionTest extends TestCase
 {
+    use AssertionTrait;
+
     public function testCanGetReasonFromException()
     {
         $thing = new Stringable('foo');

@@ -10,12 +10,15 @@ use bdk\CurlHttpMessage\Handler\Mock as MockHandler;
 use bdk\CurlHttpMessage\Middleware\Status;
 use bdk\Promise;
 use bdk\Test\CurlHttpMessage\TestCase;
+use bdk\Test\PolyFill\ExpectExceptionTrait;
 
 /**
  * @covers bdk\CurlHttpMessage\Middleware\Status
  */
 class StatusTest extends TestCase
 {
+    use ExpectExceptionTrait;
+
     public function testNoExceptionOnSuccess()
     {
         $middleware = new Status();
@@ -45,8 +48,8 @@ class StatusTest extends TestCase
         $promise = $callable($curlReqRes);
         self::assertTrue(Promise::isPending($promise));
 
-        self::expectException($this->classes['BadResponseException']);
-        self::expectExceptionMessage('Client error: `GET http://foo.com` resulted in a `400 Bad Request');
+        $this->expectException($this->classes['BadResponseException']);
+        $this->expectExceptionMessage('Client error: `GET http://foo.com` resulted in a `400 Bad Request');
         $promise->wait();
     }
 
@@ -77,12 +80,8 @@ class StatusTest extends TestCase
         $promise = $callable($curlReqRes);
         self::assertTrue(Promise::isPending($promise));
 
-        self::expectException($this->classes['BadResponseException']);
-        self::expectExceptionMessage('GET http://foo.com` resulted in a `500 Internal Server Error');
+        $this->expectException($this->classes['BadResponseException']);
+        $this->expectExceptionMessage('GET http://foo.com` resulted in a `500 Internal Server Error');
         $promise->wait();
     }
-
-
-
-
 }

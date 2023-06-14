@@ -20,6 +20,7 @@ use Error;
 use Exception;
 use mysqli;
 use ReflectionFunction;
+use RuntimeException;
 
 /**
  * Internal subscriber to ABSTRACT_START and ABSTRACT_END events

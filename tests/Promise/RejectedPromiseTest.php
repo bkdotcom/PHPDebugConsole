@@ -4,6 +4,8 @@ namespace bdk\Test\Promise;
 
 use bdk\Promise;
 use bdk\Promise\RejectedPromise;
+use bdk\Test\PolyFill\AssertionTrait;
+use bdk\Test\PolyFill\ExpectExceptionTrait;
 use Exception;
 use PHPUnit\Framework\TestCase;
 
@@ -12,6 +14,9 @@ use PHPUnit\Framework\TestCase;
  */
 class RejectedPromiseTest extends TestCase
 {
+    use AssertionTrait;
+    use ExpectExceptionTrait;
+
     protected $classes = array(
         'InvalidArgumentException' => 'InvalidArgumentException',
         'LogicException' => 'LogicException',

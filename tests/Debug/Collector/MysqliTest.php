@@ -476,7 +476,8 @@ EOD;
 
         $result4 = self::$client->release_savepoint('Sally');
         $line = __LINE__ - 1;
-        if (PHP_VERSION_ID < 70000) {
+        if (PHP_VERSION_ID < 70000 || \mysqli_get_client_version() <= 50082) {
+            // https://bugs.mysql.com/bug.php?id=26288
             $this->assertTrue($result4);
             return;
         }

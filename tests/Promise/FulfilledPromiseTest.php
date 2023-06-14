@@ -7,13 +7,17 @@ use bdk\Promise\FulfilledPromise;
 use Exception;
 use LogicException;
 use PHPUnit\Framework\TestCase;
+use bdk\Test\PolyFill\ExpectExceptionTrait;
 
 /**
  * @covers bdk\Promise\FulfilledPromise
  */
 class FulfilledPromiseTest extends TestCase
 {
+    use ExpectExceptionTrait;
+
     protected $classes = array(
+        'LogicException' => 'LogicException',
         'InvalidArgumentException' => 'InvalidArgumentException',
     );
 
@@ -37,7 +41,7 @@ class FulfilledPromiseTest extends TestCase
      */
     public function testCannotResolve()
     {
-        $this->expectException(LogicException::class);
+        $this->expectException($this->classes['LogicException']);
 
         $p = new FulfilledPromise('foo');
         $p->resolve('bar');
@@ -48,7 +52,7 @@ class FulfilledPromiseTest extends TestCase
      */
     public function testCannotReject()
     {
-        $this->expectException(LogicException::class);
+        $this->expectException($this->classes['LogicException']);
 
         $p = new FulfilledPromise('foo');
         $p->reject('bar');

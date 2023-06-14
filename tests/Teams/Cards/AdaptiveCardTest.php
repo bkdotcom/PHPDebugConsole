@@ -7,6 +7,7 @@ use bdk\Teams\Actions\ShowCard;
 use bdk\Teams\Cards\AdaptiveCard;
 use bdk\Teams\Elements\TextBlock;
 use bdk\Teams\Enums;
+use bdk\Test\PolyFill\ExpectExceptionTrait;
 use bdk\Test\Teams\AbstractTestCaseWith;
 
 /**
@@ -17,6 +18,8 @@ use bdk\Test\Teams\AbstractTestCaseWith;
  */
 class AdaptiveCardTest extends AbstractTestCaseWith
 {
+    use ExpectExceptionTrait;
+
     protected static $unsupportedAttributes = array(
         'authentication',
         'refresh',
@@ -25,7 +28,7 @@ class AdaptiveCardTest extends AbstractTestCaseWith
 
     public function testConstructInvalidArg()
     {
-        self::expectException('InvalidArgumentException');
+        $this->expectException('InvalidArgumentException');
         new AdaptiveCard(123);
     }
 
@@ -72,8 +75,8 @@ class AdaptiveCardTest extends AbstractTestCaseWith
     public function testWithBackgroundImageObjException()
     {
         $card = new AdaptiveCard(1.1);
-        self::expectException('InvalidArgumentException');
-        self::expectExceptionMessage('backgroundImage fillmode, horizontalAlignment, & verticalAlignment values required card version 1.2 or greater');
+        $this->expectException('InvalidArgumentException');
+        $this->expectExceptionMessage('backgroundImage fillmode, horizontalAlignment, & verticalAlignment values required card version 1.2 or greater');
         $card->withBackgroundImage('http://example.com/img.jpg', Enums::FILLMODE_COVER);
     }
 

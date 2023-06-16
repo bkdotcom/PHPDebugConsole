@@ -68,7 +68,7 @@ class ObjectMethods
             'paramAttributeOutput' => $abs['cfgFlags'] & AbstractObject::PARAM_ATTRIBUTE_OUTPUT,
             'phpDocOutput' => $abs['cfgFlags'] & AbstractObject::PHPDOC_OUTPUT,
         );
-        $methods = $abs['methods'];
+        $methods = $abs->sort($abs['methods'], $abs['sort']);
         $magicMethods = \array_intersect(array('__call', '__callStatic'), \array_keys($methods));
         $str .= $this->dumpObject->magicMethodInfo($magicMethods);
         foreach ($methods as $methodName => $info) {

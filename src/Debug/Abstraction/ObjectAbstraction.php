@@ -120,65 +120,14 @@ class ObjectAbstraction extends Abstraction
     }
 
     /**
-     * {@inheritDoc}
-     */
-    #[\ReturnTypeWillChange]
-    public function offsetExists($key)
-    {
-        if (\array_key_exists($key, $this->values)) {
-            return $this->values[$key] !== null;
-        }
-        return isset($this->class[$key]);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    #[\ReturnTypeWillChange]
-    public function &offsetGet($key)
-    {
-        $value = $this->getCombinedValue($key);
-        if (\in_array($key, $this->sortableValues, true)) {
-            $this->sort($value, $this->values['sort']);
-        }
-        // update our local and return it as a reference
-        $this->values[$key] = $value;
-        return $this->values[$key];
-    }
-
-    /**
-     * Get merged class & instance value
-     *
-     * @param string $key Value key
-     *
-     * @return mixed
-     */
-    private function getCombinedValue($key)
-    {
-        $value = isset($this->values[$key])
-            ? $this->values[$key]
-            : null;
-        $classVal = \in_array($key, $this->sortableValues, true)
-            && ($this->values['isRecursion'] || $this->values['isExcluded'])
-                ? array() // don't inherit
-                : $this->class[$key];
-        if ($value !== null) {
-            return \is_array($classVal)
-                ? \array_replace_recursive($classVal, $value)
-                : $value;
-        }
-        return $classVal;
-    }
-
-    /**
      * Sorts constant/property/method array by visibility or name
      *
      * @param array  $array array to sort
      * @param string $order ("visibility")|"name"
      *
-     * @return void
+     * @return array
      */
-    private function sort(&$array, $order = 'visibility')
+    public function sort(array $array, $order = 'visibility')
     {
         $sortVisOrder = array('public', 'magic', 'magic-read', 'magic-write', 'protected', 'private', 'debug');
         $sortData = array(
@@ -208,5 +157,53 @@ class ObjectAbstraction extends Abstraction
         } elseif ($order === 'visibility') {
             \array_multisort($sortData['vis'], $sortData['name'], $array);
         }
+        return $array;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    #[\ReturnTypeWillChange]
+    public function offsetExists($key)
+    {
+        if (\array_key_exists($key, $this->values)) {
+            return $this->values[$key] !== null;
+        }
+        return isset($this->class[$key]);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    #[\ReturnTypeWillChange]
+    public function &offsetGet($key)
+    {
+        // update our local and return it as a reference
+        $this->values[$key] = $this->getCombinedValue($key);
+        return $this->values[$key];
+    }
+
+    /**
+     * Get merged class & instance value
+     *
+     * @param string $key Value key
+     *
+     * @return mixed
+     */
+    private function getCombinedValue($key)
+    {
+        $value = isset($this->values[$key])
+            ? $this->values[$key]
+            : null;
+        $classVal = \in_array($key, $this->sortableValues, true)
+            && ($this->values['isRecursion'] || $this->values['isExcluded'])
+                ? array() // don't inherit
+                : $this->class[$key];
+        if ($value !== null) {
+            return \is_array($classVal)
+                ? \array_replace_recursive($classVal, $value)
+                : $value;
+        }
+        return $classVal;
     }
 }

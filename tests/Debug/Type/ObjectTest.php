@@ -530,10 +530,16 @@ EOD;
                     'entry' => static function (LogEntry $entry) {
                         // echo print_r($entry->getValues(), true) . "\n";
                         $abs = $entry['args'][0];
+                        $constNames = \array_keys($abs['constants']);
+                        \sort($constNames);
+                        $propNames = \array_keys($abs['properties']);
+                        \sort($propNames, SORT_STRING|SORT_FLAG_CASE);
+                        $methodNames = \array_keys($abs['methods']);
+                        \sort($methodNames);
                         self::assertSame(array(
                             'INHERITED',
                             'MY_CONSTANT',
-                        ), \array_keys($abs['constants']));
+                        ), $constNames);
                         self::assertSame(array(
                             'baseDynamic',
                             'debug',
@@ -551,10 +557,10 @@ EOD;
                             'testBasePrivate',
                             'toString',
                             'toStrThrow',
-                        ), \array_keys($abs['properties']));
+                        ), $propNames);
                         self::assertSame(array(
-                            '__construct',
                             '__call',
+                            '__construct',
                             '__debugInfo',
                             '__get',
                             '__set',
@@ -566,7 +572,7 @@ EOD;
                             'prestoStatic',
                             'testBasePublic',
                             'testBaseStatic',
-                        ), \array_keys($abs['methods']));
+                        ), $methodNames);
                     },
                 ),
             ),
@@ -620,6 +626,8 @@ EOD;
         }
         self::assertSame($expect, $abs['implements']);
 
+        $constants = $abs['constants'];
+        \ksort($constants);
         self::assertSame(array(
             'INHERITED' => array(
                 'attributes' => array(),
@@ -651,7 +659,7 @@ EOD;
                 'value' => 'redefined in Test',
                 'visibility' => 'public',
             ),
-        ), $abs['constants']);
+        ), $constants);
 
         self::assertArraySubset(
             array(
@@ -905,11 +913,14 @@ EOD;
                     self::assertSame(array(
                         'A',
                     ), \array_keys($abs['constants']));
+
+                    $propNames = \array_keys($abs['properties']);
+                    \sort($propNames);
                     self::assertSame(array(
                         'b',
                         'debug.file',
                         'debug.line',
-                    ), \array_keys($abs['properties']));
+                    ), $propNames);
                     self::assertSame(array(
                         'anon',
                     ), \array_keys($abs['methods']));
@@ -969,12 +980,14 @@ EOD;
                         $abs['constants']['PI']
                     );
 
+                    $propNames = \array_keys($abs->getInstanceValues()['properties']);
+                    \sort($propNames);
                     self::assertSame(array(
                         'color',
-                        'pro',
                         'debug.file',
                         'debug.line',
-                    ), \array_keys($abs->getInstanceValues()['properties']));
+                        'pro',
+                    ), $propNames);
                     self::assertArraySubset(
                         array(
                             'attributes' => array(),

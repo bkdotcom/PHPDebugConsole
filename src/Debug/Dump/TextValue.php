@@ -183,7 +183,8 @@ class TextValue extends BaseValue
         if (isset($abs['methods']['__get'])) {
             $str .= '    ✨ This object has a __get() method' . "\n";
         }
-        foreach ($abs['properties'] as $name => $info) {
+        $properties = $abs->sort($abs['properties'], $abs['sort']);
+        foreach ($properties as $name => $info) {
             $name = \str_replace('debug.', '', $name);
             $info['isInherited'] = $info['declaredLast'] && $info['declaredLast'] !== $abs['className'];
             $vis = $this->dumpPropVis($info);

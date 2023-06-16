@@ -219,7 +219,8 @@ class TextAnsiValue extends TextValue
                 . $this->escapeReset
                 . "\n";
         }
-        foreach ($abs['properties'] as $name => $info) {
+        $properties = $abs->sort($abs['properties'], $abs['sort']);
+        foreach ($properties as $name => $info) {
             $info['isInherited'] = $info['declaredLast'] && $info['declaredLast'] !== $abs['className'];
             $vis = $this->cfg['escapeCodes']['muted'] . '(' . $this->dumpPropVis($info) . ')' . $this->escapeReset;
             $name = $this->cfg['escapeCodes']['property'] . $name . $this->escapeReset;
@@ -231,7 +232,7 @@ class TextAnsiValue extends TextValue
                     $this->escapeReset,
                     $this->dump($info['value'])
                 );
-            $str .= '    ' . $vis . ' ' . $name . $val . "\n";
+            $str .= \sprintf('    %s %s%s', $vis, $name, $val) . "\n";
         }
         $header = $str
             ? "\e[4mProperties:\e[24m"

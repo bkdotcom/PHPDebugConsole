@@ -55,6 +55,7 @@ class ObjectConstants
         if (\in_array('UnitEnum', $abs['implements'], true) === false) {
             return '';
         }
+        $cases = $abs['cases'];
         $cfg = array(
             'attributeOutput' => $abs['cfgFlags'] & AbstractObject::CASE_ATTRIBUTE_OUTPUT,
             'caseCollect' => $abs['cfgFlags'] & AbstractObject::CASE_COLLECT,
@@ -67,10 +68,10 @@ class ObjectConstants
         if (!$cfg['caseCollect']) {
             return '<dt class="cases">cases <i>not collected</i></dt>' . "\n";
         }
-        $cases = $abs['cases'];
         if (!$cases) {
             return '<dt class="cases"><i>no cases!</i></dt>' . "\n";
         }
+        $cases = $abs->sort($cases, $abs['sort']);
         $html = '<dt class="cases">cases</dt>' . "\n";
         foreach ($cases as $name => $info) {
             $html .= $this->dumpCase($name, $info, $cfg);
@@ -103,6 +104,7 @@ class ObjectConstants
         if (!$constants) {
             return '';
         }
+        $constants = $abs->sort($constants, $abs['sort']);
         $html = '<dt class="constants">constants</dt>' . "\n";
         foreach ($constants as $name => $info) {
             $info['isInherited'] = $info['declaredLast'] && $info['declaredLast'] !== $abs['className'];

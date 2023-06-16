@@ -143,6 +143,7 @@ class HtmlObject
             return '';
         }
         $str = '<dt class="attributes">attributes</dt>' . "\n";
+        $attributes = $abs->sort($attributes, $abs['sort']);
         foreach ($attributes as $info) {
             $str .= '<dd class="attribute">'
                 . $this->valDumper->markupIdentifier($info['name'])

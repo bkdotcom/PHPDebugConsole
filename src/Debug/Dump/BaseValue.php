@@ -331,7 +331,8 @@ class BaseValue extends AbstractComponent
     protected function dumpObjectProperties(Abstraction $abs)
     {
         $return = array();
-        foreach ($abs['properties'] as $name => $info) {
+        $properties = $abs->sort($abs['properties'], $abs['sort']);
+        foreach ($properties as $name => $info) {
             $info['isInherited'] = $info['declaredLast'] && $info['declaredLast'] !== $abs['className'];
             $vis = $this->dumpPropVis($info);
             $name = '(' . $vis . ') ' . \str_replace('debug.', '', $name);

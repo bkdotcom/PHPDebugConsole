@@ -60,7 +60,8 @@ class ObjectProperties
         $magicMethods = \array_intersect(array('__get', '__set'), \array_keys($abs['methods']));
         $html = '<dt class="properties">' . $this->dumpPropertiesLabel($abs) . '</dt>' . "\n";
         $html .= $this->dumpObject->magicMethodInfo($magicMethods);
-        foreach ($abs['properties'] as $name => $info) {
+        $properties = $abs->sort($abs['properties'], $abs['sort']);
+        foreach ($properties as $name => $info) {
             $info['className'] = $abs['className'];
             $info['isInherited'] = $info['declaredLast'] && $info['declaredLast'] !== $abs['className'];
             $html .= $this->dumpProperty($name, $info, $opts) . "\n";

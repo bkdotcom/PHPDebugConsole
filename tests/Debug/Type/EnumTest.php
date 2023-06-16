@@ -39,6 +39,9 @@ class EnumTest extends DebugTestFramework
                         $abs = $logEntry['args'][0];
                         self::assertAbstractionType($abs);
                         self::assertSame(Abstracter::TYPE_OBJECT, $abs['type']);
+
+                        $cases = $abs['cases'];
+                        \ksort($cases);
                         self::assertSame(array(
                             'BREAKFAST' => array(
                                 'attributes' => array(),
@@ -66,7 +69,7 @@ class EnumTest extends DebugTestFramework
                                 'value' => null,
                                 'visibility' => 'public',
                             ),
-                        ), $abs['cases']);
+                        ), $cases);
                     },
                     'html' => '<li class="m_log"><div class="t_object" data-accessible="public"><span class="t_const" title="The most important meal
                         Meals PHPDoc"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\Enum\</span>Meals</span><span class="t_operator">::</span><span class="t_identifier">BREAKFAST</span></span>
@@ -160,6 +163,9 @@ class EnumTest extends DebugTestFramework
                     'entry' => static function (LogEntry $logEntry) {
                         $abs = $logEntry['args'][0];
                         self::assertAbstractionType($abs);
+
+                        $cases = $abs['cases'];
+                        \ksort($cases);
                         self::assertSame(array(
                             'BREAKFAST' => array(
                                 'attributes' => array(),
@@ -182,7 +188,7 @@ class EnumTest extends DebugTestFramework
                                 'value' => 'lunch',
                                 'visibility' => 'public',
                             ),
-                        ), $abs['cases']);
+                        ), $cases);
                     },
                     'html' => '<li class="m_log"><div class="t_object" data-accessible="public"><span class="t_const"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\Enum\</span>MealsBacked</span><span class="t_operator">::</span><span class="t_identifier">BREAKFAST</span></span>
                         <dl class="object-inner">

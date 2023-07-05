@@ -1107,25 +1107,14 @@ EOD;
                 $dateTime,
             ),
             array(
-                'chromeLogger' => array(
-                    array(
-                        'dateTime',
-                        array(
-                            '___class_name' => 'DateTime',
-                        ),
-                    ),
-                    null,
-                    '',
-                ),
-                'firephp' => 'X-Wf-1-1-1-%d: %d|[{"Label":"dateTime","Type":"LOG"},{"___class_name":"DateTime"}]|',
+                'entry' => static function (LogEntry $logEntry) use ($dateTime) {
+                    // Note:  DateTime in PHP < 7.4 has public properties!
+                    $abs = $logEntry['args'][1];
+                    self::assertSame($dateTime->format(\DateTime::ISO8601), $abs['stringified']);
+                },
                 'html' => static function ($htmlActual) use ($dateTime) {
                     self::assertStringContainsString('<li class="m_log"><span class="no-quotes t_string">dateTime</span> = <div class="t_object" data-accessible="public"><span class="t_string t_stringified">' . $dateTime->format(\DateTime::ISO8601) . '</span>', $htmlActual);
                 },
-                'script' => 'console.log("dateTime",{"___class_name":"DateTime"});',
-                'text' => 'dateTime = DateTime
-                    Properties: none!
-                    Methods:
-                        public: %d',
             )
         );
     }

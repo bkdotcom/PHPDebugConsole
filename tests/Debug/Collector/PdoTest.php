@@ -263,6 +263,7 @@ EOD;
     public function testExecuteException()
     {
         $this->expectException('PDOException');
+        self::$client->setAttribute(PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
         $statement = self::$client->prepare('SELECT *
             FROM `bob`
             WHERE e < :datetime');

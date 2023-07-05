@@ -210,9 +210,11 @@ EOD;
                             "\t" . '<li><span class="t_key">string</span><span class="t_operator">=&gt;</span><span class="t_string">cheese</span></li>',
                             "\t" . '<li><span class="t_key">bool</span><span class="t_operator">=&gt;</span><span class="t_bool" data-type-more="true">true</span></li>',
                             "\t" . '<li><span class="t_key">obj</span><span class="t_operator">=&gt;</span><div class="t_object" data-accessible="public"><span class="classname">stdClass</span>',
-                            '<dl class="object-inner">',
-                            '<dt class="attributes">attributes</dt>',
-                            '<dd class="attribute"><span class="classname">AllowDynamicProperties</span></dd>',
+                            (PHP_VERSION_ID >= 80000
+                                ? '<dl class="object-inner">' . "\n"
+                                    . '<dt class="attributes">attributes</dt>' . "\n"
+                                    . '<dd class="attribute"><span class="classname">AllowDynamicProperties</span></dd>'
+                                : '<dl class="object-inner">'),
                             '<dt class="properties">properties</dt>',
                             '<dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier">foo</span> <span class="t_operator">=</span> <span class="t_string">bar</span></dd>',
                             '<dt class="methods">no methods</dt>',
@@ -1123,7 +1125,7 @@ EOD;
                 'text' => 'dateTime = DateTime
                     Properties: none!
                     Methods:
-                        public: 22',
+                        public: %d',
             )
         );
     }

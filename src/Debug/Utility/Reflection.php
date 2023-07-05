@@ -31,6 +31,19 @@ use UnitEnum;
  */
 class Reflection
 {
+    private static $regex = '/^(?:
+            (?:
+                (?P<class>[\w\\\]+) # classname
+                (?:::(?:
+                    (?P<constant>\w+)|       # constant
+                    (?:\$(?P<property>\w+))| # property
+                    (?:(?P<method>\w+)\(\))| # method
+                ))?
+            )|(?:
+                (?P<function>[\w\\\]*\w+)\(\)
+            )
+        )$/x';
+
     /**
      * Get the reflector's classname
      *
@@ -206,20 +219,8 @@ class Reflection
      */
     private static function getReflectorFromString($string)
     {
-        $regex = '/^(?:'
-                . '(?:'
-                    . '(?P<class>[\w\\\]+)' // classname
-                    . '(?:::(?:'
-                        . '(?P<constant>\w+)|'       // constant
-                        . '(?:\$(?P<property>\w+))|' // property
-                        . '(?:(?P<method>\w+)\(\))|' // method
-                    . '))?'
-                . ')|(?:'
-                    . '(?P<function>[\w\\\]*\w+)\(\)'
-                . ')'
-            . ')$/';
         $matches = array();
-        \preg_match($regex, $string, $matches);
+        \preg_match(self::$regex, $string, $matches);
         $defaults = \array_fill_keys(array('class', 'constant', 'property', 'method', 'function'), null);
         $matches = \array_merge($defaults, $matches);
         if ($matches['method']) {
@@ -229,13 +230,7 @@ class Reflection
             return new ReflectionProperty($matches['class'], $matches['property']);
         }
         if ($matches['class'] && PHP_VERSION_ID >= 80100 && \enum_exists($matches['class'])) {
-            $refEnum = new ReflectionEnum($matches['class']);
-            if (empty($matches['constant'])) {
-                return $refEnum;
-            }
-            return $refEnum->hasCase($matches['constant'])
-                ? $refEnum->getCase($matches['constant']) // ReflectionEnumUnitCase or ReflectionEnumBackedCase
-                : $refEnum->getReflectionConstant($matches['constant']);  // ReflectionClassConstant
+            return self::getReflectorFromStringEnum($matches);
         }
         if ($matches['constant'] && PHP_VERSION_ID >= 70100) {
             return new ReflectionClassConstant($matches['class'], $matches['constant']);
@@ -247,5 +242,23 @@ class Reflection
             return new ReflectionFunction($matches['function']);
         }
         return false;
+    }
+
+    /**
+     * Get enum reflector from string matches
+     *
+     * @param array $matches regex matches
+     *
+     * @return Reflector ReflectionEnum | ReflectionEnumUnitCase | ReflectionEnumBackedCase | ReflectionClassConstant
+     */
+    private static function getReflectorFromStringEnum(array $matches)
+    {
+        $refEnum = new ReflectionEnum($matches['class']);
+        if (empty($matches['constant'])) {
+            return $refEnum;
+        }
+        return $refEnum->hasCase($matches['constant'])
+            ? $refEnum->getCase($matches['constant']) // ReflectionEnumUnitCase or ReflectionEnumBackedCase
+            : $refEnum->getReflectionConstant($matches['constant']);  // ReflectionClassConstant
     }
 }

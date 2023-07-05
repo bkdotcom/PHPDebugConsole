@@ -235,9 +235,9 @@ class DebugTest extends DebugTestFramework
             array('bdk\ErrorHandler', 'onShutdown'),
             array('bdk\Debug\Method\Group', 'onShutdown'),
             array('bdk\Debug\InternalEvents', 'onShutdownHigh2'),
-            'Closure(' . TEST_DIR . '/bootstrap.php)',
             array('bdk\Debug\InternalEvents', 'onShutdownLow'),
             array('bdk\Debug\Route\Wamp', 'onShutdown'),
+            'Closure(' . TEST_DIR . '/bootstrap.php)',
         );
         $this->assertSame($subscribersExpect, $subscribers);
     }

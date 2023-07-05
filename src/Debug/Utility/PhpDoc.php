@@ -333,6 +333,7 @@ class PhpDoc extends PhpDocBase
                 'tags' => array('param','property','property-read', 'property-write', 'var'),
             ),
             array(
+                // @phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
                 'callable' => function ($tagStr, $tagName, $parsed) {
                     $parsed['param'] = $this->parseMethodParams($parsed['param']);
                     $parsed['static'] = $parsed['static'] !== null;
@@ -352,6 +353,7 @@ class PhpDoc extends PhpDocBase
             array(
                 'callable' => array(
                     array($this, 'extractTypeFromBody'),
+                    // @phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
                     function ($tagStr, $tagName, $parsed) {
                         $parsed['type'] = $this->typeNormalize($parsed['type']);
                         return $parsed;

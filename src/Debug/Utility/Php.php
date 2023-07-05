@@ -14,6 +14,7 @@ namespace bdk\Debug\Utility;
 
 use bdk\Debug\Utility\Reflection;
 use Exception;
+use Reflector;
 
 /**
  * Php language utilities
@@ -41,15 +42,9 @@ class Php
         if ($reflector && \method_exists($reflector, 'getDeclaringClass')) {
             $reflector = $reflector->getDeclaringClass();
         }
-        if (PHP_VERSION_ID < 70000 || $reflector->isAnonymous() === false) {
-            return $reflector->getName();
-        }
-        // anonymous class
-        $parentClassRef = $reflector->getParentClass();
-        $extends = $parentClassRef
-            ? $parentClassRef->getName()
-            : null;
-        return ($extends ?: \current($reflector->getInterfaceNames()) ?: 'class') . '@anonymous';
+        return PHP_VERSION_ID >= 70000 && $reflector->isAnonymous()
+            ? self::friendlyClassNameAnon($reflector)
+            : $reflector->getName();
     }
 
     /**
@@ -244,6 +239,22 @@ class Php
         return $opts & self::IS_CALLABLE_NO_CALL
             ? false
             : \method_exists($val[0], '__callStatic');
+    }
+
+    /**
+     * Get friendly name for anonymous class
+     *
+     * @param Reflector $reflector Reflector
+     *
+     * @return string
+     */
+    private static function friendlyClassNameAnon(Reflector $reflector)
+    {
+        $parentClassRef = $reflector->getParentClass();
+        $extends = $parentClassRef
+            ? $parentClassRef->getName()
+            : null;
+        return ($extends ?: \current($reflector->getInterfaceNames()) ?: 'class') . '@anonymous';
     }
 
     /**

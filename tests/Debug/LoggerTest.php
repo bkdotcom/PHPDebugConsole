@@ -18,7 +18,9 @@ class LoggerTest extends DebugTestFramework
 
     public function testConstruct()
     {
-        $logger = new \bdk\Debug\Psr3\Logger();
+        $this->helper->resetContainerValue('logger');
+
+        $logger = $this->debug->logger;
         $this->assertSame($this->debug, $logger->debug);
     }
 

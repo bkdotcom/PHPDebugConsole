@@ -138,6 +138,22 @@ class Helper
             : $refProp->setValue($obj, $val);
     }
 
+    public function resetContainerValue($name)
+    {
+        $debug = Debug::getInstance();
+        $container = self::getProp($debug, 'container');
+        $invoked = self::getProp($container, 'invoked');
+        if (isset($invoked[$name])) {
+            $raw = self::getProp($container, 'raw');
+            $values = self::getProp($container, 'values');
+            $values[$name] = $raw[$name];
+            unset($invoked[$name]);
+            self::setProp($container, 'invoked', $invoked);
+            self::setProp($container, 'raw', $raw);
+            self::setProp($container, 'values', $values);
+        }
+    }
+
     /**
      * convert log entry to array
      *

@@ -57,6 +57,7 @@ class SerializeLogTest extends DebugTestFramework
             'classDefinitions' => array(
                 'bdk\\Test\\Debug\\Fixture\\TestObj' => $debug->abstracter->crate(new TestObj())->getClassValues(),
                 "\x00default\x00" => $this->helper->getProp($debug->abstracter->abstractObject->class, 'values'),
+                'stdClass' => $debug->abstracter->crate((object) array())->getClassValues(),
             ),
             'config' => array(
                 'channelIcon' => $debug->getCfg('channelIcon', Debug::CONFIG_DEBUG),

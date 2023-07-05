@@ -23,11 +23,14 @@ use bdk\Test\Debug\DebugTestFramework;
  * @covers \bdk\Debug\Dump\Html\Helper
  * @covers \bdk\Debug\Dump\Html\HtmlObject
  * @covers \bdk\Debug\Dump\Html\HtmlString
+ * @covers \bdk\Debug\Dump\Html\ObjectConstants
+ * @covers \bdk\Debug\Dump\Html\ObjectMethods
+ * @covers \bdk\Debug\Dump\Html\ObjectProperties
  * @covers \bdk\Debug\Dump\Html\Table
  * @covers \bdk\Debug\Dump\Html\Value
  * @covers \bdk\Debug\Route\ChromeLogger
- * @covers \bdk\Debug\Route\Text
  * @covers \bdk\Debug\Route\Script
+ * @covers \bdk\Debug\Route\Text
  * @covers \bdk\Debug\ServiceProvider
  */
 class ServiceProviderTest extends DebugTestFramework

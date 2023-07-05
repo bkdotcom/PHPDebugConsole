@@ -16,6 +16,7 @@ enum Meals
 
     #[ExampleCaseAttribute]
     case LUNCH;
+    /** What's for dinner? */
     case DINNER;
 
     static function prepare($meal = self::BREAKFAST) {

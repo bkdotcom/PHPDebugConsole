@@ -68,7 +68,7 @@ class AbstractObjectClass
     }
 
     /**
-     * Get Class abstraction
+     * Get class abstraction
      *
      * @param object $obj  Object being abstracted
      * @param array  $info values already collected
@@ -84,8 +84,8 @@ class AbstractObjectClass
 
         $this->addDefinition($abs);
         $this->addAttributes($abs);
-        $this->constants->addCases($abs);
         $this->constants->add($abs);
+        $this->constants->addCases($abs);
         $this->methods->add($abs);
         $this->properties->addClass($abs);
         if ($abs['className'] === 'Closure') {
@@ -101,7 +101,7 @@ class AbstractObjectClass
     /**
      * Get class ValueStore obj
      *
-     * @param object $obj  object being abstracted
+     * @param object $obj  Object being abstracted
      * @param array  $info Instance abstraction info
      *
      * @return ValueStore
@@ -123,14 +123,14 @@ class AbstractObjectClass
         if ($valueStore) {
             return $valueStore;
         }
-        $skip = \array_filter(array($info['isMaxDepth'], $info['isExcluded']));
-        if ($skip) {
+        if (\array_filter(array($info['isMaxDepth'], $info['isExcluded']))) {
             return $this->getValueStoreDefault();
         }
-        $abs = $this->getAbstraction($obj, $info);
-        $valueStore = new ValueStore($abs->getValues());
-        unset($valueStore['type']);
+        $valueStore = new ValueStore();
         $this->debug->data->set($dataPath, $valueStore);
+        $classAbs = $this->getAbstraction($obj, $info);
+        $valueStore->setValues($classAbs->getValues());
+        unset($valueStore['type']);
         return $valueStore;
     }
 

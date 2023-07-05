@@ -2,6 +2,7 @@
 
 namespace bdk\Test\Debug\Fixture;
 
+use bdk\Debug;
 use bdk\Debug\Abstraction\Abstraction;
 
 /**
@@ -59,11 +60,12 @@ class TestObj extends TestBase
      */
     public function __construct($toString = 'abracadabra', $toStrThrow = 0)
     {
-        $this->debug = \bdk\Debug::getInstance();
+        $this->debug = Debug::getInstance();
         $this->toStrThrow = $toStrThrow;
         $this->toString = $toString;
         $this->instance = $this;
         $this->dynamic = 'dynomite!';
+        $this->someArray['obj'] = (object) array('foo' => 'bar');
         parent::__construct();
     }
 

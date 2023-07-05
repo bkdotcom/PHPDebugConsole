@@ -197,21 +197,7 @@ class Emailer extends AbstractComponent implements SubscriberInterface
      */
     private function buildBodyError(Error $error)
     {
-        $emailBody = \implode("\n", array(
-            'datetime: ' . \date($this->cfg['dateTimeFmt']),
-            'type: ' . $error['type'] . ' (' . $error['typeStr'] . ')',
-            'message: ' . $error->getMessageText(),
-            'file: ' . $error['file'],
-            'line: ' . $error['line'],
-        )) . "\n";
-        if ($this->isCli === false) {
-            $emailBody .= \implode("\n", array(
-                'remote_addr: ' . $this->serverParams['REMOTE_ADDR'],
-                'http_host: ' . $this->serverParams['HTTP_HOST'],
-                'referer: ' . (isset($this->serverParams['HTTP_REFERER']) ? $this->serverParams['HTTP_REFERER'] : 'null'),
-                'request_uri: ' . $this->serverParams['REQUEST_URI'],
-            )) . "\n";
-        }
+        $emailBody = $this->buildBodyValues($error);
         if (!empty($_POST)) {
             $emailBody .= 'post params: ' . \var_export($_POST, true) . "\n";
         }
@@ -225,6 +211,35 @@ class Emailer extends AbstractComponent implements SubscriberInterface
     }
 
     /**
+     * Build string containing error values
+     *
+     * @param Error $error Error instance
+     *
+     * @return string
+     */
+    private function buildBodyValues(Error $error)
+    {
+        $string = \implode("\n", array(
+            'datetime: ' . \date($this->cfg['dateTimeFmt']),
+            'type: ' . $error['type'] . ' (' . $error['typeStr'] . ')',
+            'message: ' . $error->getMessageText(),
+            'file: ' . $error['file'],
+            'line: ' . $error['line'],
+        )) . "\n";
+        if ($this->isCli === false) {
+            $string .= \implode("\n", array(
+                'remote_addr: ' . $this->serverParams['REMOTE_ADDR'],
+                'http_host: ' . $this->serverParams['HTTP_HOST'],
+                'referer: ' . (isset($this->serverParams['HTTP_REFERER'])
+                    ? $this->serverParams['HTTP_REFERER']
+                    : 'null'),
+                'request_uri: ' . $this->serverParams['REQUEST_URI'],
+            )) . "\n";
+        }
+        return $string;
+    }
+
+    /**
      * Build summary of errors that haven't occured in a while
      *
      * @param array $errors errors to include in summary
@@ -233,7 +248,12 @@ class Emailer extends AbstractComponent implements SubscriberInterface
      */
     protected function buildBodySummary($errors)
     {
-        $emailBody = '';
+        $request = $this->isCli
+            ? \implode(' ', $this->serverParams['argv'])
+            : $this->serverParams['HTTP_HOST'] . $this->serverParams['REQUEST_URI'];
+
+        $emailBody = 'This summary sent via ' . $request . "\n\n";
+
         foreach ($errors as $errStats) {
             $countSinceLine = isset($errStats['email'])
                 ? \sprintf(

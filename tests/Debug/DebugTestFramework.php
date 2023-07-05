@@ -578,11 +578,6 @@ class DebugTestFramework extends DOMTestCase
                     break;
                 case 'firephp':
                     /*
-                    if ($asString) {
-                        $outputExpect = \preg_replace('/^(X-Wf-1-1-1-)\S+\b/m', '$1%d', $outputExpect);
-                    }
-                    */
-                    /*
                         Filter just the log entry headers
                     */
                     $headersNew = array();
@@ -697,19 +692,23 @@ class DebugTestFramework extends DOMTestCase
         if ($test === 'firephp') {
             $outputExpect = \preg_replace('/^(X-Wf-1-1-1-)\S+\b/m', '$1%d', $outputExpect);
         }
-        $output = \preg_replace('#^\s+#m', '', $output);
+
+        $outputNorm = $output;
+        $outputNorm = \preg_replace('#^\s+#m', '', $outputNorm);
         $outputExpect = \preg_replace('#^\s+#m', '', $outputExpect);
         // @see https://github.com/sebastianbergmann/phpunit/issues/3040
-        $output = \str_replace("\r", '[\\r]', $output);
+        $outputNorm = \str_replace("\r", '[\\r]', $outputNorm);
         $outputExpect = \str_replace("\r", '[\\r]', $outputExpect);
-        $message = "\e[1m" . $test . " not same\e[0m";
+
         try {
-            $this->assertStringMatchesFormat(\trim($outputExpect), \trim($output), $message);
+            $message = "\e[1m" . $test . " not same\e[0m";
+            $this->assertStringMatchesFormat(\trim($outputExpect), \trim($outputNorm), $message);
         } catch (\Exception $e) {
             echo $test . ':' . "\n";
             echo $test === 'streamAnsi'
                 ? 'expect: ' . \str_replace("\e", '\e', $outputExpect) . "\n\n"
-                    . 'actual: ' . \str_replace("\e", '\e', $output) . "\n\n"
+                    . 'actual: ' . \str_replace("\e", '\e', $outputNorm) . "\n\n"
+                    . 'actual: ' . $output . "\n\n"
                 : 'expect: ' . $outputExpect . "\n\n"
                     . 'actual: ' . $output . "\n";
             throw new \PHPUnit\Framework\AssertionFailedError($test . ' has failed');

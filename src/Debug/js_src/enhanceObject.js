@@ -202,4 +202,5 @@ function postToggle ($obj, allDescendants) {
     })
     $(dt).toggleClass('text-muted', $dds.length > 0 && $ddsVis.length === 0)
   })
+  $obj.trigger('expanded.debug.object')
 }

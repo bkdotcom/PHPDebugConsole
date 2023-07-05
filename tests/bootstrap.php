@@ -99,6 +99,7 @@ $debug = \bdk\Debug::getInstance(array(
     ),
     'emailFrom' => 'testFrom@test.com',
     'enableProfiling' => true,
+    'errorStatsFile' => __DIR__ . '/../tmp/error_stats.json',
     'exitCheck' => false,
     'fullyQualifyPhpDocType' => true,
     'logEnvInfo' => false,
@@ -125,13 +126,13 @@ $debug = \bdk\Debug::getInstance(array(
 $httpdProcess = \bdk\Test\startHttpd();
 
 $debug->eventManager->subscribe(\bdk\PubSub\Manager::EVENT_PHP_SHUTDOWN, function () use ($httpdProcess) {
-    // $procDetails = \proc_get_status($httpdProcess);
     \proc_terminate($httpdProcess);
     $files = \glob(TEST_DIR . '/../tmp/log/*.json');
     foreach ($files as $filePath) {
         \unlink($filePath);
     }
     $files = array(
+        __DIR__ . '/../tmp/error_stats.json',
         __DIR__ . '/../tmp/logo_clone.png',
     );
     foreach ($files as $file) {
@@ -139,7 +140,7 @@ $debug->eventManager->subscribe(\bdk\PubSub\Manager::EVENT_PHP_SHUTDOWN, functio
             \unlink($file);
         }
     }
-});
+}, 0 - PHP_INT_MAX);
 
 $debug->eventManager->subscribe(\bdk\Debug::EVENT_STREAM_WRAP, function (\bdk\PubSub\Event $event) {
     if (\strpos($event['filepath'], 'StreamTest') !== false) {

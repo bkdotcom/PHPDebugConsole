@@ -221,7 +221,9 @@ class TextAnsiValue extends TextValue
         }
         $properties = $abs->sort($abs['properties'], $abs['sort']);
         foreach ($properties as $name => $info) {
+            $info['className'] = $abs['className'];
             $info['isInherited'] = $info['declaredLast'] && $info['declaredLast'] !== $abs['className'];
+            $prefix = $this->dumpPropPrefix($info);
             $vis = $this->cfg['escapeCodes']['muted'] . '(' . $this->dumpPropVis($info) . ')' . $this->escapeReset;
             $name = $this->cfg['escapeCodes']['property'] . $name . $this->escapeReset;
             $val = $info['debugInfoExcluded']
@@ -232,12 +234,38 @@ class TextAnsiValue extends TextValue
                     $this->escapeReset,
                     $this->dump($info['value'])
                 );
-            $str .= \sprintf('    %s %s%s', $vis, $name, $val) . "\n";
+            $str .= \sprintf('    %s%s %s%s', $prefix, $vis, $name, $val) . "\n";
         }
         $header = $str
             ? "\e[4mProperties:\e[24m"
             : 'Properties: none!';
         return '  ' . $header . "\n" . $str;
+    }
+
+    /**
+     * Get inherited/dynamic/override indicator
+     *
+     * @param array $info Property info
+     *
+     * @return string
+     */
+    protected function dumpPropPrefix(array $info)
+    {
+        $info = \array_filter(array(
+            'inherited' => $info['isInherited'],
+            'isDynamic' => $info['declaredLast'] === null
+                && $info['valueFrom'] === 'value'
+                && $info['className'] !== 'stdClass',
+            'overrides' => $info['isInherited'] === false && $info['declaredPrev'],
+        ));
+        $prefixes = \array_intersect_key(array(
+            'inherited' => $this->cfg['escapeCodes']['muted'] . '↳' . $this->escapeReset,
+            'isDynamic' => $this->cfg['escapeCodesMethods']['warn'] . '⚠' . $this->escapeReset,
+            'overrides' => $this->cfg['escapeCodes']['muted'] . '⟳' . $this->escapeReset,
+        ), $info);
+        return $prefixes
+            ? \implode(' ', $prefixes) . ' '
+            : '';
     }
 
     /**

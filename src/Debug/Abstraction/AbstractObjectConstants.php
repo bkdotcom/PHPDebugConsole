@@ -24,6 +24,8 @@ use UnitEnum;
  */
 class AbstractObjectConstants extends AbstractObjectInheritable
 {
+    protected $abs;
+
     private $constants = array();
     private $attributeCollect = true;
     private $phpDocCollect = true;
@@ -51,17 +53,21 @@ class AbstractObjectConstants extends AbstractObjectInheritable
         if (!($abs['cfgFlags'] & AbstractObject::CONST_COLLECT)) {
             return;
         }
+        $this->abs = $abs;
         $this->constants = array();
         $this->attributeCollect = ($abs['cfgFlags'] & AbstractObject::CONST_ATTRIBUTE_COLLECT) === AbstractObject::CONST_ATTRIBUTE_COLLECT;
         $this->phpDocCollect = ($abs['cfgFlags'] & AbstractObject::PHPDOC_COLLECT) === AbstractObject::PHPDOC_COLLECT;
         /*
             We trace our lineage to learn where constants are inherited from
         */
+        $briefBak = $this->abstracter->debug->setCfg('brief', true);
         $this->traverseAncestors($abs['reflector'], function (ReflectionClass $reflector) {
             PHP_VERSION_ID >= 70100
                 ? $this->addConstantsReflection($reflector)
                 : $this->addConstantsLegacy($reflector);
         }, true);
+        $this->abstracter->debug->setCfg('brief', $briefBak);
+        $this->abs = null;
         $abs['constants'] = $this->constants;
     }
 
@@ -88,31 +94,6 @@ class AbstractObjectConstants extends AbstractObjectInheritable
             $cases[$name] = $this->getCaseRefInfo($refCase);
         }
         $abs['cases'] = $cases;
-    }
-
-    /**
-     * Collect constant values that are Enums
-     *
-     * attempting to do this at the class level leads to recursion
-     *
-     * @param Abstraction $abs Object Abstraction instance
-     *
-     * @return void
-     */
-    public function addConstantEnumValues(Abstraction $abs)
-    {
-        if (PHP_VERSION_ID < 80100) {
-            return;
-        }
-        $reflector = $abs['reflector'];
-        foreach ($reflector->getReflectionConstants() as $refConstant) {
-            $value = $refConstant->getValue();
-            if (!($value instanceof UnitEnum) || $refConstant->isEnumCase()) {
-                continue;
-            }
-            $name = $refConstant->getName();
-            $abs['constants'][$name]['value'] = $this->abstracter->crate($value, $abs['debugMethod'], $abs['hist']);
-        }
     }
 
     /**
@@ -199,8 +180,7 @@ class AbstractObjectConstants extends AbstractObjectInheritable
     {
         $value = $refConstant->getValue();
         if ($value instanceof UnitEnum) {
-            // storing enum value at class level leads to recursion
-            $value = null;
+            $value = $this->abstracter->crate($value, $this->abs['debugMethod']);
         }
         return \array_merge(static::$baseConstInfo, array(
             'attributes' => $this->attributeCollect

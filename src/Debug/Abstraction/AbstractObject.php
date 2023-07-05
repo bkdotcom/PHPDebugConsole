@@ -20,7 +20,6 @@ use bdk\Debug\Abstraction\AbstractObjectProperties;
 use bdk\Debug\Abstraction\ObjectAbstraction;
 use bdk\Debug\Utility\Reflection;
 use ReflectionClass;
-use ReflectionEnum;
 use ReflectionEnumUnitCase;
 use RuntimeException;
 use UnitEnum;
@@ -246,33 +245,6 @@ class AbstractObject extends AbstractComponent
     }
 
     /**
-     * Add enum case's @var desc (if exists) to phpDoc
-     *
-     * @param Abstraction $abs Abstraction instance
-     *
-     * @return void
-     */
-    private function addEnumCasePhpDoc(Abstraction $abs)
-    {
-        if (!($abs['cfgFlags'] & self::PHPDOC_COLLECT)) {
-            return;
-        }
-        $reflector = $abs['reflector'];
-        if (!($reflector instanceof ReflectionEnum)) {
-            return;
-        }
-        $name = $abs->getSubject()->name;
-        $caseReflector = $reflector->getCase($name);
-        $desc = $this->helper->getPhpDocVar($caseReflector)['desc'];
-        if ($desc) {
-            $abs['phpDoc'] = \array_merge($abs['phpDoc'], array(
-                'desc' => \trim($abs['phpDoc']['summary'] . "\n" . $abs['phpDoc']['desc']),
-                'summary' => $desc,
-            ));
-        }
-    }
-
-    /**
      * Populate rows or columns (traverseValues) if we're outputing as a table
      *
      * @param Abstraction $abs Abstraction instance
@@ -325,11 +297,9 @@ class AbstractObject extends AbstractComponent
         if ($abs['isExcluded']) {
             return;
         }
-        $this->addEnumCasePhpDoc($abs);
         if ($abs['isTraverseOnly']) {
             $this->addTraverseValues($abs);
         }
-        $this->constants->addConstantEnumValues($abs);
         $this->properties->add($abs);
         /*
             Debug::EVENT_OBJ_ABSTRACT_END subscriber has free reign to modify abtraction values

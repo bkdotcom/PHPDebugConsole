@@ -186,17 +186,45 @@ class TextValue extends BaseValue
         $properties = $abs->sort($abs['properties'], $abs['sort']);
         foreach ($properties as $name => $info) {
             $name = \str_replace('debug.', '', $name);
+            $info['className'] = $abs['className'];
             $info['isInherited'] = $info['declaredLast'] && $info['declaredLast'] !== $abs['className'];
+            $prefix = $this->dumpPropPrefix($info);
             $vis = $this->dumpPropVis($info);
             $val = $info['debugInfoExcluded']
                 ? ''
                 : ' = ' . $this->dump($info['value']);
-            $str .= '    (' . $vis . ') ' . $name . $val . "\n";
+            $str .= '    ' . $prefix . '(' . $vis . ') ' . $name . $val . "\n";
         }
         $propHeader = $str
             ? 'Properties:'
             : 'Properties: none!';
         return '  ' . $propHeader . "\n" . $str;
+    }
+
+    /**
+     * Get inherited/dynamic/override indicator
+     *
+     * @param array $info Property info
+     *
+     * @return string
+     */
+    protected function dumpPropPrefix(array $info)
+    {
+        $info = \array_filter(array(
+            'inherited' => $info['isInherited'],
+            'isDynamic' => $info['declaredLast'] === null
+                && $info['valueFrom'] === 'value'
+                && $info['className'] !== 'stdClass',
+            'overrides' => $info['isInherited'] === false && $info['declaredPrev'],
+        ));
+        $prefixes = \array_intersect_key(array(
+            'inherited' => '↳',
+            'isDynamic' => '⚠',
+            'overrides' => '⟳',
+        ), $info);
+        return $prefixes
+            ? \implode(' ', $prefixes) . ' '
+            : '';
     }
 
     /**

@@ -7,6 +7,7 @@ use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Collector\Pdo;
 use bdk\PubSub\Event;
 use bdk\Test\Debug\DebugTestFramework;
+use bdk\Test\PolyFill\ExpectExceptionTrait;
 
 /**
  * PHPUnit tests for Debug class
@@ -17,6 +18,8 @@ use bdk\Test\Debug\DebugTestFramework;
  */
 class PdoTest extends DebugTestFramework
 {
+    use ExpectExceptionTrait;
+
     private static $client;
 
     public static function setUpBeforeClass(): void
@@ -257,6 +260,17 @@ EOD;
         $this->assertIsString(self::$client->lastInsertId());
     }
 
+    public function testExecuteException()
+    {
+        $this->expectException('PDOException');
+        $statement = self::$client->prepare('SELECT *
+            FROM `bob`
+            WHERE e < :datetime');
+        $datetime = '2020-12-04 22:00:00';
+        $statement->bindParam(':bogusParam', $datetime, \PDO::PARAM_STR);
+        $statement->execute();
+    }
+
     public function testExec()
     {
         $count = self::$client->exec('DELETE FROM `bob`');
@@ -366,7 +380,7 @@ EOD;
             },
             {
                 "method": "log",
-                "args": ["logged operations: ", 7],
+                "args": ["logged operations: ", 8],
                 "meta": {"channel": "general.PDO"}
             },
             {

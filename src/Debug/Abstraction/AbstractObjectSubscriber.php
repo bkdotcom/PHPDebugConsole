@@ -21,6 +21,7 @@ use Exception;
 use mysqli;
 use ReflectionFunction;
 use RuntimeException;
+use UnitEnum;
 
 /**
  * Internal subscriber to ABSTRACT_START and ABSTRACT_END events
@@ -94,11 +95,38 @@ class AbstractObjectSubscriber implements SubscriberInterface
             $abs['properties']['xdebug_message']['debugInfoExcluded'] = true;
         } elseif ($obj instanceof mysqli && !$abs['collectPropertyValues']) {
             $this->onEndMysqli($abs);
+        } elseif ($obj instanceof UnitEnum) {
+            $this->onEndEnum($abs);
         }
         if (isset($abs['methods']['__toString'])) {
             $abs['methods']['__toString']['returnValue'] = $this->abstractObject->methods->toString($abs);
         }
         $this->promoteParamDescs($abs);
+    }
+
+    /**
+     * Add enum case's @var desc (if exists) to phpDoc
+     *
+     * @param Abstraction $abs Abstraction instance
+     *
+     * @return void
+     */
+    private function onEndEnum(Abstraction $abs)
+    {
+        if (!($abs['cfgFlags'] & AbstractObject::PHPDOC_COLLECT)) {
+            return;
+        }
+        $reflector = $abs['reflector'];
+        $name = $abs->getSubject()->name;
+        $caseReflector = $reflector->getCase($name);
+        $desc = $this->abstractObject->helper->getPhpDocVar($caseReflector)['desc'];
+        if ($desc) {
+            $phpDoc = $this->abstractObject->helper->getPhpDoc($reflector);
+            $abs['phpDoc'] = \array_merge($phpDoc, array(
+                'desc' => \trim($phpDoc['summary'] . "\n" . $phpDoc['desc']),
+                'summary' => $desc,
+            ));
+        }
     }
 
     /**

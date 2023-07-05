@@ -28,6 +28,7 @@ use ReflectionProperty;
  * @covers \bdk\Debug\Method\Table
  * @covers \bdk\Debug\Method\TableRow
  * @covers \bdk\Debug\Route\Firephp
+ * @covers \bdk\Debug\ServiceProvider
  */
 class TableTest extends DebugTestFramework
 {
@@ -639,6 +640,42 @@ EOD;
                     'text' => $rowsAText,
                     'script' => $rowsAScript,
                     'firephp' => $rowsAFirephp,
+                ),
+            ),
+
+            'totalRow' => array(
+                'table',
+                array(
+                    'caption',
+                    $rowsA,
+                    Debug::meta('totalCols', array('age', 'noSuchVal')),
+                ),
+                array(
+                    'entry' => static function (LogEntry $logEntry) use ($rowsAProcessed) {
+                        self::assertSame(array(
+                            $rowsAProcessed,
+                        ), $logEntry['args']);
+                        self::assertSame(22, $logEntry['meta']['tableInfo']['columns'][1]['total']);
+                    },
+                    'html' => '%A<tfoot>
+                            <tr><td>&nbsp;</td><td></td><td class="t_int">22</td><td></td><td></td><td></td></tr>
+                            </tfoot>
+                            </table>%A',
+                    'text' => 'caption = array(
+                        [4] => array(
+                            [name] => "Bob"
+                            [age] => "12"
+                            [sex] => "M"
+                            [Naughty] => false
+                        )
+                        [2] => array(
+                            [name] => "Sally"
+                            [age] => "10"
+                            [sex] => "F"
+                            [Naughty] => true
+                            [extracol] => "yes"
+                        )
+                    )',
                 ),
             ),
         );

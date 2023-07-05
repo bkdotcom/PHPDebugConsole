@@ -103,6 +103,7 @@ class AbstractObjectMethodParams
                 'type' => $phpDocParam['type'],
             ));
         }
+        $this->abs = null;
         return $params;
     }
 

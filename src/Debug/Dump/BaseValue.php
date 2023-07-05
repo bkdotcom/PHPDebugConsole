@@ -344,11 +344,11 @@ class BaseValue extends AbstractComponent
     /**
      * Dump property visibility
      *
-     * @param array $info property info array
+     * @param array $info Property info
      *
      * @return string visibility
      */
-    protected function dumpPropVis($info)
+    protected function dumpPropVis(array $info)
     {
         $vis = (array) $info['visibility'];
         foreach ($vis as $i => $v) {

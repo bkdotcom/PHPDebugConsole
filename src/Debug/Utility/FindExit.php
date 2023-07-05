@@ -49,9 +49,7 @@ class FindExit
         $phpSrcCode = \preg_replace('/^\s*((public|private|protected|final|static)\s+)+/', '', $phpSrcCode);
         $tokens = $this->getTokens($phpSrcCode, true, false);
         $this->searchTokenInit($frame);
-        $token = $tokens
-            ? $this->searchTokens($tokens)
-            : null;
+        $token = $this->searchTokens($tokens ?: array());
         return $token
             ? array(
                 'class' => $frame['class'],
@@ -143,28 +141,44 @@ class FindExit
         $count = \count($tokens);
         for ($i = 0; $i < $count; $i++) {
             $token = $tokens[$i];
-            if (\is_array($token) === false) {
-                $continue = $this->handleStringToken($token);
-                if ($continue) {
-                    continue;
-                }
-                return null;
-            }
-            if ($token[0] === T_FUNCTION) {
-                $tokenNext = $tokens[$i + 1];
-                $this->handleTfunction($tokenNext);
-            }
-            if (!$this->inFunc) {
-                continue;
-            }
-            if ($this->funcStack) {
-                continue;
-            }
-            if ($token[0] === T_EXIT) {
-                return $token;
+            $tokenNext = $i + 1 < $count
+                ? $tokens[$i + 1]
+                : null;
+            $result = $this->searchTokenTest($token, $tokenNext);
+            if ($result !== false) {
+                return $result;
             }
         }
         return null;
+    }
+
+    /**
+     * Test if found exit
+     *
+     * @param array|string $token     Token
+     * @param array|string $tokenNext Next token
+     *
+     * @return array|null|false
+     */
+    private function searchTokenTest($token, $tokenNext)
+    {
+        if (\is_array($token) === false) {
+            return $this->handleStringToken($token)
+                ? false
+                : null;
+        }
+        if ($token[0] === T_FUNCTION) {
+            $this->handleTfunction($tokenNext);
+        }
+        if (!$this->inFunc) {
+            return false;
+        }
+        if ($this->funcStack) {
+            return false;
+        }
+        return $token[0] === T_EXIT
+            ? $token
+            : false;
     }
 
     /**

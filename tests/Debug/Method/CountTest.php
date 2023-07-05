@@ -10,6 +10,7 @@ use bdk\Test\Debug\DebugTestFramework;
  *
  * @covers \bdk\Debug
  * @covers \bdk\Debug\Method\Count
+ * @covers \bdk\Debug\ServiceProvider
  */
 class CountTest extends DebugTestFramework
 {

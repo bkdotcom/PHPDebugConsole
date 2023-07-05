@@ -99,15 +99,8 @@ class Html
      * @var array
      */
     public static $htmlBoolAttrEnum = array(
-        'aria-checked',
-        'aria-expanded',
-        'aria-grabbed',
-        'aria-hidden',
-        'aria-pressed',
-        'aria-selected',
-        'contenteditable',
-        'draggable',
-        'spellcheck',
+        'aria-checked', 'aria-expanded', 'aria-grabbed', 'aria-hidden', 'aria-pressed', 'aria-selected',
+        'contenteditable', 'draggable', 'spellcheck',
     );
 
     /**

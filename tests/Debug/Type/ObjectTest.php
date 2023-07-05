@@ -47,25 +47,28 @@ class ObjectTest extends DebugTestFramework
 bdk\Test\Debug\Fixture\TestObj
   Properties:
     ✨ This object has a __get() method
-    (public) baseDynamic = "duo"
-    (public) dynamic = "dynomite!"
-    (public) propPublic = "redefined in Test (public)"
+    ⚠ (public) baseDynamic = "duo"
+    ⚠ (public) dynamic = "dynomite!"
+    ⟳ (public) propPublic = "redefined in Test (public)"
     (public) propStatic = "I'm Static"
     (public) someArray = array(
-        [int] => 123
-        [numeric] => "123"
-        [string] => "cheese"
-        [bool] => true
-        [obj] => null
+      [int] => 123
+      [numeric] => "123"
+      [string] => "cheese"
+      [bool] => true
+      [obj] => stdClass
+        Properties:
+          (public) foo = "bar"
+        Methods: none!
     )
-    (✨ magic excluded) magicProp
-    (✨ magic-read protected) magicReadProp = "not null"
-    (protected) propProtected = "defined only in TestBase (protected)"
+    ↳ (✨ magic excluded) magicProp
+    ↳ (✨ magic-read protected) magicReadProp = "not null"
+    ↳ (protected) propProtected = "defined only in TestBase (protected)"
     (private) debug = bdk\Debug NOT INSPECTED
     (private) instance = bdk\Test\Debug\Fixture\TestObj *RECURSION*
     (private excluded) propNoDebug
-    (private) propPrivate = "redefined in Test (private) (alternate value via __debugInfo)"
-    (🔒 private) testBasePrivate = "defined in TestBase (private)"
+    ⟳ (private) propPrivate = "redefined in Test (private) (alternate value via __debugInfo)"
+    ↳ (🔒 private) testBasePrivate = "defined in TestBase (private)"
     (private) toString = "abracadabra"
     (private) toStrThrow = 0
     (debug) debugValue = "This property is debug only"
@@ -78,35 +81,38 @@ EOD;
 
         $ansi = <<<'EOD'
 \e[38;5;250mbdk\Test\Debug\Fixture\\e[0m\e[1mTestObj\e[22m
-    \e[4mProperties:\e[24m
-        \e[38;5;250m✨ This object has a __get() method\e[0m
-        \e[38;5;250m(public)\e[0m \e[38;5;83mbaseDynamic\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mduo\e[38;5;250m"\e[0m
-        \e[38;5;250m(public)\e[0m \e[38;5;83mdynamic\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mdynomite!\e[38;5;250m"\e[0m
-        \e[38;5;250m(public)\e[0m \e[38;5;83mpropPublic\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mredefined in Test (public)\e[38;5;250m"\e[0m
-        \e[38;5;250m(public)\e[0m \e[38;5;83mpropStatic\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mI'm Static\e[38;5;250m"\e[0m
-        \e[38;5;250m(public)\e[0m \e[38;5;83msomeArray\e[0m \e[38;5;130m=\e[0m \e[38;5;45marray\e[38;5;245m(\e[0m
-            \e[38;5;245m[\e[38;5;83mint\e[38;5;245m]\e[38;5;130m => \e[0m\e[96m123\e[0m
-            \e[38;5;245m[\e[38;5;83mnumeric\e[38;5;245m]\e[38;5;130m => \e[0m\e[38;5;250m"\e[96m123\e[38;5;250m"\e[0m
-            \e[38;5;245m[\e[38;5;83mstring\e[38;5;245m]\e[38;5;130m => \e[0m\e[38;5;250m"\e[0mcheese\e[38;5;250m"\e[0m
-            \e[38;5;245m[\e[38;5;83mbool\e[38;5;245m]\e[38;5;130m => \e[0m\e[32mtrue\e[0m
-            \e[38;5;245m[\e[38;5;83mobj\e[38;5;245m]\e[38;5;130m => \e[0m\e[38;5;250mnull\e[0m
-        \e[38;5;245m)\e[0m
-        \e[38;5;250m(✨ magic excluded)\e[0m \e[38;5;83mmagicProp\e[0m
-        \e[38;5;250m(✨ magic-read protected)\e[0m \e[38;5;83mmagicReadProp\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mnot null\e[38;5;250m"\e[0m
-        \e[38;5;250m(protected)\e[0m \e[38;5;83mpropProtected\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mdefined only in TestBase (protected)\e[38;5;250m"\e[0m
-        \e[38;5;250m(private)\e[0m \e[38;5;83mdebug\e[0m \e[38;5;130m=\e[0m \e[38;5;250mbdk\\e[0m\e[1mDebug\e[22m \e[38;5;9mNOT INSPECTED\e[0m
-        \e[38;5;250m(private)\e[0m \e[38;5;83minstance\e[0m \e[38;5;130m=\e[0m \e[38;5;250mbdk\Test\Debug\Fixture\\e[0m\e[1mTestObj\e[22m \e[38;5;196m*RECURSION*\e[0m
-        \e[38;5;250m(private excluded)\e[0m \e[38;5;83mpropNoDebug\e[0m
-        \e[38;5;250m(private)\e[0m \e[38;5;83mpropPrivate\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mredefined in Test (private) (alternate value via __debugInfo)\e[38;5;250m"\e[0m
-        \e[38;5;250m(🔒 private)\e[0m \e[38;5;83mtestBasePrivate\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mdefined in TestBase (private)\e[38;5;250m"\e[0m
-        \e[38;5;250m(private)\e[0m \e[38;5;83mtoString\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mabracadabra\e[38;5;250m"\e[0m
-        \e[38;5;250m(private)\e[0m \e[38;5;83mtoStrThrow\e[0m \e[38;5;130m=\e[0m \e[96m0\e[0m
-        \e[38;5;250m(debug)\e[0m \e[38;5;83mdebugValue\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mThis property is debug only\e[38;5;250m"\e[0m
-    \e[4mMethods:\e[24m
-        public\e[38;5;245m:\e[0m \e[96m9\e[0m
-        protected\e[38;5;245m:\e[0m \e[96m1\e[0m
-        private\e[38;5;245m:\e[0m \e[96m1\e[0m
-        magic\e[38;5;245m:\e[0m \e[96m2\e[0m
+  \e[4mProperties:\e[24m
+    \e[38;5;250m✨ This object has a __get() method\e[0m
+    \e[38;5;148m⚠\e[0m \e[38;5;250m(public)\e[0m \e[38;5;83mbaseDynamic\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mduo\e[38;5;250m"\e[0m
+    \e[38;5;148m⚠\e[0m \e[38;5;250m(public)\e[0m \e[38;5;83mdynamic\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mdynomite!\e[38;5;250m"\e[0m
+    \e[38;5;250m⟳\e[0m \e[38;5;250m(public)\e[0m \e[38;5;83mpropPublic\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mredefined in Test (public)\e[38;5;250m"\e[0m
+    \e[38;5;250m(public)\e[0m \e[38;5;83mpropStatic\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mI'm Static\e[38;5;250m"\e[0m
+    \e[38;5;250m(public)\e[0m \e[38;5;83msomeArray\e[0m \e[38;5;130m=\e[0m \e[38;5;45marray\e[38;5;245m(\e[0m
+      \e[38;5;245m[\e[38;5;83mint\e[38;5;245m]\e[38;5;130m => \e[0m\e[96m123\e[0m
+      \e[38;5;245m[\e[38;5;83mnumeric\e[38;5;245m]\e[38;5;130m => \e[0m\e[38;5;250m"\e[96m123\e[38;5;250m"\e[0m
+      \e[38;5;245m[\e[38;5;83mstring\e[38;5;245m]\e[38;5;130m => \e[0m\e[38;5;250m"\e[0mcheese\e[38;5;250m"\e[0m
+      \e[38;5;245m[\e[38;5;83mbool\e[38;5;245m]\e[38;5;130m => \e[0m\e[32mtrue\e[0m
+      \e[38;5;245m[\e[38;5;83mobj\e[38;5;245m]\e[38;5;130m => \e[0m\e[1mstdClass\e[22m
+        \e[4mProperties:\e[24m
+            \e[38;5;250m(public)\e[0m \e[38;5;83mfoo\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mbar\e[38;5;250m"\e[0m
+        Methods: none!
+    \e[38;5;245m)\e[0m
+    \e[38;5;250m↳\e[0m \e[38;5;250m(✨ magic excluded)\e[0m \e[38;5;83mmagicProp\e[0m
+    \e[38;5;250m↳\e[0m \e[38;5;250m(✨ magic-read protected)\e[0m \e[38;5;83mmagicReadProp\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mnot null\e[38;5;250m"\e[0m
+    \e[38;5;250m↳\e[0m \e[38;5;250m(protected)\e[0m \e[38;5;83mpropProtected\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mdefined only in TestBase (protected)\e[38;5;250m"\e[0m
+    \e[38;5;250m(private)\e[0m \e[38;5;83mdebug\e[0m \e[38;5;130m=\e[0m \e[38;5;250mbdk\\e[0m\e[1mDebug\e[22m \e[38;5;9mNOT INSPECTED\e[0m
+    \e[38;5;250m(private)\e[0m \e[38;5;83minstance\e[0m \e[38;5;130m=\e[0m \e[38;5;250mbdk\Test\Debug\Fixture\\e[0m\e[1mTestObj\e[22m \e[38;5;196m*RECURSION*\e[0m
+    \e[38;5;250m(private excluded)\e[0m \e[38;5;83mpropNoDebug\e[0m
+    \e[38;5;250m⟳\e[0m \e[38;5;250m(private)\e[0m \e[38;5;83mpropPrivate\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mredefined in Test (private) (alternate value via __debugInfo)\e[38;5;250m"\e[0m
+    \e[38;5;250m↳\e[0m \e[38;5;250m(🔒 private)\e[0m \e[38;5;83mtestBasePrivate\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mdefined in TestBase (private)\e[38;5;250m"\e[0m
+    \e[38;5;250m(private)\e[0m \e[38;5;83mtoString\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mabracadabra\e[38;5;250m"\e[0m
+    \e[38;5;250m(private)\e[0m \e[38;5;83mtoStrThrow\e[0m \e[38;5;130m=\e[0m \e[96m0\e[0m
+    \e[38;5;250m(debug)\e[0m \e[38;5;83mdebugValue\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mThis property is debug only\e[38;5;250m"\e[0m
+  \e[4mMethods:\e[24m
+    public\e[38;5;245m:\e[0m \e[96m9\e[0m
+    protected\e[38;5;245m:\e[0m \e[96m1\e[0m
+    private\e[38;5;245m:\e[0m \e[96m1\e[0m
+    magic\e[38;5;245m:\e[0m \e[96m2\e[0m
 EOD;
         $ansi = \str_replace('\e', "\e", $ansi);
 
@@ -114,8 +120,8 @@ EOD;
 bdk\Test\Debug\Fixture\Test2
   Properties:
     ✨ This object has a __get() method
-    (✨ magic) magicProp = undefined
-    (✨ magic-read protected) magicReadProp = "not null"
+    ↳ (✨ magic) magicProp = undefined
+    ↳ (✨ magic-read protected) magicReadProp = "not null"
   Methods:
     public: 3
     magic: 1
@@ -155,7 +161,9 @@ EOD;
                             . 'PhpDoc Description"><span class="namespace">bdk\Test\Debug\Fixture\</span>TestObj</span>',
                             $str
                         );
-                        self::assertSelectCount('dl.object-inner', 1, $str);
+
+                        // obj + someArray.obj
+                        self::assertSelectCount('dl.object-inner', 2, $str);
 
                         // extends
                         self::assertStringContainsString('<dt>extends</dt>' . "\n" .
@@ -201,7 +209,15 @@ EOD;
                             "\t" . '<li><span class="t_key">numeric</span><span class="t_operator">=&gt;</span><span class="t_string" data-type-more="numeric">123</span></li>',
                             "\t" . '<li><span class="t_key">string</span><span class="t_operator">=&gt;</span><span class="t_string">cheese</span></li>',
                             "\t" . '<li><span class="t_key">bool</span><span class="t_operator">=&gt;</span><span class="t_bool" data-type-more="true">true</span></li>',
-                            "\t" . '<li><span class="t_key">obj</span><span class="t_operator">=&gt;</span><span class="t_null">null</span></li>',
+                            "\t" . '<li><span class="t_key">obj</span><span class="t_operator">=&gt;</span><div class="t_object" data-accessible="public"><span class="classname">stdClass</span>',
+                            '<dl class="object-inner">',
+                            '<dt class="attributes">attributes</dt>',
+                            '<dd class="attribute"><span class="classname">AllowDynamicProperties</span></dd>',
+                            '<dt class="properties">properties</dt>',
+                            '<dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier">foo</span> <span class="t_operator">=</span> <span class="t_string">bar</span></dd>',
+                            '<dt class="methods">no methods</dt>',
+                            '</dl>',
+                            '</div></li>',
                             '</ul><span class="t_punct">)</span></span></dd>',
                             '<dd class="debuginfo-excluded inherited magic property" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_magic">magic</span> <span class="t_type">bool</span> <span class="t_identifier" title="I\'m avail via __get()">magicProp</span></dd>',
                             '<dd class="inherited magic-read property protected" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_magic-read">magic-read</span> <span class="t_modifier_protected">protected</span> <span class="t_type">bool</span> <span class="t_identifier" title="Read Only!">magicReadProp</span> <span class="t_operator">=</span> <span class="t_string">not null</span></dd>',
@@ -265,7 +281,7 @@ EOD;
                             '</dl>',
                         )), $str);
                     },
-                    'script' => 'console.log({"___class_name":"bdk\\\\Test\\\\Debug\\\\Fixture\\\\TestObj","(public) baseDynamic":"duo","(public) dynamic":"dynomite!","(public) propPublic":"redefined in Test (public)","(public) propStatic":"I\'m Static","(public) someArray":{"int":123,"numeric":"123","string":"cheese","bool":true,"obj":null},"(✨ magic excluded) magicProp":undefined,"(✨ magic-read protected) magicReadProp":"not null","(protected) propProtected":"defined only in TestBase (protected)","(private) debug":"(object) bdk\\\\Debug NOT INSPECTED","(private) instance":"(object) bdk\\\\Test\\\\Debug\\\\Fixture\\\\TestObj *RECURSION*","(private excluded) propNoDebug":"not included in __debugInfo","(private) propPrivate":"redefined in Test (private) (alternate value via __debugInfo)","(🔒 private) testBasePrivate":"defined in TestBase (private)","(private) toString":"abracadabra","(private) toStrThrow":0,"(debug) debugValue":"This property is debug only"});',
+                    'script' => 'console.log({"___class_name":"bdk\\\\Test\\\\Debug\\\\Fixture\\\\TestObj","(public) baseDynamic":"duo","(public) dynamic":"dynomite!","(public) propPublic":"redefined in Test (public)","(public) propStatic":"I\'m Static","(public) someArray":{"int":123,"numeric":"123","string":"cheese","bool":true,"obj":{"___class_name":"stdClass","(public) foo":"bar"}},"(✨ magic excluded) magicProp":undefined,"(✨ magic-read protected) magicReadProp":"not null","(protected) propProtected":"defined only in TestBase (protected)","(private) debug":"(object) bdk\\\\Debug NOT INSPECTED","(private) instance":"(object) bdk\\\\Test\\\\Debug\\\\Fixture\\\\TestObj *RECURSION*","(private excluded) propNoDebug":"not included in __debugInfo","(private) propPrivate":"redefined in Test (private) (alternate value via __debugInfo)","(🔒 private) testBasePrivate":"defined in TestBase (private)","(private) toString":"abracadabra","(private) toStrThrow":0,"(debug) debugValue":"This property is debug only"});',
                     'streamAnsi' => $ansi,
                     'text' => $text,
                     'wamp' => array(
@@ -1079,6 +1095,39 @@ EOD;
         ), \array_keys($this->debug->data->get('classDefinitions')));
     }
 
+    public function testDateTime()
+    {
+        $dateTime = new \DateTime();
+        $this->testMethod(
+            'log',
+            array(
+                'dateTime',
+                $dateTime,
+            ),
+            array(
+                'chromeLogger' => array(
+                    array(
+                        'dateTime',
+                        array(
+                            '___class_name' => 'DateTime',
+                        ),
+                    ),
+                    null,
+                    '',
+                ),
+                'firephp' => 'X-Wf-1-1-1-%d: %d|[{"Label":"dateTime","Type":"LOG"},{"___class_name":"DateTime"}]|',
+                'html' => static function ($htmlActual) use ($dateTime) {
+                    self::assertStringContainsString('<li class="m_log"><span class="no-quotes t_string">dateTime</span> = <div class="t_object" data-accessible="public"><span class="t_string t_stringified">' . $dateTime->format(\DateTime::ISO8601) . '</span>', $htmlActual);
+                },
+                'script' => 'console.log("dateTime",{"___class_name":"DateTime"});',
+                'text' => 'dateTime = DateTime
+                    Properties: none!
+                    Methods:
+                        public: 22',
+            )
+        );
+    }
+
     public function testDom()
     {
         $domDoc = new \DOMDocument();
@@ -1368,8 +1417,8 @@ EOD;
     {
         $test = new TestObj();
         $this->debug->log('test', $test);
-        $abstraction = $this->debug->data->get('log/0/args/1');
-        $props = $abstraction['properties'];
+        $abs = $this->debug->data->get('log/0/args/1');
+        $props = $abs['properties'];
         self::assertArrayNotHasKey('propHidden', $props, 'propHidden shouldn\'t be debugged');
         // debugValue
         self::assertSame('This property is debug only', $props['debugValue']['value']);

@@ -210,7 +210,7 @@ EOD;
                             "\t" . '<li><span class="t_key">string</span><span class="t_operator">=&gt;</span><span class="t_string">cheese</span></li>',
                             "\t" . '<li><span class="t_key">bool</span><span class="t_operator">=&gt;</span><span class="t_bool" data-type-more="true">true</span></li>',
                             "\t" . '<li><span class="t_key">obj</span><span class="t_operator">=&gt;</span><div class="t_object" data-accessible="public"><span class="classname">stdClass</span>',
-                            (PHP_VERSION_ID >= 80000
+                            (PHP_VERSION_ID >= 80200
                                 ? '<dl class="object-inner">' . "\n"
                                     . '<dt class="attributes">attributes</dt>' . "\n"
                                     . '<dd class="attribute"><span class="classname">AllowDynamicProperties</span></dd>'

@@ -100,7 +100,7 @@ class ErrorLevel
     private static function calculateEall($constants, $phpVer)
     {
         $eAll = \array_sum($constants);
-        if (isset($constants['E_STRICT']) && PHP_VERSION_ID < 50400) {
+        if (isset($constants['E_STRICT']) && \version_compare($phpVer, '5.4.0', '<')) {
             // E_STRICT not included in E_ALL until 5.4
             $eAll -= $constants['E_STRICT'];
         }

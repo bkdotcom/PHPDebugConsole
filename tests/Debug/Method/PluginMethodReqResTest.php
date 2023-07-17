@@ -177,7 +177,7 @@ class PluginMethodReqResTest extends DebugTestFramework
     public function testWriteToResponseInvalid()
     {
         $this->expectException('InvalidArgumentException');
-        $this->expectExceptionMessage('writeToResponse expects ResponseInterface or HttpFoundationResponse, but NULL provided');
+        $this->expectExceptionMessage('writeToResponse expects ResponseInterface or HttpFoundationResponse, but null provided');
         $this->debug->writeToResponse(null);
     }
 }

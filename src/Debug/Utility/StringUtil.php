@@ -13,6 +13,7 @@
 namespace bdk\Debug\Utility;
 
 use bdk\Debug\Utility\ArrayUtil;
+use bdk\Debug\Utility\Php;
 use DOMDocument;
 use InvalidArgumentException;
 use SqlFormatter;
@@ -404,7 +405,7 @@ class StringUtil
         ) {
             throw new \InvalidArgumentException(\sprintf(
                 __NAMESPACE__ . '::interpolate()\'s $message expects string or Stringable object. %s provided.',
-                \is_object($message) ? \get_class($message) : \gettype($message)
+                Php::getDebugType($message)
             ));
         }
         if (
@@ -414,8 +415,8 @@ class StringUtil
             ))) === 0
         ) {
             throw new \InvalidArgumentException(\sprintf(
-                __NAMESPACE__ . '::interpolate()\'s $context expects array or object for $context. %s provided.',
-                \gettype($context)
+                __NAMESPACE__ . '::interpolate()\'s $context expects array or object. %s provided.',
+                Php::getDebugType($context)
             ));
         }
     }

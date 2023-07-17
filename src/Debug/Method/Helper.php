@@ -125,9 +125,7 @@ class Helper
         if (\is_string($caption) === false) {
             $this->debug->warn(\sprintf(
                 'trace caption should be a string.  %s provided',
-                \is_object($caption)
-                    ? \get_class($caption)
-                    : \gettype($caption)
+                $this->debug->php->getDebugType($caption)
             ));
             $logEntry->setMeta('caption', 'trace');
         }

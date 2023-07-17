@@ -199,9 +199,9 @@ class DebugTest extends DebugTestFramework
             Lets clear all of its subscribers
         */
         $eventManager = Debug::getInstance()->eventManager;
-        foreach ($eventManager->getSubscribers() as $eventName => $subs) {
-            foreach ($subs as $sub) {
-                $eventManager->unsubscribe($eventName, $sub);
+        foreach ($eventManager->getSubscribers() as $eventName => $eventSubscribers) {
+            foreach ($eventSubscribers as $subInfo) {
+                $eventManager->unsubscribe($eventName, $subInfo['callable']);
             }
         }
 
@@ -220,15 +220,16 @@ class DebugTest extends DebugTestFramework
      */
     public function testShutDownSubscribers()
     {
-        $subscribers = \array_map(function ($val) {
-            if (\is_array($val)) {
-                return array(\get_class($val[0]), $val[1]);
+        $subscribers = \array_map(function ($subInfo) {
+            $callable = $subInfo['callable'];
+            if (\is_array($callable)) {
+                return array(\get_class($callable[0]), $callable[1]);
             }
-            if ($val instanceof \Closure) {
-                $abs = $this->debug->abstracter->crate($val);
+            if ($callable instanceof \Closure) {
+                $abs = $this->debug->abstracter->crate($callable);
                 return 'Closure(' . $abs['properties']['debug.file']['value'] . ')';
             }
-            return \gettype($val);
+            return \gettype($callable);
         }, $this->debug->eventManager->getSubscribers(EventManager::EVENT_PHP_SHUTDOWN));
         $subscribersExpect = array(
             array('bdk\Debug\InternalEvents', 'onShutdownHigh'),

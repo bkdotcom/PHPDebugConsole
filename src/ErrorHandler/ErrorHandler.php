@@ -333,9 +333,7 @@ class ErrorHandler extends AbstractErrorHandler
     public function setErrorCaller($caller = null, $offset = 0)
     {
         if ($caller === null) {
-            $backtrace = \version_compare(PHP_VERSION, '5.4.0', '>=')
-                ? \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, $offset + 3)
-                : \debug_backtrace(false);   // don't provide object
+            $backtrace = \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, $offset + 3);
             $index = isset($backtrace[$offset + 1])
                 ? $offset + 1
                 : \count($backtrace) - 1;

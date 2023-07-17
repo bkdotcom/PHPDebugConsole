@@ -337,11 +337,11 @@ class ConfigTest extends DebugTestFramework
         $this->debug->setCfg($name, $closure2);
         $closure1isSub = false;
         $closure2isSub = false;
-        foreach ($this->debug->eventManager->getSubscribers($event) as $sub) {
-            if ($sub === $closure1) {
+        foreach ($this->debug->eventManager->getSubscribers($event) as $subInfo) {
+            if ($subInfo['callable'] === $closure1) {
                 $closure1isSub = true;
             }
-            if ($sub === $closure2) {
+            if ($subInfo['callable'] === $closure2) {
                 $closure2isSub = true;
             }
         }

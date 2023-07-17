@@ -29,6 +29,48 @@ class PhpTest extends TestCase
         self::assertSame($expect, Php::friendlyClassName($input));
     }
 
+    public static function providerGetDebugType()
+    {
+        $callbackFunc = \ini_set('unserialize_callback_func', null);
+        $incompleteClass = \unserialize('O:8:"Foo\Buzz":0:{}');
+        \ini_set('unserialize_callback_func', $callbackFunc);
+
+        $fh = \fopen(__FILE__, 'r');
+        \fclose($fh);
+
+        // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
+        $tests = array(
+            'object' => array(new \stdClass(), 'stdClass'),
+            'string' => array('foo', 'string'),
+            'false' => array(false, 'bool'),
+            'true' => array(true, 'bool'),
+            'null' => array(null, 'null'),
+            'array' => array(array(), 'array'),
+            'int' => array(42, 'int'),
+            'float' => array(3.14, 'float'),
+            'stream' => array(\fopen(__FILE__, 'r'), 'resource (stream)'),
+            'closed resource' => array($fh, 'resource (closed)'),
+            '__PHP_Incomplete_Class' => array($incompleteClass, '__PHP_Incomplete_Class'),
+        );
+        if (PHP_VERSION_ID >= 70000) {
+            $tests = \array_merge($tests, array(
+                'anon' => array(eval('return new class() {};'), 'class@anonymous'),
+                'anonExtends' => array(eval('return new class() extends stdClass {};'), 'stdClass@anonymous'),
+                'anonImplements' => array(eval('return new class() implements Reflector { function __toString() {} public static function export() {} };'), 'Reflector@anonymous'),
+            ));
+        }
+        return $tests;
+    }
+
+    /**
+     * @dataProvider providerGetDebugType
+     */
+    public function testGetDebugType($val, $expectedType)
+    {
+        $type = Php::getDebugType($val);
+        self::assertSame($expectedType, $type);
+    }
+
     public function testGetIncludedFiles()
     {
         $filesA = \get_included_files();
@@ -71,6 +113,7 @@ class PhpTest extends TestCase
 
     public function testUnserializeSafe()
     {
+        // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
         $serialized = \serialize(array(
             'before' => 'foo',
             'stdClass' => (object) array('foo' => 'bar'),
@@ -79,6 +122,7 @@ class PhpTest extends TestCase
         ));
 
         // allow everything
+        // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
         self::assertEquals(array(
             'before' => 'foo',
             'stdClass' => (object) array('foo' => 'bar'),
@@ -88,6 +132,7 @@ class PhpTest extends TestCase
 
         // disable all (stdClass still allowed)
         $serialized = 'a:5:{s:6:"before";s:3:"foo";s:8:"stdClass";O:8:"stdClass":1:{s:3:"foo";s:3:"bar";}s:12:"serializable";C:35:"bdk\Test\Debug\Fixture\Serializable":13:{Brad was here}s:3:"obj";O:38:"bdk\Test\Debug\Fixture\TestTraversable":1:{s:4:"data";a:1:{s:3:"foo";s:3:"bar";}}s:5:"after";s:3:"bar";}';
+        // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
         self::assertEquals(array(
             'before' => 'foo',
             'stdClass' => (object) array('foo' => 'bar'),
@@ -97,11 +142,13 @@ class PhpTest extends TestCase
         ), Php::unserializeSafe($serialized, false));
 
         // no Serializable (vanila unserialize will be used
+        // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
         $serialized = \serialize(array(
             'before' => 'foo',
             'stdClass' => (object) array('foo' => 'bar'),
             'after' => 'bar',
         ));
+        // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
         self::assertEquals(array(
             'before' => 'foo',
             'stdClass' => (object) array('foo' => 'bar'),
@@ -144,6 +191,7 @@ class PhpTest extends TestCase
             echo $foo;
         };
         $invokable = new \bdk\Test\Container\Fixture\Invokable();
+        // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
         $return = array(
             // closure
             'closure' => array($closure, null, true),

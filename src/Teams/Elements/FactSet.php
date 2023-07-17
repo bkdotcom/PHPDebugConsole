@@ -93,7 +93,7 @@ class FactSet extends AbstractElement
             throw new InvalidArgumentException(\sprintf(
                 'Invalid Fact or value encountered at %s. Expected Fact, string, or numeric. %s provided.',
                 $key,
-                self::getTypeDebug($value)
+                self::getDebugType($value)
             ));
         });
         return $factsNew;

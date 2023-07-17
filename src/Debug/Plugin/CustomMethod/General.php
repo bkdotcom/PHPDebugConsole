@@ -238,6 +238,8 @@ class General implements SubscriberInterface
     /**
      * Dump values to output
      *
+     * Similar to php's `var_dump()`.  Dump values immediately
+     *
      * @param mixed $arg,... message / values
      *
      * @return void

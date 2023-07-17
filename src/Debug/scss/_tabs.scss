@@ -32,6 +32,7 @@ nav[role=tablist] {
   overflow: auto;
 
   .tab-pane {
+    position: static;
     display: none;
     &.active {
       display: block;

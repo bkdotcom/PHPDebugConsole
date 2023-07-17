@@ -160,7 +160,7 @@ class TextBlock extends AbstractElement
         if ($isValid === false) {
             throw new InvalidArgumentException(\sprintf(
                 'withMaxLines expects int or null. %s provided.',
-                self::getTypeDebug($maxLines)
+                self::getDebugType($maxLines)
             ));
         }
         if ($maxLines < 1) {

@@ -71,14 +71,14 @@ class StringUtilTest extends TestCase
     public function testInterpolateInvalidMessage()
     {
         $this->expectException('InvalidArgumentException');
-        $this->expectExceptionMessage('bdk\Debug\Utility::interpolate()\'s $message expects string or Stringable object. boolean provided.');
+        $this->expectExceptionMessage('bdk\Debug\Utility::interpolate()\'s $message expects string or Stringable object. bool provided.');
         StringUtil::interpolate(false, 'string');
     }
 
     public function testInterpolateInvalidContext()
     {
         $this->expectException('InvalidArgumentException');
-        $this->expectExceptionMessage('bdk\Debug\Utility::interpolate()\'s $context expects array or object for $context. string provided.');
+        $this->expectExceptionMessage('bdk\Debug\Utility::interpolate()\'s $context expects array or object. string provided.');
         StringUtil::interpolate('message', 'string');
     }
 

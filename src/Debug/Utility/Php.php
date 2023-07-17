@@ -48,6 +48,43 @@ class Php
     }
 
     /**
+     * Gets the type name of a variable in a way that is suitable for debugging
+     *
+     * @param mixed $val The value being type checked
+     *
+     * @return string
+     *
+     * @see https://github.com/symfony/polyfill/blob/main/src/Php80/Php80.php
+     */
+    public static function getDebugType($val)
+    {
+        if (PHP_VERSION_ID >= 80000) {
+            return \get_debug_type($val);
+        }
+
+        switch (true) {
+            case $val === null:
+                return 'null';
+            case \is_bool($val):
+                return 'bool';
+            case \is_string($val):
+                return 'string';
+            case \is_array($val):
+                return 'array';
+            case \is_int($val):
+                return 'int';
+            case \is_float($val):
+                return 'float';
+            case \is_object($val):
+                return self::getDebugTypeObject($val);
+            case $val instanceof \__PHP_Incomplete_Class:
+                return '__PHP_Incomplete_Class';
+            default:
+                return self::getDebugTypeResource($val);
+        }
+    }
+
+    /**
      * returns required/included files sorted by directory
      *
      * @return array
@@ -165,6 +202,48 @@ class Php
     }
 
     /**
+     * get friendly class name
+     *
+     * @param [type] $obj [description]
+     *
+     * @return string
+     */
+    private static function getDebugTypeObject($obj)
+    {
+        $class = \get_class($obj);
+        if (\strpos($class, '@') === false) {
+            return $class;
+        }
+        $class = \get_parent_class($class) ?: \key(\class_implements($class)) ?: 'class';
+        return $class . '@anonymous';
+    }
+
+    /**
+     * Get resource type
+     *
+     * @param mixed $val Resource
+     *
+     * @return string
+     */
+    private static function getDebugTypeResource($val)
+    {
+        // @phpcs:ignore Squiz.WhiteSpace.ScopeClosingBrace
+        \set_error_handler(static function () {});
+        $type = \get_resource_type($val);
+        \restore_error_handler();
+
+        if ($type === null) {
+            // closed resource (php < 7.2)
+            $type = 'closed';
+        }
+        if ($type === 'Unknown') {
+            $type = 'closed';
+        }
+
+        return 'resource (' . $type . ')';
+    }
+
+    /**
      * Test if array is a callable
      *
      * We will ignore current context
@@ -254,7 +333,8 @@ class Php
         $extends = $parentClassRef
             ? $parentClassRef->getName()
             : null;
-        return ($extends ?: \current($reflector->getInterfaceNames()) ?: 'class') . '@anonymous';
+        $class = $extends ?: \current($reflector->getInterfaceNames()) ?: 'class';
+        return $class . '@anonymous';
     }
 
     /**

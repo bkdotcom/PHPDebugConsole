@@ -49,10 +49,10 @@
     "replace": {
         "bdk/backtrace": "2.1.1",
         "bdk/curl-http-message": "1.0",
-        "bdk/errorhandler": "3.2",
+        "bdk/errorhandler": "3.3",
         "bdk/http-message": "1.0",
         "bdk/promise": "1.0",
-        "bdk/pubsub": "2.4",
+        "bdk/pubsub": "3.0",
         "bdk/slack": "1.0",
         "bdk/teams": "1.0",
         "psr/http-message": "1.0.1"

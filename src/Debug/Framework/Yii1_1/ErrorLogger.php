@@ -194,7 +194,8 @@ class ErrorLogger implements SubscriberInterface
     private function republishShutdown()
     {
         $eventManager = $this->debug->eventManager;
-        foreach ($eventManager->getSubscribers(EventManager::EVENT_PHP_SHUTDOWN) as $callable) {
+        foreach ($eventManager->getSubscribers(EventManager::EVENT_PHP_SHUTDOWN) as $subscriberInfo) {
+            $callable = $subscriberInfo['callable'];
             $eventManager->unsubscribe(EventManager::EVENT_PHP_SHUTDOWN, $callable);
             if (\is_array($callable) && $callable[0] === $this->debug->errorHandler) {
                 break;

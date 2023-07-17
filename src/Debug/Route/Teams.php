@@ -23,6 +23,7 @@ use bdk\Teams\Elements\TableRow as TeamsTableRow;
 use bdk\Teams\Elements\TextBlock as TeamsTextBlock;
 use bdk\Teams\Enums;
 use bdk\Teams\TeamsWebhook;
+use RuntimeException;
 
 /**
  * Send critical errors to Teams
@@ -85,33 +86,54 @@ class Teams extends AbstractRoute
     }
 
     /**
-     * Return SlackApi or SlackWebhook client depending on what config provided
+     * Validate configuration values
      *
-     * @return SlackApi|SlackWebhook
+     * @return void
+     *
+     * @throws RuntimeException
      */
-    protected function getTeamsClient()
+    private function assertCfg()
     {
-        if ($this->teamsClient) {
-            return $this->teamsClient;
+        if ($this->cfg['webhookUrl']) {
+            return;
         }
-        $this->teamsClient = new TeamsWebhook($this->cfg['webhookUrl']);
-        if (\is_callable($this->cfg['onClientInit'])) {
-            \call_user_func($this->cfg['onClientInit'], $this->teamsClient);
-        }
-        return $this->teamsClient;
+        throw new RuntimeException(\sprintf(
+            '%s: missing config value: %s.  Also tried env-var: %s',
+            __CLASS__,
+            'webhookUrl',
+            'TEAMS_WEBHOOK_URL'
+        ));
     }
 
     /**
-     * Send message to Teams
+     * Build Teams Table element with backtrace info
      *
-     * @param CardInterface $card Card message
+     * @param Error $error Error instance
      *
-     * @return array
+     * @return TeamsTableRow
      */
-    protected function sendMessage(CardInterface $card)
+    private function buildBacktraceTable(Error $error)
     {
-        $teamsClient = $this->getTeamsClient();
-        return $teamsClient->post($card);
+        $rows = array(
+            (new TeamsTableRow(array('file', 'line', 'function')))
+                ->withStyle(Enums::CONTAINER_STYLE_ATTENTION),
+        );
+        $frameDefault = array('file' => null, 'line' => null, 'function' => null);
+        foreach ($error['backtrace'] as $frame) {
+            $frame = \array_merge($frameDefault, $frame);
+            $frame = \array_intersect_key($frame, $frameDefault);
+            $rows[] = $frame;
+        }
+        return (new TeamsTable())
+            ->withColumns(array(
+                array('width' => 2),
+                array('width' => 0.5, 'horizontalAlignment' => Enums::HORIZONTAL_ALIGNMENT_RIGHT),
+                array('width' => 1),
+            ))
+            ->withFirstRowAsHeader()
+            ->withGridStyle(Enums::CONTAINER_STYLE_ATTENTION)
+            ->withShowGridLines()
+            ->withRows($rows);
     }
 
     /**
@@ -158,33 +180,33 @@ class Teams extends AbstractRoute
     }
 
     /**
-     * Build Teams Table element with backtrace info
+     * Return SlackApi or SlackWebhook client depending on what config provided
      *
-     * @param Error $error Error instance
-     *
-     * @return TeamsTableRow
+     * @return SlackApi|SlackWebhook
      */
-    private function buildBacktraceTable(Error $error)
+    protected function getClient()
     {
-        $rows = array(
-            (new TeamsTableRow(array('file', 'line', 'function')))
-                ->withStyle(Enums::CONTAINER_STYLE_ATTENTION),
-        );
-        $frameDefault = array('file' => null, 'line' => null, 'function' => null);
-        foreach ($error['backtrace'] as $frame) {
-            $frame = \array_merge($frameDefault, $frame);
-            $frame = \array_intersect_key($frame, $frameDefault);
-            $rows[] = $frame;
+        if ($this->teamsClient) {
+            return $this->teamsClient;
         }
-        return (new TeamsTable())
-            ->withColumns(array(
-                array('width' => 2),
-                array('width' => 0.5, 'horizontalAlignment' => Enums::HORIZONTAL_ALIGNMENT_RIGHT),
-                array('width' => 1),
-            ))
-            ->withFirstRowAsHeader()
-            ->withGridStyle(Enums::CONTAINER_STYLE_ATTENTION)
-            ->withShowGridLines()
-            ->withRows($rows);
+        $this->assertCfg();
+        $this->teamsClient = new TeamsWebhook($this->cfg['webhookUrl']);
+        if (\is_callable($this->cfg['onClientInit'])) {
+            \call_user_func($this->cfg['onClientInit'], $this->teamsClient);
+        }
+        return $this->teamsClient;
+    }
+
+    /**
+     * Send message to Teams
+     *
+     * @param CardInterface $card Card message
+     *
+     * @return array
+     */
+    protected function sendMessage(CardInterface $card)
+    {
+        $teamsClient = $this->getClient();
+        return $teamsClient->post($card);
     }
 }

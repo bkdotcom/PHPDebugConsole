@@ -38,13 +38,13 @@ abstract class AbstractStream
     protected $resource;
 
     /**
-     * Return object class or value type
+     * Gets the type name of a variable in a way that is suitable for debugging
      *
      * @param mixed $value The value being type checked
      *
      * @return string
      */
-    protected static function getTypeDebug($value)
+    protected static function getDebugType($value)
     {
         return \is_object($value)
             ? \get_class($value)
@@ -107,7 +107,7 @@ abstract class AbstractStream
         }
         throw new InvalidArgumentException(\sprintf(
             $this->strings['resourceInvalidType'],
-            $this->getTypeDebug($value)
+            $this->getDebugType($value)
         ));
     }
 

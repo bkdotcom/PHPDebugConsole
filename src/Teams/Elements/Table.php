@@ -264,7 +264,7 @@ class Table extends AbstractElement
         if ($isIterable === false) {
             throw new InvalidArgumentException(\sprintf(
                 'Invalid rows. Expecting iterator of rows. %s provided.',
-                self::getTypeDebug($rows)
+                self::getDebugType($rows)
             ));
         }
         foreach ($rows as $i => $row) {

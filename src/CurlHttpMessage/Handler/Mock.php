@@ -123,8 +123,10 @@ class Mock implements Countable
                 || $value instanceof Exception
                 || \is_callable($value);
             if ($isValid === false) {
-                $type = \is_object($value) ? \get_class($value) : \gettype($value);
-                throw new InvalidArgumentException('Expected a Response, Promise, Throwable or callable. ' . $type . ' provided');
+                throw new InvalidArgumentException(\sprintf(
+                    'Expected a Response, Promise, Throwable or callable. %s provided',
+                    \is_object($value) ? \get_class($value) : \gettype($value)
+                ));
             }
             $this->queue[] = $value;
         }

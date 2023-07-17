@@ -168,7 +168,7 @@ class TableRow extends AbstractItem
             throw new InvalidArgumentException(\sprintf(
                 'Invalid table cell found at index %s. Expected TableCell, ElementInterface, stringable, scalar, or null. %s provided.',
                 $i,
-                self::getTypeDebug($cell)
+                self::getDebugType($cell)
             ));
         }
         return \array_values($cells);

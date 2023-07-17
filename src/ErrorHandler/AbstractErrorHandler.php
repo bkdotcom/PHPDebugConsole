@@ -91,12 +91,14 @@ abstract class AbstractErrorHandler extends AbstractComponent
             // no reason to instantiate or subscribe
             return;
         }
-        $errorSubscribers = $this->eventManager->getSubscribers(ErrorHandler::EVENT_ERROR);
-        if ($this->cfg['enableEmailer'] && \in_array(array($this->getEmailer(), 'onErrorHighPri'), $errorSubscribers, true) === false) {
+        $callables = \array_map(static function ($subscriberInfo) {
+            return $subscriberInfo['callable'];
+        }, $this->eventManager->getSubscribers(ErrorHandler::EVENT_ERROR));
+        if ($this->cfg['enableEmailer'] && \in_array(array($this->getEmailer(), 'onErrorHighPri'), $callables, true) === false) {
             $this->cfg['enableStats'] = true;
             $this->eventManager->addSubscriberInterface($this->emailer);
         }
-        if ($this->cfg['enableStats'] && \in_array(array($this->getStats(), 'onErrorHighPri'), $errorSubscribers, true) === false) {
+        if ($this->cfg['enableStats'] && \in_array(array($this->getStats(), 'onErrorHighPri'), $callables, true) === false) {
             $this->eventManager->addSubscriberInterface($this->stats);
         }
     }

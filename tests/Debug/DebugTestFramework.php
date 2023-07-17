@@ -145,20 +145,22 @@ class DebugTestFramework extends DOMTestCase
     {
         $this->debug->setCfg('output', false);
         $subscribers = $this->debug->eventManager->getSubscribers(Debug::EVENT_OUTPUT);
-        foreach ($subscribers as $subscriber) {
+        foreach ($subscribers as $subscriberInfo) {
             $unsub = false;
-            if ($subscriber instanceof \Closure) {
+            $callable = $subscriberInfo['callable'];
+            if ($callable instanceof \Closure) {
                 $unsub = true;
-            } elseif (\is_array($subscriber) && \strpos(\get_class($subscriber[0]), 'bdk\\Debug') === false) {
+            } elseif (\is_array($callable) && \strpos(\get_class($callable[0]), 'bdk\\Debug') === false) {
                 $unsub = true;
             }
             if ($unsub) {
-                $this->debug->eventManager->unsubscribe(Debug::EVENT_OUTPUT, $subscriber);
+                $this->debug->eventManager->unsubscribe(Debug::EVENT_OUTPUT, $callable);
             }
         }
         $subscribers = $this->debug->eventManager->getSubscribers(Debug::EVENT_OUTPUT_LOG_ENTRY);
-        foreach ($subscribers as $subscriber) {
-            $this->debug->eventManager->unsubscribe(Debug::EVENT_OUTPUT_LOG_ENTRY, $subscriber);
+        foreach ($subscribers as $subscriberInfo) {
+            $callable = $subscriberInfo['callable'];
+            $this->debug->eventManager->unsubscribe(Debug::EVENT_OUTPUT_LOG_ENTRY, $callable);
         }
     }
 

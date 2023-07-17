@@ -267,7 +267,7 @@ class ReqRes implements SubscriberInterface
         }
         throw new InvalidArgumentException(\sprintf(
             'writeToResponse expects ResponseInterface or HttpFoundationResponse, but %s provided',
-            \is_object($response) ? \get_class($response) : \gettype($response)
+            $this->debug->php->getDebugType($response)
         ));
     }
 

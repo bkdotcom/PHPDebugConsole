@@ -6,13 +6,14 @@
  * @package   bdk\PubSub
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
- * @version   v2.4
+ * @copyright 2014-2023 Brad Kent
+ * @version   v3.0
  * @link      http://www.github.com/bkdotcom/PubSub
  */
 
 namespace bdk\PubSub;
 
+use bdk\PubSub\ManagerHelperTrait;
 use bdk\PubSub\SubscriberInterface;
 
 /**
@@ -20,11 +21,14 @@ use bdk\PubSub\SubscriberInterface;
  */
 class Manager
 {
-    const EVENT_PHP_SHUTDOWN = 'php.shutdown';
-    const DEFAULT_PRIORITY = 0;
+    use ManagerHelperTrait;
 
-    private $subscribers = array();
-    private $sorted = array();
+    const DEFAULT_PRIORITY = 0;
+    const EVENT_PHP_SHUTDOWN = 'php.shutdown';
+
+    protected $subscribers = array();
+    protected $sorted = array();
+    protected $subscriberStack = array();
 
     /**
      * Constructor
@@ -46,15 +50,19 @@ class Manager
      *
      * @param SubscriberInterface $interface object implementing subscriber interface
      *
-     * @return array a normalized list of subscriptions added.
+     * @return array A normalized list of subscriptions added.
      */
     public function addSubscriberInterface(SubscriberInterface $interface)
     {
         $subscribersByEvent = $this->getInterfaceSubscribers($interface);
-        foreach ($subscribersByEvent as $eventName => $subscribers) {
-            foreach ($subscribers as $methodPriority) {
-                $callable = array($interface, $methodPriority[0]);
-                $this->subscribe($eventName, $callable, $methodPriority[1]);
+        foreach ($subscribersByEvent as $eventName => $eventSubscribers) {
+            foreach ($eventSubscribers as $subscriberInfo) {
+                $this->subscribe(
+                    $eventName,
+                    $subscriberInfo['callable'],
+                    $subscriberInfo['priority'],
+                    $subscriberInfo['onlyOnce']
+                );
             }
         }
         return $subscribersByEvent;
@@ -75,16 +83,12 @@ class Manager
             if (!isset($this->subscribers[$eventName])) {
                 return array();
             }
-            if (!isset($this->sorted[$eventName])) {
-                $this->prepSubscribers($eventName);
-            }
+            $this->setSorted($eventName);
             return $this->sorted[$eventName];
         }
         // return all subscribers
         foreach (\array_keys($this->subscribers) as $eventName) {
-            if (!isset($this->sorted[$eventName])) {
-                $this->prepSubscribers($eventName);
-            }
+            $this->setSorted($eventName);
         }
         return \array_filter($this->sorted);
     }
@@ -140,10 +144,9 @@ class Manager
     public function removeSubscriberInterface(SubscriberInterface $interface)
     {
         $subscribersByEvent = $this->getInterfaceSubscribers($interface);
-        foreach ($subscribersByEvent as $eventName => $subscribers) {
-            foreach ($subscribers as $methodPriority) {
-                $callable = array($interface, $methodPriority[0]);
-                $this->unsubscribe($eventName, $callable);
+        foreach ($subscribersByEvent as $eventName => $eventSubscribers) {
+            foreach ($eventSubscribers as $subscriberInfo) {
+                $this->unsubscribe($eventName, $subscriberInfo['callable']);
             }
         }
         return $subscribersByEvent;
@@ -166,14 +169,26 @@ class Manager
      * @param string         $eventName event name
      * @param callable|array $callable  callable or closure factory
      * @param int            $priority  The higher this value, the earlier we handle event
+     * @param bool           $onlyOnce  (false) Auto-unsubscribe after first invocation
      *
      * @return void
      */
-    public function subscribe($eventName, $callable, $priority = 0)
+    public function subscribe($eventName, $callable, $priority = 0, $onlyOnce = false)
     {
         unset($this->sorted[$eventName]); // clear the sorted cache
         $this->assertCallable($callable);
-        $this->subscribers[$eventName][$priority][] = $callable;
+        $subscriberInfo = array(
+            'callable' => $callable,
+            'onlyOnce' => $onlyOnce,
+            'priority' => $priority,
+        );
+        $this->subscribers[$eventName][$priority][] = $subscriberInfo;
+        // add to active event subscribers
+        foreach ($this->subscriberStack as $i => $stackInfo) {
+            if ($stackInfo['eventName'] === $eventName) {
+                $this->subscribeActive($i, $subscriberInfo);
+            }
+        }
     }
 
     /**
@@ -186,173 +201,18 @@ class Manager
      */
     public function unsubscribe($eventName, $callable)
     {
-        if (!isset($this->subscribers[$eventName])) {
-            return;
-        }
         if ($this->isClosureFactory($callable)) {
             $callable = $this->doClosureFactory($callable);
         }
         $this->prepSubscribers($eventName);
-        foreach ($this->subscribers[$eventName] as $priority => $subscribers) {
-            foreach ($subscribers as $k => $subscriber) {
-                if ($subscriber === $callable) {
-                    unset($this->subscribers[$eventName][$priority][$k], $this->sorted[$eventName]);
-                }
-            }
-            if (empty($this->subscribers[$eventName][$priority])) {
-                unset($this->subscribers[$eventName][$priority]);
-            }
+        $priorities = \array_keys($this->subscribers[$eventName]);
+        foreach ($priorities as $priority) {
+            $this->unsubscribeFromPriority($eventName, $callable, $priority, false);
         }
-    }
-
-    /**
-     * Test if value is a callable or "closure factory"
-     *
-     * @param mixed $val Value to test
-     *
-     * @return void
-     *
-     * @throws \InvalidArgumentException
-     */
-    private function assertCallable($val)
-    {
-        if (\is_callable($val, true)) {
-            return;
-        }
-        if ($this->isClosureFactory($val)) {
-            return;
-        }
-        throw new \InvalidArgumentException(\sprintf(
-            'Expected callable or "closure factory", but %s provided',
-            \is_object($val) ? \get_class($val) : \gettype($val)
-        ));
-    }
-
-    /**
-     * Instantiate the object wrapped in the closure factory
-     * closure factory may be
-     *    [Closure, 'methodName'] - closure returns object
-     *    [Closure] - closure returns object that is callable (ie has __invoke)
-     *
-     * @param array $closureFactory "closure factory" lazy loads an object / subscriber
-     *
-     * @return callable
-     */
-    private function doClosureFactory($closureFactory = array())
-    {
-        $closureFactory[0] = $closureFactory[0]($this);
-        return \count($closureFactory) === 1
-            ? $closureFactory[0]    // invokeable object
-            : $closureFactory;      // [obj, 'method']
-    }
-
-    /**
-     * Calls the subscribers of an event.
-     *
-     * @param string     $eventName   The name of the event to publish
-     * @param callable[] $subscribers The event subscribers
-     * @param Event      $event       The event object to pass to the subscribers
-     *
-     * @return void
-     */
-    protected function doPublish($eventName, $subscribers, Event $event)
-    {
-        foreach ($subscribers as $callable) {
-            if ($event->isPropagationStopped()) {
-                break;
-            }
-            \call_user_func($callable, $event, $eventName, $this);
-        }
-    }
-
-    /**
-     * Does val appear to be a "closure factory"?
-     * array & array[0] instanceof Closure
-     *
-     * @param mixed $val value to check
-     *
-     * @return bool
-     *
-     * @psalm-assert-if-true array $val
-     */
-    private function isClosureFactory($val)
-    {
-        return \is_array($val) && isset($val[0]) && $val[0] instanceof \Closure;
-    }
-
-    /**
-     * Calls the passed object's getSubscriptions() method and returns a normalized list of subscriptions
-     *
-     * @param SubscriberInterface $interface object implementing subscriber interface
-     *
-     * @return array
-     */
-    private function getInterfaceSubscribers(SubscriberInterface $interface)
-    {
-        $subscribers = array();
-        foreach ($interface->getSubscriptions() as $eventName => $mixed) {
-            $subscribers[$eventName] = $this->normalizeInterfaceSubscribers($mixed);
-        }
-        return $subscribers;
-    }
-
-    /**
-     * Normalize event subscribers
-     *
-     * @param string|array $mixed method(s) with priority
-     *
-     * @return array list of array(methodName, priority)
-     */
-    private function normalizeInterfaceSubscribers($mixed)
-    {
-        if (\is_string($mixed)) {
-            // methodName
-            return array(
-                array($mixed, self::DEFAULT_PRIORITY),
-            );
-        }
-        if (\count($mixed) === 2 && \is_int($mixed[1])) {
-            // ['methodName', priority]
-            return array(
-                $mixed,
-            );
-        }
-        // array of methods
-        $eventSubscribers = array();
-        foreach ($mixed as $mixed2) {
-            if (\is_string($mixed2)) {
-                // methodName
-                $eventSubscribers[] = array($mixed2, self::DEFAULT_PRIORITY);
-                continue;
-            }
-            // array(methodName[, priority])
-            $priority = isset($mixed2[1])
-                ? $mixed2[1]
-                : self::DEFAULT_PRIORITY;
-            $eventSubscribers[] = array($mixed2[0], $priority);
-        }
-        return $eventSubscribers;
-    }
-
-    /**
-     * Sorts the internal list of subscribers for the given event by priority.
-     * Any closure factories for eventName are invoked
-     *
-     * @param string $eventName The name of the event
-     *
-     * @return void
-     */
-    private function prepSubscribers($eventName)
-    {
-        \krsort($this->subscribers[$eventName]);
-        $this->sorted[$eventName] = array();
-        foreach ($this->subscribers[$eventName] as $priority => $subscribers) {
-            foreach ($subscribers as $k => $subscriber) {
-                if ($this->isClosureFactory($subscriber)) {
-                    $subscriber = $this->doClosureFactory($subscriber);
-                    $this->subscribers[$eventName][$priority][$k] = $subscriber;
-                }
-                $this->sorted[$eventName][] = $subscriber;
+        // remove from any active events
+        foreach ($this->subscriberStack as $i => $stackInfo) {
+            if ($stackInfo['eventName'] === $eventName) {
+                $this->unsubscribeActive($i, $callable, $priority);
             }
         }
     }

@@ -270,7 +270,7 @@ class TableCell extends AbstractItem
         }
         throw new InvalidArgumentException(\sprintf(
             'Invalid TableCell item found. Expecting ElementInterface, stringable, scalar, or null. %s provided.',
-            self::getTypeDebug($item)
+            self::getDebugType($item)
         ));
     }
 
@@ -292,7 +292,7 @@ class TableCell extends AbstractItem
         } catch (InvalidArgumentException $e) {
             throw new InvalidArgumentException(\sprintf(
                 'Invalid TableCell item type (%s) found at index %s',
-                self::getTypeDebug($item),
+                self::getDebugType($item),
                 $i
             ));
         }

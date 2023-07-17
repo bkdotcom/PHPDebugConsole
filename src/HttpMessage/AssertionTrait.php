@@ -42,18 +42,18 @@ trait AssertionTrait
         throw new InvalidArgumentException(\sprintf(
             '%s must be a string, %s provided.',
             \ucfirst($what),
-            $this->getTypeDebug($value)
+            $this->getDebugType($value)
         ));
     }
 
     /**
-     * Get the value's type
+     * Gets the type name of a variable in a way that is suitable for debugging
      *
      * @param mixed $value Value to inspect
      *
      * @return string
      */
-    protected static function getTypeDebug($value)
+    protected static function getDebugType($value)
     {
         return \is_object($value)
             ? \get_class($value)
@@ -108,7 +108,7 @@ trait AssertionTrait
         if (\is_array($value) === false) {
             throw new InvalidArgumentException(\sprintf(
                 'The header field value only accepts string and array, %s provided.',
-                self::getTypeDebug($value)
+                self::getDebugType($value)
             ));
         }
         if (empty($value)) {
@@ -169,7 +169,7 @@ trait AssertionTrait
         if (\is_numeric($version) === false) {
             throw new InvalidArgumentException(\sprintf(
                 'Unsupported HTTP protocol version number. %s provided.',
-                self::getTypeDebug($version)
+                self::getDebugType($version)
             ));
         }
         if (\in_array((string) $version, $this->validProtocolVers, true) === false) {
@@ -290,7 +290,7 @@ trait AssertionTrait
         }
         throw new InvalidArgumentException(\sprintf(
             'ParsedBody must be array, object, or null. %s provided.',
-            self::getTypeDebug($data)
+            self::getDebugType($data)
         ));
     }
 
@@ -309,7 +309,7 @@ trait AssertionTrait
             if (!($val instanceof UploadedFileInterface)) {
                 throw new InvalidArgumentException(\sprintf(
                     'Invalid file in uploaded files structure. Expected UploadedFileInterface, %s provided',
-                    self::getTypeDebug($val)
+                    self::getDebugType($val)
                 ));
             }
         });
@@ -362,7 +362,7 @@ trait AssertionTrait
         if (\is_int($code) === false) {
             throw new InvalidArgumentException(\sprintf(
                 'Status code must to be an integer, %s provided.',
-                self::getTypeDebug($code)
+                self::getDebugType($code)
             ));
         }
         if ($code < 100 || $code > 599) {
@@ -421,7 +421,7 @@ trait AssertionTrait
         if (\is_int($port) === false) {
             throw new InvalidArgumentException(\sprintf(
                 'Port must be a int, %s provided.',
-                $this->getTypeDebug($port)
+                $this->getDebugType($port)
             ));
         }
         if ($port < 1 || $port > 0xffff) {

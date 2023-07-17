@@ -233,7 +233,8 @@ class Module extends BaseModule implements SubscriberInterface, BootstrapInterfa
             //    exit within shutdown procedure (that's us) = immediate exit
             //    so... unsubscribe the callables that have already been called and
             //    re-publish the shutdown event before calling yii's error handler
-            foreach ($this->debug->rootInstance->eventManager->getSubscribers(EventManager::EVENT_PHP_SHUTDOWN) as $callable) {
+            foreach ($this->debug->rootInstance->eventManager->getSubscribers(EventManager::EVENT_PHP_SHUTDOWN) as $subscriberInfo) {
+                $callable = $subscriberInfo['callable'];
                 $this->debug->rootInstance->eventManager->unsubscribe(EventManager::EVENT_PHP_SHUTDOWN, $callable);
                 if (\is_array($callable) && $callable[0] === $this->debug->rootInstance->errorHandler) {
                     break;

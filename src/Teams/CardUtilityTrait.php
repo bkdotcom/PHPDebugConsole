@@ -63,7 +63,7 @@ trait CardUtilityTrait
         throw new InvalidArgumentException(\sprintf(
             '%s must be bool. %s provided',
             $name,
-            self::getTypeDebug($val)
+            self::getDebugType($val)
         ));
     }
 
@@ -152,7 +152,7 @@ trait CardUtilityTrait
         $message = $paramName
             ? $message . ' supplied for ' . $paramName . '.'
             : $message . '.';
-        $message .= ' ' . self::getTypeDebug($val) . ' provided.';
+        $message .= ' ' . self::getDebugType($val) . ' provided.';
         throw new InvalidArgumentException($message);
     }
 
@@ -188,7 +188,7 @@ trait CardUtilityTrait
         throw new InvalidArgumentException(\sprintf(
             $message,
             $method,
-            self::getTypeDebug($val)
+            self::getDebugType($val)
         ));
     }
 
@@ -207,7 +207,7 @@ trait CardUtilityTrait
         if (\is_string($val) === false) {
             throw new InvalidArgumentException(\sprintf(
                 'Url should be a string. %s provided.',
-                \gettype($val)
+                self::getDebugType($val)
             ));
         }
         if (
@@ -227,13 +227,13 @@ trait CardUtilityTrait
     }
 
     /**
-     * Get the value's type
+     * Gets the type name of a variable in a way that is suitable for debugging
      *
      * @param mixed $value Value to inspect
      *
      * @return string
      */
-    protected static function getTypeDebug($value)
+    protected static function getDebugType($value)
     {
         return \is_object($value)
             ? \get_class($value)

@@ -18,6 +18,7 @@ use bdk\ErrorHandler\Error;
 use bdk\Slack\SlackApi;
 use bdk\Slack\SlackMessage;
 use bdk\Slack\SlackWebhook;
+use RuntimeException;
 
 /**
  * Send critical errors to Slack
@@ -85,37 +86,32 @@ class Slack extends AbstractRoute
     }
 
     /**
-     * Send message(s) to Slack
-     *
-     * @param SlackMessage[] $messages Slack messages
+     * Validate configuration values
      *
      * @return void
-     */
-    protected function sendMessages(array $messages)
-    {
-        $ts = null;
-        foreach ($messages as $message) {
-            $message = $message->withValue('thread_ts', $ts);
-            $response = $this->sendMessage($message);
-            $ts = $ts ?: $response['ts'];
-        }
-    }
-
-    /**
-     * Send message to Slack
      *
-     * @param SlackMessage $message Slack messages
-     *
-     * @return array
+     * @throws RuntimeException
      */
-    protected function sendMessage(SlackMessage $message)
+    private function assertCfg()
     {
-        $slackClient = $this->getSlackClient();
-        if ($slackClient instanceof SlackApi) {
-            $message = $message->withChannel($this->cfg['channel']);
-            return $slackClient->chatPostMessage($message);
+        if (\in_array($this->cfg['use'], array('auto', 'api', 'webhook'), true) === false) {
+            throw new RuntimeException(\sprintf(
+                '%s: Invalid cfg value.  `use` must be one of "auto", "api", or "webhook"',
+                __CLASS__
+            ));
         }
-        return $slackClient->post($message);
+        if ($this->cfg['token'] && $this->cfg['channel']) {
+            return;
+        }
+        if ($this->cfg['webhookUrl']) {
+            return;
+        }
+        throw new RuntimeException(\sprintf(
+            '%s: missing config value(s).  Must configure %s.  Or define equivalent environment variable(s) (%s)',
+            __CLASS__,
+            'token+channel or webhookUrl',
+            'SLACK_TOKEN, SLACK_CHANNEL, SLACK_WEBHOOK_URL'
+        ));
     }
 
     /**
@@ -123,11 +119,12 @@ class Slack extends AbstractRoute
      *
      * @return SlackApi|SlackWebhook
      */
-    protected function getSlackClient()
+    protected function getClient()
     {
         if ($this->slackClient) {
             return $this->slackClient;
         }
+        $this->assertCfg();
         $use = $this->cfg['use'];
         if ($use === 'auto') {
             $use = $this->cfg['token'] && $this->cfg['channel']
@@ -202,5 +199,39 @@ class Slack extends AbstractRoute
         return (new SlackMessage())
             ->withHeader('Backtrace')
             ->withSection(\implode("\n", $frames));
+    }
+
+    /**
+     * Send message(s) to Slack
+     *
+     * @param SlackMessage[] $messages Slack messages
+     *
+     * @return void
+     */
+    protected function sendMessages(array $messages)
+    {
+        $ts = null;
+        foreach ($messages as $message) {
+            $message = $message->withValue('thread_ts', $ts);
+            $response = $this->sendMessage($message);
+            $ts = $ts ?: $response['ts'];
+        }
+    }
+
+    /**
+     * Send message to Slack
+     *
+     * @param SlackMessage $message Slack messages
+     *
+     * @return array
+     */
+    protected function sendMessage(SlackMessage $message)
+    {
+        $slackClient = $this->getClient();
+        if ($slackClient instanceof SlackApi) {
+            $message = $message->withChannel($this->cfg['channel']);
+            return $slackClient->chatPostMessage($message);
+        }
+        return $slackClient->post($message);
     }
 }

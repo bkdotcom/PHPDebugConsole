@@ -121,7 +121,7 @@ class HandlerStack
         if (\is_string($remove) === false && \is_callable($remove) === false) {
             throw new InvalidArgumentException(\sprintf(
                 __METHOD__ . ' requires a string or callable. %s provided',
-                \gettype($remove)
+                self::getDebugType($remove)
             ));
         }
         $index = \is_callable($remove) ? 0 : 1;
@@ -172,7 +172,7 @@ class HandlerStack
         if (\is_string($name) === false) {
             throw new InvalidArgumentException(\sprintf(
                 'Name should be a string. %s provided',
-                \gettype($name)
+                self::getDebugType($name)
             ));
         }
         $found = \array_filter($this->stack, static function ($callableAndName) use ($name) {
@@ -200,6 +200,20 @@ class HandlerStack
             }
         }
         throw new RuntimeException('Middleware not found: ' . $name);
+    }
+
+    /**
+     * Gets the type name of a variable in a way that is suitable for debugging
+     *
+     * @param mixed $value The value being type checked
+     *
+     * @return string
+     */
+    protected static function getDebugType($value)
+    {
+        return \is_object($value)
+            ? \get_class($value)
+            : \gettype($value);
     }
 
     /**

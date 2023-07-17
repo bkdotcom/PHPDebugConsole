@@ -150,7 +150,7 @@ class RichTextBlock extends AbstractElement
         }
         throw new InvalidArgumentException(\sprintf(
             'Inline must be TextRun or string. %s provided.',
-            \gettype($val)
+            \is_object($val) ? \get_class($val) : \gettype($val)
         ));
     }
 }

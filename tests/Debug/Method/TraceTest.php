@@ -162,7 +162,7 @@ class TraceTest extends DebugTestFramework
         $logEntryTrace = $this->debug->data->get('log/1');
         $this->assertSame(array(
             'method' => 'warn',
-            'args' => array('trace caption should be a string.  boolean provided'),
+            'args' => array('trace caption should be a string.  bool provided'),
             'meta' => array(
                 'detectFiles' => true,
                 'file' => __FILE__,

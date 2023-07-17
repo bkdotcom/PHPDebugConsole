@@ -157,9 +157,11 @@ class Manager implements SubscriberInterface
             return;
         }
         $backtrace = \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
-        $type = \is_object($plugin)
-            ? \get_class($plugin)
-            : \gettype($plugin);
-        throw new InvalidArgumentException($backtrace[1]['function'] . ' expects \\bdk\\Debug\\AssetProviderInterface and/or \\bdk\\PubSub\\SubscriberInterface.  ' . $type . ' provided');
+        throw new InvalidArgumentException(\sprintf(
+            '%s expects %s.  %s provided',
+            $backtrace[1]['function'],
+            '\\bdk\\Debug\\AssetProviderInterface and/or \\bdk\\PubSub\\SubscriberInterface',
+            $this->debug->php->getDebugType($plugin)
+        ));
     }
 }

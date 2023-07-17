@@ -78,7 +78,7 @@ abstract class AbstractServerRequest extends Request
         if (\is_array($mixed) === false) {
             throw new InvalidArgumentException(\sprintf(
                 'parseStrOpts expects string or array. %s provided.',
-                self::getTypeDebug($mixed)
+                self::getDebugType($mixed)
             ));
         }
         $mixed = \array_intersect_key($mixed, self::$parseStrOpts);

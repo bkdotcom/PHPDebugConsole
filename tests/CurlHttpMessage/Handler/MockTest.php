@@ -1,6 +1,6 @@
 <?php
 
-namespace bdk\Test\Handler;
+namespace bdk\Test\CurlHttpMessage\Handler;
 
 use bdk\CurlHttpMessage\Handler\Mock as MockHandler;
 use bdk\Test\CurlHttpMessage\TestCase;

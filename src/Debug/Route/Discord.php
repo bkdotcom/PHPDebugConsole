@@ -16,6 +16,7 @@ use bdk\CurlHttpMessage\Client as CurlHttpMessageClient;
 use bdk\Debug;
 use bdk\ErrorHandler;
 use bdk\ErrorHandler\Error;
+use RuntimeException;
 
 /**
  * Send critical errors to Discord
@@ -80,39 +81,23 @@ class Discord extends AbstractRoute
     }
 
     /**
-     * Send message to Discord
-     *
-     * @param array $message Discord message
+     * Validate configuration values
      *
      * @return void
-     */
-    protected function sendMessage(array $message)
-    {
-        $client = $this->getClient();
-        $client->post(
-            $this->cfg['webhookUrl'],
-            array(
-                'Content-Type' => 'application/json; charset=utf-8',
-            ),
-            $message
-        );
-    }
-
-    /**
-     * Return CurlHttpMessage
      *
-     * @return CurlHttpMessageClient
+     * @throws RuntimeException
      */
-    protected function getClient()
+    private function assertCfg()
     {
-        if ($this->client) {
-            return $this->client;
+        if ($this->cfg['webhookUrl']) {
+            return;
         }
-        $this->client = new CurlHttpMessageClient();
-        if (\is_callable($this->cfg['onClientInit'])) {
-            \call_user_func($this->cfg['onClientInit'], $this->client);
-        }
-        return $this->client;
+        throw new RuntimeException(\sprintf(
+            '%s: missing config value: %s.  Also tried env-var: %s',
+            __CLASS__,
+            'webhookUrl',
+            'DISCORD_WEBHOOK_URL'
+        ));
     }
 
     /**
@@ -136,6 +121,43 @@ class Discord extends AbstractRoute
                 ) . "\n"
                 . $error->getMessageText() . "\n"
                 . $error['file'] . ' (line ' . $error['line'] . ')',
+        );
+    }
+
+    /**
+     * Return CurlHttpMessage
+     *
+     * @return CurlHttpMessageClient
+     */
+    protected function getClient()
+    {
+        if ($this->client) {
+            return $this->client;
+        }
+        $this->assertCfg();
+        $this->client = new CurlHttpMessageClient();
+        if (\is_callable($this->cfg['onClientInit'])) {
+            \call_user_func($this->cfg['onClientInit'], $this->client);
+        }
+        return $this->client;
+    }
+
+    /**
+     * Send message to Discord
+     *
+     * @param array $message Discord message
+     *
+     * @return void
+     */
+    protected function sendMessage(array $message)
+    {
+        $client = $this->getClient();
+        $client->post(
+            $this->cfg['webhookUrl'],
+            array(
+                'Content-Type' => 'application/json; charset=utf-8',
+            ),
+            $message
         );
     }
 }

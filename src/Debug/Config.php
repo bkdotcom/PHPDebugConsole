@@ -197,21 +197,12 @@ class Config
      *
      * @return array previous values
      */
-    private function doSet($configs)
+    private function doSet(array $configs)
     {
         if (!$configs) {
             return array();
         }
-        /*
-            Set previous (return) values
-        */
-        $return = array();
-        foreach ($configs as $debugProp => $cfg) {
-            $cfgWas = $debugProp === 'debug'
-                ? $this->debug->getCfg(null, Debug::CONFIG_DEBUG)
-                : $this->getPropCfg($debugProp, array(), true, false);
-            $return[$debugProp] = \array_intersect_key($cfgWas, $cfg);
-        }
+        $return = $this->doSetReturn($configs);
         /*
             Publish config event first... it may add/update debugProp values
         */
@@ -226,6 +217,33 @@ class Config
         unset($configs['debug']); // debug uses a Debug::EVENT_CONFIG subscriber to set the value
         foreach ($configs as $debugProp => $cfg) {
             $this->setPropCfg($debugProp, $cfg);
+        }
+        return $return;
+    }
+
+    /**
+     * Find the previous values
+     *
+     * @param array $configs New config values
+     *
+     * @return array
+     */
+    private function doSetReturn(array $configs)
+    {
+        $return = array();
+        foreach ($configs as $debugProp => $cfg) {
+            $cfgWas = $debugProp === 'debug'
+                ? $this->debug->getCfg(null, Debug::CONFIG_DEBUG)
+                : $this->getPropCfg($debugProp, array(), true, false);
+            $cfgWas = \array_intersect_key($cfgWas, $cfg);
+            $keys = \array_keys($cfg);
+            $keysWas = \array_keys($cfgWas);
+            if ($debugProp !== 'debug' && \array_intersect($keys, $keysWas) !== $keys) {
+                // we didn't get all the expected previous values...
+                $cfgWas = $this->getPropCfg($debugProp, array());
+                $cfgWas = \array_intersect_key($cfgWas, $cfg);
+            }
+            $return[$debugProp] = $cfgWas;
         }
         return $return;
     }
@@ -311,7 +329,7 @@ class Config
      *
      * @return array
      */
-    private function normalizeArray($cfg)
+    private function normalizeArray(array $cfg)
     {
         $return = array();
         foreach ($cfg as $path => $v) {
@@ -393,7 +411,7 @@ class Config
      *
      * @return void
      */
-    private function setPropCfg($debugProp, $cfg)
+    private function setPropCfg($debugProp, array $cfg)
     {
         $obj = null;
         $matches = array();

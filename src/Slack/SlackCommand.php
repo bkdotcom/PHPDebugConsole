@@ -79,7 +79,7 @@ class SlackCommand
     /**
      * Assert that the request is a valid signed request from Slack
      *
-     * @param ServerRequestInterface $request [description]
+     * @param ServerRequestInterface $request Server request
      *
      * @return void
      *
@@ -125,7 +125,7 @@ class SlackCommand
         if (\function_exists('hash_equals')) {
             return \hash_equals($str1, $str2);
         }
-        if (\strlen($str1) != \strlen($str2)) {
+        if (\strlen($str1) !== \strlen($str2)) {
             return false;
         }
         $res = $str1 ^ $str2;

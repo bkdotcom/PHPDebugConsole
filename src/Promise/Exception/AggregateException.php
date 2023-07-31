@@ -12,8 +12,8 @@ class AggregateException extends RejectionException
     /**
      * Constructor
      *
-     * @param string $msg     [description]
-     * @param array  $reasons [description]
+     * @param string $msg     Exception message
+     * @param array  $reasons Reasons
      */
     public function __construct($msg, array $reasons)
     {

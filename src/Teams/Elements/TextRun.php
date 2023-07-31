@@ -165,7 +165,7 @@ class TextRun extends AbstractItem implements ElementInterface
     /**
      * An Action that will be invoked when the "Image" is tapped or selected.
      *
-     * @param ActionInterface|null $action [description]
+     * @param ActionInterface|null $action Action
      *
      * @return static
      *

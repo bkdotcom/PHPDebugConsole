@@ -22,7 +22,7 @@ class BlockFactory
     /**
      * Actions block
      *
-     * @param array $elements [description]
+     * @param array $elements Element definitions
      * @param array $values   Actions block fields
      *
      * @return array
@@ -111,7 +111,7 @@ class BlockFactory
      * @param string $title   (optional) plain-text title
      * @param array  $values  image block fields
      *
-     * @return [type] [description]
+     * @return array<string,mixed>
      */
     public static function image($url, $altText, $title = null, $values = array())
     {
@@ -306,8 +306,8 @@ class BlockFactory
      * Image Block Element
      * Works with block types: Section, Context
      *
-     * @param string $url     [description]
-     * @param string $altText [description]
+     * @param string $url     Image url
+     * @param string $altText Alternate text
      *
      * @return array<string,mixed>
      */
@@ -353,9 +353,9 @@ class BlockFactory
      * Create a checkbox group
      * Works with block types: Section, Actions, Input
      *
-     * @param string $actionId [description]
-     * @param string $options  [description]
-     * @param array  $values   [description]
+     * @param string $actionId ActionId
+     * @param string $options  Selectable options
+     * @param array  $values   Attributes
      *
      * @return array<string,mixed>
      */
@@ -377,8 +377,8 @@ class BlockFactory
      * Create a date picker
      * Works with block types: Section, Actions, Input
      *
-     * @param string $actionId [description]
-     * @param array  $values   [description]
+     * @param string $actionId Action Id
+     * @param array  $values   Attributes
      *
      * @return array<string,mixed>
      */
@@ -401,8 +401,8 @@ class BlockFactory
      * Create a Date & Time picker
      * Works with block types: Actions, Input
      *
-     * @param string $actionId [description]
-     * @param array  $values   [description]
+     * @param string $actionId Action id
+     * @param array  $values   Attributes
      *
      * @return array<string,mixed>
      */
@@ -423,8 +423,8 @@ class BlockFactory
      * Create an email input
      * Works with block types: Input
      *
-     * @param string $actionId [description]
-     * @param array  $values   [description]
+     * @param string $actionId Action id
+     * @param array  $values   Attributes
      *
      * @return array<string,mixed>
      */
@@ -492,9 +492,9 @@ class BlockFactory
      * Create radio-button group
      * Works with block types: Section Actions Input
      *
-     * @param string $actionId [description]
-     * @param string $options  [description]
-     * @param array  $values   [description]
+     * @param string $actionId Action Id
+     * @param string $options  Selectable options
+     * @param array  $values   Attributes
      *
      * @return array<string,mixed>
      */
@@ -515,10 +515,10 @@ class BlockFactory
     /**
      * Create a select menu
      *
-     * @param string $actionId [description]
-     * @param array  $options  [description]
-     * @param bool   $multiple [description]
-     * @param array  $values   [description]
+     * @param string $actionId Action id
+     * @param array  $options  Selectable options
+     * @param bool   $multiple (false) Allow multi-select?
+     * @param array  $values   Attributes
      *
      * @return array<string,mixed>
      */
@@ -781,7 +781,7 @@ class BlockFactory
      * @param int|string|null $key    The option's array key...
      *                                   if a string, it will used as the option's text (label)
      *
-     * @return [type] [description]
+     * @return array<string,mixed>
      */
     private static function normalizeOption($option, $key = null)
     {
@@ -812,8 +812,7 @@ class BlockFactory
         }
         $option['text'] = self::normalizeText($option['text']);
         $option = \array_intersect_key($option, $default);
-        $option = self::removeNull($option);
-        return $option;
+        return self::removeNull($option);
     }
 
     /**

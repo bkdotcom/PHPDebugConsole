@@ -255,7 +255,7 @@ class CurlReqRes
     /**
      * Set the promise identified with this curl request/response
      *
-     * @param Promise $promise [description]
+     * @param Promise $promise Promise instance
      *
      * @return self
      */

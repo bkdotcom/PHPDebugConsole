@@ -269,9 +269,9 @@ class Group implements SubscriberInterface
     /**
      * Test if called group/groupCollapsed is the first statement of a function/method
      *
-     * @param string $file              [description]
-     * @param int    $functionStartLine [description]
-     * @param int    $callerLine        [description]
+     * @param string $file              file path
+     * @param int    $functionStartLine function start
+     * @param int    $callerLine        line calling group()
      *
      * @return bool
      */

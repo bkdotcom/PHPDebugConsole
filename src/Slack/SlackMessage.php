@@ -257,7 +257,7 @@ class SlackMessage implements JsonSerializable
      * Set the message text
      *
      * @param string $text     Message text
-     * @param bool   $isMrkdwn (true) [description]
+     * @param bool   $isMrkdwn (true) Markdown?
      *
      * @return static
      */

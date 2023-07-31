@@ -122,7 +122,7 @@ class TableCell extends AbstractItem
      *
      * Determines whether the element should bleed through its parent’s padding.
      *
-     * @param bool $bleed [description]
+     * @param bool $bleed Whether element should bleed
      *
      * @return static
      */
@@ -191,7 +191,7 @@ class TableCell extends AbstractItem
      *
      * Action.ShowCard is not supported.
      *
-     * @param ActionInterface|null $action [description]
+     * @param ActionInterface|null $action Action
      *
      * @return static
      *

@@ -295,7 +295,7 @@ class Promise implements PromiseInterface
      *
      * @param string $state    self::FULFILLED OR self::REJECTED
      * @param mixed  $value    resolve value or reject reason
-     * @param array  $handlers [description]
+     * @param array  $handlers list of Promise, onFulfilled, onRejected
      *
      * @return void
      */

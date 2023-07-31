@@ -22,7 +22,7 @@ class AdaptiveCard extends AbstractCard
     /**
      * Constructor
      *
-     * @param float $version [description]
+     * @param float $version Card version
      *
      * @throws InvalidArgumentException
      */
@@ -277,7 +277,7 @@ class AdaptiveCard extends AbstractCard
      *
      * Action.ShowCard is not supported.
      *
-     * @param ActionInterface|null $action [description]
+     * @param ActionInterface|null $action select action
      *
      * @return static
      *

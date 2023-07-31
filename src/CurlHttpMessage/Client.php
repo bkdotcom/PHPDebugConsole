@@ -297,7 +297,7 @@ class Client
      * apply options to request
      *
      * @param RequestInterface $request Request instance
-     * @param array            $options [description]
+     * @param array            $options options
      *
      * @return RequestInterface
      *

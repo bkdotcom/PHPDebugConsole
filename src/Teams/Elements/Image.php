@@ -203,7 +203,7 @@ class Image extends AbstractElement
      * An Action that will be invoked when the "Image" is tapped or selected.
      * "Action.ShowCard" is not supported.
      *
-     * @param ActionInterface|null $action [description]
+     * @param ActionInterface|null $action Action
      *
      * @return static
      *

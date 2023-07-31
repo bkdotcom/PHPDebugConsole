@@ -202,9 +202,9 @@ class Php
     }
 
     /**
-     * get friendly class name
+     * Get friendly class name
      *
-     * @param [type] $obj [description]
+     * @param object $obj Object to inspect
      *
      * @return string
      */

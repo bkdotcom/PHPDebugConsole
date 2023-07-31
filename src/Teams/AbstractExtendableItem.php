@@ -35,7 +35,7 @@ class AbstractExtendableItem extends AbstractItem
      * the item requires with corresponding minimum version.
      * When a feature is missing or of insufficient version, fallback is triggered
      *
-     * @param array $requires [description]
+     * @param array $requires Required features
      *
      * @return static
      */

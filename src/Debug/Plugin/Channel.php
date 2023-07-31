@@ -33,16 +33,6 @@ class Channel implements SubscriberInterface
     );
 
     /**
-     * {@inheritDoc}
-     */
-    public function getSubscriptions()
-    {
-        return array(
-            Debug::EVENT_CUSTOM_METHOD => 'onCustomMethod',
-        );
-    }
-
-    /**
      * Return a named sub-instance... if channel does not exist, it will be created
      *
      * Channels can be used to categorize log data... for example, may have a framework channel, database channel, library-x channel, etc

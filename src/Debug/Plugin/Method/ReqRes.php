@@ -10,7 +10,7 @@
  * @version   v3.0
  */
 
-namespace bdk\Debug\Plugin\CustomMethod;
+namespace bdk\Debug\Plugin\Method;
 
 use bdk\Debug;
 use bdk\Debug\Plugin\CustomMethodTrait;

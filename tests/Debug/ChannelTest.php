@@ -11,9 +11,9 @@ use bdk\PubSub\Event;
  * @covers \bdk\Debug\Dump\Html\Helper
  * @covers \bdk\Debug\Dump\Text
  * @covers \bdk\Debug\Internal
- * @covers \bdk\Debug\InternalEvents
  * @covers \bdk\Debug\Method\Clear
  * @covers \bdk\Debug\Plugin\Channel
+ * @covers \bdk\Debug\Plugin\InternalEvents
  * @covers \bdk\Debug\Route\Html
  * @covers \bdk\Debug\Route\Html\ErrorSummary
  * @covers \bdk\Debug\Route\Html\Tabs
@@ -39,7 +39,7 @@ class ChannelTest extends DebugTestFramework
 
     public function testInstance()
     {
-        $this->assertInstanceOf('bdk\\Debug', $this->debug->getChannel('foo'));
+        self::assertInstanceOf('bdk\\Debug', $this->debug->getChannel('foo'));
     }
 
     public function testData()
@@ -91,11 +91,11 @@ class ChannelTest extends DebugTestFramework
 
         // nothing actually cleared (bitmask = 0)
         $data = $this->genLog($this->debug);
-        $this->assertSame($dataExpect, $data);
+        self::assertSame($dataExpect, $data);
 
         // nothing actually cleared (bitmask = 0)
         $data = $this->genLog($this->debugFoo);
-        $this->assertSame($dataExpect, $data);
+        self::assertSame($dataExpect, $data);
 
         $dataFooClearedExpect = array(
             'alerts' => array(
@@ -155,7 +155,7 @@ class ChannelTest extends DebugTestFramework
             ),
         );
         $data = $this->genLog($this->debugFoo, Debug::CLEAR_ALL);
-        $this->assertSame($dataFooClearedExpect, $data);
+        self::assertSame($dataFooClearedExpect, $data);
     }
 
     public function testOutput()
@@ -270,7 +270,7 @@ EOD;
         $this->outputTest(array(
             'html' => $html,
         ), $this->debug);
-        $this->assertSame(2, $this->eventCounter['general.foo.debug.output']);
+        self::assertSame(2, $this->eventCounter['general.foo.debug.output']);
     }
 
     public function testCreateChannel()
@@ -285,27 +285,27 @@ EOD;
             'channelIcon' => 'fa fa-asterisk',
         ));
 
-        $this->assertSame('tabby', $tabby->getCfg('channelName'));
+        self::assertSame('tabby', $tabby->getCfg('channelName'));
 
         // $this->helper->stderr($this->debug->getChannels());
-        $this->assertSame(array(
-            'foo'
+        self::assertSame(array(
+            'foo',
         ), \array_keys($this->debug->getChannels()));
 
         // $this->helper->stderr($this->debug->getChannels(true));
-        $this->assertSame(array(
+        self::assertSame(array(
             'general.foo',
             'general.foo.bar',
         ), \array_keys($this->debug->getChannels(true)));
 
         // $this->helper->stderr($this->debug->getChannels(false, true));
-        $this->assertSame(array(
+        self::assertSame(array(
             'tabby',
             'foo',
         ), \array_keys($this->debug->getChannels(false, true)));
 
         // $this->helper->stderr($this->debug->getChannels(true, true));
-        $this->assertSame(array(
+        self::assertSame(array(
             'tabby',
             'general.foo',
             'general.foo.bar',
@@ -323,8 +323,8 @@ EOD;
                     'fork' => array(
                         'channelIcon' => 'fa fa-fork',
                     ),
-                )
-            )
+                ),
+            ),
         ));
 
         $channelsBack = $this->helper->getProp($this->debug->pluginChannel, 'channels');
@@ -334,15 +334,15 @@ EOD;
             'channelIcon' => 'fa fa-asterisk',
         ));
         $foo = $this->debug->getChannel('foo');
-        $this->assertSame(null, $foo->getCfg('channelIcon'));
+        self::assertSame(null, $foo->getCfg('channelIcon'));
         $bar = $foo->getChannel('bar');
-        $this->assertSame('fa fa-asterisk', $bar->getCfg('channelIcon'));
+        self::assertSame('fa fa-asterisk', $bar->getCfg('channelIcon'));
 
         $bar = $this->debug->getChannel('general.foo.bar');
-        $this->assertSame('fa fa-asterisk', $bar->getCfg('channelIcon'));
+        self::assertSame('fa fa-asterisk', $bar->getCfg('channelIcon'));
 
         $fork = $this->debug->getChannel('utensil.fork');
-        $this->assertSame('fa fa-fork', $fork->getCfg('channelIcon'));
+        self::assertSame('fa fa-fork', $fork->getCfg('channelIcon'));
 
         $this->helper->setProp($this->debug->pluginChannel, 'channels', $channelsBack);
     }
@@ -403,7 +403,7 @@ EOD;
         $data = $this->helper->deObjectifyData($data, false);
         $groupStack = $this->getSharedVar('reflectionProperties')['groupStack'];
         $data['groupPriorityStack'] = $this->getSharedVar('reflectionProperties')['groupPriorityStack']->getValue($groupStack);
-        $data['groupStacks'] = \array_map(function ($stack) {
+        $data['groupStacks'] = \array_map(static function ($stack) {
             foreach ($stack as $k2 => $info) {
                 $channelName = $info['channel']->getCfg('channelName');
                 $stack[$k2]['channel'] = $channelName;

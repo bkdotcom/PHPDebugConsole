@@ -12,7 +12,7 @@ use bdk\Test\PolyFill\ExpectExceptionTrait;
 /**
  * Test SerializeLog
  *
- * @covers \bdk\Debug\Plugin\CustomMethod\ReqRes
+ * @covers \bdk\Debug\Plugin\Method\ReqRes
  */
 class PluginMethodReqResTest extends DebugTestFramework
 {
@@ -23,7 +23,7 @@ class PluginMethodReqResTest extends DebugTestFramework
         $this->assertSame(array(
             Debug::EVENT_CONFIG,
             Debug::EVENT_CUSTOM_METHOD,
-        ), \array_keys($this->debug->customMethodReqRes->getSubscriptions()));
+        ), \array_keys($this->debug->pluginMethodReqRes->getSubscriptions()));
     }
 
     public function testGetInterface()

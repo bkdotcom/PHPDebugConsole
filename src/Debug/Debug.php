@@ -147,6 +147,23 @@ class Debug extends AbstractDebug
         'onOutput' => null,         // callable
         'output'    => false,       // output the log?
         'outputHeaders' => true,    // ie, ChromeLogger and/or firePHP headers
+        'plugins' => array(
+            'logEnv' => array(
+                'class' => 'bdk\Debug\Plugin\LogEnv',
+            ),
+            'logFiles' => array(
+                'class' => 'bdk\Debug\Plugin\LogFiles',
+            ),
+            'logPhp' => array(
+                'class' => 'bdk\Debug\Plugin\LogPhp',
+            ),
+            'logReqRes' => array(
+                'class' => 'bdk\Debug\Plugin\LogReqRes',
+            ),
+            'runtime' => array(
+                'class' => 'bdk\Debug\Plugin\Runtime',
+            ),
+        ),
         'redactKeys' => array(      // case-insensitive
             'password',
         ),
@@ -508,7 +525,7 @@ class Debug extends AbstractDebug
                 return $this;
             }
             if ($args[0] instanceof Error) {
-                $this->container['internalEvents']->onError($args[0]);
+                $this->container['pluginInternalEvents']->onError($args[0]);
                 return $this;
             }
         }
@@ -787,12 +804,11 @@ class Debug extends AbstractDebug
     public function getCfg($path = null, $opt = null)
     {
         if ($path === 'route' && $this->cfg['route'] === 'auto') {
-            return $this->container['internal']->getDefaultRoute(); // returns string
+            return $this->getDefaultRoute(); // returns string
         }
-        if ($opt === self::CONFIG_DEBUG) {
-            return $this->arrayUtil->pathGet($this->cfg, $path);
-        }
-        return $this->config->get($path, $opt === self::CONFIG_INIT);
+        return $opt === self::CONFIG_DEBUG
+            ? $this->arrayUtil->pathGet($this->cfg, $path)
+            : $this->config->get($path, $opt === self::CONFIG_INIT);
     }
 
     /**
@@ -864,10 +880,6 @@ class Debug extends AbstractDebug
             $this->config->set($cfgRestore);
             $this->obEnd();
             return null;
-        }
-        $route = $this->getCfg('route');
-        if (\is_string($route)) {
-            $this->config->set('route', $route);
         }
         $output = $this->container['internal']->publishOutputEvent();
         if (!$this->parentInstance) {

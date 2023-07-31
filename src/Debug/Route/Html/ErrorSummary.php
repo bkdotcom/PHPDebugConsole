@@ -80,7 +80,9 @@ class ErrorSummary
             . $this->buildInConsole()
             . $this->buildNotInConsole();
         return new LogEntry(
-            $this->routeHtml->debug->getChannel('phpError'),
+            $summary !== ''
+                ? $this->routeHtml->debug->getChannel('phpError')
+                : $this->debug,
             'alert',
             array($summary),
             array(

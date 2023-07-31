@@ -1,6 +1,6 @@
 <?php
 
-namespace bdk\Test\Debug;
+namespace bdk\Test\Debug\Plugin;
 
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
@@ -8,14 +8,17 @@ use bdk\Debug\Abstraction\Abstraction;
 use bdk\ErrorHandler\Error;
 use bdk\PubSub\Event;
 use bdk\PubSub\Manager as EventManager;
+use bdk\Test\Debug\DebugTestFramework;
 use bdk\Test\PolyFill\ExpectExceptionTrait;
 
 /**
  * PHPUnit tests for Debug class
  *
- * @covers \bdk\Debug\InternalEvents
+ * @covers \bdk\Debug\Plugin\InternalEvents
  * @covers \bdk\Debug\Route\Email
  * @covers \bdk\Debug\Route\Stream
+ *
+ * @phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
  */
 class InternalEventsTest extends DebugTestFramework
 {
@@ -32,15 +35,15 @@ class InternalEventsTest extends DebugTestFramework
 </ul><span class="t_punct">)</span></span></span>';
         $expect = \str_replace('\\t', "\t", $expect);
         $dumped = $this->debug->getDump('html')->valDumper->dump($val);
-        $this->assertSame($expect, $dumped);
+        self::assertSame($expect, $dumped);
 
         $callable = function (Event $event) {
             $event['return'] = '<span>woo</span>';
-            $this->assertIsObject($event['valDumper']);
+            self::assertIsObject($event['valDumper']);
         };
         $this->debug->eventManager->subscribe(Debug::EVENT_DUMP_CUSTOM, $callable);
         $dumped = $this->debug->getDump('html')->valDumper->dump($val);
-        $this->assertSame('<span class="t_someCustomValueType"><span>woo</span></span>', $dumped);
+        self::assertSame('<span class="t_someCustomValueType"><span>woo</span></span>', $dumped);
         $this->debug->eventManager->unsubscribe(Debug::EVENT_DUMP_CUSTOM, $callable);
     }
 
@@ -60,13 +63,13 @@ class InternalEventsTest extends DebugTestFramework
         ));
 
         $container = $this->helper->getProp($this->debug, 'container');
-        $internalEvents = $container['internalEvents'];
+        $internalEvents = $container['pluginInternalEvents'];
 
         //
         // Test that not emailed if nothing logged
         //
         $internalEvents->onShutdownLow();
-        $this->assertEmpty($this->emailInfo);
+        self::assertEmpty($this->emailInfo);
 
         //
         // Test that emailed if something logged
@@ -74,10 +77,10 @@ class InternalEventsTest extends DebugTestFramework
         $this->debug->log('this is a test');
         $this->debug->log(new \DateTime());
         $internalEvents->onShutdownLow();
-        $this->assertNotEmpty($this->emailInfo);
-        $this->assertSame($this->debug->getCfg('emailTo'), $this->emailInfo['to']);
-        $this->assertSame('Debug Log', $this->emailInfo['subject']);
-        $this->assertContainsSerializedLog($this->emailInfo['body']);
+        self::assertNotEmpty($this->emailInfo);
+        self::assertSame($this->debug->getCfg('emailTo'), $this->emailInfo['to']);
+        self::assertSame('Debug Log', $this->emailInfo['subject']);
+        self::assertContainsSerializedLog($this->emailInfo['body']);
         $this->emailInfo = array();
 
         $this->debug->setCfg('emailLog', 'onError');
@@ -86,14 +89,14 @@ class InternalEventsTest extends DebugTestFramework
         // Test that not emailed if no error
         //
         $internalEvents->onShutdownLow();
-        $this->assertEmpty($this->emailInfo);
+        self::assertEmpty($this->emailInfo);
 
         //
         // Test that not emailed for notice
         //
         $undefinedVar;  // notice
         $internalEvents->onShutdownLow();
-        $this->assertEmpty($this->emailInfo);
+        self::assertEmpty($this->emailInfo);
 
         //
         // Test that emailed if there's an error
@@ -101,9 +104,9 @@ class InternalEventsTest extends DebugTestFramework
         // 1 / 0; // warning
         $this->debug->errorHandler->handleError(E_WARNING, 'you have been warned', __FILE__, __LINE__);
         $internalEvents->onShutdownLow();
-        $this->assertNotEmpty($this->emailInfo);
-        $this->assertSame('Debug Log: Error', $this->emailInfo['subject']);
-        $this->assertContainsSerializedLog($this->emailInfo['body']);
+        self::assertNotEmpty($this->emailInfo);
+        self::assertSame('Debug Log: Error', $this->emailInfo['subject']);
+        self::assertContainsSerializedLog($this->emailInfo['body']);
         $this->emailInfo = array();
 
         //
@@ -111,7 +114,7 @@ class InternalEventsTest extends DebugTestFramework
         //
         $this->debug->setCfg('emailLog', false);
         $internalEvents->onShutdownLow();
-        $this->assertEmpty($this->emailInfo);
+        self::assertEmpty($this->emailInfo);
     }
 
     /*
@@ -121,9 +124,9 @@ class InternalEventsTest extends DebugTestFramework
         $error['throw'] = true;
         $errorValues = $error->getValues();
         $logCount = $this->debug->data->get('log/__count__');
-        $this->debug->internalEvents->onError($error);
-        $this->assertSame($errorValues, $error->getValues());
-        $this->assertSame($logCount, $this->debug->data->get('log/__count__'));
+        $this->debug->pluginInternalEvents->onError($error);
+        self::assertSame($errorValues, $error->getValues());
+        self::assertSame($logCount, $this->debug->data->get('log/__count__'));
     }
     */
 
@@ -142,9 +145,9 @@ class InternalEventsTest extends DebugTestFramework
         } catch (\Exception $e) {
         }
         // $this->debug->errorHandler->eventManager->unsubscribe(\bdk\ErrorHandler::EVENT_ERROR, $callable);
-        $this->assertSame(0, $this->debug->data->get('log/__count__'));
-        $this->assertInstanceOf('Exception', $e);
-        $this->assertSame(
+        self::assertSame(0, $this->debug->data->get('log/__count__'));
+        self::assertInstanceOf('Exception', $e);
+        self::assertSame(
             array(
                 'message' => 'some error',
                 'file' => __FILE__,
@@ -180,11 +183,11 @@ class InternalEventsTest extends DebugTestFramework
             'collect' => false,
         ));
         $this->debug->getRoute('stream')->setCfg('stream', 'php://temp');
-        $this->debug->internalEvents->onError($error);
+        $this->debug->pluginInternalEvents->onError($error);
         $logEntry = $this->helper->logEntryToArray($this->debug->data->get('log/__end__'));
         $logEntry['meta']['errorHash'] = '';
         $logEntry['meta']['trace'] = array();
-        $this->assertSame(array(
+        self::assertSame(array(
             'method' => 'error',
             'args' => array(
                 'Fatal Error:',
@@ -220,10 +223,10 @@ class InternalEventsTest extends DebugTestFramework
             'file' => __FILE__,
             'line' => __LINE__,
         ));
-        $this->debug->internalEvents->onError($error);
-        $this->assertSame(0, $this->debug->data->get('log/__count__'));
-        $this->assertFalse($error['email']);
-        $this->assertFalse($error['inConsole']);
+        $this->debug->pluginInternalEvents->onError($error);
+        self::assertSame(0, $this->debug->data->get('log/__count__'));
+        self::assertFalse($error['email']);
+        self::assertFalse($error['inConsole']);
     }
 
     public function testErrorCollectNoOutputNo()
@@ -238,23 +241,23 @@ class InternalEventsTest extends DebugTestFramework
             'file' => __FILE__,
             'line' => __LINE__,
         ));
-        $this->debug->internalEvents->onError($error);
-        $this->assertSame(0, $this->debug->data->get('log/__count__'));
-        $this->assertArrayNotHasKey('error', $error);
-        $this->assertFalse($error['inConsole']);
+        $this->debug->pluginInternalEvents->onError($error);
+        self::assertSame(0, $this->debug->data->get('log/__count__'));
+        self::assertArrayNotHasKey('error', $error);
+        self::assertFalse($error['inConsole']);
     }
 
     public function testPrettify()
     {
-        $reflector = new \ReflectionProperty($this->debug->internalEvents, 'highlightAdded');
+        $reflector = new \ReflectionProperty($this->debug->pluginInternalEvents, 'highlightAdded');
         $reflector->setAccessible(true);
-        $reflector->setValue($this->debug->internalEvents, false);
+        $reflector->setValue($this->debug->pluginInternalEvents, false);
 
         $foo = $this->debug->prettify('foo', 'unknown');
-        $this->assertSame('foo', $foo);
+        self::assertSame('foo', $foo);
 
         $html = $this->debug->prettify('<html><title>test</title></html>', 'text/html');
-        $this->assertEquals(
+        self::assertEquals(
             new Abstraction(Abstracter::TYPE_STRING, array(
                 'strlen' => null,
                 'typeMore' => null,
@@ -275,9 +278,9 @@ class InternalEventsTest extends DebugTestFramework
             $html
         );
 
-        $data = array('foo','bar');
+        $data = array('foo', 'bar');
         $json = $this->debug->prettify(\json_encode($data), 'application/json');
-        $this->assertEquals(
+        self::assertEquals(
             new Abstraction(Abstracter::TYPE_STRING, array(
                 'strlen' => null,
                 'typeMore' => 'json',
@@ -300,7 +303,7 @@ class InternalEventsTest extends DebugTestFramework
         );
 
         $sql = $this->debug->prettify('SELECT * FROM table WHERE col = "val"', 'application/sql');
-        $this->assertEquals(
+        self::assertEquals(
             new Abstraction(Abstracter::TYPE_STRING, array(
                 'strlen' => null,
                 'typeMore' => null,
@@ -336,7 +339,7 @@ WHERE·
 </SOAP-ENV:Envelope>
 ';
         $xml = $this->debug->prettify(\str_replace("\n", '', $xmlExpect), 'application/xml');
-        $this->assertEquals(
+        self::assertEquals(
             new Abstraction(Abstracter::TYPE_STRING, array(
                 'strlen' => null,
                 'typeMore' => null,
@@ -357,7 +360,7 @@ WHERE·
             $xml
         );
 
-        $this->assertTrue($reflector->getValue($this->debug->internalEvents));
+        self::assertTrue($reflector->getValue($this->debug->pluginInternalEvents));
     }
 
     public function testShutdown()
@@ -372,7 +375,7 @@ WHERE·
             'output' => true,
             'exitCheck' => true,
             'outputHeaders' => true,
-            'onOutput' => function (Event $event) {
+            'onOutput' => static function (Event $event) {
                 $event['headers'][] = array('x-debug-text', 'success');
             },
         ));
@@ -397,7 +400,7 @@ WHERE·
                     'attribs' => array(
                         'class' => [
                             'php-shutdown',
-                        ]
+                        ],
                     ),
                     'icon' => 'fa fa-power-off',
                 ),
@@ -425,15 +428,16 @@ WHERE·
                     'uncollapse' => true,
                 ),
             ));
-            $this->assertStringContainsString('Potentialy shutdown via exit', $output);
+            self::assertStringContainsString('Potentialy shutdown via exit', $output);
         }
 
         $logEntries = $this->debug->data->get('log');
         $logEntries = $this->helper->deObjectifyData($logEntries);
-        $this->assertSame($logEntriesExpect, $logEntries);
-        $this->assertSame(array(
+        self::assertSame($logEntriesExpect, $logEntries);
+        self::assertContains(
             'x-debug-text: success',
-        ), \bdk\Debug\headers_list());
+            \bdk\Debug\headers_list()
+        );
     }
 
     public function assertContainsSerializedLog($string)
@@ -451,7 +455,7 @@ WHERE·
             'config' => array(
                 'channelIcon' => $rootInstance->getCfg('channelIcon', Debug::CONFIG_DEBUG),
                 'channelName' => $channelNameRoot,
-                'channels' => \array_map(function (Debug $channel) use ($channelNameRoot) {
+                'channels' => \array_map(static function (Debug $channel) use ($channelNameRoot) {
                     $channelName = $channel->getCfg('channelName', Debug::CONFIG_DEBUG);
                     return array(
                         'channelIcon' => $channel->getCfg('channelIcon', Debug::CONFIG_DEBUG),
@@ -476,7 +480,7 @@ WHERE·
             }
         }
         */
-        $this->assertEquals(
+        self::assertEquals(
             $expect,
             $this->helper->deObjectifyData($unserialized)
         );

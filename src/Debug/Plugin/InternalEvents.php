@@ -10,10 +10,11 @@
  * @version   v3.0
  */
 
-namespace bdk\Debug;
+namespace bdk\Debug\Plugin;
 
 use bdk\Debug;
 use bdk\Debug\LogEntry;
+use bdk\Debug\PluginInterface;
 use bdk\Debug\Route\Stream;
 use bdk\ErrorHandler;
 use bdk\ErrorHandler\Error;
@@ -24,23 +25,10 @@ use bdk\PubSub\SubscriberInterface;
 /**
  * Handle debug events
  */
-class InternalEvents implements SubscriberInterface
+class InternalEvents implements PluginInterface, SubscriberInterface
 {
     private $debug;
     private $highlightAdded = false;
-
-    /**
-     * Constructor
-     *
-     * @param Debug $debug debug instance
-     */
-    public function __construct(Debug $debug)
-    {
-        $this->debug = $debug;
-        if ($debug->parentInstance) {
-            return;
-        }
-    }
 
     /**
      * {@inheritDoc}
@@ -183,11 +171,6 @@ class InternalEvents implements SubscriberInterface
             return;
         }
         $this->debug->data->set('headers', array());
-        $debug = $event->getSubject();
-        if (!$debug->parentInstance) {
-            // this is the root instance
-            $this->onOutputLogRuntime();
-        }
     }
 
     /**
@@ -206,7 +189,6 @@ class InternalEvents implements SubscriberInterface
         $outputHeaders = $event->getSubject()->getCfg('outputHeaders', Debug::CONFIG_DEBUG);
         if (!$outputHeaders || !$headers) {
             $event->getSubject()->data->set('headers', \array_merge(
-                // ->getHeaders()
                 $event->getSubject()->data->get('headers'),
                 $headers
             ));
@@ -295,7 +277,6 @@ class InternalEvents implements SubscriberInterface
     {
         $this->debug->eventManager->unsubscribe(Debug::EVENT_LOG, array($this, 'onDebugLogShutdown'));
         if ($this->testEmailLog()) {
-            $this->runtimeVals();
             $this->debug->getRoute('email')->processLogEntries(new Event($this->debug));
         }
         if ($this->debug->data->get('outputSent')) {
@@ -303,6 +284,14 @@ class InternalEvents implements SubscriberInterface
             return;
         }
         echo $this->debug->output();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setDebug(Debug $debug)
+    {
+        $this->debug = $debug;
     }
 
     /**
@@ -386,41 +375,6 @@ class InternalEvents implements SubscriberInterface
     }
 
     /**
-     * Log our runtime info in a summary group
-     *
-     * As we're only subscribed to root debug instance's Debug::EVENT_OUTPUT event, this info
-     *   will not be output for any sub-channels output directly
-     *
-     * @return void
-     */
-    private function onOutputLogRuntime()
-    {
-        if (!$this->debug->getCfg('logRuntime', Debug::CONFIG_DEBUG)) {
-            return;
-        }
-        $vals = $this->runtimeVals();
-        $route = $this->debug->getCfg('route');
-        /** @psalm-suppress TypeDoesNotContainType */
-        $isRouteHtml = $route && \get_class($route) === 'bdk\\Debug\\Route\\Html';
-        $this->debug->groupSummary(1);
-        $this->debug->info('Built In ' . $this->debug->utility->formatDuration($vals['runtime']));
-        $this->debug->info(
-            'Peak Memory Usage'
-                . ($isRouteHtml
-                    ? ' <span title="Includes debug overhead">?&#x20dd;</span>'
-                    : '')
-                . ': '
-                . $this->debug->utility->getBytes($vals['memoryPeakUsage']) . ' / '
-                . ($vals['memoryLimit'] === '-1'
-                    ? '∞'
-                    : $this->debug->utility->getBytes($vals['memoryLimit'])
-                ),
-            $this->debug->meta('sanitize', false)
-        );
-        $this->debug->groupEnd();
-    }
-
-    /**
      * Shoule we force output for the given error
      *
      * @param Error $error Error instance
@@ -461,25 +415,6 @@ class InternalEvents implements SubscriberInterface
         $event['isPrettified'] = $string !== $event['value'];
         $event['value'] = $string;
         return $lang;
-    }
-
-    /**
-     * Get/store values such as runtime & peak memory usage
-     *
-     * @return array
-     */
-    private function runtimeVals()
-    {
-        $vals = $this->debug->data->get('runtime');
-        if (!$vals) {
-            $vals = array(
-                'memoryLimit' => $this->debug->php->memoryLimit(),
-                'memoryPeakUsage' => \memory_get_peak_usage(true),
-                'runtime' => $this->debug->timeEnd('requestTime', false, true),
-            );
-            $this->debug->data->set('runtime', $vals);
-        }
-        return $vals;
     }
 
     /**

@@ -13,6 +13,8 @@ use bdk\Test\Debug\DebugTestFramework;
  *
  * @covers \bdk\Debug\Plugin\LogPhp
  * @covers \bdk\Debug\ServiceProvider
+ *
+ * @phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
  */
 class LogPhpTest extends DebugTestFramework
 {
@@ -33,19 +35,19 @@ class LogPhpTest extends DebugTestFramework
                 ),
             ),
         ));
-        $this->debug->pluginLogPhp->onPluginInit(new Event($this->debug));
+        $logPhp = $this->debug->getPlugin('logPhp');
+
+        $logPhp->onPluginInit(new Event($this->debug));
 
         $logEntries = $this->helper->deObjectifyData($this->debug->data->get('log'));
-        // $this->helper->stderr('logEntries', $logEntries);
-        $this->assertSame(array('PHP Version', PHP_VERSION), $logEntries[0]['args']);
+        self::assertSame(array('PHP Version', PHP_VERSION), $logEntries[0]['args']);
         $found = null;
         foreach ($logEntries as $logEntry) {
             if ($logEntry['args'][0] === '$_SERVER') {
                 $found = $logEntry;
             }
         }
-        // $this->helper->stdErr('found', $found);
-        $this->assertEquals(
+        self::assertEquals(
             \array_intersect_key($serverParams, $found['args'][1]),
             \array_intersect_key($found['args'][1], $serverParams)
         );
@@ -69,9 +71,8 @@ class LogPhpTest extends DebugTestFramework
                 ),
             ),
         ));
-        $this->debug->pluginLogPhp->onPluginInit(new Event($this->debug));
+        $logPhp->onPluginInit(new Event($this->debug));
         $logEntries = $this->helper->deObjectifyData($this->debug->data->get('log'));
-        // $this->helper->stderr('logEntries', $logEntries);
         $found = array(
             'server' => false,
             'bogusExtension' => false,
@@ -84,7 +85,7 @@ class LogPhpTest extends DebugTestFramework
                 $found['bogusExtension'] = true;
             }
         }
-        $this->assertSame(array(
+        self::assertSame(array(
             'server' => false,
             'bogusExtension' => true,
         ), $found);
@@ -138,7 +139,7 @@ class LogPhpTest extends DebugTestFramework
         $refMethod->invoke($logPhp);
         $log = $this->debug->data->get('log');
         $log = \array_slice($log, -2);
-        $log = \array_map(function (LogEntry $logEntry) {
+        $log = \array_map(static function (LogEntry $logEntry) {
             return $logEntry->export();
         }, $log);
         // echo 'log = ' . \json_encode($log, JSON_PRETTY_PRINT) . "\n";
@@ -152,7 +153,7 @@ class LogPhpTest extends DebugTestFramework
                     'font-family:monospace; opacity:0.8;',
                     'font-family:inherit; white-space:pre-wrap;',
                     'font-family:monospace; opacity:0.8;',
-                    'font-family:inherit; white-space:pre-wrap;'
+                    'font-family:inherit; white-space:pre-wrap;',
                 ),
                 'meta' => array(
                     'detectFiles' => false,
@@ -160,12 +161,12 @@ class LogPhpTest extends DebugTestFramework
                     'file' => null,
                     'line' => null,
                     'channel' => 'php',
-                )
+                ),
             ),
             array(
                 'method' => 'warn',
                 'args' => array(
-                    'PHPDebugConsole\'s errorHandler is set to "system" (not all errors will be shown)'
+                    'PHPDebugConsole\'s errorHandler is set to "system" (not all errors will be shown)',
                 ),
                 'meta' => array(
                     'detectFiles' => false,
@@ -173,10 +174,10 @@ class LogPhpTest extends DebugTestFramework
                     'file' => null,
                     'line' => null,
                     'channel' => 'php',
-                )
-            )
+                ),
+            ),
         );
-        $this->assertSame($expect, $log);
+        self::assertSame($expect, $log);
 
         /*
             Test debug != all (but has same value as error_reporting)
@@ -185,7 +186,7 @@ class LogPhpTest extends DebugTestFramework
         $refMethod->invoke($logPhp);
         $log = $this->debug->data->get('log');
         $log = \array_slice($log, -2);
-        $log = \array_map(function (LogEntry $logEntry) {
+        $log = \array_map(static function (LogEntry $logEntry) {
             return $logEntry->export();
         }, $log);
         $expect =  array(
@@ -206,7 +207,7 @@ class LogPhpTest extends DebugTestFramework
                     'file' => null,
                     'line' => null,
                     'channel' => 'php',
-                )
+                ),
             ),
             array(
                 'method' => 'warn',
@@ -221,10 +222,10 @@ class LogPhpTest extends DebugTestFramework
                     'file' => null,
                     'line' => null,
                     'channel' => 'php',
-                )
-            )
+                ),
+            ),
         );
-        $this->assertSame($expect, $log);
+        self::assertSame($expect, $log);
 
         /*
             Test debug != all (value different than error_reporting)
@@ -258,7 +259,7 @@ class LogPhpTest extends DebugTestFramework
         */
         $log = $this->debug->data->get('log');
         $log = \array_slice($log, -2);
-        $log = \array_map(function (LogEntry $logEntry) {
+        $log = \array_map(static function (LogEntry $logEntry) {
             return $logEntry->export();
         }, $log);
         $expect =  array(
@@ -279,7 +280,7 @@ class LogPhpTest extends DebugTestFramework
                     'file' => null,
                     'line' => null,
                     'channel' => 'php',
-                )
+                ),
             ),
             array(
                 'method' => 'warn',
@@ -294,10 +295,10 @@ class LogPhpTest extends DebugTestFramework
                     'file' => null,
                     'line' => null,
                     'channel' => 'php',
-                )
-            )
+                ),
+            ),
         );
-        $this->assertSame($expect, $log);
+        self::assertSame($expect, $log);
 
         /*
             Reset

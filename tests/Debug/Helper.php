@@ -224,7 +224,7 @@ class Helper
      */
     public static function stderr()
     {
-        \bdk\Debug::varDump(\func_get_args());
+        \call_user_func_array(array('bdk\Debug', 'varDump'), \func_get_args());
     }
 
     private static function varDump($val)

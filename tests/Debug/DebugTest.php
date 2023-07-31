@@ -21,7 +21,7 @@ class DebugTest extends DebugTestFramework
         $output = array();
         $returnVal = 0;
         \exec('php ' . __DIR__ . '/noComposer.php', $output, $returnVal);
-        $this->assertSame(0, $returnVal, 'Failed to init Debug without composer');
+        self::assertSame(0, $returnVal, 'Failed to init Debug without composer');
     }
 
     public function testBootstrap()
@@ -30,7 +30,7 @@ class DebugTest extends DebugTestFramework
             'container' => array(),
             'serviceProvider' => 'invalid',
         ));
-        $this->assertInstanceOf('bdk\\Debug', $debug);
+        self::assertInstanceOf('bdk\\Debug', $debug);
     }
 
     public function testGetDefaultRoute()
@@ -38,14 +38,14 @@ class DebugTest extends DebugTestFramework
         $GLOBALS['collectedHeaders'] = array(
             array('Content-Type: text/html', false),
         );
-        $route = $this->debug->internal->getDefaultRoute();
-        $this->assertSame('html', $route);
+        $route = $this->debug->getDefaultRoute();
+        self::assertSame('html', $route);
 
         $GLOBALS['collectedHeaders'] = array(
             array('Content-Type: image/jpeg', false),
         );
-        $route = $this->debug->internal->getDefaultRoute();
-        $this->assertSame('serverLog', $route);
+        $route = $this->debug->getDefaultRoute();
+        self::assertSame('serverLog', $route);
 
         $this->debug->setCfg('serviceProvider', array(
             'serverRequest' => new \bdk\HttpMessage\ServerRequest('GET', null, array(
@@ -53,24 +53,24 @@ class DebugTest extends DebugTestFramework
             )),
         ));
 
-        $route = $this->debug->internal->getDefaultRoute();
-        $this->assertSame('serverLog', $route);
+        $route = $this->debug->getDefaultRoute();
+        self::assertSame('serverLog', $route);
     }
 
     public function testMagicGet()
     {
-        $this->assertNull($this->debug->noSuchProp);
+        self::assertNull($this->debug->noSuchProp);
     }
 
     public function testMagicIsset()
     {
-        $this->assertTrue(isset($this->debug->errorHandler));
+        self::assertTrue(isset($this->debug->errorHandler));
     }
 
     public function testMagicCall()
     {
         $this->destroyDebug();
-        $this->assertFalse(\bdk\Debug::_getCfg('collect'));
+        self::assertFalse(\bdk\Debug::_getCfg('collect'));
         $this->restoreDebug();
     }
 
@@ -85,15 +85,15 @@ class DebugTest extends DebugTestFramework
                 $args = \func_get_args();
             }
         ));
-        $this->assertSame(1, $count);
-        $this->assertInstanceOf('bdk\PubSub\Event', $args[0]);
-        $this->assertSame($debug, $args[0]->getSubject());
+        self::assertSame(1, $count);
+        self::assertInstanceOf('bdk\PubSub\Event', $args[0]);
+        self::assertSame($debug, $args[0]->getSubject());
     }
 
     public function testOnConfig()
     {
         $this->debug->setCfg(array());
-        $this->assertTrue(true);
+        self::assertTrue(true);
     }
 
     public function testOnCfgRoute()
@@ -104,7 +104,7 @@ class DebugTest extends DebugTestFramework
         unset($container['routeFirephp']);
 
         $this->debug->setCfg('route', new \bdk\Debug\Route\Firephp($this->debug));
-        $this->assertInstanceOf('bdk\\Debug\\Route\\Firephp', $container['routeFirephp']);
+        self::assertInstanceOf('bdk\\Debug\\Route\\Firephp', $container['routeFirephp']);
         $this->debug->obEnd();
     }
 
@@ -119,7 +119,7 @@ class DebugTest extends DebugTestFramework
 </ul><span class="t_punct">)</span></span></span>';
         $expect = \str_replace('\\t', "\t", $expect);
         $dumped = $this->debug->getDump('html')->valDumper->dump($val);
-        $this->assertSame($expect, $dumped);
+        self::assertSame($expect, $dumped);
     }
 
     public function testPhpError()
@@ -192,7 +192,7 @@ class DebugTest extends DebugTestFramework
             'output' => true,
             'route' => 'html',
         ));
-        $this->assertSame(true, Debug::getInstance()->getCfg('initViaSetCfg'));
+        self::assertSame(true, Debug::getInstance()->getCfg('initViaSetCfg'));
 
         /*
             The new debug instance got a new eventManager
@@ -209,7 +209,7 @@ class DebugTest extends DebugTestFramework
 
         $this->destroyDebug();
         Debug::_setCfg('collect', false);
-        $this->assertFalse(Debug::getInstance()->getCfg('collect'));
+        self::assertFalse(Debug::getInstance()->getCfg('collect'));
         $this->restoreDebug();
     }
 
@@ -232,15 +232,16 @@ class DebugTest extends DebugTestFramework
             return \gettype($callable);
         }, $this->debug->eventManager->getSubscribers(EventManager::EVENT_PHP_SHUTDOWN));
         $subscribersExpect = array(
-            array('bdk\Debug\InternalEvents', 'onShutdownHigh'),
             array('bdk\ErrorHandler', 'onShutdown'),
+            array('bdk\Debug\Plugin\InternalEvents', 'onShutdownHigh'),
+            array('bdk\Debug\Plugin\Runtime', 'onShutdown'),
             array('bdk\Debug\Method\Group', 'onShutdown'),
-            array('bdk\Debug\InternalEvents', 'onShutdownHigh2'),
-            array('bdk\Debug\InternalEvents', 'onShutdownLow'),
+            array('bdk\Debug\Plugin\InternalEvents', 'onShutdownHigh2'),
+            array('bdk\Debug\Plugin\InternalEvents', 'onShutdownLow'),
             array('bdk\Debug\Route\Wamp', 'onShutdown'),
             'Closure(' . TEST_DIR . '/bootstrap.php)',
         );
-        $this->assertSame($subscribersExpect, $subscribers);
+        self::assertSame($subscribersExpect, $subscribers);
     }
 
     /*
@@ -252,34 +253,34 @@ class DebugTest extends DebugTestFramework
         /*
             Test cfg shortcut...
         */
-        $this->assertSame(array(
+        self::assertSame(array(
             'cfg' => array('foo' => 'bar'),
             'debug' => Debug::META,
         ), $this->debug->meta('cfg', array('foo' => 'bar')));
-        $this->assertSame(array(
+        self::assertSame(array(
             'cfg' => array('foo' => 'bar'),
             'debug' => Debug::META,
         ), $this->debug->meta('cfg', 'foo', 'bar'));
-        $this->assertSame(array(
+        self::assertSame(array(
             'cfg' => array('foo' => true),
             'debug' => Debug::META,
         ), $this->debug->meta('cfg', 'foo'));
         // invalid cfg val... empty meta
-        $this->assertSame(array(
+        self::assertSame(array(
             'debug' => Debug::META,
         ), $this->debug->meta('cfg'));
         /*
             non cfg shortcut
         */
-        $this->assertSame(array(
+        self::assertSame(array(
             'foo' => 'bar',
             'debug' => Debug::META,
         ), $this->debug->meta(array('foo' => 'bar')));
-        $this->assertSame(array(
+        self::assertSame(array(
             'foo' => 'bar',
             'debug' => Debug::META,
         ), $this->debug->meta('foo', 'bar'));
-        $this->assertSame(array(
+        self::assertSame(array(
             'foo' => true,
             'debug' => Debug::META,
         ), $this->debug->meta('foo'));
@@ -359,7 +360,7 @@ class DebugTest extends DebugTestFramework
     {
         $this->setErrorCallerHelper();
         $errorCaller = $this->debug->errorHandler->get('errorCaller');
-        $this->assertSame(array(
+        self::assertSame(array(
             'file' => __FILE__,
             'line' => __LINE__ - 4,
             'groupDepth' => 0,
@@ -368,7 +369,7 @@ class DebugTest extends DebugTestFramework
         // this will use maximum debug_backtrace depth
         \call_user_func(array($this, 'setErrorCallerHelper'), true);
         $errorCaller = $this->debug->errorHandler->get('errorCaller');
-        $this->assertSame(array(
+        self::assertSame(array(
             'file' => __FILE__,
             'line' => __LINE__ - 4,
             'groupDepth' => 0,

@@ -56,16 +56,6 @@ class ConfigEvents implements SubscriberInterface
     public function onBootstrap()
     {
         $this->isBootstrapped = true;
-        if ($this->debug->parentInstance) {
-            return;
-        }
-        // this is the root instance
-        $route = $this->debug->getCfg('route');
-        if ($route === 'stream') {
-            // normally we don't init the route until output
-            // but stream needs to begin listening now
-            $this->debug->setCfg('route', $route);
-        }
     }
 
     /**
@@ -93,7 +83,6 @@ class ConfigEvents implements SubscriberInterface
             'onLog' => array($this, 'onCfgReplaceSubscriber'),
             'onMiddleware' => array($this, 'onCfgReplaceSubscriber'),
             'onOutput' => array($this, 'onCfgReplaceSubscriber'),
-            'route' => array($this, 'onCfgRoute'),
             'serviceProvider' => array($this, 'onCfgServiceProvider'),
         ), $cfgDebug);
         foreach ($valActions as $key => $callable) {
@@ -354,35 +343,6 @@ class ConfigEvents implements SubscriberInterface
         }
         if ($val) {
             $this->debug->eventManager->subscribe($event, $val);
-        }
-        return $val;
-    }
-
-    /**
-     * If "core" route, store in lazyObjects property
-     *
-     * @param mixed $val route value
-     *
-     * @return mixed
-     *
-     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
-     */
-    private function onCfgRoute($val)
-    {
-        if ($this->isBootstrapped) {
-            /*
-                Only need to worry about previous route if we're bootstrapped
-                There can only be one 'route' at a time:
-                If multiple output routes are desired, use debug->addPlugin()
-                unsubscribe current OutputInterface
-            */
-            $routePrev = $this->debug->getCfg('route');
-            if (\is_object($routePrev)) {
-                $this->debug->removePlugin($routePrev);
-            }
-        }
-        if (\is_string($val) && $val !== 'auto') {
-            $val = $this->debug->getRoute($val);
         }
         return $val;
     }

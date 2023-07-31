@@ -10,7 +10,7 @@
  * @version   v3.0
  */
 
-namespace bdk\Debug\Plugin\CustomMethod;
+namespace bdk\Debug\Plugin\Method;
 
 use bdk\Debug;
 use bdk\Debug\ConfigurableInterface;
@@ -36,16 +36,6 @@ class General implements SubscriberInterface
         'setErrorCaller',
         'varDump',
     );
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getSubscriptions()
-    {
-        return array(
-            Debug::EVENT_CUSTOM_METHOD => 'onCustomMethod',
-        );
-    }
 
     /**
      * Send an email

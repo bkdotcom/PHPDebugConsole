@@ -34,13 +34,7 @@ function headers_list()
         $headersByName[$name][] = $header;
     }
     $values = \array_values($headersByName);
-    if (\count($values) > 2) {
-        return \call_user_func_array('array_merge', $values);
-    }
-    if (\count($values) === 1) {
-        return $values[0];
-    }
-    return $values;
+    return \call_user_func_array('array_merge', $values);
 }
 
 function headers_sent(&$file = null, &$line = null)

@@ -10,7 +10,7 @@ use bdk\Test\Debug\DebugTestFramework;
 /**
  * PHPUnit tests for Debug class
  *
- * @covers \bdk\Debug\Plugin\CustomMethod\General
+ * @covers \bdk\Debug\Plugin\Method\General
  * @covers \bdk\Debug\Plugin\CustomMethodTrait
  */
 class PluginMethodGeneralTest extends DebugTestFramework
@@ -30,7 +30,7 @@ class PluginMethodGeneralTest extends DebugTestFramework
         $subject = 'that thing you requested';
         $body = 'Here it is';
         $this->debug->email($toAddr, $subject, $body);
-        $this->assertSame(array(
+        self::assertSame(array(
             'to' => $toAddr,
             'subject' => $subject,
             'body' => $body,
@@ -113,7 +113,7 @@ class PluginMethodGeneralTest extends DebugTestFramework
     {
         $this->assertSame(array(
             Debug::EVENT_CUSTOM_METHOD,
-        ), \array_keys($this->debug->customMethodGeneral->getSubscriptions()));
+        ), \array_keys($this->debug->pluginMethodGeneral->getSubscriptions()));
     }
     */
 

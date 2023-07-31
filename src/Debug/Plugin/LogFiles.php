@@ -14,6 +14,7 @@ namespace bdk\Debug\Plugin;
 
 use bdk\Debug;
 use bdk\Debug\AbstractComponent;
+use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
 
 /**
@@ -21,41 +22,23 @@ use bdk\PubSub\SubscriberInterface;
  */
 class LogFiles extends AbstractComponent implements SubscriberInterface
 {
-    private $excludedCounts = array();
-    private $debug;
-    private $files;
-
-    /**
-     * Constructor
-     *
-     * @param array      $config configuration
-     * @param Debug|null $debug  Debug instance
-     *
-     * @SuppressWarnings(PHPMD.StaticAccess)
-     */
-    public function __construct($config = array(), Debug $debug = null)
-    {
-        $config = \array_merge(array(
-            'asTree' => true,
-            'condense' => true,
-            'filesExclude' => array(
-                'closure://function',
-                '/vendor/',
-            ),
-        ), $config);
-        $this->setCfg($config);
-        $channelOpts = array(
+    protected $cfg = array(
+        'asTree' => true,
+        'channelOpts' => array(
             'channelIcon' => 'fa fa-files-o',
             'channelSort' => -10,
             'nested' => false,
-        );
-        if (!$debug) {
-            $debug = Debug::_getChannel('Files', $channelOpts);
-        } elseif ($debug === $debug->rootInstance) {
-            $debug = $debug->getChannel('Files', $channelOpts);
-        }
-        $this->debug = $debug;
-    }
+        ),
+        'condense' => true,
+        'filesExclude' => array(
+            'closure://function',
+            '/vendor/',
+        ),
+    );
+
+    private $excludedCounts = array();
+    private $debug;
+    private $files;
 
     /**
      * {@inheritDoc}
@@ -64,20 +47,42 @@ class LogFiles extends AbstractComponent implements SubscriberInterface
     {
         return array(
             Debug::EVENT_OUTPUT => array('onOutput', PHP_INT_MAX),
+            Debug::EVENT_PLUGIN_INIT => 'onPluginInit',
         );
     }
 
     /**
      * Debug::EVENT_OUTPUT subscriber
      *
+     * @param Event $event Event instance
+     *
      * @return void
      */
-    public function onOutput()
+    public function onOutput(Event $event)
     {
+        $this->debug = $event->getSubject()->getChannel('Files', $this->cfg['channelOpts']);
         if (!$this->debug->getCfg('logEnvInfo.files', Debug::CONFIG_DEBUG)) {
             return;
         }
         $this->output();
+    }
+
+    /**
+     * Debug::EVENT_PLUGIN_INIT subscriber
+     *
+     * @param Event $event Debug::EVENT_PLUGIN_INIT Event instance
+     *
+     * @return void
+     */
+    public function onPluginInit(Event $event)
+    {
+        $debug = $event->getSubject();
+        $cfg = $debug->getCfg('logFiles', Debug::CONFIG_INIT);
+        $this->cfg = \array_replace_recursive($this->cfg, $cfg);
+        if (isset($cfg['filesExclude'])) {
+            // replace all
+            $this->cfg['filesExclude'] = $cfg['filesExclude'];
+        }
     }
 
     /**
@@ -105,11 +110,9 @@ class LogFiles extends AbstractComponent implements SubscriberInterface
             $this->debug->info($countLogged . ' files logged');
         }
 
-        if ($this->cfg['asTree']) {
-            $this->logFilesAsTree($files);
-            return;
-        }
-        $this->logFiles($files);
+        return $this->cfg['asTree']
+            ? $this->logFilesAsTree($files)
+            : $this->logFilesAsArray($files);
     }
 
     /**
@@ -199,7 +202,7 @@ class LogFiles extends AbstractComponent implements SubscriberInterface
      *
      * @return void
      */
-    private function logFiles($files)
+    private function logFilesAsArray($files)
     {
         $this->debug->log(
             $files,

@@ -41,6 +41,7 @@ class Redaction extends AbstractComponent implements SubscriberInterface
         'redactReplace' => null, // closure
         'redactStrings' => array(),
     );
+
     protected $methods = array(
         'redact',
         'redactHeaders',

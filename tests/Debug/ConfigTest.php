@@ -11,8 +11,8 @@ use bdk\HttpMessage\ServerRequest;
  * @covers \bdk\Debug\Config
  * @covers \bdk\Debug\ConfigEvents
  * @covers \bdk\Debug\Internal
- * @covers \bdk\Debug\InternalEvents
  * @covers \bdk\Debug\Plugin\AssertSettingTrait
+ * @covers \bdk\Debug\Plugin\InternalEvents
  * @covers \bdk\Debug\Plugin\LogEnv
  * @covers \bdk\Debug\Plugin\Manager
  * @covers \bdk\Debug\Plugin\Redaction
@@ -23,16 +23,17 @@ class ConfigTest extends DebugTestFramework
 {
     public function testAssertSettingShouldNotBe()
     {
-        $reflectionMethod = new \ReflectionMethod($this->debug->pluginLogPhp, 'assertSetting');
+        $logPhp = $this->debug->getPlugin('logPhp');
+        $reflectionMethod = new \ReflectionMethod($logPhp, 'assertSetting');
         $reflectionMethod->setAccessible(true);
-        $reflectionMethod->invoke($this->debug->pluginLogPhp, array(
+        $reflectionMethod->invoke($logPhp, array(
             'filter' => FILTER_VALIDATE_INT,
             'name' => 'testThing',
             'operator' => '!=',
             'valActual' => 666,
             'valCompare' => 666,
         ));
-        $this->assertSame(array(
+        self::assertSame(array(
             'method' => 'assert',
             'args' => array(
                 '%ctestThing%c: should not be 666',
@@ -123,6 +124,7 @@ class ConfigTest extends DebugTestFramework
             'onLog',
             'onOutput',
             'outputHeaders',
+            'plugins',
             'redactKeys',
             // 'redactReplace',
             'route',
@@ -310,14 +312,14 @@ class ConfigTest extends DebugTestFramework
     {
         $called = false;
         new Debug(array(
-            'onBootstrap' => function () use (&$called) {
+            'onBootstrap' => static function () use (&$called) {
                 $called = true;
             },
         ));
         $this->assertTrue($called);
 
         $called = false;
-        $this->debug->setCfg('onBootstrap', function () use (&$called) {
+        $this->debug->setCfg('onBootstrap', static function () use (&$called) {
             $called = true;
         });
         $this->assertTrue($called);
@@ -328,10 +330,10 @@ class ConfigTest extends DebugTestFramework
      */
     public function testOnCfgReplaceSubscriber($name, $event)
     {
-        $closure1 = function () {
+        $closure1 = static function () {
         };
         $this->debug->setCfg($name, $closure1);
-        $closure2 = function () {
+        $closure2 = static function () {
             echo 'you suck!!!' . "\n";
         };
         $this->debug->setCfg($name, $closure2);

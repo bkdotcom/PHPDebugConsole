@@ -4,32 +4,37 @@ namespace bdk\Test\Debug\Plugin;
 
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
+use bdk\PubSub\Event;
 use bdk\Test\Debug\DebugTestFramework;
 
 /**
  * PHPUnit tests for LogFiles plugin
  *
  * @covers \bdk\Debug\Plugin\LogFiles
+ *
+ * @phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
  */
 class LogFilesTest extends DebugTestFramework
 {
     public function testOnOutput()
     {
         // debugTestFramework removed the logfiles channel
-        // $this->debug->addPlugin($this->debug->pluginLogFiles);
 
         // test logEnvInfo.files = false
-        $this->debug->pluginLogFiles->onOutput();
-        $this->assertSame(array(), $this->debug->data->get('log'));
+        $logFiles = $this->debug->getPlugin('logFiles');
+        $event = new Event($this->debug);
+
+        $logFiles->onOutput($event);
+        self::assertSame(array(), $this->debug->data->get('log'));
 
         // test no files
         $this->debug->getChannel('Files')->clear(Debug::CLEAR_SILENT);
         $this->debug->setCfg('logEnvInfo', array('files' => true));
-        $this->debug->pluginLogFiles->setFiles(array());
-        $this->debug->pluginLogFiles->onOutput();
+        $logFiles->setFiles(array());
+        $logFiles->onOutput($event);
         $logEntries = $this->debug->data->get('log');
         $logEntries = $this->helper->deObjectifyData($logEntries);
-        $this->assertSame(array(
+        self::assertSame(array(
             array(
                 'method' => 'info',
                 'args' => array(
@@ -63,20 +68,20 @@ class LogFilesTest extends DebugTestFramework
 
         // test asTree = true;
         $this->debug->getChannel('Files')->clear(Debug::CLEAR_SILENT);
-        $this->debug->pluginLogFiles->setCfg('filesExclude', array(
+        $logFiles->setCfg('filesExclude', array(
             '/excludedDir',
             'closure://function',
         ));
-        $this->debug->pluginLogFiles->setFiles(array(
+        $logFiles->setFiles(array(
             '/var/www/bootstrap.php',
             '/var/www/index.php',
             '/var/www/excludedDir/subdir/file.php',
             'closure://function',
         ));
-        $this->debug->pluginLogFiles->onOutput();
+        $logFiles->onOutput($event);
         $logEntries = $this->debug->data->get('log');
         $logEntries = $this->helper->deObjectifyData($logEntries);
-        $this->assertSame(array(
+        self::assertSame(array(
             array(
                 'method' => 'info',
                 'args' => array(
@@ -160,12 +165,12 @@ class LogFilesTest extends DebugTestFramework
 
         // test asTree = false;
         $this->debug->getChannel('Files')->clear(Debug::CLEAR_SILENT);
-        $this->debug->pluginLogFiles->setCfg('asTree', false);
-        $this->debug->pluginLogFiles->onOutput();
+        $logFiles->setCfg('asTree', false);
+        $logFiles->onOutput($event);
         $logEntries = $this->debug->data->get('log');
         $logEntries = $this->helper->deObjectifyData($logEntries);
         // echo json_encode($logEntries, JSON_PRETTY_PRINT) . "\n";
-        $this->assertSame(array(
+        self::assertSame(array(
             array(
                 'method' => 'info',
                 'args' => array(

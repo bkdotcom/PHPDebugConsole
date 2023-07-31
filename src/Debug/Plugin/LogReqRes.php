@@ -26,6 +26,13 @@ use bdk\PubSub\SubscriberInterface;
  */
 class LogReqRes implements SubscriberInterface
 {
+    protected $cfg = array(
+        'channelOpts' => array(
+            'channelIcon' => 'fa fa-exchange',
+            'channelSort' => 10,
+            'nested' => false,
+        ),
+    );
     private $debug;
     private $headerStyle = 'display:block; font-size:110%; font-weight:bold; padding:0.25em 0.5em; text-indent:0; border-bottom:#31708f 1px solid; background: linear-gradient(0deg, rgba(0,0,0,0.1) 0%, rgba(255,255,255,0.1) 100%);';
 
@@ -50,11 +57,7 @@ class LogReqRes implements SubscriberInterface
     public function onPluginInit(Event $event)
     {
         $debug = $event->getSubject();
-        $this->debug = $debug->getChannel('Request / Response', array(
-            'channelIcon' => 'fa fa-exchange',
-            'channelSort' => 10,
-            'nested' => false,
-        ));
+        $this->debug = $debug->getChannel('Request / Response', $this->cfg['channelOpts']);
         $collectWas = $debug->setCfg('collect', true);
         $this->logRequest();    // headers, cookies, post
         $debug->setCfg('collect', $collectWas);

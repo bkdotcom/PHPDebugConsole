@@ -185,7 +185,7 @@ class AbstractDebug
                 $this->cfg['logServerKeys'] = array();
                 return $val;
             },
-            'route' => array($this, 'onCfgRoute'),
+            'serviceProvider' => array($this, 'onCfgServiceProvider'),
         );
         $valActions = \array_intersect_key($valActions, $cfg);
         foreach ($valActions as $key => $callable) {
@@ -344,12 +344,12 @@ class AbstractDebug
         $this->container->setCfg('onInvoke', array($this->config, 'onContainerInvoke'));
         $this->serviceContainer->setCfg('onInvoke', array($this->config, 'onContainerInvoke'));
         $this->eventManager->addSubscriberInterface($this->container['pluginManager']);
-        $this->addPlugin($this->serviceContainer['customMethodGeneral']);
-        $this->addPlugin($this->serviceContainer['customMethodReqRes']);
+        $this->addPlugin($this->serviceContainer['pluginMethodGeneral']);
+        $this->addPlugin($this->serviceContainer['pluginMethodReqRes']);
         $this->addPlugin($this->container['pluginChannel']);
         $this->addPlugin($this->container['configEvents']);
-        $this->addPlugin($this->container['internalEvents']);
         $this->addPlugin($this->serviceContainer['pluginRedaction']);
+        $this->addPlugin(new \bdk\Debug\Plugin\Route());
         $this->eventManager->subscribe(Debug::EVENT_CONFIG, array($this, 'onConfig'));
 
         $this->serviceContainer['errorHandler'];
@@ -360,10 +360,8 @@ class AbstractDebug
             $this->data->set('requestId', $this->requestId());
             $this->data->set('entryCountInitial', $this->data->get('log/__count__'));
 
-            $this->addPlugin($this->container['pluginLogEnv']);
-            $this->addPlugin($this->container['pluginLogFiles']);
-            $this->addPlugin($this->container['pluginLogPhp']);
-            $this->addPlugin($this->container['pluginLogReqRes']);
+            $this->addPlugin($this->container['pluginInternalEvents']);
+            $this->addPlugins($this->getCfg('plugins', Debug::CONFIG_DEBUG));
         }
         $this->eventManager->publish(Debug::EVENT_BOOTSTRAP, $this);
     }
@@ -453,36 +451,6 @@ class AbstractDebug
             $this->parentInstance = $cfg['parent'];
             $this->rootInstance = $this->parentInstance->rootInstance;
         }
-    }
-
-    /**
-     * If "core" route, store in container
-     *
-     * @param mixed $val       route value
-     * @param bool  $addPlugin (true) Should we add as plugin?
-     *
-     * @return mixed
-     *
-     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
-     */
-    private function onCfgRoute($val, $addPlugin = true)
-    {
-        if (!($val instanceof RouteInterface)) {
-            return $val;
-        }
-        if ($addPlugin) {
-            $this->addPlugin($val);
-        }
-        $classname = \get_class($val);
-        $prefix = __NAMESPACE__ . '\\Route\\';
-        $containerName = 'route' . \substr($classname, \strlen($prefix));
-        if (\strpos($classname, $prefix) === 0 && !$this->container->has($containerName)) {
-            $this->container->offsetSet($containerName, $val);
-        }
-        if ($val->appendsHeaders()) {
-            $this->obStart();
-        }
-        return $val;
     }
 
     /**

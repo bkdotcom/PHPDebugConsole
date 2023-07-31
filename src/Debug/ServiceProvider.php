@@ -14,6 +14,7 @@ namespace bdk\Debug;
 
 use bdk\Container;
 use bdk\Container\ServiceProviderInterface;
+use bdk\Debug;
 
 /**
  * Register service
@@ -38,8 +39,6 @@ class ServiceProvider implements ServiceProviderInterface
         $container['services'] = array(
             'arrayUtil',
             'backtrace',
-            'customMethodGeneral',
-            'customMethodReqRes',
             'data',
             'errorHandler',
             'errorLevel',
@@ -52,6 +51,8 @@ class ServiceProvider implements ServiceProviderInterface
             'methodTime',
             'phpDoc',
             'pluginHighlight',
+            'pluginMethodGeneral',
+            'pluginMethodReqRes',
             'pluginRedaction',
             'response',
             'serverRequest',
@@ -62,7 +63,7 @@ class ServiceProvider implements ServiceProviderInterface
 
         $container['abstracter'] = static function (Container $container) {
             $debug = $container['debug'];
-            return new \bdk\Debug\Abstraction\Abstracter($debug, $debug->getCfg('abstracter', \bdk\Debug::CONFIG_INIT));
+            return new \bdk\Debug\Abstraction\Abstracter($debug, $debug->getCfg('abstracter', Debug::CONFIG_INIT));
         };
         $container['arrayUtil'] = static function () {
             return new \bdk\Debug\Utility\ArrayUtil();
@@ -83,12 +84,6 @@ class ServiceProvider implements ServiceProviderInterface
             $debug = $container['debug'];
             return new \bdk\Debug\ConfigEvents($debug);
         };
-        $container['customMethodGeneral'] = static function () {
-            return new \bdk\Debug\Plugin\CustomMethod\General();
-        };
-        $container['customMethodReqRes'] = static function () {
-            return new \bdk\Debug\Plugin\CustomMethod\ReqRes();
-        };
         $container['data'] = static function (Container $container) {
             $debug = $container['debug'];
             return new \bdk\Debug\Data($debug);
@@ -106,7 +101,7 @@ class ServiceProvider implements ServiceProviderInterface
                     },
                 ),
                 'onEUserError' => null, // don't halt script / log E_USER_ERROR to system_log when 'continueToNormal'
-            ), $debug->getCfg('errorHandler', \bdk\Debug::CONFIG_INIT));
+            ), $debug->getCfg('errorHandler', Debug::CONFIG_INIT));
             if ($existingInstance) {
                 $existingInstance->setCfg($cfg);
                 return $existingInstance;
@@ -125,10 +120,6 @@ class ServiceProvider implements ServiceProviderInterface
         $container['internal'] = static function (Container $container) {
             $debug = $container['debug'];
             return new \bdk\Debug\Internal($debug);
-        };
-        $container['internalEvents'] = static function (Container $container) {
-            $debug = $container['debug'];
-            return new \bdk\Debug\InternalEvents($debug);
         };
         $container['logger'] = static function (Container $container) {
             $debug = $container['debug'];
@@ -173,24 +164,17 @@ class ServiceProvider implements ServiceProviderInterface
         $container['pluginHighlight'] = static function () {
             return new \bdk\Debug\Plugin\Highlight();
         };
-        $container['pluginLogEnv'] = static function () {
-            return new \bdk\Debug\Plugin\LogEnv();
-        };
-        $container['pluginLogFiles'] = static function (Container $container) {
-            $debug = $container['debug'];
-            return new \bdk\Debug\Plugin\LogFiles(
-                $debug->getCfg('logFiles', \bdk\Debug::CONFIG_INIT),
-                $debug
-            );
-        };
-        $container['pluginLogPhp'] = static function () {
-            return new \bdk\Debug\Plugin\LogPhp();
-        };
-        $container['pluginLogReqRes'] = static function () {
-            return new \bdk\Debug\Plugin\LogReqRes();
+        $container['pluginInternalEvents'] = static function () {
+            return new \bdk\Debug\Plugin\InternalEvents();
         };
         $container['pluginManager'] = static function () {
             return new \bdk\Debug\Plugin\Manager();
+        };
+        $container['pluginMethodGeneral'] = static function () {
+            return new \bdk\Debug\Plugin\Method\General();
+        };
+        $container['pluginMethodReqRes'] = static function () {
+            return new \bdk\Debug\Plugin\Method\ReqRes();
         };
         $container['pluginRedaction'] = static function () {
             return new \bdk\Debug\Plugin\Redaction();
@@ -233,7 +217,7 @@ class ServiceProvider implements ServiceProviderInterface
             }
             $debug = $container['debug'];
             return new \bdk\WampPublisher(
-                $debug->getCfg('wampPublisher', \bdk\Debug::CONFIG_INIT)
+                $debug->getCfg('wampPublisher', Debug::CONFIG_INIT)
             );
             // @codeCoverageIgnoreEnd
         };

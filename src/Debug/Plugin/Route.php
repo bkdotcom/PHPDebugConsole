@@ -1,0 +1,166 @@
+<?php
+
+/**
+ * This file is part of PHPDebugConsole
+ *
+ * @package   PHPDebugConsole
+ * @author    Brad Kent <bkfake-github@yahoo.com>
+ * @license   http://opensource.org/licenses/MIT MIT
+ * @copyright 2014-2022 Brad Kent
+ * @version   v3.1
+ */
+
+namespace bdk\Debug\Plugin;
+
+use bdk\Debug;
+use bdk\Debug\AbstractComponent;
+use bdk\Debug\Plugin\CustomMethodTrait;
+use bdk\Debug\Route\RouteInterface;
+use bdk\PubSub\Event;
+use bdk\PubSub\SubscriberInterface;
+
+/**
+ * Handle "auto" route
+ */
+class Route extends AbstractComponent implements SubscriberInterface
+{
+    use CustomMethodTrait;
+
+    protected $methods = array(
+        'getDefaultRoute',
+    );
+
+    private $isBootstrapped = false;
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getSubscriptions()
+    {
+        return array(
+            Debug::EVENT_BOOTSTRAP => array('onBootstrap', PHP_INT_MAX * -1),
+            Debug::EVENT_CONFIG => 'onConfig',
+            Debug::EVENT_CUSTOM_METHOD => 'onCustomMethod',
+            Debug::EVENT_OUTPUT => array('onOutput', PHP_INT_MAX),
+        );
+    }
+
+    /**
+     * Determine default route
+     *
+     * @return string
+     */
+    public function getDefaultRoute()
+    {
+        $interface = $this->debug->getInterface();
+        if (\strpos($interface, 'ajax') !== false) {
+            return $this->debug->getCfg('routeNonHtml', Debug::CONFIG_DEBUG);
+        }
+        if ($interface === 'http') {
+            $contentType = $this->debug->getResponseHeader('Content-Type');
+            if ($contentType && \strpos($contentType, 'text/html') === false) {
+                return $this->debug->getCfg('routeNonHtml', Debug::CONFIG_DEBUG);
+            }
+            return 'html';
+        }
+        return 'stream';
+    }
+
+    /**
+     * Debug::EVENT_BOOTSTRAP subscriber
+     *
+     * @param Event $event Debug::EVENT_CONFIG Event instance
+     *
+     * @return void
+     */
+    public function onBootstrap(Event $event)
+    {
+        $this->isBootstrapped = true;
+        $debug = $event->getSubject();
+        if ($debug->parentInstance) {
+            return;
+        }
+        // this is the root instance
+        $route = $debug->getCfg('route');
+        if ($route === 'stream') {
+            // normally we don't init the route until output
+            // but stream needs to begin listening now
+            $debug->setCfg('route', $route);
+        }
+    }
+
+    /**
+     * Debug::EVENT_CONFIG subscriber
+     *
+     * @param Event $event Debug::EVENT_CONFIG Event instance
+     *
+     * @return void
+     */
+    public function onConfig(Event $event)
+    {
+        $this->debug = $event->getSubject();
+        $cfg = $event['debug'];
+        if (!$cfg) {
+            return;
+        }
+        $valActions = array(
+            'route' => array($this, 'onCfgRoute'),
+        );
+        $valActions = \array_intersect_key($valActions, $cfg);
+        foreach ($valActions as $key => $callable) {
+            /** @psalm-suppress TooManyArguments */
+            $cfg[$key] = $callable($cfg[$key]);
+        }
+        $event['debug'] = $cfg;
+    }
+
+    /**
+     * Debug::EVENT_OUTPUT subscriber
+     *
+     * @param Event $event Event instance
+     *
+     * @return void
+     */
+    public function onOutput(Event $event)
+    {
+        $debug = $event->getSubject();
+        $route = $debug->getCfg('route', Debug::CONFIG_DEBUG);
+        if (\is_string($route)) {
+            // \bdk\Debug::varDump('route is string (' . $route . ').  Set it to set route');
+            $debug->setCfg('route', $route);
+        }
+    }
+
+    /**
+     * If "core" route, store in lazyObjects property
+     *
+     * @param mixed $val route value
+     *
+     * @return mixed
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     */
+    private function onCfgRoute($val)
+    {
+        if ($this->isBootstrapped) {
+            /*
+                Only need to worry about previous route if we're bootstrapped
+                There can only be one 'route' at a time:
+                If multiple output routes are desired, use debug->addPlugin()
+                unsubscribe current route
+            */
+            $routePrev = $this->debug->getCfg('route');
+            if (\is_object($routePrev)) {
+                $this->debug->removePlugin($routePrev);
+            }
+        }
+        if (\is_string($val) && $val !== 'auto') {
+            // \bdk\Debug::varDump(__METHOD__ . ' getRoute ' . $val);
+            $val = $this->debug->getRoute($val);
+        }
+        if ($val instanceof RouteInterface) {
+            $this->debug->addPlugin($val);
+        }
+        return $val;
+    }
+}

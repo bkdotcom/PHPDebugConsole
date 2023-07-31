@@ -32,27 +32,6 @@ class Internal
     }
 
     /**
-     * Determine default route
-     *
-     * @return string
-     */
-    public function getDefaultRoute()
-    {
-        $interface = $this->debug->getInterface();
-        if (\strpos($interface, 'ajax') !== false) {
-            return $this->debug->getCfg('routeNonHtml', Debug::CONFIG_DEBUG);
-        }
-        if ($interface === 'http') {
-            $contentType = $this->debug->getResponseHeader('Content-Type');
-            if ($contentType && \strpos($contentType, 'text/html') === false) {
-                return $this->debug->getCfg('routeNonHtml', Debug::CONFIG_DEBUG);
-            }
-            return 'html';
-        }
-        return 'stream';
-    }
-
-    /**
      * Create config meta argument/value
      *
      * @param string|array $key key or array of key/values

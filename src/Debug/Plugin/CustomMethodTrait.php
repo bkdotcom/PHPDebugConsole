@@ -12,6 +12,7 @@
 
 namespace bdk\Debug\Plugin;
 
+use bdk\Debug;
 use bdk\Debug\LogEntry;
 
 /**
@@ -22,7 +23,17 @@ trait CustomMethodTrait
     private $debug;
 
     /**
-     * Debug::EVENT_LOG event subscriber
+     * {@inheritDoc}
+     */
+    public function getSubscriptions()
+    {
+        return array(
+            Debug::EVENT_CUSTOM_METHOD => 'onCustomMethod',
+        );
+    }
+
+    /**
+     * Debug::EVENT_CUSTOM_METHOD event subscriber
      *
      * @param LogEntry $logEntry logEntry instance
      *

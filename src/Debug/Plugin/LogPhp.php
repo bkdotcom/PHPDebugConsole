@@ -25,6 +25,14 @@ class LogPhp implements SubscriberInterface
 {
     use AssertSettingTrait;
 
+    protected $cfg = array(
+        'channelOpts' => array(
+            'channelIcon' => '<i class="fa" style="position:relative; top:2px; font-size:15px;">🐘</i>',
+            'channelSort' => 10,
+            'nested' => false,
+        ),
+    );
+
     private $debug;
 
     /**
@@ -46,12 +54,7 @@ class LogPhp implements SubscriberInterface
      */
     public function onPluginInit(Event $event)
     {
-        $channelOpts = array(
-            'channelIcon' => '<i class="fa" style="position:relative; top:2px; font-size:15px;">🐘</i>',
-            'channelSort' => 10,
-            'nested' => false,
-        );
-        $this->debug = $event->getSubject()->rootInstance->getChannel('php', $channelOpts);
+        $this->debug = $event->getSubject()->getChannel('php', $this->cfg['channelOpts']);
         $collectWas = $this->debug->setCfg('collect', true);
         $this->logPhpInfo();
         $this->logPhpEr();

@@ -16,7 +16,6 @@ use bdk\Container;
 use bdk\Container\ServiceProviderInterface;
 use bdk\Debug;
 use bdk\Debug\LogEntry;
-use bdk\Debug\Route\RouteInterface;
 use bdk\Debug\ServiceProvider;
 use bdk\PubSub\Event;
 use ReflectionMethod;
@@ -79,7 +78,7 @@ class AbstractDebug
         $this->publishBubbleEvent(Debug::EVENT_CUSTOM_METHOD, $logEntry);
         if ($logEntry['handled'] !== true) {
             $logEntry->setMeta('isCustomMethod', true);
-            $this->appendLog($logEntry);
+            $this->rootInstance->getPlugin('methodBasic')->log($logEntry);
         }
         return $logEntry['return'];
     }
@@ -114,13 +113,6 @@ class AbstractDebug
         if (!self::$instance) {
             new static();
         }
-        /*
-            Add 'statically' meta arg
-            Not all methods expect meta args... so make sure it comes after expected args
-        */
-        $defaultArgs = self::getMethodDefaultArgs($methodName);
-        $args = \array_replace(\array_values($defaultArgs), $args);
-        $args[] = static::meta('statically');
         return \call_user_func_array(array(self::$instance, $methodName), $args);
     }
 
@@ -264,58 +256,22 @@ class AbstractDebug
     }
 
     /**
-     * Store the arguments
-     * if collect is false -> does nothing
-     * otherwise:
-     *   + abstracts values
-     *   + publishes Debug::EVENT_LOG event
-     *   + appends log (if event propagation not stopped)
-     *
-     * @param LogEntry $logEntry LogEntry instance
-     *
-     * @return bool whether or not entry got appended
-     */
-    protected function appendLog(LogEntry $logEntry)
-    {
-        if (!$this->cfg['collect'] && !$logEntry['forcePublish']) {
-            return false;
-        }
-        $cfg = $logEntry->getMeta('cfg');
-        $cfgRestore = array();
-        if ($cfg) {
-            $cfgRestore = $this->setCfg($cfg);
-            $logEntry->setMeta('cfg', null);
-        }
-        $logEntry->crate();
-        $this->publishBubbleEvent(Debug::EVENT_LOG, $logEntry);
-        if ($cfgRestore) {
-            $this->setCfg($cfgRestore);
-        }
-        if ($logEntry['appendLog']) {
-            $this->data->appendLog($logEntry);
-            return true;
-        }
-        return false;
-    }
-
-    /**
      * Get Method's default argument list
      *
-     * @param string $methodName Name of the method
+     * @param string $method Method identifier
      *
      * @return array
      */
-    protected static function getMethodDefaultArgs($methodName)
+    public static function getMethodDefaultArgs($method)
     {
-        if (isset(self::$methodDefaultArgs[$methodName])) {
-            return self::$methodDefaultArgs[$methodName];
+        if (isset(self::$methodDefaultArgs[$method])) {
+            return self::$methodDefaultArgs[$method];
         }
-        if (\method_exists(self::$instance, $methodName) === false) {
-            return array();
-        }
-        $defaultArgs = array();
-        $refMethod = new ReflectionMethod(self::$instance, $methodName);
+        $regex = '/^(?P<class>[\w\\\]+)::(?P<method>\w+)(?:\(\))?$/';
+        \preg_match($regex, $method, $matches);
+        $refMethod = new ReflectionMethod($matches['class'], $matches['method']);
         $params = $refMethod->getParameters();
+        $defaultArgs = array();
         foreach ($params as $refParameter) {
             $name = $refParameter->getName();
             $defaultArgs[$name] = $refParameter->isOptional()
@@ -323,7 +279,7 @@ class AbstractDebug
                 : null;
         }
         unset($defaultArgs['args']);
-        self::$methodDefaultArgs[$methodName] = $defaultArgs;
+        self::$methodDefaultArgs[$method] = $defaultArgs;
         return $defaultArgs;
     }
 
@@ -359,8 +315,6 @@ class AbstractDebug
             // we're the root instance
             $this->data->set('requestId', $this->requestId());
             $this->data->set('entryCountInitial', $this->data->get('log/__count__'));
-
-            $this->addPlugin($this->container['pluginInternalEvents']);
             $this->addPlugins($this->getCfg('plugins', Debug::CONFIG_DEBUG));
         }
         $this->eventManager->publish(Debug::EVENT_BOOTSTRAP, $this);

@@ -13,7 +13,9 @@ use bdk\Test\Debug\DebugTestFramework;
  * @covers \bdk\Debug\Dump\Html\Helper
  * @covers \bdk\Debug\Dump\Html\HtmlString
  * @covers \bdk\Debug\Dump\Html\Table
- * @covers \bdk\Debug\Method\Helper
+ * @covers \bdk\Debug\Plugin\Method\Trace
+ *
+ * @phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
  */
 class TraceTest extends DebugTestFramework
 {
@@ -37,21 +39,21 @@ class TraceTest extends DebugTestFramework
             ),
             array(),
             array(
-                'entry' => function (LogEntry $logEntry) use ($values) {
+                'entry' => static function (LogEntry $logEntry) use ($values) {
                     $trace = $logEntry['args'][0];
-                    $this->assertSame($values['file0'], $trace[0]['file']);
-                    $this->assertSame($values['line0'], $trace[0]['line']);
-                    $this->assertIsInt($trace[0]['line']);
-                    $this->assertSame(Abstracter::UNDEFINED, $trace[0]['function']);
-                    $this->assertSame($values['function1'], $trace[1]['function']);
+                    self::assertSame($values['file0'], $trace[0]['file']);
+                    self::assertSame($values['line0'], $trace[0]['line']);
+                    self::assertIsInt($trace[0]['line']);
+                    self::assertSame(Abstracter::UNDEFINED, $trace[0]['function']);
+                    self::assertSame($values['function1'], $trace[1]['function']);
 
-                    $this->assertSame('trace', $logEntry->getMeta('caption'));
-                    $this->assertTrue($logEntry->getMeta('detectFiles'));
-                    $this->assertNull($logEntry->getMeta('inclContext'));
-                    $this->assertFalse($logEntry->getMeta('sortable'));
+                    self::assertSame('trace', $logEntry->getMeta('caption'));
+                    self::assertTrue($logEntry->getMeta('detectFiles'));
+                    self::assertNull($logEntry->getMeta('inclContext'));
+                    self::assertFalse($logEntry->getMeta('sortable'));
                 },
-                'chromeLogger' => function ($outputArray, LogEntry $logEntry) {
-                    $traceExpect = \array_map(function ($row) {
+                'chromeLogger' => static function ($outputArray, LogEntry $logEntry) {
+                    $traceExpect = \array_map(static function ($row) {
                         foreach ($row as $k => $v) {
                             if ($v === Abstracter::UNDEFINED) {
                                 unset($row[$k]);
@@ -59,20 +61,20 @@ class TraceTest extends DebugTestFramework
                         }
                         return $row;
                     }, $logEntry['args'][0]);
-                    $this->assertSame($traceExpect, $outputArray[0][0]);
-                    $this->assertSame(null, $outputArray[1]);
-                    $this->assertSame('table', $outputArray[2]);
+                    self::assertSame($traceExpect, $outputArray[0][0]);
+                    self::assertSame(null, $outputArray[1]);
+                    self::assertSame('table', $outputArray[2]);
                 },
-                'firephp' => function ($output, LogEntry $logEntry) {
+                'firephp' => static function ($output, LogEntry $logEntry) {
                     $trace = $logEntry['args'][0];
                     \preg_match('#\|(.+)\|#', $output, $matches);
                     $output = \json_decode($matches[1], true);
                     list($logEntryMeta, $logEntryTable) = $output;
-                    $this->assertSame(array(
+                    self::assertSame(array(
                         'Label' => 'trace',
                         'Type' => 'TABLE',
                     ), $logEntryMeta);
-                    $this->assertSame(array(
+                    self::assertSame(array(
                         '',
                         'file',
                         'line',
@@ -89,12 +91,12 @@ class TraceTest extends DebugTestFramework
                                 ? $trace[$tracei]['function']
                                 : null,
                         );
-                        $this->assertSame($valuesExpect, $logEntryTable[$i]);
+                        self::assertSame($valuesExpect, $logEntryTable[$i]);
                     }
                 },
                 'html' => function ($output, LogEntry $logEntry) {
                     $trace = $logEntry['args'][0];
-                    $this->assertStringContainsString('<caption>trace</caption>' . "\n"
+                    self::assertStringContainsString('<caption>trace</caption>' . "\n"
                         . '<thead>' . "\n"
                         . '<tr><th>&nbsp;</th><th scope="col">file</th><th scope="col">line</th><th scope="col">function</th></tr>' . "\n"
                         . '</thead>', $output);
@@ -124,20 +126,20 @@ class TraceTest extends DebugTestFramework
                         $valuesExpect[3] = $this->debug->getDump('html')->valDumper->markupIdentifier($valuesExpect[3], true, 'span', array(), true);
                         $valuesActual = $matches[$i];
                         \array_shift($valuesActual);
-                        $this->assertSame($valuesExpect, $valuesActual);
+                        self::assertSame($valuesExpect, $valuesActual);
                     }
                 },
-                'script' => function ($output, LogEntry $logEntry) {
+                'script' => static function ($output, LogEntry $logEntry) {
                     $trace = $logEntry['args'][0];
                     \preg_match('#console.table\((.+)\);#', $output, $matches);
-                    $this->assertSame(
+                    self::assertSame(
                         \str_replace(\json_encode(Abstracter::UNDEFINED), 'undefined', \json_encode($trace, JSON_UNESCAPED_SLASHES)),
                         $matches[1]
                     );
                 },
                 'text' => function ($output, LogEntry $logEntry) {
                     $trace = $logEntry['args'][0];
-                    $traceExpect = \array_map(function ($row) {
+                    $traceExpect = \array_map(static function ($row) {
                         foreach ($row as $k => $v) {
                             if ($v === Abstracter::UNDEFINED) {
                                 unset($row[$k]);
@@ -145,9 +147,9 @@ class TraceTest extends DebugTestFramework
                         }
                         return $row;
                     }, $trace);
-                    $this->assertNotEmpty($traceExpect);
+                    self::assertNotEmpty($traceExpect);
                     $expect = 'trace = ' . $this->debug->getDump('text')->valDumper->dump($traceExpect);
-                    $this->assertSame($expect, \trim($output));
+                    self::assertSame($expect, \trim($output));
                 },
                 // 'wamp' => @todo
             )
@@ -160,7 +162,7 @@ class TraceTest extends DebugTestFramework
         $this->debug->trace(false, false);
         $logEntryError = $this->debug->data->get('log/0');
         $logEntryTrace = $this->debug->data->get('log/1');
-        $this->assertSame(array(
+        self::assertSame(array(
             'method' => 'warn',
             'args' => array('trace caption should be a string.  bool provided'),
             'meta' => array(
@@ -170,8 +172,8 @@ class TraceTest extends DebugTestFramework
                 'uncollapse' => true,
             ),
         ), $this->helper->logEntryToArray($logEntryError));
-        $this->assertSame('trace', $logEntryTrace['method']);
-        $this->assertSame('trace', $logEntryTrace['meta']['caption']);
+        self::assertSame('trace', $logEntryTrace['method']);
+        self::assertSame('trace', $logEntryTrace['meta']['caption']);
 
         $line = __LINE__ + 1;
         $this->debug->trace(false, (object) array());
@@ -260,13 +262,13 @@ class TraceTest extends DebugTestFramework
             array(
                 'entry' => function (LogEntry $logEntry) {
                     $tableInfo = $logEntry->getMeta('tableInfo');
-                    $this->assertSame('trace', $logEntry->getMeta('caption'));
-                    $this->assertTrue($logEntry->getMeta('detectFiles'));
-                    $this->assertTrue($logEntry->getMeta('inclContext'));
-                    $this->assertFalse($logEntry->getMeta('sortable'));
+                    self::assertSame('trace', $logEntry->getMeta('caption'));
+                    self::assertTrue($logEntry->getMeta('detectFiles'));
+                    self::assertTrue($logEntry->getMeta('inclContext'));
+                    self::assertFalse($logEntry->getMeta('sortable'));
 
-                    $this->assertIsArray($tableInfo['rows'][0]['args']);
-                    $this->assertIsArray($tableInfo['rows'][0]['context']);
+                    self::assertIsArray($tableInfo['rows'][0]['args']);
+                    self::assertIsArray($tableInfo['rows'][0]['context']);
                 },
                 'html' => function ($output, LogEntry $logEntry) {
                     $expectStartsWith = <<<'EOD'
@@ -279,11 +281,11 @@ class TraceTest extends DebugTestFramework
 <tbody>
 <tr class="expanded" data-toggle="next">
 EOD;
-                    $this->assertStringContainsString($expectStartsWith, $output);
+                    self::assertStringContainsString($expectStartsWith, $output);
                     $expectMatch = '%a<tr class="context" style="display:table-row;"><td colspan="4"><pre class="highlight line-numbers" data-line="%d" data-start="%d"><code class="language-php">%a';
-                    $this->assertStringMatchesFormat($expectMatch, $output);
+                    self::assertStringMatchesFormat($expectMatch, $output);
                     $expectContains = '</code></pre><hr />Arguments = <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>';
-                    $this->assertStringContainsString($expectContains, $output);
+                    self::assertStringContainsString($expectContains, $output);
                 },
             )
         );

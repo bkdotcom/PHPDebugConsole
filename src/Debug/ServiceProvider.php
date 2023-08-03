@@ -43,12 +43,6 @@ class ServiceProvider implements ServiceProviderInterface
             'errorHandler',
             'errorLevel',
             'html',
-            'methodClear',
-            'methodCount',
-            'methodGroup',
-            'methodProfile',
-            'methodTable',
-            'methodTime',
             'phpDoc',
             'pluginHighlight',
             'pluginMethodGeneral',
@@ -117,36 +111,9 @@ class ServiceProvider implements ServiceProviderInterface
         $container['html'] = static function () {
             return new \bdk\Debug\Utility\Html();
         };
-        $container['internal'] = static function (Container $container) {
-            $debug = $container['debug'];
-            return new \bdk\Debug\Internal($debug);
-        };
         $container['logger'] = static function (Container $container) {
             $debug = $container['debug'];
             return new \bdk\Debug\Psr3\Logger($debug);
-        };
-        $container['methodClear'] = static function () {
-            return new \bdk\Debug\Method\Clear();
-        };
-        $container['methodCount'] = static function () {
-            return new \bdk\Debug\Method\Count();
-        };
-        $container['methodGroup'] = static function (Container $container) {
-            $debug = $container['debug'];
-            return new \bdk\Debug\Method\Group($debug);
-        };
-        $container['methodHelper'] = static function (Container $container) {
-            $debug = $container['debug'];
-            return new \bdk\Debug\Method\Helper($debug);
-        };
-        $container['methodProfile'] = static function () {
-            return new \bdk\Debug\Method\Profile();
-        };
-        $container['methodTable'] = static function () {
-            return new \bdk\Debug\Method\Table();
-        };
-        $container['methodTime'] = static function () {
-            return new \bdk\Debug\Method\Time();
         };
         $container['middleware'] = static function (Container $container) {
             $debug = $container['debug'];
@@ -163,9 +130,6 @@ class ServiceProvider implements ServiceProviderInterface
         };
         $container['pluginHighlight'] = static function () {
             return new \bdk\Debug\Plugin\Highlight();
-        };
-        $container['pluginInternalEvents'] = static function () {
-            return new \bdk\Debug\Plugin\InternalEvents();
         };
         $container['pluginManager'] = static function () {
             return new \bdk\Debug\Plugin\Manager();

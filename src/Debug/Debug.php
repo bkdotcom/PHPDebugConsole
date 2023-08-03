@@ -17,8 +17,6 @@ namespace bdk;
 
 use bdk\Debug\AbstractDebug;
 use bdk\Debug\Abstraction\Abstracter;
-use bdk\Debug\LogEntry;
-use bdk\ErrorHandler\Error;
 
 /**
  * Web-browser/javascript like console class for PHP
@@ -44,9 +42,6 @@ use bdk\ErrorHandler\Error;
  * @property \bdk\PubSub\Manager  $eventManager  lazy-loaded Event Manager instance
  * @property Debug\Utility\Html   $html          lazy=loaded Html Utility instance
  * @property Debug\Psr3\Logger    $logger        lazy-loaded PSR-3 instance
- * @property Debug\Method\Clear   $methodClear   lazy-loaded MethodClear instance
- * @property Debug\Method\Profile $methodProfile lazy-loaded MethodProfile instance
- * @property Debug\Method\Table   $methodTable   lazy-loaded MethodTable instance
  * @property \bdk\Debug|null      $parentInstance parent "channel"
  * @property \Psr\Http\Message\ResponseInterface $response lazy-loaded ResponseInterface (set via writeToResponse)
  * @property HttpMessage\ServerRequest $serverRequest lazy-loaded ServerRequest
@@ -148,6 +143,9 @@ class Debug extends AbstractDebug
         'output'    => false,       // output the log?
         'outputHeaders' => true,    // ie, ChromeLogger and/or firePHP headers
         'plugins' => array(
+            'internalEvents' => array(
+                'class' => 'bdk\Debug\Plugin\InternalEvents',
+            ),
             'logEnv' => array(
                 'class' => 'bdk\Debug\Plugin\LogEnv',
             ),
@@ -159,6 +157,33 @@ class Debug extends AbstractDebug
             ),
             'logReqRes' => array(
                 'class' => 'bdk\Debug\Plugin\LogReqRes',
+            ),
+            'methodAlert' => array(
+                'class' => 'bdk\Debug\Plugin\Method\Alert',
+            ),
+            'methodBasic' => array(
+                'class' => 'bdk\Debug\Plugin\Method\Basic',
+            ),
+            'methodClear' => array(
+                'class' => 'bdk\Debug\Plugin\Method\Clear',
+            ),
+            'methodCount' => array(
+                'class' => 'bdk\Debug\Plugin\Method\Count',
+            ),
+            'methodGroup' => array(
+                'class' => 'bdk\Debug\Plugin\Method\Group',
+            ),
+            'methodProfile' => array(
+                'class' => 'bdk\Debug\Plugin\Method\Profile',
+            ),
+            'methodTable' => array(
+                'class' => 'bdk\Debug\Plugin\Method\Table',
+            ),
+            'methodTime' => array(
+                'class' => 'bdk\Debug\Plugin\Method\Time',
+            ),
+            'methodTrace' => array(
+                'class' => 'bdk\Debug\Plugin\Method\Trace',
             ),
             'runtime' => array(
                 'class' => 'bdk\Debug\Plugin\Runtime',
@@ -193,605 +218,6 @@ class Debug extends AbstractDebug
             | E_WARNING | E_USER_ERROR | E_RECOVERABLE_ERROR;
         parent::__construct($cfg);
     }
-
-    /*
-        Debugging Methods
-    */
-
-    /**
-     * Display an alert at the top of the log
-     *
-     * Can use styling & substitutions.
-     * If using substitutions, will need to pass `$level` & `$dismissible` as meta values
-     *
-     * @param string $message     message to be displayed
-     * @param string $level       (error), info, success, warn
-     *                               "danger" and "warning" are still accepted, however deprecated
-     * @param bool   $dismissible (false) Whether to display a close icon/button
-     *
-     * @return $this
-     */
-    public function alert($message, $level = 'error', $dismissible = false)
-    {
-        $args = \func_get_args();
-        $hasSubstitutions = $this->methodHelper->alertHasSubstitutions($args);
-        $logEntry = new LogEntry(
-            $this,
-            __FUNCTION__,
-            $args,
-            array(
-                'dismissible' => false,
-                'level' => 'error',
-            ),
-            $hasSubstitutions
-                ? array()
-                : $this->getMethodDefaultArgs(__FUNCTION__),
-            array('level', 'dismissible')
-        );
-        $logEntry['args'] = \array_values($logEntry['args']);
-        $this->methodHelper->alertLevel($logEntry);
-        $this->data->set('logDest', 'alerts');
-        $this->appendLog($logEntry);
-        $this->data->set('logDest', 'auto');
-        return $this;
-    }
-
-    /**
-     * If first argument evaluates `false`, log the remaining paramaters
-     *
-     * Supports styling & substitutions
-     *
-     * @param bool  $assertion Any boolean expression. If the assertion is false, the message is logged
-     * @param mixed $msg,...   (optional) variable num of values to output if assertion fails
-     *                           if none provided, will use calling file & line num
-     *
-     * @return $this
-     */
-    public function assert($assertion, $msg = null)
-    {
-        $logEntry = new LogEntry(
-            $this,
-            __FUNCTION__,
-            \func_get_args()
-        );
-        $args = $logEntry['args'];
-        $assertion = \array_shift($args);
-        if ($assertion) {
-            return $this;
-        }
-        if (!$args) {
-            // add default message
-            $callerInfo = $this->backtrace->getCallerInfo();
-            $args = array(
-                'Assertion failed:',
-                \sprintf('%s (line %s)', $callerInfo['file'], $callerInfo['line']),
-            );
-            $logEntry->setMeta('detectFiles', true);
-        }
-        $logEntry['args'] = $args;
-        $this->appendLog($logEntry);
-        return $this;
-    }
-
-    /**
-     * Clear the log
-     *
-     * This method executes even if `collect` is false
-     *
-     * @param int $bitmask A bitmask of options
-     *                     `self::CLEAR_ALERTS` : Clear alerts generated with `alert()`
-     *                     `self::CLEAR_LOG` : **default** Clear log entries (excluding warn & error)
-     *                     `self::CLEAR_LOG_ERRORS` : Clear warn & error
-     *                     `self::CLEAR_SUMMARY` : Clear summary entries (excluding warn & error)
-     *                     `self::CLEAR_SUMMARY_ERRORS` : Clear warn & error within summary groups
-     *                     `self::CLEAR_ALL` : Clear all log entries
-     *                     `self::CLEAR_SILENT` : Don't add log entry
-     *
-     * @return $this
-     */
-    public function clear($bitmask = self::CLEAR_LOG)
-    {
-        $logEntry = new LogEntry(
-            $this,
-            __FUNCTION__,
-            \func_get_args(),
-            array(),
-            $this->getMethodDefaultArgs(__FUNCTION__),
-            array('bitmask')
-        );
-        $this->methodClear->doClear($logEntry);
-        // even if cleared from within summary, let's log this in primary log
-        $this->data->set('logDest', 'main');
-        $this->appendLog($logEntry);
-        $this->data->set('logDest', 'auto');
-        return $this;
-    }
-
-    /**
-     * Log the number of times this has been called with the given label.
-     *
-     * Count is maintained even when `collect` is false
-     * If `collect` = false, `count()` will be performed "silently"
-     *
-     * @param mixed $label Label.  If omitted, logs the number of times `count()` has been called at this particular line.
-     * @param int   $flags (optional) A bitmask of
-     *                        \bdk\Debug::COUNT_NO_INC` : don't increment the counter
-     *                                                     (ie, just get the current count)
-     *                        \bdk\Debug::COUNT_NO_OUT` : don't output/log
-     *
-     * @return int The new count (or current count when using `COUNT_NO_INC`)
-     */
-    public function count($label = null, $flags = 0)
-    {
-        $logEntry = new LogEntry(
-            $this,
-            __FUNCTION__,
-            \func_get_args()
-        );
-        return $this->methodCount->doCount($logEntry);
-    }
-
-    /**
-     * Resets the counter
-     *
-     * Counter is reset even when debugging is disabled (ie `collect` is false).
-     *
-     * @param mixed $label (optional) specify the counter to reset
-     * @param int   $flags (optional) currently only one option :
-     *                       \bdk\Debug::COUNT_NO_OUT` : don't output/log
-     *
-     * @return $this
-     */
-    public function countReset($label = 'default', $flags = 0)
-    {
-        $logEntry = new LogEntry(
-            $this,
-            __FUNCTION__,
-            \func_get_args()
-        );
-        $this->methodCount->countReset($logEntry);
-        return $this;
-    }
-
-    /**
-     * Log an error message.
-     *
-     * Supports styling & substitutions
-     *
-     * @param mixed $arg,... message / values
-     *
-     * @return $this
-     */
-    public function error()
-    {
-        $this->methodHelper->doError(__FUNCTION__, \func_get_args());
-        return $this;
-    }
-
-    /**
-     * Create a new inline group
-     *
-     * Groups generally get indented and will receive an expand/collapse toggle.
-     *
-     * applicable meta args:
-     *      argsAsParams: true
-     *      boldLabel: true
-     *      hideIfEmpty: false
-     *      isFuncName: (bool)
-     *      level: (string)
-     *      ungroup: false  // when closed: if no children, convert to plain log entry
-     *                      // when closed: if only one child, remove the containing group
-     *
-     * @param mixed $arg,... label / values
-     *
-     * @return $this
-     */
-    public function group()
-    {
-        $logEntry = new LogEntry(
-            $this,
-            __FUNCTION__,
-            \func_get_args()
-        );
-        $this->methodGroup->methodGroup($logEntry);
-        return $this;
-    }
-
-    /**
-     * Create a new inline group
-     *
-     * Unline `group()`, `groupCollapsed()`, will initially be collapsed
-     *
-     * @param mixed $arg,... label / values
-     *
-     * @return $this
-     */
-    public function groupCollapsed()
-    {
-        $logEntry = new LogEntry(
-            $this,
-            __FUNCTION__,
-            \func_get_args()
-        );
-        $this->methodGroup->methodGroup($logEntry);
-        return $this;
-    }
-
-    /**
-     * Close current group
-     *
-     * Every call to `group()`, `groupCollapsed()`, and `groupSummary()` should be paired with `groupEnd()`
-     *
-     * The optional return value will be visible when the group is both expanded and collapsed.
-     *
-     * @param mixed $value (optional) "return" value
-     *
-     * @return $this
-     */
-    public function groupEnd($value = Abstracter::UNDEFINED)
-    {
-        $logEntry = new LogEntry(
-            $this,
-            __FUNCTION__,
-            \func_get_args(),
-            array(),
-            $this->getMethodDefaultArgs(__FUNCTION__)
-        );
-        $this->methodGroup->methodGroupEnd($logEntry);
-        return $this;
-    }
-
-    /**
-     * Open a "summary" group
-     *
-     * Debug methods called from within a groupSummary will appear at the top of the log.
-     * Call `groupEnd()` to close the summary group
-     *
-     * All groupSummary groups will appear together at the top of the output
-     *
-     * @param int $priority (0) The higher the priority, the earlier the group will appear in output
-     *
-     * @return $this
-     */
-    public function groupSummary($priority = 0)
-    {
-        $logEntry = new LogEntry(
-            $this,
-            __FUNCTION__,
-            \func_get_args(),
-            array(),
-            $this->getMethodDefaultArgs(__FUNCTION__),
-            array('priority')
-        );
-        $this->methodGroup->methodGroupSummary($logEntry);
-        return $this;
-    }
-
-    /**
-     * Uncollapse ancestor groups
-     *
-     * This will only occur if `cfg['collect']` is currently `true`
-     *
-     * @return $this
-     */
-    public function groupUncollapse()
-    {
-        if (!$this->cfg['collect']) {
-            return $this;
-        }
-        $logEntry = new LogEntry(
-            $this,
-            __FUNCTION__,
-            \func_get_args()
-        );
-        $this->methodGroup->methodGroupUncollapse($logEntry);
-        return $this;
-    }
-
-    /**
-     * Log some informative information
-     *
-     * Supports styling & substitutions
-     *
-     * @param mixed $arg,... message / values
-     *
-     * @return $this
-     */
-    public function info()
-    {
-        $this->appendLog(new LogEntry(
-            $this,
-            __FUNCTION__,
-            \func_get_args()
-        ));
-        return $this;
-    }
-
-    /**
-     * Log general information
-     *
-     * Supports styling & substitutions
-     *
-     * @param mixed $arg,... message / values
-     *
-     * @return $this
-     */
-    public function log()
-    {
-        $args = \func_get_args();
-        if (\count($args) === 1) {
-            if ($args[0] instanceof LogEntry) {
-                $this->appendLog($args[0]);
-                return $this;
-            }
-            if ($args[0] instanceof Error) {
-                $this->container['pluginInternalEvents']->onError($args[0]);
-                return $this;
-            }
-        }
-        $this->appendLog(new LogEntry(
-            $this,
-            __FUNCTION__,
-            $args
-        ));
-        return $this;
-    }
-
-    /**
-     * Starts recording a performance profile
-     *
-     * @param string $name Optional profile name
-     *
-     * @return $this
-     */
-    public function profile($name = null)
-    {
-        if (!$this->cfg['collect']) {
-            return $this;
-        }
-        $logEntry = new LogEntry(
-            $this,
-            __FUNCTION__,
-            \func_get_args(),
-            array(),
-            $this->getMethodDefaultArgs(__FUNCTION__),
-            array('name')
-        );
-        $this->methodProfile->doProfile($logEntry);
-        return $this;
-    }
-
-    /**
-     * Stops recording profile info & adds info to the log
-     *
-     *  * if name is passed and it matches the name of a profile being recorded, then that profile is stopped.
-     *  * if name is passed and it does not match the name of a profile being recorded, nothing will be done
-     *  * if name is not passed, the most recently started profile is stopped (named, or non-named).
-     *
-     * @param string $name Optional profile name
-     *
-     * @return $this
-     */
-    public function profileEnd($name = null)
-    {
-        $logEntry = new LogEntry(
-            $this,
-            __FUNCTION__,
-            \func_get_args(),
-            array(),
-            $this->getMethodDefaultArgs(__FUNCTION__),
-            array('name')
-        );
-        $this->methodProfile->profileEnd($logEntry);
-        return $this;
-    }
-
-    /**
-     * Output an array or object as a table
-     *
-     * Accepts array of arrays or array of objects
-     *
-     * Parameters:
-     *   1st encountered array (or traversable) is the data
-     *   2nd encountered array (optional) specifies columns to output
-     *   1st encountered string is a label/caption
-     *
-     * @param mixed $arg,... traversable, [option array], [caption] in no particular order
-     *
-     * @return $this
-     */
-    public function table()
-    {
-        if (!$this->cfg['collect']) {
-            return $this;
-        }
-        $logEntry = new LogEntry(
-            $this,
-            __FUNCTION__,
-            \func_get_args()
-        );
-        $this->methodTable->doTable($logEntry);
-        $this->appendLog($logEntry);
-        return $this;
-    }
-
-    /**
-     * Start a timer identified by label
-     *
-     * ## Label passed
-     *  * if doesn't exist: starts timer
-     *  * if does exist: unpauses (does not reset)
-     *
-     * ## Label not passed
-     *  * timer will be added to a no-label stack
-     *
-     * Does not append log (unless duration is passed).
-     *
-     * Use `timeEnd` or `timeGet` to get time
-     *
-     * @param string $label    unique label
-     * @param float  $duration (optional) duration (in seconds).  Use this param to log a duration obtained externally.
-     *
-     * @return $this
-     */
-    public function time($label = null, $duration = null)
-    {
-        $logEntry = new LogEntry(
-            $this,
-            __FUNCTION__,
-            \func_get_args(),
-            array(),
-            $this->getMethodDefaultArgs(__FUNCTION__)
-        );
-        $this->methodTime->doTime($logEntry);
-        return $this;
-    }
-
-    /**
-     * Behaves like a stopwatch.. logs and (optionaly) returns running time
-     *
-     *    If label is passed, timer is "paused" (not ended/cleared)
-     *    If label is not passed, timer is removed from timer stack
-     *
-     * Meta options
-     *    precision: 4 (how many decimal places)
-     *    silent: (false) only return / don't log
-     *    template: '%label: %time'
-     *    unit: ('auto'), 'sec', 'ms', or 'us'
-     *
-     * @param string $label  (optional) unique label
-     * @param bool   $log    (true) log it, or return only
-     *                         if passed, takes precedence over silent meta val
-     * @param bool   $return ('auto') whether to return the value (vs returning $this))
-     *                          'auto' : !$log
-     *
-     * @return $this|float|false The duration (in sec).
-     *
-     * @psalm-return ($return is true ? float|false : $this)
-     */
-    public function timeEnd($label = null, $log = true, $return = 'auto')
-    {
-        $logEntry = $this->methodTime->timeLogEntry($this, __FUNCTION__, \func_get_args());
-        $value = $this->methodTime->timeEnd($logEntry);
-        return $logEntry['meta']['return']
-            ? $value
-            : $this;
-    }
-
-    /**
-     * Log/get the running time without stopping/pausing the timer
-     *
-     * Meta options
-     *    precision: 4 (how many decimal places)
-     *    silent: (false) only return / don't log
-     *    template: '%label: %time'
-     *    unit: ('auto'), 'sec', 'ms', or 'us'
-     *
-     * This method does not have a web console API equivalent
-     *
-     * @param string $label  (optional) unique label
-     * @param bool   $log    (true) log it
-     * @param bool   $return ('auto') whether to return the value (vs returning $this))
-     *                          'auto' : !$log
-     *
-     * @return $this|float|false The duration (in sec).  `false` if specified label does not exist
-     *
-     * @psalm-return ($return is true ? float|false : $this)
-     */
-    public function timeGet($label = null, $log = true, $return = 'auto')
-    {
-        $logEntry = $this->methodTime->timeLogEntry($this, __FUNCTION__, \func_get_args());
-        $value = $this->methodTime->timeGet($logEntry);
-        return $logEntry['meta']['return']
-            ? $value
-            : $this;
-    }
-
-    /**
-     * Logs the current value of a timer that was previously started via `time()`
-     *
-     * also logs additional arguments
-     *
-     * @param string $label   (optional) unique label
-     * @param mixed  $arg,... (optional) additional values to be logged with time
-     *
-     * @return $this
-     */
-    public function timeLog($label = null, $args = null)
-    {
-        $logEntry = new LogEntry(
-            $this,
-            __FUNCTION__,
-            \func_get_args(),
-            array(
-                'precision' => 4,
-                'unit' => 'auto',
-            ),
-            $this->getMethodDefaultArgs(__FUNCTION__)
-        );
-        $this->methodTime->timeLog($logEntry);
-        return $this;
-    }
-
-    /**
-     * Log a stack trace
-     *
-     * Essentially PHP's `debug_backtrace()`, but displayed as a table
-     *
-     * @param bool   $inclContext Include code snippet
-     * @param string $caption     (optional) Specify caption for the trace table
-     *
-     * @return $this
-     */
-    public function trace($inclContext = false, $caption = 'trace')
-    {
-        if (!$this->cfg['collect']) {
-            return $this;
-        }
-        $logEntry = new LogEntry(
-            $this,
-            __FUNCTION__,
-            \func_get_args(),
-            array(
-                'columns' => array('file','line','function'),
-                'detectFiles' => true,
-                'inclArgs' => null,  // incl arguments with context?
-                                     // will default to $inclContext
-                                     //   may want to set meta['cfg']['objectsExclude'] = '*'
-                'sortable' => false,
-                'trace' => null,  // set to specify trace
-            ),
-            $this->getMethodDefaultArgs(__FUNCTION__),
-            array(
-                'caption',
-                'inclContext',
-            )
-        );
-        if ($logEntry->getMeta('inclArgs') === null) {
-            $logEntry->setMeta('inclArgs', $logEntry->getMeta('inclContext'));
-        }
-        $this->methodHelper->doTrace($logEntry);
-        return $this;
-    }
-
-    /**
-     * Log a warning
-     *
-     * Supports styling & substitutions
-     *
-     * @param mixed $arg,... message / values
-     *
-     * @return $this
-     */
-    public function warn()
-    {
-        $this->methodHelper->doError(__FUNCTION__, \func_get_args());
-        return $this;
-    }
-
-    /*
-        "Non-Console" Methods
-    */
 
     /**
      * Retrieve a configuration value
@@ -856,7 +282,7 @@ class Debug extends AbstractDebug
             return array('debug' => self::META);
         }
         if ($args[0] === 'cfg') {
-            return self::$instance->container['internal']->metaCfg($args[1], $args[2]);
+            return self::metaCfg($args[1], $args[2]);
         }
         return array(
             $args[0] => $args[1],
@@ -881,7 +307,7 @@ class Debug extends AbstractDebug
             $this->obEnd();
             return null;
         }
-        $output = $this->container['internal']->publishOutputEvent();
+        $output = $this->publishOutputEvent();
         if (!$this->parentInstance) {
             $this->data->set('outputSent', true);
         }
@@ -905,5 +331,67 @@ class Debug extends AbstractDebug
     public function setCfg($path, $value = null)
     {
         return $this->config->set($path, $value);
+    }
+
+    /**
+     * Create config meta argument/value
+     *
+     * @param string|array $key key or array of key/values
+     * @param mixed        $val config value
+     *
+     * @return array
+     */
+    private static function metaCfg($key, $val)
+    {
+        if (\is_array($key)) {
+            return array(
+                'cfg' => $key,
+                'debug' => self::META,
+            );
+        }
+        if (\is_string($key)) {
+            return array(
+                'cfg' => array(
+                    $key => $val,
+                ),
+                'debug' => self::META,
+            );
+        }
+        // invalid cfg key / return empty meta array
+        return array('debug' => self::META);
+    }
+
+    /**
+     * Publish Debug::EVENT_OUTPUT
+     *    on all descendant channels
+     *    rootInstance
+     *    finally ourself
+     * This isn't outputing each channel, but for performing any per-channel "before output" activities
+     *
+     * @return string output
+     */
+    private function publishOutputEvent()
+    {
+        $debug = $this;
+        $channels = $debug->getChannels(true);
+        if ($debug !== $debug->rootInstance) {
+            $channels[] = $debug->rootInstance;
+        }
+        $channels[] = $debug;
+        foreach ($channels as $channel) {
+            if ($channel->getCfg('output', self::CONFIG_DEBUG) === false) {
+                continue;
+            }
+            $event = $channel->eventManager->publish(
+                self::EVENT_OUTPUT,
+                $channel,
+                array(
+                    'headers' => array(),
+                    'isTarget' => $channel === $debug,
+                    'return' => '',
+                )
+            );
+        }
+        return $event['return'];
     }
 }

@@ -27,9 +27,7 @@ class SlackTest extends DebugTestFramework
     public function tearDown(): void
     {
         $slackRoute = $this->debug->getRoute('slack');
-        $slackClientProp = new \ReflectionProperty($slackRoute, 'slackClient');
-        $slackClientProp->setAccessible(true);
-        $slackClientProp->setValue($slackRoute, null);
+        $this->helper->setProp($slackRoute, 'slackClient', null);
         $this->debug->removePlugin($slackRoute);
         $this->debug->errorHandler->eventManager->unsubscribe(ErrorHandler::EVENT_ERROR, array($this, 'onErrorThrow'));
         $this->debug->errorHandler->eventManager->unsubscribe(ErrorHandler::EVENT_ERROR, array($this, 'onError'));

@@ -126,7 +126,7 @@ class Route extends AbstractComponent implements SubscriberInterface
         $debug = $event->getSubject();
         $route = $debug->getCfg('route', Debug::CONFIG_DEBUG);
         if (\is_string($route)) {
-            // \bdk\Debug::varDump('route is string (' . $route . ').  Set it to set route');
+            // Route is string.  Set it to set route
             $debug->setCfg('route', $route);
         }
     }

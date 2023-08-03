@@ -8,9 +8,9 @@ use bdk\Test\Debug\DebugTestFramework;
 /**
  * PHPUnit tests for Debug::count() method
  *
- * @covers \bdk\Debug
- * @covers \bdk\Debug\Method\Count
- * @covers \bdk\Debug\ServiceProvider
+ * @covers \bdk\Debug\Plugin\Method\Count
+ *
+ * @phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
  */
 class CountTest extends DebugTestFramework
 {
@@ -45,13 +45,13 @@ class CountTest extends DebugTestFramework
         $this->assertSame(array(
             array('count', array('count test',1), array()),
             array('count', array('count test',2), array()),
-            array('count', array('count',1), array('file' => __FILE__,'line' => $lines[1],'statically' => true)),
+            array('count', array('count',1), array('file' => __FILE__,'line' => $lines[1])),
             array('count', array('count',1), array('file' => __FILE__,'line' => $lines[0])),
             array('count', array('count test', 3), array()),
-            array('count', array('count',2), array('file' => __FILE__,'line' => $lines[1],'statically' => true)),
+            array('count', array('count',2), array('file' => __FILE__,'line' => $lines[1])),
             array('count', array('count',2), array('file' => __FILE__,'line' => $lines[0])),
             array('count', array('count test', 4), array()),
-            array('count', array('count',3), array('file' => __FILE__,'line' => $lines[1],'statically' => true)),
+            array('count', array('count',3), array('file' => __FILE__,'line' => $lines[1])),
             array('log', array('count_inc test', 3), array()),
             array('count', array('count_inc test',3), array()),
         ), $this->helper->deObjectifyData($this->debug->data->get('log'), false));
@@ -106,8 +106,7 @@ class CountTest extends DebugTestFramework
                     array(
                         'file' => __FILE__,
                         'line' => $lines[1],
-                        'statically' => true,
-                    )
+                    ),
                 ),
             )
         );

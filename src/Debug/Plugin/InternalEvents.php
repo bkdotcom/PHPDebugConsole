@@ -14,7 +14,6 @@ namespace bdk\Debug\Plugin;
 
 use bdk\Debug;
 use bdk\Debug\LogEntry;
-use bdk\Debug\PluginInterface;
 use bdk\Debug\Route\Stream;
 use bdk\ErrorHandler;
 use bdk\ErrorHandler\Error;
@@ -25,7 +24,7 @@ use bdk\PubSub\SubscriberInterface;
 /**
  * Handle debug events
  */
-class InternalEvents implements PluginInterface, SubscriberInterface
+class InternalEvents implements SubscriberInterface
 {
     private $debug;
     private $highlightAdded = false;
@@ -35,15 +34,6 @@ class InternalEvents implements PluginInterface, SubscriberInterface
      */
     public function getSubscriptions()
     {
-        if ($this->debug->parentInstance) {
-            // we are a child channel
-            return array(
-                Debug::EVENT_OUTPUT => array(
-                    array('onOutput', 1),
-                    array('onOutputHeaders', -1),
-                ),
-            );
-        }
         /*
             OnShutDownHigh2 subscribes to Debug::EVENT_LOG (onDebugLogShutdown)
               so... if any log entry is added in php's shutdown phase, we'll have a
@@ -56,6 +46,7 @@ class InternalEvents implements PluginInterface, SubscriberInterface
                 array('onOutput', 1),
                 array('onOutputHeaders', -1),
             ),
+            Debug::EVENT_PLUGIN_INIT => 'onPluginInit',
             Debug::EVENT_PRETTIFY => array('onPrettify', -1),
             Debug::EVENT_STREAM_WRAP => 'onStreamWrap',
             ErrorHandler::EVENT_ERROR => array('onError', -1),
@@ -198,6 +189,18 @@ class InternalEvents implements PluginInterface, SubscriberInterface
     }
 
     /**
+     * Debug::EVENT_PLUGIN_INIT subscriber
+     *
+     * @param Event $event Debug::EVENT_PLUGIN_INIT Event instance
+     *
+     * @return void
+     */
+    public function onPluginInit(Event $event)
+    {
+        $this->debug = $event->getSubject();
+    }
+
+    /**
      * Prettify a string if known content-type
      *
      * @param Event $event Debug::EVENT_PRETTIFY event object
@@ -284,14 +287,6 @@ class InternalEvents implements PluginInterface, SubscriberInterface
             return;
         }
         echo $this->debug->output();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function setDebug(Debug $debug)
-    {
-        $this->debug = $debug;
     }
 
     /**

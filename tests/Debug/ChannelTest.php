@@ -8,12 +8,12 @@ use bdk\PubSub\Event;
 /**
  * PHPUnit tests for Debug Channels
  *
+ * @covers \bdk\Debug
  * @covers \bdk\Debug\Dump\Html\Helper
  * @covers \bdk\Debug\Dump\Text
- * @covers \bdk\Debug\Internal
- * @covers \bdk\Debug\Method\Clear
  * @covers \bdk\Debug\Plugin\Channel
  * @covers \bdk\Debug\Plugin\InternalEvents
+ * @covers \bdk\Debug\Plugin\Method\Clear
  * @covers \bdk\Debug\Route\Html
  * @covers \bdk\Debug\Route\Html\ErrorSummary
  * @covers \bdk\Debug\Route\Html\Tabs

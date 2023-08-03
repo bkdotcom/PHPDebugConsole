@@ -14,7 +14,7 @@ class LogEntryTest extends DebugTestFramework
     public function testAppendGroup()
     {
         $logEntry = new LogEntry(
-            $this->debug->getChannel('php'),
+            $this->debug->getChannel('php', array('nested' => false)),
             'log',
             array('string', true, false, null, 42),
             array(
@@ -35,8 +35,9 @@ class LogEntryTest extends DebugTestFramework
 
     public function testJsonEncode()
     {
+        $this->debug->getChannel('Request / Response', array('nested' => false));
         $logEntry = new LogEntry(
-            $this->debug->getChannel('php'),
+            $this->debug->getChannel('php', array('nested' => false)),
             'log',
             array('string', true, false, null, 42),
             array(

@@ -6,9 +6,9 @@ use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
+use bdk\Debug\Method\Table;
 use bdk\Test\Debug\DebugTestFramework;
 use ReflectionMethod;
-use ReflectionProperty;
 
 /**
  * PHPUnit tests for Debug class
@@ -27,8 +27,11 @@ use ReflectionProperty;
  * @covers \bdk\Debug\Dump\Text
  * @covers \bdk\Debug\Method\Table
  * @covers \bdk\Debug\Method\TableRow
+ * @covers \bdk\Debug\Plugin\Method\Table
  * @covers \bdk\Debug\Route\Firephp
  * @covers \bdk\Debug\ServiceProvider
+ *
+ * @phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
  */
 class TableTest extends DebugTestFramework
 {
@@ -39,26 +42,23 @@ class TableTest extends DebugTestFramework
      */
     public function testTableColKeys()
     {
-        // $debugProp = new ReflectionProperty($this->debug->methodTable, 'debug');
-        // $debugProp->setAccessible(true);
-        // $debugProp->setValue($this->debug->methodTable, $this->debug);
-        $this->helper->setProp($this->debug->methodTable, 'debug', $this->debug);
-        $colKeysMeth = new ReflectionMethod($this->debug->methodTable, 'colKeys');
+        $table = new Table(null, array(), $this->debug);
+        $colKeysMeth = new ReflectionMethod($table, 'colKeys');
         $colKeysMeth->setAccessible(true);
         $array = array(
             array('col1' => '', 'col2' => '', 'col4' => ''),
             array('col1' => '', 'col2' => '', 'col3' => ''),
             array('col1' => '', 'col2' => '', 'col3' => ''),
         );
-        $colKeys = $colKeysMeth->invoke($this->debug->methodTable, $array);
-        $this->assertSame(array('col1','col2','col3','col4'), $colKeys);
+        $colKeys = $colKeysMeth->invoke($table, $array);
+        self::assertSame(array('col1', 'col2', 'col3', 'col4'), $colKeys);
         $array = array(
             array('a','b','c'),
             array('d','e','f','g'),
             array('h','i'),
         );
-        $colKeys = $colKeysMeth->invoke($this->debug->methodTable, $array);
-        $this->assertSame(array(0,1,2,3), $colKeys);
+        $colKeys = $colKeysMeth->invoke($table, $array);
+        self::assertSame(array(0, 1, 2, 3), $colKeys);
     }
 
     /**
@@ -97,7 +97,7 @@ class TableTest extends DebugTestFramework
             array(
                 'date' => new \DateTime('1985-10-26'),
                 'date2' => new \DateTime('2015-10-21'),
-            )
+            ),
         );
         $rowsAHtml = <<<'EOD'
 <li class="m_table">
@@ -166,6 +166,22 @@ EOD;
         }
 
         $tests = array(
+            'noArgs' => array(
+                'table',
+                array(),
+                array(
+                    'entry' => array(
+                        'method' => 'log',
+                        'args' => array('No arguments passed to table()'),
+                        'meta' => array(),
+                    ),
+                    'html' => '<li class="m_log"><span class="no-quotes t_string">No arguments passed to table()</span></li>',
+                    'text' => 'No arguments passed to table()',
+                    'script' => 'console.log("No arguments passed to table()");',
+                    'firephp' => 'X-Wf-1-1-1-1: %d|[{"Type":"LOG"},"No arguments passed to table()"]|',
+                ),
+            ),
+
             'null' => array(
                 'table',
                 array(null),
@@ -293,7 +309,7 @@ EOD;
                                 'indexLabel' => null,
                                 'rows' => array(),
                                 'summary' => null,
-                            )
+                            ),
                         ),
                     ),
                     'html' => $rowsAHtml,
@@ -329,7 +345,7 @@ EOD;
                                 'indexLabel' => null,
                                 'rows' => array(),
                                 'summary' => null,
-                            )
+                            ),
                         ),
                     ),
                     'html' => '<li class="m_table">
@@ -396,7 +412,7 @@ EOD;
                                     array('isScalar' => true),
                                     array(
                                         // 'class' => 'DateTime',
-                                        'isScalar' => true
+                                        'isScalar' => true,
                                     ),
                                     array('isScalar' => true), // resource
                                     array('isScalar' => true), // callable
@@ -685,7 +701,7 @@ EOD;
 
     public function testSpecialValues()
     {
-        $binary = \base64_decode('j/v9wNrF5i1abMXFW/4vVw==');
+        $binary = \base64_decode('j/v9wNrF5i1abMXFW/4vVw==', true);
         $binaryStr = \trim(\chunk_split(\bin2hex($binary), 2, ' '));
 
         $json = \json_encode(array(

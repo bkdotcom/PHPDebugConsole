@@ -43,28 +43,27 @@ class LogReqRes implements SubscriberInterface
     {
         return array(
             Debug::EVENT_OUTPUT => array('logResponse', PHP_INT_MAX),
-            Debug::EVENT_PLUGIN_INIT => 'onPluginInit',
+            Debug::EVENT_BOOTSTRAP => 'onBootstrap',
         );
     }
 
     /**
-     * Debug::EVENT_PLUGIN_INIT subscriber
+     * Debug::EVENT_BOOTSTRAP subscriber
      *
-     * @param Event $event Debug::EVENT_PLUGIN_INIT Event instance
+     * @param Event $event Debug::EVENT_BOOTSTRAP Event instance
      *
      * @return void
      */
-    public function onPluginInit(Event $event)
+    public function onBootstrap(Event $event)
     {
-        $debug = $event->getSubject();
-        $this->debug = $debug->getChannel('Request / Response', $this->cfg['channelOpts']);
-        $collectWas = $debug->setCfg('collect', true);
-        $this->logRequest();    // headers, cookies, post
-        $debug->setCfg('collect', $collectWas);
+        $this->debug = $event->getSubject();
+        $collectWas = $this->debug->setCfg('collect', true);
+        $this->logRequest();
+        $this->debug->setCfg('collect', $collectWas);
     }
 
     /**
-     * Log request headers, Cookie, Post, & Files data
+     * Log request headers, cookie, post, & files data
      *
      * @return void
      */
@@ -73,6 +72,7 @@ class LogReqRes implements SubscriberInterface
         if ($this->testLogRequest() === false) {
             return;
         }
+        $this->setChannel();
         $this->debug->log(
             'Request',
             $this->debug->meta(array(
@@ -106,6 +106,7 @@ class LogReqRes implements SubscriberInterface
         if ($this->testLogResponse() === false) {
             return;
         }
+        $this->setChannel();
         $this->debug->log(
             'Response',
             $this->debug->meta(array(
@@ -355,6 +356,19 @@ class LogReqRes implements SubscriberInterface
             return \implode("\n", $vals);
         }, $this->debug->getResponseHeaders());
         $this->debug->table('response headers', $headers);
+    }
+
+    /**
+     * Set `$this->debug` to "Request / Response" channel
+     *
+     * @return void
+     */
+    private function setChannel()
+    {
+        if ($this->debug->parentInstance) {
+            return;
+        }
+        $this->debug = $this->debug->getChannel('Request / Response', $this->cfg['channelOpts']);
     }
 
     /**

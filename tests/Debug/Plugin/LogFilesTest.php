@@ -28,7 +28,7 @@ class LogFilesTest extends DebugTestFramework
         self::assertSame(array(), $this->debug->data->get('log'));
 
         // test no files
-        $this->debug->getChannel('Files')->clear(Debug::CLEAR_SILENT);
+        $this->debug->getChannel('Files', array('nested' => false))->clear(Debug::CLEAR_SILENT);
         $this->debug->setCfg('logEnvInfo', array('files' => true));
         $logFiles->setFiles(array());
         $logFiles->onOutput($event);

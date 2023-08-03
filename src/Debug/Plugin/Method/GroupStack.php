@@ -10,13 +10,15 @@
  * @version   v3.0
  */
 
-namespace bdk\Debug\Method;
+namespace bdk\Debug\Plugin\Method;
 
 use bdk\Debug;
 use bdk\Debug\LogEntry;
 
 /**
  * Keep track of group nesting
+ *
+ * Used by Group
  */
 class GroupStack
 {

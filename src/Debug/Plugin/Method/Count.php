@@ -7,20 +7,80 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2022 Brad Kent
- * @version   v3.0
+ * @version   v3.1
  */
 
-namespace bdk\Debug\Method;
+namespace bdk\Debug\Plugin\Method;
 
 use bdk\Debug;
 use bdk\Debug\LogEntry;
+use bdk\Debug\Plugin\CustomMethodTrait;
+use bdk\PubSub\SubscriberInterface;
 
 /**
  * Count methods
  */
-class Count
+class Count implements SubscriberInterface
 {
+    use CustomMethodTrait;
+
     private $counts = array();
+
+    protected $methods = array(
+        'count',
+        'countReset',
+    );
+
+    /**
+     * Constructor
+     */
+    public function __construct()
+    {
+    }
+
+    /**
+     * Log the number of times this has been called with the given label.
+     *
+     * Count is maintained even when `collect` is false
+     * If `collect` = false, `count()` will be performed "silently"
+     *
+     * @param mixed $label Label.  If omitted, logs the number of times `count()` has been called at this particular line.
+     * @param int   $flags (optional) A bitmask of
+     *                        \bdk\Debug::COUNT_NO_INC` : don't increment the counter
+     *                                                     (ie, just get the current count)
+     *                        \bdk\Debug::COUNT_NO_OUT` : don't output/log
+     *
+     * @return int The new count (or current count when using `COUNT_NO_INC`)
+     */
+    public function count($label = null, $flags = 0)
+    {
+        return $this->doCount(new LogEntry(
+            $this->debug,
+            __FUNCTION__,
+            \func_get_args()
+        ));
+    }
+
+    /**
+     * Resets the counter
+     *
+     * Counter is reset even when debugging is disabled (ie `collect` is false).
+     *
+     * @param mixed $label (optional) specify the counter to reset
+     * @param int   $flags (optional) currently only one option :
+     *                       \bdk\Debug::COUNT_NO_OUT` : don't output/log
+     *
+     * @return $this
+     */
+    public function countReset($label = 'default', $flags = 0)
+    {
+        $this->doCountReset(new LogEntry(
+            $this->debug,
+            __FUNCTION__,
+            \func_get_args()
+        ));
+        return $this->debug;
+    }
 
     /**
      * Handle debug's count method
@@ -29,7 +89,7 @@ class Count
      *
      * @return int
      */
-    public function doCount(LogEntry $logEntry)
+    private function doCount(LogEntry $logEntry)
     {
         $debug = $logEntry->getSubject();
         $args = $this->args($logEntry);
@@ -64,7 +124,7 @@ class Count
      *
      * @return void
      */
-    public function countReset(LogEntry $logEntry)
+    private function doCountReset(LogEntry $logEntry)
     {
         $args = $logEntry['args'];
         list($label, $flags) = \array_slice(\array_replace(array('default', 0), $args), 0, 2);

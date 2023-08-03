@@ -10,7 +10,9 @@ use bdk\Test\Debug\DebugTestFramework;
  * PHPUnit tests for Debug Methods
  *
  * @covers \bdk\Debug
- * @covers \bdk\Debug\Method\Clear
+ * @covers \bdk\Debug\Plugin\Method\Clear
+ *
+ * @phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
  */
 class ClearTest extends DebugTestFramework
 {
@@ -44,10 +46,10 @@ class ClearTest extends DebugTestFramework
             array(),
             array(
                 'custom' => function () {
-                    $this->assertCount(1, $this->debug->data->get('alerts'));
-                    $this->assertCount(3, $this->debug->data->get('logSummary/0'));
-                    $this->assertCount(3, $this->debug->data->get('logSummary/1'));
-                    $this->assertCount(5, $this->debug->data->get('log'));    // clear-summary gets added
+                    self::assertCount(1, $this->debug->data->get('alerts'));
+                    self::assertCount(3, $this->debug->data->get('logSummary/0'));
+                    self::assertCount(3, $this->debug->data->get('logSummary/1'));
+                    self::assertCount(5, $this->debug->data->get('log'));    // clear-summary gets added
                 },
                 'entry' => $entry,
                 'chromeLogger' => array(
@@ -77,12 +79,12 @@ class ClearTest extends DebugTestFramework
             array(Debug::CLEAR_SILENT), // CLEAR_LOG will be added as default
             array(
                 'custom' => function () {
-                    $this->assertCount(1, $this->debug->data->get('alerts'));
-                    $this->assertCount(3, $this->debug->data->get('logSummary/0'));
-                    $this->assertCount(3, $this->debug->data->get('logSummary/1'));
-                    $this->assertCount(4, $this->debug->data->get('log'));
+                    self::assertCount(1, $this->debug->data->get('alerts'));
+                    self::assertCount(3, $this->debug->data->get('logSummary/0'));
+                    self::assertCount(3, $this->debug->data->get('logSummary/1'));
+                    self::assertCount(4, $this->debug->data->get('log'));
                     $lastMethod = $this->debug->data->get('log/__end__/method');
-                    $this->assertSame('error', $lastMethod);
+                    self::assertSame('error', $lastMethod);
                 },
             )
         );
@@ -119,10 +121,10 @@ class ClearTest extends DebugTestFramework
             array(
                 'entry' => $entry,
                 'custom' => function () {
-                    $this->assertCount(0, $this->debug->data->get('alerts'));
-                    $this->assertCount(3, $this->debug->data->get('logSummary/0'));
-                    $this->assertCount(3, $this->debug->data->get('logSummary/1'));
-                    $this->assertCount(7, $this->debug->data->get('log'));
+                    self::assertCount(0, $this->debug->data->get('alerts'));
+                    self::assertCount(3, $this->debug->data->get('logSummary/0'));
+                    self::assertCount(3, $this->debug->data->get('logSummary/1'));
+                    self::assertCount(7, $this->debug->data->get('log'));
                 },
                 'chromeLogger' => array(
                     array('Cleared alerts'),
@@ -169,16 +171,16 @@ class ClearTest extends DebugTestFramework
             array(
                 'entry' => $entry,
                 'custom' => function () {
-                    $this->assertCount(1, $this->debug->data->get('alerts'));
-                    $this->assertCount(1, $this->debug->data->get('logSummary/0'));   // error remains
-                    $this->assertCount(2, $this->debug->data->get('logSummary/1'));   // group & error remain
-                    $this->assertCount(7, $this->debug->data->get('log'));
+                    self::assertCount(1, $this->debug->data->get('alerts'));
+                    self::assertCount(1, $this->debug->data->get('logSummary/0'));   // error remains
+                    self::assertCount(2, $this->debug->data->get('logSummary/1'));   // group & error remain
+                    self::assertCount(7, $this->debug->data->get('log'));
 
                     $groupStack = $this->getSharedVar('reflectionProperties')['groupStack'];
-                    $groupStackCounts = \array_map(function ($stack) {
+                    $groupStackCounts = \array_map(static function ($stack) {
                         return \count($stack);
                     }, $this->getSharedVar('reflectionProperties')['groupStacks']->getValue($groupStack));
-                    $this->assertSame(array(
+                    self::assertSame(array(
                         'main' => 2,
                         0 => 0,
                         1 => 1,
@@ -229,16 +231,16 @@ class ClearTest extends DebugTestFramework
             array(
                 'entry' => $entry,
                 'custom' => function () {
-                    $this->assertCount(1, $this->debug->data->get('alerts'));
-                    $this->assertCount(3, $this->debug->data->get('logSummary/0'));
-                    $this->assertCount(3, $this->debug->data->get('logSummary/1'));
-                    $this->assertCount(5, $this->debug->data->get('log'));
+                    self::assertCount(1, $this->debug->data->get('alerts'));
+                    self::assertCount(3, $this->debug->data->get('logSummary/0'));
+                    self::assertCount(3, $this->debug->data->get('logSummary/1'));
+                    self::assertCount(5, $this->debug->data->get('log'));
 
                     $groupStack = $this->getSharedVar('reflectionProperties')['groupStack'];
-                    $groupStackCounts = \array_map(function ($stack) {
+                    $groupStackCounts = \array_map(static function ($stack) {
                         return \count($stack);
                     }, $this->getSharedVar('reflectionProperties')['groupStacks']->getValue($groupStack));
-                    $this->assertSame(array(
+                    self::assertSame(array(
                         'main' => 2,
                         0 => 1,
                         1 => 1,
@@ -289,15 +291,15 @@ class ClearTest extends DebugTestFramework
             array(
                 'entry' => $entry,
                 'custom' => function () {
-                    $this->assertCount(0, $this->debug->data->get('alerts'));
-                    $this->assertCount(0, $this->debug->data->get('logSummary/0'));
-                    $this->assertCount(1, $this->debug->data->get('logSummary/1'));   // group remains
-                    $this->assertCount(3, $this->debug->data->get('log'));    // groups remain
+                    self::assertCount(0, $this->debug->data->get('alerts'));
+                    self::assertCount(0, $this->debug->data->get('logSummary/0'));
+                    self::assertCount(1, $this->debug->data->get('logSummary/1'));   // group remains
+                    self::assertCount(3, $this->debug->data->get('log'));    // groups remain
                     $groupStack = $this->getSharedVar('reflectionProperties')['groupStack'];
-                    $groupStackCounts = \array_map(function ($stack) {
+                    $groupStackCounts = \array_map(static function ($stack) {
                         return \count($stack);
                     }, $this->getSharedVar('reflectionProperties')['groupStacks']->getValue($groupStack));
-                    $this->assertSame(array(
+                    self::assertSame(array(
                         'main' => 2,
                         0 => 0,
                         1 => 1,
@@ -348,15 +350,15 @@ class ClearTest extends DebugTestFramework
             array(
                 'entry' => $entry,
                 'custom' => function () {
-                    $this->assertCount(1, $this->debug->data->get('alerts'));
-                    $this->assertCount(0, $this->debug->data->get('logSummary/0'));
-                    $this->assertCount(1, $this->debug->data->get('logSummary/1'));   // group remains
-                    $this->assertCount(7, $this->debug->data->get('log'));
+                    self::assertCount(1, $this->debug->data->get('alerts'));
+                    self::assertCount(0, $this->debug->data->get('logSummary/0'));
+                    self::assertCount(1, $this->debug->data->get('logSummary/1'));   // group remains
+                    self::assertCount(7, $this->debug->data->get('log'));
                     $groupStack = $this->getSharedVar('reflectionProperties')['groupStack'];
-                    $groupStackCounts = \array_map(function ($stack) {
+                    $groupStackCounts = \array_map(static function ($stack) {
                         return \count($stack);
                     }, $this->getSharedVar('reflectionProperties')['groupStacks']->getValue($groupStack));
-                    $this->assertSame(array(
+                    self::assertSame(array(
                         'main' => 2,
                         0 => 0,
                         1 => 1,
@@ -407,15 +409,15 @@ class ClearTest extends DebugTestFramework
             array(
                 'entry' => $entry,
                 'custom' => function () {
-                    $this->assertCount(1, $this->debug->data->get('alerts'));
-                    $this->assertCount(2, $this->debug->data->get('logSummary/0'));
-                    $this->assertCount(2, $this->debug->data->get('logSummary/1'));   // group remains
-                    $this->assertCount(7, $this->debug->data->get('log'));
+                    self::assertCount(1, $this->debug->data->get('alerts'));
+                    self::assertCount(2, $this->debug->data->get('logSummary/0'));
+                    self::assertCount(2, $this->debug->data->get('logSummary/1'));   // group remains
+                    self::assertCount(7, $this->debug->data->get('log'));
                     $groupStack = $this->getSharedVar('reflectionProperties')['groupStack'];
-                    $groupStackCounts = \array_map(function ($stack) {
+                    $groupStackCounts = \array_map(static function ($stack) {
                         return \count($stack);
                     }, $this->getSharedVar('reflectionProperties')['groupStacks']->getValue($groupStack));
-                    $this->assertSame(array(
+                    self::assertSame(array(
                         'main' => 2,
                         0 => 1,
                         1 => 1,
@@ -452,14 +454,14 @@ class ClearTest extends DebugTestFramework
             array(),
             array(
                 'custom' => function (LogEntry $logEntry) {
-                    $this->assertSame('Cleared log (sans errors)', $logEntry['args'][0]);
-                    $this->assertCount(5, $this->debug->data->get('log'));    // clear-summary gets added
+                    self::assertSame('Cleared log (sans errors)', $logEntry['args'][0]);
+                    self::assertCount(5, $this->debug->data->get('log'));    // clear-summary gets added
                 },
                 'return' => $this->debug,
                 'wamp' => array(
                     'clear',
                     array(
-                        'Cleared log (sans errors)'
+                        'Cleared log (sans errors)',
                     ),
                     array(
                         'bitmask' => Debug::CLEAR_LOG,
@@ -491,9 +493,9 @@ class ClearTest extends DebugTestFramework
             'clear',
             array(Debug::CLEAR_LOG | Debug::CLEAR_SUMMARY),
             array(
-                'custom' => function (LogEntry $logEntry) {
-                    $this->assertSame('Cleared log (sans errors) and summary (sans errors)', $logEntry['args'][0]);
-                }
+                'custom' => static function (LogEntry $logEntry) {
+                    self::assertSame('Cleared log (sans errors) and summary (sans errors)', $logEntry['args'][0]);
+                },
             )
         );
     }
@@ -509,9 +511,9 @@ class ClearTest extends DebugTestFramework
             'clear',
             array(Debug::CLEAR_ALERTS | Debug::CLEAR_LOG | Debug::CLEAR_SUMMARY),
             array(
-                'custom' => function (LogEntry $logEntry) {
-                    $this->assertSame('Cleared alerts, log (sans errors), and summary (sans errors)', $logEntry['args'][0]);
-                }
+                'custom' => static function (LogEntry $logEntry) {
+                    self::assertSame('Cleared alerts, log (sans errors), and summary (sans errors)', $logEntry['args'][0]);
+                },
             )
         );
     }

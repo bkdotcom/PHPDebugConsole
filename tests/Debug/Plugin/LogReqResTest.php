@@ -75,6 +75,11 @@ class LogReqResTest extends DebugTestFramework
     public function testLogPostOrInput()
     {
         $logReqRes = new LogReqRes();
+        $this->helper->setProp($logReqRes, 'debug', $this->debug->getChannel(
+            'Request / Response',
+            array('nested' => false)
+        ));
+
         $this->debug->addPlugin($logReqRes);
         $this->debug->data->set('log', array());
         $this->debug->data->set('logSummary', array());
@@ -85,10 +90,6 @@ class LogReqResTest extends DebugTestFramework
         $logPostMeth->setAccessible(true);
         $logRequestMeth = $reflect->getMethod('logRequest');
         $logRequestMeth->setAccessible(true);
-
-        $reqResRef = new \ReflectionObject($this->debug->pluginMethodReqRes);
-        $serverParamsRef = $reqResRef->getProperty('serverParams');
-        $serverParamsRef->setAccessible(true);
 
         /*
             valid form post
@@ -221,7 +222,7 @@ class LogReqResTest extends DebugTestFramework
         /*
             Post with just uploadedFiles
         */
-        $serverParamsRef->setValue($this->debug->pluginMethodReqRes, array());
+        $this->helper->setProp($this->debug->pluginMethodReqRes, 'serverParams', array());
         $this->debug->rootInstance->setCfg('serviceProvider', array(
             'serverRequest' => static function () {
                 $request = new ServerRequest('POST', null, array(
@@ -457,7 +458,7 @@ class LogReqResTest extends DebugTestFramework
         /*
             Reset request
         */
-        $serverParamsRef->setValue($this->debug->pluginMethodReqRes, array());
+        $this->helper->setProp($this->debug->pluginMethodReqRes, 'serverParams', array());
         $this->debug->setCfg('serviceProvider', array(
             'serverRequest' => static function () {
                 return ServerRequest::fromGlobals();

@@ -11,7 +11,7 @@ use bdk\Test\Debug\DebugTestFramework;
  * @covers \bdk\Debug
  * @covers \bdk\Debug\Dump\Base
  * @covers \bdk\Debug\Dump\TextAnsi
- * @covers \bdk\Debug\Method\Helper
+ * @covers \bdk\Debug\Plugin\Method\Alert
  * @covers \bdk\Debug\Route\Firephp
  */
 class AlertTest extends DebugTestFramework
@@ -57,7 +57,7 @@ class AlertTest extends DebugTestFramework
                 'text' => '》[Alert ⦻ error] ' . $message . '《',
                 'streamAnsi' => "\e[38;5;88;48;5;203;1;4m》[Alert ⦻ error] " . $message . "《\e[0m",
                 'wamp' => $entryExpect,
-            )
+            ),
         );
 
         $entryExpect['meta']['level'] = 'info';
@@ -83,7 +83,7 @@ class AlertTest extends DebugTestFramework
                 'script' => \str_replace('%c', '%%c', 'console.info(' . \json_encode('%c' . $message, JSON_UNESCAPED_SLASHES) . ',"' . $style . '");'),
                 'text' => '》[Alert ℹ info] ' . $message . '《',
                 'wamp' => $entryExpect,
-            )
+            ),
         );
 
         $entryExpect['meta']['level'] = 'success';
@@ -109,7 +109,7 @@ class AlertTest extends DebugTestFramework
                 'script' => \str_replace('%c', '%%c', 'console.info(' . \json_encode('%c' . $message, JSON_UNESCAPED_SLASHES) . ',"' . $style . '");'),
                 'text' => '》[Alert ℹ success] ' . $message . '《',
                 'wamp' => $entryExpect,
-            )
+            ),
         );
 
         $entryExpect['meta']['level'] = 'warn';
@@ -135,7 +135,7 @@ class AlertTest extends DebugTestFramework
                 'script' => \str_replace('%c', '%%c', 'console.log(' . \json_encode('%c' . $message, JSON_UNESCAPED_SLASHES) . ',"' . $style . '");'),
                 'text' => '》[Alert ⚠ warn] ' . $message . '《',
                 'wamp' => $entryExpect,
-            )
+            ),
         );
 
         // test alias
@@ -162,7 +162,7 @@ class AlertTest extends DebugTestFramework
                 'script' => \str_replace('%c', '%%c', 'console.log(' . \json_encode('%c' . $message, JSON_UNESCAPED_SLASHES) . ',"' . $style . '");'),
                 'text' => '》[Alert ⚠ warn] ' . $message . '《',
                 'wamp' => $entryExpect,
-            )
+            ),
         );
 
         // test invalid
@@ -189,7 +189,7 @@ class AlertTest extends DebugTestFramework
                 'script' => \str_replace('%c', '%%c', 'console.log(' . \json_encode('%c' . $message, JSON_UNESCAPED_SLASHES) . ',"' . $style . '");'),
                 'text' => '》[Alert ⦻ error] ' . $message . '《',
                 'wamp' => $entryExpect,
-            )
+            ),
         );
 
         $args = array(

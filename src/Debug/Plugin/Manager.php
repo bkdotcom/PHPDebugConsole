@@ -141,7 +141,7 @@ class Manager implements SubscriberInterface
         if ($this->hasPlugin($pluginName) === false) {
             throw new OutOfBoundsException(\sprintf(
                 'getPlugin(%s) - no such plugin',
-                $this->debug->php->getDebugType($pluginName)
+                $pluginName
             ));
         }
         return $this->namedPlugins[$pluginName];

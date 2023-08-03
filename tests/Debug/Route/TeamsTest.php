@@ -25,9 +25,7 @@ class TeamsTest extends DebugTestFramework
     public function tearDown(): void
     {
         $teamsRoute = $this->debug->getRoute('teams');
-        $teamsClientProp = new \ReflectionProperty($teamsRoute, 'teamsClient');
-        $teamsClientProp->setAccessible(true);
-        $teamsClientProp->setValue($teamsRoute, null);
+        $this->helper->setProp($teamsRoute, 'teamsClient', null);
         $this->debug->removePlugin($teamsRoute);
         parent::tearDown();
     }

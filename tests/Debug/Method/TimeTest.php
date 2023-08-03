@@ -7,8 +7,7 @@ use bdk\Test\Debug\DebugTestFramework;
 /**
  * PHPUnit tests for Debug::time() methods
  *
- * @covers \bdk\Debug
- * @covers \bdk\Debug\Method\Time
+ * @covers \bdk\Debug\Plugin\Method\Time
  */
 class TimeTest extends DebugTestFramework
 {
@@ -23,11 +22,11 @@ class TimeTest extends DebugTestFramework
         $this->debug->time('some label');
 
         $timers = $this->helper->getProp($this->debug->stopWatch, 'timers');
-        $this->assertIsFloat($timers['stack'][0]);
-        $this->assertIsFloat($timers['labels']['some label'][1]);
+        self::assertIsFloat($timers['stack'][0]);
+        self::assertIsFloat($timers['labels']['some label'][1]);
 
-        $this->assertEmpty($this->debug->data->get('log'));
-        $this->assertEmpty($this->debug->getRoute('wamp')->wamp->messages);
+        self::assertEmpty($this->debug->data->get('log'));
+        self::assertEmpty($this->debug->getRoute('wamp')->wamp->messages);
     }
 
     /**
@@ -46,7 +45,7 @@ class TimeTest extends DebugTestFramework
             array(
                 'custom' => function () {
                     $timers = $this->helper->getProp($this->debug->stopWatch, 'timers');
-                    $this->assertCount(0, $timers['stack']);
+                    self::assertCount(0, $timers['stack']);
                 },
                 'entry' => \json_encode(array(
                     'method' => 'time',
@@ -128,7 +127,7 @@ class TimeTest extends DebugTestFramework
                         array("blahmy labelblah%f msblah"),
                         array(),
                     ));
-                    $this->assertStringMatchesFormat($expectFormat, json_encode($logEntry), 'chromeLogger not same');
+                    self::assertStringMatchesFormat($expectFormat, json_encode($logEntry), 'chromeLogger not same');
                 },
                 */
                 'entry' => \json_encode(array(
@@ -154,8 +153,8 @@ class TimeTest extends DebugTestFramework
         );
 
         $timers = $this->helper->getProp($this->debug->stopWatch, 'timers');
-        $this->assertIsFloat($timers['labels']['my label'][0]);
-        $this->assertNull($timers['labels']['my label'][1]);
+        self::assertIsFloat($timers['labels']['my label'][0]);
+        self::assertNull($timers['labels']['my label'][1]);
 
         $this->debug->setCfg('collect', false);
         $this->testMethod(
@@ -186,7 +185,7 @@ class TimeTest extends DebugTestFramework
                 'custom' => function () {
                     // test stack is still 1
                     $timers = $this->helper->getProp($this->debug->stopWatch, 'timers');
-                    $this->assertCount(1, $timers['stack']);
+                    self::assertCount(1, $timers['stack']);
                 },
                 /*
                 'entry' => function (LogEntry $logEntry) {
@@ -196,7 +195,7 @@ class TimeTest extends DebugTestFramework
                         array('time: %f μs'),
                         array(),
                     ));
-                    $this->assertStringMatchesFormat($expectFormat, json_encode($logEntry));
+                    self::assertStringMatchesFormat($expectFormat, json_encode($logEntry));
                 },
                 */
                 'entry' => \json_encode(array(
@@ -264,9 +263,9 @@ class TimeTest extends DebugTestFramework
         );
 
         $timers = $this->helper->getProp($this->debug->stopWatch, 'timers');
-        $this->assertSame(0, $timers['labels']['my label'][0]);
+        self::assertSame(0, $timers['labels']['my label'][0]);
         // test not paused
-        $this->assertNotNull($timers['labels']['my label'][1]);
+        self::assertNotNull($timers['labels']['my label'][1]);
 
         $this->testMethod(
             'timeGet',
@@ -331,7 +330,7 @@ class TimeTest extends DebugTestFramework
                         array('time: ', '%f μs'),
                         array(),
                     ));
-                    $this->assertStringMatchesFormat($expectFormat, json_encode($logEntry));
+                    self::assertStringMatchesFormat($expectFormat, json_encode($logEntry));
                 },
                 */
                 'entry' => \json_encode(array(
@@ -370,7 +369,7 @@ class TimeTest extends DebugTestFramework
                         array('my label: ', '%f %ss', array('foo'=>'bar')),
                         array(),
                     ));
-                    $this->assertStringMatchesFormat($expectFormat, json_encode($logEntry));
+                    self::assertStringMatchesFormat($expectFormat, json_encode($logEntry));
                 },
                 */
                 'entry' => \json_encode(array(
@@ -416,7 +415,7 @@ class TimeTest extends DebugTestFramework
                         array('Timer \'bogus\' does not exist'),
                         array(),
                     ));
-                    $this->assertStringMatchesFormat($expectFormat, json_encode($logEntry));
+                    self::assertStringMatchesFormat($expectFormat, json_encode($logEntry));
                 },
                 */
                 'entry' => \json_encode(array(

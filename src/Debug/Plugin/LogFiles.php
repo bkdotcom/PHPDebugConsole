@@ -47,7 +47,6 @@ class LogFiles extends AbstractComponent implements SubscriberInterface
     {
         return array(
             Debug::EVENT_OUTPUT => array('onOutput', PHP_INT_MAX),
-            Debug::EVENT_PLUGIN_INIT => 'onPluginInit',
         );
     }
 
@@ -60,29 +59,20 @@ class LogFiles extends AbstractComponent implements SubscriberInterface
      */
     public function onOutput(Event $event)
     {
-        $this->debug = $event->getSubject()->getChannel('Files', $this->cfg['channelOpts']);
-        if (!$this->debug->getCfg('logEnvInfo.files', Debug::CONFIG_DEBUG)) {
+        $debug = $event->getSubject();
+        if (!$debug->getCfg('logEnvInfo.files', Debug::CONFIG_DEBUG)) {
             return;
         }
-        $this->output();
-    }
 
-    /**
-     * Debug::EVENT_PLUGIN_INIT subscriber
-     *
-     * @param Event $event Debug::EVENT_PLUGIN_INIT Event instance
-     *
-     * @return void
-     */
-    public function onPluginInit(Event $event)
-    {
-        $debug = $event->getSubject();
-        $cfg = $debug->getCfg('logFiles', Debug::CONFIG_INIT);
+        $this->debug = $debug->getChannel('Files', $this->cfg['channelOpts']);
+
+        $cfg = $this->debug->getCfg('logFiles', Debug::CONFIG_INIT);
         $this->cfg = \array_replace_recursive($this->cfg, $cfg);
         if (isset($cfg['filesExclude'])) {
             // replace all
             $this->cfg['filesExclude'] = $cfg['filesExclude'];
         }
+        $this->output();
     }
 
     /**

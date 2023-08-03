@@ -10,7 +10,7 @@ use bdk\Test\Debug\DebugTestFramework;
 /**
  * PHPUnit tests for Debug::profile() method
  *
- * @covers \bdk\Debug
+ * @covers \bdk\Debug\Plugin\Method\Profile
  * @covers \bdk\Debug\Method\Profile
  * @covers \bdk\Debug\ServiceProvider
  * @covers \bdk\Debug\Dump\Html\Table
@@ -27,27 +27,27 @@ class ProfileTest extends DebugTestFramework
             null,
             array(),
             array(
-                'custom' => function (LogEntry $logEntry) {
-                    $this->assertSame('profileEnd', $logEntry['method']);
+                'custom' => static function (LogEntry $logEntry) {
+                    self::assertSame('profileEnd', $logEntry['method']);
                     $data = $logEntry['args'][0];
                     $a = $data['bdk\Test\Debug\Method\ProfileTest::a'];
                     $b = $data['bdk\Test\Debug\Method\ProfileTest::b'];
                     $c = $data['bdk\Test\Debug\Method\ProfileTest::c'];
                     // test a
-                    $this->assertCount(3, $data);
-                    $this->assertSame(1, $a['calls']);
-                    $this->assertGreaterThanOrEqual(0.25 + 0.75 * 2, $a['totalTime']);
-                    $this->assertLessThan(0.01, $a['ownTime']);
+                    self::assertCount(3, $data);
+                    self::assertSame(1, $a['calls']);
+                    self::assertGreaterThanOrEqual(0.25 + 0.75 * 2, $a['totalTime']);
+                    self::assertLessThan(0.01, $a['ownTime']);
                     // test b
-                    $this->assertSame(1, $b['calls']);
-                    $this->assertGreaterThanOrEqual(0.25 + 0.75 * 2, $b['totalTime']);
-                    $this->assertLessThan(0.25 + 0.01, $b['ownTime']);
+                    self::assertSame(1, $b['calls']);
+                    self::assertGreaterThanOrEqual(0.25 + 0.75 * 2, $b['totalTime']);
+                    self::assertLessThan(0.25 + 0.01, $b['ownTime']);
                     // test c
-                    $this->assertSame(2, $c['calls']);
-                    $this->assertGreaterThanOrEqual(0.75 * 2, $c['totalTime']);
-                    $this->assertLessThan(0.75 * 2 + 0.01, $c['ownTime']);
+                    self::assertSame(2, $c['calls']);
+                    self::assertGreaterThanOrEqual(0.75 * 2, $c['totalTime']);
+                    self::assertLessThan(0.75 * 2 + 0.01, $c['ownTime']);
                     \ksort($logEntry['meta']);
-                    $this->assertEquals(array(
+                    self::assertEquals(array(
                         'caption' => "Profile 'Profile 1' Results",
                         'name' => 'Profile 1',
                         'sortable' => true,
@@ -70,21 +70,21 @@ class ProfileTest extends DebugTestFramework
                             'rows' => array(
                                 'bdk\Test\Debug\Method\ProfileTest::a' => array(
                                     'key' => new Abstraction(Abstracter::TYPE_CALLABLE, array(
-                                        'value' => 'bdk\Test\Debug\Method\ProfileTest::a',
                                         'hideType' => true, // don't output 'callable'
+                                        'value' => 'bdk\Test\Debug\Method\ProfileTest::a',
                                     )),
                                 ),
                                 'bdk\Test\Debug\Method\ProfileTest::b' => array(
                                     'key' => new Abstraction(Abstracter::TYPE_CALLABLE, array(
-                                        'value' => 'bdk\Test\Debug\Method\ProfileTest::b',
                                         'hideType' => true, // don't output 'callable'
-                                    ))
+                                        'value' => 'bdk\Test\Debug\Method\ProfileTest::b',
+                                    )),
                                 ),
                                 'bdk\Test\Debug\Method\ProfileTest::c' => array(
                                     'key' => new Abstraction(Abstracter::TYPE_CALLABLE, array(
-                                        'value' => 'bdk\Test\Debug\Method\ProfileTest::c',
                                         'hideType' => true, // don't output 'callable'
-                                    ))
+                                        'value' => 'bdk\Test\Debug\Method\ProfileTest::c',
+                                    )),
                                 ),
                             ),
                             'summary' => null,

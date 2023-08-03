@@ -103,10 +103,10 @@ class Data
             return;
         }
         if (!$this->data['log']) {
-            $this->debug->methodGroup->reset('main');
+            $this->debug->getPlugin('methodGroup')->reset('main');
         }
         if (!$this->data['logSummary']) {
-            $this->debug->methodGroup->reset('summary');
+            $this->debug->getPlugin('methodGroup')->reset('summary');
         }
         $this->setLogDest();
     }
@@ -227,7 +227,7 @@ class Data
      */
     private function setLogDest($where = 'auto')
     {
-        $priority = $this->debug->methodGroup->getCurrentPriority();
+        $priority = $this->debug->getPlugin('methodGroup')->getCurrentPriority();
         if ($where === 'auto') {
             $where = $priority === 'main'
                 ? 'main'
@@ -239,14 +239,14 @@ class Data
                 break;
             case 'main':
                 $this->logRef = &$this->data['log'];
-                $this->debug->methodGroup->setLogDest('main');
+                $this->debug->getPlugin('methodGroup')->setLogDest('main');
                 break;
             case 'summary':
                 if (!isset($this->data['logSummary'][$priority])) {
                     $this->data['logSummary'][$priority] = array();
                 }
                 $this->logRef = &$this->data['logSummary'][$priority];
-                $this->debug->methodGroup->setLogDest('summary');
+                $this->debug->getPlugin('methodGroup')->setLogDest('summary');
         }
     }
 }

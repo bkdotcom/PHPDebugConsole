@@ -94,10 +94,7 @@ class Backtrace
             we need to collect object... we'll remove object at end if undesired
         */
         $phpOptions = static::translateOptions($options | self::INCL_OBJECT);
-        /*
-            Must get at least 15 frames to account for potential framework loggers
-        */
-        $backtrace = \debug_backtrace($phpOptions, 15);
+        $backtrace = \debug_backtrace($phpOptions, 22);
         $index = SkipInternal::getFirstIndex($backtrace, $offset);
         $return = static::callerInfoBuild(\array_slice($backtrace, $index));
         if (!($options & self::INCL_OBJECT)) {

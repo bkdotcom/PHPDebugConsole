@@ -10,7 +10,6 @@ use bdk\HttpMessage\ServerRequest;
  *
  * @covers \bdk\Debug\Config
  * @covers \bdk\Debug\ConfigEvents
- * @covers \bdk\Debug\Internal
  * @covers \bdk\Debug\Plugin\AssertSettingTrait
  * @covers \bdk\Debug\Plugin\InternalEvents
  * @covers \bdk\Debug\Plugin\LogEnv

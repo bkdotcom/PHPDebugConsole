@@ -15,8 +15,8 @@ use bdk\Test\PolyFill\ExpectExceptionTrait;
 
 function myFunctionThatCallsGroup()
 {
-    Debug::_group();
-    Debug::_groupEnd();
+    Debug::group();
+    Debug::groupEnd();
 }
 
 /**
@@ -27,11 +27,12 @@ function myFunctionThatCallsGroup()
  * @covers \bdk\Debug\Dump\Base
  * @covers \bdk\Debug\Dump\Html
  * @covers \bdk\Debug\Dump\Text
- * @covers \bdk\Debug\Method\Group
- * @covers \bdk\Debug\Method\GroupStack
- *
+ * @covers \bdk\Debug\Plugin\Method\Group
+ * @covers \bdk\Debug\Plugin\Method\GroupStack
  * @covers \bdk\Debug\Route\Firephp
  * @covers \bdk\Debug\Route\Script
+ *
+ * @phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
  */
 class GroupTest extends DebugTestFramework
 {
@@ -46,7 +47,7 @@ class GroupTest extends DebugTestFramework
     {
         $this->testMethod(
             'group',
-            array('a','b','c'),
+            array('a', 'b', 'c'),
             array(
                 'entry' => array(
                     'method' => 'group',
@@ -55,7 +56,7 @@ class GroupTest extends DebugTestFramework
                 ),
                 'custom' => function () {
                     $groupStack = $this->getSharedVar('reflectionProperties')['groupStack'];
-                    $this->assertSame(array(
+                    self::assertSame(array(
                         'main' => array(
                             array('channel' => $this->debug, 'collect' => true),
                         ),
@@ -120,7 +121,7 @@ class GroupTest extends DebugTestFramework
         $objExpect = $this->helper->crate($this->debug->abstracter->crate($obj, 'group'));
         $this->debug->abstracter->setCfg($cfgAbsBak);
         /*
-        $this->assertSame(array(
+        self::assertSame(array(
             'method' => 'group',
             'args' => array(
                 'string',
@@ -134,18 +135,17 @@ class GroupTest extends DebugTestFramework
             'meta' => array(),
         ), $logEntry);
         */
-        $this->assertSame('string', $logEntryArray['args'][0]);
-        $this->assertSame(42, $logEntryArray['args'][1]);
-        $this->assertSame(null, $logEntryArray['args'][2]);
-        $this->assertSame(false, $logEntryArray['args'][3]);
-        $this->assertSame($objExpect, $logEntryArray['args'][4]);
-        $this->assertTrue(($logEntry['args'][5]['cfgFlags'] & AbstractObject::BRIEF) === AbstractObject::BRIEF);
-        // phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
-        $this->assertSame(array(
+        self::assertSame('string', $logEntryArray['args'][0]);
+        self::assertSame(42, $logEntryArray['args'][1]);
+        self::assertSame(null, $logEntryArray['args'][2]);
+        self::assertSame(false, $logEntryArray['args'][3]);
+        self::assertSame($objExpect, $logEntryArray['args'][4]);
+        self::assertTrue(($logEntry['args'][5]['cfgFlags'] & AbstractObject::BRIEF) === AbstractObject::BRIEF);
+        self::assertSame(array(
             'visibility' => 'public',
             'returnValue' => 'toStringVal',
         ), $logEntry['args'][5]['methods']['__toString']);
-        $this->assertTrue(($logEntry['args'][6]['cfgFlags'] & AbstractObject::BRIEF) === AbstractObject::BRIEF);
+        self::assertTrue(($logEntry['args'][6]['cfgFlags'] & AbstractObject::BRIEF) === AbstractObject::BRIEF);
     }
 
     public function testGroupHideIfEmpty()
@@ -320,16 +320,16 @@ class GroupTest extends DebugTestFramework
         $parent = new Fixture\CallerInfoParent();
         $child = new Fixture\CallerInfoChild();
 
-        $someClosure = function ($arg) {
-            \bdk\Debug::_group();
-            \bdk\Debug::_groupEnd();
+        $someClosure = static function ($arg) {
+            \bdk\Debug::group();
+            \bdk\Debug::groupEnd();
         };
 
         /*
             Test default label
         */
         $child->extendMe('foo', 10);
-        $this->assertSame(array(
+        self::assertSame(array(
             array(
                 'method' => 'group',
                 'args' => [
@@ -339,7 +339,7 @@ class GroupTest extends DebugTestFramework
                 ],
                 'meta' => array(
                     'isFuncName' => true,
-                    'statically' => true,
+                    // 'statically' => true,
                 ),
             ),
             array(
@@ -349,7 +349,7 @@ class GroupTest extends DebugTestFramework
                 ],
                 'meta' => array(
                     'isFuncName' => true,
-                    'statically' => true,
+                    // 'statically' => true,
                 ),
             ),
         ), $this->helper->deObjectifyData(\array_slice($this->debug->data->get('log'), 0, 2)));
@@ -366,7 +366,7 @@ class GroupTest extends DebugTestFramework
             ],
             'meta' => array(
                 'isFuncName' => true,
-                'statically' => true,
+                // 'statically' => true,
             ),
         );
         $this->testMethod(
@@ -400,10 +400,10 @@ class GroupTest extends DebugTestFramework
             ],
             'meta' => array(
                 'isFuncName' => true,
-                'statically' => true,
+                // 'statically' => true,
             ),
         );
-        $this->assertSame($entryExpect, $this->helper->logEntryToArray($this->debug->data->get('log/0')));
+        self::assertSame($entryExpect, $this->helper->logEntryToArray($this->debug->data->get('log/0')));
 
         $this->debug->data->set('log', array());
         $parent->inherited('foo', 10);
@@ -416,10 +416,10 @@ class GroupTest extends DebugTestFramework
             ],
             'meta' => array(
                 'isFuncName' => true,
-                'statically' => true,
+                // 'statically' => true,
             ),
         );
-        $this->assertSame($entryExpect, $this->helper->logEntryToArray($this->debug->data->get('log/0')));
+        self::assertSame($entryExpect, $this->helper->logEntryToArray($this->debug->data->get('log/0')));
 
         $this->debug->data->set('log', array());
         $this->debug->getRoute('wamp')->wamp->messages = array();
@@ -427,11 +427,11 @@ class GroupTest extends DebugTestFramework
         $entryExpect = array(
             'method' => 'group',
             'args' => array(
-                'bdk\Test\Debug\Fixture\CallerInfoParent::staticParent'
+                'bdk\Test\Debug\Fixture\CallerInfoParent::staticParent',
             ),
             'meta' => array(
                 'isFuncName' => true,
-                'statically' => true,
+                // 'statically' => true,
             ),
         );
         $this->testMethod(
@@ -461,11 +461,11 @@ class GroupTest extends DebugTestFramework
         $entryExpect = array(
             'method' => 'group',
             'args' => array(
-                'bdk\Test\Debug\Fixture\CallerInfoParent::staticParent'
+                'bdk\Test\Debug\Fixture\CallerInfoParent::staticParent',
             ),
             'meta' => array(
                 'isFuncName' => true,
-                'statically' => true,
+                // 'statically' => true,
             ),
         );
         $this->testMethod(
@@ -504,11 +504,11 @@ class GroupTest extends DebugTestFramework
                         'value' => '█████████',
                     )
                     : 'swordfish',
-                'thousand island'
+                'thousand island',
             ),
             'meta' => array(
                 'isFuncName' => true,
-                'statically' => true,
+                // 'statically' => true,
             ),
         );
         $this->testMethod(
@@ -525,11 +525,11 @@ class GroupTest extends DebugTestFramework
             'method' => 'group',
             'args' => array(
                 '{closure}',
-                'flapjack'
+                'flapjack',
             ),
             'meta' => array(
                 'isFuncName' => true,
-                'statically' => true,
+                // 'statically' => true,
             ),
         );
         $this->testMethod(
@@ -544,9 +544,9 @@ class GroupTest extends DebugTestFramework
     public function testGroupAutoArgs2()
     {
         myfunctionThatCallsGroup();
-        $logEntries = $this->debug->data->get('log');
+        // $logEntries = $this->debug->data->get('log');
 
-        $this->assertSame(array(
+        self::assertSame(array(
             'group - ' . __NAMESPACE__ . '\myFunctionThatCallsGroup',
             'groupEnd',
         ), $this->briefLogEntries());
@@ -564,7 +564,7 @@ class GroupTest extends DebugTestFramework
             'line' => null,
         ));
         $child->extendMe();
-        $this->assertSame(array(
+        self::assertSame(array(
             'group - group',
             'group - group',
             'groupEnd',
@@ -628,7 +628,7 @@ class GroupTest extends DebugTestFramework
                 'entry' => $entry,
                 'custom' => function () {
                     $groupStack = $this->getSharedVar('reflectionProperties')['groupStack'];
-                    $this->assertSame(array(
+                    self::assertSame(array(
                         'main' => array(
                             0 => array('channel' => $this->debug, 'collect' => true),
                         ),
@@ -691,12 +691,12 @@ class GroupTest extends DebugTestFramework
         $this->debug->group('a', 'b', 'c');
         $this->debug->groupEnd();
         $groupStack = $this->getSharedVar('reflectionProperties')['groupStack'];
-        $this->assertSame(array(
+        self::assertSame(array(
             'main' => array(),
         ), $this->getSharedVar('reflectionProperties')['groupStacks']->getValue($groupStack));
         $log = $this->debug->data->get('log');
-        $this->assertCount(2, $log);
-        $this->assertSame(array(
+        self::assertCount(2, $log);
+        self::assertSame(array(
             array('group', array('a','b','c'), array()),
             array('groupEnd', array(), array()),
         ), $this->helper->deObjectifyData($log, false));
@@ -711,16 +711,16 @@ class GroupTest extends DebugTestFramework
         $this->debug->setCfg('collect', false);
         $this->debug->groupEnd();
         $logAfter = $this->debug->data->get('log');
-        $this->assertSame($logBefore, $logAfter, 'groupEnd() logged although collect=false');
+        self::assertSame($logBefore, $logAfter, 'groupEnd() logged although collect=false');
 
         // turn collect back on and close the group
         $this->debug->setCfg('collect', true);
         $this->debug->groupEnd(); // close the open group
-        $this->assertCount(2, $this->debug->data->get('log'));
+        self::assertCount(2, $this->debug->data->get('log'));
 
         // nothing to close!
         $this->debug->groupEnd(); // close the open group
-        $this->assertCount(2, $this->debug->data->get('log'));
+        self::assertCount(2, $this->debug->data->get('log'));
 
         $entry = array(
             'method' => 'groupEnd',
@@ -732,7 +732,7 @@ class GroupTest extends DebugTestFramework
             array(),
             array(
                 'entry' => $entry,
-                'custom' => function () {
+                'custom' => static function () {
                 },
                 'chromeLogger' => array(
                     array(),
@@ -784,7 +784,7 @@ class GroupTest extends DebugTestFramework
         );
         $this->testMethod(
             array(
-                'dataPath' => 'log/1'
+                'dataPath' => 'log/1',
             ),
             array(),
             array(
@@ -829,28 +829,29 @@ class GroupTest extends DebugTestFramework
             collect some info before outputing
             confirm nothing has been closed yet
         */
+        $onOutputVals = array();
         $onOutputVals['groupPriorityStackA'] = $this->getSharedVar('reflectionProperties')['groupPriorityStack']->getValue($groupStack);
-        $onOutputVals['groupStacksA'] = \array_map(function ($stack) {
+        $onOutputVals['groupStacksA'] = \array_map(static function ($stack) {
             return \count($stack);
         }, $this->getSharedVar('reflectionProperties')['groupStacks']->getValue($groupStack));
         $this->debug->eventManager->subscribe(Debug::EVENT_OUTPUT, function (Event $event) use (&$onOutputVals, $groupStack) {
             // At this point, log has been output.. all groups have been closed
-            $debug = $event->getSubject();
+            // $debug = $event->getSubject();
             $onOutputVals['groupPriorityStackB'] = $this->getSharedVar('reflectionProperties')['groupPriorityStack']->getValue($groupStack);
-            $onOutputVals['groupStacksB'] = \array_map(function ($stack) {
+            $onOutputVals['groupStacksB'] = \array_map(static function ($stack) {
                 return \count($stack);
             }, $this->getSharedVar('reflectionProperties')['groupStacks']->getValue($groupStack));
         }, -1);
 
         $output = $this->debug->output();
 
-        $this->assertSame(array(1), $onOutputVals['groupPriorityStackA']);
-        $this->assertSame(array(
+        self::assertSame(array(1), $onOutputVals['groupPriorityStackA']);
+        self::assertSame(array(
             'main' => 0,
             1 => 1,
         ), $onOutputVals['groupStacksA']);
-        $this->assertSame(array(), $onOutputVals['groupPriorityStackB']);
-        $this->assertSame(array(
+        self::assertSame(array(), $onOutputVals['groupPriorityStackB']);
+        self::assertSame(array(
             'main' => 0,
         ), $onOutputVals['groupStacksB']);
         $outputExpect = <<<'EOD'
@@ -877,7 +878,7 @@ class GroupTest extends DebugTestFramework
 </div>
 EOD;
         $outputExpect = \preg_replace('#^\s+#m', '', $outputExpect);
-        $this->assertStringMatchesFormat($outputExpect, $output);
+        self::assertStringMatchesFormat($outputExpect, $output);
     }
 
     /**
@@ -905,7 +906,7 @@ EOD;
         $this->debug->log('the end');
 
         $logSummary = $this->debug->data->get('logSummary/0');
-        $this->assertSame(array(
+        self::assertSame(array(
             array('group', array('group inside summary'), array()),
             array('log', array('I\'m in the summary!'), array()),
             array('groupEnd', array(), array()),
@@ -913,7 +914,7 @@ EOD;
             array('log', array('I\'m staying in the summary!'), array()),
         ), $this->helper->deObjectifyData($logSummary, false));
         $log = $this->debug->data->get('log');
-        $this->assertSame(array(
+        self::assertSame(array(
             array('log',array('I\'m not in the summary'), array()),
             array('log',array('the end'), array()),
         ), $this->helper->deObjectifyData($log, false));
@@ -933,16 +934,16 @@ EOD;
         $this->debug->groupCollapsed('level2 (test)');  // 5
         $this->debug->groupUncollapse();
         $log = $this->debug->data->get('log');
-        $this->assertSame('group', $log[0]['method']); // groupCollapsed converted to group
-        $this->assertSame('groupCollapsed', $log[1]['method']);
-        $this->assertSame('group', $log[5]['method']); // groupCollapsed converted to group
-        $this->assertCount(6, $log);    // assert that entry not added
+        self::assertSame('group', $log[0]['method']); // groupCollapsed converted to group
+        self::assertSame('groupCollapsed', $log[1]['method']);
+        self::assertSame('group', $log[5]['method']); // groupCollapsed converted to group
+        self::assertCount(6, $log);    // assert that entry not added
 
         $this->debug->data->set('log', array());
         $this->debug->groupCollapsed('some group');
         $this->debug->setCfg('collect', false);
         $this->debug->groupUncollapse();
-        $this->assertSame(array(
+        self::assertSame(array(
             'method' => 'groupCollapsed',
             'args' => array('some group'),
             'meta' => array(),
@@ -952,8 +953,8 @@ EOD;
     public function testInaccessableMethod()
     {
         $this->expectException('RuntimeException');
-        $this->expectExceptionMessage('bdk\Debug\Method\Group::bogus is inaccessable');
-        $this->debug->methodGroup->bogus();
+        $this->expectExceptionMessage('bdk\Debug\Plugin\Method\Group::bogus is inaccessable');
+        $this->debug->getPlugin('methodGroup')->bogus();
     }
 
     public function testGroupEndClearsErrorCaller()
@@ -965,23 +966,25 @@ EOD;
         );
         $this->debug->group('testGroup');
         $this->debug->setErrorCaller($errorCaller);
-        $this->assertSame($errorCaller, $this->debug->errorHandler->get('errorCaller'));
+        self::assertSame($errorCaller, $this->debug->errorHandler->get('errorCaller'));
         $this->debug->groupEnd();
-        $this->assertSame(array(), $this->debug->errorHandler->get('errorCaller'));
+        self::assertSame(array(), $this->debug->errorHandler->get('errorCaller'));
 
         $this->debug->groupSummary();
         $this->debug->setErrorCaller($errorCaller);
-        $this->assertSame($errorCaller, $this->debug->errorHandler->get('errorCaller'));
+        self::assertSame($errorCaller, $this->debug->errorHandler->get('errorCaller'));
         $this->debug->groupEnd();
-        $this->assertSame(array(), $this->debug->errorHandler->get('errorCaller'));
+        self::assertSame(array(), $this->debug->errorHandler->get('errorCaller'));
     }
 
     public function testGetSubscriptions()
     {
-        $this->assertSame(array(
+        self::assertSame(array(
+            Debug::EVENT_CUSTOM_METHOD => 'onCustomMethod',
             Debug::EVENT_OUTPUT => array('onOutput', PHP_INT_MAX),
+            Debug::EVENT_PLUGIN_INIT => 'onPluginInit',
             EventManager::EVENT_PHP_SHUTDOWN => array('onShutdown', PHP_INT_MAX),
-        ), $this->debug->methodGroup->getSubscriptions());
+        ), $this->debug->getPlugin('methodGroup')->getSubscriptions());
     }
 
     public function testOnOutput()
@@ -990,11 +993,11 @@ EOD;
 
         // test that subchannel's doesn't process data if ('isTarget') isn't passed in event
         $someChannel = $this->debug->getChannel('bob');
-        $someChannel->methodGroup->onOutput(new Event($someChannel));
-        $this->assertCount(1, $someChannel->data->get('log'));
+        $this->debug->getPlugin('methodGroup')->onOutput(new Event($someChannel));
+        self::assertCount(1, $someChannel->data->get('log'));
 
         $this->debug->output();
-        $this->assertCount(2, $this->debug->data->get('log'));
+        self::assertCount(2, $this->debug->data->get('log'));
     }
 
     public function testUncollapseErrors()
@@ -1010,7 +1013,7 @@ EOD;
         $this->debug->groupEnd();
         $this->debug->groupEnd();
         $this->debug->output();
-        $this->assertSame(array(
+        self::assertSame(array(
             'log - logEntry',
             'group - a',
             'info - in group a',
@@ -1033,8 +1036,8 @@ EOD;
         $this->debug->eventManager->publish(EventManager::EVENT_PHP_SHUTDOWN);
         $logEntries = $this->debug->data->get('log');
         $logEntries = $this->helper->deObjectifyData($logEntries);
-        $this->assertCount(2, $logEntries);
-        $this->assertSame('groupEnd', $logEntries[1]['method']);
+        self::assertCount(2, $logEntries);
+        self::assertSame('groupEnd', $logEntries[1]['method']);
     }
 
     public function testCloseOpenNotCalledTwice()
@@ -1045,13 +1048,13 @@ EOD;
         $this->debug->group('left unopen');
         $this->debug->eventManager->publish(EventManager::EVENT_PHP_SHUTDOWN);
         $logEntries = $this->debug->data->get('log');
-        $this->assertCount(2, $logEntries);
-        $this->assertSame('groupEnd', $logEntries[1]['method']);
+        self::assertCount(2, $logEntries);
+        self::assertSame('groupEnd', $logEntries[1]['method']);
 
         $this->debug->group('group added after shutdown');
         $this->debug->eventManager->publish(EventManager::EVENT_PHP_SHUTDOWN);
         $logEntries = $this->debug->data->get('log');
-        $this->assertCount(3, $logEntries);
+        self::assertCount(3, $logEntries);
     }
 
     private function methodWithGroup()
@@ -1064,7 +1067,7 @@ EOD;
         $logEntries = $logEntries !== null
             ? $logEntries
             : $this->debug->data->get('log');
-        return \array_map(function (LogEntry $logEntry) {
+        return \array_map(static function (LogEntry $logEntry) {
             $entry = \implode(
                 ' - ',
                 array(

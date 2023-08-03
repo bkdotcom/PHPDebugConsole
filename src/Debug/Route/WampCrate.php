@@ -90,7 +90,7 @@ class WampCrate
                     'inclContext' => $logEntry->getMeta('inclContext', false),
                 )
             );
-            $this->debug->methodTable->doTable($logEntryTmp);
+            $this->debug->rootInstance->getPlugin('methodTable')->doTable($logEntryTmp);
             unset($args[2]); // error's filepath argument
             $meta = \array_merge($meta, array(
                 'caption' => 'trace',

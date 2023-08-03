@@ -15,6 +15,7 @@ use bdk\Test\Debug\DebugTestFramework;
  * @covers \bdk\Debug\Abstraction\AbstractObjectProperties
  * @covers \bdk\Debug\AbstractComponent
  * @covers \bdk\Debug\LogEntry
+ * @covers \bdk\Debug\Plugin\Method\Basic
  * @covers \bdk\Debug\Dump\Base
  * @covers \bdk\Debug\Dump\BaseValue
  * @covers \bdk\Debug\Dump\Html
@@ -24,7 +25,6 @@ use bdk\Test\Debug\DebugTestFramework;
  * @covers \bdk\Debug\Dump\TextAnsiValue
  * @covers \bdk\Debug\Dump\TextValue
  * @covers \bdk\Debug\ServiceProvider
- * @covers \bdk\Debug\Method\Helper
  * @covers \bdk\Debug\Route\AbstractRoute
  * @covers \bdk\Debug\Route\ChromeLogger
  * @covers \bdk\Debug\Route\Firephp
@@ -33,6 +33,8 @@ use bdk\Test\Debug\DebugTestFramework;
  * @covers \bdk\Debug\Route\Stream
  * @covers \bdk\Debug\Route\Text
  * @covers \bdk\Debug\Route\WampCrate
+ *
+ * @phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
  */
 class MethodTest extends DebugTestFramework
 {
@@ -59,7 +61,7 @@ class MethodTest extends DebugTestFramework
                 } elseif ($route instanceof \bdk\Debug\Route\Wamp) {
                     $logEntry['method'] = 'log';
                     $logEntry['args'] = array('something completely different');
-                    $meta = \array_diff_key($logEntry['meta'], \array_flip(array('caption','inclContext','requestId','sortable','tableInfo')));
+                    $meta = \array_diff_key($logEntry['meta'], \array_flip(array('caption', 'inclContext', 'requestId', 'sortable', 'tableInfo')));
                     $logEntry['meta'] = $meta;
                 }
             }
@@ -71,9 +73,9 @@ class MethodTest extends DebugTestFramework
             array(
                 'entry' => function (LogEntry $logEntry) {
                     // we're doing the custom stuff via Debug::EVENT_OUTPUT_LOG_ENTRY, so logEntry should still be trace
-                    $this->assertSame('trace', $logEntry['method']);
-                    $this->assertIsArray($logEntry['args'][0]);
-                    $this->assertSame(array(
+                    self::assertSame('trace', $logEntry['method']);
+                    self::assertIsArray($logEntry['args'][0]);
+                    self::assertSame(array(
                         'caption' => 'trace',
                         'detectFiles' => true,
                         'inclArgs' => false,
@@ -120,7 +122,7 @@ class MethodTest extends DebugTestFramework
      */
     public function testCustom()
     {
-        $closure = function (LogEntry $logEntry) {
+        $closure = static function (LogEntry $logEntry) {
             if ($logEntry['method'] === 'myCustom' && $logEntry['route'] instanceof \bdk\Debug\Route\Html) {
                 $lis = array();
                 foreach ($logEntry['args'] as $arg) {
@@ -166,7 +168,7 @@ class MethodTest extends DebugTestFramework
             'args' => array('called statically'),
             'meta' => array(
                 'isCustomMethod' => true,
-                'statically' => true,
+                // 'statically' => true,
             ),
         );
         $this->testMethod(
@@ -222,24 +224,18 @@ class MethodTest extends DebugTestFramework
     {
         $this->debug->log(new \bdk\Test\Debug\Fixture\TestObj(), $this->debug->meta('cfg', 'methodCollect', false));
         $methodCollect = $this->debug->data->get('log/__end__/args/0/cfgFlags') & \bdk\Debug\Abstraction\AbstractObject::METHOD_COLLECT;
-        $this->assertSame(0, $methodCollect);
-        $this->assertCount(3, $this->debug->data->get('log/__end__/args/0/methods'));
-        $this->assertTrue($this->debug->getCfg('methodCollect'));
+        self::assertSame(0, $methodCollect);
+        self::assertCount(3, $this->debug->data->get('log/__end__/args/0/methods'));
+        self::assertTrue($this->debug->getCfg('methodCollect'));
     }
 
     public function testMethodDefaultArgNotOptional()
     {
         // covers AbstractDebug::getMethodDefaultArgs
-        $refProp = new \ReflectionProperty('bdk\Debug\AbstractDebug', 'methodDefaultArgs');
-        $refProp->setAccessible(true);
-        $refProp->setValue(array());
+        $this->helper->setProp('bdk\Debug\AbstractDebug', 'methodDefaultArgs', array());
         $this->debug->alert('test');
-        $this->assertSame('alert', $this->debug->data->get('alerts/__end__/method'));
+        self::assertSame('alert', $this->debug->data->get('alerts/__end__/method'));
     }
-
-    /*
-        alert tested in AlertTest.php
-    */
 
     /**
      * Test
@@ -323,14 +319,6 @@ class MethodTest extends DebugTestFramework
         );
     }
 
-    /*
-        clear() method tested in ClearTest
-    */
-
-    /*
-        count() method tested in CountTest
-    */
-
     /**
      * Test
      *
@@ -344,11 +332,11 @@ class MethodTest extends DebugTestFramework
             array('a string', array(), new \stdClass(), $resource),
             array(
                 'entry' => function (LogEntry $logEntry) {
-                    $this->assertSame('error', $logEntry['method']);
-                    $this->assertSame('a string', $logEntry['args'][0]);
-                    $this->assertSame(array(), $logEntry['args'][1]);
-                    $this->assertAbstractionType($logEntry['args'][2], 'object');
-                    $this->assertAbstractionType($logEntry['args'][3], 'resource');
+                    self::assertSame('error', $logEntry['method']);
+                    self::assertSame('a string', $logEntry['args'][0]);
+                    self::assertSame(array(), $logEntry['args'][1]);
+                    self::assertAbstractionType($logEntry['args'][2], 'object');
+                    self::assertAbstractionType($logEntry['args'][3], 'resource');
                 },
                 'chromeLogger' => \json_encode(array(
                     array(
@@ -386,7 +374,7 @@ class MethodTest extends DebugTestFramework
         \fclose($resource);
 
         /*
-        $this->assertSame(array(
+        self::assertSame(array(
             'file' => __FILE__,
             'line' => $errLine,
         ), $logEntry[2]);
@@ -404,10 +392,6 @@ class MethodTest extends DebugTestFramework
         );
     }
 
-    /*
-        group() methods tested in GroupTest
-    */
-
     /**
      * Test
      *
@@ -421,12 +405,12 @@ class MethodTest extends DebugTestFramework
             array('a string', array(), new \stdClass(), $resource),
             array(
                 'entry' => function (LogEntry $logEntry) {
-                    $this->assertSame('info', $logEntry['method']);
-                    $this->assertSame('a string', $logEntry['args'][0]);
+                    self::assertSame('info', $logEntry['method']);
+                    self::assertSame('a string', $logEntry['args'][0]);
                     // check array abstraction
-                    // $this->assertAbstractionType($logEntry[2], 'array');
-                    $this->assertAbstractionType($logEntry['args'][2], 'object');
-                    $this->assertAbstractionType($logEntry['args'][3], 'resource');
+                    // self::assertAbstractionType($logEntry[2], 'array');
+                    self::assertAbstractionType($logEntry['args'][2], 'object');
+                    self::assertAbstractionType($logEntry['args'][3], 'resource');
                 },
                 'chromeLogger' => \json_encode(array(
                     array(
@@ -486,12 +470,12 @@ class MethodTest extends DebugTestFramework
             array('a string', array(), new \stdClass(), $resource),
             array(
                 'entry' => function (LogEntry $logEntry) {
-                    $this->assertSame('log', $logEntry['method']);
-                    $this->assertSame('a string', $logEntry['args'][0]);
+                    self::assertSame('log', $logEntry['method']);
+                    self::assertSame('a string', $logEntry['args'][0]);
                     // check array abstraction
-                    // $this->assertAbstractionType($logEntry[2], 'array');
-                    $this->assertAbstractionType($logEntry['args'][2], 'object');
-                    $this->assertAbstractionType($logEntry['args'][3], 'resource');
+                    // self::assertAbstractionType($logEntry[2], 'array');
+                    self::assertAbstractionType($logEntry['args'][2], 'object');
+                    self::assertAbstractionType($logEntry['args'][3], 'resource');
                 },
                 'chromeLogger' => \json_encode(array(
                     array(
@@ -548,7 +532,7 @@ class MethodTest extends DebugTestFramework
             ),
             array(
                 'entry' => function (LogEntry $logEntry) {
-                    $this->assertSame(array(
+                    self::assertSame(array(
                         'method' => 'error',
                         'args' => array(
                             'Warning:',
@@ -570,7 +554,7 @@ class MethodTest extends DebugTestFramework
                             'uncollapse' => true,
                         ),
                     ), $this->helper->logEntryToArray($logEntry));
-                }
+                },
             )
         );
 
@@ -589,18 +573,10 @@ class MethodTest extends DebugTestFramework
     public function testMeta()
     {
         // test invalid args
-        $this->assertSame(array(
+        self::assertSame(array(
             'debug' => Debug::META,
         ), $this->debug->meta(false));
     }
-
-    /*
-        table() method tested in TableTest
-    */
-
-    /*
-        time(), timeEnd, timeGet, timeLog
-    */
 
     /**
      * Test
@@ -615,15 +591,15 @@ class MethodTest extends DebugTestFramework
             array('a string', array(), new \stdClass(), $resource),
             array(
                 'entry' => function (LogEntry $logEntry) {
-                    $this->assertSame('warn', $logEntry['method']);
-                    $this->assertSame('a string', $logEntry['args'][0]);
+                    self::assertSame('warn', $logEntry['method']);
+                    self::assertSame('a string', $logEntry['args'][0]);
                     // check array abstraction
-                    // $this->assertAbstractionType($logEntry[2], 'array');
-                    $this->assertAbstractionType($logEntry['args'][2], 'object');
-                    $this->assertAbstractionType($logEntry['args'][3], 'resource');
+                    // self::assertAbstractionType($logEntry[2], 'array');
+                    self::assertAbstractionType($logEntry['args'][2], 'object');
+                    self::assertAbstractionType($logEntry['args'][3], 'resource');
 
-                    $this->assertArrayHasKey('file', $logEntry['meta']);
-                    $this->assertArrayHasKey('line', $logEntry['meta']);
+                    self::assertArrayHasKey('file', $logEntry['meta']);
+                    self::assertArrayHasKey('line', $logEntry['meta']);
                 },
                 'chromeLogger' => \json_encode(array(
                     array(

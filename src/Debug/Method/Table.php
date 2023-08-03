@@ -7,60 +7,68 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2022 Brad Kent
- * @version   v3.0
+ * @version   v3.1
  */
 
 namespace bdk\Debug\Method;
 
+use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
-use bdk\Debug\LogEntry;
+use bdk\Debug\Method\TableRow;
 
 /**
- * Table helper methods
+ * Tablefy data.
+ * Ensure all row fields are in the same order
  */
 class Table
 {
     private $debug;
-    private $logEntry;
     private $meta = array();
+    private $rows = array();
 
     /**
-     * Handle table() call
+     * Constructor
      *
-     * @param LogEntry $logEntry log entry instance
-     *
-     * @return void
+     * @param mixed $rows  [description]
+     * @param array $meta  Meta info / options
+     * @param Debug $debug [description]
      */
-    public function doTable(LogEntry $logEntry)
+    public function __construct($rows = array(), array $meta = array(), Debug $debug = null)
     {
-        $this->logEntry = $logEntry;
-        $this->debug = $logEntry->getSubject();
-
-        $cfg = $logEntry->getMeta('cfg', array());
-        $cfgRestore = array();
-        $maxDepth = $this->debug->getCfg('maxDepth');
-        if (\in_array($maxDepth, array(1, 2), true)) {
-            $cfg['maxDepth'] = 3;
-        }
-        if ($cfg) {
-            $cfgRestore = $this->debug->setCfg($cfg);
-            $logEntry->setMeta('cfg', null);
-        }
-
-        $this->initLogEntry();
-        $this->processRows();
-
-        if ($cfgRestore) {
-            $this->debug->setCfg($cfgRestore);
-        }
-
-        if (!$this->haveTableData()) {
-            $logEntry['method'] = 'log';
-            if ($this->meta['caption']) {
-                \array_unshift($logEntry['args'], $this->meta['caption']);
-            }
-        }
+        $this->debug = $debug ?: Debug::getInstance();
+        $this->initMeta($meta);
+        $this->processRows($rows);
         $this->setMeta();
+    }
+
+    /**
+     * Get table rows
+     *
+     * @return array
+     */
+    public function getRows()
+    {
+        return $this->rows;
+    }
+
+    /**
+     * Get meta info
+     *
+     * @return array
+     */
+    public function getMeta()
+    {
+        return $this->meta;
+    }
+
+    /**
+     * Do we have table data?
+     *
+     * @return bool
+     */
+    public function haveRows()
+    {
+        return \is_array($this->rows) && \count($this->rows) > 0;
     }
 
     /**
@@ -121,46 +129,13 @@ class Table
     }
 
     /**
-     * Do we have table data?
-     *
-     * @return bool
-     */
-    private function haveTableData()
-    {
-        return isset($this->logEntry['args'][0])
-            && \is_array($this->logEntry['args'][0])
-            && $this->logEntry['args'][0] !== array();
-    }
-
-    /**
-     * Find the data, caption, & columns in logEntry arguments
-     *
-     * @return void
-     */
-    private function initLogEntry()
-    {
-        $args = $this->logEntry['args'];
-        $argCount = \count($args);
-        $other = Abstracter::UNDEFINED;
-        $this->initMeta();
-        $this->logEntry['args'] = array();
-        for ($i = 0; $i < $argCount; $i++) {
-            $isOther = $this->testArg($args[$i]);
-            if ($isOther && $other === Abstracter::UNDEFINED) {
-                $other = $args[$i];
-            }
-        }
-        if ($this->logEntry['args'] === array() && $other !== Abstracter::UNDEFINED) {
-            $this->logEntry['args'] = array($other);
-        }
-    }
-
-    /**
      * Merge / initialize meta values
      *
+     * @param array $meta Meta info / options
+     *
      * @return void
      */
-    private function initMeta()
+    private function initMeta(array $meta)
     {
         /*
             columns, columnNames, & totalCols will be moved to
@@ -202,7 +177,7 @@ class Table
                 'summary' => null, // if table is an obj... phpDoc summary
             ),
             'totalCols' => array(),
-        ), $this->logEntry['meta']);
+        ), $meta);
     }
 
     /**
@@ -214,7 +189,7 @@ class Table
     {
         $columns = array();
         $columnNames = $this->meta['columnNames'];
-        $keys = $this->meta['columns'] ?: self::colKeys($this->logEntry['args'][0]);
+        $keys = $this->meta['columns'] ?: self::colKeys($this->rows);
         foreach ($keys as $key) {
             $columns[$key] = array(
                 'key' => isset($columnNames[$key])
@@ -261,26 +236,27 @@ class Table
      * object / traversable
      * ovject / traversable or objects / traversables
      *
+     * @param mixed $rows Row data to process
+     *
      * @return void
      */
-    private function processRows()
+    private function processRows($rows)
     {
-        if (!isset($this->logEntry['args'][0])) {
+        if ($rows === null) {
             return;
         }
-        $rows = $this->processRowsGet();
+        $rows = $this->processRowsGet($rows);
         if (\is_array($rows) === false) {
             return;
         }
         foreach ($rows as $rowKey => $row) {
             $rows[$rowKey] = new TableRow($row);
         }
-        $this->logEntry['args'] = array($rows);
+        $this->rows = $rows;
         $this->initTableInfoColumns();
-        foreach ($rows as $rowKey => $row) {
-            $rows[$rowKey] = $this->processRow($row, $rowKey);
+        foreach ($this->rows as $rowKey => $row) {
+            $this->rows[$rowKey] = $this->processRow($row, $rowKey);
         }
-        $this->logEntry['args'] = array($rows);
     }
 
     /**
@@ -288,13 +264,13 @@ class Table
      *
      * @return array
      */
-    private function processRowsGet()
+    private function processRowsGet($rows)
     {
-        $rows = $this->logEntry['args'][0];
+        // $rows = $this->logEntry['args'][0];
         if ($this->meta['inclContext'] === false) {
             $rows = $this->preCrate($rows);
         }
-        $rows = $this->debug->abstracter->crate($rows, $this->logEntry['method']);
+        $rows = $this->debug->abstracter->crate($rows, 'table'); // $this->logEntry['method']
         if ($this->debug->abstracter->isAbstraction($rows, Abstracter::TYPE_OBJECT)) {
             $this->meta['tableInfo']['class'] = $rows['className'];
             $this->meta['tableInfo']['summary'] = $rows['phpDoc']['summary'];
@@ -360,7 +336,7 @@ class Table
         if (!$this->meta['inclContext']) {
             unset($this->meta['inclContext']);
         }
-        if (!$this->haveTableData()) {
+        if (!$this->haveRows()) {
             unset(
                 $this->meta['caption'],
                 $this->meta['inclContext'],
@@ -368,62 +344,7 @@ class Table
                 $this->meta['tableInfo']
             );
         }
-        $this->logEntry['meta'] = $this->meta;
-    }
-
-    /**
-     * Place argument as "data", "caption", "columns", or "other"
-     *
-     * @param mixed $val argument value
-     *
-     * @return bool whether to treat the val as "other"
-     */
-    private function testArg($val)
-    {
-        if (\is_array($val)) {
-            $this->testArgArray($val);
-            return false;
-        }
-        if (\is_object($val)) {
-            $this->testArgObject($val);
-            return false;
-        }
-        if (\is_string($val) && $this->meta['caption'] === null) {
-            $this->meta['caption'] = $val;
-            return false;
-        }
-        return true;
-    }
-
-    /**
-     * Should array argument be treated as table data or columns?
-     *
-     * @param array $val table() arg of type array
-     *
-     * @return void
-     */
-    private function testArgArray($val)
-    {
-        if ($this->logEntry['args'] === array()) {
-            $this->logEntry['args'] = array($val);
-        } elseif (!$this->meta['columns']) {
-            $this->meta['columns'] = $val;
-        }
-    }
-
-    /**
-     * Should object argument be treated as table data?
-     *
-     * @param array $val table() arg of type object
-     *
-     * @return void
-     */
-    private function testArgObject($val)
-    {
-        // Traversable or other
-        if ($this->logEntry['args'] === array()) {
-            $this->logEntry['args'] = array($val);
-        }
+        // $this->logEntry['meta'] = $this->meta;
     }
 
     /**

@@ -15,6 +15,8 @@ use bdk\Test\PolyFill\ExpectExceptionTrait;
  * PHPUnit tests for Debug class
  *
  * @covers \bdk\Debug\Plugin\InternalEvents
+ * @covers \bdk\Debug\Plugin\Route
+ * @covers \bdk\Debug\Plugin\Runtime
  * @covers \bdk\Debug\Route\Email
  * @covers \bdk\Debug\Route\Stream
  *
@@ -62,8 +64,7 @@ class InternalEventsTest extends DebugTestFramework
             'output' => false,  // email only sent if not outputing
         ));
 
-        $container = $this->helper->getProp($this->debug, 'container');
-        $internalEvents = $container['pluginInternalEvents'];
+        $internalEvents = $this->debug->getPlugin('internalEvents');
 
         //
         // Test that not emailed if nothing logged
@@ -183,7 +184,7 @@ class InternalEventsTest extends DebugTestFramework
             'collect' => false,
         ));
         $this->debug->getRoute('stream')->setCfg('stream', 'php://temp');
-        $this->debug->pluginInternalEvents->onError($error);
+        $this->debug->getPlugin('internalEvents')->onError($error);
         $logEntry = $this->helper->logEntryToArray($this->debug->data->get('log/__end__'));
         $logEntry['meta']['errorHash'] = '';
         $logEntry['meta']['trace'] = array();
@@ -223,7 +224,7 @@ class InternalEventsTest extends DebugTestFramework
             'file' => __FILE__,
             'line' => __LINE__,
         ));
-        $this->debug->pluginInternalEvents->onError($error);
+        $this->debug->getPlugin('internalEvents')->onError($error);
         self::assertSame(0, $this->debug->data->get('log/__count__'));
         self::assertFalse($error['email']);
         self::assertFalse($error['inConsole']);
@@ -241,7 +242,7 @@ class InternalEventsTest extends DebugTestFramework
             'file' => __FILE__,
             'line' => __LINE__,
         ));
-        $this->debug->pluginInternalEvents->onError($error);
+        $this->debug->getPlugin('internalEvents')->onError($error);
         self::assertSame(0, $this->debug->data->get('log/__count__'));
         self::assertArrayNotHasKey('error', $error);
         self::assertFalse($error['inConsole']);
@@ -249,9 +250,7 @@ class InternalEventsTest extends DebugTestFramework
 
     public function testPrettify()
     {
-        $reflector = new \ReflectionProperty($this->debug->pluginInternalEvents, 'highlightAdded');
-        $reflector->setAccessible(true);
-        $reflector->setValue($this->debug->pluginInternalEvents, false);
+        $this->helper->setProp($this->debug->getPlugin('internalEvents'), 'highlightAdded', false);
 
         $foo = $this->debug->prettify('foo', 'unknown');
         self::assertSame('foo', $foo);
@@ -360,7 +359,7 @@ WHERE·
             $xml
         );
 
-        self::assertTrue($reflector->getValue($this->debug->pluginInternalEvents));
+        self::assertTrue($this->helper->getProp($this->debug->getPlugin('internalEvents'), 'highlightAdded'));
     }
 
     public function testShutdown()

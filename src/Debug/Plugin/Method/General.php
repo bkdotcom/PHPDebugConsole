@@ -220,7 +220,7 @@ class General implements SubscriberInterface
         }
         if ($caller) {
             // groupEnd will check depth and potentially clear errorCaller
-            $caller['groupDepth'] = $this->debug->methodGroup->getDepth();
+            $caller['groupDepth'] = $this->debug->rootInstance->getPlugin('methodGroup')->getDepth();
         }
         $this->debug->errorHandler->setErrorCaller($caller);
     }

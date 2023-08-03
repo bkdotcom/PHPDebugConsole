@@ -74,22 +74,22 @@ class DebugTestFramework extends DOMTestCase
 
         $refProperties = &$this->getSharedVar('reflectionProperties');
         if (!isset($refProperties['inShutdown'])) {
-            $refProp = new \ReflectionProperty('bdk\\Debug\\Method\\Group', 'inShutdown');
+            $refProp = new \ReflectionProperty('bdk\\Debug\\Plugin\\Method\\Group', 'inShutdown');
             $refProp->setAccessible(true);
             $refProperties['inShutdown'] = $refProp;
         }
         if (!isset($refProperties['groupStack'])) {
-            $refProp = new \ReflectionProperty('bdk\\Debug\\Method\\Group', 'groupStack');
+            $refProp = new \ReflectionProperty('bdk\\Debug\\Plugin\\Method\\Group', 'groupStack');
             $refProp->setAccessible(true);
-            $refProperties['groupStack'] = $refProp->getValue($this->debug->methodGroup);
+            $refProperties['groupStack'] = $refProp->getValue($this->debug->getPlugin('methodGroup'));
         }
         if (!isset($refProperties['groupPriorityStack'])) {
-            $refProp = new \ReflectionProperty('bdk\\Debug\\Method\\GroupStack', 'priorityStack');
+            $refProp = new \ReflectionProperty('bdk\\Debug\\Plugin\\Method\\GroupStack', 'priorityStack');
             $refProp->setAccessible(true);
             $refProperties['groupPriorityStack'] = $refProp;
         }
         if (!isset($refProperties['groupStacks'])) {
-            $refProp = new \ReflectionProperty('bdk\\Debug\\Method\\GroupStack', 'groupStacks');
+            $refProp = new \ReflectionProperty('bdk\\Debug\\Plugin\\Method\\GroupStack', 'groupStacks');
             $refProp->setAccessible(true);
             $refProperties['groupStacks'] = $refProp;
         }
@@ -99,7 +99,7 @@ class DebugTestFramework extends DOMTestCase
             $refProperties['textDepth'] = $refProp;
         }
 
-        $refProperties['inShutdown']->setValue($this->debug->methodGroup, false);
+        $refProperties['inShutdown']->setValue($this->debug->getPlugin('methodGroup'), false);
         $refProperties['textDepth']->setValue($this->debug->getDump('text'), 0);
 
         /*

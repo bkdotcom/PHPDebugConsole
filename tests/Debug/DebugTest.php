@@ -10,7 +10,7 @@ use bdk\PubSub\Manager as EventManager;
  *
  * @covers \bdk\Debug
  * @covers \bdk\Debug\AbstractDebug
- * @covers \bdk\Debug\Internal
+ * @covers \bdk\Debug\Plugin\Route
  */
 class DebugTest extends DebugTestFramework
 {
@@ -98,9 +98,7 @@ class DebugTest extends DebugTestFramework
 
     public function testOnCfgRoute()
     {
-        $containerRef = new \ReflectionProperty($this->debug, 'container');
-        $containerRef->setAccessible(true);
-        $container = $containerRef->getValue($this->debug);
+        $container = $this->helper->getProp($this->debug, 'container');
         unset($container['routeFirephp']);
 
         $this->debug->setCfg('route', new \bdk\Debug\Route\Firephp($this->debug));
@@ -234,8 +232,8 @@ class DebugTest extends DebugTestFramework
         $subscribersExpect = array(
             array('bdk\ErrorHandler', 'onShutdown'),
             array('bdk\Debug\Plugin\InternalEvents', 'onShutdownHigh'),
+            array('bdk\Debug\Plugin\Method\Group', 'onShutdown'),
             array('bdk\Debug\Plugin\Runtime', 'onShutdown'),
-            array('bdk\Debug\Method\Group', 'onShutdown'),
             array('bdk\Debug\Plugin\InternalEvents', 'onShutdownHigh2'),
             array('bdk\Debug\Plugin\InternalEvents', 'onShutdownLow'),
             array('bdk\Debug\Route\Wamp', 'onShutdown'),

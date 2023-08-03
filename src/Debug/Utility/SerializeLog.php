@@ -152,7 +152,7 @@ class SerializeLog
         $vals[1] = self::importLegacy($vals[1]);
         $logEntry = new LogEntry(self::$debug, $vals[0], $vals[1], $vals[2]);
         if (self::$isLegacyData && $vals[0] === 'table') {
-            self::$debug->methodTable->doTable($logEntry);
+            self::$debug->rootInstance->getPlugin('methodTable')->doTable($logEntry);
         }
         return $logEntry;
     }

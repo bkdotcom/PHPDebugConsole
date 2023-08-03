@@ -7,24 +7,73 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2022 Brad Kent
- * @version   v3.0
+ * @version   v3.1
  */
 
-namespace bdk\Debug\Method;
+namespace bdk\Debug\Plugin\Method;
 
 use bdk\Debug;
 use bdk\Debug\LogEntry;
+use bdk\Debug\Plugin\CustomMethodTrait;
+use bdk\PubSub\SubscriberInterface;
 
 /**
  * Clear method
  */
-class Clear
+class Clear implements SubscriberInterface
 {
+    use CustomMethodTrait;
+
     private $data = array();
-    private $debug;
     private $channelName = null;
     private $channelRegex;
     private $isRootInstance = false;
+
+    protected $methods = array(
+        'clear',
+    );
+
+    /**
+     * Constructor
+     */
+    public function __construct()
+    {
+    }
+
+    /**
+     * Clear the log
+     *
+     * This method executes even if `collect` is false
+     *
+     * @param int $bitmask A bitmask of options
+     *                     `self::CLEAR_ALERTS` : Clear alerts generated with `alert()`
+     *                     `self::CLEAR_LOG` : **default** Clear log entries (excluding warn & error)
+     *                     `self::CLEAR_LOG_ERRORS` : Clear warn & error
+     *                     `self::CLEAR_SUMMARY` : Clear summary entries (excluding warn & error)
+     *                     `self::CLEAR_SUMMARY_ERRORS` : Clear warn & error within summary groups
+     *                     `self::CLEAR_ALL` : Clear all log entries
+     *                     `self::CLEAR_SILENT` : Don't add log entry
+     *
+     * @return $this
+     */
+    public function clear($bitmask = Debug::CLEAR_LOG)
+    {
+        $debug = $this->debug;
+        $logEntry = new LogEntry(
+            $debug,
+            __FUNCTION__,
+            \func_get_args(),
+            array(),
+            $debug->getMethodDefaultArgs(__METHOD__),
+            array('bitmask')
+        );
+        $this->doClear($logEntry);
+        // even if cleared from within summary, let's log this in primary log
+        $debug->data->set('logDest', 'main');
+        $debug->log($logEntry);
+        $debug->data->set('logDest', 'auto');
+        return $debug;
+    }
 
     /**
      * Handle clear() call
@@ -33,7 +82,7 @@ class Clear
      *
      * @return void
      */
-    public function doClear(LogEntry $logEntry)
+    private function doClear(LogEntry $logEntry)
     {
         $this->debug = $logEntry->getSubject();
         $this->data = $this->debug->data->get();
@@ -180,7 +229,7 @@ class Clear
         $clearErrors = (bool) ($flags & Debug::CLEAR_LOG_ERRORS);
         if ($flags & Debug::CLEAR_LOG) {
             $return = 'log (' . ($clearErrors ? 'incl errors' : 'sans errors') . ')';
-            $entriesKeep = $this->debug->methodGroup->getCurrentGroups('main');
+            $entriesKeep = $this->debug->rootInstance->getPlugin('methodGroup')->getCurrentGroups('main');
             $this->clearLogHelper($this->data['log'], $clearErrors, $entriesKeep);
         } elseif ($clearErrors) {
             $return = 'errors';
@@ -229,14 +278,15 @@ class Clear
         $clearErrors = (bool) ($flags & Debug::CLEAR_SUMMARY_ERRORS);
         if ($flags & Debug::CLEAR_SUMMARY) {
             $return = 'summary (' . ($clearErrors ? 'incl errors' : 'sans errors') . ')';
-            $curPriority = $this->debug->methodGroup->getCurrentPriority(); // 'main'|int
+            $groupPlugin = $this->debug->rootInstance->getPlugin('methodGroup');
+            $curPriority = $groupPlugin->getCurrentPriority(); // 'main'|int
             foreach (\array_keys($this->data['logSummary']) as $priority) {
                 if ($priority !== $curPriority) {
-                    $this->debug->methodGroup->reset($priority);
+                    $groupPlugin->reset($priority);
                     $this->clearLogHelper($this->data['logSummary'][$priority], $clearErrors, array());
                     continue;
                 }
-                $entriesKeep = $this->debug->methodGroup->getCurrentGroups($priority);
+                $entriesKeep = $groupPlugin->getCurrentGroups($priority);
                 $this->clearLogHelper($this->data['logSummary'][$priority], $clearErrors, $entriesKeep);
             }
         } elseif ($clearErrors) {

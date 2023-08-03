@@ -162,7 +162,7 @@ class ErrorSummary
             'objectsExclude' => array('*'),
         ));
         $logEntry = $this->buildFatalBacktraceLogEntry($backtrace);
-        $this->debug->methodTable->doTable($logEntry);
+        $this->debug->rootInstance->getPlugin('methodTable')->doTable($logEntry);
         $this->debug->setCfg($cfgWas);
         return '<li class="m_trace" data-detect-files="true">' . $this->routeHtml->dumper->table->build(
             $logEntry['args'][0],

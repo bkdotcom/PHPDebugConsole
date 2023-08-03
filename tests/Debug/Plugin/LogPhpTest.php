@@ -37,7 +37,7 @@ class LogPhpTest extends DebugTestFramework
         ));
         $logPhp = $this->debug->getPlugin('logPhp');
 
-        $logPhp->onPluginInit(new Event($this->debug));
+        $logPhp->onBootstrap(new Event($this->debug));
 
         $logEntries = $this->helper->deObjectifyData($this->debug->data->get('log'));
         self::assertSame(array('PHP Version', PHP_VERSION), $logEntries[0]['args']);
@@ -71,7 +71,7 @@ class LogPhpTest extends DebugTestFramework
                 ),
             ),
         ));
-        $logPhp->onPluginInit(new Event($this->debug));
+        $logPhp->onBootstrap(new Event($this->debug));
         $logEntries = $this->helper->deObjectifyData($this->debug->data->get('log'));
         $found = array(
             'server' => false,
@@ -94,6 +94,7 @@ class LogPhpTest extends DebugTestFramework
     public function testLogPhpInfoEr()
     {
         $logPhp = new LogPhp();
+        $this->helper->setProp($logPhp, 'debug', $this->debug->getChannel('php', array('nested' => false)));
 
         $refMethod = new \ReflectionMethod($logPhp, 'logPhpEr');
         $refMethod->setAccessible(true);

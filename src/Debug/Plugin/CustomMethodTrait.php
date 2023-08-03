@@ -46,8 +46,13 @@ trait CustomMethodTrait
             return;
         }
         $this->debug = $logEntry->getSubject();
+        $args = $logEntry['args'];
+        $meta = $logEntry['meta'];
+        if ($meta) {
+            $args[] = $this->debug->meta($meta);
+        }
         $logEntry['handled'] = true;
-        $logEntry['return'] = \call_user_func_array(array($this, $method), $logEntry['args']);
+        $logEntry['return'] = \call_user_func_array(array($this, $method), $args);
         $logEntry->stopPropagation();
     }
 }

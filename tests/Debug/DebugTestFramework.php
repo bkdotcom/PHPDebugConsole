@@ -424,7 +424,7 @@ class DebugTestFramework extends DOMTestCase
             'logRequestInfo' => false,
             'logResponse' => false,
             'logRuntime' => true,
-            'onError' => function (Error $error) {
+            'onError' => static function (Error $error) {
                 if (self::$allowError) {
                     $error['continueToNormal'] = false;
                     return;
@@ -438,6 +438,7 @@ class DebugTestFramework extends DOMTestCase
             'outputScript' => false,
             'route' => 'html',
             'serviceProvider' => array(
+                'response' => null,
                 'serverRequest' => new ServerRequest(
                     'GET',
                     'http://test.example.com/noun/id/verb',
@@ -465,6 +466,7 @@ class DebugTestFramework extends DOMTestCase
         $this->debug->errorHandler->setData('errors', array());
         $this->debug->errorHandler->setData('errorCaller', array());
         $this->debug->errorHandler->setData('lastErrors', array());
+        $this->helper->setProp($this->debug->getPlugin('methodReqRes'), 'serverParams', array());
         $this->helper->setProp($this->debug->abstracter->abstractObject->class, 'default', null);
 
         // make sure we still have wamp plugin registered

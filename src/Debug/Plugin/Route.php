@@ -52,12 +52,12 @@ class Route extends AbstractComponent implements SubscriberInterface
      */
     public function getDefaultRoute()
     {
-        $interface = $this->debug->getInterface();
+        $interface = $this->debug->rootInstance->getInterface();
         if (\strpos($interface, 'ajax') !== false) {
             return $this->debug->getCfg('routeNonHtml', Debug::CONFIG_DEBUG);
         }
         if ($interface === 'http') {
-            $contentType = $this->debug->getResponseHeader('Content-Type');
+            $contentType = $this->debug->rootInstance->getResponseHeader('Content-Type');
             if ($contentType && \strpos($contentType, 'text/html') === false) {
                 return $this->debug->getCfg('routeNonHtml', Debug::CONFIG_DEBUG);
             }
@@ -69,7 +69,7 @@ class Route extends AbstractComponent implements SubscriberInterface
     /**
      * Debug::EVENT_BOOTSTRAP subscriber
      *
-     * @param Event $event Debug::EVENT_CONFIG Event instance
+     * @param Event $event Debug::EVENT_BOOTSTRAP Event instance
      *
      * @return void
      */
@@ -92,7 +92,7 @@ class Route extends AbstractComponent implements SubscriberInterface
     /**
      * Debug::EVENT_CONFIG subscriber
      *
-     * @param Event $event Debug::EVENT_CONFIG Event instance
+     * @param Event $event Event instance
      *
      * @return void
      */
@@ -117,12 +117,18 @@ class Route extends AbstractComponent implements SubscriberInterface
     /**
      * Debug::EVENT_OUTPUT subscriber
      *
+     * If we're the target channel, check if configured route is a string or obj
+     * if string, reset the route... which will instantiate the route
+     *
      * @param Event $event Event instance
      *
      * @return void
      */
     public function onOutput(Event $event)
     {
+        if ($event['isTarget'] === false) {
+            return;
+        }
         $debug = $event->getSubject();
         $route = $debug->getCfg('route', Debug::CONFIG_DEBUG);
         if (\is_string($route)) {
@@ -155,7 +161,6 @@ class Route extends AbstractComponent implements SubscriberInterface
             }
         }
         if (\is_string($val) && $val !== 'auto') {
-            // \bdk\Debug::varDump(__METHOD__ . ' getRoute ' . $val);
             $val = $this->debug->getRoute($val);
         }
         if ($val instanceof RouteInterface) {

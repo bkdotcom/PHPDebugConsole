@@ -10,7 +10,6 @@ use bdk\PubSub\Manager as EventManager;
  *
  * @covers \bdk\Debug
  * @covers \bdk\Debug\AbstractDebug
- * @covers \bdk\Debug\Plugin\Route
  */
 class DebugTest extends DebugTestFramework
 {
@@ -31,30 +30,6 @@ class DebugTest extends DebugTestFramework
             'serviceProvider' => 'invalid',
         ));
         self::assertInstanceOf('bdk\\Debug', $debug);
-    }
-
-    public function testGetDefaultRoute()
-    {
-        $GLOBALS['collectedHeaders'] = array(
-            array('Content-Type: text/html', false),
-        );
-        $route = $this->debug->getDefaultRoute();
-        self::assertSame('html', $route);
-
-        $GLOBALS['collectedHeaders'] = array(
-            array('Content-Type: image/jpeg', false),
-        );
-        $route = $this->debug->getDefaultRoute();
-        self::assertSame('serverLog', $route);
-
-        $this->debug->setCfg('serviceProvider', array(
-            'serverRequest' => new \bdk\HttpMessage\ServerRequest('GET', null, array(
-                'HTTP_X_REQUESTED_WITH' => 'XMLHttpRequest',
-            )),
-        ));
-
-        $route = $this->debug->getDefaultRoute();
-        self::assertSame('serverLog', $route);
     }
 
     public function testMagicGet()
@@ -94,16 +69,6 @@ class DebugTest extends DebugTestFramework
     {
         $this->debug->setCfg(array());
         self::assertTrue(true);
-    }
-
-    public function testOnCfgRoute()
-    {
-        $container = $this->helper->getProp($this->debug, 'container');
-        unset($container['routeFirephp']);
-
-        $this->debug->setCfg('route', new \bdk\Debug\Route\Firephp($this->debug));
-        self::assertInstanceOf('bdk\\Debug\\Route\\Firephp', $container['routeFirephp']);
-        $this->debug->obEnd();
     }
 
     public function testPublishBubbleEvent()

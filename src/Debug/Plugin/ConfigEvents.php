@@ -10,7 +10,7 @@
  * @version   v3.0
  */
 
-namespace bdk\Debug;
+namespace bdk\Debug\Plugin;
 
 use bdk\Debug;
 use bdk\Debug\Utility\FileStreamWrapper;
@@ -26,16 +26,6 @@ class ConfigEvents implements SubscriberInterface
     private $isBootstrapped = false;
     private $isConfigured = false;
     private static $profilingEnabled = false;
-
-    /**
-     * Constructor
-     *
-     * @param Debug $debug Debug instance
-     */
-    public function __construct(Debug $debug)
-    {
-        $this->debug = $debug;
-    }
 
     /**
      * {@inheritDoc}
@@ -67,6 +57,7 @@ class ConfigEvents implements SubscriberInterface
      */
     public function onConfig(Event $event)
     {
+        $this->debug = $event->getSubject();
         $configs = $event->getValues();
         $cfgDebug = $this->onConfigInit($configs);
         $valActions = \array_intersect_key(array(

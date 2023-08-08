@@ -25,12 +25,12 @@ class WampTest extends DebugTestFramework
     {
         self::$publisher = new \bdk\Test\Debug\Mock\WampPublisher();
         self::$wamp = new Wamp($this->debug, self::$publisher);
-        $this->assertInstanceOf('\\bdk\\Debug\\Route\\Wamp', self::$wamp);
+        self::assertInstanceOf('\\bdk\\Debug\\Route\\Wamp', self::$wamp);
     }
 
     public function testAppendsHeaders()
     {
-        $this->assertFalse($this->debug->getRoute('wamp')->appendsHeaders());
+        self::assertFalse($this->debug->getRoute('wamp')->appendsHeaders());
     }
 
     public function testErrorWithTrace()
@@ -149,30 +149,29 @@ class WampTest extends DebugTestFramework
 
     public function testGetSubscriptions()
     {
-        $this->assertTrue(self::$wamp->isConnected());
+        self::assertTrue(self::$wamp->isConnected());
         $subs = self::$wamp->getSubscriptions();
-        $this->assertArrayHasKey(Debug::EVENT_BOOTSTRAP, $subs);
-        $this->assertArrayHasKey(Debug::EVENT_CONFIG, $subs);
-        $this->assertArrayHasKey(Debug::EVENT_LOG, $subs);
-        $this->assertArrayHasKey(Debug::EVENT_PLUGIN_INIT, $subs);
-        $this->assertArrayHasKey(ErrorHandler::EVENT_ERROR, $subs);
-        $this->assertArrayHasKey(EventManager::EVENT_PHP_SHUTDOWN, $subs);
+        self::assertArrayHasKey(Debug::EVENT_BOOTSTRAP, $subs);
+        self::assertArrayHasKey(Debug::EVENT_CONFIG, $subs);
+        self::assertArrayHasKey(Debug::EVENT_LOG, $subs);
+        self::assertArrayHasKey(ErrorHandler::EVENT_ERROR, $subs);
+        self::assertArrayHasKey(EventManager::EVENT_PHP_SHUTDOWN, $subs);
 
         self::$publisher->connected = false;
-        $this->assertFalse(self::$wamp->isConnected());
+        self::assertFalse(self::$wamp->isConnected());
         $subs = self::$wamp->getSubscriptions();
-        $this->assertSame(array(), $subs);
+        self::assertSame(array(), $subs);
 
         $alert = $this->debug->data->get('alerts/__end__');
-        $this->assertSame('WAMP publisher not connected to WAMP router', $alert['args'][0]);
+        self::assertSame('WAMP publisher not connected to WAMP router', $alert['args'][0]);
     }
 
     public function testInit()
     {
-        self::$wamp->init();
+        self::$wamp->onBootstrap();
         $msg = self::$publisher->messages[0];
-        $this->assertSame('bdk.debug', $msg['topic']);
-        $this->assertSame('meta', $msg['args'][0]);
+        self::assertSame('bdk.debug', $msg['topic']);
+        self::assertSame('meta', $msg['args'][0]);
         $expect = array(
             'processId' => \getmypid(),
             'HTTP_HOST' => null,
@@ -184,8 +183,8 @@ class WampTest extends DebugTestFramework
             'SERVER_ADDR' => null,
             'SERVER_NAME' => null,
         );
-        $this->assertSame($expect, \array_intersect_key($expect, $msg['args'][1][0]));
-        $this->assertSame(array(
+        self::assertSame($expect, \array_intersect_key($expect, $msg['args'][1][0]));
+        self::assertSame(array(
             'format' => 'raw',
             'requestId' => $this->debug->data->get('requestId'),
             'channelNameRoot' => 'general',
@@ -207,13 +206,13 @@ class WampTest extends DebugTestFramework
         $this->debug->getRoute('wamp')->onError($error);
         $msg = $this->debug->getRoute('wamp')->wamp->messages[0];
         // echo \json_encode($msg, JSON_PRETTY_PRINT) . "\n";
-        $this->assertSame('errorNotConsoled', $msg['args'][0]);
-        $this->assertSame(array(
+        self::assertSame('errorNotConsoled', $msg['args'][0]);
+        self::assertSame(array(
             'Warning:',
             'bogus error',
             __FILE__ . ' (line 42)',
         ), $msg['args'][1]);
-        $this->assertSame(array(
+        self::assertSame(array(
             'class' => array('error'),
         ), $msg['args'][2]['attribs']);
     }
@@ -223,7 +222,7 @@ class WampTest extends DebugTestFramework
         $this->debug->getRoute('wamp')->onShutdown();
         $msg = $this->debug->getRoute('wamp')->wamp->messages[0];
         // echo \json_encode($msg, JSON_PRETTY_PRINT) . "\n";
-        $this->assertSame(array(
+        self::assertSame(array(
             'endOutput',
             array(),
             array(
@@ -245,6 +244,6 @@ class WampTest extends DebugTestFramework
         $this->debug->getRoute('wamp')->processLogEntries();
         $messages = $this->debug->getRoute('wamp')->wamp->messages;
         // echo \json_encode($messages, JSON_PRETTY_PRINT) . "\n";
-        $this->assertCount(5, $messages);
+        self::assertCount(5, $messages);
     }
 }

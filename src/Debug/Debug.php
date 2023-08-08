@@ -170,11 +170,17 @@ class Debug extends AbstractDebug
             'methodCount' => array(
                 'class' => 'bdk\Debug\Plugin\Method\Count',
             ),
+            'methodGeneral' => array(
+                'class' => 'bdk\Debug\Plugin\Method\General',
+            ),
             'methodGroup' => array(
                 'class' => 'bdk\Debug\Plugin\Method\Group',
             ),
             'methodProfile' => array(
                 'class' => 'bdk\Debug\Plugin\Method\Profile',
+            ),
+            'methodReqRes' => array(
+                'class' => 'bdk\Debug\Plugin\Method\ReqRes',
             ),
             'methodTable' => array(
                 'class' => 'bdk\Debug\Plugin\Method\Table',
@@ -185,6 +191,9 @@ class Debug extends AbstractDebug
             'methodTrace' => array(
                 'class' => 'bdk\Debug\Plugin\Method\Trace',
             ),
+            'redaction' => array(
+                'class' => 'bdk\Debug\Plugin\Redaction',
+            ),
             'runtime' => array(
                 'class' => 'bdk\Debug\Plugin\Runtime',
             ),
@@ -192,7 +201,7 @@ class Debug extends AbstractDebug
         'redactKeys' => array(      // case-insensitive
             'password',
         ),
-        // 'redactReplace'          // closure (default defined in Plugin/Redaction)
+        // 'redactReplace'          // callable (default defined in Plugin/Redaction)
         'route' => 'auto',          // 'auto', 'chromeLogger', 'firephp', 'html', 'serverLog', 'script', 'steam', 'text', or RouteInterface,
                                     //   if 'auto', will be determined automatically
                                     //   if null, no output (unless output plugin added manually)

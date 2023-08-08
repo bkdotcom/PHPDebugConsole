@@ -6,7 +6,7 @@ use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
-use bdk\Debug\Method\Table;
+use bdk\Debug\Utility\Table;
 use bdk\Test\Debug\DebugTestFramework;
 use ReflectionMethod;
 
@@ -25,11 +25,11 @@ use ReflectionMethod;
  * @covers \bdk\Debug\Dump\Html\Table
  * @covers \bdk\Debug\Dump\Html\Value
  * @covers \bdk\Debug\Dump\Text
- * @covers \bdk\Debug\Method\Table
- * @covers \bdk\Debug\Method\TableRow
  * @covers \bdk\Debug\Plugin\Method\Table
  * @covers \bdk\Debug\Route\Firephp
  * @covers \bdk\Debug\ServiceProvider
+ * @covers \bdk\Debug\Utility\Table
+ * @covers \bdk\Debug\Utility\TableRow
  *
  * @phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
  */

@@ -15,8 +15,8 @@ namespace bdk\Debug\Plugin\Method;
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\LogEntry;
-use bdk\Debug\Method\Table as TableProcessor;
 use bdk\Debug\Plugin\CustomMethodTrait;
+use bdk\Debug\Utility\Table as TableProcessor;
 use bdk\PubSub\SubscriberInterface;
 
 /**

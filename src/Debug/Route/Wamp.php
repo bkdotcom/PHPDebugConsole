@@ -54,7 +54,7 @@ class Wamp implements RouteInterface
      * @var WampCrate
      */
     protected $crate;
-
+    protected $isBootstrapped = false;
     protected $metaPublished = false;
     protected $notConnectedAlert = false;
 
@@ -94,27 +94,12 @@ class Wamp implements RouteInterface
             return array();
         }
         return array(
-            Debug::EVENT_BOOTSTRAP => 'init',
+            Debug::EVENT_BOOTSTRAP => 'onBootstrap',
             Debug::EVENT_CONFIG => 'onConfig',
             Debug::EVENT_LOG => array('onLog', PHP_INT_MAX * -1),
-            Debug::EVENT_PLUGIN_INIT => 'init',
             ErrorHandler::EVENT_ERROR => array('onError', -1),    // assumes errorhandler is using same dispatcher.. as should be
             EventManager::EVENT_PHP_SHUTDOWN => array('onShutdown', PHP_INT_MAX * -1),
         );
-    }
-
-    /**
-     * Debug::EVENT_PLUGIN_INIT && Debug::EVENT_BOOTSTRAP subscriber
-     *
-     * @return void
-     */
-    public function init()
-    {
-        $this->requestId = $this->debug->data->get('requestId');
-        $this->cfg['output'] = $this->debug->getCfg('output', Debug::CONFIG_DEBUG);
-        if ($this->cfg['output']) {
-            $this->publishMeta();
-        }
     }
 
     /**
@@ -125,6 +110,19 @@ class Wamp implements RouteInterface
     public function isConnected()
     {
         return $this->wamp->connected;
+    }
+
+    /**
+     * Debug::EVENT_BOOTSTRAP subscriber
+     *
+     * @return void
+     */
+    public function onBootstrap()
+    {
+        $this->cfg['output'] = $this->debug->getCfg('output', Debug::CONFIG_DEBUG);
+        $this->isBootstrapped = true;
+        $this->requestId = $this->debug->data->get('requestId');
+        $this->publishMeta();
     }
 
     /**
@@ -140,9 +138,7 @@ class Wamp implements RouteInterface
         if (isset($cfg['debug']['output'])) {
             $this->cfg['output'] = $cfg['debug']['output'];
         }
-        if ($this->cfg['output']) {
-            $this->publishMeta();
-        }
+        $this->publishMeta();
     }
 
     /**
@@ -346,9 +342,10 @@ class Wamp implements RouteInterface
      */
     private function publishMeta()
     {
-        if ($this->metaPublished) {
+        if ($this->isBootstrapped !== true || $this->cfg['output'] !== true || $this->metaPublished) {
             return;
         }
+
         $this->metaPublished = true;
         $this->processLogEntry(new LogEntry(
             $this->debug,

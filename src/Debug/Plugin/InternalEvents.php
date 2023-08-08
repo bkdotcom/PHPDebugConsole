@@ -13,7 +13,6 @@
 namespace bdk\Debug\Plugin;
 
 use bdk\Debug;
-use bdk\Debug\LogEntry;
 use bdk\Debug\Route\Stream;
 use bdk\ErrorHandler;
 use bdk\ErrorHandler\Error;
@@ -41,7 +40,6 @@ class InternalEvents implements SubscriberInterface
         */
         return array(
             Debug::EVENT_DUMP_CUSTOM => array('onDumpCustom', -1),
-            Debug::EVENT_LOG => array('onLog', PHP_INT_MAX),
             Debug::EVENT_OUTPUT => array(
                 array('onOutput', 1),
                 array('onOutputHeaders', -1),
@@ -128,21 +126,6 @@ class InternalEvents implements SubscriberInterface
             return;
         }
         $error['inConsole'] = false;
-    }
-
-    /**
-     * Debug::EVENT_LOG subscriber
-     *
-     * @param LogEntry $logEntry LogEntry instance
-     *
-     * @return void
-     */
-    public function onLog(LogEntry $logEntry)
-    {
-        if ($logEntry->getMeta('redact')) {
-            $debug = $logEntry->getSubject();
-            $logEntry['args'] = $debug->redact($logEntry['args']);
-        }
     }
 
     /**

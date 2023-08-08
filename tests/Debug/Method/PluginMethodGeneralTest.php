@@ -51,7 +51,7 @@ class PluginMethodGeneralTest extends DebugTestFramework
         $this->debug->setCfg('collect', false);
         $this->debug->errorHandler->handleError(E_NOTICE, 'we tried to warn you', __FILE__, __LINE__);
 
-        $this->assertSame(array(
+        self::assertSame(array(
             'counts' => array(
                 'deprecated' => array('inConsole' => 0, 'notInConsole' => 0, 'suppressed' => 0, ),
                 'error'      => array('inConsole' => 0, 'notInConsole' => 0, 'suppressed' => 0, ),
@@ -70,10 +70,10 @@ class PluginMethodGeneralTest extends DebugTestFramework
 
     public function testGetDump()
     {
-        $this->assertTrue($this->debug->getDump('html', true));
-        $this->assertFalse($this->debug->getDump('bogus', true));
+        self::assertTrue($this->debug->getDump('html', true));
+        self::assertFalse($this->debug->getDump('bogus', true));
 
-        $this->assertInstanceOf('bdk\\Debug\\Dump\\Text', (new Debug(array(
+        self::assertInstanceOf('bdk\\Debug\\Dump\\Text', (new Debug(array(
             'logResponse' => false,
         )))->getDump('text'));
 
@@ -84,7 +84,7 @@ class PluginMethodGeneralTest extends DebugTestFramework
         $logEntry = $this->debug->data->get('log/__end__');
         $logEntry = $this->helper->logEntryToArray($logEntry);
         // $this->helper->stderr($logEntry);
-        $this->assertSame(array(
+        self::assertSame(array(
             'method' => 'warn',
             'args' => array(
                 'User Notice:',
@@ -104,16 +104,16 @@ class PluginMethodGeneralTest extends DebugTestFramework
                 'sanitize' => true,
                 'trace' => null,
                 'uncollapse' => true,
-            )
+            ),
         ), $logEntry);
     }
 
     /*
     public function testGetSubscriptions()
     {
-        $this->assertSame(array(
+        self::assertSame(array(
             Debug::EVENT_CUSTOM_METHOD,
-        ), \array_keys($this->debug->pluginMethodGeneral->getSubscriptions()));
+        ), \array_keys($this->debug->getPlugin('methodGeneral')->getSubscriptions()));
     }
     */
 
@@ -122,11 +122,11 @@ class PluginMethodGeneralTest extends DebugTestFramework
      */
     public function testHasLog()
     {
-        $this->assertFalse($this->debug->hasLog());
+        self::assertFalse($this->debug->hasLog());
         $this->debug->log('something');
-        $this->assertTrue($this->debug->hasLog());
+        self::assertTrue($this->debug->hasLog());
         $this->debug->clear();
-        $this->assertFalse($this->debug->hasLog());
+        self::assertFalse($this->debug->hasLog());
     }
 
     public function testObEnd()
@@ -136,17 +136,17 @@ class PluginMethodGeneralTest extends DebugTestFramework
         $needRestart = $isObCache;
         if (!$isObCache) {
             $this->debug->obStart();
-            $this->assertTrue($this->debug->data->get('isObCache'));
+            self::assertTrue($this->debug->data->get('isObCache'));
         }
         $level = \ob_get_level();
 
         $this->debug->obEnd();
-        $this->assertFalse($this->debug->data->get('isObCache'));
-        $this->assertSame($level - 1, \ob_get_level());
+        self::assertFalse($this->debug->data->get('isObCache'));
+        self::assertSame($level - 1, \ob_get_level());
 
         $this->debug->obEnd();
-        $this->assertFalse($this->debug->data->get('isObCache'));
-        $this->assertSame($level - 1, \ob_get_level());
+        self::assertFalse($this->debug->data->get('isObCache'));
+        self::assertSame($level - 1, \ob_get_level());
 
         if ($needRestart) {
             $this->debug->obStart();
@@ -160,23 +160,23 @@ class PluginMethodGeneralTest extends DebugTestFramework
         $needReclose = !$isObCache;
         if ($isObCache) {
             $this->debug->obEnd();
-            $this->assertFalse($this->debug->data->get('isObCache'));
+            self::assertFalse($this->debug->data->get('isObCache'));
         }
         $level = \ob_get_level();
 
         $this->debug->setCfg('collect', false);
         $this->debug->obStart();
-        $this->assertFalse($this->debug->data->get('isObCache'));
-        $this->assertSame($level, \ob_get_level());
+        self::assertFalse($this->debug->data->get('isObCache'));
+        self::assertSame($level, \ob_get_level());
 
         $this->debug->setCfg('collect', true);
         $this->debug->obStart();
-        $this->assertTrue($this->debug->data->get('isObCache'));
-        $this->assertSame($level + 1, \ob_get_level());
+        self::assertTrue($this->debug->data->get('isObCache'));
+        self::assertSame($level + 1, \ob_get_level());
 
         $this->debug->obStart();
-        $this->assertTrue($this->debug->data->get('isObCache'));
-        $this->assertSame($level + 1, \ob_get_level());
+        self::assertTrue($this->debug->data->get('isObCache'));
+        self::assertSame($level + 1, \ob_get_level());
 
         if ($needReclose) {
             $this->debug->obEnd();
@@ -185,9 +185,9 @@ class PluginMethodGeneralTest extends DebugTestFramework
 
     public function testPrettify()
     {
-        $data = array('foo','bar');
+        $data = array('foo', 'bar');
         $json = $this->debug->prettify(\json_encode($data), 'application/json');
-        $this->assertEquals(
+        self::assertEquals(
             new Abstraction(Abstracter::TYPE_STRING, array(
                 'strlen' => null,
                 'typeMore' => 'json',
@@ -213,7 +213,7 @@ class PluginMethodGeneralTest extends DebugTestFramework
     public function testSetErrorCaller()
     {
         $this->setErrorCallerHelper();
-        $this->assertSame(array(
+        self::assertSame(array(
             'file' => __FILE__,
             'line' => __line__ - 3,
             'groupDepth' => 0,
@@ -224,7 +224,7 @@ class PluginMethodGeneralTest extends DebugTestFramework
             'line' => 128,
         );
         $this->debug->setErrorCaller($errorCaller);
-        $this->assertSame(\array_merge(
+        self::assertSame(\array_merge(
             $errorCaller,
             array('groupDepth' => 0)
         ), $this->debug->errorHandler->get('errorCaller'));

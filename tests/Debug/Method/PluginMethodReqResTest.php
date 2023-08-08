@@ -20,10 +20,10 @@ class PluginMethodReqResTest extends DebugTestFramework
 
     public function testGetSubscriptions()
     {
-        $this->assertSame(array(
+        self::assertSame(array(
             Debug::EVENT_CONFIG,
             Debug::EVENT_CUSTOM_METHOD,
-        ), \array_keys($this->debug->pluginMethodReqRes->getSubscriptions()));
+        ), \array_keys($this->debug->getPlugin('methodReqRes')->getSubscriptions()));
     }
 
     public function testGetInterface()
@@ -33,7 +33,7 @@ class PluginMethodReqResTest extends DebugTestFramework
                 // 'REQUEST_METHOD' => 'GET',
             )),
         ));
-        $this->assertSame('http', $this->debug->getInterface());
+        self::assertSame('http', $this->debug->getInterface());
 
         $this->debug->setCfg('serviceProvider', array(
             'serverRequest' => new ServerRequest('GET', null, array(
@@ -41,7 +41,7 @@ class PluginMethodReqResTest extends DebugTestFramework
                 // 'REQUEST_METHOD' => 'GET',
             )),
         ));
-        $this->assertSame('http ajax', $this->debug->getInterface());
+        self::assertSame('http ajax', $this->debug->getInterface());
 
         $this->debug->setCfg('serviceProvider', array(
             'serverRequest' => new ServerRequest('GET', null, array(
@@ -49,38 +49,38 @@ class PluginMethodReqResTest extends DebugTestFramework
                 'argv' => array('phpunit'),
             )),
         ));
-        $this->assertSame('cli', $this->debug->getInterface());
+        self::assertSame('cli', $this->debug->getInterface());
 
         $this->debug->setCfg('serviceProvider', array(
             'serverRequest' => new ServerRequest('GET', null, array(
                 'argv' => array('phpunit'),
             )),
         ));
-        $this->assertSame('cli cron', $this->debug->getInterface());
+        self::assertSame('cli cron', $this->debug->getInterface());
     }
 
     public function testGetResponseCode()
     {
-        $this->assertSame(\http_response_code(), $this->debug->getResponseCode());
+        self::assertSame(\http_response_code(), $this->debug->getResponseCode());
         $this->debug->setCfg('serviceProvider', array(
             'response' => new Response(200),
         ));
-        $this->assertSame(200, $this->debug->getResponseCode());
+        self::assertSame(200, $this->debug->getResponseCode());
     }
 
     public function testGetResponseHeader()
     {
-        $this->assertSame('', $this->debug->getResponseHeader());
+        self::assertSame('', $this->debug->getResponseHeader());
         $response = new Response(200);
         $response = $response->withHeader('Content-Type', 'text/html');
         $response = $response->withHeader('Content-Length', 1234);
         $this->debug->setCfg('serviceProvider', array(
             'response' => $response,
         ));
-        $this->assertSame('text/html', $this->debug->getResponseHeader());
-        $this->assertSame('1234', $this->debug->getResponseHeader('Content-Length'));
-        $this->assertSame(array('text/html'), $this->debug->getResponseHeader('content-type', false));
-        $this->assertSame(array('1234'), $this->debug->getResponseHeader('Content-Length', false));
+        self::assertSame('text/html', $this->debug->getResponseHeader());
+        self::assertSame('1234', $this->debug->getResponseHeader('Content-Length'));
+        self::assertSame(array('text/html'), $this->debug->getResponseHeader('content-type', false));
+        self::assertSame(array('1234'), $this->debug->getResponseHeader('Content-Length', false));
     }
 
     public function testGetResponseHeaders()
@@ -88,10 +88,7 @@ class PluginMethodReqResTest extends DebugTestFramework
         $GLOBALS['collectedHeaders'] = array(
             array('X-Emitted-Header: I was emitted.. there is no HttpMessage Response', true),
         );
-        $this->debug->setCfg('serviceProvider', array(
-            'response' => null,
-        ));
-        $this->assertSame(array(
+        self::assertSame(array(
             'X-Emitted-Header' => array(
                 'I was emitted.. there is no HttpMessage Response',
             ),
@@ -103,29 +100,29 @@ class PluginMethodReqResTest extends DebugTestFramework
         $this->debug->setCfg('serviceProvider', array(
             'response' => $response,
         ));
-        $this->assertSame(array(
+        self::assertSame(array(
             'Content-Type' => array('text/html'),
             'Content-Length' => array('1234'),
         ), $this->debug->getResponseHeaders());
-        $this->assertSame('HTTP/1.0 200 OK' . "\n"
+        self::assertSame('HTTP/1.0 200 OK' . "\n"
             . 'Content-Type: text/html' . "\n"
             . 'Content-Length: 1234', $this->debug->getResponseHeaders(true));
     }
 
     public function testGetServerParam()
     {
-        $this->assertSame(null, $this->debug->getServerParam('REMOTE_ADDR'));
-        $this->assertSame('testAdmin@test.com', $this->debug->getServerParam('SERVER_ADMIN'));
+        self::assertSame(null, $this->debug->getServerParam('REMOTE_ADDR'));
+        self::assertSame('testAdmin@test.com', $this->debug->getServerParam('SERVER_ADMIN'));
     }
 
     public function testIsCli()
     {
-        $this->assertFalse($this->debug->isCli());
+        self::assertFalse($this->debug->isCli());
     }
 
     public function testRequestId()
     {
-        $this->assertStringMatchesFormat('%x', $this->debug->requestId());
+        self::assertStringMatchesFormat('%x', $this->debug->requestId());
     }
 
     public function testWriteToPsr7Response()
@@ -136,18 +133,18 @@ class PluginMethodReqResTest extends DebugTestFramework
         $response = $response->withBody(new Stream($html));
         $response = $this->debug->writeToResponse($response);
         $responseBodyContents = $response->getBody()->getContents();
-        $this->assertSame(array(), $response->getHeaders());
-        $this->assertStringMatchesFormat($html . '<div class="debug" %a</div>', $responseBodyContents);
+        self::assertSame(array(), $response->getHeaders());
+        self::assertStringMatchesFormat($html . '<div class="debug" %a</div>', $responseBodyContents);
 
         $this->debug->setCfg('route', 'chromeLogger');
         $response = new Response();
         $response = $response->withBody(new Stream($html));
         $response = $this->debug->writeToResponse($response);
         $responseBodyContents = $response->getBody()->getContents();
-        $this->assertSame(array(
+        self::assertSame(array(
             'X-ChromeLogger-Data',
         ), \array_keys($response->getHeaders()));
-        $this->assertSame($html, $responseBodyContents);
+        self::assertSame($html, $responseBodyContents);
     }
 
     public function testWriteToHttpFoundationResponse()
@@ -156,22 +153,22 @@ class PluginMethodReqResTest extends DebugTestFramework
         $html = '<!DOCTYPE html><html><head><title>WebCo WebPage</title></head><body>Clever Response</body></html>';
         $response = new \Symfony\Component\HttpFoundation\Response($html);
         $response = $this->debug->writeToResponse($response);
-        $this->assertSame(array(
+        self::assertSame(array(
             'cache-control',
             'date',
         ), \array_keys($response->headers->all()));
         $htmlExpectFormat = \str_replace('</body>', '<div class="debug" %a</div>' . "\n" . '</body>', $html);
-        $this->assertStringMatchesFormat($htmlExpectFormat, $response->getContent());
+        self::assertStringMatchesFormat($htmlExpectFormat, $response->getContent());
 
         $this->debug->setCfg('route', 'chromeLogger');
         $response = new \Symfony\Component\HttpFoundation\Response($html);
         $response = $this->debug->writeToResponse($response);
-        $this->assertSame(array(
+        self::assertSame(array(
             'cache-control',
             'date',
             'x-chromelogger-data',
         ), \array_keys($response->headers->all()));
-        $this->assertSame($html, $response->getContent());
+        self::assertSame($html, $response->getContent());
     }
 
     public function testWriteToResponseInvalid()

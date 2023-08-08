@@ -10,10 +10,10 @@ use bdk\Test\Debug\DebugTestFramework;
 /**
  * PHPUnit tests for Debug::profile() method
  *
- * @covers \bdk\Debug\Plugin\Method\Profile
- * @covers \bdk\Debug\Method\Profile
- * @covers \bdk\Debug\ServiceProvider
  * @covers \bdk\Debug\Dump\Html\Table
+ * @covers \bdk\Debug\Plugin\Method\Profile
+ * @covers \bdk\Debug\ServiceProvider
+ * @covers \bdk\Debug\Utility\Profile
  */
 class ProfileTest extends DebugTestFramework
 {

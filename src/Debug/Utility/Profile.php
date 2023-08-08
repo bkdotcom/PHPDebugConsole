@@ -10,7 +10,7 @@
  * @version   v3.0
  */
 
-namespace bdk\Debug\Method;
+namespace bdk\Debug\Utility;
 
 /**
  * Utility for collecting profile data via tick_function

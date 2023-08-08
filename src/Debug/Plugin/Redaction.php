@@ -6,8 +6,8 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
- * @version   v3.0
+ * @copyright 2014-2023 Brad Kent
+ * @version   v3.1
  */
 
 namespace bdk\Debug\Plugin;
@@ -16,6 +16,7 @@ use bdk\Debug;
 use bdk\Debug\AbstractComponent;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\LogEntry;
 use bdk\Debug\Plugin\CustomMethodTrait;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
@@ -79,6 +80,8 @@ class Redaction extends AbstractComponent implements SubscriberInterface
         return array(
             Debug::EVENT_CONFIG => 'onConfig',
             Debug::EVENT_CUSTOM_METHOD => 'onCustomMethod',
+            Debug::EVENT_LOG => array('onLog', PHP_INT_MAX),
+            Debug::EVENT_PLUGIN_INIT => 'onPluginInit',
         );
     }
 
@@ -107,6 +110,36 @@ class Redaction extends AbstractComponent implements SubscriberInterface
             $cfg[$key] = $callable($cfg[$key], $event);
         }
         $event['debug'] = \array_merge($event['debug'], $cfg);
+    }
+
+    /**
+     * Debug::EVENT_LOG subscriber
+     *
+     * @param LogEntry $logEntry LogEntry instance
+     *
+     * @return void
+     */
+    public function onLog(LogEntry $logEntry)
+    {
+        if ($logEntry->getMeta('redact')) {
+            $logEntry['args'] = $this->redact($logEntry['args']);
+        }
+    }
+
+    /**
+     * Debug::EVENT_PLUGIN_INIT subscriber
+     *
+     * @param Event $event Debug::EVENT_PLUGIN_INIT Event instance
+     *
+     * @return void
+     */
+    public function onPluginInit(Event $event)
+    {
+        $debug = $event->getSubject();
+        $event = new Event($debug, array(
+            'debug' => $debug->getCfg(null, Debug::CONFIG_DEBUG),
+        ));
+        $this->onConfig($event);
     }
 
     /**

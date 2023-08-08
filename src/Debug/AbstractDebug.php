@@ -300,23 +300,21 @@ class AbstractDebug
         $this->container->setCfg('onInvoke', array($this->config, 'onContainerInvoke'));
         $this->serviceContainer->setCfg('onInvoke', array($this->config, 'onContainerInvoke'));
         $this->eventManager->addSubscriberInterface($this->container['pluginManager']);
-        $this->addPlugin($this->serviceContainer['pluginMethodGeneral']);
-        $this->addPlugin($this->serviceContainer['pluginMethodReqRes']);
-        $this->addPlugin($this->container['pluginChannel']);
-        $this->addPlugin($this->container['configEvents']);
-        $this->addPlugin($this->serviceContainer['pluginRedaction']);
-        $this->addPlugin(new \bdk\Debug\Plugin\Route());
-        $this->eventManager->subscribe(Debug::EVENT_CONFIG, array($this, 'onConfig'));
 
-        $this->serviceContainer['errorHandler'];
-        $this->config->set($cfg);
+        $this->addPlugin($this->container['pluginChannel']);
+        $this->addPlugin($this->container['pluginConfigEvents']);
+        $this->addPlugin(new \bdk\Debug\Plugin\Route(), 'route');
 
         if (!$this->parentInstance) {
             // we're the root instance
+            $this->serviceContainer['errorHandler'];
+            $this->addPlugins($this->getCfg('plugins', Debug::CONFIG_DEBUG));
             $this->data->set('requestId', $this->requestId());
             $this->data->set('entryCountInitial', $this->data->get('log/__count__'));
-            $this->addPlugins($this->getCfg('plugins', Debug::CONFIG_DEBUG));
         }
+
+        $this->eventManager->subscribe(Debug::EVENT_CONFIG, array($this, 'onConfig'));
+        $this->config->set($cfg);
         $this->eventManager->publish(Debug::EVENT_BOOTSTRAP, $this);
     }
 

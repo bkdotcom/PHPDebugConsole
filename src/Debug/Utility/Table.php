@@ -10,11 +10,11 @@
  * @version   v3.1
  */
 
-namespace bdk\Debug\Method;
+namespace bdk\Debug\Utility;
 
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
-use bdk\Debug\Method\TableRow;
+use bdk\Debug\Utility\TableRow;
 
 /**
  * Tablefy data.

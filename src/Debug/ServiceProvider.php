@@ -45,9 +45,6 @@ class ServiceProvider implements ServiceProviderInterface
             'html',
             'phpDoc',
             'pluginHighlight',
-            'pluginMethodGeneral',
-            'pluginMethodReqRes',
-            'pluginRedaction',
             'response',
             'serverRequest',
             'stringUtil',
@@ -73,10 +70,6 @@ class ServiceProvider implements ServiceProviderInterface
         $container['config'] = static function (Container $container) {
             $debug = $container['debug'];
             return new \bdk\Debug\Config($debug);
-        };
-        $container['configEvents'] = static function (Container $container) {
-            $debug = $container['debug'];
-            return new \bdk\Debug\ConfigEvents($debug);
         };
         $container['data'] = static function (Container $container) {
             $debug = $container['debug'];
@@ -128,20 +121,15 @@ class ServiceProvider implements ServiceProviderInterface
         $container['pluginChannel'] = static function () {
             return new \bdk\Debug\Plugin\Channel();
         };
+        $container['pluginConfigEvents'] = static function (Container $container) {
+            $debug = $container['debug'];
+            return new \bdk\Debug\Plugin\ConfigEvents($debug);
+        };
         $container['pluginHighlight'] = static function () {
             return new \bdk\Debug\Plugin\Highlight();
         };
         $container['pluginManager'] = static function () {
             return new \bdk\Debug\Plugin\Manager();
-        };
-        $container['pluginMethodGeneral'] = static function () {
-            return new \bdk\Debug\Plugin\Method\General();
-        };
-        $container['pluginMethodReqRes'] = static function () {
-            return new \bdk\Debug\Plugin\Method\ReqRes();
-        };
-        $container['pluginRedaction'] = static function () {
-            return new \bdk\Debug\Plugin\Redaction();
         };
         $container['response'] = null;
         $container['routeWamp'] = static function (Container $container) {

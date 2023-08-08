@@ -27,6 +27,7 @@ use bdk\PubSub\SubscriberInterface;
 class LogReqRes implements SubscriberInterface
 {
     protected $cfg = array(
+        'channelName' => 'Request / Response',
         'channelOpts' => array(
             'channelIcon' => 'fa fa-exchange',
             'channelSort' => 10,
@@ -42,8 +43,8 @@ class LogReqRes implements SubscriberInterface
     public function getSubscriptions()
     {
         return array(
-            Debug::EVENT_OUTPUT => array('logResponse', PHP_INT_MAX),
             Debug::EVENT_BOOTSTRAP => 'onBootstrap',
+            Debug::EVENT_OUTPUT => array('logResponse', PHP_INT_MAX),
         );
     }
 
@@ -57,6 +58,7 @@ class LogReqRes implements SubscriberInterface
     public function onBootstrap(Event $event)
     {
         $this->debug = $event->getSubject();
+        $this->setChannel();
         $collectWas = $this->debug->setCfg('collect', true);
         $this->logRequest();
         $this->debug->setCfg('collect', $collectWas);
@@ -72,7 +74,6 @@ class LogReqRes implements SubscriberInterface
         if ($this->testLogRequest() === false) {
             return;
         }
-        $this->setChannel();
         $this->debug->log(
             'Request',
             $this->debug->meta(array(
@@ -106,7 +107,6 @@ class LogReqRes implements SubscriberInterface
         if ($this->testLogResponse() === false) {
             return;
         }
-        $this->setChannel();
         $this->debug->log(
             'Response',
             $this->debug->meta(array(
@@ -368,7 +368,7 @@ class LogReqRes implements SubscriberInterface
         if ($this->debug->parentInstance) {
             return;
         }
-        $this->debug = $this->debug->getChannel('Request / Response', $this->cfg['channelOpts']);
+        $this->debug = $this->debug->getChannel($this->cfg['channelName'], $this->cfg['channelOpts']);
     }
 
     /**

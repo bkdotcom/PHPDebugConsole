@@ -15,8 +15,8 @@ namespace bdk\Debug\Plugin;
 use bdk\Debug;
 use bdk\Debug\AssetProviderInterface;
 use bdk\Debug\ConfigurableInterface;
-use bdk\Debug\PluginInterface;
 use bdk\Debug\Plugin\CustomMethodTrait;
+use bdk\Debug\PluginInterface;
 use bdk\Debug\Route\RouteInterface;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
@@ -44,6 +44,8 @@ class Manager implements SubscriberInterface
     protected $registeredPlugins;
 
     protected $namedPlugins = array();
+
+    private $isBootstrapped = false;
 
     /**
      * Constructor
@@ -148,6 +150,17 @@ class Manager implements SubscriberInterface
     }
 
     /**
+     * {@inheritDoc}
+     */
+    public function getSubscriptions()
+    {
+        return array(
+            Debug::EVENT_BOOTSTRAP => 'onBootstrap',
+            Debug::EVENT_CUSTOM_METHOD => 'onCustomMethod',
+        );
+    }
+
+    /**
      * Test if we already have plugin
      *
      * @param SubscriberInterface $plugin Plugin to check
@@ -161,6 +174,16 @@ class Manager implements SubscriberInterface
         }
         $this->assertPlugin($plugin);
         return $this->registeredPlugins->contains($plugin);
+    }
+
+    /**
+     * Debug::EVENT_BOOTSTRAP subscriber
+     *
+     * @return void
+     */
+    public function onBootstrap()
+    {
+        $this->isBootstrapped = true;
     }
 
     /**
@@ -228,6 +251,18 @@ class Manager implements SubscriberInterface
                 array($plugin, $subscriptions[Debug::EVENT_PLUGIN_INIT]),
                 new Event($this->debug),
                 Debug::EVENT_PLUGIN_INIT,
+                $this->debug->eventManager
+            );
+        }
+        if (isset($subscriptions[Debug::EVENT_BOOTSTRAP]) && $this->isBootstrapped) {
+            /*
+                plugin subscribes to Debug::EVENT_BOOTSTRAP
+                and we've already bootstrapped
+            */
+            \call_user_func(
+                array($plugin, $subscriptions[Debug::EVENT_BOOTSTRAP]),
+                new Event($this->debug),
+                Debug::EVENT_BOOTSTRAP,
                 $this->debug->eventManager
             );
         }

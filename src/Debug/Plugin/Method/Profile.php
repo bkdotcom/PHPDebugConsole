@@ -16,8 +16,8 @@ use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
-use bdk\Debug\Method\Profile as ProfileInstance;
 use bdk\Debug\Plugin\CustomMethodTrait;
+use bdk\Debug\Utility\Profile as ProfileInstance;
 use bdk\PubSub\SubscriberInterface;
 
 /**

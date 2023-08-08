@@ -34,7 +34,9 @@ function headers_list()
         $headersByName[$name][] = $header;
     }
     $values = \array_values($headersByName);
-    return \call_user_func_array('array_merge', $values);
+    return $values
+        ? \call_user_func_array('array_merge', $values)
+        : array();
 }
 
 function headers_sent(&$file = null, &$line = null)

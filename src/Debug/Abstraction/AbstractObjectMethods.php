@@ -127,9 +127,9 @@ class AbstractObjectMethods extends AbstractObjectInheritable
      */
     private function addMethodsFull(Abstraction $abs)
     {
-        $briefBak = $this->abstracter->debug->setCfg('brief', true);
+        $briefBak = $this->abstracter->debug->setCfg('brief', true, false);
         $this->addViaReflection($abs);
-        $this->abstracter->debug->setCfg('brief', $briefBak);
+        $this->abstracter->debug->setCfg('brief', $briefBak, false);
         $this->addViaPhpDoc($abs);
         $this->addImplements($abs);
         if ($abs['cfgFlags'] & AbstractObject::PHPDOC_COLLECT) {

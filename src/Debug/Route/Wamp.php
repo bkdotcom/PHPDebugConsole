@@ -134,9 +134,9 @@ class Wamp implements RouteInterface
      */
     public function onConfig(Event $event)
     {
-        $cfg = $event->getValues();
-        if (isset($cfg['debug']['output'])) {
-            $this->cfg['output'] = $cfg['debug']['output'];
+        $cfg = $event['debug'];
+        if (isset($cfg['output'])) {
+            $this->cfg['output'] = $cfg['output'];
         }
         $this->publishMeta();
     }

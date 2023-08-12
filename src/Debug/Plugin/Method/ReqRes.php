@@ -224,7 +224,10 @@ class ReqRes implements SubscriberInterface
     public function onConfig(Event $event)
     {
         $configs = $event->getValues();
-        if (isset($configs['debug']) && \array_key_exists('serviceProvider', $configs['debug'])) {
+        if (empty($configs['debug'])) {
+            return;
+        }
+        if (\array_key_exists('serviceProvider', $configs['debug'])) {
             $this->serverParams = array();
         }
     }

@@ -57,9 +57,11 @@ class ConfigEvents implements SubscriberInterface
      */
     public function onConfig(Event $event)
     {
+        if (!$event['debug'] || $event['isTarget'] === false) {
+            return;
+        }
         $this->debug = $event->getSubject();
-        $configs = $event->getValues();
-        $cfgDebug = $this->onConfigInit($configs);
+        $cfgDebug = $this->onConfigInit($event->getValues());
         $valActions = \array_intersect_key(array(
             'channels' => array($this, 'onCfgChannels'),
             'emailFrom' => array($this, 'onCfgEmail'),
@@ -80,7 +82,7 @@ class ConfigEvents implements SubscriberInterface
             /** @psalm-suppress TooManyArguments */
             $cfgDebug[$key] = $callable($cfgDebug[$key], $key, $event);
         }
-        $event['debug'] = \array_merge($event['debug'] ?: array(), $cfgDebug);
+        $event['debug'] = \array_merge($event['debug'], $cfgDebug);
     }
 
     /**

@@ -79,10 +79,9 @@ class Stream extends AbstractRoute
      */
     public function onConfig(Event $event)
     {
-        $cfg = $event->getValues();
-        $isCli = $this->debug->isCli();
-        if ($isCli && isset($cfg['debug']['output'])) {
-            $this->cfg['output'] = $cfg['debug']['output'];
+        $cfg = $event['debug'] ?: array();
+        if (isset($cfg['output']) && $this->debug->isCli()) {
+            $this->cfg['output'] = $cfg['output'];
         }
         if ($this->cfg['output']) {
             $this->openStream($this->cfg['stream']);

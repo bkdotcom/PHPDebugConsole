@@ -160,10 +160,10 @@ class ErrorSummary
             'maxDepth' => 0,
             // Don't inspect objects when dumping trace arguments...  potentially huge objects
             'objectsExclude' => array('*'),
-        ));
+        ), false);
         $logEntry = $this->buildFatalBacktraceLogEntry($backtrace);
         $this->debug->rootInstance->getPlugin('methodTable')->doTable($logEntry);
-        $this->debug->setCfg($cfgWas);
+        $this->debug->setCfg($cfgWas, false);
         return '<li class="m_trace" data-detect-files="true">' . $this->routeHtml->dumper->table->build(
             $logEntry['args'][0],
             $logEntry['meta']

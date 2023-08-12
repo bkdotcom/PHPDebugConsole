@@ -136,14 +136,14 @@ class Helper
         $crateRawWas = $this->dumper->crateRaw;
         $this->dumper->crateRaw = true;
         // set maxDepth for args
-        $maxDepthWas = $this->debug->getCfg('maxDepth');
-        if ($maxDepthWas > 0) {
-            $this->debug->setCfg('maxDepth', $maxDepthWas + 1);
+        $maxDepthBak = $this->debug->getCfg('maxDepth');
+        if ($maxDepthBak > 0) {
+            $this->debug->setCfg('maxDepth', $maxDepthBak + 1, false);
         }
         $args = \is_array($rowInfo['args']) && \count($rowInfo['args']) > 0
             ? '<hr />Arguments = ' . $this->dumper->valDumper->dump($rowInfo['args'])
             : '';
-        $this->debug->setCfg('maxDepth', $maxDepthWas);
+        $this->debug->setCfg('maxDepth', $maxDepthBak, false);
         $this->dumper->crateRaw = $crateRawWas;
         return \str_replace('{{arguments}}', $args, $html);
     }

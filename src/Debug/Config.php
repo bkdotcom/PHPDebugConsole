@@ -166,38 +166,41 @@ class Config
     /**
      * Set one or more config values
      *
-     *    set('key', 'value')
-     *    set('level1.level2', 'value')
-     *    set(array('k1'=>'v1', 'k2'=>'v2'))
+     *    set('key', 'value', $publish)
+     *    set('level1.level2', 'value', $publish)
+     *    set(array('k1'=>'v1', 'k2'=>'v2'), $publish)
      *
      * Triggers a `Debug::EVENT_CONFIG` event that contains all changed values
      *
-     * @param array|string $path  (string) path or array of values
-     * @param mixed        $value if setting via path, this is the value
+     * @param array|string $path    (string) path or array of values
+     * @param mixed        $value   If setting via path, this is the value
+     * @param bool         $publish Whether to publish Debug::EVENT_CONFIG
      *
      * @return mixed previous value(s)
      */
-    public function set($path, $value = null)
+    public function set($path, $value = null, $publish = true)
     {
         if (\is_array($path)) {
             $values = $this->normalizeArray($path);
-            return $this->doSet($values);
+            $publish = \is_bool($value) ? $value : $publish;
+            return $this->doSet($values, $publish);
         }
         $path = $this->normalizePath($path);
         $values = array();
         $this->debug->arrayUtil->pathSet($values, $path, $value);
-        $return = $this->doSet($values);
+        $return = $this->doSet($values, $publish);
         return $this->debug->arrayUtil->pathGet($return, $path);
     }
 
     /**
      * Set cfg values for Debug and child classes
      *
-     * @param array $configs config values grouped by class
+     * @param array $configs Config values grouped by class
+     * @param bool  $publish Whether to publish Debug::EVENT_CONFIG
      *
      * @return array previous values
      */
-    private function doSet(array $configs)
+    private function doSet(array $configs, $publish = true)
     {
         if (!$configs) {
             return array();
@@ -206,15 +209,14 @@ class Config
         /*
             Publish config event first... it may add/update debugProp values
         */
-        $configs = $this->debug->eventManager->publish(
-            Debug::EVENT_CONFIG,
-            $this->debug,
-            $configs
-        )->getValues();
+        if ($publish) {
+            $configs = $this->publishConfigEvent($configs);
+        }
         /*
             Now set the values
         */
-        unset($configs['debug']); // debug uses a Debug::EVENT_CONFIG subscriber to set the value
+        // debug uses a Debug::EVENT_CONFIG subscriber to get updated config values
+        unset($configs['debug']);
         foreach ($configs as $debugProp => $cfg) {
             $this->setPropCfg($debugProp, $cfg);
         }
@@ -401,6 +403,37 @@ class Config
             $pathNew[] = \end($path);
         }
         return $pathNew;
+    }
+
+    /**
+     * Publish the Debug::EVENT_CONFIG event
+     *
+     * @param array $configs Config values grouped by class
+     *
+     * @return array
+     */
+    private function publishConfigEvent(array $configs)
+    {
+        $configs = $this->debug->eventManager->publish(
+            Debug::EVENT_CONFIG,
+            $this->debug,
+            \array_merge($configs, array(
+                'currentTarget' => $this->debug,
+                'isTarget' => true,
+            ))
+        )->getValues();
+        if ($this->debug->parentInstance) {
+            $configs = $this->debug->rootInstance->eventManager->publish(
+                Debug::EVENT_CONFIG,
+                $this->debug,
+                \array_merge($configs, array(
+                    'currentTarget' => $this->debug->rootInstance,
+                    'isTarget' => false,
+                ))
+            )->getValues();
+        }
+        unset($configs['currentTarget'], $configs['isTarget']);
+        return $configs;
     }
 
     /**

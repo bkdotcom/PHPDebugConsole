@@ -96,7 +96,6 @@ class Redaction extends AbstractComponent implements SubscriberInterface
     {
         $configs = $event->getValues();
         if (empty($configs['debug'])) {
-            // no debug config values have changed
             return;
         }
         $cfg = \array_intersect_key($configs['debug'], $this->cfg);

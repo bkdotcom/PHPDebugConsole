@@ -126,9 +126,6 @@ class Route extends AbstractComponent implements SubscriberInterface
      */
     public function onOutput(Event $event)
     {
-        if ($event['isTarget'] === false) {
-            return;
-        }
         $debug = $event->getSubject();
         $route = $debug->getCfg('route', Debug::CONFIG_DEBUG);
         if (\is_string($route)) {
@@ -148,17 +145,20 @@ class Route extends AbstractComponent implements SubscriberInterface
      */
     private function onCfgRoute($val)
     {
+        $routePrev = null;
         if ($this->isBootstrapped) {
             /*
-                Only need to worry about previous route if we're bootstrapped
-                There can only be one 'route' at a time:
-                If multiple output routes are desired, use debug->addPlugin()
-                unsubscribe current route
+                Only need to worry about previous route if we've bootstrapped
             */
             $routePrev = $this->debug->getCfg('route');
-            if (\is_object($routePrev)) {
-                $this->debug->removePlugin($routePrev);
-            }
+        }
+        if (\is_object($routePrev)) {
+            /*
+                Unsubscribe current route
+                There can only be one 'route' at a time:
+                If multiple output routes are desired, use debug->addPlugin()
+            */
+            $this->debug->removePlugin($routePrev);
         }
         if (\is_string($val) && $val !== 'auto') {
             $val = $this->debug->getRoute($val);

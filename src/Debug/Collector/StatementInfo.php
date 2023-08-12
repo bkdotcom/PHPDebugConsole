@@ -369,7 +369,7 @@ class StatementInfo extends AbstractComponent
         if (\preg_replace('/[\r\n\s]+/', ' ', $this->sql) === $label) {
             return;
         }
-        $stringMaxLenWas = $this->debug->setCfg('stringMaxLen', -1);
+        $stringMaxLenBak = $this->debug->setCfg('stringMaxLen', -1, false);
         $sqlPretty = $this->debug->prettify($this->sql, 'application/sql');
         if ($sqlPretty instanceof Abstraction) {
             $this->prettified = $sqlPretty['prettified'];
@@ -383,7 +383,7 @@ class StatementInfo extends AbstractComponent
                 ),
             ))
         );
-        $this->debug->setCfg('stringMaxLen', $stringMaxLenWas);
+        $this->debug->setCfg('stringMaxLen', $stringMaxLenBak, false);
     }
 
     /**

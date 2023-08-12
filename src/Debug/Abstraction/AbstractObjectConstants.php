@@ -60,13 +60,13 @@ class AbstractObjectConstants extends AbstractObjectInheritable
         /*
             We trace our lineage to learn where constants are inherited from
         */
-        $briefBak = $this->abstracter->debug->setCfg('brief', true);
+        $briefBak = $this->abstracter->debug->setCfg('brief', true, false);
         $this->traverseAncestors($abs['reflector'], function (ReflectionClass $reflector) {
             PHP_VERSION_ID >= 70100
                 ? $this->addConstantsReflection($reflector)
                 : $this->addConstantsLegacy($reflector);
         }, true);
-        $this->abstracter->debug->setCfg('brief', $briefBak);
+        $this->abstracter->debug->setCfg('brief', $briefBak, false);
         $this->abs = null;
         $abs['constants'] = $this->constants;
     }

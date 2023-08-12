@@ -197,10 +197,9 @@ class LogRoute extends CLogRoute
             'trace' => array(),
         ));
         $haveTrace = $logEntry['level'] === CLogger::LEVEL_TRACE || YII_DEBUG && YII_TRACE_LEVEL > 0;
-        if ($haveTrace === false) {
-            return $logEntry;
-        }
-        return $this->parseTrace($logEntry);
+        return $haveTrace
+            ? $this->parseTrace($logEntry)
+            : $logEntry;
     }
 
     /**

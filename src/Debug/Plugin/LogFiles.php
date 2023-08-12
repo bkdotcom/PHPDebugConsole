@@ -220,7 +220,7 @@ class LogFiles extends AbstractComponent implements SubscriberInterface
     {
         $fileTree = new \bdk\Debug\Utility\FileTree();
         $files = $fileTree->filesToTree($files, $this->excludedCounts, $this->cfg['condense']);
-        $maxDepthWas = $this->debug->setCfg('maxDepth', 0);
+        $maxDepthBak = $this->debug->setCfg('maxDepth', 0, false);
         $this->debug->log(
             $this->debug->abstracter->crateWithVals(
                 $files,
@@ -235,6 +235,6 @@ class LogFiles extends AbstractComponent implements SubscriberInterface
                 'detectFiles' => true,
             ))
         );
-        $this->debug->setCfg('maxDepth', $maxDepthWas);
+        $this->debug->setCfg('maxDepth', $maxDepthBak, false);
     }
 }

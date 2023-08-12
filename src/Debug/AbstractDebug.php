@@ -168,7 +168,7 @@ class AbstractDebug
     public function onConfig(Event $event)
     {
         $cfg = $event['debug'];
-        if (!$cfg) {
+        if (!$cfg || !$event['isTarget']) {
             return;
         }
         $valActions = array(
@@ -303,7 +303,6 @@ class AbstractDebug
 
         $this->addPlugin($this->container['pluginChannel']);
         $this->addPlugin($this->container['pluginConfigEvents']);
-        $this->addPlugin(new \bdk\Debug\Plugin\Route(), 'route');
 
         if (!$this->parentInstance) {
             // we're the root instance

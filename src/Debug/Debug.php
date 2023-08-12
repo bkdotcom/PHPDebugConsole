@@ -194,6 +194,9 @@ class Debug extends AbstractDebug
             'redaction' => array(
                 'class' => 'bdk\Debug\Plugin\Redaction',
             ),
+            'route' => array(
+                'class' => 'bdk\Debug\Plugin\Route',
+            ),
             'runtime' => array(
                 'class' => 'bdk\Debug\Plugin\Runtime',
             ),
@@ -332,14 +335,15 @@ class Debug extends AbstractDebug
      * `setCfg('level1.level2', 'value')`
      * `setCfg(array('k1'=>'v1', 'k2'=>'v2'))`
      *
-     * @param string|array $path  path
-     * @param mixed        $value value
+     * @param string|array $path    path
+     * @param mixed        $value   value
+     * @param bool         $publish Whether to publish self::EVENT_CONFIG
      *
      * @return mixed previous value(s)
      */
-    public function setCfg($path, $value = null)
+    public function setCfg($path, $value = null, $publish = true)
     {
-        return $this->config->set($path, $value);
+        return $this->config->set($path, $value, $publish);
     }
 
     /**
@@ -381,12 +385,11 @@ class Debug extends AbstractDebug
      */
     private function publishOutputEvent()
     {
-        $debug = $this;
-        $channels = $debug->getChannels(true);
-        if ($debug !== $debug->rootInstance) {
-            $channels[] = $debug->rootInstance;
+        $channels = $this->getChannels(true);
+        if ($this !== $this->rootInstance) {
+            $channels[] = $this->rootInstance;
         }
-        $channels[] = $debug;
+        $channels[] = $this;
         foreach ($channels as $channel) {
             if ($channel->getCfg('output', self::CONFIG_DEBUG) === false) {
                 continue;
@@ -396,7 +399,7 @@ class Debug extends AbstractDebug
                 $channel,
                 array(
                     'headers' => array(),
-                    'isTarget' => $channel === $debug,
+                    'isTarget' => $channel === $this,
                     'return' => '',
                 )
             );

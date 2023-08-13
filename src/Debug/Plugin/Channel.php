@@ -56,12 +56,13 @@ class Channel implements SubscriberInterface
                 ? $this->debug->rootInstance->getChannel($names, $config)
                 : $this->debug->rootInstance;
         }
-        if (!isset($this->channels[$name])) {
-            $this->channels[$name] = $this->createChannel($name, $names
+        $curChannelName = $this->debug->getCfg('channelName', Debug::CONFIG_DEBUG);
+        if (!isset($this->channels[$curChannelName][$name])) {
+            $this->channels[$curChannelName][$name] = $this->createChannel($name, $names
                 ? array()
                 : $config);
         }
-        $channel = $this->channels[$name];
+        $channel = $this->channels[$curChannelName][$name];
         if ($names) {
             $channel = $channel->getChannel($names, $config);
         }
@@ -84,28 +85,29 @@ class Channel implements SubscriberInterface
      */
     public function getChannels($allDescendants = false, $inclTop = false)
     {
-        $channels = $this->channels;
+        $curChannelName = $this->debug->getCfg('channelName', Debug::CONFIG_DEBUG);
+        $channels = isset($this->channels[$curChannelName])
+            ? $this->channels[$curChannelName]
+            : array();
         if ($allDescendants) {
-            $channels = array();
-            foreach ($this->channels as $channel) {
+            $debug = $this->debug;
+            $channelsNew = array();
+            foreach ($channels as $channel) {
                 $channelName = $channel->getCfg('channelName', Debug::CONFIG_DEBUG);
-                $channels = \array_merge(
-                    $channels,
+                $channelsNew = \array_merge(
+                    $channelsNew,
                     array(
                         $channelName => $channel,
                     ),
                     $channel->getChannels(true)
                 );
             }
+            $channels = $channelsNew;
+            $this->debug = $debug;
         }
-        if ($inclTop) {
-            return $channels;
-        }
-        if ($this->debug === $this->debug->rootInstance) {
-            $channelsTop = $this->getChannelsTop();
-            $channels = \array_diff_key($channels, $channelsTop);
-        }
-        return $channels;
+        return $inclTop === false && $this->debug === $this->debug->rootInstance
+            ? \array_diff_key($channels, $this->getChannelsTop())
+            : $channels;
     }
 
     /**

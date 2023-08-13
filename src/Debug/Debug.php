@@ -143,6 +143,9 @@ class Debug extends AbstractDebug
         'output'    => false,       // output the log?
         'outputHeaders' => true,    // ie, ChromeLogger and/or firePHP headers
         'plugins' => array(
+            'channel' => array(
+                'class' => 'bdk\Debug\Plugin\Channel',
+            ),
             'configEvents' => array(
                 'class' => 'bdk\Debug\Plugin\ConfigEvents',
             ),

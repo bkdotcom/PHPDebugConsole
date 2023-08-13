@@ -287,7 +287,7 @@ EOD;
 
         self::assertSame('tabby', $tabby->getCfg('channelName'));
 
-        // $this->helper->stderr($this->debug->getChannels());
+        // $this->debug->varDump($this->debug->getChannels());
         self::assertSame(array(
             'foo',
         ), \array_keys($this->debug->getChannels()));
@@ -298,13 +298,13 @@ EOD;
             'general.foo.bar',
         ), \array_keys($this->debug->getChannels(true)));
 
-        // $this->helper->stderr($this->debug->getChannels(false, true));
+        // $this->debug->varDump($this->debug->getChannels(false, true));
         self::assertSame(array(
             'tabby',
             'foo',
         ), \array_keys($this->debug->getChannels(false, true)));
 
-        // $this->helper->stderr($this->debug->getChannels(true, true));
+        // $this->debug->varDump($this->debug->getChannels(true, true));
         self::assertSame(array(
             'tabby',
             'general.foo',

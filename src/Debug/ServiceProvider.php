@@ -118,9 +118,6 @@ class ServiceProvider implements ServiceProviderInterface
         $container['phpDoc'] = static function () {
             return new \bdk\Debug\Utility\PhpDoc();
         };
-        $container['pluginChannel'] = static function () {
-            return new \bdk\Debug\Plugin\Channel();
-        };
         $container['pluginHighlight'] = static function () {
             return new \bdk\Debug\Plugin\Highlight();
         };

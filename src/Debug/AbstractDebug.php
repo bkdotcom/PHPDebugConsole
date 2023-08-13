@@ -193,7 +193,8 @@ class AbstractDebug
             return;
         }
         $event['debug'] = $cfg;
-        $cfg = $this->container['pluginChannel']->getPropagateValues($event->getValues());
+        $cfg = $this->getPlugin('channel')->getPropagateValues($event->getValues());
+        unset($cfg['currentSubject'], $cfg['isTarget']);
         foreach ($channels as $channel) {
             $channel->config->set($cfg);
         }
@@ -302,7 +303,6 @@ class AbstractDebug
         $this->eventManager->addSubscriberInterface($this->container['pluginManager']);
 
         $this->addPlugin($this->container['pluginChannel']);
-        $this->addPlugin($this->container['pluginConfigEvents']);
 
         if (!$this->parentInstance) {
             // we're the root instance

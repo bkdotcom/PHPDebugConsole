@@ -7,7 +7,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2022 Brad Kent
- * @version   v3.0
+ * @version   v3.1
  *
  * @link http://www.github.com/bkdotcom/PHPDebugConsole
  * @link https://developer.mozilla.org/en-US/docs/Web/API/console
@@ -82,7 +82,7 @@ class Debug extends AbstractDebug
     const EVENT_STREAM_WRAP = 'debug.streamWrap';
 
     const META = "\x00meta\x00";
-    const VERSION = '3.0.4';
+    const VERSION = '3.1';
 
     protected $cfg = array(
         'channelIcon' => 'fa fa-list-ul',
@@ -143,6 +143,9 @@ class Debug extends AbstractDebug
         'output'    => false,       // output the log?
         'outputHeaders' => true,    // ie, ChromeLogger and/or firePHP headers
         'plugins' => array(
+            'configEvents' => array(
+                'class' => 'bdk\Debug\Plugin\ConfigEvents',
+            ),
             'internalEvents' => array(
                 'class' => 'bdk\Debug\Plugin\InternalEvents',
             ),

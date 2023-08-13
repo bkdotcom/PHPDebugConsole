@@ -150,6 +150,8 @@ class Channel implements SubscriberInterface
             'channelIcon',
             'channelName',
             'onBootstrap',
+            'onLog',
+            'onOutput',
             'route',
         )));
         foreach ($cfg as $k => $v) {

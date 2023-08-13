@@ -121,10 +121,6 @@ class ServiceProvider implements ServiceProviderInterface
         $container['pluginChannel'] = static function () {
             return new \bdk\Debug\Plugin\Channel();
         };
-        $container['pluginConfigEvents'] = static function (Container $container) {
-            $debug = $container['debug'];
-            return new \bdk\Debug\Plugin\ConfigEvents($debug);
-        };
         $container['pluginHighlight'] = static function () {
             return new \bdk\Debug\Plugin\Highlight();
         };

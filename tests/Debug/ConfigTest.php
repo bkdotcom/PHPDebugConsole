@@ -327,18 +327,18 @@ class ConfigTest extends DebugTestFramework
     /**
      * @dataProvider providerOnCfgReplaceSubscriber
      */
-    public function testOnCfgReplaceSubscriber($name, $event)
+    public function testOnCfgReplaceSubscriber($cfgName, $eventName)
     {
         $closure1 = static function () {
         };
-        $this->debug->setCfg($name, $closure1);
-        $closure2 = static function () {
-            echo 'you suck!!!' . "\n";
+        $this->debug->setCfg($cfgName, $closure1);
+        $closure2 = static function ($event, $name) {
+            echo 'closure 2 ' . $event->getSubject()->getCfg('channelName', Debug::CONFIG_DEBUG) . ' ' . $name . "\n";
         };
-        $this->debug->setCfg($name, $closure2);
+        $this->debug->setCfg($cfgName, $closure2);
         $closure1isSub = false;
         $closure2isSub = false;
-        foreach ($this->debug->eventManager->getSubscribers($event) as $subInfo) {
+        foreach ($this->debug->eventManager->getSubscribers($eventName) as $subInfo) {
             if ($subInfo['callable'] === $closure1) {
                 $closure1isSub = true;
             }
@@ -349,7 +349,9 @@ class ConfigTest extends DebugTestFramework
         $this->assertFalse($closure1isSub);
         $this->assertTrue($closure2isSub);
 
-        $this->debug->setCfg($name, null);
+        $this->debug->setCfg($cfgName, null);
+
+        // \bdk\Debug::varDump($eventName, $this->debug->eventManager->getSubscribers($eventName));
     }
 
     /*

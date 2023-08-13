@@ -418,7 +418,7 @@ class Config
             Debug::EVENT_CONFIG,
             $this->debug,
             \array_merge($configs, array(
-                'currentTarget' => $this->debug,
+                'currentSubject' => $this->debug,
                 'isTarget' => true,
             ))
         )->getValues();
@@ -427,12 +427,12 @@ class Config
                 Debug::EVENT_CONFIG,
                 $this->debug,
                 \array_merge($configs, array(
-                    'currentTarget' => $this->debug->rootInstance,
+                    'currentSubject' => $this->debug->rootInstance,
                     'isTarget' => false,
                 ))
             )->getValues();
         }
-        unset($configs['currentTarget'], $configs['isTarget']);
+        unset($configs['currentSubject'], $configs['isTarget']);
         return $configs;
     }
 

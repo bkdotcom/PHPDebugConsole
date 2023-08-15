@@ -1,6 +1,6 @@
 <?php
 
-namespace bdk\Test\Debug\Method;
+namespace bdk\Test\Debug\Plugin\Method;
 
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
@@ -13,7 +13,6 @@ use ReflectionMethod;
 /**
  * PHPUnit tests for Debug class
  *
- * @covers \bdk\Debug
  * @covers \bdk\Debug\Abstraction\Abstracter
  * @covers \bdk\Debug\Abstraction\AbstractObject
  * @covers \bdk\Debug\Abstraction\AbstractObjectConstants
@@ -432,7 +431,7 @@ EOD;
                         <tr><th class="t_int t_key text-right" scope="row">0</th><td class="t_string">a</td></tr>
                         <tr><th class="t_int t_key text-right" scope="row">1</th><td class="t_string">2233-03-22T00:00:00%i</td></tr>
                         <tr><th class="t_int t_key text-right" scope="row">2</th><td class="t_resource">Resource id #%d: stream</td></tr>
-                        <tr><th class="t_int t_key text-right" scope="row">3</th><td class="t_callable"><span class="t_type">callable</span> <span class="classname"><span class="namespace">bdk\Test\Debug\Method\</span>TableTest</span><span class="t_operator">::</span><span class="t_identifier">providerTestMethod</span></td></tr>
+                        <tr><th class="t_int t_key text-right" scope="row">3</th><td class="t_callable"><span class="t_type">callable</span> <span class="classname"><span class="namespace">bdk\Test\Debug\Plugin\Method\</span>TableTest</span><span class="t_operator">::</span><span class="t_identifier">providerTestMethod</span></td></tr>
                         <tr><th class="t_int t_key text-right" scope="row">4</th><td class="t_object" data-accessible="public"><span class="classname">Closure</span>
                             <dl class="object-inner">
                             <dt class="t_modifier_final">final</dt>
@@ -450,7 +449,7 @@ EOD;
                         [0] => "a"
                         [1] => "2233-03-22T00:00:00%i"
                         [2] => Resource id #%d: stream
-                        [3] => callable: bdk\Test\Debug\Method\TableTest::providerTestMethod
+                        [3] => callable: bdk\Test\Debug\Plugin\Method\TableTest::providerTestMethod
                         [4] => Closure
                             Properties:
                                 (debug) file = "' . __FILE__ . '"

@@ -41,11 +41,13 @@ class PhpTest extends TestCase
         // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
         $tests = array(
             'object' => array(new \stdClass(), 'stdClass'),
+            'object.closure' => array(function () {}, 'Closure'),
             'string' => array('foo', 'string'),
             'false' => array(false, 'bool'),
             'true' => array(true, 'bool'),
             'null' => array(null, 'null'),
             'array' => array(array(), 'array'),
+            'array.callable' => array(array(new TestObj(), 'methodPublic'), 'callable'),
             'int' => array(42, 'int'),
             'float' => array(3.14, 'float'),
             'stream' => array(\fopen(__FILE__, 'r'), 'resource (stream)'),

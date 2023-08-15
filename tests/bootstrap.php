@@ -8,6 +8,11 @@ namespace bdk\Debug;
 
 $GLOBALS['collectedHeaders'] = array();
 $GLOBALS['headersSent'] = array(); // set to ['file', line] for true
+$GLOBALS['sessionMock'] = array(
+    'name' => false,
+    'status' => PHP_SESSION_NONE,
+);
+
 
 /**
  * Overwrite php's header method
@@ -46,6 +51,28 @@ function headers_sent(&$file = null, &$line = null)
         return true;
     }
     return false;
+}
+
+namespace bdk\Debug\Plugin;
+
+function session_name($name = null)
+{
+    $prev = $GLOBALS['sessionMock']['name'];
+    if ($name) {
+        $GLOBALS['sessionMock']['name'] = $name;
+    }
+    return $prev;
+}
+
+function session_start()
+{
+    $GLOBALS['sessionMock']['status'] = PHP_SESSION_ACTIVE;
+    return true;
+}
+
+function session_status()
+{
+    return $GLOBALS['sessionMock']['status'];
 }
 
 namespace bdk\Test;
@@ -107,16 +134,20 @@ $debug = \bdk\Debug::getInstance(array(
         // 'onEUserError' => 'continue',
     ),
     'serviceProvider' => array(
-        'routeWamp' => function ($container) {
+        'routeWamp' => static function ($container) {
             $debug = $container['debug'];
             return new \bdk\Debug\Route\Wamp($debug, new \bdk\Test\Debug\Mock\WampPublisher());
         },
+        'utility' => static function () {
+            // overrides gitBranch method
+            return new \bdk\Test\Debug\Mock\Utility();
+        },
     ),
-    'onBootstrap' => function ($event) {
+    'onBootstrap' => static function ($event) {
         $debug = $event->getSubject();
         $wamp = $debug->getRoute('wamp');
         $debug->addPlugin($wamp);
-    }
+    },
 ));
 
 $httpdProcess = \bdk\Test\startHttpd();
@@ -138,7 +169,7 @@ $debug->eventManager->subscribe(\bdk\PubSub\Manager::EVENT_PHP_SHUTDOWN, functio
     }
 }, 0 - PHP_INT_MAX);
 
-$debug->eventManager->subscribe(\bdk\Debug::EVENT_STREAM_WRAP, function (\bdk\PubSub\Event $event) {
+$debug->eventManager->subscribe(\bdk\Debug::EVENT_STREAM_WRAP, static function (\bdk\PubSub\Event $event) {
     if (\strpos($event['filepath'], 'StreamTest') !== false) {
         $event->stopPropagation();
     }

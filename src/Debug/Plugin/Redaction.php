@@ -198,7 +198,7 @@ class Redaction extends AbstractComponent implements SubscriberInterface
     public function redactHeaderValue($name, $value)
     {
         if (\in_array($name, array('Authorization', 'Proxy-Authorization'), true) === false) {
-            return $this->redactString($value, $name);
+            return $this->redactString((string) $value, $name);
         }
         if (\strpos($value, 'Basic') === 0) {
             $auth = \base64_decode(\str_replace('Basic ', '', $value), true);
@@ -232,7 +232,7 @@ class Redaction extends AbstractComponent implements SubscriberInterface
         }
         foreach ($headers as $name => $values) {
             foreach ($values as $value) {
-                $lines[] = $name . ': ' . $value;
+                $lines[] = \rtrim($name . ': ' . $value);
             }
         }
         return \implode("\r\n", $lines);

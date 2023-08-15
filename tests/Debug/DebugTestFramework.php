@@ -168,6 +168,7 @@ class DebugTestFramework extends DOMTestCase
     {
         $GLOBALS['collectedHeaders'] = array();
         $GLOBALS['headersSent'] = array();
+        $GLOBALS['sessionMock']['status'] = PHP_SESSION_NONE;
     }
 
     public function emailMock($to, $subject, $body, $addHeadersStr)
@@ -450,6 +451,7 @@ class DebugTestFramework extends DOMTestCase
                     )
                 ),
             ),
+            'sessionName' => null,
         ));
         $resetValues = array(
             'alerts'        => array(), // array of alerts.  alerts will be shown at top of output when possible
@@ -461,6 +463,10 @@ class DebugTestFramework extends DOMTestCase
             'outputSent'    => false,
             'runtime'       => array(),
         );
+        $routeChromeLogger = $this->debug->routeChromeLogger;
+        if ($routeChromeLogger) {
+            $this->debug->pluginManager->removePlugin($routeChromeLogger);
+        }
         $this->debug->data->set($resetValues);
         $this->debug->stopWatch->reset();
         $this->debug->errorHandler->setData('errors', array());

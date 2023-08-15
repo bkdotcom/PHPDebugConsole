@@ -8,6 +8,7 @@ use bdk\Test\Debug\DebugTestFramework;
 
 /**
  * @covers \bdk\Debug\Collector\OAuth
+ * @covers \bdk\Debug\Plugin\Redaction
  */
 class OAuthTest extends DebugTestFramework
 {
@@ -15,7 +16,7 @@ class OAuthTest extends DebugTestFramework
     public static $consumerSecret = 'secret';
     public static $accessTokenUrl = 'http://127.0.0.1:8080/oauth/access_token';
     public static $requestTokenUrl = 'http://127.0.0.1:8080/oauth/request_token';
-    public static $oauthEndpoint = 'http://127.0.0.1:8080/oauth/echo';
+    public static $oauthEndpoint = 'http://127.0.0.1:8080/echo';
     public static $token;
     public static $tokenSecret;
     private static $oauthDebug;
@@ -305,14 +306,22 @@ class OAuthTest extends DebugTestFramework
         $this->assertOauth();
         $return = self::$oauthDebug->fetch(self::$oauthEndpoint, array('foo' => 'bar'), OAUTH_HTTP_METHOD_POST);
         $this->assertIsBool($return);
+        $logEntriesActual = $this->getLogEntries();
+        $sizeDownload = null;
+        foreach ($logEntriesActual as $i => $logEntry) {
+            if (isset($logEntry['args'][0]) && $logEntry['args'][0] === 'additional info') {
+                $sizeDownload = $logEntry['args'][1]['size_download'];
+            } elseif (isset($logEntry['args'][0]) && $logEntry['args'][0] === 'response body') {
+                $logEntriesActual[$i]['args'][1] = $logEntry['args'][1]['value'];
+            }
+        }
         $this->assertLogEntries(array(
-
             array(
                 'method' => 'groupCollapsed',
                 'args' => array(
                     'OAuth::fetch',
                     'POST',
-                    'http://127.0.0.1:8080/oauth/echo',
+                    self::$oauthEndpoint,
                 ),
                 'meta' => array('channel' => 'general.OAuth'),
             ),
@@ -350,9 +359,9 @@ class OAuthTest extends DebugTestFramework
                 'args' => array(
                     'additional info',
                     array(
-                        'size_download' => 7.0,
+                        'size_download' => $sizeDownload,
                         'size_upload' => 7.0,
-                        'sbs' => 'POST&http%3A%2F%2F127.0.0.1%3A8080%2Foauth%2Fecho&foo%3Dbar%26oauth_consumer_key%3Dkey%26oauth_nonce%3D%s%26oauth_signature_method%3DHMAC-SHA1%26oauth_timestamp%3%s%26oauth_version%3D1.0',
+                        'sbs' => 'POST&http%3A%2F%2F127.0.0.1%3A8080%2Fecho&foo%3Dbar%26oauth_consumer_key%3Dkey%26oauth_nonce%3D%s%26oauth_signature_method%3DHMAC-SHA1%26oauth_timestamp%3%s%26oauth_version%3D1.0',
                     ),
                 ),
                 'meta' => array('channel' => 'general.OAuth'),
@@ -389,7 +398,7 @@ class OAuthTest extends DebugTestFramework
                     'response headers',
                     \implode('%A', array(
                         'HTTP/1.%d 200 OK',
-                        'Content-Type: application/x-www-form-urlencoded',
+                        'Content-Type: application/json; charset="utf-8"',
                         '',
                     )),
                 ),
@@ -402,7 +411,7 @@ class OAuthTest extends DebugTestFramework
                 'method' => 'log',
                 'args' => array(
                     'response body',
-                    'foo=bar',
+                    '%Afoo=bar%A',
                 ),
                 'meta' => array(
                     'channel' => 'general.OAuth',
@@ -415,7 +424,7 @@ class OAuthTest extends DebugTestFramework
                 'meta' => array('channel' => 'general.OAuth'),
             ),
 
-        ), $this->getLogEntries());
+        ), $logEntriesActual);
     }
 
     public function testFetchParamsViaSbs()

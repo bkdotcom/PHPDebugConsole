@@ -63,7 +63,7 @@ class Alert implements SubscriberInterface
             ),
             $hasSubstitutions
                 ? array()
-                : $this->debug->getMethodDefaultArgs(__METHOD__),
+                : $this->debug->rootInstance->getMethodDefaultArgs(__METHOD__),
             array('level', 'dismissible')
         );
         $logEntry['args'] = \array_values($logEntry['args']);

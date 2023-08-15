@@ -64,7 +64,7 @@ class Trace implements SubscriberInterface
                 'sortable' => false,
                 'trace' => null,  // set to specify trace
             ),
-            $this->debug->getMethodDefaultArgs(__METHOD__),
+            $this->debug->rootInstance->getMethodDefaultArgs(__METHOD__),
             array(
                 'caption',
                 'inclContext',

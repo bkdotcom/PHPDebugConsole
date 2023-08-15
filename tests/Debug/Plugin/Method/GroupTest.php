@@ -1,6 +1,6 @@
 <?php
 
-namespace bdk\Test\Debug\Method;
+namespace bdk\Test\Debug\Plugin\Method;
 
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
@@ -22,7 +22,6 @@ function myFunctionThatCallsGroup()
 /**
  * PHPUnit tests for Debug Group Methods
  *
- * @covers \bdk\Debug
  * @covers \bdk\Debug\Abstraction\Abstracter
  * @covers \bdk\Debug\Dump\Base
  * @covers \bdk\Debug\Dump\Html

@@ -1,6 +1,6 @@
 <?php
 
-namespace bdk\Test\Debug\Method;
+namespace bdk\Test\Debug\Plugin\Method;
 
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
@@ -13,7 +13,7 @@ use bdk\Test\Debug\DebugTestFramework;
  * @covers \bdk\Debug\Plugin\Method\General
  * @covers \bdk\Debug\Plugin\CustomMethodTrait
  */
-class PluginMethodGeneralTest extends DebugTestFramework
+class GeneralTest extends DebugTestFramework
 {
     public function testEmail()
     {

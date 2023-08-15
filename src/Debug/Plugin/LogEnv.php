@@ -25,6 +25,18 @@ class LogEnv implements SubscriberInterface
     use AssertSettingTrait;
 
     private $debug;
+    private $iniValues = array();
+
+    /**
+     * Constructor
+     */
+    public function __construct()
+    {
+        $this->iniValues = array(
+            'sessionUseCookies' => \ini_get('session.use_cookies'),
+            'sessionUseOnlyCookies' => \ini_get('session.use_only_cookies'),
+        );
+    }
 
     /**
      * {@inheritDoc}
@@ -46,6 +58,7 @@ class LogEnv implements SubscriberInterface
     public function onBootstrap(Event $event)
     {
         $this->debug = $event->getSubject();
+
         $collectWas = $this->debug->setCfg('collect', true);
 
         $this->logGitInfo();
@@ -66,7 +79,7 @@ class LogEnv implements SubscriberInterface
             ? array($name)
             : array('PHPSESSID', 'SESSIONID', 'SESSION_ID', 'SESSID', 'SESS_ID');
         $namesFound = array();
-        $useCookies = \filter_var(\ini_get('session.use_cookies'), FILTER_VALIDATE_BOOLEAN);
+        $useCookies = \filter_var($this->iniValues['sessionUseCookies'], FILTER_VALIDATE_BOOLEAN);
         if ($useCookies) {
             $cookies = $this->debug->serverRequest->getCookieParams();
             $keys = \array_keys($cookies);
@@ -75,7 +88,7 @@ class LogEnv implements SubscriberInterface
         if ($namesFound) {
             return \array_shift($namesFound);
         }
-        $useOnlyCookies = \filter_var(\ini_get('session.use_only_cookies'), FILTER_VALIDATE_BOOLEAN);
+        $useOnlyCookies = \filter_var($this->iniValues['sessionUseOnlyCookies'], FILTER_VALIDATE_BOOLEAN);
         if ($useOnlyCookies === false) {
             $queryParams = $this->debug->serverRequest->getQueryParams();
             $keys = \array_keys($queryParams);
@@ -182,20 +195,22 @@ class LogEnv implements SubscriberInterface
      * @param string $sessionNamePassed Name of session name passed in request
      *
      * @return void
+     *
+     * @phpcs:disable SlevomatCodingStandard.Namespaces.FullyQualifiedGlobalFunctions.NonFullyQualified
      */
     private function logSessionVals($sessionNamePassed)
     {
         $namePrev = null;
-        if (\session_status() !== PHP_SESSION_ACTIVE) {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
             if ($sessionNamePassed === null) {
                 $this->debug->log('Session Inactive / No session id passed in request');
                 return;
             }
-            $namePrev = \session_name($sessionNamePassed);
-            \session_start();
+            $namePrev = session_name($sessionNamePassed);
+            session_start();
         }
-        if (\session_status() === PHP_SESSION_ACTIVE) {
-            $this->debug->log('session name', \session_name());
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            $this->debug->log('session name', session_name());
             $this->debug->log('session id', \session_id());
             $sessionVals = $_SESSION;
             \ksort($sessionVals);
@@ -212,7 +227,7 @@ class LogEnv implements SubscriberInterface
             if (PHP_VERSION_ID >= 50600) {
                 \session_abort();
             }
-            \session_name($namePrev);
+            session_name($namePrev);
             unset($_SESSION);
         }
     }

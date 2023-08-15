@@ -15,7 +15,6 @@ use bdk\Test\PolyFill\AssertionTrait;
  *
  * @covers \bdk\Debug\Abstraction\AbstractObject
  * @covers \bdk\Debug\Abstraction\ObjectAbstraction
- * @covers \bdk\Debug\Plugin\Channel
  * @covers \bdk\Debug\Utility\SerializeLog
  *
  * @phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder

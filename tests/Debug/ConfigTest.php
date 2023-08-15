@@ -12,7 +12,6 @@ use bdk\HttpMessage\ServerRequest;
  * @covers \bdk\Debug\Plugin\ConfigEvents
  * @covers \bdk\Debug\Plugin\AssertSettingTrait
  * @covers \bdk\Debug\Plugin\InternalEvents
- * @covers \bdk\Debug\Plugin\LogEnv
  * @covers \bdk\Debug\Plugin\Manager
  * @covers \bdk\Debug\Plugin\Redaction
  * @covers \bdk\Debug\Route\Stream
@@ -43,6 +42,23 @@ class ConfigTest extends DebugTestFramework
                 'channel' => 'php',
             ),
         ), $this->helper->logEntryToArray($this->debug->data->get('log/__end__')));
+    }
+
+    public function testStreamRouteInitialized()
+    {
+        $debug = new Debug(array(
+            'collect' => true,
+            'stream' => 'php://stderr',
+        ));
+        $hasStreamRoute = false;
+        $subscribers = $debug->eventManager->getSubscribers(Debug::EVENT_LOG);
+        foreach ($subscribers as $subscriber) {
+            if (\is_array($subscriber['callable']) && $subscriber['callable'][0] instanceof \bdk\Debug\Route\Stream) {
+                $hasStreamRoute = true;
+                break;
+            }
+        }
+        self::assertTrue($hasStreamRoute);
     }
 
     /**

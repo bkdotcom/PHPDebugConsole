@@ -182,6 +182,9 @@ class Debug extends AbstractDebug
             'methodGroup' => array(
                 'class' => 'bdk\Debug\Plugin\Method\Group',
             ),
+            'methodOutput' => array(
+                'class' => 'bdk\Debug\Plugin\Method\Output',
+            ),
             'methodProfile' => array(
                 'class' => 'bdk\Debug\Plugin\Method\Profile',
             ),
@@ -309,32 +312,6 @@ class Debug extends AbstractDebug
     }
 
     /**
-     * Return debug log output
-     *
-     * Publishes `Debug::EVENT_OUTPUT` event and returns event's 'return' value
-     *
-     * @param array $cfg Override any config values
-     *
-     * @return string|null
-     */
-    public function output($cfg = array())
-    {
-        $cfgRestore = $this->config->set($cfg);
-        if (!$this->cfg['output']) {
-            $this->config->set($cfgRestore);
-            $this->obEnd();
-            return null;
-        }
-        $output = $this->publishOutputEvent();
-        if (!$this->parentInstance) {
-            $this->data->set('outputSent', true);
-        }
-        $this->config->set($cfgRestore);
-        $this->obEnd();
-        return $output;
-    }
-
-    /**
      * Set one or more config values
      *
      * `setCfg('key', 'value')`
@@ -378,38 +355,5 @@ class Debug extends AbstractDebug
         }
         // invalid cfg key / return empty meta array
         return array('debug' => self::META);
-    }
-
-    /**
-     * Publish Debug::EVENT_OUTPUT
-     *    on all descendant channels
-     *    rootInstance
-     *    finally ourself
-     * This isn't outputing each channel, but for performing any per-channel "before output" activities
-     *
-     * @return string output
-     */
-    private function publishOutputEvent()
-    {
-        $channels = $this->getChannels(true);
-        if ($this !== $this->rootInstance) {
-            $channels[] = $this->rootInstance;
-        }
-        $channels[] = $this;
-        foreach ($channels as $channel) {
-            if ($channel->getCfg('output', self::CONFIG_DEBUG) === false) {
-                continue;
-            }
-            $event = $channel->eventManager->publish(
-                self::EVENT_OUTPUT,
-                $channel,
-                array(
-                    'headers' => array(),
-                    'isTarget' => $channel === $this,
-                    'return' => '',
-                )
-            );
-        }
-        return $event['return'];
     }
 }

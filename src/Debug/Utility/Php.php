@@ -50,6 +50,8 @@ class Php
     /**
      * Gets the type name of a variable in a way that is suitable for debugging
      *
+     * like php's `get_debug_type`, but will return 'callable' for callable array
+     *
      * @param mixed $val The value being type checked
      *
      * @return string
@@ -58,7 +60,7 @@ class Php
      */
     public static function getDebugType($val)
     {
-        if (PHP_VERSION_ID >= 80000) {
+        if (PHP_VERSION_ID >= 80000 && \is_array($val) === false) {
             return \get_debug_type($val);
         }
 
@@ -70,7 +72,9 @@ class Php
             case \is_string($val):
                 return 'string';
             case \is_array($val):
-                return 'array';
+                return self::isCallable($val)
+                    ? 'callable'
+                    : 'array';
             case \is_int($val):
                 return 'int';
             case \is_float($val):

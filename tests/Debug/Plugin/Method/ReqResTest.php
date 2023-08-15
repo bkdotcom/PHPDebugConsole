@@ -1,6 +1,6 @@
 <?php
 
-namespace bdk\Test\Debug\Method;
+namespace bdk\Test\Debug\Plugin\Method;
 
 use bdk\Debug;
 use bdk\HttpMessage\Response;
@@ -14,7 +14,7 @@ use bdk\Test\PolyFill\ExpectExceptionTrait;
  *
  * @covers \bdk\Debug\Plugin\Method\ReqRes
  */
-class PluginMethodReqResTest extends DebugTestFramework
+class ReqResTest extends DebugTestFramework
 {
     use ExpectExceptionTrait;
 

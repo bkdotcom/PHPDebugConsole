@@ -1,6 +1,6 @@
 <?php
 
-namespace bdk\Test\Debug\Method;
+namespace bdk\Test\Debug\Plugin\Method;
 
 use bdk\Test\Debug\DebugTestFramework;
 

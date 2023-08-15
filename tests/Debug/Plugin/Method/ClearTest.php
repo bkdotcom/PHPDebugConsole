@@ -1,6 +1,6 @@
 <?php
 
-namespace bdk\Test\Debug\Method;
+namespace bdk\Test\Debug\Plugin\Method;
 
 use bdk\Debug;
 use bdk\Debug\LogEntry;
@@ -9,7 +9,6 @@ use bdk\Test\Debug\DebugTestFramework;
 /**
  * PHPUnit tests for Debug Methods
  *
- * @covers \bdk\Debug
  * @covers \bdk\Debug\Plugin\Method\Clear
  *
  * @phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder

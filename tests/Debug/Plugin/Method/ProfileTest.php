@@ -1,6 +1,6 @@
 <?php
 
-namespace bdk\Test\Debug\Method;
+namespace bdk\Test\Debug\Plugin\Method;
 
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
@@ -12,7 +12,6 @@ use bdk\Test\Debug\DebugTestFramework;
  *
  * @covers \bdk\Debug\Dump\Html\Table
  * @covers \bdk\Debug\Plugin\Method\Profile
- * @covers \bdk\Debug\ServiceProvider
  * @covers \bdk\Debug\Utility\Profile
  */
 class ProfileTest extends DebugTestFramework
@@ -30,9 +29,9 @@ class ProfileTest extends DebugTestFramework
                 'custom' => static function (LogEntry $logEntry) {
                     self::assertSame('profileEnd', $logEntry['method']);
                     $data = $logEntry['args'][0];
-                    $a = $data['bdk\Test\Debug\Method\ProfileTest::a'];
-                    $b = $data['bdk\Test\Debug\Method\ProfileTest::b'];
-                    $c = $data['bdk\Test\Debug\Method\ProfileTest::c'];
+                    $a = $data['bdk\Test\Debug\Plugin\Method\ProfileTest::a'];
+                    $b = $data['bdk\Test\Debug\Plugin\Method\ProfileTest::b'];
+                    $c = $data['bdk\Test\Debug\Plugin\Method\ProfileTest::c'];
                     // test a
                     self::assertCount(3, $data);
                     self::assertSame(1, $a['calls']);
@@ -68,22 +67,22 @@ class ProfileTest extends DebugTestFramework
                             'haveObjRow' => false,
                             'indexLabel' => null,
                             'rows' => array(
-                                'bdk\Test\Debug\Method\ProfileTest::a' => array(
+                                'bdk\Test\Debug\Plugin\Method\ProfileTest::a' => array(
                                     'key' => new Abstraction(Abstracter::TYPE_CALLABLE, array(
                                         'hideType' => true, // don't output 'callable'
-                                        'value' => 'bdk\Test\Debug\Method\ProfileTest::a',
+                                        'value' => 'bdk\Test\Debug\Plugin\Method\ProfileTest::a',
                                     )),
                                 ),
-                                'bdk\Test\Debug\Method\ProfileTest::b' => array(
+                                'bdk\Test\Debug\Plugin\Method\ProfileTest::b' => array(
                                     'key' => new Abstraction(Abstracter::TYPE_CALLABLE, array(
                                         'hideType' => true, // don't output 'callable'
-                                        'value' => 'bdk\Test\Debug\Method\ProfileTest::b',
+                                        'value' => 'bdk\Test\Debug\Plugin\Method\ProfileTest::b',
                                     )),
                                 ),
-                                'bdk\Test\Debug\Method\ProfileTest::c' => array(
+                                'bdk\Test\Debug\Plugin\Method\ProfileTest::c' => array(
                                     'key' => new Abstraction(Abstracter::TYPE_CALLABLE, array(
                                         'hideType' => true, // don't output 'callable'
-                                        'value' => 'bdk\Test\Debug\Method\ProfileTest::c',
+                                        'value' => 'bdk\Test\Debug\Plugin\Method\ProfileTest::c',
                                     )),
                                 ),
                             ),
@@ -91,8 +90,8 @@ class ProfileTest extends DebugTestFramework
                         ),
                     ), $logEntry['meta']);
                 },
-                'chromeLogger' => '[[{"bdk\\\Test\\\Debug\\\Method\\\ProfileTest::a":{"calls":1,"totalTime":%f,"ownTime":%f},"bdk\\\Test\\\Debug\\\Method\\\ProfileTest::b":{"calls":1,"totalTime":%f,"ownTime":%f},"bdk\\\Test\\\Debug\\\Method\\\ProfileTest::c":{"calls":2,"totalTime":%f,"ownTime":%f}}],null,"table"]',
-                'firephp' => 'X-Wf-1-1-1-2: %d|[{"Label":"Profile \'Profile 1\' Results","Type":"TABLE"},[["","calls","totalTime","ownTime"],["bdk\\\Test\\\Debug\\\Method\\\ProfileTest::a",1,%f,%f],["bdk\\\Test\\\Debug\\\Method\\\ProfileTest::b",1,%f,%f],["bdk\\\Test\\\Debug\\\Method\\\ProfileTest::c",2,%f,%f]]]|',
+                'chromeLogger' => '[[{"bdk\\\Test\\\Debug\\\Plugin\\\Method\\\ProfileTest::a":{"calls":1,"totalTime":%f,"ownTime":%f},"bdk\\\Test\\\Debug\\\Plugin\\\Method\\\ProfileTest::b":{"calls":1,"totalTime":%f,"ownTime":%f},"bdk\\\Test\\\Debug\\\Plugin\\\Method\\\ProfileTest::c":{"calls":2,"totalTime":%f,"ownTime":%f}}],null,"table"]',
+                'firephp' => 'X-Wf-1-1-1-2: %d|[{"Label":"Profile \'Profile 1\' Results","Type":"TABLE"},[["","calls","totalTime","ownTime"],["bdk\\\Test\\\Debug\\\Plugin\\\Method\\\ProfileTest::a",1,%f,%f],["bdk\\\Test\\\Debug\\\Plugin\\\Method\\\ProfileTest::b",1,%f,%f],["bdk\\\Test\\\Debug\\\Plugin\\\Method\\\ProfileTest::c",2,%f,%f]]]|',
                 'html' => '<li class="m_profileEnd">
                     <table class="sortable table-bordered">
                     <caption>Profile ' . (PHP_VERSION_ID >= 80100 ? '&#039;Profile 1&#039;' : '\'Profile 1\'') . ' Results</caption>
@@ -100,28 +99,28 @@ class ProfileTest extends DebugTestFramework
                         <tr><th>&nbsp;</th><th scope="col">calls</th><th scope="col">totalTime</th><th scope="col">ownTime</th></tr>
                     </thead>
                     <tbody>
-                        <tr><th class="t_callable t_key text-right" scope="row"><span class="classname"><span class="namespace">bdk\Test\Debug\Method\</span>ProfileTest</span><span class="t_operator">::</span><span class="t_identifier">a</span></th><td class="t_int">1</td><td class="t_float">%f</td><td class="t_float">%f</td></tr>
-                        <tr><th class="t_callable t_key text-right" scope="row"><span class="classname"><span class="namespace">bdk\Test\Debug\Method\</span>ProfileTest</span><span class="t_operator">::</span><span class="t_identifier">b</span></th><td class="t_int">1</td><td class="t_float">%f</td><td class="t_float">%f</td></tr>
-                        <tr><th class="t_callable t_key text-right" scope="row"><span class="classname"><span class="namespace">bdk\Test\Debug\Method\</span>ProfileTest</span><span class="t_operator">::</span><span class="t_identifier">c</span></th><td class="t_int">2</td><td class="t_float">%f</td><td class="t_float">%f</td></tr>
+                        <tr><th class="t_callable t_key text-right" scope="row"><span class="classname"><span class="namespace">bdk\Test\Debug\Plugin\Method\</span>ProfileTest</span><span class="t_operator">::</span><span class="t_identifier">a</span></th><td class="t_int">1</td><td class="t_float">%f</td><td class="t_float">%f</td></tr>
+                        <tr><th class="t_callable t_key text-right" scope="row"><span class="classname"><span class="namespace">bdk\Test\Debug\Plugin\Method\</span>ProfileTest</span><span class="t_operator">::</span><span class="t_identifier">b</span></th><td class="t_int">1</td><td class="t_float">%f</td><td class="t_float">%f</td></tr>
+                        <tr><th class="t_callable t_key text-right" scope="row"><span class="classname"><span class="namespace">bdk\Test\Debug\Plugin\Method\</span>ProfileTest</span><span class="t_operator">::</span><span class="t_identifier">c</span></th><td class="t_int">2</td><td class="t_float">%f</td><td class="t_float">%f</td></tr>
                     </tbody>
                     <tfoot>
                         <tr><td>&nbsp;</td><td></td><td></td><td class="t_float">%f</td></tr>
                     </tfoot>
                     </table>
                     </li>',
-                'script' => 'console.table({"bdk\\\Test\\\Debug\\\Method\\\ProfileTest::a":{"calls":1,"totalTime":%f,"ownTime":%f},"bdk\\\Test\\\Debug\\\Method\\\ProfileTest::b":{"calls":1,"totalTime":%f,"ownTime":%f},"bdk\\\Test\\\Debug\\\Method\\\ProfileTest::c":{"calls":2,"totalTime":%f,"ownTime":%f}});',
+                'script' => 'console.table({"bdk\\\Test\\\Debug\\\Plugin\\\Method\\\ProfileTest::a":{"calls":1,"totalTime":%f,"ownTime":%f},"bdk\\\Test\\\Debug\\\Plugin\\\Method\\\ProfileTest::b":{"calls":1,"totalTime":%f,"ownTime":%f},"bdk\\\Test\\\Debug\\\Plugin\\\Method\\\ProfileTest::c":{"calls":2,"totalTime":%f,"ownTime":%f}});',
                 'text' => 'Profile \'Profile 1\' Results = array(
-                    [bdk\Test\Debug\Method\ProfileTest::a] => array(
+                    [bdk\Test\Debug\Plugin\Method\ProfileTest::a] => array(
                         [calls] => 1
                         [totalTime] => %f
                         [ownTime] => %f
                     )
-                    [bdk\Test\Debug\Method\ProfileTest::b] => array(
+                    [bdk\Test\Debug\Plugin\Method\ProfileTest::b] => array(
                         [calls] => 1
                         [totalTime] => %f
                         [ownTime] => %f
                     )
-                    [bdk\Test\Debug\Method\ProfileTest::c] => array(
+                    [bdk\Test\Debug\Plugin\Method\ProfileTest::c] => array(
                         [calls] => 2
                         [totalTime] => %f
                         [ownTime] => %f

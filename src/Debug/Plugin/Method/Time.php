@@ -68,7 +68,7 @@ class Time implements SubscriberInterface
                 'template' => '%label: %time',
                 'unit' => 'auto',
             ),
-            $this->debug->getMethodDefaultArgs(__METHOD__)
+            $this->debug->rootInstance->getMethodDefaultArgs(__METHOD__)
         );
         $args = $logEntry['args'];
         $floats = \array_filter($args, static function ($val) {
@@ -182,7 +182,7 @@ class Time implements SubscriberInterface
                 'precision' => 4,
                 'unit' => 'auto',
             ),
-            $this->debug->getMethodDefaultArgs(__METHOD__)
+            $this->debug->rootInstance->getMethodDefaultArgs(__METHOD__)
         );
         $this->doTimeLog($logEntry);
         return $this->debug;

@@ -1,6 +1,6 @@
 <?php
 
-namespace bdk\Test\Debug\Method;
+namespace bdk\Test\Debug\Plugin\Method;
 
 use bdk\Debug;
 use bdk\Debug\LogEntry;
@@ -10,10 +10,9 @@ use bdk\Test\Debug\DebugTestFramework;
 /**
  * PHPUnit tests for Debug Methods
  *
- * @covers \bdk\Debug
- * @covers \bdk\Debug\AbstractDebug
  * @covers \bdk\Debug\Abstraction\AbstractObjectProperties
  * @covers \bdk\Debug\AbstractComponent
+ * @covers \bdk\Debug\AbstractDebug
  * @covers \bdk\Debug\LogEntry
  * @covers \bdk\Debug\Plugin\Method\Basic
  * @covers \bdk\Debug\Dump\Base
@@ -36,7 +35,7 @@ use bdk\Test\Debug\DebugTestFramework;
  *
  * @phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
  */
-class MethodTest extends DebugTestFramework
+class BasicTest extends DebugTestFramework
 {
     /**
      * Test overriding a core method
@@ -220,21 +219,31 @@ class MethodTest extends DebugTestFramework
         );
     }
 
-    public function testMethodSetsCfg()
-    {
-        $this->debug->log(new \bdk\Test\Debug\Fixture\TestObj(), $this->debug->meta('cfg', 'methodCollect', false));
-        $methodCollect = $this->debug->data->get('log/__end__/args/0/cfgFlags') & \bdk\Debug\Abstraction\AbstractObject::METHOD_COLLECT;
-        self::assertSame(0, $methodCollect);
-        self::assertCount(3, $this->debug->data->get('log/__end__/args/0/methods'));
-        self::assertTrue($this->debug->getCfg('methodCollect'));
-    }
-
-    public function testMethodDefaultArgNotOptional()
+    public function testMethodDefaultArgs()
     {
         // covers AbstractDebug::getMethodDefaultArgs
         $this->helper->setProp('bdk\Debug\AbstractDebug', 'methodDefaultArgs', array());
         $this->debug->alert('test');
         self::assertSame('alert', $this->debug->data->get('alerts/__end__/method'));
+
+        $this->debug->assert(false);
+        self::assertSame('assert', $this->debug->data->get('log/__end__/method'));
+    }
+
+    public function testLogEntryWithCfg()
+    {
+        $this->debug->log('hello', Debug::meta('cfg', 'stringMaxLen', 3));
+        self::assertSame('hel', $this->debug->data->get('log/__end__/args/0/value'));
+        self::assertNull($this->debug->data->get('log/__end__/meta/cfg'));
+        self::assertNotSame(3, $this->debug->getCfg('stringMaxLen')['other']);
+
+        $closure = static function (LogEntry $logEntry) {
+            $logEntry['appendLog'] = false;
+        };
+        $this->debug->eventManager->subscribe(Debug::EVENT_LOG, $closure);
+        $this->debug->log('foo');
+        $this->debug->eventManager->unsubscribe(Debug::EVENT_LOG, $closure);
+        self::assertNotSame('foo', $this->debug->data->get('log/__end__/args/0'));
     }
 
     /**
@@ -347,11 +356,11 @@ class MethodTest extends DebugTestFramework
                         ),
                         'Resource id #%d: stream',
                     ),
-                    \realpath(__DIR__ . '/../DebugTestFramework.php') . ': %d',
+                    \realpath(__DIR__ . '/../../DebugTestFramework.php') . ': %d',
                     'error',
                 )),
                 'firephp' => 'X-Wf-1-1-1-3: %d|[{"File":"%s","Label":"a string","Line":%d,"Type":"ERROR"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
-                'html' => '<li class="m_error" data-detect-files="true" data-file="' . \realpath(__DIR__ . '/../DebugTestFramework.php') . '" data-line="%d"><span class="no-quotes t_string">a string</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>, <div class="t_object" data-accessible="public"><span class="classname">stdClass</span>
+                'html' => '<li class="m_error" data-detect-files="true" data-file="' . \realpath(__DIR__ . '/../../DebugTestFramework.php') . '" data-line="%d"><span class="no-quotes t_string">a string</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>, <div class="t_object" data-accessible="public"><span class="classname">stdClass</span>
                     <dl class="object-inner">
                     ' . (PHP_VERSION_ID >= 80200
                         ? '<dt class="attributes">attributes</dt>
@@ -570,14 +579,6 @@ class MethodTest extends DebugTestFramework
         );
     }
 
-    public function testMeta()
-    {
-        // test invalid args
-        self::assertSame(array(
-            'debug' => Debug::META,
-        ), $this->debug->meta(false));
-    }
-
     /**
      * Test
      *
@@ -610,11 +611,11 @@ class MethodTest extends DebugTestFramework
                         ),
                         'Resource id #%d: stream',
                     ),
-                    \realpath(__DIR__ . '/../DebugTestFramework.php') . ': %d',
+                    \realpath(__DIR__ . '/../../DebugTestFramework.php') . ': %d',
                     'warn',
                 )),
-                'firephp' => 'X-Wf-1-1-1-5: %d|[{"File":"' . \realpath(__DIR__ . '/../DebugTestFramework.php') . '","Label":"a string","Line":%d,"Type":"WARN"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
-                'html' => '<li class="m_warn" data-detect-files="true" data-file="' . \realpath(__DIR__ . '/../DebugTestFramework.php') . '" data-line="%d"><span class="no-quotes t_string">a string</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>, <div class="t_object" data-accessible="public"><span class="classname">stdClass</span>
+                'firephp' => 'X-Wf-1-1-1-5: %d|[{"File":"' . \realpath(__DIR__ . '/../../DebugTestFramework.php') . '","Label":"a string","Line":%d,"Type":"WARN"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
+                'html' => '<li class="m_warn" data-detect-files="true" data-file="' . \realpath(__DIR__ . '/../../DebugTestFramework.php') . '" data-line="%d"><span class="no-quotes t_string">a string</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>, <div class="t_object" data-accessible="public"><span class="classname">stdClass</span>
                     <dl class="object-inner">
                     ' . (PHP_VERSION_ID >= 80200
                         ? '<dt class="attributes">attributes</dt>
@@ -625,7 +626,7 @@ class MethodTest extends DebugTestFramework
                     <dt class="methods">no methods</dt>
                     </dl>
                     </div>, <span class="t_resource">Resource id #%d: stream</span></li>',
-                'script' => 'console.warn("a string",[],{"___class_name":"stdClass"},"Resource id #%d: stream","' . \realpath(__DIR__ . '/../DebugTestFramework.php') . ': line %d");',
+                'script' => 'console.warn("a string",[],{"___class_name":"stdClass"},"Resource id #%d: stream","' . \realpath(__DIR__ . '/../../DebugTestFramework.php') . ': line %d");',
                 'text' => '⚠ a string, array(), stdClass
                     Properties: none!
                     Methods: none!, Resource id #%d: stream',

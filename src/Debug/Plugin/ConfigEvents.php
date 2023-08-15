@@ -372,9 +372,6 @@ class ConfigEvents implements SubscriberInterface
         if (isset($configs['routeStream']['stream'])) {
             $this->debug->addPlugin($this->debug->getRoute('stream'));
         }
-        if (\array_key_exists('onEUserError', $configs['errorHandler'])) {
-            $this->explicitlySet['onEUserError'] = true;
-        }
         if (empty($cfgDebug) || $this->isConfigured) {
             return $cfgDebug;
         }

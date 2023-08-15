@@ -1,9 +1,10 @@
 <?php
 
-namespace bdk\Test\Debug;
+namespace bdk\Test\Debug\Plugin;
 
 use bdk\Debug;
 use bdk\PubSub\Event;
+use bdk\Test\Debug\DebugTestFramework;
 
 /**
  * PHPUnit tests for Debug Channels

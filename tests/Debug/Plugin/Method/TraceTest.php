@@ -1,6 +1,6 @@
 <?php
 
-namespace bdk\Test\Debug\Method;
+namespace bdk\Test\Debug\Plugin\Method;
 
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\LogEntry;
@@ -9,7 +9,6 @@ use bdk\Test\Debug\DebugTestFramework;
 /**
  * PHPUnit tests for Debug::trace() method
  *
- * @covers \bdk\Debug
  * @covers \bdk\Debug\Dump\Html\Helper
  * @covers \bdk\Debug\Dump\Html\HtmlString
  * @covers \bdk\Debug\Dump\Html\Table

@@ -1,6 +1,6 @@
 <?php
 
-namespace bdk\Test\Debug\Method;
+namespace bdk\Test\Debug\Plugin\Method;
 
 use bdk\Debug;
 use bdk\Test\Debug\DebugTestFramework;
@@ -8,7 +8,6 @@ use bdk\Test\Debug\DebugTestFramework;
 /**
  * PHPUnit tests for Debug::time() methods
  *
- * @covers \bdk\Debug
  * @covers \bdk\Debug\Dump\Base
  * @covers \bdk\Debug\Dump\TextAnsi
  * @covers \bdk\Debug\Plugin\Method\Alert

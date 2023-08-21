@@ -42,7 +42,7 @@ class FileStreamWrapperTest extends TestCase
     public function testSetEventManager()
     {
         $pathsExcludeBack = FileStreamWrapper::getPathsExclude();
-        $requirePath = __DIR__ . '/../Fixture/FileStreamWrapperRequireTest.php';
+        $requirePath = __DIR__ . '/../Fixture/fileStreamWrapperRequireTest.php';
 
         $eventManager = \bdk\Debug::getInstance()->eventManager;
         FileStreamWrapper::setEventManager($eventManager);

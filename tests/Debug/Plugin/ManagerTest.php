@@ -7,6 +7,7 @@ use bdk\Debug\Plugin\Manager;
 use bdk\PubSub\Event;
 use bdk\Test\Debug\DebugTestFramework;
 use bdk\Test\Debug\Helper;
+use bdk\Test\PolyFill\AssertionTrait;
 use bdk\Test\PolyFill\ExpectExceptionTrait;
 use PHPUnit\Framework\TestCase;
 
@@ -15,6 +16,7 @@ use PHPUnit\Framework\TestCase;
  */
 class ManagerTest extends TestCase
 {
+    use AssertionTrait;
     use ExpectExceptionTrait;
 
     protected static $debug;

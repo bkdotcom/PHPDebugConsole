@@ -140,7 +140,7 @@ EOD;
                 ct INT NULL DEFAULT 0,
                 KEY e
             )
-        EOD;
+EOD;
 
         $conn = \Doctrine\DBAL\DriverManager::getConnection(array(
             'url' => 'sqlite:///:memory:',

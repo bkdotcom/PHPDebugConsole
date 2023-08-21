@@ -13,6 +13,7 @@
 namespace bdk\Debug\Collector;
 
 use bdk\Debug;
+use bdk\Debug\Collector\DatabaseTrait;
 use bdk\Debug\Collector\StatementInfo;
 use bdk\PubSub\Event;
 use Doctrine\DBAL\Connection;
@@ -25,6 +26,8 @@ use Doctrine\DBAL\Logging\SQLLogger;
  */
 class DoctrineLogger implements SQLLogger
 {
+    use DatabaseTrait;
+
     private $connection;
     private $debug;
 
@@ -54,33 +57,6 @@ class DoctrineLogger implements SQLLogger
         $this->debug = $debug;
         $this->debug->eventManager->subscribe(Debug::EVENT_OUTPUT, array($this, 'onDebugOutput'), 1);
         $this->debug->addPlugin($debug->pluginHighlight);
-    }
-
-    /**
-     * Returns the accumulated execution time of statements
-     *
-     * @return float
-     */
-    public function getTimeSpent()
-    {
-        return \array_reduce($this->loggedStatements, static function ($val, StatementInfo $info) {
-            return $val + $info->duration;
-        });
-    }
-
-    /**
-     * Returns the peak memory usage while performing statements
-     *
-     * @return int
-     */
-    public function getPeakMemoryUsage()
-    {
-        return \array_reduce($this->loggedStatements, static function ($carry, StatementInfo $info) {
-            $mem = $info->memoryUsage;
-            return $mem > $carry
-                ? $mem
-                : $carry;
-        });
     }
 
     /**

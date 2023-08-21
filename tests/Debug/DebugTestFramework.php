@@ -11,6 +11,8 @@ use bdk\HttpMessage\ServerRequest;
 use bdk\PubSub\Event;
 use bdk\Test\Debug\Helper;
 use bdk\Test\PolyFill\AssertionTrait;
+use PHPUnit\Framework\ExpectationFailedException;
+use RuntimeException;
 
 /**
  * PHPUnit tests for Debug class
@@ -53,6 +55,8 @@ class DebugTestFramework extends DOMTestCase
 
     /**
      * setUp is executed before each test
+     *
+     * @coversNothing
      *
      * @return void
      */
@@ -212,7 +216,7 @@ class DebugTestFramework extends DOMTestCase
                 $expectContains = \preg_replace($regexLtrim, '', $expect);
                 try {
                     if ($expectContains) {
-                        $this->assertStringMatchesFormat('%A' . $expectContains . '%A', $output);
+                        self::assertStringMatchesFormat('%A' . $expectContains . '%A', $output);
                     }
                 } catch (\Exception $e) {
                     // \bdk\Debug::varDump('expect', $expectContains);
@@ -222,7 +226,7 @@ class DebugTestFramework extends DOMTestCase
             } elseif (\is_callable($expect)) {
                 \call_user_func($expect, $output);
             } else {
-                $this->assertSame($expect, $output);
+                self::assertSame($expect, $output);
             }
         }
         // note that this setting the route removes previous route plugins  (ie wamp)
@@ -266,6 +270,7 @@ class DebugTestFramework extends DOMTestCase
             'logCountAfter' => 0,
             'logCountBefore' => $this->debug->data->get($countPath),
             'return' => null,
+            'output' => null,
         );
         if (\is_array($method)) {
             if (isset($method['dataPath'])) {
@@ -273,9 +278,11 @@ class DebugTestFramework extends DOMTestCase
             }
         } elseif ($method) {
             $this->debug->getRoute('wamp')->wamp->messages = array();
+            \ob_start();
             $values['return'] = \call_user_func_array(array($this->debug, $method), $args);
+            $values['output'] = \ob_get_clean();
             $this->file = __FILE__;
-            $this->line = __LINE__ - 2;
+            $this->line = __LINE__ - 3;
         }
         $values['logCountAfter'] = $this->debug->data->get($countPath);
         $logEntry = $this->debug->data->get($dataPath);
@@ -302,18 +309,36 @@ class DebugTestFramework extends DOMTestCase
             $tests['serverLog'] = $tests['chromeLogger'];
         }
         foreach ($tests as $test => $expect) {
-            // $this->helper->stderr('test', $test);
             $logEntryTemp = $logEntry
                 ? new LogEntry($logEntry->getSubject(), $logEntry['method'], $logEntry['args'], $logEntry['meta'])
                 : new LogEntry($this->debug, 'null');
-            $continue = $this->tstMethodPreTest($test, $expect, $logEntryTemp, $values);
-            if ($continue === false) {
-                // continue testing = false
-                continue;
+            $output = $test === 'output'
+                ? $values['output']
+                : null;
+            try {
+                $continue = $this->tstMethodPreTest($test, $expect, $logEntryTemp, $values);
+                if ($continue === false) {
+                    // continue testing = false
+                    continue;
+                }
+                $routeObj = $this->tstMethodRouteObj($test);
+                $output = $this->tstMethodOutput($test, $routeObj, $logEntryTemp, $expect);
+                $this->tstMethodTest($test, $logEntryTemp, $expect, $output);
+            } catch (ExpectationFailedException $e) {
+                $message = $test . ' has failed';
+                if (\is_string($expect) && \is_string($output)) {
+                    echo $test . ':' . "\n";
+                    echo 'expect: ' . \str_replace("\e", '\e', $expect) . "\n\n"
+                        . 'actual: ' . \str_replace("\e", '\e', $output) . "\n\n";
+                    if (\strpos($output, "\e") !== false) {
+                        echo 'actual ansi: ' . $output . "\n\n";
+                    }
+                } else {
+                    // var_dump($e);
+                    $message .= ' - ' . $e->getMessage();
+                }
+                throw new \PHPUnit\Framework\AssertionFailedError($message);
             }
-            $routeObj = $this->tstMethodRouteObj($test);
-            $output = $this->tstMethodOutput($test, $routeObj, $logEntryTemp, $expect);
-            $this->tstMethodTest($test, $logEntryTemp, $expect, $output);
         }
     }
 
@@ -414,14 +439,24 @@ class DebugTestFramework extends DOMTestCase
         return $this->helper->deObjectifyData($logEntries);
     }
 
+    /**
+     * @coversNothing
+     */
     protected function resetDebug()
     {
+        \bdk\Test\Debug\Mock\Php::$memoryLimit = null;
         self::$debug = Debug::getInstance(array(
             'collect' => true,
             'emailFunc' => array($this, 'emailMock'),
             'emailLog' => false,
             'emailTo' => null,
             'logEnvInfo' => false,
+            'logFiles' => array(
+                'filesExclude' => array(
+                    'closure://function',
+                    '/vendor/',
+                ),
+            ),
             'logRequestInfo' => false,
             'logResponse' => false,
             'logRuntime' => true,
@@ -472,6 +507,11 @@ class DebugTestFramework extends DOMTestCase
         $this->debug->errorHandler->setData('errors', array());
         $this->debug->errorHandler->setData('errorCaller', array());
         $this->debug->errorHandler->setData('lastErrors', array());
+        $channels = $this->helper->getProp($this->debug->getPlugin('channel'), 'channels');
+        $channels = array(
+            'general' => \array_intersect_key($channels['general'], \array_flip(array('Request / Response'))),
+        );
+        $this->helper->setProp($this->debug->getPlugin('channel'), 'channels', $channels);
         $this->helper->setProp($this->debug->getPlugin('methodReqRes'), 'serverParams', array());
         $this->helper->setProp($this->debug->abstracter->abstractObject->class, 'default', null);
 
@@ -489,28 +529,31 @@ class DebugTestFramework extends DOMTestCase
                     \call_user_func($expect, $logEntry);
                 } elseif (\is_string($expect)) {
                     $logEntryArray = $this->helper->logEntryToArray($logEntry);
-                    $this->assertStringMatchesFormat($expect, \json_encode($logEntryArray), 'log entry does not match format');
+                    self::assertStringMatchesFormat($expect, \json_encode($logEntryArray), 'log entry does not match format');
                 } else {
                     $logEntryArray = $this->helper->logEntryToArray($logEntry);
                     if (isset($expect['meta']['file']) && $expect['meta']['file'] === '*') {
                         unset($expect['meta']['file']);
                         unset($logEntryArray['meta']['file']);
                     }
-                    $this->assertEquals($expect, $logEntryArray);
+                    self::assertEquals($expect, $logEntryArray);
                 }
                 return false;
             case 'custom':
                 \call_user_func($expect, $logEntry);
                 return false;
             case 'notLogged':
-                $this->assertSame($vals['logCountBefore'], $vals['logCountAfter'], 'failed asserting nothing logged');
+                self::assertSame($vals['logCountBefore'], $vals['logCountAfter'], 'failed asserting nothing logged');
+                return false;
+            case 'output':
+                self::assertStringMatchesFormatNormalized($expect, (string) $vals['output'], 'output not match format');
                 return false;
             case 'return':
                 if (\is_string($expect)) {
-                    $this->assertStringMatchesFormat($expect, (string) $vals['return'], 'return value does not match format');
+                    self::assertStringMatchesFormat($expect, (string) $vals['return'], 'return value does not match format');
                     return false;
                 }
-                $this->assertSame($expect, $vals['return'], 'return value not same');
+                self::assertSame($expect, $vals['return'], 'return value not same');
                 return false;
         }
         return true;
@@ -570,7 +613,11 @@ class DebugTestFramework extends DOMTestCase
                 )
             );
             if ($routeObj) {
-                $routeObj->processLogEntries($event, Debug::EVENT_OUTPUT, $this->debug->eventManager);
+                $subscriptions = $routeObj->getSubscriptions();
+                $subscriptions = (array) $subscriptions[Debug::EVENT_OUTPUT];
+                foreach ($subscriptions as $methodName) {
+                    $routeObj->{$methodName}($event, Debug::EVENT_OUTPUT, $this->debug->eventManager);
+                }
             }
             $this->debug->data->set($dataBackup);
             $headers = $event['headers'];
@@ -680,22 +727,18 @@ class DebugTestFramework extends DOMTestCase
             }
             if (isset($outputExpect['contains'])) {
                 $message = "\e[1m" . $test . " doesn't contain\e[0m";
-                if ($test === 'streamAnsi') {
-                    $message .= "\nactual: " . \str_replace("\e", '\e', $output);
-                }
-                if (\is_string($output)) {
-                    $this->assertStringContainsString($outputExpect['contains'], $output, $message);
-                    return;
-                }
-                $this->assertContains($outputExpect['contains'], $output, $message);
-            } else {
-                $message = "\e[1m" . $test . " not same\e[0m";
-                $this->assertSame($outputExpect, $output, $message);
+                \is_string($output)
+                    ? self::assertStringContainsString($outputExpect['contains'], $output, $message)
+                    : self::assertContains($outputExpect['contains'], $output, $message);
+                return;
             }
+            $message = "\e[1m" . $test . " not same\e[0m";
+            self::assertSame($outputExpect, $output, $message);
             return;
-        } elseif ($outputExpect === false) {
+        }
+        if ($outputExpect === false) {
             if ($test === 'wamp') {
-                $this->assertFalse($output);
+                self::assertFalse($output);
                 return;
             }
         }
@@ -703,25 +746,35 @@ class DebugTestFramework extends DOMTestCase
             $outputExpect = \preg_replace('/^(X-Wf-1-1-1-)\S+\b/m', '$1%d', $outputExpect);
         }
 
-        $outputNorm = $output;
-        $outputNorm = \preg_replace('#^\s+#m', '', $outputNorm);
-        $outputExpect = \preg_replace('#^\s+#m', '', $outputExpect);
-        // @see https://github.com/sebastianbergmann/phpunit/issues/3040
-        $outputNorm = \str_replace("\r", '[\\r]', $outputNorm);
-        $outputExpect = \str_replace("\r", '[\\r]', $outputExpect);
+        $message = "\e[1m" . $test . " not same\e[0m";
+        self::assertStringMatchesFormatNormalized($outputExpect, \trim($output), $message);
+    }
 
-        try {
-            $message = "\e[1m" . $test . " not same\e[0m";
-            $this->assertStringMatchesFormat(\trim($outputExpect), \trim($outputNorm), $message);
-        } catch (\Exception $e) {
-            echo $test . ':' . "\n";
-            echo $test === 'streamAnsi'
-                ? 'expect: ' . \str_replace("\e", '\e', $outputExpect) . "\n\n"
-                    . 'actual: ' . \str_replace("\e", '\e', $outputNorm) . "\n\n"
-                    . 'actual: ' . $output . "\n\n"
-                : 'expect: ' . $outputExpect . "\n\n"
-                    . 'actual: ' . $output . "\n";
-            throw new \PHPUnit\Framework\AssertionFailedError($test . ' has failed');
+    /**
+     * Assert string matches format
+     * Leading per-line whitespace is removed
+     *
+     * @param string $expect  expect format
+     * @param string $actual  actual
+     * @param string $message message to output when assert failes
+     *
+     * @return void
+     */
+    protected static function assertStringMatchesFormatNormalized($expect, $actual, $message = null)
+    {
+        $actual = \preg_replace('#^\s+#m', '', $actual);
+        $expect = \preg_replace('#^\s+#m', '', $expect);
+        // @see https://github.com/sebastianbergmann/phpunit/issues/3040
+        $actual = \str_replace("\r", '[\\r]', $actual);
+        $expect = \str_replace("\r", '[\\r]', $expect);
+
+        $actual = \trim($actual);
+        $expect = \trim($expect);
+
+        $args = array($expect, $actual);
+        if ($message) {
+            $args[] = $message;
         }
+        \call_user_func_array(array('PHPUnit\Framework\TestCase', 'assertStringMatchesFormat'), $args);
     }
 }

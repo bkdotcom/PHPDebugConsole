@@ -12,6 +12,7 @@
 
 namespace bdk\Debug\Abstraction;
 
+use bdk\Debug;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
 use bdk\Debug\Abstraction\AbstractObjectMethodParams;
@@ -127,9 +128,9 @@ class AbstractObjectMethods extends AbstractObjectInheritable
      */
     private function addMethodsFull(Abstraction $abs)
     {
-        $briefBak = $this->abstracter->debug->setCfg('brief', true, false);
+        $briefBak = $this->abstracter->debug->setCfg('brief', true, Debug::CONFIG_NO_PUBLISH);
         $this->addViaReflection($abs);
-        $this->abstracter->debug->setCfg('brief', $briefBak, false);
+        $this->abstracter->debug->setCfg('brief', $briefBak, Debug::CONFIG_NO_PUBLISH | Debug::CONFIG_NO_RETURN);
         $this->addViaPhpDoc($abs);
         $this->addImplements($abs);
         if ($abs['cfgFlags'] & AbstractObject::PHPDOC_COLLECT) {

@@ -105,14 +105,14 @@ class LogEntry extends Event implements JsonSerializable
         if (\in_array($this->values['method'], array('profileEnd', 'table', 'trace'), true)) {
             $maxDepth = $this->subject->getCfg('maxDepth');
             if ($maxDepth === 1) {
-                $this->subject->setCfg('maxDepth', 2);
+                $this->subject->setCfg('maxDepth', 2, Debug::CONFIG_NO_RETURN);
                 $cfgRestore = array('maxDepth' => $maxDepth);
             }
         }
         foreach ($this->values['args'] as $i => $val) {
             $this->values['args'][$i] = $this->subject->abstracter->crate($val, $this->values['method']);
         }
-        $this->subject->setCfg($cfgRestore);
+        $this->subject->setCfg($cfgRestore, Debug::CONFIG_NO_RETURN);
     }
 
     /**

@@ -12,6 +12,7 @@
 
 namespace bdk\Debug\Route\Html;
 
+use bdk\Debug;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Route\Html as RouteHtml;
 use bdk\ErrorHandler;
@@ -160,10 +161,10 @@ class ErrorSummary
             'maxDepth' => 0,
             // Don't inspect objects when dumping trace arguments...  potentially huge objects
             'objectsExclude' => array('*'),
-        ), false);
+        ), Debug::CONFIG_NO_PUBLISH);
         $logEntry = $this->buildFatalBacktraceLogEntry($backtrace);
         $this->debug->rootInstance->getPlugin('methodTable')->doTable($logEntry);
-        $this->debug->setCfg($cfgWas, false);
+        $this->debug->setCfg($cfgWas, Debug::CONFIG_NO_PUBLISH | Debug::CONFIG_NO_RETURN);
         return '<li class="m_trace" data-detect-files="true">' . $this->routeHtml->dumper->table->build(
             $logEntry['args'][0],
             $logEntry['meta']

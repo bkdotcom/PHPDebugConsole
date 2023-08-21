@@ -46,8 +46,29 @@ class LogFiles extends AbstractComponent implements SubscriberInterface
     public function getSubscriptions()
     {
         return array(
+            Debug::EVENT_CONFIG => 'onConfig',
             Debug::EVENT_OUTPUT => array('onOutput', PHP_INT_MAX),
         );
+    }
+
+    /**
+     * Debug::EVENT_CONFIG subscriber
+     *
+     * @param Event $event Event instance
+     *
+     * @return void
+     */
+    public function onConfig(Event $event)
+    {
+        if (empty($event['debug']['logFiles'])) {
+            return;
+        }
+        $cfg = $event['debug']['logFiles'];
+        $this->cfg = \array_replace_recursive($this->cfg, $cfg);
+        if (isset($cfg['filesExclude'])) {
+            // replace all
+            $this->cfg['filesExclude'] = $cfg['filesExclude'];
+        }
     }
 
     /**
@@ -66,12 +87,6 @@ class LogFiles extends AbstractComponent implements SubscriberInterface
 
         $this->debug = $debug->getChannel('Files', $this->cfg['channelOpts']);
 
-        $cfg = $this->debug->getCfg('logFiles', Debug::CONFIG_INIT);
-        $this->cfg = \array_replace_recursive($this->cfg, $cfg);
-        if (isset($cfg['filesExclude'])) {
-            // replace all
-            $this->cfg['filesExclude'] = $cfg['filesExclude'];
-        }
         $this->output();
     }
 
@@ -220,7 +235,7 @@ class LogFiles extends AbstractComponent implements SubscriberInterface
     {
         $fileTree = new \bdk\Debug\Utility\FileTree();
         $files = $fileTree->filesToTree($files, $this->excludedCounts, $this->cfg['condense']);
-        $maxDepthBak = $this->debug->setCfg('maxDepth', 0, false);
+        $maxDepthBak = $this->debug->setCfg('maxDepth', 0, Debug::CONFIG_NO_PUBLISH);
         $this->debug->log(
             $this->debug->abstracter->crateWithVals(
                 $files,
@@ -235,6 +250,6 @@ class LogFiles extends AbstractComponent implements SubscriberInterface
                 'detectFiles' => true,
             ))
         );
-        $this->debug->setCfg('maxDepth', $maxDepthBak, false);
+        $this->debug->setCfg('maxDepth', $maxDepthBak, Debug::CONFIG_NO_PUBLISH | Debug::CONFIG_NO_RETURN);
     }
 }

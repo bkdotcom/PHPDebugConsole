@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2023 Brad Kent
  * @version   v3.1
  */
 
@@ -35,6 +35,8 @@ class Table implements SubscriberInterface
 
     /**
      * Constructor
+     *
+     * @codeCoverageIgnore
      */
     public function __construct()
     {
@@ -102,7 +104,7 @@ class Table implements SubscriberInterface
         );
 
         if ($cfgRestore) {
-            $this->debug->setCfg($cfgRestore);
+            $this->debug->setCfg($cfgRestore, Debug::CONFIG_NO_RETURN);
         }
 
         if ($table->haveRows()) {

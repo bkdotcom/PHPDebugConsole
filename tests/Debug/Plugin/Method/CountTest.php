@@ -42,7 +42,7 @@ class CountTest extends DebugTestFramework
         );
         $this->debug->count('count_inc test', Debug::COUNT_NO_INC);  // (9) //  doesn't increment
 
-        $this->assertSame(array(
+        self::assertSame(array(
             array('count', array('count test',1), array()),
             array('count', array('count test',2), array()),
             array('count', array('count',1), array('file' => __FILE__,'line' => $lines[1])),
@@ -134,7 +134,7 @@ class CountTest extends DebugTestFramework
                 'notLogged' => true,
                 // 'return' => 5,
                 // 'custom' => function () {
-                    // $this->assertSame(5, $this->debug->data->get('counts/count test'));
+                    // self::assertSame(5, $this->debug->data->get('counts/count test'));
                 // },
                 'wamp' => false,
             )

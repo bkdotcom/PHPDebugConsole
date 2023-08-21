@@ -116,7 +116,7 @@ class InternalEvents implements SubscriberInterface
         if ($this->debug->getCfg('collect', Debug::CONFIG_DEBUG)) {
             $this->logError($error);
             if ($cfgWas) {
-                $this->debug->setCfg($cfgWas);
+                $this->debug->setCfg($cfgWas, Debug::CONFIG_NO_RETURN);
             }
             return;
         }

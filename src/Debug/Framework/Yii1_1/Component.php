@@ -98,7 +98,7 @@ class Component extends CApplicationComponent implements SubscriberInterface
         $cfg = $name === 'config'
             ? $value
             : array($name => $value);
-        $this->debug->rootInstance->setCfg($cfg);
+        $this->debug->rootInstance->setCfg($cfg, Debug::CONFIG_NO_RETURN);
     }
 
     /**
@@ -181,7 +181,7 @@ class Component extends CApplicationComponent implements SubscriberInterface
                 $logEntry['handled'] = true;
                 break;
             case 'logPdo':
-                $debug->getChannel('PDO')->setCfg('collect', $arg0);
+                $debug->getChannel('PDO')->setCfg('collect', $arg0, Debug::CONFIG_NO_RETURN);
                 $logEntry->stopPropagation();
                 $logEntry['handled'] = true;
                 break;

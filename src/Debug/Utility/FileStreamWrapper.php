@@ -13,12 +13,13 @@
 namespace bdk\Debug\Utility;
 
 use bdk\Debug;
+use bdk\Debug\Utility\Php;
 use bdk\PubSub\Manager;
 
 /**
  * Generic stream-wrapper which publishes Debug::EVENT_STREAM_WRAP when file is required/included
  *
- * Event subscriber is able to modify file on-the-fly to monkey-path
+ * Event subscriber is able to modify file on-the-fly to monkey-patch
  *  or, in the case of PHPDebugConsole, inject `declare(ticks=1);`
  *
  * @see http://php.net/manual/en/class.streamwrapper.php
@@ -117,13 +118,23 @@ class FileStreamWrapper
     /**
      * Set paths/directories to exclude
      *
-     * @param array $pathsExclude paths/directories to exclude
+     * @param string[] $pathsExclude paths/directories to exclude
      *
      * @return void
      */
-    public static function setPathsExclude($pathsExclude)
+    public static function setPathsExclude(array $pathsExclude)
     {
-        static::$pathsExclude = $pathsExclude;
+        static::$pathsExclude = \array_map('realpath', $pathsExclude);
+    }
+
+    /**
+     * Get paths/directories to exclude
+     *
+     * @return string[]
+     */
+    public static function getPathsExclude()
+    {
+        return static::$pathsExclude;
     }
 
     /**
@@ -155,15 +166,11 @@ class FileStreamWrapper
      */
     public function dir_opendir($path, $options = 0)
     {
-        if ($this->resource) {
-            return false;
-        }
         // "use" our function params so things don't complain
         array($options);
         static::unregister();
-        $this->resource = $this->context
-            ? \opendir($path, $this->context)
-            : \opendir($path);
+        $args = $this->popNull(array($path, $this->context));
+        $this->resource = \call_user_func_array('opendir', $args);
         static::register();
         return $this->resource !== false;
     }
@@ -177,10 +184,9 @@ class FileStreamWrapper
      */
     public function dir_readdir()
     {
-        if (!$this->resource) {
-            return false;
-        }
-        return \readdir($this->resource);
+        return $this->resource
+            ? \readdir($this->resource)
+            : false;
     }
 
     /**
@@ -212,9 +218,8 @@ class FileStreamWrapper
     {
         static::unregister();
         $isRecursive = (bool) ($options & STREAM_MKDIR_RECURSIVE);
-        $result = $this->context
-            ? \mkdir($path, $mode, $isRecursive, $this->context)
-            : \mkdir($path, $mode, $isRecursive);
+        $args = $this->popNull(array($path, $mode, $isRecursive, $this->context));
+        $result = \call_user_func_array('mkdir', $args);
         static::register();
         return $result;
     }
@@ -232,9 +237,8 @@ class FileStreamWrapper
     public function rename($pathFrom, $pathTo)
     {
         static::unregister();
-        $result = $this->context
-            ? \rename($pathFrom, $pathTo, $this->context)
-            : \rename($pathFrom, $pathTo);
+        $args = $this->popNull(array($pathFrom, $pathTo, $this->context));
+        $result = \call_user_func_array('rename', $args);
         static::register();
         return $result;
     }
@@ -254,9 +258,8 @@ class FileStreamWrapper
         // "use" our function params so things don't complain
         array($options);
         static::unregister();
-        $result = $this->context
-            ? \rmdir($path, $this->context)
-            : \rmdir($path);
+        $args = $this->popNull(array($path, $this->context));
+        $result = \call_user_func_array('rmdir', $args);
         static::register();
         return $result;
     }
@@ -271,15 +274,11 @@ class FileStreamWrapper
      *
      * @see http://php.net/manual/en/streamwrapper.stream-cast.php
      */
-    public function stream_cast($castAs)
+    public function stream_cast($castAs) // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
     {
-        if (!$this->resource) {
-            return false;
-        }
-        if (($castAs & STREAM_CAST_AS_STREAM) !== STREAM_CAST_AS_STREAM) {
-            return false;
-        }
-        return $this->resource;
+        return $this->resource
+            ? $this->resource
+            : false;
     }
 
     /**
@@ -308,10 +307,9 @@ class FileStreamWrapper
      */
     public function stream_eof()
     {
-        if (!$this->resource) {
-            return false;
-        }
-        return \feof($this->resource);
+        return $this->resource
+            ? \feof($this->resource)
+            : false;
     }
 
     /**
@@ -323,10 +321,9 @@ class FileStreamWrapper
      */
     public function stream_flush()
     {
-        if (!$this->resource) {
-            return false;
-        }
-        return \fflush($this->resource);
+        return $this->resource
+            ? \fflush($this->resource)
+            : false;
     }
 
     /**
@@ -358,10 +355,9 @@ class FileStreamWrapper
             // phpunit 9.5.5 issue ??
             $operation = LOCK_EX;
         }
-        if (\in_array($operation, $validOperations, true) === false) {
-            return false;
-        }
-        return \flock($this->resource, $operation);
+        return \in_array($operation, $validOperations, true)
+            ? \flock($this->resource, $operation)
+            : false;
     }
 
     /**
@@ -378,11 +374,11 @@ class FileStreamWrapper
     public function stream_metadata($path, $option, $value)
     {
         static::unregister();
+        $result = false;
         switch ($option) {
             case STREAM_META_TOUCH:
-                $result = empty($value)
-                    ? \touch($path)
-                    : \touch($path, $value[0], $value[1]);
+                $args = \array_merge(array($path), $value ?: array());
+                $result = \call_user_func_array('touch', $this->popNull($args));
                 break;
             case STREAM_META_OWNER_NAME:
                 // Fall through
@@ -397,8 +393,6 @@ class FileStreamWrapper
             case STREAM_META_ACCESS:
                 $result = \chmod($path, $value);
                 break;
-            default:
-                $result = false;
         }
         static::register();
         return $result;
@@ -418,6 +412,7 @@ class FileStreamWrapper
      */
     public function stream_open($path, $mode, $options, &$openedPath)
     {
+        // echo 'stream_open ' . $path . "\n";
         if (\strpos($mode, 'r') !== false && \file_exists($path) === false) {
             return false;
         }
@@ -431,7 +426,7 @@ class FileStreamWrapper
         }
         $this->resource = $shouldTransform
             ? static::getResourceTransformed($path, $options, $openedPath)
-            : $this->resource = static::getResource($path, $mode, $options, $openedPath);
+            : static::getResource($path, $mode, $options, $openedPath);
         static::register();
         return $this->resource !== false;
     }
@@ -447,14 +442,15 @@ class FileStreamWrapper
      */
     public function stream_read($bytes)
     {
-        if (!$this->resource) {
-            return false;
-        }
-        return \fread($this->resource, $bytes);
+        return $this->resource
+            ? \fread($this->resource, $bytes)
+            : false;
     }
 
     /**
      * Seek to specific location in a stream
+     *
+     * This method is called in response to `fseek().`
      *
      * @param int $offset The stream offset to seek to
      * @param int $whence [SEEK_SET] | SEEK_CUR | SEEK_END
@@ -465,11 +461,9 @@ class FileStreamWrapper
      */
     public function stream_seek($offset, $whence = SEEK_SET)
     {
-        if (!$this->resource) {
-            return false;
-        }
-        $result = \fseek($this->resource, $offset, $whence);
-        return $result !== -1;
+        return $this->resource
+            ? \fseek($this->resource, $offset, $whence) !== -1
+            : false;
     }
 
     /**
@@ -484,25 +478,28 @@ class FileStreamWrapper
     public function stream_set_option($option, $arg1, $arg2)
     {
         if (!$this->resource || \get_resource_type($this->resource) !== 'stream') {
-            \trigger_error(\sprintf('The "$resource" property of "%s" needs to be a stream.', __CLASS__), E_USER_WARNING);
+            \trigger_error(\sprintf(
+                'The "$resource" property of "%s" needs to be a stream.  Currently %s',
+                __CLASS__,
+                Php::getDebugType($this->resource)
+            ), E_USER_WARNING);
             return false;
         }
-        $return = false;
         switch ($option) {
             case STREAM_OPTION_BLOCKING:
-                $return = \stream_set_blocking($this->resource, (bool) $arg1);
-                break;
+                return \stream_set_blocking($this->resource, (bool) $arg1);
             case STREAM_OPTION_READ_TIMEOUT:
-                $return = \stream_set_timeout($this->resource, $arg1, $arg2);
-                break;
-            case STREAM_OPTION_READ_BUFFER:
-                // poorly documented / unsure how to implement / return false to not implement
-                break;
+                return \stream_set_timeout($this->resource, $arg1, $arg2);
             case STREAM_OPTION_WRITE_BUFFER:
-                // poorly documented / unsure how to implement / return false to not implement
-                break;
+                // $arg1: STREAM_BUFFER_NONE or STREAM_BUFFER_FULL
+                // $arg2: the requested buffer size
+                return \stream_set_write_buffer($this->resource, $arg2) === 0;
+            case STREAM_OPTION_READ_BUFFER:
+                // $arg1: STREAM_BUFFER_NONE or STREAM_BUFFER_FULL
+                // $arg2: the requested buffer size
+                return \stream_set_read_buffer($this->resource, $arg2) === 0;
         }
-        return $return;
+        return false;
     }
 
     /**
@@ -514,14 +511,15 @@ class FileStreamWrapper
      */
     public function stream_stat()
     {
-        if (!$this->resource) {
-            return false;
-        }
-        return \fstat($this->resource);
+        return $this->resource
+            ? \fstat($this->resource)
+            : false;
     }
 
     /**
      * Retrieve the current position of a stream
+     *
+     * This method is called in response to `fseek()` to determine the current position.
      *
      * @return int|false
      *
@@ -529,10 +527,9 @@ class FileStreamWrapper
      */
     public function stream_tell()
     {
-        if (!$this->resource) {
-            return false;
-        }
-        return \ftell($this->resource);
+        return $this->resource
+            ? \ftell($this->resource)
+            : false;
     }
 
     /**
@@ -546,10 +543,9 @@ class FileStreamWrapper
      */
     public function stream_truncate($size)
     {
-        if (!$this->resource) {
-            return false;
-        }
-        return \ftruncate($this->resource, $size);
+        return $this->resource
+            ? \ftruncate($this->resource, $size)
+            : false;
     }
 
     /**
@@ -563,10 +559,9 @@ class FileStreamWrapper
      */
     public function stream_write($data)
     {
-        if (!$this->resource) {
-            return false;
-        }
-        return \fwrite($this->resource, $data);
+        return $this->resource
+            ? \fwrite($this->resource, $data)
+            : false;
     }
 
     /**
@@ -581,9 +576,8 @@ class FileStreamWrapper
     public function unlink($path)
     {
         static::unregister();
-        $result = $this->context
-            ? \unlink($path, $this->context)
-            : \unlink($path);
+        $args = $this->popNull(array($path, $this->context));
+        $result = \call_user_func_array('unlink', $args);
         static::register();
         return $result;
     }
@@ -606,11 +600,8 @@ class FileStreamWrapper
             return false;
         }
         if ($flags & STREAM_URL_STAT_QUIET) {
-            /*
-                Temporary error handler to discard errors in silent mode
-            */
-            \set_error_handler(static function () {
-            });
+            // Temporary error handler to discard errors in silent mode
+            \set_error_handler(static function () {});
             try {
                 $result = $flags & STREAM_URL_STAT_LINK
                     ? \lstat($path)
@@ -643,9 +634,8 @@ class FileStreamWrapper
     private function getResource($file, $mode, $options, &$openedPath)
     {
         $useIncludePath = (bool) ($options & STREAM_USE_PATH);
-        $resource = $this->context
-            ? \fopen($file, $mode, $useIncludePath, $this->context)
-            : \fopen($file, $mode, $useIncludePath);
+        $args = $this->popNull(array($file, $mode, $useIncludePath, $this->context));
+        $resource = \call_user_func_array('fopen', $args);
         /*
             Determine opened path
         */
@@ -670,9 +660,8 @@ class FileStreamWrapper
     {
         $resource = \fopen(static::OUTPUT_DESTINATION, static::OUTPUT_ACCESS_MODE);
         $useIncludePath = (bool) ($options & STREAM_USE_PATH);
-        $content = $this->context
-            ? \file_get_contents($file, $useIncludePath, $this->context)
-            : \file_get_contents($file, $useIncludePath);
+        $args = $this->popNull(array($file, $useIncludePath, $this->context));
+        $content = \call_user_func_array('file_get_contents', $args);
         if ($useIncludePath) {
             $openedPath = \stream_resolve_include_path($file);
         }
@@ -698,11 +687,25 @@ class FileStreamWrapper
     private static function isTargeted($file)
     {
         foreach (static::$pathsExclude as $excludePath) {
+            if ($file === $excludePath) {
+                return false;
+            }
             if (\strpos($file, $excludePath . DIRECTORY_SEPARATOR) === 0) {
                 return false;
             }
         }
         return true;
+    }
+
+    private function popNull($values)
+    {
+        $count = \count($values);
+        for ($i = $count; $i > 0; $i--) {
+            if ($values[$i - 1] !== null) {
+                break;
+            }
+        }
+        return \array_slice($values, 0, $i);
     }
 
     /**

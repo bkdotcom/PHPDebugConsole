@@ -852,6 +852,7 @@ EOD;
         $filepath = $fixtureDir . '/Anonymous.php';
         $anonymous = require $filepath;
         $line = 26;
+
         $this->testMethod(
             'log',
             array(
@@ -901,6 +902,7 @@ EOD;
                     public: 1',
             )
         );
+
         $this->testMethod(
             'log',
             array(
@@ -1048,6 +1050,7 @@ EOD;
                 },
             )
         );
+
         $this->testMethod(
             'log',
             array(

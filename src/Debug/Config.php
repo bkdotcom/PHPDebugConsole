@@ -174,21 +174,21 @@ class Config
      *
      * @param array|string $path    (string) path or array of values
      * @param mixed        $value   If setting via path, this is the value
-     * @param bool         $publish Whether to publish Debug::EVENT_CONFIG
+     * @param int          $options Bitmask of CONFIG_NO_PUBLISH, CONFIG_NO_RETURN
      *
      * @return mixed previous value(s)
      */
-    public function set($path, $value = null, $publish = true)
+    public function set($path, $value = null, $options = 0)
     {
         if (\is_array($path)) {
             $values = $this->normalizeArray($path);
-            $publish = \is_bool($value) ? $value : $publish;
-            return $this->doSet($values, $publish);
+            $options = \is_int($value) ? $value : $options;
+            return $this->doSet($values, $options);
         }
         $path = $this->normalizePath($path);
         $values = array();
         $this->debug->arrayUtil->pathSet($values, $path, $value);
-        $return = $this->doSet($values, $publish);
+        $return = $this->doSet($values, $options);
         return $this->debug->arrayUtil->pathGet($return, $path);
     }
 
@@ -196,20 +196,23 @@ class Config
      * Set cfg values for Debug and child classes
      *
      * @param array $configs Config values grouped by class
-     * @param bool  $publish Whether to publish Debug::EVENT_CONFIG
+     * @param int   $options Bitmask of CONFIG_NO_PUBLISH, CONFIG_NO_RETURN
      *
      * @return array previous values
      */
-    private function doSet(array $configs, $publish = true)
+    private function doSet(array $configs, $options = 0)
     {
+        $return = array();
         if (!$configs) {
-            return array();
+            return $return;
         }
-        $return = $this->doSetReturn($configs);
+        if (($options & Debug::CONFIG_NO_RETURN) !== Debug::CONFIG_NO_RETURN) {
+            $return = $this->doSetReturn($configs);
+        }
         /*
             Publish config event first... it may add/update debugProp values
         */
-        if ($publish) {
+        if (($options & Debug::CONFIG_NO_PUBLISH) !== Debug::CONFIG_NO_PUBLISH) {
             $configs = $this->publishConfigEvent($configs);
         }
         /*

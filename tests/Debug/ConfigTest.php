@@ -12,7 +12,6 @@ use bdk\HttpMessage\ServerRequest;
  * @covers \bdk\Debug\Plugin\ConfigEvents
  * @covers \bdk\Debug\Plugin\AssertSettingTrait
  * @covers \bdk\Debug\Plugin\InternalEvents
- * @covers \bdk\Debug\Plugin\Manager
  * @covers \bdk\Debug\Plugin\Redaction
  * @covers \bdk\Debug\Route\Stream
  * @covers \bdk\Debug\Utility\FileStreamWrapper
@@ -130,6 +129,7 @@ class ConfigTest extends DebugTestFramework
             'headerMaxAll',
             'headerMaxPer',
             'logEnvInfo',
+            'logFiles',
             'logRequestInfo',
             'logResponse',
             'logResponseMaxLen',

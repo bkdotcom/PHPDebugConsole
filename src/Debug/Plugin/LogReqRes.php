@@ -61,7 +61,7 @@ class LogReqRes implements SubscriberInterface
         $this->setChannel();
         $collectWas = $this->debug->setCfg('collect', true);
         $this->logRequest();
-        $this->debug->setCfg('collect', $collectWas);
+        $this->debug->setCfg('collect', $collectWas, Debug::CONFIG_NO_RETURN);
     }
 
     /**
@@ -391,7 +391,7 @@ class LogReqRes implements SubscriberInterface
     private function testLogResponse()
     {
         $isHttp = \strpos($this->debug->getInterface(), 'http') === 0;
-        $logResponse = $this->debug->getCfg('logResponse', Debug::CONFIG_DEBUG);
+        $logResponse = $this->debug->rootInstance->getCfg('logResponse', Debug::CONFIG_DEBUG);
         return $isHttp && $logResponse;
     }
 

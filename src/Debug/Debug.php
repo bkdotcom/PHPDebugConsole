@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2023 Brad Kent
  * @version   v3.1
  *
  * @link http://www.github.com/bkdotcom/PHPDebugConsole
@@ -64,6 +64,8 @@ class Debug extends AbstractDebug
     const CLEAR_SILENT = 32;
     const CONFIG_DEBUG = 'configDebug';
     const CONFIG_INIT = 'configInit';
+    const CONFIG_NO_PUBLISH = 1;
+    const CONFIG_NO_RETURN = 2;
     const COUNT_NO_INC = 1;
     const COUNT_NO_OUT = 2;
 
@@ -271,7 +273,7 @@ class Debug extends AbstractDebug
             // self::$instance set in __construct
             new static($cfg);
         } elseif ($cfg) {
-            self::$instance->setCfg($cfg);
+            self::$instance->setCfg($cfg, self::CONFIG_NO_RETURN);
         }
         return self::$instance;
     }
@@ -320,13 +322,13 @@ class Debug extends AbstractDebug
      *
      * @param string|array $path    path
      * @param mixed        $value   value
-     * @param bool         $publish Whether to publish self::EVENT_CONFIG
+     * @param int          $options bitmask of CONFIG_NO_PUBLISH, CONFIG_NO_RETURN
      *
      * @return mixed previous value(s)
      */
-    public function setCfg($path, $value = null, $publish = true)
+    public function setCfg($path, $value = null, $options = 0)
     {
-        return $this->config->set($path, $value, $publish);
+        return $this->config->set($path, $value, $options);
     }
 
     /**

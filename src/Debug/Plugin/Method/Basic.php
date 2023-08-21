@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2023 Brad Kent
  * @version   v3.1
  */
 
@@ -175,7 +175,7 @@ class Basic implements SubscriberInterface
         $logEntry->crate();
         $this->debug->publishBubbleEvent(Debug::EVENT_LOG, $logEntry);
         if ($cfgRestore) {
-            $this->debug->setCfg($cfgRestore);
+            $this->debug->setCfg($cfgRestore, Debug::CONFIG_NO_RETURN);
         }
         if ($logEntry['appendLog']) {
             $this->debug->data->appendLog($logEntry);

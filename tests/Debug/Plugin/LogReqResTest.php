@@ -39,6 +39,7 @@ class LogReqResTest extends DebugTestFramework
             ),
         ));
         $logReqRes->logResponse();
+
         $logEntries = $this->helper->deObjectifyData($this->debug->data->get('log'));
         self::assertSame('Response', $logEntries[0]['args'][0]);
         self::assertSame('Request / Response', $logEntries[0]['meta']['channel']);

@@ -54,9 +54,6 @@ abstract class AbstractRoute extends AbstractComponent implements RouteInterface
     public function __construct(Debug $debug)
     {
         $this->debug = $debug;
-        $this->channelName = $this->debug->getCfg('channelName', Debug::CONFIG_DEBUG);
-        $this->channelNameRoot = $this->debug->getCfg('channelName', Debug::CONFIG_DEBUG);
-        $this->channelRegex = '#^' . \preg_quote($this->channelName, '#') . '(\.|$)#';
     }
 
     /**
@@ -73,7 +70,10 @@ abstract class AbstractRoute extends AbstractComponent implements RouteInterface
     public function getSubscriptions()
     {
         return array(
-            Debug::EVENT_OUTPUT => 'processLogEntries',
+            Debug::EVENT_OUTPUT => array(
+                'setChannelName',
+                'processLogEntries',
+            ),
         );
     }
 
@@ -161,6 +161,21 @@ abstract class AbstractRoute extends AbstractComponent implements RouteInterface
     public function processLogEntry(LogEntry $logEntry)
     {
         return $this->dumper->processLogEntry($logEntry);
+    }
+
+    /**
+     * Set channelName values
+     *
+     * @param Event $event Event instance
+     *
+     * @return void
+     */
+    public function setChannelName(Event $event)
+    {
+        $debug = $event->getSubject();
+        $this->channelName = $debug->getCfg('channelName', Debug::CONFIG_DEBUG);
+        $this->channelNameRoot = $debug->getCfg('channelName', Debug::CONFIG_DEBUG);
+        $this->channelRegex = '#^' . \preg_quote($this->channelName, '#') . '(\.|$)#';
     }
 
     /**

@@ -311,7 +311,7 @@ class AbstractDebug
         }
 
         $this->eventManager->subscribe(Debug::EVENT_CONFIG, array($this, 'onConfig'));
-        $this->config->set($cfg);
+        $this->config->set($cfg, Debug::CONFIG_NO_RETURN);
         $this->eventManager->publish(Debug::EVENT_BOOTSTRAP, $this);
     }
 

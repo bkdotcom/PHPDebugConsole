@@ -9,12 +9,12 @@ class Utility extends UtilityBase
     public static $gitBranch = null;
 
     /**
-     * Get current git branch
-     *
-     * @return string|null
+     * {@inheritDoc}
      */
     public static function gitBranch()
     {
-        return self::$gitBranch;
+        return self::$gitBranch !== null
+            ? self::$gitBranch
+            : parent::gitBranch();
     }
 }

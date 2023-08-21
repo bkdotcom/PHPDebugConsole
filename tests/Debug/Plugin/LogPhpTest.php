@@ -18,8 +18,10 @@ use bdk\Test\Debug\DebugTestFramework;
  */
 class LogPhpTest extends DebugTestFramework
 {
-    public function testLogPhpInfo()
+    public function testLogPhpInfo1()
     {
+        \bdk\Test\Debug\Mock\Php::$memoryLimit = '128M';
+        \bdk\Test\Debug\Mock\Php::$iniFiles = array('/path/to/php.ini');
         $serverParams = \array_merge($this->debug->serverRequest->getServerParams(), array(
             'CONTENT_LENGTH' => 1234,
             'CONTENT_TYPE' => 'application/x-www-form-urlencoded',
@@ -35,28 +37,57 @@ class LogPhpTest extends DebugTestFramework
                 ),
             ),
         ));
-        $logPhp = $this->debug->getPlugin('logPhp');
 
+        $logPhp = $this->debug->getPlugin('logPhp');
+        $this->helper->setProp($logPhp, 'iniValues', array(
+            'dateTimezone' => 'America/Chicago',
+        ));
         $logPhp->onBootstrap(new Event($this->debug));
 
         $logEntries = $this->helper->deObjectifyData($this->debug->data->get('log'));
         self::assertSame(array('PHP Version', PHP_VERSION), $logEntries[0]['args']);
-        $found = null;
+        $found = array(
+            'dateTimezone' => null,
+            'iniFiles' => null,
+            'memoryLimit' => null,
+            'server' => null,
+        );
         foreach ($logEntries as $logEntry) {
-            if ($logEntry['args'][0] === '$_SERVER') {
-                $found = $logEntry;
+            if ($logEntry['args'][0] === 'memory_limit') {
+                $found['memoryLimit'] = $logEntry;
+            } elseif ($logEntry['args'][0] === '$_SERVER') {
+                $found['server'] = $logEntry;
+            } elseif ($logEntry['args'][0] === 'ini location') {
+                $found['iniFiles'] = $logEntry;
+            } elseif ($logEntry['args'][0] === 'date.timezone') {
+                $found['dateTimezone'] = true;
             }
         }
+        self::assertSame('128 MB', $found['memoryLimit']['args'][1]);
         self::assertEquals(
-            \array_intersect_key($serverParams, $found['args'][1]),
-            \array_intersect_key($found['args'][1], $serverParams)
+            \array_intersect_key($serverParams, $found['server']['args'][1]),
+            \array_intersect_key($found['server']['args'][1], $serverParams)
         );
+        self::assertTrue($found['dateTimezone']);
+        self::assertSame(array(
+            'method' => 'log',
+            'args' => array(
+                'ini location',
+                '/path/to/php.ini',
+            ),
+            'meta' => array(
+                'channel' => 'php',
+                'detectFiles' => true,
+            ),
+        ), $found['iniFiles']);
+    }
 
-        $this->debug->data->set('log', array());
-        unset(
-            $serverParams['CONTENT_LENGTH'],
-            $serverParams['CONTENT_TYPE'],
-            $serverParams['REQUEST_METHOD']
+    public function testLogPhpInfo2()
+    {
+        \bdk\Test\Debug\Mock\Php::$memoryLimit = '-1';
+        \bdk\Test\Debug\Mock\Php::$iniFiles = array(
+            '/path/to/php.ini',
+            '/path/to/ext-xdebug.ini',
         );
         $this->debug->setCfg(array(
             'logEnvInfo' => true,
@@ -67,27 +98,62 @@ class LogPhpTest extends DebugTestFramework
                 'serverRequest' => new ServerRequest(
                     'GET',
                     null,
-                    $serverParams
+                    array()
                 ),
             ),
+        ));
+        $logPhp = $this->debug->getPlugin('logPhp');
+        $this->helper->setProp($logPhp, 'iniValues', array(
+            'dateTimezone' => '',
         ));
         $logPhp->onBootstrap(new Event($this->debug));
         $logEntries = $this->helper->deObjectifyData($this->debug->data->get('log'));
         $found = array(
-            'server' => false,
             'bogusExtension' => false,
+            'dateTimezone' => false,
+            'iniFiles' => false,
+            'memoryLimitWarning' => false,
+            'server' => false,
         );
         foreach ($logEntries as $logEntry) {
             if ($found['server'] === false && $logEntry['args'][0] === '$_SERVER') {
                 $found['server'] = true;
-            }
-            if ($found['server'] === false && $logEntry['args'][0] === 'bogusExtension extension is not loaded') {
+            } elseif ($found['bogusExtension'] === false && $logEntry['args'][0] === 'bogusExtension extension is not loaded') {
                 $found['bogusExtension'] = true;
+            } elseif ($logEntry['method'] === 'assert' && $logEntry['args'][0] === '%cmemory_limit%c: should not be -1 (no limit)') {
+                $found['memoryLimitWarning'] = true;
+            } elseif ($logEntry['args'][0] === 'ini files') {
+                $found['iniFiles'] = $logEntry;
+            } elseif ($logEntry['method'] === 'assert' && $logEntry['args'][0] === '%cdate.timezone%c is not set') {
+                $found['dateTimezone'] = true;
             }
         }
         self::assertSame(array(
-            'server' => false,
             'bogusExtension' => true,
+            'dateTimezone' => true,
+            'iniFiles' => array(
+                'method' => 'log',
+                'args' => array(
+                    'ini files',
+                    array(
+                        'debug' => "\x00debug\x00",
+                        'options' => array(
+                            'showListKeys' => false,
+                        ),
+                        'type' => 'array',
+                        'value' => array(
+                            '/path/to/php.ini',
+                            '/path/to/ext-xdebug.ini',
+                        ),
+                    ),
+                ),
+                'meta' => array(
+                    'channel' => 'php',
+                    'detectFiles' => true,
+                ),
+            ),
+            'memoryLimitWarning' => true,
+            'server' => false,
         ), $found);
     }
 

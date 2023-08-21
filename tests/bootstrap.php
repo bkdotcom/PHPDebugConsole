@@ -134,6 +134,9 @@ $debug = \bdk\Debug::getInstance(array(
         // 'onEUserError' => 'continue',
     ),
     'serviceProvider' => array(
+        'php' => static function () {
+            return new \bdk\Test\Debug\Mock\Php();
+        },
         'routeWamp' => static function ($container) {
             $debug = $container['debug'];
             return new \bdk\Debug\Route\Wamp($debug, new \bdk\Test\Debug\Mock\WampPublisher());
@@ -154,13 +157,9 @@ $httpdProcess = \bdk\Test\startHttpd();
 
 $debug->eventManager->subscribe(\bdk\PubSub\Manager::EVENT_PHP_SHUTDOWN, function () use ($httpdProcess) {
     \proc_terminate($httpdProcess);
-    $files = \glob(TEST_DIR . '/../tmp/log/*.json');
-    foreach ($files as $filePath) {
-        \unlink($filePath);
-    }
-    $files = array(
-        __DIR__ . '/../tmp/error_stats.json',
-        __DIR__ . '/../tmp/logo_clone.png',
+    $files = \array_merge(
+        \glob(TEST_DIR . '/../tmp/log/*.json'),
+        \glob(TEST_DIR . '/../tmp/*')
     );
     foreach ($files as $file) {
         if (\is_file($file)) {

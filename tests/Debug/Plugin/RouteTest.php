@@ -1,10 +1,9 @@
 <?php
 
-namespace bdk\Test\Debug\PLugin;
+namespace bdk\Test\Debug\Plugin;
 
-use bdk\Debug;
-use bdk\Test\Debug\DebugTestFramework;
 use bdk\PubSub\Event;
+use bdk\Test\Debug\DebugTestFramework;
 
 /**
  * PHPUnit tests for Debug class
@@ -15,7 +14,6 @@ use bdk\PubSub\Event;
  */
 class RouteTest extends DebugTestFramework
 {
-
     public function testGetDefaultRoute()
     {
         $GLOBALS['collectedHeaders'] = array(

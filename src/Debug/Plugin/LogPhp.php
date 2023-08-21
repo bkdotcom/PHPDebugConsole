@@ -34,6 +34,17 @@ class LogPhp implements SubscriberInterface
     );
 
     private $debug;
+    private $iniValues = array();
+
+    /**
+     * Constructor
+     */
+    public function __construct()
+    {
+        $this->iniValues = array(
+            'dateTimezone' => \ini_get('date.timezone'),
+        );
+    }
 
     /**
      * {@inheritDoc}
@@ -59,7 +70,7 @@ class LogPhp implements SubscriberInterface
         $this->logPhpInfo();
         $this->logPhpEr();
         $this->logServerVals();
-        $this->debug->setCfg('collect', $collectWas);
+        $this->debug->setCfg('collect', $collectWas, Debug::CONFIG_NO_RETURN);
     }
 
     /**
@@ -221,10 +232,7 @@ class LogPhp implements SubscriberInterface
      */
     private function logPhpIni()
     {
-        $iniFiles = \array_merge(
-            array(\php_ini_loaded_file()),
-            \preg_split('#\s*[,\r\n]+\s*#', \trim(\php_ini_scanned_files()))
-        );
+        $iniFiles = $this->debug->php->getIniFiles();
         if (\count($iniFiles) === 1) {
             $this->debug->log('ini location', $iniFiles[0], $this->debug->meta('detectFiles'));
             return;
@@ -271,7 +279,7 @@ class LogPhp implements SubscriberInterface
      */
     private function logTimezone()
     {
-        $dateTimezone = \ini_get('date.timezone');
+        $dateTimezone = $this->iniValues['dateTimezone'];
         if ($dateTimezone) {
             $this->debug->log('date.timezone', $dateTimezone);
             return;

@@ -23,14 +23,14 @@ class LogEntryTest extends DebugTestFramework
                 'channel' => null,
             )
         );
-        $this->assertSame(array(
+        self::assertSame(array(
             'appendGroup' => 'foo_bar',
             'attribs' => array(
                 'id' => 'ding_dong',
                 'class' => array(),
             ),
         ), $logEntry->getMeta());
-        $this->assertSame($this->debug, $logEntry->getSubject());
+        self::assertSame($this->debug, $logEntry->getSubject());
     }
 
     public function testJsonEncode()
@@ -48,20 +48,37 @@ class LogEntryTest extends DebugTestFramework
             )
         );
         $json = \json_encode($logEntry);
-        $this->assertSame('{"method":"log","args":["string",true,false,null,42],"meta":{"attribs":{"class":["ding","dong"]},"channel":"Request \/ Response"}}', $json);
+        self::assertSame('{"method":"log","args":["string",true,false,null,42],"meta":{"attribs":{"class":["ding","dong"]},"channel":"Request \/ Response"}}', $json);
     }
 
     public function testSpecifyChannel()
     {
+        // channel does not exist..  nested channel will get created
+        $this->debug->getChannel('php', array('nested' => false));
         $logEntry = new LogEntry(
             $this->debug,
             'log',
             array('string', true, false, null, 42),
             array(
-                'channel' => 'php'
+                'channel' => 'php',
             )
         );
         $json = \json_encode($logEntry);
-        $this->assertSame('{"method":"log","args":["string",true,false,null,42],"meta":{"channel":"php"}}', $json);
+        self::assertSame('{"method":"log","args":["string",true,false,null,42],"meta":{"channel":"php"}}', $json);
+    }
+
+    public function testSpecifyChannelNotYetCreated()
+    {
+        // channel does not exist..  nested channel will get created
+        $logEntry = new LogEntry(
+            $this->debug,
+            'log',
+            array('string', true, false, null, 42),
+            array(
+                'channel' => 'php',
+            )
+        );
+        $json = \json_encode($logEntry);
+        self::assertSame('{"method":"log","args":["string",true,false,null,42],"meta":{"channel":"general.php"}}', $json);
     }
 }

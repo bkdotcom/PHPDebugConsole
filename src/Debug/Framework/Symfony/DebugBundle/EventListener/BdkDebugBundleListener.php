@@ -93,9 +93,9 @@ class BdkDebugBundleListener implements EventSubscriberInterface
         if (!$event->isMasterRequest()) {
             return;
         }
-        $this->debug->setCfg($this->debugCfg);
-        $this->debug->eventManager->subscribe('debug.log', array($this, 'onDebugLog'));
-        $this->debug->eventManager->subscribe('debug.objAbstractStart', array($this, 'onObjAbstractStart'));
+        $this->debug->setCfg($this->debugCfg, Debug::CONFIG_NO_RETURN);
+        $this->debug->eventManager->subscribe(Debug::EVENT_LOG, array($this, 'onDebugLog'));
+        $this->debug->eventManager->subscribe(Debug::EVENT_OBJ_ABSTRACT_START, array($this, 'onObjAbstractStart'));
     }
 
     /**

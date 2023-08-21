@@ -100,15 +100,17 @@ class Helper
     {
         $propRef = new ReflectionProperty($obj, $prop);
         $propRef->setAccessible(true);
-        return $propRef->getValue($obj);
+        return \is_string($obj) || $propRef->isStatic()
+            ? $propRef->getValue()
+            : $propRef->getValue($obj);
     }
 
     /**
      * Set inaccessable property value via reflection
      *
-     * @param object $obj  object instance
-     * @param string $prop property name
-     * @param mixed  $val  new value
+     * @param object|string $obj  object or classname
+     * @param string        $prop property name
+     * @param mixed         $val  new value
      *
      * @return mixed
      *

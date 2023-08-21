@@ -7,13 +7,14 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2023 Brad Kent
- * @version   v3.0
+ * @version   v3.1
  * @link      http://www.github.com/bkdotcom/PubSub
  */
 
 namespace bdk\PubSub;
 
 use bdk\PubSub\SubscriberInterface;
+use Closure;
 use InvalidArgumentException;
 use RuntimeException;
 
@@ -166,9 +167,8 @@ trait ManagerHelperTrait
     private static function normalizeInterfaceSubscribers(SubscriberInterface $interface, $mixed)
     {
         // test if single subscriber
-        $subscriberInfo = self::normalizeInterfaceSubscriber($mixed);
+        $subscriberInfo = self::normalizeInterfaceSubscriber($interface, $mixed);
         if ($subscriberInfo) {
-            $subscriberInfo['callable'] = array($interface, $subscriberInfo['callable']);
             return array($subscriberInfo);
         }
         if (\is_array($mixed) === false) {
@@ -177,9 +177,8 @@ trait ManagerHelperTrait
         // multiple subscribers
         $eventSubscribers = array();
         foreach ($mixed as $mixed2) {
-            $subscriberInfo = self::normalizeInterfaceSubscriber($mixed2);
+            $subscriberInfo = self::normalizeInterfaceSubscriber($interface, $mixed2);
             if ($subscriberInfo) {
-                $subscriberInfo['callable'] = array($interface, $subscriberInfo['callable']);
                 $eventSubscribers[] = $subscriberInfo;
                 continue;
             }
@@ -191,11 +190,12 @@ trait ManagerHelperTrait
     /**
      * Test if value defines method/priority/onlyOnce
      *
-     * @param string|array $mixed method/priority/onlyOnce info
+     * @param SubscriberInterface  $interface SubscriberInterface instance
+     * @param array|string|Closure $mixed     method/priority/onlyOnce info
      *
      * @return array|false
      */
-    private static function normalizeInterfaceSubscriber($mixed)
+    private static function normalizeInterfaceSubscriber(SubscriberInterface $interface, $mixed)
     {
         $subscriberInfo = array(
             'callable' => null,
@@ -203,11 +203,15 @@ trait ManagerHelperTrait
             'priority' => self::DEFAULT_PRIORITY,
         );
         if (\is_string($mixed)) {
+            $subscriberInfo['callable'] = array($interface, $mixed);
+            return $subscriberInfo;
+        }
+        if ($mixed instanceof Closure) {
             $subscriberInfo['callable'] = $mixed;
             return $subscriberInfo;
         }
         if (\is_array($mixed)) {
-            $subscriberInfo = self::normalizeInterfaceSubscriberArray($mixed, $subscriberInfo);
+            $subscriberInfo = self::normalizeInterfaceSubscriberArray($interface, $mixed, $subscriberInfo);
         }
         return $subscriberInfo['callable'] !== null
             ? $subscriberInfo
@@ -217,15 +221,18 @@ trait ManagerHelperTrait
     /**
      * Test if given array defines method/priority/onlyOnce
      *
-     * @param array $values         array values
-     * @param array $subscriberInfo default subscriberInfo values
+     * @param SubscriberInterface $interface      SubscriberInterface instance
+     * @param array               $values         array values
+     * @param array               $subscriberInfo default subscriberInfo values
      *
      * @return array updated subscriberInfo
      */
-    private static function normalizeInterfaceSubscriberArray(array $values, array $subscriberInfo)
+    private static function normalizeInterfaceSubscriberArray(SubscriberInterface $interface, array $values, array $subscriberInfo)
     {
         $tests = array(
-            'callable' => 'is_string',
+            'callable' => static function ($val) {
+                return \is_string($val) || ($val instanceof Closure);
+            },
             'onlyOnce' => 'is_bool',
             'priority' => 'is_int',
         );
@@ -241,6 +248,9 @@ trait ManagerHelperTrait
             // all tests failed for current value
             $subscriberInfo['callable'] = null;
             break;
+        }
+        if (\is_string($subscriberInfo['callable'])) {
+            $subscriberInfo['callable'] = array($interface, $subscriberInfo['callable']);
         }
         return $subscriberInfo;
     }

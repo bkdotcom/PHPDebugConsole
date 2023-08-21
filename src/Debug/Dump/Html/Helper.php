@@ -12,6 +12,7 @@
 
 namespace bdk\Debug\Dump\Html;
 
+use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Dump\Html as Dumper;
 
@@ -138,12 +139,12 @@ class Helper
         // set maxDepth for args
         $maxDepthBak = $this->debug->getCfg('maxDepth');
         if ($maxDepthBak > 0) {
-            $this->debug->setCfg('maxDepth', $maxDepthBak + 1, false);
+            $this->debug->setCfg('maxDepth', $maxDepthBak + 1, Debug::CONFIG_NO_PUBLISH);
         }
         $args = \is_array($rowInfo['args']) && \count($rowInfo['args']) > 0
             ? '<hr />Arguments = ' . $this->dumper->valDumper->dump($rowInfo['args'])
             : '';
-        $this->debug->setCfg('maxDepth', $maxDepthBak, false);
+        $this->debug->setCfg('maxDepth', $maxDepthBak, Debug::CONFIG_NO_PUBLISH | Debug::CONFIG_NO_RETURN);
         $this->dumper->crateRaw = $crateRawWas;
         return \str_replace('{{arguments}}', $args, $html);
     }

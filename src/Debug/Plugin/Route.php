@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2023 Brad Kent
  * @version   v3.1
  */
 
@@ -85,7 +85,7 @@ class Route extends AbstractComponent implements SubscriberInterface
         if ($route === 'stream') {
             // normally we don't init the route until output
             // but stream needs to begin listening now
-            $debug->setCfg('route', $route);
+            $debug->setCfg('route', $route, Debug::CONFIG_NO_RETURN);
         }
     }
 
@@ -130,7 +130,7 @@ class Route extends AbstractComponent implements SubscriberInterface
         $route = $debug->getCfg('route', Debug::CONFIG_DEBUG);
         if (\is_string($route)) {
             // Route is string.  Set it to set route
-            $debug->setCfg('route', $route);
+            $debug->setCfg('route', $route, Debug::CONFIG_NO_RETURN);
         }
     }
 

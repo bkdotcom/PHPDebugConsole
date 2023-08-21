@@ -68,7 +68,7 @@ class Channel implements SubscriberInterface
         }
         unset($config['nested']);
         if ($config) {
-            $channel->setCfg($config);
+            $channel->setCfg($config, Debug::CONFIG_NO_RETURN);
         }
         return $channel;
     }

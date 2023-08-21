@@ -48,9 +48,9 @@ class SerializeLog
         self::$debug = $debug;
         // set config for any channels already present in debug
         foreach (\array_intersect_key($debug->getChannels(true, true), $data['config']['channels']) as $fqn => $channel) {
-            $channel->setCfg($data['config']['channels'][$fqn]);
+            $channel->setCfg($data['config']['channels'][$fqn], Debug::CONFIG_NO_RETURN);
         }
-        $debug->setCfg($data['config']);
+        $debug->setCfg($data['config'], Debug::CONFIG_NO_RETURN);
         unset($data['config'], $data['version']);
         foreach (array('alerts', 'log', 'logSummary') as $cat) {
             $data[$cat] = self::importGroup($cat, $data[$cat]);

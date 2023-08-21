@@ -29,41 +29,6 @@ class PhpTest extends TestCase
         self::assertSame($expect, Php::friendlyClassName($input));
     }
 
-    public static function providerGetDebugType()
-    {
-        $callbackFunc = \ini_set('unserialize_callback_func', null);
-        $incompleteClass = \unserialize('O:8:"Foo\Buzz":0:{}');
-        \ini_set('unserialize_callback_func', $callbackFunc);
-
-        $fh = \fopen(__FILE__, 'r');
-        \fclose($fh);
-
-        // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
-        $tests = array(
-            'object' => array(new \stdClass(), 'stdClass'),
-            'object.closure' => array(function () {}, 'Closure'),
-            'string' => array('foo', 'string'),
-            'false' => array(false, 'bool'),
-            'true' => array(true, 'bool'),
-            'null' => array(null, 'null'),
-            'array' => array(array(), 'array'),
-            'array.callable' => array(array(new TestObj(), 'methodPublic'), 'callable'),
-            'int' => array(42, 'int'),
-            'float' => array(3.14, 'float'),
-            'stream' => array(\fopen(__FILE__, 'r'), 'resource (stream)'),
-            'closed resource' => array($fh, 'resource (closed)'),
-            '__PHP_Incomplete_Class' => array($incompleteClass, '__PHP_Incomplete_Class'),
-        );
-        if (PHP_VERSION_ID >= 70000) {
-            $tests = \array_merge($tests, array(
-                'anon' => array(eval('return new class() {};'), 'class@anonymous'),
-                'anonExtends' => array(eval('return new class() extends stdClass {};'), 'stdClass@anonymous'),
-                'anonImplements' => array(eval('return new class() implements Reflector { function __toString() {} public static function export() {} };'), 'Reflector@anonymous'),
-            ));
-        }
-        return $tests;
-    }
-
     /**
      * @dataProvider providerGetDebugType
      */
@@ -163,28 +128,73 @@ class PhpTest extends TestCase
         $fcnExpect = 'bdk\Test\Debug\Fixture\TestObj';
         $obj = new TestObj();
         $strClassname = 'bdk\Test\Debug\Fixture\TestObj';
-        $return = array(
+        $tests = array(
             'obj' => array($obj, $fcnExpect),
-            'strClassname' => array($strClassname, $fcnExpect),
-            'strProperty' => array('\bdk\Test\Debug\Fixture\TestObj::$someArray', $fcnExpect),
-            'strMethod' => array('\bdk\Test\Debug\Fixture\TestObj::methodPublic()', $fcnExpect),
             'reflectionClass' => array(new \ReflectionClass($strClassname), $fcnExpect),
             'reflectionObject' => array(new \ReflectionObject($obj), $fcnExpect),
+            'strClassname' => array($strClassname, $fcnExpect),
+            'strMethod' => array('\bdk\Test\Debug\Fixture\TestObj::methodPublic()', $fcnExpect),
+            'strProperty' => array('\bdk\Test\Debug\Fixture\TestObj::$someArray', $fcnExpect),
         );
-        if (PHP_VERSION_ID < 70000) {
-            return $return;
+        if (PHP_VERSION_ID >= 70000) {
+            $anonymous = require TEST_DIR . '/Debug/Fixture/Anonymous.php';
+            $tests = \array_merge($tests, array(
+                'anonymous' => array($anonymous['anonymous'], 'class@anonymous'),
+                'anonymousExtends' => array($anonymous['stdClass'], 'stdClass@anonymous'),
+                'anonymousImplements' => array($anonymous['implements'], 'IteratorAggregate@anonymous'),
+            ));
         }
-        $anonymous = require TEST_DIR . '/Debug/Fixture/Anonymous.php';
-        $return = \array_merge($return, array(
-            'anonymous' => array($anonymous['anonymous'], 'class@anonymous'),
-            'anonymousExtends' => array($anonymous['stdClass'], 'stdClass@anonymous'),
-            'anonymousImplements' => array($anonymous['implements'], 'IteratorAggregate@anonymous'),
-        ));
-        if (PHP_VERSION_ID < 70100) {
-            return $return;
+        if (PHP_VERSION_ID >= 70100) {
+            $tests['strConstant'] = array('\bdk\Test\Debug\Fixture\TestObj::MY_CONSTANT', $fcnExpect);
         }
-        $return['strConstant'] = array('\bdk\Test\Debug\Fixture\TestObj::MY_CONSTANT', $fcnExpect);
-        return $return;
+        if (PHP_VERSION_ID >= 80100) {
+            $tests = \array_merge($tests, array(
+                'enum' => array(\bdk\Test\Debug\Fixture\Enum\Meals::BREAKFAST, 'bdk\Test\Debug\Fixture\Enum\Meals'),
+                'enum.backed' => array(\bdk\Test\Debug\Fixture\Enum\MealsBacked::BREAKFAST, 'bdk\Test\Debug\Fixture\Enum\MealsBacked'),
+            ));
+        }
+        return $tests;
+    }
+
+    public static function providerGetDebugType()
+    {
+        $callbackFunc = \ini_set('unserialize_callback_func', null);
+        $incompleteClass = \unserialize('O:8:"Foo\Buzz":0:{}');
+        \ini_set('unserialize_callback_func', $callbackFunc);
+
+        $fh = \fopen(__FILE__, 'r');
+        \fclose($fh);
+
+        // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
+        $tests = array(
+            'object' => array(new \stdClass(), 'stdClass'),
+            'object.closure' => array(function () {}, 'Closure'),
+            'string' => array('foo', 'string'),
+            'false' => array(false, 'bool'),
+            'true' => array(true, 'bool'),
+            'null' => array(null, 'null'),
+            'array' => array(array(), 'array'),
+            'array.callable' => array(array(new TestObj(), 'methodPublic'), 'callable'),
+            'int' => array(42, 'int'),
+            'float' => array(3.14, 'float'),
+            'stream' => array(\fopen(__FILE__, 'r'), 'resource (stream)'),
+            'closed resource' => array($fh, 'resource (closed)'),
+            '__PHP_Incomplete_Class' => array($incompleteClass, '__PHP_Incomplete_Class'),
+        );
+        if (PHP_VERSION_ID >= 70000) {
+            $tests = \array_merge($tests, array(
+                'anon' => array(eval('return new class() {};'), 'class@anonymous'),
+                'anonExtends' => array(eval('return new class() extends stdClass {};'), 'stdClass@anonymous'),
+                'anonImplements' => array(eval('return new class() implements Reflector { function __toString() {} public static function export() {} };'), 'Reflector@anonymous'),
+            ));
+        }
+        if (PHP_VERSION_ID >= 80100) {
+            $tests = \array_merge($tests, array(
+                'enum' => array(\bdk\Test\Debug\Fixture\Enum\Meals::BREAKFAST, 'bdk\Test\Debug\Fixture\Enum\Meals::BREAKFAST'),
+                'enum.backed' => array(\bdk\Test\Debug\Fixture\Enum\MealsBacked::BREAKFAST, 'bdk\Test\Debug\Fixture\Enum\MealsBacked::BREAKFAST'),
+            ));
+        }
+        return $tests;
     }
 
     public static function providerIsCallable()

@@ -92,7 +92,7 @@ class Module extends BaseModule implements SubscriberInterface, BootstrapInterfa
     public function __construct($id, $parent, $config = array())
     {
         $debugRootInstance = Debug::getInstance($this->configDefault);
-        $debugRootInstance->setCfg($config);
+        $debugRootInstance->setCfg($config, Debug::CONFIG_NO_RETURN);
         /*
             Debug instance may have already been instantiated
             remove any session info that may have been logged
@@ -128,7 +128,7 @@ class Module extends BaseModule implements SubscriberInterface, BootstrapInterfa
         $cfg = $name === 'config'
             ? $value
             : array($name => $value);
-        $this->debug->rootInstance->setCfg($cfg);
+        $this->debug->rootInstance->setCfg($cfg, Debug::CONFIG_NO_RETURN);
     }
 
     /**

@@ -14,7 +14,7 @@ namespace bdk\Debug\Utility;
 
 use bdk\Debug\Utility\Reflection;
 use Exception;
-use Reflector;
+use UnitEnum;
 
 /**
  * Php language utilities
@@ -42,15 +42,15 @@ class Php
         if ($reflector && \method_exists($reflector, 'getDeclaringClass')) {
             $reflector = $reflector->getDeclaringClass();
         }
-        return PHP_VERSION_ID >= 70000 && $reflector->isAnonymous()
-            ? self::friendlyClassNameAnon($reflector)
-            : $reflector->getName();
+        return self::getDebugTypeObject($reflector->getName());
     }
 
     /**
      * Gets the type name of a variable in a way that is suitable for debugging
      *
-     * like php's `get_debug_type`, but will return 'callable' for callable array
+     * like php's `get_debug_type`, but will return
+     *  - 'callable' for callable array
+     *  - enum name for enum value
      *
      * @param mixed $val The value being type checked
      *
@@ -60,7 +60,7 @@ class Php
      */
     public static function getDebugType($val)
     {
-        if (PHP_VERSION_ID >= 80000 && \is_array($val) === false) {
+        if (PHP_VERSION_ID >= 80000 && \is_array($val) === false && \is_object($val) === false) {
             return \get_debug_type($val);
         }
 
@@ -106,6 +106,19 @@ class Php
                 : \strnatcasecmp($dirA, $dirB);
         });
         return $includedFiles;
+    }
+
+    /**
+     * Return path to the loaded php.ini file along with .ini files parsed from the additional ini dir
+     *
+     * @return array
+     */
+    public static function getIniFiles()
+    {
+        return \array_merge(
+            array(\php_ini_loaded_file()),
+            \preg_split('#\s*[,\r\n]+\s*#', \trim(\php_ini_scanned_files()))
+        );
     }
 
     /**
@@ -214,7 +227,12 @@ class Php
      */
     private static function getDebugTypeObject($obj)
     {
-        $class = \get_class($obj);
+        if ($obj instanceof UnitEnum) {
+            return \get_class($obj) . '::' . $obj->name;
+        }
+        $class = \is_object($obj)
+            ? \get_class($obj)
+            : $obj;
         if (\strpos($class, '@') === false) {
             return $class;
         }
@@ -322,23 +340,6 @@ class Php
         return $opts & self::IS_CALLABLE_NO_CALL
             ? false
             : \method_exists($val[0], '__callStatic');
-    }
-
-    /**
-     * Get friendly name for anonymous class
-     *
-     * @param Reflector $reflector Reflector
-     *
-     * @return string
-     */
-    private static function friendlyClassNameAnon(Reflector $reflector)
-    {
-        $parentClassRef = $reflector->getParentClass();
-        $extends = $parentClassRef
-            ? $parentClassRef->getName()
-            : null;
-        $class = $extends ?: \current($reflector->getInterfaceNames()) ?: 'class';
-        return $class . '@anonymous';
     }
 
     /**

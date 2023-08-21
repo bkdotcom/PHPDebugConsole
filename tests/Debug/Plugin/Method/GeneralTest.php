@@ -230,6 +230,84 @@ class GeneralTest extends DebugTestFramework
         ), $this->debug->errorHandler->get('errorCaller'));
     }
 
+    public function testVarDump()
+    {
+        $stream = \fopen('php://output', 'w');
+        $this->helper->setProp($this->debug->getPlugin('methodGeneral'), 'cliOutputStream', $stream);
+        $this->testMethod(
+            'varDump',
+            array(
+                'foo',
+            ),
+            array(
+                'output' => \str_replace('\e', "\e", '\e[38;5;250m"\e[0mfoo\e[38;5;250m"\e[0m'),
+            )
+        );
+        $this->testMethod(
+            'varDump',
+            array(
+                'values',
+                array(
+                    'false' => false,
+                    'int' => 42,
+                    'null' => null,
+                    'true' => true,
+                ),
+            ),
+            array(
+                'output' => \str_replace('\e', "\e", '\e[38;5;250m"\e[0mvalues\e[38;5;250m"\e[0m = \e[38;5;45marray\e[38;5;245m(\e[0m
+                        \e[38;5;245m[\e[38;5;83mfalse\e[38;5;245m]\e[38;5;130m => \e[0m\e[91mfalse\e[0m
+                        \e[38;5;245m[\e[38;5;83mint\e[38;5;245m]\e[38;5;130m => \e[0m\e[96m42\e[0m
+                        \e[38;5;245m[\e[38;5;83mnull\e[38;5;245m]\e[38;5;130m => \e[0m\e[38;5;250mnull\e[0m
+                        \e[38;5;245m[\e[38;5;83mtrue\e[38;5;245m]\e[38;5;130m => \e[0m\e[32mtrue\e[0m
+                    \e[38;5;245m)\e[0m
+                '),
+            )
+        );
+
+        $this->helper->setProp($this->debug->getPlugin('methodGeneral'), 'isCli', false);
+        $this->testMethod(
+            'varDump',
+            array(
+                'foo',
+            ),
+            array(
+                'output' => '<pre style="margin:.25em;">"foo"</pre>',
+            )
+        );
+        $this->testMethod(
+            'varDump',
+            array(
+                'val1',
+                'val2',
+                'val3',
+            ),
+            array(
+                'output' => '<pre style="margin:.25em;">"val1", "val2", "val3"</pre>',
+            )
+        );
+        $this->testMethod(
+            'varDump',
+            array(
+                'values',
+                array(
+                    'false' => false,
+                    'int' => 42,
+                    'null' => null,
+                    'true' => true,
+                ),
+            ),
+            array(
+                'output' => '<pre style="margin:.25em;">"values" = array(
+                    [false] => false
+                    [int] => 42
+                    [null] => null
+                    [true] => true
+                )</pre>',
+            )
+        );
+    }
+
     protected function setErrorCallerHelper()
     {
         $this->debug->setErrorCaller();

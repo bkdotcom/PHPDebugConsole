@@ -20,6 +20,7 @@ use bdk\Debug\PluginInterface;
 use bdk\Debug\Route\RouteInterface;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
+use Closure;
 use InvalidArgumentException;
 use OutOfBoundsException;
 use RuntimeException;
@@ -28,7 +29,7 @@ use SplObjectStorage;
 /**
  * Plugin management
  */
-class Manager implements SubscriberInterface
+class Manager implements SubscriberInterface, PluginInterface
 {
     use CustomMethodTrait;
 
@@ -94,7 +95,8 @@ class Manager implements SubscriberInterface
      *
      * @param array $plugins List of plugins and/or plugin-definitions
      *
-     * @return void
+     * @return Debug
+     * @throws RuntimeException
      */
     public function addPlugins(array $plugins)
     {
@@ -120,6 +122,30 @@ class Manager implements SubscriberInterface
                 $plugin->setCfg($cfg);
             }
         });
+        return $this->debug;
+    }
+
+    /**
+     * Get all registered Plugins
+     *
+     * @return array
+     */
+    public function getPlugins()
+    {
+        $plugins = array();
+        $this->registeredPlugins->rewind();
+        while ($this->registeredPlugins->valid()) {
+            $plugin = $this->registeredPlugins->current();
+            $pluginName = \array_search($plugin, $this->namedPlugins, true);
+            $this->registeredPlugins->next();
+            if ($pluginName === false) {
+                $plugins[] = $plugin;
+                continue;
+            }
+            $plugins[$pluginName] = $plugin;
+        }
+        \ksort($plugins);
+        return $plugins;
     }
 
     /**
@@ -192,11 +218,19 @@ class Manager implements SubscriberInterface
      * @param string|SubscriberInterface $plugin Plugin name or object implementing SubscriberInterface
      *
      * @return Debug
+     * @throws InvalidArgumentException
      */
     public function removePlugin($plugin)
     {
         if (\is_string($plugin)) {
-            $plugin = $this->removePluginNamed($plugin);
+            $plugin = $this->findPluginByName($plugin);
+        } elseif (\is_object($plugin) === false) {
+            throw new InvalidArgumentException(\sprintf(
+                '%s expects %s.  %s provided',
+                __FUNCTION__,
+                'plugin name or object',
+                $this->debug->php->getDebugType($plugin)
+            ));
         }
         if ($plugin === false) {
             return $this->debug;
@@ -216,20 +250,33 @@ class Manager implements SubscriberInterface
     }
 
     /**
-     * Remove plugin by name
-     *
-     * @param string $pluginName Plugin name
-     *
-     * @return AssetProviderInterface|SubscriberInterface|false The removed plugin instance, or false
+     * {@inheritDoc}
      */
-    private function removePluginNamed($pluginName)
+    public function setDebug(Debug $debug)
     {
-        if (isset($this->namedPlugins[$pluginName]) === false) {
-            return false;
+        $this->debug = $debug;
+    }
+
+    /**
+     * Add RouteInterface plugin
+     *
+     * @param RouteInterface $route RouteInterface instance
+     *
+     * @return void
+     */
+    private function addRouteInterface(RouteInterface $route)
+    {
+        $classname = \get_class($route);
+        $prefix = 'bdk\\Debug\\Route\\';
+        $containerName = 'route' . \substr($classname, \strlen($prefix));
+        if (\strpos($classname, $prefix) === 0 && isset($this->debug->{$containerName}) === false) {
+            $this->debug->setCfg('serviceProvider', array(
+                $containerName => $route,
+            ), Debug::CONFIG_NO_RETURN);
         }
-        $plugin = $this->namedPlugins[$pluginName];
-        unset($this->namedPlugins[$pluginName]);
-        return $plugin;
+        if ($route->appendsHeaders()) {
+            $this->debug->obStart();
+        }
     }
 
     /**
@@ -248,7 +295,7 @@ class Manager implements SubscriberInterface
                 call subscriber directly
             */
             \call_user_func(
-                array($plugin, $subscriptions[Debug::EVENT_PLUGIN_INIT]),
+                $this->getSubscriberCallable($plugin, $subscriptions[Debug::EVENT_PLUGIN_INIT]),
                 new Event($this->debug),
                 Debug::EVENT_PLUGIN_INIT,
                 $this->debug->eventManager
@@ -260,35 +307,13 @@ class Manager implements SubscriberInterface
                 and we've already bootstrapped
             */
             \call_user_func(
-                array($plugin, $subscriptions[Debug::EVENT_BOOTSTRAP]),
+                $this->getSubscriberCallable($plugin, $subscriptions[Debug::EVENT_BOOTSTRAP]),
                 new Event($this->debug),
                 Debug::EVENT_BOOTSTRAP,
                 $this->debug->eventManager
             );
         }
         $this->debug->eventManager->addSubscriberInterface($plugin);
-    }
-
-    /**
-     * Add RouteInterface plugin
-     *
-     * @param RouteInterface $route RouteInterface instance
-     *
-     * @return void
-     */
-    private function addRouteInterface(RouteInterface $route)
-    {
-        $classname = \get_class($route);
-        $prefix = 'bdk\\Debug\\Route\\';
-        $containerName = 'route' . \substr($classname, \strlen($prefix));
-        if (\strpos($classname, $prefix) === 0 && isset($this->debug->{$containerName}) === false) {
-            $this->debug->setCfg('serviceProvider', array(
-                $containerName => $route,
-            ));
-        }
-        if ($route->appendsHeaders()) {
-            $this->debug->obStart();
-        }
     }
 
     /**
@@ -314,5 +339,34 @@ class Manager implements SubscriberInterface
             '\\bdk\\Debug\\AssetProviderInterface and/or \\bdk\\PubSub\\SubscriberInterface',
             $this->debug->php->getDebugType($plugin)
         ));
+    }
+
+    /**
+     * Remove plugin by name
+     *
+     * @param string $pluginName Plugin name
+     *
+     * @return AssetProviderInterface|SubscriberInterface|false The removed plugin instance, or false
+     */
+    private function findPluginByName($pluginName)
+    {
+        return isset($this->namedPlugins[$pluginName])
+            ? $this->namedPlugins[$pluginName]
+            : false;
+    }
+
+    /**
+     * Determine callable from raw SubscribdrInterface::getSubscribers  return value
+     *
+     * @param SubscriberInterface $plugin SubscriberInterface instance
+     * @param mixed               $mixed  Closure or method name (array not yet supported)
+     *
+     * @return callable
+     */
+    private function getSubscriberCallable(SubscriberInterface $plugin, $mixed)
+    {
+        return $mixed instanceof Closure
+            ? $mixed
+            : array($plugin, $mixed);
     }
 }

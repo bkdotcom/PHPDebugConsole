@@ -16,17 +16,17 @@ namespace bdk\PubSub;
 interface SubscriberInterface
 {
     /**
-     * Return a list of event subscribers
-     *
-     * Returns an array of event names this plugin subscribes to.
+     * Return event subscribers
      *
      * The array keys are event names and the value can be:
      *
-     *  string:  method name to call (priority defaults to 0)
-     *  array(string methodName, int priority)
-     *  array of methodName and/or array(methodName, priority)
+     *  _method_: priority defaults to 0, onlyOnce defaults to false
+     *  array: (required) _method_, (optional) int priority, (optional) bool onlyOnce)
+     *  array: any combination of the above
      *
-     * @return array The event names to subscribe to
+     *  _method_ = string|Callable name of public method or Closure
+     *
+     * @return array
      */
     public function getSubscriptions();
 }

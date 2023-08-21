@@ -64,7 +64,7 @@ class LogEnv implements SubscriberInterface
         $this->logGitInfo();
         $this->logSession();
 
-        $this->debug->setCfg('collect', $collectWas);
+        $this->debug->setCfg('collect', $collectWas, Debug::CONFIG_NO_RETURN);
     }
 
     /**

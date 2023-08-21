@@ -203,6 +203,7 @@ class LogEnvTest extends DebugTestFramework
             'logEnvInfo' => array('gitInfo'),
             // 'logRequestInfo' => array(),
         ));
+        \bdk\Test\Debug\Mock\Utility::$gitBranch = '';
         $logEnv = new LogEnv();
         $logEnv->onBootstrap(new Event($this->debug));
         self::assertEmpty($this->debug->data->get('log'));

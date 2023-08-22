@@ -3,6 +3,7 @@
 namespace bdk\Test\Debug\Utility;
 
 use bdk\Debug\Utility\Reflection;
+use bdk\Test\PolyFill\ExpectExceptionTrait;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use ReflectionClassConstant;
@@ -25,6 +26,28 @@ function testFunc()
  */
 class ReflectionTest extends TestCase
 {
+    use ExpectExceptionTrait;
+
+    private static $staticBackup = array();
+
+    public static function setUpBeforeClass(): void
+    {
+        $staticBackup = array(
+            '\bdk\Test\Debug\Fixture\TestObj' => array(
+                'propStatic' => Reflection::propGet('\bdk\Test\Debug\Fixture\TestObj', 'propStatic'),
+            ),
+        );
+    }
+
+    public static function tearDownAfterClass(): void
+    {
+        foreach (self::$staticBackup as $classname => $props) {
+            foreach ($props as $prop => $val) {
+                Reflection::propSet($classname, $prop, $val);
+            }
+        }
+    }
+
     /**
      * @dataProvider providerGetParentReflector
      */
@@ -49,6 +72,60 @@ class ReflectionTest extends TestCase
         self::assertInstanceOf($expect['instanceOf'], $reflector);
         self::assertSame($expect['classname'], Reflection::classname($reflector));
         self::assertSame($expect['hash'], Reflection::hash($reflector));
+    }
+
+    /**
+     * @dataProvider providerPropGet
+     */
+    public function testPropGet($obj, $prop, $expect)
+    {
+        if ($expect instanceof \Exception) {
+            $this->expectException(\get_class($expect));
+            $this->expectExceptionMessage($expect->getMessage());
+        }
+        $return = Reflection::propGet($obj, $prop);
+        self::assertSame($expect, $return);
+    }
+
+    /**
+     * @dataProvider providerPropSet
+     */
+    public function testPropSet($obj, $prop, $val, $expect = null)
+    {
+        if ($expect instanceof \Exception) {
+            $this->expectException(\get_class($expect));
+            $this->expectExceptionMessage($expect->getMessage());
+        }
+        Reflection::propSet($obj, $prop, $val);
+        self::assertSame($val, Reflection::propGet($obj, $prop));
+    }
+
+    public function providerPropGet()
+    {
+        $testObj = new \bdk\Test\Debug\Fixture\TestObj();
+        $classname = \get_class($testObj);
+        return array(
+            'obj.instanceVal' => array($testObj, 'propPrivate', 'redefined in Test (private)'),
+            'obj.staticVal' => array($testObj, 'propStatic', 'I\'m Static'),
+            'obj.bogusProp' => array($testObj, 'noSuchProp', new \RuntimeException('Property ' . $classname . '::$noSuchProp does not exist')),
+            'classname.instanceVal' => array($classname, 'propPrivate', new \RuntimeException('propGet: object must be provided to retrieve instance value propPrivate')),
+            'classname.staticVal' => array($classname, 'propStatic', 'I\'m Static'),
+            'classname.bogusProp' => array($classname, 'noSuchProp', new \RuntimeException('Property ' . $classname . '::$noSuchProp does not exist')),
+        );
+    }
+
+    public function providerPropSet()
+    {
+        $testObj = new \bdk\Test\Debug\Fixture\TestObj();
+        $classname = \get_class($testObj);
+        return array(
+            'obj.instanceVal' => array($testObj, 'propPrivate', 'newVal 1'),
+            'obj.staticVal' => array($testObj, 'propStatic', 'newVal 2'),
+            'obj.bogusProp' => array($testObj, 'noSuchProp', 'irrelevant', new \RuntimeException('Property ' . $classname . '::$noSuchProp does not exist')),
+            'classname.instanceVal' => array($classname, 'propPrivate', 'nocando', new \RuntimeException('propSet: object must be provided to set instance value propPrivate')),
+            'classname.staticVal' => array($classname, 'propStatic', 'newVal 3'),
+            'classname.bogusProp' => array($classname, 'noSuchProp', 'irrelevant', new \RuntimeException('Property ' . $classname . '::$noSuchProp does not exist')),
+        );
     }
 
     public function providerGetParentReflector()

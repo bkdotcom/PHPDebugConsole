@@ -46,7 +46,7 @@ class Pdo extends PdoBase
     public function __construct(PdoBase $pdo, Debug $debug = null)
     {
         if (!$debug) {
-            $debug = Debug::_getChannel('PDO', array('channelIcon' => $this->icon));
+            $debug = Debug::getChannel('PDO', array('channelIcon' => $this->icon));
         } elseif ($debug === $debug->rootInstance) {
             $debug = $debug->getChannel('PDO', array('channelIcon' => $this->icon));
         }

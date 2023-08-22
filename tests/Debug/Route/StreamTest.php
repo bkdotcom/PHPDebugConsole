@@ -38,7 +38,7 @@ class StreamTest extends DebugTestFramework
         $route->setCfg('output', true);
 
         $route->onLog(new \bdk\Debug\LogEntry($this->debug, 'log', array('foo')));
-        $fileHandle = $this->helper->getProp($route, 'fileHandle');
+        $fileHandle = \bdk\Debug\Utility\Reflection::propGet($route, 'fileHandle');
         \fseek($fileHandle, 0);
         $string = \fgets($fileHandle);
         $this->assertSame("foo\n", $string);
@@ -50,14 +50,14 @@ class StreamTest extends DebugTestFramework
 
         $route->setCfg('output', false);
         $route->onLog(new \bdk\Debug\LogEntry($this->debug, 'log', array('bar')));
-        $fileHandle = $this->helper->getProp($route, 'fileHandle');
+        $fileHandle = \bdk\Debug\Utility\Reflection::propGet($route, 'fileHandle');
         \fseek($fileHandle, 0);
         $string = \fgets($fileHandle);
         $this->assertSame("foo\n", $string);
 
         $route->setCfg('stream', null);
         $route->onLog(new \bdk\Debug\LogEntry($this->debug, 'log', array('bar')));
-        $fileHandle = $this->helper->getProp($route, 'fileHandle');
+        $fileHandle = \bdk\Debug\Utility\Reflection::propGet($route, 'fileHandle');
         $this->assertNull($fileHandle);
     }
 }

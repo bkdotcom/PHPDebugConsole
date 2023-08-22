@@ -35,7 +35,7 @@ class TwigExtension extends ProfilerExtension
     public function __construct(Debug $debug = null, Profile $profile = null)
     {
         if (!$debug) {
-            $debug = Debug::_getChannel('Twig', array('channelIcon' => $this->icon));
+            $debug = Debug::getChannel('Twig', array('channelIcon' => $this->icon));
         } elseif ($debug === $debug->rootInstance) {
             $debug = $debug->getChannel('Twig', array('channelIcon' => $this->icon));
         }

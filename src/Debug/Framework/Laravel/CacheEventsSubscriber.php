@@ -58,7 +58,7 @@ class CacheEventsSubscriber
             'channelShow' => false,
         );
         if (!$debug) {
-            $debug = Debug::_getChannel('cache', $channelOptions);
+            $debug = Debug::getChannel('cache', $channelOptions);
         } elseif ($debug === $debug->rootInstance) {
             $debug = $debug->getChannel('cache', $channelOptions);
         }

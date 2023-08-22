@@ -58,7 +58,7 @@ class CurlHttpMessageMiddleware extends AbstractComponent
     {
         $this->setCfg($cfg);
         if (!$debug) {
-            $debug = Debug::_getChannel($this->cfg['label'], array('channelIcon' => $this->cfg['icon']));
+            $debug = Debug::getChannel($this->cfg['label'], array('channelIcon' => $this->cfg['icon']));
         } elseif ($debug === $debug->rootInstance) {
             $debug = $debug->getChannel($this->cfg['label'], array('channelIcon' => $this->cfg['icon']));
         }

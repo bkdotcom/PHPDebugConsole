@@ -158,7 +158,7 @@ class FileStreamWrapperTest extends TestCase
 
         // Debug::varDump('STREAM_CAST_AS_STREAM', STREAM_CAST_AS_STREAM, -1 & STREAM_CAST_AS_STREAM);
 
-        \bdk\Test\Debug\Helper::setProp($fsw, 'resource', $resource);
+        \bdk\Debug\Utility\Reflection::propSet($fsw, 'resource', $resource);
         self::assertSame($resource, $fsw->stream_cast(42));
 
         self::assertSame($resource, $fsw->stream_cast(STREAM_CAST_AS_STREAM));
@@ -265,7 +265,7 @@ class FileStreamWrapperTest extends TestCase
 
         self::assertFalse(\stream_set_timeout($resource, 88));
 
-        \bdk\Test\Debug\Helper::setProp($fsw, 'resource', $resource);
+        \bdk\Debug\Utility\Reflection::propSet($fsw, 'resource', $resource);
         $fsw->stream_set_option(STREAM_OPTION_WRITE_BUFFER, STREAM_BUFFER_NONE, 1024);
     }
 
@@ -274,7 +274,7 @@ class FileStreamWrapperTest extends TestCase
         $fsw = new FileStreamWrapper();
         $resource = \fopen(static::$filepath, 'r');
         self::assertFalse($fsw->stream_tell());
-        \bdk\Test\Debug\Helper::setProp($fsw, 'resource', $resource);
+        \bdk\Debug\Utility\Reflection::propSet($fsw, 'resource', $resource);
         self::assertSame(0, $fsw->stream_tell());
     }
 

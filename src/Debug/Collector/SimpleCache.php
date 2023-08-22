@@ -42,7 +42,7 @@ class SimpleCache implements CacheInterface
     public function __construct(CacheInterface $cache, Debug $debug = null)
     {
         if (!$debug) {
-            $debug = Debug::_getChannel('SimpleCache', array('channelIcon' => $this->icon));
+            $debug = Debug::getChannel('SimpleCache', array('channelIcon' => $this->icon));
         } elseif ($debug === $debug->rootInstance) {
             $debug = $debug->getChannel('SimpleCache', array('channelIcon' => $this->icon));
         }

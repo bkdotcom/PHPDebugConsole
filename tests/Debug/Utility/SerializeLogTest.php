@@ -55,7 +55,7 @@ class SerializeLogTest extends DebugTestFramework
             'alerts' => $this->helper->deObjectifyData($debug->data->get('alerts'), false),
             'classDefinitions' => array(
                 'bdk\\Test\\Debug\\Fixture\\TestObj' => $debug->abstracter->crate(new TestObj())->getClassValues(),
-                "\x00default\x00" => $this->helper->getProp($debug->abstracter->abstractObject->class, 'values'),
+                "\x00default\x00" => \bdk\Debug\Utility\Reflection::propGet($debug->abstracter->abstractObject->class, 'values'),
                 'stdClass' => $debug->abstracter->crate((object) array())->getClassValues(),
             ),
             'config' => array(
@@ -87,7 +87,7 @@ class SerializeLogTest extends DebugTestFramework
         self::assertInstanceOf('bdk\\Debug\\Abstraction\\Abstraction', $objAbs);
         self::assertSame(
             $debug->data->get(array('classDefinitions', 'bdk\\Test\\Debug\\Fixture\\TestObj')),
-            $this->helper->getProp($objAbs, 'class')
+            \bdk\Debug\Utility\Reflection::propGet($objAbs, 'class')
         );
         $serialized = SerializeLog::serialize($debug);
         $unserialized = SerializeLog::unserialize($serialized);

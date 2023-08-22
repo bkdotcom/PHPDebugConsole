@@ -96,7 +96,6 @@ class Utf8Dump
         if ($str === '') {
             return '';
         }
-        // echo $blockType . ' "' . \bin2hex($str) . '"' . "\n";
         switch ($blockType) {
             case 'utf8special':
                 return $this->dumpBlockSpecial($str);

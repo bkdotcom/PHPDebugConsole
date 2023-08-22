@@ -6,7 +6,6 @@ use bdk\Debug;
 use bdk\Debug\Plugin\Manager;
 use bdk\PubSub\Event;
 use bdk\Test\Debug\DebugTestFramework;
-use bdk\Test\Debug\Helper;
 use bdk\Test\PolyFill\AssertionTrait;
 use bdk\Test\PolyFill\ExpectExceptionTrait;
 use PHPUnit\Framework\TestCase;
@@ -21,16 +20,6 @@ class ManagerTest extends TestCase
 
     protected static $debug;
     protected static $manager;
-    protected $helper;
-
-    /**
-     * Constructor
-     */
-    public function __construct($name = null, array $data = array(), $dataName = '')
-    {
-        $this->helper = new Helper();
-        parent::__construct($name, $data, $dataName);
-    }
 
     public static function setUpBeforeClass(): void
     {
@@ -87,7 +76,7 @@ class ManagerTest extends TestCase
         $plugin = new Manager();
         $return = self::$manager->addPlugin($plugin);
         self::assertEquals(static::$debug, $return);
-        self::assertEquals(static::$debug, $this->helper->getProp($plugin, 'debug'));
+        self::assertEquals(static::$debug, \bdk\Debug\Utility\Reflection::propGet($plugin, 'debug'));
 
         $return = self::$manager->addPlugin($plugin);
         self::assertEquals(static::$debug, $return);
@@ -152,7 +141,7 @@ class ManagerTest extends TestCase
     public function testAddRoute()
     {
         $GLOBALS['turd'] = true;
-        $container = $this->helper->getProp(static::$debug, 'container');
+        $container = \bdk\Debug\Utility\Reflection::propGet(static::$debug, 'container');
         unset($container['serverLog']);
         $route = new \bdk\Debug\Route\ServerLog(static::$debug);
         self::assertFalse(self::$debug->data->get('isObCache'));

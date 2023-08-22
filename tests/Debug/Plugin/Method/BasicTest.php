@@ -10,11 +10,9 @@ use bdk\Test\Debug\DebugTestFramework;
 /**
  * PHPUnit tests for Debug Methods
  *
- * @covers \bdk\Debug\Abstraction\AbstractObjectProperties
  * @covers \bdk\Debug\AbstractComponent
  * @covers \bdk\Debug\AbstractDebug
- * @covers \bdk\Debug\LogEntry
- * @covers \bdk\Debug\Plugin\Method\Basic
+ * @covers \bdk\Debug\Abstraction\AbstractObjectProperties
  * @covers \bdk\Debug\Dump\Base
  * @covers \bdk\Debug\Dump\BaseValue
  * @covers \bdk\Debug\Dump\Html
@@ -23,15 +21,17 @@ use bdk\Test\Debug\DebugTestFramework;
  * @covers \bdk\Debug\Dump\TextAnsi
  * @covers \bdk\Debug\Dump\TextAnsiValue
  * @covers \bdk\Debug\Dump\TextValue
- * @covers \bdk\Debug\ServiceProvider
+ * @covers \bdk\Debug\LogEntry
+ * @covers \bdk\Debug\Plugin\Method\Basic
  * @covers \bdk\Debug\Route\AbstractRoute
  * @covers \bdk\Debug\Route\ChromeLogger
  * @covers \bdk\Debug\Route\Firephp
- * @covers \bdk\Debug\Route\ServerLog
  * @covers \bdk\Debug\Route\Script
+ * @covers \bdk\Debug\Route\ServerLog
  * @covers \bdk\Debug\Route\Stream
  * @covers \bdk\Debug\Route\Text
  * @covers \bdk\Debug\Route\WampCrate
+ * @covers \bdk\Debug\ServiceProvider
  *
  * @phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
  */
@@ -222,7 +222,7 @@ class BasicTest extends DebugTestFramework
     public function testMethodDefaultArgs()
     {
         // covers AbstractDebug::getMethodDefaultArgs
-        $this->helper->setProp('bdk\Debug\AbstractDebug', 'methodDefaultArgs', array());
+        \bdk\Debug\Utility\Reflection::propSet('bdk\Debug\AbstractDebug', 'methodDefaultArgs', array());
         $this->debug->alert('test');
         self::assertSame('alert', $this->debug->data->get('alerts/__end__/method'));
 
@@ -575,6 +575,84 @@ class BasicTest extends DebugTestFramework
                 'notLogged' => true,
                 'return' => $this->debug,
                 'wamp' => false,
+            )
+        );
+    }
+
+    public function testVarDump()
+    {
+        $stream = \fopen('php://output', 'w');
+        \bdk\Debug\Utility\Reflection::propSet($this->debug->getPlugin('methodBasic'), 'cliOutputStream', $stream);
+        $this->testMethod(
+            'varDump',
+            array(
+                'foo',
+            ),
+            array(
+                'output' => \str_replace('\e', "\e", '\e[38;5;250m"\e[0mfoo\e[38;5;250m"\e[0m'),
+            )
+        );
+        $this->testMethod(
+            'varDump',
+            array(
+                'values',
+                array(
+                    'false' => false,
+                    'int' => 42,
+                    'null' => null,
+                    'true' => true,
+                ),
+            ),
+            array(
+                'output' => \str_replace('\e', "\e", '\e[38;5;250m"\e[0mvalues\e[38;5;250m"\e[0m = \e[38;5;45marray\e[38;5;245m(\e[0m
+                        \e[38;5;245m[\e[38;5;83mfalse\e[38;5;245m]\e[38;5;130m => \e[0m\e[91mfalse\e[0m
+                        \e[38;5;245m[\e[38;5;83mint\e[38;5;245m]\e[38;5;130m => \e[0m\e[96m42\e[0m
+                        \e[38;5;245m[\e[38;5;83mnull\e[38;5;245m]\e[38;5;130m => \e[0m\e[38;5;250mnull\e[0m
+                        \e[38;5;245m[\e[38;5;83mtrue\e[38;5;245m]\e[38;5;130m => \e[0m\e[32mtrue\e[0m
+                    \e[38;5;245m)\e[0m
+                '),
+            )
+        );
+
+        \bdk\Debug\Utility\Reflection::propSet($this->debug->getPlugin('methodBasic'), 'isCli', false);
+        $this->testMethod(
+            'varDump',
+            array(
+                'foo',
+            ),
+            array(
+                'output' => '<pre style="margin:.25em;">"foo"</pre>',
+            )
+        );
+        $this->testMethod(
+            'varDump',
+            array(
+                'val1',
+                'val2',
+                'val3',
+            ),
+            array(
+                'output' => '<pre style="margin:.25em;">"val1", "val2", "val3"</pre>',
+            )
+        );
+        $this->testMethod(
+            'varDump',
+            array(
+                'values',
+                array(
+                    'false' => false,
+                    'int' => 42,
+                    'null' => null,
+                    'true' => true,
+                ),
+            ),
+            array(
+                'output' => '<pre style="margin:.25em;">"values" = array(
+                    [false] => false
+                    [int] => 42
+                    [null] => null
+                    [true] => true
+                )</pre>',
             )
         );
     }

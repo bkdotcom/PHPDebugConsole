@@ -37,7 +37,7 @@ class ServiceProviderTest extends DebugTestFramework
 {
     public function testDebugConstruct()
     {
-        $this->helper->setProp('\bdk\ErrorHandler', 'instance', null);
+        \bdk\Debug\Utility\Reflection::propSet('\bdk\ErrorHandler', 'instance', null);
 
         $debug = new Debug(array(
             'logResponse' => false,

@@ -6,7 +6,6 @@ use bdk\Teams\Elements\TableCell;
 use bdk\Teams\Elements\TableRow;
 use bdk\Teams\Elements\TextBlock;
 use bdk\Teams\Enums;
-use bdk\Test\PolyFill\ExpectExceptionTrait;
 use bdk\Test\Teams\AbstractTestCaseWith;
 
 /**
@@ -16,8 +15,6 @@ use bdk\Test\Teams\AbstractTestCaseWith;
  */
 class TableRowTest extends AbstractTestCaseWith
 {
-    use ExpectExceptionTrait;
-
     public function testConstruct()
     {
         $tableRow = new TableRow(array(

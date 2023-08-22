@@ -57,7 +57,7 @@ class PhpCurlClass extends Curl
     {
         $this->debugOptions = \array_merge($this->debugOptions, $options);
         if (!$debug) {
-            $debug = Debug::_getChannel($this->debugOptions['label'], array('channelIcon' => $this->icon));
+            $debug = Debug::getChannel($this->debugOptions['label'], array('channelIcon' => $this->icon));
         } elseif ($debug === $debug->rootInstance) {
             $debug = $debug->getChannel($this->debugOptions['label'], array('channelIcon' => $this->icon));
         }

@@ -250,7 +250,7 @@ class InternalEventsTest extends DebugTestFramework
 
     public function testPrettify()
     {
-        $this->helper->setProp($this->debug->getPlugin('internalEvents'), 'highlightAdded', false);
+        \bdk\Debug\Utility\Reflection::propSet($this->debug->getPlugin('internalEvents'), 'highlightAdded', false);
 
         $foo = $this->debug->prettify('foo', 'unknown');
         self::assertSame('foo', $foo);
@@ -359,7 +359,7 @@ WHERE·
             $xml
         );
 
-        self::assertTrue($this->helper->getProp($this->debug->getPlugin('internalEvents'), 'highlightAdded'));
+        self::assertTrue(\bdk\Debug\Utility\Reflection::propGet($this->debug->getPlugin('internalEvents'), 'highlightAdded'));
     }
 
     public function testShutdown()

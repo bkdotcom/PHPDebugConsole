@@ -69,7 +69,7 @@ class MySqli extends mysqliBase
             : array();
         $this->doConstruct($params);
         if (!$debug) {
-            $debug = Debug::_getChannel('MySqli', array('channelIcon' => $this->icon));
+            $debug = Debug::getChannel('MySqli', array('channelIcon' => $this->icon));
         } elseif ($debug === $debug->rootInstance) {
             $debug = $debug->getChannel('MySqli', array('channelIcon' => $this->icon));
         }

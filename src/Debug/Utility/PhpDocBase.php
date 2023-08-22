@@ -88,6 +88,7 @@ class PhpDocBase
         $matches = array();
         foreach ($params as $i => $str) {
             \preg_match('/^(?:([^=]*?)\s)?([^\s=]+)(?:\s*=\s*(\S+))?$/', $str, $matches);
+            $matches = \array_replace(array('?', null), $matches);
             $info = array(
                 'name' => $matches[2],
                 'type' => $this->typeNormalize($matches[1]),

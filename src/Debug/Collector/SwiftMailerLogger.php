@@ -52,7 +52,7 @@ class SwiftMailerLogger implements Swift_Events_CommandListener, Swift_Events_Re
     public function __construct(Debug $debug = null)
     {
         if (!$debug) {
-            $debug = Debug::_getChannel('SwiftMailer', array('channelIcon' => $this->icon));
+            $debug = Debug::getChannel('SwiftMailer', array('channelIcon' => $this->icon));
         } elseif ($debug === $debug->rootInstance) {
             $debug = $debug->getChannel('SwiftMailer', array('channelIcon' => $this->icon));
         }

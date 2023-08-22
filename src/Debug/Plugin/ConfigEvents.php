@@ -186,7 +186,7 @@ class ConfigEvents implements SubscriberInterface
             static::$profilingEnabled = true;
             FileStreamWrapper::setEventManager($this->debug->eventManager);
             FileStreamWrapper::setPathsExclude(array(
-                \realpath(__DIR__ . '/../'),
+                __DIR__ . '/../',
             ));
             FileStreamWrapper::register();
         }

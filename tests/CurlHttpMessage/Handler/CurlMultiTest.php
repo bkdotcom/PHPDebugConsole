@@ -76,7 +76,7 @@ class CurlMultiTest extends TestCase
         $curlMulti = new CurlMulti(array(
             'selectTimeout' => 2,
         ));
-        self::assertSame(2, \bdk\Test\Debug\Helper::getProp($curlMulti, 'options')['selectTimeout']);
+        self::assertSame(2, \bdk\Debug\Utility\Reflection::propGet($curlMulti, 'options')['selectTimeout']);
     }
 
     public function testCanCancel()

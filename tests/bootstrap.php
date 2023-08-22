@@ -106,9 +106,6 @@ ini_set('xdebug.show_error_trace', 0);
 ini_set('xdebug.show_exception_trace', 0);
 */
 
-$modifyTests = new \bdk\Test\ModifyTests();
-$modifyTests->modify(__DIR__);
-
 /*
     We also initialize via DebugTestFramework::setUp()
     however, testProviders are called before setup (I believe)
@@ -169,12 +166,21 @@ $debug->eventManager->subscribe(\bdk\PubSub\Manager::EVENT_PHP_SHUTDOWN, functio
 }, 0 - PHP_INT_MAX);
 
 $debug->eventManager->subscribe(\bdk\Debug::EVENT_STREAM_WRAP, static function (\bdk\PubSub\Event $event) {
-    if (\strpos($event['filepath'], 'StreamTest') !== false) {
+    $filepath = $event['filepath'];
+    $isTest = \strpos($filepath, 'PHPDebugConsole/tests') !== false;
+    if ($isTest === false) {
         $event->stopPropagation();
     }
-    if (\strpos($event['filepath'], 'PHPDebugConsole/tests') === false) {
-        $event->stopPropagation();
+    if ($isTest === false || PHP_VERSION_ID >= 70100 || \preg_match('/\b(Mock|Fixture)\b/', $filepath) === 1) {
+        return;
     }
+    // remove void return type from method definitions if php < 7.1
+    $event['content'] = \preg_replace(
+        '/(function \S+\s*\([^)]*\))\s*:\s*void/',
+        '$1',
+        $event['content'],
+        -1 // no limit
+    );
 }, PHP_INT_MAX);
 
 function startHttpd()

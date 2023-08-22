@@ -48,9 +48,9 @@ class Count implements SubscriberInterface
      *
      * @param mixed $label Label.  If omitted, logs the number of times `count()` has been called at this particular line.
      * @param int   $flags (optional) A bitmask of
-     *                        \bdk\Debug::COUNT_NO_INC` : don't increment the counter
+     *                        `\bdk\Debug::COUNT_NO_INC` : don't increment the counter
      *                                                     (ie, just get the current count)
-     *                        \bdk\Debug::COUNT_NO_OUT` : don't output/log
+     *                        `\bdk\Debug::COUNT_NO_OUT` : don't output/log
      *
      * @return int The new count (or current count when using `COUNT_NO_INC`)
      */

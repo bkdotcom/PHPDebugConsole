@@ -25,11 +25,11 @@ class FirephpTest extends DebugTestFramework
         }
 
         $routeFirephp = $this->debug->getRoute('firephp');
-        $this->helper->setProp($routeFirephp, 'messageIndex', 0);
+        \bdk\Debug\Utility\Reflection::propSet($routeFirephp, 'messageIndex', 0);
 
-        $timers = $this->helper->getProp($this->debug->stopWatch, 'timers');
+        $timers = \bdk\Debug\Utility\Reflection::propGet($this->debug->stopWatch, 'timers');
         $timers['labels']['requestTime'] = array(0, \microtime(true));
-        $this->helper->setProp($this->debug->stopWatch, 'timers', $timers);
+        \bdk\Debug\Utility\Reflection::propSet($this->debug->stopWatch, 'timers', $timers);
     }
 
     /*

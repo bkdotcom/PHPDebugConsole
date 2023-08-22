@@ -412,7 +412,6 @@ class FileStreamWrapper
      */
     public function stream_open($path, $mode, $options, &$openedPath)
     {
-        // echo 'stream_open ' . $path . "\n";
         if (\strpos($mode, 'r') !== false && \file_exists($path) === false) {
             return false;
         }
@@ -420,11 +419,7 @@ class FileStreamWrapper
             return false;
         }
         static::unregister();
-        $shouldTransform = static::shouldTransform($path, $options);
-        if ($shouldTransform) {
-            static::$filesTransformed[] = $path;
-        }
-        $this->resource = $shouldTransform
+        $this->resource = static::shouldTransform($path, $options)
             ? static::getResourceTransformed($path, $options, $openedPath)
             : static::getResource($path, $mode, $options, $openedPath);
         static::register();
@@ -662,14 +657,17 @@ class FileStreamWrapper
         $useIncludePath = (bool) ($options & STREAM_USE_PATH);
         $args = $this->popNull(array($file, $useIncludePath, $this->context));
         $content = \call_user_func_array('file_get_contents', $args);
-        if ($useIncludePath) {
-            $openedPath = \stream_resolve_include_path($file);
-        }
+        $openedPath = $useIncludePath
+            ? \stream_resolve_include_path($file)
+            : $file;
         if (static::$eventManager) {
             $event = static::$eventManager->publish(Debug::EVENT_STREAM_WRAP, $resource, array(
                 'content' => $content,
                 'filepath' => $file,
             ));
+            if ($event['content'] !== $content) {
+                self::$filesTransformed[] = $openedPath;
+            }
             $content = $event['content'];
         }
         \fwrite($resource, $content);
@@ -742,6 +740,6 @@ class FileStreamWrapper
     private static function shouldTransform($file, $options)
     {
         $including = (bool) ($options & static::STREAM_OPEN_FOR_INCLUDE);
-        return static::isTargeted($file) && ($including || \in_array($file, static::$filesTransformed, true));
+        return static::isTargeted($file) && $including;
     }
 }

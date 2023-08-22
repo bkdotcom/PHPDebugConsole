@@ -15,7 +15,6 @@ namespace bdk\Debug\Plugin\Method;
 use bdk\Debug;
 use bdk\Debug\ConfigurableInterface;
 use bdk\Debug\Plugin\CustomMethodTrait;
-use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
 
 /**
@@ -35,11 +34,7 @@ class General implements SubscriberInterface
         'obStart',
         'prettify',
         'setErrorCaller',
-        'varDump',
     );
-
-    private $cliOutputStream = null;
-    private $isCli = false;
 
     /**
      * Send an email
@@ -133,17 +128,6 @@ class General implements SubscriberInterface
     }
 
     /**
-     * {@inheritDoc}
-     */
-    public function getSubscriptions()
-    {
-        return array(
-            Debug::EVENT_BOOTSTRAP => 'onBootstrap',
-            Debug::EVENT_CUSTOM_METHOD => 'onCustomMethod',
-        );
-    }
-
-    /**
      * Do we have log entries?
      *
      * @return bool
@@ -187,22 +171,6 @@ class General implements SubscriberInterface
         }
         \ob_start();
         $this->debug->data->set('isObCache', true);
-    }
-
-    /**
-     * Debug::EVENT_BOOTSTRAP subscriber
-     *
-     * @param Event $event Debug::EVENT_BOOTSTRAP Event instance
-     *
-     * @return void
-     */
-    public function onBootstrap(Event $event)
-    {
-        $debug = $event->getSubject();
-        $this->isCli = $debug->isCli(false); // are we a cli app?  (disregard PSR7 ServerRequest obj)
-        if ($this->isCli) {
-            $this->cliOutputStream = STDERR;
-        }
     }
 
     /**
@@ -254,38 +222,6 @@ class General implements SubscriberInterface
             $caller['groupDepth'] = $this->debug->rootInstance->getPlugin('methodGroup')->getDepth();
         }
         $this->debug->errorHandler->setErrorCaller($caller);
-    }
-
-    /**
-     * Dump values to output
-     *
-     * Similar to php's `var_dump()`.  Dump values immediately
-     *
-     * @param mixed $arg,... message / values
-     *
-     * @return void
-     */
-    public function varDump()
-    {
-        $isCli = $this->isCli;
-        $dumper = $this->debug->getDump($isCli ? 'textAnsi' : 'text');
-        $args = \array_map(static function ($val) use ($dumper, $isCli) {
-            $new = $dumper->valDumper->dump($val);
-            if ($isCli) {
-                $dumper->valDumper->escapeReset = "\e[0m";
-            }
-            $dumper->valDumper->setValDepth(0);
-            return $new;
-        }, \func_get_args());
-        $glue = \func_num_args() > 2
-            ? ', '
-            : ' = ';
-        $outStr = \implode($glue, $args);
-        if ($isCli) {
-            \fwrite($this->cliOutputStream, $outStr . "\n");
-            return;
-        }
-        echo '<pre style="margin:.25em;">' . $outStr . '</pre>' . "\n";
     }
 
     /**

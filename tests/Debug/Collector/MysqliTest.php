@@ -66,7 +66,7 @@ EOD;
         self::$client->query($createDb);
         self::$client->query($createTable);
 
-        \bdk\Test\Debug\Helper::setProp('bdk\\Debug\\Collector\\StatementInfo', 'constants', array());
+        \bdk\Debug\Utility\Reflection::propSet('bdk\\Debug\\Collector\\StatementInfo', 'constants', array());
     }
 
     public static function tearDownAfterClass(): void

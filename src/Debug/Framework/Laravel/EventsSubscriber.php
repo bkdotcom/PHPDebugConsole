@@ -45,7 +45,7 @@ class EventsSubscriber
             'channelShow' => false,
         );
         if (!$debug) {
-            $debug = Debug::_getChannel('events', $channelOptions);
+            $debug = Debug::getChannel('events', $channelOptions);
         } elseif ($debug === $debug->rootInstance) {
             $debug = $debug->getChannel('events', $channelOptions);
         }

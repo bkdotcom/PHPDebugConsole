@@ -50,7 +50,7 @@ class RouteTest extends DebugTestFramework
 
     public function testOnCfgRoute()
     {
-        $container = $this->helper->getProp($this->debug, 'container');
+        $container = \bdk\Debug\Utility\Reflection::propGet($this->debug, 'container');
         unset($container['routeFirephp']);
 
         $this->debug->setCfg('route', new \bdk\Debug\Route\Firephp($this->debug));

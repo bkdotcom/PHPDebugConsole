@@ -151,7 +151,7 @@ class LogEnvTest extends DebugTestFramework
 
         $GLOBALS['sessionMock']['status'] = PHP_SESSION_NONE;
         $logEnv = new LogEnv();
-        $this->helper->setProp($logEnv, 'iniValues', array(
+        \bdk\Debug\Utility\Reflection::propSet($logEnv, 'iniValues', array(
             'sessionUseCookies' => true,
             'sessionUseOnlyCookies' => false,
         ));

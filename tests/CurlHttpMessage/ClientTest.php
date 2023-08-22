@@ -74,7 +74,7 @@ class ClientTest extends TestCase
             'headers'  => ['bar' => 'baz'],
             'handler'  => new MockHandler(),
         ]);
-        $options = \bdk\Test\Debug\Helper::getProp($client, 'options');
+        $options = \bdk\Debug\Utility\Reflection::propGet($client, 'options');
         // self::assertArrayHasKey('base_uri', $options);
         // self::assertInstanceOf(Uri::class, $options['base_uri']);
         // self::assertSame('http://foo.com', (string) $options['base_uri']);
@@ -149,7 +149,7 @@ class ClientTest extends TestCase
         $client = new Client([
             'headers' => ['User-agent' => 'default'],
         ]);
-        $options = \bdk\Test\Debug\Helper::getProp($client, 'options');
+        $options = \bdk\Debug\Utility\Reflection::propGet($client, 'options');
         self::assertSame(['User-agent' => 'default'], $options['headers']);
         self::assertFalse($options['isAsyncronous']);
         // self::assertIsArray($options['allow_redirects']);
@@ -693,19 +693,19 @@ class ClientTest extends TestCase
 
         try {
             $client = new Client();
-            $options = \bdk\Test\Debug\Helper::getProp($client, 'options');
+            $options = \bdk\Debug\Utility\Reflection::propGet($client, 'options');
             self::assertArrayNotHasKey('proxy', $options);
 
             \putenv('HTTP_PROXY=127.0.0.1');
             $client = new Client();
-            $options = \bdk\Test\Debug\Helper::getProp($client, 'options');
+            $options = \bdk\Debug\Utility\Reflection::propGet($client, 'options');
             self::assertArrayHasKey('proxy', $options);
             self::assertSame(['http' => '127.0.0.1'], $options['proxy']);
 
             \putenv('HTTPS_PROXY=127.0.0.2');
             \putenv('NO_PROXY=127.0.0.3, 127.0.0.4');
             $client = new Client();
-            $options = \bdk\Test\Debug\Helper::getProp($client, 'options');
+            $options = \bdk\Debug\Utility\Reflection::propGet($client, 'options');
             self::assertArrayHasKey('proxy', $options);
             self::assertSame(
                 [

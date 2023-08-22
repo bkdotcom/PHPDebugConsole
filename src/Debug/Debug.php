@@ -21,8 +21,33 @@ use bdk\Debug\Abstraction\Abstracter;
 /**
  * Web-browser/javascript like console class for PHP
  *
+ * @method $this alert(string $message, string $level = error, bool $dismissible = false)
+ * @method $this assert(bool $assertion, mixed ...$msg = null)
+ * @method $this clear(int $bitmask = bdk\Debug::CLEAR_LOG)
+ * @method $this count($label = null, int $flags = null)
+ * @method $this countReset(mixed $label = null, int $flags = null)
+ * @method $this error(mixed ...$arg)
+ * @method $this group(mixed ...$arg)
+ * @method $this groupCollapsed(mixed ...$arg)
+ * @method $this groupEnd(mixed $value = bdk\Debug\Abstraction\Abstracter::UNDEFINED)
+ * @method $this groupSummary(int $priority = 0)
+ * @method $this groupUncollapse()
+ * @method $this info(mixed ...$arg)
+ * @method $this log(mixed ...$arg)
+ * @method $this profile(string $name = null)
+ * @method $this profileEnd(string $name = null)
+ * @method $this table(mixed ...$arg)
+ * @method $this time(string $label = null, float $duration = null)
+ * @method $this timeEnd(string $label = null, bool $log = true, bool $return = auto)
+ * @method $this|float|false timeGet(string $label = null, bool $log = true, bool $return = auto)
+ * @method $this timeLog(string $label = null, mixed ...$args = null)
+ * @method $this trace(bool $inclContext = false, string $caption = trace)
+ * @method $this warn(mixed ...$arg)
+ * @method string output()
+ *
  * @method Abstraction|string prettify(string $string, string $contentType)
  * @method bool email($toAddr, $subject, $body)
+ * @method array errorStats()
  * @method string getInterface()
  * @method string getResponseCode()
  * @method array|string getResponseHeader($header = 'Content-Type', $delimiter = ', ')
@@ -31,9 +56,11 @@ use bdk\Debug\Abstraction\Abstracter;
  * @method bool hasLog()
  * @method void obEnd()
  * @method void obStart()
+ * @method Abstraction|string prettify($string, $contentType)
  * @method mixed redact($val, $key = null)
  * @method string requestId()
  * @method void setErrorCaller(array $callerInfo)
+ * @method void varDump(mixed ...$arg)
  *
  * @property Abstracter           $abstracter    lazy-loaded Abstracter instance
  * @property \bdk\Debug\Utility\ArrayUtil $arrayUtil lazy-loaded array utilitys

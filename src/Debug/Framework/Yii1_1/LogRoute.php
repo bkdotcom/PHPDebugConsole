@@ -60,7 +60,7 @@ class LogRoute extends CLogRoute
     public function __construct(Debug $debug = null, $opts = array())
     {
         if (!$debug) {
-            $debug = Debug::_getChannel('Yii');
+            $debug = Debug::getChannel('Yii');
         } elseif ($debug === $debug->rootInstance) {
             $debug = $debug->getChannel('Yii');
         }

@@ -88,71 +88,19 @@ class Helper
         return $data;
     }
 
-    /**
-     * Get inaccessable property value via reflection
-     *
-     * @param object $obj  object instance
-     * @param string $prop property name
-     *
-     * @return mixed
-     */
-    public static function getProp($obj, $prop)
-    {
-        $propRef = new ReflectionProperty($obj, $prop);
-        $propRef->setAccessible(true);
-        return \is_string($obj) || $propRef->isStatic()
-            ? $propRef->getValue()
-            : $propRef->getValue($obj);
-    }
-
-    /**
-     * Set inaccessable property value via reflection
-     *
-     * @param object|string $obj  object or classname
-     * @param string        $prop property name
-     * @param mixed         $val  new value
-     *
-     * @return mixed
-     *
-     * @throws \RuntimeException
-     */
-    public static function setProp($obj, $prop, $val)
-    {
-        $refProp = null;
-        $ref = new \ReflectionClass($obj);
-        do {
-            if ($ref->hasProperty($prop)) {
-                $refProp = $ref->getProperty($prop);
-                break;
-            }
-            $ref = $ref->getParentClass();
-        } while ($ref);
-        if ($refProp === null) {
-            throw new \RuntimeException(\sprintf(
-                'Property %s::$%s does not exist',
-                \get_class($obj),
-                $prop
-            ));
-        }
-        $refProp->setAccessible(true);
-        \is_string($obj) || $refProp->isStatic()
-            ? $refProp->setValue($val)
-            : $refProp->setValue($obj, $val);
-    }
-
     public function resetContainerValue($name)
     {
         $debug = Debug::getInstance();
-        $container = self::getProp($debug, 'container');
-        $invoked = self::getProp($container, 'invoked');
+        $container = \bdk\Debug\Utility\Reflection::propGet($debug, 'container');
+        $invoked = \bdk\Debug\Utility\Reflection::propGet($container, 'invoked');
         if (isset($invoked[$name])) {
-            $raw = self::getProp($container, 'raw');
-            $values = self::getProp($container, 'values');
+            $raw = \bdk\Debug\Utility\Reflection::propGet($container, 'raw');
+            $values = \bdk\Debug\Utility\Reflection::propGet($container, 'values');
             $values[$name] = $raw[$name];
             unset($invoked[$name]);
-            self::setProp($container, 'invoked', $invoked);
-            self::setProp($container, 'raw', $raw);
-            self::setProp($container, 'values', $values);
+            \bdk\Debug\Utility\Reflection::propSet($container, 'invoked', $invoked);
+            \bdk\Debug\Utility\Reflection::propSet($container, 'raw', $raw);
+            \bdk\Debug\Utility\Reflection::propSet($container, 'values', $values);
         }
     }
 

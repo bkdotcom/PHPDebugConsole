@@ -24,6 +24,7 @@ use ReflectionMethod;
 use ReflectionObject;
 use ReflectionProperty;
 use Reflector;
+use RuntimeException;
 use UnitEnum;
 
 /**
@@ -62,7 +63,7 @@ class Reflection
     }
 
     /**
-     * Find "parent" phpDoc
+     * Find "parent" reflector
      *
      * @param Reflector $reflector Reflector interface
      *
@@ -148,6 +149,90 @@ class Reflection
             $str = $name .= '()';
         }
         return \md5($str);
+    }
+
+    /**
+     * Get inaccessable property value via reflection
+     *
+     * @param object|classname $obj  object instance
+     * @param string           $prop property name
+     *
+     * @return mixed
+     *
+     * @throws RuntimeException
+     */
+    public static function propGet($obj, $prop)
+    {
+        $refProp = static::getReflectionProperty($obj, $prop);
+        if ($refProp->isStatic()) {
+            return $refProp->getValue();
+        }
+        if (\is_object($obj) === false) {
+            throw new RuntimeException(\sprintf(
+                'propGet: object must be provided to retrieve instance value %s',
+                $prop
+            ));
+        }
+        return $refProp->getValue($obj);
+    }
+
+    /**
+     * Set inaccessable property value via reflection
+     *
+     * @param object|classname $obj  object or classname
+     * @param string           $prop property name
+     * @param mixed            $val  new value
+     *
+     * @return mixed
+     *
+     * @throws RuntimeException
+     */
+    public static function propSet($obj, $prop, $val)
+    {
+        $refProp = static::getReflectionProperty($obj, $prop);
+        if ($refProp->isStatic()) {
+            return $refProp->setValue($val);
+        }
+        if (\is_object($obj) === false) {
+            throw new RuntimeException(\sprintf(
+                'propSet: object must be provided to set instance value %s',
+                $prop
+            ));
+        }
+        return $refProp->setValue($obj, $val);
+    }
+
+    /**
+     * Get ReflectionProperty
+     *
+     * @param object|classname $obj  object or classname
+     * @param string           $prop property name
+     *
+     * @return ReflectionProperty
+     * @throws RuntimeException
+     */
+    private static function getReflectionProperty($obj, $prop)
+    {
+        $refProp = null;
+        $ref = new ReflectionClass($obj);
+        do {
+            if ($ref->hasProperty($prop)) {
+                $refProp = $ref->getProperty($prop);
+                break;
+            }
+            $ref = $ref->getParentClass();
+        } while ($ref);
+        if ($refProp === null) {
+            throw new RuntimeException(\sprintf(
+                'Property %s::$%s does not exist',
+                \is_string($obj)
+                    ? $obj
+                    : \get_class($obj),
+                $prop
+            ));
+        }
+        $refProp->setAccessible(true);
+        return $refProp;
     }
 
     /**

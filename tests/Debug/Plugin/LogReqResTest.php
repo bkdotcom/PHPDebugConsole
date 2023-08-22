@@ -217,7 +217,7 @@ class LogReqResTest extends DebugTestFramework
         /*
             Post with just uploadedFiles
         */
-        $this->helper->setProp($this->debug->getPlugin('methodReqRes'), 'serverParams', array());
+        \bdk\Debug\Utility\Reflection::propSet($this->debug->getPlugin('methodReqRes'), 'serverParams', array());
         $this->debug->rootInstance->setCfg('serviceProvider', array(
             'serverRequest' => static function () {
                 $request = new ServerRequest('POST', null, array(

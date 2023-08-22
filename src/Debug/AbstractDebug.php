@@ -86,9 +86,6 @@ class AbstractDebug
     /**
      * Magic method to allow us to call instance methods statically
      *
-     * Prefix the instance method with an underscore ie
-     *    \bdk\Debug::_log('logged via static method');
-     *
      * @param string $methodName Inaccessible method name
      * @param array  $args       Arguments passed to method
      *
@@ -96,6 +93,8 @@ class AbstractDebug
      */
     public static function __callStatic($methodName, $args)
     {
+        // prior to v3.1 it was required to have underscore prefix to disambiguate from instance method
+        //   as of v3.1, all methodss provided via plugin
         $methodName = \ltrim($methodName, '_');
         if (!self::$instance && $methodName === 'setCfg') {
             /*

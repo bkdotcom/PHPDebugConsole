@@ -39,7 +39,7 @@ class LogPhpTest extends DebugTestFramework
         ));
 
         $logPhp = $this->debug->getPlugin('logPhp');
-        $this->helper->setProp($logPhp, 'iniValues', array(
+        \bdk\Debug\Utility\Reflection::propSet($logPhp, 'iniValues', array(
             'dateTimezone' => 'America/Chicago',
         ));
         $logPhp->onBootstrap(new Event($this->debug));
@@ -103,7 +103,7 @@ class LogPhpTest extends DebugTestFramework
             ),
         ));
         $logPhp = $this->debug->getPlugin('logPhp');
-        $this->helper->setProp($logPhp, 'iniValues', array(
+        \bdk\Debug\Utility\Reflection::propSet($logPhp, 'iniValues', array(
             'dateTimezone' => '',
         ));
         $logPhp->onBootstrap(new Event($this->debug));
@@ -160,7 +160,7 @@ class LogPhpTest extends DebugTestFramework
     public function testLogPhpInfoEr()
     {
         $logPhp = new LogPhp();
-        $this->helper->setProp($logPhp, 'debug', $this->debug->getChannel('php', array('nested' => false)));
+        \bdk\Debug\Utility\Reflection::propSet($logPhp, 'debug', $this->debug->getChannel('php', array('nested' => false)));
 
         $refMethod = new \ReflectionMethod($logPhp, 'logPhpEr');
         $refMethod->setAccessible(true);

@@ -163,7 +163,7 @@ abstract class AbstractTestCaseWith extends TestCase
                 continue;
             }
             // \bdk\Test\Debug\Helper::stderr($name, $info);
-            if (\in_array($info['type'], array('array','object'), true)) {
+            if (isset($info['type']) && \in_array($info['type'], array('array','object'), true)) {
                 $tests[$name . ' empty array'] = array($name, array(), $info['isRequired']);
             } else {
                 $tests[$name . ' null'] = array($name, null, $info['isRequired']);

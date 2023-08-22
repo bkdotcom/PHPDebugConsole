@@ -26,7 +26,7 @@ class StringTest extends DebugTestFramework
     {
         $debug = Debug::getInstance();
         $htmlString = $debug->getDump('html')->valDumper->string;
-        \bdk\Test\Debug\Helper::setProp($htmlString, 'lazy', array());
+        \bdk\Debug\Utility\Reflection::propSet($htmlString, 'lazy', array());
     }
 
     public static function providerTestMethod()

@@ -276,8 +276,8 @@ EOD;
 
     public function testCreateChannel()
     {
-        $channelsBack = $this->helper->getProp($this->debug->getPlugin('channel'), 'channels');
-        $this->helper->setProp($this->debug->getPlugin('channel'), 'channels', array());
+        $channelsBack = \bdk\Debug\Utility\Reflection::propGet($this->debug->getPlugin('channel'), 'channels');
+        \bdk\Debug\Utility\Reflection::propSet($this->debug->getPlugin('channel'), 'channels', array());
         $tabby = $this->debug->getChannel('tabby', array(
             'channelIcon' => 'fa fa-tabby',
             'nested' => false,
@@ -312,7 +312,7 @@ EOD;
             'general.foo.bar',
         ), \array_keys($this->debug->getChannels(true, true)));
 
-        $this->helper->setProp($this->debug->getPlugin('channel'), 'channels', $channelsBack);
+        \bdk\Debug\Utility\Reflection::propSet($this->debug->getPlugin('channel'), 'channels', $channelsBack);
     }
 
     public function testGetChannel()
@@ -328,8 +328,8 @@ EOD;
             ),
         ));
 
-        $channelsBack = $this->helper->getProp($this->debug->getPlugin('channel'), 'channels');
-        $this->helper->setProp($this->debug->getPlugin('channel'), 'channels', array());
+        $channelsBack = \bdk\Debug\Utility\Reflection::propGet($this->debug->getPlugin('channel'), 'channels');
+        \bdk\Debug\Utility\Reflection::propSet($this->debug->getPlugin('channel'), 'channels', array());
         $baz = $this->debug->getChannel('baz');
         $baz->getChannel('general.foo.bar', array(
             'channelIcon' => 'fa fa-asterisk',
@@ -345,7 +345,7 @@ EOD;
         $fork = $this->debug->getChannel('utensil.fork');
         self::assertSame('fa fa-fork', $fork->getCfg('channelIcon'));
 
-        $this->helper->setProp($this->debug->getPlugin('channel'), 'channels', $channelsBack);
+        \bdk\Debug\Utility\Reflection::propSet($this->debug->getPlugin('channel'), 'channels', $channelsBack);
     }
 
     protected function genLog(Debug $clearer = null, $bitmask = null, &$info = array())

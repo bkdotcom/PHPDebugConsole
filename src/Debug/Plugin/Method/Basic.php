@@ -16,6 +16,7 @@ use bdk\Debug;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Plugin\CustomMethodTrait;
 use bdk\ErrorHandler\Error;
+use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
 
 /**
@@ -25,11 +26,15 @@ class Basic implements SubscriberInterface
 {
     use CustomMethodTrait;
 
+    private $cliOutputStream = null;
+    private $isCli = false;
+
     protected $methods = array(
         'assert',
         'error',
         'info',
         'log',
+        'varDump',
         'warn',
     );
 
@@ -105,6 +110,17 @@ class Basic implements SubscriberInterface
     }
 
     /**
+     * {@inheritDoc}
+     */
+    public function getSubscriptions()
+    {
+        return array(
+            Debug::EVENT_BOOTSTRAP => 'onBootstrap',
+            Debug::EVENT_CUSTOM_METHOD => 'onCustomMethod',
+        );
+    }
+
+    /**
      * Log general information
      *
      * Supports styling & substitutions
@@ -132,6 +148,54 @@ class Basic implements SubscriberInterface
             $args
         ));
         return $this->debug;
+    }
+
+    /**
+     * Debug::EVENT_BOOTSTRAP subscriber
+     *
+     * @param Event $event Debug::EVENT_BOOTSTRAP Event instance
+     *
+     * @return void
+     */
+    public function onBootstrap(Event $event)
+    {
+        $debug = $event->getSubject();
+        $this->isCli = $debug->isCli(false); // are we a cli app?  (disregard PSR7 ServerRequest obj)
+        if ($this->isCli) {
+            $this->cliOutputStream = STDERR;
+        }
+    }
+
+    /**
+     * Dump values to output
+     *
+     * Similar to php's `var_dump()`.  Dump values immediately
+     *
+     * @param mixed $arg,... message / values
+     *
+     * @return void
+     */
+    public function varDump()
+    {
+        $isCli = $this->isCli;
+        $dumper = $this->debug->getDump($isCli ? 'textAnsi' : 'text');
+        $args = \array_map(static function ($val) use ($dumper, $isCli) {
+            $new = $dumper->valDumper->dump($val);
+            if ($isCli) {
+                $dumper->valDumper->escapeReset = "\e[0m";
+            }
+            $dumper->valDumper->setValDepth(0);
+            return $new;
+        }, \func_get_args());
+        $glue = \func_num_args() > 2
+            ? ', '
+            : ' = ';
+        $outStr = \implode($glue, $args);
+        if ($isCli) {
+            \fwrite($this->cliOutputStream, $outStr . "\n");
+            return;
+        }
+        echo '<pre style="margin:.25em;">' . $outStr . '</pre>' . "\n";
     }
 
     /**

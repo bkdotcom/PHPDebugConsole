@@ -165,7 +165,7 @@ WHERE·
 
     public function testPrettyXml()
     {
-        \bdk\Test\Debug\Helper::setProp('bdk\Debug\Utility\StringUtil', 'domDocument', null);
+        \bdk\Debug\Utility\Reflection::propSet('bdk\Debug\Utility\StringUtil', 'domDocument', null);
 
         self::assertSame('', StringUtil::prettyXml(''));
 

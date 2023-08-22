@@ -507,13 +507,13 @@ class DebugTestFramework extends DOMTestCase
         $this->debug->errorHandler->setData('errors', array());
         $this->debug->errorHandler->setData('errorCaller', array());
         $this->debug->errorHandler->setData('lastErrors', array());
-        $channels = $this->helper->getProp($this->debug->getPlugin('channel'), 'channels');
+        $channels = \bdk\Debug\Utility\Reflection::propGet($this->debug->getPlugin('channel'), 'channels');
         $channels = array(
             'general' => \array_intersect_key($channels['general'], \array_flip(array('Request / Response'))),
         );
-        $this->helper->setProp($this->debug->getPlugin('channel'), 'channels', $channels);
-        $this->helper->setProp($this->debug->getPlugin('methodReqRes'), 'serverParams', array());
-        $this->helper->setProp($this->debug->abstracter->abstractObject->class, 'default', null);
+        \bdk\Debug\Utility\Reflection::propSet($this->debug->getPlugin('channel'), 'channels', $channels);
+        \bdk\Debug\Utility\Reflection::propSet($this->debug->getPlugin('methodReqRes'), 'serverParams', array());
+        \bdk\Debug\Utility\Reflection::propSet($this->debug->abstracter->abstractObject->class, 'default', null);
 
         // make sure we still have wamp plugin registered
         $wamp = $this->debug->getRoute('wamp');

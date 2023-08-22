@@ -20,7 +20,7 @@ class HandlerStackTest extends TestCase
     {
         $callable = static function () {};
         $stack = new HandlerStack($callable);
-        self::assertSame($callable, \bdk\Test\Debug\Helper::getProp($stack, 'handler'));
+        self::assertSame($callable, \bdk\Debug\Utility\Reflection::propGet($stack, 'handler'));
     }
 
     public function testCanSetDifferentHandlerAfterConstruction()
@@ -28,7 +28,7 @@ class HandlerStackTest extends TestCase
         $callable = static function () {};
         $stack = new HandlerStack();
         $stack->setHandler($callable);
-        self::assertSame($callable, \bdk\Test\Debug\Helper::getProp($stack, 'handler'));
+        self::assertSame($callable, \bdk\Debug\Utility\Reflection::propGet($stack, 'handler'));
     }
 
     public function testAssertHandlerCallable()

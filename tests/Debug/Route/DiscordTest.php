@@ -25,7 +25,7 @@ class DiscordTest extends DebugTestFramework
     public function tearDown(): void
     {
         $discordRoute = $this->debug->getRoute('discord');
-        $this->helper->setProp($discordRoute, 'client', null);
+        \bdk\Debug\Utility\Reflection::propSet($discordRoute, 'client', null);
         $this->debug->removePlugin($discordRoute);
         parent::tearDown();
     }

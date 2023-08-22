@@ -43,7 +43,7 @@ class OAuth extends OAuthBase
     {
         parent::__construct($consumerKey, $consumerSecret, $signatureMethod, $authType);
         if ($debug === null) {
-            $debug = Debug::_getChannel('OAuth', array('channelIcon' => $this->icon));
+            $debug = Debug::getChannel('OAuth', array('channelIcon' => $this->icon));
         } elseif ($debug === $debug->rootInstance) {
             $debug = $debug->getChannel('OAuth', array('channelIcon' => $this->icon));
         }

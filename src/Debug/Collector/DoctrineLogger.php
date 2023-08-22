@@ -49,7 +49,7 @@ class DoctrineLogger implements SQLLogger
     public function __construct(Connection $connection = null, Debug $debug = null)
     {
         if (!$debug) {
-            $debug = Debug::_getChannel('Doctrine', array('channelIcon' => $this->icon));
+            $debug = Debug::getChannel('Doctrine', array('channelIcon' => $this->icon));
         } elseif ($debug === $debug->rootInstance) {
             $debug = $debug->getChannel('Doctrine', array('channelIcon' => $this->icon));
         }

@@ -4,14 +4,13 @@
  * @package   Backtrace
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2020-2022 Brad Kent
+ * @copyright 2020-2023 Brad Kent
  * @version   v2.1
  * @link      http://www.github.com/bkdotcom/Backtrace
  */
 
 namespace bdk\Backtrace;
 
-use bdk\Backtrace\Normalizer;
 use InvalidArgumentException;
 
 /**
@@ -19,8 +18,8 @@ use InvalidArgumentException;
  *
  * backtrace:
  *    index 0 is current position
- *    file/line are calling _from_
  *    function/class are what's getting called
+ *    file/line are calling _from_
  */
 class SkipInternal
 {
@@ -28,21 +27,26 @@ class SkipInternal
      * @var array
      */
     private static $internalClasses = array(
+        // classes/namespaces
+        // the lower the number, the more we'll enforce skipping
+        //   if all frames are skipped, we will try lower number
         'classes' => array(
-            __NAMESPACE__ => 0, // the lower the number, the more we'll enforce skipping
+            'ReflectionMethod' => 0,
+            __NAMESPACE__ => 0,
         ),
         'levelCurrent' => null,
         'levels' => array(0),
-        # 'regex' => '/^bdk\\\Backtrace\b$/',
         'regex' => null,
     );
 
+    private static $classMethodRegex = '/^(?<class>\S+)(?<type>::|->)(?<method>\S+)$/';
+
     /**
-     * add a new namespace or classname to be used to determine when to
+     * Add a new namespace or classname to be used to determine when to
      * stop iterrating over the backtrace when determining calling info
      *
      * @param array|string $classes classname(s)
-     * @param int          $level   "priority".  0 = will never skipp
+     * @param int          $level   "priority"
      *
      * @return void
      * @throws InvalidArgumentException
@@ -72,35 +76,42 @@ class SkipInternal
      *
      * @param array    $backtrace Backtrace
      * @param int      $offset    Adjust how far to go back
-     * @param int|null $levelMax  (internal)
+     * @param int|null $level     {internal}
      *
      * @return int
      */
-    public static function getFirstIndex($backtrace, $offset, $levelMax = null)
+    public static function getFirstIndex($backtrace, $offset = 0, $level = null)
     {
-        $levelMax = self::initSkippableTests($levelMax);
+        $level = self::initSkippableTests($level);
         $count = \count($backtrace);
-        for ($i = 1; $i < $count; $i++) {
-            if (static::isSkippable($backtrace[$i], $levelMax)) {
-                continue;
-            }
-            break;
-        }
-        if ($i === $count && $levelMax > 0) {
-            // every frame was skipped.. let's try again
-            return self::getFirstIndex($backtrace, $offset, $levelMax - 1);
-        }
-        $i--;
-        $i = \max($i, 1);
-        /*
-            file/line values may be missing... if frame called via core PHP function/method
-        */
-        for ($i = $i + $offset; $i < $count; $i++) {
-            if (isset($backtrace[$i]['line'])) {
+        for ($i = 0; $i < $count; $i++) {
+            if (static::isSkippable($backtrace[$i], $level) === false) {
                 break;
             }
         }
-        return $i;
+        for ($i2 = $i - 1; $i2 > 0; $i2--) {
+            $class = self::getClass($backtrace[$i2]);
+            if ($i === $count && $class === null) {
+                // every frame was skipped and first frame is include, or similar
+                break;
+            }
+            if (\in_array($class, array(null, 'ReflectionMethod'), true) === false) {
+                // class method (but not ReflectionMethod)
+                break;
+            }
+            $i = $i2;
+        }
+        if ($i === $count) {
+            // every frame was skipped
+            return $level > 0
+                ? self::getFirstIndex($backtrace, $offset, $level - 1)
+                : 0;
+        }
+        $i--;
+        $i = \max($i, 0); // insure we're >= 0
+        return isset($backtrace[$i + $offset])
+            ? $i + $offset
+            : $i;
     }
 
     /**
@@ -112,7 +123,7 @@ class SkipInternal
      */
     public static function removeInternalFrames($backtrace)
     {
-        $index = static::getFirstIndex($backtrace, 0);
+        $index = static::getFirstIndex($backtrace);
         return \array_slice($backtrace, $index);
     }
 
@@ -123,10 +134,10 @@ class SkipInternal
      */
     private static function buildSkipRegex()
     {
-        $levelMax = self::$internalClasses['levelCurrent'];
+        $levelCurrent = self::$internalClasses['levelCurrent'];
         $classes = array();
         foreach (self::$internalClasses['classes'] as $class => $level) {
-            if ($level <= $levelMax) {
+            if ($level <= $levelCurrent) {
                 $classes[] = $class;
             }
         }
@@ -141,7 +152,7 @@ class SkipInternal
     /**
      * Determine level max and set regex
      *
-     * @param int|null $levelMax maximum level
+     * @param int|null $levelMax Maximum level
      *
      * @return int levelMax
      */
@@ -167,56 +178,61 @@ class SkipInternal
     /**
      * Test if frame is skippable
      *
-     * @param array $frame    backtrace frame
-     * @param int   $levelMax when classes to consider internal
+     * "Skippable" if
+     *    * not a class method
+     *    * class belongs to internalClasses
+     *
+     * @param array $frame backtrace frame
+     * @param int   $level when classes to consider internal
      *
      * @return bool
      */
-    private static function isSkippable($frame, $levelMax)
+    private static function isSkippable($frame, $level)
     {
-        $frame = \array_merge(array(
-            'class' => null,
-            'function' => null,
-        ), $frame);
-        $class = null;
-        if ($frame['class']) {
-            $class = $frame['class'];
-        } elseif (\preg_match('/^(.+)(::|->)/', (string) $frame['function'], $matches)) {
-            $class = $matches[1];
-        }
+        $class = self::getClass($frame);
         if (!$class) {
-            return Normalizer::isInternal($frame);
+            return true;
         }
         if (\preg_match(static::$internalClasses['regex'], $class)) {
             return true;
         }
-        if (\in_array($frame['function'], array('__call', '__callStatic'), true)) {
-            return true;
-        }
-        if ($class === 'ReflectionMethod' && \in_array($frame['function'], array('invoke', 'invokeArgs'), true)) {
-            return true;
-        }
-        return static::isSubclassOfInternal($frame, $levelMax);
+        return static::isSubclassOfInternal($class, $level);
     }
 
     /**
      * Test frame against internal classes
      *
-     * @param array $frame    backtrace frame
-     * @param int   $levelMax when classes to consider internal
+     * @param classname $class    class name
+     * @param int       $levelMax MAximum level
      *
      * @return bool
      */
-    private static function isSubclassOfInternal(array $frame, $levelMax)
+    private static function isSubclassOfInternal($class, $levelMax)
     {
-        if (!isset($frame['object'])) {
-            return false;
-        }
-        foreach (static::$internalClasses['classes'] as $className => $level) {
-            if ($level <= $levelMax && \is_subclass_of($frame['object'], $className)) {
+        foreach (static::$internalClasses['classes'] as $classNameInternal => $level) {
+            if ($level <= $levelMax && \class_exists($classNameInternal, false) && \is_subclass_of($class, $classNameInternal)) {
                 return true;
             }
         }
         return false;
+    }
+
+    /**
+     * Get classname of called class/method
+     *
+     * @param array $frame Normalized backtrace frame
+     *
+     * @return string|null
+     */
+    private static function getClass(array $frame)
+    {
+        /*
+        if (isset($frame['class'])) {
+            return $frame['class'];
+        }
+        */
+        return \preg_match(self::$classMethodRegex, $frame['function'], $matches)
+            ? $matches['class']
+            : null;
     }
 }

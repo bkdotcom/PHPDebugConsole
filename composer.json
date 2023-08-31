@@ -47,7 +47,7 @@
         }
     },
     "replace": {
-        "bdk/backtrace": "2.1.1",
+        "bdk/backtrace": "2.2",
         "bdk/curl-http-message": "1.0",
         "bdk/errorhandler": "3.3",
         "bdk/http-message": "1.0",

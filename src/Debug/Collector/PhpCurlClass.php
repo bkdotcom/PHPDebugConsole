@@ -218,7 +218,7 @@ class PhpCurlClass extends Curl
         $this->debug->log('request headers', $this->debug->redactHeaders($this->rawRequestHeaders));
         // Curl provides no means to get the request body
         if ($this->error) {
-            $this->debug->backtrace->addInternalClass('Curl\\');
+            $this->debug->backtrace->addInternalClass('Curl');
             $this->debug->warn($this->errorCode, $this->errorMessage);
         }
         if ($this->effectiveUrl !== $options['CURLOPT_URL']) {

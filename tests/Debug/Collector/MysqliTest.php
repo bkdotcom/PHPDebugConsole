@@ -80,7 +80,7 @@ EOD;
 
     public function testConstruct()
     {
-        $this->assertPhpClient();
+        self::assertPhpClient();
 
         $client1 = new MySqli(
             \getenv('MYSQL_HOST'),
@@ -91,21 +91,21 @@ EOD;
         );
         $this->debug->getChannel('MySqli')
             ->eventManager->unsubscribe(Debug::EVENT_OUTPUT, array($client1, 'onDebugOutput'));
-        $this->assertTrue($client1->connectionAttempted);
+        self::assertTrue($client1->connectionAttempted);
 
         $client2 = new MySqli();
         $this->debug->getChannel('MySqli')
             ->eventManager->unsubscribe(Debug::EVENT_OUTPUT, array($client2, 'onDebugOutput'));
-        $this->assertFalse($client2->connectionAttempted);
+        self::assertFalse($client2->connectionAttempted);
     }
 
     public function testAutocommit()
     {
-        $this->assertPhpClient();
+        self::assertPhpClient();
 
         self::$client->autocommit(false);
         $logEntry = $this->helper->logEntryToArray($this->debug->data->get('log/__end__'));
-        $this->assertSame(array(
+        self::assertSame(array(
             'method' => 'info',
             'args' => array('autocommit', false),
             'meta' => array(
@@ -116,7 +116,7 @@ EOD;
 
     public function testExecuteQuery()
     {
-        $this->assertPhpClient();
+        self::assertPhpClient();
         if (PHP_VERSION_ID < 80200) {
             $this->markTestSkipped('execute_query is php 8.2+');
         }
@@ -128,7 +128,7 @@ EOD;
                 42,
             ]
         );
-        $this->assertTrue($result);
+        self::assertTrue($result);
         $logEntriesExpectJson = <<<EOD
         [
             {
@@ -195,18 +195,19 @@ EOD;
             }
         ]
 EOD;
-        $this->assertLogEntries($logEntriesExpectJson, $this->getLogEntries());
+        self::assertLogEntries($logEntriesExpectJson, $this->getLogEntries());
     }
 
     public function testMultiQuery()
     {
-        $this->assertPhpClient();
+        self::assertPhpClient();
 
         $query = 'SELECT CURRENT_USER();';
         $query .= 'SELECT `t` from `bob` LIMIT 10';
 
         self::$client->multi_query($query);
-        $line = __LINE__ - 1;
+        $file = __FILE__;
+        $line = __LINE__ - 2;
         do {
             $result = self::$client->store_result();
             if ($result) {
@@ -273,7 +274,7 @@ EOD;
                 "meta": {
                     "channel": "general.MySqli",
                     "detectFiles": true,
-                    "file": "%s",
+                    "file": "{$file}",
                     "line": {$line},
                     "uncollapse": false
                 }
@@ -284,7 +285,7 @@ EOD;
                 "meta": {
                     "channel": "general.MySqli",
                     "detectFiles": true,
-                    "file": "%s",
+                    "file": "{$file}",
                     "line": {$line},
                     "uncollapse": false
                 }
@@ -296,19 +297,19 @@ EOD;
             }
         ]
 EOD;
-        $this->assertLogEntries($logEntriesExpectJson, $this->getLogEntries(9));
+        self::assertLogEntries($logEntriesExpectJson, $this->getLogEntries(9));
     }
 
     public function testDebugMysqliObj()
     {
         $this->debug->log('mysqli', new \mysqli());
         $logEntry = $this->debug->data->get('log/__end__');
-        $this->assertTrue($logEntry instanceof \bdk\Debug\LogEntry);
+        self::assertTrue($logEntry instanceof \bdk\Debug\LogEntry);
     }
 
     public function testPrepareBindExecute()
     {
-        $this->assertPhpClient();
+        self::assertPhpClient();
 
         $stmt = self::$client->prepare('INSERT INTO `bob` (`t`, `e`, `ct`) VALUES (?, ?, ?)');
         $stmt->bind_param('ssi', $text, $datetime, $int);
@@ -363,12 +364,12 @@ EOD;
             }
         ]
 EOD;
-        $this->assertLogEntries($logEntriesExpectJson, $this->getLogEntries(8));
+        self::assertLogEntries($logEntriesExpectJson, $this->getLogEntries(8));
     }
 
     public function testRealQuery()
     {
-        $this->assertPhpClient();
+        self::assertPhpClient();
 
         $success = self::$client->real_query('SELECT * from `bob`');
         $line = __LINE__ - 1;
@@ -438,12 +439,12 @@ EOD;
         ]
 
 EOD;
-        $this->assertLogEntries($logEntriesExpectJson, $this->getLogEntries(9));
+        self::assertLogEntries($logEntriesExpectJson, $this->getLogEntries(9));
     }
 
     public function testRealConnect()
     {
-        $this->assertPhpClient();
+        self::assertPhpClient();
 
         $result = self::$client->real_connect(
             \getenv('MYSQL_HOST'),
@@ -452,17 +453,17 @@ EOD;
             \getenv('MYSQL_DATABASE'),
             \getenv('MYSQL_PORT')
         );
-        $this->assertTrue($result);
+        self::assertTrue($result);
     }
 
     public function testReleaseSavepoint()
     {
-        $this->assertPhpClient();
+        self::assertPhpClient();
 
         $result1 = self::$client->begin_transaction();
         $result2 = self::$client->savepoint('Sally');
         $logEntry = $this->helper->logEntryToArray($this->debug->data->get('log/__end__'));
-        $this->assertSame(array(
+        self::assertSame(array(
             'method' => 'info',
             'args' => array('savepoint', 'Sally'),
             'meta' => array(
@@ -470,20 +471,20 @@ EOD;
             ),
         ), $logEntry);
         $result3 = self::$client->release_savepoint('Sally');
-        $this->assertTrue($result1);
-        $this->assertTrue($result2);
-        $this->assertTrue($result3);
+        self::assertTrue($result1);
+        self::assertTrue($result2);
+        self::assertTrue($result3);
 
         $result4 = self::$client->release_savepoint('Sally');
         $line = __LINE__ - 1;
         if (PHP_VERSION_ID < 70000 || \mysqli_get_client_version() <= 50082) {
             // https://bugs.mysql.com/bug.php?id=26288
-            $this->assertTrue($result4);
+            self::assertTrue($result4);
             return;
         }
-        $this->assertFalse($result4);
+        self::assertFalse($result4);
         $logEntry = $this->helper->logEntryToArray($this->debug->data->get('log/__end__'));
-        $this->assertSame(array(
+        self::assertSame(array(
             'method' => 'warn',
             'args' => array('SAVEPOINT Sally does not exist'),
             'meta' => array(
@@ -498,7 +499,7 @@ EOD;
 
     public function testRollback()
     {
-        $this->assertPhpClient();
+        self::assertPhpClient();
 
         self::$client->begin_transaction();
         self::$client->query('INSERT INTO `bob` (`t`) VALUES ("rollback test")');
@@ -525,31 +526,31 @@ EOD;
                 }
             ]
 EOD;
-        $this->assertLogEntries($logEntriesExpectJson, $this->getLogEntries(2));
+        self::assertLogEntries($logEntriesExpectJson, $this->getLogEntries(2));
     }
 
     /*
     public function testRollbackError()
     {
-        $this->assertPhpClient();
+        self::assertPhpClient();
 
         $result = self::$client->rollback(0, 'Jimbo');
 
         $logEntries = $this->getLogEntries(2);
         $this->helper->stderr(__FUNCTION__, $result, $logEntries);
-        $this->assertFalse($result);
+        self::assertFalse($result);
     }
     */
 
     public function testRollbackName()
     {
-        $this->assertPhpClient();
+        self::assertPhpClient();
 
         self::$client->begin_transaction(MYSQLI_TRANS_START_READ_WRITE, 'Sally');
         self::$client->rollback(0, 'Sally');
         $line = __LINE__ - 1;
         $logEntries = $this->getLogEntries(3);
-        $this->assertSame(array(
+        self::assertSame(array(
             array(
                 'method' => 'warn',
                 'args' => array(
@@ -589,13 +590,13 @@ EOD;
 
     public function testSavepoint()
     {
-        $this->assertPhpClient();
+        self::assertPhpClient();
 
         $result = self::$client->savepoint('Sally');
         $result = self::$client->savepoint('Sally');
-        $this->assertTrue($result);
+        self::assertTrue($result);
         $logEntry = $this->helper->logEntryToArray($this->debug->data->get('log/__end__'));
-        $this->assertSame(array(
+        self::assertSame(array(
             'method' => 'info',
             'args' => array('savepoint', 'Sally'),
             'meta' => array(
@@ -606,15 +607,15 @@ EOD;
 
     public function testStmtInit()
     {
-        $this->assertPhpClient();
+        self::assertPhpClient();
 
         $stmt = self::$client->stmt_init();
-        $this->assertInstanceOf('bdk\\Debug\\Collector\\MySqli\\MySqliStmt', $stmt);
+        self::assertInstanceOf('bdk\\Debug\\Collector\\MySqli\\MySqliStmt', $stmt);
     }
 
     public function testTransaction()
     {
-        $this->assertPhpClient();
+        self::assertPhpClient();
 
         self::$client->begin_transaction();
         self::$client->query('INSERT INTO `bob` (`t`) VALUES ("test")');
@@ -686,12 +687,12 @@ EOD;
                 }
             ]
 EOD;
-        $this->assertLogEntries($logEntriesExpectJson, $this->getLogEntries(9));
+        self::assertLogEntries($logEntriesExpectJson, $this->getLogEntries(9));
     }
 
     public function testTransactionNamed()
     {
-        $this->assertPhpClient();
+        self::assertPhpClient();
 
         self::$client->begin_transaction(MYSQLI_TRANS_START_READ_WRITE, 'Billy');
         self::$client->query('INSERT INTO `bob` (`t`) VALUES ("test")');
@@ -786,12 +787,12 @@ EOD;
             }
         ]
 EOD;
-        $this->assertLogEntries($logEntriesExpectJson, $this->getLogEntries());
+        self::assertLogEntries($logEntriesExpectJson, $this->getLogEntries());
     }
 
     public function testDebugOutput()
     {
-        $this->assertPhpClient();
+        self::assertPhpClient();
 
         self::$client->onDebugOutput(new Event($this->debug));
         $logEntriesExpectJson = <<<'EOD'
@@ -852,16 +853,16 @@ EOD;
         $logEntriesExpect[2]['args'][1] = $logEntries[2]['args'][1];
         // server info
         $logEntriesExpect[5]['args'][1] = $logEntries[5]['args'][1];
-        $this->assertLogEntries($logEntriesExpect, $logEntries);
+        self::assertLogEntries($logEntriesExpect, $logEntries);
     }
 
     protected function assertPhpClient()
     {
         if (PHP_VERSION_ID < 50600) {
-            $this->markTestSkipped('Our MysqliStmt implementation requires PHP 5.6');
+            self::markTestSkipped('Our MysqliStmt implementation requires PHP 5.6');
         }
         if (self::$error === true) {
-            $this->markTestSkipped('Error initiating client');
+            self::markTestSkipped('Error initiating client');
         }
     }
 }

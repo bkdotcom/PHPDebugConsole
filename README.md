@@ -119,7 +119,7 @@ $monolog->critical('all your base are belong to them');
 ![Build Status](https://img.shields.io/github/actions/workflow/status/bkdotcom/PHPDebugConsole/phpunit.yml.svg?logo=github)
 [![Codacy Score](https://img.shields.io/codacy/grade/e950849edfd9463b993386080d39875e/master.svg?logo=codacy)](https://app.codacy.com/gh/bkdotcom/PHPDebugConsole/dashboard)
 [![Maintainability](https://img.shields.io/codeclimate/maintainability/bkdotcom/PHPDebugConsole.svg?logo=codeclimate)](https://codeclimate.com/github/bkdotcom/PHPDebugConsole)
-[![Coverage](https://img.shields.io/codeclimate/coverage-letter/bkdotcom/PHPDebugConsole?logo=codeclimate)](https://codeclimate.com/github/bkdotcom/PHPDebugConsole)
+[![Coverage](https://img.shields.io/codeclimate/coverage-letter/bkdotcom/PHPDebugConsole.svg?logo=codeclimate)](https://codeclimate.com/github/bkdotcom/PHPDebugConsole)
 
 ## Changelog
 

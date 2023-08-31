@@ -104,7 +104,7 @@ class TraceTest extends DebugTestFramework
                         . '<th.*?>(.*?)</th>'
                         . '<td.*?>(.*?)</td>'
                         . '<td.*?>(.*?)</td>'
-                        . '<td.*?>(.*?)</td>'
+                        . '<td(.*?)>(.*?)</td>'
                         . '</tr>#is', $output, $matches, PREG_SET_ORDER);
                     $count = \count($matches);
                     for ($i = 1; $i < $count; $i++) {
@@ -114,17 +114,17 @@ class TraceTest extends DebugTestFramework
                         );
                         $valuesExpect[1] = $valuesExpect[1] === null ? 'null' : $valuesExpect[1];
                         $valuesExpect[2] = $valuesExpect[2] === null ? 'null' : (string) $valuesExpect[2];
-
-                        /*
-                        $function = $valuesExpect[3];
-                        $regex = '/^(.+)(::|->)(.+)$/';
-                        $valuesExpect[3] = \preg_match($regex, $function) || \strpos($function, '{closure}')
-                            ? $this->debug->getDump('html')->valDumper->markupIdentifier($function, 'span', array(), true)
-                            : '<span class="t_identifier">' . \htmlspecialchars($function) . '</span>';
-                        */
                         $valuesExpect[3] = $this->debug->getDump('html')->valDumper->markupIdentifier($valuesExpect[3], true, 'span', array(), true);
+
                         $valuesActual = $matches[$i];
                         \array_shift($valuesActual);
+                        $attribs = $valuesActual[3];
+                        unset($valuesActual[3]);
+                        $valuesActual = \array_values($valuesActual);
+                        if (\strpos($attribs, 't_undefined') !== false) {
+                            $valuesActual[3] = $this->debug->getDump('html')->valDumper->markupIdentifier(Abstracter::UNDEFINED, true, 'span', array(), true);
+                        }
+
                         self::assertSame($valuesExpect, $valuesActual);
                     }
                 },

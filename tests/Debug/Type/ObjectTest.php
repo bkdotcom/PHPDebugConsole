@@ -609,8 +609,7 @@ EOD;
                 array(
                     'html' => '<li class="m_log"><div class="t_object" data-accessible="public"><span class="classname">stdClass</span>
                         <dl class="object-inner">
-                        <dt class="attributes">attributes</dt>
-                        <dd class="attribute"><span class="classname">AllowDynamicProperties</span></dd>
+                        %A
                         <dt class="properties">properties</dt>
                         <dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier t_string"></span> <span class="t_operator">=</span> <span class="t_string">empty</span></dd>
                         <dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier t_string"> </span> <span class="t_operator">=</span> <span class="t_string">space</span></dd>
@@ -618,7 +617,7 @@ EOD;
                         <dd class="property public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string"><a class="unicode" href="https://unicode-table.com/en/feff" target="unicode-table" title="BOM / Zero Width No-Break Space: \xef \xbb \xbf">\ufeff</a></span> <span class="t_operator">=</span> <span class="t_string">bom</span></dd>
                         <dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier t_string"><a class="unicode" href="https://unicode-table.com/en/feff" target="unicode-table" title="BOM / Zero Width No-Break Space: \xef \xbb \xbf">\ufeff</a>bom<span class="ws_r"></span><span class="ws_n"></span>
                         <span class="ws_t">%s</span><span class="binary"><span class="c1-control" title="BEL (bell): \x07">␇</span></span> <span class="binary"><span class="c1-control" title="US (unit seperator): \x1f">␟</span></span> <span class="binary"><span class="c1-control" title="DEL: \x7f">␡</span></span> <span class="binary"><span class="c1-control" title="NUL: \x00">␀</span></span> <a class="unicode" href="https://unicode-table.com/en/00a0" target="unicode-table" title="NBSP: \xc2 \xa0">\u00a0</a>&lt;i&gt;(nbsp)&lt;/i&gt; <a class="unicode" href="https://unicode-table.com/en/2009" target="unicode-table" title="Thin Space: \xe2 \x80 \x89">\u2009</a>(thsp), &amp; <a class="unicode" href="https://unicode-table.com/en/200b" target="unicode-table" title="Zero Width Space: \xe2 \x80 \x8b">\u200b</a>(zwsp)</span> <span class="t_operator">=</span> <span class="t_string">ctrl chars and whatnot</span></dd>
-                        <dt class="methods">no methods</dt>
+                        %A
                         </dl>
                         </div></li>',
                     'script' => 'console.log({"___class_name":"stdClass","(public) ":"empty","(public)  ":"space","(public) \\\u{200b}":"zwsp","(public) \\\u{feff}":"bom","(public) \\\u{feff}bom\r\n\t\\\x07 \\\x1f \\\x7f \\\x00 \\\u{00a0}<i>(nbsp)</i> \\\u{2009}(thsp), & \\\u{200b}(zwsp)":"ctrl chars and whatnot"});',

@@ -22,6 +22,7 @@ use bdk\Debug\Abstraction\AbstractObject;
 class TextAnsiValue extends TextValue
 {
     public $escapeReset = "\e[0m";
+    protected $dumpKeys = false;
 
     /**
      * Add ansi escape sequences for classname type strings
@@ -61,23 +62,25 @@ class TextAnsiValue extends TextValue
      */
     protected function dumpArray($array)
     {
-        $isNested = $this->valDepth > 0;
         $this->valDepth++;
+        $isNested = $this->valDepth > 0;
         $escapeCodes = $this->cfg['escapeCodes'];
+        $regexRemoveReset = '/' . \preg_quote($this->escapeReset) . '$/';
         if ($this->getDumpOpt('isMaxDepth')) {
             return $this->cfg['escapeCodes']['keyword'] . 'array '
                 . $this->cfg['escapeCodes']['recursion'] . '*MAX DEPTH*'
                 . $this->escapeReset;
         }
         $str = $escapeCodes['keyword'] . 'array' . $escapeCodes['punct'] . '(' . $this->escapeReset . "\n";
-        foreach ($array as $k => $v) {
-            $escapeKey = \is_int($k)
-                ? $escapeCodes['numeric']
-                : $escapeCodes['arrayKey'];
+        foreach ($array as $key => $val) {
+            // key gets 'numeric' from dump...   apply arrayKey if string
+            //  remove escapeReset
+            $key = (\is_int($key) ? '' : $escapeCodes['arrayKey']) . $this->dump($key, array('addQuotes' => false));
+            $key = \preg_replace($regexRemoveReset, '', $key);
             $str .= '    '
-                . $escapeCodes['punct'] . '[' . $escapeKey . $k . $escapeCodes['punct'] . ']'
+                . $escapeCodes['punct'] . '[' . $key . $escapeCodes['punct'] . ']'
                 . $escapeCodes['operator'] . ' => ' . $this->escapeReset
-                . $this->dump($v) . "\n";
+                . $this->dump($val) . "\n";
         }
         $str .= $this->cfg['escapeCodes']['punct'] . ')' . $this->escapeReset;
         if (!$array) {
@@ -295,9 +298,9 @@ class TextAnsiValue extends TextValue
             return $this->dumpStringNumeric($val, $addQuotes, $abs);
         }
         $escapeCodes = $this->cfg['escapeCodes'];
-        $ansiQuote = $escapeCodes['quote'] . '"' . $this->escapeReset;
         $val = $this->debug->utf8->dump($val);
         if ($addQuotes) {
+            $ansiQuote = $escapeCodes['quote'] . '"' . $this->escapeReset;
             $val = $ansiQuote . $val . $ansiQuote;
         }
         $diff = $abs && $abs['strlen']

@@ -233,7 +233,7 @@ class Abstracter extends AbstractComponent
      */
     public function getType($val)
     {
-        $type = $this->getTypePhp($val);
+        $type = self::getTypePhp($val);
         switch ($type) {
             case self::TYPE_ARRAY:
                 return $this->getTypeArray($val);
@@ -418,9 +418,9 @@ class Abstracter extends AbstractComponent
      *
      * @param mixed` $val value
      *
-     * @return string "array", "bool", "float","int","null","object","resource","string","unknown"
+     * @return string "array", "bool", "float", "int", "null", "object", "resource", "string", "unknown"
      */
-    private function getTypePhp($val)
+    private static function getTypePhp($val)
     {
         $type = \gettype($val);
         $map = array(

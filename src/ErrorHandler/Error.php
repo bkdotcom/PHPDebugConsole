@@ -241,7 +241,8 @@ class Error extends Event
         if ($key === 'backtrace') {
             $trace = $this->getTrace();
             return $trace;
-        } elseif ($key === 'context') {
+        }
+        if ($key === 'context') {
             $context = $this->subject->backtrace->getFileLines(
                 $this->values['file'],
                 \max($this->values['line'] - 6, 0),

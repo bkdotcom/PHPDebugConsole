@@ -84,7 +84,18 @@ class ServiceProvider implements ServiceProviderInterface
             $cfg = \array_merge(array(
                 'emailer' => array(
                     'emailBacktraceDumper' => static function ($backtrace) use ($debug) {
-                        return $debug->getDump('text')->valDumper->dump($backtrace);
+                        $backtrace = \array_map(static function ($frame) {
+                            if (isset($frame['context'])) {
+                                $frame['context'] = \array_map(static function ($line) {
+                                    return \rtrim($line, "\n");
+                                }, $frame['context']);
+                            }
+                            return $frame;
+                        }, $backtrace);
+                        $maxDepthBak = $debug->setCfg('maxDepth', 4, Debug::CONFIG_NO_PUBLISH);
+                        $traceStr = $debug->getDump('text')->valDumper->dump($backtrace);
+                        $debug->setCfg('maxDepth', $maxDepthBak, Debug::CONFIG_NO_PUBLISH | Debug::CONFIG_NO_RETURN);
+                        return $traceStr;
                     },
                 ),
                 'onEUserError' => null, // don't halt script / log E_USER_ERROR to system_log when 'continueToNormal'

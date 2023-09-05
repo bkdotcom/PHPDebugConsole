@@ -208,19 +208,22 @@ class ErrorSummary
      */
     private function buildFatalContext(Error $error)
     {
-        return ''
-            . $this->html->buildTag(
-                'li',
-                array(
-                    'class' => 't_string no-quotes',
-                    'data-file' => $error['file'],
-                    'data-line' => $error['line'],
-                ),
-                \sprintf('%s (line %s)', $error['file'], $error['line'])
-            ) . "\n"
-            . '<li>'
+        $context = $error['context'];
+        $return = $this->html->buildTag(
+            'li',
+            array(
+                'class' => 't_string no-quotes',
+                'data-file' => $error['file'],
+                'data-line' => $error['line'],
+            ),
+            \sprintf('%s (line %s)', $error['file'], $error['line'])
+        ) . "\n";
+        if ($context) {
+            $return .= '<li>'
                 . $this->routeHtml->dumper->helper->buildContext($error['context'], $error['line'])
-            . '</li>' . "\n";
+                . '</li>' . "\n";
+        }
+        return $return;
     }
 
     /**

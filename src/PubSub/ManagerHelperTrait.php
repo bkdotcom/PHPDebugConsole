@@ -153,7 +153,7 @@ trait ManagerHelperTrait
      */
     private static function isClosureFactory($val)
     {
-        return \is_array($val) && isset($val[0]) && $val[0] instanceof \Closure;
+        return \is_array($val) && isset($val[0]) && $val[0] instanceof Closure;
     }
 
     /**

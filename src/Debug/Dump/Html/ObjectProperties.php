@@ -131,7 +131,13 @@ class ObjectProperties
             $info['type']
                 ? $this->helper->markupType($info['type'])
                 : '',
-            '<span class="t_identifier" title="' . \htmlspecialchars($title) . '">' . $name . '</span>',
+            $this->valDumper->dump($name, array(
+                'addQuotes' => \preg_match('#[\s\r\n]#u', $name) === 1 || $name === '',
+                'attribs' => array(
+                    'class' => array('t_identifier'),
+                    'title' => $title,
+                ),
+            )),
             $info['value'] !== Abstracter::UNDEFINED
                 ? '<span class="t_operator">=</span> ' . $this->valDumper->dump($info['value'])
                 : '',

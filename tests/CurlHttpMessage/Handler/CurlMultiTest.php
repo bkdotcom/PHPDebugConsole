@@ -171,7 +171,7 @@ class CurlMultiTest extends TestCase
             $promises[] = $promise;
         }
         $promises[0]->wait();
-        $this->assertSame(array(0,1,2,3,4), $fulfilled);
+        self::assertSame(array(0, 1, 2, 3, 4), $fulfilled);
     }
 
     /*

@@ -186,6 +186,11 @@ class TextValue extends BaseValue
         $properties = $abs->sort($abs['properties'], $abs['sort']);
         foreach ($properties as $name => $info) {
             $name = \str_replace('debug.', '', $name);
+            $name = $this->dumpKeys
+                ? $this->dump($name, array(
+                    'addQuotes' => \preg_match('#[\s\r\n]#u', $name) === 1 || $name === '',
+                ))
+                : $name;
             $info['className'] = $abs['className'];
             $info['isInherited'] = $info['declaredLast'] && $info['declaredLast'] !== $abs['className'];
             $prefix = $this->dumpPropPrefix($info);

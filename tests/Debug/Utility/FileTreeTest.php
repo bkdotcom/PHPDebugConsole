@@ -63,7 +63,7 @@ class FileTreeTest extends TestCase
                 ),
             ),
         );
-        $this->assertSame($expect, \json_decode(\json_encode($fileTree), true));
+        self::assertSame($expect, \json_decode(\json_encode($fileTree), true));
         /*
         $debug->log(
             $debug->abstracter->crateWithVals(

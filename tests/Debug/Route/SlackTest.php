@@ -300,7 +300,7 @@ class SlackTest extends DebugTestFramework
 
         self::$persistErrors = $this->debug->errorHandler->get('errors');
 
-        $this->assertCount($sent ? 1 : 0, $requests);
+        self::assertCount($sent ? 1 : 0, $requests);
     }
 
     public function onErrorThrow(Error $error)

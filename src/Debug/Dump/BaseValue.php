@@ -28,6 +28,7 @@ class BaseValue extends AbstractComponent
     public $debug;
 
     protected $dumper;
+    protected $dumpKeys = true;
     protected $dumpOptions = array();
     protected $dumpOptStack = array();
     protected $simpleTypes = array(
@@ -203,10 +204,14 @@ class BaseValue extends AbstractComponent
         if ($this->getDumpOpt('isMaxDepth')) {
             return 'array *MAX DEPTH*';
         }
+        $arrayNew = array();
         foreach ($array as $key => $val) {
-            $array[$key] = $this->dump($val);
+            $key = $this->dumpKeys
+                ? $this->dump($key, array('addQuotes' => false))
+                : $key;
+            $arrayNew[$key] = $this->dump($val);
         }
-        return $array;
+        return $arrayNew;
     }
 
     /**
@@ -335,6 +340,9 @@ class BaseValue extends AbstractComponent
         foreach ($properties as $name => $info) {
             $info['isInherited'] = $info['declaredLast'] && $info['declaredLast'] !== $abs['className'];
             $vis = $this->dumpPropVis($info);
+            $name = $this->dumpKeys
+                ? $this->dump($name, array('addQuotes' => false))
+                : $name;
             $name = '(' . $vis . ') ' . \str_replace('debug.', '', $name);
             $return[$name] = $this->dump($info['value']);
         }

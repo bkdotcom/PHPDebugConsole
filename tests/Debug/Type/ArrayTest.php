@@ -38,7 +38,7 @@ class ArrayTest extends DebugTestFramework
                         : ''
                     ) . '
                     <dt class="properties">properties</dt>
-                    <dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier">foo</span> <span class="t_operator">=</span> <span class="t_string">bar</span></dd>
+                    <dd class="property public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string">foo</span> <span class="t_operator">=</span> <span class="t_string">bar</span></dd>
                     <dt class="methods">no methods</dt>
                     </dl>
                     </div></li>
@@ -96,11 +96,43 @@ EOD;
                 ),
                 array(
                     'html' => '<li class="m_log"><span class="t_callable"><span class="t_type">callable</span> <span class="classname"><span class="namespace">bdk\</span>Debug</span><span class="t_operator">::</span><span class="t_identifier">getInstance</span></span></li>',
-                    'text' => 'callable: bdk\Debug::getInstance',
                     'script' => 'console.log("callable: bdk\\\\Debug::getInstance");',
                     'streamAnsi' => "callable: \e[38;5;250mbdk\\\e[0m\e[1mDebug\e[22m\e[38;5;130m::\e[0m\e[1mgetInstance\e[22m",
+                    'text' => 'callable: bdk\Debug::getInstance',
                 ),
-            )
+            ),
+            'keys' => array(
+                'log',
+                array(
+                    array(
+                        "\xE2\x80\x8B" => 'zwsp',
+                        "\xef\xbb\xbf" => 'bom',
+                        "\xef\xbb\xbfbom\r\n\t\x07 \x1F \x7F \x00 \xc2\xa0<i>(nbsp)</i> \xE2\x80\x89(thsp), & \xE2\x80\x8B(zwsp)" => 'ctrl chars and whatnot',
+                        ' ' => 'space',
+                        '' => 'empty',
+                    ),
+                ),
+                array(
+                    'html' => '<li class="m_log"><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
+                        <ul class="array-inner list-unstyled">
+                            <li><span class="t_key"><a class="unicode" href="https://unicode-table.com/en/200b" target="unicode-table" title="Zero Width Space: \xe2 \x80 \x8b">\u200b</a></span><span class="t_operator">=&gt;</span><span class="t_string">zwsp</span></li>
+                            <li><span class="t_key"><a class="unicode" href="https://unicode-table.com/en/feff" target="unicode-table" title="BOM / Zero Width No-Break Space: \xef \xbb \xbf">\ufeff</a></span><span class="t_operator">=&gt;</span><span class="t_string">bom</span></li>
+                            <li><span class="t_key"><a class="unicode" href="https://unicode-table.com/en/feff" target="unicode-table" title="BOM / Zero Width No-Break Space: \xef \xbb \xbf">\ufeff</a>bom<span class="ws_r"></span><span class="ws_n"></span>
+                        <span class="ws_t">%s</span><span class="binary"><span class="c1-control" title="BEL (bell): \x07">␇</span></span> <span class="binary"><span class="c1-control" title="US (unit seperator): \x1f">␟</span></span> <span class="binary"><span class="c1-control" title="DEL: \x7f">␡</span></span> <span class="binary"><span class="c1-control" title="NUL: \x00">␀</span></span> <a class="unicode" href="https://unicode-table.com/en/00a0" target="unicode-table" title="NBSP: \xc2 \xa0">\u00a0</a>&lt;i&gt;(nbsp)&lt;/i&gt; <a class="unicode" href="https://unicode-table.com/en/2009" target="unicode-table" title="Thin Space: \xe2 \x80 \x89">\u2009</a>(thsp), &amp; <a class="unicode" href="https://unicode-table.com/en/200b" target="unicode-table" title="Zero Width Space: \xe2 \x80 \x8b">\u200b</a>(zwsp)</span><span class="t_operator">=&gt;</span><span class="t_string">ctrl chars and whatnot</span></li>
+                            <li><span class="t_key"> </span><span class="t_operator">=&gt;</span><span class="t_string">space</span></li>
+                            <li><span class="t_key"></span><span class="t_operator">=&gt;</span><span class="t_string">empty</span></li>
+                        </ul><span class="t_punct">)</span></span></li>',
+                    'script' => 'console.log({"\\\u{200b}":"zwsp","\\\u{feff}":"bom","\\\u{feff}bom\r\n\t\\\x07 \\\x1f \\\x7f \\\x00 \\\u{00a0}<i>(nbsp)</i> \\\u{2009}(thsp), & \\\u{200b}(zwsp)":"ctrl chars and whatnot"," ":"space","":"empty"});',
+                    'text' => 'array(
+                        [\u{200b}] => "zwsp"
+                        [\u{feff}] => "bom"
+                        [\u{feff}bom[\r]
+                            \x07 \x1f \x7f \x00 \u{00a0}<i>(nbsp)</i> \u{2009}(thsp), & \u{200b}(zwsp)] => "ctrl chars and whatnot"
+                        [ ] => "space"
+                        [] => "empty"
+                    )',
+                ),
+            ),
         );
         if (PHP_VERSION_ID >= 70000) {
             $filepath = \realpath(__DIR__ . '/../Fixture/Anonymous.php');
@@ -114,7 +146,7 @@ EOD;
                 array(
                     'chromeLogger' => array(
                         array(
-                            'callable: stdClass@anonymous::myMethod'
+                            'callable: stdClass@anonymous::myMethod',
                         ),
                         null,
                         '',
@@ -245,13 +277,13 @@ EOD;
         $array[] = &$array;
         $this->debug->log('array', $array);
         $abstraction = $this->debug->data->get('log/0/args/1');
-        $this->assertEquals(
+        self::assertEquals(
             Abstracter::RECURSION,
             $abstraction[0],
             'Did not find expected recursion'
         );
         $output = $this->debug->output();
-        $testA = array( 'foo' => 'bar' );
+        $testA = array('foo' => 'bar');
         $testA['val'] = &$testA;
         $this->debug->log('testA', $testA);
         $output = $this->debug->output();
@@ -264,14 +296,14 @@ EOD;
                     array(
                         array(
                             'foo' => 'bar',
-                            'val' => 'array *RECURSION*'
+                            'val' => 'array *RECURSION*',
                         ),
                     ),
                     null,
                     '',
                 ),
                 'firephp' => 'X-Wf-1-1-1-37: 56|[{"Type":"LOG"},{"foo":"bar","val":"array *RECURSION*"}]|',
-                'html' => function ($strHtml) {
+                'html' => static function ($strHtml) {
                     self::assertSelectEquals('.array-inner > li > .t_keyword', 'array', true, $strHtml);
                     self::assertSelectEquals('.array-inner > li > .t_recursion', '*RECURSION*', true, $strHtml);
                 },
@@ -309,6 +341,6 @@ EOD;
         $testB = array('foo', &$testA, 'bar');
         $this->debug->log('testB', $testB);
         $output = $this->debug->output();
-        $this->assertSelectCount('.t_recursion', 2, $output, 'Does not contain two recursion types');
+        self::assertSelectCount('.t_recursion', 2, $output, 'Does not contain two recursion types');
     }
 }

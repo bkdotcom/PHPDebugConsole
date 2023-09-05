@@ -437,8 +437,8 @@ EOD;
                             <dt class="t_modifier_final">final</dt>
                             <dt class="constants">constants <i>not collected</i></dt>
                             <dt class="properties">properties</dt>
-                            <dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="t_type">string</span> <span class="t_identifier">file</span> <span class="t_operator">=</span> <span class="t_string">' . __FILE__ . '</span></dd>
-                            <dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="t_type">int</span> <span class="t_identifier">line</span> <span class="t_operator">=</span> <span class="t_int">%i</span></dd>
+                            <dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="t_type">string</span> <span class="no-quotes t_identifier t_string">file</span> <span class="t_operator">=</span> <span class="t_string">' . __FILE__ . '</span></dd>
+                            <dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="t_type">int</span> <span class="no-quotes t_identifier t_string">line</span> <span class="t_operator">=</span> <span class="t_int">%i</span></dd>
                             <dt class="methods">methods <i>not collected</i></dt>
                             </dl>
                         </td></tr>

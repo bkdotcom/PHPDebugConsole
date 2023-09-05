@@ -43,7 +43,7 @@ class Helper
      *
      * @return string html
      */
-    public function buildArgString($args, $meta = array())
+    public function buildArgString(array $args, array $meta = array())
     {
         if (\count($args) === 0) {
             return '';
@@ -74,7 +74,7 @@ class Helper
      *
      * @return string
      */
-    public function buildContext($lines, $lineNum)
+    public function buildContext(array $lines, $lineNum)
     {
         return $this->debug->html->buildTag(
             'pre',
@@ -97,7 +97,7 @@ class Helper
      *
      * @return string
      */
-    public function markupType($type, $attribs = array())
+    public function markupType($type, array $attribs = array())
     {
         $regex = '/(?:(\$this|[-\w\[\]\'"\\\\]+:?)|([\(\)<>\{\},\|&]))/';
         $type = \preg_replace_callback($regex, function ($matches) {
@@ -122,7 +122,7 @@ class Helper
      *
      * @return string
      */
-    public function tableAddContextRow($html, $row, $rowInfo, $index)
+    public function tableAddContextRow($html, array $row, array $rowInfo, $index)
     {
         if ($rowInfo['context'] === Abstracter::UNDEFINED) {
             return $html;
@@ -157,7 +157,7 @@ class Helper
      *
      * @return string
      */
-    public function tableMarkupFunction($html, $row)
+    public function tableMarkupFunction($html, array $row)
     {
         if (isset($row['function'])) {
             $replace = $this->dumper->valDumper->markupIdentifier($row['function'], true, 'span', array(), true);
@@ -179,7 +179,7 @@ class Helper
      *
      * @return array
      */
-    private function buildArgStringArgs($args, $meta)
+    private function buildArgStringArgs(array $args, array $meta)
     {
         foreach ($args as $i => $v) {
             list($type, $typeMore) = $this->debug->abstracter->getType($v);

@@ -747,7 +747,7 @@ class DebugTestFramework extends DOMTestCase
         }
 
         $message = "\e[1m" . $test . " not same\e[0m";
-        self::assertStringMatchesFormatNormalized($outputExpect, \trim($output), $message);
+        self::assertStringMatchesFormatNormalized($outputExpect, $output, $message);
     }
 
     /**
@@ -775,6 +775,7 @@ class DebugTestFramework extends DOMTestCase
         if ($message) {
             $args[] = $message;
         }
+
         \call_user_func_array(array('PHPUnit\Framework\TestCase', 'assertStringMatchesFormat'), $args);
     }
 }

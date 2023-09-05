@@ -80,7 +80,7 @@ class ChromeLoggerTest extends DebugTestFramework
         $this->debug->output();
         $header = \base64_decode($this->debug->getHeaders()[0][1], true);
         $rows = \json_decode($header, true)['rows'];
-        $this->assertSame(array(
+        self::assertSame(array(
             array(
                 array(
                     'PHP',
@@ -136,7 +136,7 @@ class ChromeLoggerTest extends DebugTestFramework
         $this->debug->output();
         $header = \base64_decode($this->debug->getHeaders()[0][1], true);
         $rows = \json_decode($header, true)['rows'];
-        $this->assertSame(array(
+        self::assertSame(array(
             array(
                 array(
                     'PHP',

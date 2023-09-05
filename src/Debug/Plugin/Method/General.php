@@ -52,6 +52,7 @@ class General implements SubscriberInterface
         if ($fromAddr) {
             $addHeadersStr .= 'From: ' . $fromAddr;
         }
+        $body = \str_replace("\x00", '\x00', $body);
         return \call_user_func(
             $this->debug->getCfg('emailFunc', Debug::CONFIG_DEBUG),
             $toAddr,

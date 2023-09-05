@@ -47,7 +47,7 @@ class ServiceProviderTest extends DebugTestFramework
         self::assertInstanceOf('\bdk\ErrorHandler', $debug->errorHandler);
         self::assertInstanceOf('\bdk\Debug\Utility\Html', $debug->html);
         if (PHP_VERSION_ID >= 70000) {
-            $this->assertInstanceOf('\bdk\Debug\Psr15\Middleware', $debug->middleware);
+            self::assertInstanceOf('\bdk\Debug\Psr15\Middleware', $debug->middleware);
         }
         self::assertInstanceOf('\bdk\Debug\Plugin\Highlight', $debug->pluginHighlight);
         self::assertInstanceOf('\bdk\Debug\Route\Wamp', $debug->routeWamp);

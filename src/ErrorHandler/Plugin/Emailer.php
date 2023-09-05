@@ -45,7 +45,7 @@ class Emailer extends AbstractComponent implements SubscriberInterface
             'emailFrom' => null,            // null = use php's default (php.ini: sendmail_from)
             'emailFunc' => 'mail',
             'emailMask' => E_ERROR | E_PARSE | E_COMPILE_ERROR | E_WARNING | E_USER_ERROR | E_USER_NOTICE,
-            'emailMin' => 60,               // 0 = no throttle
+            'emailMin' => 60 * 4,               // 0 = no throttle
             'emailThrottledSummary' => true,    // if errors have been throttled, should we email a summary email of throttled errors?
                                                 //    (first occurance of error is never throttled)
             'emailTo' => !empty($this->serverParams['SERVER_ADMIN'])
@@ -289,6 +289,7 @@ class Emailer extends AbstractComponent implements SubscriberInterface
         if ($fromAddr) {
             $addHeadersStr .= 'From: ' . $fromAddr;
         }
+        $body = \str_replace("\x00", '\x00', $body);
         \call_user_func($this->cfg['emailFunc'], $toAddr, $subject, $body, $addHeadersStr);
     }
 

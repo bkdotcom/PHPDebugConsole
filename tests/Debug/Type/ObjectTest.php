@@ -199,11 +199,11 @@ EOD;
                         $expect = \implode("\n", array(
                             '<dt class="properties">properties <span class="text-muted">(via __debugInfo)</span></dt>',
                             '<dd class="info magic">This object has <code>__get</code> and <code>__set</code> methods</dd>',
-                            '<dd class="isDynamic property public"><span class="t_modifier_public">public</span> <span class="t_identifier">baseDynamic</span> <span class="t_operator">=</span> <span class="t_string">duo</span></dd>',
-                            '<dd class="isDynamic property public"><span class="t_modifier_public">public</span> <span class="t_identifier">dynamic</span> <span class="t_operator">=</span> <span class="t_string">dynomite!</span></dd>',
-                            '<dd class="overrides property public" data-declared-prev="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_public">public</span> <span class="t_identifier" title="Public Property.">propPublic</span> <span class="t_operator">=</span> <span class="t_string">redefined in Test (public)</span></dd>',
-                            '<dd class="isStatic property public"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="t_identifier">propStatic</span> <span class="t_operator">=</span> <span class="t_string">I\'m Static</span></dd>',
-                            '<dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier">someArray</span> <span class="t_operator">=</span> <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>',
+                            '<dd class="isDynamic property public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string">baseDynamic</span> <span class="t_operator">=</span> <span class="t_string">duo</span></dd>',
+                            '<dd class="isDynamic property public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string">dynamic</span> <span class="t_operator">=</span> <span class="t_string">dynomite!</span></dd>',
+                            '<dd class="overrides property public" data-declared-prev="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string" title="Public Property.">propPublic</span> <span class="t_operator">=</span> <span class="t_string">redefined in Test (public)</span></dd>',
+                            '<dd class="isStatic property public"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="no-quotes t_identifier t_string">propStatic</span> <span class="t_operator">=</span> <span class="t_string">I\'m Static</span></dd>',
+                            '<dd class="property public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string">someArray</span> <span class="t_operator">=</span> <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>',
                             '<ul class="array-inner list-unstyled">',
                             "\t" . '<li><span class="t_key">int</span><span class="t_operator">=&gt;</span><span class="t_int">123</span></li>',
                             "\t" . '<li><span class="t_key">numeric</span><span class="t_operator">=&gt;</span><span class="t_string" data-type-more="numeric">123</span></li>',
@@ -216,26 +216,26 @@ EOD;
                                     . '<dd class="attribute"><span class="classname">AllowDynamicProperties</span></dd>'
                                 : '<dl class="object-inner">'),
                             '<dt class="properties">properties</dt>',
-                            '<dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier">foo</span> <span class="t_operator">=</span> <span class="t_string">bar</span></dd>',
+                            '<dd class="property public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string">foo</span> <span class="t_operator">=</span> <span class="t_string">bar</span></dd>',
                             '<dt class="methods">no methods</dt>',
                             '</dl>',
                             '</div></li>',
                             '</ul><span class="t_punct">)</span></span></dd>',
-                            '<dd class="debuginfo-excluded inherited magic property" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_magic">magic</span> <span class="t_type">bool</span> <span class="t_identifier" title="I\'m avail via __get()">magicProp</span></dd>',
-                            '<dd class="inherited magic-read property protected" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_magic-read">magic-read</span> <span class="t_modifier_protected">protected</span> <span class="t_type">bool</span> <span class="t_identifier" title="Read Only!">magicReadProp</span> <span class="t_operator">=</span> <span class="t_string">not null</span></dd>',
-                            '<dd class="inherited property protected" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_protected">protected</span> <span class="t_identifier">propProtected</span> <span class="t_operator">=</span> <span class="t_string">defined only in TestBase (protected)</span></dd>',
-                            '<dd class="private property"><span class="t_modifier_private">private</span> <span class="t_identifier">debug</span> <span class="t_operator">=</span> <div class="t_object" data-accessible="public"><span class="classname"><span class="namespace">bdk\</span>Debug</span>',
+                            '<dd class="debuginfo-excluded inherited magic property" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_magic">magic</span> <span class="t_type">bool</span> <span class="no-quotes t_identifier t_string" title="I\'m avail via __get()">magicProp</span></dd>',
+                            '<dd class="inherited magic-read property protected" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_magic-read">magic-read</span> <span class="t_modifier_protected">protected</span> <span class="t_type">bool</span> <span class="no-quotes t_identifier t_string" title="Read Only!">magicReadProp</span> <span class="t_operator">=</span> <span class="t_string">not null</span></dd>',
+                            '<dd class="inherited property protected" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_protected">protected</span> <span class="no-quotes t_identifier t_string">propProtected</span> <span class="t_operator">=</span> <span class="t_string">defined only in TestBase (protected)</span></dd>',
+                            '<dd class="private property"><span class="t_modifier_private">private</span> <span class="no-quotes t_identifier t_string">debug</span> <span class="t_operator">=</span> <div class="t_object" data-accessible="public"><span class="classname"><span class="namespace">bdk\</span>Debug</span>',
                             '<span class="excluded">NOT INSPECTED</span></div></dd>',
-                            '<dd class="private property"><span class="t_modifier_private">private</span> <span class="t_identifier">instance</span> <span class="t_operator">=</span> <div class="t_object" data-accessible="private"><span class="classname" title="PhpDoc Summary',
+                            '<dd class="private property"><span class="t_modifier_private">private</span> <span class="no-quotes t_identifier t_string">instance</span> <span class="t_operator">=</span> <div class="t_object" data-accessible="private"><span class="classname" title="PhpDoc Summary',
                             '',
                             'PhpDoc Description"><span class="namespace">bdk\Test\Debug\Fixture\</span>TestObj</span>',
                             '<span class="t_recursion">*RECURSION*</span></div></dd>',
-                            '<dd class="debuginfo-excluded private property"><span class="t_modifier_private">private</span> <span class="t_identifier">propNoDebug</span> <span class="t_operator">=</span> <span class="t_string">not included in __debugInfo</span></dd>',
-                            '<dd class="debuginfo-value overrides private property" data-declared-prev="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_private">private</span> <span class="t_type">string</span> <span class="t_identifier" title="Private Property.">propPrivate</span> <span class="t_operator">=</span> <span class="t_string">redefined in Test (private) (alternate value via __debugInfo)</span></dd>',
-                            '<dd class="private private-ancestor property" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_private">private</span> <span class="t_type">string</span> <span class="t_identifier" title="Inherited desc">testBasePrivate</span> <span class="t_operator">=</span> <span class="t_string">defined in TestBase (private)</span></dd>',
-                            '<dd class="private property"><span class="t_modifier_private">private</span> <span class="t_identifier">toString</span> <span class="t_operator">=</span> <span class="t_string">abracadabra</span></dd>',
-                            '<dd class="private property"><span class="t_modifier_private">private</span> <span class="t_identifier">toStrThrow</span> <span class="t_operator">=</span> <span class="t_int">0</span></dd>',
-                            '<dd class="debuginfo-value property"><span class="t_modifier_debug">debug</span> <span class="t_identifier">debugValue</span> <span class="t_operator">=</span> <span class="t_string">This property is debug only</span></dd>',
+                            '<dd class="debuginfo-excluded private property"><span class="t_modifier_private">private</span> <span class="no-quotes t_identifier t_string">propNoDebug</span> <span class="t_operator">=</span> <span class="t_string">not included in __debugInfo</span></dd>',
+                            '<dd class="debuginfo-value overrides private property" data-declared-prev="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_private">private</span> <span class="t_type">string</span> <span class="no-quotes t_identifier t_string" title="Private Property.">propPrivate</span> <span class="t_operator">=</span> <span class="t_string">redefined in Test (private) (alternate value via __debugInfo)</span></dd>',
+                            '<dd class="private private-ancestor property" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_private">private</span> <span class="t_type">string</span> <span class="no-quotes t_identifier t_string" title="Inherited desc">testBasePrivate</span> <span class="t_operator">=</span> <span class="t_string">defined in TestBase (private)</span></dd>',
+                            '<dd class="private property"><span class="t_modifier_private">private</span> <span class="no-quotes t_identifier t_string">toString</span> <span class="t_operator">=</span> <span class="t_string">abracadabra</span></dd>',
+                            '<dd class="private property"><span class="t_modifier_private">private</span> <span class="no-quotes t_identifier t_string">toStrThrow</span> <span class="t_operator">=</span> <span class="t_int">0</span></dd>',
+                            '<dd class="debuginfo-value property"><span class="t_modifier_debug">debug</span> <span class="no-quotes t_identifier t_string">debugValue</span> <span class="t_operator">=</span> <span class="t_string">This property is debug only</span></dd>',
                             '<dt class="methods">methods</dt>',
                         ));
                         if (PHP_VERSION_ID >= 80100) {
@@ -317,8 +317,8 @@ EOD;
                         $expect = \implode("\n", array(
                             '<dt class="properties">properties</dt>',
                             '<dd class="info magic">This object has a <code>__get</code> method</dd>',
-                            '<dd class="inherited magic property" data-inherited-from="bdk\Test\Debug\Fixture\Test2Base"><span class="t_modifier_magic">magic</span> <span class="t_type">bool</span> <span class="t_identifier" title="I\'m avail via __get()">magicProp</span></dd>',
-                            '<dd class="inherited magic-read property protected" data-inherited-from="bdk\Test\Debug\Fixture\Test2Base"><span class="t_modifier_magic-read">magic-read</span> <span class="t_modifier_protected">protected</span> <span class="t_type">bool</span> <span class="t_identifier" title="Read Only!">magicReadProp</span> <span class="t_operator">=</span> <span class="t_string">not null</span></dd>',
+                            '<dd class="inherited magic property" data-inherited-from="bdk\Test\Debug\Fixture\Test2Base"><span class="t_modifier_magic">magic</span> <span class="t_type">bool</span> <span class="no-quotes t_identifier t_string" title="I\'m avail via __get()">magicProp</span></dd>',
+                            '<dd class="inherited magic-read property protected" data-inherited-from="bdk\Test\Debug\Fixture\Test2Base"><span class="t_modifier_magic-read">magic-read</span> <span class="t_modifier_protected">protected</span> <span class="t_type">bool</span> <span class="no-quotes t_identifier t_string" title="Read Only!">magicReadProp</span> <span class="t_operator">=</span> <span class="t_string">not null</span></dd>',
                         ));
                         if (PHP_VERSION_ID >= 80100) {
                             $expect = \str_replace('\'', '&#039;', $expect);
@@ -484,9 +484,9 @@ EOD;
                                 : '<dd class="constant public"><span class="t_modifier_public">public</span> <span class="t_identifier">SOME_CONSTANT</span> <span class="t_operator">=</span> <span class="t_string">never change</span></dd>'
                             ) . "\n"
                             . '<dt class="properties">properties</dt>' . "\n"
-                            . '<dd class="overrides property public" data-declared-prev="bdk\Test\Debug\Fixture\Utility\PhpDocImplements"><span class="t_modifier_public">public</span> <span class="t_type">string</span> <span class="t_identifier" title="$someProperty summary: desc">someProperty</span> <span class="t_operator">=</span> <span class="t_string">St. James Place</span></dd>' . "\n"
-                            . '<dd class="magic property"><span class="t_modifier_magic">magic</span> <span class="t_type">bool</span> <span class="t_identifier" title="I\'m avail via __get()">magicProp</span></dd>' . "\n"
-                            . '<dd class="magic-read property"><span class="t_modifier_magic-read">magic-read</span> <span class="t_type">bool</span> <span class="t_identifier" title="Read Only!">magicReadProp</span></dd>' . "\n"
+                            . '<dd class="overrides property public" data-declared-prev="bdk\Test\Debug\Fixture\Utility\PhpDocImplements"><span class="t_modifier_public">public</span> <span class="t_type">string</span> <span class="no-quotes t_identifier t_string" title="$someProperty summary: desc">someProperty</span> <span class="t_operator">=</span> <span class="t_string">St. James Place</span></dd>' . "\n"
+                            . '<dd class="magic property"><span class="t_modifier_magic">magic</span> <span class="t_type">bool</span> <span class="no-quotes t_identifier t_string" title="I\'m avail via __get()">magicProp</span></dd>' . "\n"
+                            . '<dd class="magic-read property"><span class="t_modifier_magic-read">magic-read</span> <span class="t_type">bool</span> <span class="no-quotes t_identifier t_string" title="Read Only!">magicReadProp</span></dd>' . "\n"
                             . '<dt class="methods">methods</dt>' . "\n"
                             . '<dd class="method overrides public" data-declared-prev="bdk\Test\Debug\Fixture\Utility\PhpDocImplements"><span class="t_modifier_public">public</span> <span class="t_identifier" title="SomeInterface summary' . "\n"
                             . '' . "\n"
@@ -517,9 +517,9 @@ EOD;
                             <li class="m_log"><div class="t_object" data-accessible="public"><span class="classname" title="&quot;Array Shapes&quot; and &quot;General Arrays&quot;"><span class="namespace">bdk\Test\Debug\Fixture\</span>ArrayDocs</span>
                             <dl class="object-inner">
                             <dt class="properties">properties</dt>
-                            <dd class="property public"><span class="t_modifier_public">public</span> <span class="t_type">non-empty-array</span><span class="t_punct">&lt;</span><span class="t_type">string</span><span class="t_punct">,</span> <span class="t_type">array</span><span class="t_punct">&lt;</span><span class="t_type">int</span><span class="t_punct">,</span> <span class="t_type">int</span><span class="t_punct">|</span><span class="t_type">string</span><span class="t_punct">&gt;</span><span class="t_punct">|</span><span class="t_type">int</span><span class="t_punct">|</span><span class="t_type">string</span><span class="t_punct">&gt;</span><span class="t_type"><span class="t_punct">[]</span></span> <span class="t_identifier" title="General Description">general</span> <span class="t_operator">=</span> <span class="t_null">null</span></dd>
-                            <dd class="property public"><span class="t_modifier_public">public</span> <span class="t_type">null</span><span class="t_punct">|</span><span class="t_string t_type">literal</span><span class="t_punct">|</span><span class="t_type">123</span> <span class="t_identifier" title="Union test">literal</span> <span class="t_operator">=</span> <span class="t_null">null</span></dd>
-                            <dd class="property public"><span class="t_modifier_public">public</span> <span class="t_type">array</span><span class="t_punct">{</span><span class="t_string">name</span><span class="t_punct">:</span> <span class="t_type">string</span><span class="t_punct">,</span> <span class="t_string">value</span><span class="t_punct">:</span> <span class="t_type">positive-int</span><span class="t_punct">|</span><span class="t_type">string</span><span class="t_punct">,</span> <span class="t_string">foo</span><span class="t_punct">:</span> <span class="t_type"><span class="classname">bar</span></span><span class="t_punct">,</span> <span class="t_string">number</span><span class="t_punct">:</span> <span class="t_type">42</span><span class="t_punct">,</span> <span class="t_string">string</span><span class="t_punct">:</span> <span class="t_string t_type">theory</span><span class="t_punct">}</span> <span class="t_identifier" title="Shape Description">shape</span> <span class="t_operator">=</span> <span class="t_null">null</span></dd>
+                            <dd class="property public"><span class="t_modifier_public">public</span> <span class="t_type">non-empty-array</span><span class="t_punct">&lt;</span><span class="t_type">string</span><span class="t_punct">,</span> <span class="t_type">array</span><span class="t_punct">&lt;</span><span class="t_type">int</span><span class="t_punct">,</span> <span class="t_type">int</span><span class="t_punct">|</span><span class="t_type">string</span><span class="t_punct">&gt;</span><span class="t_punct">|</span><span class="t_type">int</span><span class="t_punct">|</span><span class="t_type">string</span><span class="t_punct">&gt;</span><span class="t_type"><span class="t_punct">[]</span></span> <span class="no-quotes t_identifier t_string" title="General Description">general</span> <span class="t_operator">=</span> <span class="t_null">null</span></dd>
+                            <dd class="property public"><span class="t_modifier_public">public</span> <span class="t_type">null</span><span class="t_punct">|</span><span class="t_string t_type">literal</span><span class="t_punct">|</span><span class="t_type">123</span> <span class="no-quotes t_identifier t_string" title="Union test">literal</span> <span class="t_operator">=</span> <span class="t_null">null</span></dd>
+                            <dd class="property public"><span class="t_modifier_public">public</span> <span class="t_type">array</span><span class="t_punct">{</span><span class="t_string">name</span><span class="t_punct">:</span> <span class="t_type">string</span><span class="t_punct">,</span> <span class="t_string">value</span><span class="t_punct">:</span> <span class="t_type">positive-int</span><span class="t_punct">|</span><span class="t_type">string</span><span class="t_punct">,</span> <span class="t_string">foo</span><span class="t_punct">:</span> <span class="t_type"><span class="classname">bar</span></span><span class="t_punct">,</span> <span class="t_string">number</span><span class="t_punct">:</span> <span class="t_type">42</span><span class="t_punct">,</span> <span class="t_string">string</span><span class="t_punct">:</span> <span class="t_string t_type">theory</span><span class="t_punct">}</span> <span class="no-quotes t_identifier t_string" title="Shape Description">shape</span> <span class="t_operator">=</span> <span class="t_null">null</span></dd>
                             <dt class="methods">methods</dt>
                             <dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier" title="Method description">myMethod</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">int</span><span class="t_punct">|</span><span class="t_type">string</span> <span class="t_parameter-name" title="I&#039;m a description">$foo</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span></dd>
                             <dt>phpDoc</dt>
@@ -551,7 +551,7 @@ EOD;
                         $constNames = \array_keys($abs['constants']);
                         \sort($constNames);
                         $propNames = \array_keys($abs['properties']);
-                        \sort($propNames, SORT_STRING|SORT_FLAG_CASE);
+                        \sort($propNames, SORT_STRING | SORT_FLAG_CASE);
                         $methodNames = \array_keys($abs['methods']);
                         \sort($methodNames);
                         self::assertSame(array(
@@ -592,6 +592,45 @@ EOD;
                             'testBaseStatic',
                         ), $methodNames);
                     },
+                ),
+            ),
+
+            'keys' => array(
+                'log',
+                array(
+                    (object) array(
+                        "\xE2\x80\x8B" => 'zwsp',
+                        "\xef\xbb\xbf" => 'bom',
+                        "\xef\xbb\xbfbom\r\n\t\x07 \x1F \x7F \x00 \xc2\xa0<i>(nbsp)</i> \xE2\x80\x89(thsp), & \xE2\x80\x8B(zwsp)" => 'ctrl chars and whatnot',
+                        ' ' => 'space',
+                        '' => 'empty',
+                    ),
+                ),
+                array(
+                    'html' => '<li class="m_log"><div class="t_object" data-accessible="public"><span class="classname">stdClass</span>
+                        <dl class="object-inner">
+                        <dt class="attributes">attributes</dt>
+                        <dd class="attribute"><span class="classname">AllowDynamicProperties</span></dd>
+                        <dt class="properties">properties</dt>
+                        <dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier t_string"></span> <span class="t_operator">=</span> <span class="t_string">empty</span></dd>
+                        <dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier t_string"> </span> <span class="t_operator">=</span> <span class="t_string">space</span></dd>
+                        <dd class="property public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string"><a class="unicode" href="https://unicode-table.com/en/200b" target="unicode-table" title="Zero Width Space: \xe2 \x80 \x8b">\u200b</a></span> <span class="t_operator">=</span> <span class="t_string">zwsp</span></dd>
+                        <dd class="property public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string"><a class="unicode" href="https://unicode-table.com/en/feff" target="unicode-table" title="BOM / Zero Width No-Break Space: \xef \xbb \xbf">\ufeff</a></span> <span class="t_operator">=</span> <span class="t_string">bom</span></dd>
+                        <dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier t_string"><a class="unicode" href="https://unicode-table.com/en/feff" target="unicode-table" title="BOM / Zero Width No-Break Space: \xef \xbb \xbf">\ufeff</a>bom<span class="ws_r"></span><span class="ws_n"></span>
+                        <span class="ws_t">%s</span><span class="binary"><span class="c1-control" title="BEL (bell): \x07">␇</span></span> <span class="binary"><span class="c1-control" title="US (unit seperator): \x1f">␟</span></span> <span class="binary"><span class="c1-control" title="DEL: \x7f">␡</span></span> <span class="binary"><span class="c1-control" title="NUL: \x00">␀</span></span> <a class="unicode" href="https://unicode-table.com/en/00a0" target="unicode-table" title="NBSP: \xc2 \xa0">\u00a0</a>&lt;i&gt;(nbsp)&lt;/i&gt; <a class="unicode" href="https://unicode-table.com/en/2009" target="unicode-table" title="Thin Space: \xe2 \x80 \x89">\u2009</a>(thsp), &amp; <a class="unicode" href="https://unicode-table.com/en/200b" target="unicode-table" title="Zero Width Space: \xe2 \x80 \x8b">\u200b</a>(zwsp)</span> <span class="t_operator">=</span> <span class="t_string">ctrl chars and whatnot</span></dd>
+                        <dt class="methods">no methods</dt>
+                        </dl>
+                        </div></li>',
+                    'script' => 'console.log({"___class_name":"stdClass","(public) ":"empty","(public)  ":"space","(public) \\\u{200b}":"zwsp","(public) \\\u{feff}":"bom","(public) \\\u{feff}bom\r\n\t\\\x07 \\\x1f \\\x7f \\\x00 \\\u{00a0}<i>(nbsp)</i> \\\u{2009}(thsp), & \\\u{200b}(zwsp)":"ctrl chars and whatnot"});',
+                    'text' => 'stdClass
+                          Properties:
+                            (public) "" = "empty"
+                            (public) " " = "space"
+                            (public) \u{200b} = "zwsp"
+                            (public) \u{feff} = "bom"
+                            (public) "\u{feff}bom%A
+                                %A\x07 \x1f \x7f \x00 \u{00a0}<i>(nbsp)</i> \u{2009}(thsp), & \u{200b}(zwsp)" = "ctrl chars and whatnot"
+                          Methods: none!',
                 ),
             ),
         );
@@ -885,9 +924,9 @@ EOD;
                     <dt class="constants">constants</dt>
                         <dd class="constant public"><span class="t_modifier_public">public</span> <span class="t_identifier">TWELVE</span> <span class="t_operator">=</span> <span class="t_int">12</span></dd>
                     <dt class="properties">properties</dt>
-                        <dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier">thing</span> <span class="t_operator">=</span> <span class="t_string">hammer</span></dd>
-                        <dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="t_type">string</span> <span class="t_identifier">file</span> <span class="t_operator">=</span> <span class="t_string">' . $filepath . '</span></dd>
-                        <dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="t_type">int</span> <span class="t_identifier">line</span> <span class="t_operator">=</span> <span class="t_int">' . $line . '</span></dd>
+                        <dd class="property public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string">thing</span> <span class="t_operator">=</span> <span class="t_string">hammer</span></dd>
+                        <dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="t_type">string</span> <span class="no-quotes t_identifier t_string">file</span> <span class="t_operator">=</span> <span class="t_string">' . $filepath . '</span></dd>
+                        <dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="t_type">int</span> <span class="no-quotes t_identifier t_string">line</span> <span class="t_operator">=</span> <span class="t_int">' . $line . '</span></dd>
                     <dt class="methods">methods</dt>
                         <dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier" title="Anonymous method">myMethod</span><span class="t_punct">(</span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span></dd>
                     </dl>
@@ -1171,7 +1210,7 @@ EOD;
                     self::assertSame('Attributed & promoted param', $abs['properties']['arg1']['desc']);
                 },
                 'html' => static function ($html) {
-                    $propExpect = \str_replace('\\', '\\\\', '<dd class="isPromoted property public" data-attributes="[{&quot;name&quot;:&quot;bdk\\Test\\Debug\\Fixture\\ExampleParamAttribute&quot;,&quot;arguments&quot;:[]}]"><span class="t_modifier_public">public</span> <span class="t_type">int</span> <span class="t_identifier" title="Attributed &amp; promoted param">arg1</span> <span class="t_operator">=</span> <span class="t_int">42</span></dd>');
+                    $propExpect = \str_replace('\\', '\\\\', '<dd class="isPromoted property public" data-attributes="[{&quot;name&quot;:&quot;bdk\\Test\\Debug\\Fixture\\ExampleParamAttribute&quot;,&quot;arguments&quot;:[]}]"><span class="t_modifier_public">public</span> <span class="t_type">int</span> <span class="no-quotes t_identifier t_string" title="Attributed &amp; promoted param">arg1</span> <span class="t_operator">=</span> <span class="t_int">42</span></dd>');
                     $methExpect = \str_replace('\\', '\\\\', '<span class="isPromoted parameter" data-attributes="[{&quot;name&quot;:&quot;bdk\\Test\\Debug\\Fixture\\ExampleParamAttribute&quot;,&quot;arguments&quot;:[]}]"><span class="t_type">int</span> <span class="t_parameter-name" title="Attributed &amp; promoted param">$arg1</span></span>');
                     $attrExpect = '<dt class="attributes">attributes</dt>' . "\n"
                         . '<dd class="attribute"><span class="classname"><span class="namespace">bdk\\Test\\Debug\\Fixture\\</span>ExampleClassAttribute</span><span class="t_punct">(</span><span class="t_string">foo</span><span class="t_punct">,</span> <span class="t_int">' . PHP_VERSION_ID . '</span><span class="t_punct">,</span> <span class="t_parameter-name">name</span><span class="t_punct t_colon">:</span><span class="t_string">bar</span><span class="t_punct">)</span></dd>';
@@ -1213,7 +1252,7 @@ EOD;
                     $constExpect = '<dd class="constant isFinal public"><span class="t_modifier_public">public</span> <span class="t_modifier_final">final</span> <span class="t_identifier">FINAL_CONST</span> <span class="t_operator">=</span> <span class="t_string">foo</span></dd>';
                     self::assertStringContainsString($constExpect, $html);
 
-                    $propExpect = '<dd class="isPromoted isReadOnly property public"><span class="t_modifier_public">public</span> <span class="t_modifier_readonly">readonly</span> <span class="t_type">string</span> <span class="t_identifier">title</span> <span class="t_operator">=</span> <span class="t_string" data-type-more="numeric">42</span></dd>';
+                    $propExpect = '<dd class="isPromoted isReadOnly property public"><span class="t_modifier_public">public</span> <span class="t_modifier_readonly">readonly</span> <span class="t_type">string</span> <span class="no-quotes t_identifier t_string">title</span> <span class="t_operator">=</span> <span class="t_string" data-type-more="numeric">42</span></dd>';
                     self::assertStringContainsString($propExpect, $html);
                 },
             )

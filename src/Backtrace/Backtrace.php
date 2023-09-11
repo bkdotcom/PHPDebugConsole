@@ -5,12 +5,13 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2020-2023 Brad Kent
- * @version   v2.1
+ * @version   v2.2
  * @link      http://www.github.com/bkdotcom/Backtrace
  */
 
 namespace bdk;
 
+use bdk\Backtrace\Context;
 use bdk\Backtrace\Normalizer;
 use bdk\Backtrace\SkipInternal;
 use Exception;
@@ -28,6 +29,20 @@ class Backtrace
 {
     const INCL_ARGS = 1;
     const INCL_OBJECT = 2;
+
+    protected static $callerInfoDefault = array(
+        'args' => array(),
+        'class' => null,         // where the method is defined
+        'classCalled' => null,   // parent::method()... this will be the parent class
+        'classContext' => null,  // child->method()
+        'evalLine' => null,
+        'file' => null,
+        'function' => null,
+        'line' => null,
+        'type' => null,
+    );
+
+    private static $isXdebugAvail = null;
 
     /**
      * Add a new namespace or classname to be used to determine when to
@@ -47,9 +62,7 @@ class Backtrace
     /**
      * Helper method to get backtrace
      *
-     * Uses passed exception, debug_backtrace, or xdebug_get_function_stack
-     *
-     * Utilizes `xdebug_get_function_stack()` (if available) to get backtrace in shutdown phase
+     * Uses passed exception, xdebug_get_function_stack, or debug_backtrace
      *
      * @param int|null              $options   bitmask of options
      * @param int                   $limit     limit the number of stack frames returned.
@@ -59,24 +72,26 @@ class Backtrace
      */
     public static function get($options = 0, $limit = 0, $exception = null)
     {
+        $debugBacktraceOpts = self::translateOptions($options);
         $limit = $limit ?: null;
-        if ($exception) {
-            $backtrace = self::getExceptionTrace($exception);
-            return \array_slice($backtrace, 0, $limit);
-        }
-        $options = self::translateOptions($options);
-        $backtrace = \debug_backtrace($options, $limit ? $limit + 2 : 0);
-        if (\array_key_exists('file', \end($backtrace)) === false) {
-            // We're in shutdown
-            $backtrace = static::xdebugGetFunctionStack() ?: array();
-            $backtrace = \array_reverse($backtrace);
-        }
-        $backtrace = Normalizer::normalize($backtrace);
-        $backtrace = SkipInternal::removeInternalFrames($backtrace);
+        $trace = $exception
+            ? self::getExceptionTrace($exception)
+            : (\array_reverse(static::xdebugGetFunctionStack() ?: array())
+                ?: \debug_backtrace($debugBacktraceOpts, $limit ? $limit + 2 : 0));
+        $trace = Normalizer::normalize($trace);
+        $trace = SkipInternal::removeInternalFrames($trace);
         // keep the calling file & line, but toss the called function (what initiated trace)
-        unset($backtrace[0]['function']);
-        unset($backtrace[\count($backtrace) - 1]['function']);  // remove "{main}"
-        return \array_slice($backtrace, 0, $limit);
+        unset($trace[0]['function']);
+        unset($trace[\count($trace) - 1]['function']);  // remove "{main}"
+        $trace = \array_slice($trace, 0, $limit);
+        $keysRemove = \array_filter(array(
+            'args' => ($options & self::INCL_ARGS) !== self::INCL_ARGS,
+            'object' => ($options & self::INCL_OBJECT) !== self::INCL_OBJECT,
+        ));
+        return \array_map(static function ($frame) use ($keysRemove) {
+            $frame = \array_diff_key($frame, $keysRemove);
+            return $frame;
+        }, $trace);
     }
 
     /**
@@ -109,7 +124,7 @@ class Backtrace
         $backtrace = Normalizer::normalize($backtrace);
         $index = SkipInternal::getFirstIndex($backtrace, $offset);
         $index = \max($index, 1); // insure we're >= 1
-        $return = static::callerInfoBuild(\array_slice($backtrace, $index));
+        $return = static::callerInfoBuild(\array_slice($backtrace, $index, 2));
         if (!($options & self::INCL_OBJECT)) {
             unset($return['object']);
         }
@@ -126,20 +141,9 @@ class Backtrace
      *
      * @return array backtrace
      */
-    public static function addContext($backtrace, $length = 19)
+    public static function addContext(array $backtrace, $length = 19)
     {
-        if ($length <= 0) {
-            $length = 19;
-        }
-        $sub = (int) \floor($length  / 2);
-        foreach ($backtrace as $i => $frame) {
-            $backtrace[$i]['context'] = static::getFileLines(
-                $frame['file'],
-                \max($frame['line'] - $sub, 0),
-                $length
-            );
-        }
-        return $backtrace;
+        return Context::add($backtrace, $length);
     }
 
     /**
@@ -148,28 +152,14 @@ class Backtrace
      * Returns array of lineNumber => line
      *
      * @param string $file   filepath
-     * @param int    $start  line to start on (1-indexed; 1 = first line)
-     *                         0 also = first line
+     * @param int    $start  line to start on (1 = first line)
      * @param int    $length number of lines to return
      *
      * @return array|false false if file doesn't exist
      */
-    public static function getFileLines($file, $start = 1, $length = null)
+    public static function getFileLines($file, $start = null, $length = null)
     {
-        $start  = (int) $start;
-        $length = (int) $length;
-        if (\file_exists($file) === false) {
-            return false;
-        }
-        $lines = \array_merge(array(null), \file($file));
-        if ($start <= 0) {
-            $start = 1;
-        }
-        if ($start > 1 || $length) {
-            // Get a subset of lines from $start to $end (preserve keys)
-            $lines = \array_slice($lines, $start, $length, true);
-        }
-        return $lines;
+        return Context::getFileLines($file, $start, $length);
     }
 
     /**
@@ -179,17 +169,18 @@ class Backtrace
      */
     public static function isXdebugFuncStackAvail()
     {
-        if (\extension_loaded('xdebug') === false) {
+        if (self::$isXdebugAvail !== null) {
+            return self::$isXdebugAvail;
+        }
+        // phpcs:ignore SlevomatCodingStandard.Namespaces.FullyQualifiedGlobalFunctions.NonFullyQualified
+        if (extension_loaded('xdebug') === false) {
+            self::$isXdebugAvail = false;
             return false;
         }
         $xdebugVer = \phpversion('xdebug');
-        if (\version_compare($xdebugVer, '3.0.0', '>=')) {
-            $mode = \ini_get('xdebug.mode') ?: 'off';
-            if (\strpos($mode, 'develop') === false) {
-                return false;
-            }
-        }
-        return true;
+        $mode = \ini_get('xdebug.mode') ?: 'off';
+        self::$isXdebugAvail = \version_compare($xdebugVer, '3.0.0', '<') || \strpos($mode, 'develop') !== false;
+        return self::$isXdebugAvail;
     }
 
     /**
@@ -210,11 +201,13 @@ class Backtrace
             return false;
         }
         $stack = \xdebug_get_function_stack();
-        $xdebugVer = \phpversion('xdebug');
+        // phpcs:ignore SlevomatCodingStandard.Namespaces.FullyQualifiedGlobalFunctions.NonFullyQualified
+        $xdebugVer = phpversion('xdebug');
         if (\version_compare($xdebugVer, '2.6.0', '<')) {
             $stack = static::xdebugFix($stack);
         }
-        $error = \error_get_last();
+        // phpcs:ignore SlevomatCodingStandard.Namespaces.FullyQualifiedGlobalFunctions.NonFullyQualified
+        $error = error_get_last();
         if ($error !== null && $error['type'] & (E_ERROR | E_PARSE | E_COMPILE_ERROR | E_CORE_ERROR)) {
             // xdebug_get_function_stack doesn't include the frame that triggered the error!
             $errorFileLine = array(
@@ -239,32 +232,16 @@ class Backtrace
      *
      * @return array
      */
-    private static function callerInfoBuild($backtrace)
+    private static function callerInfoBuild(array $backtrace)
     {
-        $return = array(
-            'args' => array(),
-            'class' => null,         // where the method is defined
-            'classCalled' => null,   // parent::method()... this will be the parent class
-            'classContext' => null,  // child->method()
-            'evalLine' => null,
-            'file' => null,
-            'function' => null,
-            'line' => null,
-            'type' => null,
-        );
+        $return = static::$callerInfoDefault;
         $iFileLine = 0;
         $iFunc = 1;
         if (isset($backtrace[$iFunc])) {
             $return = \array_merge(
                 $return,
                 $backtrace[$iFunc],
-                \preg_match('/^(?<class>\S+)(?<type>::|->)(?<method>\S+)$/', $backtrace[$iFunc]['function'], $matches)
-                    ? array(
-                        'class' => $matches['class'],
-                        'function' => $matches['method'],
-                        'type' => $matches['type'],
-                    )
-                    : array()
+                self::parseFunction($backtrace[$iFunc]['function'])
             );
             $return['classCalled'] = $return['class'];
         }
@@ -286,15 +263,12 @@ class Backtrace
      *
      * @return array
      */
-    private static function callerInfoClassCalled($info)
+    private static function callerInfoClassCalled(array $info)
     {
         // parent::method()
         //   class : classname of parent (or where method defined)
         //   object : scope / context
         $info['classCalled'] = $info['classContext'];
-        if ($info['function'] === '{closure}') {
-            return $info;
-        }
         $classDeclared = null;
         if ($info['classContext'] !== $info['class']) {
             $reflector = new \ReflectionMethod($info['classContext'], $info['function']);
@@ -325,7 +299,29 @@ class Backtrace
             'file' => $exception->getFile(),
             'line' => $exception->getLine(),
         ));
-        return Normalizer::normalize($backtrace);
+        return $backtrace;
+    }
+
+    /**
+     * Parsed "normalized" function into class, type, & function components
+     *
+     * @param string $function Function string to parse
+     *
+     * @return array
+     */
+    private static function parseFunction($function)
+    {
+        return \preg_match('/^(?<class>\S+)(?<type>::|->)(?<method>\S+)$/', $function, $matches)
+            ? array(
+                'class' => $matches['class'],
+                'function' => $matches['method'],
+                'type' => $matches['type'],
+            )
+            : array(
+                'class' => null,
+                'function' => $function,
+                'type' => null,
+            );
     }
 
     /**
@@ -369,14 +365,12 @@ class Backtrace
                 // XDebug pre 2.1.1 doesn't set the call type key https://bugs.xdebug.org/view.php?id=695
                 $stack[$i]['type'] = 'static';
             }
-            if ($frame['function'] !== '__get') {
-                continue;
-            }
             // __get ... wrong file! - https://bugs.xdebug.org/view.php?id=1529
-            $prev = $stack[$i - 1];
-            $stack[$i]['file'] = isset($prev['include_filename'])
-                ? $prev['include_filename']
-                : $prev['file'];
+            if ($frame['function'] === '__get' && isset($stack[$i - 1]['include_filename'])) {
+                // if prev frame has include_filename, we can get the correct file,
+                //    otherwise, the file will still be wrong
+                $stack[$i]['file'] = $stack[$i - 1]['include_filename'];
+            }
         }
         return $stack;
     }

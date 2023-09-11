@@ -5,7 +5,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2020-2023 Brad Kent
- * @version   v2.1
+ * @version   v2.2
  * @link      http://www.github.com/bkdotcom/Backtrace
  */
 
@@ -20,7 +20,6 @@ class Normalizer
 
     private static $frameDefault = array(
         'args' => array(),
-        'evalLine' => null,
         'file' => null,
         'function' => null,     // function, Class::function, or Class->function
         'line' => null,
@@ -43,6 +42,7 @@ class Normalizer
             'params' => null,
             'type' => null,
         );
+        $frameKeysKeep = \array_merge(self::$frameDefault, \array_flip(array('evalLine')));
         $count = \count($backtrace);
         $backtrace[] = array(); // add a frame so backtrace[$i + 1] is always a thing
         for ($i = 0; $i < $count; $i++) {
@@ -57,9 +57,9 @@ class Normalizer
             }
             if ($frame['params']) {
                 // xdebug_get_function_stack
-                $frame['args'] = self::normalizeXdebugArgs($frame['params']);
+                $frame['args'] = self::normalizeXdebugParams($frame['params']);
             }
-            $frame = \array_intersect_key($frame, self::$frameDefault);
+            $frame = \array_intersect_key($frame, $frameKeysKeep);
             \ksort($frame);
             self::$backtraceTemp[] = $frame;
         }
@@ -84,12 +84,16 @@ class Normalizer
                 $frame,
                 \array_intersect_key($frameNext, \array_flip(array('file', 'line')))
             );
-        } elseif (\preg_match($regexEvaldCode, $frame['file'], $matches)) {
+        }
+        if (\preg_match($regexEvaldCode, $frame['file'], $matches)) {
             // reported line = line within eval
             // line inside paren is the line `eval` is on
-            $frame['evalLine'] = (int) $matches[2];
+            $frame['evalLine'] = $frame['line'];
+            $frame['line'] = (int) $matches[2];
             $frame['file'] = $matches[1];
             if (isset($frameNext['include_filename'])) {
+                // xdebug_get_function_stack puts the evaled code in include_filename
+                $frameNext['params'] = array($frameNext['include_filename']);
                 $frameNext['class'] = null;
                 $frameNext['function'] = 'eval';
                 $frameNext['include_filename'] = null;
@@ -98,11 +102,8 @@ class Normalizer
         if ($frame['include_filename']) {
             // xdebug_get_function_stack
             $frame['class'] = null;
-            self::$backtraceTemp[] = \array_merge(self::$frameDefault, array(
-                'file' => $frame['include_filename'],
-                'function' => 'include or require',
-                'line' => 0,
-            ));
+            $frame['args'] = array($frame['include_filename']);
+            $frame['function'] = 'include or require';
         }
         return $frame;
     }
@@ -138,18 +139,26 @@ class Normalizer
     /**
      * de-stringify most params
      *
-     * @param array $args Xdebug frame "params"
+     * @param array $params Xdebug frame "params"
      *
      * @return array
      */
-    private static function normalizeXdebugArgs($args)
+    private static function normalizeXdebugParams($params)
     {
         $map = array(
             'FALSE' => false,
             'NULL' => null,
             'TRUE' => true,
         );
-        $args = \array_map(static function ($param) use ($map) {
+        $i = 0;
+        // some versions of xdebug have the wrong numeric key index...
+        //   reindex
+        $keys = \array_map(static function ($key) use (&$i) {
+            return \is_string($key)
+                ? $key
+                : $i++;
+        }, \array_keys($params));
+        $values = \array_map(static function ($param) use ($map) {
             if ($param[0] === "'") {
                 return \substr(\stripslashes($param), 1, -1);
             }
@@ -159,7 +168,7 @@ class Normalizer
             return \array_key_exists($param, $map)
                 ? $map[$param]
                 : $param;
-        }, $args);
-        return \array_values($args);
+        }, $params);
+        return \array_combine($keys, $values);
     }
 }

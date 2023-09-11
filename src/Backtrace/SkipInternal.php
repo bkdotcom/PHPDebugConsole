@@ -5,7 +5,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2020-2023 Brad Kent
- * @version   v2.1
+ * @version   v2.2
  * @link      http://www.github.com/bkdotcom/Backtrace
  */
 
@@ -80,7 +80,7 @@ class SkipInternal
      *
      * @return int
      */
-    public static function getFirstIndex($backtrace, $offset = 0, $level = null)
+    public static function getFirstIndex(array $backtrace, $offset = 0, $level = null)
     {
         $level = self::initSkippableTests($level);
         $count = \count($backtrace);
@@ -89,18 +89,7 @@ class SkipInternal
                 break;
             }
         }
-        for ($i2 = $i - 1; $i2 > 0; $i2--) {
-            $class = self::getClass($backtrace[$i2]);
-            if ($i === $count && $class === null) {
-                // every frame was skipped and first frame is include, or similar
-                break;
-            }
-            if (\in_array($class, array(null, 'ReflectionMethod'), true) === false) {
-                // class method (but not ReflectionMethod)
-                break;
-            }
-            $i = $i2;
-        }
+        $i = self::getFirstIndexRewind($backtrace, $i);
         if ($i === $count) {
             // every frame was skipped
             return $level > 0
@@ -147,6 +136,33 @@ class SkipInternal
             }, $classes))
             . ')\b/';
         return self::$internalClasses['regex'];
+    }
+
+    /**
+     * getFirstIndex may have skipped over (non object)function calls
+     * back it up
+     *
+     * @param array $backtrace Backtrace
+     * @param int   $index     Index after skipping frames
+     *
+     * @return int [description]
+     */
+    private static function getFirstIndexRewind(array $backtrace, $index)
+    {
+        $count = \count($backtrace);
+        if ($index && $index === $count && self::getClass($backtrace[$index - 1]) === null) {
+            // every frame was skipped and first frame is include, or similar
+            return $index;
+        }
+        for ($i = $index - 1; $i > 0; $i--) {
+            $class = self::getClass($backtrace[$i]);
+            if (\in_array($class, array(null, 'ReflectionMethod'), true) === false) {
+                // class method (but not ReflectionMethod)
+                break;
+            }
+            $index = $i;
+        }
+        return $index;
     }
 
     /**
@@ -226,12 +242,7 @@ class SkipInternal
      */
     private static function getClass(array $frame)
     {
-        /*
-        if (isset($frame['class'])) {
-            return $frame['class'];
-        }
-        */
-        return \preg_match(self::$classMethodRegex, $frame['function'], $matches)
+        return \preg_match(self::$classMethodRegex, (string) $frame['function'], $matches)
             ? $matches['class']
             : null;
     }

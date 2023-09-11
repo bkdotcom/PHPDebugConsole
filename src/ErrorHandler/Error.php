@@ -12,7 +12,10 @@ namespace bdk\ErrorHandler;
 
 use bdk\ErrorHandler;
 use bdk\PubSub\Event;
+use ErrorException;
 use InvalidArgumentException;
+use ParseError;
+use ReflectionProperty;
 
 /**
  * Error object
@@ -122,24 +125,38 @@ class Error extends Event
      *
      * If error is an uncaught exception, the original Exception will be returned
      *
-     * @return \Exception|\ErrorException
+     * @return \Exception|ErrorException
      */
     public function asException()
     {
         if ($this->values['exception']) {
             return $this->values['exception'];
         }
-        $exception = new \ErrorException(
+        $exception = new ErrorException(
             $this->values['message'],
             0,
             $this->values['type'],
             $this->values['file'],
             $this->values['line']
         );
-        $traceReflector = new \ReflectionProperty('Exception', 'trace');
+        $traceReflector = new ReflectionProperty('Exception', 'trace');
         $traceReflector->setAccessible(true);
         $traceReflector->setValue($exception, $this->getTrace() ?: array());
         return $exception;
+    }
+
+    /**
+     * Get php code surrounding error
+     *
+     * @return array|false
+     */
+    public function getContext()
+    {
+        return $this->subject->backtrace->getFileLines(
+            $this->values['file'],
+            \max($this->values['line'] - 6, 0),
+            13
+        );
     }
 
     /**
@@ -180,7 +197,7 @@ class Error extends Event
      */
     public function getTrace($withContext = 'auto')
     {
-        if ($this->values['exception'] instanceof \ParseError) {
+        if ($this->values['exception'] instanceof ParseError) {
             return null;
         }
         $trace = $this->values['exception']
@@ -239,16 +256,7 @@ class Error extends Event
     public function &offsetGet($key)
     {
         if ($key === 'backtrace') {
-            $trace = $this->getTrace();
-            return $trace;
-        }
-        if ($key === 'context') {
-            $context = $this->subject->backtrace->getFileLines(
-                $this->values['file'],
-                \max($this->values['line'] - 6, 0),
-                13
-            );
-            return $context;
+            $key = 'trace';
         }
         return parent::offsetGet($key);
     }

@@ -197,8 +197,12 @@ class ValueStore implements ArrayAccess, IteratorAggregate, JsonSerializable, Se
         if ($this->hasValue($key)) {
             return $this->values[$key];
         }
-        $null = null;
-        return $null;
+        $return = null;
+        $getter = 'get' . \ucfirst($key);
+        if (\method_exists($this, $getter)) {
+            $return = $this->{$getter}();
+        }
+        return $return;
     }
 
     /**

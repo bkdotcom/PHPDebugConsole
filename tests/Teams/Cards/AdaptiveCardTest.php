@@ -7,7 +7,6 @@ use bdk\Teams\Actions\ShowCard;
 use bdk\Teams\Cards\AdaptiveCard;
 use bdk\Teams\Elements\TextBlock;
 use bdk\Teams\Enums;
-use bdk\Test\PolyFill\ExpectExceptionTrait;
 use bdk\Test\Teams\AbstractTestCaseWith;
 
 /**
@@ -18,8 +17,6 @@ use bdk\Test\Teams\AbstractTestCaseWith;
  */
 class AdaptiveCardTest extends AbstractTestCaseWith
 {
-    use ExpectExceptionTrait;
-
     protected static $unsupportedAttributes = array(
         'authentication',
         'refresh',

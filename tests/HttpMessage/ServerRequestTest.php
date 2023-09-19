@@ -6,7 +6,7 @@ use bdk\HttpMessage\Message;
 use bdk\HttpMessage\Request;
 use bdk\HttpMessage\ServerRequest;
 use bdk\HttpMessage\UploadedFile;
-use bdk\Test\PolyFill\ExpectExceptionTrait;
+use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
 use ReflectionObject;

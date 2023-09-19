@@ -8,7 +8,6 @@ use bdk\Teams\Elements\Container;
 use bdk\Teams\Elements\Image;
 use bdk\Teams\Elements\TextBlock;
 use bdk\Teams\Enums;
-use bdk\Test\PolyFill\ExpectExceptionTrait;
 use bdk\Test\Teams\AbstractTestCaseWith;
 
 /**
@@ -16,8 +15,6 @@ use bdk\Test\Teams\AbstractTestCaseWith;
  */
 class ContainerTest extends AbstractTestCaseWith
 {
-    use ExpectExceptionTrait;
-
     protected static $withMethods = array(
         'rtl?' => 'withRtl',
     );

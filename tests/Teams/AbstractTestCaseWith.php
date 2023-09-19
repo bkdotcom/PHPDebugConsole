@@ -2,7 +2,7 @@
 
 namespace bdk\Test\Teams;
 
-use bdk\Test\PolyFill\ExpectExceptionTrait;
+use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 use Exception;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;

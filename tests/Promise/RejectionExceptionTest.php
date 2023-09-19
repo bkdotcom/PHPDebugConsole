@@ -2,8 +2,8 @@
 
 namespace bdk\Test\Promise;
 
+use bdk\PhpUnitPolyfill\AssertionTrait;
 use bdk\Promise\Exception\RejectionException;
-use bdk\Test\PolyFill\AssertionTrait;
 use bdk\Test\Promise\Fixture\JsonSerializable;
 use bdk\Test\Promise\Fixture\Stringable;
 use PHPUnit\Framework\TestCase;

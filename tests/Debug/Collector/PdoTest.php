@@ -5,9 +5,9 @@ namespace bdk\Test\Debug\Collector;
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Collector\Pdo;
+use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 use bdk\PubSub\Event;
 use bdk\Test\Debug\DebugTestFramework;
-use bdk\Test\PolyFill\ExpectExceptionTrait;
 
 /**
  * PHPUnit tests for Debug class

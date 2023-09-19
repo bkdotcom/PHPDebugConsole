@@ -4,7 +4,7 @@ namespace bdk\Test\Debug\Utility;
 
 use bdk\Backtrace;
 use bdk\Debug\Utility\FindExit;
-use bdk\Test\PolyFill\AssertionTrait;
+use bdk\PhpUnitPolyfill\AssertionTrait;
 use PHPUnit\Framework\TestCase;
 
 /**

@@ -2,10 +2,10 @@
 
 namespace bdk\Test\Promise;
 
+use bdk\PhpUnitPolyfill\AssertionTrait;
+use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 use bdk\Promise;
 use bdk\Promise\RejectedPromise;
-use bdk\Test\PolyFill\AssertionTrait;
-use bdk\Test\PolyFill\ExpectExceptionTrait;
 use Exception;
 use PHPUnit\Framework\TestCase;
 

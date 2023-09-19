@@ -3,6 +3,7 @@
 namespace bdk\Test\CurlHttpMessage;
 
 use bdk\CurlHttpMessage\Factory;
+use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 use PHPUnit\Framework\TestCase as TestCaseBase;
 
 /**
@@ -10,6 +11,8 @@ use PHPUnit\Framework\TestCase as TestCaseBase;
  */
 class TestCase extends TestCaseBase
 {
+    use ExpectExceptionTrait;
+
     protected $baseUrl = 'http://127.0.0.1:8080';
 
     // ::class introduced in PHP 5.5...  we support 5.4

@@ -8,9 +8,9 @@ use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
 use bdk\ErrorHandler\Error;
 use bdk\HttpMessage\ServerRequest;
+use bdk\PhpUnitPolyfill\AssertionTrait;
 use bdk\PubSub\Event;
 use bdk\Test\Debug\Helper;
-use bdk\Test\PolyFill\AssertionTrait;
 use PHPUnit\Framework\ExpectationFailedException;
 use RuntimeException;
 

@@ -5,7 +5,7 @@ namespace bdk\Test\Debug\Utility;
 use bdk\Debug;
 use bdk\Debug\Utility\PhpDoc;
 use bdk\Debug\Utility\Reflection;
-use bdk\Test\PolyFill\AssertionTrait;
+use bdk\PhpUnitPolyfill\AssertionTrait;
 use PHPUnit\Framework\TestCase;
 
 /**

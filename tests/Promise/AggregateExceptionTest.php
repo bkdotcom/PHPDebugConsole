@@ -3,7 +3,7 @@
 namespace bdk\Test\Promise;
 
 use bdk\Promise\Exception\AggregateException;
-use bdk\Test\PolyFill\AssertionTrait;
+use bdk\PhpUnitPolyfill\AssertionTrait;
 use PHPUnit\Framework\TestCase;
 
 /**

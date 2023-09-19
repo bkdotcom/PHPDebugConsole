@@ -3,7 +3,7 @@
 namespace bdk\Test\Debug\Utility;
 
 use bdk\Debug\Utility\StopWatch;
-use bdk\Test\PolyFill\AssertionTrait;
+use bdk\PhpUnitPolyfill\AssertionTrait;
 use PHPUnit\Framework\TestCase;
 
 /**

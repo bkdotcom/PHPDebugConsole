@@ -6,7 +6,6 @@ use bdk\CurlHttpMessage\ClientAsync;
 use bdk\CurlHttpMessage\Handler\Mock as MockHandler;
 use bdk\Promise;
 use bdk\Test\CurlHttpMessage\TestCase;
-use bdk\Test\PolyFill\ExpectExceptionTrait;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
@@ -15,8 +14,6 @@ use Psr\Http\Message\ResponseInterface;
  */
 class ClientAsyncTest extends TestCase
 {
-    use ExpectExceptionTrait;
-
     protected $handled = array();
 
     public function testExtendsClient()

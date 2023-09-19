@@ -5,7 +5,6 @@ namespace bdk\Test\Teams\Cards;
 use bdk\Teams\Actions\OpenUrl;
 use bdk\Teams\Cards\HeroCard;
 use bdk\Teams\Enums;
-use bdk\Test\PolyFill\ExpectExceptionTrait;
 use bdk\Test\Teams\AbstractTestCaseWith;
 
 /**
@@ -15,8 +14,6 @@ use bdk\Test\Teams\AbstractTestCaseWith;
  */
 class HeroCardTest extends AbstractTestCaseWith
 {
-    use ExpectExceptionTrait;
-
     public function testGetMessage()
     {
         $card = (new HeroCard())

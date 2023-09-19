@@ -5,15 +5,12 @@ namespace bdk\Test\CurlHttpMessage\Handler;
 use bdk\CurlHttpMessage\Handler\CurlMulti;
 use bdk\Promise;
 use bdk\Test\CurlHttpMessage\TestCase;
-use bdk\Test\PolyFill\ExpectExceptionTrait;
 
 /**
  * @covers bdk\CurlHttpMessage\Handler\CurlMulti
  */
 class CurlMultiTest extends TestCase
 {
-    use ExpectExceptionTrait;
-
     public function testCanAddCustomCurlOptions()
     {
         if (PHP_VERSION_ID < 50500) {

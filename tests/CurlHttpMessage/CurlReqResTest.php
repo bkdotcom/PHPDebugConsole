@@ -3,9 +3,9 @@
 namespace bdk\Test\CurlHttpMessage;
 
 use bdk\CurlHttpMessage\Exception\RequestException;
+use bdk\PhpUnitPolyfill\AssertionTrait;
 use bdk\Promise;
 use bdk\Test\CurlHttpMessage\TestCase;
-use bdk\Test\PolyFill\AssertionTrait;
 
 /**
  * @covers \bdk\CurlHttpMessage\CurlReqRes

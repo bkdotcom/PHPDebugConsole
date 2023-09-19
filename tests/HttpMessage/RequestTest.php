@@ -5,8 +5,8 @@ namespace bdk\Test\HttpMessage;
 use bdk\HttpMessage\Message;
 use bdk\HttpMessage\Request;
 use bdk\HttpMessage\Uri;
-use bdk\Test\PolyFill\AssertionTrait;
-use bdk\Test\PolyFill\ExpectExceptionTrait;
+use bdk\PhpUnitPolyfill\AssertionTrait;
+use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 use PHPUnit\Framework\TestCase;
 
 /**

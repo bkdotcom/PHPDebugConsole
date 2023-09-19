@@ -3,7 +3,7 @@
 namespace bdk\Test\Debug;
 
 use bdk\Debug;
-use bdk\Test\PolyFill\ExpectExceptionTrait;
+use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 
 /**
  * PHPUnit tests for Debug class

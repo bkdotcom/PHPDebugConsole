@@ -4,7 +4,6 @@ namespace bdk\Test\Teams\Elements;
 
 use bdk\Teams\Elements\Media;
 use bdk\Teams\Elements\MediaSource;
-use bdk\Test\PolyFill\ExpectExceptionTrait;
 use bdk\Test\Teams\AbstractTestCaseWith;
 
 /**
@@ -12,8 +11,6 @@ use bdk\Test\Teams\AbstractTestCaseWith;
  */
 class MediaTest extends AbstractTestCaseWith
 {
-    use ExpectExceptionTrait;
-
     public function testConstruct()
     {
         $media = new Media([

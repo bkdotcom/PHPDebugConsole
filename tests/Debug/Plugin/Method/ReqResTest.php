@@ -3,11 +3,11 @@
 namespace bdk\Test\Debug\Plugin\Method;
 
 use bdk\Debug;
+use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 use bdk\HttpMessage\Response;
 use bdk\HttpMessage\ServerRequest;
 use bdk\HttpMessage\Stream;
 use bdk\Test\Debug\DebugTestFramework;
-use bdk\Test\PolyFill\ExpectExceptionTrait;
 
 /**
  * Test SerializeLog

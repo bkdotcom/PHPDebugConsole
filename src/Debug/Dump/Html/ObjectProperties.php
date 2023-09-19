@@ -123,9 +123,6 @@ class ObjectProperties
     protected function dumpInner($name, array $info, array $opts)
     {
         $name = \str_replace('debug.', '', $name);
-        $title = $opts['phpDocOutput']
-            ? (string) $info['desc']
-            : '';
         $parts = \array_filter(array(
             $this->dumpModifiers($info),
             $info['type']
@@ -135,7 +132,9 @@ class ObjectProperties
                 'addQuotes' => \preg_match('#[\s\r\n]#u', $name) === 1 || $name === '',
                 'attribs' => array(
                     'class' => array('t_identifier'),
-                    'title' => $title,
+                    'title' => $opts['phpDocOutput']
+                        ? $info['desc']
+                        : '',
                 ),
             )),
             $info['value'] !== Abstracter::UNDEFINED

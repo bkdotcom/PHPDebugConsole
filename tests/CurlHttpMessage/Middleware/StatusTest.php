@@ -2,23 +2,16 @@
 
 namespace bdk\Test\CurlHttpMessage\Middleware;
 
-// use bdk\CurlHttpMessage\Exception\NetworkException;
-// use bdk\CurlHttpMessage\Handler\CurlMulti;
-// use bdk\HttpMessage\Request;
-
 use bdk\CurlHttpMessage\Handler\Mock as MockHandler;
 use bdk\CurlHttpMessage\Middleware\Status;
 use bdk\Promise;
 use bdk\Test\CurlHttpMessage\TestCase;
-use bdk\Test\PolyFill\ExpectExceptionTrait;
 
 /**
  * @covers bdk\CurlHttpMessage\Middleware\Status
  */
 class StatusTest extends TestCase
 {
-    use ExpectExceptionTrait;
-
     public function testNoExceptionOnSuccess()
     {
         $middleware = new Status();

@@ -42,7 +42,6 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "bdk\\Sniffs\\": "sniffs/",
             "bdk\\Test\\": "tests/"
         }
     },
@@ -61,7 +60,7 @@
         "php": ">=5.4.0"
     },
     "require-dev": {
-        "bdk/css-xpath": "dev-master",
+        "bdk/devutil": "dev-master",
         "bdk/wamp-publisher": "dev-master",
         "doctrine/dbal": "^2.5.0",
         "guzzlehttp/psr7": "^1.6",
@@ -79,8 +78,8 @@
     "scripts": {
         "coverage" : [
             "vendor/bin/phpunit -v --coverage-clover coverage/clover.xml --coverage-html coverage/html",
-            "cp tests/htmlCoverageCustom.css coverage/html/_css/custom.css",
-            "php -f tests/coverageChecker.php -- coverage/clover.xml"
+            "cp vendor/bdk/devutil/src/htmlCoverageCustom.css coverage/html/_css/custom.css",
+            "php -f vendor/bdk/devutil/src/coverageChecker.php -- coverage/clover.xml"
         ],
         "cs" : [
             "vendor/bin/phpcs -p -s --colors ./src"

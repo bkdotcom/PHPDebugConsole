@@ -4,7 +4,7 @@ namespace bdk\Test\HttpMessage;
 
 use bdk\HttpMessage\Message;
 use bdk\HttpMessage\Response;
-use bdk\Test\PolyFill\ExpectExceptionTrait;
+use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 use PHPUnit\Framework\TestCase;
 
 /**

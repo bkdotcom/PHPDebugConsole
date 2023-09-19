@@ -37,6 +37,7 @@
       <file>src/HttpMessage/Factory.php</file>
       <directory>src/Backtrace</directory>
       <directory>src/Debug/Framework</directory>
+      <directory>src/DevUtil</directory>
       <directory>src/ErrorHandler</directory>
       <directory>src/Psr7</directory>
       <directory>src/PubSub</directory>

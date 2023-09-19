@@ -4,10 +4,10 @@ namespace bdk\Test\Slack;
 
 use bdk\CurlHttpMessage\Factory;
 use bdk\CurlHttpMessage\Handler\Mock as MockHandler;
+use bdk\PhpUnitPolyfill\AssertionTrait;
+use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 use bdk\Slack\SlackApi;
 use bdk\Slack\SlackMessage;
-use bdk\Test\PolyFill\AssertionTrait;
-use bdk\Test\PolyFill\ExpectExceptionTrait;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\RequestInterface;
 

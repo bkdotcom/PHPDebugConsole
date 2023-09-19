@@ -4,8 +4,8 @@ namespace bdk\Test\HttpMessage;
 
 use bdk\HttpMessage\HttpFoundationBridge;
 use bdk\HttpMessage\UploadedFile;
-use bdk\Test\PolyFill\AssertionTrait;
-use bdk\Test\PolyFill\ExpectExceptionTrait;
+use bdk\PhpUnitPolyfill\AssertionTrait;
+use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Cookie;

@@ -3,7 +3,7 @@
 namespace bdk\Test\Container;
 
 use bdk\Container;
-use bdk\Test\PolyFill\ExpectExceptionTrait;
+use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 use PHPUnit\Framework\TestCase;
 
 /**

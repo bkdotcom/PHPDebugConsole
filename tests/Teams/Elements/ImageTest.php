@@ -6,7 +6,6 @@ use bdk\Teams\Actions\OpenUrl;
 use bdk\Teams\Actions\ShowCard;
 use bdk\Teams\Elements\Image;
 use bdk\Teams\Enums;
-use bdk\Test\PolyFill\ExpectExceptionTrait;
 use bdk\Test\Teams\AbstractTestCaseWith;
 
 /**
@@ -15,8 +14,6 @@ use bdk\Test\Teams\AbstractTestCaseWith;
  */
 class ImageTest extends AbstractTestCaseWith
 {
-    use ExpectExceptionTrait;
-
     public function testConstruct()
     {
         $image = new Image('https://example.com/test.png');

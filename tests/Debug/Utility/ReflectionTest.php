@@ -3,7 +3,7 @@
 namespace bdk\Test\Debug\Utility;
 
 use bdk\Debug\Utility\Reflection;
-use bdk\Test\PolyFill\ExpectExceptionTrait;
+use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use ReflectionClassConstant;

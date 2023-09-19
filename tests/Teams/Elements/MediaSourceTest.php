@@ -3,7 +3,6 @@
 namespace bdk\Test\Teams\Elements;
 
 use bdk\Teams\Elements\MediaSource;
-use bdk\Test\PolyFill\ExpectExceptionTrait;
 use bdk\Test\Teams\AbstractTestCaseWith;
 
 /**
@@ -11,8 +10,6 @@ use bdk\Test\Teams\AbstractTestCaseWith;
  */
 class MediaSourceTest extends AbstractTestCaseWith
 {
-    use ExpectExceptionTrait;
-
     public function testConstruct()
     {
         $mediaSource = new MediaSource('http://example.com/cat.mp4', 'video/mp4');

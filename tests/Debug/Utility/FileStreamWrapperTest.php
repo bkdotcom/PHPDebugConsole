@@ -4,8 +4,8 @@ namespace bdk\Test\Debug\Utility;
 
 use bdk\Debug;
 use bdk\Debug\Utility\FileStreamWrapper;
-use bdk\Test\PolyFill\AssertionTrait;
-use bdk\Test\PolyFill\ExpectExceptionTrait;
+use bdk\PhpUnitPolyfill\AssertionTrait;
+use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 use PHPUnit\Framework\TestCase;
 
 /**

@@ -4,7 +4,7 @@ namespace bdk\Test\HttpMessage;
 
 use bdk\HttpMessage\Stream;
 use bdk\HttpMessage\UploadedFile;
-use bdk\Test\PolyFill\ExpectExceptionTrait;
+use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
 use ReflectionProperty;

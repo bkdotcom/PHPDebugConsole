@@ -5,7 +5,6 @@ namespace bdk\Test\Teams\Elements;
 use bdk\Teams\Actions\OpenUrl;
 use bdk\Teams\Actions\ShowCard;
 use bdk\Teams\Elements\ActionSet;
-use bdk\Test\PolyFill\ExpectExceptionTrait;
 use bdk\Test\Teams\AbstractTestCaseWith;
 
 /**
@@ -15,8 +14,6 @@ use bdk\Test\Teams\AbstractTestCaseWith;
  */
 class ActionSetTest extends AbstractTestCaseWith
 {
-    use ExpectExceptionTrait;
-
     public function testConstructException()
     {
         $this->expectException('InvalidArgumentException');

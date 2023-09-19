@@ -6,12 +6,12 @@ use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\AbstractObject;
 use bdk\Debug\LogEntry;
+use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 use bdk\PubSub\Event;
 use bdk\PubSub\Manager as EventManager;
 use bdk\Test\Debug\DebugTestFramework;
 use bdk\Test\Debug\Fixture;
 use bdk\Test\Debug\Mock;
-use bdk\Test\PolyFill\ExpectExceptionTrait;
 
 function myFunctionThatCallsGroup()
 {

@@ -2,6 +2,7 @@
 
 namespace bdk\Test\PromisePhpCond;
 
+use bdk\PhpUnitPolyfill\AssertionTrait;
 use bdk\Promise;
 use bdk\Promise\Coroutine;
 use bdk\Promise\Exception\RejectionException;
@@ -9,7 +10,6 @@ use bdk\Promise\FulfilledPromise;
 use bdk\Promise\PromiseInterface;
 use bdk\Promise\RejectedPromise;
 use bdk\Test\Promise\PropertyHelper;
-use bdk\Test\PolyFill\AssertionTrait;
 use Exception;
 use OutOfBoundsException;
 use PHPUnit\Framework\TestCase;

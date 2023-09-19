@@ -2,12 +2,12 @@
 
 namespace bdk\Test\Promise;
 
+use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 use bdk\Promise;
 use bdk\Promise\FulfilledPromise;
 use Exception;
 use LogicException;
 use PHPUnit\Framework\TestCase;
-use bdk\Test\PolyFill\ExpectExceptionTrait;
 
 /**
  * @covers bdk\Promise\FulfilledPromise

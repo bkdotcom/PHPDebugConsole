@@ -8,7 +8,6 @@ use bdk\Teams\Elements\Column;
 use bdk\Teams\Elements\ColumnSet;
 use bdk\Teams\Elements\TextBlock;
 use bdk\Teams\Enums;
-use bdk\Test\PolyFill\ExpectExceptionTrait;
 use bdk\Test\Teams\AbstractTestCaseWith;
 
 /**
@@ -18,8 +17,6 @@ use bdk\Test\Teams\AbstractTestCaseWith;
  */
 class ColumnSetTest extends AbstractTestCaseWith
 {
-    use ExpectExceptionTrait;
-
     public function testContentGet()
     {
         $columnSet = (new ColumnSet())

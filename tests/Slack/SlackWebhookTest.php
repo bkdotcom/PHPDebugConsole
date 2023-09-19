@@ -4,9 +4,9 @@ namespace bdk\Test\Slack;
 
 use bdk\CurlHttpMessage\Factory;
 use bdk\CurlHttpMessage\Handler\Mock as MockHandler;
+use bdk\PhpUnitPolyfill\AssertionTrait;
 use bdk\Slack\SlackMessage;
 use bdk\Slack\SlackWebhook;
-use bdk\Test\PolyFill\AssertionTrait;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\RequestInterface;
 

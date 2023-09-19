@@ -3,9 +3,9 @@
 namespace bdk\Test\Debug\Utility;
 
 use bdk\Debug\Utility\StringUtil;
+use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 use bdk\Test\Debug\Fixture\Test2Base;
 use bdk\Test\Debug\Fixture\TestObj;
-use bdk\Test\PolyFill\ExpectExceptionTrait;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -60,12 +60,12 @@ class StringUtilTest extends TestCase
         $placeholders = array();
         $return = StringUtil::interpolate($message, $values, $placeholders);
         self::assertSame('Brad was here. toStringVal  {notReplaced}', $return);
-        self::assertSame(array('user.name','where','obj','null','notReplaced'), $placeholders);
+        self::assertSame(array('user.name', 'where', 'obj', 'null', 'notReplaced'), $placeholders);
 
         $message = new TestObj($message);
         $return = StringUtil::interpolate($message, (object) $values, $placeholders);
         self::assertSame('Brad was here. toStringVal {null} {notReplaced}', $return);
-        self::assertSame(array('user.name','where','obj','null','notReplaced'), $placeholders);
+        self::assertSame(array('user.name', 'where', 'obj', 'null', 'notReplaced'), $placeholders);
     }
 
     public function testInterpolateInvalidMessage()
@@ -142,7 +142,7 @@ EOD;
 
     public function testPrettyJson()
     {
-        $data = array('foo','bar');
+        $data = array('foo', 'bar');
         self::assertSame(
             \json_encode($data, JSON_PRETTY_PRINT),
             StringUtil::prettyJson(\json_encode($data))

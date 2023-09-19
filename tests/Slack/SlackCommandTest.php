@@ -4,8 +4,8 @@ namespace bdk\Test\Slack;
 
 use bdk\HttpMessage\ServerRequest;
 use bdk\HttpMessage\Stream;
+use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 use bdk\Slack\SlackCommand;
-use bdk\Test\PolyFill\ExpectExceptionTrait;
 use PHPUnit\Framework\TestCase;
 
 /**

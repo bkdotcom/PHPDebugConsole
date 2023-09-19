@@ -4,10 +4,9 @@ namespace bdk\Test\CurlHttpMessage;
 
 use bdk\CurlHttpMessage\Client;
 use bdk\CurlHttpMessage\Handler\Mock as MockHandler;
+use bdk\PhpUnitPolyfill\AssertionTrait;
 use bdk\Test\CurlHttpMessage\Fixture\JsonSerializable;
 use bdk\Test\CurlHttpMessage\TestCase;
-use bdk\Test\PolyFill\AssertionTrait;
-use bdk\Test\PolyFill\ExpectExceptionTrait;
 
 /**
  * @covers \bdk\CurlHttpMessage\Client
@@ -17,7 +16,6 @@ use bdk\Test\PolyFill\ExpectExceptionTrait;
 class ClientTest extends TestCase
 {
     use AssertionTrait;
-    use ExpectExceptionTrait;
 
     public function testGetStack()
     {

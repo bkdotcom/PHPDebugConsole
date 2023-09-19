@@ -3,7 +3,7 @@
 namespace bdk\Test\HttpMessage;
 
 use bdk\HttpMessage\Uri;
-use bdk\Test\PolyFill\ExpectExceptionTrait;
+use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 use PHPUnit\Framework\TestCase;
 use ReflectionObject;
 

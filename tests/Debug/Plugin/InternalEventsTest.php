@@ -6,10 +6,10 @@ use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\ErrorHandler\Error;
+use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 use bdk\PubSub\Event;
 use bdk\PubSub\Manager as EventManager;
 use bdk\Test\Debug\DebugTestFramework;
-use bdk\Test\PolyFill\ExpectExceptionTrait;
 
 /**
  * PHPUnit tests for Debug class

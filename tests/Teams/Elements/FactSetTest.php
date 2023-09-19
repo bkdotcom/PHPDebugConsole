@@ -4,7 +4,6 @@ namespace bdk\Test\Teams\Elements;
 
 use bdk\Teams\Elements\Fact;
 use bdk\Teams\Elements\FactSet;
-use bdk\Test\PolyFill\ExpectExceptionTrait;
 use bdk\Test\Teams\AbstractTestCaseWith;
 
 /**
@@ -14,8 +13,6 @@ use bdk\Test\Teams\AbstractTestCaseWith;
  */
 class FactSetTest extends AbstractTestCaseWith
 {
-    use ExpectExceptionTrait;
-
     public function testConstruct()
     {
         $factSet = new FactSet(array(

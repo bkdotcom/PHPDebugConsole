@@ -6,7 +6,6 @@ use bdk\Teams\Actions\OpenUrl;
 use bdk\Teams\Actions\ShowCard;
 use bdk\Teams\Elements\TextRun;
 use bdk\Teams\Enums;
-use bdk\Test\PolyFill\ExpectExceptionTrait;
 use bdk\Test\Teams\AbstractTestCaseWith;
 
 /**
@@ -14,8 +13,6 @@ use bdk\Test\Teams\AbstractTestCaseWith;
  */
 class TextRunTest extends AbstractTestCaseWith
 {
-    use ExpectExceptionTrait;
-
     public function testConstruct()
     {
         $textRun = new TextRun('hello world');

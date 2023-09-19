@@ -4,8 +4,8 @@ namespace bdk\Test\Debug\Utility;
 
 use bdk\Debug\Utility;
 use bdk\HttpMessage\Stream;
+use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 use bdk\Test\Debug\DebugTestFramework;
-use bdk\Test\PolyFill\ExpectExceptionTrait;
 
 /**
  * PHPUnit tests for Utility class

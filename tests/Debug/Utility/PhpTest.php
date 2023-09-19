@@ -3,8 +3,8 @@
 namespace bdk\Test\Debug\Utility;
 
 use bdk\Debug\Utility\Php;
+use bdk\PhpUnitPolyfill\AssertionTrait;
 use bdk\Test\Debug\Fixture\TestObj;
-use bdk\Test\PolyFill\AssertionTrait;
 use PHPUnit\Framework\TestCase;
 
 /**

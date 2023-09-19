@@ -4,7 +4,6 @@ namespace bdk\Test\Teams\Actions;
 
 use bdk\Teams\Actions\OpenUrl;
 use bdk\Teams\Enums;
-use bdk\Test\PolyFill\ExpectExceptionTrait;
 use bdk\Test\Teams\AbstractTestCaseWith;
 
 /**
@@ -13,8 +12,6 @@ use bdk\Test\Teams\AbstractTestCaseWith;
  */
 class OpenUrlTest extends AbstractTestCaseWith
 {
-    use ExpectExceptionTrait;
-
     public function testConstruct()
     {
         $openUrl = new OpenUrl('http://www.bradkent.com/');

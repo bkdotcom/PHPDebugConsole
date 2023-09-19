@@ -2,8 +2,8 @@
 
 namespace bdk\Test\Slack;
 
+use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 use bdk\Slack\BlockFactory;
-use bdk\Test\PolyFill\ExpectExceptionTrait;
 use PHPUnit\Framework\TestCase;
 
 /**

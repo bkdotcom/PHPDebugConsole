@@ -4,7 +4,6 @@ namespace bdk\Test\Teams;
 
 use bdk\Teams\Actions\OpenUrl;
 use bdk\Teams\Section;
-use bdk\Test\PolyFill\ExpectExceptionTrait;
 use bdk\Test\Teams\AbstractTestCaseWith;
 
 /**
@@ -13,8 +12,6 @@ use bdk\Test\Teams\AbstractTestCaseWith;
  */
 class SectionTest extends AbstractTestCaseWith
 {
-    use ExpectExceptionTrait;
-
     public function testGetContent()
     {
         $section = (new Section())

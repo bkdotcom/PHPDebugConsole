@@ -2,12 +2,12 @@
 
 namespace bdk\Test\Promise;
 
+use bdk\PhpUnitPolyfill\AssertionTrait;
+use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 use bdk\Promise;
 use bdk\Promise\Exception\CancellationException;
 use bdk\Promise\Exception\RejectionException;
 use bdk\Promise\RejectedPromise;
-use bdk\Test\PolyFill\AssertionTrait;
-use bdk\Test\PolyFill\ExpectExceptionTrait;
 use bdk\Test\Promise\Fixture\ExtendsPromise;
 use bdk\Test\Promise\Fixture\Thenable;
 use Exception;

@@ -4,10 +4,10 @@ namespace bdk\Test\Debug\Plugin;
 
 use bdk\Debug;
 use bdk\Debug\Plugin\Manager;
+use bdk\PhpUnitPolyfill\AssertionTrait;
+use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 use bdk\PubSub\Event;
 use bdk\Test\Debug\DebugTestFramework;
-use bdk\Test\PolyFill\AssertionTrait;
-use bdk\Test\PolyFill\ExpectExceptionTrait;
 use PHPUnit\Framework\TestCase;
 
 /**

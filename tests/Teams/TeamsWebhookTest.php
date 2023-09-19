@@ -5,9 +5,9 @@ namespace bdk\Test\Teams;
 use bdk\CurlHttpMessage\Handler\Mock as MockHandler;
 use bdk\HttpMessage\Response;
 use bdk\HttpMessage\Stream;
+use bdk\PhpUnitPolyfill\AssertionTrait;
 use bdk\Teams\Cards\MessageCard;
 use bdk\Teams\TeamsWebhook;
-use bdk\Test\PolyFill\AssertionTrait;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\RequestInterface;
 

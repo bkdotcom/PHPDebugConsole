@@ -5,7 +5,6 @@ namespace bdk\Test\Teams\Elements;
 use bdk\Teams\Elements\RichTextBlock;
 use bdk\Teams\Elements\TextRun;
 use bdk\Teams\Enums;
-use bdk\Test\PolyFill\ExpectExceptionTrait;
 use bdk\Test\Teams\AbstractTestCaseWith;
 
 /**
@@ -15,8 +14,6 @@ use bdk\Test\Teams\AbstractTestCaseWith;
  */
 class RichTextBlockTest extends AbstractTestCaseWith
 {
-    use ExpectExceptionTrait;
-
     public function testConstruct()
     {
         $rtb = new RichTextBlock(array(

@@ -304,8 +304,8 @@ EOD;
                 ),
                 'firephp' => 'X-Wf-1-1-1-37: 56|[{"Type":"LOG"},{"foo":"bar","val":"array *RECURSION*"}]|',
                 'html' => static function ($strHtml) {
-                    self::assertSelectEquals('.array-inner > li > .t_keyword', 'array', true, $strHtml);
-                    self::assertSelectEquals('.array-inner > li > .t_recursion', '*RECURSION*', true, $strHtml);
+                    self::assertSelectEquals('.array-inner > li > .t_array > .t_keyword', 'array', true, $strHtml);
+                    self::assertSelectEquals('.array-inner > li > .t_array > .t_recursion', '*RECURSION*', true, $strHtml);
                 },
                 'script' => 'console.log({"foo":"bar","val":"array *RECURSION*"});',
                 'streamAnsi' => array('contains' => "    \e[38;5;245m[\e[38;5;83mval\e[38;5;245m]\e[38;5;130m => \e[0m\e[38;5;45marray \e[38;5;196m*RECURSION*\e[0m"),

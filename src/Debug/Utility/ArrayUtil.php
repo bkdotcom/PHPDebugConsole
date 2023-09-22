@@ -57,26 +57,9 @@ class ArrayUtil
         \array_shift($arrays);
         while ($arrays) {
             $array2 = \array_shift($arrays);
-            $diff = array();
-            foreach ($array as $key => $value) {
-                if (\array_key_exists($key, $array2) === false) {
-                    $diff[$key] = $value;
-                    continue;
-                }
-                if (\is_array($value) && \is_array($array2[$key])) {
-                    $value = self::diffAssocRecursive($value, $array2[$key]);
-                    if ($value) {
-                        $diff[$key] = $value;
-                    }
-                    continue;
-                }
-                if ($value !== $array2[$key]) {
-                    $diff[$key] = $value;
-                }
-            }
-            $array = $diff;
+            $array = self::diffAssocRecursiveHelper($array, $array2);
         }
-        return $diff;
+        return $array;
     }
 
     /**
@@ -315,6 +298,36 @@ class ArrayUtil
     }
 
     /**
+     * Compares 2 arrays
+     *
+     * @param array $array  Array to compare from
+     * @param array $array2 Array to compare against
+     *
+     * @return array An array containing all the values from array that are not present in array2
+     */
+    private static function diffAssocRecursiveHelper($array, $array2)
+    {
+        $diff = array();
+        \array_walk($array, static function ($value, $key) use (&$diff, $array2) {
+            if (\array_key_exists($key, $array2) === false) {
+                $diff[$key] = $value;
+                return;
+            }
+            if (\is_array($value) && \is_array($array2[$key])) {
+                $value = self::diffAssocRecursive($value, $array2[$key]);
+                if ($value) {
+                    $diff[$key] = $value;
+                }
+                return;
+            }
+            if ($value !== $array2[$key]) {
+                $diff[$key] = $value;
+            }
+        });
+        return $diff;
+    }
+
+    /**
      * Merge 2nd array into first
      *
      * @param array $arrayDef default array
@@ -324,28 +337,24 @@ class ArrayUtil
      */
     private static function mergeDeepWalk($arrayDef, $array2)
     {
-        foreach ($array2 as $k2 => $v2) {
-            if (\is_array($v2) === false || Php::isCallable($v2, Php::IS_CALLABLE_ARRAY_ONLY)) {
+        \array_walk($array2, static function ($value, $key) use (&$arrayDef) {
+            if (\is_array($value) === false || Php::isCallable($value, Php::IS_CALLABLE_ARRAY_ONLY)) {
                 // not array or appears to be a callable
-                if (\is_int($k2) === false) {
-                    $arrayDef[$k2] = $v2;
-                    continue;
+                if (\is_int($key) === false) {
+                    $arrayDef[$key] = $value;
+                } elseif (\in_array($value, $arrayDef, true) === false) {
+                    // unique value -> append it
+                    $arrayDef[] = $value;
                 }
-                // append int-key'd values if not already in array
-                if (\in_array($v2, $arrayDef, true)) {
-                    continue;
-                }
-                // unique value -> append it
-                $arrayDef[] = $v2;
-                continue;
+                return;
             }
-            if (isset($arrayDef[$k2]) === false || \is_array($arrayDef[$k2]) === false || Php::isCallable($arrayDef[$k2], Php::IS_CALLABLE_ARRAY_ONLY)) {
-                $arrayDef[$k2] = $v2;
-                continue;
+            if (isset($arrayDef[$key]) === false || \is_array($arrayDef[$key]) === false || Php::isCallable($arrayDef[$key], Php::IS_CALLABLE_ARRAY_ONLY)) {
+                $arrayDef[$key] = $value;
+                return;
             }
             // both values are arrays... merge em
-            $arrayDef[$k2] = static::mergeDeep($arrayDef[$k2], $v2);
-        }
+            $arrayDef[$key] = static::mergeDeep($arrayDef[$key], $value);
+        });
         return $arrayDef;
     }
 

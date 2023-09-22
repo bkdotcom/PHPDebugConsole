@@ -147,17 +147,6 @@ class Time implements SubscriberInterface
         $debug = $logEntry->getSubject();
         $label = $logEntry['args'][0];
         $elapsed = $debug->stopWatch->get($label, $label);
-        if ($elapsed === false) {
-            if ($logEntry->getMeta('silent') === false) {
-                $debug->log(new LogEntry(
-                    $debug,
-                    $logEntry['method'],
-                    array('Timer \'' . $label . '\' does not exist'),
-                    $logEntry['meta']
-                ));
-            }
-            return false;
-        }
         $this->appendLogEntry($elapsed, $logEntry);
         return $logEntry['meta']['return']
             ? $elapsed
@@ -182,11 +171,25 @@ class Time implements SubscriberInterface
             \func_get_args(),
             array(
                 'precision' => 4,
+                'silent' => false,
                 'unit' => 'auto',
             ),
             $this->debug->rootInstance->getMethodDefaultArgs(__METHOD__)
         );
-        $this->doTimeLog($logEntry);
+        $args = $logEntry['args'];
+        $meta = $logEntry['meta'];
+        $label = $args[0];
+        $elapsed = $this->debug->stopWatch->get($label, $label);
+        if ($elapsed === false) {
+            $this->appendNotFound($logEntry);
+            return $this->debug;
+        }
+        $elapsed = $this->debug->utility->formatDuration($elapsed, $meta['unit'], $meta['precision']);
+        $args[0] = $label . ': ';
+        \array_splice($args, 1, 0, $elapsed);
+        $logEntry['args'] = $args;
+        $logEntry['meta'] = \array_diff_key($meta, \array_flip(array('precision', 'silent', 'unit')));
+        $this->debug->log($logEntry);
         return $this->debug;
     }
 
@@ -205,15 +208,17 @@ class Time implements SubscriberInterface
         if ($meta['silent']) {
             return;
         }
+        if ($elapsed === false) {
+            $this->appendNotFound($logEntry);
+            return;
+        }
         $label = isset($logEntry['args'][0])
             ? $logEntry['args'][0]
             : 'time';
-        $str = $elapsed === false
-            ? 'Timer \'' . $label . '\' does not exist'
-            : \strtr($meta['template'], array(
-                '%label' => $label,
-                '%time' => $debug->utility->formatDuration($elapsed, $meta['unit'], $meta['precision']),
-            ));
+        $str = \strtr($meta['template'], array(
+            '%label' => $label,
+            '%time' => $debug->utility->formatDuration($elapsed, $meta['unit'], $meta['precision']),
+        ));
         $debug->log(new LogEntry(
             $debug,
             'time',
@@ -223,38 +228,26 @@ class Time implements SubscriberInterface
     }
 
     /**
-     * Handle debug's timeLog method
+     * Append a "label does not exist" log entry
      *
      * @param LogEntry $logEntry LogEntry instance
      *
      * @return void
      */
-    protected function doTimeLog(LogEntry $logEntry)
+    protected function appendNotFound(LogEntry $logEntry)
     {
         $debug = $logEntry->getSubject();
-        $args = $logEntry['args'];
+        $label = $logEntry['args'][0];
         $meta = $logEntry['meta'];
-        $label = $args[0];
-        $elapsed = $debug->stopWatch->get($label, $label);
-        if ($elapsed === false) {
-            $debug->log(new LogEntry(
-                $debug,
-                $logEntry['method'],
-                array('Timer \'' . $label . '\' does not exist'),
-                \array_diff_key($meta, \array_flip(array('precision', 'unit')))
-            ));
+        if ($meta['silent']) {
             return;
         }
-        $elapsed = $debug->utility->formatDuration(
-            $elapsed,
-            $meta['unit'],
-            $meta['precision']
-        );
-        $args[0] = $label . ': ';
-        \array_splice($args, 1, 0, $elapsed);
-        $logEntry['args'] = $args;
-        $logEntry['meta'] = \array_diff_key($meta, \array_flip(array('precision', 'unit')));
-        $debug->log($logEntry);
+        $debug->log(new LogEntry(
+            $debug,
+            $logEntry['method'],
+            array('Timer \'' . $label . '\' does not exist'),
+            \array_diff_key($meta, \array_flip(array('precision', 'silent', 'unit')))
+        ));
     }
 
     /**
@@ -285,7 +278,7 @@ class Time implements SubscriberInterface
             array('return')
         );
         if ($logEntry['numArgs'] === 1 && \is_bool($logEntry['args'][0])) {
-            // $log passed as single arg
+            // first and only arg is bool..  treat as 'log' param
             $logEntry['args'][1] = $logEntry['args'][0];
             $logEntry['args'][0] = null;
         }

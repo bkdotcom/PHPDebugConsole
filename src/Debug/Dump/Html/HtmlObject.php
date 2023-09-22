@@ -26,6 +26,7 @@ use bdk\Debug\Utility\Html as HtmlUtil;
 class HtmlObject
 {
     public $valDumper;
+    protected $cases;
     protected $constants;
     protected $helper;
     protected $html;
@@ -44,9 +45,10 @@ class HtmlObject
         $this->valDumper = $valDumper;
         $this->helper = $helper;
         $this->html = $html;
-        $this->constants = new ObjectConstants($this, $helper, $html);
-        $this->methods = new ObjectMethods($this, $helper, $html);
-        $this->properties = new ObjectProperties($this, $helper, $html);
+        $this->cases = new ObjectCases($valDumper, $helper, $html);
+        $this->constants = new ObjectConstants($valDumper, $helper, $html);
+        $this->methods = new ObjectMethods($valDumper, $helper, $html);
+        $this->properties = new ObjectProperties($valDumper, $helper, $html);
     }
 
     /**
@@ -79,34 +81,13 @@ class HtmlObject
                 . $this->dumpExtends($abs)
                 . $this->dumpImplements($abs)
                 . $this->dumpAttributes($abs)
-                . $this->constants->dumpConstants($abs)
-                . $this->constants->dumpCases($abs)
+                . $this->constants->dump($abs)
+                . $this->cases->dump($abs)
                 . $this->properties->dump($abs)
                 . $this->methods->dump($abs)
                 . $this->dumpPhpDoc($abs)
             . '</dl>' . "\n";
         return $this->cleanup($html);
-    }
-
-    /**
-     * Generate some info regarding the given method names
-     *
-     * @param array $methods method names
-     *
-     * @return string html fragment
-     */
-    public function magicMethodInfo($methods)
-    {
-        if (!$methods) {
-            return '';
-        }
-        $methods = \array_map(static function ($method) {
-            return '<code>' . $method . '</code>';
-        }, $methods);
-        $methods = \count($methods) === 1
-            ? 'a ' . $methods[0] . ' method'
-            : \implode(' and ', $methods) . ' methods';
-        return '<dd class="info magic">This object has ' . $methods . '</dd>' . "\n";
     }
 
     /**

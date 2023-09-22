@@ -78,7 +78,7 @@ class DebugTestFramework extends DOMTestCase
 
         $refProperties = &$this->getSharedVar('reflectionProperties');
         if (!isset($refProperties['inShutdown'])) {
-            $refProp = new \ReflectionProperty('bdk\\Debug\\Plugin\\Method\\Group', 'inShutdown');
+            $refProp = new \ReflectionProperty('bdk\\Debug\\Plugin\\Method\\GroupCleanup', 'inShutdown');
             $refProp->setAccessible(true);
             $refProperties['inShutdown'] = $refProp;
         }
@@ -103,7 +103,7 @@ class DebugTestFramework extends DOMTestCase
             $refProperties['textDepth'] = $refProp;
         }
 
-        $refProperties['inShutdown']->setValue($this->debug->getPlugin('methodGroup'), false);
+        $refProperties['inShutdown']->setValue($this->debug->getPlugin('groupCleanup'), false);
         $refProperties['textDepth']->setValue($this->debug->getDump('text'), 0);
 
         /*
@@ -325,17 +325,31 @@ class DebugTestFramework extends DOMTestCase
                 $output = $this->tstMethodOutput($test, $routeObj, $logEntryTemp, $expect);
                 $this->tstMethodTest($test, $logEntryTemp, $expect, $output);
             } catch (ExpectationFailedException $e) {
-                $message = $test . ' has failed';
-                if (\is_string($expect) && \is_string($output)) {
+                $trace = $e->getTrace();
+                $file = null;
+                $line = null;
+                for ($i = 0, $count = \count($trace); $i < $count; $i++) {
+                    $frame = $trace[$i];
+                    if (\strpos($frame['class'], __NAMESPACE__) === 0) {
+                        $file = $trace[$i - 1]['file'];
+                        $line = $trace[$i - 1]['line'];
+                        break;
+                    }
+                }
+                $message = $test . ' has failed'
+                    . ' - ' . $file . ':' . $line;
+                if ($test === 'entry') {
+                    \bdk\Debug::varDump('blah', array(
+                        'expect' => $expect,
+                        'actual' => $this->helper->logEntryToArray($logEntryTemp),
+                    ));
+                } elseif (\is_string($expect) && \is_string($output)) {
                     echo $test . ':' . "\n";
                     echo 'expect: ' . \str_replace("\e", '\e', $expect) . "\n\n"
                         . 'actual: ' . \str_replace("\e", '\e', $output) . "\n\n";
                     if (\strpos($output, "\e") !== false) {
                         echo 'actual ansi: ' . $output . "\n\n";
                     }
-                } else {
-                    // var_dump($e);
-                    $message .= ' - ' . $e->getMessage();
                 }
                 throw new \PHPUnit\Framework\AssertionFailedError($message);
             }

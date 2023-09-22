@@ -127,6 +127,20 @@ class SectionTest extends AbstractTestCaseWith
             array('potentialAction', [
                 new OpenUrl('http://example.com'),
             ]),
+            array('potentialAction',
+                [
+                    \array_fill(0, 5, new OpenUrl('http://example.com')),
+                ],
+                'OutOfBoundsException',
+                'There can be a maximum of 4 actions (whatever their type)',
+            ),
+            array('potentialAction',
+                [
+                    'you suck',
+                ],
+                true,
+                'withPotentialAction: Invalid action found at index 0',
+            ),
             array('startGroup', []),
             array('text', ['blah blah']),
             array('title', ['text']),

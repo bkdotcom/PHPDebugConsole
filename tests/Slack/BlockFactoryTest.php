@@ -7,6 +7,8 @@ use bdk\Slack\BlockFactory;
 use PHPUnit\Framework\TestCase;
 
 /**
+ * @covers \bdk\Slack\AbstractBlockFactory
+ * @covers \bdk\Slack\BlockElementsFactory
  * @covers \bdk\Slack\BlockFactory
  */
 class BlockFactoryTest extends TestCase
@@ -313,6 +315,18 @@ class BlockFactoryTest extends TestCase
                 [
                     'expectException' => 'InvalidArgumentException',
                     'expectExceptionMessage' => 'url_text_input is an invalid type for accessory',
+                ],
+            ],
+
+            'section.fields.tooMany' => [
+                'section',
+                [
+                    'I have an accessory',
+                    \array_fill(0, 11, 'field'),
+                ],
+                [
+                    'expectException' => 'OutOfBoundsException',
+                    'expectExceptionMessage' => 'A maximum of 10 fields are allowed in section block. 11 provided',
                 ],
             ],
 

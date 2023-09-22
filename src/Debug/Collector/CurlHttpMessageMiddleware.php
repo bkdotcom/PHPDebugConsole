@@ -125,7 +125,7 @@ class CurlHttpMessageMiddleware extends AbstractComponent
      *
      * @return Promise
      */
-    public function onRequest(CurlReqRes $curlReqRes) // RequestInterface $request, array $options
+    public function onRequest(CurlReqRes $curlReqRes)
     {
         $request = $curlReqRes->getRequest();
         $options = $curlReqRes->getOptions();

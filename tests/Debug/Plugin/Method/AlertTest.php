@@ -9,6 +9,7 @@ use bdk\Test\Debug\DebugTestFramework;
  * PHPUnit tests for Debug::time() methods
  *
  * @covers \bdk\Debug\Dump\Base
+ * @covers \bdk\Debug\Dump\Html
  * @covers \bdk\Debug\Dump\TextAnsi
  * @covers \bdk\Debug\Plugin\Method\Alert
  * @covers \bdk\Debug\Route\Firephp
@@ -185,6 +186,44 @@ class AlertTest extends DebugTestFramework
                 ),
                 'firephp' => 'X-Wf-1-1-1-1: %d|[{"Type":"ERROR"},' . \json_encode($message, JSON_UNESCAPED_SLASHES) . ']|',
                 'html' => '<div class="alert-error m_alert" role="alert">' . $messageEscaped . '</div>',
+                'script' => \str_replace('%c', '%%c', 'console.log(' . \json_encode('%c' . $message, JSON_UNESCAPED_SLASHES) . ',"' . $style . '");'),
+                'text' => '》[Alert ⦻ error] ' . $message . '《',
+                'wamp' => $entryExpect,
+            ),
+        );
+
+        // test dismissable
+        $entryExpect = array(
+            'method' => 'alert',
+            'args' => array(
+                $message,
+            ),
+            'meta' => array(
+                'dismissible' => true,
+                'level' => 'error',
+            ),
+        );
+        $button = '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>';
+        $style = 'padding: 5px; line-height: 26px; font-size: 125%; font-weight: bold; background-color: #ffbaba; border: 1px solid #d8000c; color: #d8000c;';
+        $return['dismissible'] = array(
+            'alert',
+            array(
+                $message,
+                'error',
+                true,
+            ),
+            array(
+                'entry' => $entryExpect,
+                'chromeLogger' => array(
+                    array(
+                        '%c' . $message,
+                        $style,
+                    ),
+                    null,
+                    '',
+                ),
+                'firephp' => 'X-Wf-1-1-1-1: %d|[{"Type":"ERROR"},' . \json_encode($message, JSON_UNESCAPED_SLASHES) . ']|',
+                'html' => '<div class="alert-dismissible alert-error m_alert" role="alert">' . $button . $messageEscaped . '</div>',
                 'script' => \str_replace('%c', '%%c', 'console.log(' . \json_encode('%c' . $message, JSON_UNESCAPED_SLASHES) . ',"' . $style . '");'),
                 'text' => '》[Alert ⦻ error] ' . $message . '《',
                 'wamp' => $entryExpect,

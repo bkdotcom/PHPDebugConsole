@@ -269,12 +269,12 @@ class Error extends Event
         $this->setValuesInit($values);
         $errType = $values['type'];
         $hash = $this->hash($values);
-        $prevOccurance = $this->subject->get('error', $hash);
-        $isSuppressed = $this->isSuppressed($prevOccurance);
+        $prevOccurrence = $this->subject->get('error', $hash);
+        $isSuppressed = $this->isSuppressed($prevOccurrence);
         $this->values = \array_merge(
             $this->values,
             array(
-                'continueToNormal' => $this->setContinueToNormal($isSuppressed, $prevOccurance === null),
+                'continueToNormal' => $this->setContinueToNormal($isSuppressed, $prevOccurrence === null),
                 'continueToPrevHandler' => $this->subject->getCfg('continueToPrevHandler'),
                 'throw' => $this->isFatal() === false && ($errType & $this->subject->getCfg('errorThrow')) === $errType,
             ),
@@ -282,7 +282,7 @@ class Error extends Event
             array(
                 'category' => $this->values['category'],
                 'hash' => $hash,
-                'isFirstOccur' => !$prevOccurance,
+                'isFirstOccur' => !$prevOccurrence,
                 'isHtml' => $this->isHtml(),
                 'isSuppressed' => $isSuppressed,
                 'message' => $this->isHtml()
@@ -387,13 +387,13 @@ class Error extends Event
     /**
      * Get initial `isSuppressed` value
      *
-     * @param self|null $prevOccurance previous occurrence of current error
+     * @param self|null $prevOccurrence previous occurrence of current error
      *
      * @return bool
      */
-    private function isSuppressed($prevOccurance = null)
+    private function isSuppressed($prevOccurrence = null)
     {
-        if ($prevOccurance && !$prevOccurance['isSuppressed']) {
+        if ($prevOccurrence && !$prevOccurrence['isSuppressed']) {
             // if any instance of this error was not supprssed, reflect that
             return false;
         }
@@ -408,14 +408,14 @@ class Error extends Event
     /**
      * Set continueToNormal flag
      *
-     * @param bool $isSuppressed     Whether error is suppressed
-     * @param bool $isFirstOccurance Whether this is errors' first occurance durring this request
+     * @param bool $isSuppressed      Whether error is suppressed
+     * @param bool $isFirstOccurrence Whether this is errors' first occurrence during this request
      *
      * @return bool
      */
-    private function setContinueToNormal($isSuppressed, $isFirstOccurance)
+    private function setContinueToNormal($isSuppressed, $isFirstOccurrence)
     {
-        $continueToNormal = $isSuppressed === false && $isFirstOccurance;
+        $continueToNormal = $isSuppressed === false && $isFirstOccurrence;
         if ($continueToNormal === false || $this->values['category'] !== self::CAT_ERROR) {
             return $continueToNormal;
         }

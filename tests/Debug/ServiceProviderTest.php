@@ -23,9 +23,7 @@ use bdk\Test\Debug\DebugTestFramework;
  * @covers \bdk\Debug\Dump\Html\Helper
  * @covers \bdk\Debug\Dump\Html\HtmlObject
  * @covers \bdk\Debug\Dump\Html\HtmlString
- * @covers \bdk\Debug\Dump\Html\ObjectConstants
- * @covers \bdk\Debug\Dump\Html\ObjectMethods
- * @covers \bdk\Debug\Dump\Html\ObjectProperties
+ * @covers \bdk\Debug\Dump\Html\AbstractObjectSection
  * @covers \bdk\Debug\Dump\Html\Table
  * @covers \bdk\Debug\Dump\Html\Value
  * @covers \bdk\Debug\Route\ChromeLogger
@@ -37,7 +35,7 @@ class ServiceProviderTest extends DebugTestFramework
 {
     public function testDebugConstruct()
     {
-        \bdk\Debug\Utility\Reflection::propSet('\bdk\ErrorHandler', 'instance', null);
+        \bdk\Debug\Utility\Reflection::propSet('bdk\ErrorHandler', 'instance', null);
 
         $debug = new Debug(array(
             'logResponse' => false,

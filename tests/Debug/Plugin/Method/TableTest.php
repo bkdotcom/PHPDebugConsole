@@ -19,6 +19,7 @@ use ReflectionMethod;
  * @covers \bdk\Debug\Abstraction\AbstractObjectProperties
  * @covers \bdk\Debug\Abstraction\AbstractObjectMethods
  * @covers \bdk\Debug\Dump\Base
+ * @covers \bdk\Debug\Dump\Html
  * @covers \bdk\Debug\Dump\Html\Helper
  * @covers \bdk\Debug\Dump\Html\HtmlString
  * @covers \bdk\Debug\Dump\Html\Table

@@ -61,12 +61,15 @@ abstract class AbstractTestCaseWith extends TestCase
     /**
      * @dataProvider providerWith
      */
-    public function testWith($method, $args, $isException = false, $exceptionMessage = null, $callable = null)
+    public function testWith($method, $args, $expectException = false, $exceptionMessage = null, $callable = null)
     {
         self::$testedWithMethods[$method] = true;
         $obj = static::itemFactory();
-        if ($isException) {
-            $this->expectException('InvalidArgumentException');
+        if ($expectException) {
+            $expect = \is_string($expectException)
+                ? $expectException
+                : 'InvalidArgumentException';
+            $this->expectException($expect);
         }
         if ($exceptionMessage !== null) {
             $this->expectExceptionMessage($exceptionMessage);
@@ -122,11 +125,11 @@ abstract class AbstractTestCaseWith extends TestCase
         $withCases = static::withTestCases();
         foreach ($withCases as $vals) {
             $vals = \array_replace(array(
-                '',
-                array(),
-                false,
-                null,
-                null,
+                '',         // prop  (becomes)
+                array(),    // args
+                false,      // expectException
+                null,       // expectExceptionMessage
+                null,       // callable
             ), $vals);
             $prop = $vals[0];
             $expectException = $vals[2];

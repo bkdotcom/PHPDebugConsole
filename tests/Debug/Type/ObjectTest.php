@@ -28,8 +28,10 @@ use bdk\Test\Debug\Fixture\TestObj;
  * @covers \bdk\Debug\Dump\Base
  * @covers \bdk\Debug\Dump\BaseValue
  * @covers \bdk\Debug\Dump\Html
+ * @covers \bdk\Debug\Dump\Html\AbstractObjectSection
  * @covers \bdk\Debug\Dump\Html\Helper
  * @covers \bdk\Debug\Dump\Html\HtmlObject
+ * @covers \bdk\Debug\Dump\Html\ObjectCases
  * @covers \bdk\Debug\Dump\Html\ObjectConstants
  * @covers \bdk\Debug\Dump\Html\ObjectMethods
  * @covers \bdk\Debug\Dump\Html\ObjectProperties
@@ -188,11 +190,11 @@ EOD;
                         // constants
                         $expect = PHP_VERSION_ID >= 70100
                             ? '<dt class="constants">constants</dt>' . "\n"
-                                . '<dd class="constant inherited public" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_public">public</span> <span class="t_identifier" title="Inherited description">INHERITED</span> <span class="t_operator">=</span> <span class="t_string">defined in TestBase</span></dd>' . "\n"
-                                . '<dd class="constant overrides public" data-declared-prev="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_public">public</span> <span class="t_identifier" title="constant documentation">MY_CONSTANT</span> <span class="t_operator">=</span> <span class="t_string">redefined in Test</span></dd>'
+                                . '<dd class="constant inherited public" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string" title="Inherited description">INHERITED</span> <span class="t_operator">=</span> <span class="t_string">defined in TestBase</span></dd>' . "\n"
+                                . '<dd class="constant overrides public" data-declared-prev="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string" title="constant documentation">MY_CONSTANT</span> <span class="t_operator">=</span> <span class="t_string">redefined in Test</span></dd>'
                             : '<dt class="constants">constants</dt>' . "\n"
-                                . '<dd class="constant public"><span class="t_modifier_public">public</span> <span class="t_identifier">INHERITED</span> <span class="t_operator">=</span> <span class="t_string">defined in TestBase</span></dd>' . "\n"
-                                . '<dd class="constant public"><span class="t_modifier_public">public</span> <span class="t_identifier">MY_CONSTANT</span> <span class="t_operator">=</span> <span class="t_string">redefined in Test</span></dd>';
+                                . '<dd class="constant public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string">INHERITED</span> <span class="t_operator">=</span> <span class="t_string">defined in TestBase</span></dd>' . "\n"
+                                . '<dd class="constant public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string">MY_CONSTANT</span> <span class="t_operator">=</span> <span class="t_string">redefined in Test</span></dd>';
                         self::assertStringContainsString($expect, $str);
 
                         // properties
@@ -480,8 +482,8 @@ EOD;
                     'html' => static function ($html) {
                         $expect = '<dt class="constants">constants</dt>' . "\n"
                             . (PHP_VERSION_ID >= 70100
-                                ? '<dd class="constant overrides public" data-declared-prev="bdk\Test\Debug\Fixture\SomeInterface"><span class="t_modifier_public">public</span> <span class="t_identifier" title="Interface summary">SOME_CONSTANT</span> <span class="t_operator">=</span> <span class="t_string">never change</span></dd>'
-                                : '<dd class="constant public"><span class="t_modifier_public">public</span> <span class="t_identifier">SOME_CONSTANT</span> <span class="t_operator">=</span> <span class="t_string">never change</span></dd>'
+                                ? '<dd class="constant overrides public" data-declared-prev="bdk\Test\Debug\Fixture\SomeInterface"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string" title="Interface summary">SOME_CONSTANT</span> <span class="t_operator">=</span> <span class="t_string">never change</span></dd>'
+                                : '<dd class="constant public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string">SOME_CONSTANT</span> <span class="t_operator">=</span> <span class="t_string">never change</span></dd>'
                             ) . "\n"
                             . '<dt class="properties">properties</dt>' . "\n"
                             . '<dd class="overrides property public" data-declared-prev="bdk\Test\Debug\Fixture\Utility\PhpDocImplements"><span class="t_modifier_public">public</span> <span class="t_type">string</span> <span class="no-quotes t_identifier t_string" title="$someProperty summary: desc">someProperty</span> <span class="t_operator">=</span> <span class="t_string">St. James Place</span></dd>' . "\n"
@@ -919,7 +921,7 @@ EOD;
                             <dd class="attribute"><span class="classname">AllowDynamicProperties</span></dd>'
                         : '') . '
                     <dt class="constants">constants</dt>
-                        <dd class="constant public"><span class="t_modifier_public">public</span> <span class="t_identifier">TWELVE</span> <span class="t_operator">=</span> <span class="t_int">12</span></dd>
+                        <dd class="constant public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string">TWELVE</span> <span class="t_operator">=</span> <span class="t_int">12</span></dd>
                     <dt class="properties">properties</dt>
                         <dd class="property public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string">thing</span> <span class="t_operator">=</span> <span class="t_string">hammer</span></dd>
                         <dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="t_type">string</span> <span class="no-quotes t_identifier t_string">file</span> <span class="t_operator">=</span> <span class="t_string">' . $filepath . '</span></dd>
@@ -1246,7 +1248,7 @@ EOD;
                     // self::assertSame('Attributed & promoted param', $abs['properties']['arg1']['desc']);
                 },
                 'html' => static function ($html) {
-                    $constExpect = '<dd class="constant isFinal public"><span class="t_modifier_public">public</span> <span class="t_modifier_final">final</span> <span class="t_identifier">FINAL_CONST</span> <span class="t_operator">=</span> <span class="t_string">foo</span></dd>';
+                    $constExpect = '<dd class="constant isFinal public"><span class="t_modifier_public">public</span> <span class="t_modifier_final">final</span> <span class="no-quotes t_identifier t_string">FINAL_CONST</span> <span class="t_operator">=</span> <span class="t_string">foo</span></dd>';
                     self::assertStringContainsString($constExpect, $html);
 
                     $propExpect = '<dd class="isPromoted isReadOnly property public"><span class="t_modifier_public">public</span> <span class="t_modifier_readonly">readonly</span> <span class="t_type">string</span> <span class="no-quotes t_identifier t_string">title</span> <span class="t_operator">=</span> <span class="t_string" data-type-more="numeric">42</span></dd>';

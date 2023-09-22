@@ -15,35 +15,13 @@ namespace bdk\Debug\Dump\Html;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
-use bdk\Debug\Dump\Html\Helper;
-use bdk\Debug\Dump\Html\HtmlObject;
-use bdk\Debug\Utility\Html as HtmlUtil;
 
 /**
  * Dump object methods as HTML
  */
-class ObjectMethods
+class ObjectMethods extends AbstractObjectSection
 {
-    protected $dumpObject;
-    protected $valDumper;
-    protected $helper;
-    protected $html;
     protected $opts = array();
-
-    /**
-     * Constructor
-     *
-     * @param HtmlObject $dumpObj Html dumper
-     * @param Helper     $helper  Html dump helpers
-     * @param HtmlUtil   $html    Html methods
-     */
-    public function __construct(HtmlObject $dumpObj, Helper $helper, HtmlUtil $html)
-    {
-        $this->dumpObject = $dumpObj;
-        $this->valDumper = $dumpObj->valDumper;
-        $this->helper = $helper;
-        $this->html = $html;
-    }
 
     /**
      * Dump object methods as html
@@ -54,105 +32,55 @@ class ObjectMethods
      */
     public function dump(Abstraction $abs)
     {
-        if (!($abs['cfgFlags'] & AbstractObject::METHOD_OUTPUT)) {
-            // we're not outputting methods
-            return '';
-        }
-        $str = $this->dumpMethodsLabel($abs);
-        if (!($abs['cfgFlags'] & AbstractObject::METHOD_COLLECT)) {
-            return $str;
-        }
         $this->opts = array(
-            'methodAttributeOutput' => $abs['cfgFlags'] & AbstractObject::METHOD_ATTRIBUTE_OUTPUT,
+            'attributeOutput' => $abs['cfgFlags'] & AbstractObject::METHOD_ATTRIBUTE_OUTPUT,
+            'collect' => $abs['cfgFlags'] & AbstractObject::METHOD_COLLECT,
             'methodDescOutput' => $abs['cfgFlags'] & AbstractObject::METHOD_DESC_OUTPUT,
+            'output' => $abs['cfgFlags'] & AbstractObject::METHOD_OUTPUT,
             'paramAttributeOutput' => $abs['cfgFlags'] & AbstractObject::PARAM_ATTRIBUTE_OUTPUT,
             'phpDocOutput' => $abs['cfgFlags'] & AbstractObject::PHPDOC_OUTPUT,
         );
-        $methods = $abs->sort($abs['methods'], $abs['sort']);
-        $magicMethods = \array_intersect(array('__call', '__callStatic'), \array_keys($methods));
-        $str .= $this->dumpObject->magicMethodInfo($magicMethods);
-        foreach ($methods as $methodName => $info) {
-            $info['isInherited'] = $info['declaredLast'] && $info['declaredLast'] !== $abs['className'];
-            $str .= $this->dumpMethod($methodName, $info) . "\n";
+        if (!$this->opts['output']) {
+            // we're not outputting methods
+            return '';
         }
-        $str = \str_replace(array(
+        $html = '<dt class="methods">' . $this->getLabel($abs) . '</dt>' . "\n";
+        if (!$this->opts['collect']) {
+            return $html;
+        }
+        $magicMethods = \array_intersect(array('__call', '__callStatic'), \array_keys($abs['methods']));
+        $html .= $this->magicMethodInfo($magicMethods);
+        $html .= $this->dumpItems($abs, 'methods', array());
+        return \str_replace(array(
             ' data-deprecated-desc="null"',
             ' data-implements="null"',
             ' <span class="t_type"></span>',
-        ), '', $str);
-        return $str;
+        ), '', $html);
     }
 
     /**
-     * Returns <dt class="methods">methods</dt>
-     *
-     * @param Abstraction $abs Object Abstraction instance
-     *
-     * @return string html fragment
+     * {@inheritDoc}
      */
-    protected function dumpMethodsLabel(Abstraction $abs)
+    protected function dumpItemInner($name, array $info, array $cfg)
     {
-        $label = \count($abs['methods']) > 0
-            ? 'methods'
-            : 'no methods';
-        if (!($abs['cfgFlags'] & AbstractObject::METHOD_COLLECT)) {
-            $label = 'methods <i>not collected</i>';
-        }
-        return '<dt class="methods">' . $label . '</dt>' . "\n";
-    }
-
-    /**
-     * Dump Method
-     *
-     * @param string $methodName method name
-     * @param array  $info       method info
-     *
-     * @return string html fragment
-     */
-    protected function dumpMethod($methodName, $info)
-    {
-        return $this->html->buildTag(
-            'dd',
-            $this->getAttribs($info),
-            $this->dumpModifiers($info) . ' '
-                . $this->dumpName($methodName, $info)
-                . $this->dumpParams($info['params'])
-                . $this->dumpReturnType($info)
-                . ($methodName === '__toString'
-                    ? '<br />' . "\n" . $this->valDumper->dump($info['returnValue'])
-                    : '')
-        );
-    }
-
-    /**
-     * Dump method modifiers
-     *
-     * @param array $info method info
-     *
-     * @return string
-     */
-    protected function dumpModifiers($info)
-    {
-        // phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
-        $modifiers = \array_keys(\array_filter(array(
-            'final' => $info['isFinal'],
-            $info['visibility'] => true,
-            'static' => $info['isStatic'],
-        )));
-        return \implode(' ', \array_map(static function ($modifier) {
-            return '<span class="t_modifier_' . $modifier . '">' . $modifier . '</span>';
-        }, $modifiers));
+        return $this->dumpModifiers($info) . ' '
+            . $this->dumpName($name, $info)
+            . $this->dumpParams($info['params'])
+            . $this->dumpReturnType($info)
+            . ($name === '__toString'
+                ? '<br />' . "\n" . $this->valDumper->dump($info['returnValue'])
+                : '');
     }
 
     /**
      * Dump method name with phpdoc summary & desc
      *
-     * @param string $methodName method name
-     * @param array  $info       method info
+     * @param string $name method name
+     * @param array  $info method info
      *
      * @return string html fragment
      */
-    protected function dumpName($methodName, $info)
+    protected function dumpName($name, $info)
     {
         return $this->html->buildTag(
             'span',
@@ -165,7 +93,7 @@ class ObjectMethods
                             : ''))
                     : '',
             ),
-            $methodName
+            $name
         );
     }
 
@@ -277,38 +205,63 @@ class ObjectMethods
     }
 
     /**
-     * Get html attributes
-     *
-     * @param array $info Abstraction info
-     *
-     * @return array
+     * {@inheritDoc}
      */
-    private function getAttribs(array $info)
+    protected function getAttribs(array $info, array $cfg = array())
     {
-        $overrides = $info['isInherited'] === false && $info['declaredPrev'];
-        return array(
-            'class' => array(
-                $info['visibility'] => true,
-                'inherited' => $info['isInherited'],
-                'isDeprecated' => $info['isDeprecated'],
-                'isFinal' => $info['isFinal'],
-                'isStatic' => $info['isStatic'],
-                'method' => true,
-                'overrides' => $overrides,
-            ),
-            'data-attributes' => $this->opts['methodAttributeOutput']
-                ? ($info['attributes'] ?: null)
-                : null,
-            'data-declared-prev' => $overrides
-                ? $info['declaredPrev']
-                : null,
+        return \array_merge(parent::getAttribs($info, $this->opts), array(
             'data-deprecated-desc' => isset($info['phpDoc']['deprecated'])
                 ? $info['phpDoc']['deprecated'][0]['desc']
                 : null,
             'data-implements' => $info['implements'],
-            'data-inherited-from' => $info['isInherited']
-                ? $info['declaredLast']
-                : null,
-        );
+        ));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    protected function getClasses(array $info)
+    {
+        $visClasses = \array_diff((array) $info['visibility'], array('debug'));
+        $classes = \array_keys(\array_filter(array(
+            'inherited' => $info['isInherited'],
+            'isDeprecated' => $info['isDeprecated'],
+            'isFinal' => $info['isFinal'],
+            'isStatic' => $info['isStatic'],
+            'method' => true,
+            'overrides' => $info['isInherited'] === false && $info['declaredPrev'],
+        )));
+        return \array_merge($classes, $visClasses);
+    }
+
+    /**
+     * Returns <dt class="methods">methods</dt>
+     *
+     * @param Abstraction $abs Object Abstraction instance
+     *
+     * @return string html fragment
+     */
+    protected function getLabel(Abstraction $abs)
+    {
+        $label = \count($abs['methods']) > 0
+            ? 'methods'
+            : 'no methods';
+        if (!($abs['cfgFlags'] & AbstractObject::METHOD_COLLECT)) {
+            $label = 'methods <i>not collected</i>';
+        }
+        return $label;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    protected function getModifiers(array $info)
+    {
+        // phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
+        return \array_keys(\array_filter(array(
+            'final' => $info['isFinal'],
+            $info['visibility'] => true,
+            'static' => $info['isStatic'],
+        )));
     }
 }

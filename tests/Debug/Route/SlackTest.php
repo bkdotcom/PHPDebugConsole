@@ -300,6 +300,18 @@ class SlackTest extends DebugTestFramework
 
         self::$persistErrors = $this->debug->errorHandler->get('errors');
 
+        if (\count($requests) !== ($sent ? 1 : 0)) {
+            var_dump(array(
+                'sent' => $sent,
+                'requests' => \array_map(static function ($request) {
+                    return array(
+                        'body' => (string) $request->getBody(),
+                        'uri' => (string) $request->getUri(),
+                    );
+                }, $requests),
+            ));
+        }
+
         self::assertCount($sent ? 1 : 0, $requests);
     }
 

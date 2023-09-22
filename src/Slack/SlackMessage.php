@@ -63,7 +63,7 @@ class SlackMessage implements JsonSerializable
      *
      * @throws InvalidArgumentException
      */
-    public function __construct($values = array())
+    public function __construct(array $values = array())
     {
         $this->setData($values);
     }
@@ -78,7 +78,7 @@ class SlackMessage implements JsonSerializable
      *
      * @throws BadMethodCallException
      */
-    public function __call($method, $args)
+    public function __call($method, array $args)
     {
         $factoryMethods = array(
             'withActions',
@@ -138,7 +138,7 @@ class SlackMessage implements JsonSerializable
      *
      * @return static
      */
-    public function withData($values)
+    public function withData(array $values)
     {
         $new = clone $this;
         $new->setData($values);
@@ -162,7 +162,7 @@ class SlackMessage implements JsonSerializable
      *    withAttachment(array $attachment)
      *    withAttachment(string $text, array $blocks, array $values)
      *
-     * @param array $attachment New attachment
+     * @param array|string $attachment New attachment
      *
      * @return static
      *
@@ -193,7 +193,7 @@ class SlackMessage implements JsonSerializable
      *
      * @throws OutOfBoundsException
      */
-    public function withAttachments($attachments = array())
+    public function withAttachments(array $attachments = array())
     {
         $new = clone $this;
         $new->data['attachments'] = array();
@@ -210,7 +210,7 @@ class SlackMessage implements JsonSerializable
      *
      * @return static
      */
-    public function withBlock($block = array())
+    public function withBlock(array $block = array())
     {
         $new = clone $this;
         $new->data['blocks'][] = $block;
@@ -224,7 +224,7 @@ class SlackMessage implements JsonSerializable
      *
      * @return static
      */
-    public function withBlocks($blocks = array())
+    public function withBlocks(array $blocks = array())
     {
         return $this->withValue('blocks', $blocks);
     }
@@ -303,6 +303,20 @@ class SlackMessage implements JsonSerializable
     }
 
     /**
+     * Remove null values from array
+     *
+     * @param array $values Input array
+     *
+     * @return array
+     */
+    private static function removeNull(array $values)
+    {
+        return \array_filter($values, static function ($value) {
+            return $value !== null;
+        });
+    }
+
+    /**
      * Set data values
      * Clears all existing values
      *
@@ -312,7 +326,7 @@ class SlackMessage implements JsonSerializable
      *
      * @throws InvalidArgumentException
      */
-    private function setData($values)
+    private function setData(array $values)
     {
         $unknownData = \array_diff_key($values, $this->dataDefault, \array_flip(array('icon')));
         if ($unknownData) {
@@ -348,19 +362,5 @@ class SlackMessage implements JsonSerializable
             : ':' . $icon . ':';
         $this->data[$key] = $val;
         return $this;
-    }
-
-    /**
-     * Remove null values from array
-     *
-     * @param array $values Input array
-     *
-     * @return array
-     */
-    private static function removeNull($values)
-    {
-        return \array_filter($values, static function ($value) {
-            return $value !== null;
-        });
     }
 }

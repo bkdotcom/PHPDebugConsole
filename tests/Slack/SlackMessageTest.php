@@ -8,6 +8,8 @@ use bdk\Slack\SlackMessage;
 use PHPUnit\Framework\TestCase;
 
 /**
+ * @covers \bdk\Slack\AbstractBlockFactory
+ * @covers \bdk\Slack\BlockElementsFactory
  * @covers \bdk\Slack\BlockFactory
  * @covers \bdk\Slack\SlackMessage
  */
@@ -99,6 +101,15 @@ class SlackMessageTest extends TestCase
             'unfurl_links' => false,
             'unfurl_media' => true,
         ], $slackMessage->getData());
+    }
+
+    public function testThrowsExceptionWithTooManyAttachments()
+    {
+        $this->expectException('OutOfBoundsException');
+        $this->expectExceptionMessage('A maximum of 20 message attachments are allowed. 21 provided');
+        $slackMessage = new SlackMessage();
+        $attachment = $slackMessage->getBlockFactory()->attachment('some attachment');
+        $slackMessage = $slackMessage->withAttachments(\array_fill(0, 21, $attachment));
     }
 
     public function testWithBlock()

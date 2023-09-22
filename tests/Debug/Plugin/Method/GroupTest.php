@@ -27,6 +27,7 @@ function myFunctionThatCallsGroup()
  * @covers \bdk\Debug\Dump\Html
  * @covers \bdk\Debug\Dump\Text
  * @covers \bdk\Debug\Plugin\Method\Group
+ * @covers \bdk\Debug\Plugin\Method\GroupCleanup
  * @covers \bdk\Debug\Plugin\Method\GroupStack
  * @covers \bdk\Debug\Route\Firephp
  * @covers \bdk\Debug\Route\Script
@@ -980,10 +981,13 @@ EOD;
     {
         self::assertSame(array(
             Debug::EVENT_CUSTOM_METHOD => 'onCustomMethod',
+            Debug::EVENT_PLUGIN_INIT => 'onPluginInit',
+        ), $this->debug->getPlugin('methodGroup')->getSubscriptions());
+        self::assertSame(array(
             Debug::EVENT_OUTPUT => array('onOutput', PHP_INT_MAX),
             Debug::EVENT_PLUGIN_INIT => 'onPluginInit',
             EventManager::EVENT_PHP_SHUTDOWN => array('onShutdown', PHP_INT_MAX),
-        ), $this->debug->getPlugin('methodGroup')->getSubscriptions());
+        ), $this->debug->getPlugin('groupCleanup')->getSubscriptions());
     }
 
     public function testOnOutput()
@@ -992,7 +996,7 @@ EOD;
 
         // test that subchannel's doesn't process data if ('isTarget') isn't passed in event
         $someChannel = $this->debug->getChannel('bob');
-        $this->debug->getPlugin('methodGroup')->onOutput(new Event($someChannel));
+        $this->debug->getPlugin('groupCleanup')->onOutput(new Event($someChannel));
         self::assertCount(1, $someChannel->data->get('log'));
 
         $this->debug->output();

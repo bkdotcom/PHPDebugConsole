@@ -13,6 +13,7 @@
 namespace bdk\Debug\Abstraction;
 
 use bdk\Debug;
+use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use ReflectionClass;
 use ReflectionClassConstant;
@@ -165,7 +166,7 @@ class AbstractObjectConstants extends AbstractObjectInheritable
             'isFinal' => $refCase->isFinal(),
             'value' => $refCase instanceof ReflectionEnumBackedCase
                 ? $refCase->getBackingValue()
-                : null,
+                : Abstracter::UNDEFINED,
             'visibility' => $this->helper->getVisibility($refCase),
         );
     }

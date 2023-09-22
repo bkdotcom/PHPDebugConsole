@@ -68,7 +68,6 @@ class Alert implements SubscriberInterface
                 : $this->debug->rootInstance->getMethodDefaultArgs(__METHOD__),
             array('level', 'dismissible')
         );
-        $logEntry['args'] = \array_values($logEntry['args']);
         $this->level($logEntry);
         $this->debug->data->set('logDest', 'alerts');
         $this->debug->log($logEntry);

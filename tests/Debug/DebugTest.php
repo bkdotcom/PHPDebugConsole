@@ -197,7 +197,7 @@ class DebugTest extends DebugTestFramework
         $subscribersExpect = array(
             array('bdk\ErrorHandler', 'onShutdown'),
             array('bdk\Debug\Plugin\InternalEvents', 'onShutdownHigh'),
-            array('bdk\Debug\Plugin\Method\Group', 'onShutdown'),
+            array('bdk\Debug\Plugin\Method\GroupCleanup', 'onShutdown'),
             array('bdk\Debug\Plugin\Runtime', 'onShutdown'),
             array('bdk\Debug\Plugin\InternalEvents', 'onShutdownHigh2'),
             array('bdk\Debug\Plugin\InternalEvents', 'onShutdownLow'),

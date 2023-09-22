@@ -27,6 +27,15 @@ class TimeTest extends DebugTestFramework
 
         self::assertEmpty($this->debug->data->get('log'));
         self::assertEmpty($this->debug->getRoute('wamp')->wamp->messages);
+
+        self::assertSame($this->debug, $this->debug->time('π time', 3.14));
+        self::assertLogEntries(array(
+            array(
+                'method' => 'time',
+                'args' => array('π time: 3.14 sec'),
+                'meta' => array(),
+            ),
+        ), $this->getLogEntries());
     }
 
     /**
@@ -180,6 +189,15 @@ class TimeTest extends DebugTestFramework
 
         $this->testMethod(
             'timeGet',
+            array(false),
+            array(
+                'notLogged' => true,  // not logged because only param treated as $log param
+                'return' => '%f',
+            )
+        );
+
+        $this->testMethod(
+            'timeGet',
             array(),
             array(
                 'custom' => function () {
@@ -256,7 +274,7 @@ class TimeTest extends DebugTestFramework
                 true,  // return value
             ),
             array(
-                'notLogged' => true,  // not logged because 2nd param = true
+                'notLogged' => true,  // not logged because 2nd param = false
                 'return' => '%f',
                 'wamp' => false,
             )
@@ -293,6 +311,26 @@ class TimeTest extends DebugTestFramework
                 'script' => 'console.log("blahmy labelblah%f %ssblah");',
                 'text' => '⏱ blahmy labelblah%f %ssblah',
                 // 'wamp' => @todo
+            )
+        );
+
+        $this->testMethod(
+            'timeGet',
+            array(
+                'no such label',
+                // $this->debug->meta('silent'),
+            ),
+            array(
+                'entry' => array(
+                    'method' => 'timeGet',
+                    'args' => array('Timer \'no such label\' does not exist'),
+                    'meta' => array(
+                        'return' => false,
+                        'template' => '%label: %time',
+                    ),
+                ),
+                // 'notLogged' => true,
+                // 'wamp' => false,
             )
         );
 
@@ -405,19 +443,12 @@ class TimeTest extends DebugTestFramework
 
         $this->testMethod(
             'timeLog',
-            array('bogus'),
+            array(
+                'bogus',
+                $this->debug->meta('silent'),
+            ),
             array(
                 /*
-                'entry' => function (LogEntry $logEntry) {
-                    $logEntry = $this->helper->logEntryToArray($logEntry);
-                    $expectFormat = json_encode(array(
-                        'timeLog',
-                        array('Timer \'bogus\' does not exist'),
-                        array(),
-                    ));
-                    self::assertStringMatchesFormat($expectFormat, json_encode($logEntry));
-                },
-                */
                 'entry' => \json_encode(array(
                     'method' => 'timeLog',
                     'args' => array('Timer \'bogus\' does not exist'),
@@ -435,6 +466,9 @@ class TimeTest extends DebugTestFramework
                 'script' => 'console.log("Timer \'bogus\' does not exist");',
                 'text' => '⏱ Timer \'bogus\' does not exist',
                 // 'wamp' => @todo
+                */
+                'notLogged' => true,
+                'wamp' => false,
             )
         );
     }

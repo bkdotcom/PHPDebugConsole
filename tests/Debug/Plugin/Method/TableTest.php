@@ -15,9 +15,9 @@ use ReflectionMethod;
  *
  * @covers \bdk\Debug\Abstraction\Abstracter
  * @covers \bdk\Debug\Abstraction\AbstractObject
- * @covers \bdk\Debug\Abstraction\AbstractObjectConstants
- * @covers \bdk\Debug\Abstraction\AbstractObjectProperties
- * @covers \bdk\Debug\Abstraction\AbstractObjectMethods
+ * @covers \bdk\Debug\Abstraction\Object\Constants
+ * @covers \bdk\Debug\Abstraction\Object\Properties
+ * @covers \bdk\Debug\Abstraction\Object\Methods
  * @covers \bdk\Debug\Dump\Base
  * @covers \bdk\Debug\Dump\Html
  * @covers \bdk\Debug\Dump\Html\Helper

@@ -16,9 +16,9 @@ use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
-use bdk\Debug\Abstraction\AbstractObjectMethods;
-use bdk\Debug\Abstraction\AbstractObjectProperties;
-use bdk\Debug\Abstraction\ObjectAbstraction;
+use bdk\Debug\Abstraction\Object\Abstraction as ObjectAbstraction;
+use bdk\Debug\Abstraction\Object\Methods;
+use bdk\Debug\Abstraction\Object\Properties;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Utility\Php;
 use bdk\Debug\Utility\StringUtil;
@@ -99,7 +99,7 @@ class SerializeLog
         if ($str) {
             $data = Php::unserializeSafe($str, array(
                 'bdk\\Debug\\Abstraction\\Abstraction',
-                'bdk\\Debug\\Abstraction\\ObjectAbstraction',
+                'bdk\\Debug\\Abstraction\\Object\\Abstraction',
                 'bdk\\PubSub\\ValueStore',
             ));
         }
@@ -206,7 +206,7 @@ class SerializeLog
             }
             $val['properties'] = self::importLegacy($val['properties']);
             $val = self::importLegacyObj($val);
-            $valueStore = self::$debug->abstracter->abstractObject->class->getValueStoreDefault();
+            $valueStore = self::$debug->abstracter->abstractObject->definition->getValueStoreDefault();
             return new ObjectAbstraction($valueStore, $val);
         }, $vals);
     }
@@ -221,11 +221,11 @@ class SerializeLog
     private static function importLegacyObj(array $absValues)
     {
         $absValues = AbstractObject::buildObjValues($absValues);
-        $baseMethodInfo = AbstractObjectMethods::buildMethodValues();
+        $baseMethodInfo = Methods::buildMethodValues();
         foreach ($absValues['methods'] as $name => $meth) {
             $absValues['methods'][$name] = \array_merge($baseMethodInfo, $meth);
         }
-        $basePropInfo = AbstractObjectProperties::buildPropValues();
+        $basePropInfo = Properties::buildPropValues();
         foreach ($absValues['properties'] as $name => $prop) {
             $absValues['properties'][$name] = \array_merge($basePropInfo, $prop);
         }

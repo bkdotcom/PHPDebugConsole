@@ -13,7 +13,7 @@
 namespace bdk\Debug\Dump\Html;
 
 use bdk\Debug\Abstraction\Abstracter;
-use bdk\Debug\Abstraction\ObjectAbstraction;
+use bdk\Debug\Abstraction\Object\Abstraction as ObjectAbstraction;
 use bdk\Debug\Dump\Html\Helper;
 use bdk\Debug\Dump\Html\Value as ValDumper;
 use bdk\Debug\Utility\Html as HtmlUtil;

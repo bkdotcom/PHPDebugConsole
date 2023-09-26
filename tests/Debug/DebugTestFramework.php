@@ -77,33 +77,9 @@ class DebugTestFramework extends DOMTestCase
         */
 
         $refProperties = &$this->getSharedVar('reflectionProperties');
-        if (!isset($refProperties['inShutdown'])) {
-            $refProp = new \ReflectionProperty('bdk\\Debug\\Plugin\\Method\\GroupCleanup', 'inShutdown');
-            $refProp->setAccessible(true);
-            $refProperties['inShutdown'] = $refProp;
-        }
-        if (!isset($refProperties['groupStack'])) {
-            $refProp = new \ReflectionProperty('bdk\\Debug\\Plugin\\Method\\Group', 'groupStack');
-            $refProp->setAccessible(true);
-            $refProperties['groupStack'] = $refProp->getValue($this->debug->getPlugin('methodGroup'));
-        }
-        if (!isset($refProperties['groupPriorityStack'])) {
-            $refProp = new \ReflectionProperty('bdk\\Debug\\Plugin\\Method\\GroupStack', 'priorityStack');
-            $refProp->setAccessible(true);
-            $refProperties['groupPriorityStack'] = $refProp;
-        }
-        if (!isset($refProperties['groupStacks'])) {
-            $refProp = new \ReflectionProperty('bdk\\Debug\\Plugin\\Method\\GroupStack', 'groupStacks');
-            $refProp->setAccessible(true);
-            $refProperties['groupStacks'] = $refProp;
-        }
-        if (!isset($refProperties['textDepth'])) {
-            $refProp = new \ReflectionProperty($this->debug->getDump('text'), 'depth');
-            $refProp->setAccessible(true);
-            $refProperties['textDepth'] = $refProp;
-        }
 
         $refProperties['inShutdown']->setValue($this->debug->getPlugin('groupCleanup'), false);
+        $refProperties['subscriberStack']->setValue($this->debug->eventManager, array());
         $refProperties['textDepth']->setValue($this->debug->getDump('text'), 0);
 
         /*
@@ -339,7 +315,7 @@ class DebugTestFramework extends DOMTestCase
                 $message = $test . ' has failed'
                     . ' - ' . $file . ':' . $line;
                 if ($test === 'entry') {
-                    \bdk\Debug::varDump('blah', array(
+                    \bdk\Debug::varDump(array(
                         'expect' => $expect,
                         'actual' => $this->helper->logEntryToArray($logEntryTemp),
                     ));
@@ -359,9 +335,25 @@ class DebugTestFramework extends DOMTestCase
     protected function &getSharedVar($key)
     {
         static $values = array(
+            'groupStack' => null,
             'reflectionMethods' => array(),
             'reflectionProperties' => array(),
         );
+        if (empty($values['groupStack'])) {
+            $values['groupStack'] = \bdk\Debug\Utility\Reflection::propGet(\bdk\Debug::getPlugin('methodGroup'), 'groupStack');
+        }
+        if (empty($values['reflectionProperties'])) {
+            $values['reflectionProperties'] = array(
+                'groupPriorityStack' => new \ReflectionProperty('bdk\\Debug\\Plugin\\Method\\GroupStack', 'priorityStack'),
+                'groupStacks' => new \ReflectionProperty('bdk\\Debug\\Plugin\\Method\\GroupStack', 'groupStacks'),
+                'inShutdown' => new \ReflectionProperty('bdk\\Debug\\Plugin\\Method\\GroupCleanup', 'inShutdown'),
+                'subscriberStack' => new \ReflectionProperty('bdk\\PubSub\\Manager', 'subscriberStack'),
+                'textDepth' => new \ReflectionProperty($this->debug->getDump('text'), 'depth'),
+            );
+            \array_walk($values['reflectionProperties'], function ($refProp) {
+                $refProp->setAccessible(true);
+            });
+        }
         if (!isset($values[$key])) {
             $values[$key] = null;
         }
@@ -527,7 +519,7 @@ class DebugTestFramework extends DOMTestCase
         );
         \bdk\Debug\Utility\Reflection::propSet($this->debug->getPlugin('channel'), 'channels', $channels);
         \bdk\Debug\Utility\Reflection::propSet($this->debug->getPlugin('methodReqRes'), 'serverParams', array());
-        \bdk\Debug\Utility\Reflection::propSet($this->debug->abstracter->abstractObject->class, 'default', null);
+        \bdk\Debug\Utility\Reflection::propSet($this->debug->abstracter->abstractObject->definition, 'default', null);
 
         // make sure we still have wamp plugin registered
         $wamp = $this->debug->getRoute('wamp');

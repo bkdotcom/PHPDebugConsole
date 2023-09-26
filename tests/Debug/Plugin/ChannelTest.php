@@ -402,7 +402,7 @@ EOD;
             'logSummary',
         )));
         $data = $this->helper->deObjectifyData($data, false);
-        $groupStack = $this->getSharedVar('reflectionProperties')['groupStack'];
+        $groupStack = $this->getSharedVar('groupStack');
         $data['groupPriorityStack'] = $this->getSharedVar('reflectionProperties')['groupPriorityStack']->getValue($groupStack);
         $data['groupStacks'] = \array_map(static function ($stack) {
             foreach ($stack as $k2 => $info) {

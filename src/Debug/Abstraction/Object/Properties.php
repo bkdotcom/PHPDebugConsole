@@ -10,18 +10,19 @@
  * @version   v3.0
  */
 
-namespace bdk\Debug\Abstraction;
+namespace bdk\Debug\Abstraction\Object;
 
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
+use bdk\Debug\Abstraction\Object\PropertiesPhpDoc;
 use ReflectionClass;
 use ReflectionProperty;
 
 /**
  * Get object property info
  */
-class AbstractObjectProperties extends AbstractObjectInheritable
+class Properties extends Inheritable
 {
     private static $basePropInfo = array(
         'attributes' => array(),
@@ -44,57 +45,18 @@ class AbstractObjectProperties extends AbstractObjectInheritable
                                         //   may also be an array (ie: ['private', 'magic-read'])
     );
 
-    private $domNodeProps = array(
-        'attributes' => 'DOMNamedNodeMap',
-        'childNodes' => 'DOMNodeList',
-        'firstChild' => 'DOMNode',
-        'lastChild' => 'DOMNode',
-        'localName' => 'string',
-        'namespaceURI' => 'string',
-        'nextSibling' => 'DOMNode', // var_dump() doesn't include ¯\_(ツ)_/¯
-        'nodeName' => 'string',
-        'nodeType' => 'int',
-        'nodeValue' => 'string',
-        'ownerDocument' => 'DOMDocument',
-        'parentNode' => 'DOMNode',
-        'prefix' => 'string',
-        'previousSibling' => 'DOMNode',
-        'textContent' => 'string',
-    );
+    private $phpDoc;
 
-    private $domDocumentProps = array(
-        'actualEncoding' => 'string',
-        'baseURI' => 'string',
-        'config' => 'DOMConfiguration',
-        'doctype' => 'DOMDocumentType',
-        'documentElement' => 'DOMElement',
-        'documentURI' => 'string',
-        'encoding' => 'string',
-        'formatOutput' => 'bool',
-        'implementation' => 'DOMImplementation',
-        'preserveWhiteSpace' => 'bool',
-        'recover' => 'bool',
-        'resolveExternals' => 'bool',
-        'standalone' => 'bool',
-        'strictErrorChecking' => 'bool',
-        'substituteEntities' => 'bool',
-        'validateOnParse' => 'bool',
-        'version' => 'string',
-        'xmlEncoding' => 'string',
-        'xmlStandalone' => 'bool',
-        'xmlVersion' => 'string',
-    );
-
-    private $domElementProps = array(
-        'schemaTypeInfo' => 'bool',
-        'tagName' => 'string',
-    );
-
-    private $magicPhpDocTags = array(
-        'property' => 'magic',
-        'property-read' => 'magic-read',
-        'property-write' => 'magic-write',
-    );
+    /**
+     * Constructor
+     *
+     * @param AbstractObject $abstractObject Object abstracter
+     */
+    public function __construct(AbstractObject $abstractObject)
+    {
+        parent::__construct($abstractObject);
+        $this->phpDoc = new PropertiesPhpDoc($abstractObject->helper);
+    }
 
     /**
      * Add property instance info/values to abstraction
@@ -111,7 +73,6 @@ class AbstractObjectProperties extends AbstractObjectInheritable
         $this->addValues($abs);
         $obj = $abs->getSubject();
         if (\is_object($obj)) {
-            $this->addDom($abs);
             $this->addDebug($abs); // use __debugInfo() values if useDebugInfo' && method exists
         }
         $this->crate($abs);
@@ -127,7 +88,7 @@ class AbstractObjectProperties extends AbstractObjectInheritable
     public function addClass(Abstraction $abs)
     {
         $this->addViaRef($abs);
-        $this->addViaPhpDoc($abs); // magic properties documented via phpDoc
+        $this->phpDoc->addViaPhpDoc($abs); // magic properties documented via phpDoc
         $defaultValues = $abs['reflector']->getDefaultProperties();
         $properties = $abs['properties'];
         foreach ($defaultValues as $name => $value) {
@@ -217,72 +178,6 @@ class AbstractObjectProperties extends AbstractObjectInheritable
     }
 
     /**
-     * Add properties to Dom* abstraction
-     *
-     * DOM* properties are invisible to reflection
-     * https://bugs.php.net/bug.php?id=48527
-     *
-     * @param Abstraction $abs Object Abstraction instance
-     *
-     * @return void
-     */
-    private function addDom(Abstraction $abs)
-    {
-        $obj = $abs->getSubject();
-        if ($abs['properties']) {
-            return;
-        }
-        if ($this->isDomObj($obj) === false) {
-            return;
-        }
-        // for php < 8.1
-        $props = $this->addDomGetProps($obj);
-        foreach ($props as $propName => $type) {
-            $val = $obj->{$propName};
-            if (!$type) {
-                // function array dereferencing = php 5.4
-                $type = $this->abstracter->getType($val)[0];
-            }
-            $abs['properties'][$propName] = static::buildPropValues(array(
-                'type' => $type,
-                'value' => \is_object($val)
-                    ? Abstracter::NOT_INSPECTED
-                    : $val,
-            ));
-        }
-    }
-
-    /**
-     * use print_r to get the property names
-     * get_object_vars() doesn't work
-     * var_dump may be overridden by xdebug...  and if xdebug v3 unable to disable at runtime
-     *
-     * PHP < 8.1
-     *
-     * @param object $obj DOMXXX instance
-     *
-     * @return array
-     *
-     * @SuppressWarnings(PHPMD.DevelopmentCodeFragment)
-     */
-    private function addDomGetProps($obj)
-    {
-        $dump = \print_r($obj, true);
-        $matches = array();
-        \preg_match_all('/^\s+\[(.+?)\] => /m', $dump, $matches);
-        $props = \array_fill_keys($matches[1], null);
-        if ($obj instanceof \DOMNode) {
-            $props = \array_merge($props, $this->domNodeProps);
-            if ($obj instanceof \DOMDocument) {
-                $props = \array_merge($props, $this->domDocumentProps);
-            } elseif ($obj instanceof \DOMElement) {
-                $props = \array_merge($props, $this->domElementProps);
-            }
-        }
-        return $props;
-    }
-
-    /**
      * Add property values
      *
      * @param Abstraction $abs Object Abstraction instance
@@ -308,7 +203,6 @@ class AbstractObjectProperties extends AbstractObjectInheritable
                     : $this->buildViaRef($abs, $refProperty);
                 if ($abs['isAnonymous'] && $refProperty->isDefault() && $className === $abs['className']) {
                     // Necessary for anonymous classes
-                    // $propInfo['declaredLast'] = $className;
                     $propInfo = $this->updateDeclarationVals(
                         $propInfo,
                         $this->helper->getClassName($refProperty->getDeclaringClass()),
@@ -358,81 +252,6 @@ class AbstractObjectProperties extends AbstractObjectInheritable
     }
 
     /**
-     * "Magic" properties may be defined in a class' doc-block
-     * If so... move this information to the properties array
-     *
-     * @param Abstraction $abs Object Abstraction instance
-     *
-     * @return void
-     *
-     * @see http://docs.phpdoc.org/references/phpdoc/tags/property.html
-     */
-    private function addViaPhpDoc(Abstraction $abs)
-    {
-        $declaredLast = $abs['className'];
-        $phpDoc = $this->helper->getPhpDoc($abs['reflector'], $abs['fullyQualifyPhpDocType']);
-        $haveMagic = \array_intersect_key($phpDoc, $this->magicPhpDocTags);
-        if (!$haveMagic && $abs['reflector']->hasMethod('__get')) {
-            // phpDoc doesn't contain any @property tags
-            // we've got __get method:  check if parent classes have @property tags
-            $declaredLast = $this->addViaPhpDocInherit($abs);
-            $haveMagic = $declaredLast !== $abs['className'];
-        }
-        if ($haveMagic) {
-            $this->addViaPhpDocIter($abs, $declaredLast);
-        }
-    }
-
-    /**
-     * Inspect inherited classes until we find properties defined in PhpDoc
-     *
-     * @param Abstraction $abs Object Abstraction instance
-     *
-     * @return string|null class where found
-     */
-    private function addViaPhpDocInherit(Abstraction $abs)
-    {
-        $declaredLast = $abs['className'];
-        $reflector = $abs['reflector'];
-        while ($reflector = $reflector->getParentClass()) {
-            $parsed = $this->helper->getPhpDoc($reflector, $abs['fullyQualifyPhpDocType']);
-            $tagIntersect = \array_intersect_key($parsed, $this->magicPhpDocTags);
-            if ($tagIntersect === array()) {
-                continue;
-            }
-            $declaredLast = $reflector->getName();
-            $abs['phpDoc'] = \array_merge(
-                $abs['phpDoc'],
-                $tagIntersect
-            );
-            break;
-        }
-        return $declaredLast;
-    }
-
-    /**
-     * Iterate over PhpDoc's magic properties & add to abstrction
-     *
-     * @param Abstraction $abs          Object Abstraction instance
-     * @param string|null $declaredLast Where the magic properties were found
-     *
-     * @return void
-     */
-    private function addViaPhpDocIter(Abstraction $abs, $declaredLast)
-    {
-        $properties = $abs['properties'];
-        $tags = \array_intersect_key($this->magicPhpDocTags, $abs['phpDoc']);
-        foreach ($tags as $tag => $vis) {
-            foreach ($abs['phpDoc'][$tag] as $phpDocProp) {
-                $name = $phpDocProp['name'];
-                $properties[$name] = $this->buildViaPhpDoc($abs, $phpDocProp, $declaredLast, $vis);
-            }
-            unset($abs['phpDoc'][$tag]);
-        }
-        $abs['properties'] = $properties;
-    }
-
-    /**
      * Adds properties to abstraction via reflection
      *
      * @param Abstraction $abs Object Abstraction instance
@@ -467,35 +286,6 @@ class AbstractObjectProperties extends AbstractObjectInheritable
         });
         \ksort($properties);
         $abs['properties'] = $properties;
-    }
-
-    /**
-     * Build property info from parsed PhpDoc values
-     *
-     * @param Abstraction $abs          Object Abstraction instance
-     * @param array       $phpDocProp   parsed property docblock tag
-     * @param string      $declaredLast className
-     * @param string      $vis          prop visibility
-     *
-     * @return array
-     */
-    private function buildViaPhpDoc(Abstraction $abs, $phpDocProp, $declaredLast, $vis)
-    {
-        $name = $phpDocProp['name'];
-        $existing = isset($abs['properties'][$name])
-            ? $abs['properties'][$name]
-            : null;
-        return \array_merge(
-            $existing ?: self::$basePropInfo,
-            array(
-                'declaredLast' => $declaredLast,
-                'desc' => $phpDocProp['desc'],
-                'type' => $phpDocProp['type'],
-                'visibility' => $existing
-                    ? array($vis, $existing['visibility']) // we want "magic" visibility first
-                    : $vis,
-            )
-        );
     }
 
     /**
@@ -568,17 +358,5 @@ class AbstractObjectProperties extends AbstractObjectInheritable
         return PHP_VERSION_ID >= 70400
             ? $this->helper->getTypeString($refProperty->getType())
             : null;
-    }
-
-    /**
-     * Check if a Dom* class  where properties aren't avail to reflection
-     *
-     * @param object $obj object to check
-     *
-     * @return bool
-     */
-    private function isDomObj($obj)
-    {
-        return $obj instanceof \DOMNode || $obj instanceof \DOMNodeList;
     }
 }

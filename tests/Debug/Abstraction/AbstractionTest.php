@@ -4,7 +4,7 @@ namespace bdk\Test\Debug\Abstraction;
 
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
-use bdk\Debug\Abstraction\ObjectAbstraction;
+use bdk\Debug\Abstraction\Object\Abstraction as ObjectAbstraction;
 use bdk\PubSub\ValueStore;
 use PHPUnit\Framework\TestCase;
 

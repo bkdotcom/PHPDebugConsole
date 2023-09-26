@@ -10,12 +10,12 @@
  * @version   v3.0
  */
 
-namespace bdk\Debug\Abstraction;
+namespace bdk\Debug\Abstraction\Object;
 
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
-use bdk\Debug\Abstraction\AbstractObjectMethodParams;
+use bdk\Debug\Abstraction\Object\MethodParams;
 use Exception;
 use ReflectionClass;
 use ReflectionMethod;
@@ -23,7 +23,7 @@ use ReflectionMethod;
 /**
  * Get object method info
  */
-class AbstractObjectMethods extends AbstractObjectInheritable
+class Methods extends Inheritable
 {
     protected $params;
 
@@ -57,7 +57,7 @@ class AbstractObjectMethods extends AbstractObjectInheritable
     public function __construct(AbstractObject $abstractObject)
     {
         parent::__construct($abstractObject);
-        $this->params = new AbstractObjectMethodParams($abstractObject);
+        $this->params = new MethodParams($abstractObject);
     }
 
     /**

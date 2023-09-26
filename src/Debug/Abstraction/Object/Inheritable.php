@@ -10,14 +10,15 @@
  * @version   v3.1
  */
 
-namespace bdk\Debug\Abstraction;
+namespace bdk\Debug\Abstraction\Object;
 
+use bdk\Debug\Abstraction\AbstractObject;
 use ReflectionClass;
 
 /**
  * Base class for collecting constants, properties, & methods
  */
-abstract class AbstractObjectInheritable
+abstract class Inheritable
 {
     /** @var Abstracter */
     protected $abstracter;

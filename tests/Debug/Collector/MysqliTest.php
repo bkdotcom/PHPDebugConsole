@@ -12,7 +12,7 @@ use bdk\Test\Debug\DebugTestFramework;
  * Test Mysqli debug collector
  *
  * @covers \bdk\Debug\Abstraction\AbstractObject
- * @covers \bdk\Debug\Abstraction\AbstractObjectSubscriber
+ * @covers \bdk\Debug\Abstraction\Object\Subscriber
  * @covers \bdk\Debug\Collector\MySqli
  * @covers \bdk\Debug\Collector\MySqli\MySqliStmt
  * @covers \bdk\Debug\Collector\StatementInfo

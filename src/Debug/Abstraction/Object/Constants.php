@@ -10,11 +10,12 @@
  * @version   v3.0
  */
 
-namespace bdk\Debug\Abstraction;
+namespace bdk\Debug\Abstraction\Object;
 
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Abstraction\AbstractObject;
 use ReflectionClass;
 use ReflectionClassConstant;
 use ReflectionEnumBackedCase;
@@ -24,7 +25,7 @@ use UnitEnum;
 /**
  * Get object constant info
  */
-class AbstractObjectConstants extends AbstractObjectInheritable
+class Constants extends Inheritable
 {
     protected $abs;
 

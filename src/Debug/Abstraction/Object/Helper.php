@@ -10,7 +10,7 @@
  * @version   v3.0
  */
 
-namespace bdk\Debug\Abstraction;
+namespace bdk\Debug\Abstraction\Object;
 
 use bdk\Debug\Utility\Php as PhpUtil;
 use bdk\Debug\Utility\PhpDoc;
@@ -23,7 +23,7 @@ use Reflector;
 /**
  * Get object method info
  */
-class AbstractObjectHelper
+class Helper
 {
     private $phpDoc;
 

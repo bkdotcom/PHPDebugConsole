@@ -10,30 +10,31 @@
  * @version   v3.1
  */
 
-namespace bdk\Debug\Abstraction;
+namespace bdk\Debug\Abstraction\Object;
 
-use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Abstraction\Abstracter;
+use bdk\Debug\Abstraction\Abstraction as BaseAbstraction;
 use bdk\Debug\Utility\ArrayUtil;
 use bdk\PubSub\ValueStore;
 
 /**
  * Object Abstraction
  */
-class ObjectAbstraction extends Abstraction
+class Abstraction extends BaseAbstraction
 {
-    private $class;
+    private $definition;
 
     private $sortableValues = array('attributes', 'cases', 'constants', 'methods', 'properties');
 
     /**
      * Constructor
      *
-     * @param ValueStore $class  class values
-     * @param array      $values abtraction values
+     * @param ValueStore $definition class definition values
+     * @param array      $values     abtraction values
      */
-    public function __construct(ValueStore $class, $values = array())
+    public function __construct(ValueStore $definition, $values = array())
     {
-        $this->class = $class;
+        $this->definition = $definition;
         parent::__construct(Abstracter::TYPE_OBJECT, $values);
     }
 
@@ -42,7 +43,7 @@ class ObjectAbstraction extends Abstraction
      */
     public function __serialize()
     {
-        return $this->getInstanceValues() + array('class' => $this->class);
+        return $this->getInstanceValues() + array('classDefinition' => $this->definition);
     }
 
     /**
@@ -66,8 +67,8 @@ class ObjectAbstraction extends Abstraction
      */
     public function __unserialize($data)
     {
-        $this->class = $data['class'];
-        unset($data['class']);
+        $this->definition = $data['classDefinition'];
+        unset($data['classDefinition']);
         $this->values = $data;
     }
 
@@ -80,19 +81,8 @@ class ObjectAbstraction extends Abstraction
     public function jsonSerialize()
     {
         return $this->getInstanceValues() + array(
-            'classDefinition' => $this->class['className'],
+            'classDefinition' => $this->definition['className'],
             'debug' => Abstracter::ABSTRACTION,
-        );
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getValues()
-    {
-        return \array_replace_recursive(
-            $this->getClassValues(),
-            $this->values
         );
     }
 
@@ -101,9 +91,20 @@ class ObjectAbstraction extends Abstraction
      *
      * @return array
      */
-    public function getClassValues()
+    public function getDefinitionValues()
     {
-        return $this->class->getValues();
+        return $this->definition->getValues();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getValues()
+    {
+        return \array_replace_recursive(
+            $this->getDefinitionValues(),
+            $this->values
+        );
     }
 
     /**
@@ -115,7 +116,7 @@ class ObjectAbstraction extends Abstraction
     {
         return ArrayUtil::diffAssocRecursive(
             $this->values,
-            $this->getClassValues()
+            $this->getDefinitionValues()
         );
     }
 
@@ -169,7 +170,7 @@ class ObjectAbstraction extends Abstraction
         if (\array_key_exists($key, $this->values)) {
             return $this->values[$key] !== null;
         }
-        return isset($this->class[$key]);
+        return isset($this->definition[$key]);
     }
 
     /**
@@ -198,7 +199,7 @@ class ObjectAbstraction extends Abstraction
         $classVal = \in_array($key, $this->sortableValues, true)
             && ($this->values['isRecursion'] || $this->values['isExcluded'])
                 ? array() // don't inherit
-                : $this->class[$key];
+                : $this->definition[$key];
         if ($value !== null) {
             return \is_array($classVal)
                 ? \array_replace_recursive($classVal, $value)

@@ -11,14 +11,16 @@ use bdk\Test\Debug\DebugTestFramework;
  * @covers \bdk\Debug\Abstraction\Abstracter
  * @covers \bdk\Debug\Abstraction\AbstractArray
  * @covers \bdk\Debug\Abstraction\AbstractObject
- * @covers \bdk\Debug\Abstraction\AbstractObjectClass
- * @covers \bdk\Debug\Abstraction\AbstractObjectConstants
- * @covers \bdk\Debug\Abstraction\AbstractObjectHelper
- * @covers \bdk\Debug\Abstraction\AbstractObjectMethodParams
- * @covers \bdk\Debug\Abstraction\AbstractObjectMethods
- * @covers \bdk\Debug\Abstraction\AbstractObjectProperties
- * @covers \bdk\Debug\Abstraction\AbstractObjectSubscriber
  * @covers \bdk\Debug\Abstraction\AbstractString
+ * @covers \bdk\Debug\Abstraction\Object\Constants
+ * @covers \bdk\Debug\Abstraction\Object\Definition
+ * @covers \bdk\Debug\Abstraction\Object\Helper
+ * @covers \bdk\Debug\Abstraction\Object\MethodParams
+ * @covers \bdk\Debug\Abstraction\Object\Methods
+ * @covers \bdk\Debug\Abstraction\Object\Properties
+ * @covers \bdk\Debug\Abstraction\Object\PropertiesDom
+ * @covers \bdk\Debug\Abstraction\Object\PropertiesPhpDoc
+ * @covers \bdk\Debug\Abstraction\Object\Subscriber
  * @covers \bdk\Debug\Dump\Html
  * @covers \bdk\Debug\Dump\Html\Helper
  * @covers \bdk\Debug\Dump\Html\HtmlObject

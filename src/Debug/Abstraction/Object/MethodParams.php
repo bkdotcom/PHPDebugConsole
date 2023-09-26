@@ -10,7 +10,7 @@
  * @version   v3.0
  */
 
-namespace bdk\Debug\Abstraction;
+namespace bdk\Debug\Abstraction\Object;
 
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
@@ -22,7 +22,7 @@ use UnitEnum;
 /**
  * Get method parameter info
  */
-class AbstractObjectMethodParams
+class MethodParams
 {
     protected $abs;
     protected $abstracter;

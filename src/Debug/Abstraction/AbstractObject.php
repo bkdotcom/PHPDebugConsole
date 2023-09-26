@@ -15,9 +15,13 @@ namespace bdk\Debug\Abstraction;
 use bdk\Debug;
 use bdk\Debug\AbstractComponent;
 use bdk\Debug\Abstraction\Abstracter;
-use bdk\Debug\Abstraction\AbstractObjectHelper;
-use bdk\Debug\Abstraction\AbstractObjectProperties;
-use bdk\Debug\Abstraction\ObjectAbstraction;
+use bdk\Debug\Abstraction\Object\Abstraction as ObjectAbstraction;
+use bdk\Debug\Abstraction\Object\Constants;
+use bdk\Debug\Abstraction\Object\Definition;
+use bdk\Debug\Abstraction\Object\Helper;
+use bdk\Debug\Abstraction\Object\Methods;
+use bdk\Debug\Abstraction\Object\Properties;
+use bdk\Debug\Abstraction\Object\Subscriber;
 use bdk\Debug\Utility\Reflection;
 use ReflectionClass;
 use ReflectionEnumUnitCase;
@@ -98,17 +102,17 @@ class AbstractObject extends AbstractComponent
     );
 
     protected $abstracter;
-    protected $class;
     protected $constants;
     protected $debug;
+    protected $definition;
     protected $helper;
     protected $methods;
     protected $properties;
     protected $readOnly = array(
         'abstracter',
-        'class',
         'constants',
         'debug',
+        'definition',
         'helper',
         'methods',
         'properties',
@@ -162,22 +166,22 @@ class AbstractObject extends AbstractComponent
     /**
      * Constructor
      *
-     * @param Abstracter $abstracter abstracter instance
+     * @param Abstracter $abstracter Abstracter instance
      */
     public function __construct(Abstracter $abstracter)
     {
         $this->abstracter = $abstracter;
         $this->debug = $abstracter->debug;
-        $this->helper = new AbstractObjectHelper($this->debug->phpDoc);
-        $this->constants = new AbstractObjectConstants($this);
-        $this->methods = new AbstractObjectMethods($this);
-        $this->properties = new AbstractObjectProperties($this);
-        $this->class = new AbstractObjectClass($this);
+        $this->helper = new Helper($this->debug->phpDoc);
+        $this->constants = new Constants($this);
+        $this->methods = new Methods($this);
+        $this->properties = new Properties($this);
+        $this->definition = new Definition($this);
         if ($abstracter->debug->parentInstance) {
             // we only need to subscribe to these events from root channel
             return;
         }
-        $subscriber = new AbstractObjectSubscriber($this);
+        $subscriber = new Subscriber($this);
         $abstracter->debug->eventManager->addSubscriberInterface($subscriber);
     }
 
@@ -198,8 +202,8 @@ class AbstractObject extends AbstractComponent
             $reflector = $reflector->getEnum();
         }
         $values = $this->getAbstractionValues($reflector, $obj, $method, $hist);
-        $classValueStore = $this->class->getValueStore($obj, $values);
-        $abs = new ObjectAbstraction($classValueStore, $values);
+        $valueStore = $this->definition->getValueStore($obj, $values);
+        $abs = new ObjectAbstraction($valueStore, $values);
         $abs->setSubject($obj);
         $abs['hist'][] = $obj;
         $this->doAbstraction($abs);
@@ -232,11 +236,11 @@ class AbstractObject extends AbstractComponent
     /**
      * Sort things and remove temporary values
      *
-     * @param Abstraction $abs Abstraction instance
+     * @param ObjectAbstraction $abs Abstraction instance
      *
      * @return void
      */
-    private function absClean(Abstraction $abs)
+    private function absClean(ObjectAbstraction $abs)
     {
         $values = \array_diff_key($abs->getInstanceValues(), \array_flip(self::$keysTemp));
         $abs
@@ -247,11 +251,11 @@ class AbstractObject extends AbstractComponent
     /**
      * Populate rows or columns (traverseValues) if we're outputing as a table
      *
-     * @param Abstraction $abs Abstraction instance
+     * @param ObjectAbstraction $abs Abstraction instance
      *
      * @return void
      */
-    private function addTraverseValues(Abstraction $abs)
+    private function addTraverseValues(ObjectAbstraction $abs)
     {
         if ($abs['traverseValues']) {
             return;
@@ -266,11 +270,11 @@ class AbstractObject extends AbstractComponent
     /**
      * Add attributes, constants, properties, methods, constants, etc
      *
-     * @param Abstraction $abs Abstraction instance
+     * @param ObjectAbstraction $abs Abstraction instance
      *
      * @return void
      */
-    private function doAbstraction(Abstraction $abs)
+    private function doAbstraction(ObjectAbstraction $abs)
     {
         if ($abs['isMaxDepth']) {
             return;
@@ -425,11 +429,11 @@ class AbstractObject extends AbstractComponent
     /**
      * Test if only need to populate traverseValues
      *
-     * @param Abstraction $abs Abstraction instance
+     * @param ObjectAbstraction $abs Abstraction instance
      *
      * @return bool
      */
-    private function isTraverseOnly(Abstraction $abs)
+    private function isTraverseOnly(ObjectAbstraction $abs)
     {
         if ($abs['debugMethod'] === 'table' && \count($abs['hist']) < 4) {
             $abs['cfgFlags'] &= ~self::CONST_COLLECT;  // set collect constants to "false"

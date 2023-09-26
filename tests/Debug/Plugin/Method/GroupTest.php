@@ -55,7 +55,7 @@ class GroupTest extends DebugTestFramework
                     'meta' => array(),
                 ),
                 'custom' => function () {
-                    $groupStack = $this->getSharedVar('reflectionProperties')['groupStack'];
+                    $groupStack = $this->getSharedVar('groupStack');
                     self::assertSame(array(
                         'main' => array(
                             array('channel' => $this->debug, 'collect' => true),
@@ -627,7 +627,7 @@ class GroupTest extends DebugTestFramework
             array(
                 'entry' => $entry,
                 'custom' => function () {
-                    $groupStack = $this->getSharedVar('reflectionProperties')['groupStack'];
+                    $groupStack = $this->getSharedVar('groupStack');
                     self::assertSame(array(
                         'main' => array(
                             0 => array('channel' => $this->debug, 'collect' => true),
@@ -690,7 +690,7 @@ class GroupTest extends DebugTestFramework
         */
         $this->debug->group('a', 'b', 'c');
         $this->debug->groupEnd();
-        $groupStack = $this->getSharedVar('reflectionProperties')['groupStack'];
+        $groupStack = $this->getSharedVar('groupStack');
         self::assertSame(array(
             'main' => array(),
         ), $this->getSharedVar('reflectionProperties')['groupStacks']->getValue($groupStack));
@@ -818,7 +818,7 @@ class GroupTest extends DebugTestFramework
 
         This also tests that the values returned by getData have been dereferenced
         */
-        $groupStack = $this->getSharedVar('reflectionProperties')['groupStack'];
+        $groupStack = $this->getSharedVar('groupStack');
 
         $this->debug->groupSummary(1);
             $this->debug->log('in summary');

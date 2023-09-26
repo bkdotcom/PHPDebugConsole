@@ -16,6 +16,7 @@ use GuzzleHttp\Psr7\Response;
 /**
  * PHPUnit tests for GuzzleMiddleware
  *
+ * @covers \bdk\Debug\Collector\AbstractAsyncMiddleware
  * @covers \bdk\Debug\Collector\GuzzleMiddleware
  */
 class GuzzleMiddlewareTest extends DebugTestFramework

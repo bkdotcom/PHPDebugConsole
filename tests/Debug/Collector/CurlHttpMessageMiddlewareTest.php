@@ -15,6 +15,7 @@ use Exception;
 /**
  * PHPUnit tests for CurlHttpMessageMiddleware
  *
+ * @covers \bdk\Debug\Collector\AbstractAsyncMiddleware
  * @covers \bdk\Debug\Collector\CurlHttpMessageMiddleware
  */
 class CurlHttpMessageMiddlewareTest extends DebugTestFramework

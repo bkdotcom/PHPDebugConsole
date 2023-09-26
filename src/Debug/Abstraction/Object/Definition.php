@@ -10,14 +10,17 @@
  * @version   v3.1
  */
 
-namespace bdk\Debug\Abstraction;
+namespace bdk\Debug\Abstraction\Object;
 
+use bdk\Debug\Abstraction\Abstracter;
+use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Abstraction\AbstractObject;
 use bdk\PubSub\ValueStore;
 
 /**
  * Abstracter: Gather class definition info common across all instances
  */
-class AbstractObjectClass
+class Definition
 {
     protected $constants;
     protected $debug;
@@ -189,7 +192,7 @@ class AbstractObjectClass
     }
 
     /**
-     * Initialize class abstraction
+     * Initialize class definition abstraction
      *
      * @param array $info values already collected
      *
@@ -217,7 +220,7 @@ class AbstractObjectClass
             $values['extends'][] = $reflector->getName();
         }
         unset($values['phpDoc']['method']);
-        // magic properties removed via AbstractObjectProperties::addViaPhpDocIter
+        // magic properties removed via PropertiesPhpDoc::addViaPhpDocIter
         return new Abstraction(Abstracter::TYPE_OBJECT, $values);
     }
 }

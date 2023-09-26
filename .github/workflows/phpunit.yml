@@ -71,4 +71,4 @@ jobs:
     - name: Coverage summary
       if: matrix.php-version == '8.2'
       continue-on-error: true
-      run: php -f tests/coverageChecker.php -- coverage/clover.xml
+      run: php -f vendor/bdk/devutil/src/coverageChecker.php -- coverage/clover.xml

@@ -10,9 +10,13 @@
  * @version   v3.0
  */
 
-namespace bdk\Debug\Abstraction;
+namespace bdk\Debug\Abstraction\Object;
 
 use bdk\Debug;
+use bdk\Debug\Abstraction\Abstracter;
+use bdk\Debug\Abstraction\AbstractObject;
+use bdk\Debug\Abstraction\Object\Definition as AbstractObjectDefinition;
+use bdk\Debug\Abstraction\Object\PropertiesDom;
 use bdk\Debug\Data;
 use bdk\Debug\Utility\PhpDoc;
 use bdk\PubSub\SubscriberInterface;
@@ -26,9 +30,11 @@ use UnitEnum;
 /**
  * Internal subscriber to ABSTRACT_START and ABSTRACT_END events
  */
-class AbstractObjectSubscriber implements SubscriberInterface
+class Subscriber implements SubscriberInterface
 {
     protected $abstractObject;
+
+    private $dom;
 
     /**
      * Constructor
@@ -38,6 +44,7 @@ class AbstractObjectSubscriber implements SubscriberInterface
     public function __construct(AbstractObject $abstractObject)
     {
         $this->abstractObject = $abstractObject;
+        $this->dom = new PropertiesDom($abstractObject->abstracter);
     }
 
     /**
@@ -72,7 +79,7 @@ class AbstractObjectSubscriber implements SubscriberInterface
             $abs['propertyOverrideValues']['data'] = Abstracter::NOT_INSPECTED;
         } elseif ($obj instanceof PhpDoc) {
             $abs['propertyOverrideValues']['cache'] = Abstracter::NOT_INSPECTED;
-        } elseif ($obj instanceof AbstractObjectClass) {
+        } elseif ($obj instanceof AbstractObjectDefinition) {
             $abs['propertyOverrideValues']['cache'] = Abstracter::NOT_INSPECTED;
         } elseif ($abs['isAnonymous']) {
             $this->onStartAnonymous($abs);
@@ -98,6 +105,7 @@ class AbstractObjectSubscriber implements SubscriberInterface
         } elseif ($obj instanceof UnitEnum) {
             $this->onEndEnum($abs);
         }
+        $this->dom->add($abs);
         if (isset($abs['methods']['__toString'])) {
             $abs['methods']['__toString']['returnValue'] = $this->abstractObject->methods->toString($abs);
         }
@@ -170,7 +178,7 @@ class AbstractObjectSubscriber implements SubscriberInterface
      */
     private function onStartAnonymous(Abstraction $abs)
     {
-        $this->abstractObject->class->addDefinition($abs);
+        $this->abstractObject->definition->addDefinition($abs);
         $this->abstractObject->constants->add($abs);
         $this->abstractObject->methods->add($abs);
         if ($abs['reflector']->getParentClass()) {

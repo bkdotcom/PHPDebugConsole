@@ -14,7 +14,7 @@ use bdk\Test\Debug\Fixture\TestObj;
  * Test SerializeLog
  *
  * @covers \bdk\Debug\Abstraction\AbstractObject
- * @covers \bdk\Debug\Abstraction\ObjectAbstraction
+ * @covers \bdk\Debug\Abstraction\Object\Abstraction
  * @covers \bdk\Debug\Utility\SerializeLog
  *
  * @phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
@@ -54,9 +54,9 @@ class SerializeLogTest extends DebugTestFramework
         $expect = array(
             'alerts' => $this->helper->deObjectifyData($debug->data->get('alerts'), false),
             'classDefinitions' => array(
-                'bdk\\Test\\Debug\\Fixture\\TestObj' => $debug->abstracter->crate(new TestObj())->getClassValues(),
-                "\x00default\x00" => \bdk\Debug\Utility\Reflection::propGet($debug->abstracter->abstractObject->class, 'values'),
-                'stdClass' => $debug->abstracter->crate((object) array())->getClassValues(),
+                'bdk\\Test\\Debug\\Fixture\\TestObj' => $debug->abstracter->crate(new TestObj())->getDefinitionValues(),
+                "\x00default\x00" => \bdk\Debug\Utility\Reflection::propGet($debug->abstracter->abstractObject->definition, 'values'),
+                'stdClass' => $debug->abstracter->crate((object) array())->getDefinitionValues(),
             ),
             'config' => array(
                 'channelIcon' => $debug->getCfg('channelIcon', Debug::CONFIG_DEBUG),
@@ -87,7 +87,7 @@ class SerializeLogTest extends DebugTestFramework
         self::assertInstanceOf('bdk\\Debug\\Abstraction\\Abstraction', $objAbs);
         self::assertSame(
             $debug->data->get(array('classDefinitions', 'bdk\\Test\\Debug\\Fixture\\TestObj')),
-            \bdk\Debug\Utility\Reflection::propGet($objAbs, 'class')
+            \bdk\Debug\Utility\Reflection::propGet($objAbs, 'definition')
         );
         $serialized = SerializeLog::serialize($debug);
         $unserialized = SerializeLog::unserialize($serialized);

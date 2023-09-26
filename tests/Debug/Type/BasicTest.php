@@ -10,8 +10,8 @@ use bdk\Test\Debug\DebugTestFramework;
  * PHPUnit tests for Debug class
  *
  * @covers \bdk\Debug\Abstraction\Abstracter
- * @covers \bdk\Debug\Abstraction\AbstractObjectSubscriber
  * @covers \bdk\Debug\Abstraction\AbstractString
+ * @covers \bdk\Debug\Abstraction\Object\Subscriber
  * @covers \bdk\Debug\Dump\BaseValue
  * @covers \bdk\Debug\Dump\Html
  * @covers \bdk\Debug\Dump\Html\HtmlString

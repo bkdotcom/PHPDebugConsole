@@ -12,7 +12,7 @@ use bdk\Test\Debug\DebugTestFramework;
  *
  * @covers \bdk\Debug\AbstractComponent
  * @covers \bdk\Debug\AbstractDebug
- * @covers \bdk\Debug\Abstraction\AbstractObjectProperties
+ * @covers \bdk\Debug\Abstraction\Object\Properties
  * @covers \bdk\Debug\Dump\Base
  * @covers \bdk\Debug\Dump\BaseValue
  * @covers \bdk\Debug\Dump\Html
@@ -655,6 +655,7 @@ class BasicTest extends DebugTestFramework
                 )</pre>',
             )
         );
+        \bdk\Debug\Utility\Reflection::propSet($this->debug->getPlugin('methodBasic'), 'isCli', true);
     }
 
     /**

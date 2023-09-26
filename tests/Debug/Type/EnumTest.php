@@ -11,9 +11,9 @@ use bdk\Test\Debug\DebugTestFramework;
  * Test Enums
  *
  * @covers \bdk\Debug\Abstraction\AbstractObject
- * @covers \bdk\Debug\Abstraction\AbstractObjectConstants
- * @covers \bdk\Debug\Abstraction\AbstractObjectMethodParams
- * @covers \bdk\Debug\Abstraction\AbstractObjectSubscriber
+ * @covers \bdk\Debug\Abstraction\Object\Constants
+ * @covers \bdk\Debug\Abstraction\Object\MethodParams
+ * @covers \bdk\Debug\Abstraction\Object\Subscriber
  * @covers \bdk\Debug\Dump\Html\HtmlObject
  * @covers \bdk\Debug\Dump\Html\ObjectCases
  */

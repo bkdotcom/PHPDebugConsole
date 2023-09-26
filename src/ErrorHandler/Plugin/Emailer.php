@@ -47,7 +47,7 @@ class Emailer extends AbstractComponent implements SubscriberInterface
             'emailMask' => E_ERROR | E_PARSE | E_COMPILE_ERROR | E_WARNING | E_USER_ERROR | E_USER_NOTICE,
             'emailMin' => 60 * 4,               // 0 = no throttle
             'emailThrottledSummary' => true,    // if errors have been throttled, should we email a summary email of throttled errors?
-                                                //    (first occurance of error is never throttled)
+                                                //    (first occurrence of error is never throttled)
             'emailTo' => !empty($this->serverParams['SERVER_ADMIN'])
                 ? $this->serverParams['SERVER_ADMIN']
                 : null,

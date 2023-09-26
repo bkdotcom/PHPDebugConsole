@@ -16,15 +16,17 @@ use bdk\Test\Debug\Fixture\TestObj;
  * @covers \bdk\Debug\Abstraction\Abstracter
  * @covers \bdk\Debug\Abstraction\Abstraction
  * @covers \bdk\Debug\Abstraction\AbstractObject
- * @covers \bdk\Debug\Abstraction\AbstractObjectClass
- * @covers \bdk\Debug\Abstraction\AbstractObjectConstants
- * @covers \bdk\Debug\Abstraction\AbstractObjectHelper
- * @covers \bdk\Debug\Abstraction\AbstractObjectInheritable
- * @covers \bdk\Debug\Abstraction\AbstractObjectMethodParams
- * @covers \bdk\Debug\Abstraction\AbstractObjectMethods
- * @covers \bdk\Debug\Abstraction\AbstractObjectProperties
- * @covers \bdk\Debug\Abstraction\AbstractObjectSubscriber
- * @covers \bdk\Debug\Abstraction\ObjectAbstraction
+ * @covers \bdk\Debug\Abstraction\Object\Abstraction
+ * @covers \bdk\Debug\Abstraction\Object\Constants
+ * @covers \bdk\Debug\Abstraction\Object\Definition
+ * @covers \bdk\Debug\Abstraction\Object\Helper
+ * @covers \bdk\Debug\Abstraction\Object\Inheritable
+ * @covers \bdk\Debug\Abstraction\Object\MethodParams
+ * @covers \bdk\Debug\Abstraction\Object\Methods
+ * @covers \bdk\Debug\Abstraction\Object\Properties
+ * @covers \bdk\Debug\Abstraction\Object\PropertiesDom
+ * @covers \bdk\Debug\Abstraction\Object\PropertiesPhpDoc
+ * @covers \bdk\Debug\Abstraction\Object\Subscriber
  * @covers \bdk\Debug\Dump\Base
  * @covers \bdk\Debug\Dump\BaseValue
  * @covers \bdk\Debug\Dump\Html
@@ -958,7 +960,7 @@ EOD;
                             'fileName' => '',
                             'startLine' => 1,
                         ),
-                    ), $abs->getClassValues());
+                    ), $abs->getDefinitionValues());
                     self::assertArraySubset(array(
                         'className' => 'class@anonymous',
                         'definition' => array(
@@ -1003,7 +1005,7 @@ EOD;
                             'fileName' => $fixtureDir . '/AnonBase.php',
                             'startLine' => 8,
                         ),
-                    ), $abs->getClassValues());
+                    ), $abs->getDefinitionValues());
                     self::assertArraySubset(array(
                         'className' => 'bdk\\Test\\Debug\\Fixture\\AnonBase@anonymous',
                         'definition' => array(
@@ -1016,14 +1018,14 @@ EOD;
                     self::assertSame(array(
                         'ONE',
                         // 'PRIVATE_CONST',
-                    ), \array_keys($abs->getClassValues()['constants']));
+                    ), \array_keys($abs->getDefinitionValues()['constants']));
                     self::assertSame(array(
                         'foo',
                         'pro',
-                    ), \array_keys($abs->getClassValues()['properties']));
+                    ), \array_keys($abs->getDefinitionValues()['properties']));
                     self::assertSame(array(
                         'test',
-                    ), \array_keys($abs->getClassValues()['methods']));
+                    ), \array_keys($abs->getDefinitionValues()['methods']));
 
                     self::assertArraySubset(
                         array(
@@ -1106,7 +1108,7 @@ EOD;
                             'fileName' => $fixtureDir . '/AnonBase.php',
                             'startLine' => 8,
                         ),
-                    ), $abs->getClassValues());
+                    ), $abs->getDefinitionValues());
                     self::assertArraySubset(array(
                         'className' => 'bdk\\Test\\Debug\\Fixture\\AnonBase@anonymous',
                         'definition' => array(
@@ -1119,14 +1121,14 @@ EOD;
                     self::assertSame(array(
                         'ONE',
                         // 'PRIVATE_CONST',
-                    ), \array_keys($abs->getClassValues()['constants']));
+                    ), \array_keys($abs->getDefinitionValues()['constants']));
                     self::assertSame(array(
                         'foo',
                         'pro',
-                    ), \array_keys($abs->getClassValues()['properties']));
+                    ), \array_keys($abs->getDefinitionValues()['properties']));
                     self::assertSame(array(
                         'test',
-                    ), \array_keys($abs->getClassValues()['methods']));
+                    ), \array_keys($abs->getDefinitionValues()['methods']));
                 },
             )
         );

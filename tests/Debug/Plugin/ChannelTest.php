@@ -220,7 +220,7 @@ EOD;
                                 </ul>
                             </li>
                             <li class="m_info"><span class="no-quotes t_string">Built In %f %s</span></li>
-                            <li class="m_info"><span class="no-quotes t_string">Peak Memory Usage <span title="Includes debug overhead">?&#x20dd;</span>: %f MB / %d %cB</span></li>
+                            <li class="m_info"><span class="no-quotes t_string">Peak Memory Usage <span title="Includes debug overhead">?&#x20dd;</span>: %f MB / %s</span></li>
                             <li class="expanded m_group" data-channel="general.foo">
                                 <div class="group-header"><span class="font-weight-bold group-label">foo: sum 0 / group 1</span></div>
                                 <ul class="group-body">

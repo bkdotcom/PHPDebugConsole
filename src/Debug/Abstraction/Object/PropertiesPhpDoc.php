@@ -18,7 +18,7 @@ use bdk\Debug\Abstraction\Object\Helper;
 /**
  * Get object property info
  */
-class PropertiesPhpDoc extends Inheritable
+class PropertiesPhpDoc
 {
     protected $helper;
 

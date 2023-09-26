@@ -869,7 +869,7 @@ class GroupTest extends DebugTestFramework
                         </ul>
                     </li>
                     <li class="m_info"><span class="no-quotes t_string">Built In %f %s</span></li>
-                    <li class="m_info"><span class="no-quotes t_string">Peak Memory Usage <span title="Includes debug overhead">?&#x20dd;</span>: %f MB / %d %cB</span></li>
+                    <li class="m_info"><span class="no-quotes t_string">Peak Memory Usage <span title="Includes debug overhead">?&#x20dd;</span>: %f MB / %s</span></li>
                 %A</ul>
                 <ul class="debug-log group-body"></ul>
             </div>

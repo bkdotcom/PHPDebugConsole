@@ -105,7 +105,7 @@ class PropertiesDom
             return;
         }
         // for php < 8.1
-        $props = $this-getProps($obj);
+        $props = $this->getProps($obj);
         foreach ($props as $propName => $type) {
             $val = $obj->{$propName};
             if (!$type) {

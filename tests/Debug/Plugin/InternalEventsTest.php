@@ -413,7 +413,7 @@ WHERE·
             ),
         );
 
-        if (\bdk\Backtrace::isXdebugFuncStackAvail()) {
+        if (\bdk\Backtrace\Xdebug::isXdebugFuncStackAvail()) {
             \array_unshift($logEntriesExpect, array(
                 'method' => 'warn',
                 'args' => array(

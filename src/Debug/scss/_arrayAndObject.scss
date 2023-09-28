@@ -117,11 +117,38 @@ li[class*=m_] > .t_array.array-file-tree > .array-inner {
   }
 
   > .object-inner {
+    > .modifiers {
+      display: none;
+    }
+    > dd[class*=t_modifier_] {
+      position: relative;
+      display: inline-block;
+      margin-left: 0;
+      margin-right: 0.5em;
+      padding: .25em .75em;
+      border: solid 1px;
+      border-radius: 4px;
+      text-indent: 0;
+      line-height: 1.5em;
+      max-height: 1.5em;
+      font-weight: bold;
+    }
+    > .t_modifier_readonly {
+      color: $warn-fg;
+      background-color: $warn-bg;
+      border-color: $warn-fg;
+      .fa-stack {
+        font-size: 0.8em;
+        margin-right: 0.33em;
+        .fa-ban {
+          opacity: 0.75;
+        }
+      }
+    }
     > .t_modifier_final {
       color: $error-fg;
       background-color: lighten($error-bg, 10%);
-      border-bottom: solid 1px $error-fg;
-      padding: 0.25em 0.25em 1px;
+      border-color: $error-fg;
     }
   }
 
@@ -130,6 +157,9 @@ li[class*=m_] > .t_array.array-file-tree > .array-inner {
       padding: 0.15em 0.5em;
       display: inline-block;
     }
+  }
+  dd + .vis-toggles {
+    margin-top: .25em;
   }
 
   .method .parameter .t_parameter-name[title],

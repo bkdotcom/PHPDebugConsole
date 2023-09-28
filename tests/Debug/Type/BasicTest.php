@@ -187,7 +187,8 @@ class BasicTest extends DebugTestFramework
                     },
                     'html' => '<li class="m_log"><div class="t_object" data-accessible="public"><span class="classname">Closure</span>
                         <dl class="object-inner">
-                        <dt class="t_modifier_final">final</dt>
+                        <dt class="modifiers">modifiers</dt>
+                        <dd class="t_modifier_final">final</dd>
                         <dt class="properties">properties</dt>
                         <dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="t_type">string</span> <span class="no-quotes t_identifier t_string">file</span> <span class="t_operator">=</span> <span class="t_string">' . __FILE__ . '</span></dd>
                         <dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="t_type">int</span> <span class="no-quotes t_identifier t_string">line</span> <span class="t_operator">=</span> <span class="t_int">%d</span></dd>

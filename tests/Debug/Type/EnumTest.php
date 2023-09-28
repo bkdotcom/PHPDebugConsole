@@ -75,7 +75,8 @@ class EnumTest extends DebugTestFramework
                     'html' => '<li class="m_log"><div class="t_object" data-accessible="public"><span class="t_const" title="The most important meal
                         Meals PHPDoc"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\Enum\</span>Meals</span><span class="t_operator">::</span><span class="t_identifier">BREAKFAST</span></span>
                         <dl class="object-inner">
-                        <dt class="t_modifier_final">final</dt>
+                        <dt class="modifiers">modifiers</dt>
+                        <dd class="t_modifier_final">final</dd>
                         <dt>implements</dt>
                         <dd class="interface"><span class="classname">UnitEnum</span></dd>
                         <dt class="attributes">attributes</dt>
@@ -172,7 +173,8 @@ class EnumTest extends DebugTestFramework
                     },
                     'html' => '<li class="m_log"><div class="t_object" data-accessible="public"><span class="t_const"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\Enum\</span>MealsBacked</span><span class="t_operator">::</span><span class="t_identifier">BREAKFAST</span></span>
                         <dl class="object-inner">
-                        <dt class="t_modifier_final">final</dt>
+                        <dt class="modifiers">modifiers</dt>
+                        <dd class="t_modifier_final">final</dd>
                         <dt>implements</dt>
                         <dd class="interface"><span class="classname">BackedEnum</span></dd>
                         <dd class="interface"><span class="classname">UnitEnum</span></dd>

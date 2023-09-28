@@ -370,6 +370,7 @@ EOD;
                 'isAnonymous' => false,
                 'isFinal' => false,
                 'isMaxDepth' => false,
+                'isReadOnly' => false,
                 'sort' => '',
             ),
             $expect['log'][1][1][1]

@@ -2,7 +2,7 @@
 
 namespace bdk\Debug\Utility;
 
-use bdk\Backtrace;
+use bdk\Backtrace\Xdebug;
 use Reflector;
 
 /**
@@ -38,7 +38,7 @@ class FindExit
         if (\extension_loaded('tokenizer') === false) {
             return false; // @codeCoverageIgnore
         }
-        if (Backtrace::isXdebugFuncStackAvail() === false) {
+        if (Xdebug::isXdebugFuncStackAvail() === false) {
             return false; // @codeCoverageIgnore
         }
         $frame = $this->getLastFrame();
@@ -237,6 +237,7 @@ class FindExit
      */
     private function getLastFrame()
     {
+        \ini_set('xdebug.var_display_max_depth', 3);
         $backtrace = \xdebug_get_function_stack();
         $backtrace = \array_reverse($backtrace);
         $frame = false;

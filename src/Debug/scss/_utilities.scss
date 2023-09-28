@@ -2,11 +2,9 @@
 // Utilities
 //
 .indent { padding-left: 10px !important; }
-.no-quotes {
-  &::before { content: none; }
-  &::after { content: none; }
-}
+
 .p0 { padding: 0 !important; }
+
 .fa-inverse { color: $color-white; }
 .fa-stack { line-height: 2em; }
 .fa-stack-1x { line-height: inherit; }
@@ -14,7 +12,14 @@
 
 .float-left { float: left !important; }
 .float-right { float: right !important; }
+
 .font-weight-bold { font-weight: bold; }
+
+.no-quotes {
+  &::before { content: none; }
+  &::after { content: none; }
+}
+
 .text-center { text-align: center; }
 .text-muted { color: $text-muted; }
 // .text-nowrap { white-space: nowrap; }

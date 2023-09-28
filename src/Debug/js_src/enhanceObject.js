@@ -118,8 +118,8 @@ function visToggles ($inner, accessible) {
   if (flags.hasInherited) {
     $visToggles.append('<span class="toggle-on" data-toggle="vis" data-vis="inherited">hide inherited</span>')
   }
-  if ($inner.find('> dt.t_modifier_final').length) {
-    $inner.find('> dt.t_modifier_final').after($visToggles)
+  if ($inner.find('> dd[class*=t_modifier_]').length) {
+    $inner.find('> dd[class*=t_modifier_]').last().after($visToggles)
     return
   }
   $inner.prepend($visToggles)

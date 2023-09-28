@@ -48,6 +48,7 @@ class Definition
         'extends' => array(),
         'implements' => array(),
         'isFinal' => false,
+        'isReadOnly' => false,
         'methods' => array(),
         'phpDoc' => array(
             'desc' => null,
@@ -210,6 +211,7 @@ class Definition
                 'className' => $reflector->getName(),
                 'implements' => $interfaceNames,
                 'isFinal' => $reflector->isFinal(),
+                'isReadOnly' => PHP_VERSION_ID >= 80200 && $reflector->isReadOnly(),
                 'phpDoc' => $this->helper->getPhpDoc($reflector, $info['fullyQualifyPhpDocType']),
             )
         );

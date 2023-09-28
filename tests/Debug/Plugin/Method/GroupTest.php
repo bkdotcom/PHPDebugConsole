@@ -55,12 +55,12 @@ class GroupTest extends DebugTestFramework
                     'meta' => array(),
                 ),
                 'custom' => function () {
-                    $groupStack = $this->getSharedVar('groupStack');
+                    $groupStack = self::getSharedVar('groupStack');
                     self::assertSame(array(
                         'main' => array(
                             array('channel' => $this->debug, 'collect' => true),
                         ),
-                    ), $this->getSharedVar('reflectionProperties')['groupStacks']->getValue($groupStack));
+                    ), self::getSharedVar('reflectionProperties')['groupStacks']->getValue($groupStack));
                 },
                 'chromeLogger' => array(
                     array('a','b','c'),
@@ -627,12 +627,12 @@ class GroupTest extends DebugTestFramework
             array(
                 'entry' => $entry,
                 'custom' => function () {
-                    $groupStack = $this->getSharedVar('groupStack');
+                    $groupStack = self::getSharedVar('groupStack');
                     self::assertSame(array(
                         'main' => array(
                             0 => array('channel' => $this->debug, 'collect' => true),
                         ),
-                    ), $this->getSharedVar('reflectionProperties')['groupStacks']->getValue($groupStack));
+                    ), self::getSharedVar('reflectionProperties')['groupStacks']->getValue($groupStack));
                 },
                 'chromeLogger' => array(
                     array('a','b','c'),
@@ -690,10 +690,10 @@ class GroupTest extends DebugTestFramework
         */
         $this->debug->group('a', 'b', 'c');
         $this->debug->groupEnd();
-        $groupStack = $this->getSharedVar('groupStack');
+        $groupStack = self::getSharedVar('groupStack');
         self::assertSame(array(
             'main' => array(),
-        ), $this->getSharedVar('reflectionProperties')['groupStacks']->getValue($groupStack));
+        ), self::getSharedVar('reflectionProperties')['groupStacks']->getValue($groupStack));
         $log = $this->debug->data->get('log');
         self::assertCount(2, $log);
         self::assertSame(array(
@@ -818,7 +818,7 @@ class GroupTest extends DebugTestFramework
 
         This also tests that the values returned by getData have been dereferenced
         */
-        $groupStack = $this->getSharedVar('groupStack');
+        $groupStack = self::getSharedVar('groupStack');
 
         $this->debug->groupSummary(1);
             $this->debug->log('in summary');
@@ -830,17 +830,17 @@ class GroupTest extends DebugTestFramework
             confirm nothing has been closed yet
         */
         $onOutputVals = array();
-        $onOutputVals['groupPriorityStackA'] = $this->getSharedVar('reflectionProperties')['groupPriorityStack']->getValue($groupStack);
+        $onOutputVals['groupPriorityStackA'] = self::getSharedVar('reflectionProperties')['groupPriorityStack']->getValue($groupStack);
         $onOutputVals['groupStacksA'] = \array_map(static function ($stack) {
             return \count($stack);
-        }, $this->getSharedVar('reflectionProperties')['groupStacks']->getValue($groupStack));
+        }, self::getSharedVar('reflectionProperties')['groupStacks']->getValue($groupStack));
         $this->debug->eventManager->subscribe(Debug::EVENT_OUTPUT, function (Event $event) use (&$onOutputVals, $groupStack) {
             // At this point, log has been output.. all groups have been closed
             // $debug = $event->getSubject();
-            $onOutputVals['groupPriorityStackB'] = $this->getSharedVar('reflectionProperties')['groupPriorityStack']->getValue($groupStack);
+            $onOutputVals['groupPriorityStackB'] = self::getSharedVar('reflectionProperties')['groupPriorityStack']->getValue($groupStack);
             $onOutputVals['groupStacksB'] = \array_map(static function ($stack) {
                 return \count($stack);
-            }, $this->getSharedVar('reflectionProperties')['groupStacks']->getValue($groupStack));
+            }, self::getSharedVar('reflectionProperties')['groupStacks']->getValue($groupStack));
         }, -1);
 
         $output = $this->debug->output();

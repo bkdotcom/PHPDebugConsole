@@ -179,9 +179,12 @@ class Helper
 
     private static function varDump($val)
     {
-        \ini_set('xdebug.var_display_max_depth', 8);
+        $iniKey = 'xdebug.var_display_max_depth';
+        $iniWas = \ini_get($iniKey);
+        \ini_set($iniKey, 8);
         \ob_start();
         \var_dump($val);
+        \ini_set($iniKey, $iniWas);
         $new = \ob_get_clean();
         $new = \preg_replace('/^<pre[^>]*>\n(.*)<\/pre>$/is', '$1', $new);
         $new = \preg_replace('/^(\S+:\d+[\r\n]|<small>.*?<\/small>)/s', '', $new);

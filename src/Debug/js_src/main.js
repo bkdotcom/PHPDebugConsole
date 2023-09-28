@@ -34,6 +34,10 @@ var config = new Config({
   },
   iconsObject: {
     '> .t_modifier_final': '<i class="fa fa-hand-stop-o"></i>',
+    '> .t_modifier_readonly': '<span class="fa-stack">' +
+      '<i class="fa fa-pencil fa-stack-1x"></i>' +
+      '<i class="fa fa-ban fa-flip-horizontal fa-stack-2x text-muted"></i>' +
+      '</span>',
     '> .info.magic': '<i class="fa fa-fw fa-magic"></i>',
     '> .inherited': '<i class="fa fa-fw fa-clone" title="Inherited"></i>',
     '> .overrides': '<i class="fa fa-fw fa-repeat" title="Overrides"></i>',

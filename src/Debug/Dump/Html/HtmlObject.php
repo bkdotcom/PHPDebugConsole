@@ -229,9 +229,17 @@ class HtmlObject
      */
     protected function dumpModifiers(Abstraction $abs)
     {
-        return $abs['isFinal']
-            ? '<dt class="t_modifier_final">final</dt>' . "\n"
-            : '';
+        $modifiers = \array_keys(\array_filter(array(
+            'final' => $abs['isFinal'],
+            'readonly' => $abs['isReadOnly'],
+        )));
+        if (empty($modifiers)) {
+            return '';
+        }
+        return '<dt class="modifiers">modifiers</dt>' . "\n"
+            . \implode('', \array_map(static function ($modifier) {
+                return '<dd class="t_modifier_' . $modifier . '">' . $modifier . '</dd>' . "\n";
+            }, $modifiers));
     }
 
     /**

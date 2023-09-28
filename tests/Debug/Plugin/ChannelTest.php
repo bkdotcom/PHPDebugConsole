@@ -402,15 +402,15 @@ EOD;
             'logSummary',
         )));
         $data = $this->helper->deObjectifyData($data, false);
-        $groupStack = $this->getSharedVar('groupStack');
-        $data['groupPriorityStack'] = $this->getSharedVar('reflectionProperties')['groupPriorityStack']->getValue($groupStack);
+        $groupStack = self::getSharedVar('groupStack');
+        $data['groupPriorityStack'] = self::getSharedVar('reflectionProperties')['groupPriorityStack']->getValue($groupStack);
         $data['groupStacks'] = \array_map(static function ($stack) {
             foreach ($stack as $k2 => $info) {
                 $channelName = $info['channel']->getCfg('channelName');
                 $stack[$k2]['channel'] = $channelName;
             }
             return $stack;
-        }, $this->getSharedVar('reflectionProperties')['groupStacks']->getValue($groupStack));
+        }, self::getSharedVar('reflectionProperties')['groupStacks']->getValue($groupStack));
         return $data;
     }
 }

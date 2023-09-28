@@ -76,7 +76,7 @@ class DebugTestFramework extends DOMTestCase
         }
         */
 
-        $refProperties = &$this->getSharedVar('reflectionProperties');
+        $refProperties = self::getSharedVar('reflectionProperties');
 
         $refProperties['inShutdown']->setValue($this->debug->getPlugin('groupCleanup'), false);
         $refProperties['subscriberStack']->setValue($this->debug->eventManager, array());
@@ -123,6 +123,8 @@ class DebugTestFramework extends DOMTestCase
      */
     public function tearDown(): void
     {
+        self::memoryUsage();
+
         $this->debug->setCfg('output', false);
         $subscribers = $this->debug->eventManager->getSubscribers(Debug::EVENT_OUTPUT);
         foreach ($subscribers as $subscriberInfo) {
@@ -219,6 +221,22 @@ class DebugTestFramework extends DOMTestCase
         return array(
             array(),
         );
+    }
+
+    private static function memoryUsage()
+    {
+        static $memoryUsage = 0;
+        $memoryUsageNew = \memory_get_usage(true);
+        $memoryDelta = $memoryUsageNew - $memoryUsage;
+        if ($memoryUsage > 0 && $memoryDelta > 256000) {
+            \fwrite(STDERR, \sprintf(
+                 'memory usage: %s (increase of %s) (%s)',
+                 \number_format($memoryUsageNew),
+                 \number_format($memoryDelta),
+                 \get_called_class()
+            ) . "\n");
+        }
+        $memoryUsage = $memoryUsageNew;
     }
 
     /**
@@ -332,7 +350,7 @@ class DebugTestFramework extends DOMTestCase
         }
     }
 
-    protected function &getSharedVar($key)
+    protected static function &getSharedVar($key)
     {
         static $values = array(
             'groupStack' => null,
@@ -348,7 +366,7 @@ class DebugTestFramework extends DOMTestCase
                 'groupStacks' => new \ReflectionProperty('bdk\\Debug\\Plugin\\Method\\GroupStack', 'groupStacks'),
                 'inShutdown' => new \ReflectionProperty('bdk\\Debug\\Plugin\\Method\\GroupCleanup', 'inShutdown'),
                 'subscriberStack' => new \ReflectionProperty('bdk\\PubSub\\Manager', 'subscriberStack'),
-                'textDepth' => new \ReflectionProperty($this->debug->getDump('text'), 'depth'),
+                'textDepth' => new \ReflectionProperty('bdk\\Debug\\Dump\\Text', 'depth'),
             );
             \array_walk($values['reflectionProperties'], function ($refProp) {
                 $refProp->setAccessible(true);
@@ -683,7 +701,7 @@ class DebugTestFramework extends DOMTestCase
             }
             return $output;
         }
-        $refMethods = &$this->getSharedVar('reflectionMethods');
+        $refMethods = &self::getSharedVar('reflectionMethods');
         if (!isset($refMethods[$test])) {
             $refMethod = new \ReflectionMethod($routeObj, 'processLogEntryViaEvent');
             $refMethod->setAccessible(true);

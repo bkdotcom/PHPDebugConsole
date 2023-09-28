@@ -175,10 +175,10 @@ class ClearTest extends DebugTestFramework
                     self::assertCount(2, $this->debug->data->get('logSummary/1'));   // group & error remain
                     self::assertCount(7, $this->debug->data->get('log'));
 
-                    $groupStack = $this->getSharedVar('groupStack');
+                    $groupStack = self::getSharedVar('groupStack');
                     $groupStackCounts = \array_map(static function ($stack) {
                         return \count($stack);
-                    }, $this->getSharedVar('reflectionProperties')['groupStacks']->getValue($groupStack));
+                    }, self::getSharedVar('reflectionProperties')['groupStacks']->getValue($groupStack));
                     self::assertSame(array(
                         'main' => 2,
                         0 => 0,
@@ -235,10 +235,10 @@ class ClearTest extends DebugTestFramework
                     self::assertCount(3, $this->debug->data->get('logSummary/1'));
                     self::assertCount(5, $this->debug->data->get('log'));
 
-                    $groupStack = $this->getSharedVar('groupStack');
+                    $groupStack = self::getSharedVar('groupStack');
                     $groupStackCounts = \array_map(static function ($stack) {
                         return \count($stack);
-                    }, $this->getSharedVar('reflectionProperties')['groupStacks']->getValue($groupStack));
+                    }, self::getSharedVar('reflectionProperties')['groupStacks']->getValue($groupStack));
                     self::assertSame(array(
                         'main' => 2,
                         0 => 1,
@@ -294,10 +294,10 @@ class ClearTest extends DebugTestFramework
                     self::assertCount(0, $this->debug->data->get('logSummary/0'));
                     self::assertCount(1, $this->debug->data->get('logSummary/1'));   // group remains
                     self::assertCount(3, $this->debug->data->get('log'));    // groups remain
-                    $groupStack = $this->getSharedVar('groupStack');
+                    $groupStack = self::getSharedVar('groupStack');
                     $groupStackCounts = \array_map(static function ($stack) {
                         return \count($stack);
-                    }, $this->getSharedVar('reflectionProperties')['groupStacks']->getValue($groupStack));
+                    }, self::getSharedVar('reflectionProperties')['groupStacks']->getValue($groupStack));
                     self::assertSame(array(
                         'main' => 2,
                         0 => 0,
@@ -353,10 +353,10 @@ class ClearTest extends DebugTestFramework
                     self::assertCount(0, $this->debug->data->get('logSummary/0'));
                     self::assertCount(1, $this->debug->data->get('logSummary/1'));   // group remains
                     self::assertCount(7, $this->debug->data->get('log'));
-                    $groupStack = $this->getSharedVar('groupStack');
+                    $groupStack = self::getSharedVar('groupStack');
                     $groupStackCounts = \array_map(static function ($stack) {
                         return \count($stack);
-                    }, $this->getSharedVar('reflectionProperties')['groupStacks']->getValue($groupStack));
+                    }, self::getSharedVar('reflectionProperties')['groupStacks']->getValue($groupStack));
                     self::assertSame(array(
                         'main' => 2,
                         0 => 0,
@@ -412,10 +412,10 @@ class ClearTest extends DebugTestFramework
                     self::assertCount(2, $this->debug->data->get('logSummary/0'));
                     self::assertCount(2, $this->debug->data->get('logSummary/1'));   // group remains
                     self::assertCount(7, $this->debug->data->get('log'));
-                    $groupStack = $this->getSharedVar('groupStack');
+                    $groupStack = self::getSharedVar('groupStack');
                     $groupStackCounts = \array_map(static function ($stack) {
                         return \count($stack);
-                    }, $this->getSharedVar('reflectionProperties')['groupStacks']->getValue($groupStack));
+                    }, self::getSharedVar('reflectionProperties')['groupStacks']->getValue($groupStack));
                     self::assertSame(array(
                         'main' => 2,
                         0 => 1,

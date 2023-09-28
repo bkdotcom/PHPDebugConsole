@@ -135,8 +135,8 @@
     if (flags.hasInherited) {
       $visToggles.append('<span class="toggle-on" data-toggle="vis" data-vis="inherited">hide inherited</span>');
     }
-    if ($inner.find('> dt.t_modifier_final').length) {
-      $inner.find('> dt.t_modifier_final').after($visToggles);
+    if ($inner.find('> dd[class*=t_modifier_]').length) {
+      $inner.find('> dd[class*=t_modifier_]').last().after($visToggles);
       return
     }
     $inner.prepend($visToggles);
@@ -6231,6 +6231,10 @@
     },
     iconsObject: {
       '> .t_modifier_final': '<i class="fa fa-hand-stop-o"></i>',
+      '> .t_modifier_readonly': '<span class="fa-stack">' +
+        '<i class="fa fa-pencil fa-stack-1x"></i>' +
+        '<i class="fa fa-ban fa-flip-horizontal fa-stack-2x text-muted"></i>' +
+        '</span>',
       '> .info.magic': '<i class="fa fa-fw fa-magic"></i>',
       '> .inherited': '<i class="fa fa-fw fa-clone" title="Inherited"></i>',
       '> .overrides': '<i class="fa fa-fw fa-repeat" title="Overrides"></i>',

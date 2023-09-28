@@ -2,7 +2,7 @@
 
 namespace bdk\Test\Debug\Utility;
 
-use bdk\Backtrace;
+use bdk\Backtrace\Xdebug;
 use bdk\Debug\Utility\FindExit;
 use bdk\PhpUnitPolyfill\AssertionTrait;
 use PHPUnit\Framework\TestCase;
@@ -19,7 +19,7 @@ class FindExitTest extends TestCase
 
     public function testFind()
     {
-        if (Backtrace::isXdebugFuncStackAvail() === false) {
+        if (Xdebug::isXdebugFuncStackAvail() === false) {
             $this->markTestSkipped('xdebug_get_function_stack() required');
         }
         $info = \call_user_func(array($this, 'findExit'));
@@ -34,7 +34,7 @@ class FindExitTest extends TestCase
 
     public function testFindNotFound()
     {
-        if (Backtrace::isXdebugFuncStackAvail() === false) {
+        if (Xdebug::isXdebugFuncStackAvail() === false) {
             $this->markTestSkipped('xdebug_get_function_stack() required');
         }
         $findExit = new FindExit();
@@ -43,7 +43,7 @@ class FindExitTest extends TestCase
 
     public function testFindClosure()
     {
-        if (Backtrace::isXdebugFuncStackAvail() === false) {
+        if (Xdebug::isXdebugFuncStackAvail() === false) {
             $this->markTestSkipped('xdebug_get_function_stack() required');
         }
         $xdebugVer = \phpversion('xdebug');

@@ -879,8 +879,6 @@ EOD;
 
     /**
      * Test Anonymous classes
-     *
-     * @requires PHP >= 7.0
      */
     public function testAnonymousClass()
     {
@@ -1188,8 +1186,6 @@ EOD;
 
     /**
      * Test Promoted Params
-     *
-     * @requires PHP >= 8.0
      */
     public function testPromotedParam()
     {
@@ -1225,8 +1221,6 @@ EOD;
 
     /**
      * Test Php 8.1 features
-     *
-     * @requires PHP >= 8.1
      */
     public function testPhp81()
     {
@@ -1234,11 +1228,10 @@ EOD;
             // @requires not working in 4.8.36
             self::markTestSkipped('Test requires Php >= 8.1');
         }
-        $test = new \bdk\Test\Debug\Fixture\Php81(42);
         $this->testMethod(
             'log',
             array(
-                $test,
+                new \bdk\Test\Debug\Fixture\Php81(42),
             ),
             array(
                 'entry' => static function (LogEntry $logEntry) {
@@ -1246,7 +1239,7 @@ EOD;
                     self::assertTrue($abs['properties']['title']['isReadOnly']);
                     self::assertTrue($abs['constants']['FINAL_CONST']['isFinal']);
 
-                    // self::assertTrue($abs['methods']['__construct']['params'][0]['isPromoted']);
+                    self::assertTrue($abs['methods']['__construct']['params'][0]['isPromoted']);
                     // self::assertSame('Attributed & promoted param', $abs['properties']['arg1']['desc']);
                 },
                 'html' => static function ($html) {
@@ -1261,9 +1254,49 @@ EOD;
     }
 
     /**
+     * Test Php 8.2 features
+     */
+    public function testPhp82()
+    {
+        if (PHP_VERSION_ID < 80200) {
+            self::markTestSkipped('Test requires Php >= 8.2');
+        }
+        $this->testMethod(
+            'log',
+            array(
+                new \bdk\Test\Debug\Fixture\Php82readonly(
+                    'look, but don\'t touch',
+                    'active',
+                    \time()
+                ),
+            ),
+            array(
+                'entry' => static function (LogEntry $logEntry) {
+                    $abs = $logEntry['args'][0];
+                    self::assertTrue($abs['isReadOnly']);
+                    self::assertCount(4, $abs['properties']);
+                    \array_walk($abs['properties'], static function ($propInfo) {
+                        self::assertTrue($propInfo['isReadOnly']);
+                    });
+                },
+                'html' => static function ($html) {
+                    self::assertStringContainsString(
+                        '<dt class="modifiers">modifiers</dt>' . "\n"
+                            . '<dd class="t_modifier_final">final</dd>' . "\n"
+                            . '<dd class="t_modifier_readonly">readonly</dd>',
+                        $html
+                    );
+                    self::assertStringContainsString(
+                        '<dd class="isPromoted isReadOnly property public"><span class="t_modifier_public">public</span> <span class="t_modifier_readonly">readonly</span> <span class="t_type">string</span> <span class="no-quotes t_identifier t_string" title="$status">status</span> <span class="t_operator">=</span> <span class="t_string">active</span></dd>',
+                        $html
+                    );
+                },
+            )
+        );
+    }
+
+    /**
      * Test Attributes
-     *
-     * @requires PHP >= 8.0
      */
     public function testAttributes()
     {
@@ -1362,7 +1395,8 @@ EOD;
                     self::assertTrue($logEntry['args'][0]['isFinal']);
                 },
                 'html' => array(
-                    'contains' => '<dt class="t_modifier_final">final</dt>' . "\n",
+                    'contains' => '<dt class="modifiers">modifiers</dt>' . "\n"
+                        . '<dd class="t_modifier_final">final</dd>' . "\n",
                 ),
             )
         );
@@ -1371,7 +1405,7 @@ EOD;
     public function testVariadic()
     {
         if (\version_compare(PHP_VERSION, '5.6', '<')) {
-            return;
+            self::markTestSkipped('variadic params are a php 5.6 thing');
         }
         $testVar = new \bdk\Test\Debug\Fixture\TestVariadic();
         $abs = $this->debug->abstracter->getAbstraction($testVar);
@@ -1381,10 +1415,10 @@ EOD;
     public function testVariadicByReference()
     {
         if (\version_compare(PHP_VERSION, '5.6', '<')) {
-            return;
+            self::markTestSkipped('variadic params are a php 5.6 thing');
         }
         if (\defined('HHVM_VERSION')) {
-            return;
+            self::markTestSkipped('variadic params are a php thing');
         }
         $testVarByRef = new \bdk\Test\Debug\Fixture\TestVariadicByReference();
         $abs = $this->debug->abstracter->getAbstraction($testVarByRef);

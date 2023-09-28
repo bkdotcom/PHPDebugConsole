@@ -14,6 +14,7 @@ namespace bdk;
 use bdk\Backtrace\Context;
 use bdk\Backtrace\Normalizer;
 use bdk\Backtrace\SkipInternal;
+use bdk\Backtrace\Xdebug;
 use Exception;
 use ParseError;
 
@@ -41,8 +42,6 @@ class Backtrace
         'line' => null,
         'type' => null,
     );
-
-    private static $isXdebugAvail = null;
 
     /**
      * Add a new namespace or classname to be used to determine when to
@@ -76,7 +75,7 @@ class Backtrace
         $limit = $limit ?: null;
         $trace = $exception
             ? self::getExceptionTrace($exception)
-            : (\array_reverse(static::xdebugGetFunctionStack() ?: array())
+            : (\array_reverse(Xdebug::getFunctionStack() ?: array())
                 ?: \debug_backtrace($debugBacktraceOpts, $limit ? $limit + 2 : 0));
         $trace = Normalizer::normalize($trace);
         $trace = SkipInternal::removeInternalFrames($trace);
@@ -160,69 +159,6 @@ class Backtrace
     public static function getFileLines($file, $start = null, $length = null)
     {
         return Context::getFileLines($file, $start, $length);
-    }
-
-    /**
-     * Check if `xdebug_get_function_stack()` is available for use
-     *
-     * @return bool
-     */
-    public static function isXdebugFuncStackAvail()
-    {
-        if (self::$isXdebugAvail !== null) {
-            return self::$isXdebugAvail;
-        }
-        // phpcs:ignore SlevomatCodingStandard.Namespaces.FullyQualifiedGlobalFunctions.NonFullyQualified
-        if (extension_loaded('xdebug') === false) {
-            self::$isXdebugAvail = false;
-            return false;
-        }
-        $xdebugVer = \phpversion('xdebug');
-        $mode = \ini_get('xdebug.mode') ?: 'off';
-        self::$isXdebugAvail = \version_compare($xdebugVer, '3.0.0', '<') || \strpos($mode, 'develop') !== false;
-        return self::$isXdebugAvail;
-    }
-
-    /**
-     * Wrapper for xdebug_get_function_stack
-     * accounts for bug 1529 (may report incorrect file)
-     *
-     * xdebug.collect_params ini must be set prior to running code to be backtraced for params (args) to be collected
-     *
-     * @return array|false
-     *
-     * @see https://bugs.xdebug.org/view.php?id=695
-     * @see https://bugs.xdebug.org/view.php?id=1529
-     * @see https://xdebug.org/docs/all_settings#xdebug.collect_params
-     */
-    public static function xdebugGetFunctionStack()
-    {
-        if (static::isXdebugFuncStackAvail() === false) {
-            return false;
-        }
-        $stack = \xdebug_get_function_stack();
-        // phpcs:ignore SlevomatCodingStandard.Namespaces.FullyQualifiedGlobalFunctions.NonFullyQualified
-        $xdebugVer = phpversion('xdebug');
-        if (\version_compare($xdebugVer, '2.6.0', '<')) {
-            $stack = static::xdebugFix($stack);
-        }
-        // phpcs:ignore SlevomatCodingStandard.Namespaces.FullyQualifiedGlobalFunctions.NonFullyQualified
-        $error = error_get_last();
-        if ($error !== null && $error['type'] & (E_ERROR | E_PARSE | E_COMPILE_ERROR | E_CORE_ERROR)) {
-            // xdebug_get_function_stack doesn't include the frame that triggered the error!
-            $errorFileLine = array(
-                'file' => $error['file'],
-                'line' => $error['line'],
-            );
-            $lastFrame = \end($stack);
-            if (\array_intersect_assoc($errorFileLine, $lastFrame) !== $errorFileLine) {
-                \array_push($stack, $errorFileLine);
-            }
-        }
-        return \array_map(static function ($frame) {
-            \ksort($frame);
-            return $frame;
-        }, $stack);
     }
 
     /**
@@ -342,36 +278,5 @@ class Backtrace
             $phpOptions |= DEBUG_BACKTRACE_PROVIDE_OBJECT;
         }
         return $phpOptions;
-    }
-
-    /**
-     * Fix xdebug bugs
-     *
-     * https://bugs.xdebug.org/view.php?id=695 - doesn't set the call type key
-     * https://bugs.xdebug.org/view.php?id=1529 - __get : wrong file
-     *
-     * @param array $stack xdebug stack
-     *
-     * @return array
-     */
-    private static function xdebugFix(array $stack)
-    {
-        $count = \count($stack);
-        for ($i = 0; $i < $count; $i++) {
-            $frame = \array_merge(array(
-                'function' => null,
-            ), $stack[$i]);
-            if (!isset($frame['type']) && isset($frame['class'])) {
-                // XDebug pre 2.1.1 doesn't set the call type key https://bugs.xdebug.org/view.php?id=695
-                $stack[$i]['type'] = 'static';
-            }
-            // __get ... wrong file! - https://bugs.xdebug.org/view.php?id=1529
-            if ($frame['function'] === '__get' && isset($stack[$i - 1]['include_filename'])) {
-                // if prev frame has include_filename, we can get the correct file,
-                //    otherwise, the file will still be wrong
-                $stack[$i]['file'] = $stack[$i - 1]['include_filename'];
-            }
-        }
-        return $stack;
     }
 }

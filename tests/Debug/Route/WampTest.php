@@ -40,7 +40,7 @@ class WampTest extends DebugTestFramework
                 'file' => '/path/to/file.php',
                 'line' => 42,
                 'function' => 'Foo::bar',
-            )
+            ),
         );
         $this->testMethod(
             'error',
@@ -56,24 +56,20 @@ class WampTest extends DebugTestFramework
                         'foundFiles' => array(
                             __FILE__,
                         ),
+                        'inclArgs' => false,
                         'line' => $this->line,
+                        'sortable' => false,
                         'tableInfo' => array(
                             'class' => null,
                             'columns' => array(
-                                array(
-                                    'key' => 'file',
-                                ),
-                                array(
-                                    'key' => 'line',
-                                ),
-                                array(
-                                    'key' => 'function',
-                                ),
+                                array('key' => 'file'),
+                                array('key' => 'line'),
+                                array('key' => 'function'),
                             ),
                             'haveObjRow' => false,
                             'indexLabel' => null,
                             'rows' => array(),
-                            'summary' => null
+                            'summary' => null,
                         ),
                         'trace' => $frames,
                         'uncollapse' => true,

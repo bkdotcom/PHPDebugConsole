@@ -67,7 +67,9 @@ class Abstraction extends BaseAbstraction
      */
     public function __unserialize($data)
     {
-        $this->definition = $data['classDefinition'];
+        $this->definition = isset($data['classDefinition'])
+            ? $data['classDefinition']
+            : new ValueStore();
         unset($data['classDefinition']);
         $this->values = $data;
     }

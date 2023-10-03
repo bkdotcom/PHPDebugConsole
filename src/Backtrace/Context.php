@@ -89,6 +89,9 @@ class Context
         $backtrace = \array_slice($backtrace, $index);
         $lines = false;
         foreach ($backtrace as $frame) {
+            if (!isset($frame['function'])) {
+                break;
+            }
             if ($frame['function'] !== 'eval') {
                 continue;
             }

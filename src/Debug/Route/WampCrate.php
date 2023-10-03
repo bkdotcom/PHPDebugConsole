@@ -84,19 +84,21 @@ class WampCrate
             $logEntryTmp = new LogEntry(
                 $this->debug,
                 'trace',
-                array($meta['trace']),
+                array(),
                 array(
-                    'columns' => array('file','line','function'),
                     'inclContext' => $logEntry->getMeta('inclContext', false),
+                    'trace' => $meta['trace'],
                 )
             );
-            $this->debug->rootInstance->getPlugin('methodTable')->doTable($logEntryTmp);
+            $this->debug->rootInstance->getPlugin('methodTrace')->doTrace($logEntryTmp);
             unset($args[2]); // error's filepath argument
-            $meta = \array_merge($meta, array(
-                'caption' => 'trace',
-                'tableInfo' => $logEntryTmp['meta']['tableInfo'],
-                'trace' => $logEntryTmp['args'][0],
-            ));
+            $meta = \array_replace_recursive(
+                $meta,
+                $logEntryTmp['meta'],
+                array(
+                    'trace' => $logEntryTmp['args'][0],
+                )
+            );
         }
         if ($this->detectFiles) {
             $meta['foundFiles'] = $this->foundFiles();

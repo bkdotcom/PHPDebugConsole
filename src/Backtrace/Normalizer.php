@@ -85,7 +85,7 @@ class Normalizer
                 \array_intersect_key($frameNext, \array_flip(array('file', 'line')))
             );
         }
-        if (\preg_match($regexEvaldCode, $frame['file'], $matches)) {
+        if (\preg_match($regexEvaldCode, (string) $frame['file'], $matches)) {
             // reported line = line within eval
             // line inside paren is the line `eval` is on
             $frame['evalLine'] = $frame['line'];

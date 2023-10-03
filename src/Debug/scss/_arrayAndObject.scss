@@ -121,18 +121,25 @@ li[class*=m_] > .t_array.array-file-tree > .array-inner {
       display: none;
     }
     > dd[class*=t_modifier_] {
-      position: relative;
       display: inline-block;
       margin-left: 0;
       margin-right: 0.5em;
-      padding: .25em .75em;
       border: solid 1px;
       border-radius: 4px;
+      padding: 0 .75em;
+      height: 1.75em;
       text-indent: 0;
-      line-height: 1.5em;
-      max-height: 1.5em;
+      line-height: 1.5;
       font-weight: bold;
     }
+    /*
+    > dd[class*=t_modifier_]:before {
+      content: "";
+      display: inline-block;
+      vertical-align: middle;
+      height: 100%;
+    }
+    */
     > .t_modifier_readonly {
       color: $warn-fg;
       background-color: $warn-bg;

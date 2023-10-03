@@ -274,7 +274,7 @@ class Basic implements SubscriberInterface
             $callerInfo = $this->debug->backtrace->getCallerInfo();
             $logEntry->setMeta(array(
                 'file' => $callerInfo['file'],
-                'line' => $callerInfo['line'],
+                'line' => $callerInfo['evalLine'] ?: $callerInfo['line'],
             ));
         }
         $this->appendLog($logEntry);

@@ -182,8 +182,12 @@ class Backtrace
             $return['classCalled'] = $return['class'];
         }
         if (isset($backtrace[$iFileLine])) {
-            $return['file'] = $backtrace[$iFileLine]['file'];
-            $return['line'] = $backtrace[$iFileLine]['line'];
+            $fileLineVals = \array_intersect_key($backtrace[$iFileLine], \array_flip(array(
+                'evalLine',
+                'file',
+                'line',
+            )));
+            $return = \array_merge($return, $fileLineVals);
         }
         if ($return['type'] === '->') {
             $return['classContext'] = \get_class($backtrace[$iFunc]['object']);
@@ -230,12 +234,15 @@ class Backtrace
         if ($exception instanceof ParseError) {
             return array();
         }
-        $backtrace = $exception->getTrace();
-        \array_unshift($backtrace, array(
+        $trace = $exception->getTrace();
+        $fileLine = array(
             'file' => $exception->getFile(),
             'line' => $exception->getLine(),
-        ));
-        return $backtrace;
+        );
+        if (\array_intersect_assoc($fileLine, \reset($trace)) !== $fileLine) {
+            \array_unshift($trace, $fileLine);
+        }
+        return $trace;
     }
 
     /**

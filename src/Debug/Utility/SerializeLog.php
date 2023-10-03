@@ -7,7 +7,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2022 Brad Kent
- * @version   v3.0
+ * @version   v3.1
  */
 
 namespace bdk\Debug\Utility;
@@ -85,7 +85,7 @@ class SerializeLog
     }
 
     /**
-     * Use to unserialize the log serialized by emailLog
+     * Unserialize log data serialized by emailLog
      *
      * @param string $str serialized log data
      *
@@ -93,16 +93,9 @@ class SerializeLog
      */
     public static function unserialize($str)
     {
-        $data = false;
         $str = self::extractLog($str);
-        $str = self::unserializeDecode($str);
-        if ($str) {
-            $data = Php::unserializeSafe($str, array(
-                'bdk\\Debug\\Abstraction\\Abstraction',
-                'bdk\\Debug\\Abstraction\\Object\\Abstraction',
-                'bdk\\PubSub\\ValueStore',
-            ));
-        }
+        $str = self::unserializeDecodeAndInflate($str);
+        $data = self::unserializeSafe($str);
         if (!$data) {
             return false;
         }
@@ -343,7 +336,7 @@ class SerializeLog
      *
      * @return string|false
      */
-    private static function unserializeDecode($str)
+    private static function unserializeDecodeAndInflate($str)
     {
         $str = StringUtil::isBase64Encoded($str)
             ? \base64_decode($str, true)
@@ -355,5 +348,30 @@ class SerializeLog
             }
         }
         return $str;
+    }
+
+    /**
+     * Safely unserialize data
+     * Handle legazy data
+     *
+     * @param string $serialized serialized array
+     *
+     * @return array|false
+     */
+    private static function unserializeSafe($serialized)
+    {
+        $serialized = \preg_replace(
+            '/O:33:"bdk\\\Debug\\\Abstraction\\\Abstraction":((?:\d+):{s:4:"type";s:6:"object")/',
+            'O:40:"bdk\\Debug\\Abstraction\\Object\Abstraction":$1',
+            (string) $serialized
+        );
+        if (!$serialized) {
+            return false;
+        }
+        return Php::unserializeSafe($serialized, array(
+            'bdk\\Debug\\Abstraction\\Abstraction',
+            'bdk\\Debug\\Abstraction\\Object\\Abstraction',
+            'bdk\\PubSub\\ValueStore',
+        ));
     }
 }

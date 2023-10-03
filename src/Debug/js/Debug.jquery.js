@@ -423,9 +423,13 @@
     $entry.find('table tbody tr').each(function () {
       var $tr = $(this);
       var $tds = $tr.find('> td');
+      var info = {
+        file: $tr.data('file') || $tds.eq(0).text(),
+        line: $tr.data('line') || $tds.eq(1).text()
+      };
       var $a = $('<a>', {
         class: 'file-link',
-        href: buildFileLink($tds.eq(0).text(), $tds.eq(1).text()),
+        href: buildFileLink(info.file, info.line),
         html: '<i class="fa fa-fw fa-external-link"></i>',
         style: 'vertical-align: bottom',
         title: 'Open in editor'

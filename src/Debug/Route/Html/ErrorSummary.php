@@ -151,52 +151,39 @@ class ErrorSummary
     /**
      * Build backtrace table
      *
-     * @param array $backtrace backtrace from error object
+     * @param array $trace backtrace from error object
      *
      * @return string
      */
-    protected function buildFatalBacktrace($backtrace)
+    protected function buildFatalBacktrace($trace)
     {
         $cfgWas = $this->debug->setCfg(array(
             'maxDepth' => 0,
             // Don't inspect objects when dumping trace arguments...  potentially huge objects
             'objectsExclude' => array('*'),
         ), Debug::CONFIG_NO_PUBLISH);
-        $logEntry = $this->buildFatalBacktraceLogEntry($backtrace);
-        $this->debug->rootInstance->getPlugin('methodTable')->doTable($logEntry);
-        $this->debug->setCfg($cfgWas, Debug::CONFIG_NO_PUBLISH | Debug::CONFIG_NO_RETURN);
-        return '<li class="m_trace" data-detect-files="true">' . $this->routeHtml->dumper->table->build(
-            $logEntry['args'][0],
-            $logEntry['meta']
-        ) . '</li>' . "\n";
-    }
-
-    /**
-     * Create temporary LogEntry used by buildFatalBacktrace
-     *
-     * @param array $backtrace backtrace from error object
-     *
-     * @return LogEntry
-     */
-    private function buildFatalBacktraceLogEntry($backtrace)
-    {
-        return new LogEntry(
+        $logEntry = new LogEntry(
             $this->debug,
             'table',
-            array($backtrace),
+            array(),
             array(
                 'attribs' => array(
                     'class' => 'trace trace-context table-bordered',
                 ),
-                'caption' => 'trace',
-                'columns' => array('file','line','function'),
                 'inclContext' => true,
                 'onBuildRow' => array(
                     array($this->routeHtml->dumper->helper, 'tableMarkupFunction'),
                     array($this->routeHtml->dumper->helper, 'tableAddContextRow'),
                 ),
+                'trace' => $trace,
             )
         );
+        $this->debug->rootInstance->getPlugin('methodTrace')->doTrace($logEntry);
+        $this->debug->setCfg($cfgWas, Debug::CONFIG_NO_PUBLISH | Debug::CONFIG_NO_RETURN);
+        return '<li class="m_trace" data-detect-files="true">' . $this->routeHtml->dumper->table->build(
+            $logEntry['args'][0],
+            $logEntry['meta']
+        ) . '</li>' . "\n";
     }
 
     /**

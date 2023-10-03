@@ -57,25 +57,15 @@ class Trace implements SubscriberInterface
             $this->debug,
             __FUNCTION__,
             \func_get_args(),
-            array(
-                'columns' => array('file','line','function'),
-                'detectFiles' => true,
-                'inclArgs' => null,  // incl arguments with context?
-                                     // will default to $inclContext
-                                     //   may want to set meta['cfg']['objectsExclude'] = '*'
-                'sortable' => false,
-                'trace' => null,  // set to specify trace
-            ),
+            array(),
             $this->debug->rootInstance->getMethodDefaultArgs(__METHOD__),
             array(
                 'caption',
                 'inclContext',
             )
         );
-        if ($logEntry->getMeta('inclArgs') === null) {
-            $logEntry->setMeta('inclArgs', $logEntry->getMeta('inclContext'));
-        }
         $this->doTrace($logEntry);
+        $this->debug->log($logEntry);
         return $this->debug;
     }
 
@@ -88,27 +78,82 @@ class Trace implements SubscriberInterface
      */
     public function doTrace(LogEntry $logEntry)
     {
-        $caption = $logEntry->getMeta('caption');
-        if (\is_string($caption) === false) {
-            $this->debug->warn(\sprintf(
-                'trace caption should be a string.  %s provided',
-                $this->debug->php->getDebugType($caption)
-            ));
-            $logEntry->setMeta('caption', 'trace');
-        }
-        // Get trace and include args if we're including context
-        $inclContext = $logEntry->getMeta('inclContext');
-        $inclArgs = $logEntry->getMeta('inclArgs');
-        $backtrace = isset($logEntry['meta']['trace'])
-            ? $logEntry['meta']['trace']
-            : $this->debug->backtrace->get($inclArgs ? Backtrace::INCL_ARGS : 0);
-        $logEntry->setMeta('trace', null);
-        if ($backtrace && $inclContext) {
-            $backtrace = $this->debug->backtrace->addContext($backtrace);
+        $this->debug = $logEntry->getSubject();
+        $meta = $this->getMeta($logEntry);
+        $trace = isset($meta['trace'])
+            ? $meta['trace']
+            : $this->debug->backtrace->get($meta['inclArgs'] ? Backtrace::INCL_ARGS : 0);
+        if ($trace && $meta['inclContext']) {
+            $trace = $this->debug->backtrace->addContext($trace);
             $this->debug->addPlugin($this->debug->pluginHighlight, 'highlight');
         }
-        $logEntry['args'] = array($backtrace);
+        unset($meta['trace']);
+        $logEntry['args'] = array($trace);
+        $logEntry['meta'] = $meta;
+        $this->evalRows($logEntry);
         $this->debug->rootInstance->getPlugin('methodTable')->doTable($logEntry);
-        $this->debug->log($logEntry);
+    }
+
+    /**
+     * Set default meta values
+     *
+     * @param LogEntry $logEntry LogEntry instance
+     *
+     * @return array meta values
+     */
+    private function getMeta(LogEntry $logEntry)
+    {
+        $meta = \array_merge(array(
+            'caption' => 'trace',
+            'columns' => array('file','line','function'),
+            'detectFiles' => true,
+            'inclArgs' => null,  // incl arguments with context?
+                                 // will default to $inclContext
+                                 //   may want to set meta['cfg']['objectsExclude'] = '*'
+            'inclContext' => false,
+            'sortable' => false,
+            'trace' => null,  // set to specify trace
+        ), $logEntry['meta']);
+
+        if (\is_string($meta['caption']) === false) {
+            $this->debug->warn(\sprintf(
+                'trace caption should be a string.  %s provided',
+                $this->debug->php->getDebugType($meta['caption'])
+            ));
+            $meta['caption'] = 'trace';
+        }
+        if ($meta['inclArgs'] === null) {
+            $meta['inclArgs'] = $meta['inclContext'];
+        }
+        return $meta;
+    }
+
+    /**
+     * Handle "eval()'d code" frames
+     *
+     * @param LogEntry $logEntry LogEntry instance
+     *
+     * @return void
+     */
+    private function evalRows(LogEntry $logEntry)
+    {
+        $meta = \array_replace_recursive(array(
+            'tableInfo' => array(
+                'rows' => array(),
+            ),
+        ), $logEntry['meta']);
+        $trace = $logEntry['args'][0];
+        foreach ($trace as $i => $frame) {
+            if (!empty($frame['evalLine'])) {
+                $meta['tableInfo']['rows'][$i]['attribs'] = array(
+                    'data-file' => $frame['file'],
+                    'data-line' => $frame['line'],
+                );
+                $trace[$i]['file'] = 'eval()\'d code';
+                $trace[$i]['line'] = $frame['evalLine'];
+            }
+        }
+        $logEntry['meta'] = $meta;
+        $logEntry['args'] = array($trace);
     }
 }

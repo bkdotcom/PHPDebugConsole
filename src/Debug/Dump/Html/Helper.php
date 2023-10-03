@@ -124,7 +124,7 @@ class Helper
      */
     public function tableAddContextRow($html, array $row, array $rowInfo, $index)
     {
-        if ($rowInfo['context'] === Abstracter::UNDEFINED) {
+        if (empty($rowInfo['context']) || $rowInfo['context'] === Abstracter::UNDEFINED) {
             return $html;
         }
         $html = \str_replace('<tr>', '<tr' . ($index === 0 ? ' class="expanded"' : '') . ' data-toggle="next">', $html);

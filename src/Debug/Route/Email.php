@@ -88,13 +88,14 @@ class Email implements RouteInterface
             ? 'Command: ' . \implode(' ', $this->debug->getServerParam('argv', array()))
             : 'Request: ' . $this->debug->serverRequest->getMethod()
                 . ' ' . $this->debug->redact((string) $this->debug->serverRequest->getUri());
+        $body .= "\n\n";
         /*
             List errors that occured
         */
         $errorStr = $this->buildErrorList();
         if ($errorStr) {
             $body .= 'Error(s):' . "\n"
-                . $errorStr . "\n";
+                . $errorStr . "\n\n";
         }
         /*
             "attach" serialized log to body

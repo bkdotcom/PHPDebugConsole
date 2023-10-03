@@ -81,6 +81,7 @@ class Table
         foreach ($rows as $k => $row) {
             $rowInfo = \array_merge(
                 array(
+                    'attribs' => array(),
                     'class' => null,
                     'key' => null,
                     'summary' => null,
@@ -89,8 +90,7 @@ class Table
                     ? $this->options['tableInfo']['rows'][$k]
                     : array()
             );
-            $html = $this->buildRow($row, $rowInfo, $k);
-            $tBody .= $html;
+            $tBody .= $this->buildRow($row, $rowInfo, $k);
         }
         $tBody = \str_replace(' title=""', '', $tBody);
         return '<tbody>' . "\n" . $tBody . '</tbody>' . "\n";
@@ -192,12 +192,12 @@ class Table
      *
      * @return string
      */
-    protected function buildRow($row, $rowInfo, $rowKey)
+    protected function buildRow($row, array $rowInfo, $rowKey)
     {
         $str = '';
         $rowKey = $rowInfo['key'] ?: $rowKey;
         $rowKeyParsed = $this->debug->html->parseTag($this->dumper->valDumper->dump($rowKey));
-        $str .= '<tr>';
+        $str .= '<tr' . $this->debug->html->buildAttribString($rowInfo['attribs']) . '>';
         /*
             Output key
         */

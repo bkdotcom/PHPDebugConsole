@@ -13,6 +13,7 @@
 namespace bdk\Debug\Collector;
 
 use bdk\Debug;
+use bdk\Debug\Collector\MonologHandlerCompatTrait;
 use InvalidArgumentException;
 use Monolog\Handler\PsrHandler;
 use Monolog\Logger;
@@ -23,6 +24,8 @@ use Psr\Log\LoggerInterface;
  */
 class MonologHandler extends PsrHandler
 {
+    use MonologHandlerCompatTrait;
+
     /**
      * Constructor
      *
@@ -52,9 +55,16 @@ class MonologHandler extends PsrHandler
     }
 
     /**
-     * {@inheritDoc}
+     * the `handle` method
+     *
+     * Handle method provided by MonologHandlerCompatTrait (to support different method signatures in interface)
+     *
+     * @param array $record The record to handle
+     *
+     * @return bool true means that this handler handled the record, and that bubbling is not permitted.
+     *                      false means the record was either not processed or that this handler allows bubbling.
      */
-    public function handle(array $record)
+    protected function doHandle(array $record)
     {
         $this->logger->log(
             \strtolower($record['level_name']),

@@ -237,6 +237,10 @@ class Logger extends AbstractLogger
         if ($context) {
             $args[] = $context;
             $logEntry->setMeta('glue', ', ');
+            $logEntry->setMeta('cfg', array(
+                'maxDepth' => 6,
+                'methodCollect' => false,
+            ));
         }
         $logEntry['args'] = $args;
     }

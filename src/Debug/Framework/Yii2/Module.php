@@ -26,11 +26,10 @@ use bdk\PubSub\SubscriberInterface;
 use Yii;
 use yii\base\BootstrapInterface;
 use yii\base\Event as YiiEvent;
-use yii\base\Model;
 use yii\base\Module as BaseModule;
 
 /**
- * PhpDebugBar Yii 2 Module
+ * PhpDebugConsole Yii 2 Module
  */
 class Module extends BaseModule implements SubscriberInterface, BootstrapInterface
 {
@@ -179,13 +178,12 @@ class Module extends BaseModule implements SubscriberInterface, BootstrapInterfa
      * @param Event $event Event instance
      *
      * @return void
-     *
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function onDebugOutput(Event $event)
     {
         $this->logCollectedEvents();
-        $this->logUser();
+        $user = new LogUser($this);
+        $user->onDebugOutput($event);
     }
 
     /**
@@ -247,6 +245,22 @@ class Module extends BaseModule implements SubscriberInterface, BootstrapInterfa
     }
 
     /**
+     * Config get wrapper
+     *
+     * @param string $name    option name
+     * @param mixed  $default default vale
+     *
+     * @return bool
+     */
+    public function shouldCollect($name, $default = false)
+    {
+        $val = $this->debug->rootInstance->getCfg('yii.' . $name);
+        return $val !== null
+            ? $val
+            : $default;
+    }
+
+    /**
      * Collect Yii events
      *
      * @return void
@@ -283,10 +297,10 @@ class Module extends BaseModule implements SubscriberInterface, BootstrapInterfa
      */
     protected function collectLog()
     {
+        $this->logTarget = new LogTarget($this->debug);
         if ($this->shouldCollect('log') === false) {
             return;
         }
-        $this->logTarget = new LogTarget($this->debug);
         $log = $this->module->getLog();
         $log->flushInterval = 1;
         $log->targets['phpDebugConsole'] = $this->logTarget;
@@ -399,124 +413,5 @@ class Module extends BaseModule implements SubscriberInterface, BootstrapInterfa
         }
         \ksort($sessionVals);
         $debug->log($sessionVals);
-    }
-
-    /**
-     * Log current user info
-     *
-     * @return void
-     */
-    protected function logUser()
-    {
-        if ($this->shouldCollect('user') === false) {
-            return;
-        }
-
-        $user = $this->module->get('user', false);
-        if ($user === null || $user->isGuest) {
-            return;
-        }
-
-        $debug = $this->debug->rootInstance->getChannel('User');
-        $debug->eventManager->subscribe(Debug::EVENT_LOG, function (LogEntry $logEntry) {
-            $captions = array('roles', 'permissions');
-            $isRolesPermissions = $logEntry['method'] === 'table' && \in_array($logEntry->getMeta('caption'), $captions, true);
-            if (!$isRolesPermissions) {
-                return;
-            }
-            $logEntry['args'] = array($this->tableTsToString($logEntry['args'][0]));
-        });
-
-        $this->logUserIdentity($debug);
-        $this->logUserRolesPermissions($debug);
-    }
-
-    /**
-     * Convert unix-timestamps to strings
-     *
-     * @param array $rows table rows
-     *
-     * @return array rows
-     */
-    private function tableTsToString($rows)
-    {
-        foreach ($rows as $i => $row) {
-            $tsCols = array('createdAt', 'updatedAt');
-            $nonEmptyTsVals = \array_filter(\array_intersect_key($row, \array_flip($tsCols)));
-            foreach ($nonEmptyTsVals as $key => $val) {
-                $val = $val instanceof Abstraction
-                    ? $val['value']
-                    : $val;
-                $datetime = new \DateTime('@' . $val);
-                $rows[$i][$key] = \str_replace('+0000', '', $datetime->format('Y-m-d H:i:s T'));
-            }
-        }
-        return $rows;
-    }
-
-    /**
-     * Log user Identity attributes
-     *
-     * @param Debug $debug Debug instance
-     *
-     * @return void
-     */
-    private function logUserIdentity(Debug $debug)
-    {
-        $user = $this->module->get('user', false);
-        $identityData = $user->identity->attributes;
-        if ($user->identity instanceof Model) {
-            $identityData = array();
-            foreach ($user->identity->attributes as $key => $val) {
-                $key = $user->identity->getAttributeLabel($key);
-                $identityData[$key] = $val;
-            }
-        }
-        $debug->table($identityData);
-    }
-
-    /**
-     * Log user permissions
-     *
-     * @param Debug $debug Debug instance
-     *
-     * @return void
-     */
-    private function logUserRolesPermissions(Debug $debug)
-    {
-        try {
-            $authManager = Yii::$app->getAuthManager();
-            if (!($authManager instanceof \yii\rbac\ManagerInterface)) {
-                return;
-            }
-            $user = $this->module->get('user', false);
-            $cols = array(
-                'description',
-                'ruleName',
-                'data',
-                'createdAt',
-                'updatedAt',
-            );
-            $debug->table('roles', $authManager->getRolesByUser($user->id), $cols);
-            $debug->table('permissions', $authManager->getPermissionsByUser($user->id), $cols);
-        } catch (\Exception $e) {
-            $debug->error('Exception logging user roles and permissions', $e);
-        }
-    }
-
-    /**
-     * Config get wrapper
-     *
-     * @param string $name    option name
-     * @param mixed  $default default vale
-     *
-     * @return bool
-     */
-    protected function shouldCollect($name, $default = false)
-    {
-        $val = $this->debug->rootInstance->getCfg('yii.' . $name);
-        return $val !== null
-            ? $val
-            : $default;
     }
 }

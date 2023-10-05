@@ -36,6 +36,6 @@ in the `config/bundles.php` file of your project:
 
 return [
     // ...
-    bdk\Debug>\Framework\Symfony\DebugBundle\BdkDebugBundle::class => ['all' => true],
+    bdk\Debug\Framework\Symfony\DebugBundle\BdkDebugBundle::class => ['all' => true],
 ];
 ```

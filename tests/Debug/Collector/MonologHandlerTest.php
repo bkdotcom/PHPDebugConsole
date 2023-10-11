@@ -28,7 +28,7 @@ class MonologHandlerTest extends DebugTestFramework
     public function testConstructPassedLogger()
     {
         $handler = new MonologHandler($this->debug->logger);
-        $this->assertInstanceOf('bdk\\Debug\\Collector\\MonologHandler', $handler);
+        self::assertInstanceOf('bdk\\Debug\\Collector\\MonologHandler', $handler);
     }
 
     public function testConstructThrowsException()
@@ -53,9 +53,9 @@ class MonologHandlerTest extends DebugTestFramework
         $logEntry = $this->debug->data->get($path);
         $array = $this->helper->logEntryToArray($logEntry);
         // $this->helper->stderr($array);
-        $this->assertSame($method, $array['method']);
-        $this->assertSame($args, $array['args']);
-        $this->assertSame($psr3method, $array['meta']['psr3level']);
+        self::assertSame($method, $array['method']);
+        self::assertSame($args, $array['args']);
+        self::assertSame($psr3method, $array['meta']['psr3level']);
     }
 
     /**
@@ -81,13 +81,12 @@ class MonologHandlerTest extends DebugTestFramework
         );
         if (\in_array($psr3method, $levelsHandled, true)) {
             $array = $this->helper->logEntryToArray($logEntry);
-            $this->assertSame($method, $array['method']);
-            $this->assertSame($args, $array['args']);
-            $this->assertSame($psr3method, $array['meta']['psr3level']);
-        } else {
-            // $this->helper->stderr($psr3method, $logEntry);
-            $this->assertNull($logEntry);
+            self::assertSame($method, $array['method']);
+            self::assertSame($args, $array['args']);
+            self::assertSame($psr3method, $array['meta']['psr3level']);
+            return;
         }
+        self::assertNull($logEntry);
     }
 
     /*
@@ -119,7 +118,7 @@ class MonologHandlerTest extends DebugTestFramework
             'adj' => 'Awesome',
             'foo' => 'bar',
         ));
-        $this->assertSame(array(
+        self::assertSame(array(
             'method' => 'log',
             'args' => array(
                 'Awesome debugging',
@@ -152,7 +151,7 @@ class MonologHandlerTest extends DebugTestFramework
             'table' => $tableData,
             'columns' => array('name', 'age'),
         ));
-        $this->assertSame(array(
+        self::assertSame(array(
             'method' => 'table',
             'args' => array(
                 $tableDataLogged,

@@ -93,7 +93,7 @@ class Runtime extends AbstractComponent implements SubscriberInterface
     }
 
     /**
-     * DebUg::EVENT_OUTPUT SUBSCRIBER
+     * Debug::EVENT_OUTPUT SUBSCRIBER
      *
      * @return void
      */

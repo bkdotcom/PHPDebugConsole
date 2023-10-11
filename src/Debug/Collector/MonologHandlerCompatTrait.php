@@ -20,7 +20,11 @@ $refClass = new \ReflectionClass('Monolog\\Handler\\HandlerInterface');
 $refMethod = $refClass->getMethod('handle');
 
 if (\method_exists($refMethod, 'hasReturnType') && $refMethod->hasReturnType()) {
-    require __DIR__ . '/MonologHandlerCompatTrait_return.php';
+    $refParam = $refMethod->getParameters()[0];
+    $type = \bdk\Debug\Abstraction\Object\Helper::getParamType($refParam);
+    require $type === 'array'
+        ? __DIR__ . '/MonologHandlerCompatTrait_2.0.php'
+        : __DIR__ . '/MonologHandlerCompatTrait_3.0.php';
 } elseif (\trait_exists(__NAMESPACE__ . '\\MonologHandlerCompatTrait', false) === false) {
     trait MonologHandlerCompatTrait
     {

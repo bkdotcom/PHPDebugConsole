@@ -12,21 +12,27 @@
 
 namespace bdk\Debug\Collector;
 
-/**
- * Provide handle method (with return type-hint)
- */
-trait MonologHandlerCompatTrait
-{
+/*
+    Wrap in condition.
+    PHPUnit code coverage scans all files and will conflict
+*/
+if (\trait_exists(__NAMESPACE__ . '\\MonologHandlerCompatTrait', false) === false) {
     /**
-     * Handles a record.
-     *
-     * @param array $record The record to handle
-     *
-     * @return bool true means that this handler handled the record, and that bubbling is not permitted.
-     *                      false means the record was either not processed or that this handler allows bubbling.
+     * Provide handle method (with return type-hint)
      */
-    public function handle(array $record): bool
+    trait MonologHandlerCompatTrait
     {
-        return $this->doHandle($record);
+        /**
+         * Handles a record.
+         *
+         * @param array $record The record to handle
+         *
+         * @return bool true means that this handler handled the record, and that bubbling is not permitted.
+         *                      false means the record was either not processed or that this handler allows bubbling.
+         */
+        public function handle(array $record): bool
+        {
+            return $this->doHandle($record);
+        }
     }
 }

@@ -163,12 +163,10 @@ class LogEnv implements SubscriberInterface
         $settings = array(
             array('name' => 'session.cookie_httponly'),
             array(
-                'filter' => FILTER_VALIDATE_INT,
                 'name' => 'session.cookie_lifetime',
                 'valCompare' => 0,
             ),
             array(
-                'filter' => FILTER_DEFAULT,
                 'msg' => 'should not be PHPSESSID (just as %cexpose_php%c should be disabled)',
                 'name' => 'session.name',
                 'operator' => '!=',

@@ -91,6 +91,11 @@ class LogPhp implements SubscriberInterface
             'name' => 'expose_php',
             'valCompare' => false,
         ));
+        $this->assertSetting(array(
+            'name' => 'default_charset',
+            'operator' => '!=',
+            'valCompare' => '',
+        ));
         $this->assertExtensions();
         $this->logXdebug();
     }
@@ -167,11 +172,18 @@ class LogPhp implements SubscriberInterface
             );
         }
         $this->assertSetting(array(
-            'filter' => FILTER_VALIDATE_INT,
             'msg' => 'Multibyte string function overloading is enabled (is evil)',
             'name' => 'mbstring.func_overload',
-            'valCompare' => array(0, false),
+            'valCompare' => false,
         ));
+        if (PHP_VERSION_ID < 50600) {
+            // default_charset should be used for php >= 5.6
+            $this->assertSetting(array(
+                'name' => 'mb_string.internal_encoding',
+                'operator' => '!=',
+                'valCompare' => '',
+            ));
+        }
     }
 
     /**

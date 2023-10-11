@@ -21,7 +21,7 @@ $refMethod = $refClass->getMethod('handle');
 
 if (\method_exists($refMethod, 'hasReturnType') && $refMethod->hasReturnType()) {
     require __DIR__ . '/MonologHandlerCompatTrait_return.php';
-} elseif (\trait_exists(__NAMESPACE__ . '\\MethodSignatureCompatTrait', false) === false) {
+} elseif (\trait_exists(__NAMESPACE__ . '\\MonologHandlerCompatTrait', false) === false) {
     trait MonologHandlerCompatTrait
     {
         /**

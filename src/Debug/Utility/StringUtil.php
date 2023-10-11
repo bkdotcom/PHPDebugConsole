@@ -301,7 +301,7 @@ class StringUtil
      * @param mixed  $valB     Value B
      * @param string $operator (strcmp) Comparison operator
      *
-     * @return bool
+     * @return bool|int
      */
     private static function doCompare($valA, $valB, $operator)
     {

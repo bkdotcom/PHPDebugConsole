@@ -12,6 +12,8 @@
 
 namespace bdk\Debug\Plugin;
 
+use bdk\Debug;
+
 /**
  * Provite assertSetting method
  */
@@ -28,18 +30,15 @@ trait AssertSettingTrait
     {
         $setting = $this->assertSettingPrep(\array_merge(array(
             'addParams' => array(),
-            'filter' => FILTER_VALIDATE_BOOLEAN,
+            'filter' => FILTER_DEFAULT, // filter applied if getting value from ini val
             'msg' => '',    // (optional) message displayed if assertion fails
             'name' => '',   // ini name
             'operator' => '==',
             'valActual' => '__use_ini_val__',
             'valCompare' => true,
         ), $setting));
-        $assert = \is_array($setting['valCompare'])
-            ? \in_array($setting['valActual'], $setting['valCompare'], true)
-            : $this->debug->stringUtil->compare($setting['valActual'], $setting['valCompare'], $setting['operator']);
         $params = array(
-            $assert,
+            $this->debug->stringUtil->compare($setting['valActual'], $setting['valCompare'], $setting['operator']),
             $setting['name']
                 ? '%c' . $setting['name'] . '%c: ' . $setting['msg']
                 : $setting['msg'],
@@ -62,18 +61,46 @@ trait AssertSettingTrait
      */
     private function assertSettingPrep($setting)
     {
+        if (\is_bool($setting['valCompare'])) {
+            $setting['filter'] = FILTER_VALIDATE_BOOLEAN;
+        } elseif (\is_int($setting['valCompare'])) {
+            $setting['filter'] = FILTER_VALIDATE_INT;
+        }
         if ($setting['valActual'] === '__use_ini_val__') {
             $setting['valActual'] = \filter_var(\ini_get($setting['name']), $setting['filter']);
         }
-        $valFriendly = $setting['filter'] === FILTER_VALIDATE_BOOLEAN
-            ? ($setting['valCompare'] ? 'enabled' : 'disabled')
-            : $setting['valCompare'];
-        if (!$setting['msg']) {
-            $msgDefault = $setting['operator'] === '=='
-                ? 'should be ' . $valFriendly
-                : 'should not be ' . $valFriendly;
-            $setting['msg'] = $msgDefault;
+        if ($setting['msg']) {
+            return $setting;
+        }
+        $valFriendly = $this->valFriendly($setting);
+        $setting['msg'] = \sprintf(
+            '%s %s',
+            $setting['operator'] === '==' ? 'should be' : 'should not be',
+            $valFriendly
+        );
+        if (\substr($valFriendly, 0, 1) === '<') {
+            $setting['addParams'][] = Debug::meta('sanitize', false);
         }
         return $setting;
+    }
+
+    /**
+     * Get the friendly expected / not-expected value for default message
+     *
+     * @param array $setting setting options
+     *
+     * @return string
+     */
+    private function valFriendly(array $setting)
+    {
+        if ($setting['filter'] === FILTER_VALIDATE_BOOLEAN) {
+            return $setting['valCompare'] ? 'enabled' : 'disabled';
+        }
+        if ($setting['valCompare'] === '') {
+            return 'empty';
+        }
+        return \is_string($setting['valCompare'])
+            ? '<span class="t_string">' . \htmlspecialchars($setting['valCompare']) . '</span>'
+            : $setting['valCompare'];
     }
 }

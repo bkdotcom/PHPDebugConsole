@@ -234,23 +234,9 @@ class AbstractObjectMethodParams
      */
     private function getParamTypeHint(ReflectionParameter $refParameter, $phpDocType)
     {
-        $matches = array();
-        if ($phpDocType !== null) {
-            return $this->helper->resolvePhpDocType($phpDocType, $this->abs);
-        }
-        if (PHP_VERSION_ID >= 70000) {
-            return $this->helper->getTypeString($refParameter->getType());
-        }
-        if ($refParameter->isArray()) {
-            // isArray is deprecated in php 8.0
-            // isArray is only concerned with type-hint and does not look at default value
-            return 'array';
-        }
-        if (\preg_match('/\[\s<\w+>\s([\w\\\\]+)/s', $refParameter->__toString(), $matches)) {
-            // Parameter #0 [ <required> namespace\Type $varName ]
-            return $matches[1];
-        }
-        return null;
+        return $phpDocType !== null
+            ? $this->helper->resolvePhpDocType($phpDocType, $this->abs)
+            : $this->helper->getParamType($refParameter);
     }
 
     /**

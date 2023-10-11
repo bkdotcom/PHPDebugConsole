@@ -1,9 +1,5 @@
 name: PHPUnit
-on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+on: [push, pull_request]
 jobs:
   run:
     runs-on: ${{ matrix.operating-system }}
@@ -34,7 +30,7 @@ jobs:
         mysql -e 'CREATE DATABASE ${{ env.MYSQL_DATABASE }};' -u${{ env.MYSQL_USERNAME }} -p${{ env.MYSQL_PASSWORD }}
         mysqld --version
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: Install PHP
       uses: shivammathur/setup-php@v2 # https://github.com/marketplace/actions/setup-php-action
       with:
@@ -43,11 +39,13 @@ jobs:
         ini-values: error_reporting=-1, post_max_size=256M, memory_limit=512M
         coverage: xdebug #optional
     - name: Check PHP Version
-      run: php -v
+      run: |
+        php -v
+        php -r 'echo "curl version: " . curl_version()["version"] . "\n";'
     - name: Validate composer.json and composer.lock
       run: composer validate --strict
     - name: Cache composer packages
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       id: composer-cache
       with:
         path: vendor
@@ -61,8 +59,8 @@ jobs:
     - name: Unit test
       run: composer run test
     - name: Publish code coverage
-      uses: paambaati/codeclimate-action@v3.0.0
-      if: matrix.php-version == '8.2'
+      if: ${{ matrix.php-version == '8.2' && github.ref_name == 'master' }}
+      uses: paambaati/codeclimate-action@v4.0.0
       continue-on-error: true
       env:
         CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
@@ -71,6 +69,6 @@ jobs:
         coverageCommand: vendor/bin/phpunit --coverage-clover coverage/clover.xml
         coverageLocations: coverage/clover.xml:clover
     - name: Coverage summary
-      if: matrix.php-version == '8.2'
+      if: ${{ matrix.php-version == '8.2' && github.ref_name == 'master' }}
       continue-on-error: true
       run: php -f tests/coverageChecker.php -- coverage/clover.xml

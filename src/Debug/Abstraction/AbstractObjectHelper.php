@@ -16,6 +16,7 @@ use bdk\Debug\Utility\PhpDoc;
 use bdk\Debug\Utility\UseStatements;
 use ReflectionAttribute;
 use ReflectionNamedType;
+use ReflectionParameter;
 use ReflectionType;
 use Reflector;
 
@@ -55,6 +56,30 @@ class AbstractObjectHelper
                 'arguments' => $attribute->getArguments(),
             );
         }, $reflector->getAttributes());
+    }
+
+    /**
+     * Get param type
+     *
+     * @param ReflectionParameter $refParameter reflectionParameter
+     *
+     * @return string|null
+     */
+    public static function getParamType(ReflectionParameter $refParameter)
+    {
+        if (PHP_VERSION_ID >= 70000) {
+            return self::getTypeString($refParameter->getType());
+        }
+        if ($refParameter->isArray()) {
+            // isArray is deprecated in php 8.0
+            // isArray is only concerned with type-hint and does not look at default value
+            return 'array';
+        }
+        if (\preg_match('/\[\s<\w+>\s([\w\\\\]+)/s', $refParameter->__toString(), $matches)) {
+            // Parameter #0 [ <required> namespace\Type $varName ]
+            return $matches[1];
+        }
+        return null;
     }
 
     /**
@@ -132,7 +157,7 @@ class AbstractObjectHelper
      *
      * @return string|null
      */
-    public function getTypeString(ReflectionType $type = null)
+    public static function getTypeString(ReflectionType $type = null)
     {
         if ($type === null) {
             return null;

@@ -13,19 +13,13 @@
 namespace bdk\Debug\Collector;
 
 /*
-    Support HandlerInterface with/without return type in handle() method definition
+    Wrap in condition.
+    PHPUnit code coverage scans all files and will conflict
 */
-
-$refClass = new \ReflectionClass('Monolog\\Handler\\HandlerInterface');
-$refMethod = $refClass->getMethod('handle');
-
-if (\method_exists($refMethod, 'hasReturnType') && $refMethod->hasReturnType()) {
-    $refParam = $refMethod->getParameters()[0];
-    $type = \bdk\Debug\Abstraction\AbstractObjectHelper::getParamType($refParam);
-    require $type === 'array'
-        ? __DIR__ . '/MonologHandlerCompatTrait_2.0.php'
-        : __DIR__ . '/MonologHandlerCompatTrait_3.0.php';
-} elseif (\trait_exists(__NAMESPACE__ . '\\MonologHandlerCompatTrait', false) === false) {
+if (\trait_exists(__NAMESPACE__ . '\\MonologHandlerCompatTrait', false) === false) {
+    /**
+     * Provide handle method (with return type-hint)
+     */
     trait MonologHandlerCompatTrait
     {
         /**
@@ -36,7 +30,7 @@ if (\method_exists($refMethod, 'hasReturnType') && $refMethod->hasReturnType()) 
          * @return bool true means that this handler handled the record, and that bubbling is not permitted.
          *                      false means the record was either not processed or that this handler allows bubbling.
          */
-        public function handle(array $record)
+        public function handle(array $record): bool
         {
             return $this->doHandle($record);
         }

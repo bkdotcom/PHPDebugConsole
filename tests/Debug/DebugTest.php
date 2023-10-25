@@ -14,6 +14,8 @@ use bdk\PubSub\Manager as EventManager;
  */
 class DebugTest extends DebugTestFramework
 {
+    use ExpectExceptionTrait;
+
     protected $debugBackup = array();
 
     public function testNoComposer()

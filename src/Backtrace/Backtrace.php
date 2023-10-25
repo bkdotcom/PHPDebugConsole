@@ -239,7 +239,7 @@ class Backtrace
             'file' => $exception->getFile(),
             'line' => $exception->getLine(),
         );
-        if (\array_intersect_assoc($fileLine, \reset($trace)) !== $fileLine) {
+        if (\array_intersect_assoc($fileLine, \reset($trace) ?: array()) !== $fileLine) {
             \array_unshift($trace, $fileLine);
         }
         return $trace;

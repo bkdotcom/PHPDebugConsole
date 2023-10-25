@@ -3,6 +3,7 @@
 namespace bdk\Test\Debug;
 
 use bdk\Debug;
+use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 use bdk\PubSub\Manager as EventManager;
 
 /**
@@ -25,6 +26,7 @@ class DebugTest extends DebugTestFramework
 
     public function testBootstrap()
     {
+        $this->expectException('InvalidArgumentException');
         $debug = new Debug(array(
             'container' => array(),
             'serviceProvider' => 'invalid',

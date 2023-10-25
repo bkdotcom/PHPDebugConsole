@@ -14,6 +14,7 @@ namespace bdk\Debug;
 
 use bdk\Container;
 use bdk\Container\ServiceProviderInterface;
+use bdk\Container\Utility as ContainerUtility;
 use bdk\Debug;
 use bdk\Debug\LogEntry;
 use bdk\Debug\ServiceProvider;
@@ -70,11 +71,7 @@ class AbstractDebug
      */
     public function __call($methodName, $args)
     {
-        $logEntry = new LogEntry(
-            $this,
-            $methodName,
-            $args
-        );
+        $logEntry = new LogEntry($this, $methodName, $args);
         $this->publishBubbleEvent(Debug::EVENT_CUSTOM_METHOD, $logEntry);
         if ($logEntry['handled'] !== true) {
             $logEntry->setMeta('isCustomMethod', true);
@@ -208,12 +205,9 @@ class AbstractDebug
      */
     public function onCfgServiceProvider($val)
     {
-        $val = $this->serviceProviderToArray($val);
-        if (\is_array($val) === false) {
-            return $val;
-        }
+        $rawValues = ContainerUtility::toRawValues($val);
         $services = $this->container['services'];
-        foreach ($val as $k => $v) {
+        foreach ($rawValues as $k => $v) {
             if (\in_array($k, $services, true)) {
                 $this->serviceContainer[$k] = $v;
                 unset($val[$k]);
@@ -221,7 +215,7 @@ class AbstractDebug
             }
             $this->container[$k] = $v;
         }
-        return $val;
+        return $rawValues;
     }
 
     /**
@@ -399,41 +393,5 @@ class AbstractDebug
             $this->parentInstance = $cfg['parent'];
             $this->rootInstance = $this->parentInstance->rootInstance;
         }
-    }
-
-    /**
-     * Convert serviceProvider to array of name => value
-     *
-     * @param ServiceProviderInterface|callable|array $val dependency definitions
-     *
-     * @return array
-     */
-    private function serviceProviderToArray($val)
-    {
-        $getContainerRawVals = static function (Container $container) {
-            $keys = $container->keys();
-            $return = array();
-            foreach ($keys as $key) {
-                $return[$key] = $container->raw($key);
-            }
-            return $return;
-        };
-        if ($val instanceof ServiceProviderInterface) {
-            /*
-                convert to array
-            */
-            $containerTmp = new Container();
-            $containerTmp->registerProvider($val);
-            return $getContainerRawVals($containerTmp);
-        }
-        if (\is_callable($val)) {
-            /*
-                convert to array
-            */
-            $containerTmp = new Container();
-            \call_user_func($val, $containerTmp);
-            return $getContainerRawVals($containerTmp);
-        }
-        return $val;
     }
 }

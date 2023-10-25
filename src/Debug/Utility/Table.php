@@ -42,6 +42,31 @@ class Table
     }
 
     /**
+     * Go through all the "rows" of array to determine what the keys are and their order
+     *
+     * @param TableRow[] $rows array of TableRow instance
+     *
+     * @return array
+     */
+    public static function colKeys($rows)
+    {
+        if (\is_array($rows) === false) {
+            return array();
+        }
+        $colKeys = array();
+        foreach ($rows as $row) {
+            if (!$row instanceof TableRow) {
+                $row = new TableRow($row);
+            }
+            $curRowKeys = $row->keys();
+            if ($curRowKeys !== $colKeys) {
+                $colKeys = self::colKeysMerge($curRowKeys, $colKeys);
+            }
+        }
+        return $colKeys;
+    }
+
+    /**
      * Get table rows
      *
      * @return array
@@ -69,31 +94,6 @@ class Table
     public function haveRows()
     {
         return \is_array($this->rows) && \count($this->rows) > 0;
-    }
-
-    /**
-     * Go through all the "rows" of array to determine what the keys are and their order
-     *
-     * @param TableRow[] $rows array of TableRow instance
-     *
-     * @return array
-     */
-    private static function colKeys($rows)
-    {
-        if (\is_array($rows) === false) {
-            return array();
-        }
-        $colKeys = array();
-        foreach ($rows as $row) {
-            if (!$row instanceof TableRow) {
-                $row = new TableRow($row);
-            }
-            $curRowKeys = $row->keys();
-            if ($curRowKeys !== $colKeys) {
-                $colKeys = self::colKeysMerge($curRowKeys, $colKeys);
-            }
-        }
-        return $colKeys;
     }
 
     /**

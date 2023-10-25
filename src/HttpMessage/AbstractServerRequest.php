@@ -43,6 +43,7 @@ abstract class AbstractServerRequest extends Request
      */
     public static function parseStr($str, $opts = array())
     {
+        $str = (string) $str;
         $opts = \array_merge(self::$parseStrOpts, $opts);
         $useParseStr = ($opts['convDot'] || \strpos($str, '.') === false)
             && ($opts['convSpace'] || \strpos($str, ' ') === false);

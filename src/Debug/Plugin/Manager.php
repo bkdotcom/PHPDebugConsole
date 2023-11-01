@@ -23,7 +23,6 @@ use bdk\PubSub\SubscriberInterface;
 use Closure;
 use InvalidArgumentException;
 use OutOfBoundsException;
-use RuntimeException;
 use SplObjectStorage;
 
 /**
@@ -96,30 +95,16 @@ class Manager implements SubscriberInterface, PluginInterface
      * @param array $plugins List of plugins and/or plugin-definitions
      *
      * @return Debug
-     * @throws RuntimeException
+     * @throws InvalidArgumentException
      */
     public function addPlugins(array $plugins)
     {
         \array_walk($plugins, function ($plugin, $key) {
-            $cfg = array();
-            if (\is_array($plugin)) {
-                if (empty($plugin['class'])) {
-                    throw new RuntimeException(\sprintf('plugins[%s]: missing "class" value', $key));
-                }
-                $cfg = $plugin;
-                $class = $cfg['class'];
-                unset($cfg['class']);
-                $plugin = new $class();
-            } elseif (\is_string($plugin)) {
-                $plugin = new $plugin();
-            }
             try {
+                $plugin = $this->instantiatePlugin($plugin);
                 $this->addPlugin($plugin, $key);
             } catch (InvalidArgumentException $e) {
-                throw new RuntimeException(\sprintf('plugins[%s]: %s', $key, $e->getMessage()));
-            }
-            if ($plugin instanceof ConfigurableInterface && !empty($cfg)) {
-                $plugin->setCfg($cfg);
+                throw new InvalidArgumentException(\sprintf('plugins[%s]: %s', $key, $e->getMessage()));
             }
         });
         return $this->debug;
@@ -353,6 +338,36 @@ class Manager implements SubscriberInterface, PluginInterface
         return isset($this->namedPlugins[$pluginName])
             ? $this->namedPlugins[$pluginName]
             : false;
+    }
+
+    /**
+     * Instantiate plugin
+     *
+     * @param object|array|classname $plugin Plugin info
+     *
+     * @return object
+     *
+     * @throws InvalidArgumentException
+     */
+    private function instantiatePlugin($plugin)
+    {
+        $cfg = array();
+        if (\is_string($plugin)) {
+            $plugin = array('class' => $plugin);
+        }
+        if (\is_array($plugin)) {
+            $cfg = $plugin;
+            if (empty($cfg['class'])) {
+                throw new InvalidArgumentException(\sprintf('missing "class" value'));
+            }
+            $class = $cfg['class'];
+            $plugin = new $class();
+            unset($cfg['class']);
+        }
+        if ($plugin instanceof ConfigurableInterface && !empty($cfg)) {
+            $plugin->setCfg($cfg);
+        }
+        return $plugin;
     }
 
     /**

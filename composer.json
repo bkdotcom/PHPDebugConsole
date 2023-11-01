@@ -51,7 +51,7 @@
         "bdk/errorhandler": "3.3.1",
         "bdk/http-message": "1.0",
         "bdk/promise": "1.0",
-        "bdk/pubsub": "3.1",
+        "bdk/pubsub": "3.2",
         "bdk/slack": "1.0",
         "bdk/teams": "1.0",
         "psr/http-message": "1.0.1"

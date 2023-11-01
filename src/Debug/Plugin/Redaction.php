@@ -36,6 +36,7 @@ class Redaction extends AbstractComponent implements SubscriberInterface
      * @var array
      */
     protected $cfg = array(
+        'enabled' => true,
         'redactKeys' => array(
             // key => regex of key
         ),
@@ -151,6 +152,9 @@ class Redaction extends AbstractComponent implements SubscriberInterface
      */
     public function redact($val, $key = null)
     {
+        if ($this->cfg['enabled'] === false) {
+            return $val;
+        }
         if (\is_string($val)) {
             return $this->redactString($val, $key);
         }
@@ -172,6 +176,9 @@ class Redaction extends AbstractComponent implements SubscriberInterface
      */
     public function redactHeaders($headers)
     {
+        if ($this->cfg['enabled'] === false) {
+            return $headers;
+        }
         $isString = \is_string($headers);
         if ($isString) {
             list($startLine, $headers) = $this->parseHeaders($headers);
@@ -195,7 +202,7 @@ class Redaction extends AbstractComponent implements SubscriberInterface
      *
      * @return string
      */
-    public function redactHeaderValue($name, $value)
+    protected function redactHeaderValue($name, $value)
     {
         if (\in_array($name, array('Authorization', 'Proxy-Authorization'), true) === false) {
             return $this->redactString((string) $value, $name);

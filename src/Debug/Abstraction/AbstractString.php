@@ -300,7 +300,7 @@ class AbstractString extends AbstractComponent
     }
 
     /**
-     * Test if string is Base64 enncoded, json, or serialized
+     * Test if string is Base64 encoded, json, or serialized
      *
      * @param string $val string value
      *

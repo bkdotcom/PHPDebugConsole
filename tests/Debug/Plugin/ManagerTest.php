@@ -167,7 +167,7 @@ class ManagerTest extends TestCase
 
     public function testAddPluginsNoClass()
     {
-        $this->expectException('RuntimeException');
+        $this->expectException('InvalidArgumentException');
         $this->expectExceptionMessage('plugins[highlight]: missing "class" value');
         self::$manager->addPlugins(array(
             'highlight' => array(),
@@ -176,7 +176,7 @@ class ManagerTest extends TestCase
 
     public function testAddPluginsInvalid()
     {
-        $this->expectException('RuntimeException');
+        $this->expectException('InvalidArgumentException');
         $this->expectExceptionMessage('plugins[highlight]: addPlugin expects \bdk\Debug\AssetProviderInterface and/or \bdk\PubSub\SubscriberInterface.  stdClass provided');
         self::$manager->addPlugins(array(
             'highlight' => new \stdClass(),

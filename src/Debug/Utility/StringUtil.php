@@ -142,6 +142,9 @@ class StringUtil
         if (\preg_match('/^(\[.+\]|\{.+\})$/s', $val) !== 1) {
             return false;
         }
+        if (\function_exists('json_validate')) {
+            return \json_validate($val, JSON_INVALID_UTF8_IGNORE);
+        }
         \json_decode($val);
         return \json_last_error() === JSON_ERROR_NONE;
     }

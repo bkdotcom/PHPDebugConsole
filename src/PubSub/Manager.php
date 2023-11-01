@@ -216,4 +216,35 @@ class Manager
             }
         }
     }
+
+    /**
+     * Calls the subscribers of an event.
+     *
+     * @param string $eventName   The name of the event to publish
+     * @param array  $subscribers The event subscribers
+     * @param Event  $event       The event object to pass to the subscribers
+     *
+     * @return void
+     */
+    protected function doPublish($eventName, $subscribers, Event $event)
+    {
+        $this->subscriberStack[] = array(
+            'eventName' => $eventName,
+            'subscribers' => $subscribers,
+        );
+        $stackIndex = \count($this->subscriberStack) - 1;
+        $subscribers = &$this->subscriberStack[$stackIndex]['subscribers'];
+        while ($subscribers) {
+            if ($event->isPropagationStopped()) {
+                break;
+            }
+            $subscriberInfo = \array_shift($subscribers);
+            $return = \call_user_func($subscriberInfo['callable'], $event, $eventName, $this);
+            $this->attachReturnToEvent($return, $event);
+            if ($subscriberInfo['onlyOnce']) {
+                $this->unsubscribeFromPriority($eventName, $subscriberInfo['callable'], $subscriberInfo['priority'], true);
+            }
+        }
+        \array_pop($this->subscriberStack);
+    }
 }

@@ -9,6 +9,7 @@ use bdk\PubSub\Manager as EventManager;
 /**
  * PHPUnit tests for Debug class
  *
+ * @covers \bdk\Container\Utility
  * @covers \bdk\Debug
  * @covers \bdk\Debug\AbstractDebug
  */
@@ -329,6 +330,13 @@ class DebugTest extends DebugTestFramework
 
         $this->debug->setCfg('serviceProvider', new \bdk\Test\Debug\Fixture\ServiceProvider());
         self::assertSame('bar2', $this->debug->foo);
+
+        $this->debug->setCfg('serviceProvider', new \bdk\Container(array('foo' => 'bar3')));
+        self::assertSame('bar3', $this->debug->foo);
+
+        $this->expectException('InvalidArgumentException');
+        $this->expectExceptionMessage('toRawValues expects Container, ServiceProviderInterface, callable, or key->value array. stdClass provided');
+        $this->debug->setCfg('serviceProvider', (object) array('foo' => 'bar4'));
     }
 
     /**

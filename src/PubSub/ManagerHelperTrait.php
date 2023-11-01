@@ -47,6 +47,32 @@ trait ManagerHelperTrait
     }
 
     /**
+     * As a convenience, we'll attach subscriber's return value to event['return']
+     *
+     *     * Event must already have 'return' value defined and must be `null` or ""
+     *
+     * @param mixed $return return value
+     * @param Event $event  Event instance
+     *
+     * @return void
+     */
+    private function attachReturnToEvent($return, Event $event)
+    {
+        if ($return === null) {
+            return;
+        }
+        if (\in_array($event['return'], array(null, ''), true) === false) {
+            // event already has non-null return value
+            return;
+        }
+        if (\array_key_exists('return', $event->getValues()) === false) {
+            // return value not defined / not expected to be set
+            return;
+        }
+        $event['return'] = $return;
+    }
+
+    /**
      * Instantiate the object wrapped in the closure factory
      * closure factory may be
      *    [Closure, 'methodName'] - closure returns object
@@ -62,36 +88,6 @@ trait ManagerHelperTrait
         return \count($closureFactory) === 1
             ? $closureFactory[0]    // invokeable object
             : $closureFactory;      // [obj, 'method']
-    }
-
-    /**
-     * Calls the subscribers of an event.
-     *
-     * @param string $eventName   The name of the event to publish
-     * @param array  $subscribers The event subscribers
-     * @param Event  $event       The event object to pass to the subscribers
-     *
-     * @return void
-     */
-    protected function doPublish($eventName, $subscribers, Event $event)
-    {
-        $this->subscriberStack[] = array(
-            'eventName' => $eventName,
-            'subscribers' => $subscribers,
-        );
-        $stackIndex = \count($this->subscriberStack) - 1;
-        $subscribers = &$this->subscriberStack[$stackIndex]['subscribers'];
-        while ($subscribers) {
-            if ($event->isPropagationStopped()) {
-                break;
-            }
-            $subscriberInfo = \array_shift($subscribers);
-            \call_user_func($subscriberInfo['callable'], $event, $eventName, $this);
-            if ($subscriberInfo['onlyOnce']) {
-                $this->unsubscribeFromPriority($eventName, $subscriberInfo['callable'], $subscriberInfo['priority'], true);
-            }
-        }
-        \array_pop($this->subscriberStack);
     }
 
     /**

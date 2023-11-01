@@ -40,6 +40,7 @@ class Constants extends Inheritable
         'declaredPrev' => null,
         'desc' => null,
         'isFinal' => false,
+        'type' => null,
         'value' => null,
         'visibility' => 'public',
     );
@@ -195,6 +196,9 @@ class Constants extends Inheritable
             'isFinal' => PHP_VERSION_ID >= 80100
                 ? $refConstant->isFinal()
                 : false,
+            'type' => PHP_VERSION_ID >= 80300
+                ? $this->helper->getTypeString($refConstant->getType())
+                : null,
             'value' => $value,
             'visibility' => $this->helper->getVisibility($refConstant),
         ));

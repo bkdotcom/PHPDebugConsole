@@ -286,9 +286,9 @@ class AbstractDebug
      */
     private function bootstrap($cfg)
     {
-        $bootstrapConfig = $this->bootstrapConfig($cfg);
-        $this->bootstrapSetInstances($bootstrapConfig);
-        $this->bootstrapContainer($bootstrapConfig);
+        $cfgBootstrap = $this->bootstrapConfig($cfg);
+        $this->bootstrapSetInstances($cfgBootstrap);
+        $this->bootstrapContainer($cfgBootstrap);
 
         $this->config = $this->container['config'];
         $this->container->setCfg('onInvoke', array($this->config, 'onContainerInvoke'));
@@ -298,7 +298,7 @@ class AbstractDebug
         if (!$this->parentInstance) {
             // we're the root instance
             $this->serviceContainer['errorHandler'];
-            $this->addPlugins($this->getCfg('plugins', Debug::CONFIG_DEBUG));
+            $this->addPlugins($cfgBootstrap['plugins']);
             $this->data->set('requestId', $this->requestId());
             $this->data->set('entryCountInitial', $this->data->get('log/__count__'));
         }
@@ -311,39 +311,35 @@ class AbstractDebug
     /**
      * Get config values needed for bootstraping
      *
-     * @param array $cfg Config passed to container
+     * @param array $cfg Config passed to constructor
      *
      * @return array
      */
     private function bootstrapConfig(&$cfg)
     {
-        $cfgValues = array(
+        $cfgDefault = array(
             'container' => array(),
             'parent' => null,
+            'plugins' => $this->cfg['plugins'],
             'serviceProvider' => $this->cfg['serviceProvider'],
         );
 
-        if (isset($cfg['debug']['container'])) {
-            $cfgValues['container'] = $cfg['debug']['container'];
-        } elseif (isset($cfg['container'])) {
-            $cfgValues['container'] = $cfg['container'];
+        $cfgValues = array();
+        foreach (\array_keys($cfgDefault) as $k) {
+            if (isset($cfg['debug'][$k])) {
+                $cfgValues[$k] = $cfg['debug'][$k];
+            } elseif (isset($cfg[$k])) {
+                $cfgValues[$k] = $cfg[$k];
+            }
         }
 
-        if (isset($cfg['debug']['serviceProvider'])) {
-            $cfgValues['serviceProvider'] = $cfg['debug']['serviceProvider'];
-            // unset so we don't do this again with setCfg
-            unset($cfg['debug']['serviceProvider']);
-        } elseif (isset($cfg['serviceProvider'])) {
-            $cfgValues['serviceProvider'] = $cfg['serviceProvider'];
-            // unset so we don't do this again with setCfg
-            unset($cfg['serviceProvider']);
-        }
+        unset(
+            $cfg['debug']['parent'],
+            $cfg['debug']['serviceProvider'],
+            $cfg['serviceProvider']
+        );
 
-        if (isset($cfg['debug']['parent'])) {
-            $cfgValues['parent'] = $cfg['debug']['parent'];
-            unset($cfg['debug']['parent']);
-        }
-        return $cfgValues;
+        return \array_replace_recursive($cfgDefault, $cfgValues);
     }
 
     /**

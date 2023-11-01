@@ -41,7 +41,7 @@ class Utility
     /**
      * Get values from Container, ServiceProviderInterface, callable or plain array
      *
-     * @param ServiceProviderInterface|callable|array $val dependency definitions
+     * @param Container|ServiceProviderInterface|callable|array $val dependency definitions
      *
      * @return array
      *

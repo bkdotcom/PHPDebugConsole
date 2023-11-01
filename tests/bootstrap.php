@@ -165,23 +165,8 @@ $debug->eventManager->subscribe(\bdk\PubSub\Manager::EVENT_PHP_SHUTDOWN, functio
     }
 }, 0 - PHP_INT_MAX);
 
-$debug->eventManager->subscribe(\bdk\Debug::EVENT_STREAM_WRAP, static function (\bdk\PubSub\Event $event) {
-    $filepath = $event['filepath'];
-    $isTest = \strpos($filepath, 'PHPDebugConsole/tests') !== false;
-    if ($isTest === false) {
-        $event->stopPropagation();
-    }
-    if ($isTest === false || PHP_VERSION_ID >= 70100 || \preg_match('/\b(Mock|Fixture)\b/', $filepath) === 1) {
-        return;
-    }
-    // remove void return type from method definitions if php < 7.1
-    $event['content'] = \preg_replace(
-        '/(function \S+\s*\([^)]*\))\s*:\s*void/',
-        '$1',
-        $event['content'],
-        -1 // no limit
-    );
-}, PHP_INT_MAX);
+$modifyTests = new \bdk\DevUtil\ModifyTests();
+$modifyTests->modify(__DIR__);
 
 function startHttpd()
 {

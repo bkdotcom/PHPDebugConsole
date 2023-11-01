@@ -477,6 +477,7 @@ EOD;
                                 ? 'Interface summary'
                                 : null,
                             'isFinal' => false,
+                            'type' => null,
                             'value' => 'never change',
                             'visibility' => 'public',
                         ), $abs['constants']['SOME_CONSTANT']);
@@ -698,6 +699,7 @@ EOD;
                     ? 'Inherited description'
                     : null,
                 'isFinal' => false,
+                'type' => null,
                 'value' => 'defined in TestBase',
                 'visibility' => 'public',
             ),
@@ -714,6 +716,7 @@ EOD;
                     ? 'constant documentation'
                     : null,
                 'isFinal' => false,
+                'type' => null,
                 'value' => 'redefined in Test',
                 'visibility' => 'public',
             ),

@@ -264,6 +264,9 @@ class StreamTest extends TestCase
 
     public function testExceptionSeekFail()
     {
+        if (PHP_VERSION_ID >= 80300) {
+            self::markTestSkipped('PHP 8.3 : Memory stream no longer fails if seek offset is past the end. Instead the memory is increase on the next write and data between the old end and offset is filled with zero bytes in the same way how it works for files.');
+        }
         $this->expectException('RuntimeException');
         $this->expectExceptionMessage('Unable to seek to stream position 10 with whence 0');
         $this->createStream()

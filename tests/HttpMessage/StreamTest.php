@@ -412,7 +412,7 @@ class StreamTest extends TestCase
         }
         $refProp->setAccessible(true);
         \is_string($obj) || $refProp->isStatic()
-            ? $refProp->setValue($val)
+            ? $refProp->setValue(null, $val)
             : $refProp->setValue($obj, $val);
     }
 }

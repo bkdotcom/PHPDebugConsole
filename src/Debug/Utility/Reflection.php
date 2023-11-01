@@ -191,7 +191,7 @@ class Reflection
     {
         $refProp = static::getReflectionProperty($obj, $prop);
         if ($refProp->isStatic()) {
-            return $refProp->setValue($val);
+            return $refProp->setValue(null, $val);
         }
         if (\is_object($obj) === false) {
             throw new RuntimeException(\sprintf(

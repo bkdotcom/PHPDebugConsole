@@ -5,8 +5,8 @@ namespace bdk\Test\Promise;
 class PropertyHelper
 {
     /**
-     * @param object $object
-     * @param string $property
+     * @param object $object   classname or object
+     * @param string $property property name
      *
      * @return mixed
      *
@@ -21,8 +21,8 @@ class PropertyHelper
 
     /**
      * @param string|object $object   classname or object
-     * @param string        $property
-     * @param mixed         $value
+     * @param string        $property property name
+     * @param mixed         $value    new value
      *
      * @return void
      *
@@ -33,7 +33,7 @@ class PropertyHelper
         $refProperty = new \ReflectionProperty($object, $property);
         $refProperty->setAccessible(true);
         $refProperty->isStatic()
-            ? $refProperty->setValue($value)
+            ? $refProperty->setValue(null, $value)
             : $refProperty->setValue($object, $value);
     }
 }

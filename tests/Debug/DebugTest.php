@@ -431,7 +431,7 @@ class DebugTest extends DebugTestFramework
         foreach ($debugProps as $prop) {
             $prop->setAccessible(true);
             $name = $prop->getName();
-            $prop->setValue($this->debugBackup['debug'][$name]);
+            $prop->setValue(null, $this->debugBackup['debug'][$name]);
         }
 
         /*

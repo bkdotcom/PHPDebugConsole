@@ -35,7 +35,7 @@ Browser/javascript like console class for PHP
 
 ## Installation
 
-This library supports PHP 5.4 - 8.2 and has no userland dependencies.
+This library supports PHP 5.4 - 8.3 and has no userland dependencies.
 
 It is installable and autoloadable via [Composer](https://getcomposer.org/) as [bdk/debug](https://packagist.org/packages/bdk/debug).
 
@@ -115,11 +115,11 @@ $monolog->critical('all your base are belong to them');
 ## Tests / Quality
 
 ![No Dependencies](https://img.shields.io/badge/dependencies-none-333333.svg)
-![Supported PHP versions](https://img.shields.io/static/v1?label=PHP&message=5.4%20-%208.2&color=blue)
+![Supported PHP versions](https://img.shields.io/static/v1?label=PHP&message=5.4%20-%208.3&color=blue)
 ![Build Status](https://img.shields.io/github/actions/workflow/status/bkdotcom/PHPDebugConsole/phpunit.yml.svg?logo=github)
 [![Codacy Score](https://img.shields.io/codacy/grade/e950849edfd9463b993386080d39875e/master.svg?logo=codacy)](https://app.codacy.com/gh/bkdotcom/PHPDebugConsole/dashboard)
 [![Maintainability](https://img.shields.io/codeclimate/maintainability/bkdotcom/PHPDebugConsole.svg?logo=codeclimate)](https://codeclimate.com/github/bkdotcom/PHPDebugConsole)
-[![Coverage](https://img.shields.io/codeclimate/coverage-letter/bkdotcom/PHPDebugConsole?logo=codeclimate)](https://codeclimate.com/github/bkdotcom/PHPDebugConsole)
+[![Coverage](https://img.shields.io/codeclimate/coverage-letter/bkdotcom/PHPDebugConsole.svg?logo=codeclimate)](https://codeclimate.com/github/bkdotcom/PHPDebugConsole)
 
 ## Changelog
 

@@ -232,7 +232,7 @@ class MethodTest extends DebugTestFramework
         // covers AbstractDebug::getMethodDefaultArgs
         $refProp = new \ReflectionProperty('bdk\Debug\AbstractDebug', 'methodDefaultArgs');
         $refProp->setAccessible(true);
-        $refProp->setValue(array());
+        $refProp->setValue(null, array());
         $this->debug->alert('test');
         $this->assertSame('alert', $this->debug->data->get('alerts/__end__/method'));
     }

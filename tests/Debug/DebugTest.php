@@ -404,7 +404,7 @@ class DebugTest extends DebugTestFramework
             $newVal = \is_array($this->debugBackup['debug'][$name])
                 ? array()
                 : null;
-            $prop->setValue($newVal);
+            $prop->setValue(null, $newVal);
         }
 
         /*

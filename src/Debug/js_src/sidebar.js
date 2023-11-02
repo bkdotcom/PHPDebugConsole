@@ -87,9 +87,9 @@ function onChangeSidebarInput (e) {
 
 function onClickCloseAlert () {
   // setTimeout -> new thread -> executed after event bubbled
-  var $debug = $(this).closest('.debug')
+  var $debug = $(e.delegateTarget)
   setTimeout(function () {
-    if ($debug.find('.m_alert').length) {
+    if ($debug.find('.tab-primary > .tab-body > .m_alert').length === 0) {
       $debug.find('.debug-sidebar input[data-toggle=method][value=alert]').parent().addClass('disabled')
     }
   })
@@ -169,7 +169,7 @@ export function open ($node) {
 function addMethodToggles ($node) {
   var channelNameRoot = $node.data('channelNameRoot')
   var $filters = $node.find('.debug-filters')
-  var $entries = $node.find('.tab-primary').find('> .tab-panes .m_alert, .group-body > *')
+  var $entries = $node.find('.tab-primary').find('> .tab-body > .m_alert, .group-body > *')
   var val
   var haveEntry
   for (val in methodLabels) {

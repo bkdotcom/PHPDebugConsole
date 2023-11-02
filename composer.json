@@ -52,7 +52,7 @@
         "php": ">=5.4.0"
     },
     "require-dev": {
-        "bdk/css-xpath": "dev-master",
+        "bdk/css-xpath": "^1.0",
         "bdk/wamp-publisher": "dev-master",
         "doctrine/dbal": "^2.5.0",
         "guzzlehttp/psr7": "^1.6",

@@ -20,9 +20,6 @@ class PhpDocTest extends TestCase
 
     public static function setUpBeforeClass(): void
     {
-        // $reflector = new \ReflectionProperty('bdk\Debug\Utility\PhpDoc', 'cache');
-        // $reflector->setAccessible(true);
-        // $reflector->setValue(array());
         Helper::setProp('bdk\Debug\Utility\PhpDoc', 'cache', array());
     }
 

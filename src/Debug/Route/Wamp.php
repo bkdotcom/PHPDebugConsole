@@ -194,6 +194,9 @@ class Wamp implements RouteInterface
         if (!$this->cfg['output']) {
             return;
         }
+        if (!$this->isBootstrapped) {
+            return;
+        }
         $this->processLogEntryViaEvent($logEntry);
     }
 

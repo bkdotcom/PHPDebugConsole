@@ -75,6 +75,7 @@
     var $inner = $nodeObj.find('> .object-inner');
     var accessible = $nodeObj.data('accessible');
     var hiddenInterfaces = [];
+    var callPostToggle = null; // or "local", or "allDesc"
     if ($nodeObj.is('.enhanced')) {
       return
     }
@@ -95,20 +96,27 @@
           }
         });
       });
-      postToggle($nodeObj);
+      callPostToggle = 'local';
     }
     $inner.find('> .private, > .protected')
       .filter('.magic, .magic-read, .magic-write')
       .removeClass('private protected');
     if (accessible === 'public') {
       $inner.find('.private, .protected').hide();
+      callPostToggle = 'allDesc';
     }
     visToggles($inner, accessible);
     addIcons($inner);
     $inner.find('> .property.forceShow').show().find('> .t_array').debugEnhance('expand');
+    if (callPostToggle) {
+      postToggle($nodeObj, callPostToggle === 'allDesc');
+    }
     $nodeObj.addClass('enhanced');
   }
 
+  /**
+   * Add toggles for protected, private excluded inherited
+   */
   function visToggles ($inner, accessible) {
     var flags = {
       hasProtected: $inner.children('.protected').not('.magic, .magic-read, .magic-write').length > 0,
@@ -1533,7 +1541,7 @@
     }
   }
 
-  function onClickCloseAlert () {
+  function onClickCloseAlert (e) {
     // setTimeout -> new thread -> executed after event bubbled
     var $debug = $(e.delegateTarget);
     setTimeout(function () {

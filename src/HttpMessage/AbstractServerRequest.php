@@ -43,6 +43,7 @@ abstract class AbstractServerRequest extends Request
      */
     public static function parseStr($str, $opts = array())
     {
+        $str = (string) $str;
         $opts = \array_merge(self::$parseStrOpts, $opts);
         $useParseStr = ($opts['convDot'] || \strpos($str, '.') === false)
             && ($opts['convSpace'] || \strpos($str, ' ') === false);
@@ -78,7 +79,7 @@ abstract class AbstractServerRequest extends Request
         if (\is_array($mixed) === false) {
             throw new InvalidArgumentException(\sprintf(
                 'parseStrOpts expects string or array. %s provided.',
-                self::getTypeDebug($mixed)
+                self::getDebugType($mixed)
             ));
         }
         $mixed = \array_intersect_key($mixed, self::$parseStrOpts);

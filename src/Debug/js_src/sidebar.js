@@ -85,7 +85,7 @@ function onChangeSidebarInput (e) {
   }
 }
 
-function onClickCloseAlert () {
+function onClickCloseAlert (e) {
   // setTimeout -> new thread -> executed after event bubbled
   var $debug = $(e.delegateTarget)
   setTimeout(function () {

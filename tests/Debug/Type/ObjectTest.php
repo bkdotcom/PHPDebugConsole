@@ -776,7 +776,7 @@ EOD;
             self::markTestSkipped('anonymous classes are a php 7.0 thing');
         }
         $filepath = TEST_DIR . '/Debug/Fixture/Anonymous.php';
-        $line = 6;
+        $line = 26;
         $anonymous = require $filepath;
         $this->testMethod(
             'log',
@@ -791,6 +791,7 @@ EOD;
                         'anonymous',
                         array(
                             '___class_name' => 'stdClass@anonymous',
+                            '(public) thing' => 'hammer',
                             '(debug) file' => $filepath,
                             '(debug) line' => $line,
                         ),
@@ -798,21 +799,30 @@ EOD;
                     null,
                     '',
                 ),
-                'firephp' => 'X-Wf-1-1-1-%d: %d|[{"Label":"anonymous","Type":"LOG"},{"___class_name":"stdClass@anonymous","(debug) file":"' . $filepath . '","(debug) line":' . $line . '}]|',
+                'firephp' => 'X-Wf-1-1-1-%d: %d|[{"Label":"anonymous","Type":"LOG"},{"___class_name":"stdClass@anonymous","(public) thing":"hammer","(debug) file":"' . $filepath . '","(debug) line":' . $line . '}]|',
                 'html' => '<li class="m_log"><span class="no-quotes t_string">anonymous</span> = <div class="t_object" data-accessible="public"><span class="classname">stdClass@anonymous</span>
                     <dl class="object-inner">
                     <dt>extends</dt>
                         <dd class="extends"><span class="classname">stdClass</span></dd>
+                    ' . (false && PHP_VERSION_ID >= 80200
+                        ? '<dt class="attributes">attributes</dt>
+                            <dd class="attribute"><span class="classname">AllowDynamicProperties</span></dd>'
+                        : '') . '
+                    <dt class="constants">constants</dt>
+                        <dd class="constant public"><span class="t_modifier_public">public</span> <span class="t_identifier">TWELVE</span> <span class="t_operator">=</span> <span class="t_int">12</span></dd>
                     <dt class="properties">properties</dt>
+                        <dd class="inherited property public" data-inherited-from="stdClass@anonymous' . "\x00" . $filepath . ':' . $line . '$%S"><span class="t_modifier_public">public</span> <span class="t_identifier">thing</span> <span class="t_operator">=</span> <span class="t_string">hammer</span></dd>
                         <dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="t_type">string</span> <span class="t_identifier">file</span> <span class="t_operator">=</span> <span class="t_string">' . $filepath . '</span></dd>
                         <dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="t_type">int</span> <span class="t_identifier">line</span> <span class="t_operator">=</span> <span class="t_int">' . $line . '</span></dd>
                     <dt class="methods">methods</dt>
                         <dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier" title="Anonymous method">myMethod</span><span class="t_punct">(</span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span></dd>
                     </dl>
-                    </div></li>',
-                'script' => 'console.log("anonymous",{"___class_name":"stdClass@anonymous","(debug) file":"' . $filepath . '","(debug) line":' . $line . '});',
+                    </div></li>
+                    ',
+                'script' => 'console.log("anonymous",{"___class_name":"stdClass@anonymous","(public) thing":"hammer","(debug) file":"' . $filepath . '","(debug) line":' . $line . '});',
                 'text' => 'anonymous = stdClass@anonymous
                     Properties:
+                    (public) thing = "hammer"
                     (debug) file = "%s/PHPDebugConsole/tests/Debug/Fixture/Anonymous.php"
                     (debug) line = %d
                     Methods:

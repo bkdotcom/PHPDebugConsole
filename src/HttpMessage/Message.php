@@ -287,7 +287,6 @@ class Message implements MessageInterface
      * @param string $name header name
      *
      * @return array
-     * @throws InvalidArgumentException
      */
     private function normalizeHeaderName($name)
     {
@@ -336,19 +335,32 @@ class Message implements MessageInterface
                 $name = (string) $name;
             }
             $this->assertHeaderName($name);
-            $name = $this->normalizeHeaderName($name);
             $this->assertHeaderValue($value);
+            $name = $this->normalizeHeaderName($name);
             $values = $this->normalizeHeaderValue($value);
-            $nameLower = \strtolower($name);
-            if (isset($this->headerNames[$nameLower])) {
-                $name = $this->headerNames[$nameLower];
-                $values = \array_merge($this->headers[$name], $values);
-            }
-            $this->headerNames[$nameLower] = $name;
-            $this->headers[$name] = $values;
-            if ($nameLower === 'host') {
-                $this->afterUpdateHost();
-            }
+            $this->setHeaderValues($name, $values);
         });
+    }
+
+    /**
+     * Append the given values
+     *
+     * @param string $name   header name
+     * @param array  $values header values
+     *
+     * @return void
+     */
+    private function setHeaderValues($name, array $values)
+    {
+        $nameLower = \strtolower($name);
+        if (isset($this->headerNames[$nameLower])) {
+            $name = $this->headerNames[$nameLower];
+            $values = \array_merge($this->headers[$name], $values);
+        }
+        $this->headerNames[$nameLower] = $name;
+        $this->headers[$name] = $values;
+        if ($nameLower === 'host') {
+            $this->afterUpdateHost();
+        }
     }
 }

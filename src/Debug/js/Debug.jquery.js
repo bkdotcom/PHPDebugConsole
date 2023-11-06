@@ -75,6 +75,7 @@
     var $inner = $nodeObj.find('> .object-inner');
     var accessible = $nodeObj.data('accessible');
     var hiddenInterfaces = [];
+    var callPostToggle = null; // or "local", or "allDesc"
     if ($nodeObj.is('.enhanced')) {
       return
     }
@@ -95,20 +96,27 @@
           }
         });
       });
-      postToggle($nodeObj);
+      callPostToggle = 'local';
     }
     $inner.find('> .private, > .protected')
       .filter('.magic, .magic-read, .magic-write')
       .removeClass('private protected');
     if (accessible === 'public') {
       $inner.find('.private, .protected').hide();
+      callPostToggle = 'allDesc';
     }
     visToggles($inner, accessible);
     addIcons($inner);
     $inner.find('> .property.forceShow').show().find('> .t_array').debugEnhance('expand');
+    if (callPostToggle) {
+      postToggle($nodeObj, callPostToggle === 'allDesc');
+    }
     $nodeObj.addClass('enhanced');
   }
 
+  /**
+   * Add toggles for protected, private excluded inherited
+   */
   function visToggles ($inner, accessible) {
     var flags = {
       hasProtected: $inner.children('.protected').not('.magic, .magic-read, .magic-write').length > 0,
@@ -135,8 +143,8 @@
     if (flags.hasInherited) {
       $visToggles.append('<span class="toggle-on" data-toggle="vis" data-vis="inherited">hide inherited</span>');
     }
-    if ($inner.find('> dt.t_modifier_final').length) {
-      $inner.find('> dt.t_modifier_final').after($visToggles);
+    if ($inner.find('> dd[class*=t_modifier_]').length) {
+      $inner.find('> dd[class*=t_modifier_]').last().after($visToggles);
       return
     }
     $inner.prepend($visToggles);
@@ -177,8 +185,8 @@
       .addClass(show ? 'toggle-on' : 'toggle-off')
       .removeClass(show ? 'toggle-off' : 'toggle-on');
     show
-      ? toggleVisNodes($nodes) // show for this and all descendants
-      : $nodes.hide(); // hide for this and all descendants
+      ? toggleVisNodes($nodes) // show for this and all descendants.. unless hidden by other toggle
+      : $nodes.hide(); // simply hide for this and all descendants
     postToggle($obj, true);
   }
 
@@ -189,8 +197,8 @@
       var show = true;
       $objInner.find('> .vis-toggles [data-toggle]').each(function () {
         var $toggle = $(this);
+        var isOn = $toggle.hasClass('toggle-on');
         var vis = $toggle.data('vis');
-        var isOn = $toggle.is('.toggle-on');
         // if any applicable test is false, don't show it
         if (!isOn && $node.hasClass(vis)) {
           show = false;
@@ -214,6 +222,7 @@
       });
       $(dt).toggleClass('text-muted', $dds.length > 0 && $ddsVis.length === 0);
     });
+    $obj.trigger('expanded.debug.object');
   }
 
   /**
@@ -417,9 +426,13 @@
     $entry.find('table tbody tr').each(function () {
       var $tr = $(this);
       var $tds = $tr.find('> td');
+      var info = {
+        file: $tr.data('file') || $tds.eq(0).text(),
+        line: $tr.data('line') || $tds.eq(1).text()
+      };
       var $a = $('<a>', {
         class: 'file-link',
-        href: buildFileLink($tds.eq(0).text(), $tds.eq(1).text()),
+        href: buildFileLink(info.file, info.line),
         html: '<i class="fa fa-fw fa-external-link"></i>',
         style: 'vertical-align: bottom',
         title: 'Open in editor'
@@ -1520,7 +1533,7 @@
     }
   }
 
-  function onClickCloseAlert () {
+  function onClickCloseAlert (e) {
     // setTimeout -> new thread -> executed after event bubbled
     var $debug = $(e.delegateTarget);
     setTimeout(function () {
@@ -5915,6 +5928,8 @@
       title = tippyContentDeprecated($ref, title);
     } else if (['Inherited', 'Private ancestor'].indexOf(title) > -1) {
       title = tippyContentInherited($ref, title);
+    } else if (title === 'Overrides') {
+      title = tippyContentOverrides($ref, title);
     } else if (title === 'Open in editor') {
       title = '<i class="fa fa-pencil"></i> ' + title;
     } else if (title.match(/^\/.+: line \d+$/)) {
@@ -5942,6 +5957,13 @@
       titleMore.replace(/^(.*\\)(.+)$/, '<span class="namespace">$1</span>$2') +
       '</span>';
     return title + ' ' + titleMore
+  }
+
+  function tippyContentOverrides ($ref, title) {
+    var titleMore = $ref.parent().data('declaredPrev');
+    return titleMore
+      ? 'Overrides ' + titleMore
+      : title
   }
 
   function tippyOnHide (instance) {

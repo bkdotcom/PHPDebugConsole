@@ -66,16 +66,7 @@ class UriUtils
                 ->withQuery($targetQuery)
                 ->withFragment($rel->getFragment());
         }
-        $relPath = $rel->getPath();
-        $lastSlashPos = \strrpos($base->getPath(), '/');
-        $targetPath = $lastSlashPos === false
-            ? $relPath
-            : \substr($base->getPath(), 0, $lastSlashPos + 1) . $relPath;
-        if ($relPath[0] === '/') {
-            $targetPath = $relPath;
-        } elseif ($base->getAuthority() !== '' && $base->getPath() === '') {
-            $targetPath = '/' . $relPath;
-        }
+        $targetPath = self::resolveTargetPath($base, $rel);
         return $base
             ->withPath(self::pathRemoveDots($targetPath))
             ->withQuery($rel->getQuery())
@@ -184,7 +175,7 @@ class UriUtils
      */
     private static function pathRemoveDots($path)
     {
-        if ($path === '') { //  || $path === '/'
+        if ($path === '') {
             return $path;
         }
 
@@ -210,5 +201,28 @@ class UriUtils
         }
 
         return $pathNew;
+    }
+
+    /**
+     * Resolve target path
+     *
+     * @param UriInterface $base Base URI
+     * @param UriInterface $rel  Relative URI
+     *
+     * @return string
+     */
+    private static function resolveTargetPath(UriInterface $base, UriInterface $rel)
+    {
+        $relPath = $rel->getPath();
+        $lastSlashPos = \strrpos($base->getPath(), '/');
+        $targetPath = $lastSlashPos === false
+            ? $relPath
+            : \substr($base->getPath(), 0, $lastSlashPos + 1) . $relPath;
+        if ($relPath[0] === '/') {
+            $targetPath = $relPath;
+        } elseif ($base->getAuthority() !== '' && $base->getPath() === '') {
+            $targetPath = '/' . $relPath;
+        }
+        return $targetPath;
     }
 }

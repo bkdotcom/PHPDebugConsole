@@ -811,7 +811,7 @@ EOD;
                     <dt class="constants">constants</dt>
                         <dd class="constant public"><span class="t_modifier_public">public</span> <span class="t_identifier">TWELVE</span> <span class="t_operator">=</span> <span class="t_int">12</span></dd>
                     <dt class="properties">properties</dt>
-                        <dd class="inherited property public" data-inherited-from="' . (PHP_VERSION_ID < 80000 ? 'class' : 'stdClass') . '@anonymous' . "\x00" . $filepath . ':' . $line . '$%S"><span class="t_modifier_public">public</span> <span class="t_identifier">thing</span> <span class="t_operator">=</span> <span class="t_string">hammer</span></dd>
+                        <dd class="inherited property public" data-inherited-from="' . (PHP_VERSION_ID < 80000 ? 'class' : 'stdClass') . '@anonymous' . "\x00" . $filepath . '%S"><span class="t_modifier_public">public</span> <span class="t_identifier">thing</span> <span class="t_operator">=</span> <span class="t_string">hammer</span></dd>
                         <dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="t_type">string</span> <span class="t_identifier">file</span> <span class="t_operator">=</span> <span class="t_string">' . $filepath . '</span></dd>
                         <dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="t_type">int</span> <span class="t_identifier">line</span> <span class="t_operator">=</span> <span class="t_int">' . $line . '</span></dd>
                     <dt class="methods">methods</dt>

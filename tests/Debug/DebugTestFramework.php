@@ -705,6 +705,7 @@ class DebugTestFramework extends DOMTestCase
             $this->assertStringMatchesFormat(\trim($outputExpect), \trim($output), $message);
         } catch (\Exception $e) {
             echo $test . ':' . "\n";
+            echo 'dump: ' . \bdk\Debug\Utility\Utf8::dump($actual) . "\n";
             echo $test === 'streamAnsi'
                 ? 'expect: ' . \str_replace("\e", '\e', $outputExpect) . "\n\n"
                     . 'actual: ' . \str_replace("\e", '\e', $output) . "\n\n"

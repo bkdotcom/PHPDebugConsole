@@ -70,7 +70,13 @@ class ReqResTest extends DebugTestFramework
 
     public function testGetResponseHeader()
     {
-        self::assertSame('text/html; charset=UTF-8', $this->debug->getResponseHeader()); // gets php default value
+        $contentTypeDefault = \sprintf(
+            '%s; charset=%s',
+            \ini_get('default_mimetype'),
+            \ini_get('default_charset')
+        );
+        $contentTypeDefault = \preg_replace('/; charset=$/', '', $contentTypeDefault);
+        self::assertSame($contentTypeDefault, $this->debug->getResponseHeader()); // gets php default value
         $response = new Response(200);
         $response = $response->withHeader('Content-Type', 'text/html');
         $response = $response->withHeader('Content-Length', 1234);
@@ -89,9 +95,16 @@ class ReqResTest extends DebugTestFramework
         $GLOBALS['collectedHeaders'] = array(
             array('X-Emitted-Header: I was emitted.. there is no HttpMessage Response', true),
         );
+        $contentTypeDefault = \sprintf(
+            '%s; charset=%s',
+            \ini_get('default_mimetype'),
+            \ini_get('default_charset')
+        );
+        $contentTypeDefault = \preg_replace('/; charset=$/', '', $contentTypeDefault);
+
         self::assertSame(array(
             'Content-Type' => array(
-                'text/html; charset=UTF-8', // not explicitly output, but PHP will add
+                $contentTypeDefault, // not explicitly output, but PHP will add
             ),
             'X-Emitted-Header' => array(
                 'I was emitted.. there is no HttpMessage Response',

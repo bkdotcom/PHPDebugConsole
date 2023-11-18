@@ -75,7 +75,7 @@ trait AssertSettingTrait
         $valFriendly = $this->valFriendly($setting);
         $setting['msg'] = \sprintf(
             '%s %s',
-            $setting['operator'] === '==' ? 'should be' : 'should not be',
+            \in_array($setting['operator'], array('===', '==', '=', 'eq'), true) ? 'should be' : 'should not be',
             $valFriendly
         );
         if (\substr($valFriendly, 0, 1) === '<') {

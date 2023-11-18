@@ -3,6 +3,7 @@
 namespace bdk\Test\Debug\Utility;
 
 use bdk\Debug\Utility\StringUtil;
+use bdk\HttpMessage\Utility\ContentType;
 use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 use bdk\Test\Debug\Fixture\Test2Base;
 use bdk\Test\Debug\Fixture\TestObj;
@@ -18,6 +19,32 @@ use PHPUnit\Framework\TestCase;
 class StringUtilTest extends TestCase
 {
     use ExpectExceptionTrait;
+
+    public static function getHtml()
+    {
+        return <<<'EOD'
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<body>
+    <p>Brad was here</p>
+</body>
+</html>
+EOD;
+    }
+
+    public static function getXml()
+    {
+        return <<<'EOD'
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="http://www.SoapClient.com/xml/SQLDataSoap.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+  <SOAP-ENV:Body>
+    <ns1:ProcessSRL>
+      <SRLFile xsi:type="xsd:string">/xml/NEWS.SRI</SRLFile><RequestName xsi:type="xsd:string">yahoo</RequestName><key xsi:nil="true"/>
+    </ns1:ProcessSRL>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+EOD;
+    }
 
     /**
      * Test compare method
@@ -44,6 +71,31 @@ class StringUtilTest extends TestCase
         $this->expectException('InvalidArgumentException');
         $this->expectExceptionMessage('bdk\Debug\Utility\StringUtil::compare - Invalid operator passed');
         StringUtil::compare('1', '2', '3');
+    }
+
+    public static function providerContentType()
+    {
+        return array(
+            array(new \bdk\HttpMessage\Stream(TEST_DIR . '/assets/logo.png'), ContentType::IMAGE_PNG),
+            array(\file_get_contents(TEST_DIR . '/assets/squares.svg'), ContentType::IMAGE_SVG),
+            array(self::getHtml(), ContentType::HTML),
+            array(self::getXml(), array(ContentType::XML, 'application/xml')),
+            array('Brad was <b>here</b>', ContentType::HTML),
+        );
+    }
+
+    /**
+     * @dataProvider providerContentType()
+     */
+    public function testContentType($val, $contentTypeExpect)
+    {
+        $contentType = StringUtil::contentType($val);
+        \is_array($contentTypeExpect)
+            ? self::assertTrue(
+                \in_array($contentType, $contentTypeExpect, true),
+                \sprintf('%s not in %s', $contentType, \json_encode($contentTypeExpect))
+            )
+            : self::assertSame($contentTypeExpect, $contentType);
     }
 
     public function testInterpolate()
@@ -97,6 +149,24 @@ class StringUtilTest extends TestCase
         self::assertSame($expect, StringUtil::isBase64Encoded($val));
     }
 
+    public static function providerIsHtml()
+    {
+        return array(
+            'null' => array(null, false),
+            'empty' => array('', false),
+            'xml' => array(self::getXml(), false),
+            'html' => array(self::getHtml(), true),
+        );
+    }
+
+    /**
+     * @dataProvider providerIsHtml
+     */
+    public function testIsHtml($val, $isHtml)
+    {
+        self::assertSame($isHtml, StringUtil::isHtml($val));
+    }
+
     public function testIsJson()
     {
         self::assertFalse(StringUtil::isJson(null));
@@ -119,25 +189,23 @@ class StringUtilTest extends TestCase
         self::assertSame($expect, StringUtil::isSerializedSafe($val));
     }
 
-    public function getXml()
+
+    public static function providerIsXml()
     {
-        return <<<'EOD'
-<?xml version="1.0" encoding="UTF-8"?>
-<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="http://www.SoapClient.com/xml/SQLDataSoap.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
-  <SOAP-ENV:Body>
-    <ns1:ProcessSRL>
-      <SRLFile xsi:type="xsd:string">/xml/NEWS.SRI</SRLFile><RequestName xsi:type="xsd:string">yahoo</RequestName><key xsi:nil="true"/>
-    </ns1:ProcessSRL>
-  </SOAP-ENV:Body>
-</SOAP-ENV:Envelope>
-EOD;
+        return array(
+            'null' => array(null, false),
+            'empty' => array('', false),
+            'xml' => array(self::getXml(), true),
+            'html' => array(self::getHtml(), false),
+        );
     }
 
-    public function testIsXml()
+    /**
+     * @dataProvider providerIsXml
+     */
+    public function testIsXml($val, $isXml)
     {
-        $xml = self::getXml();
-        self::assertFalse(StringUtil::isXml(null));
-        self::assertTrue(StringUtil::isXml($xml));
+        self::assertSame($isXml, StringUtil::isXml($val));
     }
 
     public function testPrettyJson()

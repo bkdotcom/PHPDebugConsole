@@ -16,6 +16,7 @@ use bdk\Debug;
 use bdk\Debug\AbstractComponent;
 use bdk\Debug\Plugin\CustomMethodTrait;
 use bdk\Debug\Route\RouteInterface;
+use bdk\HttpMessage\Utility\ContentType;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
 
@@ -58,7 +59,7 @@ class Route extends AbstractComponent implements SubscriberInterface
         }
         if ($interface === 'http') {
             $contentType = $this->debug->rootInstance->getResponseHeader('Content-Type');
-            if ($contentType && \strpos($contentType, 'text/html') === false) {
+            if ($contentType && \strpos($contentType, ContentType::HTML) === false) {
                 return $this->debug->getCfg('routeNonHtml', Debug::CONFIG_DEBUG);
             }
             return 'html';

@@ -14,7 +14,7 @@ namespace bdk\Debug\Collector;
 
 use bdk\Debug;
 use bdk\Debug\Plugin\Redaction;
-use bdk\HttpMessage\UriUtils;
+use bdk\HttpMessage\Utility\Uri as UriUtils;
 use Oauth as OAuthBase;
 use OAuthException;
 

@@ -47,6 +47,17 @@ class PhpTest extends TestCase
         self::assertArraySubset($filesA, $filesB);
     }
 
+    public function testGetIniFiles()
+    {
+        self::assertSame(
+            \array_merge(
+                array(\php_ini_loaded_file()),
+                \preg_split('#\s*[,\r\n]+\s*#', \trim(\php_ini_scanned_files()))
+            ),
+            Php::getIniFiles()
+        );
+    }
+
     /**
      * @dataProvider providerIsCallable
      */

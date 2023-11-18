@@ -1,17 +1,17 @@
 <?php
 
-namespace bdk\Test\HttpMessage;
+namespace bdk\Test\HttpMessage\Utility;
 
 use bdk\HttpMessage\Uri;
-use bdk\HttpMessage\UriUtils;
+use bdk\HttpMessage\Utility\Uri as UriUtils;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @covers bdk\HttpMessage\UriUtils
+ * @covers bdk\HttpMessage\Utility\Uri
  *
  * @phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
  */
-class UriUtilsTest extends TestCase
+class UriTest extends TestCase
 {
     const RFC3986_BASE = 'http://a/b/c/d;p?q';
 

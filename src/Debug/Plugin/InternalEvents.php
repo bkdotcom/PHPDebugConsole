@@ -26,7 +26,6 @@ use bdk\PubSub\SubscriberInterface;
 class InternalEvents implements SubscriberInterface
 {
     private $debug;
-    private $highlightAdded = false;
 
     /**
      * {@inheritDoc}
@@ -45,8 +44,6 @@ class InternalEvents implements SubscriberInterface
                 array('onOutputHeaders', -1),
             ),
             Debug::EVENT_PLUGIN_INIT => 'onPluginInit',
-            Debug::EVENT_PRETTIFY => array('onPrettify', -1),
-            Debug::EVENT_STREAM_WRAP => 'onStreamWrap',
             ErrorHandler::EVENT_ERROR => array('onError', -1),
             EventManager::EVENT_PHP_SHUTDOWN => array(
                 array('onShutdownHigh', PHP_INT_MAX),
@@ -141,7 +138,7 @@ class InternalEvents implements SubscriberInterface
             All channels share the same data.
             We only need to do this via the channel that called output
         */
-        if (!$event['isTarget']) {
+        if ($event['isTarget'] === false) {
             return;
         }
         $this->debug->data->set('headers', array());
@@ -181,55 +178,6 @@ class InternalEvents implements SubscriberInterface
     public function onPluginInit(Event $event)
     {
         $this->debug = $event->getSubject();
-    }
-
-    /**
-     * Prettify a string if known content-type
-     *
-     * @param Event $event Debug::EVENT_PRETTIFY event object
-     *
-     * @return void
-     */
-    public function onPrettify(Event $event)
-    {
-        $matches = array();
-        if (\preg_match('#\b(html|json|sql|xml)\b#', (string) $event['contentType'], $matches) !== 1) {
-            return;
-        }
-        $this->onPrettifyDo($event, $matches[1]);
-        $event['value'] = $event->getSubject()->abstracter->crateWithVals($event['value'], array(
-            'addQuotes' => false,
-            'attribs' => array(
-                'class' => 'highlight language-' . $event['highlightLang'],
-            ),
-            'contentType' => $event['contentType'],
-            'prettified' => $event['isPrettified'],
-            'prettifiedTag' => $event['isPrettified'],
-            'visualWhiteSpace' => false,
-        ));
-        if (!$this->highlightAdded) {
-            $this->debug->addPlugin($this->debug->pluginHighlight);
-            $this->highlightAdded = true;
-        }
-        $event->stopPropagation();
-    }
-
-    /**
-     * If profiling, inject `declare(ticks=1)`
-     *
-     * @param Event $event Debug::EVENT_STREAM_WRAP event object
-     *
-     * @return void
-     */
-    public function onStreamWrap(Event $event)
-    {
-        $declare = 'declare(ticks=1);';
-        $event['content'] = \preg_replace(
-            '/^(<\?php)\s*$/m',
-            '$0 ' . $declare,
-            $event['content'],
-            1
-        );
     }
 
     /**
@@ -362,37 +310,6 @@ class InternalEvents implements SubscriberInterface
     private function forceErrorOutput(Error $error)
     {
         return $error->isFatal() && $this->debug->isCli() && $this->debug->getCfg('route') instanceof Stream;
-    }
-
-    /**
-     * Update event's value with prettified string
-     *
-     * @param Event  $event Event instance
-     * @param string $type  html, json, sql, or xml
-     *
-     * @return string highlight lang
-     */
-    private function onPrettifyDo(Event $event, $type)
-    {
-        $lang = $type;
-        $string = $event['value'];
-        switch ($type) {
-            case 'html':
-                $lang = 'markup';
-                break;
-            case 'json':
-                $string = $this->debug->stringUtil->prettyJson($string);
-                break;
-            case 'sql':
-                $string = $this->debug->stringUtil->prettySql($string);
-                break;
-            case 'xml':
-                $string = $this->debug->stringUtil->prettyXml($string);
-        }
-        $event['highlightLang'] = $lang;
-        $event['isPrettified'] = $string !== $event['value'];
-        $event['value'] = $string;
-        return $lang;
     }
 
     /**

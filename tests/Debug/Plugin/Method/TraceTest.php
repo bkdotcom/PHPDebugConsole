@@ -25,7 +25,7 @@ class TraceTest extends DebugTestFramework
      */
     public function testTrace()
     {
-        $this->debug->trace();
+        eval('$this->debug->trace();');
         $values = array(
             'file0' => __FILE__,
             'line0' => __LINE__ - 3,
@@ -40,11 +40,17 @@ class TraceTest extends DebugTestFramework
             array(
                 'entry' => static function (LogEntry $logEntry) use ($values) {
                     $trace = $logEntry['args'][0];
-                    self::assertSame($values['file0'], $trace[0]['file']);
-                    self::assertSame($values['line0'], $trace[0]['line']);
-                    self::assertIsInt($trace[0]['line']);
+
+                    self::assertSame('eval()\'d code', $trace[0]['file']);
+                    self::assertSame(1, $trace[0]['line']);
                     self::assertSame(Abstracter::UNDEFINED, $trace[0]['function']);
-                    self::assertSame($values['function1'], $trace[1]['function']);
+
+                    self::assertSame($values['file0'], $trace[1]['file']);
+                    self::assertSame($values['line0'], $trace[1]['line']);
+                    self::assertSame('eval', $trace[1]['function']);
+                    self::assertIsInt($trace[1]['line']);
+
+                    self::assertSame($values['function1'], $trace[2]['function']);
 
                     self::assertSame('trace', $logEntry->getMeta('caption'));
                     self::assertTrue($logEntry->getMeta('detectFiles'));

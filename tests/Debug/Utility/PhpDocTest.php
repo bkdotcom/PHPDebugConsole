@@ -216,6 +216,27 @@ EOD;
                     'summary' => null,
                 ),
             ),
+            'comment (no namespace)' => array(
+                '/**
+                  * some function
+                  * @param stdClass $obj plain ol object
+                  */',
+                array(
+                    'desc' => null,
+                    'param' => array(
+                        array(
+                            'desc' => 'plain ol object',
+                            'name' => '$obj',
+                            'type' => 'stdClass',
+                        ),
+                    ),
+                    'return' => array(
+                        'desc' => null,
+                        'type' => null,
+                    ),
+                    'summary' => 'some function',
+                ),
+            ),
         );
     }
 

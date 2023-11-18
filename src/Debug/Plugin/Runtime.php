@@ -52,7 +52,7 @@ class Runtime extends AbstractComponent implements SubscriberInterface
      */
     public function onOutput(Event $event)
     {
-        if (!$event['isTarget']) {
+        if ($event['isTarget'] === false) {
             return;
         }
         if (!$this->debug->getCfg('logRuntime', Debug::CONFIG_DEBUG)) {

@@ -252,14 +252,6 @@ class ConfigTest extends DebugTestFramework
         ), $debug->getCfg('channels'));
     }
 
-    public function testOnCfgEnableProfiling()
-    {
-        $enableProfilingWas = $this->debug->setCfg('enableProfiling', false);
-        $this->debug->setCfg('enableProfiling', true);
-        $this->assertTrue($this->debug->getCfg('enableProfiling'));
-        $this->debug->setCfg('enableProfiling', $enableProfilingWas);
-    }
-
     public function testOnCfgKey()
     {
         $debug = new Debug(array(

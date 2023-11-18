@@ -32,7 +32,6 @@ class General implements SubscriberInterface
         'hasLog',
         'obEnd',
         'obStart',
-        'prettify',
         'setErrorCaller',
     );
 
@@ -175,32 +174,6 @@ class General implements SubscriberInterface
     }
 
     /**
-     * Prettify string
-     *
-     * format whitepace
-     *    json, xml  (or anything else handled via Debug::EVENT_PRETTIFY)
-     * add attributes to indicate value should be syntax highlighted
-     *    html, json, xml
-     *
-     * @param string $string      string to prettify]
-     * @param string $contentType mime type
-     *
-     * @return Abstraction|string
-     */
-    public function prettify($string, $contentType)
-    {
-        $event = $this->debug->rootInstance->eventManager->publish(
-            Debug::EVENT_PRETTIFY,
-            $this->debug,
-            array(
-                'contentType' => $contentType,
-                'value' => $string,
-            )
-        );
-        return $event['value'];
-    }
-
-    /**
      * A wrapper for errorHandler->setErrorCaller
      *
      * @param array $caller (optional) null (default) determine automatically
@@ -215,7 +188,7 @@ class General implements SubscriberInterface
             $caller = $this->debug->backtrace->getCallerInfo(1);
             $caller = array(
                 'file' => $caller['file'],
-                'line' => $caller['line'],
+                'line' => $caller['evalLine'] ?: $caller['line'],
             );
         }
         if ($caller) {

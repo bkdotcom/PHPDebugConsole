@@ -190,8 +190,11 @@ class Debug extends AbstractDebug
             'logPhp' => array(
                 'class' => 'bdk\Debug\Plugin\LogPhp',
             ),
-            'logReqRes' => array(
-                'class' => 'bdk\Debug\Plugin\LogReqRes',
+            'logRequest' => array(
+                'class' => 'bdk\Debug\Plugin\LogRequest',
+            ),
+            'logResponse' => array(
+                'class' => 'bdk\Debug\Plugin\LogResponse',
             ),
             'methodAlert' => array(
                 'class' => 'bdk\Debug\Plugin\Method\Alert',
@@ -228,6 +231,9 @@ class Debug extends AbstractDebug
             ),
             'methodTrace' => array(
                 'class' => 'bdk\Debug\Plugin\Method\Trace',
+            ),
+            'prettify' => array(
+                'class' => 'bdk\Debug\Plugin\Prettify',
             ),
             'redaction' => array(
                 'class' => 'bdk\Debug\Plugin\Redaction',

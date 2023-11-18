@@ -5,6 +5,7 @@ namespace bdk\Test\Debug\Collector;
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Collector\Pdo;
+use bdk\HttpMessage\Utility\ContentType;
 use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 use bdk\PubSub\Event;
 use bdk\Test\Debug\DebugTestFramework;
@@ -144,7 +145,7 @@ EOD;
                             'class' => array('highlight', 'language-sql'),
                         ),
                         'brief' => false,
-                        'contentType' => 'application/sql',
+                        'contentType' => ContentType::SQL,
                         'debug' => Abstracter::ABSTRACTION,
                         'prettified' => true,
                         'prettifiedTag' => false,

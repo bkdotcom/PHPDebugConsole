@@ -6,8 +6,8 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
- * @version   v3.0
+ * @copyright 2014-2023 Brad Kent
+ * @version   v3.1
  */
 
 namespace bdk\Debug\Plugin\Method;
@@ -166,14 +166,14 @@ class ReqRes implements SubscriberInterface
         $headers = $response
             ? $response->getHeaders()
             : $this->debug->utility->getEmittedHeaders();
+        $headers = static::mergeDefaultHeaders($headers);
         if (!$asString) {
             return $headers;
         }
         $protocol = $this->getServerParam('SERVER_PROTOCOL') ?: 'HTTP/1.0';
         $code = $this->getResponseCode();
-        $phrase = Response::codePhrase($code);
         $headersAll = array(
-            $protocol . ' ' . $code . ' ' . $phrase,
+            $protocol . ' ' . $code .' ' . Response::codePhrase($code),
         );
         foreach ($headers as $k => $vals) {
             foreach ($vals as $val) {
@@ -224,10 +224,7 @@ class ReqRes implements SubscriberInterface
     public function onConfig(Event $event)
     {
         $configs = $event->getValues();
-        if (empty($configs['debug'])) {
-            return;
-        }
-        if (\array_key_exists('serviceProvider', $configs['debug'])) {
+        if (isset($configs['debug']['serviceProvider'])) {
             $this->serverParams = array();
         }
     }
@@ -272,6 +269,30 @@ class ReqRes implements SubscriberInterface
             'writeToResponse expects ResponseInterface or HttpFoundationResponse, but %s provided',
             $this->debug->php->getDebugType($response)
         ));
+    }
+
+    /**
+     * Add header values that php sends by default
+     *
+     * @param array $headers Header values
+     *
+     * @return array
+     */
+    private static function mergeDefaultHeaders(array $headers)
+    {
+        $contentTypeDefault = \ini_get('default_mimetype');
+        $charset = \ini_get('default_charset');
+        if ($contentTypeDefault) {
+            // By default, PHP will output a Content-Type header if this ini value is non-empty
+            $contentTypeDefault = $contentTypeDefault . '; charset=' . $charset;
+            $contentTypeDefault = \preg_replace('/; charset=$/', '', $contentTypeDefault);
+            $headers = \array_merge(array(
+                'Content-Type' => array(
+                    $contentTypeDefault,
+                ),
+            ), $headers);
+        }
+        return $headers;
     }
 
     /**

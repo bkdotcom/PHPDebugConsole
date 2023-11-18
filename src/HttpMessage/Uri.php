@@ -6,14 +6,14 @@
  * @package   bdk/http-message
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2023 Brad Kent
  * @version   v1.0
  */
 
 namespace bdk\HttpMessage;
 
 use bdk\HttpMessage\AbstractUri;
-use bdk\HttpMessage\UriUtils;
+use bdk\HttpMessage\Utility\Uri as UriUtils;
 use InvalidArgumentException;
 use Psr\Http\Message\UriInterface;
 

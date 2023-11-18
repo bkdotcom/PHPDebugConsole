@@ -3,7 +3,6 @@
 namespace bdk\Test\Debug\Plugin;
 
 use bdk\Debug;
-use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\ErrorHandler\Error;
 use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
@@ -16,7 +15,6 @@ use bdk\Test\Debug\DebugTestFramework;
  *
  * @covers \bdk\Debug\Plugin\InternalEvents
  * @covers \bdk\Debug\Plugin\Route
- * @covers \bdk\Debug\Plugin\Runtime
  * @covers \bdk\Debug\Route\Email
  * @covers \bdk\Debug\Route\Stream
  *
@@ -248,120 +246,6 @@ class InternalEventsTest extends DebugTestFramework
         self::assertFalse($error['inConsole']);
     }
 
-    public function testPrettify()
-    {
-        \bdk\Debug\Utility\Reflection::propSet($this->debug->getPlugin('internalEvents'), 'highlightAdded', false);
-
-        $foo = $this->debug->prettify('foo', 'unknown');
-        self::assertSame('foo', $foo);
-
-        $html = $this->debug->prettify('<html><title>test</title></html>', 'text/html');
-        self::assertEquals(
-            new Abstraction(Abstracter::TYPE_STRING, array(
-                'strlen' => null,
-                'typeMore' => null,
-                'value' => '<html><title>test</title></html>',
-                'attribs' => array(
-                    'class' => array(
-                        'highlight',
-                        'language-markup',
-                    ),
-                ),
-                'addQuotes' => false,
-                'brief' => false,
-                'contentType' => 'text/html',
-                'prettified' => false,
-                'prettifiedTag' => false,
-                'visualWhiteSpace' => false,
-            )),
-            $html
-        );
-
-        $data = array('foo', 'bar');
-        $json = $this->debug->prettify(\json_encode($data), 'application/json');
-        self::assertEquals(
-            new Abstraction(Abstracter::TYPE_STRING, array(
-                'strlen' => null,
-                'typeMore' => 'json',
-                'value' => \json_encode($data, JSON_PRETTY_PRINT),
-                'attribs' => array(
-                    'class' => array(
-                        'highlight',
-                        'language-json',
-                    ),
-                ),
-                'addQuotes' => false,
-                'brief' => false,
-                'contentType' => 'application/json',
-                'prettified' => true,
-                'prettifiedTag' => true,
-                'visualWhiteSpace' => false,
-                'valueDecoded' => $data,
-            )),
-            $json
-        );
-
-        $sql = $this->debug->prettify('SELECT * FROM table WHERE col = "val"', 'application/sql');
-        self::assertEquals(
-            new Abstraction(Abstracter::TYPE_STRING, array(
-                'strlen' => null,
-                'typeMore' => null,
-                'value' => \str_replace('·', ' ', 'SELECT·
-  *·
-FROM·
-  table·
-WHERE·
-  col = "val"'),
-                'attribs' => array(
-                    'class' => array(
-                        'highlight',
-                        'language-sql',
-                    ),
-                ),
-                'addQuotes' => false,
-                'brief' => false,
-                'contentType' => 'application/sql',
-                'prettified' => true,
-                'prettifiedTag' => true,
-                'visualWhiteSpace' => false,
-            )),
-            $sql
-        );
-
-        $xmlExpect = '<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tns="http://www.SoapClient.com/xml/SQLDataSoap.wsdl" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/">
-  <SOAP-ENV:Body>
-    <mns:ProcessSRLResponse xmlns:mns="http://www.SoapClient.com/xml/SQLDataSoap.xsd" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
-      <return xsi:type="xsd:string"/>
-    </mns:ProcessSRLResponse>
-  </SOAP-ENV:Body>
-</SOAP-ENV:Envelope>
-';
-        $xml = $this->debug->prettify(\str_replace("\n", '', $xmlExpect), 'application/xml');
-        self::assertEquals(
-            new Abstraction(Abstracter::TYPE_STRING, array(
-                'strlen' => null,
-                'typeMore' => null,
-                'value' => $xmlExpect,
-                'attribs' => array(
-                    'class' => array(
-                        'highlight',
-                        'language-xml',
-                    ),
-                ),
-                'addQuotes' => false,
-                'brief' => false,
-                'contentType' => 'application/xml',
-                'prettified' => true,
-                'prettifiedTag' => true,
-                'visualWhiteSpace' => false,
-            )),
-            $xml
-        );
-
-        self::assertTrue(\bdk\Debug\Utility\Reflection::propGet($this->debug->getPlugin('internalEvents'), 'highlightAdded'));
-    }
-
     public function testShutdown()
     {
         if (false) {
@@ -430,8 +314,7 @@ WHERE·
             self::assertStringContainsString('Potentialy shutdown via exit', $output);
         }
 
-        $logEntries = $this->debug->data->get('log');
-        $logEntries = $this->helper->deObjectifyData($logEntries);
+        $logEntries = $this->helper->deObjectifyData($this->debug->data->get('log'));
         self::assertSame($logEntriesExpect, $logEntries);
         self::assertContains(
             'x-debug-text: success',

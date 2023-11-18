@@ -16,6 +16,7 @@ use bdk\Debug;
 use bdk\Debug\AbstractComponent;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
+use bdk\HttpMessage\Utility\ContentType;
 use Closure;
 use Exception;
 
@@ -370,7 +371,7 @@ class StatementInfo extends AbstractComponent
             return;
         }
         $stringMaxLenBak = $this->debug->setCfg('stringMaxLen', -1, Debug::CONFIG_NO_PUBLISH);
-        $sqlPretty = $this->debug->prettify($this->sql, 'application/sql');
+        $sqlPretty = $this->debug->prettify($this->sql, ContentType::SQL);
         if ($sqlPretty instanceof Abstraction) {
             $this->prettified = $sqlPretty['prettified'];
             $sqlPretty['prettifiedTag'] = false; // don't add "(prettified)" to output"

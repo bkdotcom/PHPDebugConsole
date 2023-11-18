@@ -6,7 +6,7 @@
  * @package   bdk/http-message
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2023 Brad Kent
  * @version   v1.0
  */
 
@@ -15,6 +15,7 @@ namespace bdk\HttpMessage;
 use bdk\HttpMessage\Request;
 use bdk\HttpMessage\UploadedFile;
 use bdk\HttpMessage\Uri;
+use bdk\HttpMessage\Utility\ContentType;
 use InvalidArgumentException;
 use Psr\Http\Message\UploadedFileInterface;
 
@@ -161,7 +162,7 @@ abstract class AbstractServerRequest extends Request
         if ($rawBody === '') {
             return null;
         }
-        if ($contentType !== 'application/json') {
+        if ($contentType !== ContentType::JSON) {
             return self::parseStr($rawBody);
         }
         $jsonParsedBody = \json_decode($rawBody, true);
@@ -300,9 +301,9 @@ abstract class AbstractServerRequest extends Request
     private static function isContentTypeParseable($contentType)
     {
         $parsableTypes = array(
-            'application/json',
-            'application/x-www-form-urlencoded',
-            'multipart/form-data', // would be parsable... but php doesn't make available
+            ContentType::FORM,
+            ContentType::FORM_MULTIPART, // would be parsable... but php doesn't make available
+            ContentType::JSON,
         );
         return \in_array($contentType, $parsableTypes, true);
     }

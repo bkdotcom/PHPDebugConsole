@@ -84,7 +84,9 @@ class Table implements SubscriberInterface
 
         $cfg = $logEntry->getMeta('cfg', array());
         $cfgRestore = array();
-        $maxDepth = $this->debug->getCfg('maxDepth');
+        $maxDepth = isset($cfg['maxDepth'])
+            ? $cfg['maxDepth']
+            : $this->debug->getCfg('maxDepth');
         if (\in_array($maxDepth, array(1, 2), true)) {
             $cfg['maxDepth'] = 3;
         }

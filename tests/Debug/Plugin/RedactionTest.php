@@ -14,6 +14,15 @@ use bdk\Test\Debug\DebugTestFramework;
  */
 class RedactionTest extends DebugTestFramework
 {
+    /**
+     * @doesNotPerformAssertions
+     */
+    public function testBootstrap()
+    {
+        $this->debug->removePlugin($this->debug->getPlugin('redaction'));
+        $this->debug->addPlugin(new \bdk\Debug\Plugin\Redaction(), 'redaction');
+    }
+
     public function testConfig()
     {
         $this->debug->setCfg(array(

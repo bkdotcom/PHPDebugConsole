@@ -243,6 +243,8 @@ class Php
     /**
      * Get resource type
      *
+     * This method is only used for php < 8.0
+     *
      * @param mixed $val Resource
      *
      * @return string

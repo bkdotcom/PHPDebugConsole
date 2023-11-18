@@ -6,6 +6,7 @@ use bdk\CssXpath\DOMTestCase;
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
+use bdk\Debug\Utility\Reflection;
 use bdk\ErrorHandler\Error;
 use bdk\HttpMessage\ServerRequest;
 use bdk\PhpUnitPolyfill\AssertionTrait;
@@ -30,6 +31,7 @@ class DebugTestFramework extends DOMTestCase
     public $emailInfo = array();
 
     protected static $helper;
+    protected static $outputMemoryUsage = false;
     protected $file;
     protected $line;
 
@@ -123,7 +125,7 @@ class DebugTestFramework extends DOMTestCase
      */
     public function tearDown(): void
     {
-        self::memoryUsage();
+        // self::memoryUsage();
 
         $this->debug->setCfg('output', false);
         $subscribers = $this->debug->eventManager->getSubscribers(Debug::EVENT_OUTPUT);
@@ -228,12 +230,12 @@ class DebugTestFramework extends DOMTestCase
         static $memoryUsage = 0;
         $memoryUsageNew = \memory_get_usage(true);
         $memoryDelta = $memoryUsageNew - $memoryUsage;
-        if ($memoryUsage > 0 && $memoryDelta > 256000) {
+        if ($memoryUsage > 0 && $memoryDelta > 256000 && self::$outputMemoryUsage) {
             \fwrite(STDERR, \sprintf(
-                 'memory usage: %s (increase of %s) (%s)',
-                 \number_format($memoryUsageNew),
-                 \number_format($memoryDelta),
-                 \get_called_class()
+                'memory usage: %s (increase of %s) (%s)',
+                \number_format($memoryUsageNew),
+                \number_format($memoryDelta),
+                \get_called_class()
             ) . "\n");
         }
         $memoryUsage = $memoryUsageNew;
@@ -358,7 +360,7 @@ class DebugTestFramework extends DOMTestCase
             'reflectionProperties' => array(),
         );
         if (empty($values['groupStack'])) {
-            $values['groupStack'] = \bdk\Debug\Utility\Reflection::propGet(\bdk\Debug::getPlugin('methodGroup'), 'groupStack');
+            $values['groupStack'] = Reflection::propGet(\bdk\Debug::getPlugin('methodGroup'), 'groupStack');
         }
         if (empty($values['reflectionProperties'])) {
             $values['reflectionProperties'] = array(
@@ -368,7 +370,7 @@ class DebugTestFramework extends DOMTestCase
                 'subscriberStack' => new \ReflectionProperty('bdk\\PubSub\\Manager', 'subscriberStack'),
                 'textDepth' => new \ReflectionProperty('bdk\\Debug\\Dump\\Text', 'depth'),
             );
-            \array_walk($values['reflectionProperties'], function ($refProp) {
+            \array_walk($values['reflectionProperties'], static function ($refProp) {
                 $refProp->setAccessible(true);
             });
         }
@@ -531,13 +533,13 @@ class DebugTestFramework extends DOMTestCase
         $this->debug->errorHandler->setData('errors', array());
         $this->debug->errorHandler->setData('errorCaller', array());
         $this->debug->errorHandler->setData('lastErrors', array());
-        $channels = \bdk\Debug\Utility\Reflection::propGet($this->debug->getPlugin('channel'), 'channels');
+        $channels = Reflection::propGet($this->debug->getPlugin('channel'), 'channels');
         $channels = array(
             'general' => \array_intersect_key($channels['general'], \array_flip(array('Request / Response'))),
         );
-        \bdk\Debug\Utility\Reflection::propSet($this->debug->getPlugin('channel'), 'channels', $channels);
-        \bdk\Debug\Utility\Reflection::propSet($this->debug->getPlugin('methodReqRes'), 'serverParams', array());
-        \bdk\Debug\Utility\Reflection::propSet($this->debug->abstracter->abstractObject->definition, 'default', null);
+        Reflection::propSet($this->debug->getPlugin('channel'), 'channels', $channels);
+        Reflection::propSet($this->debug->getPlugin('methodReqRes'), 'serverParams', array());
+        Reflection::propSet($this->debug->abstracter->abstractObject->definition, 'default', null);
 
         // make sure we still have wamp plugin registered
         $wamp = $this->debug->getRoute('wamp');

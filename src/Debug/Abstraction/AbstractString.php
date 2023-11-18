@@ -14,6 +14,7 @@ namespace bdk\Debug\Abstraction;
 
 use bdk\Debug\AbstractComponent;
 use bdk\Debug\Abstraction\Abstracter;
+use bdk\HttpMessage\Utility\ContentType;
 use finfo;
 
 /**
@@ -185,8 +186,7 @@ class AbstractString extends AbstractComponent
         // is string long enough to try to determine the mime type?
         $strLenMime = $this->cfg['stringMinLen']['contentType'];
         if ($strLenMime > -1 && $absValues['strlen'] > $strLenMime) {
-            $finfo = new finfo(FILEINFO_MIME_TYPE);
-            $absValues['contentType'] = $finfo->buffer($absValues['valueRaw']);
+            $absValues['contentType'] = $this->debug->stringUtil->contentType($absValues['valueRaw']);
         }
         return $absValues;
     }
@@ -210,7 +210,7 @@ class AbstractString extends AbstractComponent
             $classes = \explode(' ', $classes);
         }
         if (\in_array('language-json', $classes, true) === false) {
-            $abstraction = $this->debug->prettify($absValues['valueRaw'], 'application/json');
+            $abstraction = $this->debug->prettify($absValues['valueRaw'], ContentType::JSON);
             $absValues = $abstraction->getValues();
         }
         if (empty($absValues['valueDecoded'])) {

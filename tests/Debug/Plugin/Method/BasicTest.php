@@ -38,6 +38,15 @@ use bdk\Test\Debug\DebugTestFramework;
 class BasicTest extends DebugTestFramework
 {
     /**
+     * @doesNotPerformAssertions
+     */
+    public function testBootstrap()
+    {
+        $this->debug->removePlugin($this->debug->getPlugin('methodBasic'));
+        $this->debug->addPlugin(new \bdk\Debug\Plugin\Method\Basic(), 'methodBasic');
+    }
+
+    /**
      * Test overriding a core method
      */
     public function testOverrideOutput()

@@ -7,7 +7,7 @@ use bdk\CurlHttpMessage\Exception\BadResponseException;
 use bdk\CurlHttpMessage\Exception\RequestException;
 use bdk\HttpMessage\Stream;
 use bdk\HttpMessage\Uri;
-use bdk\HttpMessage\UriUtils;
+use bdk\HttpMessage\Utility\Uri as UriUtils;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\UriInterface;
 

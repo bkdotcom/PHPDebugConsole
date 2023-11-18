@@ -40,7 +40,7 @@ class TableTest extends DebugTestFramework
      *
      * @return void
      */
-    public function testTableColKeys()
+    public function testColKeys()
     {
         $table = new Table(null, array(), $this->debug);
         $colKeysMeth = new ReflectionMethod($table, 'colKeys');
@@ -282,6 +282,39 @@ EOD;
                     'text' => \str_replace('table caption', 'arg1', $rowsAText),
                     'script' => $rowsAScript,
                     'firephp' => \str_replace('table caption', 'arg1', $rowsAFirephp),
+                ),
+            ),
+
+            'maxDepthCfg' => array(
+                'table',
+                array(
+                    $rowsA,
+                    'table caption',
+                    Debug::meta('cfg', 'maxDepth', 1),
+                ),
+                array(
+                    'entry' => array(
+                        'method' => 'table',
+                        'args' => array($rowsAProcessed),
+                        'meta' => array(
+                            'caption' => 'table caption',
+                            'sortable' => true,
+                            'tableInfo' => array(
+                                'class' => null,
+                                'columns' => array(
+                                    array('key' => 'name'),
+                                    array('key' => 'age'),
+                                    array('key' => 'sex'),
+                                    array('key' => 'Naughty'),
+                                    array('key' => 'extracol'),
+                                ),
+                                'haveObjRow' => false,
+                                'indexLabel' => null,
+                                'rows' => array(),
+                                'summary' => null,
+                            ),
+                        ),
+                    ),
                 ),
             ),
 
@@ -580,6 +613,41 @@ EOD;
                         . '["","___class_name","name","age","sex","Naughty","extracol"],'
                         . '[4,"stdClass","Bob","12","M",false,null],'
                         . '[2,"stdClass","Sally","10","F",true,"yes"]]]|',
+                ),
+            ),
+
+            'object' => array(
+                'table',
+                array(
+                    'object -o- objects',
+                    // convoluted example to get abstraction without traverseValues populated
+                    // note that columns will be in different order
+                    //    abstraction stores properties sorted by name
+                    //    whereas traverseValues are not sorted
+                    Debug::getInstance()->abstracter->crateWithVals((object) array(
+                        'b' => (object) $rowsA[4], // Bob
+                        's' => (object) $rowsA[2], // Sally
+                    )),
+                    Debug::meta('tableInfo', array(
+                        'rows' => array(
+                            's' => array('key' => 'Sally'),
+                            'b' => array('key' => 'Bob'),
+                        ),
+                    )),
+                ),
+                array(
+                    'html' => '<li class="m_table">
+                        <table class="sortable table-bordered">
+                        <caption>object -o- objects (<span class="classname">stdClass</span>)</caption>
+                        <thead>
+                        <tr><th>&nbsp;</th><th>&nbsp;</th><th scope="col">age</th><th scope="col">extracol</th><th scope="col">name</th><th scope="col">Naughty</th><th scope="col">sex</th></tr>
+                        </thead>
+                        <tbody>
+                        <tr><th class="t_key t_string text-right" scope="row">Sally</th><td class="classname">stdClass</td><td class="t_string" data-type-more="numeric">10</td><td class="t_string">yes</td><td class="t_string">Sally</td><td class="t_bool" data-type-more="true">true</td><td class="t_string">F</td></tr>
+                        <tr><th class="t_key t_string text-right" scope="row">Bob</th><td class="classname">stdClass</td><td class="t_string" data-type-more="numeric">12</td><td class="t_undefined"></td><td class="t_string">Bob</td><td class="t_bool" data-type-more="false">false</td><td class="t_string">M</td></tr>
+                        </tbody>
+                        </table>
+                        </li>',
                 ),
             ),
 

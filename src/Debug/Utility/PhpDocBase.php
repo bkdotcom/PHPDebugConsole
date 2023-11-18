@@ -204,9 +204,11 @@ class PhpDocBase
     private function resolvePhpDocTypeClass($type)
     {
         $first = \substr($type, 0, \strpos($type, '\\') ?: 0) ?: $type;
-        $className = $this->className;
+        $className = $this->className ?: '';
         $classReflector = Reflection::getReflector($className, true);
-        $useStatements = UseStatements::getUseStatements($classReflector)['class'];
+        $useStatements = $classReflector
+            ? UseStatements::getUseStatements($classReflector)['class']
+            : array();
         if (isset($useStatements[$first])) {
             return $useStatements[$first] . \substr($type, \strlen($first));
         }

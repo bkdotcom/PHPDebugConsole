@@ -1,82 +1,5 @@
 <?php
 
-namespace bdk\Test;
-
-require __DIR__ . '/CurlHttpMessage/bootstrap.php';
-
-namespace bdk\Debug;
-
-$GLOBALS['collectedHeaders'] = array();
-$GLOBALS['headersSent'] = array(); // set to ['file', line] for true
-$GLOBALS['sessionMock'] = array(
-    'name' => false,
-    'status' => PHP_SESSION_NONE,
-);
-
-
-/**
- * Overwrite php's header method
- *
- * @param string $header Header value
- *
- * @return void
- */
-function header($header, $replace = true)
-{
-    $GLOBALS['collectedHeaders'][] = array($header, $replace);
-}
-
-function headers_list()
-{
-    $headersByName = array();
-    foreach ($GLOBALS['collectedHeaders'] as $pair) {
-        list($header, $replace) = $pair;
-        $name = \explode(': ', $header, 2)[0];
-        if ($replace || !isset($headersByName[$name])) {
-            $headersByName[$name] = array($header);
-            continue;
-        }
-        $headersByName[$name][] = $header;
-    }
-    $values = \array_values($headersByName);
-    return $values
-        ? \call_user_func_array('array_merge', $values)
-        : array();
-}
-
-function headers_sent(&$file = null, &$line = null)
-{
-    if ($GLOBALS['headersSent']) {
-        list($file, $line) = $GLOBALS['headersSent'];
-        return true;
-    }
-    return false;
-}
-
-namespace bdk\Debug\Plugin;
-
-function session_name($name = null)
-{
-    $prev = $GLOBALS['sessionMock']['name'];
-    if ($name) {
-        $GLOBALS['sessionMock']['name'] = $name;
-    }
-    return $prev;
-}
-
-function session_start()
-{
-    $GLOBALS['sessionMock']['status'] = PHP_SESSION_ACTIVE;
-    return true;
-}
-
-function session_status()
-{
-    return $GLOBALS['sessionMock']['status'];
-}
-
-namespace bdk\Test;
-
 // backward compatibility
 $classMap = array(
     // PHP 5.3 doesn't like leading backslash
@@ -93,6 +16,7 @@ foreach ($classMap as $old => $new) {
 }
 
 require __DIR__ . '/../vendor/autoload.php';
+require __DIR__ . '/bootstrapFunctionReplace.php';
 
 \define('TEST_DIR', __DIR__);
 
@@ -150,10 +74,8 @@ $debug = \bdk\Debug::getInstance(array(
     },
 ));
 
-$httpdProcess = \bdk\Test\startHttpd();
-
-$debug->eventManager->subscribe(\bdk\PubSub\Manager::EVENT_PHP_SHUTDOWN, function () use ($httpdProcess) {
-    \proc_terminate($httpdProcess);
+$debug->eventManager->subscribe(\bdk\PubSub\Manager::EVENT_PHP_SHUTDOWN, static function () {
+    httpdStop();
     $files = \array_merge(
         \glob(TEST_DIR . '/../tmp/log/*.json'),
         \glob(TEST_DIR . '/../tmp/*')
@@ -165,10 +87,17 @@ $debug->eventManager->subscribe(\bdk\PubSub\Manager::EVENT_PHP_SHUTDOWN, functio
     }
 }, 0 - PHP_INT_MAX);
 
+httpdStart();
+
 $modifyTests = new \bdk\DevUtil\ModifyTests();
 $modifyTests->modify(__DIR__);
 
-function startHttpd()
+/**
+ * Start PHP's dev httpd
+ *
+ * @return void
+ */
+function httpdStart()
 {
     // php 7.0 seems to e borked.
     // unable to specify -t docroot  and -f frontController.php
@@ -185,13 +114,21 @@ function startHttpd()
         2 => ['pipe', 'w'],
     );
     $pipes = array();
-    $resource = \proc_open($cmd, $descriptorSpec, $pipes);
+    $GLOBALS['httpdResource'] = \proc_open($cmd, $descriptorSpec, $pipes);
     \fclose($pipes[0]);
     \stream_set_blocking($pipes[1], false);
     \stream_set_blocking($pipes[2], false);
     \usleep(250000); // wait .25 sec for server to get going
-    // echo '1: ' . \stream_get_contents($pipes[1]) . "\n";
     echo \stream_get_contents($pipes[2]) . "\n";
     \chdir($dirWas);
-    return $resource;
+}
+
+/**
+ * Stop PHP's dev httpd
+ *
+ * @return void
+ */
+function httpdStop()
+{
+    \proc_terminate($GLOBALS['httpdResource']);
 }

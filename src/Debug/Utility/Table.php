@@ -44,15 +44,12 @@ class Table
     /**
      * Go through all the "rows" of array to determine what the keys are and their order
      *
-     * @param TableRow[] $rows array of TableRow instance
+     * @param array[]|TableRow[]|mixed[] $rows Array rows
      *
      * @return array
      */
-    public static function colKeys($rows)
+    public static function colKeys(array $rows)
     {
-        if (\is_array($rows) === false) {
-            return array();
-        }
         $colKeys = array();
         foreach ($rows as $row) {
             if (!$row instanceof TableRow) {
@@ -234,7 +231,6 @@ class Table
      * empty array
      * array
      * object / traversable
-     * ovject / traversable or objects / traversables
      *
      * @param mixed $rows Row data to process
      *
@@ -262,15 +258,16 @@ class Table
     /**
      * Get table rows
      *
+     * @param mixed $rows Row data to process
+     *
      * @return array
      */
     private function processRowsGet($rows)
     {
-        // $rows = $this->logEntry['args'][0];
         if ($this->meta['inclContext'] === false) {
             $rows = $this->preCrate($rows);
         }
-        $rows = $this->debug->abstracter->crate($rows, 'table'); // $this->logEntry['method']
+        $rows = $this->debug->abstracter->crate($rows, 'table');
         if ($this->debug->abstracter->isAbstraction($rows, Abstracter::TYPE_OBJECT)) {
             $this->meta['tableInfo']['class'] = $rows['className'];
             $this->meta['tableInfo']['summary'] = $rows['phpDoc']['summary'];

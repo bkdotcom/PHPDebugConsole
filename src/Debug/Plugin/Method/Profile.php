@@ -17,7 +17,9 @@ use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Plugin\CustomMethodTrait;
+use bdk\Debug\Utility\FileStreamWrapper;
 use bdk\Debug\Utility\Profile as ProfileInstance;
+use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
 
 /**
@@ -28,12 +30,16 @@ class Profile implements SubscriberInterface
     use CustomMethodTrait;
 
     protected $autoInc = 1;
+
+    /** @var ProfileInstance[] */
     protected $instances = array();
 
     protected $methods = array(
         'profile',
         'profileEnd',
     );
+
+    private static $profilingEnabled = false;
 
     /**
      * Constructor
@@ -45,13 +51,67 @@ class Profile implements SubscriberInterface
     }
 
     /**
+     * {@inheritDoc}
+     */
+    public function getSubscriptions()
+    {
+        return array(
+            Debug::EVENT_CONFIG => 'onConfig',
+            Debug::EVENT_CUSTOM_METHOD => 'onCustomMethod',
+            Debug::EVENT_STREAM_WRAP => 'onStreamWrap',
+        );
+    }
+
+    /**
+     * Debug::EVENT_CONFIG subscriber
+     *
+     * @param Event $event Event instance
+     *
+     * @return void
+     */
+    public function onConfig(Event $event)
+    {
+        if (!$event['debug'] || $event['isTarget'] === false) {
+            return;
+        }
+        $this->debug = $event->getSubject();
+        $cfgDebug = $event['debug'];
+        $valActions = \array_intersect_key(array(
+            'enableProfiling' => array($this, 'onCfgEnableProfiling'),
+        ), $cfgDebug);
+        foreach ($valActions as $key => $callable) {
+            /** @psalm-suppress TooManyArguments */
+            $cfgDebug[$key] = $callable($cfgDebug[$key], $key, $event);
+        }
+        $event['debug'] = \array_merge($event['debug'], $cfgDebug);
+    }
+
+    /**
+     * If profiling, inject `declare(ticks=1)`
+     *
+     * @param Event $event Debug::EVENT_STREAM_WRAP event object
+     *
+     * @return void
+     */
+    public function onStreamWrap(Event $event)
+    {
+        $declare = 'declare(ticks=1);';
+        $event['content'] = \preg_replace(
+            '/^(<\?php)\s*?$/m',
+            '$0 ' . $declare,
+            $event['content'],
+            1
+        );
+    }
+
+    /**
      * Starts recording a performance profile
      *
      * @param string $name Optional profile name
      *
      * @return Debug
      */
-    public function profile($name = null)
+    public function profile($name = null) // @phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
     {
         $debug = $this->debug;
         if (!$debug->getCfg('collect', Debug::CONFIG_DEBUG)) {
@@ -93,7 +153,7 @@ class Profile implements SubscriberInterface
      *
      * @return $this
      */
-    public function profileEnd($name = null)
+    public function profileEnd($name = null) // @phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
     {
         $logEntry = new LogEntry(
             $this->debug,
@@ -155,17 +215,15 @@ class Profile implements SubscriberInterface
             $logEntry['meta']['name'] = \key($this->instances);
         }
         $name = $logEntry['meta']['name'];
-        $args = array( $name !== null
-            ? 'profileEnd: No such Profile: ' . $name
-            : 'profileEnd: Not currently profiling',
+        // set default args
+        $args = array(
+            $name !== null
+                ? 'profileEnd: No such Profile: ' . $name
+                : 'profileEnd: Not currently profiling',
         );
         if (isset($this->instances[$name])) {
             $instance = $this->instances[$name];
             $data = $instance->end();
-            /*
-                So that our row keys can receive 'callable' formatting,
-                set special '__key' value
-            */
             $tableInfo = $logEntry->getMeta('tableInfo', array());
             $tableInfo = \array_replace_recursive(array(
                 'rows' => \array_fill_keys(\array_keys($data), array()),
@@ -194,5 +252,43 @@ class Profile implements SubscriberInterface
         $logEntry['args'] = $args;
         $debug->rootInstance->getPlugin('methodTable')->doTable($logEntry);
         $debug->log($logEntry);
+    }
+
+    /**
+     * Test if we need to enable profiling
+     *
+     * @param string $val   config value
+     * @param string $key   config param name
+     * @param Event  $event The config change event
+     *
+     * @return bool
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter
+     */
+    private function onCfgEnableProfiling($val, $key, Event $event)
+    {
+        if (static::$profilingEnabled) {
+            // profiling currently enabled
+            if ($val === false) {
+                FileStreamWrapper::unregister();
+                static::$profilingEnabled = false;
+            }
+            return $val;
+        }
+        $cfgAll = \array_merge(
+            $this->debug->getCfg(null, Debug::CONFIG_DEBUG),
+            $event['debug']
+        );
+        if ($cfgAll['enableProfiling'] && $cfgAll['collect']) {
+            static::$profilingEnabled = true;
+            FileStreamWrapper::setEventManager($this->debug->eventManager);
+            FileStreamWrapper::setPathsExclude(\array_merge(FileStreamWrapper::getPathsExclude(), array(
+                __DIR__ . '/../../',
+            )));
+            FileStreamWrapper::register();
+        }
+        return $val;
     }
 }

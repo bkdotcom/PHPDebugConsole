@@ -6,6 +6,7 @@ use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\AbstractObject;
 use bdk\Debug\LogEntry;
+use bdk\Debug\Utility\Reflection;
 use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 use bdk\PubSub\Event;
 use bdk\PubSub\Manager as EventManager;
@@ -37,6 +38,18 @@ function myFunctionThatCallsGroup()
 class GroupTest extends DebugTestFramework
 {
     use ExpectExceptionTrait;
+
+    /**
+     * @doesNotPerformAssertions
+     */
+    public function testBootstrap()
+    {
+        $this->debug->removePlugin($this->debug->getPlugin('methodGroup'));
+        $this->debug->removePlugin($this->debug->getPlugin('groupCleanup'));
+        $this->debug->addPlugin(new \bdk\Debug\Plugin\Method\Group(), 'methodGroup');
+        $groupStack = &self::getSharedVar('groupStack');
+        $groupStack = Reflection::propGet($this->debug->getPlugin('methodGroup'), 'groupStack');
+    }
 
     /**
      * Test

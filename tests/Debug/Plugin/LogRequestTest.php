@@ -3,125 +3,56 @@
 namespace bdk\Test\Debug\Plugin;
 
 use bdk\Debug\Abstraction\Abstracter;
-use bdk\Debug\Plugin\LogReqRes;
 use bdk\HttpMessage\Response;
 use bdk\HttpMessage\ServerRequest;
 use bdk\HttpMessage\Stream;
 use bdk\HttpMessage\UploadedFile;
+use bdk\HttpMessage\Utility\ContentType;
 use bdk\Test\Debug\DebugTestFramework;
 
 /**
  * PHPUnit tests for Debug class
  *
- * @covers \bdk\Debug\Plugin\LogReqRes
+ * @covers \bdk\Debug\Plugin\AbstractLogReqRes
+ * @covers \bdk\Debug\Plugin\LogRequest
  * @covers \bdk\Debug\Plugin\Redaction
  *
  * @phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
  */
-class LogReqResTest extends DebugTestFramework
+class LogRequestTest extends DebugTestFramework
 {
-    public function testLogRes()
+    protected $xml = '<?xml version="1.0" encoding="ISO-8859-1"?>
+<note>
+    <to>Jack</to>
+    <from>Jill</from>
+    <subject>Reminder</subject>
+    <message>I\'m thirsty</message>
+    <password>foo</password>
+</note>';
+
+    /**
+     * @doesNotPerformAssertions
+     */
+    public function testBootstrap()
     {
-        $logReqRes = $this->debug->getPlugin('logReqRes');
-        $logReqRes->logResponse();
-        $logEntries = $this->helper->deObjectifyData($this->debug->data->get('log'));
-        self::assertSame(array(), $logEntries);
-
-        $this->debug->data->set('log', array());
-        $json = \json_encode(array('foo' => 'bar'));
-        $response = (new Response())
-            ->withHeader('Content-Type', 'application/json')
-            ->withBody(new Stream($json));
-        $this->debug->setCfg(array(
-            'logResponse' => 'auto',
-            'serviceProvider' => array(
-                'response' => $response,
-            ),
-        ));
-        $logReqRes->logResponse();
-
-        $logEntries = $this->helper->deObjectifyData($this->debug->data->get('log'));
-        self::assertSame('Response', $logEntries[0]['args'][0]);
-        self::assertSame('Request / Response', $logEntries[0]['meta']['channel']);
-        self::assertSame('table', $logEntries[1]['method']);
-        self::assertSame(array(
-            'Content-Type' => array('value' => 'application/json'),
-        ), $logEntries[1]['args'][0]);
-        self::assertSame('response headers', $logEntries[1]['meta']['caption']);
-        self::assertSame('{' . "\n"
-            . '    "foo": "bar"' . "\n"
-            . '}', $logEntries[2]['args'][4]['value']);
-        self::assertSame(array(
-            'foo' => 'bar',
-        ), $logEntries[2]['args'][4]['valueDecoded']);
-
-        $this->debug->data->set('log', array());
-        $html = '<!DOCTYPE html><html><head><title>WebCo WebPage</title></head><body>Clever Response</body></html>';
-        $response = (new Response())
-            ->withHeader('Content-Type', 'text/html')
-            ->withBody(new Stream($html));
-        $this->debug->setCfg(array(
-            // 'logEnvInfo' => true,
-            'logResponse' => 'auto',
-            'serviceProvider' => array(
-                'response' => $response,
-            ),
-        ));
-        $logReqRes->logResponse();
-        $logEntries = $this->helper->deObjectifyData($this->debug->data->get('log'));
-        self::assertSame('Not logging response body for Content-Type "text/html"', \end($logEntries)['args'][0]);
-
-        $this->debug->obEnd();
+        $this->debug->removePlugin($this->debug->getPlugin('logRequest'));
+        $this->debug->addPlugin(new \bdk\Debug\Plugin\LogRequest(), 'logRequest');
     }
 
-    public function testLogPostOrInput()
+    public function testJsonRequest()
     {
-        $logReqRes = new LogReqRes();
-        $this->debug->addPlugin($logReqRes);
-        $this->debug->setCfg('logRequestInfo', true);
-
-        $reflect = new \ReflectionObject($logReqRes);
-        $logPostMeth = $reflect->getMethod('logPostOrInput');
-        $logPostMeth->setAccessible(true);
-        $logRequestMeth = $reflect->getMethod('logRequest');
-        $logRequestMeth->setAccessible(true);
-
-        /*
-            valid form post
-        */
-        $post = array('foo' => 'bar');
-        $this->debug->setCfg('serviceProvider', array(
-            'serverRequest' => $this->debug->serverRequest
-                ->withMethod('POST')
-                ->withParsedBody($post)
-                ->withBody(new Stream(\http_build_query($post))),
-        ));
-        $logPostMeth->invoke($logReqRes);
-        self::assertSame(
-            array(
-                'method' => 'log',
-                'args' => array('$_POST', $post),
-                'meta' => array(
-                    'channel' => 'Request / Response',
-                    'redact' => true,
-                ),
-            ),
-            $this->helper->logEntryToArray($this->debug->data->get('log/0'))
-        );
-        $this->debug->data->set('log', array());
-
-        /*
-            json properly posted
-        */
         $requestBody = \json_encode(array('foo' => 'bar=baz'));
         $this->debug->setCfg('serviceProvider', array(
             'serverRequest' => $this->debug->serverRequest
                 ->withMethod('POST')
-                ->withHeader('Content-Type', 'application/json')
+                ->withHeader('Content-Type', ContentType::JSON)
                 ->withBody(new Stream($requestBody))
                 ->withParsedBody(array()),
         ));
-        $logPostMeth->invoke($logReqRes);
+        $this->debug->setCfg('logRequestInfo', true);
+        $logReqRes = $this->debug->getPlugin('logRequest');
+        $logReqRes->logRequest();
+
         self::assertEquals(
             array(
                 'method' => 'log',
@@ -133,7 +64,7 @@ class LogReqResTest extends DebugTestFramework
                             'class' => array('highlight', 'language-json'),
                         ),
                         'brief' => false,
-                        'contentType' => 'application/json',
+                        'contentType' => ContentType::JSON,
                         'debug' => Abstracter::ABSTRACTION,
                         'prettified' => true,
                         'prettifiedTag' => true,
@@ -150,27 +81,29 @@ class LogReqResTest extends DebugTestFramework
                     'redact' => true,
                 ),
             ),
-            $this->helper->logEntryToArray($this->debug->data->get('log/0'))
+            $this->helper->logEntryToArray($this->debug->data->get('log/2'))
         );
-        $this->debug->data->set('log', array());
+    }
 
-        /*
-            json improperly posted
-        */
+    public function testJsonRequestWrongType()
+    {
         $requestBody = \json_encode(array('foo' => 'bar=baz'));
         \parse_str($requestBody, $parsedBody);
         $this->debug->setCfg('serviceProvider', array(
             'serverRequest' => $this->debug->serverRequest
                 ->withMethod('POST')
-                ->withHeader('Content-Type', 'application/x-www-form-urlencoded')
+                ->withHeader('Content-Type', ContentType::FORM)
                 ->withBody(new Stream($requestBody))
                 ->withParsedBody($parsedBody),
         ));
-        $logPostMeth->invoke($logReqRes);
+        $this->debug->setCfg('logRequestInfo', true);
+        $logReqRes = $this->debug->getPlugin('logRequest');
+        $logReqRes->logRequest();
+
         self::assertSame(
             array(
                 'method' => 'warn',
-                'args' => array('It appears application/json was posted with the wrong Content-Type' . "\n"
+                'args' => array('It appears application/json was received with the wrong Content-Type' . "\n"
                     . 'Pay no attention to $_POST and instead use php://input'),
                 'meta' => array(
                     'channel' => 'Request / Response',
@@ -180,7 +113,7 @@ class LogReqResTest extends DebugTestFramework
                     'uncollapse' => true,
                 ),
             ),
-            $this->helper->logEntryToArray($this->debug->data->get('log/0'))
+            $this->helper->logEntryToArray($this->debug->data->get('log/2'))
         );
         self::assertEquals(
             array(
@@ -193,7 +126,7 @@ class LogReqResTest extends DebugTestFramework
                             'class' => array('highlight', 'language-json'),
                         ),
                         'brief' => false,
-                        'contentType' => 'application/json',
+                        'contentType' => ContentType::JSON,
                         'debug' => Abstracter::ABSTRACTION,
                         'prettified' => true,
                         'prettifiedTag' => true,
@@ -210,33 +143,100 @@ class LogReqResTest extends DebugTestFramework
                     'redact' => true,
                 ),
             ),
-            $this->helper->logEntryToArray($this->debug->data->get('log/1'))
+            $this->helper->logEntryToArray($this->debug->data->get('log/3'))
         );
-        $this->debug->data->set('log', array());
+    }
 
-        /*
-            Post with just uploadedFiles
-        */
-        \bdk\Debug\Utility\Reflection::propSet($this->debug->getPlugin('methodReqRes'), 'serverParams', array());
+    public function testXmlRequest()
+    {
+        $this->debug->setCfg('serviceProvider', array(
+            'serverRequest' => $this->debug->serverRequest
+                ->withHeader('Content-Type', 'application/debug+xml')
+                ->withMethod('POST')
+                ->withBody(new Stream($this->xml)),
+        ));
+        $this->debug->setCfg('logRequestInfo', true);
+        $logReqRes = $this->debug->getPlugin('logRequest');
+        $logReqRes->logRequest();
+        $logEntries = $this->helper->deObjectifyData($this->debug->data->get('log'));
+        self::assertSame('php://input', $logEntries[2]['args'][0]);
+        self::assertSame('application/debug+xml', $logEntries[2]['args'][1]['contentType']);
+        self::assertStringMatchesFormatNormalized(\str_replace('foo', '█████████', $this->xml), $logEntries[2]['args'][1]['value']);
+    }
+
+    public function testXmlRequestWrongType()
+    {
+        $this->debug->setCfg('serviceProvider', array(
+            'serverRequest' => $this->debug->serverRequest
+                ->withHeader('Content-Type', ContentType::FORM)
+                ->withMethod('PUT')
+                ->withBody(new Stream($this->xml)),
+        ));
+        $this->debug->setCfg('logRequestInfo', true);
+        $logReqRes = $this->debug->getPlugin('logRequest');
+        $logReqRes->logRequest();
+        $logEntries = $this->helper->deObjectifyData($this->debug->data->get('log'));
+        $contentTypeDetected = $logEntries[3]['args'][1]['contentType']; // either text/xml or application/xml
+        self::assertSame('It appears ' . $contentTypeDetected . ' was received with the wrong Content-Type', $logEntries[2]['args'][0]);
+        self::assertSame('php://input', $logEntries[3]['args'][0]);
+        self::assertTrue(
+            \in_array($contentTypeDetected, array(ContentType::XML, 'application/xml'), true),
+            \sprintf('%s not in %s', $contentTypeDetected, \json_encode(array(ContentType::XML, 'application/xml')))
+        );
+        self::assertStringMatchesFormatNormalized(\str_replace('foo', '█████████', $this->xml), $logEntries[3]['args'][1]['value']);
+    }
+
+    public function testPostMeth()
+    {
+        $post = array('foo' => 'bar');
+        $this->debug->setCfg('serviceProvider', array(
+            'serverRequest' => (new ServerRequest('POST'))
+                ->withHeader('Content-Type', ContentType::FORM)
+                ->withParsedBody($post)
+                ->withBody(new Stream(\http_build_query($post))),
+        ));
+        $this->debug->setCfg('logRequestInfo', true);
+        $logReqRes = $this->debug->getPlugin('logRequest');
+        $logReqRes->logRequest();
+
+        self::assertSame(
+            array(
+                'method' => 'log',
+                'args' => array('$_POST', $post),
+                'meta' => array(
+                    'channel' => 'Request / Response',
+                    'redact' => true,
+                ),
+            ),
+            $this->helper->logEntryToArray($this->debug->data->get('log/2'))
+        );
+    }
+
+    public function testPostOnlyFiles()
+    {
         $this->debug->rootInstance->setCfg('serviceProvider', array(
             'serverRequest' => static function () {
                 $request = new ServerRequest('POST', null, array(
                     'REQUEST_METHOD' => 'POST',
                 ));
-                return $request->withUploadedFiles(array(
-                    'foo' => new UploadedFile(
-                        TEST_DIR . '/assets/logo.png',
-                        10000,
-                        UPLOAD_ERR_OK,
-                        'logo.png',
-                        'image/png'
-                    )))
+                return $request
+                    ->withUploadedFiles(array(
+                        'foo' => new UploadedFile(
+                            TEST_DIR . '/assets/logo.png',
+                            10000,
+                            UPLOAD_ERR_OK,
+                            'logo.png',
+                            'image/png'
+                        )))
                     ->withCookieParams(array('SESSIONID' => '123'))
                     ->withHeader('X-Test', '123')
                     ->withHeader('Authorization', 'Basic ' . \base64_encode('fred:1234'));
             },
         ));
-        $logRequestMeth->invoke($logReqRes);
+        $this->debug->setCfg('logRequestInfo', true);
+        $logReqRes = $this->debug->getPlugin('logRequest');
+        $logReqRes->logRequest();
+
         self::assertLogEntries(
             array(
                 array(
@@ -347,17 +347,19 @@ class LogReqResTest extends DebugTestFramework
             ),
             $this->helper->deObjectifyData(\array_slice($this->debug->data->get('log'), 1))
         );
-        $this->debug->data->set('log', array());
+    }
 
-        /*
-            Post with no body
-        */
+    public function testPostNoBody()
+    {
         $this->debug->setCfg('serviceProvider', array(
             'serverRequest' => static function () {
                 return new ServerRequest('POST');
             },
         ));
-        $logPostMeth->invoke($logReqRes);
+        $this->debug->setCfg('logRequestInfo', true);
+        $logReqRes = $this->debug->getPlugin('logRequest');
+        $logReqRes->logRequest();
+
         self::assertSame(
             array(
                 'method' => 'warn',
@@ -370,23 +372,25 @@ class LogReqResTest extends DebugTestFramework
                     'uncollapse' => true,
                 ),
             ),
-            $this->helper->logEntryToArray($this->debug->data->get('log/0'))
+            $this->helper->logEntryToArray($this->debug->data->get('log/1'))
         );
-        $this->debug->data->set('log', array());
+    }
 
-        /*
-            Put method
-        */
+    public function testPutMethod()
+    {
         $requestBody = \json_encode(array('foo' => 'bar=bazy'));
         $this->debug->setCfg('serviceProvider', array(
             'serverRequest' => static function () use ($requestBody) {
                 $request = new ServerRequest('PUT');
                 return $request
-                    ->withHeader('Content-Type', 'application/json')
+                    ->withHeader('Content-Type', ContentType::JSON)
                     ->withBody(new Stream($requestBody));
             },
         ));
-        $logPostMeth->invoke($logReqRes);
+        $this->debug->setCfg('logRequestInfo', true);
+        $logReqRes = $this->debug->getPlugin('logRequest');
+        $logReqRes->logRequest();
+
         self::assertEquals(
             array(
                 'method' => 'log',
@@ -400,7 +404,7 @@ class LogReqResTest extends DebugTestFramework
                             'class' => array('highlight', 'language-json'),
                         ),
                         'brief' => false,
-                        'contentType' => 'application/json',
+                        'contentType' => ContentType::JSON,
                         'debug' => Abstracter::ABSTRACTION,
                         'prettified' => true,
                         'prettifiedTag' => true,
@@ -417,23 +421,51 @@ class LogReqResTest extends DebugTestFramework
                     'redact' => true,
                 ),
             ),
-            $this->helper->logEntryToArray($this->debug->data->get('log/0'))
+            $this->helper->logEntryToArray($this->debug->data->get('log/2'))
         );
-        $this->debug->data->set('log', array());
+    }
 
-        /*
-            Get with body
-        */
+    public function testGetMethod()
+    {
+        $this->debug->setCfg('serviceProvider', array(
+            'serverRequest' => static function () {
+                $request = (new ServerRequest('GET'))
+                    ->withCookieParams(array('SESSIONID' => '123'))
+                    ->withHeader('X-Test', '123');
+                return $request;
+            },
+        ));
+        $this->debug->setCfg('logRequestInfo', true);
+        $logReqRes = $this->debug->getPlugin('logRequest');
+        $logReqRes->logRequest();
+
+        $logEntries = $this->helper->deObjectifyData($this->debug->data->get('log'));
+        self::AssertCount(3, $logEntries);
+        self::assertSame('request headers', $logEntries[1]['meta']['caption']);
+        self::assertSame('$_COOKIE', $logEntries[2]['meta']['caption']);
+    }
+
+    public function testGetWithBody()
+    {
         $requestBody = \json_encode(array('foo' => 'bar=bazy'));
         $this->debug->setCfg('serviceProvider', array(
             'serverRequest' => static function () use ($requestBody) {
                 $request = new ServerRequest('GET');
                 return $request
-                    ->withHeader('Content-Type', 'application/json')
+                    ->withHeader('Content-Type', ContentType::JSON)
+                    ->withCookieParams(array('SESSIONID' => '123'))
+                    ->withHeader('X-Test', '123')
                     ->withBody(new Stream($requestBody));
             },
         ));
-        $logPostMeth->invoke($logReqRes);
+        $this->debug->setCfg('logRequestInfo', array(
+            'post',
+        ));
+        $logReqRes = $this->debug->getPlugin('logRequest');
+        $logReqRes->logRequest();
+
+        $logEntries = $this->helper->deObjectifyData($this->debug->data->get('log'));
+        self::assertCount(3, $logEntries);
         self::assertEquals(
             array(
                 'method' => 'warn',
@@ -446,8 +478,37 @@ class LogReqResTest extends DebugTestFramework
                     'uncollapse' => true,
                 ),
             ),
-            $this->helper->logEntryToArray($this->debug->data->get('log/0'))
+            $logEntries[1]
         );
-        $this->debug->data->set('log', array());
+        self::assertSame(ContentType::JSON, $logEntries[2]['args'][1]['contentType']);
+        self::assertSame(array('foo' => 'bar=bazy'), $logEntries[2]['args'][1]['valueDecoded']);
+    }
+
+    public function testDontLogFiles()
+    {
+        $this->debug->rootInstance->setCfg('serviceProvider', array(
+            'serverRequest' => static function () {
+                $request = new ServerRequest('POST');
+                return $request->withUploadedFiles(array(
+                    'foo' => new UploadedFile(
+                        TEST_DIR . '/assets/logo.png',
+                        10000,
+                        UPLOAD_ERR_OK,
+                        'logo.png',
+                        'image/png'
+                    )))
+                    ->withCookieParams(array('SESSIONID' => '123'))
+                    ->withHeader('X-Test', '123');
+            },
+        ));
+        $this->debug->setCfg('logRequestInfo', array(
+            'cookies',
+        ));
+        $logReqRes = $this->debug->getPlugin('logRequest');
+        $logReqRes->logRequest();
+        $logEntries = $this->helper->deObjectifyData($this->debug->data->get('log'));
+        self::assertCount(2, $logEntries);
+        self::assertSame(array('SESSIONID'), \array_keys($logEntries[1]['args'][0]));
+        self::assertSame('$_COOKIE', $logEntries[1]['meta']['caption']);
     }
 }

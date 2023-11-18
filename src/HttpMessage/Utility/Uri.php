@@ -1,13 +1,13 @@
 <?php
 
-namespace bdk\HttpMessage;
+namespace bdk\HttpMessage\Utility;
 
 use Psr\Http\Message\UriInterface;
 
 /**
  * Uri Utilities
  */
-class UriUtils
+class Uri
 {
     /**
      * Determines if two Uri's should be considered cross-origin

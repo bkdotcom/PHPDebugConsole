@@ -124,7 +124,7 @@ class FileStreamWrapper
      */
     public static function setPathsExclude(array $pathsExclude)
     {
-        static::$pathsExclude = \array_map('realpath', $pathsExclude);
+        static::$pathsExclude = \array_unique(\array_map('realpath', $pathsExclude));
     }
 
     /**

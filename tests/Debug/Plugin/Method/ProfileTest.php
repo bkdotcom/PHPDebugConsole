@@ -5,6 +5,7 @@ namespace bdk\Test\Debug\Plugin\Method;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
+use bdk\PubSub\Event;
 use bdk\Test\Debug\DebugTestFramework;
 
 /**
@@ -16,6 +17,39 @@ use bdk\Test\Debug\DebugTestFramework;
  */
 class ProfileTest extends DebugTestFramework
 {
+    /**
+     * @doesNotPerformAssertions
+     */
+    public function testBootstrap()
+    {
+        $this->debug->removePlugin($this->debug->getPlugin('methodProfile'));
+        $this->debug->addPlugin(new \bdk\Debug\Plugin\Method\Profile(), 'methodProfile');
+    }
+
+    public function testOnCfgEnableProfiling()
+    {
+        $enableProfilingWas = $this->debug->setCfg('enableProfiling', false);
+        $this->debug->setCfg('enableProfiling', true);
+        $this->assertTrue($this->debug->getCfg('enableProfiling'));
+        $this->debug->setCfg('enableProfiling', $enableProfilingWas);
+    }
+
+    public function testOnStreamWrap()
+    {
+        $filepath = TEST_DIR . '/Debug/Fixture/ProfileOnStreamWrap.php';
+        $fileContentModified = '';
+        $closure = static function (Event $event) use ($filepath, &$fileContentModified) {
+            if ($event['filepath'] === $filepath) {
+                $fileContentModified = $event['content'];
+            }
+        };
+        $this->debug->eventManager->subscribe(\bdk\Debug::EVENT_STREAM_WRAP, $closure);
+        require $filepath;
+        $this->debug->eventManager->unsubscribe(\bdk\Debug::EVENT_STREAM_WRAP, $closure);
+
+        self::assertStringContainsString('<?php declare(ticks=1);' . "\n\n//", $fileContentModified);
+    }
+
     public function testProfile()
     {
         $this->debug->profile();
@@ -130,6 +164,46 @@ class ProfileTest extends DebugTestFramework
         );
     }
 
+    public function testRestart()
+    {
+        if (PHP_VERSION_ID < 70000) {
+            self::markTestSkipped('not sure what\'s going on with PHP < v7');
+        }
+        $this->debug->profile('restart');
+        $this->debug->profile('restart');
+        $this->debug->profileEnd();
+        $this->assertSame(array(
+            array(
+                'method' => 'profile',
+                'args' => array(
+                    'Profile \'restart\' started',
+                ),
+                'meta' => array(
+                    'name' => 'restart',
+                ),
+            ),
+            array(
+                'method' => 'profile',
+                'args' => array(
+                    'Profile \'restart\' restarted',
+                ),
+                'meta' => array(
+                    'name' => 'restart',
+                ),
+            ),
+            array(
+                'method' => 'log',
+                'args' => array(
+                    'Profile \'restart\' Results',
+                    'no data',
+                ),
+                'meta' => array(
+                    'name' => 'restart',
+                ),
+            ),
+        ), $this->helper->deObjectifyData($this->debug->data->get('log')));
+    }
+
     public function testCollectFalse()
     {
         $this->debug->setCfg('collect', false);
@@ -141,6 +215,21 @@ class ProfileTest extends DebugTestFramework
                 'return' => $this->debug,
             )
         );
+    }
+
+    public function testEnabledFalse()
+    {
+        $enableProfilingWas = $this->debug->setCfg('enableProfiling', false);
+        $line = __LINE__ + 1;
+        $this->debug->profile();
+        $this->debug->setCfg('enableProfiling', $enableProfilingWas);
+        $this->assertSame(array(
+            'method' => 'profile',
+            'args' => array(
+                'Profile: Unable to start - enableProfiling opt not set.  ' . __FILE__ . ' on line ' . $line . '.',
+            ),
+            'meta' => array(),
+        ), $this->helper->logEntryToArray($this->debug->data->get('log/__end__')));
     }
 
     private function a()

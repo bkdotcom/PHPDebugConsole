@@ -13,7 +13,6 @@
 namespace bdk\Debug\Plugin;
 
 use bdk\Debug;
-use bdk\Debug\Utility\FileStreamWrapper;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
 
@@ -25,7 +24,6 @@ class ConfigEvents implements SubscriberInterface
     protected $debug;
     private $isBootstrapped = false;
     private $isConfigured = false;
-    private static $profilingEnabled = false;
 
     /**
      * {@inheritDoc}
@@ -67,7 +65,6 @@ class ConfigEvents implements SubscriberInterface
             'emailFrom' => array($this, 'onCfgEmail'),
             'emailFunc' => array($this, 'onCfgEmail'),
             'emailTo' => array($this, 'onCfgEmail'),
-            'enableProfiling' => array($this, 'onCfgEnableProfiling'),
             'key' => array($this, 'onCfgKey'),
             'logEnvInfo' => array($this, 'onCfgList'),
             'logRequestInfo' => array($this, 'onCfgList'),
@@ -76,7 +73,6 @@ class ConfigEvents implements SubscriberInterface
             'onLog' => array($this, 'onCfgReplaceSubscriber'),
             'onMiddleware' => array($this, 'onCfgReplaceSubscriber'),
             'onOutput' => array($this, 'onCfgReplaceSubscriber'),
-            'serviceProvider' => array($this, 'onCfgServiceProvider'),
         ), $cfgDebug);
         foreach ($valActions as $key => $callable) {
             /** @psalm-suppress TooManyArguments */
@@ -152,44 +148,6 @@ class ConfigEvents implements SubscriberInterface
         }
         $errorHandlerCfg['emailer'] = $errorEmailerCfg;
         $event['errorHandler'] = $errorHandlerCfg;
-        return $val;
-    }
-
-    /**
-     * Test if we need to enable profiling
-     *
-     * @param string $val   config value
-     * @param string $key   config param name
-     * @param Event  $event The config change event
-     *
-     * @return bool
-     *
-     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-     * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter
-     */
-    private function onCfgEnableProfiling($val, $key, Event $event)
-    {
-        if (static::$profilingEnabled) {
-            // profiling currently enabled
-            if ($val === false) {
-                FileStreamWrapper::unregister();
-                static::$profilingEnabled = false;
-            }
-            return $val;
-        }
-        $cfgAll = \array_merge(
-            $this->debug->getCfg(null, Debug::CONFIG_DEBUG),
-            $event['debug']
-        );
-        if ($cfgAll['enableProfiling'] && $cfgAll['collect']) {
-            static::$profilingEnabled = true;
-            FileStreamWrapper::setEventManager($this->debug->eventManager);
-            FileStreamWrapper::setPathsExclude(array(
-                __DIR__ . '/../',
-            ));
-            FileStreamWrapper::register();
-        }
         return $val;
     }
 
@@ -341,21 +299,6 @@ class ConfigEvents implements SubscriberInterface
     }
 
     /**
-     * Handle updates to serviceProvider here
-     * We need to clear serverParamCache
-     *
-     * @param mixed $val ServiceProvider value
-     *
-     * @return array
-     *
-     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
-     */
-    private function onCfgServiceProvider($val)
-    {
-        return $this->debug->onCfgServiceProvider($val);
-    }
-
-    /**
      * Merge in default config values if not yet configured
      *
      * @param array $configs Config vals being updated
@@ -364,10 +307,6 @@ class ConfigEvents implements SubscriberInterface
      */
     private function onConfigInit($configs)
     {
-        $configs = \array_merge(array(
-            'debug' => array(),
-            'errorHandler' => array(),
-        ), $configs);
         $cfgDebug = $configs['debug'];
         if (isset($configs['routeStream']['stream'])) {
             $this->debug->addPlugin($this->debug->getRoute('stream'));

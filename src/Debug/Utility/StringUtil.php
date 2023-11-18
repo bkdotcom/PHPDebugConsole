@@ -6,16 +6,20 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
- * @version   v3.0
+ * @copyright 2014-2023 Brad Kent
+ * @version   v3.1
  */
 
 namespace bdk\Debug\Utility;
 
+use bdk\Debug\Utility;
 use bdk\Debug\Utility\ArrayUtil;
 use bdk\Debug\Utility\Php;
+use bdk\Debug\Utility\Utf8;
+use bdk\HttpMessage\Utility\ContentType;
 use DOMDocument;
 use InvalidArgumentException;
+use Psr\Http\Message\StreamInterface;
 use SqlFormatter;
 
 /**
@@ -77,6 +81,32 @@ class StringUtil
     }
 
     /**
+     * Detect mime-type
+     *
+     * @param StreamInterface|string $val Value to inspect
+     *
+     * @return string
+     */
+    public static function contentType($val)
+    {
+        if ($val instanceof StreamInterface) {
+            $val = Utility::getStreamContents($val);
+        }
+        $finfo = new \finfo(FILEINFO_MIME_TYPE);
+        $contentType = $finfo->buffer($val);
+        if ($contentType !== ContentType::TXT) {
+            return $contentType;
+        }
+        if (self::isJson($val)) {
+            return ContentType::JSON;
+        }
+        if (self::isHtml($val)) {
+            return ContentType::HTML;
+        }
+        return $contentType;
+    }
+
+    /**
      * Interpolates context values into the message placeholders.
      *
      * @param string|Stringable $message      message (string, or obj with __toString)
@@ -128,9 +158,32 @@ class StringUtil
     }
 
     /**
+     * Test if value is html
+     *
+     * @param mixed $val value to test
+     *
+     * @return bool
+     */
+    public static function isHtml($val)
+    {
+        if (\is_string($val) === false) {
+            return false;
+        }
+        if (\preg_match('/^\s*<!DOCTYPE html/ui', $val) === 1) {
+            return true;
+        }
+        if (\preg_match('/^\s*<\?/u', $val) === 1) {
+            return false;
+        }
+        $containsTag = \preg_match('/<([a-z]+|h[1-6])\b[^<]*>/', $val) === 1;
+        $containsEntity = \preg_match('/&([a-z]{2,23}|#\d+|#x[0-9a-f]+);/i', $val) === 1;
+        return $containsTag || $containsEntity;
+    }
+
+    /**
      * Test if value is a json encoded object or array
      *
-     * @param string $val value to test
+     * @param mixed $val value to test
      *
      * @return bool
      */
@@ -145,8 +198,8 @@ class StringUtil
         if (\function_exists('json_validate')) {
             return \json_validate($val, JSON_INVALID_UTF8_IGNORE);
         }
-        \json_decode($val);
-        return \json_last_error() === JSON_ERROR_NONE;
+        \json_decode($val); // @codeCoverageIgnore
+        return \json_last_error() === JSON_ERROR_NONE; // @codeCoverageIgnore
     }
 
     /**
@@ -185,6 +238,8 @@ class StringUtil
     /**
      * Test if string is valid xml
      *
+     * Note that HTML with a DocType declaration will return false, but without it may return true
+     *
      * @param string $str string to test
      *
      * @return bool
@@ -192,6 +247,13 @@ class StringUtil
     public static function isXml($str)
     {
         if (\is_string($str) === false) {
+            return false;
+        }
+        if (empty($str)) {
+            return false;
+        }
+        if (\preg_match('/^\s*<!DOCTYPE html/u', $str) === 1) {
+            // with/without byte-order mark
             return false;
         }
         \libxml_use_internal_errors(true);

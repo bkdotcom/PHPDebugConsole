@@ -36,7 +36,7 @@ abstract class AbstractServerRequest extends Request
      *   key difference: by default this does not convert root key dots and spaces to '_'
      *
      * @param string $str  input string
-     * @param array  $opts parse options
+     * @param array  $opts parse options (default: {convDot:false, convSpace:false})
      *
      * @return array
      *
@@ -62,8 +62,8 @@ abstract class AbstractServerRequest extends Request
     /**
      * Set default parseStr option(s)
      *
-     *    parseStrOpts('key', 'value')
-     *    parseStrOpts(array('k1'=>'v1', 'k2'=>'v2'))
+     *    parseStrOpts('convDot', true)
+     *    parseStrOpts(array('convDot'=>true, 'convSpace'=>true))
      *
      * @param array|string $mixed key=>value array or key
      * @param mixed        $val   new value
@@ -146,12 +146,13 @@ abstract class AbstractServerRequest extends Request
      *
      * Note: this will return null if content-type = "multipart/form-data" and input = "php://input"
      *
-     * @param string $contentType Content-Type header value
-     * @param string $input       ('php://input') specify input
+     * @param string $contentType  Content-Type header value
+     * @param string $input        ('php://input') specify input
+     * @param array  $parseStrOpts Parse options (default: {convDot:false, convSpace:false})
      *
      * @return array|null
      */
-    protected static function postFromInput($contentType, $input = 'php://input')
+    protected static function postFromInput($contentType, $input = 'php://input', $parseStrOpts = array())
     {
         $contentType = \preg_replace('/\s*[;,].*$/', '', $contentType);
         $contentType = \strtolower($contentType);
@@ -163,47 +164,12 @@ abstract class AbstractServerRequest extends Request
             return null;
         }
         if ($contentType !== ContentType::JSON) {
-            return self::parseStr($rawBody);
+            return self::parseStr($rawBody, $parseStrOpts);
         }
         $jsonParsedBody = \json_decode($rawBody, true);
         return \json_last_error() === JSON_ERROR_NONE
             ? $jsonParsedBody
             : null;
-    }
-
-    /**
-     * Get a Uri populated with values from $_SERVER.
-     *
-     * @return Uri
-     *
-     * @SuppressWarnings(PHPMD.Superglobals)
-     */
-    protected static function uriFromGlobals()
-    {
-        $uri = new Uri('');
-        $parts = \array_merge(
-            array(
-                'scheme' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'
-                    ? 'https'
-                    : 'http',
-            ),
-            self::uriHostPortFromGlobals(),
-            self::uriPathQueryFromGlobals()
-        );
-        $methods = array(
-            'host' => 'withHost',
-            'path' => 'withPath',
-            'port' => 'withPort',
-            'query' => 'withQuery',
-            'scheme' => 'withScheme',
-        );
-        foreach ($parts as $name => $value) {
-            if ($value) {
-                $method = $methods[$name];
-                $uri = $uri->{$method}($value);
-            }
-        }
-        return $uri;
     }
 
     /**
@@ -345,78 +311,5 @@ abstract class AbstractServerRequest extends Request
             return \strtr(\hex2bin($key), $replace);
         }, \array_keys($params));
         return \array_combine($keys, $params);
-    }
-
-    /**
-     * Get host and port from $_SERVER vals
-     *
-     * @return array host & port
-     *
-     * @SuppressWarnings(PHPMD.Superglobals)
-     */
-    private static function uriHostPortFromGlobals()
-    {
-        $hostPort = array(
-            'host' => null,
-            'port' => null,
-        );
-        if (isset($_SERVER['HTTP_HOST'])) {
-            $hostPort = self::uriHostPortFromHttpHost($_SERVER['HTTP_HOST']);
-        } elseif (isset($_SERVER['SERVER_NAME'])) {
-            $hostPort['host'] = $_SERVER['SERVER_NAME'];
-        } elseif (isset($_SERVER['SERVER_ADDR'])) {
-            $hostPort['host'] = $_SERVER['SERVER_ADDR'];
-        }
-        if ($hostPort['port'] === null && isset($_SERVER['SERVER_PORT'])) {
-            $hostPort['port'] = $_SERVER['SERVER_PORT'];
-        }
-        return $hostPort;
-    }
-
-    /**
-     * Get host & port from `$_SERVER['HTTP_HOST']`
-     *
-     * @param string $httpHost `$_SERVER['HTTP_HOST']` value
-     *
-     * @return array host & port
-     */
-    private static function uriHostPortFromHttpHost($httpHost)
-    {
-        $url = 'http://' . $httpHost;
-        $partsDefault = array(
-            'host' => null,
-            'port' => null,
-        );
-        $parts = \parse_url($url) ?: array();
-        $parts = \array_merge($partsDefault, $parts);
-        return \array_intersect_key($parts, $partsDefault);
-    }
-
-    /**
-     * Get request uri and query from $_SERVER
-     *
-     * @return array path & query
-     *
-     * @SuppressWarnings(PHPMD.Superglobals)
-     */
-    private static function uriPathQueryFromGlobals()
-    {
-        $path = '/';
-        $query = null;
-        if (isset($_SERVER['REQUEST_URI'])) {
-            $exploded = \explode('?', $_SERVER['REQUEST_URI'], 2);
-            // exploded is an array of length 1 or 2
-            // use array_shift to avoid testing if exploded[1] exists
-            $path = \array_shift($exploded);
-            $query = \array_shift($exploded); // string|null
-        } elseif (isset($_SERVER['QUERY_STRING'])) {
-            $query = $_SERVER['QUERY_STRING'];
-        }
-        return array(
-            'path' => $path,
-            'query' => $query !== null
-                ? $query
-                : \http_build_query($_GET),
-        );
     }
 }

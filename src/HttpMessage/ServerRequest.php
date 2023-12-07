@@ -15,6 +15,7 @@ namespace bdk\HttpMessage;
 use bdk\HttpMessage\AbstractServerRequest;
 use bdk\HttpMessage\Stream;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\UriInterface;
 
 /**
  * Http ServerRequest
@@ -80,25 +81,27 @@ class ServerRequest extends AbstractServerRequest implements ServerRequestInterf
     /**
      * Instantiate self from superglobals
      *
+     * @param array $parseStrOpts Parse options (default: {convDot:false, convSpace:false})
+     *
      * @return static
      *
      * @SuppressWarnings(PHPMD.Superglobals)
      */
-    public static function fromGlobals()
+    public static function fromGlobals($parseStrOpts = array())
     {
         $method = isset($_SERVER['REQUEST_METHOD'])
             ? $_SERVER['REQUEST_METHOD']
             : 'GET';
-        $uri = self::uriFromGlobals();
+        $uri = Uri::fromGlobals();
         $files = self::filesFromGlobals($_FILES);
         $serverRequest = new static($method, $uri, $_SERVER);
         $contentType = $serverRequest->getHeaderLine('Content-Type');
         // note: php://input not available with content-type = "multipart/form-data".
         $parsedBody = $method !== 'GET'
-            ? self::postFromInput($contentType, self::$inputStream) ?: $_POST
+            ? self::postFromInput($contentType, self::$inputStream, $parseStrOpts) ?: $_POST
             : null;
         $query = $uri->getQuery();
-        $queryParams = self::parseStr($query);
+        $queryParams = self::parseStr($query, $parseStrOpts);
         return $serverRequest
             ->withBody(new Stream(
                 PHP_VERSION_ID < 50600
@@ -132,6 +135,8 @@ class ServerRequest extends AbstractServerRequest implements ServerRequestInterf
     }
 
     /**
+     * Return an instance with the specified cookies.
+     *
      * @param array $cookies $_COOKIE
      *
      * @return static
@@ -155,6 +160,8 @@ class ServerRequest extends AbstractServerRequest implements ServerRequestInterf
     }
 
     /**
+     * Return an instance with the specified query string arguments.
+     *
      * @param array $get $_GET
      *
      * @return static
@@ -207,6 +214,8 @@ class ServerRequest extends AbstractServerRequest implements ServerRequestInterf
     }
 
     /**
+     * Return an instance with the specified body parameters.
+     *
      * @param null|array|object $post The deserialized body data ($_POST).
      *                                  This will typically be in an array or object
      *

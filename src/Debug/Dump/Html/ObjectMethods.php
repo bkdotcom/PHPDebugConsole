@@ -80,7 +80,7 @@ class ObjectMethods extends AbstractObjectSection
      *
      * @return string html fragment
      */
-    protected function dumpName($name, $info)
+    protected function dumpName($name, array $info)
     {
         return $this->html->buildTag(
             'span',
@@ -100,11 +100,11 @@ class ObjectMethods extends AbstractObjectSection
     /**
      * Dump method parameters as HTML
      *
-     * @param array $params params as returned from getParams()
+     * @param array $params Params as returned from getParams()
      *
      * @return string html fragment
      */
-    protected function dumpParams($params)
+    protected function dumpParams(array $params)
     {
         foreach ($params as $i => $info) {
             $params[$i] = $this->dumpParam($info);
@@ -117,11 +117,11 @@ class ObjectMethods extends AbstractObjectSection
     /**
      * Dump a single parameter
      *
-     * @param array $info parameter info
+     * @param array $info Parameter info
      *
      * @return string html fragment
      */
-    protected function dumpParam($info)
+    protected function dumpParam(array $info)
     {
         return $this->html->buildTag(
             'span',

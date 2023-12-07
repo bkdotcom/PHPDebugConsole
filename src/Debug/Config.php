@@ -42,7 +42,7 @@ class Config
             'methodCollect',
             'methodDescOutput',
             'methodOutput',
-            'objAttributeObj',
+            'objAttributeCollect',
             'objAttributeOutput',
             'objectsExclude',
             'objectSort',

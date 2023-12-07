@@ -71,6 +71,10 @@ class Message implements MessageInterface
     }
 
     /**
+     * Return an instance with the specified HTTP protocol version.
+     *
+     * The version string MUST contain only the HTTP version number (e.g., "1.1", "1.0").
+     *
      * @param string $version HTTP protocol version
      *
      * @return static
@@ -88,6 +92,8 @@ class Message implements MessageInterface
     }
 
     /**
+     * {@inheritDoc}
+     *
      * @return string[][] Returns an associative array of the message's headers. Each
      *     key is a header name, and each value is an array of strings for that header.
      */
@@ -112,6 +118,11 @@ class Message implements MessageInterface
     }
 
     /**
+     * Retrieves a message header value by the given case-insensitive name.
+     *
+     * This method returns an array of all the header values of the given
+     * case-insensitive header name.
+     *
      * @param string $name header name
      *
      * @return string[] An array of string values as provided for the given

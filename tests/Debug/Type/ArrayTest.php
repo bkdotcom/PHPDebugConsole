@@ -30,7 +30,7 @@ class ArrayTest extends DebugTestFramework
             	<li><span class="t_int t_key">0</span><span class="t_operator">=&gt;</span><span class="t_string">a</span></li>
             	<li><span class="t_key">foo</span><span class="t_operator">=&gt;</span><span class="t_string">bar</span></li>
             	<li><span class="t_int t_key">1</span><span class="t_operator">=&gt;</span><span class="t_string">c</span></li>
-                <li><span class="t_key">obj</span><span class="t_operator">=&gt;</span><div class="t_object" data-accessible="public"><span class="classname">stdClass</span>
+                <li><span class="t_key">obj</span><span class="t_operator">=&gt;</span><div class="groupByInheritance t_object" data-accessible="public"><span class="classname">stdClass</span>
                     <dl class="object-inner">
                     ' . (PHP_VERSION_ID >= 80200
                         ? '<dt class="attributes">attributes</dt>

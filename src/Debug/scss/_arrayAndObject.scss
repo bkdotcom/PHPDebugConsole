@@ -25,7 +25,7 @@ $color-final: #f00e;
 
 .classname {
   font-weight: bold;
-  color: $color-classname;
+  color: color-mix(in lch, currentColor, $color-classname);
 }
 
 // this is outside of .t_object because tooltip gets placed outside
@@ -156,6 +156,11 @@ li[class*=m_] > .t_array.array-file-tree > .array-inner {
       color: $error-fg;
       background-color: lighten($error-bg, 10%);
       border-color: $error-fg;
+    }
+    .heading {
+      color: #4f16b0;
+      text-decoration: underline;
+      font-weight: bold;
     }
   }
 

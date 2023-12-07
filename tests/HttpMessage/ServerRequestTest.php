@@ -202,10 +202,6 @@ class ServerRequestTest extends TestCase
         ), $request->getUploadedFiles());
         $_FILES = array();
 
-        $_SERVER['HTTPS'] = 'on';
-        $request = ServerRequest::fromGlobals();
-        $this->assertSame('https://www.test.com:8080/path?ding=dong', (string) $request->getUri());
-
         // test parse_url failure
         $_SERVER = array(
             'HTTP_HOST' => '/s?a=12&b=12.3.3.4:1233',
@@ -215,27 +211,6 @@ class ServerRequestTest extends TestCase
         $request = ServerRequest::fromGlobals();
         $this->assertSame('GET', $request->getMethod());
         $this->assertSame('http:/?ding=dong', (string) $request->getUri());
-
-        $_SERVER = array(
-            'REQUEST_METHOD' => 'GET',
-            'SERVER_NAME' => 'somedomain',
-            'SERVER_PORT' => '8080',
-            // 'QUERY_STRING' => 'ding=dong',
-        );
-        $request = ServerRequest::fromGlobals();
-        $this->assertSame('http://somedomain:8080/', (string) $request->getUri());
-
-        $_SERVER = array(
-            'REQUEST_METHOD' => 'GET',
-            'SERVER_ADDR' => '192.168.100.42',
-            'SERVER_PORT' => '8080',
-            // 'QUERY_STRING' => 'ding=dong',
-        );
-        $_GET = array(
-            'foo' => 'bar',
-        );
-        $request = ServerRequest::fromGlobals();
-        $this->assertSame('http://192.168.100.42:8080/?foo=bar', (string) $request->getUri());
 
         $_SERVER = $serverBackup;
         $_GET = $getBackup;

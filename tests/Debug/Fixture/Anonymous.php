@@ -3,7 +3,13 @@
 namespace bdk\Test\Debug\Fixture;
 
 return array(
-    'anonymous' => new class () {
+    /**
+     * Anonymous with Attribute!
+     */
+    'anonymous' =>
+    new
+    #[\AnonymousAttribute]
+    class () {
         const A = 'aye';
 
         public $b = 'bee';
@@ -12,6 +18,9 @@ return array(
         {
         }
     },
+    /**
+     * I implement IteratorAggregate
+     */
     'implements' => new class () implements \IteratorAggregate {
         /**
          * Implements Iterator Aggregate
@@ -23,7 +32,12 @@ return array(
             return new \ArrayIterator($this);
         }
     },
-    'stdClass' => new class () extends \stdClass {
+    /**
+     * I extend stdClass
+     */
+    'stdClass' => new
+    #[\AnonymousAttribute]
+    class () extends \stdClass implements \IteratorAggregate {
         const TWELVE = 12;
 
         public $thing = 'hammer';
@@ -35,6 +49,16 @@ return array(
          */
         public function myMethod()
         {
+        }
+
+        /**
+         * Implements Iterator Aggregate
+         *
+         * @return Traversable
+         */
+        public function getIterator(): \Traversable
+        {
+            return new \ArrayIterator($this);
         }
     },
     /**

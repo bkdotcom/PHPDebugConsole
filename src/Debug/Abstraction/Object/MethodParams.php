@@ -287,7 +287,7 @@ class MethodParams
             // there are no quotes around value
             return $defaultValue * 1;
         }
-        if (\preg_match('/^array\(\s*\)|\[\s*\]$/i', $defaultValue)) {
+        if (\preg_match('/^(array\(\s*\)|\[\s*\])$/i', $defaultValue)) {
             // empty array...
             // we're not going to eval non-empty arrays...
             //    non empty array will appear as a string

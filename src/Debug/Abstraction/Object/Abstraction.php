@@ -130,36 +130,31 @@ class Abstraction extends BaseAbstraction
      *
      * @return array
      */
-    public function sort(array $array, $order = 'visibility')
+    public function sort(array $array, $order = 'visibility, name')
     {
-        $sortVisOrder = array('public', 'magic', 'magic-read', 'magic-write', 'protected', 'private', 'debug');
-        $sortData = array(
-            'name' => array(),
-            'vis' => array(),
+        $order = \preg_split('/[,\s]+/', (string) $order);
+        $aliases = array(
+            'name' => 'name',
+            'vis' => 'vis',
+            'visibility' => 'vis',
         );
-        foreach ($array as $name => $info) {
-            if ($name === '__construct') {
-                // always place __construct at the top
-                $sortData['name'][$name] = -1;
-                $sortData['vis'][$name] = 0;
+        foreach ($order as $i => $what) {
+            if (isset($aliases[$what]) === false) {
+                unset($order[$i]);
                 continue;
             }
-            $vis = isset($info['visibility'])
-                ? $info['visibility']
-                : '?';
-            if (\is_array($vis)) {
-                // Sort the visiblity so we use the most significant vis
-                ArrayUtil::sortWithOrder($vis, $sortVisOrder);
-                $vis = $vis[0];
-            }
-            $sortData['name'][$name] = \strtolower($name);
-            $sortData['vis'][$name] = \array_search($vis, $sortVisOrder, true);
+            $order[$i] = $aliases[$what];
         }
-        if ($order === 'name') {
-            \array_multisort($sortData['name'], $array);
-        } elseif ($order === 'visibility') {
-            \array_multisort($sortData['vis'], $sortData['name'], $array);
+        if (empty($order)) {
+            return $array;
         }
+        $multiSortArgs = array();
+        $sortData = $this->sortData($array);
+        foreach ($order as $what) {
+            $multiSortArgs[] = $sortData[$what];
+        }
+        $multiSortArgs[] = &$array;
+        \call_user_func_array('array_multisort', $multiSortArgs);
         return $array;
     }
 
@@ -208,5 +203,40 @@ class Abstraction extends BaseAbstraction
                 : $value;
         }
         return $classVal;
+    }
+
+    /**
+     * Collect sort data to be used by `array_multisort`
+     *
+     * @param array $array The array of methods or properties to be sorted
+     *
+     * @return array
+     */
+    protected function sortData(array $array)
+    {
+        $sortVisOrder = array('public', 'magic', 'magic-read', 'magic-write', 'protected', 'private', 'debug');
+        $sortData = array(
+            'name' => array(),
+            'vis' => array(),
+        );
+        foreach ($array as $name => $info) {
+            if ($name === '__construct') {
+                // always place __construct at the top
+                $sortData['name'][$name] = -1;
+                $sortData['vis'][$name] = 0;
+                continue;
+            }
+            $vis = isset($info['visibility'])
+                ? $info['visibility']
+                : '?';
+            if (\is_array($vis)) {
+                // Sort the visiblity so we use the most significant vis
+                ArrayUtil::sortWithOrder($vis, $sortVisOrder);
+                $vis = $vis[0];
+            }
+            $sortData['name'][$name] = \strtolower($name);
+            $sortData['vis'][$name] = \array_search($vis, $sortVisOrder, true);
+        }
+        return $sortData;
     }
 }

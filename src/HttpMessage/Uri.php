@@ -92,6 +92,41 @@ class Uri extends AbstractUri implements UriInterface
     }
 
     /**
+     * Get a Uri populated with values from $_SERVER.
+     *
+     * @return static
+     *
+     * @SuppressWarnings(PHPMD.Superglobals)
+     */
+    public static function fromGlobals()
+    {
+        $uri = new Uri('');
+        $parts = \array_merge(
+            array(
+                'scheme' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'
+                    ? 'https'
+                    : 'http',
+            ),
+            self::hostPortFromGlobals(),
+            self::pathQueryFromGlobals()
+        );
+        $methods = array(
+            'host' => 'withHost',
+            'path' => 'withPath',
+            'port' => 'withPort',
+            'query' => 'withQuery',
+            'scheme' => 'withScheme',
+        );
+        foreach ($parts as $name => $value) {
+            if ($value) {
+                $method = $methods[$name];
+                $uri = $uri->{$method}($value);
+            }
+        }
+        return $uri;
+    }
+
+    /**
      * Retrieve the scheme component of the URI.
      *
      * @return string

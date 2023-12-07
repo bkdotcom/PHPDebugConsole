@@ -68,23 +68,28 @@ class Subscriber implements SubscriberInterface
     public function onStart(Abstraction $abs)
     {
         $obj = $abs->getSubject();
-        if ($obj instanceof \DateTime || $obj instanceof \DateTimeImmutable) {
-            // check for both DateTime and DateTimeImmutable
-            //   DateTimeInterface (and DateTimeImmutable) not available until Php 5.5
-            $abs['isTraverseOnly'] = false;
-            $abs['stringified'] = $obj->format(\DateTime::ISO8601);
-        } elseif ($obj instanceof mysqli) {
-            $this->onStartMysqli($abs);
-        } elseif ($obj instanceof Data) {
-            $abs['propertyOverrideValues']['data'] = Abstracter::NOT_INSPECTED;
-        } elseif ($obj instanceof PhpDoc) {
-            $abs['propertyOverrideValues']['cache'] = Abstracter::NOT_INSPECTED;
-        } elseif ($obj instanceof AbstractObjectDefinition) {
-            $abs['propertyOverrideValues']['cache'] = Abstracter::NOT_INSPECTED;
-        } elseif ($abs['isAnonymous']) {
-            $this->onStartAnonymous($abs);
-        } elseif ($abs['className'] === 'Closure') {
-            $this->onStartClosure($abs);
+        switch (true) {
+            case $obj instanceof \DateTime || $obj instanceof \DateTimeImmutable:
+                // check for both DateTime and DateTimeImmutable
+                //   DateTimeInterface (and DateTimeImmutable) not available until Php 5.5
+                $abs['isTraverseOnly'] = false;
+                $abs['stringified'] = $obj->format(\DateTime::ISO8601);
+                break;
+            case $obj instanceof mysqli:
+                $this->onStartMysqli($abs);
+                break;
+            case $obj instanceof Data:
+                $abs['propertyOverrideValues']['data'] = Abstracter::NOT_INSPECTED;
+                break;
+            case $obj instanceof PhpDoc:
+                $abs['propertyOverrideValues']['cache'] = Abstracter::NOT_INSPECTED;
+                break;
+            case $obj instanceof AbstractObjectDefinition:
+                $abs['propertyOverrideValues']['cache'] = Abstracter::NOT_INSPECTED;
+                break;
+            case $abs['className'] === 'Closure':
+                $this->onStartClosure($abs);
+                break;
         }
     }
 
@@ -162,44 +167,6 @@ class Subscriber implements SubscriberInterface
             $abs['properties'][$name]['value'] = $refObject->getProperty($name)->getValue($obj);
         }
         \restore_error_handler();
-    }
-
-    /**
-     * Add anonymous instance info
-     *
-     *  * definition
-     *  * constants
-     *  * methods
-     *  * add file & line debug properties
-     *
-     * @param Abstraction $abs Abstraction instance
-     *
-     * @return void
-     */
-    private function onStartAnonymous(Abstraction $abs)
-    {
-        $this->abstractObject->definition->addDefinition($abs);
-        $this->abstractObject->constants->add($abs);
-        $this->abstractObject->methods->add($abs);
-        if ($abs['reflector']->getParentClass()) {
-            $abs['extends'] = \array_merge(array(
-                $abs['reflector']->getParentClass()->getName(),
-            ), $abs['extends']);
-        }
-        $properties = $abs['properties'];
-        $properties['debug.file'] = $this->abstractObject->properties->buildPropValues(array(
-            'type' => Abstracter::TYPE_STRING,
-            'value' => $abs['definition']['fileName'],
-            'valueFrom' => 'debug',
-            'visibility' => 'debug',
-        ));
-        $properties['debug.line'] = $this->abstractObject->properties->buildPropValues(array(
-            'type' => Abstracter::TYPE_INT,
-            'value' => (int) $abs['definition']['startLine'],
-            'valueFrom' => 'debug',
-            'visibility' => 'debug',
-        ));
-        $abs['properties'] = $properties;
     }
 
     /**

@@ -180,19 +180,19 @@ class Methods extends Inheritable
      */
     private function addImplements(Abstraction $abs)
     {
-        $interfaceMethods = array(
-            'ArrayAccess' => array('offsetExists','offsetGet','offsetSet','offsetUnset'),
-            'BackedEnum' => array('from', 'tryFrom'),
-            'Countable' => array('count'),
-            'Iterator' => array('current','key','next','rewind','valid'),
-            'IteratorAggregate' => array('getIterator'),
-            'UnitEnum' => array('cases'),
-        );
-        $interfaces = \array_intersect($abs['reflector']->getInterfaceNames(), \array_keys($interfaceMethods));
-        foreach ($interfaces as $interface) {
-            foreach ($interfaceMethods[$interface] as $methodName) {
-                // this method implements this interface
-                $abs['methods'][$methodName]['implements'] = $interface;
+        $stack = $abs['implements'];
+        while ($stack) {
+            $key = \key($stack);
+            $val = \array_shift($stack);
+            $classname = $val;
+            if (\is_array($val)) {
+                $classname = $key;
+                $stack = \array_merge($stack, $val);
+            }
+            $refClass = new ReflectionClass($classname);
+            foreach ($refClass->getMethods() as $refMethod) {
+                $methodName = $refMethod->getName();
+                $abs['methods'][$methodName]['implements'] = $classname;
             }
         }
     }

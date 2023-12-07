@@ -41,7 +41,9 @@ i.fa-calendar { font-size: 1.1em; }
 [data-toggle=interface]:hover { background-color: rgba(0, 0, 0, 0.1); }
 
 .vis-toggles .toggle-off,
-.interface .toggle-off { color: $text-muted; }
+.interface {
+  &.toggle-off { opacity: 0.5; }
+}
 
 //
 // strings - show more

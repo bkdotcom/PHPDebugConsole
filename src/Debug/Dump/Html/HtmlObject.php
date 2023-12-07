@@ -32,6 +32,7 @@ class HtmlObject
     protected $html;
     protected $methods;
     protected $properties;
+    protected $sectionCallables;
 
     /**
      * Constructor
@@ -49,6 +50,16 @@ class HtmlObject
         $this->constants = new ObjectConstants($valDumper, $helper, $html);
         $this->methods = new ObjectMethods($valDumper, $helper, $html);
         $this->properties = new ObjectProperties($valDumper, $helper, $html);
+        $this->sectionCallables = array(
+            'attributes' => array($this, 'dumpAttributes'),
+            'cases' => array($this->cases, 'dump'),
+            'constants' => array($this->constants, 'dump'),
+            'extends' => array($this, 'dumpExtends'),
+            'implements' => array($this, 'dumpImplements'),
+            'methods' => array($this->methods, 'dump'),
+            'phpDoc' => array($this, 'dumpPhpDoc'),
+            'properties' => array($this->properties, 'dump'),
+        );
     }
 
     /**
@@ -71,23 +82,51 @@ class HtmlObject
             return $this->dumpToString($abs)
                 . $classname . "\n" . '<span class="excluded">NOT INSPECTED</span>';
         }
-        if (($abs['cfgFlags'] & AbstractObject::BRIEF) && \in_array('UnitEnum', $abs['implements'], true)) {
+        if (($abs['cfgFlags'] & AbstractObject::BRIEF) && \strpos(\json_encode($abs['implements']), '"UnitEnum"') !== false) {
             return $classname;
+        }
+        if (\strpos($abs['sort'], 'inheritance') === 0) {
+            $this->valDumper->setDumpOpt('attribs.class.__push__', 'groupByInheritance');
         }
         $html = $this->dumpToString($abs)
             . $classname . "\n"
             . '<dl class="object-inner">' . "\n"
-                . $this->dumpModifiers($abs)
-                . $this->dumpExtends($abs)
-                . $this->dumpImplements($abs)
-                . $this->dumpAttributes($abs)
-                . $this->constants->dump($abs)
-                . $this->cases->dump($abs)
-                . $this->properties->dump($abs)
-                . $this->methods->dump($abs)
-                . $this->dumpPhpDoc($abs)
+            . $this->dumpInner($abs)
             . '</dl>' . "\n";
         return $this->cleanup($html);
+    }
+
+    /**
+     * Build implements tree
+     *
+     * @param array $implements         Implements structure
+     * @param array $interfacesCollapse Interfaces that should initially be hidden
+     *
+     * @return string
+     */
+    private function buildImplementsTree(array $implements, array $interfacesCollapse)
+    {
+        $str = '<ul class="list-unstyled">' . "\n";
+        foreach ($implements as $k => $v) {
+            $classname = \is_array($v)
+                ? $k
+                : $v;
+            $str .= '<li>'
+                . $this->html->buildTag(
+                    'span',
+                    array(
+                        'class' => array(
+                            'interface' => true,
+                            'toggle-off' => \in_array($classname, $interfacesCollapse, true),
+                        ),
+                    ),
+                    $this->valDumper->markupIdentifier($classname)
+                )
+                . (\is_array($v) ? "\n" . self::buildImplementsTree($v, $interfacesCollapse) : '')
+                . '</li>' . "\n";
+        }
+        $str .= '</ul>' . "\n";
+        return $str;
     }
 
     /**
@@ -107,6 +146,22 @@ class HtmlObject
             ' data-inherited-from="null"',
             ' title=""',
         ), '', $html);
+        return $html;
+    }
+
+    /**
+     * Dump the object's details
+     *
+     * @param Abstraction $abs Object Abstraction instance
+     *
+     * @return string html fragment
+     */
+    protected function dumpInner(Abstraction $abs)
+    {
+        $html = $this->dumpModifiers($abs);
+        foreach ($abs['sectionOrder'] as $sectionName) {
+            $html .= $this->sectionCallables[$sectionName]($abs);
+        }
         return $html;
     }
 
@@ -175,7 +230,7 @@ class HtmlObject
             ? \trim($abs['phpDoc']['summary'] . "\n\n" . $abs['phpDoc']['desc'])
             : null;
         $title = $title ?: null;
-        if (\in_array('UnitEnum', $abs['implements'], true)) {
+        if (\strpos(\json_encode($abs['implements']), '"UnitEnum"') !== false) {
             return $this->html->buildTag(
                 'span',
                 \array_filter(array(
@@ -214,10 +269,11 @@ class HtmlObject
      */
     protected function dumpImplements(Abstraction $abs)
     {
+        if (empty($abs['implements'])) {
+            return '';
+        }
         return '<dt>implements</dt>' . "\n"
-            . \implode(\array_map(function ($classname) {
-                return '<dd class="interface">' . $this->valDumper->markupIdentifier($classname) . '</dd>' . "\n";
-            }, $abs['implements']));
+            . '<dd>' . $this->buildImplementsTree($abs['implements'], $abs['interfacesCollapse']) . '</dd>' . "\n";
     }
 
     /**

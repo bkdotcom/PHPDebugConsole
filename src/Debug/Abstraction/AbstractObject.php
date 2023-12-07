@@ -26,7 +26,6 @@ use bdk\Debug\Utility\Reflection;
 use ReflectionClass;
 use ReflectionEnumUnitCase;
 use RuntimeException;
-use UnitEnum;
 
 /**
  * Abstracter:  Methods used to abstract objects
@@ -142,10 +141,11 @@ class AbstractObject extends AbstractComponent
         'cfgFlags' => 0,
         'className' => '',
         'debugMethod' => '',
-        'isAnonymous' => false,
+        'interfacesCollapse' => array(),  // cfg.interfacesCollapse
         'isExcluded' => false,  // don't exclude if we're debugging directly
         'isMaxDepth' => false,
         'isRecursion' => false,
+        'sectionOrder' => array(),  // cfg.objectSectionOrder
         'properties' => array(),
         'scopeClass' => '',
         'sort' => '',  // cfg.objectSort
@@ -280,11 +280,6 @@ class AbstractObject extends AbstractComponent
             return;
         }
         if ($abs['isRecursion']) {
-            if ($abs->getSubject() instanceof UnitEnum) {
-                $abs['properties']['name'] = array(
-                    'value' => $abs->getSubject()->name,
-                );
-            }
             return;
         }
         $abs['isTraverseOnly'] = $this->isTraverseOnly($abs);
@@ -312,7 +307,7 @@ class AbstractObject extends AbstractComponent
     }
 
     /**
-     * Returns information about an object
+     * Get initial "top-level" values.
      *
      * @param ReflectionClass $reflector Reflection instance
      * @param object|string   $obj       Object (or classname) to inspect
@@ -330,11 +325,12 @@ class AbstractObject extends AbstractComponent
                 'cfgFlags' => $this->getCfgFlags(),
                 'className' => $this->helper->getClassName($reflector),
                 'debugMethod' => $method,
-                'isAnonymous' => PHP_VERSION_ID >= 70000 && $reflector->isAnonymous(),
+                'interfacesCollapse' => \array_values(\array_intersect($reflector->getInterfaceNames(), $this->cfg['interfacesCollapse'])),
                 'isExcluded' => $hist && $this->isExcluded($obj),    // don't exclude if we're debugging directly
                 'isMaxDepth' => $this->cfg['maxDepth'] && \count($hist) === $this->cfg['maxDepth'],
                 'isRecursion' => \in_array($obj, $hist, true),
                 'scopeClass' => $this->getScopeClass($hist),
+                'sectionOrder' => $this->cfg['objectSectionOrder'],
                 'sort' => $this->cfg['objectSort'],
                 'viaDebugInfo' => $this->cfg['useDebugInfo'] && $reflector->hasMethod('__debugInfo'),
             ),

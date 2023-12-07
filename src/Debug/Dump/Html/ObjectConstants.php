@@ -33,7 +33,6 @@ class ObjectConstants extends AbstractObjectSection
             'attributeOutput' => $abs['cfgFlags'] & AbstractObject::CONST_ATTRIBUTE_OUTPUT,
             'collect' => $abs['cfgFlags'] & AbstractObject::CONST_COLLECT,
             'output' => $abs['cfgFlags'] & AbstractObject::CONST_OUTPUT,
-            'phpDocOutput' => $abs['cfgFlags'] & AbstractObject::PHPDOC_OUTPUT,
         );
         if (!$cfg['output']) {
             return '';
@@ -57,7 +56,6 @@ class ObjectConstants extends AbstractObjectSection
         $visClasses = \array_diff((array) $info['visibility'], array('debug'));
         $classes = \array_keys(\array_filter(array(
             'constant' => true,
-            'inherited' => $info['isInherited'],
             'isFinal' => $info['isFinal'],
             'overrides' => $info['isInherited'] === false && $info['declaredPrev'],
             'private-ancestor' => $info['isPrivateAncestor'],
@@ -70,9 +68,8 @@ class ObjectConstants extends AbstractObjectSection
      */
     protected function getModifiers(array $info)
     {
-        $modifiers = (array) $info['visibility'];
-        return \array_merge($modifiers, \array_keys(\array_filter(array(
+        return \array_merge(\array_keys(\array_filter(array(
             'final' => $info['isFinal'],
-        ))));
+        ))), (array) $info['visibility']);
     }
 }

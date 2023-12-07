@@ -31,7 +31,6 @@ class ObjectProperties extends AbstractObjectSection
     {
         $cfg = array(
             'attributeOutput' => $abs['cfgFlags'] & AbstractObject::PROP_ATTRIBUTE_OUTPUT,
-            'phpDocOutput' => $abs['cfgFlags'] & AbstractObject::PHPDOC_OUTPUT,
         );
         $magicMethods = \array_intersect(array('__get', '__set'), \array_keys($abs['methods']));
         $html = '<dt class="properties">' . $this->getLabel($abs) . '</dt>' . "\n";
@@ -51,10 +50,9 @@ class ObjectProperties extends AbstractObjectSection
             'debuginfo-excluded' => $info['debugInfoExcluded'],
             'debuginfo-value' => $info['valueFrom'] === 'debugInfo',
             'forceShow' => $info['forceShow'],
-            'inherited' => $info['isInherited'],
             'isDynamic' => $info['declaredLast'] === null
                 && $info['valueFrom'] === 'value'
-                && $info['className'] !== 'stdClass',
+                && $info['objClassName'] !== 'stdClass',
             'isPromoted' => $info['isPromoted'],
             'isReadOnly' => $info['isReadOnly'],
             'isStatic' => $info['isStatic'],

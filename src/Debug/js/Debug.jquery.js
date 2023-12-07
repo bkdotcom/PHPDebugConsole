@@ -35,14 +35,26 @@
     // console.warn('addIcons', $node)
     $.each(config.iconsObject, function (selector, v) {
       var prepend = true;
-      var matches = v.match(/^([ap])\s*:(.+)$/);
-      if (matches) {
-        prepend = matches[1] === 'p';
-        v = matches[2];
+      var sMatches = selector.match(/(?:parent(\S+)\s)?(?:context(\S+)\s)?(.*)$/);
+      var vMatches = v.match(/^([ap])\s*:(.+)$/);
+      var $found;
+      if (sMatches) {
+        if (sMatches[1] && $node.parent().filter(sMatches[1]).length === 0) {
+          return
+        }
+        if (sMatches[2]) {
+          $node = $node.filter(sMatches[2]);
+        }
+        selector = sMatches[3];
       }
+      if (vMatches) {
+        prepend = vMatches[1] === 'p';
+        v = vMatches[2];
+      }
+      $found = $node.find(selector);
       prepend
-        ? $node.find(selector).prepend(v)
-        : $node.find(selector).append(v);
+        ? $found.prepend(v)
+        : $found.append(v);
     });
   }
 
@@ -71,33 +83,27 @@
     });
   }
 
-  function enhanceInner ($nodeObj) {
-    var $inner = $nodeObj.find('> .object-inner');
-    var accessible = $nodeObj.data('accessible');
-    var hiddenInterfaces = [];
+  function enhanceInner ($obj) {
+    var $inner = $obj.find('> .object-inner');
+    var accessible = $obj.data('accessible');
     var callPostToggle = null; // or "local", or "allDesc"
-    if ($nodeObj.is('.enhanced')) {
+    if ($obj.is('.enhanced')) {
       return
     }
-    if ($inner.find('> .method[data-implements]').hide().length) {
-      // linkify visibility
-      $inner.find('> .method[data-implements]').each(function () {
-        var iface = $(this).data('implements');
-        if (hiddenInterfaces.indexOf(iface) < 0) {
-          hiddenInterfaces.push(iface);
-        }
-      });
-      $.each(hiddenInterfaces, function (i, iface) {
-        $inner.find('> .interface').each(function () {
-          var html = '<span class="toggle-off" data-toggle="interface" data-interface="' + iface + '" title="toggle methods">' +
-              '<i class="fa fa-eye-slash"></i>' + iface + '</span>';
-          if ($(this).text() === iface) {
-            $(this).html(html);
-          }
-        });
-      });
-      callPostToggle = 'local';
-    }
+    $inner.find('> dd > ul > li > .interface, > dd > ul > li > .interface + ul .interface').each(function () {
+      var iface = $(this).text();
+      if (findInterfaceMethods($obj, iface).length === 0) {
+        return
+      }
+      $(this)
+        .addClass('toggle-on')
+        .prop('title', 'toggle interface methods')
+        .attr('data-toggle', 'interface')
+        .attr('data-interface', iface);
+    }).filter('.toggle-off').removeClass('toggle-off').each(function () {
+      // element may have toggle-off to begin with...
+      toggleInterface(this);
+    });
     $inner.find('> .private, > .protected')
       .filter('.magic, .magic-read, .magic-write')
       .removeClass('private protected');
@@ -109,9 +115,9 @@
     addIcons($inner);
     $inner.find('> .property.forceShow').show().find('> .t_array').debugEnhance('expand');
     if (callPostToggle) {
-      postToggle($nodeObj, callPostToggle === 'allDesc');
+      postToggle($obj, callPostToggle === 'allDesc');
     }
-    $nodeObj.addClass('enhanced');
+    $obj.addClass('enhanced');
   }
 
   /**
@@ -122,7 +128,7 @@
       hasProtected: $inner.children('.protected').not('.magic, .magic-read, .magic-write').length > 0,
       hasPrivate: $inner.children('.private').not('.magic, .magic-read, .magic-write').length > 0,
       hasExcluded: $inner.children('.debuginfo-excluded').hide().length > 0,
-      hasInherited: $inner.children('.inherited').length > 0
+      hasInherited: $inner.children('dd[data-inherited-from]').length > 0
     };
     var toggleClass = accessible === 'public'
       ? 'toggle-off'
@@ -152,17 +158,28 @@
 
   function toggleInterface (toggle) {
     var $toggle = $(toggle);
-    var iface = $toggle.data('interface');
     var $obj = $toggle.closest('.t_object');
-    var $methods = $obj.find('> .object-inner > dd[data-implements=' + iface + ']');
-    if ($toggle.is('.toggle-off')) {
-      $toggle.addClass('toggle-on').removeClass('toggle-off');
-      $methods.show();
-    } else {
-      $toggle.addClass('toggle-off').removeClass('toggle-on');
-      $methods.hide();
-    }
+    $toggle = $toggle.is('.toggle-off')
+      ? $toggle.add($toggle.next().find('.toggle-off'))
+      : $toggle.add($toggle.next().find('.toggle-on'));
+    $toggle.each(function () {
+      var $toggle = $(this);
+      var iface = $toggle.data('interface');
+      var $methods = findInterfaceMethods($obj, iface);
+      if ($toggle.is('.toggle-off')) {
+        $toggle.addClass('toggle-on').removeClass('toggle-off');
+        $methods.show();
+      } else {
+        $toggle.addClass('toggle-off').removeClass('toggle-on');
+        $methods.hide();
+      }
+    });
     postToggle($obj);
+  }
+
+  function findInterfaceMethods ($obj, iface) {
+      var selector = '> .object-inner > dd[data-implements="' + CSS.escape(iface) + '"]';
+      return $obj.find(selector)
   }
 
   /**
@@ -176,7 +193,7 @@
     var $objInner = $obj.find('> .object-inner');
     var $toggles = $objInner.find('[data-toggle=vis][data-vis=' + vis + ']');
     var selector = vis === 'inherited'
-      ? '.inherited, .private-ancestor'
+      ? 'dd[data-inherited-from], .private-ancestor'
       : '.' + vis;
     var $nodes = $objInner.find(selector);
     var show = $toggle.hasClass('toggle-off');
@@ -203,7 +220,7 @@
         var isOn = $toggle.hasClass('toggle-on');
         var vis = $toggle.data('vis');
         var filter = vis === 'inherited'
-          ? '.inherited, .private-ancestor'
+          ? 'dd[data-inherited-from], .private-ancestor'
           : '.' + vis;
         if (!isOn && $node.filter(filter).length === 1) {
           show = false;
@@ -220,13 +237,26 @@
     var selector = allDescendants
       ? '.object-inner > dt'
       : '> .object-inner > dt';
+    var selector2 = allDescendants
+      ? '.object-inner > .heading'
+      : '> .object-inner > .heading';
     $obj.find(selector).each(function (i, dt) {
       var $dds = $(dt).nextUntil('dt');
+      var $ddsVis = $dds.not('.heading').filter(function (index, node) {
+        return $(node).css('display') !== 'none'
+      });
+      var allHidden = $dds.length > 0 && $ddsVis.length === 0;
+      $(dt).toggleClass('text-muted', allHidden);
+    });
+    $obj.find(selector2).each(function (i, heading) {
+      var $dds = $(heading).nextUntil('dt, .heading');
       var $ddsVis = $dds.filter(function (index, node) {
         return $(node).css('display') !== 'none'
       });
-      $(dt).toggleClass('text-muted', $dds.length > 0 && $ddsVis.length === 0);
+      var allHidden = $dds.length > 0 && $ddsVis.length === 0;
+      $(heading).toggleClass('text-muted', allHidden);
     });
+
     $obj.trigger('expanded.debug.object');
   }
 
@@ -1207,6 +1237,10 @@
       var $node = sort[i].node;
       applyFilterToNode($node, channelNameRoot);
     }
+    $root.find('.tab-primary > .tab-body > hr').toggleClass(
+      'filter-hidden',
+      $root.find('.tab-primary .debug-log-summary').height() < 1
+    );
   }
 
   function applyFilterToNode ($node, channelNameRoot) {
@@ -5934,6 +5968,8 @@
     $ref.data('titleOrig', title);
     if (title === 'Deprecated') {
       title = tippyContentDeprecated($ref, title);
+    } else if (title === 'Implements') {
+      title = tippyContentImplements($ref);
     } else if (['Inherited', 'Private ancestor'].indexOf(title) > -1) {
       title = tippyContentInherited($ref, title);
     } else if (title === 'Overrides') {
@@ -5951,6 +5987,14 @@
     return titleMore
       ? 'Deprecated: ' + titleMore
       : title
+  }
+
+  function tippyContentImplements ($ref, title) {
+    var titleMore = $ref.parent().data('implements');
+    titleMore = '<span class="classname">' +
+      titleMore.replace(/^(.*\\)(.+)$/, '<span class="namespace">$1</span>$2') +
+      '</span>';
+    return 'Implements: ' + titleMore
   }
 
   function tippyContentInherited ($ref, title) {
@@ -6248,15 +6292,16 @@
         '<i class="fa fa-ban fa-flip-horizontal fa-stack-2x text-muted"></i>' +
         '</span>',
       '> .info.magic': '<i class="fa fa-fw fa-magic"></i>',
-      '> .inherited': '<i class="fa fa-fw fa-clone" title="Inherited"></i>',
+      'parent:not(.groupByInheritance) > dd[data-inherited-from]:not(.private-ancestor)': '<i class="fa fa-fw fa-clone" title="Inherited"></i>',
+      'parent:not(.groupByInheritance) > dd.private-ancestor': '<i class="fa fa-lock" title="Private ancestor"></i>',
+      '> dd[data-attributes]': '<i class="fa fa-hashtag" title="Attributes"></i>',
       '> .overrides': '<i class="fa fa-fw fa-repeat" title="Overrides"></i>',
       '> .method.isDeprecated': '<i class="fa fa-fw fa-arrow-down" title="Deprecated"></i>',
       '> .method > .t_modifier_magic': '<i class="fa fa-magic" title="magic method"></i>',
       '> .method > .t_modifier_final': '<i class="fa fa-hand-stop-o"></i>',
       '> .method > .parameter.isPromoted': '<i class="fa fa-arrow-up" title="Promoted"></i>',
       '> .method > .parameter[data-attributes]': '<i class="fa fa-hashtag" title="Attributes"></i>',
-      '> *[data-attributes]': '<i class="fa fa-hashtag" title="Attributes"></i>',
-      '> .private-ancestor': '<i class="fa fa-lock" title="Private ancestor"></i>',
+      '> .method[data-implements]': '<i class="fa fa-handshake-o" title="Implements"></i>',
       '> .property.debuginfo-value': '<i class="fa fa-eye" title="via __debugInfo()"></i>',
       '> .property.debuginfo-excluded': '<i class="fa fa-eye-slash" title="not included in __debugInfo"></i>',
       '> .property.isDynamic': '<i class="fa fa-warning" title="Dynamic"></i>',
@@ -6264,10 +6309,10 @@
       '> .property > .t_modifier_magic': '<i class="fa fa-magic" title="magic property"></i>',
       '> .property > .t_modifier_magic-read': '<i class="fa fa-magic" title="magic property"></i>',
       '> .property > .t_modifier_magic-write': '<i class="fa fa-magic" title="magic property"></i>',
-      '[data-toggle=vis][data-vis=private]': '<i class="fa fa-user-secret"></i>',
-      '[data-toggle=vis][data-vis=protected]': '<i class="fa fa-shield"></i>',
-      '[data-toggle=vis][data-vis=debuginfo-excluded]': '<i class="fa fa-eye-slash"></i>',
-      '[data-toggle=vis][data-vis=inherited]': '<i class="fa fa-clone"></i>'
+      '> .vis-toggles > span[data-toggle=vis][data-vis=private]': '<i class="fa fa-user-secret"></i>',
+      '> .vis-toggles > span[data-toggle=vis][data-vis=protected]': '<i class="fa fa-shield"></i>',
+      '> .vis-toggles > span[data-toggle=vis][data-vis=debuginfo-excluded]': '<i class="fa fa-eye-slash"></i>',
+      '> .vis-toggles > span[data-toggle=vis][data-vis=inherited]': '<i class="fa fa-clone"></i>'
     },
     // debug methods (not object methods)
     iconsMethods: {

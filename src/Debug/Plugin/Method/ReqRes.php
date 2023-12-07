@@ -282,15 +282,20 @@ class ReqRes implements SubscriberInterface
     {
         $contentTypeDefault = \ini_get('default_mimetype');
         $charset = \ini_get('default_charset');
+        $headersDefault = array();
         if ($contentTypeDefault) {
             // By default, PHP will output a Content-Type header if this ini value is non-empty
             $contentTypeDefault = $contentTypeDefault . '; charset=' . $charset;
             $contentTypeDefault = \preg_replace('/; charset=$/', '', $contentTypeDefault);
-            $headers = \array_merge(array(
-                'Content-Type' => array(
-                    $contentTypeDefault,
-                ),
-            ), $headers);
+            $headersDefault['Content-Type'] = array(
+                $contentTypeDefault,
+            );
+        }
+        $keysLower = \array_map('strtolower', \array_keys($headers));
+        foreach ($headersDefault as $k => $v) {
+            if (\in_array(\strtolower($k), $keysLower, true) === false) {
+                $headers[$k] = $v;
+            }
         }
         return $headers;
     }

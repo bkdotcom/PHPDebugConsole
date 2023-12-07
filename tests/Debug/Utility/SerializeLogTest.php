@@ -367,10 +367,12 @@ EOD;
                 'attributes' => array(),
                 'cases' => array(),
                 'cfgFlags' => 4194303,
+                'interfacesCollapse' => array(),
                 'isAnonymous' => false,
                 'isFinal' => false,
                 'isMaxDepth' => false,
                 'isReadOnly' => false,
+                'sectionOrder' => array(),
                 'sort' => '',
             ),
             $expect['log'][1][1][1]

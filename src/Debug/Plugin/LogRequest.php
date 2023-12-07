@@ -177,11 +177,12 @@ class LogRequest extends AbstractLogReqRes implements SubscriberInterface
             $this->debug->utility->getStreamContents($request->getBody()),
             $contentTypeUser
         );
+        $contentTypeTrimmed = \preg_replace('/\s*[;,].*$/', '', (string) $contentType);
         $parsedBody = $request->getParsedBody();
         $this->assertCorrectContentType($contentType, $contentTypeUser, $method);
         if (
             $method === 'POST'
-            && \in_array($contentType, array(ContentType::FORM, ContentType::FORM_MULTIPART), true)
+            && \in_array($contentTypeTrimmed, array(ContentType::FORM, ContentType::FORM_MULTIPART), true)
             && $parsedBody
         ) {
             $this->debug->log('$_POST', $parsedBody, $this->debug->meta('redact'));

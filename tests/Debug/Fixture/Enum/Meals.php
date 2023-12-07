@@ -19,6 +19,6 @@ enum Meals
     /** What's for dinner? */
     case DINNER;
 
-    static function prepare($meal = self::BREAKFAST) {
+    public static function prepare($meal = self::BREAKFAST) {
     }
 }

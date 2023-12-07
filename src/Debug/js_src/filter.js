@@ -104,6 +104,10 @@ function applyFilter ($root) {
     var $node = sort[i].node
     applyFilterToNode($node, channelNameRoot)
   }
+  $root.find('.tab-primary > .tab-body > hr').toggleClass(
+    'filter-hidden',
+    $root.find('.tab-primary .debug-log-summary').height() < 1
+  )
 }
 
 function applyFilterToNode ($node, channelNameRoot) {

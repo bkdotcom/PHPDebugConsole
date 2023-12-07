@@ -212,6 +212,64 @@ class LogRequestTest extends DebugTestFramework
         );
     }
 
+    /**
+     * A "from globals" multipart request probably won't contain the raw body as PHP doesn't make it available
+     */
+    public function testPostMethMultipart()
+    {
+        $post = array('foo' => 'bar');
+        $this->debug->setCfg('serviceProvider', array(
+            'serverRequest' => (new ServerRequest('POST'))
+                ->withHeader('Content-Type', ContentType::FORM_MULTIPART . '; boundary=----testme')
+                ->withParsedBody($post),
+        ));
+        $this->debug->setCfg('logRequestInfo', true);
+        $logReqRes = $this->debug->getPlugin('logRequest');
+        $logReqRes->logRequest();
+
+        self::assertSame(
+            array(
+                'method' => 'log',
+                'args' => array('$_POST', $post),
+                'meta' => array(
+                    'channel' => 'Request / Response',
+                    'redact' => true,
+                ),
+            ),
+            $this->helper->logEntryToArray($this->debug->data->get('log/2'))
+        );
+    }
+
+    /**
+     * PHP won't have php://input with multipart, but it's possible
+     *   the supplied ServerRequest object may contain a supplied body
+     */
+    public function testPostMethMultipartWithBody()
+    {
+        $post = array('foo' => 'bar');
+        $this->debug->setCfg('serviceProvider', array(
+            'serverRequest' => (new ServerRequest('POST'))
+                ->withHeader('Content-Type', ContentType::FORM_MULTIPART . '; boundary=----testme')
+                ->withParsedBody($post)
+                ->withBody(new Stream(\http_build_query($post))),
+        ));
+        $this->debug->setCfg('logRequestInfo', true);
+        $logReqRes = $this->debug->getPlugin('logRequest');
+        $logReqRes->logRequest();
+
+        self::assertSame(
+            array(
+                'method' => 'log',
+                'args' => array('$_POST', $post),
+                'meta' => array(
+                    'channel' => 'Request / Response',
+                    'redact' => true,
+                ),
+            ),
+            $this->helper->logEntryToArray($this->debug->data->get('log/2'))
+        );
+    }
+
     public function testPostOnlyFiles()
     {
         $this->debug->rootInstance->setCfg('serviceProvider', array(

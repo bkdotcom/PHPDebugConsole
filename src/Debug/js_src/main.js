@@ -39,15 +39,16 @@ var config = new Config({
       '<i class="fa fa-ban fa-flip-horizontal fa-stack-2x text-muted"></i>' +
       '</span>',
     '> .info.magic': '<i class="fa fa-fw fa-magic"></i>',
-    '> .inherited': '<i class="fa fa-fw fa-clone" title="Inherited"></i>',
+    'parent:not(.groupByInheritance) > dd[data-inherited-from]:not(.private-ancestor)': '<i class="fa fa-fw fa-clone" title="Inherited"></i>',
+    'parent:not(.groupByInheritance) > dd.private-ancestor': '<i class="fa fa-lock" title="Private ancestor"></i>',
+    '> dd[data-attributes]': '<i class="fa fa-hashtag" title="Attributes"></i>',
     '> .overrides': '<i class="fa fa-fw fa-repeat" title="Overrides"></i>',
     '> .method.isDeprecated': '<i class="fa fa-fw fa-arrow-down" title="Deprecated"></i>',
     '> .method > .t_modifier_magic': '<i class="fa fa-magic" title="magic method"></i>',
     '> .method > .t_modifier_final': '<i class="fa fa-hand-stop-o"></i>',
     '> .method > .parameter.isPromoted': '<i class="fa fa-arrow-up" title="Promoted"></i>',
     '> .method > .parameter[data-attributes]': '<i class="fa fa-hashtag" title="Attributes"></i>',
-    '> *[data-attributes]': '<i class="fa fa-hashtag" title="Attributes"></i>',
-    '> .private-ancestor': '<i class="fa fa-lock" title="Private ancestor"></i>',
+    '> .method[data-implements]': '<i class="fa fa-handshake-o" title="Implements"></i>',
     '> .property.debuginfo-value': '<i class="fa fa-eye" title="via __debugInfo()"></i>',
     '> .property.debuginfo-excluded': '<i class="fa fa-eye-slash" title="not included in __debugInfo"></i>',
     '> .property.isDynamic': '<i class="fa fa-warning" title="Dynamic"></i>',
@@ -55,10 +56,10 @@ var config = new Config({
     '> .property > .t_modifier_magic': '<i class="fa fa-magic" title="magic property"></i>',
     '> .property > .t_modifier_magic-read': '<i class="fa fa-magic" title="magic property"></i>',
     '> .property > .t_modifier_magic-write': '<i class="fa fa-magic" title="magic property"></i>',
-    '[data-toggle=vis][data-vis=private]': '<i class="fa fa-user-secret"></i>',
-    '[data-toggle=vis][data-vis=protected]': '<i class="fa fa-shield"></i>',
-    '[data-toggle=vis][data-vis=debuginfo-excluded]': '<i class="fa fa-eye-slash"></i>',
-    '[data-toggle=vis][data-vis=inherited]': '<i class="fa fa-clone"></i>'
+    '> .vis-toggles > span[data-toggle=vis][data-vis=private]': '<i class="fa fa-user-secret"></i>',
+    '> .vis-toggles > span[data-toggle=vis][data-vis=protected]': '<i class="fa fa-shield"></i>',
+    '> .vis-toggles > span[data-toggle=vis][data-vis=debuginfo-excluded]': '<i class="fa fa-eye-slash"></i>',
+    '> .vis-toggles > span[data-toggle=vis][data-vis=inherited]': '<i class="fa fa-clone"></i>'
   },
   // debug methods (not object methods)
   iconsMethods: {

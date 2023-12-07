@@ -82,18 +82,19 @@ class AbstractLogReqRes
      * @param StreamInterface|string $content         Reqeust/response body
      * @param string                 $contentTypeUser Content-Type provided with request or being sent with response
      *
-     * @return string|null
+     * @return string|null The detected content-type.  may contain the supplied character encoding / boundary
      */
     protected function detectContentType($content, $contentTypeUser)
     {
+        $ctuTrimmed = \preg_replace('/\s*[;,].*$/', '', (string) $contentTypeUser);
         $contentTypeDetected = $this->debug->stringUtil->contentType($content);
         $xmlTypes = array(ContentType::XML, 'application/xml');
-        $userIsXml = \in_array($contentTypeUser, $xmlTypes, true)
-            || \preg_match('/application\\/\S+\+xml/', $contentTypeUser);
+        $userIsXml = \in_array($ctuTrimmed, $xmlTypes, true)
+            || \preg_match('/application\\/\S+\+xml/', $ctuTrimmed);
         if (
             \array_filter(array(
                 \in_array($contentTypeDetected, $xmlTypes, true) && $userIsXml,
-                $contentTypeDetected === ContentType::TXT && $contentTypeUser === ContentType::FORM,
+                $contentTypeDetected === ContentType::TXT && \in_array($ctuTrimmed, array(ContentType::FORM, ContentType::FORM_MULTIPART), true),
                 $contentTypeDetected === 'application/x-empty',
             ))
         ) {

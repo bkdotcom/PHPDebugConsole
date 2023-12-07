@@ -184,6 +184,7 @@ class ChannelTest extends DebugTestFramework
                                 </ul>
                             </li>
                         </ul>
+                        <hr />
                         <ul class="debug-log group-body">
                             <li class="expanded m_group" data-channel="general.foo">
                                 <div class="group-header"><span class="font-weight-bold group-label">foo: group / group</span></div>
@@ -236,6 +237,7 @@ EOD;
                                 </ul>
                             </li>
                         </ul>
+                        <hr />
                         <ul class="debug-log group-body">
                             <li class="m_log"><span class="no-quotes t_string">main: log</span></li>
                             <li class="expanded m_group">

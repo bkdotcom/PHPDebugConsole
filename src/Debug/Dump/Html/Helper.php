@@ -210,10 +210,11 @@ class Helper
      */
     private function markupTypePart($type)
     {
-        $isArray = false;
-        if (\substr($type, -2) === '[]') {
-            $isArray = true;
-            $type = \substr($type, 0, -2);
+        $arrayCount = 0; // how many "[]" at end..
+        if (\preg_match('/(\[\])+$/', $type, $matches)) {
+            $strlen = \strlen($matches[0]);
+            $arrayCount = $strlen / 2;
+            $type = \substr($type, 0, 0 - $strlen);
         }
         if (\is_numeric($type)) {
             return '<span class="t_type">' . $type . '</span>';
@@ -230,8 +231,8 @@ class Helper
         if (\in_array($type, $this->debug->phpDoc->types, true) === false) {
             $type = $this->dumper->valDumper->markupIdentifier($type);
         }
-        if ($isArray) {
-            $type .= '<span class="t_punct">[]</span>';
+        if ($arrayCount > 0) {
+            $type .= '<span class="t_punct">' . \str_repeat('[]', $arrayCount) . '</span>';
         }
         return '<span class="t_type">' . $type . '</span>';
     }

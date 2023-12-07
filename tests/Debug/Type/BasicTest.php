@@ -185,7 +185,7 @@ class BasicTest extends DebugTestFramework
                             }
                         });
                     },
-                    'html' => '<li class="m_log"><div class="t_object" data-accessible="public"><span class="classname">Closure</span>
+                    'html' => '<li class="m_log"><div class="groupByInheritance t_object" data-accessible="public"><span class="classname">Closure</span>
                         <dl class="object-inner">
                         <dt class="modifiers">modifiers</dt>
                         <dd class="t_modifier_final">final</dd>

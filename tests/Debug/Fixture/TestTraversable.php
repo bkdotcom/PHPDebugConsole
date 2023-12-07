@@ -20,7 +20,7 @@ class TestTraversable implements \IteratorAggregate
     }
 
     /**
-     * Implements Traversable
+     * Implements IteratorAggregate
      *
      * @return ArrayIterator
      */

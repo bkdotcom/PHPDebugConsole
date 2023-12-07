@@ -29,14 +29,14 @@ class ObjectCases extends AbstractObjectSection
      */
     public function dump(Abstraction $abs)
     {
-        if (\in_array('UnitEnum', $abs['implements'], true) === false) {
+        if (\strpos(\json_encode($abs['implements']), '"UnitEnum"') === false) {
             return '';
         }
         $cfg = array(
             'attributeOutput' => $abs['cfgFlags'] & AbstractObject::CASE_ATTRIBUTE_OUTPUT,
             'collect' => $abs['cfgFlags'] & AbstractObject::CASE_COLLECT,
+            'groupByInheritance' => false,
             'output' => $abs['cfgFlags'] & AbstractObject::CASE_OUTPUT,
-            'phpDocOutput' => $abs['cfgFlags'] & AbstractObject::PHPDOC_OUTPUT,
         );
         if (!$cfg['output']) {
             return '';

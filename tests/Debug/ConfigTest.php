@@ -85,6 +85,7 @@ class ConfigTest extends DebugTestFramework
             'constCollect',
             'constOutput',
             'fullyQualifyPhpDocType',
+            'interfacesCollapse',
             'maxDepth',
             'methodAttributeCollect',
             'methodAttributeOutput',
@@ -93,6 +94,7 @@ class ConfigTest extends DebugTestFramework
             'methodOutput',
             'objAttributeCollect',
             'objAttributeOutput',
+            'objectSectionOrder',
             'objectsExclude',
             'objectSort',
             'objectsWhitelist',
@@ -154,9 +156,9 @@ class ConfigTest extends DebugTestFramework
         $this->assertSame(true, $this->debug->getCfg('collect'));
         $this->assertSame(true, $this->debug->getCfg('debug.collect'));
 
-        $this->assertSame('visibility', $this->debug->getCfg('objectSort'));
-        $this->assertSame('visibility', $this->debug->getCfg('abstracter.objectSort'));
-        $this->assertSame('visibility', $this->debug->getCfg('abstracter/objectSort'));
+        $this->assertSame('inheritance visibility name', $this->debug->getCfg('objectSort'));
+        $this->assertSame('inheritance visibility name', $this->debug->getCfg('abstracter.objectSort'));
+        $this->assertSame('inheritance visibility name', $this->debug->getCfg('abstracter/objectSort'));
 
         $keysActual = \array_keys($this->debug->getCfg('debug'));
         \sort($keysActual);
@@ -404,7 +406,7 @@ class ConfigTest extends DebugTestFramework
         $debug = new Debug(array(
             'logEnvInfo' => false,
         ));
-        $this->assertSame('visibility', $debug->getCfg('abstracter.objectSort'));
+        $this->assertSame('inheritance visibility name', $debug->getCfg('abstracter.objectSort'));
     }
 
     public static function providerOnCfgReplaceSubscriber()

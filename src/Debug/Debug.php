@@ -111,7 +111,7 @@ class Debug extends AbstractDebug
     const EVENT_STREAM_WRAP = 'debug.streamWrap';
 
     const META = "\x00meta\x00";
-    const VERSION = '3.1';
+    const VERSION = '3.2';
 
     protected $cfg = array(
         'channelIcon' => 'fa fa-list-ul',

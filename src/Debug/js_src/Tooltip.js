@@ -32,6 +32,8 @@ function tippyContent (reference) {
   $ref.data('titleOrig', title)
   if (title === 'Deprecated') {
     title = tippyContentDeprecated($ref, title)
+  } else if (title === 'Implements') {
+    title = tippyContentImplements($ref, title)
   } else if (['Inherited', 'Private ancestor'].indexOf(title) > -1) {
     title = tippyContentInherited($ref, title)
   } else if (title === 'Overrides') {
@@ -49,6 +51,14 @@ function tippyContentDeprecated ($ref, title) {
   return titleMore
     ? 'Deprecated: ' + titleMore
     : title
+}
+
+function tippyContentImplements ($ref, title) {
+  var titleMore = $ref.parent().data('implements')
+  titleMore = '<span class="classname">' +
+    titleMore.replace(/^(.*\\)(.+)$/, '<span class="namespace">$1</span>$2') +
+    '</span>'
+  return 'Implements: ' + titleMore
 }
 
 function tippyContentInherited ($ref, title) {

@@ -82,9 +82,11 @@ dl {
     margin-left: 20px;
     padding-left: 10px;
     text-indent: -10px;
+    > ul {
+      margin-left: -10px;
+    }
   }
 }
-// dl > dd.no-indent {
 li.no-indent {
   padding-left: 0;
   text-indent: 0;

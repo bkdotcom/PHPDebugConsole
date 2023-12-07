@@ -89,11 +89,28 @@ class Properties extends Inheritable
     {
         $this->addViaRef($abs);
         $this->phpDoc->addViaPhpDoc($abs); // magic properties documented via phpDoc
-        $defaultValues = $abs['reflector']->getDefaultProperties();
         $properties = $abs['properties'];
+
+        $defaultValues = $abs['reflector']->getDefaultProperties();
         foreach ($defaultValues as $name => $value) {
             $properties[$name]['value'] = $value;
         }
+
+        if ($abs['isAnonymous']) {
+            $properties['debug.file'] = static::buildPropValues(array(
+                'type' => Abstracter::TYPE_STRING,
+                'value' => $abs['definition']['fileName'],
+                'valueFrom' => 'debug',
+                'visibility' => 'debug',
+            ));
+            $properties['debug.line'] = static::buildPropValues(array(
+                'type' => Abstracter::TYPE_INT,
+                'value' => (int) $abs['definition']['startLine'],
+                'valueFrom' => 'debug',
+                'visibility' => 'debug',
+            ));
+        }
+
         $abs['properties'] = $properties;
     }
 

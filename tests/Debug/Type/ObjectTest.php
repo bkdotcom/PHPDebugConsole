@@ -920,7 +920,7 @@ EOD;
                 'firephp' => 'X-Wf-1-1-1-%d: %d|[{"Label":"anonymous","Type":"LOG"},{"___class_name":"stdClass@anonymous","(public) thing":"hammer","(debug) file":"' . $filepath . '","(debug) line":' . $line . '}]|',
                 'html' => '<li class="m_log"><span class="no-quotes t_string">anonymous</span> = <div class="groupByInheritance t_object" data-accessible="public"><span class="classname" title="I extend stdClass">stdClass@anonymous</span>
                     <dl class="object-inner">
-                    ' . (PHP_VERSION_ID >= 80200
+                    ' . (PHP_VERSION_ID >= 80000
                         ? '<dt class="attributes">attributes</dt>
                             <dd class="attribute"><span class="classname">AnonymousAttribute</span></dd>'
                         : '') . '

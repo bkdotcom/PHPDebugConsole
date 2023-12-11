@@ -212,6 +212,10 @@ class WampCrate
             $this->classesNew[] = $classKey;
             $this->classesCrated[] = $classKey;
         }
+        // methods may be populated with __toString info, or methods with static variables
+        if (isset($info['methods'])) {
+            $info['methods'] = $this->crate($info['methods']);
+        }
         $properties = isset($info['properties'])
             ? $info['properties']
             : array();
@@ -219,9 +223,6 @@ class WampCrate
             if (isset($propInfo['value'])) {
                 $info['properties'][$k]['value'] = $this->crate($propInfo['value']);
             }
-        }
-        if (isset($info['methods']['__toString'])) {
-            $info['methods']['__toString'] = $this->crate($info['methods']['__toString']);
         }
         return $info;
     }

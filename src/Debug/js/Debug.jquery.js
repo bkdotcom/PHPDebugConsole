@@ -743,9 +743,9 @@
     } else if ($target.hasClass('t_object')) {
       // e.namespace = debug.object
       $strings = $target.find('> .object-inner')
-        .find('> dd.constant > .t_string,' +
-          ' > dd.property:visible > .t_string,' +
-          ' > dd.method > .t_string');
+        .find(['> dd.constant > .t_string',
+          '> dd.property:visible > .t_string',
+          '> dd.method > ul > li > .t_string.return-value'].join(', '));
     } else {
       $strings = $();
     }

@@ -181,6 +181,9 @@ li[class*=m_] > .t_array.array-file-tree > .array-inner {
   }
 
   .method {
+    ul {
+      margin-left: 15px;
+    }
     &.deprecated {
       opacity: 0.66;
       i {

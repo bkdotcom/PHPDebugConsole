@@ -33,37 +33,39 @@ use RuntimeException;
 class AbstractObject extends AbstractComponent
 {
     // GENERAL
+    const BRIEF = 4194304; // 2^22
     const PHPDOC_COLLECT = 1; // 2^0
-    const PHPDOC_OUTPUT = 2;  // 2^1
+    const PHPDOC_OUTPUT = 2;
     const OBJ_ATTRIBUTE_COLLECT = 4;
     const OBJ_ATTRIBUTE_OUTPUT = 8;
     const TO_STRING_OUTPUT = 16; // 2^4
-    const BRIEF = 4194304; // 2^22
 
-    // CONSTANTS
-    const CONST_COLLECT = 32;
-    const CONST_OUTPUT = 64;
-    const CONST_ATTRIBUTE_COLLECT = 128;
-    const CONST_ATTRIBUTE_OUTPUT = 256; // 2^8
-
-    // CASE
+    // CASE (2^9 - 2^12)
     const CASE_COLLECT = 512;
     const CASE_OUTPUT = 1024;
     const CASE_ATTRIBUTE_COLLECT = 2048;
-    const CASE_ATTRIBUTE_OUTPUT = 4096; // 2^12
+    const CASE_ATTRIBUTE_OUTPUT = 4096;
 
-    // PROPERTIES
-    const PROP_ATTRIBUTE_COLLECT = 8192;
-    const PROP_ATTRIBUTE_OUTPUT = 16384; // 2^14
+    // CONSTANTS (2^5 - 2^8)
+    const CONST_COLLECT = 32;
+    const CONST_OUTPUT = 64;
+    const CONST_ATTRIBUTE_COLLECT = 128;
+    const CONST_ATTRIBUTE_OUTPUT = 256;
 
-    // METHODS
+    // METHODS (2^15 - 2^21, 2^23 - 2^24)
     const METHOD_COLLECT = 32768;
     const METHOD_OUTPUT = 65536;
     const METHOD_ATTRIBUTE_COLLECT = 131072;
     const METHOD_ATTRIBUTE_OUTPUT = 262144;
     const METHOD_DESC_OUTPUT = 524288;
+    const METHOD_STATIC_VAR_COLLECT = 8388608; // 2^23
+    const METHOD_STATIC_VAR_OUTPUT = 16777216; // 2^24
     const PARAM_ATTRIBUTE_COLLECT = 1048576;
-    const PARAM_ATTRIBUTE_OUTPUT = 2097152; // 2^21
+    const PARAM_ATTRIBUTE_OUTPUT = 2097152;
+
+    // PROPERTIES (2^13 - 2^14)
+    const PROP_ATTRIBUTE_COLLECT = 8192; // 2^13
+    const PROP_ATTRIBUTE_OUTPUT = 16384; // 2^14
 
     public static $cfgFlags = array(  // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
         // GENERAL
@@ -92,6 +94,8 @@ class AbstractObject extends AbstractComponent
         'methodCollect' => self::METHOD_COLLECT,
         'methodDescOutput' => self::METHOD_DESC_OUTPUT,
         'methodOutput' => self::METHOD_OUTPUT,
+        'methodStaticVarCollect' => self::METHOD_STATIC_VAR_COLLECT,
+        'methodStaticVarOutput' => self::METHOD_STATIC_VAR_OUTPUT,
         'paramAttributeCollect' => self::PARAM_ATTRIBUTE_COLLECT,
         'paramAttributeOutput' => self::PARAM_ATTRIBUTE_OUTPUT,
 
@@ -146,6 +150,7 @@ class AbstractObject extends AbstractComponent
         'isMaxDepth' => false,
         'isRecursion' => false,
         'sectionOrder' => array(),  // cfg.objectSectionOrder
+        // methods may be populated with __toString info, or methods with staticVars
         'properties' => array(),
         'scopeClass' => '',
         'sort' => '',  // cfg.objectSort
@@ -299,7 +304,8 @@ class AbstractObject extends AbstractComponent
         if ($abs['isTraverseOnly']) {
             $this->addTraverseValues($abs);
         }
-        $this->properties->add($abs);
+        $this->methods->addInstance($abs);  // method static variables
+        $this->properties->addInstance($abs);
         /*
             Debug::EVENT_OBJ_ABSTRACT_END subscriber has free reign to modify abtraction values
         */

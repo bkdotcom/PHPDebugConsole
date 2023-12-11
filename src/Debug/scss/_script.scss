@@ -48,6 +48,10 @@ i.fa-calendar { font-size: 1.1em; }
 //
 // strings - show more
 //
+ul.list-unstyled > li:has(.show-more-container) {
+  text-indent: 0;
+  padding-left: 0;
+}
 .show-more-container { display: inline; }
 .show-more-wrapper {
   display: block;

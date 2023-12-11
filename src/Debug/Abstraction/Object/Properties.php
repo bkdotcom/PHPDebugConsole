@@ -59,33 +59,13 @@ class Properties extends Inheritable
     }
 
     /**
-     * Add property instance info/values to abstraction
-     *
-     * @param Abstraction $abs Object Abstraction instance
-     *
-     * @return void
-     */
-    public function add(Abstraction $abs)
-    {
-        if ($abs['isTraverseOnly']) {
-            return;
-        }
-        $this->addValues($abs);
-        $obj = $abs->getSubject();
-        if (\is_object($obj)) {
-            $this->addDebug($abs); // use __debugInfo() values if useDebugInfo' && method exists
-        }
-        $this->crate($abs);
-    }
-
-    /**
      * Add declared property info
      *
      * @param Abstraction $abs Object Abstraction instance
      *
      * @return void
      */
-    public function addClass(Abstraction $abs)
+    public function add(Abstraction $abs)
     {
         $this->addViaRef($abs);
         $this->phpDoc->addViaPhpDoc($abs); // magic properties documented via phpDoc
@@ -112,6 +92,26 @@ class Properties extends Inheritable
         }
 
         $abs['properties'] = $properties;
+    }
+
+    /**
+     * Add property instance info/values to abstraction
+     *
+     * @param Abstraction $abs Object Abstraction instance
+     *
+     * @return void
+     */
+    public function addInstance(Abstraction $abs)
+    {
+        if ($abs['isTraverseOnly']) {
+            return;
+        }
+        $this->addValues($abs);
+        $obj = $abs->getSubject();
+        if (\is_object($obj)) {
+            $this->addDebug($abs); // use __debugInfo() values if useDebugInfo' && method exists
+        }
+        $this->crate($abs);
     }
 
     /**

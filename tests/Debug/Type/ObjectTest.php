@@ -46,6 +46,8 @@ use ReflectionObject;
  */
 class ObjectTest extends DebugTestFramework
 {
+    static $testObj;
+
     public static function providerTestMethod()
     {
         $text = <<<'EOD'
@@ -134,7 +136,9 @@ EOD;
 
         $crate = new \bdk\Debug\Route\WampCrate(Debug::getInstance());
 
-        $abs1 = Debug::getInstance()->abstracter->getAbstraction(new TestObj(), 'log');
+        self::$testObj = new TestObj();
+        self::$testObj->methodPublic((object) array());
+        $abs1 = Debug::getInstance()->abstracter->getAbstraction(self::$testObj, 'log');
         $cratedAbs1 = $crate->crate($abs1);
         $cratedAbs1 = \bdk\Test\Debug\Helper::crate($cratedAbs1);
         // as provider method is static, but test is not static...
@@ -146,16 +150,78 @@ EOD;
         $cratedAbs2 = \bdk\Test\Debug\Helper::crate($cratedAbs2);
         $cratedAbs2['scopeClass'] = __CLASS__;
 
-        return array(
+        $tests = array(
+            'closure' => array(
+                'log',
+                array(
+                    static function ($foo, $bar) {
+                        return $foo . $bar;
+                    },
+                ),
+                array(
+                    'entry' => static function ($logEntry) {
+                        $objAbs = $logEntry['args'][0];
+                        self::assertAbstractionType($objAbs);
+                        $values = $objAbs->getValues();
+                        self::assertSame('Closure', $values['className']);
+                        $line = __LINE__ - 10;
+                        self::assertSame(array(
+                            'extensionName' => false,
+                            'fileName' => __FILE__,
+                            'startLine' => $line,
+                        ), $values['definition']);
+                        \array_walk($values['properties'], static function ($propInfo, $propName) use ($line) {
+                            // echo \json_encode($propInfo, JSON_PRETTY_PRINT);
+                            $values = \array_intersect_key($propInfo, \array_flip(array(
+                                'value',
+                                'valueFrom',
+                                'visibility',
+                            )));
+                            switch ($propName) {
+                                case 'debug.file':
+                                    self::assertSame(array(
+                                        'value' => __FILE__,
+                                        'valueFrom' => 'debug',
+                                        'visibility' => 'debug',
+                                    ), $values);
+                                    break;
+                                case 'debug.line':
+                                    self::assertSame(array(
+                                        'value' => $line,
+                                        'valueFrom' => 'debug',
+                                        'visibility' => 'debug',
+                                    ), $values);
+                                    break;
+                            }
+                        });
+                    },
+                    'html' => '<li class="m_log"><div class="groupByInheritance t_object" data-accessible="public"><span class="classname">Closure</span>
+                        <dl class="object-inner">
+                        <dt class="modifiers">modifiers</dt>
+                        <dd class="t_modifier_final">final</dd>
+                        <dt class="properties">properties</dt>
+                        <dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="t_type">string</span> <span class="no-quotes t_identifier t_string">file</span> <span class="t_operator">=</span> <span class="t_string">' . __FILE__ . '</span></dd>
+                        <dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="t_type">int</span> <span class="no-quotes t_identifier t_string">line</span> <span class="t_operator">=</span> <span class="t_int">%d</span></dd>
+                        <dt class="methods">methods</dt>
+                        <dd class="method private"><span class="t_modifier_private">private</span> <span class="t_identifier">__construct</span><span class="t_punct">(</span><span class="t_punct">)</span></dd>
+                        <dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier">__invoke</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$foo</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_parameter-name">$bar</span></span><span class="t_punct">)</span></dd>
+                        %a
+                        </dl>
+                        </div></li>',
+                ),
+            ),
+
             'testObj' => array(
                 'log',
                 array(
-                    new TestObj(),
+                    self::$testObj,
                 ),
                 array(
                     'entry' => static function (LogEntry $logEntry) {
                         $objAbs = $logEntry['args'][0];
                         self::assertAbstractionType($objAbs);
+                        // var_dump($objAbs->getInstanceValues());
+                        // var_dump($objAbs->getDefinitionValues());
                     },
                     'html' => static function ($str) {
                         self::assertStringStartsWith(
@@ -255,26 +321,40 @@ EOD;
                             '<dd class="info magic">This object has a <code>__call</code> method</dd>',
                             '<dd class="method overrides public" data-declared-prev="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_public">public</span> <span class="t_identifier" title="Constructor',
                             '',
-                            'Constructor description">__construct</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="value __toString will return;">$toString</span> <span class="t_operator">=</span> <span class="t_parameter-default t_string">abracadabra</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_type">int</span> <span class="t_parameter-name" title="0: don\'t, 1: throw, 2: throw &amp; catch">$toStrThrow</span> <span class="t_operator">=</span> <span class="t_int t_parameter-default">0</span></span><span class="t_punct">)</span></dd>',
+                            'Constructor description">__construct</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="value __toString will return;">$toString</span> <span class="t_operator">=</span> <span class="t_parameter-default t_string">abracadabra</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_type">int</span> <span class="t_parameter-name" title="0: don&#039;t, 1: throw, 2: throw &amp; catch">$toStrThrow</span> <span class="t_operator">=</span> <span class="t_int t_parameter-default">0</span></span><span class="t_punct">)</span></dd>',
                             '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier" title="magic method">__debugInfo</span><span class="t_punct">(</span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span title="property=&gt;value array"><span class="t_type">array</span></span></dd>',
-                            '<dd class="method public"' . (PHP_VERSION_ID >= 80000 ? ' data-implements="Stringable"' : '' ) . '><span class="t_modifier_public">public</span> <span class="t_identifier" title="toString magic method">__toString</span><span class="t_punct">(</span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">string</span><br />',
-                                '<span class="t_string">abracadabra</span></dd>',
-                            '<dd class="isDeprecated isFinal method public" data-deprecated-desc="this method is bad and should feel bad"><span class="t_modifier_final">final</span> <span class="t_modifier_public">public</span> <span class="t_identifier" title="This method is public">methodPublic</span><span class="t_punct">(</span><span class="parameter"><span class="t_type"><span class="classname">SomeClass</span></span> <span class="t_parameter-name" title="first param',
-                                'two-line description!">$param1</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_type">array</span> <span class="t_parameter-name" title="second param">$param2</span> <span class="t_operator">=</span> <span class="t_array t_parameter-default"><span class="t_keyword">array</span><span class="t_punct">()</span></span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span></dd>',
+                            '<dd class="method public"' . (PHP_VERSION_ID >= 80000 ? ' data-implements="Stringable"' : '' ) . '><span class="t_modifier_public">public</span> <span class="t_identifier" title="toString magic method">__toString</span><span class="t_punct">(</span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">string</span>',
+                                '<h3>static variables</h3>',
+                                '<ul class="list-unstyled">',
+                                    '<li><span class="no-quotes t_identifier t_string">static</span><span class="t_operator">=</span> <span class="t_string">I&#039;m static</span></li>',
+                                '</ul>',
+                                '<h3>return value</h3>',
+                                '<ul class="list-unstyled"><li><span class="return-value t_string">abracadabra</span></li></ul></dd>',
+                            '<dd class="isDeprecated isFinal method public" data-deprecated-desc="this method is bad and should feel bad"><span class="t_modifier_final">final</span> <span class="t_modifier_public">public</span> <span class="t_identifier" title="This method is public">methodPublic</span><span class="t_punct">(</span><span class="parameter"><span class="t_type"><span class="classname">stdClass</span></span> <span class="t_parameter-name" title="first param',
+                                'two-line description!">$param1</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_type">array</span> <span class="t_parameter-name" title="second param">$param2</span> <span class="t_operator">=</span> <span class="t_array t_parameter-default"><span class="t_keyword">array</span><span class="t_punct">()</span></span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span>',
+                                '<h3>static variables</h3>',
+                                '<ul class="list-unstyled">',
+                                '<li><span class="no-quotes t_identifier t_string">foo</span><span class="t_operator">=</span> <span class="t_int">42</span></li>',
+                                '<li><span class="no-quotes t_identifier t_string">bar</span><span class="t_operator">=</span> <span class="t_string">test</span></li>',
+                                '<li><span class="no-quotes t_identifier t_string">baz</span><span class="t_operator">=</span> <div class="t_object" data-accessible="private"><span class="classname" title="PhpDoc Summary',
+                                    '',
+                                    'PhpDoc Description"><span class="namespace">bdk\Test\Debug\Fixture\</span>TestObj</span>',
+                                    '<span class="t_recursion">*RECURSION*</span></div></li>',
+                                    '</ul></dd>',
                             '<dd class="method protected"><span class="t_modifier_protected">protected</span> <span class="t_identifier" title="This method is protected">methodProtected</span><span class="t_punct">(</span><span class="parameter"><span class="t_type"><span class="classname"><span class="namespace">bdk\Debug\Abstraction\</span>Abstraction</span><span class="t_punct">[]</span></span> <span class="t_parameter-name" title="first param">$param1</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span></dd>',
                             '<dd class="method private"><span class="t_modifier_private">private</span> <span class="t_identifier" title="This method is private">methodPrivate</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">mixed</span> <span class="t_parameter-name" title="first param (passed by ref)">&amp;$param1</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_type"><span class="classname"><span class="namespace">bdk\PubSub\</span>Event</span><span class="t_punct">[]</span></span> <span class="t_parameter-name" title="second param (passed by ref)">&amp;$param2</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_type">bool</span> <span class="t_parameter-name" title="3rd param not in method signature">...$param3</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span></dd>',
                             '<dd class="heading">Inherited from <span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>TestBase</span></dd>',
                             '<dd class="method public" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_public">public</span> <span class="t_identifier" title="call magic method">__call</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="Method being called">$name</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_type">array</span> <span class="t_parameter-name" title="Arguments passed">$args</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">mixed</span></dd>',
-                            '<dd class="method public" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_public">public</span> <span class="t_identifier" title="get magic method">__get</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="what we\'re getting">$key</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">mixed</span></dd>',
-                            '<dd class="method public" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_public">public</span> <span class="t_identifier" title="set magic method">__set</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="what we\'re setting">$key</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_type">mixed</span> <span class="t_parameter-name" title="value">$val</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span></dd>',
+                            '<dd class="method public" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_public">public</span> <span class="t_identifier" title="get magic method">__get</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="what we&#039;re getting">$key</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">mixed</span></dd>',
+                            '<dd class="method public" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_public">public</span> <span class="t_identifier" title="set magic method">__set</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="what we&#039;re setting">$key</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_type">mixed</span> <span class="t_parameter-name" title="value">$val</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span></dd>',
                             '<dd class="method public" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_public">public</span> <span class="t_identifier">testBasePublic</span><span class="t_punct">(</span><span class="t_punct">)</span></dd>',
                             '<dd class="isStatic method public" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="t_identifier">testBaseStatic</span><span class="t_punct">(</span><span class="t_punct">)</span></dd>',
-                            '<dd class="magic method" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_magic">magic</span> <span class="t_identifier" title="I\'m a magic method">presto</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$foo</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_type">int</span> <span class="t_parameter-name">$int</span> <span class="t_operator">=</span> <span class="t_int t_parameter-default">1</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_parameter-name">$bool</span> <span class="t_operator">=</span> <span class="t_bool t_parameter-default" data-type-more="true">true</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_parameter-name">$null</span> <span class="t_operator">=</span> <span class="t_null t_parameter-default">null</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span></dd>',
-                            '<dd class="isStatic magic method" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_magic">magic</span> <span class="t_modifier_static">static</span> <span class="t_identifier" title="I\'m a static magic method">prestoStatic</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name">$noDefault</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_parameter-name">$arr</span> <span class="t_operator">=</span> <span class="t_array t_parameter-default"><span class="t_keyword">array</span><span class="t_punct">()</span></span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_parameter-name">$opts</span> <span class="t_operator">=</span> <span class="t_parameter-default t_string">array(\'a\'=&gt;\'ay\',\'b\'=&gt;\'bee\')</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_parameter-name">$val</span> <span class="t_operator">=</span> <span class="t_const t_parameter-default" title="value: &quot;defined in TestBase&quot;"><span class="classname">self</span><span class="t_operator">::</span><span class="t_identifier">MY_CONSTANT</span></span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span></dd>',
+                            '<dd class="magic method" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_magic">magic</span> <span class="t_identifier" title="I&#039;m a magic method">presto</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$foo</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_type">int</span> <span class="t_parameter-name">$int</span> <span class="t_operator">=</span> <span class="t_int t_parameter-default">1</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_parameter-name">$bool</span> <span class="t_operator">=</span> <span class="t_bool t_parameter-default" data-type-more="true">true</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_parameter-name">$null</span> <span class="t_operator">=</span> <span class="t_null t_parameter-default">null</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span></dd>',
+                            '<dd class="isStatic magic method" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_magic">magic</span> <span class="t_modifier_static">static</span> <span class="t_identifier" title="I&#039;m a static magic method">prestoStatic</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name">$noDefault</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_parameter-name">$arr</span> <span class="t_operator">=</span> <span class="t_array t_parameter-default"><span class="t_keyword">array</span><span class="t_punct">()</span></span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_parameter-name">$opts</span> <span class="t_operator">=</span> <span class="t_parameter-default t_string">array(&#039;a&#039;=&gt;&#039;ay&#039;,&#039;b&#039;=&gt;&#039;bee&#039;)</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_parameter-name">$val</span> <span class="t_operator">=</span> <span class="t_const t_parameter-default" title="value: &quot;defined in TestBase&quot;"><span class="classname">self</span><span class="t_operator">::</span><span class="t_identifier">MY_CONSTANT</span></span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span></dd>',
                             '<dt>phpDoc</dt>',
                         ));
-                        if (PHP_VERSION_ID >= 80100) {
-                            $expect = \str_replace('\'', '&#039;', $expect);
+                        if (PHP_VERSION_ID <= 80100) {
+                            $expect = \str_replace('&#039;', '\'', $expect);
                         }
                         // echo 'expect = ' . $expect . "\n\n";
                         // echo 'actual = ' . $str . "\n";
@@ -639,6 +719,10 @@ EOD;
                 ),
             ),
         );
+
+        // $tests = \array_intersect_key($tests, \array_flip(array('testObj')));
+
+        return $tests;
     }
 
     /**
@@ -671,8 +755,7 @@ EOD;
     {
         // mostly tested via logTest, infoTest, warnTest, errorTest....
         // test object inheritance
-        $test = new TestObj();
-        $abs = $this->debug->abstracter->getAbstraction($test);
+        $abs = $this->debug->abstracter->getAbstraction(self::$testObj);
 
         self::assertSame('object', $abs['type']);
         self::assertSame('bdk\Test\Debug\Fixture\TestObj', $abs['className']);
@@ -852,7 +935,7 @@ EOD;
                         'isOptional' => false,
                         'isPromoted' => false,
                         'name' => '$param1',
-                        'type' => 'SomeClass',
+                        'type' => 'stdClass',
                     ),
                     array(
                         'attributes' => array(),
@@ -877,10 +960,14 @@ EOD;
                     'desc' => null,
                     'type' => 'void',
                 ),
+                // 'staticVars' => array()
                 'visibility' => 'public',
             ),
-            $abs['methods']['methodPublic']
+            \array_diff_key($abs['methods']['methodPublic'], \array_flip(array('staticVars')))
         );
+        self::assertSame(42, $abs['methods']['methodPublic']['staticVars']['foo']);
+        self::assertSame('test', $abs['methods']['methodPublic']['staticVars']['bar']);
+        self::assertTrue($abs['methods']['methodPublic']['staticVars']['baz']['isRecursion']);
     }
 
     /**

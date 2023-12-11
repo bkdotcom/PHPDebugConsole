@@ -39,6 +39,7 @@ class ObjectMethods extends AbstractObjectSection
             'output' => $abs['cfgFlags'] & AbstractObject::METHOD_OUTPUT,
             'paramAttributeOutput' => $abs['cfgFlags'] & AbstractObject::PARAM_ATTRIBUTE_OUTPUT,
             'phpDocOutput' => $abs['cfgFlags'] & AbstractObject::PHPDOC_OUTPUT,
+            'staticVarOutput' => $abs['cfgFlags'] & AbstractObject::METHOD_STATIC_VAR_OUTPUT,
         );
         if (!$this->opts['output']) {
             // we're not outputting methods
@@ -65,18 +66,26 @@ class ObjectMethods extends AbstractObjectSection
     {
         return $this->dumpModifiers($info) . ' '
             . $this->dumpName($name, $info)
-            . $this->dumpParams($info['params'])
+            . $this->dumpParams($info)
             . $this->dumpReturnType($info)
+            . $this->dumpStaticVars($info)
             . ($name === '__toString'
-                ? '<br />' . "\n" . $this->valDumper->dump($info['returnValue'])
+                ? "\n" . '<h3>return value</h3>' . "\n"
+                    . '<ul class="list-unstyled"><li>'
+                    . $this->valDumper->dump($info['returnValue'], array(
+                        'attribs' => array(
+                            'class' => array('return-value'),
+                        ),
+                    ))
+                    . '</li></ul>'
                 : '');
     }
 
     /**
      * Dump method name with phpdoc summary & desc
      *
-     * @param string $name method name
-     * @param array  $info method info
+     * @param string $name Method name
+     * @param array  $info Method info
      *
      * @return string html fragment
      */
@@ -100,15 +109,13 @@ class ObjectMethods extends AbstractObjectSection
     /**
      * Dump method parameters as HTML
      *
-     * @param array $params Params as returned from getParams()
+     * @param array $info Method info
      *
      * @return string html fragment
      */
-    protected function dumpParams(array $params)
+    protected function dumpParams(array $info)
     {
-        foreach ($params as $i => $info) {
-            $params[$i] = $this->dumpParam($info);
-        }
+        $params = \array_map(array($this, 'dumpParam'), $info['params']);
         return '<span class="t_punct">(</span>'
             . \implode('<span class="t_punct">,</span> ', $params)
             . '<span class="t_punct">)</span>';
@@ -191,7 +198,7 @@ class ObjectMethods extends AbstractObjectSection
      *
      * @return string
      */
-    protected function dumpReturnType($info)
+    protected function dumpReturnType(array $info)
     {
         if ($info['return']['type'] === null) {
             return '';
@@ -202,6 +209,35 @@ class ObjectMethods extends AbstractObjectSection
                     ? $info['return']['desc']
                     : '',
             ));
+    }
+
+    /**
+     * Dump method's return type
+     *
+     * @param array $info Method info
+     *
+     * @return string
+     */
+    protected function dumpStaticVars(array $info)
+    {
+        if (!$this->opts['staticVarOutput'] || empty($info['staticVars'])) {
+            return '';
+        }
+        $html = "\n" . '<h3>static variables</h3>' . "\n";
+        $html .= '<ul class="list-unstyled">' . "\n";
+        foreach ($info['staticVars'] as $name => $value) {
+            $html .= '<li>'
+                . $this->valDumper->dump($name, array(
+                    'addQuotes' => false,
+                    'attribs' => array(
+                        'class' => array('t_identifier'),
+                    ),
+                ))
+                . '<span class="t_operator">=</span> ' . $this->valDumper->dump($value)
+                . '</li>' . "\n";
+        }
+        $html .= '</ul>';
+        return $html;
     }
 
     /**

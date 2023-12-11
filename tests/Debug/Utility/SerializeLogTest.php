@@ -366,7 +366,7 @@ EOD;
             array(
                 'attributes' => array(),
                 'cases' => array(),
-                'cfgFlags' => 4194303,
+                'cfgFlags' => 29360127,
                 'interfacesCollapse' => array(),
                 'isAnonymous' => false,
                 'isFinal' => false,
@@ -374,6 +374,7 @@ EOD;
                 'isReadOnly' => false,
                 'sectionOrder' => array(),
                 'sort' => '',
+                'methodsWithStaticVars' => array(),
             ),
             $expect['log'][1][1][1]
         );

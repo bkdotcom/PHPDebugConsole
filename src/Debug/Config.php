@@ -43,6 +43,8 @@ class Config
             'methodCollect',
             'methodDescOutput',
             'methodOutput',
+            'methodStaticVarCollect',
+            'methodStaticVarOutput',
             'objAttributeCollect',
             'objAttributeOutput',
             'objectSectionOrder',

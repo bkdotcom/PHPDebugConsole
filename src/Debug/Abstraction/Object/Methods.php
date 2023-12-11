@@ -46,6 +46,7 @@ class Methods extends Inheritable
             'desc' => null,
             'type' => null,
         ),
+        'staticVars' => array(),
         'visibility' => 'public',  // public | private | protected | magic
     );
 
@@ -74,6 +75,28 @@ class Methods extends Inheritable
             : $this->addMethodsMin($abs);
         if (isset($abs['methods']['__toString'])) {
             $abs['methods']['__toString']['returnValue'] = null;
+        }
+    }
+
+    /**
+     * Add static variable info to abstraction
+     *
+     * @param Abstraction $abs Object Abstraction instance
+     *
+     * @return void
+     */
+    public function addInstance(Abstraction $abs)
+    {
+        $staticVarCollect = $abs['cfgFlags'] & AbstractObject::METHOD_COLLECT
+            && $abs['cfgFlags'] & AbstractObject::METHOD_STATIC_VAR_COLLECT;
+        if ($staticVarCollect === false) {
+            return;
+        }
+        foreach ($abs['methodsWithStaticVars'] as $name) {
+            $reflector = $abs['reflector']->getMethod($name);
+            $abs['methods'][$name]['staticVars'] = \array_map(function ($value) use ($abs) {
+                return $this->abstracter->crate($value, $abs['debugMethod'], $abs['hist']);
+            }, $reflector->getStaticVariables());
         }
     }
 
@@ -260,7 +283,8 @@ class Methods extends Inheritable
     private function addViaReflection(Abstraction $abs)
     {
         $methods = array();
-        $this->traverseAncestors($abs['reflector'], function (ReflectionClass $reflector) use ($abs, &$methods) {
+        $withStaticVars = array();
+        $this->traverseAncestors($abs['reflector'], function (ReflectionClass $reflector) use ($abs, &$methods, &$withStaticVars) {
             $className = $this->helper->getClassName($reflector);
             $refMethods = $reflector->getMethods();
             while ($refMethods) {
@@ -279,12 +303,17 @@ class Methods extends Inheritable
                     // getMethods() returns parent's private methods (#reasons)..  we'll skip it
                     continue;
                 }
+                if (!empty($info['hasStaticVars'])) {
+                    $withStaticVars[] = $name;
+                }
+                unset($info['hasStaticVars']);
                 unset($info['phpDoc']['param']);
                 unset($info['phpDoc']['return']);
                 $methods[$name] = $info;
             }
         });
         \ksort($methods);
+        $abs['methodsWithStaticVars'] = $withStaticVars;
         $abs['methods'] = $methods;
     }
 
@@ -333,6 +362,7 @@ class Methods extends Inheritable
             'attributes' => $abs['cfgFlags'] & AbstractObject::METHOD_ATTRIBUTE_COLLECT
                 ? $this->helper->getAttributes($refMethod)
                 : array(),
+            'hasStaticVars' => \count($refMethod->getStaticVariables()) > 0, // temporary we don't store the values in the definition, only what methods have static vars
             'isAbstract' => $refMethod->isAbstract(),
             'isDeprecated' => $refMethod->isDeprecated() || isset($phpDoc['deprecated']),
             'isFinal' => $refMethod->isFinal(),

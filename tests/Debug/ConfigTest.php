@@ -92,6 +92,8 @@ class ConfigTest extends DebugTestFramework
             'methodCollect',
             'methodDescOutput',
             'methodOutput',
+            'methodStaticVarCollect',
+            'methodStaticVarOutput',
             'objAttributeCollect',
             'objAttributeOutput',
             'objectSectionOrder',

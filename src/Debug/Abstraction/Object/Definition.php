@@ -52,6 +52,7 @@ class Definition
         'isFinal' => false,
         'isReadOnly' => false,
         'methods' => array(),
+        'methodsWithStaticVars' => array(),
         'phpDoc' => array(
             'desc' => null,
             'summary' => null,
@@ -95,10 +96,10 @@ class Definition
         $this->constants->add($abs);
         $this->constants->addCases($abs);
         $this->methods->add($abs);
-        $this->properties->addClass($abs);
+        $this->properties->add($abs);
 
         if ($abs['className'] === 'Closure') {
-            // __incoke is "unique" per instance
+            // __invoke is "unique" per instance
             $abs['methods']['__invoke'] = array();
         }
 
@@ -167,10 +168,10 @@ class Definition
      */
     public function addAttributes(ValueStore $abs)
     {
-        $reflector = $abs['reflector'];
-        $abs['attributes'] = $abs['cfgFlags'] & AbstractObject::OBJ_ATTRIBUTE_COLLECT
-            ? $this->helper->getAttributes($reflector)
-            : array();
+        if ($abs['cfgFlags'] & AbstractObject::OBJ_ATTRIBUTE_COLLECT) {
+            $reflector = $abs['reflector'];
+            $abs['attributes'] = $this->helper->getAttributes($reflector);
+        }
     }
 
     /**
@@ -252,7 +253,7 @@ class Definition
         }
         $remove = \array_unique($remove);
         $interfaces = \array_diff_key($interfaces, \array_flip($remove));
-        // remove values... array_diff complains aboutarray to string conversion
+        // remove values... array_diff complains about array to string conversion
         foreach ($remove as $classname) {
             $key = \array_search($classname, $interfaces, true);
             if ($key !== false) {

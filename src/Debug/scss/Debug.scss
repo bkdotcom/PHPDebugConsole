@@ -15,6 +15,7 @@
   $error-fg: #d8000c;
   $warn-bg: #fefbe5;
   $warn-fg: #8a6d3b;
+  $color-header: purple;
 
   $grey-text: #6e6e6e;
   $lite-grey: #f3f3f3;
@@ -32,6 +33,16 @@
   font-size: $font-size;
 
   @import "base";
+
+  /*
+    Method static-vars header
+  */
+  h3 {
+    margin: 0;
+    font-size: inherit;
+    font-style: italic;
+    color: $color-header;
+  }
 
   ul {
     &.debug-log-summary {

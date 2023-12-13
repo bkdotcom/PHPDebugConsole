@@ -53,11 +53,7 @@ class SerializeLogTest extends DebugTestFramework
         $channelNameRoot = $debug->getCfg('channelName', Debug::CONFIG_DEBUG);
         $expect = array(
             'alerts' => $this->helper->deObjectifyData($debug->data->get('alerts'), false),
-            'classDefinitions' => array(
-                'bdk\\Test\\Debug\\Fixture\\TestObj' => $debug->abstracter->crate(new TestObj())->getDefinitionValues(),
-                "\x00default\x00" => \bdk\Debug\Utility\Reflection::propGet($debug->abstracter->abstractObject->definition, 'values'),
-                'stdClass' => $debug->abstracter->crate((object) array())->getDefinitionValues(),
-            ),
+            'classDefinitions' => $this->helper->deObjectifyData($debug->data->get('classDefinitions')),
             'config' => array(
                 'channelIcon' => $debug->getCfg('channelIcon', Debug::CONFIG_DEBUG),
                 'channelName' => $channelNameRoot,
@@ -78,6 +74,11 @@ class SerializeLogTest extends DebugTestFramework
             'requestId' => $debug->data->get('requestId'),
             'version' => Debug::VERSION,
         );
+        self::assertSame(array(
+            "\x00default\x00",
+            'bdk\\Test\\Debug\\Fixture\\TestObj',
+            'stdClass',
+        ), \array_keys($unserialized['classDefinitions']));
         self::assertEquals(
             $expect,
             $this->helper->deObjectifyData($unserialized)
@@ -87,7 +88,7 @@ class SerializeLogTest extends DebugTestFramework
         self::assertInstanceOf('bdk\\Debug\\Abstraction\\Abstraction', $objAbs);
         self::assertSame(
             $debug->data->get(array('classDefinitions', 'bdk\\Test\\Debug\\Fixture\\TestObj')),
-            \bdk\Debug\Utility\Reflection::propGet($objAbs, 'definition')
+            \bdk\Debug\Utility\Reflection::propGet($objAbs, 'inherited')
         );
         $serialized = SerializeLog::serialize($debug);
         $unserialized = SerializeLog::unserialize($serialized);
@@ -372,7 +373,16 @@ EOD;
                 'isFinal' => false,
                 'isMaxDepth' => false,
                 'isReadOnly' => false,
-                'sectionOrder' => array(),
+                'sectionOrder' => array(
+                    'attributes',
+                    'extends',
+                    'implements',
+                    'constants',
+                    'cases',
+                    'properties',
+                    'methods',
+                    'phpDoc',
+                ),
                 'sort' => '',
                 'methodsWithStaticVars' => array(),
             ),
@@ -406,12 +416,15 @@ EOD;
                 unset($expect['logSummary'][0][$i][2]);
             }
         }
-        self::assertEquals(
-            \array_intersect_key($expect, \array_flip($keysCompare)),
-            \array_intersect_key(
-                $this->helper->deObjectifyData($unserialized, true, false, true),
-                \array_flip($keysCompare)
-            )
+
+        $expect = \array_intersect_key($expect, \array_flip($keysCompare));
+        $actual = \array_intersect_key(
+            $this->helper->deObjectifyData($unserialized, true, false, true),
+            \array_flip($keysCompare)
         );
+
+        // \bdk\Debug::varDump('expect', print_r($expect, true));
+        // \bdk\Debug::varDump('actual', print_r($actual, true));
+        self::assertEquals($expect, $actual);
     }
 }

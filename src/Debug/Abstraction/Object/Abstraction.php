@@ -22,19 +22,29 @@ use bdk\PubSub\ValueStore;
  */
 class Abstraction extends BaseAbstraction
 {
-    private $definition;
+    protected static $keysTemp = array(
+        'collectPropertyValues',
+        'fullyQualifyPhpDocType',
+        'hist',
+        'isTraverseOnly',
+        'propertyOverrideValues',
+        'reflector',
+    );
+
+    /** @var ValueStore */
+    private $inherited;
 
     private $sortableValues = array('attributes', 'cases', 'constants', 'methods', 'properties');
 
     /**
      * Constructor
      *
-     * @param ValueStore $definition class definition values
-     * @param array      $values     abtraction values
+     * @param ValueStore $inherited Inherited values
+     * @param array      $values    Abtraction values
      */
-    public function __construct(ValueStore $definition, $values = array())
+    public function __construct(ValueStore $inherited, $values = array())
     {
-        $this->definition = $definition;
+        $this->inherited = $inherited;
         parent::__construct(Abstracter::TYPE_OBJECT, $values);
     }
 
@@ -43,7 +53,7 @@ class Abstraction extends BaseAbstraction
      */
     public function __serialize()
     {
-        return $this->getInstanceValues() + array('classDefinition' => $this->definition);
+        return $this->getInstanceValues() + array('inherited' => $this->inherited);
     }
 
     /**
@@ -67,11 +77,22 @@ class Abstraction extends BaseAbstraction
      */
     public function __unserialize($data)
     {
-        $this->definition = isset($data['classDefinition'])
-            ? $data['classDefinition']
+        $this->inherited = isset($data['inherited'])
+            ? $data['inherited']
             : new ValueStore();
-        unset($data['classDefinition']);
+        unset($data['inherited']);
         $this->values = $data;
+    }
+
+    /**
+     * Remove temporary values
+     *
+     * @return void
+     */
+    public function clean()
+    {
+        $this->values = \array_diff_key($this->values, \array_flip(self::$keysTemp));
+        $this->setSubject(null);
     }
 
     /**
@@ -83,8 +104,9 @@ class Abstraction extends BaseAbstraction
     public function jsonSerialize()
     {
         return $this->getInstanceValues() + array(
-            'classDefinition' => $this->definition['className'],
             'debug' => Abstracter::ABSTRACTION,
+            'inheritsFrom' => $this->inherited['className'],
+            'type' => Abstracter::TYPE_OBJECT,
         );
     }
 
@@ -93,9 +115,11 @@ class Abstraction extends BaseAbstraction
      *
      * @return array
      */
-    public function getDefinitionValues()
+    public function getInheritedValues()
     {
-        return $this->definition->getValues();
+        $values = $this->inherited->getValues();
+        unset($values['cfgFlags']);
+        return $values;
     }
 
     /**
@@ -104,7 +128,7 @@ class Abstraction extends BaseAbstraction
     public function getValues()
     {
         return \array_replace_recursive(
-            $this->getDefinitionValues(),
+            $this->getInheritedValues(),
             $this->values
         );
     }
@@ -118,7 +142,7 @@ class Abstraction extends BaseAbstraction
     {
         return ArrayUtil::diffAssocRecursive(
             $this->values,
-            $this->getDefinitionValues()
+            $this->getInheritedValues()
         );
     }
 
@@ -167,7 +191,7 @@ class Abstraction extends BaseAbstraction
         if (\array_key_exists($key, $this->values)) {
             return $this->values[$key] !== null;
         }
-        return isset($this->definition[$key]);
+        return isset($this->inherited[$key]);
     }
 
     /**
@@ -193,10 +217,19 @@ class Abstraction extends BaseAbstraction
         $value = isset($this->values[$key])
             ? $this->values[$key]
             : null;
-        $classVal = \in_array($key, $this->sortableValues, true)
-            && ($this->values['isRecursion'] || $this->values['isExcluded'])
-                ? array() // don't inherit
-                : $this->definition[$key];
+        $inherit = true;
+        if (\in_array($key, $this->sortableValues, true)) {
+            $combined = \array_merge(array(
+                'isExcluded' => $this->inherited['isExcluded'],
+                'isRecursion' => $this->inherited['isRecursion'],
+            ), $this->values);
+            if ($combined['isExcluded'] || $combined['isRecursion']) {
+                $inherit = false;
+            }
+        }
+        $classVal = $inherit
+            ? $this->inherited[$key]
+            : array();
         if ($value !== null) {
             return \is_array($classVal)
                 ? \array_replace_recursive($classVal, $value)

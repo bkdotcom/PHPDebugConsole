@@ -34,16 +34,6 @@
 
   @import "base";
 
-  /*
-    Method static-vars header
-  */
-  h3 {
-    margin: 0;
-    font-size: inherit;
-    font-style: italic;
-    color: $color-header;
-  }
-
   ul {
     &.debug-log-summary {
       /*

@@ -43,10 +43,12 @@ use ReflectionObject;
  * @covers \bdk\Debug\Dump\TextAnsi
  * @covers \bdk\Debug\Dump\TextAnsiValue
  * @covers \bdk\Debug\Dump\TextValue
+ *
+ * @phpcs:disable Generic.Arrays.ArrayIndent.KeyIncorrect
  */
 class ObjectTest extends DebugTestFramework
 {
-    static $testObj;
+    protected static $testObj;
 
     public static function providerTestMethod()
     {
@@ -220,8 +222,12 @@ EOD;
                     'entry' => static function (LogEntry $logEntry) {
                         $objAbs = $logEntry['args'][0];
                         self::assertAbstractionType($objAbs);
-                        // var_dump($objAbs->getInstanceValues());
-                        // var_dump($objAbs->getDefinitionValues());
+                        self::assertSame(array(
+                            array(
+                                'desc' => null,
+                                'type' => 'Exception',
+                            ),
+                        ), $objAbs['methods']['__toString']['phpDoc']['throws']);
                     },
                     'html' => static function ($str) {
                         self::assertStringStartsWith(
@@ -323,7 +329,9 @@ EOD;
                             '',
                             'Constructor description">__construct</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="value __toString will return;">$toString</span> <span class="t_operator">=</span> <span class="t_parameter-default t_string">abracadabra</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_type">int</span> <span class="t_parameter-name" title="0: don&#039;t, 1: throw, 2: throw &amp; catch">$toStrThrow</span> <span class="t_operator">=</span> <span class="t_int t_parameter-default">0</span></span><span class="t_punct">)</span></dd>',
                             '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier" title="magic method">__debugInfo</span><span class="t_punct">(</span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span title="property=&gt;value array"><span class="t_type">array</span></span></dd>',
-                            '<dd class="method public"' . (PHP_VERSION_ID >= 80000 ? ' data-implements="Stringable"' : '' ) . '><span class="t_modifier_public">public</span> <span class="t_identifier" title="toString magic method">__toString</span><span class="t_punct">(</span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">string</span>',
+                            '<dd class="method public"' . (PHP_VERSION_ID >= 80000 ? ' data-implements="Stringable"' : '' ) . '><span class="t_modifier_public">public</span> <span class="t_identifier" title="toString magic method',
+                                '',
+                                'Long Description">__toString</span><span class="t_punct">(</span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">string</span>',
                                 '<h3>static variables</h3>',
                                 '<ul class="list-unstyled">',
                                     '<li><span class="no-quotes t_identifier t_string">static</span><span class="t_operator">=</span> <span class="t_string">I&#039;m static</span></li>',
@@ -1062,7 +1070,7 @@ EOD;
                             'fileName' => $filepath,
                             'startLine' => 12,
                         ),
-                    ), $abs->getDefinitionValues());
+                    ), $abs->getInheritedValues());
                     self::assertArraySubset(array(
                         'className' => 'class@anonymous',
                         /*
@@ -1110,7 +1118,7 @@ EOD;
                             'fileName' => $filepath,
                             'startLine' => 69,
                         ),
-                    ), $abs->getDefinitionValues());
+                    ), $abs->getInheritedValues());
 
                     self::assertArraySubset(array(
                         'className' => 'bdk\\Test\\Debug\\Fixture\\AnonBase@anonymous',
@@ -1126,7 +1134,7 @@ EOD;
                     self::assertSame(array(
                         'PI',
                         'ONE',
-                    ), \array_keys($abs->getDefinitionValues()['constants']));
+                    ), \array_keys($abs->getInheritedValues()['constants']));
 
                     self::assertSame(array(
                         'color',
@@ -1134,13 +1142,13 @@ EOD;
                         'pro',
                         'debug.file',
                         'debug.line',
-                    ), \array_keys($abs->getDefinitionValues()['properties']));
+                    ), \array_keys($abs->getInheritedValues()['properties']));
 
                     self::assertSame(array(
                         'test',
                         'test1',
                         'magic',
-                    ), \array_keys($abs->getDefinitionValues()['methods']));
+                    ), \array_keys($abs->getInheritedValues()['methods']));
 
                     self::assertArraySubset(
                         array(
@@ -1222,7 +1230,7 @@ EOD;
                             'fileName' => $filepath,
                             'startLine' => 80,
                         ),
-                    ), $abs->getDefinitionValues());
+                    ), $abs->getInheritedValues());
                     self::assertArraySubset(array(
                         'className' => 'bdk\\Test\\Debug\\Fixture\\AnonBase@anonymous',
                         /*
@@ -1238,23 +1246,24 @@ EOD;
                         'PI',
                         'ONE',
                         // 'PRIVATE_CONST',
-                    ), \array_keys($abs->getDefinitionValues()['constants']));
+                    ), \array_keys($abs->getInheritedValues()['constants']));
                     self::assertSame(array(
                         'color',
                         'foo',
                         'pro',
                         'debug.file',
                         'debug.line',
-                    ), \array_keys($abs->getDefinitionValues()['properties']));
+                    ), \array_keys($abs->getInheritedValues()['properties']));
                     self::assertSame(array(
                         'test',
                         'test2',
-                    ), \array_keys($abs->getDefinitionValues()['methods']));
+                    ), \array_keys($abs->getInheritedValues()['methods']));
                 },
             )
         );
         // anonymous callable tested via ArrayTest
         self::assertSame(array(
+            "\x00default\x00",
             'stdClass@anonymous|' . \md5((new ReflectionObject($anonymous['stdClass']))->getName()),
             'class@anonymous|' . \md5((new ReflectionObject($anonymous['anonymous']))->getName()),
             'bdk\Test\Debug\Fixture\AnonBase@anonymous|' . \md5((new ReflectionObject($anonymous['test1']))->getName()),

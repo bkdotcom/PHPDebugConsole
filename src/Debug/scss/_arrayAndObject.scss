@@ -95,6 +95,16 @@ li[class*=m_] > .t_array.array-file-tree > .array-inner {
 .t_object {
   display: inline;
 
+  /*
+    Method static-vars / return-value header
+  */
+  h3 {
+    margin: 0;
+    font-size: inherit;
+    font-style: italic;
+    color: $color-header;
+  }
+
   .t_modifier_public {
     color: $color-public;
   }

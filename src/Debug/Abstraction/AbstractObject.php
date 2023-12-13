@@ -32,13 +32,7 @@ use RuntimeException;
  */
 class AbstractObject extends AbstractComponent
 {
-    // GENERAL
     const BRIEF = 4194304; // 2^22
-    const PHPDOC_COLLECT = 1; // 2^0
-    const PHPDOC_OUTPUT = 2;
-    const OBJ_ATTRIBUTE_COLLECT = 4;
-    const OBJ_ATTRIBUTE_OUTPUT = 8;
-    const TO_STRING_OUTPUT = 16; // 2^4
 
     // CASE (2^9 - 2^12)
     const CASE_COLLECT = 512;
@@ -55,26 +49,29 @@ class AbstractObject extends AbstractComponent
     // METHODS (2^15 - 2^21, 2^23 - 2^24)
     const METHOD_COLLECT = 32768;
     const METHOD_OUTPUT = 65536;
+    const METHOD_DESC_OUTPUT = 524288;
     const METHOD_ATTRIBUTE_COLLECT = 131072;
     const METHOD_ATTRIBUTE_OUTPUT = 262144;
-    const METHOD_DESC_OUTPUT = 524288;
     const METHOD_STATIC_VAR_COLLECT = 8388608; // 2^23
     const METHOD_STATIC_VAR_OUTPUT = 16777216; // 2^24
+
+    const OBJ_ATTRIBUTE_COLLECT = 4;
+    const OBJ_ATTRIBUTE_OUTPUT = 8;
+
     const PARAM_ATTRIBUTE_COLLECT = 1048576;
     const PARAM_ATTRIBUTE_OUTPUT = 2097152;
+
+    const PHPDOC_COLLECT = 1; // 2^0
+    const PHPDOC_OUTPUT = 2;
 
     // PROPERTIES (2^13 - 2^14)
     const PROP_ATTRIBUTE_COLLECT = 8192; // 2^13
     const PROP_ATTRIBUTE_OUTPUT = 16384; // 2^14
 
-    public static $cfgFlags = array(  // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
-        // GENERAL
+    const TO_STRING_OUTPUT = 16; // 2^4
+
+    public static $cfgFlags = array(
         'brief' => self::BRIEF,
-        'objAttributeCollect' => self::OBJ_ATTRIBUTE_COLLECT,
-        'objAttributeOutput' => self::OBJ_ATTRIBUTE_OUTPUT,
-        'phpDocCollect' => self::PHPDOC_COLLECT,
-        'phpDocOutput' => self::PHPDOC_OUTPUT,
-        'toStringOutput' => self::TO_STRING_OUTPUT,
 
         // CASE
         'caseAttributeCollect' => self::CASE_ATTRIBUTE_COLLECT,
@@ -96,12 +93,21 @@ class AbstractObject extends AbstractComponent
         'methodOutput' => self::METHOD_OUTPUT,
         'methodStaticVarCollect' => self::METHOD_STATIC_VAR_COLLECT,
         'methodStaticVarOutput' => self::METHOD_STATIC_VAR_OUTPUT,
+
+        'objAttributeCollect' => self::OBJ_ATTRIBUTE_COLLECT,
+        'objAttributeOutput' => self::OBJ_ATTRIBUTE_OUTPUT,
+
         'paramAttributeCollect' => self::PARAM_ATTRIBUTE_COLLECT,
         'paramAttributeOutput' => self::PARAM_ATTRIBUTE_OUTPUT,
+
+        'phpDocCollect' => self::PHPDOC_COLLECT,
+        'phpDocOutput' => self::PHPDOC_OUTPUT,
 
         // PROPERTIES
         'propAttributeCollect' => self::PROP_ATTRIBUTE_COLLECT,
         'propAttributeOutput' => self::PROP_ATTRIBUTE_OUTPUT,
+
+        'toStringOutput' => self::TO_STRING_OUTPUT,
     );
 
     protected $abstracter;
@@ -140,8 +146,7 @@ class AbstractObject extends AbstractComponent
      *
      * @var array Array of key/values
      */
-    protected static $values = array(  // phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
-        'type' => Abstracter::TYPE_OBJECT,
+    protected static $values = array(
         'cfgFlags' => 0,
         'className' => '',
         'debugMethod' => '',
@@ -149,23 +154,14 @@ class AbstractObject extends AbstractComponent
         'isExcluded' => false,  // don't exclude if we're debugging directly
         'isMaxDepth' => false,
         'isRecursion' => false,
-        'sectionOrder' => array(),  // cfg.objectSectionOrder
         // methods may be populated with __toString info, or methods with staticVars
         'properties' => array(),
         'scopeClass' => '',
+        'sectionOrder' => array(),  // cfg.objectSectionOrder
         'sort' => '',  // cfg.objectSort
         'stringified' => null,
         'traverseValues' => array(),  // populated if method is table
         'viaDebugInfo' => false,
-    );
-
-    protected static $keysTemp = array(
-        'collectPropertyValues',
-        'fullyQualifyPhpDocType',
-        'hist',
-        'isTraverseOnly',
-        'propertyOverrideValues',
-        'reflector',
     );
 
     /**
@@ -207,12 +203,12 @@ class AbstractObject extends AbstractComponent
             $reflector = $reflector->getEnum();
         }
         $values = $this->getAbstractionValues($reflector, $obj, $method, $hist);
-        $valueStore = $this->definition->getValueStore($obj, $values);
-        $abs = new ObjectAbstraction($valueStore, $values);
+        $definitionValueStore = $this->definition->getAbstraction($obj, $values);
+        $abs = new ObjectAbstraction($definitionValueStore, $values);
         $abs->setSubject($obj);
         $abs['hist'][] = $obj;
         $this->doAbstraction($abs);
-        $this->absClean($abs);
+        $abs->clean();
         return $abs;
     }
 
@@ -239,21 +235,6 @@ class AbstractObject extends AbstractComponent
     }
 
     /**
-     * Sort things and remove temporary values
-     *
-     * @param ObjectAbstraction $abs Abstraction instance
-     *
-     * @return void
-     */
-    private function absClean(ObjectAbstraction $abs)
-    {
-        $values = \array_diff_key($abs->getInstanceValues(), \array_flip(self::$keysTemp));
-        $abs
-            ->setSubject(null)
-            ->setValues($values);
-    }
-
-    /**
      * Populate rows or columns (traverseValues) if we're outputing as a table
      *
      * @param ObjectAbstraction $abs Abstraction instance
@@ -273,9 +254,10 @@ class AbstractObject extends AbstractComponent
     }
 
     /**
-     * Add attributes, constants, properties, methods, constants, etc
+     * Collect instance info
+     * Property values & static method variables
      *
-     * @param ObjectAbstraction $abs Abstraction instance
+     * @param ObjectAbstraction $abs Object abstraction instance
      *
      * @return void
      */
@@ -357,7 +339,7 @@ class AbstractObject extends AbstractComponent
      *
      * @return int bitmask
      */
-    private function getCfgFlags()
+    protected function getCfgFlags()
     {
         $flagVals = \array_intersect_key(self::$cfgFlags, \array_filter($this->cfg));
         $bitmask = \array_reduce($flagVals, static function ($carry, $val) {

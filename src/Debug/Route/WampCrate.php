@@ -207,7 +207,7 @@ class WampCrate
     private function crateObject(Abstraction $abs)
     {
         $info = $abs->jsonSerialize();
-        $classKey = $info['classDefinition'];
+        $classKey = $info['inheritsFrom'];
         if (\in_array($classKey, $this->classesCrated, true) === false) {
             $this->classesNew[] = $classKey;
             $this->classesCrated[] = $classKey;

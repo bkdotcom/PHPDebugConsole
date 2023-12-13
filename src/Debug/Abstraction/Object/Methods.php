@@ -161,8 +161,10 @@ class Methods extends Inheritable
         }
         $methods = $abs['methods'];
         foreach ($methods as &$methodInfo) {
-            $methodInfo['phpDoc']['desc'] = null;
-            $methodInfo['phpDoc']['summary'] = null;
+            $methodInfo['phpDoc'] = array(
+                'desc' => null,
+                'summary' => null,
+            );
             foreach (\array_keys($methodInfo['params']) as $index) {
                 $methodInfo['params'][$index]['desc'] = null;
             }

@@ -87,7 +87,11 @@ class TestObj extends TestBase
     /**
      * toString magic method
      *
+     * Long Description
+     *
      * @return string
+     *
+     * @throws \Exception
      */
     public function __toString()
     {

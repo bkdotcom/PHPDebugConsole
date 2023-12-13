@@ -173,7 +173,8 @@ class RedactionTest extends DebugTestFramework
                     'entry' => static function (LogEntry $logEntry) {
                         $logEntry = \bdk\Test\Debug\Helper::logEntryToArray($logEntry);
                         $obj = $logEntry['args'][0];
-                        self::assertSame(null, $obj['stringified']);
+                        // self::assertSame(null, $obj['stringified']);
+                        self::assertArrayNotHasKey('stringified', $obj);
                         self::assertSame('foo=bar&password=█████████&ding=dong', $obj['methods']['__toString']['returnValue']);
                     },
                 ),

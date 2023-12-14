@@ -78,7 +78,19 @@ dl {
   margin-top: 0;
   margin-bottom: 0;
   dt { font-weight: bold; }
-  &:not(.dl-horizontal) dd {
+  &.dl-horizontal {
+    display: grid;
+    grid-template-columns: max-content auto;
+    > dt {
+      grid-column: 1;
+      text-align: right;
+    }
+    > dd {
+      grid-column: 2;
+      margin-left: 0.75em;
+    }
+  }
+  &:not(.dl-horizontal) > dd {
     margin-left: 20px;
     padding-left: 10px;
     text-indent: -10px;

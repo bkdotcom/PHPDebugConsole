@@ -224,7 +224,7 @@ EOD;
                         self::assertAbstractionType($objAbs);
                         self::assertSame(array(
                             array(
-                                'desc' => null,
+                                'desc' => 'when toStrThrow is `1`',
                                 'type' => 'Exception',
                             ),
                         ), $objAbs['methods']['__toString']['phpDoc']['throws']);
@@ -329,7 +329,7 @@ EOD;
                             '',
                             'Constructor description">__construct</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="value __toString will return;">$toString</span> <span class="t_operator">=</span> <span class="t_parameter-default t_string">abracadabra</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_type">int</span> <span class="t_parameter-name" title="0: don&#039;t, 1: throw, 2: throw &amp; catch">$toStrThrow</span> <span class="t_operator">=</span> <span class="t_int t_parameter-default">0</span></span><span class="t_punct">)</span></dd>',
                             '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier" title="magic method">__debugInfo</span><span class="t_punct">(</span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span title="property=&gt;value array"><span class="t_type">array</span></span></dd>',
-                            '<dd class="method public"' . (PHP_VERSION_ID >= 80000 ? ' data-implements="Stringable"' : '' ) . '><span class="t_modifier_public">public</span> <span class="t_identifier" title="toString magic method',
+                            '<dd class="method public" ' . (PHP_VERSION_ID >= 80000 ? 'data-implements="Stringable" ' : '' ) . 'data-throws="[{&quot;desc&quot;:&quot;when toStrThrow is `1`&quot;,&quot;type&quot;:&quot;Exception&quot;}]"><span class="t_modifier_public">public</span> <span class="t_identifier" title="toString magic method',
                                 '',
                                 'Long Description">__toString</span><span class="t_punct">(</span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">string</span>',
                                 '<h3>static variables</h3>',

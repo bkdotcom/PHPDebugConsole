@@ -49,6 +49,7 @@ var config = new Config({
     '> .method > .parameter.isPromoted': '<i class="fa fa-arrow-up" title="Promoted"></i>',
     '> .method > .parameter[data-attributes]': '<i class="fa fa-hashtag" title="Attributes"></i>',
     '> .method[data-implements]': '<i class="fa fa-handshake-o" title="Implements"></i>',
+    '> .method[data-throws]': '<i class="fa fa-flag" title="Throws"></i>',
     '> .property.debuginfo-value': '<i class="fa fa-eye" title="via __debugInfo()"></i>',
     '> .property.debuginfo-excluded': '<i class="fa fa-eye-slash" title="not included in __debugInfo"></i>',
     '> .property.isDynamic': '<i class="fa fa-warning" title="Dynamic"></i>',

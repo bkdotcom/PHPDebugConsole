@@ -91,7 +91,7 @@ class TestObj extends TestBase
      *
      * @return string
      *
-     * @throws \Exception
+     * @throws \Exception when toStrThrow is `1`
      */
     public function __toString()
     {

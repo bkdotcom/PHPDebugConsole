@@ -5969,13 +5969,15 @@
     if (title === 'Deprecated') {
       title = tippyContentDeprecated($ref, title);
     } else if (title === 'Implements') {
-      title = tippyContentImplements($ref);
+      title = tippyContentImplements($ref, title);
     } else if (['Inherited', 'Private ancestor'].indexOf(title) > -1) {
       title = tippyContentInherited($ref, title);
     } else if (title === 'Overrides') {
       title = tippyContentOverrides($ref, title);
     } else if (title === 'Open in editor') {
       title = '<i class="fa fa-pencil"></i> ' + title;
+    } else if (title === 'Throws') {
+       title = tippyContentThrows($ref, title);
     } else if (title.match(/^\/.+: line \d+$/)) {
       title = '<i class="fa fa-file-code-o"></i> ' + title;
     }
@@ -5990,32 +5992,42 @@
   }
 
   function tippyContentImplements ($ref, title) {
-    var titleMore = $ref.parent().data('implements');
-    titleMore = '<span class="classname">' +
-      titleMore.replace(/^(.*\\)(.+)$/, '<span class="namespace">$1</span>$2') +
-      '</span>';
-    return 'Implements: ' + titleMore
+    var classname = $ref.parent().data('implements');
+    return title + ' ' + markupClassname(classname)
   }
 
   function tippyContentInherited ($ref, title) {
-    var titleMore = $ref.parent().data('inheritedFrom');
-    if (typeof titleMore === 'undefined') {
+    var classname = $ref.parent().data('classname');
+    if (typeof classname === 'undefined') {
       return title
     }
     title = title === 'Inherited'
       ? 'Inherited from'
-      : title + '<br />defined in';
-    titleMore = '<span class="classname">' +
-      titleMore.replace(/^(.*\\)(.+)$/, '<span class="namespace">$1</span>$2') +
-      '</span>';
-    return title + ' ' + titleMore
+      : title + '<br />defined in'; // private ancestor
+    return title + ' ' + markupClassname(classname)
   }
 
   function tippyContentOverrides ($ref, title) {
-    var titleMore = $ref.parent().data('declaredPrev');
-    return titleMore
-      ? 'Overrides ' + titleMore
+    var classname = $ref.parent().data('declaredPrev');
+    return classname
+      ? title + ' ' + markupClassname(classname)
       : title
+  }
+
+  function tippyContentThrows ($ref, title) {
+    var throws = $ref.parent().data('throws');
+    var i;
+    var count;
+    var info;
+    var $dl = $('<dl class="dl-horizontal"></dl>');
+    for (i = 0, count = throws.length; i < count; i++) {
+      info = throws[i];
+      $dl.append($('<dt></dt>').html(markupClassname(info.type)));
+      if (info.desc) {
+        $dl.append($('<dd></dd>').text(info.desc));
+      }
+    }
+    return title + $dl[0].outerHTML
   }
 
   function tippyOnHide (instance) {
@@ -6302,6 +6314,7 @@
       '> .method > .parameter.isPromoted': '<i class="fa fa-arrow-up" title="Promoted"></i>',
       '> .method > .parameter[data-attributes]': '<i class="fa fa-hashtag" title="Attributes"></i>',
       '> .method[data-implements]': '<i class="fa fa-handshake-o" title="Implements"></i>',
+      '> .method[data-throws]': '<i class="fa fa-flag" title="Throws"></i>',
       '> .property.debuginfo-value': '<i class="fa fa-eye" title="via __debugInfo()"></i>',
       '> .property.debuginfo-excluded': '<i class="fa fa-eye-slash" title="not included in __debugInfo"></i>',
       '> .property.isDynamic': '<i class="fa fa-warning" title="Dynamic"></i>',

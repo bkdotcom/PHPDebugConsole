@@ -55,6 +55,7 @@ class ObjectMethods extends AbstractObjectSection
         return \str_replace(array(
             ' data-deprecated-desc="null"',
             ' data-implements="null"',
+            ' data-throws="null"',
             ' <span class="t_type"></span>',
         ), '', $html);
     }
@@ -250,6 +251,9 @@ class ObjectMethods extends AbstractObjectSection
                 ? $info['phpDoc']['deprecated'][0]['desc']
                 : null,
             'data-implements' => $info['implements'],
+            'data-throws' => $this->opts['phpDocOutput'] && isset($info['phpDoc']['throws'])
+                ? $info['phpDoc']['throws']
+                : null,
         ));
     }
 

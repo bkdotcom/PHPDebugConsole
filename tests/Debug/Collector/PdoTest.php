@@ -226,6 +226,7 @@ EOD;
                 'meta' => array(
                     'channel' => 'general.PDO',
                     'detectFiles' => true,
+                    'evalLine' => null,
                     'file' => __FILE__,
                     'line' => $line,
                     'uncollapse' => false,
@@ -239,7 +240,7 @@ EOD;
                 ),
                 'meta' => array(
                     'channel' => 'general.PDO',
-                )
+                ),
             ),
             array(
                 'method' => 'groupEnd',

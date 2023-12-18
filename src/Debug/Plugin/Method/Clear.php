@@ -346,6 +346,7 @@ class Clear implements SubscriberInterface
             'args' => $args,
             'meta' =>  \array_merge(array(
                 'bitmask' => $bitmask,
+                'evalLine' => $callerInfo['evalLine'],
                 'file' => $callerInfo['file'],
                 'flags' => array(
                     'alerts' => (bool) ($bitmask & Debug::CLEAR_ALERTS),

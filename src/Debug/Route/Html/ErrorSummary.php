@@ -203,7 +203,7 @@ class ErrorSummary
                 'data-file' => $error['file'],
                 'data-line' => $error['line'],
             ),
-            \sprintf('%s (line %s)', $error['file'], $error['line'])
+            $error['fileAndLine']
         ) . "\n";
         if ($context) {
             $return .= '<li>'
@@ -338,11 +338,10 @@ class ErrorSummary
             . '<ul class="list-unstyled">' . "\n"
             . \implode("\n", \array_map(static function (Error $error) {
                 return \sprintf(
-                    '<li class="error-%s">%s: %s (line %s): %s</li>',
+                    '<li class="error-%s">%s: %s: %s</li>',
                     $error['category'],
                     $error['typeStr'],
-                    $error['file'],
-                    $error['line'],
+                    $error['fileAndLine'],
                     $error['isHtml']
                         ? $error['message']
                         : \htmlspecialchars($error['message'])

@@ -27,6 +27,7 @@ class ClearTest extends DebugTestFramework
             'args' => array('Cleared log (sans errors)'),
             'meta' => array(
                 'bitmask' => Debug::CLEAR_LOG,
+                'evalLine' => null,
                 'file' => $this->file,
                 'flags' => array(
                     'alerts' => false,
@@ -101,6 +102,7 @@ class ClearTest extends DebugTestFramework
             'args' => array('Cleared alerts'),
             'meta' => array(
                 'bitmask' => Debug::CLEAR_ALERTS,
+                'evalLine' => null,
                 'file' => $this->file,
                 'flags' => array(
                     'alerts' => true,
@@ -151,6 +153,7 @@ class ClearTest extends DebugTestFramework
             'args' => array('Cleared summary (sans errors)'),
             'meta' => array(
                 'bitmask' => Debug::CLEAR_SUMMARY,
+                'evalLine' => null,
                 'file' => $this->file,
                 'flags' => array(
                     'alerts' => false,
@@ -211,6 +214,7 @@ class ClearTest extends DebugTestFramework
             'args' => array('Cleared errors'),
             'meta' => array(
                 'bitmask' => Debug::CLEAR_LOG_ERRORS,
+                'evalLine' => null,
                 'file' => $this->file,
                 'flags' => array(
                     'alerts' => false,
@@ -271,6 +275,7 @@ class ClearTest extends DebugTestFramework
             'args' => array('Cleared everything'),
             'meta' => array(
                 'bitmask' => Debug::CLEAR_ALL,
+                'evalLine' => null,
                 'file' => $this->file,
                 'flags' => array(
                     'alerts' => true,
@@ -330,6 +335,7 @@ class ClearTest extends DebugTestFramework
             'args' => array('Cleared summary (incl errors)'),
             'meta' => array(
                 'bitmask' => Debug::CLEAR_SUMMARY | Debug::CLEAR_SUMMARY_ERRORS,
+                'evalLine' => null,
                 'file' => $this->file,
                 'flags' => array(
                     'alerts' => false,
@@ -389,6 +395,7 @@ class ClearTest extends DebugTestFramework
             'args' => array('Cleared summary errors'),
             'meta' => array(
                 'bitmask' => Debug::CLEAR_SUMMARY_ERRORS,
+                'evalLine' => null,
                 'file' => $this->file,
                 'flags' => array(
                     'alerts' => false,
@@ -464,6 +471,7 @@ class ClearTest extends DebugTestFramework
                     ),
                     array(
                         'bitmask' => Debug::CLEAR_LOG,
+                        'evalLine' => null,
                         'file' => $this->file,
                         'flags' => array(
                             'alerts' => false,

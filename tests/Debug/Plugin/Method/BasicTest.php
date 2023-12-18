@@ -564,6 +564,7 @@ class BasicTest extends DebugTestFramework
                             'errorCat' => 'warning',
                             'errorHash' => $logEntry->getMeta('errorHash'),
                             'errorType' => 2,
+                            'evalLine' => null,
                             'file' => __FILE__,
                             'isSuppressed' => false,
                             'line' => 42,
@@ -630,7 +631,7 @@ class BasicTest extends DebugTestFramework
                 'foo',
             ),
             array(
-                'output' => '<pre style="margin:.25em;">"foo"</pre>',
+                'output' => '<pre style="margin:.25em;">&quot;foo&quot;</pre>',
             )
         );
         $this->testMethod(
@@ -641,7 +642,7 @@ class BasicTest extends DebugTestFramework
                 'val3',
             ),
             array(
-                'output' => '<pre style="margin:.25em;">"val1", "val2", "val3"</pre>',
+                'output' => '<pre style="margin:.25em;">&quot;val1&quot;, &quot;val2&quot;, &quot;val3&quot;</pre>',
             )
         );
         $this->testMethod(
@@ -656,11 +657,11 @@ class BasicTest extends DebugTestFramework
                 ),
             ),
             array(
-                'output' => '<pre style="margin:.25em;">"values" = array(
-                    [false] => false
-                    [int] => 42
-                    [null] => null
-                    [true] => true
+                'output' => '<pre style="margin:.25em;">&quot;values&quot; = array(
+                    [false] =&gt; false
+                    [int] =&gt; 42
+                    [null] =&gt; null
+                    [true] =&gt; true
                 )</pre>',
             )
         );

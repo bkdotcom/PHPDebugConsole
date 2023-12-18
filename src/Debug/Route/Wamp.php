@@ -170,7 +170,7 @@ class Wamp implements RouteInterface
             array(
                 $error['typeStr'] . ':',
                 $error['message'],
-                \sprintf('%s (line %s)', $error['file'], $error['line']),
+                $error['fileAndLine'],
             ),
             array(
                 'attribs' => array(

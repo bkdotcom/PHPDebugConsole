@@ -98,6 +98,7 @@ class GeneralTest extends DebugTestFramework
                 'errorCat' => 'notice',
                 'errorHash' => $logEntry['meta']['errorHash'],
                 'errorType' => E_USER_NOTICE,
+                'evalLine' => null,
                 'file' => __FILE__,
                 'isSuppressed' => false,
                 'line' => $line,
@@ -214,8 +215,9 @@ class GeneralTest extends DebugTestFramework
     {
         $this->setErrorCallerHelper();
         self::assertSame(array(
+            'evalLine' => null,
             'file' => __FILE__,
-            'line' => __line__ - 3,
+            'line' => __line__ - 4,
             'groupDepth' => 0,
         ), $this->debug->errorHandler->get('errorCaller'));
 

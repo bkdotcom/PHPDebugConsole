@@ -311,9 +311,14 @@ function enhanceArrayIsExpanded ($node) {
 
 function enhanceEntryDefault ($entry) {
   // regular log-type entry
+  var title
   if ($entry.data('file')) {
     if (!$entry.attr('title')) {
-      $entry.attr('title', $entry.data('file') + ': line ' + $entry.data('line'))
+      title = $entry.data('file') + ': line ' + $entry.data('line')
+      if ($entry.data('evalline')) {
+        title += ' (eval\'d line ' + $entry.data('evalline') + ')'
+      }
+      $entry.attr('title', title)
     }
     fileLinks.create($entry)
   }

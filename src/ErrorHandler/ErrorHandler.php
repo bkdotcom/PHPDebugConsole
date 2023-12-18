@@ -228,7 +228,9 @@ class ErrorHandler extends AbstractErrorHandler
         // lets store the exception so we can use the backtrace it provides
         //   error constructor will pull this
         $this->data['uncaughtException'] = $exception;
-        \http_response_code(500);
+        if (\headers_sent() === false) {
+            \http_response_code(500);
+        }
         $this->handleError(
             E_ERROR,
             'Uncaught exception \'' . \get_class($exception) . '\' with message ' . $exception->getMessage(),
@@ -333,7 +335,7 @@ class ErrorHandler extends AbstractErrorHandler
     public function setErrorCaller($caller = null, $offset = 0)
     {
         if ($caller === null) {
-            $backtrace = \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, $offset + 3);
+            $backtrace = \bdk\Backtrace::get(null, $offset + 3);
             $index = isset($backtrace[$offset + 1])
                 ? $offset + 1
                 : \count($backtrace) - 1;
@@ -341,6 +343,7 @@ class ErrorHandler extends AbstractErrorHandler
                 ? $backtrace[$index]
                 : $backtrace[$index + 1]; // likely called via call_user_func.. need to go one more to get calling file & line
             $caller = array(
+                'evalLine' => $caller['evalLine'],
                 'file' => $caller['file'],
                 'line' => $caller['line'],
             );

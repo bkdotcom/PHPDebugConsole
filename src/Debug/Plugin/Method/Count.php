@@ -102,6 +102,7 @@ class Count implements SubscriberInterface
             // determine dataLabel from calling file & line
             $callerInfo = $debug->backtrace->getCallerInfo();
             $logEntry['meta'] = \array_merge(array(
+                'evalLine' => $callerInfo['evalLine'],
                 'file' => $callerInfo['file'],
                 'line' => $callerInfo['line'],
             ), $logEntry['meta']);

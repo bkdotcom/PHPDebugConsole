@@ -187,8 +187,9 @@ class General implements SubscriberInterface
         if ($caller === null) {
             $caller = $this->debug->backtrace->getCallerInfo(1);
             $caller = array(
+                'evalLine' => $caller['evalLine'],
                 'file' => $caller['file'],
-                'line' => $caller['evalLine'] ?: $caller['line'],
+                'line' => $caller['line'],
             );
         }
         if ($caller) {

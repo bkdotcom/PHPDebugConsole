@@ -235,5 +235,5 @@ function createFileLinkMatches ($string, foundFiles) {
     })
     return [null, text, matches.line]
   }
-  return text.match(/^(\/.+\.php)(?: \(line (\d+)\))?$/) || []
+  return text.match(/^(\/.+\.php)(?: \(line (\d+)(, eval'd line \d+)?\))?$/) || []
 }

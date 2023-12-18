@@ -275,7 +275,7 @@ class InternalEvents implements SubscriberInterface
         $this->debug->rootInstance->getChannel('phpError')->{$method}(
             $error['typeStr'] . ':',
             $error['message'],
-            \sprintf('%s (line %s)', $error['file'], $error['line']),
+            $error['fileAndLine'],
             $this->debug->meta(array(
                 'context' => $error['category'] === 'fatal' && $error['backtrace'] === null
                     ? $error['context']
@@ -283,6 +283,7 @@ class InternalEvents implements SubscriberInterface
                 'errorCat' => $error['category'],
                 'errorHash' => $error['hash'],
                 'errorType' => $error['type'],
+                'evalLine' => $error['evalLine'],
                 'file' => $error['file'],
                 'isSuppressed' => $error['isSuppressed'], // set via event subscriber vs "@"" code prefix
                 'line' => $error['line'],

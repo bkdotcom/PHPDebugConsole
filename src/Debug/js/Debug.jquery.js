@@ -589,7 +589,7 @@
       });
       return [null, text, matches.line]
     }
-    return text.match(/^(\/.+\.php)(?: \(line (\d+)\))?$/) || []
+    return text.match(/^(\/.+\.php)(?: \(line (\d+)(, eval'd line \d+)?\))?$/) || []
   }
 
   var config$2;
@@ -900,9 +900,14 @@
 
   function enhanceEntryDefault ($entry) {
     // regular log-type entry
+    var title;
     if ($entry.data('file')) {
       if (!$entry.attr('title')) {
-        $entry.attr('title', $entry.data('file') + ': line ' + $entry.data('line'));
+        title = $entry.data('file') + ': line ' + $entry.data('line');
+        if ($entry.data('evalline')) {
+          title += ' (eval\'d line ' + $entry.data('evalline') + ')';
+        }
+        $entry.attr('title', title);
       }
       create($entry);
     }
@@ -5978,7 +5983,7 @@
       title = '<i class="fa fa-pencil"></i> ' + title;
     } else if (title === 'Throws') {
        title = tippyContentThrows($ref, title);
-    } else if (title.match(/^\/.+: line \d+$/)) {
+    } else if (title.match(/^\/.+: line \d+( \(eval'd line \d+\))?$/)) {
       title = '<i class="fa fa-file-code-o"></i> ' + title;
     }
     return title.replace(/\n/g, '<br />')

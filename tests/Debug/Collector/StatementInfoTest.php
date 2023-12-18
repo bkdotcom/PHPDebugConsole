@@ -132,6 +132,7 @@ class StatementInfoTest extends DebugTestFramework
                 ],
                 "meta": {
                     "detectFiles": true,
+                    "evalLine": null,
                     "file": "\/Users\/bkent\/Dropbox\/htdocs\/common\/vendor\/bdk\/PHPDebugConsole\/tests\/Debug\/Collector\/StatementInfoTest.php",
                     "line": 53,
                     "uncollapse": false
@@ -144,6 +145,7 @@ class StatementInfoTest extends DebugTestFramework
                 ],
                 "meta": {
                     "detectFiles": true,
+                    "evalLine": null,
                     "file": "\/Users\/bkent\/Dropbox\/htdocs\/common\/vendor\/bdk\/PHPDebugConsole\/tests\/Debug\/Collector\/StatementInfoTest.php",
                     "line": 53,
                     "uncollapse": true

@@ -121,12 +121,13 @@ class DebugTest extends DebugTestFramework
                     'errorCat' => $errCat,
                     'errorHash' => $lastError['hash'],
                     'errorType' => \version_compare(PHP_VERSION, '7.0', '>=') ? E_NOTICE : E_STRICT,
+                    'evalLine' => null,
                     'file' => __FILE__,
+                    'isSuppressed' => false,
                     'line' => $lastError['line'],
                     'sanitize' => true,
-                    'isSuppressed' => false,
-                    'uncollapse' => true,
                     'trace' => $lastError['backtrace'],
+                    'uncollapse' => true,
                 ),
             ),
             'html' => '<li class="error-' . $errCat . ' m_warn" data-channel="general.phpError" data-detect-files="true">'
@@ -349,8 +350,9 @@ class DebugTest extends DebugTestFramework
         $this->setErrorCallerHelper();
         $errorCaller = $this->debug->errorHandler->get('errorCaller');
         self::assertSame(array(
+            'evalLine' => null,
             'file' => __FILE__,
-            'line' => __LINE__ - 4,
+            'line' => __LINE__ - 5,
             'groupDepth' => 0,
         ), $errorCaller);
 
@@ -358,8 +360,9 @@ class DebugTest extends DebugTestFramework
         \call_user_func(array($this, 'setErrorCallerHelper'), true);
         $errorCaller = $this->debug->errorHandler->get('errorCaller');
         self::assertSame(array(
+            'evalLine' => null,
             'file' => __FILE__,
-            'line' => __LINE__ - 4,
+            'line' => __LINE__ - 5,
             'groupDepth' => 0,
         ), $errorCaller);
     }

@@ -150,6 +150,7 @@ class OAuthTest extends DebugTestFramework
             'meta' => array(
                 'channel' => 'general.OAuth',
                 'detectFiles' => true,
+                'evalLine' => null,
                 'file' => __FILE__,
                 'line' => $line,
                 'uncollapse' => true,
@@ -293,6 +294,7 @@ class OAuthTest extends DebugTestFramework
             'meta' => array(
                 'channel' => 'general.OAuth',
                 'detectFiles' => true,
+                'evalLine' => null,
                 'file' => __FILE__,
                 'line' => $line,
                 'uncollapse' => true,
@@ -480,6 +482,7 @@ class OAuthTest extends DebugTestFramework
             'meta' => array(
                 'channel' => 'general.OAuth',
                 'detectFiles' => true,
+                'evalLine' => null,
                 'file' => __FILE__,
                 'line' => $line,
                 'uncollapse' => true,

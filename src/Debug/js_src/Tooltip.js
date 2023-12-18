@@ -42,7 +42,7 @@ function tippyContent (reference) {
     title = '<i class="fa fa-pencil"></i> ' + title
   } else if (title === 'Throws') {
      title = tippyContentThrows($ref, title)
-  } else if (title.match(/^\/.+: line \d+$/)) {
+  } else if (title.match(/^\/.+: line \d+( \(eval'd line \d+\))?$/)) {
     title = '<i class="fa fa-file-code-o"></i> ' + title
   }
   return title.replace(/\n/g, '<br />')

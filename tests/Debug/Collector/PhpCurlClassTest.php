@@ -195,7 +195,7 @@ class PhpCurlClassTest extends DebugTestFramework
                                 %A
                             </ul><span class="t_punct">)</span></span></li>
                         <li class="m_log" data-channel="general.Curl">%srequest headers</span> = <span class="t_string">GET /echo%s HTTP/1.1%A</li>
-                        <li class="m_warn" data-channel="general.Curl" data-detect-files="true" data-file="' . __FILE__ . '" data-line="%d"><span class="t_int">%d</span>, <span class="t_string">%AUnsupported HTTP version in response</span></li>
+                        <li class="m_warn" data-channel="general.Curl" data-detect-files="true" data-file="' . __FILE__ . '" data-line="%d"><span class="t_int">%d</span>, <span class="t_string">%SUnsupported %S in response</span></li>
                         <li class="m_time" data-channel="general.Curl"><span class="no-quotes t_string">time: %f %s</span></li>
                         <li class="m_log" data-channel="general.Curl"><span class="no-quotes t_string">response headers</span> = <span class="t_string">%A</span></li>
                         <li class="m_log" data-channel="general.Curl"><span class="no-quotes t_string">response body</span> = <span class="t_null">null</span></li>

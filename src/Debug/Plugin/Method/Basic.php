@@ -195,7 +195,7 @@ class Basic implements SubscriberInterface
             \fwrite($this->cliOutputStream, $outStr . "\n");
             return;
         }
-        echo '<pre style="margin:.25em;">' . $outStr . '</pre>' . "\n";
+        echo '<pre style="margin:.25em;">' . \htmlspecialchars($outStr) . '</pre>' . "\n";
     }
 
     /**

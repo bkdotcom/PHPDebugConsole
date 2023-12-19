@@ -228,7 +228,9 @@ class ErrorHandler extends AbstractErrorHandler
         // lets store the exception so we can use the backtrace it provides
         //   error constructor will pull this
         $this->data['uncaughtException'] = $exception;
-        \http_response_code(500);
+        if (\headers_sent() === false) {
+            \http_response_code(500);
+        }
         $this->handleError(
             E_ERROR,
             'Uncaught exception \'' . \get_class($exception) . '\' with message ' . $exception->getMessage(),

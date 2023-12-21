@@ -56,7 +56,6 @@ class ObjectProperties extends AbstractObjectSection
             'isPromoted' => $info['isPromoted'],
             'isReadOnly' => $info['isReadOnly'],
             'isStatic' => $info['isStatic'],
-            'overrides' => $info['isInherited'] === false && $info['declaredPrev'],
             'private-ancestor' => $info['isPrivateAncestor'],
             'property' => true,
         )));

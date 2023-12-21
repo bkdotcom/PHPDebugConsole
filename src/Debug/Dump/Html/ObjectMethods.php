@@ -268,7 +268,6 @@ class ObjectMethods extends AbstractObjectSection
             'isFinal' => $info['isFinal'],
             'isStatic' => $info['isStatic'],
             'method' => true,
-            'overrides' => $info['isInherited'] === false && $info['declaredPrev'],
         )));
         return \array_merge($classes, $visClasses);
     }

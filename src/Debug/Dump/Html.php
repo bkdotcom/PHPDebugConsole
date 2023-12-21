@@ -222,6 +222,7 @@ class Html extends Base
         if (isset($meta['file']) && $logEntry->getChannelName() !== $this->channelNameRoot . '.phpError') {
             // PHP errors will have file & line as one of the arguments
             //    so no need to store file & line as data args
+            $meta = \array_merge(array('evalLine' => null), $meta);
             $attribs = \array_merge(array(
                 'data-evalLine' => $meta['evalLine'],
                 'data-file' => $meta['file'],

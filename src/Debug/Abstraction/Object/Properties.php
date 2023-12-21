@@ -69,8 +69,11 @@ class Properties extends Inheritable
     {
         $this->addViaRef($abs);
         $this->phpDoc->addViaPhpDoc($abs); // magic properties documented via phpDoc
+
         $properties = $abs['properties'];
 
+        // note: for user-defined classes getDefaultProperties
+        //   will return the current value for static properties
         $defaultValues = $abs['reflector']->getDefaultProperties();
         foreach ($defaultValues as $name => $value) {
             $properties[$name]['value'] = $value;
@@ -92,6 +95,8 @@ class Properties extends Inheritable
         }
 
         $abs['properties'] = $properties;
+
+        $this->crate($abs);
     }
 
     /**
@@ -317,14 +322,13 @@ class Properties extends Inheritable
     {
         $phpDoc = $this->helper->getPhpDocVar($refProperty, $abs['fullyQualifyPhpDocType']);
         $refProperty->setAccessible(true); // only accessible via reflection
-        /*
-            getDeclaringClass returns "LAST-declared/overriden"
-        */
         return static::buildPropValues(array(
             'attributes' => $abs['cfgFlags'] & AbstractObject::PROP_ATTRIBUTE_COLLECT
                 ? $this->helper->getAttributes($refProperty)
                 : array(),
-            'desc' => $phpDoc['desc'],
+            'desc' => $abs['cfgFlags'] & AbstractObject::PHPDOC_COLLECT
+                ? $phpDoc['desc']
+                : null,
             'isPromoted' =>  PHP_VERSION_ID >= 80000
                 ? $refProperty->isPromoted()
                 : false,
@@ -347,12 +351,8 @@ class Properties extends Inheritable
     private function crate(Abstraction $abs)
     {
         $properties = $abs['properties'];
-        $phpDocCollect = $abs['cfgFlags'] & AbstractObject::PHPDOC_COLLECT;
         foreach ($properties as $name => $info) {
             $info['value'] = $this->abstracter->crate($info['value'], $abs['debugMethod'], $abs['hist']);
-            if (!$phpDocCollect) {
-                $info['desc'] = null;
-            }
             $properties[$name] = $info;
         }
         $abs['properties'] = $properties;

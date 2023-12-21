@@ -57,7 +57,6 @@ class ObjectConstants extends AbstractObjectSection
         $classes = \array_keys(\array_filter(array(
             'constant' => true,
             'isFinal' => $info['isFinal'],
-            'overrides' => $info['isInherited'] === false && $info['declaredPrev'],
             'private-ancestor' => $info['isPrivateAncestor'],
         )));
         return \array_merge($classes, $visClasses);

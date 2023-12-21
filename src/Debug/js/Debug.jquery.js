@@ -6312,7 +6312,7 @@
       'parent:not(.groupByInheritance) > dd[data-inherited-from]:not(.private-ancestor)': '<i class="fa fa-fw fa-clone" title="Inherited"></i>',
       'parent:not(.groupByInheritance) > dd.private-ancestor': '<i class="fa fa-lock" title="Private ancestor"></i>',
       '> dd[data-attributes]': '<i class="fa fa-hashtag" title="Attributes"></i>',
-      '> .overrides': '<i class="fa fa-fw fa-repeat" title="Overrides"></i>',
+      '> dd[data-declared-prev]': '<i class="fa fa-fw fa-repeat" title="Overrides"></i>',
       '> .method.isDeprecated': '<i class="fa fa-fw fa-arrow-down" title="Deprecated"></i>',
       '> .method > .t_modifier_magic': '<i class="fa fa-magic" title="magic method"></i>',
       '> .method > .t_modifier_final': '<i class="fa fa-hand-stop-o"></i>',

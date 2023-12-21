@@ -293,6 +293,7 @@ class Definition
             array(
                 // these are temporary values available during abstraction
                 'fullyQualifyPhpDocType' => $values['fullyQualifyPhpDocType'],
+                'hist' => array(),
                 'reflector' => $values['reflector'],
             )
         );

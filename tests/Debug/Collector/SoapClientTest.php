@@ -150,7 +150,7 @@ class SoapClientTest extends DebugTestFramework
                         'POST /soap/wsdl HTTP/1.1',
                         'Host: 127.0.0.1:8080',
                         'Connection: Keep-Alive',
-                        'User-Agent: PHP-SOAP/' . PHP_VERSION,
+                        'User-Agent: PHP-SOAP/%d.%d.%d', // "usually" PHP_VERSION
                         'Content-Type: text/xml; charset=utf-8',
                         'SOAPAction: "http://127.0.0.1:8080/soap/SQLDataSRL"',
                         'Content-Length: %d',

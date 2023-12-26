@@ -1172,12 +1172,15 @@
       return
     }
     */
-    applyFilter($delegateNode);
     $delegateNode.on('change', 'input[type=checkbox]', onCheckboxChange);
     $delegateNode.on('change', 'input[data-toggle=error]', onToggleErrorChange);
     $delegateNode.on('channelAdded.debug', function (e) {
       var $root = $(e.target).closest('.debug');
       updateFilterStatus($root);
+    });
+    $delegateNode.on('refresh.debug', function (e) {
+      var $root = $(e.target).closest('.debug');
+      applyFilter($root);
     });
   }
 
@@ -1186,13 +1189,16 @@
     var isChecked = $this.is(':checked');
     var $nested = $this.closest('label').next('ul').find('input');
     var $root = $this.closest('.debug');
+    if ($this.closest('.debug-options').length > 0) {
+      // we're only interested in filter checkboxes
+      return
+    }
     if ($this.data('toggle') === 'error') {
       // filtered separately
       return
     }
     $nested.prop('checked', isChecked);
     applyFilter($root);
-    updateFilterStatus($root);
   }
 
   function onToggleErrorChange () {
@@ -1227,7 +1233,8 @@
     /*
       find all log entries and process them greatest depth to least depth
     */
-    $root.find('> .tab-panes > .tab-primary > .tab-body')
+    $root
+      .find('> .tab-panes > .tab-primary > .tab-body')
       .find('.m_alert, .group-body > *:not(.m_groupSummary)')
       .each(function () {
         sort.push({
@@ -1246,6 +1253,7 @@
       'filter-hidden',
       $root.find('.tab-primary .debug-log-summary').height() < 1
     );
+    updateFilterStatus($root);
   }
 
   function applyFilterToNode ($node, channelNameRoot) {
@@ -1282,9 +1290,9 @@
     }
   }
 
-  function updateFilterStatus ($debugRoot) {
-    var haveUnchecked = $debugRoot.find('.debug-sidebar input:checkbox:not(:checked)').length > 0;
-    $debugRoot.toggleClass('filter-active', haveUnchecked);
+  function updateFilterStatus ($root) {
+    var haveUnchecked = $root.find('.debug-sidebar input:checkbox:not(:checked)').length > 0;
+    $root.toggleClass('filter-active', haveUnchecked);
   }
 
   function cookieGet (name) {
@@ -1388,7 +1396,8 @@
       .on('change', onDebugCookieChange)
       .prop('checked', config$4.get('debugKey') && cookieGet('debug') === config$4.get('debugKey'));
     if (!config$4.get('debugKey')) {
-      $('input[name=debugCookie]').prop('disabled', true)
+      $('input[name=debugCookie]')
+        .prop('disabled', true)
         .closest('label').addClass('disabled');
     }
 
@@ -1398,7 +1407,8 @@
 
     $root$1.find('input[name=linkFiles]')
       .on('change', onLinkFilesChange)
-      .prop('checked', config$4.get('linkFiles')).trigger('change');
+      .prop('checked', config$4.get('linkFiles'))
+      .trigger('change');
 
     $root$1.find('input[name=linkFilesTemplate]')
       .on('change', onLinkFilesTemplateChange)
@@ -6002,7 +6012,7 @@
   }
 
   function tippyContentInherited ($ref, title) {
-    var classname = $ref.parent().data('classname');
+    var classname = $ref.parent().data('inheritedFrom');
     if (typeof classname === 'undefined') {
       return title
     }
@@ -6474,6 +6484,7 @@
         $self.find('.tab-pane.active')
           .find('.m_alert, .debug-log-summary, .debug-log')
           .debugEnhance();
+        $self.trigger('refresh.debug');
         return
       }
       if ($self.hasClass('filter-hidden') && $self.hasClass('m_group') === false) {

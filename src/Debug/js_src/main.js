@@ -204,6 +204,7 @@ function debugEnhanceDefault ($node) {
       $self.find('.tab-pane.active')
         .find('.m_alert, .debug-log-summary, .debug-log')
         .debugEnhance()
+      $self.trigger('refresh.debug')
       return
     }
     if ($self.hasClass('filter-hidden') && $self.hasClass('m_group') === false) {

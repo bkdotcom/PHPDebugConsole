@@ -61,7 +61,7 @@ function tippyContentImplements ($ref, title) {
 }
 
 function tippyContentInherited ($ref, title) {
-  var classname = $ref.parent().data('classname')
+  var classname = $ref.parent().data('inheritedFrom')
   if (typeof classname === 'undefined') {
     return title
   }

@@ -34,12 +34,15 @@ export function init ($delegateNode) {
     return
   }
   */
-  applyFilter($delegateNode)
   $delegateNode.on('change', 'input[type=checkbox]', onCheckboxChange)
   $delegateNode.on('change', 'input[data-toggle=error]', onToggleErrorChange)
   $delegateNode.on('channelAdded.debug', function (e) {
     var $root = $(e.target).closest('.debug')
     updateFilterStatus($root)
+  })
+  $delegateNode.on('refresh.debug', function (e) {
+    var $root = $(e.target).closest('.debug')
+    applyFilter($root)
   })
 }
 
@@ -48,13 +51,16 @@ function onCheckboxChange () {
   var isChecked = $this.is(':checked')
   var $nested = $this.closest('label').next('ul').find('input')
   var $root = $this.closest('.debug')
+  if ($this.closest('.debug-options').length > 0) {
+    // we're only interested in filter checkboxes
+    return
+  }
   if ($this.data('toggle') === 'error') {
     // filtered separately
     return
   }
   $nested.prop('checked', isChecked)
   applyFilter($root)
-  updateFilterStatus($root)
 }
 
 function onToggleErrorChange () {
@@ -89,7 +95,8 @@ function applyFilter ($root) {
   /*
     find all log entries and process them greatest depth to least depth
   */
-  $root.find('> .tab-panes > .tab-primary > .tab-body')
+  $root
+    .find('> .tab-panes > .tab-primary > .tab-body')
     .find('.m_alert, .group-body > *:not(.m_groupSummary)')
     .each(function () {
       sort.push({
@@ -108,6 +115,7 @@ function applyFilter ($root) {
     'filter-hidden',
     $root.find('.tab-primary .debug-log-summary').height() < 1
   )
+  updateFilterStatus($root)
 }
 
 function applyFilterToNode ($node, channelNameRoot) {
@@ -144,7 +152,7 @@ function applyFilterToNode ($node, channelNameRoot) {
   }
 }
 
-function updateFilterStatus ($debugRoot) {
-  var haveUnchecked = $debugRoot.find('.debug-sidebar input:checkbox:not(:checked)').length > 0
-  $debugRoot.toggleClass('filter-active', haveUnchecked)
+function updateFilterStatus ($root) {
+  var haveUnchecked = $root.find('.debug-sidebar input:checkbox:not(:checked)').length > 0
+  $root.toggleClass('filter-active', haveUnchecked)
 }

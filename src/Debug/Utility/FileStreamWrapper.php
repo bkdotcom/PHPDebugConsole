@@ -634,11 +634,13 @@ class FileStreamWrapper
         /*
             Determine opened path
         */
-        $meta = \stream_get_meta_data($resource);
-        if (!isset($meta['uri'])) {
-            throw new \UnexpectedValueException('Uri not in meta data');
+        if ($resource) {
+            $meta = \stream_get_meta_data($resource);
+            if (!isset($meta['uri'])) {
+                throw new \UnexpectedValueException('Uri not in meta data');
+            }
+            $openedPath = $meta['uri'];
         }
-        $openedPath = $meta['uri'];
         return $resource;
     }
 

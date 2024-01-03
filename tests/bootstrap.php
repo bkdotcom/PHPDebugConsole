@@ -30,6 +30,10 @@ ini_set('xdebug.show_error_trace', 0);
 ini_set('xdebug.show_exception_trace', 0);
 */
 
+$httpdCfg = array(
+    'errorLogPath' => __DIR__ . '/docroot/httpd_error_log.txt',
+);
+
 /*
     We also initialize via DebugTestFramework::setUp()
     however, testProviders are called before setup (I believe)
@@ -74,7 +78,7 @@ $debug = \bdk\Debug::getInstance(array(
     },
 ));
 
-$debug->eventManager->subscribe(\bdk\PubSub\Manager::EVENT_PHP_SHUTDOWN, static function () {
+$debug->eventManager->subscribe(\bdk\PubSub\Manager::EVENT_PHP_SHUTDOWN, static function () use ($httpdCfg) {
     httpdStop();
     $files = \array_merge(
         \glob(TEST_DIR . '/../tmp/log/*.json'),
@@ -85,9 +89,11 @@ $debug->eventManager->subscribe(\bdk\PubSub\Manager::EVENT_PHP_SHUTDOWN, static 
             \unlink($file);
         }
     }
+    outputHttpErrorLog($httpdCfg);
 }, 0 - PHP_INT_MAX);
 
-httpdStart();
+httpdStart($httpdCfg);
+httpdTest($httpdCfg);
 
 $modifyTests = new \bdk\DevUtil\ModifyTests();
 $modifyTests->modify(__DIR__);
@@ -95,10 +101,15 @@ $modifyTests->modify(__DIR__);
 /**
  * Start PHP's dev httpd
  *
+ * @param array $cfg HTTPD config
+ *
  * @return void
  */
-function httpdStart()
+function httpdStart($cfg = array())
 {
+    $cfg = \array_merge(array(
+        'errorLogPath' =>  __DIR__ . '/docroot/httpd_error_log.txt',
+    ), $cfg);
     // php 7.0 seems to e borked.
     // unable to specify -t docroot  and -f frontController.php
     //     frontController ignored
@@ -121,6 +132,21 @@ function httpdStart()
     \usleep(250000); // wait .25 sec for server to get going
     echo \stream_get_contents($pipes[2]) . "\n";
     \chdir($dirWas);
+    \file_put_contents($cfg['errorLogPath'], '');
+}
+
+/**
+ * Confirm server is working
+ *
+ * @param array $httpdCfg HTTPD config
+ *
+ * @return void
+ */
+function httpdTest($httpdCfg = array())
+{
+    $response =  \file_get_contents('http://127.0.0.1:8080/echo?initServerTest');
+    echo "\e[38;5;22;48;5;121;1;4m" . 'Http Test response' . "\e[0m" . "\n" . $response . "\n\n";
+    echo outputHttpErrorLog($httpdCfg);
 }
 
 /**
@@ -131,4 +157,19 @@ function httpdStart()
 function httpdStop()
 {
     \proc_terminate($GLOBALS['httpdResource']);
+}
+
+/**
+ * Output Http error log if non-empty
+ *
+ * @param array $httpdCfg HTTPD config
+ *
+ * @return string
+ */
+function outputHttpErrorLog($httpdCfg = array())
+{
+    $errorLogContents = \file_get_contents($httpdCfg['errorLogPath']);
+    return $errorLogContents
+        ? "\n" . "\e[38;5;88;48;5;203;1;4m" . 'http error log:' . "\e[0m" . "\n" . $errorLogContents . "\n\n"
+        : '';
 }

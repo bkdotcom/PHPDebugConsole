@@ -8,17 +8,27 @@
 
 require __DIR__ . '/../../vendor/autoload.php';
 
+$serverRequest = \bdk\HttpMessage\ServerRequest::fromGlobals();
+$serverParams = $serverRequest->getServerParams();
+$requestUri = $serverRequest->getUri();
+
 if (\class_exists('bdk\\Debug')) {
     $debug = new \bdk\Debug(array(
         'collect' => true,
         'output' => true,
         'route' => 'wamp',
     ));
+    $debug->eventManager->subscribe(\bdk\ErrorHandler::EVENT_ERROR, static function (\bdk\ErrorHandler\Error $error) use ($requestUri) {
+        $logFile = __DIR__ . '/httpd_error_log.txt';
+        $logEntry = \sprintf(
+            '[%s] %s',
+            $requestUri,
+            $error['typeStr'] . ': ' . $error['file'] . '(' . $error['line'] . ') ' . $error['message']
+        );
+        \fwrite(STDERR, "\e[38;5;250m" . $logEntry . "\e[0m" . "\n");
+        \file_put_contents($logFile, $logEntry, FILE_APPEND);
+    });
 }
-
-$serverRequest = \bdk\HttpMessage\ServerRequest::fromGlobals();
-$serverParams = $serverRequest->getServerParams();
-$requestUri = $serverRequest->getUri();
 
 \chdir($serverParams['DOCUMENT_ROOT']);
 
@@ -61,9 +71,9 @@ if ($realpath && \is_file($realpath)) {
 */
 
 $extensions = array(
-    'php' => 'text/html; charset=UTF-8',
     'html' => 'text/html; charset=UTF-8',
     'json' => 'application/json',
+    'php' => 'text/html; charset=UTF-8',
     'xml' => 'application/xml',
 );
 foreach ($extensions as $ext => $contentType) {
@@ -78,9 +88,13 @@ foreach ($extensions as $ext => $contentType) {
 
 notFound();
 
+/**
+ * Handle 404 Not Found
+ *
+ * @return void
+ */
 function notFound()
 {
     \header('HTTP/1.1 404 Not Found');
     echo '<h1>404 Not Found</h1>';
-    // echo '<pre>' . htmlspecialchars(var_export($_SERVER, true)) . '</pre>';
 }

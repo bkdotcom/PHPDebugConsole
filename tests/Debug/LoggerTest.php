@@ -60,8 +60,9 @@ class LoggerTest extends DebugTestFramework
         $this->debug->logger->emergency('Emergency broadcast system');
         $metaExpect = array(
             'detectFiles' => true,
+            'evalLine' => null,
             'file' => __FILE__,
-            'line' => __LINE__ - 4,
+            'line' => __LINE__ - 5,
             'psr3level' => 'emergency',
             'uncollapse' => true,
         );
@@ -77,8 +78,9 @@ class LoggerTest extends DebugTestFramework
         $this->debug->logger->critical('Critical test');
         $metaExpect = array(
             'detectFiles' => true,
+            'evalLine' => null,
             'file' => __FILE__,
-            'line' => __LINE__ - 4,
+            'line' => __LINE__ - 5,
             'psr3level' => 'critical',
             'uncollapse' => true,
         );
@@ -100,8 +102,9 @@ class LoggerTest extends DebugTestFramework
         ));
         $metaSubset = array(
             'detectFiles' => true,
+            'evalLine' => null,
             'file' => __FILE__,
-            'line' => __LINE__ - 7, // line of Exception
+            'line' => __LINE__ - 8, // line of Exception
             'uncollapse' => true,
         );
         $this->assertSame('error', $this->debug->data->get('log/__end__/method'));
@@ -126,6 +129,7 @@ class LoggerTest extends DebugTestFramework
             ),
             'meta' => array(
                 'detectFiles' => true,
+                'evalLine' => null,
                 'file' => __FILE__,
                 'glue' => ', ',
                 'line' => $logEntryArray['meta']['line'],
@@ -145,7 +149,7 @@ class LoggerTest extends DebugTestFramework
         ));
         $this->debug->eventManager->unsubscribe(Debug::EVENT_OBJ_ABSTRACT_START, $objStartClosure);
         $logEntryArray = $this->helper->logEntryToArray($this->debug->data->get('log/__end__'));
-        $this->assertSame('Exception', $logEntryArray['args'][1]['exception']['classDefinition']);
+        $this->assertSame('Exception', $logEntryArray['args'][1]['exception']['inheritsFrom']);
         unset($logEntryArray['args'][1]['exception']);
         $this->assertSame(array(
             'method' => 'warn',
@@ -157,6 +161,7 @@ class LoggerTest extends DebugTestFramework
             ),
             'meta' => array(
                 'detectFiles' => true,
+                'evalLine' => null,
                 'file' => __FILE__,
                 'glue' => ', ',
                 'line' => $logEntryArray['meta']['line'],
@@ -171,8 +176,9 @@ class LoggerTest extends DebugTestFramework
         $this->debug->logger->error('Error test');
         $meta = array(
             'detectFiles' => true,
+            'evalLine' => null,
             'file' => __FILE__,
-            'line' => __LINE__ - 4,
+            'line' => __LINE__ - 5,
             'psr3level' => 'error',
             'uncollapse' => true,
         );
@@ -188,8 +194,9 @@ class LoggerTest extends DebugTestFramework
         $this->debug->logger->warning('You\'ve been warned');
         $meta = array(
             'detectFiles' => true,
+            'evalLine' => null,
             'file' => __FILE__,
-            'line' => __LINE__ - 4,
+            'line' => __LINE__ - 5,
             'psr3level' => 'warning',
             'uncollapse' => true,
         );
@@ -205,8 +212,9 @@ class LoggerTest extends DebugTestFramework
         $this->debug->logger->notice('Final Notice');
         $meta = array(
             'detectFiles' => true,
+            'evalLine' => null,
             'file' => __FILE__,
-            'line' => __LINE__ - 4,
+            'line' => __LINE__ - 5,
             'psr3level' => 'notice',
             'uncollapse' => true,
         );

@@ -25,7 +25,7 @@ $color-final: #f00e;
 
 .classname {
   font-weight: bold;
-  color: $color-classname;
+  color: color-mix(in lch, currentColor, $color-classname);
 }
 
 // this is outside of .t_object because tooltip gets placed outside
@@ -95,6 +95,16 @@ li[class*=m_] > .t_array.array-file-tree > .array-inner {
 .t_object {
   display: inline;
 
+  /*
+    Method static-vars / return-value header
+  */
+  h3 {
+    margin: 0;
+    font-size: inherit;
+    font-style: italic;
+    color: $color-header;
+  }
+
   .t_modifier_public {
     color: $color-public;
   }
@@ -157,6 +167,11 @@ li[class*=m_] > .t_array.array-file-tree > .array-inner {
       background-color: lighten($error-bg, 10%);
       border-color: $error-fg;
     }
+    .heading {
+      color: #4f16b0;
+      text-decoration: underline;
+      font-weight: bold;
+    }
   }
 
   .vis-toggles {
@@ -176,6 +191,9 @@ li[class*=m_] > .t_array.array-file-tree > .array-inner {
   }
 
   .method {
+    ul {
+      margin-left: 15px;
+    }
     &.deprecated {
       opacity: 0.66;
       i {
@@ -200,6 +218,7 @@ li[class*=m_] > .t_array.array-file-tree > .array-inner {
     }
   }
 
+  i.fa-flag,
   i.fa-warning {
     color: $color-warning;
   }

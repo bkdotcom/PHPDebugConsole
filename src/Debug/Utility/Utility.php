@@ -12,6 +12,7 @@
 
 namespace bdk\Debug;
 
+use bdk\Debug;
 use Exception;
 use Psr\Http\Message\StreamInterface;
 
@@ -177,26 +178,38 @@ class Utility
     }
 
     /**
-     * Get current git branch
+     * Get current git branch for specified directory
+     *
+     * @param string $dir (optional) defaults to current working dir
      *
      * @return string|null
      */
-    public static function gitBranch()
+    public static function gitBranch($dir = null)
     {
-        $redirect = \stripos(PHP_OS, 'WIN') !== 0
-            ? '2>/dev/null'
-            : '2> nul';  // @codeCoverageIgnore
-        $outputLines = array();
-        $returnStatus = 0;
-        // all branches are output
-        // current branch is preceeded with "*"
-        \exec('git branch ' . $redirect, $outputLines, $returnStatus);
-        $allLines = \implode("\n", $outputLines);
-        $matches = array();
-        \preg_match('#^\* (.+)$#m', $allLines, $matches);
-        return $matches
-            ? $matches[1]
-            : null;
+        // exec('git branch') may fail due due to permissions / rights
+        // navigate up until we find the ./git/HEAD file
+        $dir = $dir ?: \getcwd();
+        $parts = \explode(DIRECTORY_SEPARATOR, $dir);
+        $docRootFound = false;
+        for ($i = \count($parts); $i > 0; $i--) {
+            $dirParts = \array_slice($parts, 0, $i);
+            $filepath = \implode(DIRECTORY_SEPARATOR, \array_merge(
+                $dirParts,
+                array('.git', 'HEAD')
+            ));
+            if (\file_exists($filepath)) {
+                $filelines = \file($filepath);
+                $parts = \explode('/', $filelines[0], 3);
+                return \trim($parts[2]);
+            }
+            if ($docRootFound) {
+                break;
+            }
+            if (\implode($dirParts) === Debug::getInstance()->getServerParam('DOCUMENT_ROOT')) {
+                $docRootFound = true;
+            }
+        }
+        return null;
     }
 
     /**

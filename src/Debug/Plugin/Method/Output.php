@@ -58,13 +58,13 @@ class Output implements SubscriberInterface
             $debug->obEnd();
             return null;
         }
-        $output = $this->publishOutputEvent();
+        $event = $this->publishOutputEvent();
         if (!$debug->parentInstance) {
             $debug->data->set('outputSent', true);
         }
         $debug->config->set($cfgRestore);
         $debug->obEnd();
-        return $output;
+        return $event['return'];
     }
 
     /**
@@ -74,7 +74,7 @@ class Output implements SubscriberInterface
      *    finally ourself
      * This isn't outputing each channel, but for performing any per-channel "before output" activities
      *
-     * @return string output
+     * @return \bdk\PubSub\Event
      */
     private function publishOutputEvent()
     {
@@ -98,6 +98,6 @@ class Output implements SubscriberInterface
                 )
             );
         }
-        return $event['return'];
+        return $event;
     }
 }

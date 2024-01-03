@@ -167,7 +167,7 @@ class Slack extends AbstractRoute
                 'type' => 'plain_text',
             ))
             ->withContext(array(
-                $error['file'] . ' (line ' . $error['line'] . ')',
+                $error['fileAndLine'],
             ));
         if ($error->isFatal() && $error['backtrace']) {
             $messages[] = $this->buildMessageBacktrace($error);

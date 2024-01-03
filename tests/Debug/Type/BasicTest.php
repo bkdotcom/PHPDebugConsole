@@ -11,7 +11,6 @@ use bdk\Test\Debug\DebugTestFramework;
  *
  * @covers \bdk\Debug\Abstraction\Abstracter
  * @covers \bdk\Debug\Abstraction\AbstractString
- * @covers \bdk\Debug\Abstraction\Object\Subscriber
  * @covers \bdk\Debug\Dump\BaseValue
  * @covers \bdk\Debug\Dump\Html
  * @covers \bdk\Debug\Dump\Html\HtmlString
@@ -138,66 +137,6 @@ class BasicTest extends DebugTestFramework
                     ),
                     'html' => '<li class="m_log"><span class="classname no-quotes t_string" data-type-more="classname"><span class="namespace">SomeNamespace\</span>Classname</span></li>',
                     'text' => 'SomeNamespace\Classname',
-                ),
-            ),
-
-            'closure' => array(
-                'log',
-                array(
-                    static function ($foo, $bar) {
-                        return $foo . $bar;
-                    },
-                ),
-                array(
-                    'entry' => static function ($logEntry) {
-                        $objAbs = $logEntry['args'][0];
-                        self::assertAbstractionType($objAbs);
-                        $values = $objAbs->getValues();
-                        self::assertSame('Closure', $values['className']);
-                        $line = __LINE__ - 10;
-                        self::assertSame(array(
-                            'extensionName' => false,
-                            'fileName' => __FILE__,
-                            'startLine' => $line,
-                        ), $values['definition']);
-                        \array_walk($values['properties'], static function ($propInfo, $propName) use ($line) {
-                            // echo \json_encode($propInfo, JSON_PRETTY_PRINT);
-                            $values = \array_intersect_key($propInfo, \array_flip(array(
-                                'value',
-                                'valueFrom',
-                                'visibility',
-                            )));
-                            switch ($propName) {
-                                case 'debug.file':
-                                    self::assertSame(array(
-                                        'value' => __FILE__,
-                                        'valueFrom' => 'debug',
-                                        'visibility' => 'debug',
-                                    ), $values);
-                                    break;
-                                case 'debug.line':
-                                    self::assertSame(array(
-                                        'value' => $line,
-                                        'valueFrom' => 'debug',
-                                        'visibility' => 'debug',
-                                    ), $values);
-                                    break;
-                            }
-                        });
-                    },
-                    'html' => '<li class="m_log"><div class="t_object" data-accessible="public"><span class="classname">Closure</span>
-                        <dl class="object-inner">
-                        <dt class="modifiers">modifiers</dt>
-                        <dd class="t_modifier_final">final</dd>
-                        <dt class="properties">properties</dt>
-                        <dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="t_type">string</span> <span class="no-quotes t_identifier t_string">file</span> <span class="t_operator">=</span> <span class="t_string">' . __FILE__ . '</span></dd>
-                        <dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="t_type">int</span> <span class="no-quotes t_identifier t_string">line</span> <span class="t_operator">=</span> <span class="t_int">%d</span></dd>
-                        <dt class="methods">methods</dt>
-                        <dd class="method private"><span class="t_modifier_private">private</span> <span class="t_identifier">__construct</span><span class="t_punct">(</span><span class="t_punct">)</span></dd>
-                        <dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier">__invoke</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$foo</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_parameter-name">$bar</span></span><span class="t_punct">)</span></dd>
-                        %a
-                        </dl>
-                        </div></li>',
                 ),
             ),
 

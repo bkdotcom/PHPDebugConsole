@@ -22,19 +22,29 @@ use bdk\PubSub\ValueStore;
  */
 class Abstraction extends BaseAbstraction
 {
-    private $definition;
+    protected static $keysTemp = array(
+        'collectPropertyValues',
+        'fullyQualifyPhpDocType',
+        'hist',
+        'isTraverseOnly',
+        'propertyOverrideValues',
+        'reflector',
+    );
+
+    /** @var ValueStore */
+    private $inherited;
 
     private $sortableValues = array('attributes', 'cases', 'constants', 'methods', 'properties');
 
     /**
      * Constructor
      *
-     * @param ValueStore $definition class definition values
-     * @param array      $values     abtraction values
+     * @param ValueStore $inherited Inherited values
+     * @param array      $values    Abtraction values
      */
-    public function __construct(ValueStore $definition, $values = array())
+    public function __construct(ValueStore $inherited, $values = array())
     {
-        $this->definition = $definition;
+        $this->inherited = $inherited;
         parent::__construct(Abstracter::TYPE_OBJECT, $values);
     }
 
@@ -43,7 +53,7 @@ class Abstraction extends BaseAbstraction
      */
     public function __serialize()
     {
-        return $this->getInstanceValues() + array('classDefinition' => $this->definition);
+        return $this->getInstanceValues() + array('inherited' => $this->inherited);
     }
 
     /**
@@ -67,11 +77,22 @@ class Abstraction extends BaseAbstraction
      */
     public function __unserialize($data)
     {
-        $this->definition = isset($data['classDefinition'])
-            ? $data['classDefinition']
+        $this->inherited = isset($data['inherited'])
+            ? $data['inherited']
             : new ValueStore();
-        unset($data['classDefinition']);
+        unset($data['inherited']);
         $this->values = $data;
+    }
+
+    /**
+     * Remove temporary values
+     *
+     * @return void
+     */
+    public function clean()
+    {
+        $this->values = \array_diff_key($this->values, \array_flip(self::$keysTemp));
+        $this->setSubject(null);
     }
 
     /**
@@ -83,8 +104,9 @@ class Abstraction extends BaseAbstraction
     public function jsonSerialize()
     {
         return $this->getInstanceValues() + array(
-            'classDefinition' => $this->definition['className'],
             'debug' => Abstracter::ABSTRACTION,
+            'inheritsFrom' => $this->inherited['className'],
+            'type' => Abstracter::TYPE_OBJECT,
         );
     }
 
@@ -93,9 +115,11 @@ class Abstraction extends BaseAbstraction
      *
      * @return array
      */
-    public function getDefinitionValues()
+    public function getInheritedValues()
     {
-        return $this->definition->getValues();
+        $values = $this->inherited->getValues();
+        unset($values['cfgFlags']);
+        return $values;
     }
 
     /**
@@ -104,7 +128,7 @@ class Abstraction extends BaseAbstraction
     public function getValues()
     {
         return \array_replace_recursive(
-            $this->getDefinitionValues(),
+            $this->getInheritedValues(),
             $this->values
         );
     }
@@ -118,7 +142,7 @@ class Abstraction extends BaseAbstraction
     {
         return ArrayUtil::diffAssocRecursive(
             $this->values,
-            $this->getDefinitionValues()
+            $this->getInheritedValues()
         );
     }
 
@@ -130,36 +154,31 @@ class Abstraction extends BaseAbstraction
      *
      * @return array
      */
-    public function sort(array $array, $order = 'visibility')
+    public function sort(array $array, $order = 'visibility, name')
     {
-        $sortVisOrder = array('public', 'magic', 'magic-read', 'magic-write', 'protected', 'private', 'debug');
-        $sortData = array(
-            'name' => array(),
-            'vis' => array(),
+        $order = \preg_split('/[,\s]+/', (string) $order);
+        $aliases = array(
+            'name' => 'name',
+            'vis' => 'vis',
+            'visibility' => 'vis',
         );
-        foreach ($array as $name => $info) {
-            if ($name === '__construct') {
-                // always place __construct at the top
-                $sortData['name'][$name] = -1;
-                $sortData['vis'][$name] = 0;
+        foreach ($order as $i => $what) {
+            if (isset($aliases[$what]) === false) {
+                unset($order[$i]);
                 continue;
             }
-            $vis = isset($info['visibility'])
-                ? $info['visibility']
-                : '?';
-            if (\is_array($vis)) {
-                // Sort the visiblity so we use the most significant vis
-                ArrayUtil::sortWithOrder($vis, $sortVisOrder);
-                $vis = $vis[0];
-            }
-            $sortData['name'][$name] = \strtolower($name);
-            $sortData['vis'][$name] = \array_search($vis, $sortVisOrder, true);
+            $order[$i] = $aliases[$what];
         }
-        if ($order === 'name') {
-            \array_multisort($sortData['name'], $array);
-        } elseif ($order === 'visibility') {
-            \array_multisort($sortData['vis'], $sortData['name'], $array);
+        if (empty($order)) {
+            return $array;
         }
+        $multiSortArgs = array();
+        $sortData = $this->sortData($array);
+        foreach ($order as $what) {
+            $multiSortArgs[] = $sortData[$what];
+        }
+        $multiSortArgs[] = &$array;
+        \call_user_func_array('array_multisort', $multiSortArgs);
         return $array;
     }
 
@@ -172,7 +191,7 @@ class Abstraction extends BaseAbstraction
         if (\array_key_exists($key, $this->values)) {
             return $this->values[$key] !== null;
         }
-        return isset($this->definition[$key]);
+        return isset($this->inherited[$key]);
     }
 
     /**
@@ -198,15 +217,59 @@ class Abstraction extends BaseAbstraction
         $value = isset($this->values[$key])
             ? $this->values[$key]
             : null;
-        $classVal = \in_array($key, $this->sortableValues, true)
-            && ($this->values['isRecursion'] || $this->values['isExcluded'])
-                ? array() // don't inherit
-                : $this->definition[$key];
+        $inherit = true;
+        if (\in_array($key, $this->sortableValues, true)) {
+            $combined = \array_merge(array(
+                'isExcluded' => $this->inherited['isExcluded'],
+                'isRecursion' => $this->inherited['isRecursion'],
+            ), $this->values);
+            if ($combined['isExcluded'] || $combined['isRecursion']) {
+                $inherit = false;
+            }
+        }
+        $classVal = $inherit
+            ? $this->inherited[$key]
+            : array();
         if ($value !== null) {
             return \is_array($classVal)
                 ? \array_replace_recursive($classVal, $value)
                 : $value;
         }
         return $classVal;
+    }
+
+    /**
+     * Collect sort data to be used by `array_multisort`
+     *
+     * @param array $array The array of methods or properties to be sorted
+     *
+     * @return array
+     */
+    protected function sortData(array $array)
+    {
+        $sortVisOrder = array('public', 'magic', 'magic-read', 'magic-write', 'protected', 'private', 'debug');
+        $sortData = array(
+            'name' => array(),
+            'vis' => array(),
+        );
+        foreach ($array as $name => $info) {
+            if ($name === '__construct') {
+                // always place __construct at the top
+                $sortData['name'][$name] = -1;
+                $sortData['vis'][$name] = 0;
+                continue;
+            }
+            $vis = isset($info['visibility'])
+                ? $info['visibility']
+                : '?';
+            if (\is_array($vis)) {
+                // Sort the visiblity so we use the most significant vis
+                ArrayUtil::sortWithOrder($vis, $sortVisOrder);
+                $vis = $vis[0];
+            }
+            $sortData['name'][$name] = \strtolower($name);
+            $sortData['vis'][$name] = \array_search($vis, $sortVisOrder, true);
+        }
+        return $sortData;
     }
 }

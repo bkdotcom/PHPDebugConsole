@@ -172,6 +172,7 @@ class TraceTest extends DebugTestFramework
             'args' => array('trace caption should be a string.  bool provided'),
             'meta' => array(
                 'detectFiles' => true,
+                'evalLine' => null,
                 'file' => __FILE__,
                 'line' => $line,
                 'uncollapse' => true,
@@ -189,6 +190,7 @@ class TraceTest extends DebugTestFramework
             'args' => array('trace caption should be a string.  stdClass provided'),
             'meta' => array(
                 'detectFiles' => true,
+                'evalLine' => null,
                 'file' => __FILE__,
                 'line' => $line,
                 'uncollapse' => true,

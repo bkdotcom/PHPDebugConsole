@@ -80,6 +80,7 @@ class Error extends Event
     protected $values = array( // phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
         'type'      => null,        // int: The severity / level / one of the E_* constants
         'message'   => '',          // The error message
+        'evalLine'  => null,
         'file'      => null,        // Filepath the error was raised in
         'line'      => null,        // Line the error was raised in
         'vars'      => array(),     // Active symbol table at point error occured
@@ -110,6 +111,15 @@ class Error extends Event
         $this->setValues($values);
         unset($this->values['vars']['GLOBALS']);
         $errorCaller = $errHandler->get('errorCaller');
+        $regexEvaldCode = '/^(.+)\((\d+)\) : eval\(\)\'d code$/';
+        $matches = array();
+        if (\preg_match($regexEvaldCode, (string) $this->values['file'], $matches)) {
+            // reported line = line within eval
+            // line inside paren is the line `eval` is on
+            $this->values['evalLine'] = $this->values['line'];
+            $this->values['file'] = $matches[1];
+            $this->values['line'] = (int) $matches[2];
+        }
         if ($errorCaller) {
             $errorCallerVals = \array_intersect_key($errorCaller, \array_flip(array('file', 'line')));
             $this->values = \array_merge($this->values, $errorCallerVals);
@@ -157,6 +167,23 @@ class Error extends Event
             \max($this->values['line'] - 6, 0),
             13
         );
+    }
+
+    /**
+     * Get file and line string
+     *
+     * @return string
+     */
+    public function getFileAndLine()
+    {
+        $fileAndLine = \sprintf(
+            '%s (line %s, eval\'d line %s)',
+            $this->values['file'],
+            $this->values['line'],
+            $this->values['evalLine']
+        );
+        $fileAndLine = \str_replace(', eval\'d line )', ')', $fileAndLine);
+        return $fileAndLine;
     }
 
     /**

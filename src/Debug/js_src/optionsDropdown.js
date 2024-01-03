@@ -18,7 +18,8 @@ export function init ($debugRoot) {
     .on('change', onDebugCookieChange)
     .prop('checked', config.get('debugKey') && cookieGet('debug') === config.get('debugKey'))
   if (!config.get('debugKey')) {
-    $('input[name=debugCookie]').prop('disabled', true)
+    $('input[name=debugCookie]')
+      .prop('disabled', true)
       .closest('label').addClass('disabled')
   }
 
@@ -28,7 +29,8 @@ export function init ($debugRoot) {
 
   $root.find('input[name=linkFiles]')
     .on('change', onLinkFilesChange)
-    .prop('checked', config.get('linkFiles')).trigger('change')
+    .prop('checked', config.get('linkFiles'))
+    .trigger('change')
 
   $root.find('input[name=linkFilesTemplate]')
     .on('change', onLinkFilesTemplateChange)

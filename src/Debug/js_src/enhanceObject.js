@@ -18,14 +18,26 @@ function addIcons ($node) {
   // console.warn('addIcons', $node)
   $.each(config.iconsObject, function (selector, v) {
     var prepend = true
-    var matches = v.match(/^([ap])\s*:(.+)$/)
-    if (matches) {
-      prepend = matches[1] === 'p'
-      v = matches[2]
+    var sMatches = selector.match(/(?:parent(\S+)\s)?(?:context(\S+)\s)?(.*)$/)
+    var vMatches = v.match(/^([ap])\s*:(.+)$/)
+    var $found
+    if (sMatches) {
+      if (sMatches[1] && $node.parent().filter(sMatches[1]).length === 0) {
+        return
+      }
+      if (sMatches[2]) {
+        $node = $node.filter(sMatches[2])
+      }
+      selector = sMatches[3]
     }
+    if (vMatches) {
+      prepend = vMatches[1] === 'p'
+      v = vMatches[2]
+    }
+    $found = $node.find(selector)
     prepend
-      ? $node.find(selector).prepend(v)
-      : $node.find(selector).append(v)
+      ? $found.prepend(v)
+      : $found.append(v)
   })
 }
 
@@ -54,33 +66,27 @@ export function enhance ($node) {
   })
 }
 
-export function enhanceInner ($nodeObj) {
-  var $inner = $nodeObj.find('> .object-inner')
-  var accessible = $nodeObj.data('accessible')
-  var hiddenInterfaces = []
+export function enhanceInner ($obj) {
+  var $inner = $obj.find('> .object-inner')
+  var accessible = $obj.data('accessible')
   var callPostToggle = null // or "local", or "allDesc"
-  if ($nodeObj.is('.enhanced')) {
+  if ($obj.is('.enhanced')) {
     return
   }
-  if ($inner.find('> .method[data-implements]').hide().length) {
-    // linkify visibility
-    $inner.find('> .method[data-implements]').each(function () {
-      var iface = $(this).data('implements')
-      if (hiddenInterfaces.indexOf(iface) < 0) {
-        hiddenInterfaces.push(iface)
-      }
-    })
-    $.each(hiddenInterfaces, function (i, iface) {
-      $inner.find('> .interface').each(function () {
-        var html = '<span class="toggle-off" data-toggle="interface" data-interface="' + iface + '" title="toggle methods">' +
-            '<i class="fa fa-eye-slash"></i>' + iface + '</span>'
-        if ($(this).text() === iface) {
-          $(this).html(html)
-        }
-      })
-    })
-    callPostToggle = 'local'
-  }
+  $inner.find('> dd > ul > li > .interface, > dd > ul > li > .interface + ul .interface').each(function () {
+    var iface = $(this).text()
+    if (findInterfaceMethods($obj, iface).length === 0) {
+      return
+    }
+    $(this)
+      .addClass('toggle-on')
+      .prop('title', 'toggle interface methods')
+      .attr('data-toggle', 'interface')
+      .attr('data-interface', iface)
+  }).filter('.toggle-off').removeClass('toggle-off').each(function () {
+    // element may have toggle-off to begin with...
+    toggleInterface(this)
+  })
   $inner.find('> .private, > .protected')
     .filter('.magic, .magic-read, .magic-write')
     .removeClass('private protected')
@@ -92,9 +98,9 @@ export function enhanceInner ($nodeObj) {
   addIcons($inner)
   $inner.find('> .property.forceShow').show().find('> .t_array').debugEnhance('expand')
   if (callPostToggle) {
-    postToggle($nodeObj, callPostToggle === 'allDesc')
+    postToggle($obj, callPostToggle === 'allDesc')
   }
-  $nodeObj.addClass('enhanced')
+  $obj.addClass('enhanced')
 }
 
 /**
@@ -105,7 +111,7 @@ function visToggles ($inner, accessible) {
     hasProtected: $inner.children('.protected').not('.magic, .magic-read, .magic-write').length > 0,
     hasPrivate: $inner.children('.private').not('.magic, .magic-read, .magic-write').length > 0,
     hasExcluded: $inner.children('.debuginfo-excluded').hide().length > 0,
-    hasInherited: $inner.children('.inherited').length > 0
+    hasInherited: $inner.children('dd[data-inherited-from]').length > 0
   }
   var toggleClass = accessible === 'public'
     ? 'toggle-off'
@@ -135,17 +141,28 @@ function visToggles ($inner, accessible) {
 
 function toggleInterface (toggle) {
   var $toggle = $(toggle)
-  var iface = $toggle.data('interface')
   var $obj = $toggle.closest('.t_object')
-  var $methods = $obj.find('> .object-inner > dd[data-implements=' + iface + ']')
-  if ($toggle.is('.toggle-off')) {
-    $toggle.addClass('toggle-on').removeClass('toggle-off')
-    $methods.show()
-  } else {
-    $toggle.addClass('toggle-off').removeClass('toggle-on')
-    $methods.hide()
-  }
+  $toggle = $toggle.is('.toggle-off')
+    ? $toggle.add($toggle.next().find('.toggle-off'))
+    : $toggle.add($toggle.next().find('.toggle-on'))
+  $toggle.each(function () {
+    var $toggle = $(this)
+    var iface = $toggle.data('interface')
+    var $methods = findInterfaceMethods($obj, iface)
+    if ($toggle.is('.toggle-off')) {
+      $toggle.addClass('toggle-on').removeClass('toggle-off')
+      $methods.show()
+    } else {
+      $toggle.addClass('toggle-off').removeClass('toggle-on')
+      $methods.hide()
+    }
+  })
   postToggle($obj)
+}
+
+function findInterfaceMethods ($obj, iface) {
+    var selector = '> .object-inner > dd[data-implements="' + CSS.escape(iface) + '"]'
+    return $obj.find(selector)
 }
 
 /**
@@ -159,7 +176,7 @@ function toggleVis (toggle) {
   var $objInner = $obj.find('> .object-inner')
   var $toggles = $objInner.find('[data-toggle=vis][data-vis=' + vis + ']')
   var selector = vis === 'inherited'
-    ? '.inherited, .private-ancestor'
+    ? 'dd[data-inherited-from], .private-ancestor'
     : '.' + vis
   var $nodes = $objInner.find(selector)
   var show = $toggle.hasClass('toggle-off')
@@ -186,7 +203,7 @@ function toggleVisNodes ($nodes) {
       var isOn = $toggle.hasClass('toggle-on')
       var vis = $toggle.data('vis')
       var filter = vis === 'inherited'
-        ? '.inherited, .private-ancestor'
+        ? 'dd[data-inherited-from], .private-ancestor'
         : '.' + vis
       if (!isOn && $node.filter(filter).length === 1) {
         show = false
@@ -203,12 +220,25 @@ function postToggle ($obj, allDescendants) {
   var selector = allDescendants
     ? '.object-inner > dt'
     : '> .object-inner > dt'
+  var selector2 = allDescendants
+    ? '.object-inner > .heading'
+    : '> .object-inner > .heading'
   $obj.find(selector).each(function (i, dt) {
     var $dds = $(dt).nextUntil('dt')
+    var $ddsVis = $dds.not('.heading').filter(function (index, node) {
+      return $(node).css('display') !== 'none'
+    })
+    var allHidden = $dds.length > 0 && $ddsVis.length === 0
+    $(dt).toggleClass('text-muted', allHidden)
+  })
+  $obj.find(selector2).each(function (i, heading) {
+    var $dds = $(heading).nextUntil('dt, .heading')
     var $ddsVis = $dds.filter(function (index, node) {
       return $(node).css('display') !== 'none'
     })
-    $(dt).toggleClass('text-muted', $dds.length > 0 && $ddsVis.length === 0)
+    var allHidden = $dds.length > 0 && $ddsVis.length === 0
+    $(heading).toggleClass('text-muted', allHidden)
   })
+
   $obj.trigger('expanded.debug.object')
 }

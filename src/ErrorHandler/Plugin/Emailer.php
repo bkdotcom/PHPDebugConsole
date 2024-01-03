@@ -233,7 +233,8 @@ class Emailer extends AbstractComponent implements SubscriberInterface
                 'referer: ' . (isset($this->serverParams['HTTP_REFERER'])
                     ? $this->serverParams['HTTP_REFERER']
                     : 'null'),
-                'request_uri: ' . $this->serverParams['REQUEST_URI'],
+                'request method: ' . $this->serverParams['REQUEST_METHOD'],
+                'request uri: ' . $this->serverParams['REQUEST_URI'],
             )) . "\n";
         }
         return $string;

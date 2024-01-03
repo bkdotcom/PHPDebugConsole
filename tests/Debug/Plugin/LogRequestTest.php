@@ -108,6 +108,7 @@ class LogRequestTest extends DebugTestFramework
                 'meta' => array(
                     'channel' => 'Request / Response',
                     'detectFiles' => false,
+                    'evalLine' => null,
                     'file' => null,
                     'line' => null,
                     'uncollapse' => true,
@@ -425,6 +426,7 @@ class LogRequestTest extends DebugTestFramework
                 'meta' => array(
                     'channel' => 'Request / Response',
                     'detectFiles' => false,
+                    'evalLine' => null,
                     'file' => null,
                     'line' => null,
                     'uncollapse' => true,
@@ -531,6 +533,7 @@ class LogRequestTest extends DebugTestFramework
                 'meta' => array(
                     'channel' => 'Request / Response',
                     'detectFiles' => false,
+                    'evalLine' => null,
                     'file' => null,
                     'line' => null,
                     'uncollapse' => true,

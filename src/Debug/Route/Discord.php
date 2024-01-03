@@ -120,7 +120,7 @@ class Discord extends AbstractRoute
                         . ' ' . $this->debug->redact((string) $this->debug->serverRequest->getUri())
                 ) . "\n"
                 . $error->getMessageText() . "\n"
-                . $error['file'] . ' (line ' . $error['line'] . ')',
+                . $error['fileAndLine'],
         );
     }
 

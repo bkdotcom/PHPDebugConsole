@@ -74,12 +74,30 @@ class Abstracter extends AbstractComponent
     protected $cfg = array(
         'brief' => false, // collect & output less details
         'fullyQualifyPhpDocType' => false,
+        'interfacesCollapse' => array(
+            'ArrayAccess',
+            'BackedEnum',
+            'Countable',
+            'Iterator',
+            'IteratorAggregate',
+            'UnitEnum',
+        ),
         'maxDepth' => 0, // value < 1 : no max-depth
+        'objectSectionOrder' => array(
+            'attributes',
+            'extends',
+            'implements',
+            'constants',
+            'cases',
+            'properties',
+            'methods',
+            'phpDoc',
+        ),
         'objectsExclude' => array(
             // __NAMESPACE__ added in constructor
             'DOMNode',
         ),
-        'objectSort' => 'visibility',   // none, visibility, or name
+        'objectSort' => 'inheritance visibility name',
         'objectsWhitelist' => null,     // will be used if array
         'stringMaxLen' => array(
             'base64' => 156, // 2 lines of chunk_split'ed
@@ -470,7 +488,6 @@ class Abstracter extends AbstractComponent
         $debugClass = \get_class($this->debug);
         if (!\array_intersect(array('*', $debugClass), $this->cfg['objectsExclude'])) {
             $this->cfg['objectsExclude'][] = $debugClass;
-            $cfg['objectsExclude'] = $this->cfg['objectsExclude'];
         }
         if (isset($cfg['stringMaxLen'])) {
             if (\is_array($cfg['stringMaxLen']) === false) {
@@ -478,14 +495,18 @@ class Abstracter extends AbstractComponent
                     'other' => $cfg['stringMaxLen'],
                 );
             }
-            $cfg['stringMaxLen'] = \array_merge($prev['stringMaxLen'], $cfg['stringMaxLen']);
-            $this->cfg['stringMaxLen'] = $cfg['stringMaxLen'];
+            $this->cfg['stringMaxLen'] = \array_merge($prev['stringMaxLen'], $cfg['stringMaxLen']);
         }
         if (isset($cfg['stringMinLen'])) {
-            $cfg['stringMinLen'] = \array_merge($prev['stringMinLen'], $cfg['stringMinLen']);
-            $this->cfg['stringMinLen'] = $cfg['stringMinLen'];
+            $this->cfg['stringMinLen'] = \array_merge($prev['stringMinLen'], $cfg['stringMinLen']);
         }
-        $this->setCfgDependencies($cfg);
+        if (isset($cfg['objectSectionOrder'])) {
+            $oso = \array_intersect($cfg['objectSectionOrder'], $prev['objectSectionOrder']);
+            $oso = \array_merge($oso, $prev['objectSectionOrder']);
+            $oso = \array_unique($oso);
+            $this->cfg['objectSectionOrder'] = $oso;
+        }
+        $this->setCfgDependencies(\array_intersect_key($this->cfg, $cfg));
     }
 
     /**

@@ -15,10 +15,11 @@
   $error-fg: #d8000c;
   $warn-bg: #fefbe5;
   $warn-fg: #8a6d3b;
+  $color-header: purple;
 
   $grey-text: #6e6e6e;
   $lite-grey: #f3f3f3;
-  $text-muted: #777;
+  // $text-muted: #777;
   $border-color: #d0d0d0;
   $lite-blue: #dde6f0;
 
@@ -35,9 +36,16 @@
 
   ul {
     &.debug-log-summary {
+      /*
       margin-bottom: 0.75em;
       &:empty {
         margin-bottom: 0;
+      }
+      */
+      + hr {
+        border-top: 1px dotted;
+        background-color: transparent;
+        margin: .5em 0;
       }
     }
   }

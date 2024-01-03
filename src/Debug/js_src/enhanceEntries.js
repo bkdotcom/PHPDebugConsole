@@ -154,9 +154,9 @@ function onExpanded (e) {
   } else if ($target.hasClass('t_object')) {
     // e.namespace = debug.object
     $strings = $target.find('> .object-inner')
-      .find('> dd.constant > .t_string,' +
-        ' > dd.property:visible > .t_string,' +
-        ' > dd.method > .t_string')
+      .find(['> dd.constant > .t_string',
+        '> dd.property:visible > .t_string',
+        '> dd.method > ul > li > .t_string.return-value'].join(', '))
   } else {
     $strings = $()
   }
@@ -311,9 +311,14 @@ function enhanceArrayIsExpanded ($node) {
 
 function enhanceEntryDefault ($entry) {
   // regular log-type entry
+  var title
   if ($entry.data('file')) {
     if (!$entry.attr('title')) {
-      $entry.attr('title', $entry.data('file') + ': line ' + $entry.data('line'))
+      title = $entry.data('file') + ': line ' + $entry.data('line')
+      if ($entry.data('evalline')) {
+        title += ' (eval\'d line ' + $entry.data('evalline') + ')'
+      }
+      $entry.attr('title', title)
     }
     fileLinks.create($entry)
   }

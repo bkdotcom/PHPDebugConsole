@@ -67,8 +67,21 @@ class ChannelTest extends DebugTestFramework
                     array('group', array('main: sum 0 / group 1 / group 2'), array()),
                     array('log', array('main: sum 0 / group 1 / group 2 / log'), array()),
                     array('log', array('foo: sum 0 / group 1 / group 2 / log'), array('channel' => 'general.foo')),
-                    array('error', array('main: error'), array('detectFiles' => true, 'file' => __FILE__, 'line' => $info['lines'][0], 'uncollapse' => true,)),
-                    array('error', array('foo: error'), array('channel' => 'general.foo', 'detectFiles' => true, 'file' => __FILE__, 'line' => $info['lines'][1], 'uncollapse' => true,)),
+                    array('error', array('main: error'), array(
+                        'detectFiles' => true,
+                        'evalLine' => null,
+                        'file' => __FILE__,
+                        'line' => $info['lines'][0],
+                        'uncollapse' => true,
+                    )),
+                    array('error', array('foo: error'), array(
+                        'channel' => 'general.foo',
+                        'detectFiles' => true,
+                        'evalLine' => null,
+                        'file' => __FILE__,
+                        'line' => $info['lines'][1],
+                        'uncollapse' => true,
+                    )),
                     array('groupEnd', array(), array()),
                     array('groupEnd', array(), array('channel' => 'general.foo')),
                 ),
@@ -118,6 +131,7 @@ class ChannelTest extends DebugTestFramework
                     array(
                         'bitmask' => Debug::CLEAR_ALL,
                         'channel' => 'general.foo',
+                        'evalLine' => null,
                         'file' => __FILE__,
                         'flags' => array(
                             'alerts' => true,
@@ -137,7 +151,13 @@ class ChannelTest extends DebugTestFramework
                 0 => array(
                     array('group', array('main: sum 0 / group 1 / group 2'), array()),
                     array('log', array('main: sum 0 / group 1 / group 2 / log'), array()),
-                    array('error', array('main: error'), array('detectFiles' => true, 'file' => __FILE__, 'line' => $info['lines'][0], 'uncollapse' => true)),
+                    array('error', array('main: error'), array(
+                        'detectFiles' => true,
+                        'evalLine' => null,
+                        'file' => __FILE__,
+                        'line' => $info['lines'][0],
+                        'uncollapse' => true,
+                    )),
                     array('groupEnd', array(), array()),
                 ),
                 1 => array(
@@ -184,6 +204,7 @@ class ChannelTest extends DebugTestFramework
                                 </ul>
                             </li>
                         </ul>
+                        <hr />
                         <ul class="debug-log group-body">
                             <li class="expanded m_group" data-channel="general.foo">
                                 <div class="group-header"><span class="font-weight-bold group-label">foo: group / group</span></div>
@@ -236,6 +257,7 @@ EOD;
                                 </ul>
                             </li>
                         </ul>
+                        <hr />
                         <ul class="debug-log group-body">
                             <li class="m_log"><span class="no-quotes t_string">main: log</span></li>
                             <li class="expanded m_group">

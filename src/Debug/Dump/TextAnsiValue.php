@@ -254,21 +254,11 @@ class TextAnsiValue extends TextValue
      */
     protected function dumpPropPrefix(array $info)
     {
-        $info = \array_filter(array(
-            'inherited' => $info['isInherited'],
-            'isDynamic' => $info['declaredLast'] === null
-                && $info['valueFrom'] === 'value'
-                && $info['className'] !== 'stdClass',
-            'overrides' => $info['isInherited'] === false && $info['declaredPrev'],
+        return \strtr(parent::dumpPropPrefix($info), array(
+            '↳' => $this->cfg['escapeCodes']['muted'] . '↳' . $this->escapeReset,
+            '⚠' => $this->cfg['escapeCodesMethods']['warn'] . '⚠' . $this->escapeReset,
+            '⟳' => $this->cfg['escapeCodes']['muted'] . '⟳' . $this->escapeReset,
         ));
-        $prefixes = \array_intersect_key(array(
-            'inherited' => $this->cfg['escapeCodes']['muted'] . '↳' . $this->escapeReset,
-            'isDynamic' => $this->cfg['escapeCodesMethods']['warn'] . '⚠' . $this->escapeReset,
-            'overrides' => $this->cfg['escapeCodes']['muted'] . '⟳' . $this->escapeReset,
-        ), $info);
-        return $prefixes
-            ? \implode(' ', $prefixes) . ' '
-            : '';
     }
 
     /**

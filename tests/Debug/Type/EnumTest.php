@@ -72,15 +72,18 @@ class EnumTest extends DebugTestFramework
                             ),
                         ), $cases);
                     },
-                    'html' => '<li class="m_log"><div class="t_object" data-accessible="public"><span class="t_const" title="The most important meal
+                    'html' => '<li class="m_log"><div class="groupByInheritance t_object" data-accessible="public"><span class="t_const" title="The most important meal
                         Meals PHPDoc"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\Enum\</span>Meals</span><span class="t_operator">::</span><span class="t_identifier">BREAKFAST</span></span>
                         <dl class="object-inner">
                         <dt class="modifiers">modifiers</dt>
                         <dd class="t_modifier_final">final</dd>
-                        <dt>implements</dt>
-                        <dd class="interface"><span class="classname">UnitEnum</span></dd>
                         <dt class="attributes">attributes</dt>
                         <dd class="attribute"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\Enum\</span>ExampleAttribute</span></dd>
+                        <dt>implements</dt>
+                        <dd><ul class="list-unstyled">
+                            <li><span class="interface toggle-off"><span class="classname">UnitEnum</span></span></li>
+                        </ul>
+                        </dd>
                         <dt class="constants">constants</dt>
                         <dd class="constant public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string">ENUM_VALUE</span> <span class="t_operator">=</span> <div class="t_object" data-accessible="public"><span class="t_const" title="What&#039;s for dinner?
                             Meals PHPDoc"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\Enum\</span>Meals</span><span class="t_operator">::</span><span class="t_identifier">DINNER</span></span></div></dd>
@@ -171,13 +174,19 @@ class EnumTest extends DebugTestFramework
                             ),
                         ), $cases);
                     },
-                    'html' => '<li class="m_log"><div class="t_object" data-accessible="public"><span class="t_const"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\Enum\</span>MealsBacked</span><span class="t_operator">::</span><span class="t_identifier">BREAKFAST</span></span>
+                    'html' => '<li class="m_log"><div class="groupByInheritance t_object" data-accessible="public"><span class="t_const"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\Enum\</span>MealsBacked</span><span class="t_operator">::</span><span class="t_identifier">BREAKFAST</span></span>
                         <dl class="object-inner">
                         <dt class="modifiers">modifiers</dt>
                         <dd class="t_modifier_final">final</dd>
                         <dt>implements</dt>
-                        <dd class="interface"><span class="classname">BackedEnum</span></dd>
-                        <dd class="interface"><span class="classname">UnitEnum</span></dd>
+                        <dd><ul class="list-unstyled">
+                            <li><span class="interface toggle-off"><span class="classname">BackedEnum</span></span>
+                                <ul class="list-unstyled">
+                                    <li><span class="interface toggle-off"><span class="classname">UnitEnum</span></span></li>
+                                </ul>
+                            </li>
+                        </ul>
+                        </dd>
                         <dt class="constants">constants</dt>
                         <dd class="constant public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string">ENUM_VALUE</span> <span class="t_operator">=</span> <div class="t_object" data-accessible="public"><span class="t_const"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\Enum\</span>MealsBacked</span><span class="t_operator">::</span><span class="t_identifier">DINNER</span></span></div></dd>
                         <dd class="constant public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string">REGULAR_CONSTANT</span> <span class="t_operator">=</span> <span class="t_string">test</span></dd>

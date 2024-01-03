@@ -34,6 +34,7 @@ class HtmlTest extends DebugTestFramework
 <li class="m_info"><span class="no-quotes t_string">Built In %f %s</span></li>
 <li class="m_info"><span class="no-quotes t_string">Peak Memory Usage <span title="Includes debug overhead">?&#x20dd;</span>: %s / %s</span></li>
 %A</ul>
+<hr />
 <ul class="debug-log group-body"></ul>
 </div>
 </div>

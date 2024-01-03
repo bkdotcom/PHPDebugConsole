@@ -64,9 +64,11 @@ class Basic implements SubscriberInterface
         if (!$args) {
             // add default message
             $callerInfo = $this->debug->backtrace->getCallerInfo();
+            $fileAndLine = \sprintf('%s (line %s, eval\'d line %s)', $callerInfo['file'], $callerInfo['line'], $callerInfo['evalLine']);
+            $fileAndLine = \str_replace(', eval\'d line )', ')', $fileAndLine);
             $args = array(
                 'Assertion failed:',
-                \sprintf('%s (line %s)', $callerInfo['file'], $callerInfo['line']),
+                $fileAndLine,
             );
             $logEntry->setMeta('detectFiles', true);
         }
@@ -258,23 +260,27 @@ class Basic implements SubscriberInterface
      */
     protected function doError($method, $args)
     {
+        $default = "\x00default\x00";
         $logEntry = new LogEntry(
             $this->debug,
             $method,
             $args,
             array(
                 'detectFiles' => true,
+                'evalLine' => null,
+                'file' => $default,
+                'line' => null,
                 'uncollapse' => true,
             )
         );
         // file & line meta may -already be set (ie coming via errorHandler)
         // file & line may also be defined as null
-        $default = "\x00default\x00";
         if ($logEntry->getMeta('file', $default) === $default) {
             $callerInfo = $this->debug->backtrace->getCallerInfo();
             $logEntry->setMeta(array(
+                'evalLine' => $callerInfo['evalLine'],
                 'file' => $callerInfo['file'],
-                'line' => $callerInfo['evalLine'] ?: $callerInfo['line'],
+                'line' => $callerInfo['line'],
             ));
         }
         $this->appendLog($logEntry);

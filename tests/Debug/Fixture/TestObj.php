@@ -87,10 +87,15 @@ class TestObj extends TestBase
     /**
      * toString magic method
      *
+     * Long Description
+     *
      * @return string
+     *
+     * @throws \Exception when toStrThrow is `1`
      */
     public function __toString()
     {
+        static $static = 'I\'m static';
         if ($this->toStrThrow === 1) {
             throw new \Exception('thown exception');
         }
@@ -121,15 +126,19 @@ class TestObj extends TestBase
     /**
      * This method is public
      *
-     * @param SomeClass $param1 first param
-     *                      two-line description!
-     * @param array     $param2 second param
+     * @param stdClass $param1 first param
+     *                     two-line description!
+     * @param array    $param2 second param
      *
      * @return     void
      * @deprecated this method is bad and should feel bad
      */
-    final public function methodPublic(\SomeClass $param1, array $param2 = array())
+    final public function methodPublic(\stdClass $param1, array $param2 = array())
     {
+        static $foo = 42;
+        static $bar = 'test';
+        static $baz = null;
+        $baz = $this; // test for recursion
     }
 
     /**

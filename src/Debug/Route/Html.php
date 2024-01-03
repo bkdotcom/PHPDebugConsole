@@ -46,7 +46,7 @@ class Html extends AbstractRoute
             'drawer' => true,
             'filepathCss' => __DIR__ . '/../css/Debug.css',
             'filepathScript' => __DIR__ . '/../js/Debug.jquery.min.js',
-            'jqueryUrl' => '//ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js',
+            'jqueryUrl' => '//ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js',
             'outputCss' => true,
             'outputScript' => true,
             'sidebar' => true,

@@ -13,6 +13,7 @@
 namespace bdk\Debug\Abstraction\Object;
 
 use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Abstraction\AbstractObject;
 use bdk\Debug\Abstraction\Object\Helper;
 
 /**
@@ -133,7 +134,9 @@ class PropertiesPhpDoc
             $existing ?: Properties::buildPropValues(), // self::$basePropInfo
             array(
                 'declaredLast' => $declaredLast,
-                'desc' => $phpDocProp['desc'],
+                'desc' => $abs['cfgFlags'] & AbstractObject::PHPDOC_COLLECT
+                    ? $phpDocProp['desc']
+                    : null,
                 'type' => $phpDocProp['type'],
                 'visibility' => $existing
                     ? array($vis, $existing['visibility']) // we want "magic" visibility first

@@ -274,6 +274,7 @@ EOD;
                 "meta": {
                     "channel": "general.MySqli",
                     "detectFiles": true,
+                    "evalLine": null,
                     "file": "{$file}",
                     "line": {$line},
                     "uncollapse": false
@@ -285,6 +286,7 @@ EOD;
                 "meta": {
                     "channel": "general.MySqli",
                     "detectFiles": true,
+                    "evalLine": null,
                     "file": "{$file}",
                     "line": {$line},
                     "uncollapse": false
@@ -404,6 +406,7 @@ EOD;
                 "meta": {
                     "channel": "general.MySqli",
                     "detectFiles": true,
+                    "evalLine": null,
                     "file": "%s",
                     "line": {$line},
                     "uncollapse": false
@@ -421,6 +424,7 @@ EOD;
                 "meta": {
                     "channel": "general.MySqli",
                     "detectFiles": true,
+                    "evalLine": null,
                     "file": "%s",
                     "line": {$line},
                     "uncollapse": false
@@ -490,6 +494,7 @@ EOD;
             'meta' => array(
                 'channel' => 'general.MySqli',
                 'detectFiles' => true,
+                'evalLine' => null,
                 'file' => __FILE__,
                 'line' => $line,
                 'uncollapse' => true,
@@ -563,6 +568,7 @@ EOD;
                 'meta' => array(
                     'channel' => 'general.MySqli',
                     'detectFiles' => true,
+                    'evalLine' => null,
                     'file' => __FILE__,
                     'line' => $line,
                     'uncollapse' => true,
@@ -770,6 +776,7 @@ EOD;
                 "meta": {
                     "channel": "general.MySqli",
                     "detectFiles": true,
+                    "evalLine": null,
                     "file": "%s",
                     "line": $line,
                     "uncollapse": true

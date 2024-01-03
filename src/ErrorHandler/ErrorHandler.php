@@ -335,7 +335,7 @@ class ErrorHandler extends AbstractErrorHandler
     public function setErrorCaller($caller = null, $offset = 0)
     {
         if ($caller === null) {
-            $backtrace = \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, $offset + 3);
+            $backtrace = \bdk\Backtrace::get(null, $offset + 3);
             $index = isset($backtrace[$offset + 1])
                 ? $offset + 1
                 : \count($backtrace) - 1;
@@ -343,6 +343,7 @@ class ErrorHandler extends AbstractErrorHandler
                 ? $backtrace[$index]
                 : $backtrace[$index + 1]; // likely called via call_user_func.. need to go one more to get calling file & line
             $caller = array(
+                'evalLine' => $caller['evalLine'],
                 'file' => $caller['file'],
                 'line' => $caller['line'],
             );

@@ -59,13 +59,54 @@ class Properties extends Inheritable
     }
 
     /**
-     * Add property instance info/values to abstraction
+     * Add declared property info
      *
      * @param Abstraction $abs Object Abstraction instance
      *
      * @return void
      */
     public function add(Abstraction $abs)
+    {
+        $this->addViaRef($abs);
+        $this->phpDoc->addViaPhpDoc($abs); // magic properties documented via phpDoc
+
+        $properties = $abs['properties'];
+
+        // note: for user-defined classes getDefaultProperties
+        //   will return the current value for static properties
+        $defaultValues = $abs['reflector']->getDefaultProperties();
+        foreach ($defaultValues as $name => $value) {
+            $properties[$name]['value'] = $value;
+        }
+
+        if ($abs['isAnonymous']) {
+            $properties['debug.file'] = static::buildPropValues(array(
+                'type' => Abstracter::TYPE_STRING,
+                'value' => $abs['definition']['fileName'],
+                'valueFrom' => 'debug',
+                'visibility' => 'debug',
+            ));
+            $properties['debug.line'] = static::buildPropValues(array(
+                'type' => Abstracter::TYPE_INT,
+                'value' => (int) $abs['definition']['startLine'],
+                'valueFrom' => 'debug',
+                'visibility' => 'debug',
+            ));
+        }
+
+        $abs['properties'] = $properties;
+
+        $this->crate($abs);
+    }
+
+    /**
+     * Add property instance info/values to abstraction
+     *
+     * @param Abstraction $abs Object Abstraction instance
+     *
+     * @return void
+     */
+    public function addInstance(Abstraction $abs)
     {
         if ($abs['isTraverseOnly']) {
             return;
@@ -76,25 +117,6 @@ class Properties extends Inheritable
             $this->addDebug($abs); // use __debugInfo() values if useDebugInfo' && method exists
         }
         $this->crate($abs);
-    }
-
-    /**
-     * Add declared property info
-     *
-     * @param Abstraction $abs Object Abstraction instance
-     *
-     * @return void
-     */
-    public function addClass(Abstraction $abs)
-    {
-        $this->addViaRef($abs);
-        $this->phpDoc->addViaPhpDoc($abs); // magic properties documented via phpDoc
-        $defaultValues = $abs['reflector']->getDefaultProperties();
-        $properties = $abs['properties'];
-        foreach ($defaultValues as $name => $value) {
-            $properties[$name]['value'] = $value;
-        }
-        $abs['properties'] = $properties;
     }
 
     /**
@@ -300,14 +322,13 @@ class Properties extends Inheritable
     {
         $phpDoc = $this->helper->getPhpDocVar($refProperty, $abs['fullyQualifyPhpDocType']);
         $refProperty->setAccessible(true); // only accessible via reflection
-        /*
-            getDeclaringClass returns "LAST-declared/overriden"
-        */
         return static::buildPropValues(array(
             'attributes' => $abs['cfgFlags'] & AbstractObject::PROP_ATTRIBUTE_COLLECT
                 ? $this->helper->getAttributes($refProperty)
                 : array(),
-            'desc' => $phpDoc['desc'],
+            'desc' => $abs['cfgFlags'] & AbstractObject::PHPDOC_COLLECT
+                ? $phpDoc['desc']
+                : null,
             'isPromoted' =>  PHP_VERSION_ID >= 80000
                 ? $refProperty->isPromoted()
                 : false,
@@ -330,12 +351,8 @@ class Properties extends Inheritable
     private function crate(Abstraction $abs)
     {
         $properties = $abs['properties'];
-        $phpDocCollect = $abs['cfgFlags'] & AbstractObject::PHPDOC_COLLECT;
         foreach ($properties as $name => $info) {
             $info['value'] = $this->abstracter->crate($info['value'], $abs['debugMethod'], $abs['hist']);
-            if (!$phpDocCollect) {
-                $info['desc'] = null;
-            }
             $properties[$name] = $info;
         }
         $abs['properties'] = $properties;

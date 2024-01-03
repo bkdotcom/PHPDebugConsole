@@ -145,33 +145,35 @@ class Tabs
         $name = $debug->getCfg('channelName', Debug::CONFIG_DEBUG);
         $isActive = $debug === $this->debug;
         $this->route->setChannelRegex('#^' . \preg_quote($name, '#') . '(\.|$)#');
-        $str = '<div' . $this->debug->html->buildAttribString(array(
-            'class' => array(
-                $this->nameToClassname($name) => true,
-                'active' => $isActive,
-                'tab-pane' => true,
-                'tab-primary' => $isActive,
+        return $this->debug->html->buildTag(
+            'div',
+            array(
+                'class' => array(
+                    $this->nameToClassname($name) => true,
+                    'active' => $isActive,
+                    'tab-pane' => true,
+                    'tab-primary' => $isActive,
+                ),
+                'data-options' => array(
+                    'sidebar' => $this->route->getCfg('sidebar'),
+                ),
+                'role' => 'tabpanel',
             ),
-            'data-options' => array(
-                'sidebar' => $this->route->getCfg('sidebar'),
-            ),
-            'role' => 'tabpanel',
-        )) . ">\n";
-        $str .= '<div class="tab-body">' . "\n";
-
-        $str .= $this->route->processAlerts();
-        /*
-            If outputing script, initially hide the output..
-            this will help page load performance (fewer redraws)... by magnitudes
-        */
-        $str .= '<ul class="debug-log-summary group-body">' . "\n"
-            . $this->route->processSummary() . '</ul>' . "\n";
-        $str .= '<ul class="debug-log group-body">' . "\n"
-            . $this->route->processLog() . '</ul>' . "\n";
-
-        $str .= '</div>' . "\n"; // close .tab-body
-        $str .= '</div>' . "\n"; // close .tab-pane
-        return $str;
+            "\n" . '<div class="tab-body">' . "\n"
+            . $this->route->processAlerts()
+            /*
+                If outputing script, initially hide the output..
+                this will help page load performance (fewer redraws)... by magnitudes
+            */
+            . '<ul class="debug-log-summary group-body">' . "\n"
+                . $this->route->processSummary()
+                . '</ul>' . "\n"
+            . '<hr />' . "\n"
+            . '<ul class="debug-log group-body">' . "\n"
+                . $this->route->processLog()
+                . '</ul>' . "\n"
+            . '</div>' . "\n" // close .tab-body
+        ) . "\n";
     }
 
     /**

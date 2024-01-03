@@ -13,6 +13,7 @@
 namespace bdk\Debug\Dump\Html;
 
 use bdk\Debug\Abstraction\Abstracter;
+use bdk\Debug\Abstraction\AbstractObject;
 use bdk\Debug\Abstraction\Object\Abstraction as ObjectAbstraction;
 use bdk\Debug\Dump\Html\Helper;
 use bdk\Debug\Dump\Html\Value as ValDumper;
@@ -52,18 +53,67 @@ abstract class AbstractObjectSection
      */
     public function dumpItems(ObjectAbstraction $abs, $what, array $cfg)
     {
-        $html = '';
         $items = $abs->sort($abs[$what], $abs['sort']);
-        foreach ($items as $name => $info) {
-            $info = \array_merge(array(
-                'className' => $abs['className'],
-                'declaredLast' => null,
-                'declaredPrev' => null,
-            ), $info);
-            $info['isInherited'] = $info['declaredLast'] && $info['declaredLast'] !== $abs['className'];
-            $html .= $this->dumpItem($name, $info, $cfg) . "\n";
+        $cfg = \array_merge(array(
+            'groupByInheritance' => \strpos($abs['sort'], 'inheritance') === 0,
+            'objClassName' => $abs['className'],
+            'phpDocOutput' => $abs['cfgFlags'] & AbstractObject::PHPDOC_OUTPUT,
+        ), $cfg);
+        if ($cfg['groupByInheritance'] === false) {
+            return $this->dumpItemsFiltered($items, $cfg);
+        }
+        // group by inheritance... with headings
+        //   stop looping over classes when we've output everything
+        //   no sense in showing "inherited from" when no more inherited items
+        //   Or, we could only display the heading when itemsFiltered non-empty
+        $classes = $this->getInheritedClasses($abs, $what);
+        \array_unshift($classes, $abs['className']);
+        $html = '';
+        $itemCount = \count($items);
+        $itemOutCount = 0;
+        while ($classes && $itemOutCount < $itemCount) {
+            $classname = \array_shift($classes);
+            $itemsFiltered = \array_filter($items, static function ($info) use ($classname) {
+                return !isset($info['declaredLast']) || $info['declaredLast'] === $classname;
+            });
+            $items = \array_diff_key($items, $itemsFiltered);
+            $itemOutCount += \count($itemsFiltered);
+            $html .= \in_array($classname, array($abs['className'], 'stdClass'), true) === false
+                ? '<dd class="heading">Inherited from ' . $this->valDumper->markupIdentifier($classname) . '</dd>' . "\n"
+                : '';
+            $html .= $this->dumpItemsFiltered($itemsFiltered, $cfg);
         }
         return $html;
+    }
+
+    /**
+     * Get the extended classes we'll iterate over for "groupByInheritance"
+     *
+     * @param ObjectAbstraction $abs  Object abstraction
+     * @param string            $what 'cases', 'constants', 'properties', or 'methods'
+     *
+     * @return array
+     */
+    private function getInheritedClasses(ObjectAbstraction $abs, $what)
+    {
+        $classes = $abs['extends'];
+        if ($what !== 'constants') {
+            return $classes;
+        }
+        // constants can be defined in interface
+        $implements = $abs['implements'];
+        $implementsList = array();
+        while ($implements) {
+            $key = \key($implements);
+            $val = \array_shift($implements);
+            if (\is_array($val)) {
+                $implementsList[] = $key;
+                \array_splice($implements, 0, 0, $val);
+                continue;
+            }
+            $implementsList[] = $val;
+        }
+        return \array_merge($classes, $implementsList);
     }
 
     /**
@@ -77,11 +127,6 @@ abstract class AbstractObjectSection
      */
     protected function dumpItem($name, array $info, array $cfg)
     {
-        $vis = (array) $info['visibility'];
-        $info['isPrivateAncestor'] = \in_array('private', $vis, true) && $info['isInherited'];
-        if ($info['isPrivateAncestor']) {
-            $info['isInherited'] = false;
-        }
         return $this->html->buildTag(
             'dd',
             $this->getAttribs($info, $cfg),
@@ -94,7 +139,7 @@ abstract class AbstractObjectSection
      *
      * @param string $name Property name
      * @param array  $info Property info
-     * @param array  $cfg  options (currently just attributeOutput)
+     * @param array  $cfg  options
      *
      * @return string html fragment
      */
@@ -121,6 +166,34 @@ abstract class AbstractObjectSection
                 : '',
         ));
         return \implode(' ', $parts);
+    }
+
+    /**
+     * Iterate over cases, constants, properties, or methods
+     *
+     * @param array $items Cases, Constants, Properties, or Methods
+     * @param array $cfg   config options
+     *
+     * @return string
+     */
+    private function dumpItemsFiltered(array $items, array $cfg)
+    {
+        $html = '';
+        foreach ($items as $name => $info) {
+            $vis = (array) $info['visibility'];
+            $info = \array_merge(array(
+                'declaredLast' => null,
+                'declaredPrev' => null,
+                'objClassName' => $cfg['objClassName'],  // used by Properties to determine "isDynamic"
+            ), $info);
+            $info['isInherited'] = $info['declaredLast'] && $info['declaredLast'] !== $info['objClassName'];
+            $info['isPrivateAncestor'] = \in_array('private', $vis, true) && $info['isInherited'];
+            if ($info['isPrivateAncestor']) {
+                $info['isInherited'] = false;
+            }
+            $html .= $this->dumpItem($name, $info, $cfg) . "\n";
+        }
+        return $html;
     }
 
     /**

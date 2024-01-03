@@ -11,7 +11,7 @@ class Utility extends UtilityBase
     /**
      * {@inheritDoc}
      */
-    public static function gitBranch()
+    public static function gitBranch($dir = null)
     {
         return self::$gitBranch !== null
             ? self::$gitBranch

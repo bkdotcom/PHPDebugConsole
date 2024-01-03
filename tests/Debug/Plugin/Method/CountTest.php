@@ -45,13 +45,33 @@ class CountTest extends DebugTestFramework
         self::assertSame(array(
             array('count', array('count test',1), array()),
             array('count', array('count test',2), array()),
-            array('count', array('count',1), array('file' => __FILE__,'line' => $lines[1])),
-            array('count', array('count',1), array('file' => __FILE__,'line' => $lines[0])),
+            array('count', array('count',1), array(
+                'evalLine' => null,
+                'file' => __FILE__,
+                'line' => $lines[1],
+            )),
+            array('count', array('count',1), array(
+                'evalLine' => null,
+                'file' => __FILE__,
+                'line' => $lines[0],
+            )),
             array('count', array('count test', 3), array()),
-            array('count', array('count',2), array('file' => __FILE__,'line' => $lines[1])),
-            array('count', array('count',2), array('file' => __FILE__,'line' => $lines[0])),
+            array('count', array('count',2), array(
+                'evalLine' => null,
+                'file' => __FILE__,
+                'line' => $lines[1],
+            )),
+            array('count', array('count',2), array(
+                'evalLine' => null,
+                'file' => __FILE__,
+                'line' => $lines[0],
+            )),
             array('count', array('count test', 4), array()),
-            array('count', array('count',3), array('file' => __FILE__,'line' => $lines[1])),
+            array('count', array('count',3), array(
+                'evalLine' => null,
+                'file' => __FILE__,
+                'line' => $lines[1],
+            )),
             array('log', array('count_inc test', 3), array()),
             array('count', array('count_inc test',3), array()),
         ), $this->helper->deObjectifyData($this->debug->data->get('log'), false));
@@ -104,6 +124,7 @@ class CountTest extends DebugTestFramework
                         1,
                     ),
                     array(
+                        'evalLine' => null,
                         'file' => __FILE__,
                         'line' => $lines[1],
                     ),

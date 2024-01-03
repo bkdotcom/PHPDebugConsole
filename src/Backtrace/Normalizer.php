@@ -20,6 +20,7 @@ class Normalizer
 
     private static $frameDefault = array(
         'args' => array(),
+        'evalLine' => null,
         'file' => null,
         'function' => null,     // function, Class::function, or Class->function
         'line' => null,
@@ -42,7 +43,6 @@ class Normalizer
             'params' => null,
             'type' => null,
         );
-        $frameKeysKeep = \array_merge(self::$frameDefault, \array_flip(array('evalLine')));
         $count = \count($backtrace);
         $backtrace[] = array(); // add a frame so backtrace[$i + 1] is always a thing
         for ($i = 0; $i < $count; $i++) {
@@ -59,7 +59,7 @@ class Normalizer
                 // xdebug_get_function_stack
                 $frame['args'] = self::normalizeXdebugParams($frame['params']);
             }
-            $frame = \array_intersect_key($frame, $frameKeysKeep);
+            $frame = \array_intersect_key($frame, self::$frameDefault);
             \ksort($frame);
             self::$backtraceTemp[] = $frame;
         }
@@ -89,8 +89,8 @@ class Normalizer
             // reported line = line within eval
             // line inside paren is the line `eval` is on
             $frame['evalLine'] = $frame['line'];
-            $frame['line'] = (int) $matches[2];
             $frame['file'] = $matches[1];
+            $frame['line'] = (int) $matches[2];
             if (isset($frameNext['include_filename'])) {
                 // xdebug_get_function_stack puts the evaled code in include_filename
                 $frameNext['params'] = array($frameNext['include_filename']);

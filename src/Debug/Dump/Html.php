@@ -78,11 +78,7 @@ class Html extends Base
             'data-icon' => $meta['icon'],
         ), $meta['attribs']);
         $html = parent::processLogEntry($logEntry);
-        $html = \strtr($html, array(
-            ' data-channel="null"' => '',
-            ' data-detect-files="null"' => '',
-            ' data-icon="null"' => '',
-        ));
+        $html = \preg_replace('/ data-[-\w]+="null"/', '', $html);
         return $html . "\n";
     }
 
@@ -226,7 +222,9 @@ class Html extends Base
         if (isset($meta['file']) && $logEntry->getChannelName() !== $this->channelNameRoot . '.phpError') {
             // PHP errors will have file & line as one of the arguments
             //    so no need to store file & line as data args
+            $meta = \array_merge(array('evalLine' => null), $meta);
             $attribs = \array_merge(array(
+                'data-evalLine' => $meta['evalLine'],
                 'data-file' => $meta['file'],
                 'data-line' => $meta['line'],
             ), $attribs);

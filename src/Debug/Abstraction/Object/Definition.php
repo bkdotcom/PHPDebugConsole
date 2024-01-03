@@ -15,7 +15,9 @@ namespace bdk\Debug\Abstraction\Object;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
+use bdk\Debug\Abstraction\Object\Abstraction as ObjectAbstraction;
 use bdk\PubSub\ValueStore;
+use ReflectionClass;
 
 /**
  * Abstracter: Gather class definition info common across all instances
@@ -26,10 +28,11 @@ class Definition
     protected $debug;
     protected $helper;
     protected $methods;
+    protected $object;
     protected $properties;
 
     /** @var ValueStore|null base/default class values */
-    protected static $default;
+    protected $default;
 
     /**
      * @var array Array of key/values
@@ -41,15 +44,17 @@ class Definition
         'className' => "\x00default\x00",
         'constants' => array(),
         'definition' => array(
-            'extensionName' => '',
-            'fileName' => '',
-            'startLine' => 1,
+            'extensionName' => false,
+            'fileName' => false,
+            'startLine' => false,
         ),
         'extends' => array(),
         'implements' => array(),
+        'isAnonymous' => false,
         'isFinal' => false,
         'isReadOnly' => false,
         'methods' => array(),
+        'methodsWithStaticVars' => array(),
         'phpDoc' => array(
             'desc' => null,
             'summary' => null,
@@ -65,6 +70,7 @@ class Definition
     public function __construct(AbstractObject $abstractObject)
     {
         $this->debug = $abstractObject->debug;
+        $this->object = $abstractObject;
         $this->helper = $abstractObject->helper;
         $this->constants = $abstractObject->constants;
         $this->methods = $abstractObject->methods;
@@ -72,70 +78,33 @@ class Definition
     }
 
     /**
-     * Get class abstraction
-     *
-     * @param object $obj  Object being abstracted
-     * @param array  $info values already collected
-     *
-     * @return Abstraction
-     */
-    public function getAbstraction($obj, array $info = array())
-    {
-        $abs = $this->getAbstractionInit($info);
-        $abs->setSubject($obj);
-        $abs['fullyQualifyPhpDocType'] = $info['fullyQualifyPhpDocType'];
-        $abs['reflector'] = $info['reflector'];
-
-        $this->addDefinition($abs);
-        $this->addAttributes($abs);
-        $this->constants->add($abs);
-        $this->constants->addCases($abs);
-        $this->methods->add($abs);
-        $this->properties->addClass($abs);
-        if ($abs['className'] === 'Closure') {
-            // __incoke is "unique" per instance
-            $abs['methods']['__invoke'] = array();
-        }
-
-        unset($abs['fullyQualifyPhpDocType']);
-        unset($abs['reflector']);
-        return $abs;
-    }
-
-    /**
      * Get class ValueStore obj
      *
-     * @param object $obj  Object being abstracted
-     * @param array  $info Instance abstraction info
+     * @param object $obj    Object being abstracted
+     * @param array  $values Instance values
      *
      * @return ValueStore
      */
-    public function getValueStore($obj, array $info)
+    public function getAbstraction($obj, array $values)
     {
-        $className = $info['className'];
-        $reflector = $info['reflector'];
-        if ($info['isAnonymous']) {
-            if ($reflector->getParentClass() === false) {
-                return $this->getValueStoreDefault();
-            }
-            $reflector = $reflector->getParentClass();
-            $className = $reflector->getName();
-            $info['reflector'] = $reflector;
-        }
-        $dataPath = array('classDefinitions', $className);
+        $className = $values['className'];
+        $reflector = $values['reflector'];
+        $valueStoreKey = PHP_VERSION_ID >= 70000 && $reflector->isAnonymous()
+            ? $className . '|' . \md5($reflector->getName())
+            : $className;
+        $dataPath = array('classDefinitions', $valueStoreKey);
         $valueStore = $this->debug->data->get($dataPath);
         if ($valueStore) {
             return $valueStore;
         }
-        if (\array_filter(array($info['isMaxDepth'], $info['isExcluded']))) {
+        if (\array_filter(array($values['isMaxDepth'], $values['isExcluded']))) {
             return $this->getValueStoreDefault();
         }
-        $valueStore = new ValueStore();
-        $this->debug->data->set($dataPath, $valueStore);
-        $classAbs = $this->getAbstraction($obj, $info);
-        $valueStore->setValues($classAbs->getValues());
-        unset($valueStore['type']);
-        return $valueStore;
+        $abs = new ObjectAbstraction($this->getValueStoreDefault(), $this->getInitValues($values));
+        $abs->setSubject($obj);
+        $this->doAbstraction($abs);
+        $this->debug->data->set($dataPath, $abs);
+        return $abs;
     }
 
     /**
@@ -145,12 +114,22 @@ class Definition
      */
     public function getValueStoreDefault()
     {
-        if (self::$default) {
-            return self::$default;
+        if ($this->default) {
+            return $this->default;
         }
         $key = self::$values['className'];
-        $classValueStore = new ValueStore(self::$values);
-        self::$default = $classValueStore;
+        $classValueStore = new ValueStore(\array_merge(
+            self::$values,
+            array(
+                'isExcluded' => false,
+                'sectionOrder' => $this->object->getCfg('objectSectionOrder'),
+                'sort' => $this->object->getCfg('objectSort'),
+                'stringified' => null,
+                'traverseValues' => array(),
+                'viaDebugInfo' => false,
+            )
+        ));
+        $this->default = $classValueStore;
         $this->debug->data->set(array(
             'classDefinitions',
             $key,
@@ -161,22 +140,22 @@ class Definition
     /**
      * Collect class attributes
      *
-     * @param ValueStore $abs Object abstraction instance
+     * @param ValueStore $abs ValueStore instance
      *
      * @return void
      */
     public function addAttributes(ValueStore $abs)
     {
-        $reflector = $abs['reflector'];
-        $abs['attributes'] = $abs['cfgFlags'] & AbstractObject::OBJ_ATTRIBUTE_COLLECT
-            ? $this->helper->getAttributes($reflector)
-            : array();
+        if ($abs['cfgFlags'] & AbstractObject::OBJ_ATTRIBUTE_COLLECT) {
+            $reflector = $abs['reflector'];
+            $abs['attributes'] = $this->helper->getAttributes($reflector);
+        }
     }
 
     /**
      * Collect "definition" values
      *
-     * @param ValueStore $abs Object abstraction instance
+     * @param ValueStore $abs ValueStore instance
      *
      * @return void
      */
@@ -193,36 +172,134 @@ class Definition
     }
 
     /**
+     * Collect interfaces that object implements
+     *
+     * @param ValueStore $abs ValueStore instance
+     *
+     * @return void
+     */
+    public function addImplements(ValueStore $abs)
+    {
+        $abs['implements'] = $this->getInterfaces($abs['reflector']);
+    }
+
+    /**
+     * Collect phpDoc summary/description/params
+     *
+     * @param ValueStore $abs ValueStore instance
+     *
+     * @return void
+     */
+    public function addPhpDoc(ValueStore $abs)
+    {
+        $reflector = $abs['reflector'];
+        $fullyQualifyType = $abs['fullyQualifyPhpDocType'];
+        $phpDoc = $this->helper->getPhpDoc($reflector, $fullyQualifyType);
+        while (
+            ($reflector = $reflector->getParentClass())
+            && $phpDoc === array('desc' => null, 'summary' => null)
+        ) {
+            $phpDoc = $this->helper->getPhpDoc($reflector, $fullyQualifyType);
+        }
+        unset($phpDoc['method']);
+        // magic properties removed via PropertiesPhpDoc::addViaPhpDocIter
+        $abs['phpDoc'] = $phpDoc;
+    }
+
+    /**
+     * Collect runtime info
+     * attributes, constants, properties, methods, etc
+     *
+     * @param ObjectAbstraction $abs Object abstraction instance
+     *
+     * @return void
+     */
+    protected function doAbstraction(ObjectAbstraction $abs)
+    {
+        $this->addAttributes($abs);
+        $this->addDefinition($abs);
+        $this->addImplements($abs);
+        $this->addPhpDoc($abs);
+        $this->constants->add($abs);
+        $this->constants->addCases($abs);
+        $this->methods->add($abs);
+        $this->properties->add($abs);
+
+        if ($abs['className'] === 'Closure') {
+            // __invoke is "unique" per instance
+            $abs['methods']['__invoke'] = array();
+        }
+
+        $abs->clean();
+    }
+
+    /**
+     * Get a structured interface tree
+     *
+     * @param ReflectionClass $reflector ReflectionClass
+     *
+     * @return array
+     */
+    protected function getInterfaces(ReflectionClass $reflector)
+    {
+        $interfaces = array();
+        $remove = array();
+        foreach ($reflector->getInterfaces() as $classname => $refClass) {
+            if (\in_array($classname, $remove, true)) {
+                continue;
+            }
+            $extends = $refClass->getInterfaceNames();
+            if ($extends) {
+                $interfaces[$classname] = $this->getInterfaces($refClass);
+                $remove = \array_merge($remove, $extends);
+                continue;
+            }
+            $interfaces[] = $classname;
+        }
+        $remove = \array_unique($remove);
+        $interfaces = \array_diff_key($interfaces, \array_flip($remove));
+        // remove values... array_diff complains about array to string conversion
+        foreach ($remove as $classname) {
+            $key = \array_search($classname, $interfaces, true);
+            if ($key !== false) {
+                unset($interfaces[$key]);
+            }
+        }
+        return $interfaces;
+    }
+
+    /**
      * Initialize class definition abstraction
      *
-     * @param array $info values already collected
+     * @param array $values values already collected
      *
      * @return Absttraction
      */
-    protected function getAbstractionInit(array $info)
+    protected function getInitValues(array $values)
     {
-        $reflector = $info['reflector'];
-        $interfaceNames = $reflector->getInterfaceNames();
-        \sort($interfaceNames);
+        $reflector = $values['reflector'];
+        $isAnonymous = PHP_VERSION_ID >= 70000 && $reflector->isAnonymous();
         $values = \array_merge(
             self::$values,
             array(
-                'cfgFlags' => $info['cfgFlags'],
-                'className' => $reflector->getName(),
-                'implements' => $interfaceNames,
+                'cfgFlags' => $values['cfgFlags'],
+                'className' => $isAnonymous
+                    ? $values['className'] . '|' . \md5($reflector->getName())
+                    : $values['className'],
+                'isAnonymous' => $isAnonymous,
                 'isFinal' => $reflector->isFinal(),
                 'isReadOnly' => PHP_VERSION_ID >= 80200 && $reflector->isReadOnly(),
-                'phpDoc' => $this->helper->getPhpDoc($reflector, $info['fullyQualifyPhpDocType']),
+            ),
+            array(
+                // these are temporary values available during abstraction
+                'fullyQualifyPhpDocType' => $values['fullyQualifyPhpDocType'],
+                'hist' => array(),
+                'reflector' => $values['reflector'],
             )
         );
         while ($reflector = $reflector->getParentClass()) {
-            if ($values['phpDoc'] === array('desc' => null, 'summary' => null)) {
-                $values['phpDoc'] = $this->helper->getPhpDoc($reflector, $info['fullyQualifyPhpDocType']);
-            }
             $values['extends'][] = $reflector->getName();
         }
-        unset($values['phpDoc']['method']);
-        // magic properties removed via PropertiesPhpDoc::addViaPhpDocIter
-        return new Abstraction(Abstracter::TYPE_OBJECT, $values);
+        return $values;
     }
 }

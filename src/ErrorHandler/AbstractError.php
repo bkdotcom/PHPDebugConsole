@@ -130,9 +130,10 @@ class AbstractError extends Event
      */
     private function assertValues($values)
     {
-        $values = \array_merge($this->values, $values);
         $keysMustHave = array('type', 'message', 'file', 'line');
-        $keys = \array_keys(\array_filter($values));
+        $values = \array_merge($this->values, $values);
+        $valuesCheck = \array_intersect_key($values, \array_flip($keysMustHave));
+        $keys = \array_keys(\array_filter($valuesCheck, 'strlen'));
         if (\array_intersect($keysMustHave, $keys) !== $keysMustHave) {
             throw new InvalidArgumentException('Error values must include: type, message, file, & line');
         }

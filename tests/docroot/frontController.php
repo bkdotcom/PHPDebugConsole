@@ -8,6 +8,10 @@
 
 require __DIR__ . '/../../vendor/autoload.php';
 
+if (!\defined('STDERR')) {
+    \define('STDERR', \fopen('php://stderr', 'wb'));
+}
+
 $serverRequest = \bdk\HttpMessage\ServerRequest::fromGlobals();
 $serverParams = $serverRequest->getServerParams();
 $requestUri = $serverRequest->getUri();
@@ -25,8 +29,8 @@ if (\class_exists('bdk\\Debug')) {
             $requestUri,
             $error['typeStr'] . ': ' . $error['file'] . '(' . $error['line'] . ') ' . $error['message']
         );
-        \fwrite(STDERR, "\e[38;5;250m" . $logEntry . "\e[0m" . "\n");
-        \file_put_contents($logFile, $logEntry, FILE_APPEND);
+        // \fwrite(STDERR, "\e[38;5;250m" . $logEntry . "\e[0m" . "\n");
+        \file_put_contents($logFile, $logEntry . "\n", FILE_APPEND);
     });
 }
 

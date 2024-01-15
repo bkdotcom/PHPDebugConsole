@@ -33,16 +33,16 @@ class FileStreamWrapperBase
 
     public static $filesTransformed = array();
 
+    /** @var Manager */
+    protected static $eventManager;
+
     protected static $isRegistered = false;
 
     /** @var string[] */
     protected static $protocols = array('file', 'phar');
 
-    /** @var Manager */
-    private static $eventManager;
-
     /** @var array paths to exclude from adding tick declaration */
-    private static $pathsExclude = array();
+    protected static $pathsExclude = array();
 
     /**
      * Register this stream wrapper

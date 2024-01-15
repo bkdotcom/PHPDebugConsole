@@ -3,7 +3,7 @@
 namespace bdk\Test\Debug\Plugin;
 
 use bdk\Debug\Abstraction\Abstracter;
-use bdk\HttpMessage\Response;
+use bdk\Debug\Abstraction\Type;
 use bdk\HttpMessage\ServerRequest;
 use bdk\HttpMessage\Stream;
 use bdk\HttpMessage\UploadedFile;
@@ -69,8 +69,8 @@ class LogRequestTest extends DebugTestFramework
                         'prettified' => true,
                         'prettifiedTag' => true,
                         'strlen' => null,
-                        'type' => Abstracter::TYPE_STRING,
-                        'typeMore' => Abstracter::TYPE_STRING_JSON,
+                        'type' => Type::TYPE_STRING,
+                        'typeMore' => Type::TYPE_STRING_JSON,
                         'value' => \json_encode(\json_decode($requestBody), JSON_PRETTY_PRINT),
                         'valueDecoded' => \json_decode($requestBody, true),
                         'visualWhiteSpace' => false,
@@ -132,8 +132,8 @@ class LogRequestTest extends DebugTestFramework
                         'prettified' => true,
                         'prettifiedTag' => true,
                         'strlen' => null,
-                        'type' => Abstracter::TYPE_STRING,
-                        'typeMore' => Abstracter::TYPE_STRING_JSON,
+                        'type' => Type::TYPE_STRING,
+                        'typeMore' => Type::TYPE_STRING_JSON,
                         'value' => \json_encode(\json_decode($requestBody), JSON_PRETTY_PRINT),
                         'valueDecoded' => \json_decode($requestBody, true),
                         'visualWhiteSpace' => false,
@@ -313,8 +313,8 @@ class LogRequestTest extends DebugTestFramework
                                     'brief' => false,
                                     'debug' => Abstracter::ABSTRACTION,
                                     'strlen' => null,
-                                    'type' => Abstracter::TYPE_STRING,
-                                    'typeMore' => Abstracter::TYPE_STRING_NUMERIC,
+                                    'type' => Type::TYPE_STRING,
+                                    'typeMore' => Type::TYPE_STRING_NUMERIC,
                                     'value' => '123',
                                 ),
                             ),
@@ -358,8 +358,8 @@ class LogRequestTest extends DebugTestFramework
                                     'brief' => false,
                                     'debug' => Abstracter::ABSTRACTION,
                                     'strlen' => null,
-                                    'type' => Abstracter::TYPE_STRING,
-                                    'typeMore' => Abstracter::TYPE_STRING_NUMERIC,
+                                    'type' => Type::TYPE_STRING,
+                                    'typeMore' => Type::TYPE_STRING_NUMERIC,
                                     'value' => '123',
                                 ),
                             ),
@@ -469,8 +469,8 @@ class LogRequestTest extends DebugTestFramework
                         'prettified' => true,
                         'prettifiedTag' => true,
                         'strlen' => null,
-                        'type' => Abstracter::TYPE_STRING,
-                        'typeMore' => Abstracter::TYPE_STRING_JSON,
+                        'type' => Type::TYPE_STRING,
+                        'typeMore' => Type::TYPE_STRING_JSON,
                         'value' => \json_encode(\json_decode($requestBody), JSON_PRETTY_PRINT),
                         'valueDecoded' => \json_decode($requestBody, true),
                         'visualWhiteSpace' => false,

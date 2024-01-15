@@ -6,14 +6,12 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2023 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.1
  */
 
 namespace bdk\Debug\Abstraction\Object;
 
-use bdk\Debug\Abstraction\Abstracter;
-use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
 use bdk\Debug\Abstraction\Object\Abstraction as ObjectAbstraction;
 use bdk\PubSub\ValueStore;

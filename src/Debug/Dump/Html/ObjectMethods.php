@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
@@ -180,6 +180,12 @@ class ObjectMethods extends AbstractObjectSection
      */
     protected function dumpParamName(array $info)
     {
+        $name = \sprintf(
+            '%s%s$%s',
+            $info['isPassedByReference'] ? '&' : '',
+            $info['isVariadic'] ? '...' : '',
+            $info['name']
+        );
         return $this->html->buildTag(
             'span',
             array(
@@ -188,7 +194,7 @@ class ObjectMethods extends AbstractObjectSection
                     ? $info['desc']
                     : '',
             ),
-            \htmlspecialchars($info['name'])
+            \htmlspecialchars($name)
         );
     }
 

@@ -6,15 +6,15 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
 namespace bdk\Debug\Collector;
 
 use bdk\Debug;
-use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Abstraction\Type;
 use Exception;
 use SoapClient as SoapClientBase;
 use SoapFault;
@@ -334,7 +334,7 @@ class SoapClient extends SoapClientBase
     {
         $this->debug->log(
             $label,
-            new Abstraction(Abstracter::TYPE_STRING, array(
+            new Abstraction(Type::TYPE_STRING, array(
                 'addQuotes' => false,
                 'attribs' => array(
                     'class' => 'highlight language-xml',

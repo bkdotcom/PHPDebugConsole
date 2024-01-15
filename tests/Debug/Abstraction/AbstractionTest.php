@@ -2,9 +2,9 @@
 
 namespace bdk\Test\Debug\Abstraction;
 
-use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\Object\Abstraction as ObjectAbstraction;
+use bdk\Debug\Abstraction\Type;
 use bdk\PubSub\ValueStore;
 use PHPUnit\Framework\TestCase;
 
@@ -21,7 +21,7 @@ class AbstractionTest extends TestCase
         $abs = new Abstraction('myType', array('foo' => 'bar'));
         $this->assertSame('myType', $abs->getValue('type'));
         $this->assertSame('bar', $abs->getValue('foo'));
-        $abs = new Abstraction(Abstracter::TYPE_ARRAY);
+        $abs = new Abstraction(Type::TYPE_ARRAY);
         $this->assertSame(array(), $abs->getValue('value'));
     }
 

@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
@@ -15,6 +15,7 @@ namespace bdk\Debug\Abstraction;
 use bdk\Debug\AbstractComponent;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Abstraction\Type;
 
 /**
  * Abstracter:  Methods used de=refrence and store arrays
@@ -52,7 +53,7 @@ class AbstractArray extends AbstractComponent
             return Abstracter::RECURSION;
         }
         if ($this->cfg['maxDepth'] && \count($hist) === $this->cfg['maxDepth']) {
-            return new Abstraction(Abstracter::TYPE_ARRAY, array(
+            return new Abstraction(Type::TYPE_ARRAY, array(
                 'options' => array(
                     'isMaxDepth' => true,
                 ),
@@ -77,7 +78,7 @@ class AbstractArray extends AbstractComponent
      */
     public function getAbstraction(array &$array, $method = null, array $hist = array())
     {
-        return new Abstraction(Abstracter::TYPE_ARRAY, array(
+        return new Abstraction(Type::TYPE_ARRAY, array(
             'value' => $this->crate($array, $method, $hist),
         ));
     }
@@ -97,7 +98,7 @@ class AbstractArray extends AbstractComponent
         if (PHP_VERSION_ID >= 70000 && \strpos($className, "@anonymous\0") !== false) {
             $className = $this->abstracter->debug->php->friendlyClassName($array[0]);
         }
-        return new Abstraction(Abstracter::TYPE_CALLABLE, array(
+        return new Abstraction(Type::TYPE_CALLABLE, array(
             'value' => array($className, $array[1]),
         ));
     }

@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2023 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.1
  */
 
@@ -14,6 +14,7 @@ namespace bdk\Debug\Abstraction\Object;
 
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction as BaseAbstraction;
+use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Utility\ArrayUtil;
 use bdk\PubSub\ValueStore;
 
@@ -45,7 +46,7 @@ class Abstraction extends BaseAbstraction
     public function __construct(ValueStore $inherited, $values = array())
     {
         $this->inherited = $inherited;
-        parent::__construct(Abstracter::TYPE_OBJECT, $values);
+        parent::__construct(Type::TYPE_OBJECT, $values);
     }
 
     /**
@@ -106,7 +107,7 @@ class Abstraction extends BaseAbstraction
         return $this->getInstanceValues() + array(
             'debug' => Abstracter::ABSTRACTION,
             'inheritsFrom' => $this->inherited['className'],
-            'type' => Abstracter::TYPE_OBJECT,
+            'type' => Type::TYPE_OBJECT,
         );
     }
 

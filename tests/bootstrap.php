@@ -31,7 +31,7 @@ ini_set('xdebug.show_exception_trace', 0);
 */
 
 $httpdCfg = array(
-    'errorLogPath' => __DIR__ . '/docroot/httpd_error_log.txt',
+    'errorLogPath' => __DIR__ . '/../tmp/httpd_error_log.txt',
 );
 
 /*
@@ -78,8 +78,15 @@ $debug = \bdk\Debug::getInstance(array(
     },
 ));
 
+$debug->eventManager->subscribe(\bdk\ErrorHandler::EVENT_ERROR, static function (\bdk\ErrorHandler\Error $error) {
+    if ($error['continueToNormal'] && $error['throw'] === false) {
+        throw new \PHPUnit\Framework\Error($error['message']);
+    }
+}, -1);
+
 $debug->eventManager->subscribe(\bdk\PubSub\Manager::EVENT_PHP_SHUTDOWN, static function () use ($httpdCfg) {
     httpdStop();
+    outputHttpErrorLog($httpdCfg);
     $files = \array_merge(
         \glob(TEST_DIR . '/../tmp/log/*.json'),
         \glob(TEST_DIR . '/../tmp/*')
@@ -89,7 +96,6 @@ $debug->eventManager->subscribe(\bdk\PubSub\Manager::EVENT_PHP_SHUTDOWN, static 
             \unlink($file);
         }
     }
-    outputHttpErrorLog($httpdCfg);
 }, 0 - PHP_INT_MAX);
 
 httpdStart($httpdCfg);
@@ -108,7 +114,7 @@ $modifyTests->modify(__DIR__);
 function httpdStart($cfg = array())
 {
     $cfg = \array_merge(array(
-        'errorLogPath' =>  __DIR__ . '/docroot/httpd_error_log.txt',
+        'errorLogPath' =>  __DIR__ . '/../tmp/httpd_error_log.txt',
     ), $cfg);
     // php 7.0 seems to e borked.
     // unable to specify -t docroot  and -f frontController.php
@@ -132,7 +138,6 @@ function httpdStart($cfg = array())
     \usleep(250000); // wait .25 sec for server to get going
     echo \stream_get_contents($pipes[2]) . "\n";
     \chdir($dirWas);
-    \file_put_contents($cfg['errorLogPath'], '');
 }
 
 /**
@@ -168,7 +173,9 @@ function httpdStop()
  */
 function outputHttpErrorLog($httpdCfg = array())
 {
-    $errorLogContents = \file_get_contents($httpdCfg['errorLogPath']);
+    $errorLogContents = \file_exists($httpdCfg['errorLogPath'])
+        ? \file_get_contents($httpdCfg['errorLogPath'])
+        : '';
     return $errorLogContents
         ? "\n" . "\e[38;5;88;48;5;203;1;4m" . 'http error log:' . "\e[0m" . "\n" . $errorLogContents . "\n\n"
         : '';

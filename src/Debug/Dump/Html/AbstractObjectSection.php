@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2023 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.1
  */
 
@@ -53,67 +53,15 @@ abstract class AbstractObjectSection
      */
     public function dumpItems(ObjectAbstraction $abs, $what, array $cfg)
     {
-        $items = $abs->sort($abs[$what], $abs['sort']);
         $cfg = \array_merge(array(
             'groupByInheritance' => \strpos($abs['sort'], 'inheritance') === 0,
             'objClassName' => $abs['className'],
             'phpDocOutput' => $abs['cfgFlags'] & AbstractObject::PHPDOC_OUTPUT,
+            'what' => $what,
         ), $cfg);
-        if ($cfg['groupByInheritance'] === false) {
-            return $this->dumpItemsFiltered($items, $cfg);
-        }
-        // group by inheritance... with headings
-        //   stop looping over classes when we've output everything
-        //   no sense in showing "inherited from" when no more inherited items
-        //   Or, we could only display the heading when itemsFiltered non-empty
-        $classes = $this->getInheritedClasses($abs, $what);
-        \array_unshift($classes, $abs['className']);
-        $html = '';
-        $itemCount = \count($items);
-        $itemOutCount = 0;
-        while ($classes && $itemOutCount < $itemCount) {
-            $classname = \array_shift($classes);
-            $itemsFiltered = \array_filter($items, static function ($info) use ($classname) {
-                return !isset($info['declaredLast']) || $info['declaredLast'] === $classname;
-            });
-            $items = \array_diff_key($items, $itemsFiltered);
-            $itemOutCount += \count($itemsFiltered);
-            $html .= \in_array($classname, array($abs['className'], 'stdClass'), true) === false
-                ? '<dd class="heading">Inherited from ' . $this->valDumper->markupIdentifier($classname) . '</dd>' . "\n"
-                : '';
-            $html .= $this->dumpItemsFiltered($itemsFiltered, $cfg);
-        }
-        return $html;
-    }
-
-    /**
-     * Get the extended classes we'll iterate over for "groupByInheritance"
-     *
-     * @param ObjectAbstraction $abs  Object abstraction
-     * @param string            $what 'cases', 'constants', 'properties', or 'methods'
-     *
-     * @return array
-     */
-    private function getInheritedClasses(ObjectAbstraction $abs, $what)
-    {
-        $classes = $abs['extends'];
-        if ($what !== 'constants') {
-            return $classes;
-        }
-        // constants can be defined in interface
-        $implements = $abs['implements'];
-        $implementsList = array();
-        while ($implements) {
-            $key = \key($implements);
-            $val = \array_shift($implements);
-            if (\is_array($val)) {
-                $implementsList[] = $key;
-                \array_splice($implements, 0, 0, $val);
-                continue;
-            }
-            $implementsList[] = $val;
-        }
-        return \array_merge($classes, $implementsList);
+        return $cfg['groupByInheritance']
+            ? $this->dumpItemsByInheritance($abs, $cfg)
+            : $this->dumpItemsFiltered($abs->sort($abs[$cfg['what']], $abs['sort']), $cfg);
     }
 
     /**
@@ -172,7 +120,7 @@ abstract class AbstractObjectSection
      * Iterate over cases, constants, properties, or methods
      *
      * @param array $items Cases, Constants, Properties, or Methods
-     * @param array $cfg   config options
+     * @param array $cfg   Config options
      *
      * @return string
      */
@@ -192,6 +140,41 @@ abstract class AbstractObjectSection
                 $info['isInherited'] = false;
             }
             $html .= $this->dumpItem($name, $info, $cfg) . "\n";
+        }
+        return $html;
+    }
+
+    /**
+     * group by inheritance... with headings
+     *
+     * @param ObjectAbstraction $abs ObjectAbstraction instance
+     * @param array             $cfg Config options
+     *
+     * @return string
+     */
+    private function dumpItemsByInheritance(ObjectAbstraction $abs, array $cfg)
+    {
+        $html = '';
+        $className = $abs['className'];
+        $classes = $this->getInheritedClasses($abs, $abs['what']);
+        \array_unshift($classes, $className);
+        $items = $abs->sort($abs[$cfg['what']], $abs['sort']);
+        $itemCount = \count($items);
+        $itemOutCount = 0;
+        // stop looping over classes when we've output everything
+        // no sense in showing "inherited from" when no more inherited items
+        // Or, we could only display the heading when itemsFiltered non-empty
+        while ($classes && $itemOutCount < $itemCount) {
+            $classNameCur = \array_shift($classes);
+            $itemsFiltered = \array_filter($items, static function ($info) use ($classNameCur) {
+                return !isset($info['declaredLast']) || $info['declaredLast'] === $classNameCur;
+            });
+            $items = \array_diff_key($items, $itemsFiltered);
+            $itemOutCount += \count($itemsFiltered);
+            $html .= \in_array($classNameCur, array($className, 'stdClass'), true) === false
+                ? '<dd class="heading">Inherited from ' . $this->valDumper->markupIdentifier($classNameCur) . '</dd>' . "\n"
+                : '';
+            $html .= $this->dumpItemsFiltered($itemsFiltered, $cfg);
         }
         return $html;
     }
@@ -244,6 +227,36 @@ abstract class AbstractObjectSection
      * @return string[]
      */
     abstract protected function getClasses(array $info);
+
+    /**
+     * Get the extended classes we'll iterate over for "groupByInheritance"
+     *
+     * @param ObjectAbstraction $abs  Object abstraction
+     * @param string            $what 'cases', 'constants', 'properties', or 'methods'
+     *
+     * @return array
+     */
+    private function getInheritedClasses(ObjectAbstraction $abs, $what)
+    {
+        $classes = $abs['extends'];
+        if ($what !== 'constants') {
+            return $classes;
+        }
+        // constants can be defined in interface
+        $implements = $abs['implements'];
+        $implementsList = array();
+        while ($implements) {
+            $key = \key($implements);
+            $val = \array_shift($implements);
+            if (\is_array($val)) {
+                $implementsList[] = $key;
+                \array_splice($implements, 0, 0, $val);
+                continue;
+            }
+            $implementsList[] = $val;
+        }
+        return \array_merge($classes, $implementsList);
+    }
 
     /**
      * Get "modifiers" (final, readonly, static)

@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
@@ -16,6 +16,7 @@ use bdk\Debug;
 use bdk\Debug\AbstractComponent;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Dump\Base as Dumper;
 use bdk\PubSub\Event;
 use DateTime;
@@ -32,12 +33,12 @@ class BaseValue extends AbstractComponent
     protected $dumpOptions = array();
     protected $dumpOptStack = array();
     protected $simpleTypes = array(
-        Abstracter::TYPE_ARRAY,
-        Abstracter::TYPE_BOOL,
-        Abstracter::TYPE_FLOAT,
-        Abstracter::TYPE_INT,
-        Abstracter::TYPE_NULL,
-        Abstracter::TYPE_STRING,
+        Type::TYPE_ARRAY,
+        Type::TYPE_BOOL,
+        Type::TYPE_FLOAT,
+        Type::TYPE_INT,
+        Type::TYPE_NULL,
+        Type::TYPE_STRING,
     );
 
     /**
@@ -69,17 +70,17 @@ class BaseValue extends AbstractComponent
             'visualWhiteSpace' => true,
         ), $opts);
         if ($opts['type'] === null) {
-            list($opts['type'], $opts['typeMore']) = $this->debug->abstracter->getType($val);
+            list($opts['type'], $opts['typeMore']) = $this->debug->abstracter->type->getType($val);
         }
-        if ($opts['typeMore'] === Abstracter::TYPE_RAW) {
-            if ($opts['type'] === Abstracter::TYPE_OBJECT || $this->dumper->crateRaw) {
+        if ($opts['typeMore'] === Type::TYPE_RAW) {
+            if ($opts['type'] === Type::TYPE_OBJECT || $this->dumper->crateRaw) {
                 $val = $this->debug->abstracter->crate($val, 'dump');
             }
             $opts['typeMore'] = null;
         }
         $this->dumpOptStack[] = $opts;
         $method = 'dump' . \ucfirst($opts['type']);
-        $return = $opts['typeMore'] === Abstracter::TYPE_ABSTRACTION
+        $return = $opts['typeMore'] === Type::TYPE_ABSTRACTION
             ? $this->dumpAbstraction($val)
             : $this->{$method}($val);
         $this->dumpOptions = \array_pop($this->dumpOptStack);
@@ -150,7 +151,7 @@ class BaseValue extends AbstractComponent
      */
     protected function checkTimestamp($val, Abstraction $abs = null)
     {
-        if ($abs && $abs['typeMore'] === Abstracter::TYPE_TIMESTAMP) {
+        if ($abs && $abs['typeMore'] === Type::TYPE_TIMESTAMP) {
             $datetime = new DateTime('@' . (int) $val);
             $datetimeStr = $datetime->format('Y-m-d H:i:s T');
             $datetimeStr = \str_replace('GMT+0000', 'GMT', $datetimeStr);
@@ -338,12 +339,13 @@ class BaseValue extends AbstractComponent
         $return = array();
         $properties = $abs->sort($abs['properties'], $abs['sort']);
         foreach ($properties as $name => $info) {
-            $info['isInherited'] = $info['declaredLast'] && $info['declaredLast'] !== $abs['className'];
-            $vis = $this->dumpPropVis($info);
+            $name = \str_replace('debug.', '', $name);
             $name = $this->dumpKeys
                 ? $this->dump($name, array('addQuotes' => false))
                 : $name;
-            $name = '(' . $vis . ') ' . \str_replace('debug.', '', $name);
+            $info['isInherited'] = $info['declaredLast'] && $info['declaredLast'] !== $abs['className'];
+            $vis = $this->dumpPropVis($info);
+            $name = '(' . $vis . ') ' . $name;
             $return[$name] = $this->dump($info['value']);
         }
         return $return;
@@ -504,7 +506,7 @@ class BaseValue extends AbstractComponent
      */
     private function dumpStringAbs(Abstraction $abs)
     {
-        if ($abs['typeMore'] === Abstracter::TYPE_STRING_BINARY && !$abs['value']) {
+        if ($abs['typeMore'] === Type::TYPE_STRING_BINARY && !$abs['value']) {
             return 'Binary data not collected';
         }
         $val = $this->debug->utf8->dump($abs['value']);

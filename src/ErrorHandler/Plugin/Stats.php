@@ -4,7 +4,7 @@
  * @package   bdk\ErrorHandler
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2023 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.2
  */
 
@@ -107,7 +107,7 @@ class Stats extends AbstractComponent implements SubscriberInterface
         $errorStats = $this->dataStore->findByError($error);
         if ($errorStats) {
             unset($errorStats['info']);
-            $errorStats['count'] ++;
+            $errorStats['count']++;
             $error['stats'] = \array_merge($error['stats'], $errorStats);
         }
     }
@@ -131,8 +131,6 @@ class Stats extends AbstractComponent implements SubscriberInterface
      * @param array $prev previous config values
      *
      * @return void
-     *
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     protected function postSetCfg($cfg = array(), $prev = array())
     {

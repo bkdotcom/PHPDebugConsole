@@ -4,6 +4,7 @@ namespace bdk\Test\Debug\Plugin;
 
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Utility\Reflection;
 use bdk\HttpMessage\Utility\ContentType;
 use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
@@ -38,7 +39,7 @@ class PrettifyTest extends DebugTestFramework
 
         $html = $this->debug->prettify('<html><title>test</title></html>', 'text/html');
         self::assertEquals(
-            new Abstraction(Abstracter::TYPE_STRING, array(
+            new Abstraction(Type::TYPE_STRING, array(
                 'strlen' => null,
                 'typeMore' => null,
                 'value' => '<html><title>test</title></html>',
@@ -61,7 +62,7 @@ class PrettifyTest extends DebugTestFramework
         $data = array('foo', 'bar');
         $json = $this->debug->prettify(\json_encode($data), 'application/json');
         self::assertEquals(
-            new Abstraction(Abstracter::TYPE_STRING, array(
+            new Abstraction(Type::TYPE_STRING, array(
                 'strlen' => null,
                 'typeMore' => 'json',
                 'value' => \json_encode($data, JSON_PRETTY_PRINT),
@@ -84,7 +85,7 @@ class PrettifyTest extends DebugTestFramework
 
         $sql = $this->debug->prettify('SELECT * FROM table WHERE col = "val"', ContentType::SQL);
         self::assertEquals(
-            new Abstraction(Abstracter::TYPE_STRING, array(
+            new Abstraction(Type::TYPE_STRING, array(
                 'strlen' => null,
                 'typeMore' => null,
                 'value' => \str_replace('·', ' ', 'SELECT·
@@ -120,7 +121,7 @@ WHERE·
 ';
         $xml = $this->debug->prettify(\str_replace("\n", '', $xmlExpect), 'application/xml');
         self::assertEquals(
-            new Abstraction(Abstracter::TYPE_STRING, array(
+            new Abstraction(Type::TYPE_STRING, array(
                 'strlen' => null,
                 'typeMore' => null,
                 'value' => $xmlExpect,

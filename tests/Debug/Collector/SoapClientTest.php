@@ -3,6 +3,7 @@
 namespace bdk\Test\Debug\Collector;
 
 use bdk\Debug\Abstraction\Abstracter;
+use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Collector\SoapClient;
 use bdk\Test\Debug\DebugTestFramework;
 
@@ -49,7 +50,7 @@ class SoapClientTest extends DebugTestFramework
                         'options' => array(
                             'showListKeys' => false,
                         ),
-                        'type' => Abstracter::TYPE_ARRAY,
+                        'type' => Type::TYPE_ARRAY,
                         'value' => array(
                             'ProcessSRL(string $SRLFile, string $RequestName, string $key): string',
                             'ProcessSRL2(string $SRLFile, string $RequestName, string $key1, string $key2): string',
@@ -171,7 +172,7 @@ class SoapClientTest extends DebugTestFramework
                             'class' => array('highlight', 'language-xml'),
                         ),
                         'debug' => Abstracter::ABSTRACTION,
-                        'type' => Abstracter::TYPE_STRING,
+                        'type' => Type::TYPE_STRING,
                         'value' => '<?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="http://www.SoapClient.com/xml/SQLDataSoap.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
   <SOAP-ENV:Body>
@@ -225,7 +226,7 @@ class SoapClientTest extends DebugTestFramework
                             'class' => array('highlight', 'language-xml'),
                         ),
                         'debug' => Abstracter::ABSTRACTION,
-                        'type' => Abstracter::TYPE_STRING,
+                        'type' => Type::TYPE_STRING,
                         'value' => '<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="http://www.SoapClient.com/xml/SQLDataSoap.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
   <SOAP-ENV:Body>
@@ -387,7 +388,7 @@ class SoapClientTest extends DebugTestFramework
                             'class' => array('highlight', 'language-xml'),
                         ),
                         'debug' => Abstracter::ABSTRACTION,
-                        'type' => Abstracter::TYPE_STRING,
+                        'type' => Type::TYPE_STRING,
                         'value' => '<?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="http://www.SoapClient.com/xml/SQLDataSoap.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
   <SOAP-ENV:Body>
@@ -441,7 +442,7 @@ class SoapClientTest extends DebugTestFramework
                             'class' => array('highlight', 'language-xml'),
                         ),
                         'debug' => Abstracter::ABSTRACTION,
-                        'type' => Abstracter::TYPE_STRING,
+                        'type' => Type::TYPE_STRING,
                         'value' => '<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="http://www.SoapClient.com/xml/SQLDataSoap.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
   <SOAP-ENV:Body>

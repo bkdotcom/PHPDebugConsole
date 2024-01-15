@@ -6,15 +6,15 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
 namespace bdk\Debug\Route;
 
 use bdk\Debug;
-use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Abstraction\Type;
 use bdk\Debug\LogEntry;
 
 /**
@@ -129,17 +129,17 @@ class WampCrate
     {
         $clone = clone $abs;
         switch ($clone['type']) {
-            case Abstracter::TYPE_ARRAY:
+            case Type::TYPE_ARRAY:
                 $clone['value'] = $this->crateArray($clone['value']);
                 return $clone;
-            case Abstracter::TYPE_OBJECT:
+            case Type::TYPE_OBJECT:
                 return $this->crateObject($clone);
-            case Abstracter::TYPE_STRING:
+            case Type::TYPE_STRING:
                 $clone['value'] = $this->crateString(
                     $clone['value'],
-                    $clone['typeMore'] === Abstracter::TYPE_STRING_BINARY
+                    $clone['typeMore'] === Type::TYPE_STRING_BINARY
                 );
-                if ($clone['typeMore'] === Abstracter::TYPE_STRING_BINARY) {
+                if ($clone['typeMore'] === Type::TYPE_STRING_BINARY) {
                     // PITA to get strlen in javascript
                     // pass the length of captured value
                     $clone['strlenValue'] = \strlen($abs['value']);

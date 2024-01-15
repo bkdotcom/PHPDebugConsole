@@ -19,6 +19,8 @@ namespace bdk\Debug\Collector;
 if (\trait_exists(__NAMESPACE__ . '\\MonologHandlerCompatTrait', false) === false) {
     /**
      * Provide handle method (with return type-hint)
+     *
+     * @phpcs:disable Generic.Classes.DuplicateClassName.Found
      */
     trait MonologHandlerCompatTrait
     {

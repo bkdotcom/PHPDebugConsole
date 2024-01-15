@@ -121,23 +121,13 @@ class EachPromise extends Promise
         $this->pending[$index] = $promise->then(
             function ($value) use ($index, $key) {
                 if ($this->onFulfilled) {
-                    \call_user_func(
-                        $this->onFulfilled,
-                        $value,
-                        $key,
-                        $this->aggregate
-                    );
+                    \call_user_func($this->onFulfilled, $value, $key, $this->aggregate);
                 }
                 $this->step($index);
             },
             function ($reason) use ($index, $key) {
                 if ($this->onRejected) {
-                    \call_user_func(
-                        $this->onRejected,
-                        $reason,
-                        $key,
-                        $this->aggregate
-                    );
+                    \call_user_func($this->onRejected, $reason, $key, $this->aggregate);
                 }
                 $this->step($index);
             }

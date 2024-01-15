@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
@@ -14,6 +14,7 @@ namespace bdk\Debug\Utility;
 
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Abstraction\Type;
 
 /**
  * Represent a table row
@@ -136,7 +137,7 @@ class TableRow
      */
     private function valuesAbs(Abstraction $abs)
     {
-        if ($abs['type'] !== Abstracter::TYPE_OBJECT) {
+        if ($abs['type'] !== Type::TYPE_OBJECT) {
             // resource & callable
             $this->info['isScalar'] = true;
             return array(self::SCALAR => $abs);

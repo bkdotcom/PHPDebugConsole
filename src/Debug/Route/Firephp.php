@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
@@ -72,15 +72,10 @@ class Firephp extends AbstractRoute
         $event['headers'][] = array('X-Wf-Protocol-1', 'http://meta.wildfirehq.org/Protocol/JsonStream/0.2');
         $event['headers'][] = array('X-Wf-1-Plugin-1', 'http://meta.firephp.org/Wildfire/Plugin/FirePHP/Library-FirePHPCore/' . self::FIREPHP_PROTO_VER);
         $event['headers'][] = array('X-Wf-1-Structure-1', 'http://meta.firephp.org/Wildfire/Structure/FirePHP/FirebugConsole/0.1');
-        // FirePHP in a CLI environment??  Sure, why not.
-        $heading = $this->debug->isCli()
-            ? '$: ' . \implode(' ', $this->debug->getServerParam('argv', array()))
-            : $this->debug->serverRequest->getMethod()
-                . ' ' . $this->debug->redact((string) $this->debug->serverRequest->getUri());
         $this->processLogEntryViaEvent(new LogEntry(
             $this->debug,
             'groupCollapsed',
-            array('PHP: ' . $heading)
+            array('PHP: ' . $this->getRequestMethodUri())
         ));
         $this->processAlerts();
         $this->processSummary();

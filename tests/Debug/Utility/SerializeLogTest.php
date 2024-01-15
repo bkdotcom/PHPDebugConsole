@@ -4,6 +4,7 @@ namespace bdk\Test\Debug\Utility;
 
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
+use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Utility\SerializeLog;
 use bdk\HttpMessage\ServerRequest;
 use bdk\PhpUnitPolyfill\AssertionTrait;
@@ -209,7 +210,7 @@ EOD;
                             ),
                             'scopeClass' => 'bdk\Debug',
                             'stringified' => null,
-                            'type' => Abstracter::TYPE_OBJECT,
+                            'type' => Type::TYPE_OBJECT,
                             'traverseValues' => array(),
                             'viaDebugInfo' => false,
                         ),

@@ -4,6 +4,7 @@ namespace bdk\Test\Debug\Plugin\Method;
 
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Abstraction\Type;
 use bdk\Debug\LogEntry;
 use bdk\PubSub\Event;
 use bdk\Test\Debug\DebugTestFramework;
@@ -102,19 +103,19 @@ class ProfileTest extends DebugTestFramework
                             'indexLabel' => null,
                             'rows' => array(
                                 'bdk\Test\Debug\Plugin\Method\ProfileTest::a' => array(
-                                    'key' => new Abstraction(Abstracter::TYPE_CALLABLE, array(
+                                    'key' => new Abstraction(Type::TYPE_CALLABLE, array(
                                         'hideType' => true, // don't output 'callable'
                                         'value' => 'bdk\Test\Debug\Plugin\Method\ProfileTest::a',
                                     )),
                                 ),
                                 'bdk\Test\Debug\Plugin\Method\ProfileTest::b' => array(
-                                    'key' => new Abstraction(Abstracter::TYPE_CALLABLE, array(
+                                    'key' => new Abstraction(Type::TYPE_CALLABLE, array(
                                         'hideType' => true, // don't output 'callable'
                                         'value' => 'bdk\Test\Debug\Plugin\Method\ProfileTest::b',
                                     )),
                                 ),
                                 'bdk\Test\Debug\Plugin\Method\ProfileTest::c' => array(
-                                    'key' => new Abstraction(Abstracter::TYPE_CALLABLE, array(
+                                    'key' => new Abstraction(Type::TYPE_CALLABLE, array(
                                         'hideType' => true, // don't output 'callable'
                                         'value' => 'bdk\Test\Debug\Plugin\Method\ProfileTest::c',
                                     )),

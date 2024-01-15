@@ -17,17 +17,18 @@ use ReflectionObject;
  * @covers \bdk\Debug\Abstraction\Abstracter
  * @covers \bdk\Debug\Abstraction\Abstraction
  * @covers \bdk\Debug\Abstraction\AbstractObject
+ * @covers \bdk\Debug\Abstraction\Object\AbstractInheritable
  * @covers \bdk\Debug\Abstraction\Object\Abstraction
  * @covers \bdk\Debug\Abstraction\Object\Constants
  * @covers \bdk\Debug\Abstraction\Object\Definition
  * @covers \bdk\Debug\Abstraction\Object\Helper
- * @covers \bdk\Debug\Abstraction\Object\Inheritable
  * @covers \bdk\Debug\Abstraction\Object\MethodParams
  * @covers \bdk\Debug\Abstraction\Object\Methods
  * @covers \bdk\Debug\Abstraction\Object\Properties
  * @covers \bdk\Debug\Abstraction\Object\PropertiesDom
  * @covers \bdk\Debug\Abstraction\Object\PropertiesPhpDoc
  * @covers \bdk\Debug\Abstraction\Object\Subscriber
+ * @covers \bdk\Debug\Abstraction\Type
  * @covers \bdk\Debug\Dump\Base
  * @covers \bdk\Debug\Dump\BaseValue
  * @covers \bdk\Debug\Dump\Html
@@ -37,6 +38,7 @@ use ReflectionObject;
  * @covers \bdk\Debug\Dump\Html\ObjectCases
  * @covers \bdk\Debug\Dump\Html\ObjectConstants
  * @covers \bdk\Debug\Dump\Html\ObjectMethods
+ * @covers \bdk\Debug\Dump\Html\ObjectPhpDoc
  * @covers \bdk\Debug\Dump\Html\ObjectProperties
  * @covers \bdk\Debug\Dump\Html\Value
  * @covers \bdk\Debug\Dump\Text
@@ -941,8 +943,10 @@ EOD;
                         'defaultValue' => Abstracter::UNDEFINED,
                         'desc' => 'first param' . "\n" . 'two-line description!',
                         'isOptional' => false,
+                        'isPassedByReference' => false,
                         'isPromoted' => false,
-                        'name' => '$param1',
+                        'isVariadic' => false,
+                        'name' => 'param1',
                         'type' => 'stdClass',
                     ),
                     array(
@@ -950,8 +954,10 @@ EOD;
                         'defaultValue' => array(),
                         'desc' => 'second param',
                         'isOptional' => true,
+                        'isPassedByReference' => false,
                         'isPromoted' => false,
-                        'name' => '$param2',
+                        'isVariadic' => false,
+                        'name' => 'param2',
                         'type' => 'array',
                     ),
                 ),
@@ -1145,9 +1151,9 @@ EOD;
                     ), \array_keys($abs->getInheritedValues()['properties']));
 
                     self::assertSame(array(
+                        'magic',
                         'test',
                         'test1',
-                        'magic',
                     ), \array_keys($abs->getInheritedValues()['methods']));
 
                     self::assertArraySubset(
@@ -1542,7 +1548,17 @@ EOD;
         }
         $testVar = new \bdk\Test\Debug\Fixture\TestVariadic();
         $abs = $this->debug->abstracter->getAbstraction($testVar);
-        self::assertSame('...$moreParams', $abs['methods']['methodVariadic']['params'][1]['name']);
+        self::assertSame(array(
+            'attributes' => array(),
+            'defaultValue' => Abstracter::UNDEFINED,
+            'desc' => 'variadic param (PHP 5.6)',
+            'isOptional' => true,
+            'isPassedByReference' => false,
+            'isPromoted' => false,
+            'isVariadic' => true,
+            'name' => 'moreParams',
+            'type' => 'mixed',
+        ), $abs['methods']['methodVariadic']['params'][1]);
     }
 
     public function testVariadicByReference()
@@ -1555,7 +1571,17 @@ EOD;
         }
         $testVarByRef = new \bdk\Test\Debug\Fixture\TestVariadicByReference();
         $abs = $this->debug->abstracter->getAbstraction($testVarByRef);
-        self::assertSame('&...$moreParams', $abs['methods']['methodVariadicByReference']['params'][1]['name']);
+        self::assertSame(array(
+            'attributes' => array(),
+            'defaultValue' => Abstracter::UNDEFINED,
+            'desc' => 'variadic param by reference (PHP 5.6)',
+            'isOptional' => true,
+            'isPassedByReference' => true,
+            'isPromoted' => false,
+            'isVariadic' => true,
+            'name' => 'moreParams',
+            'type' => 'mixed',
+        ), $abs['methods']['methodVariadicByReference']['params'][1]);
     }
 
     public function testCollectPropertyValues()

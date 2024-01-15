@@ -183,7 +183,7 @@ class UseStatements
      *
      * @return void
      */
-    private static function recordTokenArray($token)
+    private static function recordTokenArray($token) // phpcs:ignore Generic.Metrics.CyclomaticComplexity
     {
         switch (self::$record) {
             case 'namespace':

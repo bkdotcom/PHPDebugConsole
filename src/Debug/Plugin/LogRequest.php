@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2023 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.1
  */
 
@@ -137,16 +137,14 @@ class LogRequest extends AbstractLogReqRes implements SubscriberInterface
             || $methodHasBody
             || $request->getHeaderLine('Content-Length')
             || $request->getHeaderLine('Transfer-Encoding');
-        if ($logInput === false) {
-            return;
-        }
-        // we have post body or we expect post body
         $meta = $this->debug->meta(array(
             'detectFiles' => false,
             'file' => null,
             'line' => null,
         ));
-        if ($input) {
+        if ($logInput === false) {
+            return;
+        } elseif ($input) {
             if ($methodHasBody === false) {
                 $this->debug->warn($method . ' request with body', $meta);
             }

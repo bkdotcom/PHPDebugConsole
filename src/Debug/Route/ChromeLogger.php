@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  *
  * @see https://craig.is/writing/chrome-logger/techspecs
@@ -16,6 +16,7 @@ namespace bdk\Debug\Route;
 
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
+use bdk\Debug\Abstraction\Type;
 use bdk\Debug\LogEntry;
 use bdk\PubSub\Event;
 
@@ -160,11 +161,7 @@ class ChromeLogger extends AbstractRoute
         $this->processAlerts();
         $this->processSummary();
         $this->processLog();
-        $heading = array('PHP', $this->debug->isCli()
-            ? '$: ' . \implode(' ', $this->debug->getServerParam('argv', array()))
-            : $this->debug->serverRequest->getMethod()
-                . ' ' . $this->debug->redact((string) $this->debug->serverRequest->getUri()),
-        );
+        $heading = array('PHP', $this->getRequestMethodUri());
         if (!$this->cfg['group']) {
             \array_unshift($this->jsonData['rows'], array($heading, null, 'info'));
             return;
@@ -341,8 +338,8 @@ class ChromeLogger extends AbstractRoute
     {
         return \str_replace(
             array(
-                \json_encode(Abstracter::TYPE_FLOAT_INF),
-                \json_encode(Abstracter::TYPE_FLOAT_NAN),
+                \json_encode(Type::TYPE_FLOAT_INF),
+                \json_encode(Type::TYPE_FLOAT_NAN),
                 \json_encode(Abstracter::UNDEFINED),
             ),
             array(

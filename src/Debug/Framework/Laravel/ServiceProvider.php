@@ -6,14 +6,14 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
 namespace bdk\Debug\Framework\Laravel;
 
 use bdk\Debug;
-use bdk\Debug\Abstraction\Abstracter;
+use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Collector\MonologHandler;
 use bdk\Debug\Collector\StatementInfo;
 use bdk\Debug\Framework\Laravel\CacheEventsSubscriber;
@@ -163,7 +163,7 @@ class ServiceProvider extends BaseServiceProvider
                     'attribs' => array(
                         'data-file' => $ref->getFileName(),
                     ),
-                    'typeMore' => Abstracter::TYPE_STRING_CLASSNAME,
+                    'typeMore' => Type::TYPE_STRING_CLASSNAME,
                 )),
             );
         }
@@ -452,10 +452,10 @@ class ServiceProvider extends BaseServiceProvider
             return $data;
         }
         foreach ($data as $k => $v) {
-            $type = $this->debug->abstracter->getType($v)[0];
+            $type = $this->debug->abstracter->type->getType($v)[0];
             $data[$k] = $type === 'object'
                 ? $this->debug->abstracter->crateWithVals(\get_class($v), array(
-                    'typeMore' => Abstracter::TYPE_STRING_CLASSNAME,
+                    'typeMore' => Type::TYPE_STRING_CLASSNAME,
                 ))
                 : $type;
         }

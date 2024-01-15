@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2023 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.1
  */
 
@@ -103,7 +103,7 @@ class Group implements SubscriberInterface
      *      ungroup: false  // when closed: if no children, convert to plain log entry
      *                      // when closed: if only one child, remove the containing group
      *
-     * @param mixed $arg,... label / values
+     * @param mixed ...$arg. label / values
      *
      * @return $this
      */
@@ -122,7 +122,7 @@ class Group implements SubscriberInterface
      *
      * Unline `group()`, `groupCollapsed()`, will initially be collapsed
      *
-     * @param mixed $arg,... label / values
+     * @param mixed ...$arg label / values
      *
      * @return $this
      */

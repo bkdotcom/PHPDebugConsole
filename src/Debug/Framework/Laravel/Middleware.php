@@ -6,14 +6,14 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
 namespace bdk\Debug\Framework\Laravel;
 
 use bdk\Debug;
-use bdk\Debug\Abstraction\Abstracter;
+use bdk\Debug\Abstraction\Type;
 use Closure;
 use Error;
 use Exception;
@@ -336,7 +336,7 @@ class Middleware
         $debug->log(
             $this->debug->abstracter->crateWithVals(
                 \get_class($this->container['session']),
-                array('typeMore' => Abstracter::TYPE_STRING_CLASSNAME)
+                array('typeMore' => Type::TYPE_STRING_CLASSNAME)
             )
         );
         $debug->log(

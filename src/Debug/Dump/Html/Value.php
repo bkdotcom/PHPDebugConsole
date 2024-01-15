@@ -6,14 +6,14 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
 namespace bdk\Debug\Dump\Html;
 
-use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Dump\BaseValue;
 use bdk\Debug\Dump\Html as Dumper;
 use bdk\Debug\Dump\Html\HtmlObject;
@@ -100,7 +100,7 @@ class Value extends BaseValue
         }
         $tagName = $this->dumpOptions['tagName'];
         if ($tagName === '__default__') {
-            $tagName = $this->dumpOptions['type'] === Abstracter::TYPE_OBJECT
+            $tagName = $this->dumpOptions['type'] === Type::TYPE_OBJECT
                 ? 'div'
                 : 'span';
         }
@@ -125,7 +125,7 @@ class Value extends BaseValue
         $val = parent::getDumpOpt($what);
         if ($what === 'tagName' && $val === '__default__') {
             $val = 'span';
-            if (parent::getDumpOpt('type') === Abstracter::TYPE_OBJECT) {
+            if (parent::getDumpOpt('type') === Type::TYPE_OBJECT) {
                 $val = 'div';
             }
         }
@@ -212,8 +212,7 @@ class Value extends BaseValue
                 . ' <span class="t_maxDepth">*MAX DEPTH*</span>';
         }
         if (empty($array)) {
-            return '<span class="t_keyword">array</span>'
-                . '<span class="t_punct">()</span>';
+            return '<span class="t_keyword">array</span><span class="t_punct">()</span>';
         }
         if ($opts['expand'] !== null) {
             $this->setDumpOpt('attribs.data-expand', $opts['expand']);
@@ -222,44 +221,42 @@ class Value extends BaseValue
             $this->setDumpOpt('attribs.class.__push__', 'array-file-tree');
         }
         $showKeys = $opts['showListKeys'] || !$this->debug->arrayUtil->isList($array);
-        $html = '<span class="t_keyword">array</span>'
-            . '<span class="t_punct">(</span>' . "\n"
-            . '<ul class="array-inner list-unstyled">' . "\n";
-        foreach ($array as $key => $val) {
-            $html .= $this->dumpArrayValue($key, $val, $showKeys);
-        }
-        $html .= '</ul>'
-            . '<span class="t_punct">)</span>';
-        return $html;
+        return '<span class="t_keyword">array</span><span class="t_punct">(</span>' . "\n"
+            . '<ul class="array-inner list-unstyled">' . "\n"
+            . $this->dumpArrayValues($array, $showKeys)
+            . '</ul><span class="t_punct">)</span>';
     }
 
     /**
      * Dump an array key/value pair
      *
-     * @param int|string $key     key
-     * @param mixed      $val     value
-     * @param bool       $withKey include key with value?
+     * @param array $array      array to output
+     * @param bool  $outputKeys include key with value?
      *
      * @return string
      */
-    private function dumpArrayValue($key, $val, $withKey)
+    private function dumpArrayValues(array $array, $outputKeys)
     {
-        return $withKey
-            ? "\t" . '<li>'
-                . $this->html->buildTag(
-                    'span',
-                    array(
-                        'class' => array(
-                            't_int' => \is_int($key),
-                            't_key' => true,
+        $html = '';
+        foreach ($array as $key => $val) {
+            $html .= $outputKeys
+                ? "\t" . '<li>'
+                    . $this->html->buildTag(
+                        'span',
+                        array(
+                            'class' => array(
+                                't_int' => \is_int($key),
+                                't_key' => true,
+                            ),
                         ),
-                    ),
-                    $this->dump($key, array('tagName' => null)) // don't wrap it
-                )
-                . '<span class="t_operator">=&gt;</span>'
-                . $this->dump($val)
-            . '</li>' . "\n"
-            : "\t" . $this->dump($val, array('tagName' => 'li')) . "\n";
+                        $this->dump($key, array('tagName' => null)) // don't wrap it
+                    )
+                    . '<span class="t_operator">=&gt;</span>'
+                    . $this->dump($val)
+                . '</li>' . "\n"
+                : "\t" . $this->dump($val, array('tagName' => 'li')) . "\n";
+        }
+        return $html;
     }
 
     /**
@@ -314,10 +311,10 @@ class Value extends BaseValue
      */
     protected function dumpFloat($val, Abstraction $abs = null)
     {
-        if ($val === Abstracter::TYPE_FLOAT_INF) {
+        if ($val === Type::TYPE_FLOAT_INF) {
             return 'INF';
         }
-        if ($val === Abstracter::TYPE_FLOAT_NAN) {
+        if ($val === Type::TYPE_FLOAT_NAN) {
             return 'NaN';
         }
         $this->checkTimestamp($val, $abs);
@@ -359,7 +356,7 @@ class Value extends BaseValue
      */
     protected function dumpRecursion()
     {
-        $this->setDumpOpt('type', Abstracter::TYPE_ARRAY);
+        $this->setDumpOpt('type', Type::TYPE_ARRAY);
         return '<span class="t_keyword">array</span> <span class="t_recursion">*RECURSION*</span>';
     }
 

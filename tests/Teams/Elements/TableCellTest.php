@@ -124,12 +124,12 @@ class TableCellTest extends AbstractTestCaseWith
                 array(
                     'type' => 'TextBlock',
                     'text' => '3.14',
-                    'wrap' => true,
+                    // 'wrap' => true,
                 ),
                 array(
                     'type' => 'TextBlock',
                     'text' => '42',
-                    'wrap' => true,
+                    // 'wrap' => true,
                 ),
             ),
             'minHeight' => '42px',

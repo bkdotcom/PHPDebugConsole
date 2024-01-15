@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
@@ -38,8 +38,8 @@ class Channel implements SubscriberInterface
      * Channels can be used to categorize log data... for example, may have a framework channel, database channel, library-x channel, etc
      * Channels may have subchannels
      *
-     * @param string $name   channel name
-     * @param array  $config channel specific configuration
+     * @param string|array $name   channel name (or channel path)
+     * @param array        $config channel specific configuration
      *
      * @return \bdk\Debug new or existing `Debug` instance
      */

@@ -3,6 +3,7 @@
 namespace bdk\Test\Debug\Collector;
 
 use bdk\Debug\Abstraction\Abstracter;
+use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Collector\GuzzleMiddleware;
 use bdk\Test\Debug\DebugTestFramework;
 use Exception;
@@ -106,8 +107,8 @@ class GuzzleMiddlewareTest extends DebugTestFramework
                                 'prettified' => true,
                                 'prettifiedTag' => true,
                                 'strlen' => null,
-                                'type' => Abstracter::TYPE_STRING,
-                                'typeMore' => Abstracter::TYPE_STRING_JSON,
+                                'type' => Type::TYPE_STRING,
+                                'typeMore' => Type::TYPE_STRING_JSON,
                                 'value' => '{' . "\n"
                                     . '    "foo": "bar"' . "\n"
                                     . '}',

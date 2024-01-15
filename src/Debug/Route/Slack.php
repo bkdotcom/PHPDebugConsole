@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2023 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.1
  */
 
@@ -157,10 +157,7 @@ class Slack extends AbstractRoute
             ->withHeader($icon . ' ' . $error['typeStr'])
             ->withText($icon . ' ' . $error['typeStr'] . "\n" . $error->getMessageText())
             ->withContext(array(
-                $this->debug->isCli()
-                    ? '$: ' . \implode(' ', $this->debug->getServerParam('argv', array()))
-                    : $this->debug->serverRequest->getMethod()
-                        . ' ' . $this->debug->redact((string) $this->debug->serverRequest->getUri()),
+                $this->getRequestMethodUri(),
             ))
             ->withSection(array(
                 'text' => $error->getMessageText(),

@@ -6,14 +6,14 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
 namespace bdk\Debug\Utility;
 
-use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Abstraction\Type;
 
 /**
  * Convert a list of files a tree
@@ -39,7 +39,7 @@ class FileTree
                 $dirs[0] = '/' . $dirs[0];
             }
             $node = &$this->getTreeNode($tree, $dirs);
-            $node[] = new Abstraction(Abstracter::TYPE_STRING, array(
+            $node[] = new Abstraction(Type::TYPE_STRING, array(
                 'attribs' => array(
                     'data-file' => $filepath,
                 ),
@@ -73,7 +73,7 @@ class FileTree
                 $dirs = array($path);
             }
             $node = &$this->getTreeNode($tree, $dirs);
-            \array_unshift($node, new Abstraction(Abstracter::TYPE_STRING, array(
+            \array_unshift($node, new Abstraction(Type::TYPE_STRING, array(
                 'attribs' => array(
                     'class' => 'exclude-count',
                 ),

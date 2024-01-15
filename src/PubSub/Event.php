@@ -6,7 +6,7 @@
  * @package   bdk\PubSub
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2023 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  * @link      http://www.github.com/bkdotcom/PubSub
  */
@@ -21,14 +21,14 @@ namespace bdk\PubSub;
 class Event extends ValueStore
 {
     /**
+     * @var mixed Event subject - usually object or callable
+     */
+    protected $subject = null;
+
+    /**
      * @var bool Whether event subscribers should be called
      */
     private $propagationStopped = false;
-
-    /**
-     * @var mixed Event subject: usually object or callable
-     */
-    protected $subject = null;
 
     /**
      * Construct an event with optional subject and values

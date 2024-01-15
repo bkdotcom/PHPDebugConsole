@@ -6,15 +6,15 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2023 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.1
  */
 
 namespace bdk\Debug\Plugin\Method;
 
 use bdk\Debug;
-use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Abstraction\Type;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Plugin\CustomMethodTrait;
 use bdk\Debug\Utility\FileStreamWrapper;
@@ -215,43 +215,51 @@ class Profile implements SubscriberInterface
             $logEntry['meta']['name'] = \key($this->instances);
         }
         $name = $logEntry['meta']['name'];
-        // set default args
-        $args = array(
-            $name !== null
+        $logEntry['args'] = isset($this->instances[$name])
+            ? $this->doProfileEndArgs($logEntry)
+            : ($name !== null
                 ? 'profileEnd: No such Profile: ' . $name
-                : 'profileEnd: Not currently profiling',
-        );
-        if (isset($this->instances[$name])) {
-            $instance = $this->instances[$name];
-            $data = $instance->end();
-            $tableInfo = $logEntry->getMeta('tableInfo', array());
-            $tableInfo = \array_replace_recursive(array(
-                'rows' => \array_fill_keys(\array_keys($data), array()),
-            ), $tableInfo);
-            foreach (\array_keys($data) as $k) {
-                $tableInfo['rows'][$k]['key'] = new Abstraction(
-                    Abstracter::TYPE_CALLABLE,
-                    array(
-                        'hideType' => true, // don't output 'callable'
-                        'value' => $k,
-                    )
-                );
-            }
-            $caption = 'Profile \'' . $name . '\' Results';
-            $args = array($caption, 'no data');
-            if ($data) {
-                $args = array($data);
-                $logEntry->setMeta(array(
-                    'caption' => $caption,
-                    'tableInfo' => $tableInfo,
-                    'totalCols' => array('ownTime'),
-                ));
-            }
-            unset($this->instances[$name]);
-        }
-        $logEntry['args'] = $args;
+                : 'profileEnd: Not currently profiling'
+            );
         $debug->rootInstance->getPlugin('methodTable')->doTable($logEntry);
         $debug->log($logEntry);
+        unset($this->instances[$name]);
+    }
+
+    /**
+     * Build table data and info
+     *
+     * @param LogEntry $logEntry LogEntry instance
+     *
+     * @return array
+     */
+    private function doProfileEndArgs(LogEntry $logEntry)
+    {
+        $name = $logEntry['meta']['name'];
+        $caption = 'Profile \'' . $name . '\' Results';
+        $instance = $this->instances[$name];
+        $data = $instance->end();
+        if (!$data) {
+            return array($caption, 'no data');
+        }
+        $tableInfo = \array_replace_recursive(array(
+            'rows' => \array_fill_keys(\array_keys($data), array()),
+        ), $logEntry->getMeta('tableInfo', array()));
+        foreach (\array_keys($data) as $k) {
+            $tableInfo['rows'][$k]['key'] = new Abstraction(
+                Type::TYPE_CALLABLE,
+                array(
+                    'hideType' => true, // don't output 'callable'
+                    'value' => $k,
+                )
+            );
+        }
+        $logEntry->setMeta(array(
+            'caption' => $caption,
+            'tableInfo' => $tableInfo,
+            'totalCols' => array('ownTime'),
+        ));
+        return array($data);
     }
 
     /**
@@ -264,7 +272,6 @@ class Profile implements SubscriberInterface
      * @return bool
      *
      * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter
      */
     private function onCfgEnableProfiling($val, $key, Event $event)

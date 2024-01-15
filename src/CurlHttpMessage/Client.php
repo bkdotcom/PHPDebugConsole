@@ -84,7 +84,7 @@ class Client
      *
      * @return PromiseInterface|ResponseInterface
      */
-    public function delete($uri, $headers = array(), $body = null)
+    public function delete($uri, array $headers = array(), $body = null)
     {
         return $this->request('DELETE', $uri, array(
             'body' => $body,
@@ -96,7 +96,7 @@ class Client
      * Send a GET request
      *
      * @param UriInterface|string $uri     UriInterface or string
-     * @param array               $headers Request headers
+     * @param array|null          $headers Request headers
      *
      * @return PromiseInterface|ResponseInterface
      */
@@ -115,7 +115,7 @@ class Client
      *
      * @return PromiseInterface|ResponseInterface
      */
-    public function head($uri, $headers = array())
+    public function head($uri, array $headers = array())
     {
         return $this->request('HEAD', $uri, array(
             'headers' => $headers,
@@ -131,7 +131,7 @@ class Client
      *
      * @return PromiseInterface|ResponseInterface
      */
-    public function options($uri, $headers = array(), $body = null)
+    public function options($uri, array $headers = array(), $body = null)
     {
         return $this->request('OPTIONS', $uri, array(
             'body' => $body,
@@ -148,7 +148,7 @@ class Client
      *
      * @return PromiseInterface|ResponseInterface
      */
-    public function patch($uri, $headers = array(), $body = null)
+    public function patch($uri, array $headers = array(), $body = null)
     {
         return $this->request('PATCH', $uri, array(
             'body' => $body,
@@ -165,7 +165,7 @@ class Client
      *
      * @return PromiseInterface|ResponseInterface
      */
-    public function post($uri, $headers = array(), $body = null)
+    public function post($uri, array $headers = array(), $body = null)
     {
         return $this->request('POST', $uri, array(
             'body' => $body,
@@ -182,7 +182,7 @@ class Client
      *
      * @return PromiseInterface|ResponseInterface
      */
-    public function put($uri, $headers = array(), $body = null)
+    public function put($uri, array $headers = array(), $body = null)
     {
         return $this->request('PUT', $uri, array(
             'body' => $body,
@@ -198,7 +198,7 @@ class Client
      *
      * @return PromiseInterface|ResponseInterface
      */
-    public function trace($uri, $headers = array())
+    public function trace($uri, array $headers = array())
     {
         return $this->request(
             'TRACE',
@@ -232,7 +232,7 @@ class Client
      * @throws BadResponseException HTTP error (4xx or 5xx response)
      * @throws RuntimeException     Failure to create stream
      */
-    public function handle(RequestInterface $request, $options = array())
+    public function handle(RequestInterface $request, array $options = array())
     {
         $options = $this->mergeOptions($options);
         $request = $this->applyOptions($request, $options);
@@ -256,10 +256,29 @@ class Client
      *
      * @return PromiseInterface|ResponseInterface
      */
-    public function request($method, $uri, $options = array())
+    public function request($method, $uri, array $options = array())
     {
         $request = $this->factory->request($method, $uri);
         return $this->handle($request, $options);
+    }
+
+    /**
+     * Assert valid options
+     *
+     * @param array $options Options
+     *
+     * @return void
+     *
+     * @throws InvalidArgumentException
+     */
+    private function assertOptions(array $options)
+    {
+        if (\is_array($options['headers']) !== true) {
+            throw new InvalidArgumentException('headers must be an array');
+        }
+        if (\array_keys($options['headers']) === \range(0, \count($options['headers']) - 1)) {
+            throw new InvalidArgumentException('headers array must have header name as keys');
+        }
     }
 
     /**
@@ -300,17 +319,10 @@ class Client
      * @param array            $options options
      *
      * @return RequestInterface
-     *
-     * @throws InvalidArgumentException
      */
-    private function applyOptions(RequestInterface $request, $options)
+    private function applyOptions(RequestInterface $request, array $options)
     {
-        if (\is_array($options['headers']) !== true) {
-            throw new InvalidArgumentException('headers must be an array');
-        }
-        if (\array_keys($options['headers']) === \range(0, \count($options['headers']) - 1)) {
-            throw new InvalidArgumentException('headers array must have header name as keys');
-        }
+        $this->assertOptions($options);
 
         foreach ($options['headers'] as $name => $val) {
             $request = $request->withHeader($name, $val);

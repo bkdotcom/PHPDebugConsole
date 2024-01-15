@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2023 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.1
  */
 
@@ -114,11 +114,7 @@ class Discord extends AbstractRoute
             : ':warning:';
         return array(
             'content' => $emoji . ' **' . $error['typeStr'] . '**' . "\n"
-                . ($this->debug->isCli()
-                    ? '$: ' . \implode(' ', $this->debug->getServerParam('argv', array()))
-                    : $this->debug->serverRequest->getMethod()
-                        . ' ' . $this->debug->redact((string) $this->debug->serverRequest->getUri())
-                ) . "\n"
+                . $this->getRequestMethodUri() . "\n"
                 . $error->getMessageText() . "\n"
                 . $error['fileAndLine'],
         );

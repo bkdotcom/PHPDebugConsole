@@ -31,7 +31,7 @@ class TableCell extends AbstractItem
     /**
      * Constructor
      *
-     * @param array<int, ElementInterface|string|numeric>|ElementInterface|string|numeric $items The card elements to render inside the Container,
+     * @param array<int, ElementInterface|\Stringable|scalar|null>|ElementInterface|\Stringable|scalar|null $items The card elements to render inside the Container,
      *                                                                            Or may pass in a single item
      */
     public function __construct($items = array())
@@ -78,7 +78,7 @@ class TableCell extends AbstractItem
     /**
      * Return new instance with added TableCell
      *
-     * @param ElementInterface|string|numeric $item Item to append
+     * @param ElementInterface|\Stringable|scalar|null $item Item to append
      *
      * @return static
      *
@@ -109,7 +109,7 @@ class TableCell extends AbstractItem
     /**
      * Return new instance with specified items
      *
-     * @param array<int, ElementInterface|string|numeric> $items The card elements to render inside the TableCell
+     * @param array<int, ElementInterface|\Stringable|scalar|null> $items The card elements to render inside the TableCell
      *
      * @return static
      *
@@ -208,7 +208,7 @@ class TableCell extends AbstractItem
     /**
      * Append ElementInterface, string, or numeric to items
      *
-     * @param ElementInterface|string|numeric $item Item to append
+     * @param ElementInterface|\Stringable|scalar|null $item Item to append
      *
      * @return ElementInterface
      *
@@ -216,31 +216,22 @@ class TableCell extends AbstractItem
      */
     private function asItem($item)
     {
-        if ($item instanceof ElementInterface) {
-            return $item;
-        }
-        if (\is_string($item) || \is_numeric($item)) {
-            return (new TextBlock($item))
-                ->withWrap();
-        }
-        if ($item === null) {
-            return (new TextBlock('null'))
-                ->withFontType(Enums::FONT_TYPE_MONOSPACE)
-                ->withIsSubtle();
-        }
-        if ($item === true) {
-            return (new TextBlock('true'))
-                ->withFontType(Enums::FONT_TYPE_MONOSPACE)
-                ->withColor(Enums::COLOR_GOOD);
-        }
-        if ($item === false) {
-            return (new TextBlock('false'))
-                ->withFontType(Enums::FONT_TYPE_MONOSPACE)
-                ->withColor(Enums::COLOR_WARNING);
-        }
-        if (\is_object($item) && \method_exists($item, '__toString')) {
-            return (new TextBlock((string) $item))
-                ->withWrap();
+        switch (true) {
+            case $item instanceof ElementInterface:
+                return $item;
+            case \is_string($item) || (\is_object($item) && \method_exists($item, '__toString')):
+                return (new TextBlock((string) $item))
+                    ->withWrap();
+            case \is_numeric($item):
+                return new TextBlock($item);
+            case \is_bool($item):
+                return (new TextBlock(\json_encode($item)))
+                    ->withFontType(Enums::FONT_TYPE_MONOSPACE)
+                    ->withColor($item ? Enums::COLOR_GOOD : Enums::COLOR_WARNING);
+            case $item === null:
+                return (new TextBlock('null'))
+                    ->withFontType(Enums::FONT_TYPE_MONOSPACE)
+                    ->withIsSubtle();
         }
         throw new InvalidArgumentException(\sprintf(
             'Invalid TableCell item found. Expecting ElementInterface, stringable, scalar, or null. %s provided.',
@@ -251,7 +242,7 @@ class TableCell extends AbstractItem
     /**
      * Assert each item is instance of ElementInterface, string, or numeric
      *
-     * @param array<int, ElementInterface|string|numeric> $items Items to test
+     * @param array<int, ElementInterface|Stringable|scalar|null> $items Items to test
      *
      * @return ElementInterface[]
      *

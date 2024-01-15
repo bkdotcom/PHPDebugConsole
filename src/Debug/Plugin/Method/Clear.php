@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2023 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.1
  */
 
@@ -58,7 +58,7 @@ class Clear implements SubscriberInterface
      *
      * @return $this
      */
-    public function clear($bitmask = Debug::CLEAR_LOG)
+    public function clear($bitmask = Debug::CLEAR_LOG) // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
     {
         $debug = $this->debug;
         $logEntry = new LogEntry(

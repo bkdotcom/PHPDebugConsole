@@ -4,6 +4,7 @@ namespace bdk\Test\Debug\Type;
 
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
+use bdk\Debug\Abstraction\Type;
 use bdk\Test\Debug\DebugTestFramework;
 
 /**
@@ -11,6 +12,7 @@ use bdk\Test\Debug\DebugTestFramework;
  *
  * @covers \bdk\Debug\Abstraction\Abstracter
  * @covers \bdk\Debug\Abstraction\AbstractString
+ * @covers \bdk\Debug\Abstraction\Type
  * @covers \bdk\Debug\Dump\BaseValue
  * @covers \bdk\Debug\Dump\Html
  * @covers \bdk\Debug\Dump\Html\HtmlString
@@ -34,7 +36,7 @@ class BasicTest extends DebugTestFramework
             'args' => array(
                 array(
                     'debug' => Abstracter::ABSTRACTION,
-                    'type' => Abstracter::TYPE_RESOURCE,
+                    'type' => Type::TYPE_RESOURCE,
                     'value' => \print_r($fhOpen, true) . ': stream',
                 ),
             ),
@@ -47,7 +49,7 @@ class BasicTest extends DebugTestFramework
             'args' => array(
                 array(
                     'debug' => Abstracter::ABSTRACTION,
-                    'type' => Abstracter::TYPE_RESOURCE,
+                    'type' => Type::TYPE_RESOURCE,
                     'value' => \print_r($fhClosed, true) . ': stream',
                 ),
             ),
@@ -101,7 +103,7 @@ class BasicTest extends DebugTestFramework
                         array(
                             array(
                                 'debug' => Abstracter::ABSTRACTION,
-                                'type' => Abstracter::TYPE_CALLABLE,
+                                'type' => Type::TYPE_CALLABLE,
                                 'value' => array(
                                     'bdk\Test\Debug\Fixture\TestObj',
                                     'testBaseStatic',
@@ -117,7 +119,7 @@ class BasicTest extends DebugTestFramework
                 array(
                     Debug::_getInstance()->abstracter->crateWithVals(
                         'SomeNamespace\Classname',
-                        array('typeMore' => Abstracter::TYPE_STRING_CLASSNAME)
+                        array('typeMore' => Type::TYPE_STRING_CLASSNAME)
                     ),
                 ),
                 array(
@@ -128,8 +130,8 @@ class BasicTest extends DebugTestFramework
                                 'debug' => Abstracter::ABSTRACTION,
                                 'brief' => false,
                                 'strlen' => null,
-                                'type' => Abstracter::TYPE_STRING,
-                                'typeMore' => Abstracter::TYPE_STRING_CLASSNAME,
+                                'type' => Type::TYPE_STRING,
+                                'typeMore' => Type::TYPE_STRING_CLASSNAME,
                                 'value' => 'SomeNamespace\Classname',
                             )
                         ),
@@ -169,9 +171,9 @@ class BasicTest extends DebugTestFramework
                         array(
                             array(
                                 'debug' => Abstracter::ABSTRACTION,
-                                'type' => Abstracter::TYPE_FLOAT,
-                                'typeMore' => Abstracter::TYPE_FLOAT_INF,
-                                'value' => Abstracter::TYPE_FLOAT_INF,
+                                'type' => Type::TYPE_FLOAT,
+                                'typeMore' => Type::TYPE_FLOAT_INF,
+                                'value' => Type::TYPE_FLOAT_INF,
                             ),
                         ),
                     ),
@@ -191,9 +193,9 @@ class BasicTest extends DebugTestFramework
                         array(
                             array(
                                 'debug' => Abstracter::ABSTRACTION,
-                                'type' => Abstracter::TYPE_FLOAT,
-                                'typeMore' => Abstracter::TYPE_FLOAT_NAN,
-                                'value' => Abstracter::TYPE_FLOAT_NAN,
+                                'type' => Type::TYPE_FLOAT,
+                                'typeMore' => Type::TYPE_FLOAT_NAN,
+                                'value' => Type::TYPE_FLOAT_NAN,
                             ),
                         ),
                     ),
@@ -286,8 +288,8 @@ class BasicTest extends DebugTestFramework
                         'args' => array(
                             array(
                                 'debug' => Abstracter::ABSTRACTION,
-                                'type' => Abstracter::TYPE_FLOAT,
-                                'typeMore' => Abstracter::TYPE_TIMESTAMP,
+                                'type' => Type::TYPE_FLOAT,
+                                'typeMore' => Type::TYPE_TIMESTAMP,
                                 'value' => $ts + 0.1,
                             ),
                         ),
@@ -303,8 +305,8 @@ class BasicTest extends DebugTestFramework
                         array(
                             array(
                                 'debug' => Abstracter::ABSTRACTION,
-                                'type' => Abstracter::TYPE_FLOAT,
-                                'typeMore' => Abstracter::TYPE_TIMESTAMP,
+                                'type' => Type::TYPE_FLOAT,
+                                'typeMore' => Type::TYPE_TIMESTAMP,
                                 'value' => $ts + 0.1,
                             ),
                         ),
@@ -320,8 +322,8 @@ class BasicTest extends DebugTestFramework
                         'args' => array(
                             array(
                                 'debug' => Abstracter::ABSTRACTION,
-                                'type' => Abstracter::TYPE_INT,
-                                'typeMore' => Abstracter::TYPE_TIMESTAMP,
+                                'type' => Type::TYPE_INT,
+                                'typeMore' => Type::TYPE_TIMESTAMP,
                                 'value' => $ts,
                             ),
                         ),
@@ -337,8 +339,8 @@ class BasicTest extends DebugTestFramework
                         array(
                             array(
                                 'debug' => Abstracter::ABSTRACTION,
-                                'type' => Abstracter::TYPE_INT,
-                                'typeMore' => Abstracter::TYPE_TIMESTAMP,
+                                'type' => Type::TYPE_INT,
+                                'typeMore' => Type::TYPE_TIMESTAMP,
                                 'value' => $ts,
                             ),
                         ),
@@ -349,7 +351,7 @@ class BasicTest extends DebugTestFramework
                 'log',
                 array(
                     Debug::getInstance()->abstracter->crateWithVals(\strtotime('1985-10-26 09:00:00 PDT'), array(
-                        'typeMore' => Abstracter::TYPE_TIMESTAMP,
+                        'typeMore' => Type::TYPE_TIMESTAMP,
                     )),
                 ),
                 array(
@@ -363,8 +365,8 @@ class BasicTest extends DebugTestFramework
                         array(
                             array(
                                 'debug' => Abstracter::ABSTRACTION,
-                                'type' => Abstracter::TYPE_INT,
-                                'typeMore' => Abstracter::TYPE_TIMESTAMP,
+                                'type' => Type::TYPE_INT,
+                                'typeMore' => Type::TYPE_TIMESTAMP,
                                 'value' => 499190400,
                             ),
                         ),
@@ -387,8 +389,8 @@ class BasicTest extends DebugTestFramework
                                 'brief' => false,
                                 'debug' => Abstracter::ABSTRACTION,
                                 'strlen' => null,
-                                'type' => Abstracter::TYPE_STRING,
-                                'typeMore' => Abstracter::TYPE_TIMESTAMP,
+                                'type' => Type::TYPE_STRING,
+                                'typeMore' => Type::TYPE_TIMESTAMP,
                                 'value' => (string) $ts,
                             )
                         ),
@@ -399,7 +401,7 @@ class BasicTest extends DebugTestFramework
                 'log',
                 array(
                     Debug::getInstance()->abstracter->crateWithVals((string) \strtotime('1985-10-26 09:00:00 PDT'), array(
-                        'typeMore' => Abstracter::TYPE_TIMESTAMP,
+                        'typeMore' => Type::TYPE_TIMESTAMP,
                     )),
                 ),
                 array(
@@ -415,8 +417,8 @@ class BasicTest extends DebugTestFramework
                                 'brief' => false,
                                 'debug' => Abstracter::ABSTRACTION,
                                 'strlen' => null,
-                                'type' => Abstracter::TYPE_STRING,
-                                'typeMore' => Abstracter::TYPE_TIMESTAMP,
+                                'type' => Type::TYPE_STRING,
+                                'typeMore' => Type::TYPE_TIMESTAMP,
                                 'value' => '499190400',
                             ),
                         ),
@@ -450,8 +452,8 @@ class BasicTest extends DebugTestFramework
                                 'brief' => false,
                                 'debug' => Abstracter::ABSTRACTION,
                                 'strlen' => null,
-                                'type' => Abstracter::TYPE_STRING,
-                                'typeMore' => Abstracter::TYPE_TIMESTAMP,
+                                'type' => Type::TYPE_STRING,
+                                'typeMore' => Type::TYPE_TIMESTAMP,
                                 'value' => (string) $ts,
                             ),
                         ),
@@ -508,7 +510,7 @@ class BasicTest extends DebugTestFramework
                 'log',
                 array(
                     Debug::getInstance()->abstracter->crateWithVals('mysteryVal', array(
-                        'type' => Abstracter::TYPE_UNKNOWN,
+                        'type' => Type::TYPE_UNKNOWN,
                     )),
                 ),
                 array(
@@ -519,7 +521,7 @@ class BasicTest extends DebugTestFramework
                                 'brief' => false, // crateWithVals... initially treated as string
                                 'debug' => Abstracter::ABSTRACTION,
                                 'strlen' => null,
-                                'type' => Abstracter::TYPE_UNKNOWN,
+                                'type' => Type::TYPE_UNKNOWN,
                                 'typeMore' => null,
                                 'value' => 'mysteryVal',
                             ),

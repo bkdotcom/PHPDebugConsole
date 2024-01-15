@@ -12,7 +12,11 @@ use PHPUnit\Framework\TestCase;
  * PHPUnit tests for Debug class
  *
  * @covers \bdk\Debug\Utility\PhpDoc
- * @covers \bdk\Debug\Utility\PhpDocBase
+ * @covers \bdk\Debug\Utility\PhpDoc\Helper
+ * @covers \bdk\Debug\Utility\PhpDoc\ParseMethod
+ * @covers \bdk\Debug\Utility\PhpDoc\ParseParam
+ * @covers \bdk\Debug\Utility\PhpDoc\Parsers
+ * @covers \bdk\Debug\Utility\PhpDoc\Type
  */
 class PhpDocTest extends TestCase
 {
@@ -26,7 +30,8 @@ class PhpDocTest extends TestCase
     public function testConstruct()
     {
         $phpDoc = new PhpDoc();
-        $parsers = \bdk\Debug\Utility\Reflection::propGet($phpDoc, 'parsers');
+        $parsersObj = \bdk\Debug\Utility\Reflection::propGet($phpDoc, 'parsers');
+        $parsers = \bdk\Debug\Utility\Reflection::propGet($parsersObj, 'parsers');
         self::assertIsArray($parsers);
         self::assertNotEmpty($parsers, 'Parsers is empty');
     }
@@ -56,22 +61,26 @@ class PhpDocTest extends TestCase
                     "name": "presto",
                     "param": [
                         {
-                            "name": "$foo",
+                            "isVariadic": false,
+                            "name": "foo",
                             "type": null
                         },
                         {
                             "defaultValue": "1",
-                            "name": "$int",
+                            "isVariadic": false,
+                            "name": "int",
                             "type": "int"
                         },
                         {
                             "defaultValue": "true",
-                            "name": "$bool",
+                            "isVariadic": false,
+                            "name": "bool",
                             "type": null
                         },
                         {
                             "defaultValue": "null",
-                            "name": "$null",
+                            "isVariadic": false,
+                            "name": "null",
                             "type": null
                         }
                     ],
@@ -83,17 +92,20 @@ class PhpDocTest extends TestCase
                     "name": "prestoStatic",
                     "param": [
                         {
-                            "name": "$noDefault",
+                            "isVariadic": false,
+                            "name": "noDefault",
                             "type": "string"
                         },
                         {
                             "defaultValue": "array()",
-                            "name": "$arr",
+                            "isVariadic": false,
+                            "name": "arr",
                             "type": null
                         },
                         {
                             "defaultValue": "array('a'=>'ay','b'=>'bee')",
-                            "name": "$opts",
+                            "isVariadic": false,
+                            "name": "opts",
                             "type": null
                         }
                     ],
@@ -226,7 +238,8 @@ EOD;
                     'param' => array(
                         array(
                             'desc' => 'plain ol object',
-                            'name' => '$obj',
+                            'isVariadic' => false,
+                            'name' => 'obj',
                             'type' => 'stdClass',
                         ),
                     ),
@@ -343,6 +356,7 @@ EOD;
                     'param' => array(
                         array(
                             'desc' => null,
+                            'isVariadic' => false,
                             'name' => 'comment',
                             'type' => 'string',
                         ),
@@ -363,6 +377,7 @@ EOD;
                     'param' => array(
                         array(
                             'desc' => 'comment here',
+                            'isVariadic' => false,
                             'name' => null,
                             'type' => 'string',
                         ),
@@ -389,7 +404,8 @@ EOD;
                     'param' => array(
                         array(
                             'desc' => "Some number\ndoes things",
-                            'name' => '$number',
+                            'isVariadic' => false,
+                            'name' => 'number',
                             'type' => 'int[]',
                         ),
                     ),

@@ -176,10 +176,33 @@ class Uri
     private static function pathRemoveDots($path)
     {
         if ($path === '') {
-            return $path;
+            return '';
         }
 
         $segments = \explode('/', $path);
+        $segmentsNew = self::pathSegments($segments);
+        $pathNew = \implode('/', $segmentsNew);
+
+        if ($path[0] === '/' && (!isset($pathNew[0]) || $pathNew[0] !== '/')) {
+            // Re-add the leading slash if necessary for cases like "/.."
+            $pathNew = '/' . $pathNew;
+        } elseif ($pathNew !== '' && \in_array(\end($segments), array('.', '..'), true)) {
+            // Add the trailing slash if necessary
+            $pathNew .= '/';
+        }
+
+        return $pathNew;
+    }
+
+    /**
+     * Remove '..' & '.' from path segments
+     *
+     * @param array $segments Path segments
+     *
+     * @return array
+     */
+    private static function pathSegments($segments)
+    {
         $segmentsNew = [];
         foreach ($segments as $segment) {
             if ($segment === '..') {
@@ -188,19 +211,7 @@ class Uri
                 $segmentsNew[] = $segment;
             }
         }
-
-        $pathNew = \implode('/', $segmentsNew);
-
-        if ($path[0] === '/' && (!isset($pathNew[0]) || $pathNew[0] !== '/')) {
-            // Re-add the leading slash if necessary for cases like "/.."
-            $pathNew = '/' . $pathNew;
-        } elseif ($pathNew !== '' && \in_array($segment, array('.', '..'), true)) {
-            // Add the trailing slash if necessary
-            // If pathNew is not empty, then $segment must be set and is the last segment from the foreach
-            $pathNew .= '/';
-        }
-
-        return $pathNew;
+        return $segmentsNew;
     }
 
     /**

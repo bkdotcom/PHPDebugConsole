@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
@@ -276,9 +276,12 @@ class Config
                 unset($this->valuesPending[$debugProp]);
             }
         }
-        return $val !== null
-            ? $val
-            : $this->getPropCfgFromObj($debugProp, $path, $forInit);
+        if ($val !== null) {
+            return $val;
+        }
+        return $debugProp === 'debug'
+            ? $this->debug->getCfg($path, Debug::CONFIG_DEBUG)
+            : $this->getPropCfgFromChildObj($debugProp, $path, $forInit);
     }
 
     /**
@@ -290,13 +293,10 @@ class Config
      *
      * @return mixed
      */
-    private function getPropCfgFromObj($debugProp, $path = array(), $forInit = false)
+    private function getPropCfgFromChildObj($debugProp, $path = array(), $forInit = false)
     {
         $obj = null;
         $matches = array();
-        if ($debugProp === 'debug') {
-            return $this->debug->getCfg($path, Debug::CONFIG_DEBUG);
-        }
         if (\in_array($debugProp, $this->invokedServices, true)) {
             $obj = $this->debug->{$debugProp};
         } elseif ($forInit) {
@@ -343,9 +343,7 @@ class Config
         $return = array();
         foreach ($cfg as $path => $v) {
             $ref = &$return;
-            $path = isset($this->configKeys[$path])
-                ? array($path)
-                : $this->normalizePath($path);
+            $path = $this->normalizePath($path);
             foreach ($path as $k) {
                 if (!isset($ref[$k])) {
                     $ref[$k] = array();

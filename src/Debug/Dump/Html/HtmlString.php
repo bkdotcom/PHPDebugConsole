@@ -6,14 +6,14 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
 namespace bdk\Debug\Dump\Html;
 
-use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Dump\Html\HtmlStringEncoded;
 use bdk\Debug\Dump\Html\Value as ValDumper;
 use RuntimeException;
@@ -102,7 +102,7 @@ class HtmlString
      */
     public function dumpAsSubstitution($val, $opts)
     {
-        $isBinary = $val instanceof Abstraction && $val['typeMore'] === Abstracter::TYPE_STRING_BINARY;
+        $isBinary = $val instanceof Abstraction && $val['typeMore'] === Type::TYPE_STRING_BINARY;
         if ($isBinary === false) {
             // we do NOT wrap in <span>...  log('<a href="%s">link</a>', $url);
             $opts['tagName'] = null;
@@ -132,9 +132,9 @@ class HtmlString
     public function isEncoded($val)
     {
         $typesEncoded = array(
-            Abstracter::TYPE_STRING_BASE64,
-            Abstracter::TYPE_STRING_JSON,
-            Abstracter::TYPE_STRING_SERIALIZED,
+            Type::TYPE_STRING_BASE64,
+            Type::TYPE_STRING_JSON,
+            Type::TYPE_STRING_SERIALIZED,
         );
         return $val instanceof Abstraction && \in_array($val['typeMore'], $typesEncoded, true);
     }
@@ -167,14 +167,14 @@ class HtmlString
      */
     private function dumpAbs(Abstraction $abs)
     {
-        if ($abs['typeMore'] === Abstracter::TYPE_STRING_CLASSNAME) {
+        if ($abs['typeMore'] === Type::TYPE_STRING_CLASSNAME) {
             return $this->dumpClassname($abs);
         }
         $val = $this->dumpHelper($abs['value']);
         if ($this->isEncoded($abs)) {
             return $this->dumpEncoded->dump($val, $abs);
         }
-        if ($abs['typeMore'] === Abstracter::TYPE_STRING_BINARY) {
+        if ($abs['typeMore'] === Type::TYPE_STRING_BINARY) {
             return $this->dumpBinary($val, $abs);
         }
         if ($abs['strlen']) {

@@ -12,6 +12,7 @@ use PHPUnit\Framework\TestCase;
  * PHPUnit tests for Debug class
  *
  * @covers \bdk\Debug\Utility\FileStreamWrapper
+ * @covers \bdk\Debug\Utility\FileStreamWrapperBase
  */
 class FileStreamWrapperTest extends TestCase
 {

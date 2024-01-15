@@ -9,6 +9,8 @@ namespace bdk\Debug\Psr3;
 if (\trait_exists(__NAMESPACE__ . '\\MethodSignatureCompatTrait', false) === false) {
     /**
      * Provide log method with signature compatible with psr/log v2
+     *
+     * @phpcs:disable Generic.Classes.DuplicateClassName.Found
      */
     trait MethodSignatureCompatTrait
     {

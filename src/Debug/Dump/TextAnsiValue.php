@@ -6,15 +6,15 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
 namespace bdk\Debug\Dump;
 
-use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
+use bdk\Debug\Abstraction\Type;
 
 /**
  * Base output plugin
@@ -115,9 +115,9 @@ class TextAnsiValue extends TextValue
      */
     protected function dumpFloat($val, Abstraction $abs = null)
     {
-        if ($val === Abstracter::TYPE_FLOAT_INF) {
+        if ($val === Type::TYPE_FLOAT_INF) {
             $val = 'INF';
-        } elseif ($val === Abstracter::TYPE_FLOAT_NAN) {
+        } elseif ($val === Type::TYPE_FLOAT_NAN) {
             $val = 'NaN';
         }
         $date = $this->checkTimestamp($val, $abs);
@@ -191,7 +191,7 @@ class TextAnsiValue extends TextValue
             'magic' => 0,
         );
         foreach ($abs['methods'] as $info) {
-            $counts[ $info['visibility'] ] ++;
+            $counts[ $info['visibility'] ]++;
         }
         $counts = \array_filter($counts);
         $header = $counts
@@ -226,23 +226,36 @@ class TextAnsiValue extends TextValue
         foreach ($properties as $name => $info) {
             $info['className'] = $abs['className'];
             $info['isInherited'] = $info['declaredLast'] && $info['declaredLast'] !== $abs['className'];
-            $prefix = $this->dumpPropPrefix($info);
-            $vis = $this->cfg['escapeCodes']['muted'] . '(' . $this->dumpPropVis($info) . ')' . $this->escapeReset;
-            $name = $this->cfg['escapeCodes']['property'] . $name . $this->escapeReset;
-            $val = $info['debugInfoExcluded']
-                ? ''
-                : \sprintf(
-                    ' %s=%s %s',
-                    $this->cfg['escapeCodes']['operator'],
-                    $this->escapeReset,
-                    $this->dump($info['value'])
-                );
-            $str .= \sprintf('    %s%s %s%s', $prefix, $vis, $name, $val) . "\n";
+            $str .= $this->dumpProp($name, $info);
         }
         $header = $str
             ? "\e[4mProperties:\e[24m"
             : 'Properties: none!';
         return '  ' . $header . "\n" . $str;
+    }
+
+    /**
+     * Dump object property
+     *
+     * @param string $name Property name
+     * @param array  $info Property info
+     *
+     * @return string
+     */
+    protected function dumpProp($name, array $info)
+    {
+        $name = $this->cfg['escapeCodes']['property'] . $name . $this->escapeReset;
+        $prefix = $this->dumpPropPrefix($info);
+        $vis = $this->cfg['escapeCodes']['muted'] . '(' . $this->dumpPropVis($info) . ')' . $this->escapeReset;
+        $val = $info['debugInfoExcluded']
+            ? ''
+            : \sprintf(
+                ' %s=%s %s',
+                $this->cfg['escapeCodes']['operator'],
+                $this->escapeReset,
+                $this->dump($info['value'])
+            );
+        return \sprintf('    %s%s %s%s', $prefix, $vis, $name, $val) . "\n";
     }
 
     /**

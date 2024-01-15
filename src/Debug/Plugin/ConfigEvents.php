@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
@@ -95,7 +95,7 @@ class ConfigEvents implements SubscriberInterface
     private function onCfgChannels($val)
     {
         $tree = array();
-        foreach ($val as $name => $config) {
+        \array_walk($val, static function ($config, $name) use (&$tree) {
             $ref = &$tree;
             $path = \explode('.', $name);
             $name = \array_pop($path);
@@ -112,7 +112,7 @@ class ConfigEvents implements SubscriberInterface
                 $ref[$name] = array();
             }
             $ref[$name] = \array_merge($ref[$name], $config);
-        }
+        });
         return $tree;
     }
 
@@ -162,7 +162,6 @@ class ConfigEvents implements SubscriberInterface
      * @return string
      *
      * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter
      */
     private function onCfgKey($val, $name, Event $event)

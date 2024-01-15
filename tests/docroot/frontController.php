@@ -19,7 +19,7 @@ if (\class_exists('bdk\\Debug')) {
         'route' => 'wamp',
     ));
     $debug->eventManager->subscribe(\bdk\ErrorHandler::EVENT_ERROR, static function (\bdk\ErrorHandler\Error $error) use ($requestUri) {
-        $logFile = __DIR__ . '/httpd_error_log.txt';
+        $logFile = __DIR__ . '/../../tmp/httpd_error_log.txt';
         $logEntry = \sprintf(
             '[%s] %s',
             $requestUri,

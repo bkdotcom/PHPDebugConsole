@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
@@ -68,6 +68,17 @@ class Substitution
             ), $options),
             'typeCounts' => \array_fill_keys(\str_split('coOdifs'), 0),
         );
+        return $this->processArgs();
+    }
+
+    /**
+     * Update arguments
+     *
+     * @return array updated args
+     */
+    private function processArgs()
+    {
+        $args = $this->subInfo['args'];
         $string = \preg_replace_callback($this->subRegex, array($this, 'processSubsCallback'), $args[0]);
         $args = $this->subInfo['args'];
         if (!$this->subInfo['options']['style']) {
@@ -113,7 +124,7 @@ class Substitution
         } elseif (\preg_match('/[oO]/', $type)) {
             $replacement = $this->dumper->valDumper->dump($arg);
         }
-        $this->subInfo['typeCounts'][$type] ++;
+        $this->subInfo['typeCounts'][$type]++;
         if ($this->subInfo['options']['replace']) {
             unset($this->subInfo['args'][$index]);
             return $replacement;

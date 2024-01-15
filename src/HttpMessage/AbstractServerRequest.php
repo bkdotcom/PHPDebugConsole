@@ -6,7 +6,7 @@
  * @package   bdk/http-message
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2023 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v1.0
  */
 
@@ -14,7 +14,6 @@ namespace bdk\HttpMessage;
 
 use bdk\HttpMessage\Request;
 use bdk\HttpMessage\UploadedFile;
-use bdk\HttpMessage\Uri;
 use bdk\HttpMessage\Utility\ContentType;
 use InvalidArgumentException;
 use Psr\Http\Message\UploadedFileInterface;

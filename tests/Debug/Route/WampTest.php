@@ -4,6 +4,7 @@ namespace bdk\Test\Debug\Route;
 
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
+use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Route\Wamp;
 use bdk\ErrorHandler;
 use bdk\ErrorHandler\Error;
@@ -100,7 +101,7 @@ class WampTest extends DebugTestFramework
                     array(
                         array(
                             'debug' => Abstracter::ABSTRACTION,
-                            'type' => Abstracter::TYPE_ARRAY,
+                            'type' => Type::TYPE_ARRAY,
                             'value' => array('_b64_:AGZvbw==' => 'bar'),
                         ),
                         array(
@@ -108,8 +109,8 @@ class WampTest extends DebugTestFramework
                             'debug' => Abstracter::ABSTRACTION,
                             'strlen' => 16,
                             'strlenValue' => 16,
-                            'type' => Abstracter::TYPE_STRING,
-                            'typeMore' => Abstracter::TYPE_STRING_BINARY,
+                            'type' => Type::TYPE_STRING,
+                            'typeMore' => Type::TYPE_STRING_BINARY,
                             'value' => '_b64_:' . $base64,
                         ),
                         array(
@@ -121,8 +122,8 @@ class WampTest extends DebugTestFramework
                             'prettified' => true,
                             'prettifiedTag' => true,
                             'strlen' => null,
-                            'type' => Abstracter::TYPE_STRING,
-                            'typeMore' => Abstracter::TYPE_STRING_JSON,
+                            'type' => Type::TYPE_STRING,
+                            'typeMore' => Type::TYPE_STRING_JSON,
                             'value' => \json_encode(array('foo' => 'bar',42,true,false,null), JSON_PRETTY_PRINT),
                             'valueDecoded' => array(
                                 'foo' => 'bar',42,true,false,null,

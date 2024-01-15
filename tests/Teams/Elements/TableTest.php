@@ -50,7 +50,7 @@ class TableTest extends AbstractTestCaseWith
                                 array(
                                     'type' => 'TextBlock',
                                     'text' => '26',
-                                    'wrap' => true,
+                                    // 'wrap' => true,
                                 ),
                             ),
                         ),
@@ -75,7 +75,7 @@ class TableTest extends AbstractTestCaseWith
                                 array(
                                     'type' => 'TextBlock',
                                     'text' => '25',
-                                    'wrap' => true,
+                                    // 'wrap' => true,
                                 ),
                             ),
                         ),

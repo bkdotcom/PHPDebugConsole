@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
@@ -17,7 +17,7 @@ use bdk\Debug\AbstractComponent;
 use bdk\Debug\Abstraction\AbstractArray;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
-use bdk\Debug\Utility\Php;
+use bdk\Debug\Abstraction\Type;
 
 /**
  * Store array/object/resource info
@@ -29,47 +29,17 @@ class Abstracter extends AbstractComponent
     const RECURSION = "\x00recursion\x00";  // ie, array recursion
     const UNDEFINED = "\x00undefined\x00";
 
-    const TYPE_ARRAY = 'array';
-    const TYPE_BOOL = 'bool';
-    const TYPE_CALLABLE = 'callable'; // non-native type : callable array
-    const TYPE_INT = 'int';
-    const TYPE_FLOAT = 'float';
-    const TYPE_NULL = 'null';
-    const TYPE_OBJECT = 'object';
-    const TYPE_RESOURCE = 'resource';
-    const TYPE_STRING = 'string';
-    const TYPE_CONST = 'const'; // non-native type (Abstraction: we store name and value)
-    const TYPE_NOT_INSPECTED = 'notInspected'; // non-native type
-    const TYPE_RECURSION = 'recursion'; // non-native type
-    const TYPE_UNDEFINED = 'undefined'; // non-native type
-    const TYPE_UNKNOWN = 'unknown'; // non-native type
-
-    /*
-        "typeMore" values
-        (no constants for "true" & "false")
-    */
-    const TYPE_ABSTRACTION = 'abstraction';
-    const TYPE_RAW = 'raw'; // raw object or array
-    const TYPE_FLOAT_INF = "\x00inf\x00";
-    const TYPE_FLOAT_NAN = "\x00nan\x00";
-    const TYPE_STRING_BASE64 = 'base64';
-    const TYPE_STRING_BINARY = 'binary';
-    const TYPE_STRING_CLASSNAME = 'classname';
-    const TYPE_STRING_JSON = 'json';
-    const TYPE_STRING_LONG = 'maxLen';
-    const TYPE_STRING_NUMERIC = 'numeric';
-    const TYPE_STRING_SERIALIZED = 'serialized';
-    const TYPE_TIMESTAMP = 'timestamp';
-
     protected $abstractArray;
     protected $abstractObject;
     protected $abstractString;
     protected $debug;
+    protected $type;
     protected $readOnly = array(
         'abstractArray',
         'abstractObject',
         'abstractString',
         'debug',
+        'type',
     );
     protected $cfg = array(
         'brief' => false, // collect & output less details
@@ -127,6 +97,7 @@ class Abstracter extends AbstractComponent
         $this->abstractArray = new AbstractArray($this);
         $this->abstractObject = new AbstractObject($this);
         $this->abstractString = new AbstractString($this);
+        $this->type = new Type($this);
         $this->cfg = \array_merge(
             $this->cfg,
             \array_fill_keys(
@@ -157,7 +128,7 @@ class Abstracter extends AbstractComponent
         if (!$typeInfo) {
             return $mixed;
         }
-        return $typeInfo === array(self::TYPE_ARRAY, self::TYPE_RAW)
+        return $typeInfo === array(Type::TYPE_ARRAY, Type::TYPE_RAW)
             ? $this->abstractArray->crate($mixed, $method, $hist)
             : $this->getAbstraction($mixed, $method, $typeInfo, $hist);
     }
@@ -210,67 +181,29 @@ class Abstracter extends AbstractComponent
      */
     public function getAbstraction($val, $method = null, $typeInfo = array(), $hist = array())
     {
-        list($type, $typeMore) = $typeInfo ?: $this->getType($val);
+        list($type, $typeMore) = $typeInfo ?: $this->type->getType($val);
         switch ($type) {
-            case self::TYPE_ARRAY:
+            case Type::TYPE_ARRAY:
                 return $this->abstractArray->getAbstraction($val, $method, $hist);
-            case self::TYPE_CALLABLE:
+            case Type::TYPE_CALLABLE:
                 return $this->abstractArray->getCallableAbstraction($val);
-            case self::TYPE_FLOAT:
+            case Type::TYPE_FLOAT:
                 return $this->getAbstractionFloat($val, $typeMore);
-            case self::TYPE_OBJECT:
+            case Type::TYPE_OBJECT:
                 return $val instanceof \SensitiveParameterValue
                     ? $this->abstractString->getAbstraction(\call_user_func($this->debug->getPlugin('redaction')->getCfg('redactReplace'), 'redacted'))
                     : $this->abstractObject->getAbstraction($val, $method, $hist);
-            case self::TYPE_RESOURCE:
+            case Type::TYPE_RESOURCE:
                 return new Abstraction($type, array(
                     'value' => \print_r($val, true) . ': ' . \get_resource_type($val),
                 ));
-            case self::TYPE_STRING:
+            case Type::TYPE_STRING:
                 return $this->abstractString->getAbstraction($val, $typeMore, $this->crateVals);
             default:
                 return new Abstraction($type, array(
                     'typeMore' => $typeMore,
                     'value' => $val,
                 ));
-        }
-    }
-
-    /**
-     * Returns value's type and "extended type" (ie "numeric", "binary", etc)
-     *
-     * @param mixed $val value
-     *
-     * @return array [$type, $typeMore] typeMore may be
-     *    null
-     *    'raw' indicates value needs crating
-     *    'abstraction'
-     *    'true'  (type bool)
-     *    'false' (type bool)
-     *    'numeric' (type string)
-     */
-    public function getType($val)
-    {
-        $type = self::getTypePhp($val);
-        switch ($type) {
-            case self::TYPE_ARRAY:
-                return $this->getTypeArray($val);
-            case self::TYPE_BOOL:
-                return array(self::TYPE_BOOL, \json_encode($val));
-            case self::TYPE_FLOAT:
-                return $this->getTypeFloat($val);
-            case self::TYPE_INT:
-                return $this->getTypeInt($val);
-            case self::TYPE_OBJECT:
-                return $this->getTypeObject($val);
-            case self::TYPE_RESOURCE:
-                return array(self::TYPE_RESOURCE, self::TYPE_RAW);
-            case self::TYPE_STRING:
-                return $this->abstractString->getType($val);
-            case self::TYPE_UNKNOWN:
-                return $this->getTypeUnknown($val);
-            default:
-                return array($type, null);
         }
     }
 
@@ -307,30 +240,16 @@ class Abstracter extends AbstractComponent
         if ($val instanceof Abstraction) {
             return false;
         }
-        list($type, $typeMore) = $this->getType($val);
-        if ($type === self::TYPE_BOOL) {
+        list($type, $typeMore) = $this->type->getType($val);
+        if ($type === Type::TYPE_BOOL) {
             return false;
         }
-        if (\in_array($typeMore, array(self::TYPE_ABSTRACTION, self::TYPE_STRING_NUMERIC), true)) {
+        if (\in_array($typeMore, array(Type::TYPE_ABSTRACTION, Type::TYPE_STRING_NUMERIC), true)) {
             return false;
         }
         return $typeMore
             ? array($type, $typeMore)
             : false;
-    }
-
-    /**
-     * Does value appear to be a unix timestamp?
-     *
-     * @param int|string|float $val Value to test
-     *
-     * @return bool
-     */
-    public function testTimestamp($val)
-    {
-        $secs = 86400 * 90; // 90 days worth o seconds
-        $tsNow = \time();
-        return $val > $tsNow - $secs && $val < $tsNow + $secs;
     }
 
     /**
@@ -345,139 +264,15 @@ class Abstracter extends AbstractComponent
      */
     private function getAbstractionFloat($val, $typeMore)
     {
-        if ($typeMore === self::TYPE_FLOAT_INF) {
-            $val = self::TYPE_FLOAT_INF;
-        } elseif ($typeMore === self::TYPE_FLOAT_NAN) {
-            $val = self::TYPE_FLOAT_NAN;
+        if ($typeMore === Type::TYPE_FLOAT_INF) {
+            $val = Type::TYPE_FLOAT_INF;
+        } elseif ($typeMore === Type::TYPE_FLOAT_NAN) {
+            $val = Type::TYPE_FLOAT_NAN;
         }
-        return new Abstraction(self::TYPE_FLOAT, array(
+        return new Abstraction(Type::TYPE_FLOAT, array(
             'typeMore' => $typeMore,
             'value' => $val,
         ));
-    }
-
-    /**
-     * Get Array's type & typeMore
-     *
-     * @param array $val array value
-     *
-     * @return array
-     */
-    private function getTypeArray($val)
-    {
-        $type = self::TYPE_ARRAY;
-        $typeMore = self::TYPE_RAW;  // needs abstracted (references removed / values abstracted if necessary)
-        if (\count($val) === 2 && $this->debug->php->isCallable($val, Php::IS_CALLABLE_ARRAY_ONLY)) {
-            $type = self::TYPE_CALLABLE;
-        }
-        return array($type, $typeMore);
-    }
-
-    /**
-     * Get Float's type & typeMore
-     *
-     * INF and NAN are considered "float"
-     *
-     * @param float $val float/INF/NAN
-     *
-     * @return array
-     */
-    private function getTypeFloat($val)
-    {
-        $typeMore = null;
-        if ($val === INF) {
-            $typeMore = self::TYPE_FLOAT_INF;
-        } elseif (\is_nan($val)) {
-            // using is_nan() func as comparing with NAN constant doesn't work
-            $typeMore = self::TYPE_FLOAT_NAN;
-        } elseif ($this->testTimestamp($val)) {
-            $typeMore = self::TYPE_TIMESTAMP;
-        }
-        return array(self::TYPE_FLOAT, $typeMore);
-    }
-
-    /**
-     * Get Int's type & typeMore
-     *
-     * INF and NAN are considered "float"
-     *
-     * @param float $val float/INF/NAN
-     *
-     * @return array
-     */
-    private function getTypeInt($val)
-    {
-        $typeMore = $this->testTimestamp($val)
-            ? self::TYPE_TIMESTAMP
-            : null;
-        return array(self::TYPE_INT, $typeMore);
-    }
-
-    /**
-     * Get Object's type & typeMore
-     *
-     * @param object $object any object
-     *
-     * @return array type & typeMore
-     */
-    private function getTypeObject($object)
-    {
-        $type = self::TYPE_OBJECT;
-        $typeMore = self::TYPE_RAW;  // needs abstracted
-        if ($object instanceof Abstraction) {
-            $type = $object['type'];
-            $typeMore = self::TYPE_ABSTRACTION;
-        }
-        return array($type, $typeMore);
-    }
-
-    /**
-     * Get PHP type
-     *
-     * @param mixed` $val value
-     *
-     * @return string "array", "bool", "float", "int", "null", "object", "resource", "string", "unknown"
-     */
-    private static function getTypePhp($val)
-    {
-        $type = \gettype($val);
-        $map = array(
-            'boolean' => self::TYPE_BOOL,
-            'double' => self::TYPE_FLOAT,
-            'integer' => self::TYPE_INT,
-            'NULL' => self::TYPE_NULL,
-            'resource (closed)' => self::TYPE_RESOURCE,
-            'unknown type' => self::TYPE_UNKNOWN,  // closed resource (php < 7.2)
-        );
-        if (isset($map[$type])) {
-            $type = $map[$type];
-        }
-        return $type;
-    }
-
-    /**
-     * Get "unknown" type & typeMore
-     *
-     * @param mixed $val value of unknown type (likely closed resource)
-     *
-     * @return array type and typeMore
-     *
-     * @SuppressWarnings(PHPMD.DevelopmentCodeFragment)
-     */
-    private function getTypeUnknown($val)
-    {
-        $type = self::TYPE_UNKNOWN;
-        $typeMore = null;
-        /*
-            closed resource?
-            is_resource() returns false for a closed resource
-            gettype  returns 'unknown type' or 'resource (closed)'
-        */
-        if (\strpos(\print_r($val, true), 'Resource') === 0) {
-            $type = self::TYPE_RESOURCE;
-            $typeMore = self::TYPE_RAW;  // needs abstracted
-        }
-        return array($type, $typeMore);
     }
 
     /**

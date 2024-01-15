@@ -6,14 +6,15 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
 namespace bdk\Debug\Dump;
 
 use bdk\Debug;
-use bdk\Debug\Abstraction\Abstracter;
+use bdk\Debug\Abstraction\Type;
+use bdk\Debug\Dump\Html\Group;
 use bdk\Debug\Dump\Html\Helper;
 use bdk\Debug\Dump\Html\Table;
 use bdk\Debug\Dump\Html\Value;
@@ -32,14 +33,17 @@ class Html extends Base
     /** @var Debug[] Logged channels (channelName => Debug) */
     protected $channels = array();
 
-    /** @var array LogEntry meta attribs */
-    protected $logEntryAttribs = array();
+    /** @var Group */
+    protected $group;
 
     /** @var \bdk\Debug\Utility\Html */
     protected $html;
 
     /** @var HtmlTable */
     protected $lazyTable;
+
+    /** @var array LogEntry meta attribs */
+    protected $logEntryAttribs = array();
 
     /**
      * Constructor
@@ -49,6 +53,7 @@ class Html extends Base
     public function __construct(Debug $debug)
     {
         parent::__construct($debug);
+        $this->group = new Group($this);
         $this->helper = new Helper($this);
         $this->html = $debug->html;
     }
@@ -94,17 +99,16 @@ class Html extends Base
      */
     public function substitutionAsString($val, $opts)
     {
-        // function array dereferencing = php 5.4
-        $type = $this->debug->abstracter->getType($val)[0];
-        if ($type === Abstracter::TYPE_STRING) {
+        $type = $this->debug->abstracter->type->getType($val)[0];
+        if ($type === Type::TYPE_STRING) {
             return $this->valDumper->string->dumpAsSubstitution($val, $opts);
         }
-        if ($type === Abstracter::TYPE_ARRAY) {
+        if ($type === Type::TYPE_ARRAY) {
             $count = \count($val);
             return '<span class="t_keyword">array</span>'
                 . '<span class="t_punct">(</span>' . $count . '<span class="t_punct">)</span>';
         }
-        if ($type === Abstracter::TYPE_OBJECT) {
+        if ($type === Type::TYPE_OBJECT) {
             $opts['tagName'] = null;
             $toStr = (string) $val; // objects __toString or its classname
             return $toStr === $val['className']
@@ -255,98 +259,7 @@ class Html extends Base
      */
     protected function methodGroup(LogEntry $logEntry)
     {
-        $method = $logEntry['method'];
-        if ($method === 'groupEnd') {
-            return '</ul>' . "\n" . '</li>';
-        }
-        $meta = $this->methodGroupPrep($logEntry);
-
-        $str = '<li' . $this->html->buildAttribString($this->logEntryAttribs) . '>' . "\n";
-        $str .= $this->html->buildTag(
-            'div',
-            array(
-                'class' => 'group-header',
-            ),
-            $this->methodGroupHeader($logEntry['args'], $meta)
-        ) . "\n";
-        $str .= '<ul' . $this->html->buildAttribString(array(
-            'class' => 'group-body',
-        )) . '>';
-        return $str;
-    }
-
-    /**
-     * Adds 'class' value to `$this->logEntryAttribs`
-     *
-     * @param LogEntry $logEntry LogEntry instance
-     *
-     * @return array meta values
-     */
-    private function methodGroupPrep(LogEntry $logEntry)
-    {
-        $meta = \array_merge(array(
-            'argsAsParams' => true,
-            'boldLabel' => true,
-            'hideIfEmpty' => false,
-            'isFuncName' => false,
-            'level' => null,
-        ), $logEntry['meta']);
-
-        $classes = (array) $this->logEntryAttribs['class'];
-        if ($logEntry['method'] === 'group') {
-            // groupCollapsed doesn't get expanded
-            $classes[] = 'expanded';
-        }
-        if ($meta['hideIfEmpty']) {
-            $classes[] = 'hide-if-empty';
-        }
-        if ($meta['level']) {
-            $classes[] = 'level-' . $meta['level'];
-        }
-        $classes = \implode(' ', $classes);
-        $classes = \str_replace('m_' . $logEntry['method'], 'm_group', $classes);
-        $this->logEntryAttribs['class'] = $classes;
-        return $meta;
-    }
-
-    /**
-     * Build group header
-     *
-     * @param array $args arguments
-     * @param array $meta meta values
-     *
-     * @return string
-     */
-    private function methodGroupHeader($args, $meta)
-    {
-        $label = \array_shift($args);
-        $label = $meta['isFuncName']
-            ? $this->valDumper->markupIdentifier($label, true)
-            : \preg_replace('#^<span class="t_string">(.+)</span>$#s', '$1', $this->valDumper->dump($label));
-        $labelClasses = \implode(' ', \array_keys(\array_filter(array(
-            'font-weight-bold' => $meta['boldLabel'],
-            'group-label' => true,
-        ))));
-
-        $headerAppend = '';
-
-        if ($args) {
-            foreach ($args as $k => $v) {
-                $args[$k] = $this->valDumper->dump($v);
-            }
-            $argStr = \implode(', ', $args);
-            $label .= $meta['argsAsParams']
-                ? '(</span>' . $argStr . '<span class="' . $labelClasses . '">)'
-                : ':';
-            $headerAppend = $meta['argsAsParams']
-                ? ''
-                : ' ' . $argStr;
-        }
-
-        return '<span class="' . $labelClasses . '">'
-            . $label
-            . '</span>'
-            . $headerAppend;
+        return $this->group->build($logEntry, $this->logEntryAttribs);
     }
 
     /**

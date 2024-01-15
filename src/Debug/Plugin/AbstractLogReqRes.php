@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2023 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.1
  */
 
@@ -45,8 +45,8 @@ class AbstractLogReqRes
      */
     protected function assertCorrectContentType($contentTypeDetected, $contentTypeUser, $requestMethod = null)
     {
-        $contentTypeDetected = \preg_replace('/\s*[;,].*$/', '', (string) $contentTypeDetected) ?: null;
-        $contentTypeUser = \preg_replace('/\s*[;,].*$/', '', (string) $contentTypeUser) ?: null;
+        $contentTypeDetected = \preg_replace('/\s*[;,].*$/', '', (string) $contentTypeDetected);
+        $contentTypeUser = \preg_replace('/\s*[;,].*$/', '', (string) $contentTypeUser);
         if ($contentTypeDetected === $contentTypeUser) {
             return;
         }
@@ -60,20 +60,15 @@ class AbstractLogReqRes
                 ? 'with the wrong Content-Type'
                 : 'without a Content-Type header'
         );
-        if (
-            $requestMethod === 'POST'
-            && \in_array($contentTypeUser, array(ContentType::FORM, ContentType::FORM_MULTIPART), true)
-        ) {
+        $formTypes = array(ContentType::FORM, ContentType::FORM_MULTIPART);
+        if ($requestMethod === 'POST' && \in_array($contentTypeUser, $formTypes, true)) {
             $message .= "\n" . 'Pay no attention to $_POST and instead use php://input';
         }
-        $this->debug->warn(
-            $message,
-            $this->debug->meta(array(
-                'detectFiles' => false,
-                'file' => null,
-                'line' => null,
-            ))
-        );
+        $this->debug->warn($message, $this->debug->meta(array(
+            'detectFiles' => false,
+            'file' => null,
+            'line' => null,
+        )));
     }
 
     /**

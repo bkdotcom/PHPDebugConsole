@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
@@ -250,6 +250,13 @@ class AbstractAsyncMiddleware extends AbstractComponent
         }
     }
 
+    /**
+     * Log the request body
+     *
+     * @param RequestInterface $request Request
+     *
+     * @return void
+     */
     protected function logRequestBody(RequestInterface $request)
     {
         if ($this->cfg['inclRequestBody'] === false) {

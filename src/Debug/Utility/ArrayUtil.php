@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
@@ -28,7 +28,7 @@ class ArrayUtil
      *
      * @return array
      */
-    public static function copy($source, $deep = true)
+    public static function copy(array $source, $deep = true)
     {
         $arr = array();
         foreach ($source as $key => $val) {
@@ -46,12 +46,12 @@ class ArrayUtil
      *
      * Returns an array containing all the values from array that are not present in any of the other arrays.
      *
-     * @param array $array      array to compare from
-     * @param array $arrays,... arrays to compare against
+     * @param array $array     array to compare from
+     * @param array ...$arrays arrays to compare against
      *
      * @return array
      */
-    public static function diffAssocRecursive($array, $arrays)
+    public static function diffAssocRecursive(array $array, $arrays)
     {
         $arrays = \func_get_args();
         \array_shift($arrays);
@@ -93,7 +93,7 @@ class ArrayUtil
      *
      * @return array
      */
-    public static function mapRecursive($callback, $input)
+    public static function mapRecursive($callback, array $input)
     {
         return \array_map(static function ($val) use ($callback) {
             return \is_array($val)
@@ -105,12 +105,12 @@ class ArrayUtil
     /**
      * Recursively merge arrays
      *
-     * @param array $arrayDef   default array
-     * @param array $array2,... array to merge
+     * @param array $arrayDef  default array
+     * @param array ...$array2 array to merge
      *
      * @return array
      */
-    public static function mergeDeep($arrayDef, $array2)
+    public static function mergeDeep(array $arrayDef, $array2)
     {
         $mergeArrays = \func_get_args();
         \array_shift($mergeArrays);
@@ -122,7 +122,7 @@ class ArrayUtil
     }
 
     /**
-     * Get value from array
+     * Get value from array (or obj with array access)
      *
      * @param array        $array   array to traverse
      * @param array|string $path    key path
@@ -135,7 +135,7 @@ class ArrayUtil
      *
      * @return mixed
      */
-    public static function pathGet(&$array, $path, $default = null)
+    public static function pathGet(array &$array, $path, $default = null)
     {
         $path = \array_reverse(self::pathToArray($path));
         while ($path) {
@@ -143,20 +143,16 @@ class ArrayUtil
             $arrayAccess = \is_array($array) || $array instanceof \ArrayAccess;
             if (!$arrayAccess) {
                 return $default;
-            }
-            if (isset($array[$key])) {
+            } elseif (isset($array[$key])) {
                 $array = &$array[$key];
                 continue;
-            }
-            if ($key === '__count__') {
+            } elseif ($key === '__count__') {
                 return \count($array);
-            }
-            if ($key === '__pop__') {
+            } elseif ($key === '__pop__') {
                 $arrayNew = \array_pop($array);
                 $array = &$arrayNew;
                 continue;
-            }
-            if (self::specialKey($key, $path, $array)) {
+            } elseif (self::specialKey($key, $path, $array)) {
                 continue;
             }
             return $default;
@@ -177,19 +173,17 @@ class ArrayUtil
      *
      * @return void
      */
-    public static function pathSet(&$array, $path, $val)
+    public static function pathSet(array &$array, $path, $val)
     {
         $path = \array_reverse(self::pathToArray($path));
         while ($path) {
             $key = \array_pop($path);
             if (self::specialKey($key, $path, $array)) {
                 continue;
-            }
-            if ($val === '__unset__' && empty($path)) {
+            } elseif ($val === '__unset__' && empty($path)) {
                 unset($array[$key]);
                 return;
-            }
-            if (!isset($array[$key]) || !\is_array($array[$key])) {
+            } elseif (!isset($array[$key]) || !\is_array($array[$key])) {
                 $array[$key] = array(); // initialize this level
             }
             $array = &$array[$key];
@@ -206,7 +200,7 @@ class ArrayUtil
      *
      * @return array|false Returns empty array if value not found
      */
-    public static function searchRecursive($value, $array, $inclKeys = false)
+    public static function searchRecursive($value, array $array, $inclKeys = false)
     {
         $key = \array_search($value, $array, true);
         if ($key !== false) {
@@ -231,13 +225,13 @@ class ArrayUtil
      * Sort array, using `$order`
      * Keys will be preserved
      *
-     * @param array  $array Array to sort
-     * @param array  $order values that define order / should come first
-     * @param string $what  ("value") or "key" - Whether to sort sort by value or key
+     * @param array      $array Array to sort
+     * @param array|null $order values that define order / should come first
+     * @param string     $what  ("value") or "key" - Whether to sort sort by value or key
      *
      * @return void
      */
-    public static function sortWithOrder(&$array, $order = array(), $what = 'value')
+    public static function sortWithOrder(array &$array, $order = array(), $what = 'value')
     {
         $callback = static function ($valA, $valB) use ($order) {
             $aPos = \array_search($valA, $order, true);
@@ -273,7 +267,7 @@ class ArrayUtil
      *
      * @return array removed values
      */
-    public static function spliceAssoc(&$array, $key, $length = null, $replacement = array())
+    public static function spliceAssoc(array &$array, $key, $length = null, $replacement = array())
     {
         $offset = \array_search($key, \array_keys($array), true);
         $count = \count($array);
@@ -305,7 +299,7 @@ class ArrayUtil
      *
      * @return array An array containing all the values from array that are not present in array2
      */
-    private static function diffAssocRecursiveHelper($array, $array2)
+    private static function diffAssocRecursiveHelper(array $array, array $array2)
     {
         $diff = array();
         \array_walk($array, static function ($value, $key) use (&$diff, $array2) {
@@ -328,6 +322,18 @@ class ArrayUtil
     }
 
     /**
+     * Check that value is not an array
+     *
+     * @param mixed $value Value to test
+     *
+     * @return bool
+     */
+    private static function isNonMergeable($value)
+    {
+        return \is_array($value) === false || Php::isCallable($value, Php::IS_CALLABLE_ARRAY_ONLY);
+    }
+
+    /**
      * Merge 2nd array into first
      *
      * @param array $arrayDef default array
@@ -335,10 +341,10 @@ class ArrayUtil
      *
      * @return array
      */
-    private static function mergeDeepWalk($arrayDef, $array2)
+    private static function mergeDeepWalk(array $arrayDef, array $array2)
     {
         \array_walk($array2, static function ($value, $key) use (&$arrayDef) {
-            if (\is_array($value) === false || Php::isCallable($value, Php::IS_CALLABLE_ARRAY_ONLY)) {
+            if (self::isNonMergeable($value)) {
                 // not array or appears to be a callable
                 if (\is_int($key) === false) {
                     $arrayDef[$key] = $value;
@@ -348,7 +354,8 @@ class ArrayUtil
                 }
                 return;
             }
-            if (isset($arrayDef[$key]) === false || \is_array($arrayDef[$key]) === false || Php::isCallable($arrayDef[$key], Php::IS_CALLABLE_ARRAY_ONLY)) {
+            if (isset($arrayDef[$key]) === false || self::isNonMergeable($arrayDef[$key])) {
+                // default not set or can be overwritten without merge
                 $arrayDef[$key] = $value;
                 return;
             }
@@ -385,7 +392,7 @@ class ArrayUtil
      *
      * @return bool whether key was handled
      */
-    private static function specialKey($key, &$path, &$array)
+    private static function specialKey($key, array &$path, array &$array)
     {
         if ($key === '__end__') {
             \end($array);

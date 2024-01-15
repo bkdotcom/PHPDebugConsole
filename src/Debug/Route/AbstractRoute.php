@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
@@ -210,6 +210,19 @@ abstract class AbstractRoute extends AbstractComponent implements RouteInterface
     protected function getDumper()
     {
         return $this->dumper;
+    }
+
+    /**
+     * Get request-method + request-uri or command line args
+     *
+     * @return string
+     */
+    protected function getRequestMethodUri()
+    {
+        return $this->debug->isCli()
+            ? '$: ' . \implode(' ', $this->debug->getServerParam('argv', array()))
+            : $this->debug->serverRequest->getMethod()
+                . ' ' . $this->debug->redact((string) $this->debug->serverRequest->getUri());
     }
 
     /**

@@ -63,11 +63,8 @@ class ClientAsync extends Client
                     yield $key => $request($opts);
                     continue;
                 }
-                throw new InvalidArgumentException(
-                    'Each value yielded by the iterator must be a'
-                    . ' Psr7\Http\Message\RequestInterface or a callable that returns a promise'
-                    . ' that fulfills with a Psr7\Message\Http\ResponseInterface object.'
-                );
+                throw new InvalidArgumentException('Each request must be a Psr7\Http\Message\RequestInterface'
+                    . ' or a callable that returns a promise that fulfills with a Psr7\Message\Http\ResponseInterface object.');
             }
         };
 

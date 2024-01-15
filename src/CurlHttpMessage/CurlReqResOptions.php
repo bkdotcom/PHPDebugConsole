@@ -187,12 +187,12 @@ class CurlReqResOptions
     private function requestHeadersToHeaders(array $requestHeaders)
     {
         $headers = [];
-        foreach ($requestHeaders as $name => $values) {
+        \array_walk($requestHeaders, function ($values, $name) use (&$headers) {
             $nameLower = \strtolower($name);
 
             // cURL does not support 'Expect-Continue', skip all 'EXPECT' headers
             if ($nameLower === 'expect') {
-                continue;
+                return;
             }
 
             if ($nameLower === 'content-length') {
@@ -207,7 +207,7 @@ class CurlReqResOptions
             foreach ($values as $value) {
                 $headers[] = $name . ': ' . $value;
             }
-        }
+        });
         return $headers;
     }
 

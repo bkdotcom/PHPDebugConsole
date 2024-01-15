@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
@@ -97,6 +97,7 @@ class LogPhp implements SubscriberInterface
             'valCompare' => '',
         ));
         $this->assertExtensions();
+        $this->assertMbStringSettings();
         $this->logXdebug();
     }
 
@@ -171,11 +172,15 @@ class LogPhp implements SubscriberInterface
                 ))
             );
         }
-        $this->assertSetting(array(
-            'msg' => 'Multibyte string function overloading is enabled (is evil)',
-            'name' => 'mbstring.func_overload',
-            'valCompare' => false,
-        ));
+    }
+
+    /**
+     * Assert MbString settings
+     *
+     * @return void
+     */
+    private function assertMbStringSettings()
+    {
         if (PHP_VERSION_ID < 50600) {
             // default_charset should be used for php >= 5.6
             $this->assertSetting(array(
@@ -184,6 +189,11 @@ class LogPhp implements SubscriberInterface
                 'valCompare' => '',
             ));
         }
+        $this->assertSetting(array(
+            'msg' => 'Multibyte string function overloading is enabled (is evil)',
+            'name' => 'mbstring.func_overload',
+            'valCompare' => false,
+        ));
     }
 
     /**

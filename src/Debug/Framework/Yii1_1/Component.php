@@ -6,15 +6,15 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
 namespace bdk\Debug\Framework\Yii1_1;
 
 use bdk\Debug;
-use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Collector\Pdo;
 use bdk\Debug\Framework\Yii1_1\ErrorLogger;
 use bdk\Debug\Framework\Yii1_1\LogRoute;
@@ -331,7 +331,7 @@ class Component extends CApplicationComponent implements SubscriberInterface
             $debug->log('authManager class', $debug->abstracter->crateWithVals(
                 \get_class($authManager),
                 array(
-                    'typeMore' => Abstracter::TYPE_STRING_CLASSNAME,
+                    'typeMore' => Type::TYPE_STRING_CLASSNAME,
                 )
             ));
 
@@ -340,7 +340,7 @@ class Component extends CApplicationComponent implements SubscriberInterface
                 $debug->log('accessManager class', $debug->abstracter->crateWithVals(
                     \get_class($accessManager),
                     array(
-                        'typeMore' => Abstracter::TYPE_STRING_CLASSNAME,
+                        'typeMore' => Type::TYPE_STRING_CLASSNAME,
                     )
                 ));
             }
@@ -377,7 +377,7 @@ class Component extends CApplicationComponent implements SubscriberInterface
         $debug->log('session class', $debug->abstracter->crateWithVals(
             \get_class($session),
             array(
-                'typeMore' => Abstracter::TYPE_STRING_CLASSNAME,
+                'typeMore' => Type::TYPE_STRING_CLASSNAME,
             )
         ));
 

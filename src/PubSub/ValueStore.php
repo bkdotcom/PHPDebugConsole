@@ -6,7 +6,7 @@
  * @package   bdk\PubSub
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2023 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  * @link      http://www.github.com/bkdotcom/PubSub
  */
@@ -198,7 +198,9 @@ class ValueStore implements ArrayAccess, IteratorAggregate, JsonSerializable, Se
             return $this->values[$key];
         }
         $return = null;
-        $getter = 'get' . \ucfirst($key);
+        $getter = \preg_match('/^is[A-Z]/', $key)
+            ? $key
+            : 'get' . \ucfirst($key);
         if (\method_exists($this, $getter)) {
             $return = $this->{$getter}();
         }
@@ -260,8 +262,6 @@ class ValueStore implements ArrayAccess, IteratorAggregate, JsonSerializable, Se
      * @param array $values key => values  being set
      *
      * @return void
-     *
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     protected function onSet($values = array())
     {

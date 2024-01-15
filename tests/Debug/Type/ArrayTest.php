@@ -4,6 +4,7 @@ namespace bdk\Test\Debug\Type;
 
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
+use bdk\Debug\Abstraction\Type;
 use bdk\Test\Debug\DebugTestFramework;
 
 /**
@@ -237,7 +238,7 @@ EOD;
                                 'options' => array(
                                     'isMaxDepth' => true,
                                 ),
-                                'type' => Abstracter::TYPE_ARRAY,
+                                'type' => Type::TYPE_ARRAY,
                                 'value' => array(),
                             ),
                             'ding' => 'dong',

@@ -71,17 +71,7 @@ class Mock implements Countable
 
         $this->lastCurlReqRes = $curlReqRes;
 
-        $response = \array_shift($this->queue);
-
-        if (\is_callable($response)) {
-            $response = $response($curlReqRes->getRequest(), $curlReqRes->getOptions());
-        }
-
-        $response = $response instanceof Exception
-            ? Promise::rejectionFor($response)
-            : Promise::promiseFor($response);
-
-        return $response->then(
+        return $this->getResponsePromise()->then(
             function (ResponseInterface $value) use ($curlReqRes) {
                 $curlReqRes->setResponse($value);
 
@@ -109,8 +99,6 @@ class Mock implements Countable
      * @param mixed ...$values Value(s) to add to queue
      *
      * @return void
-     *
-     * @throws InvalidArgumentException
      */
     public function append($values)
     {
@@ -118,16 +106,7 @@ class Mock implements Countable
             ? $values
             : \func_get_args();
         foreach ($values as $value) {
-            $isValid = $value instanceof ResponseInterface
-                || $value instanceof PromiseInterface
-                || $value instanceof Exception
-                || \is_callable($value);
-            if ($isValid === false) {
-                throw new InvalidArgumentException(\sprintf(
-                    'Expected a Response, Promise, Throwable or callable. %s provided',
-                    \is_object($value) ? \get_class($value) : \gettype($value)
-                ));
-            }
+            $this->assertValue($value);
             $this->queue[] = $value;
         }
     }
@@ -173,5 +152,49 @@ class Mock implements Countable
     public function reset()
     {
         $this->queue = array();
+    }
+
+    /**
+     * Get promise wrapped in promise
+     *
+     * @return PromiseInterface
+     */
+    public function getResponsePromise()
+    {
+        $response = \array_shift($this->queue);
+
+        if (\is_callable($response)) {
+            $response = $response(
+                $this->lastCurlReqRes->getRequest(),
+                $this->lastCurlReqRes->getOptions()
+            );
+        }
+
+        return $response instanceof Exception
+            ? Promise::rejectionFor($response)
+            : Promise::promiseFor($response);
+    }
+
+    /**
+     * Assert valid mock "response" value
+     *
+     * @param callable|Exception|PromiseInterface|ResponseInterface $value value to assert
+     *
+     * @return void
+     *
+     * @throws InvalidArgumentException
+     */
+    private function assertValue($value)
+    {
+        $isValid = $value instanceof ResponseInterface
+            || $value instanceof PromiseInterface
+            || $value instanceof Exception
+            || \is_callable($value);
+        if ($isValid === false) {
+            throw new InvalidArgumentException(\sprintf(
+                'Expected a Response, Promise, Throwable or callable. %s provided',
+                \is_object($value) ? \get_class($value) : \gettype($value)
+            ));
+        }
     }
 }

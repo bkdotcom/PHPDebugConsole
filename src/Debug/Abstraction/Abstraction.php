@@ -6,13 +6,14 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
 namespace bdk\Debug\Abstraction;
 
 use bdk\Debug\Abstraction\Abstracter;
+use bdk\Debug\Abstraction\Type;
 use bdk\PubSub\Event;
 
 /**
@@ -35,9 +36,9 @@ class Abstraction extends Event
     public function __construct($type, $values = array())
     {
         $values['type'] = $type;
-        if ($type !== Abstracter::TYPE_OBJECT && \array_key_exists('value', $values) === false) {
+        if ($type !== Type::TYPE_OBJECT && \array_key_exists('value', $values) === false) {
             // make sure non-object gets value
-            $values['value'] = $type === Abstracter::TYPE_ARRAY
+            $values['value'] = $type === Type::TYPE_ARRAY
                 ? array()
                 : null;
         }

@@ -6,14 +6,14 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2023 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.1
  */
 
 namespace bdk\Debug\Utility;
 
 use bdk\Debug;
-use bdk\Debug\Abstraction\Abstracter;
+use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Utility\TableRow;
 
 /**
@@ -268,7 +268,7 @@ class Table
             $rows = $this->preCrate($rows);
         }
         $rows = $this->debug->abstracter->crate($rows, 'table');
-        if ($this->debug->abstracter->isAbstraction($rows, Abstracter::TYPE_OBJECT)) {
+        if ($this->debug->abstracter->isAbstraction($rows, Type::TYPE_OBJECT)) {
             $this->meta['tableInfo']['class'] = $rows['className'];
             $this->meta['tableInfo']['summary'] = $rows['phpDoc']['summary'];
             $rows = $rows['traverseValues']

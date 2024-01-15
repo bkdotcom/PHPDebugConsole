@@ -6,13 +6,13 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
 namespace bdk\Debug\Dump;
 
-use bdk\Debug\Abstraction\Abstracter;
+use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Dump\TextValue;
 use bdk\Debug\LogEntry;
 
@@ -76,13 +76,12 @@ class Text extends Base
      */
     public function substitutionAsString($val, $opts)
     {
-        // function array dereferencing = php 5.4
-        $type = $this->debug->abstracter->getType($val)[0];
-        if ($type === Abstracter::TYPE_ARRAY) {
+        $type = $this->debug->abstracter->type->getType($val)[0];
+        if ($type === Type::TYPE_ARRAY) {
             $count = \count($val);
             return 'array(' . $count . ')';
         }
-        if ($type === Abstracter::TYPE_OBJECT) {
+        if ($type === Type::TYPE_OBJECT) {
             return (string) $val;   // __toString or className
         }
         return $this->valDumper->dump($val, $opts);
@@ -98,12 +97,12 @@ class Text extends Base
     protected function buildArgString($args)
     {
         foreach ($args as $i => $v) {
-            list($type, $typeMore) = $this->debug->abstracter->getType($v);
-            $typeMore2 = $typeMore === Abstracter::TYPE_ABSTRACTION
+            list($type, $typeMore) = $this->debug->abstracter->type->getType($v);
+            $typeMore2 = $typeMore === Type::TYPE_ABSTRACTION
                 ? $v['typeMore']
                 : $typeMore;
-            $isNumericString = $type === Abstracter::TYPE_STRING
-                && \in_array($typeMore2, array(Abstracter::TYPE_STRING_NUMERIC, Abstracter::TYPE_TIMESTAMP), true);
+            $isNumericString = $type === Type::TYPE_STRING
+                && \in_array($typeMore2, array(Type::TYPE_STRING_NUMERIC, Type::TYPE_TIMESTAMP), true);
             $args[$i] = $this->valDumper->dump($v, array(
                 'addQuotes' => $i !== 0 || $isNumericString,
                 'type' => $type,
@@ -220,7 +219,7 @@ class Text extends Base
                 return '=======';
             }
             if ($this->depth > 0) {
-                $this->depth --;
+                $this->depth--;
             }
             return '';
         }

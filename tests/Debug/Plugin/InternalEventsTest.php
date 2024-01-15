@@ -13,6 +13,7 @@ use bdk\Test\Debug\DebugTestFramework;
 /**
  * PHPUnit tests for Debug class
  *
+ * @covers \bdk\Debug\Dump\BaseValue
  * @covers \bdk\Debug\Plugin\InternalEvents
  * @covers \bdk\Debug\Plugin\Route
  * @covers \bdk\Debug\Route\Email

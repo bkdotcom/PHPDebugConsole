@@ -6,8 +6,8 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2023 Brad Kent
- * @version   v3.1
+ * @copyright 2014-2024 Brad Kent
+ * @version   v3.3
  *
  * @link http://www.github.com/bkdotcom/PHPDebugConsole
  * @link https://developer.mozilla.org/en-US/docs/Web/API/console
@@ -111,7 +111,7 @@ class Debug extends AbstractDebug
     const EVENT_STREAM_WRAP = 'debug.streamWrap';
 
     const META = "\x00meta\x00";
-    const VERSION = '3.2';
+    const VERSION = '3.3';
 
     protected $cfg = array(
         'channelIcon' => 'fa fa-list-ul',
@@ -320,11 +320,11 @@ class Debug extends AbstractDebug
      *  * 'key', value
      *  * 'key'                 (value defaults to true)
      *
-     * @param mixed $args,... arguments
+     * @param mixed ...$arg arguments
      *
      * @return array special array storing "meta" values
      */
-    public static function meta()
+    public static function meta($arg = null)
     {
         $args = \func_get_args();
         /** @var mixed[] make psalm happy */

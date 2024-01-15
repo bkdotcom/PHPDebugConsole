@@ -6,15 +6,15 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
 namespace bdk\Debug\Framework\Yii2;
 
 use bdk\Debug;
-use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Collector\Pdo;
 use bdk\Debug\Framework\Yii2\LogTarget;
 use bdk\Debug\LogEntry;
@@ -367,10 +367,10 @@ class Module extends BaseModule implements SubscriberInterface, BootstrapInterfa
         foreach ($tableData as &$info) {
             unset($info['index']);
             $info['senderClass'] = $this->debug->abstracter->crateWithVals($info['senderClass'], array(
-                'typeMore' => Abstracter::TYPE_STRING_CLASSNAME,
+                'typeMore' => Type::TYPE_STRING_CLASSNAME,
             ));
             $info['eventClass'] = $this->debug->abstracter->crateWithVals($info['eventClass'], array(
-                'typeMore' => Abstracter::TYPE_STRING_CLASSNAME,
+                'typeMore' => Type::TYPE_STRING_CLASSNAME,
             ));
         }
 
@@ -403,7 +403,7 @@ class Module extends BaseModule implements SubscriberInterface, BootstrapInterfa
         $debug->log('session class', $debug->abstracter->crateWithVals(
             \get_class($session),
             array(
-                'typeMore' => Abstracter::TYPE_STRING_CLASSNAME,
+                'typeMore' => Type::TYPE_STRING_CLASSNAME,
             )
         ));
 

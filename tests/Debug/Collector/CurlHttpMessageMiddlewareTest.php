@@ -5,6 +5,7 @@ namespace bdk\Test\Debug\Collector;
 use bdk\CurlHttpMessage\Exception\RequestException;
 use bdk\CurlHttpMessage\Handler\Mock as MockHandler;
 use bdk\Debug\Abstraction\Abstracter;
+use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Collector\CurlHttpMessageMiddleware;
 use bdk\HttpMessage\Request;
 use bdk\HttpMessage\Response;
@@ -102,8 +103,8 @@ class CurlHttpMessageMiddlewareTest extends DebugTestFramework
                                 'prettified' => true,
                                 'prettifiedTag' => true,
                                 'strlen' => null,
-                                'type' => Abstracter::TYPE_STRING,
-                                'typeMore' => Abstracter::TYPE_STRING_JSON,
+                                'type' => Type::TYPE_STRING,
+                                'typeMore' => Type::TYPE_STRING_JSON,
                                 'value' => '{' . "\n"
                                     . '    "foo": "bar"' . "\n"
                                     . '}',

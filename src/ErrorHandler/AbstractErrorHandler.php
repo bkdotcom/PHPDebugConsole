@@ -4,14 +4,13 @@
  * @package   bdk\ErrorHandler
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2023 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.3
  */
 
 namespace bdk\ErrorHandler;
 
 use bdk\Backtrace;
-use bdk\ErrorHandler;
 use bdk\ErrorHandler\AbstractComponent;
 use bdk\ErrorHandler\Error;
 use bdk\ErrorHandler\Plugin\Emailer;
@@ -27,14 +26,19 @@ use bdk\ErrorHandler\Plugin\Stats;
  */
 abstract class AbstractErrorHandler extends AbstractComponent
 {
+    const EVENT_ERROR = 'errorHandler.error';
+
     /** @var array */
     protected $data = array(
         'errorCaller'   => array(),
         'errors'        => array(),
-        'lastErrors'     => array(),    // contains up to two errors: suppressed & unsuppressed
+        'lastErrors'    => array(),     // contains up to two errors: suppressed & unsuppressed
                                         // lastError[0] is the most recent error
         'uncaughtException' => null,    // error constructor will pull this
     );
+
+    protected $prevErrorHandler = null;
+    protected $prevExceptionHandler = null;
 
     /** @var Backtrace */
     private $backtrace;
@@ -53,25 +57,70 @@ abstract class AbstractErrorHandler extends AbstractComponent
     private $toStringException = null;
 
     /**
-     * Check for anonymous class notation
-     * Replace with more usefull parent class
+     * Set data value
+     *
+     * @param string $key   what
+     * @param mixed  $value value
+     *
+     * @return void
+     */
+    public function setData($key, $value)
+    {
+        $this->data[$key] = $value;
+    }
+
+    /**
+     * Conditioanlly pass error or exception to previously defined handler
+     *
+     * @param Error $error Error instance
+     *
+     * @return bool
+     * @throws \Exception
+     */
+    protected function continueToPrevHandler(Error $error)
+    {
+        $this->handleUserError($error);
+        if ($error['continueToPrevHandler'] === false || $error->isPropagationStopped()) {
+            return $error['continueToNormal'] === false;
+        }
+        if ($error['exception']) {
+            $this->continueToPrevHandlerException($error);
+            return $error['continueToNormal'] === false;
+        }
+        if (!$this->prevErrorHandler) {
+            return $error['continueToNormal'] === false;
+        }
+        return \call_user_func(
+            $this->prevErrorHandler,
+            $error['type'],
+            $error['message'],
+            $error['file'],
+            $error['line'],
+            $error['vars']
+        );
+    }
+
+    /**
+     * Restore previous excption handler and re-throw or log exception
      *
      * @param Error $error Error instance
      *
      * @return void
+     * @throws \Exception
      */
-    protected function anonymousCheck(Error $error)
+    private function continueToPrevHandlerException(Error $error)
     {
-        $message = $error['message'];
-        if (\strpos($message, "@anonymous\0") === false) {
-            return;
+        if ($this->prevExceptionHandler) {
+            /*
+                re-throw exception vs calling handler directly
+            */
+            \restore_exception_handler();
+            $this->data['uncaughtException'] = null;
+            throw $error['exception'];
         }
-        $regex = '/[a-zA-Z_\x7f-\xff][\\\\a-zA-Z0-9_\x7f-\xff]*+@anonymous\x00(.*?\.php)(?:0x?|:([0-9]++)\$)[0-9a-fA-F]++/';
-        $error['message'] = \preg_replace_callback($regex, static function ($matches) {
-            return \class_exists($matches[0], false)
-                ? (\get_parent_class($matches[0]) ?: \key(\class_implements($matches[0])) ?: 'class') . '@anonymous'
-                : $matches[0];
-        }, $message);
+        if ($error['continueToNormal']) {
+            $error->log();
+        }
     }
 
     /**
@@ -93,7 +142,7 @@ abstract class AbstractErrorHandler extends AbstractComponent
         }
         $callables = \array_map(static function ($subscriberInfo) {
             return $subscriberInfo['callable'];
-        }, $this->eventManager->getSubscribers(ErrorHandler::EVENT_ERROR));
+        }, $this->eventManager->getSubscribers(self::EVENT_ERROR));
         if ($this->cfg['enableEmailer'] && \in_array(array($this->getEmailer(), 'onErrorHighPri'), $callables, true) === false) {
             $this->cfg['enableStats'] = true;
             $this->eventManager->addSubscriberInterface($this->emailer);
@@ -196,10 +245,10 @@ abstract class AbstractErrorHandler extends AbstractComponent
             Replace - not append - subscriber set via setCfg
         */
         if ($prev !== null) {
-            $this->eventManager->unsubscribe(ErrorHandler::EVENT_ERROR, $prev);
+            $this->eventManager->unsubscribe(self::EVENT_ERROR, $prev);
         }
         if ($onError) {
-            $this->eventManager->subscribe(ErrorHandler::EVENT_ERROR, $onError);
+            $this->eventManager->subscribe(self::EVENT_ERROR, $onError);
         }
     }
 

@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2023 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.1
  */
 
@@ -15,9 +15,9 @@ namespace bdk\Debug\Utility;
 use bdk\Debug\Utility;
 use bdk\Debug\Utility\ArrayUtil;
 use bdk\Debug\Utility\Php;
-use bdk\Debug\Utility\Utf8;
 use bdk\HttpMessage\Utility\ContentType;
 use DOMDocument;
+use finfo;
 use InvalidArgumentException;
 use Psr\Http\Message\StreamInterface;
 use SqlFormatter;
@@ -92,7 +92,7 @@ class StringUtil
         if ($val instanceof StreamInterface) {
             $val = Utility::getStreamContents($val);
         }
-        $finfo = new \finfo(FILEINFO_MIME_TYPE);
+        $finfo = new finfo(FILEINFO_MIME_TYPE);
         $contentType = $finfo->buffer($val);
         if ($contentType !== ContentType::TXT) {
             return $contentType;
@@ -531,7 +531,7 @@ class StringUtil
             $val = ArrayUtil::pathGet($val, \array_slice($path, 1), $noValue);
         }
         if ($val === $noValue) {
-            return null;
+            return null; // will not replace token
         }
         if ($val === null) {
             return '';

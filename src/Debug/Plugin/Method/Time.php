@@ -158,8 +158,8 @@ class Time implements SubscriberInterface
      *
      * also logs additional arguments
      *
-     * @param string $label   (optional) unique label
-     * @param mixed  $arg,... (optional) additional values to be logged with time
+     * @param string $label  (optional) unique label
+     * @param mixed  ...$arg (optional) additional values to be logged with time
      *
      * @return $this
      */

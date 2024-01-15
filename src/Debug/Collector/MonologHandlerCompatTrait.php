@@ -1,4 +1,4 @@
-<?php
+<?php // phpcs:ignore PSR1.Files.SideEffects.FoundWithSymbol
 
 /**
  * This file is part of PHPDebugConsole
@@ -26,6 +26,9 @@ if (\method_exists($refMethod, 'hasReturnType') && $refMethod->hasReturnType()) 
         ? __DIR__ . '/MonologHandlerCompatTrait_2.0.php'
         : __DIR__ . '/MonologHandlerCompatTrait_3.0.php';
 } elseif (\trait_exists(__NAMESPACE__ . '\\MonologHandlerCompatTrait', false) === false) {
+    /**
+     * @phpcs:disable Generic.Classes.DuplicateClassName.Found
+     */
     trait MonologHandlerCompatTrait
     {
         /**

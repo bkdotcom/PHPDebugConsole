@@ -4,12 +4,13 @@
  * @package   bdk\ErrorHandler
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2023 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.3
  */
 
 namespace bdk;
 
+use bdk\Backtrace;
 use bdk\ErrorHandler\AbstractErrorHandler;
 use bdk\ErrorHandler\Error;
 use bdk\PubSub\Event;
@@ -24,15 +25,12 @@ use bdk\PubSub\Manager as EventManager;
  */
 class ErrorHandler extends AbstractErrorHandler
 {
-    const EVENT_ERROR = 'errorHandler.error';
-
     /** @var EventManager */
     public $eventManager;
+
     protected $inShutdown = false;
     protected $registered = false;
     protected $prevDisplayErrors = null;
-    protected $prevErrorHandler = null;
-    protected $prevExceptionHandler = null;
 
     private static $instance;
 
@@ -188,7 +186,6 @@ class ErrorHandler extends AbstractErrorHandler
     public function handleError($errType, $errMsg, $file, $line, $vars = array())
     {
         $error = $this->cfg['errorFactory']($this, $errType, $errMsg, $file, $line, $vars);
-        $this->anonymousCheck($error);
         $this->toStringCheck($error);
         if (!$this->isErrTypeHandled($errType)) {
             // not handled
@@ -203,7 +200,7 @@ class ErrorHandler extends AbstractErrorHandler
         $this->data['errors'][ $error['hash'] ] = $error;
         if (!$error['isSuppressed']) {
             // only clear error caller via non-suppressed error
-            $this->data['errorCaller'] = array();
+            $this->setErrorCaller(array());
             // only publish event for non-suppressed error
             $this->eventManager->publish(self::EVENT_ERROR, $error);
             $this->throwError($error);
@@ -305,19 +302,6 @@ class ErrorHandler extends AbstractErrorHandler
     }
 
     /**
-     * Set data value
-     *
-     * @param string $key   what
-     * @param mixed  $value value
-     *
-     * @return void
-     */
-    public function setData($key, $value)
-    {
-        $this->data[$key] = $value;
-    }
-
-    /**
      * Set the calling file/line for next error.
      * This override will apply until cleared or error occurs
      *
@@ -335,7 +319,7 @@ class ErrorHandler extends AbstractErrorHandler
     public function setErrorCaller($caller = null, $offset = 0)
     {
         if ($caller === null) {
-            $backtrace = \bdk\Backtrace::get(null, $offset + 3);
+            $backtrace = Backtrace::get(null, $offset + 3);
             $index = isset($backtrace[$offset + 1])
                 ? $offset + 1
                 : \count($backtrace) - 1;
@@ -381,60 +365,6 @@ class ErrorHandler extends AbstractErrorHandler
         $this->prevErrorHandler = null;
         $this->prevExceptionHandler = null;
         $this->registered = false;  // used by $this->onShutdown()
-    }
-
-    /**
-     * Conditioanlly pass error or exception to previously defined handler
-     *
-     * @param Error $error Error instance
-     *
-     * @return bool
-     * @throws \Exception
-     */
-    protected function continueToPrevHandler(Error $error)
-    {
-        $this->handleUserError($error);
-        if ($error['continueToPrevHandler'] === false || $error->isPropagationStopped()) {
-            return $error['continueToNormal'] === false;
-        }
-        if ($error['exception']) {
-            $this->continueToPrevHandlerException($error);
-            return $error['continueToNormal'] === false;
-        }
-        if (!$this->prevErrorHandler) {
-            return $error['continueToNormal'] === false;
-        }
-        return \call_user_func(
-            $this->prevErrorHandler,
-            $error['type'],
-            $error['message'],
-            $error['file'],
-            $error['line'],
-            $error['vars']
-        );
-    }
-
-    /**
-     * Restore previous excption handler and re-throw or log exception
-     *
-     * @param Error $error Error instance
-     *
-     * @return void
-     * @throws \Exception
-     */
-    private function continueToPrevHandlerException(Error $error)
-    {
-        if ($this->prevExceptionHandler) {
-            /*
-                re-throw exception vs calling handler directly
-            */
-            \restore_exception_handler();
-            $this->data['uncaughtException'] = null;
-            throw $error['exception'];
-        }
-        if ($error['continueToNormal']) {
-            $error->log();
-        }
     }
 
     /**

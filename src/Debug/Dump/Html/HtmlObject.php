@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
@@ -15,7 +15,10 @@ namespace bdk\Debug\Dump\Html;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
 use bdk\Debug\Dump\Html\Helper;
+use bdk\Debug\Dump\Html\ObjectCases;
+use bdk\Debug\Dump\Html\ObjectConstants;
 use bdk\Debug\Dump\Html\ObjectMethods;
+use bdk\Debug\Dump\Html\ObjectPhpDoc;
 use bdk\Debug\Dump\Html\ObjectProperties;
 use bdk\Debug\Dump\Html\Value as ValDumper;
 use bdk\Debug\Utility\Html as HtmlUtil;
@@ -31,6 +34,7 @@ class HtmlObject
     protected $helper;
     protected $html;
     protected $methods;
+    protected $phpDoc;
     protected $properties;
     protected $sectionCallables;
 
@@ -49,6 +53,7 @@ class HtmlObject
         $this->cases = new ObjectCases($valDumper, $helper, $html);
         $this->constants = new ObjectConstants($valDumper, $helper, $html);
         $this->methods = new ObjectMethods($valDumper, $helper, $html);
+        $this->phpDoc = new ObjectPhpDoc($valDumper);
         $this->properties = new ObjectProperties($valDumper, $helper, $html);
         $this->sectionCallables = array(
             'attributes' => array($this, 'dumpAttributes'),
@@ -57,7 +62,7 @@ class HtmlObject
             'extends' => array($this, 'dumpExtends'),
             'implements' => array($this, 'dumpImplements'),
             'methods' => array($this->methods, 'dump'),
-            'phpDoc' => array($this, 'dumpPhpDoc'),
+            'phpDoc' => array($this->phpDoc, 'dump'),
             'properties' => array($this->properties, 'dump'),
         );
     }
@@ -277,7 +282,7 @@ class HtmlObject
     }
 
     /**
-     * Dump method modifiers (final)
+     * Dump modifiers (final & readonly)
      *
      * @param Abstraction $abs Object Abstraction instance
      *
@@ -296,85 +301,6 @@ class HtmlObject
             . \implode('', \array_map(static function ($modifier) {
                 return '<dd class="t_modifier_' . $modifier . '">' . $modifier . '</dd>' . "\n";
             }, $modifiers));
-    }
-
-    /**
-     * Dump object's phpDoc info
-     *
-     * @param Abstraction $abs Object Abstraction instance
-     *
-     * @return string html fragment
-     */
-    protected function dumpPhpDoc(Abstraction $abs)
-    {
-        $str = '<dt>phpDoc</dt>' . "\n";
-        foreach ($abs['phpDoc'] as $tagName => $values) {
-            if (\is_array($values) === false) {
-                continue;
-            }
-            foreach ($values as $tagData) {
-                $tagData['tagName'] = $tagName;
-                $str .= $this->dumpPhpDocTag($tagData);
-            }
-        }
-        return $str;
-    }
-
-    /**
-     * Markup tag
-     *
-     * @param array $tagData parsed tag
-     *
-     * @return string html fragment
-     */
-    private function dumpPhpDocTag($tagData)
-    {
-        $tagName = $tagData['tagName'];
-        switch ($tagName) {
-            case 'author':
-                $info = $this->dumpPhpDocTagAuthor($tagData);
-                break;
-            case 'link':
-            case 'see':
-                $desc = $tagData['desc'] ?: $tagData['uri'] ?: '';
-                if (isset($tagData['uri'])) {
-                    $info = '<a href="' . $tagData['uri'] . '" target="_blank">' . \htmlspecialchars($desc) . '</a>';
-                    break;
-                }
-                // see tag
-                $info = $this->valDumper->markupIdentifier($tagData['fqsen'])
-                    . ' <span class="phpdoc-desc">' . \htmlspecialchars($desc) . '</span>';
-                $info = \str_replace(' <span class="phpdoc-desc"></span>', '', $info);
-                break;
-            default:
-                unset($tagData['tagName']);
-                $info = \htmlspecialchars(\implode(' ', $tagData));
-        }
-        return '<dd class="phpdoc phpdoc-' . $tagName . '">'
-            . '<span class="phpdoc-tag">' . $tagName . '</span>'
-            . '<span class="t_operator">:</span> '
-            . $info
-            . '</dd>' . "\n";
-    }
-
-    /**
-     * Dump PhpDoc author tag value
-     *
-     * @param array $tagData parsed tag
-     *
-     * @return string html partial
-     */
-    private function dumpPhpDocTagAuthor($tagData)
-    {
-        $html = $tagData['name'];
-        if ($tagData['email']) {
-            $html .= ' &lt;<a href="mailto:' . $tagData['email'] . '">' . $tagData['email'] . '</a>&gt;';
-        }
-        if ($tagData['desc']) {
-            // desc is non-standard for author tag
-            $html .= ' ' . \htmlspecialchars($tagData['desc']);
-        }
-        return $html;
     }
 
     /**

@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2023 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.1
  */
 
@@ -18,7 +18,7 @@ use ReflectionClass;
 /**
  * Base class for collecting constants, properties, & methods
  */
-abstract class Inheritable
+abstract class AbstractInheritable
 {
     /** @var Abstracter */
     protected $abstracter;

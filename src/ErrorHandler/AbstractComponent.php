@@ -4,7 +4,7 @@
  * @package   bdk\ErrorHandler
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2023 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.3
  */
 
@@ -124,8 +124,6 @@ class AbstractComponent
      * @param array $prev previous config values
      *
      * @return void
-     *
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     protected function postSetCfg($cfg = array(), $prev = array())
     {

@@ -3,6 +3,7 @@
 namespace bdk\Test\Debug\Collector;
 
 use bdk\Debug\Abstraction\Abstracter;
+use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Collector\OAuth;
 use bdk\Test\Debug\DebugTestFramework;
 
@@ -66,8 +67,8 @@ class OAuthTest extends DebugTestFramework
                             'brief' => false,
                             'debug' => Abstracter::ABSTRACTION,
                             'strlen' => null,
-                            'type' => Abstracter::TYPE_STRING,
-                            'typeMore' => Abstracter::TYPE_TIMESTAMP,
+                            'type' => Type::TYPE_STRING,
+                            'typeMore' => Type::TYPE_TIMESTAMP,
                             'value' => '%d'
                         ),
                         'oauth_version' => '1.0',
@@ -206,8 +207,8 @@ class OAuthTest extends DebugTestFramework
                             'brief' => false,
                             'debug' => Abstracter::ABSTRACTION,
                             'strlen' => null,
-                            'type' => Abstracter::TYPE_STRING,
-                            'typeMore' => Abstracter::TYPE_TIMESTAMP,
+                            'type' => Type::TYPE_STRING,
+                            'typeMore' => Type::TYPE_TIMESTAMP,
                             'value' => '%d',
                         ),
                         'oauth_version' => '1.0',
@@ -347,8 +348,8 @@ class OAuthTest extends DebugTestFramework
                             'brief' => false,
                             'debug' => Abstracter::ABSTRACTION,
                             'strlen' => null,
-                            'type' => Abstracter::TYPE_STRING,
-                            'typeMore' => Abstracter::TYPE_TIMESTAMP,
+                            'type' => Type::TYPE_STRING,
+                            'typeMore' => Type::TYPE_TIMESTAMP,
                             'value' => '%d',
                         ),
                         'oauth_version' => '1.0',
@@ -449,8 +450,8 @@ class OAuthTest extends DebugTestFramework
                             'brief' => false,
                             'debug' => Abstracter::ABSTRACTION,
                             'strlen' => null,
-                            'type' => Abstracter::TYPE_STRING,
-                            'typeMore' => Abstracter::TYPE_TIMESTAMP,
+                            'type' => Type::TYPE_STRING,
+                            'typeMore' => Type::TYPE_TIMESTAMP,
                             'value' => '%s',
                         ),
                         'oauth_version' => '1.0',

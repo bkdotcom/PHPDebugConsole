@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.1
  */
 
@@ -19,6 +19,7 @@ use bdk\Debug\Abstraction\AbstractObject;
 use bdk\Debug\Abstraction\Object\Abstraction as ObjectAbstraction;
 use bdk\Debug\Abstraction\Object\Methods;
 use bdk\Debug\Abstraction\Object\Properties;
+use bdk\Debug\Abstraction\Type;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Utility\Php;
 use bdk\Debug\Utility\StringUtil;
@@ -194,7 +195,7 @@ class SerializeLog
             // we are an abstraction
             $type = $val['type'];
             unset($val['debug'], $val['type']);
-            if ($type !== Abstracter::TYPE_OBJECT) {
+            if ($type !== Type::TYPE_OBJECT) {
                 return new Abstraction($type, $val);
             }
             $val['properties'] = self::importLegacy($val['properties']);

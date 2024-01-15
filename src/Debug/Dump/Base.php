@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
@@ -15,6 +15,7 @@ namespace bdk\Debug\Dump;
 use bdk\Debug;
 use bdk\Debug\AbstractComponent;
 use bdk\Debug\Abstraction\Abstracter;
+use bdk\Debug\Abstraction\Type;
 use bdk\Debug\LogEntry;
 
 /**
@@ -96,8 +97,8 @@ class Base extends AbstractComponent
      */
     public function substitutionAsString($val, $opts)
     {
-        list($type, $typeMore) = $this->debug->abstracter->getType($val);
-        if ($type === Abstracter::TYPE_ARRAY) {
+        list($type, $typeMore) = $this->debug->abstracter->type->getType($val);
+        if ($type === Type::TYPE_ARRAY) {
             $count = \count($val);
             if ($count) {
                 // replace with dummy array so browser console will display native Array(length)
@@ -105,7 +106,7 @@ class Base extends AbstractComponent
             }
             return $val;
         }
-        if ($type === Abstracter::TYPE_OBJECT) {
+        if ($type === Type::TYPE_OBJECT) {
             return (string) $val;   // __toString or className
         }
         $opts['type'] = $type;

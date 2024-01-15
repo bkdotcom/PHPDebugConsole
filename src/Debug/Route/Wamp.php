@@ -9,7 +9,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
@@ -241,25 +241,7 @@ class Wamp implements RouteInterface
             $this->processLogEntryViaEvent($logEntry);
         }
         foreach ($data['logSummary'] as $priority => $entries) {
-            $this->processLogEntryViaEvent(new LogEntry(
-                $this->debug,
-                'groupSummary',
-                array(),
-                array(
-                    'priority' => $priority,
-                )
-            ));
-            foreach ($entries as $logEntry) {
-                $this->processLogEntryViaEvent($logEntry);
-            }
-            $this->processLogEntryViaEvent(new LogEntry(
-                $this->debug,
-                'groupEnd',
-                array(),
-                array(
-                    'closesSummary' => true,
-                )
-            ));
+            $this->processLogSummaryEntries($priority, $entries);
         }
         foreach ($data['log'] as $logEntry) {
             $this->processLogEntryViaEvent($logEntry);
@@ -296,22 +278,7 @@ class Wamp implements RouteInterface
             list($args, $metaNew, $classesNew) = $this->crate->crateLogEntry($logEntry);
             $meta = \array_merge($meta, $metaNew);
         }
-        if ($classesNew) {
-            $classDefinitions = array();
-            foreach ($classesNew as $classKey) {
-                $classDefinitions[$classKey] = $this->debug->data->get('classDefinitions/' . $classKey);
-            }
-            $this->processLogEntry(new LogEntry(
-                $this->debug,
-                'meta',
-                array(
-                    array(
-                        'classDefinitions' => $classDefinitions,
-                    ),
-                ),
-                $meta
-            ));
-        }
+        $this->processNewClasses($classesNew, $meta);
         $this->wamp->publish($this->topic, array($logEntry['method'], $args, $meta));
     }
 
@@ -336,6 +303,64 @@ class Wamp implements RouteInterface
             return;
         }
         $this->processLogEntry($logEntry);
+    }
+
+    /**
+     * Process logSummary priority
+     *
+     * @param int        $priority Priority
+     * @param LogEntry[] $entries  LogEntries
+     *
+     * @return void
+     */
+    private function processLogSummaryEntries($priority, array $entries)
+    {
+        $this->processLogEntryViaEvent(new LogEntry(
+            $this->debug,
+            'groupSummary',
+            array(),
+            array(
+                'priority' => $priority,
+            )
+        ));
+        foreach ($entries as $logEntry) {
+            $this->processLogEntryViaEvent($logEntry);
+        }
+        $this->processLogEntryViaEvent(new LogEntry(
+            $this->debug,
+            'groupEnd',
+            array(),
+            array(
+                'closesSummary' => true,
+            )
+        ));
+    }
+
+    /**
+     * Process class definitions that have not yet been pushed
+     *
+     * @param array $classesNew New classnames
+     *
+     * @return void
+     */
+    private function processNewClasses(array $classesNew)
+    {
+        if (!$classesNew) {
+            return;
+        }
+        $classDefinitions = array();
+        foreach ($classesNew as $classKey) {
+            $classDefinitions[$classKey] = $this->debug->data->get('classDefinitions/' . $classKey);
+        }
+        $this->processLogEntry(new LogEntry(
+            $this->debug,
+            'meta',
+            array(
+                array(
+                    'classDefinitions' => $classDefinitions,
+                ),
+            )
+        ));
     }
 
     /**

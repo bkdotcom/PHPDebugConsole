@@ -6,14 +6,14 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
 namespace bdk\Debug\Framework;
 
 use bdk\Debug;
-use bdk\Debug\Abstraction\Abstracter;
+use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Collector\Pdo;
 use bdk\Debug\Psr15\Middleware;
 use bdk\ErrorHandler\Error;
@@ -179,12 +179,12 @@ class Cake4 extends BasePlugin
                     'subject' => $debug->abstracter->crateWithVals(
                         \get_class($event->getSubject()),
                         array(
-                            'typeMore' => Abstracter::TYPE_STRING_CLASSNAME,
+                            'typeMore' => Type::TYPE_STRING_CLASSNAME,
                         )
                     ),
                 );
             }
-            $events[$name]['count'] ++;
+            $events[$name]['count']++;
         }
         \ksort($events);
         $debug->table('dispatched events', \array_values($events));

@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2023 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
@@ -17,6 +17,7 @@ use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\AbstractObject;
 use bdk\Debug\Abstraction\Object\Definition as AbstractObjectDefinition;
 use bdk\Debug\Abstraction\Object\PropertiesDom;
+use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Data;
 use bdk\Debug\Utility\PhpDoc;
 use bdk\PubSub\SubscriberInterface;
@@ -189,13 +190,13 @@ class Subscriber implements SubscriberInterface
         );
         $properties = $abs['properties'];
         $properties['debug.file'] = $this->abstractObject->properties->buildPropValues(array(
-            'type' => Abstracter::TYPE_STRING,
+            'type' => Type::TYPE_STRING,
             'value' => $abs['definition']['fileName'],
             'valueFrom' => 'debug',
             'visibility' => 'debug',
         ));
         $properties['debug.line'] = $this->abstractObject->properties->buildPropValues(array(
-            'type' => Abstracter::TYPE_INT,
+            'type' => Type::TYPE_INT,
             'value' => (int) $abs['definition']['startLine'],
             'valueFrom' => 'debug',
             'visibility' => 'debug',
@@ -244,7 +245,7 @@ class Subscriber implements SubscriberInterface
         }
         foreach ($abs['methods']['__construct']['params'] as $info) {
             if ($info['isPromoted'] && $info['desc']) {
-                $paramName = \substr($info['name'], 1); // toss the "$"
+                $paramName = $info['name'];
                 $abs['properties'][$paramName]['desc'] = $info['desc'];
             }
         }

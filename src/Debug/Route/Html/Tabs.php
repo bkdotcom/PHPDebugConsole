@@ -1,5 +1,15 @@
 <?php
 
+/**
+ * This file is part of PHPDebugConsole
+ *
+ * @package   PHPDebugConsole
+ * @author    Brad Kent <bkfake-github@yahoo.com>
+ * @license   http://opensource.org/licenses/MIT MIT
+ * @copyright 2014-2024 Brad Kent
+ * @version   v3.0
+ */
+
 namespace bdk\Debug\Route\Html;
 
 use bdk\Debug;
@@ -159,7 +169,19 @@ class Tabs
                 ),
                 'role' => 'tabpanel',
             ),
-            "\n" . '<div class="tab-body">' . "\n"
+            $this->buildTabPaneBody()
+        ) . "\n";
+    }
+
+    /**
+     * Build primary tab pane body
+     *
+     * @return string html
+     */
+    private function buildTabPaneBody()
+    {
+        return "\n"
+            . '<div class="tab-body">' . "\n"
             . $this->route->processAlerts()
             /*
                 If outputing script, initially hide the output..
@@ -172,8 +194,7 @@ class Tabs
             . '<ul class="debug-log group-body">' . "\n"
                 . $this->route->processLog()
                 . '</ul>' . "\n"
-            . '</div>' . "\n" // close .tab-body
-        ) . "\n";
+            . '</div>' . "\n"; // close .tab-body
     }
 
     /**

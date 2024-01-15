@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2023 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.1
  */
 
@@ -269,7 +269,7 @@ class AbstractObject extends AbstractComponent
         if ($abs['isRecursion']) {
             return;
         }
-        $abs['isTraverseOnly'] = $this->isTraverseOnly($abs);
+        $abs['isTraverseOnly'] = $this->helper->isTraverseOnly($abs);
         /*
             Debug::EVENT_OBJ_ABSTRACT_START subscriber may
             set isExcluded
@@ -406,23 +406,6 @@ class AbstractObject extends AbstractComponent
             if (\is_subclass_of($obj, $class)) {
                 return true;
             }
-        }
-        return false;
-    }
-
-    /**
-     * Test if only need to populate traverseValues
-     *
-     * @param ObjectAbstraction $abs Abstraction instance
-     *
-     * @return bool
-     */
-    private function isTraverseOnly(ObjectAbstraction $abs)
-    {
-        if ($abs['debugMethod'] === 'table' && \count($abs['hist']) < 4) {
-            $abs['cfgFlags'] &= ~self::CONST_COLLECT;  // set collect constants to "false"
-            $abs['cfgFlags'] &= ~self::METHOD_COLLECT;  // set collect methods to "false"
-            return true;
         }
         return false;
     }

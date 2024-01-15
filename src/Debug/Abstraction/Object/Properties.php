@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2023 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.1
  */
 
@@ -16,13 +16,14 @@ use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
 use bdk\Debug\Abstraction\Object\PropertiesPhpDoc;
+use bdk\Debug\Abstraction\Type;
 use ReflectionClass;
 use ReflectionProperty;
 
 /**
  * Get object property info
  */
-class Properties extends Inheritable
+class Properties extends AbstractInheritable
 {
     private static $basePropInfo = array(
         'attributes' => array(),
@@ -81,13 +82,13 @@ class Properties extends Inheritable
 
         if ($abs['isAnonymous']) {
             $properties['debug.file'] = static::buildPropValues(array(
-                'type' => Abstracter::TYPE_STRING,
+                'type' => Type::TYPE_STRING,
                 'value' => $abs['definition']['fileName'],
                 'valueFrom' => 'debug',
                 'visibility' => 'debug',
             ));
             $properties['debug.line'] = static::buildPropValues(array(
-                'type' => Abstracter::TYPE_INT,
+                'type' => Type::TYPE_INT,
                 'value' => (int) $abs['definition']['startLine'],
                 'valueFrom' => 'debug',
                 'visibility' => 'debug',
@@ -212,9 +213,7 @@ class Properties extends Inheritable
         $valuedProps = array();
         $this->traverseAncestors($abs['reflector'], function (ReflectionClass $reflector) use ($abs, &$properties, &$valuedProps) {
             $className = $this->helper->getClassName($reflector);
-            $refProperties = $reflector->getProperties();
-            while ($refProperties) {
-                $refProperty = \array_pop($refProperties);
+            foreach ($reflector->getProperties() as $refProperty) {
                 $name = $refProperty->getName();
                 if (\in_array($name, $valuedProps, true)) {
                     continue;
@@ -222,22 +221,37 @@ class Properties extends Inheritable
                 $valuedProps[] = $name;
                 $propInfo = isset($properties[$name])
                     ? $properties[$name]   // defined in class
-                    : $this->buildViaRef($abs, $refProperty);
-                if ($abs['isAnonymous'] && $refProperty->isDefault() && $className === $abs['className']) {
-                    // Necessary for anonymous classes
-                    $propInfo = $this->updateDeclarationVals(
-                        $propInfo,
-                        $this->helper->getClassName($refProperty->getDeclaringClass()),
-                        $className
-                    );
-                }
-                if ($abs['collectPropertyValues']) {
-                    $propInfo = $this->addValue($propInfo, $abs, $refProperty);
-                }
-                $properties[$name] = $propInfo;
+                    : $this->buildViaRef($abs, $refProperty); // dynamic
+                $properties[$name] = $this->addValuesPropInfo($abs, $refProperty, $propInfo, $className);
             }
         });
         $abs['properties'] = $properties;
+    }
+
+    /**
+     * Update property info with current value / declaration info
+     *
+     * @param Abstraction        $abs         Object Abstraction instance
+     * @param ReflectionProperty $refProperty ReflectionProperty instance
+     * @param array              $propInfo    Property info
+     * @param string             $className   Current level className
+     *
+     * @return array updated property info
+     */
+    private function addValuesPropInfo(Abstraction $abs, ReflectionProperty $refProperty, array $propInfo, $className)
+    {
+        if ($abs['isAnonymous'] && $refProperty->isDefault() && $className === $abs['className']) {
+            // Necessary for anonymous classes
+            $propInfo = $this->updateDeclarationVals(
+                $propInfo,
+                $this->helper->getClassName($refProperty->getDeclaringClass()),
+                $className
+            );
+        }
+        if ($abs['collectPropertyValues']) {
+            $propInfo = $this->addValue($propInfo, $abs, $refProperty);
+        }
+        return $propInfo;
     }
 
     /**
@@ -288,9 +302,7 @@ class Properties extends Inheritable
         $properties = $abs['properties'];
         $this->traverseAncestors($abs['reflector'], function (ReflectionClass $reflector) use ($abs, &$properties) {
             $className = $this->helper->getClassName($reflector);
-            $refProperties = $reflector->getProperties();
-            while ($refProperties) {
-                $refProperty = \array_pop($refProperties);
+            foreach ($reflector->getProperties() as $refProperty) {
                 if ($refProperty->isDefault() === false) {
                     continue;
                 }

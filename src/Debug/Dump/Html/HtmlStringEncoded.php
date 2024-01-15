@@ -6,14 +6,14 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
 namespace bdk\Debug\Dump\Html;
 
-use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Dump\Html\HtmlString;
 
 /**
@@ -157,7 +157,7 @@ class HtmlStringEncoded
         $attribs = $this->valDumper->getDumpOpt('attribs');
         $attribs['class'][] = 'no-quotes';
         $attribs['class'][] = 't_' . $abs['type'];
-        if ($abs['typeMore'] === Abstracter::TYPE_STRING_BASE64 && $abs['brief']) {
+        if ($abs['typeMore'] === Type::TYPE_STRING_BASE64 && $abs['brief']) {
             $this->valDumper->setDumpOpt('postDump', static function ($dumped) {
                 return '<span class="t_keyword">string</span><span class="text-muted">(base64)</span><span class="t_punct colon">:</span> ' . $dumped;
             });
@@ -185,13 +185,13 @@ class HtmlStringEncoded
     private function tabValuesFinish($vals, Abstraction $abs)
     {
         switch ($abs['typeMore']) {
-            case Abstracter::TYPE_STRING_BASE64:
+            case Type::TYPE_STRING_BASE64:
                 $vals['labelRaw'] = 'base64';
                 if ($abs['strlen']) {
                     $vals['valRaw'] .= '<span class="maxlen">&hellip; ' . ($abs['strlen'] - \strlen($abs['value'])) . ' more bytes (not logged)</span>';
                 }
                 break;
-            case Abstracter::TYPE_STRING_JSON:
+            case Type::TYPE_STRING_JSON:
                 $vals['labelRaw'] = 'json';
                 if ($abs['prettified'] || $abs['strlen']) {
                     $abs['typeMore'] = null; // unset typeMore to prevent loop
@@ -199,7 +199,7 @@ class HtmlStringEncoded
                     $abs['typeMore'] = 'json';
                 }
                 break;
-            case Abstracter::TYPE_STRING_SERIALIZED:
+            case Type::TYPE_STRING_SERIALIZED:
                 $vals['labelDecoded'] = 'unserialized';
                 $vals['labelRaw'] = 'serialized';
                 break;

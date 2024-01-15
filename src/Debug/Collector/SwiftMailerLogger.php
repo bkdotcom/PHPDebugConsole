@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
@@ -92,8 +92,6 @@ class SwiftMailerLogger implements Swift_Events_CommandListener, Swift_Events_Re
      * @param Swift_Events_SendEvent $event Swift SendEvent Instance
      *
      * @return void
-     *
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function sendPerformed(Swift_Events_SendEvent $event)
     {

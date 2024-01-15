@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
@@ -167,15 +167,14 @@ class AbstractDebug
         if (!$cfg || !$event['isTarget']) {
             return;
         }
-        $valActions = array(
+        $valActions = \array_intersect_key(array(
             'logServerKeys' => function ($val) {
                 // don't append, replace
                 $this->cfg['logServerKeys'] = array();
                 return $val;
             },
             'serviceProvider' => array($this, 'onCfgServiceProvider'),
-        );
-        $valActions = \array_intersect_key($valActions, $cfg);
+        ), $cfg);
         foreach ($valActions as $key => $callable) {
             /** @psalm-suppress TooManyArguments */
             $cfg[$key] = $callable($cfg[$key]);

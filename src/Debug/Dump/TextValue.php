@@ -6,15 +6,15 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
 namespace bdk\Debug\Dump;
 
-use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
+use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Dump\BaseValue;
 
 /**
@@ -81,10 +81,10 @@ class TextValue extends BaseValue
      */
     protected function dumpFloat($val, Abstraction $abs = null)
     {
-        if ($val === Abstracter::TYPE_FLOAT_INF) {
+        if ($val === Type::TYPE_FLOAT_INF) {
             return 'INF';
         }
-        if ($val === Abstracter::TYPE_FLOAT_NAN) {
+        if ($val === Type::TYPE_FLOAT_NAN) {
             return 'NaN';
         }
         $date = $this->checkTimestamp($val, $abs);
@@ -156,7 +156,7 @@ class TextValue extends BaseValue
             'magic' => 0,
         );
         foreach ($abs['methods'] as $info) {
-            $counts[ $info['visibility'] ] ++;
+            $counts[ $info['visibility'] ]++;
         }
         foreach ($counts as $vis => $count) {
             if ($count > 0) {
@@ -186,24 +186,40 @@ class TextValue extends BaseValue
         $properties = $abs->sort($abs['properties'], $abs['sort']);
         foreach ($properties as $name => $info) {
             $name = \str_replace('debug.', '', $name);
-            $name = $this->dumpKeys
-                ? $this->dump($name, array(
-                    'addQuotes' => \preg_match('#[\s\r\n]#u', $name) === 1 || $name === '',
-                ))
-                : $name;
             $info['className'] = $abs['className'];
             $info['isInherited'] = $info['declaredLast'] && $info['declaredLast'] !== $abs['className'];
-            $prefix = $this->dumpPropPrefix($info);
-            $vis = $this->dumpPropVis($info);
-            $val = $info['debugInfoExcluded']
-                ? ''
-                : ' = ' . $this->dump($info['value']);
-            $str .= '    ' . $prefix . '(' . $vis . ') ' . $name . $val . "\n";
+            $str .= $this->dumpProp($name, $info);
         }
         $propHeader = $str
             ? 'Properties:'
             : 'Properties: none!';
         return '  ' . $propHeader . "\n" . $str;
+    }
+
+    /**
+     * Dump object property
+     *
+     * @param string $name Property name
+     * @param array  $info Property info
+     *
+     * @return string
+     */
+    protected function dumpProp($name, array $info)
+    {
+        $name = $this->dumpKeys
+            ? $this->dump($name, array(
+                'addQuotes' => \preg_match('#[\s\r\n]#u', $name) === 1 || $name === '',
+            ))
+            : $name;
+        return \sprintf(
+            '    %s(%s) %s%s' . "\n",
+            $this->dumpPropPrefix($info),
+            $this->dumpPropVis($info),
+            $name,
+            $info['debugInfoExcluded']
+                ? ''
+                : ' = ' . $this->dump($info['value'])
+        ) . "\n";
     }
 
     /**
@@ -243,18 +259,15 @@ class TextValue extends BaseValue
     protected function dumpString($val, Abstraction $abs = null)
     {
         $addQuotes = $this->getDumpOpt('addQuotes');
-        if (\is_numeric($val)) {
-            $date = $this->checkTimestamp($val, $abs);
-            if ($addQuotes) {
-                $val = '"' . $val . '"';
-            }
-            return $date
-                ? '📅 ' . $val . ' (' . $date . ')'
-                : $val;
-        }
+        $date = \is_numeric($val)
+            ? $this->checkTimestamp($val, $abs)
+            : null;
         $val = $this->debug->utf8->dump($val);
         if ($addQuotes) {
             $val = '"' . $val . '"';
+        }
+        if ($date) {
+            return '📅 ' . $val . ' (' . $date . ')';
         }
         $diff = $abs && $abs['strlen']
             ? $abs['strlen'] - \strlen($abs['value'])
@@ -281,6 +294,8 @@ class TextValue extends BaseValue
      * @param Abstraction $abs resource abstraction
      *
      * @return string
+     *
+     * @SuppressWarnings(PHPMD.DevelopmentCodeFragment)
      */
     protected function dumpUnknown(Abstraction $abs)
     {

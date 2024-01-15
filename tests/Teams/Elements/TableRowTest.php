@@ -148,7 +148,7 @@ class TableRowTest extends AbstractTestCaseWith
                                 array(
                                     'type' => 'TextBlock',
                                     'text' => '3.14',
-                                    'wrap' => true,
+                                    // 'wrap' => true,
                                 ),
                             ),
                         ),

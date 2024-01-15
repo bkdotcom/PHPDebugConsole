@@ -4,6 +4,7 @@ namespace bdk\Test\Debug\Type;
 
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
+use bdk\Debug\Abstraction\Type;
 use bdk\Debug\LogEntry;
 use bdk\Test\Debug\DebugTestFramework;
 
@@ -416,8 +417,8 @@ EOD;
                                 'debug' => Abstracter::ABSTRACTION,
                                 'brief' => false,
                                 'strlen' => 16,
-                                'type' => Abstracter::TYPE_STRING,
-                                'typeMore' => Abstracter::TYPE_STRING_BINARY,
+                                'type' => Type::TYPE_STRING,
+                                'typeMore' => Type::TYPE_STRING_BINARY,
                                 'value' => \base64_decode('j/v9wNrF5i1abMXFW/4vVw==', true),
                             ),
                         ),
@@ -444,8 +445,8 @@ EOD;
                                 'debug' => Abstracter::ABSTRACTION,
                                 'brief' => true,
                                 'strlen' => 16,
-                                'type' => Abstracter::TYPE_STRING,
-                                'typeMore' => Abstracter::TYPE_STRING_BINARY,
+                                'type' => Type::TYPE_STRING,
+                                'typeMore' => Type::TYPE_STRING_BINARY,
                                 'value' => \base64_decode('j/v9wNrF5i1abMXFW/4vVw==', true),
                             ),
                         ),
@@ -470,8 +471,8 @@ EOD;
                                 'debug' => Abstracter::ABSTRACTION,
                                 'brief' => true,
                                 'strlen' => \filesize(TEST_DIR . '/assets/logo.png'),
-                                'type' => Abstracter::TYPE_STRING,
-                                'typeMore' => Abstracter::TYPE_STRING_BINARY,
+                                'type' => Type::TYPE_STRING,
+                                'typeMore' => Type::TYPE_STRING_BINARY,
                                 'contentType' => 'image/png',
                                 'value' => '',
                             ),
@@ -531,8 +532,8 @@ EOD;
                                 'debug' => Abstracter::ABSTRACTION,
                                 'brief' => true,
                                 'strlen' => null,
-                                'type' => Abstracter::TYPE_STRING,
-                                'typeMore' => Abstracter::TYPE_STRING_JSON,
+                                'type' => Type::TYPE_STRING,
+                                'typeMore' => Type::TYPE_STRING_JSON,
                                 'value' => '{"poop":"\ud83d\udca9","int":42,"password":"█████████"}',
                                 'valueDecoded' => null,
                             ),
@@ -570,8 +571,8 @@ EOD;
                                 'debug' => Abstracter::ABSTRACTION,
                                 'brief' => false,
                                 'strlen' => null,
-                                'type' => Abstracter::TYPE_STRING,
-                                'typeMore' => Abstracter::TYPE_STRING_SERIALIZED,
+                                'type' => Type::TYPE_STRING,
+                                'typeMore' => Type::TYPE_STRING_SERIALIZED,
                                 'value' => 'a:1:{s:3:"foo";s:3:"bar";}',
                                 'valueDecoded' => array(
                                     'foo' => 'bar',
@@ -603,8 +604,8 @@ EOD;
                                 'debug' => Abstracter::ABSTRACTION,
                                 'brief' => true,
                                 'strlen' => null,
-                                'type' => Abstracter::TYPE_STRING,
-                                'typeMore' => Abstracter::TYPE_STRING_SERIALIZED,
+                                'type' => Type::TYPE_STRING,
+                                'typeMore' => Type::TYPE_STRING_SERIALIZED,
                                 'value' => 'a:1:{s:3:"foo";s:3:"bar";}',
                                 'valueDecoded' => null,
                             ),

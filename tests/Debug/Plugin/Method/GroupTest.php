@@ -5,6 +5,7 @@ namespace bdk\Test\Debug\Plugin\Method;
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\AbstractObject;
+use bdk\Debug\Abstraction\Type;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Utility\Reflection;
 use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
@@ -26,6 +27,7 @@ function myFunctionThatCallsGroup()
  * @covers \bdk\Debug\Abstraction\Abstracter
  * @covers \bdk\Debug\Dump\Base
  * @covers \bdk\Debug\Dump\Html
+ * @covers \bdk\Debug\Dump\Html\Group
  * @covers \bdk\Debug\Dump\Text
  * @covers \bdk\Debug\Plugin\Method\Group
  * @covers \bdk\Debug\Plugin\Method\GroupCleanup
@@ -512,7 +514,7 @@ class GroupTest extends DebugTestFramework
                         'brief' => true,
                         'debug' => Abstracter::ABSTRACTION,
                         'strlen' => null,
-                        'type' => Abstracter::TYPE_STRING,
+                        'type' => Type::TYPE_STRING,
                         'typeMore' => null,
                         'value' => '█████████',
                     )

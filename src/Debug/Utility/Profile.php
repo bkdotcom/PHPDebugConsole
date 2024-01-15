@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
@@ -157,7 +157,7 @@ class Profile
         $this->data[$funcPopped]['ownTime'] += $timeElapsed - $stackInfo['subTime'];
         $this->data[$funcPopped]['totalTime'] += $timeElapsed;
         if ($this->data[$funcPopped]['calls'] === 0) {
-            $this->data[$funcPopped]['calls'] ++;
+            $this->data[$funcPopped]['calls']++;
         }
         if ($this->funcStack) {
             $this->funcStack[\count($this->funcStack) - 1]['subTime'] += $timeElapsed;
@@ -187,7 +187,7 @@ class Profile
                 'ownTime' => 0,     // time spent in function excluding nested funcs
             );
         }
-        $this->data[$funcName]['calls'] ++;
+        $this->data[$funcName]['calls']++;
     }
 
     /**

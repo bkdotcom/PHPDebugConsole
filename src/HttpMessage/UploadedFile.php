@@ -127,9 +127,6 @@ class UploadedFile implements UploadedFileInterface
      *
      * @throws RuntimeException in cases when no stream is available or can be
      *     created.
-     *
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-     * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter
      */
     public function getStream()
     {
@@ -458,13 +455,11 @@ class UploadedFile implements UploadedFileInterface
      * @return bool
      *
      * @throws RuntimeException
-     *
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-     * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter
      */
     private function moveFile($targetPath)
     {
         $errMsg = '';
+        // phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter
         \set_error_handler(static function ($type, $msg) use (&$errMsg) {
             $errMsg = $msg;
         });
@@ -517,7 +512,7 @@ class UploadedFile implements UploadedFileInterface
 
     /**
      * @return void
-     * @throws \RuntimeException if is moved or not ok
+     * @throws RuntimeException if is moved or not ok
      */
     private function validateCanMove()
     {

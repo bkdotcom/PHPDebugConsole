@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2023 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.1
  */
 
@@ -14,8 +14,8 @@ namespace bdk\Debug\Plugin;
 
 use bdk\Debug;
 use bdk\Debug\AbstractComponent;
-use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Abstraction\Type;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Plugin\CustomMethodTrait;
 use bdk\PubSub\Event;
@@ -322,10 +322,10 @@ class Redaction extends AbstractComponent implements SubscriberInterface
         $headerLines = \explode("\r\n", \trim($headers));
         $startLine = null;
         $headers = array();
-        foreach ($headerLines as $i => $line) {
+        \array_walk($headerLines, static function ($line, $i) use (&$headers, &$startLine) {
             if ($i === 0 && \strpos($line, ':') === false) {
                 $startLine = $line;
-                continue;
+                return;
             }
             list($name, $value) = \array_replace(array(null, null), \explode(':', $line, 2));
             $name = \trim($name);
@@ -335,7 +335,7 @@ class Redaction extends AbstractComponent implements SubscriberInterface
             $headers[$name][] = $value !== null
                 ? \trim($value)
                 : null;
-        }
+        });
         return array($startLine, $headers);
     }
 
@@ -348,7 +348,7 @@ class Redaction extends AbstractComponent implements SubscriberInterface
      */
     private function redactAbstraction(Abstraction $abs)
     {
-        if ($abs['type'] === Abstracter::TYPE_OBJECT) {
+        if ($abs['type'] === Type::TYPE_OBJECT) {
             $abs['properties'] = $this->redact($abs['properties']);
             $abs['stringified'] = $this->redact($abs['stringified']);
             if (isset($abs['methods']['__toString']['returnValue'])) {

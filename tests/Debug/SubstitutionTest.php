@@ -4,6 +4,7 @@ namespace bdk\Test\Debug;
 
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
+use bdk\Debug\Abstraction\Type;
 
 /**
  * PHPUnit tests for Debug Methods
@@ -118,8 +119,8 @@ class SubstitutionTest extends DebugTestFramework
                         42,
                         array(
                             'debug' => Abstracter::ABSTRACTION,
-                            'type' => Abstracter::TYPE_INT,
-                            'typeMore' => Abstracter::TYPE_TIMESTAMP,
+                            'type' => Type::TYPE_INT,
+                            'typeMore' => Type::TYPE_TIMESTAMP,
                             'value' => $time,
                         ),
                         '<i>boring</i>',
@@ -127,8 +128,8 @@ class SubstitutionTest extends DebugTestFramework
                             'brief' => false,
                             'debug' => Abstracter::ABSTRACTION,
                             'strlen' => 16,
-                            'type' => Abstracter::TYPE_STRING,
-                            'typeMore' => Abstracter::TYPE_STRING_BINARY,
+                            'type' => Type::TYPE_STRING,
+                            'typeMore' => Type::TYPE_STRING_BINARY,
                             'value' => $binary,
                         ),
                     ),

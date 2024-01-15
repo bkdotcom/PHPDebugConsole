@@ -80,7 +80,9 @@ class PhpCurlClassTest extends DebugTestFramework
                         </ul><span class="t_punct">)</span></span></div>
                         </span></li>
                     <li class="m_log" data-channel="general.Curl"><span class="no-quotes t_string">info</span> = <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
-                        <ul class="array-inner list-unstyled">%A</ul><span class="t_punct">)</span></span></li>
+                        <ul class="array-inner list-unstyled">
+                        %A
+                        </ul><span class="t_punct">)</span></span></li>
                     <li class="m_log" data-channel="general.Curl"><span class="no-quotes t_string">verbose</span> = <span class="t_string">%A</span></li>
                 </ul>
             </li>';
@@ -89,6 +91,8 @@ class PhpCurlClassTest extends DebugTestFramework
                 self::assertSame(2, \preg_match_all('/password=█████████/', $htmlActual), 'Did not find redacted password twice');
                 $htmlActual = \preg_replace('#^\s+#m', '', $htmlActual);
                 $htmlExpect = \preg_replace('#^\s+#m', '', $htmlExpect);
+                // echo 'actual: ' . $htmlActual . "\n\n";
+                // echo 'expect: ' . $htmlExpect . "\n";
                 self::assertStringMatchesFormat('%A' . $htmlExpect . '%A', $htmlActual);
             },
         ));

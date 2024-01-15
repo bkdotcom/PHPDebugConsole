@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2023 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.1
  */
 
@@ -109,8 +109,7 @@ class PropertiesDom
         foreach ($props as $propName => $type) {
             $val = $obj->{$propName};
             if (!$type) {
-                // function array dereferencing = php 5.4
-                $type = $this->abstracter->getType($val)[0];
+                $type = $this->abstracter->type->getType($val)[0];
             }
             $abs['properties'][$propName] = Properties::buildPropValues(array(
                 'type' => $type,

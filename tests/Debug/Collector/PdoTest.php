@@ -4,6 +4,7 @@ namespace bdk\Test\Debug\Collector;
 
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
+use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Collector\Pdo;
 use bdk\HttpMessage\Utility\ContentType;
 use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
@@ -150,7 +151,7 @@ EOD;
                         'prettified' => true,
                         'prettifiedTag' => false,
                         'strlen' => null,
-                        'type' => Abstracter::TYPE_STRING,
+                        'type' => Type::TYPE_STRING,
                         'typeMore' => null,
                         'value' => "SELECT \n  * \nFROM \n  `bob` \nWHERE \n  e < :datetime",
                         'visualWhiteSpace' => false,
@@ -172,7 +173,7 @@ EOD;
                             'type' => array(
                                 'debug' => Abstracter::ABSTRACTION,
                                 'name' => 'PDO::PARAM_STR',
-                                'type' => Abstracter::TYPE_CONST,
+                                'type' => Type::TYPE_CONST,
                                 'value' => 2,
                             ),
                         ),

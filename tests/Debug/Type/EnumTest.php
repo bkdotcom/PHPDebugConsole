@@ -4,6 +4,7 @@ namespace bdk\Test\Debug\Type;
 
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
+use bdk\Debug\Abstraction\Type;
 use bdk\Debug\LogEntry;
 use bdk\Test\Debug\DebugTestFramework;
 
@@ -39,7 +40,7 @@ class EnumTest extends DebugTestFramework
                     'entry' => static function (LogEntry $logEntry) {
                         $abs = $logEntry['args'][0];
                         self::assertAbstractionType($abs);
-                        self::assertSame(Abstracter::TYPE_OBJECT, $abs['type']);
+                        self::assertSame(Type::TYPE_OBJECT, $abs['type']);
 
                         $cases = $abs['cases'];
                         \ksort($cases);

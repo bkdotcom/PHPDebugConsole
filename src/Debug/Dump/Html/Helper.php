@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
@@ -14,6 +14,7 @@ namespace bdk\Debug\Dump\Html;
 
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
+use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Dump\Html as Dumper;
 
 /**
@@ -182,12 +183,12 @@ class Helper
     private function buildArgStringArgs(array $args, array $meta)
     {
         foreach ($args as $i => $v) {
-            list($type, $typeMore) = $this->debug->abstracter->getType($v);
-            $typeMore2 = $typeMore === Abstracter::TYPE_ABSTRACTION
+            list($type, $typeMore) = $this->debug->abstracter->type->getType($v);
+            $typeMore2 = $typeMore === Type::TYPE_ABSTRACTION
                 ? $v['typeMore']
                 : $typeMore;
-            $isNumericString = $type === Abstracter::TYPE_STRING
-                && \in_array($typeMore2, array(Abstracter::TYPE_STRING_NUMERIC, Abstracter::TYPE_TIMESTAMP), true);
+            $isNumericString = $type === Type::TYPE_STRING
+                && \in_array($typeMore2, array(Type::TYPE_STRING_NUMERIC, Type::TYPE_TIMESTAMP), true);
             $args[$i] = $this->dumper->valDumper->dump($v, array(
                 'addQuotes' => $i !== 0 || $isNumericString,
                 'sanitize' => $i === 0
@@ -228,7 +229,7 @@ class Helper
             $type = \trim($type, '\'"');
             return '<span class="t_string t_type">' . $type . '</span>';
         }
-        if (\in_array($type, $this->debug->phpDoc->types, true) === false) {
+        if (\in_array($type, $this->debug->phpDoc->type->types, true) === false) {
             $type = $this->dumper->valDumper->markupIdentifier($type);
         }
         if ($arrayCount > 0) {

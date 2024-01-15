@@ -1,13 +1,8 @@
-<?php
+<?php // phpcs:ignore PSR1.Files.SideEffects.FoundWithSymbol
 
 /**
  * PHP 8 requires signatures to match.. which relies on variadic....
  * to maintain compatibility with ancient PHP we'll do this via trait
- *
- * @phpcs:disable Generic.Classes.DuplicateClassName.Found
- * @phpcs:disable Generic.Files.OneObjectStructurePerFile.MultipleFound
- * @phpcs:disable Generic.Files.OneTraitPerFile.MultipleFound
- * @phpcs:disable PSR1.Classes.ClassDeclaration.MultipleClasses
  */
 
 namespace bdk\Debug\Collector\Pdo;
@@ -15,6 +10,9 @@ namespace bdk\Debug\Collector\Pdo;
 if (PHP_VERSION_ID >= 50600) {
     require __DIR__ . '/MethodSignatureCompatTrait_php5.6.php';
 } else {
+    /**
+     * @phpcs:disable Generic.Classes.DuplicateClassName.Found
+     */
     trait MethodSignatureCompatTrait
     {
         /**

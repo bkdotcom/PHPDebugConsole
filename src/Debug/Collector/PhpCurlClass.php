@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
@@ -84,11 +84,11 @@ class PhpCurlClass extends Curl
     /**
      * {@inheritDoc}
      *
-     * @param resource $ch Curl handle
+     * @param resource $handle Curl handle
      *
      * @return mixed Returns the value provided by parseResponse.
      */
-    public function exec($ch = null)
+    public function exec($handle = null)
     {
         $options = $this->buildOptionsDebug();
         $this->debug->groupCollapsed(
@@ -102,7 +102,21 @@ class PhpCurlClass extends Curl
         );
         $this->debug->time($this->debugOptions['label']);
         $this->debug->log('options', $options);
-        $return = parent::exec($ch);
+        $return = parent::exec($handle);
+        $this->execLog($options);
+        $this->debug->groupEnd();
+        return $return;
+    }
+
+    /**
+     * Log request and response
+     *
+     * @param array $options [description]
+     *
+     * @return void
+     */
+    private function execLog(array $options)
+    {
         $verboseOutput = null;
         $this->rawRequestHeaders = $this->getInfo(CURLINFO_HEADER_OUT);
         if (!empty($options['CURLOPT_VERBOSE'])) {
@@ -119,8 +133,6 @@ class PhpCurlClass extends Curl
             $this->requestHeaders = $this->reflection['parseReqHeaders']->invoke($this, $this->rawRequestHeaders);
         }
         $this->logRequestResponse($verboseOutput, $options);
-        $this->debug->groupEnd();
-        return $return;
     }
 
     /**

@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2023 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.1
  */
 
@@ -23,8 +23,12 @@ use ReflectionMethod;
 /**
  * Get object method info
  */
-class Methods extends Inheritable
+class Methods extends AbstractInheritable
 {
+    protected $methods = array();
+    protected $methodsWithStatic = array();
+
+    /** @var MethodParams */
     protected $params;
 
     private static $baseMethodInfo = array(
@@ -71,8 +75,8 @@ class Methods extends Inheritable
     public function add(Abstraction $abs)
     {
         $abs['cfgFlags'] & AbstractObject::METHOD_COLLECT
-            ? $this->addMethodsFull($abs)
-            : $this->addMethodsMin($abs);
+            ? $this->addFull($abs)
+            : $this->addMin($abs);
         if (isset($abs['methods']['__toString'])) {
             $abs['methods']['__toString']['returnValue'] = null;
         }
@@ -107,7 +111,7 @@ class Methods extends Inheritable
      *
      * @return array
      */
-    public static function buildMethodValues($values = array())
+    public static function buildMethodValues(array $values = array())
     {
         return \array_merge(static::$baseMethodInfo, $values);
     }
@@ -149,28 +153,15 @@ class Methods extends Inheritable
      *
      * @return void
      */
-    private function addMethodsFull(Abstraction $abs)
+    private function addFull(Abstraction $abs)
     {
         $briefBak = $this->abstracter->debug->setCfg('brief', true, Debug::CONFIG_NO_PUBLISH);
-        $this->addViaReflection($abs);
+        $this->addViaRef($abs);
         $this->abstracter->debug->setCfg('brief', $briefBak, Debug::CONFIG_NO_PUBLISH | Debug::CONFIG_NO_RETURN);
         $this->addViaPhpDoc($abs);
         $this->addImplements($abs);
-        if ($abs['cfgFlags'] & AbstractObject::PHPDOC_COLLECT) {
-            return;
-        }
-        $methods = $abs['methods'];
-        foreach ($methods as &$methodInfo) {
-            $methodInfo['phpDoc'] = array(
-                'desc' => null,
-                'summary' => null,
-            );
-            foreach (\array_keys($methodInfo['params']) as $index) {
-                $methodInfo['params'][$index]['desc'] = null;
-            }
-            $methodInfo['return']['desc'] = null;
-        }
-        $abs['methods'] = $methods;
+        $this->helper->clearPhpDoc($abs);
+        \ksort($abs['methods']);
     }
 
     /**
@@ -180,7 +171,7 @@ class Methods extends Inheritable
      *
      * @return void
      */
-    private function addMethodsMin(Abstraction $abs)
+    private function addMin(Abstraction $abs)
     {
         $reflector = $abs['reflector'];
         if ($reflector->hasMethod('__toString')) {
@@ -197,7 +188,7 @@ class Methods extends Inheritable
     }
 
     /**
-     * Add `implements` value to common interface methods
+     * Add `implements` value to interface methods
      *
      * @param Abstraction $abs Object Abstraction instance
      *
@@ -249,8 +240,38 @@ class Methods extends Inheritable
             return;
         }
         foreach ($phpDoc['method'] as $phpDocMethod) {
-            $abs['methods'][$phpDocMethod['name']] = $this->buildMethodPhpDoc($abs, $phpDocMethod, $declaredLast);
+            $abs['methods'][$phpDocMethod['name']] = $this->addViaPhpDocBuild($abs, $phpDocMethod, $declaredLast);
         }
+    }
+
+    /**
+     * Build magic method info
+     *
+     * @param Abstraction $abs          Object Abstraction instance
+     * @param array       $phpDoc       Parsed phpdoc method info
+     * @param string      $declaredLast class-name or null
+     *
+     * @return array
+     */
+    private function addViaPhpDocBuild(Abstraction $abs, array $phpDoc, $declaredLast)
+    {
+        $className = $declaredLast
+            ? $declaredLast
+            : $abs['className'];
+        return $this->buildMethodValues(array(
+            'declaredLast' => $declaredLast,
+            'isStatic' => $phpDoc['static'],
+            'params' => $this->params->getParamsPhpDoc($abs, $phpDoc, $className),
+            'phpDoc' => array(
+                'desc' => null,
+                'summary' => $phpDoc['desc'],
+            ),
+            'return' => array(
+                'desc' => null,
+                'type' => $phpDoc['type'],
+            ),
+            'visibility' => 'magic',
+        ));
     }
 
     /**
@@ -282,71 +303,54 @@ class Methods extends Inheritable
      *
      * @return void
      */
-    private function addViaReflection(Abstraction $abs)
+    private function addViaRef(Abstraction $abs)
     {
-        $methods = array();
-        $withStaticVars = array();
-        $this->traverseAncestors($abs['reflector'], function (ReflectionClass $reflector) use ($abs, &$methods, &$withStaticVars) {
+        $this->methods = array();
+        $this->methodsWithStatic = array();
+        $this->traverseAncestors($abs['reflector'], function (ReflectionClass $reflector) use ($abs) {
             $className = $this->helper->getClassName($reflector);
-            $refMethods = $reflector->getMethods();
-            while ($refMethods) {
-                $refMethod = \array_pop($refMethods);
-                $name = $refMethod->getName();
-                $info = isset($methods[$name])
-                    ? $methods[$name]
-                    : $this->buildMethodRef($abs, $refMethod);
-                $info = $this->updateDeclarationVals(
-                    $info,
-                    $this->helper->getClassName($refMethod->getDeclaringClass()),
-                    $className
-                );
-                $isInherited = $info['declaredLast'] && $info['declaredLast'] !== $abs['className'];
-                if ($info['visibility'] === 'private' && $isInherited) {
-                    // getMethods() returns parent's private methods (#reasons)..  we'll skip it
-                    continue;
-                }
-                if (!empty($info['hasStaticVars'])) {
-                    $withStaticVars[] = $name;
-                }
-                unset($info['hasStaticVars']);
-                unset($info['phpDoc']['param']);
-                unset($info['phpDoc']['return']);
-                $methods[$name] = $info;
+            foreach ($reflector->getMethods() as $refMethod) {
+                $this->addViaRefBuild($abs, $refMethod, $className);
             }
         });
-        \ksort($methods);
-        $abs['methodsWithStaticVars'] = $withStaticVars;
-        $abs['methods'] = $methods;
+        $abs['methods'] = $this->methods;
+        $methodsWithStatic = \array_unique($this->methodsWithStatic);
+        \sort($methodsWithStatic);
+        $abs['methodsWithStaticVars'] = $methodsWithStatic;
     }
 
     /**
-     * Build magic method info
+     * Add/Update method info
      *
-     * @param Abstraction $abs          Object Abstraction instance
-     * @param array       $phpDoc       parsed phpdoc method info
-     * @param string      $declaredLast class-name or null
+     * @param Abstraction      $abs       Object Abstraction instance
+     * @param ReflectionMethod $refMethod ReflectionMethod instance
+     * @param string           $className Current level className
      *
-     * @return array
+     * @return void
      */
-    private function buildMethodPhpDoc(Abstraction $abs, $phpDoc, $declaredLast)
+    private function addViaRefBuild(Abstraction $abs, ReflectionMethod $refMethod, $className)
     {
-        $className = $declaredLast
-            ? $declaredLast
-            : $abs['className'];
-        return $this->buildMethodValues(array(
-            'declaredLast' => $declaredLast,
-            'isStatic' => $phpDoc['static'],
-            'params' => $this->params->getParamsPhpDoc($abs, $phpDoc, $className),
-            'phpDoc' => array(
-                'desc' => null,
-                'summary' => $phpDoc['desc'],
-            ),
-            'return' => array(
-                'desc' => null,
-                'type' => $phpDoc['type'],
-            ),
-            'visibility' => 'magic',
-        ));
+        $name = $refMethod->getName();
+        $info = isset($this->methods[$name])
+            ? $this->methods[$name]
+            : $this->addViaRefBuildInit($abs, $refMethod);
+        $info = $this->updateDeclarationVals(
+            $info,
+            $this->helper->getClassName($refMethod->getDeclaringClass()),
+            $className
+        );
+        $isInherited = $info['declaredLast'] && $info['declaredLast'] !== $abs['className'];
+        if ($info['visibility'] === 'private' && $isInherited) {
+            // getMethods() returns parent's private methods (#reasons)..  we'll skip it
+            return;
+        }
+        if (!empty($info['hasStaticVars'])) {
+            $this->methodsWithStatic[] = $name;
+        }
+        unset($info['hasStaticVars']);
+        unset($info['phpDoc']['param']);
+        unset($info['phpDoc']['return']);
+        $this->methods[$name] = $info;
     }
 
     /**
@@ -357,7 +361,7 @@ class Methods extends Inheritable
      *
      * @return array
      */
-    private function buildMethodRef(Abstraction $abs, ReflectionMethod $refMethod)
+    private function addViaRefBuildInit(Abstraction $abs, ReflectionMethod $refMethod)
     {
         $phpDoc = $this->helper->getPhpDoc($refMethod, $abs['fullyQualifyPhpDocType']);
         return $this->buildMethodValues(array(

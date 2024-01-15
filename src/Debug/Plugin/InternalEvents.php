@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
@@ -228,15 +228,7 @@ class InternalEvents implements SubscriberInterface
      */
     private function exitCheck()
     {
-        if ($this->debug->getCfg('exitCheck', Debug::CONFIG_DEBUG) === false) {
-            return;
-        }
-        if ($this->debug->data->get('outputSent')) {
-            return;
-        }
-        $lastError = $this->debug->errorHandler->getLastError();
-        if ($lastError && ($lastError['type'] === E_PARSE || $lastError['exception'] instanceof \ParseError)) {
-            // parse error
+        if ($this->shouldExitCheck() === false) {
             return;
         }
         $findExit = $this->debug->findExit;
@@ -255,6 +247,18 @@ class InternalEvents implements SubscriberInterface
                 ))
             );
         }
+    }
+
+    /**
+     * Shoule we force output for the given error
+     *
+     * @param Error $error Error instance
+     *
+     * @return bool
+     */
+    private function forceErrorOutput(Error $error)
+    {
+        return $error->isFatal() && $this->debug->isCli() && $this->debug->getCfg('route') instanceof Stream;
     }
 
     /**
@@ -277,7 +281,7 @@ class InternalEvents implements SubscriberInterface
             $error['message'],
             $error['fileAndLine'],
             $this->debug->meta(array(
-                'context' => $error['category'] === 'fatal' && $error['backtrace'] === null
+                'context' => $error['category'] === Error::CAT_FATAL && $error['backtrace'] === null
                     ? $error['context']
                     : null,
                 'errorCat' => $error['category'],
@@ -302,15 +306,21 @@ class InternalEvents implements SubscriberInterface
     }
 
     /**
-     * Shoule we force output for the given error
-     *
-     * @param Error $error Error instance
+     * Determine if should perform `exit` search
      *
      * @return bool
      */
-    private function forceErrorOutput(Error $error)
+    private function shouldExitCheck()
     {
-        return $error->isFatal() && $this->debug->isCli() && $this->debug->getCfg('route') instanceof Stream;
+        if ($this->debug->getCfg('exitCheck', Debug::CONFIG_DEBUG) === false) {
+            return false;
+        }
+        if ($this->debug->data->get('outputSent')) {
+            return false;
+        }
+        $lastError = $this->debug->errorHandler->getLastError();
+        $isParseError = $lastError && ($lastError['type'] === E_PARSE || $lastError['exception'] instanceof \ParseError);
+        return $isParseError === false;
     }
 
     /**

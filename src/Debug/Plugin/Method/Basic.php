@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2023 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.1
  */
 
@@ -44,7 +44,7 @@ class Basic implements SubscriberInterface
      * Supports styling & substitutions
      *
      * @param bool  $assertion Any boolean expression. If the assertion is false, the message is logged
-     * @param mixed $msg,...   (optional) variable num of values to output if assertion fails
+     * @param mixed ...$msg    (optional) variable num of values to output if assertion fails
      *                           if none provided, will use calling file & line num
      *
      * @return $this
@@ -82,7 +82,7 @@ class Basic implements SubscriberInterface
      *
      * Supports styling & substitutions
      *
-     * @param mixed $arg,... message / values
+     * @param mixed ...$arg message / values
      *
      * @return $this
      */
@@ -97,7 +97,7 @@ class Basic implements SubscriberInterface
      *
      * Supports styling & substitutions
      *
-     * @param mixed $arg,... message / values
+     * @param mixed ...$arg message / values
      *
      * @return $this
      */
@@ -127,7 +127,7 @@ class Basic implements SubscriberInterface
      *
      * Supports styling & substitutions
      *
-     * @param mixed $arg,... message / values
+     * @param mixed ...$arg. message / values
      *
      * @return $this
      */
@@ -173,7 +173,7 @@ class Basic implements SubscriberInterface
      *
      * Similar to php's `var_dump()`.  Dump values immediately
      *
-     * @param mixed $arg,... message / values
+     * @param mixed ...$arg. message / values
      *
      * @return void
      */
@@ -205,7 +205,7 @@ class Basic implements SubscriberInterface
      *
      * Supports styling & substitutions
      *
-     * @param mixed $arg,... message / values
+     * @param mixed ...$arg message / values
      *
      * @return $this
      */

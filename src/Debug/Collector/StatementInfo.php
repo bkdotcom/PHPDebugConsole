@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
@@ -14,8 +14,8 @@ namespace bdk\Debug\Collector;
 
 use bdk\Debug;
 use bdk\Debug\AbstractComponent;
-use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Abstraction\Type;
 use bdk\HttpMessage\Utility\ContentType;
 use Closure;
 use Exception;
@@ -349,7 +349,7 @@ class StatementInfo extends AbstractComponent
             $type = $this->types[$name];
             $params[$name]['type'] = $type; // integer value
             if (isset(self::$constants[$type])) {
-                $params[$name]['type'] = new Abstraction(Abstracter::TYPE_CONST, array(
+                $params[$name]['type'] = new Abstraction(Type::TYPE_CONST, array(
                     'name' => self::$constants[$type],
                     'value' => $type,
                 ));

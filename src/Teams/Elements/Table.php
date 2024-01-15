@@ -122,27 +122,10 @@ class Table extends AbstractElement
      */
     public function withColumns(array $columns = array())
     {
-        $defaultCol = array(
-            'horizontalAlignment' => null,
-            'horizontalCellContentAlignment' => null,
-            'type' => 'TableColumnDefinition',
-            'verticalAlignment' => null,
-            'verticalCellContentAlignment' => null,
-            'width' => 1,
-        );
         $new = clone $this;
-        \array_walk($columns, static function ($column, $i) use ($defaultCol, &$new) {
-            if (\is_array($column) === false) {
-                throw new InvalidArgumentException(\sprintf('non array TableColumnDefinition value found (index %s)', $i));
-            }
-            $column = \array_merge($defaultCol, $column);
-            $unknownVals = \array_diff_key($column, $defaultCol);
-            if (\count($unknownVals) > 0) {
-                throw new InvalidArgumentException(\sprintf('unknown TableColumnDefinition key "%s" found (index %s)', \key($unknownVals), $i));
-            }
-            if ($column['type'] !== 'TableColumnDefinition') {
-                throw new InvalidArgumentException(\sprintf('TableColumnDefinition type must be "TableColumnDefinition" (index %s)', $i));
-            }
+        $new->fields['columns'] = array();
+        \array_walk($columns, static function ($column, $i) use (&$new) {
+            $column = self::withColumnsNormalize($column, $i);
             $new = $new->withAddedColumn(
                 $column['width'],
                 $column['horizontalAlignment'] ?: $column['horizontalCellContentAlignment'],
@@ -316,5 +299,39 @@ class Table extends AbstractElement
             }
         }
         return $colCount;
+    }
+
+    /**
+     * Merge default values and assert valid definition
+     *
+     * @param array $column Column definition
+     * @param index $index  Column index
+     *
+     * @return array
+     *
+     * @throws InvalidArgumentException
+     */
+    private static function withColumnsNormalize($column, $index)
+    {
+        $defaultCol = array(
+            'horizontalAlignment' => null,
+            'horizontalCellContentAlignment' => null,
+            'type' => 'TableColumnDefinition',
+            'verticalAlignment' => null,
+            'verticalCellContentAlignment' => null,
+            'width' => 1,
+        );
+        if (\is_array($column) === false) {
+            throw new InvalidArgumentException(\sprintf('non array TableColumnDefinition value found (index %s)', $index));
+        }
+        $column = \array_merge($defaultCol, $column);
+        $unknownVals = \array_diff_key($column, $defaultCol);
+        if (\count($unknownVals) > 0) {
+            throw new InvalidArgumentException(\sprintf('unknown TableColumnDefinition key "%s" found (index %s)', \key($unknownVals), $index));
+        }
+        if ($column['type'] !== 'TableColumnDefinition') {
+            throw new InvalidArgumentException(\sprintf('TableColumnDefinition type must be "TableColumnDefinition" (index %s)', $index));
+        }
+        return $column;
     }
 }

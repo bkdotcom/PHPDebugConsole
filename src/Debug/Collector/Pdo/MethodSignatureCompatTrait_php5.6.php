@@ -2,6 +2,9 @@
 
 namespace bdk\Debug\Collector\Pdo;
 
+/**
+ * @phpcs:disable Generic.Classes.DuplicateClassName.Found
+ */
 trait MethodSignatureCompatTrait
 {
     /**

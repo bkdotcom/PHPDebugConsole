@@ -1,4 +1,4 @@
-<?php
+<?php // phpcs:ignore PSR1.Files.SideEffects.FoundWithSymbol
 
 /**
  * This file is part of PHPDebugConsole
@@ -27,7 +27,11 @@ if (\method_exists($refMethod, 'hasReturnType') && $refMethod->hasReturnType()) 
     // psr/log 2.0
     require __DIR__ . '/MethodSignatureCompatTrait_2.php';
 } elseif (\trait_exists(__NAMESPACE__ . '\\MethodSignatureCompatTrait', false) === false) {
-    // psr/log 1.0
+    /**
+     * psr/log 1.0
+     *
+     * @phpcs:disable Generic.Classes.DuplicateClassName.Found
+     */
     trait MethodSignatureCompatTrait
     {
         /**

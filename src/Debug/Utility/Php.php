@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
@@ -58,7 +58,7 @@ class Php
      *
      * @see https://github.com/symfony/polyfill/blob/main/src/Php80/Php80.php
      */
-    public static function getDebugType($val)
+    public static function getDebugType($val) // phpcs:ignore Generic.Metrics.CyclomaticComplexity
     {
         if (PHP_VERSION_ID >= 80000 && \is_array($val) === false && \is_object($val) === false) {
             return \get_debug_type($val);

@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2023 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.1
  */
 
@@ -52,7 +52,7 @@ class Table implements SubscriberInterface
      *   2nd encountered array (optional) specifies columns to output
      *   1st encountered string is a label/caption
      *
-     * @param mixed $arg,... traversable, [option array], [caption] in no particular order
+     * @param mixed ...$arg traversable, [option array], [caption] in no particular order
      *
      * @return $this
      */
@@ -95,8 +95,23 @@ class Table implements SubscriberInterface
             $logEntry->setMeta('cfg', null);
         }
 
-        $this->initLogEntry($logEntry);
+        $this->doTableLogEntry($logEntry);
 
+        if ($cfgRestore) {
+            $this->debug->setCfg($cfgRestore, Debug::CONFIG_NO_RETURN);
+        }
+    }
+
+    /**
+     * Find the data, caption, & columns in logEntry arguments
+     *
+     * @param LogEntry $logEntry log entry instance
+     *
+     * @return void
+     */
+    private function doTableLogEntry(LogEntry $logEntry)
+    {
+        $this->initLogEntry($logEntry);
         $table = new TableProcessor(
             isset($logEntry['args'][0])
                 ? $logEntry['args'][0]
@@ -105,16 +120,13 @@ class Table implements SubscriberInterface
             $this->debug
         );
 
-        if ($cfgRestore) {
-            $this->debug->setCfg($cfgRestore, Debug::CONFIG_NO_RETURN);
-        }
-
         if ($table->haveRows()) {
             $logEntry['args'] = array($table->getRows());
             $logEntry['meta'] = $table->getMeta();
             return;
         }
 
+        // no data...  create logEntry instead
         $logEntry['method'] = 'log';
         if ($logEntry->getMeta('caption')) {
             \array_unshift($logEntry['args'], $logEntry->getMeta('caption'));

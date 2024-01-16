@@ -148,6 +148,62 @@ function createFileLink (string, remove, foundFiles) {
   if (!matches.length) {
     return
   }
+
+  $replace = createFileLinkReplace($string, matches, text, remove, isUpdate)
+
+  /*
+  console.warn('createFileLink', {
+    remove: remove,
+    isUpdate: isUpdate,
+    matches: matches,
+    // stringOuterHTML: string.outerHTML,
+    stringText: text,
+    replace: $replace[0].outerHTML
+  })
+  */
+  /*
+    attrs is not a plain object, but an array of attribute nodes
+    which contain both the name and value
+  */
+  if (isUpdate === false) {
+    createFileLinkUpdateAttr($string, $replace, attrs)
+  }
+  if ($string.is('td, th, li')) {
+    $string.html(remove
+      ? text
+      : $replace
+    )
+    return
+  }
+  $string.replaceWith($replace)
+}
+
+function createFileLinkUpdateAttr($string, $replace, attrs)
+{
+  $.each(attrs, function () {
+    if (typeof this === 'undefined') {
+      return // continue
+    }
+    var name = this.name
+    if (['html', 'href', 'title'].indexOf(name) > -1) {
+      return // continue
+    }
+    if (name === 'class') {
+      $replace.addClass(this.value)
+      $string.removeClass('t_string')
+      return // continue
+    }
+    $replace.attr(name, this.value)
+    $string.removeAttr(name)
+  })
+  if (attrs.style) {
+    // why is this necessary?
+    $replace.attr('style', attrs.style.value)
+  }
+}
+
+function createFileLinkReplace($string, matches, text, remove, isUpdate) {
+  var $replace
   if (remove) {
     $replace = $('<span>', {
       text: text
@@ -164,50 +220,7 @@ function createFileLink (string, remove, foundFiles) {
       title: 'Open in editor'
     })
   }
-  /*
-  console.warn('createFileLink', {
-    remove: remove,
-    isUpdate: isUpdate,
-    matches: matches,
-    // stringOuterHTML: string.outerHTML,
-    stringText: text,
-    replace: $replace[0].outerHTML
-  })
-  */
-  /*
-    attrs is not a plain object, but an array of attribute nodes
-    which contain both the name and value
-  */
-  if (isUpdate === false) {
-    $.each(attrs, function () {
-      if (typeof this === 'undefined') {
-        return // continue
-      }
-      var name = this.name
-      if (['html', 'href', 'title'].indexOf(name) > -1) {
-        return // continue
-      }
-      if (name === 'class') {
-        $replace.addClass(this.value)
-        $string.removeClass('t_string')
-        return // continue
-      }
-      $replace.attr(name, this.value)
-      $string.removeAttr(name)
-    })
-    if (attrs.style) {
-      // why is this necessary?
-      $replace.attr('style', attrs.style.value)
-    }
-  }
-  if ($string.is('td, th, li')) {
-    $string.html(remove
-      ? text
-      : $replace
-    )
-    return
-  }
-  $string.replaceWith($replace)
+  return $replace
 }
 
 function createFileLinkMatches ($string, foundFiles) {

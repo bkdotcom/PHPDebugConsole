@@ -15,13 +15,65 @@ class HtmlTest extends DebugTestFramework
     /**
      * Test
      *
+     * @param array|string $attribs
+     * @param string       $expect
+     *
+     * @return void
+     *
+     * @dataProvider providerBuildAttribString
+     */
+    public function testBuildAttribString($attribs, $expect)
+    {
+        $attribString = Html::buildAttribString($attribs);
+        self::assertSame($expect, $attribString);
+    }
+
+    /**
+     * @param string $tagName   tag name
+     * @param array  $attribs   tag attributes
+     * @param string $innerhtml inner html
+     * @param string $expect    expected built tag
+     *
+     * @dataProvider providerBuildTag
+     *
      * @return void
      */
-    public function testBuildAttribString()
+    public function testBuildTag($tagName, $attribs, $innerhtml, $expect)
     {
-        $testStack = array(
+        $tag = Html::buildTag($tagName, $attribs, $innerhtml);
+        self::assertSame($expect, $tag);
+    }
+
+    /**
+     * @return void
+     *
+     * @dataProvider providerParseAttribString
+     */
+    public function testParseAttribString($paramString, $options, $expect)
+    {
+        $parsed = Html::parseAttribString($paramString, $options);
+        self::assertSame($expect, $parsed);
+    }
+
+    /**
+     * @param string $tag    Html tag to parse
+     * @param array  $expect expected return value
+     *
+     * @dataProvider providerParseTag
+     *
+     * @return void
+     */
+    public function testParseTag($tag, $expect)
+    {
+        $parsed = Html::parseTag($tag);
+        self::assertSame($expect, $parsed);
+    }
+
+    public static function providerBuildAttribString()
+    {
+        return array(
             array(
-                'attribs' => array(
+                array(
                     'id' => 'unique identifier',
                     'src' => '/path/to/image.png',
                     'width' => 80,
@@ -40,6 +92,7 @@ class HtmlTest extends DebugTestFramework
                     'foo' => false,     // not a valid boolean attrib - we'll not output regardless
                     'bar' => true,      // not a valid boolean attrib - we'll output anyhow : bar="bar"
                     'baz' => null,
+                    'autocapitalize' => 'off',
                     'AUTOCOMPLETE',       // autocomplete="on"
                     'translate' => false, // translate="no"
                     'disabled',         // disabled="disabled"
@@ -52,7 +105,8 @@ class HtmlTest extends DebugTestFramework
                     'data-array' => array('foo' => 'bar'),
                     'data-obj' => (object) array('key' => 'val'),
                 ),
-                'expect' => ''
+                ''
+                    . ' autocapitalize="off"'
                     . ' autocomplete="on"'
                     . ' bar="bar"'
                     . ' class="dupe test"'
@@ -75,7 +129,7 @@ class HtmlTest extends DebugTestFramework
                     . ' width="80"',
             ),
             array(
-                'attribs' => array(
+                array(
                     'class' => array(),     // not output
                     'style' => array(),     // not output
                     'data-empty-string' => '',
@@ -84,123 +138,27 @@ class HtmlTest extends DebugTestFramework
                     'data-false' => false,
                     'data-null' => null,    // not output
                 ),
-                'expect' => ' data-empty-array="[]" data-empty-obj="{}" data-empty-string="" data-false="false" data-null="null"',
+                ' data-empty-array="[]" data-empty-obj="{}" data-empty-string="" data-false="false" data-null="null"',
             ),
             array(
-                'attribs' => array(
+                array(
                     'id' => null,
                     'class' => 'foo bar',     // not output
                 ),
-                'expect' => ' class="bar foo"',
+                ' class="bar foo"',
             ),
             array(
-                'attribs' => '',
-                'expect' => '',
+                '',
+                '',
             ),
             array(
-                'attribs' => '  foo=bar bar="baz"',
-                'expect' => ' bar="baz" foo="bar"',
+                '  foo=bar bar="baz"',
+                ' bar="baz" foo="bar"',
             ),
         );
-        foreach ($testStack as $test) {
-            $ret = Html::buildAttribString($test['attribs']);
-            self::assertSame($test['expect'], $ret);
-        }
     }
 
-    /**
-     * @return void
-     */
-    public function testParseAttribString()
-    {
-        $testStack = array(
-            array(
-                'params' => array(''),
-                'expect' => array(
-                    'class' => array(),
-                ),
-            ),
-            array(
-                'params' => array(
-                    ' '
-                    . ' class="foo bar"'
-                    . ' placeholder="&quot;quotes&quot; &amp; ampersands"'
-                    . ' autocomplete=off'
-                    . ' required=required'
-                    . ' autofocus'
-                    . ' notabool'
-                    . ' value=""'
-                    . ' data-null="null"'
-                    . ' data-obj="{&quot;foo&quot;:&quot;bar&quot;}"'
-                    . ' data-str = "foo"'
-                    . ' data-zero="0"'
-                    . ' draggable="true"'
-                    . ' width="100"',
-                ),
-                'expect' => array(
-                    'autocomplete' => 'off',
-                    'autofocus' => true,
-                    'class' => array('bar', 'foo'),
-                    'data-null' => null,
-                    'data-obj' => array('foo' => 'bar'),
-                    'data-str' => 'foo',
-                    'data-zero' => 0,
-                    'draggable' => true,
-                    'notabool' => '',
-                    'placeholder' => '"quotes" & ampersands',
-                    'required' => true,
-                    'value' => '',
-                    'width' => 100,
-                ),
-            ),
-            array(
-                'params' => array(
-                    'class="still string" value="sun &amp; ski" data-true="true" data-false="false" data-null="null" data-list="[&quot;a&quot;,&quot;b&quot;]"',
-                    false,
-                ),
-                'expect' => array(
-                    'class' => 'still string',
-                    'data-false' => 'false',
-                    'data-list' => '["a","b"]',
-                    'data-null' => 'null',
-                    'data-true' => 'true',
-                    'value' => 'sun & ski',
-                ),
-            ),
-        );
-        foreach ($testStack as $test) {
-            $ret = \call_user_func_array('bdk\\Debug\\Utility\Html::parseAttribString', $test['params']);
-            self::assertSame($test['expect'], $ret);
-        }
-    }
-
-    /**
-     * @param string $tagName   tag name
-     * @param array  $attribs   tag attributes
-     * @param string $innerhtml inner html
-     * @param string $expect    built tag
-     *
-     * @dataProvider providerTestBuildTag
-     */
-    public function testBuildTag($tagName, $attribs, $innerhtml, $expect)
-    {
-        $tag = Html::buildTag($tagName, $attribs, $innerhtml);
-        self::assertSame($expect, $tag);
-    }
-
-    /**
-     * @param string $tag    Html tag to parse
-     * @param array  $expect expected return value
-     *
-     * @dataProvider providerTestParseTag
-     */
-    public function testParseTag($tag, $expect)
-    {
-        $parsed = Html::parseTag($tag);
-        self::assertSame($expect, $parsed);
-    }
-
-    public static function providerTestBuildTag()
+    public static function providerBuildTag()
     {
         return array(
             'selfClosing' => array(
@@ -226,17 +184,102 @@ class HtmlTest extends DebugTestFramework
             'innerHtmlClosure' => array(
                 'div',
                 array(
-                    'class' => array('test', 'best')
+                    'class' => array('test', 'best'),
                 ),
-                function () {
+                static function () {
                     return 'innerHtml';
                 },
                 '<div class="best test">innerHtml</div>',
             ),
+            'boolEnum1' => array(
+                'div',
+                array(
+                    'autocapitalize' => 'off',
+                    'contenteditable' => false,
+                    'draggable' => 'false',
+                    'translate' => 'no',
+                ),
+                'test',
+                '<div autocapitalize="off" contenteditable="false" draggable="false" translate="no">test</div>',
+            ),
+            'boolEnum2' => array(
+                'div',
+                array(
+                    'autocapitalize' => 'other',
+                    'contenteditable' => true,
+                    'translate' => false,
+                ),
+                'test',
+                '<div autocapitalize="other" contenteditable="true" translate="no">test</div>',
+            ),
         );
     }
 
-    public static function providerTestParseTag()
+    public static function providerParseAttribString()
+    {
+        return array(
+            array(
+                '',
+                null,
+                'expect' => array(
+                    'class' => array(),
+                ),
+            ),
+            array(
+                ' '
+                    . ' class="foo bar"'
+                    . ' placeholder="&quot;quotes&quot; &amp; ampersands"'
+                    . ' autocapitalize="Bob"'
+                    . ' autocomplete=off'
+                    . ' required=required'
+                    . ' autofocus'
+                    . ' notabool'
+                    . ' value=""'
+                    . ' data-null="null"'
+                    . ' data-obj="{&quot;foo&quot;:&quot;bar&quot;}"'
+                    . ' data-str = "foo"'
+                    . ' data-zero="0"'
+                    . ' draggable="true"'
+                    . ' width="100"',
+                null,
+                array(
+                    'autocapitalize' => 'Bob',
+                    'autocomplete' => false,
+                    'autofocus' => true,
+                    'class' => array('bar', 'foo'),
+                    'data-null' => null,
+                    'data-obj' => array('foo' => 'bar'),
+                    'data-str' => 'foo',
+                    'data-zero' => 0,
+                    'draggable' => true,
+                    'notabool' => '',
+                    'placeholder' => '"quotes" & ampersands',
+                    'required' => true,
+                    'value' => '',
+                    'width' => 100,
+                ),
+            ),
+            array(
+                'class="still string"
+                    value="sun &amp; ski"
+                    data-true="true"
+                    data-false="false"
+                    data-null="null"
+                    data-list="[&quot;a&quot;,&quot;b&quot;]"',
+                false,
+                array(
+                    'class' => 'still string',
+                    'data-false' => 'false',
+                    'data-list' => '["a","b"]',
+                    'data-null' => 'null',
+                    'data-true' => 'true',
+                    'value' => 'sun & ski',
+                ),
+            ),
+        );
+    }
+
+    public static function providerParseTag()
     {
         return array(
             'tagsAndEntities' => array(

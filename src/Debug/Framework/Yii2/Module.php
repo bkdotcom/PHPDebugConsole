@@ -13,16 +13,10 @@
 namespace bdk\Debug\Framework\Yii2;
 
 use bdk\Debug;
-use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Collector\Pdo;
 use bdk\Debug\Framework\Yii2\LogTarget;
 use bdk\Debug\LogEntry;
-use bdk\ErrorHandler;
-use bdk\ErrorHandler\Error;
-use bdk\PubSub\Event;
-use bdk\PubSub\Manager as EventManager;
-use bdk\PubSub\SubscriberInterface;
 use Yii;
 use yii\base\BootstrapInterface;
 use yii\base\Event as YiiEvent;
@@ -31,15 +25,13 @@ use yii\base\Module as BaseModule;
 /**
  * PhpDebugConsole Yii 2 Module
  */
-class Module extends BaseModule implements SubscriberInterface, BootstrapInterface
+class Module extends BaseModule implements BootstrapInterface
 {
     /** @var \bdk\Debug */
     public $debug;
 
     /** @var LogTarget */
     public $logTarget;
-
-    private $collectedEvents = array();
 
     private $configDefault = array(
         'channels' => array(
@@ -79,6 +71,9 @@ class Module extends BaseModule implements SubscriberInterface, BootstrapInterfa
         ),
     );
 
+    private $collectEvents;
+    private $eventSubscribers;
+
     /**
      * Constructor
      *
@@ -92,6 +87,7 @@ class Module extends BaseModule implements SubscriberInterface, BootstrapInterfa
     {
         $debugRootInstance = Debug::getInstance($this->configDefault);
         $debugRootInstance->setCfg($config, Debug::CONFIG_NO_RETURN);
+        $this->debug = $debugRootInstance->getChannel('Yii');
         /*
             Debug instance may have already been instantiated
             remove any session info that may have been logged
@@ -102,13 +98,16 @@ class Module extends BaseModule implements SubscriberInterface, BootstrapInterfa
             return $logEntry->getChannelName() !== 'Session';
         });
         $debugRootInstance->data->set('log', \array_values($logEntries));
-        $debugRootInstance->eventManager->addSubscriberInterface($this);
+
+        $this->collectEvents = new CollectEvents($this);
+        $this->eventSubscribers = new EventSubscribers($this);
+        $debugRootInstance->eventManager->addSubscriberInterface($this->collectEvents);
+        $debugRootInstance->eventManager->addSubscriberInterface($this->eventSubscribers);
         /*
             Debug error handler may have been registered first -> reregister
         */
         $debugRootInstance->errorHandler->unregister();
         $debugRootInstance->errorHandler->register();
-        $this->debug = $debugRootInstance->getChannel('Yii');
         parent::__construct($id, $parent, array());
     }
 
@@ -137,111 +136,10 @@ class Module extends BaseModule implements SubscriberInterface, BootstrapInterfa
     {
         // setAlias needed for Console app
         Yii::setAlias('@' . \str_replace('\\', '/', __NAMESPACE__), __DIR__);
-        $this->collectEvent();
+        $this->collectEvents->bootstrap();
         $this->collectLog();
         $this->collectPdo();
         $this->logSession();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getSubscriptions()
-    {
-        return array(
-            Debug::EVENT_OBJ_ABSTRACT_END => 'onDebugObjAbstractEnd',
-            Debug::EVENT_OUTPUT => array('onDebugOutput', 1),
-            ErrorHandler::EVENT_ERROR => array(
-                array('onErrorLow', -1),
-                array('onErrorHigh', 1),
-            ),
-        );
-    }
-
-    /**
-     * Debug::EVENT_OBJ_ABSTRACT_END event subscriber
-     *
-     * @param Abstraction $abs Abstraction instance
-     *
-     * @return void
-     */
-    public function onDebugObjAbstractEnd(Abstraction $abs)
-    {
-        if ($abs->getSubject() instanceof \yii\db\BaseActiveRecord) {
-            $abs['properties']['_attributes']['forceShow'] = true;
-        }
-    }
-
-    /**
-     * PhpDebugConsole output event listener
-     *
-     * @param Event $event Event instance
-     *
-     * @return void
-     */
-    public function onDebugOutput(Event $event)
-    {
-        $this->logCollectedEvents();
-        $user = new LogUser($this);
-        $user->onDebugOutput($event);
-    }
-
-    /**
-     * Intercept minor framework issues and ignore them
-     *
-     * @param Error $error Error instance
-     *
-     * @return void
-     */
-    public function onErrorHigh(Error $error)
-    {
-        if (\in_array($error['category'], array(Error::CAT_DEPRECATED, Error::CAT_NOTICE, Error::CAT_STRICT), true)) {
-            /*
-                "Ignore" minor internal framework errors
-            */
-            if (\strpos($error['file'], YII2_PATH) === 0) {
-                $error->stopPropagation();          // don't log it now
-                $error['isSuppressed'] = true;
-                $this->ignoredErrors[] = $error['hash'];
-            }
-        }
-        if ($error['category'] !== Error::CAT_FATAL) {
-            /*
-                Don't pass error to Yii's handler... it will exit for #reasons
-            */
-            $error['continueToPrevHandler'] = false;
-        }
-    }
-
-    /**
-     * ErrorHandler::EVENT_ERROR event subscriber
-     *
-     * @param Error $error Error instance
-     *
-     * @return void
-     */
-    public function onErrorLow(Error $error)
-    {
-        // Yii's handler will log the error.. we can ignore that
-        $this->logTarget->enabled = false;
-        if ($error['exception']) {
-            $this->module->errorHandler->handleException($error['exception']);
-        } elseif ($error['category'] === Error::CAT_FATAL) {
-            // Yii's error handler exits (for reasons)
-            //    exit within shutdown procedure (that's us) = immediate exit
-            //    so... unsubscribe the callables that have already been called and
-            //    re-publish the shutdown event before calling yii's error handler
-            foreach ($this->debug->rootInstance->eventManager->getSubscribers(EventManager::EVENT_PHP_SHUTDOWN) as $subscriberInfo) {
-                $callable = $subscriberInfo['callable'];
-                $this->debug->rootInstance->eventManager->unsubscribe(EventManager::EVENT_PHP_SHUTDOWN, $callable);
-                if (\is_array($callable) && $callable[0] === $this->debug->rootInstance->errorHandler) {
-                    break;
-                }
-            }
-            $this->debug->rootInstance->eventManager->publish(EventManager::EVENT_PHP_SHUTDOWN);
-            $this->module->errorHandler->handleError($error['type'], $error['message'], $error['file'], $error['line']);
-        }
-        $this->logTarget->enabled = true;
     }
 
     /**
@@ -258,36 +156,6 @@ class Module extends BaseModule implements SubscriberInterface, BootstrapInterfa
         return $val !== null
             ? $val
             : $default;
-    }
-
-    /**
-     * Collect Yii events
-     *
-     * @return void
-     */
-    protected function collectEvent()
-    {
-        if ($this->shouldCollect('events') === false) {
-            return;
-        }
-        /*
-            $this->module->getVersion() returns the application "module" version vs framework version ¯\_(ツ)_/¯
-        */
-        $yiiVersion = Yii::getVersion();  // Framework version
-        if (\version_compare($yiiVersion, '2.0.14', '<')) {
-            return;
-        }
-        YiiEvent::on('*', '*', function (YiiEvent $event) {
-            $this->collectedEvents[] = array(
-                'eventClass' => \get_class($event),
-                'index' => \count($this->collectedEvents),
-                'isStatic' => \is_object($event->sender) === false,
-                'name' => $event->name,
-                'senderClass' => \is_object($event->sender)
-                    ? \get_class($event->sender)
-                    : $event->sender,
-            );
-        });
     }
 
     /**
@@ -326,56 +194,6 @@ class Module extends BaseModule implements SubscriberInterface, BootstrapInterfa
             $pdoChannel = $this->debug->getChannel('PDO');
             $connection->pdo = new Pdo($pdo, $pdoChannel);
         });
-    }
-
-    /**
-     * Get collectedEvents table rows
-     *
-     * @return array
-     */
-    private function getEventTableData()
-    {
-        $tableData = array();
-        foreach ($this->collectedEvents as $info) {
-            $key = $info['senderClass'] . $info['name'];
-            if (isset($tableData[$key])) {
-                $tableData[$key]['count']++;
-                continue;
-            }
-            $info['count'] = 1;
-            $tableData[$key] = $info;
-        }
-
-        \usort($tableData, static function ($infoA, $infoB) {
-            $cmp = \strcmp($infoA['senderClass'], $infoB['senderClass']);
-            if ($cmp) {
-                return $cmp;
-            }
-            return $infoA['index'] - $infoB['index'];
-        });
-        return $tableData;
-    }
-
-    /**
-     * Output collected event info
-     *
-     * @return void
-     */
-    protected function logCollectedEvents()
-    {
-        $tableData = $this->getEventTableData();
-        foreach ($tableData as &$info) {
-            unset($info['index']);
-            $info['senderClass'] = $this->debug->abstracter->crateWithVals($info['senderClass'], array(
-                'typeMore' => Type::TYPE_STRING_CLASSNAME,
-            ));
-            $info['eventClass'] = $this->debug->abstracter->crateWithVals($info['eventClass'], array(
-                'typeMore' => Type::TYPE_STRING_CLASSNAME,
-            ));
-        }
-
-        $debug = $this->debug->rootInstance->getChannel('events');
-        $debug->table(\array_values($tableData));
     }
 
     /**

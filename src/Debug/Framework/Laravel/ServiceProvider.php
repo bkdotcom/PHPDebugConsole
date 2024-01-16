@@ -15,7 +15,6 @@ namespace bdk\Debug\Framework\Laravel;
 use bdk\Debug;
 use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Collector\MonologHandler;
-use bdk\Debug\Collector\StatementInfo;
 use bdk\Debug\Framework\Laravel\CacheEventsSubscriber;
 use bdk\Debug\Framework\Laravel\EventsSubscriber;
 use bdk\Debug\Framework\Laravel\Middleware;
@@ -24,10 +23,7 @@ use bdk\Debug\Utility\ArrayUtil;
 use bdk\Debug\Utility\TableRow;
 use bdk\ErrorHandler\Error;
 use Illuminate\Contracts\Http\Kernel;
-use Illuminate\Database\DatabaseManager;
-use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Support\ServiceProvider as BaseServiceProvider;
-use Illuminate\View\View;
 
 /**
  * PhpDebugConsole
@@ -37,6 +33,7 @@ class ServiceProvider extends BaseServiceProvider
     public $debug;
     protected $modelCounts = array();
     private $isLumen = false;
+    private $logViews;
 
     /**
      * Register services.
@@ -65,6 +62,8 @@ class ServiceProvider extends BaseServiceProvider
         $this->app->singleton(Debug::class, function () {
             return $this->debug;
         });
+        $this->logViews = new LogViews($this, $this->app);
+        $this->logDb = new LogDb($this, $this->app);
     }
 
     /**
@@ -85,11 +84,11 @@ class ServiceProvider extends BaseServiceProvider
         // mail
         $this->logCacheEvents();
         $this->logConfig();
-        $this->logDb();
+        $this->logDb->log();
         $this->logEvents();
         $this->logLaravel();
         $this->logModels();
-        $this->logViews();
+        $this->logViews->log();
         $this->registerLogHandler();
         $this->registerMiddleware();
     }
@@ -122,26 +121,16 @@ class ServiceProvider extends BaseServiceProvider
     }
 
     /**
-     * Build DatabaseManager event handler
+     * Config get wrapper
      *
-     * @param Debug       $dbChannel  PHPDebugConsole channel
-     * @param string|null $msg        Group message
-     * @param bool        $isGroupEnd (false) groupEnd ?
+     * @param string $name    option name
+     * @param mixed  $default default vale
      *
-     * @return Closure
+     * @return bool
      */
-    private function buildDbEventHandler(Debug $dbChannel, $msg, $isGroupEnd = false)
+    public function shouldCollect($name, $default = false)
     {
-        return static function () use ($dbChannel, $msg, $isGroupEnd) {
-            if ($isGroupEnd === false) {
-                $dbChannel->group($msg);
-                return;
-            }
-            if ($msg) {
-                $dbChannel->log($msg);
-            }
-            $dbChannel->groupEnd();
-        };
+        return $this->app['config']->get('phpDebugConsole.laravel.' . $name, $default);
     }
 
     /**
@@ -168,82 +157,6 @@ class ServiceProvider extends BaseServiceProvider
             );
         }
         return $modelCounts;
-    }
-
-    /**
-     * Register a database query listener with the connection.
-     *
-     * @param DatabaseManager $dbManager DatabaseManager instance
-     * @param Debug           $dbChannel Debug instance
-     *
-     * @return void
-     */
-    protected function dbListen(DatabaseManager $dbManager, Debug $dbChannel)
-    {
-        // listen found in Illuminate\Database\Connection
-        $dbManager->listen(function ($query, $bindings = null, $time = null, $connection = null) use ($dbManager, $dbChannel) {
-            if (!$this->shouldCollect('db', true)) {
-                // We've turned off collecting after the listener was attached
-                return;
-            }
-
-            // Laravel 5.2 changed the way some core events worked. We must account for
-            // the first argument being an "event object", where arguments are passed
-            // via object properties, instead of individual arguments.
-            $connection = $query instanceof QueryExecuted
-                ? $query->connection
-                : $dbManager->connection($connection);
-            if ($query instanceof QueryExecuted) {
-                $bindings = $query->bindings;
-                $time = $query->time;
-                $query = $query->sql;
-            }
-            $statementInfo = new StatementInfo(
-                $query,
-                $connection->prepareBindings($bindings)
-            );
-            $statementInfo->setDuration($time);
-            $statementInfo->appendLog($dbChannel);
-        });
-    }
-
-    /**
-     * Listen to database events
-     *
-     * @param DatabaseManager $dbManager DatabaseManager instance
-     * @param Debug           $dbChannel Debug instance
-     *
-     * @return void
-     */
-    private function dbSubscribe(DatabaseManager $dbManager, Debug $dbChannel)
-    {
-        $eventDispatcher = $dbManager->getEventDispatcher();
-
-        $eventDispatcher->listen(
-            \Illuminate\Database\Events\TransactionBeginning::class,
-            $this->buildDbEventHandler($dbChannel, 'Begin Transaction')
-        );
-        $eventDispatcher->listen(
-            \Illuminate\Database\Events\TransactionCommitted::class,
-            $this->buildDbEventHandler($dbChannel, null, true)
-        );
-        $eventDispatcher->listen(
-            \Illuminate\Database\Events\TransactionRolledBack::class,
-            $this->buildDbEventHandler($dbChannel, 'rollback', true)
-        );
-
-        $eventDispatcher->listen(
-            'connection.*.beganTransaction',
-            $this->buildDbEventHandler($dbChannel, 'Begin Transaction')
-        );
-        $eventDispatcher->listen(
-            'connection.*.committed',
-            $this->buildDbEventHandler($dbChannel, null, true)
-        );
-        $eventDispatcher->listen(
-            'connection.*.rollingBack',
-            $this->buildDbEventHandler($dbChannel, 'rollback', true)
-        );
     }
 
     /**
@@ -280,37 +193,6 @@ class ServiceProvider extends BaseServiceProvider
             'nested' => false,
         ));
         $configChannel->log($config);
-    }
-
-    /**
-     * Subscribe to database events and log them
-     *
-     * @return void
-     */
-    protected function logDb()
-    {
-        if (!$this->shouldCollect('db', true) || !isset($this->app['db'])) {
-            return;
-        }
-
-        /** @var \Illuminate\Database\DatabaseManager */
-        $dbManager = $this->app['db'];
-
-        $dbChannel = $this->debug->getChannel('Db', array(
-            'channelIcon' => 'fa fa-database',
-        ));
-
-        try {
-            $this->dbListen($dbManager, $dbChannel);
-        } catch (\Exception $e) {
-            $this->debug->warn($e->getMessage());
-        }
-
-        try {
-            $this->dbSubscribe($dbManager, $dbChannel);
-        } catch (\Exception $e) {
-            $this->debug->log('exception', $e->getMessage());
-        }
     }
 
     /**
@@ -368,102 +250,6 @@ class ServiceProvider extends BaseServiceProvider
     }
 
     /**
-     * Log views
-     *
-     * @return void
-     */
-    protected function logViews()
-    {
-        if (!$this->shouldCollect('laravel', true)) {
-            return;
-        }
-        $this->viewChannel = $this->debug->getChannel('Views', array(
-            'channelIcon' => 'fa fa-file-text-o',
-        ));
-        $this->app['events']->listen(
-            'composing:*',
-            function ($view, $data = []) {
-                if ($data) {
-                    $view = $data[0]; // For Laravel >= 5.4
-                }
-                $this->logView($view);
-            }
-        );
-    }
-
-    /**
-     * Log view information
-     *
-     * @param View $view View instance
-     *
-     * @return void
-     */
-    protected function logView(View $view)
-    {
-        $name = $view->getName();
-        $path = $view->getPath();
-        $pathStr = \is_object($path)
-            ? null
-            : \realpath($path);
-
-        $info = \array_filter(array(
-            'name' => $name,
-            'params' => \call_user_func(array($this, 'logViewParams'), $view),
-            'path' => $pathStr
-                ? $this->debug->abstracter->crateWithVals(
-                    \ltrim(\str_replace(\base_path(), '', $pathStr), '/'),
-                    array(
-                        'attribs' => array(
-                            'data-file' => $path,
-                        ),
-                    )
-                )
-                : null,
-            'type' => \is_object($path)
-                ? \get_class($view)
-                : (\substr($path, -10) === '.blade.php'
-                    ? 'blade'
-                    : \pathinfo($path, PATHINFO_EXTENSION)),
-        ));
-        $this->viewChannel->log('view', $info, $this->viewChannel->meta('detectFiles'));
-    }
-
-    /**
-     * Get view params (view data)
-     *
-     * @param View $view View instance
-     *
-     * @return array
-     *
-     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
-     */
-    private function logViewParams(View $view)
-    {
-        $data = $view->getData();
-        /** @var bool|'type' */
-        $collectValues = $this->app['config']->get('phpDebugConsole.options.views.data');
-        if ($collectValues === true) {
-            \ksort($data);
-            return $data;
-        }
-        if ($collectValues !== 'type') {
-            $data = \array_keys($data);
-            \sort($data);
-            return $data;
-        }
-        foreach ($data as $k => $v) {
-            $type = $this->debug->abstracter->type->getType($v)[0];
-            $data[$k] = $type === 'object'
-                ? $this->debug->abstracter->crateWithVals(\get_class($v), array(
-                    'typeMore' => Type::TYPE_STRING_CLASSNAME,
-                ))
-                : $type;
-        }
-        \ksort($data);
-        return $data;
-    }
-
-    /**
      * Register Monolog handler
      *
      * @return void
@@ -483,18 +269,5 @@ class ServiceProvider extends BaseServiceProvider
     {
         $kernel = $this->app[Kernel::class];
         $kernel->prependMiddleware(Middleware::class);
-    }
-
-    /**
-     * Config get wrapper
-     *
-     * @param string $name    option name
-     * @param mixed  $default default vale
-     *
-     * @return bool
-     */
-    protected function shouldCollect($name, $default = false)
-    {
-        return $this->app['config']->get('phpDebugConsole.laravel.' . $name, $default);
     }
 }

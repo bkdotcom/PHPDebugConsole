@@ -15,7 +15,6 @@ namespace bdk\Debug\Framework\Yii2;
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
-use bdk\PubSub\Event;
 use DateTime;
 use Exception;
 use Yii;
@@ -37,20 +36,17 @@ class LogUser
      */
     public function __construct(Module $debugModule)
     {
+        $this->debug = $debugModule->debug;
         $this->debugModule = $debugModule;
     }
 
     /**
      * Log current user info
      *
-     * @param Event $event Event instance
-     *
      * @return void
      */
-    public function onDebugOutput(Event $event)
+    public function log()
     {
-        $this->debug = $event->getSubject();
-
         if ($this->debugModule->shouldCollect('user') === false) {
             return;
         }

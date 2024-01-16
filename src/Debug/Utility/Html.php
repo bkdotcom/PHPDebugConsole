@@ -39,46 +39,23 @@ class Html
      * @var array
      */
     public static $htmlBoolAttr = array(
-        /*
-            enum attribues that behave like bool :
-                'autocapitalize' :  on|off  (along with other values)
-                'autocomplete' :    on|off
-                'translate' :       yes|no
-        */
-
         // GLOBAL
         'hidden', 'itemscope',
 
         // FORM / INPUT
-        'autofocus', 'checked', 'disabled', 'formnovalidate',
-        'multiple', 'novalidate', 'readonly', 'required', 'selected',
+        'autofocus', 'checked', 'disabled', 'formnovalidate', 'multiple', 'novalidate', 'readonly', 'required', 'selected',
 
         // AUDIO / VIDEO / TRACK
         'autoplay', 'controls', 'default', 'loop', 'muted', 'playsinline',
 
-        // DETAILS / DIALOG
-        'open',
-
-        // OL
-        'reversed',
-
-        // IFRAME
-        'frameborder', // removed from draft
-
-        // IMG
-        'ismap',
-
-        // MARQUEE
-        'truespeed',
-
-        // OBJECT
-        'typemustmatch', // removed from draft
-
-        // SCRIPT
-        'async', 'defer', 'nomodule',
-
-        // STYLE
-        'scoped',   // removed from draft
+        'open', // <details> & <dialog>
+        'reversed', // <ol>
+        'frameborder', // <iframe> removed from draft
+        'ismap', // <img>
+        'truespeed', // <marquee>
+        'typemustmatch', // <object> removed from draft
+        'async', 'defer', 'nomodule',  // <script>
+        'scoped',   // <style> removed from draft
 
         // OBSOLETE / DEPRECATED / NEVER-A-THING
         'allowfullscreen',     // <iframe> - legacy: redefined as allow="fullscreen"
@@ -99,6 +76,9 @@ class Html
      * @var array
      */
     public static $htmlBoolAttrEnum = array(
+        'autocapitalize', // on|off  (along with other values)
+        'autocomplete', // on|off
+        'translate', // yes|no
         'aria-checked', 'aria-expanded', 'aria-grabbed', 'aria-hidden', 'aria-pressed', 'aria-selected',
         'contenteditable', 'draggable', 'spellcheck',
     );
@@ -333,7 +313,7 @@ class Html
      *
      * This function is not meant for data attributs
      *
-     * @param string $key    attribute name (class|style)
+     * @param string $key    attribute name ("style")
      * @param array  $values key/value for style
      *
      * @return string|null
@@ -361,18 +341,19 @@ class Html
      */
     private static function buildAttribValBool($key, $value = true)
     {
-        if (\in_array($key, self::$htmlBoolAttrEnum, true)) {
-            return \json_encode($value);
-        }
-        $values = array(
-            'autocapitalize' => array('on','off'),
-            'autocomplete' => array('on','off'), // autocapitalize also takes other values...
+        $enumValues = array(
+            'autocapitalize' => array('on','off'), // also takes other values (sentences, words, characters)
+            'autocomplete' => array('on','off'), // autocomplete also takes other values...
             'translate' => array('yes','no'),
         );
-        if (isset($values[$key])) {
+        if (isset($enumValues[$key])) {
             return $value
-                ? $values[$key][0]
-                : $values[$key][1];
+                ? $enumValues[$key][0]
+                : $enumValues[$key][1];
+        }
+        if (\in_array($key, self::$htmlBoolAttrEnum, true)) {
+            // "true" or "false"
+            return \json_encode($value);
         }
         return $value
             ? $key // even if not a recognized boolean attribute
@@ -446,15 +427,13 @@ class Html
      * @param string $val enum attribute value
      *
      * @return bool
-     *
-     * @see self::$htmlBoolAttrEnum
      */
     private static function parseAttribBoolEnum($val)
     {
-        $val = \strtolower($val);
-        return \in_array($val, array('true', 'false'), true)
-            ? $val === 'true'
-            : false;
+        $parsed = \filter_var(\strtolower($val), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+        return $parsed !== null
+            ? $parsed
+            : $val;
     }
 
     /**

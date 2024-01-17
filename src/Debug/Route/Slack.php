@@ -13,7 +13,6 @@
 namespace bdk\Debug\Route;
 
 use bdk\Debug;
-use bdk\ErrorHandler;
 use bdk\ErrorHandler\Error;
 use bdk\Slack\SlackApi;
 use bdk\Slack\SlackMessage;
@@ -25,10 +24,8 @@ use RuntimeException;
  *
  * Not so much a route as a plugin (we only listen for errors)
  */
-class Slack extends AbstractRoute
+class Slack extends AbstractErrorRoute
 {
-    use ErrorThrottleTrait;
-
     protected $cfg = array(
         'channel' => null, // default pulled from SLACK_CHANNEL env var
         'errorMask' => 0,
@@ -42,47 +39,19 @@ class Slack extends AbstractRoute
     /** @var SlackApi|SlackWebhook */
     protected $slackClient;
 
+    protected $statsKey = 'slack';
+
     /**
-     * Constructor
-     *
-     * @param Debug $debug debug instance
+     * {@inheritDoc}
      */
     public function __construct(Debug $debug)
     {
         parent::__construct($debug);
         $this->cfg = \array_merge($this->cfg, array(
             'channel' => \getenv('SLACK_CHANNEL'),
-            'errorMask' => E_ERROR | E_PARSE | E_COMPILE_ERROR | E_WARNING | E_USER_ERROR,
             'token' => \getenv('SLACK_TOKEN'),
             'webhookUrl' => \getenv('SLACK_WEBHOOK_URL'),
         ));
-        $debug->errorHandler->setCfg('enableStats', true);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getSubscriptions()
-    {
-        return array(
-            ErrorHandler::EVENT_ERROR => array('onError', -1),
-        );
-    }
-
-    /**
-     * ErrorHandler::EVENT_ERROR event subscriber
-     *
-     * @param Error $error error/event object
-     *
-     * @return void
-     */
-    public function onError(Error $error)
-    {
-        if ($this->shouldSend($error, 'slack') === false) {
-            return;
-        }
-        $messages = $this->buildMessages($error);
-        $this->sendMessages($messages);
     }
 
     /**
@@ -126,12 +95,7 @@ class Slack extends AbstractRoute
         }
         $this->assertCfg();
         $use = $this->cfg['use'];
-        if ($use === 'auto') {
-            $use = $this->cfg['token'] && $this->cfg['channel']
-                ? 'api'
-                : 'webhook';
-        }
-        $this->slackClient = $use === 'api'
+        $this->slackClient = $use === 'api' || ($use === 'auto' && $this->cfg['token'] && $this->cfg['channel'])
             ? new SlackApi($this->cfg['token'])
             : new SlackWebhook($this->cfg['webhookUrl']);
         if (\is_callable($this->cfg['onClientInit'])) {
@@ -141,13 +105,9 @@ class Slack extends AbstractRoute
     }
 
     /**
-     * Build Slack error message(s)
-     *
-     * @param Error $error Error instance
-     *
-     * @return SlackMessage[]
+     * {@inheritDoc}
      */
-    private function buildMessages(Error $error)
+    protected function buildMessages(Error $error)
     {
         $messages = array();
         $icon = $error->isFatal()
@@ -199,11 +159,7 @@ class Slack extends AbstractRoute
     }
 
     /**
-     * Send message(s) to Slack
-     *
-     * @param SlackMessage[] $messages Slack messages
-     *
-     * @return void
+     * {@inheritDoc}
      */
     protected function sendMessages(array $messages)
     {

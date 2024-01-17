@@ -3,6 +3,7 @@
 namespace bdk\Teams\Cards;
 
 use bdk\Teams\Actions\ActionInterface;
+use Psr\Http\Message\UriInterface;
 
 /**
  * Hero card
@@ -72,7 +73,7 @@ class HeroCard extends AbstractCard
      * Image(s) displayed at top of card. Aspect ratio 16:9.
      * Currently only the first image of the array will be shown in teams
      *
-     * @param string $url Image url
+     * @param string|UriInterface $url Image url
      *
      * @return static
      */
@@ -80,7 +81,7 @@ class HeroCard extends AbstractCard
     {
         self::assertUrl($url);
         return $this->withAdded('images', array(
-            'url' => $url,
+            'url' => (string) $url,
         ));
     }
 

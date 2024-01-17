@@ -107,6 +107,26 @@ class UriTest extends TestCase
                 'query' => '',
                 'fragment' => '[]%" \\',
             )),
+            'uriInterface' => array(
+                new Uri('//example.com/'),
+                array(
+                    'host' => 'example.com',
+                    'path' => '/',
+                ),
+            ),
+            'uriInterface2' => array(
+                new Uri('http://foo:bar@example.com:8080/path?zip=zap#frag'),
+                array(
+                    'scheme' => 'http',
+                    'host' => 'example.com',
+                    'port' => 8080,
+                    'user' => 'foo',
+                    'pass' => 'bar',
+                    'path' => '/path',
+                    'query' => 'zip=zap',
+                    'fragment' => 'frag',
+                ),
+            ),
         );
     }
 

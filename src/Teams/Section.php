@@ -6,6 +6,7 @@ use bdk\Teams\AbstractItem;
 use bdk\Teams\Actions\ActionInterface;
 use InvalidArgumentException;
 use OutOfBoundsException;
+use Psr\Http\Message\UriInterface;
 
 /**
  * MessageCard Section
@@ -39,10 +40,10 @@ class Section extends AbstractItem
     /**
      * Return a new intance with specified activity values
      *
-     * @param string $title    Title
-     * @param string $subtitle Subtitle
-     * @param string $text     Text
-     * @param string $image    Image url
+     * @param string              $title    Title
+     * @param string              $subtitle Subtitle
+     * @param string              $text     Text
+     * @param string|UriInterface $image    Image url
      *
      * @return static
      */
@@ -55,7 +56,7 @@ class Section extends AbstractItem
             self::assertUrl($image);
         }
         $new = clone $this;
-        $new->fields['activityImage'] = $image;
+        $new->fields['activityImage'] = $image ? (string) $image : null;
         $new->fields['activitySubtitle'] = $subtitle;
         $new->fields['activityText'] = $text;
         $new->fields['activityTitle'] = $title;
@@ -87,9 +88,9 @@ class Section extends AbstractItem
     /**
      * Return new instance with the specified hero image
      *
-     * @param string $url   Iaage url
-     * @param string $title A short description of the image
-     *                         (typically displayed as a tooltip)
+     * @param string|UriInterface $url   Iaage url
+     * @param string              $title A short description of the image
+     *                                     (typically displayed as a tooltip)
      *
      * @return static
      */
@@ -100,7 +101,7 @@ class Section extends AbstractItem
         }
         self::assertUrl($url);
         return $this->with('heroImage', array(
-            'image' => $url,
+            'image' => (string) $url,
             'title' => self::asString($title, true, __METHOD__),
         ));
     }

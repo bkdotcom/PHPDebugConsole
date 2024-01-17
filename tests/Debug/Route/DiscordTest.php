@@ -11,6 +11,7 @@ use Psr\Http\Message\RequestInterface;
 /**
  * Test Discord route
  *
+ * @covers \bdk\Debug\Route\AbstractErrorRoute
  * @covers \bdk\Debug\Route\Discord
  *
  * @phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder

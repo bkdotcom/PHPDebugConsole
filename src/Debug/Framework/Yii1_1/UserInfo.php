@@ -18,7 +18,6 @@ use CApplicationComponent;
 use CModel;
 use CWebApplication;
 use Exception;
-use IWebUser;
 use Yii;
 
 /**
@@ -69,12 +68,12 @@ class UserInfo
     /**
      * Log user attributes
      *
-     * @param IWebUser $user  User instance
-     * @param Debug    $debug Debug instance
+     * @param CApplicationComponent $user  User instance (web or console)
+     * @param Debug                 $debug Debug instance
      *
      * @return void
      */
-    private function logIdentityData(IWebUser $user, Debug $debug)
+    private function logIdentityData(CApplicationComponent $user, Debug $debug)
     {
         $identityData = $user->model->attributes;
         if ($user->model instanceof CModel) {

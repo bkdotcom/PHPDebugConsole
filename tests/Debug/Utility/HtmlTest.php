@@ -9,6 +9,8 @@ use bdk\Test\Debug\DebugTestFramework;
  * PHPUnit tests for Debug class
  *
  * @covers \bdk\Debug\Utility\Html
+ * @covers \bdk\Debug\Utility\HtmlBuild
+ * @covers \bdk\Debug\Utility\HtmlParse
  */
 class HtmlTest extends DebugTestFramework
 {

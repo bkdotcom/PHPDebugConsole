@@ -3,6 +3,7 @@
 namespace bdk\Teams\Cards;
 
 use bdk\Teams\Section;
+use Psr\Http\Message\UriInterface;
 
 /**
  * MessageCard
@@ -65,8 +66,8 @@ class MessageCard extends AbstractCard
      * "HttpPOST"
      * "ActionCard"
      *
-     * @param string $name Action name
-     * @param string $url  Action Url
+     * @param string              $name Action name
+     * @param string|UriInterface $url  Action Url
      *
      * @return static
      *
@@ -80,7 +81,7 @@ class MessageCard extends AbstractCard
             '@context' => 'http://schema.org',
             '@type' => 'ViewAction',
             'name' => $name,
-            'target' => [$url],
+            'target' => [(string) $url],
         ));
     }
 
@@ -117,9 +118,9 @@ class MessageCard extends AbstractCard
     /**
      * Add a new section consisting of a hero image
      *
-     * @param string $url   Image url
-     * @param string $title A short description of the image
-     *                          (typically displayed as a tooltip)
+     * @param string|UriInterface $url   Image url
+     * @param string              $title A short description of the image
+     *                                     (typically displayed as a tooltip)
      *
      * @return static
      */
@@ -128,7 +129,7 @@ class MessageCard extends AbstractCard
         self::assertUrl($url);
         return $this->withAdded('sections', array(
             'heroImage' => array(
-                'image' => $url,
+                'image' => (string) $url,
                 'title' => $title,
             ),
         ));

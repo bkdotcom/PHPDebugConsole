@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
@@ -31,12 +31,17 @@ class Html
      *
      * @var array
      */
-    public static $htmlEmptyTags = array('area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr');
+    public static $htmlEmptyTags = array(
+        'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr',
+    );
 
     /**
-     * Used by parseAttribString
+     * The presence of these attributes = true / abscence = false
+     * value not necessary, but may be written as key="key"  (ie autofocus="autofocus" )
      *
      * @var array
+     *
+     * @link https://developer.mozilla.org/en-US/docs/Glossary/Boolean/HTML
      */
     public static $htmlBoolAttr = array(
         // GLOBAL
@@ -76,9 +81,11 @@ class Html
      * @var array
      */
     public static $htmlBoolAttrEnum = array(
-        'autocapitalize', // on|off  (along with other values)
-        'autocomplete', // on|off
+        'autocapitalize', // on|off (other values also accepted)
+        'autocomplete', // on|off (other values also accepted)
         'translate', // yes|no
+
+        // "true"/"false" :
         'aria-checked', 'aria-expanded', 'aria-grabbed', 'aria-hidden', 'aria-pressed', 'aria-selected',
         'contenteditable', 'draggable', 'spellcheck',
     );
@@ -106,7 +113,7 @@ class Html
         $attribPairs = array();
         foreach ($attribs as $name => $value) {
             // buildAttribNameValue updates $name by reference
-            $nameVal = static::buildAttribNameValue($name, $value);
+            $nameVal = HtmlBuild::buildAttribNameValue($name, $value);
             $attribPairs[$name] = $nameVal;
         }
         $attribPairs = \array_filter($attribPairs, 'strlen');
@@ -160,7 +167,7 @@ class Html
         $names = \array_map('strtolower', $matches[1]);
         $values = \array_replace($matches[3], \array_filter($matches[4], 'strlen'));
         foreach ($names as $i => $name) {
-            $attribs[$name] = self::parseAttribValue($name, $values[$i], $options);
+            $attribs[$name] = HtmlParse::parseAttribValue($name, $values[$i], $options);
         }
         \ksort($attribs);
         return $attribs;
@@ -221,271 +228,5 @@ class Html
         $id = \preg_replace('/[^a-zA-Z0-9_\-]+/', '_', $id);
         $id = \preg_replace('/_+/', '_', $id);
         return $id;
-    }
-
-    /**
-     * Buile name="value"
-     *
-     * @param string $name  Attribute name
-     * @param mixed  $value Attribute value
-     *
-     * @return string
-     */
-    private static function buildAttribNameValue(&$name, $value)
-    {
-        // buildAttribVal updates $name by reference
-        $value = self::buildAttribVal($name, $value);
-        if ($value === null) {
-            return '';
-        }
-        if ($value === '' && \in_array($name, array('class', 'style'), true)) {
-            return '';
-        }
-        return $name . '="' . \htmlspecialchars($value) . '"';
-    }
-
-    /**
-     * Converts attribute value to string
-     *
-     * @param string $key key
-     * @param mixed  $val value
-     *
-     * @return string|null
-     */
-    private static function buildAttribVal(&$key, $val)
-    {
-        if (\is_int($key)) {
-            $key = $val;
-            $val = true;
-        }
-        $key = \strtolower($key);
-        if ($key === 'id') {
-            return static::sanitizeId($val);
-        }
-        switch (static::buildAttribValType($key, $val)) {
-            case 'class':
-                return static::buildAttribValClass($val);
-            case 'data':
-                return \is_string($val)
-                    ? $val
-                    : \json_encode($val);
-            case 'valArray':
-                return static::buildAttribValArray($key, $val);
-            case 'valBool':
-                return static::buildAttribValBool($key, $val);
-            case 'valNull':
-                return null;
-            default:
-                return \trim($val);
-        }
-    }
-
-    /**
-     * Determine the type of attribute being updated
-     *
-     * @param string $name Attribute name
-     * @param mixed  $val  Attribute value
-     *
-     * @return string 'class', data', 'valArray', valBool', or 'valNull'
-     */
-    private static function buildAttribValType($name, $val)
-    {
-        if (\substr($name, 0, 5) === 'data-') {
-            return 'data';
-        }
-        if ($val === null) {
-            return 'valNull';
-        }
-        if (\is_bool($val)) {
-            return 'valBool';
-        }
-        if ($name === 'class') {
-            return 'class';
-        }
-        if (\is_array($val)) {
-            return 'valArray';
-        }
-        return 'string';
-    }
-
-    /**
-     * Convert array attribute value to string
-     *
-     * This function is not meant for data attributs
-     *
-     * @param string $key    attribute name ("style")
-     * @param array  $values key/value for style
-     *
-     * @return string|null
-     */
-    private static function buildAttribValArray($key, $values = array())
-    {
-        if ($key === 'style') {
-            $keyValues = array();
-            foreach ($values as $key => $val) {
-                $keyValues[] = $key . ':' . $val . ';';
-            }
-            \sort($keyValues);
-            return \implode('', $keyValues);
-        }
-        return null;
-    }
-
-    /**
-     * Convert boolean attribute value to string
-     *
-     * @param string $key   attribute name
-     * @param bool   $value true|false
-     *
-     * @return string|null
-     */
-    private static function buildAttribValBool($key, $value = true)
-    {
-        $enumValues = array(
-            'autocapitalize' => array('on','off'), // also takes other values (sentences, words, characters)
-            'autocomplete' => array('on','off'), // autocomplete also takes other values...
-            'translate' => array('yes','no'),
-        );
-        if (isset($enumValues[$key])) {
-            return $value
-                ? $enumValues[$key][0]
-                : $enumValues[$key][1];
-        }
-        if (\in_array($key, self::$htmlBoolAttrEnum, true)) {
-            // "true" or "false"
-            return \json_encode($value);
-        }
-        return $value
-            ? $key // even if not a recognized boolean attribute
-            : null;
-    }
-
-    /**
-     * Build class attribute value
-     * May pass
-     *   string:  'foo bar'
-     *   array:  [
-     *      'foo',
-     *      'bar' => true,
-     *      'notIncl' => false,
-     *      'key' => 'classValue',
-     *   ]
-     *
-     * @param string|array $values Class values.  May be array or space-separated string
-     *
-     * @return string
-     */
-    private static function buildAttribValClass($values)
-    {
-        if (\is_array($values) === false) {
-            $values = \explode(' ', $values);
-        }
-        $values = \array_map(static function ($key, $val) {
-            return \is_bool($val)
-                ? ($val ?  $key : null)
-                : $val;
-        }, \array_keys($values), $values);
-        // only interested in unique, non-empty values
-        $values = \array_filter(\array_unique($values));
-        \sort($values);
-        return \implode(' ', $values);
-    }
-
-    /**
-     * Parse attribute value
-     *
-     * @param string $name    attribute name
-     * @param string $val     value (assumed to be htmlspecialchar'd)
-     * @param int    $options bitmask of self::PARSE_ATTRIB_x FLAGS
-     *
-     * @return mixed
-     */
-    private static function parseAttribValue($name, $val, $options)
-    {
-        $val = \htmlspecialchars_decode($val);
-        if ($name === 'class') {
-            return self::parseAttribClass($val, $options & self::PARSE_ATTRIB_CLASS);
-        }
-        if (\substr($name, 0, 5) === 'data-') {
-            return self::parseAttribData($val, $options & self::PARSE_ATTRIB_DATA);
-        }
-        if (\in_array($name, self::$htmlBoolAttr, true)) {
-            return true;
-        }
-        if (\in_array($name, self::$htmlBoolAttrEnum, true)) {
-            return self::parseAttribBoolEnum($val);
-        }
-        if (\is_numeric($val)) {
-            return self::parseAttribNumeric($val, $options & self::PARSE_ATTRIB_NUMERIC);
-        }
-        return $val;
-    }
-
-    /**
-     * Convert bool enum attribute value to bool
-     *
-     * @param string $val enum attribute value
-     *
-     * @return bool
-     */
-    private static function parseAttribBoolEnum($val)
-    {
-        $parsed = \filter_var(\strtolower($val), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
-        return $parsed !== null
-            ? $parsed
-            : $val;
-    }
-
-    /**
-     * Convert class attribute value to array of classes
-     *
-     * @param string $val    attribute value to decode
-     * @param bool   $decode whether to decode
-     *
-     * @return array|string
-     */
-    private static function parseAttribClass($val, $decode)
-    {
-        if (!$decode) {
-            return $val;
-        }
-        $classes = \explode(' ', $val);
-        \sort($classes);
-        return \array_unique($classes);
-    }
-
-    /**
-     * Json decode data-xxx attribute
-     *
-     * @param string $val    attribute value to decode
-     * @param bool   $decode whether to decode
-     *
-     * @return mixed
-     */
-    private static function parseAttribData($val, $decode)
-    {
-        if (!$decode) {
-            return $val;
-        }
-        $decoded = \json_decode((string) $val, true);
-        if ($decoded === null && $val !== 'null') {
-            $decoded = \json_decode('"' . $val . '"', true);
-        }
-        return $decoded;
-    }
-
-    /**
-     * Convert numeric attribute value to float/int
-     *
-     * @param string $val    enum attribute value
-     * @param bool   $decode whether to decode
-     *
-     * @return string|float|int
-     */
-    private static function parseAttribNumeric($val, $decode)
-    {
-        return $decode
-            ? \json_decode($val)
-            : $val;
     }
 }

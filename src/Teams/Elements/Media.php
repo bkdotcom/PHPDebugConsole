@@ -3,6 +3,7 @@
 namespace bdk\Teams\Elements;
 
 use InvalidArgumentException;
+use Psr\Http\Message\UriInterface;
 use RuntimeException;
 
 /**
@@ -101,7 +102,7 @@ class Media extends AbstractElement
      * URL of an image to display before playing.
      * Supports data URI in version 1.2+
      *
-     * @param string $url URL of an image to display before playing.
+     * @param string|UriInterface $url URL of an image to display before playing.
      *
      * @return static
      */
@@ -110,7 +111,7 @@ class Media extends AbstractElement
         if ($url !== null) {
             self::assertUrl($url, true);
         }
-        return $this->with('poster', $url);
+        return $this->with('poster', $url ? (string) $url : null);
     }
 
     /**

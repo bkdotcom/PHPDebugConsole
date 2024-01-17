@@ -5,6 +5,7 @@ namespace bdk\Teams\Elements;
 use bdk\Teams\Actions\ActionInterface;
 use bdk\Teams\Enums;
 use InvalidArgumentException;
+use Psr\Http\Message\UriInterface;
 use RuntimeException;
 
 /**
@@ -17,7 +18,7 @@ class Image extends AbstractElement
     /**
      * Constructor
      *
-     * @param string $url Image url
+     * @param string|UriInterface $url Image url
      */
     public function __construct($url = null)
     {
@@ -34,7 +35,7 @@ class Image extends AbstractElement
             'selectAction' => null,
             'size' => null,
             'style' => null,
-            'url' => $url,
+            'url' => $url ? (string) $url : null,
             'width' => null,
         ));
     }
@@ -80,14 +81,14 @@ class Image extends AbstractElement
      * Sets Url
      * The URL to the image. Supports data URI in version 1.2+
      *
-     * @param string $url Url
+     * @param string|UriInterface $url Url
      *
      * @return static
      */
     public function withUrl($url)
     {
         self::assertUrl($url, true);
-        return $this->with('url', $url);
+        return $this->with('url', (string) $url);
     }
 
     /**

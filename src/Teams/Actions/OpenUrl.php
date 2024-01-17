@@ -2,6 +2,7 @@
 
 namespace bdk\Teams\Actions;
 
+use Psr\Http\Message\UriInterface;
 use RuntimeException;
 
 /**
@@ -14,7 +15,7 @@ class OpenUrl extends AbstractAction
     /**
      * Constructor
      *
-     * @param string $url The url to open
+     * @param string|UriInterface $url The url to open
      */
     public function __construct($url = null)
     {
@@ -24,7 +25,7 @@ class OpenUrl extends AbstractAction
         parent::__construct();
         $this->type = 'Action.OpenUrl';
         $this->fields = \array_merge($this->fields, array(
-            'url' => $url,
+            'url' => $url ? (string) $url : null,
         ));
     }
 
@@ -50,13 +51,13 @@ class OpenUrl extends AbstractAction
     /**
      * Sets url
      *
-     * @param string $url The url to open
+     * @param string|UriInterface $url The url to open
      *
      * @return OpenUrl
      */
     public function withUrl($url)
     {
         self::assertUrl($url);
-        return $this->with('url', $url);
+        return $this->with('url', (string) $url);
     }
 }

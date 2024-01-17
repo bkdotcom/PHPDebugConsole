@@ -235,15 +235,14 @@ class Html extends AbstractRoute
                 'linkFilesTemplateDefault' => $lftDefault ?: null,
                 'tooltip' => $this->cfg['tooltip'],
             ),
-        )) . ">\n";
-        $str .= $this->buildStyleTag();
-        $str .= $this->buildScriptTag();
-        $str .= $this->buildHeader();
-        if ($this->cfg['outputScript']) {
-            $str .= '<div class="loading">Loading <i class="fa fa-spinner fa-pulse fa-2x fa-fw" aria-hidden="true"></i></div>' . "\n";
-        }
-        $str .= $this->tabs->buildTabPanes();
-        $str .= '</div>' . "\n"; // close .debug
+        )) . ">\n"
+            . $this->buildStyleTag()
+            . $this->buildScriptTag()
+            . $this->buildHeader()
+            . $this->buildLoading()
+            . $this->tabs->buildTabPanes()
+            . '</div>' . "\n"; // close .debug
+
         $str = \preg_replace('#(<ul[^>]*>)\s+</ul>#', '$1</ul>', $str); // ugly, but want to be able to use :empty
         $str = \strtr($str, array(
             '{{channels}}' => \htmlspecialchars(\json_encode($this->buildChannelTree(), JSON_FORCE_OBJECT)),
@@ -262,17 +261,17 @@ class Html extends AbstractRoute
         $channelRoot = \reset($channels)->rootInstance;
         \ksort($channels, SORT_NATURAL | SORT_FLAG_CASE);
         $tree = array();
-        foreach ($channels as $name => $channel) {
+        \array_walk($channels, static function (Debug $channel, $name) use ($channels, $channelRoot, &$tree) {
             $ref = &$tree;
             $path = \explode('.', $name);
             foreach ($path as $i => $k) {
+                // output may have only output general.foo
+                //   we still need general
+                $pathFq = \implode('.', \array_slice($path, 0, $i + 1));
+                $channel = isset($channels[$pathFq])
+                    ? $channels[$pathFq]
+                    : $channelRoot->getChannel($pathFq);
                 if (!isset($ref[$k])) {
-                    // output may have only output general.foo
-                    //   we still need general
-                    $pathFq = \implode('.', \array_slice($path, 0, $i + 1));
-                    $channel = isset($channels[$pathFq])
-                        ? $channels[$pathFq]
-                        : $channelRoot->getChannel($pathFq);
                     $ref[$k] = array(
                         'channels' => array(),
                         'options' => array(
@@ -283,7 +282,7 @@ class Html extends AbstractRoute
                 }
                 $ref = &$ref[$k]['channels'];
             }
-        }
+        });
         return $tree;
     }
 
@@ -300,6 +299,18 @@ class Html extends AbstractRoute
                 . $this->tabs->buildTabList()
             . '</nav>'
             . '</header>' . "\n";
+    }
+
+    /**
+     * Build "loading" spinner
+     *
+     * @return string
+     */
+    private function buildLoading()
+    {
+        return $this->cfg['outputScript']
+            ? '<div class="loading">Loading <i class="fa fa-spinner fa-pulse fa-2x fa-fw" aria-hidden="true"></i></div>' . "\n"
+            : '';
     }
 
     /**

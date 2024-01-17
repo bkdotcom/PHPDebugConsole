@@ -52,6 +52,7 @@
         <exclude name="Generic.Commenting.DocComment.LongNotCapital" />
         <exclude name="Generic.Commenting.DocComment.MissingShort" />
         <exclude name="Generic.Commenting.DocComment.ShortNotCapital" />
+        <exclude name="Generic.Commenting.DocComment.SpacingAfterTagGroup" />
         <exclude name="Generic.Files.EndFileNewline.NotFound" /> <!-- handled by PSR-12 -->
         <exclude name="Generic.Files.EndFileNoNewline.Found" />
         <exclude name="Generic.Files.InlineHTML.Found" />
@@ -139,6 +140,7 @@
         <!-- VariableComment -->
         <exclude name="Squiz.Commenting.VariableComment.IncorrectVarType" />
         <exclude name="Squiz.Commenting.VariableComment.Missing" />
+        <exclude name="Squiz.Commenting.VariableComment.TagNotAllowed" />
         <exclude name="Squiz.Commenting.VariableComment.WrongStyle" />
     </rule>
     <rule ref="Squiz.Commenting.FileComment.Missing">

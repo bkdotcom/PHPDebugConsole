@@ -76,12 +76,28 @@ class Uri
     /**
      * Parse URL (multi-byte safe)
      *
-     * @param string $url The URL to parse.
+     * @param string|UriInterface $url The URL to parse.
      *
      * @return array|false
      */
     public static function parseUrl($url)
     {
+        if ($url instanceof UriInterface) {
+            $userInfo = \array_replace(array(null, null), \explode(':', $url->getUserInfo(), 2));
+            // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
+            return \array_filter(array(
+                'scheme' => $url->getScheme(),
+                'host' => $url->getHost(),
+                'port' => $url->getPort(),
+                'user' => $userInfo[0],
+                'pass' => $userInfo[1],
+                'path' => $url->getPath(),
+                'query' => $url->getQuery(),
+                'fragment' => $url->getFragment(),
+            ), static function ($val) {
+                return !empty($val);
+            });
+        }
         // reserved chars
         $chars = '!*\'();:@&=$,/?#[]';
         $entities = \str_split(\urlencode($chars), 3);
@@ -146,7 +162,7 @@ class Uri
      *
      * @return array
      */
-    private static function parseUrlAddEmpty($parts, $url)
+    private static function parseUrlAddEmpty(array $parts, $url)
     {
         // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
         $default = array(

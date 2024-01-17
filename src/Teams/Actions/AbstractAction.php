@@ -4,6 +4,7 @@ namespace bdk\Teams\Actions;
 
 use bdk\Teams\AbstractExtendableItem;
 use bdk\Teams\Enums;
+use Psr\Http\Message\UriInterface;
 
 /**
  * Common action attributes
@@ -76,7 +77,7 @@ abstract class AbstractAction extends AbstractExtendableItem implements ActionIn
      * Optional icon to be shown on the action in conjunction with the title.
      * Supports data URI in version 1.2+
      *
-     * @param string $iconUrl Url
+     * @param string|UriInterface $iconUrl Url
      *
      * @return static
      */
@@ -85,7 +86,7 @@ abstract class AbstractAction extends AbstractExtendableItem implements ActionIn
         if ($iconUrl !== null) {
             self::assertUrl($iconUrl, true);
         }
-        return $this->with('iconUrl', $iconUrl);
+        return $this->with('iconUrl', $iconUrl ? (string) $iconUrl : null);
     }
 
     /**

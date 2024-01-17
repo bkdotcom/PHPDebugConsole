@@ -27,6 +27,7 @@ use ReflectionMethod;
  * @covers \bdk\Debug\Dump\Text
  * @covers \bdk\Debug\Plugin\Method\Table
  * @covers \bdk\Debug\Route\Firephp
+ * @covers \bdk\Debug\Route\Script
  * @covers \bdk\Debug\ServiceProvider
  * @covers \bdk\Debug\Utility\Table
  * @covers \bdk\Debug\Utility\TableRow

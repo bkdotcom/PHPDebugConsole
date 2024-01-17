@@ -14,7 +14,6 @@ namespace bdk\Debug\Route;
 
 use bdk\CurlHttpMessage\Client as CurlHttpMessageClient;
 use bdk\Debug;
-use bdk\ErrorHandler;
 use bdk\ErrorHandler\Error;
 use RuntimeException;
 
@@ -25,10 +24,8 @@ use RuntimeException;
  *
  * @see https://discord.com/developers/docs/resources/webhook#execute-webhook
  */
-class Discord extends AbstractRoute
+class Discord extends AbstractErrorRoute
 {
-    use ErrorThrottleTrait;
-
     protected $cfg = array(
         'errorMask' => 0,
         'onClientInit' => null,
@@ -39,45 +36,17 @@ class Discord extends AbstractRoute
     /** @var CurlHttpMessageClient */
     protected $client;
 
+    protected $statsKey = 'discord';
+
     /**
-     * Constructor
-     *
-     * @param Debug $debug debug instance
+     * {@inheritDoc}
      */
     public function __construct(Debug $debug)
     {
         parent::__construct($debug);
         $this->cfg = \array_merge($this->cfg, array(
-            'errorMask' => E_ERROR | E_PARSE | E_COMPILE_ERROR | E_WARNING | E_USER_ERROR,
             'webhookUrl' => \getenv('DISCORD_WEBHOOK_URL'),
         ));
-        $debug->errorHandler->setCfg('enableStats', true);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getSubscriptions()
-    {
-        return array(
-            ErrorHandler::EVENT_ERROR => array('onError', -1),
-        );
-    }
-
-    /**
-     * ErrorHandler::EVENT_ERROR event subscriber
-     *
-     * @param Error $error error/event object
-     *
-     * @return void
-     */
-    public function onError(Error $error)
-    {
-        if ($this->shouldSend($error, 'discord') === false) {
-            return;
-        }
-        $message = $this->buildMessage($error);
-        $this->sendMessage($message);
     }
 
     /**
@@ -101,23 +70,20 @@ class Discord extends AbstractRoute
     }
 
     /**
-     * Build Discord error message(s)
-     *
-     * @param Error $error Error instance
-     *
-     * @return array
+     * {@inheritDoc}
      */
-    private function buildMessage(Error $error)
+    protected function buildMessages(Error $error)
     {
         $emoji = $error->isFatal()
             ? ':no_entry:'
             : ':warning:';
-        return array(
+        $message = array(
             'content' => $emoji . ' **' . $error['typeStr'] . '**' . "\n"
                 . $this->getRequestMethodUri() . "\n"
                 . $error->getMessageText() . "\n"
                 . $error['fileAndLine'],
         );
+        return array($message);
     }
 
     /**
@@ -139,7 +105,17 @@ class Discord extends AbstractRoute
     }
 
     /**
-     * Send message to Discord
+     * {@inheritDoc}
+     */
+    protected function sendMessages(array $messages)
+    {
+        foreach ($messages as $message) {
+            $this->sendMessage($message);
+        }
+    }
+
+    /**
+     * Send message
      *
      * @param array $message Discord message
      *

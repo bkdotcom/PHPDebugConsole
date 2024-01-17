@@ -3,6 +3,7 @@
 namespace bdk\Teams\Elements;
 
 use bdk\Teams\AbstractItem;
+use Psr\Http\Message\UriInterface;
 use RuntimeException;
 
 /**
@@ -17,8 +18,8 @@ class MediaSource extends AbstractItem
     /**
      * Constructor
      *
-     * @param string $url      URL
-     * @param string $mimeType Mime type
+     * @param string|UriInterface $url      URL
+     * @param string              $mimeType Mime type
      */
     public function __construct($url = null, $mimeType = null)
     {
@@ -28,7 +29,7 @@ class MediaSource extends AbstractItem
         $this->type = 'MediaSource';
         $this->fields = array(
             'mimeType' => $mimeType,
-            'url' => $url,
+            'url' => $url ? (string) $url : null,
         );
     }
 
@@ -74,13 +75,13 @@ class MediaSource extends AbstractItem
      * URL to media.
      * Supports data URI in version 1.2+
      *
-     * @param string $url Url
+     * @param string|UriInterface $url Url
      *
      * @return static
      */
     public function withUrl($url)
     {
         self::assertUrl($url, true);
-        return $this->with('url', $url);
+        return $this->with('url', (string) $url);
     }
 }

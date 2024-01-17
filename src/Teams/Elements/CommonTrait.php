@@ -2,6 +2,8 @@
 
 namespace bdk\Teams\Elements;
 
+use Psr\Http\Message\UriInterface;
+
 /**
  * Common element methods
  */
@@ -10,7 +12,7 @@ trait CommonTrait
     /**
      * Return new instance with given backgroundImage
      *
-     * @param string                        $url                 Image url
+     * @param string|UriInterface           $url                 Image url
      * @param Enums::FILLMODE_x             $fillmode            fill mode
      * @param Enums::HORIZONTAL_ALIGNMENT_x $horizontalAlignment horizontal alignment
      * @param Enums::VERTICAL_ALIGNMENT_x   $verticalAlignment   Vertical alignment
@@ -30,7 +32,7 @@ trait CommonTrait
         $backgroundImage = self::normalizeContent(array(
             'fillmode' => $fillmode,
             'horizontalAlignment' => $horizontalAlignment,
-            'url' => $url,
+            'url' => $url ? (string) $url : null,
             'verticalContentAlignment' => $verticalAlignment,
         ));
         return \count($backgroundImage) > 1

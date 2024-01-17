@@ -6,6 +6,7 @@ use bdk\Teams\Actions\ActionInterface;
 use bdk\Teams\Elements\ElementInterface;
 use bdk\Teams\Enums;
 use InvalidArgumentException;
+use Psr\Http\Message\UriInterface;
 
 /**
  * Custom adaptive card
@@ -176,7 +177,7 @@ class AdaptiveCard extends AbstractCard
     /**
      * Return new instance with given backgroundImage
      *
-     * @param string                        $url                 Image url
+     * @param string|UriInterface           $url                 Image url
      * @param Enums::FILLMODE_x             $fillmode            fill mode
      * @param Enums::HORIZONTAL_ALIGNMENT_x $horizontalAlignment horizontal alignment
      * @param Enums::VERTICAL_ALIGNMENT_x   $verticalAlignment   Vertical alignment
@@ -196,7 +197,7 @@ class AdaptiveCard extends AbstractCard
         $backgroundImage = self::normalizeContent(array(
             'fillmode' => $fillmode,
             'horizontalAlignment' => $horizontalAlignment,
-            'url' => $url,
+            'url' => $url ? (string) $url : null,
             'verticalContentAlignment' => $verticalAlignment,
         ));
         if (\count($backgroundImage) > 1 && $this->fields['version'] < 1.2) {

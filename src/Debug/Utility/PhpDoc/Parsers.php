@@ -74,61 +74,120 @@ class Parsers
                 'parts' => array('type', 'name', 'desc'),
                 'tags' => array('param', 'property', 'property-read', 'property-write', 'var'),
             ),
-            array(
-                'callable' => array(
-                    $this->parseMethod,
-                ),
-                'parts' => array('static', 'type', 'name', 'param', 'desc'),
-                'regex' => '/'
-                    . '(?:(?P<static>static)\s+)?'
-                    . '(?:(?P<type>.*?)\s+)?'
-                    . '(?P<name>\S+)'
-                    . '\((?P<param>((?>[^()]+)|(?R))*)\)'  // see http://php.net/manual/en/regexp.reference.recursive.php
-                    . '(?:\s+(?P<desc>.*))?'
-                    . '/s',
-                'tags' => array('method'),
+            $this->parserReturnThrows(),
+            $this->parserMethod(),
+            $this->parserAuthor(),
+            $this->parserLink(),
+            $this->parserSee(),
+            $this->parserDefault(),
+        );
+    }
+
+    /**
+     * Parser "definition" for @author tag
+     *
+     * @return array
+     */
+    private function parserAuthor()
+    {
+        return array(
+            'parts' => array('name', 'email', 'desc'),
+            'regex' => '/^(?P<name>[^<]+)'
+                . '(?:\s+<(?P<email>\S*)>)?'
+                . '(?:\s+(?P<desc>.*))?' // desc isn't part of the standard
+                . '$/s',
+            'tags' => array('author'),
+        );
+    }
+
+    /**
+     * Default parser "definition"
+     *
+     * @return array
+     */
+    private function parserDefault()
+    {
+        return array(
+            'parts' => array('desc'),
+            'regex' => '/^(?P<desc>.*?)$/s',
+            'tags' => array(),
+        );
+    }
+
+    /**
+     * Parser "definition" for @link tag
+     *
+     * @return array
+     */
+    private function parserLink()
+    {
+        return array(
+            'parts' => array('uri', 'desc'),
+            'regex' => '/^(?P<uri>\S+)'
+                . '(?:\s+(?P<desc>.*))?$/s',
+            'tags' => array('link'),
+        );
+    }
+
+    /**
+     * Parser "definition" for @method tag
+     *
+     * @return array
+     */
+    private function parserMethod()
+    {
+        return array(
+            'callable' => array(
+                $this->parseMethod,
             ),
-            array(
-                'callable' => array(
-                    array($this->helper, 'extractTypeFromBody'),
-                    static function (array $parsed, array $info) {
-                        $parsed['type'] = $info['phpDoc']->type->normalize($parsed['type'], $info['className'], $info['fullyQualifyType']);
-                        return $parsed;
-                    },
-                ),
-                'parts' => array('type', 'desc'),
-                'regex' => '/^(?P<type>.*?)'
-                    . '(?:\s+(?P<desc>.*))?$/s',
-                'tags' => array('return', 'throws'),
+            'parts' => array('static', 'type', 'name', 'param', 'desc'),
+            'regex' => '/'
+                . '(?:(?P<static>static)\s+)?'
+                . '(?:(?P<type>.*?)\s+)?'
+                . '(?P<name>\S+)'
+                . '\((?P<param>((?>[^()]+)|(?R))*)\)'  // see http://php.net/manual/en/regexp.reference.recursive.php
+                . '(?:\s+(?P<desc>.*))?'
+                . '/s',
+            'tags' => array('method'),
+        );
+    }
+
+    /**
+     * Parser "definition" for @return & @throws tags
+     *
+     * @return array
+     */
+    private function parserReturnThrows()
+    {
+        return array(
+            'callable' => array(
+                array($this->helper, 'extractTypeFromBody'),
+                static function (array $parsed, array $info) {
+                    $parsed['type'] = $info['phpDoc']->type->normalize($parsed['type'], $info['className'], $info['fullyQualifyType']);
+                    return $parsed;
+                },
             ),
-            array(
-                'parts' => array('name', 'email', 'desc'),
-                'regex' => '/^(?P<name>[^<]+)'
-                    . '(?:\s+<(?P<email>\S*)>)?'
-                    . '(?:\s+(?P<desc>.*))?' // desc isn't part of the standard
-                    . '$/s',
-                'tags' => array('author'),
-            ),
-            array(
-                'parts' => array('uri', 'desc'),
-                'regex' => '/^(?P<uri>\S+)'
-                    . '(?:\s+(?P<desc>.*))?$/s',
-                'tags' => array('link'),
-            ),
-            array(
-                'parts' => array('uri', 'fqsen', 'desc'),
-                'regex' => '/^(?:'
-                    . '(?P<uri>https?:\/\/\S+)|(?P<fqsen>\S+)'
-                    . ')'
-                    . '(?:\s+(?P<desc>.*))?$/s',
-                'tags' => array('see'),
-            ),
-            array(
-                // default
-                'parts' => array('desc'),
-                'regex' => '/^(?P<desc>.*?)$/s',
-                'tags' => array(),
-            ),
+            'parts' => array('type', 'desc'),
+            'regex' => '/^(?P<type>.*?)'
+                . '(?:\s+(?P<desc>.*))?$/s',
+            'tags' => array('return', 'throws'),
+        );
+    }
+
+    /**
+     * Parser "definition" for @see tag
+     *
+     * @return array
+     */
+    private function parserSee()
+    {
+        return array(
+            'parts' => array('uri', 'fqsen', 'desc'),
+            'regex' => '/^(?:'
+                . '(?P<uri>https?:\/\/\S+)|(?P<fqsen>\S+)'
+                . ')'
+                . '(?:\s+(?P<desc>.*))?$/s',
+            'tags' => array('see'),
         );
     }
 }

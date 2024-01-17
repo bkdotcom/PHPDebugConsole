@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
@@ -96,7 +96,9 @@ class GuzzleMiddleware extends AbstractAsyncMiddleware
         }
         $this->logResponse($response, $requestInfo, $reason);
         $this->debug->groupEnd($meta);
-        return Promise\Create::rejectionFor($reason);
+        return \class_exists('GuzzleHttp\\Promise\\Create')
+            ? Promise\Create::rejectionFor($reason)
+            : Promise\rejection_for($reason);
     }
 
     /**

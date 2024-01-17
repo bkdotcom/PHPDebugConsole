@@ -13,7 +13,6 @@
 namespace bdk\Debug\Route;
 
 use bdk\Debug;
-use bdk\ErrorHandler;
 use bdk\ErrorHandler\Error;
 use bdk\Teams\Cards\AdaptiveCard;
 use bdk\Teams\Cards\CardInterface;
@@ -30,10 +29,8 @@ use RuntimeException;
  *
  * Not so much a route as a plugin (we only listen for errors)
  */
-class Teams extends AbstractRoute
+class Teams extends AbstractErrorRoute
 {
-    use ErrorThrottleTrait;
-
     protected $cfg = array(
         'errorMask' => 0,
         'onClientInit' => null,
@@ -44,45 +41,17 @@ class Teams extends AbstractRoute
     /** @var TeamsWebhook */
     protected $teamsClient;
 
+    protected $statsKey = 'teams';
+
     /**
-     * Constructor
-     *
-     * @param Debug $debug debug instance
+     * {@inheritDoc}
      */
     public function __construct(Debug $debug)
     {
         parent::__construct($debug);
         $this->cfg = \array_merge($this->cfg, array(
-            'errorMask' => E_ERROR | E_PARSE | E_COMPILE_ERROR | E_WARNING | E_USER_ERROR,
             'webhookUrl' => \getenv('TEAMS_WEBHOOK_URL'),
         ));
-        $debug->errorHandler->setCfg('enableStats', true);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getSubscriptions()
-    {
-        return array(
-            ErrorHandler::EVENT_ERROR => array('onError', -1),
-        );
-    }
-
-    /**
-     * ErrorHandler::EVENT_ERROR event subscriber
-     *
-     * @param Error $error error/event object
-     *
-     * @return void
-     */
-    public function onError(Error $error)
-    {
-        if ($this->shouldSend($error, 'teams') === false) {
-            return;
-        }
-        $card = $this->buildMessage($error);
-        $this->sendMessage($card);
     }
 
     /**
@@ -137,30 +106,22 @@ class Teams extends AbstractRoute
     }
 
     /**
-     * Build Teams error message
-     *
-     * @param Error $error Error instance
-     *
-     * @return CardInterface
+     * {@inheritDoc}
      */
-    private function buildMessage(Error $error)
+    protected function buildMessages(Error $error)
     {
         $icon = $error->isFatal()
             ? '🚫'
             : '⚠';
         $card = (new AdaptiveCard())
             ->withAddedElement(
-                (new TeamsTextBlock($icon . ' ' . $error['typeStr']))
-                    ->withStyle(Enums::TEXTBLOCK_STYLE_HEADING)
+                (new TeamsTextBlock($icon . ' ' . $error['typeStr']))->withStyle(Enums::TEXTBLOCK_STYLE_HEADING)
             )
             ->withAddedElement(
-                (new TeamsTextBlock(
-                    $this->getRequestMethodUri()
-                ))->withIsSubtle()
+                (new TeamsTextBlock($this->getRequestMethodUri()))->withIsSubtle()
             )
             ->withAddedElement(
-                (new TeamsTextBlock($error->getMessageText()))
-                    ->withWrap()
+                (new TeamsTextBlock($error->getMessageText()))->withWrap()
             )
             ->withAddedElement(
                 new FactSet(array(
@@ -169,11 +130,9 @@ class Teams extends AbstractRoute
                 ))
             );
         if ($error->isFatal() && $error['backtrace']) {
-            $card = $card->withAddedElement(
-                $this->buildBacktraceTable($error)
-            );
+            $card = $card->withAddedElement($this->buildBacktraceTable($error));
         }
-        return $card;
+        return array($card);
     }
 
     /**
@@ -192,6 +151,16 @@ class Teams extends AbstractRoute
             \call_user_func($this->cfg['onClientInit'], $this->teamsClient);
         }
         return $this->teamsClient;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    protected function sendMessages(array $messages)
+    {
+        foreach ($messages as $message) {
+            $this->sendMessage($message);
+        }
     }
 
     /**

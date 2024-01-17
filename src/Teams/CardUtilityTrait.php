@@ -2,8 +2,10 @@
 
 namespace bdk\Teams;
 
+use bdk\HttpMessage\Utility\Uri as UriUtility;
 use bdk\Teams\ItemInterface;
 use InvalidArgumentException;
+use Psr\Http\Message\UriInterface;
 use ReflectionClass;
 
 /**
@@ -170,10 +172,7 @@ trait CardUtilityTrait
      */
     protected static function asString($val, $allowNull, $method, $paramName = null)
     {
-        if (\is_string($val) || \is_numeric($val)) {
-            return (string) $val;
-        }
-        if (\is_object($val) && \method_exists($val, '__toString')) {
+        if (self::isStringable($val)) {
             return (string) $val;
         }
         if ($val === null && $allowNull) {
@@ -193,6 +192,22 @@ trait CardUtilityTrait
     }
 
     /**
+     * Can value be coerced to string?
+     * (string, numeric, or Stringable)
+     *
+     * @param mixed $val Value to test
+     *
+     * @return bool
+     */
+    private static function isStringable($val)
+    {
+        if (\is_string($val) || \is_numeric($val)) {
+            return true;
+        }
+        return \is_object($val) && \method_exists($val, '__toString');
+    }
+
+    /**
      * Assert that value is a URL
      *
      * @param mixed $val          Value to test
@@ -204,15 +219,15 @@ trait CardUtilityTrait
      */
     protected static function assertUrl($val, $allowDataUrl = false)
     {
-        if (\is_string($val) === false) {
+        if (\is_string($val) === false && !($val instanceof UriInterface)) {
             throw new InvalidArgumentException(\sprintf(
-                'Url should be a string. %s provided.',
+                'Url should be a string or UriInterface. %s provided.',
                 self::getDebugType($val)
             ));
         }
         if (
             $allowDataUrl
-            && \preg_match('#^data:\w+/\w+;base64,(.*)$#', $val, $matches)
+            && \preg_match('#^data:\w+/\w+;base64,(.*)$#', (string) $val, $matches)
             && self::isBase64RegexTest($matches[1])
         ) {
             return;
@@ -220,7 +235,7 @@ trait CardUtilityTrait
         $message = $allowDataUrl
             ? 'Invalid url (or data url)'
             : 'Invalid url';
-        $urlParts = self::parseUrl($val);
+        $urlParts = UriUtility::parseUrl($val);
         if ($urlParts === false || isset($urlParts['scheme']) === false) {
             throw new InvalidArgumentException($message);
         }
@@ -310,45 +325,5 @@ trait CardUtilityTrait
             . '([ \t]*[a-zA-Z0-9+/]*={0,2})' // last line may have "=" padding at the end"
             . '$#';
         return \preg_match($regex, $val) === 1;
-    }
-
-    /**
-     * Parse URL (multi-byte safe)
-     *
-     * @param string $url The URL to parse.
-     *
-     * @return array|false
-     */
-    protected static function parseUrl($url)
-    {
-        // reserved chars
-        $chars = '!*\'();:@&=$,/?#[]';
-        $entities = \str_split(\urlencode($chars), 3);
-        $chars = \str_split($chars);
-        $urlEnc = \str_replace($entities, $chars, \urlencode($url));
-        $parts = self::parseUrlPatched($urlEnc);
-        return $parts
-            ? \array_map('urldecode', $parts)
-            : $parts;
-    }
-
-    /**
-     * Parse URL that may or may not contain schema
-     *
-     * @param string $url The URL to parse.
-     *
-     * @return array|false
-     */
-    private static function parseUrlPatched($url)
-    {
-        if (PHP_VERSION_ID >= 50500 || \strpos($url, '//') !== 0) {
-            return \parse_url($url);
-        }
-        // php 5.4 chokes without the scheme
-        $parts = \parse_url('http:' . $url);
-        if ($parts) {
-            unset($parts['scheme']);
-        }
-        return $parts;
     }
 }

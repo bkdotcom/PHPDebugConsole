@@ -168,8 +168,10 @@ abstract class AbstractBlockFactory
         if (isset($values['focus_on_load']) && $values['focus_on_load'] === false) {
             unset($values['focus_on_load']);
         }
-        return \array_filter($values, static function ($value) {
+        $values = \array_filter($values, static function ($value) {
             return $value !== null;
         });
+        \ksort($values);
+        return $values;
     }
 }

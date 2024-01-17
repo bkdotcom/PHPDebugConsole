@@ -11,6 +11,7 @@ use Psr\Http\Message\RequestInterface;
 /**
  * Test Teams route
  *
+ * @covers \bdk\Debug\Route\AbstractErrorRoute
  * @covers \bdk\Debug\Route\Teams
  *
  * @phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder

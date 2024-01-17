@@ -70,16 +70,7 @@ class BlockElementsFactory extends AbstractBlockFactory
      */
     public static function checkboxes($actionId, $options, $values = array())
     {
-        $block = \array_merge(array(
-            'action_id' => (string) $actionId,
-            'confirm' => null,
-            'focus_on_load' => false,
-            'initial_options' => null,
-            'options' => self::normalizeOptions($options, 10, 'checkboxes'),
-            'type' => 'checkboxes',
-        ), $values);
-        $block = self::renameDefault($block, 'initial_options');
-        return self::removeNull($block);
+        return self::checkboxesRadio($actionId, $options, $values, 'checkboxes');
     }
 
     /**
@@ -209,16 +200,7 @@ class BlockElementsFactory extends AbstractBlockFactory
      */
     public static function radio($actionId, $options, $values = array())
     {
-        $block = \array_merge(array(
-            'action_id' => (string) $actionId,
-            'confirm' => null,
-            'focus_on_load' => false,
-            'initial_option' => null,
-            'options' => self::normalizeOptions($options, 10, 'radio_buttons'),
-            'type' => 'radio_buttons',
-        ), $values);
-        $block = self::renameDefault($block, 'initial_option');
-        return self::removeNull($block);
+        return self::checkboxesRadio($actionId, $options, $values, 'radio_buttons');
     }
 
     /**
@@ -334,6 +316,33 @@ class BlockElementsFactory extends AbstractBlockFactory
     }
 
     /**
+     * Create a checkbox or radio  group
+     *
+     * @param string $actionId ActionId
+     * @param string $options  Selectable options
+     * @param array  $values   Attributes
+     * @param string $what     "checkboxes" or "radio_buttons"
+     *
+     * @return array<string,mixed>
+     */
+    private static function checkboxesRadio($actionId, $options, $values, $what)
+    {
+        $initialOptionKey = $what === 'checkboxes'
+            ? 'initial_options'
+            : 'initial_option';
+        $block = \array_merge(array(
+            $initialOptionKey => null,
+            'action_id' => (string) $actionId,
+            'confirm' => null,
+            'focus_on_load' => false,
+            'options' => self::normalizeOptions($options, 10, $what),
+            'type' => $what,
+        ), $values);
+        $block = self::renameDefault($block);
+        return self::removeNull($block);
+    }
+
+    /**
      * Normalize checkbox, radio, or select options
      *
      * @param array  $options checkbox, radio, overflow, or select block element
@@ -400,9 +409,9 @@ class BlockElementsFactory extends AbstractBlockFactory
      */
     private static function renameDefault($block, $renameTo = 'initial_value')
     {
-        if ($block['type'] === 'multi_static_select') {
+        if (\in_array($block['type'], array('checkboxes', 'multi_static_select'), true)) {
             $renameTo = 'initial_options';
-        } elseif ($block['type'] === 'static_select') {
+        } elseif (\in_array($block['type'], array('radio_buttons', 'static_select'), true)) {
             $renameTo = 'initial_option';
         }
         if (isset($block['default'])) {

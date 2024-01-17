@@ -13,6 +13,7 @@ use Psr\Http\Message\RequestInterface;
 /**
  * Test Slack route
  *
+ * @covers \bdk\Debug\Route\AbstractErrorRoute
  * @covers \bdk\Debug\Route\Slack
  */
 class SlackTest extends DebugTestFramework

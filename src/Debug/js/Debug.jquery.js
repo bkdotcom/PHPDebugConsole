@@ -360,7 +360,7 @@
     $root.on('expand.debug.group', onExpandGroup);
     $root.on('expand.debug.object', onExpandObject);
     $root.on('expanded.debug.next', '.context', function (e) {
-      enhanceValue($(e.target).find('> td > .t_array'));
+      enhanceValue($(e.target).find('> td > .t_array'), $(e.target).closest('li'));
     });
     $root.on('expanded.debug.array expanded.debug.group expanded.debug.object', onExpanded);
   }
@@ -394,7 +394,7 @@
     var $entry = $node.closest('li[class*=m_]');
     e.stopPropagation();
     $node.find('> .array-inner > li > :last-child, > .array-inner > li[class]').each(function () {
-      enhanceValue($entry, this);
+      enhanceValue(this, $entry);
     });
   }
 
@@ -416,7 +416,7 @@
         '> .property > :last-child,' +
         '> .method .t_string'
       ).each(function () {
-        enhanceValue($entry, this);
+        enhanceValue(this, $entry);
       });
     enhanceObject$1.enhanceInner($node);
   }
@@ -494,11 +494,11 @@
   /**
    * Sort table
    *
-   * @param obj table dom element
-   * @param int col   column index
-   * @param str dir   (asc) or desc
+   * @param obj table    dom element
+   * @param int colIndex column index
+   * @param str dir      (asc) or desc
    */
-  function sortTable (table, col, dir) {
+  function sortTable (table, colIndex, dir) {
     var body = table.tBodies[0];
     var rows = body.rows;
     var i;
@@ -510,39 +510,42 @@
       : null;
     dir = dir === 'desc' ? -1 : 1;
     rows = Array.prototype.slice.call(rows, 0); // Converts HTMLCollection to Array
-    rows = rows.sort(rowComparator(col, dir, collator));
+    rows = rows.sort(rowComparator(colIndex, dir, collator));
     for (i = 0; i < rows.length; ++i) {
       body.appendChild(rows[i]); // append each row in order (which moves)
     }
   }
 
-  function rowComparator (col, dir, collator) {
+  function rowComparator (colIndex, dir, collator) {
     var floatRe = /^([+-]?(?:0|[1-9]\d*)(?:\.\d*)?)(?:[eE]([+-]?\d+))?$/;
     return function sortFunction (trA, trB) {
-      var a = trA.cells[col].textContent.trim();
-      var b = trB.cells[col].textContent.trim();
+      var a = trA.cells[colIndex].textContent.trim();
+      var b = trB.cells[colIndex].textContent.trim();
       var afloat = a.match(floatRe);
       var bfloat = b.match(floatRe);
-      var comp = 0;
       if (afloat) {
         a = toFixed(a, afloat);
       }
       if (bfloat) {
         b = toFixed(b, bfloat);
       }
-      if (afloat && bfloat) {
-        if (a < b) {
-          comp = -1;
-        } else if (a > b) {
-          comp = 1;
-        }
-        return dir * comp
-      }
-      comp = collator
-        ? collator.compare(a, b)
-        : a.localeCompare(b); // not a natural sort
-      return dir * comp
+      return dir * compare(a, b, collator)
     }
+  }
+
+  function compare (a, b, collator) {
+    var comp = 0;
+    if (afloat && bfloat) {
+      if (a < b) {
+        comp = -1;
+      } else if (a > b) {
+        comp = 1;
+      }
+      return comp
+    }
+    return collator
+      ? collator.compare(a, b)
+      : a.localeCompare(b) // not a natural sort
   }
 
   function toFixed (str, matches) {
@@ -655,7 +658,7 @@
     if (!isUpdate) {
       $entry.find('table thead tr > *:last-child').after('<th></th>');
     } else if (remove) {
-      $entry.find('table tr > *:last-child').remove();
+      $entry.find('table t:not(.context) > *:last-child').remove();
       return
     }
     $entry.find('table tbody tr').each(function () {
@@ -732,8 +735,7 @@
     $string.replaceWith($replace);
   }
 
-  function createFileLinkUpdateAttr($string, $replace, attrs)
-  {
+  function createFileLinkUpdateAttr ($string, $replace, attrs) {
     $.each(attrs, function () {
       if (typeof this === 'undefined') {
         return // continue
@@ -756,7 +758,7 @@
     }
   }
 
-  function createFileLinkReplace($string, matches, text, remove, isUpdate) {
+  function createFileLinkReplace ($string, matches, text, remove, isUpdate) {
     var $replace;
     if (remove) {
       $replace = $('<span>', {
@@ -860,7 +862,7 @@
     $entry.trigger('enhanced.debug');
   }
 
-  function enhanceValue$1 ($entry, node) {
+  function enhanceValue$1 (node, $entry) {
     var $node = $(node);
     if ($node.is('.t_array')) {
       enhance($node);
@@ -964,7 +966,7 @@
     }
     addIcons$1($entry);
     $entry.children().each(function () {
-      enhanceValue$1($entry, this);
+      enhanceValue$1(this, $entry);
     });
   }
 
@@ -973,7 +975,7 @@
     addIcons$1($entry);
     if ($entry.hasClass('m_table')) {
       $entry.find('> table > tbody > tr > td').each(function () {
-        enhanceValue$1($entry, this);
+        enhanceValue$1(this, $entry);
       });
     }
     // table may have a expand collapse row that's initially expanded
@@ -991,7 +993,7 @@
     $toggle.attr('data-toggle', 'group');
     $toggle.find('.t_array, .t_object').each(function () {
       $(this).data('expand', false);
-      enhanceValue$1($group, this);
+      enhanceValue$1(this, $group);
     });
     $.each(['level-error', 'level-info', 'level-warn'], function (i, classname) {
       var $toggleIcon;
@@ -1175,12 +1177,6 @@
    */
 
   var channels = [];
-  var tests = [
-    function ($node) {
-      var channel = $node.data('channel') || $node.closest('.debug').data('channelNameRoot');
-      return channels.indexOf(channel) > -1
-    }
-  ];
   var preFilterCallbacks = [
     function ($root) {
       var $checkboxes = $root.find('input[data-toggle=channel]');
@@ -1246,10 +1242,6 @@
     updateFilterStatus($root);
   }
 
-  function addTest (func) {
-    tests.push(func);
-  }
-
   function addPreFilter (func) {
     preFilterCallbacks.push(func);
   }
@@ -1290,35 +1282,37 @@
 
   function applyFilterToNode ($node, channelNameRoot) {
     var hiddenWas = $node.is('.filter-hidden');
-    var i;
     var isFilterVis = true;
-    var $parentGroup;
     if ($node.data('channel') === channelNameRoot + '.phpError') {
       // php Errors are filtered separately
       return
     }
-    for (i in tests) {
-      isFilterVis = tests[i]($node);
-      if (!isFilterVis) {
-        break
-      }
-    }
+    isFilterVis = isFilterVis();
     $node.toggleClass('filter-hidden', !isFilterVis);
     if (isFilterVis && hiddenWas) {
       // unhiding
-      $parentGroup = $node.parent().closest('.m_group');
-      if (!$parentGroup.length || $parentGroup.hasClass('expanded')) {
-        $node.debugEnhance();
-      }
+      afterUnhide($node);
     } else if (!isFilterVis && !hiddenWas) {
       // hiding
-      if ($node.hasClass('m_group')) {
-        // filtering group... means children (if not filtered) are visible
-        $node.find('> .group-body').debugEnhance();
-      }
+      afterHide($node);
     }
     if (isFilterVis && $node.hasClass('m_group')) {
+      // trigger to call groupUpdate
       $node.trigger('collapsed.debug.group');
+    }
+  }
+
+  function afterUnhide ($node) {
+    $parentGroup = $node.parent().closest('.m_group');
+    if (!$parentGroup.length || $parentGroup.hasClass('expanded')) {
+      $node.debugEnhance();
+    }
+  }
+
+  function afterHide ($node) {
+    if ($node.hasClass('m_group')) {
+      // filtering group... means children (if not filtered) are visible
+      $node.find('> .group-body').debugEnhance();
     }
   }
 
@@ -1604,7 +1598,6 @@
     }
 
     addPreFilter(preFilter);
-    addTest(filterTest);
     initialized = true;
   }
 
@@ -1640,22 +1633,6 @@
     } else {
       close$2($debug);
     }
-  }
-
-  function filterTest ($node) {
-    var matches = $node[0].className.match(/\bm_(\S+)\b/);
-    var method = matches ? matches[1] : null;
-    if (!options.sidebar) {
-      return true
-    }
-    if (method === 'group' && $node.find('> .group-body')[0].className.match(/level-(error|info|warn)/)) {
-      method = $node.find('> .group-body')[0].className.match(/level-(error|info|warn)/)[1];
-      $node.toggleClass('filter-hidden-body', methods.indexOf(method) < 0);
-    }
-    if (['alert', 'error', 'warn', 'info'].indexOf(method) > -1) {
-      return methods.indexOf(method) > -1
-    }
-    return methods.indexOf('other') > -1
   }
 
   function preFilter ($delegateRoot) {
@@ -2045,6 +2022,43 @@
     $errorSummary.find('.m_trace').debugEnhance();
   }
 
+  function getNodeType ($node) {
+    var matches = $node.prop('class').match(/t_(\w+)|(timestamp|string-encoded)/);
+    var type;
+    var typeMore = $node.data('typeMore');
+    if (matches === null) {
+      return getNodeTypeNoMatch($node)
+    }
+    type = findFirstDefined(matches.slice(1)) || 'unknown';
+    if (type === 'timestamp') {
+      type = $node.find('> span').prop('class').replace('t_', '');
+      typeMore = 'timestamp';
+    } else if (type === 'string-encoded') {
+      type = 'string';
+      typeMore = $node.data('typeMore');
+    }
+    return [type, typeMore]
+  }
+
+  function findFirstDefined (list) {
+    for (var i = 0, count = list.length; i < count; i++) {
+      if (list[i] !== undefined) {
+        return list[i]
+      }
+    }
+  }
+
+  function getNodeTypeNoMatch ($node) {
+    var type = $node.data('type') || 'unknown';
+    var typeMore = $node.data('typeMore');
+    if ($node.hasClass('show-more-container')) {
+      type = 'string';
+    } else if ($node.hasClass('value-container') && $node.find('.content-type').length) {
+      typeMore = $node.find('.content-type').text();
+    }
+    return [type, typeMore]
+  }
+
   /**
    * handle expanding/collapsing arrays, groups, & objects
    */
@@ -2056,7 +2070,7 @@
     $delegateNode.on('click', '[data-toggle=array]', onClickToggle);
     $delegateNode.on('click', '[data-toggle=group]', onClickToggle);
     $delegateNode.on('click', '[data-toggle=next]', function (e) {
-      if ($(e.target).closest('a,button').length) {
+      if ($(e.target).closest('a, button').length) {
         return
       }
       return onClickToggle.call(this)
@@ -2151,43 +2165,6 @@
       : expand($node);
   }
 
-  function findFirstDefined (list) {
-    for (var i = 0, count = list.length; i < count; i++) {
-      if (list[i] !== undefined) {
-        return list[i]
-      }
-    }
-  }
-
-  function getNodeType ($node) {
-    var matches = $node.prop('class').match(/t_(\w+)|(timestamp|string-encoded)/);
-    var type;
-    var typeMore = $node.data('typeMore');
-    if (matches === null) {
-      return getNodeTypeNoMatch($node)
-    }
-    type = findFirstDefined(matches.slice(1)) || 'unknown';
-    if (type === 'timestamp') {
-      type = $node.find('> span').prop('class').replace('t_', '');
-      typeMore = 'timestamp';
-    } else if (type === 'string-encoded') {
-      type = 'string';
-      typeMore = $node.data('typeMore');
-    }
-    return [type, typeMore]
-  }
-
-  function getNodeTypeNoMatch ($node) {
-    var type = $node.data('type') || 'unknown';
-    var typeMore = $node.data('typeMore');
-    if ($node.hasClass('show-more-container')) {
-      type = 'string';
-    } else if ($node.hasClass('value-container') && $node.find('.content-type').length) {
-      typeMore = $node.find('.content-type').text();
-    }
-    return [type, typeMore]
-  }
-
   /**
    * Build the value displayed when group is collapsed
    */
@@ -2248,8 +2225,7 @@
   function collapseNext ($toggle, immediate, eventNameDone) {
     if (immediate) {
       $toggle.next().hide();
-      collapseNextDone($toggle, eventNameDone);
-      return
+      return collapseNextDone($toggle, eventNameDone)
     }
     $toggle.next().slideUp('fast', function () {
       collapseNextDone($toggle, eventNameDone);
@@ -2304,25 +2280,26 @@
    */
   function groupHasVis ($group) {
     var $children = $group.find('> .group-body > *');
-    var $entry;
     var count;
     var i;
     for (i = 0, count = $children.length; i < count; i++) {
-      $entry = $children.eq(i);
-      if ($entry.hasClass('filter-hidden')) {
-        if ($entry.hasClass('m_group') === false) {
-          continue
-        }
-        if (groupHasVis($entry)) {
-          return true
-        }
-        continue
+      if (groupHasVisTestChild($children.eq(i))) {
+        return true
       }
-      if ($entry.is('.m_group.hide-if-empty.empty')) {
-        continue
-      }
-      return true
     }
+    return false
+  }
+
+  function groupHasVisTestChild ($child) {
+    if ($child.hasClass('filter-hidden')) {
+      return $child.hasClass('m_group')
+        ? groupHasVis($child)
+        : false
+    }
+    if ($child.is('.m_group.hide-if-empty.empty')) {
+      return false
+    }
+    return true
   }
 
   /**
@@ -6198,15 +6175,107 @@
     return '<span class="classname">' + val + '</span>'
   }
 
-  function Config (defaults, localStorageKey) {
+  var config$9 = {
+    fontAwesomeCss: '//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css',
+    clipboardSrc: '//cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js',
+    iconsExpand: {
+      expand: 'fa-plus-square-o',
+      collapse: 'fa-minus-square-o',
+      empty: 'fa-square-o'
+    },
+    iconsMisc: {
+      '.string-encoded': '<i class="fa fa-barcode"></i>',
+      '.timestamp': '<i class="fa fa-calendar"></i>'
+    },
+    iconsArray: {
+      '> .array-inner > li > .exclude-count': '<i class="fa fa-eye-slash"></i>'
+    },
+    iconsObject: {
+      '> .t_modifier_final': '<i class="fa fa-hand-stop-o"></i>',
+      '> .t_modifier_readonly': '<span class="fa-stack">' +
+        '<i class="fa fa-pencil fa-stack-1x"></i>' +
+        '<i class="fa fa-ban fa-flip-horizontal fa-stack-2x text-muted"></i>' +
+        '</span>',
+      '> .info.magic': '<i class="fa fa-fw fa-magic"></i>',
+      'parent:not(.groupByInheritance) > dd[data-inherited-from]:not(.private-ancestor)': '<i class="fa fa-fw fa-clone" title="Inherited"></i>',
+      'parent:not(.groupByInheritance) > dd.private-ancestor': '<i class="fa fa-lock" title="Private ancestor"></i>',
+      '> dd[data-attributes]': '<i class="fa fa-hashtag" title="Attributes"></i>',
+      '> dd[data-declared-prev]': '<i class="fa fa-fw fa-repeat" title="Overrides"></i>',
+      '> .method.isDeprecated': '<i class="fa fa-fw fa-arrow-down" title="Deprecated"></i>',
+      '> .method > .t_modifier_magic': '<i class="fa fa-magic" title="magic method"></i>',
+      '> .method > .t_modifier_final': '<i class="fa fa-hand-stop-o"></i>',
+      '> .method > .parameter.isPromoted': '<i class="fa fa-arrow-up" title="Promoted"></i>',
+      '> .method > .parameter[data-attributes]': '<i class="fa fa-hashtag" title="Attributes"></i>',
+      '> .method[data-implements]': '<i class="fa fa-handshake-o" title="Implements"></i>',
+      '> .method[data-throws]': '<i class="fa fa-flag" title="Throws"></i>',
+      '> .property.debuginfo-value': '<i class="fa fa-eye" title="via __debugInfo()"></i>',
+      '> .property.debuginfo-excluded': '<i class="fa fa-eye-slash" title="not included in __debugInfo"></i>',
+      '> .property.isDynamic': '<i class="fa fa-warning" title="Dynamic"></i>',
+      '> .property.isPromoted': '<i class="fa fa-arrow-up" title="Promoted"></i>',
+      '> .property > .t_modifier_magic': '<i class="fa fa-magic" title="magic property"></i>',
+      '> .property > .t_modifier_magic-read': '<i class="fa fa-magic" title="magic property"></i>',
+      '> .property > .t_modifier_magic-write': '<i class="fa fa-magic" title="magic property"></i>',
+      '> .vis-toggles > span[data-toggle=vis][data-vis=private]': '<i class="fa fa-user-secret"></i>',
+      '> .vis-toggles > span[data-toggle=vis][data-vis=protected]': '<i class="fa fa-shield"></i>',
+      '> .vis-toggles > span[data-toggle=vis][data-vis=debuginfo-excluded]': '<i class="fa fa-eye-slash"></i>',
+      '> .vis-toggles > span[data-toggle=vis][data-vis=inherited]': '<i class="fa fa-clone"></i>'
+    },
+    // debug methods (not object methods)
+    iconsMethods: {
+      '.m_assert': '<i class="fa-lg"><b>&ne;</b></i>',
+      '.m_clear': '<i class="fa fa-lg fa-ban"></i>',
+      '.m_count': '<i class="fa fa-lg fa-plus-circle"></i>',
+      '.m_countReset': '<i class="fa fa-lg fa-plus-circle"></i>',
+      '.m_error': '<i class="fa fa-lg fa-times-circle"></i>',
+      '.m_group.expanded': '<i class="fa fa-lg fa-minus-square-o"></i>',
+      '.m_group': '<i class="fa fa-lg fa-plus-square-o"></i>',
+      '.m_info': '<i class="fa fa-lg fa-info-circle"></i>',
+      '.m_profile': '<i class="fa fa-lg fa-pie-chart"></i>',
+      '.m_profileEnd': '<i class="fa fa-lg fa-pie-chart"></i>',
+      '.m_time': '<i class="fa fa-lg fa-clock-o"></i>',
+      '.m_timeLog': '<i class="fa fa-lg fa-clock-o"></i>',
+      '.m_trace': '<i class="fa fa-list"></i>',
+      '.m_warn': '<i class="fa fa-lg fa-warning"></i>'
+    },
+    debugKey: getDebugKey(),
+    drawer: false,
+    persistDrawer: false,
+    linkFiles: false,
+    linkFilesTemplate: 'subl://open?url=file://%file&line=%line',
+    localStorageKey: 'phpDebugConsole',
+    useLocalStorage: true,
+    tooltip: true,
+    cssFontAwesome5: '' +
+      '.debug .fa-bell-o:before { content:"\\f0f3"; font-weight:400; }' +
+      '.debug .fa-calendar:before { content:"\\f073"; }' +
+      '.debug .fa-clock-o:before { content:"\\f017"; font-weight:400; }' +
+      '.debug .fa-clone:before { content:"\\f24d"; font-weight:400; }' +
+      '.debug .fa-envelope-o:before { content:"\\f0e0"; font-weight:400; }' +
+      '.debug .fa-exchange:before { content:"\\f362"; }' +
+      '.debug .fa-external-link:before { content:"\\f35d"; }' +
+      '.debug .fa-eye-slash:before { content:"\\f070"; font-weight:400; }' +
+      '.debug .fa-file-code-o:before { content:"\\f1c9"; font-weight:400; }' +
+      '.debug .fa-file-text-o:before { content:"\\f15c"; font-weight:400; }' +
+      '.debug .fa-files-o:before { content:"\\f0c5"; font-weight:400; }' +
+      '.debug .fa-hand-stop-o:before { content:"\\f256"; font-weight:400; }' +
+      '.debug .fa-minus-square-o:before { content:"\\f146"; font-weight:400; }' +
+      '.debug .fa-pencil:before { content:"\\f303" }' +
+      '.debug .fa-pie-chart:before { content:"\\f200"; }' +
+      '.debug .fa-plus-square-o:before { content:"\\f0fe"; font-weight:400; }' +
+      '.debug .fa-shield:before { content:"\\f3ed"; }' +
+      '.debug .fa-square-o:before { content:"\\f0c8"; font-weight:400; }' +
+      '.debug .fa-user-o:before { content:"\\f007"; }' +
+      '.debug .fa-warning:before { content:"\\f071"; }' +
+      '.debug .fa.fa-github { font-family: "Font Awesome 5 Brands"; }'
+  };
+
+  function Config () {
     var storedConfig = null;
-    if (defaults.useLocalStorage) {
-      storedConfig = lsGet(localStorageKey);
+    if (config$9.useLocalStorage) {
+      storedConfig = lsGet(config$9.localStorageKey);
     }
-    this.config = $.extend({}, defaults, storedConfig || {});
-    // console.warn('config', JSON.parse(JSON.stringify(this.config)))
+    this.config = $.extend({}, config$9, storedConfig || {});
     this.haveSavedConfig = typeof storedConfig === 'object';
-    this.localStorageKey = localStorageKey;
     this.localStorageKeys = ['persistDrawer', 'openDrawer', 'openSidebar', 'height', 'linkFiles', 'linkFilesTemplate'];
   }
 
@@ -6220,9 +6289,7 @@
   };
 
   Config.prototype.set = function (key, val) {
-    var lsObj = {};
     var setVals = {};
-    var haveLsKey = false;
     if (typeof key === 'object') {
       setVals = key;
     } else {
@@ -6233,25 +6300,43 @@
       this.config[k] = setVals[k];
     }
     if (this.config.useLocalStorage) {
-      lsObj = lsGet(this.localStorageKey) || {};
-      if (setVals.linkFilesTemplateDefault && !lsObj.linkFilesTemplate) {
-        // we don't have a user specified template... use the default
-        this.config.linkFiles = setVals.linkFiles = true;
-        this.config.linkFilesTemplate = setVals.linkFilesTemplate = setVals.linkFilesTemplateDefault;
-      }
-      for (var i = 0, count = this.localStorageKeys.length; i < count; i++) {
-        key = this.localStorageKeys[i];
-        if (typeof setVals[key] !== 'undefined') {
-          haveLsKey = true;
-          lsObj[key] = setVals[key];
-        }
-      }
-      if (haveLsKey) {
-        lsSet(this.localStorageKey, lsObj);
-      }
+      this.updateStorage(setVals);
     }
     this.haveSavedConfig = true;
   };
+
+  Config.prototype.updateStorage = function (setVals) {
+    var lsObj = lsGet(this.config.localStorageKey) || {};
+    var haveLsKey = false;
+    var key = null;
+    if (setVals.linkFilesTemplateDefault && !lsObj.linkFilesTemplate) {
+      // we don't have a user specified template... use the default
+      this.config.linkFiles = setVals.linkFiles = true;
+      this.config.linkFilesTemplate = setVals.linkFilesTemplate = setVals.linkFilesTemplateDefault;
+    }
+    for (var i = 0, count = this.localStorageKeys.length; i < count; i++) {
+      key = this.localStorageKeys[i];
+      if (typeof setVals[key] !== 'undefined') {
+        haveLsKey = true;
+        lsObj[key] = setVals[key];
+      }
+    }
+    if (haveLsKey) {
+      lsSet(this.config.localStorageKey, lsObj);
+    }
+  };
+
+  function getDebugKey () {
+    var key = null;
+    var queryParams = queryDecode();
+    var cookieValue = cookieGet('debug');
+    if (typeof queryParams.debug !== 'undefined') {
+      key = queryParams.debug;
+    } else if (cookieValue) {
+      key = cookieValue;
+    }
+    return key
+  }
 
   function loadDeps (deps) {
     var checkInterval;
@@ -6329,98 +6414,7 @@
    */
 
   var listenersRegistered = false;
-  var config$9 = new Config({
-    fontAwesomeCss: '//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css',
-    clipboardSrc: '//cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js',
-    iconsExpand: {
-      expand: 'fa-plus-square-o',
-      collapse: 'fa-minus-square-o',
-      empty: 'fa-square-o'
-    },
-    iconsMisc: {
-      '.string-encoded': '<i class="fa fa-barcode"></i>',
-      '.timestamp': '<i class="fa fa-calendar"></i>'
-    },
-    iconsArray: {
-      '> .array-inner > li > .exclude-count': '<i class="fa fa-eye-slash"></i>'
-    },
-    iconsObject: {
-      '> .t_modifier_final': '<i class="fa fa-hand-stop-o"></i>',
-      '> .t_modifier_readonly': '<span class="fa-stack">' +
-        '<i class="fa fa-pencil fa-stack-1x"></i>' +
-        '<i class="fa fa-ban fa-flip-horizontal fa-stack-2x text-muted"></i>' +
-        '</span>',
-      '> .info.magic': '<i class="fa fa-fw fa-magic"></i>',
-      'parent:not(.groupByInheritance) > dd[data-inherited-from]:not(.private-ancestor)': '<i class="fa fa-fw fa-clone" title="Inherited"></i>',
-      'parent:not(.groupByInheritance) > dd.private-ancestor': '<i class="fa fa-lock" title="Private ancestor"></i>',
-      '> dd[data-attributes]': '<i class="fa fa-hashtag" title="Attributes"></i>',
-      '> dd[data-declared-prev]': '<i class="fa fa-fw fa-repeat" title="Overrides"></i>',
-      '> .method.isDeprecated': '<i class="fa fa-fw fa-arrow-down" title="Deprecated"></i>',
-      '> .method > .t_modifier_magic': '<i class="fa fa-magic" title="magic method"></i>',
-      '> .method > .t_modifier_final': '<i class="fa fa-hand-stop-o"></i>',
-      '> .method > .parameter.isPromoted': '<i class="fa fa-arrow-up" title="Promoted"></i>',
-      '> .method > .parameter[data-attributes]': '<i class="fa fa-hashtag" title="Attributes"></i>',
-      '> .method[data-implements]': '<i class="fa fa-handshake-o" title="Implements"></i>',
-      '> .method[data-throws]': '<i class="fa fa-flag" title="Throws"></i>',
-      '> .property.debuginfo-value': '<i class="fa fa-eye" title="via __debugInfo()"></i>',
-      '> .property.debuginfo-excluded': '<i class="fa fa-eye-slash" title="not included in __debugInfo"></i>',
-      '> .property.isDynamic': '<i class="fa fa-warning" title="Dynamic"></i>',
-      '> .property.isPromoted': '<i class="fa fa-arrow-up" title="Promoted"></i>',
-      '> .property > .t_modifier_magic': '<i class="fa fa-magic" title="magic property"></i>',
-      '> .property > .t_modifier_magic-read': '<i class="fa fa-magic" title="magic property"></i>',
-      '> .property > .t_modifier_magic-write': '<i class="fa fa-magic" title="magic property"></i>',
-      '> .vis-toggles > span[data-toggle=vis][data-vis=private]': '<i class="fa fa-user-secret"></i>',
-      '> .vis-toggles > span[data-toggle=vis][data-vis=protected]': '<i class="fa fa-shield"></i>',
-      '> .vis-toggles > span[data-toggle=vis][data-vis=debuginfo-excluded]': '<i class="fa fa-eye-slash"></i>',
-      '> .vis-toggles > span[data-toggle=vis][data-vis=inherited]': '<i class="fa fa-clone"></i>'
-    },
-    // debug methods (not object methods)
-    iconsMethods: {
-      '.m_assert': '<i class="fa-lg"><b>&ne;</b></i>',
-      '.m_clear': '<i class="fa fa-lg fa-ban"></i>',
-      '.m_count': '<i class="fa fa-lg fa-plus-circle"></i>',
-      '.m_countReset': '<i class="fa fa-lg fa-plus-circle"></i>',
-      '.m_error': '<i class="fa fa-lg fa-times-circle"></i>',
-      '.m_group.expanded': '<i class="fa fa-lg fa-minus-square-o"></i>',
-      '.m_group': '<i class="fa fa-lg fa-plus-square-o"></i>',
-      '.m_info': '<i class="fa fa-lg fa-info-circle"></i>',
-      '.m_profile': '<i class="fa fa-lg fa-pie-chart"></i>',
-      '.m_profileEnd': '<i class="fa fa-lg fa-pie-chart"></i>',
-      '.m_time': '<i class="fa fa-lg fa-clock-o"></i>',
-      '.m_timeLog': '<i class="fa fa-lg fa-clock-o"></i>',
-      '.m_trace': '<i class="fa fa-list"></i>',
-      '.m_warn': '<i class="fa fa-lg fa-warning"></i>'
-    },
-    debugKey: getDebugKey(),
-    drawer: false,
-    persistDrawer: false,
-    linkFiles: false,
-    linkFilesTemplate: 'subl://open?url=file://%file&line=%line',
-    useLocalStorage: true,
-    tooltip: true,
-    cssFontAwesome5: '' +
-      '.debug .fa-bell-o:before { content:"\\f0f3"; font-weight:400; }' +
-      '.debug .fa-calendar:before { content:"\\f073"; }' +
-      '.debug .fa-clock-o:before { content:"\\f017"; font-weight:400; }' +
-      '.debug .fa-clone:before { content:"\\f24d"; font-weight:400; }' +
-      '.debug .fa-envelope-o:before { content:"\\f0e0"; font-weight:400; }' +
-      '.debug .fa-exchange:before { content:"\\f362"; }' +
-      '.debug .fa-external-link:before { content:"\\f35d"; }' +
-      '.debug .fa-eye-slash:before { content:"\\f070"; font-weight:400; }' +
-      '.debug .fa-file-code-o:before { content:"\\f1c9"; font-weight:400; }' +
-      '.debug .fa-file-text-o:before { content:"\\f15c"; font-weight:400; }' +
-      '.debug .fa-files-o:before { content:"\\f0c5"; font-weight:400; }' +
-      '.debug .fa-hand-stop-o:before { content:"\\f256"; font-weight:400; }' +
-      '.debug .fa-minus-square-o:before { content:"\\f146"; font-weight:400; }' +
-      '.debug .fa-pencil:before { content:"\\f303" }' +
-      '.debug .fa-pie-chart:before { content:"\\f200"; }' +
-      '.debug .fa-plus-square-o:before { content:"\\f0fe"; font-weight:400; }' +
-      '.debug .fa-shield:before { content:"\\f3ed"; }' +
-      '.debug .fa-square-o:before { content:"\\f0c8"; font-weight:400; }' +
-      '.debug .fa-user-o:before { content:"\\f007"; }' +
-      '.debug .fa-warning:before { content:"\\f071"; }' +
-      '.debug .fa.fa-github { font-family: "Font Awesome 5 Brands"; }'
-  }, 'phpDebugConsole');
+  var config$a = new Config();
 
   if (typeof $ === 'undefined') {
     throw new TypeError('PHPDebugConsole\'s JavaScript requires jQuery.')
@@ -6431,7 +6425,7 @@
   */
   loadDeps([
     {
-      src: config$9.get('fontAwesomeCss'),
+      src: config$a.get('fontAwesomeCss'),
       type: 'stylesheet',
       check: function () {
         var fontFamily = getFontFamily();
@@ -6442,12 +6436,12 @@
         var fontFamily = getFontFamily();
         var matches = fontFamily.match(/Font\s?Awesome.+(\d+)/);
         if (matches && matches[1] >= 5) {
-          addStyle(config$9.get('cssFontAwesome5'));
+          addStyle(config$a.get('cssFontAwesome5'));
         }
       }
     },
     {
-      src: config$9.get('clipboardSrc'),
+      src: config$a.get('clipboardSrc'),
       check: function () {
         return typeof window.ClipboardJS !== 'undefined'
       },
@@ -6488,7 +6482,7 @@
   });
 
   function debugEnhanceInit ($node, arg1) {
-    var conf = new Config(config$9.get(), 'phpDebugConsole');
+    var conf = new Config(config$a.get(), 'phpDebugConsole');
     $node.data('config', conf);
     conf.set($node.eq(0).data('options') || {});
     if (typeof arg1 === 'object') {
@@ -6531,10 +6525,10 @@
       } else if ($self.prop('class').match(/\bt_/)) {
         // value
         enhanceValue$1(
+          $self,
           $self.parents('li').filter(function () {
             return $(this).prop('class').match(/\bm_/) !== null
-          }),
-          $self
+          })
         );
       }
       // console.groupEnd()
@@ -6545,7 +6539,7 @@
     if (typeof arg1 !== 'object') {
       return
     }
-    config$9.set(arg1);
+    config$a.set(arg1);
     // update log entries that have already been enhanced
     $node
       .find('.debug-log.enhanced')
@@ -6591,18 +6585,6 @@
     fontFamily = window.getComputedStyle(span, null).getPropertyValue('font-family');
     document.body.removeChild(span);
     return fontFamily
-  }
-
-  function getDebugKey () {
-    var key = null;
-    var queryParams = queryDecode();
-    var cookieValue = cookieGet('debug');
-    if (typeof queryParams.debug !== 'undefined') {
-      key = queryParams.debug;
-    } else if (cookieValue) {
-      key = cookieValue;
-    }
-    return key
   }
 
   function initClipboardJs () {

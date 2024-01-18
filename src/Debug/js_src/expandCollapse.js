@@ -3,6 +3,7 @@
  */
 
 import $ from 'jquery'
+import { getNodeType } from './nodeType.js'
 
 var config
 
@@ -11,7 +12,7 @@ export function init ($delegateNode) {
   $delegateNode.on('click', '[data-toggle=array]', onClickToggle)
   $delegateNode.on('click', '[data-toggle=group]', onClickToggle)
   $delegateNode.on('click', '[data-toggle=next]', function (e) {
-    if ($(e.target).closest('a,button').length) {
+    if ($(e.target).closest('a, button').length) {
       return
     }
     return onClickToggle.call(this)
@@ -106,43 +107,6 @@ export function toggle (node) {
     : expand($node)
 }
 
-function findFirstDefined (list) {
-  for (var i = 0, count = list.length; i < count; i++) {
-    if (list[i] !== undefined) {
-      return list[i]
-    }
-  }
-}
-
-function getNodeType ($node) {
-  var matches = $node.prop('class').match(/t_(\w+)|(timestamp|string-encoded)/)
-  var type
-  var typeMore = $node.data('typeMore')
-  if (matches === null) {
-    return getNodeTypeNoMatch($node)
-  }
-  type = findFirstDefined(matches.slice(1)) || 'unknown'
-  if (type === 'timestamp') {
-    type = $node.find('> span').prop('class').replace('t_', '')
-    typeMore = 'timestamp'
-  } else if (type === 'string-encoded') {
-    type = 'string'
-    typeMore = $node.data('typeMore')
-  }
-  return [type, typeMore]
-}
-
-function getNodeTypeNoMatch ($node) {
-  var type = $node.data('type') || 'unknown'
-  var typeMore = $node.data('typeMore')
-  if ($node.hasClass('show-more-container')) {
-    type = 'string'
-  } else if ($node.hasClass('value-container') && $node.find('.content-type').length) {
-    typeMore = $node.find('.content-type').text()
-  }
-  return [type, typeMore]
-}
-
 /**
  * Build the value displayed when group is collapsed
  */
@@ -203,8 +167,7 @@ function collapseGroupObjectDone ($wrap, $toggle, eventNameDone) {
 function collapseNext ($toggle, immediate, eventNameDone) {
   if (immediate) {
     $toggle.next().hide()
-    collapseNextDone($toggle, eventNameDone)
-    return
+    return collapseNextDone($toggle, eventNameDone)
   }
   $toggle.next().slideUp('fast', function () {
     collapseNextDone($toggle, eventNameDone)
@@ -259,25 +222,26 @@ function groupErrorIconGet ($group) {
  */
 function groupHasVis ($group) {
   var $children = $group.find('> .group-body > *')
-  var $entry
   var count
   var i
   for (i = 0, count = $children.length; i < count; i++) {
-    $entry = $children.eq(i)
-    if ($entry.hasClass('filter-hidden')) {
-      if ($entry.hasClass('m_group') === false) {
-        continue
-      }
-      if (groupHasVis($entry)) {
-        return true
-      }
-      continue
+    if (groupHasVisTestChild($children.eq(i))) {
+      return true
     }
-    if ($entry.is('.m_group.hide-if-empty.empty')) {
-      continue
-    }
-    return true
   }
+  return false
+}
+
+function groupHasVisTestChild ($child) {
+  if ($child.hasClass('filter-hidden')) {
+    return $child.hasClass('m_group')
+      ? groupHasVis($child)
+      : false
+  }
+  if ($child.is('.m_group.hide-if-empty.empty')) {
+    return false
+  }
+  return true
 }
 
 /**

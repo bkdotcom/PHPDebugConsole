@@ -127,29 +127,44 @@ function applyFilterToNode ($node, channelNameRoot) {
     // php Errors are filtered separately
     return
   }
+  isFilterVis = isFilterVis()
+  $node.toggleClass('filter-hidden', !isFilterVis)
+  if (isFilterVis && hiddenWas) {
+    // unhiding
+    afterUnhide($node)
+  } else if (!isFilterVis && !hiddenWas) {
+    // hiding
+    afterHide($node)
+  }
+  if (isFilterVis && $node.hasClass('m_group')) {
+    // trigger to call groupUpdate
+    $node.trigger('collapsed.debug.group')
+  }
+}
+
+function afterUnhide ($node) {
+  $parentGroup = $node.parent().closest('.m_group')
+  if (!$parentGroup.length || $parentGroup.hasClass('expanded')) {
+    $node.debugEnhance()
+  }
+}
+
+function afterHide ($node) {
+  if ($node.hasClass('m_group')) {
+    // filtering group... means children (if not filtered) are visible
+    $node.find('> .group-body').debugEnhance()
+  }
+}
+
+function isFilterVis () {
+  var isFilterVis = true
   for (i in tests) {
     isFilterVis = tests[i]($node)
     if (!isFilterVis) {
       break
     }
   }
-  $node.toggleClass('filter-hidden', !isFilterVis)
-  if (isFilterVis && hiddenWas) {
-    // unhiding
-    $parentGroup = $node.parent().closest('.m_group')
-    if (!$parentGroup.length || $parentGroup.hasClass('expanded')) {
-      $node.debugEnhance()
-    }
-  } else if (!isFilterVis && !hiddenWas) {
-    // hiding
-    if ($node.hasClass('m_group')) {
-      // filtering group... means children (if not filtered) are visible
-      $node.find('> .group-body').debugEnhance()
-    }
-  }
-  if (isFilterVis && $node.hasClass('m_group')) {
-    $node.trigger('collapsed.debug.group')
-  }
+  return isFilterVis
 }
 
 function updateFilterStatus ($root) {

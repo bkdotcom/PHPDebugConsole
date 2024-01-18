@@ -334,8 +334,8 @@ class BlockFactoryTest extends TestCase
                 'video',
                 [
                     'https://youtu.be/dQw4w9WgXcQ',
-                    'You should watch this',
                     'definitely not Rick Astley',
+                    'You should watch this',
                 ],
                 [
                     'alt_text' => 'definitely not Rick Astley',

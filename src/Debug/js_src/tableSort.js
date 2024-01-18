@@ -34,11 +34,11 @@ export function makeSortable (table) {
 /**
  * Sort table
  *
- * @param obj table dom element
- * @param int col   column index
- * @param str dir   (asc) or desc
+ * @param obj table    dom element
+ * @param int colIndex column index
+ * @param str dir      (asc) or desc
  */
-function sortTable (table, col, dir) {
+function sortTable (table, colIndex, dir) {
   var body = table.tBodies[0]
   var rows = body.rows
   var i
@@ -50,39 +50,42 @@ function sortTable (table, col, dir) {
     : null
   dir = dir === 'desc' ? -1 : 1
   rows = Array.prototype.slice.call(rows, 0) // Converts HTMLCollection to Array
-  rows = rows.sort(rowComparator(col, dir, collator))
+  rows = rows.sort(rowComparator(colIndex, dir, collator))
   for (i = 0; i < rows.length; ++i) {
     body.appendChild(rows[i]) // append each row in order (which moves)
   }
 }
 
-function rowComparator (col, dir, collator) {
+function rowComparator (colIndex, dir, collator) {
   var floatRe = /^([+-]?(?:0|[1-9]\d*)(?:\.\d*)?)(?:[eE]([+-]?\d+))?$/
   return function sortFunction (trA, trB) {
-    var a = trA.cells[col].textContent.trim()
-    var b = trB.cells[col].textContent.trim()
+    var a = trA.cells[colIndex].textContent.trim()
+    var b = trB.cells[colIndex].textContent.trim()
     var afloat = a.match(floatRe)
     var bfloat = b.match(floatRe)
-    var comp = 0
     if (afloat) {
       a = toFixed(a, afloat)
     }
     if (bfloat) {
       b = toFixed(b, bfloat)
     }
-    if (afloat && bfloat) {
-      if (a < b) {
-        comp = -1
-      } else if (a > b) {
-        comp = 1
-      }
-      return dir * comp
-    }
-    comp = collator
-      ? collator.compare(a, b)
-      : a.localeCompare(b) // not a natural sort
-    return dir * comp
+    return dir * compare(a, b, collator)
   }
+}
+
+function compare (a, b, collator) {
+  var comp = 0
+  if (afloat && bfloat) {
+    if (a < b) {
+      comp = -1
+    } else if (a > b) {
+      comp = 1
+    }
+    return comp
+  }
+  return collator
+    ? collator.compare(a, b)
+    : a.localeCompare(b) // not a natural sort
 }
 
 function toFixed (str, matches) {

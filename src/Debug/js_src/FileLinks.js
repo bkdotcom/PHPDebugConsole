@@ -101,7 +101,7 @@ function createFileLinksTrace ($entry, remove) {
   if (!isUpdate) {
     $entry.find('table thead tr > *:last-child').after('<th></th>')
   } else if (remove) {
-    $entry.find('table tr > *:last-child').remove()
+    $entry.find('table t:not(.context) > *:last-child').remove()
     return
   }
   $entry.find('table tbody tr').each(function () {
@@ -178,8 +178,7 @@ function createFileLink (string, remove, foundFiles) {
   $string.replaceWith($replace)
 }
 
-function createFileLinkUpdateAttr($string, $replace, attrs)
-{
+function createFileLinkUpdateAttr ($string, $replace, attrs) {
   $.each(attrs, function () {
     if (typeof this === 'undefined') {
       return // continue
@@ -202,7 +201,7 @@ function createFileLinkUpdateAttr($string, $replace, attrs)
   }
 }
 
-function createFileLinkReplace($string, matches, text, remove, isUpdate) {
+function createFileLinkReplace ($string, matches, text, remove, isUpdate) {
   var $replace
   if (remove) {
     $replace = $('<span>', {

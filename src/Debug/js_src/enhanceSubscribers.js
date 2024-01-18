@@ -15,7 +15,7 @@ export function init($root, enhanceVal, enhanceObj) {
   $root.on('expand.debug.group', onExpandGroup)
   $root.on('expand.debug.object', onExpandObject)
   $root.on('expanded.debug.next', '.context', function (e) {
-    enhanceValue($(e.target).find('> td > .t_array'))
+    enhanceValue($(e.target).find('> td > .t_array'), $(e.target).closest('li'))
   })
   $root.on('expanded.debug.array expanded.debug.group expanded.debug.object', onExpanded)
 }
@@ -49,7 +49,7 @@ function onExpandArray (e) {
   var $entry = $node.closest('li[class*=m_]')
   e.stopPropagation()
   $node.find('> .array-inner > li > :last-child, > .array-inner > li[class]').each(function () {
-    enhanceValue($entry, this)
+    enhanceValue(this, $entry)
   })
 }
 
@@ -71,7 +71,7 @@ function onExpandObject (e) {
       '> .property > :last-child,' +
       '> .method .t_string'
     ).each(function () {
-      enhanceValue($entry, this)
+      enhanceValue(this, $entry)
     })
   enhanceObject.enhanceInner($node)
 }

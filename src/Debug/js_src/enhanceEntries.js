@@ -60,7 +60,7 @@ export function enhanceEntry ($entry) {
   $entry.trigger('enhanced.debug')
 }
 
-export function enhanceValue ($entry, node) {
+export function enhanceValue (node, $entry) {
   var $node = $(node)
   if ($node.is('.t_array')) {
     enhanceArray.enhance($node)
@@ -164,7 +164,7 @@ function enhanceEntryDefault ($entry) {
   }
   addIcons($entry)
   $entry.children().each(function () {
-    enhanceValue($entry, this)
+    enhanceValue(this, $entry)
   })
 }
 
@@ -173,7 +173,7 @@ function enhanceEntryTabular ($entry) {
   addIcons($entry)
   if ($entry.hasClass('m_table')) {
     $entry.find('> table > tbody > tr > td').each(function () {
-      enhanceValue($entry, this)
+      enhanceValue(this, $entry)
     })
   }
   // table may have a expand collapse row that's initially expanded
@@ -191,7 +191,7 @@ function enhanceGroup ($group) {
   $toggle.attr('data-toggle', 'group')
   $toggle.find('.t_array, .t_object').each(function () {
     $(this).data('expand', false)
-    enhanceValue($group, this)
+    enhanceValue(this, $group)
   })
   $.each(['level-error', 'level-info', 'level-warn'], function (i, classname) {
     var $toggleIcon

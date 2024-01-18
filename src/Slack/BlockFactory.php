@@ -262,13 +262,13 @@ class BlockFactory extends BlockElementsFactory
      * Video block
      *
      * @param string $url     The URL to be embedded. Must match any existing unfurl domains within the app and point to a HTTPS URL.
-     * @param string $title   Video title in plain text format. Must be less than 200 characters.
      * @param string $altText A tooltip for the video. Required for accessibility
+     * @param string $title   Video title in plain text format. Must be less than 200 characters.
      * @param array  $values  Video properties
      *
      * @return array<string,mixed>
      */
-    public static function video($url, $title, $altText, $values = array())
+    public static function video($url, $altText, $title, $values = array())
     {
         $block = \array_merge(self::$defaults['video'], array(
             'alt_text' => $altText,

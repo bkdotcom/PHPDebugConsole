@@ -24,10 +24,12 @@ class Prettify implements SubscriberInterface
 {
     use CustomMethodTrait;
 
+    /** @var string[] */
     protected $methods = array(
         'prettify',
     );
 
+    /** @var bool */
     private $highlightAdded = false;
 
     /**

@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
@@ -28,6 +28,7 @@ class GroupStack
         'minDepth' => 0,
     );
 
+    /** @var Debug */
     private $debug;
 
     /**
@@ -39,11 +40,13 @@ class GroupStack
      */
     private $priorityStack = array();
 
+    /** @var array<string, array{channel: Debug, collect: bool}> */
     private $groupStacks = array(
         'main' => array(),  // array('channel' => Debug instance, 'collect' => bool)[]
     );
 
-    private $groupStacksRef = null;  // points to $this->data['groupStacks'][x] (where x = 'main' or (int) priority)
+    /** @var array{channel: Debug, collect: bool} */
+    private $groupStacksRef = null;  // points to $this-groupStacks[x] (where x = 'main' or (int) priority)
 
     /**
      * Constructor

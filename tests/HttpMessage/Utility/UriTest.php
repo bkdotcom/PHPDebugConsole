@@ -7,6 +7,7 @@ use bdk\HttpMessage\Utility\Uri as UriUtils;
 use PHPUnit\Framework\TestCase;
 
 /**
+ * @covers bdk\HttpMessage\Uri
  * @covers bdk\HttpMessage\Utility\Uri
  *
  * @phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
@@ -14,6 +15,22 @@ use PHPUnit\Framework\TestCase;
 class UriTest extends TestCase
 {
     const RFC3986_BASE = 'http://a/b/c/d;p?q';
+
+    /**
+     * @dataProvider providerFromGlobals
+     */
+    public function testFromGlobals(array $serverVars, array $getVars, $expectUriString)
+    {
+        $serverBackup = $_SERVER;
+        $getBackup = $_GET;
+
+        $_SERVER = $serverVars;
+        $_GET = $getVars;
+        self::assertSame($expectUriString, (string) Uri::fromGlobals());
+
+        $_SERVER = $serverBackup;
+        $_GET = $getBackup;
+    }
 
     /**
      * @dataProvider providerIsCrossOrigin
@@ -55,6 +72,61 @@ class UriTest extends TestCase
         self::assertSame($expect, (string) UriUtils::resolve($base, $targetUri));
     }
 
+    public static function providerFromGlobals()
+    {
+        $serverCommon = array(
+            'HTTP_CONTENT_TYPE' => 'application/json',
+            'HTTP_HOST' => 'www.test.com:8080',
+            'PHP_AUTH_PW' => '1234',
+            'PHP_AUTH_USER' => 'billybob',
+            'QUERY_STRING' => 'used=only_if_no_REQUEST_URI',
+            'REQUEST_METHOD' => 'POST',
+            'REQUEST_TIME_FLOAT' => $_SERVER['REQUEST_TIME_FLOAT'],
+            'REQUEST_URI' => '/path?ding=dong',
+            'SCRIPT_NAME' => isset($_SERVER['SCRIPT_NAME'])
+                ? $_SERVER['SCRIPT_NAME']
+                : null,
+        );
+
+        return array(
+            array(
+                $serverCommon,
+                array(
+                    'used' => 'only after REQUEST_URI and QUERY_STRING',
+                ),
+                'http://www.test.com:8080/path?ding=dong',
+            ),
+            array(
+                \array_merge($serverCommon, array(
+                    'HTTPS' => 'on',
+                )),
+                array(),
+                'https://www.test.com:8080/path?ding=dong',
+            ),
+            array(
+                array(
+                    'REQUEST_METHOD' => 'GET',
+                    'SERVER_NAME' => 'somedomain',
+                    'SERVER_PORT' => '8080',
+                    'QUERY_STRING' => 'ding=dong',
+                ),
+                array(),
+                'http://somedomain:8080/?ding=dong',
+            ),
+            array(
+                array(
+                    'REQUEST_METHOD' => 'GET',
+                    'SERVER_ADDR' => '192.168.100.42',
+                    'SERVER_PORT' => '8080',
+                ),
+                array(
+                    'foo' => 'bar',
+                ),
+                'http://192.168.100.42:8080/?foo=bar',
+            ),
+        );
+    }
+
     public static function providerIsCrossOrigin()
     {
         return [
@@ -85,7 +157,7 @@ class UriTest extends TestCase
             array('https://user:pass@example.com:80/path/È/💩/page.html?foo=bar&zip=zap#fragment', array(
                 'scheme' => 'https',
                 'host' => 'example.com',
-                'port' => '80',
+                'port' => 80,
                 'user' => 'user',
                 'pass' => 'pass',
                 'path' => '/path/È/💩/page.html',

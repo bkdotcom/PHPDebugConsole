@@ -6,7 +6,7 @@
  * @package   bdk/http-message
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2023 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v1.0
  */
 
@@ -19,6 +19,8 @@ use RuntimeException;
 
 /**
  * Psr\Http\Message\Stream implementation
+ *
+ * @psalm-api
  */
 class Stream extends AbstractStream implements StreamInterface
 {
@@ -33,12 +35,18 @@ class Stream extends AbstractStream implements StreamInterface
     const READABLE_MODES = '/r|a\+|ab\+|w\+|wb\+|x\+|xb\+|c\+|cb\+/';
     const WRITABLE_MODES = '/a|w|r\+|rb\+|rw|x|c/';
 
+    /** @var int|null */
     private $size;
+    /** @var bool */
     private $seekable;
+    /** @var bool */
     private $readable;
+    /** @var bool */
     private $writable;
+    /** @var string|null */
     private $uri;
-    private $customMetadata;
+    /** @var array */
+    private $customMetadata = array();
 
     /**
      * This constructor accepts an associative array of options.
@@ -54,20 +62,22 @@ class Stream extends AbstractStream implements StreamInterface
      *
      * @throws InvalidArgumentException if the stream is not a stream resource
      */
-    public function __construct($resource = null, $options = array())
+    public function __construct($resource = null, array $options = array())
     {
         $this->setResource($resource);
-        if (isset($options['size'])) {
-            $this->size = $options['size'];
-        }
-        $this->customMetadata = isset($options['metadata'])
-            ? $options['metadata']
-            : array();
+        /** @var array{metadata: array, size: int|null} */
+        $options = \array_merge(array(
+            'metadata' => array(),
+            'size' => null,
+        ), $options);
+        $this->size = $options['size'];
+        $this->customMetadata = $options['metadata'];
         /** @psalm-suppress PossiblyInvalidArgument */
         $meta = \stream_get_meta_data($this->resource);
         $this->seekable = $meta['seekable'];
         $this->readable = (bool) \preg_match(self::READABLE_MODES, $meta['mode']);
         $this->writable = (bool) \preg_match(self::WRITABLE_MODES, $meta['mode']);
+        /** @var string|null */
         $this->uri = $this->getMetadata('uri');
     }
 
@@ -123,14 +133,16 @@ class Stream extends AbstractStream implements StreamInterface
      *
      * After the stream has been detached, the stream is in an unusable state.
      *
-     * @return resource|closed-resource|null Underlying PHP stream, if any
+     * @return resource|null Underlying PHP stream, if any
      */
     public function detach()
     {
         if (!isset($this->resource)) {
             return null;
         }
-        $resource = $this->resource;
+        $resource = $this->isResourceOpen()
+            ? $this->resource
+            : null;
         unset($this->resource);
         $this->size = null;
         $this->uri = null;

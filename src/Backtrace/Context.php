@@ -4,7 +4,7 @@
  * @package   Backtrace
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2020-2023 Brad Kent
+ * @copyright 2020-2024 Brad Kent
  * @version   v2.2
  * @link      http://www.github.com/bkdotcom/Backtrace
  */
@@ -55,9 +55,9 @@ class Context
      *
      * Returns array of lineNumber => line
      *
-     * @param string $file   filepath
-     * @param int    $start  line to start on (1 = first line)
-     * @param int    $length number of lines to return
+     * @param string   $file   filepath
+     * @param int|null $start  line to start on (1 = first line)
+     * @param int|null $length number of lines to return
      *
      * @return array|false false if file doesn't exist
      */
@@ -116,9 +116,9 @@ class Context
      *
      * Essentially array_slice but one-based vs zero-based
      *
-     * @param array $lines  lines of code
-     * @param int   $start  line to start on (1 = first line)
-     * @param int   $length number of lines to return
+     * @param array    $lines  lines of code
+     * @param int|null $start  line to start on (1 = first line)
+     * @param int|null $length number of lines to return
      *
      * @return array
      */

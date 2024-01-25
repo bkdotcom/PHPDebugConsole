@@ -6,7 +6,7 @@
  * @package   bdk/http-message
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2023 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v1.0
  */
 
@@ -28,37 +28,22 @@ class Message implements MessageInterface
     use AssertionTrait;
 
     /**
-     * @var StreamInterface
+     * @var StreamInterface|null
      */
     private $body;
 
     /**
-     * @var array Map of all registered headers, as name => array of values
+     * @var array<string, string[]> Map of all registered headers, as name => array of values
      */
     private $headers = array();
 
     /**
-     * @var array Map of lowercase header name => original name at registration
+     * @var array<string, string> Map of lowercase header name => original name at registration
      */
     private $headerNames = array();
 
     /** @var string */
     protected $protocolVersion = '1.1';
-
-    /**
-     * Valid HTTP version numbers.
-     *
-     * @var array
-     */
-    protected $validProtocolVers = array(
-        '0.9',
-        '1.0',
-        '1.1',
-        '2',
-        '2.0',
-        '3',
-        '3.0',
-    );
 
     /**
      * Retrieves the HTTP protocol version as a string.
@@ -82,7 +67,7 @@ class Message implements MessageInterface
     public function withProtocolVersion($version)
     {
         $this->assertProtocolVersion($version);
-        $version = (string) $version;
+        $version = $version;
         if ($version === $this->protocolVersion) {
             return $this;
         }
@@ -297,7 +282,7 @@ class Message implements MessageInterface
      *
      * @param string $name header name
      *
-     * @return array
+     * @return string
      */
     private function normalizeHeaderName($name)
     {
@@ -315,7 +300,7 @@ class Message implements MessageInterface
      * header-field = field-name ":" OWS field-value OWS
      * OWS          = *( SP / HTAB )
      *
-     * @param string|array $value header value
+     * @param non-empty-string|int|float|string[]|int[]|float[] $value header value
      *
      * @return string[] Trimmed header values
      *
@@ -356,8 +341,8 @@ class Message implements MessageInterface
     /**
      * Append the given values
      *
-     * @param string $name   header name
-     * @param array  $values header values
+     * @param string   $name   header name
+     * @param string[] $values header values
      *
      * @return void
      */

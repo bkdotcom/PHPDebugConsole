@@ -6,14 +6,16 @@
  * @package   bdk/http-message
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2023 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v1.0
  */
 
 namespace bdk\HttpMessage;
 
-use bdk\HttpMessage\AbstractServerRequest;
-use bdk\HttpMessage\Stream;
+use bdk\HttpMessage\Request;
+use bdk\HttpMessage\Utility\ParseStr;
+use bdk\HttpMessage\Utility\ServerRequest as ServerRequestUtil;
+use InvalidArgumentException;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
 
@@ -22,35 +24,24 @@ use Psr\Http\Message\UriInterface;
  *
  * @psalm-consistent-constructor
  */
-class ServerRequest extends AbstractServerRequest implements ServerRequestInterface
+class ServerRequest extends Request implements ServerRequestInterface
 {
-    /** @var string used for unit tests */
-    public static $inputStream = 'php://input';
-
     /** @var array */
     private $attributes = array();
 
-    /**
-     * @var array $_COOKIE
-     */
+    /** @var array $_COOKIE */
     private $cookie = array();
 
     /** @var array */
     private $files = array();
 
-    /**
-     * @var array $_GET
-     */
+    /** @var array $_GET */
     private $get = array();
 
-    /**
-     * @var null|array|object $_POST
-     */
+    /** @var null|array|object $_POST */
     private $post = null;
 
-    /**
-     * @var array $_SERVER
-     */
+    /** @var array $_SERVER */
     private $server = array();
 
     /**
@@ -61,19 +52,19 @@ class ServerRequest extends AbstractServerRequest implements ServerRequestInterf
      * @param array               $serverParams An array of Server API (SAPI) parameters with
      *     which to seed the generated request instance. (and headers)
      */
-    public function __construct($method = 'GET', $uri = '', $serverParams = array())
+    public function __construct($method = 'GET', $uri = '', array $serverParams = array())
     {
         parent::__construct($method, $uri);
         $headers = $this->getHeadersViaServer($serverParams);
         $query = $this->getUri()->getQuery();
         $this->get = $query !== ''
-            ? self::parseStr($query)
+            ? ParseStr::parse($query)
             : array();
         $this->server = \array_merge(array(
             'REQUEST_METHOD' => $method,
         ), $serverParams);
         $this->protocolVersion = isset($serverParams['SERVER_PROTOCOL'])
-            ? \str_replace('HTTP/', '', $serverParams['SERVER_PROTOCOL'])
+            ? \str_replace('HTTP/', '', (string) $serverParams['SERVER_PROTOCOL'])
             : '1.1';
         $this->setHeaders($headers);
     }
@@ -83,35 +74,11 @@ class ServerRequest extends AbstractServerRequest implements ServerRequestInterf
      *
      * @param array $parseStrOpts Parse options (default: {convDot:false, convSpace:false})
      *
-     * @return static
-     *
-     * @SuppressWarnings(PHPMD.Superglobals)
+     * @return self
      */
     public static function fromGlobals($parseStrOpts = array())
     {
-        $method = isset($_SERVER['REQUEST_METHOD'])
-            ? $_SERVER['REQUEST_METHOD']
-            : 'GET';
-        $uri = Uri::fromGlobals();
-        $files = self::filesFromGlobals($_FILES);
-        $serverRequest = new static($method, $uri, $_SERVER);
-        $contentType = $serverRequest->getHeaderLine('Content-Type');
-        // note: php://input not available with content-type = "multipart/form-data".
-        $parsedBody = $method !== 'GET'
-            ? self::postFromInput($contentType, self::$inputStream, $parseStrOpts) ?: $_POST
-            : null;
-        $query = $uri->getQuery();
-        $queryParams = self::parseStr($query, $parseStrOpts);
-        return $serverRequest
-            ->withBody(new Stream(
-                PHP_VERSION_ID < 70000
-                    ? \stream_get_contents(\fopen('php://input', 'r+')) // prev 5.6 is not seekable / read once.. still not reliable in 5.6
-                    : \fopen('php://input', 'r+')
-            ))
-            ->withCookieParams($_COOKIE)
-            ->withParsedBody($parsedBody)
-            ->withQueryParams($queryParams)
-            ->withUploadedFiles($files);
+        return ServerRequestUtil::fromGlobals($parseStrOpts);
     }
 
     /**
@@ -162,15 +129,15 @@ class ServerRequest extends AbstractServerRequest implements ServerRequestInterf
     /**
      * Return an instance with the specified query string arguments.
      *
-     * @param array $get $_GET
+     * @param array $query $_GET params
      *
      * @return static
      */
-    public function withQueryParams(array $get)
+    public function withQueryParams(array $query)
     {
-        $this->assertQueryParams($get);
+        $this->assertQueryParams($query);
         $new = clone $this;
-        $new->get = $get;
+        $new->get = $query;
         return $new;
     }
 
@@ -216,16 +183,16 @@ class ServerRequest extends AbstractServerRequest implements ServerRequestInterf
     /**
      * Return an instance with the specified body parameters.
      *
-     * @param null|array|object $post The deserialized body data ($_POST).
+     * @param null|array|object $data The deserialized body data ($_POST).
      *                                  This will typically be in an array or object
      *
      * @return static
      */
-    public function withParsedBody($post)
+    public function withParsedBody($data)
     {
-        $this->assertParsedBody($post);
+        $this->assertParsedBody($data);
         $new = clone $this;
-        $new->post = $post;
+        $new->post = $data;
         return $new;
     }
 
@@ -295,5 +262,66 @@ class ServerRequest extends AbstractServerRequest implements ServerRequestInterf
         $new = clone $this;
         unset($new->attributes[$name]);
         return $new;
+    }
+
+    /**
+     * Get all HTTP header key/values as an associative array for the current request.
+     *
+     * See also the php function `getallheaders`
+     *
+     * @param array $serverParams $_SERVER
+     *
+     * @return array<string, string> The HTTP header key/value pairs.
+     */
+    protected function getHeadersViaServer(array $serverParams)
+    {
+        $headers = array();
+        $keysSansHttp = array(
+            'CONTENT_LENGTH' => 'Content-Length',
+            'CONTENT_MD5'    => 'Content-Md5',
+            'CONTENT_TYPE'   => 'Content-Type',
+        );
+        $auth = $this->getAuthorizationHeader($serverParams);
+        if (\strlen($auth)) {
+            // set default...   can be overwritten by HTTP_AUTHORIZATION
+            $headers['Authorization'] = $auth;
+        }
+        /** @var mixed $value */
+        foreach ($serverParams as $key => $value) {
+            $key = (string) $key;
+            if (isset($keysSansHttp[$key])) {
+                $key = $keysSansHttp[$key];
+                $headers[$key] = (string) $value;
+            } elseif (\substr($key, 0, 5) === 'HTTP_') {
+                $key = \substr($key, 5);
+                $key = \strtolower($key);
+                $key = \str_replace(' ', '-', \ucwords(\str_replace('_', ' ', $key)));
+                $headers[$key] = (string) $value;
+            }
+        }
+        return $headers;
+    }
+
+    /**
+     * Build Authorization header value from $_SERVER values
+     *
+     * @param array $serverParams $_SERVER vals
+     *
+     * @return string (empty string if no auth)
+     */
+    private function getAuthorizationHeader(array $serverParams)
+    {
+        if (isset($serverParams['REDIRECT_HTTP_AUTHORIZATION'])) {
+            return (string) $serverParams['REDIRECT_HTTP_AUTHORIZATION'];
+        }
+        if (isset($serverParams['PHP_AUTH_USER'])) {
+            $user = (string) $serverParams['PHP_AUTH_USER'];
+            $pass = isset($serverParams['PHP_AUTH_PW']) ? (string) $serverParams['PHP_AUTH_PW'] : '';
+            return 'Basic ' . \base64_encode($user . ':' . $pass);
+        }
+        if (isset($serverParams['PHP_AUTH_DIGEST'])) {
+            return (string) $serverParams['PHP_AUTH_DIGEST'];
+        }
+        return '';
     }
 }

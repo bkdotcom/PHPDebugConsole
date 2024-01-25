@@ -15,7 +15,7 @@ namespace bdk\Debug\Plugin\Method;
 use bdk\Debug;
 use bdk\Debug\Plugin\CustomMethodTrait;
 use bdk\HttpMessage\HttpFoundationBridge;
-use bdk\HttpMessage\Response;
+use bdk\HttpMessage\Utility\Response as ResponseUtil;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
 use InvalidArgumentException;
@@ -29,8 +29,10 @@ class ReqRes implements SubscriberInterface
 {
     use CustomMethodTrait;
 
+    /** @var array<string, mixed> */
     private $serverParams = array();
 
+    /** @var string[] */
     protected $methods = array(
         'getHeaders',
         'getInterface',
@@ -173,7 +175,7 @@ class ReqRes implements SubscriberInterface
         $protocol = $this->getServerParam('SERVER_PROTOCOL') ?: 'HTTP/1.0';
         $code = $this->getResponseCode();
         $headersAll = array(
-            $protocol . ' ' . $code . ' ' . Response::codePhrase($code),
+            $protocol . ' ' . $code . ' ' . ResponseUtil::codePhrase($code),
         );
         foreach ($headers as $k => $vals) {
             foreach ($vals as $val) {

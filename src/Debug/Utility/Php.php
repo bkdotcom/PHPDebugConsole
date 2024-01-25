@@ -359,6 +359,7 @@ class Php
         $regexKeys = array('full', 'prefix', 'type', 'strlen', 'classname', 'length');
         $serializedNew = '';
         while (\preg_match($regex, $serialized, $matches, PREG_OFFSET_CAPTURE, $offset)) {
+            /** @var array<string, int> */
             $offsets = array();
             foreach ($regexKeys as $i => $key) {
                 $matches[$key] = $matches[$i][0];

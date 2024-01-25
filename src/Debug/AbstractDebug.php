@@ -23,23 +23,32 @@ use ReflectionMethod;
 
 /**
  * Handle underlying Debug bootstraping and config
+ *
+ * @psalm-consistent-constructor
  */
 class AbstractDebug
 {
     /** @var \bdk\Debug\Config */
     protected $config;
 
-    /** @var \bdk\Container */
+    /** @var Container */
     protected $container;
+    /** @var Container */
     protected $serviceContainer;
 
-    /** @var \bdk\Debug */
+    /** @var Debug|null */
     protected static $instance;
 
+    /** @var array<string, array> */
     protected static $methodDefaultArgs = array();
+
+    /** @var Debug|null */
     protected $parentInstance;
+
+    /** @var Debug */
     protected $rootInstance;
 
+    /** @var array<int, string> */
     protected $readOnly = array(
         'parentInstance',
         'rootInstance',
@@ -50,7 +59,7 @@ class AbstractDebug
      *
      * @param array $cfg config
      */
-    public function __construct($cfg)
+    public function __construct($cfg = array())
     {
         if (!isset(self::$instance)) {
             // self::getInstance() will always return initial/first instance

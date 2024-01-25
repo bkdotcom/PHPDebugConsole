@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2023 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.1
  */
 
@@ -23,8 +23,10 @@ class Alert implements SubscriberInterface
 {
     use CustomMethodTrait;
 
+    /** @var array<int, string> */
     protected $levelsAllowed = array('danger', 'error', 'info', 'success', 'warn', 'warning');
 
+    /** @var string[] */
     protected $methods = array(
         'alert',
     );
@@ -49,7 +51,7 @@ class Alert implements SubscriberInterface
      *                               "danger" and "warning" are still accepted, however deprecated
      * @param bool   $dismissible (false) Whether to display a close icon/button
      *
-     * @return $this
+     * @return \bdk\Debug
      */
     public function alert($message, $level = 'error', $dismissible = false)
     {

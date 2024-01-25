@@ -23,7 +23,7 @@ interface ItemInterface
     /**
      * Get element content
      *
-     * @param float $version Card version
+     * @param float|null $version Card version
      *
      * @return array
      */

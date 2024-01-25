@@ -4,7 +4,7 @@
  * @package   Backtrace
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2020-2023 Brad Kent
+ * @copyright 2020-2024 Brad Kent
  * @version   v2.2
  * @link      http://www.github.com/bkdotcom/Backtrace
  */
@@ -26,7 +26,7 @@ class Xdebug
      *
      * @param int $maxDepth set xdebug.var_display_max_depth ini/config
      *
-     * @return array|false
+     * @return array[]|false
      *
      * @see https://bugs.xdebug.org/view.php?id=695
      * @see https://bugs.xdebug.org/view.php?id=1529
@@ -39,7 +39,7 @@ class Xdebug
         }
         $vdmdKey = 'xdebug.var_display_max_depth';
         $vdmdBak = \ini_get($vdmdKey);
-        \ini_set($vdmdKey, $maxDepth);
+        \ini_set($vdmdKey, (string) $maxDepth);
         $stack = \xdebug_get_function_stack();
         \ini_set($vdmdKey, $vdmdBak);
         // phpcs:ignore SlevomatCodingStandard.Namespaces.FullyQualifiedGlobalFunctions.NonFullyQualified

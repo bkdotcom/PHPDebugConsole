@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2023 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.1
  */
 
@@ -24,8 +24,10 @@ class Count implements SubscriberInterface
 {
     use CustomMethodTrait;
 
+    /** @var array<string, int> */
     private $counts = array();
 
+    /** @var string[] */
     protected $methods = array(
         'count',
         'countReset',
@@ -72,7 +74,7 @@ class Count implements SubscriberInterface
      * @param int   $flags (optional) currently only one option :
      *                       \bdk\Debug::COUNT_NO_OUT` : don't output/log
      *
-     * @return $this
+     * @return Debug
      */
     public function countReset($label = 'default', $flags = 0)
     {

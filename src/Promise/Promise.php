@@ -13,15 +13,18 @@ use Throwable;
  * Promises/A+ implementation that avoids recursion when possible.
  *
  * @link https://promisesaplus.com/
+ *
+ * @psalm-consistent-constructor
  */
 class Promise implements PromiseInterface
 {
-    /** @var callable */
+    /** @var callable|null */
     protected $waitFn;
 
-    /** @var callable */
+    /** @var callable|null */
     private $cancelFn;
 
+    /** @var array<int, array<Promise>, callable|nuoll, callable|null> */
     private $handlers = array();
     protected $result;
     protected $state = self::PENDING;
@@ -99,7 +102,7 @@ class Promise implements PromiseInterface
      * @param callable $onFulfilled Invoked when the promise fulfills.
      * @param callable $onRejected  Invoked when the promise is rejected.
      *
-     * @return static
+     * @return Promise
      */
     public function then(callable $onFulfilled = null, callable $onRejected = null)
     {

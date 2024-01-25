@@ -10,6 +10,7 @@ use OutOfBoundsException;
  */
 abstract class AbstractBlockFactory
 {
+    /** @var array */
     protected static $validElementTypes = array(
         'actions' => array(
             'button',

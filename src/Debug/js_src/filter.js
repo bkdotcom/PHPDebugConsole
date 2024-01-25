@@ -34,6 +34,7 @@ export function init ($delegateNode) {
     return
   }
   */
+  applyFilter($delegateNode)
   $delegateNode.on('change', 'input[type=checkbox]', onCheckboxChange)
   $delegateNode.on('change', 'input[data-toggle=error]', onToggleErrorChange)
   $delegateNode.on('channelAdded.debug', function (e) {
@@ -44,6 +45,18 @@ export function init ($delegateNode) {
     var $root = $(e.target).closest('.debug')
     applyFilter($root)
   })
+  $delegateNode.on('shown.debug.tab', function (e) {
+    hideSummarySeparator($(e.target))
+  })
+}
+
+function hideSummarySeparator ($tabPane) {
+  $tabPane.find('> .tab-body > hr').toggleClass(
+    'filter-hidden',
+    $tabPane.find('> .tab-body').find(' > .debug-log-summary, > .debug-log').filter(function () {
+      return $(this).height() < 1
+    }).length > 0
+  )
 }
 
 function onCheckboxChange () {
@@ -111,39 +124,34 @@ function applyFilter ($root) {
     var $node = sort[i].node
     applyFilterToNode($node, channelNameRoot)
   }
-  $root.find('.tab-primary > .tab-body > hr').toggleClass(
-    'filter-hidden',
-    $root.find('.tab-primary .debug-log-summary').height() < 1
-  )
+  hideSummarySeparator($root.find('> .tab-panes > .tab-pane.active'))
   updateFilterStatus($root)
 }
 
 function applyFilterToNode ($node, channelNameRoot) {
   var hiddenWas = $node.is('.filter-hidden')
-  var i
-  var isFilterVis = true
-  var $parentGroup
+  var isVis = true
   if ($node.data('channel') === channelNameRoot + '.phpError') {
     // php Errors are filtered separately
     return
   }
-  isFilterVis = isFilterVis()
-  $node.toggleClass('filter-hidden', !isFilterVis)
-  if (isFilterVis && hiddenWas) {
+  isVis = isFilterVis($node)
+  $node.toggleClass('filter-hidden', !isVis)
+  if (isVis && hiddenWas) {
     // unhiding
     afterUnhide($node)
-  } else if (!isFilterVis && !hiddenWas) {
+  } else if (!isVis && !hiddenWas) {
     // hiding
     afterHide($node)
   }
-  if (isFilterVis && $node.hasClass('m_group')) {
+  if (isVis && $node.hasClass('m_group')) {
     // trigger to call groupUpdate
     $node.trigger('collapsed.debug.group')
   }
 }
 
 function afterUnhide ($node) {
-  $parentGroup = $node.parent().closest('.m_group')
+  var $parentGroup = $node.parent().closest('.m_group')
   if (!$parentGroup.length || $parentGroup.hasClass('expanded')) {
     $node.debugEnhance()
   }
@@ -156,15 +164,16 @@ function afterHide ($node) {
   }
 }
 
-function isFilterVis () {
-  var isFilterVis = true
+function isFilterVis ($node) {
+  var i
+  var isVis = true
   for (i in tests) {
-    isFilterVis = tests[i]($node)
-    if (!isFilterVis) {
+    isVis = tests[i]($node)
+    if (!isVis) {
       break
     }
   }
-  return isFilterVis
+  return isVis
 }
 
 function updateFilterStatus ($root) {

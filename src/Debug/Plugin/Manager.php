@@ -32,6 +32,7 @@ class Manager implements SubscriberInterface, PluginInterface
 {
     use CustomMethodTrait;
 
+    /** @var string[] */
     protected $methods = array(
         'addPlugin',
         'addPlugins',
@@ -43,8 +44,10 @@ class Manager implements SubscriberInterface, PluginInterface
     /** @var SplObjectStorage */
     protected $registeredPlugins;
 
+    /** @var array<non-empty-string, AssetProviderInterface|SubscriberInterface> */
     protected $namedPlugins = array();
 
+    /** @var bool */
     private $isBootstrapped = false;
 
     /**

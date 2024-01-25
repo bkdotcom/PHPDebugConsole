@@ -49,54 +49,6 @@ class UriTest extends TestCase
         $this->assertSame((string) $uri, '/trimMe');
     }
 
-    public function testFromGlobals()
-    {
-        $serverBackup = $_SERVER;
-        $getBackup = $_GET;
-
-        $_SERVER = array(
-            'HTTP_CONTENT_TYPE' => 'application/json',
-            'HTTP_HOST' => 'www.test.com:8080',
-            'REQUEST_METHOD' => 'POST',
-            'REQUEST_URI' => '/path?ding=dong',
-            'REQUEST_TIME_FLOAT' => $_SERVER['REQUEST_TIME_FLOAT'],
-            'SCRIPT_NAME' => isset($_SERVER['SCRIPT_NAME'])
-                ? $_SERVER['SCRIPT_NAME']
-                : null,
-            'PHP_AUTH_USER' => 'billybob',
-            'PHP_AUTH_PW' => '1234',
-        );
-        $uri = Uri::fromGlobals();
-        $this->assertSame('http://www.test.com:8080/path?ding=dong', (string) $uri);
-
-        $_SERVER['HTTPS'] = 'on';
-        $uri = Uri::fromGlobals();
-        $this->assertSame('https://www.test.com:8080/path?ding=dong', (string) $uri);
-
-        $_SERVER = array(
-            'REQUEST_METHOD' => 'GET',
-            'SERVER_NAME' => 'somedomain',
-            'SERVER_PORT' => '8080',
-            'QUERY_STRING' => 'ding=dong',
-        );
-        $uri = Uri::fromGlobals();
-        $this->assertSame('http://somedomain:8080/?ding=dong', (string) $uri);
-
-        $_SERVER = array(
-            'REQUEST_METHOD' => 'GET',
-            'SERVER_ADDR' => '192.168.100.42',
-            'SERVER_PORT' => '8080',
-        );
-        $_GET = array(
-            'foo' => 'bar',
-        );
-        $uri = Uri::fromGlobals();
-        $this->assertSame('http://192.168.100.42:8080/?foo=bar', (string) $uri);
-
-        $_SERVER = $serverBackup;
-        $_GET = $getBackup;
-    }
-
     public function testProperties()
     {
         $uri = new Uri('http://jack:1234@example.com:8080/demo/?test=5678&test2=90#section-1');

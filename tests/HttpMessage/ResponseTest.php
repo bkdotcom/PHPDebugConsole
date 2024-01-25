@@ -24,11 +24,6 @@ class ResponseTest extends TestCase
         $this->assertTrue($response instanceof Message);
     }
 
-    public function testCodePhrase()
-    {
-        $this->assertSame('I\'m a teapot', Response::codePhrase('418'));
-    }
-
     /**
      * @param mixed  $code         status code to test
      * @param mixed  $phrase       phrase to test

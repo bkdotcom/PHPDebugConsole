@@ -6,7 +6,7 @@
  * @package   bdk/http-message
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2023 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v1.0
  */
 
@@ -21,15 +21,32 @@ use Psr\Http\Message\UploadedFileInterface;
 trait AssertionTrait
 {
     /**
+     * Valid HTTP version numbers.
+     *
+     * @var numeric-string[]
+     */
+    protected $validProtocolVers = array(
+        '0.9',
+        '1.0',
+        '1.1',
+        '2',
+        '2.0',
+        '3',
+        '3.0',
+    );
+
+    /**
      * Test that value is a string (or optionally numeric)
      *
-     * @param string $value        The value to check.
+     * @param mixed  $value        The value to check.
      * @param string $what         The name of the value.
      * @param bool   $allowNumeric Allow float or int?
      *
      * @return void
      *
      * @throws InvalidArgumentException
+     *
+     * @psalm-assert string $value
      */
     protected function assertString($value, $what = '', $allowNumeric = false)
     {
@@ -67,10 +84,12 @@ trait AssertionTrait
     /**
      * Test valid header name
      *
-     * @param string $name header name
+     * @param mixed $name header name
      *
      * @return void
      * @throws InvalidArgumentException
+     *
+     * @psalm-assert non-empty-string $name
      */
     private function assertHeaderName($name)
     {
@@ -84,7 +103,7 @@ trait AssertionTrait
             digit  => 0-9
             others => !#$%&\'*+-.^_`|~
         */
-        if (\preg_match('/^[a-zA-Z0-9!#$%&\'*+-.^_`|~]+$/', (string) $name) !== 1) {
+        if (\preg_match('/^[a-zA-Z0-9!#$%&\'*+-.^_`|~]+$/', $name) !== 1) {
             throw new InvalidArgumentException(\sprintf(
                 '"%s" is not valid header name, it must be an RFC 7230 compatible string.',
                 $name
@@ -95,10 +114,12 @@ trait AssertionTrait
     /**
      * Test valid header value
      *
-     * @param array|string $value header value
+     * @param mixed $value Value to test
      *
      * @return void
      * @throws InvalidArgumentException
+     *
+     * @psalm-assert non-empty-string|int|float|string[]|int[]|float[] $value
      */
     private function assertHeaderValue($value)
     {
@@ -129,6 +150,8 @@ trait AssertionTrait
      * @return void
      *
      * @throws InvalidArgumentException
+     *
+     * @psalm-assert string $value
      */
     private function assertHeaderValueLine($value)
     {
@@ -147,7 +170,7 @@ trait AssertionTrait
             HTAB          = horizontal tab
             VCHAR         = any visible [USASCII] character. (x21-x7e)
         */
-        if (\preg_match('/^[ \t\x21-\x7e]+$/', (string) $value) !== 1) {
+        if (\preg_match('/^[ \t\x21-\x7e]+$/', $value) !== 1) {
             throw new InvalidArgumentException(\sprintf(
                 '"%s" is not valid header value, it must contains visible ASCII characters only.',
                 $value
@@ -158,11 +181,13 @@ trait AssertionTrait
     /**
      * Check out whether a protocol version number is supported.
      *
-     * @param string $version HTTP protocol version.
+     * @param mixed $version HTTP protocol version.
      *
      * @return void
      *
      * @throws InvalidArgumentException
+     *
+     * @psalm-assert numeric-string $version
      */
     private function assertProtocolVersion($version)
     {
@@ -187,11 +212,13 @@ trait AssertionTrait
     /**
      * Assert valid method
      *
-     * @param string $method Http methods
+     * @param mixed $method Value to assert
      *
      * @return void
      *
      * @throws InvalidArgumentException
+     *
+     * @psalm-assert non-empty-string $method
      */
     protected function assertMethod($method)
     {
@@ -243,15 +270,22 @@ trait AssertionTrait
     protected function assertCookieParams($cookies)
     {
         $nameRegex = '/^[!#-+\--:<-[\]-~]+$/';
-        \array_walk($cookies, function ($value, $name) use ($nameRegex) {
-            if (\preg_match($nameRegex, $name) !== 1) {
-                throw new InvalidArgumentException(\sprintf(
-                    'Invalid cookie name specified: %s',
-                    $name
-                ));
+        \array_walk(
+            $cookies,
+            /**
+             * @param string $value cookie value
+             * @param string $name  cookie name
+             */
+            function ($value, $name) use ($nameRegex) {
+                if (\preg_match($nameRegex, (string) $name) !== 1) {
+                    throw new InvalidArgumentException(\sprintf(
+                        'Invalid cookie name specified: %s',
+                        $name
+                    ));
+                }
+                $this->assertString($value, 'Cookie value', true);
             }
-            $this->assertString($value, 'Cookie value', true);
-        });
+        );
     }
 
     /**
@@ -329,6 +363,8 @@ trait AssertionTrait
      * @see https://datatracker.ietf.org/doc/html/rfc7230#section-3.1.2
      *
      * @throws InvalidArgumentException
+     *
+     * @psalm-assert string $phrase
      */
     protected function assertReasonPhrase($phrase)
     {
@@ -348,11 +384,13 @@ trait AssertionTrait
     /**
      * Validate status code
      *
-     * @param int $code Status Code
+     * @param int|string $code Status Code
      *
      * @return void
      *
      * @throws InvalidArgumentException
+     *
+     * @psalm-assert numeric $code
      */
     protected function assertStatusCode($code)
     {
@@ -410,11 +448,13 @@ trait AssertionTrait
     /**
      * Throw exception if invalid port value
      *
-     * @param int $port port value
+     * @param mixed $port port value
      *
      * @return void
      *
      * @throws InvalidArgumentException
+     *
+     * @psalm-assert int $port
      */
     protected function assertPort($port)
     {

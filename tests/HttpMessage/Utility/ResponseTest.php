@@ -5,7 +5,7 @@ namespace bdk\Test\HttpMessage\Utility;
 use bdk\HttpMessage\Response;
 use bdk\HttpMessage\Stream;
 use bdk\HttpMessage\Utility\ContentType;
-use bdk\HttpMessage\Utility\Response as ResponseUtils;
+use bdk\HttpMessage\Utility\Response as ResponseUtil;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -25,7 +25,7 @@ class ResponseTest extends TestCase
         $response = $response->withBody(new Stream($body));
         $response = $response->withHeader('Content-Type', ContentType::JSON);
         \ob_start();
-        ResponseUtils::emit($response);
+        ResponseUtil::emit($response);
         $output = \ob_get_clean();
 
         self::assertSame(array(
@@ -33,5 +33,10 @@ class ResponseTest extends TestCase
             array('Content-Type: ' . ContentType::JSON, false),
         ), $GLOBALS['collectedHeaders']);
         self::assertSame($body, $output);
+    }
+
+    public function testCodePhrase()
+    {
+        self::assertSame('I\'m a teapot', ResponseUtil::codePhrase('418'));
     }
 }

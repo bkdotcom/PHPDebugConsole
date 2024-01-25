@@ -4,7 +4,7 @@
  * @package   Backtrace
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2020-2023 Brad Kent
+ * @copyright 2020-2024 Brad Kent
  * @version   v2.2
  * @link      http://www.github.com/bkdotcom/Backtrace
  */
@@ -16,8 +16,10 @@ namespace bdk\Backtrace;
  */
 class Normalizer
 {
+    /** @var array */
     private static $backtraceTemp = array();
 
+    /** @var array */
     private static $frameDefault = array(
         'args' => array(),
         'evalLine' => null,

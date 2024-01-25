@@ -26,8 +26,10 @@ class Table implements SubscriberInterface
 {
     use CustomMethodTrait;
 
+    /** @var LogEntry */
     private $logEntry;
 
+    /** @var string[] */
     protected $methods = array(
         'table',
         'doTable',
@@ -54,7 +56,7 @@ class Table implements SubscriberInterface
      *
      * @param mixed ...$arg traversable, [option array], [caption] in no particular order
      *
-     * @return $this
+     * @return Debug
      */
     public function table()
     {

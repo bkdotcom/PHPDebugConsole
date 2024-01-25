@@ -32,8 +32,10 @@ class Group implements SubscriberInterface
 {
     use CustomMethodTrait;
 
+    /** @var GroupStack|null */
     protected $groupStack;
 
+    /** @var string[] */
     protected $methods = array(
         'group',
         'groupCollapsed',
@@ -105,7 +107,7 @@ class Group implements SubscriberInterface
      *
      * @param mixed ...$arg. label / values
      *
-     * @return $this
+     * @return Debug
      */
     public function group()
     {
@@ -124,7 +126,7 @@ class Group implements SubscriberInterface
      *
      * @param mixed ...$arg label / values
      *
-     * @return $this
+     * @return Debug
      */
     public function groupCollapsed()
     {
@@ -145,7 +147,7 @@ class Group implements SubscriberInterface
      *
      * @param mixed $value (optional) "return" value
      *
-     * @return $this
+     * @return Debug
      */
     public function groupEnd($value = Abstracter::UNDEFINED) // @phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
     {
@@ -169,7 +171,7 @@ class Group implements SubscriberInterface
      *
      * @param int $priority (0) The higher the priority, the earlier the group will appear in output
      *
-     * @return $this
+     * @return Debug
      */
     public function groupSummary($priority = 0) // @phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
     {
@@ -189,7 +191,7 @@ class Group implements SubscriberInterface
      *
      * This will only occur if `cfg['collect']` is currently `true`
      *
-     * @return $this
+     * @return Debug
      */
     public function groupUncollapse()
     {

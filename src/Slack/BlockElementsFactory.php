@@ -63,12 +63,12 @@ class BlockElementsFactory extends AbstractBlockFactory
      * Works with block types: Section, Actions, Input
      *
      * @param string $actionId ActionId
-     * @param string $options  Selectable options
+     * @param array  $options  Selectable options
      * @param array  $values   Attributes
      *
      * @return array<string,mixed>
      */
-    public static function checkboxes($actionId, $options, $values = array())
+    public static function checkboxes($actionId, array $options, $values = array())
     {
         return self::checkboxesRadio($actionId, $options, $values, 'checkboxes');
     }
@@ -193,12 +193,12 @@ class BlockElementsFactory extends AbstractBlockFactory
      * Works with block types: Section Actions Input
      *
      * @param string $actionId Action Id
-     * @param string $options  Selectable options
+     * @param array  $options  Selectable options
      * @param array  $values   Attributes
      *
      * @return array<string,mixed>
      */
-    public static function radio($actionId, $options, $values = array())
+    public static function radio($actionId, array $options, $values = array())
     {
         return self::checkboxesRadio($actionId, $options, $values, 'radio_buttons');
     }
@@ -319,13 +319,13 @@ class BlockElementsFactory extends AbstractBlockFactory
      * Create a checkbox or radio  group
      *
      * @param string $actionId ActionId
-     * @param string $options  Selectable options
+     * @param array  $options  Selectable options
      * @param array  $values   Attributes
      * @param string $what     "checkboxes" or "radio_buttons"
      *
      * @return array<string,mixed>
      */
-    private static function checkboxesRadio($actionId, $options, $values, $what)
+    private static function checkboxesRadio($actionId, array $options, array $values, $what)
     {
         $initialOptionKey = $what === 'checkboxes'
             ? 'initial_options'
@@ -407,7 +407,7 @@ class BlockElementsFactory extends AbstractBlockFactory
      *
      * @return array
      */
-    private static function renameDefault($block, $renameTo = 'initial_value')
+    private static function renameDefault(array $block, $renameTo = 'initial_value')
     {
         if (\in_array($block['type'], array('checkboxes', 'multi_static_select'), true)) {
             $renameTo = 'initial_options';

@@ -21,8 +21,9 @@ class Profile
     protected $data = array();
     protected $funcStack = array();
     protected $isProfiling = false;
+    /** @var non-empty-string */
     protected $namespace = 'bdk\\Debug';
-    /** @var string Ignore methods in these namespaces */
+    /** @var non-empty-string Ignore methods in these namespaces */
     protected $nsIgnoreRegex;
     protected $rootStack = array();
     protected $timeLastTick = null;

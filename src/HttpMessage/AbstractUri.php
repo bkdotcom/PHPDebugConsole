@@ -6,18 +6,21 @@
  * @package   bdk/http-message
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2023 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v1.0
  */
 
 namespace bdk\HttpMessage;
 
 use bdk\HttpMessage\AssertionTrait;
+use InvalidArgumentException;
 
 /**
  * Extended by Uri
  *
  * All the non-public Uri bits
+ *
+ * @psalm-consistent-constructor
  */
 abstract class AbstractUri
 {
@@ -26,6 +29,7 @@ abstract class AbstractUri
     const CHAR_SUB_DELIMS = '!\$&\'\(\)\*\+,;=';
     const CHAR_UNRESERVED = 'a-zA-Z0-9_\-\.~';
 
+    /** @var array<string, int> */
     private static $schemes = array(
         'ftp' => 21,
         'http' => 80,
@@ -77,7 +81,7 @@ abstract class AbstractUri
     /**
      * Filter/validate port
      *
-     * @param null|int $port Port
+     * @param null|int|string $port Port
      *
      * @return null|int
      * @throws InvalidArgumentException
@@ -110,36 +114,10 @@ abstract class AbstractUri
     }
 
     /**
-     * Get host and port from $_SERVER vals
-     *
-     * @return array host & port
-     *
-     * @SuppressWarnings(PHPMD.Superglobals)
-     */
-    protected static function hostPortFromGlobals()
-    {
-        $hostPort = array(
-            'host' => null,
-            'port' => null,
-        );
-        if (isset($_SERVER['HTTP_HOST'])) {
-            $hostPort = self::hostPortFromHttpHost($_SERVER['HTTP_HOST']);
-        } elseif (isset($_SERVER['SERVER_NAME'])) {
-            $hostPort['host'] = $_SERVER['SERVER_NAME'];
-        } elseif (isset($_SERVER['SERVER_ADDR'])) {
-            $hostPort['host'] = $_SERVER['SERVER_ADDR'];
-        }
-        if ($hostPort['port'] === null && isset($_SERVER['SERVER_PORT'])) {
-            $hostPort['port'] = $_SERVER['SERVER_PORT'];
-        }
-        return $hostPort;
-    }
-
-    /**
      * Is a given port standard for the given scheme?
      *
-     * @param string $scheme Scheme
-     * @param int    $port   Port
+     * @param string   $scheme Scheme
+     * @param int|null $port   Port
      *
      * @return bool
      */
@@ -165,57 +143,10 @@ abstract class AbstractUri
     }
 
     /**
-     * Get request uri and query from $_SERVER
-     *
-     * @return array path & query
-     *
-     * @SuppressWarnings(PHPMD.Superglobals)
-     */
-    protected static function pathQueryFromGlobals()
-    {
-        $path = '/';
-        $query = null;
-        if (isset($_SERVER['REQUEST_URI'])) {
-            $exploded = \explode('?', $_SERVER['REQUEST_URI'], 2);
-            // exploded is an array of length 1 or 2
-            // use array_shift to avoid testing if exploded[1] exists
-            $path = \array_shift($exploded);
-            $query = \array_shift($exploded); // string|null
-        } elseif (isset($_SERVER['QUERY_STRING'])) {
-            $query = $_SERVER['QUERY_STRING'];
-        }
-        return array(
-            'path' => $path,
-            'query' => $query !== null
-                ? $query
-                : \http_build_query($_GET),
-        );
-    }
-
-    /**
-     * Get host & port from `$_SERVER['HTTP_HOST']`
-     *
-     * @param string $httpHost `$_SERVER['HTTP_HOST']` value
-     *
-     * @return array host & port
-     */
-    private static function hostPortFromHttpHost($httpHost)
-    {
-        $url = 'http://' . $httpHost;
-        $partsDefault = array(
-            'host' => null,
-            'port' => null,
-        );
-        $parts = \parse_url($url) ?: array();
-        $parts = \array_merge($partsDefault, $parts);
-        return \array_intersect_key($parts, $partsDefault);
-    }
-
-    /**
      * Call rawurlencode on on match
      *
-     * @param string $regex Regular expression
-     * @param string $str   string
+     * @param non-empty-string $regex Regular expression
+     * @param string           $str   string
      *
      * @return string
      */

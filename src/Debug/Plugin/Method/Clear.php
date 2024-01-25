@@ -29,6 +29,7 @@ class Clear implements SubscriberInterface
     private $channelRegex;
     private $isRootInstance = false;
 
+    /** @var string[] */
     protected $methods = array(
         'clear',
     );
@@ -56,7 +57,7 @@ class Clear implements SubscriberInterface
      *                     `self::CLEAR_ALL` : Clear all log entries
      *                     `self::CLEAR_SILENT` : Don't add log entry
      *
-     * @return $this
+     * @return Debug
      */
     public function clear($bitmask = Debug::CLEAR_LOG) // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
     {

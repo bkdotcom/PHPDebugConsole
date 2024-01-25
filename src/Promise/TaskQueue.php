@@ -13,6 +13,7 @@ namespace bdk\Promise;
  */
 class TaskQueue
 {
+    /** @var bool */
     private $enableShutdown = true;
 
     /** @var callable[] */

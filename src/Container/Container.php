@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
@@ -31,6 +31,7 @@ use bdk\Container\ServiceProviderInterface;
  */
 class Container implements \ArrayAccess
 {
+    /** @var array */
     private $cfg = array(
         'allowOverride' => false,  // whether can update alreay built service
         'onInvoke' => null, // callable
@@ -43,8 +44,10 @@ class Container implements \ArrayAccess
      */
     private $factories;
 
+    /** @var array<string, bool> */
     private $invoked = array();  // keep track of invoked service closures
 
+    /** @var array<string, bool> */
     private $keys = array();
 
     /**
@@ -55,8 +58,10 @@ class Container implements \ArrayAccess
      */
     private $protected;
 
+    /** @var array<string, mixed> */
     private $raw = array();
 
+    /** @var array<string, mixed> */
     private $values = array();
 
     /**
@@ -207,26 +212,26 @@ class Container implements \ArrayAccess
      * ArrayAccess
      * Sets a parameter or an object.
      *
-     * @param string $name  The unique identifier for the parameter or object
-     * @param mixed  $value The value of the parameter or a closure to define an object
+     * @param string $offset The unique identifier for the parameter or object
+     * @param mixed  $value  The value of the parameter or a closure to define an object
      *
      * @throws \RuntimeException Prevent override of a already built service
      * @return void
      */
     #[\ReturnTypeWillChange]
-    public function offsetSet($name, $value)
+    public function offsetSet($offset, $value)
     {
-        if (isset($this->invoked[$name]) && $this->cfg['allowOverride'] === false) {
+        if (isset($this->invoked[$offset]) && $this->cfg['allowOverride'] === false) {
             throw new \RuntimeException(
-                \sprintf('Cannot update "%s" after it has been instantiated.', $name)
+                \sprintf('Cannot update "%s" after it has been instantiated.', $offset)
             );
         }
 
-        $this->keys[$name] = true;
-        $this->values[$name] = $value;
+        $this->keys[$offset] = true;
+        $this->values[$offset] = $value;
         unset(
-            $this->invoked[$name],
-            $this->raw[$name]
+            $this->invoked[$offset],
+            $this->raw[$offset]
         );
     }
 

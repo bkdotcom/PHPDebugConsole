@@ -14,6 +14,7 @@ use Throwable;
  */
 final class Utils
 {
+    /** @var TaskQueue|null */
     private static $queue;
 
     /**

@@ -25,6 +25,7 @@ class Channel implements SubscriberInterface
 
     private $channels = array();
 
+    /** @var string[] */
     protected $methods = array(
         'getChannel',
         'getChannels',

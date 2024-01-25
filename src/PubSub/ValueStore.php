@@ -210,23 +210,23 @@ class ValueStore implements ArrayAccess, IteratorAggregate, JsonSerializable, Se
     /**
      * ArrayAccess setValue
      *
-     * @param string $key   Array key to set
-     * @param mixed  $value Value
+     * @param string $offset Array key to set
+     * @param mixed  $value  Value
      *
      * @return void
      */
     #[\ReturnTypeWillChange]
-    public function offsetSet($key, $value)
+    public function offsetSet($offset, $value)
     {
-        if ($key === null) {
+        if ($offset === null) {
             // appending...  determine key
             $this->values[] = $value;
             \end($this->values);
-            $key = \key($this->values);
+            $offset = \key($this->values);
         }
-        $this->values[$key] = $value;
+        $this->values[$offset] = $value;
         $this->onSet(array(
-            $key => $value,
+            $offset => $value,
         ));
     }
 

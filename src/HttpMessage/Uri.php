@@ -6,14 +6,14 @@
  * @package   bdk/http-message
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2023 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v1.0
  */
 
 namespace bdk\HttpMessage;
 
 use bdk\HttpMessage\AbstractUri;
-use bdk\HttpMessage\Utility\Uri as UriUtils;
+use bdk\HttpMessage\Utility\Uri as UriUtil;
 use InvalidArgumentException;
 use Psr\Http\Message\UriInterface;
 
@@ -25,7 +25,7 @@ class Uri extends AbstractUri implements UriInterface
     /** @var string Uri scheme. */
     private $scheme = '';
 
-    /** @var string Uri user info. */
+    /** @var string The URI user information, in "username[:password]" format. (or empty string) */
     private $userInfo = '';
 
     /** @var string Uri host. */
@@ -59,7 +59,7 @@ class Uri extends AbstractUri implements UriInterface
         if ($uri === '') {
             return;
         }
-        $parts = UriUtils::parseUrl($uri);
+        $parts = UriUtil::parseUrl($uri);
         if ($parts === false) {
             throw new InvalidArgumentException('Unable to parse URI: ' . $uri);
         }
@@ -94,36 +94,13 @@ class Uri extends AbstractUri implements UriInterface
     /**
      * Get a Uri populated with values from $_SERVER.
      *
-     * @return static
+     * @return self
      *
      * @SuppressWarnings(PHPMD.Superglobals)
      */
     public static function fromGlobals()
     {
-        $uri = new Uri('');
-        $parts = \array_merge(
-            array(
-                'scheme' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'
-                    ? 'https'
-                    : 'http',
-            ),
-            self::hostPortFromGlobals(),
-            self::pathQueryFromGlobals()
-        );
-        $methods = array(
-            'host' => 'withHost',
-            'path' => 'withPath',
-            'port' => 'withPort',
-            'query' => 'withQuery',
-            'scheme' => 'withScheme',
-        );
-        foreach ($parts as $name => $value) {
-            if ($value) {
-                $method = $methods[$name];
-                $uri = $uri->{$method}($value);
-            }
-        }
-        return $uri;
+        return UriUtil::fromGlobals();
     }
 
     /**
@@ -468,7 +445,7 @@ class Uri extends AbstractUri implements UriInterface
     /**
      * Set properties from parsed url
      *
-     * @param array $urlParts Url parts parsed from parse_url
+     * @param array<string, int|string> $urlParts Url parts parsed from parse_url
      *
      * @return void
      */
@@ -494,7 +471,7 @@ class Uri extends AbstractUri implements UriInterface
             $this->{$part} = $this->{$method}($val);
         }
         if (isset($urlParts['user'])) {
-            $this->userInfo = $urlParts['user'];
+            $this->userInfo = (string) $urlParts['user'];
         }
         if (isset($urlParts['pass'])) {
             $this->userInfo .= ':' . $urlParts['pass'];

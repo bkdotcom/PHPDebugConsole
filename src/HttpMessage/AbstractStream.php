@@ -6,7 +6,7 @@
  * @package   bdk/http-message
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2023 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v1.0
  */
 
@@ -20,6 +20,7 @@ use RuntimeException;
  */
 abstract class AbstractStream
 {
+    /** @var array<string, string> */
     protected $strings = array(
         'detached' => 'Stream is detached',
         'fopenFail' => 'The file %s cannot be opened.',
@@ -54,9 +55,11 @@ abstract class AbstractStream
     /**
      * Safely test if value is a file
      *
-     * @param string $value The value to check
+     * @param mixed $value The value to check
      *
      * @return bool
+     *
+     * @psalm-assert-if-true non-empty-string $value
      */
     protected static function isFile($value)
     {
@@ -69,6 +72,8 @@ abstract class AbstractStream
      * Is resource open?
      *
      * @return bool
+     *
+     * @psalm-assert-if-true resource $this->resource
      */
     protected function isResourceOpen()
     {
@@ -123,6 +128,7 @@ abstract class AbstractStream
     protected function setResourceFile($file)
     {
         \set_error_handler(static function () {
+            return true; // Don't execute PHP internal error handler
         });
         $this->resource = \fopen($file, 'r');
         \restore_error_handler();

@@ -15,7 +15,7 @@ use Psr\Http\Message\ResponseInterface;
  */
 class CurlReqRes
 {
-    /** @var resource|CurlHandle */
+    /** @var resource|\CurlHandle */
     private $curlHandle;
 
     /** @var bool */
@@ -127,7 +127,7 @@ class CurlReqRes
      *
      * @param bool $create (false) whether handle should be created
      *
-     * @return resource|CurlHandle|null
+     * @return resource|\CurlHandle|null
      */
     public function getCurlHandle($create = false)
     {
@@ -143,7 +143,7 @@ class CurlReqRes
      *
      * If setting, also sets curl options
      *
-     * @param resource|CurlHandle|null $curlHandle curlHandle
+     * @param resource|\CurlHandle|null $curlHandle curlHandle
      *
      * @return self
      */

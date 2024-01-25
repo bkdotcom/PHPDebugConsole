@@ -6,7 +6,7 @@
  * @package   bdk/http-message
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2023 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v1.0
  */
 
@@ -40,6 +40,7 @@ class UploadedFile implements UploadedFileInterface
     /** @var int */
     private $error;
 
+    /** @var array<int, string> */
     private $errors = array(
         UPLOAD_ERR_CANT_WRITE => 'Failed to write file to disk.',
         UPLOAD_ERR_EXTENSION  => 'File upload stopped by extension.',
@@ -72,7 +73,7 @@ class UploadedFile implements UploadedFileInterface
      *    __construct(array $fileInfo)
      *    __construct($streamOrFile, $size = null, $error = UPLOAD_ERR_OK, $clientFilename = null, $clientMediaType = null, $clientFullPath = null)
      *
-     * @param array $values Uploaded file values as populated in $_FILES array
+     * @param mixed ...$values Uploaded file values as populated in $_FILES array
      *    null|string|resource|StreamInterface tmp_name  filepath, resource, or StreamInterface
      *    int    size      Size in bytes
      *    int    error     one of the UPLOAD_ERR_* constants
@@ -295,10 +296,12 @@ class UploadedFile implements UploadedFileInterface
     /**
      * Assert valid client filename
      *
-     * @param string|null $filename filename to validate
+     * @param mixed $filename filename to validate
      *
      * @return void
      * @throws InvalidArgumentException
+     *
+     * @psalm-assert string|null $filename
      */
     private function assertClientFilename($filename)
     {
@@ -314,10 +317,12 @@ class UploadedFile implements UploadedFileInterface
     /**
      * Assert valid client filename
      *
-     * @param string|null $type Content/Media type to validate
+     * @param mixed $type Content/Media type to validate
      *
      * @return void
      * @throws InvalidArgumentException
+     *
+     * @psalm-assert null|string $type
      */
     private function assertClientMediaType($type)
     {
@@ -342,11 +347,13 @@ class UploadedFile implements UploadedFileInterface
     /**
      * Validate uploaded file error
      *
-     * @param int $error one of the UPLOAD_ERR_* constants
+     * @param mixed $error one of the UPLOAD_ERR_* constants
      *
      * @return void
      *
      * @throws InvalidArgumentException
+     *
+     * @psalm-assert int<0,8> $error
      */
     private function assertError($error)
     {
@@ -358,36 +365,44 @@ class UploadedFile implements UploadedFileInterface
     /**
      * Validate reported filesize
      *
-     * @param int|null $size Reported filesize
+     * @param mixed $size Reported filesize
      *
      * @return void
      *
      * @throws InvalidArgumentException
+     *
+     * @psalm-assert null|positive-int $size
      */
     private function assertSize($size)
     {
         if ($size === null || \is_int($size) && $size > -1) {
             return;
         }
-        throw new InvalidArgumentException('Upload file size must be a positive integer');
+        throw new InvalidArgumentException(\sprintf('Upload file size must be a positive integer.  %s provided', \gettype($size)));
     }
 
     /**
      * Validate client filename / filepath / mediaType
      *
-     * @param string|null $value Reported filesize
-     * @param string      $key   nNme of param being tested
+     * @param mixed  $value Reported filesize
+     * @param string $key   nNme of param being tested
      *
      * @return void
      *
      * @throws InvalidArgumentException
+     *
+     * @psalm-assert string|null $value
      */
     private function assertStringOrNull($value, $key)
     {
         if ($value === null || \is_string($value)) {
             return;
         }
-        throw new InvalidArgumentException('Upload file ' . $key . ' must be a string or null');
+        throw new InvalidArgumentException(\sprintf(
+            'Upload file %s must be a string or null. %s provided.',
+            $key,
+            \gettype($value)
+        ));
     }
 
     /**
@@ -399,6 +414,8 @@ class UploadedFile implements UploadedFileInterface
      *
      * @throws InvalidArgumentException
      * @throws RuntimeException
+     *
+     * @psalm-assert non-empty-string $targetPath
      */
     private function assertTargetPath($targetPath)
     {
@@ -423,9 +440,11 @@ class UploadedFile implements UploadedFileInterface
      */
     private function getStreamFromFile()
     {
+        /** @var non-empty-string $this->file */
         $errMsg = '';
         \set_error_handler(static function ($type, $msg) use (&$errMsg) {
             $errMsg = '(' . $type . ') ' . $msg;
+            return true; // Don't execute PHP internal error handler
         });
         $resource = \fopen($this->file, 'r');
         \restore_error_handler();
@@ -458,10 +477,12 @@ class UploadedFile implements UploadedFileInterface
      */
     private function moveFile($targetPath)
     {
+        /** @var string $this->file */
         $errMsg = '';
         // phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter
         \set_error_handler(static function ($type, $msg) use (&$errMsg) {
             $errMsg = $msg;
+            return true; // Don't execute PHP internal error handler
         });
         $success = $this->sapi === 'cli'
             ? \rename($this->file, $targetPath)
@@ -480,11 +501,13 @@ class UploadedFile implements UploadedFileInterface
     /**
      * Set the file's stream
      *
-     * @param string|resource|StreamInterface $streamOrFile filepath, resource, or StreamInterface
+     * @param mixed $streamOrFile filepath, resource, or StreamInterface
      *
      * @return void
      *
      * @throws InvalidArgumentException
+     *
+     * @psalm-assert string|resource|StreamInterface $streamOrFile
      */
     private function setStream($streamOrFile)
     {
@@ -505,9 +528,7 @@ class UploadedFile implements UploadedFileInterface
             $this->size = $this->stream->getSize();
             return;
         }
-        throw new InvalidArgumentException(
-            'Invalid file, resource, or StreamInterface provided for UploadedFile'
-        );
+        throw new InvalidArgumentException('Invalid file, resource, or StreamInterface provided for UploadedFile');
     }
 
     /**

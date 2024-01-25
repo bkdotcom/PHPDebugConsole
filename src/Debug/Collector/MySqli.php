@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
@@ -173,9 +173,9 @@ class MySqli extends mysqliBase
      * {@inheritDoc}
      */
     #[\ReturnTypeWillChange]
-    public function query($query, $resultmode = MYSQLI_STORE_RESULT)
+    public function query($query, $resultMode = MYSQLI_STORE_RESULT)
     {
-        return $this->profileCall('query', $query, array($query, $resultmode));
+        return $this->profileCall('query', $query, array($query, $resultMode));
     }
 
     /**

@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
@@ -31,11 +31,14 @@ class StopWatch
      */
     public function __construct($vals = array())
     {
+        $requestTimeDefault = isset($_SERVER['REQUEST_TIME_FLOAT'])
+            ? $_SERVER['REQUEST_TIME_FLOAT']
+            : \microtime(true);
         $this->timers['labels']['requestTime'] = array(
             0,
             isset($vals['requestTime'])
                 ? $vals['requestTime']
-                : $_SERVER['REQUEST_TIME_FLOAT'],
+                : $requestTimeDefault,
         );
     }
 

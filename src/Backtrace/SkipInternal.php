@@ -4,7 +4,7 @@
  * @package   Backtrace
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2020-2023 Brad Kent
+ * @copyright 2020-2024 Brad Kent
  * @version   v2.2
  * @link      http://www.github.com/bkdotcom/Backtrace
  */
@@ -54,7 +54,10 @@ class SkipInternal
     public static function addInternalClass($classes, $level = 0)
     {
         if (\is_int($level) === false) {
-            throw new InvalidArgumentException(\sprintf('level must be an integer'));
+            throw new InvalidArgumentException(\sprintf(
+                'level must be an integer. %s provided.',
+                \gettype($level)
+            ));
         }
         if (\is_array($classes) === false) {
             $classes = array($classes => $level);

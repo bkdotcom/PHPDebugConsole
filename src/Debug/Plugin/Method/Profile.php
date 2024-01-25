@@ -29,16 +29,19 @@ class Profile implements SubscriberInterface
 {
     use CustomMethodTrait;
 
+    /** @var int */
     protected $autoInc = 1;
 
     /** @var ProfileInstance[] */
     protected $instances = array();
 
+    /** @var string[] */
     protected $methods = array(
         'profile',
         'profileEnd',
     );
 
+    /** @var bool */
     private static $profilingEnabled = false;
 
     /**
@@ -124,14 +127,13 @@ class Profile implements SubscriberInterface
                 $callerInfo['file'],
                 $callerInfo['line']
             );
-            $debug->log(new LogEntry(
+            return $debug->log(new LogEntry(
                 $debug,
                 __FUNCTION__,
                 array($msg)
             ));
-            return $debug;
         }
-        $this->doProfile(new LogEntry(
+        return $this->doProfile(new LogEntry(
             $debug,
             __FUNCTION__,
             \func_get_args(),
@@ -139,7 +141,6 @@ class Profile implements SubscriberInterface
             $debug->rootInstance->getMethodDefaultArgs(__METHOD__),
             array('name')
         ));
-        return $debug;
     }
 
     /**
@@ -151,7 +152,7 @@ class Profile implements SubscriberInterface
      *
      * @param string $name Optional profile name
      *
-     * @return $this
+     * @return Debug
      */
     public function profileEnd($name = null) // @phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
     {
@@ -172,7 +173,7 @@ class Profile implements SubscriberInterface
      *
      * @param LogEntry $logEntry LogEntry instance
      *
-     * @return void
+     * @return Debug
      */
     private function doProfile(LogEntry $logEntry)
     {
@@ -191,13 +192,13 @@ class Profile implements SubscriberInterface
             $this->instances[$name] = $instance;
             $logEntry['args'] = array('Profile \'' . $name . '\' restarted');
             $debug->log($logEntry);
-            return;
+            return $debug;
         }
         $instance = new ProfileInstance();
         $instance->start();
         $this->instances[$name] = $instance;
         $logEntry['args'] = array('Profile \'' . $name . '\' started');
-        $debug->log($logEntry);
+        return $debug->log($logEntry);
     }
 
     /**
@@ -265,7 +266,7 @@ class Profile implements SubscriberInterface
     /**
      * Test if we need to enable profiling
      *
-     * @param string $val   config value
+     * @param bool   $val   config value
      * @param string $key   config param name
      * @param Event  $event The config change event
      *

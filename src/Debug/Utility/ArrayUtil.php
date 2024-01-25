@@ -69,16 +69,19 @@ class ArrayUtil
      * @param mixed $val value to check
      *
      * @return bool
+     *
+     * @SuppressWarnings(PHPMD.UnusedLocalVariable)
      */
     public static function isList($val)
     {
         if (\is_array($val) === false) {
             return false;
         }
-        // iterate over keys more efficient than `$val === array_values($val)`
-        $keys = \array_keys($val);
-        foreach ($keys as $i => $key) {
-            if ($key !== $i) {
+        $i = -1;
+        // phpcs:ignore SlevomatCodingStandard.Variables.UnusedVariable
+        foreach ($val as $k => $v) {
+            ++$i;
+            if ($k !== $i) {
                 return false;
             }
         }

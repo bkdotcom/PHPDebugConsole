@@ -4,12 +4,14 @@ namespace bdk\Teams;
 
 use bdk\CurlHttpMessage\Client;
 use bdk\Teams\Cards\CardInterface;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * Send teams message notifications using webhook url
  */
 class TeamsWebhook
 {
+    /** @var array */
     protected $cfg = array(
         'webhookUrl' => '',
     );
@@ -18,7 +20,7 @@ class TeamsWebhook
     protected $client;
 
     /** @var ResponseInterface */
-    protected $lastResponse;
+    protected $lastResponse = null;
 
     /**
      * Constructor

@@ -2,11 +2,14 @@
 
 namespace bdk\CurlHttpMessage;
 
+use bdk\CurlHttpMessage\Exception\NetworkException;
 use bdk\CurlHttpMessage\Factory;
 use bdk\CurlHttpMessage\HandlerStack;
 use bdk\Promise\PromiseInterface;
 use InvalidArgumentException;
 use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\UriInterface;
 
 /**
  * Lightweight PSR-7 (HttpMessage) based cURL client

@@ -16,6 +16,7 @@ class AbstractItem implements ItemInterface
     /** @var string Element type */
     protected $type;
 
+    /** @var array */
     protected $fields = array();
 
     /**

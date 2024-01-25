@@ -3,6 +3,7 @@
 namespace bdk\Slack;
 
 use bdk\CurlHttpMessage\Client;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * Base class for SlackApi & SlackWebhook

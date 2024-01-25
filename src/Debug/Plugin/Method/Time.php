@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2023 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.1
  */
 
@@ -23,6 +23,7 @@ class Time implements SubscriberInterface
 {
     use CustomMethodTrait;
 
+    /** @var string[] */
     protected $methods = array(
         'time',
         'timeEnd',
@@ -56,7 +57,7 @@ class Time implements SubscriberInterface
      * @param string $label    unique label
      * @param float  $duration (optional) duration (in seconds).  Use this param to log a duration obtained externally.
      *
-     * @return $this
+     * @return \bdk\Debug
      */
     public function time($label = null, $duration = null)
     {
@@ -105,7 +106,7 @@ class Time implements SubscriberInterface
      * @param bool   $return ('auto') whether to return the value (vs returning $this))
      *                          'auto' : !$log
      *
-     * @return $this|float|false The duration (in sec).
+     * @return \bdk\Debug|float|false The duration (in sec).
      *
      * @psalm-return ($return is true ? float|false : $this)
      */
@@ -137,7 +138,7 @@ class Time implements SubscriberInterface
      * @param bool   $return ('auto') whether to return the value (vs returning $this))
      *                          'auto' : !$log
      *
-     * @return $this|float|false The duration (in sec).  `false` if specified label does not exist
+     * @return \bdk\Debug|float|false The duration (in sec).  `false` if specified label does not exist
      *
      * @psalm-return ($return is true ? float|false : $this)
      */
@@ -161,7 +162,7 @@ class Time implements SubscriberInterface
      * @param string $label  (optional) unique label
      * @param mixed  ...$arg (optional) additional values to be logged with time
      *
-     * @return $this
+     * @return \bdk\Debug
      */
     public function timeLog($label = null, $args = null)
     {

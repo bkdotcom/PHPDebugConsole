@@ -15,6 +15,7 @@ use Psr\Http\Message\UriInterface;
  */
 class Section extends AbstractItem
 {
+    /** @var array */
     protected $fields = array(
         'activityImage' => null,
         'activitySubtitle' => null,

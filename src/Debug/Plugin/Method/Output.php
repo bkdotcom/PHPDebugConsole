@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2023 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.1
  */
 
@@ -14,6 +14,7 @@ namespace bdk\Debug\Plugin\Method;
 
 use bdk\Debug;
 use bdk\Debug\Plugin\CustomMethodTrait;
+use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
 
 /**
@@ -23,6 +24,7 @@ class Output implements SubscriberInterface
 {
     use CustomMethodTrait;
 
+    /** @var string[] */
     protected $methods = array(
         'output',
     );
@@ -74,7 +76,7 @@ class Output implements SubscriberInterface
      *    finally ourself
      * This isn't outputing each channel, but for performing any per-channel "before output" activities
      *
-     * @return \bdk\PubSub\Event
+     * @return Event
      */
     private function publishOutputEvent()
     {
@@ -98,6 +100,7 @@ class Output implements SubscriberInterface
                 )
             );
         }
+        /** var Event */
         return $event;
     }
 }

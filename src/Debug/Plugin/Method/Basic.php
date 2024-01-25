@@ -29,6 +29,7 @@ class Basic implements SubscriberInterface
     private $cliOutputStream = null;
     private $isCli = false;
 
+    /** @var string[] */
     protected $methods = array(
         'assert',
         'error',
@@ -47,7 +48,7 @@ class Basic implements SubscriberInterface
      * @param mixed ...$msg    (optional) variable num of values to output if assertion fails
      *                           if none provided, will use calling file & line num
      *
-     * @return $this
+     * @return Debug
      */
     public function assert($assertion, $msg = null)
     {
@@ -84,7 +85,7 @@ class Basic implements SubscriberInterface
      *
      * @param mixed ...$arg message / values
      *
-     * @return $this
+     * @return Debug
      */
     public function error()
     {
@@ -99,7 +100,7 @@ class Basic implements SubscriberInterface
      *
      * @param mixed ...$arg message / values
      *
-     * @return $this
+     * @return Debug
      */
     public function info()
     {
@@ -129,7 +130,7 @@ class Basic implements SubscriberInterface
      *
      * @param mixed ...$arg. message / values
      *
-     * @return $this
+     * @return Debug
      */
     public function log()
     {
@@ -207,7 +208,7 @@ class Basic implements SubscriberInterface
      *
      * @param mixed ...$arg message / values
      *
-     * @return $this
+     * @return Debug
      */
     public function warn()
     {

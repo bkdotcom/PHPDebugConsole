@@ -72,7 +72,7 @@ export function enhanceValue (node, $entry) {
     fileLinks.create($entry, $node)
   } else if ($node.is('.string-encoded.tabs-container')) {
     // console.warn('enhanceStringEncoded', $node)
-    enhanceValue($node, $node.find('> .tab-pane.active > *'))
+    enhanceValue($node.find('> .tab-pane.active > *'), $entry)
   }
 }
 

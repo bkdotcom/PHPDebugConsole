@@ -259,7 +259,7 @@ trait CardUtilityTrait
      * Remove null and empty array values from array
      *
      * @param array $values  Input array
-     * @param array $version Card version
+     * @param float $version Card version
      *
      * @return array
      */

@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2023 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.1
  */
 
@@ -25,6 +25,7 @@ class Trace implements SubscriberInterface
 {
     use CustomMethodTrait;
 
+    /** @var string[] */
     protected $methods = array(
         'trace',
     );
@@ -46,7 +47,7 @@ class Trace implements SubscriberInterface
      * @param bool   $inclContext Include code snippet
      * @param string $caption     (optional) Specify caption for the trace table
      *
-     * @return $this
+     * @return Debug
      */
     public function trace($inclContext = false, $caption = 'trace')
     {

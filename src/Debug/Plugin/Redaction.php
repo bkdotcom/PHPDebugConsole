@@ -33,7 +33,7 @@ class Redaction extends AbstractComponent implements SubscriberInterface
     /**
      * duplicate/store frequently used cfg vals
      *
-     * @var array
+     * @var array<string, mixed>
      */
     protected $cfg = array(
         'enabled' => true,
@@ -44,6 +44,7 @@ class Redaction extends AbstractComponent implements SubscriberInterface
         'redactStrings' => array(),
     );
 
+    /** @var string[] */
     protected $methods = array(
         'redact',
         'redactHeaders',

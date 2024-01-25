@@ -22,13 +22,23 @@ use bdk\Debug\Utility\UseStatements;
 class Type
 {
     public $types = array(
-        'array','bool','callable','float','int','iterable','null','object','string',
-        '$this','self','static',
-        'array-key','double','false','mixed','non-empty-array','resource','scalar','true','void',
-        'key-of', 'value-of',
-        'callable-string', 'class-string', 'literal-string', 'numeric-string', 'non-empty-string',
-        'negative-int', 'positive-int',
+        'null',
+        'mixed', 'scalar',
+        'bool', 'boolean', 'true', 'false',
+        'callable', 'callable-string', 'iterable',
+        'int', 'integer', 'negative-int', 'positive-int', 'non-positive-int', 'non-negative-int', 'non-zero-int',
         'int-mask', 'int-mask-of',
+        'float', 'double',
+        'numeric', // int, float, or numeric-string
+        'array', 'non-empty-array', 'list', 'non-empty-list',
+        'array-key',
+        'void',
+        'object',
+        'string', 'non-falsy-string', 'numeric-string', 'non-empty-string', 'class-string', 'literal-string',
+        '$this', 'self', 'static',
+        'resource', 'closed-resource', 'open-resource',
+        'key-of', 'value-of',
+        'never', 'never-return', 'never-returns', 'no-return',
     );
 
     /**

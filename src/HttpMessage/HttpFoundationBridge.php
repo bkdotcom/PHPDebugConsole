@@ -6,7 +6,7 @@
  * @package   bdk/http-message
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2023 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v1.0
  */
 
@@ -24,6 +24,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Factories for creating ServerRequest & Response from HttpFoundation objects
+ *
+ * @psalm-api
  */
 class HttpFoundationBridge
 {
@@ -33,9 +35,12 @@ class HttpFoundationBridge
      * @param HttpFoundationRequest $request HttpFoundation\Request obj
      *
      * @return ServerRequest
+     *
+     * @psalm-suppress ReservedWord complains about HttpFoundations' : mixed return spec
      */
     public static function createRequest(HttpFoundationRequest $request)
     {
+        /** @psalm-var string  */
         $query = $request->server->get('QUERY_STRING', '');
         $uri = $request->getSchemeAndHttpHost()
             . $request->getBaseUrl()
@@ -54,8 +59,9 @@ class HttpFoundationBridge
             ->withQueryParams($request->query->all())
             ->withParsedBody($request->request->all());
 
+        /** @var mixed $value */
         foreach ($request->attributes->all() as $key => $value) {
-            $psr7request = $psr7request->withAttribute($key, $value);
+            $psr7request = $psr7request->withAttribute((string) $key, $value);
         }
 
         return $psr7request;
@@ -71,20 +77,22 @@ class HttpFoundationBridge
     public static function createResponse(HttpFoundationResponse $response)
     {
         $statusCode = $response->getStatusCode();
-        $reasonPhrase = isset(HttpFoundationResponse::$statusTexts[$statusCode])
-            ? HttpFoundationResponse::$statusTexts[$statusCode]
-            : null;
         $protocolVersion = $response->getProtocolVersion();
         $stream = self::createResponseStream($response);
 
-        $psr7response = new Response($statusCode, $reasonPhrase);
+        $psr7response = new Response($statusCode);
         $psr7response = $psr7response
             ->withProtocolVersion($protocolVersion)
             ->withBody($stream);
 
         $headers = $response->headers->all();
-        foreach ($headers as $name => $value) {
-            $psr7response = $psr7response->withHeader($name, $value);
+        foreach ($headers as $name => $values) {
+            $values = \array_filter($values, static function ($value) {
+                return $value !== null;
+            });
+            if ($values) {
+                $psr7response = $psr7response->withHeader($name, $values);
+            }
         }
 
         return $psr7response;
@@ -105,15 +113,26 @@ class HttpFoundationBridge
         }
         $stream = new Stream(\fopen('php://temp', 'wb+'));
         if ($response instanceof StreamedResponse || $response instanceof BinaryFileResponse) {
-            \ob_start(static function ($buffer) use ($stream) {
-                $stream->write($buffer);
-                return '';
-            });
+            \ob_start(
+                /**
+                 * @param string $buffer
+                 *
+                 * @return string
+                 */
+                static function ($buffer) use ($stream) {
+                    $stream->write($buffer);
+                    return '';
+                }
+            );
             $response->sendContent();
             \ob_end_clean();
             return $stream;
         }
-        $stream->write($response->getContent());
+        /** @psalm-suppress ReservedWord */
+        $content = $response->getContent();
+        if ($content !== false) {
+            $stream->write($content);
+        }
         return $stream;
     }
 
@@ -142,20 +161,21 @@ class HttpFoundationBridge
      *
      * @return array
      */
-    private static function getFiles($uploadedFiles)
+    private static function getFiles(array $uploadedFiles)
     {
         return \array_map(static function ($value) {
             if ($value === null) {
-                return new UploadedFile(
+                $value = new UploadedFile(
                     null,
                     0,
                     UPLOAD_ERR_NO_FILE
                 );
+            } elseif ($value instanceof HttpFoundationUploadedFile) {
+                $value =  self::createUploadedFile($value);
+            } elseif (\is_array($value)) {
+                $value = self::getFiles($value);
             }
-            if ($value instanceof HttpFoundationUploadedFile) {
-                return self::createUploadedFile($value);
-            }
-            return self::getFiles($value);
+            return $value;
         }, $uploadedFiles);
     }
 }

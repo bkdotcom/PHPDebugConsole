@@ -4,6 +4,7 @@ namespace bdk\CurlHttpMessage;
 
 use bdk\Promise;
 use bdk\Promise\EachPromise;
+use bdk\Promise\PromiseInterface;
 use InvalidArgumentException;
 use Psr\Http\Message\RequestInterface;
 

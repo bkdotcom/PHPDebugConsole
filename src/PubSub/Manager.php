@@ -6,35 +6,39 @@
  * @package   bdk\PubSub
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2023 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.1
  * @link      http://www.github.com/bkdotcom/PubSub
  */
 
 namespace bdk\PubSub;
 
-use bdk\PubSub\ManagerHelperTrait;
+use bdk\PubSub\AbstractManager;
 use bdk\PubSub\SubscriberInterface;
+use InvalidArgumentException;
 
 /**
  * Event publish/subscribe event manager
+ *
+ * @psalm-api
+ *
+ * @psalm-import-type ClosureFactory from \bdk\PubSub\AbstractManager
+ * @psalm-import-type SubscriberInfo from \bdk\PubSub\AbstractManager
+ * @psalm-import-type SubscriberInfoRaw from \bdk\PubSub\AbstractManager
  */
-class Manager
+class Manager extends AbstractManager
 {
-    use ManagerHelperTrait;
-
-    const DEFAULT_PRIORITY = 0;
     const EVENT_PHP_SHUTDOWN = 'php.shutdown';
 
-    protected $subscribers = array();
-    protected $sorted = array();
-    protected $subscriberStack = array();
+    /** @var InterfaceManager */
+    protected $interfaceManager;
 
     /**
      * Constructor
      */
     public function __construct()
     {
+        $this->interfaceManager = new InterfaceManager();
         /*
             As a convenience, make shutdown subscribeable
         */
@@ -50,11 +54,11 @@ class Manager
      *
      * @param SubscriberInterface $interface object implementing subscriber interface
      *
-     * @return array A normalized list of subscriptions added.
+     * @return array<string, list<SubscriberInfoRaw>> A normalized list of subscriptions added.
      */
     public function addSubscriberInterface(SubscriberInterface $interface)
     {
-        $subscribersByEvent = $this->getInterfaceSubscribers($interface);
+        $subscribersByEvent = $this->interfaceManager->getSubscribers($interface);
         foreach ($subscribersByEvent as $eventName => $eventSubscribers) {
             foreach ($eventSubscribers as $subscriberInfo) {
                 $this->subscribe(
@@ -76,11 +80,13 @@ class Manager
      * @param string $eventName The name of the event
      *
      * @return array The event subscribers for the specified event, or all event subscribers by event name
+     *
+     * @psalm-return ($eventName is string ? list<SubscriberInfo> : array<string, list<SubscriberInfo>>)
      */
     public function getSubscribers($eventName = null)
     {
         if ($eventName !== null) {
-            if (!isset($this->subscribers[$eventName])) {
+            if (isset($this->subscribers[$eventName]) === false) {
                 return array();
             }
             $this->setSorted($eventName);
@@ -143,7 +149,7 @@ class Manager
      */
     public function removeSubscriberInterface(SubscriberInterface $interface)
     {
-        $subscribersByEvent = $this->getInterfaceSubscribers($interface);
+        $subscribersByEvent = $this->interfaceManager->getSubscribers($interface);
         foreach ($subscribersByEvent as $eventName => $eventSubscribers) {
             foreach ($eventSubscribers as $subscriberInfo) {
                 $this->unsubscribe($eventName, $subscriberInfo['callable']);
@@ -166,17 +172,24 @@ class Manager
      *    `array(Closure)` - closure returns object that is callable (ie has `__invoke` method)
      *   The closure will be called the first time the event occurs
      *
-     * @param string         $eventName event name
-     * @param callable|array $callable  callable or closure factory
-     * @param int            $priority  The higher this value, the earlier we handle event
-     * @param bool           $onlyOnce  (false) Auto-unsubscribe after first invocation
+     * @param string                  $eventName event name
+     * @param callable|ClosureFactory $callable  callable or closure factory
+     * @param int                     $priority  The higher this value, the earlier we handle event
+     * @param bool                    $onlyOnce  (false) Auto-unsubscribe after first invocation
      *
      * @return void
+     *
+     * @throws InvalidArgumentException
      */
     public function subscribe($eventName, $callable, $priority = 0, $onlyOnce = false)
     {
+        if (self::isCallableOrFactory($callable) === false) {
+            throw new InvalidArgumentException(\sprintf(
+                'Expected callable or "closure factory", but %s provided',
+                self::getDebugType($callable)
+            ));
+        }
         unset($this->sorted[$eventName]); // clear the sorted cache
-        $this->assertCallable($callable);
         $subscriberInfo = array(
             'callable' => $callable,
             'onlyOnce' => $onlyOnce,
@@ -194,8 +207,8 @@ class Manager
     /**
      * Removes an event subscriber from the specified event.
      *
-     * @param string         $eventName The event we're unsubscribing from
-     * @param callable|array $callable  The subscriber to remove
+     * @param string                  $eventName The event we're unsubscribing from
+     * @param callable|ClosureFactory $callable  The subscriber to remove
      *
      * @return void
      */
@@ -209,10 +222,9 @@ class Manager
         foreach ($priorities as $priority) {
             $this->unsubscribeFromPriority($eventName, $callable, $priority, false);
         }
-        // remove from any active events
-        foreach ($this->subscriberStack as $i => $stackInfo) {
+        foreach ($this->subscriberStack as $stackIndex => $stackInfo) {
             if ($stackInfo['eventName'] === $eventName) {
-                $this->unsubscribeActive($i, $callable, $priority);
+                $this->unsubscribeActive($stackIndex, $callable);
             }
         }
     }
@@ -224,6 +236,8 @@ class Manager
      * @param array  $subscribers The event subscribers
      * @param Event  $event       The event object to pass to the subscribers
      *
+     * @psalm-param list<SubscriberInfo> $subscribers
+     *
      * @return void
      */
     protected function doPublish($eventName, $subscribers, Event $event)
@@ -233,12 +247,12 @@ class Manager
             'subscribers' => $subscribers,
         );
         $stackIndex = \count($this->subscriberStack) - 1;
-        $subscribers = &$this->subscriberStack[$stackIndex]['subscribers'];
-        while ($subscribers) {
+        while ($this->subscriberStack[$stackIndex]['subscribers']) {
             if ($event->isPropagationStopped()) {
                 break;
             }
-            $subscriberInfo = \array_shift($subscribers);
+            $subscriberInfo = \array_shift($this->subscriberStack[$stackIndex]['subscribers']);
+            /** @var Event */
             $return = \call_user_func($subscriberInfo['callable'], $event, $eventName, $this);
             $this->attachReturnToEvent($return, $event);
             if ($subscriberInfo['onlyOnce']) {

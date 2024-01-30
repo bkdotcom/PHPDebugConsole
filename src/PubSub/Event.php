@@ -17,6 +17,11 @@ namespace bdk\PubSub;
  * Event
  *
  * Events are passed to event subscribres/listeners
+ *
+ * @template TKey   of array-key
+ * @template TValue of mixed
+ *
+ * @template-extends ValueStore<TKey, TValue>
  */
 class Event extends ValueStore
 {
@@ -33,8 +38,8 @@ class Event extends ValueStore
     /**
      * Construct an event with optional subject and values
      *
-     * @param mixed $subject The subject of the event (usually an object)
-     * @param array $values  Values to store in the event
+     * @param mixed               $subject The subject of the event (usually an object)
+     * @param array<TKey, TValue> $values  Values to store in the event
      */
     public function __construct($subject = null, array $values = array())
     {
@@ -45,7 +50,11 @@ class Event extends ValueStore
     /**
      * Magic Method
      *
-     * @return array
+     * @return array{
+     *    propagationStopped: bool,
+     *    subject: class-string|mixed,
+     *    values: array<TKey, TValue>,
+     * }
      */
     public function __debugInfo()
     {

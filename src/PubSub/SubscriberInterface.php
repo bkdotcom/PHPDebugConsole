@@ -6,7 +6,7 @@
  * @package   bdk\PubSub
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v2.4
  * @link      http://www.github.com/bkdotcom/PubSub
  */
@@ -26,7 +26,7 @@ interface SubscriberInterface
      *
      *  _method_ = string|Callable name of public method or Closure
      *
-     * @return array
+     * @return array<string, string|array>
      */
     public function getSubscriptions();
 }

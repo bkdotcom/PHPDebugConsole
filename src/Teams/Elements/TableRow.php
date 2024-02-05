@@ -16,13 +16,6 @@ use Traversable;
  */
 class TableRow extends AbstractItem
 {
-    protected $fields = array(
-        'cells' => array(),
-        'horizontalCellContentAlignment' => null,
-        'style' => null,
-        'verticalCellContentAlignment' => null,
-    );
-
     /**
      * Constructor
      *
@@ -30,8 +23,12 @@ class TableRow extends AbstractItem
      */
     public function __construct($cells = array())
     {
-        $this->type = 'TableRow';
-        $this->fields['cells'] = self::asCells($cells);
+        parent::__construct(array(
+            'cells' => self::asCells($cells),
+            'horizontalCellContentAlignment' => null,
+            'style' => null,
+            'verticalCellContentAlignment' => null,
+        ), 'TableRow');
     }
 
     /**
@@ -51,6 +48,7 @@ class TableRow extends AbstractItem
         );
         foreach ($attrVersions as $name => $ver) {
             if ($version >= $ver) {
+                /** @var mixed */
                 $content[$name] = $this->fields[$name];
             }
         }
@@ -75,7 +73,7 @@ class TableRow extends AbstractItem
     /**
      * Return new instance with the specified cells
      *
-     * @param iterable|array<int, ElementInterface|string|numeric> $cells The cells in this row
+     * @param iterable<array-key, ElementInterface|string|numeric> $cells The cells in this row
      *
      * @return static
      */
@@ -89,7 +87,7 @@ class TableRow extends AbstractItem
      *
      * Controls how the content of all cells in the row is horizontally aligned by default. When specified, this value overrides both the setting at the table and columns level. When not specified, horizontal alignment is defined at the table, column or cell level
      *
-     * @param Enums::HORIZONTAL_ALIGNMENT_x $alignment Horizontal alignment
+     * @param Enums::HORIZONTAL_ALIGNMENT_* $alignment Horizontal alignment
      *
      * @return static
      */
@@ -104,7 +102,7 @@ class TableRow extends AbstractItem
      *
      * Defines the style of the entire row
      *
-     * @param Enums::CONTAINER_STYLE_x $style Container style
+     * @param Enums::CONTAINER_STYLE_* $style Container style
      *
      * @return static
      */
@@ -119,7 +117,7 @@ class TableRow extends AbstractItem
      *
      * Controls how the content of all cells in the column is vertically aligned by default. When specified, this value overrides the setting at the table and column level. When not specified, vertical alignment is defined either at the table, column or cell level.
      *
-     * @param Enums::HORIZONTAL_ALIGNMENT_x $alignment Horizontal alignment
+     * @param Enums::HORIZONTAL_ALIGNMENT_* $alignment Horizontal alignment
      *
      * @return static
      */
@@ -138,7 +136,7 @@ class TableRow extends AbstractItem
      *
      * @throws InvalidArgumentException
      */
-    private function asCell($cell)
+    private static function asCell($cell)
     {
         return $cell instanceof TableCell
             ? $cell
@@ -148,9 +146,9 @@ class TableRow extends AbstractItem
     /**
      * Return array with each value converted to instance of TableCell
      *
-     * @param iterable|array<int, TableCell|ElementInterface|string|numeric> $cells Cells to convert
+     * @param iterable<array-key, TableCell|ElementInterface|string|numeric> $cells Cells to convert
      *
-     * @return TableCell[]
+     * @return list<TableCell>
      *
      * @throws InvalidArgumentException
      */
@@ -160,17 +158,20 @@ class TableRow extends AbstractItem
         if ($isIterable === false) {
             throw new InvalidArgumentException('Table cells must be an iterator of cells.');
         }
+        $i = 0;
+        $cell = null;
         try {
+            $cellsNew = array();
             foreach ($cells as $i => $cell) {
-                $cells[$i] = self::asCell($cell);
+                $cellsNew[] = self::asCell($cell);
             }
+            return $cellsNew;
         } catch (InvalidArgumentException $e) {
             throw new InvalidArgumentException(\sprintf(
-                'Invalid table cell found at index %s. Expected TableCell, ElementInterface, stringable, scalar, or null. %s provided.',
+                'Invalid table cell found at index %s.  Expected TableCell, ElementInterface, stringable, scalar, or null.  %s provided.',
                 $i,
                 self::getDebugType($cell)
             ));
         }
-        return \array_values($cells);
     }
 }

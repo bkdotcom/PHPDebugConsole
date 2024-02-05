@@ -7,15 +7,26 @@ namespace bdk\Teams;
  */
 class AbstractExtendableItem extends AbstractItem
 {
-    protected $fields = array(
-        'requires' => array(),
-    );
+    /**
+     * Constructor
+     *
+     * @param array<string, mixed> $fields Field values
+     * @param string               $type   Item type
+     */
+    public function __construct(array $fields, $type)
+    {
+        $fields = \array_merge(array(
+            'requires' => array(),
+        ), $fields);
+        parent::__construct($fields, $type);
+    }
 
     /**
      * {@inheritDoc}
      */
     public function getContent($version)
     {
+        /** @var array<string, float> */
         $attrVersions = array(
             'requires' => 1.2,
         );
@@ -23,6 +34,7 @@ class AbstractExtendableItem extends AbstractItem
         $content = parent::getContent($version);
         foreach ($attrVersions as $name => $ver) {
             if ($version >= $ver) {
+                /** @var mixed */
                 $content[$name] = $this->fields[$name];
             }
         }
@@ -35,7 +47,7 @@ class AbstractExtendableItem extends AbstractItem
      * the item requires with corresponding minimum version.
      * When a feature is missing or of insufficient version, fallback is triggered
      *
-     * @param array $requires Required features
+     * @param array<string, float> $requires Required features
      *
      * @return static
      */

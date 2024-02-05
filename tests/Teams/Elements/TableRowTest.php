@@ -122,7 +122,7 @@ class TableRowTest extends AbstractTestCaseWith
         return array(
             array('addedCell', ['string']),
             array('addedCell', [new TableCell('foo')]),
-            array('addedCell', [\fopen(__FILE__, 'r')], true, 'Invalid TableCell item type (resource) found at index 0'),
+            array('addedCell', [\fopen(__FILE__, 'r')], true, 'Invalid TableCell item found at index 0.  resource provided.'),
             array('cells', [[
                 new TableCell('foo'),
                 'bar',
@@ -159,7 +159,7 @@ class TableRowTest extends AbstractTestCaseWith
             array('cells', [[
                 new TableCell('foo'),
                 [['array val']],
-            ]], true, 'Invalid table cell found at index 1. Expected TableCell, ElementInterface, stringable, scalar, or null. array provided.'),
+            ]], true, 'Invalid table cell found at index 1.  Expected TableCell, ElementInterface, stringable, scalar, or null.  array provided.'),
             // array('horizontalCellContentAlignment', [Enums::HORIZONTAL_ALIGNMENT_LEFT]),
             // array('style', [Enums::CONTAINER_STYLE_DEFAULT]),
             // array('verticalCellContentAlignment', [Enums::VERTICAL_ALIGNMENT_TOP]),

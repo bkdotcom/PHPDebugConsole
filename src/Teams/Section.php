@@ -15,7 +15,7 @@ use Psr\Http\Message\UriInterface;
  */
 class Section extends AbstractItem
 {
-    /** @var array */
+    /** @var array<string, mixed> */
     protected $fields = array(
         'activityImage' => null,
         'activitySubtitle' => null,
@@ -69,7 +69,7 @@ class Section extends AbstractItem
      *
      * (not to be confused with AdaptiveCard facts)
      *
-     * @param array $facts name => value array
+     * @param array<string, mixed> $facts name => value array
      *
      * @return static
      */
@@ -77,6 +77,7 @@ class Section extends AbstractItem
     {
         $new = clone $this;
         $new->fields['facts'] = array();
+        /** @var mixed $value */
         foreach ($facts as $name => $value) {
             $new->fields['facts'][] = array(
                 'name' => self::asString($name, false, __METHOD__, 'fact name'),
@@ -110,7 +111,7 @@ class Section extends AbstractItem
     /**
      * Return new instance with images replaced with specified
      *
-     * @param array<int, string|array{image: string, title: string}> $images Array containing image urls and/or title/image array
+     * @param array<array-key, string|array{image: string, title: string}> $images Array containing image urls and/or title/image array
      *
      * @return static
      */
@@ -196,7 +197,7 @@ class Section extends AbstractItem
     /**
      * Return new instance with the specified title
      *
-     * @param string $title Title
+     * @param string|null $title Title
      *
      * @return static
      */

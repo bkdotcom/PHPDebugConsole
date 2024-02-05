@@ -26,21 +26,14 @@ class MediaSource extends AbstractItem
         if ($url !== null) {
             self::assertUrl($url, true);
         }
-        $this->type = 'MediaSource';
-        $this->fields = array(
+        parent::__construct(array(
             'mimeType' => $mimeType,
             'url' => $url ? (string) $url : null,
-        );
+        ), 'MediaSource');
     }
 
     /**
-     * Returns content of card element
-     *
-     * @param float $version Card version
-     *
-     * @return array
-     *
-     * @throws RuntimeException
+     * {@inheritDoc}
      */
     public function getContent($version)
     {

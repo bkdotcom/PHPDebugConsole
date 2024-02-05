@@ -20,30 +20,19 @@ class RichTextBlock extends AbstractElement
      *
      * @param array<int, string|TextRun> $inlines Initial inline elements
      */
-    public function __construct($inlines = array())
+    public function __construct(array $inlines = array())
     {
-        parent::__construct();
-
-        $this->type = 'RichTextBlock';
-        $this->fields = \array_merge($this->fields, array(
-            'horizontalAlignment' => null,
-            'inlines' => array(),
-        ));
-
-        foreach ($inlines as $inline) {
+        \array_walk($inlines, static function ($inline) {
             self::assertInline($inline);
-            $this->fields['inlines'][] = $inline;
-        }
+        });
+        parent::__construct(array(
+            'horizontalAlignment' => null,
+            'inlines' => $inlines,
+        ), 'RichTextBlock');
     }
 
     /**
-     * Returns content of card element
-     *
-     * @param float $version Card version
-     *
-     * @return array
-     *
-     * @throws RuntimeException
+     * {@inheritDoc}
      */
     public function getContent($version)
     {
@@ -59,6 +48,7 @@ class RichTextBlock extends AbstractElement
         $content = parent::getContent($version);
         foreach ($attrVersions as $name => $ver) {
             if ($version >= $ver) {
+                /** @var mixed */
                 $content[$name] = $this->fields[$name];
             }
         }
@@ -110,9 +100,9 @@ class RichTextBlock extends AbstractElement
                 __METHOD__
             ));
         }
-        \array_map(static function ($inline) {
+        \array_walk($inlines, static function ($inline) {
             self::assertInline($inline);
-        }, $inlines);
+        });
         return $this->with('inlines', $inlines);
     }
 
@@ -123,7 +113,7 @@ class RichTextBlock extends AbstractElement
      * When not specified, the value of horizontalAlignment is inherited from the parent container.
      * If no parent container has horizontalAlignment set, it defaults to Left.
      *
-     * @param Enums::HORIZONTAL_ALIGNMENT_x $alignment Horizontal alignment
+     * @param Enums::HORIZONTAL_ALIGNMENT_* $alignment Horizontal alignment
      *
      * @return static
      */

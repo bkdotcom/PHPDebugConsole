@@ -16,8 +16,20 @@ class AbstractItem implements ItemInterface
     /** @var string Element type */
     protected $type;
 
-    /** @var array */
+    /** @var array<string, mixed> */
     protected $fields = array();
+
+    /**
+     * Constructor
+     *
+     * @param array<string, mixed> $fields Field values
+     * @param string               $type   Item type
+     */
+    public function __construct(array $fields = array(), $type = 'Unknown')
+    {
+        $this->fields = \array_merge($this->fields, $fields);
+        $this->type = $type;
+    }
 
     /**
      * Return attribute/property value
@@ -75,10 +87,19 @@ class AbstractItem implements ItemInterface
      * @param mixed  $value Value to append
      *
      * @return static
+     *
+     * @throws OutOfBoundsException
      */
     protected function withAdded($name, $value)
     {
         $new = clone $this;
+        if (\is_array($new->fields[$name]) === false) {
+            throw new OutOfBoundsException(\sprintf(
+                '%s :  unable to add additional %s',
+                $this->type,
+                $name
+            ));
+        }
         $new->fields[$name][] = $value;
         return $new;
     }

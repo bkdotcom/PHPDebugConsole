@@ -11,24 +11,23 @@ abstract class AbstractElement extends AbstractToggleableItem implements Element
 {
     /**
      * Constructor
+     *
+     * @param array<string, mixed> $fields Field values
+     * @param string               $type   Item type
      */
-    public function __construct()
+    public function __construct(array $fields, $type)
     {
-        parent::__construct();
-        $this->fields = \array_merge($this->fields, array(
+        $fields = \array_merge(array(
             'fallback' => null,
             'height' => null,
             'separator' => null,
             'spacing' => null,
-        ));
+        ), $fields);
+        parent::__construct($fields, $type);
     }
 
     /**
-     * Get base / common properties
-     *
-     * @param float $version Card version
-     *
-     * @return array
+     * {@inheritDoc}
      */
     public function getContent($version)
     {
@@ -42,6 +41,7 @@ abstract class AbstractElement extends AbstractToggleableItem implements Element
         $content = parent::getContent($version);
         foreach ($attrVersions as $name => $ver) {
             if ($version >= $ver) {
+                /** @var mixed */
                 $content[$name] = $this->fields[$name];
             }
         }
@@ -53,7 +53,7 @@ abstract class AbstractElement extends AbstractToggleableItem implements Element
      * Describes what to do when an unknown element is encountered
      * or the requires of this or any children can't be met.
      *
-     * @param ElementInterface|Enums::FALLBACK_x $fallback How to we fallback?
+     * @param ElementInterface|Enums::FALLBACK_* $fallback How to we fallback?
      *
      * @return static
      */
@@ -70,7 +70,7 @@ abstract class AbstractElement extends AbstractToggleableItem implements Element
     /**
      * Return new instance with specified height
      *
-     * @param Enums::HEIGHT_x $height Height of the element.
+     * @param Enums::HEIGHT_* $height Height of the element.
      *
      * @return static
      */
@@ -98,7 +98,7 @@ abstract class AbstractElement extends AbstractToggleableItem implements Element
      * Return new instance with specified spacing value
      * Controls the amount of spacing between this element and the preceding element.
      *
-     * @param Enums::SPACING_x $spacing Spacing
+     * @param Enums::SPACING_* $spacing Spacing
      *
      * @return static
      */

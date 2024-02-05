@@ -17,20 +17,6 @@ use RuntimeException;
  */
 class TextRun extends AbstractItem implements ElementInterface
 {
-    protected $fields = array(
-        'color' => null,
-        'fontType' => null,
-        'highlight' => null,
-        'isSubtle' => null,
-        'italic' => null,
-        'selectAction' => null,
-        'size' => null,
-        'strikethrough' => null,
-        'text' => null,
-        'underline' => null,
-        'weight' => null,
-    );
-
     /**
      * Consructor
      *
@@ -38,18 +24,23 @@ class TextRun extends AbstractItem implements ElementInterface
      */
     public function __construct($text = null)
     {
-        $this->type = 'TextRun';
-        $this->fields['text'] = $text;
+        parent::__construct(array(
+            'color' => null,
+            'fontType' => null,
+            'highlight' => null,
+            'isSubtle' => null,
+            'italic' => null,
+            'selectAction' => null,
+            'size' => null,
+            'strikethrough' => null,
+            'text' => $text,
+            'underline' => null,
+            'weight' => null,
+        ), 'TextRun');
     }
 
     /**
-     * Returns content of card element
-     *
-     * @param float $version Card version
-     *
-     * @return array
-     *
-     * @throws RuntimeException
+     * {@inheritDoc}
      */
     public function getContent($version)
     {
@@ -76,6 +67,7 @@ class TextRun extends AbstractItem implements ElementInterface
         );
         foreach ($attrVersions as $name => $ver) {
             if ($version >= $ver) {
+                /** @var mixed */
                 $content[$name] = $this->fields[$name];
             }
         }
@@ -100,7 +92,7 @@ class TextRun extends AbstractItem implements ElementInterface
     /**
      * Controls the color of TextRun elements.
      *
-     * @param Enums::COLOR_x $color Color
+     * @param Enums::COLOR_* $color Color
      *
      * @return static
      */
@@ -113,7 +105,7 @@ class TextRun extends AbstractItem implements ElementInterface
     /**
      * Type of font to use for rendering
      *
-     * @param Enums::FONT_TYPE_x $fontType Font type
+     * @param Enums::FONT_TYPE_* $fontType Font type
      *
      * @return static
      */
@@ -182,7 +174,7 @@ class TextRun extends AbstractItem implements ElementInterface
     /**
      * Set font size.
      *
-     * @param Enums::FONT_SIZE_x $size Font size
+     * @param Enums::FONT_SIZE_* $size Font size
      *
      * @return static
      */
@@ -221,7 +213,7 @@ class TextRun extends AbstractItem implements ElementInterface
     /**
      * Controls the weight of TextRun elements.
      *
-     * @param Enums::FONT_WEIGHT_x $weight Font weight
+     * @param Enums::FONT_WEIGHT_* $weight Font weight
      *
      * @return static
      */

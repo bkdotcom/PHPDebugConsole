@@ -167,7 +167,7 @@ class TableCellTest extends AbstractTestCaseWith
             // array('backgroundImage', ['http://example.com/cat.jpg']),
             // array('bleed', []),
             array('items', [['string']]),
-            array('items', [[array('string')]], true, 'Invalid TableCell item type (array) found at index 0'),
+            array('items', [[array('string')]], true, 'Invalid TableCell item found at index 0.  array provided.'),
             array('minHeight', ['42px']),
             array('minHeight', [null]),
             // array('rtl', []),

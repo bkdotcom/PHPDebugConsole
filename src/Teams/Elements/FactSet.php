@@ -16,19 +16,13 @@ class FactSet extends AbstractElement
      */
     public function __construct(array $facts = array())
     {
-        parent::__construct();
-        $this->type = 'FactSet';
-        $this->fields = \array_merge($this->fields, array(
+        parent::__construct(array(
             'facts' => self::asFacts($facts),
-        ));
+        ), 'FactSet');
     }
 
     /**
-     * Returns content of card element
-     *
-     * @param float $version Card version
-     *
-     * @return array
+     * {@inheritDoc}
      */
     public function getContent($version)
     {
@@ -52,7 +46,7 @@ class FactSet extends AbstractElement
     /**
      * Return new instance with provided facts
      *
-     * @param array $facts Fact objects of key/value array
+     * @param array<string, mixed> $facts Fact objects of key/value array
      *
      * @return static
      *
@@ -81,21 +75,28 @@ class FactSet extends AbstractElement
     private function asFacts(array $facts)
     {
         $factsNew = array();
-        \array_walk($facts, static function ($value, $key) use (&$factsNew) {
-            if ($value instanceof Fact) {
-                $factsNew[] = $value;
-                return;
+        \array_walk(
+            $facts,
+            /**
+             * @param mixed     $value
+             * @param array-key $key
+             */
+            static function ($value, $key) use (&$factsNew) {
+                if ($value instanceof Fact) {
+                    $factsNew[] = $value;
+                    return;
+                }
+                if (\is_string($value) || \is_numeric($value)) {
+                    $factsNew[] = new Fact($key, $value);
+                    return;
+                }
+                throw new InvalidArgumentException(\sprintf(
+                    'Invalid Fact or value encountered at %s. Expected Fact, string, or numeric. %s provided.',
+                    $key,
+                    self::getDebugType($value)
+                ));
             }
-            if (\is_string($value) || \is_numeric($value)) {
-                $factsNew[] = new Fact($key, $value);
-                return;
-            }
-            throw new InvalidArgumentException(\sprintf(
-                'Invalid Fact or value encountered at %s. Expected Fact, string, or numeric. %s provided.',
-                $key,
-                self::getDebugType($value)
-            ));
-        });
+        );
         return $factsNew;
     }
 }

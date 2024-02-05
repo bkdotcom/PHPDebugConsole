@@ -17,14 +17,14 @@ class HeroCard extends AbstractCard
      */
     public function __construct()
     {
-        $this->fields = \array_merge($this->fields, array(
-            'buttons' => null,
-            'images' => null,
+        parent::__construct(array(
+            'buttons' => array(),
+            'images' => array(),
             'subtitle' => null,
             'tap' => null,
             'text' => null,
             'title' => null,
-        ));
+        ), 'HeroCard');
     }
 
     /**
@@ -126,7 +126,7 @@ class HeroCard extends AbstractCard
     /**
      * Sets card subtitle
      *
-     * @param string $subtitle Card subtitle
+     * @param string|null $subtitle Card subtitle
      *
      * @return static
      */

@@ -21,28 +21,24 @@ class MessageCard extends AbstractCard
      */
     public function __construct($title = null, $text = null)
     {
-        $title = self::asString($title, true, __METHOD__);
-        $text = self::asString($text, true, __METHOD__);
-        $this->fields = \array_merge($this->fields, array(
+        parent::__construct(array(
             'potentialAction' => array(),
             'sections' => array(),
             'summary' => null,
-            'text' => $text,
+            'text' => self::asString($text, true, __METHOD__),
             'themeColor' => null,
-            'title' => $title,
-        ));
+            'title' => self::asString($title, true, __METHOD__),
+        ), 'MessageCard');
     }
 
     /**
-     * Get message data
-     *
-     * @return array
+     * {@inheritDoc}
      */
     public function getMessage()
     {
         return self::normalizeContent(\array_merge(array(
             '@context' => 'http://schema.org/extensions',
-            '@type' => 'MessageCard',
+            '@type' => $this->type,
         ), $this->fields));
     }
 
@@ -141,7 +137,7 @@ class MessageCard extends AbstractCard
      * @param string $imageUrl Image url
      * @param string $title    Image title
      *
-     * @return CustomCard
+     * @return static
      */
     public function withImage($imageUrl, $title = null)
     {
@@ -204,8 +200,8 @@ class MessageCard extends AbstractCard
     /**
      * Adds facts section to card
      *
-     * @param array  $facts name => value array
-     * @param string $title title for this facts section
+     * @param array<string, mixed> $facts name => value array
+     * @param string|null          $title title for this facts section
      *
      * @return static
      */

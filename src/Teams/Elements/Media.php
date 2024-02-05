@@ -23,23 +23,15 @@ class Media extends AbstractElement
     public function __construct(array $sources = array())
     {
         self::assertSources($sources);
-        parent::__construct();
-        $this->type = 'Media';
-        $this->fields = \array_merge($this->fields, array(
+        parent::__construct(array(
             'altText' => null,
             'poster' => null,
             'sources' => $sources,
-        ));
+        ), 'Media');
     }
 
     /**
-     * Returns content of card element
-     *
-     * @param float $version Card version
-     *
-     * @return array
-     *
-     * @throws RuntimeException
+     * {@inheritDoc}
      */
     public function getContent($version)
     {
@@ -56,6 +48,7 @@ class Media extends AbstractElement
         $content = parent::getContent($version);
         foreach ($attrVersions as $name => $ver) {
             if ($version >= $ver) {
+                /** @var mixed */
                 $content[$name] = $this->fields[$name];
             }
         }

@@ -21,9 +21,7 @@ class Table extends AbstractElement
      */
     public function __construct($rows = array())
     {
-        parent::__construct();
-        $this->type = 'Table';
-        $this->fields = \array_merge($this->fields, array(
+        parent::__construct(array(
             'columns' => array(),
             'firstRowAsHeader' => null,
             'gridStyle' => null,
@@ -31,17 +29,11 @@ class Table extends AbstractElement
             'rows' => self::asRows($rows),
             'showGridLines' => null,
             'verticalCellContentAlignment' => null,
-        ));
+        ), 'Table');
     }
 
     /**
-     * Returns content of card element
-     *
-     * @param float $version Card version
-     *
-     * @return array
-     *
-     * @throws RuntimeException
+     * {@inheritDoc}
      */
     public function getContent($version)
     {
@@ -55,8 +47,8 @@ class Table extends AbstractElement
             'verticalCellContentAlignment' => 1.5,
         );
 
-        if ($this->fields['columns'] === array()) {
-            $colCount = $this->getColCount();
+        $colCount = $this->getColCount();
+        if ($this->fields['columns'] === array() && $colCount > 0) {
             $cols = \array_fill(0, $colCount, array());
             $tableTemp = $this->withColumns($cols);
             $this->fields['columns'] = $tableTemp->get('columns');
@@ -65,6 +57,7 @@ class Table extends AbstractElement
         $content = parent::getContent($version);
         foreach ($attrVersions as $name => $ver) {
             if ($version >= $ver) {
+                /** @var mixed */
                 $content[$name] = $this->fields[$name];
             }
         }
@@ -76,8 +69,8 @@ class Table extends AbstractElement
      * Return new instance with specified items
      *
      * @param string|numeric                $width               (default: 1) Pixel width or relative width
-     * @param Enums::HORIZONTAL_ALIGNMENT_x $horizontalAlignment Horizontal alignment of cells
-     * @param Enums::VERTICAL_ALIGNMENT_x   $verticalAlignment   Verical alignment of cells
+     * @param Enums::HORIZONTAL_ALIGNMENT_* $horizontalAlignment Horizontal alignment of cells
+     * @param Enums::VERTICAL_ALIGNMENT_*   $verticalAlignment   Verical alignment of cells
      *
      * @return static
      *
@@ -114,7 +107,7 @@ class Table extends AbstractElement
      *
      * If a row contains more cells than there are columns defined, the extra cells are ignored
      *
-     * @param array{horizontalAlignment: Enums::HORIZONTAL_ALIGNMENT_x, verticalAlignment: Enums::VERTICALL_ALIGNMENT_x, width: string}[] $columns Column definitions
+     * @param array{horizontalAlignment: Enums::HORIZONTAL_ALIGNMENT_*, verticalAlignment: Enums::VERTICALL_ALIGNMENT_*, width: string}[] $columns Column definitions
      *
      * @return static
      *
@@ -153,7 +146,7 @@ class Table extends AbstractElement
     /**
      * Return new instance with specified grid style
      *
-     * @param Enums::CONTAINER_STYLE_x $style Container style
+     * @param Enums::CONTAINER_STYLE_* $style Container style
      *
      * @return static
      */
@@ -166,7 +159,7 @@ class Table extends AbstractElement
     /**
      * Return new instance with specified horizontal alignment
      *
-     * @param Enums::HORIZONTAL_ALIGNMENT_x $alignment Horizontal alignment
+     * @param Enums::HORIZONTAL_ALIGNMENT_* $alignment Horizontal alignment
      *
      * @return static
      */
@@ -179,7 +172,7 @@ class Table extends AbstractElement
     /**
      * Return new instance with the specified table rows
      *
-     * @param TableRow[] $rows Rows of the table
+     * @param iterable<TableRow|iterable> $rows Rows of the table
      *
      * @return static
      *
@@ -206,7 +199,7 @@ class Table extends AbstractElement
     /**
      * Return new instance with specified horizontal alignment
      *
-     * @param Enums::HORIZONTAL_ALIGNMENT_x $alignment Horizontal alignment
+     * @param Enums::HORIZONTAL_ALIGNMENT_* $alignment Horizontal alignment
      *
      * @return static
      */
@@ -292,6 +285,7 @@ class Table extends AbstractElement
     private function getColCount()
     {
         $colCount = 0;
+        /** @var TableRow $tableRow */
         foreach ($this->fields['rows'] as $tableRow) {
             $rowColCount = \count($tableRow->get('cells'));
             if ($rowColCount > $colCount) {
@@ -305,7 +299,7 @@ class Table extends AbstractElement
      * Merge default values and assert valid definition
      *
      * @param array $column Column definition
-     * @param index $index  Column index
+     * @param int   $index  Column index
      *
      * @return array
      *

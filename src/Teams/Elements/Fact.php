@@ -14,16 +14,15 @@ class Fact extends AbstractItem
     /**
      * Constructor
      *
-     * @param string $title Fact title
-     * @param string $value Fact name
+     * @param string|int     $title Fact title
+     * @param string|numeric $value Fact value
      */
     public function __construct($title, $value)
     {
-        $this->type = 'Fact';
-        $this->fields = array(
+        parent::__construct(array(
             'title' => self::asString($title, false, __METHOD__),
             'value' => self::asString($value, false, __METHOD__),
-        );
+        ), 'Fact');
     }
 
     /**

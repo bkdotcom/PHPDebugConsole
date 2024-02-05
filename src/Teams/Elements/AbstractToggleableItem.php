@@ -11,13 +11,17 @@ class AbstractToggleableItem extends AbstractExtendableItem
 {
     /**
      * Constructor
+     *
+     * @param array<string, mixed> $fields Field values
+     * @param string               $type   Item type
      */
-    public function __construct()
+    public function __construct(array $fields, $type)
     {
-        $this->fields = \array_merge($this->fields, array(
+        $fields = \array_merge($this->fields, array(
             'id' => null,
             'isVisible' => null,
-        ));
+        ), $fields);
+        parent::__construct($fields, $type);
     }
 
     /**
@@ -33,6 +37,7 @@ class AbstractToggleableItem extends AbstractExtendableItem
         $content = parent::getContent($version);
         foreach ($attrVersions as $name => $ver) {
             if ($version >= $ver) {
+                /** @var mixed */
                 $content[$name] = $this->fields[$name];
             }
         }

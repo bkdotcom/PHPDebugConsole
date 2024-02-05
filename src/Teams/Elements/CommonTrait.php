@@ -2,6 +2,8 @@
 
 namespace bdk\Teams\Elements;
 
+use bdk\Teams\Enums;
+use InvalidArgumentException;
 use Psr\Http\Message\UriInterface;
 
 /**
@@ -13,9 +15,9 @@ trait CommonTrait
      * Return new instance with given backgroundImage
      *
      * @param string|UriInterface           $url                 Image url
-     * @param Enums::FILLMODE_x             $fillmode            fill mode
-     * @param Enums::HORIZONTAL_ALIGNMENT_x $horizontalAlignment horizontal alignment
-     * @param Enums::VERTICAL_ALIGNMENT_x   $verticalAlignment   Vertical alignment
+     * @param Enums::FILLMODE_*             $fillmode            fill mode
+     * @param Enums::HORIZONTAL_ALIGNMENT_* $horizontalAlignment horizontal alignment
+     * @param Enums::VERTICAL_ALIGNMENT_*   $verticalAlignment   Vertical alignment
      *
      * @return static
      *

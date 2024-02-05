@@ -12,6 +12,13 @@ use bdk\Test\Teams\AbstractTestCaseWith;
  */
 class SectionTest extends AbstractTestCaseWith
 {
+    public function testDefault()
+    {
+        $section = new Section();
+        self::assertSame(array(
+        ), $section->getContent());
+    }
+
     public function testGetContent()
     {
         $section = (new Section())

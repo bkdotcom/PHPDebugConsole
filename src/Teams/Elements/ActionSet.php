@@ -18,11 +18,9 @@ class ActionSet extends AbstractElement
     public function __construct(array $actions = array())
     {
         self::assertActions($actions);
-        parent::__construct();
-        $this->type = 'ActionSet';
-        $this->fields = \array_merge($this->fields, array(
+        parent::__construct(array(
             'actions' => $actions,
-        ));
+        ), 'ActionSet');
     }
 
     /**
@@ -31,6 +29,7 @@ class ActionSet extends AbstractElement
     public function getContent($version)
     {
         $element = parent::getContent($version);
+        /** @var ActionInterface[] */
         $element['actions'] = $this->fields['actions'];
         return self::normalizeContent($element, $version);
     }

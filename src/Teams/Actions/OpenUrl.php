@@ -22,21 +22,13 @@ class OpenUrl extends AbstractAction
         if ($url !== null) {
             self::assertUrl($url);
         }
-        parent::__construct();
-        $this->type = 'Action.OpenUrl';
-        $this->fields = \array_merge($this->fields, array(
+        parent::__construct(array(
             'url' => $url ? (string) $url : null,
-        ));
+        ), 'Action.OpenUrl');
     }
 
     /**
-     * Returns content of card action
-     *
-     * @param float $version Card version
-     *
-     * @return array
-     *
-     * @throws RuntimeException
+     * {@inheritDoc}
      */
     public function getContent($version)
     {
@@ -44,6 +36,7 @@ class OpenUrl extends AbstractAction
             throw new RuntimeException('OpenUrl url is required');
         }
         $content = parent::getContent($version);
+        /** @var string */
         $content['url'] = $this->fields['url'];
         return $content;
     }

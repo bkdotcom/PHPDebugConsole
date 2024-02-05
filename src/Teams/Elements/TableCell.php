@@ -9,6 +9,7 @@ use bdk\Teams\Elements\ElementInterface;
 use bdk\Teams\Enums;
 use InvalidArgumentException;
 use RuntimeException;
+use Traversable;
 
 /**
  * Represents a cell within a row of a Table element.
@@ -17,30 +18,28 @@ class TableCell extends AbstractItem
 {
     use CommonTrait;
 
-    protected $fields = array(
-        'backgroundImage' => null,
-        'bleed' => null,
-        'items' => array(),
-        'minHeight' => null,
-        'rtl?' => null,
-        'selectAction' => null,
-        'style' => null,
-        'verticalContentAlignment' => null,
-    );
-
     /**
      * Constructor
      *
-     * @param array<int, ElementInterface|\Stringable|scalar|null>|ElementInterface|\Stringable|scalar|null $items The card elements to render inside the Container,
+     * @param iterable<ElementInterface|\Stringable|scalar|null>|ElementInterface|\Stringable|scalar|null $items The card elements to render inside the Container,
      *                                                                            Or may pass in a single item
      */
     public function __construct($items = array())
     {
-        $this->type = 'TableCell';
-        if (\is_array($items) === false) {
+        $isIterable = \is_array($items) || ($items instanceof Traversable);
+        if ($isIterable === false) {
             $items = array($items);
         }
-        $this->fields['items'] = self::asItems($items);
+        parent::__construct(array(
+            'backgroundImage' => null,
+            'bleed' => null,
+            'items' => self::asItems($items),
+            'minHeight' => null,
+            'rtl?' => null,
+            'selectAction' => null,
+            'style' => null,
+            'verticalContentAlignment' => null,
+        ), 'TableCell');
     }
 
     /**
@@ -68,6 +67,7 @@ class TableCell extends AbstractItem
         );
         foreach ($attrVersions as $name => $ver) {
             if ($version >= $ver) {
+                /** @var mixed */
                 $content[$name] = $this->fields[$name];
             }
         }
@@ -109,13 +109,13 @@ class TableCell extends AbstractItem
     /**
      * Return new instance with specified items
      *
-     * @param array<int, ElementInterface|\Stringable|scalar|null> $items The card elements to render inside the TableCell
+     * @param iterable<ElementInterface|\Stringable|scalar|null> $items The card elements to render inside the TableCell
      *
      * @return static
      *
      * @throws InvalidArgumentException
      */
-    public function withItems(array $items)
+    public function withItems($items)
     {
         if ($items === array()) {
             throw new InvalidArgumentException(\sprintf(
@@ -182,7 +182,7 @@ class TableCell extends AbstractItem
     /**
      * Return new instance with specified container style
      *
-     * @param Enums::CONTAINER_STYLE_x $style Container style
+     * @param Enums::CONTAINER_STYLE_* $style Container style
      *
      * @return static
      */
@@ -195,7 +195,7 @@ class TableCell extends AbstractItem
     /**
      * Return new instance with specified vertical alignment
      *
-     * @param Enums::VERTICAL_ALIGNMENT_x $alignment Vertical alignment
+     * @param Enums::VERTICAL_ALIGNMENT_* $alignment Vertical alignment
      *
      * @return static
      */
@@ -242,25 +242,28 @@ class TableCell extends AbstractItem
     /**
      * Assert each item is instance of ElementInterface, string, or numeric
      *
-     * @param array<int, ElementInterface|Stringable|scalar|null> $items Items to test
+     * @param iterable<ElementInterface|\Stringable|scalar|null> $items Items to test
      *
-     * @return ElementInterface[]
+     * @return list<ElementInterface>
      *
      * @throws InvalidArgumentException
      */
-    private function asItems(array $items)
+    private function asItems($items)
     {
+        $i = 0;
+        $item = null;
         try {
+            $itemsNew = array();
             foreach ($items as $i => $item) {
-                $items[$i] = self::asItem($item);
+                $itemsNew[] = self::asItem($item);
             }
+            return $itemsNew;
         } catch (InvalidArgumentException $e) {
             throw new InvalidArgumentException(\sprintf(
-                'Invalid TableCell item type (%s) found at index %s',
-                self::getDebugType($item),
-                $i
+                'Invalid TableCell item found at index %s.  %s provided.',
+                $i,
+                self::getDebugType($item)
             ));
         }
-        return $items;
     }
 }

@@ -23,7 +23,7 @@ class TextBlockTest extends AbstractTestCaseWith
         $refClass = new \ReflectionClass('bdk\\Teams\\AbstractItem');
         $refProp = $refClass->getProperty('constants');
         $refProp->setAccessible('true');
-        $refProp->setValue(null, null);
+        $refProp->setValue(null, array());
     }
 
     public function testConstruct()

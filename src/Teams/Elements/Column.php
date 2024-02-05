@@ -23,9 +23,7 @@ class Column extends AbstractToggleableItem implements ElementInterface
     public function __construct(array $items = array())
     {
         self::assertItems($items);
-        parent::__construct();
-        $this->type = 'Column';
-        $this->fields = \array_merge($this->fields, array(
+        parent::__construct(array(
             'backgroundImage' => null,
             'bleed' => null,
             'fallback' => null,
@@ -38,17 +36,11 @@ class Column extends AbstractToggleableItem implements ElementInterface
             'style' => null,
             'verticalContentAlignment' => null,
             'width' => null,
-        ));
+        ), 'Column');
     }
 
     /**
-     * Returns content of card element
-     *
-     * @param float $version Card version
-     *
-     * @return array
-     *
-     * @throws RuntimeException
+     * {@inheritDoc}
      */
     public function getContent($version)
     {
@@ -74,6 +66,7 @@ class Column extends AbstractToggleableItem implements ElementInterface
         $content = parent::getContent($version);
         foreach ($attrVersions as $name => $ver) {
             if ($version >= $ver) {
+                /** @var mixed */
                 $content[$name] = $this->fields[$name];
             }
         }
@@ -102,7 +95,7 @@ class Column extends AbstractToggleableItem implements ElementInterface
      * Describes what to do when an unknown element is encountered
      * or the requires of this or any children can't be met.
      *
-     * @param Column|Enums::FALLBACK_x $fallback How to we fallback?
+     * @param Column|Enums::FALLBACK_* $fallback How to we fallback?
      *
      * @return static
      */
@@ -119,7 +112,7 @@ class Column extends AbstractToggleableItem implements ElementInterface
     /**
      * Return new instance with specified items
      *
-     * @param array $items The card elements to render inside the Container
+     * @param ElementInterface[] $items The card elements to render inside the Container
      *
      * @return static
      */
@@ -201,7 +194,7 @@ class Column extends AbstractToggleableItem implements ElementInterface
      *
      * Controls the amount of spacing between this column and the preceding column.
      *
-     * @param Enums::SPACING_x $spacing Spacing
+     * @param Enums::SPACING_* $spacing Spacing
      *
      * @return static
      */
@@ -214,7 +207,7 @@ class Column extends AbstractToggleableItem implements ElementInterface
     /**
      * Return new instance with specified container style
      *
-     * @param Enums::CONTAINER_STYLE_x $style Container style
+     * @param Enums::CONTAINER_STYLE_* $style Container style
      *
      * @return static
      */
@@ -227,7 +220,7 @@ class Column extends AbstractToggleableItem implements ElementInterface
     /**
      * Return new instance with specified vertical alignment
      *
-     * @param Enums::VERTICAL_ALIGNMENT_x $alignment Vertical alignment
+     * @param Enums::VERTICAL_ALIGNMENT_* $alignment Vertical alignment
      *
      * @return static
      */
@@ -261,6 +254,8 @@ class Column extends AbstractToggleableItem implements ElementInterface
      * @return void
      *
      * @throws InvalidArgumentException
+     *
+     * @psalm-assert ElementInterface[] $items
      */
     private static function assertItems(array $items)
     {
@@ -278,8 +273,8 @@ class Column extends AbstractToggleableItem implements ElementInterface
     /**
      * Assert valid width value
      *
-     * @param string|Enums:COLUMN_WIDTH_x|numeric $val    value to test
-     * @param string                              $method calling method
+     * @param string|Enums::COLUMN_WIDTH_*|numeric $val    value to test
+     * @param string                               $method calling method
      *
      * @return void
      *

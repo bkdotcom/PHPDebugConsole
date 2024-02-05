@@ -4,14 +4,20 @@ namespace bdk\Teams;
 
 use bdk\CurlHttpMessage\Client;
 use bdk\Teams\Cards\CardInterface;
+use OutOfBoundsException;
 use Psr\Http\Message\ResponseInterface;
 
 /**
  * Send teams message notifications using webhook url
+ *
+ * @psalm-api
  */
 class TeamsWebhook
 {
-    /** @var array */
+    /** @var array{
+     *   webhookUrl:  string,
+     * }
+     */
     protected $cfg = array(
         'webhookUrl' => '',
     );
@@ -19,17 +25,23 @@ class TeamsWebhook
     /** @var Client */
     protected $client;
 
-    /** @var ResponseInterface */
+    /** @var ResponseInterface|null */
     protected $lastResponse = null;
 
     /**
      * Constructor
      *
      * @param string $webhookUrl Slack webhook url
+     *
+     * @throws OutOfBoundsException
      */
     public function __construct($webhookUrl = null)
     {
-        $this->cfg['webhookUrl'] = $webhookUrl ?: \getenv('TEAMS_WEBHOOK_URL');
+        $webhookUrl = $webhookUrl ?: \getenv('TEAMS_WEBHOOK_URL');
+        if (\is_string($webhookUrl) === false) {
+            throw new OutOfBoundsException('webhookUrl must be defined');
+        }
+        $this->cfg['webhookUrl'] = $webhookUrl;
         $this->client = new Client();
     }
 
@@ -42,7 +54,7 @@ class TeamsWebhook
     }
 
     /**
-     * @return ResponseInterface
+     * @return ResponseInterface|null
      */
     public function getLastResponse()
     {
@@ -54,7 +66,7 @@ class TeamsWebhook
      *
      * @param CardInterface $card Card instance
      *
-     * @return array
+     * @return array|false
      */
     public function post(CardInterface $card)
     {
@@ -66,6 +78,7 @@ class TeamsWebhook
             $card
         );
         $body = (string) $this->lastResponse->getBody();
+        /** @var array|false */
         return \json_decode($body, true);
     }
 }

@@ -3,6 +3,7 @@
 namespace bdk\Teams;
 
 use bdk\HttpMessage\Utility\Uri as UriUtility;
+use bdk\Teams\Enums;
 use bdk\Teams\ItemInterface;
 use InvalidArgumentException;
 use Psr\Http\Message\UriInterface;
@@ -13,7 +14,8 @@ use ReflectionClass;
  */
 trait CardUtilityTrait
 {
-    private static $constants;
+    /** @var array<non-empty-string, mixed> */
+    private static $constants = array();
 
     /**
      * Itterate over supplied tests.
@@ -30,8 +32,7 @@ trait CardUtilityTrait
     {
         foreach ($tests as $callable) {
             try {
-                $ret = $callable($val);
-                if ($ret === false) {
+                if ($callable($val) === false) {
                     // test failed
                     continue;
                 }
@@ -52,6 +53,8 @@ trait CardUtilityTrait
      * @return void
      *
      * @throws InvalidArgumentException
+     *
+     * @psalm-assert bool|null $val
      */
     protected static function assertBool($val, $name)
     {
@@ -72,19 +75,21 @@ trait CardUtilityTrait
     /**
      * Assert that value is one of the constants beginning with prefix
      *
-     * @param string $value     Value to check
+     * @param mixed  $value     Value to check
      * @param string $prefix    Prefix (such as "HEIGHT_")
-     * @param string $paramName Optional paramNAme to use in exception message
+     * @param string $paramName Optional paramName to use in exception message
      * @param bool   $allowNull Is `null` and allowed value?
      *
      * @return void
      *
      * @throws InvalidArgumentException
+     *
+     * @psalm-assert Enums::*|null $value
      */
     protected static function assertEnumValue($value, $prefix, $paramName = null, $allowNull = true)
     {
         $allowedValues = self::getConstantsWithPrefix($prefix);
-        $message = '%s should must be one of the %s::%s_x constants';
+        $message = '%s must be one of the %s::%s* constants';
         if ($allowNull) {
             $allowedValues[] = null;
             $message .= ' (or null)';
@@ -93,19 +98,20 @@ trait CardUtilityTrait
             return;
         }
         throw new InvalidArgumentException(\sprintf(
-            $message,
+            $message . '  %s provided',
             $paramName ?: 'value',
             'bdk\\Teams\\Enums',
-            $prefix
+            $prefix,
+            \json_encode($value)
         ));
     }
 
     /**
      * Assert valid fallback
      *
-     * @param objec|Enums::FALLBACK_x $fallback   value to test
-     * @param classname               $instanceOf check val is instance of this class
-     * @param string                  $message    exception message
+     * @param object|Enums::FALLBACK_* $fallback   value to test
+     * @param string                   $instanceOf check val is instance of this class
+     * @param string                   $message    exception message
      *
      * @return void
      *
@@ -198,6 +204,8 @@ trait CardUtilityTrait
      * @param mixed $val Value to test
      *
      * @return bool
+     *
+     * @psalm-assert-if-true string|numeric|\Stringable $val
      */
     private static function isStringable($val)
     {
@@ -216,6 +224,8 @@ trait CardUtilityTrait
      * @return void
      *
      * @throws InvalidArgumentException
+     *
+     * @psalm-assert string|UriInterface $url
      */
     protected static function assertUrl($val, $allowDataUrl = false)
     {
@@ -281,6 +291,7 @@ trait CardUtilityTrait
         }, $values);
         \ksort($values);
         if (isset($values['type'])) {
+            // sort type to the top
             $values = array('type' => $values['type']) + $values;
         }
         return $values;
@@ -291,19 +302,20 @@ trait CardUtilityTrait
      *
      * @param string $prefix Constant name prefix
      *
-     * @return array
+     * @return array<string, string>
      */
     private static function getConstantsWithPrefix($prefix)
     {
-        if (self::$constants === null) {
+        if (self::$constants === array()) {
             $refClass = new ReflectionClass('bdk\\Teams\\Enums');
             self::$constants = $refClass->getConstants();
         }
         // array_filter / ARRAY_FILTER_USE_KEY is php 5.6
         $filteredByKey = array();
+        /** @var mixed $value */
         foreach (self::$constants as $key => $value) {
             if (\strpos($key, $prefix) === 0) {
-                $filteredByKey[$key] = $value;
+                $filteredByKey[$key] = (string) $value;
             }
         }
         return $filteredByKey;

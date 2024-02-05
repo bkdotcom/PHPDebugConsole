@@ -17,6 +17,27 @@ use Psr\Http\Message\UriInterface;
  */
 class AdaptiveCard extends AbstractCard
 {
+    /**
+     * @var array{
+     *    $schema: string,
+     *    actions: ActionInterface[],
+     *    backgroundImage: string|null,
+     *    body: ElementInterface[],
+     *    fallbackText: string|null,
+     *    lang: string|null,
+     *    minHeight: string|null,
+     *    rtl: bool|null,
+     *    selectAction: ActionInterface|null,
+     *    speak: null,
+     *    version: float,
+     *    verticalContentAlignment: Enums::VERTICAL_ALIGNMENT_*|null,
+     * }
+     *
+     * @psalm-suppress NonInvariantDocblockPropertyType
+     * @psalm-suppress InvalidPropertyAssignmentValue
+     */
+    protected $fields = array();
+
     /** @var float[] */
     private $supportedVersions = array(1.0, 1.1, 1.2, 1.3, 1.4, 1.5);
 
@@ -32,8 +53,7 @@ class AdaptiveCard extends AbstractCard
         if (\in_array($version, $this->supportedVersions, true) === false) {
             throw new InvalidArgumentException('Invalid version');
         }
-        $this->type = 'AdaptiveCard';
-        $this->fields = \array_merge($this->fields, array(
+        parent::__construct(array(
             '$schema' => 'http://adaptivecards.io/schemas/adaptive-card.json',
             'actions' => array(),
             'backgroundImage' => null,
@@ -46,7 +66,7 @@ class AdaptiveCard extends AbstractCard
             'speak' => null,
             'version' => $version,
             'verticalContentAlignment' => null,
-        ));
+        ), 'AdaptiveCard');
     }
 
     /**
@@ -74,6 +94,7 @@ class AdaptiveCard extends AbstractCard
         );
         foreach ($attrVersions as $name => $ver) {
             if ($version >= $ver) {
+                /** @var mixed */
                 $content[$name] = $this->fields[$name];
             }
         }
@@ -82,9 +103,7 @@ class AdaptiveCard extends AbstractCard
     }
 
     /**
-     * Formats data for API call
-     *
-     * @return array
+     * {@inheritDoc}
      */
     public function getMessage()
     {
@@ -178,9 +197,9 @@ class AdaptiveCard extends AbstractCard
      * Return new instance with given backgroundImage
      *
      * @param string|UriInterface           $url                 Image url
-     * @param Enums::FILLMODE_x             $fillmode            fill mode
-     * @param Enums::HORIZONTAL_ALIGNMENT_x $horizontalAlignment horizontal alignment
-     * @param Enums::VERTICAL_ALIGNMENT_x   $verticalAlignment   Vertical alignment
+     * @param Enums::FILLMODE_*             $fillmode            fill mode
+     * @param Enums::HORIZONTAL_ALIGNMENT_* $horizontalAlignment horizontal alignment
+     * @param Enums::VERTICAL_ALIGNMENT_*   $verticalAlignment   Vertical alignment
      *
      * @return static
      *
@@ -326,7 +345,7 @@ class AdaptiveCard extends AbstractCard
     /**
      * Return new instance with specified vertical alignment
      *
-     * @param Enums::VERTICAL_ALIGNMENT_x $alignment Vertical alignment
+     * @param Enums::VERTICAL_ALIGNMENT_* $alignment Vertical alignment
      *
      * @return static
      */

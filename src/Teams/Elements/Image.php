@@ -25,9 +25,7 @@ class Image extends AbstractElement
         if ($url !== null) {
             self::assertUrl($url, true);
         }
-        parent::__construct();
-        $this->type = 'Image';
-        $this->fields = \array_merge($this->fields, array(
+        parent::__construct(array(
             'altText' => null,
             'backgroundColor' => null,
             'height' => null,
@@ -37,17 +35,11 @@ class Image extends AbstractElement
             'style' => null,
             'url' => $url ? (string) $url : null,
             'width' => null,
-        ));
+        ), 'Image');
     }
 
     /**
-     * Returns content of card element
-     *
-     * @param float $version card version
-     *
-     * @return array
-     *
-     * @throws RuntimeException
+     * {@inheritDoc}
      */
     public function getContent($version)
     {
@@ -70,6 +62,7 @@ class Image extends AbstractElement
         $content = parent::getContent($version);
         foreach ($attrVersions as $name => $ver) {
             if ($version >= $ver) {
+                /** @var mixed */
                 $content[$name] = $this->fields[$name];
             }
         }
@@ -137,7 +130,7 @@ class Image extends AbstractElement
      * the image will distort to fit that exact height.
      * This overrides the size property.
      *
-     * @param Enums::HEIGHT_X $height "auto"|"stretch"
+     * @param Enums::HEIGHT_* $height "auto"|"stretch"
      *
      * @return static
      *
@@ -172,7 +165,7 @@ class Image extends AbstractElement
     /**
      * Sets horizontal aligment.
      *
-     * @param Enums::HORIZONTAL_ALIGNMENT_x $alignment Horizontal alignment
+     * @param Enums::HORIZONTAL_ALIGNMENT_* $alignment Horizontal alignment
      *
      * @return static
      */
@@ -188,7 +181,7 @@ class Image extends AbstractElement
      * Controls the approximate size of the image.
      * The physical dimensions will vary per host.
      *
-     * @param Enums::IMAGE_SIZE_X $size Image size
+     * @param Enums::IMAGE_SIZE_* $size Image size
      *
      * @return static
      */
@@ -221,7 +214,7 @@ class Image extends AbstractElement
     /**
      * Sets image style.
      *
-     * @param Enums::IMAGE_STYLE_x $style Image style
+     * @param Enums::IMAGE_STYLE_* $style Image style
      *
      * @return static
      */

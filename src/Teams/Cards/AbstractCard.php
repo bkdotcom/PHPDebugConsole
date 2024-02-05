@@ -9,8 +9,6 @@ use bdk\Teams\AbstractItem;
  */
 abstract class AbstractCard extends AbstractItem implements CardInterface
 {
-    protected $fields = array();
-
     /**
      * Returns card data
      *

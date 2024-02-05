@@ -22,26 +22,18 @@ class ColumnSet extends AbstractElement
     public function __construct(array $columns = array())
     {
         self::assertColumns($columns);
-        parent::__construct();
-        $this->type = 'ColumnSet';
-        $this->fields = \array_merge($this->fields, array(
+        parent::__construct(array(
             'bleed' => null,
             'columns' => $columns,
             'horizontalAlignment' => null,
             'minHeight' => null,
             'selectAction' => null,
             'style' => null,
-        ));
+        ), 'ColumnSet');
     }
 
     /**
-     * Returns content of card element
-     *
-     * @param float $version Card version
-     *
-     * @return array
-     *
-     * @throws RuntimeException
+     * {@inheritDoc}
      */
     public function getContent($version)
     {
@@ -61,6 +53,7 @@ class ColumnSet extends AbstractElement
         $content = parent::getContent($version);
         foreach ($attrVersions as $name => $ver) {
             if ($version >= $ver) {
+                /** @var mixed */
                 $content[$name] = $this->fields[$name];
             }
         }
@@ -103,7 +96,7 @@ class ColumnSet extends AbstractElement
      * When not specified, the value of horizontalAlignment is inherited from the parent container.
      * If no parent container has horizontalAlignment set, it defaults to Left.
      *
-     * @param Enums::HORIZONTAL_ALIGNMENT_x $alignment Horizontal alignment
+     * @param Enums::HORIZONTAL_ALIGNMENT_* $alignment Horizontal alignment
      *
      * @return static
      */
@@ -151,7 +144,7 @@ class ColumnSet extends AbstractElement
     /**
      * Return new instance with specified container style
      *
-     * @param Enums::CONTAINER_STYLE_x $style Container style
+     * @param Enums::CONTAINER_STYLE_* $style Container style
      *
      * @return static
      */

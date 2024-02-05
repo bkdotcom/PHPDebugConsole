@@ -23,9 +23,7 @@ class Container extends AbstractElement
     public function __construct(array $items = array())
     {
         self::assertItems($items);
-        parent::__construct();
-        $this->type = 'Container';
-        $this->fields = \array_merge($this->fields, array(
+        parent::__construct(array(
             'backgroundImage' => null,
             'bleed' => null,
             'items' => $items,
@@ -34,17 +32,11 @@ class Container extends AbstractElement
             'selectAction' => null,
             'style' => null,
             'verticalContentAlignment' => null,
-        ));
+        ), 'Container');
     }
 
     /**
-     * Returns content of card element
-     *
-     * @param float $version Card version
-     *
-     * @return array
-     *
-     * @throws RuntimeException
+     * {@inheritDoc}
      */
     public function getContent($version)
     {
@@ -66,6 +58,7 @@ class Container extends AbstractElement
         $content = parent::getContent($version);
         foreach ($attrVersions as $name => $ver) {
             if ($version >= $ver) {
+                /** @var mixed */
                 $content[$name] = $this->fields[$name];
             }
         }
@@ -167,7 +160,7 @@ class Container extends AbstractElement
     /**
      * Return new instance with specified container style
      *
-     * @param Enums::CONTAINER_STYLE_x $style Container style
+     * @param Enums::CONTAINER_STYLE_* $style Container style
      *
      * @return static
      */
@@ -180,7 +173,7 @@ class Container extends AbstractElement
     /**
      * Return new instance with specified vertical alignment
      *
-     * @param Enums::VERTICAL_ALIGNMENT_x $alignment Vertical alignment
+     * @param Enums::VERTICAL_ALIGNMENT_* $alignment Vertical alignment
      *
      * @return static
      */

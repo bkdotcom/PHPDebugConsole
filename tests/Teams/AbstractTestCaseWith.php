@@ -23,6 +23,8 @@ abstract class AbstractTestCaseWith extends TestCase
     protected static $unsupportedAttributes = array();
     protected static $withMethods = array();
 
+    protected static $typesWithoutSchema = array('HeroCard', 'MessageCard', 'Unknown');
+
     public static function setUpBeforeClass(): void
     {
         self::$testedSchemaProps = array();
@@ -99,18 +101,18 @@ abstract class AbstractTestCaseWith extends TestCase
     {
         self::setdefinitions();
         $obj = static::itemFactory();
-        $objType = $obj->get('type');
+        $type = $obj->get('type');
 
         $tests = array();
         $tests['exception'] = array('noSuchProp', 'OutOfBoundsException');
 
-        if (empty($objType)) {
+        if (empty($type) || \in_array($type, self::$typesWithoutSchema, true)) {
             // \bdk\Test\Debug\Helper::stderr(\get_class($obj) . ' empty type');
             // self::expectNotToPerformAssertions();
             return $tests;
         }
 
-        $props = \array_keys(self::$definitions[$objType]);
+        $props = \array_keys(self::$definitions[$type]);
         $props = \array_diff($props, \array_keys(self::$testedSchemaProps), static::$unsupportedAttributes ?: array());
         foreach ($props as $prop) {
             $tests[$prop] = array($prop);
@@ -155,7 +157,7 @@ abstract class AbstractTestCaseWith extends TestCase
         self::setdefinitions();
         $obj = static::itemFactory();
         $type = $obj->get('type');
-        if ($type === null) {
+        if ($type === null || \in_array($type, self::$typesWithoutSchema, true)) {
             return array(
                 array(true, true),
             );
@@ -288,7 +290,7 @@ abstract class AbstractTestCaseWith extends TestCase
     {
         $obj = static::itemFactory();
         $type = $obj->get('type');
-        if (empty($type)) {
+        if (empty($type) || \in_array($type, self::$typesWithoutSchema, true)) {
             return;
         }
         $expectMethods = \array_map(static function ($prop) {

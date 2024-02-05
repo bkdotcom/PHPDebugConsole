@@ -20,9 +20,7 @@ class TextBlock extends AbstractElement
      */
     public function __construct($text = null)
     {
-        parent::__construct();
-        $this->type = 'TextBlock';
-        $this->fields = \array_merge($this->fields, array(
+        parent::__construct(array(
             'color' => null,
             'fontType' => null,
             'horizontalAlignment' => null,
@@ -33,17 +31,11 @@ class TextBlock extends AbstractElement
             'text' => self::asString($text, true, __METHOD__),
             'weight' => null,
             'wrap' => null,
-        ));
+        ), 'TextBlock');
     }
 
     /**
-     * Returns content of card element
-     *
-     * @param float $version Card version
-     *
-     * @return array
-     *
-     * @throws RuntimeException
+     * {@inheritDoc}
      */
     public function getContent($version)
     {
@@ -67,6 +59,7 @@ class TextBlock extends AbstractElement
         $content = parent::getContent($version);
         foreach ($attrVersions as $name => $ver) {
             if ($version >= $ver) {
+                /** @var mixed */
                 $content[$name] = $this->fields[$name];
             }
         }
@@ -91,7 +84,7 @@ class TextBlock extends AbstractElement
     /**
      * Sets color.
      *
-     * @param Enums::COLOR_x $color Color enum
+     * @param Enums::COLOR_* $color Color enum
      *
      * @return static
      */
@@ -104,7 +97,7 @@ class TextBlock extends AbstractElement
     /**
      * Sets font type.
      *
-     * @param Enums::FONT_TYPE_x $fontType Type of font to use for rendering
+     * @param Enums::FONT_TYPE_* $fontType Type of font to use for rendering
      *
      * @return static
      */
@@ -122,7 +115,7 @@ class TextBlock extends AbstractElement
      * is inherited from the parent container.
      * If no parent container has horizontalAlignment set, it defaults to Left.
      *
-     * @param Enums::HORIZONTAL_ALIGNMENT_x $alignment Horizontal alignment
+     * @param Enums::HORIZONTAL_ALIGNMENT_* $alignment Horizontal alignment
      *
      * @return static
      */
@@ -172,7 +165,7 @@ class TextBlock extends AbstractElement
     /**
      * Sets font size
      *
-     * @param Enums::FONT_SIZE_x $size Font size enum
+     * @param Enums::FONT_SIZE_* $size Font size enum
      *
      * @return static
      */
@@ -185,7 +178,7 @@ class TextBlock extends AbstractElement
     /**
      * Sets Text block style
      *
-     * @param Enums::TEXTBLOCK_STYLE_x $style Controls how a TextBlock behaves
+     * @param Enums::TEXTBLOCK_STYLE_* $style Controls how a TextBlock behaves
      *
      * @return static
      */
@@ -198,7 +191,7 @@ class TextBlock extends AbstractElement
     /**
      * Sets font weight.
      *
-     * @param Enums::FONT_WEIGHT_x $weight Font weight enum
+     * @param Enums::FONT_WEIGHT_* $weight Font weight enum
      *
      * @return static
      */

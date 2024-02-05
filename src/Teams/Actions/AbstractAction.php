@@ -13,10 +13,13 @@ abstract class AbstractAction extends AbstractExtendableItem implements ActionIn
 {
     /**
      * Constructor
+     *
+     * @param array<string, mixed> $fields Field values
+     * @param string               $type   Item type
      */
-    public function __construct()
+    public function __construct(array $fields, $type)
     {
-        $this->fields = \array_merge($this->fields, array(
+        $fields = \array_merge(array(
             'fallback' => null,
             'iconUrl' => null,
             'id' => null,
@@ -25,7 +28,8 @@ abstract class AbstractAction extends AbstractExtendableItem implements ActionIn
             'style' => null,
             'title' => null,
             'tooltip' => null,
-        ));
+        ), $fields);
+        parent::__construct($fields, $type);
     }
 
     /**
@@ -47,6 +51,7 @@ abstract class AbstractAction extends AbstractExtendableItem implements ActionIn
         $content = parent::getContent($version);
         foreach ($attrVersions as $name => $ver) {
             if ($version >= $ver) {
+                /** @var mixed */
                 $content[$name] = $this->fields[$name];
             }
         }
@@ -58,7 +63,7 @@ abstract class AbstractAction extends AbstractExtendableItem implements ActionIn
      * Describes what to do when an unknown element is encountered or
      * the requires of this or any children can’t be met.
      *
-     * @param AbstractAction|Enums::FALLBACK_x $fallback Fallback option
+     * @param AbstractAction|Enums::FALLBACK_* $fallback Fallback option
      *
      * @return static
      */
@@ -118,7 +123,7 @@ abstract class AbstractAction extends AbstractExtendableItem implements ActionIn
     /**
      * Return new instance with specified mode
      *
-     * @param ACTION_MODE_x $mode whether an action is displayed with a button or is moved to the overflow menu.
+     * @param Enums::ACTION_MODE_* $mode whether an action is displayed with a button or is moved to the overflow menu.
      *
      * @return static
      */
@@ -131,7 +136,7 @@ abstract class AbstractAction extends AbstractExtendableItem implements ActionIn
     /**
      * Controls the style of an Action, which influences how the action is displayed,
      *
-     * @param Enums::ACTION_STYLE_x $style Style
+     * @param Enums::ACTION_STYLE_* $style Style
      *
      * @return static
      */
@@ -159,7 +164,7 @@ abstract class AbstractAction extends AbstractExtendableItem implements ActionIn
     /**
      * Return new instance with specified tooltip
      *
-     * @param string $tooltip Tooltip
+     * @param string|null $tooltip Tooltip
      *
      * @return static
      */

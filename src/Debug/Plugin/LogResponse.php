@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2023 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.1
  */
 
@@ -42,6 +42,7 @@ class LogResponse extends AbstractLogReqRes implements SubscriberInterface
     {
         return array(
             Debug::EVENT_BOOTSTRAP => 'onBootstrap',
+            Debug::EVENT_CONFIG => array('onConfig', -1),
             Debug::EVENT_OUTPUT => array('logResponse', PHP_INT_MAX),
         );
     }
@@ -56,6 +57,35 @@ class LogResponse extends AbstractLogReqRes implements SubscriberInterface
     public function onBootstrap(Event $event)
     {
         $this->debug = $event->getSubject()->getChannel($this->cfg['channelName'], $this->cfg['channelOpts']);
+    }
+
+    /**
+     * Debug::EVENT_CONFIG event listener (low priority)
+     *
+     * Begin output buffering if we're logging the response
+     *
+     * @param Event $event Debug::EVENT_CONFIG Event instance
+     *
+     * @return void
+     */
+    public function onConfig(Event $event)
+    {
+        $cfg = $event['debug'];
+        if (!$cfg || !$event['isTarget']) {
+            return;
+        }
+        $debug = $event->getSubject();
+        $valsTest = array(
+            'collect' => true,
+            'logResponse' => true,
+        );
+        if (
+            \array_intersect_assoc($cfg, $valsTest)
+            && \array_intersect_assoc($valsTest, $debug->getCfg(null, Debug::CONFIG_DEBUG)) === $valsTest
+        ) {
+            // collect and/or logResponse being updated and both values are now true
+            $debug->obStart();
+        }
     }
 
     /**
@@ -82,28 +112,49 @@ class LogResponse extends AbstractLogReqRes implements SubscriberInterface
     }
 
     /**
+     * Get response content, & type
+     *
+     * @return array{content:string, contentLength: int, contentType: string}
+     */
+    private function getResponseInfo()
+    {
+        /*
+            get the contents of the output buffer we started
+            Note that we don't clear, echo, flush, or end the buffer here
+        */
+        $content = \ob_get_contents();
+        $contentLength = \strlen($content);
+        if ($this->debug->response) {
+            $content = $this->debug->response->getBody();
+            $contentLength = $content->getSize() ?: \strlen($this->debug->utility->getStreamContents($content));
+        }
+        return array(
+            'content' => $content,
+            'contentLength' => $contentLength,
+            'contentType' => $this->debug->getResponseHeader('Content-Type'),
+        );
+    }
+
+    /**
      * log response body/content
      *
      * @return void
      */
     private function logResponseContent()
     {
-        /*
-            get the contents of the output buffer we started to collect response
-            Note that we don't clear, echo, flush, or end the buffer here
-        */
-        $content = \ob_get_contents();
-        $contentLength = \strlen($content);
-        $contentTypeUser = $this->debug->getResponseHeader('Content-Type');
-        if ($this->debug->response) {
-            $content = $this->debug->response->getBody();
-            $contentLength = $content->getSize() ?: \strlen($this->debug->utility->getStreamContents($content));
+        $responseInfo = $this->getResponseInfo();
+        $contentType = $this->detectContentType($responseInfo['content'], $responseInfo['contentType']);
+        $this->assertCorrectContentType($contentType, $responseInfo['contentType']);
+
+        $logContent = $this->testLogResponseContent($contentType, $responseInfo['contentLength']);
+
+        if (\headers_sent($file, $line)) {
+            $this->debug->log('Output started at ' . $file . '::' . $line, $this->debug->meta(array(
+                'detectFiles' => true,
+                'file' => $file,
+                'line' => $line,
+            )));
         }
-
-        $contentType = $this->detectContentType($content, $contentTypeUser);
-        $this->assertCorrectContentType($contentType, $contentTypeUser);
-
-        $logContent = $this->testLogResponseContent($contentType, $contentLength);
 
         if ($logContent === false) {
             return;
@@ -114,7 +165,7 @@ class LogResponse extends AbstractLogReqRes implements SubscriberInterface
             'font-family: monospace;',
             $contentType,
             '',
-            $this->debug->prettify($content, $contentType),
+            $this->debug->prettify($responseInfo['content'], $contentType),
             $this->debug->meta('redact')
         );
     }
@@ -159,6 +210,11 @@ class LogResponse extends AbstractLogReqRes implements SubscriberInterface
             $this->debug->log(
                 'Not logging response body for Content-Type "' . $contentType . '"'
             );
+            return false;
+        }
+
+        if ($contentLength === 0) {
+            $this->debug->log('Empty response body.  We may have been unable to capture output.');
             return false;
         }
 

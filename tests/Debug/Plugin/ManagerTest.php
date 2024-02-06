@@ -144,11 +144,11 @@ class ManagerTest extends TestCase
         $container = \bdk\Debug\Utility\Reflection::propGet(static::$debug, 'container');
         unset($container['serverLog']);
         $route = new \bdk\Debug\Route\ServerLog(static::$debug);
-        self::assertFalse(self::$debug->data->get('isObCache'));
+        self::assertFalse(self::$debug->data->get('isObBuffer'));
         $return = self::$manager->addPlugin($route);
         self::assertEquals(static::$debug, $return);
         self::assertEquals($route, self::$debug->routeServerLog);
-        self::assertTrue(self::$debug->data->get('isObCache'));
+        self::assertTrue(self::$debug->data->get('isObBuffer'));
         self::$debug->obEnd();
     }
 

@@ -32,6 +32,7 @@ class LogEnvTest extends DebugTestFramework
             ),
         ));
         // Debug::varDump('noIdPassed', $this->helper->deObjectifyData($debug->data->get('log')));
+        $debug->obEnd();
         self::assertEmpty($debug->data->get('log'));
     }
 
@@ -69,6 +70,7 @@ class LogEnvTest extends DebugTestFramework
             ),
         ));
         // Debug::varDump('noIdPassed', $this->helper->deObjectifyData($debug->data->get('log')));
+        $debug->obEnd();
         self::assertSame('Session Inactive / No session id passed in request', $debug->data->get('log/__end__/args/0'));
     }
 
@@ -93,6 +95,7 @@ class LogEnvTest extends DebugTestFramework
             ),
             'sessionName' => 'custSessionName',
         ));
+        $debug->obEnd();
         self::assertLogEntries(array(
             array(
                 'method' => 'log',
@@ -168,6 +171,7 @@ class LogEnvTest extends DebugTestFramework
         ));
         $logEnv->onBootstrap(new Event($debug));
         // Debug::varDump('sessionId in query', $this->helper->deObjectifyData($debug->data->get('log')));
+        $debug->obEnd();
         self::assertLogEntries(array(
             array(
                 'method' => 'log',

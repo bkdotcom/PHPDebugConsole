@@ -148,13 +148,13 @@ class General implements SubscriberInterface
      */
     public function obEnd()
     {
-        if ($this->debug->data->get('isObCache') === false) {
+        if ($this->debug->data->get('isObBuffer') === false) {
             return;
         }
         if (\ob_get_level()) {
             \ob_end_flush();
         }
-        $this->debug->data->set('isObCache', false);
+        $this->debug->data->set('isObBuffer', false);
     }
 
     /**
@@ -164,14 +164,14 @@ class General implements SubscriberInterface
      */
     public function obStart()
     {
-        if ($this->debug->data->get('isObCache')) {
+        if ($this->debug->data->get('isObBuffer')) {
             return;
         }
         if ($this->debug->rootInstance->getCfg('collect', Debug::CONFIG_DEBUG) !== true) {
             return;
         }
         \ob_start();
-        $this->debug->data->set('isObCache', true);
+        $this->debug->data->set('isObBuffer', true);
     }
 
     /**

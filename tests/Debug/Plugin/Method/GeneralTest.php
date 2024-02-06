@@ -133,20 +133,20 @@ class GeneralTest extends DebugTestFramework
     public function testObEnd()
     {
         $levelStart = \ob_get_level();
-        $isObCache = $this->debug->data->get('isObCache');
-        $needRestart = $isObCache;
-        if (!$isObCache) {
+        $isObBuffer = $this->debug->data->get('isObBuffer');
+        $needRestart = $isObBuffer;
+        if (!$isObBuffer) {
             $this->debug->obStart();
-            self::assertTrue($this->debug->data->get('isObCache'));
+            self::assertTrue($this->debug->data->get('isObBuffer'));
         }
         $level = \ob_get_level();
 
         $this->debug->obEnd();
-        self::assertFalse($this->debug->data->get('isObCache'));
+        self::assertFalse($this->debug->data->get('isObBuffer'));
         self::assertSame($level - 1, \ob_get_level());
 
         $this->debug->obEnd();
-        self::assertFalse($this->debug->data->get('isObCache'));
+        self::assertFalse($this->debug->data->get('isObBuffer'));
         self::assertSame($level - 1, \ob_get_level());
 
         if ($needRestart) {
@@ -157,26 +157,26 @@ class GeneralTest extends DebugTestFramework
     public function testObStart()
     {
         $levelStart = \ob_get_level();
-        $isObCache = $this->debug->data->get('isObCache');
-        $needReclose = !$isObCache;
-        if ($isObCache) {
+        $isObBuffer = $this->debug->data->get('isObBuffer');
+        $needReclose = !$isObBuffer;
+        if ($isObBuffer) {
             $this->debug->obEnd();
-            self::assertFalse($this->debug->data->get('isObCache'));
+            self::assertFalse($this->debug->data->get('isObBuffer'));
         }
         $level = \ob_get_level();
 
         $this->debug->setCfg('collect', false);
         $this->debug->obStart();
-        self::assertFalse($this->debug->data->get('isObCache'));
+        self::assertFalse($this->debug->data->get('isObBuffer'));
         self::assertSame($level, \ob_get_level());
 
         $this->debug->setCfg('collect', true);
         $this->debug->obStart();
-        self::assertTrue($this->debug->data->get('isObCache'));
+        self::assertTrue($this->debug->data->get('isObBuffer'));
         self::assertSame($level + 1, \ob_get_level());
 
         $this->debug->obStart();
-        self::assertTrue($this->debug->data->get('isObCache'));
+        self::assertTrue($this->debug->data->get('isObBuffer'));
         self::assertSame($level + 1, \ob_get_level());
 
         if ($needReclose) {

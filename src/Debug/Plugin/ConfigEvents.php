@@ -238,9 +238,6 @@ class ConfigEvents implements SubscriberInterface
                 ))
             ) > 0;
         }
-        if ($val) {
-            $this->debug->obStart();
-        }
         return $val;
     }
 

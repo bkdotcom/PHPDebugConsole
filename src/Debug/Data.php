@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
@@ -27,7 +27,7 @@ class Data
         'classDefinitions'  => array(),
         'entryCountInitial' => 0,       // store number of log entries created during init
         'headers'           => array(), // headers that need to be output (ie chromeLogger & firePhp)
-        'isObCache'         => false,
+        'isObBuffer'        => false,
         'log'               => array(),
         'logSummary'        => array(), // summary log entries grouped by priority
         'outputSent'        => false,

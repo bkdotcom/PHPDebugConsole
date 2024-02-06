@@ -2,12 +2,8 @@
 
 namespace bdk\Test\Debug\Plugin;
 
-use bdk\Debug\Abstraction\Abstracter;
-use bdk\Debug\Utility\Reflection;
 use bdk\HttpMessage\Response;
-use bdk\HttpMessage\ServerRequest;
 use bdk\HttpMessage\Stream;
-use bdk\HttpMessage\UploadedFile;
 use bdk\HttpMessage\Utility\ContentType;
 use bdk\Test\Debug\DebugTestFramework;
 
@@ -56,7 +52,7 @@ class LogResponseTest extends DebugTestFramework
         $logReqRes->logResponse();
         $logEntries = $this->helper->deObjectifyData($this->debug->data->get('log'));
 
-        self::assertCount(3, $logEntries);
+        self::assertCount(4, $logEntries);
 
         self::assertSame('Response', $logEntries[0]['args'][0]);
         self::assertSame('Request / Response', $logEntries[0]['meta']['channel']);
@@ -69,10 +65,10 @@ class LogResponseTest extends DebugTestFramework
 
         self::assertSame('{' . "\n"
             . '    "foo": "bar"' . "\n"
-            . '}', $logEntries[2]['args'][4]['value']);
+            . '}', \end($logEntries)['args'][4]['value']);
         self::assertSame(array(
             'foo' => 'bar',
-        ), $logEntries[2]['args'][4]['valueDecoded']);
+        ), \end($logEntries)['args'][4]['valueDecoded']);
     }
 
     public function testLogResponseContentUnknownType()
@@ -95,7 +91,7 @@ class LogResponseTest extends DebugTestFramework
 
         \ini_set('default_mimetype', $defaultMimetype);
 
-        self::assertCount(4, $logEntries);
+        self::assertCount(5, $logEntries);
         self::assertSame('Response', $logEntries[0]['args'][0]);
         self::assertSame(array('response headers', array()), $logEntries[1]['args']);
         self::assertSame('It appears text/plain is being sent without a Content-Type header', $logEntries[2]['args'][0]);
@@ -121,7 +117,7 @@ class LogResponseTest extends DebugTestFramework
         $logReqRes->logResponse();
         $logEntries = $this->helper->deObjectifyData($this->debug->data->get('log'));
 
-        self::assertCount(3, $logEntries);
+        self::assertCount(4, $logEntries);
 
         self::assertSame('Response', $logEntries[0]['args'][0]);
         self::assertSame('Request / Response', $logEntries[0]['meta']['channel']);
@@ -153,8 +149,9 @@ class LogResponseTest extends DebugTestFramework
         $logReqRes = $this->debug->getPlugin('logResponse');
         $logReqRes->logResponse();
         $logEntries = $this->helper->deObjectifyData($this->debug->data->get('log'));
+        $count = \count($logEntries);
 
-        self::assertCount(3, $logEntries);
-        self::assertSame('Not logging response body for Content-Type "text/html"', \end($logEntries)['args'][0]);
+        self::assertCount(4, $logEntries);
+        self::assertSame('Not logging response body for Content-Type "text/html"', $logEntries[$count - 2]['args'][0]);
     }
 }

@@ -74,7 +74,7 @@ abstract class AbstractBlockFactory
      *
      * @psalm-assert array{type: string} $value
      */
-    private static function assertArrayWithType($value, $what, $index = null)
+    protected static function assertArrayWithType($value, $what, $index = null)
     {
         $prefix = $index !== null
             ? 'Invalid :what` (index :index).'

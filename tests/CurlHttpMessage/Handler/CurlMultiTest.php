@@ -126,7 +126,6 @@ class CurlMultiTest extends TestCase
         self::assertSame(4, $i);
     }
 
-
     public function testCannotCancelFinished()
     {
         $curlMulti = new CurlMulti();

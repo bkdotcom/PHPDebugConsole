@@ -100,7 +100,7 @@ class Output implements SubscriberInterface
                 )
             );
         }
-        /** var Event */
+        /** @var Event */
         return $event;
     }
 }

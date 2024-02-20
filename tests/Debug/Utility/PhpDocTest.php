@@ -442,6 +442,27 @@ EOD;
                     'summary' => null,
                 ),
             ),
+            'complexType 3' => array(
+                '/**
+                * @param array<string, mixed>|Foo $var blah blah
+                */',
+                array(
+                    'desc' => null,
+                    'param' => array(
+                        array(
+                            'desc' => 'blah blah',
+                            'isVariadic' => false,
+                            'name' => 'var',
+                            'type' => 'array<string, mixed>|Foo',
+                        ),
+                    ),
+                    'return' => array(
+                        'desc' => null,
+                        'type' => null,
+                    ),
+                    'summary' => null,
+                ),
+            ),
         );
     }
 

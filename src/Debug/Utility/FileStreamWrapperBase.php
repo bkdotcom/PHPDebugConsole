@@ -24,24 +24,29 @@ use UnexpectedValueException;
  */
 class FileStreamWrapperBase
 {
+    /** @var string */
     const OUTPUT_ACCESS_MODE = 'rb+';
+    /** @var string */
     const OUTPUT_DESTINATION = 'php://memory';
+    /** @var int */
     const STREAM_OPEN_FOR_INCLUDE = 128;
 
-    /** @var resource The current context, or null if no context was passed to the caller function */
+    /** @var resource|null The current context, or null if no context was passed to the caller function */
     public $context;
 
+    /** @var list<string> */
     public static $filesTransformed = array();
 
-    /** @var Manager */
+    /** @var Manager|null */
     protected static $eventManager;
 
+    /** @var bool */
     protected static $isRegistered = false;
 
-    /** @var string[] */
+    /** @var list<string> */
     protected static $protocols = array('file', 'phar');
 
-    /** @var array paths to exclude from adding tick declaration */
+    /** @var list<string> paths to exclude from adding tick declaration */
     protected static $pathsExclude = array();
 
     /**
@@ -110,13 +115,13 @@ class FileStreamWrapperBase
      */
     public static function setPathsExclude(array $pathsExclude)
     {
-        static::$pathsExclude = \array_unique(\array_map('realpath', $pathsExclude));
+        static::$pathsExclude = \array_values(\array_unique(\array_filter(\array_map('realpath', $pathsExclude))));
     }
 
     /**
      * Get paths/directories to exclude
      *
-     * @return string[]
+     * @return list<string>
      */
     public static function getPathsExclude()
     {
@@ -131,13 +136,14 @@ class FileStreamWrapperBase
      * @param int    $options    Holds additional flags set by the streams API.
      * @param string $openedPath the full path of the file/resource that was actually opened
      *
-     * @return resource
+     * @return resource|false
      * @throws UnexpectedValueException
      */
     protected function getResource($file, $mode, $options, &$openedPath)
     {
         $useIncludePath = (bool) ($options & STREAM_USE_PATH);
         $args = $this->popNull(array($file, $mode, $useIncludePath, $this->context));
+        /** @var resource|false */
         $resource = \call_user_func_array('fopen', $args);
         /*
             Determine opened path
@@ -159,16 +165,21 @@ class FileStreamWrapperBase
      * @param int    $options    Holds additional flags set by the streams API.
      * @param string $openedPath the full path of the file/resource that was actually opened
      *
-     * @return resource
+     * @return resource|false
      */
     protected function getResourceTransformed($file, $options, &$openedPath)
     {
         $resource = \fopen(static::OUTPUT_DESTINATION, static::OUTPUT_ACCESS_MODE);
+        if ($resource === false) {
+            return false;
+        }
         $useIncludePath = (bool) ($options & STREAM_USE_PATH);
         $args = $this->popNull(array($file, $useIncludePath, $this->context));
+        /** @var string|false */
         $content = \call_user_func_array('file_get_contents', $args);
-        $openedPath = $useIncludePath
-            ? \stream_resolve_include_path($file)
+        $resolvedPath = \stream_resolve_include_path($file);
+        $openedPath = $useIncludePath && $resolvedPath
+            ? $resolvedPath
             : $file;
         if (static::$eventManager) {
             $event = static::$eventManager->publish(Debug::EVENT_STREAM_WRAP, $resource, array(

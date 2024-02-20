@@ -21,13 +21,12 @@ class TableCell extends AbstractItem
     /**
      * Constructor
      *
-     * @param iterable<ElementInterface|\Stringable|scalar|null>|ElementInterface|\Stringable|scalar|null $items The card elements to render inside the Container,
+     * @param iterable<ElementInterface|\Stringable|scalar|null>|ElementInterface|\Stringable|scalar|null|mixed $items The card elements to render inside the Container,
      *                                                                            Or may pass in a single item
      */
     public function __construct($items = array())
     {
-        $isIterable = \is_array($items) || ($items instanceof Traversable);
-        if ($isIterable === false) {
+        if (\is_array($items) === false && !($items instanceof Traversable)) {
             $items = array($items);
         }
         parent::__construct(array(
@@ -208,13 +207,14 @@ class TableCell extends AbstractItem
     /**
      * Append ElementInterface, string, or numeric to items
      *
-     * @param ElementInterface|\Stringable|scalar|null $item Item to append
+     * @param ElementInterface|\Stringable|scalar|null|mixed $item  Item to append
+     * @param array-key|null                                 $index Array index
      *
      * @return ElementInterface
      *
      * @throws InvalidArgumentException
      */
-    private function asItem($item)
+    private function asItem($item, $index = null)
     {
         switch (true) {
             case $item instanceof ElementInterface:
@@ -234,7 +234,10 @@ class TableCell extends AbstractItem
                     ->withIsSubtle();
         }
         throw new InvalidArgumentException(\sprintf(
-            'Invalid TableCell item found. Expecting ElementInterface, stringable, scalar, or null. %s provided.',
+            'Invalid TableCell item found%s. Expecting ElementInterface, stringable, scalar, or null. %s provided.',
+            $index !== null
+                ? ' at index ' . $index
+                : '',
             self::getDebugType($item)
         ));
     }
@@ -242,7 +245,7 @@ class TableCell extends AbstractItem
     /**
      * Assert each item is instance of ElementInterface, string, or numeric
      *
-     * @param iterable<ElementInterface|\Stringable|scalar|null> $items Items to test
+     * @param iterable<mixed> $items Items to test
      *
      * @return list<ElementInterface>
      *
@@ -250,20 +253,14 @@ class TableCell extends AbstractItem
      */
     private function asItems($items)
     {
-        $i = 0;
-        $item = null;
-        try {
-            $itemsNew = array();
-            foreach ($items as $i => $item) {
-                $itemsNew[] = self::asItem($item);
-            }
-            return $itemsNew;
-        } catch (InvalidArgumentException $e) {
-            throw new InvalidArgumentException(\sprintf(
-                'Invalid TableCell item found at index %s.  %s provided.',
-                $i,
-                self::getDebugType($item)
-            ));
+        $itemsNew = array();
+        /**
+         * @var array-key $i
+         * @var mixed     $item
+         */
+        foreach ($items as $i => $item) {
+            $itemsNew[] = self::asItem($item, $i);
         }
+        return $itemsNew;
     }
 }

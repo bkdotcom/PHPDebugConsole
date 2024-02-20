@@ -6,27 +6,27 @@ use BadMethodCallException;
 use bdk\Slack\AbstractSlack;
 
 /**
- * @method array chatDelete
- * @method array chatDeleteScheduledMessage
- * @method array chatGetPermalink
- * @method array chatMeMessage
- * @method array chatPostEphemeral
- * @method array chatPostMessage
- * @method array chatScheduledMessagesList
- * @method array chatScheduleMessage
- * @method array chatUnfurl
- * @method array chatUpdate
+ * @method array chatDelete()
+ * @method array chatDeleteScheduledMessage()
+ * @method array chatGetPermalink()
+ * @method array chatMeMessage()
+ * @method array chatPostEphemeral()
+ * @method array chatPostMessage()
+ * @method array chatScheduledMessagesList()
+ * @method array chatScheduleMessage()
+ * @method array chatUnfurl()
+ * @method array chatUpdate()
  *
  * @link https://api.slack.com/
+ *
+ * @psalm-api
  */
 class SlackApi extends AbstractSlack
 {
-    protected $cfg = array(
-        'token' => '',  // Slack API token  (defaults to SLACK_TOKEN env var)
-    );
-
+    /** @var string */
     private $baseUrl = 'https://slack.com/api/';
 
+    /** @var array<string,string|array{httpMethod:string, uri:string}> */
     private $endpoints = array(
         'chat.delete' => 'POST',
         'chat.deleteScheduledMessage' => 'POST',
@@ -40,16 +40,25 @@ class SlackApi extends AbstractSlack
         'chat.update' => 'POST',
     );
 
+    /** @var string */
+    protected $token = '';  // Slack API token  (defaults to SLACK_TOKEN env var)
+
     /**
      * Constructor
      *
      * @param string $token Slack API token
+     *
+     * @throws BadMethodCallException
      */
     public function __construct($token = null)
     {
-        $this->cfg['token'] = $token ?: \getenv('SLACK_TOKEN');
-
+        $token = $token ?: \getenv('SLACK_TOKEN');
+        if (\is_string($token) === false) {
+            throw new BadMethodCallException('Slack token must be provided.');
+        }
+        $this->token = $token;
         $endpoints = array();
+        /** @psalm-var string $httpMethod */
         foreach ($this->endpoints as $method => $httpMethod) {
             $key = \strtolower(\str_replace('.', '', $method));
             $endpoints[$key] = array(
@@ -68,30 +77,50 @@ class SlackApi extends AbstractSlack
      * @param string $method Method name
      * @param array  $args   Method arguments
      *
-     * @return array
+     * @return array|false
      *
      * @throws BadMethodCallException
      */
     public function __call($method, $args)
     {
-        $key = \strtolower($method);
-        if (isset($this->endpoints[$key]) === false) {
-            throw new BadMethodCallException('Unknown slack method - ' . $method);
-        }
-        $info = $this->endpoints[$key];
+        $info = $this->getMethodInfo($method);
         $url = $this->baseUrl . $info['uri'];
         $headers = array(
-            'Authorization' =>  'Bearer ' . $this->cfg['token'],
+            'Authorization' =>  'Bearer ' . $this->token,
         );
         if ($info['httpMethod'] === 'get') {
-            $query = \http_build_query($args[0]);
-            $url = $url . '?' . $query;
+            if (\is_array($args[0])) {
+                $query = \http_build_query($args[0]);
+                $url = $url . '?' . $query;
+            }
             $this->lastResponse = $this->client->get($url, $headers);
         } elseif ($info['httpMethod'] === 'post') {
             $headers['Content-Type'] = 'application/json; charset=utf-8';
             $this->lastResponse = $this->client->post($url, $headers, $args[0]);
         }
-        $responseBody = (string) $this->lastResponse->getBody();
-        return \json_decode($responseBody, true);
+        if ($this->lastResponse) {
+            $responseBody = (string) $this->lastResponse->getBody();
+            /** @psalm-var array */
+            return \json_decode($responseBody, true);
+        }
+        return false;
+    }
+
+    /**
+     * Get slack method info
+     *
+     * @param string $method Slack method
+     *
+     * @return array{httpMethod:string, uri:string}
+     *
+     * @throws BadMethodCallException
+     */
+    private function getMethodInfo($method)
+    {
+        $key = \strtolower($method);
+        if (isset($this->endpoints[$key]) === false || \is_array($this->endpoints[$key]) === false) {
+            throw new BadMethodCallException('Unknown slack method - ' . $method);
+        }
+        return $this->endpoints[$key];
     }
 }

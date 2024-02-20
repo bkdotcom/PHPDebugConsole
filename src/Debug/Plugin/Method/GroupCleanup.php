@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2023 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.1
  */
 
@@ -24,18 +24,22 @@ use bdk\PubSub\SubscriberInterface;
  */
 class GroupCleanup implements SubscriberInterface
 {
+    /** @var GroupStack */
     protected $groupStack;
 
+    /** @var LogEntry[] */
     protected $log = array();
 
+    /** @var array<string,mixed> */
     private $cleanupInfo = array(
         'stack' => array(),
         'stackCount' => 0,
     );
 
+    /** @var Debug|null */
     private $debug;
 
-
+    /** @var bool */
     private $inShutdown = false;
 
     /**

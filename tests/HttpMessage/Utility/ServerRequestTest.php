@@ -387,6 +387,4 @@ class ServerRequestTest extends TestCase
 
         self::assertEquals($expectedFiles, $uploadedFiles);
     }
-
-
 }

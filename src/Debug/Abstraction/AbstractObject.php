@@ -29,6 +29,14 @@ use RuntimeException;
 
 /**
  * Abstracter:  Methods used to abstract objects
+ *
+ * @property-read Abstracter $abstracter
+ * @property-read Constants $constants
+ * @property-read Debug $debug
+ * @property-read Definition $definition
+ * @property-read Helper $helper
+ * @property-read Methods $methods
+ * @property-read Properties $properties
  */
 class AbstractObject extends AbstractComponent
 {
@@ -70,6 +78,7 @@ class AbstractObject extends AbstractComponent
 
     const TO_STRING_OUTPUT = 16; // 2^4
 
+    /** @var array<string, self::*> */
     public static $cfgFlags = array(
         'brief' => self::BRIEF,
 
@@ -110,13 +119,22 @@ class AbstractObject extends AbstractComponent
         'toStringOutput' => self::TO_STRING_OUTPUT,
     );
 
+    /** @var Abstracter */
     protected $abstracter;
+    /** @var Constants */
     protected $constants;
+    /** @var Debug */
     protected $debug;
+    /** @var Definition */
     protected $definition;
+    /** @var Helper */
     protected $helper;
+    /** @var Methods */
     protected $methods;
+    /** @var Properties */
     protected $properties;
+
+    /** @var list<string> */
     protected $readOnly = array(
         'abstracter',
         'constants',
@@ -144,7 +162,7 @@ class AbstractObject extends AbstractComponent
      *      methods
      *      phpDoc
      *
-     * @var array Array of key/values
+     * @var array<string, mixed> Array of key/values
      */
     protected static $values = array(
         'cfgFlags' => 0,
@@ -215,9 +233,9 @@ class AbstractObject extends AbstractComponent
     /**
      * Get the default object abstraction values
      *
-     * @param array $values values to apply
+     * @param array<string,mixed> $values values to apply
      *
-     * @return array
+     * @return array<string,mixed>
      */
     public static function buildObjValues(array $values = array())
     {
@@ -302,7 +320,7 @@ class AbstractObject extends AbstractComponent
      * @param string          $method    Method requesting abstraction
      * @param array           $hist      (@internal) array & object history
      *
-     * @return ObjectAbstraction
+     * @return array{reflector:ReflectionClass, ...<string,mixed>}
      * @throws RuntimeException
      */
     protected function getAbstractionValues(ReflectionClass $reflector, $obj, $method = null, array $hist = array())

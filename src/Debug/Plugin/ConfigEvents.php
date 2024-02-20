@@ -21,8 +21,12 @@ use bdk\PubSub\SubscriberInterface;
  */
 class ConfigEvents implements SubscriberInterface
 {
+    /** @var Debug|null */
     protected $debug;
+
+    /** @var bool */
     private $isBootstrapped = false;
+    /** @var bool */
     private $isConfigured = false;
 
     /**

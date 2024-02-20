@@ -31,6 +31,13 @@ class SlackApiTest extends TestCase
         parent::__construct($name, $data, $dataName);
     }
 
+    public function testConstrutorThrowsException()
+    {
+        $this->expectException('BadMethodCallException');
+        $this->expectExceptionMessage('Slack token must be provided.');
+        $slackApi = new SlackApi();
+    }
+
     /**
      * @param string $method
      * @param array  $data
@@ -53,8 +60,10 @@ class SlackApiTest extends TestCase
                 ]);
             },
         ]);
-        $message = new SlackMessage($data);
-        $responseData = \call_user_func([$api, $method], $message);
+        if ($method !== 'chatGetPermalink') {
+            $data = new SlackMessage($data);
+        }
+        $responseData = \call_user_func([$api, $method], $data);
         $lastRequest = $this->mockHandler->getLastRequest();
         $lastResponse = $api->getLastResponse();
         self::assertIsArray($responseData);
@@ -173,7 +182,7 @@ class SlackApiTest extends TestCase
 
     private function buildClient()
     {
-        $slackApi = new SlackApi();
+        $slackApi = new SlackApi('testToken');
         $stack = $slackApi->getClient()->getStack();
         $this->mockHandler = new MockHandler();
         $stack->setHandler($this->mockHandler);

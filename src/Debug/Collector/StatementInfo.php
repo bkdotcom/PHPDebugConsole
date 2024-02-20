@@ -42,21 +42,37 @@ use Exception;
  */
 class StatementInfo extends AbstractComponent
 {
+    /** @var Debug */
     protected $debug;
 
+    /** @var float|null */
     protected $duration;
+    /** @var Exception|null */
     protected $exception;
-    protected $isSuccess;
+    /** @var bool */
+    protected $isSuccess = false;
+    /** @var float|null */
     protected $memoryEnd;
+    /** @var float */
     protected $memoryStart;
+    /** @var int|null */
     protected $memoryUsage;
+    /** @var array|null */
     protected $params;
+    /** @var string|null */
     protected $prettified = null;
+    /** @var int|null */
     protected $rowCount;
+    /** @var string */
     protected $sql;
+    /** @var float|null */
     protected $timeEnd;
+    /** @var float */
     protected $timeStart;
+    /** @var array|null */
     protected $types;
+
+    /** @var list<string> */
     protected $readOnly = array(
         'duration',
         'exception',
@@ -72,6 +88,8 @@ class StatementInfo extends AbstractComponent
         'timeStart',
         'types',
     );
+
+    /** @var array<int,string> */
     protected static $constants = array();
 
     /**

@@ -12,13 +12,18 @@
 
 namespace bdk\Debug\Utility;
 
-use bdk\Debug\Utility\Php;
+use ArrayAccess;
+use bdk\Debug\Utility\ArrayUtilHelperTrait;
+use InvalidArgumentException;
+use UnexpectedValueException;
 
 /**
  * Array Utilities
  */
 class ArrayUtil
 {
+    use ArrayUtilHelperTrait;
+
     /**
      * "dereference" array
      * returns a copy of the array with references removed
@@ -31,11 +36,13 @@ class ArrayUtil
     public static function copy(array $source, $deep = true)
     {
         $arr = array();
+        /** @var mixed $val */
         foreach ($source as $key => $val) {
             if ($deep && \is_array($val)) {
                 $arr[$key] = self::copy($val);
                 continue;
             }
+            /** @var mixed */
             $arr[$key] = $val;
         }
         return $arr;
@@ -50,6 +57,8 @@ class ArrayUtil
      * @param array ...$arrays arrays to compare against
      *
      * @return array
+     *
+     * @throws InvalidArgumentException
      */
     public static function diffAssocRecursive(array $array, $arrays)
     {
@@ -57,6 +66,9 @@ class ArrayUtil
         \array_shift($arrays);
         while ($arrays) {
             $array2 = \array_shift($arrays);
+            if (\is_array($array2) === false) {
+                throw new InvalidArgumentException('diffAssocRecursive: non-array value passed');
+            }
             $array = self::diffAssocRecursiveHelper($array, $array2);
         }
         return $array;
@@ -71,6 +83,8 @@ class ArrayUtil
      * @return bool
      *
      * @SuppressWarnings(PHPMD.UnusedLocalVariable)
+     *
+     * @psalm-assert-if-true list<mixed> $val
      */
     public static function isList($val)
     {
@@ -78,8 +92,8 @@ class ArrayUtil
             return false;
         }
         $i = -1;
-        // phpcs:ignore SlevomatCodingStandard.Variables.UnusedVariable
-        foreach ($val as $k => $v) {
+        /** @var mixed $v */
+        foreach ($val as $k => $v) { // phpcs:ignore SlevomatCodingStandard.Variables.UnusedVariable
             ++$i;
             if ($k !== $i) {
                 return false;
@@ -112,13 +126,19 @@ class ArrayUtil
      * @param array ...$array2 array to merge
      *
      * @return array
+     *
+     * @throws InvalidArgumentException
      */
     public static function mergeDeep(array $arrayDef, $array2)
     {
         $mergeArrays = \func_get_args();
         \array_shift($mergeArrays);
         while ($mergeArrays) {
+            /** @var mixed  */
             $array2 = \array_shift($mergeArrays);
+            if (\is_array($array2) === false) {
+                throw new InvalidArgumentException('mergeDeep: non-array value passed');
+            }
             $arrayDef = static::mergeDeepWalk($arrayDef, $array2);
         }
         return $arrayDef;
@@ -127,31 +147,35 @@ class ArrayUtil
     /**
      * Get value from array (or obj with array access)
      *
-     * @param array        $array   array to traverse
-     * @param array|string $path    key path
+     * @param array|ArrayAccess $array   array to traverse
+     * @param array|string|null $path    key path
      *                              path may contain special keys:
      *                                * __count__ : return count() (traversal will cease)
      *                                * __end__ : last value
      *                                * __pop__ : pop value
      *                                * __reset__ : first value
-     * @param mixed        $default default value
+     * @param mixed             $default default value
      *
      * @return mixed
+     *
+     * @throws UnexpectedValueException
      */
-    public static function pathGet(array &$array, $path, $default = null)
+    public static function pathGet(&$array, $path, $default = null)
     {
         $path = \array_reverse(self::pathToArray($path));
+        $curPath = array();
         while ($path) {
+            self::assertArrayAccess($array, $curPath);
             $key = \array_pop($path);
-            $arrayAccess = \is_array($array) || $array instanceof \ArrayAccess;
-            if (!$arrayAccess) {
-                return $default;
-            } elseif (isset($array[$key])) {
+            $curPath[] = $key;
+            if (isset($array[$key])) {
                 $array = &$array[$key];
                 continue;
             } elseif ($key === '__count__') {
+                self::assertCountable($array, \array_slice($curPath, 0, -1));
                 return \count($array);
             } elseif ($key === '__pop__') {
+                /** @var mixed */
                 $arrayNew = \array_pop($array);
                 $array = &$arrayNew;
                 continue;
@@ -166,12 +190,12 @@ class ArrayUtil
     /**
      * Update/Set an array value via "path"
      *
-     * @param array        $array array to edit
-     * @param array|string $path  path may contain special keys:
+     * @param array             $array array to edit
+     * @param array|string|null $path  path may contain special keys:
      *                                 * __end__ : last value
      *                                 * __push__ : append value
      *                                 * __reset__ : first value
-     * @param mixed        $val   value to set
+     * @param mixed             $val   value to set
      *                                 * __unset__ to unset
      *
      * @return void
@@ -179,7 +203,7 @@ class ArrayUtil
     public static function pathSet(array &$array, $path, $val)
     {
         $path = \array_reverse(self::pathToArray($path));
-        while ($path) {
+        while ($path && \is_array($array)) {
             $key = \array_pop($path);
             if (self::specialKey($key, $path, $array)) {
                 continue;
@@ -191,6 +215,7 @@ class ArrayUtil
             }
             $array = &$array[$key];
         }
+        /** @var mixed */
         $array = $val;
     }
 
@@ -209,7 +234,7 @@ class ArrayUtil
         if ($key !== false) {
             return array($key);
         }
-        if ($inclKeys && \array_key_exists($value, $array)) {
+        if ($inclKeys && self::isValidKey($value) && \array_key_exists($value, $array)) {
             return array($value);
         }
         foreach ($array as $key => $val) {
@@ -236,6 +261,9 @@ class ArrayUtil
      */
     public static function sortWithOrder(array &$array, $order = array(), $what = 'value')
     {
+        if ($order === null) {
+            $order = array();
+        }
         $callback = static function ($valA, $valB) use ($order) {
             $aPos = \array_search($valA, $order, true);
             $bPos = \array_search($valB, $order, true);
@@ -252,9 +280,6 @@ class ArrayUtil
                 ? -1
                 : 1;
         };
-        if (empty($order)) {
-            $callback = 'strnatcasecmp';
-        }
         $what === 'value'
             ? \uasort($array, $callback)
             : \uksort($array, $callback);
@@ -292,126 +317,5 @@ class ArrayUtil
             \array_slice($array, $offset + $length, null, true)
         );
         return $ret;
-    }
-
-    /**
-     * Compares 2 arrays
-     *
-     * @param array $array  Array to compare from
-     * @param array $array2 Array to compare against
-     *
-     * @return array An array containing all the values from array that are not present in array2
-     */
-    private static function diffAssocRecursiveHelper(array $array, array $array2)
-    {
-        $diff = array();
-        \array_walk($array, static function ($value, $key) use (&$diff, $array2) {
-            if (\array_key_exists($key, $array2) === false) {
-                $diff[$key] = $value;
-                return;
-            }
-            if (\is_array($value) && \is_array($array2[$key])) {
-                $value = self::diffAssocRecursive($value, $array2[$key]);
-                if ($value) {
-                    $diff[$key] = $value;
-                }
-                return;
-            }
-            if ($value !== $array2[$key]) {
-                $diff[$key] = $value;
-            }
-        });
-        return $diff;
-    }
-
-    /**
-     * Check that value is not an array
-     *
-     * @param mixed $value Value to test
-     *
-     * @return bool
-     */
-    private static function isNonMergeable($value)
-    {
-        return \is_array($value) === false || Php::isCallable($value, Php::IS_CALLABLE_ARRAY_ONLY);
-    }
-
-    /**
-     * Merge 2nd array into first
-     *
-     * @param array $arrayDef default array
-     * @param array $array2   array 2
-     *
-     * @return array
-     */
-    private static function mergeDeepWalk(array $arrayDef, array $array2)
-    {
-        \array_walk($array2, static function ($value, $key) use (&$arrayDef) {
-            if (self::isNonMergeable($value)) {
-                // not array or appears to be a callable
-                if (\is_int($key) === false) {
-                    $arrayDef[$key] = $value;
-                } elseif (\in_array($value, $arrayDef, true) === false) {
-                    // unique value -> append it
-                    $arrayDef[] = $value;
-                }
-                return;
-            }
-            if (isset($arrayDef[$key]) === false || self::isNonMergeable($arrayDef[$key])) {
-                // default not set or can be overwritten without merge
-                $arrayDef[$key] = $value;
-                return;
-            }
-            // both values are arrays... merge em
-            $arrayDef[$key] = static::mergeDeep($arrayDef[$key], $value);
-        });
-        return $arrayDef;
-    }
-
-    /**
-     * Cast path to array
-     *
-     * @param array|string $path path
-     *
-     * @return array
-     */
-    private static function pathToArray($path)
-    {
-        return \is_array($path)
-            ? $path
-            : \array_filter(\preg_split('#[\./]#', (string) $path), 'strlen');
-    }
-
-    /**
-     * Handle special pathGet & pathSet keys
-     *
-     * Special keys
-     *    handled:  __end__, __push__, __reset__
-     *    not handled:  __count__, __pop__
-     *
-     * @param string $key   path key to test
-     * @param array  $path  the path
-     * @param array  $array the current array
-     *
-     * @return bool whether key was handled
-     */
-    private static function specialKey($key, array &$path, array &$array)
-    {
-        if ($key === '__end__') {
-            \end($array);
-            $path[] = \key($array);
-            return true;
-        }
-        if ($key === '__push__') {
-            $array[] = array();
-            $path[] = '__end__';
-            return true;
-        }
-        if ($key === '__reset__') {
-            \reset($array);
-            $path[] = \key($array);
-            return true;
-        }
-        return false;
     }
 }

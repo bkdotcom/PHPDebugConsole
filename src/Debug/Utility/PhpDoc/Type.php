@@ -21,11 +21,12 @@ use bdk\Debug\Utility\UseStatements;
  */
 class Type
 {
+    /** @var list<string> */
     public $types = array(
         'null',
         'mixed', 'scalar',
         'bool', 'boolean', 'true', 'false',
-        'callable', 'callable-string', 'iterable',
+        'callable', 'callable-array', 'callable-string', 'iterable',
         'int', 'integer', 'negative-int', 'positive-int', 'non-positive-int', 'non-negative-int', 'non-zero-int',
         'int-mask', 'int-mask-of',
         'float', 'double',

@@ -20,6 +20,7 @@ use Psr\Http\Message\StreamInterface;
  */
 class AbstractLogReqRes
 {
+    /** @var array<string,mixed> */
     protected $cfg = array(
         'channelName' => 'Request / Response',
         'channelOpts' => array(
@@ -28,7 +29,9 @@ class AbstractLogReqRes
             'nested' => false,
         ),
     );
+    /** @var \bdk\Debug|null */
     protected $debug;
+    /** @var string */
     protected $headerStyle = 'display:block; font-size:110%; font-weight:bold; padding:0.25em 0.5em; text-indent:0; border-bottom:#31708f 1px solid; background: linear-gradient(0deg, rgba(0,0,0,0.1) 0%, rgba(255,255,255,0.1) 100%);';
 
     /**

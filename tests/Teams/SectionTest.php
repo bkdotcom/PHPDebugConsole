@@ -138,7 +138,7 @@ class SectionTest extends AbstractTestCaseWith
                 [
                     \array_fill(0, 5, new OpenUrl('http://example.com')),
                 ],
-                'OutOfBoundsException',
+                'OverflowException',
                 'There can be a maximum of 4 actions (whatever their type)',
             ),
             array('potentialAction',

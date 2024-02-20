@@ -5,7 +5,8 @@ namespace bdk\Slack;
 use BadMethodCallException;
 use InvalidArgumentException;
 use JsonSerializable;
-use OutOfBoundsException;
+use OverflowException;
+use UnexpectedValueException;
 
 /**
  * Represent a Slack message payload "composition"
@@ -16,7 +17,7 @@ use OutOfBoundsException;
  * @method static withContext(array $elements, array $values)
  * @method static withDivider()
  * @method static withHeader(string $text, array $values)
- * @method static withImage(string url, string $altText, string $title, array $values)
+ * @method static withImage(string $url, string $altText, string $title, array $values)
  * @method static withInput(string $label, array $element, array $values)
  * @method static withSection(string $text, array $fields, array $accessory, array $values)
  * @method static withVideo(string $url, string $title, string $altText, array $values)
@@ -30,7 +31,11 @@ use OutOfBoundsException;
 class SlackMessage implements JsonSerializable
 {
     /**
-     * @var array<string, mixed>
+     * @var array{
+     *   attachments: list<array>,
+     *   blocks: list<array>,
+     *   ...<string, mixed>
+     * }
      */
     protected $dataDefault = array( // phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
         'attachments' => array(),
@@ -51,9 +56,19 @@ class SlackMessage implements JsonSerializable
         'username' => null,
     );
 
-    protected $data = array();
+    /**
+     * @var array{
+     *   attachments: list<array>,
+     *   blocks: list<array>,
+     *   ...<string, mixed>
+     * }
+     */
+    protected $data = array(
+        'attachments' => array(),
+        'blocks' => array(),
+    );
 
-    /** @var BlockFactory */
+    /** @var BlockFactory|null */
     private $blockFactory;
 
     /**
@@ -92,6 +107,7 @@ class SlackMessage implements JsonSerializable
         );
         if (\in_array($method, $factoryMethods, true)) {
             $method = \strtolower(\substr($method, 4));
+            /** @var array<string, mixed> */
             $block = \call_user_func_array(array($this->getBlockFactory(), $method), $args);
             return $this->withBlock($block);
         }
@@ -112,7 +128,7 @@ class SlackMessage implements JsonSerializable
     /**
      * Returns required data in format that Slack is expecting.
      *
-     * @return mixed[]
+     * @return array<string,mixed>
      */
     public function getData()
     {
@@ -120,15 +136,27 @@ class SlackMessage implements JsonSerializable
         if ($data['text'] === null) {
             $data['mrkdwn'] = null;
         }
-        if (\count($data['blocks']) === 0) {
-            $data['blocks'] = null;
+        if ($data['blocks'] === array()) {
+            unset($data['blocks']);
         }
-        if (\count($data['attachments']) === 0) {
-            $data['attachments'] = null;
+        if ($data['attachments'] === array()) {
+            unset($data['attachments']);
         }
         $data = $this->removeNull($data);
+
         \ksort($data);
         return $data;
+    }
+
+    /**
+     * Specify data which should be serialized to JSON
+     *
+     * @return array<string,mixed>
+     */
+    #[\ReturnTypeWillChange]
+    public function jsonSerialize()
+    {
+        return $this->getData();
     }
 
     /**
@@ -146,17 +174,6 @@ class SlackMessage implements JsonSerializable
     }
 
     /**
-     * Specify data which should be serialized to JSON
-     *
-     * @return array
-     */
-    #[\ReturnTypeWillChange]
-    public function jsonSerialize()
-    {
-        return $this->getData();
-    }
-
-    /**
      * Append new attachment to message
      *
      *    withAttachment(array $attachment)
@@ -166,32 +183,36 @@ class SlackMessage implements JsonSerializable
      *
      * @return static
      *
-     * @throws OutOfBoundsException
+     * @throws OverflowException
+     * @throws UnexpectedValueException
      */
     public function withAttachment($attachment = array())
     {
         if (\is_array($attachment) === false) {
+            /** @var array<string,mixed> */
             $attachment = \call_user_func_array(array($this->getBlockFactory(), 'attachment'), \func_get_args());
         }
         $new = clone $this;
+        /**
+         * Psalm bug - attachments becomes list<array<array-key, mixed>>|mixed
+         *
+         * @psalm-suppress MixedArrayAssignment
+         * @psalm-suppress MixedPropertyTypeCoercion
+         */
         $new->data['attachments'][] = $attachment;
-        $count = \count($new->data['attachments']);
-        if ($count > 20) {
-            // according to slack message guidelines:
-            // https://api.slack.com/reference/messaging/payload
-            throw new OutOfBoundsException(\sprintf('A maximum of 20 message attachments are allowed. %d provided', $count));
-        }
+        $new->assertAttachmentCount();
         return $new;
     }
 
     /**
      * Replace existing attachments with new attachments
      *
-     * @param array $attachments New attachments
+     * @param array<string, mixed>[] $attachments New attachments
      *
      * @return static
      *
-     * @throws OutOfBoundsException
+     * @throws OverflowException
+     * @throws UnexpectedValueException
      */
     public function withAttachments(array $attachments = array())
     {
@@ -213,6 +234,12 @@ class SlackMessage implements JsonSerializable
     public function withBlock(array $block = array())
     {
         $new = clone $this;
+        /**
+         * Psalm bug - blocks becomes list<array<array-key, mixed>>|mixed
+         *
+         * @psalm-suppress MixedArrayAssignment
+         * @psalm-suppress MixedPropertyTypeCoercion
+         */
         $new->data['blocks'][] = $block;
         return $new;
     }
@@ -226,7 +253,7 @@ class SlackMessage implements JsonSerializable
      */
     public function withBlocks(array $blocks = array())
     {
-        return $this->withValue('blocks', $blocks);
+        return $this->withValueDo('blocks', $blocks);
     }
 
     /**
@@ -238,7 +265,7 @@ class SlackMessage implements JsonSerializable
      */
     public function withChannel($channel = null)
     {
-        return $this->withValue('channel', $channel);
+        return $this->withValueDo('channel', $channel);
     }
 
     /**
@@ -250,7 +277,9 @@ class SlackMessage implements JsonSerializable
      */
     public function withIcon($icon = null)
     {
-        return $this->withValue('icon', $icon);
+        $new = clone $this;
+        $new->setIcon($icon);
+        return $new;
     }
 
     /**
@@ -263,8 +292,8 @@ class SlackMessage implements JsonSerializable
      */
     public function withText($text, $isMrkdwn = true)
     {
-        return $this->withValue('text', $text)
-            ->withValue('mrkdwn', $isMrkdwn);
+        return $this->withValueDo('text', $text)
+            ->withValueDo('mrkdwn', $isMrkdwn);
     }
 
     /**
@@ -276,7 +305,7 @@ class SlackMessage implements JsonSerializable
      */
     public function withUsername($username = null)
     {
-        return $this->withValue('username', $username);
+        return $this->withValueDo('username', $username);
     }
 
     /**
@@ -291,23 +320,37 @@ class SlackMessage implements JsonSerializable
      */
     public function withValue($key, $value)
     {
-        $new = clone $this;
-        if ($key === 'icon') {
-            return $new->setIcon($value);
+        $method = 'with' . \ucfirst($key);
+        if (\method_exists($this, $method)) {
+            /** @var static */
+            return $this->{$method}($value);
         }
-        if (\array_key_exists($key, $this->dataDefault) === false) {
-            throw new InvalidArgumentException(\sprintf('"%s"is an invalid message value', $key));
+        return $this->withValueDo($key, $value);
+    }
+
+    /**
+     * Assert attachment count < maximum
+     *
+     * @return void
+     *
+     * @throws OverflowException
+     */
+    private function assertAttachmentCount()
+    {
+        $count = \count($this->data['attachments']);
+        if ($count > 20) {
+            // according to slack message guidelines:
+            // https://api.slack.com/reference/messaging/payload
+            throw new OverflowException('A maximum of 20 message attachments are allowed.');
         }
-        $new->data[$key] = $value;
-        return $new;
     }
 
     /**
      * Remove null values from array
      *
-     * @param array $values Input array
+     * @param array<string,mixed> $values Input array
      *
-     * @return array
+     * @return array<string,mixed>
      */
     private static function removeNull(array $values)
     {
@@ -330,27 +373,63 @@ class SlackMessage implements JsonSerializable
     {
         $unknownData = \array_diff_key($values, $this->dataDefault, \array_flip(array('icon')));
         if ($unknownData) {
-            throw new InvalidArgumentException('Unknown values: ' . \implode(', ', \array_keys($unknownData)));
+            throw new InvalidArgumentException('SlackMesssage: Unknown values: ' . \implode(', ', \array_keys($unknownData)));
         }
-        $this->data = $values;
+        if (isset($values['attachments']) && \is_array($values['attachments']) === false) {
+            throw new InvalidArgumentException(\sprintf(
+                'SlackMessage: attachments should be array or null,  %s provided.',
+                self::getDebugType($values['attachments'])
+            ));
+        }
+        if (isset($values['blocks']) && \is_array($values['blocks']) === false) {
+            throw new InvalidArgumentException(\sprintf(
+                'SlackMessage: blocks should be array or null,  %s provided.',
+                self::getDebugType($values['blocks'])
+            ));
+        }
+        /** @psalm-suppress MixedPropertyTypeCoercion - Psalm bug - we know attachments and blocks are arrays*/
+        $this->data = \array_merge(array(
+            'attachments' => array(),
+            'blocks' => array(),
+        ), $values);
         if (\array_key_exists('icon', $values)) {
             unset($this->data['icon']);
             $this->setIcon($values['icon']);
         }
+        $this->assertAttachmentCount();
+    }
+
+    /**
+     * Gets the type name of a variable in a way that is suitable for debugging
+     *
+     * @param mixed $value The value being type checked
+     *
+     * @return string
+     */
+    protected static function getDebugType($value)
+    {
+        return \is_object($value)
+            ? \get_class($value)
+            : \gettype($value);
     }
 
     /**
      * Set icon_url or icon_emoji
      *
-     * @param string|null $icon icon to use
+     * @param mixed $icon icon to use (null to remove)
      *
      * @return static
+     *
+     * @throws InvalidArgumentException
      */
     private function setIcon($icon = null)
     {
         unset($this->data['icon_url'], $this->data['icon_emoji']);
         if ($icon === null || $icon === '') {
             return $this;
+        }
+        if (\is_string($icon) === false) {
+            throw new InvalidArgumentException('icon should be string (url or emoji) or null (to remove)');
         }
         $icon = \trim($icon, ':');
         $iconUrl = \filter_var($icon, FILTER_VALIDATE_URL);
@@ -362,5 +441,25 @@ class SlackMessage implements JsonSerializable
             : ':' . $icon . ':';
         $this->data[$key] = $val;
         return $this;
+    }
+
+    /**
+     * Directly set an arbitrary value
+     *
+     * @param string $key   data key
+     * @param mixed  $value [description]
+     *
+     * @return static
+     *
+     * @throws InvalidArgumentException
+     */
+    private function withValueDo($key, $value)
+    {
+        if (\array_key_exists($key, $this->dataDefault) === false) {
+            throw new InvalidArgumentException(\sprintf('"%s"is an invalid message value', $key));
+        }
+        $new = clone $this;
+        $new->data[$key] = $value;
+        return $new;
     }
 }

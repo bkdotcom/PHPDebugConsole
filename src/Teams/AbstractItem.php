@@ -4,6 +4,7 @@ namespace bdk\Teams;
 
 use bdk\Teams\CardUtilityTrait;
 use bdk\Teams\ItemInterface;
+use LogicException;
 use OutOfBoundsException;
 
 /**
@@ -88,13 +89,13 @@ class AbstractItem implements ItemInterface
      *
      * @return static
      *
-     * @throws OutOfBoundsException
+     * @throws LogicException
      */
     protected function withAdded($name, $value)
     {
         $new = clone $this;
         if (\is_array($new->fields[$name]) === false) {
-            throw new OutOfBoundsException(\sprintf(
+            throw new LogicException(\sprintf(
                 '%s :  unable to add additional %s',
                 $this->type,
                 $name

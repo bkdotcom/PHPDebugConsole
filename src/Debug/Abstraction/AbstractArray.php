@@ -22,8 +22,10 @@ use bdk\Debug\Abstraction\Type;
  */
 class AbstractArray extends AbstractComponent
 {
+    /** @var Abstracter */
     protected $abstracter;
 
+    /** @var array<string, mixed> */
     protected $cfg = array(
         'maxDepth' => 0,
     );
@@ -45,7 +47,7 @@ class AbstractArray extends AbstractComponent
      * @param string $method Method requesting abstraction
      * @param array  $hist   (@internal) array/object history
      *
-     * @return array|string
+     * @return array|Abstraction|Abstracter::RECURSION
      */
     public function crate(array $array, $method = null, array $hist = array())
     {
@@ -61,6 +63,7 @@ class AbstractArray extends AbstractComponent
         }
         $hist[] = $array;
         $return = array();
+        /** @var mixed $v */
         foreach ($array as $k => $v) {
             $return[$k] = $this->abstracter->crate($v, $method, $hist);
         }
@@ -86,12 +89,13 @@ class AbstractArray extends AbstractComponent
     /**
      * Returns a callable array(obj, 'method') abstraction
      *
-     * @param array $array array callable
+     * @param callable-array $array array callable
      *
      * @return Abstraction
      */
     public function getCallableAbstraction(array $array)
     {
+        /** @var class-string */
         $className = \is_object($array[0])
             ? \get_class($array[0])
             : $array[0];

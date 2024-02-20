@@ -24,9 +24,13 @@ class Clear implements SubscriberInterface
 {
     use CustomMethodTrait;
 
+    /** @var array<string,mixed> */
     private $data = array();
+    /** @var string|null */
     private $channelName = null;
+    /** @var string|null */
     private $channelRegex;
+    /** @var bool */
     private $isRootInstance = false;
 
     /** @var string[] */

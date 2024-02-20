@@ -2,6 +2,7 @@
 
 namespace bdk\Slack;
 
+use BadMethodCallException;
 use bdk\Slack\AbstractSlack;
 use bdk\Slack\SlackMessage;
 
@@ -9,9 +10,16 @@ use bdk\Slack\SlackMessage;
  * Send slack message notifications using Webhooks url
  *
  * @link https://api.slack.com/incoming-webhooks
+ *
+ * @psalm-api
  */
 class SlackWebhook extends AbstractSlack
 {
+    /**
+     * @var array{
+     *   webhookUrl:  string,
+     * }
+     */
     protected $cfg = array(
         'webhookUrl' => '',
     );
@@ -19,11 +27,17 @@ class SlackWebhook extends AbstractSlack
     /**
      * Constructor
      *
-     * @param string $webhookUrl Slack webhook url
+     * @param string|null $webhookUrl Slack webhook url
+     *
+     * @throws BadMethodCallException
      */
     public function __construct($webhookUrl = null)
     {
-        $this->cfg['webhookUrl'] = $webhookUrl ?: \getenv('SLACK_WEBHOOK_URL');
+        $webhookUrl = $webhookUrl ?: \getenv('SLACK_WEBHOOK_URL');
+        if (\is_string($webhookUrl) === false) {
+            throw new BadMethodCallException('webhookUrl must be provided.');
+        }
+        $this->cfg['webhookUrl'] = $webhookUrl;
         parent::__construct();
     }
 
@@ -32,7 +46,7 @@ class SlackWebhook extends AbstractSlack
      *
      * @param SlackMessage $slackMessage SlackMessage instance
      *
-     * @return array
+     * @return array|false
      */
     public function post(SlackMessage $slackMessage)
     {
@@ -44,6 +58,7 @@ class SlackWebhook extends AbstractSlack
             $slackMessage
         );
         $body = (string) $this->lastResponse->getBody();
+        /** @psalm-var array|false */
         return \json_decode($body, true);
     }
 }

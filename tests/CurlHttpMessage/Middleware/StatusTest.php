@@ -28,7 +28,6 @@ class StatusTest extends TestCase
         self::assertSame('Hello World', (string) $response->getBody());
     }
 
-
     public function testThrowsExceptionOnHttpClientError()
     {
         $middleware = new Status();

@@ -22,6 +22,7 @@ use bdk\PubSub\SubscriberInterface;
  */
 class LogFiles extends AbstractComponent implements SubscriberInterface
 {
+    /** @var array<string,mixed> */
     protected $cfg = array(
         'asTree' => true,
         'channelOpts' => array(
@@ -36,9 +37,12 @@ class LogFiles extends AbstractComponent implements SubscriberInterface
         ),
     );
 
+    /** @var array<string,int> */
     private $excludedCounts = array();
+    /** @var Debug|null */
     private $debug;
-    private $files;
+    /** @var string[] */
+    private $files = array();
 
     /**
      * {@inheritDoc}
@@ -97,7 +101,7 @@ class LogFiles extends AbstractComponent implements SubscriberInterface
      */
     public function output()
     {
-        $files = $this->files !== null
+        $files = $this->files !== array()
             ? $this->files
             : $this->debug->php->getIncludedFiles();
 

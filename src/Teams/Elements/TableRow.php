@@ -19,7 +19,7 @@ class TableRow extends AbstractItem
     /**
      * Constructor
      *
-     * @param iterable|array<int, TableCell|ElementInterface|string|numeric> $cells The cells in this row
+     * @param iterable<TableCell|ElementInterface|string|numeric>|mixed $cells The cells in this row
      */
     public function __construct($cells = array())
     {
@@ -54,6 +54,17 @@ class TableRow extends AbstractItem
         }
 
         return self::normalizeContent($content, $version);
+    }
+
+    /**
+     * Get row's cells
+     *
+     * @return list<TableCell>
+     */
+    public function getCells()
+    {
+        /** @psalm-var list<TableCell> */
+        return $this->fields['cells'];
     }
 
     /**
@@ -130,7 +141,7 @@ class TableRow extends AbstractItem
     /**
      * Return value as TableCell
      *
-     * @param TableCell|ElementInterface|string|numeric $cell Value to normalize
+     * @param TableCell|ElementInterface|string|numeric|mixed $cell Value to normalize
      *
      * @return TableCell
      *
@@ -146,7 +157,7 @@ class TableRow extends AbstractItem
     /**
      * Return array with each value converted to instance of TableCell
      *
-     * @param iterable<array-key, TableCell|ElementInterface|string|numeric> $cells Cells to convert
+     * @param iterable<TableCell|ElementInterface|string|numeric>|mixed $cells Cells to convert
      *
      * @return list<TableCell>
      *
@@ -162,6 +173,10 @@ class TableRow extends AbstractItem
         $cell = null;
         try {
             $cellsNew = array();
+            /**
+             * @var array-key $i
+             * @var mixed     $cell
+             */
             foreach ($cells as $i => $cell) {
                 $cellsNew[] = self::asCell($cell);
             }
@@ -169,7 +184,7 @@ class TableRow extends AbstractItem
         } catch (InvalidArgumentException $e) {
             throw new InvalidArgumentException(\sprintf(
                 'Invalid table cell found at index %s.  Expected TableCell, ElementInterface, stringable, scalar, or null.  %s provided.',
-                $i,
+                (string) $i,
                 self::getDebugType($cell)
             ));
         }

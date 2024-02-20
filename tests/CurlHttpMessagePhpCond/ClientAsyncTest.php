@@ -5,22 +5,28 @@ namespace bdk\Test\CurlHttpMessagePhpCond;
 use bdk\CurlHttpMessage\ClientAsync;
 use bdk\CurlHttpMessage\Handler\Mock as MockHandler;
 use bdk\Promise;
+use bdk\Test\CurlHttpMessage\ProviderTrait;
 use bdk\Test\CurlHttpMessage\TestCase;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
 /**
  * @covers \bdk\CurlHttpMessage\ClientAsync
+ * @covers \bdk\CurlHttpMessage\AbstractClient
  */
 class ClientAsyncTest extends TestCase
 {
+    use ProviderTrait;
+
     protected $handled = array();
 
+    /*
     public function testExtendsClient()
     {
         $client = new ClientAsync();
         self::assertInstanceOf($this->classes['Client'], $client);
     }
+    */
 
     /**
      * @dataProvider methodProvider
@@ -105,52 +111,6 @@ class ClientAsyncTest extends TestCase
                 (string) $lastRequest->getBody()
             );
         }
-    }
-
-    public static function methodProvider()
-    {
-        return [
-            'DELETE' => [
-                'method' => 'delete',
-                'uri' => 'http://example.com/',
-            ],
-            'GET' => [
-                'method' => 'get',
-                'uri' => 'http://example.com/',
-            ],
-            'HEAD' => [
-                'method' => 'head',
-                'uri' => 'http://example.com/',
-            ],
-            'OPTIONS' => [
-                'method' => 'options',
-                'uri' => 'http://example.com/',
-            ],
-            'PATCH' => [
-                'method' => 'patch',
-                'uri' => 'http://example.com/',
-            ],
-            'POST' => [
-                'method' => 'post',
-                'uri' => 'http://example.com/',
-                'headers' => [
-                    'Content-Type' => 'application/json',
-                ],
-                'body' => array('foo' => 'bar'),
-            ],
-            'PUT' => [
-                'method' => 'put',
-                'uri' => 'http://example.com/',
-                'headers' => [
-                    'Content-Type' => 'application/json',
-                ],
-                'body' => array('foo' => 'bar'),
-            ],
-            'TRACE' => [
-                'method' => 'trace',
-                'uri' => 'http://example.com/',
-            ],
-        ];
     }
 
     public function testValidatesIterable()

@@ -3,7 +3,8 @@
 namespace bdk\Slack;
 
 use InvalidArgumentException;
-use OutOfBoundsException;
+use OverflowException;
+use UnexpectedValueException;
 
 /**
  * Block elements can be used inside of section, context, input and actions layout blocks.
@@ -11,6 +12,8 @@ use OutOfBoundsException;
  * @link https://api.slack.com/reference/block-kit/blocks
  * @link https://api.slack.com/reference/block-kit/block-elements
  * @link https://api.slack.com/reference/messaging/attachments
+ *
+ * @psalm-api
  */
 class BlockFactory extends BlockElementsFactory
 {
@@ -19,6 +22,9 @@ class BlockFactory extends BlockElementsFactory
     const COLOR_GOOD = 'good'; // green
     const COLOR_WARNING = 'warning'; // yellow
 
+    /**
+     * @var array<string, array<string, mixed>>
+     */
     protected static $defaults = array(
         'actions' => array(
             'block_id' => null,     // max: 255 chars
@@ -105,16 +111,17 @@ class BlockFactory extends BlockElementsFactory
      * @param array $elements Element definitions
      * @param array $values   Actions block fields
      *
-     * @return array
+     * @return array<string, mixed>
      */
     public static function actions(array $elements, $values = array())
     {
-        $block = \array_merge(self::$defaults['actions'], array(
-            'elements' => $elements,
-        ), $values);
-        $block = \array_intersect_key($block, self::$defaults['actions']);
-        self::assertElements($block['elements'], 'actions', 25);
-        return self::removeNull($block);
+        $default = \array_merge(self::$defaults['actions'], array(
+            'elements' => $elements,  // max: 25
+        ));
+        return self::initBlock($default, $values, static function (array $block) {
+            self::assertElements($block['elements'], 'actions', 25);
+            return $block;
+        });
     }
 
     /**
@@ -127,17 +134,24 @@ class BlockFactory extends BlockElementsFactory
      */
     public static function context(array $elements, $values = array())
     {
-        $block = \array_merge(self::$defaults['context'], array(
-            'elements' => $elements,
-        ), $values);
-        $block = \array_intersect_key($block, self::$defaults['context']);
-        $block['elements'] = \array_map(static function ($element) {
-            return \is_array($element)
-                ? $element
-                : self::normalizeText($element);
-        }, $elements);
-        self::assertElements($block['elements'], 'context', 10);
-        return self::removeNull($block);
+        $default = \array_merge(self::$defaults['context'], array(
+            'elements' => $elements,  // max: 10
+        ));
+        return self::initBlock($default, $values, static function (array $block) {
+            if (\is_array($block['elements']) === false) {
+                throw new UnexpectedValueException(\sprintf(
+                    'context block:  elements must be array.  %s provided.',
+                    self::getDebugType($block['elements'])
+                ));
+            }
+            $block['elements'] = \array_map(static function ($element) {
+                return \is_array($element)
+                    ? $element
+                    : self::normalizeText($element, 'element');
+            }, $block['elements']);
+            self::assertElements($block['elements'], 'context', 10);
+            return $block;
+        });
     }
 
     /**
@@ -163,14 +177,16 @@ class BlockFactory extends BlockElementsFactory
      */
     public static function header($text, $values = array())
     {
-        $block = \array_replace_recursive(self::$defaults['header'], array(
+        $default = \array_merge(self::$defaults['header'], array(
             'text' => array(
-                'text' => $text,
+                'text' => $text,     // max: 150 chars
+                'type' => 'plain_text',
             ),
-        ), $values);
-        $block = \array_intersect_key($block, self::$defaults['header']);
-        $block['text'] = self::normalizeText($block['text']);
-        return self::removeNull($block);
+        ));
+        return self::initBlock($default, $values, static function (array $block) {
+            $block['text'] = self::normalizeText($block['text']);
+            return $block;
+        });
     }
 
     /**
@@ -185,14 +201,15 @@ class BlockFactory extends BlockElementsFactory
      */
     public static function image($url, $altText, $title = null, $values = array())
     {
-        $block = \array_merge(self::$defaults['image'], array(
-            'alt_text' => $altText,
-            'image_url' => $url,
-            'title' => $title,
-        ), $values);
-        $block = \array_intersect_key($block, self::$defaults['image']);
-        $block['title'] = self::normalizeText($block['title']);
-        return self::removeNull($block);
+        $default = \array_merge(self::$defaults['image'], array(
+            'alt_text' => $altText, // max: 2000 chars
+            'image_url' => $url,    // max: 3000 chars
+            'title' => $title,      // max: 2000 chars
+        ));
+        return self::initBlock($default, $values, static function (array $block) {
+            $block['title'] = self::normalizeText($block['title'], 'title');
+            return $block;
+        });
     }
 
     /**
@@ -208,54 +225,63 @@ class BlockFactory extends BlockElementsFactory
      */
     public static function input($label, $element, $values = array())
     {
-        $block = \array_replace_recursive(self::$defaults['input'], array(
+        $default = \array_merge(self::$defaults['input'], array(
             'element' => $element,
             'label' => array(
-                'text' => $label,
+                'text' => $label,   // max: 2000 chars
+                'type' => 'plain_text',
             ),
-        ), $values);
-        $block = \array_intersect_key($block, self::$defaults['input']);
-        $block['label'] = self::normalizeText($block['label']);
-        $block['hint'] = self::normalizeText($block['hint']);
-        self::assertInputElement($block['element']);
-        return self::removeNull($block);
+        ));
+        return self::initBlock($default, $values, static function (array $block) {
+            $block['label'] = self::normalizeText($block['label'], 'label');
+            $block['hint'] = self::normalizeText($block['hint'], 'label');
+            self::assertInputElement($block['element']);
+            return $block;
+        });
     }
 
     /**
      * Section block
      *
      * @param string|array $text      Text for the block
-     * @param array        $fields    array of up to 10 text objects
+     * @param array|null   $fields    array of up to 10 text objects
      * @param array        $accessory optional block element
      * @param array        $values    Section block fields
      *
      * @return array<string,mixed>
      *
      * @throws InvalidArgumentException
-     * @throws OutOfBoundsException
+     * @throws OverflowException
+     * @throws UnexpectedValueException
      */
     public static function section($text, $fields = array(), $accessory = null, $values = array())
     {
-        $block = \array_merge(self::$defaults['section'], array(
+        $default = \array_merge(self::$defaults['section'], array(
             'accessory' => $accessory,
-            'fields' => $fields,
-            'text' => $text,
-        ), $values);
-        $block = \array_intersect_key($block, self::$defaults['section']);
-        $block['text'] = self::normalizeText($block['text'], true);
-        $block['fields'] = \array_map(static function ($field) {
-            return self::normalizeText($field, true);
-        }, $block['fields']);
-        if (empty($block['fields'])) {
-            unset($block['fields']);
-        } elseif (\count($block['fields']) > 10) {
-            throw new OutOfBoundsException(\sprintf('A maximum of 10 fields are allowed in section block. %d provided', \count($block['fields'])));
-        }
-
-        if (isset($block['accessory'])) {
-            self::assertAccessory($block['accessory']);
-        }
-        return self::removeNull($block);
+            'fields' => $fields,    // max: 10,  each text's max: 2000 chars
+            'text' => $text,         // optional text obj... defaults to mrkdown
+                                    //   max: 3000 chars
+        ));
+        return self::initBlock($default, $values, static function (array $block) {
+            /** @psalm-var array|null $block['fields'] */
+            self::assertFields($block['fields'], 'section');
+            $block['fields'] = \array_map(static function ($field) {
+                return self::normalizeText($field, 'field', true);
+            }, $block['fields'] ?: array());
+            if (empty($block['fields'])) {
+                unset($block['fields']);
+            } elseif (\count($block['fields']) > 10) {
+                throw new OverflowException(\sprintf(
+                    'section block:  A maximum of 10 fields are allowed.  %d provided.',
+                    \count($block['fields'])
+                ));
+            }
+            $block['text'] = self::normalizeText($block['text'], 'text', true);
+            if (isset($block['accessory'])) {
+                self::assertAccessory($block['accessory']);
+            }
+            return $block;
+        });
     }
 
     /**
@@ -270,14 +296,15 @@ class BlockFactory extends BlockElementsFactory
      */
     public static function video($url, $altText, $title, $values = array())
     {
-        $block = \array_merge(self::$defaults['video'], array(
+        $default = \array_merge(self::$defaults['video'], array(
             'alt_text' => $altText,
-            'title' => $title,
-            'video_url' => $url,
-        ), $values);
-        $block = \array_intersect_key($block, self::$defaults['video']);
-        $block['description'] = self::normalizeText($block['description']);
-        return self::removeNull($block);
+            'title' => $title,   // max: 199 chars
+            'video_url' => $url, // must be https
+        ));
+        return self::initBlock($default, $values, static function (array $block) {
+            $block['description'] = self::normalizeText($block['description'], 'description');
+            return $block;
+        });
     }
 
     /**
@@ -290,6 +317,8 @@ class BlockFactory extends BlockElementsFactory
      * @return array<string,mixed>
      *
      * @link https://api.slack.com/reference/messaging/attachments
+     *
+     * @throws UnexpectedValueException
      */
     public static function attachment($text, $blocks = array(), $values = array())
     {
@@ -298,33 +327,53 @@ class BlockFactory extends BlockElementsFactory
             Legacy fields are optional if you're including blocks as above.
             If you aren't, one of either fallback or text are required:
         */
-        $attachment = \array_merge(self::$defaults['attachment'], array(
-            'blocks' => $blocks,
+        $default = \array_merge(self::$defaults['attachment'], array(
+            'blocks' => $blocks, // An array of layout blocks in the same format as described here https://api.slack.com/reference/block-kit/blocks
             'text' => $text,
-        ), $values);
-        $attachment = \array_intersect_key($attachment, self::$defaults['attachment']);
-        foreach ($attachment['fields'] as $i => $field) {
-            if (\is_array($field) === false) {
-                $field = array('value' => $field);
+        ));
+        return self::initBlock($default, $values, static function (array $attachment) {
+            self::assertFields($attachment['fields'], 'attachment');
+            if (\is_array($attachment['fields'])) {
+                $attachment['fields'] = self::attachmentFields($attachment['fields']);
             }
-            $field = \array_merge(array(
+            return $attachment;
+        });
+    }
+
+    /**
+     * Prepare attachment fields
+     *
+     * @param array $fields Attachment fields
+     *
+     * @return non-empty-list<array<string, mixed>>|null
+     */
+    private static function attachmentFields(array $fields)
+    {
+        $fieldsNew = array();
+        /** @psalm-var mixed $field */
+        foreach ($fields as $field) {
+            $default = array(
                 'short' => false, // Indicates whether the field object is short enough to be displayed side-by-side with other field objects.
                 'title' => null, // Shown as a bold heading displayed in the field object.
                                  // It cannot contain markup and will be escaped for you.
                 'value' => null, // The text value displayed in the field object.
                                  // It can be formatted as plain text, or with mrkdwn by using the mrkdwn_in option above.
-            ), $field);
+            );
+            if (\is_array($field) === false) {
+                $field = array('value' => $field);
+            }
+            $field = \array_merge($default, $field);
+            /** @psalm-var array<string, mixed> psalm bug - should infer, but doesn't */
+            $field = \array_intersect_key($field, $default);
             $field = self::removeNull($field);
             if (\count($field) === 1) {
                 // just 'short'
-                unset($attachment['fields'][$i]);
                 continue;
             }
-            $attachment['fields'][$i] = $field;
+            $fieldsNew[] = $field;
         }
-        $attachment['fields'] = \count($attachment['fields']) > 0
-            ? \array_values($attachment['fields'])
+        return \count($fieldsNew) > 0
+            ? $fieldsNew
             : null;
-        return self::removeNull($attachment);
     }
 }

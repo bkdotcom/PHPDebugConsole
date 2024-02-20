@@ -2,9 +2,9 @@
 
 namespace bdk\Teams;
 
+use BadMethodCallException;
 use bdk\CurlHttpMessage\Client;
 use bdk\Teams\Cards\CardInterface;
-use OutOfBoundsException;
 use Psr\Http\Message\ResponseInterface;
 
 /**
@@ -31,15 +31,15 @@ class TeamsWebhook
     /**
      * Constructor
      *
-     * @param string $webhookUrl Slack webhook url
+     * @param string|null $webhookUrl Slack webhook url
      *
-     * @throws OutOfBoundsException
+     * @throws BadMethodCallException
      */
     public function __construct($webhookUrl = null)
     {
         $webhookUrl = $webhookUrl ?: \getenv('TEAMS_WEBHOOK_URL');
         if (\is_string($webhookUrl) === false) {
-            throw new OutOfBoundsException('webhookUrl must be defined');
+            throw new BadMethodCallException('webhookUrl must be provided.');
         }
         $this->cfg['webhookUrl'] = $webhookUrl;
         $this->client = new Client();

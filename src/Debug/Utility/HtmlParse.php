@@ -55,7 +55,7 @@ class HtmlParse
      *
      * @param string $val enum attribute value
      *
-     * @return bool
+     * @return bool|string
      */
     private static function parseAttribBoolEnum($val)
     {
@@ -106,8 +106,8 @@ class HtmlParse
     /**
      * Convert numeric attribute value to float/int
      *
-     * @param string $val    enum attribute value
-     * @param bool   $decode whether to decode (convert to int/float)
+     * @param numeric $val    enum attribute value
+     * @param bool    $decode whether to cast to int/float
      *
      * @return string|float|int
      */

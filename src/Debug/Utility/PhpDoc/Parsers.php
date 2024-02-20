@@ -14,12 +14,19 @@ namespace bdk\Debug\Utility\PhpDoc;
 
 /**
  * PhpDoc parsing helper methods
+ *
+ * @psalm-import-type TagInfo from \bdk\Debug\Utility\PhpDoc
+ * @psalm-import-type ParserInfo from \bdk\Debug\Utility\PhpDoc
  */
 class Parsers
 {
+    /** @var Helper */
     protected $helper;
+    /** @var ParserInfo[] */
     protected $parsers = array();
+    /** @var ParseMethod */
     protected $parseMethod;
+    /** @var ParseParam */
     protected $parseParam;
 
     /**
@@ -30,8 +37,8 @@ class Parsers
     public function __construct(Helper $helper)
     {
         $this->helper = $helper;
-        $this->parseMethod = new ParseMethod($helper);
-        $this->parseParam = new ParseParam($helper);
+        $this->parseMethod = new ParseMethod();
+        $this->parseParam = new ParseParam();
         $this->setParsers();
     }
 
@@ -41,6 +48,8 @@ class Parsers
      * @param string $tag phpDoc tag
      *
      * @return array
+     *
+     * @psalm-return ParserInfo
      */
     public function getTagParser($tag)
     {
@@ -86,7 +95,7 @@ class Parsers
     /**
      * Parser "definition" for @author tag
      *
-     * @return array
+     * @return ParserInfo
      */
     private function parserAuthor()
     {
@@ -103,7 +112,7 @@ class Parsers
     /**
      * Default parser "definition"
      *
-     * @return array
+     * @return ParserInfo
      */
     private function parserDefault()
     {
@@ -117,7 +126,7 @@ class Parsers
     /**
      * Parser "definition" for @link tag
      *
-     * @return array
+     * @return ParserInfo
      */
     private function parserLink()
     {
@@ -132,7 +141,7 @@ class Parsers
     /**
      * Parser "definition" for @method tag
      *
-     * @return array
+     * @return ParserInfo
      */
     private function parserMethod()
     {
@@ -155,13 +164,16 @@ class Parsers
     /**
      * Parser "definition" for @return & @throws tags
      *
-     * @return array
+     * @return ParserInfo
      */
     private function parserReturnThrows()
     {
         return array(
             'callable' => array(
                 array($this->helper, 'extractTypeFromBody'),
+                /**
+                 * @psalm-param TagInfo $info
+                 */
                 static function (array $parsed, array $info) {
                     $parsed['type'] = $info['phpDoc']->type->normalize($parsed['type'], $info['className'], $info['fullyQualifyType']);
                     return $parsed;
@@ -177,7 +189,7 @@ class Parsers
     /**
      * Parser "definition" for @see tag
      *
-     * @return array
+     * @return ParserInfo
      */
     private function parserSee()
     {

@@ -6,9 +6,12 @@
 
 namespace bdk\Test\Debug\Utility;
 
+use bdk\Debug\Utility\Reflection;
 use bdk\Debug\Utility\Utf8;
 use bdk\Debug\Utility\Utf8Buffer;
 use bdk\Debug\Utility\Utf8Dump;
+use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
+use PHPUnit\Framework\TestCase;
 
 /**
  * PHPUnit tests for Debug class
@@ -19,8 +22,10 @@ use bdk\Debug\Utility\Utf8Dump;
  * @covers \bdk\Debug\Utility\Utf8Buffer
  * @covers \bdk\Debug\Utility\Utf8Dump
  */
-class Utf8Test extends \PHPUnit\Framework\TestCase
+class Utf8Test extends TestCase
 {
+    use ExpectExceptionTrait;
+
     public function testBufferAnalyze()
     {
         $str = "\xef\xbb\xbfPesky BOM";
@@ -30,7 +35,7 @@ class Utf8Test extends \PHPUnit\Framework\TestCase
         self::assertSame(array(
             'blocks' => array(
                 array(
-                    'utf8special',
+                    'special',
                     "\xef\xbb\xbf",
                 ),
                 array(
@@ -47,6 +52,50 @@ class Utf8Test extends \PHPUnit\Framework\TestCase
             'strlen' => 12,
         ), $stats1);
         self::assertSame($stats1, $stats2);
+    }
+
+    public function testAddSpecial()
+    {
+        $backup = Reflection::propGet('bdk\Debug\Utility\Utf8Buffer', 'special');
+        Reflection::propSet('bdk\Debug\Utility\Utf8Buffer', 'special', array());
+        Utf8Buffer::addSpecial(array(
+            'a',
+            'regex:/foo/',
+            'regex:',
+        ));
+        Utf8Buffer::addSpecial('b');
+        Utf8Buffer::addSpecial('regex:/bar/');
+        self::assertSame(array(
+            'chars' => array(
+                'a',
+                'b',
+            ),
+            'regex' => array(
+                '/foo/',
+                '/bar/',
+            ),
+        ), Reflection::propGet('bdk\Debug\Utility\Utf8Buffer', 'special'));
+        Reflection::propSet('bdk\Debug\Utility\Utf8Buffer', 'special', $backup);
+    }
+
+    public function testBufferSeek()
+    {
+        $buffer = new Utf8Buffer('Brad was here');
+        $buffer->seek(5);
+        self::assertSame('was', $buffer->read(3));
+        $buffer->seek(1, SEEK_CUR);
+        self::assertSame('here', $buffer->read(4));
+        $buffer->seek(-8, SEEK_END);
+        self::assertSame('was', $buffer->read(3));
+    }
+
+    public function testBufferReadThrowsException()
+    {
+        $this->expectException('LengthException');
+        $this->expectExceptionMessage('Utf8Buffer::read - length must be >= 0');
+
+        $buffer = new Utf8Buffer('Brad was here');
+        $buffer->read('-42');
     }
 
     /**

@@ -26,7 +26,9 @@ class Basic implements SubscriberInterface
 {
     use CustomMethodTrait;
 
+    /** @var resource|null */
     private $cliOutputStream = null;
+    /** @var bool */
     private $isCli = false;
 
     /** @var string[] */

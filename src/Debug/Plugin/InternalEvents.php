@@ -25,6 +25,7 @@ use bdk\PubSub\SubscriberInterface;
  */
 class InternalEvents implements SubscriberInterface
 {
+    /** @var Debug|null */
     private $debug;
 
     /**

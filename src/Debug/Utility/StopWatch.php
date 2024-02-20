@@ -17,6 +17,12 @@ namespace bdk\Debug\Utility;
  */
 class StopWatch
 {
+    /**
+     * @var array{
+     *   labels: array<string, array{0:float, 1:float|null}>,
+     *   stack: list<float>,
+     * }
+     */
     protected $timers = array(
         'labels' => array(
             // label => array(accumulatedTime, lastStartedTime|null)
@@ -27,7 +33,7 @@ class StopWatch
     /**
      * Constructor
      *
-     * @param array $vals initial values
+     * @param array{requestTime?: float} $vals Initial values
      */
     public function __construct($vals = array())
     {

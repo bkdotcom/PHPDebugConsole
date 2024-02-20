@@ -56,7 +56,6 @@ class CurlReqResOptionsTest extends TestCase
         self::assertSame('I\'m a teapot', $response->getReasonPhrase());
     }
 
-
     public function testGet()
     {
         // $handler = new MockHandler([$this->factory->response()]);

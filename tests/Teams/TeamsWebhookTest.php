@@ -6,6 +6,7 @@ use bdk\CurlHttpMessage\Handler\Mock as MockHandler;
 use bdk\HttpMessage\Response;
 use bdk\HttpMessage\Stream;
 use bdk\PhpUnitPolyfill\AssertionTrait;
+use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 use bdk\Teams\Cards\MessageCard;
 use bdk\Teams\TeamsWebhook;
 use PHPUnit\Framework\TestCase;
@@ -17,19 +18,16 @@ use Psr\Http\Message\RequestInterface;
 class TeamsWebhookTest extends TestCase
 {
     use AssertionTrait;
+    use ExpectExceptionTrait;
 
     private $mockHandler;
 
-    /**
-     * {@inheritDoc}
-     */
-    /*
-    public function __construct($name = null, array $data = array(), $dataName = '')
+    public function testConstructorThrowsException()
     {
-        // $this->factory = new Factory();
-        parent::__construct($name, $data, $dataName);
+        $this->expectException('BadMethodCallException');
+        $this->expectExceptionMessage('webhookUrl must be provided.');
+        new TeamsWebhook();
     }
-    */
 
     public function testPost()
     {

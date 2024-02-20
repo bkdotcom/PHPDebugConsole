@@ -18,15 +18,16 @@ namespace bdk\PubSub;
  *
  * Events are passed to event subscribres/listeners
  *
- * @template TKey   of array-key
- * @template TValue of mixed
+ * @template Subject of mixed
+ * @template TKey    of array-key
+ * @template TValue  of mixed
  *
  * @template-extends ValueStore<TKey, TValue>
  */
 class Event extends ValueStore
 {
     /**
-     * @var mixed Event subject - usually object or callable
+     * @var Subject Event subject - usually object or callable
      */
     protected $subject = null;
 
@@ -38,7 +39,7 @@ class Event extends ValueStore
     /**
      * Construct an event with optional subject and values
      *
-     * @param mixed               $subject The subject of the event (usually an object)
+     * @param Subject             $subject The subject of the event (usually an object)
      * @param array<TKey, TValue> $values  Values to store in the event
      */
     public function __construct($subject = null, array $values = array())
@@ -70,7 +71,7 @@ class Event extends ValueStore
     /**
      * Get Event's "subject"
      *
-     * @return mixed The observer subject
+     * @return Subject The observer subject
      */
     public function getSubject()
     {

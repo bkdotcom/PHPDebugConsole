@@ -15,6 +15,7 @@ namespace bdk\Debug;
 use bdk\Debug;
 use Exception;
 use Psr\Http\Message\StreamInterface;
+use RuntimeException;
 
 /**
  * Utility methods
@@ -24,7 +25,7 @@ class Utility
     /**
      * Emit headers queued for output directly using `header()`
      *
-     * @param array $headers array of headers
+     * @param array<array-key, string|string[]> $headers array of headers
      *                array(
      *                   array(name, value)
      *                   name => value
@@ -32,9 +33,9 @@ class Utility
      *                )
      *
      * @return void
-     * @throws \RuntimeException if headers already sent
+     * @throws RuntimeException if headers already sent
      */
-    public static function emitHeaders($headers)
+    public static function emitHeaders(array $headers)
     {
         if (!$headers) {
             return;
@@ -43,11 +44,11 @@ class Utility
         $line = 0;
         // phpcs:ignore SlevomatCodingStandard.Namespaces.FullyQualifiedGlobalFunctions.NonFullyQualified
         if (headers_sent($file, $line)) {
-            throw new \RuntimeException('Headers already sent: ' . $file . ', line ' . $line);
+            throw new RuntimeException('Headers already sent: ' . $file . ', line ' . $line);
         }
         foreach ($headers as $key => $val) {
             if (\is_int($key)) {
-                $key = $val[0];
+                $key = (string) $val[0];
                 $val = $val[1];
             }
             self::emitHeader($key, $val);
@@ -110,6 +111,7 @@ class Utility
         $units = array('B', 'kB', 'MB', 'GB', 'TB', 'PB');
         $exp = (int) \floor(\log((float) $size, 1024));
         $pow = \pow(1024, $exp);
+        /** @psalm-suppress RedundantCast */
         $size = (int) $pow < 1
             ? '0 B'
             : \round($size / $pow, 2) . ' ' . $units[$exp];
@@ -120,10 +122,12 @@ class Utility
      * Returns sent/pending response header values for specified header
      *
      * @param string      $key       ('Content-Type') header to return
-     * @param null|string $delimiter (', ') if string, then join the header values
+     * @param string|null $delimiter (', ') if string, then join the header values
      *                                 if null, return array
      *
-     * @return array|string
+     * @return string|string[]
+     *
+     * @psalm-return ($delimiter is string ? string : string[])
      */
     public static function getEmittedHeader($key = 'Content-Type', $delimiter = ', ')
     {
@@ -142,7 +146,7 @@ class Utility
      * The keys represent the header name as it will be sent over the wire, and
      * each value is an array of strings associated with the header.
      *
-     * @return array
+     * @return array<string, list<string>>
      */
     public static function getEmittedHeaders()
     {
@@ -189,23 +193,26 @@ class Utility
         // exec('git branch') may fail due due to permissions / rights
         // navigate up until we find the ./git/HEAD file
         $dir = $dir ?: \getcwd();
-        $parts = \explode(DIRECTORY_SEPARATOR, $dir);
+        $docRoot = Debug::getInstance()->getServerParam('DOCUMENT_ROOT');
         $docRootFound = false;
+        $parts = \explode(DIRECTORY_SEPARATOR, $dir);
         for ($i = \count($parts); $i > 0; $i--) {
             $dirParts = \array_slice($parts, 0, $i);
-            $filepath = \implode(DIRECTORY_SEPARATOR, \array_merge(
+            $gitHeadFilepath = \implode(DIRECTORY_SEPARATOR, \array_merge(
                 $dirParts,
                 array('.git', 'HEAD')
             ));
-            if (\file_exists($filepath)) {
-                $filelines = \file($filepath);
+            if (\file_exists($gitHeadFilepath)) {
+                $filelines = \file($gitHeadFilepath);
                 $parts = \explode('/', $filelines[0], 3);
-                return \trim($parts[2]);
+                return isset($parts[2])
+                    ? \trim($parts[2])
+                    : null;
             }
             if ($docRootFound) {
                 break;
             }
-            if (\implode($dirParts) === Debug::getInstance()->getServerParam('DOCUMENT_ROOT')) {
+            if (\implode(DIRECTORY_SEPARATOR, $dirParts) === $docRoot) {
                 $docRootFound = true;
             }
         }
@@ -232,6 +239,8 @@ class Utility
      * @param string $val value to test
      *
      * @return bool
+     *
+     * @psalm-assert-if-true string $val
      */
     public static function isFile($val)
     {
@@ -250,8 +259,8 @@ class Utility
     /**
      * Emit a header
      *
-     * @param string       $name  Header name
-     * @param string|array $value Header value(s)
+     * @param string          $name  Header name
+     * @param string|string[] $value Header value(s)
      *
      * @return void
      *
@@ -259,16 +268,13 @@ class Utility
      */
     private static function emitHeader($name, $value)
     {
-        if (\is_array($value)) {
-            $val = \array_shift($value);
-            header($name . ': ' . $val);
-            foreach ($value as $val) {
-                // add (vs replace) the additional headers
-                header($name . ': ' . $val, false);
-            }
-            return;
+        $values = (array) $value;
+        $val = \array_shift($values);
+        header($name . ': ' . $val);
+        foreach ($values as $val) {
+            // add (vs replace) the additional values
+            header($name . ': ' . $val, false);
         }
-        header($name . ': ' . $value);
     }
 
     /**
@@ -299,10 +305,8 @@ class Utility
                 '%f' => $micros,                    // Microseconds: w/o leading zeros
             ));
         }
-        $dateInterval = new \DateInterval('PT0S');
-        $dateInterval->h = (int) $hours;
-        $dateInterval->i = (int) $min;
-        $dateInterval->s = (int) $sec;
+        $duration = \sprintf('PT%dH%dM%dS', (int) $hours, (int) $min, (int) $sec);
+        $dateInterval = new \DateInterval($duration);
         return $dateInterval->format($format);
     }
 

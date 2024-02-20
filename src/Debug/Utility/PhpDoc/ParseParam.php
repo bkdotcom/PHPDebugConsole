@@ -14,21 +14,11 @@ namespace bdk\Debug\Utility\PhpDoc;
 
 /**
  * Parse 'param', 'property', 'property-read', 'property-write', & 'var'
+ *
+ * @psalm-import-type TagInfo from \bdk\Debug\Utility\PhpDoc
  */
 class ParseParam
 {
-    protected $helper;
-
-    /**
-     * Constructor
-     *
-     * @param PhpDocHelper $helper Helper instance
-     */
-    public function __construct(Helper $helper)
-    {
-        $this->helper = $helper;
-    }
-
     /**
      * Parse @method tag
      *
@@ -36,6 +26,8 @@ class ParseParam
      * @param array $info   tagName, raw tag string, etc
      *
      * @return array
+     *
+     * @psalm-param TagInfo $info
      */
     public function __invoke(array $parsed, array $info)
     {
@@ -65,7 +57,7 @@ class ParseParam
     }
 
     /**
-     * Test is string appears to start with a variable name
+     * Test if string appears to start with a variable name
      *
      * @param string $str Stringto test
      *

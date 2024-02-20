@@ -19,19 +19,71 @@ use bdk\Debug\Utility\TableRow;
 /**
  * Tablefy data.
  * Ensure all row fields are in the same order
+ *
+ * @psalm-type meta = array{
+ *   columns: list<array-key>,
+ *   columnNames: array<array-key, string>,
+ *   tableInfo: array{
+ *     class: string|null,
+ *     columns: array<array-key, array<string, string|numeric|false>>,
+ *     rows: array<array-key, array<string, mixed>>,
+ *     ...<string, mixed>,
+ *   },
+ *   totalCols: list<array-key>,
+ *   ...<string, mixed>,
+ * }
  */
 class Table
 {
+    /** @var Debug */
     private $debug;
-    private $meta = array();
+    /** @var meta */
+    private $meta = array(
+        'caption' => null,
+        'columnNames' => array(
+            TableRow::SCALAR => 'value',
+        ),
+        'columns' => array(),
+        'inclContext' => false, // for trace tables
+        'sortable' => true,
+        'tableInfo' => array(
+            'class' => null,
+            'columns' => array(
+                /*
+                array(
+                    key
+                    class
+                    total
+                )
+                */
+            ),
+            'haveObjRow' => false,
+            'indexLabel' => null,
+            'rows' => array(
+                /*
+                key => array(
+                    'args'     (for traces)
+                    'class'
+                    'context'  (for traces)
+                    'isScalar'
+                    'key'      (alternate key to display)
+                    'summary'
+                )
+                */
+            ),
+            'summary' => null, // if table is an obj... phpDoc summary
+        ),
+        'totalCols' => array(),
+    );
+    /** @var array<array-key, TableRow|array>  */
     private $rows = array();
 
     /**
      * Constructor
      *
-     * @param mixed $rows  [description]
-     * @param array $meta  Meta info / options
-     * @param Debug $debug [description]
+     * @param mixed                $rows  Table data
+     * @param array<string, mixed> $meta  Meta info / options
+     * @param Debug                $debug Debug instance
      */
     public function __construct($rows = array(), array $meta = array(), Debug $debug = null)
     {
@@ -46,7 +98,7 @@ class Table
      *
      * @param array[]|TableRow[]|mixed[] $rows Array rows
      *
-     * @return array
+     * @return list<array-key>
      */
     public static function colKeys(array $rows)
     {
@@ -66,7 +118,7 @@ class Table
     /**
      * Get table rows
      *
-     * @return array
+     * @return array<array-key, TableRow|array>
      */
     public function getRows()
     {
@@ -76,7 +128,7 @@ class Table
     /**
      * Get meta info
      *
-     * @return array
+     * @return meta
      */
     public function getMeta()
     {
@@ -96,39 +148,44 @@ class Table
     /**
      * Merge current row's keys with merged keys
      *
-     * @param array $curRowKeys current row's keys
-     * @param array $colKeys    all col keys
+     * @param list<array-key> $curRowKeys current row's keys
+     * @param list<array-key> $colKeys    all col keys
      *
-     * @return array
+     * @return list<array-key>
      */
-    private static function colKeysMerge($curRowKeys, $colKeys)
+    private static function colKeysMerge(array $curRowKeys, array $colKeys)
     {
+        /** @var list<array-key> */
         $newKeys = array();
         $count = \count($curRowKeys);
         for ($i = 0; $i < $count; $i++) {
             $curKey = $curRowKeys[$i];
             if ($colKeys && $curKey === $colKeys[0]) {
-                \array_push($newKeys, $curKey);
+                /** @psalm-var list<array-key> $newKeys */
+                $newKeys[] = $curKey;
                 \array_shift($colKeys);
                 continue;
             }
             $position = \array_search($curKey, $colKeys, true);
             if ($position !== false) {
                 $segment = \array_splice($colKeys, 0, (int) $position + 1);
+                /** @psalm-var list<array-key> $newKeys */
                 \array_splice($newKeys, \count($newKeys), 0, $segment);
             } elseif (\in_array($curKey, $newKeys, true) === false) {
-                \array_push($newKeys, $curKey);
+                /** @psalm-var list<array-key> $newKeys */
+                $newKeys[] = $curKey;
             }
         }
         // put on remaining colKeys
         \array_splice($newKeys, \count($newKeys), 0, $colKeys);
-        return \array_unique($newKeys);
+        /** @psalm-var list<array-key> */
+        return \array_values(\array_unique($newKeys));
     }
 
     /**
      * Merge / initialize meta values
      *
-     * @param array $meta Meta info / options
+     * @param array<string, mixed> $meta Meta info / options
      *
      * @return void
      */
@@ -138,43 +195,8 @@ class Table
             columns, columnNames, & totalCols will be moved to
             tableInfo['columns'] structure
         */
-        $this->meta = $this->debug->arrayUtil->mergeDeep(array(
-            'caption' => null,
-            'columnNames' => array(
-                TableRow::SCALAR => 'value',
-            ),
-            'columns' => array(),
-            'inclContext' => false, // for trace tables
-            'sortable' => true,
-            'tableInfo' => array(
-                'class' => null,
-                'columns' => array(
-                    /*
-                    array(
-                        key
-                        class
-                        total
-                    )
-                    */
-                ),
-                'haveObjRow' => false,
-                'indexLabel' => null,
-                'rows' => array(
-                    /*
-                    key => array(
-                        'args'     (for traces)
-                        'class'
-                        'context'  (for traces)
-                        'isScalar'
-                        'key'      (alternate key to display)
-                        'summary'
-                    )
-                    */
-                ),
-                'summary' => null, // if table is an obj... phpDoc summary
-            ),
-            'totalCols' => array(),
-        ), $meta);
+        /** @psalm-var meta */
+        $this->meta = $this->debug->arrayUtil->mergeDeep($this->meta, $meta);
     }
 
     /**
@@ -201,6 +223,10 @@ class Table
             }
             $columns[$key]['total'] = null;
         }
+        /**
+         * @psalm-suppress MixedArrayAssignment
+         * @psalm-suppress MixedPropertyTypeCoercion
+         */
         $this->meta['tableInfo']['columns'] = $columns;
     }
 
@@ -210,7 +236,7 @@ class Table
      *
      * @param mixed $rows Table rows
      *
-     * @return array
+     * @return mixed
      */
     private function preCrate($rows)
     {
@@ -245,10 +271,9 @@ class Table
         if (\is_array($rows) === false) {
             return;
         }
-        foreach ($rows as $rowKey => $row) {
-            $rows[$rowKey] = new TableRow($row);
-        }
-        $this->rows = $rows;
+        $this->rows = \array_map(static function ($row) {
+            return new TableRow($row);
+        }, $rows);
         $this->initTableInfoColumns();
         foreach ($this->rows as $rowKey => $row) {
             $this->rows[$rowKey] = $this->processRow($row, $rowKey);
@@ -260,7 +285,7 @@ class Table
      *
      * @param mixed $rows Row data to process
      *
-     * @return array
+     * @return mixed
      */
     private function processRowsGet($rows)
     {
@@ -269,17 +294,44 @@ class Table
         }
         $rows = $this->debug->abstracter->crate($rows, 'table');
         if ($this->debug->abstracter->isAbstraction($rows, Type::TYPE_OBJECT)) {
+            /**
+             * @psalm-var array{
+             *    classname: string,
+             *    phpDoc: array{summary: string|null},
+             *    properties: array<string, array<string,mixed>>,
+             *    traverseValues?: array,
+             * } $rows
+             */
+            /**
+             * @psalm-suppress MixedArrayAssignment
+             * @psalm-suppress MixedPropertyTypeCoercion pslam bug tableInfo becomes mixed
+             */
             $this->meta['tableInfo']['class'] = $rows['className'];
+            /**
+             * @psalm-suppress MixedArrayAssignment
+             * @psalm-suppress MixedPropertyTypeCoercion pslam bug tableInfo becomes mixed
+             * @psalm-suppress MixedArrayAccess
+             */
             $this->meta['tableInfo']['summary'] = $rows['phpDoc']['summary'];
-            $rows = $rows['traverseValues']
+            /** @psalm-suppress MixedArgument */
+            return $rows['traverseValues']
                 ? $rows['traverseValues']
                 : \array_map(
+                    /**
+                     * @param array{value:mixed, ...<string,mixed>} $info
+                     */
                     static function ($info) {
                         return $info['value'];
                     },
-                    \array_filter($rows['properties'], static function ($prop) {
-                        return $prop['visibility'] === 'public';
-                    })
+                    \array_filter(
+                        $rows['properties'],
+                        /**
+                         * @param array<string,mixed> $prop
+                         */
+                        static function ($prop) {
+                            return $prop['visibility'] === 'public';
+                        }
+                    )
                 );
         }
         return $rows;
@@ -297,7 +349,6 @@ class Table
     {
         $columns = $this->meta['tableInfo']['columns'];
         $keys = \array_keys($columns);
-        $rowInfo = array();
         $valsTemp = $row->keyValues($keys);
         $rowInfo = $row->getInfo();
         if ($this->meta['inclContext']) {
@@ -322,7 +373,9 @@ class Table
     {
         $columns = array();
         foreach ($this->meta['tableInfo']['columns'] as $colInfo) {
-            $columns[] = \array_filter($colInfo, 'strlen');
+            $columns[] = \array_filter($colInfo, static function ($val) {
+                return \strlen((string) $val) > 0;
+            });
         }
         $this->meta['tableInfo']['columns'] = $columns;
         unset(
@@ -353,17 +406,25 @@ class Table
      *
      * @return void
      */
-    private function updateTableInfo($rowKey, $rowValues, $rowInfo)
+    private function updateTableInfo($rowKey, array $rowValues, array $rowInfo)
     {
         $this->meta['tableInfo']['haveObjRow'] = $this->meta['tableInfo']['haveObjRow'] || $rowInfo['class'];
         foreach ($this->meta['totalCols'] as $key) {
+            /**
+             * @psalm-suppress MixedPropertyTypeCoercion
+             * @psalm-suppress MixedOperand
+             * @psalm-suppress PossiblyFalseOperand
+             */
             $this->meta['tableInfo']['columns'][$key]['total'] += $rowValues[$key];
         }
+        /** @var array-key $key */
         foreach ($rowInfo['classes'] as $key => $class) {
             if (!isset($this->meta['tableInfo']['columns'][$key]['class'])) {
+                /** @psalm-suppress MixedPropertyTypeCoercion */
                 $this->meta['tableInfo']['columns'][$key]['class'] = $class;
             } elseif ($this->meta['tableInfo']['columns'][$key]['class'] !== $class) {
                 // column values not of the same type
+                /** @psalm-suppress MixedPropertyTypeCoercion */
                 $this->meta['tableInfo']['columns'][$key]['class'] = false;
             }
         }
@@ -378,7 +439,7 @@ class Table
      *
      * @return void
      */
-    private function updateTableInfoRow($rowKey, $rowInfo)
+    private function updateTableInfoRow($rowKey, array $rowInfo)
     {
         unset($rowInfo['classes']);
         $rowInfo = \array_filter($rowInfo, static function ($val) {
@@ -391,6 +452,10 @@ class Table
         $rowInfoExisting = isset($this->meta['tableInfo']['rows'][$rowKey])
             ? $this->meta['tableInfo']['rows'][$rowKey]
             : array();
+        /**
+         * @psalm-suppress MixedArrayAssignment
+         * @psalm-suppress MixedPropertyTypeCoercion
+         */
         $this->meta['tableInfo']['rows'][$rowKey] = \array_merge($rowInfoExisting, $rowInfo);
     }
 }

@@ -23,6 +23,7 @@ class Channel implements SubscriberInterface
 {
     use CustomMethodTrait;
 
+    /** @var array<string, Debug> */
     private $channels = array();
 
     /** @var string[] */
@@ -42,7 +43,7 @@ class Channel implements SubscriberInterface
      * @param string|array $name   channel name (or channel path)
      * @param array        $config channel specific configuration
      *
-     * @return \bdk\Debug new or existing `Debug` instance
+     * @return Debug new or existing `Debug` instance
      */
     public function getChannel($name, $config = array())
     {

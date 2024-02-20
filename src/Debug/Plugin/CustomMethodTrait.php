@@ -20,6 +20,7 @@ use bdk\Debug\LogEntry;
  */
 trait CustomMethodTrait
 {
+    /** @var Debug */
     private $debug;
 
     /**

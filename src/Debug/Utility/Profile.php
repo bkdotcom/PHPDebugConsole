@@ -19,14 +19,19 @@ class Profile
 {
     /** @var array profile data */
     protected $data = array();
+    /** @var list<array{function:non-empty-string, subTime:float, tsStart:float}> */
     protected $funcStack = array();
+    /** @var bool */
     protected $isProfiling = false;
     /** @var non-empty-string */
     protected $namespace = 'bdk\\Debug';
     /** @var non-empty-string Ignore methods in these namespaces */
     protected $nsIgnoreRegex;
+    /** @var list<non-empty-string> */
     protected $rootStack = array();
+    /** @var float|null */
     protected $timeLastTick = null;
+    /** @var array */
     protected $trace = array();
 
     /**

@@ -2,6 +2,7 @@
 
 namespace bdk\Slack;
 
+use BadMethodCallException;
 use Psr\Http\Message\ServerRequestInterface;
 use RuntimeException;
 
@@ -10,29 +11,38 @@ use RuntimeException;
  *
  * @see https://api.slack.com/interactivity/slash-commands
  * @see https://api.slack.com/authentication/verifying-requests-from-slack
+ *
+ * @psalm-api
  */
 class SlackCommand
 {
     const SIGNING_SIGNATURE_VERSION = 'v0';
 
-    /** @var array */
+    /** @var array{signingSecret:string, ...<string,mixed>} */
     protected $cfg = array(
-        'signingSecret' => null,
+        'signingSecret' => '',
     );
 
+    /** @var array<non-empty-string, callable> */
     protected $commandHandlers = array();
 
     /**
      * Constructor
      *
-     * @param array<string, mixed>    $cfg      Configuration
-     * @param array<string, callable> $handlers command handlers
+     * @param array<string, mixed>              $cfg      Configuration
+     * @param array<non-empty-string, callable> $handlers command handlers
+     *
+     * @throws BadMethodCallException
      */
     public function __construct(array $cfg = array(), array $handlers = array())
     {
-        $this->cfg = \array_merge(array(
+        $cfg = \array_merge(array(
             'signingSecret' => \getenv('SLACK_SIGNING_SECRET'),
         ), $cfg);
+        if (\is_string($cfg['signingSecret']) === false) {
+            throw new BadMethodCallException('signingSecret must be provided.');
+        }
+        $this->cfg = \array_merge($this->cfg, $cfg);
         foreach ($handlers as $name => $handler) {
             $this->registerHandler($name, $handler);
         }
@@ -50,7 +60,14 @@ class SlackCommand
     public function handle(ServerRequestInterface $request)
     {
         $this->assertSlackRequest($request);
-        $command = $request->getParsedBody()['command'];
+        $params = $request->getParsedBody() ?: array();
+        /** @psalm-var mixed */
+        $command = isset($params['command'])
+            ? $params['command']
+            : null;
+        if (\is_string($command) === false) {
+            throw new RuntimeException('Command not provided (or not-string)');
+        }
         if (isset($this->commandHandlers[$command])) {
             $function = $this->commandHandlers[$command];
             return $function($request);
@@ -66,8 +83,8 @@ class SlackCommand
      * Register to handle a specific command
      * May also register a 'default' handler
      *
-     * @param string   $command Name of command
-     * @param callable $handler Callable that can handle command/request
+     * @param non-empty-string $command Name of command
+     * @param callable         $handler Callable that can handle command/request
      *
      * @return void
      */

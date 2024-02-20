@@ -27,8 +27,8 @@ use bdk\Debug\Utility\Php;
  */
 class FileStreamWrapper extends FileStreamWrapperBase
 {
-    /** @var resource|null */
-    private $resource;
+    /** @var resource|false */
+    private $resource = false;
 
     /**
      * Close the directory
@@ -43,7 +43,7 @@ class FileStreamWrapper extends FileStreamWrapperBase
             return false;
         }
         \closedir($this->resource);
-        $this->resource = null;
+        $this->resource = false;
         return true;
     }
 
@@ -56,13 +56,14 @@ class FileStreamWrapper extends FileStreamWrapperBase
      * @return bool
      *
      * @see http://php.net/manual/en/streamwrapper.dir-opendir.php
+     *
+     * @psalm-suppress PossiblyUnusedParam
      */
     public function dir_opendir($path, $options = 0)
     {
-        // "use" our function params so things don't complain
-        array($options);
         static::unregister();
         $args = $this->popNull(array($path, $this->context));
+        /** @var resource|false */
         $this->resource = \call_user_func_array('opendir', $args);
         static::register();
         return $this->resource !== false;
@@ -112,6 +113,7 @@ class FileStreamWrapper extends FileStreamWrapperBase
         static::unregister();
         $isRecursive = (bool) ($options & STREAM_MKDIR_RECURSIVE);
         $args = $this->popNull(array($path, $mode, $isRecursive, $this->context));
+        /** @var bool */
         $result = \call_user_func_array('mkdir', $args);
         static::register();
         return $result;
@@ -131,6 +133,7 @@ class FileStreamWrapper extends FileStreamWrapperBase
     {
         static::unregister();
         $args = $this->popNull(array($pathFrom, $pathTo, $this->context));
+        /** @var bool */
         $result = \call_user_func_array('rename', $args);
         static::register();
         return $result;
@@ -145,13 +148,14 @@ class FileStreamWrapper extends FileStreamWrapperBase
      * @return bool
      *
      * @see http://php.net/manual/en/streamwrapper.rmdir.php
+     *
+     * @psalm-suppress PossiblyUnusedParam
      */
     public function rmdir($path, $options)
     {
-        // "use" our function params so things don't complain
-        array($options);
         static::unregister();
         $args = $this->popNull(array($path, $this->context));
+        /** @var bool */
         $result = \call_user_func_array('rmdir', $args);
         static::register();
         return $result;
@@ -166,8 +170,10 @@ class FileStreamWrapper extends FileStreamWrapperBase
      * @return resource|false
      *
      * @see http://php.net/manual/en/streamwrapper.stream-cast.php
+     *
+     * @psalm-suppress PossiblyUnusedParam
      */
-    public function stream_cast($castAs) // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
+    public function stream_cast($castAs)
     {
         return $this->resource
             ? $this->resource
@@ -188,7 +194,7 @@ class FileStreamWrapper extends FileStreamWrapperBase
             $resource = $this->resource;
             \fclose($resource);
         }
-        $this->resource = null;
+        $this->resource = false;
     }
 
     /**
@@ -256,9 +262,9 @@ class FileStreamWrapper extends FileStreamWrapperBase
     /**
      * Change file options
      *
-     * @param string $path   filepath or URL
-     * @param int    $option What meta value is being set
-     * @param mixed  $value  Meta value
+     * @param string                    $path   filepath or URL
+     * @param int                       $option What meta value is being set
+     * @param string|int|list<int|null> $value  Meta value
      *
      * @return bool
      *
@@ -270,20 +276,26 @@ class FileStreamWrapper extends FileStreamWrapperBase
         $result = false;
         switch ($option) {
             case STREAM_META_TOUCH:
-                $args = \array_merge(array($path), $value ?: array());
+                // @var array consisting of two arguments of the touch() function
+                $value = $value ?: array();
+                $args = \array_merge(array($path), $value);
+                /** @var bool */
                 $result = \call_user_func_array('touch', $this->popNull($args));
                 break;
             case STREAM_META_OWNER_NAME:
                 // Fall through
             case STREAM_META_OWNER:
+                /** @var string $value */
                 $result = \chown($path, $value);
                 break;
             case STREAM_META_GROUP_NAME:
                 // Fall through
             case STREAM_META_GROUP:
+                /** @var string $value */
                 $result = \chgrp($path, $value);
                 break;
             case STREAM_META_ACCESS:
+                /** @var int $value */
                 $result = \chmod($path, $value);
                 break;
         }
@@ -465,6 +477,7 @@ class FileStreamWrapper extends FileStreamWrapperBase
     {
         static::unregister();
         $args = $this->popNull(array($path, $this->context));
+        /** @var bool */
         $result = \call_user_func_array('unlink', $args);
         static::register();
         return $result;

@@ -108,9 +108,9 @@ class ReflectionTest extends TestCase
             'obj.instanceVal' => array($testObj, 'propPrivate', 'redefined in Test (private)'),
             'obj.staticVal' => array($testObj, 'propStatic', 'I\'m Static'),
             'obj.bogusProp' => array($testObj, 'noSuchProp', new \RuntimeException('Property ' . $classname . '::$noSuchProp does not exist')),
-            'classname.instanceVal' => array($classname, 'propPrivate', new \RuntimeException('propGet: object must be provided to retrieve instance value propPrivate')),
+            'classname.instanceVal' => array($classname, 'propPrivate', new \InvalidArgumentException('propGet: object must be provided to retrieve instance value propPrivate')),
             'classname.staticVal' => array($classname, 'propStatic', 'I\'m Static'),
-            'classname.bogusProp' => array($classname, 'noSuchProp', new \RuntimeException('Property ' . $classname . '::$noSuchProp does not exist')),
+            'classname.bogusProp' => array($classname, 'noSuchProp', new \OutOfBoundsException('Property ' . $classname . '::$noSuchProp does not exist')),
         );
     }
 
@@ -122,9 +122,9 @@ class ReflectionTest extends TestCase
             'obj.instanceVal' => array($testObj, 'propPrivate', 'newVal 1'),
             'obj.staticVal' => array($testObj, 'propStatic', 'newVal 2'),
             'obj.bogusProp' => array($testObj, 'noSuchProp', 'irrelevant', new \RuntimeException('Property ' . $classname . '::$noSuchProp does not exist')),
-            'classname.instanceVal' => array($classname, 'propPrivate', 'nocando', new \RuntimeException('propSet: object must be provided to set instance value propPrivate')),
+            'classname.instanceVal' => array($classname, 'propPrivate', 'nocando', new \InvalidArgumentException('propSet: object must be provided to set instance value propPrivate')),
             'classname.staticVal' => array($classname, 'propStatic', 'newVal 3'),
-            'classname.bogusProp' => array($classname, 'noSuchProp', 'irrelevant', new \RuntimeException('Property ' . $classname . '::$noSuchProp does not exist')),
+            'classname.bogusProp' => array($classname, 'noSuchProp', 'irrelevant', new \OutOfBoundsException('Property ' . $classname . '::$noSuchProp does not exist')),
         );
     }
 
@@ -253,7 +253,7 @@ class ReflectionTest extends TestCase
                 false,
                 array(
                     'instanceOf' => 'ReflectionFunction',
-                    'classname' => false,
+                    'classname' => null,
                     'hash' => \md5('var_dump()'),
                 ),
             ),
@@ -262,7 +262,7 @@ class ReflectionTest extends TestCase
                 false,
                 array(
                     'instanceOf' => 'ReflectionFunction',
-                    'classname' => false,
+                    'classname' => null,
                     'hash' => \md5(__NAMESPACE__ . '\\testFunc()'),
                 ),
             ),

@@ -24,7 +24,10 @@ class LogEnv implements SubscriberInterface
 {
     use AssertSettingTrait;
 
+    /** @var Debug|null */
     private $debug;
+
+    /** @var array<string|mixed> */
     private $iniValues = array();
 
     /**

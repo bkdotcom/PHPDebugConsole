@@ -19,7 +19,10 @@ use bdk\Debug;
  */
 class Data
 {
+    /** @var Debug */
     private $debug;
+
+    /** @var \bdk\Debug\Utility\ArrayUtil */
     private $arrayUtil;
 
     protected $data = array(
@@ -37,6 +40,7 @@ class Data
         ),
     );
 
+    /** @var \bdk\Debug\LogEntry[] */
     protected $logRef;          // points to either log or logSummary[priority]
 
     /**

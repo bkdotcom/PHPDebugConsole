@@ -22,11 +22,11 @@ trait AssertSettingTrait
     /**
      * Assert ini setting is/is-not specified value
      *
-     * @param array $setting setting name, "type", comparison value, operator
+     * @param array<string,mixed> $setting setting name, "type", comparison value, operator
      *
      * @return void
      */
-    protected function assertSetting($setting)
+    protected function assertSetting(array $setting)
     {
         $setting = $this->assertSettingPrep(\array_merge(array(
             'addParams' => array(),
@@ -37,6 +37,7 @@ trait AssertSettingTrait
             'valActual' => '__use_ini_val__',
             'valCompare' => true,
         ), $setting));
+        /** @var array{0:bool, 1:string} */
         $params = array(
             $this->debug->stringUtil->compare($setting['valActual'], $setting['valCompare'], $setting['operator']),
             $setting['name']
@@ -55,11 +56,11 @@ trait AssertSettingTrait
     /**
      * Merge in default valActual & msg values
      *
-     * @param array $setting setting name, "type", comparison value, operator
+     * @param array<string,mixed> $setting setting name, "type", comparison value, operator
      *
      * @return array
      */
-    private function assertSettingPrep($setting)
+    private function assertSettingPrep(array $setting)
     {
         if (\is_bool($setting['valCompare'])) {
             $setting['filter'] = FILTER_VALIDATE_BOOLEAN;
@@ -75,7 +76,9 @@ trait AssertSettingTrait
         $valFriendly = $this->valFriendly($setting);
         $setting['msg'] = \sprintf(
             '%s %s',
-            \in_array($setting['operator'], array('===', '==', '=', 'eq'), true) ? 'should be' : 'should not be',
+            \in_array($setting['operator'], array('===', '==', '=', 'eq'), true)
+                ? 'should be'
+                : 'should not be',
             $valFriendly
         );
         if (\substr($valFriendly, 0, 1) === '<') {

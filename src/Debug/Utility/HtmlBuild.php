@@ -28,7 +28,7 @@ class HtmlBuild
     public static function buildAttribNameValue(&$name, $value)
     {
         if (\is_int($name)) {
-            $name = $value;
+            $name = (string) $value;
             $value = true;
         }
         $name = \strtolower($name);
@@ -54,17 +54,20 @@ class HtmlBuild
     {
         switch (static::getType($name, $val)) {
             case 'array':
+                /** @var string[] $val */
                 return static::buildAttribValArray($name, $val);
             case 'bool':
+                /** @var bool $val */
                 return static::buildAttribValBool($name, $val);
             case 'class':
+                /** @var string|string[] $val */
                 return static::buildAttribValClass($val);
             case 'data':
                 return \is_string($val)
                     ? $val
                     : \json_encode($val);
             case 'id':
-				return Html::sanitizeId($val);
+                return Html::sanitizeId($val);
             case 'null':
                 return null;
             default:
@@ -77,8 +80,8 @@ class HtmlBuild
      *
      * This function is not meant for data attributs
      *
-     * @param string $name   attribute name ("style")
-     * @param array  $values key/value for style
+     * @param string   $name   attribute name ("style")
+     * @param string[] $values key/value for style
      *
      * @return string|null
      */
@@ -135,7 +138,7 @@ class HtmlBuild
      *      'key' => 'classValue',
      *   ]
      *
-     * @param string|array $values Class values.  May be array or space-separated string
+     * @param string|string[] $values Class values.  May be array or space-separated string
      *
      * @return string
      */

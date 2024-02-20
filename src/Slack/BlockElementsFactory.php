@@ -2,12 +2,15 @@
 
 namespace bdk\Slack;
 
-use OutOfBoundsException;
+use Closure;
+use UnexpectedValueException;
 
 /**
  * Block elements can be used inside of section, context, input and actions layout blocks.
  *
  * @link https://api.slack.com/reference/block-kit/block-elements
+ *
+ * @psaslm-api
  */
 class BlockElementsFactory extends AbstractBlockFactory
 {
@@ -42,7 +45,7 @@ class BlockElementsFactory extends AbstractBlockFactory
      */
     public static function button($actionId, $label, $value = null, $values = array())
     {
-        $block = \array_merge(array(
+        $default = array(
             'accessibility_label' => null,
             'action_id' => (string) $actionId,  // really required?
             'confirm' => null,
@@ -50,21 +53,21 @@ class BlockElementsFactory extends AbstractBlockFactory
             'text' => self::normalizeText([
                 'text' => $label,
                 'type' => 'plain_text',
-            ]),
+            ], 'button text'),
             'type' => 'button',
             'url' => null,
             'value' => $value,
-        ), $values);
-        return self::removeNull($block);
+        );
+        return self::initBlock($default, $values);
     }
 
     /**
      * Create a checkbox group
      * Works with block types: Section, Actions, Input
      *
-     * @param string $actionId ActionId
-     * @param array  $options  Selectable options
-     * @param array  $values   Attributes
+     * @param string              $actionId ActionId
+     * @param array               $options  Selectable options
+     * @param array<string,mixed> $values   Attributes
      *
      * @return array<string,mixed>
      */
@@ -84,17 +87,15 @@ class BlockElementsFactory extends AbstractBlockFactory
      */
     public static function datePicker($actionId, $values = array())
     {
-        $block = \array_merge(array(
+        $default = array(
             'action_id' => (string) $actionId,
             'confirm' => null,
             'focus_on_load' => false,
             'initial_date' => null, // YYYY-MM-DD
             'placeholder' => null,
             'type' => 'datepicker',
-        ), $values);
-        $block = self::renameDefault($block, 'initial_date');
-        $block['placeholder'] = self::normalizeText($block['placeholder']);
-        return self::removeNull($block);
+        );
+        return self::initBlock($default, $values);
     }
 
     /**
@@ -108,15 +109,14 @@ class BlockElementsFactory extends AbstractBlockFactory
      */
     public static function datetimePicker($actionId, $values = array())
     {
-        $block = \array_merge(array(
+        $default = array(
             'action_id' => (string) $actionId,
             'confirm' => null,
             'focus_on_load' => false,
             'initial_date_time' => null, // unix timestamp
             'type' => 'datetimepicker',
-        ), $values);
-        $block = self::renameDefault($block, 'initial_date_time');
-        return self::removeNull($block);
+        );
+        return self::initBlock($default, $values);
     }
 
     /**
@@ -130,17 +130,15 @@ class BlockElementsFactory extends AbstractBlockFactory
      */
     public static function email($actionId, $values = array())
     {
-        $block = \array_merge(array(
+        $default = array(
             'action_id' => (string) $actionId,
             'dispatch_action_config' => null,
             'focus_on_load' => false,
             'initial_value' => null,
             'placeholder' => null,
             'type' => 'email_text_input',
-        ), $values);
-        $block = self::renameDefault($block);
-        $block['placeholder'] = self::normalizeText($block['placeholder']);
-        return self::removeNull($block);
+        );
+        return self::initBlock($default, $values);
     }
 
     /**
@@ -152,7 +150,7 @@ class BlockElementsFactory extends AbstractBlockFactory
      */
     public static function number($values = array())
     {
-        $block = \array_merge(array(
+        $default = array(
             'action_id' => null,
             'dispatch_action_config' => null,
             'focus_on_load' => false,
@@ -162,10 +160,8 @@ class BlockElementsFactory extends AbstractBlockFactory
             'min_value' => null,
             'placeholder' => null,
             'type' => 'number_input',
-        ), $values);
-        $block = self::renameDefault($block);
-        $block['placeholder'] = self::normalizeText($block['placeholder']);
-        return self::removeNull($block);
+        );
+        return self::initBlock($default, $values);
     }
 
     /**
@@ -179,13 +175,13 @@ class BlockElementsFactory extends AbstractBlockFactory
      */
     public static function overflow($actionId, array $options, $values = array())
     {
-        $block = \array_merge(array(
+        $default = array(
             'action_id' => $actionId,
             'confirm' => null,
             'options' => self::normalizeOptions($options, 5, 'overflow'),
             'type' => 'overflow',
-        ), $values);
-        return self::removeNull($block);
+        );
+        return self::initBlock($default, $values);
     }
 
     /**
@@ -212,32 +208,39 @@ class BlockElementsFactory extends AbstractBlockFactory
      * @param array  $values   Attributes
      *
      * @return array<string,mixed>
+     *
+     * @throws UnexpectedValueException
      */
     public static function select($actionId, array $options = array(), $multiple = false, $values = array())
     {
-        $block = \array_merge(array(
+        $default = array(
             'action_id' => (string) $actionId,
             'confirm' => null,
             'focus_on_load' => false,
             'initial_option' => null, // use with static_slect
             'initial_options' => null, // use with multi_static_select
-            'max_selected_items' => null,   // min = 1
+            'max_selected_items' => null, // min = 1
             'options' => $options,
             'option_groups' => null, // max 100 groups
             'placeholder' => null,
             'type' => $multiple ? 'multi_static_select' : 'static_select',
-        ), $values);
-        $block = self::renameDefault($block);
-        if ($block['initial_options'] !== null) {
-            $block['initial_options'] = self::normalizeOptions((array) $block['initial_options'], 100, $block['type']);
-        }
-        if ($block['option_groups']) {
-            $block['options'] = null;
-        } elseif ($block['options']) {
-            $block['options'] = self::normalizeOptions($options, 100, $block['type']); // max 100 options
-        }
-        $block['placeholder'] = self::normalizeText($block['placeholder']);
-        return self::removeNull($block);
+        );
+        $closure =
+        /**
+         * @param array{type:string, ...<string,mixed>} $block
+         */
+        static function (array $block) {
+            if ($block['initial_options'] !== null) {
+                $block['initial_options'] = self::normalizeOptions((array) $block['initial_options'], 100, $block['type']);
+            }
+            if ($block['option_groups'] !== null) {
+                $block['options'] = null;
+            } elseif (\is_array($block['options'])) {
+                $block['options'] = self::normalizeOptions($block['options'], 100, $block['type']); // max 100 options
+            }
+            return $block;
+        };
+        return self::initBlock($default, $values, $closure);
     }
 
     /**
@@ -251,7 +254,7 @@ class BlockElementsFactory extends AbstractBlockFactory
      */
     public static function textInput($actionId, $values = array())
     {
-        $block = \array_merge(array(
+        $default = array(
             'action_id' => $actionId,
             'dispatch_action_config' => null,
             'focus_on_load' => false,
@@ -261,10 +264,8 @@ class BlockElementsFactory extends AbstractBlockFactory
             'multiline' => false,
             'placeholder' => null,
             'type' => 'plain_text_input',
-        ), $values);
-        $block = self::renameDefault($block);
-        $block['placeholder'] = self::normalizeText($block['placeholder']);
-        return self::removeNull($block);
+        );
+        return self::initBlock($default, $values);
     }
 
     /**
@@ -278,17 +279,15 @@ class BlockElementsFactory extends AbstractBlockFactory
      */
     public static function timePicker($actionId, $values = array())
     {
-        $block = \array_merge(array(
+        $default = array(
             'action_id' => $actionId,
             'confirm' => null,
             'focus_on_load' => false,
             'initial_time' => null, // HH:mm   (24-hour format)
             'placeholder' => null,
             'type' => 'timepicker',
-        ), $values);
-        $block = self::renameDefault($block, 'initial_time');
-        $block['placeholder'] = self::normalizeText($block['placeholder']);
-        return self::removeNull($block);
+        );
+        return self::initBlock($default, $values);
     }
 
     /**
@@ -302,17 +301,15 @@ class BlockElementsFactory extends AbstractBlockFactory
      */
     public static function url($actionId, $values = array())
     {
-        $block = \array_merge(array(
+        $default = array(
             'action_id' => $actionId,
             'dispatch_action_config' => null,
             'focus_on_load' => false,
             'initial_value' => null,
             'placeholder' => null,
             'type' => 'url_text_input',
-        ), $values);
-        $block = self::renameDefault($block);
-        $block['placeholder'] = self::normalizeText($block['placeholder']);
-        return self::removeNull($block);
+        );
+        return self::initBlock($default, $values);
     }
 
     /**
@@ -321,103 +318,55 @@ class BlockElementsFactory extends AbstractBlockFactory
      * @param string $actionId ActionId
      * @param array  $options  Selectable options
      * @param array  $values   Attributes
-     * @param string $what     "checkboxes" or "radio_buttons"
+     * @param string $type     "checkboxes" or "radio_buttons"
      *
      * @return array<string,mixed>
      */
-    private static function checkboxesRadio($actionId, array $options, array $values, $what)
+    protected static function checkboxesRadio($actionId, array $options, array $values, $type)
     {
-        $initialOptionKey = $what === 'checkboxes'
+        $initialOptionKey = $type === 'checkboxes'
             ? 'initial_options'
             : 'initial_option';
-        $block = \array_merge(array(
+        $default = array(
             $initialOptionKey => null,
             'action_id' => (string) $actionId,
             'confirm' => null,
             'focus_on_load' => false,
-            'options' => self::normalizeOptions($options, 10, $what),
-            'type' => $what,
-        ), $values);
-        $block = self::renameDefault($block);
+            'options' => self::normalizeOptions($options, 10, $type),
+            'type' => $type,
+        );
+        return self::initBlock($default, $values);
+    }
+
+    /**
+     * Merge default and user values
+     *
+     * @param array{type?:string, ...<string,mixed>} $default Block's default values
+     * @param array                                  $values  User supplied values
+     * @param Closure|null                           $closure called before removing null values
+     *
+     * @return array{type?:string, ...<string,mixed>}
+     *
+     * @throws UnexpectedValueException
+     */
+    protected static function initBlock($default, $values, $closure = null)
+    {
+        $block = \array_merge($default, $values);
+        if (isset($default['type'])) {
+            // don't allow user to override
+            $block['type'] = $default['type'];
+            $block = self::renameDefault($block);
+        }
+        /** @psalm-var array{type:string, ...<string,mixed>} psalm bug - should infer, but doesn't */
+        $block = \array_intersect_key($block, $default);
+        if (isset($block['placeholder'])) {
+            $block['placeholder'] = self::normalizeText($block['placeholder'], 'placeholder');
+        }
+        if ($closure) {
+            /** @psalm-var array{type:string, ...<string,mixed>} */
+            $block = $closure($block);
+        }
+        /** @psalm-var array{type:string, ...<string,mixed>} */
         return self::removeNull($block);
-    }
-
-    /**
-     * Normalize checkbox, radio, or select options
-     *
-     * @param array  $options checkbox, radio, overflow, or select block element
-     * @param int    $max     Maximum number of allowed options
-     * @param string $where   Name of element options belong to
-     *
-     * @return array
-     *
-     * @throws OutOfBoundsException
-     */
-    private static function normalizeOptions(array $options, $max, $where)
-    {
-        foreach ($options as $k => $option) {
-            $options[$k] = self::normalizeOption($option, $k);
-        }
-        $count = \count($options);
-        if ($count > $max) {
-            throw new OutOfBoundsException(\sprintf('A maximum of %d options are allowed in %s element. %d provided', $max, $where, $count));
-        }
-        return \array_values($options);
-    }
-
-    /**
-     * Normaliee a single option "object"
-     *
-     * Overflow, select, and multi-select menus can only use plain_text
-     * Radio buttons and checkboxes can use mrkdwn text objects.
-     *
-     * @param array|string    $option option text/value
-     * @param int|string|null $key    The option's array key...
-     *                                   if a string, it will used as the option's text (label)
-     *
-     * @return array<string,mixed>
-     */
-    private static function normalizeOption($option, $key = null)
-    {
-        if (\is_array($option) === false) {
-            $option = array(
-                'text' => $option,
-                'value' => $option,
-            );
-        }
-        if (\is_string($key)) {
-            $option['text'] = $key;
-        }
-        $isMrkdwn = isset($option['type']) && $option['type'] === 'mrkdwn';
-        $option['text'] = self::normalizeText($option['text'], $isMrkdwn);
-        $option = \array_intersect_key($option, array(
-            'description' => null,
-            'text' => null,
-            'url' => null, // only for overflow,
-            'value' => null,
-        ));
-        return self::removeNull($option);
-    }
-
-    /**
-     * Rename 'default' to block-specific name
-     *
-     * @param array  $block    block values
-     * @param string $renameTo block type's "initial_value" name
-     *
-     * @return array
-     */
-    private static function renameDefault(array $block, $renameTo = 'initial_value')
-    {
-        if (\in_array($block['type'], array('checkboxes', 'multi_static_select'), true)) {
-            $renameTo = 'initial_options';
-        } elseif (\in_array($block['type'], array('radio_buttons', 'static_select'), true)) {
-            $renameTo = 'initial_option';
-        }
-        if (isset($block['default'])) {
-            $block[$renameTo] = $block['default'];
-            unset($block['default']);
-        }
-        return $block;
     }
 }

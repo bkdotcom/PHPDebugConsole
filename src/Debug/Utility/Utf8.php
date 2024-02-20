@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
@@ -23,6 +23,12 @@ use bdk\Debug\Utility\Utf8Dump;
  */
 class Utf8
 {
+    const TYPE_CONTROL = 'control';
+    const TYPE_OTHER = 'other';
+    const TYPE_SPECIAL = 'special';
+    const TYPE_UTF8 = 'utf8';
+
+    /** @var Utf8Buffer|null */
     private static $buffer;
 
     /**
@@ -31,8 +37,8 @@ class Utf8
      * control & non-utf-8 chars are displayed as hex
      * "special" unicode-characters are displayed with the \uxxxx representation
      *
-     * @param string $str     string containing binary
-     * @param array  $options prefix, sanitizeNonBinary, useHtml
+     * @param string              $str     string containing binary
+     * @param array<string,mixed> $options prefix, sanitizeNonBinary, useHtml
      *
      * @return string
      */
@@ -82,7 +88,7 @@ class Utf8
      */
     public static function strcut($str, $start, $length = null)
     {
-        self::$buffer = new \bdk\Debug\Utility\Utf8Buffer($str);
+        self::$buffer = new Utf8Buffer($str);
         $start = self::strcutGetStart($start);
         $length = self::strcutGetLength($start, $length);
         self::$buffer->seek($start);
@@ -129,19 +135,19 @@ class Utf8
     /**
      * Find length value...
      *
-     * @param int $start  Our start value
-     * @param int $length User supplied length
+     * @param int      $start  Our start value
+     * @param int|null $length User supplied length
      *
      * @return int
      */
     private static function strcutGetLength($start, $length)
     {
-        $end = $start + $length;
+        $end = $start + (int) $length;
         $strlen = self::$buffer->strlen();
         if ($end >= $strlen) {
             return $strlen - $start;
         }
-        $end++; // increment so that we start at original
+        $end++; // increment to offset the initial decrement below
         for ($i = 0; $i < 4; $i++) {
             $end--;
             self::$buffer->seek($end);

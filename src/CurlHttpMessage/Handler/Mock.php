@@ -8,9 +8,9 @@ use bdk\Promise\PromiseInterface;
 use Countable;
 use Exception;
 use InvalidArgumentException;
-use OutOfBoundsException;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use UnderflowException;
 
 /**
  * Handler that returns responses or throw exceptions from a queue.
@@ -55,12 +55,12 @@ class Mock implements Countable
      *
      * @return PromiseInterface
      *
-     * @throws OutOfBoundsException
+     * @throws UnderflowException
      */
     public function __invoke(CurlReqRes $curlReqRes)
     {
         if (!$this->queue) {
-            throw new OutOfBoundsException('Mock queue is empty');
+            throw new UnderflowException('Mock queue is empty');
         }
 
         $options = $curlReqRes->getOptions();

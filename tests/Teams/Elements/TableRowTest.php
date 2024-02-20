@@ -122,7 +122,9 @@ class TableRowTest extends AbstractTestCaseWith
         return array(
             array('addedCell', ['string']),
             array('addedCell', [new TableCell('foo')]),
-            array('addedCell', [\fopen(__FILE__, 'r')], true, 'Invalid TableCell item found at index 0.  resource provided.'),
+            array('addedCell', [\fopen(__FILE__, 'r')], true,
+                'Invalid TableCell item found at index 0. Expecting ElementInterface, stringable, scalar, or null. resource provided.',
+            ),
             array('cells', [[
                 new TableCell('foo'),
                 'bar',

@@ -6,13 +6,15 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2023 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
 namespace bdk\Debug\Utility;
 
 use BackedEnum;
+use InvalidArgumentException;
+use OutOfBoundsException;
 use ReflectionClass;
 use ReflectionClassConstant;
 use ReflectionEnum;
@@ -24,7 +26,6 @@ use ReflectionMethod;
 use ReflectionObject;
 use ReflectionProperty;
 use Reflector;
-use RuntimeException;
 use UnitEnum;
 
 /**
@@ -50,12 +51,12 @@ class Reflection
      *
      * @param Reflector $reflector Reflector instance
      *
-     * @return string|false
+     * @return string|null
      */
     public static function classname(Reflector $reflector)
     {
         if ($reflector instanceof ReflectionFunction) {
-            return false;
+            return null;
         }
         return \method_exists($reflector, 'getDeclaringClass')
             ? $reflector->getDeclaringClass()->getName()
@@ -159,7 +160,7 @@ class Reflection
      *
      * @return mixed
      *
-     * @throws RuntimeException
+     * @throws InvalidArgumentException
      */
     public static function propGet($obj, $prop)
     {
@@ -168,7 +169,7 @@ class Reflection
             return $refProp->getValue();
         }
         if (\is_object($obj) === false) {
-            throw new RuntimeException(\sprintf(
+            throw new InvalidArgumentException(\sprintf(
                 'propGet: object must be provided to retrieve instance value %s',
                 $prop
             ));
@@ -185,7 +186,7 @@ class Reflection
      *
      * @return mixed
      *
-     * @throws RuntimeException
+     * @throws InvalidArgumentException
      */
     public static function propSet($obj, $prop, $val)
     {
@@ -194,7 +195,7 @@ class Reflection
             return $refProp->setValue(null, $val);
         }
         if (\is_object($obj) === false) {
-            throw new RuntimeException(\sprintf(
+            throw new InvalidArgumentException(\sprintf(
                 'propSet: object must be provided to set instance value %s',
                 $prop
             ));
@@ -209,7 +210,7 @@ class Reflection
      * @param string           $prop property name
      *
      * @return ReflectionProperty
-     * @throws RuntimeException
+     * @throws OutOfBoundsException
      */
     private static function getReflectionProperty($obj, $prop)
     {
@@ -223,7 +224,7 @@ class Reflection
             $ref = $ref->getParentClass();
         } while ($ref);
         if ($refProp === null) {
-            throw new RuntimeException(\sprintf(
+            throw new OutOfBoundsException(\sprintf(
                 'Property %s::$%s does not exist',
                 \is_string($obj)
                     ? $obj

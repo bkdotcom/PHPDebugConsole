@@ -22,6 +22,7 @@ use bdk\Debug\LogEntry;
  */
 class GroupStack
 {
+    /** @var array<string,mixed> */
     private $currentInfo = array(
         'curDepth' => 0,
         'logEntries' => array(),

@@ -25,11 +25,13 @@ class TestCase extends TestCaseBase
         'InvalidArgumentException' => 'InvalidArgumentException',
         'NetworkException' => 'bdk\\CurlHttpMessage\\Exception\\NetworkException',
         'OutOfBoundsException' => 'OutOfBoundsException',
+        // 'OverflowException' => 'OverflowException',
         'PromiseInterface' => 'bdk\\Promise\\PromiseInterface',
         'RequestException' => 'bdk\\CurlHttpMessage\\Exception\\RequestException',
         'Response' => 'bdk\\HttpMessage\\Response',
         'ResponseInterface' => 'Psr\\Http\\Message\\ResponseInterface',
         'RuntimeException' => 'RuntimeException',
+        'UnderflowException' => 'UnderflowException',
     );
 
     protected static $factory;

@@ -12,6 +12,10 @@
 
 namespace bdk\Debug\Utility;
 
+use bdk\Debug\Utility\Php as PhpUtil;
+use Closure;
+use UnexpectedValueException;
+
 /**
  * Html utilities
  */
@@ -100,7 +104,7 @@ class Html
      *
      * If a string is passed, it will be parsed and rebuilt
      *
-     * @param array|string $attribs key/values
+     * @param array<string,mixed>|string $attribs key/values
      *
      * @return string
      * @see    https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#autofilling-form-controls:-the-autocomplete-attribute
@@ -124,18 +128,26 @@ class Html
     /**
      * Build an html tag
      *
-     * @param string         $tagName   tag name (ie "div" or "input")
-     * @param array|string   $attribs   key/value attributes
-     * @param string|Closure $innerhtml inner HTML if applicable
+     * @param string                     $tagName   tag name (ie "div" or "input")
+     * @param array<string,mixed>|string $attribs   key/value attributes
+     * @param string|Closure             $innerhtml inner HTML if applicable
      *
      * @return string
+     *
+     * @throws UnexpectedValueException
      */
     public static function buildTag($tagName, $attribs = array(), $innerhtml = '')
     {
         $tagName = \strtolower($tagName);
         $attribStr = self::buildAttribString($attribs);
-        if ($innerhtml instanceof \Closure) {
+        if ($innerhtml instanceof Closure) {
             $innerhtml = \call_user_func($innerhtml);
+            if (\is_string($innerhtml) === false) {
+                throw new UnexpectedValueException(\sprintf(
+                    'Innerhtml closure should return string.  Got %s',
+                    PhpUtil::getDebugType($innerhtml)
+                ));
+            }
         }
         return \in_array($tagName, self::$htmlEmptyTags, true)
             ? '<' . $tagName . $attribStr . ' />'
@@ -148,7 +160,7 @@ class Html
      * @param string         $str     string to parse
      * @param int|null|false $options bitmask of PARSE_ATTRIB_x flags
      *
-     * @return array
+     * @return array<string,mixed>
      */
     public static function parseAttribString($str, $options = null)
     {
@@ -214,9 +226,9 @@ class Html
     /**
      * Remove "invalid" characters from id attribute
      *
-     * @param string $id Id value
+     * @param string|null $id Id value
      *
-     * @return string
+     * @return string|null
      */
     public static function sanitizeId($id)
     {

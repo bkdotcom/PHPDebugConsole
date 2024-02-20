@@ -156,6 +156,8 @@ class PropertiesDom
      * @param object $obj object to check
      *
      * @return bool
+     *
+     * @psalm-assert-if DOMNode|DOMNodeList $obj
      */
     private function isDomObj($obj)
     {

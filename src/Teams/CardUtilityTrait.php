@@ -66,7 +66,7 @@ trait CardUtilityTrait
             return;
         }
         throw new InvalidArgumentException(\sprintf(
-            '%s must be bool. %s provided',
+            '%s must be bool. %s provided.',
             $name,
             self::getDebugType($val)
         ));
@@ -98,7 +98,7 @@ trait CardUtilityTrait
             return;
         }
         throw new InvalidArgumentException(\sprintf(
-            $message . '  %s provided',
+            $message . '  %s provided.',
             $paramName ?: 'value',
             'bdk\\Teams\\Enums',
             $prefix,
@@ -179,6 +179,7 @@ trait CardUtilityTrait
     protected static function asString($val, $allowNull, $method, $paramName = null)
     {
         if (self::isStringable($val)) {
+            /** @psalm-suppress RedundantCast https://github.com/vimeo/psalm/issues/6831 */
             return (string) $val;
         }
         if ($val === null && $allowNull) {
@@ -188,7 +189,7 @@ trait CardUtilityTrait
             ? 'string, numeric, stringable obj, or null'
             : 'string, numeric, or stringable obj';
         $message = $paramName
-            ? '%s - ' . $paramName . ' should be a ' . $allowedTypes . '. %s provided'
+            ? '%s - ' . $paramName . ' should be a ' . $allowedTypes . '. %s provided.'
             : '%s expects a ' . $allowedTypes . '. %s provided.';
         throw new InvalidArgumentException(\sprintf(
             $message,

@@ -20,9 +20,10 @@ use ReflectionClass;
  */
 abstract class AbstractInheritable
 {
-    /** @var Abstracter */
+    /** @var AbstractObject */
     protected $abstracter;
 
+    /** @var Helper */
     protected $helper;
 
     /**

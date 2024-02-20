@@ -64,7 +64,7 @@ class BlockFactoryTest extends TestCase
                 ],
             ],
 
-            'actions.invalid' => [
+            'actions.elements.invalid' => [
                 'actions',
                 [
                     [
@@ -73,11 +73,11 @@ class BlockFactoryTest extends TestCase
                 ],
                 [
                     'expectException' => 'InvalidArgumentException',
-                    'expectExceptionMessage' => 'Invalid element (index 0) provided for actions block',
+                    'expectExceptionMessage' => 'Invalid element` (index 0).  string provided.',
                 ],
             ],
 
-            'actions.invalid.type' => [
+            'actions.elements.invalid.type' => [
                 'actions',
                 [
                     [
@@ -86,7 +86,7 @@ class BlockFactoryTest extends TestCase
                 ],
                 [
                     'expectException' => 'InvalidArgumentException',
-                    'expectExceptionMessage' => 'url_text_input (index 0) is an invalid actions element',
+                    'expectExceptionMessage' => 'actions block:  Invalid element (index 0).  url_text_input is an invalid type.',
                 ],
             ],
 
@@ -96,10 +96,25 @@ class BlockFactoryTest extends TestCase
                     [],
                 ],
                 [
-                    'expectException' => 'OutOfBoundsException',
-                    'expectExceptionMessage' => 'At least one element is require for actions block',
+                    'expectException' => 'LengthException',
+                    'expectExceptionMessage' => 'actions block:  At least one element is required.',
                 ],
             ],
+
+            'actions.elements.notArray' => [
+                'actions',
+                [
+                    [],
+                    [
+                        'elements' => null,
+                    ],
+                ],
+                [
+                    'expectException' => 'InvalidArgumentException',
+                    'expectExceptionMessage' => 'actions block:  elements must be array.  NULL provided.',
+                ],
+            ],
+
 
             'actions.elements.tooMany' => [
                 'actions',
@@ -107,8 +122,8 @@ class BlockFactoryTest extends TestCase
                     \array_fill(0, 26, $blockFactory->button('buttonId', 'button label')),
                 ],
                 [
-                    'expectException' => 'OutOfBoundsException',
-                    'expectExceptionMessage' => 'A maximum of 25 elements are allowed in actions block. 26 provided',
+                    'expectException' => 'OverflowException',
+                    'expectExceptionMessage' => 'actions block:  A maximum of 25 elements are allowed.  26 provided.',
                 ],
             ],
 
@@ -137,8 +152,8 @@ class BlockFactoryTest extends TestCase
                     [],
                 ],
                 [
-                    'expectException' => 'OutOfBoundsException',
-                    'expectExceptionMessage' => 'At least one element is require for context block',
+                    'expectException' => 'LengthException',
+                    'expectExceptionMessage' => 'context block:  At least one element is required.',
                 ],
             ],
 
@@ -148,8 +163,21 @@ class BlockFactoryTest extends TestCase
                     \array_fill(0, 11, 'hello world'),
                 ],
                 [
-                    'expectException' => 'OutOfBoundsException',
-                    'expectExceptionMessage' => 'A maximum of 10 elements are allowed in context block. 11 provided',
+                    'expectException' => 'OverflowException',
+                    'expectExceptionMessage' => 'context block:  A maximum of 10 elements are allowed.  11 provided.',
+                ],
+            ],
+            'context.element.notArray' => [
+                'context',
+                [
+                    array(),
+                    array(
+                        'elements' => null,
+                    ),
+                ],
+                [
+                    'expectException' => 'UnexpectedValueException',
+                    'expectExceptionMessage' => 'context block:  elements must be array.  NULL provided.',
                 ],
             ],
 
@@ -224,7 +252,7 @@ class BlockFactoryTest extends TestCase
                 ],
                 [
                     'expectException' => 'InvalidArgumentException',
-                    'expectExceptionMessage' => 'Invalid element provided for input block',
+                    'expectExceptionMessage' => 'Invalid input block.  string provided.',
                 ],
             ],
 
@@ -236,7 +264,7 @@ class BlockFactoryTest extends TestCase
                 ],
                 [
                     'expectException' => 'InvalidArgumentException',
-                    'expectExceptionMessage' => 'button is an invalid input type for input block element',
+                    'expectExceptionMessage' => 'invalid input block.  button is an invalid type.',
                 ],
             ],
 
@@ -244,6 +272,7 @@ class BlockFactoryTest extends TestCase
                 'section',
                 [
                     'Section!',
+                    null,
                 ],
                 [
                     'text' => [
@@ -301,7 +330,7 @@ class BlockFactoryTest extends TestCase
                 ],
                 [
                     'expectException' => 'InvalidArgumentException',
-                    'expectExceptionMessage' => 'Invalid accessory provided for section block',
+                    'expectExceptionMessage' => 'Invalid accessory.  type not set',
                 ],
             ],
 
@@ -314,7 +343,35 @@ class BlockFactoryTest extends TestCase
                 ],
                 [
                     'expectException' => 'InvalidArgumentException',
-                    'expectExceptionMessage' => 'url_text_input is an invalid type for accessory',
+                    'expectExceptionMessage' => 'Invalid accessory.  url_text_input is an invalid type.',
+                ],
+            ],
+
+            'section.accessory.elementsNotArray' => [
+                'section',
+                [
+                    'I have an accessory',
+                    new \stdClass(),
+                ],
+                [
+                    'expectException' => 'UnexpectedValueException',
+                    'expectExceptionMessage' => 'section block:  fields must be array or null.  stdClass provided.',
+                ],
+            ],
+
+
+            'section.accessory.typeNotString' => [
+                'section',
+                [
+                    'I have an accessory',
+                    [],
+                    [
+                        'type' => new \stdClass(),
+                    ],
+                ],
+                [
+                    'expectException' => 'InvalidArgumentException',
+                    'expectExceptionMessage' => 'Invalid accessory.  type must be a string.  stdClass provided.',
                 ],
             ],
 
@@ -325,8 +382,8 @@ class BlockFactoryTest extends TestCase
                     \array_fill(0, 11, 'field'),
                 ],
                 [
-                    'expectException' => 'OutOfBoundsException',
-                    'expectExceptionMessage' => 'A maximum of 10 fields are allowed in section block. 11 provided',
+                    'expectException' => 'OverflowException',
+                    'expectExceptionMessage' => 'section block:  A maximum of 10 fields are allowed.  11 provided.',
                 ],
             ],
 
@@ -399,6 +456,23 @@ class BlockFactoryTest extends TestCase
                 ],
             ],
 
+            'attachment.fieldsInvalid' => [
+                'attachment',
+                [
+                    'Attach This!',
+                    [
+                        $blockFactory->image('http://example.com/img.png', 'alt text'),
+                    ],
+                    [
+                        'fields' => new \stdClasS(),
+                    ],
+                ],
+                [
+                    'expectException' => 'UnexpectedValueException',
+                    'expectExceptionMessage' => 'attachment block:  fields must be array or null.  stdClass provided.',
+                ],
+            ],
+
             'imageElement' => [
                 'imageElement',
                 [
@@ -434,6 +508,40 @@ class BlockFactoryTest extends TestCase
                 ],
             ],
 
+            'button.typeNotOverridable' => [
+                'button',
+                [
+                    'action id',
+                    'label',
+                    42,
+                    [
+                        'type' => 'bogusType',
+                    ],
+                ],
+                [
+                    'action_id' => 'action id',
+                    'style' => 'default',
+                    'text' => [
+                        'text' => 'label',
+                        'type' => 'plain_text',
+                    ],
+                    'type' => 'button',
+                    'value' => 42,
+                ],
+            ],
+
+            'button.invalidText' => [
+                'button',
+                [
+                    'action id',
+                    new \stdClass(),
+                ],
+                [
+                    'expectException' => 'UnexpectedValueException',
+                    'expectExceptionMessage' => 'button text should be string, numeric, null, or array containing valid text value.  stdClass provided.',
+                ],
+            ],
+
             'checkboxes' => [
                 'checkboxes',
                 [
@@ -462,6 +570,20 @@ class BlockFactoryTest extends TestCase
                         ],
                     ],
                     'type' => 'checkboxes',
+                ],
+            ],
+
+            'checkboxes.invalidOption' => [
+                'checkboxes',
+                [
+                    'action id',
+                    [
+                        new \stdClass(),
+                    ],
+                ],
+                [
+                    'expectException' => 'UnexpectedValueException',
+                    'expectExceptionMessage' => 'Option should be string, numeric, null, or array containing valid text value.  stdClass provided.',
                 ],
             ],
 
@@ -584,8 +706,8 @@ class BlockFactoryTest extends TestCase
                     ],
                 ],
                 [
-                    'expectException' => 'OutOfBoundsException',
-                    'expectExceptionMessage' => 'A maximum of 5 options are allowed in overflow element. 6 provided',
+                    'expectException' => 'OverflowException',
+                    'expectExceptionMessage' => 'A maximum of 5 options are allowed in overflow element. 6 provided.',
                 ],
             ],
 
@@ -667,6 +789,44 @@ class BlockFactoryTest extends TestCase
                         'text' => 'Select A Thing',
                         'type' => 'plain_text',
                     ],
+                    'type' => 'static_select',
+                ],
+            ],
+
+            /*
+            'select.invalidType' => [
+                'select',
+                [
+                    'action id',
+                    [],
+                    false,
+                    [
+                        'type' => 'invalid',
+                    ],
+                ],
+                [
+                    'expectException' => 'UnexpectedValueException',
+                    'expectExceptionMessage' => 'select: invalid type.  must be either "multi_static_select", or "static_select"',
+                ],
+            ],
+            */
+
+            'select.option_groups' => [
+                'select',
+                [
+                    'action id',
+                    [
+                        'One',
+                        'Two',
+                    ],
+                    false,
+                    [
+                        'option_groups' => array(),
+                    ],
+                ],
+                [
+                    'action_id' => 'action id',
+                    'option_groups' => [],
                     'type' => 'static_select',
                 ],
             ],

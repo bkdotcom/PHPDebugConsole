@@ -48,9 +48,9 @@ class HandlerStack
     /**
      * Add a middleware after existing named middleware
      *
-     * @param string                       $findName   Middleware to find
-     * @param callable(callable): callable $middleware Middleware function
-     * @param string                       $withName   Name to register for this middleware.
+     * @param string                      $findName   Middleware to find
+     * @param callable(callable):callable $middleware Middleware function
+     * @param string                      $withName   Name to register for this middleware.
      *
      * @return void
      */
@@ -64,9 +64,9 @@ class HandlerStack
     /**
      * Add a middleware before existing named middleware
      *
-     * @param string                       $findName   Middleware to find
-     * @param callable(callable): callable $middleware Middleware function
-     * @param string                       $withName   Name to register for this middleware.
+     * @param string                      $findName   Middleware to find
+     * @param callable(callable):callable $middleware Middleware function
+     * @param string                      $withName   Name to register for this middleware.
      *
      * @return void
      */
@@ -80,8 +80,8 @@ class HandlerStack
     /**
      * Push a middleware to the stack
      *
-     * @param callable(callable): callable $middleware Middleware function
-     * @param string                       $name       Name to register for this middleware.
+     * @param callable(callable):callable $middleware Middleware function
+     * @param string                      $name       Name to register for this middleware.
      *
      * @return void
      */
@@ -95,8 +95,8 @@ class HandlerStack
     /**
      * Unshift a middleware to the bottom of the stack.
      *
-     * @param callable(callable): callable $middleware Middleware function
-     * @param string                       $name       Name to register for this middleware.
+     * @param callable(callable):callable $middleware Middleware function
+     * @param string                      $name       Name to register for this middleware.
      *
      * @return void
      */

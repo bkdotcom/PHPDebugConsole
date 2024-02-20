@@ -14,6 +14,7 @@ namespace bdk\Debug\Utility;
 
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\Type;
+use OutOfBoundsException;
 
 /**
  * Convert a list of files a tree
@@ -23,9 +24,9 @@ class FileTree
     /**
      * Convert list of filepaths to a tree structure
      *
-     * @param string[] $files          list of files
-     * @param array    $excludedCounts path => count array
-     * @param bool     $condense       whether to "condense" filepaths
+     * @param string[]          $files          list of files
+     * @param array<string,int> $excludedCounts path => count array
+     * @param bool              $condense       whether to "condense" filepaths
      *
      * @return array
      */
@@ -57,8 +58,8 @@ class FileTree
     /**
      * Insert 'xx omitted' info into file tree
      *
-     * @param array $tree           file tree
-     * @param array $excludedCounts path => count array
+     * @param array              $tree           file tree
+     * @param array<string, int> $excludedCounts path => count array
      *
      * @return array modifed tree
      */
@@ -86,12 +87,14 @@ class FileTree
     /**
      * Get tree node for given path
      *
-     * @param array $tree file tree
-     * @param array $path path to traverse
+     * @param array    $tree file tree
+     * @param string[] $path path to traverse
      *
      * @return array reference to tree node
+     *
+     * @throws OutOfBoundsException
      */
-    private function &getTreeNode(&$tree, $path)
+    private function &getTreeNode(array &$tree, array $path)
     {
         $cur = &$tree;
         foreach ($path as $subdir) {
@@ -101,6 +104,9 @@ class FileTree
                 $this->sortDir($cur);
             }
             $cur = &$cur[$subdir];
+            if (\is_array($cur) === false) {
+                throw new OutOfBoundsException('Invalid path: ' . \implode('/', $path));
+            }
         }
         return $cur;
     }
@@ -118,6 +124,7 @@ class FileTree
     private function condenseTree($tree)
     {
         $out = array();
+        /** @var array{out:array, src:array}[]  */
         $stack = array(
             array(
                 'out' => &$out,
@@ -134,8 +141,8 @@ class FileTree
     /**
      * Condense a tree frame
      *
-     * @param array $cur   current stack frame]
-     * @param array $stack remaining stack]
+     * @param array                         $cur   current stack frame]
+     * @param array{out:array, src:array}[] $stack remaining stack]
      *
      * @return void
      */
@@ -167,28 +174,35 @@ class FileTree
      */
     private function sortDir(&$dir)
     {
-        \uksort($dir, static function ($keyA, $keyB) {
-            $aIsDir = \is_string($keyA);
-            $bIsDir = \is_string($keyB);
-            if ($aIsDir) {
-                return $bIsDir
-                    ? \strnatcasecmp($keyA, $keyB)
-                    : -1;
+        \uksort(
+            $dir,
+            /**
+             * @param string|int $keyA
+             * @param string|int $keyB
+             */
+            static function ($keyA, $keyB) {
+                $aIsDir = \is_string($keyA);
+                $bIsDir = \is_string($keyB);
+                if ($aIsDir) {
+                    return $bIsDir
+                        ? \strnatcasecmp($keyA, $keyB)
+                        : -1;
+                }
+                if ($bIsDir) {
+                    return 1;
+                }
+                return \strnatcasecmp((string) $keyA, (string) $keyB);
             }
-            if ($bIsDir) {
-                return 1;
-            }
-            return \strnatcasecmp($keyA, $keyB);
-        });
+        );
     }
 
     /**
      * Walk branch to test for multiple branches
      *
-     * @param array $keys path/directories
-     * @param array $val  tree node
+     * @param string[] $keys path/directories
+     * @param array    $val  tree node
      *
-     * @return array
+     * @return array{0: list<string>, 1: string|Abstraction}
      */
     private function walkBranch($keys, $val)
     {
@@ -212,15 +226,15 @@ class FileTree
     /**
      * Update current value if abstraction
      *
-     * @param array $keys path
-     * @param array $val  directory entries
+     * @param string[]                 $keys path
+     * @param list<Abstraction|string> $val  directory entries
      *
-     * @return array|string|Abstraction
+     * @return list<Abstraction|string>|Abstraction|string
      */
     private function walkBranchTestLeaf($keys, $val)
     {
         $valFirst = \current($val);
-        $isOmittedCount = \preg_match('/^\d+ omitted/', $valFirst) === 1;
+        $isOmittedCount = \preg_match('/^\d+ omitted/', (string) $valFirst) === 1;
         if ($isOmittedCount) {
             return $val;
         }

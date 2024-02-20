@@ -27,6 +27,7 @@ class FactSet extends AbstractElement
     public function getContent($version)
     {
         $content = parent::getContent($version);
+        /** @var Fact[] */
         $content['facts'] = $this->fields['facts'];
         return self::normalizeContent($content, $version);
     }

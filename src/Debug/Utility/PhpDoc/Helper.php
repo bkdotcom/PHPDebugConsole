@@ -14,6 +14,8 @@ namespace bdk\Debug\Utility\PhpDoc;
 
 /**
  * PhpDoc parsing helper methods
+ *
+ * @psalm-import-type TagInfo from \bdk\Debug\Utility\PhpDoc
  */
 class Helper
 {
@@ -21,7 +23,11 @@ class Helper
      * @param array $parsed Parsed tag info
      * @param array $info   tagName, raw tag string, etc
      *
-     * @return string[]
+     * @return array{desc:string|null, type:string}
+     *
+     * @psalm-param TagInfo $info
+     *
+     * @psalm-suppress PossiblyUnusedParam
      */
     public static function extractTypeFromBody(array $parsed, array $info) // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
     {
@@ -54,7 +60,7 @@ class Helper
      *
      * @param string $comment Beginning of doc comment
      *
-     * @return array desc and/or summary (or empty array)
+     * @return array{desc?:string, summary?:string}
      */
     public static function parseDescSummary($comment)
     {

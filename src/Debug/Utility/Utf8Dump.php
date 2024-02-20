@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
@@ -19,8 +19,8 @@ use bdk\Debug\Utility\Utf8;
  */
 class Utf8Dump
 {
-    // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
-    private $charDesc = array(
+    /** @var array<int, string> */
+    private $charDesc = array( // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys
         0x00 => 'NUL',
         0x01 => 'SOH (start of heading)',
         0x02 => 'STX (start of text)',
@@ -77,6 +77,7 @@ class Utf8Dump
         0xFFFD => 'Replacement Character',
     );
 
+    /** @var array<string,mixed> */
     private $options = array(
         'prefix' => true,
         'sanitizeNonBinary' => false,
@@ -97,10 +98,10 @@ class Utf8Dump
             return '';
         }
         switch ($blockType) {
-            case 'utf8special':
+            case Utf8::TYPE_SPECIAL:
                 return $this->dumpBlockSpecial($str);
-            case 'utf8control':
-            case 'other':
+            case Utf8::TYPE_CONTROL:
+            case Utf8::TYPE_OTHER:
                 $str = $this->dumpBlockCtrlOther($str);
                 return $this->options['useHtml']
                     ? '<span class="binary">' . $str . '</span>'
@@ -118,8 +119,8 @@ class Utf8Dump
      *    setOptions('key', 'value')
      *    setOptions(array('k1'=>'v1', 'k2'=>'v2'))
      *
-     * @param array|string $mixed key=>value array or key
-     * @param mixed        $val   new value
+     * @param array<string,mixed>|string $mixed key=>value array or key
+     * @param mixed                      $val   new value
      *
      * @return void
      */
@@ -225,7 +226,7 @@ class Utf8Dump
      *
      * @return int
      */
-    private function ordUtf8($str, &$offset = 0, &$char = null)
+    private function ordUtf8($str, &$offset = 0, &$char = '')
     {
         $code = \ord($str[$offset]);
         $numBytes = 1;

@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2023 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.1
  */
 
@@ -26,6 +26,7 @@ use bdk\PubSub\SubscriberInterface;
  */
 class Runtime extends AbstractComponent implements SubscriberInterface
 {
+    /** @var Debug|null */
     private $debug;
 
     /**
@@ -105,7 +106,7 @@ class Runtime extends AbstractComponent implements SubscriberInterface
     /**
      * Get/store values such as runtime & peak memory usage
      *
-     * @return array
+     * @return array<string, float|int>
      */
     private function runtimeVals()
     {

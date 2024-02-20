@@ -31,16 +31,26 @@ use Exception;
  */
 class CallInfo extends AbstractComponent
 {
+    /** @var int|null */
     protected $duration;
+    /** @var Exception|null */
     protected $exception;
+    /** @var array|null */
     protected $keyOrKeys;
+    /** @var int|null */
     protected $memoryEnd;
+    /** @var int */
     protected $memoryStart;
+    /** @var int|null */
     protected $memoryUsage;
+    /** @var string */
     protected $method = '';
+    /** @var float|null */
     protected $timeEnd;
+    /** @var float */
     protected $timeStart;
 
+    /** @var list<string> */
     protected $readOnly = array(
         'duration',
         'exception',
@@ -55,7 +65,7 @@ class CallInfo extends AbstractComponent
 
     /**
      * @param string $method    method called
-     * @param mixed  $keyOrKeys aftected key or keys being
+     * @param mixed  $keyOrKeys affeccted key or keys
      */
     public function __construct($method, $keyOrKeys = null)
     {

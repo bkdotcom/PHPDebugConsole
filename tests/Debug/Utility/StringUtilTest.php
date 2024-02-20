@@ -13,6 +13,7 @@ use PHPUnit\Framework\TestCase;
  * PHPUnit tests for Utility class
  *
  * @covers \bdk\Debug\Utility\StringUtil
+ * @covers \bdk\Debug\Utility\StringUtilHelperTrait
  *
  * @SuppressWarnings(PHPMD.StaticAccess)
  */
@@ -188,7 +189,6 @@ EOD;
     {
         self::assertSame($expect, StringUtil::isSerializedSafe($val));
     }
-
 
     public static function providerIsXml()
     {

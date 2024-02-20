@@ -48,7 +48,7 @@ class AbstractDebug
     /** @var Debug */
     protected $rootInstance;
 
-    /** @var array<int, string> */
+    /** @var list<string> */
     protected $readOnly = array(
         'parentInstance',
         'rootInstance',

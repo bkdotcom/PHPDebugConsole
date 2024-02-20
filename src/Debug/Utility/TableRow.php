@@ -18,6 +18,13 @@ use bdk\Debug\Abstraction\Type;
 
 /**
  * Represent a table row
+ *
+ * @psalm-type rowInfo = array{
+ *   class: string|null,
+ *   classes: array<string, string|false>,
+ *   isScalar: bool,
+ *   summary: string|null,
+ * }
  */
 class TableRow
 {
@@ -32,7 +39,7 @@ class TableRow
      *  if a value is an object being displayed as a string,
      *      $info['classes'][key] will be populated with className
      *
-     * @var array
+     * @var rowInfo
      */
     private $info = array(
         'class' => null,
@@ -65,7 +72,7 @@ class TableRow
     /**
      * Get the collected row information
      *
-     * @return array
+     * @return rowInfo
      */
     public function getInfo()
     {
@@ -101,7 +108,7 @@ class TableRow
     /**
      * Get the row's keys
      *
-     * @return string[]
+     * @return list<array-key>
      */
     public function keys()
     {

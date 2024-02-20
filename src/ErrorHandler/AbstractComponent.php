@@ -15,9 +15,13 @@ namespace bdk\ErrorHandler;
  */
 class AbstractComponent
 {
-    /** @var array */
+    /** @var array<string,mixed> */
     protected $cfg = array();
+
+    /** @var list<string> */
     protected $readOnly = array();
+
+    /** @var callable */
     protected $setCfgMergeCallable = 'array_replace_recursive';
 
     /**

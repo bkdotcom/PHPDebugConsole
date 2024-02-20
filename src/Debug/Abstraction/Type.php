@@ -195,7 +195,7 @@ class Type
     /**
      * Get PHP type
      *
-     * @param mixed` $val value
+     * @param mixed $val value
      *
      * @return string "array", "bool", "float", "int", "null", "object", "resource", "string", "unknown"
      */

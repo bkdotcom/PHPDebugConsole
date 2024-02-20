@@ -21,6 +21,27 @@ use Reflector;
 
 /**
  * Get and parse phpDoc block
+ *
+ * @psalm-type TagInfo = array{
+ *   className: string,
+ *   elementName: string,
+ *   fullyQualifyType: string,
+ *   phpDoc: \bdk\Debug\Utility\PhpDoc,
+ *   reflector: Reflector,
+ *   tagName: string,
+ *   tagStr: string,
+ * }
+ * @psalm-type ParserInfo array{
+ *   callable?: callable|list<callable>,
+ *   parts:list<string>,
+ *   regex:string,
+ *   tags:list<string>,
+ * }
+ * @psalm-type Parsed = array{
+ *   desc: string|null,
+ *   summary?: string|null,
+ *   ...<string,array>,
+ * }
  */
 class PhpDoc
 {
@@ -30,17 +51,18 @@ class PhpDoc
     /** @var Type */
     public $type;
 
-    protected $className;
-    protected $fullyQualifyType;
-
-    /** @var string[] */
+    /** @var array<string,Parsed> */
     protected static $cache = array();
-    /** @var Reflector */
-    protected $reflector;
+    /** @var string|null */
+    protected $className;
+    /** @var int */
+    protected $fullyQualifyType = 0;
     /** @var Helper */
     protected $helper;
     /** @var Parsers */
     protected $parsers;
+    /** @var Reflector|null */
+    protected $reflector;
 
     /**
      * Constructor
@@ -67,8 +89,11 @@ class PhpDoc
                 ? $this->reflector->getDocComment()
                 : ''
             : $what;
+        if (\is_string($comment) === false) {
+            return '';
+        }
         // remove opening "/**" and closing "*/"
-        $comment = \preg_replace('#^\s*/\*\*(.+)\*/$#s', '$1', (string) $comment);
+        $comment = \preg_replace('#^\s*/\*\*(.+)\*/$#s', '$1', $comment);
         // remove leading "*"s
         $comment = \preg_replace('#^[ \t]*\*[ ]?#m', '', $comment);
         return \trim($comment);
@@ -82,6 +107,8 @@ class PhpDoc
      *                                                    Bitmask of FULLY_QUALIFY* constants
      *
      * @return array
+     *
+     * @psalm-return Parsed
      */
     public function getParsed($what, $fullyQualifyType = 0)
     {
@@ -102,7 +129,7 @@ class PhpDoc
      *
      * @param mixed $what classname, object, or Reflector
      *
-     * @return string|null
+     * @return string
      */
     public static function hash($what)
     {
@@ -126,6 +153,8 @@ class PhpDoc
      * @param int       $fullyQualifyType Whether to fully qualify type(s)
      *
      * @return array
+     *
+     * @psalm-return Parsed
      */
     private function parse($comment, Reflector $reflector = null, $fullyQualifyType = 0)
     {
@@ -134,6 +163,7 @@ class PhpDoc
         $this->className = $reflector
             ? Reflection::classname($reflector)
             : null;
+        /** @var string|null */
         $elementName = $reflector
             ? $reflector->getName()
             : null;
@@ -162,6 +192,8 @@ class PhpDoc
      * @param array $parsed Parsed tags
      *
      * @return array
+     *
+     * @psalm-return Parsed
      */
     private function parseGetDefaults(array $parsed)
     {
@@ -184,6 +216,8 @@ class PhpDoc
      * @param Reflector $reflector Reflector instance
      *
      * @return array
+     *
+     * @psalm-return Parsed
      */
     private function parseParent(Reflector $reflector)
     {
@@ -205,7 +239,7 @@ class PhpDoc
      * @param string $tagStr      tag values (ie "[Type] [name] [<description>]")
      * @param string $elementName class, property, method, or constant name if available
      *
-     * @return array
+     * @return Parsed
      */
     private function parseTag($tagName, $tagStr = '', $elementName = null)
     {
@@ -239,7 +273,7 @@ class PhpDoc
      * @param array  $parser Parser info (regex & parts)
      * @param string $tagStr Raw tag body
      *
-     * @return array
+     * @return array<string, string>
      */
     private function parseTagRegex(array $parser, $tagStr)
     {
@@ -257,10 +291,10 @@ class PhpDoc
     /**
      * Parse tags
      *
-     * @param string $str         Portion of phpdoc content that contains tags
-     * @param string $elementName class, property, method, or constant name if available
+     * @param string      $str         Portion of phpdoc content that contains tags
+     * @param string|null $elementName class, property, method, or constant name if available
      *
-     * @return array
+     * @return array<string, array>
      */
     private function parseTags($str, $elementName = null)
     {
@@ -290,6 +324,8 @@ class PhpDoc
      * @param string $comment raw comment (asterisks removed)
      *
      * @return array Parsed PhpDoc comment
+     *
+     * @psalm-return Parsed
      */
     private function replaceInheritDoc(array $parsed, $comment)
     {

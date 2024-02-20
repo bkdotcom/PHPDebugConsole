@@ -5,7 +5,7 @@ namespace bdk\Teams;
 use bdk\Teams\AbstractItem;
 use bdk\Teams\Actions\ActionInterface;
 use InvalidArgumentException;
-use OutOfBoundsException;
+use OverflowException;
 use Psr\Http\Message\UriInterface;
 
 /**
@@ -153,7 +153,7 @@ class Section extends AbstractItem
             ? $actions
             : array($actions);
         if (\count($actions) > 4) {
-            throw new OutOfBoundsException('There can be a maximum of 4 actions (whatever their type)');
+            throw new OverflowException('There can be a maximum of 4 actions (whatever their type)');
         }
         foreach ($actions as $i => $action) {
             if ($action instanceof ActionInterface) {

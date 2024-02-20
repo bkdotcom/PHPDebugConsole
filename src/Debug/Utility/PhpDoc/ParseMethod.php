@@ -14,28 +14,26 @@ namespace bdk\Debug\Utility\PhpDoc;
 
 /**
  * Parse 'method' tag  (magic methods)
+ *
+ * @psalm-import-type TagInfo from \bdk\Debug\Utility\PhpDoc
  */
 class ParseMethod
 {
-    protected $helper;
-
-    /**
-     * Constructor
-     *
-     * @param PhpDocHelper $helper Helper instance
-     */
-    public function __construct(Helper $helper)
-    {
-        $this->helper = $helper;
-    }
-
     /**
      * Parse @method tag
      *
-     * @param array $parsed type, name, & desc
-     * @param array $info   tagName, raw tag string, etc
+     * @param array{
+     *    type: string,
+     *    name: string,
+     *    desc: string,
+     *    param: string|null,
+     *    static: string|null,
+     * } $parsed type, name, & desc
+     * @param array $info tagName, raw tag string, etc
      *
      * @return array
+     *
+     * @psalm-param TagInfo $info
      */
     public function __invoke(array $parsed, array $info)
     {
@@ -53,6 +51,8 @@ class ParseMethod
      * @param array  $info     tagName, raw tag string, etc
      *
      * @return array
+     *
+     * @psalm-param TagInfo $info
      */
     protected function parseMethodParams($paramStr, array $info)
     {

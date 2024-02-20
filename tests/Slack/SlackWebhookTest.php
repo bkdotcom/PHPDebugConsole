@@ -5,6 +5,7 @@ namespace bdk\Test\Slack;
 use bdk\CurlHttpMessage\Factory;
 use bdk\CurlHttpMessage\Handler\Mock as MockHandler;
 use bdk\PhpUnitPolyfill\AssertionTrait;
+use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 use bdk\Slack\SlackMessage;
 use bdk\Slack\SlackWebhook;
 use PHPUnit\Framework\TestCase;
@@ -17,6 +18,7 @@ use Psr\Http\Message\RequestInterface;
 class SlackWebhookTest extends TestCase
 {
     use AssertionTrait;
+    use ExpectExceptionTrait;
 
     private $mockHandler;
     private $factory;
@@ -28,6 +30,13 @@ class SlackWebhookTest extends TestCase
     {
         $this->factory = new Factory();
         parent::__construct($name, $data, $dataName);
+    }
+
+    public function testConstrutorThrowsException()
+    {
+        $this->expectException('BadMethodCallException');
+        $this->expectExceptionMessage('webhookUrl must be provided.');
+        $webhook = new SlackWebhook();
     }
 
     public function testPost()

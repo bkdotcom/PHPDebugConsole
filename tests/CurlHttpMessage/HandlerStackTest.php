@@ -68,7 +68,6 @@ class HandlerStackTest extends TestCase
         self::assertSame('Hello - testabc', $stack('test'));
     }
 
-
     public function testUnshiftsInReverseOrder()
     {
         $meths = $this->getFunctions();

@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2023 Brad Kent
  * @version   v3.0
  */
 
@@ -27,8 +27,10 @@ class Logger extends AbstractLogger
     // define the log method with the appropriate method signature
     use MethodSignatureCompatTrait;
 
+    /** @var Debug */
     public $debug;
 
+    /** @var array<string,mixed> */
     protected $cfg = array(
         // phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
         'levelMap' => array(
@@ -69,7 +71,7 @@ class Logger extends AbstractLogger
     /**
      * Check if level is valid
      *
-     * @param string $level debug level
+     * @param mixed $level debug level
      *
      * @return void
      *

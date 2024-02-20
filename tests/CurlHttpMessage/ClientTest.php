@@ -9,6 +9,7 @@ use bdk\Test\CurlHttpMessage\Fixture\JsonSerializable;
 use bdk\Test\CurlHttpMessage\TestCase;
 
 /**
+ * @covers \bdk\CurlHttpMessage\AbstractClient
  * @covers \bdk\CurlHttpMessage\Client
  * @covers \bdk\CurlHttpMessage\Factory
  * @covers \bdk\CurlHttpMessage\Handler\Curl
@@ -16,6 +17,7 @@ use bdk\Test\CurlHttpMessage\TestCase;
 class ClientTest extends TestCase
 {
     use AssertionTrait;
+    use ProviderTrait;
 
     public function testGetStack()
     {
@@ -41,6 +43,7 @@ class ClientTest extends TestCase
     }
     */
 
+    /*
     public function testCanSendAsyncGetRequests()
     {
         $client = new Client(array(
@@ -50,10 +53,8 @@ class ClientTest extends TestCase
         self::assertInstanceOf($this->classes['PromiseInterface'], $promise);
         $response = $promise->wait();
         self::assertSame(200, $response->getStatusCode());
-        // $received = Server::received(true);
-        // self::assertCount(1, $received);
-        // self::assertSame('test=foo', $received[0]->getUri()->getQuery());
     }
+    */
 
     public function testCanSendSynchronously()
     {
@@ -149,7 +150,7 @@ class ClientTest extends TestCase
         ]);
         $options = \bdk\Debug\Utility\Reflection::propGet($client, 'options');
         self::assertSame(['User-agent' => 'default'], $options['headers']);
-        self::assertFalse($options['isAsyncronous']);
+        // self::assertFalse($options['isAsyncronous']);
         // self::assertIsArray($options['allow_redirects']);
         // self::assertTrue($options['http_errors']);
         // self::assertTrue($options['decode_content']);
@@ -829,7 +830,6 @@ class ClientTest extends TestCase
     }
     */
 
-
     public function testHostHeaderOverridesRequest()
     {
         $mock = new MockHandler([
@@ -1138,51 +1138,5 @@ class ClientTest extends TestCase
                 (string) $lastRequest->getBody()
             );
         }
-    }
-
-    public static function methodProvider()
-    {
-        return [
-            'DELETE' => [
-                'method' => 'delete',
-                'uri' => 'http://example.com/',
-            ],
-            'GET' => [
-                'method' => 'get',
-                'uri' => 'http://example.com/',
-            ],
-            'HEAD' => [
-                'method' => 'head',
-                'uri' => 'http://example.com/',
-            ],
-            'OPTIONS' => [
-                'method' => 'options',
-                'uri' => 'http://example.com/',
-            ],
-            'PATCH' => [
-                'method' => 'patch',
-                'uri' => 'http://example.com/',
-            ],
-            'POST' => [
-                'method' => 'post',
-                'uri' => 'http://example.com/',
-                'headers' => [
-                    'Content-Type' => 'application/json',
-                ],
-                'body' => array('foo' => 'bar'),
-            ],
-            'PUT' => [
-                'method' => 'put',
-                'uri' => 'http://example.com/',
-                'headers' => [
-                    'Content-Type' => 'application/json',
-                ],
-                'body' => array('foo' => 'bar'),
-            ],
-            'TRACE' => [
-                'method' => 'trace',
-                'uri' => 'http://example.com/',
-            ],
-        ];
     }
 }

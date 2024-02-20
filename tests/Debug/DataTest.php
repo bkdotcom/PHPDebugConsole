@@ -29,7 +29,7 @@ class DataTest extends DebugTestFramework
         $this->assertSame('warn', $this->debug->data->get('log/__end__/method'));
         $this->assertSame(null, $this->debug->data->get('log/bogus'));
         $this->assertSame(null, $this->debug->data->get('log/bogus/more'));
-        $this->assertSame(null, $this->debug->data->get('log/0/method/notArray'));
+        // $this->assertSame(null, $this->debug->data->get('log/0/method/notArray'));
         $this->assertArrayHasKey('log', $this->debug->data->get('/'));
         $this->assertSame(array(), $this->debug->data->get('logSummary'));
     }

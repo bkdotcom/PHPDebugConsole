@@ -29,7 +29,9 @@ use bdk\Debug\Utility\StringUtil;
  */
 class SerializeLog
 {
+    /** @var Debug */
     protected static $debug;
+    /** @var bool */
     protected static $isLegacyData = false;
 
     /**
@@ -208,18 +210,26 @@ class SerializeLog
     /**
      * Convert legacy object abstraction data
      *
-     * @param array $absValues Abstraction values
+     * @param array<string,mixed> $absValues Abstraction values
      *
-     * @return array
+     * @return array<string,mixed>
      */
     private static function importLegacyObj(array $absValues)
     {
         $absValues = AbstractObject::buildObjValues($absValues);
         $baseMethodInfo = Methods::buildMethodValues();
+        /**
+         * @var array<string, array<string,mixed>> $absValues['methods']
+         * @var array<string,mixed> $meth
+         */
         foreach ($absValues['methods'] as $name => $meth) {
             $absValues['methods'][$name] = \array_merge($baseMethodInfo, $meth);
         }
         $basePropInfo = Properties::buildPropValues();
+        /**
+         * @var array<string, array<string,mixed>> $absValues['properties']
+         * @var array<string,mixed> $prop
+         */
         foreach ($absValues['properties'] as $name => $prop) {
             $absValues['properties'][$name] = \array_merge($basePropInfo, $prop);
         }
@@ -229,9 +239,9 @@ class SerializeLog
     /**
      * Convert values
      *
-     * @param array $absValues Object abstraction values
+     * @param array<string,mixed> $absValues Object abstraction values
      *
-     * @return array
+     * @return array<string,mixed>
      */
     private static function onImportObj($absValues)
     {

@@ -2,11 +2,9 @@
 
 namespace bdk\CurlHttpMessage;
 
+use bdk\CurlHttpMessage\Exception\BadResponseException;
 use bdk\CurlHttpMessage\Exception\NetworkException;
-use bdk\CurlHttpMessage\Factory;
-use bdk\CurlHttpMessage\HandlerStack;
-use bdk\Promise\PromiseInterface;
-use InvalidArgumentException;
+use bdk\CurlHttpMessage\Exception\RequestException;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\UriInterface;
@@ -14,70 +12,8 @@ use Psr\Http\Message\UriInterface;
 /**
  * Lightweight PSR-7 (HttpMessage) based cURL client
  */
-class Client
+class Client extends AbstractClient
 {
-    const VERSION = '0.1b1';
-
-    /** @var array<string, mixed> */
-    protected $options = array(
-        'curl' => array(),
-        'factories' => array(), // temporary
-        'handler' => null,      // temporary
-        'headers' => array(),
-        'isAsyncronous' => false,
-        'maxRedirect' => 5,
-        'onRedirect' => null,
-    );
-
-    /** @var Factory */
-    protected $factory;
-
-    /** @var HandlerStack */
-    protected $stack;
-
-    private $isTempCookieJar = true;
-
-    /**
-     * Constructor
-     *
-     * @param array $options curl options, factories, and other request options
-     *
-     * @throws InvalidArgumentException
-     */
-    public function __construct($options = array())
-    {
-        $cookieJarDefault = \tempnam(\sys_get_temp_dir(), 'curlHttpMessageCookies_') . '.txt';
-        $this->isTempCookieJar = isset($options['curl'][CURLOPT_COOKIEJAR]) === false;
-        $this->options = \array_replace_recursive(
-            $this->options,
-            array(
-                'curl' => array(
-                    CURLOPT_COOKIEFILE => $cookieJarDefault,
-                    CURLOPT_COOKIEJAR => $cookieJarDefault,
-                    CURLOPT_USERAGENT => 'bdk\CurlHttpMessage v' . self::VERSION,
-                ),
-            ),
-            $options
-        );
-        $this->factory = new Factory($this->options['factories']);
-        if ($this->options['handler'] && \is_callable($this->options['handler']) === false) {
-            throw new InvalidArgumentException('handler must be callable');
-        }
-        $this->stack = $this->factory->stack($this->options['handler']);
-        unset($this->options['factories'], $this->options['handler']);
-    }
-
-    /**
-     * Clear resources
-     */
-    public function __destruct()
-    {
-        $filepath = $this->options['curl'][CURLOPT_COOKIEFILE];
-        if ($this->isTempCookieJar && \is_file($filepath)) {
-            \unlink($filepath);
-        }
-    }
-
     /**
      * Send a DELETE request
      *
@@ -85,14 +21,11 @@ class Client
      * @param array               $headers Request headers
      * @param mixed               $body    (optional) request body or data
      *
-     * @return PromiseInterface|ResponseInterface
+     * @return ResponseInterface
      */
-    public function delete($uri, array $headers = array(), $body = null)
+    public function delete($uri, array $headers = array(), $body = null) // @phpcs:ignore Generic.CodeAnalysis.UselessOverridingMethod
     {
-        return $this->request('DELETE', $uri, array(
-            'body' => $body,
-            'headers' => $headers,
-        ));
+        return parent::delete($uri, $headers, $body);
     }
 
     /**
@@ -101,13 +34,11 @@ class Client
      * @param UriInterface|string $uri     UriInterface or string
      * @param array|null          $headers Request headers
      *
-     * @return PromiseInterface|ResponseInterface
+     * @return ResponseInterface
      */
-    public function get($uri, $headers = array())
+    public function get($uri, $headers = array()) // @phpcs:ignore Generic.CodeAnalysis.UselessOverridingMethod
     {
-        return $this->request('GET', $uri, array(
-            'headers' => $headers,
-        ));
+        return parent::get($uri, $headers);
     }
 
     /**
@@ -116,13 +47,11 @@ class Client
      * @param UriInterface|string $uri     UriInterface or string
      * @param array               $headers Request headers
      *
-     * @return PromiseInterface|ResponseInterface
+     * @return ResponseInterface
      */
-    public function head($uri, array $headers = array())
+    public function head($uri, array $headers = array()) // @phpcs:ignore Generic.CodeAnalysis.UselessOverridingMethod
     {
-        return $this->request('HEAD', $uri, array(
-            'headers' => $headers,
-        ));
+        return parent::head($uri, $headers);
     }
 
     /**
@@ -132,14 +61,11 @@ class Client
      * @param array               $headers Request headers
      * @param mixed               $body    (optional) request body or data
      *
-     * @return PromiseInterface|ResponseInterface
+     * @return ResponseInterface
      */
-    public function options($uri, array $headers = array(), $body = null)
+    public function options($uri, array $headers = array(), $body = null) // @phpcs:ignore Generic.CodeAnalysis.UselessOverridingMethod
     {
-        return $this->request('OPTIONS', $uri, array(
-            'body' => $body,
-            'headers' => $headers,
-        ));
+        return parent::options($uri, $headers, $body);
     }
 
     /**
@@ -149,14 +75,11 @@ class Client
      * @param array               $headers Request headers
      * @param mixed               $body    (optional) request body or data
      *
-     * @return PromiseInterface|ResponseInterface
+     * @return ResponseInterface
      */
-    public function patch($uri, array $headers = array(), $body = null)
+    public function patch($uri, array $headers = array(), $body = null) // @phpcs:ignore Generic.CodeAnalysis.UselessOverridingMethod
     {
-        return $this->request('PATCH', $uri, array(
-            'body' => $body,
-            'headers' => $headers,
-        ));
+        return parent::patch($uri, $headers, $body);
     }
 
     /**
@@ -166,14 +89,11 @@ class Client
      * @param array               $headers Request headers
      * @param mixed               $body    (optional) request body or data
      *
-     * @return PromiseInterface|ResponseInterface
+     * @return ResponseInterface
      */
-    public function post($uri, array $headers = array(), $body = null)
+    public function post($uri, array $headers = array(), $body = null) // @phpcs:ignore Generic.CodeAnalysis.UselessOverridingMethod
     {
-        return $this->request('POST', $uri, array(
-            'body' => $body,
-            'headers' => $headers,
-        ));
+        return parent::post($uri, $headers, $body);
     }
 
     /**
@@ -183,14 +103,11 @@ class Client
      * @param array               $headers Request headers
      * @param mixed               $body    (optional) request body or data
      *
-     * @return PromiseInterface|ResponseInterface
+     * @return ResponseInterface
      */
-    public function put($uri, array $headers = array(), $body = null)
+    public function put($uri, array $headers = array(), $body = null) // @phpcs:ignore Generic.CodeAnalysis.UselessOverridingMethod
     {
-        return $this->request('PUT', $uri, array(
-            'body' => $body,
-            'headers' => $headers,
-        ));
+        return parent::put($uri, $headers, $body);
     }
 
     /**
@@ -199,27 +116,11 @@ class Client
      * @param UriInterface|string $uri     UriInterface or string
      * @param array               $headers Request headers
      *
-     * @return PromiseInterface|ResponseInterface
+     * @return ResponseInterface
      */
-    public function trace($uri, array $headers = array())
+    public function trace($uri, array $headers = array()) // @phpcs:ignore Generic.CodeAnalysis.UselessOverridingMethod
     {
-        return $this->request(
-            'TRACE',
-            $uri,
-            array(
-                'headers' => $headers,
-            )
-        );
-    }
-
-    /**
-     * Get the stack handler so that we can add / remove middleware
-     *
-     * @return HandlerStack
-     */
-    public function getStack()
-    {
-        return $this->stack;
+        return parent::trace($uri, $headers);
     }
 
     /**
@@ -228,26 +129,18 @@ class Client
      * @param RequestInterface $request RequestInterface instance
      * @param array            $options Options
      *
-     * @return PromiseInterface|ResponseInterface
+     * @return RequestInterface
      *
      * @throws NetworkException     Invalid request due to network issue
      * @throws RequestException     Invalid request
      * @throws BadResponseException HTTP error (4xx or 5xx response)
      * @throws RuntimeException     Failure to create stream
      */
-    public function handle(RequestInterface $request, array $options = array())
+    public function handle(RequestInterface $request, array $options = array()) // @phpcs:ignore Generic.CodeAnalysis.UselessOverridingMethod
     {
-        $options = $this->mergeOptions($options);
-        $request = $this->applyOptions($request, $options);
-
-        $curlReqRes = $this->factory->curlReqRes($request, $options);
-
-        $handler = $this->stack;
-        $promise = $handler($curlReqRes);
-
-        return $options['isAsyncronous']
-            ? $promise
-            : $promise->wait();
+        $options['isAsyncronous'] = false;
+        $promise = parent::handle($request, $options);
+        return $promise->wait();
     }
 
     /**
@@ -257,94 +150,10 @@ class Client
      * @param string|UriInterface $uri     URI object or string.
      * @param array               $options Options including headers, body, & curl
      *
-     * @return PromiseInterface|ResponseInterface
-     */
-    public function request($method, $uri, array $options = array())
-    {
-        $request = $this->factory->request($method, $uri);
-        return $this->handle($request, $options);
-    }
-
-    /**
-     * Assert valid options
-     *
-     * @param array $options Options
-     *
-     * @return void
-     *
-     * @throws InvalidArgumentException
-     */
-    private function assertOptions(array $options)
-    {
-        if (\is_array($options['headers']) !== true) {
-            throw new InvalidArgumentException('headers must be an array');
-        }
-        if (\array_keys($options['headers']) === \range(0, \count($options['headers']) - 1)) {
-            throw new InvalidArgumentException('headers array must have header name as keys');
-        }
-    }
-
-    /**
-     * Merge specified options with default client options
-     *
-     * @param array $options Request options
-     *
-     * @return array
-     */
-    private function mergeOptions($options)
-    {
-        $defaultOpts = $this->options;
-
-        $defaultOpts['defaultHeaders'] = $defaultOpts['headers'];
-        unset($defaultOpts['headers']);
-
-        $options = \array_replace_recursive(
-            array(
-                'body' => null,
-                'headers' => array(),
-            ),
-            $defaultOpts,
-            $options
-        );
-
-        if ($options['headers'] === null) {
-            $options['headers'] = array();
-            $options['defaultHeaders'] = array();
-        }
-
-        return $options;
-    }
-
-    /**
-     * apply options to request
-     *
-     * @param RequestInterface $request Request instance
-     * @param array            $options options
-     *
      * @return RequestInterface
      */
-    private function applyOptions(RequestInterface $request, array $options)
+    public function request($method, $uri, array $options = array()) // @phpcs:ignore Generic.CodeAnalysis.UselessOverridingMethod
     {
-        $this->assertOptions($options);
-
-        foreach ($options['headers'] as $name => $val) {
-            $request = $request->withHeader($name, $val);
-        }
-
-        foreach ($options['defaultHeaders'] as $name => $val) {
-            if ($request->hasHeader($name) === false) {
-                $request = $request->withHeader($name, $val);
-            }
-        }
-
-        if ($request->hasHeader('User-Agent') === false) {
-            $request = $request->withHeader('User-Agent', $options['curl'][CURLOPT_USERAGENT]);
-        }
-
-        if ($options['body']) {
-            $request = $this->factory->withBody($request, $options['body']);
-        }
-
-        return $request;
+        return parent::request($method, $uri, $options);
     }
 }

@@ -13,6 +13,7 @@
 namespace bdk;
 
 use bdk\Container\ServiceProviderInterface;
+use OutOfBoundsException;
 
 /**
  * Container
@@ -144,7 +145,7 @@ class Container implements \ArrayAccess
      *
      * @return bool
      *
-     * @throws \OutOfBoundsException If the identifier is not defined
+     * @throws OutOfBoundsException If the identifier is not defined
      */
     public function needsInvoked($name)
     {
@@ -177,7 +178,7 @@ class Container implements \ArrayAccess
      * @param string $name The unique identifier for the parameter or object
      *
      * @return mixed The value of the parameter or an object
-     * @throws \OutOfBoundsException If the identifier is not defined
+     * @throws OutOfBoundsException If the identifier is not defined
      */
     #[\ReturnTypeWillChange]
     public function offsetGet($name)
@@ -293,7 +294,7 @@ class Container implements \ArrayAccess
      *
      * @return mixed The value of the parameter or the closure defining an object
      *
-     * @throws \OutOfBoundsException If the identifier is not defined
+     * @throws OutOfBoundsException If the identifier is not defined
      */
     public function raw($name)
     {
@@ -364,12 +365,12 @@ class Container implements \ArrayAccess
      *
      * @return void
      *
-     * @throws \OutOfBoundsException If the identifier is not defined
+     * @throws OutOfBoundsException If the identifier is not defined
      */
     private function assertExists($name)
     {
         if ($this->offsetExists($name) === false) {
-            throw new \OutOfBoundsException(
+            throw new OutOfBoundsException(
                 \sprintf('Unknown identifier: "%s"', $name)
             );
         }

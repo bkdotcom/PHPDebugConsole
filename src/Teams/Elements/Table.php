@@ -68,9 +68,9 @@ class Table extends AbstractElement
     /**
      * Return new instance with specified items
      *
-     * @param string|numeric                $width               (default: 1) Pixel width or relative width
-     * @param Enums::HORIZONTAL_ALIGNMENT_* $horizontalAlignment Horizontal alignment of cells
-     * @param Enums::VERTICAL_ALIGNMENT_*   $verticalAlignment   Verical alignment of cells
+     * @param string|numeric|mixed                $width               (default: 1) Pixel width or relative width
+     * @param Enums::HORIZONTAL_ALIGNMENT_*|mixed $horizontalAlignment Horizontal alignment of cells
+     * @param Enums::VERTICAL_ALIGNMENT_*|mixed   $verticalAlignment   Verical alignment of cells
      *
      * @return static
      *
@@ -107,7 +107,7 @@ class Table extends AbstractElement
      *
      * If a row contains more cells than there are columns defined, the extra cells are ignored
      *
-     * @param array{horizontalAlignment: Enums::HORIZONTAL_ALIGNMENT_*, verticalAlignment: Enums::VERTICALL_ALIGNMENT_*, width: string}[] $columns Column definitions
+     * @param array{horizontalAlignment?: Enums::HORIZONTAL_ALIGNMENT_*, verticalAlignment?: Enums::VERTICALL_ALIGNMENT_*, width?: string}[] $columns Column definitions
      *
      * @return static
      *
@@ -117,14 +117,21 @@ class Table extends AbstractElement
     {
         $new = clone $this;
         $new->fields['columns'] = array();
-        \array_walk($columns, static function ($column, $i) use (&$new) {
-            $column = self::withColumnsNormalize($column, $i);
-            $new = $new->withAddedColumn(
-                $column['width'],
-                $column['horizontalAlignment'] ?: $column['horizontalCellContentAlignment'],
-                $column['verticalAlignment'] ?: $column['verticalCellContentAlignment']
-            );
-        });
+        \array_walk(
+            $columns,
+            /**
+             * @param mixed      $column
+             * @param int|string $i
+             */
+            static function ($column, $i) use (&$new) {
+                $column = self::withColumnsNormalize($column, $i);
+                $new = $new->withAddedColumn(
+                    $column['width'],
+                    $column['horizontalAlignment'] ?: $column['horizontalCellContentAlignment'],
+                    $column['verticalAlignment'] ?: $column['verticalCellContentAlignment']
+                );
+            }
+        );
         return $new;
     }
 
@@ -212,9 +219,9 @@ class Table extends AbstractElement
     /**
      * Return row as TableRow instance
      *
-     * @param TableRow|iterable $row Row to convert
+     * @param mixed $row Row to convert
      *
-     * @return TableCell
+     * @return TableRow
      *
      * @throws InvalidArgumentException
      */
@@ -228,7 +235,7 @@ class Table extends AbstractElement
     /**
      * Return array with each value converted to instance of TableCell
      *
-     * @param iterable|TableRow[] $rows Rows to convert
+     * @param iterable<TableRow|mixed> $rows Rows to convert
      *
      * @return TableRow[]
      *
@@ -243,10 +250,12 @@ class Table extends AbstractElement
                 self::getDebugType($rows)
             ));
         }
-        foreach ($rows as $i => $row) {
-            $rows[$i] = self::asRow($row);
+        $rowsNew = array();
+        /** @var mixed $row */
+        foreach ($rows as $row) {
+            $rowsNew[] = self::asRow($row);
         }
-        return \array_values($rows);
+        return $rowsNew;
     }
 
     /**
@@ -285,9 +294,9 @@ class Table extends AbstractElement
     private function getColCount()
     {
         $colCount = 0;
-        /** @var TableRow $tableRow */
+        /** @psalm-var TableRow $tableRow */
         foreach ($this->fields['rows'] as $tableRow) {
-            $rowColCount = \count($tableRow->get('cells'));
+            $rowColCount = \count($tableRow->getCells());
             if ($rowColCount > $colCount) {
                 $colCount = $rowColCount;
             }
@@ -298,12 +307,22 @@ class Table extends AbstractElement
     /**
      * Merge default values and assert valid definition
      *
-     * @param array $column Column definition
-     * @param int   $index  Column index
+     * @param mixed      $column Column definition
+     * @param int|string $index  Column index
      *
-     * @return array
+     * @return array{
+     *   horizontalAlignment: mixed,
+     *   horizontalCellContentAlignment: mixed,
+     *   type: mixed,
+     *   verticalAlignment: mixed,
+     *   verticalCellContentAlignment: mixed,
+     *   width: mixed,
+     * }
      *
      * @throws InvalidArgumentException
+     *
+     * @psalm-suppress InvalidReturnType
+     * @psalm-suppress InvalidReturnStatement
      */
     private static function withColumnsNormalize($column, $index)
     {

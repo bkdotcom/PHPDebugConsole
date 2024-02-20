@@ -45,38 +45,46 @@ use bdk\Debug\Abstraction\Abstracter;
  * @method $this warn(mixed ...$arg)
  * @method string output()
  *
- * @method Abstraction|string prettify(string $string, string $contentType)
- * @method bool email($toAddr, $subject, $body)
+ * @method $this addPlugin(AssetProviderInterface|SubscriberInterface $plugin, string $name = null)
+ * @method $this addPlugins(mixed[] $plugins)
+ * @method bool email(string $toAddr, string $subject, string $body)
  * @method array errorStats()
+ * @method self getChannel(string $name, $config = array())
+ * @method self[] getChannels($allDescendants = false, $inclTop = false)
  * @method string getInterface()
  * @method string getResponseCode()
- * @method array|string getResponseHeader($header = 'Content-Type', $delimiter = ', ')
+ * @method array|string getResponseHeader(string $header = 'Content-Type', string|null $delimiter = ', ')
  * @method array|string getResponseHeaders($asString = false)
+ * @method object|bool getRoute(string $name, bool $checkOnly)
  * @method mixed getServerParam($name, $default = null)
  * @method bool hasLog()
  * @method void obEnd()
  * @method void obStart()
- * @method Abstraction|string prettify($string, $contentType)
+ * @method Abstraction|string prettify(string $string, string $contentType)
  * @method mixed redact($val, $key = null)
+ * @method $this removePlugin(string|SubscriberInterface $plugin)
  * @method string requestId()
  * @method void setErrorCaller(array $callerInfo)
  * @method void varDump(mixed ...$arg)
  *
- * @property Abstracter           $abstracter    lazy-loaded Abstracter instance
- * @property \bdk\Debug\Utility\ArrayUtil $arrayUtil lazy-loaded array utilitys
- * @property \bdk\Backtrace       $backtrace     lazy-loaded Backtrace instance
- * @property \bdk\ErrorHandler    $errorHandler  lazy-loaded ErrorHandler instance
- * @property \bdk\PubSub\Manager  $eventManager  lazy-loaded Event Manager instance
- * @property Debug\Utility\Html   $html          lazy=loaded Html Utility instance
- * @property Debug\Psr3\Logger    $logger        lazy-loaded PSR-3 instance
- * @property \bdk\Debug|null      $parentInstance parent "channel"
- * @property \Psr\Http\Message\ResponseInterface $response lazy-loaded ResponseInterface (set via writeToResponse)
- * @property HttpMessage\ServerRequest $serverRequest lazy-loaded ServerRequest
- * @property \bdk\Debug           $rootInstance  root "channel"
- * @property \bdk\Debug\Utility\StringUtil $stringUtil lazy-loaded string utilitys
- * @property Debug\Utility\StopWatch $stopWatch  lazy-loaded StopWatch instance
- * @property Debug\Utility\Utf8   $utf8          lazy-loaded Utf8 instance
- * @property Debug\Utility        $utility       lazy-loaded Utility instance
+ * @property-read Abstracter           $abstracter
+ * @property-read Debug\Utility\ArrayUtil $arrayUtil
+ * @property-read Backtrace            $backtrace
+ * @property-read Debug\Data           $data
+ * @property-read ErrorHandler         $errorHandler
+ * @property-read PubSub\Manager       $eventManager
+ * @property-read Debug\Utility\Html   $html
+ * @property-read Debug\Psr3\Logger    $logger
+ * @property-read Debug|null           $parentInstance parent "channel"
+ * @property-read Debug\Utility\Php    $php
+ * @property-read Debug\Utility\PhpDoc $phpDoc
+ * @property-read \Psr\Http\Message\ResponseInterface $response lazy-loaded ResponseInterface (set via writeToResponse)
+ * @property-read HttpMessage\ServerRequest $serverRequest
+ * @property-read Debug                $rootInstance  root "channel"
+ * @property-read Debug\Utility\StringUtil $stringUtil
+ * @property-read Debug\Utility\StopWatch $stopWatch
+ * @property-read Debug\Utility\Utf8   $utf8
+ * @property-read Debug\Utility        $utility
  *
  * @psalm-consistent-constructor
  */

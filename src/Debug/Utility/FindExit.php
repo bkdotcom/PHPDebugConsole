@@ -12,10 +12,15 @@ use Reflector;
  */
 class FindExit
 {
+    /** @var string[] */
     private $classesSkip = array();
+    /** @var int */
     private $depth = 0;
-    private $funcStack = array(); // nested functions
+    /** @var array nested functions */
+    private $funcStack = array();
+    /** @var string */
     private $function = '';
+    /** @var bool */
     private $inFunc = false;
 
     /**
@@ -31,7 +36,7 @@ class FindExit
     /**
      * If xdebug is avail, search if exit triggered via exit() or die()
      *
-     * @return array|null|false array if exit found, null if not, false if not supported
+     * @return array<string, mixed>|null|false array if exit found, null if not, false if not supported
      */
     public function find()
     {
@@ -103,7 +108,7 @@ class FindExit
     /**
      * Set the classes that should be skipped when going through backtrace
      *
-     * @param strjing|array $classes Classnames to bypass
+     * @param string|string[] $classes Classnames to bypass
      *
      * @return void
      */
@@ -117,11 +122,11 @@ class FindExit
     /**
      * Reset/Init depth, & function stack
      *
-     * @param array $frame backtrace frame
+     * @param array<string, mixed> $frame backtrace frame
      *
      * @return void
      */
-    private function searchTokenInit($frame)
+    private function searchTokenInit(array $frame)
     {
         $this->depth = 0; // keep track of bracket depth
         $this->funcStack = array();
@@ -155,8 +160,8 @@ class FindExit
     /**
      * Test if found exit
      *
-     * @param array|string $token     Token
-     * @param array|string $tokenNext Next token
+     * @param array|string      $token     Token
+     * @param array|string|null $tokenNext Next token
      *
      * @return array|null|false
      */
@@ -233,7 +238,7 @@ class FindExit
     /**
      * Get the last frame
      *
-     * @return array|false
+     * @return array<string,mixed>|false
      */
     private function getLastFrame()
     {
@@ -265,7 +270,7 @@ class FindExit
      *
      * @param array $frame backtrace frame
      *
-     * @return array [$filepath, start-line, src]
+     * @return array{0:string|null, 1:int, 2:string}
      */
     private function getFrameSource($frame)
     {
@@ -305,7 +310,7 @@ class FindExit
      * @param int    $lineStart start line
      * @param int    $lineEnd   end line
      *
-     * @return array [filepath, lineStart, src]
+     * @return array{0:string, 1:int, 2:string}
      */
     private function getFrameSourceClosure($file, $lineStart, $lineEnd)
     {
@@ -326,7 +331,7 @@ class FindExit
      *
      * @param Reflector $reflector Reflector instance
      *
-     * @return array [filepath, lineStart, src]
+     * @return array{0:string|null, 1:int, 2:string}
      */
     private function getFrameSourceReflection(Reflector $reflector)
     {
@@ -352,7 +357,7 @@ class FindExit
     /**
      * Is frame a core php function (vs user defined)
      *
-     * @param array $frame backtrace frame
+     * @param array<string,mixed> $frame backtrace frame
      *
      * @return bool
      */

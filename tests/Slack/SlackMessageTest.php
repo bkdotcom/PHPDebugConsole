@@ -31,6 +31,16 @@ class SlackMessageTest extends TestCase
         ], $slackMessage->getData());
     }
 
+    public function testConstrutorInvalidData()
+    {
+        $this->expectException('InvalidArgumentException');
+        $this->expectExceptionMessage('SlackMessage: attachments should be array or null,  stdClass provided.');
+        $slackApi = new SlackMessage(array(
+            'attachments' => new \stdClass(),
+        ));
+    }
+
+
     public function testWithData()
     {
         $slackMessage = new SlackMessage([
@@ -51,13 +61,24 @@ class SlackMessageTest extends TestCase
         ], $slackMessage->getData());
     }
 
-    public function testWithDataThrowsException()
+    public function testWithDataUnknownThrowsException()
     {
         $this->expectException('InvalidArgumentException');
+        $this->expectExceptionMessage('SlackMesssage: Unknown values: foo');
         $slackMessage = new SlackMessage([
             'foo' => 'bar',
         ]);
     }
+
+    public function testWithDataInvalidBlocksThrowsException()
+    {
+        $this->expectException('InvalidArgumentException');
+        $this->expectExceptionMessage('SlackMessage: blocks should be array or null,  boolean provided.');
+        $slackMessage = new SlackMessage([
+            'blocks' => false,
+        ]);
+    }
+
 
     public function testWithAttachment()
     {
@@ -105,8 +126,8 @@ class SlackMessageTest extends TestCase
 
     public function testThrowsExceptionWithTooManyAttachments()
     {
-        $this->expectException('OutOfBoundsException');
-        $this->expectExceptionMessage('A maximum of 20 message attachments are allowed. 21 provided');
+        $this->expectException('OverflowException');
+        $this->expectExceptionMessage('A maximum of 20 message attachments are allowed.');
         $slackMessage = new SlackMessage();
         $attachment = $slackMessage->getBlockFactory()->attachment('some attachment');
         $slackMessage = $slackMessage->withAttachments(\array_fill(0, 21, $attachment));
@@ -211,6 +232,14 @@ class SlackMessageTest extends TestCase
         $slackMessage = new SlackMessage();
         $slackMessage = $slackMessage->withUsername('billy');
         self::assertSame('billy', $slackMessage->getData()['username']);
+    }
+
+    public function testWithValueCallsMethod()
+    {
+        $this->expectException('InvalidArgumentException');
+        $this->expectExceptionMessage('icon should be string (url or emoji) or null (to remove)');
+        $slackMessage = new SlackMessage();
+        $slackMessage->withValue('icon', false);
     }
 
     public function testWithValueThrowsException()

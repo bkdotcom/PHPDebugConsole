@@ -213,7 +213,7 @@ class MockTest extends TestCase
         $request = $this->factory->request('GET', 'http://example.com');
         $curlReqRes = $this->factory->curlReqRes($request);
 
-        $this->expectException($this->classes['OutOfBoundsException']);
+        $this->expectException($this->classes['UnderflowException']);
         $mock($curlReqRes);
     }
 

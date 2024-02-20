@@ -17,7 +17,14 @@ class SlackCommandTest extends TestCase
 
     const SIGNING_SECRET = 'twinkieweinersandwich';
 
-    public function testHandled()
+    public function testConstrutorThrowsException()
+    {
+        $this->expectException('BadMethodCallException');
+        $this->expectExceptionMessage('signingSecret must be provided.');
+        $slackApi = new SlackCommand();
+    }
+
+    public function testHandle()
     {
         $handled = false;
         $slackCommand = new SlackCommand([
@@ -32,6 +39,20 @@ class SlackCommandTest extends TestCase
         $return = $slackCommand->handle($request);
         self::assertTrue($handled);
         self::assertSame('myCommand', $return);
+    }
+
+    public function testHandleThrowsException()
+    {
+        $this->expectException('RuntimeException');
+        $this->expectExceptionMessage('Command not provided (or not-string)');
+        $slackCommand = new SlackCommand([
+            'signingSecret' => self::SIGNING_SECRET,
+        ], [
+            'myCommand' => static function (ServerRequest $request) use (&$handled) {
+            },
+        ]);
+        $request = $this->buildRequest(array('command' => null));
+        $slackCommand->handle($request);
     }
 
     public function testRegisterHandler()
@@ -127,9 +148,9 @@ class SlackCommandTest extends TestCase
         $slackCommand->handle($request);
     }
 
-    private function buildRequest()
+    private function buildRequest($values = array())
     {
-        $requestParams = array(
+        $requestParams = array_merge(array(
             'api_app_id' => '1234',
             'channel_id' => '1234',
             'command' => 'myCommand',
@@ -138,7 +159,7 @@ class SlackCommandTest extends TestCase
             'team_id' => '1234',
             'text' => 'this is a test',
             'trigger_id' => '1234',
-        );
+        ), $values);
         $secret = self::SIGNING_SECRET;
         $timestamp = \time();
 

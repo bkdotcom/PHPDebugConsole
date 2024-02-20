@@ -13,7 +13,7 @@ abstract class AbstractSlack
     /** @var Client */
     protected $client;
 
-    /** @var ResponseInterface */
+    /** @var ResponseInterface|null */
     protected $lastResponse;
 
     /**
@@ -33,7 +33,7 @@ abstract class AbstractSlack
     }
 
     /**
-     * @return ResponseInterface
+     * @return ResponseInterface|null
      */
     public function getLastResponse()
     {

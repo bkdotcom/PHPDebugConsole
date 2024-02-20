@@ -25,6 +25,7 @@ class LogPhp implements SubscriberInterface
 {
     use AssertSettingTrait;
 
+    /** @var array<string,mixed> */
     protected $cfg = array(
         'channelOpts' => array(
             'channelIcon' => '<i class="fa" style="position:relative; top:2px; font-size:15px;">🐘</i>',
@@ -33,7 +34,9 @@ class LogPhp implements SubscriberInterface
         ),
     );
 
+    /** @var Debug|null */
     private $debug;
+    /** @var array<string,mixed> */
     private $iniValues = array();
 
     /**

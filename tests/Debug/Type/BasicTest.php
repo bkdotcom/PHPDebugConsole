@@ -56,7 +56,6 @@ class BasicTest extends DebugTestFramework
             'meta' => array(),
         );
 
-
         return array(
             'bool.true' => array(
                 'log',
@@ -71,7 +70,7 @@ class BasicTest extends DebugTestFramework
                         'log',
                         array(true),
                     ),
-                )
+                ),
             ),
             'bool.false' => array(
                 'log',
@@ -86,7 +85,7 @@ class BasicTest extends DebugTestFramework
                         'log',
                         array(false),
                     ),
-                )
+                ),
             ),
 
             'callable' => array(
@@ -133,7 +132,7 @@ class BasicTest extends DebugTestFramework
                                 'type' => Type::TYPE_STRING,
                                 'typeMore' => Type::TYPE_STRING_CLASSNAME,
                                 'value' => 'SomeNamespace\Classname',
-                            )
+                            ),
                         ),
                         'meta' => array(),
                     ),
@@ -392,7 +391,7 @@ class BasicTest extends DebugTestFramework
                                 'type' => Type::TYPE_STRING,
                                 'typeMore' => Type::TYPE_TIMESTAMP,
                                 'value' => (string) $ts,
-                            )
+                            ),
                         ),
                     ),
                 ),
@@ -431,8 +430,8 @@ class BasicTest extends DebugTestFramework
                     Debug::getInstance()->abstracter->crateWithVals((string) $ts, array(
                         'attribs' => array(
                             'class' => 'testaroo', // also test that converted to array
-                        )
-                    ))
+                        ),
+                    )),
                 ),
                 array(
                     'chromeLogger' => '[["' . $ts . ' (' . $datetime . ')"],null,""]',

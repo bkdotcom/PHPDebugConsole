@@ -30,7 +30,12 @@ class LogFilesTest extends DebugTestFramework
         // test no files
         $this->debug->getChannel('Files', array('nested' => false))->clear(Debug::CLEAR_SILENT);
         $this->debug->setCfg('logEnvInfo', array('files' => true));
-        $logFiles->setFiles(array());
+        $logFiles->setFiles(array(
+            'path/to/file.php',
+        ));
+        $logFiles->setCfg('filesExclude', array(
+            'path/to/file.php',
+        ));
         $logFiles->onOutput($event);
         $logEntries = $this->debug->data->get('log');
         $logEntries = $this->helper->deObjectifyData($logEntries);
@@ -38,7 +43,7 @@ class LogFilesTest extends DebugTestFramework
             array(
                 'method' => 'info',
                 'args' => array(
-                    '0 files required',
+                    '1 files required',
                 ),
                 'meta' => array(
                     'channel' => 'Files',

@@ -17,10 +17,17 @@ use bdk\Debug\AbstractComponent;
 use bdk\Debug\Abstraction\AbstractArray;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
+use bdk\Debug\Abstraction\AbstractString;
 use bdk\Debug\Abstraction\Type;
 
 /**
  * Store array/object/resource info
+ *
+ * @property-read AbstractArray $abstractArray
+ * @property-read AbstractObject $abstractObject
+ * @property-read AbstractString $abstractString
+ * @property-read Debug $debug
+ * @property-read Type $type
  */
 class Abstracter extends AbstractComponent
 {
@@ -29,11 +36,22 @@ class Abstracter extends AbstractComponent
     const RECURSION = "\x00recursion\x00";  // ie, array recursion
     const UNDEFINED = "\x00undefined\x00";
 
+    /** @var AbstractArray */
     protected $abstractArray;
+
+    /** @var AbstractObject */
     protected $abstractObject;
+
+    /** @var AbstractString */
     protected $abstractString;
+
+    /** @var Debug */
     protected $debug;
+
+    /** @var Type */
     protected $type;
+
+    /** @var list<string> */
     protected $readOnly = array(
         'abstractArray',
         'abstractObject',
@@ -41,6 +59,8 @@ class Abstracter extends AbstractComponent
         'debug',
         'type',
     );
+
+    /** @var array>string,mixed> */
     protected $cfg = array(
         'brief' => false, // collect & output less details
         'fullyQualifyPhpDocType' => false,
@@ -82,13 +102,15 @@ class Abstracter extends AbstractComponent
         ),
         'useDebugInfo' => true,
     );
+
+    /** @var array */
     private $crateVals = array();
 
     /**
      * Constructor
      *
-     * @param Debug $debug debug instance
-     * @param array $cfg   config options
+     * @param Debug               $debug debug instance
+     * @param array<string,mixed> $cfg   config options
      */
     public function __construct(Debug $debug, $cfg = array())
     {

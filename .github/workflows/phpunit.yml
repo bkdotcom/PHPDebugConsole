@@ -30,7 +30,7 @@ jobs:
         mysql -e 'CREATE DATABASE ${{ env.MYSQL_DATABASE }};' -u${{ env.MYSQL_USERNAME }} -p${{ env.MYSQL_PASSWORD }}
         mysqld --version
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Install PHP
       uses: shivammathur/setup-php@v2 # https://github.com/marketplace/actions/setup-php-action
       with:
@@ -45,7 +45,7 @@ jobs:
     - name: Validate composer.json and composer.lock
       run: composer validate --strict
     - name: Cache composer packages
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       id: composer-cache
       with:
         path: vendor

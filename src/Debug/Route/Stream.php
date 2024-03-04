@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
@@ -21,7 +21,10 @@ use bdk\PubSub\Event;
  */
 class Stream extends AbstractRoute
 {
+    /** @var resource|null */
     protected $fileHandle;
+
+    /** @var array<string,mixed> */
     protected $cfg = array(
         'ansi' => 'default',        // default | true | false  (STDOUT & STDERR streams will default to true)
         'channels' => array('*'),

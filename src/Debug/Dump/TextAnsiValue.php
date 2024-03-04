@@ -21,7 +21,10 @@ use bdk\Debug\Abstraction\Type;
  */
 class TextAnsiValue extends TextValue
 {
+    /** @var string */
     public $escapeReset = "\e[0m";
+
+    /** @var bool */
     protected $dumpKeys = false;
 
     /**

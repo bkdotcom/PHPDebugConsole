@@ -38,8 +38,13 @@ class AbstractAsyncMiddleware extends AbstractComponent
         'prettyResponseBody' => true,
     );
 
+    /** @var Debug */
     protected $debug;
+
+    /** @var callable|null */
     protected $nextHandler;
+
+    /** @var callable|null */
     protected $onRedirectOrig;
 
     /**

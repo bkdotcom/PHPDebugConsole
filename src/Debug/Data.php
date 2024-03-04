@@ -25,6 +25,7 @@ class Data
     /** @var \bdk\Debug\Utility\ArrayUtil */
     private $arrayUtil;
 
+    /** @var array<string,mixed> */
     protected $data = array(
         'alerts'            => array(), // alert entries.  alerts will be shown at top of output when possible
         'classDefinitions'  => array(),

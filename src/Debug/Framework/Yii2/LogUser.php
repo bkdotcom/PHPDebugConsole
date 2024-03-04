@@ -14,11 +14,11 @@ namespace bdk\Debug\Framework\Yii2;
 
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Framework\Yii2\Module as DebugModule;
 use bdk\Debug\LogEntry;
 use DateTime;
 use Exception;
 use Yii;
-use yii\base\Model;
 use yii\rbac\ManagerInterface as rbacManagerInterface;
 
 /**
@@ -26,7 +26,10 @@ use yii\rbac\ManagerInterface as rbacManagerInterface;
  */
 class LogUser
 {
+    /** @var Debug */
     protected $debug;
+
+    /** @var DebugModule */
     private $debugModule;
 
     /**
@@ -34,7 +37,7 @@ class LogUser
      *
      * @param Module $debugModule Debug module
      */
-    public function __construct(Module $debugModule)
+    public function __construct(DebugModule $debugModule)
     {
         $this->debug = $debugModule->debug;
         $this->debugModule = $debugModule;

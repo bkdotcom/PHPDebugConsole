@@ -30,7 +30,8 @@ class TableRow
 {
     const SCALAR = "\x00scalar\x00";
 
-    private $row = null;
+    /** @var array */
+    private $row = array();
 
     /**
      * Will be populated with object info

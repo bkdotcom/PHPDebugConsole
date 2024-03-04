@@ -21,6 +21,7 @@ use bdk\ErrorHandler\Error;
  */
 abstract class AbstractErrorRoute extends AbstractRoute
 {
+    /** @var string */
     protected $statsKey = '';
 
     /**

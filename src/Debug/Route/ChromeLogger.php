@@ -30,8 +30,10 @@ class ChromeLogger extends AbstractRoute
 {
     const HEADER_NAME = 'X-ChromeLogger-Data';
 
+    /** @var bool */
     protected $appendsHeaders = true;
 
+    /** @var array<string, mixed> */
     protected $cfg = array(
         'channels' => array('*'),
         'channelsExclude' => array(
@@ -41,6 +43,7 @@ class ChromeLogger extends AbstractRoute
         'group' => true, // contain/wrap log in a group?
     );
 
+    /** @var list<string> */
     protected $consoleMethods = array(
         'assert',
         // 'count',    // output as log

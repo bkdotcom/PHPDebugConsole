@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2023 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.1
  */
 
@@ -21,8 +21,10 @@ use bdk\Debug\Abstraction\Object\Helper;
  */
 class PropertiesPhpDoc
 {
+    /** @var Helper */
     protected $helper;
 
+    /** @var array<string,string> */
     private $magicPhpDocTags = array(
         'property' => 'magic',
         'property-read' => 'magic-read',

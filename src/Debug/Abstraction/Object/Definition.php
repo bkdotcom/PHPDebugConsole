@@ -12,8 +12,13 @@
 
 namespace bdk\Debug\Abstraction\Object;
 
+use bdk\Debug;
 use bdk\Debug\Abstraction\AbstractObject;
 use bdk\Debug\Abstraction\Object\Abstraction as ObjectAbstraction;
+use bdk\Debug\Abstraction\Object\Constants;
+use bdk\Debug\Abstraction\Object\Helper;
+use bdk\Debug\Abstraction\Object\Methods;
+use bdk\Debug\Abstraction\Object\Properties;
 use bdk\PubSub\ValueStore;
 use ReflectionClass;
 
@@ -22,11 +27,22 @@ use ReflectionClass;
  */
 class Definition
 {
+    /** @var Constants */
     protected $constants;
+
+    /** @var Debug */
     protected $debug;
+
+    /** @var Helper */
     protected $helper;
+
+    /** @var Methods */
     protected $methods;
+
+    /** @var AbstractObject */
     protected $object;
+
+    /** @var Properties */
     protected $properties;
 
     /** @var ValueStore|null base/default class values */

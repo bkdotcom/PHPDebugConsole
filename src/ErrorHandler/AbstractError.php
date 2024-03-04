@@ -28,6 +28,7 @@ class AbstractError extends Event
     const CAT_WARNING = 'warning';
     const CAT_FATAL = 'fatal';
 
+    /** @var array<string, list<int>> */
     protected static $errCategories = array(
         self::CAT_DEPRECATED => array( E_DEPRECATED, E_USER_DEPRECATED ),
         self::CAT_ERROR      => array( E_USER_ERROR, E_RECOVERABLE_ERROR ),
@@ -36,6 +37,8 @@ class AbstractError extends Event
         self::CAT_STRICT     => array( E_STRICT ),
         self::CAT_WARNING    => array( E_WARNING, E_CORE_WARNING, E_COMPILE_WARNING, E_USER_WARNING ),
     );
+
+    /** @var array<int, string> */
     protected static $errTypes = array(
         E_ALL               => 'E_ALL',             // listed here for completeness
         E_COMPILE_ERROR     => 'Compile Error',     // handled via shutdown function
@@ -54,6 +57,8 @@ class AbstractError extends Event
         E_USER_WARNING      => 'User Warning',
         E_WARNING           => 'Warning',
     );
+
+    /** @var list<int> */
     protected static $userErrors = array(
         E_USER_DEPRECATED,
         E_USER_ERROR,
@@ -79,7 +84,7 @@ class AbstractError extends Event
         'evalLine'  => null,
         'file'      => null,        // Filepath the error was raised in
         'line'      => null,        // Line the error was raised in
-        'vars'      => array(),     // Active symbol table at point error occured
+        'vars'      => array(),     // Active symbol table at point error occurred
         'category'  => null,
         'continueToNormal' => null, // let PHP do its thing (log error / exit if E_USER_ERROR)
         'continueToPrevHandler' => true,

@@ -26,12 +26,18 @@ use DateTime;
  */
 class BaseValue extends AbstractComponent
 {
+    /** @var Debug */
     public $debug;
-
+    /** @var Dumper  */
     protected $dumper;
+
+    /** @var bool Whether to dump array keys / property names */
     protected $dumpKeys = true;
+    /** @var array<string,mixed> */
     protected $dumpOptions = array();
+    /** @var list<array<string,mixed>> */
     protected $dumpOptStack = array();
+    /** @var list<Type::TYPE_*> */
     protected $simpleTypes = array(
         Type::TYPE_ARRAY,
         Type::TYPE_BOOL,
@@ -428,7 +434,7 @@ class BaseValue extends AbstractComponent
     }
 
     /**
-     * Dump Abstraction::TYPE_UNKNOWN
+     * Dump Type::TYPE_UNKNOWN
      *
      * @param Abstraction $abs resource abstraction
      *
@@ -484,7 +490,7 @@ class BaseValue extends AbstractComponent
      *
      * @param Abstraction $abs Abstraction instance
      *
-     * @return array
+     * @return array<string,mixed>
      */
     private function dumpAbstractionOpts(Abstraction $abs)
     {

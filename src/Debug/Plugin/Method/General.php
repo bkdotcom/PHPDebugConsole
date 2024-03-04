@@ -67,7 +67,15 @@ class General implements SubscriberInterface
      * how many errors were captured in/out of console
      * breakdown per error category
      *
-     * @return array
+     * @return array{
+     *   counts: array<string,array{
+     *     inConsole: int,
+     *     notInConsole: int,
+     *     suppressed: int}>,
+     *   inConsole: int,
+     *   inConsoleCategories: int,
+     *   notInConsole: int,
+     * }
      */
     public function errorStats()
     {

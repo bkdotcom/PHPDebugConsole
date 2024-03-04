@@ -12,6 +12,7 @@
 
 namespace bdk\Debug\Dump;
 
+use bdk\Debug;
 use bdk\Debug\Dump\Base as Dumper;
 use bdk\Debug\LogEntry;
 
@@ -22,9 +23,16 @@ use bdk\Debug\LogEntry;
  */
 class Substitution
 {
+    /** @var Debug */
     protected $debug;
+
+    /** @var Dumper */
     protected $dumper;
+
+    /** @var array<string, mixed> */
     private $subInfo = array();
+
+    /** @var string */
     private $subRegex;
 
     /**

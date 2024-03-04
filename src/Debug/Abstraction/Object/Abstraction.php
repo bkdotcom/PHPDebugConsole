@@ -23,6 +23,7 @@ use bdk\PubSub\ValueStore;
  */
 class Abstraction extends BaseAbstraction
 {
+    /** @var list<string> */
     protected static $keysTemp = array(
         'collectPropertyValues',
         'fullyQualifyPhpDocType',
@@ -35,6 +36,7 @@ class Abstraction extends BaseAbstraction
     /** @var ValueStore */
     private $inherited;
 
+    /** @var list<string> */
     private $sortableValues = array('attributes', 'cases', 'constants', 'methods', 'properties');
 
     /**

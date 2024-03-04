@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
@@ -21,8 +21,11 @@ use Twig\Profiler\Profile;
  */
 class TwigExtension extends ProfilerExtension
 {
-    private $debug;
+    /** @var string */
     protected $icon = 'fa fa-file-text-o';
+
+    /** @var Debug */
+    private $debug;
 
     /**
      * Constructor

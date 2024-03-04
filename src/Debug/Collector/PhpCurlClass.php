@@ -25,10 +25,16 @@ use ReflectionObject;
  */
 class PhpCurlClass extends Curl
 {
+    /** @var string */
     public $rawRequestHeaders = '';
 
+    /** @var Debug */
     private $debug;
+
+    /** @var string */
     private $icon = 'fa fa-exchange';
+
+    /** @var array<string,mixed> */
     private $debugOptions = array(
         'inclInfo' => false,
         'inclResponseBody' => false,
@@ -36,11 +42,11 @@ class PhpCurlClass extends Curl
         'prettyResponseBody' => true,
         'verbose' => false,
     );
+
+    /** @var array<string,\Reflector> */
     private $reflection = array();
 
-    /**
-     * @var array constant value to array of names
-     */
+    /** @var array<int, list<string>> constant value to array of names */
     protected static $optionConstants = array();
 
     /**

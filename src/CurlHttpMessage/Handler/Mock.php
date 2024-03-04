@@ -20,7 +20,7 @@ class Mock implements Countable
     /** @var array */
     private $queue = array();
 
-    /** @var CyrlReqRes */
+    /** @var CurlReqRes */
     private $lastCurlReqRes;
 
     /** @var callable|null */

@@ -21,7 +21,10 @@ use bdk\Debug\LogEntry;
  */
 class Text extends Base
 {
+    /** @var int */
     protected $depth = 0;   // for keeping track of indentation
+
+    /** @var<string, mixed> */
     protected $cfg = array(
         'glue' => array(
             'equal' => ' = ',

@@ -12,6 +12,7 @@
 
 namespace bdk\Debug\Abstraction;
 
+use bdk\Debug;
 use bdk\Debug\AbstractComponent;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Type;
@@ -22,7 +23,10 @@ use bdk\HttpMessage\Utility\ContentType;
  */
 class AbstractString extends AbstractComponent
 {
+    /** @var Abstracter */
     protected $abstracter;
+
+    /** @var Debug */
     protected $debug;
 
     /**
@@ -228,7 +232,9 @@ class AbstractString extends AbstractComponent
      */
     private function getAbsValuesSerialized($absValues)
     {
-        $absValues['value'] = $this->debug->utf8->strcut($absValues['valueRaw'], 0, $absValues['maxlen']);
+        $absValues['value'] = $absValues['maxlen'] > -1
+            ? $this->debug->utf8->strcut($absValues['valueRaw'], 0, $absValues['maxlen'])
+            : $absValues['valueRaw'];
         $absValues['valueDecoded'] = $this->cfg['brief']
             ? null
             : $this->abstracter->crate(

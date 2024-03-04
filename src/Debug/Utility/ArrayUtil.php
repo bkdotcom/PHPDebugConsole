@@ -134,7 +134,6 @@ class ArrayUtil
         $mergeArrays = \func_get_args();
         \array_shift($mergeArrays);
         while ($mergeArrays) {
-            /** @var mixed  */
             $array2 = \array_shift($mergeArrays);
             if (\is_array($array2) === false) {
                 throw new InvalidArgumentException('mergeDeep: non-array value passed');
@@ -209,6 +208,7 @@ class ArrayUtil
                 continue;
             } elseif ($val === '__unset__' && empty($path)) {
                 unset($array[$key]);
+                /** @psalm-suppress ReferenceConstraintViolation */
                 return;
             } elseif (!isset($array[$key]) || !\is_array($array[$key])) {
                 $array[$key] = array(); // initialize this level

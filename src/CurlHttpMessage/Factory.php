@@ -15,15 +15,17 @@ use JsonSerializable;
 use Psr\Http\Message\MessageInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\StreamInterface;
+use Psr\Http\Message\UriInterface;
 
 /**
  * factory methods
  */
 class Factory
 {
-    /** @var array<string, closure> */
+    /** @var array<string,callable> */
     protected $factories = array();
 
+    /** @var array<string,string> */
     protected $types = array(
         'form' => 'application/x-www-form-urlencoded',
         'json' => 'application/json; charset=utf-8',

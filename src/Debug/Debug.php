@@ -121,6 +121,7 @@ class Debug extends AbstractDebug
     const META = "\x00meta\x00";
     const VERSION = '3.3';
 
+    /** @var array<string,mixed> */
     protected $cfg = array(
         'channelIcon' => 'fa fa-list-ul',
         'channelName' => 'general', // channel or tab name
@@ -144,7 +145,7 @@ class Debug extends AbstractDebug
         'emailLog' => false,    // Whether to email a debug log.  (requires 'collect' to also be true)
                                 //   false:             email will not be sent
                                 //   true or 'always':  email sent (if log is not output)
-                                //   'onError':         email sent if error occured (unless output)
+                                //   'onError':         email sent if error occurred (unless output)
         'emailTo' => 'default', // will default to $_SERVER['SERVER_ADMIN'] if non-empty, null otherwise
         'enableProfiling' => false,
         'errorLogNormal' => false, // whether php shoyld also log the error when debugging is active

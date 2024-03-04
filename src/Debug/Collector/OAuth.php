@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
@@ -23,9 +23,16 @@ use OAuthException;
  */
 class OAuth extends OAuthBase
 {
+    /** @var Debug */
     protected $debugger;
+
+    /** @var string */
     protected $icon = 'fa fa-handshake-o';
+
+    /** @var float */
     private $elapsed;
+
+    /** @var OAuthException|null */
     private $exception;
 
     /**

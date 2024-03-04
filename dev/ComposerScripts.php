@@ -1,6 +1,6 @@
 <?php
 
-namespace bdk\Debug;
+namespace bdk\Debug\Dev;
 
 use Composer\Script\Event;
 
@@ -48,7 +48,7 @@ class ComposerScripts
         /*
             Comment/uncomment slevomat rule
         */
-        $phpcsPath = __DIR__ . '/../../phpcs.xml.dist';
+        $phpcsPath = __DIR__ . '/../phpcs.xml.dist';
         $xml = \file_get_contents($phpcsPath);
 
         $ruleSlevomat = '<rule ref="./phpcs.slevomat.xml" />';
@@ -93,15 +93,18 @@ class ComposerScripts
             // v 2.0 requires php 7.0
             ? \exec($composer . ' require twig/twig ~3.1 --dev --no-scripts')
             : \exec($composer . ' require twig/twig ~1.42 --dev --no-scripts');
-        if (PHP_VERSION_ID >= 50500) {
-            \exec($composer . ' require guzzlehttp/guzzle --dev --no-scripts');
-        }
         if (PHP_VERSION_ID >= 70000) {
             \exec($composer . ' require psr/http-server-middleware --dev --no-scripts');
             \exec($composer . ' require mindplay/middleman --dev --no-scripts');
         }
+        if (PHP_VERSION_ID >= 50500) {
+            \exec($composer . ' require guzzlehttp/guzzle --dev --no-scripts');
+        }
         if ($isCi) {
             return $info;
+        }
+        if (PHP_VERSION_ID >= 80000) {
+            \exec($composer . ' require vimeo/psalm ^5.22.2 --dev --with-all-dependencies --no-scripts');
         }
         if (PHP_VERSION_ID >= 70200) {
             \exec($composer . ' require slevomat/coding-standard ^8.9.0 --dev --no-scripts');
@@ -117,14 +120,14 @@ class ComposerScripts
      */
     private static function updateSlevomat()
     {
-        $phpcsPath = __DIR__ . '/../../phpcs.slevomat.xml';
+        $phpcsPath = __DIR__ . '/../phpcs.slevomat.xml';
         $xml = \file_get_contents($phpcsPath);
         /*
             convert relative paths to absolute
         */
         $regex = '#(<config name="installed_paths" value=")([^"]+)#';
         $xml = \preg_replace_callback($regex, static function ($matches) {
-            $baseDir = \realpath(__DIR__ . '/../..') . '/';
+            $baseDir = \realpath(__DIR__ . '/..') . '/';
             $paths = \preg_split('/,\s*/', $matches[2]);
             foreach ($paths as $i => $path) {
                 if (\strpos($path, 'vendor') === 0) {

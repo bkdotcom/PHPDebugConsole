@@ -21,9 +21,13 @@ class CurlReqRes
     /** @var bool */
     private $curlHandleInternal = false;
 
-    private $errno;
-    private $error;
+    /** @var int */
+    private $errno = CURLE_OK;
 
+    /** @var string */
+    private $error = '';
+
+    /** @var array<string,mixed> */
     private $options = array(
         'curl' => array(),
         'delay' => null,
@@ -38,7 +42,7 @@ class CurlReqRes
     /** @var RequestInterface */
     private $request;
 
-    /** @var ResposneInterface */
+    /** @var ResponseInterface */
     private $response;
 
     /** @var callable */

@@ -35,17 +35,27 @@ use bdk\WampPublisher;
  */
 class Wamp implements RouteInterface
 {
+    /** @var Debug */
     public $debug;
+
+    /** @var string */
     public $requestId;
+
+    /** @var string */
     public $topic = 'bdk.debug';
 
     /** @var WampPublisher */
     public $wamp;
 
+    /** @var array<string,mixed> */
     protected $cfg = array(
         'output' => false,      // kept in sync with debug->cfg['output']
     );
+
+    /** @var string */
     protected $channelName = '';
+
+    /** @var list<string> */
     protected $channelNames = array();
 
     /**
@@ -54,8 +64,14 @@ class Wamp implements RouteInterface
      * @var WampCrate
      */
     protected $crate;
+
+    /** @var bool */
     protected $isBootstrapped = false;
+
+    /** @var bool */
     protected $metaPublished = false;
+
+    /** @var bool */
     protected $notConnectedAlert = false;
 
     /**

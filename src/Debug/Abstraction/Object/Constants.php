@@ -27,12 +27,19 @@ use UnitEnum;
  */
 class Constants extends AbstractInheritable
 {
+    /** @var Abstraction */
     protected $abs;
 
+    /** @var array<string, mixed> */
     private $constants = array();
+
+    /** @var bool */
     private $attributeCollect = true;
+
+    /** @var bool */
     private $phpDocCollect = true;
 
+    /** @var array<string,mixed> */
     private static $baseConstInfo = array(
         'attributes' => array(),
         'declaredLast' => null,

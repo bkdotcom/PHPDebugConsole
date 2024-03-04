@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
@@ -22,6 +22,7 @@ class TextAnsi extends Text
 {
     const ESCAPE_RESET = "\x00escapeReset\x00";
 
+    /** @var array<string, mixed> */
     protected $ansiCfg = array(
         'ansi' => 'default',    // default | true | false  (STDOUT & STDERR streams will default to true)
         'escapeCodes' => array(

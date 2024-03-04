@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
@@ -23,8 +23,13 @@ use PDOStatement;
  */
 class Statement extends PDOStatement
 {
+    /** @var DebugCollectorPdo */
     protected $pdo;
+
+    /** @var array<string,mixed> */
     protected $boundParameters = array();
+
+    /** @var array<string,int> */
     protected $boundParameterTypes = array();
 
     /**
@@ -147,9 +152,9 @@ class Statement extends PDOStatement
     /**
      * Combine execute's inputParameters with already bound parameters for statementInfo
      *
-     * @param array $inputParameters parameters passed to execute
+     * @param array<string,mixed> $inputParameters parameters passed to execute
      *
-     * @return array
+     * @return array<string,mixed>
      */
     private function mergeParams($inputParameters)
     {

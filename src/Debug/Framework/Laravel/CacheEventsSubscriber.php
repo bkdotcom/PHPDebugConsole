@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
@@ -33,12 +33,14 @@ class CacheEventsSubscriber
         KeyWritten::class => 'written',
     );
 
+    /** @var Debug */
     protected $debug;
+
+    /** @var array<string,mixed> */
     protected $options = array(
         'collectValues' => true,
         'icon' => 'fa fa-cube',
     );
-    protected $loggedActions = array();
 
     /**
      * Constructor
@@ -82,7 +84,7 @@ class CacheEventsSubscriber
     /**
      * Subscribe to events
      *
-     * @param Dispatcher $dispatcher Dispater interface
+     * @param Dispatcher $dispatcher Dispatcher interface
      *
      * @return void
      */

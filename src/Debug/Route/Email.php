@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
@@ -23,6 +23,7 @@ use bdk\PubSub\Event;
  */
 class Email implements RouteInterface
 {
+    /** @var Debug */
     public $debug;
 
     /**
@@ -90,7 +91,7 @@ class Email implements RouteInterface
                 . ' ' . $this->debug->redact((string) $this->debug->serverRequest->getUri());
         $body .= "\n\n";
         /*
-            List errors that occured
+            List errors that occurred
         */
         $errorStr = $this->buildErrorList();
         if ($errorStr) {

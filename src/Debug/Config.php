@@ -20,10 +20,16 @@ use bdk\Debug\ConfigurableInterface;
  */
 class Config
 {
+    /** @var Debug */
     protected $debug;
-    protected $debugPropChecked = array();
+
+    /** @var array */
     protected $valuesPending = array();
+
+    /** @var array */
     protected $invokedServices = array();
+
+    /** @var array<string, list<string|list<string>>> */
     protected $configKeys = array(
         'abstracter' => array(
             'brief',

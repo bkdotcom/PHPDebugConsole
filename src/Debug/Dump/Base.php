@@ -16,6 +16,8 @@ use bdk\Debug;
 use bdk\Debug\AbstractComponent;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Type;
+use bdk\Debug\Dump\BaseValue;
+use bdk\Debug\Dump\Substitution;
 use bdk\Debug\LogEntry;
 
 /**
@@ -23,10 +25,14 @@ use bdk\Debug\LogEntry;
  */
 class Base extends AbstractComponent
 {
+    /** @var bool */
     public $crateRaw = true;    // whether dump() should crate "raw" value
                                 //   when processing log this is set to false
                                 //   so not unecessarily re-crating arrays
+    /** @var Debug */
     public $debug;
+
+    /** @var array<string,string> */
     protected $alertStyles = array(
         'common' => 'padding: 5px;
             line-height: 26px;
@@ -45,9 +51,17 @@ class Base extends AbstractComponent
             border: 1px solid #faebcc;
             color: #8a6d3b;',
     );
+
+    /** @var string */
     protected $channelNameRoot;
+
+    /** @var Substitution */
     protected $substitution;
+
+    /** @var BaseValue */
     protected $valDumper;
+
+    /** @var array */
     private $tableInfo = array();
 
     /**
@@ -117,7 +131,7 @@ class Base extends AbstractComponent
     /**
      * Get value dumper
      *
-     * @return \bdk\Debug\Dump\BaseValue
+     * @return BaseValue
      */
     protected function getValDumper()
     {

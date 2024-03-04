@@ -23,8 +23,10 @@ class Firephp extends AbstractRoute
 {
     const FIREPHP_PROTO_VER = '0.3';
 
+    /** @var bool */
     protected $appendsHeaders = true;
 
+    /** @var array<string, mixed> */
     protected $cfg = array(
         'channels' => array('*'),
         'channelsExclude' => array(
@@ -33,6 +35,8 @@ class Firephp extends AbstractRoute
         ),
         'messageLimit' => 99999,
     );
+
+    /** @var array<string,string> */
     protected $firephpMethods = array(
         'error' => 'ERROR',
         'group' => 'GROUP_START',
@@ -43,7 +47,11 @@ class Firephp extends AbstractRoute
         'table' => 'TABLE',
         'warn' => 'WARN',
     );
+
+    /** @var int */
     protected $messageIndex = 0;
+
+    /** @var Event|null */
     protected $outputEvent;
 
     /**

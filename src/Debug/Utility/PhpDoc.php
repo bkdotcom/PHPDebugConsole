@@ -85,9 +85,9 @@ class PhpDoc
     {
         $this->reflector = Reflection::getReflector($what, true) ?: null;
         $comment = $this->reflector
-            ? \is_callable(array($this->reflector, 'getDocComment'))
+            ? (\is_callable(array($this->reflector, 'getDocComment'))
                 ? $this->reflector->getDocComment()
-                : ''
+                : '')
             : $what;
         if (\is_string($comment) === false) {
             return '';

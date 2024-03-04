@@ -31,7 +31,7 @@ class Redaction extends AbstractComponent implements SubscriberInterface
     const REPLACEMENT = '█████████';
 
     /**
-     * duplicate/store frequently used cfg vals
+     * duplicate/store frequently used cfg values
      *
      * @var array<string, mixed>
      */
@@ -122,7 +122,7 @@ class Redaction extends AbstractComponent implements SubscriberInterface
      */
     public function onLog(LogEntry $logEntry)
     {
-        if ($logEntry->getMeta('redact')) {
+        if ($this->cfg['enabled'] && $logEntry->getMeta('redact')) {
             $logEntry['args'] = $this->redact($logEntry['args']);
         }
     }
@@ -141,31 +141,6 @@ class Redaction extends AbstractComponent implements SubscriberInterface
             'debug' => $debug->getCfg(null, Debug::CONFIG_DEBUG),
         ));
         $this->onConfig($event);
-    }
-
-    /**
-     * Redact
-     *
-     * @param mixed $val value to scrub
-     * @param mixed $key array key, or property name
-     *
-     * @return mixed
-     */
-    public function redact($val, $key = null)
-    {
-        if ($this->cfg['enabled'] === false) {
-            return $val;
-        }
-        if (\is_string($val)) {
-            return $this->redactString($val, $key);
-        }
-        if ($val instanceof Abstraction) {
-            return $this->redactAbstraction($val);
-        }
-        if (\is_array($val)) {
-            return $this->redactArray($val);
-        }
-        return $val;
     }
 
     /**
@@ -193,35 +168,6 @@ class Redaction extends AbstractComponent implements SubscriberInterface
             $headers = $this->buildHeaderBlock($headers, $startLine);
         }
         return $headers;
-    }
-
-    /**
-     * Redact a single header value
-     *
-     * @param string $name  Header name
-     * @param string $value Header value
-     *
-     * @return string
-     */
-    protected function redactHeaderValue($name, $value)
-    {
-        if (\in_array($name, array('Authorization', 'Proxy-Authorization'), true) === false) {
-            return $this->redactString((string) $value, $name);
-        }
-        if (\strpos($value, 'Basic') === 0) {
-            $auth = \base64_decode(\str_replace('Basic ', '', $value), true);
-            $userpass = \explode(':', $auth);
-            $replacementShort = \mb_substr(self::REPLACEMENT, 0, 5, 'UTF-8');
-            return 'Basic ' . self::REPLACEMENT . ' (base64\'d ' . $userpass[0] . ':' . $replacementShort . ')';
-        }
-        if (\strpos($value, 'Digest') === 0) {
-            return \preg_replace('/(response="?)([^,"]*)("?)/', '$1' . self::REPLACEMENT . '$3', $value);
-        }
-        if (\strpos($value, 'OAuth') === 0) {
-            return \preg_replace('/(oauth_signature="?)([^,"]*)("?)/', '$1' . self::REPLACEMENT . '$3', $value);
-        }
-        // Bearer or any unknown auth type
-        return \preg_replace('/^(\S+ ).+$/', '$1' . self::REPLACEMENT, $value);
     }
 
     /**
@@ -341,6 +287,28 @@ class Redaction extends AbstractComponent implements SubscriberInterface
     }
 
     /**
+     * Redact
+     *
+     * @param mixed $val value to scrub
+     * @param mixed $key array key, or property name
+     *
+     * @return mixed
+     */
+    protected function redact($val, $key = null)
+    {
+        if (\is_string($val)) {
+            return $this->redactString($val, $key);
+        }
+        if ($val instanceof Abstraction) {
+            return $this->redactAbstraction($val);
+        }
+        if (\is_array($val)) {
+            return $this->redactArray($val);
+        }
+        return $val;
+    }
+
+    /**
      * Redact Abstraction
      *
      * @param Abstraction $abs Abstraction instance
@@ -371,7 +339,7 @@ class Redaction extends AbstractComponent implements SubscriberInterface
     /**
      * Redact array
      *
-     * @param array $array array to redact
+     * @param array $array array to process
      *
      * @return Abstraction
      */
@@ -384,7 +352,36 @@ class Redaction extends AbstractComponent implements SubscriberInterface
     }
 
     /**
-     * Redact string or portions within
+     * Redact a single header value
+     *
+     * @param string $name  Header name
+     * @param string $value Header value
+     *
+     * @return string
+     */
+    protected function redactHeaderValue($name, $value)
+    {
+        if (\in_array($name, array('Authorization', 'Proxy-Authorization'), true) === false) {
+            return $this->redactString((string) $value, $name);
+        }
+        if (\strpos($value, 'Basic') === 0) {
+            $auth = \base64_decode(\str_replace('Basic ', '', $value), true);
+            $userpass = \explode(':', $auth);
+            $replacementShort = \mb_substr(self::REPLACEMENT, 0, 5, 'UTF-8');
+            return 'Basic ' . self::REPLACEMENT . ' (base64\'d ' . $userpass[0] . ':' . $replacementShort . ')';
+        }
+        if (\strpos($value, 'Digest') === 0) {
+            return \preg_replace('/(response="?)([^,"]*)("?)/', '$1' . self::REPLACEMENT . '$3', $value);
+        }
+        if (\strpos($value, 'OAuth') === 0) {
+            return \preg_replace('/(oauth_signature="?)([^,"]*)("?)/', '$1' . self::REPLACEMENT . '$3', $value);
+        }
+        // Bearer or any unknown auth type
+        return \preg_replace('/^(\S+ ).+$/', '$1' . self::REPLACEMENT, $value);
+    }
+
+    /**
+     * Redact string
      *
      * @param string $val string to redact
      * @param string $key if array value: the key. if object property: the prop name

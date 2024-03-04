@@ -28,10 +28,16 @@ class ErrorHandler extends AbstractErrorHandler
     /** @var EventManager */
     public $eventManager;
 
+    /** @var bool */
     protected $inShutdown = false;
-    protected $registered = false;
-    protected $prevDisplayErrors = null;
 
+    /** @var bool */
+    protected $registered = false;
+
+    /** @var string|false previous display_errors setting (false if error getting/setting) */
+    protected $prevDisplayErrors = false;
+
+    /** @var self */
     private static $instance;
 
     /**
@@ -176,7 +182,7 @@ class ErrorHandler extends AbstractErrorHandler
      * @param string $errMsg  the error message
      * @param string $file    filepath the error was raised in
      * @param int    $line    the line the error was raised in
-     * @param array  $vars    active symbol table at point error occured
+     * @param array  $vars    active symbol table at point error occurred
      *
      * @return bool false: will be handled by standard PHP error handler
      *              true: we "handled" / will not be handed by PHP error handler
@@ -375,7 +381,7 @@ class ErrorHandler extends AbstractErrorHandler
      * @param string $errMsg  the error message
      * @param string $file    filepath the error was raised in
      * @param string $line    the line the error was raised in
-     * @param array  $vars    active symbol table at point error occured
+     * @param array  $vars    active symbol table at point error occurred
      *
      * @return Error
      */

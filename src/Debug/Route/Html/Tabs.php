@@ -20,7 +20,10 @@ use bdk\Debug\Route\Html as HtmlRoute;
  */
 class Tabs
 {
+    /** @var Debug */
     protected $debug;
+
+    /** @var HtmlRoute */
     protected $route;
 
     /**

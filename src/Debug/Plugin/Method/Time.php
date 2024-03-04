@@ -100,15 +100,15 @@ class Time implements SubscriberInterface
      *    template: '%label: %time'
      *    unit: ('auto'), 'sec', 'ms', or 'us'
      *
-     * @param string $label  (optional) unique label
-     * @param bool   $log    (true) log it, or return only
-     *                         if passed, takes precedence over silent meta val
-     * @param bool   $return ('auto') whether to return the value (vs returning $this))
-     *                          'auto' : !$log
+     * @param string      $label  (optional) unique label
+     * @param bool        $log    (true) log it, or return only
+     *                              if passed, takes precedence over silent meta val
+     * @param bool|'auto' $return ('auto') whether to return the value (vs returning $this))
+     *                              'auto' : !$log
      *
      * @return \bdk\Debug|float|false The duration (in sec).
      *
-     * @psalm-return ($return is true ? float|false : $this)
+     * @psalm-return ($return is true ? float|false : \bdk\Debug)
      */
     public function timeEnd($label = null, $log = true, $return = 'auto')
     {
@@ -133,14 +133,14 @@ class Time implements SubscriberInterface
      *
      * This method does not have a web console API equivalent
      *
-     * @param string $label  (optional) unique label
-     * @param bool   $log    (true) log it
-     * @param bool   $return ('auto') whether to return the value (vs returning $this))
-     *                          'auto' : !$log
+     * @param string      $label  (optional) unique label
+     * @param bool        $log    (true) log it
+     * @param bool|'auto' $return ('auto') whether to return the value (vs returning $this))
+     *                              'auto' : !$log
      *
      * @return \bdk\Debug|float|false The duration (in sec).  `false` if specified label does not exist
      *
-     * @psalm-return ($return is true ? float|false : $this)
+     * @psalm-return ($return is true ? float|false : \bdk\Debug)
      */
     public function timeGet($label = null, $log = true, $return = 'auto')
     {

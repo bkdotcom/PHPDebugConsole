@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
@@ -15,6 +15,7 @@ namespace bdk\Debug\Route\Html;
 use bdk\Debug;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Route\Html as RouteHtml;
+use bdk\Debug\Utility\Html as HtmlUtil;
 use bdk\ErrorHandler;
 use bdk\ErrorHandler\Error;
 
@@ -23,11 +24,31 @@ use bdk\ErrorHandler\Error;
  */
 class ErrorSummary
 {
+    /** @var Debug */
     protected $debug;
+
+    /** @var HtmlUtil */
     protected $html;
+
+    /** @var ErrorHandler */
     protected $errorHandler;
+
+    /** @var RouteHtml */
     protected $routeHtml;
+
+    /** @var array{
+     *   counts: array<string,array{
+     *     inConsole: int,
+     *     notInConsole: int,
+     *     suppressed: int}>,
+     *   inConsole: int,
+     *   inConsoleCategories: int,
+     *   notInConsole: int,
+     * }
+     */
     protected $stats = array();
+
+    /** @var array<string, array<string,string>> */
     private $catStrings = array(
         'deprecated' => array(
             'header' => 'Deprecated',

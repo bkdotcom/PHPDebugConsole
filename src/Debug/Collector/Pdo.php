@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
@@ -28,9 +28,13 @@ class Pdo extends PdoBase
     use DatabaseTrait;
     use MethodSignatureCompatTrait;
 
+    /** @var Debug */
     private $debug;
+
+    /** @var PdoBase */
     protected $pdo;
-    protected $loggedStatements = array();
+
+    /** @var string */
     protected $icon = 'fa fa-database';
 
     /**

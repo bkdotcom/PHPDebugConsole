@@ -5,15 +5,22 @@ namespace bdk\CurlHttpMessage;
 use bdk\CurlHttpMessage\CurlReqRes;
 use bdk\CurlHttpMessage\Exception\BadResponseException;
 use bdk\CurlHttpMessage\Exception\RequestException;
+use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use RuntimeException;
 
 /**
  * Convert PSR-7 Request to Curl options
  */
 class CurlReqResOptions
 {
+    /** @var RequestInterface */
     private $request;
+
+    /** @var array<int,mixed> */
     private $curlOptions = array();
+
+    /** @var int */
     private $maxBodySize;
 
     /**
@@ -29,7 +36,7 @@ class CurlReqResOptions
      *
      * @param CurlReqRes $curlReqRes CurlReqRes instance
      *
-     * @return array
+     * @return array<int,mixed>
      */
     public function getCurlOptions(CurlReqRes $curlReqRes)
     {

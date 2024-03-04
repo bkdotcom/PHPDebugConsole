@@ -25,12 +25,16 @@ use ReflectionMethod;
  */
 class Methods extends AbstractInheritable
 {
+    /** @var array<string,mixed> */
     protected $methods = array();
+
+    /** @var list<string> */
     protected $methodsWithStatic = array();
 
     /** @var MethodParams */
     protected $params;
 
+    /** @var array<string,mixed> */
     private static $baseMethodInfo = array(
         'attributes' => array(),
         'declaredLast' => null,

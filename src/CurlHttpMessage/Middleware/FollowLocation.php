@@ -17,6 +17,7 @@ use Psr\Http\Message\UriInterface;
  */
 class FollowLocation
 {
+    /** @var callable */
     private $handler;
 
     /**

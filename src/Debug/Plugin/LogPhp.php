@@ -169,7 +169,6 @@ class LogPhp implements SubscriberInterface
             $this->debug->warn(
                 $extension . ' extension is not loaded',
                 $this->debug->meta(array(
-                    'detectFiles' => false,
                     'file' => null,
                     'line' => null,
                 ))
@@ -331,7 +330,6 @@ class LogPhp implements SubscriberInterface
             $args[] = $styleReset;
         }
         $args[] = $this->debug->meta(array(
-            'detectFiles' => false,
             'file' => null,
             'line' => null,
         ));

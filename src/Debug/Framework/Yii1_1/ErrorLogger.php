@@ -6,13 +6,14 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
 namespace bdk\Debug\Framework\Yii1_1;
 
 use bdk\Debug;
+use bdk\Debug\Framework\Yii1_1\Component as DebugComponent;
 use bdk\Debug\Framework\Yii1_1\LogRoute;
 use bdk\ErrorHandler;
 use bdk\ErrorHandler\Error;
@@ -27,16 +28,21 @@ use Yii;
  */
 class ErrorLogger implements SubscriberInterface
 {
+    /** @var Debug */
     protected $debug;
+
+    /** @var DebugComponent */
     protected $component;
+
+    /** @var list<string> Error hashes */
     protected $ignoredErrors = array();
 
     /**
      * Constructor
      *
-     * @param Debug $debugComponent PHPDebugConsole component
+     * @param DebugComponent $debugComponent PHPDebugConsole component
      */
-    public function __construct($debugComponent)
+    public function __construct(DebugComponent $debugComponent)
     {
         $this->component = $debugComponent;
         $this->debug = $debugComponent->debug->rootInstance;

@@ -18,16 +18,20 @@ use Throwable;
  */
 class Promise implements PromiseInterface
 {
+    /** @var mixed */
+    protected $result;
+
+    /** @var string */
+    protected $state = self::PENDING;
+
     /** @var callable|null */
     protected $waitFn;
 
     /** @var callable|null */
     private $cancelFn;
 
-    /** @var array<int, array<Promise>, callable|nuoll, callable|null> */
+    /** @var list<list{Promise, callable|null, callable|null}> */
     private $handlers = array();
-    protected $result;
-    protected $state = self::PENDING;
 
     /** @var self[] Promise chain */
     private $waitList = array();

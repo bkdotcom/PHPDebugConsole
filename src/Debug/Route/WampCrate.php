@@ -22,10 +22,19 @@ use bdk\Debug\LogEntry;
  */
 class WampCrate
 {
+    /** @var Debug */
     private $debug;
+
+    /** @var bool */
     private $detectFiles = false;
+
+    /** @var list<string> */
     private $foundFiles = array();
+
+    /** @var list<string> */
     private $classesCrated = array();
+
+    /** @var list<string> */
     private $classesNew = array();
 
     /**

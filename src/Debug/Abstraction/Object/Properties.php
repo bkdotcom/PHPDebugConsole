@@ -25,6 +25,7 @@ use ReflectionProperty;
  */
 class Properties extends AbstractInheritable
 {
+    /** @var array<string,mixed> */
     private static $basePropInfo = array(
         'attributes' => array(),
         'debugInfoExcluded' => false,   // true if not included in __debugInfo
@@ -46,6 +47,7 @@ class Properties extends AbstractInheritable
                                         //   may also be an array (ie: ['private', 'magic-read'])
     );
 
+    /** @var PropertiesPhpDoc */
     private $phpDoc;
 
     /**

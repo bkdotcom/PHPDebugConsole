@@ -22,7 +22,10 @@ use bdk\Debug\Dump\Html as Dumper;
  */
 class Helper
 {
+    /** @var Debug */
     protected $debug;
+
+    /** @var Dumper */
     protected $dumper;
 
     /**

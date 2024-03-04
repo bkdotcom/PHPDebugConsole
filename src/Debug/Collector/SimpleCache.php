@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
@@ -24,9 +24,16 @@ use Traversable;
  */
 class SimpleCache implements CacheInterface
 {
+    /** @var Debug */
     public $debug;
+
+    /** @var CacheInterface */
     protected $cache;
+
+    /** @var string */
     protected $icon = 'fa fa-cube';
+
+    /** @var list<CallInfo> */
     protected $loggedActions = array();
 
     /**

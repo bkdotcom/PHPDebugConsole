@@ -33,6 +33,7 @@ use UnitEnum;
  */
 class Reflection
 {
+    /** @var non-empty-string */
     private static $regex = '/^(?:
             (?:
                 (?P<class>[\w\\\]+) # classname
@@ -52,6 +53,11 @@ class Reflection
      * @param Reflector $reflector Reflector instance
      *
      * @return string|null
+     *
+     * @psalm-suppress MixedInferredReturnType
+     * @psalm-suppress MixedMethodCall
+     * @psalm-suppress MixedReturnStatement
+     * @psalm-suppress UndefinedInterfaceMethod
      */
     public static function classname(Reflector $reflector)
     {

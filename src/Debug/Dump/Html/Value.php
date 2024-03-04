@@ -384,7 +384,7 @@ class Value extends BaseValue
     }
 
     /**
-     * Dump Abstraction::TYPE_UNKNOWN
+     * Dump Type::TYPE_UNKNOWN
      *
      * @param Abstraction $abs resource abstraction
      *

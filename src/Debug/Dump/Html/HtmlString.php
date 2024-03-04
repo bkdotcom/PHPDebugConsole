@@ -12,10 +12,12 @@
 
 namespace bdk\Debug\Dump\Html;
 
+use bdk\Debug;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Dump\Html\HtmlStringEncoded;
 use bdk\Debug\Dump\Html\Value as ValDumper;
+use Closure;
 use RuntimeException;
 
 /**
@@ -23,11 +25,16 @@ use RuntimeException;
  */
 class HtmlString
 {
+    /** @var Debug */
+    public $debug;
+
+    /** @var bool */
     public $detectFiles = false;
 
-    public $debug;
+    /** @var ValDumper */
     public $valDumper;
 
+    /** @var array<string,mixed> */
     protected $lazy = array(
         'dumpEncoded' => null,
     );
@@ -86,10 +93,9 @@ class HtmlString
         if (!$this->valDumper->getDumpOpt('addQuotes')) {
             $this->valDumper->setDumpOpt('attribs.class.__push__', 'no-quotes');
         }
-        if ($abs) {
-            return $this->dumpAbs($abs);
-        }
-        return $this->dumpHelper($val);
+        return $abs
+            ? $this->dumpAbs($abs)
+            : $this->dumpHelper($val);
     }
 
     /**
@@ -265,7 +271,7 @@ class HtmlString
      * @param Abstraction $abs     String Abstraction
      * @param string      $tagName html tag (ie div,td, or span)
      *
-     * @return closure
+     * @return Closure
      */
     private function dumpBinaryPost(Abstraction $abs, $tagName)
     {

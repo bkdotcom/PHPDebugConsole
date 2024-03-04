@@ -14,6 +14,7 @@ use bdk\ErrorHandler;
 use bdk\ErrorHandler\AbstractComponent;
 use bdk\ErrorHandler\Error;
 use bdk\ErrorHandler\Plugin\StatsStoreFile;
+use bdk\ErrorHandler\Plugin\StatsStoreInterface;
 use bdk\PubSub\SubscriberInterface;
 
 /**
@@ -23,6 +24,7 @@ use bdk\PubSub\SubscriberInterface;
  */
 class Stats extends AbstractComponent implements SubscriberInterface
 {
+    /** @var StatsStoreInterface */
     protected $dataStore;
 
     /**
@@ -80,8 +82,8 @@ class Stats extends AbstractComponent implements SubscriberInterface
 
     /**
      * Return list of errors that have
-     * not occured since their cutoff
-     * have occured since their last email
+     * not occurred since their cutoff
+     * have occurred since their last email
      *
      * @return array
      */

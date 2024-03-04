@@ -8,6 +8,7 @@ use bdk\CurlHttpMessage\Exception\RequestException;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\UriInterface;
+use RuntimeException;
 
 /**
  * Lightweight PSR-7 (HttpMessage) based cURL client

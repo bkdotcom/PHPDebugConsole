@@ -84,21 +84,20 @@ $(function () {
 })
 
 function debugEnhanceInit ($node, arg1) {
-  var conf = new Config(config.get(), 'phpDebugConsole')
-  $node.data('config', conf)
-  conf.set($node.eq(0).data('options') || {})
+  $node.data('config', config)
+  config.set($node.eq(0).data('options') || {})
   if (typeof arg1 === 'object') {
-    conf.set(arg1)
+    config.set(arg1)
   }
   tabs.init($node)
-  if (conf.get('tooltip')) {
+  if (config.get('tooltip')) {
     tooltip.init($node)
   }
   enhanceEntries.init($node)
   expandCollapse.init($node)
   registerListeners($node)
   enhanceMain.init($node)
-  if (!conf.get('drawer')) {
+  if (!config.get('drawer')) {
     $node.debugEnhance()
   }
 }
@@ -146,6 +145,7 @@ function debugEnhanceSetConfig ($node, arg1) {
   $node
     .find('.debug-log.enhanced')
     .closest('.debug')
+    .add($node)
     .trigger('config.debug.updated', 'linkFilesTemplate')
 }
 

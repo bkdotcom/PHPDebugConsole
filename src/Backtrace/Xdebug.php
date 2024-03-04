@@ -16,6 +16,7 @@ namespace bdk\Backtrace;
  */
 class Xdebug
 {
+    /** @var bool|null */
     private static $isXdebugAvail = null;
 
     /**

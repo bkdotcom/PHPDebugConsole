@@ -44,7 +44,7 @@ class GuzzleMiddleware extends AbstractAsyncMiddleware
      * @param RequestInterface $request Request
      * @param array            $options opts
      *
-     * @return GuzzleHttp\Promise\PromiseInterface;
+     * @return GuzzleHttp\Promise\PromiseInterface
      */
     public function onRequest(RequestInterface $request, array $options)
     {
@@ -74,7 +74,7 @@ class GuzzleMiddleware extends AbstractAsyncMiddleware
      * @param GuzzleException $reason      Reject reason
      * @param array           $requestInfo Request information
      *
-     * @return GuzzleHttp\Promise\PromiseInterface;
+     * @return GuzzleHttp\Promise\PromiseInterface
      */
     public function onRejected(GuzzleException $reason, array $requestInfo)
     {
@@ -108,7 +108,7 @@ class GuzzleMiddleware extends AbstractAsyncMiddleware
      * @param array            $options     Guzzle request options
      * @param array            $requestInfo Request info
      *
-     * @return GuzzleHttp\Promise\PromiseInterface;
+     * @return GuzzleHttp\Promise\PromiseInterface
      */
     protected function doRequest(RequestInterface $request, array $options, array $requestInfo)
     {

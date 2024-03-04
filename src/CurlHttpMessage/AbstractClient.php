@@ -11,6 +11,7 @@ use bdk\Promise\PromiseInterface;
 use InvalidArgumentException;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\UriInterface;
+use RuntimeException;
 
 /**
  * Base client providing methods that return PromiseInterface

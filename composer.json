@@ -42,6 +42,7 @@
     },
     "autoload-dev": {
         "psr-4": {
+            "bdk\\Debug\\Dev\\": "dev/",
             "bdk\\Test\\": "tests/"
         }
     },
@@ -85,13 +86,13 @@
             "vendor/bin/phpcs -p -s --colors ./src"
         ],
         "post-update-cmd": [
-            "bdk\\Debug\\ComposerScripts::postUpdate"
+            "bdk\\Debug\\Dev\\ComposerScripts::postUpdate"
         ],
         "test" : [
             "vendor/bin/phpunit -v"
         ],
         "update-phpcs": [
-            "bdk\\Debug\\ComposerScripts::updatePhpCsXml"
+            "bdk\\Debug\\Dev\\ComposerScripts::updatePhpCsXml"
         ],
         "webserver": [
             "cd tests/docroot; php -S 127.0.0.1:8080 frontController.php; cd ../.."

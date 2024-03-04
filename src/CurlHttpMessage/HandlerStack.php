@@ -2,6 +2,7 @@
 
 namespace bdk\CurlHttpMessage;
 
+use bdk\Promise\PromiseInterface;
 use InvalidArgumentException;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -9,23 +10,22 @@ use RuntimeException;
 
 /**
  * Manage the middleware stack and ultimate request handler
+ *
+ * @psalm-type handler = callable(RequestInterface, array): PromiseInterface
  */
 class HandlerStack
 {
+    /** @var handler */
     private $handler;
 
-    /**
-     * @var array{(callable(callable(RequestInterface, array): PromiseInterface): callable), (string|null)}[]
-     */
+    /** @var list<list{callable,string|null}> */
     private $stack = array();
 
-    /**
-     * @var (callable(RequestInterface, array): PromiseInterface)|null
-     */
+    /** @var handler|null */
     private $stackCallable;
 
     /**
-     * @param (callable(RequestInterface, array): PromiseInterface)|null $handler Underlying HTTP handler.
+     * @param handler|null $handler Underlying HTTP handler.
      */
     public function __construct($handler = null)
     {
@@ -239,7 +239,7 @@ class HandlerStack
     /**
      * Compose the middleware and handler into a single callable function.
      *
-     * @return callable(RequestInterface, array): PromiseInterface
+     * @return handler
      */
     private function stackCallable()
     {

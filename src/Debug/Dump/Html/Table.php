@@ -6,12 +6,13 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
 namespace bdk\Debug\Dump\Html;
 
+use bdk\Debug;
 use bdk\Debug\Dump\Html as Dumper;
 
 /**
@@ -19,8 +20,13 @@ use bdk\Debug\Dump\Html as Dumper;
  */
 class Table
 {
+    /** @var Dumper */
     protected $debug;
+
+    /** @var Dumper */
     protected $dumper;
+
+    /** @var array<string, mixed> */
     protected $options;
 
     /**

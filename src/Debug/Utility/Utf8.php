@@ -32,6 +32,42 @@ class Utf8
     private static $buffer;
 
     /**
+     * Convert code point to character
+     *
+     * @param int $codePoint Unicode code-point
+     *
+     * @return string
+     */
+    public static function chr($codePoint)
+    {
+        if ($codePoint <= 0x7F) {
+            // Plain ASCII
+            return \chr($codePoint);
+        }
+        if ($codePoint <= 0x07FF) {
+            // 2-byte unicode (range 0x80-0x7FF)
+            return ''
+                . \chr((($codePoint >> 6) & 0x1F) | 0xC0)
+                . \chr((($codePoint >> 0) & 0x3F) | 0x80);
+        }
+        if ($codePoint <= 0xFFFF) {
+            // 3-byte unicode (range 0x800-0xFFFF)
+            return ''
+                . \chr((($codePoint >> 12) & 0x0F) | 0xE0)
+                . \chr((($codePoint >>  6) & 0x3F) | 0x80)
+                . \chr((($codePoint >>  0) & 0x3F) | 0x80);
+        }
+        if ($codePoint <= 0x10FFFF) {
+            // 4-byte unicode (range 0x10000-1114111)
+            return ''
+                . \chr((($codePoint >> 18) & 0x07) | 0xF0)
+                . \chr((($codePoint >> 12) & 0x3F) | 0x80)
+                . \chr((($codePoint >>  6) & 0x3F) | 0x80)
+                . \chr((($codePoint >>  0) & 0x3F) | 0x80);
+        }
+    }
+
+    /**
      * Highlight non-UTF-8, control, & "special" characters
      *
      * control & non-utf-8 chars are displayed as hex
@@ -50,7 +86,7 @@ class Utf8
         $dump->setOptions($options);
         if ($info['percentBinary'] > 33) {
             $dump->setOptions('prefix', false);
-            return $dump->dumpBlock($str, 'other');
+            return $dump->dumpBlock($str, self::TYPE_OTHER);
         }
         $str = '';
         foreach ($info['blocks'] as $block) {
@@ -79,9 +115,9 @@ class Utf8
     /**
      * mb_strcut implementation
      *
-     * @param string $str    The string being cut
-     * @param int    $start  start position
-     * @param int    $length length in bytes
+     * @param string   $str    The string being cut
+     * @param int      $start  start position
+     * @param int|null $length length in bytes
      *
      * @return string
      * @see    https://www.php.net/manual/en/function.mb-strcut.php
@@ -90,7 +126,9 @@ class Utf8
     {
         self::$buffer = new Utf8Buffer($str);
         $start = self::strcutGetStart($start);
-        $length = self::strcutGetLength($start, $length);
+        $length = $length !== null
+            ? self::strcutGetLength($start, $length)
+            : self::$buffer->strlen() - $start;
         self::$buffer->seek($start);
         return self::$buffer->read($length);
     }
@@ -135,15 +173,18 @@ class Utf8
     /**
      * Find length value...
      *
-     * @param int      $start  Our start value
-     * @param int|null $length User supplied length
+     * @param int $start  Our start value
+     * @param int $length User supplied length
      *
      * @return int
      */
     private static function strcutGetLength($start, $length)
     {
-        $end = $start + (int) $length;
+        $length = (int) $length;
         $strlen = self::$buffer->strlen();
+        $end = $length >= 0
+            ? $start + $length
+            : $strlen + $length;
         if ($end >= $strlen) {
             return $strlen - $start;
         }

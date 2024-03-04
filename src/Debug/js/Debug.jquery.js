@@ -6553,21 +6553,20 @@
   });
 
   function debugEnhanceInit ($node, arg1) {
-    var conf = new Config(config$a.get(), 'phpDebugConsole');
-    $node.data('config', conf);
-    conf.set($node.eq(0).data('options') || {});
+    $node.data('config', config$a);
+    config$a.set($node.eq(0).data('options') || {});
     if (typeof arg1 === 'object') {
-      conf.set(arg1);
+      config$a.set(arg1);
     }
     init$b($node);
-    if (conf.get('tooltip')) {
+    if (config$a.get('tooltip')) {
       init$c($node);
     }
     init$4($node);
     init$a($node);
     registerListeners();
     init$9($node);
-    if (!conf.get('drawer')) {
+    if (!config$a.get('drawer')) {
       $node.debugEnhance();
     }
   }
@@ -6615,6 +6614,7 @@
     $node
       .find('.debug-log.enhanced')
       .closest('.debug')
+      .add($node)
       .trigger('config.debug.updated', 'linkFilesTemplate');
   }
 

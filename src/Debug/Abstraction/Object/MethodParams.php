@@ -15,6 +15,7 @@ namespace bdk\Debug\Abstraction\Object;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
+use bdk\Debug\Abstraction\Object\Helper;
 use bdk\Debug\Abstraction\Type;
 use ReflectionMethod;
 use ReflectionParameter;
@@ -25,10 +26,16 @@ use UnitEnum;
  */
 class MethodParams
 {
+    /** @var Abstraction|null */
     protected $abs;
+
+    /** @var Abstracter */
     protected $abstracter;
+
+    /** @var Helper */
     protected $helper;
 
+    /** @var array<string,mixed> */
     private static $baseParamInfo = array(
         'attributes' => array(),
         'defaultValue' => Abstracter::UNDEFINED,

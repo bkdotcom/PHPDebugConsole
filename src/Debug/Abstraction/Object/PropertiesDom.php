@@ -27,8 +27,10 @@ use DOMNodeList;
  */
 class PropertiesDom
 {
+    /** @var Abstracter */
     private $abstracter;
 
+    /** @var array<string,string> */
     private $domNodeProps = array(
         'attributes' => 'DOMNamedNodeMap',
         'childNodes' => 'DOMNodeList',
@@ -47,6 +49,7 @@ class PropertiesDom
         'textContent' => 'string',
     );
 
+    /** @var array<string,string> */
     private $domDocumentProps = array(
         'actualEncoding' => 'string',
         'baseURI' => 'string',
@@ -70,6 +73,7 @@ class PropertiesDom
         'xmlVersion' => 'string',
     );
 
+    /** @var array<string,string> */
     private $domElementProps = array(
         'schemaTypeInfo' => 'bool',
         'tagName' => 'string',
@@ -157,7 +161,7 @@ class PropertiesDom
      *
      * @return bool
      *
-     * @psalm-assert-if DOMNode|DOMNodeList $obj
+     * @psalm-assert-if-true DOMNode|DOMNodeList $obj
      */
     private function isDomObj($obj)
     {

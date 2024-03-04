@@ -32,11 +32,19 @@ class MySqli extends mysqliBase
     use DatabaseTrait;
     use ExecuteQueryTrait;
 
+    /** @var bool */
     public $connectionAttempted = false;
+
+    /** @var string */
     protected $icon = 'fa fa-database';
-    protected $loggedStatements = array();
+
+    /** @var bool */
     protected $autocommit = true;
+
+    /** @var list<string> */
     protected $savepoints = array();
+
+    /** @var Debug */
     private $debug;
 
     /**
@@ -271,8 +279,7 @@ class MySqli extends mysqliBase
         }
         $index = \array_search($name, $this->savepoints, true);
         if ($index !== false) {
-            unset($this->savepoints[$index]);
-            $this->savepoints = \array_values($this->savepoints);
+            \array_splice($this->savepoints, $index, 1);
         }
         $this->savepoints[] = $name;
         $this->debug->info('savepoint', $name);

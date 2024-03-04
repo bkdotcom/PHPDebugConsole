@@ -4,6 +4,8 @@ namespace bdk\CurlHttpMessage\Handler;
 
 use bdk\CurlHttpMessage\CurlReqRes;
 use bdk\Promise;
+use CurlHandle;
+use CurlMultiHandle;
 use RuntimeException;
 
 /**
@@ -11,14 +13,13 @@ use RuntimeException;
  */
 class CurlMulti extends Curl
 {
-    /**
-     * @var int Will be higher than 0 when `curl_multi_exec` is still running.
-     */
+    /** @var int Will be higher than 0 when `curl_multi_exec` is still running. */
     private $active = 0;
 
     /** @var resource[]|\CurlHandle[] Idle curl handles */
     private $idleHandles = array();
 
+    /** @var CurlMultiHandle|resource|null|false */
     private $multiHandle;
 
     /** @var array options */

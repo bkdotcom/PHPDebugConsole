@@ -16,7 +16,7 @@ class Status
      *
      * @param callable $handler Next request handler in the middleware stack
      *
-     * @return closure
+     * @return Closure
      */
     public function __invoke(callable $handler)
     {

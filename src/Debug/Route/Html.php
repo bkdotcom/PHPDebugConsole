@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
@@ -23,9 +23,16 @@ use bdk\PubSub\Event;
  */
 class Html extends AbstractRoute
 {
+    /** @var ErrorSummary */
     protected $errorSummary;
+
+    /** @var Tabs */
     protected $tabs;
+
+    /** @var array<string,mixed> */
     protected $cfg = array();
+
+    /** @var array{css:array, script:array} */
     private $assets = array(
         'css' => array(),
         'script' => array(),
@@ -257,10 +264,13 @@ class Html extends AbstractRoute
      */
     protected function buildChannelTree()
     {
+        $tree = array();
         $channels = $this->dumper->channels;
+        if (empty($channels)) {
+            return $tree;
+        }
         $channelRoot = \reset($channels)->rootInstance;
         \ksort($channels, SORT_NATURAL | SORT_FLAG_CASE);
-        $tree = array();
         \array_walk($channels, static function (Debug $channel, $name) use ($channels, $channelRoot, &$tree) {
             $ref = &$tree;
             $path = \explode('.', $name);

@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  *
  * @see https://craig.is/writing/chrome-logger/techspecs
@@ -24,6 +24,7 @@ class ServerLog extends ChromeLogger
 {
     const HEADER_NAME = 'X-ServerLog-Location';
 
+    /** @var array<string, mixed> */
     protected $cfg = array(
         'channels' => array('*'),
         'channelsExclude' => array(),
@@ -37,6 +38,7 @@ class ServerLog extends ChromeLogger
         'urlTemplate' => '/log/{filename}',
     );
 
+    /** @var string|null */
     protected $filename = null;
 
     /**

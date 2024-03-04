@@ -23,8 +23,13 @@ use bdk\PubSub\Event;
  */
 abstract class AbstractRoute extends AbstractComponent implements RouteInterface
 {
+    /** @var Debug  */
     public $debug;
+
+    /** @var bool */
     protected $appendsHeaders = false;
+
+    /** @var string|bool */
     protected $channelName = null;
 
     /**
@@ -35,12 +40,19 @@ abstract class AbstractRoute extends AbstractComponent implements RouteInterface
      */
     protected $channelNameRoot = '';
 
-    protected $channelRegex;
+    /** @var string */
+    protected $channelRegex = '';
+
+    /** @var array<string,mixed> */
     protected $cfg = array(
         'channels' => array('*'),
         'channelsExclude' => array(),
     );
+
+    /** @var array<string,mixed> */
     protected $data = array();
+
+    /** @var \bdk\Debug\Dump\Base */
     protected $dumper;
 
     /** @var array channelName => bool */

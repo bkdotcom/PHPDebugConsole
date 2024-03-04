@@ -154,6 +154,7 @@ class ArrayUtilTest extends TestCase
         ArrayUtil::pathSet($array, 'surfaces.__reset__.hard', false);
         ArrayUtil::pathSet($array, 'surfaces.__end__.__push__', 'pushed');
         ArrayUtil::pathSet($array, 'surfaces.__push__.itchy', true);
+        ArrayUtil::pathSet($array, 'foo', 'bar');
 
         self::assertSame(array(
             'surfaces' => array(
@@ -170,6 +171,7 @@ class ArrayUtilTest extends TestCase
                     'itchy' => true,
                 ),
             ),
+            'foo' => 'bar',
         ), $array);
     }
 

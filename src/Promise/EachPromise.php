@@ -12,15 +12,20 @@ use Throwable;
  */
 class EachPromise extends Promise
 {
-    private $pending = array();
+    /** @var Promise|null */
+    private $aggregate;
 
-    private $nextPendingIndex = 0;
+    /** @var callable|int|null */
+    private $concurrency;
 
     /** @var \Iterator|null */
     private $iterable;
 
-    /** @var callable|int|null */
-    private $concurrency;
+    /** @var bool|null */
+    private $mutex;
+
+    /** @var int */
+    private $nextPendingIndex = 0;
 
     /** @var callable|null */
     private $onFulfilled;
@@ -28,11 +33,8 @@ class EachPromise extends Promise
     /** @var callable|null */
     private $onRejected;
 
-    /** @var Promise|null */
-    private $aggregate;
-
-    /** @var bool|null */
-    private $mutex;
+    /** @var array<int, Promise> */
+    private $pending = array();
 
     /**
      * Configuration hash can include the following key value pairs:

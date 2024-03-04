@@ -23,9 +23,7 @@ use InvalidArgumentException;
  */
 class SkipInternal
 {
-    /**
-     * @var array
-     */
+    /** @var array<string,mixed> */
     private static $internalClasses = array(
         // classes/namespaces
         // the lower the number, the more we'll enforce skipping
@@ -39,6 +37,7 @@ class SkipInternal
         'regex' => null,
     );
 
+    /** @var non-empty-string */
     private static $classMethodRegex = '/^(?<class>\S+)(?<type>::|->)(?<method>\S+)$/';
 
     /**
@@ -221,8 +220,8 @@ class SkipInternal
     /**
      * Test frame against internal classes
      *
-     * @param classname $class    class name
-     * @param int       $levelMax MAximum level
+     * @param class-string $class    class name
+     * @param int          $levelMax MAximum level
      *
      * @return bool
      */

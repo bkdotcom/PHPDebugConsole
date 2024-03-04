@@ -260,11 +260,11 @@ class ConfigEvents implements SubscriberInterface
             return;
         }
         if ($this->isBootstrapped) {
-            // boostrap has already occured, so go ahead and call
+            // bootstrap has already occurred, so go ahead and call
             \call_user_func($val, new Event($this->debug));
             return;
         }
-        // we're bootstraping
+        // we're bootstrapping
         $this->debug->eventManager->subscribe(Debug::EVENT_BOOTSTRAP, $val);
     }
 

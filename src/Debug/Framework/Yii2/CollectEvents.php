@@ -24,9 +24,13 @@ use yii\base\Event as YiiEvent;
  */
 class CollectEvents implements SubscriberInterface
 {
-	protected $debug;
+    /** @var Debug */
+    protected $debug;
+
+    /** @var DebugModule */
 	protected $debugModule;
 
+    /** @var list<array<string,mixed>> */
     private $collectedEvents = array();
 
 	/**

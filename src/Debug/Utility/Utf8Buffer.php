@@ -88,12 +88,14 @@ class Utf8Buffer
         $special = (array) $special;
         foreach ($special as $char) {
             if (\strpos($char, 'regex:') !== 0) {
+                /** @psalm-suppress PropertyTypeCoercion */
                 self::$special['chars'][] = $char;
                 continue;
             }
             // remove "regex:" prefix
             $regex = \substr($char, 6);
             if (\strlen($regex)) {
+                /** @psalm-suppress PropertyTypeCoercion */
                 self::$special['regex'][] = $regex;
             }
         }
@@ -103,10 +105,13 @@ class Utf8Buffer
      * Get stats about string
      *
      * @return stats
+     *
+     * @psalm-suppress InvalidReturnType
      */
     public function analyze()
     {
         if ($this->stats['calculated']) {
+            /** @psalm-suppress InvalidReturnStatement */
             return \array_diff_key($this->stats, array('calculated' => false));
         }
         $this->seek(0);
@@ -127,6 +132,7 @@ class Utf8Buffer
         $this->addBlock($curBlockType, $curBlockStart, $curBlockLen);
         $this->analyzeFinish();
         $this->stats['calculated'] = true;
+        /** @psalm-suppress InvalidReturnStatement */
         return \array_diff_key($this->stats, array('calculated' => false));
     }
 
@@ -169,7 +175,7 @@ class Utf8Buffer
      * Determine if string is UTF-8 encoded
      *
      * In addition, if valid UTF-8, will also report whether string contains
-     * control, or other speical characters that could otherwise go unnoticed
+     * control, or other special characters that could otherwise go unnoticed
      *
      * @param bool $hasSpecial does valid utf-8 string contain control or "exotic" whitespace type character
      *

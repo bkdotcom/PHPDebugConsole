@@ -28,14 +28,31 @@ use bdk\Debug\Utility\Html as HtmlUtil;
  */
 class HtmlObject
 {
+    /** @var ValDumper */
     public $valDumper;
+
+    /** @var ObjectCases */
     protected $cases;
+
+    /** @var ObjectConstants */
     protected $constants;
+
+    /** @var Helper */
     protected $helper;
+
+    /** @var HtmlUtil */
     protected $html;
+
+    /** @var ObjectMethods */
     protected $methods;
+
+    /** @var ObjectPhpDoc */
     protected $phpDoc;
+
+    /** @var ObjectProperties */
     protected $properties;
+
+    /** @var array<string, callable> */
     protected $sectionCallables;
 
     /**

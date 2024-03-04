@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
@@ -17,7 +17,10 @@ namespace bdk\Debug;
  */
 class Autoloader
 {
+    /** @var array<string,string> */
     protected $classMap = array();
+
+    /** @var array<string,string> */
     protected $psr4Map = array();
 
     /**
@@ -27,6 +30,14 @@ class Autoloader
      */
     public function register()
     {
+        $this->classMap = array(
+            'bdk\\Backtrace' => __DIR__ . '/../Backtrace/Backtrace.php',
+            'bdk\\Container' => __DIR__ . '/../Container/Container.php',
+            'bdk\\Debug' => __DIR__ . '/Debug.php',
+            'bdk\\Debug\\Utility' => __DIR__ . '/Utility/Utility.php',
+            'bdk\\ErrorHandler' => __DIR__ . '/../ErrorHandler/ErrorHandler.php',
+            'bdk\\Promise' => __DIR__ . '/../Promise/Promise.php',
+        );
         $this->psr4Map = array(
             'bdk\\Backtrace\\' => __DIR__ . '/../Backtrace',
             'bdk\\Container\\' => __DIR__ . '/../Container',
@@ -40,14 +51,6 @@ class Autoloader
             'bdk\\Teams\\' => __DIR__ . '/../Teams',
             'bdk\\Test\\Debug\\' => __DIR__ . '/../../tests/Debug',
             'Psr\\Http\\Message\\' => __DIR__ . '/../Psr7',
-        );
-        $this->classMap = array(
-            'bdk\\Backtrace' => __DIR__ . '/../Backtrace/Backtrace.php',
-            'bdk\\Container' => __DIR__ . '/../Container/Container.php',
-            'bdk\\Debug' => __DIR__ . '/Debug.php',
-            'bdk\\Debug\\Utility' => __DIR__ . '/Utility/Utility.php',
-            'bdk\\ErrorHandler' => __DIR__ . '/../ErrorHandler/ErrorHandler.php',
-            'bdk\\Promise' => __DIR__ . '/../Promise/Promise.php',
         );
         return \spl_autoload_register(array($this, 'autoload'));
     }

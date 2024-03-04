@@ -22,6 +22,7 @@ use bdk\Debug\Dump\BaseValue;
  */
 class TextValue extends BaseValue
 {
+    /** @var int */
     protected $valDepth = 0;
 
     /**
@@ -289,7 +290,7 @@ class TextValue extends BaseValue
     }
 
     /**
-     * Dump Abstraction::TYPE_UNKNOWN
+     * Dump Type::TYPE_UNKNOWN
      *
      * @param Abstraction $abs resource abstraction
      *

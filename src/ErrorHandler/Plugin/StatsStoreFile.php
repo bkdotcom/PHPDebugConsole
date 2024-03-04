@@ -15,10 +15,34 @@ use bdk\ErrorHandler\Error;
 
 /**
  * Retrieve and store stats in a single json file
+ *
+ * @psalm-type errorStatus = array{
+ *      count: int,
+ *      info: array{
+ *         file: string,
+ *         line: int,
+ *         message: string,
+ *         type: int,
+ *      ),
+ *      tsAdded: int,
+ *      tsLastOccur: int,
+ *      email?: array{
+ *         countSince: int,
+ *         ...
+ *      },
+ *   }
  */
 class StatsStoreFile extends AbstractComponent implements StatsStoreInterface
 {
+    /**
+     * @var array{
+     *   errors: array<string,errorStats>,
+     *   tsGarbageCollection: int,
+     * }
+     */
     protected $data = array();
+
+    /** @var list<errorStats> */
     protected $summaryErrors = array();
 
     /**
@@ -175,8 +199,8 @@ class StatsStoreFile extends AbstractComponent implements StatsStoreInterface
     }
 
     /**
-     * Remove errors from data that haven't occured recently
-     * If error(s) have occured since they were last emailed, a summary email may be sent
+     * Remove errors from data that haven't occurred recently
+     * If error(s) have occurred since they were last emailed, a summary email may be sent
      *
      * @return void
      */
@@ -196,7 +220,7 @@ class StatsStoreFile extends AbstractComponent implements StatsStoreInterface
 
     /**
      * Check if error should be included in summary email
-     * Remove from stats data if hasn't occured recently
+     * Remove from stats data if hasn't occurred recently
      *
      * @param array  $errorStats Error instance
      * @param string $hash       Error's index in data[errors]
@@ -211,11 +235,12 @@ class StatsStoreFile extends AbstractComponent implements StatsStoreInterface
         }
         // it's been a while since this error was emailed
         unset($this->data['errors'][$hash]);
-        // determine if error has occured since last notification
+        // determine if error has occurred since last notification
         //   is so, add to summaryErrors
         foreach ($errorStats as $val) {
             if (\is_array($val) && !empty($val['countSince'])) {
                 $this->summaryErrors[] = $errorStats;
+                break;
             }
         }
         return true;

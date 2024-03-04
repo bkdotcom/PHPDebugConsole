@@ -12,17 +12,24 @@
 
 namespace bdk\Debug\Dump\Html;
 
+use bdk\Debug;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Dump\Html\HtmlString;
+use bdk\Debug\Dump\Html\Value as ValDumper;
 
 /**
  * Output "encoded" string (ie base64, json, or serialized)
  */
 class HtmlStringEncoded
 {
+    /** @var Debug */
     private $debug;
+
+    /** @var HtmlString */
     private $htmlString;
+
+    /** @var ValDumper */
     private $valDumper;
 
     /**

@@ -54,8 +54,9 @@ class Utf8Dump
         0x1E => 'RS (record seperator)',
         0x1F => 'US (unit seperator)',
         0x7F => 'DEL',
-        0xA0 => 'NBSP',
+        0x00A0 => 'NBSP',
         0x1680 => 'Ogham Space Mark',
+        0x180E => 'Mongolian Vowel Separator',
         0x2000 => 'En Quad',
         0x2001 => 'Em Quad',
         0x2002 => 'En Space',
@@ -87,8 +88,8 @@ class Utf8Dump
     /**
      * Format a block of text
      *
-     * @param string $str       string to output
-     * @param string $blockType "utf8", "utf8control", "utf8special", or "other"
+     * @param string       $str       string to output
+     * @param Utf8::TYPE_* $blockType one of the Utf8::_TYPE_* constants
      *
      * @return string hidden/special chars converted to visible human-readable
      */
@@ -172,22 +173,22 @@ class Utf8Dump
         $length = Utf8::strlen($str);
         while ($pos < $length) {
             $char = '';
-            $ord = $this->ordUtf8($str, $pos, $char);
+            $ord = self::ord($str, $pos, $char);
             $ordHex = \dechex($ord);
             $ordHex = \str_pad($ordHex, 4, '0', STR_PAD_LEFT);
             if ($this->options['useHtml'] === false) {
-                $strNew .= '\u{' . $ordHex . '}';
+                $strNew .= '\\u{' . $ordHex . '}';
                 continue;
             }
-            $chars = \str_split($char);
-            $utf8Hex = \array_map('bin2hex', $chars);
-            $utf8Hex = '\x' . \implode(' \x', $utf8Hex);
-            $title = $utf8Hex;
-            if (isset($this->charDesc[$ord])) {
-                $title = $this->charDesc[$ord] . ': ' . $utf8Hex;
-            }
-            $url = 'https://unicode-table.com/en/' . $ordHex;
-            $strNew .= '<a class="unicode" href="' . $url . '" target="unicode-table" title="' . $title . '">\u' . $ordHex . '</a>';
+            $title = isset($this->charDesc[$ord])
+                ? 'U-' . $ordHex . ': ' . $this->charDesc[$ord]
+                : 'U-' . $ordHex;
+            $strNew .= \sprintf(
+                '<a class="unicode" href="%s" target="unicode" title="%s">\u%s</a>',
+                'https://symbl.cc/en/' . $ordHex,
+                $title,
+                $ordHex
+            );
         }
         return $strNew;
     }
@@ -212,7 +213,7 @@ class Utf8Dump
         $chr = $ord === 0x7f
             ? "\xe2\x90\xa1"            // "del" char
             : "\xe2\x90" . \chr($ord + 128); // chars for 0x00 - 0x1F
-        return '<span class="c1-control" title="' . $this->charDesc[$ord] . ': ' . $hex . '">' . $chr . '</span>';
+        return '<span class="char-control" title="' . $this->charDesc[$ord] . ': ' . $hex . '">' . $chr . '</span>';
     }
 
     /**
@@ -220,13 +221,18 @@ class Utf8Dump
      *
      * Use dechex to convert to hex (ie \uxxxx)
      *
+     *      $ord = ordUtf8($char)
+     *      $ordHex = \dechex($ord);
+     *      $ordHex = \str_pad($ordHex, 4, '0', STR_PAD_LEFT);
+     *      $ordHex = '\\u{' . $ordHex . '}';
+     *
      * @param string $str    A string or single character
      * @param int    $offset (0) Zero-based offset will be updated to offset of next char
      * @param string $char   will be populated with the character found at offset
      *
      * @return int
      */
-    private function ordUtf8($str, &$offset = 0, &$char = '')
+    private static function ord($str, &$offset = 0, &$char = '')
     {
         $code = \ord($str[$offset]);
         $numBytes = 1;

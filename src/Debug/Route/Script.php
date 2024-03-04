@@ -23,6 +23,7 @@ use bdk\PubSub\Event;
  */
 class Script extends AbstractRoute
 {
+    /** @var array<string, mixed> */
     protected $cfg = array(
         'channels' => array('*'),
         'channelsExclude' => array(
@@ -30,6 +31,8 @@ class Script extends AbstractRoute
             'files',
         ),
     );
+
+    /** @var list<string> */
     protected $consoleMethods = array(
         'assert',
         // 'count',    // output as log

@@ -28,7 +28,10 @@ use SoapFault;
  */
 class SoapClient extends SoapClientBase
 {
+    /** @var Debug */
     private $debug;
+
+    /** @var string */
     protected $icon = 'fa fa-exchange';
 
     /** @var \DOMDocument */

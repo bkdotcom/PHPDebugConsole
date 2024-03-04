@@ -25,8 +25,13 @@ use bdk\PubSub\SubscriberInterface;
  */
 class EventSubscribers implements SubscriberInterface
 {
-	protected $debug;
+    /** @var Debug */
+    protected $debug;
+
+    /** @var DebugModule */
 	protected $debugModule;
+
+    /** @var list<string> Error hashes */
 	protected $ignoredErrors = array();
 
 	/**

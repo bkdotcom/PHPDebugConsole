@@ -15,10 +15,10 @@
 /.github export-ignore
 /.gitignore export-ignore
 /.stylelintrc.json export-ignore
+/dev export-ignore
 /phpcs.slevomat.xml export-ignore
 /phpcs.xml.dist export-ignore
 /phpunit.xml.dist export-ignore
-/src/Debug/ComposerScripts.php export-ignore
 /src/Debug/jest.config.js export-ignore
 /src/Debug/js_src export-ignore
 /src/Debug/package-lock.json export-ignore

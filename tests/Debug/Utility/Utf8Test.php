@@ -130,6 +130,14 @@ class Utf8Test extends TestCase
         self::assertSame($isUtf8, Utf8::isUtf8($input));
     }
 
+    public function testChr()
+    {
+        self::assertSame('A', Utf8::chr(65));
+        self::assertSame('©', Utf8::chr(169));
+        self::assertSame('︙', Utf8::chr(65049));
+        self::assertSame('💩', Utf8::chr(128169));
+    }
+
     /**
      * Test the private Utf8Dump::ordUtf9 method
      *
@@ -137,10 +145,10 @@ class Utf8Test extends TestCase
      *
      * @return void
      */
-    public function testOrdUtf8()
+    public function testOrd()
     {
         $utf8Dump = new Utf8Dump();
-        $reflector = new \ReflectionMethod($utf8Dump, 'ordUtf8');
+        $reflector = new \ReflectionMethod($utf8Dump, 'ord');
         $reflector->setAccessible(true);
         self::assertSame(97, $reflector->invoke($utf8Dump, 'a'));
         self::AssertSame(128169, $reflector->invoke($utf8Dump, '💩'));
@@ -180,7 +188,7 @@ class Utf8Test extends TestCase
 
     public static function providerDump()
     {
-        $binary = \base64_decode('TzipAdbGNF+DfyAwZrp7ew==');
+        $binary = \base64_decode('TzipAdbGNF+DfyAwZrp7ew==', true);
         return array(
             'empty' => array('', ''),
 
@@ -191,13 +199,13 @@ class Utf8Test extends TestCase
 
             'nonUtf8Char' => array("\xfe is not a valid utf8 char",
                 '<span class="binary">\xfe</span> is not a valid utf8 char',
-                array('useHtml' => true)
+                array('useHtml' => true),
             ),
 
             'bom' => array("\xef\xbb\xbfPesky BOM",
                 '\u{feff}Pesky BOM'),
             'bomHtml' => array("\xef\xbb\xbfPesky BOM",
-                '<a class="unicode" href="https://unicode-table.com/en/feff" target="unicode-table" title="BOM / Zero Width No-Break Space: \xef \xbb \xbf">\ufeff</a>Pesky BOM',
+                '<a class="unicode" href="https://symbl.cc/en/feff" target="unicode" title="U-feff: BOM / Zero Width No-Break Space">\ufeff</a>Pesky BOM',
                 array('useHtml' => true),
             ),
 
@@ -209,7 +217,7 @@ class Utf8Test extends TestCase
             ),
 
             'nul_plain' => array("null \x00 up in here",
-                'null \\x00 up in here'
+                'null \\x00 up in here',
             ),
             'nul' => array("control char \x00",
                 'control char <span class="binary"><span class="c1-control" title="NUL: \\x00">␀</span></span>',
@@ -354,12 +362,12 @@ class Utf8Test extends TestCase
                 'easy-to-miss characters such as \u{00a0}(nbsp), \u{2009}(thsp), &amp; \u{200b}(zwsp)',
             ),
             array("easy-to-miss characters such as \xc2\xa0(nbsp), \xE2\x80\x89(thsp), &amp; \xE2\x80\x8B(zwsp)",
-                'easy-to-miss characters such as <a class="unicode" href="https://unicode-table.com/en/00a0" target="unicode-table" title="NBSP: \xc2 \xa0">\u00a0</a>(nbsp), <a class="unicode" href="https://unicode-table.com/en/2009" target="unicode-table" title="Thin Space: \xe2 \x80 \x89">\u2009</a>(thsp), &amp; <a class="unicode" href="https://unicode-table.com/en/200b" target="unicode-table" title="Zero Width Space: \xe2 \x80 \x8b">\u200b</a>(zwsp)',
+                'easy-to-miss characters such as <a class="unicode" href="https://symbl.cc/en/00a0" target="unicode" title="U-00a0: NBSP">\u00a0</a>(nbsp), <a class="unicode" href="https://symbl.cc/en/2009" target="unicode" title="U-2009: Thin Space">\u2009</a>(thsp), &amp; <a class="unicode" href="https://symbl.cc/en/200b" target="unicode" title="U-200b: Zero Width Space">\u200b</a>(zwsp)',
                 array('useHtml' => true),
             ),
 
             'replacement' => array("replacement char \xef\xbf\xbd",
-                'replacement char <a class="unicode" href="https://unicode-table.com/en/fffd" target="unicode-table" title="Replacement Character: \xef \xbf \xbd">\ufffd</a>',
+                'replacement char <a class="unicode" href="https://symbl.cc/en/fffd" target="unicode" title="U-fffd: Replacement Character">\ufffd</a>',
                 array('useHtml' => true),
             ),
 
@@ -376,7 +384,7 @@ class Utf8Test extends TestCase
             ),
 
             'sanitize' => array("<b>some\xc2\xa0html</b>",
-                '&lt;b&gt;some<a class="unicode" href="https://unicode-table.com/en/00a0" target="unicode-table" title="NBSP: \xc2 \xa0">\u00a0</a>html&lt;/b&gt;',
+                '&lt;b&gt;some<a class="unicode" href="https://symbl.cc/en/00a0" target="unicode" title="U-00a0: NBSP">\u00a0</a>html&lt;/b&gt;',
                 array(
                     'sanitizeNonBinary' => true,
                     'useHtml' => true,
@@ -403,28 +411,46 @@ class Utf8Test extends TestCase
         // 1-byte, 2-byte, 3-type, 4-byte
         $str = 'A©︙💩';
         return array(
-            array($str, 0, 0, ''),
-            array($str, 0, 1, 'A'),
-            array($str, 0, 2, 'A'),
-            array($str, 0, 3, 'A©'),
-            array($str, 0, 4, 'A©'),
-            array($str, 0, 5, 'A©'),
-            array($str, 0, 6, 'A©︙'),
-            array($str, 0, 7, 'A©︙'),
-            array($str, 0, 8, 'A©︙'),
-            array($str, 0, 9, 'A©︙'),
-            array($str, 0, 10, $str),
-            // start in middle of 2nd char
-            array($str, 2, 2, '©'), // 1st char
+            'start 0 a' => array($str, 0, 0, ''),
+            'start 0 b' => array($str, 0, 1, 'A'),
+            'start 0 c' => array($str, 0, 2, 'A'),
+            'start 0 d' => array($str, 0, 3, 'A©'),
+            'start 0 e' => array($str, 0, 4, 'A©'),
+            'start 0 f' => array($str, 0, 5, 'A©'),
+            'start 0 g' => array($str, 0, 6, 'A©︙'),
+            'start 0 h' => array($str, 0, 7, 'A©︙'),
+            'start 0 i' => array($str, 0, 8, 'A©︙'),
+            'start 0 j' => array($str, 0, 9, 'A©︙'),
+            'start 0 k' => array($str, 0, 10, $str),
 
-            array($str, 2, 3, '©'), // 1st byte of 3rd char
-            array($str, 2, 4, '©'), // 2nd byte of 3rd char
-            array($str, 2, 5, '©︙'), // 3rd byte of 3rd char
-            array($str, 2, 6, '©︙'), // 1st byte of last char
-            array($str, 2, 7, '©︙'), // 2nd byte of last char
-            array($str, 2, 8, '©︙'), // 3rd byte of last char
-            array($str, 2, 9, '©︙💩'), // all 4 bytes of last char
-            array($str, 2, 10, '©︙💩'),
+            // start in middle of 2nd char...
+            //   method finds beginning and starts from there
+            'start mid a' => array($str, 2, 1, ''),      // end on 1/2 byte of 2nd char
+            'start mid b' => array($str, 2, 2, '©'),     // end on 2/2 byte of 2nd char
+            'start mid c' => array($str, 2, 3, '©'),     // end on 1/3 byte of 3rd char
+            'start mid d' => array($str, 2, 4, '©'),     // end on 2/3 byte of 3rd char
+            'start mid e' => array($str, 2, 5, '©︙'),   // end on 3/3 byte of 3rd char
+            'start mid f' => array($str, 2, 6, '©︙'),   // end on 1/4 byte of last char
+            'start mid g' => array($str, 2, 7, '©︙'),   // end on 2/4 byte of last char
+            'start mid h' => array($str, 2, 8, '©︙'),   // end on 3/4 byte of last char
+            'start mid i' => array($str, 2, 9, '©︙💩'), // end on 4/4 byte of last char
+            'start mid j' => array($str, 2, 10, '©︙💩'),
+
+            // null length
+            'null length a' => array($str, 2, null, '©︙💩'),
+            'null length b' => array($str, 3, null, '︙💩'),
+            'null length c' => array($str, 4, null, '︙💩'),
+            'null length d' => array($str, 5, null, '︙💩'),
+            'null length e' => array($str, 6, null, '💩'),
+            'null length f' => array($str, 7, null, '💩'),
+            'null length g' => array($str, 8, null, '💩'),
+            'null length h' => array($str, 9, null, '💩'),
+
+            // negative length
+            'neg length a' => array($str, 1, -2, '©︙'),
+            'neg length b' => array($str, 1, -3, '©︙'),
+            'neg length c' => array($str, 1, -4, '©︙'),
+
         );
     }
 
@@ -433,11 +459,11 @@ class Utf8Test extends TestCase
         return array(
             'ascii' => array('plain',
                 'plain'),
-            'utf8' => array(\base64_decode('4oCcZmFuY3kgcXVvdGVz4oCd'),
+            'utf8' => array(\base64_decode('4oCcZmFuY3kgcXVvdGVz4oCd', true),
                 '&ldquo;fancy quotes&rdquo;'),
             'utf8_2' => array('bèfore [:: whoa ::] àfter',
                 'b&egrave;fore [:: whoa ::] &agrave;fter'),
-            'utf8_many' => array(\base64_decode('xZLFk8WgxaHFuMuGy5zigJrGkuKAnuKApuKAoOKAoeKAmOKAmeKAnOKAneKAouKAk+KAlOKEouKAsOKAueKAug=='),
+            'utf8_many' => array(\base64_decode('xZLFk8WgxaHFuMuGy5zigJrGkuKAnuKApuKAoOKAoeKAmOKAmeKAnOKAneKAouKAk+KAlOKEouKAsOKAueKAug==', true),
                 '&OElig;&oelig;&Scaron;&scaron;&Yuml;&circ;&tilde;&sbquo;&fnof;&bdquo;&hellip;&dagger;&Dagger;&lsquo;&rsquo;&ldquo;&rdquo;&bull;&ndash;&mdash;&trade;&permil;&lsaquo;&rsaquo;'),
 
             // 'utf-16' => array(
@@ -445,7 +471,7 @@ class Utf8Test extends TestCase
                 // '',
             // ),
 
-            'ansi' => array(\base64_decode('k2ZhbmN5IHF1b3Rlc5Q='),
+            'ansi' => array(\base64_decode('k2ZhbmN5IHF1b3Rlc5Q=', true),
                 '&ldquo;fancy quotes&rdquo;'),
             'Windows-1252' => array("42\x80", // euro
                 '42&euro;',
@@ -453,11 +479,11 @@ class Utf8Test extends TestCase
             'ISO-8859-1' => array("\xE1\xE9\xF3\xFA", // 'áéóú'
                 '&aacute;&eacute;&oacute;&uacute;'),
 
-            'huffman' => array(\base64_decode('SHVmZm1hbi1HaWxyZWF0aCBKZW7p'),
+            'huffman' => array(\base64_decode('SHVmZm1hbi1HaWxyZWF0aCBKZW7p', true),
                 'Huffman-Gilreath Jen&eacute;'),
-            'grr' => array(\base64_decode('SmVu6SBIdWZmbWFuLUdpbHJlYXRoIGFzc3VtZWQgaGVyIHJvbGUgYXMgdGhlIFByb2Zlc3Npb25hbCAmIEV4ZWN1dGl2ZSBPZmZpY2VyIGluIEF1Z3VzdCAyMDA3LiBKZW7pIGpvaW5lZCBBcnZlc3QgaW4gMjAwMiBhbmQgaGFzIGdhaW5lZCBhIHdlYWx0aCBvZiBrbm93bGVkZ2UgaW4gbWFueSBiYW5raW5nIGFyZWFzLCBzdWNoIGFzIGxlbmRpbmcsIHdlYWx0aCBtYW5hZ2VtZW50LCBhbmQgY29ycG9yYXRlIHNlcnZpY2VzLiBTaGUgaG9sZHMgYSBNYXN0ZXImcnNxdW87cyBkZWdyZWUgaW4gUHVibGljIEFkbWluaXN0cmF0aW9uIGFzIHdlbGwgYXMgYSBCU0JBIGluIFNtYWxsIEJ1c2luZXNzIEVudHJlcHJlbmV1cnNoaXAuIEplbukgaXMgdmVyeSBpbnZvbHZlZCBpbiB0aGUgY29tbXVuaXR5IGFuZCBzZXJ2ZXMgYXMgYSBtZW1iZXIgb2YgbnVtZXJvdXMgY2hhcml0YWJsZSBmb3VuZGF0aW9ucywgc3VjaCBhcyBEaWFtb25kcyBEZW5pbXMgYW5kIERpY2UgKFJlYnVpbGRpbmcgVG9nZXRoZXIpIGFuZCB0aGUgQWZyaWNhbiBFZHVjYXRpb24gUmVzb3VyY2UgQ2VudGVyLg=='),
+            'grr' => array(\base64_decode('SmVu6SBIdWZmbWFuLUdpbHJlYXRoIGFzc3VtZWQgaGVyIHJvbGUgYXMgdGhlIFByb2Zlc3Npb25hbCAmIEV4ZWN1dGl2ZSBPZmZpY2VyIGluIEF1Z3VzdCAyMDA3LiBKZW7pIGpvaW5lZCBBcnZlc3QgaW4gMjAwMiBhbmQgaGFzIGdhaW5lZCBhIHdlYWx0aCBvZiBrbm93bGVkZ2UgaW4gbWFueSBiYW5raW5nIGFyZWFzLCBzdWNoIGFzIGxlbmRpbmcsIHdlYWx0aCBtYW5hZ2VtZW50LCBhbmQgY29ycG9yYXRlIHNlcnZpY2VzLiBTaGUgaG9sZHMgYSBNYXN0ZXImcnNxdW87cyBkZWdyZWUgaW4gUHVibGljIEFkbWluaXN0cmF0aW9uIGFzIHdlbGwgYXMgYSBCU0JBIGluIFNtYWxsIEJ1c2luZXNzIEVudHJlcHJlbmV1cnNoaXAuIEplbukgaXMgdmVyeSBpbnZvbHZlZCBpbiB0aGUgY29tbXVuaXR5IGFuZCBzZXJ2ZXMgYXMgYSBtZW1iZXIgb2YgbnVtZXJvdXMgY2hhcml0YWJsZSBmb3VuZGF0aW9ucywgc3VjaCBhcyBEaWFtb25kcyBEZW5pbXMgYW5kIERpY2UgKFJlYnVpbGRpbmcgVG9nZXRoZXIpIGFuZCB0aGUgQWZyaWNhbiBFZHVjYXRpb24gUmVzb3VyY2UgQ2VudGVyLg==', true),
                 'Jen&eacute; Huffman-Gilreath assumed her role as the Professional &amp; Executive Officer in August 2007. Jen&eacute; joined Arvest in 2002 and has gained a wealth of knowledge in many banking areas, such as lending, wealth management, and corporate services. She holds a Master&amp;rsquo;s degree in Public Administration as well as a BSBA in Small Business Entrepreneurship. Jen&eacute; is very involved in the community and serves as a member of numerous charitable foundations, such as Diamonds Denims and Dice (Rebuilding Together) and the African Education Resource Center.'),
-            'ansi_many' => array(\base64_decode('jJyKmp+ImIKDhIWGh5GSk5SVlpeZiYub'),
+            'ansi_many' => array(\base64_decode('jJyKmp+ImIKDhIWGh5GSk5SVlpeZiYub', true),
                 '&OElig;&oelig;&Scaron;&scaron;&Yuml;&circ;&tilde;&sbquo;&fnof;&bdquo;&hellip;&dagger;&Dagger;&lsquo;&rsquo;&ldquo;&rdquo;&bull;&ndash;&mdash;&trade;&permil;&lsaquo;&rsaquo;'),
             'tm' => array('<b>' . "\x99" . '</b>',  // gets detected as ISO-8859-1 ?!
                 '&lt;b&gt;&trade;&lt;/b&gt;'),

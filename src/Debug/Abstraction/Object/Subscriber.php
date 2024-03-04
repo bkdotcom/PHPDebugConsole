@@ -33,8 +33,10 @@ use UnitEnum;
  */
 class Subscriber implements SubscriberInterface
 {
+    /** @var AbstractObject */
     protected $abstractObject;
 
+    /** @var PropertiesDom */
     private $dom;
 
     /**

@@ -16,7 +16,9 @@ use bdk\Debug;
 use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Framework\Yii1_1\ErrorLogger;
 use bdk\Debug\Framework\Yii1_1\LogRoute;
+use bdk\Debug\Framework\Yii1_1\PdoCollector;
 use bdk\Debug\LogEntry;
+use CApplication;
 use CApplicationComponent;
 use Yii;
 
@@ -27,11 +29,19 @@ use Yii;
  */
 class Component extends CApplicationComponent
 {
+    /** @var Debug */
     public $debug;
+
+    /** @var LogRoute */
     public $logRoute;
+
+    /** @var CApplication */
     public $yiiApp;
+
+    /** @var PdoCollector */
     public $pdoCollector;
 
+    /** @var array<string,mixed> */
     private $debugConfig = array(
         'logEnvInfo' => array(
             'session' => false,

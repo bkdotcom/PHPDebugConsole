@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2022 Brad Kent
+ * @copyright 2014-2024 Brad Kent
  * @version   v3.0
  */
 
@@ -28,14 +28,20 @@ class DoctrineLogger implements SQLLogger
 {
     use DatabaseTrait;
 
-    private $connection;
-    private $debug;
-
-    protected $debugStack;
+    /** @var string */
     protected $icon = 'fa fa-database';
 
+    /** @var list<StatementInfo> */
     protected $loggedStatements = array();
+
+    /** @var StatementInfo|null */
     protected $statementInfo;
+
+    /** @var Connection */
+    private $connection;
+
+    /** @var Debug */
+    private $debug;
 
     /**
      * Constructor

@@ -31,9 +31,6 @@ class DoctrineLogger implements SQLLogger
     /** @var string */
     protected $icon = 'fa fa-database';
 
-    /** @var list<StatementInfo> */
-    protected $loggedStatements = array();
-
     /** @var StatementInfo|null */
     protected $statementInfo;
 

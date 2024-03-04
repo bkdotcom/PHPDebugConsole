@@ -68,6 +68,7 @@ class AbstractLogReqRes
             $message .= "\n" . 'Pay no attention to $_POST and instead use php://input';
         }
         $this->debug->warn($message, $this->debug->meta(array(
+            'detectFiles' => false,
             'file' => null,
             'line' => null,
         )));

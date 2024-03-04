@@ -213,7 +213,7 @@ class Utf8Dump
         $chr = $ord === 0x7f
             ? "\xe2\x90\xa1"            // "del" char
             : "\xe2\x90" . \chr($ord + 128); // chars for 0x00 - 0x1F
-        return '<span class="char-control" title="' . $this->charDesc[$ord] . ': ' . $hex . '">' . $chr . '</span>';
+        return '<span class="c1-control" title="' . $this->charDesc[$ord] . ': ' . $hex . '">' . $chr . '</span>';
     }
 
     /**

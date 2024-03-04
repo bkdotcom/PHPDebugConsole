@@ -227,7 +227,7 @@ class SubstitutionTest extends DebugTestFramework
                 'firephp' => 'X-Wf-1-1-1-19: %d|[{{meta}},{{args}}]|',
                 'html' => '<li class="m_log">'
                     . '<span class="no-quotes t_string">'
-                        . '<a class="unicode" href="https://unicode-table.com/en/feff" target="unicode-table" title="BOM / Zero Width No-Break Space: \xef \xbb \xbf">\ufeff</a>'
+                        . '<a class="unicode" href="https://symbl.cc/en/feff" target="unicode" title="U-feff: BOM / Zero Width No-Break Space">\ufeff</a>'
                         . '<span style="color:red;">sub 1</span>'
                         . '<span> &lt;b&gt;boldy&lt;/b&gt; &lt;b&gt;sub bold&lt;/b&gt;</span>'
                     . '</span> = <span class="t_string">extra</span>'
@@ -272,7 +272,7 @@ class SubstitutionTest extends DebugTestFramework
                 'firephp' => 'X-Wf-1-1-1-19: %d|[{{meta}},{{args}}]|',
                 'html' => '<li class="m_log">'
                     . '<span class="no-quotes t_string">'
-                        . '<a class="unicode" href="https://unicode-table.com/en/feff" target="unicode-table" title="BOM / Zero Width No-Break Space: \xef \xbb \xbf">\ufeff</a>'
+                        . '<a class="unicode" href="https://symbl.cc/en/feff" target="unicode" title="U-feff: BOM / Zero Width No-Break Space">\ufeff</a>'
                         . '<span style="color:red;">sub 1</span>'
                         . '<span> <b>boldy</b> <b>sub bold</b></span>'
                     . '</span> = <span class="t_string">extra</span>'
@@ -317,7 +317,7 @@ class SubstitutionTest extends DebugTestFramework
                 'firephp' => 'X-Wf-1-1-1-19: %d|[{{meta}},{{args}}]|',
                 'html' => '<li class="m_log">'
                     . '<span class="no-quotes t_string">'
-                        . '<a class="unicode" href="https://unicode-table.com/en/feff" target="unicode-table" title="BOM / Zero Width No-Break Space: \xef \xbb \xbf">\ufeff</a>'
+                        . '<a class="unicode" href="https://symbl.cc/en/feff" target="unicode" title="U-feff: BOM / Zero Width No-Break Space">\ufeff</a>'
                         . '<span style="color:red;">sub 1</span>'
                         . '<span> <b>boldy</b> &lt;b&gt;sub bold&lt;/b&gt;</span>'
                     . '</span> = <span class="t_string">extra</span>'

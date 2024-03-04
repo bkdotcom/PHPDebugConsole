@@ -20,6 +20,9 @@ use bdk\Debug\Collector\StatementInfo;
  */
 trait DatabaseTrait
 {
+    /** @var list<StatementInfo> */
+    protected $loggedStatements = array();
+
     /**
      * Logs StatementInfo
      *
@@ -88,7 +91,7 @@ trait DatabaseTrait
         $debug->log('max memory usage', $debug->utility->getBytes($this->getPeakMemoryUsage()));
         $debug->log('server info', $this->serverInfo());
         if ($this->prettified() === false) {
-            $debug->info('install jdorn/sql-formatter to prettify logged sql statemeents');
+            $debug->info('install jdorn/sql-formatter to prettify logged sql statements');
         }
     }
 

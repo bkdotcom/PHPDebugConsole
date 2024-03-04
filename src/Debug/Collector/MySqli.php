@@ -35,11 +35,11 @@ class MySqli extends mysqliBase
     /** @var bool */
     public $connectionAttempted = false;
 
-    /** @var string */
-    protected $icon = 'fa fa-database';
-
     /** @var bool */
     protected $autocommit = true;
+
+    /** @var string */
+    protected $icon = 'fa fa-database';
 
     /** @var list<string> */
     protected $savepoints = array();

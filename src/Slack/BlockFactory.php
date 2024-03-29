@@ -42,7 +42,7 @@ class BlockFactory extends BlockElementsFactory
             'footer' => null, // text max: 300 chars
             'footer_icon' => null,  // Will only work if author_name is present.
             'image_url' => null,
-            'mrkdwn_in' => null, // An array of field names that should be formattd with markdown
+            'mrkdwn_in' => null, // An array of field names that should be formatted with markdown
             'pretext' => null, // Text that appears above the message attachment block.
             'text' => null,
             'thumb_url' => null, // A valid URL to an image file that will be displayed as a thumbnail on the right side of a message attachment.
@@ -93,7 +93,7 @@ class BlockFactory extends BlockElementsFactory
         'video' => array(
             'alt_text' => null,
             'author_name' => null,  // max: 49 chars
-            'block_id' => null,     // max: 255 chass
+            'block_id' => null,     // max: 255 chars
             'description' => null,
             'provider_icon_url' => null,
             'provider_name' => null,

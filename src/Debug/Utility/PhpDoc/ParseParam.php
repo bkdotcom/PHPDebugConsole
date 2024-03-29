@@ -59,7 +59,7 @@ class ParseParam
     /**
      * Test if string appears to start with a variable name
      *
-     * @param string $str Stringto test
+     * @param string $str String to test
      *
      * @return bool
      */

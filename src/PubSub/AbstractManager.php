@@ -87,7 +87,7 @@ abstract class AbstractManager
         \assert(\is_object($object), '"Closure factory" did not return an object');
         $closureFactory[0] = $object;
         $callable = \count($closureFactory) === 1
-            ? $closureFactory[0]    // invokeable object
+            ? $closureFactory[0]    // invokable object
             : $closureFactory;      // [obj, 'method']
         if (\is_callable($callable) === false) {
             throw new InvalidArgumentException('"Closure factory" did not produce a callable');

@@ -120,7 +120,7 @@ class ParseStr
             $str
         );
 
-        // parse_str urldecodes both keys and values in resulting array
+        // parse_str url-decodes both keys and values in resulting array
         \parse_str($str, $params);
 
         $replace = array();

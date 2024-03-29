@@ -17,7 +17,7 @@ use bdk\Debug\Dump\Base as Dumper;
 use bdk\Debug\LogEntry;
 
 /**
- * handle formatting / substitutijon
+ * handle formatting / substitution
  *
  * @see https://console.spec.whatwg.org/#formatter
  */

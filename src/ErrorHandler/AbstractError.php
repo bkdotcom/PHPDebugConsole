@@ -90,7 +90,7 @@ class AbstractError extends Event
         'continueToPrevHandler' => true,
         'exception'     => null,
         'hash'          => null,
-        'isFirstOccur'  => true,    // per error  (ie a error inside a loop, or inside a functon called multiple times)
+        'isFirstOccur'  => true,    // per error  (ie a error inside a loop, or inside a function called multiple times)
         'isHtml'        => false,
         'isSuppressed'  => false,
         'throw'         => false,   // whether to throw as exception (fatal errors never throw)
@@ -180,7 +180,7 @@ class AbstractError extends Event
 
     /**
      * Check for anonymous class notation
-     * Replace with more usefull parent class
+     * Replace with more useful parent class
      *
      * @param string $message Error Message
      *
@@ -230,7 +230,7 @@ class AbstractError extends Event
     }
 
     /**
-     * Set values that will remain unchainged after __construct
+     * Set values that will remain unchanged after __construct
      *
      * @return void
      */
@@ -336,7 +336,7 @@ class AbstractError extends Event
     {
         $prevOccurrence = $this->subject->get('error', $this->values['hash']);
         if ($prevOccurrence && !$prevOccurrence['isSuppressed']) {
-            // if any instance of this error was not supprssed, reflect that
+            // if any instance of this error was not suppressed, reflect that
             return false;
         }
         $errType = $this->values['type'];

@@ -19,7 +19,7 @@ use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\UriInterface;
 
 /**
- * Http Requeset
+ * Http Request
  *
  * @psalm-consistent-constructor
  */

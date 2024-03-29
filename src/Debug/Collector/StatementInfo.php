@@ -153,6 +153,7 @@ class StatementInfo extends AbstractComponent
                 $msg .= ' (code ' . $code . ')';
             }
             $debug->warn(\get_class($this->exception) . ': ' . \trim($msg));
+            $debug->groupUncollapse();
         } elseif ($this->rowCount !== null) {
             $debug->log('rowCount', $this->rowCount);
         }

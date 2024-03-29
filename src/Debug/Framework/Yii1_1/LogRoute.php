@@ -196,7 +196,7 @@ class LogRoute extends CLogRoute
      * Yii's logger appends trace info to log message as a string
      * extract it and move to 'trace'
      *
-     * @param array $logEntry key/valued logentry
+     * @param array $logEntry key/valued logEntry
      *
      * @return array
      */

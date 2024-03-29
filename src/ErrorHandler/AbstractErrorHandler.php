@@ -73,7 +73,7 @@ abstract class AbstractErrorHandler extends AbstractComponent
     }
 
     /**
-     * Conditioanlly pass error or exception to previously defined handler
+     * Conditionally pass error or exception to previously defined handler
      *
      * @param Error $error Error instance
      *
@@ -104,7 +104,7 @@ abstract class AbstractErrorHandler extends AbstractComponent
     }
 
     /**
-     * Restore previous excption handler and re-throw or log exception
+     * Restore previous exception handler and re-throw or log exception
      *
      * @param Error $error Error instance
      *

@@ -31,7 +31,7 @@ export function init ($delegateNode) {
  * Collapse an array, group, or object
  *
  * @param jQueryObj $toggle   the toggle node
- * @param immediate immediate no annimation
+ * @param immediate immediate no animation
  *
  * @return void
  */

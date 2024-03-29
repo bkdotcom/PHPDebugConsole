@@ -16,7 +16,7 @@ namespace bdk\PubSub;
 /**
  * Event
  *
- * Events are passed to event subscribres/listeners
+ * Events are passed to event subscribers/listeners
  *
  * @template Subject of mixed
  * @template TKey    of array-key

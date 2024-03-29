@@ -23,7 +23,7 @@ class ErrorLevel
     /**
      * Get error level constants understood by specified php version
      *
-     * @param string $phpVer (PHP_VERSION) PHP verion
+     * @param string $phpVer (PHP_VERSION) PHP version
      *
      * @return array<string, int>
      */

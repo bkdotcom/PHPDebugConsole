@@ -77,7 +77,7 @@ class AbstractLogReqRes
     /**
      * Inspect content to determine mime-type
      *
-     * @param StreamInterface|string $content         Reqeust/response body
+     * @param StreamInterface|string $content         Request/response body
      * @param string                 $contentTypeUser Content-Type provided with request or being sent with response
      *
      * @return string|null The detected content-type.  may contain the supplied character encoding / boundary

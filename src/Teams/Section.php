@@ -39,7 +39,7 @@ class Section extends AbstractItem
     }
 
     /**
-     * Return a new intance with specified activity values
+     * Return a new instance with specified activity values
      *
      * @param string              $title    Title
      * @param string              $subtitle Subtitle
@@ -90,7 +90,7 @@ class Section extends AbstractItem
     /**
      * Return new instance with the specified hero image
      *
-     * @param string|UriInterface $url   Iaage url
+     * @param string|UriInterface $url   Image url
      * @param string              $title A short description of the image
      *                                     (typically displayed as a tooltip)
      *

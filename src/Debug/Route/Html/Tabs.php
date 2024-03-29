@@ -187,7 +187,7 @@ class Tabs
             . '<div class="tab-body">' . "\n"
             . $this->route->processAlerts()
             /*
-                If outputing script, initially hide the output..
+                If outputting script, initially hide the output..
                 this will help page load performance (fewer redraws)... by magnitudes
             */
             . '<ul class="debug-log-summary group-body">' . "\n"

@@ -133,7 +133,7 @@ class Value extends BaseValue
     }
 
     /**
-     * Set "option" of value being dumped
+     * Set one or more "options" for value being dumped
      *
      * @param array|string $what name of value to set (or key/value array)
      * @param mixed        $val  value
@@ -285,7 +285,7 @@ class Value extends BaseValue
     }
 
     /**
-     * Dump "const" abstration as html
+     * Dump "const" abstraction as html
      *
      * Object constant or method param's default value
      *

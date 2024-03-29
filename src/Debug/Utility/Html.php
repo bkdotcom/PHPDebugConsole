@@ -40,7 +40,7 @@ class Html
     );
 
     /**
-     * The presence of these attributes = true / abscence = false
+     * The presence of these attributes = true / absence = false
      * value not necessary, but may be written as key="key"  (ie autofocus="autofocus" )
      *
      * @var array
@@ -68,7 +68,7 @@ class Html
 
         // OBSOLETE / DEPRECATED / NEVER-A-THING
         'allowfullscreen',     // <iframe> - legacy: redefined as allow="fullscreen"
-        'allowpaymentrequest', // <iframe> - legacy: redefined as allowe="payment"
+        'allowpaymentrequest', // <iframe> - legacy: redefined as allow="payment"
         'compact',  // <dir> and <ol>
         'nohref',   // <area>
         'noresize', // <frame>
@@ -80,7 +80,7 @@ class Html
     );
 
     /**
-     * enum attribues that behave like bool, but have "true" / "false" value
+     * enum attributes that behave like bool, but have "true" / "false" value
      *
      * @var array
      */

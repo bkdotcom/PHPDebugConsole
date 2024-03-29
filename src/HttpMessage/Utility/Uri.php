@@ -100,7 +100,7 @@ class Uri
         }
         if ($rel->getAuthority() !== '') {
             // rel specified "authority"..
-            //   return base's scheee, rel's everything else (with path cleaned up)
+            //   return base's scheme, rel's everything else (with path cleaned up)
             return $rel
                 ->withScheme($base->getScheme())
                 ->withPath(self::pathRemoveDots($rel->getPath()));

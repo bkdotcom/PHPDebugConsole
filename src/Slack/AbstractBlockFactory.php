@@ -8,7 +8,7 @@ use OverflowException;
 use UnexpectedValueException;
 
 /**
- * Utilties/Helpers/Assertions for blocks
+ * Utilities/Helpers/Assertions for blocks
  */
 abstract class AbstractBlockFactory
 {
@@ -264,7 +264,7 @@ abstract class AbstractBlockFactory
     }
 
     /**
-     * Normaliee a single option "object"
+     * Normalize a single option "object"
      *
      * Overflow, select, and multi-select menus can only use plain_text
      * Radio buttons and checkboxes can use mrkdwn text objects.

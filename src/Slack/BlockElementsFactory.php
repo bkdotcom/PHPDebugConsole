@@ -10,7 +10,7 @@ use UnexpectedValueException;
  *
  * @link https://api.slack.com/reference/block-kit/block-elements
  *
- * @psaslm-api
+ * @psalm-api
  */
 class BlockElementsFactory extends AbstractBlockFactory
 {
@@ -217,7 +217,7 @@ class BlockElementsFactory extends AbstractBlockFactory
             'action_id' => (string) $actionId,
             'confirm' => null,
             'focus_on_load' => false,
-            'initial_option' => null, // use with static_slect
+            'initial_option' => null, // use with static_select
             'initial_options' => null, // use with multi_static_select
             'max_selected_items' => null, // min = 1
             'options' => $options,

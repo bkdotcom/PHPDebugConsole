@@ -114,7 +114,7 @@ class Middleware
             );
         }
 
-        // The default auth identifer is the ID number, which isn't all that
+        // The default auth identifier is the ID number, which isn't all that
         // useful. Try username and email.
         $identifier = $user instanceof Authenticatable
             ? $user->getAuthIdentifier()

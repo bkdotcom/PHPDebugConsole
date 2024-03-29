@@ -79,7 +79,7 @@ class EventsSubscriber
     /**
      * Subscribe to events
      *
-     * @param Dispatcher $dispatcher Dispater interface
+     * @param Dispatcher $dispatcher Dispatcher interface
      *
      * @return void
      */

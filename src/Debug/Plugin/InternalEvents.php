@@ -55,7 +55,7 @@ class InternalEvents implements SubscriberInterface
     }
 
     /**
-     * Listen for a log entry occuring after EventManager::EVENT_PHP_SHUTDOWN...
+     * Listen for a log entry occurring after EventManager::EVENT_PHP_SHUTDOWN...
      *
      * @return void
      */
@@ -240,7 +240,7 @@ class InternalEvents implements SubscriberInterface
         $info = $findExit->find();
         if ($info) {
             $this->debug->warn(
-                'Potentialy shutdown via ' . $info['found'] . ': ',
+                'Potentially shutdown via ' . $info['found'] . ': ',
                 \sprintf('%s (line %s)', $info['file'], $info['line']),
                 $this->debug->meta(array(
                     'file' => $info['file'],
@@ -251,7 +251,7 @@ class InternalEvents implements SubscriberInterface
     }
 
     /**
-     * Shoule we force output for the given error
+     * Should we force output for the given error
      *
      * @param Error $error Error instance
      *
@@ -275,7 +275,7 @@ class InternalEvents implements SubscriberInterface
             ? 'error'
             : 'warn';
         /*
-            specify rootInstance as there's nothing to prevent calling Internal::onError() directly (from aanother instance)
+            specify rootInstance as there's nothing to prevent calling Internal::onError() directly (from another instance)
         */
         $this->debug->rootInstance->getChannel('phpError')->{$method}(
             $error['typeStr'] . ':',
@@ -298,7 +298,7 @@ class InternalEvents implements SubscriberInterface
         );
         // We've captured the error and are logging / viewing it with debugger.
         //    typically no reason for php to log the error...
-        //    This value can be overriden via 'errorLogNormal' config or via error event subscriber
+        //    This value can be overridden via 'errorLogNormal' config or via error event subscriber
         $error['continueToNormal'] = $this->debug->getCfg('errorLogNormal', Debug::CONFIG_DEBUG);
         $error['inConsole'] = true;
         // Prevent ErrorHandler\Plugin\Emailer from sending email.
@@ -335,7 +335,7 @@ class InternalEvents implements SubscriberInterface
             return false;
         }
         if ($this->debug->getCfg('output', Debug::CONFIG_DEBUG)) {
-            // don't email log if we're outputing it
+            // don't email log if we're outputting it
             return false;
         }
         if (!$this->debug->hasLog()) {

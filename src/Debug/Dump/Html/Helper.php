@@ -206,7 +206,7 @@ class Helper
     }
 
     /**
-     * Markup a single type-hint / type decloration
+     * Markup a single type-hint / type declaration
      *
      * @param string $type type declaration
      *

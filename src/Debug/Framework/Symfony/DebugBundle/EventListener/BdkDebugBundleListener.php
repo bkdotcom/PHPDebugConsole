@@ -56,7 +56,7 @@ class BdkDebugBundleListener implements EventSubscriberInterface
      * Constructor
      *
      * @param Debug            $debug            Debug instance
-     * @param DoctrineRegistry $doctrineRegistry Doctrine Regsitry
+     * @param DoctrineRegistry $doctrineRegistry Doctrine Registry
      */
     public function __construct(Debug $debug, DoctrineRegistry $doctrineRegistry)
     {

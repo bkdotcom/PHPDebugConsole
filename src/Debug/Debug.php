@@ -21,28 +21,28 @@ use bdk\Debug\Abstraction\Abstracter;
 /**
  * Web-browser/javascript like console class for PHP
  *
- * @method $this alert(string $message, string $level = error, bool $dismissible = false)
- * @method $this assert(bool $assertion, mixed ...$msg = null)
- * @method $this clear(int $bitmask = bdk\Debug::CLEAR_LOG)
- * @method $this count($label = null, int $flags = null)
- * @method $this countReset(mixed $label = null, int $flags = null)
- * @method $this error(mixed ...$arg)
- * @method $this group(mixed ...$arg)
- * @method $this groupCollapsed(mixed ...$arg)
- * @method $this groupEnd(mixed $value = bdk\Debug\Abstraction\Abstracter::UNDEFINED)
- * @method $this groupSummary(int $priority = 0)
- * @method $this groupUncollapse()
- * @method $this info(mixed ...$arg)
- * @method $this log(mixed ...$arg)
- * @method $this profile(string $name = null)
- * @method $this profileEnd(string $name = null)
- * @method $this table(mixed ...$arg)
- * @method $this time(string $label = null, float $duration = null)
- * @method $this timeEnd(string $label = null, bool $log = true, bool $return = auto)
- * @method $this|float|false timeGet(string $label = null, bool $log = true, bool $return = auto)
- * @method $this timeLog(string $label = null, mixed ...$args = null)
- * @method $this trace(bool $inclContext = false, string $caption = trace)
- * @method $this warn(mixed ...$arg)
+ * @method static $this alert(string $message, string $level = error, bool $dismissible = false)
+ * @method static $this assert(bool $assertion, mixed ...$msg = null)
+ * @method static $this clear(int $bitmask = bdk\Debug::CLEAR_LOG)
+ * @method static $this count($label = null, int $flags = null)
+ * @method static $this countReset(mixed $label = null, int $flags = null)
+ * @method static $this error(mixed ...$arg)
+ * @method static $this group(mixed ...$arg)
+ * @method static $this groupCollapsed(mixed ...$arg)
+ * @method static $this groupEnd(mixed $value = bdk\Debug\Abstraction\Abstracter::UNDEFINED)
+ * @method static $this groupSummary(int $priority = 0)
+ * @method static $this groupUncollapse()
+ * @method static $this info(mixed ...$arg)
+ * @method static $this log(mixed ...$arg)
+ * @method static $this profile(string $name = null)
+ * @method static $this profileEnd(string $name = null)
+ * @method static $this table(mixed ...$arg)
+ * @method static $this time(string $label = null, float $duration = null)
+ * @method static $this timeEnd(string $label = null, bool $log = true, bool $return = auto)
+ * @method static $this|float|false timeGet(string $label = null, bool $log = true, bool $return = auto)
+ * @method static $this timeLog(string $label = null, mixed ...$args = null)
+ * @method static $this trace(bool $inclContext = false, string $caption = trace)
+ * @method static $this warn(mixed ...$arg)
  * @method string output()
  *
  * @method $this addPlugin(AssetProviderInterface|SubscriberInterface $plugin, string $name = null)
@@ -65,7 +65,7 @@ use bdk\Debug\Abstraction\Abstracter;
  * @method $this removePlugin(string|SubscriberInterface $plugin)
  * @method string requestId()
  * @method void setErrorCaller(array $callerInfo)
- * @method void varDump(mixed ...$arg)
+ * @method static void varDump(mixed ...$arg)
  *
  * @property-read Abstracter           $abstracter
  * @property-read Debug\Utility\ArrayUtil $arrayUtil
@@ -148,7 +148,7 @@ class Debug extends AbstractDebug
                                 //   'onError':         email sent if error occurred (unless output)
         'emailTo' => 'default', // will default to $_SERVER['SERVER_ADMIN'] if non-empty, null otherwise
         'enableProfiling' => false,
-        'errorLogNormal' => false, // whether php shoyld also log the error when debugging is active
+        'errorLogNormal' => false, // whether php should also log the error when debugging is active
         'errorMask' => 0,       // which error types appear as "error" in debug console...
                                 //   all other errors are "warn"
                                 //   (default set in constructor)
@@ -265,7 +265,7 @@ class Debug extends AbstractDebug
         'serviceProvider' => array(), // ServiceProviderInterface, array, or callable that receives Container as param
         'sessionName' => null,  // if logging session data (see logEnvInfo), optionally specify session name
         'wampPublisher' => array(
-            // wampPuglisher
+            // wampPublisher
             //    required if using Wamp route
             //    must be installed separately
             'realm' => 'debug',

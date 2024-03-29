@@ -150,7 +150,7 @@ class ErrorSummary
     }
 
     /**
-     * Build fata error's backtrace, not-avail message, or context
+     * Build fatal error's backtrace, not-avail message, or context
      *
      * @param Error $error Error instance
      *

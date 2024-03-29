@@ -69,11 +69,11 @@ class ErrorHandler extends AbstractErrorHandler
                                     //         if propagation not stopped, call error_log()
                                     //   'normal' : sets error[continueToNormal] = true;
                                     //         php will log error
-                                    //         script will hault
+                                    //         script will halt
                                     //   null : use error's error[continueToNormal] value
                                     //         continueToNormal true -> log
                                     //         continueToNormal false -> continue
-            'onFirstError' => null,     // callable : called on first error..   usefull for lazy-loading subscriberInterface
+            'onFirstError' => null,     // callable : called on first error..   useful for lazy-loading subscriberInterface
             'suppressNever' => E_ERROR | E_PARSE | E_RECOVERABLE_ERROR | E_USER_ERROR,
             // emailer options
             'emailer' => array(),
@@ -178,7 +178,7 @@ class ErrorHandler extends AbstractErrorHandler
     /**
      * Error handler
      *
-     * @param int    $errType error lavel / type (one of PHP's E_* constants)
+     * @param int    $errType error level / type (one of PHP's E_* constants)
      * @param string $errMsg  the error message
      * @param string $file    filepath the error was raised in
      * @param int    $line    the line the error was raised in
@@ -217,7 +217,7 @@ class ErrorHandler extends AbstractErrorHandler
     /**
      * Handle uncaught exceptions
      *
-     * This isn't strictly necesssary...  uncaught exceptions are a fatal error, which we can handle...
+     * This isn't strictly necessary...  uncaught exceptions are a fatal error, which we can handle...
      * However:
      *   * catching backtrace via shutdown function only possible if xdebug installed
      *   * xdebug_get_function_stack's magic seems powerless for uncaught exceptions!

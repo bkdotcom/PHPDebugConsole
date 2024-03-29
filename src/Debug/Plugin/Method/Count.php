@@ -133,7 +133,7 @@ class Count implements SubscriberInterface
     {
         $args = $logEntry['args'];
         list($label, $flags) = \array_slice(\array_replace(array('default', 0), $args), 0, 2);
-        // label may be ommitted and only flags passed as a single argument
+        // label may be omitted and only flags passed as a single argument
         //   (excluding potential meta argument)
         if (\count($args) === 1 && \is_int($args[0])) {
             $label = 'default';
@@ -164,7 +164,7 @@ class Count implements SubscriberInterface
     {
         $args = $logEntry['args'];
         list($label, $flags) = \array_slice(\array_replace(array(null, 0), $args), 0, 2);
-        // label may be ommitted and only flags passed as a single argument
+        // label may be omitted and only flags passed as a single argument
         //   (excluding potential meta argument)
         if (\count($args) === 1 && \is_int($args[0])) {
             $label = null;

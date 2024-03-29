@@ -184,7 +184,7 @@ class Container extends AbstractElement
     }
 
     /**
-     * Assert each valis is instance of ElementInterface
+     * Assert each value is instance of ElementInterface
      *
      * @param ElementInterface[] $items values to validate
      *

@@ -133,7 +133,7 @@ class ChromeLogger extends AbstractRoute
     /**
      * Test that our header's length is less than max
      *
-     * @param string $encoded ChromeLogger heaader value
+     * @param string $encoded ChromeLogger header value
      *
      * @return string header
      */

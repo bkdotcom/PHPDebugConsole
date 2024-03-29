@@ -309,7 +309,7 @@ class Promise implements PromiseInterface
     private function settleInvokeHandlers($state, $value, $handlers)
     {
         /*
-            could optimise.. if $value instance of self (not extended from)
+            could optimize.. if $value instance of self (not extended from)
             then We can just merge our handlers onto the next promise.
             $value->handlers = \array_merge($value->handlers, $handlers);
         */

@@ -163,7 +163,7 @@ class Image extends AbstractElement
     }
 
     /**
-     * Sets horizontal aligment.
+     * Sets horizontal alignment.
      *
      * @param Enums::HORIZONTAL_ALIGNMENT_* $alignment Horizontal alignment
      *

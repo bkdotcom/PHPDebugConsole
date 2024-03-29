@@ -60,14 +60,14 @@
     padding-left: 0;
   }
 
-  // specific log entry created in Output to separate entries occuring after shutdown
+  // specific log entry created in Output to separate entries occurring after shutdown
   li.php-shutdown {
     display: block;
     border-bottom: $info-fg solid 1px;
   }
 
   .fa {
-    line-height: 1;  // fontawesome sets this, but our debug
+    line-height: 1;  // fontAwesome sets this, but our debug
   }
 
   @import "alerts";

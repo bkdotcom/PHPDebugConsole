@@ -101,7 +101,7 @@ abstract class AbstractUri
     /**
      * Filter/validate query and fragment
      *
-     * @param string $str query or frabment
+     * @param string $str query or fragment
      *
      * @return string
      */

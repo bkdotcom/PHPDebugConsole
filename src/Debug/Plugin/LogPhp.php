@@ -19,7 +19,7 @@ use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
 
 /**
- * Log PHP info, Error Reporting and $_SERVDR vals
+ * Log PHP info, Error Reporting and $_SERVER vals
  */
 class LogPhp implements SubscriberInterface
 {
@@ -193,7 +193,7 @@ class LogPhp implements SubscriberInterface
             ));
         }
         $this->assertSetting(array(
-            'msg' => 'Multibyte string function overloading is enabled (is evil)',
+            'msg' => 'Multi-byte string function overloading is enabled (is evil)',
             'name' => 'mbstring.func_overload',
             'valCompare' => false,
         ));
@@ -298,7 +298,7 @@ class LogPhp implements SubscriberInterface
 
     /**
      * Log date.timezone setting (if set)
-     * otherwize log date_default_timezone_get()
+     * otherwise log date_default_timezone_get()
      *
      * @return void
      */

@@ -91,7 +91,7 @@ class LogTarget extends Target
     }
 
     /**
-     * Send log meessage to PhpDebugConsole
+     * Send log message to PhpDebugConsole
      *
      * @param array $message Yii log message
      *
@@ -172,7 +172,7 @@ class LogTarget extends Target
     }
 
     /**
-     * Set meta infor for Application category
+     * Set meta info for Application category
      *
      * @param array $message key/value'd Yii log message
      *
@@ -188,7 +188,7 @@ class LogTarget extends Target
     }
 
     /**
-     * Set meta infor for Caching namespace
+     * Set meta info for Caching namespace
      *
      * @param array $message key/value'd Yii log message
      *
@@ -208,7 +208,7 @@ class LogTarget extends Target
     }
 
     /**
-     * Set meta infor for Connection category
+     * Set meta info for Connection category
      *
      * @param array $message key/value'd Yii log message
      *
@@ -228,7 +228,7 @@ class LogTarget extends Target
     }
 
     /**
-     * Set meta infor for Module category
+     * Set meta info for Module category
      *
      * @param array $message key/value'd Yii log message
      *
@@ -247,7 +247,7 @@ class LogTarget extends Target
     }
 
     /**
-     * Set meta infor for View category
+     * Set meta info for View category
      *
      * @param array $message key/value'd Yii log message
      *

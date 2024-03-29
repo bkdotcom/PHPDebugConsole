@@ -128,7 +128,7 @@ trait StringUtilHelperTrait
         if ($isHex) {
             return false;
         }
-        // only allow whitspace at beginning and end of lines
+        // only allow whitespace at beginning and end of lines
         $regex = '#^'
             . '([ \t]*[a-zA-Z0-9+/]*[ \t]*[\r\n]+)*'
             . '([ \t]*[a-zA-Z0-9+/]*={0,2})' // last line may have "=" padding at the end"

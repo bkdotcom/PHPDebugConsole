@@ -40,7 +40,7 @@ class Manager extends AbstractManager
     {
         $this->interfaceManager = new InterfaceManager();
         /*
-            As a convenience, make shutdown subscribeable
+            As a convenience, make shutdown subscribable
         */
         \register_shutdown_function(function () {
             $this->publish(self::EVENT_PHP_SHUTDOWN); // @codeCoverageIgnore

@@ -136,7 +136,7 @@ class SerializeLog
     }
 
     /**
-     * Unserialzie Log entry
+     * Unserialize Log entry
      *
      * @param array $vals method, args, & meta values
      *
@@ -181,7 +181,7 @@ class SerializeLog
      * Prior to to v3.0, abstractions were stored as an array
      * Find these arrays and convert them to Abstraction objects
      *
-     * @param array $vals values orproperties
+     * @param array $vals values or properties
      *
      * @return array
      */
@@ -363,7 +363,7 @@ class SerializeLog
 
     /**
      * Safely unserialize data
-     * Handle legazy data
+     * Handle legacy data
      *
      * @param string $serialized serialized array
      *

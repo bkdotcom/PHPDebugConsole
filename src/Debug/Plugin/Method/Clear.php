@@ -117,7 +117,7 @@ class Clear implements SubscriberInterface
     }
 
     /**
-     * Test channel for inclussion
+     * Test channel for inclusion
      *
      * @param LogEntry $logEntry logEntry instance
      *

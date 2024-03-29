@@ -192,7 +192,7 @@ class LogRouteMeta
     }
 
     /**
-     * If trace is pressent, set file & line meta
+     * If trace is present, set file & line meta
      * If CLogger::LEVEL_ERROR, move trace to meta
      *
      * @param array $logEntry key/valued Yii log entry

@@ -75,7 +75,7 @@ class Group implements SubscriberInterface
             'setLogDest',
         );
         if (\in_array($method, $methods, true) === false) {
-            throw new RuntimeException(__CLASS__ . '::' . $method . ' is inaccessable');
+            throw new RuntimeException(__CLASS__ . '::' . $method . ' is inaccessible');
         }
         return \call_user_func_array(array($this->groupStack, $method), $args);
     }
@@ -397,7 +397,7 @@ class Group implements SubscriberInterface
     }
 
     /**
-     * Perform a rudamentary test to check if group is first statement within {closure}
+     * Perform a rudimentary test to check if group is first statement within {closure}
      *
      * @param array $caller caller info
      *

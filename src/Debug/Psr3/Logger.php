@@ -88,7 +88,7 @@ class Logger extends AbstractLogger
     }
 
     /**
-     * Checkc if table data was passed in context and convert logEntry to table
+     * Checks if table data was passed in context and convert logEntry to table
      *
      * @param LogEntry $logEntry LogEntry instance
      * @param array    $context  Context values
@@ -164,7 +164,7 @@ class Logger extends AbstractLogger
     }
 
     /**
-     * Handle as exception if Error or Exception attached to contexxt
+     * Handle as exception if Error or Exception attached to context
      *
      * @param string $level   Psr3 log level
      * @param array  $context log entry context

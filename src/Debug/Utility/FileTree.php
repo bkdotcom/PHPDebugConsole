@@ -61,7 +61,7 @@ class FileTree
      * @param array              $tree           file tree
      * @param array<string, int> $excludedCounts path => count array
      *
-     * @return array modifed tree
+     * @return array modified tree
      */
     private function addExcludedToTree($tree, $excludedCounts)
     {

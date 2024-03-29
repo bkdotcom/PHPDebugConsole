@@ -163,7 +163,7 @@ class Utility
     /**
      * Get stream contents without affecting pointer
      *
-     * @param StreamInterface $stream StreamInteface
+     * @param StreamInterface $stream StreamInterface
      *
      * @return string
      */
@@ -203,8 +203,8 @@ class Utility
                 array('.git', 'HEAD')
             ));
             if (\file_exists($gitHeadFilepath)) {
-                $filelines = \file($gitHeadFilepath);
-                $parts = \explode('/', $filelines[0], 3);
+                $fileLines = \file($gitHeadFilepath);
+                $parts = \explode('/', $fileLines[0], 3);
                 return isset($parts[2])
                     ? \trim($parts[2])
                     : null;

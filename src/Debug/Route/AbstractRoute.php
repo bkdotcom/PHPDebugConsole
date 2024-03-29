@@ -203,7 +203,7 @@ abstract class AbstractRoute extends AbstractComponent implements RouteInterface
     }
 
     /**
-     * Test channel for inclussion
+     * Test channel for inclusion
      *
      * @param LogEntry $logEntry LogEntry instance
      *

@@ -89,7 +89,7 @@ class Time implements SubscriberInterface
     }
 
     /**
-     * Behaves like a stopwatch.. logs and (optionaly) returns running time
+     * Behaves like a stopwatch.. logs and (optionally) returns running time
      *
      *    If label is passed, timer is "paused" (not ended/cleared)
      *    If label is not passed, timer is removed from timer stack

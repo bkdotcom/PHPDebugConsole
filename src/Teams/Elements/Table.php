@@ -70,7 +70,7 @@ class Table extends AbstractElement
      *
      * @param string|numeric|mixed                $width               (default: 1) Pixel width or relative width
      * @param Enums::HORIZONTAL_ALIGNMENT_*|mixed $horizontalAlignment Horizontal alignment of cells
-     * @param Enums::VERTICAL_ALIGNMENT_*|mixed   $verticalAlignment   Verical alignment of cells
+     * @param Enums::VERTICAL_ALIGNMENT_*|mixed   $verticalAlignment   Vertical alignment of cells
      *
      * @return static
      *
@@ -107,7 +107,7 @@ class Table extends AbstractElement
      *
      * If a row contains more cells than there are columns defined, the extra cells are ignored
      *
-     * @param array{horizontalAlignment?: Enums::HORIZONTAL_ALIGNMENT_*, verticalAlignment?: Enums::VERTICALL_ALIGNMENT_*, width?: string}[] $columns Column definitions
+     * @param array{horizontalAlignment?: Enums::HORIZONTAL_ALIGNMENT_*, verticalAlignment?: Enums::VERTICAL_ALIGNMENT_*, width?: string}[] $columns Column definitions
      *
      * @return static
      *

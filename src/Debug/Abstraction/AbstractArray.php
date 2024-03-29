@@ -18,7 +18,7 @@ use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\Type;
 
 /**
- * Abstracter:  Methods used de=refrence and store arrays
+ * Abstracter:  Methods used de=reference and store arrays
  */
 class AbstractArray extends AbstractComponent
 {

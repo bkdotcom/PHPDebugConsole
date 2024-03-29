@@ -373,7 +373,7 @@ class SlackMessage implements JsonSerializable
     {
         $unknownData = \array_diff_key($values, $this->dataDefault, \array_flip(array('icon')));
         if ($unknownData) {
-            throw new InvalidArgumentException('SlackMesssage: Unknown values: ' . \implode(', ', \array_keys($unknownData)));
+            throw new InvalidArgumentException('SlackMessage: Unknown values: ' . \implode(', ', \array_keys($unknownData)));
         }
         if (isset($values['attachments']) && \is_array($values['attachments']) === false) {
             throw new InvalidArgumentException(\sprintf(

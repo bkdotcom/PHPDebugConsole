@@ -80,7 +80,7 @@ class GroupStack
      *
      * @param 'auto'|'main'|int $where ('auto'), 'main' or summary priority
      *
-     * @return LogEntry[] kwys are maintained
+     * @return LogEntry[] keys are maintained
      */
     public function getCurrentGroups($where = 'auto')
     {
@@ -161,7 +161,7 @@ class GroupStack
     }
 
     /**
-     * Pop summary prioirty off off summary stack
+     * Pop summary priority off off summary stack
      *
      * @return int
      */

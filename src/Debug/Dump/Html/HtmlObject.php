@@ -361,9 +361,9 @@ class HtmlObject
      * Get object's "string" representation
      *
      * @param Abstraction $abs    Object Abstraction instance
-     * @param int         $strlen updated to ength of non-truncated value
+     * @param int         $strlen updated to length of non-truncated value
      *
-     * @return string
+     * @return string|Abstraction
      */
     private function getToStringVal(Abstraction $abs, &$strlen)
     {

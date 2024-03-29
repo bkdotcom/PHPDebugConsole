@@ -74,7 +74,7 @@ class Table
     /**
      * Builds table's body
      *
-     * @param array $rows array of arrays or Traverssable
+     * @param array $rows array of arrays or Traversable
      *
      * @return string
      */

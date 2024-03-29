@@ -242,7 +242,7 @@ class FindExit
      */
     private function getLastFrame()
     {
-        \ini_set('xdebug.var_display_max_depth', 3);
+        $maxDepthBak = \ini_set('xdebug.var_display_max_depth', 3);
         $backtrace = \xdebug_get_function_stack();
         $backtrace = \array_reverse($backtrace);
         $frame = false;
@@ -262,6 +262,7 @@ class FindExit
                 break;
             }
         }
+        \ini_set('xdebug.var_display_max_depth', $maxDepthBak);
         return $frame;
     }
 

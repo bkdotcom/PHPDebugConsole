@@ -180,9 +180,9 @@ class LogFiles extends AbstractComponent implements SubscriberInterface
      * Test if file contains search string
      *
      * @param string $file      filepath
-     * @param string $searchStr searchstring
+     * @param string $searchStr search string
      *
-     * @return string portion of file preceeding and including searchStr
+     * @return string portion of file preceding and including searchStr
      */
     private function filterExcludePath($file, $searchStr)
     {

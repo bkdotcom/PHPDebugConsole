@@ -159,7 +159,7 @@ class Reflection
     }
 
     /**
-     * Get inaccessable property value via reflection
+     * Get inaccessible property value via reflection
      *
      * @param object|classname $obj  object instance
      * @param string           $prop property name
@@ -184,7 +184,7 @@ class Reflection
     }
 
     /**
-     * Set inaccessable property value via reflection
+     * Set inaccessible property value via reflection
      *
      * @param object|classname $obj  object or classname
      * @param string           $prop property name

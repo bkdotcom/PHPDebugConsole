@@ -299,7 +299,7 @@ class Html extends Base
     }
 
     /**
-     * Set default meta values
+     * Set default meta values on log entry
      *
      * @param LogEntry $logEntry LogEntry instance
      *

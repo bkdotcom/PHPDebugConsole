@@ -77,7 +77,7 @@ export function enhanceValue (node, $entry) {
 }
 
 /**
- * add font-awsome icons
+ * add font-awesome icons
  */
 function addIcons ($node) {
   var $caption

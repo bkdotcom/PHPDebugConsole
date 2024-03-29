@@ -86,7 +86,7 @@ class Prettify implements SubscriberInterface
     /**
      * Prettify string
      *
-     * format whitepace
+     * format whitespace
      *    json, xml  (or anything else handled via Debug::EVENT_PRETTIFY)
      * add attributes to indicate value should be syntax highlighted
      *    html, json, xml

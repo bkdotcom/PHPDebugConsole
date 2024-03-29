@@ -42,7 +42,7 @@ class Basic implements SubscriberInterface
     );
 
     /**
-     * If first argument evaluates `false`, log the remaining paramaters
+     * If first argument evaluates `false`, log the remaining parameters
      *
      * Supports styling & substitutions
      *

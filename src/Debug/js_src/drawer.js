@@ -123,7 +123,7 @@ function setHeight (height, viaUser) {
   var $body = $root.find('.tab-panes')
   var menuH = $root.find('.debug-menu-bar').outerHeight()
   var minH = 20
-  // inacurate if document.doctype is null : $(window).height()
+  // inaccurate if document.doctype is null : $(window).height()
   //    aka document.documentElement.clientHeight
   var maxH = window.innerHeight - menuH - 50
   height = checkHeight(height)

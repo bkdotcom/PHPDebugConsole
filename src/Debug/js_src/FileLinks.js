@@ -141,7 +141,7 @@ function createFileLink (string, remove, foundFiles) {
   var matches = createFileLinkMatches($string, foundFiles)
   var isUpdate = remove !== true && $string.hasClass('file-link')
   if ($string.closest('.m_trace').length) {
-    // not recurssion...  will end up calling createFileLinksTrace
+    // not recursion...  will end up calling createFileLinksTrace
     create($string.closest('.m_trace'))
     return
   }

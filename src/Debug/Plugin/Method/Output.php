@@ -45,7 +45,7 @@ class Output implements SubscriberInterface
      *
      * If output config value is `false`, null will be returned.
      *
-     * Note: Log output is handled automatically, and calling output is gnerally not necessary.
+     * Note: Log output is handled automatically, and calling output is generally not necessary.
      *
      * @param array $cfg Override any config values
      *
@@ -74,7 +74,7 @@ class Output implements SubscriberInterface
      *    on all descendant channels
      *    rootInstance
      *    finally ourself
-     * This isn't outputing each channel, but for performing any per-channel "before output" activities
+     * This isn't outputting each channel, but for performing any per-channel "before output" activities
      *
      * @return Event
      */

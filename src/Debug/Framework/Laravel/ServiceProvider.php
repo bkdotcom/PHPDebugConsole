@@ -134,7 +134,7 @@ class ServiceProvider extends BaseServiceProvider
     }
 
     /**
-     * Process the stored model counts for outputing as table
+     * Process the stored model counts for outputting as table
      *
      * @param array $tableInfoRows gets updated with tableInfo.rows for table
      *

@@ -24,8 +24,13 @@ use bdk\Debug\Utility\Html as HtmlUtil;
  */
 abstract class AbstractObjectSection
 {
+    /** @var Helper */
     protected $helper;
+
+    /** @var HtmlUtil */
     protected $html;
+
+    /** @var ValDumper */
     protected $valDumper;
 
     /**
@@ -147,8 +152,8 @@ abstract class AbstractObjectSection
     /**
      * group by inheritance... with headings
      *
-     * @param ObjectAbstraction $abs ObjectAbstraction instance
-     * @param array             $cfg Config options
+     * @param ObjectAbstraction    $abs ObjectAbstraction instance
+     * @param array<string, mixed> $cfg Config options
      *
      * @return string
      */
@@ -182,7 +187,7 @@ abstract class AbstractObjectSection
     /**
      * Dump "modifiers"
      *
-     * @param array $info Abstraction info
+     * @param array<string, mixed> $info Abstraction info
      *
      * @return string html fragment
      */
@@ -197,10 +202,10 @@ abstract class AbstractObjectSection
     /**
      * Get html attributes
      *
-     * @param array $info Abstraction info
-     * @param array $cfg  config options
+     * @param array<string, mixed> $info Abstraction info
+     * @param array<string, mixed> $cfg  config options
      *
-     * @return array
+     * @return array<string, mixed>
      */
     protected function getAttribs(array $info, array $cfg = array())
     {
@@ -222,7 +227,7 @@ abstract class AbstractObjectSection
     /**
      * Get classes
      *
-     * @param array $info Abstraction info
+     * @param array<string, mixed> $info Abstraction info
      *
      * @return string[]
      */
@@ -234,7 +239,7 @@ abstract class AbstractObjectSection
      * @param ObjectAbstraction $abs  Object abstraction
      * @param string            $what 'cases', 'constants', 'properties', or 'methods'
      *
-     * @return array
+     * @return list<string>
      */
     private function getInheritedClasses(ObjectAbstraction $abs, $what)
     {
@@ -261,7 +266,7 @@ abstract class AbstractObjectSection
     /**
      * Get "modifiers" (final, readonly, static)
      *
-     * @param array $info Abstraction info
+     * @param array<string, mixed> $info Abstraction info
      *
      * @return string[]
      */

@@ -78,7 +78,7 @@ class HtmlBuild
     /**
      * Convert array attribute value to string
      *
-     * This function is not meant for data attributs
+     * This function is not meant for data attributes
      *
      * @param string   $name   attribute name ("style")
      * @param string[] $values key/value for style

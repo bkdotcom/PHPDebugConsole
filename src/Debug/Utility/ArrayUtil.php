@@ -270,10 +270,10 @@ class ArrayUtil
             if ($aPos === $bPos) {
                 return \strnatcasecmp($valA, $valB);
             }
-            if ($aPos === false) {   // $a is a dont care
+            if ($aPos === false) {   // $a is a don't care
                 return 1;            //   $a > $b
             }
-            if ($bPos === false) {   // $b is a dont care
+            if ($bPos === false) {   // $b is a don't care
                 return -1;           //   $a < $b
             }
             return $aPos < $bPos
@@ -300,7 +300,7 @@ class ArrayUtil
         $offset = \array_search($key, \array_keys($array), true);
         $count = \count($array);
         if ($offset === false) {
-            // merge replacemnet onto end of array
+            // merge replacement onto end of array
             $offset = $count;
             $length = 0;
         }

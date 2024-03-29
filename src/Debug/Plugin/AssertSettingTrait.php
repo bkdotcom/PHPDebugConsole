@@ -15,7 +15,7 @@ namespace bdk\Debug\Plugin;
 use bdk\Debug;
 
 /**
- * Provite assertSetting method
+ * Provide assertSetting method
  */
 trait AssertSettingTrait
 {

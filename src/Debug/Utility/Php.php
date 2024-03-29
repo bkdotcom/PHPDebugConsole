@@ -26,7 +26,7 @@ class Php
     const IS_CALLABLE_SYNTAX_ONLY = 4;
     const IS_CALLABLE_NO_CALL = 8; // don't test for __call / __callStatic methods
 
-    /** @var string[] list of allowed-to-be-unserialized classes passwed to userializeSafe */
+    /** @var string[] list of allowed-to-be-unserialized classes passed to unserializeSafe */
     protected static $allowedClasses = array();
 
     /**

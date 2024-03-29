@@ -307,7 +307,7 @@ class Manager implements SubscriberInterface, PluginInterface
     /**
      * Validate plugin
      *
-     * @param AssetProviderInterface|SubscriberInterface $plugin PHPDebugCpnsole plugin
+     * @param AssetProviderInterface|SubscriberInterface $plugin PHPDebugConsole plugin
      *
      * @return void
      * @throws InvalidArgumentException
@@ -374,7 +374,7 @@ class Manager implements SubscriberInterface, PluginInterface
     }
 
     /**
-     * Determine callable from raw SubscribdrInterface::getSubscribers  return value
+     * Determine callable from raw SubscriberInterface::getSubscribers  return value
      *
      * @param SubscriberInterface $plugin SubscriberInterface instance
      * @param mixed               $mixed  Closure or method name (array not yet supported)

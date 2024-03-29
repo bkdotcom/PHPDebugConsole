@@ -73,7 +73,7 @@ class UseStatements
         if (isset(self::$cache[$name])) {
             return self::$cache[$name];
         }
-        $source = self::getPreceedingLines($reflector->getFileName(), $reflector->getStartLine());
+        $source = self::getPrecedingLines($reflector->getFileName(), $reflector->getStartLine());
         $useStatements = \strpos($source, 'use')
             ? self::extractUse($source)
             : array();
@@ -143,7 +143,7 @@ class UseStatements
      *
      * @return string
      */
-    private static function getPreceedingLines($file, $startLine)
+    private static function getPrecedingLines($file, $startLine)
     {
         $file = \fopen($file, 'r');
         $line = 0;

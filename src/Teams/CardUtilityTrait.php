@@ -18,7 +18,7 @@ trait CardUtilityTrait
     private static $constants = array();
 
     /**
-     * Itterate over supplied tests.
+     * Iterate over supplied tests.
      *
      * @param mixed      $val     Value to test
      * @param callable[] $tests   tests.  Each test may throw exception or return false to indicate failure
@@ -332,7 +332,7 @@ trait CardUtilityTrait
     private static function isBase64RegexTest($val)
     {
         $val = \trim($val);
-        // only allow whitspace at beginning and end of lines
+        // only allow whitespace at beginning and end of lines
         $regex = '#^'
             . '([ \t]*[a-zA-Z0-9+/]*[ \t]*[\r\n]+)*'
             . '([ \t]*[a-zA-Z0-9+/]*={0,2})' // last line may have "=" padding at the end"

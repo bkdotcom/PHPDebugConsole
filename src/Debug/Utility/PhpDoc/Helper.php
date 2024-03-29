@@ -71,7 +71,7 @@ class Helper
         $comment = \str_replace('{@*}', '*/', $comment);
         /*
             split into summary & description
-            summary ends with empty whiteline or "." followed by \n
+            summary ends with empty whitespace line or "." followed by \n
         */
         $split = \preg_split('/(\.[\r\n]+|[\r\n]{2})/', $comment, 2, PREG_SPLIT_DELIM_CAPTURE);
         $split = \array_replace(array('', '', ''), $split);

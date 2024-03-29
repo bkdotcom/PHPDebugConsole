@@ -163,7 +163,7 @@ class ServerRequest
      *
      * @return bool
      */
-    private static function isContentTypeParseable($contentType)
+    private static function isContentTypeParsable($contentType)
     {
         $parsableTypes = array(
             ContentType::FORM,
@@ -219,7 +219,7 @@ class ServerRequest
     {
         $contentType = \preg_replace('/\s*[;,].*$/', '', $contentType);
         $contentType = \strtolower($contentType);
-        if (self::isContentTypeParseable($contentType) === false) {
+        if (self::isContentTypeParsable($contentType) === false) {
             return null;
         }
         $rawBody = \file_get_contents($input);

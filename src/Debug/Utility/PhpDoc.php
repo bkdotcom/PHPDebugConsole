@@ -191,7 +191,7 @@ class PhpDoc
      *
      * @param array $parsed Parsed tags
      *
-     * @return array
+     * @return array<string,string|null>
      *
      * @psalm-return Parsed
      */
@@ -230,7 +230,7 @@ class PhpDoc
      *
      * Notes:
      *    \@method tag:
-     *         optional "static" keyword may preceed type & name
+     *         optional "static" keyword may precede type & name
      *             'static' returned as a boolean value
      *         parameters:  defaultValue key only returned if defined.
      *                      defaultValue is not parsed
@@ -299,7 +299,7 @@ class PhpDoc
     private function parseTags($str, $elementName = null)
     {
         $regexNotTag = '(?P<value>(?:(?!^@).)*)';
-        $regexTags = '#^@(?P<tag>[\w-]+)[ \t]*' . $regexNotTag . '#sim';
+        $regexTags = '#^@(?P<tag>[\w-]+)[ \t]*' . $regexNotTag . '#imsu';
         \preg_match_all($regexTags, $str, $matches, PREG_SET_ORDER);
         $singleTags = array('return');
         $return = array();

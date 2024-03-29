@@ -70,7 +70,7 @@ class Type
      *
      * @param mixed $val value
      *
-     * @return array [$type, $typeMore] typeMore may be
+     * @return list{self::TYPE_*, self::TYPE_*|null} [$type, $typeMore] typeMore may be
      *    null
      *    'raw' indicates value needs crating
      *    'abstraction'
@@ -122,7 +122,7 @@ class Type
      *
      * @param array $val array value
      *
-     * @return array
+     * @return list{self::TYPE_*, self::TYPE_RAW}
      */
     private function getTypeArray($val)
     {
@@ -141,7 +141,7 @@ class Type
      *
      * @param float $val float/INF/NAN
      *
-     * @return array
+     * @return list{self::TYPE_FLOAT, self::TYPE_*}
      */
     private function getTypeFloat($val)
     {
@@ -164,7 +164,7 @@ class Type
      *
      * @param float $val float/INF/NAN
      *
-     * @return array
+     * @return list{self::TYPE_INT, self::TYPE_TIMESTAMP|null}
      */
     private function getTypeInt($val)
     {
@@ -179,7 +179,7 @@ class Type
      *
      * @param object $object any object
      *
-     * @return array type & typeMore
+     * @return list{self::TYPE_*, self::TYPE_*} type & typeMore
      */
     private function getTypeObject($object)
     {
@@ -197,7 +197,7 @@ class Type
      *
      * @param mixed $val value
      *
-     * @return string "array", "bool", "float", "int", "null", "object", "resource", "string", "unknown"
+     * @return "array"|"bool"|"float"|"int"|"null"|"object"|"resource"|"string"|"unknown"
      */
     private static function getTypePhp($val)
     {
@@ -221,7 +221,7 @@ class Type
      *
      * @param mixed $val value of unknown type (likely closed resource)
      *
-     * @return array type and typeMore
+     * @return list{self::TYPE_*, self::TYPE_*|null} type and typeMore
      *
      * @SuppressWarnings(PHPMD.DevelopmentCodeFragment)
      */

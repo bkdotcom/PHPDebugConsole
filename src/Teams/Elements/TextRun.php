@@ -18,7 +18,7 @@ use RuntimeException;
 class TextRun extends AbstractItem implements ElementInterface
 {
     /**
-     * Consructor
+     * Constructor
      *
      * @param string $text Text to display
      */

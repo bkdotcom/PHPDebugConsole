@@ -38,6 +38,7 @@
         <properties>
             <property name="forbiddenCommentPatterns" type="array">
                 <element value="#\[\w*\s+description\]#" />
+                <element value="#^Undocumented \w+$#" />
             </property>
         </properties>
     </rule>

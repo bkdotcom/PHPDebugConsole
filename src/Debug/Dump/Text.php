@@ -70,7 +70,7 @@ class Text extends Base
     }
 
     /**
-     * Cooerce value to string
+     * Coerce value to string
      *
      * @param mixed $val  value
      * @param array $opts $options passed to dump

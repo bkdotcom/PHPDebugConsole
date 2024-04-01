@@ -9,7 +9,7 @@ use InvalidArgumentException;
 use Psr\Http\Message\RequestInterface;
 
 /**
- * Lightweight PSR-7 (HttpMessage) based cURL asyncronous client
+ * Lightweight PSR-7 (HttpMessage) based cURL asynchronous client
  */
 class ClientAsync extends AbstractClient
 {
@@ -18,7 +18,7 @@ class ClientAsync extends AbstractClient
      */
     public function handle(RequestInterface $request, array $options = array())
     {
-        $options['isAsyncronous'] = true;
+        $options['isAsynchronous'] = true;
         return parent::handle($request, $options);
     }
 

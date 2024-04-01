@@ -49,7 +49,7 @@ class GuzzleMiddleware extends AbstractAsyncMiddleware
     public function onRequest(RequestInterface $request, array $options)
     {
         $requestInfo = array(
-            'isAsyncronous' => empty($options[RequestOptions::SYNCHRONOUS]),
+            'isAsynchronous' => empty($options[RequestOptions::SYNCHRONOUS]),
             'request' => $request,
             'requestId' => \spl_object_hash($request),
         );
@@ -60,7 +60,7 @@ class GuzzleMiddleware extends AbstractAsyncMiddleware
             $this->onRedirectOrig = isset($options['allow_redirects']['on_redirect'])
                 ? $options['allow_redirects']['on_redirect']
                 : null;
-            if ($requestInfo['isAsyncronous'] === false) {
+            if ($requestInfo['isAsynchronous'] === false) {
                 $options['allow_redirects']['on_redirect'] = array($this, 'onRedirect');
             }
         }
@@ -82,7 +82,7 @@ class GuzzleMiddleware extends AbstractAsyncMiddleware
         $response = $reason instanceof RequestException
             ? $reason->getResponse()
             : null;
-        if ($requestInfo['isAsyncronous']) {
+        if ($requestInfo['isAsynchronous']) {
             $meta = $this->debug->meta(array(
                 'asyncResponseGroup' => true,
                 'middlewareId' => \spl_object_hash($this),
@@ -102,7 +102,7 @@ class GuzzleMiddleware extends AbstractAsyncMiddleware
     }
 
     /**
-     * call nexthandler and register our fullfill and reject callbacks
+     * call nextHandler and register our fulfill and reject callbacks
      *
      * @param RequestInterface $request     Psr7 RequestInterface
      * @param array            $options     Guzzle request options

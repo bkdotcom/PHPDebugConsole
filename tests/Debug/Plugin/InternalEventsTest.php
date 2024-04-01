@@ -60,7 +60,7 @@ class InternalEventsTest extends DebugTestFramework
         $this->debug->setCfg(array(
             'emailLog' => 'always',
             'emailTo' => 'test@email.com', // need an email address to email to!
-            'output' => false,  // email only sent if not outputing
+            'output' => false,  // email only sent if not outputting
         ));
 
         $internalEvents = $this->debug->getPlugin('internalEvents');

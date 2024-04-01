@@ -235,7 +235,7 @@ class SoapClient extends SoapClientBase
     }
 
     /**
-     * Check if __call is in backtracew
+     * Check if __call is in backtrace
      *
      * @return bool
      */

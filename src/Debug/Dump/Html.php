@@ -23,7 +23,7 @@ use bdk\Debug\LogEntry;
 /**
  * Dump val as HTML
  *
- * @property HtmlTable $table lazy-loaded HtmlTable... only loaded if outputing a table
+ * @property HtmlTable $table lazy-loaded HtmlTable... only loaded if outputting a table
  */
 class Html extends Base
 {

@@ -31,7 +31,7 @@ class CurlReqRes
     private $options = array(
         'curl' => array(),
         'delay' => null,
-        'isAsyncronous' => false,
+        'isAsynchronous' => false,
         'maxRedirect' => 5,
         'noEarlierThan' => null,
     );

@@ -43,7 +43,7 @@ class Abstraction extends BaseAbstraction
      * Constructor
      *
      * @param ValueStore $inherited Inherited values
-     * @param array      $values    Abtraction values
+     * @param array      $values    Abstraction values
      */
     public function __construct(ValueStore $inherited, $values = array())
     {
@@ -266,7 +266,7 @@ class Abstraction extends BaseAbstraction
                 ? $info['visibility']
                 : '?';
             if (\is_array($vis)) {
-                // Sort the visiblity so we use the most significant vis
+                // Sort the visibility so we use the most significant vis
                 ArrayUtil::sortWithOrder($vis, $sortVisOrder);
                 $vis = $vis[0];
             }

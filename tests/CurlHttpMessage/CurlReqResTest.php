@@ -125,7 +125,7 @@ class CurlReqResTest extends TestCase
             'bip' => 'bam',
         ));
         self::assertNull($curlReqRes->getOption('delay'));
-        self::assertFalse($curlReqRes->getOption('isAsyncronous'));
+        self::assertFalse($curlReqRes->getOption('isAsynchronous'));
         self::assertSame(array(
             'ding' => 'dong',
         ), $curlReqRes->getOption('foo'));

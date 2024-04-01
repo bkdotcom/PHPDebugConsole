@@ -10,7 +10,7 @@ use Throwable;
 /**
  * A promise that has been rejected.
  *
- * Thenning off of this promise will invoke the onRejected callback
+ * Thening off of this promise will invoke the onRejected callback
  * immediately and ignore other callbacks.
  */
 class RejectedPromise extends Promise

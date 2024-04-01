@@ -253,7 +253,7 @@ class AbstractObject extends AbstractComponent
     }
 
     /**
-     * Populate rows or columns (traverseValues) if we're outputing as a table
+     * Populate rows or columns (traverseValues) if we're outputting as a table
      *
      * @param ObjectAbstraction $abs Abstraction instance
      *
@@ -307,7 +307,7 @@ class AbstractObject extends AbstractComponent
         $this->methods->addInstance($abs);  // method static variables
         $this->properties->addInstance($abs);
         /*
-            Debug::EVENT_OBJ_ABSTRACT_END subscriber has free reign to modify abtraction values
+            Debug::EVENT_OBJ_ABSTRACT_END subscriber has free reign to modify abstraction values
         */
         $this->debug->publishBubbleEvent(Debug::EVENT_OBJ_ABSTRACT_END, $abs, $this->debug);
     }

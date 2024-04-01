@@ -65,7 +65,7 @@ class CallInfo extends AbstractComponent
 
     /**
      * @param string $method    method called
-     * @param mixed  $keyOrKeys affeccted key or keys
+     * @param mixed  $keyOrKeys affected key or keys
      */
     public function __construct($method, $keyOrKeys = null)
     {

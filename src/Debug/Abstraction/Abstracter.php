@@ -327,7 +327,7 @@ class Abstracter extends AbstractComponent
     }
 
     /**
-     * Pass relevent config updates to AbstractObject & AbstractString
+     * Pass relevant config updates to AbstractObject & AbstractString
      *
      * @param array $cfg Updated config values
      *

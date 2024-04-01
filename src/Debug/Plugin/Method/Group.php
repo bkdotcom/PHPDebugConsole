@@ -287,7 +287,7 @@ class Group implements SubscriberInterface
         $this->debug->data->set('logDest', 'summary');
         $logEntry['appendLog'] = false;     // don't actually log
         $logEntry['forcePublish'] = true;   // publish the Debug::EVENT_LOG event (regardless of cfg.collect)
-        // groupSumary's Debug::EVENT_LOG event should happen on the root instance
+        // groupSummary's Debug::EVENT_LOG event should happen on the root instance
         $this->debug->rootInstance->log($logEntry);
     }
 

@@ -69,7 +69,7 @@ class Middleware
      * Handle an incoming request.
      *
      * @param Request $request Request instance
-     * @param Closure $next    Next middleare handler
+     * @param Closure $next    Next middleware handler
      *
      * @return mixed
      */
@@ -210,7 +210,7 @@ class Middleware
     }
 
     /**
-     * Set guart info
+     * Set guard info
      *
      * @param string $guardName Guard name
      *

@@ -179,7 +179,7 @@ class HandlerStack
             return $callableAndName[1] === $name;
         });
         if (\count($found) > 0) {
-            throw new RuntimeException('Middlware already in stack: ' . $name);
+            throw new RuntimeException('Middleware already in stack: ' . $name);
         }
     }
 

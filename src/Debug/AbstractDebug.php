@@ -22,7 +22,7 @@ use bdk\PubSub\Event;
 use ReflectionMethod;
 
 /**
- * Handle underlying Debug bootstraping and config
+ * Handle underlying Debug bootstrapping and config
  *
  * @psalm-consistent-constructor
  */
@@ -100,7 +100,7 @@ class AbstractDebug
     public static function __callStatic($methodName, $args)
     {
         // prior to v3.1 it was required to have underscore prefix to disambiguate from instance method
-        //   as of v3.1, all methodss provided via plugin
+        //   as of v3.1, all methods provided via plugin
         $methodName = \ltrim($methodName, '_');
         if (!self::$instance && $methodName === 'setCfg') {
             /*
@@ -317,7 +317,7 @@ class AbstractDebug
     }
 
     /**
-     * Get config values needed for bootstraping
+     * Get config values needed for bootstrapping
      *
      * @param array $cfg Config passed to constructor
      *
@@ -351,7 +351,7 @@ class AbstractDebug
     }
 
     /**
-     * Initialize dependancy containers
+     * Initialize dependency containers
      *
      * @param array $cfg Initial cfg values
      *

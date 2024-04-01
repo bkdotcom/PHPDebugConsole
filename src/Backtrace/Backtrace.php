@@ -48,7 +48,7 @@ class Backtrace
 
     /**
      * Add a new namespace or classname to be used to determine when to
-     * stop iterrating over the backtrace when determining calling info
+     * stop iterating over the backtrace when determining calling info
      *
      * @param array|string $classes classname(s)
      * @param int          $level   "priority".  0 = will never skip

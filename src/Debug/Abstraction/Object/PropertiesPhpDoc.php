@@ -95,7 +95,7 @@ class PropertiesPhpDoc
     }
 
     /**
-     * Iterate over PhpDoc's magic properties & add to abstrction
+     * Iterate over PhpDoc's magic properties & add to abstraction
      *
      * @param Abstraction $abs          Object Abstraction instance
      * @param string|null $declaredLast Where the magic properties were found

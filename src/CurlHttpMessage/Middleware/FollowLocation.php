@@ -110,7 +110,7 @@ class FollowLocation
      * Handle 301 and 302 response codes
      *
      * According to the HTTP specs,
-     *  a 303 redirection should be followed usingthe GET method.
+     *  a 303 redirection should be followed using the GET method.
      *  301 and 302 must not.
      *
      * @param CurlReqRes       $curlReqRes  CurlReqRes instance

@@ -34,7 +34,7 @@ class Container implements \ArrayAccess
 {
     /** @var array */
     private $cfg = array(
-        'allowOverride' => false,  // whether can update alreay built service
+        'allowOverride' => false,  // whether can update already built service
         'onInvoke' => null, // callable
     );
 

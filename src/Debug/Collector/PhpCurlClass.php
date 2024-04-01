@@ -19,7 +19,7 @@ use ReflectionObject;
 /**
  * Extend php-curl-class to log each request
  *
- * Decorator (that extends Curl) would be prefered..  however unable to handle Curl's public properties
+ * Decorator (that extends Curl) would be preferred..  however unable to handle Curl's public properties
  *
  * @see https://github.com/php-curl-class/php-curl-class
  */

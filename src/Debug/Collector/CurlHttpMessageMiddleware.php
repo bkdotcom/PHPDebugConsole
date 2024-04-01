@@ -47,12 +47,12 @@ class CurlHttpMessageMiddleware extends AbstractAsyncMiddleware
         $request = $curlReqRes->getRequest();
         $options = $curlReqRes->getOptions();
         $requestInfo = array(
-            'isAsyncronous' => $options['isAsyncronous'],
+            'isAsynchronous' => $options['isAsynchronous'],
             'request' => $request,
             'requestId' => \spl_object_hash($request),
         );
         $this->onRedirectOrig = $options['onRedirect'];
-        if ($requestInfo['isAsyncronous'] === false) {
+        if ($requestInfo['isAsynchronous'] === false) {
             $curlReqRes->setOption('onRedirect', array($this, 'onRedirect'));
         }
         $this->logRequest($request, $requestInfo);
@@ -71,7 +71,7 @@ class CurlHttpMessageMiddleware extends AbstractAsyncMiddleware
     {
         $meta = $this->debug->meta();
         $response = $reason->getResponse();
-        if ($requestInfo['isAsyncronous']) {
+        if ($requestInfo['isAsynchronous']) {
             $meta = $this->debug->meta(array(
                 'asyncResponseGroup' => true,
                 'middlewareId' => \spl_object_hash($this),
@@ -89,7 +89,7 @@ class CurlHttpMessageMiddleware extends AbstractAsyncMiddleware
     }
 
     /**
-     * call nexthandler and register our fullfill and reject callbacks
+     * call nextHandler and register our fulfill and reject callbacks
      *
      * @param CurlReqRes $curlReqRes  CurlReqRes instance
      * @param array      $requestInfo Request info

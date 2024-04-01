@@ -81,7 +81,7 @@ class AbstractAsyncMiddleware extends AbstractComponent
     }
 
     /**
-     * Subscribe to logEntry output... conditionaly output response group
+     * Subscribe to logEntry output... conditionally output response group
      *
      * @param LogEntry $logEntry LogEntry instance
      *
@@ -105,7 +105,7 @@ class AbstractAsyncMiddleware extends AbstractComponent
     /**
      * Called when redirect encountered
      * but only if this middleware is added to the bottom of the stack (unshift)
-     * and only for syncronous request
+     * and only for synchronous request
      *
      * @param RequestInterface  $request  Request
      * @param ResponseInterface $response Response
@@ -132,7 +132,7 @@ class AbstractAsyncMiddleware extends AbstractComponent
     public function onFulfilled(ResponseInterface $response, array $requestInfo)
     {
         $meta = $this->debug->meta();
-        if ($requestInfo['isAsyncronous']) {
+        if ($requestInfo['isAsynchronous']) {
             $meta = $this->debug->meta(array(
                 'asyncResponseGroup' => true,
                 'middlewareId' => \spl_object_hash($this),
@@ -149,7 +149,7 @@ class AbstractAsyncMiddleware extends AbstractComponent
     }
 
     /**
-     * Start a new group for asyncronous response
+     * Start a new group for asynchronous response
      *
      * @param RequestInterface       $request  RequestInterface
      * @param ResponseInterface|null $response ResponseInterface (if available)
@@ -245,12 +245,12 @@ class AbstractAsyncMiddleware extends AbstractComponent
                 'redact' => true,
             ))
         );
-        if ($requestInfo['isAsyncronous']) {
-            $this->debug->info('asyncronous', $this->debug->meta('icon', $this->cfg['iconAsync']));
+        if ($requestInfo['isAsynchronous']) {
+            $this->debug->info('asynchronous', $this->debug->meta('icon', $this->cfg['iconAsync']));
         }
         $this->debug->log('request headers', $this->buildHeadersString($request));
         $this->logRequestBody($request);
-        if ($requestInfo['isAsyncronous']) {
+        if ($requestInfo['isAsynchronous']) {
             $this->debug->groupEnd();
         }
     }
@@ -288,7 +288,7 @@ class AbstractAsyncMiddleware extends AbstractComponent
     protected function logResponse(ResponseInterface $response = null, array $requestInfo = array(), Exception $rejectReason = null)
     {
         $duration = $this->debug->timeEnd($this->cfg['label'] . ':' . $requestInfo['requestId'], false);
-        $metaAppend = $requestInfo['isAsyncronous'] && $this->cfg['asyncResponseWithRequest']
+        $metaAppend = $requestInfo['isAsynchronous'] && $this->cfg['asyncResponseWithRequest']
             ? $this->debug->meta('appendGroup', $this->cfg['idPrefix'] . $requestInfo['requestId'])
             : $this->debug->meta();
         if ($rejectReason) {

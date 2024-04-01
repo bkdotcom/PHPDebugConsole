@@ -287,7 +287,7 @@ class Definition
      *
      * @param array $values values already collected
      *
-     * @return Absttraction
+     * @return Abstraction
      */
     protected function getInitValues(array $values)
     {

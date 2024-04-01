@@ -268,7 +268,7 @@ class Config
      *
      * @param string $debugProp  debug property name
      * @param array  $path       path/key
-     * @param bool   $forInit    (false) Get values for bootstap (don't initialize obj)
+     * @param bool   $forInit    (false) Get values for bootstrap (don't initialize obj)
      * @param bool   $delPending Delete pending values (if forInit)
      *
      * @return mixed
@@ -295,7 +295,7 @@ class Config
      *
      * @param string $debugProp debug property name
      * @param array  $path      path/key
-     * @param bool   $forInit   (false) Get values for bootstap (don't initialize obj)
+     * @param bool   $forInit   (false) Get values for bootstrap (don't initialize obj)
      *
      * @return mixed
      */

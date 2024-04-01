@@ -133,7 +133,7 @@ class Factory
             $asyncHandler = new CurlMulti();
             $handler = static function (CurlReqRes $curlReqRes) use ($syncHandler, $asyncHandler) {
                 $options = $curlReqRes->getOptions();
-                return $options['isAsyncronous']
+                return $options['isAsynchronous']
                     ? $asyncHandler($curlReqRes)
                     : $syncHandler($curlReqRes);
             };

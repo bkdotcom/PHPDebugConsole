@@ -25,7 +25,7 @@ class CurlMulti extends Curl
     /** @var array options */
     protected $options = array();
 
-    /** @var CurlReqRes[] Requests currenting being executed by curl indexed by (int) curlHandle */
+    /** @var CurlReqRes[] Requests currently being executed by curl indexed by (int) curlHandle */
     private $processing = array();
 
     /** @var CurlReqRes[] Request Queue indexed by CurlReqRes hash*/
@@ -134,7 +134,7 @@ class CurlMulti extends Curl
     }
 
     /**
-     * Return delay (in milli seconds)
+     * Return delay (in milliseconds)
      *
      * @return int
      */

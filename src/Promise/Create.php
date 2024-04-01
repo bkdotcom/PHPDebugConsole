@@ -34,9 +34,9 @@ final class Create
         }
 
         // Return a new promise that shadows the given thenable.
-        $waitfn = \method_exists($value, 'wait') ? array($value, 'wait') : null;
-        $cancelfn = \method_exists($value, 'cancel') ? array($value, 'cancel') : null;
-        $promise = new Promise($waitfn, $cancelfn);
+        $waitFn = \method_exists($value, 'wait') ? array($value, 'wait') : null;
+        $cancelFn = \method_exists($value, 'cancel') ? array($value, 'cancel') : null;
+        $promise = new Promise($waitFn, $cancelFn);
         $value->then(array($promise, 'resolve'), array($promise, 'reject'));
         return $promise;
     }
@@ -74,7 +74,7 @@ final class Create
     /**
      * Returns an iterator for the given value.
      *
-     * @param mixed $value Value to Iteratify
+     * @param mixed $value Value to Iterator-ify
      *
      * @return Iterator
      */

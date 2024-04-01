@@ -31,7 +31,7 @@ class Abstraction extends Event
      * Constructor
      *
      * @param string $type   value type (one of the Abstracter TYPE_XXX constants)
-     * @param array  $values abtraction values
+     * @param array  $values Abstraction values
      */
     public function __construct($type, $values = array())
     {

@@ -147,11 +147,11 @@ class CurlHttpMessageMiddlewareTest extends DebugTestFramework
     }
 
     /**
-     * Test asyncronous request'
+     * Test asynchronous request'
      *
      * @return void
      */
-    public function testAsyncronous()
+    public function testAsynchronous()
     {
         if (PHP_VERSION_ID < 50500) {
             self::markTestSkipped('requires php 5.5 (yield)');
@@ -165,7 +165,7 @@ class CurlHttpMessageMiddlewareTest extends DebugTestFramework
             'html' => '<li class="m_group" data-channel="general.CurlHttpMessage" data-icon="fa fa-exchange" id="curl_%s">
                 <div class="group-header">%sCurlHttpMessage(%sGET%shttp://example.com/%s)</span></div>
                 <ul class="group-body">
-                    <li class="m_info" data-channel="general.CurlHttpMessage" data-icon="fa fa-random"><span class="no-quotes t_string">asyncronous</span></li>
+                    <li class="m_info" data-channel="general.CurlHttpMessage" data-icon="fa fa-random"><span class="no-quotes t_string">asynchronous</span></li>
                     <li class="m_log" data-channel="general.CurlHttpMessage">%srequest headers</span> = <span class="t_string">GET / HTTP/1.1%A</li>
                     <li class="m_time" data-channel="general.CurlHttpMessage"><span class="no-quotes t_string">time: %f %s</span></li>
                     <li class="m_log" data-channel="general.CurlHttpMessage"><span class="no-quotes t_string">response headers</span> = <span class="t_string">HTTP/1.1 202 Accepted<span class="ws_r"></span><span class="ws_n"></span>
@@ -205,7 +205,7 @@ class CurlHttpMessageMiddlewareTest extends DebugTestFramework
                     1 => array(
                         'method' => 'info',
                         'args' => array(
-                            'asyncronous',
+                            'asynchronous',
                         ),
                         'meta' => array(
                             'icon' => 'fa fa-random',
@@ -282,11 +282,11 @@ class CurlHttpMessageMiddlewareTest extends DebugTestFramework
     }
 
     /**
-     * Test asyncronous request with result not attached to request
+     * Test asynchronous request with result not attached to request
      *
      * @return void
      */
-    public function testAsyncronousSeparate()
+    public function testAsynchronousSeparate()
     {
         if (PHP_VERSION_ID < 50500) {
             self::markTestSkipped('requires php 5.5 (yield)');
@@ -303,7 +303,7 @@ class CurlHttpMessageMiddlewareTest extends DebugTestFramework
             'html' => '<li class="m_group" data-channel="general.CurlHttpMessage" data-icon="fa fa-exchange" id="curl_%s">
                     <div class="group-header">%sCurlHttpMessage(%sGET%shttp://example.com/%s)</span></div>
                     <ul class="group-body">
-                        <li class="m_info" data-channel="general.CurlHttpMessage" data-icon="fa fa-random"><span class="no-quotes t_string">asyncronous</span></li>
+                        <li class="m_info" data-channel="general.CurlHttpMessage" data-icon="fa fa-random"><span class="no-quotes t_string">asynchronous</span></li>
                         <li class="m_log" data-channel="general.CurlHttpMessage">%srequest headers</span> = <span class="t_string">GET / HTTP/1.1%A</li>
                     </ul>
                 </li>
@@ -371,7 +371,7 @@ class CurlHttpMessageMiddlewareTest extends DebugTestFramework
             'html' => '<li class="expanded m_group" data-channel="general.CurlHttpMessage" data-icon="fa fa-exchange" id="curl_%s">
                     <div class="group-header">%sCurlHttpMessage(%sGET%shttp://example.com/%s)</span></div>
                     <ul class="group-body">
-                        <li class="m_info" data-channel="general.CurlHttpMessage" data-icon="fa fa-random"><span class="no-quotes t_string">asyncronous</span></li>
+                        <li class="m_info" data-channel="general.CurlHttpMessage" data-icon="fa fa-random"><span class="no-quotes t_string">asynchronous</span></li>
                         <li class="m_log" data-channel="general.CurlHttpMessage"><span class="no-quotes t_string">request headers</span> = <span class="t_string">GET / HTTP/1.1%A</li>
                         <li class="m_warn" data-channel="general.CurlHttpMessage" data-detect-files="true" data-file="%s" data-line="%s"><span class="no-quotes t_string">bdk\CurlHttpMessage\Exception\RequestException</span>, <span class="t_int">0</span>, <span class="t_string">Error Communicating with Server</span></li>
                         <li class="m_time" data-channel="general.CurlHttpMessage"><span class="no-quotes t_string">time: %f %s</span></li>

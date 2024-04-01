@@ -95,7 +95,7 @@ class Highlight implements AssetProviderInterface
                                     if (["class","colspan"].indexOf(this.name) < 0) {
                                         $pre.attr(this.name, this.value)
                                         if (this.name.indexOf("data") < 0) {
-                                            // dont remove data attr... seems to remove all data attrs & only 1st data attr will get moved
+                                            // don\'t remove data attr... seems to remove all data attrs & only 1st data attr will get moved
                                             $high.removeAttr(this.name)
                                         }
                                     }

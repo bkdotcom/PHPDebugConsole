@@ -61,7 +61,7 @@ class LogEntry extends Event implements JsonSerializable
             'args' => $args,
             'meta' => $meta,
             'method' => $method,
-            'numArgs' => 0,     // number of initial non-meta aargs passed (does not include added default values)
+            'numArgs' => 0,     // number of initial non-meta args passed (does not include added default values)
             'return' => null,
         );
         $metaExtracted = $this->metaExtract($this->values['args']);

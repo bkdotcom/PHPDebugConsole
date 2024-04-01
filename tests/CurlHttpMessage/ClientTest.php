@@ -47,7 +47,7 @@ class ClientTest extends TestCase
     public function testCanSendAsyncGetRequests()
     {
         $client = new Client(array(
-            'isAsyncronous' => true,
+            'isAsynchronous' => true,
         ));
         $promise = $client->get($this->baseUrl . '/echo');
         self::assertInstanceOf($this->classes['PromiseInterface'], $promise);
@@ -150,7 +150,7 @@ class ClientTest extends TestCase
         ]);
         $options = \bdk\Debug\Utility\Reflection::propGet($client, 'options');
         self::assertSame(['User-agent' => 'default'], $options['headers']);
-        // self::assertFalse($options['isAsyncronous']);
+        // self::assertFalse($options['isAsynchronous']);
         // self::assertIsArray($options['allow_redirects']);
         // self::assertTrue($options['http_errors']);
         // self::assertTrue($options['decode_content']);
@@ -762,7 +762,7 @@ class ClientTest extends TestCase
             'handler' => $mock,
         ]);
         $client->request('GET', 'http://foo.com');
-        self::assertFalse($mock->getLastOptions()['isAsyncronous']);
+        self::assertFalse($mock->getLastOptions()['isAsynchronous']);
     }
 
     public function testSendSendsWithSync()
@@ -774,7 +774,7 @@ class ClientTest extends TestCase
             'handler' => $mock,
         ]);
         $client->handle($this->factory->request('GET', 'http://foo.com'));
-        self::assertFalse($mock->getLastOptions()['isAsyncronous']);
+        self::assertFalse($mock->getLastOptions()['isAsynchronous']);
     }
 
     public function testSendWithInvalidHeader()

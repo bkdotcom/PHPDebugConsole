@@ -139,7 +139,7 @@ class Client extends AbstractClient
      */
     public function handle(RequestInterface $request, array $options = array()) // @phpcs:ignore Generic.CodeAnalysis.UselessOverridingMethod
     {
-        $options['isAsyncronous'] = false;
+        $options['isAsynchronous'] = false;
         $promise = parent::handle($request, $options);
         return $promise->wait();
     }

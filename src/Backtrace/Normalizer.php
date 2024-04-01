@@ -53,7 +53,7 @@ class Normalizer
             $frame = self::normalizeFrameFunction($frame);
             if (\in_array($frame['function'], array('call_user_func', 'call_user_func_array'), true)) {
                 // don't include this frame
-                //   backtrace only includes when used within namespace and not fully-quallified
+                //   backtrace only includes when used within namespace and not fully-qualified
                 //   \call_user_func(); // not in trace... same as calling func directly
                 continue;
             }

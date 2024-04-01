@@ -441,7 +441,7 @@ class StatementInfo extends AbstractComponent
     }
 
     /**
-     * Process query analysys test and log result if test fails
+     * Process query analysis test and log result if test fails
      *
      * @param array|closure $test query test
      *

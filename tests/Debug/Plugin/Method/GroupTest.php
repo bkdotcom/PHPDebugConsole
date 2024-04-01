@@ -841,7 +841,7 @@ class GroupTest extends DebugTestFramework
                 $this->debug->log('in inner');
 
         /*
-            collect some info before outputing
+            collect some info before outputting
             confirm nothing has been closed yet
         */
         $onOutputVals = array();

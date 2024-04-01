@@ -28,7 +28,7 @@ class Base extends AbstractComponent
     /** @var bool */
     public $crateRaw = true;    // whether dump() should crate "raw" value
                                 //   when processing log this is set to false
-                                //   so not unecessarily re-crating arrays
+                                //   so not unnecessarily re-crating arrays
     /** @var Debug */
     public $debug;
 
@@ -80,7 +80,7 @@ class Base extends AbstractComponent
     /**
      * Process log entry
      *
-     * Transmogrify log entry to chromelogger format
+     * Transmogrify log entry to chromeLogger format
      *
      * @param LogEntry $logEntry LogEntry instance
      *
@@ -102,7 +102,7 @@ class Base extends AbstractComponent
     }
 
     /**
-     * Cooerce value to string
+     * Coerce value to string
      *
      * @param mixed $val  value
      * @param array $opts $options passed to dump

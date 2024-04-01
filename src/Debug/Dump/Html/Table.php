@@ -66,7 +66,7 @@ class Table
             "\n"
                 . $this->buildCaption()
                 . $this->buildHeader()
-                . $this->buildbody($rows)
+                . $this->buildBody($rows)
                 . $this->buildFooter()
         );
     }

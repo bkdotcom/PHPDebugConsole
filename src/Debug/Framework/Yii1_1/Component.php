@@ -20,6 +20,8 @@ use bdk\Debug\Framework\Yii1_1\PdoCollector;
 use bdk\Debug\LogEntry;
 use CApplication;
 use CApplicationComponent;
+use CEmailLogRoute;
+use CLogRoute;
 use Yii;
 
 /**
@@ -177,6 +179,23 @@ class Component extends CApplicationComponent
             return;
         }
         $this->logRoute = LogRoute::getInstance();
+        if ($this->debug->rootInstance->getCfg('output') === false) {
+            return;
+        }
+        // we're outputting log info -> disable email log route
+        $routes = $this->yiiApp->getComponent('log')->getRoutes()->toArray();
+        $disabled = 0;
+        \array_walk($routes, static function (CLogRoute $route) use (&$disabled) {
+            if ($route instanceof CEmailLogRoute) {
+                $route->enabled = false;
+                $disabled++;
+            }
+        });
+        if ($disabled > 0) {
+            $this->debug->groupSummary();
+            $this->debug->log('Disabled Yii email log route(s)');
+            $this->debug->groupEnd();
+        }
     }
 
     /**

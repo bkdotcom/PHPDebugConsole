@@ -13,6 +13,7 @@
 namespace bdk\Debug\Dump;
 
 use bdk\Debug;
+use bdk\Debug\Dump\TextAnsi\Value;
 use bdk\Debug\LogEntry;
 
 /**
@@ -27,13 +28,15 @@ class TextAnsi extends Text
         'ansi' => 'default',    // default | true | false  (STDOUT & STDERR streams will default to true)
         'escapeCodes' => array(
             'arrayKey' => "\e[38;5;83m",    // yellow
+            'binary' => "\e[30;48;5;250m",  // black foreground / grey background
+            'char' => "\e[38;5;208m",       // orange
             'excluded' => "\e[38;5;9m",     // red
             'false' => "\e[91m",            // red
             'keyword' => "\e[38;5;45m",     // blue
-            'maxlen' => "\e[30;48;5;41m",   // light green background
+            'maxlen' => "\e[30;48;5;41m",   // black foreground / light-green background
             'muted' => "\e[38;5;250m",      // dark grey
             'numeric' => "\e[96m",          // blue
-            'operator' => "\e[38;5;130m",   // green
+            'operator' => "\e[38;5;224m",   // "misty rose"
             'property' => "\e[38;5;83m",    // yellow
             'punct' => "\e[38;5;245m",      // grey  (brackets)
             'quote' => "\e[38;5;250m",      // grey
@@ -86,6 +89,7 @@ class TextAnsi extends Text
         if ($escapeCode) {
             $strIndent = \str_repeat('    ', $this->depth);
             $str = \preg_replace('#^(' . $strIndent . ')(.+)$#m', '$1' . $escapeCode . '$2' . "\e[0m", $str);
+            $this->valDumper->escapeReset = "\e[0m";
         }
         return $str;
     }
@@ -98,7 +102,7 @@ class TextAnsi extends Text
     protected function getValDumper()
     {
         if (!$this->valDumper) {
-            $this->valDumper = new TextAnsiValue($this);
+            $this->valDumper = new Value($this);
             $this->valDumper->setCfg($this->cfg);
         }
         return $this->valDumper;

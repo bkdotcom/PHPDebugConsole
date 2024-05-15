@@ -16,10 +16,6 @@ export function init ($delegateNode) {
   })
   $delegateNode.on('shown.debug.tab', function (e) {
     var $target = $(e.target)
-    if ($target.hasClass('string-raw')) {
-      $target.debugEnhance()
-      return
-    }
     $target.find('.m_alert, .group-body:visible').debugEnhance()
   })
 }

@@ -13,14 +13,15 @@ use bdk\Test\Debug\DebugTestFramework;
  * @covers \bdk\Debug\Abstraction\Abstracter
  * @covers \bdk\Debug\Abstraction\AbstractString
  * @covers \bdk\Debug\Abstraction\Type
- * @covers \bdk\Debug\Dump\BaseValue
+ * @covers \bdk\Debug\Dump\AbstractValue
+ * @covers \bdk\Debug\Dump\Base\Value
  * @covers \bdk\Debug\Dump\Html
  * @covers \bdk\Debug\Dump\Html\HtmlString
  * @covers \bdk\Debug\Dump\Html\Value
  * @covers \bdk\Debug\Dump\Text
+ * @covers \bdk\Debug\Dump\Text\Value
  * @covers \bdk\Debug\Dump\TextAnsi
- * @covers \bdk\Debug\Dump\TextAnsiValue
- * @covers \bdk\Debug\Dump\TextValue
+ * @covers \bdk\Debug\Dump\TextAnsi\Value
  */
 class BasicTest extends DebugTestFramework
 {
@@ -95,7 +96,7 @@ class BasicTest extends DebugTestFramework
                     'chromeLogger' => '[["callable: bdk\\\Test\\\Debug\\\Fixture\\\TestObj::testBaseStatic"],null,""]',
                     'html' => '<li class="m_log"><span class="t_callable"><span class="t_type">callable</span> <span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>TestObj</span><span class="t_operator">::</span><span class="t_identifier">testBaseStatic</span></span></li>',
                     'script' => 'console.log("callable: bdk\\\Test\\\Debug\\\Fixture\\\TestObj::testBaseStatic");',
-                    'streamAnsi' => "callable: \e[38;5;250mbdk\Test\Debug\Fixture\\\e[0m\e[1mTestObj\e[22m\e[38;5;130m::\e[0m\e[1mtestBaseStatic\e[22m",
+                    'streamAnsi' => "callable: \e[38;5;250mbdk\Test\Debug\Fixture\\\e[0m\e[1mTestObj\e[22m\e[38;5;224m::\e[0m\e[1mtestBaseStatic\e[22m",
                     'text' => 'callable: bdk\Test\Debug\Fixture\TestObj::testBaseStatic',
                     'wamp' => array(
                         'log',
@@ -116,7 +117,7 @@ class BasicTest extends DebugTestFramework
             'classname' => array(
                 'log',
                 array(
-                    Debug::_getInstance()->abstracter->crateWithVals(
+                    Debug::getInstance()->abstracter->crateWithVals(
                         'SomeNamespace\Classname',
                         array('typeMore' => Type::TYPE_STRING_CLASSNAME)
                     ),
@@ -126,9 +127,10 @@ class BasicTest extends DebugTestFramework
                         'method' => 'log',
                         'args' => array(
                             array(
-                                'debug' => Abstracter::ABSTRACTION,
                                 'brief' => false,
-                                'strlen' => null,
+                                'debug' => Abstracter::ABSTRACTION,
+                                // 'strlen' => 23,
+                                // 'strlenValue' => 23,
                                 'type' => Type::TYPE_STRING,
                                 'typeMore' => Type::TYPE_STRING_CLASSNAME,
                                 'value' => 'SomeNamespace\Classname',
@@ -138,6 +140,53 @@ class BasicTest extends DebugTestFramework
                     ),
                     'html' => '<li class="m_log"><span class="classname no-quotes t_string" data-type-more="classname"><span class="namespace">SomeNamespace\</span>Classname</span></li>',
                     'text' => 'SomeNamespace\Classname',
+                ),
+            ),
+
+            'constant' => array(
+                'log',
+                array(
+                    Debug::getInstance()->abstracter->crateWithVals(
+                        'constant value',
+                        array(
+                            'type' => Type::TYPE_CONST,
+                            'name' => 'Test\Thing::TEST_CONSTANT',
+                        ),
+                    ),
+                ),
+                array(
+                    'entry' => array(
+                        'method' => 'log',
+                        'args' => array(
+                            array(
+                                'brief' => false,
+                                'debug' => Abstracter::ABSTRACTION,
+                                'name' => 'Test\Thing::TEST_CONSTANT',
+                                'type' => Type::TYPE_CONST,
+                                'typeMore' => null,
+                                'value' => 'constant value',
+                            ),
+                        ),
+                        'meta' => array(),
+                    ),
+                    'chromeLogger' => '[["Test\\\\Thing::TEST_CONSTANT"],null,""]',
+                    'html' => '<li class="m_log"><span class="t_const" title="value: &quot;constant value&quot;"><span class="classname"><span class="namespace">Test\</span>Thing</span><span class="t_operator">::</span><span class="t_identifier">TEST_CONSTANT</span></span></li>',
+                    'script' => 'console.log("Test\\\\Thing::TEST_CONSTANT");',
+                    'streamAnsi' => "\e[38;5;250mTest\\\e[0m\e[1mThing\e[22m\e[38;5;224m::\e[0m\e[1mTEST_CONSTANT\e[22m",
+                    'text' => 'Test\Thing::TEST_CONSTANT',
+                    'wamp' => array(
+                        'log',
+                        array(
+                            array(
+                                'brief' => false,
+                                'debug' => Abstracter::ABSTRACTION,
+                                'name' => 'Test\Thing::TEST_CONSTANT',
+                                'type' => Type::TYPE_CONST,
+                                'typeMore' => null,
+                                'value' => 'constant value',
+                            ),
+                        ),
+                    ),
                 ),
             ),
 
@@ -269,7 +318,7 @@ class BasicTest extends DebugTestFramework
                     'chromeLogger' => '[["123.45"],null,""]',
                     'html' => '<li class="m_log"><span class="t_string" data-type-more="numeric">123.45</span></li>',
                     'script' => 'console.log("123.45");',
-                    'streamAnsi' => "\e[38;5;250m\"\e[96m123.45\e[38;5;250m\"\e[0m",
+                    'streamAnsi' => "\e[38;5;250m\"\e[0m\e[96m123.45\e[0m\e[38;5;250m\"\e[0m",
                     'text' => '"123.45"',
                     'wamp' => array(
                         'log',
@@ -379,7 +428,7 @@ class BasicTest extends DebugTestFramework
                     'chromeLogger' => '[["' . $ts . ' (' . $datetime . ')"],null,""]',
                     'html' => '<li class="m_log"><span class="timestamp value-container" title="' . $datetime . '"><span class="t_string" data-type-more="timestamp">' . $ts . '</span></span></li>',
                     'script' => 'console.log("' . $ts . ' (' . $datetime . ')");',
-                    'streamAnsi' => "📅 \e[38;5;250m\"\e[96m" . $ts . "\e[38;5;250m\"\e[0m \e[38;5;250m(" . $datetime . ")\e[0m",
+                    'streamAnsi' => "📅 \e[38;5;250m\"\e[0m\e[96m" . $ts . "\e[0m\e[38;5;250m\"\e[0m \e[38;5;250m(" . $datetime . ")\e[0m",
                     'text' => '📅 "' . $ts . '" (' . $datetime . ')',
                     'wamp' => array(
                         'log',
@@ -387,7 +436,8 @@ class BasicTest extends DebugTestFramework
                             array(
                                 'brief' => false,
                                 'debug' => Abstracter::ABSTRACTION,
-                                'strlen' => null,
+                                // 'strlen' => 10,
+                                // 'strlenValue' => 10,
                                 'type' => Type::TYPE_STRING,
                                 'typeMore' => Type::TYPE_TIMESTAMP,
                                 'value' => (string) $ts,
@@ -407,7 +457,7 @@ class BasicTest extends DebugTestFramework
                     'chromeLogger' => '[["499190400 (1985-10-26 16:00:00 GMT)"],null,""]',
                     'html' => '<li class="m_log"><span class="timestamp value-container" title="1985-10-26 16:00:00 GMT"><span class="t_string" data-type-more="timestamp">499190400</span></span></li>',
                     'script' => 'console.log("499190400 (1985-10-26 16:00:00 GMT)");',
-                    'streamAnsi' => "📅 \e[38;5;250m\"\e[96m499190400\e[38;5;250m\"\e[0m \e[38;5;250m(1985-10-26 16:00:00 GMT)\e[0m",
+                    'streamAnsi' => "📅 \e[38;5;250m\"\e[0m\e[96m499190400\e[0m\e[38;5;250m\"\e[0m \e[38;5;250m(1985-10-26 16:00:00 GMT)\e[0m",
                     'text' => '📅 "499190400" (1985-10-26 16:00:00 GMT)',
                     'wamp' => array(
                         'log',
@@ -415,7 +465,8 @@ class BasicTest extends DebugTestFramework
                             array(
                                 'brief' => false,
                                 'debug' => Abstracter::ABSTRACTION,
-                                'strlen' => null,
+                                // 'strlen' => 9,
+                                // 'strlenValue' => 9,
                                 'type' => Type::TYPE_STRING,
                                 'typeMore' => Type::TYPE_TIMESTAMP,
                                 'value' => '499190400',
@@ -437,7 +488,7 @@ class BasicTest extends DebugTestFramework
                     'chromeLogger' => '[["' . $ts . ' (' . $datetime . ')"],null,""]',
                     'html' => '<li class="m_log"><span class="timestamp value-container" title="' . $datetime . '"><span class="t_string testaroo" data-type-more="timestamp">' . $ts . '</span></span></li>',
                     'script' => 'console.log("' . $ts . ' (' . $datetime . ')");',
-                    'streamAnsi' => "📅 \e[38;5;250m\"\e[96m" . $ts . "\e[38;5;250m\"\e[0m \e[38;5;250m(" . $datetime . ")\e[0m",
+                    'streamAnsi' => "📅 \e[38;5;250m\"\e[0m\e[96m" . $ts . "\e[0m\e[38;5;250m\"\e[0m \e[38;5;250m(" . $datetime . ")\e[0m",
                     'text' => '📅 "' . $ts . '" (' . $datetime . ')',
                     'wamp' => array(
                         'log',
@@ -450,7 +501,8 @@ class BasicTest extends DebugTestFramework
                                 ),
                                 'brief' => false,
                                 'debug' => Abstracter::ABSTRACTION,
-                                'strlen' => null,
+                                // 'strlen' => 10,
+                                // 'strlenValue' => 10,
                                 'type' => Type::TYPE_STRING,
                                 'typeMore' => Type::TYPE_TIMESTAMP,
                                 'value' => (string) $ts,
@@ -519,7 +571,8 @@ class BasicTest extends DebugTestFramework
                             array(
                                 'brief' => false, // crateWithVals... initially treated as string
                                 'debug' => Abstracter::ABSTRACTION,
-                                'strlen' => null,
+                                // 'strlen' => 10,
+                                // 'strlenValue' => 10,
                                 'type' => Type::TYPE_UNKNOWN,
                                 'typeMore' => null,
                                 'value' => 'mysteryVal',
@@ -527,7 +580,23 @@ class BasicTest extends DebugTestFramework
                         ),
                         'meta' => array(),
                     ),
+                    'chromeLogger' => '[[{"type":"unknown","value":"mysteryVal"}],null,""]',
                     'html' => '<li class="m_log"><span class="t_unknown">unknown type</span></li>',
+                    'script' => 'console.log({"type":"unknown","value":"mysteryVal"});',
+                    'streamAnsi' => "unknown: mysteryVal",
+                    'text' => 'unknown: mysteryVal',
+                    'wamp' => array(
+                        'log',
+                        array(
+                            array(
+                                'brief' => false,
+                                'debug' => Abstracter::ABSTRACTION,
+                                'type' => Type::TYPE_UNKNOWN,
+                                'typeMore' => null,
+                                'value' => 'mysteryVal',
+                            ),
+                        ),
+                    ),
                 ),
             ),
         );

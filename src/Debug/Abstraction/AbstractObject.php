@@ -172,6 +172,7 @@ class AbstractObject extends AbstractComponent
         'isExcluded' => false,  // don't exclude if we're debugging directly
         'isMaxDepth' => false,
         'isRecursion' => false,
+        'keys' => array(),
         // methods may be populated with __toString info, or methods with staticVars
         'properties' => array(),
         'scopeClass' => '',
@@ -281,10 +282,7 @@ class AbstractObject extends AbstractComponent
      */
     private function doAbstraction(ObjectAbstraction $abs)
     {
-        if ($abs['isMaxDepth']) {
-            return;
-        }
-        if ($abs['isRecursion']) {
+        if ($abs['isMaxDepth'] || $abs['isRecursion']) {
             return;
         }
         $abs['isTraverseOnly'] = $this->helper->isTraverseOnly($abs);

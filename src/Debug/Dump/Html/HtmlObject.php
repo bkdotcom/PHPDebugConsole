@@ -14,6 +14,8 @@ namespace bdk\Debug\Dump\Html;
 
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
+use bdk\Debug\Abstraction\Object\Abstraction as ObjectAbstraction;
+use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Dump\Html\Helper;
 use bdk\Debug\Dump\Html\ObjectCases;
 use bdk\Debug\Dump\Html\ObjectConstants;
@@ -87,11 +89,11 @@ class HtmlObject
     /**
      * Dump object
      *
-     * @param Abstraction $abs Object Abstraction instance
+     * @param ObjectAbstraction $abs Object Abstraction instance
      *
      * @return string html fragment
      */
-    public function dump(Abstraction $abs)
+    public function dump(ObjectAbstraction $abs)
     {
         $classname = $this->dumpClassname($abs);
         if ($abs['isRecursion']) {
@@ -105,16 +107,19 @@ class HtmlObject
                 . $classname . "\n" . '<span class="excluded">NOT INSPECTED</span>';
         }
         if (($abs['cfgFlags'] & AbstractObject::BRIEF) && \strpos(\json_encode($abs['implements']), '"UnitEnum"') !== false) {
+            $this->valDumper->optionSet('tagName', null);
             return $classname;
-        }
-        if (\strpos($abs['sort'], 'inheritance') === 0) {
-            $this->valDumper->setDumpOpt('attribs.class.__push__', 'groupByInheritance');
         }
         $html = $this->dumpToString($abs)
             . $classname . "\n"
-            . '<dl class="object-inner">' . "\n"
-            . $this->dumpInner($abs)
-            . '</dl>' . "\n";
+            . $this->dumpInner($abs);
+        if (\strpos($abs['sort'], 'inheritance') === 0) {
+            $this->valDumper->optionSet('attribs.class.__push__', 'groupByInheritance');
+        }
+        // Were we debugged from inside or outside of the object?
+        $this->valDumper->optionSet('attribs.data-accessible', $abs['scopeClass'] === $abs['className']
+            ? 'private'
+            : 'public');
         return $this->cleanup($html);
     }
 
@@ -164,6 +169,7 @@ class HtmlObject
         $html = \preg_replace('#(?:<dt>(?:extends|implements|phpDoc)</dt>\n)+(<dt|</dl)#', '$1', $html);
         $html = \str_replace(array(
             ' data-attributes="null"',
+            ' data-chars="[]"',
             ' data-declared-prev="null"',
             ' data-inherited-from="null"',
             ' title=""',
@@ -174,27 +180,29 @@ class HtmlObject
     /**
      * Dump the object's details
      *
-     * @param Abstraction $abs Object Abstraction instance
+     * @param ObjectAbstraction $abs Object Abstraction instance
      *
      * @return string html fragment
      */
-    protected function dumpInner(Abstraction $abs)
+    protected function dumpInner(ObjectAbstraction $abs)
     {
-        $html = $this->dumpModifiers($abs);
+        $html = '<dl class="object-inner">' . "\n"
+            . $this->dumpModifiers($abs);
         foreach ($abs['sectionOrder'] as $sectionName) {
             $html .= $this->sectionCallables[$sectionName]($abs);
         }
+        $html .= '</dl>' . "\n";
         return $html;
     }
 
     /**
      * Dump object attributes
      *
-     * @param Abstraction $abs Object Abstraction instance
+     * @param ObjectAbstraction $abs Object Abstraction instance
      *
      * @return string html fragment
      */
-    protected function dumpAttributes(Abstraction $abs)
+    protected function dumpAttributes(ObjectAbstraction $abs)
     {
         $attributes = $abs['attributes'];
         if (!$attributes || !($abs['cfgFlags'] & AbstractObject::OBJ_ATTRIBUTE_OUTPUT)) {
@@ -226,7 +234,10 @@ class HtmlObject
         foreach ($args as $name => $value) {
             $arg = '';
             if (\is_string($name)) {
-                $arg .= '<span class="t_parameter-name">' . \htmlspecialchars($name) . '</span>'
+                $arg .= '<span class="t_parameter-name">' . $this->valDumper->dump($name, array(
+                    'tagName' => null,
+                    'type' => Type::TYPE_STRING,
+                )) . '</span>'
                     . '<span class="t_punct t_colon">:</span>';
             }
             $arg .= $this->valDumper->dump($value);
@@ -241,11 +252,11 @@ class HtmlObject
      * Dump classname of object
      * Classname may be wrapped in a span that includes phpDoc summary / desc
      *
-     * @param Abstraction $abs Object Abstraction instance
+     * @param ObjectAbstraction $abs Object Abstraction instance
      *
      * @return string html fragment
      */
-    protected function dumpClassname(Abstraction $abs)
+    protected function dumpClassname(ObjectAbstraction $abs)
     {
         $phpDocOutput = $abs['cfgFlags'] & AbstractObject::PHPDOC_OUTPUT;
         $title = $phpDocOutput
@@ -256,7 +267,7 @@ class HtmlObject
             return $this->html->buildTag(
                 'span',
                 \array_filter(array(
-                    'class' => 't_const',
+                    'class' => \array_merge($this->valDumper->optionGet('attribs')['class'], array('t_const')),
                     'title' => $title,
                 )),
                 $this->valDumper->markupIdentifier($abs['className'] . '::' . $abs['properties']['name']['value'])
@@ -270,11 +281,11 @@ class HtmlObject
     /**
      * Dump classnames of classes obj extends
      *
-     * @param Abstraction $abs Object Abstraction instance
+     * @param ObjectAbstraction $abs Object Abstraction instance
      *
      * @return string html fragment
      */
-    protected function dumpExtends(Abstraction $abs)
+    protected function dumpExtends(ObjectAbstraction $abs)
     {
         return '<dt>extends</dt>' . "\n"
             . \implode(\array_map(function ($classname) {
@@ -285,11 +296,11 @@ class HtmlObject
     /**
      * Dump classnames of interfaces obj extends
      *
-     * @param Abstraction $abs Object Abstraction instance
+     * @param ObjectAbstraction $abs Object Abstraction instance
      *
      * @return string html fragment
      */
-    protected function dumpImplements(Abstraction $abs)
+    protected function dumpImplements(ObjectAbstraction $abs)
     {
         if (empty($abs['implements'])) {
             return '';
@@ -301,11 +312,11 @@ class HtmlObject
     /**
      * Dump modifiers (final & readonly)
      *
-     * @param Abstraction $abs Object Abstraction instance
+     * @param ObjectAbstraction $abs Object Abstraction instance
      *
      * @return string html fragment
      */
-    protected function dumpModifiers(Abstraction $abs)
+    protected function dumpModifiers(ObjectAbstraction $abs)
     {
         $modifiers = \array_keys(\array_filter(array(
             'final' => $abs['isFinal'],
@@ -323,11 +334,11 @@ class HtmlObject
     /**
      * Dump object's __toString or stringified value
      *
-     * @param Abstraction $abs Object Abstraction instance
+     * @param ObjectAbstraction $abs Object Abstraction instance
      *
      * @return string html fragment
      */
-    protected function dumpToString(Abstraction $abs)
+    protected function dumpToString(ObjectAbstraction $abs)
     {
         $len = 0;
         $val = $this->getToStringVal($abs, $len);
@@ -360,12 +371,12 @@ class HtmlObject
     /**
      * Get object's "string" representation
      *
-     * @param Abstraction $abs    Object Abstraction instance
-     * @param int         $strlen updated to length of non-truncated value
+     * @param ObjectAbstraction $abs    Object Abstraction instance
+     * @param int               $strlen updated to length of non-truncated value
      *
      * @return string|Abstraction
      */
-    private function getToStringVal(Abstraction $abs, &$strlen)
+    private function getToStringVal(ObjectAbstraction $abs, &$strlen)
     {
         $val = $abs['className'];
         if ($abs['stringified']) {
@@ -373,12 +384,9 @@ class HtmlObject
         } elseif (($abs['cfgFlags'] & AbstractObject::TO_STRING_OUTPUT) && isset($abs['methods']['__toString']['returnValue'])) {
             $val = $abs['methods']['__toString']['returnValue'];
         }
-        if ($val instanceof Abstraction) {
-            $strlen = $val['strlen'];
-            $val = $val['value'];
-        } elseif (\is_string($val)) {
-            $strlen = \strlen($val);
-        }
+        $strlen = $val instanceof Abstraction && $val['strlen']
+            ? $val['strlen']
+            : \strlen((string) $val);
         return $val;
     }
 }

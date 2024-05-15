@@ -15,6 +15,7 @@ namespace bdk\Debug\Dump\Html;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
+use bdk\Debug\Abstraction\Type;
 
 /**
  * Dump object methods as HTML
@@ -86,8 +87,8 @@ class ObjectMethods extends AbstractObjectSection
     /**
      * Dump method name with phpdoc summary & desc
      *
-     * @param string $name Method name
-     * @param array  $info Method info
+     * @param Abstraction|string $name Method name
+     * @param array              $info Method info
      *
      * @return string html fragment
      */
@@ -98,13 +99,18 @@ class ObjectMethods extends AbstractObjectSection
             array(
                 'class' => 't_identifier',
                 'title' => $this->opts['phpDocOutput']
-                    ? \trim($info['phpDoc']['summary']
+                    ? \trim(
+                        $info['phpDoc']['summary']
                         . ($this->opts['methodDescOutput']
                             ? "\n\n" . $info['phpDoc']['desc']
-                            : ''))
+                            : '')
+                    )
                     : '',
             ),
-            $name
+            $this->valDumper->dump($name, array(
+                'tagName' => null,
+                'type' => Type::TYPE_STRING,
+            ))
         );
     }
 
@@ -119,7 +125,7 @@ class ObjectMethods extends AbstractObjectSection
     {
         $params = \array_map(array($this, 'dumpParam'), $info['params']);
         return '<span class="t_punct">(</span>'
-            . \implode('<span class="t_punct">,</span> ', $params)
+            . \implode('<span class="t_punct">,</span>' . "\n", $params)
             . '<span class="t_punct">)</span>';
     }
 
@@ -132,17 +138,22 @@ class ObjectMethods extends AbstractObjectSection
      */
     protected function dumpParam(array $info)
     {
+        $attribs = array(
+            'class' => array(
+                'isPromoted' => $info['isPromoted'],
+                'parameter' => true,
+            ),
+            'data-attributes' => $info['attributes'],
+            'data-chars' => $this->valDumper->findChars(\json_encode($info['attributes'], JSON_UNESCAPED_UNICODE)),
+        );
+        $attribs =  \array_intersect_key($attribs, \array_filter(array(
+            'class' => true,
+            'data-attributes' => $this->opts['paramAttributeOutput'] && $info['attributes'],
+            'data-chars' => $this->opts['paramAttributeOutput'],
+        )));
         return $this->html->buildTag(
             'span',
-            array(
-                'class' => array(
-                    'isPromoted' => $info['isPromoted'],
-                    'parameter' => true,
-                ),
-                'data-attributes' => $this->opts['paramAttributeOutput']
-                    ? ($info['attributes'] ?: null)
-                    : null,
-            ),
+            $attribs,
             (!empty($info['type'])
                 ? $this->helper->markupType($info['type']) . ' '
                 : '')
@@ -195,7 +206,9 @@ class ObjectMethods extends AbstractObjectSection
                     ? $info['desc']
                     : '',
             ),
-            \htmlspecialchars($name)
+            $this->valDumper->dump($name, array(
+                'tagName' => null,
+            ))
         );
     }
 

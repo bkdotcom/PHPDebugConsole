@@ -375,7 +375,7 @@ class UploadedFile implements UploadedFileInterface
      */
     private function assertSize($size)
     {
-        if ($size === null || \is_int($size) && $size > -1) {
+        if ($size === null || (\is_int($size) && $size > -1)) {
             return;
         }
         throw new InvalidArgumentException(\sprintf('Upload file size must be a positive integer.  %s provided', \gettype($size)));

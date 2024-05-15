@@ -221,10 +221,10 @@ class StringUtil
         }
         $isSerialized = false;
         $matches = array();
-        if (\preg_match('/^(N|b:[01]|i:\d+|d:\d+\.\d+|s:\d+:".*");$/', $val)) {
+        if (\preg_match('/^(N|b:[01]|i:\d+|d:\d+\.\d+|s:\d+:".*");$/s', $val)) {
             // null, bool, int, float, or string
             $isSerialized = true;
-        } elseif (\preg_match('/^(?:a|O:8:"stdClass"):\d+:\{(.+)\}$/', $val, $matches)) {
+        } elseif (\preg_match('/^(?:a|O:8:"stdClass"):\d+:\{(.+)\}$/s', $val, $matches)) {
             // appears to be a serialized array or stdClass object
             // make sure does not contain a serialized obj other than stdClass
             $isSerialized = \preg_match('/[OC]:\d+:"((?!stdClass)[^"])*":\d+:/', $matches[1]) !== 1;
@@ -270,17 +270,17 @@ class StringUtil
      * Prettify JSON string
      * The goal is to format whitespace without effecting the encoding
      *
-     * @param string $json        JSON string to prettify
-     * @param int    $encodeFlags (0) specify json_encode flags
-     *                               we will always add JSON_PRETTY_PRINT
-     *                               we will add JSON_UNESCAPED_SLASHES if source doesn't contain escaped slashes
-     *                               we will add JSON_UNESCAPED_UNICODE IF source doesn't contain escaped unicode
+     * @param string $json           JSON string to prettify
+     * @param int    $encodeFlags    (0) specify json_encode flags
+     *                                 we will add JSON_UNESCAPED_SLASHES if source doesn't contain escaped slashes
+     *                                 we will add JSON_UNESCAPED_UNICODE IF source doesn't contain escaped unicode
+     * @param int    $encodeFlagsAdd (JSON_PRETTY_PRINT) additional flags to add
      *
      * @return string
      */
-    public static function prettyJson($json, $encodeFlags = 0)
+    public static function prettyJson($json, $encodeFlags = 0, $encodeFlagsAdd = JSON_PRETTY_PRINT)
     {
-        $flags = $encodeFlags | JSON_PRETTY_PRINT;
+        $flags = $encodeFlags | $encodeFlagsAdd;
         if (\strpos($json, '\\/') === false) {
             // json doesn't appear to contain escaped slashes
             $flags |= JSON_UNESCAPED_SLASHES;

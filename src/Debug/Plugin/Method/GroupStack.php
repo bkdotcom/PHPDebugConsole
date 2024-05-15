@@ -95,11 +95,13 @@ class GroupStack
             curDepth will fluctuate as we go back through log
             minDepth will decrease as we work our way down/up the groups
         */
-        for ($i = \count($logEntries) - 1; $i >= 0; $i--) {
+        $keys = \array_keys($logEntries);
+        for ($i = \count($keys) - 1; $i >= 0; $i--) {
             if ($this->currentInfo['curDepth'] < 1) {
                 break;
             }
-            $this->getCurrentGroupsPLE($logEntries[$i], $i);
+            $key = $keys[$i];
+            $this->getCurrentGroupsPLE($logEntries[$key], $key);
         }
         return $this->currentInfo['logEntries'];
     }
@@ -278,8 +280,8 @@ class GroupStack
     /**
      * getCurrentGroups: Process LogEntry
      *
-     * @param LogEntry $logEntry LogEntry instance
-     * @param int      $index    logEntry index
+     * @param LogEntry   $logEntry LogEntry instance
+     * @param int|string $index    logEntry index / key
      *
      * @return void
      */

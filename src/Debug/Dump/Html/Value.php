@@ -13,8 +13,9 @@
 namespace bdk\Debug\Dump\Html;
 
 use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Abstraction\Object\Abstraction as ObjectAbstraction;
 use bdk\Debug\Abstraction\Type;
-use bdk\Debug\Dump\BaseValue;
+use bdk\Debug\Dump\Base\Value as BaseValue;
 use bdk\Debug\Dump\Html as Dumper;
 use bdk\Debug\Dump\Html\HtmlObject;
 use bdk\Debug\Dump\Html\HtmlString;
@@ -45,13 +46,18 @@ class Value extends BaseValue
         parent::__construct($dumper); // sets debug and dumper
         $this->html = $this->debug->html;
         $this->string = new HtmlString($this);
+        $this->optionStackPush(array(
+            'charHighlight' => true,
+            'charLink' => true,
+            'sanitize' => true,
+            'sanitizeFirst' => true,
+            'visualWhiteSpace' => true,
+        ));
     }
 
     /**
      * Is value a timestamp?
      * Add classname & title if so
-     *
-     * Extends Base
      *
      * @param mixed       $val value to check
      * @param Abstraction $abs (optional) full abstraction
@@ -61,23 +67,22 @@ class Value extends BaseValue
     public function checkTimestamp($val, Abstraction $abs = null)
     {
         $date = parent::checkTimestamp($val, $abs);
-        if ($date === false) {
-            return false;
-        }
-        $this->setDumpOpt('postDump', function ($dumped, $opts) use ($val, $date) {
-            $attribsContainer = array(
-                'class' => array('timestamp', 'value-container'),
-                'title' => $date,
-            );
-            if ($opts['tagName'] === 'td') {
-                return $this->html->buildTag(
-                    'td',
-                    $attribsContainer,
-                    $this->html->buildTag('span', $opts['attribs'], $val)
+        if ($date) {
+            $this->optionSet('postDump', function ($dumped, $opts) use ($val, $date) {
+                $attribsContainer = array(
+                    'class' => array('timestamp', 'value-container'),
+                    'title' => $date,
                 );
-            }
-            return $this->html->buildTag('span', $attribsContainer, $dumped);
-        });
+                if ($opts['tagName'] === 'td') {
+                    return $this->html->buildTag(
+                        'td',
+                        $attribsContainer,
+                        $this->html->buildTag('span', $opts['attribs'], $val)
+                    );
+                }
+                return $this->html->buildTag('span', $attribsContainer, $dumped);
+            });
+        }
         return $date;
     }
 
@@ -92,61 +97,22 @@ class Value extends BaseValue
      */
     public function dump($val, $opts = array())
     {
-        $opts = $this->setDumpOptDefaults($val, $opts);
-        $val = parent::dump($val, $opts);
-        $this->dumpOptions['attribs']['class'][] = 't_' . $this->dumpOptions['type'];
-        if ($this->dumpOptions['typeMore'] !== null) {
-            $this->dumpOptions['attribs']['data-type-more'] = \trim($this->dumpOptions['typeMore']);
+        $opts = $this->getPerValueOptions($val, $opts);
+        $this->optionStackPush($opts);
+        $val = $this->doDump($val);
+        $this->optionsCurrent['attribs']['class'][] = 't_' . $this->optionsCurrent['type'];
+        if (\in_array($this->optionsCurrent['typeMore'], array(null, Type::TYPE_RAW), true) === false) {
+            $this->optionsCurrent['attribs']['data-type-more'] = \trim($this->optionsCurrent['typeMore']);
         }
-        $tagName = $this->dumpOptions['tagName'];
-        if ($tagName === '__default__') {
-            $tagName = $this->dumpOptions['type'] === Type::TYPE_OBJECT
-                ? 'div'
-                : 'span';
-        }
+        $tagName = $this->optionsCurrent['tagName'];
         if ($tagName) {
-            $val = $this->html->buildTag($tagName, $this->dumpOptions['attribs'], $val);
+            $val = $this->html->buildTag($tagName, $this->optionsCurrent['attribs'], $val);
         }
-        if ($this->dumpOptions['postDump']) {
-            $val = \call_user_func($this->dumpOptions['postDump'], $val, $this->dumpOptions);
+        if ($this->optionsCurrent['postDump']) {
+            $val = \call_user_func($this->optionsCurrent['postDump'], $val, $this->optionsCurrent);
         }
+        $this->optionStackPop();
         return $val;
-    }
-
-    /**
-     * Get "option" of value being dumped
-     *
-     * @param string $what (optional) name of option to get (ie sanitize, type, typeMore)
-     *
-     * @return mixed
-     */
-    public function getDumpOpt($what = null)
-    {
-        $val = parent::getDumpOpt($what);
-        if ($what === 'tagName' && $val === '__default__') {
-            $val = 'span';
-            if (parent::getDumpOpt('type') === Type::TYPE_OBJECT) {
-                $val = 'div';
-            }
-        }
-        return $val;
-    }
-
-    /**
-     * Set one or more "options" for value being dumped
-     *
-     * @param array|string $what name of value to set (or key/value array)
-     * @param mixed        $val  value
-     *
-     * @return void
-     */
-    public function setDumpOpt($what, $val = null)
-    {
-        if ($what === 'attribs' && empty($val['class'])) {
-            // make sure class is set
-            $val['class'] = array();
-        }
-        parent::setDumpOpt($what, $val);
     }
 
     /**
@@ -164,8 +130,8 @@ class Value extends BaseValue
      */
     public function markupIdentifier($val, $asFunction = false, $tagName = 'span', $attribs = array(), $wbr = false)
     {
-        $parts = $this->parseIdentifier($val, $asFunction);
-        $operator = '<span class="t_operator">' . \htmlspecialchars($parts['operator']) . '</span>';
+        $parts = \array_map(array($this->string, 'dump'), $this->parseIdentifier($val, $asFunction));
+        $operator = '<span class="t_operator">' . $parts['operator'] . '</span>';
         if ($parts['classname']) {
             $classname = $parts['classname'];
             $idx = \strrpos($classname, '\\');
@@ -192,38 +158,51 @@ class Value extends BaseValue
     }
 
     /**
-     * Dump array as html
+     * Set one or more "options" for value being dumped
      *
-     * @param array $array array
+     * @param array|string $what name of value to set (or key/value array)
+     * @param mixed        $val  value
      *
-     * @return string html
+     * @return void
      */
-    protected function dumpArray($array)
+    public function optionSet($what, $val = null)
+    {
+        if ($what === 'attribs' && empty($val['class'])) {
+            // make sure class is set
+            $val['class'] = array();
+        }
+        parent::optionSet($what, $val);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    protected function dumpArray(array $array, Abstraction $abs = null)
     {
         $opts = \array_merge(array(
             'asFileTree' => false,
             'expand' => null,
             'isMaxDepth' => false,
             'showListKeys' => true,
-        ), $this->getDumpOpt());
+        ), $this->optionGet());
         if ($opts['isMaxDepth']) {
-            $this->setDumpOpt('attribs.class.__push__', 'max-depth');
-            return '<span class="t_keyword">array</span>'
-                . ' <span class="t_maxDepth">*MAX DEPTH*</span>';
+            $this->optionSet('attribs.class.__push__', 'max-depth');
+            return '<span class="t_keyword">array</span> <span class="t_maxDepth">*MAX DEPTH*</span>';
         }
         if (empty($array)) {
             return '<span class="t_keyword">array</span><span class="t_punct">()</span>';
         }
         if ($opts['expand'] !== null) {
-            $this->setDumpOpt('attribs.data-expand', $opts['expand']);
+            $this->optionSet('attribs.data-expand', $opts['expand']);
         }
         if ($opts['asFileTree']) {
-            $this->setDumpOpt('attribs.class.__push__', 'array-file-tree');
+            $this->optionSet('attribs.class.__push__', 'array-file-tree');
         }
+        $keys = isset($abs['keys']) ? $abs['keys'] : array();
         $showKeys = $opts['showListKeys'] || !$this->debug->arrayUtil->isList($array);
         return '<span class="t_keyword">array</span><span class="t_punct">(</span>' . "\n"
             . '<ul class="array-inner list-unstyled">' . "\n"
-            . $this->dumpArrayValues($array, $showKeys)
+            . $this->dumpArrayValues($array, $showKeys, $keys)
             . '</ul><span class="t_punct">)</span>';
     }
 
@@ -232,13 +211,17 @@ class Value extends BaseValue
      *
      * @param array $array      array to output
      * @param bool  $outputKeys include key with value?
+     * @param array $absKeys    keys that required abstraction (ie, non-utf8, or containing confusable characters)
      *
      * @return string
      */
-    private function dumpArrayValues(array $array, $outputKeys)
+    private function dumpArrayValues(array $array, $outputKeys, array $absKeys)
     {
         $html = '';
         foreach ($array as $key => $val) {
+            if (isset($absKeys[$key])) {
+                $key = $absKeys[$key];
+            }
             $html .= $outputKeys
                 ? "\t" . '<li>'
                     . $this->html->buildTag(
@@ -295,19 +278,14 @@ class Value extends BaseValue
      */
     protected function dumpConst(Abstraction $abs)
     {
-        $this->setDumpOpt('attribs.title', $abs['value']
+        $this->optionSet('attribs.title', $abs['value']
             ? 'value: ' . $this->debug->getDump('text')->valDumper->dump($abs['value'])
             : null);
         return $this->markupIdentifier($abs['name']);
     }
 
     /**
-     * Dump float value
-     *
-     * @param float       $val float value
-     * @param Abstraction $abs (optional) full abstraction
-     *
-     * @return float|string
+     * {@inheritDoc}
      */
     protected function dumpFloat($val, Abstraction $abs = null)
     {
@@ -334,18 +312,12 @@ class Value extends BaseValue
     /**
      * Dump object as html
      *
-     * @param Abstraction $abs Object Abstraction instance
+     * @param ObjectAbstraction $abs Object Abstraction instance
      *
      * @return string
      */
-    protected function dumpObject(Abstraction $abs)
+    protected function dumpObject(ObjectAbstraction $abs)
     {
-        /*
-            Were we debugged from inside or outside of the object?
-        */
-        $this->setDumpOpt('attribs.data-accessible', $abs['scopeClass'] === $abs['className']
-            ? 'private'
-            : 'public');
         return $this->object->dump($abs);
     }
 
@@ -356,7 +328,7 @@ class Value extends BaseValue
      */
     protected function dumpRecursion()
     {
-        $this->setDumpOpt('type', Type::TYPE_ARRAY);
+        $this->optionSet('type', Type::TYPE_ARRAY);
         return '<span class="t_keyword">array</span> <span class="t_recursion">*RECURSION*</span>';
     }
 
@@ -411,13 +383,13 @@ class Value extends BaseValue
     /**
      * Get dump options
      *
-     * @param mixed $val  value being dumpted
+     * @param mixed $val  value being dumped
      * @param array $opts options for string values
      *                      addQuotes, sanitize, visualWhitespace, etc
      *
-     * @return array
+     * @return array<string,mixed>
      */
-    private function setDumpOptDefaults($val, $opts)
+    protected function getPerValueOptions($val, $opts)
     {
         $attribs = array(
             'class' => array(),
@@ -428,11 +400,17 @@ class Value extends BaseValue
                 $val['attribs']
             );
         }
-        $opts = \array_merge(array(
-            'attribs' => $attribs,
-            'postDump' => null,
-            'tagName' => '__default__',
-        ), $opts);
-        return $opts;
+        $parentOptions = parent::getPerValueOptions($val, $opts);
+        return \array_merge(
+            $parentOptions,
+            array(
+                'attribs' => $attribs,
+                'postDump' => null,
+                'tagName' => $parentOptions['type'] === Type::TYPE_OBJECT
+                    ? 'div'
+                    : 'span',
+            ),
+            $opts
+        );
     }
 }

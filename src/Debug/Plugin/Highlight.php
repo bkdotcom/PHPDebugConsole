@@ -15,7 +15,7 @@ namespace bdk\Debug\Plugin;
 use bdk\Debug\AssetProviderInterface;
 
 /**
- * Register prismjs' javascript & css
+ * Register PrismJs' javascript & css
  */
 class Highlight implements AssetProviderInterface
 {
@@ -57,7 +57,7 @@ class Highlight implements AssetProviderInterface
                 './js/prism.js',
                 'Prism.manual = true;
                 (function(){
-                    $("body").on("enhanced.debug expanded.debug.group", function (e) {
+                    $("body").on("enhanced.debug expanded.debug.group shown.debug.tab", function (e) {
                         var $target = $(e.target)
                         var selector = ".highlight:visible"
                         if (e.type === "enhanced" && $target.hasClass("m_group")) {

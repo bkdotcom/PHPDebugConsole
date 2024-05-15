@@ -90,24 +90,8 @@ class WampCrate
         $args = $this->crate($logEntry['args']);
         $meta = $logEntry['meta'];
         if ($logEntry['method'] === 'error' && !empty($meta['trace'])) {
-            $logEntryTmp = new LogEntry(
-                $this->debug,
-                'trace',
-                array(),
-                array(
-                    'inclContext' => $logEntry->getMeta('inclContext', false),
-                    'trace' => $meta['trace'],
-                )
-            );
-            $this->debug->rootInstance->getPlugin('methodTrace')->doTrace($logEntryTmp);
+            $meta = $this->getErrorTraceMeta($logEntry);
             unset($args[2]); // error's filepath argument
-            $meta = \array_replace_recursive(
-                $meta,
-                $logEntryTmp['meta'],
-                array(
-                    'trace' => $logEntryTmp['args'][0],
-                )
-            );
         }
         if ($this->detectFiles) {
             $meta['foundFiles'] = $this->foundFiles();
@@ -144,15 +128,7 @@ class WampCrate
             case Type::TYPE_OBJECT:
                 return $this->crateObject($clone);
             case Type::TYPE_STRING:
-                $clone['value'] = $this->crateString(
-                    $clone['value'],
-                    $clone['typeMore'] === Type::TYPE_STRING_BINARY
-                );
-                if ($clone['typeMore'] === Type::TYPE_STRING_BINARY) {
-                    // PITA to get strlen in javascript
-                    // pass the length of captured value
-                    $clone['strlenValue'] = \strlen($abs['value']);
-                }
+                $clone['value'] = $this->crateString($clone['value']);
                 if (isset($clone['valueDecoded'])) {
                     $clone['valueDecoded'] = $this->crate($clone['valueDecoded']);
                 }
@@ -239,22 +215,47 @@ class WampCrate
     /**
      * Base64 encode string if it contains non-utf8 characters
      *
-     * @param string $str       string
-     * @param bool   $isNotUtf8 does string contain non-utf8 chars?
+     * @param string $str string
      *
      * @return string
      */
-    private function crateString($str, $isNotUtf8 = false)
+    private function crateString($str)
     {
         if (!$str) {
             return $str;
-        }
-        if ($isNotUtf8) {
-            return '_b64_:' . \base64_encode($str);
         }
         if ($this->detectFiles && $this->debug->utility->isFile($str)) {
             $this->foundFiles[] = $str;
         }
         return $str;
+    }
+
+    /**
+     * Process trace meta data
+     * (so that we find filepaths)
+     *
+     * @param LogEntry $logEntry LogEntry instance
+     *
+     * @return array meta data
+     */
+    private function getErrorTraceMeta(LogEntry $logEntry)
+    {
+        $logEntryTmp = new LogEntry(
+            $this->debug,
+            'trace',
+            array(),
+            array(
+                'inclContext' => $logEntry->getMeta('inclContext', false),
+                'trace' => $logEntry->getMeta('trace'),
+            )
+        );
+        $this->debug->rootInstance->getPlugin('methodTrace')->doTrace($logEntryTmp);
+        return \array_replace_recursive(
+            $logEntry['meta'],
+            $logEntryTmp['meta'],
+            array(
+                'trace' => $logEntryTmp['args'][0],
+            )
+        );
     }
 }

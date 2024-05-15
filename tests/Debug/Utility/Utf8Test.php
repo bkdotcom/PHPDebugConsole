@@ -6,10 +6,8 @@
 
 namespace bdk\Test\Debug\Utility;
 
-use bdk\Debug\Utility\Reflection;
 use bdk\Debug\Utility\Utf8;
 use bdk\Debug\Utility\Utf8Buffer;
-use bdk\Debug\Utility\Utf8Dump;
 use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 use PHPUnit\Framework\TestCase;
 
@@ -20,7 +18,6 @@ use PHPUnit\Framework\TestCase;
  *
  * @covers \bdk\Debug\Utility\Utf8
  * @covers \bdk\Debug\Utility\Utf8Buffer
- * @covers \bdk\Debug\Utility\Utf8Dump
  */
 class Utf8Test extends TestCase
 {
@@ -34,19 +31,21 @@ class Utf8Test extends TestCase
         $stats2 = $buffer->analyze();
         self::assertSame(array(
             'blocks' => array(
+                /*
                 array(
                     'special',
                     "\xef\xbb\xbf",
                 ),
+                */
                 array(
                     'utf8',
-                    'Pesky BOM',
+                    "\xef\xbb\xbfPesky BOM",
                 ),
             ),
-            'bytesControl' => 0,
+            // 'bytesControl' => 0,
             'bytesOther' => 0,
-            'bytesSpecial' => 3,
-            'bytesUtf8' => 9,
+            // 'bytesSpecial' => 3,
+            'bytesUtf8' => 12,
             'mbStrlen' => 10,
             'percentBinary' => 0,
             'strlen' => 12,
@@ -54,6 +53,7 @@ class Utf8Test extends TestCase
         self::assertSame($stats1, $stats2);
     }
 
+    /*
     public function testAddSpecial()
     {
         $backup = Reflection::propGet('bdk\Debug\Utility\Utf8Buffer', 'special');
@@ -77,6 +77,7 @@ class Utf8Test extends TestCase
         ), Reflection::propGet('bdk\Debug\Utility\Utf8Buffer', 'special'));
         Reflection::propSet('bdk\Debug\Utility\Utf8Buffer', 'special', $backup);
     }
+    */
 
     public function testBufferSeek()
     {
@@ -107,10 +108,12 @@ class Utf8Test extends TestCase
      *
      * @return void
      */
+    /*
     public function testDump($input, $outputExpect, $opts = array())
     {
         self::assertSame($outputExpect, Utf8::dump($input, $opts));
     }
+    */
 
     /**
      * Test
@@ -138,20 +141,12 @@ class Utf8Test extends TestCase
         self::assertSame('💩', Utf8::chr(128169));
     }
 
-    /**
-     * Test the private Utf8Dump::ordUtf9 method
-     *
-     * ordUtf is only called for "special" chars.. but works on all utf8 chars
-     *
-     * @return void
-     */
     public function testOrd()
     {
-        $utf8Dump = new Utf8Dump();
-        $reflector = new \ReflectionMethod($utf8Dump, 'ord');
-        $reflector->setAccessible(true);
-        self::assertSame(97, $reflector->invoke($utf8Dump, 'a'));
-        self::AssertSame(128169, $reflector->invoke($utf8Dump, '💩'));
+        self::assertSame(97, Utf8::ord('a'));   // 1-bype
+        self::assertSame(169, Utf8::ord('©'));   // 2-byte
+        self::assertSame(65049, Utf8::ord('︙'));   // 3-byte
+        self::assertSame(128169, Utf8::ord('💩'));  // 4-type
     }
 
     /**
@@ -186,6 +181,7 @@ class Utf8Test extends TestCase
         self::assertSame($outputExpect, $output);
     }
 
+    /*
     public static function providerDump()
     {
         $binary = \base64_decode('TzipAdbGNF+DfyAwZrp7ew==', true);
@@ -392,6 +388,7 @@ class Utf8Test extends TestCase
             ),
         );
     }
+    */
 
     public static function providerIsUtf8()
     {

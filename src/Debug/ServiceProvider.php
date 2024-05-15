@@ -149,6 +149,9 @@ class ServiceProvider implements ServiceProviderInterface
             // Psr\Http\Message\ServerRequestInterface
             return \bdk\HttpMessage\ServerRequest::fromGlobals();
         };
+        $container['sqlQueryAnalysis'] = static function (Container $container) {
+            return new \bdk\Debug\Utility\SqlQueryAnalysis($container['debug']);
+        };
         $container['stringUtil'] = static function () {
             return new \bdk\Debug\Utility\StringUtil();
         };

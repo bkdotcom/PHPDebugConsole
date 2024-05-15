@@ -2,6 +2,7 @@
 
 namespace bdk\Test\Debug\Plugin;
 
+use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Plugin\LogPhp;
 use bdk\HttpMessage\ServerRequest;
@@ -136,7 +137,7 @@ class LogPhpTest extends DebugTestFramework
                 'args' => array(
                     'ini files',
                     array(
-                        'debug' => "\x00debug\x00",
+                        'debug' => Abstracter::ABSTRACTION,
                         'options' => array(
                             'showListKeys' => false,
                         ),

@@ -190,8 +190,7 @@ class Time implements SubscriberInterface
         \array_splice($args, 1, 0, $elapsed);
         $logEntry['args'] = $args;
         $logEntry['meta'] = \array_diff_key($meta, \array_flip(array('precision', 'silent', 'unit')));
-        $this->debug->log($logEntry);
-        return $this->debug;
+        return $this->debug->log($logEntry);
     }
 
     /**

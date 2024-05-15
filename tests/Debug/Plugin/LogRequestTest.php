@@ -59,21 +59,20 @@ class LogRequestTest extends DebugTestFramework
                 'args' => array(
                     'php://input',
                     array(
-                        'addQuotes' => false,
                         'attribs' => array(
-                            'class' => array('highlight', 'language-json'),
+                            'class' => array('highlight', 'language-json', 'no-quotes'),
                         ),
                         'brief' => false,
                         'contentType' => ContentType::JSON,
                         'debug' => Abstracter::ABSTRACTION,
                         'prettified' => true,
                         'prettifiedTag' => true,
-                        'strlen' => null,
+                        // 'strlen' => 24,
+                        // 'strlenValue' => 24,
                         'type' => Type::TYPE_STRING,
                         'typeMore' => Type::TYPE_STRING_JSON,
                         'value' => \json_encode(\json_decode($requestBody), JSON_PRETTY_PRINT),
                         'valueDecoded' => \json_decode($requestBody, true),
-                        'visualWhiteSpace' => false,
                     ),
                 ),
                 'meta' => array(
@@ -122,21 +121,20 @@ class LogRequestTest extends DebugTestFramework
                 'args' => array(
                     'php://input',
                     array(
-                        'addQuotes' => false,
                         'attribs' => array(
-                            'class' => array('highlight', 'language-json'),
+                            'class' => array('highlight', 'language-json', 'no-quotes'),
                         ),
                         'brief' => false,
                         'contentType' => ContentType::JSON,
                         'debug' => Abstracter::ABSTRACTION,
                         'prettified' => true,
                         'prettifiedTag' => true,
-                        'strlen' => null,
+                        // 'strlen' => 24,
+                        // 'strlenValue' => 24,
                         'type' => Type::TYPE_STRING,
                         'typeMore' => Type::TYPE_STRING_JSON,
                         'value' => \json_encode(\json_decode($requestBody), JSON_PRETTY_PRINT),
                         'valueDecoded' => \json_decode($requestBody, true),
-                        'visualWhiteSpace' => false,
                     ),
                 ),
                 'meta' => array(
@@ -312,7 +310,8 @@ class LogRequestTest extends DebugTestFramework
                                     ),
                                     'brief' => false,
                                     'debug' => Abstracter::ABSTRACTION,
-                                    'strlen' => null,
+                                    // 'strlen' => 3,
+                                    // 'strlenValue' => 3,
                                     'type' => Type::TYPE_STRING,
                                     'typeMore' => Type::TYPE_STRING_NUMERIC,
                                     'value' => '123',
@@ -357,7 +356,8 @@ class LogRequestTest extends DebugTestFramework
                                     ),
                                     'brief' => false,
                                     'debug' => Abstracter::ABSTRACTION,
-                                    'strlen' => null,
+                                    // 'strlen' => 3,
+                                    // 'strlenValue' => 3,
                                     'type' => Type::TYPE_STRING,
                                     'typeMore' => Type::TYPE_STRING_NUMERIC,
                                     'value' => '123',
@@ -459,21 +459,20 @@ class LogRequestTest extends DebugTestFramework
                     // 'font-style: italic; opacity: 0.8;',
                     // '(prettified)',
                     array(
-                        'addQuotes' => false,
                         'attribs' => array(
-                            'class' => array('highlight', 'language-json'),
+                            'class' => array('highlight', 'language-json', 'no-quotes'),
                         ),
                         'brief' => false,
                         'contentType' => ContentType::JSON,
                         'debug' => Abstracter::ABSTRACTION,
                         'prettified' => true,
                         'prettifiedTag' => true,
-                        'strlen' => null,
+                        // 'strlen' => 25,
+                        // 'strlenValue' => 25,
                         'type' => Type::TYPE_STRING,
                         'typeMore' => Type::TYPE_STRING_JSON,
                         'value' => \json_encode(\json_decode($requestBody), JSON_PRETTY_PRINT),
                         'valueDecoded' => \json_decode($requestBody, true),
-                        'visualWhiteSpace' => false,
                     ),
                 ),
                 'meta' => array(
@@ -500,7 +499,7 @@ class LogRequestTest extends DebugTestFramework
         $logReqRes->logRequest();
 
         $logEntries = $this->helper->deObjectifyData($this->debug->data->get('log'));
-        self::AssertCount(3, $logEntries);
+        self::assertCount(3, $logEntries);
         self::assertSame('request headers', $logEntries[1]['meta']['caption']);
         self::assertSame('$_COOKIE', $logEntries[2]['meta']['caption']);
     }

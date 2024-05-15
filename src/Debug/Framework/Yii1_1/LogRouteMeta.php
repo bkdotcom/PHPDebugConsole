@@ -120,6 +120,15 @@ class LogRouteMeta
     {
         $logEntry['category'] = null;
         $logEntry['channel'] = $this->debug->getChannel('app');
+        if (!empty($logEntry['trace']) && \strpos($logEntry['trace'][0]['file'], 'starship/RestfullYii') !== false) {
+            $logEntry['channel'] = $this->debug->getChannel('RestfullYii');
+            $logEntry['trace'] = array();
+            $logEntry['meta']['icon'] = 'fa fa-code-fork';
+            unset(
+                $logEntry['meta']['file'],
+                $logEntry['meta']['line']
+            );
+        }
         return $logEntry;
     }
 
@@ -206,7 +215,7 @@ class LogRouteMeta
             $logEntry['meta']['line'] = $logEntry['trace'][0]['line'];
             if ($logEntry['level'] === CLogger::LEVEL_ERROR) {
                 $logEntry['meta']['trace'] = $logEntry['trace'];
-                unset($logEntry['trace']);
+                $logEntry['trace'] = array();
             }
         }
         return $logEntry;

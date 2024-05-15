@@ -91,6 +91,9 @@
         "test" : [
             "vendor/bin/phpunit -v"
         ],
+        "update-char-data": [
+            "bdk\\Debug\\Dev\\UpdateCharData::update"
+        ],
         "update-phpcs": [
             "bdk\\Debug\\Dev\\ComposerScripts::updatePhpCsXml"
         ],
@@ -102,6 +105,7 @@
         "coverage": "analyze code coverage",
         "cs": "check coding standards",
         "test": "run unit tests",
+        "update-char-data": "rebuild confusable char latest unicode data",
         "update-phpcs": "update phpcs.xml.dist & phpcs.slevomat.xml",
         "webserver": "run php's internal webserver"
     },

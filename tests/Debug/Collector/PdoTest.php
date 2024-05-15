@@ -141,20 +141,19 @@ EOD;
                 'method' => 'log',
                 'args' => array(
                     array(
-                        'addQuotes' => false,
                         'attribs' => array(
-                            'class' => array('highlight', 'language-sql'),
+                            'class' => array('highlight', 'language-sql', 'no-quotes'),
                         ),
                         'brief' => false,
                         'contentType' => ContentType::SQL,
                         'debug' => Abstracter::ABSTRACTION,
                         'prettified' => true,
                         'prettifiedTag' => false,
-                        'strlen' => null,
+                        // 'strlen' => 50,
+                        // 'strlenValue' => 50,
                         'type' => Type::TYPE_STRING,
                         'typeMore' => null,
                         'value' => "SELECT \n  * \nFROM \n  `bob` \nWHERE \n  e < :datetime",
-                        'visualWhiteSpace' => false,
                     ),
                 ),
                 'meta' => array(
@@ -324,19 +323,14 @@ EOD;
         $logEntriesExpectJson = <<<'EOD'
         [
             {
-                "method": "group",
-                "args": ["transaction"],
+                "method": "info",
+                "args": ["beginTransaction"],
                 "meta": {"channel": "general.PDO", "icon": "fa fa-database"}
             },
             {
-                "method": "groupEndValue",
-                "args": ["return", true ],
-                "meta": {"channel": "general.PDO"}
-            },
-            {
-                "method": "groupEnd",
-                "args": [],
-                "meta": {"channel": "general.PDO"}
+                "method": "info",
+                "args": ["commit"],
+                "meta": {"channel": "general.PDO", "icon": "fa fa-database"}
             }
         ]
 EOD;
@@ -350,25 +344,20 @@ EOD;
         $logEntriesExpectJson = <<<'EOD'
         [
             {
-                "method": "group",
-                "args": ["transaction"],
+                "method": "info",
+                "args": ["beginTransaction"],
                 "meta": {"channel": "general.PDO", "icon": "fa fa-database"}
             },
             {
-                "method": "groupEndValue",
-                "args": ["return", "rolled back"],
-                "meta": {"channel": "general.PDO"}
-            },
-            {
-                "method": "groupEnd",
-                "args": [],
-                "meta": {"channel": "general.PDO"}
+                "method": "info",
+                "args": ["rollBack"],
+                "meta": {"channel": "general.PDO", "icon": "fa fa-database"}
             }
         ]
 EOD;
         $this->assertSame(
             \json_decode($logEntriesExpectJson, true),
-            $this->getLogEntries(3)
+            $this->getLogEntries(2)
         );
     }
 

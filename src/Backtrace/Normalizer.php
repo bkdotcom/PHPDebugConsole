@@ -161,15 +161,17 @@ class Normalizer
                 : $i++;
         }, \array_keys($params));
         $values = \array_map(static function ($param) use ($map) {
-            if ($param[0] === "'") {
-                return \substr(\stripslashes($param), 1, -1);
+            if (\is_string($param) === false) {
+                return $param;
             }
-            if (\is_numeric($param)) {
-                return $param * 1;
+            if (\array_key_exists($param, $map)) {
+                $param = $map[$param];
+            } elseif ($param[0] === "'") {
+                $param = \substr(\stripslashes($param), 1, -1);
+            } elseif (\is_numeric($param)) {
+                $param = $param * 1;
             }
-            return \array_key_exists($param, $map)
-                ? $map[$param]
-                : $param;
+            return $param;
         }, $params);
         return \array_combine($keys, $values);
     }

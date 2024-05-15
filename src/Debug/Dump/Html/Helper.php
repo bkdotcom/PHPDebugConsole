@@ -187,19 +187,16 @@ class Helper
     {
         foreach ($args as $i => $v) {
             list($type, $typeMore) = $this->debug->abstracter->type->getType($v);
-            $typeMore2 = $typeMore === Type::TYPE_ABSTRACTION
-                ? $v['typeMore']
-                : $typeMore;
             $isNumericString = $type === Type::TYPE_STRING
-                && \in_array($typeMore2, array(Type::TYPE_STRING_NUMERIC, Type::TYPE_TIMESTAMP), true);
+                && \in_array($typeMore, array(Type::TYPE_STRING_NUMERIC, Type::TYPE_TIMESTAMP), true);
             $args[$i] = $this->dumper->valDumper->dump($v, array(
-                'addQuotes' => $i !== 0 || $isNumericString,
+                'addQuotes' => $i !== 0 || $isNumericString || $type !== Type::TYPE_STRING, // $this->dumper->valDumper->string->isEncoded($v) ||
                 'sanitize' => $i === 0
                     ? $meta['sanitizeFirst']
                     : $meta['sanitize'],
                 'type' => $type,
                 'typeMore' => $typeMore,
-                'visualWhiteSpace' => $i !== 0,
+                'visualWhiteSpace' => $i !== 0 || $type !== Type::TYPE_STRING,
             ));
         }
         return $args;

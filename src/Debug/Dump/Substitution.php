@@ -115,30 +115,46 @@ class Substitution
     private function processSubsCallback($matches)
     {
         $index = ++$this->subInfo['index'];
-        $replace = $matches[0];
+        $format = $matches[0];
+        $type = \substr($format, -1);
         if (\array_key_exists($index, $this->subInfo['args']) === false) {
-            return $replace;
+            return $format;
         }
         $arg = $this->subInfo['args'][$index];
-        $replacement = '';
-        $type = \substr($replace, -1);
-        if (\preg_match('/[difs]/', $type)) {
-            if ($type === 's') {
-                $arg = $this->dumper->substitutionAsString($arg, $this->subInfo['options']);
-            }
-            $replacement = $this->subReplacementDifs($arg, $replace);
-        } elseif ($type === 'c' && $this->subInfo['options']['style']) {
-            $replacement = $this->subReplacementC($arg);
-        } elseif (\preg_match('/[oO]/', $type)) {
-            $replacement = $this->dumper->valDumper->dump($arg);
+        if ($type === 's') {
+            $arg = $this->dumper->substitutionAsString($arg, $this->subInfo['options']);
         }
+        $replacement = $this->replacement($arg, $format);
         $this->subInfo['typeCounts'][$type]++;
         if ($this->subInfo['options']['replace']) {
             unset($this->subInfo['args'][$index]);
             return $replacement;
         }
         $this->subInfo['args'][$index] = $arg;
-        return $replace;
+        return $format;
+    }
+
+    /**
+     * Get replacement value for given arg and format
+     *
+     * @param mixed  $arg    the argument we're getting string representation of
+     * @param string $format the string we're replacing (replacement format)
+     *
+     * @return string
+     */
+    private function replacement($arg, $format)
+    {
+        $type = \substr($format, -1);
+        if (\preg_match('/[difs]/', $type)) {
+            return $this->subReplacementDifs($arg, $format);
+        }
+        if ($type === 'c' && $this->subInfo['options']['style']) {
+            return $this->subReplacementC($arg);
+        }
+        if (\preg_match('/[oO]/', $type)) {
+            return $this->dumper->valDumper->dump($arg);
+        }
+        return '';
     }
 
     /**

@@ -42,7 +42,7 @@ class MySqli extends mysqliBase
     protected $icon = 'fa fa-database';
 
     /** @var list<string> */
-    protected $savepoints = array();
+    protected $savePoints = array();
 
     /** @var Debug */
     private $debug;
@@ -53,7 +53,7 @@ class MySqli extends mysqliBase
      * @param string $host     host name or IP
      * @param string $username MySQL user name
      * @param string $passwd   password
-     * @param string $dbname   default database used wiehn performing queries
+     * @param string $dbname   default database used when performing queries
      * @param int    $port     port number
      * @param string $socket   socket or named pipe that should be used
      * @param Debug  $debug    (optional) Specify PHPDebugConsole instance
@@ -119,17 +119,17 @@ class MySqli extends mysqliBase
             $this->debug->warn($this->error);
             return $return;
         }
-        $this->savepoints = $name
+        $this->savePoints = $name
             ? array($name)
             : array();
-        $groupArgs = \array_filter(array(
-            'transaction',
+        $debugArgs = \array_filter(array(
+            'begin_transaction',
             $name,
             $this->debug->meta(array(
                 'icon' => $this->debug->getCfg('channelIcon', Debug::CONFIG_DEBUG),
             )),
         ));
-        \call_user_func_array(array($this->debug, 'group'), $groupArgs);
+        \call_user_func_array(array($this->debug, 'info'), $debugArgs);
         return $return;
     }
 
@@ -151,11 +151,13 @@ class MySqli extends mysqliBase
             $this->debug->warn($this->error);
             return $return;
         }
-        $this->savepoints = array();
+        $this->savePoints = array();
         if ($name !== null) {
             $this->debug->warn('passing $name param to mysqli::commit() does nothing!');
         }
-        $this->debug->groupEnd($return);
+        $this->debug->info('commit', $this->debug->meta(array(
+            'icon' => $this->debug->getCfg('channelIcon', Debug::CONFIG_DEBUG),
+        )));
         return $return;
     }
 
@@ -212,7 +214,7 @@ class MySqli extends mysqliBase
     public function release_savepoint($name)
     {
         $return = parent::release_savepoint($name);
-        $index = \array_search($name, $this->savepoints, true);
+        $index = \array_search($name, $this->savePoints, true);
         if (PHP_VERSION_ID < 70000) {
             $this->debug->warn(
                 'mysqli::release_savepoint on PHP < 7.0 just calls %cSAVEPOINT `Sally`%c',
@@ -225,11 +227,11 @@ class MySqli extends mysqliBase
             return $return;
         }
         if ($index !== false) {
-            unset($this->savepoints[$index]);
-            $this->savepoints = \array_values($this->savepoints);
+            unset($this->savePoints[$index]);
+            $this->savePoints = \array_values($this->savePoints);
         }
         if (PHP_VERSION_ID < 70000) {
-            $this->savepoints[] = $name;
+            $this->savePoints[] = $name;
         }
         return $return;
     }
@@ -252,7 +254,7 @@ class MySqli extends mysqliBase
             $this->debug->warn($this->error);
             return $return;
         }
-        $this->savepoints = array();
+        $this->savePoints = array();
         if ($name !== null) {
             $this->debug->warn(
                 'passing $name param to %cmysqli::rollback()%c does not %cROLLBACK TO name%c as you would expect!',
@@ -262,7 +264,9 @@ class MySqli extends mysqliBase
                 ''
             );
         }
-        $this->debug->groupEnd('rolled back');
+        $this->debug->info('rollBack', $this->debug->meta(array(
+            'icon' => $this->debug->getCfg('channelIcon', Debug::CONFIG_DEBUG),
+        )));
         return $return;
     }
 
@@ -273,15 +277,15 @@ class MySqli extends mysqliBase
     public function savepoint($name)
     {
         $return = parent::savepoint($name);
-        if (!$return) {
+        if ($return === false) {
             $this->debug->warn($this->error);
             return $return;
         }
-        $index = \array_search($name, $this->savepoints, true);
+        $index = \array_search($name, $this->savePoints, true);
         if ($index !== false) {
-            \array_splice($this->savepoints, $index, 1);
+            \array_splice($this->savePoints, $index, 1);
         }
-        $this->savepoints[] = $name;
+        $this->savePoints[] = $name;
         $this->debug->info('savepoint', $name);
         return $return;
     }

@@ -6,9 +6,11 @@ use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
+use bdk\Debug\Abstraction\Type;
 use bdk\Debug\LogEntry;
 use bdk\Test\Debug\DebugTestFramework;
 use bdk\Test\Debug\Fixture\TestObj;
+use bdk\Test\Debug\Helper;
 use ReflectionObject;
 
 /**
@@ -29,8 +31,10 @@ use ReflectionObject;
  * @covers \bdk\Debug\Abstraction\Object\PropertiesPhpDoc
  * @covers \bdk\Debug\Abstraction\Object\Subscriber
  * @covers \bdk\Debug\Abstraction\Type
+ * @covers \bdk\Debug\Dump\AbstractValue
  * @covers \bdk\Debug\Dump\Base
- * @covers \bdk\Debug\Dump\BaseValue
+ * @covers \bdk\Debug\Dump\Base\BaseObject
+ * @covers \bdk\Debug\Dump\Base\Value
  * @covers \bdk\Debug\Dump\Html
  * @covers \bdk\Debug\Dump\Html\AbstractObjectSection
  * @covers \bdk\Debug\Dump\Html\Helper
@@ -42,9 +46,11 @@ use ReflectionObject;
  * @covers \bdk\Debug\Dump\Html\ObjectProperties
  * @covers \bdk\Debug\Dump\Html\Value
  * @covers \bdk\Debug\Dump\Text
+ * @covers \bdk\Debug\Dump\Text\TextObject
+ * @covers \bdk\Debug\Dump\Text\Value
  * @covers \bdk\Debug\Dump\TextAnsi
- * @covers \bdk\Debug\Dump\TextAnsiValue
- * @covers \bdk\Debug\Dump\TextValue
+ * @covers \bdk\Debug\Dump\TextAnsi\TextAnsiObject
+ * @covers \bdk\Debug\Dump\TextAnsi\Value
  *
  * @phpcs:disable Generic.Arrays.ArrayIndent.KeyIncorrect
  */
@@ -94,36 +100,36 @@ EOD;
 \e[38;5;250mbdk\Test\Debug\Fixture\\e[0m\e[1mTestObj\e[22m
   \e[4mProperties:\e[24m
     \e[38;5;250m✨ This object has a __get() method\e[0m
-    \e[38;5;148m⚠\e[0m \e[38;5;250m(public)\e[0m \e[38;5;83mbaseDynamic\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mduo\e[38;5;250m"\e[0m
-    \e[38;5;148m⚠\e[0m \e[38;5;250m(public)\e[0m \e[38;5;83mdynamic\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mdynomite!\e[38;5;250m"\e[0m
-    \e[38;5;250m⟳\e[0m \e[38;5;250m(public)\e[0m \e[38;5;83mpropPublic\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mredefined in Test (public)\e[38;5;250m"\e[0m
-    \e[38;5;250m(public)\e[0m \e[38;5;83mpropStatic\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mI'm Static\e[38;5;250m"\e[0m
-    \e[38;5;250m(public)\e[0m \e[38;5;83msomeArray\e[0m \e[38;5;130m=\e[0m \e[38;5;45marray\e[38;5;245m(\e[0m
-      \e[38;5;245m[\e[38;5;83mint\e[38;5;245m]\e[38;5;130m => \e[0m\e[96m123\e[0m
-      \e[38;5;245m[\e[38;5;83mnumeric\e[38;5;245m]\e[38;5;130m => \e[0m\e[38;5;250m"\e[96m123\e[38;5;250m"\e[0m
-      \e[38;5;245m[\e[38;5;83mstring\e[38;5;245m]\e[38;5;130m => \e[0m\e[38;5;250m"\e[0mcheese\e[38;5;250m"\e[0m
-      \e[38;5;245m[\e[38;5;83mbool\e[38;5;245m]\e[38;5;130m => \e[0m\e[32mtrue\e[0m
-      \e[38;5;245m[\e[38;5;83mobj\e[38;5;245m]\e[38;5;130m => \e[0m\e[1mstdClass\e[22m
+    \e[38;5;148m⚠\e[0m \e[38;5;250m(public)\e[0m \e[38;5;83mbaseDynamic\e[0m \e[38;5;224m=\e[0m \e[38;5;250m"\e[0mduo\e[38;5;250m"\e[0m
+    \e[38;5;148m⚠\e[0m \e[38;5;250m(public)\e[0m \e[38;5;83mdynamic\e[0m \e[38;5;224m=\e[0m \e[38;5;250m"\e[0mdynomite!\e[38;5;250m"\e[0m
+    \e[38;5;250m⟳\e[0m \e[38;5;250m(public)\e[0m \e[38;5;83mpropPublic\e[0m \e[38;5;224m=\e[0m \e[38;5;250m"\e[0mredefined in Test (public)\e[38;5;250m"\e[0m
+    \e[38;5;250m(public)\e[0m \e[38;5;83mpropStatic\e[0m \e[38;5;224m=\e[0m \e[38;5;250m"\e[0mI'm Static\e[38;5;250m"\e[0m
+    \e[38;5;250m(public)\e[0m \e[38;5;83msomeArray\e[0m \e[38;5;224m=\e[0m \e[38;5;45marray\e[38;5;245m(\e[0m
+      \e[38;5;245m[\e[38;5;83mint\e[38;5;245m]\e[38;5;224m => \e[0m\e[96m123\e[0m
+      \e[38;5;245m[\e[38;5;83mnumeric\e[38;5;245m]\e[38;5;224m => \e[0m\e[38;5;250m"\e[0m\e[96m123\e[0m\e[38;5;250m"\e[0m
+      \e[38;5;245m[\e[38;5;83mstring\e[38;5;245m]\e[38;5;224m => \e[0m\e[38;5;250m"\e[0mcheese\e[38;5;250m"\e[0m
+      \e[38;5;245m[\e[38;5;83mbool\e[38;5;245m]\e[38;5;224m => \e[0m\e[32mtrue\e[0m
+      \e[38;5;245m[\e[38;5;83mobj\e[38;5;245m]\e[38;5;224m => \e[0m\e[1mstdClass\e[22m
         \e[4mProperties:\e[24m
-            \e[38;5;250m(public)\e[0m \e[38;5;83mfoo\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mbar\e[38;5;250m"\e[0m
+            \e[38;5;250m(public)\e[0m \e[38;5;83mfoo\e[0m \e[38;5;224m=\e[0m \e[38;5;250m"\e[0mbar\e[38;5;250m"\e[0m
         Methods: none!
     \e[38;5;245m)\e[0m
     \e[38;5;250m↳\e[0m \e[38;5;250m(✨ magic excluded)\e[0m \e[38;5;83mmagicProp\e[0m
-    \e[38;5;250m↳\e[0m \e[38;5;250m(✨ magic-read protected)\e[0m \e[38;5;83mmagicReadProp\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mnot null\e[38;5;250m"\e[0m
-    \e[38;5;250m↳\e[0m \e[38;5;250m(protected)\e[0m \e[38;5;83mpropProtected\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mdefined only in TestBase (protected)\e[38;5;250m"\e[0m
-    \e[38;5;250m(private)\e[0m \e[38;5;83mdebug\e[0m \e[38;5;130m=\e[0m \e[38;5;250mbdk\\e[0m\e[1mDebug\e[22m \e[38;5;9mNOT INSPECTED\e[0m
-    \e[38;5;250m(private)\e[0m \e[38;5;83minstance\e[0m \e[38;5;130m=\e[0m \e[38;5;250mbdk\Test\Debug\Fixture\\e[0m\e[1mTestObj\e[22m \e[38;5;196m*RECURSION*\e[0m
+    \e[38;5;250m↳\e[0m \e[38;5;250m(✨ magic-read protected)\e[0m \e[38;5;83mmagicReadProp\e[0m \e[38;5;224m=\e[0m \e[38;5;250m"\e[0mnot null\e[38;5;250m"\e[0m
+    \e[38;5;250m↳\e[0m \e[38;5;250m(protected)\e[0m \e[38;5;83mpropProtected\e[0m \e[38;5;224m=\e[0m \e[38;5;250m"\e[0mdefined only in TestBase (protected)\e[38;5;250m"\e[0m
+    \e[38;5;250m(private)\e[0m \e[38;5;83mdebug\e[0m \e[38;5;224m=\e[0m \e[38;5;250mbdk\\e[0m\e[1mDebug\e[22m \e[38;5;9mNOT INSPECTED\e[0m
+    \e[38;5;250m(private)\e[0m \e[38;5;83minstance\e[0m \e[38;5;224m=\e[0m \e[38;5;250mbdk\Test\Debug\Fixture\\e[0m\e[1mTestObj\e[22m \e[38;5;196m*RECURSION*\e[0m
     \e[38;5;250m(private excluded)\e[0m \e[38;5;83mpropNoDebug\e[0m
-    \e[38;5;250m⟳\e[0m \e[38;5;250m(private)\e[0m \e[38;5;83mpropPrivate\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mredefined in Test (private) (alternate value via __debugInfo)\e[38;5;250m"\e[0m
-    \e[38;5;250m↳\e[0m \e[38;5;250m(🔒 private)\e[0m \e[38;5;83mtestBasePrivate\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mdefined in TestBase (private)\e[38;5;250m"\e[0m
-    \e[38;5;250m(private)\e[0m \e[38;5;83mtoString\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mabracadabra\e[38;5;250m"\e[0m
-    \e[38;5;250m(private)\e[0m \e[38;5;83mtoStrThrow\e[0m \e[38;5;130m=\e[0m \e[96m0\e[0m
-    \e[38;5;250m(debug)\e[0m \e[38;5;83mdebugValue\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mThis property is debug only\e[38;5;250m"\e[0m
+    \e[38;5;250m⟳\e[0m \e[38;5;250m(private)\e[0m \e[38;5;83mpropPrivate\e[0m \e[38;5;224m=\e[0m \e[38;5;250m"\e[0mredefined in Test (private) (alternate value via __debugInfo)\e[38;5;250m"\e[0m
+    \e[38;5;250m↳\e[0m \e[38;5;250m(🔒 private)\e[0m \e[38;5;83mtestBasePrivate\e[0m \e[38;5;224m=\e[0m \e[38;5;250m"\e[0mdefined in TestBase (private)\e[38;5;250m"\e[0m
+    \e[38;5;250m(private)\e[0m \e[38;5;83mtoString\e[0m \e[38;5;224m=\e[0m \e[38;5;250m"\e[0mabracadabra\e[38;5;250m"\e[0m
+    \e[38;5;250m(private)\e[0m \e[38;5;83mtoStrThrow\e[0m \e[38;5;224m=\e[0m \e[96m0\e[0m
+    \e[38;5;250m(debug)\e[0m \e[38;5;83mdebugValue\e[0m \e[38;5;224m=\e[0m \e[38;5;250m"\e[0mThis property is debug only\e[38;5;250m"\e[0m
   \e[4mMethods:\e[24m
-    public\e[38;5;245m:\e[0m \e[96m9\e[0m
-    protected\e[38;5;245m:\e[0m \e[96m1\e[0m
-    private\e[38;5;245m:\e[0m \e[96m1\e[0m
-    magic\e[38;5;245m:\e[0m \e[96m2\e[0m
+    public\e[38;5;245m: \e[96m9\e[0m
+    protected\e[38;5;245m: \e[96m1\e[0m
+    private\e[38;5;245m: \e[96m1\e[0m
+    magic\e[38;5;245m: \e[96m2\e[0m
 EOD;
         $ansi = \str_replace('\e', "\e", $ansi);
 
@@ -208,10 +214,73 @@ EOD;
                         <dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="t_type">int</span> <span class="no-quotes t_identifier t_string">line</span> <span class="t_operator">=</span> <span class="t_int">%d</span></dd>
                         <dt class="methods">methods</dt>
                         <dd class="method private"><span class="t_modifier_private">private</span> <span class="t_identifier">__construct</span><span class="t_punct">(</span><span class="t_punct">)</span></dd>
-                        <dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier">__invoke</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$foo</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_parameter-name">$bar</span></span><span class="t_punct">)</span></dd>
+                        <dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier">__invoke</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$foo</span></span><span class="t_punct">,</span>
+                            <span class="parameter"><span class="t_parameter-name">$bar</span></span><span class="t_punct">)</span></dd>
                         %a
                         </dl>
                         </div></li>',
+                ),
+            ),
+
+            'stdClass' => array(
+                'log',
+                array(
+                    (object) array(
+                        "\xE2\x80\x8B" => 'zwsp',
+                        "\xef\xbb\xbf" => 'bom',
+                        "\xef\xbb\xbfbom\r\n\t\x07 \x1F \x7F \xc2\xa0<i>(nbsp)</i> \xE2\x80\x89(thsp), & \xE2\x80\x8B(zwsp)" => 'ctrl chars and whatnot',
+                        "not\x80\xCF\x85tf8" => 'not utf8', // this forces the array to be stored as an abstraction
+                        ' ' => 'space',
+                        // '' => 'empty', // invalid for php < 7.0
+                    ),
+                ),
+                array(
+                    'entry' => static function (LogEntry $logEntry) {
+                        $abs = $logEntry['args'][0];
+                        self::assertSame(array(
+                            'ade50251dade9edc27e822ebdc3e9664' => array(
+                                'brief' => false,
+                                'chunks' => array(
+                                    ['utf8', 'not'],
+                                    ['other', '80'],
+                                    ['utf8', "\xCF\x85tf8"],
+                                ),
+                                'debug' => Abstracter::ABSTRACTION,
+                                'percentBinary' => 1 / 9 * 100,
+                                'strlen' => 9,
+                                'strlenValue' => 9,
+                                'type' => Type::TYPE_STRING,
+                                'typeMore' => Type::TYPE_STRING_BINARY,
+                                'value' => '',
+                            ),
+                        ), Helper::deObjectifyData($abs['keys']));
+                        self::assertSame(array(
+                            "\xE2\x80\x8B",
+                            "\xef\xbb\xbf",
+                            "\xef\xbb\xbfbom\r\n\t\x07 \x1F \x7F \xc2\xa0<i>(nbsp)</i> \xE2\x80\x89(thsp), & \xE2\x80\x8B(zwsp)",
+                            ' ',
+                            // '',
+                            "ade50251dade9edc27e822ebdc3e9664",
+                        ), \array_keys($abs['properties']));
+                    },
+                    'streamAnsi' => "\e[1mstdClass\e[22m
+                        \e[4mProperties:\e[24m
+                            \e[38;5;250m(public)\e[0m \e[38;5;83m\e[38;5;250m\"\e[38;5;83;49m \e[38;5;250m\"\e[38;5;83;49m\e[0m \e[38;5;224m=\e[0m \e[38;5;250m\"\e[0mspace\e[38;5;250m\"\e[0m
+                            \e[38;5;250m(public)\e[0m \e[38;5;83mnot\e[30;48;5;250m80\e[38;5;83;49m\e[38;5;208m\\u{03c5}\e[38;5;83;49mtf8\e[0m \e[38;5;224m=\e[0m \e[38;5;250m\"\e[0mnot utf8\e[38;5;250m\"\e[0m
+                            \e[38;5;250m(public)\e[0m \e[38;5;83m\e[38;5;208m\\u{200b}\e[38;5;83;49m\e[0m \e[38;5;224m=\e[0m \e[38;5;250m\"\e[0mzwsp\e[38;5;250m\"\e[0m
+                            \e[38;5;250m(public)\e[0m \e[38;5;83m\e[38;5;208m\\u{feff}\e[38;5;83;49m\e[0m \e[38;5;224m=\e[0m \e[38;5;250m\"\e[0mbom\e[38;5;250m\"\e[0m
+                            \e[38;5;250m(public)\e[0m \e[38;5;83m\e[38;5;250m\"\e[38;5;83;49m\e[38;5;208m\\u{feff}\e[38;5;83;49mbom" . "\r" . "
+                                \e[38;5;208m\\x07\e[38;5;83;49m \e[38;5;208m\\x1f\e[38;5;83;49m \e[38;5;208m\\x7f\e[38;5;83;49m \e[38;5;208m\\u{00a0}\e[38;5;83;49m<i>(nbsp)</i> \e[38;5;208m\\u{2009}\e[38;5;83;49m(thsp), & \e[38;5;208m\\u{200b}\e[38;5;83;49m(zwsp)\e[38;5;250m\"\e[38;5;83;49m\e[0m \e[38;5;224m=\e[0m \e[38;5;250m\"\e[0mctrl chars and whatnot\e[38;5;250m\"\e[0m
+                            Methods: none!",
+                    'text' => 'stdClass
+                      Properties:
+                        (public) " " = "space"
+                        (public) not\x80\u{03c5}tf8 = "not utf8"
+                        (public) \u{200b} = "zwsp"
+                        (public) \u{feff} = "bom"
+                        (public) "\u{feff}bom[\r]
+                            \x07 \x1f \x7f \u{00a0}<i>(nbsp)</i> \u{2009}(thsp), & \u{200b}(zwsp)" = "ctrl chars and whatnot"
+                      Methods: none!',
                 ),
             ),
 
@@ -298,9 +367,9 @@ EOD;
                             '</dl>',
                             '</div></li>',
                             '</ul><span class="t_punct">)</span></span></dd>',
-                            '<dd class="private property"><span class="t_modifier_private">private</span> <span class="no-quotes t_identifier t_string">debug</span> <span class="t_operator">=</span> <div class="t_object" data-accessible="public"><span class="classname"><span class="namespace">bdk\</span>Debug</span>',
+                            '<dd class="private property"><span class="t_modifier_private">private</span> <span class="no-quotes t_identifier t_string">debug</span> <span class="t_operator">=</span> <div class="t_object"><span class="classname"><span class="namespace">bdk\</span>Debug</span>',
                             '<span class="excluded">NOT INSPECTED</span></div></dd>',
-                            '<dd class="private property"><span class="t_modifier_private">private</span> <span class="no-quotes t_identifier t_string">instance</span> <span class="t_operator">=</span> <div class="t_object" data-accessible="private"><span class="classname" title="PhpDoc Summary',
+                            '<dd class="private property"><span class="t_modifier_private">private</span> <span class="no-quotes t_identifier t_string">instance</span> <span class="t_operator">=</span> <div class="t_object"><span class="classname" title="PhpDoc Summary',
                             '',
                             'PhpDoc Description"><span class="namespace">bdk\Test\Debug\Fixture\</span>TestObj</span>',
                             '<span class="t_recursion">*RECURSION*</span></div></dd>',
@@ -329,7 +398,8 @@ EOD;
                             '<dd class="info magic">This object has a <code>__call</code> method</dd>',
                             '<dd class="method public" data-declared-prev="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_public">public</span> <span class="t_identifier" title="Constructor',
                             '',
-                            'Constructor description">__construct</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="value __toString will return;">$toString</span> <span class="t_operator">=</span> <span class="t_parameter-default t_string">abracadabra</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_type">int</span> <span class="t_parameter-name" title="0: don&#039;t, 1: throw, 2: throw &amp; catch">$toStrThrow</span> <span class="t_operator">=</span> <span class="t_int t_parameter-default">0</span></span><span class="t_punct">)</span></dd>',
+                            'Constructor description">__construct</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="value __toString will return;">$toString</span> <span class="t_operator">=</span> <span class="t_parameter-default t_string">abracadabra</span></span><span class="t_punct">,</span>',
+                                '<span class="parameter"><span class="t_type">int</span> <span class="t_parameter-name" title="0: don&#039;t, 1: throw, 2: throw &amp; catch">$toStrThrow</span> <span class="t_operator">=</span> <span class="t_int t_parameter-default">0</span></span><span class="t_punct">)</span></dd>',
                             '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier" title="magic method">__debugInfo</span><span class="t_punct">(</span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span title="property=&gt;value array"><span class="t_type">array</span></span></dd>',
                             '<dd class="method public" ' . (PHP_VERSION_ID >= 80000 ? 'data-implements="Stringable" ' : '' ) . 'data-throws="[{&quot;desc&quot;:&quot;when toStrThrow is `1`&quot;,&quot;type&quot;:&quot;Exception&quot;}]"><span class="t_modifier_public">public</span> <span class="t_identifier" title="toString magic method',
                                 '',
@@ -341,26 +411,37 @@ EOD;
                                 '<h3>return value</h3>',
                                 '<ul class="list-unstyled"><li><span class="return-value t_string">abracadabra</span></li></ul></dd>',
                             '<dd class="isDeprecated isFinal method public" data-deprecated-desc="this method is bad and should feel bad"><span class="t_modifier_final">final</span> <span class="t_modifier_public">public</span> <span class="t_identifier" title="This method is public">methodPublic</span><span class="t_punct">(</span><span class="parameter"><span class="t_type"><span class="classname">stdClass</span></span> <span class="t_parameter-name" title="first param',
-                                'two-line description!">$param1</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_type">array</span> <span class="t_parameter-name" title="second param">$param2</span> <span class="t_operator">=</span> <span class="t_array t_parameter-default"><span class="t_keyword">array</span><span class="t_punct">()</span></span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span>',
+                                'two-line description!">$param1</span></span><span class="t_punct">,</span>',
+                                    '<span class="parameter"><span class="t_type">array</span> <span class="t_parameter-name" title="second param">$param2</span> <span class="t_operator">=</span> <span class="t_array t_parameter-default"><span class="t_keyword">array</span><span class="t_punct">()</span></span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span>',
                                 '<h3>static variables</h3>',
                                 '<ul class="list-unstyled">',
                                 '<li><span class="no-quotes t_identifier t_string">foo</span><span class="t_operator">=</span> <span class="t_int">42</span></li>',
                                 '<li><span class="no-quotes t_identifier t_string">bar</span><span class="t_operator">=</span> <span class="t_string">test</span></li>',
-                                '<li><span class="no-quotes t_identifier t_string">baz</span><span class="t_operator">=</span> <div class="t_object" data-accessible="private"><span class="classname" title="PhpDoc Summary',
+                                '<li><span class="no-quotes t_identifier t_string">baz</span><span class="t_operator">=</span> <div class="t_object"><span class="classname" title="PhpDoc Summary',
                                     '',
                                     'PhpDoc Description"><span class="namespace">bdk\Test\Debug\Fixture\</span>TestObj</span>',
                                     '<span class="t_recursion">*RECURSION*</span></div></li>',
                                     '</ul></dd>',
                             '<dd class="method protected"><span class="t_modifier_protected">protected</span> <span class="t_identifier" title="This method is protected">methodProtected</span><span class="t_punct">(</span><span class="parameter"><span class="t_type"><span class="classname"><span class="namespace">bdk\Debug\Abstraction\</span>Abstraction</span><span class="t_punct">[]</span></span> <span class="t_parameter-name" title="first param">$param1</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span></dd>',
-                            '<dd class="method private"><span class="t_modifier_private">private</span> <span class="t_identifier" title="This method is private">methodPrivate</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">mixed</span> <span class="t_parameter-name" title="first param (passed by ref)">&amp;$param1</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_type"><span class="classname"><span class="namespace">bdk\PubSub\</span>Event</span><span class="t_punct">[]</span></span> <span class="t_parameter-name" title="second param (passed by ref)">&amp;$param2</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_type">bool</span> <span class="t_parameter-name" title="3rd param not in method signature">...$param3</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span></dd>',
+                            '<dd class="method private"><span class="t_modifier_private">private</span> <span class="t_identifier" title="This method is private">methodPrivate</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">mixed</span> <span class="t_parameter-name" title="first param (passed by ref)">&amp;$param1</span></span><span class="t_punct">,</span>',
+                                '<span class="parameter"><span class="t_type"><span class="classname"><span class="namespace">bdk\PubSub\</span>Event</span><span class="t_punct">[]</span></span> <span class="t_parameter-name" title="second param (passed by ref)">&amp;$param2</span></span><span class="t_punct">,</span>',
+                                '<span class="parameter"><span class="t_type">bool</span> <span class="t_parameter-name" title="3rd param not in method signature">...$param3</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span></dd>',
                             '<dd class="heading">Inherited from <span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>TestBase</span></dd>',
-                            '<dd class="method public" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_public">public</span> <span class="t_identifier" title="call magic method">__call</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="Method being called">$name</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_type">array</span> <span class="t_parameter-name" title="Arguments passed">$args</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">mixed</span></dd>',
+                            '<dd class="method public" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_public">public</span> <span class="t_identifier" title="call magic method">__call</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="Method being called">$name</span></span><span class="t_punct">,</span>',
+                                '<span class="parameter"><span class="t_type">array</span> <span class="t_parameter-name" title="Arguments passed">$args</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">mixed</span></dd>',
                             '<dd class="method public" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_public">public</span> <span class="t_identifier" title="get magic method">__get</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="what we&#039;re getting">$key</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">mixed</span></dd>',
-                            '<dd class="method public" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_public">public</span> <span class="t_identifier" title="set magic method">__set</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="what we&#039;re setting">$key</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_type">mixed</span> <span class="t_parameter-name" title="value">$val</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span></dd>',
+                            '<dd class="method public" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_public">public</span> <span class="t_identifier" title="set magic method">__set</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="what we&#039;re setting">$key</span></span><span class="t_punct">,</span>',
+                                '<span class="parameter"><span class="t_type">mixed</span> <span class="t_parameter-name" title="value">$val</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span></dd>',
                             '<dd class="method public" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_public">public</span> <span class="t_identifier">testBasePublic</span><span class="t_punct">(</span><span class="t_punct">)</span></dd>',
                             '<dd class="isStatic method public" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="t_identifier">testBaseStatic</span><span class="t_punct">(</span><span class="t_punct">)</span></dd>',
-                            '<dd class="magic method" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_magic">magic</span> <span class="t_identifier" title="I&#039;m a magic method">presto</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$foo</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_type">int</span> <span class="t_parameter-name">$int</span> <span class="t_operator">=</span> <span class="t_int t_parameter-default">1</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_parameter-name">$bool</span> <span class="t_operator">=</span> <span class="t_bool t_parameter-default" data-type-more="true">true</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_parameter-name">$null</span> <span class="t_operator">=</span> <span class="t_null t_parameter-default">null</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span></dd>',
-                            '<dd class="isStatic magic method" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_magic">magic</span> <span class="t_modifier_static">static</span> <span class="t_identifier" title="I&#039;m a static magic method">prestoStatic</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name">$noDefault</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_parameter-name">$arr</span> <span class="t_operator">=</span> <span class="t_array t_parameter-default"><span class="t_keyword">array</span><span class="t_punct">()</span></span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_parameter-name">$opts</span> <span class="t_operator">=</span> <span class="t_parameter-default t_string">array(&#039;a&#039;=&gt;&#039;ay&#039;,&#039;b&#039;=&gt;&#039;bee&#039;)</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_parameter-name">$val</span> <span class="t_operator">=</span> <span class="t_const t_parameter-default" title="value: &quot;defined in TestBase&quot;"><span class="classname">self</span><span class="t_operator">::</span><span class="t_identifier">MY_CONSTANT</span></span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span></dd>',
+                            '<dd class="magic method" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_magic">magic</span> <span class="t_identifier" title="I&#039;m a magic method">presto</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$foo</span></span><span class="t_punct">,</span>',
+                                '<span class="parameter"><span class="t_type">int</span> <span class="t_parameter-name">$int</span> <span class="t_operator">=</span> <span class="t_int t_parameter-default">1</span></span><span class="t_punct">,</span>',
+                                '<span class="parameter"><span class="t_parameter-name">$bool</span> <span class="t_operator">=</span> <span class="t_bool t_parameter-default" data-type-more="true">true</span></span><span class="t_punct">,</span>',
+                                '<span class="parameter"><span class="t_parameter-name">$null</span> <span class="t_operator">=</span> <span class="t_null t_parameter-default">null</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span></dd>',
+                            '<dd class="isStatic magic method" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_magic">magic</span> <span class="t_modifier_static">static</span> <span class="t_identifier" title="I&#039;m a static magic method">prestoStatic</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name">$noDefault</span></span><span class="t_punct">,</span>',
+                                '<span class="parameter"><span class="t_parameter-name">$arr</span> <span class="t_operator">=</span> <span class="t_array t_parameter-default"><span class="t_keyword">array</span><span class="t_punct">()</span></span></span><span class="t_punct">,</span>',
+                                '<span class="parameter"><span class="t_parameter-name">$opts</span> <span class="t_operator">=</span> <span class="t_parameter-default t_string">array(&#039;a&#039;=&gt;&#039;ay&#039;,&#039;b&#039;=&gt;&#039;bee&#039;)</span></span><span class="t_punct">,</span>',
+                                '<span class="parameter"><span class="t_parameter-name">$val</span> <span class="t_operator">=</span> <span class="t_const t_parameter-default" title="value: &quot;defined in TestBase&quot;"><span class="classname">self</span><span class="t_operator">::</span><span class="t_identifier">MY_CONSTANT</span></span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span></dd>',
                             '<dt>phpDoc</dt>',
                         ));
                         if (PHP_VERSION_ID <= 80100) {
@@ -388,6 +469,7 @@ EOD;
                     ),
                 ),
             ),
+
             'stringMaxLen' => array(
                 'log',
                 array(
@@ -400,6 +482,7 @@ EOD;
                     },
                 ),
             ),
+
             'test2' => array(
                 'log',
                 array(
@@ -431,7 +514,8 @@ EOD;
                             '<dt class="methods">methods</dt>',
                             '<dd class="info magic">This object has a <code>__call</code> method</dd>',
                             '<dd class="heading">Inherited from <span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>Test2Base</span></dd>',
-                            '<dd class="method public" data-inherited-from="bdk\Test\Debug\Fixture\Test2Base"><span class="t_modifier_public">public</span> <span class="t_identifier" title="magic method">__call</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="Method being called">$name</span></span><span class="t_punct">,</span> <span class="parameter"><span class="t_type">array</span> <span class="t_parameter-name" title="Arguments passed">$args</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">mixed</span></dd>',
+                            '<dd class="method public" data-inherited-from="bdk\Test\Debug\Fixture\Test2Base"><span class="t_modifier_public">public</span> <span class="t_identifier" title="magic method">__call</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="Method being called">$name</span></span><span class="t_punct">,</span>',
+                                '<span class="parameter"><span class="t_type">array</span> <span class="t_parameter-name" title="Arguments passed">$args</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">mixed</span></dd>',
                             '<dd class="method public" data-inherited-from="bdk\Test\Debug\Fixture\Test2Base"><span class="t_modifier_public">public</span> <span class="t_identifier" title="get magic method">__get</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="what we\'re getting">$key</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">mixed</span></dd>',
                             \version_compare(PHP_VERSION, '5.4.6', '>=')
                                 ? '<dd class="method public" data-inherited-from="bdk\Test\Debug\Fixture\Test2Base"><span class="t_modifier_public">public</span> <span class="t_identifier" title="Test constant as default value">constDefault</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="only php &gt;= 5.4.6 can get the name of the constant used">$param</span> <span class="t_operator">=</span> <span class="t_const t_parameter-default" title="value: &quot;bird&quot;">' . $constName . '</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span></dd>'
@@ -456,6 +540,7 @@ EOD;
                     ),
                 ),
             ),
+
             'phpDocCollectFalse' => array(
                 'log',
                 array(
@@ -488,6 +573,7 @@ EOD;
                     },
                 ),
             ),
+
             'phpDocOutputFalse' => array(
                 'log',
                 array(
@@ -516,6 +602,7 @@ EOD;
                     },
                 ),
             ),
+
             'methodCollectFalse' => array(
                 'log',
                 array(
@@ -547,6 +634,7 @@ EOD;
                     },
                 ),
             ),
+
             'phpDocExtends' => array(
                 'log',
                 array(
@@ -710,10 +798,10 @@ EOD;
                         %A<dt class="properties">properties</dt>
                         ' . (PHP_VERSION_ID >= 70400 ? '<dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier t_string"></span> <span class="t_operator">=</span> <span class="t_string">empty</span></dd>' . "\n" : '')
                         . '<dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier t_string"> </span> <span class="t_operator">=</span> <span class="t_string">space</span></dd>
-                        <dd class="property public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string"><a class="unicode" href="https://symbl.cc/en/200b" target="unicode" title="U-200b: Zero Width Space">\u200b</a></span> <span class="t_operator">=</span> <span class="t_string">zwsp</span></dd>
-                        <dd class="property public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string"><a class="unicode" href="https://symbl.cc/en/feff" target="unicode" title="U-feff: BOM / Zero Width No-Break Space">\ufeff</a></span> <span class="t_operator">=</span> <span class="t_string">bom</span></dd>
-                        <dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier t_string"><a class="unicode" href="https://symbl.cc/en/feff" target="unicode" title="U-feff: BOM / Zero Width No-Break Space">\ufeff</a>bom<span class="ws_r"></span><span class="ws_n"></span>
-                        <span class="ws_t">%s</span><span class="binary"><span class="c1-control" title="BEL (bell): \x07">␇</span></span> <span class="binary"><span class="c1-control" title="US (unit seperator): \x1f">␟</span></span> <span class="binary"><span class="c1-control" title="DEL: \x7f">␡</span></span> <a class="unicode" href="https://symbl.cc/en/00a0" target="unicode" title="U-00a0: NBSP">\u00a0</a>&lt;i&gt;(nbsp)&lt;/i&gt; <a class="unicode" href="https://symbl.cc/en/2009" target="unicode" title="U-2009: Thin Space">\u2009</a>(thsp), &amp; <a class="unicode" href="https://symbl.cc/en/200b" target="unicode" title="U-200b: Zero Width Space">\u200b</a>(zwsp)</span> <span class="t_operator">=</span> <span class="t_string">ctrl chars and whatnot</span></dd>
+                        <dd class="property public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string"><a class="unicode" href="https://symbl.cc/en/200B" target="unicode" title="U-200B: Zero Width Space">\u{200b}</a></span> <span class="t_operator">=</span> <span class="t_string">zwsp</span></dd>
+                        <dd class="property public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string"><a class="unicode" href="https://symbl.cc/en/FEFF" target="unicode" title="U-FEFF: BOM / Zero Width No-Break Space">\u{feff}</a></span> <span class="t_operator">=</span> <span class="t_string">bom</span></dd>
+                        <dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier t_string"><a class="unicode" href="https://symbl.cc/en/FEFF" target="unicode" title="U-FEFF: BOM / Zero Width No-Break Space">\u{feff}</a>bom<span class="ws_r"></span><span class="ws_n"></span>
+                        <span class="ws_t">%s</span><span class="char-control" title="\x07: BEL (bell)">␇</span> <span class="char-control" title="\x1f: US (unit separator)">␟</span> <span class="char-control" title="\x7f: DEL">␡</span> <a class="unicode" href="https://symbl.cc/en/00A0" target="unicode" title="U-00A0: NBSP">\u{00a0}</a>&lt;i&gt;(nbsp)&lt;/i&gt; <a class="unicode" href="https://symbl.cc/en/2009" target="unicode" title="U-2009: Thin Space">\u{2009}</a>(thsp), &amp; <a class="unicode" href="https://symbl.cc/en/200B" target="unicode" title="U-200B: Zero Width Space">\u{200b}</a>(zwsp)</span> <span class="t_operator">=</span> <span class="t_string">ctrl chars and whatnot</span></dd>
                         %A</dl>
                         </div></li>',
                     'script' => 'console.log({"___class_name":"stdClass",' . (PHP_VERSION_ID >= 70400 ? '"(public) ":"empty",' : '') . '"(public)  ":"space","(public) \\\u{200b}":"zwsp","(public) \\\u{feff}":"bom","(public) \\\u{feff}bom\r\n\t\\\x07 \\\x1f \\\x7f \\\u{00a0}<i>(nbsp)</i> \\\u{2009}(thsp), & \\\u{200b}(zwsp)":"ctrl chars and whatnot"});',
@@ -730,7 +818,7 @@ EOD;
             ),
         );
 
-        // $tests = \array_intersect_key($tests, \array_flip(array('testObj')));
+        // $tests = \array_intersect_key($tests, \array_flip(array('stdClass')));
 
         return $tests;
     }
@@ -1690,15 +1778,15 @@ EOD;
                 'html' => '<li class="m_log"><span class="no-quotes t_string">array</span> = <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
                     <ul class="array-inner list-unstyled">
                     <li><span class="t_key">foo</span><span class="t_operator">=&gt;</span><span class="t_string">bar</span></li>
-                    <li><span class="t_key">tooDeep</span><span class="t_operator">=&gt;</span><div class="t_object" data-accessible="public"><span class="classname">stdClass</span>
+                    <li><span class="t_key">tooDeep</span><span class="t_operator">=&gt;</span><div class="t_object"><span class="classname">stdClass</span>
                         <span class="t_maxDepth">*MAX DEPTH*</span></div></li>
                     <li><span class="t_key">ding</span><span class="t_operator">=&gt;</span><span class="t_string">dong</span></li>
                     </ul><span class="t_punct">)</span></span></li>',
                 'script' => 'console.log("array",{"foo":"bar","tooDeep":"(object) stdClass *MAX DEPTH*","ding":"dong"});',
                 'streamAnsi' => \str_replace('\e', "\e", 'array \e[38;5;245m=\e[0m \e[38;5;45marray\e[38;5;245m(\e[0m' . "\n"
-                    . '\e[38;5;245m[\e[38;5;83mfoo\e[38;5;245m]\e[38;5;130m => \e[0m\e[38;5;250m"\e[0mbar\e[38;5;250m"\e[0m' . "\n"
-                    . '\e[38;5;245m[\e[38;5;83mtooDeep\e[38;5;245m]\e[38;5;130m => \e[0m\e[1mstdClass\e[22m \e[38;5;196m*MAX DEPTH*\e[0m' . "\n"
-                    . '\e[38;5;245m[\e[38;5;83mding\e[38;5;245m]\e[38;5;130m => \e[0m\e[38;5;250m"\e[0mdong\e[38;5;250m"\e[0m' . "\n"
+                    . '\e[38;5;245m[\e[38;5;83mfoo\e[38;5;245m]\e[38;5;224m => \e[0m\e[38;5;250m"\e[0mbar\e[38;5;250m"\e[0m' . "\n"
+                    . '\e[38;5;245m[\e[38;5;83mtooDeep\e[38;5;245m]\e[38;5;224m => \e[0m\e[1mstdClass\e[22m \e[38;5;196m*MAX DEPTH*\e[0m' . "\n"
+                    . '\e[38;5;245m[\e[38;5;83mding\e[38;5;245m]\e[38;5;224m => \e[0m\e[38;5;250m"\e[0mdong\e[38;5;250m"\e[0m' . "\n"
                     . '\e[38;5;245m)\e[0m'),
                 'text' => 'array = array(
                     [foo] => "bar"

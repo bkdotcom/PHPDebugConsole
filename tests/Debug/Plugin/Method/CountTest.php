@@ -31,7 +31,7 @@ class CountTest extends DebugTestFramework
             $this->debug->count('count test');      // 2,3,4 (1,4,7)
             $this->debug->count('count_inc test', Debug::COUNT_NO_OUT);  //  1,2,3, but not logged
             $lines[1] = __LINE__ + 1;
-            Debug::_count();                   // 1,2,3 (2,5,8)
+            Debug::count();                   // 1,2,3 (2,5,8)
         }
         $this->debug->log(
             'count_inc test',

@@ -61,13 +61,7 @@ class AbstractArray extends AbstractComponent
                 ),
             ));
         }
-        $hist[] = $array;
-        $return = array();
-        /** @var mixed $v */
-        foreach ($array as $k => $v) {
-            $return[$k] = $this->abstracter->crate($v, $method, $hist);
-        }
-        return $return;
+        return $this->doCrate($array, $method, $hist);
     }
 
     /**
@@ -81,9 +75,12 @@ class AbstractArray extends AbstractComponent
      */
     public function getAbstraction(array &$array, $method = null, array $hist = array())
     {
-        return new Abstraction(Type::TYPE_ARRAY, array(
-            'value' => $this->crate($array, $method, $hist),
-        ));
+        $value = $this->crate($array, $method, $hist);
+        return $value instanceof Abstraction
+            ? $value
+            : new Abstraction(Type::TYPE_ARRAY, array(
+                'value' => $value,
+            ));
     }
 
     /**
@@ -105,5 +102,37 @@ class AbstractArray extends AbstractComponent
         return new Abstraction(Type::TYPE_CALLABLE, array(
             'value' => array($className, $array[1]),
         ));
+    }
+
+    /**
+     * Walk the array and crate values
+     *
+     * @param array  $array  Array to crate
+     * @param string $method Method requesting abstraction
+     * @param array  $hist   (@internal) array/object history
+     *
+     * @return array|Abstraction
+     */
+    private function doCrate(array $array, $method, array $hist)
+    {
+        $hist[] = $array;
+        $utf8 = $this->abstracter->debug->utf8;
+        $keys = array();
+        $return = array();
+        /** @var mixed $v */
+        foreach ($array as $k => $v) {
+            if (\is_string($k) && $utf8->isUtf8($k) === false) {
+                $md5 = \md5($k);
+                $keys[$md5] = $this->abstracter->crate($k, $method, $hist);
+                $k = $md5;
+            }
+            $return[$k] = $this->abstracter->crate($v, $method, $hist);
+        }
+        return $keys
+            ? new Abstraction(Type::TYPE_ARRAY, array(
+                'keys' => $keys,
+                'value' => $return,
+            ))
+            : $return;
     }
 }

@@ -191,7 +191,13 @@ class ValueStore implements ArrayAccess, IteratorAggregate, JsonSerializable, Se
     #[\ReturnTypeWillChange]
     public function offsetExists($key)
     {
-        return isset($this->values[$key]);
+        if (isset($this->values[$key])) {
+            return true;
+        }
+        $getter = $this->getter($key);
+        return $getter
+            ? $this->{$getter}() !== null
+            : false;
     }
 
     /**
@@ -208,11 +214,8 @@ class ValueStore implements ArrayAccess, IteratorAggregate, JsonSerializable, Se
             return $this->values[$key];
         }
         $return = null;
-        $key = (string) $key;
-        $getter = \preg_match('/^is[A-Z]/', $key)
-            ? $key
-            : 'get' . \ucfirst($key);
-        if (\method_exists($this, $getter)) {
+        $getter = $this->getter($key);
+        if ($getter) {
             /** @var TValue */
             $return = $this->{$getter}();
         }
@@ -267,6 +270,24 @@ class ValueStore implements ArrayAccess, IteratorAggregate, JsonSerializable, Se
     public function getIterator()
     {
         return new ArrayIterator($this->getValues());
+    }
+
+    /**
+     * Return the getter method for the given key
+     *
+     * @param TKey $key Array key
+     *
+     * @return string|false
+     */
+    private function getter($key)
+    {
+        $key = (string) $key;
+        $getter = \preg_match('/^is[A-Z]/', $key)
+            ? $key
+            : 'get' . \ucfirst($key);
+        return \method_exists($this, $getter)
+            ? $getter
+            : false;
     }
 
     /**

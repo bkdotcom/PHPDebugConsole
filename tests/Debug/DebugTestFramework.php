@@ -6,6 +6,7 @@ use bdk\CssXpath\DOMTestCase;
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
+use bdk\Debug\Utility\ArrayUtil;
 use bdk\Debug\Utility\Reflection;
 use bdk\ErrorHandler\Error;
 use bdk\HttpMessage\ServerRequest;
@@ -194,14 +195,8 @@ class DebugTestFramework extends DOMTestCase
             }
             if (\is_string($expect)) {
                 $expectContains = \preg_replace($regexLtrim, '', $expect);
-                try {
-                    if ($expectContains) {
-                        self::assertStringMatchesFormat('%A' . $expectContains . '%A', $output);
-                    }
-                } catch (\Exception $e) {
-                    // \bdk\Debug::varDump('expect', $expectContains);
-                    // \bdk\Debug::varDump('actual', $output);
-                    throw $e;
+                if ($expectContains) {
+                    self::assertStringMatchesFormat('%A' . $expectContains . '%A', $output);
                 }
             } elseif (\is_callable($expect)) {
                 \call_user_func($expect, $output);
@@ -225,36 +220,20 @@ class DebugTestFramework extends DOMTestCase
         );
     }
 
-    private static function memoryUsage()
-    {
-        static $memoryUsage = 0;
-        $memoryUsageNew = \memory_get_usage(true);
-        $memoryDelta = $memoryUsageNew - $memoryUsage;
-        if ($memoryUsage > 0 && $memoryDelta > 256000 && self::$outputMemoryUsage) {
-            \fwrite(STDERR, \sprintf(
-                'memory usage: %s (increase of %s) (%s)',
-                \number_format($memoryUsageNew),
-                \number_format($memoryDelta),
-                \get_called_class()
-            ) . "\n");
-        }
-        $memoryUsage = $memoryUsageNew;
-    }
-
     /**
      * Test Method's log-entry, return value, output, etc
      *
      * @param string|null $method debug method to call or null/false to just test against last log entry
      * @param array       $args   method arguments
-     * @param array|false $tests  array of 'route' => 'string
+     * @param array       $tests  array of 'route' => 'string
      *                          ie array('html'=>'expected html')
-     *                          pass false to test that nothing was logged
+     *                          empty array equivalent to array('notLogged'=>true)
      *
      * @dataProvider providerTestMethod
      *
      * @return void
      */
-    public function testMethod($method = null, $args = array(), $tests = array())
+    public function testMethod($method = null, $args = array(), array $tests = array())
     {
         $countPath = $method === 'alert'
             ? 'alerts/__count__'
@@ -268,6 +247,8 @@ class DebugTestFramework extends DOMTestCase
             'return' => null,
             'output' => null,
         );
+        ArrayUtil::sortWithOrder($tests, array('entry'), 'key');
+        // $tests = \array_diff_key($tests, \array_flip(array('streamAnsi')));
         if (\is_array($method)) {
             if (isset($method['dataPath'])) {
                 $dataPath = $method['dataPath'];
@@ -320,32 +301,40 @@ class DebugTestFramework extends DOMTestCase
                 $routeObj = $this->tstMethodRouteObj($test);
                 $output = $this->tstMethodOutput($test, $routeObj, $logEntryTemp, $expect);
                 $this->tstMethodTest($test, $logEntryTemp, $expect, $output);
-            } catch (ExpectationFailedException $e) {
+            } catch (\Exception $e) { // ExpectationFailedException
                 $trace = $e->getTrace();
                 $file = null;
                 $line = null;
                 for ($i = 0, $count = \count($trace); $i < $count; $i++) {
                     $frame = $trace[$i];
-                    if (\strpos($frame['class'], __NAMESPACE__) === 0) {
+                    if (isset($frame['class']) && \strpos($frame['class'], __NAMESPACE__) === 0) {
                         $file = $trace[$i - 1]['file'];
                         $line = $trace[$i - 1]['line'];
                         break;
                     }
                 }
-                $message = $test . ' has failed'
+                $message = $test . ' has failed (' . $e->getMessage() . ')'
                     . ' - ' . $file . ':' . $line;
-                if ($test === 'entry') {
-                    \bdk\Debug::varDump(array(
-                        'expect' => $expect,
-                        'actual' => $this->helper->logEntryToArray($logEntryTemp),
-                    ));
+                \fwrite(STDERR, "\e[38;5;1;48;5;230;1;4mTest: " . $test .  "\e[0m\n");
+                if ($expect instanceof \Closure) {
+                    \fwrite(STDERR, "expect is closure.\n");
                 } elseif (\is_string($expect) && \is_string($output)) {
-                    echo $test . ':' . "\n";
-                    echo 'expect: ' . \str_replace("\e", '\e', $expect) . "\n\n"
-                        . 'actual: ' . \str_replace("\e", '\e', $output) . "\n\n";
-                    if (\strpos($output, "\e") !== false) {
-                        echo 'actual ansi: ' . $output . "\n\n";
+                    \bdk\Debug::varDump('expect', \str_replace("\e", '\e', self::normalizeString($expect)));
+                    \fwrite(STDERR, "\n");
+                    \bdk\Debug::varDump('actual', \str_replace("\e", '\e', self::normalizeString($output)));
+                    if (\strpos($expect, "\e") !== false || \strpos($output, "\e") !== false) {
+                        \fwrite(STDERR, "\n");
+                        \fwrite(STDERR, 'expect ansi: ' . $expect . "\n");
+                        \fwrite(STDERR, "\n");
+                        \fwrite(STDERR, 'actual ansi: ' . $output . "\n");
                     }
+                } else {
+                    if ($test === 'entry') {
+                        $output = $this->helper->logEntryToArray($logEntryTemp);
+                    }
+                    \bdk\Debug::varDump('expect', $expect);
+                    \fwrite(STDERR, "\n");
+                    \bdk\Debug::varDump('actual', $output);
                 }
                 throw new \PHPUnit\Framework\AssertionFailedError($message);
             }
@@ -431,7 +420,7 @@ class DebugTestFramework extends DOMTestCase
             // assume json
             $expect = \json_decode($expect, true);
             if ($expect === null) {
-                throw new \Exception(\json_last_error(). ': ' . \json_last_error_msg());
+                throw new \Exception('json error: ' . \json_last_error() . ': ' . \json_last_error_msg());
             }
         }
 
@@ -463,6 +452,22 @@ class DebugTestFramework extends DOMTestCase
             }
         }
         return $this->helper->deObjectifyData($logEntries);
+    }
+
+    private static function memoryUsage()
+    {
+        static $memoryUsage = 0;
+        $memoryUsageNew = \memory_get_usage(true);
+        $memoryDelta = $memoryUsageNew - $memoryUsage;
+        if ($memoryUsage > 0 && $memoryDelta > 256000 && self::$outputMemoryUsage) {
+            \fwrite(STDERR, \sprintf(
+                'memory usage: %s (increase of %s) (%s)',
+                \number_format($memoryUsageNew),
+                \number_format($memoryDelta),
+                \get_called_class()
+            ) . "\n");
+        }
+        $memoryUsage = $memoryUsageNew;
     }
 
     /**
@@ -555,7 +560,11 @@ class DebugTestFramework extends DOMTestCase
                     \call_user_func($expect, $logEntry);
                 } elseif (\is_string($expect)) {
                     $logEntryArray = $this->helper->logEntryToArray($logEntry);
-                    self::assertStringMatchesFormat($expect, \json_encode($logEntryArray), 'log entry does not match format');
+                    self::assertStringMatchesFormat(
+                        $expect,
+                        \json_encode($logEntryArray),
+                        'log entry does not match format'
+                    );
                 } else {
                     $logEntryArray = $this->helper->logEntryToArray($logEntry);
                     if (isset($expect['meta']['file']) && $expect['meta']['file'] === '*') {
@@ -758,7 +767,7 @@ class DebugTestFramework extends DOMTestCase
                     : self::assertContains($outputExpect['contains'], $output, $message);
                 return;
             }
-            $message = "\e[1m" . $test . " not same\e[0m";
+            $message = "\e[1m" . $test . " not same\e[0m: ";
             self::assertSame($outputExpect, $output, $message);
             return;
         }
@@ -772,7 +781,7 @@ class DebugTestFramework extends DOMTestCase
             $outputExpect = \preg_replace('/^(X-Wf-1-1-1-)\S+\b/m', '$1%d', $outputExpect);
         }
 
-        $message = "\e[1m" . $test . " not same\e[0m";
+        $message = "\e[1m" . $test . " not same\e[0m: ";
         self::assertStringMatchesFormatNormalized($outputExpect, $output, $message);
     }
 
@@ -788,20 +797,21 @@ class DebugTestFramework extends DOMTestCase
      */
     protected static function assertStringMatchesFormatNormalized($expect, $actual, $message = null)
     {
-        $actual = \preg_replace('#^\s+#m', '', $actual);
-        $expect = \preg_replace('#^\s+#m', '', $expect);
-        // @see https://github.com/sebastianbergmann/phpunit/issues/3040
-        $actual = \str_replace("\r", '[\\r]', $actual);
-        $expect = \str_replace("\r", '[\\r]', $expect);
-
-        $actual = \trim($actual);
-        $expect = \trim($expect);
-
-        $args = array($expect, $actual);
+        $args = array(
+            self::normalizeString($expect),
+            self::normalizeString($actual),
+        );
         if ($message) {
             $args[] = $message;
         }
-
         \call_user_func_array(array('PHPUnit\Framework\TestCase', 'assertStringMatchesFormat'), $args);
+    }
+
+    private static function normalizeString($string)
+    {
+        $string = \preg_replace('#^\s+#m', '', $string);
+        // @see https://github.com/sebastianbergmann/phpunit/issues/3040
+        $string = \str_replace("\r", '[\\r]', $string);
+        return \trim($string);
     }
 }

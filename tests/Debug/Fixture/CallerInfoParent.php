@@ -6,20 +6,20 @@ class CallerInfoParent
 {
     function extendMe()
     {
-        \bdk\Debug::_group();
-        \bdk\Debug::_groupEnd();
+        \bdk\Debug::group();
+        \bdk\Debug::groupEnd();
     }
 
     function inherited()
     {
-        \bdk\Debug::_group();
-        \bdk\Debug::_groupEnd();
+        \bdk\Debug::group();
+        \bdk\Debug::groupEnd();
     }
 
     public static function staticParent()
     {
-        \bdk\Debug::_group();
-        \bdk\Debug::_groupEnd();
+        \bdk\Debug::group();
+        \bdk\Debug::groupEnd();
     }
 
     public function sensitiveParam(
@@ -27,7 +27,7 @@ class CallerInfoParent
         $secret,
         $sauce
     ) {
-        \bdk\Debug::_group();
-        \bdk\Debug::_groupEnd();
+        \bdk\Debug::group();
+        \bdk\Debug::groupEnd();
     }
 }

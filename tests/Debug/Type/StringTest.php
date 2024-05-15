@@ -13,13 +13,15 @@ use bdk\Test\Debug\DebugTestFramework;
  *
  * @covers \bdk\Debug\Abstraction\AbstractString
  * @covers \bdk\Debug\Dump\Base
- * @covers \bdk\Debug\Dump\BaseValue
+ * @covers \bdk\Debug\Dump\Base\Value
  * @covers \bdk\Debug\Dump\Html
  * @covers \bdk\Debug\Dump\Html\HtmlString
- * @covers \bdk\Debug\Dump\Html\HtmlStringEncoded
+ * @covers \bdk\Debug\Dump\Html\HtmlStringBinary
  * @covers \bdk\Debug\Dump\Text
- * @covers \bdk\Debug\Dump\TextAnsiValue
- * @covers \bdk\Debug\Dump\TextValue
+ * @covers \bdk\Debug\Dump\Text\Value
+ * @covers \bdk\Debug\Dump\TextAnsi\Value
+ *
+ * @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys
  */
 class StringTest extends DebugTestFramework
 {
@@ -130,24 +132,9 @@ Really white and nerdy
 
 EOD;
 
-        $base64snip = \substr(
-            \base64_encode(\file_get_contents(TEST_DIR . '/assets/logo.png')),
-            0,
-            156
-        );
+        $binary = \base64_decode('j/v9wNrF5i1abMXFW/4vVw==', true);
 
-        $array = array(
-            'poop' => '💩',
-            'int' => 42,
-            'password' => 'secret',
-        );
-        $base64snip2 = \base64_encode(
-            \json_encode($array)
-        );
-        $base64snip3 = \base64_encode(
-            \serialize($array)
-        );
-        return array(
+        $tests = array(
             'basic' => array(
                 'log',
                 array(
@@ -178,23 +165,24 @@ EOD;
                         );
                     },
                     'firephp' => 'X-Wf-1-1-1-19: %d|[{"Type":"LOG"},"\\\\u{feff}Pesky <abbr title=\"Byte-Order-Mark\">BOM</abbr> and \\\x07 (a control char)."]|',
-                    'html' => '<li class="m_log"><span class="no-quotes t_string"><a class="unicode" href="https://symbl.cc/en/feff" target="unicode" title="U-feff: BOM / Zero Width No-Break Space">\ufeff</a>Pesky <abbr title="Byte-Order-Mark">BOM</abbr> and <span class="binary"><span class="c1-control" title="BEL (bell): \x07">␇</span></span> (a control char).</span></li>',
+                    'html' => '<li class="m_log"><span class="no-quotes t_string"><a class="unicode" href="https://symbl.cc/en/FEFF" target="unicode" title="U-FEFF: BOM / Zero Width No-Break Space">\u{feff}</a>Pesky <abbr title="Byte-Order-Mark">BOM</abbr> and <span class="char-control" title="\x07: BEL (bell)">␇</span> (a control char).</span></li>',
                     'script' => 'console.log("\\\u{feff}Pesky <abbr title=\"Byte-Order-Mark\">BOM</abbr> and \\\x07 (a control char).");',
+                    'streamAnsi' => "\e[38;5;208m\\u{feff}\e[0mPesky <abbr title=\"Byte-Order-Mark\">BOM</abbr> and \e[38;5;208m\\x07\e[0m (a control char).",
                     'text' => '\u{feff}Pesky <abbr title="Byte-Order-Mark">BOM</abbr> and \x07 (a control char).',
                 ),
             ),
 
-            'nonPrintable' => array(
+            'highlight' => array(
                 'log',
                 array(
-                    "\tcontrol chars: \x07 \x1F \x7F\n",
-                    "\teasy-to-miss characters such as \xc2\xa0(nbsp), \xE2\x80\x89(thsp), &amp; \xE2\x80\x8B(zwsp)",
+                    "\tcontrol chars: \x07 \x1F \x7F\r\n",
+                    "\teasy-to-miss \xD1\x81haracters such as \xc2\xa0(nbsp), \xE2\x80\x89(thsp), &amp; \xE2\x80\x8B(zwsp)",
                 ),
                 array(
                     'chromeLogger' => array(
                         array(
-                            "\tcontrol chars: \\x07 \\x1f \\x7f\n",
-                            "\teasy-to-miss characters such as \\u{00a0}(nbsp), \\u{2009}(thsp), &amp; \\u{200b}(zwsp)",
+                            "\tcontrol chars: \\x07 \\x1f \\x7f\r\n",
+                            "\teasy-to-miss \\u{0441}haracters such as \\u{00a0}(nbsp), \\u{2009}(thsp), &amp; \\u{200b}(zwsp)",
                         ),
                         null,
                         '',
@@ -202,17 +190,19 @@ EOD;
                     'entry' => static function (LogEntry $logEntry) {
                         // assert args are unchanged
                         self::assertSame(array(
-                            "\tcontrol chars: \x07 \x1F \x7F\n",
-                            "\teasy-to-miss characters such as \xc2\xa0(nbsp), \xE2\x80\x89(thsp), &amp; \xE2\x80\x8B(zwsp)",
+                            "\tcontrol chars: \x07 \x1F \x7F\r\n",
+                            "\teasy-to-miss \xD1\x81haracters such as \xc2\xa0(nbsp), \xE2\x80\x89(thsp), &amp; \xE2\x80\x8B(zwsp)",
                         ), $logEntry['args']);
                     },
-                    'firephp' => 'X-Wf-1-1-1-5: 155|[{"Label":"\tcontrol chars: \\\x07 \\\x1f \\\x7f\n","Type":"LOG"},"\teasy-to-miss characters such as \\\u{00a0}(nbsp), \\\u{2009}(thsp), &amp; \\\u{200b}(zwsp)"]|',
-                    'html' => '<li class="m_log"><span class="no-quotes t_string">' . "\t" . 'control chars: <span class="binary"><span class="c1-control" title="BEL (bell): \x07">␇</span></span> <span class="binary"><span class="c1-control" title="US (unit seperator): \x1f">␟</span></span> <span class="binary"><span class="c1-control" title="DEL: \x7f">␡</span></span>' . "\n"
-                        . '</span> = <span class="t_string"><span class="ws_t">' . "\t" . '</span>easy-to-miss characters such as <a class="unicode" href="https://symbl.cc/en/00a0" target="unicode" title="U-00a0: NBSP">\u00a0</a>(nbsp), <a class="unicode" href="https://symbl.cc/en/2009" target="unicode" title="U-2009: Thin Space">\u2009</a>(thsp), &amp;amp; <a class="unicode" href="https://symbl.cc/en/200b" target="unicode" title="U-200b: Zero Width Space">\u200b</a>(zwsp)'
+                    'firephp' => 'X-Wf-1-1-1-5: 165|[{"Label":"\tcontrol chars: \\\x07 \\\x1f \\\x7f\r\n","Type":"LOG"},"\teasy-to-miss \\\u{0441}haracters such as \\\u{00a0}(nbsp), \\\u{2009}(thsp), &amp; \\\u{200b}(zwsp)"]|',
+                    'html' => '<li class="m_log"><span class="no-quotes t_string">' . "\t" . 'control chars: <span class="char-control" title="\x07: BEL (bell)">␇</span> <span class="char-control" title="\x1f: US (unit separator)">␟</span> <span class="char-control" title="\x7f: DEL">␡</span>' . "\r\n"
+                        . '</span> = <span class="t_string"><span class="ws_t">' . "\t" . '</span>easy-to-miss <a class="unicode" href="https://symbl.cc/en/0441" target="unicode" title="U-0441: CYRILLIC SMALL LETTER ES">' . "\xD1\x81" . '</a>haracters such as <a class="unicode" href="https://symbl.cc/en/00A0" target="unicode" title="U-00A0: NBSP">\u{00a0}</a>(nbsp), <a class="unicode" href="https://symbl.cc/en/2009" target="unicode" title="U-2009: Thin Space">\u{2009}</a>(thsp), &amp;amp; <a class="unicode" href="https://symbl.cc/en/200B" target="unicode" title="U-200B: Zero Width Space">\u{200b}</a>(zwsp)'
                         . '</span></li>',
-                    'script' => 'console.log("\tcontrol chars: \\\x07 \\\x1f \\\x7f\n","\teasy-to-miss characters such as \\\u{00a0}(nbsp), \\\u{2009}(thsp), &amp; \\\u{200b}(zwsp)");',
-                    'text' => 'control chars: \x07 \x1f \x7f' . "\n"
-                        . '= "' . "\t" . 'easy-to-miss characters such as \u{00a0}(nbsp), \u{2009}(thsp), &amp; \u{200b}(zwsp)"',
+                    'script' => 'console.log("\tcontrol chars: \\\x07 \\\x1f \\\x7f\r\n","\teasy-to-miss \\\u{0441}haracters such as \\\u{00a0}(nbsp), \\\u{2009}(thsp), &amp; \\\u{200b}(zwsp)");',
+                    'streamAnsi' => "control chars: \e[38;5;208m\\x07\e[0m \e[38;5;208m\\x1f\e[0m \e[38;5;208m\\x7f\e[0m\r\n"
+                        . "\e[38;5;245m=\e[0m \e[38;5;250m\"\e[0m	easy-to-miss \e[38;5;208m\\u{0441}\e[0mharacters such as \e[38;5;208m\\u{00a0}\e[0m(nbsp), \e[38;5;208m\\u{2009}\e[0m(thsp), &amp; \e[38;5;208m\\u{200b}\e[0m(zwsp)\e[38;5;250m\"\e[0m",
+                    'text' => 'control chars: \x07 \x1f \x7f' . "\r\n"
+                        . '= "' . "\t" . 'easy-to-miss \\u{0441}haracters such as \u{00a0}(nbsp), \u{2009}(thsp), &amp; \u{200b}(zwsp)"',
                 ),
             ),
 
@@ -268,6 +258,12 @@ EOD;
                 'log',
                 array('long string', $longString, Debug::meta('cfg', 'stringMaxLen', 430)), // cut in middle of multi-byte char
                 array(
+                    'entry' => static function (LogEntry $logEntry) {
+                        self::assertSame(2205, $logEntry['args'][1]['strlen']);
+                        // maxLen is 430, but we're cutting in middle of multi-byte char
+                        self::assertSame(427, $logEntry['args'][1]['strlenValue']);
+                        self::assertSame($logEntry['args'][1]['strlenValue'], \strlen($logEntry['args'][1]['value']));
+                    },
                     'chromeLogger' => array(
                         array(
                             'long string',
@@ -289,160 +285,51 @@ EOD;
                     'script' => 'console.log("long string",' . \json_encode($longStringExpect . '[1778 more bytes (not logged)]') . ');',
                     'streamAnsi' => "long string \e[38;5;245m=\e[0m \e[38;5;250m\"\e[0m"
                         . $longStringExpect
-                        . "\e[38;5;250m\"\e[0m"
-                        . "\e[30;48;5;41m[1778 more bytes (not logged)]\e[0m",
-                    'text' => 'long string = "' . $longStringExpect . '"[1778 more bytes (not logged)]',
+                        . "\e[30;48;5;41m[1778 more bytes (not logged)]\e[0m"
+                        . "\e[38;5;250m\"\e[0m",
+                    'text' => 'long string = "' . $longStringExpect . '[1778 more bytes (not logged)]"',
                 ),
             ),
 
-            'base64' => array(
+            'containsBinary' => array(
                 'log',
                 array(
-                    \base64_encode(\file_get_contents(TEST_DIR . '/assets/logo.png')),
-                ),
-                array(
-                    'entry' => static function (LogEntry $logEntry) use ($base64snip) {
-                        $jsonExpect = '{"method":"log","args":[{"brief":false,"strlen":10852,"type":"string","typeMore":"base64","value":' . \json_encode($base64snip) . ',"valueDecoded":{"brief":false,"contentType":"%s","strlen":%d,"type":"string","typeMore":"binary","value":"","debug":"\u0000debug\u0000"},"debug":"\u0000debug\u0000"}],"meta":[]}';
-                        $jsonified = \json_encode($logEntry);
-                        self::assertStringMatchesFormat($jsonExpect, $jsonified);
-                    },
-                    'chromeLogger' => array(
-                        array(
-                            $base64snip . '[10696 more bytes (not logged)]',
-                        ),
-                        null,
-                        '',
-                    ),
-                    'html' => '<li class="m_log"><span class="string-encoded tabs-container" data-type-more="base64">' . "\n"
-                        . '<nav role="tablist"><a class="nav-link" data-target=".tab-1" data-toggle="tab" role="tab">base64</a><a class="active nav-link" data-target=".tab-2" data-toggle="tab" role="tab">decoded</a></nav>' . "\n"
-                        . '<div class="tab-1 tab-pane" role="tabpanel"><span class="no-quotes t_string">' . $base64snip . '</span><span class="maxlen">&hellip; 10696 more bytes (not logged)</span></div>' . "\n"
-                        . '<div class="active tab-2 tab-pane" role="tabpanel"><span class="t_keyword">string</span><span class="text-muted">(binary)</span>' . "\n"
-                        . '<ul class="list-unstyled value-container" data-type="string" data-type-more="binary">' . "\n"
-                        . '<li>mime type = <span class="content-type t_string">%s</span></li>' . "\n"
-                        . '<li>size = <span class="t_int">%d</span></li>' . "\n"
-                        . '<li>Binary data not collected</li>' . "\n"
-                        . '</ul></div>' . "\n"
-                        . '</span></li>',
-                    'script' => 'console.log("' . $base64snip . '[10696 more bytes (not logged)]");',
-                    'text' => $base64snip . '[10696 more bytes (not logged)]',
-                ),
-            ),
-
-            'base64.brief' => array(
-                'group',
-                array(
-                    \base64_encode(\file_get_contents(TEST_DIR . '/assets/logo.png')),
+                    '<b>Brad</b>:' . "\n" . 'w𝔞s ' . "\x80" . 'hеre',
                 ),
                 array(
                     'entry' => static function (LogEntry $logEntry) {
-                        self::assertInstanceOf('bdk\\Debug\\Abstraction\\Abstraction', $logEntry['args'][0]);
-                        self::assertSame(array(
-                            'brief' => true,
-                            'strlen' => 10852,
-                            'type' => 'string',
-                            'typeMore' => 'base64',
-                            'value' => \substr(\base64_encode(\file_get_contents(TEST_DIR . '/assets/logo.png')), 0, 156),
-                            'valueDecoded' => null,
-                        ), $logEntry['args'][0]->getValues());
+                        self::assertInstanceOf('\bdk\Debug\Abstraction\Abstraction', $logEntry['args'][0]);
+                        self::assertSame(Type::TYPE_STRING, $logEntry['args'][0]['type']);
+                        self::assertSame(Type::TYPE_STRING_BINARY, $logEntry['args'][0]['typeMore']);
                     },
-                    'html' => '<li class="expanded m_group">
-                        <div class="group-header"><span class="font-weight-bold group-label"><span class="t_keyword">string</span><span class="text-muted">(base64)</span><span class="t_punct colon">:</span> <span class="t_string" data-type-more="base64"><span class="no-quotes t_string">'
-                            . \substr(\base64_encode(\file_get_contents(TEST_DIR . '/assets/logo.png')), 0, 156)
-                            . '</span><span class="maxlen">&hellip; 10696 more bytes (not logged)</span></span></span></div>
-                        <ul class="group-body">',
-                ),
-            ),
-
-            'base64.json.redact' => array(
-                'log',
-                array(
-                    $base64snip2,
-                    Debug::meta('redact'),
-                ),
-                array(
-                    'entry' => static function (LogEntry $logEntry) use ($base64snip2) {
-                        $jsonExpect = '{"method":"log","args":[{"brief":false,"strlen":null,"type":"string","typeMore":"base64","value":"' . $base64snip2 . '","valueDecoded":{"addQuotes":false,"attribs":{"class":["highlight","language-json"]},"brief":false,"contentType":"application\/json","prettified":true,"prettifiedTag":true,"strlen":null,"type":"string","typeMore":"json","value":"{\n    \"poop\": \"\\\\ud83d\\\\udca9\",\n    \"int\": 42,\n    \"password\": \"\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\"\n}","valueDecoded":{"poop":"\ud83d\udca9","int":42,"password":"\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588"},"visualWhiteSpace":false,"debug":"\u0000debug\u0000"},"debug":"\u0000debug\u0000"}],"meta":{"redact":true}}';
-                        $jsonified = \json_encode($logEntry);
-                        self::assertSame($jsonExpect, $jsonified);
-                    },
-                    'chromeLogger' => array(
-                        array(
-                            $base64snip2,
-                        ),
-                        null,
-                        '',
-                    ),
-                    'html' => '<li class="m_log"><span class="string-encoded tabs-container" data-type-more="base64">
-                        <nav role="tablist"><a class="nav-link" data-target=".tab-1" data-toggle="tab" role="tab">base64</a><a class="nav-link" data-target=".tab-2" data-toggle="tab" role="tab">json</a><a class="active nav-link" data-target=".tab-3" data-toggle="tab" role="tab">decoded</a></nav>
-                        <div class="tab-1 tab-pane" role="tabpanel"><span class="no-quotes t_string">' . $base64snip2 . '</span></div>
-                        <div class="tab-2 tab-pane" role="tabpanel"><span class="value-container" data-type="string"><span class="prettified">(prettified)</span> <span class="highlight language-json no-quotes t_string">{
-                            &quot;poop&quot;: &quot;\ud83d\udca9&quot;,
-                            &quot;int&quot;: 42,
-                            &quot;password&quot;: &quot;█████████&quot;
-                        }</span></span></div>
-                        <div class="active tab-3 tab-pane" role="tabpanel"><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
-                            <ul class="array-inner list-unstyled">
-                                <li><span class="t_key">poop</span><span class="t_operator">=&gt;</span><span class="t_string">💩</span></li>
-                                <li><span class="t_key">int</span><span class="t_operator">=&gt;</span><span class="t_int">42</span></li>
-                                <li><span class="t_key">password</span><span class="t_operator">=&gt;</span><span class="t_string">█████████</span></li>
-                            </ul><span class="t_punct">)</span></span></div>
-                        </span></li>',
-                    'script' => 'console.log("' . $base64snip2 . '");',
-                    'text' => $base64snip2,
-                ),
-            ),
-
-            'base64.serialized.redact' => array(
-                'log',
-                array(
-                    $base64snip3,
-                    Debug::meta('redact'),
-                ),
-                array(
-                    'entry' => static function (LogEntry $logEntry) use ($base64snip3) {
-                        $jsonExpect = '{"method":"log","args":[{"brief":false,"strlen":null,"type":"string","typeMore":"base64","value":"' . $base64snip3 . '","valueDecoded":{"brief":false,"strlen":null,"type":"string","typeMore":"serialized","value":"a:3:{s:4:\"poop\";s:4:\"\ud83d\udca9\";s:3:\"int\";i:42;s:8:\"password\";s:6:\"\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\";}","valueDecoded":{"poop":"\ud83d\udca9","int":42,"password":"\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588"},"debug":"\u0000debug\u0000"},"debug":"\u0000debug\u0000"}],"meta":{"redact":true}}';
-                        $jsonified = \json_encode($logEntry);
-                        self::assertSame($jsonExpect, $jsonified);
-                    },
-                    'chromeLogger' => array(
-                        array(
-                            $base64snip3,
-                        ),
-                        null,
-                        '',
-                    ),
-                    'html' => '<li class="m_log"><span class="string-encoded tabs-container" data-type-more="base64">
-                        <nav role="tablist"><a class="nav-link" data-target=".tab-1" data-toggle="tab" role="tab">base64</a><a class="nav-link" data-target=".tab-2" data-toggle="tab" role="tab">serialized</a><a class="active nav-link" data-target=".tab-3" data-toggle="tab" role="tab">unserialized</a></nav>
-                        <div class="tab-1 tab-pane" role="tabpanel"><span class="no-quotes t_string">' . $base64snip3 . '</span></div>
-                        <div class="tab-2 tab-pane" role="tabpanel"><span class="no-quotes t_string">a:3:{s:4:&quot;poop&quot;;s:4:&quot;💩&quot;;s:3:&quot;int&quot;;i:42;s:8:&quot;password&quot;;s:6:&quot;█████████&quot;;}</span></div>
-                        <div class="active tab-3 tab-pane" role="tabpanel"><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
-                            <ul class="array-inner list-unstyled">
-                                <li><span class="t_key">poop</span><span class="t_operator">=&gt;</span><span class="t_string">💩</span></li>
-                                <li><span class="t_key">int</span><span class="t_operator">=&gt;</span><span class="t_int">42</span></li>
-                                <li><span class="t_key">password</span><span class="t_operator">=&gt;</span><span class="t_string">█████████</span></li>
-                            </ul><span class="t_punct">)</span></span></div>
-                        </span></li>',
-                    'script' => 'console.log("' . $base64snip3 . '");',
-                    'text' => $base64snip3,
+                    'html' => '<li class="m_log">&lt;b&gt;Brad&lt;/b&gt;:
+                        w<a class="unicode" href="https://symbl.cc/en/1D51E" target="unicode" title="U-1D51E: MATHEMATICAL FRAKTUR SMALL A">𝔞</a>s <span class="binary">\x80</span>h<a class="unicode" href="https://symbl.cc/en/0435" target="unicode" title="U-0435: CYRILLIC SMALL LETTER IE">е</a>re</li>',
+                    'script' => 'console.log("<b>Brad</b>:\nw\\\u{1d51e}s \\\x80h\\\u{0435}re");',
+                    'streamAnsi' => "<b>Brad</b>:
+                        w\e[38;5;208m\\u{1d51e}\e[0ms \e[30;48;5;250m80\e[0mh\e[38;5;208m\\u{0435}\e[0mre",
+                    'text' => '<b>Brad</b>:
+                        w\u{1d51e}s \x80h\u{0435}re',
                 ),
             ),
 
             'binary' => array(
                 'log',
                 array(
-                    \base64_decode('j/v9wNrF5i1abMXFW/4vVw==', true),
+                    $binary,
                 ),
                 array(
                     'entry' => array(
                         'method' => 'log',
                         'args' => array(
                             array(
-                                'debug' => Abstracter::ABSTRACTION,
                                 'brief' => false,
+                                'debug' => Abstracter::ABSTRACTION,
+                                'percentBinary' => 62.5,
                                 'strlen' => 16,
+                                'strlenValue' => 16,
                                 'type' => Type::TYPE_STRING,
                                 'typeMore' => Type::TYPE_STRING_BINARY,
-                                'value' => \base64_decode('j/v9wNrF5i1abMXFW/4vVw==', true),
+                                'value' => \trim(\chunk_split(\bin2hex($binary), 2, ' ')),
                             ),
                         ),
                         'meta' => array(),
@@ -452,25 +339,29 @@ EOD;
                         <li>size = <span class="t_int">16</span></li>
                         <li class="t_string"><span class="binary">8f fb fd c0 da c5 e6 2d 5a 6c c5 c5 5b fe 2f 57</span></li>
                         </ul></li>',
+                    'streamAnsi' => "\e[30;48;5;250m" . \trim(\chunk_split(\bin2hex($binary), 2, ' ')) . "\e[0m",
+                    'text' => '8f fb fd c0 da c5 e6 2d 5a 6c c5 c5 5b fe 2f 57',
                 ),
             ),
 
             'binary.brief' => array(
                 'group',
                 array(
-                    \base64_decode('j/v9wNrF5i1abMXFW/4vVw==', true),
+                    $binary,
                 ),
                 array(
                     'entry' => array(
                         'method' => 'group',
                         'args' => array(
                             array(
-                                'debug' => Abstracter::ABSTRACTION,
                                 'brief' => true,
+                                'debug' => Abstracter::ABSTRACTION,
+                                'percentBinary' => 62.5,
                                 'strlen' => 16,
+                                'strlenValue' => 16,
                                 'type' => Type::TYPE_STRING,
                                 'typeMore' => Type::TYPE_STRING_BINARY,
-                                'value' => \base64_decode('j/v9wNrF5i1abMXFW/4vVw==', true),
+                                'value' => \trim(\chunk_split(\bin2hex($binary), 2, ' ')),
                             ),
                         ),
                         'meta' => array(),
@@ -478,6 +369,8 @@ EOD;
                     'html' => '<li class="expanded m_group">
                         <div class="group-header"><span class="font-weight-bold group-label"><span class="binary">8f fb fd c0 da c5 e6 2d 5a 6c c5 c5 5b fe 2f 57</span></span></div>
                         <ul class="group-body">',
+                    'streamAnsi' => "▸ \e[30;48;5;250m" . \trim(\chunk_split(\bin2hex($binary), 2, ' ')) . "\e[0m",
+                    'text' => '▸ ' . \trim(\chunk_split(\bin2hex($binary), 2, ' ')),
                 ),
             ),
 
@@ -491,12 +384,14 @@ EOD;
                         'method' => 'group',
                         'args' => array(
                             array(
-                                'debug' => Abstracter::ABSTRACTION,
                                 'brief' => true,
+                                'contentType' => 'image/png',
+                                'debug' => Abstracter::ABSTRACTION,
+                                'percentBinary' => 0,
                                 'strlen' => \filesize(TEST_DIR . '/assets/logo.png'),
+                                'strlenValue' => 0,
                                 'type' => Type::TYPE_STRING,
                                 'typeMore' => Type::TYPE_STRING_BINARY,
-                                'contentType' => 'image/png',
                                 'value' => '',
                             ),
                         ),
@@ -505,141 +400,23 @@ EOD;
                     'html' => '<li class="expanded m_group">
                         <div class="group-header"><span class="font-weight-bold group-label"><span class="t_keyword">string</span><span class="text-muted">(image/png)</span><span class="t_punct colon">:</span> 7.95 kB</span></div>
                         <ul class="group-body">',
-                ),
-            ),
-
-            'json.long' => array(
-                'log',
-                array(
-                    \file_get_contents(TEST_DIR . '/../composer.json'),
-                    Debug::_meta('cfg', 'stringMaxLen', array('json' => array(0 => 123, 5000 => 5000))),
-                ),
-                array(
-                    'entry' => static function (LogEntry $entry) {
-                        $json = \file_get_contents(TEST_DIR . '/../composer.json');
-                        $jsonPrettified = Debug::getInstance()->stringUtil->prettyJson($json);
-                        // $this->helper->stderr('jsonPrettified', $entry['args'][0]);
-                        self::assertSame(\strlen($jsonPrettified), $entry['args'][0]['strlen']);
-                        self::assertSame(\substr($jsonPrettified, 0, 123), $entry['args'][0]['value']);
-                    },
-                    'html' => static function ($html) {
-                        $json = \file_get_contents(TEST_DIR . '/../composer.json');
-                        $jsonPrettified = Debug::getInstance()->stringUtil->prettyJson($json);
-                        $diff = \strlen($jsonPrettified) - 123;
-                        self::assertStringContainsString('<span class="maxlen">&hellip; ' . $diff . ' more bytes (not logged)</span></span></span></div>', $html);
-                    },
-                    'text' => static function ($text) {
-                        $json = \file_get_contents(TEST_DIR . '/../composer.json');
-                        $jsonPrettified = Debug::getInstance()->stringUtil->prettyJson($json);
-                        $diff = \strlen($jsonPrettified) - 123;
-                        self::assertStringContainsString('[' . $diff . ' more bytes (not logged)]', $text);
-                    },
-                ),
-            ),
-
-            'json.brief' => array(
-                'group',
-                array(
-                    \json_encode(array(
-                        'poop' => '💩',
-                        'int' => 42,
-                        'password' => 'secret',
-                    )),
-                    Debug::meta('redact'),
-                ),
-                array(
-                    'entry' => array(
-                        'method' => 'group',
-                        'args' => array(
-                            array(
-                                'debug' => Abstracter::ABSTRACTION,
-                                'brief' => true,
-                                'strlen' => null,
-                                'type' => Type::TYPE_STRING,
-                                'typeMore' => Type::TYPE_STRING_JSON,
-                                'value' => '{"poop":"\ud83d\udca9","int":42,"password":"█████████"}',
-                                'valueDecoded' => null,
-                            ),
-                        ),
-                        'meta' => array(
-                            'redact' => true,
-                        ),
-                    ),
-                    'html' => '<li class="expanded m_group">
-                        <div class="group-header"><span class="font-weight-bold group-label"><span class="t_string" data-type-more="json"><span class="no-quotes t_string">{&quot;poop&quot;:&quot;\ud83d\udca9&quot;,&quot;int&quot;:42,&quot;password&quot;:&quot;█████████&quot;}</span></span></span></div>
-                        <ul class="group-body">',
+                    'streamAnsi' => "▸ \e[38;5;45mstring\e[0m\e[38;5;250m(image/png)\e[0m: 7.95 kB",
+                    'text' => '▸ string(image/png): 7.95 kB',
                 ),
             ),
 
             'dblEncode' => array(
                 'log',
                 array(
-                    '\u0000 / foo \\ bar',
+                    '\u0000 / foo \\ bar',  // both are single backslash
                 ),
                 array(
-                    'script' => 'console.log(' . \json_encode('\u0000 / foo \\ bar', JSON_UNESCAPED_SLASHES) . ');',
-                ),
-            ),
-
-            'serialized' => array(
-                'log',
-                array(
-                    \serialize(array('foo' => 'bar')),
-                ),
-                array(
-                    'entry' => array(
-                        'method' => 'log',
-                        'args' => array(
-                            array(
-                                'debug' => Abstracter::ABSTRACTION,
-                                'brief' => false,
-                                'strlen' => null,
-                                'type' => Type::TYPE_STRING,
-                                'typeMore' => Type::TYPE_STRING_SERIALIZED,
-                                'value' => 'a:1:{s:3:"foo";s:3:"bar";}',
-                                'valueDecoded' => array(
-                                    'foo' => 'bar',
-                                ),
-                            ),
-                        ),
-                        'meta' => array(),
-                    ),
-                    'html' => '<li class="m_log"><span class="string-encoded tabs-container" data-type-more="serialized">' . "\n"
-                        . '<nav role="tablist"><a class="nav-link" data-target=".tab-1" data-toggle="tab" role="tab">serialized</a><a class="active nav-link" data-target=".tab-2" data-toggle="tab" role="tab">unserialized</a></nav>' . "\n"
-                        . '<div class="tab-1 tab-pane" role="tabpanel"><span class="no-quotes t_string">a:1:{s:3:&quot;foo&quot;;s:3:&quot;bar&quot;;}</span></div>' . "\n"
-                        . '<div class="active tab-2 tab-pane" role="tabpanel"><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>' . "\n"
-                        . '<ul class="array-inner list-unstyled">' . "\n"
-                        . '<li><span class="t_key">foo</span><span class="t_operator">=&gt;</span><span class="t_string">bar</span></li>' . "\n"
-                        . '</ul><span class="t_punct">)</span></span></div>' . "\n"
-                        . '</span></li>',
-                ),
-            ),
-            'serialized.brief' => array(
-                'group',
-                array(
-                    \serialize(array('foo' => 'bar')),
-                ),
-                array(
-                    'entry' => array(
-                        'method' => 'group',
-                        'args' => array(
-                            array(
-                                'debug' => Abstracter::ABSTRACTION,
-                                'brief' => true,
-                                'strlen' => null,
-                                'type' => Type::TYPE_STRING,
-                                'typeMore' => Type::TYPE_STRING_SERIALIZED,
-                                'value' => 'a:1:{s:3:"foo";s:3:"bar";}',
-                                'valueDecoded' => null,
-                            ),
-                        ),
-                        'meta' => array(),
-                    ),
-                    'html' => '<li class="expanded m_group">
-                        <div class="group-header"><span class="font-weight-bold group-label"><span class="t_string" data-type-more="serialized"><span class="no-quotes t_string">a:1:{s:3:&quot;foo&quot;;s:3:&quot;bar&quot;;}</span></span></span></div>
-                        <ul class="group-body">',
+                    'script' => 'console.log(' . \json_encode('\u0000 / foo \ bar', JSON_UNESCAPED_SLASHES). ');',
+                    'text' => '\u0000 / foo \ bar',
                 ),
             ),
         );
+        // $tests = \array_intersect_key($tests, \array_flip(['binary.brief']));
+        return $tests;
     }
 }

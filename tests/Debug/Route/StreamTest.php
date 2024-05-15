@@ -23,11 +23,11 @@ class StreamTest extends DebugTestFramework
     public function testGetValDumper()
     {
         $valDumper = $this->debug->getDump('textAnsi')->valDumper;
-        $this->assertInstanceOf('bdk\\Debug\\Dump\\TextAnsiValue', $valDumper);
+        $this->assertInstanceOf('bdk\\Debug\\Dump\\TextAnsi\\Value', $valDumper);
 
         $dumper = new TextAnsi($this->debug);
         $valDumper = $dumper->valDumper;
-        $this->assertInstanceOf('bdk\\Debug\\Dump\\TextAnsiValue', $valDumper);
+        $this->assertInstanceOf('bdk\\Debug\\Dump\\TextAnsi\\Value', $valDumper);
     }
 
     public function testOnLog()

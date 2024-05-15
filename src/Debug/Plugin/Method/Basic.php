@@ -140,11 +140,11 @@ class Basic implements SubscriberInterface
         if (\count($args) === 1) {
             if ($args[0] instanceof LogEntry) {
                 $this->appendLog($args[0]);
-                return $this;
+                return $this->debug;
             }
             if ($args[0] instanceof Error) {
                 $this->debug->rootInstance->getPlugin('internalEvents')->onError($args[0]);
-                return $this;
+                return $this->debug;
             }
         }
         $this->appendLog(new LogEntry(

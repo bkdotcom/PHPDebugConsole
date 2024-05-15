@@ -238,12 +238,13 @@ class MethodParams
     {
         if ($matches[1] && \defined($className . '::' . $matches[2])) {
             // self
-            $defaultValue = new Abstraction(Type::TYPE_CONST, array(
+            return new Abstraction(Type::TYPE_CONST, array(
                 'name' => $matches[0],
                 'value' => \constant($className . '::' . $matches[2]),
             ));
-        } elseif (\defined($defaultValue)) {
-            $defaultValue = new Abstraction(Type::TYPE_CONST, array(
+        }
+        if (\defined($defaultValue)) {
+            return new Abstraction(Type::TYPE_CONST, array(
                 'name' => $defaultValue,
                 'value' => \constant($defaultValue),
             ));

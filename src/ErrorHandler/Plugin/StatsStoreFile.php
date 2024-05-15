@@ -159,22 +159,19 @@ class StatsStoreFile extends AbstractComponent implements StatsStoreInterface
     protected function dataWrite()
     {
         $this->garbageCollection();
-        $return = false;
         if ($this->cfg['errorStatsFile']) {
             $wrote = $this->fileWrite($this->cfg['errorStatsFile'], \json_encode($this->data, JSON_PRETTY_PRINT));
             if ($wrote !== false) {
-                $return = true;
+                return true;
             }
         }
-        if ($return === false) {
-            \error_log(\sprintf(
-                __METHOD__ . ': error writing data %s',
-                $this->cfg['errorStatsFile']
-                    ? 'to ' . $this->cfg['errorStatsFile']
-                    : '(no errorStatsFile specified)'
-            ));
-        }
-        return $return;
+        \error_log(\sprintf(
+            __METHOD__ . ': error writing data %s',
+            $this->cfg['errorStatsFile']
+                ? 'to ' . $this->cfg['errorStatsFile']
+                : '(no errorStatsFile specified)'
+        ));
+        return false;
     }
 
     /**
@@ -192,7 +189,7 @@ class StatsStoreFile extends AbstractComponent implements StatsStoreInterface
         if (\file_exists($dir) === false) {
             \mkdir($dir, 0755, true);
         }
-        if (\is_writable($file) || \file_exists($file) === false && \is_writeable($dir)) {
+        if (\is_writable($file) || (\file_exists($file) === false && \is_writeable($dir))) {
             $return = \file_put_contents($file, $str);
         }
         return $return;

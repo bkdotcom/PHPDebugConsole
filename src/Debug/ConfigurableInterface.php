@@ -13,7 +13,7 @@
 namespace bdk\Debug;
 
 /**
- * Route Interface
+ * Interface providing means to get and set configuration
  */
 interface ConfigurableInterface
 {

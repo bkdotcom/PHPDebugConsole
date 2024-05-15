@@ -1,0 +1,149 @@
+<?php
+
+/**
+ * This file is part of PHPDebugConsole
+ *
+ * @package   PHPDebugConsole
+ * @author    Brad Kent <bkfake-github@yahoo.com>
+ * @license   http://opensource.org/licenses/MIT MIT
+ * @copyright 2014-2024 Brad Kent
+ * @version   v3.0
+ */
+
+namespace bdk\Debug\Dump\Html;
+
+use bdk\Debug;
+use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Dump\Html\HtmlString;
+use bdk\Debug\Dump\Html\Value as ValDumper;
+use bdk\Debug\Utility\Utf8;
+
+/**
+ * Output binary string
+ */
+class HtmlStringBinary
+{
+    /** @var Debug */
+    private $debug;
+
+    /** @var HtmlString */
+    private $htmlString;
+
+    /** @var ValDumper */
+    private $valDumper;
+
+    /**
+     * Constructor
+     *
+     * @param HtmlString $htmlString HtmlString instance
+     */
+    public function __construct(HtmlString $htmlString)
+    {
+        $this->htmlString = $htmlString;
+        $this->debug = $htmlString->debug;
+        $this->valDumper = $htmlString->valDumper;
+    }
+
+    /**
+     * Dump binary string
+     *
+     * @param Abstraction $abs Binary string abstraction
+     *
+     * @return string
+     */
+    public function dump(Abstraction $abs)
+    {
+        $tagName = $this->valDumper->optionGet('tagName');
+        $this->valDumper->optionSet('tagName', null);
+        $str = $this->dumpBinaryBasic($abs);
+        $strLenDiff = $abs['strlen'] - $abs['strlenValue'];
+        if ($abs['strlenValue'] && $strLenDiff) {
+            $str .= '<span class="maxlen">&hellip; ' . $strLenDiff . ' more bytes (not logged)</span>';
+        }
+        if ($abs['brief']) {
+            return $this->dumpBinaryBrief($str, $abs);
+        }
+        if ($abs['percentBinary'] > 33 || $abs['contentType']) {
+            $this->valDumper->optionSet('postDump', $this->dumpBinaryPost($abs, $tagName));
+        }
+        return $str;
+    }
+
+    /**
+     * Build dumped binary string
+     *
+     * @param Abstraction $abs Binary string abstraction
+     *
+     * @return string
+     */
+    private function dumpBinaryBasic(Abstraction $abs)
+    {
+        if ($abs['strlenValue'] === 0) {
+            return '';
+        }
+        return isset($abs['chunks'])
+            ? \implode('', \array_map(function (array $chunk) {
+                return $chunk[0] === Utf8::TYPE_UTF8
+                    ? $this->htmlString->dump($chunk[1])
+                    : '<span class="binary">\x' . \str_replace(' ', ' \\x', $chunk[1]) . '</span>';
+            }, $abs['chunks']))
+            : '<span class="binary">'
+                . \substr(\chunk_split($abs['value'], 3 * 32, '<br />'), 0, -6)
+                . '</span>';
+    }
+
+    /**
+     * Dump binary string (brief)
+     *
+     * @param string      $str Dumped string
+     * @param Abstraction $abs Binary string abstraction
+     *
+     * @return string
+     */
+    private function dumpBinaryBrief($str, Abstraction $abs)
+    {
+        return $abs['contentType']
+            ? '<span class="t_keyword">string</span>'
+                . '<span class="text-muted">(' . $abs['contentType'] . ')</span><span class="t_punct colon">:</span> '
+                . $this->debug->utility->getBytes($abs['strlen'])
+            : $str;
+    }
+
+    /**
+     * Post-process binary string.
+     * Display size, contentType, & data
+     *
+     * @param Abstraction $abs     String Abstraction
+     * @param string      $tagName html tag (ie div,td, or span)
+     *
+     * @return Closure
+     */
+    private function dumpBinaryPost(Abstraction $abs, $tagName)
+    {
+        return function ($dumped) use ($abs, $tagName) {
+            $lis = array();
+            if ($abs['contentType']) {
+                $lis[] = '<li>mime type = <span class="content-type t_string">' . $abs['contentType'] . '</span></li>';
+            }
+            $lis[] = '<li>size = <span class="t_int">' . $abs['strlen'] . '</span></li>';
+            $lis[] = $dumped
+                ? '<li class="t_string">' . $dumped . '</li>'
+                : '<li>Binary data not collected</li>';
+            $wrapped =  '<span class="t_keyword">string</span><span class="text-muted">(binary)</span>' . "\n"
+                . $this->debug->html->buildTag(
+                    'ul',
+                    \array_filter(array(
+                        'class' => array('list-unstyled', 'value-container'),
+                        'data-type' => $abs['type'],
+                        'data-type-more' => $abs['typeMore'],
+                    )),
+                    "\n" . \implode("\n", $lis) . "\n"
+                );
+            if ($tagName === 'td') {
+                // wrap with td without adding class="binary t_string"
+                $wrapped = '<td>' . $wrapped . '</td>';
+            }
+            return $wrapped;
+        };
+    }
+}

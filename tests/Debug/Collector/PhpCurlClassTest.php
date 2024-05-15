@@ -60,12 +60,12 @@ class PhpCurlClassTest extends DebugTestFramework
                     <li class="m_log" data-channel="general.Curl"><span class="no-quotes t_string">response headers</span> = <span class="t_string">HTTP/1.1 200 OK%a</span></li>
                     <li class="m_log" data-channel="general.Curl"><span class="no-quotes t_string">response body</span> = <span class="string-encoded tabs-container" data-type-more="json">
                         <nav role="tablist"><a class="nav-link" data-target=".tab-1" data-toggle="tab" role="tab">json</a><a class="active nav-link" data-target=".tab-2" data-toggle="tab" role="tab">decoded</a></nav>
-                        <div class="tab-1 tab-pane" role="tabpanel"><span class="highlight language-json no-quotes t_string">{<span class="ws_n"></span>
-                        &quot;queryParams&quot;: [],<span class="ws_n"></span>
-                        &quot;headers&quot;: &quot;POST \/echo HTTP\/1.1\r\nHost: 127.0.0.1:8080\r\nUser-Agent: %s\r\nAccept: *\/*\r\nContent-Length: 39\r\nContent-Type: application\/x-www-form-urlencoded&quot;,<span class="ws_n"></span>
-                        &quot;cookieParams&quot;: [],<span class="ws_n"></span>
-                        &quot;body&quot;: &quot;username=myusername&amp;password=█████████&quot;<span class="ws_n"></span>
-                        }</span></div>
+                        <div class="tab-1 tab-pane" role="tabpanel"><span class="value-container" data-type="string"><span class="prettified">(prettified)</span> <span class="highlight language-json no-quotes t_string">{
+                            &quot;queryParams&quot;: [],
+                            &quot;headers&quot;: &quot;POST \/echo HTTP\/1.1\r\nHost: 127.0.0.1:8080\r\nUser-Agent: %s\r\nAccept: *\/*\r\nContent-Length: 39\r\nContent-Type: application\/x-www-form-urlencoded&quot;,
+                            &quot;cookieParams&quot;: [],
+                            &quot;body&quot;: &quot;username=myusername&amp;password=█████████&quot;
+                            }</span></span></div>
                         <div class="active tab-2 tab-pane" role="tabpanel"><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
                         <ul class="array-inner list-unstyled">
                         <li><span class="t_key">queryParams</span><span class="t_operator">=&gt;</span><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span></li>
@@ -91,8 +91,8 @@ class PhpCurlClassTest extends DebugTestFramework
                 self::assertSame(2, \preg_match_all('/password=█████████/', $htmlActual), 'Did not find redacted password twice');
                 $htmlActual = \preg_replace('#^\s+#m', '', $htmlActual);
                 $htmlExpect = \preg_replace('#^\s+#m', '', $htmlExpect);
-                // echo 'actual: ' . $htmlActual . "\n\n";
                 // echo 'expect: ' . $htmlExpect . "\n";
+                // echo 'actual: ' . $htmlActual . "\n\n";
                 self::assertStringMatchesFormat('%A' . $htmlExpect . '%A', $htmlActual);
             },
         ));
@@ -159,12 +159,12 @@ class PhpCurlClassTest extends DebugTestFramework
                         <li class="m_log" data-channel="general.Curl"><span class="no-quotes t_string">response headers</span> = <span class="t_string">HTTP/1.1 302 Found%a</span></li>
                         <li class="m_log" data-channel="general.Curl"><span class="no-quotes t_string">response body</span> = <span class="string-encoded tabs-container" data-type-more="json">
                             <nav role="tablist"><a class="nav-link" data-target=".tab-1" data-toggle="tab" role="tab">json</a><a class="active nav-link" data-target=".tab-2" data-toggle="tab" role="tab">decoded</a></nav>
-                            <div class="tab-1 tab-pane" role="tabpanel"><span class="highlight language-json no-quotes t_string">{<span class="ws_n"></span>
-                            &quot;queryParams&quot;: [],<span class="ws_n"></span>
-                            &quot;headers&quot;: &quot;GET \/echo HTTP\/1.1\r\nHost: 127.0.0.1:8080\r\nUser-Agent: %s\r\nAccept: *\/*&quot;,<span class="ws_n"></span>
-                            &quot;cookieParams&quot;: [],<span class="ws_n"></span>
-                            &quot;body&quot;: &quot;&quot;<span class="ws_n"></span>
-                            }</span></div>
+                            <div class="tab-1 tab-pane" role="tabpanel"><span class="value-container" data-type="string"><span class="prettified">(prettified)</span> <span class="highlight language-json no-quotes t_string">{
+                                &quot;queryParams&quot;: [],
+                                &quot;headers&quot;: &quot;GET \/echo HTTP\/1.1\r\nHost: 127.0.0.1:8080\r\nUser-Agent: %s\r\nAccept: *\/*&quot;,
+                                &quot;cookieParams&quot;: [],
+                                &quot;body&quot;: &quot;&quot;
+                                }</span></span></div>
                             <div class="active tab-2 tab-pane" role="tabpanel"><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
                             <ul class="array-inner list-unstyled">
                             <li><span class="t_key">queryParams</span><span class="t_operator">=&gt;</span><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span></li>

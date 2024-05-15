@@ -35,7 +35,6 @@ class ObjectCases extends AbstractObjectSection
         $cfg = array(
             'attributeOutput' => $abs['cfgFlags'] & AbstractObject::CASE_ATTRIBUTE_OUTPUT,
             'collect' => $abs['cfgFlags'] & AbstractObject::CASE_COLLECT,
-            'groupByInheritance' => false,
             'output' => $abs['cfgFlags'] & AbstractObject::CASE_OUTPUT,
         );
         if (!$cfg['output']) {
@@ -47,9 +46,8 @@ class ObjectCases extends AbstractObjectSection
         if (!$abs['cases']) {
             return '<dt class="cases"><i>no cases!</i></dt>' . "\n";
         }
-        $html = '<dt class="cases">cases</dt>' . "\n";
-        $html .= $this->dumpItems($abs, 'cases', $cfg);
-        return $html;
+        return '<dt class="cases">cases</dt>' . "\n"
+            . $this->dumpItems($abs, 'cases', $cfg);
     }
 
     /**

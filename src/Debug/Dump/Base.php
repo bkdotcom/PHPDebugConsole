@@ -16,7 +16,7 @@ use bdk\Debug;
 use bdk\Debug\AbstractComponent;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Type;
-use bdk\Debug\Dump\BaseValue;
+use bdk\Debug\Dump\Base\Value;
 use bdk\Debug\Dump\Substitution;
 use bdk\Debug\LogEntry;
 
@@ -89,6 +89,8 @@ class Base extends AbstractComponent
     public function processLogEntry(LogEntry $logEntry)
     {
         $method = $logEntry['method'];
+        $meta = $logEntry->getMeta();
+        $this->valDumper->optionStackPush($meta);
         if ($method === 'alert') {
             return $this->methodAlert($logEntry);
         }
@@ -98,7 +100,9 @@ class Base extends AbstractComponent
         if (\in_array($method, array('profileEnd', 'table', 'trace'), true)) {
             return $this->methodTabular($logEntry);
         }
-        return $this->methodDefault($logEntry);
+        $return = $this->methodDefault($logEntry);
+        $this->valDumper->optionStackPop();
+        return $return;
     }
 
     /**
@@ -136,7 +140,7 @@ class Base extends AbstractComponent
     protected function getValDumper()
     {
         if (!$this->valDumper) {
-            $this->valDumper = new BaseValue($this);
+            $this->valDumper = new Value($this);
         }
         return $this->valDumper;
     }

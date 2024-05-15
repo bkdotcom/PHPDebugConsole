@@ -132,27 +132,25 @@ class LogRequest extends AbstractLogReqRes implements SubscriberInterface
     {
         $request = $this->debug->serverRequest;
         $input = $this->debug->utility->getStreamContents($request->getBody());
-        $methodHasBody = $this->debug->utility->httpMethodHasBody($method);
+        $methodExpectBody = $this->debug->utility->httpMethodHasBody($method);
         $logInput = $input
-            || $methodHasBody
+            || $methodExpectBody
             || $request->getHeaderLine('Content-Length')
             || $request->getHeaderLine('Transfer-Encoding');
+        if ($logInput === false) {
+            return;
+        }
         $meta = $this->debug->meta(array(
             'detectFiles' => false,
             'file' => null,
             'line' => null,
         ));
-        if ($logInput === false) {
-            return;
-        } elseif ($input) {
-            if ($methodHasBody === false) {
+        if ($input) {
+            if ($methodExpectBody === false) {
                 $this->debug->warn($method . ' request with body', $meta);
             }
-            $this->debug->log(
-                'php://input',
-                $this->debug->prettify($input, $contentType),
-                $this->debug->meta('redact')
-            );
+            $input = $this->debug->prettify($input, $contentType);
+            $this->debug->log('php://input', $input, $this->debug->meta('redact'));
         } elseif (!$request->getUploadedFiles()) {
             $this->debug->warn($method . ' request with no body', $meta);
         }

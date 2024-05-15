@@ -133,7 +133,7 @@ class PropertiesPhpDoc
             ? $abs['properties'][$name]
             : null;
         return \array_merge(
-            $existing ?: Properties::buildPropValues(), // self::$basePropInfo
+            $existing ?: Properties::buildPropValues(),
             array(
                 'declaredLast' => $declaredLast,
                 'desc' => $abs['cfgFlags'] & AbstractObject::PHPDOC_COLLECT

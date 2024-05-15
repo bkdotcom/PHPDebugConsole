@@ -386,6 +386,7 @@ EOD;
                 ),
                 'sort' => '',
                 'methodsWithStaticVars' => array(),
+                'keys' => array(),
             ),
             $expect['log'][1][1][1]
         );

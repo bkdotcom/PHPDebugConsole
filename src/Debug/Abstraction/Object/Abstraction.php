@@ -66,19 +66,19 @@ class Abstraction extends BaseAbstraction
      */
     public function __toString()
     {
-        $val = $this->offsetGet('className');
         if ($this->values['stringified']) {
-            $val = $this->values['stringified'];
-        } elseif (isset($this->values['methods']['__toString']['returnValue'])) {
-            $val = $this->values['methods']['__toString']['returnValue'];
+            return (string) $this->values['stringified'];
         }
-        return (string) $val;
+        if (isset($this->values['methods']['__toString']['returnValue'])) {
+            return (string) $this->values['methods']['__toString']['returnValue'];
+        }
+        return (string) $this->offsetGet('className');
     }
 
     /**
      * {@inheritDoc}
      */
-    public function __unserialize($data)
+    public function __unserialize(array $data)
     {
         $this->inherited = isset($data['inherited'])
             ? $data['inherited']

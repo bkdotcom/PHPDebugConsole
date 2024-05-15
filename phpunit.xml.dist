@@ -33,10 +33,11 @@
     </report>
     -->
     <exclude>
-      <file>src/Debug/ComposerScripts.php</file>
+      <file>src/Debug/Dump/charData.php</file>
       <file>src/HttpMessage/Factory.php</file>
       <directory>src/Backtrace</directory>
       <directory>src/Debug/Framework</directory>
+      <directory>src/Debug/node_modules</directory>
       <directory>src/DevUtil</directory>
       <directory>src/ErrorHandler</directory>
       <directory>src/Psr7</directory>

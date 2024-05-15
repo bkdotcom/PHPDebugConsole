@@ -112,6 +112,18 @@ class TableRowTest extends AbstractTestCaseWith
         ), $tableRow->getContent(1.5));
     }
 
+    public function testGetCells()
+    {
+        $tableRow = (new TableRow())
+            ->withCells(array(
+                (new TableCell('foo'))->withStyle(Enums::CONTAINER_STYLE_DEFAULT),
+                'bar',
+            ));
+        $cells = $tableRow->getCells();
+        self::assertContainsOnlyInstancesOf('bdk\Teams\Elements\TableCell', $cells);
+        self::assertCount(2, $cells);
+    }
+
     protected static function itemFactory()
     {
         return new TableRow();

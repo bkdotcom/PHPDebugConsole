@@ -14,13 +14,6 @@ use bdk\Test\Debug\DebugTestFramework;
  * @covers \bdk\Debug\AbstractDebug
  * @covers \bdk\Debug\Abstraction\Object\Properties
  * @covers \bdk\Debug\Dump\Base
- * @covers \bdk\Debug\Dump\BaseValue
- * @covers \bdk\Debug\Dump\Html
- * @covers \bdk\Debug\Dump\Html\Helper
- * @covers \bdk\Debug\Dump\Text
- * @covers \bdk\Debug\Dump\TextAnsi
- * @covers \bdk\Debug\Dump\TextAnsiValue
- * @covers \bdk\Debug\Dump\TextValue
  * @covers \bdk\Debug\LogEntry
  * @covers \bdk\Debug\Plugin\Method\Basic
  * @covers \bdk\Debug\Route\AbstractRoute
@@ -69,7 +62,7 @@ class BasicTest extends DebugTestFramework
                 } elseif ($route instanceof \bdk\Debug\Route\Wamp) {
                     $logEntry['method'] = 'log';
                     $logEntry['args'] = array('something completely different');
-                    $meta = \array_diff_key($logEntry['meta'], \array_flip(array('caption', 'inclContext', 'requestId', 'sortable', 'tableInfo')));
+                    $meta = \array_diff_key($logEntry['meta'], \array_flip(array('caption', 'inclContext', 'limit', 'requestId', 'sortable', 'tableInfo')));
                     $logEntry['meta'] = $meta;
                 }
             }
@@ -87,6 +80,7 @@ class BasicTest extends DebugTestFramework
                         'caption' => 'trace',
                         'detectFiles' => true,
                         'inclArgs' => false,
+                        'limit' => 0,
                         'sortable' => false,
                         'tableInfo' => array(
                             'class' => null,
@@ -170,7 +164,7 @@ class BasicTest extends DebugTestFramework
         /*
             Now test it statically
         */
-        Debug::_myCustom('called statically');
+        Debug::myCustom('called statically');
         $entry = array(
             'method' => 'myCustom',
             'args' => array('called statically'),
@@ -322,8 +316,7 @@ class BasicTest extends DebugTestFramework
 
         $this->testMethod(
             'assert',
-            array(true, 'this is true... not logged'),
-            false
+            array(true, 'this is true... not logged')
         );
 
         $this->debug->setCfg('collect', false);
@@ -349,7 +342,7 @@ class BasicTest extends DebugTestFramework
             'error',
             array('a string', array(), new \stdClass(), $resource),
             array(
-                'entry' => function (LogEntry $logEntry) {
+                'entry' => static function (LogEntry $logEntry) {
                     self::assertSame('error', $logEntry['method']);
                     self::assertSame('a string', $logEntry['args'][0]);
                     self::assertSame(array(), $logEntry['args'][1]);
@@ -615,10 +608,10 @@ class BasicTest extends DebugTestFramework
             ),
             array(
                 'output' => \str_replace('\e', "\e", '\e[38;5;250m"\e[0mvalues\e[38;5;250m"\e[0m = \e[38;5;45marray\e[38;5;245m(\e[0m
-                        \e[38;5;245m[\e[38;5;83mfalse\e[38;5;245m]\e[38;5;130m => \e[0m\e[91mfalse\e[0m
-                        \e[38;5;245m[\e[38;5;83mint\e[38;5;245m]\e[38;5;130m => \e[0m\e[96m42\e[0m
-                        \e[38;5;245m[\e[38;5;83mnull\e[38;5;245m]\e[38;5;130m => \e[0m\e[38;5;250mnull\e[0m
-                        \e[38;5;245m[\e[38;5;83mtrue\e[38;5;245m]\e[38;5;130m => \e[0m\e[32mtrue\e[0m
+                        \e[38;5;245m[\e[38;5;83mfalse\e[38;5;245m]\e[38;5;224m => \e[0m\e[91mfalse\e[0m
+                        \e[38;5;245m[\e[38;5;83mint\e[38;5;245m]\e[38;5;224m => \e[0m\e[96m42\e[0m
+                        \e[38;5;245m[\e[38;5;83mnull\e[38;5;245m]\e[38;5;224m => \e[0m\e[38;5;250mnull\e[0m
+                        \e[38;5;245m[\e[38;5;83mtrue\e[38;5;245m]\e[38;5;224m => \e[0m\e[32mtrue\e[0m
                     \e[38;5;245m)\e[0m
                 '),
             )

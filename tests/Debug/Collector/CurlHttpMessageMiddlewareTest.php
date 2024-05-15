@@ -90,11 +90,11 @@ class CurlHttpMessageMiddlewareTest extends DebugTestFramework
                         'args' => array(
                             'request body',
                             array(
-                                'addQuotes' => false,
                                 'attribs' => array(
                                     'class' => array(
                                         'highlight',
                                         'language-json',
+                                        'no-quotes',
                                     ),
                                 ),
                                 'brief' => false,
@@ -102,7 +102,8 @@ class CurlHttpMessageMiddlewareTest extends DebugTestFramework
                                 'debug' => Abstracter::ABSTRACTION,
                                 'prettified' => true,
                                 'prettifiedTag' => true,
-                                'strlen' => null,
+                                // 'strlen' => 20,
+                                // 'strlenValue' => 20,
                                 'type' => Type::TYPE_STRING,
                                 'typeMore' => Type::TYPE_STRING_JSON,
                                 'value' => '{' . "\n"
@@ -111,7 +112,6 @@ class CurlHttpMessageMiddlewareTest extends DebugTestFramework
                                 'valueDecoded' => array(
                                     'foo' => 'bar',
                                 ),
-                                'visualWhiteSpace' => false,
                             ),
                         ),
                     ),

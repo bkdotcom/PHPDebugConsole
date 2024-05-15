@@ -116,7 +116,7 @@ class ReqRes implements SubscriberInterface
      * Status code pulled from PSR-7 response interface (if `Debug::writeToResponse()` is being used)
      * otherwise, code pulled via `http_response_code()`
      *
-     * @return int Status code
+     * @return int|bool Status code
      */
     public function getResponseCode()
     {

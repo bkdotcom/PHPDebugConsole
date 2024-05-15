@@ -313,8 +313,8 @@ class Html extends Base
             'errorCat' => null,         // should only be applicable for error & warn methods
             'glue' => null,
             'icon' => null,
-            'sanitize' => true,         // apply htmlspecialchars (to non-first arg)?
-            'sanitizeFirst' => null,    // if null, use meta.sanitize
+            'sanitize' => true,         // apply htmlspecialchars to args?
+            'sanitizeFirst' => null,    // apply htmlspecialchars to first arg?  (defaults to sanitize value)
             'uncollapse' => null,
         ), $logEntry['meta']);
         if ($meta['sanitizeFirst'] === null) {

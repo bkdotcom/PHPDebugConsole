@@ -92,7 +92,8 @@ class Abstracter extends AbstractComponent
         'stringMaxLen' => array(
             'base64' => 156, // 2 lines of chunk_split'ed
             'binary' => array(
-                128 => 0, // if over 128 bytes don't capture / store
+                0 => 128,
+                257 => 0, // if over 128 bytes don't capture / store
             ),
             'other' => 8192,
         ),
@@ -185,7 +186,7 @@ class Abstracter extends AbstractComponent
      *
      * Remove any reference to an "external" variable
      * Deep cloning objects = problematic
-     *   + some objects are uncloneable & throw fatal error
+     *   + some objects aren't able to be cloned & throw fatal error
      *   + difficult to maintain circular references
      * Instead of storing objects in log, store "Abstraction" which containing
      *     type, methods, & properties
@@ -255,7 +256,7 @@ class Abstracter extends AbstractComponent
      *
      * @param mixed $val value to check
      *
-     * @return array|false array(type, typeMore) or false
+     * @return list{Type::TYPE_*,Type::TYPE_*}|false array(type, typeMore) or false
      */
     public function needsAbstraction($val)
     {

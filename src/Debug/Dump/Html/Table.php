@@ -12,7 +12,6 @@
 
 namespace bdk\Debug\Dump\Html;
 
-use bdk\Debug;
 use bdk\Debug\Dump\Html as Dumper;
 
 /**

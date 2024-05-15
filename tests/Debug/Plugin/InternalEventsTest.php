@@ -13,7 +13,7 @@ use bdk\Test\Debug\DebugTestFramework;
 /**
  * PHPUnit tests for Debug class
  *
- * @covers \bdk\Debug\Dump\BaseValue
+ * @covers \bdk\Debug\Dump\AbstractValue
  * @covers \bdk\Debug\Plugin\InternalEvents
  * @covers \bdk\Debug\Plugin\Route
  * @covers \bdk\Debug\Route\Email
@@ -303,7 +303,7 @@ class InternalEventsTest extends DebugTestFramework
             \array_unshift($logEntriesExpect, array(
                 'method' => 'warn',
                 'args' => array(
-                    'Potentialy shutdown via exit: ',
+                    'Potentially shutdown via exit: ',
                     __FILE__ . ' (line ' . $exitLine . ')',
                 ),
                 'meta' => array(
@@ -314,7 +314,7 @@ class InternalEventsTest extends DebugTestFramework
                     'uncollapse' => true,
                 ),
             ));
-            self::assertStringContainsString('Potentialy shutdown via exit', $output);
+            self::assertStringContainsString('Potentially shutdown via exit', $output);
         }
 
         $logEntries = $this->helper->deObjectifyData($this->debug->data->get('log'));

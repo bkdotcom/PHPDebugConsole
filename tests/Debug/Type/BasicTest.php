@@ -151,7 +151,7 @@ class BasicTest extends DebugTestFramework
                         array(
                             'type' => Type::TYPE_CONST,
                             'name' => 'Test\Thing::TEST_CONSTANT',
-                        ),
+                        )
                     ),
                 ),
                 array(

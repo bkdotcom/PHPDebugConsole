@@ -44,25 +44,30 @@ class Trace implements SubscriberInterface
      *
      * Essentially PHP's `debug_backtrace()`, but displayed as a table
      *
-     * @param bool   $inclContext Include code snippet
-     * @param string $caption     (optional) Specify caption for the trace table
+     * Params may be passed in any order
+     *
+     * @param bool   $inclContext (false) Include code snippet
+     * @param string $caption     ('trace') Specify caption for the trace table
+     * @param int    $limit       (0) limit the number of stack frames returned.  By default (limit=0) all stack frames are collected
      *
      * @return Debug
      */
-    public function trace($inclContext = false, $caption = 'trace')
+    public function trace($inclContext = false, $caption = 'trace', $limit = 0)
     {
         if (!$this->debug->getCfg('collect', Debug::CONFIG_DEBUG)) {
             return $this->debug;
         }
+        $argsDefault = $this->debug->rootInstance->getMethodDefaultArgs(__METHOD__);
         $logEntry = new LogEntry(
             $this->debug,
             __FUNCTION__,
-            \func_get_args(),
+            $this->getTraceArgs(\func_get_args(), $argsDefault),
             array(),
-            $this->debug->rootInstance->getMethodDefaultArgs(__METHOD__),
+            $argsDefault,
             array(
                 'caption',
                 'inclContext',
+                'limit',
             )
         );
         $this->doTrace($logEntry);
@@ -83,7 +88,10 @@ class Trace implements SubscriberInterface
         $meta = $this->getMeta($logEntry);
         $trace = isset($meta['trace'])
             ? $meta['trace']
-            : $this->debug->backtrace->get($meta['inclArgs'] ? Backtrace::INCL_ARGS : 0);
+            : $this->debug->backtrace->get(
+                $meta['inclArgs'] ? Backtrace::INCL_ARGS : 0,
+                $meta['limit']
+            );
         if ($trace && $meta['inclContext']) {
             $trace = $this->debug->backtrace->addContext($trace);
             $this->debug->addPlugin($this->debug->pluginHighlight, 'highlight');
@@ -112,17 +120,11 @@ class Trace implements SubscriberInterface
                                  // will default to $inclContext
                                  //   may want to set meta['cfg']['objectsExclude'] = '*'
             'inclContext' => false,
+            'limit' => 0,
             'sortable' => false,
             'trace' => null,  // set to specify trace
         ), $logEntry['meta']);
 
-        if (\is_string($meta['caption']) === false) {
-            $this->debug->warn(\sprintf(
-                'trace caption should be a string.  %s provided',
-                $this->debug->php->getDebugType($meta['caption'])
-            ));
-            $meta['caption'] = 'trace';
-        }
         if ($meta['inclArgs'] === null) {
             $meta['inclArgs'] = $meta['inclContext'];
         }
@@ -156,5 +158,39 @@ class Trace implements SubscriberInterface
         }
         $logEntry['meta'] = $meta;
         $logEntry['args'] = array($trace);
+    }
+
+    /**
+     * Get trace args
+     *
+     * @param array $argsPassed  arguments passed to trace()
+     * @param array $argsDefault default arguments
+     *
+     * @return array args passed to trace() but sorted to match method signature
+     */
+    private function getTraceArgs(array $argsPassed, array $argsDefault)
+    {
+        $argsTyped = array();
+        \array_walk($argsPassed, static function ($val) use (&$argsTyped) {
+            $type = \gettype($val);
+            $typeToKey = array(
+                'boolean' => 'inclContext',
+                'integer' => 'limit',
+                'string' => 'caption',
+            );
+            $key = isset($typeToKey[$type])
+                ? $typeToKey[$type]
+                : null;
+            if ($key && isset($argsTyped[$key]) === false) {
+                $argsTyped[$key] = $val;
+                return;
+            }
+            $argsTyped[] = $val;
+        });
+        if (!empty($argsTyped['limit'])) {
+            $argsDefault['caption'] = 'trace (limited to ' . $argsTyped['limit'] . ')';
+        }
+        $args = \array_merge($argsDefault, $argsTyped);
+        return \array_values($args);
     }
 }

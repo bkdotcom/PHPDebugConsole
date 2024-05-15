@@ -17,7 +17,6 @@ use bdk\Debug\AbstractComponent;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\Type;
 use bdk\HttpMessage\Utility\ContentType;
-use Closure;
 use Exception;
 
 /**
@@ -240,65 +239,6 @@ class StatementInfo extends AbstractComponent
     }
 
     /**
-     * Returns the SQL string with any parameters used embedded
-     *
-     * @param string $quotationChars Quotation character(s)
-     *
-     * @return string
-     */
-    protected function getSqlWithParams($quotationChars = '<>')
-    {
-        $len = \strlen($quotationChars);
-        $quoteRight = $quotationChars;
-        $quoteLeft = $quoteRight;
-        if ($len > 1) {
-            $len = (int) \floor($len / 2);
-            $quoteLeft = \substr($quotationChars, 0, $len);
-            $quoteRight = \substr($quotationChars, $len);
-        }
-        $sql = $this->sql;
-        $cleanBackRefCharMap = array(
-            '$' => '$%',
-            '%' => '%%',
-            '\\' => '\\%',
-        );
-        foreach ($this->params as $k => $v) {
-            $backRefSafeV = \strtr($v, $cleanBackRefCharMap);
-            $v = $quoteLeft . $backRefSafeV . $quoteRight;
-            $sql = $this->replaceParam($sql, $k, $v, $quotationChars);
-        }
-        return \strtr($sql, \array_flip($cleanBackRefCharMap));
-    }
-
-    /**
-     * Replace param with value in query
-     *
-     * @param string $sql            SQL query
-     * @param string $key            param key
-     * @param string $value          param value
-     * @param string $quotationChars quotation characters
-     *
-     * @return string
-     */
-    private function replaceParam($sql, $key, $value, $quotationChars)
-    {
-        $marker = \is_numeric($key)
-            ? '?'
-            : (\preg_match('/^:/', $key)
-                ? $key
-                : ':' . $key);
-        $matchRule = '/(' . $marker . '(?!\w))'
-            . '(?='
-            . '(?:[^' . $quotationChars . ']|'
-            . '[' . $quotationChars . '][^' . $quotationChars . ']*[' . $quotationChars . ']'
-            . ')*$)/';
-        do {
-            $sql = \preg_replace($matchRule, $value, $sql, 1);
-        } while (\mb_substr_count($sql, $key, 'UTF-8'));
-        return $sql;
-    }
-
-    /**
      * Get group's label
      *
      * @return string
@@ -314,18 +254,21 @@ class StatementInfo extends AbstractComponent
                 SELECT\s+(?P<select>.*?)\s+FROM\s+\S+|
                 UPDATE\s+\S+
             )(?P<more>.*)/imsx';
-        $matches = array();
+        $matches = array(
+            'more' => '',
+            'select' => '',
+        );
         if (\preg_match($regex, $label, $matches)) {
-            $haveMore = !empty($matches['more']);
-            $label = $matches[1] . ($haveMore ? '…' : '');
+            $label = $matches[1];
             if (\strlen($matches['select']) > 100) {
                 $label = \str_replace($matches['select'], '(…)', $label);
             }
-            $label = \preg_replace('/[\r\n\s]+/', ' ', $label);
         }
+        $haveMore = !empty($matches['more']);
+        $label = \preg_replace('/[\r\n\s]+/', ' ', $label);
         return \strlen($label) > 100
             ? \substr($label, 0, 100) . '…'
-            : (string) $label;
+            : $label . ($haveMore ? '…' : '');
     }
 
     /**
@@ -353,10 +296,18 @@ class StatementInfo extends AbstractComponent
         if (!$this->params) {
             return;
         }
-        if (!$this->types) {
-            $this->debug->log('parameters', $this->params);
-            return;
-        }
+        $this->types
+            ? $this->logParamsTypes()
+            : $this->debug->log('parameters', $this->params);
+    }
+
+    /**
+     * Log params with types as table
+     *
+     * @return void
+     */
+    private function logParamsTypes()
+    {
         $params = array();
         foreach ($this->params as $name => $value) {
             $params[$name] = array(
@@ -366,13 +317,12 @@ class StatementInfo extends AbstractComponent
                 continue;
             }
             $type = $this->types[$name];
-            $params[$name]['type'] = $type; // integer value
-            if (isset(self::$constants[$type])) {
-                $params[$name]['type'] = new Abstraction(Type::TYPE_CONST, array(
+            $params[$name]['type'] = isset(self::$constants[$type])
+                ? new Abstraction(Type::TYPE_CONST, array(
                     'name' => self::$constants[$type],
                     'value' => $type,
-                ));
-            }
+                ))
+                : $type; // integer value
         }
         $this->debug->table('parameters', $params);
     }
@@ -415,62 +365,7 @@ class StatementInfo extends AbstractComponent
      */
     protected function performQueryAnalysis()
     {
-        \array_map(array($this, 'performQueryAnalysisTest'), array(
-            array(\preg_match('/^\s*SELECT\s*`?[a-zA-Z0-9]*`?\.?\*/i', $this->sql) === 1,
-                'Use %cSELECT *%c only if you need all columns from table',
-            ),
-            array(\stripos($this->sql, 'ORDER BY RAND()') !== false,
-                '%cORDER BY RAND()%c is slow, avoid if you can.',
-            ),
-            array(\strpos($this->sql, '!=') !== false,
-                'The %c!=%c operator is not standard. Use the %c<>%c operator instead.',
-            ),
-            array(\preg_match('/^SELECT\s/i', $this->sql) && \stripos($this->sql, 'WHERE') === false,
-                'The %cSELECT%c statement has no %cWHERE%c clause and could examine many more rows than intended',
-            ),
-            function () {
-                $matches = array();
-                return \preg_match('/LIKE\s+[\'"](%.*?)[\'"]/i', $this->sql, $matches)
-                    ? 'An argument has a leading wildcard character: %c' . $matches[1] . '%c and cannot use an index if one exists.'
-                    : false;
-            },
-            array(\preg_match('/LIMIT\s/i', $this->sql) && \stripos($this->sql, 'ORDER BY') === false,
-                '%cLIMIT%c without %cORDER BY%c causes non-deterministic results',
-            ),
-        ));
-    }
-
-    /**
-     * Process query analysis test and log result if test fails
-     *
-     * @param array|closure $test query test
-     *
-     * @return void
-     *
-     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
-     */
-    private function performQueryAnalysisTest($test)
-    {
-        if ($test instanceof Closure) {
-            $test = $test();
-            $test = array(
-                $test,
-                $test,
-            );
-        }
-        if ($test[0] === false) {
-            return;
-        }
-        $params = array(
-            $test[1],
-        );
-        $cCount = \substr_count($params[0], '%c');
-        for ($i = 0; $i < $cCount; $i += 2) {
-            $params[] = 'font-family:monospace';
-            $params[] = '';
-        }
-        $params[] = $this->debug->meta('uncollapse', false);
-        \call_user_func_array(array($this->debug, 'warn'), $params);
+        $this->debug->sqlQueryAnalysis->analyze($this->sql);
     }
 
     /**
@@ -496,18 +391,18 @@ class StatementInfo extends AbstractComponent
      */
     private function setConstantsPdo()
     {
-        $consts = array();
-        $pdoConsts = array();
+        $constants = array();
+        $pdoConstants = array();
         /** @psalm-suppress ArgumentTypeCoercion ignore expects class-string */
         if (\class_exists('PDO')) {
             $ref = new \ReflectionClass('PDO');
-            $pdoConsts = $ref->getConstants();
+            $pdoConstants = $ref->getConstants();
         }
-        foreach ($pdoConsts as $name => $val) {
+        foreach ($pdoConstants as $name => $val) {
             if (\strpos($name, 'PARAM_') === 0 && \strpos($name, 'PARAM_EVT_') !== 0) {
-                $consts[$val] = 'PDO::' . $name;
+                $constants[$val] = 'PDO::' . $name;
             }
         }
-        self::$constants += $consts;
+        self::$constants += $constants;
     }
 }

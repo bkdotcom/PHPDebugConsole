@@ -6,8 +6,8 @@ class CallerInfoChild extends CallerInfoParent
 {
     function extendMe()
     {
-        \bdk\Debug::_group();
+        \bdk\Debug::group();
         parent::extendMe();
-        \bdk\Debug::_groupEnd();
+        \bdk\Debug::groupEnd();
     }
 }

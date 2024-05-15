@@ -70,7 +70,7 @@ class Pdo extends PdoBase
     #[\ReturnTypeWillChange]
     public function beginTransaction()
     {
-        $this->debug->group('transaction', $this->debug->meta(array(
+        $this->debug->info('beginTransaction', $this->debug->meta(array(
             'icon' => $this->debug->getCfg('channelIcon', Debug::CONFIG_DEBUG),
         )));
         return $this->pdo->beginTransaction();
@@ -85,9 +85,10 @@ class Pdo extends PdoBase
     #[\ReturnTypeWillChange]
     public function commit()
     {
-        $return = $this->pdo->commit();
-        $this->debug->groupEnd($return);
-        return $return;
+        $this->debug->info('commit', $this->debug->meta(array(
+            'icon' => $this->debug->getCfg('channelIcon', Debug::CONFIG_DEBUG),
+        )));
+        return $this->pdo->commit();
     }
 
     /**
@@ -221,9 +222,10 @@ class Pdo extends PdoBase
     #[\ReturnTypeWillChange]
     public function rollBack()
     {
-        $return = $this->pdo->rollBack();
-        $this->debug->groupEnd('rolled back');
-        return $return;
+        $this->debug->info('rollBack', $this->debug->meta(array(
+            'icon' => $this->debug->getCfg('channelIcon', Debug::CONFIG_DEBUG),
+        )));
+        return $this->pdo->rollBack();
     }
 
     /**

@@ -3,8 +3,8 @@
 namespace bdk\Test\Debug\Plugin\Method;
 
 use bdk\Debug;
-use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Abstraction\Type;
 use bdk\Test\Debug\DebugTestFramework;
 
 /**
@@ -190,21 +190,21 @@ class GeneralTest extends DebugTestFramework
         $json = $this->debug->prettify(\json_encode($data), 'application/json');
         self::assertEquals(
             new Abstraction(Type::TYPE_STRING, array(
-                'strlen' => null,
+                // 'strlen' => 24,
+                // 'strlenValue' => 24,
                 'typeMore' => 'json',
                 'value' => \json_encode($data, JSON_PRETTY_PRINT),
                 'attribs' => array(
                     'class' => array(
                         'highlight',
                         'language-json',
+                        'no-quotes',
                     ),
                 ),
-                'addQuotes' => false,
                 'brief' => false,
                 'contentType' => 'application/json',
                 'prettified' => true,
                 'prettifiedTag' => true,
-                'visualWhiteSpace' => false,
                 'valueDecoded' => $data,
             )),
             $json

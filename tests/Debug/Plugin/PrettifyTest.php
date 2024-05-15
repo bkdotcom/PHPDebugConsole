@@ -2,7 +2,6 @@
 
 namespace bdk\Test\Debug\Plugin;
 
-use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Utility\Reflection;
@@ -40,21 +39,17 @@ class PrettifyTest extends DebugTestFramework
         $html = $this->debug->prettify('<html><title>test</title></html>', 'text/html');
         self::assertEquals(
             new Abstraction(Type::TYPE_STRING, array(
-                'strlen' => null,
+                // 'strlen' => 32,
+                // 'strlenValue' => 32,
                 'typeMore' => null,
                 'value' => '<html><title>test</title></html>',
                 'attribs' => array(
-                    'class' => array(
-                        'highlight',
-                        'language-markup',
-                    ),
+                    'class' => array('highlight', 'language-markup', 'no-quotes'),
                 ),
-                'addQuotes' => false,
                 'brief' => false,
                 'contentType' => 'text/html',
                 'prettified' => false,
                 'prettifiedTag' => false,
-                'visualWhiteSpace' => false,
             )),
             $html
         );
@@ -63,21 +58,17 @@ class PrettifyTest extends DebugTestFramework
         $json = $this->debug->prettify(\json_encode($data), 'application/json');
         self::assertEquals(
             new Abstraction(Type::TYPE_STRING, array(
-                'strlen' => null,
+                // 'strlen' => 24,
+                // 'strlenValue' => 24,
                 'typeMore' => 'json',
                 'value' => \json_encode($data, JSON_PRETTY_PRINT),
                 'attribs' => array(
-                    'class' => array(
-                        'highlight',
-                        'language-json',
-                    ),
+                    'class' => array('highlight', 'language-json', 'no-quotes'),
                 ),
-                'addQuotes' => false,
                 'brief' => false,
                 'contentType' => 'application/json',
                 'prettified' => true,
                 'prettifiedTag' => true,
-                'visualWhiteSpace' => false,
                 'valueDecoded' => $data,
             )),
             $json
@@ -86,7 +77,8 @@ class PrettifyTest extends DebugTestFramework
         $sql = $this->debug->prettify('SELECT * FROM table WHERE col = "val"', ContentType::SQL);
         self::assertEquals(
             new Abstraction(Type::TYPE_STRING, array(
-                'strlen' => null,
+                // 'strlen' => 48,
+                // 'strlenValue' => 48,
                 'typeMore' => null,
                 'value' => \str_replace('·', ' ', 'SELECT·
   *·
@@ -98,14 +90,13 @@ WHERE·
                     'class' => array(
                         'highlight',
                         'language-sql',
+                        'no-quotes',
                     ),
                 ),
-                'addQuotes' => false,
                 'brief' => false,
                 'contentType' => 'application/sql',
                 'prettified' => true,
                 'prettifiedTag' => true,
-                'visualWhiteSpace' => false,
             )),
             $sql
         );
@@ -122,21 +113,21 @@ WHERE·
         $xml = $this->debug->prettify(\str_replace("\n", '', $xmlExpect), 'application/xml');
         self::assertEquals(
             new Abstraction(Type::TYPE_STRING, array(
-                'strlen' => null,
+                // 'strlen' => 682,
+                // 'strlenValue' => 682,
                 'typeMore' => null,
                 'value' => $xmlExpect,
                 'attribs' => array(
                     'class' => array(
                         'highlight',
                         'language-xml',
+                        'no-quotes',
                     ),
                 ),
-                'addQuotes' => false,
                 'brief' => false,
                 'contentType' => 'application/xml',
                 'prettified' => true,
                 'prettifiedTag' => true,
-                'visualWhiteSpace' => false,
             )),
             $xml
         );

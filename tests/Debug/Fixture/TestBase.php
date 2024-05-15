@@ -78,15 +78,15 @@ class TestBase
 
     public function testBasePublic()
     {
-        \bdk\Debug::_group();
-        \bdk\Debug::_log('this group\'s label should be', get_class($this) . '->' . __FUNCTION__);
-        \bdk\Debug::_groupEnd();
+        \bdk\Debug::group();
+        \bdk\Debug::log('this group\'s label should be', \get_class($this) . '->' . __FUNCTION__);
+        \bdk\Debug::groupEnd();
     }
 
     public static function testBaseStatic()
     {
-        \bdk\Debug::_group();
-        \bdk\Debug::_log('this group\'s label will be ' . __CLASS__ . '::' . __FUNCTION__ . ' regardless if called from inherited class :(');
-        \bdk\Debug::_groupEnd();
+        \bdk\Debug::group();
+        \bdk\Debug::log('this group\'s label will be ' . __CLASS__ . '::' . __FUNCTION__ . ' regardless if called from inherited class :(');
+        \bdk\Debug::groupEnd();
     }
 }

@@ -111,11 +111,7 @@ class Group implements SubscriberInterface
      */
     public function group()
     {
-        $this->doGroup(new LogEntry(
-            $this->debug,
-            __FUNCTION__,
-            \func_get_args()
-        ));
+        $this->doGroup(new LogEntry($this->debug, __FUNCTION__, \func_get_args()));
         return $this->debug;
     }
 
@@ -130,11 +126,7 @@ class Group implements SubscriberInterface
      */
     public function groupCollapsed()
     {
-        $this->doGroup(new LogEntry(
-            $this->debug,
-            __FUNCTION__,
-            \func_get_args()
-        ));
+        $this->doGroup(new LogEntry($this->debug, __FUNCTION__, \func_get_args()));
         return $this->debug;
     }
 
@@ -198,11 +190,7 @@ class Group implements SubscriberInterface
         if ($this->debug->getCfg('collect', Debug::CONFIG_DEBUG) === false) {
             return $this->debug;
         }
-        $this->doGroupUncollapse(new LogEntry(
-            $this->debug,
-            __FUNCTION__,
-            \func_get_args()
-        ));
+        $this->doGroupUncollapse(new LogEntry($this->debug, __FUNCTION__, \func_get_args()));
         return $this->debug;
     }
 
@@ -433,7 +421,8 @@ class Group implements SubscriberInterface
             $debug->log(new LogEntry(
                 $debug,
                 'groupEndValue',
-                array('return', $returnValue)
+                array('return', $returnValue),
+                $logEntry->getMeta()
             ));
         }
         $logEntry['args'] = array();

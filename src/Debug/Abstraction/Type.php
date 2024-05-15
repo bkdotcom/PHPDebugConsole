@@ -122,7 +122,7 @@ class Type
      *
      * @param array $val array value
      *
-     * @return list{self::TYPE_*, self::TYPE_RAW}
+     * @return list{self::TYPE_*,self::TYPE_RAW}
      */
     private function getTypeArray($val)
     {
@@ -141,7 +141,7 @@ class Type
      *
      * @param float $val float/INF/NAN
      *
-     * @return list{self::TYPE_FLOAT, self::TYPE_*}
+     * @return list{self::TYPE_FLOAT,self::TYPE_*}
      */
     private function getTypeFloat($val)
     {
@@ -164,7 +164,7 @@ class Type
      *
      * @param float $val float/INF/NAN
      *
-     * @return list{self::TYPE_INT, self::TYPE_TIMESTAMP|null}
+     * @return list{self::TYPE_INT,self::TYPE_TIMESTAMP|null}
      */
     private function getTypeInt($val)
     {
@@ -179,7 +179,7 @@ class Type
      *
      * @param object $object any object
      *
-     * @return list{self::TYPE_*, self::TYPE_*} type & typeMore
+     * @return list{self::TYPE_*,self::TYPE_*} type & typeMore
      */
     private function getTypeObject($object)
     {
@@ -187,7 +187,7 @@ class Type
         $typeMore = self::TYPE_RAW;  // needs abstracted
         if ($object instanceof Abstraction) {
             $type = $object['type'];
-            $typeMore = self::TYPE_ABSTRACTION;
+            $typeMore = $object['typeMore'];
         }
         return array($type, $typeMore);
     }
@@ -221,7 +221,7 @@ class Type
      *
      * @param mixed $val value of unknown type (likely closed resource)
      *
-     * @return list{self::TYPE_*, self::TYPE_*|null} type and typeMore
+     * @return list{self::TYPE_*,self::TYPE_*|null} type and typeMore
      *
      * @SuppressWarnings(PHPMD.DevelopmentCodeFragment)
      */

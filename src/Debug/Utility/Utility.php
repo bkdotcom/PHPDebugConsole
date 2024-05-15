@@ -193,9 +193,10 @@ class Utility
         // exec('git branch') may fail due due to permissions / rights
         // navigate up until we find the ./git/HEAD file
         $dir = $dir ?: \getcwd();
-        $docRoot = Debug::getInstance()->getServerParam('DOCUMENT_ROOT');
-        $docRootFound = false;
         $parts = \explode(DIRECTORY_SEPARATOR, $dir);
+        $docRoot = Debug::getInstance()->getServerParam('DOCUMENT_ROOT');
+        $docRootParts = \explode(DIRECTORY_SEPARATOR, $docRoot);
+        $dirBreakParts = \array_slice($docRootParts, 0, -1);
         for ($i = \count($parts); $i > 0; $i--) {
             $dirParts = \array_slice($parts, 0, $i);
             $gitHeadFilepath = \implode(DIRECTORY_SEPARATOR, \array_merge(
@@ -204,16 +205,16 @@ class Utility
             ));
             if (\file_exists($gitHeadFilepath)) {
                 $fileLines = \file($gitHeadFilepath);
-                $parts = \explode('/', $fileLines[0], 3);
-                return isset($parts[2])
-                    ? \trim($parts[2])
-                    : null;
+                // line 0 should be something like:
+                // ref: refs/heads/branchName
+                $parts = \array_replace(
+                    array(null, null, null),
+                    \explode('/', $fileLines[0], 3)
+                );
+                return \trim($parts[2]);
             }
-            if ($docRootFound) {
+            if ($dirParts === $dirBreakParts) {
                 break;
-            }
-            if (\implode(DIRECTORY_SEPARATOR, $dirParts) === $docRoot) {
-                $docRootFound = true;
             }
         }
         return null;

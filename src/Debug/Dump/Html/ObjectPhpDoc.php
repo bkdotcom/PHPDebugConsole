@@ -13,6 +13,7 @@
 namespace bdk\Debug\Dump\Html;
 
 use bdk\Debug\Abstraction\Abstraction;
+use BDK\Debug\Abstraction\Type;
 use bdk\Debug\Dump\Html\Value as ValDumper;
 
 /**
@@ -66,28 +67,26 @@ class ObjectPhpDoc
         $tagName = $tagData['tagName'];
         switch ($tagName) {
             case 'author':
-                $info = $this->dumpTagAuthor($tagData);
+                $value = $this->dumpTagAuthor($tagData);
                 break;
             case 'link':
             case 'see':
-                $desc = $tagData['desc'] ?: $tagData['uri'] ?: '';
-                if (isset($tagData['uri'])) {
-                    $info = '<a href="' . $tagData['uri'] . '" target="_blank">' . \htmlspecialchars($desc) . '</a>';
-                    break;
-                }
-                // see tag
-                $info = $this->valDumper->markupIdentifier($tagData['fqsen'])
-                    . ' <span class="phpdoc-desc">' . \htmlspecialchars($desc) . '</span>';
-                $info = \str_replace(' <span class="phpdoc-desc"></span>', '', $info);
+                $value = $this->dumpTagSeeLink($tagData);
                 break;
             default:
                 unset($tagData['tagName']);
-                $info = \htmlspecialchars(\implode(' ', $tagData));
+                $value = $this->valDumper->dump(\implode(' ', $tagData), array(
+                    'tagName' => null,
+                    'type' => Type::TYPE_STRING,
+                ));
         }
         return '<dd class="phpdoc phpdoc-' . $tagName . '">'
-            . '<span class="phpdoc-tag">' . $tagName . '</span>'
+            . '<span class="phpdoc-tag">' . $this->valDumper->dump($tagName, array(
+                'tagName' => null,
+                'type' => Type::TYPE_STRING,
+            )) . '</span>'
             . '<span class="t_operator">:</span> '
-            . $info
+            . $value
             . '</dd>' . "\n";
     }
 
@@ -109,5 +108,24 @@ class ObjectPhpDoc
             $html .= ' ' . \htmlspecialchars($tagData['desc']);
         }
         return $html;
+    }
+
+    /**
+     * Dump PhpDoc see and link tag value
+     *
+     * @param array $tagData parsed tag
+     *
+     * @return string html partial
+     */
+    private function dumpTagSeeLink(array $tagData)
+    {
+        $desc = $tagData['desc'] ?: $tagData['uri'] ?: '';
+        if (isset($tagData['uri'])) {
+            return '<a href="' . $tagData['uri'] . '" target="_blank">' . \htmlspecialchars($desc) . '</a>';
+        }
+        // see tag
+        $info = $this->valDumper->markupIdentifier($tagData['fqsen'])
+            . ' <span class="phpdoc-desc">' . \htmlspecialchars($desc) . '</span>';
+        return \str_replace(' <span class="phpdoc-desc"></span>', '', $info);
     }
 }

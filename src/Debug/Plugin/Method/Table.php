@@ -105,7 +105,7 @@ class Table implements SubscriberInterface
     }
 
     /**
-     * Find the data, caption, & columns in logEntry arguments
+     * Process table log entry
      *
      * @param LogEntry $logEntry log entry instance
      *
@@ -128,7 +128,7 @@ class Table implements SubscriberInterface
             return;
         }
 
-        // no data...  create logEntry instead
+        // no data...  create log method logEntry instead
         $logEntry['method'] = 'log';
         if ($logEntry->getMeta('caption')) {
             \array_unshift($logEntry['args'], $logEntry->getMeta('caption'));

@@ -122,7 +122,7 @@ class Stream extends AbstractRoute
     private function ansiCheck()
     {
         $meta = \stream_get_meta_data($this->fileHandle);
-        return $this->cfg['ansi'] === true || $this->cfg['ansi'] === 'default' && $meta['wrapper_type'] === 'PHP';
+        return ($this->cfg['ansi'] === true || $this->cfg['ansi'] === 'default') && $meta['wrapper_type'] === 'PHP';
     }
 
     /**

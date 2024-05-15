@@ -42,7 +42,7 @@ class ErrorSummary
      *     notInConsole: int,
      *     suppressed: int}>,
      *   inConsole: int,
-     *   inConsoleCategories: int,
+     *   inConsoleCategories: list<string>,
      *   notInConsole: int,
      * }
      */

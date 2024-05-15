@@ -139,7 +139,7 @@ class DebugTest extends DebugTestFramework
     }
 
     /**
-     * Assert that calling \bdk\Debug::_setCfg() before an instance has been instantiated creates an instance
+     * Assert that calling \bdk\Debug::setCfg() before an instance has been instantiated creates an instance
      *
      * This is a bit tricky to test.. need to clear currant static instance...
      *    a 2nd instance will get created
@@ -370,7 +370,7 @@ class DebugTest extends DebugTestFramework
     private function setErrorCallerHelper($static = false)
     {
         if ($static) {
-            Debug::_setErrorCaller();
+            Debug::setErrorCaller();
             return;
         }
         $this->debug->setErrorCaller();

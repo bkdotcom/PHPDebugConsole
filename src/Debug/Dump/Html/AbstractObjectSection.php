@@ -66,15 +66,15 @@ abstract class AbstractObjectSection
         ), $cfg);
         return $cfg['groupByInheritance']
             ? $this->dumpItemsByInheritance($abs, $cfg)
-            : $this->dumpItemsFiltered($abs->sort($abs[$cfg['what']], $abs['sort']), $cfg);
+            : $this->dumpItemsFiltered($abs, \array_keys($abs[$what]), $cfg);
     }
 
     /**
      * Dump Property or Constant info as HTML
      *
-     * @param string $name Property/costant name
-     * @param array  $info Property/constant info
-     * @param array  $cfg  config options
+     * @param string|Abstraction $name Property/constant name
+     * @param array              $info Property/constant info
+     * @param array              $cfg  config options
      *
      * @return string html fragment
      */
@@ -88,20 +88,16 @@ abstract class AbstractObjectSection
     }
 
     /**
-     * Build property/constant/cate inner html
+     * Build property/constant/case inner html
      *
-     * @param string $name Property name
-     * @param array  $info Property info
-     * @param array  $cfg  options
+     * @param string|Abstraction $name Property name
+     * @param array              $info Property info
+     * @param array              $cfg  options
      *
      * @return string html fragment
      */
     protected function dumpItemInner($name, array $info, array $cfg)
     {
-        $name = \str_replace('debug.', '', $name);
-        $title = $cfg['phpDocOutput']
-            ? (string) $info['desc']
-            : '';
         $parts = \array_filter(array(
             '1_modifiers' => $this->dumpModifiers($info),
             '2_type' => isset($info['type'])
@@ -111,11 +107,13 @@ abstract class AbstractObjectSection
                 'addQuotes' => \preg_match('#[\s\r\n]#u', $name) === 1 || $name === '',
                 'attribs' => array(
                     'class' => array('t_identifier'),
-                    'title' => $title,
+                    'title' => $cfg['phpDocOutput']
+                        ? $info['desc']
+                        : '',
                 ),
             )),
             '4_value' => $info['value'] !== Abstracter::UNDEFINED
-                ? '<span class="t_operator">=</span> ' . $this->valDumper->dump($info['value'])
+                ? '<span class="t_operator">=</span> ' . $this->valDumper->dump($info['value'], $cfg)
                 : '',
         ));
         return \implode(' ', $parts);
@@ -124,15 +122,23 @@ abstract class AbstractObjectSection
     /**
      * Iterate over cases, constants, properties, or methods
      *
-     * @param array $items Cases, Constants, Properties, or Methods
-     * @param array $cfg   Config options
+     * @param ObjectAbstraction    $abs  ObjectAbstraction instance
+     * @param list<string>         $keys keys/names of items to output
+     * @param array<string, mixed> $cfg  Config options
      *
      * @return string
      */
-    private function dumpItemsFiltered(array $items, array $cfg)
+    private function dumpItemsFiltered(ObjectAbstraction $abs, array $keys, array $cfg)
     {
         $html = '';
+        $items = \array_intersect_key($abs[$cfg['what']], \array_flip($keys));
+        $items = $abs->sort($items, $abs['sort']);
+        $absKeys = $abs['keys'];
         foreach ($items as $name => $info) {
+            $name = \preg_replace('/^debug\./', '', $name);
+            if (isset($absKeys[$name])) {
+                $name = $absKeys[$name];
+            }
             $vis = (array) $info['visibility'];
             $info = \array_merge(array(
                 'declaredLast' => null,
@@ -174,12 +180,13 @@ abstract class AbstractObjectSection
             $itemsFiltered = \array_filter($items, static function ($info) use ($classNameCur) {
                 return !isset($info['declaredLast']) || $info['declaredLast'] === $classNameCur;
             });
+            $keys = \array_keys($itemsFiltered);
             $items = \array_diff_key($items, $itemsFiltered);
             $itemOutCount += \count($itemsFiltered);
             $html .= \in_array($classNameCur, array($className, 'stdClass'), true) === false
                 ? '<dd class="heading">Inherited from ' . $this->valDumper->markupIdentifier($classNameCur) . '</dd>' . "\n"
                 : '';
-            $html .= $this->dumpItemsFiltered($itemsFiltered, $cfg);
+            $html .= $this->dumpItemsFiltered($abs, $keys, $cfg);
         }
         return $html;
     }
@@ -212,12 +219,14 @@ abstract class AbstractObjectSection
         $attribs = array(
             'class' => $this->getClasses($info),
             'data-attributes' => $info['attributes'],
+            'data-chars' => $this->valDumper->findChars(\json_encode($info['attributes'], JSON_UNESCAPED_UNICODE)),
             'data-declared-prev' => $info['declaredPrev'],
             'data-inherited-from' => $info['declaredLast'],
         );
         $filter = \array_filter(array(
             'class' => true,
             'data-attributes' => $cfg['attributeOutput'] && $info['attributes'],
+            'data-chars' => $cfg['attributeOutput'],
             'data-declared-prev' => empty($info['isInherited']) && !empty($info['declaredPrev']),
             'data-inherited-from' => !empty($info['isInherited']) || $info['isPrivateAncestor'],
         ));

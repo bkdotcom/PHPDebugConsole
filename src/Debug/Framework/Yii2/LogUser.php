@@ -35,7 +35,7 @@ class LogUser
     /**
      * Constructor
      *
-     * @param Module $debugModule Debug module
+     * @param DebugModule $debugModule Debug module
      */
     public function __construct(DebugModule $debugModule)
     {

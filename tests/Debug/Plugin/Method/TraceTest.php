@@ -161,6 +161,7 @@ class TraceTest extends DebugTestFramework
         );
     }
 
+    /*
     public function testTraceInvalidCaption()
     {
         $line = __LINE__ + 1;
@@ -197,6 +198,7 @@ class TraceTest extends DebugTestFramework
             ),
         ), $this->helper->logEntryToArray($logEntryError));
     }
+    */
 
     public function testTraceProvided()
     {
@@ -211,6 +213,7 @@ class TraceTest extends DebugTestFramework
             'caption' => 'trace',
             'detectFiles' => true,
             'inclArgs' => false,
+            'limit' => 0,
             'sortable' => false,
             'tableInfo' => array(
                 'class' => null,

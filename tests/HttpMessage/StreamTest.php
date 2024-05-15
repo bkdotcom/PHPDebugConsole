@@ -385,7 +385,7 @@ class StreamTest extends TestCase
     }
 
     /**
-     * Set inaccessable property value via reflection
+     * Set inaccessible property value via reflection
      *
      * @param object $obj  object instance
      * @param string $prop property name

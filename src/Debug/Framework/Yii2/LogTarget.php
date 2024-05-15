@@ -71,7 +71,8 @@ class LogTarget extends Target
             static::filterMessages($messages, $this->getLevels(), $this->categories, $this->except)
         );
         $count = \count($this->messages);
-        if ($count > 0 && ($final || $this->exportInterval > 0 && $count >= $this->exportInterval)) {
+        $intervalMet = $final || ($this->exportInterval > 0 && $count >= $this->exportInterval);
+        if ($count > 0 && $intervalMet) {
             $oldExportInterval = $this->exportInterval;
             $this->exportInterval = 0;
             $this->export();

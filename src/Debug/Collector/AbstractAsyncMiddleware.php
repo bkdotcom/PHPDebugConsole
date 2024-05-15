@@ -177,11 +177,11 @@ class AbstractAsyncMiddleware extends AbstractComponent
     /**
      * Build request header string
      *
-     * @param MessageInterface $message Request or Response
+     * @param RequestInterface|ResponseInterface $message Request or Response
      *
      * @return string
      */
-    private function buildHeadersString(MessageInterface $message)
+    private function buildHeadersString($message)
     {
         $result = $message instanceof RequestInterface
             ? \trim($message->getMethod()

@@ -16,6 +16,7 @@ use bdk\Debug;
 use bdk\Debug\AbstractComponent;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Type;
+use bdk\Debug\Utility\Utf8;
 use bdk\HttpMessage\Utility\ContentType;
 
 /**
@@ -51,7 +52,7 @@ class AbstractString extends AbstractComponent
      *
      * @return Abstraction
      */
-    public function getAbstraction($string, $typeMore = null, $crateVals = array())
+    public function getAbstraction($string, $typeMore = null, array $crateVals = array())
     {
         $absValues = $this->absValuesInit($string, $typeMore);
         switch ($typeMore) {
@@ -67,10 +68,6 @@ class AbstractString extends AbstractComponent
             case Type::TYPE_STRING_SERIALIZED:
                 $absValues = $this->getAbsValuesSerialized($absValues);
                 break;
-            default:
-                if ($absValues['maxlen'] > -1) {
-                    $absValues['value'] = $this->debug->utf8->strcut($string, 0, $absValues['maxlen']);
-                }
         }
         $absValues = $this->absValuesFinish($absValues);
         return new Abstraction(Type::TYPE_STRING, $absValues);
@@ -81,7 +78,7 @@ class AbstractString extends AbstractComponent
      *
      * @param string $val string value
      *
-     * @return array type and typeMore
+     * @return list{Type::TYPE_STRING,Type::TYPE_*} type and typeMore
      */
     public function getType($val)
     {
@@ -115,14 +112,14 @@ class AbstractString extends AbstractComponent
         $typeMore = $absValues['typeMore'];
         if ($absValues['brief'] && $typeMore !== Type::TYPE_STRING_BINARY) {
             $matches = array();
-            $regex = '/^([^\r\n]{1,' . ($absValues['maxlen'] ?: 128) . '})/';
+            $maxLen = $absValues['maxlen'] > -1 ? $absValues['maxlen'] : 128;
+            $regex = '/^([^\r\n]{1,' . $maxLen . '})/';
             \preg_match($regex, $absValues['value'], $matches);
             $absValues['value'] = $matches[1];
+            $absValues['strlenValue'] = \strlen($absValues['value']);
         }
-        if ($absValues['strlen'] === \strlen($absValues['value']) && $typeMore !== Type::TYPE_STRING_BINARY) {
-            // including strlen indicates that value was truncated
-            //   (strlen is always provided for binary)
-            $absValues['strlen'] = null;
+        if ($absValues['strlen'] === $absValues['strlenValue'] && $absValues['strlen'] === \strlen($absValues['value'])) {
+            unset($absValues['strlen'], $absValues['strlenValue']);
         }
         unset($absValues['maxlen'], $absValues['valueRaw']);
         return $absValues;
@@ -149,17 +146,19 @@ class AbstractString extends AbstractComponent
         $maxLenCat = isset($maxLenCats[$typeMore])
             ? $maxLenCats[$typeMore]
             : 'other';
-        $strlen = \strlen($string);
-        $maxlen = $this->getMaxLen($maxLenCat, $strlen);
+        $strLen = \strlen($string);
+        $maxLen = $this->getMaxLen($maxLenCat, $strLen);
+        $value = $maxLen > -1
+            ? $this->debug->utf8->strcut($string, 0, $maxLen)
+            : $string;
         return array(
             'brief' => $this->cfg['brief'],
-            'maxlen' => $maxlen, // temporary
-            'strlen' => $strlen,
+            'maxlen' => $maxLen,                // temporary
+            'strlen' => $strLen,                // length of untrimmed value (may be unset)
+            'strlenValue' => \strlen($value),   // length of logged/captured value (may be unset unset)
             'typeMore' => $typeMore,
-            'value' => $maxlen > -1
-                ? \substr($string, 0, $maxlen)
-                : $string,
-            'valueRaw' => $string, // temporary
+            'value' => $value,
+            'valueRaw' => $string,              // temporary
         );
     }
 
@@ -170,11 +169,10 @@ class AbstractString extends AbstractComponent
      *
      * @return array
      */
-    private function getAbsValuesBase64($absValues)
+    private function getAbsValuesBase64(array $absValues)
     {
-        $absValues['valueDecoded'] = $this->cfg['brief']
-            ? null
-            : $this->abstracter->crate(\base64_decode($absValues['valueRaw'], true));
+        // decode regardless of whether brief
+        $absValues['valueDecoded'] = $this->abstracter->crate(\base64_decode($absValues['valueRaw'], true));
         return $absValues;
     }
 
@@ -185,13 +183,34 @@ class AbstractString extends AbstractComponent
      *
      * @return array
      */
-    private function getAbsValuesBinary($absValues)
+    private function getAbsValuesBinary(array $absValues)
     {
         // is string long enough to try to determine the mime type?
         $strLenMime = $this->cfg['stringMinLen']['contentType'];
         if ($strLenMime > -1 && $absValues['strlen'] > $strLenMime) {
             $absValues['contentType'] = $this->debug->stringUtil->contentType($absValues['valueRaw']);
         }
+        $buffer = new \bdk\Debug\Utility\Utf8Buffer($absValues['value']);
+        $info = $buffer->analyze();
+        $absValues['percentBinary'] = $info['percentBinary'];
+        if ($info['percentBinary'] > 33) {
+            // display entire value as binary / hex
+            $value = \bin2hex($absValues['value']);
+            $absValues['value'] = \trim(\chunk_split($value, 2, ' '));
+            return $absValues;
+        }
+        // chunked
+        $absValues['chunks'] = \array_map(static function ($chunk) {
+            if ($chunk[0] === Utf8::TYPE_OTHER) {
+                $str = \bin2hex($chunk[1]);
+                $chunk[1] = \trim(\chunk_split($str, 2, ' '));
+            }
+            return $chunk;
+        }, $info['blocks']);
+        if (empty($absValues['chunks'])) {
+            unset($absValues['chunks']);
+        }
+        $absValues['value'] = ''; // vs null..  string abstraction value should be string
         return $absValues;
     }
 
@@ -203,19 +222,21 @@ class AbstractString extends AbstractComponent
      *
      * @return array
      */
-    private function getAbsValuesJson($absValues, $crateVals)
+    private function getAbsValuesJson(array $absValues, array $crateVals)
     {
         if ($this->cfg['brief']) {
             $absValues['valueDecoded'] = null;
+            // re-encode without whitespace
+            $absValues['value'] = $this->debug->stringUtil->prettyJson($absValues['valueRaw'], 0, 0);
             return $absValues;
         }
-        $classes = $this->debug->arrayUtil->pathGet($crateVals, 'attribs.class', array());
-        if (\is_array($classes) === false) {
-            $classes = \explode(' ', $classes);
-        }
-        if (\in_array('language-json', $classes, true) === false) {
+        if (empty($crateVals['prettified'])) {
             $abstraction = $this->debug->prettify($absValues['valueRaw'], ContentType::JSON);
             $absValues = $abstraction->getValues();
+            $absValues = \array_merge(array(
+                'strlen' => \strlen($absValues['value']),
+                'strlenValue' => \strlen($absValues['value']),
+            ), $absValues);
         }
         if (empty($absValues['valueDecoded'])) {
             $absValues['valueDecoded'] = $this->abstracter->crate(\json_decode($absValues['valueRaw'], true));
@@ -230,11 +251,8 @@ class AbstractString extends AbstractComponent
      *
      * @return Abstraction
      */
-    private function getAbsValuesSerialized($absValues)
+    private function getAbsValuesSerialized(array $absValues)
     {
-        $absValues['value'] = $absValues['maxlen'] > -1
-            ? $this->debug->utf8->strcut($absValues['valueRaw'], 0, $absValues['maxlen'])
-            : $absValues['valueRaw'];
         $absValues['valueDecoded'] = $this->cfg['brief']
             ? null
             : $this->abstracter->crate(
@@ -281,7 +299,7 @@ class AbstractString extends AbstractComponent
      *
      * @param string $val string value
      *
-     * @return string|null
+     * @return Type::TYPE_STRING_*|null
      */
     private function getTypeMore($val)
     {
@@ -309,7 +327,7 @@ class AbstractString extends AbstractComponent
      *
      * @param string $val string value
      *
-     * @return string|null
+     * @return Type::TYPE_STRING_*|null
      */
     private function getTypeStringEncoded($val)
     {

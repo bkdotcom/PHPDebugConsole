@@ -8,7 +8,6 @@ use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
 use bdk\ErrorHandler\Error;
 use bdk\PubSub\ValueStore;
-use ReflectionProperty;
 
 /**
  *
@@ -37,7 +36,7 @@ class Helper
 
     /**
      * Arrayify abstractions
-     * sort abtract values and meta values for consistency
+     * sort abstract values and meta values for consistency
      *
      * @param mixed $val args or value
      *

@@ -16,7 +16,7 @@ use bdk\Debug;
 use bdk\Debug\Collector\StatementInfo;
 
 /**
- * Used by MySqli and Pdo
+ * Used by DoctrineLogger, MySqli, and Pdo
  */
 trait DatabaseTrait
 {

@@ -13,7 +13,6 @@
 namespace bdk\Debug\Utility;
 
 use bdk\Debug\Utility\Utf8Buffer;
-use bdk\Debug\Utility\Utf8Dump;
 
 /**
  * Validate Utf8 / "highlight" non-utf8, control, & whitespace characters
@@ -23,9 +22,7 @@ use bdk\Debug\Utility\Utf8Dump;
  */
 class Utf8
 {
-    const TYPE_CONTROL = 'control';
     const TYPE_OTHER = 'other';
-    const TYPE_SPECIAL = 'special';
     const TYPE_UTF8 = 'utf8';
 
     /** @var Utf8Buffer|null */
@@ -68,48 +65,46 @@ class Utf8
     }
 
     /**
-     * Highlight non-UTF-8, control, & "special" characters
-     *
-     * control & non-utf-8 chars are displayed as hex
-     * "special" unicode-characters are displayed with the \uxxxx representation
-     *
-     * @param string              $str     string containing binary
-     * @param array<string,mixed> $options prefix, sanitizeNonBinary, useHtml
-     *
-     * @return string
-     */
-    public static function dump($str, $options = array())
-    {
-        $buffer = new Utf8Buffer($str);
-        $dump = new Utf8Dump();
-        $info = $buffer->analyze();
-        $dump->setOptions($options);
-        if ($info['percentBinary'] > 33) {
-            $dump->setOptions('prefix', false);
-            return $dump->dumpBlock($str, self::TYPE_OTHER);
-        }
-        $str = '';
-        foreach ($info['blocks'] as $block) {
-            $str .= $dump->dumpBlock($block[1], $block[0]);
-        }
-        return $str;
-    }
-
-    /**
      * Determine if string is UTF-8 encoded
      *
      * In addition, if valid UTF-8, will also report whether string contains
-     * control, or other speical characters that could otherwise go unnoticed
+     * control, or other special characters that could otherwise go unnoticed
      *
-     * @param string $str        string to check
-     * @param bool   $hasSpecial does valid utf-8 string contain control or "exotic" whitespace type character
+     * @param string $str string to check
      *
      * @return bool
      */
-    public static function isUtf8($str, &$hasSpecial = false)
+    public static function isUtf8($str)
     {
         $buffer = new Utf8Buffer($str);
-        return $buffer->isUtf8($hasSpecial);
+        return $buffer->isUtf8();
+    }
+
+    /**
+     * Get Unicode code point of character
+     *
+     * @param string $char Character to get code point for
+     *
+     * @return int|false The Unicode code point for the first character of string or false on failure.
+     */
+    public static function ord($char)
+    {
+        $ord = \ord($char[0]);
+        if ($ord < 0x80) {
+            return $ord;
+        } elseif ($ord < 0xe0) {
+            return ($ord - 0xc0 << 6) + \ord($char[1]) - 0x80;
+        } elseif ($ord < 0xf0) {
+            return ($ord - 0xe0 << 12)
+                + (\ord($char[1]) - 0x80 << 6)
+                + \ord($char[2]) - 0x80;
+        } elseif ($ord < 0xf8) {
+            return ($ord - 0xf0 << 18)
+                + (\ord($char[1]) - 0x80 << 12)
+                + (\ord($char[2]) - 0x80 << 6)
+                + \ord($char[3]) - 0x80;
+        }
+        return false;
     }
 
     /**
@@ -189,14 +184,14 @@ class Utf8
             return $strlen - $start;
         }
         $end++; // increment to offset the initial decrement below
-        for ($i = 0; $i < 4; $i++) {
+        for ($i = 0; $i < 4, $end > 0; $i++) {
             $end--;
             self::$buffer->seek($end);
             if (self::$buffer->isOffsetUtf8()) {
                 break;
             }
         }
-        return $end - $start;
+        return \max($end - $start, 0);
     }
 
     /**

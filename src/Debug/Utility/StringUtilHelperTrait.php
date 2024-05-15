@@ -83,7 +83,7 @@ trait StringUtilHelperTrait
      * Test if character distribution is what we would expect for a base 64 string
      * This is quite unreliable as encoding isn't random
      *
-     * @param string $val string already striped of whitespace
+     * @param string $val string already stripped of whitespace
      *
      * @return bool
      */
@@ -96,10 +96,11 @@ trait StringUtilHelperTrait
             return true;
         }
         $stats = array(
-            'lower' => array(\preg_match_all('/[a-z]/', $val), 40.626, 8),
+            // how many chars found, percent expected for random binary, allowed deviation
+            'lower' => array(\preg_match_all('/[a-z]/', $val), 40.626, 10),
             'num' => array(\preg_match_all('/[0-9]/', $val), 15.625, 8),
             'other' => array(\preg_match_all('/[+\/]/', $val), 3.125, 5),
-            'upper' => array(\preg_match_all('/[A-Z]/', $val), 40.625, 8),
+            'upper' => array(\preg_match_all('/[A-Z]/', $val), 40.625, 10),
         );
         foreach ($stats as $stat) {
             $per = $stat[0] * 100 / $strlen;

@@ -58,6 +58,9 @@ class Methods extends AbstractInheritable
         'visibility' => 'public',  // public | private | protected | magic
     );
 
+    /** @var bool */
+    private $minimal = false;
+
     /**
      * Constructor
      *
@@ -159,9 +162,7 @@ class Methods extends AbstractInheritable
      */
     private function addFull(Abstraction $abs)
     {
-        $briefBak = $this->abstracter->debug->setCfg('brief', true, Debug::CONFIG_NO_PUBLISH);
         $this->addViaRef($abs);
-        $this->abstracter->debug->setCfg('brief', $briefBak, Debug::CONFIG_NO_PUBLISH | Debug::CONFIG_NO_RETURN);
         $this->addViaPhpDoc($abs);
         $this->addImplements($abs);
         $this->helper->clearPhpDoc($abs);
@@ -177,18 +178,11 @@ class Methods extends AbstractInheritable
      */
     private function addMin(Abstraction $abs)
     {
-        $reflector = $abs['reflector'];
-        if ($reflector->hasMethod('__toString')) {
-            $abs['methods']['__toString'] = array(
-                'visibility' => 'public',
-            );
-        }
-        if ($reflector->hasMethod('__get')) {
-            $abs['methods']['__get'] = array('visibility' => 'public');
-        }
-        if ($reflector->hasMethod('__set')) {
-            $abs['methods']['__set'] = array('visibility' => 'public');
-        }
+        $this->minimal = true;
+        $this->addViaRef($abs);
+        $this->helper->clearPhpDoc($abs);
+        \ksort($abs['methods']);
+        $this->minimal = false;
     }
 
     /**
@@ -309,11 +303,18 @@ class Methods extends AbstractInheritable
      */
     private function addViaRef(Abstraction $abs)
     {
+        $briefBak = $this->abstracter->debug->setCfg('brief', true, Debug::CONFIG_NO_PUBLISH);
         $this->methods = array();
         $this->methodsWithStatic = array();
         $this->traverseAncestors($abs['reflector'], function (ReflectionClass $reflector) use ($abs) {
             $className = $this->helper->getClassName($reflector);
-            foreach ($reflector->getMethods() as $refMethod) {
+            $refMethods = $reflector->getMethods();
+            if ($this->minimal) {
+                $refMethods = \array_filter($refMethods, static function (ReflectionMethod $refMethod) {
+                    return \in_array($refMethod->getName(), array('__toString', '__get', '__set'), true);
+                });
+            }
+            foreach ($refMethods as $refMethod) {
                 $this->addViaRefBuild($abs, $refMethod, $className);
             }
         });
@@ -321,6 +322,7 @@ class Methods extends AbstractInheritable
         $methodsWithStatic = \array_unique($this->methodsWithStatic);
         \sort($methodsWithStatic);
         $abs['methodsWithStaticVars'] = $methodsWithStatic;
+        $this->abstracter->debug->setCfg('brief', $briefBak, Debug::CONFIG_NO_PUBLISH | Debug::CONFIG_NO_RETURN);
     }
 
     /**
@@ -399,8 +401,9 @@ class Methods extends AbstractInheritable
             'type' => null,
         );
         if (isset($phpDoc['return']['type'])) {
-            $return = \array_merge($return, $phpDoc['return']);
-        } elseif (PHP_VERSION_ID >= 70000) {
+            return \array_merge($return, $phpDoc['return']);
+        }
+        if (PHP_VERSION_ID >= 70000) {
             $return['type'] = $this->helper->getTypeString($refMethod->getReturnType());
         }
         return $return;

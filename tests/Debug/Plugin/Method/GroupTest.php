@@ -157,6 +157,31 @@ class GroupTest extends DebugTestFramework
         self::assertSame($objExpect, $logEntryArray['args'][4]);
         self::assertTrue(($logEntry['args'][5]['cfgFlags'] & AbstractObject::BRIEF) === AbstractObject::BRIEF);
         self::assertSame(array(
+            'attributes' => array(),
+            'declaredLast' => 'bdk\Test\Debug\Fixture\TestObj',
+            'declaredOrig' => 'bdk\Test\Debug\Fixture\TestObj',
+            'declaredPrev' => null,
+            'implements' => null,
+            'isAbstract' => false,
+            'isDeprecated' => false,
+            'isFinal' => false,
+            'isStatic' => false,
+            'params' => array(),
+            'phpDoc' => array(
+                'desc' => 'Long Description',
+                'summary' => 'toString magic method',
+                'throws' => array(
+                    array(
+                        'desc' => 'when toStrThrow is `1`',
+                        'type' => 'Exception',
+                    ),
+                ),
+            ),
+            'return' => array(
+                'desc' => null,
+                'type' => 'string',
+            ),
+            'staticVars' => array(),
             'visibility' => 'public',
             'returnValue' => 'toStringVal',
         ), $logEntry['args'][5]['methods']['__toString']);
@@ -398,7 +423,7 @@ class GroupTest extends DebugTestFramework
                 'html' => '<li class="expanded m_group">
                     <div class="group-header"><span class="font-weight-bold group-label"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>CallerInfoParent</span><span class="t_operator">-&gt;</span><span class="t_identifier">extendMe</span>(</span><span class="t_string">foo</span>, <span class="t_int">10</span><span class="font-weight-bold group-label">)</span></div>
                     <ul class="group-body">',
-                'script' => 'console.group("bdk\\\Test\\\Debug\\\Fixture\\\CallerInfoParent->extendMe","foo",10);',
+                'script' => 'console.group("bdk\\\\Test\\\\Debug\\\\Fixture\\\\CallerInfoParent->extendMe","foo",10);',
                 'text' => '▸ bdk\Test\Debug\Fixture\CallerInfoParent->extendMe("foo", 10)',
                 'wamp' => $entryExpect + array('messageIndex' => 0),
             )
@@ -513,7 +538,8 @@ class GroupTest extends DebugTestFramework
                     ? array(
                         'brief' => true,
                         'debug' => Abstracter::ABSTRACTION,
-                        'strlen' => null,
+                        // 'strlen' => 27,
+                        // 'strlenValue' => 27,
                         'type' => Type::TYPE_STRING,
                         'typeMore' => null,
                         'value' => '█████████',
@@ -966,10 +992,10 @@ EOD;
         ), $this->helper->logEntryToArray($this->debug->data->get('log/0')));
     }
 
-    public function testInaccessableMethod()
+    public function testInaccessibleMethod()
     {
         $this->expectException('RuntimeException');
-        $this->expectExceptionMessage('bdk\Debug\Plugin\Method\Group::bogus is inaccessable');
+        $this->expectExceptionMessage('bdk\Debug\Plugin\Method\Group::bogus is inaccessible');
         $this->debug->getPlugin('methodGroup')->bogus();
     }
 

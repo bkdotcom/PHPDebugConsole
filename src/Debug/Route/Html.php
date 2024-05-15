@@ -264,11 +264,11 @@ class Html extends AbstractRoute
      */
     protected function buildChannelTree()
     {
-        $tree = array();
         $channels = $this->dumper->channels;
         if (empty($channels)) {
-            return $tree;
+            return array();
         }
+        $tree = array();
         $channelRoot = \reset($channels)->rootInstance;
         \ksort($channels, SORT_NATURAL | SORT_FLAG_CASE);
         \array_walk($channels, static function (Debug $channel, $name) use ($channels, $channelRoot, &$tree) {

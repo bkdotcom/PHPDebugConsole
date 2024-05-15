@@ -140,11 +140,11 @@ EOD;
                 "method": "log",
                 "args": [
                     {
-                        "addQuotes": false,
                         "attribs": {
                             "class": [
                                 "highlight",
-                                "language-sql"
+                                "language-sql",
+                                "no-quotes"
                             ]
                         },
                         "brief": false,
@@ -152,11 +152,9 @@ EOD;
                         "debug": "\u0000debug\u0000",
                         "prettified": true,
                         "prettifiedTag": false,
-                        "strlen": null,
                         "type": "string",
                         "typeMore": null,
-                        "value": "INSERT INTO `bob` (`t`, `e`, `ct`) \\nVALUES \\n  (?, ?, ?)",
-                        "visualWhiteSpace": false
+                        "value": "INSERT INTO `bob` (`t`, `e`, `ct`) \\nVALUES \\n  (?, ?, ?)"
                     }
                 ],
                 "meta": {
@@ -228,11 +226,11 @@ EOD;
                 "method": "log",
                 "args": [
                     {
-                        "addQuotes": false,
                         "attribs": {
                             "class": [
                                 "highlight",
-                                "language-sql"
+                                "language-sql",
+                                "no-quotes"
                             ]
                         },
                         "brief": false,
@@ -240,11 +238,9 @@ EOD;
                         "debug": "\u0000debug\u0000",
                         "prettified": true,
                         "prettifiedTag": false,
-                        "strlen": null,
                         "type": "string",
                         "typeMore": null,
-                        "value": "SELECT \\n  CURRENT_USER(); \\nSELECT \\n  `t` \\nfrom \\n  `bob` \\nLIMIT \\n  10",
-                        "visualWhiteSpace": false
+                        "value": "SELECT \\n  CURRENT_USER(); \\nSELECT \\n  `t` \\nfrom \\n  `bob` \\nLIMIT \\n  10"
                     }
                 ],
                 "meta": {
@@ -306,7 +302,7 @@ EOD;
     {
         $this->debug->log('mysqli', new \mysqli());
         $logEntry = $this->debug->data->get('log/__end__');
-        self::assertTrue($logEntry instanceof \bdk\Debug\LogEntry);
+        self::assertTrue($logEntry instanceof LogEntry);
     }
 
     public function testPrepareBindExecute()
@@ -329,7 +325,7 @@ EOD;
             {
                 "method": "log",
                 "args": [
-                    {"addQuotes": false, "attribs": {"class": ["highlight", "language-sql"] }, "brief": false, "contentType": "application\/sql", "debug": "\u0000debug\u0000", "prettified": true, "prettifiedTag": false, "strlen": null, "type": "string", "typeMore": null, "value": "INSERT INTO `bob` (`t`, `e`, `ct`) \nVALUES \n  (?, ?, ?)", "visualWhiteSpace": false }
+                    {"attribs": {"class": ["highlight", "language-sql", "no-quotes"] }, "brief": false, "contentType": "application\/sql", "debug": "\u0000debug\u0000", "prettified": true, "prettifiedTag": false, "type": "string", "typeMore": null, "value": "INSERT INTO `bob` (`t`, `e`, `ct`) \nVALUES \n  (?, ?, ?)"}
                 ],
                 "meta": {"attribs": {"class": ["no-indent"] }, "channel": "general.MySqli"}
             },
@@ -513,25 +509,16 @@ EOD;
         $logEntriesExpectJson = <<<'EOD'
             [
                 {
-                    "method": "groupEndValue",
-                    "args": [
-                        "return",
-                        "rolled back"
-                    ],
+                    "method": "info",
+                    "args": ["rollBack"],
                     "meta": {
-                        "channel": "general.MySqli"
-                    }
-                },
-                {
-                    "method": "groupEnd",
-                    "args": [],
-                    "meta": {
-                        "channel": "general.MySqli"
+                        "channel": "general.MySqli",
+                        "icon": "fa fa-database"
                     }
                 }
             ]
 EOD;
-        self::assertLogEntries($logEntriesExpectJson, $this->getLogEntries(2));
+        self::assertLogEntries($logEntriesExpectJson, $this->getLogEntries(1));
     }
 
     /*
@@ -554,7 +541,7 @@ EOD;
         self::$client->begin_transaction(MYSQLI_TRANS_START_READ_WRITE, 'Sally');
         self::$client->rollback(0, 'Sally');
         $line = __LINE__ - 1;
-        $logEntries = $this->getLogEntries(3);
+        $logEntries = $this->getLogEntries(2);
         self::assertSame(array(
             array(
                 'method' => 'warn',
@@ -574,6 +561,7 @@ EOD;
                     'uncollapse' => true,
                 ),
             ),
+            /*
             array(
                 'method' => 'groupEndValue',
                 'args' => array(
@@ -584,11 +572,13 @@ EOD;
                     'channel' => 'general.MySqli',
                 ),
             ),
+            */
             array(
-                'method' => 'groupEnd',
-                'args' => array(),
+                'method' => 'info',
+                'args' => array('rollBack'),
                 'meta' => array(
                     'channel' => 'general.MySqli',
+                    'icon' => 'fa fa-database',
                 ),
             ),
         ), $logEntries);
@@ -630,8 +620,8 @@ EOD;
         $logEntriesExpectJson = <<<'EOD'
             [
                 {
-                    "method": "group",
-                    "args": ["transaction"],
+                    "method": "info",
+                    "args": ["begin_transaction"],
                     "meta": {"channel": "general.MySqli", "icon": "fa fa-database"}
                 },
                 {
@@ -643,20 +633,17 @@ EOD;
                     "method": "log",
                     "args": [
                         {
-                            "addQuotes": false,
                             "attribs": {
-                                "class": ["highlight", "language-sql"]
+                                "class": ["highlight", "language-sql", "no-quotes"]
                             },
                             "brief": false,
                             "contentType": "application\/sql",
                             "debug": "\u0000debug\u0000",
                             "prettified": true,
                             "prettifiedTag": false,
-                            "strlen": null,
                             "type": "string",
                             "typeMore": null,
-                            "value": "INSERT INTO `bob` (`t`) \nVALUES \n  (\"test\")",
-                            "visualWhiteSpace": false
+                            "value": "INSERT INTO `bob` (`t`) \nVALUES \n  (\"test\")"
                         }
                     ],
                     "meta": {"attribs": {"class": ["no-indent"] }, "channel": "general.MySqli"}
@@ -682,14 +669,9 @@ EOD;
                     "meta": {"channel": "general.MySqli"}
                 },
                 {
-                    "method": "groupEndValue",
-                    "args": ["return", true ],
-                    "meta": {"channel": "general.MySqli"}
-                },
-                {
-                    "method": "groupEnd",
-                    "args": [],
-                    "meta": {"channel": "general.MySqli"}
+                    "method": "info",
+                    "args": ["commit"],
+                    "meta": {"channel": "general.MySqli", "icon": "fa fa-database"}
                 }
             ]
 EOD;
@@ -707,8 +689,8 @@ EOD;
         $logEntriesExpectJson = <<<EOD
         [
             {
-                "method": "group",
-                "args": ["transaction", "Billy"],
+                "method": "info",
+                "args": ["begin_transaction", "Billy"],
                 "meta": {
                     "channel": "general.MySqli",
                     "icon": "fa fa-database"
@@ -727,20 +709,17 @@ EOD;
                 "method": "log",
                 "args": [
                     {
-                        "addQuotes": false,
                         "attribs": {
-                            "class": ["highlight", "language-sql"]
+                            "class": ["highlight", "language-sql", "no-quotes"]
                         },
                         "brief": false,
                         "contentType": "application/sql",
                         "debug": "\u0000debug\u0000",
                         "prettified": true,
                         "prettifiedTag": false,
-                        "strlen": null,
                         "type": "string",
                         "typeMore": null,
-                        "value": "INSERT INTO `bob` (`t`) \\nVALUES \\n  (\"test\")",
-                        "visualWhiteSpace": false
+                        "value": "INSERT INTO `bob` (`t`) \\nVALUES \\n  (\"test\")"
                     }
                 ],
                 "meta": {
@@ -783,14 +762,9 @@ EOD;
                 }
             },
             {
-                "method": "groupEndValue",
-                "args": ["return", true],
-                "meta": {"channel": "general.MySqli"}
-            },
-            {
-                "method": "groupEnd",
-                "args": [],
-                "meta": {"channel": "general.MySqli"}
+                "method": "info",
+                "args": ["commit"],
+                "meta": {"channel": "general.MySqli", "icon": "fa fa-database"}
             }
         ]
 EOD;

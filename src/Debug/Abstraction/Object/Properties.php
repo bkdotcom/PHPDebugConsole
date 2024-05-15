@@ -178,27 +178,27 @@ class Properties extends AbstractInheritable
     private function addDebugWalk(Abstraction $abs)
     {
         $debugInfo = $abs['debugInfo'];
-        $properties = $abs['properties'];
-        foreach ($properties as $name => $info) {
+        $keys = \array_keys($abs['properties']);
+        $properties = \array_map(static function ($info, $name) use ($abs, &$debugInfo) {
             if (\array_key_exists($name, $abs['propertyOverrideValues'])) {
                 // we're using override value
-                unset($debugInfo[$name]);
-                continue;
+                return $info;
             }
             if (\array_key_exists($name, $debugInfo)) {
                 if ($debugInfo[$name] !== $info['value']) {
-                    $properties[$name]['value'] = $debugInfo[$name];
-                    $properties[$name]['valueFrom'] = 'debugInfo';
+                    $info['value'] = $debugInfo[$name];
+                    $info['valueFrom'] = 'debugInfo';
                 }
-                unset($debugInfo[$name]);
-                continue;
+                return $info;
             }
             $isInherited = $info['declaredLast'] && $info['declaredLast'] !== $abs['className'];
             $isPrivateAncestor = \in_array('private', (array) $info['visibility'], true)
                 && $isInherited;
-            $properties[$name]['debugInfoExcluded'] = $isPrivateAncestor === false;
-        }
-        $abs['debugInfo'] = $debugInfo;
+            $info['debugInfoExcluded'] = $isPrivateAncestor === false;
+            return $info;
+        }, $abs['properties'], $keys);
+        $properties = \array_combine($keys, $properties);
+        $abs['debugInfo'] = \array_diff_key($debugInfo, $properties);
         return $properties;
     }
 
@@ -267,6 +267,7 @@ class Properties extends AbstractInheritable
      */
     private function addValue($propInfo, Abstraction $abs, ReflectionProperty $refProperty)
     {
+        $obj = $abs->getSubject();
         $propName = $refProperty->getName();
         if (\array_key_exists($propName, $abs['propertyOverrideValues'])) {
             $propInfo['valueFrom'] = 'debug';
@@ -275,11 +276,7 @@ class Properties extends AbstractInheritable
                 return \array_merge($propInfo, $value);
             }
             $propInfo['value'] = $value;
-            return $propInfo;
-        }
-        $obj = $abs->getSubject();
-        $isInstance = \is_object($obj);
-        if ($isInstance) {
+        } elseif (\is_object($obj)) {
             $refProperty->setAccessible(true); // only accessible via reflection
             $isInitialized = PHP_VERSION_ID < 70400 || $refProperty->isInitialized($obj);
             $propInfo['value'] = $isInitialized
@@ -364,11 +361,20 @@ class Properties extends AbstractInheritable
      */
     private function crate(Abstraction $abs)
     {
+        $keys = array();
         $properties = $abs['properties'];
+        $utf8 = $this->abstracter->debug->utf8;
         foreach ($properties as $name => $info) {
+            if (\is_string($name) && $utf8->isUtf8($name) === false) {
+                unset($properties[$name]);
+                $md5 = \md5($name);
+                $keys[$md5] = $this->abstracter->crate($name);
+                $name = $md5;
+            }
             $info['value'] = $this->abstracter->crate($info['value'], $abs['debugMethod'], $abs['hist']);
             $properties[$name] = $info;
         }
+        $abs['keys'] = $keys;
         $abs['properties'] = $properties;
     }
 

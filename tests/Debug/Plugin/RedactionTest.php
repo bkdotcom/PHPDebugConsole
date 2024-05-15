@@ -118,23 +118,24 @@ class RedactionTest extends DebugTestFramework
                         'args' => array(
                             array(
                                 'brief' => false,
-                                'strlen' => null,
+                                // 'strlen' => 136,
+                                // 'strlenValue' => 136,
                                 'type' => 'string',
                                 'typeMore' => 'base64',
                                 'value' => $base64snip,
                                 'valueDecoded' => array(
-                                    'addQuotes' => false,
                                     'attribs' => array(
-                                        'class' => array('highlight','language-json'),
+                                        'class' => array('highlight','language-json', 'no-quotes'),
                                     ),
                                     'brief' => false,
                                     'contentType' => 'application/json',
                                     'prettified' => true,
                                     'prettifiedTag' => true,
-                                    'strlen' => null,
+                                    // 'strlen' => 126,
+                                    // 'strlenValue' => 126,
                                     'type' => 'string',
                                     'typeMore' => 'json',
-                                    'value' => str_replace('redactBlock', '█████████', \json_encode(array(
+                                    'value' => \str_replace('redactBlock', '█████████', \json_encode(array(
                                         'poop' => '💩',
                                         'int' => 42,
                                         'password' => 'redactBlock',
@@ -146,7 +147,6 @@ class RedactionTest extends DebugTestFramework
                                         'password' => '█████████',
                                         'string' => 'Never tell anyone █████████ or foo.',
                                     ),
-                                    'visualWhiteSpace' => false,
                                     'debug' => Abstracter::ABSTRACTION,
                                 ),
                                 'debug' => Abstracter::ABSTRACTION,

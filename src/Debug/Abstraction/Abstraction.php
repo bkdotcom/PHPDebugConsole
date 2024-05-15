@@ -14,6 +14,7 @@ namespace bdk\Debug\Abstraction;
 
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Type;
+use bdk\Debug\Utility\Utf8;
 use bdk\PubSub\Event;
 
 /**
@@ -53,10 +54,24 @@ class Abstraction extends Event
      */
     public function __toString()
     {
-        $val = isset($this->values['value'])
-            ? $this->values['value']
-            : '';
-        return (string) $val;
+        $typeMore = $this->getValue('typeMore');
+        if ($typeMore === Type::TYPE_STRING_BINARY && isset($this->values['chunks'])) {
+            return \implode('', \array_map(static function (array $chunk) {
+                if ($chunk[0] === Utf8::TYPE_UTF8) {
+                    return $chunk[1];
+                }
+                $hex = \str_replace(' ', '', $chunk[1]);
+                return \hex2bin($hex);
+            }, $this->values['chunks']));
+        }
+        if ($typeMore === Type::TYPE_STRING_BINARY) {
+            $hex = \str_replace(' ', '', $this->values['value']);
+            return \hex2bin($hex);
+        }
+        if (isset($this->values['value'])) {
+            return (string) $this->values['value'];
+        }
+        return '';
     }
 
     /**

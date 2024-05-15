@@ -187,7 +187,8 @@ li[class*=m_] > .t_array.array-file-tree > .array-inner {
   .method .parameter .t_parameter-name[title],
   .t_identifier[title],
   .t_type[title] {
-    text-decoration: underline;
+    // text-decoration: underline;
+    border-bottom: 1px dashed blue;
   }
 
   .method {

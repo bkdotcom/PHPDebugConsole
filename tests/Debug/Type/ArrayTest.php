@@ -10,12 +10,13 @@ use bdk\Test\Debug\DebugTestFramework;
 /**
  * PHPUnit tests for Debug class
  *
- * @covers \bdk\Debug\Dump\BaseValue
- * @covers \bdk\Debug\Dump\Text
+ * @covers \bdk\Debug\Dump\AbstractValue
+ * @covers \bdk\Debug\Dump\Base\Value
  * @covers \bdk\Debug\Dump\Html
  * @covers \bdk\Debug\Dump\Html\Value
- * @covers \bdk\Debug\Dump\TextAnsiValue
- * @covers \bdk\Debug\Dump\TextValue
+ * @covers \bdk\Debug\Dump\Text
+ * @covers \bdk\Debug\Dump\Text\Value
+ * @covers \bdk\Debug\Dump\TextAnsi\Value
  * @covers \bdk\Debug\Abstraction\Abstracter
  * @covers \bdk\Debug\Abstraction\Abstraction
  * @covers \bdk\Debug\Abstraction\AbstractArray
@@ -79,12 +80,12 @@ EOD;
                     'text' => $arrayDumpText,
                     'script' => 'console.log({"0":"a","foo":"bar","1":"c","obj":{"___class_name":"stdClass","(public) foo":"bar"}});',
                     'streamAnsi' => \str_replace('\e', "\e", '\e[38;5;45marray\e[38;5;245m(\e[0m' . "\n"
-                        . '\e[38;5;245m[\e[96m0\e[38;5;245m]\e[38;5;130m => \e[0m\e[38;5;250m"\e[0ma\e[38;5;250m"\e[0m' . "\n"
-                        . '\e[38;5;245m[\e[38;5;83mfoo\e[38;5;245m]\e[38;5;130m => \e[0m\e[38;5;250m"\e[0mbar\e[38;5;250m"\e[0m' . "\n"
-                        . '\e[38;5;245m[\e[96m1\e[38;5;245m]\e[38;5;130m => \e[0m\e[38;5;250m"\e[0mc\e[38;5;250m"\e[0m' . "\n"
-                        . '\e[38;5;245m[\e[38;5;83mobj\e[38;5;245m]\e[38;5;130m => \e[0m\e[1mstdClass\e[22m' . "\n"
+                        . '\e[38;5;245m[\e[96m0\e[38;5;83;49m\e[38;5;245m]\e[38;5;224m => \e[0m\e[38;5;250m"\e[0ma\e[38;5;250m"\e[0m' . "\n"
+                        . '\e[38;5;245m[\e[38;5;83mfoo\e[38;5;245m]\e[38;5;224m => \e[0m\e[38;5;250m"\e[0mbar\e[38;5;250m"\e[0m' . "\n"
+                        . '\e[38;5;245m[\e[96m1\e[38;5;83;49m\e[38;5;245m]\e[38;5;224m => \e[0m\e[38;5;250m"\e[0mc\e[38;5;250m"\e[0m' . "\n"
+                        . '\e[38;5;245m[\e[38;5;83mobj\e[38;5;245m]\e[38;5;224m => \e[0m\e[1mstdClass\e[22m' . "\n"
                         . '\e[4mProperties:\e[24m' . "\n"
-                        . '\e[38;5;250m(public)\e[0m \e[38;5;83mfoo\e[0m \e[38;5;130m=\e[0m \e[38;5;250m"\e[0mbar\e[38;5;250m"\e[0m' . "\n"
+                        . '\e[38;5;250m(public)\e[0m \e[38;5;83mfoo\e[0m \e[38;5;224m=\e[0m \e[38;5;250m"\e[0mbar\e[38;5;250m"\e[0m' . "\n"
                         . 'Methods: none!' . "\n"
                         . '\e[38;5;245m)\e[0m'),
                     // 'wamp' => @todo
@@ -98,7 +99,7 @@ EOD;
                 array(
                     'html' => '<li class="m_log"><span class="t_callable"><span class="t_type">callable</span> <span class="classname"><span class="namespace">bdk\</span>Debug</span><span class="t_operator">::</span><span class="t_identifier">getInstance</span></span></li>',
                     'script' => 'console.log("callable: bdk\\\\Debug::getInstance");',
-                    'streamAnsi' => "callable: \e[38;5;250mbdk\\\e[0m\e[1mDebug\e[22m\e[38;5;130m::\e[0m\e[1mgetInstance\e[22m",
+                    'streamAnsi' => "callable: \e[38;5;250mbdk\\\e[0m\e[1mDebug\e[22m\e[38;5;224m::\e[0m\e[1mgetInstance\e[22m",
                     'text' => 'callable: bdk\Debug::getInstance',
                 ),
             ),
@@ -109,26 +110,88 @@ EOD;
                         "\xE2\x80\x8B" => 'zwsp',
                         "\xef\xbb\xbf" => 'bom',
                         "\xef\xbb\xbfbom\r\n\t\x07 \x1F \x7F \x00 \xc2\xa0<i>(nbsp)</i> \xE2\x80\x89(thsp), & \xE2\x80\x8B(zwsp)" => 'ctrl chars and whatnot',
+                        "not\x80\xCF\x85tf8" => 'not utf8', // this forces the array to be stored as an abstraction
                         ' ' => 'space',
                         '' => 'empty',
                     ),
                 ),
                 array(
+                    'entry' => array(
+                        'method' => 'log',
+                        'args' => array(
+                            array(
+                                'debug' => Abstracter::ABSTRACTION,
+                                'keys' => array(
+                                    'ade50251dade9edc27e822ebdc3e9664' => array(
+                                        'brief' => false,
+                                        'chunks' => array(
+                                            ['utf8', 'not'],
+                                            ['other', '80'],
+                                            ['utf8', "\xCF\x85tf8"],
+                                        ),
+                                        'debug' => Abstracter::ABSTRACTION,
+                                        'percentBinary' => 1 / 9 * 100,
+                                        'strlen' => 9,
+                                        'strlenValue' => 9,
+                                        'type' => Type::TYPE_STRING,
+                                        'typeMore' => Type::TYPE_STRING_BINARY,
+                                        'value' => '',
+                                    ),
+                                ),
+                                'type' => Type::TYPE_ARRAY,
+                                'value' => array(
+                                    "\xE2\x80\x8B" => 'zwsp',
+                                    "\xef\xbb\xbf" => 'bom',
+                                    "\xef\xbb\xbfbom\r\n\t\x07 \x1f \x7f \x00 \xc2\xa0<i>(nbsp)</i> \xE2\x80\x89(thsp), & \xE2\x80\x8B(zwsp)" => 'ctrl chars and whatnot',
+                                    'ade50251dade9edc27e822ebdc3e9664' => 'not utf8',
+                                    ' ' => 'space',
+                                    '' => 'empty',
+                                ),
+                            ),
+                        ),
+                        'meta' => array(),
+                    ),
                     'html' => '<li class="m_log"><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
                         <ul class="array-inner list-unstyled">
-                            <li><span class="t_key"><a class="unicode" href="https://symbl.cc/en/200b" target="unicode" title="U-200b: Zero Width Space">\u200b</a></span><span class="t_operator">=&gt;</span><span class="t_string">zwsp</span></li>
-                            <li><span class="t_key"><a class="unicode" href="https://symbl.cc/en/feff" target="unicode" title="U-feff: BOM / Zero Width No-Break Space">\ufeff</a></span><span class="t_operator">=&gt;</span><span class="t_string">bom</span></li>
-                            <li><span class="t_key"><a class="unicode" href="https://symbl.cc/en/feff" target="unicode" title="U-feff: BOM / Zero Width No-Break Space">\ufeff</a>bom<span class="ws_r"></span><span class="ws_n"></span>
-                        <span class="ws_t">%s</span><span class="binary"><span class="c1-control" title="BEL (bell): \x07">␇</span></span> <span class="binary"><span class="c1-control" title="US (unit seperator): \x1f">␟</span></span> <span class="binary"><span class="c1-control" title="DEL: \x7f">␡</span></span> <span class="binary"><span class="c1-control" title="NUL: \x00">␀</span></span> <a class="unicode" href="https://symbl.cc/en/00a0" target="unicode" title="U-00a0: NBSP">\u00a0</a>&lt;i&gt;(nbsp)&lt;/i&gt; <a class="unicode" href="https://symbl.cc/en/2009" target="unicode" title="U-2009: Thin Space">\u2009</a>(thsp), &amp; <a class="unicode" href="https://symbl.cc/en/200b" target="unicode" title="U-200b: Zero Width Space">\u200b</a>(zwsp)</span><span class="t_operator">=&gt;</span><span class="t_string">ctrl chars and whatnot</span></li>
+                            <li><span class="t_key"><a class="unicode" href="https://symbl.cc/en/200B" target="unicode" title="U-200B: Zero Width Space">\u{200b}</a></span><span class="t_operator">=&gt;</span><span class="t_string">zwsp</span></li>
+                            <li><span class="t_key"><a class="unicode" href="https://symbl.cc/en/FEFF" target="unicode" title="U-FEFF: BOM / Zero Width No-Break Space">\u{feff}</a></span><span class="t_operator">=&gt;</span><span class="t_string">bom</span></li>
+                            <li><span class="t_key"><a class="unicode" href="https://symbl.cc/en/FEFF" target="unicode" title="U-FEFF: BOM / Zero Width No-Break Space">\u{feff}</a>bom<span class="ws_r"></span><span class="ws_n"></span>
+                        <span class="ws_t">%s</span><span class="char-control" title="\x07: BEL (bell)">␇</span> <span class="char-control" title="\x1f: US (unit separator)">␟</span> <span class="char-control" title="\x7f: DEL">␡</span> <span class="char-control" title="\x00: NUL">␀</span> <a class="unicode" href="https://symbl.cc/en/00A0" target="unicode" title="U-00A0: NBSP">\u{00a0}</a>&lt;i&gt;(nbsp)&lt;/i&gt; <a class="unicode" href="https://symbl.cc/en/2009" target="unicode" title="U-2009: Thin Space">\u{2009}</a>(thsp), &amp; <a class="unicode" href="https://symbl.cc/en/200B" target="unicode" title="U-200B: Zero Width Space">\u{200b}</a>(zwsp)</span><span class="t_operator">=&gt;</span><span class="t_string">ctrl chars and whatnot</span></li>
+                            <li><span class="t_key">not<span class="binary">\x80</span><a class="unicode" href="https://symbl.cc/en/03C5" target="unicode" title="U-03C5: GREEK SMALL LETTER UPSILON">' . "\xCF\x85" . '</a>tf8</span><span class="t_operator">=&gt;</span><span class="t_string">not utf8</span></li>
                             <li><span class="t_key"> </span><span class="t_operator">=&gt;</span><span class="t_string">space</span></li>
                             <li><span class="t_key"></span><span class="t_operator">=&gt;</span><span class="t_string">empty</span></li>
                         </ul><span class="t_punct">)</span></span></li>',
-                    'script' => 'console.log({"\\\u{200b}":"zwsp","\\\u{feff}":"bom","\\\u{feff}bom\r\n\t\\\x07 \\\x1f \\\x7f \\\x00 \\\u{00a0}<i>(nbsp)</i> \\\u{2009}(thsp), & \\\u{200b}(zwsp)":"ctrl chars and whatnot"," ":"space","":"empty"});',
+                    'chromeLogger' => array(
+                        array(
+                            array(
+                                '\u{200b}' => 'zwsp',
+                                '\u{feff}' => 'bom',
+                                '\u{feff}bom' . "\r\n\t" . '\x07 \x1f \x7f \x00 \u{00a0}<i>(nbsp)</i> \u{2009}(thsp), & \u{200b}(zwsp)' => 'ctrl chars and whatnot',
+                                'not\x80\\u{03c5}tf8' => 'not utf8',
+                                ' ' => 'space',
+                                '' => 'empty',
+                            ),
+                        ),
+                        null,
+                        '',
+                    ),
+                    'firephp' => 'X-Wf-1-1-1-9: 239|[{"Type":"LOG"},{"\\\\u{200b}":"zwsp","\\\\u{feff}":"bom","\\\\u{feff}bom\\r\\n\\t\\\\x07 \\\\x1f \\\\x7f \\\\x00 \\\\u{00a0}<i>(nbsp)</i> \\\\u{2009}(thsp), & \\\\u{200b}(zwsp)":"ctrl chars and whatnot","not\\\\x80\\\\u{03c5}tf8":"not utf8"," ":"space","":"empty"}]|',
+                    'script' => 'console.log({"\\\\u{200b}":"zwsp","\\\\u{feff}":"bom","\\\\u{feff}bom\\r\\n\\t\\\\x07 \\\\x1f \\\\x7f \\\\x00 \\\\u{00a0}<i>(nbsp)</i> \\\\u{2009}(thsp), & \\\\u{200b}(zwsp)":"ctrl chars and whatnot","not\\\\x80\\\\u{03c5}tf8":"not utf8"," ":"space","":"empty"});',
+                    'streamAnsi' => "\e[38;5;45marray\e[38;5;245m(\e[0m
+                        \e[38;5;245m[\e[38;5;83m\e[38;5;208m\\u{200b}\e[38;5;83;49m\e[38;5;245m]\e[38;5;224m => \e[0m\e[38;5;250m\"\e[0mzwsp\e[38;5;250m\"\e[0m
+                        \e[38;5;245m[\e[38;5;83m\e[38;5;208m\\u{feff}\e[38;5;83;49m\e[38;5;245m]\e[38;5;224m => \e[0m\e[38;5;250m\"\e[0mbom\e[38;5;250m\"\e[0m
+                        \e[38;5;245m[\e[38;5;83m\e[38;5;208m\\u{feff}\e[38;5;83;49mbom[\\r]
+                            \e[38;5;208m\\x07\e[38;5;83;49m \e[38;5;208m\\x1f\e[38;5;83;49m \e[38;5;208m\\x7f\e[38;5;83;49m \e[38;5;208m\\x00\e[38;5;83;49m \e[38;5;208m\\u{00a0}\e[38;5;83;49m<i>(nbsp)</i> \e[38;5;208m\\u{2009}\e[38;5;83;49m(thsp), & \e[38;5;208m\\u{200b}\e[38;5;83;49m(zwsp)\e[38;5;245m]\e[38;5;224m => \e[0m\e[38;5;250m\"\e[0mctrl chars and whatnot\e[38;5;250m\"\e[0m
+                        \e[38;5;245m[\e[38;5;83mnot\e[30;48;5;250m80\e[38;5;83;49m\e[38;5;208m\\u{03c5}\e[38;5;83;49mtf8\e[38;5;245m]\e[38;5;224m => \e[0m\e[38;5;250m\"\e[0mnot utf8\e[38;5;250m\"\e[0m
+                        \e[38;5;245m[\e[38;5;83m \e[38;5;245m]\e[38;5;224m => \e[0m\e[38;5;250m\"\e[0mspace\e[38;5;250m\"\e[0m
+                        \e[38;5;245m[\e[38;5;245m]\e[38;5;224m => \e[0m\e[38;5;250m\"\e[0mempty\e[38;5;250m\"\e[0m
+                        \e[38;5;245m)\e[0m",
                     'text' => 'array(
                         [\u{200b}] => "zwsp"
                         [\u{feff}] => "bom"
-                        [\u{feff}bom[\r]
+                        [\u{feff}bom' . "\r" . '
                             \x07 \x1f \x7f \x00 \u{00a0}<i>(nbsp)</i> \u{2009}(thsp), & \u{200b}(zwsp)] => "ctrl chars and whatnot"
+                        [not\x80\u{03c5}tf8] => "not utf8"
                         [ ] => "space"
                         [] => "empty"
                     )',
@@ -160,6 +223,7 @@ EOD;
                 ),
             );
         }
+        // $tests = \array_intersect_key($tests, \array_diff_key(\array_flip(array('keys'))));
         return $tests;
     }
 
@@ -254,9 +318,9 @@ EOD;
                     </ul><span class="t_punct">)</span></span></li>',
                 'script' => 'console.log("array",{"foo":"bar","tooDeep":"array *MAX DEPTH*","ding":"dong"});',
                 'streamAnsi' => \str_replace('\e', "\e", 'array \e[38;5;245m=\e[0m \e[38;5;45marray\e[38;5;245m(\e[0m' . "\n"
-                    . '\e[38;5;245m[\e[38;5;83mfoo\e[38;5;245m]\e[38;5;130m => \e[0m\e[38;5;250m"\e[0mbar\e[38;5;250m"\e[0m' . "\n"
-                    . '\e[38;5;245m[\e[38;5;83mtooDeep\e[38;5;245m]\e[38;5;130m => \e[0m\e[38;5;45marray \e[38;5;196m*MAX DEPTH*\e[0m' . "\n"
-                    . '\e[38;5;245m[\e[38;5;83mding\e[38;5;245m]\e[38;5;130m => \e[0m\e[38;5;250m"\e[0mdong\e[38;5;250m"\e[0m' . "\n"
+                    . '\e[38;5;245m[\e[38;5;83mfoo\e[38;5;245m]\e[38;5;224m => \e[0m\e[38;5;250m"\e[0mbar\e[38;5;250m"\e[0m' . "\n"
+                    . '\e[38;5;245m[\e[38;5;83mtooDeep\e[38;5;245m]\e[38;5;224m => \e[0m\e[38;5;45marray \e[38;5;196m*MAX DEPTH*\e[0m' . "\n"
+                    . '\e[38;5;245m[\e[38;5;83mding\e[38;5;245m]\e[38;5;224m => \e[0m\e[38;5;250m"\e[0mdong\e[38;5;250m"\e[0m' . "\n"
                     . '\e[38;5;245m)\e[0m'),
                 'text' => 'array = array(
                     [foo] => "bar"
@@ -309,7 +373,7 @@ EOD;
                     self::assertSelectEquals('.array-inner > li > .t_array > .t_recursion', '*RECURSION*', true, $strHtml);
                 },
                 'script' => 'console.log({"foo":"bar","val":"array *RECURSION*"});',
-                'streamAnsi' => array('contains' => "    \e[38;5;245m[\e[38;5;83mval\e[38;5;245m]\e[38;5;130m => \e[0m\e[38;5;45marray \e[38;5;196m*RECURSION*\e[0m"),
+                'streamAnsi' => array('contains' => "    \e[38;5;245m[\e[38;5;83mval\e[38;5;245m]\e[38;5;224m => \e[0m\e[38;5;45marray \e[38;5;196m*RECURSION*\e[0m"),
                 'text' => array('contains' => '    [val] => array *RECURSION*'),
                 'wamp' => array(
                     'log',

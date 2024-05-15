@@ -22,6 +22,7 @@ use ReflectionMethod;
  * @covers \bdk\Debug\Dump\Html
  * @covers \bdk\Debug\Dump\Html\Helper
  * @covers \bdk\Debug\Dump\Html\HtmlString
+ * @covers \bdk\Debug\Dump\Html\HtmlStringBinary
  * @covers \bdk\Debug\Dump\Html\Table
  * @covers \bdk\Debug\Dump\Html\Value
  * @covers \bdk\Debug\Dump\Text

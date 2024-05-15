@@ -64,7 +64,7 @@ class SlackMessageTest extends TestCase
     public function testWithDataUnknownThrowsException()
     {
         $this->expectException('InvalidArgumentException');
-        $this->expectExceptionMessage('SlackMesssage: Unknown values: foo');
+        $this->expectExceptionMessage('SlackMessage: Unknown values: foo');
         $slackMessage = new SlackMessage([
             'foo' => 'bar',
         ]);

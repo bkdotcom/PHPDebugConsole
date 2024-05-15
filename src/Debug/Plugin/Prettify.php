@@ -67,14 +67,12 @@ class Prettify implements SubscriberInterface
         }
         $this->onPrettifyDo($event, $matches[1]);
         $event['value'] = $this->debug->abstracter->crateWithVals($event['value'], array(
-            'addQuotes' => false,
             'attribs' => array(
-                'class' => 'highlight language-' . $event['highlightLang'],
+                'class' => 'highlight language-' . $event['highlightLang'] . ' no-quotes',
             ),
             'contentType' => $event['contentType'],
             'prettified' => $event['isPrettified'],
             'prettifiedTag' => $event['isPrettified'],
-            'visualWhiteSpace' => false,
         ));
         if ($this->highlightAdded === false) {
             $this->debug->addPlugin($this->debug->pluginHighlight);
@@ -121,21 +119,25 @@ class Prettify implements SubscriberInterface
     {
         $lang = $type;
         $string = $event['value'];
+        $prettified = false;
         switch ($type) {
             case 'html':
                 $lang = 'markup';
                 break;
             case 'json':
                 $string = $this->debug->stringUtil->prettyJson($string);
+                $prettified = true;
                 break;
             case 'sql':
                 $string = $this->debug->stringUtil->prettySql($string);
+                $prettified = true;
                 break;
             case 'xml':
                 $string = $this->debug->stringUtil->prettyXml($string);
+                $prettified = true;
         }
         $event['highlightLang'] = $lang;
-        $event['isPrettified'] = $string !== $event['value'];
+        $event['isPrettified'] = $prettified;
         $event['value'] = $string;
         return $lang;
     }

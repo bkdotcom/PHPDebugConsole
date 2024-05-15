@@ -3,14 +3,12 @@
 namespace bdk\Test\Debug\Collector;
 
 use bdk\Debug\Collector\StatementInfo;
-use bdk\Debug\LogEntry;
 use bdk\Test\Debug\DebugTestFramework;
 use Exception;
 
 /**
- * Test Mysqli debug collector
- *
  * @covers \bdk\Debug\Collector\StatementInfo
+ * @covers \bdk\Debug\Utility\SqlQueryAnalysis
  */
 class StatementInfoTest extends DebugTestFramework
 {
@@ -58,7 +56,7 @@ class StatementInfoTest extends DebugTestFramework
         $logEntriesExpectJson = <<<'EOD'
         [
             {
-                "method": "groupCollapsed",
+                "method": "group",
                 "args": ["SELECT `first_name`, `last_name`, `password` FROM `users`\u2026"],
                 "meta": {"boldLabel": false, "icon": "fa fa-list-ul"}
             },
@@ -66,20 +64,17 @@ class StatementInfoTest extends DebugTestFramework
                 "method": "log",
                 "args": [
                     {
-                        "addQuotes": false,
                         "attribs": {
-                            "class": ["highlight", "language-sql"]
+                            "class": ["highlight", "language-sql", "no-quotes"]
                         },
                         "brief": false,
                         "contentType": "application\/sql",
                         "debug": "\u0000debug\u0000",
                         "prettified": true,
                         "prettifiedTag": false,
-                        "strlen": null,
                         "type": "string",
                         "typeMore": null,
-                        "value": "SELECT \n  `first_name`, \n  `last_name`, \n  `password` \nFROM \n  `users` u \n  LEFT JOIN `user_info` ui ON ui.user_id = u.id \nWHERE \n  u.username = ? \nLIMIT \n  1",
-                        "visualWhiteSpace": false
+                        "value": "SELECT \n  `first_name`, \n  `last_name`, \n  `password` \nFROM \n  `users` u \n  LEFT JOIN `user_info` ui ON ui.user_id = u.id \nWHERE \n  u.username = ? \nLIMIT \n  1"
                     }
                 ],
                 "meta": {
@@ -167,6 +162,8 @@ EOD;
         $logEntriesExpect[5]['meta']['line'] = $logEntries[5]['meta']['line'];
         $logEntriesExpect[6]['meta']['file'] = $logEntries[6]['meta']['file'];
         $logEntriesExpect[6]['meta']['line'] = $logEntries[6]['meta']['line'];
+        // \bdk\Debug::varDump('expect', $logEntriesExpect);
+        // \bdk\Debug::varDump('actual', $logEntries);
         $this->assertSame($logEntriesExpect, $logEntries);
     }
 }

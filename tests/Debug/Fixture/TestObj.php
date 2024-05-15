@@ -117,9 +117,9 @@ class TestObj extends TestBase
     /*
     public static function methodStatic()
     {
-        \bdk\Debug::_group();
-        \bdk\Debug::_log('this group\'s label should be', __CLASS__.'::'.__FUNCTION__);
-        \bdk\Debug::_groupEnd();
+        \bdk\Debug::group();
+        \bdk\Debug::log('this group\'s label should be', __CLASS__.'::'.__FUNCTION__);
+        \bdk\Debug::groupEnd();
     }
     */
 

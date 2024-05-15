@@ -26,7 +26,7 @@ use ReflectionMethod;
  *
  * @psalm-consistent-constructor
  */
-class AbstractDebug
+abstract class AbstractDebug
 {
     /** @var \bdk\Debug\Config */
     protected $config;

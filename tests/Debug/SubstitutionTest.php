@@ -61,7 +61,7 @@ class SubstitutionTest extends DebugTestFramework
             array(
                 '%s %s %s',
                 array($this, __FUNCTION__), // callable
-                function ($foo, $bar) {
+                static function ($foo, $bar) {
                     return $foo . $bar;
                 },
                 $datetime,
@@ -96,7 +96,7 @@ class SubstitutionTest extends DebugTestFramework
 
     public function testTypesOther()
     {
-        $binary = \base64_decode('j/v9wNrF5i1abMXFW/4vVw==');
+        $binary = \base64_decode('j/v9wNrF5i1abMXFW/4vVw==', true);
         $binaryStr = \trim(\chunk_split(\bin2hex($binary), 2, ' '));
         $time = \time();
         $timeStr = \gmdate(self::DATETIME_FORMAT, $time);
@@ -127,10 +127,12 @@ class SubstitutionTest extends DebugTestFramework
                         array(
                             'brief' => false,
                             'debug' => Abstracter::ABSTRACTION,
+                            'percentBinary' => 62.5,
                             'strlen' => 16,
+                            'strlenValue' => 16,
                             'type' => Type::TYPE_STRING,
                             'typeMore' => Type::TYPE_STRING_BINARY,
-                            'value' => $binary,
+                            'value' => $binaryStr,
                         ),
                     ),
                     'meta' => array(),
@@ -153,7 +155,7 @@ class SubstitutionTest extends DebugTestFramework
                     . ' <span class="t_int">42</span>'
                     . ' <span class="timestamp value-container" title="' . $timeStr . '"><span class="t_int" data-type-more="timestamp">' . $time . '</span></span>'
                     . ' &lt;i&gt;boring&lt;/i&gt;'
-                    . ' ' . $binaryStr
+                    . ' <span class="binary">' . $binaryStr . '</span>'
                     . '</span></li>',
                 'script' => 'console.log("%%s %%s %%s %%s %%s",123.45,42,"' . $time . ' (' . $timeStr . ')","<i>boring</i>","' . $binaryStr . '");',
                 'text' => '123.45 42 📅 ' . $time . ' (' . $timeStr . ') <i>boring</i> ' . $binaryStr,
@@ -227,7 +229,7 @@ class SubstitutionTest extends DebugTestFramework
                 'firephp' => 'X-Wf-1-1-1-19: %d|[{{meta}},{{args}}]|',
                 'html' => '<li class="m_log">'
                     . '<span class="no-quotes t_string">'
-                        . '<a class="unicode" href="https://symbl.cc/en/feff" target="unicode" title="U-feff: BOM / Zero Width No-Break Space">\ufeff</a>'
+                        . '<a class="unicode" href="https://symbl.cc/en/FEFF" target="unicode" title="U-FEFF: BOM / Zero Width No-Break Space">\u{feff}</a>'
                         . '<span style="color:red;">sub 1</span>'
                         . '<span> &lt;b&gt;boldy&lt;/b&gt; &lt;b&gt;sub bold&lt;/b&gt;</span>'
                     . '</span> = <span class="t_string">extra</span>'
@@ -272,7 +274,7 @@ class SubstitutionTest extends DebugTestFramework
                 'firephp' => 'X-Wf-1-1-1-19: %d|[{{meta}},{{args}}]|',
                 'html' => '<li class="m_log">'
                     . '<span class="no-quotes t_string">'
-                        . '<a class="unicode" href="https://symbl.cc/en/feff" target="unicode" title="U-feff: BOM / Zero Width No-Break Space">\ufeff</a>'
+                        . '<a class="unicode" href="https://symbl.cc/en/FEFF" target="unicode" title="U-FEFF: BOM / Zero Width No-Break Space">\u{feff}</a>'
                         . '<span style="color:red;">sub 1</span>'
                         . '<span> <b>boldy</b> <b>sub bold</b></span>'
                     . '</span> = <span class="t_string">extra</span>'
@@ -317,7 +319,7 @@ class SubstitutionTest extends DebugTestFramework
                 'firephp' => 'X-Wf-1-1-1-19: %d|[{{meta}},{{args}}]|',
                 'html' => '<li class="m_log">'
                     . '<span class="no-quotes t_string">'
-                        . '<a class="unicode" href="https://symbl.cc/en/feff" target="unicode" title="U-feff: BOM / Zero Width No-Break Space">\ufeff</a>'
+                        . '<a class="unicode" href="https://symbl.cc/en/FEFF" target="unicode" title="U-FEFF: BOM / Zero Width No-Break Space">\u{feff}</a>'
                         . '<span style="color:red;">sub 1</span>'
                         . '<span> <b>boldy</b> &lt;b&gt;sub bold&lt;/b&gt;</span>'
                     . '</span> = <span class="t_string">extra</span>'

@@ -9,6 +9,6 @@ class ObjectScope
     public function callsDebug()
     {
         // abstraction's 'scopeClass' value should be bdk\Test\Debug\Fixture\ScopeTest
-        Debug::_log($this);
+        Debug::log($this);
     }
 }

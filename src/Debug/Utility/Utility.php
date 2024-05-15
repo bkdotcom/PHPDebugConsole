@@ -208,7 +208,7 @@ class Utility
                 // line 0 should be something like:
                 // ref: refs/heads/branchName
                 $parts = \array_replace(
-                    array(null, null, null),
+                    array(null, null, ''),
                     \explode('/', $fileLines[0], 3)
                 );
                 return \trim($parts[2]);

@@ -8,6 +8,7 @@ use bdk\Test\Debug\DebugTestFramework;
  * Test Html Error Symmary
  *
  * @covers \bdk\Debug\Route\Html\ErrorSummary
+ * @covers \bdk\Debug\Route\Html\FatalError
  */
 class ErrorSummaryTest extends DebugTestFramework
 {
@@ -22,7 +23,6 @@ class ErrorSummaryTest extends DebugTestFramework
         $this->debug->errorHandler->handleError(E_NOTICE, 'This is a notice', __FILE__, __LINE__);
         $line = __LINE__ - 1;
         $output = $this->debug->output();
-        // \bdk\Test\Debug\Helper::stderr(__FUNCTION__, $line, $output);
         $this->assertStringContainsString(
             '<div class="alert-error error-summary m_alert" data-channel="general.phpError" data-detect-files="true" role="alert"><h3>There was 1 error captured while not collecting debug log</h3>',
             $output
@@ -39,7 +39,6 @@ class ErrorSummaryTest extends DebugTestFramework
         $this->debug->errorHandler->handleError(E_NOTICE, 'This is a notice', __FILE__, __LINE__);
         $line = __LINE__ - 1;
         $output = $this->debug->output();
-        // \bdk\Test\Debug\Helper::stderr(__FUNCTION__, $output);
         $this->assertTrue(true);
         $this->assertStringContainsString(
             '<div class="alert-error error-summary m_alert" data-channel="general.phpError" data-detect-files="true" role="alert"><h3>Notice</h3>' . "\n"
@@ -50,7 +49,6 @@ class ErrorSummaryTest extends DebugTestFramework
 
     public function testFatalContext()
     {
-        // \bdk\Test\Debug\Helper::stderr('testFatalContext');
         parent::$allowError = true;
         \ob_start();
         $backtrace = new \bdk\Test\Debug\Mock\Backtrace();
@@ -66,7 +64,6 @@ class ErrorSummaryTest extends DebugTestFramework
         )));
         $output = \ob_get_clean();
         \bdk\Debug\Utility\Reflection::propSet($this->debug->errorHandler, 'backtrace', null);
-        // \bdk\Test\Debug\Helper::stderr('output', $output);
         // $expectMatch = '%a<tr class="context" style="display:table-row;"><td colspan="4"><pre class="highlight line-numbers" data-line="%d" data-start="%d"><code class="language-php">%a';
         $expectMatch = '%a<li class="error-fatal m_error" data-channel="general.phpError" data-detect-files="true"><span class="no-quotes t_string">Fatal Error: </span><span class="t_string">fatality</span>, <span class="t_string">' . __FILE__ . ' (line %d)</span><pre class="highlight line-numbers" data-line="%d" data-start="%d"><code class="language-php">%a';
         $this->assertStringMatchesFormat($expectMatch, $output);

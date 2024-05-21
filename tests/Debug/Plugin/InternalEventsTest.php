@@ -38,7 +38,7 @@ class InternalEventsTest extends DebugTestFramework
         $dumped = $this->debug->getDump('html')->valDumper->dump($val);
         self::assertSame($expect, $dumped);
 
-        $callable = function (Event $event) {
+        $callable = static function (Event $event) {
             $event['return'] = '<span>woo</span>';
             self::assertIsObject($event['valDumper']);
         };

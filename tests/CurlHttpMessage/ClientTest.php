@@ -351,7 +351,6 @@ class ClientTest extends TestCase
         // Server::enqueue([$this->factory->response()]);
         $response = $client->get($this->baseUrl . '/echo');
         $requestInfo = \json_decode($response->getBody(), true);
-        // \bdk\Test\Debug\Helper::stderr('requestInfo', $requestInfo);
         self::assertMatchesRegularExpression('/Accept-Encoding: .*deflate/m', $requestInfo['headers']);
         // $sent = Server::received()[0];
         // self::assertTrue($sent->hasHeader('Accept-Encoding'));

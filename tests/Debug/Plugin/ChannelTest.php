@@ -315,7 +315,6 @@ EOD;
             'foo',
         ), \array_keys($this->debug->getChannels()));
 
-        // $this->helper->stderr($this->debug->getChannels(true));
         self::assertSame(array(
             'general.foo',
             'general.foo.bar',

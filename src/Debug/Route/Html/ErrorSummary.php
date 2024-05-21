@@ -129,109 +129,14 @@ class ErrorSummary
      */
     protected function buildFatal()
     {
-        if (\array_sum($this->stats['counts']['fatal']) === 0) {
+        $haveFatal = \array_sum($this->stats['counts']['fatal']) > 0;
+        if ($haveFatal === false) {
             // no fatal errors
             return '';
         }
         $error = $this->errorHandler->get('lastError');
-        return '<div class="error-fatal">'
-            . '<h3>' . $error['typeStr'] . '</h3>' . "\n"
-            . '<ul class="list-unstyled no-indent">' . "\n"
-            . $this->html->buildTag(
-                'li',
-                array(),
-                $error['isHtml']
-                    ? $error['message']
-                    : \htmlspecialchars($error['message'])
-            ) . "\n"
-            . $this->buildFatalMoreInfo($error)
-            . '</ul>'
-            . '</div>';
-    }
-
-    /**
-     * Build fatal error's backtrace, not-avail message, or context
-     *
-     * @param Error $error Error instance
-     *
-     * @return string html snippet
-     */
-    protected function buildFatalMoreInfo(Error $error)
-    {
-        $this->debug->addPlugin($this->debug->pluginHighlight);
-        $backtrace = $error['backtrace'];
-        if (\is_array($backtrace) && \count($backtrace) > 1) {
-            return $this->buildFatalBacktrace($backtrace);
-        }
-        if ($backtrace === false) {
-            return '<li>Want to see a backtrace here?  Install <a target="_blank" href="https://xdebug.org/docs/install">xdebug</a> PHP extension.</li>' . "\n";
-        }
-        return $this->buildFatalContext($error);
-    }
-
-    /**
-     * Build backtrace table
-     *
-     * @param array $trace backtrace from error object
-     *
-     * @return string
-     */
-    protected function buildFatalBacktrace($trace)
-    {
-        $cfgWas = $this->debug->setCfg(array(
-            'maxDepth' => 0,
-            // Don't inspect objects when dumping trace arguments...  potentially huge objects
-            'objectsExclude' => array('*'),
-        ), Debug::CONFIG_NO_PUBLISH);
-        $logEntry = new LogEntry(
-            $this->debug,
-            'table',
-            array(),
-            array(
-                'attribs' => array(
-                    'class' => 'trace trace-context table-bordered',
-                ),
-                'inclContext' => true,
-                'onBuildRow' => array(
-                    array($this->routeHtml->dumper->helper, 'tableMarkupFunction'),
-                    array($this->routeHtml->dumper->helper, 'tableAddContextRow'),
-                ),
-                'trace' => $trace,
-            )
-        );
-        $this->debug->rootInstance->getPlugin('methodTrace')->doTrace($logEntry);
-        $this->debug->setCfg($cfgWas, Debug::CONFIG_NO_PUBLISH | Debug::CONFIG_NO_RETURN);
-        return '<li class="m_trace" data-detect-files="true">' . $this->routeHtml->dumper->table->build(
-            $logEntry['args'][0],
-            $logEntry['meta']
-        ) . '</li>' . "\n";
-    }
-
-    /**
-     * Build lines surrounding fatal error
-     *
-     * @param Error $error Error instance
-     *
-     * @return string html snippet
-     */
-    private function buildFatalContext(Error $error)
-    {
-        $context = $error['context'];
-        $return = $this->html->buildTag(
-            'li',
-            array(
-                'class' => 't_string no-quotes',
-                'data-file' => $error['file'],
-                'data-line' => $error['line'],
-            ),
-            $error['fileAndLine']
-        ) . "\n";
-        if ($context) {
-            $return .= '<li>'
-                . $this->routeHtml->dumper->helper->buildContext($error['context'], $error['line'])
-                . '</li>' . "\n";
-        }
-        return $return;
+        $fatal = new FatalError($this->routeHtml);
+        return $fatal->output($error);
     }
 
     /**
@@ -241,31 +146,30 @@ class ErrorSummary
      */
     protected function buildInConsole()
     {
-        if (!$this->stats['inConsole']) {
+        $stats = $this->stats;
+        if (!$stats['inConsole']) {
             return '';
         }
-        $haveFatal = \array_sum($this->stats['counts']['fatal']) > 0;
-        if (!$haveFatal && \count($this->stats['inConsoleCategories']) === 1) {
+        $haveFatal = \array_sum($stats['counts']['fatal']) > 0;
+        if (!$haveFatal && \count($stats['inConsoleCategories']) === 1) {
             // only one category of error and it's not fatal
             return $this->buildInConsoleOneCat();
         }
-        $html = '<h3>' . $this->buildInConsoleHeader() . '</h3>' . "\n";
-        $html .= '<ul class="list-unstyled in-console">' . "\n";
-        foreach ($this->stats['counts'] as $category => $vals) {
-            if ($category === 'fatal' || !$vals['inConsole']) {
-                continue;
-            }
-            $html .= $this->html->buildTag(
-                'li',
-                array(
-                    'class' => 'error-' . $category,
-                    'data-count' => $vals['inConsole'],
-                ),
-                $category . ': ' . $vals['inConsole']
-            ) . "\n";
-        }
-        $html .= '</ul>' . "\n";
-        return $html;
+        $countsInConsole = $this->getCountsInConsole();
+        return '<h3>' . $this->buildInConsoleHeader() . '</h3>' . "\n"
+            . '<ul class="list-unstyled in-console">' . "\n"
+            . \implode("\n", \array_map(function ($vals) {
+                $category = $vals['name'];
+                return $this->html->buildTag(
+                    'li',
+                    array(
+                        'class' => 'error-' . $category,
+                        'data-count' => $vals['inConsole'],
+                    ),
+                    $category . ': ' . $vals['inConsole']
+                );
+            }, $countsInConsole))
+            . '</ul>' . "\n";
     }
 
     /**
@@ -372,6 +276,22 @@ class ErrorSummary
     }
 
     /**
+     * Get count statistics for errors logged to console
+     *
+     * @return array
+     */
+    private function getCountsInConsole()
+    {
+        $stats = $this->stats;
+        foreach (\array_keys($stats['counts']) as $category) {
+            $stats['counts'][$category]['name'] = $category;
+        }
+        return \array_filter($stats['counts'], static function ($vals) {
+            return $vals['name'] !== 'fatal' && $vals['inConsole'];
+        });
+    }
+
+    /**
      * Get all unsuppressed errors that were not logged in console
      *
      * @return Error[]
@@ -382,21 +302,15 @@ class ErrorSummary
             return array();
         }
         $errors = $this->errorHandler->get('errors');
-        $errorsNotInConsole = array();
-        foreach ($errors as $error) {
-            if (
-                \array_intersect_assoc(array(
-                    // at least one of these is true
-                    'category' => 'fatal',
-                    'inConsole' => true,
-                    'isSuppressed' => true,
-                ), $error->getValues())
-            ) {
-                continue;
-            }
-            $errorsNotInConsole[] = $error;
-        }
-        return $errorsNotInConsole;
+        return \array_filter($errors, static function (Error $error) {
+            $isErrorInConsole = \count(\array_intersect_assoc(array(
+                // at least one of these is true
+                'category' => 'fatal',
+                'inConsole' => true,
+                'isSuppressed' => true,
+            ), $error->getValues())) > 0;
+            return $isErrorInConsole === false;
+        });
     }
 
     /**
@@ -404,17 +318,13 @@ class ErrorSummary
      *
      * @param string $category error category
      *
-     * @return \bdk\ErrorHandler\Error[]
+     * @return Error[]
      */
     protected function getErrorsInCategory($category)
     {
         $errors = $this->errorHandler->get('errors');
-        $errorsInCat = array();
-        foreach ($errors as $err) {
-            if ($err['category'] === $category && $err['inConsole']) {
-                $errorsInCat[] = $err;
-            }
-        }
-        return $errorsInCat;
+        return \array_values(\array_filter($errors, static function (Error $error) use ($category) {
+            return $error['category'] === $category && $error['inConsole'];
+        }));
     }
 }

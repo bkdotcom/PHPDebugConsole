@@ -197,11 +197,13 @@ class Html extends Base
             'role' => 'alert',
         ), $this->logEntryAttribs);
         $attribs['class'][] = 'alert-' . $meta['level'];
-        $html = $this->valDumper->dump($args[0], array(
-            'sanitize' => $meta['sanitizeFirst'],
-            'tagName' => null, // don't wrap value span
-            'visualWhiteSpace' => false,
-        ));
+        $html = \count($args) === 1
+            ? $this->valDumper->dump($args[0], array(
+                'sanitize' => $meta['sanitizeFirst'],
+                'tagName' => null, // don't wrap value span
+                'visualWhiteSpace' => false,
+            ))
+            : $this->helper->buildArgString($args, $meta);
         if ($meta['dismissible']) {
             $attribs['class'][] = 'alert-dismissible';
             $html = '<button type="button" class="close" data-dismiss="alert" aria-label="Close">'

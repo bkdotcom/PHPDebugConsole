@@ -125,7 +125,7 @@ class SubstitutionTest extends DebugTestFramework
                         ),
                         '<i>boring</i>',
                         array(
-                            'brief' => false,
+                            'brief' => false, // true for alert
                             'debug' => Abstracter::ABSTRACTION,
                             'percentBinary' => 62.5,
                             'strlen' => 16,
@@ -391,12 +391,17 @@ class SubstitutionTest extends DebugTestFramework
                     if ($method === 'alert') {
                         $test['meta']['dismissible'] = false;
                         $test['meta']['level'] = 'error';
+                        foreach ($test['args'] as &$arg)  {
+                            if (\is_array($arg) && isset($arg['debug']) && isset($arg['brief']) && $arg['debug'] === Abstracter::ABSTRACTION) {
+                                $arg['brief'] = true;
+                            }
+                        }
                     } elseif ($method === 'assert') {
                         if ($foundArgs) {
                             // the first arg (false) is not stored
                             \array_shift($test['args']);
                         }
-                    } elseif (\in_array($method, array('error','warn'))) {
+                    } elseif (\in_array($method, array('error', 'warn'))) {
                         $test['meta']['detectFiles'] = true;
                         $test['meta']['evalLine'] = null;
                         $test['meta']['file'] = $this->file;
@@ -437,19 +442,23 @@ class SubstitutionTest extends DebugTestFramework
                     if ($method === 'alert') {
                         $attribs['class'][] = 'alert-error';
                         $attribs['role'] = 'alert';
-                        // $test = \str_replace(array('<li','</li'), array('<div', '</div'), $test);
+                        /*
+                        // < v3.3 would just take the first arg after performing substitutions
+                        // >= v3.3 treats alert no differently than other methods
                         $test = \str_replace(
                             ' = <span class="t_string">extra</span>',
                             '',
                             $test
                         );
+                        */
+                        $haveExtra = \strpos($test, ' = <span class="t_string">extra</span>') !== false;
                         $test = \str_replace(
-                            '<li class="m_log"><span class="no-quotes t_string">',
+                            '<li class="m_log">' . ($haveExtra ? '' : '<span class="no-quotes t_string">'),
                             '<div' . $this->debug->html->buildAttribString($attribs) . '>',
                             $test
                         );
                         $test = \str_replace(
-                            '</span></li>',
+                            ($haveExtra ? '' : '</span>') . '</li>',
                             '</div>',
                             $test
                         );

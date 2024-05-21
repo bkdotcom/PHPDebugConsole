@@ -101,8 +101,6 @@ EOD;
         $stmt->bindValue(':datetime', $datetime, \PDO::PARAM_STR);
         $stmt->execute();
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
-        // \bdk\Test\Debug\Helper::stderr('errorInfo', $stmt->errorInfo());
-        // \bdk\Test\Debug\Helper::stderr('log data', $this->helper->deObjectifyData($this->debug->data->get('log')));
         $this->assertSame(array(
             'k' => 'test',
             'v' => null,

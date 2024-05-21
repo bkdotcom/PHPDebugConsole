@@ -60,7 +60,6 @@ class FirephpTest extends DebugTestFramework
         $this->debug->output();
         $headers = $this->debug->getHeaders();
         $last3 = \array_slice($headers, -3);
-        // \bdk\Test\Debug\Helper::stderr('count', \count($headers), $last3);
         self::assertSame('21|[{"Type":"LOG"},"hi"]|', $last3[0][1]);
         self::assertStringMatchesFormat('%d|[{"Type":"WARN"},"FirePhp\'s limit of ' . \number_format(50) . ' messages reached!"]|', $last3[1][1]);
         self::assertSame('X-Wf-1-Index', $last3[2][0]);

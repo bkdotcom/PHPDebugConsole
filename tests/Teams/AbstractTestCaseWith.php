@@ -107,7 +107,6 @@ abstract class AbstractTestCaseWith extends TestCase
         $tests['exception'] = array('noSuchProp', 'OutOfBoundsException');
 
         if (empty($type) || \in_array($type, self::$typesWithoutSchema, true)) {
-            // \bdk\Test\Debug\Helper::stderr(\get_class($obj) . ' empty type');
             // self::expectNotToPerformAssertions();
             return $tests;
         }
@@ -167,7 +166,6 @@ abstract class AbstractTestCaseWith extends TestCase
             if ($name === 'type' || \in_array($name, static::$unsupportedAttributes, true)) {
                 continue;
             }
-            // \bdk\Test\Debug\Helper::stderr($name, $info);
             if (isset($info['type']) && \in_array($info['type'], array('array','object'), true)) {
                 $tests[$name . ' empty array'] = array($name, array(), $info['isRequired']);
             } else {
@@ -195,7 +193,6 @@ abstract class AbstractTestCaseWith extends TestCase
                     continue;
                 }
             }
-            // \bdk\Test\Debug\Helper::stderr($name, $info);
             if (isset($info['enum'])) {
                 self::$testedSchemaProps[$name] = true;
                 foreach ($info['enum'] as $val) {
@@ -226,7 +223,6 @@ abstract class AbstractTestCaseWith extends TestCase
                         if (\strpos($ref, 'ImplementationsOf.') === 0) {
                             continue;
                         }
-                        // \bdk\Test\Debug\Helper::stderr($name . ' anyof ref ' . $ref, self::$definitions[$ref]);
                         if (isset(self::$definitions[$ref]['anyOf']) === false) {
                             continue;
                         }
@@ -252,7 +248,6 @@ abstract class AbstractTestCaseWith extends TestCase
                 if (isset(self::$definitions[$ref]['anyOf']) === false) {
                     continue;
                 }
-                // \bdk\Test\Debug\Helper::stderr($name, 'ref', $info['$ref'], self::$definitions[$ref]);
                 foreach (self::$definitions[$ref]['anyOf'] as $of) {
                     if (isset($of['enum'])) {
                         self::$testedSchemaProps[$name] = true;
@@ -370,15 +365,12 @@ abstract class AbstractTestCaseWith extends TestCase
             $props[$name] = $def;
         }
         \ksort($props);
-        // \bdk\Test\Debug\Helper::stderr('Image', $props['Image']);
-        // \bdk\Test\Debug\Helper::stderr('definitions', $props);
         self::$definitions = $props;
         self::$schema = null;
     }
 
     private static function getPropsFromSchema($def, $name)
     {
-        // \bdk\Test\Debug\Helper::stderr($name, $def);
         $props = $def['properties'];
         if (isset($def['allOf'])) {
             $props = \array_filter($props, static function ($val) {
@@ -394,7 +386,6 @@ abstract class AbstractTestCaseWith extends TestCase
         foreach (\array_keys($props) as $name) {
             $isRequired = isset($def['required']) && \in_array($name, $def['required'], true);
             $props[$name]['isRequired'] = $isRequired;
-            // \bdk\Test\Debug\Helper::stderr($name, 'isRequired', $props[$name]['isRequired']);
         }
         \ksort($props);
         return $props;

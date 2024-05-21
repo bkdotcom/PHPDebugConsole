@@ -233,11 +233,9 @@ class Group implements SubscriberInterface
                 $logEntry->setMeta('isFuncName', true);
             }
         }
-        $cfgAbsBak = $debug->abstracter->setCfg(array(
-            'brief' => true,
-        ));
+        $briefBak = $debug->abstracter->setCfg('brief', true);
         $debug->log($logEntry);
-        $debug->abstracter->setCfg($cfgAbsBak);
+        $debug->abstracter->setCfg('brief', $briefBak);
     }
 
     /**

@@ -52,7 +52,6 @@ class MonologHandlerTest extends DebugTestFramework
             : 'log/__end__';
         $logEntry = $this->debug->data->get($path);
         $array = $this->helper->logEntryToArray($logEntry);
-        // $this->helper->stderr($array);
         self::assertSame($method, $array['method']);
         self::assertSame($args, $array['args']);
         self::assertSame($psr3method, $array['meta']['psr3level']);
@@ -101,7 +100,6 @@ class MonologHandlerTest extends DebugTestFramework
             'datetime' => new \DateTime('2023-01-21 21:00:00'),
         ));
         $logEntry = $this->debug->data->get('log/__end__');
-        $this->helper->stderr('logEntry', $logEntry);
         $array = $this->helper->logEntryToArray($logEntry);
         $this->assertSame('log', $array['method']);
         $this->assertSame(array(''), $array['args']);

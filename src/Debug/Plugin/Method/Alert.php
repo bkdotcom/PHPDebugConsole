@@ -46,6 +46,9 @@ class Alert implements SubscriberInterface
      * Can use styling & substitutions.
      * If using substitutions, will need to pass `$level` & `$dismissible` as meta values
      *
+     *   * alert(...$args)
+     *   * alert($message, $level, $dismissible)
+     *
      * @param string $message     message to be displayed
      * @param string $level       (error), info, success, warn
      *                               "danger" and "warning" are still accepted, however deprecated
@@ -56,7 +59,6 @@ class Alert implements SubscriberInterface
     public function alert($message, $level = 'error', $dismissible = false)
     {
         $args = \func_get_args();
-        $hasSubstitutions = $this->hasSubstitutions($args);
         $logEntry = new LogEntry(
             $this->debug,
             __FUNCTION__,
@@ -64,15 +66,14 @@ class Alert implements SubscriberInterface
             array(
                 'dismissible' => false,
                 'level' => 'error',
-            ),
-            $hasSubstitutions
-                ? array()
-                : $this->debug->rootInstance->getMethodDefaultArgs(__METHOD__),
-            array('level', 'dismissible')
+            )
         );
+        $this->setArgs($logEntry);
         $this->level($logEntry);
         $this->debug->data->set('logDest', 'alerts');
+        $briefBak = $this->debug->abstracter->setCfg('brief', true);
         $this->debug->log($logEntry);
+        $this->debug->abstracter->setCfg('brief', $briefBak);
         $this->debug->data->set('logDest', 'auto');
         return $this->debug;
     }
@@ -80,27 +81,20 @@ class Alert implements SubscriberInterface
     /**
      * Does alert contain substitutions
      *
-     * @param array $args alert arguments
+     * @param LogEntry $logEntry LogEntry instance
      *
      * @return bool
      */
-    private function hasSubstitutions(array $args)
+    private function hasSubstitutions(LogEntry $logEntry)
     {
-        /*
-            Create a temporary LogEntry so we can test if we passed substitutions
-        */
-        $logEntry = new LogEntry(
-            $this->debug,
-            __FUNCTION__,
-            $args
-        );
+        $args = $logEntry['args'];
         return $logEntry->containsSubstitutions()
             && \array_key_exists(1, $args)
             && \in_array($args[1], $this->levelsAllowed, true) === false;
     }
 
     /**
-     * Set alert()'s alert level'\
+     * Translate deprecated level values ("danger" & "warning")
      *
      * @param LogEntry $logEntry LogEntry instance
      *
@@ -109,16 +103,47 @@ class Alert implements SubscriberInterface
     private function level(LogEntry $logEntry)
     {
         $level = $logEntry->getMeta('level');
-        // Continue to allow bootstrap "levels"
         $levelTrans = array(
             'danger' => 'error',
             'warning' => 'warn',
         );
         if (isset($levelTrans[$level])) {
-            $level = $levelTrans[$level];
-        } elseif (\in_array($level, $this->levelsAllowed, true) === false) {
-            $level = 'error';
+            $logEntry->setMeta('level', $levelTrans[$level]);
         }
-        $logEntry->setMeta('level', $level);
+        if (\in_array($level, $this->levelsAllowed, true)) {
+            return;
+        }
+        $logEntry->setMeta('level', 'error');
+    }
+
+    /**
+     * Alert method has multiple signatures
+     * Determine which signature was used and set meta values accordingly
+     *
+     * @param LogEntry $logEntry LogEntry instance
+     *
+     * @return void
+     */
+    private function setArgs(LogEntry $logEntry)
+    {
+        $args = \array_replace(array(
+            $logEntry->getMeta('level'),
+            $logEntry->getMeta('dismissible')
+        ), $logEntry['args']);
+
+        if ($this->hasSubstitutions($logEntry)) {
+            return;
+        }
+
+        $isMetaSignature = \count($args) === 3
+            && \in_array($args[1], $this->levelsAllowed, true)
+            && \is_bool($args[2]);
+
+        if ($isMetaSignature) {
+            $logEntry->setMeta('level', $args[1]);
+            $logEntry->setMeta('dismissible', $args[2]);
+            unset($args[1], $args[2]);
+            $logEntry['args'] = $args;
+        }
     }
 }

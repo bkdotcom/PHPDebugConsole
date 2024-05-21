@@ -149,8 +149,6 @@ class FollowLocationTest extends TestCase
             $promise->wait();
             self::fail();
         } catch (RequestException $e) {
-            // \bdk\Test\Debug\Helper::stderr('exception', $e->getMessage());
-            // \bdk\Test\Debug\Helper::stderr('response', $e->getResponse());
             self::assertSame(302, $e->getResponse()->getStatusCode());
         }
     }
@@ -559,17 +557,7 @@ class FollowLocationTest extends TestCase
     {
         $handler = new MockHandler([
             $this->factory->response(302, '', ['Location' => $targetUri]),
-            // function (CurlReqRes $curlReqRes) use ($targetUri) {
-                // \bdk\Test\Debug\Helper::stderr('initial request', $curlReqRes->getRequest()->getHeaders());
-                // \bdk\Test\Debug\Helper::stderr('options.curl', $curlReqRes->getOption('curl'));
-                // return $this->factory->response(302, '', ['Location' => $targetUri]);
-            // },
             function (RequestInterface $request, $options) use ($isCrossOrigin) {
-                // $request = $curlReqRes->getRequest();
-                // \bdk\Test\Debug\Helper::stderr(array(
-                    // 'isCrossOrigin' => $isCrossOrigin,
-                    // 'request headers' => $request->getHeaders(),
-                // ));
                 self::assertSame(!$isCrossOrigin, $request->hasHeader('Authorization'));
                 self::assertSame(!$isCrossOrigin, $request->hasHeader('Cookie'));
                 return $this->factory->response(200);

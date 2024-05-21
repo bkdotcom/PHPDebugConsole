@@ -192,7 +192,7 @@ class AlertTest extends DebugTestFramework
             ),
         );
 
-        // test dismissable
+        // test dismissible
         $entryExpect = array(
             'method' => 'alert',
             'args' => array(

@@ -46,7 +46,6 @@ class CurlReqResTest extends TestCase
         $curlReqRes = $this->factory->curlReqRes($request);
         $curlReqRes->setCurlHandle(\curl_init());
         $curlReqRes->setRequest($request2);
-        // \bdk\Test\Debug\Helper::stderr('curlOpts', $curlReqRes->getOption('curl'));
         self::assertSame('/foo', $curlReqRes->getOption(array('curl', CURLOPT_URL)));
     }
 
@@ -85,7 +84,6 @@ class CurlReqResTest extends TestCase
             $curlReqRes->exec();
             $this->fail('RequestException not thrown');
         } catch (RequestException $e) {
-            // \bdk\Test\Debug\Helper::stderr($e);
             self::assertStringContainsString('cURL error 1: Protocol "bogus" not supported or disabled in libcurl', $e->getMessage());
             self::assertStringContainsString(' for GET bogus://127.0.0.1/', $e->getMessage());
         }

@@ -36,7 +36,6 @@ class EachTest extends TestCase
         $this->assertTrue(Is::rejected($aggregate));
 
         $result = Promise::inspect($aggregate);
-        // \bdk\Test\Debug\Helper::stderr('result', $result);
 
         $this->assertSame('b', $result['reason']);
     }

@@ -83,7 +83,6 @@ class GeneralTest extends DebugTestFramework
         $line = __LINE__ - 1;
         $logEntry = $this->debug->data->get('log/__end__');
         $logEntry = $this->helper->logEntryToArray($logEntry);
-        // $this->helper->stderr($logEntry);
         self::assertSame(array(
             'method' => 'warn',
             'args' => array(

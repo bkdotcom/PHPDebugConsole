@@ -110,7 +110,6 @@ class CurlMultiTest extends TestCase
         $i = 0;
         $promises[0]->then(
             function () use ($promises, $curlMulti, &$i) {
-                // \bdk\Test\Debug\Helper::stderr('then', \count($promises));
                 $curlMulti->process();
                 foreach ($promises as $i => $promise) {
                     if ($i === 0) {
@@ -145,7 +144,6 @@ class CurlMultiTest extends TestCase
         $curlReqRes = $this->factory->curlReqRes($request);
         $curlReqRes->setOption('delay', 100);
         $promise = $curlMulti($curlReqRes);
-        // \bdk\Test\Debug\Helper::stderr('promise', $promise);
         $promise->wait();
         self::assertGreaterThanOrEqual($tsStart + 100 / 1000, \microtime(true));
     }

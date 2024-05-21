@@ -529,7 +529,6 @@ EOD;
         $result = self::$client->rollback(0, 'Jimbo');
 
         $logEntries = $this->getLogEntries(2);
-        $this->helper->stderr(__FUNCTION__, $result, $logEntries);
         self::assertFalse($result);
     }
     */

@@ -274,7 +274,7 @@ class DebugTestFramework extends DOMTestCase
             );
         }
         /*
-        $this->helper->stderr(array(
+        $this->debug->varDump(array(
             'method' => $method,
             'args' => $args,
             'count' => count($tests),

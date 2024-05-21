@@ -202,7 +202,7 @@ class ArrayUtil
     public static function pathSet(array &$array, $path, $val)
     {
         $path = \array_reverse(self::pathToArray($path));
-        while ($path && \is_array($array)) {
+        while ($path) {
             $key = \array_pop($path);
             if (self::specialKey($key, $path, $array)) {
                 continue;
@@ -222,31 +222,22 @@ class ArrayUtil
     /**
      * Searches array structure for value and returns the path to the first match
      *
-     * @param mixed $value    value to search for (needle)
-     * @param array $array    array structure to search (haystack)
-     * @param bool  $inclKeys (false) whether to also match keys
+     * @param mixed $search Needle / value or key to search for
+     * @param array $array  Haystack / array structure to search
+     * @param bool  $byKey  (false) whether to search for key vs value
      *
-     * @return array|false Returns empty array if value not found
+     * @return array|false
      */
-    public static function searchRecursive($value, array $array, $inclKeys = false)
+    public static function searchRecursive($search, array $array, $byKey = false)
     {
-        $key = \array_search($value, $array, true);
+        $key = \array_search($search, $array, true);
         if ($key !== false) {
             return array($key);
         }
-        if ($inclKeys && self::isValidKey($value) && \array_key_exists($value, $array)) {
-            return array($value);
+        if ($byKey && self::isValidKey($search) && \array_key_exists($search, $array)) {
+            return array($search);
         }
-        foreach ($array as $key => $val) {
-            if (\is_array($val) === false) {
-                continue;
-            }
-            $pathTest = self::searchRecursive($value, $val, $inclKeys);
-            if ($pathTest) {
-                return \array_merge(array($key), $pathTest);
-            }
-        }
-        return false;
+        return self::searchRecursiveWalk($search, $array, $byKey);
     }
 
     /**
@@ -317,5 +308,28 @@ class ArrayUtil
             \array_slice($array, $offset + $length, null, true)
         );
         return $ret;
+    }
+
+    /**
+     * Iterate over haystack to find needle
+     *
+     * @param mixed $search Needle / value or key to search for
+     * @param array $array  Haystack / array structure to search
+     * @param bool  $byKey  (false) whether to search for key vs value
+     *
+     * @return array|false
+     */
+    private static function searchRecursiveWalk($search, array $array, $byKey)
+    {
+        foreach ($array as $key => $val) {
+            if (\is_array($val) === false) {
+                continue;
+            }
+            $pathTest = self::searchRecursive($search, $val, $byKey);
+            if ($pathTest) {
+                return \array_merge(array($key), $pathTest);
+            }
+        }
+        return false;
     }
 }

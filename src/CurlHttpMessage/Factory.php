@@ -67,7 +67,7 @@ class Factory
     }
 
     /**
-     * Build CuurlReqRes instance
+     * Build CurlReqRes instance
      *
      * @param RequestInterface $request Request instance
      * @param array            $options options

@@ -68,7 +68,7 @@ class Script extends AbstractRoute
      *
      * @return string|void
      */
-    public function processlogEntries(Event $event)
+    public function processLogEntries(Event $event)
     {
         $this->dumper->crateRaw = false;
         $this->data = $this->debug->data->get();

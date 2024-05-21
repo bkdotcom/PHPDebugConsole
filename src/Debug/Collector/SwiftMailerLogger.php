@@ -87,7 +87,7 @@ class SwiftMailerLogger implements Swift_Events_CommandListener, Swift_Events_Re
         $msg = $event->getMessage();
         $this->debug->groupCollapsed(
             'sending email',
-            $this->formatEmailAddrs($msg->getTo()),
+            $this->formatEmailAddresses($msg->getTo()),
             $msg->getSubject(),
             $this->iconMeta
         );
@@ -293,14 +293,14 @@ class SwiftMailerLogger implements Swift_Events_CommandListener, Swift_Events_Re
     /**
      * Convert array of email addresses/names to string
      *
-     * @param array $addrs emailAddr->name pairs
+     * @param array $addresses emailAddr->name pairs
      *
      * @return string
      */
-    protected function formatEmailAddrs($addrs)
+    protected function formatEmailAddresses($addresses)
     {
         $return = array();
-        foreach ($addrs as $addr => $name) {
+        foreach ($addresses as $addr => $name) {
             $return[] = ($name ? $name . ' ' : '') . '<' . $addr . '>';
         }
         return \implode(', ', $return);

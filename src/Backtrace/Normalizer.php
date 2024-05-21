@@ -72,13 +72,13 @@ class Normalizer
      * Normalize file value
      *
      * @param array $frame     current frame
-     * @param array $frameNext next frrame
+     * @param array $frameNext next frame
      *
      * @return array
      */
     private static function normalizeFrameFile(array $frame, array &$frameNext)
     {
-        $regexEvaldCode = '/^(.+)\((\d+)\) : eval\(\)\'d code$/';
+        $regexEvalCode = '/^(.+)\((\d+)\) : eval\(\)\'d code$/';
         $matches = array();
         if ($frame['file'] === null) {
             // use file/line from next frame
@@ -87,14 +87,14 @@ class Normalizer
                 \array_intersect_key($frameNext, \array_flip(array('file', 'line')))
             );
         }
-        if (\preg_match($regexEvaldCode, (string) $frame['file'], $matches)) {
+        if (\preg_match($regexEvalCode, (string) $frame['file'], $matches)) {
             // reported line = line within eval
             // line inside paren is the line `eval` is on
             $frame['evalLine'] = $frame['line'];
             $frame['file'] = $matches[1];
             $frame['line'] = (int) $matches[2];
             if (isset($frameNext['include_filename'])) {
-                // xdebug_get_function_stack puts the evaled code in include_filename
+                // xdebug_get_function_stack puts the eval'd code in include_filename
                 $frameNext['params'] = array($frameNext['include_filename']);
                 $frameNext['class'] = null;
                 $frameNext['function'] = 'eval';

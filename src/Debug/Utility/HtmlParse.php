@@ -21,7 +21,7 @@ class HtmlParse
      * Parse attribute value
      *
      * @param string $name    attribute name
-     * @param string $val     value (assumed to be htmlspecialchar'd)
+     * @param string $val     value (assumed to be html encoded)
      * @param int    $options bitmask of Html::PARSE_ATTRIB_x FLAGS
      *
      * @return mixed

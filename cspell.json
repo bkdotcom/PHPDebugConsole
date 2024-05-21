@@ -1,0 +1,39 @@
+{
+  "version": "0.2",
+  "language": "en-US",
+  "ignorePaths": [
+    "./cspell.json",
+    "./src/Debug/js/**",
+    "*.min.*",
+    "**/charData.php",
+    "**/prism.js",
+    "**/tests/**"
+  ],
+  "useGitignore": true,
+  "words": [
+    "autoloader",
+    "bitmask",
+    "callables",
+    "classname",
+    "hostnames",
+    "invokable",
+    "regexs",
+    "uncollapse",
+    "ungroup",
+    "unserialized",
+    "unsets",
+    "webroot"
+  ],
+  "ignoreWords": [
+    "chromelogger",
+    "firephp",
+    "jdorn",
+    "mrkdwn",
+    "mysqli",
+    "phpcs",
+    "phpmd",
+    "slevomat",
+    "symfony",
+    "wamp"
+  ]
+}

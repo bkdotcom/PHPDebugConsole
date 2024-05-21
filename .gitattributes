@@ -15,6 +15,7 @@
 /.github export-ignore
 /.gitignore export-ignore
 /.stylelintrc.json export-ignore
+/cspell.json export-ignore
 /dev export-ignore
 /phpcs.slevomat.xml export-ignore
 /phpcs.xml.dist export-ignore

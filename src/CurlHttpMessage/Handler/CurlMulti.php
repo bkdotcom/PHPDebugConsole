@@ -232,8 +232,8 @@ class CurlMulti extends Curl
             ? $this->getDelay()
             : 0;
         if ($delay) {
-            $microsec = $delay * 1000;
-            \usleep((int) $microsec);
+            $microSec = $delay * 1000;
+            \usleep((int) $microSec);
         }
 
         // Step through the task queue which may add additional requests.

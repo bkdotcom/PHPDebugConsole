@@ -48,14 +48,14 @@ class Statement extends PDOStatement
      * @param mixed $column     Number of the column (1-indexed) or name of the column in the result set
      * @param mixed $param      Name of the PHP variable to which the column will be bound.
      * @param int   $type       [optional] Data type of the parameter, specified by the PDO::PARAM_* constants.
-     * @param int   $maxlen     [optional] A hint for pre-allocation.
-     * @param mixed $driverdata [optional] Optional parameter(s) for the driver.
+     * @param int   $maxLen     [optional] A hint for pre-allocation.
+     * @param mixed $driverData [optional] Optional parameter(s) for the driver.
      *
      * @return bool
      * @link   http://php.net/manual/en/pdostatement.bindcolumn.php
      */
     #[\ReturnTypeWillChange]
-    public function bindColumn($column, &$param, $type = null, $maxlen = null, $driverdata = null)
+    public function bindColumn($column, &$param, $type = null, $maxLen = null, $driverData = null)
     {
         $this->boundParameters[$column] = $param;
         $this->boundParameterTypes[$column] = $type;

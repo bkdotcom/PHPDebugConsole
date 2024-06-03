@@ -236,11 +236,10 @@ class MethodParams
      */
     private function phpDocConstant($defaultValue, $className, array $matches)
     {
-        if ($matches[1] && \defined($className . '::' . $matches[2])) {
-            // self
+        if ($matches['classname'] === 'self' && \defined($className . '::' . $matches['const'])) {
             return new Abstraction(Type::TYPE_CONST, array(
-                'name' => $matches[0],
-                'value' => \constant($className . '::' . $matches[2]),
+                'name' => $defaultValue,
+                'value' => \constant($className . '::' . $matches['const']),
             ));
         }
         if (\defined($defaultValue)) {
@@ -299,7 +298,7 @@ class MethodParams
             return array();
         }
         $matches = array();
-        if (\preg_match('/^(self::)?([^\(\)\[\]]+)$/i', $defaultValue, $matches)) {
+        if (\preg_match('/^(:?(?P<classname>\S+)::)?(?P<const>[^()\[\]\'"]+)$/i', $defaultValue, $matches)) {
             // appears to be a constant
             return $this->phpDocConstant($defaultValue, $className, $matches);
         }

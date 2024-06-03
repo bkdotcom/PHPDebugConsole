@@ -24,7 +24,7 @@ namespace bdk\Test\Debug\Fixture;
  * CƖass <b onhover="alert('xss')">[𐑈]um</b>mary.
  * CƖass <b onhover="alert('xss')">[𝖽]esc</b>ription
  *
- * @method bool mаgicMethod(string $𝕡аram = 'vаlսe') T[е]st <b onhover="alert('xss')">method</b>
+ * @method bool mаgicMethod(string $𝕡аram = 'vаlսe', integer $int = 1, $bool = true, $null = null, $arr = array(), $const=self::ᖴOO) T[е]st <b onhover="alert('xss')">method</b>
  *
  * @see http://ᴜrl.com <b onhover="alert('xss')">Super</b> [Η]elpful
  * @link http://ᴜrl.com [Ⅼ]ink <b onhover="alert('xss')">Rot</b>

@@ -48,7 +48,6 @@ class Value extends BaseValue
         $this->string = new HtmlString($this);
         $this->optionStackPush(array(
             'charHighlight' => true,
-            'charLink' => true,
             'sanitize' => true,
             'sanitizeFirst' => true,
             'visualWhiteSpace' => true,

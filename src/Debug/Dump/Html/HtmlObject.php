@@ -72,7 +72,7 @@ class HtmlObject
         $this->cases = new ObjectCases($valDumper, $helper, $html);
         $this->constants = new ObjectConstants($valDumper, $helper, $html);
         $this->methods = new ObjectMethods($valDumper, $helper, $html);
-        $this->phpDoc = new ObjectPhpDoc($valDumper);
+        $this->phpDoc = new ObjectPhpDoc($valDumper, $helper);
         $this->properties = new ObjectProperties($valDumper, $helper, $html);
         $this->sectionCallables = array(
             'attributes' => array($this, 'dumpAttributes'),
@@ -260,7 +260,7 @@ class HtmlObject
     {
         $phpDocOutput = $abs['cfgFlags'] & AbstractObject::PHPDOC_OUTPUT;
         $title = $phpDocOutput
-            ? \trim($abs['phpDoc']['summary'] . "\n\n" . $abs['phpDoc']['desc'])
+            ? $this->helper->dumpPhpDoc($abs['phpDoc']['summary'] . "\n\n" . $abs['phpDoc']['desc'])
             : null;
         $title = $title ?: null;
         if (\strpos(\json_encode($abs['implements']), '"UnitEnum"') !== false) {

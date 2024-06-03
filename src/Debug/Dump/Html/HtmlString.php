@@ -220,33 +220,23 @@ class HtmlString
     /**
      * Build replacement for unicode character
      *
-     * @param array<string, string|null> $info     Character info
-     * @param bool                       $charLink Whether to hyperlink to unicode.info
+     * @param array<string, string|null> $info Character info
      *
      * @return string
      */
-    private function buildHighlightReplacementOther(array $info, $charLink = true)
+    private function buildHighlightReplacementOther(array $info)
     {
         $codePoint = $info['codePoint'] ?: \dechex(Utf8::ord($info['char']));
-        $tag = $charLink
-            ? 'a'
-            : 'span';
-        $attribs = $charLink
-            ? array(
+        return $this->debug->html->buildTag(
+            'span',
+            array(
                 'class' => $info['class'],
-                'href' => 'https://symbl.cc/en/' . $codePoint,
-                'target' => 'unicode',
+                'data-code-point' => $codePoint,
                 'title' => \implode(': ', \array_filter(array(
                     'U-' . $codePoint,
                     $info['desc'],
                 ))),
-            )
-            : array(
-                'class' => $info['class'],
-            );
-        return $this->debug->html->buildTag(
-            $tag,
-            $attribs,
+            ),
             $info['replaceWith']
         );
     }
@@ -313,7 +303,7 @@ class HtmlString
             $val = \htmlspecialchars($val);
         }
         if ($opts['charHighlight']) {
-            $val = $this->highlightChars($val, $opts['charLink']);
+            $val = $this->highlightChars($val);
         }
         if ($opts['visualWhiteSpace']) {
             $val = $this->visualWhiteSpace($val);
@@ -350,12 +340,11 @@ class HtmlString
     /**
      * Highlight confusable and other characters
      *
-     * @param string $str      HTML String to update
-     * @param bool   $charLink Whether to hyperlink to unicode.info
+     * @param string $str HTML String to update
      *
      * @return string
      */
-    private function highlightChars($str, $charLink = true)
+    private function highlightChars($str)
     {
         $chars = $this->valDumper->findChars($str);
         $charInfo = \array_intersect_key($this->valDumper->charData, \array_flip($chars));
@@ -369,7 +358,7 @@ class HtmlString
             ), $info);
             $replacement = \ord($char[0]) < 0x80
                 ? $this->buildHighlightReplacementControl($info)
-                : $this->buildHighlightReplacementOther($info, $charLink);
+                : $this->buildHighlightReplacementOther($info);
             $str = \str_replace($char, $replacement, $str);
         }
         return $str;

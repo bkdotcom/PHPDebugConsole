@@ -123,7 +123,7 @@ abstract class AbstractValue extends AbstractComponent
     public function findChars($str)
     {
         $matches = array();
-        \preg_match_all($this->charRegex, $str, $matches);
+        \preg_match_all($this->charRegex, (string) $str, $matches);
         return \array_unique($matches[0]);
     }
 
@@ -263,6 +263,7 @@ abstract class AbstractValue extends AbstractComponent
     {
         $opts = $this->optionGet();
         foreach (\array_keys($opts) as $k) {
+            // Note:  this has side-effect of adding the key to to the abstraction
             if ($abs[$k] !== null) {
                 $opts[$k] = $abs[$k];
             }

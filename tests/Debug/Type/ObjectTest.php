@@ -399,8 +399,8 @@ EOD;
                             '<dd class="method public" data-declared-prev="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_public">public</span> <span class="t_identifier" title="Constructor',
                             '',
                             'Constructor description">__construct</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="value __toString will return;">$toString</span> <span class="t_operator">=</span> <span class="t_parameter-default t_string">abracadabra</span></span><span class="t_punct">,</span>',
-                                '<span class="parameter"><span class="t_type">int</span> <span class="t_parameter-name" title="0: don&#039;t, 1: throw, 2: throw &amp; catch">$toStrThrow</span> <span class="t_operator">=</span> <span class="t_int t_parameter-default">0</span></span><span class="t_punct">)</span></dd>',
-                            '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier" title="magic method">__debugInfo</span><span class="t_punct">(</span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span title="property=&gt;value array"><span class="t_type">array</span></span></dd>',
+                                '<span class="parameter"><span class="t_type">int</span> <span class="t_parameter-name" title="0: don&#039;t, 1: throw, 2: throw &amp;amp; catch">$toStrThrow</span> <span class="t_operator">=</span> <span class="t_int t_parameter-default">0</span></span><span class="t_punct">)</span></dd>',
+                            '<dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier" title="magic method">__debugInfo</span><span class="t_punct">(</span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span title="property=&amp;gt;value array"><span class="t_type">array</span></span></dd>',
                             '<dd class="method public" ' . (PHP_VERSION_ID >= 80000 ? 'data-implements="Stringable" ' : '' ) . 'data-throws="[{&quot;desc&quot;:&quot;when toStrThrow is `1`&quot;,&quot;type&quot;:&quot;Exception&quot;}]"><span class="t_modifier_public">public</span> <span class="t_identifier" title="toString magic method',
                                 '',
                                 'Long Description">__toString</span><span class="t_punct">(</span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">string</span>',
@@ -518,8 +518,8 @@ EOD;
                                 '<span class="parameter"><span class="t_type">array</span> <span class="t_parameter-name" title="Arguments passed">$args</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">mixed</span></dd>',
                             '<dd class="method public" data-inherited-from="bdk\Test\Debug\Fixture\Test2Base"><span class="t_modifier_public">public</span> <span class="t_identifier" title="get magic method">__get</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="what we\'re getting">$key</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">mixed</span></dd>',
                             \version_compare(PHP_VERSION, '5.4.6', '>=')
-                                ? '<dd class="method public" data-inherited-from="bdk\Test\Debug\Fixture\Test2Base"><span class="t_modifier_public">public</span> <span class="t_identifier" title="Test constant as default value">constDefault</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="only php &gt;= 5.4.6 can get the name of the constant used">$param</span> <span class="t_operator">=</span> <span class="t_const t_parameter-default" title="value: &quot;bird&quot;">' . $constName . '</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span></dd>'
-                                : '<dd class="method public" data-inherited-from="bdk\Test\Debug\Fixture\Test2Base"><span class="t_modifier_public">public</span> <span class="t_identifier" title="Test constant as default value">constDefault</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="only php &gt;= 5.4.6 can get the name of the constant used">$param</span> <span class="t_operator">=</span> <span class="t_parameter-default t_string">bird</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span></dd>',
+                                ? '<dd class="method public" data-inherited-from="bdk\Test\Debug\Fixture\Test2Base"><span class="t_modifier_public">public</span> <span class="t_identifier" title="Test constant as default value">constDefault</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="only php &amp;gt;= 5.4.6 can get the name of the constant used">$param</span> <span class="t_operator">=</span> <span class="t_const t_parameter-default" title="value: &quot;bird&quot;">' . $constName . '</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span></dd>'
+                                : '<dd class="method public" data-inherited-from="bdk\Test\Debug\Fixture\Test2Base"><span class="t_modifier_public">public</span> <span class="t_identifier" title="Test constant as default value">constDefault</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="only php &amp;gt;= 5.4.6 can get the name of the constant used">$param</span> <span class="t_operator">=</span> <span class="t_parameter-default t_string">bird</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span></dd>',
                             '<dd class="magic method" data-inherited-from="bdk\Test\Debug\Fixture\Test2Base"><span class="t_modifier_magic">magic</span> <span class="t_identifier" title="test constant as param">methConstTest</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$mode</span> <span class="t_operator">=</span> <span class="t_const t_parameter-default" title="value: &quot;bird&quot;"><span class="classname">self</span><span class="t_operator">::</span><span class="t_identifier">WORD</span></span></span><span class="t_punct">)</span></dd>',
                             '</dl>',
                         ));
@@ -527,7 +527,7 @@ EOD;
                             $expect = \str_replace('\'', '&#039;', $expect);
                         }
                         // echo 'expect = ' . $expect . "\n";
-                        // echo 'str = ' . $str . "\n";
+                        // echo 'actual = ' . $html . "\n";
                         self::assertStringContainsString($expect, $html);
                     },
                     'script' => 'console.log({"___class_name":"bdk\\\\Test\\\\Debug\\\\Fixture\\\\Test2","(✨ magic) magicProp":undefined,"(✨ magic-read protected) magicReadProp":"not null"});',
@@ -700,7 +700,7 @@ EOD;
                     'html' => static function ($html) {
                         // echo 'html = ' . $html . "\n";
                         $expect = \trim(\preg_replace('/^\s+/m', '', '
-                            <li class="m_log"><div class="groupByInheritance t_object" data-accessible="public"><span class="classname" title="&quot;Array Shapes&quot; and &quot;General Arrays&quot;"><span class="namespace">bdk\Test\Debug\Fixture\</span>ArrayDocs</span>
+                            <li class="m_log"><div class="groupByInheritance t_object" data-accessible="public"><span class="classname" title="&amp;quot;Array Shapes&amp;quot; and &amp;quot;General Arrays&amp;quot;"><span class="namespace">bdk\Test\Debug\Fixture\</span>ArrayDocs</span>
                             <dl class="object-inner">
                             <dt class="properties">properties</dt>
                             <dd class="property public"><span class="t_modifier_public">public</span> <span class="t_type">non-empty-array</span><span class="t_punct">&lt;</span><span class="t_type">string</span><span class="t_punct">,</span> <span class="t_type">array</span><span class="t_punct">&lt;</span><span class="t_type">int</span><span class="t_punct">,</span> <span class="t_type">int</span><span class="t_punct">|</span><span class="t_type">string</span><span class="t_punct">&gt;</span><span class="t_punct">|</span><span class="t_type">int</span><span class="t_punct">|</span><span class="t_type">string</span><span class="t_punct">&gt;</span><span class="t_type"><span class="t_punct">[]</span></span> <span class="no-quotes t_identifier t_string" title="General Description">general</span> <span class="t_operator">=</span> <span class="t_null">null</span></dd>
@@ -798,10 +798,10 @@ EOD;
                         %A<dt class="properties">properties</dt>
                         ' . (PHP_VERSION_ID >= 70400 ? '<dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier t_string"></span> <span class="t_operator">=</span> <span class="t_string">empty</span></dd>' . "\n" : '')
                         . '<dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier t_string"> </span> <span class="t_operator">=</span> <span class="t_string">space</span></dd>
-                        <dd class="property public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string"><a class="unicode" href="https://symbl.cc/en/200B" target="unicode" title="U-200B: Zero Width Space">\u{200b}</a></span> <span class="t_operator">=</span> <span class="t_string">zwsp</span></dd>
-                        <dd class="property public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string"><a class="unicode" href="https://symbl.cc/en/FEFF" target="unicode" title="U-FEFF: BOM / Zero Width No-Break Space">\u{feff}</a></span> <span class="t_operator">=</span> <span class="t_string">bom</span></dd>
-                        <dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier t_string"><a class="unicode" href="https://symbl.cc/en/FEFF" target="unicode" title="U-FEFF: BOM / Zero Width No-Break Space">\u{feff}</a>bom<span class="ws_r"></span><span class="ws_n"></span>
-                        <span class="ws_t">%s</span><span class="char-control" title="\x07: BEL (bell)">␇</span> <span class="char-control" title="\x1f: US (unit separator)">␟</span> <span class="char-control" title="\x7f: DEL">␡</span> <a class="unicode" href="https://symbl.cc/en/00A0" target="unicode" title="U-00A0: NBSP">\u{00a0}</a>&lt;i&gt;(nbsp)&lt;/i&gt; <a class="unicode" href="https://symbl.cc/en/2009" target="unicode" title="U-2009: Thin Space">\u{2009}</a>(thsp), &amp; <a class="unicode" href="https://symbl.cc/en/200B" target="unicode" title="U-200B: Zero Width Space">\u{200b}</a>(zwsp)</span> <span class="t_operator">=</span> <span class="t_string">ctrl chars and whatnot</span></dd>
+                        <dd class="property public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string"><span class="unicode" data-code-point="200B" title="U-200B: Zero Width Space">\u{200b}</span></span> <span class="t_operator">=</span> <span class="t_string">zwsp</span></dd>
+                        <dd class="property public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string"><span class="unicode" data-code-point="FEFF" title="U-FEFF: BOM / Zero Width No-Break Space">\u{feff}</span></span> <span class="t_operator">=</span> <span class="t_string">bom</span></dd>
+                        <dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier t_string"><span class="unicode" data-code-point="FEFF" title="U-FEFF: BOM / Zero Width No-Break Space">\u{feff}</span>bom<span class="ws_r"></span><span class="ws_n"></span>
+                        <span class="ws_t">%s</span><span class="char-control" title="\x07: BEL (bell)">␇</span> <span class="char-control" title="\x1f: US (unit separator)">␟</span> <span class="char-control" title="\x7f: DEL">␡</span> <span class="unicode" data-code-point="00A0" title="U-00A0: NBSP">\u{00a0}</span>&lt;i&gt;(nbsp)&lt;/i&gt; <span class="unicode" data-code-point="2009" title="U-2009: Thin Space">\u{2009}</span>(thsp), &amp; <span class="unicode" data-code-point="200B" title="U-200B: Zero Width Space">\u{200b}</span>(zwsp)</span> <span class="t_operator">=</span> <span class="t_string">ctrl chars and whatnot</span></dd>
                         %A</dl>
                         </div></li>',
                     'script' => 'console.log({"___class_name":"stdClass",' . (PHP_VERSION_ID >= 70400 ? '"(public) ":"empty",' : '') . '"(public)  ":"space","(public) \\\u{200b}":"zwsp","(public) \\\u{feff}":"bom","(public) \\\u{feff}bom\r\n\t\\\x07 \\\x1f \\\x7f \\\u{00a0}<i>(nbsp)</i> \\\u{2009}(thsp), & \\\u{200b}(zwsp)":"ctrl chars and whatnot"});',
@@ -1434,8 +1434,8 @@ EOD;
                     self::assertSame('Attributed & promoted param', $abs['properties']['arg1']['desc']);
                 },
                 'html' => static function ($html) {
-                    $propExpect = \str_replace('\\', '\\\\', '<dd class="isPromoted property public" data-attributes="[{&quot;name&quot;:&quot;bdk\\Test\\Debug\\Fixture\\ExampleParamAttribute&quot;,&quot;arguments&quot;:[]}]"><span class="t_modifier_public">public</span> <span class="t_type">int</span> <span class="no-quotes t_identifier t_string" title="Attributed &amp; promoted param">arg1</span> <span class="t_operator">=</span> <span class="t_int">42</span></dd>');
-                    $methExpect = \str_replace('\\', '\\\\', '<span class="isPromoted parameter" data-attributes="[{&quot;name&quot;:&quot;bdk\\Test\\Debug\\Fixture\\ExampleParamAttribute&quot;,&quot;arguments&quot;:[]}]"><span class="t_type">int</span> <span class="t_parameter-name" title="Attributed &amp; promoted param">$arg1</span></span>');
+                    $propExpect = \str_replacE('\\', '\\\\', '<dd class="isPromoted property public" data-attributes="[{&quot;arguments&quot;:[],&quot;name&quot;:&quot;bdk\\Test\\Debug\\Fixture\\ExampleParamAttribute&quot;}]"><span class="t_modifier_public">public</span> <span class="t_type">int</span> <span class="no-quotes t_identifier t_string" title="Attributed &amp;amp; promoted param">arg1</span> <span class="t_operator">=</span> <span class="t_int">42</span></dd>');
+                    $methExpect = \str_replace('\\', '\\\\', '<span class="isPromoted parameter" data-attributes="[{&quot;arguments&quot;:[],&quot;name&quot;:&quot;bdk\\Test\\Debug\\Fixture\\ExampleParamAttribute&quot;}]"><span class="t_type">int</span> <span class="t_parameter-name" title="Attributed &amp;amp; promoted param">$arg1</span></span>');
                     $attrExpect = '<dt class="attributes">attributes</dt>' . "\n"
                         . '<dd class="attribute"><span class="classname"><span class="namespace">bdk\\Test\\Debug\\Fixture\\</span>ExampleClassAttribute</span><span class="t_punct">(</span><span class="t_string">foo</span><span class="t_punct">,</span> <span class="t_int">' . PHP_VERSION_ID . '</span><span class="t_punct">,</span> <span class="t_parameter-name">name</span><span class="t_punct t_colon">:</span><span class="t_string">bar</span><span class="t_punct">)</span></dd>';
                     self::assertStringContainsString($propExpect, $html);
@@ -1544,12 +1544,12 @@ EOD;
                     self::assertSame(
                         array(
                             array(
-                                'name' =>  $attribNamespace . 'ExampleClassAttribute',
                                 'arguments' => array(
                                     'foo',
                                     PHP_VERSION_ID,
                                     'name' => 'bar',
                                 ),
+                                'name' =>  $attribNamespace . 'ExampleClassAttribute',
                             ),
                         ),
                         $abs['attributes']
@@ -1557,8 +1557,8 @@ EOD;
                     self::assertSame(
                         array(
                             array(
-                                'name' =>  $attribNamespace . 'ExampleConstAttribute',
                                 'arguments' => array(),
+                                'name' =>  $attribNamespace . 'ExampleConstAttribute',
                             ),
                         ),
                         $abs['constants']['FOO']['attributes']
@@ -1566,8 +1566,8 @@ EOD;
                     self::assertSame(
                         array(
                             array(
-                                'name' =>  $attribNamespace . 'ExampleMethodAttribute',
                                 'arguments' => array(),
+                                'name' =>  $attribNamespace . 'ExampleMethodAttribute',
                             ),
                         ),
                         $abs['methods']['__construct']['attributes']
@@ -1575,8 +1575,8 @@ EOD;
                     self::assertSame(
                         array(
                             array(
-                                'name' =>  $attribNamespace . 'ExampleParamAttribute',
                                 'arguments' =>  array(),
+                                'name' =>  $attribNamespace . 'ExampleParamAttribute',
                             ),
                         ),
                         $abs['methods']['__construct']['params'][0]['attributes']
@@ -1585,8 +1585,8 @@ EOD;
                         // this property (and it's attributes came via parameter promotion)
                         array(
                             array(
-                                'name' =>  $attribNamespace . 'ExampleParamAttribute',
                                 'arguments' =>  array(),
+                                'name' =>  $attribNamespace . 'ExampleParamAttribute',
                             ),
                         ),
                         $abs['properties']['arg1']['attributes']
@@ -1594,8 +1594,8 @@ EOD;
                     self::assertSame(
                         array(
                             array(
-                                'name' =>  $attribNamespace . 'ExamplePropAttribute',
                                 'arguments' =>  array(),
+                                'name' =>  $attribNamespace . 'ExamplePropAttribute',
                             ),
                         ),
                         $abs['properties']['id']['attributes']

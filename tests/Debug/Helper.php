@@ -61,9 +61,10 @@ class Helper
     /**
      * Convert data log log entries into simple arrays
      *
-     * @param array $data          log data
-     * @param bool  $withKeys      whether log entries should be returned with keys or as a list
-     * @param bool  $dropEmptyMeta whether to omit meta if empty
+     * @param array $data           log data
+     * @param bool  $withKeys       whether log entries should be returned with keys or as a list
+     * @param bool  $dropEmptyMeta  whether to omit meta if empty
+     * @param bool  $mergeWithClass whether to merge with class values
      *
      * @return array
      */
@@ -76,7 +77,9 @@ class Helper
             return self::crate($data, $mergeWithClass);
         }
         if ($data instanceof ValueStore) {
-            return $data->getValues();
+            $data = $data->getValues();
+            \ksort($data);
+            return $data;
         }
         if (\is_array($data) === false) {
             return $data;

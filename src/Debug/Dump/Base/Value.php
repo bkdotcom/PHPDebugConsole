@@ -43,7 +43,7 @@ class Value extends AbstractValue
                 $val = $val[0] . '::' . $val[1];
             }
         }
-        return $val;
+        return $this->highlightChars($val);
     }
 
     /**
@@ -284,20 +284,31 @@ class Value extends AbstractValue
     /**
      * Highlight confusable and other characters
      *
-     * @param string $str      HTML String to update
-     * @param bool   $charLink Whether to hyperlink to unicode.info
+     * @param string $str HTML String to update
      *
      * @return string
      */
-    protected function highlightChars($str, $charLink = true)
+    protected function highlightChars($str)
     {
         $chars = $this->findChars($str);
         foreach ($chars as $char) {
-            $replacement = \ord($char[0]) < 0x80
-                ? '\\x' . \str_pad(\dechex(\ord($char)), 2, '0', STR_PAD_LEFT)
-                : '\\u{' . \str_pad(\dechex(Utf8::ord($char)), 4, '0', STR_PAD_LEFT) . '}';
+            $replacement = $this->charReplacement($char);
             $str = \str_replace($char, $replacement, $str);
         }
         return $str;
+    }
+
+    /**
+     * Get ordinal replacement for character
+     *
+     * @param string $char single multi-byte character
+     *
+     * @return string \x## or \u{####}
+     */
+    protected function charReplacement($char)
+    {
+        return \ord($char) < 0x80
+            ? '\\x' . \str_pad(\dechex(\ord($char)), 2, '0', STR_PAD_LEFT)
+            : '\\u{' . \str_pad(\dechex(Utf8::ord($char)), 4, '0', STR_PAD_LEFT) . '}';
     }
 }

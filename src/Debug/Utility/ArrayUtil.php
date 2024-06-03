@@ -53,25 +53,23 @@ class ArrayUtil
      *
      * Returns an array containing all the values from array that are not present in any of the other arrays.
      *
-     * @param array $array     array to compare from
+     * @param array $array1    array to compare from
      * @param array ...$arrays arrays to compare against
      *
      * @return array
      *
      * @throws InvalidArgumentException
+     *
+     * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed
      */
-    public static function diffAssocRecursive(array $array, $arrays)
+    public static function diffAssocRecursive(array $array1, $arrays)
     {
-        $arrays = \func_get_args();
-        \array_shift($arrays);
-        while ($arrays) {
-            $array2 = \array_shift($arrays);
+        return \array_reduce(\array_slice(\func_get_args(), 1), static function (array $carry, $array2) {
             if (\is_array($array2) === false) {
                 throw new InvalidArgumentException('diffAssocRecursive: non-array value passed');
             }
-            $array = self::diffAssocRecursiveHelper($array, $array2);
-        }
-        return $array;
+            return static::diffAssocRecursiveWalk($carry, $array2);
+        }, $array1);
     }
 
     /**
@@ -122,25 +120,23 @@ class ArrayUtil
     /**
      * Recursively merge arrays
      *
-     * @param array $arrayDef  default array
-     * @param array ...$array2 array to merge
+     * @param array $array1    default array
+     * @param array ...$array2 arrays to merge
      *
      * @return array
      *
      * @throws InvalidArgumentException
+     *
+     * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed
      */
-    public static function mergeDeep(array $arrayDef, $array2)
+    public static function mergeDeep(array $array1, $array2)
     {
-        $mergeArrays = \func_get_args();
-        \array_shift($mergeArrays);
-        while ($mergeArrays) {
-            $array2 = \array_shift($mergeArrays);
+        return \array_reduce(\array_slice(\func_get_args(), 1), static function (array $carry, $array2) {
             if (\is_array($array2) === false) {
                 throw new InvalidArgumentException('mergeDeep: non-array value passed');
             }
-            $arrayDef = static::mergeDeepWalk($arrayDef, $array2);
-        }
-        return $arrayDef;
+            return static::mergeDeepWalk($carry, $array2);
+        }, $array1);
     }
 
     /**

@@ -46,7 +46,7 @@ class TextObject extends BaseObject
      */
     public function dump(ObjectAbstraction $abs)
     {
-        $className = $abs['className'];
+        $className = $this->valDumper->markupIdentifier($abs['className']);
         if ($abs['isRecursion']) {
             return $className . ' *RECURSION*';
         }
@@ -111,10 +111,26 @@ class TextObject extends BaseObject
      */
     protected function dumpObjectProperties(ObjectAbstraction $abs)
     {
-        $str = '';
+        $header = \count($abs['properties']) > 0
+            ? 'Properties:'
+            : 'Properties: none!';
+        $subHeader = '';
         if (isset($abs['methods']['__get'])) {
-            $str .= '    ✨ This object has a __get() method' . "\n";
+            $subHeader = '    ✨ This object has a __get() method' . "\n";
         }
+        return '  ' . $header . "\n" . $subHeader . $this->dumpObjectPropertiesBody($abs);
+    }
+
+    /**
+     * Dump object properties as text
+     *
+     * @param ObjectAbstraction $abs Object Abstraction instance
+     *
+     * @return string
+     */
+    protected function dumpObjectPropertiesBody(ObjectAbstraction $abs)
+    {
+        $str = '';
         $properties = $abs->sort($abs['properties'], $abs['sort']);
         $absKeys = isset($abs['keys'])
             ? $abs['keys']
@@ -128,10 +144,7 @@ class TextObject extends BaseObject
             $info['isInherited'] = $info['declaredLast'] && $info['declaredLast'] !== $abs['className'];
             $str .= $this->dumpProp($name, $info);
         }
-        $header = $properties
-            ? 'Properties:'
-            : 'Properties: none!';
-        return '  ' . $header . "\n" . $str;
+        return $str;
     }
 
     /**

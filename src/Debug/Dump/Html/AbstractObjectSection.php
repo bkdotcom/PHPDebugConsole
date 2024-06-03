@@ -108,7 +108,7 @@ abstract class AbstractObjectSection
                 'attribs' => array(
                     'class' => array('t_identifier'),
                     'title' => $cfg['phpDocOutput']
-                        ? $info['desc']
+                        ? $this->helper->dumpPhpDoc($info['desc'])
                         : '',
                 ),
             )),

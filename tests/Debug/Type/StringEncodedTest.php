@@ -185,9 +185,9 @@ class StringEncodedTest extends DebugTestFramework
                         }</span></span></div>
                         <div class="active tab-3 tab-pane" role="tabpanel"><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
                             <ul class="array-inner list-unstyled">
-                                <li><span class="t_key">p<a class="unicode" href="https://symbl.cc/en/043E" target="unicode" title="U-043E: CYRILLIC SMALL LETTER O">о</a>op</span><span class="t_operator">=&gt;</span><span class="t_string">💩</span></li>
+                                <li><span class="t_key">p<span class="unicode" data-code-point="043E" title="U-043E: CYRILLIC SMALL LETTER O">о</span>op</span><span class="t_operator">=&gt;</span><span class="t_string">💩</span></li>
                                 <li><span class="t_key">int</span><span class="t_operator">=&gt;</span><span class="t_int">42</span></li>
-                                <li><span class="t_key">string</span><span class="t_operator">=&gt;</span><span class="t_string">str<a class="unicode" href="https://symbl.cc/en/0131" target="unicode" title="U-0131: LATIN SMALL LETTER DOTLESS I">ı</a>ngy
+                                <li><span class="t_key">string</span><span class="t_operator">=&gt;</span><span class="t_string">str<span class="unicode" data-code-point="0131" title="U-0131: LATIN SMALL LETTER DOTLESS I">ı</span>ngy
                                 string</span></li>
                                 <li><span class="t_key">password</span><span class="t_operator">=&gt;</span><span class="t_string">█████████</span></li>
                             </ul><span class="t_punct">)</span></span></div>
@@ -242,13 +242,13 @@ class StringEncodedTest extends DebugTestFramework
                     'html' => '<li class="m_log"><span class="string-encoded tabs-container" data-type-more="base64">
                         <nav role="tablist"><a class="nav-link" data-target=".tab-1" data-toggle="tab" role="tab">base64</a><a class="nav-link" data-target=".tab-2" data-toggle="tab" role="tab">serialized</a><a class="active nav-link" data-target=".tab-3" data-toggle="tab" role="tab">unserialized</a></nav>
                         <div class="tab-1 tab-pane" role="tabpanel"><span class="no-quotes t_string">' . $base64snip3 . '</span></div>
-                        <div class="tab-2 tab-pane" role="tabpanel"><span class="no-quotes t_string">a:4:{s:5:&quot;p<a class="unicode" href="https://symbl.cc/en/043E" target="unicode" title="U-043E: CYRILLIC SMALL LETTER O">о</a>op&quot;;s:4:&quot;💩&quot;;s:3:&quot;int&quot;;i:42;s:6:&quot;string&quot;;s:15:&quot;str<a class="unicode" href="https://symbl.cc/en/0131" target="unicode" title="U-0131: LATIN SMALL LETTER DOTLESS I">ı</a>ngy
+                        <div class="tab-2 tab-pane" role="tabpanel"><span class="no-quotes t_string">a:4:{s:5:&quot;p<span class="unicode" data-code-point="043E" title="U-043E: CYRILLIC SMALL LETTER O">о</span>op&quot;;s:4:&quot;💩&quot;;s:3:&quot;int&quot;;i:42;s:6:&quot;string&quot;;s:15:&quot;str<span class="unicode" data-code-point="0131" title="U-0131: LATIN SMALL LETTER DOTLESS I">ı</span>ngy
                             string&quot;;s:8:&quot;password&quot;;s:6:&quot;█████████&quot;;}</span></div>
                         <div class="active tab-3 tab-pane" role="tabpanel"><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
                             <ul class="array-inner list-unstyled">
-                                <li><span class="t_key">p<a class="unicode" href="https://symbl.cc/en/043E" target="unicode" title="U-043E: CYRILLIC SMALL LETTER O">о</a>op</span><span class="t_operator">=&gt;</span><span class="t_string">💩</span></li>
+                                <li><span class="t_key">p<span class="unicode" data-code-point="043E" title="U-043E: CYRILLIC SMALL LETTER O">о</span>op</span><span class="t_operator">=&gt;</span><span class="t_string">💩</span></li>
                                 <li><span class="t_key">int</span><span class="t_operator">=&gt;</span><span class="t_int">42</span></li>
-                                <li><span class="t_key">string</span><span class="t_operator">=&gt;</span><span class="t_string">str<a class="unicode" href="https://symbl.cc/en/0131" target="unicode" title="U-0131: LATIN SMALL LETTER DOTLESS I">ı</a>ngy
+                                <li><span class="t_key">string</span><span class="t_operator">=&gt;</span><span class="t_string">str<span class="unicode" data-code-point="0131" title="U-0131: LATIN SMALL LETTER DOTLESS I">ı</span>ngy
                                     string</span></li>
                                 <li><span class="t_key">password</span><span class="t_operator">=&gt;</span><span class="t_string">█████████</span></li>
                             </ul><span class="t_punct">)</span></span></div>

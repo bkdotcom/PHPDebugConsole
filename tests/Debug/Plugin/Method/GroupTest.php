@@ -181,9 +181,9 @@ class GroupTest extends DebugTestFramework
                 'desc' => null,
                 'type' => 'string',
             ),
+            'returnValue' => 'toStringVal',
             'staticVars' => array(),
             'visibility' => 'public',
-            'returnValue' => 'toStringVal',
         ), $logEntry['args'][5]['methods']['__toString']);
         self::assertTrue(($logEntry['args'][6]['cfgFlags'] & AbstractObject::BRIEF) === AbstractObject::BRIEF);
     }

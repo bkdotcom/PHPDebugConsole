@@ -99,7 +99,7 @@ class ObjectMethods extends AbstractObjectSection
             array(
                 'class' => 't_identifier',
                 'title' => $this->opts['phpDocOutput']
-                    ? \trim(
+                    ? $this->helper->dumpPhpDoc(
                         $info['phpDoc']['summary']
                         . ($this->opts['methodDescOutput']
                             ? "\n\n" . $info['phpDoc']['desc']
@@ -203,7 +203,7 @@ class ObjectMethods extends AbstractObjectSection
             array(
                 'class' => 't_parameter-name',
                 'title' => $this->opts['phpDocOutput']
-                    ? $info['desc']
+                    ? $this->helper->dumpPhpDoc($info['desc'])
                     : '',
             ),
             $this->valDumper->dump($name, array(
@@ -227,7 +227,7 @@ class ObjectMethods extends AbstractObjectSection
         return '<span class="t_punct t_colon">:</span> '
             . $this->helper->markupType($info['return']['type'], array(
                 'title' => $this->opts['phpDocOutput']
-                    ? $info['return']['desc']
+                    ? $this->helper->dumpPhpDoc($info['return']['desc'])
                     : '',
             ));
     }
@@ -268,11 +268,15 @@ class ObjectMethods extends AbstractObjectSection
     {
         return \array_merge(parent::getAttribs($info, $this->opts), array(
             'data-deprecated-desc' => isset($info['phpDoc']['deprecated'])
-                ? $info['phpDoc']['deprecated'][0]['desc']
+                ? $this->helper->dumpPhpDoc($info['phpDoc']['deprecated'][0]['desc'])
                 : null,
             'data-implements' => $info['implements'],
             'data-throws' => $this->opts['phpDocOutput'] && isset($info['phpDoc']['throws'])
-                ? $info['phpDoc']['throws']
+                ? \array_map(function ($info) {
+                    $info['desc'] = $this->helper->dumpPhpDoc($info['desc']);
+                    $info['type'] = $this->helper->dumpPhpDoc($info['type']);
+                    return $info;
+                }, $info['phpDoc']['throws'])
                 : null,
         ));
     }

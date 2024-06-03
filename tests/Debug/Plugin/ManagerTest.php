@@ -140,9 +140,8 @@ class ManagerTest extends TestCase
 
     public function testAddRoute()
     {
-        $GLOBALS['turd'] = true;
         $container = \bdk\Debug\Utility\Reflection::propGet(static::$debug, 'container');
-        unset($container['serverLog']);
+        unset($container['routeServerLog']);
         $route = new \bdk\Debug\Route\ServerLog(static::$debug);
         self::assertFalse(self::$debug->data->get('isObBuffer'));
         $return = self::$manager->addPlugin($route);

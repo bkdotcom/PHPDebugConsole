@@ -114,31 +114,18 @@ class TextAnsiObject extends TextObject
      */
     protected function dumpObjectProperties(ObjectAbstraction $abs)
     {
-        $str = '';
+        $header = \count($abs['properties']) > 0
+            ? "\e[4m" . 'Properties:' . "\e[24m"
+            : 'Properties: none!';
+        $subHeader = '';
         if (isset($abs['methods']['__get'])) {
             $escapeCodes = $this->valDumper->getCfg('escapeCodes');
             $escapeReset = $this->valDumper->escapeReset;
-            $str .= '    ' . $escapeCodes['muted']
+            $subHeader = '    ' . $escapeCodes['muted']
                 . '✨ This object has a __get() method'
                 . $escapeReset . "\n";
         }
-        $properties = $abs->sort($abs['properties'], $abs['sort']);
-        $absKeys = isset($abs['keys'])
-            ? $abs['keys']
-            : array();
-        foreach ($properties as $name => $info) {
-            $name = \preg_replace('/^debug\./', '', $name);
-            $name = isset($absKeys[$name])
-                ? $absKeys[$name]
-                : $name;
-            $info['className'] = $abs['className'];
-            $info['isInherited'] = $info['declaredLast'] && $info['declaredLast'] !== $abs['className'];
-            $str .= $this->dumpProp($name, $info);
-        }
-        $header = $properties
-            ? "\e[4m" . 'Properties:' . "\e[24m"
-            : 'Properties: none!';
-        return '  ' . $header . "\n" . $str;
+        return '  ' . $header . "\n" . $subHeader . $this->dumpObjectPropertiesBody($abs);
     }
 
     /**

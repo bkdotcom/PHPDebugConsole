@@ -25,7 +25,7 @@ use bdk\Debug\Utility\Utf8;
 class Value extends TextValue
 {
     /** @var string */
-    public $escapeReset = "\e[0m";
+    protected $escapeReset = "\e[0m";
 
     /** @var TextAnsiObject */
     protected $lazyObject;
@@ -63,21 +63,18 @@ class Value extends TextValue
     public function markupIdentifier($val, $asFunction = false)
     {
         $parts = $this->parseIdentifier($val, $asFunction);
-        $classname = '';
+        $escapeReset = $this->escapeReset;
         $operator = $this->cfg['escapeCodes']['operator'] . $parts['operator'] . $this->escapeReset;
         $identifier = '';
-        if ($parts['classname']) {
-            $idx = \strrpos($parts['classname'], '\\');
-            $classname = $parts['classname'];
-            $classname = $idx
-                ? $this->cfg['escapeCodes']['muted'] . \substr($classname, 0, $idx + 1) . $this->escapeReset
-                    . "\e[1m" . \substr($classname, $idx + 1) . "\e[22m"
-                : "\e[1m" . $classname . "\e[22m";
-        }
+        $classnameOut = $parts['classname']
+            ? $this->markupIdentifierClassname($parts['classname'])
+            : '';
         if ($parts['identifier']) {
-            $identifier = "\e[1m" . $parts['identifier'] . "\e[22m";
+            $this->escapeReset = "\e[0;1m";
+            $identifier = "\e[1m" . $this->highlightChars($parts['identifier']) . "\e[22m";
+            $this->escapeReset = $escapeReset;
         }
-        $parts = \array_filter(array($classname, $identifier), 'strlen');
+        $parts = \array_filter(array($classnameOut, $identifier), 'strlen');
         return \implode($operator, $parts);
     }
 
@@ -352,21 +349,46 @@ class Value extends TextValue
     /**
      * Highlight confusable and other characters
      *
-     * @param string $str      HTML String to update
-     * @param bool   $charLink Whether to hyperlink to unicode.info
+     * @param string $str HTML String to update
      *
      * @return string
      */
-    protected function highlightChars($str, $charLink = true)
+    protected function highlightChars($str)
     {
         $chars = $this->findChars($str);
         foreach ($chars as $char) {
-            $replacement = \ord($char[0]) < 0x80
-                ? '\\x' . \str_pad(\dechex(\ord($char)), 2, '0', STR_PAD_LEFT)
-                : '\\u{' . \str_pad(\dechex(Utf8::ord($char)), 4, '0', STR_PAD_LEFT) . '}';
-            $replacement = $this->cfg['escapeCodes']['char'] . $replacement . $this->escapeReset;
+            $replacement = $this->cfg['escapeCodes']['char']
+                . $this->charReplacement($char)
+                . $this->escapeReset;
             $str = \str_replace($char, $replacement, $str);
         }
         return $str;
+    }
+
+    /**
+     * Markup classname (namespace & classname) portion of identifier string
+     *
+     * @param string $classname classname
+     *
+     * @return string
+     */
+    private function markupIdentifierClassname($classname)
+    {
+        $classnameOut = '';
+        $escapeReset = $this->escapeReset;
+        $idx = \strrpos($classname, '\\');
+        if ($idx) {
+            $namespace = \substr($classname, 0, $idx + 1);
+            $classname = \substr($classname, $idx + 1);
+            $this->escapeReset = $this->cfg['escapeCodes']['muted'];
+            $classnameOut = $this->cfg['escapeCodes']['muted']
+                . $this->highlightChars($namespace)
+                . $escapeReset;
+        }
+        $this->escapeReset = "\e[0;1m";
+        $classnameOut .= "\e[1m" . $this->highlightChars($classname) . "\e[22m";
+        $this->escapeReset = $escapeReset;
+        return $classnameOut;
+
     }
 }

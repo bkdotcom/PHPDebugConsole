@@ -356,6 +356,7 @@
     });
     $root.on('click', '.show-more-container .show-less', onClickShowLess);
     $root.on('click', '.show-more-container .show-more', onClickShowMore);
+    $root.on('click', '.unicode', onClickUnicode);
     $root.on('expand.debug.array', onExpandArray);
     $root.on('expand.debug.group', onExpandGroup);
     $root.on('expand.debug.object', onExpandObject);
@@ -387,6 +388,13 @@
     $container.find('.show-more-fade').fadeOut();
     $container.find('.show-more').hide();
     $container.find('.show-less').show();
+  }
+
+  function onClickUnicode(e) {
+    var codePoint = $(this).data('codePoint');
+    var url = 'https://symbl.cc/en/' + codePoint;
+    e.stopPropagation();
+    window.open(url, 'unicode').focus();
   }
 
   function onExpandArray (e) {
@@ -2129,8 +2137,7 @@
       groupUpdate($(e.target));
     });
     $delegateNode.on('expanded.debug.group', function (e) {
-      var $target = $(e.target);
-      $target.find('> .group-header > i:last-child').remove();
+      $(e.target).find('> .group-header > i:last-child').remove();
     });
   }
 
@@ -2404,8 +2411,7 @@
       return false
     });
     $delegateNode.on('shown.debug.tab', function (e) {
-      var $target = $(e.target);
-      $target.find('.m_alert, .group-body:visible').debugEnhance();
+      $(e.target).find('.m_alert, .group-body:visible').debugEnhance();
     });
   }
 
@@ -6120,7 +6126,7 @@
       info = throws[i];
       $dl.append($('<dt></dt>').html(markupClassname(info.type)));
       if (info.desc) {
-        $dl.append($('<dd></dd>').text(info.desc));
+        $dl.append($('<dd></dd>').html(info.desc));
       }
     }
     return title + $dl[0].outerHTML

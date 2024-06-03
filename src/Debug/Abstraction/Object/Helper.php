@@ -82,10 +82,9 @@ class Helper
             return array();
         }
         return \array_map(static function (ReflectionAttribute $attribute) {
-            // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
             return array(
-                'name' => $attribute->getName(),
                 'arguments' => $attribute->getArguments(),
+                'name' => $attribute->getName(),
             );
         }, $reflector->getAttributes());
     }

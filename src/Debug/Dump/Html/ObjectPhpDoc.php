@@ -14,6 +14,7 @@ namespace bdk\Debug\Dump\Html;
 
 use bdk\Debug\Abstraction\Abstraction;
 use BDK\Debug\Abstraction\Type;
+use bdk\Debug\Dump\Html\Helper;
 use bdk\Debug\Dump\Html\Value as ValDumper;
 
 /**
@@ -21,16 +22,22 @@ use bdk\Debug\Dump\Html\Value as ValDumper;
  */
 class ObjectPhpDoc
 {
+    /** @var ValDumper */
     public $valDumper;
+
+    /** @var Helper */
+    protected $helper;
 
     /**
      * Constructor
      *
      * @param ValDumper $valDumper Html dumper
+     * @param Helper    $html      Html dump helpers
      */
-    public function __construct(ValDumper $valDumper)
+    public function __construct(ValDumper $valDumper, Helper $helper)
     {
         $this->valDumper = $valDumper;
+        $this->helper = $helper;
     }
 
     /**
@@ -75,10 +82,7 @@ class ObjectPhpDoc
                 break;
             default:
                 unset($tagData['tagName']);
-                $value = $this->valDumper->dump(\implode(' ', $tagData), array(
-                    'tagName' => null,
-                    'type' => Type::TYPE_STRING,
-                ));
+                $value = $this->helper->dumpPhpDoc(\implode(' ', $tagData));
         }
         return '<dd class="phpdoc phpdoc-' . $tagName . '">'
             . '<span class="phpdoc-tag">' . $this->valDumper->dump($tagName, array(
@@ -99,13 +103,14 @@ class ObjectPhpDoc
      */
     private function dumpTagAuthor(array $tagData)
     {
-        $html = $tagData['name'];
+        $html = $this->helper->dumpPhpDoc($tagData['name']);
         if ($tagData['email']) {
-            $html .= ' &lt;<a href="mailto:' . $tagData['email'] . '">' . $tagData['email'] . '</a>&gt;';
+            $emailEscaped = $this->valDumper->string->dump($tagData['email']);
+            $html .= ' &lt;<a href="mailto:' . $tagData['email'] . '">' . $emailEscaped . '</a>&gt;';
         }
         if ($tagData['desc']) {
             // desc is non-standard for author tag
-            $html .= ' ' . \htmlspecialchars($tagData['desc']);
+            $html .= ' ' . $this->helper->dumpPhpDoc($tagData['desc']);
         }
         return $html;
     }
@@ -119,13 +124,13 @@ class ObjectPhpDoc
      */
     private function dumpTagSeeLink(array $tagData)
     {
-        $desc = $tagData['desc'] ?: $tagData['uri'] ?: '';
+        $desc = $this->helper->dumpPhpDoc($tagData['desc'] ?: $tagData['uri'] ?: '');
         if (isset($tagData['uri'])) {
-            return '<a href="' . $tagData['uri'] . '" target="_blank">' . \htmlspecialchars($desc) . '</a>';
+            return '<a href="' . $tagData['uri'] . '" target="_blank">' . $desc . '</a>';
         }
         // see tag
         $info = $this->valDumper->markupIdentifier($tagData['fqsen'])
-            . ' <span class="phpdoc-desc">' . \htmlspecialchars($desc) . '</span>';
+            . ' <span class="phpdoc-desc">' . $desc . '</span>';
         return \str_replace(' <span class="phpdoc-desc"></span>', '', $info);
     }
 }

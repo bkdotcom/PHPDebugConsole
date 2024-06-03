@@ -48,6 +48,24 @@ class AbstractComponent
     }
 
     /**
+     * Magic setter
+     *
+     * @param string $prop  Property name
+     * @param mixed  $value Property value
+     *
+     * @return void
+     */
+    public function __set($prop, $value)
+    {
+        $setter = 'set' . \ucfirst($prop);
+        if (\method_exists($this, $setter)) {
+            $this->{$setter}($value);
+            return;
+        }
+        throw new OutOfBoundsException('Property ' . $prop . ' does not exist or is read-only');
+    }
+
+    /**
      * Magic isset
      *
      * @param string $prop property to check

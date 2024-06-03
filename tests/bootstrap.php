@@ -2,7 +2,6 @@
 
 // backward compatibility
 $classMap = array(
-    // PHP 5.3 doesn't like leading backslash
     'PHPUnit_Framework_AssertionFailedError' => 'PHPUnit\Framework\AssertionFailedError',
     'PHPUnit_Framework_Constraint_IsType' => 'PHPUnit\Framework\Constraint\IsType',
     'PHPUnit_Framework_Exception' => 'PHPUnit\Framework\Exception',
@@ -17,6 +16,7 @@ foreach ($classMap as $old => $new) {
 
 require __DIR__ . '/../vendor/autoload.php';
 require __DIR__ . '/bootstrapFunctionReplace.php';
+require __DIR__ . '/Debug/Fixture/ConfusableIdentifiers.php';
 
 \define('TEST_DIR', __DIR__);
 
@@ -47,6 +47,9 @@ $debug = \bdk\Debug::getInstance(array(
     ),
     'emailFrom' => 'testFrom@test.com',
     'enableProfiling' => true,
+    'errorHandler' => array(
+        // 'onEUserError' => 'continue',
+    ),
     'errorStatsFile' => __DIR__ . '/../tmp/error_stats.json',
     'exitCheck' => false,
     'fullyQualifyPhpDocType' => true,
@@ -54,10 +57,12 @@ $debug = \bdk\Debug::getInstance(array(
     'logRequestInfo' => false,
     'logResponse' => false,
     'objectsExclude' => array('PHPUnit_Framework_TestSuite', 'PHPUnit\Framework\TestSuite'),
+    'onBootstrap' => static function ($event) {
+        $debug = $event->getSubject();
+        $wamp = $debug->getRoute('wamp');
+        $debug->addPlugin($wamp);
+    },
     'route' => 'html',
-    'errorHandler' => array(
-        // 'onEUserError' => 'continue',
-    ),
     'serviceProvider' => array(
         'php' => static function () {
             return new \bdk\Test\Debug\Mock\Php();
@@ -71,11 +76,6 @@ $debug = \bdk\Debug::getInstance(array(
             return new \bdk\Test\Debug\Mock\Utility();
         },
     ),
-    'onBootstrap' => static function ($event) {
-        $debug = $event->getSubject();
-        $wamp = $debug->getRoute('wamp');
-        $debug->addPlugin($wamp);
-    },
 ));
 
 $debug->eventManager->subscribe(\bdk\ErrorHandler::EVENT_ERROR, static function (\bdk\ErrorHandler\Error $error) {

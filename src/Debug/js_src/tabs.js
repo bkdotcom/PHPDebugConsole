@@ -15,8 +15,7 @@ export function init ($delegateNode) {
     return false
   })
   $delegateNode.on('shown.debug.tab', function (e) {
-    var $target = $(e.target)
-    $target.find('.m_alert, .group-body:visible').debugEnhance()
+    $(e.target).find('.m_alert, .group-body:visible').debugEnhance()
   })
 }
 

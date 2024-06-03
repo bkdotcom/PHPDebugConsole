@@ -11,6 +11,7 @@ export function init($root, enhanceVal, enhanceObj) {
   })
   $root.on('click', '.show-more-container .show-less', onClickShowLess)
   $root.on('click', '.show-more-container .show-more', onClickShowMore)
+  $root.on('click', '.unicode', onClickUnicode)
   $root.on('expand.debug.array', onExpandArray)
   $root.on('expand.debug.group', onExpandGroup)
   $root.on('expand.debug.object', onExpandObject)
@@ -42,6 +43,13 @@ function onClickShowMore () {
   $container.find('.show-more-fade').fadeOut()
   $container.find('.show-more').hide()
   $container.find('.show-less').show()
+}
+
+function onClickUnicode(e) {
+  var codePoint = $(this).data('codePoint')
+  var url = 'https://symbl.cc/en/' + codePoint
+  e.stopPropagation()
+  window.open(url, 'unicode').focus()
 }
 
 function onExpandArray (e) {

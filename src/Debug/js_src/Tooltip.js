@@ -93,7 +93,7 @@ function tippyContentThrows ($ref, title) {
     info = throws[i]
     $dl.append($('<dt></dt>').html(markupClassname(info.type)))
     if (info.desc) {
-      $dl.append($('<dd></dd>').text(info.desc))
+      $dl.append($('<dd></dd>').html(info.desc))
     }
   }
   return title + $dl[0].outerHTML

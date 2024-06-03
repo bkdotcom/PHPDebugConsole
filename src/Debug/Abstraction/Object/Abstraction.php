@@ -66,7 +66,7 @@ class Abstraction extends BaseAbstraction
      */
     public function __toString()
     {
-        if ($this->values['stringified']) {
+        if (!empty($this->values['stringified'])) {
             return (string) $this->values['stringified'];
         }
         if (isset($this->values['methods']['__toString']['returnValue'])) {
@@ -220,25 +220,38 @@ class Abstraction extends BaseAbstraction
         $value = isset($this->values[$key])
             ? $this->values[$key]
             : null;
-        $inherit = true;
+        $classVal = $this->inheritValue($key)
+            ? $this->inherited[$key]
+            : array();
+        if (\is_array($value) && $classVal) {
+            $combined = \array_replace_recursive($classVal, $value);
+            \ksort($combined);
+            return $combined;
+        }
+        return $value !== null
+            ? $value
+            : $classVal;
+    }
+
+    /**
+     * Should we inherit the value from the definition
+     *
+     * @param string $key Value key
+     *
+     * @return bool
+     */
+    private function inheritValue($key)
+    {
         if (\in_array($key, $this->sortableValues, true)) {
             $combined = \array_merge(array(
                 'isExcluded' => $this->inherited['isExcluded'],
                 'isRecursion' => $this->inherited['isRecursion'],
             ), $this->values);
             if ($combined['isExcluded'] || $combined['isRecursion']) {
-                $inherit = false;
+                return false;
             }
         }
-        $classVal = $inherit
-            ? $this->inherited[$key]
-            : array();
-        if ($value !== null) {
-            return \is_array($classVal)
-                ? \array_replace_recursive($classVal, $value)
-                : $value;
-        }
-        return $classVal;
+        return true;
     }
 
     /**

@@ -11,6 +11,7 @@ use bdk\Test\Debug\DebugTestFramework;
  * @covers \bdk\Debug\Utility\Html
  * @covers \bdk\Debug\Utility\HtmlBuild
  * @covers \bdk\Debug\Utility\HtmlParse
+ * @covers \bdk\Debug\Utility\HtmlSanitize
  */
 class HtmlTest extends DebugTestFramework
 {
@@ -69,6 +70,20 @@ class HtmlTest extends DebugTestFramework
     {
         $parsed = Html::parseTag($tag);
         self::assertSame($expect, $parsed);
+    }
+
+    /**
+     * @param string $html   Html to sanitize
+     * @param array  $expect expected html
+     *
+     * @dataProvider providerSanitize
+     *
+     * @return void
+     */
+    public function testSanitize($html, $expect)
+    {
+        $sanitized = Html::sanitize($html);
+        self::assertSame($expect, $sanitized);
     }
 
     public static function providerBuildAttribString()
@@ -164,7 +179,7 @@ class HtmlTest extends DebugTestFramework
     {
         return array(
             'selfClosing' => array(
-                'embed',
+                'EMBED',
                 array(
                     'type' => 'video/webm',
                     'src' => '/media/cc0-videos/flower.mp4',
@@ -295,7 +310,7 @@ class HtmlTest extends DebugTestFramework
                 ),
             ),
             'selfCloser' => array(
-                'tag' => '<input name="name" value="Billy" required/>',
+                'tag' => '<INPUT name="name" value="Billy" required/>',
                 'expect' => array(
                     'tagname' => 'input',
                     'attribs' => array(
@@ -307,8 +322,7 @@ class HtmlTest extends DebugTestFramework
                     'innerhtml' => null,
                 ),
             ),
-            // 0
-            array(
+            'voidElementWithInvalidSlash' => array(
                 'tag' => '</ hr>',
                 'expect' => array(
                     'tagname' => 'hr',
@@ -322,6 +336,42 @@ class HtmlTest extends DebugTestFramework
             array(
                 'tag' => 'not a tag',
                 'expect' => false,
+            ),
+        );
+    }
+
+    public static function providerSanitize()
+    {
+        return array(
+            'script' => array(
+                'be<fore<script>if (1 < 2) alert(dang)</script>af>ter',
+                \htmlspecialchars('be<fore<script>if (1 < 2) alert(dang)</script>af>ter'),
+            ),
+            'entity' => array(
+                'foo &amp; > bar',
+                'foo &amp; &gt; bar',
+            ),
+            'nonWhitelistAttribute' => array(
+                '<p onclick="alert(&quot;boo&quot;)">Brad <em>was</em> here</p> <xmp>Now he\'s gone</xmp>',
+                '<p>Brad <em>was</em> here</p> &lt;xmp&gt;Now he\'s gone&lt;/xmp&gt;',
+            ),
+            'notATag' => array(
+                'UserName: <enter your user name>',
+                'UserName: &lt;enter your user name&gt;',
+            ),
+            'notAVoid' => array(
+                '<p/>Brad was here</p>',
+                '<p>Brad was here</p>',
+            ),
+            'invalidClose1' => array(
+                // our parseTag() method will allow/correct this, but sanitize will escape it
+                '<IMG alt="text" bogus>foo & bar</IMG>',
+                '<img alt="text" />foo &amp; bar&lt;/IMG&gt;',
+            ),
+            'invalidClose2' => array(
+                // our parseTag() method will allow/correct this, but sanitize will escape it
+                'ding</br>dong',
+                'ding&lt;/br&gt;dong',
             ),
         );
     }

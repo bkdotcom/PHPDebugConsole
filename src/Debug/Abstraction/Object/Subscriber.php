@@ -138,10 +138,12 @@ class Subscriber implements SubscriberInterface
         $desc = $this->abstractObject->helper->getPhpDocVar($caseReflector)['desc'];
         if ($desc) {
             $phpDoc = $this->abstractObject->helper->getPhpDoc($reflector);
-            $abs['phpDoc'] = \array_merge($phpDoc, array(
+            $phpDoc = \array_merge($phpDoc, array(
                 'desc' => \trim($phpDoc['summary'] . "\n" . $phpDoc['desc']),
                 'summary' => $desc,
             ));
+            \ksort($phpDoc);
+            $abs['phpDoc'] = $phpDoc;
         }
     }
 

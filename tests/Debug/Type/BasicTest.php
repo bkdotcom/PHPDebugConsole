@@ -57,7 +57,7 @@ class BasicTest extends DebugTestFramework
             'meta' => array(),
         );
 
-        return array(
+        $tests = array(
             'bool.true' => array(
                 'log',
                 array(true),
@@ -600,6 +600,8 @@ class BasicTest extends DebugTestFramework
                 ),
             ),
         );
+        // $tests = \array_intersect_key($tests, \array_flip(array('callable')));
+        return $tests;
     }
 
     /**

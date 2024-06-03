@@ -201,7 +201,7 @@ class Utf8Test extends TestCase
             'bom' => array("\xef\xbb\xbfPesky BOM",
                 '\u{feff}Pesky BOM'),
             'bomHtml' => array("\xef\xbb\xbfPesky BOM",
-                '<a class="unicode" href="https://symbl.cc/en/feff" target="unicode" title="U-feff: BOM / Zero Width No-Break Space">\ufeff</a>Pesky BOM',
+                '<span class="unicode" data-code-point="feff" title="U-feff: BOM / Zero Width No-Break Space">\ufeff</span>Pesky BOM',
                 array('useHtml' => true),
             ),
 
@@ -358,12 +358,12 @@ class Utf8Test extends TestCase
                 'easy-to-miss characters such as \u{00a0}(nbsp), \u{2009}(thsp), &amp; \u{200b}(zwsp)',
             ),
             array("easy-to-miss characters such as \xc2\xa0(nbsp), \xE2\x80\x89(thsp), &amp; \xE2\x80\x8B(zwsp)",
-                'easy-to-miss characters such as <a class="unicode" href="https://symbl.cc/en/00a0" target="unicode" title="U-00a0: NBSP">\u00a0</a>(nbsp), <a class="unicode" href="https://symbl.cc/en/2009" target="unicode" title="U-2009: Thin Space">\u2009</a>(thsp), &amp; <a class="unicode" href="https://symbl.cc/en/200b" target="unicode" title="U-200b: Zero Width Space">\u200b</a>(zwsp)',
+                'easy-to-miss characters such as <span class="unicode" data-code-point="00a0" title="U-00a0: NBSP">\u00a0</span>(nbsp), <span class="unicode" data-code-point="2009" title="U-2009: Thin Space">\u2009</span>(thsp), &amp; <span class="unicode" data-code-point="200b" title="U-200b: Zero Width Space">\u200b</span>(zwsp)',
                 array('useHtml' => true),
             ),
 
             'replacement' => array("replacement char \xef\xbf\xbd",
-                'replacement char <a class="unicode" href="https://symbl.cc/en/fffd" target="unicode" title="U-fffd: Replacement Character">\ufffd</a>',
+                'replacement char <span class="unicode" data-code-point="fffd" title="U-fffd: Replacement Character">\ufffd</span>',
                 array('useHtml' => true),
             ),
 
@@ -380,7 +380,7 @@ class Utf8Test extends TestCase
             ),
 
             'sanitize' => array("<b>some\xc2\xa0html</b>",
-                '&lt;b&gt;some<a class="unicode" href="https://symbl.cc/en/00a0" target="unicode" title="U-00a0: NBSP">\u00a0</a>html&lt;/b&gt;',
+                '&lt;b&gt;some<span class="unicode" data-code-point="00a0" title="U-00a0: NBSP">\u00a0</span>html&lt;/b&gt;',
                 array(
                     'sanitizeNonBinary' => true,
                     'useHtml' => true,

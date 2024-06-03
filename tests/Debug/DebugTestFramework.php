@@ -13,7 +13,7 @@ use bdk\HttpMessage\ServerRequest;
 use bdk\PhpUnitPolyfill\AssertionTrait;
 use bdk\PubSub\Event;
 use bdk\Test\Debug\Helper;
-use PHPUnit\Framework\ExpectationFailedException;
+use Closure;
 use RuntimeException;
 
 /**
@@ -133,7 +133,7 @@ class DebugTestFramework extends DOMTestCase
         foreach ($subscribers as $subscriberInfo) {
             $unsub = false;
             $callable = $subscriberInfo['callable'];
-            if ($callable instanceof \Closure) {
+            if ($callable instanceof Closure) {
                 $unsub = true;
             } elseif (\is_array($callable) && \strpos(\get_class($callable[0]), 'bdk\\Debug') === false) {
                 $unsub = true;
@@ -282,12 +282,17 @@ class DebugTestFramework extends DOMTestCase
             'logEntry' => $logEntry,
         ));
         */
-        if (isset($tests['chromeLogger']) && !isset($tests['serverLog'])) {
+        if (isset($tests['chromeLogger']) && isset($tests['serverLog']) === false) {
             $tests['serverLog'] = $tests['chromeLogger'];
         }
         foreach ($tests as $test => $expect) {
             $logEntryTemp = $logEntry
-                ? new LogEntry($logEntry->getSubject(), $logEntry['method'], $logEntry['args'], $logEntry['meta'])
+                ? new LogEntry(
+                    $logEntry->getSubject(),
+                    $logEntry['method'],
+                    $logEntry['args'],
+                    $logEntry['meta']
+                )
                 : new LogEntry($this->debug, 'null');
             $output = $test === 'output'
                 ? $values['output']
@@ -313,10 +318,9 @@ class DebugTestFramework extends DOMTestCase
                         break;
                     }
                 }
-                $message = $test . ' has failed (' . $e->getMessage() . ')'
-                    . ' - ' . $file . ':' . $line;
+                $message = $test . ' has failed - ' . $file . ':' . $line . ': ' . $e->getMessage();
                 \fwrite(STDERR, "\e[38;5;1;48;5;230;1;4mTest: " . $test .  "\e[0m\n");
-                if ($expect instanceof \Closure) {
+                if ($expect instanceof Closure) {
                     \fwrite(STDERR, "expect is closure.\n");
                 } elseif (\is_string($expect) && \is_string($output)) {
                     \bdk\Debug::varDump('expect', \str_replace("\e", '\e', self::normalizeString($expect)));
@@ -693,16 +697,22 @@ class DebugTestFramework extends DOMTestCase
                     break;
                 case 'wamp':
                     $routeObj = $this->debug->getRoute('wamp');
-                    // var_dump('get output:', $routeObj->wamp);
+                    $messages = $routeObj->wamp->messages;
+                    $messages = \array_map(function ($message) {
+                        $message['args'][1] = $this->helper->crate($message['args'][1]); // sort abstraction values
+                        \ksort($message['args'][2]); // sort meta
+                        return $message;
+                    }, $messages);
                     $messageIndex = \is_array($expect) && isset($expect['messageIndex'])
                         ? $expect['messageIndex']
                         : \count($routeObj->wamp->messages) - 1;
-                    $output = isset($routeObj->wamp->messages[$messageIndex])
-                        ? $routeObj->wamp->messages[$messageIndex]
-                        : false;
+                    $output = false;
+                    if ($expect instanceof Closure) {
+                        $output = $messages;
+                    } elseif (isset($routeObj->wamp->messages[$messageIndex])) {
+                        $output = $messages[$messageIndex];
+                    }
                     if ($output) {
-                        $output['args'][1] = $this->helper->crate($output['args'][1]); // sort abstraction values
-                        \ksort($output['args'][2]); // sort meta
                         $output = \json_encode($output);
                         if (!$asString) {
                             $output = \json_decode($output, true);
@@ -758,7 +768,7 @@ class DebugTestFramework extends DOMTestCase
                     'format' => 'raw',
                     'requestId' => $this->debug->data->get('requestId'),
                 ), $outputExpect['args'][2]);
-                \ksort($outputExpect['args'][2]);
+                \ksort($outputExpect['args'][2]); // sort meta
             }
             if (isset($outputExpect['contains'])) {
                 $message = "\e[1m" . $test . " doesn't contain\e[0m";

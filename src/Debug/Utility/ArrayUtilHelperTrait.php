@@ -85,7 +85,7 @@ trait ArrayUtilHelperTrait
      *
      * @return array An array containing all the values from array that are not present in array2
      */
-    private static function diffAssocRecursiveHelper(array $array, array $array2)
+    private static function diffAssocRecursiveWalk(array $array, array $array2)
     {
         $diff = array();
         \array_walk(

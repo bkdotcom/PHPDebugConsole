@@ -30,7 +30,7 @@ class EnumTest extends DebugTestFramework
         }
 
         // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
-        return array(
+        $tests = array(
             'basic' => array(
                 'log',
                 array(
@@ -44,7 +44,7 @@ class EnumTest extends DebugTestFramework
 
                         $cases = $abs['cases'];
                         \ksort($cases);
-                        self::assertSame(array(
+                        $expect = array(
                             'BREAKFAST' => array(
                                 'attributes' => array(),
                                 'desc' => 'The most important meal',
@@ -62,8 +62,8 @@ class EnumTest extends DebugTestFramework
                             'LUNCH' => array(
                                 'attributes' => array(
                                     array(
-                                        'name' => 'bdk\Test\Debug\Fixture\Enum\ExampleCaseAttribute',
                                         'arguments' => array(),
+                                        'name' => 'bdk\Test\Debug\Fixture\Enum\ExampleCaseAttribute',
                                     ),
                                 ),
                                 'desc' => null,
@@ -71,7 +71,10 @@ class EnumTest extends DebugTestFramework
                                 'value' => Abstracter::UNDEFINED,
                                 'visibility' => 'public',
                             ),
-                        ), $cases);
+                        );
+                        // \bdk\Debug::varDump('expect', $expect);
+                        // \bdk\Debug::varDump('actual', $cases);
+                        self::assertSame($expect, $cases);
                     },
                     'html' => '<li class="m_log"><div class="groupByInheritance t_object" data-accessible="public"><span class="t_const" title="The most important meal
                         Meals PHPDoc"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\Enum\</span>Meals</span><span class="t_operator">::</span><span class="t_identifier">BREAKFAST</span></span>
@@ -92,7 +95,7 @@ class EnumTest extends DebugTestFramework
                         <dt class="cases">cases</dt>
                         <dd class="case"><span class="no-quotes t_identifier t_string" title="The most important meal">BREAKFAST</span></dd>
                         <dd class="case"><span class="no-quotes t_identifier t_string" title="What&#039;s for dinner?">DINNER</span></dd>
-                        <dd class="case" data-attributes="[{&quot;name&quot;:&quot;bdk\\\\Test\\\\Debug\\\\Fixture\\\\Enum\\\\ExampleCaseAttribute&quot;,&quot;arguments&quot;:[]}]"><span class="no-quotes t_identifier t_string">LUNCH</span></dd>
+                        <dd class="case" data-attributes="[{&quot;arguments&quot;:[],&quot;name&quot;:&quot;bdk\\\\Test\\\\Debug\\\\Fixture\\\\Enum\\\\ExampleCaseAttribute&quot;}]"><span class="no-quotes t_identifier t_string">LUNCH</span></dd>
                         <dt class="properties">properties</dt>
                         <dd class="isReadOnly property public"><span class="t_modifier_public">public</span> <span class="t_modifier_readonly">readonly</span> <span class="t_type">string</span> <span class="no-quotes t_identifier t_string">name</span> <span class="t_operator">=</span> <span class="t_string">BREAKFAST</span></dd>
                         <dt class="methods">methods</dt>
@@ -208,5 +211,7 @@ class EnumTest extends DebugTestFramework
                 ),
             ),
         );
+        // $tests = \array_intersect_key($tests, \array_flip(array('basic')));
+        return $tests;
     }
 }

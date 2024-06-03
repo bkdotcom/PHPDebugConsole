@@ -45,14 +45,13 @@ $color-bg-unicode: #c0c0ff;
 .binary,
 .maxlen,
 .unicode {
-  // margin: 0 0.1em;
   padding: 0 0.3em;
-  /*
-  // matches <.unicode> text <.unicode>
-  + .unicode { 
-    margin-left: -0.15em;
+  // match a:hover (found in base.scss
+  cursor: pointer;
+  &:hover {
+    outline: 0;
+    color: #e00;
   }
-  */
 }
 .binary,
 .char-control {

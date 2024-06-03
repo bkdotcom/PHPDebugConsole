@@ -85,7 +85,10 @@ class Methods extends AbstractInheritable
             ? $this->addFull($abs)
             : $this->addMin($abs);
         if (isset($abs['methods']['__toString'])) {
-            $abs['methods']['__toString']['returnValue'] = null;
+            $info = $abs['methods']['__toString'];
+            $info['returnValue'] = null;
+            \ksort($info);
+            $abs['methods']['__toString'] = $info;
         }
     }
 

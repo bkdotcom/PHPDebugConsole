@@ -262,7 +262,7 @@ class ArrayUtilTest extends TestCase
     public static function providerDiffAssocRecursive()
     {
         return array(
-            0 => array(
+            'test1' => array(
                 array(
                     'colors' => array(
                         'a' => 'green',
@@ -297,7 +297,7 @@ class ArrayUtilTest extends TestCase
                     ),
                 ),
             ),
-            1 => array(
+            'test2' => array(
                 array(
                     'foo' => 'bar',
                 ),

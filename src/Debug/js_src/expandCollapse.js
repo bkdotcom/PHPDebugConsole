@@ -22,8 +22,7 @@ export function init ($delegateNode) {
     groupUpdate($(e.target))
   })
   $delegateNode.on('expanded.debug.group', function (e) {
-    var $target = $(e.target)
-    $target.find('> .group-header > i:last-child').remove()
+    $(e.target).find('> .group-header > i:last-child').remove()
   })
 }
 

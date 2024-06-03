@@ -94,6 +94,36 @@ class Helper
     }
 
     /**
+     * Dump phpDoc string
+     *
+     * @param string|null $markdown summary, description, or other text gathered from phpDoc
+     * @param array       $opts     dump options
+     *
+     * @link https://github.github.com/gfm/#disallowed-raw-html-extension-
+     * @link https://github.com/github/markup/issues/245
+     * @link https://gist.github.com/seanh/13a93686bf4c2cb16e658b3cf96807f2
+     *
+     * @return string
+     */
+    public function dumpPhpDoc($markdown, array $opts = array())
+    {
+        $markdown = \trim((string) $markdown);
+        if ($markdown === '') {
+            return '';
+        }
+        // run through valDumper to highlight chars
+        return $this->dumper->valDumper->dump(
+            $this->debug->html->sanitize($markdown),
+            \array_merge(array(
+                'sanitize' => false, // we've already sanitized
+                'tagName' => null,
+                'type' => Type::TYPE_STRING,
+                'visualWhiteSpace' => false,
+            ), $opts)
+        );
+    }
+
+    /**
      * Markup type-hint / type declaration
      *
      * @param string $type    type declaration

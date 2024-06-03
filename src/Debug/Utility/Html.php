@@ -35,7 +35,7 @@ class Html
      *
      * @var array
      */
-    public static $htmlEmptyTags = array(
+    public static $tagsEmpty = array(
         'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr',
     );
 
@@ -149,7 +149,7 @@ class Html
                 ));
             }
         }
-        return \in_array($tagName, self::$htmlEmptyTags, true)
+        return \in_array($tagName, self::$tagsEmpty, true)
             ? '<' . $tagName . $attribStr . ' />'
             : '<' . $tagName . $attribStr . '>' . $innerhtml . '</' . $tagName . '>';
     }
@@ -174,12 +174,17 @@ class Html
             // if "parsing" class attribute, always include it
             $attribs['class'] = array();
         }
-        $regexAttribs = '/\b([\w\-]+)\b(?: \s*=\s*(["\'])(.*?)\\2 | \s*=\s*(\S+) )?/xs';
+        $regexAttribs = '/
+            \b(?P<name>[\w\-]+)\b
+            (?: \s*=\s* (?:
+                (["\'])(?P<valQuoted>.*?)\\2
+                | (?P<valUnquoted>\S+)
+            ))?/xs';
         \preg_match_all($regexAttribs, $str, $matches);
-        $names = \array_map('strtolower', $matches[1]);
-        $values = \array_replace($matches[3], \array_filter($matches[4], 'strlen'));
-        foreach ($names as $i => $name) {
-            $attribs[$name] = HtmlParse::parseAttribValue($name, $values[$i], $options);
+        $values = \array_replace($matches['valQuoted'], \array_filter($matches['valUnquoted'], 'strlen'));
+        foreach ($matches[1] as $i => $attribName) {
+            $attribName = \strtolower($attribName);
+            $attribs[$attribName] = HtmlParse::parseAttribValue($attribName, $values[$i], $options);
         }
         \ksort($attribs);
         return $attribs;
@@ -195,32 +200,44 @@ class Html
      * )
      *
      * @param string   $tag     html tag to parse
-     * @param int|null $options bitmask of PARSE_ATTRIB_x flags
+     * @param int|null $options bitmask of self::PARSE_ATTRIB_x flags
      *
      * @return array|false
      */
     public static function parseTag($tag, $options = null)
     {
-        $regexTag = '#<([^\s>]+)([^>]*)>(.*)</\\1>#is';
-        $regexTag2 = '#^<(?:\/\s*)?([^\s>]+)(.*?)\/?>$#s';
+        $regexTag = '#<(?P<tagname>[^\s<>]+)(?P<attributes>[^<>]*)>(?P<innerhtml>.*)</\\1>#is';
+        $regexTag2 = '#^<(?:/\s*)?(?P<tagname>[^\s<>]+)(?P<attributes>[^<>]*?)/?>$#s'; // self-closing tag or closing tag
         $tag = \trim($tag);
         if (\preg_match($regexTag, $tag, $matches)) {
             // phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
             return array(
-                'tagname' => $matches[1],
-                'attribs' => self::parseAttribString($matches[2], $options),
-                'innerhtml' => $matches[3],
+                'tagname' => \strtolower($matches['tagname']),
+                'attribs' => self::parseAttribString($matches['attributes'], $options),
+                'innerhtml' => $matches['innerhtml'],
             );
         }
         if (\preg_match($regexTag2, $tag, $matches)) {
             // phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
             return array(
-                'tagname' => $matches[1],
-                'attribs' => self::parseAttribString($matches[2], $options),
+                'tagname' => \strtolower($matches['tagname']),
+                'attribs' => self::parseAttribString($matches['attributes'], $options),
                 'innerhtml' => null,
             );
         }
         return false;
+    }
+
+    /**
+     * Sanitize html
+     *
+     * @param string $html html snippet
+     *
+     * @return string sanitized html
+     */
+    public static function sanitize($html)
+    {
+        return HtmlSanitize::sanitize($html);
     }
 
     /**

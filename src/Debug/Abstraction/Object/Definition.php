@@ -49,7 +49,7 @@ class Definition
     protected $default;
 
     /**
-     * @var array Array of key/values
+     * @var array<string,mixed> Array of key/values
      */
     protected static $values = array(
         'attributes' => array(),

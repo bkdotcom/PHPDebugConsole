@@ -187,7 +187,7 @@ abstract class AbstractRoute extends AbstractComponent implements RouteInterface
         $debug = $event->getSubject();
         $this->channelName = $debug->getCfg('channelName', Debug::CONFIG_DEBUG);
         $this->channelNameRoot = $debug->getCfg('channelName', Debug::CONFIG_DEBUG);
-        $this->channelRegex = '#^' . \preg_quote($this->channelName, '#') . '(\.|$)#';
+        $this->setChannelRegex('#^' . \preg_quote($this->channelName, '#') . '(\.|$)#');
     }
 
     /**

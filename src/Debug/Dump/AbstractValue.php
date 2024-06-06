@@ -68,6 +68,7 @@ abstract class AbstractValue extends AbstractComponent
         $this->optionStackPush(array(
             'addQuotes' => true,
             'charHighlight' => true,
+            'charReplace' => true,
         ));
     }
 
@@ -118,7 +119,7 @@ abstract class AbstractValue extends AbstractComponent
      *
      * @param string $str String to search for chars
      *
-     * @return array
+     * @return list<string>
      */
     public function findChars($str)
     {
@@ -338,7 +339,7 @@ abstract class AbstractValue extends AbstractComponent
 
     /**
      * escape hex and unicode escape sequences
-     * this allows use to differentiate between '\u{03c5}' and a replaced "\u{03c5}"
+     * this allows us to differentiate between '\u{03c5}' and a replaced "\u{03c5}"
      *
      * @param string $val string value
      *

@@ -32,20 +32,34 @@ function tippyContent (reference) {
     return
   }
   $ref.data('titleOrig', title)
-  if (title === 'Deprecated') {
-    title = tippyContentDeprecated($ref, title)
-  } else if (title === 'Implements') {
-    title = tippyContentImplements($ref, title)
-  } else if (['Inherited', 'Private ancestor'].indexOf(title) > -1) {
-    title = tippyContentInherited($ref, title)
-  } else if (title === 'Overrides') {
-    title = tippyContentOverrides($ref, title)
-  } else if (title === 'Open in editor') {
-    title = '<i class="fa fa-pencil"></i> ' + title
-  } else if (title === 'Throws') {
-     title = tippyContentThrows($ref, title)
-  } else if (title.match(/^\/.+: line \d+( \(eval'd line \d+\))?$/)) {
-    title = '<i class="fa fa-file-code-o"></i> ' + title
+  return tippyContentBuildTitle(title, $ref)
+}
+
+function tippyContentBuildTitle(title, $ref) {
+  switch (title) {
+    case 'Deprecated':
+      title = tippyContentDeprecated($ref, title)
+      break
+    case 'Implements':
+      title = tippyContentImplements($ref, title)
+      break
+    case 'Inherited':
+    case 'Private ancestor':
+      title = tippyContentInherited($ref, title)
+      break
+    case 'Overrides':
+      title = tippyContentOverrides($ref, title)
+      break
+    case 'Open in editor':
+      title = '<i class="fa fa-pencil"></i> ' + title
+      break
+    case 'Throws':
+      title = tippyContentThrows($ref, title)
+      break
+    default:
+      if (title.match(/^\/.+: line \d+( \(eval'd line \d+\))?$/)) {
+        title = '<i class="fa fa-file-code-o"></i> ' + title
+      }
   }
   if ($ref.parent().hasClass('hasTooltip')) {
     title = title + '<br /><br />' + tippyContent($ref.parent()[0])

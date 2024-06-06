@@ -16,6 +16,7 @@ use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\Object\Abstraction as ObjectAbstraction;
 use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Dump\Text\Value as TextValue;
+use bdk\Debug\Dump\TextAnsi as Dumper;
 use bdk\Debug\Dump\TextAnsi\TextAnsiObject;
 use bdk\Debug\Utility\Utf8;
 
@@ -29,6 +30,19 @@ class Value extends TextValue
 
     /** @var TextAnsiObject */
     protected $lazyObject;
+
+    /**
+     * Constructor
+     *
+     * @param Dumper $dumper "parent" dump class
+     */
+    public function __construct(Dumper $dumper)
+    {
+        parent::__construct($dumper); // sets debug and dumper
+        $this->optionStackPush(array(
+            'charReplace' => false,
+        ));
+    }
 
     /**
      * Get escape reset sequence
@@ -356,9 +370,10 @@ class Value extends TextValue
     protected function highlightChars($str)
     {
         $chars = $this->findChars($str);
+        $charReplace = $this->optionGet('charReplace');
         foreach ($chars as $char) {
             $replacement = $this->cfg['escapeCodes']['char']
-                . $this->charReplacement($char)
+                . $this->charReplacement($char, $charReplace)
                 . $this->escapeReset;
             $str = \str_replace($char, $replacement, $str);
         }

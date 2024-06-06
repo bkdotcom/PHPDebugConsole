@@ -1,4 +1,4 @@
-<?php
+<?php // @phpcs:ignore SlevomatCodingStandard.Files.FileLength.FileTooLong
 
 /**
  * Define characters that will be highlighted / replaced
@@ -179,110 +179,174 @@ return array(
     ),
 
     "\xC2\xA0" => array(
+        'class' => 'char-ws',
         'codePoint' => '00A0',
         'desc' => 'NBSP',
         'replaceWith' => '\u{00a0}',
+        'similarTo' => ' ',
     ),
     "\xE1\x9A\x80" => array(
+        'class' => 'char-ws',
         'codePoint' => '1680',
         'desc' => 'Ogham Space Mark',
         'replaceWith' => '\u{1680}',
+        'similarTo' => ' ',
     ),
     "\xE1\xA0\x8E" => array(
+        'class' => 'char-ws',
         'codePoint' => '180E',
-        'desc' => 'Mongolian Vowel Separator',
+        'desc' => 'Mongolian Vowel Separator', // not included in Separator Category (Other, Format)
         'replaceWith' => '\u{180e}',
+        'similarTo' => '',
     ),
     "\xE2\x80\x80" => array(
+        'class' => 'char-ws',
         'codePoint' => '2000',
         'desc' => 'En Quad',
         'replaceWith' => '\u{2000}',
+        'similarTo' => ' ',
     ),
     "\xE2\x80\x81" => array(
+        'class' => 'char-ws',
         'codePoint' => '2001',
         'desc' => 'Em Quad',
         'replaceWith' => '\u{2001}',
+        'similarTo' => ' ',
     ),
     "\xE2\x80\x82" => array(
+        'class' => 'char-ws',
         'codePoint' => '2002',
         'desc' => 'En Space',
         'replaceWith' => '\u{2002}',
+        'similarTo' => ' ',
     ),
     "\xE2\x80\x83" => array(
+        'class' => 'char-ws',
         'codePoint' => '2003',
         'desc' => 'Em Space',
         'replaceWith' => '\u{2003}',
+        'similarTo' => ' ',
     ),
     "\xE2\x80\x84" => array(
+        'class' => 'char-ws',
         'codePoint' => '2004',
-        'desc' => 'Three-Per-Em Space',
+        'desc' => 'Three-Per-Em (thick) Space',
         'replaceWith' => '\u{2004}',
+        'similarTo' => ' ',
     ),
     "\xE2\x80\x85" => array(
+        'class' => 'char-ws',
         'codePoint' => '2005',
-        'desc' => 'Four-Per-Em Space',
+        'desc' => 'Four-Per-Em (mid) Space',
         'replaceWith' => '\u{2005}',
+        'similarTo' => ' ',
     ),
     "\xE2\x80\x86" => array(
+        'class' => 'char-ws',
         'codePoint' => '2006',
         'desc' => 'Six-Per-Em Space',
         'replaceWith' => '\u{2006}',
+        'similarTo' => ' ',
     ),
     "\xE2\x80\x87" => array(
+        'class' => 'char-ws',
         'codePoint' => '2007',
         'desc' => 'Figure Space',
         'replaceWith' => '\u{2007}',
+        'similarTo' => ' ',
     ),
     "\xE2\x80\x88" => array(
+        'class' => 'char-ws',
         'codePoint' => '2008',
         'desc' => 'Punctuation Space',
         'replaceWith' => '\u{2008}',
+        'similarTo' => ' ',
     ),
     "\xE2\x80\x89" => array(
+        'class' => 'char-ws',
         'codePoint' => '2009',
         'desc' => 'Thin Space',
         'replaceWith' => '\u{2009}',
+        'similarTo' => ' ',
     ),
     "\xE2\x80\x8A" => array(
+        'class' => 'char-ws',
         'codePoint' => '200A',
         'desc' => 'Hair Space',
         'replaceWith' => '\u{200a}',
+        'similarTo' => ' ',
     ),
     "\xE2\x80\x8B" => array(
+        'class' => 'char-ws',
         'codePoint' => '200B',
-        'desc' => 'Zero Width Space', // not included in Separator Category
+        'desc' => 'Zero Width Space', // not included in Separator Category (Other, Format)
         'replaceWith' => '\u{200b}',
+        'similarTo' => '',
+    ),
+    "\xE2\x80\x8C" => array(
+        'class' => 'char-ws',
+        'codePoint' => '200C',
+        'desc' => 'Zero Width Non-Joiner', // not included in Separator Category (Other, Format)
+        'replaceWith' => '\u{200c}',
+        'similarTo' => '',
+    ),
+    "\xE2\x80\x8D" => array(
+        'class' => 'char-ws',
+        'codePoint' => '200D',
+        'desc' => 'Zero Width Joiner', // not included in Separator Category (Other, Format)
+        'replaceWith' => '\u{200d}',
+        'similarTo' => '',
     ),
     "\xE2\x80\xA8" => array(
+        'class' => 'char-ws',
         'codePoint' => '2028',
         'desc' => 'Line Separator',
         'replaceWith' => '\u{2028}',
+        'similarTo' => "\n",
     ),
     "\xE2\x80\xA9" => array(
+        'class' => 'char-ws',
         'codePoint' => '2029',
         'desc' => 'Paragraph Separator',
         'replaceWith' => '\u{2029}',
+        'similarTo' => "\n",
     ),
     "\xE2\x80\xAF" => array(
+        'class' => 'char-ws',
         'codePoint' => '202F',
         'desc' => 'Narrow No-Break Space',
         'replaceWith' => '\u{202f}',
+        'similarTo' => ' ',
     ),
     "\xE2\x81\x9F" => array(
+        'class' => 'char-ws',
         'codePoint' => '202F',
         'desc' => 'Medium Mathematical Space',
         'replaceWith' => '\u{205f}',
+        'similarTo' => ' ',
+    ),
+    "\xE2\x81\xA0" => array(
+        'class' => 'char-ws',
+        'codePoint' => '2060',
+        'desc' => 'Word Joiner', // Not included in Separator Category (Other, Format)
+        'replaceWith' => '\u{2060}',
+        'similarTo' => '',
     ),
     "\xE3\x80\x80" => array(
+        'class' => 'char-ws',
         'codePoint' => '3000',
         'desc' => 'Ideographic Space',
         'replaceWith' => '\u{3000}',
+        'similarTo' => ' ',
     ),
     "\xEF\xBB\xBF" => array(
+        'class' => 'char-ws',
         'codePoint' => 'FEFF',
-        'desc' => 'BOM / Zero Width No-Break Space', // not included in Separator Category
+        'desc' => 'BOM / Zero Width No-Break Space', // not included in Separator Category (Other, Format)
         'replaceWith' => '\u{feff}',
+        'similarTo' => '',
     ),
+
     "\xEF\xBF\xBD" => array(
         'codePoint' => 'FFFD',
         'desc' => 'Replacement Character',

@@ -105,32 +105,35 @@ function createFileLinksTrace ($entry, remove) {
     return
   }
   $entry.find('table tbody tr').each(function () {
-    var $tr = $(this)
-    var $tds = $tr.find('> td')
-    var info = {
-      file: $tr.data('file') || $tds.eq(0).text(),
-      line: $tr.data('line') || $tds.eq(1).text()
-    }
-    var $a = $('<a>', {
-      class: 'file-link',
-      href: buildFileLink(info.file, info.line),
-      html: '<i class="fa fa-fw fa-external-link"></i>',
-      style: 'vertical-align: bottom',
-      title: 'Open in editor'
-    })
-    if (isUpdate) {
-      $tr.find('.file-link').replaceWith($a)
-      return // continue
-    }
-    if ($tr.hasClass('context')) {
-      $tds.eq(0).attr('colspan', parseInt($tds.eq(0).attr('colspan'), 10) + 1)
-      return // continue
-    }
-    $tds.last().after($('<td/>', {
-      class: 'text-center',
-      html: $a
-    }))
+    createFileLinksTraceProcessTr($(this), isUpdate)
   })
+}
+
+function createFileLinksTraceProcessTr($tr, isUpdate) {
+  var $tds = $tr.find('> td')
+  var info = {
+    file: $tr.data('file') || $tds.eq(0).text(),
+    line: $tr.data('line') || $tds.eq(1).text()
+  }
+  var $a = $('<a>', {
+    class: 'file-link',
+    href: buildFileLink(info.file, info.line),
+    html: '<i class="fa fa-fw fa-external-link"></i>',
+    style: 'vertical-align: bottom',
+    title: 'Open in editor'
+  })
+  if (isUpdate) {
+    $tr.find('.file-link').replaceWith($a)
+    return // continue
+  }
+  if ($tr.hasClass('context')) {
+    $tds.eq(0).attr('colspan', parseInt($tds.eq(0).attr('colspan'), 10) + 1)
+    return // continue
+  }
+  $tds.last().after($('<td/>', {
+    class: 'text-center',
+    html: $a
+  }))
 }
 
 function createFileLink (string, remove, foundFiles) {

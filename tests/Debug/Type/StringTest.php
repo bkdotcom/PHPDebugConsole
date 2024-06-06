@@ -165,9 +165,9 @@ EOD;
                         );
                     },
                     'firephp' => 'X-Wf-1-1-1-19: %d|[{"Type":"LOG"},"\\\\u{feff}Pesky <abbr title=\"Byte-Order-Mark\">BOM</abbr> and \\\x07 (a control char)."]|',
-                    'html' => '<li class="m_log"><span class="no-quotes t_string"><span class="unicode" data-code-point="FEFF" title="U-FEFF: BOM / Zero Width No-Break Space">\u{feff}</span>Pesky <abbr title="Byte-Order-Mark">BOM</abbr> and <span class="char-control" title="\x07: BEL (bell)">␇</span> (a control char).</span></li>',
+                    'html' => '<li class="m_log"><span class="no-quotes t_string"><span class="char-ws" data-code-point="FEFF" title="U-FEFF: BOM / Zero Width No-Break Space">\u{feff}</span>Pesky <abbr title="Byte-Order-Mark">BOM</abbr> and <span class="char-control" title="\x07: BEL (bell)">␇</span> (a control char).</span></li>',
                     'script' => 'console.log("\\\u{feff}Pesky <abbr title=\"Byte-Order-Mark\">BOM</abbr> and \\\x07 (a control char).");',
-                    'streamAnsi' => "\e[38;5;208m\\u{feff}\e[0mPesky <abbr title=\"Byte-Order-Mark\">BOM</abbr> and \e[38;5;208m\\x07\e[0m (a control char).",
+                    'streamAnsi' => \str_replace('\e', "\e", '\e[34;48;5;14m\u{feff}\e[0mPesky <abbr title="Byte-Order-Mark">BOM</abbr> and \e[34;48;5;14m\x07\e[0m (a control char).'),
                     'text' => '\u{feff}Pesky <abbr title="Byte-Order-Mark">BOM</abbr> and \x07 (a control char).',
                 ),
             ),
@@ -196,11 +196,11 @@ EOD;
                     },
                     'firephp' => 'X-Wf-1-1-1-5: 165|[{"Label":"\tcontrol chars: \\\x07 \\\x1f \\\x7f\r\n","Type":"LOG"},"\teasy-to-miss \\\u{0441}haracters such as \\\u{00a0}(nbsp), \\\u{2009}(thsp), &amp; \\\u{200b}(zwsp)"]|',
                     'html' => '<li class="m_log"><span class="no-quotes t_string">' . "\t" . 'control chars: <span class="char-control" title="\x07: BEL (bell)">␇</span> <span class="char-control" title="\x1f: US (unit separator)">␟</span> <span class="char-control" title="\x7f: DEL">␡</span>' . "\r\n"
-                        . '</span> = <span class="t_string"><span class="ws_t">' . "\t" . '</span>easy-to-miss <span class="unicode" data-code-point="0441" title="U-0441: CYRILLIC SMALL LETTER ES">' . "\xD1\x81" . '</span>haracters such as <span class="unicode" data-code-point="00A0" title="U-00A0: NBSP">\u{00a0}</span>(nbsp), <span class="unicode" data-code-point="2009" title="U-2009: Thin Space">\u{2009}</span>(thsp), &amp;amp; <span class="unicode" data-code-point="200B" title="U-200B: Zero Width Space">\u{200b}</span>(zwsp)'
+                        . '</span> = <span class="t_string"><span class="ws_t">' . "\t" . '</span>easy-to-miss <span class="unicode" data-code-point="0441" title="U-0441: CYRILLIC SMALL LETTER ES">' . "\xD1\x81" . '</span>haracters such as <span class="char-ws" data-code-point="00A0" title="U-00A0: NBSP">\u{00a0}</span>(nbsp), <span class="char-ws" data-code-point="2009" title="U-2009: Thin Space">\u{2009}</span>(thsp), &amp;amp; <span class="char-ws" data-code-point="200B" title="U-200B: Zero Width Space">\u{200b}</span>(zwsp)'
                         . '</span></li>',
                     'script' => 'console.log("\tcontrol chars: \\\x07 \\\x1f \\\x7f\r\n","\teasy-to-miss \\\u{0441}haracters such as \\\u{00a0}(nbsp), \\\u{2009}(thsp), &amp; \\\u{200b}(zwsp)");',
-                    'streamAnsi' => "control chars: \e[38;5;208m\\x07\e[0m \e[38;5;208m\\x1f\e[0m \e[38;5;208m\\x7f\e[0m\r\n"
-                        . "\e[38;5;245m=\e[0m \e[38;5;250m\"\e[0m	easy-to-miss \e[38;5;208m\\u{0441}\e[0mharacters such as \e[38;5;208m\\u{00a0}\e[0m(nbsp), \e[38;5;208m\\u{2009}\e[0m(thsp), &amp; \e[38;5;208m\\u{200b}\e[0m(zwsp)\e[38;5;250m\"\e[0m",
+                    'streamAnsi' => \str_replace('\e', "\e", 'control chars: \e[34;48;5;14m\x07\e[0m \e[34;48;5;14m\x1f\e[0m \e[34;48;5;14m\x7f\e[0m[\r]
+                        \e[38;5;245m=\e[0m \e[38;5;250m"\e[0m	easy-to-miss \e[34;48;5;14mс\e[0mharacters such as \e[34;48;5;14m\u{00a0}\e[0m(nbsp), \e[34;48;5;14m\u{2009}\e[0m(thsp), &amp; \e[34;48;5;14m\u{200b}\e[0m(zwsp)\e[38;5;250m"\e[0m'),
                     'text' => 'control chars: \x07 \x1f \x7f' . "\r\n"
                         . '= "' . "\t" . 'easy-to-miss \\u{0441}haracters such as \u{00a0}(nbsp), \u{2009}(thsp), &amp; \u{200b}(zwsp)"',
                 ),
@@ -305,8 +305,8 @@ EOD;
                     'html' => '<li class="m_log">&lt;b&gt;Brad&lt;/b&gt;:
                         w<span class="unicode" data-code-point="1D51E" title="U-1D51E: MATHEMATICAL FRAKTUR SMALL A">𝔞</span>s <span class="binary">\x80</span>h<span class="unicode" data-code-point="0435" title="U-0435: CYRILLIC SMALL LETTER IE">е</span>re</li>',
                     'script' => 'console.log("<b>Brad</b>:\nw\\\u{1d51e}s \\\x80h\\\u{0435}re");',
-                    'streamAnsi' => "<b>Brad</b>:
-                        w\e[38;5;208m\\u{1d51e}\e[0ms \e[30;48;5;250m80\e[0mh\e[38;5;208m\\u{0435}\e[0mre",
+                    'streamAnsi' => \str_replace('\e', "\e", '<b>Brad</b>:
+                        w\e[34;48;5;14m𝔞\e[0ms \e[30;48;5;250m80\e[0mh\e[34;48;5;14mе\e[0mre'),
                     'text' => '<b>Brad</b>:
                         w\u{1d51e}s \x80h\u{0435}re',
                 ),

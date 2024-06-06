@@ -263,15 +263,17 @@ EOD;
                             "ade50251dade9edc27e822ebdc3e9664",
                         ), \array_keys($abs['properties']));
                     },
-                    'streamAnsi' => "\e[1mstdClass\e[22m
-                        \e[4mProperties:\e[24m
-                            \e[38;5;250m(public)\e[0m \e[38;5;83m\e[38;5;250m\"\e[38;5;83;49m \e[38;5;250m\"\e[38;5;83;49m\e[0m \e[38;5;224m=\e[0m \e[38;5;250m\"\e[0mspace\e[38;5;250m\"\e[0m
-                            \e[38;5;250m(public)\e[0m \e[38;5;83mnot\e[30;48;5;250m80\e[38;5;83;49m\e[38;5;208m\\u{03c5}\e[38;5;83;49mtf8\e[0m \e[38;5;224m=\e[0m \e[38;5;250m\"\e[0mnot utf8\e[38;5;250m\"\e[0m
-                            \e[38;5;250m(public)\e[0m \e[38;5;83m\e[38;5;208m\\u{200b}\e[38;5;83;49m\e[0m \e[38;5;224m=\e[0m \e[38;5;250m\"\e[0mzwsp\e[38;5;250m\"\e[0m
-                            \e[38;5;250m(public)\e[0m \e[38;5;83m\e[38;5;208m\\u{feff}\e[38;5;83;49m\e[0m \e[38;5;224m=\e[0m \e[38;5;250m\"\e[0mbom\e[38;5;250m\"\e[0m
-                            \e[38;5;250m(public)\e[0m \e[38;5;83m\e[38;5;250m\"\e[38;5;83;49m\e[38;5;208m\\u{feff}\e[38;5;83;49mbom" . "\r" . "
-                                \e[38;5;208m\\x07\e[38;5;83;49m \e[38;5;208m\\x1f\e[38;5;83;49m \e[38;5;208m\\x7f\e[38;5;83;49m \e[38;5;208m\\u{00a0}\e[38;5;83;49m<i>(nbsp)</i> \e[38;5;208m\\u{2009}\e[38;5;83;49m(thsp), & \e[38;5;208m\\u{200b}\e[38;5;83;49m(zwsp)\e[38;5;250m\"\e[38;5;83;49m\e[0m \e[38;5;224m=\e[0m \e[38;5;250m\"\e[0mctrl chars and whatnot\e[38;5;250m\"\e[0m
-                            Methods: none!",
+                    'streamAnsi' => \str_replace('\e', "\e", '
+                        \e[1mstdClass\e[22m
+                           \e[4mProperties:\e[24m
+                             \e[38;5;250m(public)\e[0m \e[38;5;83m\e[38;5;250m"\e[38;5;83;49m \e[38;5;250m"\e[38;5;83;49m\e[0m \e[38;5;224m=\e[0m \e[38;5;250m"\e[0mspace\e[38;5;250m"\e[0m
+                             \e[38;5;250m(public)\e[0m \e[38;5;83mnot\e[30;48;5;250m80\e[38;5;83;49m\e[34;48;5;14mυ\e[38;5;83;49mtf8\e[0m \e[38;5;224m=\e[0m \e[38;5;250m"\e[0mnot utf8\e[38;5;250m"\e[0m
+                             \e[38;5;250m(public)\e[0m \e[38;5;83m\e[34;48;5;14m\u{200b}\e[38;5;83;49m\e[0m \e[38;5;224m=\e[0m \e[38;5;250m"\e[0mzwsp\e[38;5;250m"\e[0m
+                             \e[38;5;250m(public)\e[0m \e[38;5;83m\e[34;48;5;14m\u{feff}\e[38;5;83;49m\e[0m \e[38;5;224m=\e[0m \e[38;5;250m"\e[0mbom\e[38;5;250m"\e[0m
+                             \e[38;5;250m(public)\e[0m \e[38;5;83m\e[38;5;250m"\e[38;5;83;49m\e[34;48;5;14m\u{feff}\e[38;5;83;49mbom[\r]
+                             \e[34;48;5;14m\x07\e[38;5;83;49m \e[34;48;5;14m\x1f\e[38;5;83;49m \e[34;48;5;14m\x7f\e[38;5;83;49m \e[34;48;5;14m\u{00a0}\e[38;5;83;49m<i>(nbsp)</i> \e[34;48;5;14m\u{2009}\e[38;5;83;49m(thsp), & \e[34;48;5;14m\u{200b}\e[38;5;83;49m(zwsp)\e[38;5;250m"\e[38;5;83;49m\e[0m \e[38;5;224m=\e[0m \e[38;5;250m"\e[0mctrl chars and whatnot\e[38;5;250m"\e[0m
+                           Methods: none!
+                    '),
                     'text' => 'stdClass
                       Properties:
                         (public) " " = "space"
@@ -798,10 +800,10 @@ EOD;
                         %A<dt class="properties">properties</dt>
                         ' . (PHP_VERSION_ID >= 70400 ? '<dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier t_string"></span> <span class="t_operator">=</span> <span class="t_string">empty</span></dd>' . "\n" : '')
                         . '<dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier t_string"> </span> <span class="t_operator">=</span> <span class="t_string">space</span></dd>
-                        <dd class="property public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string"><span class="unicode" data-code-point="200B" title="U-200B: Zero Width Space">\u{200b}</span></span> <span class="t_operator">=</span> <span class="t_string">zwsp</span></dd>
-                        <dd class="property public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string"><span class="unicode" data-code-point="FEFF" title="U-FEFF: BOM / Zero Width No-Break Space">\u{feff}</span></span> <span class="t_operator">=</span> <span class="t_string">bom</span></dd>
-                        <dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier t_string"><span class="unicode" data-code-point="FEFF" title="U-FEFF: BOM / Zero Width No-Break Space">\u{feff}</span>bom<span class="ws_r"></span><span class="ws_n"></span>
-                        <span class="ws_t">%s</span><span class="char-control" title="\x07: BEL (bell)">␇</span> <span class="char-control" title="\x1f: US (unit separator)">␟</span> <span class="char-control" title="\x7f: DEL">␡</span> <span class="unicode" data-code-point="00A0" title="U-00A0: NBSP">\u{00a0}</span>&lt;i&gt;(nbsp)&lt;/i&gt; <span class="unicode" data-code-point="2009" title="U-2009: Thin Space">\u{2009}</span>(thsp), &amp; <span class="unicode" data-code-point="200B" title="U-200B: Zero Width Space">\u{200b}</span>(zwsp)</span> <span class="t_operator">=</span> <span class="t_string">ctrl chars and whatnot</span></dd>
+                        <dd class="property public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string"><span class="char-ws" data-code-point="200B" title="U-200B: Zero Width Space">\u{200b}</span></span> <span class="t_operator">=</span> <span class="t_string">zwsp</span></dd>
+                        <dd class="property public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string"><span class="char-ws" data-code-point="FEFF" title="U-FEFF: BOM / Zero Width No-Break Space">\u{feff}</span></span> <span class="t_operator">=</span> <span class="t_string">bom</span></dd>
+                        <dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier t_string"><span class="char-ws" data-code-point="FEFF" title="U-FEFF: BOM / Zero Width No-Break Space">\u{feff}</span>bom<span class="ws_r"></span><span class="ws_n"></span>
+                        <span class="ws_t">%s</span><span class="char-control" title="\x07: BEL (bell)">␇</span> <span class="char-control" title="\x1f: US (unit separator)">␟</span> <span class="char-control" title="\x7f: DEL">␡</span> <span class="char-ws" data-code-point="00A0" title="U-00A0: NBSP">\u{00a0}</span>&lt;i&gt;(nbsp)&lt;/i&gt; <span class="char-ws" data-code-point="2009" title="U-2009: Thin Space">\u{2009}</span>(thsp), &amp; <span class="char-ws" data-code-point="200B" title="U-200B: Zero Width Space">\u{200b}</span>(zwsp)</span> <span class="t_operator">=</span> <span class="t_string">ctrl chars and whatnot</span></dd>
                         %A</dl>
                         </div></li>',
                     'script' => 'console.log({"___class_name":"stdClass",' . (PHP_VERSION_ID >= 70400 ? '"(public) ":"empty",' : '') . '"(public)  ":"space","(public) \\\u{200b}":"zwsp","(public) \\\u{feff}":"bom","(public) \\\u{feff}bom\r\n\t\\\x07 \\\x1f \\\x7f \\\u{00a0}<i>(nbsp)</i> \\\u{2009}(thsp), & \\\u{200b}(zwsp)":"ctrl chars and whatnot"});',

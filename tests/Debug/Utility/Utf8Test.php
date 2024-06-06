@@ -201,7 +201,7 @@ class Utf8Test extends TestCase
             'bom' => array("\xef\xbb\xbfPesky BOM",
                 '\u{feff}Pesky BOM'),
             'bomHtml' => array("\xef\xbb\xbfPesky BOM",
-                '<span class="unicode" data-code-point="feff" title="U-feff: BOM / Zero Width No-Break Space">\ufeff</span>Pesky BOM',
+                '<span class="char-ws" data-code-point="feff" title="U-feff: BOM / Zero Width No-Break Space">\ufeff</span>Pesky BOM',
                 array('useHtml' => true),
             ),
 
@@ -358,7 +358,7 @@ class Utf8Test extends TestCase
                 'easy-to-miss characters such as \u{00a0}(nbsp), \u{2009}(thsp), &amp; \u{200b}(zwsp)',
             ),
             array("easy-to-miss characters such as \xc2\xa0(nbsp), \xE2\x80\x89(thsp), &amp; \xE2\x80\x8B(zwsp)",
-                'easy-to-miss characters such as <span class="unicode" data-code-point="00a0" title="U-00a0: NBSP">\u00a0</span>(nbsp), <span class="unicode" data-code-point="2009" title="U-2009: Thin Space">\u2009</span>(thsp), &amp; <span class="unicode" data-code-point="200b" title="U-200b: Zero Width Space">\u200b</span>(zwsp)',
+                'easy-to-miss characters such as <span class="char-ws" data-code-point="00a0" title="U-00a0: NBSP">\u00a0</span>(nbsp), <span class="char-ws" data-code-point="2009" title="U-2009: Thin Space">\u2009</span>(thsp), &amp; <span class="char-ws" data-code-point="200b" title="U-200b: Zero Width Space">\u200b</span>(zwsp)',
                 array('useHtml' => true),
             ),
 
@@ -380,7 +380,7 @@ class Utf8Test extends TestCase
             ),
 
             'sanitize' => array("<b>some\xc2\xa0html</b>",
-                '&lt;b&gt;some<span class="unicode" data-code-point="00a0" title="U-00a0: NBSP">\u00a0</span>html&lt;/b&gt;',
+                '&lt;b&gt;some<span class="char-ws" data-code-point="00a0" title="U-00a0: NBSP">\u00a0</span>html&lt;/b&gt;',
                 array(
                     'sanitizeNonBinary' => true,
                     'useHtml' => true,

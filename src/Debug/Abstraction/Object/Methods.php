@@ -145,9 +145,8 @@ class Methods extends AbstractInheritable
         }
         $val = null;
         try {
-            $val = $obj->__toString();
             /** @var Abstraction|string */
-            $val = $this->abstracter->crate($val, $abs['debugMethod'], $abs['hist']);
+            $val = $this->abstracter->crate($obj->__toString(), $abs['debugMethod'], $abs['hist']);
         } catch (Exception $e) {
             // yes, __toString can throw exception..
             // example: SplFileObject->__toString will throw exception if file doesn't exist

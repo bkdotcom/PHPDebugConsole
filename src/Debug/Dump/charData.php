@@ -161,9 +161,11 @@ return array(
         'replaceWith' => '␡',
     ),
     ' ' => array(
+        'class' => 'char-ws',
         'codePoint' => '00A0',
         'desc' => 'NBSP',
         'replaceWith' => '\\u{00a0}',
+        'similarTo' => ' ',
     ),
     '´' => array(
         'codePoint' => 'B4',
@@ -1486,9 +1488,11 @@ return array(
         'similarTo' => 'x',
     ),
     ' ' => array(
+        'class' => 'char-ws',
         'codePoint' => '1680',
         'desc' => 'Ogham Space Mark',
         'replaceWith' => '\\u{1680}',
+        'similarTo' => ' ',
     ),
     'ᚲ' => array(
         'codePoint' => '16B2',
@@ -1546,9 +1550,11 @@ return array(
         'similarTo' => ':',
     ),
     '᠎' => array(
+        'class' => 'char-ws',
         'codePoint' => '180E',
         'desc' => 'Mongolian Vowel Separator',
         'replaceWith' => '\\u{180e}',
+        'similarTo' => '',
     ),
     'ᴄ' => array(
         'codePoint' => '1D04',
@@ -1646,64 +1652,102 @@ return array(
         'similarTo' => '\'',
     ),
     ' ' => array(
+        'class' => 'char-ws',
         'codePoint' => '2000',
         'desc' => 'En Quad',
         'replaceWith' => '\\u{2000}',
+        'similarTo' => ' ',
     ),
     ' ' => array(
+        'class' => 'char-ws',
         'codePoint' => '2001',
         'desc' => 'Em Quad',
         'replaceWith' => '\\u{2001}',
+        'similarTo' => ' ',
     ),
     ' ' => array(
+        'class' => 'char-ws',
         'codePoint' => '2002',
         'desc' => 'En Space',
         'replaceWith' => '\\u{2002}',
+        'similarTo' => ' ',
     ),
     ' ' => array(
+        'class' => 'char-ws',
         'codePoint' => '2003',
         'desc' => 'Em Space',
         'replaceWith' => '\\u{2003}',
+        'similarTo' => ' ',
     ),
     ' ' => array(
+        'class' => 'char-ws',
         'codePoint' => '2004',
-        'desc' => 'Three-Per-Em Space',
+        'desc' => 'Three-Per-Em (thick) Space',
         'replaceWith' => '\\u{2004}',
+        'similarTo' => ' ',
     ),
     ' ' => array(
+        'class' => 'char-ws',
         'codePoint' => '2005',
-        'desc' => 'Four-Per-Em Space',
+        'desc' => 'Four-Per-Em (mid) Space',
         'replaceWith' => '\\u{2005}',
+        'similarTo' => ' ',
     ),
     ' ' => array(
+        'class' => 'char-ws',
         'codePoint' => '2006',
         'desc' => 'Six-Per-Em Space',
         'replaceWith' => '\\u{2006}',
+        'similarTo' => ' ',
     ),
     ' ' => array(
+        'class' => 'char-ws',
         'codePoint' => '2007',
         'desc' => 'Figure Space',
         'replaceWith' => '\\u{2007}',
+        'similarTo' => ' ',
     ),
     ' ' => array(
+        'class' => 'char-ws',
         'codePoint' => '2008',
         'desc' => 'Punctuation Space',
         'replaceWith' => '\\u{2008}',
+        'similarTo' => ' ',
     ),
     ' ' => array(
+        'class' => 'char-ws',
         'codePoint' => '2009',
         'desc' => 'Thin Space',
         'replaceWith' => '\\u{2009}',
+        'similarTo' => ' ',
     ),
     ' ' => array(
+        'class' => 'char-ws',
         'codePoint' => '200A',
         'desc' => 'Hair Space',
         'replaceWith' => '\\u{200a}',
+        'similarTo' => ' ',
     ),
     '​' => array(
+        'class' => 'char-ws',
         'codePoint' => '200B',
         'desc' => 'Zero Width Space',
         'replaceWith' => '\\u{200b}',
+        'similarTo' => '',
+    ),
+    '‌' => array(
+        'class' => 'char-ws',
+        'codePoint' => '200C',
+        'desc' => 'Zero Width Non-Joiner',
+        'replaceWith' => '\\u{200c}',
+        'similarTo' => '',
+    ),
+    '‍' => array(
+        'class' => 'char-ws',
+        'codePoint' => '200D',
+        'desc' => 'Zero Width Joiner',
+        'replaceWith' => '\\u{200d}',
+        'similarTo' => '',
     ),
     '‐' => array(
         'codePoint' => '2010',
@@ -1751,19 +1795,27 @@ return array(
         'similarTo' => '.',
     ),
     ' ' => array(
+        'class' => 'char-ws',
         'codePoint' => '2028',
         'desc' => 'Line Separator',
         'replaceWith' => '\\u{2028}',
+        'similarTo' => '
+',
     ),
     ' ' => array(
+        'class' => 'char-ws',
         'codePoint' => '2029',
         'desc' => 'Paragraph Separator',
         'replaceWith' => '\\u{2029}',
+        'similarTo' => '
+',
     ),
     ' ' => array(
+        'class' => 'char-ws',
         'codePoint' => '202F',
         'desc' => 'Narrow No-Break Space',
         'replaceWith' => '\\u{202f}',
+        'similarTo' => ' ',
     ),
     '′' => array(
         'codePoint' => '2032',
@@ -1816,9 +1868,18 @@ return array(
         'similarTo' => ':',
     ),
     ' ' => array(
+        'class' => 'char-ws',
         'codePoint' => '202F',
         'desc' => 'Medium Mathematical Space',
         'replaceWith' => '\\u{205f}',
+        'similarTo' => ' ',
+    ),
+    '⁠' => array(
+        'class' => 'char-ws',
+        'codePoint' => '2060',
+        'desc' => 'Word Joiner',
+        'replaceWith' => '\\u{2060}',
+        'similarTo' => '',
     ),
     'ℂ' => array(
         'codePoint' => '2102',
@@ -2401,9 +2462,11 @@ return array(
         'similarTo' => '/',
     ),
     '　' => array(
+        'class' => 'char-ws',
         'codePoint' => '3000',
         'desc' => 'Ideographic Space',
         'replaceWith' => '\\u{3000}',
+        'similarTo' => ' ',
     ),
     '〇' => array(
         'codePoint' => '3007',
@@ -2891,9 +2954,11 @@ return array(
         'similarTo' => 'o',
     ),
     '﻿' => array(
+        'class' => 'char-ws',
         'codePoint' => 'FEFF',
         'desc' => 'BOM / Zero Width No-Break Space',
         'replaceWith' => '\\u{feff}',
+        'similarTo' => '',
     ),
     '！' => array(
         'codePoint' => 'FF01',

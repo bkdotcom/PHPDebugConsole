@@ -282,6 +282,31 @@ class Value extends AbstractValue
     }
 
     /**
+     * Get replacement for character
+     *
+     * @param string $char        single multi-byte character
+     * @param bool   $charReplace whether to replace char with code-point
+     *                            control chars are always replaced
+     *
+     * @return string \x##, \u{####}, or original char
+     */
+    protected function charReplacement($char, $charReplace)
+    {
+        if (\ord($char) < 0x80) {
+            // always replace control chars
+            return '\\x' . \str_pad(\dechex(\ord($char)), 2, '0', STR_PAD_LEFT);
+        }
+        if (isset($this->charData[$char]['class']) && \strpos($this->charData[$char]['class'], 'char-ws') !== false) {
+            // always replace "whitespace" chars
+            $charReplace = true;
+        }
+        if ($charReplace) {
+            return '\\u{' . \str_pad(\dechex(Utf8::ord($char)), 4, '0', STR_PAD_LEFT) . '}';
+        }
+        return $char;
+    }
+
+    /**
      * Highlight confusable and other characters
      *
      * @param string $str HTML String to update
@@ -291,24 +316,11 @@ class Value extends AbstractValue
     protected function highlightChars($str)
     {
         $chars = $this->findChars($str);
+        $charReplace = $this->optionGet('charReplace');
         foreach ($chars as $char) {
-            $replacement = $this->charReplacement($char);
+            $replacement = $this->charReplacement($char, $charReplace);
             $str = \str_replace($char, $replacement, $str);
         }
         return $str;
-    }
-
-    /**
-     * Get ordinal replacement for character
-     *
-     * @param string $char single multi-byte character
-     *
-     * @return string \x## or \u{####}
-     */
-    protected function charReplacement($char)
-    {
-        return \ord($char) < 0x80
-            ? '\\x' . \str_pad(\dechex(\ord($char)), 2, '0', STR_PAD_LEFT)
-            : '\\u{' . \str_pad(\dechex(Utf8::ord($char)), 4, '0', STR_PAD_LEFT) . '}';
     }
 }

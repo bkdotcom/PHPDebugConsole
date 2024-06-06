@@ -229,7 +229,7 @@ class SubstitutionTest extends DebugTestFramework
                 'firephp' => 'X-Wf-1-1-1-19: %d|[{{meta}},{{args}}]|',
                 'html' => '<li class="m_log">'
                     . '<span class="no-quotes t_string">'
-                        . '<span class="unicode" data-code-point="FEFF" title="U-FEFF: BOM / Zero Width No-Break Space">\u{feff}</span>'
+                        . '<span class="char-ws" data-code-point="FEFF" title="U-FEFF: BOM / Zero Width No-Break Space">\u{feff}</span>'
                         . '<span style="color:red;">sub 1</span>'
                         . '<span> &lt;b&gt;boldy&lt;/b&gt; &lt;b&gt;sub bold&lt;/b&gt;</span>'
                     . '</span> = <span class="t_string">extra</span>'
@@ -274,7 +274,7 @@ class SubstitutionTest extends DebugTestFramework
                 'firephp' => 'X-Wf-1-1-1-19: %d|[{{meta}},{{args}}]|',
                 'html' => '<li class="m_log">'
                     . '<span class="no-quotes t_string">'
-                        . '<span class="unicode" data-code-point="FEFF" title="U-FEFF: BOM / Zero Width No-Break Space">\u{feff}</span>'
+                        . '<span class="char-ws" data-code-point="FEFF" title="U-FEFF: BOM / Zero Width No-Break Space">\u{feff}</span>'
                         . '<span style="color:red;">sub 1</span>'
                         . '<span> <b>boldy</b> <b>sub bold</b></span>'
                     . '</span> = <span class="t_string">extra</span>'
@@ -319,7 +319,7 @@ class SubstitutionTest extends DebugTestFramework
                 'firephp' => 'X-Wf-1-1-1-19: %d|[{{meta}},{{args}}]|',
                 'html' => '<li class="m_log">'
                     . '<span class="no-quotes t_string">'
-                        . '<span class="unicode" data-code-point="FEFF" title="U-FEFF: BOM / Zero Width No-Break Space">\u{feff}</span>'
+                        . '<span class="char-ws" data-code-point="FEFF" title="U-FEFF: BOM / Zero Width No-Break Space">\u{feff}</span>'
                         . '<span style="color:red;">sub 1</span>'
                         . '<span> <b>boldy</b> &lt;b&gt;sub bold&lt;/b&gt;</span>'
                     . '</span> = <span class="t_string">extra</span>'

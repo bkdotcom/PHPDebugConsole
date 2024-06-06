@@ -44,6 +44,7 @@ $color-bg-unicode: #c0c0ff;
 
 .binary,
 .maxlen,
+.char-ws,
 .unicode {
   padding: 0 0.3em;
   // match a:hover (found in base.scss
@@ -70,6 +71,7 @@ $color-bg-unicode: #c0c0ff;
 .maxlen {
   background-color: $color-bg-maxlen;
 }
+.char-ws,
 .unicode {
   background-color: $color-bg-unicode;
   font-weight: normal; // many chars don't render as bold

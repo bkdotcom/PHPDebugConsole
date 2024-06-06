@@ -29,7 +29,7 @@ class TextAnsi extends Text
         'escapeCodes' => array(
             'arrayKey' => "\e[38;5;83m",    // yellow
             'binary' => "\e[30;48;5;250m",  // black foreground / grey background
-            'char' => "\e[38;5;208m",       // orange
+            'char' => "\e[34;48;5;14m",     // blue foreground / light-blue background
             'excluded' => "\e[38;5;9m",     // red
             'false' => "\e[91m",            // red
             'keyword' => "\e[38;5;45m",     // blue

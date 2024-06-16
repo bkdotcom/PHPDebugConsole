@@ -19,23 +19,18 @@ export function init ($root) {
 
 function tippyContent (reference) {
   var $ref = $(reference)
-  var attributes
-  var chars
-  var title
+  var title = $ref.prop('title') || $ref.data('titleOrig')
   if ($ref.hasClass('fa-hashtag')) {
-    attributes = $ref.parent().data('attributes')
-    chars = $ref.parent().data('chars') || []
-    return buildAttributes(attributes, chars)
+    return tippyContentAttributes($ref)
   }
-  title = $ref.prop('title') || $ref.data('titleOrig')
   if (!title) {
     return
   }
   $ref.data('titleOrig', title)
-  return tippyContentBuildTitle(title, $ref)
+  return tippyContentBuildTitle($ref, title)
 }
 
-function tippyContentBuildTitle(title, $ref) {
+function tippyContentBuildTitle($ref, title) {
   switch (title) {
     case 'Deprecated':
       title = tippyContentDeprecated($ref, title)
@@ -67,6 +62,21 @@ function tippyContentBuildTitle(title, $ref) {
   return title.replace(/\n/g, '<br />')
 }
 
+function tippyContentAttributes ($ref) {
+  var attributes = $ref.parent().data('attributes').map(function (attr) {
+    return buildAttribute(attr)
+  })
+  var chars = $ref.parent().data('chars') || []
+  var charRegex = new RegExp('[' + chars.join('') + ']', 'gu')
+  var html = '<dl>' +
+    '<dt class="attributes">attributes</dt>' +
+    attributes.join('') +
+    '</dl>'
+  return html.replace(charRegex, function (char) {
+    return '<span class="unicode">' + char + '</span>'
+  })
+}
+
 function tippyContentDeprecated ($ref, title) {
   var titleMore = $ref.parent().data('deprecatedDesc')
   return titleMore
@@ -75,8 +85,11 @@ function tippyContentDeprecated ($ref, title) {
 }
 
 function tippyContentImplements ($ref, title) {
-  var classname = $ref.parent().data('implements')
-  return title + ' ' + markupClassname(classname)
+  var className = $ref.parent().data('implements')
+  var $interface = $ref.closest('.object-inner').find('> .implements span[data-interface]').filter(function ($node) {
+    return $(this).data('interface') === className
+  })
+  return title + ' ' + $interface[0].innerHTML
 }
 
 function tippyContentInherited ($ref, title) {
@@ -178,22 +191,6 @@ function mergeModifiers (modCur, modNew) {
     modNew.push(modifier)
   }
   return modNew
-}
-
-function buildAttributes (attributes, chars) {
-  var i
-  var count = attributes.length
-  var charRegex = new RegExp('[' + chars.join('') + ']', 'gu')
-  var html = '<dl>' +
-    '<dt class="attributes">attributes</dt>'
-  for (i = 0; i < count; i++) {
-    html += buildAttribute(attributes[i])
-  }
-  html += '</dl>'
-  html = html.replace(charRegex, function (char) {
-    return '<span class="unicode">' + char + '</span>'
-  })
-  return html
 }
 
 function buildAttribute (attribute) {

@@ -103,7 +103,7 @@ class PhpDocTest extends TestCase
                             "type": null
                         },
                         {
-                            "defaultValue": "array('a'=>'ay','b'=>'bee')",
+                            "defaultValue": "array('a'=>'a\\'y','b'=>'bee')",
                             "isVariadic": false,
                             "name": "opts",
                             "type": null

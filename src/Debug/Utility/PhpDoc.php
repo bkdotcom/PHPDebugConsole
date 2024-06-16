@@ -12,6 +12,7 @@
 
 namespace bdk\Debug\Utility;
 
+use bdk\Debug\Utility\ArrayUtil;
 use bdk\Debug\Utility\PhpDoc\Helper;
 use bdk\Debug\Utility\PhpDoc\Parsers;
 use bdk\Debug\Utility\PhpDoc\Type;
@@ -53,22 +54,35 @@ class PhpDoc
 
     /** @var array<string,Parsed> */
     protected static $cache = array();
+
     /** @var string|null */
     protected $className;
+
+    /** @var array<string,mixed> */
+    protected $cfg = array();
+
     /** @var int */
     protected $fullyQualifyType = 0;
+
     /** @var Helper */
     protected $helper;
+
     /** @var Parsers */
     protected $parsers;
+
     /** @var Reflector|null */
     protected $reflector;
 
     /**
      * Constructor
+     *
+     * @param array<string,mixed> $cfg Configuration
      */
-    public function __construct()
+    public function __construct($cfg = array())
     {
+        $this->cfg = \array_merge(array(
+            'sanitizer' => array('bdk\Debug\Utility\HtmlSanitize', 'sanitize'),
+        ), $cfg);
         $this->helper = new Helper();
         $this->parsers = new Parsers($this->helper);
         $this->type = new Type();
@@ -105,19 +119,20 @@ class PhpDoc
      * @param string|object|Reflector $what             doc-block string, object, or Reflector instance
      * @param int                     $fullyQualifyType Whether to fully qualify type(s)
      *                                                    Bitmask of FULLY_QUALIFY* constants
+     * @param bool                    $sanitize         (true) Whether to sanitize comment
      *
      * @return array
      *
      * @psalm-return Parsed
      */
-    public function getParsed($what, $fullyQualifyType = 0)
+    public function getParsed($what, $fullyQualifyType = 0, $sanitize = true)
     {
         $hash = $this->hash($what);
         if (isset(self::$cache[$hash])) {
             return self::$cache[$hash];
         }
         $comment = $this->getComment($what);
-        $parsed = $this->parse($comment, $this->reflector, $fullyQualifyType);
+        $parsed = $this->parse($comment, $this->reflector, $fullyQualifyType, $sanitize);
         self::$cache[$hash] = $parsed;
         return $parsed;
     }
@@ -151,12 +166,13 @@ class PhpDoc
      * @param string    $comment          comment content
      * @param Reflector $reflector        Reflector instance
      * @param int       $fullyQualifyType Whether to fully qualify type(s)
+     * @param bool      $sanitize         Whether to sanitize comment
      *
      * @return array
      *
      * @psalm-return Parsed
      */
-    private function parse($comment, Reflector $reflector = null, $fullyQualifyType = 0)
+    private function parse($comment, Reflector $reflector = null, $fullyQualifyType = 0, $sanitize = true)
     {
         $this->reflector = $reflector;
         $this->fullyQualifyType = $fullyQualifyType;
@@ -167,23 +183,44 @@ class PhpDoc
         $elementName = $reflector
             ? $reflector->getName()
             : null;
-        $matches = array();
         $parsed = array();
+        list($comment, $strTags) = $this->separateComment($comment);
+        $parsed = \array_merge($parsed, $this->helper->parseDescSummary($comment));
+        $parsed = \array_merge($parsed, $this->parseTags($strTags, $elementName));
+        $parsed = \array_merge($this->parseGetDefaults($parsed), $parsed);
+        $parsed = \array_merge($parsed, $this->replaceInheritDoc($parsed, $comment));
+        if ($sanitize) {
+            $parsed = ArrayUtil::mapRecursive(function ($value, $key) {
+                return \is_string($value) && \in_array($key, array('defaultValue', 'type', 'uri'), true) === false
+                    ? \call_user_func($this->cfg['sanitizer'], $value)
+                    : $value;
+            }, $parsed);
+        }
+        \ksort($parsed);
+        return $parsed;
+    }
+
+    /**
+     * Split phpDoc comment into description/summary & tags
+     *
+     * @param string $comment phpDoc Comment content
+     *
+     * @return list<string>
+     */
+    private function separateComment($comment)
+    {
+        $matches = array();
+        $strTags = '';
         if (\preg_match('/^@/m', $comment, $matches, PREG_OFFSET_CAPTURE)) {
             // we have tags
             $pos = $matches[0][1];
             $strTags = \substr($comment, $pos);
-            $parsed = $this->parseTags($strTags, $elementName);
             // remove tags from comment
             $comment = $pos > 0
                 ? \substr($comment, 0, $pos - 1)
                 : '';
         }
-        $parsed = \array_merge($parsed, $this->helper->parseDescSummary($comment));
-        $parsed = \array_merge($this->parseGetDefaults($parsed), $parsed);
-        $parsed = \array_merge($parsed, $this->replaceInheritDoc($parsed, $comment));
-        \ksort($parsed);
-        return $parsed;
+        return array($comment, $strTags);
     }
 
     /**
@@ -248,7 +285,7 @@ class PhpDoc
             ? $this->parseTagRegex($parser, $tagStr)
             : \array_fill_keys($parser['parts'], null);
         foreach ((array) $parser['callable'] as $callable) {
-            $parsed = \array_merge($parsed, \call_user_func(
+            $parsed = \call_user_func(
                 $callable,
                 $parsed,
                 array(
@@ -260,7 +297,7 @@ class PhpDoc
                     'tagName' => $tagName,
                     'tagStr' => $tagStr,
                 )
-            ));
+            );
         }
         $parsed['desc'] = $this->helper->trimDesc($parsed['desc']);
         \ksort($parsed);

@@ -2,6 +2,7 @@
 
 namespace bdk\Test\Debug\Collector;
 
+use bdk\Debug\Utility\Reflection;
 use bdk\Test\Debug\DebugTestFramework;
 
 /**
@@ -9,6 +10,17 @@ use bdk\Test\Debug\DebugTestFramework;
  */
 class DoctrineLoggerTest extends DebugTestFramework
 {
+    /**
+     * setUp is executed before each test
+     *
+     * @return void
+     */
+    public function setUp(): void
+    {
+        parent::setUp();
+        Reflection::propSet('bdk\Debug\Collector\StatementInfo', 'id', 0);
+    }
+
     public function testOutput()
     {
         // $logger = $this->getLogger();
@@ -59,7 +71,7 @@ EOD;
 
         $select1expect = <<<EOD
 %A
-<li class="m_group" data-channel="general.Doctrine" data-icon="fa fa-database">
+<li class="m_group" data-channel="general.Doctrine" data-icon="fa fa-database" id="statementInfo2">
 <div class="group-header"><span class="group-label">SELECT * FROM `bob`…</span></div>
 <ul class="group-body">
 <li class="m_log no-indent" data-channel="general.Doctrine"><span class="highlight language-sql no-quotes t_string">SELECT
@@ -90,7 +102,7 @@ EOD;
 
         $select2expect = <<<'EOD'
 %A
-<li class="m_group" data-channel="general.Doctrine" data-icon="fa fa-database">
+<li class="m_group" data-channel="general.Doctrine" data-icon="fa fa-database" id="statementInfo3">
 <div class="group-header"><span class="group-label">select * from bob…</span></div>
 <ul class="group-body">
 <li class="m_log no-indent" data-channel="general.Doctrine"><span class="highlight language-sql no-quotes t_string">select

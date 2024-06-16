@@ -147,6 +147,7 @@ class Utf8Test extends TestCase
         self::assertSame(169, Utf8::ord('©'));   // 2-byte
         self::assertSame(65049, Utf8::ord('︙'));   // 3-byte
         self::assertSame(128169, Utf8::ord('💩'));  // 4-type
+        self::assertSame(false, Utf8::ord("\xf8abd"));  // invalid
     }
 
     /**

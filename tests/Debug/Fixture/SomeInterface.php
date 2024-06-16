@@ -11,7 +11,7 @@ use foo\bar\baz;
  * @property-read bool $magicReadProp Read Only!
  *
  * @method void presto($foo, integer $int = 1, $bool = true, $null = null) I'm a magic method
- * @method static void prestoStatic(string $noDefault, $arr = array(), $opts=array('a'=>'ay','b'=>'bee')) I'm a static magic method
+ * @method static void prestoStatic(string $noDefault, $arr = array(), $opts=array('a'=>'a\'y','b'=>'bee')) I'm a static magic method
  *
  * @author  Brad Kent <bkfake-github@yahoo.com> Author desc is non-standard
  * @link    https://github.com/bkdotcom/PHPDebugConsole

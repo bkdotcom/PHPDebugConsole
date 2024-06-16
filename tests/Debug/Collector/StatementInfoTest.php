@@ -3,6 +3,7 @@
 namespace bdk\Test\Debug\Collector;
 
 use bdk\Debug\Collector\StatementInfo;
+use bdk\Debug\Utility\Reflection;
 use bdk\Test\Debug\DebugTestFramework;
 use Exception;
 
@@ -12,6 +13,17 @@ use Exception;
  */
 class StatementInfoTest extends DebugTestFramework
 {
+    /**
+     * setUp is executed before each test
+     *
+     * @return void
+     */
+    public function setUp(): void
+    {
+        parent::setUp();
+        Reflection::propSet('bdk\Debug\Collector\StatementInfo', 'id', 0);
+    }
+
     public function testConstruct()
     {
         $sql = 'SELECT `first_name`, `last_name`, `password` FROM `users` u'
@@ -54,13 +66,19 @@ class StatementInfoTest extends DebugTestFramework
         $logEntries = $this->getLogEntries();
         // echo \json_encode($logEntries, JSON_PRETTY_PRINT);
         $logEntriesExpectJson = <<<'EOD'
-        [
-            {
+        {
+            "statementInfo1": {
                 "method": "group",
                 "args": ["SELECT `first_name`, `last_name`, `password` FROM `users`\u2026"],
-                "meta": {"boldLabel": false, "icon": "fa fa-list-ul"}
+                "meta": {
+                    "attribs": {
+                        "id": "statementInfo1",
+                        "class": []
+                    },
+                    "boldLabel": false, "icon": "fa fa-list-ul"
+                }
             },
-            {
+            "0": {
                 "method": "log",
                 "args": [
                     {
@@ -83,7 +101,7 @@ class StatementInfoTest extends DebugTestFramework
                     }
                 }
             },
-            {
+            "1": {
                 "method": "table",
                 "args": [
                     [
@@ -106,17 +124,17 @@ class StatementInfoTest extends DebugTestFramework
                     }
                 }
             },
-            {
+            "2": {
                 "method": "time",
                 "args": ["duration: 12.3 ms"],
                 "meta": []
             },
-            {
+            "3": {
                 "method": "log",
                 "args": ["memory usage", "6.13 kB"],
                 "meta": []
             },
-            {
+            "4": {
                 "method": "warn",
                 "args": [
                     "%cLIMIT%c without %cORDER BY%c causes non-deterministic results",
@@ -133,7 +151,7 @@ class StatementInfoTest extends DebugTestFramework
                     "uncollapse": false
                 }
             },
-            {
+            "5": {
                 "method": "warn",
                 "args": [
                     "Exception: it broke (code 666)"
@@ -146,22 +164,22 @@ class StatementInfoTest extends DebugTestFramework
                     "uncollapse": true
                 }
             },
-            {
+            "6": {
                 "method": "groupEnd",
                 "args": [],
                 "meta": []
             }
-        ]
+        }
 EOD;
         $logEntriesExpect = \json_decode($logEntriesExpectJson, true);
         // duration
         // $logEntriesExpect[3]['args'][0] = $logEntries[3]['args'][0];
         // memory usage
-        $logEntriesExpect[4]['args'][1] = $logEntries[4]['args'][1];
+        $logEntriesExpect[3]['args'][1] = $logEntries[3]['args'][1];
+        $logEntriesExpect[4]['meta']['file'] = $logEntries[4]['meta']['file'];
+        $logEntriesExpect[4]['meta']['line'] = $logEntries[4]['meta']['line'];
         $logEntriesExpect[5]['meta']['file'] = $logEntries[5]['meta']['file'];
         $logEntriesExpect[5]['meta']['line'] = $logEntries[5]['meta']['line'];
-        $logEntriesExpect[6]['meta']['file'] = $logEntries[6]['meta']['file'];
-        $logEntriesExpect[6]['meta']['line'] = $logEntries[6]['meta']['line'];
         // \bdk\Debug::varDump('expect', $logEntriesExpect);
         // \bdk\Debug::varDump('actual', $logEntries);
         $this->assertSame($logEntriesExpect, $logEntries);

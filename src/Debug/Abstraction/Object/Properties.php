@@ -338,7 +338,7 @@ class Properties extends AbstractInheritable
                 ? $this->helper->getAttributes($refProperty)
                 : array(),
             'desc' => $abs['cfgFlags'] & AbstractObject::PHPDOC_COLLECT
-                ? $phpDoc['desc']
+                ? $phpDoc['desc'] // actually the "summary"
                 : null,
             'isPromoted' =>  PHP_VERSION_ID >= 80000
                 ? $refProperty->isPromoted()

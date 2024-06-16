@@ -6,6 +6,7 @@ use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Collector\Pdo;
+use bdk\Debug\Utility\Reflection;
 use bdk\HttpMessage\Utility\ContentType;
 use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 use bdk\PubSub\Event;
@@ -23,6 +24,17 @@ class PdoTest extends DebugTestFramework
     use ExpectExceptionTrait;
 
     private static $client;
+
+    /**
+     * setUp is executed before each test
+     *
+     * @return void
+     */
+    public function setUp(): void
+    {
+        parent::setUp();
+        Reflection::propSet('bdk\Debug\Collector\StatementInfo', 'id', 0);
+    }
 
     public static function setUpBeforeClass(): void
     {
@@ -124,12 +136,16 @@ EOD;
         $logEntries = $this->getLogEntries(8);
 
         $logEntriesExpect = array(
-            array(
+            'statementInfo1' => array(
                 'method' => 'groupCollapsed',
                 'args' => array(
                     'SELECT * FROM `bob`…',
                 ),
                 'meta' => array(
+                    'attribs' => array(
+                        'id' => 'statementInfo1',
+                        'class' => array(),
+                    ),
                     'boldLabel' => false,
                     'channel' => 'general.PDO',
                     'icon' => 'fa fa-database',
@@ -278,38 +294,46 @@ EOD;
         $this->assertIsInt($count);
 
         $logEntriesExpectJson = <<<'EOD'
-        [
-            {
+        {
+            "statementInfo1": {
                 "method": "groupCollapsed",
                 "args": ["DELETE FROM `bob`"],
-                "meta": {"boldLabel": false, "channel": "general.PDO", "icon": "fa fa-database"}
+                "meta": {
+                    "attribs": {
+                        "id": "statementInfo1",
+                        "class": []
+                    },
+                    "boldLabel": false, "channel": "general.PDO", "icon": "fa fa-database"
+                }
             },
-            {
+            "0": {
                 "method": "time",
                 "args": ["duration: 46.0148 \u03bcs"],
                 "meta": {"channel": "general.PDO"}
             },
-            {
+            "1": {
                 "method": "log",
                 "args": ["memory usage", "0 B"],
                 "meta": {"channel": "general.PDO"}
             },
-            {
+            "2": {
                 "method": "groupEnd",
                 "args": [],
                 "meta": {"channel": "general.PDO"}
             }
-        ]
+        }
 EOD;
         $logEntriesExpect = \json_decode($logEntriesExpectJson, true);
 
         $logEntries = $this->getLogEntries();
 
         // duration
-        $logEntriesExpect[1]['args'][0] = $logEntries[1]['args'][0];
+        $logEntriesExpect[0]['args'][0] = $logEntries[0]['args'][0];
         // memory
-        $logEntriesExpect[2]['args'][1] = $logEntries[2]['args'][1];
+        $logEntriesExpect[1]['args'][1] = $logEntries[1]['args'][1];
 
+        // \bdk\Debug::varDump('expect', $logEntriesExpect);
+        // \bdk\Debug::varDump('actual', $logEntries);
         $this->assertSame($logEntriesExpect, $logEntries);
     }
 

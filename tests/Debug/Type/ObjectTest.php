@@ -323,7 +323,7 @@ EOD;
                         if (PHP_VERSION_ID >= 80000) {
                             self::assertStringContainsString(\implode("\n", array(
                                 '<dt>implements</dt>',
-                                '<dd><ul class="list-unstyled">',
+                                '<dd class="implements"><ul class="list-unstyled">',
                                 '<li><span class="interface"><span class="classname">Stringable</span></span></li>',
                                 '</ul>',
                                 '</dd>',
@@ -1118,7 +1118,7 @@ EOD;
                     <dt>extends</dt>
                         <dd class="extends"><span class="classname">stdClass</span></dd>
                     <dt>implements</dt>
-                        <dd><ul class="list-unstyled">
+                        <dd class="implements"><ul class="list-unstyled">
                         <li><span class="interface toggle-off"><span class="classname">IteratorAggregate</span></span>
                         <ul class="list-unstyled">
                         <li><span class="interface"><span class="classname">Traversable</span></span></li>
@@ -1433,7 +1433,7 @@ EOD;
                     $abs = $logEntry['args'][0];
                     self::assertTrue($abs['properties']['arg1']['isPromoted']);
                     self::assertTrue($abs['methods']['__construct']['params'][0]['isPromoted']);
-                    self::assertSame('Attributed & promoted param', $abs['properties']['arg1']['desc']);
+                    self::assertSame('Attributed &amp; promoted param', $abs['properties']['arg1']['desc']);
                 },
                 'html' => static function ($html) {
                     $propExpect = \str_replacE('\\', '\\\\', '<dd class="isPromoted property public" data-attributes="[{&quot;arguments&quot;:[],&quot;name&quot;:&quot;bdk\\Test\\Debug\\Fixture\\ExampleParamAttribute&quot;}]"><span class="t_modifier_public">public</span> <span class="t_type">int</span> <span class="no-quotes t_identifier t_string" title="Attributed &amp;amp; promoted param">arg1</span> <span class="t_operator">=</span> <span class="t_int">42</span></dd>');

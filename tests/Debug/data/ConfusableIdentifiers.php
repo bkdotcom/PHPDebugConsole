@@ -21,7 +21,7 @@ return array(
     'cases' => array(),
     'className' => 'bdk\Test\Debug\Fixture\Con𝘧usableIdenti𝘧iers',
     'constants' => array(
-        "ᖴOO" => array(
+        'ᖴOO' => array(
             'attributes' => PHP_VERSION_ID >= 80000
                 ? array(
                     array(
@@ -38,7 +38,7 @@ return array(
             'declaredOrig' => 'bdk\Test\Debug\Fixture\Con𝘧usableIdenti𝘧iers',
             'declaredPrev' => null,
             'desc' => PHP_VERSION_ID >= 70100
-                ? '[𐊢]onst <b onhover="alert(\'xss\')">desc</b>'
+                ? '[𐊢]onst <b>desc</b>'
                 : null,
             'isFinal' => false,
             'type' => null,
@@ -81,10 +81,10 @@ return array(
             'params' => array(),
             'phpDoc' => array(
                 'desc' => null,
-                'summary' => 'M[ɑ]gic <b onhover="alert(\'xss\')">method</b>',
+                'summary' => 'M[ɑ]gic <b>method</b>',
             ),
             'return' => array(
-                'desc' => '<b onhover="alert(\'xss\')">happy</b> [һ]appy',
+                'desc' => '<b>happy</b> [һ]appy',
                 'type' => Type::TYPE_STRING,
             ),
             'returnValue' => 'Thiꮪ <b>is</b> a string',
@@ -148,7 +148,7 @@ return array(
             'params' => array(
                 array(
                     'attributes' => array(),
-                    'defaultValue' => 'vаlսe',
+                    'defaultValue' => 'vаl,սe',
                     'desc' => null,
                     'isOptional' => false,
                     'isPassedByReference' => false,
@@ -192,7 +192,7 @@ return array(
                 ),
                 array(
                     'attributes' => array(),
-                    'defaultValue' => array(),
+                    'defaultValue' => 'array(\'<script>alert("xss")</script>\')',
                     'desc' => null,
                     'isOptional' => false,
                     'isPassedByReference' => false,
@@ -220,7 +220,7 @@ return array(
             ),
             'phpDoc' => array(
                 'desc' => null,
-                'summary' => 'T[е]st <b onhover="alert(\'xss\')">method</b>',
+                'summary' => 'T[е]st :) <b>method</b>',
             ),
             'return' => array(
                 'desc' => null,
@@ -256,7 +256,7 @@ return array(
                                 'arguments' => array(
                                     'fσo' => '<b>b</b>aг',
                                 ),
-                                'name' => "bdk\Test\Debug\Fix𝐭ure\ExampleParamАttribute",
+                                'name' => 'bdk\Test\Debug\Fix𝐭ure\ExampleParamАttribute',
                             ),
                         )
                         : array(),
@@ -273,19 +273,19 @@ return array(
             'phpDoc' => array(
                 'cʋstTag' => array(
                     array(
-                        'desc' => 'h[ο]wdy there <b onhover="alert(\'xss\')">partner</b>',
+                        'desc' => 'h[ο]wdy there <b>partner</b>',
                     ),
                 ),
                 'deprecated' => array(
                     array(
-                        'desc' => '[Ʀ]ea<b onhover="alert(\'xss\')">sons</b>',
+                        'desc' => '[Ʀ]ea<b>sons</b>',
                     ),
                 ),
-                'desc' => '<b onhover="alert(\'xss\')">[𝖽]esc</b>ription',
-                'summary' => '<b onhover="alert(\'xss\')">[𐑈]um</b>mary.',
+                'desc' => '<b>[𝖽]esc</b>ription',
+                'summary' => '<b>[𐑈]um</b>mary.',
                 'throws' => array(
                     array(
-                        'desc' => '[Ʀ]ea<b onhover="alert(\'xss\')">sons</b>',
+                        'desc' => '[Ʀ]ea<b>sons</b>',
                         'type' => 'Ьdk\𐊂ogus',
                     ),
                 ),
@@ -300,31 +300,31 @@ return array(
     ),
     'methodsWithStaticVars' => array(),
     'phpDoc' => array(
-        'desc' => 'CƖass <b onhover="alert(\'xss\')">[𝖽]esc</b>ription',
-        'summary' => 'CƖass <b onhover="alert(\'xss\')">[𐑈]um</b>mary.',
+        'desc' => 'CƖass <b>[𝖽]esc</b>ription',
+        'summary' => 'CƖass <b>[𐑈]um</b>mary.',
         'author' => array(
             array(
-                'desc' => '[Ｓ]pam <em onhover="alert(\'xss\')">folder</em>',
+                'desc' => '[Ｓ]pam <em>folder</em>',
                 'email' => 'bkfake-github@уahoo.com',
                 'name' => '[Β]rad Kent',
             ),
         ),
         'link' => array(
             array(
-                'desc' => '[Ⅼ]ink <b onhover="alert(\'xss\')">Rot</b>',
-                'uri' => 'http://ᴜrl.com',
+                'desc' => '[Ⅼ]ink <b>Rot</b>',
+                'uri' => 'http://ᴜrl.com/?foo=bar&ding=dong',
             ),
         ),
         'see' => array(
             array(
-                'desc' => '<b onhover="alert(\'xss\')">Super</b> [Η]elpful',
+                'desc' => '<b>Super</b> [Η]elpful',
                 'fqsen' => null,
-                'uri' => 'http://ᴜrl.com',
+                'uri' => 'http://ᴜrl.com/?foo=bar&ding=dong',
             ),
         ),
         'ᴄustTag' => array(
             array(
-                'desc' => '[ｈ]owdy <B onhover="alert(\'xss\')">partner</B>',
+                'desc' => '[ｈ]owdy <b>partner</b>',
             ),
         ),
     ),
@@ -335,12 +335,12 @@ return array(
             'declaredLast' => 'bdk\Test\Debug\Fixture\Con𝘧usableIdenti𝘧iers',
             'declaredOrig' => 'bdk\Test\Debug\Fixture\Con𝘧usableIdenti𝘧iers',
             'declaredPrev' => null,
-            'desc' => 'key => value array',
+            'desc' => 'key =&gt; value array',
             'forceShow' => false,
             'isPromoted' => false,
             'isReadOnly' => false,
             'isStatic' => false,
-            'type' => Type::TYPE_ARRAY,
+            'type' => 'array<string,mixed>',
             'value' => array(
                 'debug' =>  Abstracter::ABSTRACTION,
                 'keys' => array(
@@ -388,7 +388,7 @@ return array(
             'declaredLast' => 'bdk\Test\Debug\Fixture\Con𝘧usableIdenti𝘧iers',
             'declaredOrig' => 'bdk\Test\Debug\Fixture\Con𝘧usableIdenti𝘧iers',
             'declaredPrev' => null,
-            'desc' => '[Ⲣ]roperty <b onhover="alert(\'xss\')">desc</b>',
+            'desc' => '[Ⲣ]roperty <b>desc</b>',
             'forceShow' => false,
             'isPromoted' => false,
             'isReadOnly' => false,

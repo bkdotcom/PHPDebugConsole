@@ -55,6 +55,11 @@ class Base extends AbstractComponent
     /** @var string */
     protected $channelNameRoot;
 
+    /** @var list<string> */
+    protected $readOnly = array(
+        'valDumper',
+    );
+
     /** @var Substitution */
     protected $substitution;
 

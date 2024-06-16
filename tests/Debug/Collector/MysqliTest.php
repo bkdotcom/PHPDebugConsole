@@ -5,6 +5,7 @@ namespace bdk\Test\Debug\Collector;
 use bdk\Debug;
 use bdk\Debug\Collector\MySqli;
 use bdk\Debug\LogEntry;
+use bdk\Debug\Utility\Reflection;
 use bdk\PubSub\Event;
 use bdk\Test\Debug\DebugTestFramework;
 
@@ -21,6 +22,17 @@ class MysqliTest extends DebugTestFramework
 {
     private static $client;
     private static $error = false;
+
+    /**
+     * setUp is executed before each test
+     *
+     * @return void
+     */
+    public function setUp(): void
+    {
+        parent::setUp();
+        Reflection::propSet('bdk\Debug\Collector\StatementInfo', 'id', 0);
+    }
 
     public static function setUpBeforeClass(): void
     {
@@ -130,13 +142,16 @@ EOD;
         );
         self::assertTrue($result);
         $logEntriesExpectJson = <<<EOD
-        [
-            {
+        {
+            "statementInfo1" : {
                 "method": "groupCollapsed",
                 "args": ["INSERT INTO `bob`\u2026"],
-                "meta": {"boldLabel": false, "channel": "general.MySqli", "icon": "fa fa-database"}
+                "meta": {
+                    "attribs": {"id": "statementInfo1", "class":[]},
+                    "boldLabel": false, "channel": "general.MySqli", "icon": "fa fa-database"
+                }
             },
-            {
+            "0": {
                 "method": "log",
                 "args": [
                     {
@@ -162,7 +177,7 @@ EOD;
                     "channel": "general.MySqli"
                 }
             },
-            {
+            "1": {
                 "method": "log",
                 "args": ["parameters", [
                     "brad was here",
@@ -171,27 +186,27 @@ EOD;
                 ]],
                 "meta": {"channel": "general.MySqli"}
             },
-            {
+            "2": {
                 "method": "time",
                 "args": ["duration: %s"],
                 "meta": {"channel": "general.MySqli"}
             },
-            {
+            "3": {
                 "method": "log",
                 "args": ["memory usage", "%s"],
                 "meta": {"channel": "general.MySqli"}
             },
-            {
+            "4": {
                 "method": "log",
                 "args": ["rowCount", 1],
                 "meta": {"channel": "general.MySqli"}
             },
-            {
+            "5": {
                 "method": "groupEnd",
                 "args": [],
                 "meta": {"channel": "general.MySqli"}
             }
-        ]
+        }
 EOD;
         self::assertLogEntries($logEntriesExpectJson, $this->getLogEntries());
     }
@@ -216,13 +231,16 @@ EOD;
         } while (self::$client->more_results() && self::$client->next_result());
 
         $logEntriesExpectJson = <<<EOD
-        [
-            {
+        {
+            "statementInfo1": {
                 "method": "groupCollapsed",
                 "args": ["SELECT CURRENT_USER();SELECT `t` from `bob`\u2026"],
-                "meta": {"boldLabel": false, "channel": "general.MySqli", "icon": "fa fa-database"}
+                "meta": {
+                    "attribs": {"id": "statementInfo1", "class":[]},
+                    "boldLabel": false, "channel": "general.MySqli", "icon": "fa fa-database"
+                }
             },
-            {
+            "0": {
                 "method": "log",
                 "args": [
                     {
@@ -248,17 +266,17 @@ EOD;
                     "channel": "general.MySqli"
                 }
             },
-            {
+            "1": {
                 "method": "time",
                 "args": ["duration: %s"],
                 "meta": {"channel": "general.MySqli"}
             },
-            {
+            "2": {
                 "method": "log",
                 "args": ["memory usage", "%s"],
                 "meta": {"channel": "general.MySqli"}
             },
-            {
+            "3": {
                 "method": "warn",
                 "args": [
                     "The %%cSELECT%%c statement has no %%cWHERE%%c clause and could examine many more rows than intended",
@@ -276,7 +294,7 @@ EOD;
                     "uncollapse": false
                 }
             },
-            {
+            "4": {
                 "method": "warn",
                 "args": ["%%cLIMIT%%c without %%cORDER BY%%c causes non-deterministic results", "font-family:monospace", "", "font-family:monospace", ""],
                 "meta": {
@@ -288,12 +306,12 @@ EOD;
                     "uncollapse": false
                 }
             },
-            {
+            "5": {
                 "method": "groupEnd",
                 "args": [],
                 "meta": {"channel": "general.MySqli"}
             }
-        ]
+        }
 EOD;
         self::assertLogEntries($logEntriesExpectJson, $this->getLogEntries(9));
     }
@@ -316,20 +334,23 @@ EOD;
         $int = 42;
         $stmt->execute();
         $logEntriesExpectJson = <<<'EOD'
-        [
-            {
+        {
+            "statementInfo1": {
                 "method": "groupCollapsed",
                 "args": ["INSERT INTO `bob`\u2026"],
-                "meta": {"boldLabel": false, "channel": "general.MySqli", "icon": "fa fa-database"}
+                "meta": {
+                    "attribs": {"id": "statementInfo1", "class":[]},
+                    "boldLabel": false, "channel": "general.MySqli", "icon": "fa fa-database"
+                }
             },
-            {
+            "0": {
                 "method": "log",
                 "args": [
                     {"attribs": {"class": ["highlight", "language-sql", "no-quotes"] }, "brief": false, "contentType": "application\/sql", "debug": "\u0000debug\u0000", "prettified": true, "prettifiedTag": false, "type": "string", "typeMore": null, "value": "INSERT INTO `bob` (`t`, `e`, `ct`) \nVALUES \n  (?, ?, ?)"}
                 ],
                 "meta": {"attribs": {"class": ["no-indent"] }, "channel": "general.MySqli"}
             },
-            {
+            "1": {
                 "method": "table",
                 "args": [
                     [
@@ -340,27 +361,27 @@ EOD;
                 ],
                 "meta": {"caption": "parameters", "channel": "general.MySqli", "sortable": true, "tableInfo": {"class": null, "columns": [{"key": "value"}, {"key": "type"} ], "haveObjRow": false, "indexLabel": null, "rows": [], "summary": null } }
             },
-            {
+            "2": {
                 "method": "time",
                 "args": ["duration: %s"],
                 "meta": {"channel": "general.MySqli"}
             },
-            {
+            "3": {
                 "method": "log",
                 "args": ["memory usage", "%s"],
                 "meta": {"channel": "general.MySqli"}
             },
-            {
+            "4": {
                 "method": "log",
                 "args": ["rowCount", 1 ],
                 "meta": {"channel": "general.MySqli"}
             },
-            {
+            "5": {
                 "method": "groupEnd",
                 "args": [],
                 "meta": {"channel": "general.MySqli"}
             }
-        ]
+        }
 EOD;
         self::assertLogEntries($logEntriesExpectJson, $this->getLogEntries(8));
     }
@@ -380,23 +401,26 @@ EOD;
             } while (self::$client->more_results() && self::$client->next_result());
         }
         $logEntriesExpectJson = <<<EOD
-        [
-            {
+        {
+            "statementInfo1": {
                 "method": "groupCollapsed",
                 "args": ["SELECT * from `bob`"],
-                "meta": {"boldLabel": false, "channel": "general.MySqli", "icon": "fa fa-database"}
+                "meta": {
+                    "attribs": {"id": "statementInfo1", "class":[]},
+                    "boldLabel": false, "channel": "general.MySqli", "icon": "fa fa-database"
+                }
             },
-            {
+            "0": {
                 "method": "time",
                 "args": ["duration: %s"],
                 "meta": {"channel": "general.MySqli"}
             },
-            {
+            "1": {
                 "method": "log",
                 "args": ["memory usage", "%s"],
                 "meta": {"channel": "general.MySqli"}
             },
-            {
+            "2": {
                 "method": "warn",
                 "args": ["Use %%cSELECT *%%c only if you need all columns from table", "font-family:monospace", ""],
                 "meta": {
@@ -408,7 +432,7 @@ EOD;
                     "uncollapse": false
                 }
             },
-            {
+            "3": {
                 "method": "warn",
                 "args": [
                     "The %%cSELECT%%c statement has no %%cWHERE%%c clause and could examine many more rows than intended",
@@ -426,17 +450,17 @@ EOD;
                     "uncollapse": false
                 }
             },
-            {
+            "4": {
                 "method": "log",
                 "args": ["rowCount", -1 ],
                 "meta": {"channel": "general.MySqli"}
             },
-            {
+            "5": {
                 "method": "groupEnd",
                 "args": [],
                 "meta": {"channel": "general.MySqli"}
             }
-        ]
+        }
 
 EOD;
         self::assertLogEntries($logEntriesExpectJson, $this->getLogEntries(9));
@@ -617,18 +641,21 @@ EOD;
         self::$client->commit();
 
         $logEntriesExpectJson = <<<'EOD'
-            [
-                {
+            {
+                "0": {
                     "method": "info",
                     "args": ["begin_transaction"],
                     "meta": {"channel": "general.MySqli", "icon": "fa fa-database"}
                 },
-                {
+                "statementInfo1": {
                     "method": "groupCollapsed",
                     "args": ["INSERT INTO `bob`\u2026"],
-                    "meta": {"boldLabel": false, "channel": "general.MySqli", "icon": "fa fa-database"}
+                    "meta": {
+                        "attribs": {"id": "statementInfo1", "class":[]},
+                        "boldLabel": false, "channel": "general.MySqli", "icon": "fa fa-database"
+                    }
                 },
-                {
+                "1": {
                     "method": "log",
                     "args": [
                         {
@@ -647,32 +674,32 @@ EOD;
                     ],
                     "meta": {"attribs": {"class": ["no-indent"] }, "channel": "general.MySqli"}
                 },
-                {
+                "2": {
                     "method": "time",
                     "args": ["duration: %s"],
                     "meta": {"channel": "general.MySqli"}
                 },
-                {
+                "3": {
                     "method": "log",
                     "args": ["memory usage", "%s"],
                     "meta": {"channel": "general.MySqli"}
                 },
-                {
+                "4": {
                     "method": "log",
                     "args": ["rowCount", 1 ],
                     "meta": {"channel": "general.MySqli"}
                 },
-                {
+                "5": {
                     "method": "groupEnd",
                     "args": [],
                     "meta": {"channel": "general.MySqli"}
                 },
-                {
+                "6": {
                     "method": "info",
                     "args": ["commit"],
                     "meta": {"channel": "general.MySqli", "icon": "fa fa-database"}
                 }
-            ]
+            }
 EOD;
         self::assertLogEntries($logEntriesExpectJson, $this->getLogEntries(9));
     }
@@ -686,8 +713,8 @@ EOD;
         self::$client->commit(0, 'Billy');
         $line = __LINE__ - 1;
         $logEntriesExpectJson = <<<EOD
-        [
-            {
+        {
+            "0": {
                 "method": "info",
                 "args": ["begin_transaction", "Billy"],
                 "meta": {
@@ -695,16 +722,17 @@ EOD;
                     "icon": "fa fa-database"
                 }
             },
-            {
+            "statementInfo1": {
                 "method": "groupCollapsed",
                 "args": ["INSERT INTO `bob`…"],
                 "meta": {
+                    "attribs": {"id": "statementInfo1", "class":[]},
                     "boldLabel": false,
                     "channel": "general.MySqli",
                     "icon": "fa fa-database"
                 }
             },
-            {
+            "1": {
                 "method": "log",
                 "args": [
                     {
@@ -728,27 +756,27 @@ EOD;
                     "channel": "general.MySqli"
                 }
             },
-            {
+            "2": {
                 "method": "time",
                 "args": ["duration: %s"],
                 "meta": {"channel": "general.MySqli"}
             },
-            {
+            "3": {
                 "method": "log",
                 "args": ["memory usage", "%s"],
                 "meta": {"channel": "general.MySqli"}
             },
-            {
+            "4": {
                 "method": "log",
                 "args": ["rowCount", 1],
                 "meta": {"channel": "general.MySqli"}
             },
-            {
+            "5": {
                 "method": "groupEnd",
                 "args": [],
                 "meta": {"channel": "general.MySqli"}
             },
-            {
+            "6": {
                 "method": "warn",
                 "args": ["passing \$name param to mysqli::commit() does nothing!"],
                 "meta": {
@@ -760,12 +788,12 @@ EOD;
                     "uncollapse": true
                 }
             },
-            {
+            "7": {
                 "method": "info",
                 "args": ["commit"],
                 "meta": {"channel": "general.MySqli", "icon": "fa fa-database"}
             }
-        ]
+        }
 EOD;
         self::assertLogEntries($logEntriesExpectJson, $this->getLogEntries());
     }

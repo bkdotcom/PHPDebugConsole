@@ -2,20 +2,6 @@
   transform: scale(1); // so that sidebar gets attached here
 }
 
-.badge {
-  display: inline-block;
-  padding: 0.25em 0.4em 0.16em;
-  font-size: 82%;
-  font-weight: 500;
-  line-height: 1;
-  text-align: center;
-  white-space: nowrap;
-  vertical-align: bottom;
-  border-radius: 0.25rem;
-  color: #fff;
-  background-color: #666;
-}
-
 .debug-sidebar {
 
   $sidebar-w: 119px;

@@ -54,22 +54,21 @@ class ArrayUtil
      * Returns an array containing all the values from array that are not present in any of the other arrays.
      *
      * @param array $array1    array to compare from
-     * @param array ...$arrays arrays to compare against
+     * @param array ...$array2 arrays to compare against
      *
      * @return array
      *
      * @throws InvalidArgumentException
-     *
-     * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed
      */
-    public static function diffAssocRecursive(array $array1, $arrays)
+    public static function diffAssocRecursive(array $array1, $array2)
     {
-        return \array_reduce(\array_slice(\func_get_args(), 1), static function (array $carry, $array2) {
+        $arrays = \array_slice(\func_get_args(), 1);
+        foreach ($arrays as $array2) {
             if (\is_array($array2) === false) {
                 throw new InvalidArgumentException('diffAssocRecursive: non-array value passed');
             }
-            return static::diffAssocRecursiveWalk($carry, $array2);
-        }, $array1);
+        }
+        return \array_reduce($arrays, array(__CLASS__, 'diffAssocRecursiveWalk'), $array1);
     }
 
     /**
@@ -103,6 +102,10 @@ class ArrayUtil
     /**
      * Applies the callback to all leafs of the given array
      *
+     * Callable will receive the value and key
+     *
+     * keys are preserved
+     *
      * @param callable $callback Callable to be applied
      * @param array    $input    Input array
      *
@@ -110,11 +113,15 @@ class ArrayUtil
      */
     public static function mapRecursive($callback, array $input)
     {
-        return \array_map(static function ($val) use ($callback) {
-            return \is_array($val)
-                ? self::mapRecursive($callback, $val)
-                : $callback($val);
-        }, $input);
+        $keys = \array_keys($input);
+        return \array_combine(
+            $keys,
+            \array_map(static function ($val, $key) use ($callback) {
+                return \is_array($val)
+                    ? self::mapRecursive($callback, $val)
+                    : $callback($val, $key);
+            }, $input, $keys)
+        );
     }
 
     /**
@@ -126,17 +133,16 @@ class ArrayUtil
      * @return array
      *
      * @throws InvalidArgumentException
-     *
-     * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed
      */
     public static function mergeDeep(array $array1, $array2)
     {
-        return \array_reduce(\array_slice(\func_get_args(), 1), static function (array $carry, $array2) {
+        $arrays = \array_slice(\func_get_args(), 1);
+        foreach ($arrays as $array2) {
             if (\is_array($array2) === false) {
                 throw new InvalidArgumentException('mergeDeep: non-array value passed');
             }
-            return static::mergeDeepWalk($carry, $array2);
-        }, $array1);
+        }
+        return \array_reduce($arrays, array(__CLASS__, 'mergeDeepWalk'), $array1);
     }
 
     /**

@@ -55,16 +55,16 @@ class HtmlStringBinary
     {
         $tagName = $this->valDumper->optionGet('tagName');
         $this->valDumper->optionSet('tagName', null);
-        $str = $this->dumpBinaryBasic($abs);
+        $str = $this->dumpBasic($abs);
         $strLenDiff = $abs['strlen'] - $abs['strlenValue'];
         if ($abs['strlenValue'] && $strLenDiff) {
             $str .= '<span class="maxlen">&hellip; ' . $strLenDiff . ' more bytes (not logged)</span>';
         }
         if ($abs['brief']) {
-            return $this->dumpBinaryBrief($str, $abs);
+            return $this->dumpBrief($str, $abs);
         }
         if ($abs['percentBinary'] > 33 || $abs['contentType']) {
-            $this->valDumper->optionSet('postDump', $this->dumpBinaryPost($abs, $tagName));
+            $this->valDumper->optionSet('postDump', $this->dumpPost($abs, $tagName));
         }
         return $str;
     }
@@ -76,7 +76,7 @@ class HtmlStringBinary
      *
      * @return string
      */
-    private function dumpBinaryBasic(Abstraction $abs)
+    private function dumpBasic(Abstraction $abs)
     {
         if ($abs['strlenValue'] === 0) {
             return '';
@@ -100,7 +100,7 @@ class HtmlStringBinary
      *
      * @return string
      */
-    private function dumpBinaryBrief($str, Abstraction $abs)
+    private function dumpBrief($str, Abstraction $abs)
     {
         return $abs['contentType']
             ? '<span class="t_keyword">string</span>'
@@ -118,7 +118,7 @@ class HtmlStringBinary
      *
      * @return Closure
      */
-    private function dumpBinaryPost(Abstraction $abs, $tagName)
+    private function dumpPost(Abstraction $abs, $tagName)
     {
         return function ($dumped) use ($abs, $tagName) {
             $lis = array();

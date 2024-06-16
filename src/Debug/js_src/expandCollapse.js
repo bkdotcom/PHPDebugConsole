@@ -144,7 +144,8 @@ function buildReturnValString ($return, typeMore) {
  */
 function collapseGroupObject ($wrap, $toggle, immediate, eventNameDone) {
   var $groupEndValue = $wrap.find('> .group-body > .m_groupEndValue > :last-child')
-  if ($groupEndValue.length && $toggle.find('.group-label').last().nextAll().length === 0) {
+  var $afterLabel = $toggle.find('.group-label').last().nextAll().not('i')
+  if ($groupEndValue.length && $afterLabel.length === 0) {
     $toggle.find('.group-label').last()
       .after('<span class="t_operator"> : </span>' + buildReturnVal($groupEndValue))
   }

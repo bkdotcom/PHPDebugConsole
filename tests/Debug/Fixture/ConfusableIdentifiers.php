@@ -21,28 +21,28 @@ class Con𝘧usableIdenti𝘧iersBaꜱe implements Con𝘧usableInteᴦface
 namespace bdk\Test\Debug\Fixture;
 
 /**
- * CƖass <b onhover="alert('xss')">[𐑈]um</b>mary.
- * CƖass <b onhover="alert('xss')">[𝖽]esc</b>ription
+ * CƖass <b onmouseover="alert('xss')">[𐑈]um</b>mary.
+ * CƖass <b onmouseover="alert('xss')">[𝖽]esc</b>ription
  *
- * @method bool mаgicMethod(string $𝕡аram = 'vаlսe', integer $int = 1, $bool = true, $null = null, $arr = array(), $const=self::ᖴOO) T[е]st <b onhover="alert('xss')">method</b>
+ * @method bool mаgicMethod(string $𝕡аram = 'vаl,սe', integer $int = 1, $bool = true, $null = null, $arr = array('<script>alert("xss")</script>'), $const=self::ᖴOO) T[е]st :) <b onmouseover="alert('xss')">method</b>
  *
- * @see http://ᴜrl.com <b onhover="alert('xss')">Super</b> [Η]elpful
- * @link http://ᴜrl.com [Ⅼ]ink <b onhover="alert('xss')">Rot</b>
- * @author [Β]rad Kent <bkfake-github@уahoo.com> [Ｓ]pam <em onhover="alert('xss')">folder</em>
- * @ᴄustTag [ｈ]owdy <B onhover="alert('xss')">partner</B>
+ * @see http://ᴜrl.com/?foo=bar&ding=dong <b onmouseover="alert('xss')">Super</b> [Η]elpful
+ * @link http://ᴜrl.com/?foo=bar&ding=dong [Ⅼ]ink <b onmouseover="alert('xss')">Rot</b>
+ * @author [Β]rad Kent <bkfake-github@уahoo.com> [Ｓ]pam <em onmouseover="alert('xss')">folder</em>
+ * @ᴄustTag [ｈ]owdy <B onmouseover="alert('xss')">partner</B>
  */
 #[\bdk\Test\Debug\Fix𝐭ure\EⅹampleClassAttribute(nαme:'baг')]
 class Con𝘧usableIdenti𝘧iers extends \bdk\Test\Debug\Fix𝐭ure\Con𝘧usableIdenti𝘧iersBaꜱe
 {
-    /** @var string [𐊢]onst <b onhover="alert('xss')">desc</b> */
+    /** @var string [𐊢]onst <b onmouseover="alert('xss')">desc</b> */
     #[\bdk\Test\Debug\Fix𝐭ure\ExampleСonstAttribute(fσo:'baг')]
     const ᖴOO = 'fσo';
 
-    /** @var string [Ⲣ]roperty <b onhover="alert('xss')">desc</b> */
+    /** @var string [Ⲣ]roperty <b onmouseover="alert('xss')">desc</b> */
     #[\bdk\Test\Debug\Fix𝐭ure\Example𝝦ropAttribute(fσo:'baг')]
     public $ցᴏɑt = 'moun𝐭ain';
 
-    /** @var array key => value array */
+    /** @var array<string,mixed> key => value array */
     public $array = array(
         'int' => 42,
         'password' => 'secret',
@@ -53,9 +53,9 @@ class Con𝘧usableIdenti𝘧iers extends \bdk\Test\Debug\Fix𝐭ure\Con𝘧usab
     );
 
     /**
-     * M[ɑ]gic <b onhover="alert('xss')">method</b>
+     * M[ɑ]gic <b onmouseover="alert('xss')">method</b>
      *
-     * @return string <b onhover="alert('xss')">happy</b> [һ]appy
+     * @return string <b onmouseover="alert('xss')">happy</b> [һ]appy
      */
     public function __toString()
     {
@@ -63,19 +63,19 @@ class Con𝘧usableIdenti𝘧iers extends \bdk\Test\Debug\Fix𝐭ure\Con𝘧usab
     }
 
     /**
-     * <b onhover="alert('xss')">[𐑈]um</b>mary.
+     * <b onmouseover="alert('xss')">[𐑈]um</b>mary.
      *
-     * <b onhover="alert('xss')">[𝖽]esc</b>ription
+     * <b onmouseover="alert('xss')">[𝖽]esc</b>ription
      *
-     * @param string $[𝕡]aram Test <b onhover="alert('xss')">[⍴]aram</b>
+     * @param string $[𝕡]aram Test <b onmouseover="alert('xss')">[⍴]aram</b>
      *
      * @return bool
      *
-     * @throws \Ьdk\𐊂ogus [Ʀ]ea<b onhover="alert('xss')">sons</b>
+     * @throws \Ьdk\𐊂ogus [Ʀ]ea<b onmouseover="alert('xss')">sons</b>
      *
-     * @deprecated [Ʀ]ea<b onhover="alert('xss')">sons</b>
+     * @deprecated [Ʀ]ea<b onmouseover="alert('xss')">sons</b>
      *
-     * @cʋstTag h[ο]wdy there <b onhover="alert('xss')">partner</b>
+     * @cʋstTag h[ο]wdy there <b onmouseover="alert('xss')">partner</b>
      */
     #[\bdk\Test\Debug\Fix𝐭ure\ExampleΜethodAttribute(nαme:'baг')]
     public function tℯst(

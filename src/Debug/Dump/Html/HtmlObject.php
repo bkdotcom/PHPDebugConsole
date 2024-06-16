@@ -126,8 +126,8 @@ class HtmlObject
     /**
      * Build implements tree
      *
-     * @param array $implements         Implements structure
-     * @param array $interfacesCollapse Interfaces that should initially be hidden
+     * @param list<string> $implements         Implements structure
+     * @param list<string> $interfacesCollapse Interfaces that should initially be hidden
      *
      * @return string
      */
@@ -306,7 +306,7 @@ class HtmlObject
             return '';
         }
         return '<dt>implements</dt>' . "\n"
-            . '<dd>' . $this->buildImplementsTree($abs['implements'], $abs['interfacesCollapse']) . '</dd>' . "\n";
+            . '<dd class="implements">' . $this->buildImplementsTree($abs['implements'], $abs['interfacesCollapse']) . '</dd>' . "\n";
     }
 
     /**

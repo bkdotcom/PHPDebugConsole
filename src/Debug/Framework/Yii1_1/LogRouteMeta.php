@@ -44,10 +44,10 @@ class LogRouteMeta
         $logEntry = $this->messageMetaTrace($logEntry);
         $logEntry = $this->messageMetaCaller($logEntry);
         $categoryFuncs = array(
-            '/^system\\./' => 'messageMetaSystem',
-            '/^system\\.caching/' => 'messageMetaSystemCaching',
-            'application' => 'messageMetaApplication',
+            '/^system\.caching/' => 'messageMetaSystemCaching',
             'system.CModule' => 'messageMetaSystemCmodule',
+            '/^system\./' => 'messageMetaSystem',
+            'application' => 'messageMetaApplication',
         );
         foreach ($categoryFuncs as $match => $method) {
             $isMatch = $match[0] === '/'
@@ -163,6 +163,10 @@ class LogRouteMeta
      */
     private function messageMetaSystemCaching(array $logEntry)
     {
+        if (\preg_match('/^(Saving|Serving) "yii:dbquery/', $logEntry['message'])) {
+            // Leave as is for now. We'll convert to POO / statementInfo log entry
+            return $logEntry;
+        }
         $channelName = \str_replace('system.caching.', '', $logEntry['category']);
         $icon = 'fa fa-cube';
         $logEntry['category'] = $channelName;

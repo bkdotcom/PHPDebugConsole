@@ -84,6 +84,8 @@ class Methods extends AbstractInheritable
         $abs['cfgFlags'] & AbstractObject::METHOD_COLLECT
             ? $this->addFull($abs)
             : $this->addMin($abs);
+        $this->helper->clearPhpDoc($abs);
+        \ksort($abs['methods']);
         if (isset($abs['methods']['__toString'])) {
             $info = $abs['methods']['__toString'];
             $info['returnValue'] = null;
@@ -167,8 +169,6 @@ class Methods extends AbstractInheritable
         $this->addViaRef($abs);
         $this->addViaPhpDoc($abs);
         $this->addImplements($abs);
-        $this->helper->clearPhpDoc($abs);
-        \ksort($abs['methods']);
     }
 
     /**
@@ -182,8 +182,6 @@ class Methods extends AbstractInheritable
     {
         $this->minimal = true;
         $this->addViaRef($abs);
-        $this->helper->clearPhpDoc($abs);
-        \ksort($abs['methods']);
         $this->minimal = false;
     }
 

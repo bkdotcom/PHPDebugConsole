@@ -84,7 +84,7 @@ class EnumTest extends DebugTestFramework
                         <dt class="attributes">attributes</dt>
                         <dd class="attribute"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\Enum\</span>ExampleAttribute</span></dd>
                         <dt>implements</dt>
-                        <dd><ul class="list-unstyled">
+                        <dd class="implements"><ul class="list-unstyled">
                             <li><span class="interface toggle-off"><span class="classname">UnitEnum</span></span></li>
                         </ul>
                         </dd>
@@ -184,7 +184,7 @@ class EnumTest extends DebugTestFramework
                         <dt class="modifiers">modifiers</dt>
                         <dd class="t_modifier_final">final</dd>
                         <dt>implements</dt>
-                        <dd><ul class="list-unstyled">
+                        <dd class="implements"><ul class="list-unstyled">
                             <li><span class="interface toggle-off"><span class="classname">BackedEnum</span></span>
                                 <ul class="list-unstyled">
                                     <li><span class="interface toggle-off"><span class="classname">UnitEnum</span></span></li>

@@ -20,42 +20,6 @@ namespace bdk\Debug\Utility\PhpDoc;
 class Helper
 {
     /**
-     * @param array $parsed Parsed tag info
-     * @param array $info   tagName, raw tag string, etc
-     *
-     * @return array{desc:string|null, type:string}
-     *
-     * @psalm-param TagInfo $info
-     *
-     * @psalm-suppress PossiblyUnusedParam
-     */
-    public static function extractTypeFromBody(array $parsed, array $info) // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
-    {
-        $tagStr = $info['tagStr'];
-        $type = '';
-        $nestingLevel = 0;
-        for ($i = 0, $iMax = \strlen($tagStr); $i < $iMax; $i++) {
-            $char = $tagStr[$i];
-            if ($nestingLevel === 0 && \trim($char) === '') {
-                break;
-            }
-            $type .= $char;
-            if (\in_array($char, array('<', '(', '[', '{'), true)) {
-                $nestingLevel++;
-                continue;
-            }
-            if (\in_array($char, array('>', ')', ']', '}'), true)) {
-                $nestingLevel--;
-                continue;
-            }
-        }
-        return array(
-            'desc' => \trim(\substr($tagStr, \strlen($type))) ?: null,
-            'type' => $type,
-        );
-    }
-
-    /**
      * Split description and summary
      *
      * @param string $comment Beginning of doc comment

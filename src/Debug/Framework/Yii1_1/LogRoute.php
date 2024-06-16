@@ -13,6 +13,8 @@
 namespace bdk\Debug\Framework\Yii1_1;
 
 use bdk\Debug;
+use bdk\Debug\LogEntry;
+use bdk\Debug\Collector\StatementInfo;
 use CLogger;
 use CLogRoute;
 use Exception;
@@ -23,8 +25,10 @@ use Yii;
  */
 class LogRoute extends CLogRoute
 {
+    /** @var string specify levels handled by route */
     public $levels = 'error, info, profile, trace, warning';
 
+    /** @var Debug */
     private $debug;
 
     private $levelMap = array(
@@ -43,8 +47,8 @@ class LogRoute extends CLogRoute
 
     /**
      * @var array $except An array of categories to exclude from logging.
-     *                                  Regex pattern matching is supported
-     *                                  We exclude system.db categories... handled via pdo wrapper
+     *                      Regex pattern matching is supported
+     *                      We exclude system.db categories... handled via pdo wrapper
      */
     protected $except = array(
         '/^system\.db\./',
@@ -258,18 +262,63 @@ class LogRoute extends CLogRoute
     {
         $logEntry = $this->normalizeMessage($logEntry);
         $logEntry = $this->meta->messageMeta($logEntry);
-        if ($logEntry['level'] === CLogger::LEVEL_PROFILE) {
-            $this->processLogEntryProfile($logEntry);
-            return;
+        if (\strpos($logEntry['category'], 'system.caching') === 0 && \preg_match('/^(Saving|Serving) "yii:dbquery/', $logEntry['message'])) {
+            return $this->processSqlCachingLogEntry($logEntry);
         }
-        if ($logEntry['level'] === CLogger::LEVEL_TRACE) {
-            if (\count($logEntry['trace']) > 1) {
-                $this->processLogEntryTrace($logEntry);
-                return;
-            }
-            $logEntry['level'] = CLogger::LEVEL_INFO;
+        $method = 'processLogEntry' . \ucfirst($logEntry['level']);
+        $method = \method_exists($this, $method)
+            ? $method
+            : 'processLogEntryDefault';
+        $this->{$method}($logEntry);
+    }
+
+    /**
+     * Convert SQL caching log entry to a statementInfo log entry
+     *
+     * @param array $logEntry our key/value'd log entry
+     *
+     * @return void
+     */
+    private function processSqlCachingLogEntry(array $logEntry)
+    {
+        // this is an accurate way to get channel for saved to cache... not so much for from cache
+        //  we have no connectionString to channel mapping
+        $groupId = StatementInfo::lastGroupId();
+        $debug = $this->debug->data->get('log.' . $groupId)->getSubject();
+        $returnValue = 'saved to cache';
+
+        if (\strpos($logEntry['message'], 'Serving') === 0) {
+            $regEx = '/^Serving "yii:dbquery:\S+:\S*:\S+:(.*?)(?::(a:\d+:\{.+\}))?" from cache$/s';
+            \preg_match($regEx, $logEntry['message'], $matches);
+            $statementInfo = new StatementInfo($matches[1], $matches[2] ? \unserialize($matches[2]) : array());
+            $statementInfo->appendLog($debug);
+            $groupId = StatementInfo::lastGroupId();
+            $returnValue = 'from cache';
         }
+
+        $debug->log(new LogEntry(
+            $debug,
+            'groupEndValue',
+            array($returnValue),
+            array(
+                'appendGroup' => $groupId,
+                'icon' => 'fa fa-cube',
+                'level' => 'info',
+            )
+        ));
+    }
+
+    /**
+     * Process Yii log entry
+     *
+     * @param array $logEntry our key/value'd log entry
+     *
+     * @return void
+     */
+    private function processLogEntryDefault(array $logEntry)
+    {
         $debug = $logEntry['channel'];
+        $method = $this->levelMap[$logEntry['level']];
         $args = \array_filter(array(
             \ltrim($logEntry['category'] . ':', ':'),
             $logEntry['message'],
@@ -277,7 +326,6 @@ class LogRoute extends CLogRoute
         if ($logEntry['meta']) {
             $args[] = $debug->meta($logEntry['meta']);
         }
-        $method = $this->levelMap[$logEntry['level']];
         \call_user_func_array(array($debug, $method), $args);
     }
 
@@ -316,6 +364,11 @@ class LogRoute extends CLogRoute
      */
     private function processLogEntryTrace(array $logEntry)
     {
+        if (\count($logEntry['trace']) <= 1) {
+            $logEntry['level'] = CLogger::LEVEL_INFO;
+            return $this->processLogEntryDefault($logEntry);
+        }
+
         $caption = $logEntry['category']
             ? $logEntry['category'] . ': ' . $logEntry['message']
             : $logEntry['message'];

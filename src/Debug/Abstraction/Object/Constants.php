@@ -170,7 +170,7 @@ class Constants extends AbstractInheritable
                 ? $this->helper->getAttributes($refCase)
                 : array(),
             'desc' => $this->phpDocCollect
-                ? $this->helper->getPhpDocVar($refCase)['desc']
+                ? $this->helper->getPhpDocVar($refCase)['desc'] // actually the summary
                 : null,
             'isFinal' => $refCase->isFinal(),
             'value' => $refCase instanceof ReflectionEnumBackedCase
@@ -198,7 +198,7 @@ class Constants extends AbstractInheritable
                 ? $this->helper->getAttributes($refConstant)
                 : array(),
             'desc' => $this->phpDocCollect
-                ? $this->helper->getPhpDocVar($refConstant)['desc']
+                ? $this->helper->getPhpDocVar($refConstant)['desc'] // actually the summary
                 : null,
             'isFinal' => PHP_VERSION_ID >= 80100
                 ? $refConstant->isFinal()

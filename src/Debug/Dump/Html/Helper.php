@@ -113,9 +113,9 @@ class Helper
         }
         // run through valDumper to highlight chars
         return $this->dumper->valDumper->dump(
-            $this->debug->html->sanitize($markdown),
+            $markdown,
             \array_merge(array(
-                'sanitize' => false, // we've already sanitized
+                'sanitize' => false, // phpDoc parser sanitized by removing non-whitelisted html tags & attributes
                 'tagName' => null,
                 'type' => Type::TYPE_STRING,
                 'visualWhiteSpace' => false,

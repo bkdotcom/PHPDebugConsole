@@ -5,6 +5,20 @@ $color-specialchar: #003;
 $color-bg-maxlen: #ffcc77;
 $color-bg-unicode: #c0c0ff;
 
+.badge {
+  display: inline-block;
+  padding: 0.25em 0.4em 0.16em;
+  font-size: 82%;
+  font-weight: 500;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: bottom;
+  border-radius: 0.25rem;
+  color: #fff;
+  background-color: #666;
+}
+
 .expand-all {
   margin-bottom: 0.5em;
 }
@@ -42,9 +56,12 @@ $color-bg-unicode: #c0c0ff;
 .prettified { color: $color-prettified; }
 .timestamp { color: $color-timestamp; }
 
-.binary,
-.maxlen,
+.binary {
+  padding: 0 0.3em;
+}
+
 .char-ws,
+.maxlen,
 .unicode {
   padding: 0 0.3em;
   // match a:hover (found in base.scss

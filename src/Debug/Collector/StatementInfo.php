@@ -91,6 +91,9 @@ class StatementInfo extends AbstractComponent
     /** @var array<int,string> */
     protected static $constants = array();
 
+    /** @var int */
+    protected static $id = 0;
+
     /**
      * @param string $sql    SQL
      * @param array  $params bound params
@@ -140,6 +143,7 @@ class StatementInfo extends AbstractComponent
         $debug->groupCollapsed($label, $debug->meta(array(
             'boldLabel' => false,
             'icon' => $debug->getCfg('channelIcon', Debug::CONFIG_DEBUG),
+            'id' => 'statementInfo' . (++ self::$id),
         )));
         $this->logQuery($label);
         $this->logParams();
@@ -176,6 +180,16 @@ class StatementInfo extends AbstractComponent
         $this->duration = $this->timeEnd - $this->timeStart;
         $this->memoryUsage = \max($this->memoryEnd - $this->memoryStart, 0);
         $this->isSuccess = $exception === null;
+    }
+
+    /**
+     * Return the value of the previously output id attribute
+     *
+     * @return string
+     */
+    public static function lastGroupId()
+    {
+        return 'statementInfo' . self::$id;
     }
 
     /**

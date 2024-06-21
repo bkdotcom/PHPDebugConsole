@@ -479,7 +479,7 @@ class UploadedFile implements UploadedFileInterface
     {
         /** @var string $this->file */
         $errMsg = '';
-        // phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter
+        // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
         \set_error_handler(static function ($type, $msg) use (&$errMsg) {
             $errMsg = $msg;
             return true; // Don't execute PHP internal error handler

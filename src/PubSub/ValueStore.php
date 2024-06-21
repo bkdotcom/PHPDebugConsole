@@ -67,6 +67,7 @@ class ValueStore implements ArrayAccess, IteratorAggregate, JsonSerializable, Se
      */
     public function __serialize()
     {
+        \ksort($this->values);
         return $this->values;
     }
 
@@ -101,6 +102,7 @@ class ValueStore implements ArrayAccess, IteratorAggregate, JsonSerializable, Se
      */
     public function getValues()
     {
+        \ksort($this->values);
         return $this->values;
     }
 
@@ -152,6 +154,7 @@ class ValueStore implements ArrayAccess, IteratorAggregate, JsonSerializable, Se
     #[\ReturnTypeWillChange]
     public function jsonSerialize()
     {
+        \ksort($this->values);
         return $this->values;
     }
 
@@ -293,7 +296,7 @@ class ValueStore implements ArrayAccess, IteratorAggregate, JsonSerializable, Se
     /**
      * Extend me to perform action after setting value/values
      *
-     * @param array<TKey, TValue> $values key => values  being set
+     * @param array<TKey,TValue> $values key => values  being set
      *
      * @return void
      *

@@ -107,6 +107,7 @@ class ConfigTest extends DebugTestFramework
             'propAttributeCollect',
             'propAttributeOutput',
             'stringMaxLen',
+            'stringMaxLenBrief',
             'stringMinLen',
             'toStringOutput',
             'useDebugInfo',

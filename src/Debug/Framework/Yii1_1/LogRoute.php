@@ -13,8 +13,8 @@
 namespace bdk\Debug\Framework\Yii1_1;
 
 use bdk\Debug;
-use bdk\Debug\LogEntry;
 use bdk\Debug\Collector\StatementInfo;
+use bdk\Debug\LogEntry;
 use CLogger;
 use CLogRoute;
 use Exception;
@@ -262,8 +262,9 @@ class LogRoute extends CLogRoute
     {
         $logEntry = $this->normalizeMessage($logEntry);
         $logEntry = $this->meta->messageMeta($logEntry);
-        if (\strpos($logEntry['category'], 'system.caching') === 0 && \preg_match('/^(Saving|Serving) "yii:dbquery/', $logEntry['message'])) {
-            return $this->processSqlCachingLogEntry($logEntry);
+        if (\strpos((string) $logEntry['category'], 'system.caching') === 0 && \preg_match('/^(Saving|Serving) "yii:dbquery/', $logEntry['message'])) {
+            $this->processSqlCachingLogEntry($logEntry);
+            return;
         }
         $method = 'processLogEntry' . \ucfirst($logEntry['level']);
         $method = \method_exists($this, $method)
@@ -291,7 +292,9 @@ class LogRoute extends CLogRoute
             $regEx = '/^Serving "yii:dbquery:\S+:\S*:\S+:(.*?)(?::(a:\d+:\{.+\}))?" from cache$/s';
             \preg_match($regEx, $logEntry['message'], $matches);
             $statementInfo = new StatementInfo($matches[1], $matches[2] ? \unserialize($matches[2]) : array());
-            $statementInfo->appendLog($debug);
+            $statementInfo->appendLog($debug, array(
+                'attribs' => array('class' => 'logentry-muted'),
+            ));
             $groupId = StatementInfo::lastGroupId();
             $returnValue = 'from cache';
         }
@@ -299,7 +302,9 @@ class LogRoute extends CLogRoute
         $debug->log(new LogEntry(
             $debug,
             'groupEndValue',
-            array($returnValue),
+            array($this->debug->abstracter->crateWithVals($returnValue, array(
+                'attribs' => array('class' => 'badge bg-info fw-bold'),
+            ))),
             array(
                 'appendGroup' => $groupId,
                 'icon' => 'fa fa-cube',
@@ -366,7 +371,8 @@ class LogRoute extends CLogRoute
     {
         if (\count($logEntry['trace']) <= 1) {
             $logEntry['level'] = CLogger::LEVEL_INFO;
-            return $this->processLogEntryDefault($logEntry);
+            $this->processLogEntryDefault($logEntry);
+            return;
         }
 
         $caption = $logEntry['category']

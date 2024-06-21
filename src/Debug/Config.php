@@ -64,6 +64,7 @@ class Config
             'propAttributeCollect',
             'propAttributeOutput',
             'stringMaxLen',
+            'stringMaxLenBrief',
             'stringMinLen',
             'toStringOutput',
             'useDebugInfo',

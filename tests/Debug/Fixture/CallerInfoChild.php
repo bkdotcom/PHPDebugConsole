@@ -4,7 +4,7 @@ namespace bdk\Test\Debug\Fixture;
 
 class CallerInfoChild extends CallerInfoParent
 {
-    function extendMe()
+    public function extendMe()
     {
         \bdk\Debug::group();
         parent::extendMe();

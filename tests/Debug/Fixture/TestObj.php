@@ -4,6 +4,7 @@ namespace bdk\Test\Debug\Fixture;
 
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstraction;
+use stdClass;
 
 /**
  * PhpDoc Summary
@@ -133,7 +134,7 @@ class TestObj extends TestBase
      * @return     void
      * @deprecated this method is bad and should feel bad
      */
-    final public function methodPublic(\stdClass $param1, array $param2 = array())
+    final public function methodPublic(stdClass $param1, array $param2 = array())
     {
         static $foo = 42;
         static $bar = 'test';

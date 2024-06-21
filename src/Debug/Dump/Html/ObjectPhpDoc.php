@@ -32,7 +32,7 @@ class ObjectPhpDoc
      * Constructor
      *
      * @param ValDumper $valDumper Html dumper
-     * @param Helper    $html      Html dump helpers
+     * @param Helper    $helper    Html dump helpers
      */
     public function __construct(ValDumper $valDumper, Helper $helper)
     {

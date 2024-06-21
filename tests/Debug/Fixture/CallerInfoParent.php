@@ -4,13 +4,13 @@ namespace bdk\Test\Debug\Fixture;
 
 class CallerInfoParent
 {
-    function extendMe()
+    public function extendMe()
     {
         \bdk\Debug::group();
         \bdk\Debug::groupEnd();
     }
 
-    function inherited()
+    public function inherited()
     {
         \bdk\Debug::group();
         \bdk\Debug::groupEnd();

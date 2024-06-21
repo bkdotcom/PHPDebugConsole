@@ -12,6 +12,7 @@
 namespace bdk\Backtrace;
 
 use InvalidArgumentException;
+use ReflectionFunction;
 
 /**
  * Utility for Skipping over frames "internal" to debugger or framework
@@ -99,7 +100,7 @@ class SkipInternal
                 : 0;
         }
         $i--;
-        $i = \max($i, 0); // insure we're >= 0
+        $i = \max($i, 0); // ensure we're >= 0
         return isset($backtrace[$i + $offset])
             ? $i + $offset
             : $i;
@@ -194,6 +195,22 @@ class SkipInternal
     }
 
     /**
+     * Checks whether the function is internal, as opposed to user-defined.
+     *
+     * @param string $function Function name
+     *
+     * @return bool
+     */
+    private static function isPhpDefinedFunction($function)
+    {
+        if (\function_exists($function) === false) {
+            return false;
+        }
+        $refFunction = new ReflectionFunction($function);
+        return $refFunction->isInternal();
+    }
+
+    /**
      * Test if frame is skippable
      *
      * "Skippable" if
@@ -209,7 +226,7 @@ class SkipInternal
     {
         $class = self::getClass($frame);
         if (!$class) {
-            return true;
+            return self::isPhpDefinedFunction((string) $frame['function']);
         }
         if (\preg_match(static::$internalClasses['regex'], $class)) {
             return true;

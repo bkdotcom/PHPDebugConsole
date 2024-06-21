@@ -166,9 +166,8 @@ class ConfigEvents implements SubscriberInterface
      * @return string
      *
      * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
-     * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter
      */
-    private function onCfgKey($val, $name, Event $event)
+    private function onCfgKey($val, $name, Event $event) // @phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
     {
         if ($val === null || $this->debug->isCli()) {
             return $val;

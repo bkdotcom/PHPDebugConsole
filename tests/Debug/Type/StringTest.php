@@ -7,6 +7,7 @@ use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Type;
 use bdk\Debug\LogEntry;
 use bdk\Test\Debug\DebugTestFramework;
+use bdk\Test\Debug\Helper;
 
 /**
  * PHPUnit tests for Debug class
@@ -30,6 +31,21 @@ class StringTest extends DebugTestFramework
         $debug = Debug::getInstance();
         $htmlString = $debug->getDump('html')->valDumper->string;
         \bdk\Debug\Utility\Reflection::propSet($htmlString, 'lazy', array());
+    }
+
+    public function testEmptyBinary()
+    {
+        $abs = $this->debug->abstracter->crateWithVals('', array(
+            'type' => Type::TYPE_STRING,
+            'typeMore' => Type::TYPE_STRING_BINARY,
+        ));
+        self::assertSame(array(
+            'brief' => false,
+            'percentBinary' => 0,
+            'type' => Type::TYPE_STRING,
+            'typeMore' => Type::TYPE_STRING_BINARY,
+            'value' => '',
+        ), $abs->getValues());
     }
 
     public static function providerTestMethod()
@@ -380,23 +396,22 @@ EOD;
                     \file_get_contents(TEST_DIR . '/assets/logo.png'),
                 ),
                 array(
-                    'entry' => array(
-                        'method' => 'group',
-                        'args' => array(
-                            array(
-                                'brief' => true,
-                                'contentType' => 'image/png',
-                                'debug' => Abstracter::ABSTRACTION,
-                                'percentBinary' => 0,
-                                'strlen' => \filesize(TEST_DIR . '/assets/logo.png'),
-                                'strlenValue' => 0,
-                                'type' => Type::TYPE_STRING,
-                                'typeMore' => Type::TYPE_STRING_BINARY,
-                                'value' => '',
-                            ),
-                        ),
-                        'meta' => array(),
-                    ),
+                    'entry' => static function (LogEntry $logEntry) {
+                        $expect = array(
+                            'brief' => true,
+                            'contentType' => 'image/png',
+                            'debug' => Abstracter::ABSTRACTION,
+                            'percentBinary' => $logEntry['args'][0]['percentBinary'],
+                            'strlen' => \filesize(TEST_DIR . '/assets/logo.png'),
+                            'strlenValue' => 0,
+                            'type' => Type::TYPE_STRING,
+                            'typeMore' => Type::TYPE_STRING_BINARY,
+                            'value' => '',
+                        );
+                        $actual = Helper::deObjectifyData($logEntry['args'][0]);
+                        self::assertSame($expect, $actual);
+                        self::assertGreaterThan(0, $actual['percentBinary']);
+                    },
                     'html' => '<li class="expanded m_group">
                         <div class="group-header"><span class="font-weight-bold group-label"><span class="t_keyword">string</span><span class="text-muted">(image/png)</span><span class="t_punct colon">:</span> 7.95 kB</span></div>
                         <ul class="group-body">',

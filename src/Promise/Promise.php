@@ -55,8 +55,6 @@ class Promise implements PromiseInterface
      * @return mixed
      *
      * @throws BadMethodCallException
-     *
-     * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter
      */
     public function __call($method, $args)
     {

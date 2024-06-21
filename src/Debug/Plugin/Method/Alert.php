@@ -127,8 +127,9 @@ class Alert implements SubscriberInterface
     private function setArgs(LogEntry $logEntry)
     {
         $args = \array_replace(array(
+            '',
             $logEntry->getMeta('level'),
-            $logEntry->getMeta('dismissible')
+            $logEntry->getMeta('dismissible'),
         ), $logEntry['args']);
 
         if ($this->hasSubstitutions($logEntry)) {

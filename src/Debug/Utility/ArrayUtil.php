@@ -60,14 +60,10 @@ class ArrayUtil
      *
      * @throws InvalidArgumentException
      */
-    public static function diffAssocRecursive(array $array1, $array2)
+    public static function diffAssocRecursive(array $array1, $array2) // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
     {
         $arrays = \array_slice(\func_get_args(), 1);
-        foreach ($arrays as $array2) {
-            if (\is_array($array2) === false) {
-                throw new InvalidArgumentException('diffAssocRecursive: non-array value passed');
-            }
-        }
+        self::assertContainsOnly($arrays, 'array', __FUNCTION__);
         return \array_reduce($arrays, array(__CLASS__, 'diffAssocRecursiveWalk'), $array1);
     }
 
@@ -134,14 +130,10 @@ class ArrayUtil
      *
      * @throws InvalidArgumentException
      */
-    public static function mergeDeep(array $array1, $array2)
+    public static function mergeDeep(array $array1, $array2) // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
     {
         $arrays = \array_slice(\func_get_args(), 1);
-        foreach ($arrays as $array2) {
-            if (\is_array($array2) === false) {
-                throw new InvalidArgumentException('mergeDeep: non-array value passed');
-            }
-        }
+        self::assertContainsOnly($arrays, 'array', __FUNCTION__);
         return \array_reduce($arrays, array(__CLASS__, 'mergeDeepWalk'), $array1);
     }
 
@@ -310,6 +302,32 @@ class ArrayUtil
             \array_slice($array, $offset + $length, null, true)
         );
         return $ret;
+    }
+
+    /**
+     * Assert array contains only the specified type
+     *
+     * @param array  $array         array to test
+     * @param string $expectedType  type to check for
+     * @param string $messagePrefix ('') exception prefix
+     *
+     * @return void
+     *
+     * @throws InvalidArgumentException
+     */
+    private static function assertContainsOnly(array $array, $expectedType, $messagePrefix = '')
+    {
+        foreach ($array as $val) {
+            $type = \bdk\Debug\Utility\Php::getDebugType($val);
+            if ($type !== $expectedType) {
+                throw new InvalidArgumentException(\ltrim(\sprintf(
+                    '%s:  Expected only %s.  %s found.',
+                    $messagePrefix,
+                    $expectedType,
+                    $type
+                ), ': '));
+            }
+        }
     }
 
     /**

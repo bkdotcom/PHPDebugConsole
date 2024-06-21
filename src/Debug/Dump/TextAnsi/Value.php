@@ -404,6 +404,5 @@ class Value extends TextValue
         $classnameOut .= "\e[1m" . $this->highlightChars($classname) . "\e[22m";
         $this->escapeReset = $escapeReset;
         return $classnameOut;
-
     }
 }

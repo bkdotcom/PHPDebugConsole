@@ -20,6 +20,8 @@
     "invokable",
     "mergeable",
     "regexs",
+    "skippable",
+    "squiz",
     "uncollapse",
     "ungroup",
     "unserialized",

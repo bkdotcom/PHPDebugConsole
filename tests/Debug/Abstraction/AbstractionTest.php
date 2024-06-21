@@ -2,6 +2,7 @@
 
 namespace bdk\Test\Debug\Abstraction;
 
+use bdk\Debug;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\Object\Abstraction as ObjectAbstraction;
 use bdk\Debug\Abstraction\Type;
@@ -47,6 +48,10 @@ class AbstractionTest extends TestCase
 
         $abs['stringified'] = 'stringified val';
         $this->assertSame('stringified val', (string) $abs);
+
+        $binary = \base64_decode('j/v9wNrF5i1abMXFW/4vVw==', true);
+        $abs = Debug::getInstance()->abstracter->crate($binary);
+        $this->assertSame($binary, (string) $abs);
     }
 
     public function testUnserialize()

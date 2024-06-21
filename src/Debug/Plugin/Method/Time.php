@@ -61,18 +61,7 @@ class Time implements SubscriberInterface
      */
     public function time($label = null, $duration = null)
     {
-        $logEntry = new LogEntry(
-            $this->debug,
-            __FUNCTION__,
-            \func_get_args(),
-            array(
-                'precision' => 4,
-                'silent' => false,
-                'template' => '%label: %time',
-                'unit' => 'auto',
-            ),
-            $this->debug->rootInstance->getMethodDefaultArgs(__METHOD__)
-        );
+        $logEntry = $this->timeLogEntry(__FUNCTION__, \func_get_args(), $this->debug->rootInstance->getMethodDefaultArgs(__METHOD__));
         $args = $logEntry['args'];
         $floats = \array_filter($args, static function ($val) {
             return \is_float($val);
@@ -112,7 +101,7 @@ class Time implements SubscriberInterface
      */
     public function timeEnd($label = null, $log = true, $return = 'auto')
     {
-        $logEntry = $this->timeLogEntry(__FUNCTION__, \func_get_args());
+        $logEntry = $this->timeLogEntry(__FUNCTION__, \func_get_args(), $this->debug->rootInstance->getMethodDefaultArgs(__METHOD__));
         $debug = $logEntry->getSubject();
         $label = $logEntry['args'][0];
         $elapsed = $debug->stopWatch->stop($label);
@@ -144,7 +133,7 @@ class Time implements SubscriberInterface
      */
     public function timeGet($label = null, $log = true, $return = 'auto')
     {
-        $logEntry = $this->timeLogEntry(__FUNCTION__, \func_get_args());
+        $logEntry = $this->timeLogEntry(__FUNCTION__, \func_get_args(), $this->debug->rootInstance->getMethodDefaultArgs(__METHOD__));
         $debug = $logEntry->getSubject();
         $label = $logEntry['args'][0];
         $elapsed = $debug->stopWatch->get($label, $label);
@@ -166,17 +155,7 @@ class Time implements SubscriberInterface
      */
     public function timeLog($label = null, $args = null)
     {
-        $logEntry = new LogEntry(
-            $this->debug,
-            __FUNCTION__,
-            \func_get_args(),
-            array(
-                'precision' => 4,
-                'silent' => false,
-                'unit' => 'auto',
-            ),
-            $this->debug->rootInstance->getMethodDefaultArgs(__METHOD__)
-        );
+        $logEntry = $this->timeLogEntry(__FUNCTION__, \func_get_args(), $this->debug->rootInstance->getMethodDefaultArgs(__METHOD__));
         $args = $logEntry['args'];
         $meta = $logEntry['meta'];
         $label = $args[0];
@@ -189,7 +168,7 @@ class Time implements SubscriberInterface
         $args[0] = $label . ': ';
         \array_splice($args, 1, 0, $elapsed);
         $logEntry['args'] = $args;
-        $logEntry['meta'] = \array_diff_key($meta, \array_flip(array('precision', 'silent', 'unit')));
+        $logEntry['meta'] = \array_diff_key($meta, \array_flip(array('precision', 'silent', 'template', 'unit')));
         return $this->debug->log($logEntry);
     }
 
@@ -251,14 +230,15 @@ class Time implements SubscriberInterface
     }
 
     /**
-     * Create timeEnd & timeGet LogEntry
+     * Create LogEntry used by most time methods
      *
-     * @param string $method 'timeEnd' or 'timeGet'
-     * @param array  $args   arguments passed to method
+     * @param string $method      'timeEnd' or 'timeGet'
+     * @param array  $args        arguments passed to method
+     * @param array  $defaultArgs default argument values
      *
      * @return LogEntry
      */
-    protected function timeLogEntry($method, array $args)
+    protected function timeLogEntry($method, array $args, array $defaultArgs)
     {
         $logEntry = new LogEntry(
             $this->debug,
@@ -270,23 +250,21 @@ class Time implements SubscriberInterface
                 'template' => '%label: %time',
                 'unit' => 'auto',
             ),
-            array(
-                'label' => null,
-                'log' => true,      // will convert to meta['silent']
-                'return' => 'auto',
-            ),
-            array('return')
+            $defaultArgs,
+            \array_intersect(\array_keys($defaultArgs), array('return')) // convert return to meta if it's an arg
         );
         if ($logEntry['numArgs'] === 1 && \is_bool($logEntry['args'][0])) {
             // first and only arg is bool..  treat as 'log' param
             $logEntry['args'][1] = $logEntry['args'][0];
             $logEntry['args'][0] = null;
         }
-        $logEntry->setMeta('silent', !$logEntry['args'][1] || $logEntry->getMeta('silent'));
+        if (isset($defaultArgs['log'])) {
+            $logEntry->setMeta('silent', !$logEntry['args'][1] || $logEntry->getMeta('silent'));
+            unset($logEntry['args'][1]);
+        }
         if ($logEntry->getMeta('return') === 'auto') {
             $logEntry->setMeta('return', $logEntry->getMeta('silent'));
         }
-        unset($logEntry['args'][1]);
         return $logEntry;
     }
 }

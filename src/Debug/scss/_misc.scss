@@ -1,7 +1,7 @@
 $color-prettified: #000b9bee;
 $color-timestamp: #009;
-$color-bg-specialchar: #c0c0c0;
-$color-specialchar: #003;
+$color-bg-binary: #c0c0c0;
+$color-fg-binary: #003;
 $color-bg-maxlen: #ffcc77;
 $color-bg-unicode: #c0c0ff;
 
@@ -15,8 +15,8 @@ $color-bg-unicode: #c0c0ff;
   white-space: nowrap;
   vertical-align: bottom;
   border-radius: 0.25rem;
-  color: #fff;
-  background-color: #666;
+  color: $secondary-fg;
+  background-color: $secondary-bg;
 }
 
 .expand-all {
@@ -73,8 +73,8 @@ $color-bg-unicode: #c0c0ff;
 }
 .binary,
 .char-control {
-  background-color: $color-bg-specialchar;
-  color: $color-specialchar;
+  background-color: $color-bg-binary;
+  color: $color-fg-binary;
   font-family: monospace !important;
   font-weight: bold;
 }

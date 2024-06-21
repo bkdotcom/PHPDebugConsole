@@ -123,32 +123,26 @@ class Value extends BaseValue
      * @param string $asFunction (false) specify we're marking up a function
      * @param string $tagName    ("span") html tag to use
      * @param array  $attribs    (optional) additional html attributes for classname span
-     * @param bool   $wbr        (false)
+     * @param bool   $wbr        (false) whether to add a <wbr /> after the classname
      *
-     * @return string
+     * @return string html snippet
      */
     public function markupIdentifier($val, $asFunction = false, $tagName = 'span', $attribs = array(), $wbr = false)
     {
         $parts = \array_map(array($this->string, 'dump'), $this->parseIdentifier($val, $asFunction));
         $operator = '<span class="t_operator">' . $parts['operator'] . '</span>';
         if ($parts['classname']) {
-            $classname = $parts['classname'];
-            $idx = \strrpos($classname, '\\');
-            if ($idx) {
-                $classname = '<span class="namespace">' . \str_replace('\\', '\\<wbr />', \substr($classname, 0, $idx + 1)) . '</span>'
-                    . \substr($classname, $idx + 1);
-            }
             $parts['classname'] = $this->debug->html->buildTag(
                 $tagName,
                 $this->debug->arrayUtil->mergeDeep(array(
                     'class' => array('classname'),
                 ), (array) $attribs),
-                $classname
+                $this->wrapNamespace($parts['classname'])
             ) . '<wbr />';
         }
-        $parts['identifier'] = $parts['identifier']
-            ? '<span class="t_identifier">' . $parts['identifier'] . '</span>'
-            : '';
+        if ($parts['identifier']) {
+            $parts['identifier'] = '<span class="t_identifier">' . $this->wrapNamespace($parts['identifier']) . '</span>';
+        }
         $html = \implode($operator, \array_filter(array($parts['classname'], $parts['identifier']), 'strlen'));
         if ($wbr === false) {
             $html = \str_replace('<wbr />', '', $html);
@@ -198,10 +192,10 @@ class Value extends BaseValue
             $this->optionSet('attribs.class.__push__', 'array-file-tree');
         }
         $keys = isset($abs['keys']) ? $abs['keys'] : array();
-        $showKeys = $opts['showListKeys'] || !$this->debug->arrayUtil->isList($array);
+        $outputKeys = $opts['showListKeys'] || !$this->debug->arrayUtil->isList($array);
         return '<span class="t_keyword">array</span><span class="t_punct">(</span>' . "\n"
             . '<ul class="array-inner list-unstyled">' . "\n"
-            . $this->dumpArrayValues($array, $showKeys, $keys)
+            . $this->dumpArrayValues($array, $outputKeys, $keys)
             . '</ul><span class="t_punct">)</span>';
     }
 
@@ -411,5 +405,21 @@ class Value extends BaseValue
             ),
             $opts
         );
+    }
+
+    /**
+     * Wrap the namespace portion of the identifier in a span.namespace
+     *
+     * @param string $identifier (class name or function name)
+     *
+     * @return string html snippet
+     */
+    private function wrapNamespace($identifier)
+    {
+        $idx = \strrpos($identifier, '\\');
+        return $idx
+            ? '<span class="namespace">' . \str_replace('\\', '\\<wbr />', \substr($identifier, 0, $idx + 1)) . '</span>'
+                . \substr($identifier, $idx + 1)
+            : $identifier;
     }
 }

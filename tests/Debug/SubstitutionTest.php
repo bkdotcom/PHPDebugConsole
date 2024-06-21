@@ -118,6 +118,7 @@ class SubstitutionTest extends DebugTestFramework
                         123.45,
                         42,
                         array(
+                            'brief' => false,
                             'debug' => Abstracter::ABSTRACTION,
                             'type' => Type::TYPE_INT,
                             'typeMore' => Type::TYPE_TIMESTAMP,

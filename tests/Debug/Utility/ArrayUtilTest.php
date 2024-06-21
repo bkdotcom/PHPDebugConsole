@@ -304,7 +304,7 @@ class ArrayUtilTest extends TestCase
                 false,
                 array(
                     'expectException' => 'InvalidArgumentException',
-                    'expectExceptionMessage' => 'diffAssocRecursive: non-array value passed',
+                    'expectExceptionMessage' => 'diffAssocRecursive:  Expected only array.  bool found.',
                 ),
             ),
         );
@@ -373,7 +373,7 @@ class ArrayUtilTest extends TestCase
                 false,
                 array(
                     'expectException' => 'InvalidArgumentException',
-                    'expectExceptionMessage' => 'mergeDeep: non-array value passed',
+                    'expectExceptionMessage' => 'mergeDeep:  Expected only array.  bool found.',
                 ),
             ),
         );

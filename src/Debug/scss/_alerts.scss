@@ -63,9 +63,9 @@
   }
 }
 .alert-success {
-  background-color: #dff0d8;
+  background-color: $success-bg;
   border-color: #d6e9c6;
-  color: #3c763d;
+  color: $success-fg;
   .alert-link {
     color: #2b542c;
   }

@@ -91,11 +91,13 @@ class LogResponseTest extends DebugTestFramework
 
         \ini_set('default_mimetype', $defaultMimetype);
 
-        self::assertCount(5, $logEntries);
+        self::assertCount(6, $logEntries);
         self::assertSame('Response', $logEntries[0]['args'][0]);
         self::assertSame(array('response headers', array()), $logEntries[1]['args']);
         self::assertSame('It appears text/plain is being sent without a Content-Type header', $logEntries[2]['args'][0]);
         self::assertSame('Not logging response body for Content-Type "text/plain"', $logEntries[3]['args'][0]);
+        self::assertSame('Content-Length', $logEntries[4]['args'][0]);
+        self::assertSame(13, $logEntries[4]['args'][1]);
     }
 
     public function testResponseContentMaxLen()
@@ -151,7 +153,9 @@ class LogResponseTest extends DebugTestFramework
         $logEntries = $this->helper->deObjectifyData($this->debug->data->get('log'));
         $count = \count($logEntries);
 
-        self::assertCount(4, $logEntries);
-        self::assertSame('Not logging response body for Content-Type "text/html"', $logEntries[$count - 2]['args'][0]);
+        self::assertCount(5, $logEntries);
+        self::assertSame('Not logging response body for Content-Type "text/html"', $logEntries[$count - 3]['args'][0]);
+        self::assertSame('Content-Length', $logEntries[$count - 2]['args'][0]);
+        self::assertSame(\strlen($html), $logEntries[$count - 2]['args'][1]);
     }
 }

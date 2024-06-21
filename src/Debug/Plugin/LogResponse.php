@@ -207,9 +207,8 @@ class LogResponse extends AbstractLogReqRes implements SubscriberInterface
     {
         // only log response for json and xml
         if (\preg_match('#\b(json|xml)\b#', $contentType) !== 1) {
-            $this->debug->log(
-                'Not logging response body for Content-Type "' . $contentType . '"'
-            );
+            $this->debug->log('Not logging response body for Content-Type "' . $contentType . '"');
+            $this->debug->log('Content-Length', $contentLength);
             return false;
         }
 

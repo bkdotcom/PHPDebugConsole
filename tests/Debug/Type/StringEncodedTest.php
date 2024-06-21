@@ -56,7 +56,7 @@ class StringEncodedTest extends DebugTestFramework
                 ),
                 array(
                     'entry' => static function (LogEntry $logEntry) use ($base64snip) {
-                        $jsonExpect = '{"method":"log","args":[{"brief":false,"strlen":10852,"strlenValue":156,"type":"string","typeMore":"base64","value":' . \json_encode($base64snip) . ',"valueDecoded":{"brief":false,"contentType":"%s","percentBinary":0,"strlen":%d,"strlenValue":0,"type":"string","typeMore":"binary","value":"","debug":"\u0000debug\u0000"},"debug":"\u0000debug\u0000"}],"meta":[]}';
+                        $jsonExpect = '{"method":"log","args":[{"brief":false,"strlen":10852,"strlenValue":156,"type":"string","typeMore":"base64","value":' . \json_encode($base64snip) . ',"valueDecoded":{"brief":false,"contentType":"%s","percentBinary":%f,"strlen":%d,"strlenValue":0,"type":"string","typeMore":"binary","value":"","debug":"\u0000debug\u0000"},"debug":"\u0000debug\u0000"}],"meta":[]}';
                         $jsonActual = \json_encode($logEntry);
                         // echo 'expect = ' . $jsonExpect . "\n";
                         // echo 'actual = ' . $jsonActual . "\n";
@@ -91,32 +91,34 @@ class StringEncodedTest extends DebugTestFramework
                 ),
                 array(
                     'entry' => static function (LogEntry $logEntry) {
+                        $actual = \bdk\Test\Debug\Helper::logEntryToArray($logEntry)['args'][0];
                         self::assertInstanceOf('bdk\\Debug\\Abstraction\\Abstraction', $logEntry['args'][0]);
                         self::assertSame(array(
                             'brief' => true,
                             'debug' => Abstracter::ABSTRACTION,
                             'strlen' => 10852,
-                            'strlenValue' => 156,
+                            'strlenValue' => 128,
                             'type' => 'string',
-                            'typeMore' => 'base64',
-                            'value' => \substr(\base64_encode(\file_get_contents(TEST_DIR . '/assets/logo.png')), 0, 156),
+                            'typeMore' => Type::TYPE_STRING_BASE64,
+                            'value' => \substr(\base64_encode(\file_get_contents(TEST_DIR . '/assets/logo.png')), 0, 128),
                             'valueDecoded' => array(
                                 'brief' => true,
                                 'contentType' => 'image/png',
                                 'debug' => Abstracter::ABSTRACTION,
-                                'percentBinary' => 0,
+                                'percentBinary' => $actual['valueDecoded']['percentBinary'],
                                 'strlen' => 8138,
                                 'strlenValue' => 0,
-                                'type' => 'string',
-                                'typeMore' => 'binary',
+                                'type' => Type::TYPE_STRING,
+                                'typeMore' => Type::TYPE_STRING_BINARY,
                                 'value' => '',
                             ),
-                        ), \bdk\Test\Debug\Helper::logEntryToArray($logEntry)['args'][0]);
+                        ), $actual);
+                        self::assertGreaterThan(0, $actual['valueDecoded']['percentBinary']);
                     },
                     'html' => '<li class="expanded m_group">
                         <div class="group-header"><span class="font-weight-bold group-label"><span class="t_keyword">string</span><span class="text-muted">(base64⇢image/png)</span><span class="t_punct colon">:</span> <span class="t_string" data-type-more="base64"><span class="no-quotes t_string">'
-                            . \substr(\base64_encode(\file_get_contents(TEST_DIR . '/assets/logo.png')), 0, 156)
-                            . '</span><span class="maxlen">&hellip; 10696 more bytes (not logged)</span></span></span></div>
+                            . \substr(\base64_encode(\file_get_contents(TEST_DIR . '/assets/logo.png')), 0, 128)
+                            . '</span><span class="maxlen">&hellip; 10724 more bytes (not logged)</span></span></span></div>
                         <ul class="group-body">',
                 ),
             ),

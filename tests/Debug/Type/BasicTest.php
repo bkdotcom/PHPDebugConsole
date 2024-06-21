@@ -369,6 +369,7 @@ class BasicTest extends DebugTestFramework
                         'method' => 'log',
                         'args' => array(
                             array(
+                                'brief' => false,
                                 'debug' => Abstracter::ABSTRACTION,
                                 'type' => Type::TYPE_INT,
                                 'typeMore' => Type::TYPE_TIMESTAMP,
@@ -386,6 +387,7 @@ class BasicTest extends DebugTestFramework
                         'log',
                         array(
                             array(
+                                'brief' => false,
                                 'debug' => Abstracter::ABSTRACTION,
                                 'type' => Type::TYPE_INT,
                                 'typeMore' => Type::TYPE_TIMESTAMP,
@@ -412,6 +414,7 @@ class BasicTest extends DebugTestFramework
                         'log',
                         array(
                             array(
+                                'brief' => false,
                                 'debug' => Abstracter::ABSTRACTION,
                                 'type' => Type::TYPE_INT,
                                 'typeMore' => Type::TYPE_TIMESTAMP,

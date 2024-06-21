@@ -10,6 +10,8 @@
 
 namespace bdk\ErrorHandler;
 
+use OutOfBoundsException;
+
 /**
  * Base "component" methods
  */
@@ -54,6 +56,8 @@ class AbstractComponent
      * @param mixed  $value Property value
      *
      * @return void
+     *
+     * @throws OutOfBoundsException if key does not exist or is read only
      */
     public function __set($prop, $value)
     {

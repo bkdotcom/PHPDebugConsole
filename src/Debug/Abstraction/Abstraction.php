@@ -43,7 +43,6 @@ class Abstraction extends Event
                 ? array()
                 : null;
         }
-        \ksort($values);
         $this->setValues($values);
     }
 
@@ -82,6 +81,7 @@ class Abstraction extends Event
     #[\ReturnTypeWillChange]
     public function jsonSerialize()
     {
+        \ksort($this->values);
         return $this->values + array('debug' => Abstracter::ABSTRACTION);
     }
 

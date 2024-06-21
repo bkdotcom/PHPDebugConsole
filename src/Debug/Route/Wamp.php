@@ -247,10 +247,8 @@ class Wamp implements RouteInterface
      * @param Event $event debug event
      *
      * @return void
-     *
-     * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter
      */
-    public function processLogEntries(Event $event = null)
+    public function processLogEntries(Event $event = null) // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
     {
         $data = $this->debug->data->get();
         foreach ($data['alerts'] as $logEntry) {

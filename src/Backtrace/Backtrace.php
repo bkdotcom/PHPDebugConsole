@@ -125,7 +125,7 @@ class Backtrace
         $backtrace = \debug_backtrace($phpOptions, 28);
         $backtrace = Normalizer::normalize($backtrace);
         $index = SkipInternal::getFirstIndex($backtrace, $offset);
-        $index = \max($index, 1); // insure we're >= 1
+        $index = \max($index, 1); // ensure we're >= 1
         $return = static::callerInfoBuild(\array_slice($backtrace, $index, 2));
         if (!($options & self::INCL_OBJECT)) {
             unset($return['object']);

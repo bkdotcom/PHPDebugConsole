@@ -273,9 +273,8 @@ class Profile implements SubscriberInterface
      * @return bool
      *
      * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
-     * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter
      */
-    private function onCfgEnableProfiling($val, $key, Event $event)
+    private function onCfgEnableProfiling($val, $key, Event $event) // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
     {
         if (static::$profilingEnabled) {
             // profiling currently enabled

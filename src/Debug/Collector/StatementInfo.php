@@ -132,19 +132,20 @@ class StatementInfo extends AbstractComponent
     /**
      * Add this info to debug log
      *
-     * @param Debug $debug Debug instance
+     * @param Debug $debug        Debug instance
+     * @param array $metaOverride (optional) meta override
      *
      * @return void
      */
-    public function appendLog(Debug $debug)
+    public function appendLog(Debug $debug, array $metaOverride = array())
     {
         $this->debug = $debug;
         $label = $this->getGroupLabel();
-        $debug->groupCollapsed($label, $debug->meta(array(
+        $debug->groupCollapsed($label, $debug->meta(\array_merge(array(
             'boldLabel' => false,
             'icon' => $debug->getCfg('channelIcon', Debug::CONFIG_DEBUG),
             'id' => 'statementInfo' . (++ self::$id),
-        )));
+        ), $metaOverride)));
         $this->logQuery($label);
         $this->logParams();
         $this->logDurationMemory();

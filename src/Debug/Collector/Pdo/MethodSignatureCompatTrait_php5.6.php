@@ -16,11 +16,9 @@ trait MethodSignatureCompatTrait
      *
      * @return \PDOStatement|false PDO::query returns a PDOStatement object, or `false` on failure.
      * @link   http://php.net/manual/en/pdo.query.php
-     *
-     * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter
      */
     #[\ReturnTypeWillChange]
-    public function query($statement = null, $fetchMode = null, ...$fetchModeArgs)
+    public function query($statement = null, $fetchMode = null, ...$fetchModeArgs) // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
     {
         return $this->profileCall('query', $statement, \func_get_args());
     }

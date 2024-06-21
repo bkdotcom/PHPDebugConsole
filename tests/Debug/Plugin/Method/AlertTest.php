@@ -60,6 +60,17 @@ class AlertTest extends DebugTestFramework
             ),
         );
 
+        $return['error.2'] = array(
+            'alert',
+            array(
+                $message,
+                'error',
+            ),
+            array(
+                'entry' => $entryExpect,
+            ),
+        );
+
         $entryExpect['meta']['level'] = 'info';
         $style = 'padding: 5px; line-height: 26px; font-size: 125%; font-weight: bold; background-color: #d9edf7; border: 1px solid #bce8f1; color: #31708f;';
         $return['info'] = array(
@@ -83,6 +94,17 @@ class AlertTest extends DebugTestFramework
                 'script' => \str_replace('%c', '%%c', 'console.info(' . \json_encode('%c' . $message, JSON_UNESCAPED_SLASHES) . ',"' . $style . '");'),
                 'text' => '》[Alert ℹ info] ' . $message . '《',
                 'wamp' => $entryExpect,
+            ),
+        );
+
+        $return['info.2'] = array(
+            'alert',
+            array(
+                $message,
+                'info',
+            ),
+            array(
+                'entry' => $entryExpect,
             ),
         );
 
@@ -112,6 +134,17 @@ class AlertTest extends DebugTestFramework
             ),
         );
 
+        $return['success.2'] = array(
+            'alert',
+            array(
+                $message,
+                'success',
+            ),
+            array(
+                'entry' => $entryExpect,
+            ),
+        );
+
         $entryExpect['meta']['level'] = 'warn';
         $style = 'padding: 5px; line-height: 26px; font-size: 125%; font-weight: bold; background-color: #fcf8e3; border: 1px solid #faebcc; color: #8a6d3b;';
         $return['warn'] = array(
@@ -135,6 +168,17 @@ class AlertTest extends DebugTestFramework
                 'script' => \str_replace('%c', '%%c', 'console.log(' . \json_encode('%c' . $message, JSON_UNESCAPED_SLASHES) . ',"' . $style . '");'),
                 'text' => '》[Alert ⚠ warn] ' . $message . '《',
                 'wamp' => $entryExpect,
+            ),
+        );
+
+        $return['warn.2'] = array(
+            'alert',
+            array(
+                $message,
+                'warn',
+            ),
+            array(
+                'entry' => $entryExpect,
             ),
         );
 
@@ -209,8 +253,7 @@ class AlertTest extends DebugTestFramework
             'alert',
             array(
                 $message,
-                'error',
-                true,
+                Debug::meta('dismissible', true),
             ),
             array(
                 'entry' => $entryExpect,
@@ -230,6 +273,19 @@ class AlertTest extends DebugTestFramework
             ),
         );
 
+        $return['dismissible.2'] = array(
+            'alert',
+            array(
+                $message,
+                'error',
+                true,
+            ),
+            array(
+                'entry' => $entryExpect,
+            ),
+        );
+
+        // test substitution
         $args = array(
             '%s %s %s %s %s %s',
             'plain ol string',

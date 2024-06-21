@@ -93,9 +93,12 @@ class Abstracter extends AbstractComponent
             'base64' => 156, // 2 lines of chunk_split'ed
             'binary' => array(
                 0 => 128,
-                257 => 0, // if over 128 bytes don't capture / store
+                128 => 0, // if over 128 bytes don't capture / store
             ),
             'other' => 8192,
+        ),
+        'stringMaxLenBrief' => array(
+            'other' => 128,
         ),
         'stringMinLen' => array(
             'contentType' => 256, // try to determine content-type of binary string
@@ -172,7 +175,16 @@ class Abstracter extends AbstractComponent
                ie, converting attribs.class to an array
         */
         $this->crateVals = $values;
-        $abs = $this->getAbstraction($mixed);
+        // make sure any supplied typeInfo is applied during the abstraction
+        $typeInfo = array(
+            'type' => null,
+            'typeMore' => null,
+        );
+        $typeInfo = \array_merge($typeInfo, \array_intersect_key($values, $typeInfo));
+        $typeInfo = $typeInfo['type']
+            ? \array_values($typeInfo)
+            : array();
+        $abs = $this->getAbstraction($mixed, __FUNCTION__, $typeInfo);
         foreach ($values as $k => $v) {
             $abs[$k] = $v;
         }
@@ -224,6 +236,7 @@ class Abstracter extends AbstractComponent
                 return $this->abstractString->getAbstraction($val, $typeMore, $this->crateVals);
             default:
                 return new Abstraction($type, array(
+                    'brief' => $this->cfg['brief'],
                     'typeMore' => $typeMore,
                     'value' => $val,
                 ));
@@ -341,6 +354,7 @@ class Abstracter extends AbstractComponent
         );
         $keysStr = array(
             'stringMaxLen',
+            'stringMaxLenBrief',
             'stringMinLen',
         );
         $arrCfg = \array_intersect_key($cfg, \array_flip($keysArr));

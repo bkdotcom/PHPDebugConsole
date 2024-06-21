@@ -43,6 +43,7 @@ class LogRouteMeta
     {
         $logEntry = $this->messageMetaTrace($logEntry);
         $logEntry = $this->messageMetaCaller($logEntry);
+        // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys
         $categoryFuncs = array(
             '/^system\.caching/' => 'messageMetaSystemCaching',
             'system.CModule' => 'messageMetaSystemCmodule',

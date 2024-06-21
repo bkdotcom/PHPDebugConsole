@@ -63,6 +63,7 @@ return array(
             'bdk\Test\Debug\Fix𝐭ure\Con𝘧usableInteᴦface',
         ),
     'isAnonymous' => false,
+    'isExcluded' => false,
     'isFinal' => false,
     'isReadOnly' => false,
     'methods' => array(
@@ -399,7 +400,6 @@ return array(
             'visibility' => 'public',
         ),
     ),
-    'isExcluded' => false,
     'sectionOrder' => array(
         'attributes',
         'extends',

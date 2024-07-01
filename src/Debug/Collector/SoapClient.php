@@ -83,7 +83,7 @@ class SoapClient extends SoapClientBase
      * {@inheritDoc}
      */
     #[\ReturnTypeWillChange]
-    public function __call($name, array $args)
+    public function __call($name, $args)
     {
         $exception = null;
         try {

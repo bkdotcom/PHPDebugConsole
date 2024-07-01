@@ -568,9 +568,12 @@ EOD;
                         self::assertCount(2, $inheritedVals['constants']);
                         self::assertArrayNotHasKey('constants', $instanceVals);
 
-                        foreach ($objAbs['constants'] as $const) {
-                            // definition still collects everything regardless
-                            self::assertNotNull($const['desc']);
+                        if (PHP_VERSION_ID >= 70100) {
+                            // constant reflection is php 7.1+
+                            foreach ($objAbs['constants'] as $name => $const) {
+                                // definition still collects everything regardless
+                                self::assertNotNull($const['desc'], $name . ' desc is null');
+                            }
                         }
 
                         $propsWithDesc = array('magicProp','magicReadProp','propPrivate','propPublic','testBasePrivate');

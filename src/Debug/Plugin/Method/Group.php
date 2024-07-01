@@ -12,6 +12,7 @@
 
 namespace bdk\Debug\Plugin\Method;
 
+use BadMethodCallException;
 use bdk\Backtrace;
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
@@ -23,7 +24,6 @@ use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
 use ReflectionFunction;
 use ReflectionMethod;
-use RuntimeException;
 
 /**
  * Group methods
@@ -63,9 +63,9 @@ class Group implements SubscriberInterface
      *
      * @return mixed
      *
-     * @throws RuntimeException
+     * @throws BadMethodCallException
      */
-    public function __call($method, $args)
+    public function __call($method, array $args)
     {
         $methods = array(
             'getCurrentGroups',
@@ -75,7 +75,7 @@ class Group implements SubscriberInterface
             'setLogDest',
         );
         if (\in_array($method, $methods, true) === false) {
-            throw new RuntimeException(__CLASS__ . '::' . $method . ' is inaccessible');
+            throw new BadMethodCallException(__CLASS__ . '::' . $method . ' is inaccessible');
         }
         return \call_user_func_array(array($this->groupStack, $method), $args);
     }

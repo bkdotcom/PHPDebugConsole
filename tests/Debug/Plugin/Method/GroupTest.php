@@ -161,7 +161,9 @@ class GroupTest extends DebugTestFramework
             'declaredLast' => 'bdk\Test\Debug\Fixture\TestObj',
             'declaredOrig' => 'bdk\Test\Debug\Fixture\TestObj',
             'declaredPrev' => null,
-            'implements' => null,
+            'implements' => PHP_VERSION_ID >= 80000
+                ? 'Stringable'
+                : null,
             'isAbstract' => false,
             'isDeprecated' => false,
             'isFinal' => false,
@@ -994,7 +996,7 @@ EOD;
 
     public function testInaccessibleMethod()
     {
-        $this->expectException('RuntimeException');
+        $this->expectException('BadMethodCallException');
         $this->expectExceptionMessage('bdk\Debug\Plugin\Method\Group::bogus is inaccessible');
         $this->debug->getPlugin('methodGroup')->bogus();
     }

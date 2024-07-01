@@ -552,6 +552,9 @@ EOD;
                 array(
                     'entry' => static function (LogEntry $logEntry) {
                         $objAbs = $logEntry['args'][0];
+                        $inheritedVals = $objAbs->getInheritedValues();
+                        $instanceVals = $objAbs->getInstanceValues();
+                        self::assertTrue(($objAbs['cfgFlags'] & AbstractObject::PHPDOC_COLLECT) === 0);
                         self::assertSame(
                             // we collect the classes's php doc regardless of config
                             array(
@@ -560,18 +563,31 @@ EOD;
                             ),
                             \array_intersect_key($objAbs['phpDoc'], \array_flip(array('desc','summary')))
                         );
+
+                        self::assertCount(2, $objAbs['constants']);
+                        self::assertCount(2, $inheritedVals['constants']);
+                        self::assertArrayNotHasKey('constants', $instanceVals);
+
                         foreach ($objAbs['constants'] as $const) {
-                            self::assertNull($const['desc']);
+                            // definition still collects everything regardless
+                            self::assertNotNull($const['desc']);
                         }
-                        foreach ($objAbs['properties'] as $prop) {
-                            self::assertNull($prop['desc']);
+
+                        $propsWithDesc = array('magicProp','magicReadProp','propPrivate','propPublic','testBasePrivate');
+                        foreach ($objAbs['properties'] as $name => $prop) {
+                            \in_array($name, $propsWithDesc, true)
+                                ? self::assertNotNull($prop['desc'])
+                                : self::assertNull($prop['desc']);
                         }
+
+                        /*
                         foreach ($objAbs['methods'] as $method) {
                             self::assertSame(
                                 array('desc' => null, 'summary' => null),
                                 \array_intersect_key($method['phpDoc'], \array_flip(array('desc','summary')))
                             );
                         }
+                        */
                     },
                 ),
             ),

@@ -81,7 +81,7 @@ class SlackApi extends AbstractSlack
      *
      * @throws BadMethodCallException
      */
-    public function __call($method, $args)
+    public function __call($method, array $args)
     {
         $info = $this->getMethodInfo($method);
         $url = $this->baseUrl . $info['uri'];

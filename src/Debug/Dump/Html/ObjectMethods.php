@@ -305,13 +305,12 @@ class ObjectMethods extends AbstractObjectSection
      */
     protected function getLabel(Abstraction $abs)
     {
-        $label = \count($abs['methods']) > 0
+        if (!($abs['cfgFlags'] & AbstractObject::METHOD_COLLECT)) {
+            return 'methods <i>not collected</i>';
+        }
+        return \count($abs['methods']) > 0
             ? 'methods'
             : 'no methods';
-        if (!($abs['cfgFlags'] & AbstractObject::METHOD_COLLECT)) {
-            $label = 'methods <i>not collected</i>';
-        }
-        return $label;
     }
 
     /**

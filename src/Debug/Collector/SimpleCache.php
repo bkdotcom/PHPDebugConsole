@@ -12,6 +12,7 @@
 
 namespace bdk\Debug\Collector;
 
+use BadMethodCallException;
 use bdk\Debug;
 use bdk\Debug\Collector\SimpleCache\CallInfo;
 use bdk\PubSub\Event;
@@ -61,18 +62,21 @@ class SimpleCache implements CacheInterface
     /**
      * Magic method... inaccessible method called.
      *
-     * @param string $name method name
-     * @param array  $args method arguments
+     * @param string $method method name
+     * @param array  $args   method arguments
      *
      * @return mixed
      */
-    public function __call($name, $args)
+    public function __call($method, $args)
     {
+        if (\method_exists($this->cache, $method) === false) {
+            throw new BadMethodCallException('method ' . __CLASS__ . '::' . $method . ' is not defined');
+        }
         // we'll just pass the first arg since we don't know what we're dealing with
         $keys = !empty($args[0])
             ? $args[0]
             : null;
-        return $this->profileCall($name, $args, false, $keys);
+        return $this->profileCall($method, $args, false, $keys);
     }
 
     /**

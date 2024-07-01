@@ -3,6 +3,7 @@
 namespace bdk\Test\Debug;
 
 use bdk\Debug;
+use bdk\Debug\Abstraction\AbstractObject;
 use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 use bdk\PubSub\Manager as EventManager;
 
@@ -262,9 +263,8 @@ class DebugTest extends DebugTestFramework
     public function testMetaCfg()
     {
         $this->debug->log(new \bdk\Test\Debug\Fixture\TestObj(), $this->debug->meta('cfg', 'methodCollect', false));
-        $methodCollect = $this->debug->data->get('log/__end__/args/0/cfgFlags') & \bdk\Debug\Abstraction\AbstractObject::METHOD_COLLECT;
+        $methodCollect = $this->debug->data->get('log/__end__/args/0/cfgFlags') & AbstractObject::METHOD_COLLECT;
         self::assertSame(0, $methodCollect);
-        self::assertCount(3, $this->debug->data->get('log/__end__/args/0/methods'));
         self::assertTrue($this->debug->getCfg('methodCollect'));
     }
 

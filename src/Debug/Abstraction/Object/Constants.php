@@ -70,6 +70,7 @@ class Constants extends AbstractInheritable
         $this->phpDocCollect = ($abs['cfgFlags'] & AbstractObject::PHPDOC_COLLECT) === AbstractObject::PHPDOC_COLLECT;
         /*
             We trace our lineage to learn where constants are inherited from
+            (set brief to avoid recursion with enum values)
         */
         $briefBak = $this->abstracter->debug->setCfg('brief', true, Debug::CONFIG_NO_PUBLISH);
         $this->traverseAncestors($abs['reflector'], function (ReflectionClass $reflector) {

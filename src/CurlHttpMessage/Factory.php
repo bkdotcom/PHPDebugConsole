@@ -58,7 +58,7 @@ class Factory
      *
      * @throws BadMethodCallException
      */
-    public function __call($method, $args)
+    public function __call($method, array $args)
     {
         if (isset($this->factories[$method])) {
             return \call_user_func_array($this->factories[$method], $args);

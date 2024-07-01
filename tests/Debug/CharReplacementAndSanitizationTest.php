@@ -80,7 +80,7 @@ class CharReplacementAndSanitizationTest extends DebugTestFramework
                           )
                           (public) \u{0581}\u{1d0f}\u{0251}t = "moun\u{1d42d}ain"
                         Methods:
-                          public: 4
+                          public: 6
                           magic: 1
                     ',
                     'script' => \preg_replace('/\\\\([^rnt])/', '\\\\\\\\$1', 'console.log({"___class_name":"bdk\\Test\\Debug\\Fixture\\Con𝘧usableIdenti𝘧iers","(public) array":{"int":42,"password":"secret","poop":"💩","string":"str\\u{0131}ngy\nstring","ctrl chars and whatnot":"\\u{feff}bom\r\n\t\\x07 \\x1f \\x7f \\x00 \\u{00a0}<i>(nbsp)</i> \\u{2009}(thsp), & \\u{200b}(zwsp)","n\\u{03bf}n\\x80utf8":"test"},"(public) \\u{0581}\\u{1d0f}\\u{0251}t":"moun\\u{1d42d}ain"});'),
@@ -99,7 +99,7 @@ class CharReplacementAndSanitizationTest extends DebugTestFramework
                                 \e[38;5;245m)\e[0m
                             \e[38;5;250m(public)\e[0m \e[38;5;83m\e[34;48;5;14mց\e[38;5;83;49m\e[34;48;5;14mᴏ\e[38;5;83;49m\e[34;48;5;14mɑ\e[38;5;83;49mt\e[0m \e[38;5;224m=\e[0m \e[38;5;250m"\e[0mmoun\e[34;48;5;14m𝐭\e[0main\e[38;5;250m"\e[0m
                         \e[4mMethods:\e[24m
-                            public\e[38;5;245m: \e[96m4\e[0m
+                            public\e[38;5;245m: \e[96m6\e[0m
                             magic\e[38;5;245m: \e[96m1\e[0m
                     '),
                     'wamp' => static function (array $messages, LogEntry $logEntry) {

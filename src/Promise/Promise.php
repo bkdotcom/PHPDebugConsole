@@ -56,7 +56,7 @@ class Promise implements PromiseInterface
      *
      * @throws BadMethodCallException
      */
-    public function __call($method, $args)
+    public function __call($method, array $args)
     {
         if (\preg_match('/^is([A-Z][a-z]+)$/', $method)) {
             $args = array($this);
@@ -74,7 +74,7 @@ class Promise implements PromiseInterface
      *
      * @throws BadMethodCallException
      */
-    public static function __callStatic($method, $args)
+    public static function __callStatic($method, array $args)
     {
         $isClass = 'bdk\\Promise\\Is';
         $utilClasses = array(

@@ -43,11 +43,12 @@ class Alert implements SubscriberInterface
     /**
      * Display an alert at the top of the log
      *
-     * Can use styling & substitutions.
-     * If using substitutions, will need to pass `$level` & `$dismissible` as meta values
+     * Two method signatures:
+     *   * `alert(...$args)`
+     *   * `alert(string $message, string $level = 'error', bool $dismissible = false)`
      *
-     *   * alert(...$args)
-     *   * alert($message, $level, $dismissible)
+     * Can use styling & substitutions.
+     * If using substitutions or passing arbitrary arguments, will need to pass `$level` & `$dismissible` as meta values
      *
      * @param string $message     message to be displayed
      * @param string $level       (error), info, success, warn

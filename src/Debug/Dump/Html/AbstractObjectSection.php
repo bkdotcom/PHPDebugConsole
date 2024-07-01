@@ -297,7 +297,7 @@ abstract class AbstractObjectSection
             return '<code>' . $method . '</code>';
         }, $methods);
         $methods = \count($methods) === 1
-            ? 'a ' . $methods[0] . ' method'
+            ? 'a ' . \reset($methods) . ' method'
             : \implode(' and ', $methods) . ' methods';
         return '<dd class="info magic">This object has ' . $methods . '</dd>' . "\n";
     }

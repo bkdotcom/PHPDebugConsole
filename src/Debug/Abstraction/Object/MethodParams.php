@@ -171,7 +171,7 @@ class MethodParams
                 'isPassedByReference' => $refParameter->isPassedByReference(),
                 'isPromoted' =>  PHP_VERSION_ID >= 80000 && $refParameter->isPromoted(),
                 'isVariadic' => PHP_VERSION_ID >= 50600
-                    ? $refParameter->isVariadic()
+                    ? $refParameter->isVariadic() || $phpDocParam['isVariadic']
                     : $phpDocParam['isVariadic'],
                 'name' => $name,
                 'type' => $this->getParamTypeHint($refParameter, $phpDocParam['type']),

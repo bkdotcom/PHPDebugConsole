@@ -53,6 +53,24 @@ class Con𝘧usableIdenti𝘧iers extends \bdk\Test\Debug\Fix𝐭ure\Con𝘧usab
     );
 
     /**
+     * Magic method... inaccessible method called.
+     *
+     * @param string $method Inaccessible method name
+     * @param array  $args   Arguments passed to method
+     *
+     * @return mixed
+     *
+     * @throws BadMethodCallException
+     */
+    public function __call($method, array $args)
+    {
+    }
+
+    public function __set($property, $value)
+    {
+    }
+
+    /**
      * M[ɑ]gic <b onmouseover="alert('xss')">method</b>
      *
      * @return string <b onmouseover="alert('xss')">happy</b> [һ]appy

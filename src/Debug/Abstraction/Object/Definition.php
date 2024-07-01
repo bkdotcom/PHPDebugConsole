@@ -21,6 +21,7 @@ use bdk\Debug\Abstraction\Object\Methods;
 use bdk\Debug\Abstraction\Object\Properties;
 use bdk\PubSub\ValueStore;
 use ReflectionClass;
+use ReflectionEnum;
 
 /**
  * Abstracter: Gather class definition info common across all instances
@@ -54,7 +55,8 @@ class Definition
     protected static $values = array(
         'attributes' => array(),
         'cases' => array(),
-        'cfgFlags' => 0,
+        'cfgFlags' => 0, // __constructor will set to everything sans "brief"
+                         // definition will collect with all options
         'className' => "\x00default\x00",
         'constants' => array(),
         'definition' => array(
@@ -89,6 +91,9 @@ class Definition
         $this->constants = $abstractObject->constants;
         $this->methods = $abstractObject->methods;
         $this->properties = $abstractObject->properties;
+
+        $defaultValues = $abstractObject->buildObjValues();
+        self::$values['cfgFlags'] = $defaultValues['cfgFlags'];
     }
 
     /**
@@ -158,8 +163,9 @@ class Definition
      *
      * @return void
      */
-    public function addAttributes(ValueStore $abs)
+    protected function addAttributes(ValueStore $abs)
     {
+        // perform cfgFlag check even though we've enabled all flags for definition
         if ($abs['cfgFlags'] & AbstractObject::OBJ_ATTRIBUTE_COLLECT) {
             $reflector = $abs['reflector'];
             $abs['attributes'] = $this->helper->getAttributes($reflector);
@@ -169,11 +175,13 @@ class Definition
     /**
      * Collect "definition" values
      *
+     * extensionName, fileName, & startLine
+     *
      * @param ValueStore $abs ValueStore instance
      *
      * @return void
      */
-    public function addDefinition(ValueStore $abs)
+    protected function addDefinition(ValueStore $abs)
     {
         $reflector = $abs['reflector'];
         $abs['definition'] = array(
@@ -186,13 +194,30 @@ class Definition
     }
 
     /**
+     * Collect classes this class extends
+     *
+     * @param ValueStore $abs ValueStore instance
+     *
+     * @return void
+     */
+    protected function addExtends(ValueStore $abs)
+    {
+        $reflector = $abs['reflector'];
+        $extends = array();
+        while ($reflector = $reflector->getParentClass()) {
+            $extends[] = $reflector->getName();
+        }
+        $abs['extends'] = $extends;
+    }
+
+    /**
      * Collect interfaces that object implements
      *
      * @param ValueStore $abs ValueStore instance
      *
      * @return void
      */
-    public function addImplements(ValueStore $abs)
+    protected function addImplements(ValueStore $abs)
     {
         $abs['implements'] = $this->getInterfaces($abs['reflector']);
     }
@@ -204,7 +229,7 @@ class Definition
      *
      * @return void
      */
-    public function addPhpDoc(ValueStore $abs)
+    protected function addPhpDoc(ValueStore $abs)
     {
         $reflector = $abs['reflector'];
         $fullyQualifyType = $abs['fullyQualifyPhpDocType'];
@@ -232,6 +257,7 @@ class Definition
     {
         $this->addAttributes($abs);
         $this->addDefinition($abs);
+        $this->addExtends($abs);
         $this->addImplements($abs);
         $this->addPhpDoc($abs);
         $this->constants->add($abs);
@@ -293,10 +319,12 @@ class Definition
     {
         $reflector = $values['reflector'];
         $isAnonymous = PHP_VERSION_ID >= 70000 && $reflector->isAnonymous();
-        $values = \array_merge(
+        return \array_merge(
             self::$values,
             array(
-                'cfgFlags' => $values['cfgFlags'],
+                'cfgFlags' => $reflector instanceof ReflectionEnum
+                    ? $values['cfgFlags'] // avoid enum value recursion (cfgFlags based on current config)
+                    : self::$values['cfgFlags'], // all options / collect everything
                 'className' => $isAnonymous
                     ? $values['className'] . '|' . \md5($reflector->getName())
                     : $values['className'],
@@ -311,9 +339,5 @@ class Definition
                 'reflector' => $values['reflector'],
             )
         );
-        while ($reflector = $reflector->getParentClass()) {
-            $values['extends'][] = $reflector->getName();
-        }
-        return $values;
     }
 }

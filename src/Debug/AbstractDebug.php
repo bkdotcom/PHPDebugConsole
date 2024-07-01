@@ -78,7 +78,7 @@ abstract class AbstractDebug
      *
      * @return mixed
      */
-    public function __call($methodName, $args)
+    public function __call($methodName, array $args)
     {
         $logEntry = new LogEntry($this, $methodName, $args);
         $this->publishBubbleEvent(Debug::EVENT_CUSTOM_METHOD, $logEntry);
@@ -97,7 +97,7 @@ abstract class AbstractDebug
      *
      * @return mixed
      */
-    public static function __callStatic($methodName, $args)
+    public static function __callStatic($methodName, array $args)
     {
         // prior to v3.1 it was required to have underscore prefix to disambiguate from instance method
         //   as of v3.1, all methods provided via plugin

@@ -78,7 +78,7 @@ class AbstractObject extends AbstractComponent
 
     const TO_STRING_OUTPUT = 16; // 2^4
 
-    /** @var array<string, self::*> */
+    /** @var array<string,self::*> */
     public static $cfgFlags = array(
         'brief' => self::BRIEF,
 
@@ -165,7 +165,7 @@ class AbstractObject extends AbstractComponent
      * @var array<string, mixed> Array of key/values
      */
     protected static $values = array(
-        'cfgFlags' => 0,
+        'cfgFlags' => 0, // will default to everything sans "brief"
         'className' => '',
         'debugMethod' => '',
         'interfacesCollapse' => array(),  // cfg.interfacesCollapse
@@ -197,12 +197,11 @@ class AbstractObject extends AbstractComponent
         $this->methods = new Methods($this);
         $this->properties = new Properties($this);
         $this->definition = new Definition($this);
-        if ($abstracter->debug->parentInstance) {
+        if ($abstracter->debug->parentInstance === null) {
             // we only need to subscribe to these events from root channel
-            return;
+            $subscriber = new Subscriber($this);
+            $abstracter->debug->eventManager->addSubscriberInterface($subscriber);
         }
-        $subscriber = new Subscriber($this);
-        $abstracter->debug->eventManager->addSubscriberInterface($subscriber);
     }
 
     /**
@@ -240,17 +239,13 @@ class AbstractObject extends AbstractComponent
      */
     public static function buildObjValues(array $values = array())
     {
-        $cfgFlags = \array_reduce(self::$cfgFlags, static function ($carry, $val) {
-            return $carry | $val;
-        }, 0);
-        $cfgFlags &= ~self::BRIEF;
-        return \array_merge(
-            self::$values,
-            array(
-                'cfgFlags' => $cfgFlags,
-            ),
-            $values
-        );
+        if (self::$values['cfgFlags'] === 0) {
+            // calculate default cfgFlags (everything except for "brief")
+            self::$values['cfgFlags'] = \array_reduce(self::$cfgFlags, static function ($carry, $val) {
+                return $carry | $val;
+            }, 0) & ~self::BRIEF;
+        }
+        return \array_merge(self::$values, $values);
     }
 
     /**

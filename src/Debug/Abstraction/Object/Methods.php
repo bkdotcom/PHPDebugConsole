@@ -303,6 +303,7 @@ class Methods extends AbstractInheritable
      */
     private function addViaRef(Abstraction $abs)
     {
+        // set brief to avoid recursion with enum values
         $briefBak = $this->abstracter->debug->setCfg('brief', true, Debug::CONFIG_NO_PUBLISH);
         $this->methods = array();
         $this->methodsWithStatic = array();

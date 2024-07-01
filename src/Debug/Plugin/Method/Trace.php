@@ -46,9 +46,9 @@ class Trace implements SubscriberInterface
      *
      * Params may be passed in any order
      *
-     * @param bool   $inclContext (false) Include code snippet
+     * @param bool   $inclContext (`false`) Include code snippet
      * @param string $caption     ('trace') Specify caption for the trace table
-     * @param int    $limit       (0) limit the number of stack frames returned.  By default (limit=0) all stack frames are collected
+     * @param int    $limit       (0) limit the number of stack frames returned.  By default (limit = 0) all stack frames are collected
      *
      * @return Debug
      */

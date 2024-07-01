@@ -71,8 +71,8 @@ class ParseMethod
         $matches = array();
         $params = $parsed['param'];
         foreach ($params as $i => $str) {
-            \preg_match('/^(?:([^=]*?)\s)?([^\s=]+)(?:\s*=\s*(\S+))?$/', $str, $matches);
-            $matches = \array_replace(array('?', null), $matches);
+            \preg_match('/^(?:([^=]*?)\s)?([^\s=]+)(?:\s*=\s*(.+))?$/', $str, $matches);
+            $matches = \array_replace(array(null, null, null), $matches);
             $name = $matches[2];
             $paramInfo = array(
                 'isVariadic' => \strpos($name, '...') !== false,

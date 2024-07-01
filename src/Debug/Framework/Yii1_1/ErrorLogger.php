@@ -136,7 +136,7 @@ class ErrorLogger implements SubscriberInterface
      */
     private function isIgnorableError(Error $error)
     {
-        $ignorableCats = array(Error::CAT_DEPRECATED, Error::CAT_NOTICE, Error::CAT_STRICT);
+        $ignorableCats = array(Error::CAT_DEPRECATED, Error::CAT_NOTICE, Error::CAT_STRICT, Error::CAT_WARNING);
         if (\in_array($error['category'], $ignorableCats, true) === false) {
             return false;
         }

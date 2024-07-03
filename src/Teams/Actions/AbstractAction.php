@@ -14,8 +14,8 @@ abstract class AbstractAction extends AbstractExtendableItem implements ActionIn
     /**
      * Constructor
      *
-     * @param array<string, mixed> $fields Field values
-     * @param string               $type   Item type
+     * @param array<string,mixed> $fields Field values
+     * @param string              $type   Item type
      */
     public function __construct(array $fields, $type)
     {

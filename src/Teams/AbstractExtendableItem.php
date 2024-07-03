@@ -10,7 +10,7 @@ class AbstractExtendableItem extends AbstractItem
     /**
      * Constructor
      *
-     * @param array<string, mixed> $fields Field values
+     * @param array<string,mixed> $fields Field values
      * @param string               $type   Item type
      */
     public function __construct(array $fields, $type)
@@ -47,7 +47,7 @@ class AbstractExtendableItem extends AbstractItem
      * the item requires with corresponding minimum version.
      * When a feature is missing or of insufficient version, fallback is triggered
      *
-     * @param array<string, float> $requires Required features
+     * @param array<string,float> $requires Required features
      *
      * @return static
      */

@@ -12,7 +12,7 @@ class FactSet extends AbstractElement
     /**
      * Constructor
      *
-     * @param Fact[]|array<string, string>[] $facts Facts
+     * @param Fact[]|array<string,string>[] $facts Facts
      */
     public function __construct(array $facts = array())
     {
@@ -47,7 +47,7 @@ class FactSet extends AbstractElement
     /**
      * Return new instance with provided facts
      *
-     * @param array<string, mixed> $facts Fact objects of key/value array
+     * @param array<string,mixed> $facts Fact objects of key/value array
      *
      * @return static
      *

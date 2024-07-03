@@ -26,7 +26,7 @@ interface SubscriberInterface
      *
      *  _method_ = string|Callable name of public method or Closure
      *
-     * @return array<string, string|array>
+     * @return array<string,string|array>
      */
     public function getSubscriptions();
 }

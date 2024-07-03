@@ -28,7 +28,7 @@ class Emailer extends AbstractComponent implements SubscriberInterface
     /** @var \bdk\ErrorHandler\Plugin\Stats */
     private $stats = null;
 
-    /** @var array<string, mixed> */
+    /** @var array<string,mixed> */
     protected $serverParams = array();
 
     /**

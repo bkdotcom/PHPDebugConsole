@@ -25,7 +25,7 @@ class ErrorLevel
      *
      * @param string $phpVer (PHP_VERSION) PHP version
      *
-     * @return array<string, int>
+     * @return array<string,int>
      */
     public static function getConstants($phpVer = null)
     {
@@ -136,10 +136,10 @@ class ErrorLevel
     /**
      * Get on/off flags starting with E_ALL
      *
-     * @param int                $errorReportingLevel Error Level (bitmask) value
-     * @param array<string, int> $allConstants        constName => $constValue array
-     * @param int                $eAll                E_ALL value for specified php version
-     * @param bool               $explicitStrict      explicitly specify E_STRICT?
+     * @param int               $errorReportingLevel Error Level (bitmask) value
+     * @param array<string,int> $allConstants        constName => $constValue array
+     * @param int               $eAll                E_ALL value for specified php version
+     * @param bool              $explicitStrict      explicitly specify E_STRICT?
      *
      * @return array
      */

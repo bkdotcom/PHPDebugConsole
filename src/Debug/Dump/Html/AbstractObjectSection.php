@@ -122,9 +122,9 @@ abstract class AbstractObjectSection
     /**
      * Iterate over cases, constants, properties, or methods
      *
-     * @param ObjectAbstraction    $abs  ObjectAbstraction instance
-     * @param list<string>         $keys keys/names of items to output
-     * @param array<string, mixed> $cfg  Config options
+     * @param ObjectAbstraction   $abs  ObjectAbstraction instance
+     * @param list<string>        $keys keys/names of items to output
+     * @param array<string,mixed> $cfg  Config options
      *
      * @return string
      */
@@ -159,7 +159,7 @@ abstract class AbstractObjectSection
      * group by inheritance... with headings
      *
      * @param ObjectAbstraction    $abs ObjectAbstraction instance
-     * @param array<string, mixed> $cfg Config options
+     * @param array<string,mixed> $cfg Config options
      *
      * @return string
      */
@@ -194,7 +194,7 @@ abstract class AbstractObjectSection
     /**
      * Dump "modifiers"
      *
-     * @param array<string, mixed> $info Abstraction info
+     * @param array<string,mixed> $info Abstraction info
      *
      * @return string html fragment
      */
@@ -209,10 +209,10 @@ abstract class AbstractObjectSection
     /**
      * Get html attributes
      *
-     * @param array<string, mixed> $info Abstraction info
-     * @param array<string, mixed> $cfg  config options
+     * @param array<string,mixed> $info Abstraction info
+     * @param array<string,mixed> $cfg  config options
      *
-     * @return array<string, mixed>
+     * @return array<string,mixed>
      */
     protected function getAttribs(array $info, array $cfg = array())
     {
@@ -236,7 +236,7 @@ abstract class AbstractObjectSection
     /**
      * Get classes
      *
-     * @param array<string, mixed> $info Abstraction info
+     * @param array<string,mixed> $info Abstraction info
      *
      * @return string[]
      */
@@ -275,7 +275,7 @@ abstract class AbstractObjectSection
     /**
      * Get "modifiers" (final, readonly, static)
      *
-     * @param array<string, mixed> $info Abstraction info
+     * @param array<string,mixed> $info Abstraction info
      *
      * @return string[]
      */

@@ -29,8 +29,8 @@ class SlackCommand
     /**
      * Constructor
      *
-     * @param array<string, mixed>              $cfg      Configuration
-     * @param array<non-empty-string, callable> $handlers command handlers
+     * @param array<string,mixed>              $cfg      Configuration
+     * @param array<non-empty-string,callable> $handlers command handlers
      *
      * @throws BadMethodCallException
      */

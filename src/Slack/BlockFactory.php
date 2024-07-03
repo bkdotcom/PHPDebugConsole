@@ -111,7 +111,7 @@ class BlockFactory extends BlockElementsFactory
      * @param array $elements Element definitions
      * @param array $values   Actions block fields
      *
-     * @return array<string, mixed>
+     * @return array<string,mixed>
      */
     public static function actions(array $elements, $values = array())
     {
@@ -345,7 +345,7 @@ class BlockFactory extends BlockElementsFactory
      *
      * @param array $fields Attachment fields
      *
-     * @return non-empty-list<array<string, mixed>>|null
+     * @return non-empty-list<array<string,mixed>>|null
      */
     private static function attachmentFields(array $fields)
     {

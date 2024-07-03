@@ -74,7 +74,7 @@ class SlackMessage implements JsonSerializable
     /**
      * Construct
      *
-     * @param array<string, mixed> $values Initial SlackMessage values
+     * @param array<string,mixed> $values Initial SlackMessage values
      *
      * @throws InvalidArgumentException
      */
@@ -207,7 +207,7 @@ class SlackMessage implements JsonSerializable
     /**
      * Replace existing attachments with new attachments
      *
-     * @param array<string, mixed>[] $attachments New attachments
+     * @param array<string,mixed>[] $attachments New attachments
      *
      * @return static
      *

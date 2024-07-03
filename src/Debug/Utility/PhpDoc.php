@@ -310,7 +310,7 @@ class PhpDoc
      * @param array  $parser Parser info (regex & parts)
      * @param string $tagStr Raw tag body
      *
-     * @return array<string, string>
+     * @return array<string,string>
      */
     private function parseTagRegex(array $parser, $tagStr)
     {
@@ -331,7 +331,7 @@ class PhpDoc
      * @param string      $str         Portion of phpdoc content that contains tags
      * @param string|null $elementName class, property, method, or constant name if available
      *
-     * @return array<string, array>
+     * @return array<string,array>
      */
     private function parseTags($str, $elementName = null)
     {

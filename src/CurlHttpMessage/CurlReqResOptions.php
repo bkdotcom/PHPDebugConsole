@@ -187,7 +187,7 @@ class CurlReqResOptions
     /**
      * Convert request interface headers to list of headers
      *
-     * @param array<string, string[]>[] $requestHeaders RequestInterface headers
+     * @param array<string,string[]>[] $requestHeaders RequestInterface headers
      *
      * @return string[]
      */

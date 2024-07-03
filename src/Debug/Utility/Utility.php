@@ -25,7 +25,7 @@ class Utility
     /**
      * Emit headers queued for output directly using `header()`
      *
-     * @param array<array-key, string|string[]> $headers array of headers
+     * @param array<array-key,string|string[]> $headers array of headers
      *                array(
      *                   array(name, value)
      *                   name => value
@@ -146,7 +146,7 @@ class Utility
      * The keys represent the header name as it will be sent over the wire, and
      * each value is an array of strings associated with the header.
      *
-     * @return array<string, list<string>>
+     * @return array<string,list<string>>
      */
     public static function getEmittedHeaders()
     {

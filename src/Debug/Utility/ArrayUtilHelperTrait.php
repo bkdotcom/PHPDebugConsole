@@ -26,8 +26,8 @@ trait ArrayUtilHelperTrait
     /**
      * Assert value is array or implements ArrayAccess
      *
-     * @param mixed                        $value Value to test
-     * @param array<array-key, string|int> $path  Path to value
+     * @param mixed                       $value Value to test
+     * @param array<array-key,string|int> $path  Path to value
      *
      * @return void
      *
@@ -56,8 +56,8 @@ trait ArrayUtilHelperTrait
     /**
      * Assert value is array or implements ArrayAccess
      *
-     * @param mixed                        $value Value to test
-     * @param array<array-key, string|int> $path  Path to value
+     * @param mixed                       $value Value to test
+     * @param array<array-key,string|int> $path  Path to value
      *
      * @return void
      *
@@ -185,7 +185,7 @@ trait ArrayUtilHelperTrait
      *
      * @param array|string|null $path path
      *
-     * @return array<array-key, string|int>
+     * @return array<array-key,string|int>
      *
      * @throws InvalidArgumentException
      */

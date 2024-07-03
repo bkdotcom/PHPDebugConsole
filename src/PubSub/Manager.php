@@ -54,7 +54,7 @@ class Manager extends AbstractManager
      *
      * @param SubscriberInterface $interface object implementing subscriber interface
      *
-     * @return array<string, list<SubscriberInfoRaw>> A normalized list of subscriptions added.
+     * @return array<string,list<SubscriberInfoRaw>> A normalized list of subscriptions added.
      */
     public function addSubscriberInterface(SubscriberInterface $interface)
     {

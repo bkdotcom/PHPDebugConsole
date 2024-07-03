@@ -39,8 +39,8 @@ class Event extends ValueStore
     /**
      * Construct an event with optional subject and values
      *
-     * @param Subject             $subject The subject of the event (usually an object)
-     * @param array<TKey, TValue> $values  Values to store in the event
+     * @param Subject            $subject The subject of the event (usually an object)
+     * @param array<TKey,TValue> $values  Values to store in the event
      */
     public function __construct($subject = null, array $values = array())
     {

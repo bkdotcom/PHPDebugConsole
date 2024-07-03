@@ -81,9 +81,9 @@ class Table
     /**
      * Constructor
      *
-     * @param mixed                $rows  Table data
-     * @param array<string, mixed> $meta  Meta info / options
-     * @param Debug                $debug Debug instance
+     * @param mixed               $rows  Table data
+     * @param array<string,mixed> $meta  Meta info / options
+     * @param Debug               $debug Debug instance
      */
     public function __construct($rows = array(), array $meta = array(), Debug $debug = null)
     {
@@ -118,7 +118,7 @@ class Table
     /**
      * Get table rows
      *
-     * @return array<array-key, TableRow|array>
+     * @return array<array-key,TableRow|array>
      */
     public function getRows()
     {
@@ -185,7 +185,7 @@ class Table
     /**
      * Merge / initialize meta values
      *
-     * @param array<string, mixed> $meta Meta info / options
+     * @param array<string,mixed> $meta Meta info / options
      *
      * @return void
      */

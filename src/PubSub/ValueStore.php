@@ -35,14 +35,14 @@ use Serializable;
 class ValueStore implements ArrayAccess, IteratorAggregate, JsonSerializable, Serializable
 {
     /**
-     * @var array<TKey, TValue> Array of key/values
+     * @var array<TKey,TValue> Array of key/values
      */
     protected $values = array();
 
     /**
      * Constructor
      *
-     * @param array<TKey, TValue> $values Values to store
+     * @param array<TKey,TValue> $values Values to store
      */
     public function __construct(array $values = array())
     {
@@ -63,7 +63,7 @@ class ValueStore implements ArrayAccess, IteratorAggregate, JsonSerializable, Se
      * Serialize magic method
      * (since php 7.4)
      *
-     * @return array<TKey, TValue>
+     * @return array<TKey,TValue>
      */
     public function __serialize()
     {
@@ -74,7 +74,7 @@ class ValueStore implements ArrayAccess, IteratorAggregate, JsonSerializable, Se
     /**
      * Unserialize
      *
-     * @param array<TKey, TValue> $data serialized data
+     * @param array<TKey,TValue> $data serialized data
      *
      * @return void
      */
@@ -98,7 +98,7 @@ class ValueStore implements ArrayAccess, IteratorAggregate, JsonSerializable, Se
     /**
      * Get all stored values
      *
-     * @return array<TKey, TValue>
+     * @return array<TKey,TValue>
      */
     public function getValues()
     {
@@ -135,7 +135,7 @@ class ValueStore implements ArrayAccess, IteratorAggregate, JsonSerializable, Se
     /**
      * Clears existing values and sets new values
      *
-     * @param array<TKey, TValue> $values key=>value array of values
+     * @param array<TKey,TValue> $values key=>value array of values
      *
      * @return $this
      */
@@ -149,7 +149,7 @@ class ValueStore implements ArrayAccess, IteratorAggregate, JsonSerializable, Se
     /**
      * Implements JsonSerializable
      *
-     * @return array<TKey, TValue>
+     * @return array<TKey,TValue>
      */
     #[\ReturnTypeWillChange]
     public function jsonSerialize()
@@ -267,7 +267,7 @@ class ValueStore implements ArrayAccess, IteratorAggregate, JsonSerializable, Se
      *
      * Iterate over the object like an array.
      *
-     * @return ArrayIterator<TKey, TValue>
+     * @return ArrayIterator<TKey,TValue>
      */
     #[\ReturnTypeWillChange]
     public function getIterator()

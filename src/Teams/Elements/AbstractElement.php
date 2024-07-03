@@ -12,7 +12,7 @@ abstract class AbstractElement extends AbstractToggleableItem implements Element
     /**
      * Constructor
      *
-     * @param array<string, mixed> $fields Field values
+     * @param array<string,mixed> $fields Field values
      * @param string               $type   Item type
      */
     public function __construct(array $fields, $type)

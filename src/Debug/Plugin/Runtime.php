@@ -106,7 +106,7 @@ class Runtime extends AbstractComponent implements SubscriberInterface
     /**
      * Get/store values such as runtime & peak memory usage
      *
-     * @return array<string, float|int>
+     * @return array<string,float|int>
      */
     private function runtimeVals()
     {

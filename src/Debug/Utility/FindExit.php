@@ -36,7 +36,7 @@ class FindExit
     /**
      * If xdebug is avail, search if exit triggered via exit() or die()
      *
-     * @return array<string, mixed>|null|false array if exit found, null if not, false if not supported
+     * @return array<string,mixed>|null|false array if exit found, null if not, false if not supported
      */
     public function find()
     {
@@ -122,7 +122,7 @@ class FindExit
     /**
      * Reset/Init depth, & function stack
      *
-     * @param array<string, mixed> $frame backtrace frame
+     * @param array<string,mixed> $frame backtrace frame
      *
      * @return void
      */

@@ -84,7 +84,7 @@ class TableRow extends AbstractItem
     /**
      * Return new instance with the specified cells
      *
-     * @param iterable<array-key, ElementInterface|string|numeric> $cells The cells in this row
+     * @param iterable<array-key,ElementInterface|string|numeric> $cells The cells in this row
      *
      * @return static
      */

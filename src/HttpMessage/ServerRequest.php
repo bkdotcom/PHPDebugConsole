@@ -271,7 +271,7 @@ class ServerRequest extends Request implements ServerRequestInterface
      *
      * @param array $serverParams $_SERVER
      *
-     * @return array<string, string> The HTTP header key/value pairs.
+     * @return array<string,string> The HTTP header key/value pairs.
      */
     protected function getHeadersViaServer(array $serverParams)
     {

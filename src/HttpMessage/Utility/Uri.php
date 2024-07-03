@@ -125,7 +125,7 @@ class Uri
      *
      * @param string|UriInterface $url The URL to parse.
      *
-     * @return array<string, int|string>|false
+     * @return array<string,int|string>|false
      */
     public static function parseUrl($url)
     {
@@ -169,7 +169,7 @@ class Uri
      *
      * @param string $url The URL to parse.
      *
-     * @return array<string, int|string>|false
+     * @return array<string,int|string>|false
      */
     private static function parseUrlPatched($url)
     {
@@ -195,10 +195,10 @@ class Uri
     /**
      * PHP < 8.0 does not return query & fragment if empty
      *
-     * @param array<string, int|string> $parts Url components from `parse_url`
-     * @param string                    $url   Unparsed url
+     * @param array<string,int|string> $parts Url components from `parse_url`
+     * @param string                   $url   Unparsed url
      *
-     * @return array<string, int|string>
+     * @return array<string,int|string>
      */
     private static function parseUrlAddEmpty(array $parts, $url)
     {
@@ -294,7 +294,7 @@ class Uri
     /**
      * @param UriInterface $url Uri instance
      *
-     * @return array<string, int|string>
+     * @return array<string,int|string>
      */
     private static function uriInterfaceToParts(UriInterface $url)
     {

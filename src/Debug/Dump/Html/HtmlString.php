@@ -198,7 +198,7 @@ class HtmlString
     /**
      * Build replacement for control character
      *
-     * @param array<string, string|null> $info Character info
+     * @param array<string,string|null> $info Character info
      *
      * @return string
      */
@@ -220,7 +220,7 @@ class HtmlString
     /**
      * Build replacement for unicode character
      *
-     * @param array<string, string|null> $info Character info
+     * @param array<string,string|null> $info Character info
      *
      * @return string
      */

@@ -32,7 +32,7 @@ class InterfaceManager
      *
      * @param SubscriberInterface $interface SubscriberInterface instance
      *
-     * @return array<string, list<SubscriberInfo>>
+     * @return array<string,list<SubscriberInfo>>
      *
      * @throws RuntimeException
      */

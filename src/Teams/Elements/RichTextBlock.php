@@ -18,7 +18,7 @@ class RichTextBlock extends AbstractElement
     /**
      * Constructor
      *
-     * @param array<int, string|TextRun> $inlines Initial inline elements
+     * @param array<int,string|TextRun> $inlines Initial inline elements
      */
     public function __construct(array $inlines = array())
     {
@@ -86,7 +86,7 @@ class RichTextBlock extends AbstractElement
     /**
      * Sets inlines (replacing existing)
      *
-     * @param array<int, string|TextRun> $inlines Inline elements
+     * @param array<int,string|TextRun> $inlines Inline elements
      *
      * @return static
      *

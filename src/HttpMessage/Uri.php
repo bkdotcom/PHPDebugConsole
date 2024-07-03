@@ -445,7 +445,7 @@ class Uri extends AbstractUri implements UriInterface
     /**
      * Set properties from parsed url
      *
-     * @param array<string, int|string> $urlParts Url parts parsed from parse_url
+     * @param array<string,int|string> $urlParts Url parts parsed from parse_url
      *
      * @return void
      */

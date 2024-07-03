@@ -84,11 +84,11 @@ class Factory
     /**
      * Build Request instance
      *
-     * @param string                  $method  HTTP METHOD
-     * @param UriInterface|string     $uri     Request URI
-     * @param array<string, string[]> $headers Headers to add
-     * @param mixed                   $body    Message body
-     *                                    StreamInterface | JsonSerializable | array | string | null
+     * @param string                 $method  HTTP METHOD
+     * @param UriInterface|string    $uri     Request URI
+     * @param array<string,string[]> $headers Headers to add
+     * @param mixed                  $body    Message body
+     *                                   StreamInterface | JsonSerializable | array | string | null
      *
      * @return Request
      */
@@ -103,11 +103,11 @@ class Factory
     /**
      * Build Response instance
      *
-     * @param int                     $code         (200) HTTP response code
-     * @param string                  $reasonPhrase ('') HTTP reason phrase.   will default to phrase matching code
-     * @param array<string, string[]> $headers      Headers to add
-     * @param mixed                   $body         Message body
-     *                                    StreamInterface | JsonSerializable | array | string | null
+     * @param int                    $code         (200) HTTP response code
+     * @param string                 $reasonPhrase ('') HTTP reason phrase.   will default to phrase matching code
+     * @param array<string,string[]> $headers      Headers to add
+     * @param mixed                  $body         Message body
+     *                                   StreamInterface | JsonSerializable | array | string | null
      *
      * @return Response
      */
@@ -193,8 +193,8 @@ class Factory
     /**
      * Add headers to message
      *
-     * @param MessageInterface        $message MessageInterface instance
-     * @param array<string, string[]> $headers Headers to add
+     * @param MessageInterface       $message MessageInterface instance
+     * @param array<string,string[]> $headers Headers to add
      *
      * @return MessageInterface
      */

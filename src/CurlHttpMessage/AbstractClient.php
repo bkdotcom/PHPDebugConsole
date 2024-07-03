@@ -267,7 +267,7 @@ abstract class AbstractClient
      * apply options to request
      *
      * @param RequestInterface     $request Request instance
-     * @param array<string, mixed> $options options
+     * @param array<string,mixed> $options options
      *
      * @return RequestInterface
      */
@@ -299,7 +299,7 @@ abstract class AbstractClient
     /**
      * Assert valid options
      *
-     * @param array<string, mixed> $options Options
+     * @param array<string,mixed> $options Options
      *
      * @return void
      *
@@ -318,9 +318,9 @@ abstract class AbstractClient
     /**
      * Merge specified options with default client options
      *
-     * @param array<string, mixed> $options Request options
+     * @param array<string,mixed> $options Request options
      *
-     * @return array<string, mixed>
+     * @return array<string,mixed>
      */
     private function mergeOptions($options)
     {

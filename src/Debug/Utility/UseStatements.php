@@ -90,7 +90,7 @@ class UseStatements
      *
      * @param string $source php code
      *
-     * @return array<string, useStatements> Use statements grouped by namespace
+     * @return array<string,useStatements> Use statements grouped by namespace
      */
     public static function extractUse($source)
     {
@@ -307,9 +307,9 @@ class UseStatements
     /**
      * Sort use statements by namespace & alias
      *
-     * @param array<string, useStatements> $statements use statement grouped by namespace
+     * @param array<string,useStatements> $statements use statement grouped by namespace
      *
-     * @return array<string, useStatements>
+     * @return array<string,useStatements>
      */
     private static function sort(array $statements)
     {

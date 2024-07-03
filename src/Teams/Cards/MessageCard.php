@@ -200,8 +200,8 @@ class MessageCard extends AbstractCard
     /**
      * Adds facts section to card
      *
-     * @param array<string, mixed> $facts name => value array
-     * @param string|null          $title title for this facts section
+     * @param array<string,mixed> $facts name => value array
+     * @param string|null         $title title for this facts section
      *
      * @return static
      */

@@ -303,7 +303,7 @@ trait CardUtilityTrait
      *
      * @param string $prefix Constant name prefix
      *
-     * @return array<string, string>
+     * @return array<string,string>
      */
     private static function getConstantsWithPrefix($prefix)
     {

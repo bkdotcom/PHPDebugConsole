@@ -69,7 +69,7 @@ class Section extends AbstractItem
      *
      * (not to be confused with AdaptiveCard facts)
      *
-     * @param array<string, mixed> $facts name => value array
+     * @param array<string,mixed> $facts name => value array
      *
      * @return static
      */
@@ -111,7 +111,7 @@ class Section extends AbstractItem
     /**
      * Return new instance with images replaced with specified
      *
-     * @param array<array-key, string|array{image: string, title: string}> $images Array containing image urls and/or title/image array
+     * @param array<array-key,string|array{image: string, title: string}> $images Array containing image urls and/or title/image array
      *
      * @return static
      */

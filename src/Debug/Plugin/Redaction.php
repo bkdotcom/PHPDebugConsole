@@ -173,8 +173,8 @@ class Redaction extends AbstractComponent implements SubscriberInterface
     /**
      * Convert header name -> values to string
      *
-     * @param array<string, string[]> $headers   Parsed headers
-     * @param string|null             $startLine request / status line
+     * @param array<string,string[]> $headers   Parsed headers
+     * @param string|null            $startLine request / status line
      *
      * @return string
      */
@@ -262,7 +262,7 @@ class Redaction extends AbstractComponent implements SubscriberInterface
      *
      * @param string $headers Header blocks
      *
-     * @return array<string, string[]>
+     * @return array<string,string[]>
      */
     private function parseHeaders($headers)
     {

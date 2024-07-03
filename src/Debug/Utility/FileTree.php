@@ -58,8 +58,8 @@ class FileTree
     /**
      * Insert 'xx omitted' info into file tree
      *
-     * @param array              $tree           file tree
-     * @param array<string, int> $excludedCounts path => count array
+     * @param array             $tree           file tree
+     * @param array<string,int> $excludedCounts path => count array
      *
      * @return array modified tree
      */

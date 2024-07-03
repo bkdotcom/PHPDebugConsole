@@ -138,7 +138,9 @@ class AbstractError extends Event
         $keysMustHave = array('type', 'message', 'file', 'line');
         $values = \array_merge($this->values, $values);
         $valuesCheck = \array_intersect_key($values, \array_flip($keysMustHave));
-        $keys = \array_keys(\array_filter($valuesCheck, 'strlen'));
+        $keys = \array_keys(\array_filter($valuesCheck, static function ($val) {
+            return \strlen((string) $val) > 0;
+        }));
         if (\array_intersect($keysMustHave, $keys) !== $keysMustHave) {
             throw new InvalidArgumentException('Error values must include: type, message, file, & line');
         }

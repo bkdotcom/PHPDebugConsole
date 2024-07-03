@@ -203,6 +203,9 @@ class SkipInternal
      */
     private static function isPhpDefinedFunction($function)
     {
+        if (\in_array($function, array('include', 'include_once', 'include or require', 'require', 'require_once'), true)) {
+            return true;
+        }
         if (\function_exists($function) === false) {
             return false;
         }

@@ -35,11 +35,8 @@
     <exclude>
       <file>src/Debug/Dump/charData.php</file>
       <file>src/HttpMessage/Factory.php</file>
-      <directory>src/Backtrace</directory>
       <directory>src/Debug/Framework</directory>
       <directory>src/Debug/node_modules</directory>
-      <directory>src/DevUtil</directory>
-      <directory>src/ErrorHandler</directory>
       <directory>src/Psr7</directory>
       <directory>src/PubSub</directory>
     </exclude>
@@ -47,6 +44,9 @@
   <testsuites>
     <testsuite name="Autoloader">
       <file>tests/Debug/AutoloaderTest.php</file>
+    </testsuite>
+    <testsuite name="Backtrace">
+      <directory>tests/Backtrace</directory>
     </testsuite>
     <testsuite name="Container">
       <directory>tests/Container</directory>
@@ -59,6 +59,9 @@
       <directory>tests/Debug</directory>
       <exclude>tests/Debug/AutoloaderTest.php</exclude>
       <exclude>tests/Debug/Utility</exclude>
+    </testsuite>
+    <testsuite name="ErrorHandler">
+      <directory>tests/ErrorHandler</directory>
     </testsuite>
     <testsuite name="HttpMessage">
       <directory>tests/HttpMessage</directory>

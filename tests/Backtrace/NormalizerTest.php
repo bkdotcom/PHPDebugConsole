@@ -112,6 +112,8 @@ class NormalizerTest extends TestCase
         $trace = \array_reverse($GLOBALS['xdebug_trace']);
         $trace = Normalizer::normalize($trace);
 
+        var_dump($trace);
+
         self::assertSame($filepath, $trace[0]['file']);
         self::assertSame('bdk\\Backtrace\\Xdebug::getFunctionStack', $trace[0]['function']);
 

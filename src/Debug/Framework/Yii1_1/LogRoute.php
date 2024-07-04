@@ -262,8 +262,11 @@ class LogRoute extends CLogRoute
     {
         $logEntry = $this->normalizeMessage($logEntry);
         $logEntry = $this->meta->messageMeta($logEntry);
+        $handled = false;
         if (\strpos((string) $logEntry['category'], 'system.caching') === 0 && \preg_match('/^(Saving|Serving) "yii:dbquery/', $logEntry['message'])) {
-            $this->processSqlCachingLogEntry($logEntry);
+            $handled = $this->processSqlCachingLogEntry($logEntry);
+        }
+        if ($handled) {
             return;
         }
         $method = 'processLogEntry' . \ucfirst($logEntry['level']);
@@ -278,7 +281,7 @@ class LogRoute extends CLogRoute
      *
      * @param array $logEntry our key/value'd log entry
      *
-     * @return void
+     * @return bool
      */
     private function processSqlCachingLogEntry(array $logEntry)
     {
@@ -289,7 +292,7 @@ class LogRoute extends CLogRoute
         $returnValue = 'saved to cache';
 
         if (\strpos($logEntry['message'], 'Serving') === 0) {
-            $regEx = '/^Serving "yii:dbquery:\S+:\S*:\S+:(.*?)(?::(a:\d+:\{.+\}))?" from cache$/s';
+            $regEx = '/^Serving "yii:dbquery:\S+:\S*:\S+:(.*?)(?::(a:\d+:\{.*\}))?" from cache$/s';
             \preg_match($regEx, $logEntry['message'], $matches);
             $statementInfo = new StatementInfo($matches[1], $matches[2] ? \unserialize($matches[2]) : array());
             $statementInfo->appendLog($debug, array(
@@ -311,6 +314,8 @@ class LogRoute extends CLogRoute
                 'level' => 'info',
             )
         ));
+
+        return true;
     }
 
     /**

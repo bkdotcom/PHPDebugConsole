@@ -73,20 +73,6 @@ export function enhanceInner ($obj) {
   if ($obj.is('.enhanced')) {
     return
   }
-  $inner.find('> dd > ul > li > .interface, > dd > ul > li > .interface + ul .interface').each(function () {
-    var iface = $(this).text()
-    if (findInterfaceMethods($obj, iface).length === 0) {
-      return
-    }
-    $(this)
-      .addClass('toggle-on')
-      .prop('title', 'toggle interface methods')
-      .attr('data-toggle', 'interface')
-      .attr('data-interface', iface)
-  }).filter('.toggle-off').removeClass('toggle-off').each(function () {
-    // element may have toggle-off to begin with...
-    toggleInterface(this)
-  })
   $inner.find('> .private, > .protected')
     .filter('.magic, .magic-read, .magic-write')
     .removeClass('private protected')
@@ -94,6 +80,7 @@ export function enhanceInner ($obj) {
     $inner.find('.private, .protected').hide()
     callPostToggle = 'allDesc'
   }
+  enhanceInterfaces($obj)
   visToggles($inner, accessible)
   addIcons($inner)
   $inner.find('> .property.forceShow').show().find('> .t_array').debugEnhance('expand')
@@ -101,6 +88,26 @@ export function enhanceInner ($obj) {
     postToggle($obj, callPostToggle === 'allDesc')
   }
   $obj.addClass('enhanced')
+}
+
+function enhanceInterfaces ($obj) {
+  var $inner = $obj.find('> .object-inner')
+  $inner.find('> dd > ul > li > .interface, > dd > ul > li > .interface + ul .interface')
+    .each(function () {
+      var iface = $(this).text()
+      if (findInterfaceMethods($obj, iface).length === 0) {
+        return
+      }
+      $(this)
+        .addClass('toggle-on')
+        .prop('title', 'toggle interface methods')
+        .attr('data-toggle', 'interface')
+        .attr('data-interface', iface)
+    })
+    .filter('.toggle-off').removeClass('toggle-off').each(function () {
+      // element may have toggle-off to begin with...
+      toggleInterface(this)
+    })
 }
 
 /**
@@ -113,30 +120,34 @@ function visToggles ($inner, accessible) {
     hasExcluded: $inner.children('.debuginfo-excluded').hide().length > 0,
     hasInherited: $inner.children('dd[data-inherited-from]').length > 0
   }
+  var $visToggles = visTogglesGet(flags, accessible)
+  if ($inner.find('> dd[class*=t_modifier_]').length) {
+    $inner.find('> dd[class*=t_modifier_]').last().after($visToggles)
+    return
+  }
+  $inner.prepend($visToggles)
+}
+
+function visTogglesGet (flags, accessible) {
+  var $visToggles = $('<div class="vis-toggles"></div>')
   var toggleClass = accessible === 'public'
     ? 'toggle-off'
     : 'toggle-on'
   var toggleVerb = accessible === 'public'
     ? 'show'
     : 'hide'
-  var $visToggles = $('<div class="vis-toggles"></div>')
-  if (flags.hasProtected) {
-    $visToggles.append('<span class="' + toggleClass + '" data-toggle="vis" data-vis="protected">' + toggleVerb + ' protected</span>')
+  var toggles = {
+    hasProtected: '<span class="' + toggleClass + '" data-toggle="vis" data-vis="protected">' + toggleVerb + ' protected</span>',
+    hasPrivate: '<span class="' + toggleClass + '" data-toggle="vis" data-vis="private">' + toggleVerb + ' private</span>',
+    hasExcluded: '<span class="toggle-off" data-toggle="vis" data-vis="debuginfo-excluded">show excluded</span>',
+    hasInherited: '<span class="toggle-on" data-toggle="vis" data-vis="inherited">hide inherited</span>',
   }
-  if (flags.hasPrivate) {
-    $visToggles.append('<span class="' + toggleClass + '" data-toggle="vis" data-vis="private">' + toggleVerb + ' private</span>')
-  }
-  if (flags.hasExcluded) {
-    $visToggles.append('<span class="toggle-off" data-toggle="vis" data-vis="debuginfo-excluded">show excluded</span>')
-  }
-  if (flags.hasInherited) {
-    $visToggles.append('<span class="toggle-on" data-toggle="vis" data-vis="inherited">hide inherited</span>')
-  }
-  if ($inner.find('> dd[class*=t_modifier_]').length) {
-    $inner.find('> dd[class*=t_modifier_]').last().after($visToggles)
-    return
-  }
-  $inner.prepend($visToggles)
+  $.each(flags, function (name, val) {
+    if (val) {
+      $visToggles.append(toggles[name])
+    }
+  })
+  return $visToggles
 }
 
 function toggleInterface (toggle) {

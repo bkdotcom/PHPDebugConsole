@@ -29,7 +29,7 @@ abstract class AbstractUri
     const CHAR_SUB_DELIMS = '!\$&\'\(\)\*\+,;=';
     const CHAR_UNRESERVED = 'a-zA-Z0-9_\-\.~';
 
-    /** @var array<string, int> */
+    /** @var array<string,int> */
     private static $schemes = array(
         'ftp' => 21,
         'http' => 80,

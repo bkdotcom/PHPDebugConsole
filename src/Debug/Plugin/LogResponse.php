@@ -114,7 +114,7 @@ class LogResponse extends AbstractLogReqRes implements SubscriberInterface
     /**
      * Get response content, & type
      *
-     * @return array{content:string, contentLength: int, contentType: string}
+     * @return array{content:string,contentLength:int,contentType:string}
      */
     private function getResponseInfo()
     {

@@ -271,7 +271,7 @@ class FindExit
      *
      * @param array $frame backtrace frame
      *
-     * @return array{0:string|null, 1:int, 2:string}
+     * @return array{0:string|null,1:int,2:string}
      */
     private function getFrameSource($frame)
     {
@@ -311,7 +311,7 @@ class FindExit
      * @param int    $lineStart start line
      * @param int    $lineEnd   end line
      *
-     * @return array{0:string, 1:int, 2:string}
+     * @return array{0:string,1:int,2:string}
      */
     private function getFrameSourceClosure($file, $lineStart, $lineEnd)
     {
@@ -332,7 +332,7 @@ class FindExit
      *
      * @param Reflector $reflector Reflector instance
      *
-     * @return array{0:string|null, 1:int, 2:string}
+     * @return array{0:string|null,1:int,2:string}
      */
     private function getFrameSourceReflection(Reflector $reflector)
     {

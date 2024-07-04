@@ -24,7 +24,7 @@ class ServerLog extends ChromeLogger
 {
     const HEADER_NAME = 'X-ServerLog-Location';
 
-    /** @var array<string, mixed> */
+    /** @var array<string,mixed> */
     protected $cfg = array(
         'channels' => array('*'),
         'channelsExclude' => array(),

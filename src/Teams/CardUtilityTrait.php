@@ -14,7 +14,7 @@ use ReflectionClass;
  */
 trait CardUtilityTrait
 {
-    /** @var array<non-empty-string, mixed> */
+    /** @var array<non-empty-string,mixed> */
     private static $constants = array();
 
     /**

@@ -318,7 +318,7 @@ class Uri
     /**
      * Get host and port from $_SERVER vals
      *
-     * @return array{host: string|null, port: int|null} host & port
+     * @return array{host:string|null,port:int|null} host & port
      *
      * @SuppressWarnings(PHPMD.Superglobals)
      */
@@ -346,7 +346,7 @@ class Uri
      *
      * @param string $httpHost `$_SERVER['HTTP_HOST']` value
      *
-     * @return array{host: string|null, port: int|null}
+     * @return array{host:string|null,port:int|null}
      *
      * @psalm-suppress InvalidReturnType
      * @psalm-suppress InvalidReturnStatement
@@ -366,7 +366,7 @@ class Uri
     /**
      * Get request uri and query from $_SERVER
      *
-     * @return array{path: string, query: string} path & query
+     * @return array{path:string,query:string} path & query
      *
      * @SuppressWarnings(PHPMD.Superglobals)
      *

@@ -18,12 +18,12 @@ class SlackCommand
 {
     const SIGNING_SIGNATURE_VERSION = 'v0';
 
-    /** @var array{signingSecret:string, ...<string,mixed>} */
+    /** @var array{signingSecret:string,...<string,mixed>} */
     protected $cfg = array(
         'signingSecret' => '',
     );
 
-    /** @var array<non-empty-string, callable> */
+    /** @var array<non-empty-string,callable> */
     protected $commandHandlers = array();
 
     /**

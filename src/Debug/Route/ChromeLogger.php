@@ -33,7 +33,7 @@ class ChromeLogger extends AbstractRoute
     /** @var bool */
     protected $appendsHeaders = true;
 
-    /** @var array<string, mixed> */
+    /** @var array<string,mixed> */
     protected $cfg = array(
         'channels' => array('*'),
         'channelsExclude' => array(

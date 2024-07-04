@@ -107,7 +107,7 @@ class Table extends AbstractElement
      *
      * If a row contains more cells than there are columns defined, the extra cells are ignored
      *
-     * @param array{horizontalAlignment?: Enums::HORIZONTAL_ALIGNMENT_*, verticalAlignment?: Enums::VERTICAL_ALIGNMENT_*, width?: string}[] $columns Column definitions
+     * @param array{horizontalAlignment?:Enums::HORIZONTAL_ALIGNMENT_*,verticalAlignment?:Enums::VERTICAL_ALIGNMENT_*,width?:string}[] $columns Column definitions
      *
      * @return static
      *

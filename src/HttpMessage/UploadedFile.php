@@ -40,7 +40,7 @@ class UploadedFile implements UploadedFileInterface
     /** @var int */
     private $error;
 
-    /** @var array<int, string> */
+    /** @var array<int,string> */
     private $errors = array(
         UPLOAD_ERR_CANT_WRITE => 'Failed to write file to disk.',
         UPLOAD_ERR_EXTENSION  => 'File upload stopped by extension.',

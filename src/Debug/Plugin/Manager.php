@@ -44,7 +44,7 @@ class Manager implements SubscriberInterface, PluginInterface
     /** @var SplObjectStorage */
     protected $registeredPlugins;
 
-    /** @var array<non-empty-string, AssetProviderInterface|SubscriberInterface> */
+    /** @var array<non-empty-string,AssetProviderInterface|SubscriberInterface> */
     protected $namedPlugins = array();
 
     /** @var bool */

@@ -39,7 +39,7 @@ abstract class AbstractDebug
     /** @var Debug|null */
     protected static $instance;
 
-    /** @var array<string, array> */
+    /** @var array<string,array> */
     protected static $methodDefaultArgs = array();
 
     /** @var Debug|null */

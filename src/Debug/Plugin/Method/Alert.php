@@ -23,7 +23,7 @@ class Alert implements SubscriberInterface
 {
     use CustomMethodTrait;
 
-    /** @var array<int, string> */
+    /** @var array<int,string> */
     protected $levelsAllowed = array('danger', 'error', 'info', 'success', 'warn', 'warning');
 
     /** @var string[] */

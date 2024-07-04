@@ -22,7 +22,7 @@ use bdk\Debug\Abstraction\Type;
  */
 class ObjectMethods extends AbstractObjectSection
 {
-    /** @var array<string, int> */
+    /** @var array<string,int> */
     protected $opts = array();
 
     /**

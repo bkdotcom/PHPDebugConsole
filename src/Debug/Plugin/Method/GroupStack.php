@@ -41,12 +41,12 @@ class GroupStack
      */
     private $priorityStack = array();
 
-    /** @var array<string, array{channel: Debug, collect: bool}> */
+    /** @var array<string,array{channel:Debug,collect:bool}> */
     private $groupStacks = array(
         'main' => array(),  // array('channel' => Debug instance, 'collect' => bool)[]
     );
 
-    /** @var array{channel: Debug, collect: bool} */
+    /** @var array{channel:Debug,collect:bool} */
     private $groupStacksRef = null;  // points to $this-groupStacks[x] (where x = 'main' or (int) priority)
 
     /**

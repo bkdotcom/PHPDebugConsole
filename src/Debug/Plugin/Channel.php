@@ -23,7 +23,7 @@ class Channel implements SubscriberInterface
 {
     use CustomMethodTrait;
 
-    /** @var array<string, Debug> */
+    /** @var array<string,Debug> */
     private $channels = array();
 
     /** @var string[] */

@@ -29,7 +29,7 @@ class ReqRes implements SubscriberInterface
 {
     use CustomMethodTrait;
 
-    /** @var array<string, mixed> */
+    /** @var array<string,mixed> */
     private $serverParams = array();
 
     /** @var string[] */

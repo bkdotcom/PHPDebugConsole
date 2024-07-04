@@ -71,7 +71,7 @@ class Parsers
      * @param array $parsed Parsed tag info
      * @param array $info   tagName, raw tag string, etc
      *
-     * @return array{desc:string|null, type:string}
+     * @return array{desc:string|null,type:string}
      *
      * @psalm-param TagInfo $info
      *

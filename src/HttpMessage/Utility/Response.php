@@ -24,7 +24,7 @@ class Response
     /**
      * Map of standard HTTP status code/reason phrases
      *
-     * @var array<int<100,551>, non-empty-string>
+     * @var array<int<100,551>,non-empty-string>
      */
     private static $phrases = array(
         // 1xx: Informational

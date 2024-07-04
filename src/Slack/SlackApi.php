@@ -26,7 +26,7 @@ class SlackApi extends AbstractSlack
     /** @var string */
     private $baseUrl = 'https://slack.com/api/';
 
-    /** @var array<string,string|array{httpMethod:string, uri:string}> */
+    /** @var array<string,string|array{httpMethod:string,uri:string}> */
     private $endpoints = array(
         'chat.delete' => 'POST',
         'chat.deleteScheduledMessage' => 'POST',
@@ -111,7 +111,7 @@ class SlackApi extends AbstractSlack
      *
      * @param string $method Slack method
      *
-     * @return array{httpMethod:string, uri:string}
+     * @return array{httpMethod:string,uri:string}
      *
      * @throws BadMethodCallException
      */

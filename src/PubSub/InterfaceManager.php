@@ -58,7 +58,7 @@ class InterfaceManager
             }
             $subscriptions[$eventName] = $eventSubscribers;
         }
-        /** @var array<string, list<SubscriberInfo>> */
+        /** @var array<string,list<SubscriberInfo>> */
         return $subscriptions;
     }
 
@@ -165,7 +165,7 @@ class InterfaceManager
      *
      * @param array $values array values
      *
-     * @return array{callable: string|Closure|null, onlyOnce: bool, priority:int}
+     * @return array{callable:string|Closure|null,onlyOnce:bool,priority:int}
      */
     private static function buildSubscriberInfoFromValues($values)
     {
@@ -196,7 +196,7 @@ class InterfaceManager
             $subscriberInfo['callable'] = null;
             break;
         }
-        /** @var array{callable: string|Closure|null, onlyOnce: bool, priority:int} */
+        /** @var array{callable:string|Closure|null,onlyOnce:bool,priority:int} */
         return $subscriberInfo;
     }
 }

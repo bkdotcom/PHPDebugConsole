@@ -30,7 +30,7 @@ class Constants extends AbstractInheritable
     /** @var Abstraction */
     protected $abs;
 
-    /** @var array<string, mixed> */
+    /** @var array<string,mixed> */
     private $constants = array();
 
     /** @var bool */

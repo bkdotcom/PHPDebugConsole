@@ -162,7 +162,7 @@ class AbstractObject extends AbstractComponent
      *      methods
      *      phpDoc
      *
-     * @var array<string, mixed> Array of key/values
+     * @var array<string,mixed> Array of key/values
      */
     protected static $values = array(
         'cfgFlags' => 0, // will default to everything sans "brief"
@@ -313,7 +313,7 @@ class AbstractObject extends AbstractComponent
      * @param string          $method    Method requesting abstraction
      * @param array           $hist      (@internal) array & object history
      *
-     * @return array{reflector:ReflectionClass, ...<string,mixed>}
+     * @return array{reflector:ReflectionClass,...<string,mixed>}
      * @throws RuntimeException
      */
     protected function getAbstractionValues(ReflectionClass $reflector, $obj, $method = null, array $hist = array())

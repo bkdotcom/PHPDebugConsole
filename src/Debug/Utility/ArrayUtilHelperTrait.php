@@ -211,7 +211,7 @@ trait ArrayUtilHelperTrait
                 ));
             }
         });
-        /** @var array<array-key, string|int> */
+        /** @var array<array-key,string|int> */
         return $path;
     }
 

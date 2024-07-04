@@ -29,7 +29,7 @@ class Config
     /** @var array */
     protected $invokedServices = array();
 
-    /** @var array<string, list<string|list<string>>> */
+    /** @var array<string,list<string|list<string>>> */
     protected $configKeys = array(
         'abstracter' => array(
             'brief',

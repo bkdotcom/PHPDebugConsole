@@ -15,7 +15,7 @@ use Psr\Http\Message\UriInterface;
  */
 class Section extends AbstractItem
 {
-    /** @var array<string, mixed> */
+    /** @var array<string,mixed> */
     protected $fields = array(
         'activityImage' => null,
         'activitySubtitle' => null,
@@ -111,7 +111,7 @@ class Section extends AbstractItem
     /**
      * Return new instance with images replaced with specified
      *
-     * @param array<array-key,string|array{image: string, title: string}> $images Array containing image urls and/or title/image array
+     * @param array<array-key,string|array{image:string,title:string}> $images Array containing image urls and/or title/image array
      *
      * @return static
      */

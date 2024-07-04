@@ -20,7 +20,7 @@ use RuntimeException;
  */
 abstract class AbstractStream
 {
-    /** @var array<string, string> */
+    /** @var array<string,string> */
     protected $strings = array(
         'detached' => 'Stream is detached',
         'fopenFail' => 'The file %s cannot be opened.',

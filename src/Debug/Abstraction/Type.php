@@ -70,7 +70,7 @@ class Type
      *
      * @param mixed $val value
      *
-     * @return list{self::TYPE_*, self::TYPE_*|null} [$type, $typeMore] typeMore may be
+     * @return list{self::TYPE_*,self::TYPE_*|null} [$type, $typeMore] typeMore may be
      *    null
      *    'raw' indicates value needs crating
      *    'abstraction'

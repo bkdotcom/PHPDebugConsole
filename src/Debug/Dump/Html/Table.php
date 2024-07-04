@@ -25,7 +25,7 @@ class Table
     /** @var Dumper */
     protected $dumper;
 
-    /** @var array<string, mixed> */
+    /** @var array<string,mixed> */
     protected $options;
 
     /**

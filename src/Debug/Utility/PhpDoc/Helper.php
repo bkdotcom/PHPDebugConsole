@@ -24,7 +24,7 @@ class Helper
      *
      * @param string $comment Beginning of doc comment
      *
-     * @return array{desc?:string, summary?:string}
+     * @return array{desc?:string,summary?:string}
      */
     public static function parseDescSummary($comment)
     {

@@ -23,7 +23,7 @@ class BlockFactory extends BlockElementsFactory
     const COLOR_WARNING = 'warning'; // yellow
 
     /**
-     * @var array<string, array<string, mixed>>
+     * @var array<string,array<string,mixed>>
      */
     protected static $defaults = array(
         'actions' => array(

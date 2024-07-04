@@ -37,7 +37,7 @@ trait AssertSettingTrait
             'valActual' => '__use_ini_val__',
             'valCompare' => true,
         ), $setting));
-        /** @var array{0:bool, 1:string} */
+        /** @var array{0:bool,1:string} */
         $params = array(
             $this->debug->stringUtil->compare($setting['valActual'], $setting['valCompare'], $setting['operator']),
             $setting['name']

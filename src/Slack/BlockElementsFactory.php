@@ -227,7 +227,7 @@ class BlockElementsFactory extends AbstractBlockFactory
         );
         $closure =
         /**
-         * @param array{type:string, ...<string,mixed>} $block
+         * @param array{type:string,...<string,mixed>} $block
          */
         static function (array $block) {
             if ($block['initial_options'] !== null) {
@@ -341,11 +341,11 @@ class BlockElementsFactory extends AbstractBlockFactory
     /**
      * Merge default and user values
      *
-     * @param array{type?:string, ...<string,mixed>} $default Block's default values
-     * @param array                                  $values  User supplied values
-     * @param Closure|null                           $closure called before removing null values
+     * @param array{type?:string,...<string,mixed>} $default Block's default values
+     * @param array                                 $values  User supplied values
+     * @param Closure|null                          $closure called before removing null values
      *
-     * @return array{type?:string, ...<string,mixed>}
+     * @return array{type?:string,...<string,mixed>}
      *
      * @throws UnexpectedValueException
      */

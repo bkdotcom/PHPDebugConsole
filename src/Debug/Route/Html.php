@@ -32,7 +32,7 @@ class Html extends AbstractRoute
     /** @var array<string,mixed> */
     protected $cfg = array();
 
-    /** @var array{css:array, script:array} */
+    /** @var array{css:array,script:array} */
     private $assets = array(
         'css' => array(),
         'script' => array(),

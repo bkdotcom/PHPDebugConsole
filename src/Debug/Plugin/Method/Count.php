@@ -24,7 +24,7 @@ class Count implements SubscriberInterface
 {
     use CustomMethodTrait;
 
-    /** @var array<string, int> */
+    /** @var array<string,int> */
     private $counts = array();
 
     /** @var string[] */

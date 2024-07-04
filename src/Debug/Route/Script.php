@@ -23,7 +23,7 @@ use bdk\PubSub\Event;
  */
 class Script extends AbstractRoute
 {
-    /** @var array<string, mixed> */
+    /** @var array<string,mixed> */
     protected $cfg = array(
         'channels' => array('*'),
         'channelsExclude' => array(

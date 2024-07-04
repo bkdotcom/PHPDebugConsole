@@ -19,7 +19,7 @@ class Profile
 {
     /** @var array profile data */
     protected $data = array();
-    /** @var list<array{function:non-empty-string, subTime:float, tsStart:float}> */
+    /** @var list<array{function:non-empty-string,subTime:float,tsStart:float}> */
     protected $funcStack = array();
     /** @var bool */
     protected $isProfiling = false;

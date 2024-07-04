@@ -104,7 +104,7 @@ class Response extends Message implements ResponseInterface
      * @param int         $code   Status Code
      * @param string|null $phrase Reason Phrase
      *
-     * @return array{0: int, 1: string} code & phrase
+     * @return array{0:int,1:string} code & phrase
      *
      * @throws InvalidArgumentException
      */

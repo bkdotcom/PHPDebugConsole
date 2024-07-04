@@ -23,7 +23,7 @@ class TextAnsi extends Text
 {
     const ESCAPE_RESET = "\x00escapeReset\x00";
 
-    /** @var array<string, mixed> */
+    /** @var array<string,mixed> */
     protected $ansiCfg = array(
         'ansi' => 'default',    // default | true | false  (STDOUT & STDERR streams will default to true)
         'escapeCodes' => array(

@@ -24,13 +24,13 @@ use ReflectionClass;
  */
 class UseStatements
 {
-    /** @var array<string, useStatements> */
+    /** @var array<string,useStatements> */
     protected static $cache = array();
 
-    /** @var array{class:string, alias:string}|null */
+    /** @var array{class:string,alias:string}|null */
     protected static $currentUse = null;
 
-    /** @var array<'class'|'function'|'const', array<empty, empty>> */
+    /** @var array<'class'|'function'|'const',array<empty,empty>> */
     protected static $categories = array(
         'class' => array(),
         'const' => array(),

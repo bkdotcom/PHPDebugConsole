@@ -12,7 +12,7 @@ class UpdateCharData
 	/** @var string */
 	public static $filepathSrc = 'https://www.unicode.org/Public/security/latest/confusables.txt';
 
-    /** @var array<string, charInfo> */
+    /** @var array<string,charInfo> */
 	protected $charData = array();
 
 	/**
@@ -47,7 +47,7 @@ class UpdateCharData
 	/**
 	 * Build char data
 	 *
-	 * @return array<string, array<string, string|bool>>
+	 * @return array<string,array<string,string|bool>>
 	 */
 	public static function build()
 	{
@@ -88,7 +88,7 @@ class UpdateCharData
 	/**
 	 * Return parsed data for all confusable data
 	 *
-	 * @return array<string, string|bool>[]
+	 * @return array<string,string|bool>[]
 	 */
 	private static function getParsedRows()
 	{

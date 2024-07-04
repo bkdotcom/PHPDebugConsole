@@ -33,12 +33,12 @@ class Message implements MessageInterface
     private $body;
 
     /**
-     * @var array<string, string[]> Map of all registered headers, as name => array of values
+     * @var array<stringstring[]> Map of all registered headers, as name => array of values
      */
     private $headers = array();
 
     /**
-     * @var array<string, string> Map of lowercase header name => original name at registration
+     * @var array<string,string> Map of lowercase header name => original name at registration
      */
     private $headerNames = array();
 

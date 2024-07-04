@@ -107,7 +107,7 @@ class SlackMessage implements JsonSerializable
         );
         if (\in_array($method, $factoryMethods, true)) {
             $method = \strtolower(\substr($method, 4));
-            /** @var array<string, mixed> */
+            /** @var array<string,mixed> */
             $block = \call_user_func_array(array($this->getBlockFactory(), $method), $args);
             return $this->withBlock($block);
         }

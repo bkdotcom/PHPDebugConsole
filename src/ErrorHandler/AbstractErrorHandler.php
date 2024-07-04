@@ -28,7 +28,7 @@ abstract class AbstractErrorHandler extends AbstractComponent
 {
     const EVENT_ERROR = 'errorHandler.error';
 
-    /** @var array<string, mixed> */
+    /** @var array<string,mixed> */
     protected $data = array(
         'errorCaller'   => array(),
         'errors'        => array(),

@@ -26,7 +26,7 @@ class AbstractExtendableItem extends AbstractItem
      */
     public function getContent($version)
     {
-        /** @var array<string, float> */
+        /** @var array<string,float> */
         $attrVersions = array(
             'requires' => 1.2,
         );

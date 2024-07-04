@@ -30,7 +30,7 @@ class Promise implements PromiseInterface
     /** @var callable|null */
     private $cancelFn;
 
-    /** @var list<list{Promise, callable|null, callable|null}> */
+    /** @var list<list{Promise,callable|null,callable|null}> */
     private $handlers = array();
 
     /** @var self[] Promise chain */

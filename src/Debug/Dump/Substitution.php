@@ -29,7 +29,7 @@ class Substitution
     /** @var Dumper */
     protected $dumper;
 
-    /** @var array<string, mixed> */
+    /** @var array<string,mixed> */
     private $subInfo = array();
 
     /** @var string */

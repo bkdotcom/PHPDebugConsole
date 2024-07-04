@@ -124,7 +124,7 @@ class FileTree
     private function condenseTree($tree)
     {
         $out = array();
-        /** @var array{out:array, src:array}[]  */
+        /** @var array{out:array,src:array}[]  */
         $stack = array(
             array(
                 'out' => &$out,
@@ -142,7 +142,7 @@ class FileTree
      * Condense a tree frame
      *
      * @param array                         $cur   current stack frame]
-     * @param array{out:array, src:array}[] $stack remaining stack]
+     * @param array{out:array,src:array}[] $stack remaining stack]
      *
      * @return void
      */
@@ -202,7 +202,7 @@ class FileTree
      * @param string[] $keys path/directories
      * @param array    $val  tree node
      *
-     * @return array{0: list<string>, 1: string|Abstraction}
+     * @return array{0:list<string>,1:string|Abstraction}
      */
     private function walkBranch($keys, $val)
     {

@@ -33,7 +33,7 @@ class EachPromise extends Promise
     /** @var callable|null */
     private $onRejected;
 
-    /** @var array<int, Promise> */
+    /** @var array<int,Promise> */
     private $pending = array();
 
     /**

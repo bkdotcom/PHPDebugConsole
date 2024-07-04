@@ -45,10 +45,10 @@ class Container implements \ArrayAccess
      */
     private $factories;
 
-    /** @var array<string, bool> */
+    /** @var array<string,bool> */
     private $invoked = array();  // keep track of invoked service closures
 
-    /** @var array<string, bool> */
+    /** @var array<string,bool> */
     private $keys = array();
 
     /**
@@ -59,10 +59,10 @@ class Container implements \ArrayAccess
      */
     private $protected;
 
-    /** @var array<string, mixed> */
+    /** @var array<string,mixed> */
     private $raw = array();
 
-    /** @var array<string, mixed> */
+    /** @var array<string,mixed> */
     private $values = array();
 
     /**

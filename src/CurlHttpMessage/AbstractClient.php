@@ -20,7 +20,7 @@ abstract class AbstractClient
 {
     const VERSION = '0.1b2';
 
-    /** @var array<string, mixed> */
+    /** @var array<string,mixed> */
     protected $options = array(
         'curl' => array(),
         'factories' => array(), // temporary

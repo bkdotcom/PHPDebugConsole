@@ -75,7 +75,7 @@ class Table
         ),
         'totalCols' => array(),
     );
-    /** @var array<array-key, TableRow|array>  */
+    /** @var array<array-key,TableRow|array>  */
     private $rows = array();
 
     /**
@@ -318,7 +318,7 @@ class Table
                 ? $rows['traverseValues']
                 : \array_map(
                     /**
-                     * @param array{value:mixed, ...<string,mixed>} $info
+                     * @param array{value:mixed,...<string,mixed>} $info
                      */
                     static function ($info) {
                         return $info['value'];

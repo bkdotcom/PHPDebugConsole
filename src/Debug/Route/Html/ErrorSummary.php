@@ -48,7 +48,7 @@ class ErrorSummary
      */
     protected $stats = array();
 
-    /** @var array<string, array<string,string>> */
+    /** @var array<string,array<string,string>> */
     private $catStrings = array(
         'deprecated' => array(
             'header' => 'Deprecated',

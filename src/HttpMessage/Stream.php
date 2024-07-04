@@ -65,7 +65,7 @@ class Stream extends AbstractStream implements StreamInterface
     public function __construct($resource = null, array $options = array())
     {
         $this->setResource($resource);
-        /** @var array{metadata: array, size: int|null} */
+        /** @var array{metadata:array,size:int|null} */
         $options = \array_merge(array(
             'metadata' => array(),
             'size' => null,

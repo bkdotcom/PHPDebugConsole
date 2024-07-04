@@ -28,10 +28,10 @@ abstract class AbstractManager
 {
     const DEFAULT_PRIORITY = 0;
 
-    /** @var array<EventName, array<int, array<int, SubscriberInfoRaw>>> */
+    /** @var array<EventName,array<int,array<int,SubscriberInfoRaw>>> */
     protected $subscribers = array();
 
-    /** @var array<EventName, list<SubscriberInfo>> */
+    /** @var array<EventName,list<SubscriberInfo>> */
     protected $sorted = array();
 
     /** @var list<array{

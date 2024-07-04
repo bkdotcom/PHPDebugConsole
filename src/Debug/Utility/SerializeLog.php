@@ -219,7 +219,7 @@ class SerializeLog
         $absValues = AbstractObject::buildObjValues($absValues);
         $baseMethodInfo = Methods::buildMethodValues();
         /**
-         * @var array<string, array<string,mixed>> $absValues['methods']
+         * @var array<string,array<string,mixed>> $absValues['methods']
          * @var array<string,mixed> $meth
          */
         foreach ($absValues['methods'] as $name => $meth) {
@@ -227,7 +227,7 @@ class SerializeLog
         }
         $basePropInfo = Properties::buildPropValues();
         /**
-         * @var array<string, array<string,mixed>> $absValues['properties']
+         * @var array<string,array<string,mixed>> $absValues['properties']
          * @var array<string,mixed> $prop
          */
         foreach ($absValues['properties'] as $name => $prop) {

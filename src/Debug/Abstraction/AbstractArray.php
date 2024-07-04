@@ -25,7 +25,7 @@ class AbstractArray extends AbstractComponent
     /** @var Abstracter */
     protected $abstracter;
 
-    /** @var array<string, mixed> */
+    /** @var array<string,mixed> */
     protected $cfg = array(
         'maxDepth' => 0,
     );

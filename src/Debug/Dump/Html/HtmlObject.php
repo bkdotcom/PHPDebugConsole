@@ -54,7 +54,7 @@ class HtmlObject
     /** @var ObjectProperties */
     protected $properties;
 
-    /** @var array<string, callable> */
+    /** @var array<string,callable> */
     protected $sectionCallables;
 
     /**

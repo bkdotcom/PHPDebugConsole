@@ -12,7 +12,7 @@ use UnexpectedValueException;
  */
 abstract class AbstractBlockFactory
 {
-    /** @var array<string, list<string>> */
+    /** @var array<string,list<string>> */
     protected static $validElementTypes = array(
         'actions' => array(
             'button',
@@ -307,7 +307,7 @@ abstract class AbstractBlockFactory
      * @param string $what     What are we normalizing (for feedback)
      * @param bool   $isMrkdwn Is text formatted with markdown?
      *
-     * @return array{emoji?:bool, text:string, type:'mrkdwn'|'plain_text', verbatim?:bool}|null
+     * @return array{emoji?:bool,text:string,type:'mrkdwn'|'plain_text',verbatim?:bool}|null
      *
      * @throws UnexpectedValueException
      */
@@ -363,9 +363,9 @@ abstract class AbstractBlockFactory
     /**
      * Rename 'default' to block-specific name
      *
-     * @param array{type:string, ...} $block block values
+     * @param array{type:string,...} $block block values
      *
-     * @return array{type:string, ...}
+     * @return array{type:string,...}
      */
     protected static function renameDefault(array $block)
     {

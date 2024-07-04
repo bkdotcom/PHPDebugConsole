@@ -46,7 +46,7 @@ class PhpCurlClass extends Curl
     /** @var array<string,\Reflector> */
     private $reflection = array();
 
-    /** @var array<int, list<string>> constant value to array of names */
+    /** @var array<int,list<string>> constant value to array of names */
     protected static $optionConstants = array();
 
     /**

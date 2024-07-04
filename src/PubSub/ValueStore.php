@@ -102,7 +102,9 @@ class ValueStore implements ArrayAccess, IteratorAggregate, JsonSerializable, Se
      */
     public function getValues()
     {
-        \ksort($this->values);
+        // for consistency between PHP versions, we use SORT_NATURAL
+        // @see https://github.com/php/php-src/issues/9296
+        \ksort($this->values, SORT_NATURAL);
         return $this->values;
     }
 

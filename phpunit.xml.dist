@@ -38,7 +38,6 @@
       <directory>src/Debug/Framework</directory>
       <directory>src/Debug/node_modules</directory>
       <directory>src/Psr7</directory>
-      <directory>src/PubSub</directory>
     </exclude>
   </coverage>
   <testsuites>
@@ -70,6 +69,9 @@
       <directory>tests/Promise</directory>
       <file phpVersion="7.0.0" phpVersionOperator=">=">tests/PromisePhpCond/CoroutineTest.php</file>
       <file phpVersion="5.5.0" phpVersionOperator=">=">tests/PromisePhpCond/EachPromiseTest.php</file>
+    </testsuite>
+    <testsuite name="PubSub">
+      <directory>tests/PubSub</directory>
     </testsuite>
     <testsuite name="Slack">
       <directory>tests/Slack</directory>

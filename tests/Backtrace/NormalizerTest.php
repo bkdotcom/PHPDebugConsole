@@ -66,12 +66,13 @@ class NormalizerTest extends TestCase
 
     public function testNormalizeInclude()
     {
+        $GLOBALS['gautf'] = true;
         $filepath = __DIR__ . '/Fixture/include.php';
-
         require $filepath;
 
         $this->assertIncludeDebugBacktrace($filepath);
         $this->assertIncludeXdebug($filepath);
+        $GLOBALS['gautf'] = false;
     }
 
     protected function assertIncludeDebugBacktrace($filepath)
@@ -110,9 +111,9 @@ class NormalizerTest extends TestCase
     protected function assertIncludeXdebug($filepath)
     {
         $trace = \array_reverse($GLOBALS['xdebug_trace']);
+        empty($GLOBALS['gautf']) || var_dump(\array_slice($trace, 0, 8));
         $trace = Normalizer::normalize($trace);
-
-        var_dump($trace);
+        empty($GLOBALS['gautf']) || var_dump(\array_slice($trace, 0, 8));
 
         self::assertSame($filepath, $trace[0]['file']);
         self::assertSame('bdk\\Backtrace\\Xdebug::getFunctionStack', $trace[0]['function']);

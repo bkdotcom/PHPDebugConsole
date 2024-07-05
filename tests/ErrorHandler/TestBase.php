@@ -87,6 +87,13 @@ class TestBase extends TestCase
         $this->errorHandler->eventManager->unsubscribe(ErrorHandler::EVENT_ERROR, array($this, 'onError'));
     }
 
+    public static function tearDownAfterClass(): void
+    {
+        foreach (self::$subscribersBackup as $subscriberInfo) {
+            ErrorHandler::getInstance()->eventManager->subscribe(ErrorHandler::EVENT_ERROR, $subscriberInfo['callable'], $subscriberInfo['priority']);
+        }
+    }
+
     public function onError(Error $error)
     {
         foreach ($this->onErrorUpdate as $k => $v) {
@@ -110,8 +117,6 @@ class TestBase extends TestCase
         }
         $error['continueToPrevHandler'] = true;
         $error['throw'] = true;
-
-
     }
 
     public function emailMock($to, $subject, $body, $addHeadersStr)

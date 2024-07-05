@@ -66,19 +66,19 @@ class CurlReqRes
      */
     public function __destruct()
     {
-        if (\is_resource($this->curlHandle) && \get_resource_type($this->curlHandle) === 'Unknown') {
-            // already closed
-            $this->curlHandle = null;
+        if (!$this->curlHandle) {
             return;
         }
-        if ($this->curlHandle) {
-            try {
-                \curl_close($this->curlHandle);
-            } catch (ErrorException $e) {
-                // ignore exception
-            }
-            $this->curlHandle = null;
+        \set_error_handler(function ($type, $message) {
+            // ignore error
+        });
+        try {
+            \curl_close($this->curlHandle);
+        } catch (ErrorException $e) {
+            // ignore exception
         }
+        \restore_error_handler();
+        $this->curlHandle = null;
     }
 
     /**

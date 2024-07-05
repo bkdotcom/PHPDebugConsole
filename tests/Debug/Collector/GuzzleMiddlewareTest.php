@@ -225,19 +225,6 @@ class GuzzleMiddlewareTest extends DebugTestFramework
                             'channel' => 'general.Guzzle',
                         ),
                     ),
-                    /*
-                    3 => array(
-                        'method' => 'log',
-                        'args' => array(
-                            'request body',
-                            null,
-                        ),
-                        'meta' => array(
-                            'redact' => true,
-                            'channel' => 'general.Guzzle',
-                        ),
-                    ),
-                    */
                     3 => array(
                         'method' => 'groupEnd',
                         'args' => array(),
@@ -280,7 +267,7 @@ class GuzzleMiddlewareTest extends DebugTestFramework
                     ),
                 );
                 $this->assertSame($expect, $messages);
-            }
+            },
         ));
     }
 

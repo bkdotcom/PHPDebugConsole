@@ -3,7 +3,6 @@
 namespace {
     require __DIR__ . '/Backtrace/bootstrapFunctionReplace.php';
     require __DIR__ . '/CurlHttpMessage/bootstrapFunctionReplace.php';
-    require __DIR__ . '/HttpMessage/bootstrapFunctionReplace.php';
 
     $GLOBALS['collectedHeaders'] = array();
     $GLOBALS['headersSent'] = array(); // set to ['file', line] for true

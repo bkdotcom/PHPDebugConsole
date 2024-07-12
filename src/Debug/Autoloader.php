@@ -44,13 +44,11 @@ class Autoloader
             'bdk\\CurlHttpMessage\\' => __DIR__ . '/../CurlHttpMessage',
             'bdk\\Debug\\' => __DIR__,
             'bdk\\ErrorHandler\\' => __DIR__ . '/../ErrorHandler',
-            'bdk\\HttpMessage\\' => __DIR__ . '/../HttpMessage',
             'bdk\\Promise\\' => __DIR__ . '/../Promise',
             'bdk\\PubSub\\' => __DIR__ . '/../PubSub',
             'bdk\\Slack\\' => __DIR__ . '/../Slack',
             'bdk\\Teams\\' => __DIR__ . '/../Teams',
             'bdk\\Test\\Debug\\' => __DIR__ . '/../../tests/Debug',
-            'Psr\\Http\\Message\\' => __DIR__ . '/../Psr7',
         );
         return \spl_autoload_register(array($this, 'autoload'));
     }

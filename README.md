@@ -35,7 +35,7 @@ Browser/javascript like console class for PHP
 
 ## Installation
 
-This library supports PHP 5.4 - 8.3 and has no userland dependencies.
+This library supports PHP 5.4 - 8.3
 
 It is installable and autoloadable via [Composer](https://getcomposer.org/) as [bdk/debug](https://packagist.org/packages/bdk/debug).
 
@@ -49,19 +49,7 @@ It is installable and autoloadable via [Composer](https://getcomposer.org/) as [
 
 **installation without Composer**
 
-* [download a release](https://github.com/bkdotcom/PHPDebugConsole/releases) or clone this repository.
-* include Autoloader and Debug in your code
-
-```php
-// Step 1: include and register our autoloader
-require 'path-to/src/Debug/Autoloader.php';
-$autoloader = new \bdk\Debug\Autoloader();
-$autoloader->register();
-// Step 2:  you can now instantiate and user Debug
-$debug = new \bdk\Debug();
-```
-
-See <http://www.bradkent.com/php/debug> for more information
+As of v3.3 this is no longer officially supported due to now requiring one or more dependencies.
 
 ## Usage
 
@@ -114,7 +102,6 @@ $monolog->critical('all your base are belong to them');
 
 ## Tests / Quality
 
-![No Dependencies](https://img.shields.io/badge/dependencies-none-333333.svg)
 ![Supported PHP versions](https://img.shields.io/static/v1?label=PHP&message=5.4%20-%208.3&color=blue)
 ![Build Status](https://img.shields.io/github/actions/workflow/status/bkdotcom/PHPDebugConsole/phpunit.yml.svg?branch=master&logo=github)
 [![Codacy Score](https://img.shields.io/codacy/grade/e950849edfd9463b993386080d39875e/master.svg?logo=codacy)](https://app.codacy.com/gh/bkdotcom/PHPDebugConsole/dashboard)

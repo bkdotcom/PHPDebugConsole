@@ -56,7 +56,7 @@ class ValueStore implements ArrayAccess, IteratorAggregate, JsonSerializable, Se
      */
     public function __debugInfo()
     {
-        return $this->values;
+        return $this->getValues();
     }
 
     /**
@@ -67,8 +67,7 @@ class ValueStore implements ArrayAccess, IteratorAggregate, JsonSerializable, Se
      */
     public function __serialize()
     {
-        \ksort($this->values);
-        return $this->values;
+        return $this->getValues();
     }
 
     /**
@@ -156,8 +155,7 @@ class ValueStore implements ArrayAccess, IteratorAggregate, JsonSerializable, Se
     #[\ReturnTypeWillChange]
     public function jsonSerialize()
     {
-        \ksort($this->values);
-        return $this->values;
+        return $this->getValues();
     }
 
     /**

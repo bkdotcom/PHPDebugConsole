@@ -63,7 +63,7 @@ class Context
      */
     public static function getFileLines($file, $start = null, $length = null)
     {
-        if (\file_exists($file) === false) {
+        if (!$file || \file_exists($file) === false) {
             return false;
         }
         $lines = \file($file);

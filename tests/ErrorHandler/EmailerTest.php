@@ -28,7 +28,7 @@ class EmailerTest extends TestBase
         parent::tearDown();
         $this->errorHandler->setCfg(array(
             'stats' => array(
-                'errorStatsFile' => __DIR__ . '/../../src/Plugin/error_stats.json',
+                'errorStatsFile' => __DIR__ . '/../../src/ErrorHandler/Plugin/error_stats.json',
             ),
         ));
     }

@@ -34,7 +34,6 @@
     -->
     <exclude>
       <file>src/Debug/Dump/charData.php</file>
-      <file>src/HttpMessage/Factory.php</file>
       <directory>src/Debug/Framework</directory>
       <directory>src/Debug/node_modules</directory>
       <directory>src/Psr7</directory>
@@ -61,9 +60,6 @@
     </testsuite>
     <testsuite name="ErrorHandler">
       <directory>tests/ErrorHandler</directory>
-    </testsuite>
-    <testsuite name="HttpMessage">
-      <directory>tests/HttpMessage</directory>
     </testsuite>
     <testsuite name="Promise">
       <directory>tests/Promise</directory>

@@ -113,7 +113,7 @@ class Factory
      */
     public function buildResponse($code = 200, $reasonPhrase = '', $headers = array(), $body = null)
     {
-        $response = new Response($code, $reasonPhrase);
+        $response = new Response($code, (string) $reasonPhrase);
         $response = $this->withHeaders($response, $headers);
         $response = $this->withBody($response, $body);
         return $response;

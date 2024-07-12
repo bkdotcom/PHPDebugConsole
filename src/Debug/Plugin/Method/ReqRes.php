@@ -14,7 +14,7 @@ namespace bdk\Debug\Plugin\Method;
 
 use bdk\Debug;
 use bdk\Debug\Plugin\CustomMethodTrait;
-use bdk\HttpMessage\HttpFoundationBridge;
+use bdk\HttpMessage\Utility\HttpFoundationBridge;
 use bdk\HttpMessage\Utility\Response as ResponseUtil;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;

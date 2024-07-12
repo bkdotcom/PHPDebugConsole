@@ -64,6 +64,34 @@ class Autoloader
     }
 
     /**
+     * Add classname to classMap
+     *
+     * @param string $className ClassName
+     * @param string $filepath  Filepath to class' definition
+     *
+     * @return static
+     */
+    public function addClass($className, $filepath)
+    {
+        $this->classMap[$className] = $filepath;
+        return $this;
+    }
+
+    /**
+     * Add Psr4 mapping to autoloader
+     *
+     * @param string $namespace Namespace prefix
+     * @param string $dir       Directory containing namespace
+     *
+     * @return static
+     */
+    public function addPsr4($namespace, $dir)
+    {
+        $this->psr4Map[$namespace] = $dir;
+        return $this;
+    }
+
+    /**
      * Debug class autoloader
      *
      * @param string $className classname to attempt to load

@@ -2,13 +2,7 @@
 
 namespace bdk\Test\CurlHttpMessage\Middleware;
 
-/*
-use bdk\CurlHttpMessage\Handler\CurlMulti;
-use bdk\HttpMessage\Request;
-*/
-
 use bdk\CurlHttpMessage\Client;
-use bdk\CurlHttpMessage\CurlReqRes;
 use bdk\CurlHttpMessage\Exception\RequestException;
 use bdk\CurlHttpMessage\Handler\Mock as MockHandler;
 use bdk\CurlHttpMessage\Middleware\FollowLocation;

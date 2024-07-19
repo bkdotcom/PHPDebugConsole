@@ -822,6 +822,9 @@ class DebugTestFramework extends DOMTestCase
         $string = \preg_replace('#^\s+#m', '', $string);
         // @see https://github.com/sebastianbergmann/phpunit/issues/3040
         $string = \str_replace("\r", '[\\r]', $string);
+        if (PHP_VERSION_ID < 80100) {
+            $string = \str_replace('&#039;', '\'', $string);
+        }
         return \trim($string);
     }
 }

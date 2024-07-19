@@ -69,9 +69,9 @@ class ArrayUtil
 
     /**
      * Is passed argument a simple array with all-integer keys in sequence from 0 to n?
-     * empty array returns true
      *
-     * @param mixed $val value to check
+     * @param mixed $val       Value to check
+     * @param bool  $inclEmpty Whether to consider an empty array as a list
      *
      * @return bool
      *
@@ -79,10 +79,13 @@ class ArrayUtil
      *
      * @psalm-assert-if-true list<mixed> $val
      */
-    public static function isList($val)
+    public static function isList($val, $inclEmpty = true)
     {
         if (\is_array($val) === false) {
             return false;
+        }
+        if (\count($val) === 0) {
+            return $inclEmpty;
         }
         $i = -1;
         /** @var mixed $v */

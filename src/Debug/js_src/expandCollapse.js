@@ -35,70 +35,40 @@ export function init ($delegateNode) {
  * @return void
  */
 export function collapse ($node, immediate) {
-  var isToggle = $node.is('[data-toggle]')
-  var what = isToggle
-    ? $node.data('toggle')
-    : $node.find('> *[data-toggle]').data('toggle')
-  var $wrap = isToggle
-    ? $node.parent()
-    : $node
-  var $toggle = isToggle
-    ? $node
-    : $wrap.find('> *[data-toggle]')
-  var eventNameDone = 'collapsed.debug.' + what
-  if (what === 'array') {
-    $wrap.removeClass('expanded')
-  } else if (['group', 'object'].indexOf(what) > -1) {
-    collapseGroupObject($wrap, $toggle, immediate, eventNameDone)
-  } else if (what === 'next') {
-    collapseNext($toggle, immediate, eventNameDone)
+  var info = getNodeInfo($node)
+  var eventNameDone = 'collapsed.debug.' + info.what
+  if (info.what === 'array') {
+    info.$classTarget.removeClass('expanded')
+  } else if (['group', 'object'].indexOf(info.what) > -1) {
+    collapseGroupObject(info.$wrap, info.$toggle, immediate, eventNameDone)
+  } else if (info.what === 'next') {
+    collapseNext(info.$toggle, immediate, eventNameDone)
   }
 }
 
 export function expand ($node) {
   var icon = config.iconsExpand.collapse
-  var isToggle = $node.is('[data-toggle]')
-  var what = isToggle
-    ? $node.data('toggle')
-    : ($node.find('> *[data-toggle]').data('toggle') || ($node.attr('class').match(/\bt_(\w+)/) || []).pop())
-  var $wrap = isToggle
-    ? $node.parent()
-    : $node
-  var $toggle = isToggle
-    ? $node
-    : $wrap.find('> *[data-toggle]')
-  var $classTarget = what === 'next' // node that get's "expanded" class
-    ? $toggle
-    : $wrap
-  var $evtTarget = what === 'next' // node we trigger events on
-    ? $toggle.next()
-    : $wrap
-  var eventNameDone = 'expanded.debug.' + what
+  var info = getNodeInfo($node)
+  var eventNameDone = 'expanded.debug.' + info.what
   // trigger while still hidden!
   //    no redraws
-  $evtTarget.trigger('expand.debug.' + what)
-  if (what === 'array') {
-    $classTarget.addClass('expanded')
-    $evtTarget.trigger(eventNameDone)
+  info.$evtTarget.trigger('expand.debug.' + info.what)
+  if (info.what === 'array') {
+    info.$classTarget.addClass('expanded')
+    info.$evtTarget.trigger(eventNameDone)
     return
   }
   // group, object, & next
-  expandGroupObjNext($toggle, $classTarget, $evtTarget, icon, eventNameDone)
+  expandGroupObjNext(info.$toggle, info.$classTarget, info.$evtTarget, icon, eventNameDone)
 }
 
 export function toggle (node) {
   var $node = $(node)
-  var isToggle = $node.is('[data-toggle]')
-  var what = isToggle
-    ? $node.data('toggle')
-    : $node.find('> *[data-toggle]').data('toggle')
-  var $wrap = isToggle
-    ? $node.parent()
-    : $node
-  var isExpanded = what === 'next'
+  var info = getNodeInfo($node)
+  var isExpanded = info.what === 'next'
     ? $node.hasClass('expanded')
-    : $wrap.hasClass('expanded')
-  if (what === 'group' && $wrap.hasClass('.empty')) {
+    : info.$wrap.hasClass('expanded')
+  if (info.what === 'group' && info.$wrap.hasClass('.empty')) {
     return
   }
   isExpanded
@@ -211,6 +181,32 @@ function groupErrorIconGet ($group) {
     icon = config.iconsMethods['.m_warn']
   }
   return icon
+}
+
+/**
+ * Get node info for collapse/expand methods
+ */
+function getNodeInfo ($node) {
+  var isToggle = $node.is('[data-toggle]')
+  var what = isToggle
+    ? $node.data('toggle')
+    : ($node.find('> *[data-toggle]').data('toggle') || ($node.attr('class').match(/\bt_(\w+)/) || []).pop())
+  var $wrap = isToggle
+    ? $node.parent()
+    : $node
+  return {
+    what: what,
+    $wrap: $wrap,
+    $toggle: isToggle
+      ? $node
+      : $wrap.find('> *[data-toggle]'),
+    $classTarget: what === 'next' // node that get's "expanded" class
+      ? $toggle
+      : $wrap,
+    $evtTarget: what === 'next' // node we trigger events on
+      ? $toggle.next()
+      : $wrap,
+  }
 }
 
 /**

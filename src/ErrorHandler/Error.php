@@ -181,16 +181,6 @@ class Error extends AbstractError
     }
 
     /**
-     * Is the error "fatal"?
-     *
-     * @return bool
-     */
-    public function isFatal()
-    {
-        return $this->values['category'] === self::CAT_FATAL;
-    }
-
-    /**
      * Send error to `error_log()`
      *
      * @return bool

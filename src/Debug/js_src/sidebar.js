@@ -4,7 +4,6 @@ import { addTest as addFilterTest, addPreFilter } from './filter.js'
 var config
 var options
 var methods // method filters
-var $root
 var initialized = false
 var methodLabels = {
   alert: '<i class="fa fa-fw fa-lg fa-bullhorn"></i>Alerts',
@@ -44,13 +43,11 @@ var sidebarHtml = '' +
     '</div>' +
   '</div>'
 
-export function init ($debugRoot) {
-  var $debugTabLog = $debugRoot.find('> .tab-panes > .tab-primary')
+export function init ($root) {
+  config = $root.data('config') || $('body').data('config')
+  options = $root.find('> .tab-panes > .tab-primary').data('options') || {}
 
-  config = $debugRoot.data('config') || $('body').data('config')
-  $root = $debugRoot
-
-  if ($debugTabLog.length && $debugTabLog.data('options').sidebar) {
+  if (options.sidebar) {
     addMarkup($root)
   }
 
@@ -68,6 +65,7 @@ export function init ($debugRoot) {
 
   addPreFilter(preFilter)
   addFilterTest(filterTest)
+
   initialized = true
 }
 
@@ -121,11 +119,14 @@ function filterTest ($node) {
   return methods.indexOf('other') > -1
 }
 
-function preFilter ($delegateRoot) {
-  $root = $delegateRoot
-  options = $root.find('.tab-primary').data('options')
+function preFilter ($root) {
+  var $sidebar = $root.find('.tab-pane.active .debug-sidebar')
   methods = []
-  $root.find('input[data-toggle=method]:checked').each(function () {
+  if ($sidebar.length === 0) {
+    // sidebar not built yet
+    methods = Object.keys(methodLabels)
+  }
+  $sidebar.find('input[data-toggle=method]:checked').each(function () {
     methods.push($(this).val())
   })
 }

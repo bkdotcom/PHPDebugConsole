@@ -98,6 +98,16 @@ class AbstractError extends Event
     );
 
     /**
+     * Is this error "fatal"?
+     *
+     * @return bool
+     */
+    public function isFatal()
+    {
+        return $this->values['category'] === self::CAT_FATAL;
+    }
+
+    /**
      * {@inheritDoc}
      */
     public function setValues(array $values = array())
@@ -346,6 +356,10 @@ class AbstractError extends Event
             // never suppress this type
             return false;
         }
-        return \error_reporting() === 0;
+        $errorReporting = \error_reporting();
+        // @see https://php.watch/versions/8.0/fatal-error-suppression
+        $php8suppressValue = E_ERROR | E_CORE_ERROR | E_COMPILE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR | E_PARSE;
+        return $errorReporting === 0
+            || (PHP_VERSION_ID >= 80000 && $errorReporting === $php8suppressValue && $errorReporting < $this->subject->get('errorReportingInitial'));
     }
 }

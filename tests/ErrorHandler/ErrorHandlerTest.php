@@ -143,6 +143,7 @@ class ErrorHandlerTest extends TestBase
         self::assertSame(array(), $this->errorHandler->get('errors'));
         self::assertSame(array(
             'errorCaller'   => array(),
+            'errorReportingInitial' => $this->errorHandler->errorReporting(),
             'errors'        => array(),
             'lastErrors'    => array(),
             'uncaughtException' => null,

@@ -31,6 +31,7 @@ abstract class AbstractErrorHandler extends AbstractComponent
     /** @var array<string,mixed> */
     protected $data = array(
         'errorCaller'   => array(),
+        'errorReportingInitial' => 0,   // Initial error reporting level. to compare against value when handling error
         'errors'        => array(),
         'lastErrors'    => array(),     // contains up to two errors: suppressed & unsuppressed
                                         // lastError[0] is the most recent error

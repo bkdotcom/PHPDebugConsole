@@ -139,7 +139,7 @@ EOD;
             'statementInfo1' => array(
                 'method' => 'groupCollapsed',
                 'args' => array(
-                    'SELECT * FROM `bob`…',
+                    'SELECT * FROM `bob` WHERE e < \'' . $datetime . '\'',
                 ),
                 'meta' => array(
                     'attribs' => array(
@@ -163,8 +163,6 @@ EOD;
                         'debug' => Abstracter::ABSTRACTION,
                         'prettified' => true,
                         'prettifiedTag' => false,
-                        // 'strlen' => 50,
-                        // 'strlenValue' => 50,
                         'type' => Type::TYPE_STRING,
                         'typeMore' => null,
                         'value' => "SELECT \n  * \nFROM \n  `bob` \nWHERE \n  e < :datetime",

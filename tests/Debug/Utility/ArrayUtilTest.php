@@ -66,12 +66,14 @@ class ArrayUtilTest extends TestCase
         );
     }
 
-    public function testIsList()
+    /**
+     * @dataProvider providerIsList
+     */
+    public function testIsList($value, $inclEmpty, $expect)
     {
-        self::assertFalse(ArrayUtil::isList('string'));
-        self::assertTrue(ArrayUtil::isList(array()));     // empty array = "list"
-        self::assertFalse(ArrayUtil::isList(array(3 => 'foo',2 => 'bar',1 => 'baz',0 => 'nope')));
-        self::assertTrue(ArrayUtil::isList(array(0 => 'nope',1 => 'baz',2 => 'bar',3 => 'foo')));
+        $expect
+            ? self::assertTrue(ArrayUtil::isList($value, $inclEmpty))
+            : self::assertFalse(ArrayUtil::isList($value, $inclEmpty));
     }
 
     public function testMapRecursive()
@@ -307,6 +309,18 @@ class ArrayUtilTest extends TestCase
                     'expectExceptionMessage' => 'diffAssocRecursive:  Expected only array.  bool found.',
                 ),
             ),
+        );
+    }
+
+    public static function providerIsList()
+    {
+        return array(
+            'assoc' => array(array('foo' => 'bar'), true, false),
+            'emptyTrue' => array(array(), true, true),
+            'emptyFalse' => array(array(), false, false),
+            'numericKeysFalse' => array(array(3 => 'foo',2 => 'bar',1 => 'baz',0 => 'nope'), true, false),
+            'numericKeysTrue' => array(array(0 => 'nope',1 => 'baz',2 => 'bar',3 => 'foo'), true, true),
+            'string' => array('string', true, false),
         );
     }
 

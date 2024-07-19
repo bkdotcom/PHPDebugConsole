@@ -446,7 +446,7 @@ EOD;
                                 '<span class="parameter"><span class="t_parameter-name">$val</span> <span class="t_operator">=</span> <span class="t_const t_parameter-default" title="value: &quot;defined in TestBase&quot;"><span class="classname">self</span><span class="t_operator">::</span><span class="t_identifier">MY_CONSTANT</span></span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span></dd>',
                             '<dt>phpDoc</dt>',
                         ));
-                        if (PHP_VERSION_ID <= 80100) {
+                        if (PHP_VERSION_ID < 80100) {
                             $expect = \str_replace('&#039;', '\'', $expect);
                         }
                         // echo 'expect = ' . $expect . "\n\n";

@@ -119,6 +119,9 @@ class ErrorLogger implements SubscriberInterface
         $enabledWas = $logRoute->enabled;
         $logRoute->enabled = false;
         if ($error['exception']) {
+            // Yii's exception handler calls `restore_error_handler()`
+            //   make sure it restores to our error handler
+            \set_error_handler(array($this->debug->errorHandler, 'handleError'));
             $this->component->yiiApp->handleException($error['exception']);
         } elseif ($error['category'] === Error::CAT_FATAL) {
             $this->republishShutdown();

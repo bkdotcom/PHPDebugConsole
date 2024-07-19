@@ -69,7 +69,7 @@ class StatementInfoTest extends DebugTestFramework
         {
             "statementInfo1": {
                 "method": "group",
-                "args": ["SELECT `first_name`, `last_name`, `password` FROM `users`\u2026"],
+                "args": ["SELECT `first_name`, `last_name`, `password` FROM `users` (\u2026) WHERE u.username = 'bkent'\u2026"],
                 "meta": {
                     "attribs": {
                         "id": "statementInfo1",

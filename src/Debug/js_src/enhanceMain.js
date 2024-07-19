@@ -112,7 +112,6 @@ function addNoti ($root) {
 }
 
 export function buildChannelList (channels, nameRoot, checkedChannels, prepend) {
-  var $li
   var $lis = []
   var $ul = $('<ul class="list-unstyled">')
   /*
@@ -128,14 +127,13 @@ export function buildChannelList (channels, nameRoot, checkedChannels, prepend) 
   } else if (prepend.length === 0 && Object.keys(channels).length) {
     // start with (add) if there are other channels
     // console.log('buildChannelLi name root', nameRoot)
-    $li = buildChannelLi(
-      nameRoot,
-      nameRoot,
-      true,
-      true,
-      {}
-    )
-    $ul.append($li)
+    $ul.append(buildChannelLi(
+      nameRoot, // name
+      nameRoot, // value
+      true, // isChecked
+      true, // isRoot
+      {} // options
+    ))
   }
   $lis = buildChannelLis(channels, nameRoot, checkedChannels, prepend)
   for (var i = 0, len = $lis.length; i < len; i++) {
@@ -158,27 +156,22 @@ function buildChannelLis (channels, nameRoot, checkedChannels, prepend) {
   var $li
   var $lis = []
   var channel
-  var channelName = ''
   var channelNames = Object.keys(channels).sort(function (a, b) {
     return a.localeCompare(b)
   })
-  var isChecked = true
-  var value
-  for (var i = 0, len = channelNames.length; i < len; i++) {
-    channelName = channelNames[i]
+  $.each(channelNames, function (i, channelName) {
+    var value = buildChannelValue(channelName, prepend, nameRoot)
     if (channelName === 'phpError') {
       // phpError is a special channel
-      continue
+      return
     }
     channel = channels[channelName]
-    value = buildChannelValue(channelName, prepend, nameRoot)
-    isChecked = checkedChannels !== undefined
-      ? checkedChannels.indexOf(value) > -1
-      : channel.options.show
     $li = buildChannelLi(
       channelName,
       value,
-      isChecked,
+      checkedChannels !== undefined
+        ? checkedChannels.indexOf(value) > -1
+        : channel.options.show,
       channelName === nameRoot,
       channel.options
     )
@@ -186,10 +179,13 @@ function buildChannelLis (channels, nameRoot, checkedChannels, prepend) {
       $li.append(buildChannelList(channel.channels, nameRoot, checkedChannels, value + '.'))
     }
     $lis.push($li)
-  }
+  })
   return $lis
 }
 
+/**
+ * Build a single LI element without any children
+ */
 function buildChannelLi (channelName, value, isChecked, isRoot, options) {
   var $label
   var $li

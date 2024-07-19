@@ -1589,7 +1589,6 @@
   var config$6;
   var options;
   var methods; // method filters
-  var $root$2;
   var initialized = false;
   var methodLabels = {
     alert: '<i class="fa fa-fw fa-lg fa-bullhorn"></i>Alerts',
@@ -1629,23 +1628,21 @@
       '</div>' +
     '</div>';
 
-  function init$8 ($debugRoot) {
-    var $debugTabLog = $debugRoot.find('> .tab-panes > .tab-primary');
+  function init$8 ($root) {
+    config$6 = $root.data('config') || $('body').data('config');
+    options = $root.find('> .tab-panes > .tab-primary').data('options') || {};
 
-    config$6 = $debugRoot.data('config') || $('body').data('config');
-    $root$2 = $debugRoot;
-
-    if ($debugTabLog.length && $debugTabLog.data('options').sidebar) {
-      addMarkup$1($root$2);
+    if (options.sidebar) {
+      addMarkup$1($root);
     }
 
     if (config$6.get('persistDrawer') && !config$6.get('openSidebar')) {
-      close$2($root$2);
+      close$2($root);
     }
 
-    $root$2.on('click', '.close[data-dismiss=alert]', onClickCloseAlert);
-    $root$2.on('click', '.sidebar-toggle', onClickSidebarToggle);
-    $root$2.on('change', '.debug-sidebar input[type=checkbox]', onChangeSidebarInput);
+    $root.on('click', '.close[data-dismiss=alert]', onClickCloseAlert);
+    $root.on('click', '.sidebar-toggle', onClickSidebarToggle);
+    $root.on('change', '.debug-sidebar input[type=checkbox]', onChangeSidebarInput);
 
     if (initialized) {
       return
@@ -1653,6 +1650,7 @@
 
     addPreFilter(preFilter);
     addTest(filterTest);
+
     initialized = true;
   }
 
@@ -1706,11 +1704,14 @@
     return methods.indexOf('other') > -1
   }
 
-  function preFilter ($delegateRoot) {
-    $root$2 = $delegateRoot;
-    options = $root$2.find('.tab-primary').data('options');
+  function preFilter ($root) {
+    var $sidebar = $root.find('.tab-pane.active .debug-sidebar');
     methods = [];
-    $root$2.find('input[data-toggle=method]:checked').each(function () {
+    if ($sidebar.length === 0) {
+      // sidebar not built yet
+      methods = Object.keys(methodLabels);
+    }
+    $sidebar.find('input[data-toggle=method]:checked').each(function () {
       methods.push($(this).val());
     });
   }
@@ -1833,27 +1834,27 @@
    */
 
   var config$7;
-  var $root$3;
+  var $root$2;
 
   function init$9 ($debugRoot) {
-    $root$3 = $debugRoot;
-    config$7 = $root$3.data('config').get();
+    $root$2 = $debugRoot;
+    config$7 = $root$2.data('config').get();
     updateMenuBar();
     addChannelToggles();
     addExpandAll();
     addNoti($('body'));
     enhanceErrorSummary();
-    init$5($root$3);
-    init$6($root$3);
-    init$8($root$3);
-    init$7($root$3);
+    init$5($root$2);
+    init$6($root$2);
+    init$8($root$2);
+    init$7($root$2);
     addErrorIcons();
-    $root$3.find('.loading').hide();
-    $root$3.addClass('enhanced');
+    $root$2.find('.loading').hide();
+    $root$2.addClass('enhanced');
   }
 
   function updateMenuBar () {
-    var $menuBar = $root$3.find('.debug-menu-bar');
+    var $menuBar = $root$2.find('.debug-menu-bar');
     var nav = $menuBar.find('nav').length
       ? $menuBar.find('nav')[0].outerHTML
       : '';
@@ -1864,9 +1865,9 @@
   }
 
   function addChannelToggles () {
-    var channelNameRoot = $root$3.data('channelNameRoot');
-    var $log = $root$3.find('> .tab-panes > .tab-primary');
-    var channels = $root$3.data('channels') || {};
+    var channelNameRoot = $root$2.data('channelNameRoot');
+    var $log = $root$2.find('> .tab-panes > .tab-primary');
+    var channels = $root$2.data('channels') || {};
     var $ul;
     var $toggles;
     if (!channelNameRoot) {
@@ -1887,10 +1888,10 @@
   }
 
   function addErrorIcons () {
-    var channelNameRoot = $root$3.data('channelNameRoot');
+    var channelNameRoot = $root$2.data('channelNameRoot');
     var counts = {
-      error: $root$3.find('.m_error[data-channel="' + channelNameRoot + '.phpError"]').length,
-      warn: $root$3.find('.m_warn[data-channel="' + channelNameRoot + '.phpError"]').length
+      error: $root$2.find('.m_error[data-channel="' + channelNameRoot + '.phpError"]').length,
+      warn: $root$2.find('.m_warn[data-channel="' + channelNameRoot + '.phpError"]').length
     };
     var $icon;
     var $icons = $('<span>', { class: 'debug-error-counts' });
@@ -1904,21 +1905,21 @@
         html: counts[what]
       }));
     });
-    $root$3.find('.debug-pull-tab').append($icons[0].outerHTML);
-    $root$3.find('.debug-menu-bar .float-right').prepend($icons);
+    $root$2.find('.debug-pull-tab').append($icons[0].outerHTML);
+    $root$2.find('.debug-menu-bar .float-right').prepend($icons);
   }
 
   function addExpandAll () {
     var $expandAll = $('<button>', {
       class: 'expand-all'
     }).html('<i class="fa fa-lg fa-plus"></i> Expand All Groups');
-    var $logBody = $root$3.find('> .tab-panes > .tab-primary > .tab-body');
+    var $logBody = $root$2.find('> .tab-panes > .tab-primary > .tab-body');
 
     // this is currently invoked before entries are enhance / empty class not yet added
     if ($logBody.find('.m_group:not(.empty)').length > 1) {
       $logBody.find('.debug-log-summary').before($expandAll);
     }
-    $root$3.on('click', '.expand-all', function () {
+    $root$2.on('click', '.expand-all', function () {
       $(this).closest('.debug').find('.m_group:not(.expanded)').debugEnhance('expand');
       return false
     });
@@ -1936,7 +1937,6 @@
   }
 
   function buildChannelList (channels, nameRoot, checkedChannels, prepend) {
-    var $li;
     var $lis = [];
     var $ul = $('<ul class="list-unstyled">');
     /*
@@ -1952,14 +1952,13 @@
     } else if (prepend.length === 0 && Object.keys(channels).length) {
       // start with (add) if there are other channels
       // console.log('buildChannelLi name root', nameRoot)
-      $li = buildChannelLi(
-        nameRoot,
-        nameRoot,
-        true,
-        true,
-        {}
-      );
-      $ul.append($li);
+      $ul.append(buildChannelLi(
+        nameRoot, // name
+        nameRoot, // value
+        true, // isChecked
+        true, // isRoot
+        {} // options
+      ));
     }
     $lis = buildChannelLis(channels, nameRoot, checkedChannels, prepend);
     for (var i = 0, len = $lis.length; i < len; i++) {
@@ -1982,27 +1981,22 @@
     var $li;
     var $lis = [];
     var channel;
-    var channelName = '';
     var channelNames = Object.keys(channels).sort(function (a, b) {
       return a.localeCompare(b)
     });
-    var isChecked = true;
-    var value;
-    for (var i = 0, len = channelNames.length; i < len; i++) {
-      channelName = channelNames[i];
+    $.each(channelNames, function (i, channelName) {
+      var value = buildChannelValue(channelName, prepend, nameRoot);
       if (channelName === 'phpError') {
         // phpError is a special channel
-        continue
+        return
       }
       channel = channels[channelName];
-      value = buildChannelValue(channelName, prepend, nameRoot);
-      isChecked = checkedChannels !== undefined
-        ? checkedChannels.indexOf(value) > -1
-        : channel.options.show;
       $li = buildChannelLi(
         channelName,
         value,
-        isChecked,
+        checkedChannels !== undefined
+          ? checkedChannels.indexOf(value) > -1
+          : channel.options.show,
         channelName === nameRoot,
         channel.options
       );
@@ -2010,10 +2004,13 @@
         $li.append(buildChannelList(channel.channels, nameRoot, checkedChannels, value + '.'));
       }
       $lis.push($li);
-    }
+    });
     return $lis
   }
 
+  /**
+   * Build a single LI element without any children
+   */
   function buildChannelLi (channelName, value, isChecked, isRoot, options) {
     var $label;
     var $li;
@@ -2079,7 +2076,7 @@
    * ErrorSummary should be considered deprecated
    */
   function enhanceErrorSummary () {
-    var $errorSummary = $root$3.find('.m_alert.error-summary');
+    var $errorSummary = $root$2.find('.m_alert.error-summary');
     $errorSummary.find('h3:first-child').prepend(config$7.iconsMethods['.m_error']);
     $errorSummary.find('.in-console li[class*=error-]').each(function () {
       var category = $(this).attr('class').replace('error-', '');
@@ -2164,70 +2161,40 @@
    * @return void
    */
   function collapse ($node, immediate) {
-    var isToggle = $node.is('[data-toggle]');
-    var what = isToggle
-      ? $node.data('toggle')
-      : $node.find('> *[data-toggle]').data('toggle');
-    var $wrap = isToggle
-      ? $node.parent()
-      : $node;
-    var $toggle = isToggle
-      ? $node
-      : $wrap.find('> *[data-toggle]');
-    var eventNameDone = 'collapsed.debug.' + what;
-    if (what === 'array') {
-      $wrap.removeClass('expanded');
-    } else if (['group', 'object'].indexOf(what) > -1) {
-      collapseGroupObject($wrap, $toggle, immediate, eventNameDone);
-    } else if (what === 'next') {
-      collapseNext($toggle, immediate, eventNameDone);
+    var info = getNodeInfo($node);
+    var eventNameDone = 'collapsed.debug.' + info.what;
+    if (info.what === 'array') {
+      info.$classTarget.removeClass('expanded');
+    } else if (['group', 'object'].indexOf(info.what) > -1) {
+      collapseGroupObject(info.$wrap, info.$toggle, immediate, eventNameDone);
+    } else if (info.what === 'next') {
+      collapseNext(info.$toggle, immediate, eventNameDone);
     }
   }
 
   function expand ($node) {
     var icon = config$8.iconsExpand.collapse;
-    var isToggle = $node.is('[data-toggle]');
-    var what = isToggle
-      ? $node.data('toggle')
-      : ($node.find('> *[data-toggle]').data('toggle') || ($node.attr('class').match(/\bt_(\w+)/) || []).pop());
-    var $wrap = isToggle
-      ? $node.parent()
-      : $node;
-    var $toggle = isToggle
-      ? $node
-      : $wrap.find('> *[data-toggle]');
-    var $classTarget = what === 'next' // node that get's "expanded" class
-      ? $toggle
-      : $wrap;
-    var $evtTarget = what === 'next' // node we trigger events on
-      ? $toggle.next()
-      : $wrap;
-    var eventNameDone = 'expanded.debug.' + what;
+    var info = getNodeInfo($node);
+    var eventNameDone = 'expanded.debug.' + info.what;
     // trigger while still hidden!
     //    no redraws
-    $evtTarget.trigger('expand.debug.' + what);
-    if (what === 'array') {
-      $classTarget.addClass('expanded');
-      $evtTarget.trigger(eventNameDone);
+    info.$evtTarget.trigger('expand.debug.' + info.what);
+    if (info.what === 'array') {
+      info.$classTarget.addClass('expanded');
+      info.$evtTarget.trigger(eventNameDone);
       return
     }
     // group, object, & next
-    expandGroupObjNext($toggle, $classTarget, $evtTarget, icon, eventNameDone);
+    expandGroupObjNext(info.$toggle, info.$classTarget, info.$evtTarget, icon, eventNameDone);
   }
 
   function toggle (node) {
     var $node = $(node);
-    var isToggle = $node.is('[data-toggle]');
-    var what = isToggle
-      ? $node.data('toggle')
-      : $node.find('> *[data-toggle]').data('toggle');
-    var $wrap = isToggle
-      ? $node.parent()
-      : $node;
-    var isExpanded = what === 'next'
+    var info = getNodeInfo($node);
+    var isExpanded = info.what === 'next'
       ? $node.hasClass('expanded')
-      : $wrap.hasClass('expanded');
-    if (what === 'group' && $wrap.hasClass('.empty')) {
+      : info.$wrap.hasClass('expanded');
+    if (info.what === 'group' && info.$wrap.hasClass('.empty')) {
       return
     }
     isExpanded
@@ -2340,6 +2307,32 @@
       icon = config$8.iconsMethods['.m_warn'];
     }
     return icon
+  }
+
+  /**
+   * Get node info for collapse/expand methods
+   */
+  function getNodeInfo ($node) {
+    var isToggle = $node.is('[data-toggle]');
+    var what = isToggle
+      ? $node.data('toggle')
+      : ($node.find('> *[data-toggle]').data('toggle') || ($node.attr('class').match(/\bt_(\w+)/) || []).pop());
+    var $wrap = isToggle
+      ? $node.parent()
+      : $node;
+    return {
+      what: what,
+      $wrap: $wrap,
+      $toggle: isToggle
+        ? $node
+        : $wrap.find('> *[data-toggle]'),
+      $classTarget: what === 'next' // node that get's "expanded" class
+        ? $toggle
+        : $wrap,
+      $evtTarget: what === 'next' // node we trigger events on
+        ? $toggle.next()
+        : $wrap,
+    }
   }
 
   /**

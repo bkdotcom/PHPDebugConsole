@@ -402,7 +402,7 @@ class MySqli extends mysqliBase
      * @return mixed The result of the call
      * @throws Exception
      */
-    private function profileCall($method, $sql, array $args)
+    private function profileCall($method, $sql, array $args = array())
     {
         $info = new StatementInfo($sql);
         if ($this->connectionAttempted === false) {

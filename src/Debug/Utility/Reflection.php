@@ -180,7 +180,9 @@ class Reflection
                 $prop
             ));
         }
-        return $refProp->getValue($obj);
+        return $refProp->isInitialized($obj)
+            ? $refProp->getValue($obj)
+            : null;
     }
 
     /**

@@ -37,7 +37,7 @@ class ParseParam
             $parsed['name'] = $matches[1];
             $parsed['desc'] = \preg_replace('/^\S*\s+/', '', $parsed['desc']);
         }
-        if ($tagName === 'param' && $parsed['name'] === null && \strpos($parsed['desc'], ' ') === false) {
+        if ($tagName === 'param' && $parsed['name'] === null && \strpos((string) $parsed['desc'], ' ') === false) {
             $parsed['name'] = $parsed['desc'];
             $parsed['desc'] = null;
         }

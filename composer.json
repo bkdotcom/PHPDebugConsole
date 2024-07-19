@@ -1,127 +1,127 @@
 {
-    "name": "bdk/debug",
-    "description": "Browser/javascript like console class for PHP",
-    "keywords": ["debug", "chromelogger", "debugging", "firephp", "var_dump", "inspect", "errorhandler", "phpdebugconsole", "php-debugbar", "whoops", "logger", "PSR-3"],
-    "homepage": "http://bradkent.com/php/debug",
-    "license": "MIT",
-    "support": {
-        "docs": "http://bradkent.com/php/debug",
-        "issues": "https://github.com/bkdotcom/PHPDebugConsole/issues",
-        "source": "https://github.com/bkdotcom/PHPDebugConsole"
-    },
-    "authors": [
-        {
-            "name": "Brad Kent",
-            "email": "bkfake-github@yahoo.com",
-            "homepage": "http://www.bradkent.com/",
-            "role": "Developer"
-        }
-    ],
-    "autoload": {
-        "classmap": [
-            "src/Backtrace/Backtrace.php",
-            "src/Container/Container.php",
-            "src/Debug/Debug.php",
-            "src/Debug/Utility/Utility.php",
-            "src/ErrorHandler/ErrorHandler.php",
-            "src/Promise/Promise.php"
-        ],
-        "psr-4": {
-            "bdk\\Backtrace\\": "src/Backtrace/",
-            "bdk\\Container\\": "src/Container/",
-            "bdk\\CurlHttpMessage\\": "src/CurlHttpMessage/",
-            "bdk\\Debug\\": "src/Debug/",
-            "bdk\\ErrorHandler\\": "src/ErrorHandler/",
-            "bdk\\Promise\\": "src/Promise/",
-            "bdk\\PubSub\\": "src/PubSub/",
-            "bdk\\Slack\\": "src/Slack/",
-            "bdk\\Teams\\": "src/Teams/"
-        }
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "bdk\\Debug\\Dev\\": "dev/",
-            "bdk\\Test\\": "tests/"
-        }
-    },
-    "replace": {
-        "bdk/backtrace": "2.2.2",
-        "bdk/curl-http-message": "1.0",
-        "bdk/errorhandler": "3.3.3",
-        "bdk/promise": "1.0",
-        "bdk/pubsub": "3.2",
-        "bdk/slack": "1.0",
-        "bdk/teams": "1.0"
-    },
-    "require": {
-        "php": ">=5.4.0",
-        "bdk/http-message": "^1.2 || ^2.0 || ^3.0"
-    },
-    "require-dev": {
-        "bdk/devutil": "dev-master",
-        "bdk/wamp-publisher": "dev-master",
-        "doctrine/dbal": "^2.5.0",
-        "guzzlehttp/psr7": "^1.6",
-        "jdorn/sql-formatter": "^1.2",
-        "monolog/monolog": "^1.0 || ^2.0 || ^3.0",
-        "php-curl-class/php-curl-class": ">=8.6",
-        "phpunit/phpunit": "^4.0 || ^5.0 || ^6.0 || ^7.0 || ^8.0 || ^9.0",
-        "psr/log": "^1.0 || ^2.0 || ^3.0",
-        "psr/simple-cache": "^1.0",
-        "slim/slim": "^2.0",
-        "squizlabs/php_codesniffer": "^3.6",
-        "swiftmailer/swiftmailer": "^5.0",
-        "symfony/http-foundation": ">=2.8"
-    },
-    "scripts": {
-        "coverage" : [
-            "vendor/bin/phpunit -v --coverage-clover coverage/clover.xml --coverage-html coverage/html",
-            "cp vendor/bdk/devutil/src/htmlCoverageCustom.css coverage/html/_css/custom.css",
-            "php -f vendor/bdk/devutil/src/coverageChecker.php -- coverage/clover.xml"
-        ],
-        "cs" : [
-            "vendor/bin/phpcs -p -s --colors ./src"
-        ],
-        "post-update-cmd": [
-            "bdk\\Debug\\Dev\\ComposerScripts::postUpdate"
-        ],
-        "test" : [
-            "vendor/bin/phpunit -v"
-        ],
-        "update-char-data": [
-            "bdk\\Debug\\Dev\\UpdateCharData::update"
-        ],
-        "update-phpcs": [
-            "bdk\\Debug\\Dev\\ComposerScripts::updatePhpCsXml"
-        ],
-        "webserver": [
-            "cd tests/docroot; php -S 127.0.0.1:8080 frontController.php; cd ../.."
-        ]
-    },
-    "scripts-descriptions": {
-        "coverage": "analyze code coverage",
-        "cs": "check coding standards",
-        "test": "run unit tests",
-        "update-char-data": "rebuild confusable char latest unicode data",
-        "update-phpcs": "update phpcs.xml.dist & phpcs.slevomat.xml",
-        "webserver": "run php's internal webserver"
-    },
-    "extra": {
-        "laravel": {
-            "providers": [
-                "bdk\\Debug\\Framework\\Laravel\\ServiceProvider"
-            ]
-        }
-    },
-    "suggest": {
-        "bdk/wamp-publisher": "Publish messages to a WAMP (Web Application Messaging Protocol) router.  Required for Wamp route.",
-        "bdk/debug-wamp-client": "Client to display logging published via PHPDebugConsole's WAMP plugin",
-        "psr/log": "PSR-3 : Common interface for logging libraries",
-        "jdorn/sql-formatter": "A PHP class for formatting and highlighting SQL statements"
-    },
-    "config": {
-        "allow-plugins": {
-            "dealerdirect/phpcodesniffer-composer-installer": false
-        }
+  "name": "bdk/debug",
+  "description": "Browser/javascript like console class for PHP",
+  "keywords": ["debug", "chromelogger", "debugging", "firephp", "var_dump", "inspect", "errorhandler", "phpdebugconsole", "php-debugbar", "whoops", "logger", "PSR-3"],
+  "homepage": "http://bradkent.com/php/debug",
+  "license": "MIT",
+  "support": {
+    "docs": "http://bradkent.com/php/debug",
+    "issues": "https://github.com/bkdotcom/PHPDebugConsole/issues",
+    "source": "https://github.com/bkdotcom/PHPDebugConsole"
+  },
+  "authors": [
+    {
+      "name": "Brad Kent",
+      "email": "bkfake-github@yahoo.com",
+      "homepage": "http://www.bradkent.com/",
+      "role": "Developer"
     }
+  ],
+  "autoload": {
+    "classmap": [
+      "src/Backtrace/Backtrace.php",
+      "src/Container/Container.php",
+      "src/Debug/Debug.php",
+      "src/Debug/Utility/Utility.php",
+      "src/ErrorHandler/ErrorHandler.php",
+      "src/Promise/Promise.php"
+    ],
+    "psr-4": {
+      "bdk\\Backtrace\\": "src/Backtrace/",
+      "bdk\\Container\\": "src/Container/",
+      "bdk\\CurlHttpMessage\\": "src/CurlHttpMessage/",
+      "bdk\\Debug\\": "src/Debug/",
+      "bdk\\ErrorHandler\\": "src/ErrorHandler/",
+      "bdk\\Promise\\": "src/Promise/",
+      "bdk\\PubSub\\": "src/PubSub/",
+      "bdk\\Slack\\": "src/Slack/",
+      "bdk\\Teams\\": "src/Teams/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "bdk\\Debug\\Dev\\": "dev/",
+      "bdk\\Test\\": "tests/"
+    }
+  },
+  "replace": {
+    "bdk/backtrace": "2.2.2",
+    "bdk/curl-http-message": "1.0",
+    "bdk/errorhandler": "3.3.4",
+    "bdk/promise": "1.0",
+    "bdk/pubsub": "3.2",
+    "bdk/slack": "1.0",
+    "bdk/teams": "1.0"
+  },
+  "require": {
+    "php": ">=5.4.0",
+    "bdk/http-message": "^1.2 || ^2.0 || ^3.0"
+  },
+  "require-dev": {
+    "bdk/devutil": "dev-master",
+    "bdk/wamp-publisher": "dev-master",
+    "doctrine/dbal": "^2.5.0",
+    "guzzlehttp/psr7": "^1.6",
+    "jdorn/sql-formatter": "^1.2",
+    "monolog/monolog": "^1.0 || ^2.0 || ^3.0",
+    "php-curl-class/php-curl-class": ">=8.6",
+    "phpunit/phpunit": "^4.0 || ^5.0 || ^6.0 || ^7.0 || ^8.0 || ^9.0",
+    "psr/log": "^1.0 || ^2.0 || ^3.0",
+    "psr/simple-cache": "^1.0",
+    "slim/slim": "^2.0",
+    "squizlabs/php_codesniffer": "^3.6",
+    "swiftmailer/swiftmailer": "^5.0",
+    "symfony/http-foundation": ">=2.8"
+  },
+  "scripts": {
+    "coverage" : [
+      "vendor/bin/phpunit -v --coverage-clover coverage/clover.xml --coverage-html coverage/html",
+      "cp vendor/bdk/devutil/src/htmlCoverageCustom.css coverage/html/_css/custom.css",
+      "php -f vendor/bdk/devutil/src/coverageChecker.php -- coverage/clover.xml"
+    ],
+    "cs" : [
+      "vendor/bin/phpcs -p -s --colors ./src"
+    ],
+    "post-update-cmd": [
+      "bdk\\Debug\\Dev\\ComposerScripts::postUpdate"
+    ],
+    "test" : [
+      "vendor/bin/phpunit -v"
+    ],
+    "update-char-data": [
+      "bdk\\Debug\\Dev\\UpdateCharData::update"
+    ],
+    "update-phpcs": [
+      "bdk\\Debug\\Dev\\ComposerScripts::updatePhpCsXml"
+    ],
+    "webserver": [
+      "cd tests/docroot; php -S 127.0.0.1:8080 frontController.php; cd ../.."
+    ]
+  },
+  "scripts-descriptions": {
+    "coverage": "analyze code coverage",
+    "cs": "check coding standards",
+    "test": "run unit tests",
+    "update-char-data": "rebuild confusable char latest unicode data",
+    "update-phpcs": "update phpcs.xml.dist & phpcs.slevomat.xml",
+    "webserver": "run php's internal webserver"
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "bdk\\Debug\\Framework\\Laravel\\ServiceProvider"
+      ]
+    }
+  },
+  "suggest": {
+    "bdk/wamp-publisher": "Publish messages to a WAMP (Web Application Messaging Protocol) router.  Required for Wamp route.",
+    "bdk/debug-wamp-client": "Client to display logging published via PHPDebugConsole's WAMP plugin",
+    "psr/log": "PSR-3 : Common interface for logging libraries",
+    "jdorn/sql-formatter": "A PHP class for formatting and highlighting SQL statements"
+  },
+  "config": {
+    "allow-plugins": {
+      "dealerdirect/phpcodesniffer-composer-installer": false
+    }
+  }
 }

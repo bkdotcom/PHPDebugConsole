@@ -180,7 +180,7 @@ class Reflection
                 $prop
             ));
         }
-        return $refProp->isInitialized($obj)
+        return PHP_VERSION_ID < 70400 || $refProp->isInitialized($obj)
             ? $refProp->getValue($obj)
             : null;
     }

@@ -230,64 +230,6 @@ class StatementInfo extends AbstractComponent
     }
 
     /**
-     * Replace param holders with param values
-     *
-     * @param string $sql SQL statement
-     *
-     * @return string
-     */
-    private function doParamSubstitution($sql)
-    {
-        if ($this->debug->arrayUtil->isList($this->params) === false) {
-            // named params
-            foreach ($this->params as $name => $value) {
-                $value = $this->doParamSubstitutionValue($value);
-                $sql = \str_replace($name, $value, $sql);
-            }
-            return $sql;
-        }
-        // anonymous params
-        if (\substr_count($sql, '?') !== count($this->params)) {
-            return $sql;
-        }
-        $strposOffset = 0;
-        foreach ($this->params as $value) {
-            $value = $this->doParamSubstitutionValue($value);
-            $pos = \strpos($sql, '?', $strposOffset);
-            $sql = \substr_replace($sql, $value, $pos, 1);
-            $strposOffset = $pos + \strlen($value);
-        }
-        return $sql;
-    }
-
-    /**
-     * Get param value for injection into SQL statement
-     *
-     * @param mixed $value Param value
-     *
-     * @return int|string
-     */
-    private function doParamSubstitutionValue($value)
-    {
-        if (\is_string($value)) {
-            return "'" . \addslashes($value) . "'";
-        }
-        if (\is_numeric($value)) {
-            return $value;
-        }
-        if (\is_array($value)) {
-            return \implode(', ', \array_map(array($this, __FUNCTION__), $value));
-        }
-        if (\is_bool($value)) {
-            return (int) $value;
-        }
-        if ($value === null) {
-            return 'null';
-        }
-        return \call_user_func(array($this, __FUNCTION__), (string) $value);
-    }
-
-    /**
      * Returns the exception's code
      *
      * @return int|string
@@ -320,20 +262,22 @@ class StatementInfo extends AbstractComponent
     {
         $label = $this->sql;
         $label = \preg_replace('/[\r\n\s]+/', ' ', $label);
-        $label = $this->doParamSubstitution($label);
-        $parsed = self::parseSqlForLabel($label);
+        $label = $this->debug->sql->replaceParams($label, $this->params);
+        $parsed = $this->debug->sql->parse($label);
         if ($parsed === false) {
             return $label;
         }
         $label = $parsed['method']; // method + table
         $afterWhereKeys = array('groupBy', 'having', 'window', 'orderBy', 'limit', 'for');
         $afterWhereValues = \array_intersect_key($parsed, \array_flip($afterWhereKeys));
-        $haveAfterWhere = \strlen(\implode('', $afterWhereValues)) > 0;
+        $haveMore = \count($afterWhereValues) > 0;
         if ($parsed['where']) {
             $label .= $parsed['afterMethod'] ? ' (…)' : '';
             $label .= ' WHERE ' . $parsed['where'];
-            $label .= $haveAfterWhere ? '…' : '';
-        } elseif ($parsed['afterMethod'] || $haveAfterWhere) {
+        } elseif ($parsed['afterMethod']) {
+            $haveMore = true;
+        }
+        if ($haveMore) {
             $label .= '…';
         }
         if (\strlen($label) > 100 && $parsed['select']) {
@@ -425,38 +369,6 @@ class StatementInfo extends AbstractComponent
             ))
         );
         $this->debug->setCfg('stringMaxLen', $stringMaxLenBak, Debug::CONFIG_NO_PUBLISH | Debug::CONFIG_NO_RETURN);
-    }
-
-    /**
-     * "Parse" the sql statement to get a label
-     *
-     * @param string $sql SQL statement
-     *
-     * @return array|false
-     */
-    private function parseSqlForLabel($sql)
-    {
-        $regex = '/^(?<method>
-                (?:DROP|SHOW).+|
-                CREATE(?:\sTEMPORARY)?\s+TABLE(?:\sIF\sNOT\sEXISTS)?\s+\S+|
-                DELETE.*?FROM\s+\S+|
-                INSERT(?:\s+(?:LOW_PRIORITY|DELAYED|HIGH_PRIORITY|IGNORE|INTO))*\s+\S+|
-                SELECT\s+(?P<select>.*?)\s+FROM\s+(?<from>\S+)|
-                UPDATE\s+\S+
-            )
-            (?P<afterMethod>.*?)
-            (?:\s+WHERE\s+(?P<where>.*?))?
-            (?:\s+GROUP BY\s+(?P<groupBy>.*?))?
-            (?:\s+HAVING\s+(?P<having>.*?))?
-            (?:\s+WINDOW\s+(?P<window>.*?))?
-            (?:\s+ORDER BY\s+(?P<orderBy>.*?))?
-            (?:\s+LIMIT\s+(?P<limit>.*?))?
-            (?:\s+FOR\s+(?P<for>.*?))?
-            $/six';
-        $keys = array('method', 'select', 'from', 'afterMethod', 'where');
-        return \preg_match($regex, $sql, $matches) === 1
-            ? \array_merge(\array_fill_keys($keys, ''), $matches)
-            : false;
     }
 
     /**

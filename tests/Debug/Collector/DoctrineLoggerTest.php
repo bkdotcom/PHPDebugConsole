@@ -7,6 +7,7 @@ use bdk\Test\Debug\DebugTestFramework;
 
 /**
  * @covers \bdk\Debug\Collector\DoctrineLogger
+ * @covers \bdk\Debug\Utility\Sql
  */
 class DoctrineLoggerTest extends DebugTestFramework
 {

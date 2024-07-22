@@ -17,6 +17,7 @@ use bdk\Test\Debug\DebugTestFramework;
  * @covers \bdk\Debug\Collector\MySqli
  * @covers \bdk\Debug\Collector\MySqli\MySqliStmt
  * @covers \bdk\Debug\Collector\StatementInfo
+ * @covers \bdk\Debug\Utility\Sql
  */
 class MysqliTest extends DebugTestFramework
 {

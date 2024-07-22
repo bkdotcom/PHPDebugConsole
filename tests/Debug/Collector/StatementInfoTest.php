@@ -9,6 +9,7 @@ use Exception;
 
 /**
  * @covers \bdk\Debug\Collector\StatementInfo
+ * @covers \bdk\Debug\Utility\Sql
  * @covers \bdk\Debug\Utility\SqlQueryAnalysis
  */
 class StatementInfoTest extends DebugTestFramework

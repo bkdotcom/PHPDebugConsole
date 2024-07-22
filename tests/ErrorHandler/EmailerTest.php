@@ -28,7 +28,7 @@ class EmailerTest extends TestBase
         parent::tearDown();
         $this->errorHandler->setCfg(array(
             'stats' => array(
-                'errorStatsFile' => __DIR__ . '/../../src/ErrorHandler/Plugin/error_stats.json',
+                'errorStatsFile' => __DIR__ . '/../../tmp/error_stats.json',
             ),
         ));
     }
@@ -407,8 +407,8 @@ class EmailerTest extends TestBase
 
     public function testPostSetCfg()
     {
-        $fileNew = __DIR__ . '/statStore.json';
-        \file_put_contents($fileNew, \json_encode(array(
+        $statsFileNew = __DIR__ . '/statStore.json';
+        \file_put_contents($statsFileNew, \json_encode(array(
             'errors' => array(
                 'notarealhash' => array(
                     'info' => array(),
@@ -418,11 +418,11 @@ class EmailerTest extends TestBase
         ), JSON_PRETTY_PRINT));
         $this->errorHandler->setCfg(array(
             'stats' => array(
-                'errorStatsFile' => $fileNew,
+                'errorStatsFile' => $statsFileNew,
             ),
         ));
         $stats = $this->errorHandler->stats->find('notarealhash');
-        \unlink($fileNew);
+        \unlink($statsFileNew);
         self::assertSame(array(
             'info' => array(),
             'foo' => 'bar',

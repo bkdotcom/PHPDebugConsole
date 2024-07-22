@@ -18,6 +18,7 @@ use bdk\Test\Debug\DebugTestFramework;
  * @covers \bdk\Debug\Collector\Pdo
  * @covers \bdk\Debug\Collector\Pdo\Statement
  * @covers \bdk\Debug\Collector\StatementInfo
+ * @covers \bdk\Debug\Utility\Sql
  */
 class PdoTest extends DebugTestFramework
 {

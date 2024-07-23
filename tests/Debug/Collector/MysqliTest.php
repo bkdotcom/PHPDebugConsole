@@ -571,9 +571,9 @@ EOD;
                 'method' => 'warn',
                 'args' => array(
                     'passing $name param to %cmysqli::rollback()%c does not %cROLLBACK TO name%c as you would expect!',
-                    'font-family: monospace;',
+                    'font-family:monospace;',
                     '',
-                    'font-family: monospace;',
+                    'font-family:monospace;',
                     '',
                 ),
                 'meta' => array(

@@ -28,9 +28,6 @@ class DoctrineLogger implements SQLLogger
 {
     use DatabaseTrait;
 
-    /** @var string */
-    protected $icon = 'fa fa-database';
-
     /** @var StatementInfo|null */
     protected $statementInfo;
 
@@ -81,9 +78,8 @@ class DoctrineLogger implements SQLLogger
             $connectionInfo
                 ? $connectionInfo['url']
                 : null,
-            $debug->meta(array(
+            $this->meta(array(
                 'argsAsParams' => false,
-                'icon' => $this->icon,
                 'level' => 'info',
             )),
         ));

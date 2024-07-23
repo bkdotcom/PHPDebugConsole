@@ -23,6 +23,9 @@ trait DatabaseTrait
     /** @var list<StatementInfo> */
     protected $loggedStatements = array();
 
+    /** @var string */
+    protected $icon = 'fa fa-database';
+
     /**
      * Logs StatementInfo
      *
@@ -93,6 +96,43 @@ trait DatabaseTrait
         if ($this->prettified() === false) {
             $debug->info('install jdorn/sql-formatter to prettify logged sql statements');
         }
+    }
+
+    /**
+     * Call debug method with styling
+     *
+     * Replace/wrap %c with style
+     *
+     * @param string $method  Debug method
+     * @param string $message Log message
+     *
+     * @return void
+     */
+    protected function logWithStyling($method, $message)
+    {
+        $params = array(
+            $message,
+        );
+        $cCount = \substr_count($params[0], '%c');
+        for ($i = 0; $i < $cCount; $i += 2) {
+            $params[] = 'font-family:monospace;';
+            $params[] = '';
+        }
+        \call_user_func_array(array($this->debug, $method), $params);
+    }
+
+    /**
+     * Get meta argument
+     *
+     * @param array $values Values to metafy
+     *
+     * @return array
+     */
+    protected function meta(array $values = array())
+    {
+        return $this->debug->meta(\array_merge(array(
+            'icon' => $this->debug->getCfg('channelIcon', Debug::CONFIG_DEBUG),
+        ), $values));
     }
 
     /**

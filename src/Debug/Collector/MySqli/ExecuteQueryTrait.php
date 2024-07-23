@@ -15,5 +15,6 @@ if (PHP_VERSION_ID >= 80200) {
      */
     trait ExecuteQueryTrait
     {
+        // execute_query did not exist in PHP < 8.2
     }
 }

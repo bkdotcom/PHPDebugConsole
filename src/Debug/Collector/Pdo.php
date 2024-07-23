@@ -34,9 +34,6 @@ class Pdo extends PdoBase
     /** @var PdoBase */
     protected $pdo;
 
-    /** @var string */
-    protected $icon = 'fa fa-database';
-
     /**
      * Constructor
      *
@@ -70,9 +67,7 @@ class Pdo extends PdoBase
     #[\ReturnTypeWillChange]
     public function beginTransaction()
     {
-        $this->debug->info('beginTransaction', $this->debug->meta(array(
-            'icon' => $this->debug->getCfg('channelIcon', Debug::CONFIG_DEBUG),
-        )));
+        $this->debug->info('beginTransaction', $this->meta());
         return $this->pdo->beginTransaction();
     }
 
@@ -85,9 +80,7 @@ class Pdo extends PdoBase
     #[\ReturnTypeWillChange]
     public function commit()
     {
-        $this->debug->info('commit', $this->debug->meta(array(
-            'icon' => $this->debug->getCfg('channelIcon', Debug::CONFIG_DEBUG),
-        )));
+        $this->debug->info('commit', $this->meta());
         return $this->pdo->commit();
     }
 
@@ -222,9 +215,7 @@ class Pdo extends PdoBase
     #[\ReturnTypeWillChange]
     public function rollBack()
     {
-        $this->debug->info('rollBack', $this->debug->meta(array(
-            'icon' => $this->debug->getCfg('channelIcon', Debug::CONFIG_DEBUG),
-        )));
+        $this->debug->info('rollBack', $this->meta());
         return $this->pdo->rollBack();
     }
 
@@ -265,9 +256,8 @@ class Pdo extends PdoBase
             $driverName !== 'sqlite'
                 ? $this->pdo->getAttribute(PdoBase::ATTR_CONNECTION_STATUS)
                 : null,
-            $debug->meta(array(
+            $this->meta(array(
                 'argsAsParams' => false,
-                'icon' => $this->icon,
                 'level' => 'info',
             )),
         ));

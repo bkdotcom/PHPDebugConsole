@@ -19,6 +19,7 @@ use bdk\Debug;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Route\RouteInterface;
 use bdk\Debug\Route\WampCrate;
+use bdk\Debug\Route\WampHelper;
 use bdk\ErrorHandler;
 use bdk\ErrorHandler\Error;
 use bdk\PubSub\Event;
@@ -52,9 +53,6 @@ class Wamp implements RouteInterface
         'output' => false,      // kept in sync with debug->cfg['output']
     );
 
-    /** @var string */
-    protected $channelName = '';
-
     /** @var list<string> */
     protected $channelNames = array();
 
@@ -65,6 +63,9 @@ class Wamp implements RouteInterface
      */
     protected $crate;
 
+    /** @var WampHelper */
+    protected $helper;
+
     /** @var bool */
     protected $isBootstrapped = false;
 
@@ -72,7 +73,7 @@ class Wamp implements RouteInterface
     protected $metaPublished = false;
 
     /** @var bool */
-    protected $notConnectedAlert = false;
+    protected $notConnectedAlerted = false;
 
     /**
      * Constructor
@@ -85,6 +86,7 @@ class Wamp implements RouteInterface
         $this->debug = $debug;
         $this->wamp = $wamp;
         $this->crate = new WampCrate($debug);
+        $this->helper = new WampHelper($debug);
     }
 
     /**
@@ -103,9 +105,9 @@ class Wamp implements RouteInterface
     public function getSubscriptions()
     {
         if (!$this->isConnected()) {
-            if (!$this->notConnectedAlert) {
+            if (!$this->notConnectedAlerted) {
                 $this->debug->alert('WAMP publisher not connected to WAMP router');
-                $this->notConnectedAlert = true;
+                $this->notConnectedAlerted = true;
             }
             return array();
         }
@@ -207,10 +209,7 @@ class Wamp implements RouteInterface
      */
     public function onLog(LogEntry $logEntry)
     {
-        if (!$this->cfg['output']) {
-            return;
-        }
-        if (!$this->isBootstrapped) {
+        if (!$this->cfg['output'] || !$this->isBootstrapped) {
             return;
         }
         $this->processLogEntryViaEvent($logEntry);
@@ -389,58 +388,16 @@ class Wamp implements RouteInterface
         }
 
         $this->metaPublished = true;
+
         $this->processLogEntry(new LogEntry(
             $this->debug,
             'meta',
             array(
-                $this->debug->redact($this->publishMetaGet()),
+                $this->helper->getMeta(),
             ),
-            array(
-                'channelNameRoot' => $this->debug->rootInstance->getCfg('channelName', Debug::CONFIG_DEBUG),
-                'debugVersion' => Debug::VERSION,
-                'drawer' => $this->debug->getCfg('routeHtml.drawer'),
-                'interface' => $this->debug->getInterface(),
-                'linkFilesTemplateDefault' => \strtr(
-                    \ini_get('xdebug.file_link_format'),
-                    array(
-                        '%f' => '%file',
-                        '%l' => '%line',
-                    )
-                ) ?: null,
-            )
+            $this->helper->getMetaConfig()
         ));
-        $this->processLogEntries();
-    }
 
-    /**
-     * Get meta values to publish
-     *
-     * @return array
-     */
-    private function publishMetaGet()
-    {
-        $default = array(
-            'argv' => array(),
-            'HTTPS' => null,
-            'HTTP_HOST' => null,
-            'processId' => \getmypid(),
-            'REMOTE_ADDR' => null,
-            'REQUEST_METHOD' => $this->debug->serverRequest->getMethod(),
-            'REQUEST_TIME' => null,
-            'REQUEST_URI' => \urldecode($this->debug->serverRequest->getRequestTarget()),
-            'SERVER_ADDR' => null,
-            'SERVER_NAME' => null,
-        );
-        $metaVals = \array_merge(
-            $default,
-            $this->debug->serverRequest->getServerParams()
-        );
-        $metaVals = \array_intersect_key($metaVals, $default);
-        if ($this->debug->isCli()) {
-            $metaVals['REQUEST_METHOD'] = null;
-            $metaVals['REQUEST_URI'] = '$: ' . \implode(' ', $metaVals['argv']);
-        }
-        unset($metaVals['argv']);
-        return $metaVals;
+        $this->processLogEntries();
     }
 }

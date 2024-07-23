@@ -38,9 +38,6 @@ class MySqli extends mysqliBase
     /** @var bool */
     protected $autocommit = true;
 
-    /** @var string */
-    protected $icon = 'fa fa-database';
-
     /** @var list<string> */
     protected $savePoints = array();
 
@@ -62,20 +59,11 @@ class MySqli extends mysqliBase
      *
      * @SuppressWarnings(PHPMD.StaticAccess)
      */
-    public function __construct($host = null, $username = null, $passwd = null, $dbname = null, $port = null, $socket = null, Debug $debug = null)
+    public function __construct($host = null, $username = null, $passwd = null, $dbname = null, $port = null, $socket = null, Debug $debug = null) // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
     {
-        $params = \func_num_args()
-            // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
-            ? array(
-                'host' => $host,
-                'username' => $username,
-                'passwd' => $passwd,
-                'dbname' => $dbname,
-                'port' => $port,
-                'socket' => $socket,
-            )
-            : array();
-        $this->doConstruct($params);
+        $this->doConstruct(\func_num_args()
+            ? \array_slice(\func_get_args(), 0, 6)
+            : array());
         if (!$debug) {
             $debug = Debug::getChannel('MySqli', array('channelIcon' => $this->icon));
         } elseif ($debug === $debug->rootInstance) {
@@ -87,11 +75,7 @@ class MySqli extends mysqliBase
     }
 
     /**
-     * Turns on or off auto-committing database modification (begin transaction)
-     *
-     * @param bool $mode Whether to turn on auto-commit or not.
-     *
-     * @return bool
+     * {@inheritDoc}
      */
     #[\ReturnTypeWillChange]
     public function autocommit($mode)
@@ -102,16 +86,12 @@ class MySqli extends mysqliBase
     }
 
     /**
-     * Initiates a transaction
-     *
-     * @param int    $flags A bitmask of MYSQLI_TRANS_START_* constants
-     * @param string $name  Savepoint name for the transaction
-     *
-     * @return bool
+     * {@inheritDoc}
      */
     #[\ReturnTypeWillChange]
     public function begin_transaction($flags = 0, $name = null)
     {
+        // name became nullable as of PHP 8
         $return = $name === null
             ? parent::begin_transaction($flags)
             : parent::begin_transaction($flags, $name);
@@ -119,31 +99,21 @@ class MySqli extends mysqliBase
             $this->debug->warn($this->error);
             return $return;
         }
-        $this->savePoints = $name
+        $this->savePoints = $name !== null
             ? array($name)
             : array();
-        $debugArgs = \array_filter(array(
-            'begin_transaction',
-            $name,
-            $this->debug->meta(array(
-                'icon' => $this->debug->getCfg('channelIcon', Debug::CONFIG_DEBUG),
-            )),
-        ));
-        \call_user_func_array(array($this->debug, 'info'), $debugArgs);
+        $infoParams = \array_filter(array('begin_transaction', $name, $this->meta()));
+        \call_user_func_array(array($this->debug, 'info'), $infoParams);
         return $return;
     }
 
     /**
-     * Commits the current transaction
-     *
-     * @param int    $flags A bitmask of MYSQLI_TRANS_COR_* constants
-     * @param string $name  If provided then COMMIT/name/ is executed.
-     *
-     * @return bool
+     * {@inheritDoc}
      */
     #[\ReturnTypeWillChange]
     public function commit($flags = 0, $name = null)
     {
+        // name became nullable as of PHP 8
         $return = $name === null
             ? parent::commit($flags)
             : parent::commit($flags, $name);
@@ -155,11 +125,11 @@ class MySqli extends mysqliBase
         if ($name !== null) {
             $this->debug->warn('passing $name param to mysqli::commit() does nothing!');
         }
-        $this->debug->info('commit', $this->debug->meta(array(
-            'icon' => $this->debug->getCfg('channelIcon', Debug::CONFIG_DEBUG),
-        )));
+        $this->debug->info('commit', $this->meta());
         return $return;
     }
+
+    // execute_query defined in ExecuteQueryTrait
 
     /**
      * {@inheritDoc}
@@ -214,18 +184,14 @@ class MySqli extends mysqliBase
     public function release_savepoint($name)
     {
         $return = parent::release_savepoint($name);
-        $index = \array_search($name, $this->savePoints, true);
         if (PHP_VERSION_ID < 70000) {
-            $this->debug->warn(
-                'mysqli::release_savepoint on PHP < 7.0 just calls %cSAVEPOINT `Sally`%c',
-                'font-family: monospace;',
-                ''
-            );
+            $this->logWithStyling('warn', 'mysqli::release_savepoint on PHP < 7.0 just calls %cSAVEPOINT `Sally`%c');
         }
         if ($return === false) {
             $this->debug->warn($this->error);
             return $return;
         }
+        $index = \array_search($name, $this->savePoints, true);
         if ($index !== false) {
             unset($this->savePoints[$index]);
             $this->savePoints = \array_values($this->savePoints);
@@ -237,16 +203,12 @@ class MySqli extends mysqliBase
     }
 
     /**
-     * Rolls back current transaction
-     *
-     * @param int    $flags A bitmask of MYSQLI_TRANS_COR_* constants.
-     * @param string $name  If provided then ROLLBACK /name/ is executed.
-     *
-     * @return bool
+     * {@inheritDoc}
      */
     #[\ReturnTypeWillChange]
     public function rollBack($flags = 0, $name = null)
     {
+        // name became nullable as of PHP 8
         $return = $name === null
             ? parent::rollback($flags)
             : parent::rollback($flags, $name);
@@ -256,17 +218,9 @@ class MySqli extends mysqliBase
         }
         $this->savePoints = array();
         if ($name !== null) {
-            $this->debug->warn(
-                'passing $name param to %cmysqli::rollback()%c does not %cROLLBACK TO name%c as you would expect!',
-                'font-family: monospace;',
-                '',
-                'font-family: monospace;',
-                ''
-            );
+            $this->logWithStyling('warn', 'passing $name param to %cmysqli::rollback()%c does not %cROLLBACK TO name%c as you would expect!');
         }
-        $this->debug->info('rollBack', $this->debug->meta(array(
-            'icon' => $this->debug->getCfg('channelIcon', Debug::CONFIG_DEBUG),
-        )));
+        $this->debug->info('rollBack', $this->meta());
         return $return;
     }
 
@@ -310,28 +264,26 @@ class MySqli extends mysqliBase
     {
         $debug = $event->getSubject();
         $debug->groupSummary(0);
+        $debug->groupCollapsed(
+            'MySqli info',
+            $this->host_info,
+            $this->meta(array(
+                'argsAsParams' => false,
+                'level' => 'info',
+            ))
+        );
         \set_error_handler(static function ($errno, $errstr) {
             throw new RuntimeException($errstr, $errno);
         }, E_ALL);
         try {
-            $debug->groupCollapsed(
-                'MySqli info',
-                $this->host_info,
-                $debug->meta(array(
-                    'argsAsParams' => false,
-                    'icon' => $this->icon,
-                    'level' => 'info',
-                ))
-            );
             $this->logRuntime($debug);
-            $debug->groupEnd(); // groupCollapsed
         } catch (RuntimeException $e) {
             $debug->group('MySqli Error', $debug->meta(array('level' => 'error')));
             $debug->log('Connection Error');
-            $debug->groupEnd(); // MySqli Error
-            $debug->groupEnd(); // groupCollapsed (opened in try)
+            $debug->groupEnd();
         }
         \restore_error_handler();
+        $debug->groupEnd(); // groupCollapsed
         $debug->groupEnd(); // groupSummary
     }
 
@@ -345,17 +297,18 @@ class MySqli extends mysqliBase
     private function currentDatabase()
     {
         $result = parent::query('select database() as `database`');
-        if ($result instanceof \mysqli_result) {
-            $row = $result->fetch_assoc();
-            if ($row) {
-                return $row['database'];
-            }
-        }
-        return null;
+        $row = $result instanceof \mysqli_result
+            ? $result->fetch_assoc()
+            : null;
+        return $row
+            ? $row['database']
+            : null;
     }
 
     /**
      * Call mysqli constructor with appropriate params
+     *
+     * Default values will be used for all empty values
      *
      * @param array $params host, username, etc
      *
@@ -379,17 +332,11 @@ class MySqli extends mysqliBase
             'port' => \ini_get('mysqli.default_port'),
             'socket' => \ini_get('mysqli.default_socket'),
         );
-        $params = \array_filter($params);
-        $params = \array_merge($paramsDefault, $params);
+        $params = \array_replace(\array_fill(0, \count($paramsDefault), null), $params);
+        $params = \array_combine(\array_keys($paramsDefault), $params);
+        $p = \array_merge($paramsDefault, \array_filter($params));
         $this->connectionAttempted = true;
-        parent::__construct(
-            $params['host'],
-            $params['username'],
-            $params['passwd'],
-            $params['dbname'],
-            $params['port'],
-            $params['socket']
-        );
+        parent::__construct($p['host'], $p['username'], $p['passwd'], $p['dbname'], $p['port'], $p['socket']);
     }
 
     /**

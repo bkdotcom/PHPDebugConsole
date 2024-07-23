@@ -331,7 +331,7 @@ class Debug extends AbstractDebug
      *
      * @param mixed ...$arg arguments
      *
-     * @return array special array storing "meta" values
+     * @return array special array encapsulating "meta" values
      */
     public static function meta($arg = null)
     {

@@ -24,12 +24,18 @@ class Clear implements SubscriberInterface
 {
     use CustomMethodTrait;
 
-    /** @var array<string,mixed> */
-    private $data = array();
     /** @var string|null */
     private $channelName = null;
+
+    /** @var array<string,mixed> */
+    private $data = array();
+
+    /** @var list<LogEntry> */
+    private $entriesKeep = array();
+
     /** @var string|null */
     private $channelRegex;
+
     /** @var bool */
     private $isRootInstance = false;
 
@@ -179,7 +185,7 @@ class Clear implements SubscriberInterface
             Clear Summary Errors
         */
         foreach (\array_keys($this->data['logSummary']) as $priority) {
-            $errorsNotCleared = \array_merge($this->clearErrorsHelper(
+            $errorsNotCleared = \array_merge($errorsNotCleared, $this->clearErrorsHelper(
                 $this->data['logSummary'][$priority],
                 (bool) ($flags & Debug::CLEAR_SUMMARY_ERRORS)
             ));
@@ -196,30 +202,32 @@ class Clear implements SubscriberInterface
     /**
      * clear errors for given log
      *
-     * @param array $log   reference to log to clear of errors
-     * @param bool  $clear clear errors, or return errors?
+     * @param list<LogEntry> $log   Reference to log to clear of errors
+     * @param bool           $clear Clear errors?
      *
-     * @return string[] array of error-hashes not cleared
+     * @return string[] error-hashes not cleared
      */
     private function clearErrorsHelper(&$log, $clear = true)
     {
         $errorsNotCleared = array();
-        foreach ($log as $k => $logEntry) {
+
+        $log = \array_filter($log, function (LogEntry $logEntry) use ($clear, &$errorsNotCleared) {
             if (\in_array($logEntry['method'], array('error', 'warn'), true) === false) {
-                continue;
+                return true;
             }
-            $clear2 = $clear;
-            if ($this->channelName) {
-                $channelName = $logEntry->getChannelName();
-                $clear2 = $clear && $channelName === $this->channelName;
-            }
+            $clear2 = $this->channelName
+                ? $clear && $logEntry->getChannelName() === $this->channelName
+                : $clear;
             if ($clear2) {
-                unset($log[$k]);
-            } elseif (isset($logEntry['meta']['errorHash'])) {
+                return false;
+            }
+            if (isset($logEntry['meta']['errorHash'])) {
                 $errorsNotCleared[] = $logEntry['meta']['errorHash'];
             }
-        }
+            return true;
+        });
         $log = \array_values($log);
+
         return $errorsNotCleared;
     }
 
@@ -228,7 +236,7 @@ class Clear implements SubscriberInterface
      *
      * @param int $flags flags passed to clear()
      *
-     * @return string|null
+     * @return string|null user friendly string specifying what was cleared
      */
     private function clearLog($flags)
     {
@@ -236,8 +244,8 @@ class Clear implements SubscriberInterface
         $clearErrors = (bool) ($flags & Debug::CLEAR_LOG_ERRORS);
         if ($flags & Debug::CLEAR_LOG) {
             $return = 'log (' . ($clearErrors ? 'incl errors' : 'sans errors') . ')';
-            $entriesKeep = $this->debug->rootInstance->getPlugin('methodGroup')->getCurrentGroups('main');
-            $this->clearLogHelper($this->data['log'], $clearErrors, $entriesKeep);
+            $this->entriesKeep = $this->debug->rootInstance->getPlugin('methodGroup')->getCurrentGroups('main');
+            $this->clearLogHelper($this->data['log'], $clearErrors);
         } elseif ($clearErrors) {
             $return = 'errors';
         }
@@ -247,29 +255,41 @@ class Clear implements SubscriberInterface
     /**
      * Clear log data
      *
-     * @param array $log         log to clear (passed by reference)
-     * @param bool  $clearErrors whether or not to clear errors
-     * @param array $entriesKeep log entries to keep
+     * @param list<LogEntry> $log         log to clear (passed by reference)
+     * @param bool           $clearErrors whether or not to clear errors
      *
      * @return void
      */
-    private function clearLogHelper(&$log, $clearErrors = false, $entriesKeep = array())
+    private function clearLogHelper(array &$log, $clearErrors = false)
     {
         $keep = $clearErrors
             ? array()
             : array('error', 'warn');
         if ($keep || $this->channelName) {
-            // we need to go through and filter based on method and/or channel
-            foreach ($log as $k => $logEntry) {
-                $channelName = $logEntry->getChannelName();
-                $channelMatch = !$this->channelName || $channelName === $this->channelName;
-                if (\in_array($logEntry['method'], $keep, true) || !$channelMatch) {
-                    $entriesKeep[$k] = $logEntry;
-                }
+            $this->clearLogHelperFilter($log, $keep);
+        }
+        $log = \array_values($this->entriesKeep);
+    }
+
+    /**
+     * Add non-cleared log entries to $this->entriesKeep
+     *
+     * @param list<LogEntry> $log  Log entries to filter
+     * @param list<string>   $keep methods to keep
+     *
+     * @return void
+     */
+    private function clearLogHelperFilter(array $log, array $keep)
+    {
+        // we need to go through and filter based on method and/or channel
+        foreach ($log as $k => $logEntry) {
+            $channelName = $logEntry->getChannelName();
+            $channelMatch = !$this->channelName || $channelName === $this->channelName;
+            if (\in_array($logEntry['method'], $keep, true) || !$channelMatch) {
+                $this->entriesKeep[$k] = $logEntry;
             }
         }
-        \ksort($entriesKeep);
-        $log = \array_values($entriesKeep);
+        \ksort($this->entriesKeep);
     }
 
     /**
@@ -281,25 +301,26 @@ class Clear implements SubscriberInterface
      */
     private function clearSummary($flags)
     {
-        $return = null;
+        $clearSummary = (bool) ($flags & Debug::CLEAR_SUMMARY);
         $clearErrors = (bool) ($flags & Debug::CLEAR_SUMMARY_ERRORS);
-        if ($flags & Debug::CLEAR_SUMMARY) {
-            $return = 'summary (' . ($clearErrors ? 'incl errors' : 'sans errors') . ')';
-            $groupPlugin = $this->debug->rootInstance->getPlugin('methodGroup');
-            $curPriority = $groupPlugin->getCurrentPriority(); // 'main'|int
-            foreach (\array_keys($this->data['logSummary']) as $priority) {
-                if ($priority !== $curPriority) {
-                    $groupPlugin->reset($priority);
-                    $this->clearLogHelper($this->data['logSummary'][$priority], $clearErrors, array());
-                    continue;
-                }
-                $entriesKeep = $groupPlugin->getCurrentGroups($priority);
-                $this->clearLogHelper($this->data['logSummary'][$priority], $clearErrors, $entriesKeep);
-            }
-        } elseif ($clearErrors) {
-            $return = 'summary errors';
+        if (!$clearSummary) {
+            return $clearErrors
+                ? 'summary errors'
+                : null;
         }
-        return $return;
+        $groupPlugin = $this->debug->rootInstance->getPlugin('methodGroup');
+        $curPriority = $groupPlugin->getCurrentPriority(); // 'main'|int
+        foreach (\array_keys($this->data['logSummary']) as $priority) {
+            if ($priority !== $curPriority) {
+                $groupPlugin->reset($priority);
+                $this->entriesKeep = array(); // not a "reset", but an "init"
+                $this->clearLogHelper($this->data['logSummary'][$priority], $clearErrors);
+                continue;
+            }
+            $this->entriesKeep = $groupPlugin->getCurrentGroups($priority);
+            $this->clearLogHelper($this->data['logSummary'][$priority], $clearErrors);
+        }
+        return 'summary (' . ($clearErrors ? 'incl errors' : 'sans errors') . ')';
     }
 
     /**

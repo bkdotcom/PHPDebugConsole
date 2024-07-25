@@ -8,6 +8,7 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * @covers \bdk\Slack\AbstractBlockFactory
+ * @covers \bdk\Slack\AssertionTrait
  * @covers \bdk\Slack\BlockElementsFactory
  * @covers \bdk\Slack\BlockFactory
  */

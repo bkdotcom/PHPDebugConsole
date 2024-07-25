@@ -15,6 +15,7 @@ use bdk\Test\Debug\DebugTestFramework;
  * Wamp route
  *
  * @covers \bdk\Debug\Route\Wamp
+ * @covers \bdk\Debug\Route\WampHelper
  * @covers \bdk\Debug\Route\WampCrate
  */
 class WampTest extends DebugTestFramework

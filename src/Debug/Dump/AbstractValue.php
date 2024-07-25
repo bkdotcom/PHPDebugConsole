@@ -338,8 +338,8 @@ abstract class AbstractValue extends AbstractComponent
     abstract protected function dumpString($val, Abstraction $abs = null);
 
     /**
-     * escape hex and unicode escape sequences
-     * this allows us to differentiate between '\u{03c5}' and a replaced "\u{03c5}"
+     * Escape hex and unicode escape sequences.
+     * This allows us to differentiate between '\u{03c5}' and a replaced "\u{03c5}"
      *
      * @param string $val string value
      *

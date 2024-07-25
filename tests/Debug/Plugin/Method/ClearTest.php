@@ -22,7 +22,7 @@ class ClearTest extends DebugTestFramework
      */
     public function testClearDefault()
     {
-        $entry = array(
+        $entryExpect = array(
             'method' => 'clear',
             'args' => array('Cleared log (sans errors)'),
             'meta' => array(
@@ -51,7 +51,7 @@ class ClearTest extends DebugTestFramework
                     self::assertCount(3, $this->debug->data->get('logSummary/1'));
                     self::assertCount(5, $this->debug->data->get('log'));    // clear-summary gets added
                 },
-                'entry' => $entry,
+                'entry' => $entryExpect,
                 'chromeLogger' => array(
                     array('Cleared log (sans errors)'),
                     $this->file . ': ' . $this->line,
@@ -61,7 +61,7 @@ class ClearTest extends DebugTestFramework
                 'html' => '<li class="m_clear" data-file="' . $this->file . '" data-line="' . $this->line . '"><span class="no-quotes t_string">Cleared log (sans errors)</span></li>',
                 'script' => 'console.log("Cleared log (sans errors)");',
                 'text' => '⌦ Cleared log (sans errors)',
-                'wamp' => $entry,
+                'wamp' => $entryExpect,
             )
         );
     }
@@ -97,7 +97,7 @@ class ClearTest extends DebugTestFramework
      */
     public function testClearAlerts()
     {
-        $entry = array(
+        $entryExpect = array(
             'method' => 'clear',
             'args' => array('Cleared alerts'),
             'meta' => array(
@@ -120,7 +120,7 @@ class ClearTest extends DebugTestFramework
             'clear',
             array(Debug::CLEAR_ALERTS),
             array(
-                'entry' => $entry,
+                'entry' => $entryExpect,
                 'custom' => function () {
                     self::assertCount(0, $this->debug->data->get('alerts'));
                     self::assertCount(3, $this->debug->data->get('logSummary/0'));
@@ -136,7 +136,7 @@ class ClearTest extends DebugTestFramework
                 'html' => '<li class="m_clear" data-file="' . $this->file . '" data-line="' . $this->line . '"><span class="no-quotes t_string">Cleared alerts</span></li>',
                 'script' => 'console.log("Cleared alerts");',
                 'text' => '⌦ Cleared alerts',
-                'wamp' => $entry,
+                'wamp' => $entryExpect,
             )
         );
     }
@@ -148,7 +148,7 @@ class ClearTest extends DebugTestFramework
      */
     public function testClearSummary()
     {
-        $entry = array(
+        $entryExpect = array(
             'method' => 'clear',
             'args' => array('Cleared summary (sans errors)'),
             'meta' => array(
@@ -171,7 +171,7 @@ class ClearTest extends DebugTestFramework
             'clear',
             array(Debug::CLEAR_SUMMARY),
             array(
-                'entry' => $entry,
+                'entry' => $entryExpect,
                 'custom' => function () {
                     self::assertCount(1, $this->debug->data->get('alerts'));
                     self::assertCount(1, $this->debug->data->get('logSummary/0'));   // error remains
@@ -197,7 +197,7 @@ class ClearTest extends DebugTestFramework
                 'html' => '<li class="m_clear" data-file="' . $this->file . '" data-line="' . $this->line . '"><span class="no-quotes t_string">Cleared summary (sans errors)</span></li>',
                 'script' => 'console.log("Cleared summary (sans errors)");',
                 'text' => '⌦ Cleared summary (sans errors)',
-                'wamp' => $entry,
+                'wamp' => $entryExpect,
             )
         );
     }
@@ -209,7 +209,7 @@ class ClearTest extends DebugTestFramework
      */
     public function testClearErrors()
     {
-        $entry = array(
+        $entryExpect = array(
             'method' => 'clear',
             'args' => array('Cleared errors'),
             'meta' => array(
@@ -232,7 +232,7 @@ class ClearTest extends DebugTestFramework
             'clear',
             array(Debug::CLEAR_LOG_ERRORS),
             array(
-                'entry' => $entry,
+                'entry' => $entryExpect,
                 'custom' => function () {
                     self::assertCount(1, $this->debug->data->get('alerts'));
                     self::assertCount(3, $this->debug->data->get('logSummary/0'));
@@ -258,7 +258,7 @@ class ClearTest extends DebugTestFramework
                 'html' => '<li class="m_clear" data-file="' . $this->file . '" data-line="' . $this->line . '"><span class="no-quotes t_string">Cleared errors</span></li>',
                 'script' => 'console.log("Cleared errors");',
                 'text' => '⌦ Cleared errors',
-                'wamp' => $entry,
+                'wamp' => $entryExpect,
             )
         );
     }
@@ -270,7 +270,7 @@ class ClearTest extends DebugTestFramework
      */
     public function testClearAll()
     {
-        $entry = array(
+        $entryExpect = array(
             'method' => 'clear',
             'args' => array('Cleared everything'),
             'meta' => array(
@@ -293,7 +293,7 @@ class ClearTest extends DebugTestFramework
             'clear',
             array(Debug::CLEAR_ALL),
             array(
-                'entry' => $entry,
+                'entry' => $entryExpect,
                 'custom' => function () {
                     self::assertCount(0, $this->debug->data->get('alerts'));
                     self::assertCount(0, $this->debug->data->get('logSummary/0'));
@@ -318,7 +318,7 @@ class ClearTest extends DebugTestFramework
                 'html' => '<li class="m_clear" data-file="' . $this->file . '" data-line="' . $this->line . '"><span class="no-quotes t_string">Cleared everything</span></li>',
                 'script' => 'console.log("Cleared everything");',
                 'text' => '⌦ Cleared everything',
-                'wamp' => $entry,
+                'wamp' => $entryExpect,
             )
         );
     }
@@ -330,7 +330,7 @@ class ClearTest extends DebugTestFramework
      */
     public function testClearSummaryInclErrors()
     {
-        $entry = array(
+        $entryExpect = array(
             'method' => 'clear',
             'args' => array('Cleared summary (incl errors)'),
             'meta' => array(
@@ -353,7 +353,7 @@ class ClearTest extends DebugTestFramework
             'clear',
             array(Debug::CLEAR_SUMMARY | Debug::CLEAR_SUMMARY_ERRORS),
             array(
-                'entry' => $entry,
+                'entry' => $entryExpect,
                 'custom' => function () {
                     self::assertCount(1, $this->debug->data->get('alerts'));
                     self::assertCount(0, $this->debug->data->get('logSummary/0'));
@@ -378,7 +378,7 @@ class ClearTest extends DebugTestFramework
                 'html' => '<li class="m_clear" data-file="' . $this->file . '" data-line="' . $this->line . '"><span class="no-quotes t_string">Cleared summary (incl errors)</span></li>',
                 'script' => 'console.log("Cleared summary (incl errors)");',
                 'text' => '⌦ Cleared summary (incl errors)',
-                'wamp' => $entry,
+                'wamp' => $entryExpect,
             )
         );
     }
@@ -390,7 +390,7 @@ class ClearTest extends DebugTestFramework
      */
     public function testClearSummaryErrors()
     {
-        $entry = array(
+        $entryExpect = array(
             'method' => 'clear',
             'args' => array('Cleared summary errors'),
             'meta' => array(
@@ -413,7 +413,7 @@ class ClearTest extends DebugTestFramework
             'clear',
             array(Debug::CLEAR_SUMMARY_ERRORS),
             array(
-                'entry' => $entry,
+                'entry' => $entryExpect,
                 'custom' => function () {
                     self::assertCount(1, $this->debug->data->get('alerts'));
                     self::assertCount(2, $this->debug->data->get('logSummary/0'));
@@ -438,7 +438,7 @@ class ClearTest extends DebugTestFramework
                 'html' => '<li class="m_clear" data-file="' . $this->file . '" data-line="' . $this->line . '"><span class="no-quotes t_string">Cleared summary errors</span></li>',
                 'script' => 'console.log("Cleared summary errors");',
                 'text' => '⌦ Cleared summary errors',
-                'wamp' => $entry,
+                'wamp' => $entryExpect,
             )
         );
     }

@@ -30,6 +30,8 @@ use UnexpectedValueException;
  */
 class SlackMessage implements JsonSerializable
 {
+    use AssertionTrait;
+
     /**
      * @var array{
      *   attachments: list<array>,
@@ -200,7 +202,7 @@ class SlackMessage implements JsonSerializable
          * @psalm-suppress MixedPropertyTypeCoercion
          */
         $new->data['attachments'][] = $attachment;
-        $new->assertAttachmentCount();
+        $new->assertAttachmentCount(\count($new->data['attachments']));
         return $new;
     }
 
@@ -329,23 +331,6 @@ class SlackMessage implements JsonSerializable
     }
 
     /**
-     * Assert attachment count < maximum
-     *
-     * @return void
-     *
-     * @throws OverflowException
-     */
-    private function assertAttachmentCount()
-    {
-        $count = \count($this->data['attachments']);
-        if ($count > 20) {
-            // according to slack message guidelines:
-            // https://api.slack.com/reference/messaging/payload
-            throw new OverflowException('A maximum of 20 message attachments are allowed.');
-        }
-    }
-
-    /**
      * Remove null values from array
      *
      * @param array<string,mixed> $values Input array
@@ -363,7 +348,7 @@ class SlackMessage implements JsonSerializable
      * Set data values
      * Clears all existing values
      *
-     * @param array<string,mixed> $values data values
+     * @param array<string,mixed> $values Data values
      *
      * @return void
      *
@@ -371,22 +356,7 @@ class SlackMessage implements JsonSerializable
      */
     private function setData(array $values)
     {
-        $unknownData = \array_diff_key($values, $this->dataDefault, \array_flip(array('icon')));
-        if ($unknownData) {
-            throw new InvalidArgumentException('SlackMessage: Unknown values: ' . \implode(', ', \array_keys($unknownData)));
-        }
-        if (isset($values['attachments']) && \is_array($values['attachments']) === false) {
-            throw new InvalidArgumentException(\sprintf(
-                'SlackMessage: attachments should be array or null,  %s provided.',
-                self::getDebugType($values['attachments'])
-            ));
-        }
-        if (isset($values['blocks']) && \is_array($values['blocks']) === false) {
-            throw new InvalidArgumentException(\sprintf(
-                'SlackMessage: blocks should be array or null,  %s provided.',
-                self::getDebugType($values['blocks'])
-            ));
-        }
+        $this->assertData($values, $this->dataDefault);
         /** @psalm-suppress MixedPropertyTypeCoercion - Psalm bug - we know attachments and blocks are arrays*/
         $this->data = \array_merge(array(
             'attachments' => array(),
@@ -396,21 +366,6 @@ class SlackMessage implements JsonSerializable
             unset($this->data['icon']);
             $this->setIcon($values['icon']);
         }
-        $this->assertAttachmentCount();
-    }
-
-    /**
-     * Gets the type name of a variable in a way that is suitable for debugging
-     *
-     * @param mixed $value The value being type checked
-     *
-     * @return string
-     */
-    protected static function getDebugType($value)
-    {
-        return \is_object($value)
-            ? \get_class($value)
-            : \gettype($value);
     }
 
     /**

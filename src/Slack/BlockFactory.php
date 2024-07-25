@@ -259,7 +259,7 @@ class BlockFactory extends BlockElementsFactory
         $default = \array_merge(self::$defaults['section'], array(
             'accessory' => $accessory,
             'fields' => $fields,    // max: 10,  each text's max: 2000 chars
-            'text' => $text,         // optional text obj... defaults to mrkdown
+            'text' => $text,        // optional text obj... defaults to mrkdown
                                     //   max: 3000 chars
         ));
         return self::initBlock($default, $values, static function (array $block) {
@@ -333,9 +333,7 @@ class BlockFactory extends BlockElementsFactory
         ));
         return self::initBlock($default, $values, static function (array $attachment) {
             self::assertFields($attachment['fields'], 'attachment');
-            if (\is_array($attachment['fields'])) {
-                $attachment['fields'] = self::attachmentFields($attachment['fields']);
-            }
+            $attachment['fields'] = self::attachmentFields($attachment['fields']) ?: null; // fields is optional
             return $attachment;
         });
     }
@@ -343,37 +341,34 @@ class BlockFactory extends BlockElementsFactory
     /**
      * Prepare attachment fields
      *
-     * @param array $fields Attachment fields
+     * @param array|null $fields Attachment fields
      *
-     * @return non-empty-list<array<string,mixed>>|null
+     * @return list<array<string,mixed>>
      */
-    private static function attachmentFields(array $fields)
+    private static function attachmentFields($fields)
     {
         $fieldsNew = array();
+        $defaultField = array(
+            'short' => false, // Indicates whether the field object is short enough to be displayed side-by-side with other field objects.
+            'title' => null, // Shown as a bold heading displayed in the field object.
+                             // It cannot contain markup and will be escaped for you.
+            'value' => null, // The text value displayed in the field object.
+                             // It can be formatted as plain text, or with mrkdwn by using the mrkdwn_in option above.
+        );
         /** @psalm-var mixed $field */
-        foreach ($fields as $field) {
-            $default = array(
-                'short' => false, // Indicates whether the field object is short enough to be displayed side-by-side with other field objects.
-                'title' => null, // Shown as a bold heading displayed in the field object.
-                                 // It cannot contain markup and will be escaped for you.
-                'value' => null, // The text value displayed in the field object.
-                                 // It can be formatted as plain text, or with mrkdwn by using the mrkdwn_in option above.
-            );
+        foreach ((array) $fields as $field) {
             if (\is_array($field) === false) {
                 $field = array('value' => $field);
             }
-            $field = \array_merge($default, $field);
+            $field = \array_merge($defaultField, $field);
             /** @psalm-var array<string, mixed> psalm bug - should infer, but doesn't */
-            $field = \array_intersect_key($field, $default);
+            $field = \array_intersect_key($field, $defaultField);
             $field = self::removeNull($field);
-            if (\count($field) === 1) {
-                // just 'short'
-                continue;
+            if (\count($field) > 1) {
+                // more than just 'short'
+                $fieldsNew[] = $field;
             }
-            $fieldsNew[] = $field;
         }
-        return \count($fieldsNew) > 0
-            ? $fieldsNew
-            : null;
+        return $fieldsNew;
     }
 }

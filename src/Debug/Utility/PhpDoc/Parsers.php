@@ -29,6 +29,9 @@ class Parsers
     /** @var ParseParam */
     protected $parseParam;
 
+    /** @var array{string,int|string|null} */
+    protected static $typeInfo = array();
+
     /**
      * Constructor
      *
@@ -68,6 +71,11 @@ class Parsers
     }
 
     /**
+     * For a given tag string, extract the type definition
+     *
+     * type will be extracted from the beginning of the tag string
+     * desc will be the remainder
+     *
      * @param array $parsed Parsed tag info
      * @param array $info   tagName, raw tag string, etc
      *
@@ -77,30 +85,77 @@ class Parsers
      *
      * @psalm-suppress PossiblyUnusedParam
      */
-    public static function extractTypeFromBody(array $parsed, array $info) // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
+    public static function extractTypeFromBody(array $parsed, array $info)
     {
+        self::$typeInfo = array(
+            'depth' => 0,
+            'pos' => 0,
+            'str' => $info['tagStr'],
+            'strOpenedWith' => null,
+        );
+        $continue = true;
         $tagStr = $info['tagStr'];
-        $type = '';
-        $nestingLevel = 0;
-        for ($i = 0, $iMax = \strlen($tagStr); $i < $iMax; $i++) {
-            $char = $tagStr[$i];
-            if ($nestingLevel === 0 && \trim($char) === '') {
-                break;
-            }
-            $type .= $char;
-            if (\in_array($char, array('<', '(', '[', '{'), true)) {
-                $nestingLevel++;
-                continue;
-            }
-            if (\in_array($char, array('>', ')', ']', '}'), true)) {
-                $nestingLevel--;
-                continue;
-            }
+        for ($strlen = \strlen($tagStr); self::$typeInfo['pos'] < $strlen && $continue; self::$typeInfo['pos']++) {
+            $char = $tagStr[ self::$typeInfo['pos'] ];
+            $continue = self::extractTypeFromBodyTest1($char);
         }
+        $type = \substr($tagStr, 0, self::$typeInfo['pos']);
         return \array_merge($parsed, array(
             'desc' => \trim(\substr($tagStr, \strlen($type))) ?: null,
             'type' => $type,
         ));
+    }
+
+    /**
+     * Test current character / position of tag string
+     *
+     * @param string $char Current character being tested
+     *
+     * @return bool
+     */
+    private static function extractTypeFromBodyTest1($char)
+    {
+        if (self::$typeInfo['strOpenedWith'] === null) {
+            // we're not in a quoted string
+            return self::extractTypeFromBodyTest2($char);
+        }
+        if ($char === '\\') {
+            // skip over character following backslash
+            self::$typeInfo['pos']++;
+        } elseif ($char === self::$typeInfo['strOpenedWith']) {
+            // end of quoted string
+            self::$typeInfo['strOpenedWith'] = null;
+        }
+        return true;
+    }
+
+    /**
+     * Test current character / position of tag string
+     *
+     * We know we are not in a quoted string
+     *
+     * @param string $char Current character being tested
+     *
+     * @return bool
+     */
+    private static function extractTypeFromBodyTest2($char)
+    {
+        if (\in_array($char, array('\'', '"'), true)) {
+            // we're opening a quoted string
+            self::$typeInfo['strOpenedWith'] = $char;
+        } elseif (\preg_match('#\G\s*[|&]\s*#', self::$typeInfo['str'], $matches, 0, self::$typeInfo['pos'])) {
+            // intersection or union
+            self::$typeInfo['pos'] += \strlen($matches[0]) - 1;
+        } elseif (self::$typeInfo['depth'] === 0 && \trim($char) === '') {
+            // whitespace found (not surrounding | or &)..  end of type
+            self::$typeInfo['pos']--;
+            return false;
+        } elseif (\in_array($char, array('<', '(', '[', '{'), true)) {
+            self::$typeInfo['depth']++;
+        } elseif (\in_array($char, array('>', ')', ']', '}'), true)) {
+            self::$typeInfo['depth']--;
+        }
+        return true;
     }
 
     /**

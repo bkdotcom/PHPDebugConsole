@@ -97,16 +97,7 @@ class Php
     public static function getIncludedFiles()
     {
         $includedFiles = \get_included_files();
-        \usort($includedFiles, static function ($valA, $valB) {
-            $valA = \str_replace('_', '0', $valA);
-            $valB = \str_replace('_', '0', $valB);
-            $dirA = \dirname($valA);
-            $dirB = \dirname($valB);
-            return $dirA === $dirB
-                ? \strnatcasecmp($valA, $valB)
-                : \strnatcasecmp($dirA, $dirB);
-        });
-        return $includedFiles;
+        return self::sortFiles($includedFiles);
     }
 
     /**
@@ -185,6 +176,27 @@ class Php
     {
         $iniVal = \trim(\ini_get('memory_limit') ?: \get_cfg_var('memory_limit'));
         return $iniVal ?: '128M';
+    }
+
+    /**
+     * Sort a list of files
+     *
+     * @param list<string> $files Files to sort
+     *
+     * @return list<string>
+     */
+    public static function sortFiles($files)
+    {
+        \usort($files, static function ($valA, $valB) {
+            $valA = \str_replace('_', '0', $valA);
+            $valB = \str_replace('_', '0', $valB);
+            $dirA = \dirname($valA);
+            $dirB = \dirname($valB);
+            return $dirA === $dirB
+                ? \strnatcasecmp($valA, $valB)
+                : \strnatcasecmp($dirA, $dirB);
+        });
+        return $files;
     }
 
     /**

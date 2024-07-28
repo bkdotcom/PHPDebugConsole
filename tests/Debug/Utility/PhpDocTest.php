@@ -312,7 +312,7 @@ EOD;
 
     public static function providerStrings()
     {
-        return array(
+        $tests = array(
             'basic' => array(
                 '/**
                  * @var string $comment phpdoc comment
@@ -349,7 +349,7 @@ EOD;
             ),
             'missing $' => array(
                 '/**
-                 * @param string comment
+                 * @param string | null comment
                  */',
                 array(
                     'desc' => null,
@@ -358,7 +358,7 @@ EOD;
                             'desc' => null,
                             'isVariadic' => false,
                             'name' => 'comment',
-                            'type' => 'string',
+                            'type' => 'string|null',
                         ),
                     ),
                     'return' => array(
@@ -370,7 +370,7 @@ EOD;
             ),
             'missing $ 2' => array(
                 '/**
-                 * @param string comment here
+                 * @param "some(str\"ing" comment here
                  */',
                 array(
                     'desc' => null,
@@ -379,7 +379,7 @@ EOD;
                             'desc' => 'comment here',
                             'isVariadic' => false,
                             'name' => null,
-                            'type' => 'string',
+                            'type' => '"some(str\"ing"',
                         ),
                     ),
                     'return' => array(
@@ -464,6 +464,7 @@ EOD;
                 ),
             ),
         );
+        return $tests;
     }
 
     /**

@@ -90,14 +90,13 @@ class ParseMethod
     }
 
     /**
-     * Append param to params array
+     * Append current param to params array
      *
-     * @param int $pos current character position
-     *
-     * @return void;
+     * @return void
      */
-    private function parseParamAppend($pos)
+    private function parseParamAppend()
     {
+        $pos = $this->paramParseInfo['pos'];
         $param = \trim(\substr($this->paramParseInfo['str'], $this->paramParseInfo['startPos'], $pos - $this->paramParseInfo['startPos']));
         if ($param !== '') {
             $this->paramParseInfo['params'][] = $param;
@@ -118,23 +117,15 @@ class ParseMethod
         $this->paramParseInfo = array(
             'depth' => 0,
             'params' => array(),
+            'pos' => 0,
             'startPos' => 1,
             'str' => $str,
             'strOpenedWith' => null,
         );
-        $chars = \str_split($str);
-        $count = \count($chars);
         $continue = true;
-        for ($pos = 0; $pos < $count && $continue; $pos++) {
-            $char = $chars[$pos];
-            if ($this->paramParseInfo['strOpenedWith'] === null) {
-                // we're not in a quoted string
-                $continue = $this->parseParamChar($char, $pos);
-            } elseif ($char === '\\') {
-                $pos++;
-            } elseif ($char === $this->paramParseInfo['strOpenedWith']) {
-                $this->paramParseInfo['strOpenedWith'] = null;
-            }
+        for ($strlen = \strlen($str); $this->paramParseInfo['pos'] < $strlen && $continue; $this->paramParseInfo['pos']++) {
+            $char = $str[ $this->paramParseInfo['pos'] ];
+            $continue = $this->parseParamSplitTest1($char);
         }
         $parsed['param'] = $this->paramParseInfo['params'];
         $parsed['desc'] = \trim(\substr($str, $this->paramParseInfo['startPos']));
@@ -143,39 +134,55 @@ class ParseMethod
     }
 
     /**
+     * Test current character / position of tag string
+     *
+     * @param string $char Current character being tested
+     *
+     * @return bool
+     */
+    private function parseParamSplitTest1($char)
+    {
+        if ($this->paramParseInfo['strOpenedWith'] === null) {
+            // we're not in a quoted string
+            return $this->parseParamTest2($char);
+        }
+        if ($char === '\\') {
+            // skip over character following backslash
+            $this->paramParseInfo['pos']++;
+        } elseif ($char === $this->paramParseInfo['strOpenedWith']) {
+            // end of quoted string
+            $this->paramParseInfo['strOpenedWith'] = null;
+        }
+        return true;
+    }
+
+    /**
      * Test and handle current character
      *
      * We know we are outside of a quoted string
      *
      * @param string $char current character
-     * @param int    $pos  current character position
      *
-     * @return bool // whether to continue parsing
+     * @return bool whether to continue parsing
      */
-    private function parseParamChar($char, $pos)
+    private function parseParamTest2($char)
     {
         $endParam = false;
-        switch ($char) {
-            case ',':
-                $endParam = $this->paramParseInfo['depth'] === 1;
-                break;
-            case '\'':
-            case '"':
-                // we're opening a quoted string
-                $this->paramParseInfo['strOpenedWith'] = $char;
-                break;
-            case '[':
-            case '(':
-                $this->paramParseInfo['depth']++;
-                break;
-            case ']':
-            case ')':
-                $this->paramParseInfo['depth']--;
-                $endParam = $this->paramParseInfo['depth'] === 0;
-                break;
+        if ($char === ',') {
+            $endParam = $this->paramParseInfo['depth'] === 1;
+        } elseif (\in_array($char, array('\'', '"'), true)) {
+            // we're opening a quoted string
+            $this->paramParseInfo['strOpenedWith'] = $char;
+        } elseif (\preg_match('#\G\s*=>\s*#', $this->paramParseInfo['str'], $matches, 0, $this->paramParseInfo['pos'])) {
+            $this->paramParseInfo['pos'] += \strlen($matches[0]) - 1;
+        } elseif (\in_array($char, array('<', '(', '[', '{'), true)) {
+            $this->paramParseInfo['depth']++;
+        } elseif (\in_array($char, array('>', ')', ']', '}'), true)) {
+            $endParam = $this->paramParseInfo['depth'] === 1;
+            $this->paramParseInfo['depth']--;
         }
         if ($endParam) {
-            $this->parseParamAppend($pos);
+            $this->parseParamAppend();
         }
         return !($endParam && $this->paramParseInfo['depth'] === 0);
     }

@@ -95,6 +95,9 @@ trait StringUtilHelperTrait
             // if val ends with "=" it's pretty safe to assume base64
             return true;
         }
+        if ($strlen === 0) {
+            return false;
+        }
         $stats = array(
             // how many chars found, percent expected for random binary, allowed deviation
             'lower' => array(\preg_match_all('/[a-z]/', $val), 40.626, 10),

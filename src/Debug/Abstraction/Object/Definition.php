@@ -66,9 +66,12 @@ class Definition
         ),
         'extends' => array(),
         'implements' => array(),
+        'isAbstract' => false,
         'isAnonymous' => false,
         'isFinal' => false,
+        'isInterface' => false,
         'isReadOnly' => false,
+        'isTrait' => false,
         'methods' => array(),
         'methodsWithStaticVars' => array(),
         'phpDoc' => array(
@@ -328,9 +331,12 @@ class Definition
                 'className' => $isAnonymous
                     ? $values['className'] . '|' . \md5($reflector->getName())
                     : $values['className'],
+                'isAbstract' => $reflector->isAbstract(),
                 'isAnonymous' => $isAnonymous,
                 'isFinal' => $reflector->isFinal(),
+                'isInterface' => $reflector->isInterface(),
                 'isReadOnly' => PHP_VERSION_ID >= 80200 && $reflector->isReadOnly(),
+                'isTrait' => $reflector->isTrait(),
             ),
             array(
                 // these are temporary values available during abstraction

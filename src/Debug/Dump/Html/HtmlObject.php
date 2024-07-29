@@ -319,8 +319,11 @@ class HtmlObject
     protected function dumpModifiers(ObjectAbstraction $abs)
     {
         $modifiers = \array_keys(\array_filter(array(
+            'abstract' => $abs['isAbstract'],
             'final' => $abs['isFinal'],
+            'interface' => $abs['isInterface'],
             'readonly' => $abs['isReadOnly'],
+            'trait' => $abs['isTrait'],
         )));
         if (empty($modifiers)) {
             return '';

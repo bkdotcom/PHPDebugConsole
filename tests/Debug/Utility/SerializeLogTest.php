@@ -370,10 +370,13 @@ EOD;
                 'cases' => array(),
                 'cfgFlags' => 29360127,
                 'interfacesCollapse' => array(),
+                'isAbstract' => false,
                 'isAnonymous' => false,
                 'isFinal' => false,
+                'isInterface' => false,
                 'isMaxDepth' => false,
                 'isReadOnly' => false,
+                'isTrait' => false,
                 'sectionOrder' => array(
                     'attributes',
                     'extends',

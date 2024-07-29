@@ -32,6 +32,9 @@ class ObjectProperties extends AbstractObjectSection
         $cfg = array(
             'attributeOutput' => $abs['cfgFlags'] & AbstractObject::PROP_ATTRIBUTE_OUTPUT,
         );
+        if ($abs['isInterface']) {
+            return '';
+        }
         $magicMethods = \array_intersect(array('__get', '__set'), \array_keys($abs['methods']));
         $html = '<dt class="properties">' . $this->getLabel($abs) . '</dt>' . "\n";
         $html .= $this->magicMethodInfo($magicMethods);

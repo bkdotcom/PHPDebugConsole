@@ -320,6 +320,7 @@ class ObjectMethods extends AbstractObjectSection
     {
         // phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
         return \array_keys(\array_filter(array(
+            'abstract' => $info['isAbstract'],
             'final' => $info['isFinal'],
             \implode(' ', (array) $info['visibility']) => true,
             'static' => $info['isStatic'],

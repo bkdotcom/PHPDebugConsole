@@ -62,10 +62,13 @@ return array(
         : array(
             'bdk\Test\Debug\Fix𝐭ure\Con𝘧usableInteᴦface',
         ),
+    'isAbstract' => false,
     'isAnonymous' => false,
     'isExcluded' => false,
     'isFinal' => false,
+    'isInterface' => false,
     'isReadOnly' => false,
+    'isTrait' => false,
     'methods' => array(
 
         '__call' => array(

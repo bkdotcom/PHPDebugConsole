@@ -105,25 +105,29 @@ li[class*=m_] > .t_array.array-file-tree > .array-inner {
     color: $color-header;
   }
 
-  .t_modifier_public {
-    color: $color-public;
+  .t_modifier_abstract {
+    font-weight: bold;
+    color: #9d2d2d
   }
-  .t_modifier_protected {
-    color: $color-protected;
-  }
-  .t_modifier_private {
-    color: $color-private;
+  .t_modifier_debug {
+    color: $color-debug;
   }
   .t_modifier_final {
     color: $color-final;
     font-weight: bold;
   }
+  .t_modifier_private {
+    color: $color-private;
+  }
+  .t_modifier_protected {
+    color: $color-protected;
+  }
+  .t_modifier_public {
+    color: $color-public;
+  }
   .t_modifier_static {
     font-style: italic;
     color: $color-static;
-  }
-  .t_modifier_debug {
-    color: $color-debug;
   }
 
   > .object-inner {
@@ -134,7 +138,8 @@ li[class*=m_] > .t_array.array-file-tree > .array-inner {
       display: inline-block;
       margin-left: 0;
       margin-right: 0.5em;
-      border: solid 1px;
+      border-style: solid;
+      border-width: 1px;
       border-radius: 4px;
       padding: 0 .75em;
       height: 1.75em;
@@ -150,6 +155,21 @@ li[class*=m_] > .t_array.array-file-tree > .array-inner {
       height: 100%;
     }
     */
+    > .t_modifier_abstract {
+      color: #333;
+      background-color: lighten(#c0c0c0, 15%);
+      border-color: #666;
+    }
+    > .t_modifier_final {
+      color: $error-fg;
+      background-color: lighten($error-bg, 10%);
+      border-color: $error-fg;
+    }
+    > .t_modifier_interface {
+      color: $info-fg;
+      background-color: $info-bg;
+      border-color: $info-fg;
+    }
     > .t_modifier_readonly {
       color: $warn-fg;
       background-color: $warn-bg;
@@ -161,11 +181,6 @@ li[class*=m_] > .t_array.array-file-tree > .array-inner {
           opacity: 0.75;
         }
       }
-    }
-    > .t_modifier_final {
-      color: $error-fg;
-      background-color: lighten($error-bg, 10%);
-      border-color: $error-fg;
     }
     .heading {
       color: #4f16b0;

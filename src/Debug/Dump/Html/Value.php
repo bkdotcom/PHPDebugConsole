@@ -119,35 +119,39 @@ class Value extends BaseValue
      * if namespaced additionally wrap namespace in span.namespace
      * If callable, also wrap with .t_operator and .t_identifier
      *
-     * @param mixed  $val        classname or classname(::|->)name (method/property/const)
-     * @param string $asFunction (false) specify we're marking up a function
-     * @param string $tagName    ("span") html tag to use
-     * @param array  $attribs    (optional) additional html attributes for classname span
-     * @param bool   $wbr        (false) whether to add a <wbr /> after the classname
+     * @param mixed  $val     classname or classname(::|->)name (method/property/const)
+     * @param string $what    ("classname"), "const", or "function" - specify what we're marking if ambiguous
+     * @param string $tagName ("span") html tag to use
+     * @param array  $attribs (optional) additional html attributes for classname span (such as title)
+     * @param bool   $wbr     (false) whether to add a <wbr /> after the classname
      *
      * @return string html snippet
      */
-    public function markupIdentifier($val, $asFunction = false, $tagName = 'span', $attribs = array(), $wbr = false)
+    public function markupIdentifier($val, $what = 'classname', $tagName = 'span', $attribs = array(), $wbr = false)
     {
-        $parts = \array_map(array($this->string, 'dump'), $this->parseIdentifier($val, $asFunction));
-        $operator = '<span class="t_operator">' . $parts['operator'] . '</span>';
-        if ($parts['classname']) {
-            $parts['classname'] = $this->debug->html->buildTag(
-                $tagName,
-                $this->debug->arrayUtil->mergeDeep(array(
-                    'class' => array('classname'),
-                ), (array) $attribs),
-                $this->wrapNamespace($parts['classname'])
-            ) . '<wbr />';
+        $parts = \array_map(array($this->string, 'dump'), $this->parseIdentifier($val, $what));
+        $class = 'classname';
+        $classOrNamespace = $this->wrapNamespace($parts['classname']);
+        if ($parts['namespace']) {
+            $class = 'namespace';
+            $classOrNamespace = $parts['namespace'];
         }
-        if ($parts['identifier']) {
-            $parts['identifier'] = '<span class="t_identifier">' . $this->wrapNamespace($parts['identifier']) . '</span>';
+        $classOrNamespace = $this->html->buildTag(
+            $tagName,
+            $this->debug->arrayUtil->mergeDeep(array(
+                'class' => array($class),
+            ), (array) $attribs),
+            $classOrNamespace
+        ) . '<wbr />';
+        $classOrNamespace = \preg_replace('#<' . $tagName . '[^>]*></' . $tagName . '><wbr />#', '', $classOrNamespace);
+        $parts2 = \array_filter(\array_intersect_key($parts, \array_flip(array('operator', 'identifier'))));
+        foreach ($parts2 as $key => $value) {
+            $parts[$key] = '<span class="t_' . $key . '">' . $value . '</span>';
         }
-        $html = \implode($operator, \array_filter(array($parts['classname'], $parts['identifier']), 'strlen'));
-        if ($wbr === false) {
-            $html = \str_replace('<wbr />', '', $html);
-        }
-        return $html;
+        $html = \implode($parts['operator'], \array_filter(array($classOrNamespace, $parts['identifier'])));
+        return $wbr === false
+            ? \str_replace('<wbr />', '', $html)
+            : $html;
     }
 
     /**
@@ -271,10 +275,10 @@ class Value extends BaseValue
      */
     protected function dumpConst(Abstraction $abs)
     {
-        $this->optionSet('attribs.title', $abs['value']
+        $this->optionSet('attribs.title', isset($abs['value'])
             ? 'value: ' . $this->debug->getDump('text')->valDumper->dump($abs['value'])
             : null);
-        return $this->markupIdentifier($abs['name']);
+        return $this->markupIdentifier($abs['name'], 'const');
     }
 
     /**

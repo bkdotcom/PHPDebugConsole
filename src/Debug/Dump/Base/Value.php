@@ -39,9 +39,9 @@ class Value extends AbstractValue
     {
         if ($val instanceof Abstraction) {
             $val = $val['value'];
-            if (\is_array($val)) {
-                $val = $val[0] . '::' . $val[1];
-            }
+        }
+        if (\is_array($val)) {
+            $val = $val[0] . '::' . $val[1];
         }
         return $this->highlightChars($val);
     }

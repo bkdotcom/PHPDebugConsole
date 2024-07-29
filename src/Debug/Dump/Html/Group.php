@@ -117,7 +117,7 @@ class Group
     {
         $label = \array_shift($args);
         $label = $meta['isFuncName']
-            ? $this->dumper->valDumper->markupIdentifier($label, true)
+            ? $this->dumper->valDumper->markupIdentifier($label, 'function')
             : \preg_replace('#^<span class="t_string">(.+)</span>$#s', '$1', $this->dumper->valDumper->dump($label));
 
         $labelClasses = \implode(' ', \array_keys(\array_filter(array(

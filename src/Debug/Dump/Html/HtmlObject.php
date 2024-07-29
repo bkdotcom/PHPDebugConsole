@@ -147,7 +147,7 @@ class HtmlObject
                             'toggle-off' => \in_array($classname, $interfacesCollapse, true),
                         ),
                     ),
-                    $this->valDumper->markupIdentifier($classname)
+                    $this->valDumper->markupIdentifier($classname, 'classname')
                 )
                 . (\is_array($v) ? "\n" . self::buildImplementsTree($v, $interfacesCollapse) : '')
                 . '</li>' . "\n";
@@ -212,7 +212,7 @@ class HtmlObject
         $attributes = $abs->sort($attributes, $abs['sort']);
         foreach ($attributes as $info) {
             $str .= '<dd class="attribute">'
-                . $this->valDumper->markupIdentifier($info['name'])
+                . $this->valDumper->markupIdentifier($info['name'], 'classname')
                 . $this->dumpAttributeArgs($info['arguments'])
                 . '</dd>' . "\n";
         }
@@ -273,7 +273,7 @@ class HtmlObject
                 $this->valDumper->markupIdentifier($abs['className'] . '::' . $abs['properties']['name']['value'])
             );
         }
-        return $this->valDumper->markupIdentifier($abs['className'], false, 'span', array(
+        return $this->valDumper->markupIdentifier($abs['className'], 'classname', 'span', array(
             'title' => $title,
         ));
     }
@@ -289,7 +289,7 @@ class HtmlObject
     {
         return '<dt>extends</dt>' . "\n"
             . \implode(\array_map(function ($classname) {
-                return '<dd class="extends">' . $this->valDumper->markupIdentifier($classname) . '</dd>' . "\n";
+                return '<dd class="extends">' . $this->valDumper->markupIdentifier($classname, 'classname') . '</dd>' . "\n";
             }, $abs['extends']));
     }
 

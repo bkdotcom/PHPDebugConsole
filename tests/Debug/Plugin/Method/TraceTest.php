@@ -120,7 +120,7 @@ class TraceTest extends DebugTestFramework
                         );
                         $valuesExpect[1] = $valuesExpect[1] === null ? 'null' : $valuesExpect[1];
                         $valuesExpect[2] = $valuesExpect[2] === null ? 'null' : (string) $valuesExpect[2];
-                        $valuesExpect[3] = $this->debug->getDump('html')->valDumper->markupIdentifier($valuesExpect[3], true, 'span', array(), true);
+                        $valuesExpect[3] = $this->debug->getDump('html')->valDumper->markupIdentifier($valuesExpect[3], 'function', 'span', array(), true);
 
                         $valuesActual = $matches[$i];
                         \array_shift($valuesActual);
@@ -128,7 +128,7 @@ class TraceTest extends DebugTestFramework
                         unset($valuesActual[3]);
                         $valuesActual = \array_values($valuesActual);
                         if (\strpos($attribs, 't_undefined') !== false) {
-                            $valuesActual[3] = $this->debug->getDump('html')->valDumper->markupIdentifier(Abstracter::UNDEFINED, true, 'span', array(), true);
+                            $valuesActual[3] = $this->debug->getDump('html')->valDumper->markupIdentifier(Abstracter::UNDEFINED, 'function', 'span', array(), true);
                         }
 
                         self::assertSame($valuesExpect, $valuesActual);

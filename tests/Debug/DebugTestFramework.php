@@ -709,7 +709,7 @@ class DebugTestFramework extends DOMTestCase
                     $output = false;
                     if ($expect instanceof Closure) {
                         $output = $messages;
-                    } elseif (isset($routeObj->wamp->messages[$messageIndex])) {
+                    } elseif (isset($messages[$messageIndex])) {
                         $output = $messages[$messageIndex];
                     }
                     if ($output) {

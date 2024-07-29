@@ -260,7 +260,7 @@ EOD;
                             "\xef\xbb\xbfbom\r\n\t\x07 \x1F \x7F \xc2\xa0<i>(nbsp)</i> \xE2\x80\x89(thsp), & \xE2\x80\x8B(zwsp)",
                             ' ',
                             // '',
-                            "ade50251dade9edc27e822ebdc3e9664",
+                            'ade50251dade9edc27e822ebdc3e9664',
                         ), \array_keys($abs['properties']));
                     },
                     'streamAnsi' => \str_replace('\e', "\e", '
@@ -837,9 +837,82 @@ EOD;
                           Methods: none!',
                 ),
             ),
+
+            'constants' => array(
+                'log',
+                array(
+                    new \bdk\Test\Debug\Fixture\ParamConstants(),
+                ),
+                array(
+                    'chromeLogger' => array(
+                        array(
+                            array(
+                                '___class_name' => 'bdk\Test\Debug\Fixture\ParamConstants',
+                            ),
+                        ),
+                        null,
+                        '',
+                    ),
+                    'firephp' => 'X-Wf-1-1-1-%d: 78|[{"Type":"LOG"},{"___class_name":"bdk\\\\Test\\\\Debug\\\\Fixture\\\\ParamConstants"}]|',
+                    'html' => '<li class="m_log"><div class="groupByInheritance t_object" data-accessible="public"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>ParamConstants</span>
+                        <dl class="object-inner">
+                            <dt class="constants">constants</dt>
+                            <dd class="constant public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string">CLASS_CONST</span> <span class="t_operator">=</span> <span class="t_string">bar</span></dd>
+                            <dt class="properties">no properties</dt>
+                            <dt class="methods">methods</dt>
+                            <dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier">test</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$foo</span> <span class="t_operator">=</span> <span class="t_const t_parameter-default" title="value: &quot;bar&quot;"><span class="classname">self</span><span class="t_operator">::</span><span class="t_identifier">CLASS_CONST</span></span></span><span class="t_punct">,</span>
+                            <span class="parameter"><span class="t_parameter-name">$bar</span> <span class="t_operator">=</span> <span class="t_const t_parameter-default" title="value: 0"><span class="t_identifier">SEEK_SET</span></span></span><span class="t_punct">,</span>
+                            <span class="parameter"><span class="t_parameter-name">$baz</span> <span class="t_operator">=</span> <span class="t_const t_parameter-default" title="value: &quot;foo&quot;"><span class="namespace">bdk\Test\Debug\Fixture\</span><span class="t_identifier">NAMESPACE_CONST</span></span></span><span class="t_punct">,</span>
+                            <span class="parameter"><span class="t_parameter-name">$biz</span> <span class="t_operator">=</span> <span class="t_const t_parameter-default" title="value: &quot;defined in TestBase&quot;"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>TestBase</span><span class="t_operator">::</span><span class="t_identifier">MY_CONSTANT</span></span></span><span class="t_punct">)</span></dd>
+                        </dl>
+                        </div></li>',
+                    'script' => 'console.log({"___class_name":"bdk\\\\Test\\\\Debug\\\\Fixture\\\\ParamConstants"});',
+                    'streamAnsi' => "\e[38;5;250mbdk\Test\Debug\Fixture\\\e[0m\e[1mParamConstants\e[22m
+                        Properties: none!
+                        \e[4mMethods:\e[24m
+                        public\e[38;5;245m: \e[96m1\e[0m",
+                    'text' => 'bdk\Test\Debug\Fixture\ParamConstants
+                        Properties: none!
+                        Methods:
+                        public: 1',
+                    'wamp' => static function ($messages) {
+                        $abs = $messages[0]['args'][1][0]['classDefinitions']['bdk\Test\Debug\Fixture\ParamConstants'];
+                        $params = $abs['methods']['test']['params'];
+                        $defaultValuesExpect = array(
+                            array(
+                                'debug' => Abstracter::ABSTRACTION,
+                                'name' => 'self::CLASS_CONST',
+                                'type' => Type::TYPE_CONST,
+                                'value' => 'bar',
+                            ),
+                            array(
+                                'debug' => Abstracter::ABSTRACTION,
+                                'name' => 'SEEK_SET',
+                                'type' => Type::TYPE_CONST,
+                                'value' => 0,
+                            ),
+                            array(
+                                'debug' => Abstracter::ABSTRACTION,
+                                'name' => 'bdk\Test\Debug\Fixture\NAMESPACE_CONST',
+                                'type' => Type::TYPE_CONST,
+                                'value' => 'foo',
+                            ),
+                            array(
+                                'debug' => Abstracter::ABSTRACTION,
+                                'name' => 'bdk\Test\Debug\Fixture\TestBase::MY_CONSTANT',
+                                'type' => Type::TYPE_CONST,
+                                'value' => 'defined in TestBase',
+                            ),
+                        );
+                        foreach ($params as $i => $param) {
+                            self::assertSame($param['defaultValue'], $defaultValuesExpect[$i]);
+                        }
+                    },
+                ),
+            ),
         );
 
-        // $tests = \array_intersect_key($tests, \array_flip(array('stdClass')));
+        // $tests = \array_intersect_key($tests, \array_flip(array('constants')));
 
         return $tests;
     }

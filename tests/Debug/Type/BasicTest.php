@@ -190,6 +190,53 @@ class BasicTest extends DebugTestFramework
                 ),
             ),
 
+            'constantNamespaced' => array(
+                'log',
+                array(
+                    Debug::getInstance()->abstracter->crateWithVals(
+                        'constant value',
+                        array(
+                            'type' => Type::TYPE_CONST,
+                            'name' => 'Test\Namespace\SOME_CONSTANT',
+                        )
+                    ),
+                ),
+                array(
+                    'entry' => array(
+                        'method' => 'log',
+                        'args' => array(
+                            array(
+                                'brief' => false,
+                                'debug' => Abstracter::ABSTRACTION,
+                                'name' => 'Test\Namespace\SOME_CONSTANT',
+                                'type' => Type::TYPE_CONST,
+                                'typeMore' => null,
+                                'value' => 'constant value',
+                            ),
+                        ),
+                        'meta' => array(),
+                    ),
+                    'chromeLogger' => '[["Test\\\\Namespace\\\\SOME_CONSTANT"],null,""]',
+                    'html' => '<li class="m_log"><span class="t_const" title="value: &quot;constant value&quot;"><span class="namespace">Test\Namespace\</span><span class="t_identifier">SOME_CONSTANT</span></span></li>',
+                    'script' => 'console.log("Test\\\\Namespace\\\\SOME_CONSTANT");',
+                    'streamAnsi' => "\e[38;5;250mTest\Namespace\\\e[0m\e[38;5;224m\e[0m\e[1mSOME_CONSTANT\e[22m",
+                    'text' => 'Test\Namespace\SOME_CONSTANT',
+                    'wamp' => array(
+                        'log',
+                        array(
+                            array(
+                                'brief' => false,
+                                'debug' => Abstracter::ABSTRACTION,
+                                'name' => 'Test\Namespace\SOME_CONSTANT',
+                                'type' => Type::TYPE_CONST,
+                                'typeMore' => null,
+                                'value' => 'constant value',
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+
             'float' => array(
                 'log',
                 array(10.10),

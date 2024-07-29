@@ -196,13 +196,8 @@ class MethodParams
             if ($defaultValue instanceof UnitEnum) {
                 $defaultValue = $this->abstracter->crate($defaultValue, $this->abs['debugMethod']);
             } elseif (PHP_VERSION_ID >= 50406 && $refParameter->isDefaultValueConstant()) {
-                /*
-                    getDefaultValueConstantName() :
-                        php may return something like self::CONSTANT_NAME
-                        hhvm will return WhateverTheClassNameIs::CONSTANT_NAME
-                */
                 $defaultValue = new Abstraction(Type::TYPE_CONST, array(
-                    'name' => $refParameter->getDefaultValueConstantName(),
+                    'name' => $this->getConstantName($refParameter),
                     'value' => $defaultValue,
                 ));
             }
@@ -211,7 +206,30 @@ class MethodParams
     }
 
     /**
-     * Get param typehint
+     * Get param's default value constant name
+     *
+     * @param ReflectionParameter $refParameter reflectionParameter
+     *
+     * @return string
+     */
+    private function getConstantName(ReflectionParameter $refParameter)
+    {
+        // getDefaultValueConstantName() :
+        //    php may return something like self::CONSTANT_NAME
+        $name = $refParameter->getDefaultValueConstantName();
+        if (\preg_match('/^(?!.*::).*\\\\.*$/u', $name) && \defined($name) === false) {
+            // constant name includes "\", but does not include "::" and is not defined
+            // @see https://bugs.php.net/bug.php?id=73632
+            $index = \strrpos($name, '\\');
+            $name = \substr($name, $index + 1);
+            // \bdk\Debug::log('namespace', $refParameter->getDeclaringClass()->getNamespaceName());
+            // \bdk\Debug::log('namespace', $refParameter->getDeclaringFunction()->getNamespaceName());
+        }
+        return $name;
+    }
+
+    /**
+     * Get param type-hint
      *
      * @param ReflectionParameter $refParameter reflectionParameter
      * @param string|null         $phpDocType   param's phpdoc type

@@ -371,39 +371,37 @@ abstract class AbstractValue extends AbstractComponent
     }
 
     /**
-     * Split identifier into classname, operator, & identifier
-     * Identifier = classname, function, or property
+     * Split identifier into classname, operator, & identifier.
      *
-     * @param Abstraction|array|string $val        classname or classname(::|->)name (method/property/const)
-     * @param bool                     $asFunction (false)
+     * classname may be namespace\classname
+     * identifier = classname, constant function, or property
+     *
+     * @param Abstraction|array|string $val  classname or classname(::|->)name (method/property/const)
+     * @param string                   $what ("classname"), "const", or "function"
      *
      * @return array
      */
-    protected function parseIdentifier($val, $asFunction = false)
+    protected function parseIdentifier($val, $what = 'classname')
     {
         if ($val instanceof Abstraction) {
             $val = $val['value'];
         }
-        $parts = array(
-            'classname' => $val,
-            'identifier' => '',
-            'operator' => '::',
-        );
+        $parts = \array_fill_keys(array('classname', 'identifier', 'namespace', 'operator'), '');
+        $parts['classname'] = $val;
         $matches = array();
         if (\is_array($val)) {
             $parts['classname'] = $val[0];
+            $parts['operator'] = '::';
             $parts['identifier'] = $val[1];
         } elseif (\preg_match('/^(.+)(::|->)(.+)$/', $val, $matches)) {
             $parts['classname'] = $matches[1];
             $parts['operator'] = $matches[2];
             $parts['identifier'] = $matches[3];
-        } elseif (\preg_match('/^(.+)(\\\\\{closure\})$/', $val, $matches)) {
-            $parts['classname'] = $matches[1];
-            $parts['operator'] = '';
-            $parts['identifier'] = $matches[2];
-        } elseif ($asFunction) {
+        } elseif (\in_array($what, array('const', 'function'), true)) {
+            \preg_match('/^(.+\\\\)?(.+)$/', $val, $matches);
             $parts['classname'] = '';
-            $parts['identifier'] = $val;
+            $parts['namespace'] = $matches[1];
+            $parts['identifier'] = $matches[2];
         }
         return $parts;
     }

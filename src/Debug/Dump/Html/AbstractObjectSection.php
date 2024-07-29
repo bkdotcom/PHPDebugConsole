@@ -184,7 +184,7 @@ abstract class AbstractObjectSection
             $items = \array_diff_key($items, $itemsFiltered);
             $itemOutCount += \count($itemsFiltered);
             $html .= \in_array($classNameCur, array($className, 'stdClass'), true) === false
-                ? '<dd class="heading">Inherited from ' . $this->valDumper->markupIdentifier($classNameCur) . '</dd>' . "\n"
+                ? '<dd class="heading">Inherited from ' . $this->valDumper->markupIdentifier($classNameCur, 'classname') . '</dd>' . "\n"
                 : '';
             $html .= $this->dumpItemsFiltered($abs, $keys, $cfg);
         }

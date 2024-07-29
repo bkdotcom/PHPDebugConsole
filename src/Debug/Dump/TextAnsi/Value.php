@@ -69,26 +69,29 @@ class Value extends TextValue
     /**
      * Add ansi escape sequences for classname type strings
      *
-     * @param mixed $val        classname or classname(::|->)name (method/property/const)
-     * @param bool  $asFunction (false) specify we're marking up a function
+     * @param mixed  $val  classname or classname(::|->)name (method/property/const)
+     * @param string $what ("classname"), "const", or "function" - specify what we're marking if ambiguous
      *
      * @return string
      */
-    public function markupIdentifier($val, $asFunction = false)
+    public function markupIdentifier($val, $what = 'classname')
     {
-        $parts = $this->parseIdentifier($val, $asFunction);
+        $parts = $this->parseIdentifier($val, $what);
         $escapeReset = $this->escapeReset;
         $operator = $this->cfg['escapeCodes']['operator'] . $parts['operator'] . $this->escapeReset;
         $identifier = '';
         $classnameOut = $parts['classname']
             ? $this->markupIdentifierClassname($parts['classname'])
             : '';
+        $namespaceOut = $parts['namespace']
+            ? $this->markupIdentifierNamespace($parts['namespace'])
+            : '';
         if ($parts['identifier']) {
             $this->escapeReset = "\e[0;1m";
             $identifier = "\e[1m" . $this->highlightChars($parts['identifier']) . "\e[22m";
             $this->escapeReset = $escapeReset;
         }
-        $parts = \array_filter(array($classnameOut, $identifier), 'strlen');
+        $parts = \array_filter(array($namespaceOut, $classnameOut, $identifier), 'strlen');
         return \implode($operator, $parts);
     }
 
@@ -187,7 +190,7 @@ class Value extends TextValue
      */
     protected function dumpConst(Abstraction $abs)
     {
-        return $this->markupIdentifier($abs['name']);
+        return $this->markupIdentifier($abs['name'], 'const');
     }
 
     /**
@@ -390,19 +393,34 @@ class Value extends TextValue
     private function markupIdentifierClassname($classname)
     {
         $classnameOut = '';
-        $escapeReset = $this->escapeReset;
         $idx = \strrpos($classname, '\\');
         if ($idx) {
             $namespace = \substr($classname, 0, $idx + 1);
             $classname = \substr($classname, $idx + 1);
-            $this->escapeReset = $this->cfg['escapeCodes']['muted'];
-            $classnameOut = $this->cfg['escapeCodes']['muted']
-                . $this->highlightChars($namespace)
-                . $escapeReset;
+            $classnameOut = $this->markupIdentifierNamespace($namespace);
         }
+        $escapeReset = $this->escapeReset;
         $this->escapeReset = "\e[0;1m";
         $classnameOut .= "\e[1m" . $this->highlightChars($classname) . "\e[22m";
         $this->escapeReset = $escapeReset;
         return $classnameOut;
+    }
+
+    /**
+     * Markup namespace portion of identifier string
+     *
+     * @param string $namespace namespace
+     *
+     * @return string
+     */
+    private function markupIdentifierNamespace($namespace)
+    {
+        $escapeReset = $this->escapeReset;
+        $this->escapeReset = $this->cfg['escapeCodes']['muted'];
+        $namespace = $this->cfg['escapeCodes']['muted']
+            . $this->highlightChars($namespace)
+            . $escapeReset;
+        $this->escapeReset = $escapeReset;
+        return $namespace;
     }
 }

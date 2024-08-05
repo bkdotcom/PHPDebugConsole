@@ -225,7 +225,7 @@ class TraceTest extends DebugTestFramework
                 'haveObjRow' => false,
                 'indexLabel' => null,
                 'rows' => array(),
-                'summary' => null,
+                'summary' => '',
             ),
         );
         $this->testMethod(

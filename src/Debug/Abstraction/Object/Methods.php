@@ -47,11 +47,11 @@ class Methods extends AbstractInheritable
         'isStatic' => false,
         'params' => array(),
         'phpDoc' => array(
-            'desc' => null,
-            'summary' => null,
+            'desc' => '',
+            'summary' => '',
         ),
         'return' => array(
-            'desc' => null,
+            'desc' => '',
             'type' => null,
         ),
         'staticVars' => array(),
@@ -261,11 +261,11 @@ class Methods extends AbstractInheritable
             'isStatic' => $phpDoc['static'],
             'params' => $this->params->getParamsPhpDoc($abs, $phpDoc, $className),
             'phpDoc' => array(
-                'desc' => null,
+                'desc' => '',
                 'summary' => $phpDoc['desc'],
             ),
             'return' => array(
-                'desc' => null,
+                'desc' => '',
                 'type' => $phpDoc['type'],
             ),
             'visibility' => 'magic',
@@ -398,7 +398,7 @@ class Methods extends AbstractInheritable
     private function getReturn(ReflectionMethod $refMethod, array $phpDoc)
     {
         $return = array(
-            'desc' => null,
+            'desc' => '',
             'type' => null,
         );
         if (isset($phpDoc['return']['type'])) {

@@ -103,7 +103,7 @@ EOD;
         $select2expect = <<<'EOD'
 %A
 <li class="m_group" data-channel="general.Doctrine" data-icon="fa fa-database" id="statementInfo3">
-<div class="group-header"><span class="group-label">select * from bob WHERE k in (&#039;foo&#039;, &#039;bar&#039;) and v = &#039;declined&#039;</span></div>
+<div class="group-header"><span class="group-label">select * from bob…</span></div>
 <ul class="group-body">
 <li class="m_log no-indent" data-channel="general.Doctrine"><span class="highlight language-sql no-quotes t_string">select
   *

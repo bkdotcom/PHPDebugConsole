@@ -58,13 +58,13 @@ class Helper
         $methods = $abs['methods'];
         foreach ($methods as &$methodInfo) {
             $methodInfo['phpDoc'] = array(
-                'desc' => null,
-                'summary' => null,
+                'desc' => '',
+                'summary' => '',
             );
             foreach (\array_keys($methodInfo['params']) as $index) {
-                $methodInfo['params'][$index]['desc'] = null;
+                $methodInfo['params'][$index]['desc'] = '';
             }
-            $methodInfo['return']['desc'] = null;
+            $methodInfo['return']['desc'] = '';
         }
         $abs['methods'] = $methods;
     }

@@ -89,7 +89,7 @@ class Table
                     'attribs' => array(),
                     'class' => null,
                     'key' => null,
-                    'summary' => null,
+                    'summary' => '',
                 ),
                 isset($this->options['tableInfo']['rows'][$k])
                     ? $this->options['tableInfo']['rows'][$k]

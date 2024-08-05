@@ -121,7 +121,7 @@ class ProfileTest extends DebugTestFramework
                                     )),
                                 ),
                             ),
-                            'summary' => null,
+                            'summary' => '',
                         ),
                     ), $logEntry['meta']);
                 },

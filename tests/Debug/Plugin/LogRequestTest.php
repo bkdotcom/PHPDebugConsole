@@ -340,7 +340,7 @@ class LogRequestTest extends DebugTestFramework
                                     'isScalar' => true,
                                 ),
                             ),
-                            'summary' => null,
+                            'summary' => '',
                         ),
 
                     ),
@@ -384,7 +384,7 @@ class LogRequestTest extends DebugTestFramework
                                     'isScalar' => true,
                                 ),
                             ),
-                            'summary' => null,
+                            'summary' => '',
                         ),
                     ),
                 ),

@@ -271,10 +271,10 @@ class StatementInfo extends AbstractComponent
         $afterWhereKeys = array('groupBy', 'having', 'window', 'orderBy', 'limit', 'for');
         $afterWhereValues = \array_intersect_key($parsed, \array_flip($afterWhereKeys));
         $haveMore = \count($afterWhereValues) > 0;
-        if ($parsed['where']) {
+        if ($parsed['where'] && \strlen($parsed['where']) < 30) {
             $label .= $parsed['afterMethod'] ? ' (…)' : '';
             $label .= ' WHERE ' . $parsed['where'];
-        } elseif ($parsed['afterMethod']) {
+        } elseif (\array_filter(array($parsed['afterMethod'], $parsed['where']))) {
             $haveMore = true;
         }
         if ($haveMore) {

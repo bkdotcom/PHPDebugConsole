@@ -12,8 +12,8 @@
 
 namespace bdk\Debug\Dump\Html;
 
-use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
+use bdk\Debug\Abstraction\Object\Abstraction as ObjectAbstraction;
 
 /**
  * Dump object properties as HTML
@@ -23,11 +23,11 @@ class ObjectProperties extends AbstractObjectSection
     /**
      * Dump object properties as HTML
      *
-     * @param Abstraction $abs Object Abstraction instance
+     * @param ObjectAbstraction $abs Object Abstraction instance
      *
      * @return string html fragment
      */
-    public function dump(Abstraction $abs)
+    public function dump(ObjectAbstraction $abs)
     {
         $cfg = array(
             'attributeOutput' => $abs['cfgFlags'] & AbstractObject::PROP_ATTRIBUTE_OUTPUT,
@@ -68,11 +68,11 @@ class ObjectProperties extends AbstractObjectSection
     /**
      * get property "header"
      *
-     * @param Abstraction $abs Object Abstraction instance
+     * @param ObjectAbstraction $abs Object Abstraction instance
      *
      * @return string html fragment
      */
-    protected function getLabel(Abstraction $abs)
+    protected function getLabel(ObjectAbstraction $abs)
     {
         if (\count($abs['properties']) === 0) {
             return 'no properties';

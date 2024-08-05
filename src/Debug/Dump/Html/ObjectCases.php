@@ -12,8 +12,8 @@
 
 namespace bdk\Debug\Dump\Html;
 
-use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
+use bdk\Debug\Abstraction\Object\Abstraction as ObjectAbstraction;
 
 /**
  * Dump object constants and Enum cases as HTML
@@ -23,11 +23,11 @@ class ObjectCases extends AbstractObjectSection
     /**
      * Dump enum cases
      *
-     * @param Abstraction $abs Object Abstraction instance
+     * @param ObjectAbstraction $abs Object Abstraction instance
      *
      * @return string html fragment
      */
-    public function dump(Abstraction $abs)
+    public function dump(ObjectAbstraction $abs)
     {
         if (\strpos(\json_encode($abs['implements']), '"UnitEnum"') === false) {
             return '';

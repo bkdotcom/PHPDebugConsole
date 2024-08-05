@@ -180,7 +180,7 @@ class GroupTest extends DebugTestFramework
                 ),
             ),
             'return' => array(
-                'desc' => null,
+                'desc' => '',
                 'type' => 'string',
             ),
             'returnValue' => 'toStringVal',

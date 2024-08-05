@@ -71,7 +71,7 @@ class Table
                 )
                 */
             ),
-            'summary' => null, // if table is an obj... phpDoc summary
+            'summary' => '', // if table is an obj... phpDoc summary
         ),
         'totalCols' => array(),
     );
@@ -297,12 +297,12 @@ class Table
             /**
              * @psalm-var array{
              *    classname: string,
-             *    phpDoc: array{summary: string|null},
+             *    phpDoc: array{summary: string},
              *    properties: array<string, array<string,mixed>>,
              *    traverseValues?: array,
              * } $rows
-             */
-            /**
+             *
+             *
              * @psalm-suppress MixedArrayAssignment
              * @psalm-suppress MixedPropertyTypeCoercion pslam bug tableInfo becomes mixed
              */
@@ -443,7 +443,7 @@ class Table
     {
         unset($rowInfo['classes']);
         $rowInfo = \array_filter($rowInfo, static function ($val) {
-            return $val !== null && $val !== false;
+            return \in_array($val, array(null, false, ''), true) === false;
         });
         if (!$rowInfo) {
             return;

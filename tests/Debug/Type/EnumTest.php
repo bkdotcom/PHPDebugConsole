@@ -66,7 +66,7 @@ class EnumTest extends DebugTestFramework
                                         'name' => 'bdk\Test\Debug\Fixture\Enum\ExampleCaseAttribute',
                                     ),
                                 ),
-                                'desc' => null,
+                                'desc' => '',
                                 'isFinal' => false,
                                 'value' => Abstracter::UNDEFINED,
                                 'visibility' => 'public',
@@ -158,21 +158,21 @@ class EnumTest extends DebugTestFramework
                         self::assertSame(array(
                             'BREAKFAST' => array(
                                 'attributes' => array(),
-                                'desc' => null,
+                                'desc' => '',
                                 'isFinal' => false,
                                 'value' => 'breakfast',
                                 'visibility' => 'public',
                             ),
                             'DINNER' => array(
                                 'attributes' => array(),
-                                'desc' => null,
+                                'desc' => '',
                                 'isFinal' => false,
                                 'value' => 'dinner',
                                 'visibility' => 'public',
                             ),
                             'LUNCH' => array(
                                 'attributes' => array(),
-                                'desc' => null,
+                                'desc' => '',
                                 'isFinal' => false,
                                 'value' => 'lunch',
                                 'visibility' => 'public',

@@ -39,8 +39,8 @@ use Reflector;
  *   tags:list<string>,
  * }
  * @psalm-type Parsed = array{
- *   desc: string|null,
- *   summary?: string|null,
+ *   desc: string,
+ *   summary?: string,
  *   ...<string,array>,
  * }
  */
@@ -235,12 +235,12 @@ class PhpDoc
     private function parseGetDefaults(array $parsed)
     {
         $default = array(
-            'desc' => null,
-            'summary' => null,
+            'desc' => '',
+            'summary' => '',
         );
         if ($this->reflector instanceof ReflectionMethod || !empty($parsed['param'])) {
             $default['return'] = array(
-                'desc' => null,
+                'desc' => '',
                 'type' => null,
             );
         }
@@ -283,7 +283,10 @@ class PhpDoc
         $parser = $this->parsers->getTagParser($tagName);
         $parsed = $parser['regex']
             ? $this->parseTagRegex($parser, $tagStr)
-            : \array_fill_keys($parser['parts'], null);
+            : \array_merge(
+                \array_fill_keys($parser['parts'], null),
+                \array_fill_keys(\array_intersect($parser['parts'], array('desc', 'summary')), '')
+            );
         foreach ((array) $parser['callable'] as $callable) {
             $parsed = \call_user_func(
                 $callable,
@@ -318,9 +321,12 @@ class PhpDoc
         $matches = array();
         \preg_match($parser['regex'], $tagStr, $matches);
         foreach ($parser['parts'] as $part) {
+            $default = \in_array($part, array('desc', 'summary'), true)
+                ? ''
+                : null;
             $parsed[$part] = isset($matches[$part]) && $matches[$part] !== ''
                 ? \trim($matches[$part])
-                : null;
+                : $default;
         }
         return $parsed;
     }
@@ -378,9 +384,6 @@ class PhpDoc
             $parentParsed = $this->parseParent($this->reflector);
             $parsed['summary'] = $parentParsed['summary'];
             $parsed['desc'] = $parentParsed['desc'];
-            return $parsed;
-        }
-        if (!isset($parsed['desc'])) {
             return $parsed;
         }
         $parsed['desc'] = \preg_replace_callback(

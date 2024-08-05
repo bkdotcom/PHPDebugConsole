@@ -172,7 +172,7 @@ class MonologHandlerTest extends DebugTestFramework
                     'haveObjRow' => false,
                     'indexLabel' => null,
                     'rows' => array(),
-                    'summary' => null,
+                    'summary' => '',
                 ),
             ),
         ), $this->helper->logEntryToArray($this->debug->data->get('log/__end__')));

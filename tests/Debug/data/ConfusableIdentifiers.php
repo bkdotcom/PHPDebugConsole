@@ -106,17 +106,17 @@ return array(
                 ),
             ),
             'phpDoc' => array(
-                'desc' => null,
+                'desc' => '',
                 'summary' => 'Magic method... inaccessible method called.',
                 'throws' => array(
                     array(
-                        'desc' => null,
+                        'desc' => '',
                         'type' => 'BadMethodCallException',
                     ),
                 ),
             ),
             'return' => array(
-                'desc' => null,
+                'desc' => '',
                 'type' => 'mixed',
             ),
             'staticVars' => array(),
@@ -136,7 +136,7 @@ return array(
                 array(
                     'attributes' => array(),
                     'defaultValue' => Abstracter::UNDEFINED,
-                    'desc' => null,
+                    'desc' => '',
                     'isOptional' => false,
                     'isPassedByReference' => false,
                     'isPromoted' => false,
@@ -147,7 +147,7 @@ return array(
                 array(
                     'attributes' => array(),
                     'defaultValue' => Abstracter::UNDEFINED,
-                    'desc' => null,
+                    'desc' => '',
                     'isOptional' => false,
                     'isPassedByReference' => false,
                     'isPromoted' => false,
@@ -157,11 +157,11 @@ return array(
                 ),
             ),
             'phpDoc' => array(
-                'desc' => null,
-                'summary' => null,
+                'desc' => '',
+                'summary' => '',
             ),
             'return' => array(
-                'desc' => null,
+                'desc' => '',
                 'type' => null,
             ),
             'staticVars' => array(),
@@ -182,7 +182,7 @@ return array(
             'isStatic' => false,
             'params' => array(),
             'phpDoc' => array(
-                'desc' => null,
+                'desc' => '',
                 'summary' => 'M[ɑ]gic <b>method</b>',
             ),
             'return' => array(
@@ -205,11 +205,11 @@ return array(
             'isStatic' => false,
             'params' => array(),
             'phpDoc' => array(
-                'desc' => null,
-                'summary' => null,
+                'desc' => '',
+                'summary' => '',
             ),
             'return' => array(
-                'desc' => null,
+                'desc' => '',
                 'type' => null,
             ),
             'staticVars' => array(),
@@ -227,11 +227,11 @@ return array(
             'isStatic' => false,
             'params' => array(),
             'phpDoc' => array(
-                'desc' => null,
-                'summary' => null,
+                'desc' => '',
+                'summary' => '',
             ),
             'return' => array(
-                'desc' => null,
+                'desc' => '',
                 'type' => null,
             ),
             'staticVars' => array(),
@@ -251,7 +251,7 @@ return array(
                 array(
                     'attributes' => array(),
                     'defaultValue' => 'vаl,սe',
-                    'desc' => null,
+                    'desc' => '',
                     'isOptional' => false,
                     'isPassedByReference' => false,
                     'isPromoted' => false,
@@ -262,7 +262,7 @@ return array(
                 array(
                     'attributes' => array(),
                     'defaultValue' => 1,
-                    'desc' => null,
+                    'desc' => '',
                     'isOptional' => false,
                     'isPassedByReference' => false,
                     'isPromoted' => false,
@@ -273,7 +273,7 @@ return array(
                 array(
                     'attributes' => array(),
                     'defaultValue' => true,
-                    'desc' => null,
+                    'desc' => '',
                     'isOptional' => false,
                     'isPassedByReference' => false,
                     'isPromoted' => false,
@@ -284,7 +284,7 @@ return array(
                 array(
                     'attributes' => array(),
                     'defaultValue' => null,
-                    'desc' => null,
+                    'desc' => '',
                     'isOptional' => false,
                     'isPassedByReference' => false,
                     'isPromoted' => false,
@@ -295,7 +295,7 @@ return array(
                 array(
                     'attributes' => array(),
                     'defaultValue' => 'array(\'<script>alert("xss")</script>\')',
-                    'desc' => null,
+                    'desc' => '',
                     'isOptional' => false,
                     'isPassedByReference' => false,
                     'isPromoted' => false,
@@ -311,7 +311,7 @@ return array(
                         'type' => Type::TYPE_CONST,
                         'value' => 'fσo',
                     ),
-                    'desc' => null,
+                    'desc' => '',
                     'isOptional' => false,
                     'isPassedByReference' => false,
                     'isPromoted' => false,
@@ -321,11 +321,11 @@ return array(
                 ),
             ),
             'phpDoc' => array(
-                'desc' => null,
+                'desc' => '',
                 'summary' => 'T[е]st :) <b>method</b>',
             ),
             'return' => array(
-                'desc' => null,
+                'desc' => '',
                 'type' => Type::TYPE_BOOL,
             ),
             'staticVars' => array(),
@@ -363,7 +363,7 @@ return array(
                         )
                         : array(),
                     'defaultValue' => '<b>v</b>alսe',
-                    'desc' => null,
+                    'desc' => '',
                     'isOptional' => true,
                     'isPassedByReference' => false,
                     'isPromoted' => false,
@@ -393,7 +393,7 @@ return array(
                 ),
             ),
             'return' => array(
-                'desc' => null,
+                'desc' => '',
                 'type' => Type::TYPE_BOOL,
             ),
             'staticVars' => array(),

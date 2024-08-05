@@ -49,9 +49,6 @@ class ParseMethod
         $parsed = $this->parseParam($parsed, $info);
         $parsed['static'] = $parsed['static'] !== null;
         $parsed['type'] = $info['phpDoc']->type->normalize($parsed['type'], $info['className'], $info['fullyQualifyType']);
-        if ($parsed['desc'] === '') {
-            $parsed['desc'] = null;
-        }
         return $parsed;
     }
 

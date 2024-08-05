@@ -56,7 +56,7 @@ class Clear implements SubscriberInterface
     /**
      * Clear the log
      *
-     * This method executes even if `collect` is false
+     * This method executes even if `collect` is `false`
      *
      * @param int $bitmask A bitmask of options
      *                     `self::CLEAR_ALERTS` : Clear alerts generated with `alert()`

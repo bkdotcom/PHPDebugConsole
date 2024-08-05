@@ -204,7 +204,7 @@ EOD;
                         'haveObjRow' => false,
                         'indexLabel' => null,
                         'rows' => array(),
-                        'summary' => null,
+                        'summary' => '',
                     ),
                 ),
             ),

@@ -48,10 +48,10 @@ class PhpDocTest extends TestCase
                     "name": "Brad Kent"
                 }
             ],
-            "desc": null,
+            "desc": "",
             "link": [
                 {
-                    "desc": null,
+                    "desc": "",
                     "uri": "https:\/\/github.com\/bkdotcom\/PHPDebugConsole"
                 }
             ],
@@ -129,7 +129,7 @@ class PhpDocTest extends TestCase
             ],
             "see": [
                 {
-                    "desc": null,
+                    "desc": "",
                     "fqsen": "subclass::method()",
                     "uri": null
                 }
@@ -154,8 +154,8 @@ EOD;
 
         $parsed = Debug::getInstance()->phpDoc->getParsed('\bdk\Test\Debug\Fixture\Utility\PhpDocNoParent');
         self::assertSame(array(
-            'desc' => null,
-            'summary' => null,
+            'desc' => '',
+            'summary' => '',
         ), $parsed);
     }
 
@@ -167,7 +167,7 @@ EOD;
                 array(
                     'desc' => 'Tests that self resolves to fully qualified SomeInterface',
                     'return' => array(
-                        'desc' => null,
+                        'desc' => '',
                         'type' => 'bdk\Test\Debug\Fixture\SomeInterface',
                     ),
                     'summary' => 'SomeInterface summary',
@@ -176,9 +176,9 @@ EOD;
             'someMethod2' => array(
                 '\bdk\Test\Debug\Fixture\Utility\PhpDocImplements::someMethod2()',
                 array(
-                    'desc' => null,
+                    'desc' => '',
                     'return' => array(
-                        'desc' => null,
+                        'desc' => '',
                         'type' => 'Ding\\Dang',
                     ),
                     'summary' => 'SomeInterface summary',
@@ -189,7 +189,7 @@ EOD;
                 array(
                     'desc' => 'PhpDocExtends desc / PhpDocImplements desc',
                     'return' => array(
-                        'desc' => null,
+                        'desc' => '',
                         'type' => null,
                     ),
                     'summary' => 'PhpDocExtends summary',
@@ -198,9 +198,9 @@ EOD;
             'someMethod4' => array(
                 '\bdk\Test\Debug\Fixture\Utility\PhpDocExtends::someMethod4()',
                 array(
-                    'desc' => null,
+                    'desc' => '',
                     'return' => array(
-                        'desc' => null,
+                        'desc' => '',
                         'type' => 'foo\\bar\\baz',
                     ),
                     'summary' => 'Test that baz resolves to foo\bar\baz',
@@ -209,9 +209,9 @@ EOD;
             'someMethod5' => array(
                 '\bdk\Test\Debug\Fixture\Utility\PhpDocExtends::someMethod5()',
                 array(
-                    'desc' => null,
+                    'desc' => '',
                     'return' => array(
-                        'desc' => null,
+                        'desc' => '',
                         'type' => 'bdk\\Test\\Debug\\Fixture\\TestObj',
                     ),
                     'summary' => 'Test that TestObj resolves to bdk\Test\Debug\Fixture\TestObj',
@@ -220,12 +220,12 @@ EOD;
             'noParent' => array(
                 '\bdk\Test\Debug\Fixture\Utility\PhpDocNoParent::someMethod()',
                 array(
-                    'desc' => null,
+                    'desc' => '',
                     'return' => array(
-                        'desc' => null,
+                        'desc' => '',
                         'type' => null,
                     ),
-                    'summary' => null,
+                    'summary' => '',
                 ),
             ),
             'comment (no namespace)' => array(
@@ -234,7 +234,7 @@ EOD;
                   * @param stdClass $obj plain ol object
                   */',
                 array(
-                    'desc' => null,
+                    'desc' => '',
                     'param' => array(
                         array(
                             'desc' => 'plain ol object',
@@ -244,7 +244,7 @@ EOD;
                         ),
                     ),
                     'return' => array(
-                        'desc' => null,
+                        'desc' => '',
                         'type' => null,
                     ),
                     'summary' => 'some function',
@@ -266,7 +266,7 @@ EOD;
     {
         $phpDoc = Debug::getInstance()->phpDoc->getParsed('\bdk\Test\Debug\Fixture\Test2::$magicReadProp');
         self::assertSame(array(
-            'desc' => null,
+            'desc' => '',
             'summary' => 'This property is important',
             'var' => array(
                 array(
@@ -279,7 +279,7 @@ EOD;
 
         $parsed = Debug::getInstance()->phpDoc->getParsed('\bdk\Test\Debug\Fixture\Utility\PhpDocImplements::$someProperty');
         self::assertSame(array(
-            'desc' => null,
+            'desc' => '',
             'summary' => '$someProperty summary',
             'var' => array(
                 array(
@@ -299,13 +299,13 @@ EOD;
         $reflector = Reflection::getReflector('bdk\Test\Debug\Fixture\Utility\PhpDocExtends::SOME_CONSTANT');
         $parsed = Debug::getInstance()->phpDoc->getParsed($reflector);
         self::assertSame(array(
-            'desc' => null,
+            'desc' => '',
             'summary' => 'Interface summary',
         ), $parsed);
 
         $parsed = Debug::getInstance()->phpDoc->getParsed('\bdk\Test\Debug\Fixture\Utility\PhpDocExtends::SOME_CONSTANT');
         self::assertSame(array(
-            'desc' => null,
+            'desc' => '',
             'summary' => 'Interface summary',
         ), $parsed);
     }
@@ -318,8 +318,8 @@ EOD;
                  * @var string $comment phpdoc comment
                  */',
                 array(
-                    'desc' => null,
-                    'summary' => null,
+                    'desc' => '',
+                    'summary' => '',
                     'var' => array(
                         array(
                             'desc' => 'phpdoc comment',
@@ -334,17 +334,17 @@ EOD;
                  * @method boolean magicMethod()
                  */',
                 array(
-                    'desc' => null,
+                    'desc' => '',
                     'method' => array(
                         array(
-                            'desc' => null,
+                            'desc' => '',
                             'name' => 'magicMethod',
                             'param' => array(),
                             'static' => false,
                             'type' => 'bool',
                         ),
                     ),
-                    'summary' => null,
+                    'summary' => '',
                 ),
             ),
             'missing $' => array(
@@ -352,20 +352,20 @@ EOD;
                  * @param string | null comment
                  */',
                 array(
-                    'desc' => null,
+                    'desc' => '',
                     'param' => array(
                         array(
-                            'desc' => null,
+                            'desc' => '',
                             'isVariadic' => false,
                             'name' => 'comment',
                             'type' => 'string|null',
                         ),
                     ),
                     'return' => array(
-                        'desc' => null,
+                        'desc' => '',
                         'type' => null,
                     ),
-                    'summary' => null,
+                    'summary' => '',
                 ),
             ),
             'missing $ 2' => array(
@@ -373,7 +373,7 @@ EOD;
                  * @param "some(str\"ing" comment here
                  */',
                 array(
-                    'desc' => null,
+                    'desc' => '',
                     'param' => array(
                         array(
                             'desc' => 'comment here',
@@ -383,10 +383,10 @@ EOD;
                         ),
                     ),
                     'return' => array(
-                        'desc' => null,
+                        'desc' => '',
                         'type' => null,
                     ),
-                    'summary' => null,
+                    'summary' => '',
                 ),
             ),
             'multi lines' => array(
@@ -410,7 +410,7 @@ EOD;
                         ),
                     ),
                     'return' => array(
-                        'desc' => null,
+                        'desc' => '',
                         'type' => 'self',
                     ),
                     'summary' => 'Ding.',
@@ -421,12 +421,12 @@ EOD;
                 * @return array{title: string, value: string, short: false} Very clear description
                 */',
                 array(
-                    'desc' => null,
+                    'desc' => '',
                     'return' => array(
                         'desc' => 'Very clear description',
                         'type' => 'array{title: string, value: string, short: false}',
                     ),
-                    'summary' => null,
+                    'summary' => '',
                 ),
             ),
             'complexType 2' => array(
@@ -434,12 +434,12 @@ EOD;
                 * @return array<array{title: string, value: string, short: false}> mumbo jumbo
                 */',
                 array(
-                    'desc' => null,
+                    'desc' => '',
                     'return' => array(
                         'desc' => 'mumbo jumbo',
                         'type' => 'array<array{title: string, value: string, short: false}>',
                     ),
-                    'summary' => null,
+                    'summary' => '',
                 ),
             ),
             'complexType 3' => array(
@@ -447,7 +447,7 @@ EOD;
                 * @param array<string, mixed>|Foo $var blah blah
                 */',
                 array(
-                    'desc' => null,
+                    'desc' => '',
                     'param' => array(
                         array(
                             'desc' => 'blah blah',
@@ -457,10 +457,10 @@ EOD;
                         ),
                     ),
                     'return' => array(
-                        'desc' => null,
+                        'desc' => '',
                         'type' => null,
                     ),
-                    'summary' => null,
+                    'summary' => '',
                 ),
             ),
         );

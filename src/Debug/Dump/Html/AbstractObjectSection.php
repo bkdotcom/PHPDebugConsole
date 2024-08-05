@@ -13,6 +13,7 @@
 namespace bdk\Debug\Dump\Html;
 
 use bdk\Debug\Abstraction\Abstracter;
+use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
 use bdk\Debug\Abstraction\Object\Abstraction as ObjectAbstraction;
 use bdk\Debug\Dump\Html\Helper;
@@ -48,6 +49,17 @@ abstract class AbstractObjectSection
     }
 
     /**
+     * Dump object cases, constants, properties, or methods
+     *
+     * Likely calls self::dumpItems()
+     *
+     * @param ObjectAbstraction $abs Object Abstraction instance
+     *
+     * @return string html fragment
+     */
+    abstract public function dump(ObjectAbstraction $abs);
+
+    /**
      * Iterate over cases, constants, properties, or methods
      *
      * @param ObjectAbstraction $abs  Object abstraction
@@ -66,7 +78,21 @@ abstract class AbstractObjectSection
         ), $cfg);
         return $cfg['groupByInheritance']
             ? $this->dumpItemsByInheritance($abs, $cfg)
-            : $this->dumpItemsFiltered($abs, \array_keys($abs[$what]), $cfg);
+            : $this->dumpItemsFiltered($abs, \array_keys($this->getItems($abs, $what)), $cfg);
+    }
+
+    /**
+     * Build "inherited from" classname heading/divider
+     *
+     * @param string $className Class name
+     *
+     * @return string
+     */
+    protected function buildInheritedFromHeading($className)
+    {
+        return '<dd class="heading">Inherited from '
+            . $this->valDumper->markupIdentifier($className, 'classname')
+            . '</dd>' . "\n";
     }
 
     /**
@@ -131,7 +157,8 @@ abstract class AbstractObjectSection
     private function dumpItemsFiltered(ObjectAbstraction $abs, array $keys, array $cfg)
     {
         $html = '';
-        $items = \array_intersect_key($abs[$cfg['what']], \array_flip($keys));
+        $items = $this->getItems($abs, $cfg['what']);
+        $items = \array_intersect_key($items, \array_flip($keys));
         $items = $abs->sort($items, $abs['sort']);
         $absKeys = $abs['keys'];
         foreach ($items as $name => $info) {
@@ -158,7 +185,7 @@ abstract class AbstractObjectSection
     /**
      * group by inheritance... with headings
      *
-     * @param ObjectAbstraction    $abs ObjectAbstraction instance
+     * @param ObjectAbstraction   $abs ObjectAbstraction instance
      * @param array<string,mixed> $cfg Config options
      *
      * @return string
@@ -166,15 +193,16 @@ abstract class AbstractObjectSection
     private function dumpItemsByInheritance(ObjectAbstraction $abs, array $cfg)
     {
         $html = '';
-        $className = $abs['className'];
-        $classes = $this->getInheritedClasses($abs, $abs['what']);
-        \array_unshift($classes, $className);
-        $items = $abs->sort($abs[$cfg['what']], $abs['sort']);
+        $items = $this->getItems($abs, $cfg['what']);
+        $items = $abs->sort($items, $abs['sort']);
         $itemCount = \count($items);
         $itemOutCount = 0;
         // stop looping over classes when we've output everything
         // no sense in showing "inherited from" when no more inherited items
         // Or, we could only display the heading when itemsFiltered non-empty
+        $className = $abs['className'];
+        $classes = $this->getInheritedClasses($abs, $abs['what']);
+        \array_unshift($classes, $className);
         while ($classes && $itemOutCount < $itemCount) {
             $classNameCur = \array_shift($classes);
             $itemsFiltered = \array_filter($items, static function ($info) use ($classNameCur) {
@@ -183,8 +211,8 @@ abstract class AbstractObjectSection
             $keys = \array_keys($itemsFiltered);
             $items = \array_diff_key($items, $itemsFiltered);
             $itemOutCount += \count($itemsFiltered);
-            $html .= \in_array($classNameCur, array($className, 'stdClass'), true) === false
-                ? '<dd class="heading">Inherited from ' . $this->valDumper->markupIdentifier($classNameCur, 'classname') . '</dd>' . "\n"
+            $html .= $itemsFiltered && \in_array($classNameCur, array($className, 'stdClass'), true) === false
+                ? $this->buildInheritedFromHeading($classNameCur)
                 : '';
             $html .= $this->dumpItemsFiltered($abs, $keys, $cfg);
         }
@@ -234,7 +262,7 @@ abstract class AbstractObjectSection
     }
 
     /**
-     * Get classes
+     * Get css classes to apply to item
      *
      * @param array<string,mixed> $info Abstraction info
      *
@@ -273,7 +301,20 @@ abstract class AbstractObjectSection
     }
 
     /**
-     * Get "modifiers" (final, readonly, static)
+     * Get the items to be dumped
+     *
+     * @param ObjectAbstraction $abs  Object abstraction
+     * @param string            $what 'cases', 'constants', 'properties', or 'methods'
+     *
+     * @return array
+     */
+    protected function getItems(ObjectAbstraction $abs, $what)
+    {
+        return $abs[$what];
+    }
+
+    /**
+     * Get "modifiers" (abstract, final, readonly, static, etc)
      *
      * @param array<string,mixed> $info Abstraction info
      *

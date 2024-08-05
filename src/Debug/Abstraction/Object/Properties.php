@@ -34,7 +34,7 @@ class Properties extends AbstractInheritable
         'declaredOrig' => null,         // Class where originally declared
         'declaredPrev' => null,         // Class where previously declared
                                         //   populated only if overridden
-        'desc' => null,                 // from phpDoc
+        'desc' => '',                   // from phpDoc
         'forceShow' => false,           // initially show the property/value (even if protected or private)
                                         //   if value is an array, expand it
         'isPromoted' => false,
@@ -339,7 +339,7 @@ class Properties extends AbstractInheritable
                 : array(),
             'desc' => $abs['cfgFlags'] & AbstractObject::PHPDOC_COLLECT
                 ? $phpDoc['desc'] // actually the "summary"
-                : null,
+                : '',
             'isPromoted' =>  PHP_VERSION_ID >= 80000
                 ? $refProperty->isPromoted()
                 : false,

@@ -28,6 +28,7 @@ class AbstractComponent
 
     /**
      * Magic getter
+     *
      * Get inaccessible / undefined properties
      * Lazy load child classes
      *
@@ -113,8 +114,8 @@ class AbstractComponent
     /**
      * Set one or more config values
      *
-     *    setCfg('key', 'value')
-     *    setCfg(array('k1'=>'v1', 'k2'=>'v2'))
+     *     setCfg('key', 'value')
+     *     setCfg(array('k1'=>'v1', 'k2'=>'v2'))
      *
      * Calls self::postSetCfg() with new values and previous values
      *

@@ -15,6 +15,7 @@ namespace bdk\Debug\Dump\Html;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
+use bdk\Debug\Abstraction\Object\Abstraction as ObjectAbstraction;
 use bdk\Debug\Abstraction\Type;
 
 /**
@@ -28,11 +29,11 @@ class ObjectMethods extends AbstractObjectSection
     /**
      * Dump object methods as html
      *
-     * @param Abstraction $abs Object Abstraction instance
+     * @param ObjectAbstraction $abs Object Abstraction instance
      *
      * @return string html fragment
      */
-    public function dump(Abstraction $abs)
+    public function dump(ObjectAbstraction $abs)
     {
         $this->opts = array(
             'attributeOutput' => $abs['cfgFlags'] & AbstractObject::METHOD_ATTRIBUTE_OUTPUT,
@@ -299,11 +300,11 @@ class ObjectMethods extends AbstractObjectSection
     /**
      * Returns <dt class="methods">methods</dt>
      *
-     * @param Abstraction $abs Object Abstraction instance
+     * @param ObjectAbstraction $abs Object Abstraction instance
      *
      * @return string html fragment
      */
-    protected function getLabel(Abstraction $abs)
+    protected function getLabel(ObjectAbstraction $abs)
     {
         if (!($abs['cfgFlags'] & AbstractObject::METHOD_COLLECT)) {
             return 'methods <i>not collected</i>';

@@ -41,7 +41,7 @@ class Helper
         $split = \array_replace(array('', '', ''), $split);
         // assume that summary and desc won't be "0"..  remove empty value and merge
         return \array_filter(array(
-            'desc' => self::trimDesc(\trim($split[2])),
+            'desc' => self::trimDesc($split[2]),
             'summary' => \trim($split[0] . $split[1]),    // split[1] is the ".\n"
         ));
     }
@@ -55,24 +55,23 @@ class Helper
      */
     public static function trimDesc($desc)
     {
-        $lines = \explode("\n", (string) $desc);
+        $desc = \rtrim((string) $desc);
+        $lines = \explode("\n", $desc);
         $leadingSpaces = array();
+        $trimLineStart = 0;
         foreach (\array_filter($lines) as $line) {
             $leadingSpaces[] = \strspn($line, ' ');
         }
-        \array_shift($leadingSpaces);    // first line will always have zero leading spaces
+        if (\reset($leadingSpaces) === 0) {
+            $trimLineStart = 1;
+            \array_shift($leadingSpaces);
+        }
         $trimLen = $leadingSpaces
             ? \min($leadingSpaces)
             : 0;
-        if (!$trimLen) {
-            return $desc;
+        for ($i = $trimLineStart, $count = \count($lines); $i < $count; $i++) {
+            $lines[$i] = \substr($lines[$i], $trimLen);
         }
-        foreach ($lines as $i => $line) {
-            $lines[$i] = $i > 0 && \strlen($line)
-                ? \substr($line, $trimLen)
-                : $line;
-        }
-        $desc = \implode("\n", $lines);
-        return $desc;
+        return \implode("\n", $lines);
     }
 }

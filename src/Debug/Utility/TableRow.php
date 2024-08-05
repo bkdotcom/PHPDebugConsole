@@ -23,7 +23,7 @@ use bdk\Debug\Abstraction\Type;
  *   class: string|null,
  *   classes: array<string, string|false>,
  *   isScalar: bool,
- *   summary: string|null,
+ *   summary: string,
  * }
  */
 class TableRow
@@ -46,7 +46,7 @@ class TableRow
         'class' => null,
         'classes' => array(), // key => classname (or false if not stringified class)
         'isScalar' => false,
-        'summary' => null,
+        'summary' => '',
     );
 
     /**

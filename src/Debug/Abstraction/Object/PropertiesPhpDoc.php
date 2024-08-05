@@ -138,7 +138,7 @@ class PropertiesPhpDoc
                 'declaredLast' => $declaredLast,
                 'desc' => $abs['cfgFlags'] & AbstractObject::PHPDOC_COLLECT
                     ? $phpDocProp['desc']
-                    : null,
+                    : '',
                 'type' => $phpDocProp['type'],
                 'visibility' => $existing
                     ? array($vis, $existing['visibility']) // we want "magic" visibility first

@@ -121,7 +121,7 @@ class StatementInfoTest extends DebugTestFramework
                         "haveObjRow": false,
                         "indexLabel": null,
                         "rows": [],
-                        "summary": null
+                        "summary": ""
                     }
                 }
             },

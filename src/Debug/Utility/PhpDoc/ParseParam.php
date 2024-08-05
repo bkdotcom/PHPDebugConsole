@@ -39,7 +39,7 @@ class ParseParam
         }
         if ($tagName === 'param' && $parsed['name'] === null && \strpos((string) $parsed['desc'], ' ') === false) {
             $parsed['name'] = $parsed['desc'];
-            $parsed['desc'] = null;
+            $parsed['desc'] = '';
         }
         if ($tagName === 'param') {
             $parsed['isVariadic'] = \strpos((string) $parsed['name'], '...') !== false;

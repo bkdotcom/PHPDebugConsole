@@ -75,8 +75,8 @@ class Definition
         'methods' => array(),
         'methodsWithStaticVars' => array(),
         'phpDoc' => array(
-            'desc' => null,
-            'summary' => null,
+            'desc' => '',
+            'summary' => '',
         ),
         'properties' => array(),
     );
@@ -239,7 +239,7 @@ class Definition
         $phpDoc = $this->helper->getPhpDoc($reflector, $fullyQualifyType);
         while (
             ($reflector = $reflector->getParentClass())
-            && $phpDoc === array('desc' => null, 'summary' => null)
+            && $phpDoc === array('desc' => '', 'summary' => '')
         ) {
             $phpDoc = $this->helper->getPhpDoc($reflector, $fullyQualifyType);
         }

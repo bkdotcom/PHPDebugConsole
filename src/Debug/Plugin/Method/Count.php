@@ -45,8 +45,8 @@ class Count implements SubscriberInterface
     /**
      * Log the number of times this has been called with the given label.
      *
-     * Count is maintained even when `collect` is false
-     * If `collect` = false, `count()` will be performed "silently"
+     * Count is maintained even when `collect` is `false`
+     * If `collect` = `false`, `count()` will be performed "silently"
      *
      * @param mixed $label Label.  If omitted, logs the number of times `count()` has been called at this particular line.
      * @param int   $flags (optional) A bitmask of
@@ -68,7 +68,7 @@ class Count implements SubscriberInterface
     /**
      * Resets the counter
      *
-     * Counter is reset even when debugging is disabled (ie `collect` is false).
+     * Counter is reset even when debugging is disabled (ie `collect` is `false`).
      *
      * @param mixed $label (optional) specify the counter to reset
      * @param int   $flags (optional) currently only one option :

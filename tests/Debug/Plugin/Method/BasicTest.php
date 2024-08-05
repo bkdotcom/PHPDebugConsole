@@ -92,7 +92,7 @@ class BasicTest extends DebugTestFramework
                             'haveObjRow' => false,
                             'indexLabel' => null,
                             'rows' => array(),
-                            'summary' => null,
+                            'summary' => '',
                         ),
                     ), $logEntry['meta']);
                 },

@@ -12,8 +12,8 @@
 
 namespace bdk\Debug\Dump\Html;
 
-use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
+use bdk\Debug\Abstraction\Object\Abstraction as ObjectAbstraction;
 
 /**
  * Dump object constants as HTML
@@ -23,11 +23,11 @@ class ObjectConstants extends AbstractObjectSection
     /**
      * Dump object constants
      *
-     * @param Abstraction $abs Object Abstraction instance
+     * @param ObjectAbstraction $abs Object Abstraction instance
      *
      * @return string html fragment
      */
-    public function dump(Abstraction $abs)
+    public function dump(ObjectAbstraction $abs)
     {
         $cfg = array(
             'attributeOutput' => $abs['cfgFlags'] & AbstractObject::CONST_ATTRIBUTE_OUTPUT,

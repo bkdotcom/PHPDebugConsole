@@ -79,7 +79,7 @@ class Parsers
      * @param array $parsed Parsed tag info
      * @param array $info   tagName, raw tag string, etc
      *
-     * @return array{desc:string|null,type:string}
+     * @return array{desc:string,type:string}
      *
      * @psalm-param TagInfo $info
      *
@@ -101,7 +101,7 @@ class Parsers
         }
         $type = \substr($tagStr, 0, self::$typeInfo['pos']);
         return \array_merge($parsed, array(
-            'desc' => \trim(\substr($tagStr, \strlen($type))) ?: null,
+            'desc' => \trim(\substr($tagStr, \strlen($type))),
             'type' => $type,
         ));
     }

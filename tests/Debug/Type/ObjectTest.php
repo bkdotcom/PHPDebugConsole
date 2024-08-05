@@ -572,15 +572,15 @@ EOD;
                             // constant reflection is php 7.1+
                             foreach ($objAbs['constants'] as $name => $const) {
                                 // definition still collects everything regardless
-                                self::assertNotNull($const['desc'], $name . ' desc is null');
+                                self::assertNotEmpty($const['desc'], $name . ' desc is empty');
                             }
                         }
 
                         $propsWithDesc = array('magicProp','magicReadProp','propPrivate','propPublic','testBasePrivate');
                         foreach ($objAbs['properties'] as $name => $prop) {
                             \in_array($name, $propsWithDesc, true)
-                                ? self::assertNotNull($prop['desc'])
-                                : self::assertNull($prop['desc']);
+                                ? self::assertNotSame('', $prop['desc'])
+                                : self::assertSame('', $prop['desc']);
                         }
 
                         /*
@@ -1149,11 +1149,11 @@ EOD;
                             'desc' => 'this method is bad and should feel bad',
                         ),
                     ),
-                    'desc' => null,
+                    'desc' => '',
                     'summary' => 'This method is public',
                 ),
                 'return' => array(
-                    'desc' => null,
+                    'desc' => '',
                     'type' => 'void',
                 ),
                 // 'staticVars' => array()

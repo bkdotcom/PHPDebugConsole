@@ -39,7 +39,7 @@ class MethodParams
     private static $baseParamInfo = array(
         'attributes' => array(),
         'defaultValue' => Abstracter::UNDEFINED,
-        'desc' => null,
+        'desc' => '',
         'isOptional' => false,
         'isPassedByReference' => false,
         'isPromoted' => false,
@@ -280,7 +280,7 @@ class MethodParams
     private function phpDocParam($name, array $phpDocParamsByName)
     {
         return \array_merge(array(
-            'desc' => null,
+            'desc' => '',
             'isVariadic' => false,
             'type' => null,
         ), isset($phpDocParamsByName[$name]) ? $phpDocParamsByName[$name] : array());

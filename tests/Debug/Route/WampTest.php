@@ -73,7 +73,7 @@ class WampTest extends DebugTestFramework
                             'haveObjRow' => false,
                             'indexLabel' => null,
                             'rows' => array(),
-                            'summary' => null,
+                            'summary' => '',
                         ),
                         'trace' => $frames,
                         'uncollapse' => true,

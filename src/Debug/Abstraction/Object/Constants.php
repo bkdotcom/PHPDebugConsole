@@ -45,7 +45,7 @@ class Constants extends AbstractInheritable
         'declaredLast' => null,
         'declaredOrig' => null,
         'declaredPrev' => null,
-        'desc' => null,
+        'desc' => '',
         'isFinal' => false,
         'type' => null,
         'value' => null,

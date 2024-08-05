@@ -675,7 +675,7 @@ EOD;
                                 : null,
                             'desc' => PHP_VERSION_ID >= 70100
                                 ? 'Interface summary'
-                                : null,
+                                : '',
                             'isFinal' => false,
                             'type' => null,
                             'value' => 'never change',
@@ -975,7 +975,7 @@ EOD;
                 'declaredPrev' => null,
                 'desc' => PHP_VERSION_ID >= 70100
                     ? 'Inherited description'
-                    : null,
+                    : '',
                 'isFinal' => false,
                 'type' => null,
                 'value' => 'defined in TestBase',
@@ -992,7 +992,7 @@ EOD;
                     : null,
                 'desc' => PHP_VERSION_ID >= 70100
                     ? 'constant documentation'
-                    : null,
+                    : '',
                 'isFinal' => false,
                 'type' => null,
                 'value' => 'redefined in Test',

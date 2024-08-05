@@ -39,7 +39,7 @@ return array(
             'declaredPrev' => null,
             'desc' => PHP_VERSION_ID >= 70100
                 ? '[𐊢]onst <b>desc</b>'
-                : null,
+                : '',
             'isFinal' => false,
             'type' => null,
             'value' => 'fσo',

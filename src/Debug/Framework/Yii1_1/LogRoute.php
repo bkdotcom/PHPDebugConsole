@@ -288,7 +288,12 @@ class LogRoute extends CLogRoute
         // this is an accurate way to get channel for saved to cache... not so much for from cache
         //  we have no connectionString to channel mapping
         $groupId = StatementInfo::lastGroupId();
-        $debug = $this->debug->data->get('log.' . $groupId)->getSubject();
+        $groupLogEntry = $this->debug->data->get('log.' . $groupId);
+        if (empty($groupLogEntry)) {
+            // collect is/was off?
+            return true;
+        }
+        $debug = $groupLogEntry->getSubject();
         $returnValue = 'saved to cache';
 
         if (\strpos($logEntry['message'], 'Serving') === 0) {

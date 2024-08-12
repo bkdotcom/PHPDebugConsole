@@ -45,8 +45,11 @@ class Constants extends AbstractInheritable
         'declaredLast' => null,
         'declaredOrig' => null,
         'declaredPrev' => null,
-        'desc' => '',
         'isFinal' => false,
+        'phpDoc' => array(
+            'desc' => '',
+            'summary' => '',
+        ),
         'type' => null,
         'value' => null,
         'visibility' => 'public',
@@ -109,6 +112,18 @@ class Constants extends AbstractInheritable
     }
 
     /**
+     * Build constant info by passing values
+     *
+     * @param array $values Values to apply
+     *
+     * @return array
+     */
+    public static function buildValues($values = array())
+    {
+        return \array_merge(static::$baseConstInfo, $values);
+    }
+
+    /**
      * Get constants (php < 7.1)
      *
      * @param ReflectionClass $reflector ReflectionClass instance
@@ -121,7 +136,7 @@ class Constants extends AbstractInheritable
         foreach ($reflector->getConstants() as $name => $value) {
             $info = isset($this->constants[$name])
                 ? $this->constants[$name]
-                : \array_merge(static::$baseConstInfo, array('value' => $value));
+                : static::buildValues(array('value' => $value));
             // no reflection... unable to determine declaredLast & declaredPrev
             $info['declaredOrig'] = $className;
             $this->constants[$name] = $info;
@@ -166,14 +181,14 @@ class Constants extends AbstractInheritable
      */
     private function getCaseRefInfo(ReflectionEnumUnitCase $refCase)
     {
+        $phpDoc = $this->helper->getPhpDocVar($refCase);
+        unset($phpDoc['type']);
         return array(
             'attributes' => $this->attributeCollect
                 ? $this->helper->getAttributes($refCase)
                 : array(),
-            'desc' => $this->phpDocCollect
-                ? $this->helper->getPhpDocVar($refCase)['desc'] // actually the summary
-                : '',
             'isFinal' => $refCase->isFinal(),
+            'phpDoc' => $phpDoc,
             'value' => $refCase instanceof ReflectionEnumBackedCase
                 ? $refCase->getBackingValue()
                 : Abstracter::UNDEFINED,
@@ -194,19 +209,18 @@ class Constants extends AbstractInheritable
         if ($value instanceof UnitEnum) {
             $value = $this->abstracter->crate($value, $this->abs['debugMethod']);
         }
-        return \array_merge(static::$baseConstInfo, array(
+        $phpDoc = $this->helper->getPhpDocVar($refConstant, $this->abs['fullyQualifyPhpDocType']);
+        $type = $this->helper->getType($phpDoc['type'], $refConstant);
+        unset($phpDoc['type']);
+        return static::buildValues(array(
             'attributes' => $this->attributeCollect
                 ? $this->helper->getAttributes($refConstant)
                 : array(),
-            'desc' => $this->phpDocCollect
-                ? $this->helper->getPhpDocVar($refConstant)['desc'] // actually the summary
-                : '',
             'isFinal' => PHP_VERSION_ID >= 80100
                 ? $refConstant->isFinal()
                 : false,
-            'type' => PHP_VERSION_ID >= 80300
-                ? $this->helper->getTypeString($refConstant->getType())
-                : null,
+            'phpDoc' => $phpDoc,
+            'type' => $type,
             'value' => $value,
             'visibility' => $this->helper->getVisibility($refConstant),
         ));

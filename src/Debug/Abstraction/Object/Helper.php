@@ -19,8 +19,10 @@ use bdk\Debug\Utility\Php as PhpUtil;
 use bdk\Debug\Utility\PhpDoc;
 use ReflectionAttribute;
 use ReflectionClass;
+use ReflectionMethod;
 use ReflectionNamedType;
 use ReflectionParameter;
+use ReflectionProperty;
 use ReflectionType;
 use Reflector;
 
@@ -104,30 +106,6 @@ class Helper
     }
 
     /**
-     * Get param type
-     *
-     * @param ReflectionParameter $refParameter reflectionParameter
-     *
-     * @return string|null
-     */
-    public static function getParamType(ReflectionParameter $refParameter)
-    {
-        if (PHP_VERSION_ID >= 70000) {
-            return self::getTypeString($refParameter->getType());
-        }
-        if ($refParameter->isArray()) {
-            // isArray is deprecated in php 8.0
-            // isArray is only concerned with type-hint and does not look at default value
-            return 'array';
-        }
-        if (\preg_match('/\[\s<\w+>\s([\w\\\\]+)/s', $refParameter->__toString(), $matches)) {
-            // Parameter #0 [ <required> namespace\Type $varName ]
-            return $matches[1];
-        }
-        return null;
-    }
-
-    /**
      * Get parsed PhpDoc
      *
      * @param Reflector $reflector        Reflector instance
@@ -141,9 +119,9 @@ class Helper
     }
 
     /**
-     * Get type and description from phpDoc comment for Constant or Property
+     * Get type and description from phpDoc comment for Constant, Case, or Property
      *
-     * @param Reflector $reflector        ReflectionProperty or ReflectionClassConstant property object
+     * @param Reflector $reflector        ReflectionClassConstant, ReflectionEnumUnitCase, or ReflectionProperty
      * @param bool      $fullyQualifyType Whether to further parse / resolve types
      *
      * @return array
@@ -152,31 +130,35 @@ class Helper
     {
         /** @psalm-suppress NoInterfaceProperties */
         $name = $reflector->name;
-        $phpDoc = $this->getPhpDoc($reflector, $fullyQualifyType);
-        $info = array(
-            'desc' => $phpDoc['summary'],
+        $phpDoc = \array_merge(array(
+            'desc' => '',
+            'summary' => '',
+            'type' => null,
+            'var' => array(),
+        ), $this->getPhpDoc($reflector, $fullyQualifyType));
+        $foundVar = array(
+            'desc' => '',
             'type' => null,
         );
-        if (isset($phpDoc['var']) === false) {
-            return $info;
-        }
         /*
             php's getDocComment doesn't play nice with compound statements
-            https://docs.phpdoc.org/3.0/guide/references/phpdoc/tags/var.html
+            https://github.com/php-fig/fig-standards/blob/master/proposed/phpdoc-tags.md#518-var
+
+            @todo check other constants/properties for matching @var tag
         */
-        $var = array();
         foreach ($phpDoc['var'] as $var) {
             if ($var['name'] === $name) {
-                break;
+                $foundVar = $var;
             }
         }
-        $info['type'] = $var['type'];
-        if (!$info['desc']) {
-            $info['desc'] = $var['desc'];
-        } elseif ($var['desc']) {
-            $info['desc'] = $info['desc'] . ': ' . $var['desc'];
+        unset($phpDoc['var']);
+        $phpDoc['type'] = $foundVar['type'];
+        if (!$phpDoc['summary']) {
+            $phpDoc['summary'] = $foundVar['desc'];
+        } elseif ($foundVar['desc']) {
+            $phpDoc['summary'] = \trim($phpDoc['summary'] . "\n\n" . $foundVar['desc']);
         }
-        return $info;
+        return $phpDoc;
     }
 
     /**
@@ -215,13 +197,42 @@ class Helper
     }
 
     /**
+     * Get Constant, Property, or Parameter's type or Method's return type
+     * Priority given to phpDoc type, followed by reflection type (if available)
+     *
+     * @param string                                                                          $phpDocType Type specified in phpDoc block
+     * @param ReflectionClassConstant|ReflectionMethod|ReflectionParameter|ReflectionProperty $reflector  ClassConstant, Method, Parameter, or Property Reflector instance
+     *
+     * @return string|null
+     */
+    public static function getType($phpDocType, Reflector $reflector)
+    {
+        if ($phpDocType !== null) {
+            return $phpDocType;
+        }
+        if (\method_exists($reflector, 'getType')) {
+            // ReflectionClassConstant : php >= 8.3
+            // ReflectionParameter : php >= 7.0
+            // ReflectionProperty : php >= 7.4
+            return static::getTypeString($reflector->getType());
+        }
+        if ($reflector instanceof ReflectionMethod && PHP_VERSION_ID >= 70000) {
+            return static::getTypeString($reflector->getReturnType());
+        }
+        if ($reflector instanceof ReflectionParameter) {
+            return static::getParamTypeOld($reflector);
+        }
+        return null;
+    }
+
+    /**
      * Get string representation of ReflectionNamedType or ReflectionType
      *
      * @param ReflectionType|null $type ReflectionType
      *
      * @return string|null
      */
-    public static function getTypeString(ReflectionType $type = null)
+    protected static function getTypeString(ReflectionType $type = null)
     {
         if ($type === null) {
             return null;
@@ -229,5 +240,26 @@ class Helper
         return $type instanceof ReflectionNamedType
             ? $type->getName()
             : (string) $type;
+    }
+
+    /**
+     * Get parameter type from ReflectionParameter for PHP < 7.0
+     *
+     * @param ReflectionParameter $reflector ReflectionParameter instance
+     *
+     * @return string|null
+     */
+    protected static function getParamTypeOld(ReflectionParameter $reflector)
+    {
+        if ($reflector->isArray()) {
+            // isArray is deprecated in php 8.0
+            // isArray is only concerned with type-hint and does not look at default value
+            return 'array';
+        }
+        if (\preg_match('/\[\s<\w+>\s([\w\\\\]+)/s', $reflector->__toString(), $matches)) {
+            // Parameter #0 [ <required> namespace\Type $varName ]
+            return $matches[1];
+        }
+        return null;
     }
 }

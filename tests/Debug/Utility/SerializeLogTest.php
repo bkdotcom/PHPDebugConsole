@@ -403,6 +403,10 @@ EOD;
                 'debugInfoExcluded' => false,
                 'isPromoted' => false,
                 'isReadOnly' => false,
+                'phpDoc' => array(
+                    'desc' => '',
+                    'summary' => '',
+                ),
             ),
             $expect['log'][1][1][1]['properties']['foo']
         );
@@ -410,7 +414,7 @@ EOD;
         $serialized = SerializeLog::serialize($debug);
         $unserialized = SerializeLog::unserialize($serialized);
 
-        $keysCompare = array('alerts', 'log','logSummary');
+        $keysCompare = array('alerts', 'log', 'logSummary');
         foreach ($expect['log'] as $i => $logEntryArray) {
             if (empty($logEntryArray[2])) {
                 unset($expect['log'][$i][2]);

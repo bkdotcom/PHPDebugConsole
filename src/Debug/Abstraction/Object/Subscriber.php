@@ -135,12 +135,12 @@ class Subscriber implements SubscriberInterface
         $reflector = $abs['reflector'];
         $name = $abs->getSubject()->name;
         $caseReflector = $reflector->getCase($name);
-        $desc = $this->abstractObject->helper->getPhpDocVar($caseReflector)['desc'];
-        if ($desc) {
+        $phpDocCase = $this->abstractObject->helper->getPhpDocVar($caseReflector);
+        if ($phpDocCase) {
             $phpDoc = $this->abstractObject->helper->getPhpDoc($reflector);
             $phpDoc = \array_merge($phpDoc, array(
                 'desc' => \trim($phpDoc['summary'] . "\n" . $phpDoc['desc']),
-                'summary' => $desc,
+                'summary' => $phpDocCase['summary'],
             ));
             \ksort($phpDoc);
             $abs['phpDoc'] = $phpDoc;
@@ -193,13 +193,13 @@ class Subscriber implements SubscriberInterface
             'startLine' => $ref->getStartLine(),
         );
         $properties = $abs['properties'];
-        $properties['debug.file'] = $this->abstractObject->properties->buildPropValues(array(
+        $properties['debug.file'] = $this->abstractObject->properties->buildValues(array(
             'type' => Type::TYPE_STRING,
             'value' => $abs['definition']['fileName'],
             'valueFrom' => 'debug',
             'visibility' => 'debug',
         ));
-        $properties['debug.line'] = $this->abstractObject->properties->buildPropValues(array(
+        $properties['debug.line'] = $this->abstractObject->properties->buildValues(array(
             'type' => Type::TYPE_INT,
             'value' => (int) $abs['definition']['startLine'],
             'valueFrom' => 'debug',
@@ -250,7 +250,7 @@ class Subscriber implements SubscriberInterface
         foreach ($abs['methods']['__construct']['params'] as $info) {
             if ($info['isPromoted'] && $info['desc']) {
                 $paramName = $info['name'];
-                $abs['properties'][$paramName]['desc'] = $info['desc'];
+                $abs['properties'][$paramName]['phpDoc']['summary'] = $info['desc'];
             }
         }
     }

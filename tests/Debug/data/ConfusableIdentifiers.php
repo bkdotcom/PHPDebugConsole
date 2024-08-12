@@ -37,11 +37,16 @@ return array(
                 : null,
             'declaredOrig' => 'bdk\Test\Debug\Fixture\Con𝘧usableIdenti𝘧iers',
             'declaredPrev' => null,
-            'desc' => PHP_VERSION_ID >= 70100
-                ? '[𐊢]onst <b>desc</b>'
-                : '',
             'isFinal' => false,
-            'type' => null,
+            'phpDoc' => array(
+                'desc' => '',
+                'summary' => PHP_VERSION_ID >= 70100
+                    ? '[𐊢]onst <b>desc</b>'
+                    : '',
+            ),
+            'type' => PHP_VERSION_ID >= 70100
+                ? Type::TYPE_STRING
+                : null,
             'value' => 'fσo',
             'visibility' => 'public',
         ),
@@ -437,11 +442,14 @@ return array(
             'declaredLast' => 'bdk\Test\Debug\Fixture\Con𝘧usableIdenti𝘧iers',
             'declaredOrig' => 'bdk\Test\Debug\Fixture\Con𝘧usableIdenti𝘧iers',
             'declaredPrev' => null,
-            'desc' => 'key =&gt; value array',
             'forceShow' => false,
             'isPromoted' => false,
             'isReadOnly' => false,
             'isStatic' => false,
+            'phpDoc' => array(
+                'desc' => '',
+                'summary' => 'key =&gt; value array',
+            ),
             'type' => 'array<string,mixed>',
             'value' => array(
                 'debug' =>  Abstracter::ABSTRACTION,
@@ -490,11 +498,14 @@ return array(
             'declaredLast' => 'bdk\Test\Debug\Fixture\Con𝘧usableIdenti𝘧iers',
             'declaredOrig' => 'bdk\Test\Debug\Fixture\Con𝘧usableIdenti𝘧iers',
             'declaredPrev' => null,
-            'desc' => '[Ⲣ]roperty <b>desc</b>',
             'forceShow' => false,
             'isPromoted' => false,
             'isReadOnly' => false,
             'isStatic' => false,
+            'phpDoc' => array(
+                'desc' => '',
+                'summary' => '[Ⲣ]roperty <b>desc</b>',
+            ),
             'type' => Type::TYPE_STRING,
             'value' => 'moun𝐭ain',
             'valueFrom' => 'value',

@@ -572,15 +572,15 @@ EOD;
                             // constant reflection is php 7.1+
                             foreach ($objAbs['constants'] as $name => $const) {
                                 // definition still collects everything regardless
-                                self::assertNotEmpty($const['desc'], $name . ' desc is empty');
+                                self::assertNotEmpty($const['phpDoc']['summary'], $name . ' summary is empty');
                             }
                         }
 
-                        $propsWithDesc = array('magicProp','magicReadProp','propPrivate','propPublic','testBasePrivate');
+                        $propsWithSummary = array('magicProp','magicReadProp','propPrivate','propPublic','testBasePrivate');
                         foreach ($objAbs['properties'] as $name => $prop) {
-                            \in_array($name, $propsWithDesc, true)
-                                ? self::assertNotSame('', $prop['desc'])
-                                : self::assertSame('', $prop['desc']);
+                            \in_array($name, $propsWithSummary, true)
+                                ? self::assertNotSame('', $prop['phpDoc']['summary'])
+                                : self::assertSame('', $prop['phpDoc']['summary']);
                         }
 
                         /*
@@ -673,10 +673,13 @@ EOD;
                             'declaredPrev' => PHP_VERSION_ID >= 70100
                                 ? 'bdk\Test\Debug\Fixture\SomeInterface'
                                 : null,
-                            'desc' => PHP_VERSION_ID >= 70100
-                                ? 'Interface summary'
-                                : '',
                             'isFinal' => false,
+                            'phpDoc' => array(
+                                'desc' => '',
+                                'summary' => PHP_VERSION_ID >= 70100
+                                    ? 'Interface summary'
+                                    : '',
+                            ),
                             'type' => null,
                             'value' => 'never change',
                             'visibility' => 'public',
@@ -690,7 +693,9 @@ EOD;
                             ) . "\n"
                             // . '<dd class="heading">Inherited from <span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\Utility\</span>PhpDocImplements</span></dd>' . "\n"
                             . '<dt class="properties">properties</dt>' . "\n"
-                            . '<dd class="property public" data-declared-prev="bdk\Test\Debug\Fixture\Utility\PhpDocImplements"><span class="t_modifier_public">public</span> <span class="t_type">string</span> <span class="no-quotes t_identifier t_string" title="$someProperty summary: desc">someProperty</span> <span class="t_operator">=</span> <span class="t_string">St. James Place</span></dd>' . "\n"
+                            . '<dd class="property public" data-declared-prev="bdk\Test\Debug\Fixture\Utility\PhpDocImplements"><span class="t_modifier_public">public</span> <span class="t_type">string</span> <span class="no-quotes t_identifier t_string" title="$someProperty summary' . "\n"
+                                . "\n"
+                                . 'desc">someProperty</span> <span class="t_operator">=</span> <span class="t_string">St. James Place</span></dd>' . "\n"
                             . '<dd class="magic property"><span class="t_modifier_magic">magic</span> <span class="t_type">bool</span> <span class="no-quotes t_identifier t_string" title="I\'m avail via __get()">magicProp</span></dd>' . "\n"
                             . '<dd class="magic-read property"><span class="t_modifier_magic-read">magic-read</span> <span class="t_type">bool</span> <span class="no-quotes t_identifier t_string" title="Read Only!">magicReadProp</span></dd>' . "\n"
                             // . '<dd class="heading">Inherited from <span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\Utility\</span>PhpDocImplements</span></dd>' . "\n"
@@ -912,7 +917,7 @@ EOD;
             ),
         );
 
-        // $tests = \array_intersect_key($tests, \array_flip(array('constants')));
+        // $tests = \array_intersect_key($tests, \array_flip(array('phpDocExtends')));
 
         return $tests;
     }
@@ -973,10 +978,13 @@ EOD;
                     : null,
                 'declaredOrig' => 'bdk\Test\Debug\Fixture\TestBase',
                 'declaredPrev' => null,
-                'desc' => PHP_VERSION_ID >= 70100
-                    ? 'Inherited description'
-                    : '',
                 'isFinal' => false,
+                'phpDoc' => array(
+                    'desc' => '',
+                    'summary' => PHP_VERSION_ID >= 70100
+                        ? 'Inherited description'
+                        : '',
+                ),
                 'type' => null,
                 'value' => 'defined in TestBase',
                 'visibility' => 'public',
@@ -990,10 +998,13 @@ EOD;
                 'declaredPrev' => PHP_VERSION_ID >= 70100
                     ? 'bdk\Test\Debug\Fixture\TestBase'
                     : null,
-                'desc' => PHP_VERSION_ID >= 70100
-                    ? 'constant documentation'
-                    : '',
                 'isFinal' => false,
+                'phpDoc' => array(
+                    'desc' => '',
+                    'summary' => PHP_VERSION_ID >= 70100
+                        ? 'constant documentation'
+                        : '',
+                ),
                 'type' => null,
                 'value' => 'redefined in Test',
                 'visibility' => 'public',
@@ -1525,7 +1536,7 @@ EOD;
                     $abs = $logEntry['args'][0];
                     self::assertTrue($abs['properties']['arg1']['isPromoted']);
                     self::assertTrue($abs['methods']['__construct']['params'][0]['isPromoted']);
-                    self::assertSame('Attributed &amp; promoted param', $abs['properties']['arg1']['desc']);
+                    self::assertSame('Attributed &amp; promoted param', $abs['properties']['arg1']['phpDoc']['summary']);
                 },
                 'html' => static function ($html) {
                     $propExpect = \str_replacE('\\', '\\\\', '<dd class="isPromoted property public" data-attributes="[{&quot;arguments&quot;:[],&quot;name&quot;:&quot;bdk\\Test\\Debug\\Fixture\\ExampleParamAttribute&quot;}]"><span class="t_modifier_public">public</span> <span class="t_type">int</span> <span class="no-quotes t_identifier t_string" title="Attributed &amp;amp; promoted param">arg1</span> <span class="t_operator">=</span> <span class="t_int">42</span></dd>');

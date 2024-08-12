@@ -34,12 +34,15 @@ class Properties extends AbstractInheritable
         'declaredOrig' => null,         // Class where originally declared
         'declaredPrev' => null,         // Class where previously declared
                                         //   populated only if overridden
-        'desc' => '',                   // from phpDoc
         'forceShow' => false,           // initially show the property/value (even if protected or private)
                                         //   if value is an array, expand it
         'isPromoted' => false,
         'isReadOnly' => false,
         'isStatic' => false,
+        'phpDoc' => array(
+            'desc' => '',
+            'summary' => '',
+        ),
         'type' => null,
         'value' => Abstracter::UNDEFINED,
         'valueFrom' => 'value',         // 'value' | 'debugInfo' | 'debug'
@@ -83,13 +86,13 @@ class Properties extends AbstractInheritable
         }
 
         if ($abs['isAnonymous']) {
-            $properties['debug.file'] = static::buildPropValues(array(
+            $properties['debug.file'] = static::buildValues(array(
                 'type' => Type::TYPE_STRING,
                 'value' => $abs['definition']['fileName'],
                 'valueFrom' => 'debug',
                 'visibility' => 'debug',
             ));
-            $properties['debug.line'] = static::buildPropValues(array(
+            $properties['debug.line'] = static::buildValues(array(
                 'type' => Type::TYPE_INT,
                 'value' => (int) $abs['definition']['startLine'],
                 'valueFrom' => 'debug',
@@ -123,13 +126,13 @@ class Properties extends AbstractInheritable
     }
 
     /**
-     * Build property info buy passing values
+     * Build property info by passing values
      *
-     * @param array $values values to apply
+     * @param array $values Values to apply
      *
      * @return array
      */
-    public static function buildPropValues($values = array())
+    public static function buildValues($values = array())
     {
         return \array_merge(static::$basePropInfo, $values);
     }
@@ -158,7 +161,7 @@ class Properties extends AbstractInheritable
             What remains in debugInfo are __debugInfo only values
         */
         foreach ($abs['debugInfo'] as $name => $value) {
-            $properties[$name] = static::buildPropValues(array(
+            $properties[$name] = static::buildValues(array(
                 'value' => $value,
                 'valueFrom' => 'debugInfo',
                 'visibility' => 'debug',    // indicates this "property" is exclusive to debugInfo
@@ -333,13 +336,12 @@ class Properties extends AbstractInheritable
     {
         $phpDoc = $this->helper->getPhpDocVar($refProperty, $abs['fullyQualifyPhpDocType']);
         $refProperty->setAccessible(true); // only accessible via reflection
-        return static::buildPropValues(array(
+        $type = $this->helper->getType($phpDoc['type'], $refProperty);
+        unset($phpDoc['type']);
+        return static::buildValues(array(
             'attributes' => $abs['cfgFlags'] & AbstractObject::PROP_ATTRIBUTE_COLLECT
                 ? $this->helper->getAttributes($refProperty)
                 : array(),
-            'desc' => $abs['cfgFlags'] & AbstractObject::PHPDOC_COLLECT
-                ? $phpDoc['desc'] // actually the "summary"
-                : '',
             'isPromoted' =>  PHP_VERSION_ID >= 80000
                 ? $refProperty->isPromoted()
                 : false,
@@ -347,7 +349,8 @@ class Properties extends AbstractInheritable
                 ? $refProperty->isReadOnly()
                 : false,
             'isStatic' => $refProperty->isStatic(),
-            'type' => $this->getPropType($phpDoc['type'], $refProperty),
+            'phpDoc' => $phpDoc,
+            'type' => $type,
             'visibility' => $this->helper->getVisibility($refProperty),
         ));
     }
@@ -376,24 +379,5 @@ class Properties extends AbstractInheritable
         }
         $abs['keys'] = $keys;
         $abs['properties'] = $properties;
-    }
-
-    /**
-     * Get Property's type
-     * Priority given to phpDoc type, followed by declared type (PHP 7.4)
-     *
-     * @param string             $phpDocType  Type specified in phpDoc block
-     * @param ReflectionProperty $refProperty ReflectionProperty instance
-     *
-     * @return string|null
-     */
-    private function getPropType($phpDocType, ReflectionProperty $refProperty)
-    {
-        if ($phpDocType !== null) {
-            return $phpDocType;
-        }
-        return PHP_VERSION_ID >= 70400
-            ? $this->helper->getTypeString($refProperty->getType())
-            : null;
     }
 }

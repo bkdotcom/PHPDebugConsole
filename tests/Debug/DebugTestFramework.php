@@ -308,8 +308,8 @@ class DebugTestFramework extends DOMTestCase
                 $this->tstMethodTest($test, $logEntryTemp, $expect, $output);
             } catch (\Exception $e) { // ExpectationFailedException
                 $trace = $e->getTrace();
-                $file = null;
-                $line = null;
+                $file = $e->getFile();
+                $line = $e->getLine();
                 for ($i = 0, $count = \count($trace); $i < $count; $i++) {
                     $frame = $trace[$i];
                     if (isset($frame['class']) && \strpos($frame['class'], __NAMESPACE__) === 0) {

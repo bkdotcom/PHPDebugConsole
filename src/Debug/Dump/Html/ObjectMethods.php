@@ -265,7 +265,7 @@ class ObjectMethods extends AbstractObjectSection
     /**
      * {@inheritDoc}
      */
-    protected function getAttribs(array $info, array $cfg = array())
+    protected function getAttribs(array $info, array $cfg)
     {
         return \array_merge(parent::getAttribs($info, $this->opts), array(
             'data-deprecated-desc' => isset($info['phpDoc']['deprecated'])

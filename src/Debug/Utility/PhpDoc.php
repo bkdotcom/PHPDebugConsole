@@ -344,7 +344,7 @@ class PhpDoc
         $regexNotTag = '(?P<value>(?:(?!^@).)*)';
         $regexTags = '#^@(?P<tag>[\w-]+)[ \t]*' . $regexNotTag . '#imsu';
         \preg_match_all($regexTags, $str, $matches, PREG_SET_ORDER);
-        $singleTags = array('return');
+        $singleTags = array('package', 'return');
         $return = array();
         foreach ($matches as $match) {
             $value = $match['value'];

@@ -123,7 +123,7 @@ class Methods extends AbstractInheritable
      *
      * @return array
      */
-    public static function buildMethodValues(array $values = array())
+    public static function buildValues(array $values = array())
     {
         return \array_merge(static::$baseMethodInfo, $values);
     }
@@ -256,7 +256,7 @@ class Methods extends AbstractInheritable
         $className = $declaredLast
             ? $declaredLast
             : $abs['className'];
-        return $this->buildMethodValues(array(
+        return static::buildValues(array(
             'declaredLast' => $declaredLast,
             'isStatic' => $phpDoc['static'],
             'params' => $this->params->getParamsPhpDoc($abs, $phpDoc, $className),
@@ -355,8 +355,6 @@ class Methods extends AbstractInheritable
             $this->methodsWithStatic[] = $name;
         }
         unset($info['hasStaticVars']);
-        unset($info['phpDoc']['param']);
-        unset($info['phpDoc']['return']);
         $this->methods[$name] = $info;
     }
 
@@ -371,7 +369,11 @@ class Methods extends AbstractInheritable
     private function addViaRefBuildInit(Abstraction $abs, ReflectionMethod $refMethod)
     {
         $phpDoc = $this->helper->getPhpDoc($refMethod, $abs['fullyQualifyPhpDocType']);
-        return $this->buildMethodValues(array(
+        $returnTag = isset($phpDoc['return']) ? $phpDoc['return'] : array(
+            'desc' => '',
+            'type' => null,
+        );
+        return static::buildValues(array(
             'attributes' => $abs['cfgFlags'] & AbstractObject::METHOD_ATTRIBUTE_COLLECT
                 ? $this->helper->getAttributes($refMethod)
                 : array(),
@@ -381,32 +383,12 @@ class Methods extends AbstractInheritable
             'isFinal' => $refMethod->isFinal(),
             'isStatic' => $refMethod->isStatic(),
             'params' => $this->params->getParams($abs, $refMethod, $phpDoc),
-            'phpDoc' => $phpDoc,
-            'return' => $this->getReturn($refMethod, $phpDoc),
+            'phpDoc' => \array_diff_key($phpDoc, \array_flip(array('param', 'return'))),
+            'return' => array(
+                'desc' => $returnTag['desc'],
+                'type' => $this->helper->getType($returnTag['type'], $refMethod),
+            ),
             'visibility' => $this->helper->getVisibility($refMethod),
         ));
-    }
-
-    /**
-     * Get return type & desc
-     *
-     * @param ReflectionMethod $refMethod ReflectionMethod
-     * @param array            $phpDoc    parsed phpDoc param info
-     *
-     * @return array
-     */
-    private function getReturn(ReflectionMethod $refMethod, array $phpDoc)
-    {
-        $return = array(
-            'desc' => '',
-            'type' => null,
-        );
-        if (isset($phpDoc['return']['type'])) {
-            return \array_merge($return, $phpDoc['return']);
-        }
-        if (PHP_VERSION_ID >= 70000) {
-            $return['type'] = $this->helper->getTypeString($refMethod->getReturnType());
-        }
-        return $return;
     }
 }

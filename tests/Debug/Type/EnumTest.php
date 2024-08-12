@@ -47,15 +47,21 @@ class EnumTest extends DebugTestFramework
                         $expect = array(
                             'BREAKFAST' => array(
                                 'attributes' => array(),
-                                'desc' => 'The most important meal',
                                 'isFinal' => false,
+                                'phpDoc' => array(
+                                    'desc' => '',
+                                    'summary' => 'The most important meal',
+                                ),
                                 'value' => Abstracter::UNDEFINED,
                                 'visibility' => 'public',
                             ),
                             'DINNER' => array(
                                 'attributes' => array(),
-                                'desc' => 'What\'s for dinner?',
                                 'isFinal' => false,
+                                'phpDoc' => array(
+                                    'desc' => '',
+                                    'summary' => 'What\'s for dinner?',
+                                ),
                                 'value' => Abstracter::UNDEFINED,
                                 'visibility' => 'public',
                             ),
@@ -66,8 +72,11 @@ class EnumTest extends DebugTestFramework
                                         'name' => 'bdk\Test\Debug\Fixture\Enum\ExampleCaseAttribute',
                                     ),
                                 ),
-                                'desc' => '',
                                 'isFinal' => false,
+                                'phpDoc' => array(
+                                    'desc' => '',
+                                    'summary' => '',
+                                ),
                                 'value' => Abstracter::UNDEFINED,
                                 'visibility' => 'public',
                             ),
@@ -158,22 +167,31 @@ class EnumTest extends DebugTestFramework
                         self::assertSame(array(
                             'BREAKFAST' => array(
                                 'attributes' => array(),
-                                'desc' => '',
                                 'isFinal' => false,
+                                'phpDoc' => array(
+                                    'desc' => '',
+                                    'summary' => '',
+                                ),
                                 'value' => 'breakfast',
                                 'visibility' => 'public',
                             ),
                             'DINNER' => array(
                                 'attributes' => array(),
-                                'desc' => '',
                                 'isFinal' => false,
+                                'phpDoc' => array(
+                                    'desc' => '',
+                                    'summary' => '',
+                                ),
                                 'value' => 'dinner',
                                 'visibility' => 'public',
                             ),
                             'LUNCH' => array(
                                 'attributes' => array(),
-                                'desc' => '',
                                 'isFinal' => false,
+                                'phpDoc' => array(
+                                    'desc' => '',
+                                    'summary' => '',
+                                ),
                                 'value' => 'lunch',
                                 'visibility' => 'public',
                             ),

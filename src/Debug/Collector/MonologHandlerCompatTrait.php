@@ -12,6 +12,8 @@
 
 namespace bdk\Debug\Collector;
 
+use bdk\Debug\Abstraction\Object\Helper as ObjectHelper;
+
 /*
     Support HandlerInterface with/without return type in handle() method definition
 */
@@ -21,7 +23,7 @@ $refMethod = $refClass->getMethod('handle');
 
 if (\method_exists($refMethod, 'hasReturnType') && $refMethod->hasReturnType()) {
     $refParam = $refMethod->getParameters()[0];
-    $type = \bdk\Debug\Abstraction\Object\Helper::getParamType($refParam);
+    $type = ObjectHelper::getType(null, $refParam);
     require $type === 'array'
         ? __DIR__ . '/MonologHandlerCompatTrait_2.0.php'
         : __DIR__ . '/MonologHandlerCompatTrait_3.0.php';

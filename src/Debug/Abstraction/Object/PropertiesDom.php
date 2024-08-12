@@ -115,7 +115,7 @@ class PropertiesDom
             if (!$type) {
                 $type = $this->abstracter->type->getType($val)[0];
             }
-            $abs['properties'][$propName] = Properties::buildPropValues(array(
+            $abs['properties'][$propName] = Properties::buildValues(array(
                 'type' => $type,
                 'value' => \is_object($val)
                     ? Abstracter::NOT_INSPECTED

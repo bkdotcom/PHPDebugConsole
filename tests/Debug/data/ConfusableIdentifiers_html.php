@@ -20,7 +20,13 @@ C&lt;span class=&quot;unicode&quot; data-code-point=&quot;0196&quot; title=&quot
 </ul>
 </dd>
 <dt class="constants">constants</dt>
-<dd class="constant public"' . (PHP_VERSION_ID >= 80000 ? ' data-attributes="[{&quot;arguments&quot;:{&quot;f\u03c3o&quot;:&quot;ba\u0433&quot;},&quot;name&quot;:&quot;bdk\\\\Test\\\\Debug\\\\Fix\ud835\udc2dure\\\\Example\u0421onstAttribute&quot;}]" data-chars="[&quot;\u03c3&quot;,&quot;\u0433&quot;,&quot;\ud835\udc2d&quot;,&quot;\u0421&quot;]"' : '' ) . '><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string"' . (PHP_VERSION_ID >= 70100 ? ' title="[&lt;span class=&quot;unicode&quot; data-code-point=&quot;102A2&quot; title=&quot;U-102A2: CARIAN LETTER D&quot;&gt;𐊢&lt;/span&gt;]onst &lt;b&gt;desc&lt;/b&gt;"' : '' ) . '><span class="unicode" data-code-point="15B4" title="U-15B4: CANADIAN SYLLABICS BLACKFOOT WE">ᖴ</span>OO</span> <span class="t_operator">=</span> <span class="t_string">f<span class="unicode" data-code-point="03C3" title="U-03C3: GREEK SMALL LETTER SIGMA">σ</span>o</span></dd>
+<dd class="constant public"'
+    . (PHP_VERSION_ID >= 80000 ? ' data-attributes="[{&quot;arguments&quot;:{&quot;f\u03c3o&quot;:&quot;ba\u0433&quot;},&quot;name&quot;:&quot;bdk\\\\Test\\\\Debug\\\\Fix\ud835\udc2dure\\\\Example\u0421onstAttribute&quot;}]" data-chars="[&quot;\u03c3&quot;,&quot;\u0433&quot;,&quot;\ud835\udc2d&quot;,&quot;\u0421&quot;]"' : '' )
+    . '><span class="t_modifier_public">public</span> '
+    . (PHP_VERSION_ID >= 70100 ? '<span class="t_type">string</span> ' : '')
+    . '<span class="no-quotes t_identifier t_string"'
+    . (PHP_VERSION_ID >= 70100 ? ' title="[&lt;span class=&quot;unicode&quot; data-code-point=&quot;102A2&quot; title=&quot;U-102A2: CARIAN LETTER D&quot;&gt;𐊢&lt;/span&gt;]onst &lt;b&gt;desc&lt;/b&gt;"' : '' )
+    . '><span class="unicode" data-code-point="15B4" title="U-15B4: CANADIAN SYLLABICS BLACKFOOT WE">ᖴ</span>OO</span> <span class="t_operator">=</span> <span class="t_string">f<span class="unicode" data-code-point="03C3" title="U-03C3: GREEK SMALL LETTER SIGMA">σ</span>o</span></dd>
 <dt class="properties">properties</dt>
 <dd class="info magic">This object has a <code>__set</code> method</dd>
 <dd class="property public"><span class="t_modifier_public">public</span> <span class="t_type">array</span><span class="t_punct">&lt;</span><span class="t_type">string</span><span class="t_punct">,</span><span class="t_type">mixed</span><span class="t_punct">&gt;</span> <span class="no-quotes t_identifier t_string" title="key =&amp;gt; value array">array</span> <span class="t_operator">=</span> <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>

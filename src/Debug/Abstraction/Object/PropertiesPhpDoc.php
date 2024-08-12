@@ -17,7 +17,7 @@ use bdk\Debug\Abstraction\AbstractObject;
 use bdk\Debug\Abstraction\Object\Helper;
 
 /**
- * Get object property info
+ * Get object magic-property info
  */
 class PropertiesPhpDoc
 {
@@ -117,7 +117,7 @@ class PropertiesPhpDoc
     }
 
     /**
-     * Build property info from parsed PhpDoc values
+     * Build property info from parsed PhpDoc magic property values
      *
      * @param Abstraction $abs          Object Abstraction instance
      * @param array       $phpDocProp   parsed property docblock tag
@@ -133,12 +133,15 @@ class PropertiesPhpDoc
             ? $abs['properties'][$name]
             : null;
         return \array_merge(
-            $existing ?: Properties::buildPropValues(),
+            $existing ?: Properties::buildValues(),
             array(
                 'declaredLast' => $declaredLast,
-                'desc' => $abs['cfgFlags'] & AbstractObject::PHPDOC_COLLECT
-                    ? $phpDocProp['desc']
-                    : '',
+                'phpDoc' => array(
+                    'desc' => '',
+                    'summary' => $abs['cfgFlags'] & AbstractObject::PHPDOC_COLLECT
+                        ? $phpDocProp['desc']
+                        : '',
+                ),
                 'type' => $phpDocProp['type'],
                 'visibility' => $existing
                     ? array($vis, $existing['visibility']) // we want "magic" visibility first

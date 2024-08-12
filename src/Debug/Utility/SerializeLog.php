@@ -106,7 +106,7 @@ class SerializeLog
             'config' => array(
                 'channels' => array(),
             ),
-            'version' => '2.3',
+            'version' => '2.3', // prior to 3.0, we didn't include version
         ), $data);
         if (isset($data['rootChannel'])) {
             $data['config']['channelName'] = $data['rootChannel'];
@@ -217,21 +217,19 @@ class SerializeLog
     private static function importLegacyObj(array $absValues)
     {
         $absValues = AbstractObject::buildObjValues($absValues);
-        $baseMethodInfo = Methods::buildMethodValues();
         /**
          * @var array<string,array<string,mixed>> $absValues['methods']
          * @var array<string,mixed> $meth
          */
-        foreach ($absValues['methods'] as $name => $meth) {
-            $absValues['methods'][$name] = \array_merge($baseMethodInfo, $meth);
+        foreach ($absValues['methods'] as $name => $info) {
+            $absValues['methods'][$name] = Methods::buildValues($info);
         }
-        $basePropInfo = Properties::buildPropValues();
         /**
          * @var array<string,array<string,mixed>> $absValues['properties']
          * @var array<string,mixed> $prop
          */
-        foreach ($absValues['properties'] as $name => $prop) {
-            $absValues['properties'][$name] = \array_merge($basePropInfo, $prop);
+        foreach ($absValues['properties'] as $name => $info) {
+            $absValues['properties'][$name] = Properties::buildValues($info);
         }
         return self::onImportObj($absValues);
     }

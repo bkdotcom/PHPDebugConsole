@@ -78,7 +78,7 @@ abstract class AbstractObjectSection
         ), $cfg);
         return $cfg['groupByInheritance']
             ? $this->dumpItemsByInheritance($abs, $cfg)
-            : $this->dumpItemsFiltered($abs, \array_keys($this->getItems($abs, $what)), $cfg);
+            : $this->dumpItemsFiltered($abs, \array_keys($this->getItems($abs, $cfg)), $cfg);
     }
 
     /**
@@ -134,7 +134,7 @@ abstract class AbstractObjectSection
                 'attribs' => array(
                     'class' => array('t_identifier'),
                     'title' => $cfg['phpDocOutput']
-                        ? $this->helper->dumpPhpDoc($info['desc'])
+                        ? $this->helper->dumpPhpDoc($info['phpDoc']['summary'])
                         : '',
                 ),
             )),
@@ -157,7 +157,7 @@ abstract class AbstractObjectSection
     private function dumpItemsFiltered(ObjectAbstraction $abs, array $keys, array $cfg)
     {
         $html = '';
-        $items = $this->getItems($abs, $cfg['what']);
+        $items = $this->getItems($abs, $cfg);
         $items = \array_intersect_key($items, \array_flip($keys));
         $items = $abs->sort($items, $abs['sort']);
         $absKeys = $abs['keys'];
@@ -193,7 +193,7 @@ abstract class AbstractObjectSection
     private function dumpItemsByInheritance(ObjectAbstraction $abs, array $cfg)
     {
         $html = '';
-        $items = $this->getItems($abs, $cfg['what']);
+        $items = $this->getItems($abs, $cfg);
         $items = $abs->sort($items, $abs['sort']);
         $itemCount = \count($items);
         $itemOutCount = 0;
@@ -242,7 +242,7 @@ abstract class AbstractObjectSection
      *
      * @return array<string,mixed>
      */
-    protected function getAttribs(array $info, array $cfg = array())
+    protected function getAttribs(array $info, array $cfg)
     {
         $attribs = array(
             'class' => $this->getClasses($info),
@@ -303,13 +303,16 @@ abstract class AbstractObjectSection
     /**
      * Get the items to be dumped
      *
-     * @param ObjectAbstraction $abs  Object abstraction
-     * @param string            $what 'cases', 'constants', 'properties', or 'methods'
+     * Extend me for custom filtering
+     *
+     * @param ObjectAbstraction $abs Object abstraction
+     * @param array             $cfg Config options
      *
      * @return array
      */
-    protected function getItems(ObjectAbstraction $abs, $what)
+    protected function getItems(ObjectAbstraction $abs, array $cfg)
     {
+        $what = $cfg['what']; // 'cases', 'constants', 'properties', or 'methods'
         return $abs[$what];
     }
 

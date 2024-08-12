@@ -59,12 +59,22 @@ class Helper
         $lines = \explode("\n", $desc);
         $leadingSpaces = array();
         $trimLineStart = 0;
-        foreach (\array_filter($lines) as $line) {
-            $leadingSpaces[] = \strspn($line, ' ');
+        // collect leadingSpaces on non-empty lines
+        foreach (\array_filter($lines) as $i => $line) {
+            $leadingSpaces[$i] = \strspn($line, ' ');
         }
+        if (\count($leadingSpaces) === 0) {
+            // no non-empty lines
+            return '';
+        }
+        $lines = \array_slice($lines, \key($leadingSpaces)); // start with first non-empty line
         if (\reset($leadingSpaces) === 0) {
+            // first non-empty line has no leading spaces (ie a line-wrapped param description)
             $trimLineStart = 1;
-            \array_shift($leadingSpaces);
+            \array_shift($leadingSpaces); // don't include first line when determining trimLen
+        } elseif (\min($leadingSpaces) === 4) {
+            // special case where desc contains only code example(s)
+            return $desc;
         }
         $trimLen = $leadingSpaces
             ? \min($leadingSpaces)

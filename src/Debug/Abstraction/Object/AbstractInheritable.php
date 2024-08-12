@@ -14,6 +14,9 @@ namespace bdk\Debug\Abstraction\Object;
 
 use bdk\Debug\Abstraction\AbstractObject;
 use ReflectionClass;
+use ReflectionClassConstant;
+use ReflectionProperty;
+use Reflector;
 
 /**
  * Base class for collecting constants, properties, & methods

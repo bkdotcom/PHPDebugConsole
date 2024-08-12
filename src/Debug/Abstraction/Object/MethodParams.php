@@ -174,7 +174,7 @@ class MethodParams
                     ? $refParameter->isVariadic() || $phpDocParam['isVariadic']
                     : $phpDocParam['isVariadic'],
                 'name' => $name,
-                'type' => $this->getParamTypeHint($refParameter, $phpDocParam['type']),
+                'type' => $this->helper->getType($phpDocParam['type'], $refParameter),
             ));
         }
         \restore_error_handler();
@@ -226,21 +226,6 @@ class MethodParams
             // \bdk\Debug::log('namespace', $refParameter->getDeclaringFunction()->getNamespaceName());
         }
         return $name;
-    }
-
-    /**
-     * Get param type-hint
-     *
-     * @param ReflectionParameter $refParameter reflectionParameter
-     * @param string|null         $phpDocType   param's phpdoc type
-     *
-     * @return string|null
-     */
-    private function getParamTypeHint(ReflectionParameter $refParameter, $phpDocType)
-    {
-        return $phpDocType !== null
-            ? $phpDocType
-            : $this->helper->getParamType($refParameter);
     }
 
     /**

@@ -237,7 +237,7 @@ class AbstractObject extends AbstractComponent
      *
      * @return array<string,mixed>
      */
-    public static function buildObjValues(array $values = array())
+    public static function buildValues(array $values = array())
     {
         if (self::$values['cfgFlags'] === 0) {
             // calculate default cfgFlags (everything except for "brief")

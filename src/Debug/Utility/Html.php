@@ -41,7 +41,8 @@ class Html
 
     /**
      * The presence of these attributes = true / absence = false
-     * value not necessary, but may be written as key="key"  (ie autofocus="autofocus" )
+     *
+     * Value not necessary, but may be written as key="key"  (ie autofocus="autofocus" )
      *
      * @var array
      *
@@ -80,7 +81,7 @@ class Html
     );
 
     /**
-     * enum attributes that behave like bool, but have "true" / "false" value
+     * Enum attributes that behave like bool, but have "true" / "false" value
      *
      * @var array
      */

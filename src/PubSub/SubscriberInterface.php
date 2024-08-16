@@ -24,7 +24,7 @@ interface SubscriberInterface
      *  array: (required) _method_, (optional) int priority, (optional) bool onlyOnce)
      *  array: any combination of the above
      *
-     *  _method_ = string|Callable name of public method or Closure
+     *  _method_ = string|Callable name of public method or `Closure`
      *
      * @return array<string,string|array>
      */

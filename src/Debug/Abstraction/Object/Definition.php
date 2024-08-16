@@ -95,7 +95,7 @@ class Definition
         $this->methods = $abstractObject->methods;
         $this->properties = $abstractObject->properties;
 
-        $defaultValues = $abstractObject->buildObjValues();
+        $defaultValues = $abstractObject->buildValues();
         self::$values['cfgFlags'] = $defaultValues['cfgFlags'];
     }
 

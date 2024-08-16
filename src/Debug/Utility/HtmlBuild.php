@@ -18,6 +18,15 @@ namespace bdk\Debug\Utility;
 class HtmlBuild
 {
     /**
+     * Omit these attributes if the value is an empty string
+     *
+     * We never include the attribute if the value is null (unless it's a data or boolean enum attribute)
+     *
+     * @var list<string>
+     */
+    public static $omitIfEmptyAttrib = array('class', 'style', 'title');
+
+    /**
      * Build name="value"
      *
      * @param string $name  Attribute name
@@ -36,7 +45,7 @@ class HtmlBuild
         if ($value === null) {
             return '';
         }
-        if ($value === '' && \in_array($name, array('class', 'style'), true)) {
+        if ($value === '' && \in_array($name, self::$omitIfEmptyAttrib, true)) {
             return '';
         }
         return $name . '="' . \htmlspecialchars($value) . '"';
@@ -52,7 +61,7 @@ class HtmlBuild
      */
     private static function buildAttribVal($name, $val)
     {
-        switch (static::getType($name, $val)) {
+        switch (static::getAttribType($name, $val)) {
             case 'array':
                 /** @var string[] $val */
                 return static::buildAttribValArray($name, $val);
@@ -78,7 +87,7 @@ class HtmlBuild
     /**
      * Convert array attribute value to string
      *
-     * This function is not meant for data attributes
+     * Currently this method is only used for the "style" attribute
      *
      * @param string   $name   attribute name ("style")
      * @param string[] $values key/value for style
@@ -102,29 +111,36 @@ class HtmlBuild
      * Convert boolean attribute value to string
      *
      * @param string $name  Attribute name
-     * @param bool   $value true|false
+     * @param mixed  $value Attribute value
      *
      * @return string|null
      */
     private static function buildAttribValBool($name, $value = true)
     {
+        // opposite behavior of filter_var FILTER_VALIDATE_BOOLEAN
+        //    treat as true unless explicitly falsy value
+        $boolValue = !\in_array(\strtolower((string) $value), array('', 0, '0', 'false', 'no', 'off'), true);
+        if (\in_array($name, Html::$htmlBoolAttrEnum, true) === false) {
+            return $boolValue
+                ? $name // even if not a recognized boolean attribute... we will output name="name"
+                : null; // null = attribute won't be output
+        }
+        // non "true"/"false" bool attributes
         $enumValues = array(
-            'autocapitalize' => array('on','off'), // also takes other values (sentences, words, characters)
-            'autocomplete' => array('on','off'), // other values also accepted
-            'translate' => array('yes','no'),
+            'autocapitalize' => array('off', 'on', true), // also takes other values ("sentences", "words", "characters")
+            'autocomplete' => array('off', 'on', true), // other values also accepted
+            'translate' => array('no', 'yes', false),
         );
-        if (isset($enumValues[$name])) {
-            return $value
-                ? $enumValues[$name][0]
-                : $enumValues[$name][1];
-        }
-        if (\in_array($name, Html::$htmlBoolAttrEnum, true)) {
+        if (isset($enumValues[$name]) === false) {
             // "true" or "false"
-            return \json_encode($value);
+            return \json_encode($boolValue);
         }
-        return $value
-            ? $name // even if not a recognized boolean attribute
-            : null; // null = attribute won't be output
+        $opts = $enumValues[$name];
+        if ($opts[2] && \is_string($value)) {
+            // attribute may be "arbitrary" value
+            return $value;
+        }
+        return $opts[(int) $boolValue];
     }
 
     /**
@@ -164,12 +180,15 @@ class HtmlBuild
      * @param string $name Attribute name
      * @param mixed  $val  Attribute value
      *
-     * @return string 'class', data', 'array', 'bool', 'string', or 'null'
+     * @return string 'array', 'bool', 'class', data', 'id', 'null', 'string'
      */
-    private static function getType($name, $val)
+    private static function getAttribType($name, $val)
     {
         if (\substr($name, 0, 5) === 'data-') {
             return 'data';
+        }
+        if (self::isAttribBool($name, $val)) {
+            return 'bool';
         }
         if ($val === null) {
             return 'null';
@@ -177,12 +196,28 @@ class HtmlBuild
         if (\in_array($name, array('class', 'id'), true)) {
             return $name;
         }
-        if (\is_bool($val)) {
-            return 'bool';
-        }
         if (\is_array($val)) {
             return 'array';
         }
         return 'string';
+    }
+
+    /**
+     * Treat this attribute as boolean (incl boolean enum)?
+     *
+     * @param string $name Attribute name
+     * @param mixed  $val  Attribute value
+     *
+     * @return bool
+     */
+    private static function isAttribBool($name, $val)
+    {
+        if (\is_bool($val)) {
+            return true;
+        }
+        if (\in_array($name, Html::$htmlBoolAttr, true)) {
+            return true;
+        }
+        return \in_array($name, Html::$htmlBoolAttrEnum, true);
     }
 }

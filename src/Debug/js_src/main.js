@@ -54,25 +54,32 @@ loadDeps([
 ])
 
 $.fn.debugEnhance = function (method, arg1, arg2) {
-  // console.warn('debugEnhance', method, this)
-  if (method === 'sidebar') {
-    debugEnhanceSidebar(this, arg1)
-  } else if (method === 'buildChannelList') {
-    return enhanceMain.buildChannelList(arg1, arg2, arguments[3])
-  } else if (method === 'collapse') {
-    this.each(function () {
-      expandCollapse.collapse($(this), arg1)
-    })
-  } else if (method === 'expand') {
-    this.each(function () {
-      expandCollapse.expand($(this))
-    })
-  } else if (method === 'init') {
-    debugEnhanceInit(this, arg1)
-  } else if (method === 'setConfig') {
-    debugEnhanceSetConfig(this, arg1)
-  } else {
-    debugEnhanceDefault(this)
+  switch (method) {
+    case 'sidebar':
+      debugEnhanceSidebar(this, arg1)
+      break
+    case 'buildChannelList':
+      return enhanceMain.buildChannelList(arg1, arg2, arguments[3])
+      break
+    case 'collapse':
+      this.each(function () {
+        expandCollapse.collapse($(this), arg1)
+      })
+      break
+    case 'expand':
+      this.each(function () {
+        expandCollapse.expand($(this))
+      })
+      break
+    case 'init':
+      debugEnhanceInit(this, arg1)
+      break
+    case 'setConfig':
+      debugEnhanceSetConfig(this, arg1)
+      break
+    default:
+      debugEnhanceDefault(this)
+      break;
   }
   return this
 }
@@ -105,6 +112,7 @@ function debugEnhanceInit ($node, arg1) {
 function debugEnhanceDefault ($node) {
   $node.each(function () {
     var $self = $(this)
+    var $parentLis = {}
     if ($self.hasClass('debug')) {
       // console.warn('debugEnhance() : .debug')
       $self.find('.debug-menu-bar > nav, .tab-panes').show()
@@ -125,12 +133,10 @@ function debugEnhanceDefault ($node) {
       enhanceEntries.enhanceEntry($self)
     } else if ($self.prop('class').match(/\bt_/)) {
       // value
-      enhanceEntries.enhanceValue(
-        $self,
-        $self.parents('li').filter(function () {
-          return $(this).prop('class').match(/\bm_/) !== null
-        })
-      )
+      $parentLis = $self.parents('li').filter(function () {
+        return $(this).prop('class').match(/\bm_/) !== null
+      })
+      enhanceEntries.enhanceValue($self, $parentLis)
     }
     // console.groupEnd()
   })

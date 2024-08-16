@@ -95,23 +95,23 @@ class HtmlObject
      */
     public function dump(ObjectAbstraction $abs)
     {
-        $classname = $this->dumpClassname($abs);
+        $className = $this->dumpClassName($abs);
         if ($abs['isRecursion']) {
-            return $classname . "\n" . '<span class="t_recursion">*RECURSION*</span>';
+            return $className . "\n" . '<span class="t_recursion">*RECURSION*</span>';
         }
         if ($abs['isMaxDepth']) {
-            return $classname . "\n" . '<span class="t_maxDepth">*MAX DEPTH*</span>';
+            return $className . "\n" . '<span class="t_maxDepth">*MAX DEPTH*</span>';
         }
         if ($abs['isExcluded']) {
             return $this->dumpToString($abs)
-                . $classname . "\n" . '<span class="excluded">NOT INSPECTED</span>';
+                . $className . "\n" . '<span class="excluded">NOT INSPECTED</span>';
         }
         if (($abs['cfgFlags'] & AbstractObject::BRIEF) && \strpos(\json_encode($abs['implements']), '"UnitEnum"') !== false) {
             $this->valDumper->optionSet('tagName', null);
-            return $classname;
+            return $className;
         }
         $html = $this->dumpToString($abs)
-            . $classname . "\n"
+            . $className . "\n"
             . $this->dumpInner($abs);
         if (\strpos($abs['sort'], 'inheritance') === 0) {
             $this->valDumper->optionSet('attribs.class.__push__', 'groupByInheritance');
@@ -135,7 +135,7 @@ class HtmlObject
     {
         $str = '<ul class="list-unstyled">' . "\n";
         foreach ($implements as $k => $v) {
-            $classname = \is_array($v)
+            $className = \is_array($v)
                 ? $k
                 : $v;
             $str .= '<li>'
@@ -144,10 +144,10 @@ class HtmlObject
                     array(
                         'class' => array(
                             'interface' => true,
-                            'toggle-off' => \in_array($classname, $interfacesCollapse, true),
+                            'toggle-off' => \in_array($className, $interfacesCollapse, true),
                         ),
                     ),
-                    $this->valDumper->markupIdentifier($classname, 'classname')
+                    $this->valDumper->markupIdentifier($className, 'classname')
                 )
                 . (\is_array($v) ? "\n" . self::buildImplementsTree($v, $interfacesCollapse) : '')
                 . '</li>' . "\n";
@@ -172,7 +172,6 @@ class HtmlObject
             ' data-chars="[]"',
             ' data-declared-prev="null"',
             ' data-inherited-from="null"',
-            ' title=""',
         ), '', $html);
         return $html;
     }
@@ -249,20 +248,19 @@ class HtmlObject
     }
 
     /**
-     * Dump classname of object
-     * Classname may be wrapped in a span that includes phpDoc summary / desc
+     * Dump className of object
+     * ClassName may be wrapped in a span that includes phpDoc summary / desc
      *
      * @param ObjectAbstraction $abs Object Abstraction instance
      *
      * @return string html fragment
      */
-    protected function dumpClassname(ObjectAbstraction $abs)
+    protected function dumpClassName(ObjectAbstraction $abs)
     {
         $phpDocOutput = $abs['cfgFlags'] & AbstractObject::PHPDOC_OUTPUT;
         $title = $phpDocOutput
             ? $this->helper->dumpPhpDoc($abs['phpDoc']['summary'] . "\n\n" . $abs['phpDoc']['desc'])
             : null;
-        $title = $title ?: null;
         if (\strpos(\json_encode($abs['implements']), '"UnitEnum"') !== false) {
             return $this->html->buildTag(
                 'span',
@@ -279,7 +277,7 @@ class HtmlObject
     }
 
     /**
-     * Dump classnames of classes obj extends
+     * Dump classNames of classes obj extends
      *
      * @param ObjectAbstraction $abs Object Abstraction instance
      *
@@ -288,13 +286,13 @@ class HtmlObject
     protected function dumpExtends(ObjectAbstraction $abs)
     {
         return '<dt>extends</dt>' . "\n"
-            . \implode(\array_map(function ($classname) {
-                return '<dd class="extends">' . $this->valDumper->markupIdentifier($classname, 'classname') . '</dd>' . "\n";
+            . \implode(\array_map(function ($className) {
+                return '<dd class="extends">' . $this->valDumper->markupIdentifier($className, 'classname') . '</dd>' . "\n";
             }, $abs['extends']));
     }
 
     /**
-     * Dump classnames of interfaces obj extends
+     * Dump classNames of interfaces obj extends
      *
      * @param ObjectAbstraction $abs Object Abstraction instance
      *
@@ -302,11 +300,10 @@ class HtmlObject
      */
     protected function dumpImplements(ObjectAbstraction $abs)
     {
-        if (empty($abs['implements'])) {
-            return '';
-        }
-        return '<dt>implements</dt>' . "\n"
-            . '<dd class="implements">' . $this->buildImplementsTree($abs['implements'], $abs['interfacesCollapse']) . '</dd>' . "\n";
+        return empty($abs['implements'])
+            ? ''
+            : '<dt>implements</dt>' . "\n"
+                . '<dd class="implements">' . $this->buildImplementsTree($abs['implements'], $abs['interfacesCollapse']) . '</dd>' . "\n";
     }
 
     /**
@@ -325,13 +322,12 @@ class HtmlObject
             'readonly' => $abs['isReadOnly'],
             'trait' => $abs['isTrait'],
         )));
-        if (empty($modifiers)) {
-            return '';
-        }
-        return '<dt class="modifiers">modifiers</dt>' . "\n"
-            . \implode('', \array_map(static function ($modifier) {
-                return '<dd class="t_modifier_' . $modifier . '">' . $modifier . '</dd>' . "\n";
-            }, $modifiers));
+        return empty($modifiers)
+            ? ''
+            : '<dt class="modifiers">modifiers</dt>' . "\n"
+                . \implode('', \array_map(static function ($modifier) {
+                    return '<dd class="t_modifier_' . $modifier . '">' . $modifier . '</dd>' . "\n";
+                }, $modifiers));
     }
 
     /**
@@ -345,11 +341,11 @@ class HtmlObject
     {
         $len = 0;
         $val = $this->getToStringVal($abs, $len);
+        $valAppend = '';
+        $classes = array('t_stringified');
         if ($val === $abs['className']) {
             return '';
         }
-        $valAppend = '';
-        $classes = array('t_stringified');
         if ($len > 100) {
             $classes[] = 't_string_trunc';   // truncated
             $val = \substr($val, 0, 100);

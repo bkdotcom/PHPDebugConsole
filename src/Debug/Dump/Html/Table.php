@@ -97,7 +97,6 @@ class Table
             );
             $tBody .= $this->buildRow($row, $rowInfo, $k);
         }
-        $tBody = \str_replace(' title=""', '', $tBody);
         return '<tbody>' . "\n" . $tBody . '</tbody>' . "\n";
     }
 

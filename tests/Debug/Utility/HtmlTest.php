@@ -208,6 +208,21 @@ class HtmlTest extends DebugTestFramework
                 },
                 '<div class="best test">innerHtml</div>',
             ),
+            'bool' => array(
+                'input',
+                array(
+                    'autocapitalize' => 'sentences', // enum : on/off  (or "arbitrary" string)
+                    'autocomplete' => null, // enum : on/off
+                    'autofocus' => 'focus', // bool
+                    'disabled' => 'false',  // bool
+                    'draggable' => 'false', // enum : true/false
+                    'required' => 'required', // bool
+                    'spellcheck' => true,   // enum : true/false
+                    'translate' => 'false',    // enum : yes/no
+                ),
+                null,
+                '<input autocapitalize="sentences" autocomplete="off" autofocus="autofocus" draggable="false" required="required" spellcheck="true" translate="no" />',
+            ),
             'boolEnum1' => array(
                 'div',
                 array(

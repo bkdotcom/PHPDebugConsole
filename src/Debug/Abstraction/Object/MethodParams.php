@@ -66,7 +66,7 @@ class MethodParams
      *
      * @return array
      */
-    public static function buildParamValues($values = array())
+    public static function buildValues($values = array())
     {
         return \array_merge(static::$baseParamInfo, $values);
     }
@@ -106,7 +106,7 @@ class MethodParams
         $phpDocCount = \count($phpDocParams);
         for ($i = \count($params); $i < $phpDocCount; $i++) {
             $phpDocParam = $phpDoc['param'][$i];
-            $params[] = $this->buildParamValues(array(
+            $params[] = $this->buildValues(array(
                 'defaultValue' => $this->phpDocParamValue($phpDocParam, $this->abs['className']),
                 'desc' => $phpDocParam['desc'],
                 'isOptional' => true,
@@ -132,7 +132,7 @@ class MethodParams
     {
         $this->abs = $abs;
         return \array_map(function ($phpDocParam) use ($className) {
-            return $this->buildParamValues(array(
+            return $this->buildValues(array(
                 'defaultValue' => $this->phpDocParamValue($phpDocParam, $className),
                 'name' => $phpDocParam['name'],
                 'type' => $phpDocParam['type'],
@@ -161,7 +161,7 @@ class MethodParams
         foreach ($refMethod->getParameters() as $refParameter) {
             $name = $refParameter->getName();
             $phpDocParam = $this->phpDocParam($name, $phpDocParamsByName);
-            $params[] = $this->buildParamValues(array(
+            $params[] = $this->buildValues(array(
                 'attributes' => $collectAttribute
                     ? $this->helper->getAttributes($refParameter)
                     : array(),

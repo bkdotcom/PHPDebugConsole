@@ -216,7 +216,7 @@ class SerializeLog
      */
     private static function importLegacyObj(array $absValues)
     {
-        $absValues = AbstractObject::buildObjValues($absValues);
+        $absValues = AbstractObject::buildValues($absValues);
         /**
          * @var array<string,array<string,mixed>> $absValues['methods']
          * @var array<string,mixed> $meth

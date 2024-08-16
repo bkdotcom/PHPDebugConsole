@@ -31,35 +31,81 @@ function tippyContent (reference) {
 }
 
 function tippyContentBuildTitle($ref, title) {
-  switch (title) {
-    case 'Deprecated':
-      title = tippyContentDeprecated($ref, title)
-      break
-    case 'Implements':
-      title = tippyContentImplements($ref, title)
-      break
-    case 'Inherited':
-    case 'Private ancestor':
-      title = tippyContentInherited($ref, title)
-      break
-    case 'Overrides':
-      title = tippyContentOverrides($ref, title)
-      break
-    case 'Open in editor':
-      title = '<i class="fa fa-pencil"></i> ' + title
-      break
-    case 'Throws':
-      title = tippyContentThrows($ref, title)
-      break
-    default:
-      if (title.match(/^\/.+: line \d+( \(eval'd line \d+\))?$/)) {
-        title = '<i class="fa fa-file-code-o"></i> ' + title
-      }
-  }
+  title = refTitle($ref, title)
   if ($ref.parent().hasClass('hasTooltip')) {
     title = title + '<br /><br />' + tippyContent($ref.parent()[0])
   }
   return title.replace(/\n/g, '<br />')
+}
+
+function refTitle($ref, title) {
+  switch (title) {
+    case 'Deprecated':
+      return refTitleDeprecated($ref, title)
+    case 'Implements':
+      return refTitleImplements($ref, title)
+    case 'Inherited':
+    case 'Private ancestor':
+      return refTitleInherited($ref, title)
+    case 'Overrides':
+      return refTitleOverrides($ref, title)
+    case 'Open in editor':
+      return '<i class="fa fa-pencil"></i> ' + title
+    case 'Throws':
+      return refTitleThrows($ref, title)
+  }
+  return title.match(/^\/.+: line \d+( \(eval'd line \d+\))?$/)
+    ? '<i class="fa fa-file-code-o"></i> ' + title
+    : title
+}
+
+function refTitleDeprecated ($ref, title) {
+  var titleMore = $ref.parent().data('deprecatedDesc')
+  return titleMore
+    ? 'Deprecated: ' + titleMore
+    : title
+}
+
+function refTitleImplements ($ref, title) {
+  var className = $ref.parent().data('implements')
+  var $interface = $ref.closest('.object-inner').find('> .implements span[data-interface]').filter(function ($node) {
+    return $(this).data('interface') === className
+  })
+  return title + ' ' + $interface[0].innerHTML
+}
+
+function refTitleInherited ($ref, title) {
+  var classname = $ref.parent().data('inheritedFrom')
+  if (typeof classname === 'undefined') {
+    return title
+  }
+  title = title === 'Inherited'
+    ? 'Inherited from'
+    : title + '<br />defined in' // private ancestor
+  return title + ' ' + markupClassname(classname)
+}
+
+function refTitleOverrides ($ref, title) {
+  var classname = $ref.parent().data('declaredPrev')
+  return classname
+    ? title + ' ' + markupClassname(classname)
+    : title
+}
+
+function refTitleThrows ($ref, title) {
+  var throws = $ref.parent().data('throws')
+  var i
+  var count
+  var info
+  var $dl = $('<dl class="dl-horizontal"></dl>')
+  for (i = 0, count = throws.length; i < count; i++) {
+    info = throws[i]
+    $dl.append($('<dt></dt>').html(markupClassname(info.type)))
+    if (info.desc) {
+      $dl.append($('<dd></dd>').html(info.desc))
+    }
+  }
+  return title + $dl[0].outerHTML
 }
 
 function tippyContentAttributes ($ref) {
@@ -75,55 +121,6 @@ function tippyContentAttributes ($ref) {
   return html.replace(charRegex, function (char) {
     return '<span class="unicode">' + char + '</span>'
   })
-}
-
-function tippyContentDeprecated ($ref, title) {
-  var titleMore = $ref.parent().data('deprecatedDesc')
-  return titleMore
-    ? 'Deprecated: ' + titleMore
-    : title
-}
-
-function tippyContentImplements ($ref, title) {
-  var className = $ref.parent().data('implements')
-  var $interface = $ref.closest('.object-inner').find('> .implements span[data-interface]').filter(function ($node) {
-    return $(this).data('interface') === className
-  })
-  return title + ' ' + $interface[0].innerHTML
-}
-
-function tippyContentInherited ($ref, title) {
-  var classname = $ref.parent().data('inheritedFrom')
-  if (typeof classname === 'undefined') {
-    return title
-  }
-  title = title === 'Inherited'
-    ? 'Inherited from'
-    : title + '<br />defined in' // private ancestor
-  return title + ' ' + markupClassname(classname)
-}
-
-function tippyContentOverrides ($ref, title) {
-  var classname = $ref.parent().data('declaredPrev')
-  return classname
-    ? title + ' ' + markupClassname(classname)
-    : title
-}
-
-function tippyContentThrows ($ref, title) {
-  var throws = $ref.parent().data('throws')
-  var i
-  var count
-  var info
-  var $dl = $('<dl class="dl-horizontal"></dl>')
-  for (i = 0, count = throws.length; i < count; i++) {
-    info = throws[i]
-    $dl.append($('<dt></dt>').html(markupClassname(info.type)))
-    if (info.desc) {
-      $dl.append($('<dd></dd>').html(info.desc))
-    }
-  }
-  return title + $dl[0].outerHTML
 }
 
 function tippyOnHide (instance) {

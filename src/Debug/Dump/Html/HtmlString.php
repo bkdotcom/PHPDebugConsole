@@ -7,7 +7,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.3
+ * @since     3.0b1
  */
 
 namespace bdk\Debug\Dump\Html;
@@ -82,13 +82,15 @@ class HtmlString
     /**
      * Dump string
      *
-     * @param string      $val string value
-     * @param Abstraction $abs (optional) full abstraction
+     * @param string           $val string value
+     * @param Abstraction|null $abs (optional) full abstraction
      *
      * @return string
      */
-    public function dump($val, Abstraction $abs = null)
+    public function dump($val, $abs = null)
     {
+        \bdk\Debug\Utility\Php::assertType($abs, 'bdk\Debug\Abstraction\Abstraction');
+
         if (\is_numeric($val)) {
             $this->valDumper->checkTimestamp($val, $abs);
         }

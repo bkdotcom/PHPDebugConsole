@@ -4,7 +4,7 @@ namespace bdk\Test\Debug\Plugin;
 
 use bdk\Debug;
 use bdk\Debug\Plugin\LogEnv;
-use bdk\HttpMessage\ServerRequest;
+use bdk\HttpMessage\ServerRequestExtended as ServerRequest;
 use bdk\PubSub\Event;
 use bdk\Test\Debug\DebugTestFramework;
 

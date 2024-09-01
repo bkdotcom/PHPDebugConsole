@@ -7,7 +7,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.0
+ * @since     2.3
  */
 
 namespace bdk\Debug\Collector;
@@ -47,20 +47,22 @@ class MySqli extends mysqliBase
     /**
      * Constructor
      *
-     * @param string $host     host name or IP
-     * @param string $username MySQL user name
-     * @param string $passwd   password
-     * @param string $dbname   default database used when performing queries
-     * @param int    $port     port number
-     * @param string $socket   socket or named pipe that should be used
-     * @param Debug  $debug    (optional) Specify PHPDebugConsole instance
-     *                           if not passed, will create MySqli channel on singleton instance
-     *                           if root channel is specified, will create a MySqli channel
+     * @param string     $host     host name or IP
+     * @param string     $username MySQL user name
+     * @param string     $passwd   password
+     * @param string     $dbname   default database used when performing queries
+     * @param int        $port     port number
+     * @param string     $socket   socket or named pipe that should be used
+     * @param Debug|null $debug    (optional) Specify PHPDebugConsole instance
+     *                               if not passed, will create MySqli channel on singleton instance
+     *                               if root channel is specified, will create a MySqli channel
      *
      * @SuppressWarnings(PHPMD.StaticAccess)
      */
-    public function __construct($host = null, $username = null, $passwd = null, $dbname = null, $port = null, $socket = null, Debug $debug = null) // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
+    public function __construct($host = null, $username = null, $passwd = null, $dbname = null, $port = null, $socket = null, $debug = null) // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
     {
+        \bdk\Debug\Utility\Php::assertType($debug, 'bdk\Debug');
+
         $this->doConstruct(\func_num_args()
             ? \array_slice(\func_get_args(), 0, 6)
             : array());

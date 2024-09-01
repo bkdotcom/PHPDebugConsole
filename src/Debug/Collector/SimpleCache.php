@@ -7,7 +7,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.0
+ * @since     2.3
  */
 
 namespace bdk\Debug\Collector;
@@ -41,14 +41,16 @@ class SimpleCache implements CacheInterface
      * Constructor
      *
      * @param CacheInterface $cache SimpleCache instance
-     * @param Debug          $debug (optional) Specify PHPDebugConsole instance
+     * @param Debug|null     $debug (optional) Specify PHPDebugConsole instance
      *                                if not passed, will create PDO channel on singleton instance
      *                                if root channel is specified, will create a PDO channel
      *
      * @SuppressWarnings(PHPMD.StaticAccess)
      */
-    public function __construct(CacheInterface $cache, Debug $debug = null)
+    public function __construct(CacheInterface $cache, $debug = null)
     {
+        \bdk\Debug\Utility\Php::assertType($debug, 'bdk\Debug');
+
         if (!$debug) {
             $debug = Debug::getChannel('SimpleCache', array('channelIcon' => $this->icon));
         } elseif ($debug === $debug->rootInstance) {
@@ -66,6 +68,8 @@ class SimpleCache implements CacheInterface
      * @param array  $args   method arguments
      *
      * @return mixed
+     *
+     * @throws BadMethodCallException
      */
     public function __call($method, $args)
     {

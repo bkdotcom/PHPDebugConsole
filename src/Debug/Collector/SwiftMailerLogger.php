@@ -7,7 +7,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.0
+ * @since     2.3
  */
 
 namespace bdk\Debug\Collector;
@@ -54,14 +54,16 @@ class SwiftMailerLogger implements Swift_Events_CommandListener, Swift_Events_Re
     /**
      * Constructor
      *
-     * @param Debug $debug (optional) Specify PHPDebugConsole instance
-     *                         if not passed, will create Slim channel on singleton instance
-     *                         if root channel is specified, will create a SwiftMailer channel
+     * @param Debu|null $debug (optional) Specify PHPDebugConsole instance
+     *                           if not passed, will create Slim channel on singleton instance
+     *                           if root channel is specified, will create a SwiftMailer channel
      *
      * @SuppressWarnings(PHPMD.StaticAccess)
      */
-    public function __construct(Debug $debug = null)
+    public function __construct($debug = null)
     {
+        \bdk\Debug\Utility\Php::assertType($debug, 'bdk\Debug');
+
         if (!$debug) {
             $debug = Debug::getChannel('SwiftMailer', array('channelIcon' => $this->icon));
         } elseif ($debug === $debug->rootInstance) {

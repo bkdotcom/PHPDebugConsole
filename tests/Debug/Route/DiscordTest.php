@@ -4,6 +4,7 @@ namespace bdk\Test\Debug\Route;
 
 use bdk\CurlHttpMessage\Handler\Mock;
 use bdk\HttpMessage\Response;
+use bdk\HttpMessage\ServerRequestExtended as ServerRequest;
 use bdk\HttpMessage\Stream;
 use bdk\Test\Debug\DebugTestFramework;
 use Psr\Http\Message\RequestInterface;
@@ -83,7 +84,7 @@ class DiscordTest extends DebugTestFramework
 
         $this->debug->setCfg(array(
             'serviceProvider' => array(
-                'serverRequest' => new \bdk\HttpMessage\ServerRequest('GET', '', array(
+                'serverRequest' => new ServerRequest('GET', '', array(
                     'argv' => array('foo','bar'),
                 )),
             ),

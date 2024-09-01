@@ -21,12 +21,12 @@ interface PromiseInterface
      * Appends fulfillment and rejection handlers to the promise, and returns
      * a new promise resolving to the return value of the called handler.
      *
-     * @param callable $onFulfilled Invoked when the promise fulfills.
-     * @param callable $onRejected  Invoked when the promise is rejected.
+     * @param callable|null $onFulfilled Invoked when the promise fulfills.
+     * @param callable|null $onRejected  Invoked when the promise is rejected.
      *
      * @return PromiseInterface
      */
-    public function then(callable $onFulfilled = null, callable $onRejected = null);
+    public function then($onFulfilled = null, $onRejected = null);
 
     /**
      * Appends a rejection handler callback to the promise, and returns a new

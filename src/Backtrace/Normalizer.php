@@ -5,7 +5,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2020-2024 Brad Kent
- * @version   v2.2
+ * @since     v2.2
  * @link      http://www.github.com/bkdotcom/Backtrace
  */
 
@@ -128,7 +128,7 @@ class Normalizer
             // xdebug_get_function_stack
             $frame['function'] = $matches[1];
         }
-        if (\preg_match('/^(.*)\{closure(?::(.*):(\d*)-(\d*))?\}$/', (string) $frame['function'])) {
+        if (\preg_match('/^([^\{]*)\{closure(?::(.*):(\d*)(?:-(\d*))?)?\}$/', (string) $frame['function'])) {
             // both debug_backtrace and xdebug_get_function_stack may have the namespace prefix
             //   xdebug provides the filepath, start and end lines
             $frame['function'] = '{closure}';

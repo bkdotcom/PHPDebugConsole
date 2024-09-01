@@ -386,6 +386,7 @@ return array(
                 'deprecated' => array(
                     array(
                         'desc' => '[Ʀ]ea<b>sons</b>',
+                        'version' => null,
                     ),
                 ),
                 'desc' => '<b>[𝖽]esc</b>ription',
@@ -443,6 +444,7 @@ return array(
             'declaredOrig' => 'bdk\Test\Debug\Fixture\Con𝘧usableIdenti𝘧iers',
             'declaredPrev' => null,
             'forceShow' => false,
+            'isDeprecated' => false,
             'isPromoted' => false,
             'isReadOnly' => false,
             'isStatic' => false,
@@ -499,6 +501,7 @@ return array(
             'declaredOrig' => 'bdk\Test\Debug\Fixture\Con𝘧usableIdenti𝘧iers',
             'declaredPrev' => null,
             'forceShow' => false,
+            'isDeprecated' => false,
             'isPromoted' => false,
             'isReadOnly' => false,
             'isStatic' => false,

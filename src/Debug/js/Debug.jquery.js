@@ -110,12 +110,12 @@
   }
 
   function addIcons ($node) {
-    // console.warn('addIcons', $node)
     $.each(config$1.iconsObject, function (selector, v) {
       var prepend = true;
       var sMatches = selector.match(/(?:parent(\S+)\s)?(?:context(\S+)\s)?(.*)$/);
       var vMatches = v.match(/^([ap])\s*:(.+)$/);
       var $found;
+      var $existingIcon;
       if (sMatches) {
         if (sMatches[1] && $node.parent().filter(sMatches[1]).length === 0) {
           return
@@ -130,9 +130,12 @@
         v = vMatches[2];
       }
       $found = $node.find(selector);
-      prepend
-        ? $found.prepend(v)
-        : $found.append(v);
+      if (prepend === false) {
+        $found.append(v);
+      }
+      $existingIcon = $found.find('> i:first-child');
+      $existingIcon.after(v);
+      $found.not($existingIcon.parent()).prepend(v);
     });
   }
 
@@ -540,35 +543,33 @@
     return function sortFunction (trA, trB) {
       var a = trA.cells[colIndex].textContent.trim();
       var b = trB.cells[colIndex].textContent.trim();
-      var afloat = a.match(floatRe);
-      var bfloat = b.match(floatRe);
-      if (afloat) {
-        a = toFixed(a, afloat);
-      }
-      if (bfloat) {
-        b = toFixed(b, bfloat);
-      }
-      return dir * compare(a, b, collator)
+      var aFloatMatches = a.match(floatRe);
+      var bFloatMatches = b.match(floatRe);
+      return aFloatMatches && bFloatMatches
+        ? dir * compareFloat(toFixed(aFloatMatches), toFixed(bFloatMatches))
+        : dir * compare(a, b, collator)
     }
   }
 
   function compare (a, b, collator) {
-    var comp = 0;
-    if (afloat && bfloat) {
-      if (a < b) {
-        comp = -1;
-      } else if (a > b) {
-        comp = 1;
-      }
-      return comp
-    }
     return collator
       ? collator.compare(a, b)
       : a.localeCompare(b) // not a natural sort
   }
 
-  function toFixed (str, matches) {
-    var num = Number.parseFloat(str);
+  function compareFloat(a, b)
+  {
+    if (a < b) {
+      return -1
+    }
+    if (a > b) {
+      return 1
+    }
+    return 0
+  }
+
+  function toFixed (matches) {
+    var num = Number.parseFloat(matches[0]);
     if (matches[2]) {
       // sci notation
       num = num.toFixed(6);
@@ -6072,35 +6073,81 @@
   }
 
   function tippyContentBuildTitle($ref, title) {
-    switch (title) {
-      case 'Deprecated':
-        title = tippyContentDeprecated($ref, title);
-        break
-      case 'Implements':
-        title = tippyContentImplements($ref, title);
-        break
-      case 'Inherited':
-      case 'Private ancestor':
-        title = tippyContentInherited($ref, title);
-        break
-      case 'Overrides':
-        title = tippyContentOverrides($ref, title);
-        break
-      case 'Open in editor':
-        title = '<i class="fa fa-pencil"></i> ' + title;
-        break
-      case 'Throws':
-        title = tippyContentThrows($ref, title);
-        break
-      default:
-        if (title.match(/^\/.+: line \d+( \(eval'd line \d+\))?$/)) {
-          title = '<i class="fa fa-file-code-o"></i> ' + title;
-        }
-    }
+    title = refTitle($ref, title);
     if ($ref.parent().hasClass('hasTooltip')) {
       title = title + '<br /><br />' + tippyContent($ref.parent()[0]);
     }
     return title.replace(/\n/g, '<br />')
+  }
+
+  function refTitle($ref, title) {
+    switch (title) {
+      case 'Deprecated':
+        return refTitleDeprecated($ref, title)
+      case 'Implements':
+        return refTitleImplements($ref, title)
+      case 'Inherited':
+      case 'Private ancestor':
+        return refTitleInherited($ref, title)
+      case 'Overrides':
+        return refTitleOverrides($ref, title)
+      case 'Open in editor':
+        return '<i class="fa fa-pencil"></i> ' + title
+      case 'Throws':
+        return refTitleThrows($ref, title)
+    }
+    return title.match(/^\/.+: line \d+( \(eval'd line \d+\))?$/)
+      ? '<i class="fa fa-file-code-o"></i> ' + title
+      : title
+  }
+
+  function refTitleDeprecated ($ref, title) {
+    var titleMore = $ref.parent().data('deprecatedDesc');
+    return titleMore
+      ? 'Deprecated: ' + titleMore
+      : title
+  }
+
+  function refTitleImplements ($ref, title) {
+    var className = $ref.parent().data('implements');
+    var $interface = $ref.closest('.object-inner').find('> .implements span[data-interface]').filter(function ($node) {
+      return $(this).data('interface') === className
+    });
+    return title + ' ' + $interface[0].innerHTML
+  }
+
+  function refTitleInherited ($ref, title) {
+    var classname = $ref.parent().data('inheritedFrom');
+    if (typeof classname === 'undefined') {
+      return title
+    }
+    title = title === 'Inherited'
+      ? 'Inherited from'
+      : title + '<br />defined in'; // private ancestor
+    return title + ' ' + markupClassname(classname)
+  }
+
+  function refTitleOverrides ($ref, title) {
+    var classname = $ref.parent().data('declaredPrev');
+    return classname
+      ? title + ' ' + markupClassname(classname)
+      : title
+  }
+
+  function refTitleThrows ($ref, title) {
+    var throws = $ref.parent().data('throws');
+    var i;
+    var count;
+    var info;
+    var $dl = $('<dl class="dl-horizontal"></dl>');
+    for (i = 0, count = throws.length; i < count; i++) {
+      info = throws[i];
+      $dl.append($('<dt></dt>').html(markupClassname(info.type)));
+      if (info.desc) {
+        $dl.append($('<dd></dd>').html(info.desc));
+      }
+    }
+    return title + $dl[0].outerHTML
   }
 
   function tippyContentAttributes ($ref) {
@@ -6116,55 +6163,6 @@
     return html.replace(charRegex, function (char) {
       return '<span class="unicode">' + char + '</span>'
     })
-  }
-
-  function tippyContentDeprecated ($ref, title) {
-    var titleMore = $ref.parent().data('deprecatedDesc');
-    return titleMore
-      ? 'Deprecated: ' + titleMore
-      : title
-  }
-
-  function tippyContentImplements ($ref, title) {
-    var className = $ref.parent().data('implements');
-    var $interface = $ref.closest('.object-inner').find('> .implements span[data-interface]').filter(function ($node) {
-      return $(this).data('interface') === className
-    });
-    return title + ' ' + $interface[0].innerHTML
-  }
-
-  function tippyContentInherited ($ref, title) {
-    var classname = $ref.parent().data('inheritedFrom');
-    if (typeof classname === 'undefined') {
-      return title
-    }
-    title = title === 'Inherited'
-      ? 'Inherited from'
-      : title + '<br />defined in'; // private ancestor
-    return title + ' ' + markupClassname(classname)
-  }
-
-  function tippyContentOverrides ($ref, title) {
-    var classname = $ref.parent().data('declaredPrev');
-    return classname
-      ? title + ' ' + markupClassname(classname)
-      : title
-  }
-
-  function tippyContentThrows ($ref, title) {
-    var throws = $ref.parent().data('throws');
-    var i;
-    var count;
-    var info;
-    var $dl = $('<dl class="dl-horizontal"></dl>');
-    for (i = 0, count = throws.length; i < count; i++) {
-      info = throws[i];
-      $dl.append($('<dt></dt>').html(markupClassname(info.type)));
-      if (info.desc) {
-        $dl.append($('<dd></dd>').html(info.desc));
-      }
-    }
-    return title + $dl[0].outerHTML
   }
 
   function tippyOnHide (instance) {
@@ -6305,10 +6303,10 @@
       'parent:not(.groupByInheritance) > dd.private-ancestor': '<i class="fa fa-lock" title="Private ancestor"></i>',
       '> dd[data-attributes]': '<i class="fa fa-hashtag" title="Attributes"></i>',
       '> dd[data-declared-prev]': '<i class="fa fa-fw fa-repeat" title="Overrides"></i>',
+      '> .method.isAbstract': '<i class="fa fa-circle-o" title="abstract method"></i>',
       '> .method.isDeprecated': '<i class="fa fa-fw fa-arrow-down" title="Deprecated"></i>',
-      '> .method > .t_modifier_abstract': '<i class="fa fa-circle-o" title="abstract method"></i>',
+      '> .method.isFinal': '<i class="fa fa-hand-stop-o" title="Final"></i>',
       '> .method > .t_modifier_magic': '<i class="fa fa-magic" title="magic method"></i>',
-      '> .method > .t_modifier_final': '<i class="fa fa-hand-stop-o"></i>',
       '> .method > .parameter.isPromoted': '<i class="fa fa-arrow-up" title="Promoted"></i>',
       '> .method > .parameter[data-attributes]': '<i class="fa fa-hashtag" title="Attributes"></i>',
       '> .method[data-implements]': '<i class="fa fa-handshake-o" title="Implements"></i>',
@@ -6557,25 +6555,31 @@
   ]);
 
   $.fn.debugEnhance = function (method, arg1, arg2) {
-    // console.warn('debugEnhance', method, this)
-    if (method === 'sidebar') {
-      debugEnhanceSidebar(this, arg1);
-    } else if (method === 'buildChannelList') {
-      return buildChannelList(arg1, arg2, arguments[3])
-    } else if (method === 'collapse') {
-      this.each(function () {
-        collapse($(this), arg1);
-      });
-    } else if (method === 'expand') {
-      this.each(function () {
-        expand($(this));
-      });
-    } else if (method === 'init') {
-      debugEnhanceInit(this, arg1);
-    } else if (method === 'setConfig') {
-      debugEnhanceSetConfig(this, arg1);
-    } else {
-      debugEnhanceDefault(this);
+    switch (method) {
+      case 'sidebar':
+        debugEnhanceSidebar(this, arg1);
+        break
+      case 'buildChannelList':
+        return buildChannelList(arg1, arg2, arguments[3])
+      case 'collapse':
+        this.each(function () {
+          collapse($(this), arg1);
+        });
+        break
+      case 'expand':
+        this.each(function () {
+          expand($(this));
+        });
+        break
+      case 'init':
+        debugEnhanceInit(this, arg1);
+        break
+      case 'setConfig':
+        debugEnhanceSetConfig(this, arg1);
+        break
+      default:
+        debugEnhanceDefault(this);
+        break;
     }
     return this
   };
@@ -6608,6 +6612,7 @@
   function debugEnhanceDefault ($node) {
     $node.each(function () {
       var $self = $(this);
+      var $parentLis = {};
       if ($self.hasClass('debug')) {
         // console.warn('debugEnhance() : .debug')
         $self.find('.debug-menu-bar > nav, .tab-panes').show();
@@ -6628,12 +6633,10 @@
         enhanceEntry($self);
       } else if ($self.prop('class').match(/\bt_/)) {
         // value
-        enhanceValue$1(
-          $self,
-          $self.parents('li').filter(function () {
-            return $(this).prop('class').match(/\bm_/) !== null
-          })
-        );
+        $parentLis = $self.parents('li').filter(function () {
+          return $(this).prop('class').match(/\bm_/) !== null
+        });
+        enhanceValue$1($self, $parentLis);
       }
       // console.groupEnd()
     });

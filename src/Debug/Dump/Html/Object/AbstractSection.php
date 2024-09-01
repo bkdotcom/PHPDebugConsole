@@ -7,10 +7,10 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.1
+ * @since     3.0.5
  */
 
-namespace bdk\Debug\Dump\Html;
+namespace bdk\Debug\Dump\Html\Object;
 
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
@@ -23,7 +23,7 @@ use bdk\Debug\Utility\Html as HtmlUtil;
 /**
  * Base class for dumping object constants/enum-cases/properties/methods
  */
-abstract class AbstractObjectSection
+abstract class AbstractSection
 {
     /** @var Helper */
     protected $helper;
@@ -78,7 +78,7 @@ abstract class AbstractObjectSection
         ), $cfg);
         return $cfg['groupByInheritance']
             ? $this->dumpItemsByInheritance($abs, $cfg)
-            : $this->dumpItemsFiltered($abs, \array_keys($this->getItems($abs, $cfg)), $cfg);
+            : $this->dumpItemsFiltered($abs, \array_keys($this->getItems($abs, $what)), $cfg);
     }
 
     /**
@@ -157,7 +157,7 @@ abstract class AbstractObjectSection
     private function dumpItemsFiltered(ObjectAbstraction $abs, array $keys, array $cfg)
     {
         $html = '';
-        $items = $this->getItems($abs, $cfg);
+        $items = $this->getItems($abs, $cfg['what']);
         $items = \array_intersect_key($items, \array_flip($keys));
         $items = $abs->sort($items, $abs['sort']);
         $absKeys = $abs['keys'];
@@ -193,7 +193,7 @@ abstract class AbstractObjectSection
     private function dumpItemsByInheritance(ObjectAbstraction $abs, array $cfg)
     {
         $html = '';
-        $items = $this->getItems($abs, $cfg);
+        $items = $this->getItems($abs, $cfg['what']);
         $items = $abs->sort($items, $abs['sort']);
         $itemCount = \count($items);
         $itemOutCount = 0;
@@ -201,7 +201,7 @@ abstract class AbstractObjectSection
         // no sense in showing "inherited from" when no more inherited items
         // Or, we could only display the heading when itemsFiltered non-empty
         $className = $abs['className'];
-        $classes = $this->getInheritedClasses($abs, $abs['what']);
+        $classes = $this->getInheritedClasses($abs, $cfg['what']);
         \array_unshift($classes, $className);
         while ($classes && $itemOutCount < $itemCount) {
             $classNameCur = \array_shift($classes);
@@ -281,23 +281,19 @@ abstract class AbstractObjectSection
     private function getInheritedClasses(ObjectAbstraction $abs, $what)
     {
         $classes = $abs['extends'];
-        if ($what !== 'constants') {
-            return $classes;
+        if ($abs['isInterface']) {
+            // flatten the tree
+            \preg_match_all('/("[^"]+")/', \json_encode($classes), $matches);
+            $classes = \array_map('json_decode', $matches[1]);
         }
-        // constants can be defined in interface
-        $implements = $abs['implements'];
-        $implementsList = array();
-        while ($implements) {
-            $key = \key($implements);
-            $val = \array_shift($implements);
-            if (\is_array($val)) {
-                $implementsList[] = $key;
-                \array_splice($implements, 0, 0, $val);
-                continue;
-            }
-            $implementsList[] = $val;
+        if ($what === 'constants') {
+            // constants can be defined in interface
+            // flatten the tree
+            \preg_match_all('/("[^"]+")/', \json_encode($abs['implements']), $matches);
+            $implementsList = \array_map('json_decode', $matches[1]);
+            $classes = \array_merge($classes, $implementsList);
         }
-        return \array_merge($classes, $implementsList);
+        return $classes;
     }
 
     /**
@@ -305,14 +301,13 @@ abstract class AbstractObjectSection
      *
      * Extend me for custom filtering
      *
-     * @param ObjectAbstraction $abs Object abstraction
-     * @param array             $cfg Config options
+     * @param ObjectAbstraction $abs  Object abstraction
+     * @param string            $what 'cases', 'constants', 'properties', or 'methods'
      *
      * @return array
      */
-    protected function getItems(ObjectAbstraction $abs, array $cfg)
+    protected function getItems(ObjectAbstraction $abs, $what)
     {
-        $what = $cfg['what']; // 'cases', 'constants', 'properties', or 'methods'
         return $abs[$what];
     }
 

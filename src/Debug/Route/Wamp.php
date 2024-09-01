@@ -10,7 +10,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.0
+ * @since     2.0
  */
 
 namespace bdk\Debug\Route;
@@ -243,12 +243,14 @@ class Wamp implements RouteInterface
      *
      * We use this interface method to process pre-existing log data
      *
-     * @param Event $event debug event
+     * @param Event|null $event debug event
      *
      * @return void
      */
-    public function processLogEntries(Event $event = null) // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
+    public function processLogEntries($event = null) // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
     {
+        \bdk\Debug\Utility\Php::assertType($event, 'bdk\PubSub\Event');
+
         $data = $this->debug->data->get();
         foreach ($data['alerts'] as $logEntry) {
             $this->processLogEntryViaEvent($logEntry);

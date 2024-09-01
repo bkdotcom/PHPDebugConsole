@@ -7,7 +7,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.0
+ * @since     3.0b1
  */
 
 namespace bdk\Debug\Framework\Laravel;
@@ -100,12 +100,14 @@ class Middleware
     /**
      * Get displayed user information
      *
-     * @param User $user user interface
+     * @param User|null $user user interface
      *
      * @return array
      */
-    protected function getUserInformation(User $user = null)
+    protected function getUserInformation($user = null)
     {
+        \bdk\Debug\Utility\Php::assertType($user, 'Illuminate\Foundation\Auth\User');
+
         // Defaults
         if ($user === null) {
             return array(

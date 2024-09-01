@@ -7,12 +7,12 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.3
+ * @since     3.3
  */
 
-namespace bdk\Debug\Dump\Html;
+namespace bdk\Debug\Dump\Html\Object;
 
-use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Abstraction\Object\Abstraction as ObjectAbstraction;
 use BDK\Debug\Abstraction\Type;
 use bdk\Debug\Dump\Html\Helper;
 use bdk\Debug\Dump\Html\Value as ValDumper;
@@ -20,7 +20,7 @@ use bdk\Debug\Dump\Html\Value as ValDumper;
 /**
  * Dump object properties as HTML
  */
-class ObjectPhpDoc
+class PhpDoc
 {
     /** @var ValDumper */
     public $valDumper;
@@ -41,19 +41,21 @@ class ObjectPhpDoc
     }
 
     /**
-     * Dump object's phpDoc info
+     * Dump phpDoc info
      *
-     * @param Abstraction $abs Object Abstraction instance
+     * @param ObjectAbstraction|array $phpDoc Object Abstraction instance or array of phpDoc tags/values
      *
      * @return string html fragment
      */
-    public function dump(Abstraction $abs)
+    public function dump($phpDoc)
     {
+        if ($phpDoc instanceof ObjectAbstraction) {
+            $phpDoc = $phpDoc['phpDoc'];
+        }
+        $phpDoc = \array_filter($phpDoc, 'is_array');
+        $phpDoc = $this->getItems($phpDoc);
         $str = '<dt>phpDoc</dt>' . "\n";
-        foreach ($abs['phpDoc'] as $tagName => $values) {
-            if (\is_array($values) === false) {
-                continue;
-            }
+        foreach ($phpDoc as $tagName => $values) {
             foreach ($values as $tagData) {
                 $tagData['tagName'] = $tagName;
                 $str .= $this->dumpTag($tagData);
@@ -132,5 +134,19 @@ class ObjectPhpDoc
         $info = $this->valDumper->markupIdentifier($tagData['fqsen'])
             . ' <span class="phpdoc-desc">' . $desc . '</span>';
         return \str_replace(' <span class="phpdoc-desc"></span>', '', $info);
+    }
+
+    /**
+     * Get the phpDoc tags to be dumped
+     *
+     * Extend me for custom filtering
+     *
+     * @param array $phpDoc info
+     *
+     * @return array
+     */
+    protected function getItems(array $phpDoc)
+    {
+        return $phpDoc;
     }
 }

@@ -9,7 +9,7 @@ use RuntimeException;
 /**
  * RichTextBlock element
  *
- * @version >= 1.2
+ * @since v1.2
  *
  * @see https://adaptivecards.io/explorer/RichTextBlock.html
  */

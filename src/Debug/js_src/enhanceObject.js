@@ -15,12 +15,12 @@ export function init ($delegateNode) {
 }
 
 function addIcons ($node) {
-  // console.warn('addIcons', $node)
   $.each(config.iconsObject, function (selector, v) {
     var prepend = true
     var sMatches = selector.match(/(?:parent(\S+)\s)?(?:context(\S+)\s)?(.*)$/)
     var vMatches = v.match(/^([ap])\s*:(.+)$/)
     var $found
+    var $existingIcon
     if (sMatches) {
       if (sMatches[1] && $node.parent().filter(sMatches[1]).length === 0) {
         return
@@ -35,9 +35,12 @@ function addIcons ($node) {
       v = vMatches[2]
     }
     $found = $node.find(selector)
-    prepend
-      ? $found.prepend(v)
-      : $found.append(v)
+    if (prepend === false) {
+      $found.append(v)
+    }
+    $existingIcon = $found.find('> i:first-child')
+    $existingIcon.after(v)
+    $found.not($existingIcon.parent()).prepend(v)
   })
 }
 

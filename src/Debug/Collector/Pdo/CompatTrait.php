@@ -8,12 +8,12 @@
 namespace bdk\Debug\Collector\Pdo;
 
 if (PHP_VERSION_ID >= 50600) {
-    require __DIR__ . '/MethodSignatureCompatTrait_php5.6.php';
+    require __DIR__ . '/CompatTrait_php5.6.php';
 } else {
     /**
      * @phpcs:disable Generic.Classes.DuplicateClassName.Found
      */
-    trait MethodSignatureCompatTrait
+    trait CompatTrait
     {
         /**
          * Executes an SQL statement, returning a result set as a PDOStatement object

@@ -7,7 +7,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.1
+ * @since     2.1
  */
 
 namespace bdk\Debug\Utility;
@@ -83,10 +83,12 @@ class Table
      *
      * @param mixed               $rows  Table data
      * @param array<string,mixed> $meta  Meta info / options
-     * @param Debug               $debug Debug instance
+     * @param Debug|null          $debug Debug instance
      */
-    public function __construct($rows = array(), array $meta = array(), Debug $debug = null)
+    public function __construct($rows = array(), array $meta = array(), $debug = null)
     {
+        \bdk\Debug\Utility\Php::assertType($debug, 'bdk\Debug');
+
         $this->debug = $debug ?: Debug::getInstance();
         $this->initMeta($meta);
         $this->processRows($rows);

@@ -7,7 +7,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.3
+ * @since     2.0
  */
 
 namespace bdk\Debug\Dump;
@@ -75,13 +75,15 @@ abstract class AbstractValue extends AbstractComponent
     /**
      * Is value a timestamp?
      *
-     * @param mixed       $val value to check
-     * @param Abstraction $abs (optional) full abstraction
+     * @param mixed            $val value to check
+     * @param Abstraction|null $abs (optional) full abstraction
      *
      * @return string|false
      */
-    public function checkTimestamp($val, Abstraction $abs = null)
+    public function checkTimestamp($val, $abs = null)
     {
+        \bdk\Debug\Utility\Php::assertType($abs, 'bdk\Debug\Abstraction\Abstraction');
+
         if ($abs && $abs['typeMore'] === Type::TYPE_TIMESTAMP) {
             $datetime = new DateTime('@' . (int) $val);
             $datetimeStr = $datetime->format('Y-m-d H:i:s T');
@@ -275,12 +277,12 @@ abstract class AbstractValue extends AbstractComponent
     /**
      * Dump array
      *
-     * @param array       $array array to be dumped
-     * @param Abstraction $abs   (optional) full abstraction
+     * @param array            $array array to be dumped
+     * @param Abstraction|null $abs   (optional) full abstraction
      *
      * @return array|string
      */
-    abstract protected function dumpArray(array $array, Abstraction $abs = null);
+    abstract protected function dumpArray(array $array, $abs = null);
 
     /**
      * Dump boolean
@@ -294,22 +296,22 @@ abstract class AbstractValue extends AbstractComponent
     /**
      * Dump float value
      *
-     * @param float|int   $val float value
-     * @param Abstraction $abs (optional) full abstraction
+     * @param float|int        $val float value
+     * @param Abstraction|null $abs (optional) full abstraction
      *
      * @return float|string
      */
-    abstract protected function dumpFloat($val, Abstraction $abs = null);
+    abstract protected function dumpFloat($val, $abs = null);
 
     /**
      * Dump integer value
      *
-     * @param int         $val integer value
-     * @param Abstraction $abs (optional) full abstraction
+     * @param int              $val integer value
+     * @param Abstraction|null $abs (optional) full abstraction
      *
      * @return int|string
      */
-    abstract protected function dumpInt($val, Abstraction $abs = null);
+    abstract protected function dumpInt($val, $abs = null);
 
     /**
      * Dump null value
@@ -330,12 +332,12 @@ abstract class AbstractValue extends AbstractComponent
     /**
      * Dump string
      *
-     * @param string      $val string value
-     * @param Abstraction $abs (optional) full abstraction
+     * @param string           $val string value
+     * @param Abstraction|null $abs (optional) full abstraction
      *
      * @return string
      */
-    abstract protected function dumpString($val, Abstraction $abs = null);
+    abstract protected function dumpString($val, $abs = null);
 
     /**
      * Escape hex and unicode escape sequences.

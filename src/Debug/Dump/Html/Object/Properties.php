@@ -7,10 +7,10 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.1
+ * @since     3.0b1
  */
 
-namespace bdk\Debug\Dump\Html;
+namespace bdk\Debug\Dump\Html\Object;
 
 use bdk\Debug\Abstraction\AbstractObject;
 use bdk\Debug\Abstraction\Object\Abstraction as ObjectAbstraction;
@@ -18,7 +18,7 @@ use bdk\Debug\Abstraction\Object\Abstraction as ObjectAbstraction;
 /**
  * Dump object properties as HTML
  */
-class ObjectProperties extends AbstractObjectSection
+class Properties extends AbstractSection
 {
     /**
      * Dump object properties as HTML

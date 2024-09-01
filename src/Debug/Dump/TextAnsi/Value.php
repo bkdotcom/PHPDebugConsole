@@ -7,7 +7,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.0
+ * @since     2.3
  */
 
 namespace bdk\Debug\Dump\TextAnsi;
@@ -113,8 +113,10 @@ class Value extends TextValue
     /**
      * {@inheritDoc}
      */
-    protected function dumpArray(array $array, Abstraction $abs = null)
+    protected function dumpArray(array $array, $abs = null)
     {
+        \bdk\Debug\Utility\Php::assertType($abs, 'bdk\Debug\Abstraction\Abstraction');
+
         $this->valDepth++;
         $isNested = $this->valDepth > 0;
         $escapeCodes = $this->cfg['escapeCodes'];
@@ -196,13 +198,15 @@ class Value extends TextValue
     /**
      * Dump float value
      *
-     * @param float       $val float value
-     * @param Abstraction $abs (optional) full abstraction
+     * @param float            $val float value
+     * @param Abstraction|null $abs (optional) full abstraction
      *
      * @return float|string
      */
-    protected function dumpFloat($val, Abstraction $abs = null)
+    protected function dumpFloat($val, $abs = null)
     {
+        \bdk\Debug\Utility\Php::assertType($abs, 'bdk\Debug\Abstraction\Abstraction');
+
         if ($val === Type::TYPE_FLOAT_INF) {
             $val = 'INF';
         } elseif ($val === Type::TYPE_FLOAT_NAN) {
@@ -252,13 +256,15 @@ class Value extends TextValue
     /**
      * Dump string
      *
-     * @param string      $val string value
-     * @param Abstraction $abs (optional) full abstraction
+     * @param string           $val string value
+     * @param Abstraction|null $abs (optional) full abstraction
      *
      * @return string
      */
-    protected function dumpString($val, Abstraction $abs = null)
+    protected function dumpString($val, $abs = null)
     {
+        \bdk\Debug\Utility\Php::assertType($abs, 'bdk\Debug\Abstraction\Abstraction');
+
         if (\is_numeric($val)) {
             return $this->dumpStringNumeric($val, $abs);
         }
@@ -324,13 +330,15 @@ class Value extends TextValue
     /**
      * Dump numeric string
      *
-     * @param string      $val numeric string value
-     * @param Abstraction $abs (optional) full abstraction
+     * @param string           $val numeric string value
+     * @param Abstraction|null $abs (optional) full abstraction
      *
      * @return string
      */
-    private function dumpStringNumeric($val, Abstraction $abs = null)
+    private function dumpStringNumeric($val, $abs = null)
     {
+        \bdk\Debug\Utility\Php::assertType($abs, 'bdk\Debug\Abstraction\Abstraction');
+
         $escapeCodes = $this->cfg['escapeCodes'];
         $date = $this->checkTimestamp($val, $abs);
         $val = $escapeCodes['numeric'] . $val . $this->escapeReset;

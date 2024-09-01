@@ -3,7 +3,7 @@
 namespace bdk\Test\Debug;
 
 use bdk\Debug;
-use bdk\HttpMessage\ServerRequest;
+use bdk\HttpMessage\ServerRequestExtended as ServerRequest;
 
 /**
  * PHPUnit tests for Debug class

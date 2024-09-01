@@ -7,7 +7,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.0
+ * @since     3.0b1
  */
 
 namespace bdk\Debug;
@@ -15,6 +15,9 @@ namespace bdk\Debug;
 use bdk\Container;
 use bdk\Container\ServiceProviderInterface;
 use bdk\Debug;
+use bdk\HttpMessage\ServerRequestExtended;
+use Psr\Http\Message\ServerRequestInterface;
+use RuntimeException;
 
 /**
  * Register service
@@ -24,12 +27,17 @@ class ServiceProvider implements ServiceProviderInterface
     /**
      * Register services and factories
      *
-     * @param Container $container Container instances
+     * @param Container $container Container instance
      *
      * @return void
      */
-    public function register(Container $container) // phpcs:ignore SlevomatCodingStandard.Functions.FunctionLength
+    public function register(Container $container)
     {
+        $this->registerCoreServices($container);
+        $this->registerRoutes($container);
+        $this->registerUtilities($container);
+        $this->registerMisc($container);
+
         /*
             These "services" are reused between channels
             each debug "rootInstance" gets at most one instance of the following
@@ -50,12 +58,24 @@ class ServiceProvider implements ServiceProviderInterface
             'utility',
         );
 
+        // ensure that PHPDebugConsole receives ServerRequestExtended
+        $container->extend('serverRequest', static function (ServerRequestInterface $serverRequest) {
+            return ServerRequestExtended::fromServerRequest($serverRequest);
+        });
+    }
+
+    /**
+     * Register "core" services
+     *
+     * @param Container $container Container instance
+     *
+     * @return void
+     */
+    protected function registerCoreServices(Container $container) // phpcs:ignore SlevomatCodingStandard.Functions.FunctionLength
+    {
         $container['abstracter'] = static function (Container $container) {
             $debug = $container['debug'];
             return new \bdk\Debug\Abstraction\Abstracter($debug, $debug->getCfg('abstracter', Debug::CONFIG_INIT));
-        };
-        $container['arrayUtil'] = static function () {
-            return new \bdk\Debug\Utility\ArrayUtil();
         };
         $container['backtrace'] = static function (Container $container) {
             $debug = $container['debug'];
@@ -72,9 +92,6 @@ class ServiceProvider implements ServiceProviderInterface
         $container['data'] = static function (Container $container) {
             $debug = $container['debug'];
             return new \bdk\Debug\Data($debug);
-        };
-        $container['errorLevel'] = static function () {
-            return new \bdk\Debug\Utility\ErrorLevel();
         };
         $container['errorHandler'] = static function (Container $container) {
             $debug = $container['debug'];
@@ -107,12 +124,20 @@ class ServiceProvider implements ServiceProviderInterface
         $container['eventManager'] = static function () {
             return new \bdk\PubSub\Manager();
         };
-        $container['findExit'] = static function () {
-            return new \bdk\Debug\Utility\FindExit();
+        $container['pluginManager'] = static function () {
+            return new \bdk\Debug\Plugin\Manager();
         };
-        $container['html'] = static function () {
-            return new \bdk\Debug\Utility\Html();
-        };
+    }
+
+    /**
+     * Register miscellaneous services
+     *
+     * @param Container $container Container instance
+     *
+     * @return void
+     */
+    protected function registerMisc(Container $container)
+    {
         $container['logger'] = static function (Container $container) {
             $debug = $container['debug'];
             return new \bdk\Debug\Psr3\Logger($debug);
@@ -121,35 +146,83 @@ class ServiceProvider implements ServiceProviderInterface
             $debug = $container['debug'];
             return new \bdk\Debug\Psr15\Middleware($debug);
         };
+        $container['pluginHighlight'] = static function () {
+            return new \bdk\Debug\Plugin\Highlight();
+        };
+        $container['response'] = null; // app may provide \Psr\Http\Message\ServerRequestInterface
+        $container['serverRequest'] = static function () {
+            // should return instance of either
+            //    \Psr\Http\Message\ServerRequestInterface
+            //    or
+            //    \bdk\HttpMessage\ServerRequestExtendedInterface
+            return \bdk\HttpMessage\Utility\ServerRequest::fromGlobals();
+        };
+    }
+
+    /**
+     * Register route services
+     *
+     * @param Container $container Container instance
+     *
+     * @return void
+     */
+    protected function registerRoutes(Container $container)
+    {
+        $container['routeWamp'] = static function (Container $container) {
+            try {
+                $wampPublisher = $container['wampPublisher'];
+                // @codeCoverageIgnoreStart
+            } catch (RuntimeException $e) {
+                throw new RuntimeException('Wamp route requires \bdk\WampPublisher, which must be installed separately');
+                // @codeCoverageIgnoreEnd
+            }
+            $debug = $container['debug'];
+            return new \bdk\Debug\Route\Wamp($debug, $wampPublisher);
+        };
+        $container['wampPublisher'] = static function (Container $container) {
+            // @codeCoverageIgnoreStart
+            if (\class_exists('bdk\\WampPublisher') === false) {
+                throw new RuntimeException('PHPDebugConsole does not include WampPublisher.  Install separately');
+            }
+            $debug = $container['debug'];
+            return new \bdk\WampPublisher(
+                $debug->getCfg('wampPublisher', Debug::CONFIG_INIT)
+            );
+            // @codeCoverageIgnoreEnd
+        };
+    }
+
+    /**
+     * Register utility services
+     *
+     * @param Container $container Container instance
+     *
+     * @return void
+     */
+    protected function registerUtilities(Container $container) // phpcs:ignore SlevomatCodingStandard.Functions.FunctionLength
+    {
+        $container['arrayUtil'] = static function () {
+            return new \bdk\Debug\Utility\ArrayUtil();
+        };
+        $container['errorLevel'] = static function () {
+            return new \bdk\Debug\Utility\ErrorLevel();
+        };
+        $container['findExit'] = static function () {
+            return new \bdk\Debug\Utility\FindExit();
+        };
+        $container['html'] = static function () {
+            return new \bdk\Debug\Utility\Html();
+        };
         $container['php'] = static function () {
             return new \bdk\Debug\Utility\Php();
         };
         $container['phpDoc'] = static function () {
             return new \bdk\Debug\Utility\PhpDoc();
         };
-        $container['pluginHighlight'] = static function () {
-            return new \bdk\Debug\Plugin\Highlight();
+        $container['reflection'] = static function () {
+            return new \bdk\Debug\Utility\Reflection();
         };
-        $container['pluginManager'] = static function () {
-            return new \bdk\Debug\Plugin\Manager();
-        };
-        $container['response'] = null;
-        $container['routeWamp'] = static function (Container $container) {
-            try {
-                $wampPublisher = $container['wampPublisher'];
-                // @codeCoverageIgnoreStart
-            } catch (\RuntimeException $e) {
-                throw new \RuntimeException('Wamp route requires \bdk\WampPublisher, which must be installed separately');
-                // @codeCoverageIgnoreEnd
-            }
-            $debug = $container['debug'];
-            return new \bdk\Debug\Route\Wamp($debug, $wampPublisher);
-        };
-        $container['serverRequest'] = static function () {
-            // Psr\Http\Message\ServerRequestInterface
-            return \bdk\HttpMessage\ServerRequest::fromGlobals();
-        };
-        $container['sql'] = static function (Container $container) {
+        $container['sql'] = static function () {
             return new \bdk\Debug\Utility\Sql();
         };
         $container['sqlQueryAnalysis'] = static function (Container $container) {
@@ -169,17 +242,6 @@ class ServiceProvider implements ServiceProviderInterface
         };
         $container['utility'] = static function () {
             return new \bdk\Debug\Utility();
-        };
-        $container['wampPublisher'] = static function (Container $container) {
-            // @codeCoverageIgnoreStart
-            if (\class_exists('\\bdk\\WampPublisher') === false) {
-                throw new \RuntimeException('PHPDebugConsole does not include WampPublisher.  Install separately');
-            }
-            $debug = $container['debug'];
-            return new \bdk\WampPublisher(
-                $debug->getCfg('wampPublisher', Debug::CONFIG_INIT)
-            );
-            // @codeCoverageIgnoreEnd
         };
     }
 }

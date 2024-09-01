@@ -5,6 +5,7 @@ namespace bdk\Test\Debug\Plugin;
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\ErrorHandler\Error;
+use bdk\HttpMessage\ServerRequestExtended as ServerRequest;
 use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 use bdk\PubSub\Event;
 use bdk\PubSub\Manager as EventManager;
@@ -174,7 +175,7 @@ class InternalEventsTest extends DebugTestFramework
         // stream
         $this->debug->setCfg(array(
             'serviceProvider' => array(
-                'serverRequest' => new \bdk\HttpMessage\ServerRequest('GET', '', array(
+                'serverRequest' => new ServerRequest('GET', '', array(
                     'argv' => array('foo','bar'),
                 )),
             ),

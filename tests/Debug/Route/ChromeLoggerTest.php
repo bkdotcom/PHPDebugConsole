@@ -2,6 +2,7 @@
 
 namespace bdk\Test\Debug\Route;
 
+use bdk\HttpMessage\ServerRequestExtended as ServerRequest;
 use bdk\Test\Debug\DebugTestFramework;
 
 /**
@@ -184,7 +185,7 @@ class ChromeLoggerTest extends DebugTestFramework
         $this->debug->setCfg(array(
             'route' => 'chromeLogger',
             'serviceProvider' => array(
-                'serverRequest' => new \bdk\HttpMessage\ServerRequest('GET', '', array(
+                'serverRequest' => new ServerRequest('GET', '', array(
                     'argv' => array('foo','bar'),
                 )),
             ),

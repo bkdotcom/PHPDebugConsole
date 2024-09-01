@@ -369,7 +369,7 @@ EOD;
         \bdk\Debug\Utility\Reflection::propSet($this->debug->getPlugin('channel'), 'channels', $channelsBack);
     }
 
-    protected function genLog(Debug $clearer = null, $bitmask = null, &$info = array())
+    protected function genLog($clearer = null, $bitmask = null, &$info = array())
     {
         if (!$clearer) {
             $clearer = $this->debug;

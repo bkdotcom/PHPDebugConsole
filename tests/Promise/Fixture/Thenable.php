@@ -13,7 +13,7 @@ class Thenable
         $this->nextPromise = new Promise();
     }
 
-    public function then(callable $resolve = null, callable $reject = null)
+    public function then($resolve = null, $reject = null)
     {
         return $this->nextPromise->then($resolve, $reject);
     }

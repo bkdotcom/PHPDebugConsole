@@ -7,7 +7,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.0
+ * @since     2.3
  */
 
 namespace bdk\Debug\Collector;
@@ -68,7 +68,7 @@ class StatementInfo extends AbstractComponent
     protected $timeEnd;
     /** @var float */
     protected $timeStart;
-    /** @var array|null */
+    /** @var array */
     protected $types;
 
     /** @var list<string> */
@@ -96,16 +96,19 @@ class StatementInfo extends AbstractComponent
 
     /**
      * @param string     $sql    SQL
-     * @param array|null $params bound params
-     * @param array      $types  bound types
+     * @param array|null $params (optional) bound params
+     * @param array|null $types  (optional) bound types
      */
-    public function __construct($sql, $params = array(), $types = null)
+    public function __construct($sql, $params = array(), $types = array())
     {
+        \bdk\Debug\Utility\Php::assertType($params, 'array');
+        \bdk\Debug\Utility\Php::assertType($types, 'array');
+
         $this->memoryStart = \memory_get_usage(false);
         $this->params = $params ?: array();
         $this->sql = \trim($sql);
         $this->timeStart = \microtime(true);
-        $this->types = $types;
+        $this->types = $types ?: array();
         if (!self::$constants) {
             $this->setConstants();
         }
@@ -172,8 +175,10 @@ class StatementInfo extends AbstractComponent
      *
      * @return void
      */
-    public function end(Exception $exception = null, $rowCount = null)
+    public function end($exception = null, $rowCount = null)
     {
+        \bdk\Debug\Utility\Php::assertType($exception, 'Exception');
+
         $this->exception = $exception;
         $this->rowCount = $rowCount;
         $this->timeEnd = \microtime(true);
@@ -271,7 +276,7 @@ class StatementInfo extends AbstractComponent
         $afterWhereKeys = array('groupBy', 'having', 'window', 'orderBy', 'limit', 'for');
         $afterWhereValues = \array_intersect_key($parsed, \array_flip($afterWhereKeys));
         $haveMore = \count($afterWhereValues) > 0;
-        if ($parsed['where'] && \strlen($parsed['where']) < 30) {
+        if ($parsed['where'] && \strlen($parsed['where']) < 35) {
             $label .= $parsed['afterMethod'] ? ' (…)' : '';
             $label .= ' WHERE ' . $parsed['where'];
         } elseif (\array_filter(array($parsed['afterMethod'], $parsed['where']))) {

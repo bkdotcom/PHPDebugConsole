@@ -2,6 +2,7 @@
 
 namespace bdk\Test\Debug\Plugin;
 
+use bdk\HttpMessage\ServerRequestExtended as ServerRequest;
 use bdk\PubSub\Event;
 use bdk\Test\Debug\DebugTestFramework;
 
@@ -29,7 +30,7 @@ class RouteTest extends DebugTestFramework
         self::assertSame('serverLog', $route);
 
         $this->debug->setCfg('serviceProvider', array(
-            'serverRequest' => new \bdk\HttpMessage\ServerRequest('GET', null, array(
+            'serverRequest' => new ServerRequest('GET', null, array(
                 'HTTP_X_REQUESTED_WITH' => 'XMLHttpRequest',
             )),
         ));
@@ -37,7 +38,7 @@ class RouteTest extends DebugTestFramework
         self::assertSame('serverLog', $route);
 
         $this->debug->setCfg('serviceProvider', array(
-            'serverRequest' => new \bdk\HttpMessage\ServerRequest('GET', null, array(
+            'serverRequest' => new ServerRequest('GET', null, array(
                 'HTTP_X_REQUESTED_WITH' => 'XMLHttpRequest',
             )),
         ));

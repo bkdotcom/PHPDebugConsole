@@ -31,15 +31,17 @@ class Mock implements Countable
 
     /**
      * The passed in value must be an array of
-     * {@see \Psr\Http\Message\ResponseInterface} objects, Exceptions,
-     * callables, or Promises.
+     * {@see \Psr\Http\Message\ResponseInterface} objects, Exceptions, callables, or Promises.
      *
-     * @param array<int,mixed>|null $queue       The parameters to be passed to the append function, as an indexed array.
-     * @param callable|null         $onFulfilled Callback to invoke when the return value is fulfilled.
-     * @param callable|null         $onRejected  Callback to invoke when the return value is rejected.
+     * @param array<int,mixed> $queue       The parameters to be passed to the append function, as an indexed array.
+     * @param callable|null    $onFulfilled Callback to invoke when the return value is fulfilled.
+     * @param callable|null    $onRejected  Callback to invoke when the return value is rejected.
      */
-    public function __construct(array $queue = null, callable $onFulfilled = null, callable $onRejected = null)
+    public function __construct(array $queue = array(), $onFulfilled = null, $onRejected = null)
     {
+        \bdk\Debug\Utility\Php::assertType($onFulfilled, 'callable');
+        \bdk\Debug\Utility\Php::assertType($onRejected, 'callable');
+
         $this->onFulfilled = $onFulfilled;
         $this->onRejected = $onRejected;
 

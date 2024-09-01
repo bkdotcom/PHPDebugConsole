@@ -3,6 +3,7 @@
 namespace bdk\Test\Debug\Route;
 
 use bdk\Debug\LogEntry;
+use bdk\HttpMessage\ServerRequestExtended as ServerRequest;
 use bdk\Test\Debug\DebugTestFramework;
 
 /**
@@ -48,7 +49,7 @@ class FirephpTest extends DebugTestFramework
         $this->debug->setCfg(array(
             'route' => 'firephp',
             'serviceProvider' => array(
-                'serverRequest' => new \bdk\HttpMessage\ServerRequest('GET', '', array(
+                'serverRequest' => new ServerRequest('GET', '', array(
                     'argv' => array('foo','bar'),
                 )),
             ),
@@ -72,7 +73,7 @@ class FirephpTest extends DebugTestFramework
         $this->debug->setCfg(array(
             'route' => 'firephp',
             'serviceProvider' => array(
-                'serverRequest' => new \bdk\HttpMessage\ServerRequest('GET', '', array(
+                'serverRequest' => new \bdk\HttpMessage\ServerRequestExtended('GET', '', array(
                     'argv' => array('foo','bar'),
                     'REQUEST_TIME_FLOAT' => \microtime(true),
                 )),

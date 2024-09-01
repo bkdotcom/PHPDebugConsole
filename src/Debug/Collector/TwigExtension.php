@@ -7,7 +7,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.0
+ * @since     3.0b1
  */
 
 namespace bdk\Debug\Collector;
@@ -30,13 +30,16 @@ class TwigExtension extends ProfilerExtension
     /**
      * Constructor
      *
-     * @param Debug   $debug   (optional) Debug instance
-     * @param Profile $profile (optional) Profile instance
+     * @param Debug|null   $debug   (optional) Debug instance
+     * @param Profile|null $profile (optional) Profile instance
      *
      * @SuppressWarnings(PHPMD.StaticAccess)
      */
-    public function __construct(Debug $debug = null, Profile $profile = null)
+    public function __construct($debug = null, $profile = null)
     {
+        \bdk\Debug\Utility\Php::assertType($debug, 'bdk\Debug');
+        \bdk\Debug\Utility\Php::assertType($profile, 'Twig\Profiler\Profile');
+
         if (!$debug) {
             $debug = Debug::getChannel('Twig', array('channelIcon' => $this->icon));
         } elseif ($debug === $debug->rootInstance) {

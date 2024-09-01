@@ -37,11 +37,14 @@ class Promise implements PromiseInterface
     private $waitList = array();
 
     /**
-     * @param callable $waitFn   Fn that when invoked resolves the promise.
-     * @param callable $cancelFn Fn that when invoked cancels the promise.
+     * @param callable|null $waitFn   Fn that when invoked resolves the promise.
+     * @param callable|null $cancelFn Fn that when invoked cancels the promise.
      */
-    public function __construct(callable $waitFn = null, callable $cancelFn = null)
+    public function __construct($waitFn = null, $cancelFn = null)
     {
+        \bdk\Promise\Utils::assertType($waitFn, 'callable');
+        \bdk\Promise\Utils::assertType($cancelFn, 'callable');
+
         $this->waitFn = $waitFn;
         $this->cancelFn = $cancelFn;
     }
@@ -101,13 +104,16 @@ class Promise implements PromiseInterface
      * Appends fulfillment and rejection handlers to the promise, and returns
      * a new promise resolving to the return value of the called handler.
      *
-     * @param callable $onFulfilled Invoked when the promise fulfills.
-     * @param callable $onRejected  Invoked when the promise is rejected.
+     * @param callable|null $onFulfilled Invoked when the promise fulfills.
+     * @param callable|null $onRejected  Invoked when the promise is rejected.
      *
      * @return Promise
      */
-    public function then(callable $onFulfilled = null, callable $onRejected = null)
+    public function then($onFulfilled = null, $onRejected = null)
     {
+        \bdk\Promise\Utils::assertType($onFulfilled, 'callable');
+        \bdk\Promise\Utils::assertType($onRejected, 'callable');
+
         if ($this->state === self::PENDING) {
             $promise = new static(null, array($this, 'cancel'));
             $this->handlers[] = array($promise, $onFulfilled, $onRejected);

@@ -7,12 +7,11 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.0
+ * @since     2.3
  */
 
 namespace bdk\Debug\Collector;
 
-use bdk\Debug;
 use GuzzleHttp;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\RequestException;
@@ -29,8 +28,10 @@ class GuzzleMiddleware extends AbstractAsyncMiddleware
     /**
      * {@inheritDoc}
      */
-    public function __construct($cfg = array(), Debug $debug = null)
+    public function __construct($cfg = array(), $debug = null)
     {
+        \bdk\Debug\Utility\Php::assertType($debug, 'bdk\Debug');
+
         $this->cfg = \array_merge($this->cfg, array(
             'idPrefix' => 'guzzle_',
             'label' => 'Guzzle',

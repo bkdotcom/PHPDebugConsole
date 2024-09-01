@@ -7,7 +7,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.3
+ * @since     1.0
  *
  * @link http://www.github.com/bkdotcom/PHPDebugConsole
  * @link https://developer.mozilla.org/en-US/docs/Web/API/console
@@ -79,7 +79,7 @@ use bdk\Debug\Abstraction\Abstracter;
  * @property-read Debug\Utility\Php    $php
  * @property-read Debug\Utility\PhpDoc $phpDoc
  * @property-read \Psr\Http\Message\ResponseInterface $response lazy-loaded ResponseInterface (set via writeToResponse)
- * @property-read HttpMessage\ServerRequest $serverRequest
+ * @property-read \bdk\HttpMessage\ServerRequestExtendedInterface $serverRequest
  * @property-read Debug                $rootInstance  root "channel"
  * @property-read Debug\Utility\StringUtil $stringUtil
  * @property-read Debug\Utility\StopWatch $stopWatch

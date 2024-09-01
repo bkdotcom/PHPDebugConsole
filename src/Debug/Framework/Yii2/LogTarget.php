@@ -7,7 +7,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.0
+ * @since     3.0b1
  */
 
 namespace bdk\Debug\Framework\Yii2;
@@ -44,13 +44,15 @@ class LogTarget extends Target
     /**
      * Constructor
      *
-     * @param Debug $debug  Debug instance
-     * @param array $config Configuration
+     * @param Debug|null $debug  Debug instance
+     * @param array      $config Configuration
      *
      * @SuppressWarnings(PHPMD.StaticAccess)
      */
-    public function __construct(Debug $debug = null, $config = array())
+    public function __construct($debug = null, $config = array())
     {
+        \bdk\Debug\Utility\Php::assertType($debug, 'bdk\Debug');
+
         if (!$debug) {
             $debug = Debug::getChannel('Yii');
         } elseif ($debug === $debug->rootInstance) {

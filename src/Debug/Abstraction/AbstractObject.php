@@ -7,7 +7,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.1
+ * @since     2.0
  */
 
 namespace bdk\Debug\Abstraction;
@@ -22,7 +22,6 @@ use bdk\Debug\Abstraction\Object\Helper;
 use bdk\Debug\Abstraction\Object\Methods;
 use bdk\Debug\Abstraction\Object\Properties;
 use bdk\Debug\Abstraction\Object\Subscriber;
-use bdk\Debug\Utility\Reflection;
 use ReflectionClass;
 use ReflectionEnumUnitCase;
 use RuntimeException;
@@ -216,7 +215,7 @@ class AbstractObject extends AbstractComponent
      */
     public function getAbstraction($obj, $method = null, array $hist = array())
     {
-        $reflector = Reflection::getReflector($obj);
+        $reflector = $this->debug->reflection->getReflector($obj);
         if ($reflector instanceof ReflectionEnumUnitCase) {
             $reflector = $reflector->getEnum();
         }

@@ -7,7 +7,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.3
+ * @since     3.3
  */
 
 namespace bdk\Debug\Utility\PhpDoc;
@@ -179,6 +179,7 @@ class Parsers
             $this->parserAuthor(),
             $this->parserLink(),
             $this->parserSee(),
+            $this->parserVersion(),
             $this->parserDefault(),
         );
     }
@@ -294,6 +295,24 @@ class Parsers
                 . ')'
                 . '(?:\s+(?P<desc>.*))?$/s',
             'tags' => array('see'),
+        );
+    }
+
+    /**
+     * Parser "definition" for @deprecated, @since, & @version tags
+     *
+     * @return ParserInfo
+     */
+    private function parserVersion()
+    {
+        return array(
+            'parts' => array('version', 'desc'),
+            'regex' => '/^'
+                . '(?P<version>\d+(?:\.\d+){0,2})?'
+                . '\s*'
+                . '(?P<desc>.*)'
+                . '$/s',
+            'tags' => array('deprecated', 'since', 'version'),
         );
     }
 }

@@ -33,6 +33,7 @@
     </report>
     -->
     <exclude>
+      <file>src/Debug/Collector/DoctrineLogger/CompatTrait_legacy.php</file>
       <file>src/Debug/Dump/charData.php</file>
       <directory>src/Debug/Framework</directory>
       <directory>src/Debug/node_modules</directory>

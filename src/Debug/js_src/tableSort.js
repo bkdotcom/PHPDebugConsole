@@ -61,35 +61,33 @@ function rowComparator (colIndex, dir, collator) {
   return function sortFunction (trA, trB) {
     var a = trA.cells[colIndex].textContent.trim()
     var b = trB.cells[colIndex].textContent.trim()
-    var afloat = a.match(floatRe)
-    var bfloat = b.match(floatRe)
-    if (afloat) {
-      a = toFixed(a, afloat)
-    }
-    if (bfloat) {
-      b = toFixed(b, bfloat)
-    }
-    return dir * compare(a, b, collator)
+    var aFloatMatches = a.match(floatRe)
+    var bFloatMatches = b.match(floatRe)
+    return aFloatMatches && bFloatMatches
+      ? dir * compareFloat(toFixed(aFloatMatches), toFixed(bFloatMatches))
+      : dir * compare(a, b, collator)
   }
 }
 
 function compare (a, b, collator) {
-  var comp = 0
-  if (afloat && bfloat) {
-    if (a < b) {
-      comp = -1
-    } else if (a > b) {
-      comp = 1
-    }
-    return comp
-  }
   return collator
     ? collator.compare(a, b)
     : a.localeCompare(b) // not a natural sort
 }
 
-function toFixed (str, matches) {
-  var num = Number.parseFloat(str)
+function compareFloat(a, b)
+{
+  if (a < b) {
+    return -1
+  }
+  if (a > b) {
+    return 1
+  }
+  return 0
+}
+
+function toFixed (matches) {
+  var num = Number.parseFloat(matches[0])
   if (matches[2]) {
     // sci notation
     num = num.toFixed(6)

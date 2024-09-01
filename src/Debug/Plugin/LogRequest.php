@@ -7,7 +7,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.1
+ * @since     2.3.1
  */
 
 namespace bdk\Debug\Plugin;
@@ -168,23 +168,22 @@ class LogRequest extends AbstractLogReqRes implements SubscriberInterface
         }
         $request = $this->debug->serverRequest;
         $method = $request->getMethod();
-        $contentTypeUser = $request->getHeaderLine('Content-Type');
-        $contentType = $this->detectContentType(
+        $mediaTypeUser = (string) $request->getMediaType();
+        $mediaType = $this->detectContentType(
             $this->debug->utility->getStreamContents($request->getBody()),
-            $contentTypeUser
+            $mediaTypeUser
         );
-        $contentTypeTrimmed = \preg_replace('/\s*[;,].*$/', '', (string) $contentType);
         $parsedBody = $request->getParsedBody();
-        $this->assertCorrectContentType($contentType, $contentTypeUser, $method);
+        $this->assertCorrectContentType($mediaType, $mediaTypeUser, $method);
         if (
             $method === 'POST'
-            && \in_array($contentTypeTrimmed, array(ContentType::FORM, ContentType::FORM_MULTIPART), true)
+            && \in_array($mediaType, array(ContentType::FORM, ContentType::FORM_MULTIPART), true)
             && $parsedBody
         ) {
             $this->debug->log('$_POST', $parsedBody, $this->debug->meta('redact'));
             return;
         }
-        $this->logInput($method, $contentType);
+        $this->logInput($method, $mediaType);
     }
 
     /**

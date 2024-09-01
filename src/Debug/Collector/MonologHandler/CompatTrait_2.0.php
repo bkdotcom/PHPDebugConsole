@@ -7,22 +7,22 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.1
+ * @since     3.0.5
  */
 
-namespace bdk\Debug\Collector;
+namespace bdk\Debug\Collector\MonologHandler;
 
 /*
     Wrap in condition.
     PHPUnit code coverage scans all files and will conflict
 */
-if (\trait_exists(__NAMESPACE__ . '\\MonologHandlerCompatTrait', false) === false) {
+if (\trait_exists(__NAMESPACE__ . '\\CompatTrait', false) === false) {
     /**
      * Provide handle method (with return type-hint)
      *
      * @phpcs:disable Generic.Classes.DuplicateClassName.Found
      */
-    trait MonologHandlerCompatTrait
+    trait CompatTrait
     {
         /**
          * Handles a record.

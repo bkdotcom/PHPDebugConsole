@@ -7,7 +7,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.1
+ * @since     2.3
  */
 
 namespace bdk\Debug\Abstraction\Object;
@@ -318,7 +318,7 @@ class Methods extends AbstractInheritable
             foreach ($refMethods as $refMethod) {
                 $this->addViaRefBuild($abs, $refMethod, $className);
             }
-        });
+        }, $abs['isInterface'] ? $abs['extends'] : false);
         $abs['methods'] = $this->methods;
         $methodsWithStatic = \array_unique($this->methodsWithStatic);
         \sort($methodsWithStatic);

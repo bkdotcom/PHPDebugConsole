@@ -7,7 +7,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.0
+ * @since     2.3
  */
 
 namespace bdk\Debug\Framework\Yii1_1;
@@ -57,13 +57,15 @@ class LogRoute extends CLogRoute
     /**
      * Constructor
      *
-     * @param Debug $debug Debug instance
-     * @param array $opts  Route options
+     * @param Debug|null $debug Debug instance
+     * @param array      $opts  Route options
      *
      * @SuppressWarnings(PHPMD.StaticAccess)
      */
-    public function __construct(Debug $debug = null, $opts = array())
+    public function __construct($debug = null, $opts = array())
     {
+        \bdk\Debug\Utility\Php::assertType($debug, 'bdk\Debug');
+
         if (!$debug) {
             $debug = Debug::getChannel('Yii');
         } elseif ($debug === $debug->rootInstance) {

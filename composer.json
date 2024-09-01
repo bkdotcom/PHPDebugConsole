@@ -55,7 +55,7 @@
   },
   "require": {
     "php": ">=5.4.0",
-    "bdk/http-message": "^1.2 || ^2.0 || ^3.0"
+    "bdk/http-message": "^1.3 || ^2.3 || ^3.3"
   },
   "require-dev": {
     "bdk/devutil": "dev-master",

@@ -7,7 +7,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.0
+ * @since     2.3
  */
 
 namespace bdk\Debug\Collector;
@@ -15,7 +15,6 @@ namespace bdk\Debug\Collector;
 use bdk\Debug;
 use bdk\Debug\AbstractComponent;
 use bdk\Debug\LogEntry;
-use Exception;
 use Psr\Http\Message\MessageInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -50,15 +49,16 @@ class AbstractAsyncMiddleware extends AbstractComponent
     /**
      * Constructor
      *
-     * @param array $cfg   configuration
-     * @param Debug $debug (optional) Specify PHPDebugConsole instance
-     *                       if not passed, will create Guzzle channel on singleton instance
-     *                       if root channel is specified, will create a Guzzle channel
+     * @param array      $cfg   configuration
+     * @param Debug|null $debug (optional) Specify PHPDebugConsole instance
+     *                            if not passed, will create Guzzle channel on singleton instance
+     *                            if root channel is specified, will create a Guzzle channel
      *
      * @SuppressWarnings(PHPMD.StaticAccess)
      */
-    public function __construct($cfg = array(), Debug $debug = null)
+    public function __construct($cfg = array(), $debug = null)
     {
+        \bdk\Debug\Utility\Php::assertType($debug, 'bdk\Debug');
         $this->setCfg($cfg);
         if (!$debug) {
             $debug = Debug::getChannel($this->cfg['label'], array('channelIcon' => $this->cfg['icon']));
@@ -279,14 +279,17 @@ class AbstractAsyncMiddleware extends AbstractComponent
     /**
      * Log request headers and request body
      *
-     * @param ResponseInterface|null           $response     Response
-     * @param array                            $requestInfo  Request information
-     * @param RequestException|GuzzleException $rejectReason Response exception
+     * @param ResponseInterface|null                $response     Response
+     * @param array                                 $requestInfo  Request information
+     * @param RequestException|GuzzleException|null $rejectReason Response exception
      *
      * @return void
      */
-    protected function logResponse(ResponseInterface $response = null, array $requestInfo = array(), Exception $rejectReason = null)
+    protected function logResponse($response = null, array $requestInfo = array(), $rejectReason = null)
     {
+        \bdk\Debug\Utility\Php::assertType($response, 'Psr\Http\Message\ResponseInterface');
+        \bdk\Debug\Utility\Php::assertType($rejectReason, 'Exception');
+
         $duration = $this->debug->timeEnd($this->cfg['label'] . ':' . $requestInfo['requestId'], false);
         $metaAppend = $requestInfo['isAsynchronous'] && $this->cfg['asyncResponseWithRequest']
             ? $this->debug->meta('appendGroup', $this->cfg['idPrefix'] . $requestInfo['requestId'])

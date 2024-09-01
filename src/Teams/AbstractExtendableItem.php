@@ -11,7 +11,7 @@ class AbstractExtendableItem extends AbstractItem
      * Constructor
      *
      * @param array<string,mixed> $fields Field values
-     * @param string               $type   Item type
+     * @param string              $type   Item type
      */
     public function __construct(array $fields, $type)
     {

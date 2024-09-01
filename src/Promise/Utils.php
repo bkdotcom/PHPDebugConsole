@@ -7,6 +7,7 @@ use bdk\Promise\Exception\AggregateException;
 use bdk\Promise\Exception\RejectionException;
 use bdk\Promise\PromiseInterface;
 use Exception;
+use InvalidArgumentException;
 use Throwable;
 
 /**
@@ -16,6 +17,53 @@ final class Utils
 {
     /** @var TaskQueue|null */
     private static $queue;
+
+    /**
+     * Assert that a value is of a certain type
+     *
+     * Support extreme range of PHP versions : 5.4 - 8.4 (and beyond)
+     * `MyObj $obj = null` has been deprecated in PHP 8.4
+     * must now be `?MyObj $obj = null` (which is a php 7.1 feature)
+     * Workaround - remove type-hint when we allow null (not ideal) and call assertType
+     * When we drop support for php < 7.1, we can remove this method and do proper type-hinting
+     *
+     * @param mixed  $value     Value to test
+     * @param string $type      "array", "callable", "object", or className
+     * @param bool   $allowNull (true) allow null?
+     *
+     * @return void
+     *
+     * @throws InvalidArgumentException
+     */
+    public static function assertType($value, $type, $allowNull = true)
+    {
+        if ($allowNull && $value === null) {
+            return;
+        }
+        $isType = false;
+        switch ($type) {
+            case 'array':
+                $isType = \is_array($value);
+                break;
+            case 'callable':
+                $isType = \is_callable($value);
+                break;
+            case 'object':
+                $isType = \is_object($value);
+                break;
+            default:
+                $isType = \is_a($value, $type);
+        }
+        if ($isType) {
+            return;
+        }
+        throw new InvalidArgumentException(\sprintf(
+            'Expected %s%s, got %s',
+            $type,
+            $allowNull ? ' (or null)' : '',
+            self::getDebugType($value)
+        ));
+    }
 
     /**
      * Get the global task queue used for promise resolution.
@@ -279,5 +327,19 @@ final class Utils
             \ksort($results);
             return $results;
         });
+    }
+
+    /**
+     * Gets the type name of a variable in a way that is suitable for debugging
+     *
+     * @param mixed $value Value to inspect
+     *
+     * @return string
+     */
+    protected static function getDebugType($value)
+    {
+        return \is_object($value)
+            ? \get_class($value)
+            : \gettype($value);
     }
 }

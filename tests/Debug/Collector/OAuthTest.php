@@ -24,7 +24,7 @@ class OAuthTest extends DebugTestFramework
 
     public static function setUpBeforeClass(): void
     {
-        if (\class_exists('OAuth')) {
+        if (\extension_loaded('OAuth')) {
             self::$oauthDebug = new OAuth(self::$consumerKey, self::$consumerSecret, OAUTH_SIG_METHOD_HMACSHA1, OAUTH_AUTH_TYPE_AUTHORIZATION);
         }
     }
@@ -498,7 +498,7 @@ class OAuthTest extends DebugTestFramework
 
     protected function assertOauth()
     {
-        if (\class_exists('OAuth') === false) {
+        if (\extension_loaded('oauth') === false) {
             $this->markTestSkipped('OAuth not avail');
         }
     }

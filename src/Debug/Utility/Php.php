@@ -7,13 +7,14 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.0
+ * @since     3.0b1
  */
 
 namespace bdk\Debug\Utility;
 
 use bdk\Debug\Utility\Reflection;
 use Exception;
+use InvalidArgumentException;
 use UnitEnum;
 
 /**
@@ -28,6 +29,53 @@ class Php
 
     /** @var string[] list of allowed-to-be-unserialized classes passed to unserializeSafe */
     protected static $allowedClasses = array();
+
+    /**
+     * Assert that a value is of a certain type
+     *
+     * PHPDebugConsole supports an extreme range of PHP versions : 5.4 - 8.4 (and beyond)
+     * `MyObj $obj = null` has been deprecated in PHP 8.4
+     * must now be `?MyObj $obj = null` (which is a php 7.1 feature)
+     * Workaround - remove type-hint when we allow null (not ideal) and call assertType
+     * When we drop support for php < 7.1, we can remove this method and do proper type-hinting
+     *
+     * @param mixed  $value     Value to test
+     * @param string $type      "array", "callable", "object", or className
+     * @param bool   $allowNull (true) allow null?
+     *
+     * @return void
+     *
+     * @throws InvalidArgumentException
+     */
+    public static function assertType($value, $type, $allowNull = true)
+    {
+        if ($allowNull && $value === null) {
+            return;
+        }
+        $isType = false;
+        switch ($type) {
+            case 'array':
+                $isType = \is_array($value);
+                break;
+            case 'callable':
+                $isType = self::isCallable($value);
+                break;
+            case 'object':
+                $isType = \is_object($value);
+                break;
+            default:
+                $isType = \is_a($value, $type);
+        }
+        if ($isType) {
+            return;
+        }
+        throw new InvalidArgumentException(\sprintf(
+            'Expected %s%s, got %s',
+            $type,
+            $allowNull ? ' (or null)' : '',
+            self::getDebugType($value)
+        ));
+    }
 
     /**
      * Get friendly classname for given classname or object

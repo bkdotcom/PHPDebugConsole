@@ -7,7 +7,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.1
+ * @since     2.3
  */
 
 namespace bdk\Debug\Utility;
@@ -37,13 +37,15 @@ class SerializeLog
     /**
      * Import the config and data into the debug instance
      *
-     * @param array $data  Unpacked / Unserialized log data
-     * @param Debug $debug (optional) Debug instance
+     * @param array      $data  Unpacked / Unserialized log data
+     * @param Debug|null $debug (optional) Debug instance
      *
      * @return Debug
      */
-    public static function import($data, Debug $debug = null)
+    public static function import(array $data, $debug = null)
     {
+        \bdk\Debug\Utility\Php::assertType($debug, 'bdk\Debug');
+
         if (!$debug) {
             $debug = new Debug();
         }

@@ -7,7 +7,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.0
+ * @since     3.0b1
  */
 
 namespace bdk\Debug\Framework\Laravel;
@@ -45,15 +45,17 @@ class CacheEventsSubscriber
     /**
      * Constructor
      *
-     * @param array $options Options
-     * @param Debug $debug   (optional) Specify PHPDebugConsole instance
-     *                         if not passed, will create PDO channel on singleton instance
-     *                         if root channel is specified, will create a PDO channel
+     * @param array      $options Options
+     * @param Debug|null $debug   (optional) Specify PHPDebugConsole instance
+     *                              if not passed, will create PDO channel on singleton instance
+     *                              if root channel is specified, will create a PDO channel
      *
      * @SuppressWarnings(PHPMD.StaticAccess)
      */
-    public function __construct($options = array(), Debug $debug = null)
+    public function __construct($options = array(), $debug = null)
     {
+        \bdk\Debug\Utility\Php::assertType($debug, 'bdk\Debug');
+
         $this->options = \array_merge($this->options, $options);
         $channelOptions = array(
             'channelIcon' => $this->options['icon'],

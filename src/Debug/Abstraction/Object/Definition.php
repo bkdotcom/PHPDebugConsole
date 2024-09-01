@@ -7,7 +7,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.1
+ * @since     3.0.4
  */
 
 namespace bdk\Debug\Abstraction\Object;
@@ -199,12 +199,21 @@ class Definition
     /**
      * Collect classes this class extends
      *
+     * If interface, collect ancestor interfaces as a tree.
+     * ReflectionClass::getParentClass() doesn't work for interfaces
+     * as interfaces can extend multiple interfaces
+     *
      * @param ValueStore $abs ValueStore instance
      *
      * @return void
      */
     protected function addExtends(ValueStore $abs)
     {
+        if ($abs['isInterface']) {
+            // interfaces can EXTEND multiple interfaces
+            $abs['extends'] = $this->getInterfaces($abs['reflector']);
+            return;
+        }
         $reflector = $abs['reflector'];
         $extends = array();
         while ($reflector = $reflector->getParentClass()) {
@@ -214,7 +223,7 @@ class Definition
     }
 
     /**
-     * Collect interfaces that object implements
+     * Collect interfaces that class implements
      *
      * @param ValueStore $abs ValueStore instance
      *
@@ -222,7 +231,9 @@ class Definition
      */
     protected function addImplements(ValueStore $abs)
     {
-        $abs['implements'] = $this->getInterfaces($abs['reflector']);
+        $abs['implements'] = $abs['isInterface']
+            ? array()
+            : $this->getInterfaces($abs['reflector']);
     }
 
     /**

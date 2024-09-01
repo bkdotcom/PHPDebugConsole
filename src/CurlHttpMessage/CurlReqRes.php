@@ -69,7 +69,7 @@ class CurlReqRes
         if (!$this->curlHandle) {
             return;
         }
-        \set_error_handler(function ($type, $message) {
+        \set_error_handler(static function ($type, $message) {
             // ignore error
         });
         try {

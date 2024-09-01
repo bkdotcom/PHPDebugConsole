@@ -5,7 +5,7 @@ namespace bdk\Test\Debug\Plugin\Method;
 use bdk\Debug;
 use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 use bdk\HttpMessage\Response;
-use bdk\HttpMessage\ServerRequest;
+use bdk\HttpMessage\ServerRequestExtended as ServerRequest;
 use bdk\HttpMessage\Stream;
 use bdk\Test\Debug\DebugTestFramework;
 
@@ -21,7 +21,7 @@ class ReqResTest extends DebugTestFramework
     public function testGetSubscriptions()
     {
         self::assertSame(array(
-            Debug::EVENT_CONFIG,
+            // Debug::EVENT_CONFIG,
             Debug::EVENT_CUSTOM_METHOD,
         ), \array_keys($this->debug->getPlugin('methodReqRes')->getSubscriptions()));
     }

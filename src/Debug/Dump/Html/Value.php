@@ -7,7 +7,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.0
+ * @since     2.0
  */
 
 namespace bdk\Debug\Dump\Html;
@@ -58,13 +58,15 @@ class Value extends BaseValue
      * Is value a timestamp?
      * Add classname & title if so
      *
-     * @param mixed       $val value to check
-     * @param Abstraction $abs (optional) full abstraction
+     * @param mixed            $val value to check
+     * @param Abstraction|null $abs (optional) full abstraction
      *
      * @return string|false
      */
-    public function checkTimestamp($val, Abstraction $abs = null)
+    public function checkTimestamp($val, $abs = null)
     {
+        \bdk\Debug\Utility\Php::assertType($abs, 'bdk\Debug\Abstraction\Abstraction');
+
         $date = parent::checkTimestamp($val, $abs);
         if ($date) {
             $this->optionSet('postDump', function ($dumped, $opts) use ($val, $date) {
@@ -174,8 +176,10 @@ class Value extends BaseValue
     /**
      * {@inheritDoc}
      */
-    protected function dumpArray(array $array, Abstraction $abs = null)
+    protected function dumpArray(array $array, $abs = null)
     {
+        \bdk\Debug\Utility\Php::assertType($abs, 'bdk\Debug\Abstraction\Abstraction');
+
         $opts = \array_merge(array(
             'asFileTree' => false,
             'expand' => null,
@@ -284,8 +288,10 @@ class Value extends BaseValue
     /**
      * {@inheritDoc}
      */
-    protected function dumpFloat($val, Abstraction $abs = null)
+    protected function dumpFloat($val, $abs = null)
     {
+        \bdk\Debug\Utility\Php::assertType($abs, 'bdk\Debug\Abstraction\Abstraction');
+
         if ($val === Type::TYPE_FLOAT_INF) {
             return 'INF';
         }
@@ -332,13 +338,15 @@ class Value extends BaseValue
     /**
      * Dump string
      *
-     * @param string      $val string value
-     * @param Abstraction $abs (optional) full abstraction
+     * @param string           $val string value
+     * @param Abstraction|null $abs (optional) full abstraction
      *
      * @return string
      */
-    protected function dumpString($val, Abstraction $abs = null)
+    protected function dumpString($val, $abs = null)
     {
+        \bdk\Debug\Utility\Php::assertType($abs, 'bdk\Debug\Abstraction\Abstraction');
+
         return $this->string->dump($val, $abs);
     }
 

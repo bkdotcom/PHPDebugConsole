@@ -12,15 +12,12 @@ C&lt;span class=&quot;unicode&quot; data-code-point=&quot;0196&quot; title=&quot
     : ''
 ) . '
 <dt>extends</dt>
-<dd class="extends"><span class="classname"><span class="namespace">bdk\Test\Debug\Fix<span class="unicode" data-code-point="1D42D" title="U-1D42D: MATHEMATICAL BOLD SMALL T">𝐭</span>ure\</span>Con<span class="unicode" data-code-point="1D627" title="U-1D627: MATHEMATICAL SANS-SERIF ITALIC SMALL F">𝘧</span>usableIdenti<span class="unicode" data-code-point="1D627" title="U-1D627: MATHEMATICAL SANS-SERIF ITALIC SMALL F">𝘧</span>iersBa<span class="unicode" data-code-point="A731" title="U-A731: LATIN LETTER SMALL CAPITAL S">ꜱ</span>e</span></dd>
+    <dd class="extends"><span class="classname"><span class="namespace">bdk\Test\Debug\Fix<span class="unicode" data-code-point="1D42D" title="U-1D42D: MATHEMATICAL BOLD SMALL T">𝐭</span>ure\</span>Con<span class="unicode" data-code-point="1D627" title="U-1D627: MATHEMATICAL SANS-SERIF ITALIC SMALL F">𝘧</span>usableIdenti<span class="unicode" data-code-point="1D627" title="U-1D627: MATHEMATICAL SANS-SERIF ITALIC SMALL F">𝘧</span>iersBa<span class="unicode" data-code-point="A731" title="U-A731: LATIN LETTER SMALL CAPITAL S">ꜱ</span>e</span></dd>
 <dt>implements</dt>
-<dd class="implements"><ul class="list-unstyled">
-<li><span class="interface"><span class="classname"><span class="namespace">bdk\Test\Debug\Fix<span class="unicode" data-code-point="1D42D" title="U-1D42D: MATHEMATICAL BOLD SMALL T">𝐭</span>ure\</span>Con<span class="unicode" data-code-point="1D627" title="U-1D627: MATHEMATICAL SANS-SERIF ITALIC SMALL F">𝘧</span>usableInte<span class="unicode" data-code-point="1D26" title="U-1D26: GREEK LETTER SMALL CAPITAL GAMMA">ᴦ</span>face</span></span></li>'
-    . (PHP_VERSION_ID >= 80000 ? "\n" . '<li><span class="interface"><span class="classname">Stringable</span></span></li>' : '') . '
-</ul>
-</dd>
+    <dd class="interface"><span class="classname"><span class="namespace">bdk\Test\Debug\Fix<span class="unicode" data-code-point="1D42D" title="U-1D42D: MATHEMATICAL BOLD SMALL T">𝐭</span>ure\</span>Con<span class="unicode" data-code-point="1D627" title="U-1D627: MATHEMATICAL SANS-SERIF ITALIC SMALL F">𝘧</span>usableInte<span class="unicode" data-code-point="1D26" title="U-1D26: GREEK LETTER SMALL CAPITAL GAMMA">ᴦ</span>face</span></dd>'
+    . (PHP_VERSION_ID >= 80000 ? "\n" . '<dd class="interface"><span class="classname">Stringable</span></dd>' : '') . '
 <dt class="constants">constants</dt>
-<dd class="constant public"'
+    <dd class="constant public"'
     . (PHP_VERSION_ID >= 80000 ? ' data-attributes="[{&quot;arguments&quot;:{&quot;f\u03c3o&quot;:&quot;ba\u0433&quot;},&quot;name&quot;:&quot;bdk\\\\Test\\\\Debug\\\\Fix\ud835\udc2dure\\\\Example\u0421onstAttribute&quot;}]" data-chars="[&quot;\u03c3&quot;,&quot;\u0433&quot;,&quot;\ud835\udc2d&quot;,&quot;\u0421&quot;]"' : '' )
     . '><span class="t_modifier_public">public</span> '
     . (PHP_VERSION_ID >= 70100 ? '<span class="t_type">string</span> ' : '')

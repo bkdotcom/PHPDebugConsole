@@ -7,14 +7,14 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.0
+ * @since     2.3
  */
 
 namespace bdk\Debug\Psr3;
 
 use bdk\Debug;
 use bdk\Debug\LogEntry;
-use bdk\Debug\Psr3\MethodSignatureCompatTrait;
+use bdk\Debug\Psr3\CompatTrait;
 use Psr\Log\AbstractLogger;
 use Psr\Log\InvalidArgumentException;
 use Psr\Log\LogLevel;
@@ -25,7 +25,7 @@ use Psr\Log\LogLevel;
 class Logger extends AbstractLogger
 {
     // define the log method with the appropriate method signature
-    use MethodSignatureCompatTrait;
+    use CompatTrait;
 
     /** @var Debug */
     public $debug;
@@ -48,12 +48,14 @@ class Logger extends AbstractLogger
     /**
      * Constructor
      *
-     * @param Debug $debug Debug instance
+     * @param Debug|null $debug Debug instance
      *
      * @SuppressWarnings(PHPMD.StaticAccess)
      */
-    public function __construct(Debug $debug = null)
+    public function __construct($debug = null)
     {
+        \bdk\Debug\Utility\Php::assertType($debug, 'bdk\Debug');
+
         if (!$debug) {
             $debug = Debug::getInstance();
         }

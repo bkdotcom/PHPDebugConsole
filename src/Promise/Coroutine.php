@@ -87,8 +87,11 @@ final class Coroutine implements PromiseInterface
     /**
      * {@inheritDoc}
      */
-    public function then(callable $onFulfilled = null, callable $onRejected = null)
+    public function then($onFulfilled = null, $onRejected = null)
     {
+        \bdk\Promise\Utils::assertType($onFulfilled, 'callable');
+        \bdk\Promise\Utils::assertType($onRejected, 'callable');
+
         return $this->promise->then($onFulfilled, $onRejected);
     }
 

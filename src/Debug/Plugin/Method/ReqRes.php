@@ -7,7 +7,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.1
+ * @since     3.0b1
  */
 
 namespace bdk\Debug\Plugin\Method;
@@ -16,7 +16,6 @@ use bdk\Debug;
 use bdk\Debug\Plugin\CustomMethodTrait;
 use bdk\HttpMessage\Utility\HttpFoundationBridge;
 use bdk\HttpMessage\Utility\Response as ResponseUtil;
-use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
 use InvalidArgumentException;
 use Psr\Http\Message\ResponseInterface; // PSR-7
@@ -28,9 +27,6 @@ use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 class ReqRes implements SubscriberInterface
 {
     use CustomMethodTrait;
-
-    /** @var array<string,mixed> */
-    private $serverParams = array();
 
     /** @var string[] */
     protected $methods = array(
@@ -51,7 +47,6 @@ class ReqRes implements SubscriberInterface
     public function getSubscriptions()
     {
         return array(
-            Debug::EVENT_CONFIG => array('onConfig', PHP_INT_MAX),
             Debug::EVENT_CUSTOM_METHOD => 'onCustomMethod',
         );
     }
@@ -187,7 +182,8 @@ class ReqRes implements SubscriberInterface
 
     /**
      * Get $_SERVER param/value
-     * Gets serverParams from serverRequest interface
+     *
+     * Gets server param from serverRequest interface
      *
      * @param string $name    $_SERVER key/name
      * @param mixed  $default default value
@@ -196,12 +192,7 @@ class ReqRes implements SubscriberInterface
      */
     public function getServerParam($name, $default = null)
     {
-        if (!$this->serverParams) {
-            $this->serverParams = $this->debug->serverRequest->getServerParams();
-        }
-        return \array_key_exists($name, $this->serverParams)
-            ? $this->serverParams[$name]
-            : $default;
+        return $this->debug->serverRequest->getServerParam($name, $default);
     }
 
     /**
@@ -214,21 +205,6 @@ class ReqRes implements SubscriberInterface
     public function isCli($usePsr7 = true)
     {
         return \strpos($this->getInterface($usePsr7), 'cli') === 0;
-    }
-
-    /**
-     * Debug::EVENT_CONFIG subscriber
-     *
-     * @param Event $event Event instance
-     *
-     * @return void
-     */
-    public function onConfig(Event $event)
-    {
-        $configs = $event->getValues();
-        if (isset($configs['debug']['serviceProvider'])) {
-            $this->serverParams = array();
-        }
     }
 
     /**

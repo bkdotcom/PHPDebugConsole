@@ -7,7 +7,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.1
+ * @since     2.3
  */
 
 namespace bdk\Debug\Abstraction\Object;
@@ -232,8 +232,9 @@ class Helper
      *
      * @return string|null
      */
-    protected static function getTypeString(ReflectionType $type = null)
+    protected static function getTypeString($type = null)
     {
+        PhpUtil::assertType($type, 'ReflectionType');
         if ($type === null) {
             return null;
         }

@@ -7,7 +7,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.0
+ * @since     2.0
  */
 
 namespace bdk\Debug\Dump\Text;
@@ -80,8 +80,10 @@ class Value extends BaseValue
      *
      * @SuppressWarnings(PHPMD.DevelopmentCodeFragment)
      */
-    protected function dumpArray(array $array, Abstraction $abs = null)
+    protected function dumpArray(array $array, $abs = null)
     {
+        \bdk\Debug\Utility\Php::assertType($abs, 'bdk\Debug\Abstraction\Abstraction');
+
         $isNested = $this->valDepth > 0;
         $this->valDepth++;
         $array = parent::dumpArray($array, $abs);
@@ -111,13 +113,15 @@ class Value extends BaseValue
     /**
      * Dump float value
      *
-     * @param float       $val float value
-     * @param Abstraction $abs (optional) full abstraction
+     * @param float            $val float value
+     * @param Abstraction|null $abs (optional) full abstraction
      *
      * @return float|string
      */
-    protected function dumpFloat($val, Abstraction $abs = null)
+    protected function dumpFloat($val, $abs = null)
     {
+        \bdk\Debug\Utility\Php::assertType($abs, 'bdk\Debug\Abstraction\Abstraction');
+
         if ($val === Type::TYPE_FLOAT_INF) {
             return 'INF';
         }
@@ -155,13 +159,15 @@ class Value extends BaseValue
     /**
      * Dump string
      *
-     * @param string      $val string value
-     * @param Abstraction $abs (optional) full abstraction
+     * @param string           $val string value
+     * @param Abstraction|null $abs (optional) full abstraction
      *
      * @return string
      */
-    protected function dumpString($val, Abstraction $abs = null)
+    protected function dumpString($val, $abs = null)
     {
+        \bdk\Debug\Utility\Php::assertType($abs, 'bdk\Debug\Abstraction\Abstraction');
+
         $date = \is_numeric($val)
             ? $this->checkTimestamp($val, $abs)
             : null;

@@ -57,12 +57,14 @@ class ShowCard extends AbstractAction
     /**
      * Return new instance with specified card
      *
-     * @param AdaptiveCard $card AdaptiveCard
+     * @param AdaptiveCard|null $card AdaptiveCard
      *
      * @return static
      */
-    public function withCard(AdaptiveCard $card = null)
+    public function withCard($card = null)
     {
+        self::assertType($card, 'bdk\Teams\Cards\AdaptiveCard');
+
         return $this->with('card', $card);
     }
 

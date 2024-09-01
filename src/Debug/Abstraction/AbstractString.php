@@ -7,7 +7,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.0
+ * @since     3.0b1
  */
 
 namespace bdk\Debug\Abstraction;
@@ -112,10 +112,14 @@ class AbstractString extends AbstractComponent
         $typeMore = $abs['typeMore'];
         if ($abs['brief'] && $typeMore !== Type::TYPE_STRING_BINARY) {
             $matches = array();
-            $maxLen = $abs['maxlen'] > -1 ? $abs['maxlen'] : 128;
+            $maxLen = $abs['maxlen'] > -1
+                ? $abs['maxlen']
+                : 128;
             $regex = '/^([^\r\n]{1,' . $maxLen . '})/';
             \preg_match($regex, $abs['value'], $matches);
-            $abs['value'] = $matches[1];
+            $abs['value'] = $matches
+                ? $matches[1]
+                : \substr($abs['value'], 0, $maxLen);
             $abs['strlenValue'] = \strlen($abs['value']);
         }
         if ($abs['strlen'] === $abs['strlenValue'] && $abs['strlen'] === \strlen($abs['value'])) {

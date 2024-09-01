@@ -30,6 +30,13 @@ ini_set('xdebug.show_error_trace', 0);
 ini_set('xdebug.show_exception_trace', 0);
 */
 
+if (\class_exists('OAuth') === false) {
+    class OAuth
+    {
+        // make phpunit coverage happy
+    }
+}
+
 $httpdCfg = array(
     'errorLogPath' => __DIR__ . '/../tmp/httpd_error_log.txt',
 );

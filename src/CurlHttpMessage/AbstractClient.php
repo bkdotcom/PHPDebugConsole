@@ -266,7 +266,7 @@ abstract class AbstractClient
     /**
      * apply options to request
      *
-     * @param RequestInterface     $request Request instance
+     * @param RequestInterface    $request Request instance
      * @param array<string,mixed> $options options
      *
      * @return RequestInterface

@@ -11,7 +11,7 @@ use RuntimeException;
 /**
  * TextRun element
  *
- * @version >= 1.2
+ * @since v1.2
  *
  * @see https://adaptivecards.io/explorer/TextRun.html
  */
@@ -163,8 +163,10 @@ class TextRun extends AbstractItem implements ElementInterface
      *
      * @throws InvalidArgumentException
      */
-    public function withSelectAction(ActionInterface $action = null)
+    public function withSelectAction($action = null)
     {
+        self::assertType($action, 'bdk\Teams\Actions\ActionInterface');
+
         if ($action && $action->get('type') === 'Action.ShowCard') {
             throw new InvalidArgumentException('TextRun selectAction does not support ShowCard');
         }

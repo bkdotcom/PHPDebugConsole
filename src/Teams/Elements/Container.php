@@ -149,8 +149,10 @@ class Container extends AbstractElement
      *
      * @throws InvalidArgumentException
      */
-    public function withSelectAction(ActionInterface $action = null)
+    public function withSelectAction($action = null)
     {
+        self::assertType($action, 'bdk\Teams\Actions\ActionInterface');
+
         if ($action && $action->get('type') === 'Action.ShowCard') {
             throw new InvalidArgumentException('Container selectAction does not support ShowCard');
         }

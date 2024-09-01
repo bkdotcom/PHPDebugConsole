@@ -9,7 +9,7 @@ use bdk\Debug\LogEntry;
 use bdk\Debug\Utility\ArrayUtil;
 use bdk\Debug\Utility\Reflection;
 use bdk\ErrorHandler\Error;
-use bdk\HttpMessage\ServerRequest;
+use bdk\HttpMessage\ServerRequestExtended as ServerRequest;
 use bdk\PhpUnitPolyfill\AssertionTrait;
 use bdk\PubSub\Event;
 use bdk\Test\Debug\Helper;
@@ -35,6 +35,8 @@ class DebugTestFramework extends DOMTestCase
     protected static $outputMemoryUsage = false;
     protected $file;
     protected $line;
+
+    private static $errorHandlerPrev;
 
     /**
      * Constructor
@@ -149,8 +151,40 @@ class DebugTestFramework extends DOMTestCase
         }
     }
 
+    public static function setUpBeforeClass(): void
+    {
+        self::$errorHandlerPrev = \set_error_handler(static function ($errno, $errstr, $errfile, $errline) {
+            $dirVendor = \realpath(__DIR__ . '/../../vendor');
+            if (
+                $errno === E_DEPRECATED
+                && \strpos($errstr, 'the explicit nullable type must be used') !== false
+                && \strpos($errfile, $dirVendor) === 0
+            ) {
+                // ignore vendor "implicit nullable type" deprecation notices
+                /*
+                \print_r(array(
+                    'message' => $errstr,
+                    'file' => $errfile,
+                    'line' => $errline,
+                ));
+                */
+                return true;
+            }
+            if (self::$allowError && self::$errorHandlerPrev) {
+                Debug::getInstance()->errorHandler->handleError($errno, $errstr, $errfile, $errline);
+                // \call_user_func(self::$errorHandlerPrev, $errno, $errstr, $errfile, $errline);
+                return true;
+            }
+            throw new \ErrorException($errstr, 0, $errno, $errfile, $errline);
+        });
+    }
+
     public static function tearDownAfterClass(): void
     {
+        if (\is_callable(self::$errorHandlerPrev)) {
+            \restore_error_handler();
+        }
+        self::$errorHandlerPrev = null;
         $GLOBALS['collectedHeaders'] = array();
         $GLOBALS['headersSent'] = array();
         $GLOBALS['sessionMock']['status'] = PHP_SESSION_NONE;
@@ -547,7 +581,7 @@ class DebugTestFramework extends DOMTestCase
             'general' => \array_intersect_key($channels['general'], \array_flip(array('Request / Response'))),
         );
         Reflection::propSet($this->debug->getPlugin('channel'), 'channels', $channels);
-        Reflection::propSet($this->debug->getPlugin('methodReqRes'), 'serverParams', array());
+        // Reflection::propSet($this->debug->getPlugin('methodReqRes'), 'serverParams', array());
         Reflection::propSet($this->debug->abstracter->abstractObject->definition, 'default', null);
 
         // make sure we still have wamp plugin registered

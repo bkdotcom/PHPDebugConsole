@@ -36,8 +36,11 @@ class RejectedPromise extends Promise
     /**
      * {@inheritDoc}
      */
-    public function then(callable $onFulfilled = null, callable $onRejected = null)
+    public function then($onFulfilled = null, $onRejected = null)
     {
+        \bdk\Promise\Utils::assertType($onFulfilled, 'callable');
+        \bdk\Promise\Utils::assertType($onRejected, 'callable');
+
         // Return self if there is no onRejected function.
         if (!$onRejected) {
             return $this;

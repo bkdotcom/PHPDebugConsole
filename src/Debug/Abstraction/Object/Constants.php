@@ -7,7 +7,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.1
+ * @since     3.0b1
  */
 
 namespace bdk\Debug\Abstraction\Object;
@@ -80,7 +80,7 @@ class Constants extends AbstractInheritable
             PHP_VERSION_ID >= 70100
                 ? $this->addConstantsReflection($reflector)
                 : $this->addConstantsLegacy($reflector);
-        }, true);
+        }, $abs['isInterface'] ? $abs['extends'] : true);
         $this->abstracter->debug->setCfg('brief', $briefBak, Debug::CONFIG_NO_PUBLISH | Debug::CONFIG_NO_RETURN);
         $this->abs = null;
         $abs['constants'] = $this->constants;

@@ -7,7 +7,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.3
+ * @since     2.0
  */
 
 namespace bdk\Debug\Utility;
@@ -163,17 +163,19 @@ class PhpDoc
      *
      * Comment has already been stripped of comment "*"s
      *
-     * @param string    $comment          comment content
-     * @param Reflector $reflector        Reflector instance
-     * @param int       $fullyQualifyType Whether to fully qualify type(s)
-     * @param bool      $sanitize         Whether to sanitize comment
+     * @param string         $comment          comment content
+     * @param Reflector|null $reflector        Reflector instance
+     * @param int            $fullyQualifyType Whether to fully qualify type(s)
+     * @param bool           $sanitize         Whether to sanitize comment
      *
      * @return array
      *
      * @psalm-return Parsed
      */
-    private function parse($comment, Reflector $reflector = null, $fullyQualifyType = 0, $sanitize = true)
+    private function parse($comment, $reflector = null, $fullyQualifyType = 0, $sanitize = true)
     {
+        \bdk\Debug\Utility\Php::assertType($reflector, 'Reflector');
+
         $this->reflector = $reflector;
         $this->fullyQualifyType = $fullyQualifyType;
         $this->className = $reflector

@@ -7,14 +7,14 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.0
+ * @since     2.3
  */
 
 namespace bdk\Debug\Collector;
 
 use bdk\Debug;
 use bdk\Debug\Collector\DatabaseTrait;
-use bdk\Debug\Collector\Pdo\MethodSignatureCompatTrait;
+use bdk\Debug\Collector\Pdo\CompatTrait;
 use bdk\Debug\Collector\StatementInfo;
 use bdk\PubSub\Event;
 use PDO as PdoBase;
@@ -25,8 +25,8 @@ use PDOException;
  */
 class Pdo extends PdoBase
 {
+    use CompatTrait;
     use DatabaseTrait;
-    use MethodSignatureCompatTrait;
 
     /** @var Debug */
     private $debug;
@@ -37,15 +37,17 @@ class Pdo extends PdoBase
     /**
      * Constructor
      *
-     * @param PdoBase $pdo   PDO instance
-     * @param Debug   $debug (optional) Specify PHPDebugConsole instance
-     *                         if not passed, will create PDO channel on singleton instance
-     *                         if root channel is specified, will create a PDO channel
+     * @param PdoBase    $pdo   PDO instance
+     * @param Debug|null $debug (optional) Specify PHPDebugConsole instance
+     *                            if not passed, will create PDO channel on singleton instance
+     *                            if root channel is specified, will create a PDO channel
      *
      * @SuppressWarnings(PHPMD.StaticAccess)
      */
-    public function __construct(PdoBase $pdo, Debug $debug = null)
+    public function __construct(PdoBase $pdo, $debug = null)
     {
+        \bdk\Debug\Utility\Php::assertType($debug, 'bdk\Debug');
+
         if (!$debug) {
             $debug = Debug::getChannel('PDO', array('channelIcon' => $this->icon));
         } elseif ($debug === $debug->rootInstance) {
@@ -186,7 +188,7 @@ class Pdo extends PdoBase
     }
 
     /*
-        query() is in MethodSignatureCompatTrait
+        query() is in CompatTrait
     */
 
     /**

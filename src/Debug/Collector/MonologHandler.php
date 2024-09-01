@@ -7,13 +7,13 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.0
+ * @since     3.0b1
  */
 
 namespace bdk\Debug\Collector;
 
 use bdk\Debug;
-use bdk\Debug\Collector\MonologHandlerCompatTrait;
+use bdk\Debug\Collector\MonologHandler\CompatTrait;
 use InvalidArgumentException;
 use Monolog\Handler\PsrHandler;
 use Monolog\Logger;
@@ -24,7 +24,7 @@ use Psr\Log\LoggerInterface;
  */
 class MonologHandler extends PsrHandler
 {
-    use MonologHandlerCompatTrait;
+    use CompatTrait;
 
     /**
      * Constructor

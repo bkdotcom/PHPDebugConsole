@@ -463,6 +463,36 @@ EOD;
                     'summary' => '',
                 ),
             ),
+            'version' => array(
+                '/**
+                * @version 1.2.3 Version and Desc
+                * @version 1.2
+                * @version Just desc
+                * @version
+                */',
+                array(
+                    'desc' => '',
+                    'summary' => '',
+                    'version' => array(
+                        array(
+                            'desc' => 'Version and Desc',
+                            'version' => '1.2.3',
+                        ),
+                        array(
+                            'desc' => '',
+                            'version' => '1.2',
+                        ),
+                        array(
+                            'desc' => 'Just desc',
+                            'version' => null,
+                        ),
+                        array(
+                            'desc' => '',
+                            'version' => null,
+                        ),
+                    ),
+                ),
+            ),
         );
         return $tests;
     }

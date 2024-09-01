@@ -7,13 +7,14 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.0
+ * @since     2.3
  */
 
 namespace bdk\Debug\Collector;
 
 use bdk\Debug;
 use bdk\Debug\Collector\DatabaseTrait;
+use bdk\Debug\Collector\DoctrineLogger\CompatTrait;
 use bdk\Debug\Collector\StatementInfo;
 use bdk\PubSub\Event;
 use Doctrine\DBAL\Connection;
@@ -27,6 +28,7 @@ use Doctrine\DBAL\Logging\SQLLogger;
 class DoctrineLogger implements SQLLogger
 {
     use DatabaseTrait;
+    use CompatTrait;
 
     /** @var StatementInfo|null */
     protected $statementInfo;
@@ -40,14 +42,17 @@ class DoctrineLogger implements SQLLogger
     /**
      * Constructor
      *
-     * @param Connection $connection Optional Doctrine DBAL connection instance
-     *                                  pass to log connection info
-     * @param Debug      $debug      Optional DebugInstance
+     * @param Connection|null $connection Optional Doctrine DBAL connection instance
+     *                                      pass to log connection info
+     * @param Debug|null      $debug      Optional DebugInstance
      *
      * @SuppressWarnings(PHPMD.StaticAccess)
      */
-    public function __construct(Connection $connection = null, Debug $debug = null)
+    public function __construct($connection = null, $debug = null)
     {
+        \bdk\Debug\Utility\Php::assertType($connection, 'Doctrine\DBAL\Connection');
+        \bdk\Debug\Utility\Php::assertType($debug, 'bdk\Debug');
+
         if (!$debug) {
             $debug = Debug::getChannel('Doctrine', array('channelIcon' => $this->icon));
         } elseif ($debug === $debug->rootInstance) {
@@ -94,13 +99,7 @@ class DoctrineLogger implements SQLLogger
         $debug->groupEnd();  // groupSummary
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public function startQuery($sql, array $params = null, array $types = null)
-    {
-        $this->statementInfo = new StatementInfo($sql, $params, $types);
-    }
+    // startQuery defined in DoctrineLoggerTrait
 
     /**
      * {@inheritDoc}

@@ -4,7 +4,7 @@ namespace bdk\Test\Debug\Plugin;
 
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Type;
-use bdk\HttpMessage\ServerRequest;
+use bdk\HttpMessage\ServerRequestExtended as ServerRequest;
 use bdk\HttpMessage\Stream;
 use bdk\HttpMessage\UploadedFile;
 use bdk\HttpMessage\Utility\ContentType;

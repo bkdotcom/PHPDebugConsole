@@ -7,14 +7,13 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.1
+ * @since     2.3
  */
 
 namespace bdk\Debug\Collector;
 
 use bdk\CurlHttpMessage\CurlReqRes;
 use bdk\CurlHttpMessage\Exception\RequestException;
-use bdk\Debug;
 use bdk\Promise;
 use Psr\Http\Message\ResponseInterface;
 
@@ -26,8 +25,10 @@ class CurlHttpMessageMiddleware extends AbstractAsyncMiddleware
     /**
      * {@inheritDoc}
      */
-    public function __construct($cfg = array(), Debug $debug = null)
+    public function __construct($cfg = array(), $debug = null)
     {
+        \bdk\Debug\Utility\Php::assertType($debug, 'bdk\Debug');
+
         $this->cfg = \array_merge($this->cfg, array(
             'idPrefix' => 'curl_',
             'label' => 'CurlHttpMessage',

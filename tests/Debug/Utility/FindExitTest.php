@@ -62,12 +62,17 @@ class FindExitTest extends TestCase
         $lineBegin = __LINE__ - 8;
         $lineEnd = __LINE__ - 2;
         $info = $closure();
-        $this->assertArraySubset(array(
+        $xdebugVer = \phpversion('xdebug');
+        $expect = array(
             'class' => 'bdk\\Test\\Debug\\Utility\\FindExitTest',
             'file' => __FILE__,
             'found' => 'exit',
-            'function' => __NAMESPACE__ . '\\{closure:' . __FILE__ . ':' . $lineBegin . '-' . $lineEnd . '}',
-        ), $info);
+            'function' => (\version_compare($xdebugVer, '3.4.0.alpha', '>=') ? '' : __NAMESPACE__ . '\\')
+                 . '{closure:' . __FILE__ . ':' . $lineBegin . '-' . $lineEnd . '}',
+        );
+        // \bdk\Debug::varDump('expect', $expect);
+        // \bdk\Debug::varDump('actual', $info);
+        $this->assertArraySubset($expect, $info);
     }
 
     private function findExit()

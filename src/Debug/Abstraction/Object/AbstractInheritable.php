@@ -7,16 +7,13 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.1
+ * @since     3.0.5
  */
 
 namespace bdk\Debug\Abstraction\Object;
 
 use bdk\Debug\Abstraction\AbstractObject;
 use ReflectionClass;
-use ReflectionClassConstant;
-use ReflectionProperty;
-use Reflector;
 
 /**
  * Base class for collecting constants, properties, & methods
@@ -41,23 +38,32 @@ abstract class AbstractInheritable
     }
 
     /**
-     * Pass reflector and each parent class reflector to callable
+     * Pass reflector and ancestor reflectors to callable
      *
      * @param ReflectionClass $reflector      ReflectionClass instance
      * @param callable        $callable       callable to be invoked on each parent
-     * @param bool            $inclInterfaces (false) Whether to also iterate over interfaces
+     * @param array|bool      $inclInterfaces (false)
+     *                                          bool:  Whether to also iterate over interfaces
+     *                                          array:  interfaces/classes to iterate over
+     *                                          interfaces have multiple inheritance / getParentClass returns false
+     *                                          constants may be inherited from interfaces
+     *                                          properties only from parent classes
      *
      * @return void
      */
     protected function traverseAncestors(ReflectionClass $reflector, callable $callable, $inclInterfaces = false)
     {
-        $interfaces = $reflector->getInterfaceNames();
+        $interfaces = array();
+        if ($inclInterfaces === true) {
+            $interfaces = $reflector->getInterfaceNames();
+        } elseif (\is_array($inclInterfaces)) {
+            // flatten interface tree
+            \preg_match_all('/("[^"]+")/', \json_encode($inclInterfaces), $matches);
+            $interfaces = \array_map('json_decode', $matches[1]);
+        }
         while ($reflector) {
             $callable($reflector);
             $reflector = $reflector->getParentClass();
-        }
-        if ($inclInterfaces === false) {
-            return;
         }
         foreach ($interfaces as $className) {
             $reflector = new ReflectionClass($className);

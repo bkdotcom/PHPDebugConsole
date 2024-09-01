@@ -7,7 +7,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.0
+ * @since     3.0.1
  */
 
 namespace bdk\Debug\Psr3;
@@ -22,17 +22,17 @@ $refParameters = $refMethod->getParameters();
 
 if (\method_exists($refMethod, 'hasReturnType') && $refMethod->hasReturnType()) {
     // psr/log 3.0
-    require __DIR__ . '/MethodSignatureCompatTrait_3.php';
+    require __DIR__ . '/CompatTrait_3.php';
 } elseif (\method_exists($refParameters[1], 'hasType') && $refParameters[1]->hasType()) {
     // psr/log 2.0
-    require __DIR__ . '/MethodSignatureCompatTrait_2.php';
-} elseif (\trait_exists(__NAMESPACE__ . '\\MethodSignatureCompatTrait', false) === false) {
+    require __DIR__ . '/CompatTrait_2.php';
+} elseif (\trait_exists(__NAMESPACE__ . '\\CompatTrait', false) === false) {
     /**
      * psr/log 1.0
      *
      * @phpcs:disable Generic.Classes.DuplicateClassName.Found
      */
-    trait MethodSignatureCompatTrait
+    trait CompatTrait
     {
         /**
          * Logs with an arbitrary level.

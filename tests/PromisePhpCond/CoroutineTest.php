@@ -146,7 +146,7 @@ class CoroutineTest extends TestCase
                 yield $promise;
             });
         })
-        ->otherwise(static function (Exception $error = null) {
+        ->otherwise(static function ($error = null) {
             if (!$error) {
                 self::fail('Error did not propagate.');
             }

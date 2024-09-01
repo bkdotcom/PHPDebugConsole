@@ -7,7 +7,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.0
+ * @since     3.0b1
  */
 
 namespace bdk\Debug;
@@ -19,6 +19,7 @@ use bdk\Debug;
 use bdk\Debug\LogEntry;
 use bdk\Debug\ServiceProvider;
 use bdk\PubSub\Event;
+use InvalidArgumentException;
 use ReflectionMethod;
 
 /**
@@ -28,6 +29,9 @@ use ReflectionMethod;
  */
 abstract class AbstractDebug
 {
+    /** @var array<string,mixed> */
+    protected $cfg = array();
+
     /** @var \bdk\Debug\Config */
     protected $config;
 
@@ -230,16 +234,17 @@ abstract class AbstractDebug
      * Publish/Trigger/Dispatch event
      * Event will get published on ancestor channels if propagation not stopped
      *
-     * @param string $eventName Event name
-     * @param Event  $event     Event instance
-     * @param Debug  $debug     Specify Debug instance to start on.
-     *                            If not specified will check if getSubject returns Debug instance
-     *                            Fallback: this->debug
+     * @param string     $eventName Event name
+     * @param Event      $event     Event instance
+     * @param Debug|null $debug     Specify Debug instance to start on.
+     *                                If not specified will check if getSubject returns Debug instance
+     *                                Fallback: this->debug
      *
      * @return Event
      */
-    public function publishBubbleEvent($eventName, Event $event, Debug $debug = null)
+    public function publishBubbleEvent($eventName, Event $event, $debug = null)
     {
+        $this->php->assertType($debug, 'bdk\Debug');
         if ($debug === null) {
             $subject = $event->getSubject();
             /** @var Debug */

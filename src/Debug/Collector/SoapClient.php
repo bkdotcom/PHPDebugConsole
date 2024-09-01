@@ -7,7 +7,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.0
+ * @since     2.3
  */
 
 namespace bdk\Debug\Collector;
@@ -44,18 +44,20 @@ class SoapClient extends SoapClientBase
      *    list_functions: (false)
      *    list_types: (false)
      *
-     * @param string $wsdl    URI of the WSDL file or NULL if working in non-WSDL mode.
-     * @param array  $options Array of options
-     * @param Debug  $debug   (optional) Specify PHPDebugConsole instance
-     *                            if not passed, will create Soap channel on singleton instance
-     *                            if root channel is specified, will create a Soap channel
+     * @param string     $wsdl    URI of the WSDL file or NULL if working in non-WSDL mode.
+     * @param array      $options Array of options
+     * @param Debug|null $debug   (optional) Specify PHPDebugConsole instance
+     *                              if not passed, will create Soap channel on singleton instance
+     *                              if root channel is specified, will create a Soap channel
      *
      * @throws Exception
      *
      * @SuppressWarnings(PHPMD.StaticAccess)
      */
-    public function __construct($wsdl, $options = array(), Debug $debug = null)
+    public function __construct($wsdl, $options = array(), $debug = null)
     {
+        \bdk\Debug\Utility\Php::assertType($debug, 'bdk\Debug');
+
         if (!$debug) {
             $debug = Debug::getChannel('Soap', array('channelIcon' => $this->icon));
         } elseif ($debug === $debug->rootInstance) {
@@ -265,8 +267,10 @@ class SoapClient extends SoapClientBase
      *
      * @return void
      */
-    private function logConstruct($wsdl, $options, Exception $exception = null)
+    private function logConstruct($wsdl, $options, $exception = null)
     {
+        \bdk\Debug\Utility\Php::assertType($exception, 'Exception');
+
         $this->debug->groupCollapsed('SoapClient::__construct', $wsdl ?: 'non-WSDL mode', $this->debug->meta('icon', $this->icon));
         if ($wsdl && !empty($options['list_functions'])) {
             $this->debug->log(
@@ -299,8 +303,10 @@ class SoapClient extends SoapClientBase
      *
      * @return void
      */
-    private function logReqRes($action, Exception $exception = null, $logParsedFault = false)
+    private function logReqRes($action, $exception = null, $logParsedFault = false)
     {
+        \bdk\Debug\Utility\Php::assertType($exception, 'Exception');
+
         $fault = null;
         $xmlRequest = $this->debugGetXmlRequest($action);
         $xmlResponse = $this->debugGetXmlResponse($fault);

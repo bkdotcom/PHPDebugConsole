@@ -7,7 +7,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.0
+ * @since     2.3
  */
 
 namespace bdk\Debug\Collector;
@@ -52,15 +52,17 @@ class PhpCurlClass extends Curl
     /**
      * Constructor
      *
-     * @param array $options options
-     * @param Debug $debug   (optional) Specify PHPDebugConsole instance
-     *                        if not passed, will create Curl channel on singleton instance
-     *                        if root channel is specified, will create a Curl channel
+     * @param array      $options options
+     * @param Debug|null $debug   (optional) Specify PHPDebugConsole instance
+     *                              if not passed, will create Curl channel on singleton instance
+     *                              if root channel is specified, will create a Curl channel
      *
      * @SuppressWarnings(PHPMD.StaticAccess)
      */
-    public function __construct($options = array(), Debug $debug = null)
+    public function __construct($options = array(), $debug = null)
     {
+        \bdk\Debug\Utility\Php::assertType($debug, 'bdk\Debug');
+
         $this->debugOptions = \array_merge($this->debugOptions, $options);
         if (!$debug) {
             $debug = Debug::getChannel($this->debugOptions['label'], array('channelIcon' => $this->icon));

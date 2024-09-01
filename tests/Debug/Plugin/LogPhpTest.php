@@ -5,7 +5,7 @@ namespace bdk\Test\Debug\Plugin;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Plugin\LogPhp;
-use bdk\HttpMessage\ServerRequest;
+use bdk\HttpMessage\ServerRequestExtended as ServerRequest;
 use bdk\PubSub\Event;
 use bdk\Test\Debug\DebugTestFramework;
 

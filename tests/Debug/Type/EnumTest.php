@@ -16,7 +16,7 @@ use bdk\Test\Debug\DebugTestFramework;
  * @covers \bdk\Debug\Abstraction\Object\MethodParams
  * @covers \bdk\Debug\Abstraction\Object\Subscriber
  * @covers \bdk\Debug\Dump\Html\HtmlObject
- * @covers \bdk\Debug\Dump\Html\ObjectCases
+ * @covers \bdk\Debug\Dump\Html\Object\Cases
  */
 class EnumTest extends DebugTestFramework
 {
@@ -93,10 +93,7 @@ class EnumTest extends DebugTestFramework
                         <dt class="attributes">attributes</dt>
                         <dd class="attribute"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\Enum\</span>ExampleAttribute</span></dd>
                         <dt>implements</dt>
-                        <dd class="implements"><ul class="list-unstyled">
-                            <li><span class="interface toggle-off"><span class="classname">UnitEnum</span></span></li>
-                        </ul>
-                        </dd>
+                        <dd class="interface toggle-off"><span class="classname">UnitEnum</span></dd>
                         <dt class="constants">constants</dt>
                         <dd class="constant public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string">ENUM_VALUE</span> <span class="t_operator">=</span> <span class="t_const" title="What&#039;s for dinner?
                             Meals PHPDoc"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\Enum\</span>Meals</span><span class="t_operator">::</span><span class="t_identifier">DINNER</span></span></dd>
@@ -202,13 +199,14 @@ class EnumTest extends DebugTestFramework
                         <dt class="modifiers">modifiers</dt>
                         <dd class="t_modifier_final">final</dd>
                         <dt>implements</dt>
-                        <dd class="implements"><ul class="list-unstyled">
-                            <li><span class="interface toggle-off"><span class="classname">BackedEnum</span></span>
-                                <ul class="list-unstyled">
-                                    <li><span class="interface toggle-off"><span class="classname">UnitEnum</span></span></li>
-                                </ul>
-                            </li>
-                        </ul>
+                        <dd class="implements">
+                            <ul class="list-unstyled">
+                                <li><span class="interface toggle-off"><span class="classname">BackedEnum</span></span>
+                                    <ul class="list-unstyled">
+                                        <li><span class="interface toggle-off"><span class="classname">UnitEnum</span></span></li>
+                                    </ul>
+                                </li>
+                            </ul>
                         </dd>
                         <dt class="constants">constants</dt>
                         <dd class="constant public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string">ENUM_VALUE</span> <span class="t_operator">=</span> <span class="t_const"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\Enum\</span>MealsBacked</span><span class="t_operator">::</span><span class="t_identifier">DINNER</span></span></dd>

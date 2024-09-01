@@ -5,7 +5,7 @@ namespace bdk\Debug\Collector\Pdo;
 /**
  * @phpcs:disable Generic.Classes.DuplicateClassName.Found
  */
-trait MethodSignatureCompatTrait
+trait CompatTrait
 {
     /**
      * Executes an SQL statement, returning a result set as a PDOStatement object

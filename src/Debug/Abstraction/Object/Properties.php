@@ -7,7 +7,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.1
+ * @since     2.0
  */
 
 namespace bdk\Debug\Abstraction\Object;
@@ -36,6 +36,9 @@ class Properties extends AbstractInheritable
                                         //   populated only if overridden
         'forceShow' => false,           // initially show the property/value (even if protected or private)
                                         //   if value is an array, expand it
+        'isDeprecated' => false,        // some internal php objects may raise a deprecation notice when accessing
+                                        //    example: `DOMDocument::$actualEncoding`
+                                        //    or may come from phpDoc tag
         'isPromoted' => false,
         'isReadOnly' => false,
         'isStatic' => false,
@@ -268,7 +271,7 @@ class Properties extends AbstractInheritable
      *
      * @return array updated propInfo
      */
-    private function addValue($propInfo, Abstraction $abs, ReflectionProperty $refProperty)
+    private function addValue(array $propInfo, Abstraction $abs, ReflectionProperty $refProperty)
     {
         $obj = $abs->getSubject();
         $propName = $refProperty->getName();
@@ -280,12 +283,35 @@ class Properties extends AbstractInheritable
             }
             $propInfo['value'] = $value;
         } elseif (\is_object($obj)) {
-            $refProperty->setAccessible(true); // only accessible via reflection
-            $isInitialized = PHP_VERSION_ID < 70400 || $refProperty->isInitialized($obj);
-            $propInfo['value'] = $isInitialized
-                ? $refProperty->getValue($obj)
-                : Abstracter::UNDEFINED;  // value won't be displayed
+            $propInfo = $this->addValueInstance($propInfo, $abs, $refProperty);
         }
+        return $propInfo;
+    }
+
+    /**
+     * Obtain property value from instance
+     *
+     * @param array              $propInfo    propInfo array
+     * @param Abstraction        $abs         Object Abstraction instance
+     * @param ReflectionProperty $refProperty ReflectionProperty
+     *
+     * @return array updated propInfo
+     */
+    private function addValueInstance(array $propInfo, Abstraction $abs, ReflectionProperty $refProperty)
+    {
+        $obj = $abs->getSubject();
+        $refProperty->setAccessible(true); // only accessible via reflection
+        $isInitialized = PHP_VERSION_ID < 70400 || $refProperty->isInitialized($obj);
+        \set_error_handler(static function ($errType) use (&$propInfo) {
+            // example: DOMDocument::$actualEncoding  raises a deprecation notice when accessed
+            if ($errType & (E_DEPRECATED | E_USER_DEPRECATED)) {
+                $propInfo['isDeprecated'] = true;
+            }
+        });
+        $propInfo['value'] = $isInitialized
+            ? $refProperty->getValue($obj)
+            : Abstracter::UNDEFINED;  // value won't be displayed
+        \restore_error_handler();
         return $propInfo;
     }
 
@@ -342,6 +368,8 @@ class Properties extends AbstractInheritable
             'attributes' => $abs['cfgFlags'] & AbstractObject::PROP_ATTRIBUTE_COLLECT
                 ? $this->helper->getAttributes($refProperty)
                 : array(),
+            'isDeprecated' => isset($phpDoc['deprecated']), // if inspecting an instance,
+                                                            // we will also check if ReflectionProperty::getValue throws a deprecation notice
             'isPromoted' =>  PHP_VERSION_ID >= 80000
                 ? $refProperty->isPromoted()
                 : false,

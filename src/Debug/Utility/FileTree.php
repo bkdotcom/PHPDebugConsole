@@ -7,7 +7,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.0
+ * @since     3.0b1
  */
 
 namespace bdk\Debug\Utility;
@@ -141,7 +141,7 @@ class FileTree
     /**
      * Condense a tree frame
      *
-     * @param array                         $cur   current stack frame]
+     * @param array                        $cur   current stack frame]
      * @param array{out:array,src:array}[] $stack remaining stack]
      *
      * @return void

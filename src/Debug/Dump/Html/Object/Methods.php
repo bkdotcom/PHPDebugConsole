@@ -7,10 +7,10 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.0
+ * @since     3.0b1
  */
 
-namespace bdk\Debug\Dump\Html;
+namespace bdk\Debug\Dump\Html\Object;
 
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
@@ -21,7 +21,7 @@ use bdk\Debug\Abstraction\Type;
 /**
  * Dump object methods as HTML
  */
-class ObjectMethods extends AbstractObjectSection
+class Methods extends AbstractSection
 {
     /** @var array<string,int> */
     protected $opts = array();
@@ -289,6 +289,7 @@ class ObjectMethods extends AbstractObjectSection
     {
         $visClasses = \array_diff((array) $info['visibility'], array('debug'));
         $classes = \array_keys(\array_filter(array(
+            'isAbstract' => $info['isAbstract'],
             'isDeprecated' => $info['isDeprecated'],
             'isFinal' => $info['isFinal'],
             'isStatic' => $info['isStatic'],

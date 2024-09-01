@@ -7,7 +7,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.0
+ * @since     2.1
  */
 
 namespace bdk\Debug\Dump\Html;
@@ -17,11 +17,12 @@ use bdk\Debug\Abstraction\AbstractObject;
 use bdk\Debug\Abstraction\Object\Abstraction as ObjectAbstraction;
 use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Dump\Html\Helper;
-use bdk\Debug\Dump\Html\ObjectCases;
-use bdk\Debug\Dump\Html\ObjectConstants;
-use bdk\Debug\Dump\Html\ObjectMethods;
-use bdk\Debug\Dump\Html\ObjectPhpDoc;
-use bdk\Debug\Dump\Html\ObjectProperties;
+use bdk\Debug\Dump\Html\Object\Cases;
+use bdk\Debug\Dump\Html\Object\Constants;
+use bdk\Debug\Dump\Html\Object\ExtendsImplements;
+use bdk\Debug\Dump\Html\Object\Methods;
+use bdk\Debug\Dump\Html\Object\PhpDoc;
+use bdk\Debug\Dump\Html\Object\Properties;
 use bdk\Debug\Dump\Html\Value as ValDumper;
 use bdk\Debug\Utility\Html as HtmlUtil;
 
@@ -33,11 +34,14 @@ class HtmlObject
     /** @var ValDumper */
     public $valDumper;
 
-    /** @var ObjectCases */
+    /** @var Cases */
     protected $cases;
 
-    /** @var ObjectConstants */
+    /** @var Constants */
     protected $constants;
+
+    /** @var ExtendsImplements */
+    protected $extendsImplements;
 
     /** @var Helper */
     protected $helper;
@@ -45,13 +49,13 @@ class HtmlObject
     /** @var HtmlUtil */
     protected $html;
 
-    /** @var ObjectMethods */
+    /** @var Methods */
     protected $methods;
 
-    /** @var ObjectPhpDoc */
+    /** @var PhpDoc */
     protected $phpDoc;
 
-    /** @var ObjectProperties */
+    /** @var Properties */
     protected $properties;
 
     /** @var array<string,callable> */
@@ -69,17 +73,18 @@ class HtmlObject
         $this->valDumper = $valDumper;
         $this->helper = $helper;
         $this->html = $html;
-        $this->cases = new ObjectCases($valDumper, $helper, $html);
-        $this->constants = new ObjectConstants($valDumper, $helper, $html);
-        $this->methods = new ObjectMethods($valDumper, $helper, $html);
-        $this->phpDoc = new ObjectPhpDoc($valDumper, $helper);
-        $this->properties = new ObjectProperties($valDumper, $helper, $html);
+        $this->cases = new Cases($valDumper, $helper, $html);
+        $this->constants = new Constants($valDumper, $helper, $html);
+        $this->extendsImplements = new ExtendsImplements($valDumper, $helper, $html);
+        $this->methods = new Methods($valDumper, $helper, $html);
+        $this->phpDoc = new PhpDoc($valDumper, $helper);
+        $this->properties = new Properties($valDumper, $helper, $html);
         $this->sectionCallables = array(
             'attributes' => array($this, 'dumpAttributes'),
             'cases' => array($this->cases, 'dump'),
             'constants' => array($this->constants, 'dump'),
-            'extends' => array($this, 'dumpExtends'),
-            'implements' => array($this, 'dumpImplements'),
+            'extends' => array($this->extendsImplements, 'dumpExtends'),
+            'implements' => array($this->extendsImplements, 'dumpImplements'),
             'methods' => array($this->methods, 'dump'),
             'phpDoc' => array($this->phpDoc, 'dump'),
             'properties' => array($this->properties, 'dump'),
@@ -124,39 +129,6 @@ class HtmlObject
     }
 
     /**
-     * Build implements tree
-     *
-     * @param list<string> $implements         Implements structure
-     * @param list<string> $interfacesCollapse Interfaces that should initially be hidden
-     *
-     * @return string
-     */
-    private function buildImplementsTree(array $implements, array $interfacesCollapse)
-    {
-        $str = '<ul class="list-unstyled">' . "\n";
-        foreach ($implements as $k => $v) {
-            $className = \is_array($v)
-                ? $k
-                : $v;
-            $str .= '<li>'
-                . $this->html->buildTag(
-                    'span',
-                    array(
-                        'class' => array(
-                            'interface' => true,
-                            'toggle-off' => \in_array($className, $interfacesCollapse, true),
-                        ),
-                    ),
-                    $this->valDumper->markupIdentifier($className, 'classname')
-                )
-                . (\is_array($v) ? "\n" . self::buildImplementsTree($v, $interfacesCollapse) : '')
-                . '</li>' . "\n";
-        }
-        $str .= '</ul>' . "\n";
-        return $str;
-    }
-
-    /**
      * Remove empty tags and unneeded attributes
      *
      * @param string $html html fragment
@@ -166,7 +138,7 @@ class HtmlObject
     private function cleanup($html)
     {
         // remove <dt>'s that have no <dd>'
-        $html = \preg_replace('#(?:<dt>(?:extends|implements|phpDoc)</dt>\n)+(<dt|</dl)#', '$1', $html);
+        $html = \preg_replace('#(?:<dt>(?:phpDoc)</dt>\n)+(<dt|</dl)#', '$1', $html);
         $html = \str_replace(array(
             ' data-attributes="null"',
             ' data-chars="[]"',
@@ -207,15 +179,14 @@ class HtmlObject
         if (!$attributes || !($abs['cfgFlags'] & AbstractObject::OBJ_ATTRIBUTE_OUTPUT)) {
             return '';
         }
-        $str = '<dt class="attributes">attributes</dt>' . "\n";
         $attributes = $abs->sort($attributes, $abs['sort']);
-        foreach ($attributes as $info) {
-            $str .= '<dd class="attribute">'
-                . $this->valDumper->markupIdentifier($info['name'], 'classname')
-                . $this->dumpAttributeArgs($info['arguments'])
-                . '</dd>' . "\n";
-        }
-        return $str;
+        return '<dt class="attributes">attributes</dt>' . "\n"
+            . \implode(\array_map(function ($info) {
+                return '<dd class="attribute">'
+                    . $this->valDumper->markupIdentifier($info['name'], 'classname')
+                    . $this->dumpAttributeArgs($info['arguments'])
+                    . '</dd>' . "\n";
+            }, $attributes));
     }
 
     /**
@@ -274,36 +245,6 @@ class HtmlObject
         return $this->valDumper->markupIdentifier($abs['className'], 'classname', 'span', array(
             'title' => $title,
         ));
-    }
-
-    /**
-     * Dump classNames of classes obj extends
-     *
-     * @param ObjectAbstraction $abs Object Abstraction instance
-     *
-     * @return string html fragment
-     */
-    protected function dumpExtends(ObjectAbstraction $abs)
-    {
-        return '<dt>extends</dt>' . "\n"
-            . \implode(\array_map(function ($className) {
-                return '<dd class="extends">' . $this->valDumper->markupIdentifier($className, 'classname') . '</dd>' . "\n";
-            }, $abs['extends']));
-    }
-
-    /**
-     * Dump classNames of interfaces obj extends
-     *
-     * @param ObjectAbstraction $abs Object Abstraction instance
-     *
-     * @return string html fragment
-     */
-    protected function dumpImplements(ObjectAbstraction $abs)
-    {
-        return empty($abs['implements'])
-            ? ''
-            : '<dt>implements</dt>' . "\n"
-                . '<dd class="implements">' . $this->buildImplementsTree($abs['implements'], $abs['interfacesCollapse']) . '</dd>' . "\n";
     }
 
     /**

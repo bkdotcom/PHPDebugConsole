@@ -7,7 +7,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.0
+ * @since     2.0
  */
 
 namespace bdk\Debug\Dump\Base;
@@ -49,8 +49,10 @@ class Value extends AbstractValue
     /**
      * {@inheritDoc}
      */
-    protected function dumpArray(array $array, Abstraction $abs = null)
+    protected function dumpArray(array $array, $abs = null)
     {
+        \bdk\Debug\Utility\Php::assertType($abs, 'bdk\Debug\Abstraction\Abstraction');
+
         if ($this->optionGet('isMaxDepth')) {
             return 'array *MAX DEPTH*';
         }
@@ -104,8 +106,10 @@ class Value extends AbstractValue
     /**
      * {@inheritDoc}
      */
-    protected function dumpFloat($val, Abstraction $abs = null)
+    protected function dumpFloat($val, $abs = null)
     {
+        \bdk\Debug\Utility\Php::assertType($abs, 'bdk\Debug\Abstraction\Abstraction');
+
         $date = $this->checkTimestamp($val, $abs);
         return $date
             ? $val . ' (' . $date . ')'
@@ -115,8 +119,10 @@ class Value extends AbstractValue
     /**
      * {@inheritDoc}
      */
-    protected function dumpInt($val, Abstraction $abs = null)
+    protected function dumpInt($val, $abs = null)
     {
+        \bdk\Debug\Utility\Php::assertType($abs, 'bdk\Debug\Abstraction\Abstraction');
+
         $val = $this->dumpFloat($val, $abs);
         return \is_string($val)
             ? $val
@@ -178,8 +184,10 @@ class Value extends AbstractValue
     /**
      * {@inheritDoc}
      */
-    protected function dumpString($val, Abstraction $abs = null)
+    protected function dumpString($val, $abs = null)
     {
+        \bdk\Debug\Utility\Php::assertType($abs, 'bdk\Debug\Abstraction\Abstraction');
+
         if (\is_numeric($val)) {
             $date = $this->checkTimestamp($val, $abs);
             return $date

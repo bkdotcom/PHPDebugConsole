@@ -25,7 +25,7 @@ use bdk\Test\Debug\DebugTestFramework;
  * @covers \bdk\Debug\Dump\Html\Helper
  * @covers \bdk\Debug\Dump\Html\HtmlObject
  * @covers \bdk\Debug\Dump\Html\HtmlString
- * @covers \bdk\Debug\Dump\Html\AbstractObjectSection
+ * @covers \bdk\Debug\Dump\Html\Object\AbstractSection
  * @covers \bdk\Debug\Dump\Html\Table
  * @covers \bdk\Debug\Dump\Html\Value
  * @covers \bdk\Debug\Route\ChromeLogger

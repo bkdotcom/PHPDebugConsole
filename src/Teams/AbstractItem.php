@@ -67,6 +67,53 @@ class AbstractItem implements ItemInterface
     }
 
     /**
+     * Assert that a value is of a certain type
+     *
+     * Support extreme range of PHP versions : 5.4 - 8.4 (and beyond)
+     * `MyObj $obj = null` has been deprecated in PHP 8.4
+     * must now be `?MyObj $obj = null` (which is a php 7.1 feature)
+     * Workaround - remove type-hint when we allow null (not ideal) and call assertType
+     * When we drop support for php < 7.1, we can remove this method and do proper type-hinting
+     *
+     * @param mixed  $value     Value to test
+     * @param string $type      "array", "callable", "object", or className
+     * @param bool   $allowNull (true) allow null?
+     *
+     * @return void
+     *
+     * @throws InvalidArgumentException
+     */
+    protected static function assertType($value, $type, $allowNull = true)
+    {
+        if ($allowNull && $value === null) {
+            return;
+        }
+        $isType = false;
+        switch ($type) {
+            case 'array':
+                $isType = \is_array($value);
+                break;
+            case 'callable':
+                $isType = \is_callable($value);
+                break;
+            case 'object':
+                $isType = \is_object($value);
+                break;
+            default:
+                $isType = \is_a($value, $type);
+        }
+        if ($isType) {
+            return;
+        }
+        throw new InvalidArgumentException(\sprintf(
+            'Expected %s%s, got %s',
+            $type,
+            $allowNull ? ' (or null)' : '',
+            self::getDebugType($value)
+        ));
+    }
+
+    /**
      * Return new instance with updated property value
      *
      * @param string $name  attribute/property name

@@ -7,7 +7,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.0
+ * @since     3.3
  */
 
 namespace bdk\Debug\Framework\Yii1_1;
@@ -40,12 +40,14 @@ class PdoCollector
      * Setup up PDO collector
      * Log to PDO channel
      *
-     * @param CDbConnection $dbConnection CDbConnection instance
+     * @param CDbConnection|null $dbConnection CDbConnection instance
      *
      * @return void
      */
-    public function collect(CDbConnection $dbConnection = null)
+    public function collect($dbConnection = null)
     {
+        \bdk\Debug\Utility\Php::assertType($dbConnection, 'CDbConnection');
+
         if ($this->component->shouldCollect('pdo') === false) {
             return;
         }
@@ -84,7 +86,7 @@ class PdoCollector
     }
 
     /**
-     * Attache PDO Collector to db connection
+     * Attach PDO Collector to db connection
      *
      * @param CDbConnection $dbConnection CDbConnection instance
      * @param Pdo           $pdoCollector PDO collector instance

@@ -10,7 +10,7 @@ use UnexpectedValueException;
 /**
  * Assertion methods
  */
-Trait AssertionTrait
+trait AssertionTrait
 {
     /**
      * Assert valid section accessory

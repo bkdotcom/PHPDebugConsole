@@ -7,7 +7,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.0
+ * @since     2.3
  */
 
 namespace bdk\Debug\Framework;
@@ -31,15 +31,18 @@ class Slim2
     /**
      * Constructor
      *
-     * @param Debug  $debug      (optional) Specify PHPDebugConsole instance
-     *                             if not passed, will create Slim channel on singleton instance
-     *                             if root channel is specified, will create a Slim channel
-     * @param object $prevWriter (optional) previous slim logWriter if desired to continue writing to existing writer
+     * @param Debug|null $debug      (optional) Specify PHPDebugConsole instance
+     *                                 if not passed, will create Slim channel on singleton instance
+     *                                 if root channel is specified, will create a Slim channel
+     * @param object     $prevWriter (optional) previous slim logWriter if desired to continue writing to existing writer
      *
      * @SuppressWarnings(PHPMD.StaticAccess)
      */
-    public function __construct(Debug $debug = null, $prevWriter = null)
+    public function __construct($debug = null, $prevWriter = null)
     {
+        \bdk\Debug\Utility\Php::assertType($debug, 'bdk\Debug');
+        \bdk\Debug\Utility\Php::assertType($prevWriter, 'object'); // object not avail as type-hint until php 7.2
+
         if (!$debug) {
             $debug = Debug::getChannel('Slim');
         } elseif ($debug === $debug->rootInstance) {

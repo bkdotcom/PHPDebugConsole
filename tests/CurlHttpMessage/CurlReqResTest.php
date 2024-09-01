@@ -84,7 +84,7 @@ class CurlReqResTest extends TestCase
             $curlReqRes->exec();
             $this->fail('RequestException not thrown');
         } catch (RequestException $e) {
-            self::assertStringContainsString('cURL error 1: Protocol "bogus" not supported or disabled in libcurl', $e->getMessage());
+            self::assertStringContainsString('cURL error 1: Protocol "bogus" not supported', $e->getMessage());
             self::assertStringContainsString(' for GET bogus://127.0.0.1/', $e->getMessage());
         }
     }

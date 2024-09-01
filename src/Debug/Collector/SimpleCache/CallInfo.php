@@ -7,7 +7,7 @@
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2024 Brad Kent
- * @version   v3.0
+ * @since     2.3
  */
 
 namespace bdk\Debug\Collector\SimpleCache;
@@ -96,8 +96,10 @@ class CallInfo extends AbstractComponent
      *
      * @return void
      */
-    public function end(Exception $exception = null)
+    public function end($exception = null)
     {
+        \bdk\Debug\Utility\Php::assertType($exception, 'Exception');
+
         $this->exception = $exception;
         $this->timeEnd = \microtime(true);
         $this->memoryEnd = \memory_get_usage(false);

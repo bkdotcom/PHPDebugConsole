@@ -36,14 +36,15 @@ use ReflectionObject;
  * @covers \bdk\Debug\Dump\Base\BaseObject
  * @covers \bdk\Debug\Dump\Base\Value
  * @covers \bdk\Debug\Dump\Html
- * @covers \bdk\Debug\Dump\Html\AbstractObjectSection
  * @covers \bdk\Debug\Dump\Html\Helper
  * @covers \bdk\Debug\Dump\Html\HtmlObject
- * @covers \bdk\Debug\Dump\Html\ObjectCases
- * @covers \bdk\Debug\Dump\Html\ObjectConstants
- * @covers \bdk\Debug\Dump\Html\ObjectMethods
- * @covers \bdk\Debug\Dump\Html\ObjectPhpDoc
- * @covers \bdk\Debug\Dump\Html\ObjectProperties
+ * @covers \bdk\Debug\Dump\Html\Object\AbstractSection
+ * @covers \bdk\Debug\Dump\Html\Object\Cases
+ * @covers \bdk\Debug\Dump\Html\Object\Constants
+ * @covers \bdk\Debug\Dump\Html\Object\ExtendsImplements
+ * @covers \bdk\Debug\Dump\Html\Object\Methods
+ * @covers \bdk\Debug\Dump\Html\Object\PhpDoc
+ * @covers \bdk\Debug\Dump\Html\Object\Properties
  * @covers \bdk\Debug\Dump\Html\Value
  * @covers \bdk\Debug\Dump\Text
  * @covers \bdk\Debug\Dump\Text\TextObject
@@ -323,10 +324,7 @@ EOD;
                         if (PHP_VERSION_ID >= 80000) {
                             self::assertStringContainsString(\implode("\n", array(
                                 '<dt>implements</dt>',
-                                '<dd class="implements"><ul class="list-unstyled">',
-                                '<li><span class="interface"><span class="classname">Stringable</span></span></li>',
-                                '</ul>',
-                                '</dd>',
+                                '<dd class="interface"><span class="classname">Stringable</span></dd>',
                             )), $str);
                         } else {
                             self::assertStringNotContainsString('<dt>implements</dt>', $str);
@@ -1158,6 +1156,7 @@ EOD;
                     'deprecated' => array(
                         array(
                             'desc' => 'this method is bad and should feel bad',
+                            'version' => null,
                         ),
                     ),
                     'desc' => '',
@@ -1221,7 +1220,8 @@ EOD;
                     <dt>extends</dt>
                         <dd class="extends"><span class="classname">stdClass</span></dd>
                     <dt>implements</dt>
-                        <dd class="implements"><ul class="list-unstyled">
+                        <dd class="implements">
+                        <ul class="list-unstyled">
                         <li><span class="interface toggle-off"><span class="classname">IteratorAggregate</span></span>
                         <ul class="list-unstyled">
                         <li><span class="interface"><span class="classname">Traversable</span></span></li>
@@ -1511,6 +1511,48 @@ EOD;
                     $arg1 = $entry['args'][1];
                     self::assertSame('DOMElement', $arg1['className']);
                     // echo json_encode($this->helper->logEntryToArray($entry), JSON_PRETTY_PRINT) . "\n";
+                },
+            )
+        );
+    }
+
+    public function testInterface()
+    {
+        $interface = 'bdk\HttpMessage\ServerRequestExtendedInterface';
+        $abs = $this->debug->abstracter->abstractObject->getAbstraction($interface);
+        $this->testMethod(
+            'log',
+            array(
+                $abs,
+            ),
+            array(
+                'entry' => static function (LogEntry $logEntry) {
+                    $abs = $logEntry['args'][0];
+                    self::assertSame(array(
+                        'Psr\Http\Message\ServerRequestInterface' => array(
+                            'Psr\Http\Message\RequestInterface' => array(
+                                'Psr\Http\Message\MessageInterface',
+                            ),
+                        ),
+                    ), $abs['extends']);
+                },
+                'html' => static function ($html) {
+                    $expect = '<dt>extends</dt>
+                        <dd class="extends">
+                            <ul class="list-unstyled">
+                            <li><span class="extends"><span class="classname"><span class="namespace">Psr\Http\Message\</span>ServerRequestInterface</span></span>
+                                <ul class="list-unstyled">
+                                <li><span class="extends"><span class="classname"><span class="namespace">Psr\Http\Message\</span>RequestInterface</span></span>
+                                        <ul class="list-unstyled">
+                                    <li><span class="extends"><span class="classname"><span class="namespace">Psr\Http\Message\</span>MessageInterface</span></span></li>
+                                    </ul>
+                                </li>
+                                </ul>
+                            </li>
+                            </ul>
+                        </dd>';
+                    self::assertStringContainsString(preg_replace('/^\s+/m', $expect, ''), $html);
+                    self::assertStringNotContainsString('<dt>implements</dt>', $html);
                 },
             )
         );

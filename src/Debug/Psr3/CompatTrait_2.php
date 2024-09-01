@@ -6,13 +6,13 @@ namespace bdk\Debug\Psr3;
     Wrap in condition.
     PHPUnit code coverage scans all files and will conflict
 */
-if (\trait_exists(__NAMESPACE__ . '\\MethodSignatureCompatTrait', false) === false) {
+if (\trait_exists(__NAMESPACE__ . '\\CompatTrait', false) === false) {
     /**
-     * Provide log method with signature compatible with psr/log v3
+     * Provide log method with signature compatible with psr/log v2
      *
      * @phpcs:disable Generic.Classes.DuplicateClassName.Found
      */
-    trait MethodSignatureCompatTrait
+    trait CompatTrait
     {
         /**
          * Logs with an arbitrary level.
@@ -25,7 +25,7 @@ if (\trait_exists(__NAMESPACE__ . '\\MethodSignatureCompatTrait', false) === fal
          *
          * @throws \Psr\Log\InvalidArgumentException
          */
-        public function log($level, string|\Stringable $message, array $context = array()): void
+        public function log($level, string|\Stringable $message, array $context = array())
         {
             $this->doLog($level, $message, $context);
         }

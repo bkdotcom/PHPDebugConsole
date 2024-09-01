@@ -6,7 +6,7 @@ use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Utility\SerializeLog;
-use bdk\HttpMessage\ServerRequest;
+use bdk\HttpMessage\ServerRequestExtended as ServerRequest;
 use bdk\PhpUnitPolyfill\AssertionTrait;
 use bdk\Test\Debug\DebugTestFramework;
 use bdk\Test\Debug\Fixture\TestObj;
@@ -401,6 +401,7 @@ EOD;
                 'declaredPrev' => null,
                 'declaredOrig' => null,
                 'debugInfoExcluded' => false,
+                'isDeprecated' => false,
                 'isPromoted' => false,
                 'isReadOnly' => false,
                 'phpDoc' => array(

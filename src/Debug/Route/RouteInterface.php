@@ -37,11 +37,11 @@ interface RouteInterface extends SubscriberInterface
      * Process log collectively (alerts, summary, log...)
      * likely implemented as a subscriber for the Debug::EVENT_OUTPUT event
      *
-     * @param Event $event Event instance
+     * @param Event|null $event Event instance
      *
      * @return mixed
      */
-    public function processLogEntries(Event $event);
+    public function processLogEntries($event = null);
 
     /**
      * Process log entry

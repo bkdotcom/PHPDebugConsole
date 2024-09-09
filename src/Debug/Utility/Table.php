@@ -331,7 +331,7 @@ class Table
                          * @param array<string,mixed> $prop
                          */
                         static function ($prop) {
-                            return $prop['visibility'] === 'public';
+                            return \in_array('public', (array) $prop['visibility'], true);
                         }
                     )
                 );

@@ -401,9 +401,11 @@ EOD;
                 'declaredPrev' => null,
                 'declaredOrig' => null,
                 'debugInfoExcluded' => false,
+                'hooks' => array(),
                 'isDeprecated' => false,
                 'isPromoted' => false,
                 'isReadOnly' => false,
+                'isVirtual' => false,
                 'phpDoc' => array(
                     'desc' => '',
                     'summary' => '',

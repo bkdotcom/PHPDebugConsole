@@ -55,6 +55,8 @@ class ReqRes implements SubscriberInterface
      * Get and clear debug headers that need to be output
      *
      * @return array headerName => value array
+     *
+     * @since 2.3
      */
     public function getHeaders()
     {

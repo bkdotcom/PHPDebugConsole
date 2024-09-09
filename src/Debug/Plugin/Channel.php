@@ -44,6 +44,8 @@ class Channel implements SubscriberInterface
      * @param array        $config channel specific configuration
      *
      * @return Debug new or existing `Debug` instance
+     *
+     * @since 2.3
      */
     public function getChannel($name, $config = array())
     {

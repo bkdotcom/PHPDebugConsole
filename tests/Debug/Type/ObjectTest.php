@@ -11,6 +11,7 @@ use bdk\Debug\LogEntry;
 use bdk\Test\Debug\DebugTestFramework;
 use bdk\Test\Debug\Fixture\TestObj;
 use bdk\Test\Debug\Helper;
+use PHP_CodeSniffer\Tokenizers\PHP;
 use ReflectionObject;
 
 /**
@@ -28,6 +29,7 @@ use ReflectionObject;
  * @covers \bdk\Debug\Abstraction\Object\Methods
  * @covers \bdk\Debug\Abstraction\Object\Properties
  * @covers \bdk\Debug\Abstraction\Object\PropertiesDom
+ * @covers \bdk\Debug\Abstraction\Object\PropertiesInstance
  * @covers \bdk\Debug\Abstraction\Object\PropertiesPhpDoc
  * @covers \bdk\Debug\Abstraction\Object\Subscriber
  * @covers \bdk\Debug\Abstraction\Type
@@ -193,14 +195,14 @@ EOD;
                                     self::assertSame(array(
                                         'value' => __FILE__,
                                         'valueFrom' => 'debug',
-                                        'visibility' => 'debug',
+                                        'visibility' => ['debug'],
                                     ), $values);
                                     break;
                                 case 'debug.line':
                                     self::assertSame(array(
                                         'value' => $line,
                                         'valueFrom' => 'debug',
-                                        'visibility' => 'debug',
+                                        'visibility' => ['debug'],
                                     ), $values);
                                     break;
                             }
@@ -748,6 +750,56 @@ EOD;
                 ),
             ),
 
+            // php 8.4+
+            'propertyAsymVisibility' => array(
+                'log',
+                array(
+                    PHP_VERSION_ID >= 80400
+                        ? new \bdk\Test\Debug\Fixture\PropertyAsymVisibility()
+                        : null,
+                ),
+                array(
+                    'entry' => static function (LogEntry $logEntry) {
+                        $expect = require __DIR__ . '/../data/PropertyAsymVisibility.php';
+                        $actual = Helper::deObjectifyData($logEntry['args'][0]->getValues(), true, false, true);
+                        // \bdk\Debug::varDump('expect', $expect);
+                        // \bdk\Debug::varDump('actual', $actual);
+                        self::assertSame($expect, $actual);
+                    },
+                    'html' => static function ($html) {
+                        $expect = require __DIR__ . '/../data/PropertyAsymVisibility_html.php';
+                        // echo 'expect: ' . $expect . "\n\n";
+                        // echo 'actual: ' . $html . "\n\n";
+                        self::assertStringMatchesFormatNormalized($expect, $html);
+                    },
+                ),
+            ),
+
+            // php 8.4+
+            'propertyHooks' => array(
+                'log',
+                array(
+                    PHP_VERSION_ID >= 80400
+                        ? new \bdk\Test\Debug\Fixture\PropertyHooks()
+                        : null,
+                ),
+                array(
+                    'entry' => static function (LogEntry $logEntry) {
+                        $expect = require __DIR__ . '/../data/PropertyHooks.php';
+                        $actual = Helper::deObjectifyData($logEntry['args'][0]->getValues(), true, false, true);
+                        // \bdk\Debug::varDump('expect', $expect);
+                        // \bdk\Debug::varDump('actual', $actual);
+                        self::assertSame($expect, $actual);
+                    },
+                    'html' => static function ($html) {
+                        $expect = require __DIR__ . '/../data/PropertyHooks_html.php';
+                        // echo 'expect: ' . $expect . "\n\n";
+                        // echo 'actual: ' . $html . "\n\n";
+                        self::assertStringMatchesFormatNormalized($expect, $html);
+                    },
+                ),
+            ),
+
             'sortByName' => array(
                 'log',
                 array(
@@ -915,7 +967,11 @@ EOD;
             ),
         );
 
-        // $tests = \array_intersect_key($tests, \array_flip(array('phpDocExtends')));
+        if (PHP_VERSION_ID < 80400) {
+            unset($tests['propertyAsymVisibility'], $tests['propertyHooks']);
+        }
+
+        // $tests = \array_intersect_key($tests, \array_flip(array('propertyHooks')));
 
         return $tests;
     }
@@ -1050,7 +1106,7 @@ EOD;
                 'isPromoted' => false,
                 'value' => 'redefined in Test (public)',
                 'valueFrom' => 'value',
-                'visibility' => 'public',
+                'visibility' => ['public'],
             ),
             $abs['properties']['propPublic']
         );
@@ -1058,7 +1114,7 @@ EOD;
             array(
                 'isPromoted' => false,
                 'valueFrom' => 'value',
-                'visibility' => 'public',
+                'visibility' => ['public'],
                 // 'value' => 'This property is debug only',
             ),
             $abs['properties']['someArray']
@@ -1071,7 +1127,7 @@ EOD;
                 'isPromoted' => false,
                 'value' => 'defined only in TestBase (protected)',
                 'valueFrom' => 'value',
-                'visibility' => 'protected',
+                'visibility' => ['protected'],
             ),
             $abs['properties']['propProtected']
         );
@@ -1084,7 +1140,7 @@ EOD;
                 'isPromoted' => false,
                 'value' => 'redefined in Test (private) (alternate value via __debugInfo)',
                 'valueFrom' => 'debugInfo',
-                'visibility' => 'private',
+                'visibility' => ['private'],
             ),
             $abs['properties']['propPrivate']
         );
@@ -1097,7 +1153,7 @@ EOD;
                 'isPromoted' => false,
                 'value' => 'defined in TestBase (private)',
                 'valueFrom' => 'value',
-                'visibility' => 'private',
+                'visibility' => ['private'],
             ),
             $abs['properties']['testBasePrivate']
         );
@@ -1377,7 +1433,7 @@ EOD;
                             'isPromoted' => false,
                             'value' => 'bar',
                             'valueFrom' => 'value',
-                            'visibility' => 'private',
+                            'visibility' => ['private'],
                         ),
                         $abs['properties']['foo']
                     );
@@ -1390,7 +1446,7 @@ EOD;
                             'isPromoted' => false,
                             'value' => 'red',
                             'valueFrom' => 'value',
-                            'visibility' => 'public',
+                            'visibility' => ['public'],
                         ),
                         $abs['properties']['color']
                     );
@@ -1620,7 +1676,11 @@ EOD;
                     $constExpect = '<dd class="constant isFinal public"><span class="t_modifier_final">final</span> <span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string">FINAL_CONST</span> <span class="t_operator">=</span> <span class="t_string">foo</span></dd>';
                     self::assertStringContainsString($constExpect, $html);
 
-                    $propExpect = '<dd class="isPromoted isReadOnly property public"><span class="t_modifier_public">public</span> <span class="t_modifier_readonly">readonly</span> <span class="t_type">string</span> <span class="no-quotes t_identifier t_string">title</span> <span class="t_operator">=</span> <span class="t_string" data-type-more="numeric">42</span></dd>';
+                    $propExpect = '<dd class="isPromoted isReadOnly property ' . (PHP_VERSION_ID >= 80400 ? 'protected-set ' : '') . 'public">'
+                        . '<span class="t_modifier_public">public</span> '
+                        . (PHP_VERSION_ID >= 80400 ? '<span class="t_modifier_protected-set">protected-set</span> ' : '' )
+                        . '<span class="t_modifier_readonly">readonly</span> '
+                        . '<span class="t_type">string</span> <span class="no-quotes t_identifier t_string">title</span> <span class="t_operator">=</span> <span class="t_string" data-type-more="numeric">42</span></dd>';
                     self::assertStringContainsString($propExpect, $html);
                 },
             )
@@ -1661,7 +1721,11 @@ EOD;
                         $html
                     );
                     self::assertStringContainsString(
-                        '<dd class="isPromoted isReadOnly property public"><span class="t_modifier_public">public</span> <span class="t_modifier_readonly">readonly</span> <span class="t_type">string</span> <span class="no-quotes t_identifier t_string" title="$status">status</span> <span class="t_operator">=</span> <span class="t_string">active</span></dd>',
+                        '<dd class="isPromoted isReadOnly property ' . (PHP_VERSION_ID >= 80400 ? 'protected-set ' : '') . 'public">'
+                            . '<span class="t_modifier_public">public</span> '
+                            . (PHP_VERSION_ID >= 80400 ? '<span class="t_modifier_protected-set">protected-set</span> ' : '')
+                            . '<span class="t_modifier_readonly">readonly</span> '
+                            . '<span class="t_type">string</span> <span class="no-quotes t_identifier t_string" title="$status">status</span> <span class="t_operator">=</span> <span class="t_string">active</span></dd>',
                         $html
                     );
                 },
@@ -1884,7 +1948,7 @@ EOD;
         self::assertArrayNotHasKey('propHidden', $props, 'propHidden shouldn\'t be debugged');
         // debugValue
         self::assertSame('This property is debug only', $props['debugValue']['value']);
-        self::assertEquals('debug', $props['debugValue']['visibility']);
+        self::assertEquals(['debug'], $props['debugValue']['visibility']);
         // propPrivate
         self::assertStringEndsWith('(alternate value via __debugInfo)', $props['propPrivate']['value']);
         self::assertSame('debugInfo', $props['propPrivate']['valueFrom']);

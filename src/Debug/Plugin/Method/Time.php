@@ -58,6 +58,8 @@ class Time implements SubscriberInterface
      * @param float  $duration (optional) duration (in seconds).  Use this param to log a duration obtained externally.
      *
      * @return \bdk\Debug
+     *
+     * @since 3.0 duration argument added
      */
     public function time($label = null, $duration = null)
     {
@@ -98,6 +100,9 @@ class Time implements SubscriberInterface
      * @return \bdk\Debug|float|false The duration (in sec).
      *
      * @psalm-return ($return is true ? float|false : \bdk\Debug)
+     *
+     * @since 3.0 returnOrTemplate & precision arguments removed.
+     *            New meta options: precision, silent, template, & unit
      */
     public function timeEnd($label = null, $log = true, $return = 'auto')
     {
@@ -130,6 +135,9 @@ class Time implements SubscriberInterface
      * @return \bdk\Debug|float|false The duration (in sec).  `false` if specified label does not exist
      *
      * @psalm-return ($return is true ? float|false : \bdk\Debug)
+     *
+     * @since 3.0 returnOrTemplate & precision arguments removed.
+     *            New meta options: precision, silent, template, & unit
      */
     public function timeGet($label = null, $log = true, $return = 'auto')
     {
@@ -152,6 +160,8 @@ class Time implements SubscriberInterface
      * @param mixed  ...$arg (optional) additional values to be logged with time
      *
      * @return \bdk\Debug
+     *
+     * @since 2.3
      */
     public function timeLog($label = null, $args = null)
     {

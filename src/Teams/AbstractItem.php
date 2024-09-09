@@ -4,6 +4,7 @@ namespace bdk\Teams;
 
 use bdk\Teams\CardUtilityTrait;
 use bdk\Teams\ItemInterface;
+use InvalidArgumentException;
 use LogicException;
 use OutOfBoundsException;
 
@@ -88,21 +89,7 @@ class AbstractItem implements ItemInterface
         if ($allowNull && $value === null) {
             return;
         }
-        $isType = false;
-        switch ($type) {
-            case 'array':
-                $isType = \is_array($value);
-                break;
-            case 'callable':
-                $isType = \is_callable($value);
-                break;
-            case 'object':
-                $isType = \is_object($value);
-                break;
-            default:
-                $isType = \is_a($value, $type);
-        }
-        if ($isType) {
+        if (self::assertTypeCheck($value, $type)) {
             return;
         }
         throw new InvalidArgumentException(\sprintf(
@@ -111,6 +98,30 @@ class AbstractItem implements ItemInterface
             $allowNull ? ' (or null)' : '',
             self::getDebugType($value)
         ));
+    }
+
+    /**
+     * Test if value is of a certain type
+     *
+     * @param mixed  $value Value to test
+     * @param string $type  "array", "callable", "object", or className
+     *
+     * @return bool
+     */
+    private static function assertTypeCheck($value, $type)
+    {
+        // For teams we don't need 'array', 'callable', or 'object' tests
+        switch ($type) {
+            case 'array':
+                return \is_array($value);
+            case 'callable':
+                return \is_callable($value);
+            case 'object':
+                return \is_object($value);
+            default:
+                return \is_a($value, $type);
+        }
+        return false;
     }
 
     /**

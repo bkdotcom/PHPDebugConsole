@@ -50,6 +50,9 @@ class Output implements SubscriberInterface
      * @param array $cfg Override any config values
      *
      * @return string|null
+     *
+     * @since 1.2 explicitly calling output() is no longer necessary.. log will be output automatically via shutdown function
+     * @since 2.3 `$config` parameter
      */
     public function output($cfg = array())
     {

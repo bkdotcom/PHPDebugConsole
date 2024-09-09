@@ -53,14 +53,19 @@ class Properties extends AbstractSection
             'debuginfo-excluded' => $info['debugInfoExcluded'],
             'debuginfo-value' => $info['valueFrom'] === 'debugInfo',
             'forceShow' => $info['forceShow'],
+            'getHook' => \in_array('get', $info['hooks'], true),
+            'isDeprecated' => $info['isDeprecated'],
             'isDynamic' => $info['declaredLast'] === null
                 && $info['valueFrom'] === 'value'
                 && $info['objClassName'] !== 'stdClass',
             'isPromoted' => $info['isPromoted'],
             'isReadOnly' => $info['isReadOnly'],
             'isStatic' => $info['isStatic'],
+            'isVirtual' => $info['isVirtual'],
+            'isWriteOnly' => $info['isVirtual'] && \in_array('get', $info['hooks'], true) === false,
             'private-ancestor' => $info['isPrivateAncestor'],
             'property' => true,
+            'setHook' => \in_array('set', $info['hooks'], true),
         )));
         return \array_merge($classes, $visClasses);
     }

@@ -63,6 +63,8 @@ class Abstracter extends AbstractComponent
     /** @var array>string,mixed> */
     protected $cfg = array(
         'brief' => false, // collect & output less details
+                          //    see also AbstractObject::$cfgFlags where each key
+                          //    can be set to true/false as a cfg value here
         'fullyQualifyPhpDocType' => false,
         'interfacesCollapse' => array(
             'ArrayAccess',
@@ -132,6 +134,7 @@ class Abstracter extends AbstractComponent
             ),
             array(
                 'brief' => false,
+                'propVirtualValueCollect' => false,
             )
         );
         $this->setCfg(\array_merge($this->cfg, $cfg));

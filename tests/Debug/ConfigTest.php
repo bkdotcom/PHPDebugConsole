@@ -106,6 +106,7 @@ class ConfigTest extends DebugTestFramework
             'phpDocOutput',
             'propAttributeCollect',
             'propAttributeOutput',
+            'propVirtualValueCollect',
             'stringMaxLen',
             'stringMaxLenBrief',
             'stringMinLen',

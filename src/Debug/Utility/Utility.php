@@ -258,6 +258,27 @@ class Utility
     }
 
     /**
+     * Sort a list of files
+     *
+     * @param list<string> $files Files to sort
+     *
+     * @return list<string>
+     */
+    public static function sortFiles($files)
+    {
+        \usort($files, static function ($valA, $valB) {
+            $valA = \str_replace('_', '0', $valA);
+            $valB = \str_replace('_', '0', $valB);
+            $dirA = \dirname($valA);
+            $dirB = \dirname($valB);
+            return $dirA === $dirB
+                ? \strnatcasecmp($valA, $valB)
+                : \strnatcasecmp($dirA, $dirB);
+        });
+        return $files;
+    }
+
+    /**
      * Emit a header
      *
      * @param string          $name  Header name

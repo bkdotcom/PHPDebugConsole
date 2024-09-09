@@ -68,6 +68,8 @@ class Clear implements SubscriberInterface
      *                     `self::CLEAR_SILENT` : Don't add log entry
      *
      * @return Debug
+     *
+     * @since 2.2
      */
     public function clear($bitmask = Debug::CLEAR_LOG) // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
     {

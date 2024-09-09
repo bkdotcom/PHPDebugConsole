@@ -51,6 +51,8 @@ class Trace implements SubscriberInterface
      * @param int    $limit       (0) limit the number of stack frames returned.  By default (limit = 0) all stack frames are collected
      *
      * @return Debug
+     *
+     * @since 3.3 added limit argument
      */
     public function trace($inclContext = false, $caption = 'trace', $limit = 0)
     {

@@ -14,6 +14,7 @@ namespace bdk\Debug\Abstraction\Object;
 
 use bdk\Debug\Abstraction\AbstractObject;
 use ReflectionClass;
+use Reflector;
 
 /**
  * Base class for collecting constants, properties, & methods
@@ -26,6 +27,9 @@ abstract class AbstractInheritable
     /** @var Helper */
     protected $helper;
 
+    /** @var array<string,mixed> */
+    protected static $values = array();
+
     /**
      * Constructor
      *
@@ -35,6 +39,36 @@ abstract class AbstractInheritable
     {
         $this->abstracter = $abstractObject->abstracter;
         $this->helper = $abstractObject->helper;
+    }
+
+    /**
+     * Build (constant,method,property) info by passing values
+     *
+     * @param array $values Values to apply
+     *
+     * @return array
+     */
+    public static function buildValues($values = array())
+    {
+        return \array_merge(static::$values, $values);
+    }
+
+    /**
+     * Get constant/method/property visibility
+     *
+     * @param Reflector $reflector Reflection instance
+     *
+     * @return list<string>|'public'|'private'|'protected'
+     */
+    protected static function getVisibility(Reflector $reflector)
+    {
+        if ($reflector->isPrivate()) {
+            return 'private';
+        }
+        if ($reflector->isProtected()) {
+            return 'protected';
+        }
+        return 'public';
     }
 
     /**

@@ -110,6 +110,7 @@ class PhpTest extends TestCase
 
         // disable all (stdClass still allowed)
         $serialized = 'a:5:{s:6:"before";s:3:"foo";s:8:"stdClass";O:8:"stdClass":1:{s:3:"foo";s:3:"bar";}s:12:"serializable";C:35:"bdk\Test\Debug\Fixture\Serializable":13:{Brad was here}s:3:"obj";O:38:"bdk\Test\Debug\Fixture\TestTraversable":1:{s:4:"data";a:1:{s:3:"foo";s:3:"bar";}}s:5:"after";s:3:"bar";}';
+        $unserialized = Php::unserializeSafe($serialized, false);
         // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
         self::assertEquals(array(
             'before' => 'foo',
@@ -117,7 +118,7 @@ class PhpTest extends TestCase
             'serializable' => \unserialize('O:22:"__PHP_Incomplete_Class":2:{s:27:"__PHP_Incomplete_Class_Name";s:35:"bdk\Test\Debug\Fixture\Serializable";s:17:"__serialized_data";s:13:"Brad was here";}'),
             'obj' => \unserialize('O:22:"__PHP_Incomplete_Class":2:{s:27:"__PHP_Incomplete_Class_Name";s:38:"bdk\Test\Debug\Fixture\TestTraversable";s:4:"data";a:1:{s:3:"foo";s:3:"bar";}}'),
             'after' => 'bar',
-        ), Php::unserializeSafe($serialized, false));
+        ), $unserialized);
 
         // no Serializable (vanila unserialize will be used
         // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder

@@ -21,6 +21,7 @@ use bdk\Debug\Abstraction\Object\Definition;
 use bdk\Debug\Abstraction\Object\Helper;
 use bdk\Debug\Abstraction\Object\Methods;
 use bdk\Debug\Abstraction\Object\Properties;
+use bdk\Debug\Abstraction\Object\PropertiesInstance;
 use bdk\Debug\Abstraction\Object\Subscriber;
 use ReflectionClass;
 use ReflectionEnumUnitCase;
@@ -36,6 +37,7 @@ use RuntimeException;
  * @property-read Helper $helper
  * @property-read Methods $methods
  * @property-read Properties $properties
+ * @property-read PropertiesInstance $properties
  */
 class AbstractObject extends AbstractComponent
 {
@@ -66,7 +68,7 @@ class AbstractObject extends AbstractComponent
     const OBJ_ATTRIBUTE_OUTPUT = 8;
 
     const PARAM_ATTRIBUTE_COLLECT = 1048576;
-    const PARAM_ATTRIBUTE_OUTPUT = 2097152;
+    const PARAM_ATTRIBUTE_OUTPUT = 2097152; // 2^21
 
     const PHPDOC_COLLECT = 1; // 2^0
     const PHPDOC_OUTPUT = 2;
@@ -74,6 +76,7 @@ class AbstractObject extends AbstractComponent
     // PROPERTIES (2^13 - 2^14)
     const PROP_ATTRIBUTE_COLLECT = 8192; // 2^13
     const PROP_ATTRIBUTE_OUTPUT = 16384; // 2^14
+    const PROP_VIRTUAL_VALUE_COLLECT = 33554432; // 2^25
 
     const TO_STRING_OUTPUT = 16; // 2^4
 
@@ -114,6 +117,7 @@ class AbstractObject extends AbstractComponent
         // PROPERTIES
         'propAttributeCollect' => self::PROP_ATTRIBUTE_COLLECT,
         'propAttributeOutput' => self::PROP_ATTRIBUTE_OUTPUT,
+        'propVirtualValueCollect' => self::PROP_VIRTUAL_VALUE_COLLECT,
 
         'toStringOutput' => self::TO_STRING_OUTPUT,
     );
@@ -132,6 +136,8 @@ class AbstractObject extends AbstractComponent
     protected $methods;
     /** @var Properties */
     protected $properties;
+    /** @var PropertiesInstance */
+    protected $propertiesInstance;
 
     /** @var list<string> */
     protected $readOnly = array(
@@ -142,6 +148,7 @@ class AbstractObject extends AbstractComponent
         'helper',
         'methods',
         'properties',
+        'propertiesInstance',
     );
 
     /**
@@ -164,7 +171,7 @@ class AbstractObject extends AbstractComponent
      * @var array<string,mixed> Array of key/values
      */
     protected static $values = array(
-        'cfgFlags' => 0, // will default to everything sans "brief"
+        'cfgFlags' => 0, // will default to everything sans "brief" & 'virtualValueCollect'
         'className' => '',
         'debugMethod' => '',
         'interfacesCollapse' => array(),  // cfg.interfacesCollapse
@@ -195,6 +202,7 @@ class AbstractObject extends AbstractComponent
         $this->constants = new Constants($this);
         $this->methods = new Methods($this);
         $this->properties = new Properties($this);
+        $this->propertiesInstance = new PropertiesInstance($this);
         $this->definition = new Definition($this);
         if ($abstracter->debug->parentInstance === null) {
             // we only need to subscribe to these events from root channel
@@ -239,10 +247,10 @@ class AbstractObject extends AbstractComponent
     public static function buildValues(array $values = array())
     {
         if (self::$values['cfgFlags'] === 0) {
-            // calculate default cfgFlags (everything except for "brief")
+            // calculate default cfgFlags (everything except for "brief" & virtualValueCollect)
             self::$values['cfgFlags'] = \array_reduce(self::$cfgFlags, static function ($carry, $val) {
                 return $carry | $val;
-            }, 0) & ~self::BRIEF;
+            }, 0) & ~self::BRIEF & ~self::PROP_VIRTUAL_VALUE_COLLECT;
         }
         return \array_merge(self::$values, $values);
     }
@@ -297,7 +305,7 @@ class AbstractObject extends AbstractComponent
             $this->addTraverseValues($abs);
         }
         $this->methods->addInstance($abs);  // method static variables
-        $this->properties->addInstance($abs);
+        $this->propertiesInstance->add($abs);
         /*
             Debug::EVENT_OBJ_ABSTRACT_END subscriber has free reign to modify abstraction values
         */
@@ -352,6 +360,7 @@ class AbstractObject extends AbstractComponent
     protected function getCfgFlags()
     {
         $flagVals = \array_intersect_key(self::$cfgFlags, \array_filter($this->cfg));
+        // see Abstracter::__construct which sets initial/default cfgFlags cfg vales
         $bitmask = \array_reduce($flagVals, static function ($carry, $val) {
             return $carry | $val;
         }, 0);

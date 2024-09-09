@@ -51,6 +51,9 @@ class Basic implements SubscriberInterface
      *                           if none provided, will use calling file & line num
      *
      * @return Debug
+     *
+     * 2.0 Default message used if none passed
+     * 2.3 Support for substitution & formatting
      */
     public function assert($assertion, $msg = null)
     {
@@ -88,6 +91,9 @@ class Basic implements SubscriberInterface
      * @param mixed ...$arg message / values
      *
      * @return Debug
+     *
+     * @since 3.0 first param now gets `htmlspecialchar()`'d by default
+     *            use `meta('sanitizeFirst', false)` to allow html
      */
     public function error()
     {
@@ -103,6 +109,9 @@ class Basic implements SubscriberInterface
      * @param mixed ...$arg message / values
      *
      * @return Debug
+     *
+     * @since 3.0 first param now gets `htmlspecialchar()`'d by default
+     *            use `meta('sanitizeFirst', false)` to allow html
      */
     public function info()
     {
@@ -133,6 +142,9 @@ class Basic implements SubscriberInterface
      * @param mixed ...$arg. message / values
      *
      * @return Debug
+     *
+     * @since 3.0 first param now gets `htmlspecialchar()`'d by default
+     *            use `meta('sanitizeFirst', false)` to allow html
      */
     public function log()
     {
@@ -179,6 +191,8 @@ class Basic implements SubscriberInterface
      * @param mixed ...$arg. message / values
      *
      * @return void
+     *
+     * @since 3.1
      */
     public function varDump()
     {
@@ -211,6 +225,9 @@ class Basic implements SubscriberInterface
      * @param mixed ...$arg message / values
      *
      * @return Debug
+     *
+     * @since 3.0 first param now gets `htmlspecialchar()`'d by default
+     *            use `meta('sanitizeFirst', false)` to allow html
      */
     public function warn()
     {

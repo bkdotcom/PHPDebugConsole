@@ -57,6 +57,9 @@ class Table implements SubscriberInterface
      * @param mixed ...$arg traversable, [option array], [caption] in no particular order
      *
      * @return Debug
+     *
+     * @since 2.0 properly handles array of objects (objects can implement Traversable)
+     * @since 2.1 properly handles Traversable as param
      */
     public function table()
     {

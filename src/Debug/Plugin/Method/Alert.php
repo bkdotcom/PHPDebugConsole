@@ -56,6 +56,10 @@ class Alert implements SubscriberInterface
      * @param bool   $dismissible (false) Whether to display a close icon/button
      *
      * @return \bdk\Debug
+     *
+     * @since 2.0
+     * @since 3.0 danger & warning levels replaced with error & warn
+     * @since 3.3 Now accepts arbitrary arguments (like log, info, warn, & error)
      */
     public function alert($message, $level = 'error', $dismissible = false)
     {

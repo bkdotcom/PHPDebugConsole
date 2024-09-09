@@ -40,7 +40,7 @@ class CharReplacementAndSanitizationTest extends DebugTestFramework
                         $actual = Helper::deObjectifyData($logEntry['args'][0]->getValues(), true, false, true);
                         $expect = require __DIR__ . '/data/ConfusableIdentifiers.php';
                         // \bdk\Debug::varDump('expect', $expect);
-                        // \bdk\Debug::varDump('actual', $absValues);
+                        // \bdk\Debug::varDump('actual', $actual);
                         self::assertSame($expect, $actual);
                     },
                     'chromeLogger' => array(

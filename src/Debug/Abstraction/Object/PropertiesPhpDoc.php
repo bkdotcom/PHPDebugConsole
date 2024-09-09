@@ -144,8 +144,8 @@ class PropertiesPhpDoc
                 ),
                 'type' => $phpDocProp['type'],
                 'visibility' => $existing
-                    ? array($vis, $existing['visibility']) // we want "magic" visibility first
-                    : $vis,
+                    ? \array_merge((array) $vis, (array) $existing['visibility']) // we want "magic" visibility first
+                    : (array) $vis,
             )
         );
     }

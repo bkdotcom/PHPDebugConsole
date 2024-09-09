@@ -35,7 +35,7 @@ class Methods extends AbstractInheritable
     protected $params;
 
     /** @var array<string,mixed> */
-    private static $baseMethodInfo = array(
+    protected static $values = array(
         'attributes' => array(),
         'declaredLast' => null,
         'declaredOrig' => null,
@@ -114,18 +114,6 @@ class Methods extends AbstractInheritable
                 return $this->abstracter->crate($value, $abs['debugMethod'], $abs['hist']);
             }, $reflector->getStaticVariables());
         }
-    }
-
-    /**
-     * Return method info array
-     *
-     * @param array $values values to apply
-     *
-     * @return array
-     */
-    public static function buildValues(array $values = array())
-    {
-        return \array_merge(static::$baseMethodInfo, $values);
     }
 
     /**
@@ -388,7 +376,7 @@ class Methods extends AbstractInheritable
                 'desc' => $returnTag['desc'],
                 'type' => $this->helper->getType($returnTag['type'], $refMethod),
             ),
-            'visibility' => $this->helper->getVisibility($refMethod),
+            'visibility' => $this->getVisibility($refMethod),
         ));
     }
 }

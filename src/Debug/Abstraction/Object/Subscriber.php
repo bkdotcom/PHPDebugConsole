@@ -197,13 +197,13 @@ class Subscriber implements SubscriberInterface
             'type' => Type::TYPE_STRING,
             'value' => $abs['definition']['fileName'],
             'valueFrom' => 'debug',
-            'visibility' => 'debug',
+            'visibility' => ['debug'],
         ));
         $properties['debug.line'] = $this->abstractObject->properties->buildValues(array(
             'type' => Type::TYPE_INT,
             'value' => (int) $abs['definition']['startLine'],
             'valueFrom' => 'debug',
-            'visibility' => 'debug',
+            'visibility' => ['debug'],
         ));
         $abs['properties'] = $properties;
     }

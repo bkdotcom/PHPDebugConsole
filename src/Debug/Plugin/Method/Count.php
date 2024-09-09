@@ -55,6 +55,8 @@ class Count implements SubscriberInterface
      *                        `\bdk\Debug::COUNT_NO_OUT` : don't output/log
      *
      * @return int The new count (or current count when using `COUNT_NO_INC`)
+     *
+     * @since 2.1 `$flags` argument added
      */
     public function count($label = null, $flags = 0)
     {
@@ -75,6 +77,8 @@ class Count implements SubscriberInterface
      *                       \bdk\Debug::COUNT_NO_OUT` : don't output/log
      *
      * @return Debug
+     *
+     * @since 2.3
      */
     public function countReset($label = 'default', $flags = 0)
     {

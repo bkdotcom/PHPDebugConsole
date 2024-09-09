@@ -10,6 +10,7 @@ $color-magic: #f80e;
 $color-private: #00000082;
 $color-protected: #000000c6;
 $color-public: inherit;
+$color-virtual: #ccaaFF;
 $color-warning: #F00;
 
 $color-static: #da0d87ee;
@@ -224,6 +225,13 @@ li[class*=m_] > .t_array.array-file-tree > .array-inner {
       color: inherit;
     }
     i.fa-clone { color: #999; }
+  }
+
+  .property {
+    i.isVirtual {
+      color: $color-virtual;
+      text-shadow: 0px 0px 1px #990099;
+    }      
   }
 
   .private-ancestor:not(:hover) {

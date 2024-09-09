@@ -220,6 +220,9 @@ class Abstraction extends BaseAbstraction
         $value = isset($this->values[$key])
             ? $this->values[$key]
             : null;
+        if (\in_array($key, self::$keysTemp)) {
+            return $value;
+        }
         $classVal = $this->inheritValue($key)
             ? $this->inherited[$key]
             : array();

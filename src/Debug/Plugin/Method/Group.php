@@ -118,7 +118,7 @@ class Group implements SubscriberInterface
     /**
      * Create a new inline group
      *
-     * Unline `group()`, `groupCollapsed()`, will initially be collapsed
+     * Unlike `group()`, `groupCollapsed()`, will initially be collapsed
      *
      * @param mixed ...$arg label / values
      *
@@ -140,6 +140,8 @@ class Group implements SubscriberInterface
      * @param mixed $value (optional) "return" value
      *
      * @return Debug
+     *
+     * @since 2.3 accepts `$value` parameter
      */
     public function groupEnd($value = Abstracter::UNDEFINED) // @phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
     {

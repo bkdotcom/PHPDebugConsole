@@ -42,6 +42,18 @@ var config = {
     '> .property.debuginfo-excluded': '<i class="fa fa-eye-slash" title="not included in __debugInfo"></i>',
     '> .property.isDynamic': '<i class="fa fa-warning" title="Dynamic"></i>',
     '> .property.isPromoted': '<i class="fa fa-arrow-up" title="Promoted"></i>',
+    '> .property.getHook, > .property.setHook': function () {
+      var title = 'set hook';
+      if ($(this).hasClass('getHook') && $(this).hasClass('setHook')) {
+        title = 'get and set hooks'
+      } else if ($(this).hasClass('getHook')) {
+        title = 'get hook'
+      }
+      return $('<i class="fa">🪝</i>').prop('title', title)
+    },
+    '> .property.isDeprecated': '<i class="fa fa-fw fa-arrow-down" title="Deprecated"></i>',
+    '> .property.isVirtual': '<i class="fa fa-cloud isVirtual" title="Virtual"></i>',
+    '> .property.isWriteOnly': '<i class="fa fa-eye-slash" title="Write-only"></i>',
     '> .property > .t_modifier_magic': '<i class="fa fa-magic" title="magic property"></i>',
     '> .property > .t_modifier_magic-read': '<i class="fa fa-magic" title="magic property"></i>',
     '> .property > .t_modifier_magic-write': '<i class="fa fa-magic" title="magic property"></i>',
@@ -111,7 +123,9 @@ export function Config () {
 
 Config.prototype.get = function (key) {
   if (typeof key === 'undefined') {
-    return JSON.parse(JSON.stringify(this.config))
+    // unable to use JSON.parse(JSON.stringify(this.config))
+    //  iconsObject functions are lost
+    return deepCopy(this.config)
   }
   return typeof this.config[key] !== 'undefined'
     ? this.config[key]
@@ -154,6 +168,17 @@ Config.prototype.updateStorage = function (setVals) {
   if (haveLsKey) {
     http.lsSet(this.config.localStorageKey, lsObj)
   }
+}
+
+function deepCopy (src) {
+  let target = Array.isArray(src) ? [] : {}
+  for (let prop in src) {
+    let value = src[prop]
+    target[prop] = value && typeof value === 'object'
+      ? deepCopy(value)
+      : value
+  }
+  return target
 }
 
 function getDebugKey () {

@@ -113,6 +113,8 @@ class Profile implements SubscriberInterface
      * @param string $name Optional profile name
      *
      * @return Debug
+     *
+     * @since 2.3
      */
     public function profile($name = null) // @phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
     {
@@ -153,6 +155,8 @@ class Profile implements SubscriberInterface
      * @param string $name Optional profile name
      *
      * @return Debug
+     *
+     * @since 2.3
      */
     public function profileEnd($name = null) // @phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
     {

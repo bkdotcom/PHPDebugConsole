@@ -34,8 +34,8 @@ class Php
      * Assert that a value is of a certain type
      *
      * PHPDebugConsole supports an extreme range of PHP versions : 5.4 - 8.4 (and beyond)
-     * `MyObj $obj = null` has been deprecated in PHP 8.4
-     * must now be `?MyObj $obj = null` (which is a php 7.1 feature)
+     * `func(MyObj $obj = null)` has been deprecated in PHP 8.4
+     * must now be `func(?MyObj $obj = null)` (which is a php 7.1 feature)
      * Workaround - remove type-hint when we allow null (not ideal) and call assertType
      * When we drop support for php < 7.1, we can remove this method and do proper type-hinting
      *
@@ -52,21 +52,7 @@ class Php
         if ($allowNull && $value === null) {
             return;
         }
-        $isType = false;
-        switch ($type) {
-            case 'array':
-                $isType = \is_array($value);
-                break;
-            case 'callable':
-                $isType = self::isCallable($value);
-                break;
-            case 'object':
-                $isType = \is_object($value);
-                break;
-            default:
-                $isType = \is_a($value, $type);
-        }
-        if ($isType) {
+        if (self::assertTypeCheck($value, $type)) {
             return;
         }
         throw new InvalidArgumentException(\sprintf(
@@ -107,9 +93,9 @@ class Php
      *
      * @see https://github.com/symfony/polyfill/blob/main/src/Php80/Php80.php
      */
-    public static function getDebugType($val) // phpcs:ignore Generic.Metrics.CyclomaticComplexity
+    public static function getDebugType($val)
     {
-        if (PHP_VERSION_ID >= 80000 && \is_array($val) === false && \is_object($val) === false) {
+        if (PHP_VERSION_ID >= 80000 && \in_array(\gettype($val), ['array', 'object'], true) === false) {
             return \get_debug_type($val);
         }
 
@@ -145,7 +131,7 @@ class Php
     public static function getIncludedFiles()
     {
         $includedFiles = \get_included_files();
-        return self::sortFiles($includedFiles);
+        return \bdk\Debug\Utility::sortFiles($includedFiles);
     }
 
     /**
@@ -222,29 +208,7 @@ class Php
      */
     public static function memoryLimit()
     {
-        $iniVal = \trim(\ini_get('memory_limit') ?: \get_cfg_var('memory_limit'));
-        return $iniVal ?: '128M';
-    }
-
-    /**
-     * Sort a list of files
-     *
-     * @param list<string> $files Files to sort
-     *
-     * @return list<string>
-     */
-    public static function sortFiles($files)
-    {
-        \usort($files, static function ($valA, $valB) {
-            $valA = \str_replace('_', '0', $valA);
-            $valB = \str_replace('_', '0', $valB);
-            $dirA = \dirname($valA);
-            $dirB = \dirname($valB);
-            return $dirA === $dirB
-                ? \strnatcasecmp($valA, $valB)
-                : \strnatcasecmp($dirA, $dirB);
-        });
-        return $files;
+        return \trim(\ini_get('memory_limit') ?: \get_cfg_var('memory_limit')) ?: '128M';
     }
 
     /**
@@ -277,6 +241,29 @@ class Php
         }
         $serialized = self::unserializeSafeModify($serialized);
         return \unserialize($serialized);
+    }
+
+    /**
+     * Test if value is of a certain type
+     *
+     * @param mixed  $value Value to test
+     * @param string $type  "array", "callable", "object", or className
+     *
+     * @return bool
+     */
+    private static function assertTypeCheck($value, $type)
+    {
+        switch ($type) {
+            case 'array':
+                return \is_array($value);
+            case 'callable':
+                return \is_callable($value);
+            case 'object':
+                return \is_object($value);
+            default:
+                return \is_a($value, $type);
+        }
+        return false;
     }
 
     /**
@@ -350,10 +337,9 @@ class Php
         if (\is_object($val[0])) {
             return self::isCallableArrayObj($val, $opts);
         }
-        if ($opts & self::IS_CALLABLE_OBJ_ONLY) {
-            return false;
-        }
-        return self::isCallableArrayString($val, $opts);
+        return $opts & self::IS_CALLABLE_OBJ_ONLY
+            ? false
+            : self::isCallableArrayString($val, $opts);
     }
 
     /**

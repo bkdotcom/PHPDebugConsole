@@ -265,9 +265,6 @@ class Html extends AbstractRoute
     protected function buildChannelTree()
     {
         $channels = $this->dumper->channels;
-        if (empty($channels)) {
-            return array();
-        }
         $tree = array();
         $channelRoot = \reset($channels)->rootInstance;
         \ksort($channels, SORT_NATURAL | SORT_FLAG_CASE);

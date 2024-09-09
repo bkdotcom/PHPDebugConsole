@@ -36,11 +36,8 @@ class Constants extends AbstractInheritable
     /** @var bool */
     private $attributeCollect = true;
 
-    /** @var bool */
-    private $phpDocCollect = true;
-
     /** @var array<string,mixed> */
-    private static $baseConstInfo = array(
+    protected static $values = array(
         'attributes' => array(),
         'declaredLast' => null,
         'declaredOrig' => null,
@@ -70,7 +67,6 @@ class Constants extends AbstractInheritable
         $this->abs = $abs;
         $this->constants = array();
         $this->attributeCollect = ($abs['cfgFlags'] & AbstractObject::CONST_ATTRIBUTE_COLLECT) === AbstractObject::CONST_ATTRIBUTE_COLLECT;
-        $this->phpDocCollect = ($abs['cfgFlags'] & AbstractObject::PHPDOC_COLLECT) === AbstractObject::PHPDOC_COLLECT;
         /*
             We trace our lineage to learn where constants are inherited from
             (set brief to avoid recursion with enum values)
@@ -102,25 +98,12 @@ class Constants extends AbstractInheritable
             return;
         }
         $this->attributeCollect = ($abs['cfgFlags'] & AbstractObject::CASE_ATTRIBUTE_COLLECT) === AbstractObject::CASE_ATTRIBUTE_COLLECT;
-        $this->phpDocCollect = ($abs['cfgFlags'] & AbstractObject::PHPDOC_COLLECT) === AbstractObject::PHPDOC_COLLECT;
         $cases = array();
         foreach ($abs['reflector']->getCases() as $refCase) {
             $name = $refCase->getName();
             $cases[$name] = $this->getCaseRefInfo($refCase);
         }
         $abs['cases'] = $cases;
-    }
-
-    /**
-     * Build constant info by passing values
-     *
-     * @param array $values Values to apply
-     *
-     * @return array
-     */
-    public static function buildValues($values = array())
-    {
-        return \array_merge(static::$baseConstInfo, $values);
     }
 
     /**
@@ -192,7 +175,7 @@ class Constants extends AbstractInheritable
             'value' => $refCase instanceof ReflectionEnumBackedCase
                 ? $refCase->getBackingValue()
                 : Abstracter::UNDEFINED,
-            'visibility' => $this->helper->getVisibility($refCase),
+            'visibility' => $this->getVisibility($refCase),
         );
     }
 
@@ -216,13 +199,11 @@ class Constants extends AbstractInheritable
             'attributes' => $this->attributeCollect
                 ? $this->helper->getAttributes($refConstant)
                 : array(),
-            'isFinal' => PHP_VERSION_ID >= 80100
-                ? $refConstant->isFinal()
-                : false,
+            'isFinal' => PHP_VERSION_ID >= 80100 && $refConstant->isFinal(),
             'phpDoc' => $phpDoc,
             'type' => $type,
             'value' => $value,
-            'visibility' => $this->helper->getVisibility($refConstant),
+            'visibility' => $this->getVisibility($refConstant),
         ));
     }
 }

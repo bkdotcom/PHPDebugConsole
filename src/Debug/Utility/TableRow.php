@@ -191,7 +191,7 @@ class TableRow
                 return $info['value'];
             },
             \array_filter($abs['properties'], static function ($prop) {
-                return $prop['visibility'] === 'public';
+                return \in_array('public', (array) $prop['visibility'], true);
             })
         );
         /*

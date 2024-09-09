@@ -55,7 +55,7 @@ class Definition
     protected static $values = array(
         'attributes' => array(),
         'cases' => array(),
-        'cfgFlags' => 0, // __constructor will set to everything sans "brief"
+        'cfgFlags' => 0, // __constructor will set to everything sans "brief" and "propVirtualValueCollect"
                          // definition will collect with all options
         'className' => "\x00default\x00",
         'constants' => array(),

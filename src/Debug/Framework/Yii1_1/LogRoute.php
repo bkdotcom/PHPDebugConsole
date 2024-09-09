@@ -295,16 +295,11 @@ class LogRoute extends CLogRoute
             // collect is/was off?
             return true;
         }
+
         $debug = $groupLogEntry->getSubject();
         $returnValue = 'saved to cache';
-
         if (\strpos($logEntry['message'], 'Serving') === 0) {
-            $regEx = '/^Serving "yii:dbquery:\S+:\S*:\S+:(.*?)(?::(a:\d+:\{.*\}))?" from cache$/s';
-            \preg_match($regEx, $logEntry['message'], $matches);
-            $statementInfo = new StatementInfo($matches[1], $matches[2] ? \unserialize($matches[2]) : array());
-            $statementInfo->appendLog($debug, array(
-                'attribs' => array('class' => 'logentry-muted'),
-            ));
+            $this->processSqlCachingLogEntryServe($logEntry, $debug);
             $groupId = StatementInfo::lastGroupId();
             $returnValue = 'from cache';
         }
@@ -323,6 +318,24 @@ class LogRoute extends CLogRoute
         ));
 
         return true;
+    }
+
+    /**
+     * If we have a "Serving" log entry, process it as a statementInfo log entry
+     *
+     * @param array $logEntry our key/value'd log entry
+     * @param Debug $debug    Debug instance
+     *
+     * @return void
+     */
+    private function processSqlCachingLogEntryServe(array $logEntry, Debug $debug)
+    {
+        $regEx = '/^Serving "yii:dbquery:\S+:\S*:\S+:(.*?)(?::(a:\d+:\{.*\}))?" from cache$/s';
+        \preg_match($regEx, $logEntry['message'], $matches);
+        $statementInfo = new StatementInfo($matches[1], $matches[2] ? \unserialize($matches[2]) : array());
+        $statementInfo->appendLog($debug, array(
+            'attribs' => array('class' => 'logentry-muted'),
+        ));
     }
 
     /**

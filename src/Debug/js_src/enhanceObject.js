@@ -18,7 +18,9 @@ function addIcons ($node) {
   $.each(config.iconsObject, function (selector, v) {
     var prepend = true
     var sMatches = selector.match(/(?:parent(\S+)\s)?(?:context(\S+)\s)?(.*)$/)
-    var vMatches = v.match(/^([ap])\s*:(.+)$/)
+    var vMatches = typeof v === 'string'
+      ? v.match(/^([ap])\s*:(.+)$/)
+      : null
     var $found
     var $existingIcon
     if (sMatches) {
@@ -37,10 +39,13 @@ function addIcons ($node) {
     $found = $node.find(selector)
     if (prepend === false) {
       $found.append(v)
+      return
     }
-    $existingIcon = $found.find('> i:first-child')
-    $existingIcon.after(v)
-    $found.not($existingIcon.parent()).prepend(v)
+    $existingIcon = $found.find('> i:first-child + i').after(v)
+    $found = $found.not($existingIcon.parent())
+    $existingIcon = $found.find('> i:first-child').after(v)
+    $found = $found.not($existingIcon.parent())
+    $found.prepend(v)
   })
 }
 

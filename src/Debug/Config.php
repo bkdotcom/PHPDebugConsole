@@ -63,6 +63,7 @@ class Config
             'phpDocOutput',
             'propAttributeCollect',
             'propAttributeOutput',
+            'propVirtualValueCollect',
             'stringMaxLen',
             'stringMaxLenBrief',
             'stringMinLen',

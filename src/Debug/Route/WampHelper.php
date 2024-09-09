@@ -10,9 +10,9 @@
  * @since     3.3
  */
 
- namespace bdk\Debug\Route;
+namespace bdk\Debug\Route;
 
- use bdk\Debug;
+use bdk\Debug;
 
 /**
  * WAMP Helper Methods

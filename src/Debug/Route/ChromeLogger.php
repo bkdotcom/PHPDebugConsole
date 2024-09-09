@@ -84,12 +84,14 @@ class ChromeLogger extends AbstractRoute
     /**
      * Output the log as chromelogger headers
      *
-     * @param Event $event Debug::EVENT_OUTPUT Event object
+     * @param Event|null $event Debug::EVENT_OUTPUT Event object
      *
      * @return void
      */
-    public function processLogEntries(Event $event)
+    public function processLogEntries($event = null)
     {
+        $this->debug->php->assertType($event, 'bdk\PubSub\Event');
+
         $this->dumper->crateRaw = false;
         $this->data = $this->debug->data->get();
         $this->buildJsonData();

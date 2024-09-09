@@ -147,12 +147,14 @@ abstract class AbstractRoute extends AbstractComponent implements RouteInterface
     /**
      * Output the log as text
      *
-     * @param Event $event event object
+     * @param Event|null $event event object
      *
      * @return void
      */
-    public function processLogEntries(Event $event)
+    public function processLogEntries($event = null)
     {
+        $this->debug->php->assertType($event, 'bdk\PubSub\Event');
+
         $this->dumper->crateRaw = false;
         $this->data = $this->debug->data->get();
         $event['return'] = ''

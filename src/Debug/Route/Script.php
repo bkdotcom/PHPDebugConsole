@@ -64,12 +64,14 @@ class Script extends AbstractRoute
      * output the log as javascript
      *    which outputs the log to the console
      *
-     * @param Event $event Debug::EVENT_OUTPUT event object
+     * @param Event|null $event Debug::EVENT_OUTPUT event object
      *
      * @return string|void
      */
-    public function processLogEntries(Event $event)
+    public function processLogEntries($event = null)
     {
+        $this->debug->php->assertType($event, 'bdk\PubSub\Event');
+
         $this->dumper->crateRaw = false;
         $this->data = $this->debug->data->get();
         $str = '<script>' . "\n";

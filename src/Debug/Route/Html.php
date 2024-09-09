@@ -135,12 +135,14 @@ class Html extends AbstractRoute
     /**
      * Return the log as HTML
      *
-     * @param Event $event Debug::EVENT_OUTPUT event object
+     * @param Event|null $event Debug::EVENT_OUTPUT event object
      *
      * @return string|void
      */
-    public function processLogEntries(Event $event)
+    public function processLogEntries($event = null)
     {
+        $this->debug->php->assertType($event, 'bdk\PubSub\Event');
+
         if ($event['isTarget'] === false) {
             return;
         }

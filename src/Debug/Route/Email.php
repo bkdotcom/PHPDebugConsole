@@ -57,12 +57,14 @@ class Email implements RouteInterface
     /**
      * Serializes and emails log
      *
-     * @param Event $event Generic event having Debug instance as subject
+     * @param Event|null $event Generic event having Debug instance as subject
      *
      * @return void
      */
-    public function processLogEntries(Event $event)
+    public function processLogEntries($event = null)
     {
+        $this->debug->php->assertType($event, 'bdk\PubSub\Event');
+
         $debug = $event->getSubject();
         $this->debug->email(
             $debug->getCfg('emailTo', Debug::CONFIG_DEBUG),

@@ -68,12 +68,14 @@ class Firephp extends AbstractRoute
     /**
      * Output the log via FirePHP headers
      *
-     * @param Event $event Debug::EVENT_OUTPUT Event object
+     * @param Event|null $event Debug::EVENT_OUTPUT Event object
      *
      * @return void
      */
-    public function processLogEntries(Event $event)
+    public function processLogEntries($event = null)
     {
+        $this->debug->php->assertType($event, 'bdk\PubSub\Event');
+
         $this->dumper->crateRaw = false;
         $this->outputEvent = $event;
         $this->data = $this->debug->data->get();

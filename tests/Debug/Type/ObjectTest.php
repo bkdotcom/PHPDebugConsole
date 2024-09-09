@@ -1607,7 +1607,8 @@ EOD;
                             </li>
                             </ul>
                         </dd>';
-                    self::assertStringContainsString(preg_replace('/^\s+/m', $expect, ''), $html);
+                    $expect = \preg_replace('/^\s+/m', '', $expect);
+                    self::assertStringContainsString($expect, $html);
                     self::assertStringNotContainsString('<dt>implements</dt>', $html);
                 },
             )

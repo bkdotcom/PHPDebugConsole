@@ -36,7 +36,7 @@ class DebugTestFramework extends DOMTestCase
     protected $file;
     protected $line;
 
-    private static $errorHandlerPrev;
+    protected static $errorHandlerPrev;
 
     /**
      * Constructor
@@ -344,9 +344,10 @@ class DebugTestFramework extends DOMTestCase
                 $trace = $e->getTrace();
                 $file = $e->getFile();
                 $line = $e->getLine();
+                // \bdk\Debug::varDump('exception', $e->getMessage(), $file, $line);
                 for ($i = 0, $count = \count($trace); $i < $count; $i++) {
                     $frame = $trace[$i];
-                    if (isset($frame['class']) && \strpos($frame['class'], __NAMESPACE__) === 0) {
+                    if (isset($frame['class']) && \strpos($frame['class'], __NAMESPACE__) === 0 && isset($trace[$i - 1])) {
                         $file = $trace[$i - 1]['file'];
                         $line = $trace[$i - 1]['line'];
                         break;

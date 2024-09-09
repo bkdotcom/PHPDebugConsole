@@ -243,7 +243,8 @@ class PropertiesInstance extends Properties
             }
             return Abstracter::NOT_INSPECTED;
         }
-        if ($refProperty->isInitialized($obj) === false) {
+        $isInitialized = PHP_VERSION_ID < 70400 || $refProperty->isInitialized($obj);
+        if ($isInitialized === false) {
             return $propInfo['value']; // undefined
         }
         if (PHP_VERSION_ID >= 80400 && $propInfo['isStatic'] === false) {

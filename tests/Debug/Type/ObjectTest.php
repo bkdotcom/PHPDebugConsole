@@ -1679,7 +1679,7 @@ EOD;
 
                     $propExpect = '<dd class="isPromoted isReadOnly property ' . (PHP_VERSION_ID >= 80400 ? 'protected-set ' : '') . 'public">'
                         . '<span class="t_modifier_public">public</span> '
-                        . (PHP_VERSION_ID >= 80400 ? '<span class="t_modifier_protected-set">protected-set</span> ' : '' )
+                        . (PHP_VERSION_ID >= 80400 ? '<span class="t_modifier_protected-set">protected(set)</span> ' : '' )
                         . '<span class="t_modifier_readonly">readonly</span> '
                         . '<span class="t_type">string</span> <span class="no-quotes t_identifier t_string">title</span> <span class="t_operator">=</span> <span class="t_string" data-type-more="numeric">42</span></dd>';
                     self::assertStringContainsString($propExpect, $html);
@@ -1724,7 +1724,7 @@ EOD;
                     self::assertStringContainsString(
                         '<dd class="isPromoted isReadOnly property ' . (PHP_VERSION_ID >= 80400 ? 'protected-set ' : '') . 'public">'
                             . '<span class="t_modifier_public">public</span> '
-                            . (PHP_VERSION_ID >= 80400 ? '<span class="t_modifier_protected-set">protected-set</span> ' : '')
+                            . (PHP_VERSION_ID >= 80400 ? '<span class="t_modifier_protected-set">protected(set)</span> ' : '')
                             . '<span class="t_modifier_readonly">readonly</span> '
                             . '<span class="t_type">string</span> <span class="no-quotes t_identifier t_string" title="$status">status</span> <span class="t_operator">=</span> <span class="t_string">active</span></dd>',
                         $html

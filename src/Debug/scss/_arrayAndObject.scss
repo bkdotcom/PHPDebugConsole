@@ -117,10 +117,12 @@ li[class*=m_] > .t_array.array-file-tree > .array-inner {
     color: $color-final;
     font-weight: bold;
   }
-  .t_modifier_private {
+  .t_modifier_private,
+  .t_modifier_private-set {
     color: $color-private;
   }
-  .t_modifier_protected {
+  .t_modifier_protected,
+  .t_modifier_protected-set {
     color: $color-protected;
   }
   .t_modifier_public {

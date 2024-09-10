@@ -105,7 +105,7 @@ class EnumTest extends DebugTestFramework
                         <dt class="properties">properties</dt>
                         <dd class="isReadOnly property ' . (PHP_VERSION_ID >= 80400 ? 'protected-set ' : '') . 'public">'
                             . '<span class="t_modifier_public">public</span> '
-                            . (PHP_VERSION_ID >= 80400 ? '<span class="t_modifier_protected-set">protected-set</span> ' : '')
+                            . (PHP_VERSION_ID >= 80400 ? '<span class="t_modifier_protected-set">protected(set)</span> ' : '')
                             . '<span class="t_modifier_readonly">readonly</span> <span class="t_type">string</span> <span class="no-quotes t_identifier t_string">name</span> <span class="t_operator">=</span> <span class="t_string">BREAKFAST</span></dd>
                         <dt class="methods">methods</dt>
                         <dd class="isStatic method public" data-implements="UnitEnum"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="t_identifier">cases</span><span class="t_punct">(</span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">array</span></dd>
@@ -221,11 +221,11 @@ class EnumTest extends DebugTestFramework
                         <dt class="properties">properties</dt>
                         <dd class="isReadOnly property ' . (PHP_VERSION_ID >= 80400 ? 'protected-set ' : '') . 'public">'
                             . '<span class="t_modifier_public">public</span> '
-                            . (PHP_VERSION_ID >= 80400 ? '<span class="t_modifier_protected-set">protected-set</span> ' : '')
+                            . (PHP_VERSION_ID >= 80400 ? '<span class="t_modifier_protected-set">protected(set)</span> ' : '')
                             . '<span class="t_modifier_readonly">readonly</span> <span class="t_type">string</span> <span class="no-quotes t_identifier t_string">name</span> <span class="t_operator">=</span> <span class="t_string">BREAKFAST</span></dd>
                         <dd class="isReadOnly property ' . (PHP_VERSION_ID >= 80400 ? 'protected-set ' : '') . 'public">'
                             . '<span class="t_modifier_public">public</span> '
-                            . (PHP_VERSION_ID >= 80400 ? '<span class="t_modifier_protected-set">protected-set</span> ' : '')
+                            . (PHP_VERSION_ID >= 80400 ? '<span class="t_modifier_protected-set">protected(set)</span> ' : '')
                             . '<span class="t_modifier_readonly">readonly</span> <span class="t_type">string</span> <span class="no-quotes t_identifier t_string">value</span> <span class="t_operator">=</span> <span class="t_string">breakfast</span></dd>
                         <dt class="methods">methods</dt>
                         <dd class="isStatic method public" data-implements="UnitEnum"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="t_identifier">cases</span><span class="t_punct">(</span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">array</span></dd>

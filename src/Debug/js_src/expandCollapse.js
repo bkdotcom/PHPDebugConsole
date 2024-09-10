@@ -194,12 +194,13 @@ function getNodeInfo ($node) {
   var $wrap = isToggle
     ? $node.parent()
     : $node
+  var $toggle = isToggle
+    ? $node
+    : $wrap.find('> *[data-toggle]')
   return {
     what: what,
     $wrap: $wrap,
-    $toggle: isToggle
-      ? $node
-      : $wrap.find('> *[data-toggle]'),
+    $toggle: $toggle,
     $classTarget: what === 'next' // node that get's "expanded" class
       ? $toggle
       : $wrap,

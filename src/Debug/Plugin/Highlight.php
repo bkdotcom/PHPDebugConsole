@@ -107,13 +107,17 @@ class Highlight implements AssetProviderInterface
                                 // throw a zero-width-space on the end so we get the blank line
                                 $pre.find("> code").append("&#8203;")
                             }
-                            Prism.highlightElement($pre.find("> code")[0])
+                            setTimeout(function () {
+                                Prism.highlightElement($pre.find("> code")[0])
+                            }, 100)
                         })
                     })
                     $("body").on("expanded.debug.next", ".context", function (e) {
                         var $code = $(e.target).find("code")
                         if ($code.length && $code.children().length === 0) {
-                            Prism.highlightElement($code[0])
+                            setTimeout(function () {
+                                Prism.highlightElement($code[0])
+                            }, 100)
                         }
                     })
                 }());',

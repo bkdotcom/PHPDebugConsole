@@ -240,12 +240,13 @@ class WampCrate
      */
     private function getErrorTraceMeta(LogEntry $logEntry)
     {
+        $inclContextDefault = $logEntry->getMeta('errorCat') === 'fatal';
         $logEntryTmp = new LogEntry(
             $this->debug,
             'trace',
             array(),
             array(
-                'inclContext' => $logEntry->getMeta('inclContext', false),
+                'inclContext' => $logEntry->getMeta('inclContext', $inclContextDefault),
                 'trace' => $logEntry->getMeta('trace'),
             )
         );

@@ -230,7 +230,9 @@ abstract class AbstractSection
     {
         $modifiers = $this->getModifiers($info);
         return \implode(' ', \array_map(static function ($modifier) {
-            return '<span class="t_modifier_' . $modifier . '">' . $modifier . '</span>';
+            $class = 't_modifier_' . $modifier;
+            $modifier = \str_replace('-set', '(set)', $modifier);
+            return '<span class="' . $class . '">' . $modifier . '</span>';
         }, $modifiers));
     }
 

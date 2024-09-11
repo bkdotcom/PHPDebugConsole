@@ -181,7 +181,7 @@ EOD;
                         );
                     },
                     'firephp' => 'X-Wf-1-1-1-19: %d|[{"Type":"LOG"},"\\\\u{feff}Pesky <abbr title=\"Byte-Order-Mark\">BOM</abbr> and \\\x07 (a control char)."]|',
-                    'html' => '<li class="m_log"><span class="no-quotes t_string"><span class="char-ws" data-code-point="FEFF" title="U-FEFF: BOM / Zero Width No-Break Space">\u{feff}</span>Pesky <abbr title="Byte-Order-Mark">BOM</abbr> and <span class="char-control" title="\x07: BEL (bell)">␇</span> (a control char).</span></li>',
+                    'html' => '<li class="m_log"><span class="no-quotes t_string"><span class="char-ws" data-code-point="FEFF" title="U-FEFF: BOM / Zero Width No-Break Space">\u{feff}</span>Pesky <abbr title="Byte-Order-Mark">BOM</abbr> and <span class="char-control" data-abbr="BEL" title="\x07: BEL (bell)">␇</span> (a control char).</span></li>',
                     'script' => 'console.log("\\\u{feff}Pesky <abbr title=\"Byte-Order-Mark\">BOM</abbr> and \\\x07 (a control char).");',
                     'streamAnsi' => \str_replace('\e', "\e", '\e[34;48;5;14m\u{feff}\e[0mPesky <abbr title="Byte-Order-Mark">BOM</abbr> and \e[34;48;5;14m\x07\e[0m (a control char).'),
                     'text' => '\u{feff}Pesky <abbr title="Byte-Order-Mark">BOM</abbr> and \x07 (a control char).',
@@ -211,7 +211,7 @@ EOD;
                         ), $logEntry['args']);
                     },
                     'firephp' => 'X-Wf-1-1-1-5: 165|[{"Label":"\tcontrol chars: \\\x07 \\\x1f \\\x7f\r\n","Type":"LOG"},"\teasy-to-miss \\\u{0441}haracters such as \\\u{00a0}(nbsp), \\\u{2009}(thsp), &amp; \\\u{200b}(zwsp)"]|',
-                    'html' => '<li class="m_log"><span class="no-quotes t_string">' . "\t" . 'control chars: <span class="char-control" title="\x07: BEL (bell)">␇</span> <span class="char-control" title="\x1f: US (unit separator)">␟</span> <span class="char-control" title="\x7f: DEL">␡</span>' . "\r\n"
+                    'html' => '<li class="m_log"><span class="no-quotes t_string">' . "\t" . 'control chars: <span class="char-control" data-abbr="BEL" title="\x07: BEL (bell)">␇</span> <span class="char-control" data-abbr="US" title="\x1f: US (unit separator)">␟</span> <span class="char-control" data-abbr="DEL" title="\x7f: DEL">␡</span>' . "\r\n"
                         . '</span> = <span class="t_string"><span class="ws_t">' . "\t" . '</span>easy-to-miss <span class="unicode" data-code-point="0441" title="U-0441: CYRILLIC SMALL LETTER ES">' . "\xD1\x81" . '</span>haracters such as <span class="char-ws" data-code-point="00A0" title="U-00A0: NBSP">\u{00a0}</span>(nbsp), <span class="char-ws" data-code-point="2009" title="U-2009: Thin Space">\u{2009}</span>(thsp), &amp;amp; <span class="char-ws" data-code-point="200B" title="U-200B: Zero Width Space">\u{200b}</span>(zwsp)'
                         . '</span></li>',
                     'script' => 'console.log("\tcontrol chars: \\\x07 \\\x1f \\\x7f\r\n","\teasy-to-miss \\\u{0441}haracters such as \\\u{00a0}(nbsp), \\\u{2009}(thsp), &amp; \\\u{200b}(zwsp)");',

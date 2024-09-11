@@ -210,6 +210,7 @@ class HtmlString
             'span',
             array(
                 'class' => $info['class'],
+                'data-abbr' => $info['abbr'],
                 'title' => \implode(': ', \array_filter(array(
                     '\\x' . \str_pad(\dechex(\ord($info['char'])), 2, '0', STR_PAD_LEFT),
                     $info['desc'],

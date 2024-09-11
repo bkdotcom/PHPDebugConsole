@@ -9,170 +9,203 @@
 // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys
 return array(
     "\x00" => array(
+        'abbr' => 'NUL',
         'class' => 'char-control',
         'desc' => 'NUL',
         'replaceWith' => "\xE2\x90\x80",
     ),
     "\x01" => array(
+        'abbr' => 'SOH',
         'class' => 'char-control',
         'desc' => 'SOH (start of heading)',
         'replaceWith' => "\xE2\x90\x81",
     ),
     "\x02" => array(
+        'abbr' => 'STX',
         'class' => 'char-control',
         'desc' => 'STX (start of text)',
         'replaceWith' => "\xE2\x90\x82",
     ),
     "\x03" => array(
+        'abbr' => 'ETX',
         'class' => 'char-control',
         'desc' => 'ETX (end of text)',
         'replaceWith' => "\xE2\x90\x83",
     ),
     "\x04" => array(
+        'abbr' => 'EOT',
         'class' => 'char-control',
         'desc' => 'EOT (end of transmission)',
         'replaceWith' => "\xE2\x90\x84",
     ),
     "\x05" => array(
+        'abbr' => 'ENQ',
         'class' => 'char-control',
         'desc' => 'ENQ (enquiry)',
         'replaceWith' => "\xE2\x90\x85",
     ),
     "\x06" => array(
+        'abbr' => 'ACK',
         'class' => 'char-control',
         'desc' => 'ACK (acknowledge)',
         'replaceWith' => "\xE2\x90\x86",
     ),
     "\x07" => array(
+        'abbr' => 'BEL',
         'class' => 'char-control',
         'desc' => 'BEL (bell)',
         'replaceWith' => "\xE2\x90\x87",
     ),
     "\x08" => array(
+        'abbr' => 'BS',
         'class' => 'char-control',
         'desc' => 'BS (backspace)',
         'replaceWith' => "\xE2\x90\x88",
     ),
     /*
     "\x09" => array(
+        'abbr' => 'HT',
         'class' => 'char-control',
         'desc' => 'HT (horizontal tab)',           // \t not treated special by default
         'replaceWith' => "\u{2409}",
     ),
     "\x0A" => array(
+        'abbr' => 'LF',
         'class' => 'char-control',
         'desc' => 'LF (NL line feed / new line)',  // \n not treated special by default
         'replaceWith' => "\u{240A}",
     ),
     */
     "\x0B" => array(
+        'abbr' => 'VT',
         'class' => 'char-control',
         'desc' => 'VT (vertical tab)',
         'replaceWith' => "\xE2\x90\x8B",
     ),
     "\x0C" => array(
+        'abbr' => 'ff',
         'class' => 'char-control',
         'desc' => 'FF (NP form feed / new page)',
         'replaceWith' => "\xE2\x90\x8C",
     ),
     /*
     "\x0D" => array(
+        'abbr' => 'CR',
         'class' => 'char-control',
         'desc' => 'CR (carriage return)',          // \r not treated special by default
         'replaceWith' => "\u{240D}",
     ),
     */
     "\x0E" => array(
+        'abbr' => 'SO',
         'class' => 'char-control',
         'desc' => 'SO (shift out)',
         'replaceWith' => "\xE2\x90\x8E",
     ),
     "\x0F" => array(
+        'abbr' => 'SI',
         'class' => 'char-control',
         'desc' => 'SI (shift in)',
         'replaceWith' => "\xE2\x90\x8F",
     ),
     "\x10" => array(
+        'abbr' => 'DLF',
         'class' => 'char-control',
         'desc' => 'DLE (data link escape)',
         'replaceWith' => "\xE2\x90\x90",
     ),
     "\x11" => array(
+        'abbr' => 'DC1',
         'class' => 'char-control',
         'desc' => 'DC1 (device control 1)',
         'replaceWith' => "\xE2\x90\x91",
     ),
     "\x12" => array(
+        'abbr' => 'DC2',
         'class' => 'char-control',
         'desc' => 'DC2 (device control 2)',
         'replaceWith' => "\xE2\x90\x92",
     ),
     "\x13" => array(
+        'abbr' => 'DC3',
         'class' => 'char-control',
         'desc' => 'DC3 (device control 3)',
         'replaceWith' => "\xE2\x90\x93",
     ),
     "\x14" => array(
+        'abbr' => 'DC4',
         'class' => 'char-control',
         'desc' => 'DC4 (device control 4)',
         'replaceWith' => "\xE2\x90\x94",
     ),
     "\x15" => array(
+        'abbr' => 'NAK',
         'class' => 'char-control',
         'desc' => 'NAK (negative acknowledge)',
         'replaceWith' => "\xE2\x90\x95",
     ),
     "\x16" => array(
+        'abbr' => 'SYN',
         'class' => 'char-control',
         'desc' => 'SYN (synchronous idle)',
         'replaceWith' => "\xE2\x90\x96",
     ),
     "\x17" => array(
+        'abbr' => 'ETB',
         'class' => 'char-control',
         'desc' => 'ETB (end of trans. block)',
         'replaceWith' => "\xE2\x90\x97",
     ),
     "\x18" => array(
+        'abbr' => 'CAN',
         'class' => 'char-control',
         'desc' => 'CAN (cancel)',
         'replaceWith' => "\xE2\x90\x98",
     ),
     "\x19" => array(
+        'abbr' => 'EM',
         'class' => 'char-control',
         'desc' => 'EM (end of medium)',
         'replaceWith' => "\xE2\x90\x99",
     ),
     "\x1A" => array(
+        'abbr' => 'SUB',
         'class' => 'char-control',
         'desc' => 'SUB (substitute)',
         'replaceWith' => "\xE2\x90\x9A",
     ),
     "\x1B" => array(
+        'abbr' => 'ESC',
         'class' => 'char-control',
         'desc' => 'ESC (escape)',
         'replaceWith' => "\xE2\x90\x9B",
     ),
     "\x1C" => array(
+        'abbr' => 'FS',
         'class' => 'char-control',
         'desc' => 'FS (file separator)',
         'replaceWith' => "\xE2\x90\x9C",
     ),
     "\x1D" => array(
+        'abbr' => 'GS',
         'class' => 'char-control',
         'desc' => 'GS (group separator)',
         'replaceWith' => "\xE2\x90\x9D",
     ),
     "\x1E" => array(
+        'abbr' => 'RS',
         'class' => 'char-control',
         'desc' => 'RS (record separator)',
         'replaceWith' => "\xE2\x90\x9E",
     ),
     "\x1F" => array(
+        'abbr' => 'US',
         'class' => 'char-control',
         'desc' => 'US (unit separator)',
         'replaceWith' => "\xE2\x90\x9F",
     ),
     "\x7F" => array(
+        'abbr' => 'DEL',
         'class' => 'char-control',
         'desc' => 'DEL',
         'replaceWith' => "\xE2\x90\xA1",

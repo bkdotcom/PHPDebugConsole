@@ -71,20 +71,38 @@ $color-bg-unicode: #c0c0ff;
     color: #e00;
   }
 }
-.binary,
-.char-control {
+.binary {
   background-color: $color-bg-binary;
   color: $color-fg-binary;
   font-family: monospace !important;
   font-weight: bold;
 }
-.char-control {
+
+/*
+char-control is a single "control picture" / replacement character
+https://www.compart.com/en/unicode/block/U+2400
+which displays very small
+use ::after pseudo element to replace the char with abbreviation
+*/
+.char-control[data-abbr] {
   display: inline-block;
-  vertical-align: baseline;
-  clip-path: inset(30% 0);
-  transform: scale(2);
-  margin-left: 0.33em;
+  text-indent: -9999px;
+  line-height: 0;  // #reasons
+  margin: 0 0.15em;
 }
+.char-control[data-abbr]::after {
+  content: attr(data-abbr);
+  display: block;
+  line-height: 1em;
+  text-indent: 0;
+
+  padding: .05em .5em;
+  background-color: silver;
+  color: $color-fg-binary;
+  font-family: monospace !important;
+  // pointer-events: none;
+}
+
 .maxlen {
   background-color: $color-bg-maxlen;
 }

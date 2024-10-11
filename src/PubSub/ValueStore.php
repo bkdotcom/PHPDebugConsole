@@ -23,8 +23,8 @@ use Serializable;
  * Value store
  *
  * Note:
- *   The Serializable interface - since PHP 5.1.  Deprecated in php 8.1
- *   __serialize and __unserialize magic methods : since PHP 7.4
+ *   - The Serializable interface - since PHP 5.1.  Deprecated in php 8.1
+ *   - __serialize and __unserialize magic methods : since PHP 7.4
  *
  * @template TKey   of array-key
  * @template TValue of mixed
@@ -120,7 +120,7 @@ class ValueStore implements ArrayAccess, IteratorAggregate, JsonSerializable, Se
     }
 
     /**
-     * Set event value
+     * Set value
      *
      * @param TKey   $key   Value name
      * @param TValue $value Value
@@ -148,7 +148,7 @@ class ValueStore implements ArrayAccess, IteratorAggregate, JsonSerializable, Se
     }
 
     /**
-     * Implements JsonSerializable
+     * Implements `JsonSerializable`
      *
      * @return array<TKey,TValue>
      */
@@ -159,7 +159,7 @@ class ValueStore implements ArrayAccess, IteratorAggregate, JsonSerializable, Se
     }
 
     /**
-     * Implements Serializable
+     * Implements `Serializable`
      *
      * @return string
      */
@@ -169,7 +169,7 @@ class ValueStore implements ArrayAccess, IteratorAggregate, JsonSerializable, Se
     }
 
     /**
-     * Implements Serializable
+     * Implements `Serializable`
      *
      * @param string $data serialized data
      *
@@ -185,7 +185,7 @@ class ValueStore implements ArrayAccess, IteratorAggregate, JsonSerializable, Se
     }
 
     /**
-     * ArrayAccess hasValue.
+     * `ArrayAccess` hasValue.
      *
      * @param TKey $key Array key
      *
@@ -204,7 +204,7 @@ class ValueStore implements ArrayAccess, IteratorAggregate, JsonSerializable, Se
     }
 
     /**
-     * ArrayAccess getValue.
+     * `ArrayAccess` getValue.
      *
      * @param TKey $key Array key
      *
@@ -226,7 +226,7 @@ class ValueStore implements ArrayAccess, IteratorAggregate, JsonSerializable, Se
     }
 
     /**
-     * ArrayAccess setValue
+     * `ArrayAccess` setValue
      *
      * @param TKey   $offset Array key to set
      * @param TValue $value  Value
@@ -250,7 +250,7 @@ class ValueStore implements ArrayAccess, IteratorAggregate, JsonSerializable, Se
     }
 
     /**
-     * ArrayAccess interface
+     * `ArrayAccess` interface
      *
      * @param TKey $key Array key
      *
@@ -263,7 +263,7 @@ class ValueStore implements ArrayAccess, IteratorAggregate, JsonSerializable, Se
     }
 
     /**
-     * IteratorAggregate interface
+     * `IteratorAggregate` interface
      *
      * Iterate over the object like an array.
      *

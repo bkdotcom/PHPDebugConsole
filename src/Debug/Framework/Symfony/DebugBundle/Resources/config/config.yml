@@ -24,6 +24,10 @@ services:
   # "shared"
   # "synthetic"
   # "tags"
+  _defaults:
+    autowire: true      # Automatically injects dependencies in your services.
+    autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+
   bdk\Debug:
     factory: ['bdk\Debug', 'getInstance']
     public: false
@@ -32,14 +36,14 @@ services:
     public: true
   bdk_debug_listener:
     class: bdk\Debug\Framework\Symfony\DebugBundle\EventListener\BdkDebugBundleListener
-    arguments: ['@bdk_debug', '@doctrine']
+    arguments: ['@bdk_debug', '@kernel', '@doctrine']
     tags: ['kernel.event_subscriber']
   bdk_debug_twig:
     class: bdk\Debug\Collector\TwigExtension
     arguments: ['@bdk_debug']
     tags: ['twig.extension']
   monologHandler:
-   class: bdk\Debug\Collector\MonologHandler
-   arguments: ['@bdk_debug']
-   tags: ['monolog.logger']
+    class: bdk\Debug\Collector\MonologHandler
+    arguments: ['@bdk_debug']
+    tags: ['monolog.logger']
         # - { name: monolog.logger, channel: country }

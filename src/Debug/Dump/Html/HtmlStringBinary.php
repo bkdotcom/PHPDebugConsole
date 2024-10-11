@@ -84,9 +84,9 @@ class HtmlStringBinary
         }
         return isset($abs['chunks'])
             ? \implode('', \array_map(function (array $chunk) {
-                return $chunk[0] === Utf8::TYPE_UTF8
-                    ? $this->htmlString->dump($chunk[1])
-                    : '<span class="binary">\x' . \str_replace(' ', ' \\x', $chunk[1]) . '</span>';
+                return $chunk[0] === Utf8::TYPE_OTHER
+                    ? '<span class="binary">\x' . \str_replace(' ', ' \\x', $chunk[1]) . '</span>'
+                    : $this->htmlString->dump($chunk[1]);
             }, $abs['chunks']))
             : '<span class="binary">'
                 . \substr(\chunk_split($abs['value'], 3 * 32, '<br />'), 0, -6)

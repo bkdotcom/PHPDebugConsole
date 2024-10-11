@@ -260,9 +260,9 @@ class Value extends AbstractValue
             return $abs['value'];
         }
         return \implode('', \array_map(function ($chunk) {
-            return $chunk[0] === Utf8::TYPE_UTF8
-                ? $this->dumpString($chunk[1])
-                : '\\x' . \str_replace(' ', ' \\x', $chunk[1]);
+            return $chunk[0] === Utf8::TYPE_OTHER
+                ? '\\x' . \str_replace(' ', ' \\x', $chunk[1])
+                : $this->dumpString($chunk[1]);
         }, $abs['chunks'] ?: array()));
     }
 

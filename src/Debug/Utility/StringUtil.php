@@ -295,17 +295,19 @@ class StringUtil
     /**
      * Prettify SQL string
      *
-     * @param string $sql SQL string to prettify
+     * @param string $sql     SQL string to prettify
+     * @param bool   $success Was prettification successful?
      *
      * @return string
      *
      * @see https://github.com/jdorn/sql-formatter
      */
-    public static function prettySql($sql)
+    public static function prettySql($sql, &$success = false)
     {
         if (\class_exists('SqlFormatter') === false) {
             return $sql; // @codeCoverageIgnore
         }
+        $success = true;
         // whitespace only, don't highlight
         $sql = SqlFormatter::format($sql, false);
         // SqlFormatter borks bound params

@@ -37,6 +37,9 @@ class ErrorLogger implements SubscriberInterface
     /** @var list<string> Error hashes */
     protected $ignoredErrors = array();
 
+    /** @var list<string> list of paths... we will "ignore" errors occurring in these paths */
+    private $pathsIgnoreError = array();
+
     /**
      * Constructor
      *
@@ -51,6 +54,13 @@ class ErrorLogger implements SubscriberInterface
         */
         $this->debug->errorHandler->unregister();
         $this->debug->errorHandler->register();
+
+        $this->pathsIgnoreError = \array_map(static function ($path) {
+            $path = \preg_replace_callback('/:([\w\.]+):/', function (array $matches) {
+                return Yii::getPathOfAlias($matches[1]);
+            }, $path);
+            return \preg_replace('#' . DIRECTORY_SEPARATOR . '+#', DIRECTORY_SEPARATOR, $path);
+        }, $this->debug->getCfg('yii.pathsIgnoreError'));
     }
 
     /**
@@ -88,6 +98,10 @@ class ErrorLogger implements SubscriberInterface
      */
     public function onErrorHigh(Error $error)
     {
+        if ($error['isFirstOccur'] === false) {
+            $error->stopPropagation();
+            return;
+        }
         if ($this->isIgnorableError($error)) {
             $error->stopPropagation();          // don't log it now
             $error['isSuppressed'] = true;
@@ -146,12 +160,7 @@ class ErrorLogger implements SubscriberInterface
         /*
             "Ignore" minor internal framework errors
         */
-        $pathsIgnore = array(
-            Yii::getPathOfAlias('system'),
-            Yii::getPathOfAlias('webroot') . '/protected/extensions',
-            Yii::getPathOfAlias('webroot') . '/protected/components',
-        );
-        foreach ($pathsIgnore as $pathIgnore) {
+        foreach ($this->pathsIgnoreError as $pathIgnore) {
             if (\strpos($error['file'], $pathIgnore) === 0) {
                 return true;
             }

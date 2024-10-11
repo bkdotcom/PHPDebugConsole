@@ -307,27 +307,6 @@ EOD;
                 ),
             ),
 
-            'containsBinary' => array(
-                'log',
-                array(
-                    '<b>Brad</b>:' . "\n" . 'w𝔞s ' . "\x80" . 'hеre',
-                ),
-                array(
-                    'entry' => static function (LogEntry $logEntry) {
-                        self::assertInstanceOf('\bdk\Debug\Abstraction\Abstraction', $logEntry['args'][0]);
-                        self::assertSame(Type::TYPE_STRING, $logEntry['args'][0]['type']);
-                        self::assertSame(Type::TYPE_STRING_BINARY, $logEntry['args'][0]['typeMore']);
-                    },
-                    'html' => '<li class="m_log">&lt;b&gt;Brad&lt;/b&gt;:
-                        w<span class="unicode" data-code-point="1D51E" title="U-1D51E: MATHEMATICAL FRAKTUR SMALL A">𝔞</span>s <span class="binary">\x80</span>h<span class="unicode" data-code-point="0435" title="U-0435: CYRILLIC SMALL LETTER IE">е</span>re</li>',
-                    'script' => 'console.log("<b>Brad</b>:\nw\\\u{1d51e}s \\\x80h\\\u{0435}re");',
-                    'streamAnsi' => \str_replace('\e', "\e", '<b>Brad</b>:
-                        w\e[34;48;5;14m𝔞\e[0ms \e[30;48;5;250m80\e[0mh\e[34;48;5;14mе\e[0mre'),
-                    'text' => '<b>Brad</b>:
-                        w\u{1d51e}s \x80h\u{0435}re',
-                ),
-            ),
-
             'binary' => array(
                 'log',
                 array(
@@ -417,6 +396,72 @@ EOD;
                         <ul class="group-body">',
                     'streamAnsi' => "▸ \e[38;5;45mstring\e[0m\e[38;5;250m(image/png)\e[0m: 7.95 kB",
                     'text' => '▸ string(image/png): 7.95 kB',
+                ),
+            ),
+
+            'binary.partial' => array(
+                'log',
+                array(
+                    '<b>Brad</b>:' . "\n" . 'w𝔞s ' . "\x80\x00" . 'hеre',
+                ),
+                array(
+                    'entry' => static function (LogEntry $logEntry) {
+                        $abs = $logEntry['args'][0];
+                        self::assertInstanceOf('\bdk\Debug\Abstraction\Abstraction', $abs);
+                        self::assertSame(Type::TYPE_STRING, $abs['type']);
+                        self::assertSame(Type::TYPE_STRING_BINARY, $abs['typeMore']);
+                        self::assertSame([
+                            ["utf8", "<b>Brad</b>:\nw𝔞s "],
+                            ["other", "80" ],
+                            ["utf8Control", "\x00"],
+                            ["utf8", "hеre" ],
+                        ], $abs['chunks']);
+                    },
+                    'html' => '<li class="m_log"><span class="no-quotes t_string" data-type-more="binary">&lt;b&gt;Brad&lt;/b&gt;:
+                        w<span class="unicode" data-code-point="1D51E" title="U-1D51E: MATHEMATICAL FRAKTUR SMALL A">𝔞</span>s <span class="binary">\x80</span><span class="char-control" data-abbr="NUL" title="\x00: NUL">␀</span>h<span class="unicode" data-code-point="0435" title="U-0435: CYRILLIC SMALL LETTER IE">е</span>re</span></li>',
+                    'script' => 'console.log("<b>Brad</b>:\nw\\\u{1d51e}s \\\x80\\\x00h\\\u{0435}re");',
+                    'streamAnsi' => \str_replace('\e', "\e", '<b>Brad</b>:
+                        w\e[34;48;5;14m𝔞\e[0ms \e[30;48;5;250m80\e[0m\e[34;48;5;14m\x00\e[0mh\e[34;48;5;14mе\e[0mre'),
+                    'text' => '<b>Brad</b>:
+                        w\u{1d51e}s \x80\x00h\u{0435}re',
+                ),
+            ),
+
+            'binary.controlChars' => array(
+                'table',
+                array(
+                    array(
+                        'binary' => \base64_decode('AAAAAAEBAAAAAAAAAAAA8D8AAAAAAAAAQA==', true),
+                    ),
+                ),
+                array(
+                    'entry' => static function (LogEntry $logEntry) {
+                        $abs = $logEntry['args'][0]['binary']['value'];
+                        $expect = array(
+                            'brief' => false,
+                            'percentBinary' => (float) 96,
+                            'strlen' => 25,
+                            'strlenValue' => 25,
+                            'type' => Type::TYPE_STRING,
+                            'typeMore' => Type::TYPE_STRING_BINARY,
+                            'value' => '00 00 00 00 01 01 00 00 00 00 00 00 00 00 00 f0 3f 00 00 00 00 00 00 00 40',
+                        );
+                        self::assertSame($expect, $abs->getValues());
+                    },
+                    'html' => '<li class="m_table">
+                        <table class="sortable table-bordered">
+                        <thead>
+                            <tr><th>&nbsp;</th><th scope="col">value</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><th class="t_key t_string text-right" scope="row">binary</th><td><span class="t_keyword">string</span><span class="text-muted">(binary)</span>
+                            <ul class="list-unstyled value-container" data-type="string" data-type-more="binary">
+                            <li>size = <span class="t_int">25</span></li>
+                            <li class="t_string"><span class="binary">00 00 00 00 01 01 00 00 00 00 00 00 00 00 00 f0 3f 00 00 00 00 00 00 00 40</span></li>
+                            </ul></td></tr>
+                        </tbody>
+                        </table>
+                        </li>',
                 ),
             ),
 

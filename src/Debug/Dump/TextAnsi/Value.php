@@ -338,9 +338,9 @@ class Value extends TextValue
             return $this->cfg['escapeCodes']['binary'] . $abs['value'] . $this->escapeReset;
         }
         return \implode('', \array_map(function ($chunk) {
-            return $chunk[0] === Utf8::TYPE_UTF8
-                ? $this->highlightChars($chunk[1])
-                : $this->cfg['escapeCodes']['binary'] . $chunk[1] . $this->escapeReset;
+            return $chunk[0] === Utf8::TYPE_OTHER
+                ? $this->cfg['escapeCodes']['binary'] . $chunk[1] . $this->escapeReset
+                : $this->highlightChars($chunk[1]);
         }, $abs['chunks'] ?: array()));
     }
 

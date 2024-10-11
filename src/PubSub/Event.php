@@ -14,7 +14,7 @@
 namespace bdk\PubSub;
 
 /**
- * Event
+ * Represents a basic event
  *
  * Events are passed to event subscribers/listeners
  *
@@ -71,7 +71,7 @@ class Event extends ValueStore
     /**
      * Get Event's "subject"
      *
-     * @return Subject The observer subject
+     * @return Subject Usually the object that published the event
      */
     public function getSubject()
     {

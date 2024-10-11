@@ -13,6 +13,9 @@
 
 namespace bdk\PubSub;
 
+/**
+ * Provide event subscribers
+ */
 interface SubscriberInterface
 {
     /**
@@ -20,8 +23,8 @@ interface SubscriberInterface
      *
      * The array keys are event names and the value can be:
      *
-     *  _method_: priority defaults to 0, onlyOnce defaults to false
-     *  array: (required) _method_, (optional) int priority, (optional) bool onlyOnce)
+     *  _method_: priority defaults to 0, onlyOnce defaults to false<br />
+     *  array: (required) _method_, (optional) `int` priority, (optional) `bool` onlyOnce<br />
      *  array: any combination of the above
      *
      *  _method_ = string|Callable name of public method or `Closure`

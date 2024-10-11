@@ -130,10 +130,12 @@ class Abstraction extends BaseAbstraction
      */
     public function getValues()
     {
-        return \array_replace_recursive(
+        $return = \array_replace_recursive(
             $this->getInheritedValues(),
             $this->values
         );
+        \ksort($return, SORT_NATURAL);
+        return $return;
     }
 
     /**
@@ -220,7 +222,7 @@ class Abstraction extends BaseAbstraction
         $value = isset($this->values[$key])
             ? $this->values[$key]
             : null;
-        if (\in_array($key, self::$keysTemp)) {
+        if (\in_array($key, self::$keysTemp, true)) {
             return $value;
         }
         $classVal = $this->inheritValue($key)

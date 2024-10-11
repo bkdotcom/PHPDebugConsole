@@ -21,6 +21,7 @@ use Psr\Log\LogLevel;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
+use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\HttpKernel\KernelEvents;
 
 /**
@@ -60,17 +61,26 @@ class BdkDebugBundleListener implements EventSubscriberInterface
      * Constructor
      *
      * @param Debug            $debug            Debug instance
+     * @param Kernel           $kernel           Kernel instance
      * @param DoctrineRegistry $doctrineRegistry Doctrine Registry
      */
-    public function __construct(Debug $debug, DoctrineRegistry $doctrineRegistry)
+    public function __construct(Debug $debug, Kernel $kernel, DoctrineRegistry $doctrineRegistry, $logDir = null)
     {
         $this->debug = $debug;
         $this->debug->errorHandler->register();
+        $this->debugCfg['routeServerLog']['logDir'] = $kernel->getLogDir();
 
-        $connections = $doctrineRegistry->getConnections();
-        foreach ($connections as $conn) {
-            $logger = new DoctrineLogger($conn);
-            $conn->getConfiguration()->setSQLLogger($logger);
+        // doctrine v3.2 added setMiddlewares
+        // doctrine v3.3 added AbstractConnectionMiddleware (and other abstract classes)
+        // doctrine v3.4 deprecated SqlLogger
+        $doctrineSupportsMiddleware = \method_exists('Doctrine\DBAL\Configuration', 'setMiddlewares')
+            && \class_exists('Doctrine\DBAL\Driver\Middleware\AbstractConnectionMiddleware');
+        if ($doctrineSupportsMiddleware === false) {
+            $connections = $doctrineRegistry->getConnections();
+            foreach ($connections as $conn) {
+                $logger = new DoctrineLogger($conn);
+                $conn->getConfiguration()->setSQLLogger($logger);
+            }
         }
     }
 
@@ -94,9 +104,15 @@ class BdkDebugBundleListener implements EventSubscriberInterface
      */
     public function onKernelRequest(RequestEvent $event)
     {
-        if (!$event->isMasterRequest()) {
+        $methodName = \method_exists($event, 'isMainRequest')
+            ? 'isMainRequest'
+            : 'isMasterRequest'; // isMasterRequest deprecated in symfony/http-kernel 5.3
+        if (!$event->{$methodName}()) {
             return;
         }
+        $this->debug->groupSummary();
+        $this->debug->info('Symfony version', \Symfony\Component\HttpKernel\Kernel::VERSION);
+        $this->debug->groupEnd();
         $this->debug->setCfg($this->debugCfg, Debug::CONFIG_NO_RETURN);
         $this->debug->eventManager->subscribe(Debug::EVENT_LOG, [$this, 'onDebugLog']);
         $this->debug->eventManager->subscribe(Debug::EVENT_OBJ_ABSTRACT_START, [$this, 'onObjAbstractStart']);
@@ -111,6 +127,18 @@ class BdkDebugBundleListener implements EventSubscriberInterface
      */
     public function onDebugLog(LogEntry $logEntry)
     {
+        $channelName = $logEntry->getSubject()->getCfg('channelName');
+        if ($channelName === 'general.doctrine') {
+            $logEntry['appendLog'] = false;
+            return;
+        }
+        if ($channelName === 'general.event' && preg_match('/^Notified event "(?P<event>[^"]+)" to listener "(?P<listener>.+)"/', $logEntry['args'][0], $matches)) {
+            $logEntry['args'] = [
+                'Notified event "%s" to listener %s',
+                $matches['event'],
+                $matches['listener'],
+            ];
+        }
         if ($logEntry->getMeta('psr3level') !== LogLevel::CRITICAL) {
             return;
         }
@@ -141,8 +169,10 @@ class BdkDebugBundleListener implements EventSubscriberInterface
     {
         $response = $event->getResponse();
         $request = $event->getRequest();
-
-        if (!$event->isMasterRequest()) {
+        $methodName = \method_exists($event, 'isMainRequest')
+            ? 'isMainRequest'
+            : 'isMasterRequest'; // isMasterRequest deprecated in symfony/http-kernel 5.3
+        if (!$event->{$methodName}()) {
             return;
         }
 
@@ -185,6 +215,6 @@ class BdkDebugBundleListener implements EventSubscriberInterface
         $request = $event->getRequest();
         $responseTypeIsHtml = $response->headers->has('Content-Type') === false || \strpos($response->headers->get('Content-Type'), 'html') !== false;
         return ($responseTypeIsHtml || $request->getRequestFormat() === 'html')
-            && \stripos($response->headers->get('Content-Disposition'), 'attachment;') === false;
+            && \stripos((string) $response->headers->get('Content-Disposition'), 'attachment;') === false;
     }
 }

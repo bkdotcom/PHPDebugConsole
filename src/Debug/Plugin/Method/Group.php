@@ -366,22 +366,33 @@ class Group implements SubscriberInterface
                 \bdk\Debug::group();
         */
         $length = $callerLine - $functionStartLine + 1;
+        $lineFirstStatement = $this->getFirstStatementLine($file, $functionStartLine, $length);
+        return $callerLine === $lineFirstStatement;
+    }
+
+    /**
+     * Get the line number of the first statement within a function/method
+     *
+     * @param string $file              File path
+     * @param int    $functionStartLine Line with function keyword
+     * @param int    $length            Number of lines to search
+     *
+     * @return int|false
+     */
+    private function getFirstStatementLine($file, $functionStartLine, $length)
+    {
         $lines = $this->debug->backtrace->getFileLines($file, $functionStartLine, $length);
         $lines = \implode('', $lines);
         $tokens = $this->debug->findExit->getTokens($lines, false, false, $functionStartLine);
         $foundOpen = false;
-        $lineFirstStatement = null;
         foreach ($tokens as $token) {
             if ($token === '{') {
                 $foundOpen = true;
-                continue;
-            }
-            if ($foundOpen && \is_array($token)) {
-                $lineFirstStatement = $token[2];
-                break;
+            } elseif ($foundOpen && \is_array($token)) {
+                return $token[2];
             }
         }
-        return $callerLine === $lineFirstStatement;
+        return false;
     }
 
     /**

@@ -161,7 +161,7 @@ class InterfaceManager
     }
 
     /**
-     * Find
+     * Normalize/assign-keys for subscriber array values
      *
      * @param array $values array values
      *
@@ -174,6 +174,7 @@ class InterfaceManager
             'onlyOnce' => false,
             'priority' => Manager::DEFAULT_PRIORITY,
         );
+        /** @var array<string,callable> */
         $tests = array(
             'callable' => static function ($val) {
                 return \is_string($val) || ($val instanceof Closure);
@@ -181,22 +182,39 @@ class InterfaceManager
             'onlyOnce' => 'is_bool',
             'priority' => 'is_int',
         );
-        while ($values && $tests) {
+        while ($values) {
             /** @var mixed */
             $val = \array_shift($values);
-            foreach ($tests as $key => $test) {
-                if ($test($val)) {
-                    /** @var string|Closure|bool|int */
-                    $subscriberInfo[$key] = $val;
-                    unset($tests[$key]);
-                    continue 2;
-                }
+            $key = self::testValue($val, $tests);
+            if ($key) {
+                /** @var string|Closure|bool|int */
+                $subscriberInfo[$key] = $val;
+                unset($tests[$key]);
+                continue; // next value;
             }
-            // all tests failed
+            // all (remaining) tests failed / invalid value found
             $subscriberInfo['callable'] = null;
             break;
         }
         /** @var array{callable:string|Closure|null,onlyOnce:bool,priority:int} */
         return $subscriberInfo;
+    }
+
+    /**
+     * Test value against tests to determine key (callable, onlyOnce, priority)
+     *
+     * @param mixed                  $val   value test
+     * @param array<string,callable> $tests callable tests
+     *
+     * @return string|false key or false if no match
+     */
+    private static function testValue($val, array $tests)
+    {
+        foreach ($tests as $key => $test) {
+            if ($test($val)) {
+                return $key;
+            }
+        }
+        return false;
     }
 }

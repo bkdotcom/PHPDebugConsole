@@ -87,6 +87,9 @@ class Subscriber implements SubscriberInterface
             case $obj instanceof PhpDoc:
                 $abs['propertyOverrideValues']['cache'] = Abstracter::NOT_INSPECTED;
                 break;
+            case $obj instanceof UnitEnum:
+                $abs['isTraverseOnly'] = false;
+                break;
             case $obj instanceof AbstractObjectDefinition:
                 $abs['propertyOverrideValues']['cache'] = Abstracter::NOT_INSPECTED;
                 break;
@@ -129,6 +132,9 @@ class Subscriber implements SubscriberInterface
      */
     private function onEndEnum(Abstraction $abs)
     {
+        if ($abs['debugMethod'] === 'table') {
+            $abs['cfgFlags'] |= AbstractObject::BRIEF;
+        }
         if (!($abs['cfgFlags'] & AbstractObject::PHPDOC_COLLECT)) {
             return;
         }

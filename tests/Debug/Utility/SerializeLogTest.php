@@ -390,6 +390,7 @@ EOD;
                 'sort' => '',
                 'methodsWithStaticVars' => array(),
                 'keys' => array(),
+                'typeMore' => null,
             ),
             $expect['log'][1][1][1]
         );

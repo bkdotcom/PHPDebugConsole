@@ -146,7 +146,12 @@ class TableRow
     private function valuesAbs(Abstraction $abs)
     {
         if ($abs['type'] !== Type::TYPE_OBJECT) {
-            // resource & callable
+            // resource, callable, string, etc
+            $this->info['isScalar'] = true;
+            return array(self::SCALAR => $abs);
+        }
+        // we are an object
+        if (\strpos(\json_encode($abs['implements']), '"UnitEnum"') !== false) {
             $this->info['isScalar'] = true;
             return array(self::SCALAR => $abs);
         }

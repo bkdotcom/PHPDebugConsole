@@ -133,9 +133,13 @@ class Helper
      */
     public function markupType($type, array $attribs = array())
     {
-        $regex = '/(?:(\$this|[-\w\[\]\'"\\\\]+:?)|([\(\)<>\{\},\|&]))/';
+        $regex = '/(?:
+            (\$this|[-\w\[\]\'"\\\\]+:?)
+            |
+            ([\(\)<>\{\},\|&])
+            )/x';
         $type = \preg_replace_callback($regex, function ($matches) {
-            return $matches[1]
+            return $matches[1] !== ''
                 ? $this->markupTypePart($matches[1])
                 : '<span class="t_punct">' . \htmlspecialchars($matches[2]) . '</span>';
         }, $type);

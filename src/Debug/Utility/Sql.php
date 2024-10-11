@@ -110,6 +110,9 @@ class Sql
         if ($value === null) {
             return 'null';
         }
+        if ($value instanceof DateTime) {
+            $value = $value->format(DateTime::ISO8601);
+        }
         return \call_user_func([__CLASS__, __FUNCTION__], (string) $value);
     }
 }

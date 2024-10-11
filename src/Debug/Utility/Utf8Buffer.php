@@ -20,10 +20,9 @@ use LengthException;
  *
  * @psalm-type stats = array{
  *   blocks: list<array{0:Utf8::TYPE_*, 1:string}>,
- *   bytesControl: int,
  *   bytesOther: int,
- *   bytesSpecial: int,
  *   bytesUtf8: int,
+ *   bytesUtf8Control: int,
  *   calculated: bool,
  *   mbStrlen: int,
  *   percentBinary: float,
@@ -42,7 +41,8 @@ class Utf8Buffer
     private $stats = array(
         'blocks' => array(),
         'bytesOther' => 0,          // aka binary
-        'bytesUtf8' => 0,           // any valid utf-8
+        'bytesUtf8' => 0,           // any valid utf-8 (sans control)
+        'bytesUtf8Control' => 0,    // control characters (sans \r\n\t)
         'calculated' => false,      // internal check if stats calculated
         'mbStrlen' => 0,
         'percentBinary' => 0,
@@ -104,11 +104,12 @@ class Utf8Buffer
      *
      * Increments the current offset
      *
-     * @param string $char populated with the char that was tested
+     * @param string $char      Populated with the char that was tested
+     * @param bool   $isControl Populated with whether the char is a control character (sans \t\n\r)
      *
      * @return bool
      */
-    public function isOffsetUtf8(&$char = '')
+    public function isOffsetUtf8(&$char = '', &$isControl = false)
     {
         $byte1 = \ord($this->str[$this->curI]);
         $inc = 1;
@@ -116,6 +117,7 @@ class Utf8Buffer
         if ($byte1 < 0x80) {
             // single byte 0bbbbbbb
             $isUtf8 = true;
+            $isControl = $this->isOffsetUtf8Control($byte1);
         } elseif (($byte1 & 0xe0) === 0xc0) {
             // 2-byte sequence 110bbbbb 10bbbbbb
             $inc = 2;   // skip the next byte
@@ -241,7 +243,7 @@ class Utf8Buffer
     private function analyzeFinish()
     {
         $this->stats['percentBinary'] = $this->stats['strlen']
-            ? $this->stats['bytesOther'] / $this->stats['strlen'] * 100
+            ? ($this->stats['bytesOther'] + $this->stats['bytesUtf8Control']) / $this->stats['strlen'] * 100
             : 0;
         if ($this->stats['strlen'] && Utf8::strlen($this->stats['blocks'][0][1]) === 0) {
             // first block was empty
@@ -273,9 +275,15 @@ class Utf8Buffer
      */
     private function getOffsetCharType()
     {
-        return $this->isOffsetUtf8()
-            ? Utf8::TYPE_UTF8
-            : Utf8::TYPE_OTHER;
+        $char = '';
+        $isControl = false;
+        $isUtf8 = $this->isOffsetUtf8($char, $isControl);
+        if ($isUtf8 === false) {
+            return Utf8::TYPE_OTHER;
+        }
+        return $isControl
+            ? Utf8::TYPE_UTF8_CONTROL
+            : Utf8::TYPE_UTF8;
     }
 
     /**
@@ -288,9 +296,23 @@ class Utf8Buffer
      */
     private function incStat($stat, $inc)
     {
-        /** @var 'bytesOther'|'bytesUtf8' */
+        /** @var 'bytesOther'|'bytesUtf8|'bytesUtf8Control' */
         $stat = 'bytes' . \ucfirst($stat);
         $this->stats[$stat] += $inc;
+    }
+
+    /**
+     * Is the given byte a control character?
+     *
+     * We do not include \r, \n, or \t
+     *
+     * @param int $ord Ordinal value
+     *
+     * @return bool
+     */
+    private function isOffsetUtf8Control($ord)
+    {
+        return ($ord < 0x20 || $ord === 0x7f) && \in_array($ord, [0x09, 0x0A, 0x0D], true) === false;
     }
 
     /**

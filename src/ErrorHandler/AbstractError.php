@@ -249,7 +249,6 @@ class AbstractError extends Event
     private function setValuesInitDefault()
     {
         $errType = $this->values['type'];
-        $prevOccurrence = $this->subject->get('error', $this->values['hash']);
         $isSuppressed = $this->valIsSuppressed();
         $this->values['hash'] = $this->valHash();
         $this->values['category'] = $this->valCategory();
@@ -257,7 +256,7 @@ class AbstractError extends Event
             'continueToNormal' => $this->valContinueToNormal($isSuppressed),
             'continueToPrevHandler' => $this->subject->getCfg('continueToPrevHandler'),
             'exception' => $this->subject->get('uncaughtException'),  // non-null if error is uncaught-exception
-            'isFirstOccur' => $prevOccurrence === null,
+            'isFirstOccur' => $this->subject->get('error', $this->values['hash']) === null,
             'isSuppressed' => $isSuppressed,
             'throw' => $this->isFatal() === false && ($errType & $this->subject->getCfg('errorThrow')) === $errType,
         ));
@@ -314,12 +313,14 @@ class AbstractError extends Event
     private function valHash()
     {
         $errMsg = $this->values['message'];
-        // (\(.*?)\d+(.*?\))    "(tried to allocate 16384 bytes)" -> "(tried to allocate xxx bytes)"
-        $errMsg = \preg_replace('/(\(.*?)\d+(.*?\))/', '\1x\2', $errMsg);
-        // "blah123" -> "blahxxx"
-        $errMsg = \preg_replace('/\b([a-z]+\d+)+\b/', 'xxx', $errMsg);
-        // "-123.123" -> "xxx"
-        $errMsg = \preg_replace('/\b[\d.-]{4,}\b/', 'xxx', $errMsg);
+        $dirParts = \array_slice(\explode(DIRECTORY_SEPARATOR , __DIR__), 0, 3);
+        $dirStart = \implode(DIRECTORY_SEPARATOR, $dirParts);
+        // remove paths from message
+        $errMsg = \preg_replace('/' . \preg_quote($dirStart, '/') . '[\S:]*/', $dirStart . '...', $errMsg);
+        // remove floats: "-123.123" -> "###"
+        $errMsg = \preg_replace('/\b[\d.-]{4,}\b/', '###', $errMsg);
+        // remove integers:  "123" -> "###"
+        $errMsg = \preg_replace('/\d+/', '###', $errMsg);
         // remove "comments"..  this allows throttling email, while still adding unique info to user errors
         $errMsg = \preg_replace('/\s*##.+$/', '', $errMsg);
         return \md5($this->values['file'] . $this->values['line'] . $this->values['type'] . $errMsg);

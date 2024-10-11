@@ -42,6 +42,9 @@ class LogRoute extends CLogRoute
     /** @var LogEntryMeta */
     protected $meta;
 
+    /** @var array<string,bool> */
+    private $messageHashes = array();
+
     /** @var array stack of yii begin-profile log entries */
     private $stack;
 
@@ -145,33 +148,43 @@ class LogRoute extends CLogRoute
     protected function isExcluded(array $logEntry)
     {
         $category = $logEntry[2];
-        if (\strpos($category, 'system.db') === 0 && \preg_match('/^(Opening|Closing)/', $logEntry[0])) {
+        if (\strpos($category, 'system.db.') === 0 && \preg_match('/^(Opening|Closing)/', $logEntry[0])) {
             return false;
         }
-        foreach ($this->except as $except) {
-            if ($this->isExcludedTest($except, $category)) {
+        if ($category === 'application' && $logEntry[1] === 'trace' && \preg_match('/^(Begin|Commit|Rollback) transaction/', $logEntry[0])) {
+            // we will og these via our PDO collector
+            return true;
+        }
+        if ($logEntry[1] === 'warning') {
+            $hash = \md5($logEntry[0]);
+            if (isset($this->messageHashes[$hash])) {
+                // we've already logged this warning
                 return true;
             }
+            $this->messageHashes[$hash] = true;
         }
-        return false;
+        return $this->isExcludedTest($category);
     }
 
     /**
      * Test except string against category
      *
-     * @param string $except   category or regex to match against category
      * @param string $category logEntry category
      *
      * @return bool
      */
-    private function isExcludedTest($except, $category)
+    private function isExcludedTest($category)
     {
-        //  If found, we skip
-        if (\trim(\strtolower($except)) === \trim(\strtolower($category))) {
-            return true;
+        $category = \trim(\strtolower($category));
+        foreach ($this->except as $except) {
+            //  If found, we skip
+            if (\trim(\strtolower($except)) === $category) {
+                return true;
+            }
+            //  Check for regex
+            return $except[0] === '/' && \preg_match($except, $category);
         }
-        //  Check for regex
-        return $except[0] === '/' && \preg_match($except, $category);
+        return false;
     }
 
     /**

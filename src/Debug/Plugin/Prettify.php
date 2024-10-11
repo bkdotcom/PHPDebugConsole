@@ -129,8 +129,7 @@ class Prettify implements SubscriberInterface
                 $prettified = true;
                 break;
             case 'sql':
-                $string = $this->debug->stringUtil->prettySql($string);
-                $prettified = true;
+                $string = $this->debug->stringUtil->prettySql($string, $prettified);
                 break;
             case 'xml':
                 $string = $this->debug->stringUtil->prettyXml($string);

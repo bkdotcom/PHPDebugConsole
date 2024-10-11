@@ -24,6 +24,7 @@ class Utf8
 {
     const TYPE_OTHER = 'other';
     const TYPE_UTF8 = 'utf8';
+    const TYPE_UTF8_CONTROL = 'utf8Control'; // control character (sans \r\n\t)
 
     /** @var Utf8Buffer|null */
     private static $buffer;

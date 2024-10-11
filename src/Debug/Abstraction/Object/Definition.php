@@ -100,6 +100,18 @@ class Definition
     }
 
     /**
+     * "Build" object definition values
+     *
+     * @param array<string,mixed> $values values to apply
+     *
+     * @return array<string,mixed>
+     */
+    public static function buildValues(array $values = array())
+    {
+        return \array_merge(self::$values, $values);
+    }
+
+    /**
      * Get class ValueStore obj
      *
      * @param object $obj    Object being abstracted
@@ -124,8 +136,9 @@ class Definition
         }
         $abs = new ObjectAbstraction($this->getValueStoreDefault(), $this->getInitValues($values));
         $abs->setSubject($obj);
-        $this->doAbstraction($abs);
         $this->debug->data->set($dataPath, $abs);
+        $this->doAbstraction($abs);
+        unset($abs['debugMethod']);
         return $abs;
     }
 
@@ -139,23 +152,20 @@ class Definition
         if ($this->default) {
             return $this->default;
         }
-        $key = self::$values['className'];
-        $classValueStore = new ValueStore(\array_merge(
-            self::$values,
-            array(
-                'isExcluded' => false,
-                'sectionOrder' => $this->object->getCfg('objectSectionOrder'),
-                'sort' => $this->object->getCfg('objectSort'),
-                'stringified' => null,
-                'traverseValues' => array(),
-                'viaDebugInfo' => false,
-            )
+        $values = self::buildValues(array(
+            'isExcluded' => false,
+            'sectionOrder' => $this->object->getCfg('objectSectionOrder'),
+            'sort' => $this->object->getCfg('objectSort'),
+            'stringified' => null,
+            'traverseValues' => array(),
+            'viaDebugInfo' => false,
         ));
+        $classValueStore = new ValueStore($values);
         $this->default = $classValueStore;
-        $this->debug->data->set(array(
+        $this->debug->data->set([
             'classDefinitions',
-            $key,
-        ), $classValueStore);
+            $values['className'], // "\x00default\x00"
+        ], $classValueStore);
         return $classValueStore;
     }
 
@@ -333,12 +343,9 @@ class Definition
     {
         $reflector = $values['reflector'];
         $isAnonymous = PHP_VERSION_ID >= 70000 && $reflector->isAnonymous();
-        return \array_merge(
-            self::$values,
+        return self::buildValues(\array_merge(
             array(
-                'cfgFlags' => $reflector instanceof ReflectionEnum
-                    ? $values['cfgFlags'] // avoid enum value recursion (cfgFlags based on current config)
-                    : self::$values['cfgFlags'], // all options / collect everything
+                'cfgFlags' => self::$values['cfgFlags'],
                 'className' => $isAnonymous
                     ? $values['className'] . '|' . \md5($reflector->getName())
                     : $values['className'],
@@ -351,10 +358,11 @@ class Definition
             ),
             array(
                 // these are temporary values available during abstraction
+                'debugMethod' => $values['debugMethod'],
                 'fullyQualifyPhpDocType' => $values['fullyQualifyPhpDocType'],
                 'hist' => array(),
                 'reflector' => $values['reflector'],
             )
-        );
+        ));
     }
 }

@@ -25,30 +25,23 @@ class Utf8Test extends TestCase
 
     public function testBufferAnalyze()
     {
-        $str = "\xef\xbb\xbfPesky BOM";
+        $str = "\xef\xbb\xbfPesky BOM\x80Brad was here\n\x00";
         $buffer = new Utf8Buffer($str);
         $stats1 = $buffer->analyze();
         $stats2 = $buffer->analyze();
         self::assertSame(array(
-            'blocks' => array(
-                /*
-                array(
-                    'special',
-                    "\xef\xbb\xbf",
-                ),
-                */
-                array(
-                    'utf8',
-                    "\xef\xbb\xbfPesky BOM",
-                ),
-            ),
-            // 'bytesControl' => 0,
-            'bytesOther' => 0,
-            // 'bytesSpecial' => 3,
-            'bytesUtf8' => 12,
-            'mbStrlen' => 10,
-            'percentBinary' => 0,
-            'strlen' => 12,
+            'blocks' => [
+                ['utf8', "\xef\xbb\xbfPesky BOM"],
+                ['other', "\x80"],
+                ['utf8', "Brad was here\n"],
+                ['utf8Control', "\x00"],
+            ],
+            'bytesOther' => 1,
+            'bytesUtf8' => 26,
+            'bytesUtf8Control' => 1,
+            'mbStrlen' => 26,
+            'percentBinary' => 2 / 28 * 100,
+            'strlen' => 28,
         ), $stats1);
         self::assertSame($stats1, $stats2);
     }

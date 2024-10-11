@@ -43,7 +43,7 @@ class StatsStoreFile extends AbstractComponent implements StatsStoreInterface
     protected $data = array();
 
     /** @var list<errorStats> */
-    protected $summaryErrors = array();
+    protected $summaryErrors = [];
 
     /**
      * Constructor

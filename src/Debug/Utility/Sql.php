@@ -13,6 +13,7 @@
 namespace bdk\Debug\Utility;
 
 use bdk\Debug\Utility\ArrayUtil;
+use DateTime;
 
 /**
  * Utilities for formatting SQL statements
@@ -47,7 +48,7 @@ class Sql
             (?:\s+LIMIT\s+(?P<limit>.*?))?
             (?:\s+FOR\s+(?P<for>.*?))?
             $/six';
-        $keysAlwaysReturn = array('method', 'select', 'from', 'afterMethod', 'where');
+        $keysAlwaysReturn = ['method', 'select', 'from', 'afterMethod', 'where'];
         return \preg_match($regex, $sql, $matches) === 1
             ? \array_merge(\array_fill_keys($keysAlwaysReturn, ''), $matches)
             : false;
@@ -101,7 +102,7 @@ class Sql
             return $value;
         }
         if (\is_array($value)) {
-            return \implode(', ', \array_map(array(__CLASS__, __FUNCTION__), $value));
+            return \implode(', ', \array_map([__CLASS__, __FUNCTION__], $value));
         }
         if (\is_bool($value)) {
             return (int) $value;
@@ -109,6 +110,6 @@ class Sql
         if ($value === null) {
             return 'null';
         }
-        return \call_user_func(array(__CLASS__, __FUNCTION__), (string) $value);
+        return \call_user_func([__CLASS__, __FUNCTION__], (string) $value);
     }
 }

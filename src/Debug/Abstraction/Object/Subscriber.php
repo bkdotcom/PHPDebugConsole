@@ -157,9 +157,9 @@ class Subscriber implements SubscriberInterface
     private function onEndMysqli(Abstraction $abs)
     {
         $obj = $abs->getSubject();
-        $propsAlwaysAvail = array(
+        $propsAlwaysAvail = [
             'client_info','client_version','connect_errno','connect_error','errno','error','stat',
-        );
+        ];
         \set_error_handler(static function () {
             // ignore error
         });

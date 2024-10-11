@@ -13,11 +13,11 @@ use Reflector;
 class FindExit
 {
     /** @var string[] */
-    private $classesSkip = array();
+    private $classesSkip = [];
     /** @var int */
     private $depth = 0;
     /** @var array nested functions */
-    private $funcStack = array();
+    private $funcStack = [];
     /** @var string */
     private $function = '';
     /** @var bool */
@@ -28,7 +28,7 @@ class FindExit
      *
      * @param array $classesSkip Classnames to bypass when going through backtrace
      */
-    public function __construct($classesSkip = array())
+    public function __construct($classesSkip = [])
     {
         $this->setSkipClasses($classesSkip);
     }
@@ -276,18 +276,18 @@ class FindExit
     private function getFrameSource($frame)
     {
         if (isset($frame['include_filename'])) {
-            return array(
+            return [
                 $frame['include_filename'],
                 0,
                 \file_get_contents($frame['include_filename']),
-            );
+            ];
         }
         if ($frame['function'] === '{main}') {
-            return array(
+            return [
                 $frame['file'],
                 $frame['line'],
                 \file_get_contents($frame['file']),
-            );
+            ];
         }
         // xdebug < 3.0: namespace\{closure}
         // xdebug 3.0    namespace\{closure:filepath.php:48-55}
@@ -300,7 +300,7 @@ class FindExit
                 : new \ReflectionFunction($frame['function']);
             return $this->getFrameSourceReflection($reflector);
         } catch (\ReflectionException $e) {
-            return array($frame['file'], $frame['line'], ''); // @codeCoverageIgnore
+            return [$frame['file'], $frame['line'], '']; // @codeCoverageIgnore
         }
     }
 
@@ -320,11 +320,11 @@ class FindExit
             $lineStart - 1,
             $lineEnd - $lineStart + 1
         );
-        return array(
+        return [
             $file,
             $lineStart,
             \implode('', $php),
-        );
+        ];
     }
 
     /**
@@ -337,22 +337,22 @@ class FindExit
     private function getFrameSourceReflection(Reflector $reflector)
     {
         if ($reflector->isInternal()) {
-            return array(
+            return [
                 null,
                 0,
                 '',
-            );
+            ];
         }
         $php = \array_slice(
             \file($reflector->getFileName()),
             $reflector->getStartLine() - 1,
             $reflector->getEndLine() - $reflector->getStartLine() + 1
         );
-        return array(
+        return [
             $reflector->getFileName(),
             $reflector->getStartLine(),
             \implode('', $php),
-        );
+        ];
     }
 
     /**

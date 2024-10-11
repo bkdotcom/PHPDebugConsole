@@ -44,7 +44,7 @@ abstract class AbstractErrorRoute extends AbstractRoute
     public function getSubscriptions()
     {
         return array(
-            ErrorHandler::EVENT_ERROR => array('onError', -1),
+            ErrorHandler::EVENT_ERROR => ['onError', -1],
         );
     }
 

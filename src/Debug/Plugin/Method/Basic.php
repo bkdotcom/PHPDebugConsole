@@ -32,14 +32,14 @@ class Basic implements SubscriberInterface
     private $isCli = false;
 
     /** @var string[] */
-    protected $methods = array(
+    protected $methods = [
         'assert',
         'error',
         'info',
         'log',
         'varDump',
         'warn',
-    );
+    ];
 
     /**
      * If first argument evaluates `false`, log the remaining parameters
@@ -72,10 +72,10 @@ class Basic implements SubscriberInterface
             $callerInfo = $this->debug->backtrace->getCallerInfo();
             $fileAndLine = \sprintf('%s (line %s, eval\'d line %s)', $callerInfo['file'], $callerInfo['line'], $callerInfo['evalLine']);
             $fileAndLine = \str_replace(', eval\'d line )', ')', $fileAndLine);
-            $args = array(
+            $args = [
                 'Assertion failed:',
                 $fileAndLine,
-            );
+            ];
             $logEntry->setMeta('detectFiles', true);
         }
         $logEntry['args'] = $args;

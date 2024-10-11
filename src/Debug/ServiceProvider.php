@@ -42,7 +42,7 @@ class ServiceProvider implements ServiceProviderInterface
             These "services" are reused between channels
             each debug "rootInstance" gets at most one instance of the following
         */
-        $container['services'] = array(
+        $container['services'] = [
             'arrayUtil',
             'backtrace',
             'data',
@@ -56,7 +56,7 @@ class ServiceProvider implements ServiceProviderInterface
             'stringUtil',
             'utf8',
             'utility',
-        );
+        ];
 
         // ensure that PHPDebugConsole receives ServerRequestExtended
         $container->extend('serverRequest', static function (ServerRequestInterface $serverRequest) {
@@ -80,9 +80,9 @@ class ServiceProvider implements ServiceProviderInterface
         $container['backtrace'] = static function (Container $container) {
             $debug = $container['debug'];
             $backtrace = $debug->errorHandler->backtrace;
-            $backtrace->addInternalClass(array(
+            $backtrace->addInternalClass([
                 'bdk\\Debug',
-            ));
+            ]);
             return $backtrace;
         };
         $container['config'] = static function (Container $container) {

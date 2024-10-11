@@ -140,7 +140,7 @@ class AbstractObject extends AbstractComponent
     protected $propertiesInstance;
 
     /** @var list<string> */
-    protected $readOnly = array(
+    protected $readOnly = [
         'abstracter',
         'constants',
         'debug',
@@ -149,7 +149,7 @@ class AbstractObject extends AbstractComponent
         'methods',
         'properties',
         'propertiesInstance',
-    );
+    ];
 
     /**
      * Default object abstraction values
@@ -238,7 +238,7 @@ class AbstractObject extends AbstractComponent
     }
 
     /**
-     * Get the default object abstraction values
+     * "Build" object abstraction values
      *
      * @param array<string,mixed> $values values to apply
      *
@@ -418,7 +418,7 @@ class AbstractObject extends AbstractComponent
     private function isObjInList($obj, array $list)
     {
         $classname = \get_class($obj);
-        if (\array_intersect(array('*', $classname), $list)) {
+        if (\array_intersect(['*', $classname], $list)) {
             return true;
         }
         foreach ($list as $class) {

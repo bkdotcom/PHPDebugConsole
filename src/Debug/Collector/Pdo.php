@@ -55,8 +55,8 @@ class Pdo extends PdoBase
         }
         $this->pdo = $pdo;
         $this->debug = $debug;
-        $this->setAttribute(PdoBase::ATTR_STATEMENT_CLASS, array('bdk\Debug\Collector\Pdo\Statement', array($this)));
-        $debug->eventManager->subscribe(Debug::EVENT_OUTPUT, array($this, 'onDebugOutput'), 1);
+        $this->setAttribute(PdoBase::ATTR_STATEMENT_CLASS, ['bdk\Debug\Collector\Pdo\Statement', [$this]]);
+        $debug->eventManager->subscribe(Debug::EVENT_OUTPUT, [$this, 'onDebugOutput'], 1);
         $debug->addPlugin($debug->pluginHighlight);
     }
 
@@ -252,7 +252,7 @@ class Pdo extends PdoBase
         $name = \end($nameParts);
         $driverName = $this->pdo->getAttribute(PdoBase::ATTR_DRIVER_NAME);
 
-        $groupParams = \array_filter(array(
+        $groupParams = \array_filter([
             ($name !== 'general' ? $name : 'PDO') . ' info',
             $driverName,
             $driverName !== 'sqlite'
@@ -262,8 +262,8 @@ class Pdo extends PdoBase
                 'argsAsParams' => false,
                 'level' => 'info',
             )),
-        ));
-        \call_user_func_array(array($debug, 'groupCollapsed'), $groupParams);
+        ]);
+        \call_user_func_array([$debug, 'groupCollapsed'], $groupParams);
         $this->logRuntime($debug);
         $debug->groupEnd(); // groupCollapsed
         $debug->groupEnd(); // groupSummary
@@ -285,7 +285,6 @@ class Pdo extends PdoBase
                 return $statement->fetchColumn();
             }
         } catch (PDOException $e) {
-            // no such method
             return null;
         }
     }
@@ -300,7 +299,7 @@ class Pdo extends PdoBase
      * @return mixed The result of the call
      * @throws PDOException
      */
-    protected function profileCall($method, $sql, $args = array())
+    protected function profileCall($method, $sql, $args = [])
     {
         $info = new StatementInfo($sql);
         $isExceptionMode = $this->pdo->getAttribute(PdoBase::ATTR_ERRMODE) === PdoBase::ERRMODE_EXCEPTION;
@@ -308,7 +307,7 @@ class Pdo extends PdoBase
         $result = null;
         $exception = null;
         try {
-            $result = \call_user_func_array(array($this->pdo, $method), $args);
+            $result = \call_user_func_array([$this->pdo, $method], $args);
             if (!$isExceptionMode && $result === false) {
                 $error = $this->pdo->errorInfo();
                 $exception = new PDOException($error[2], $error[0]);

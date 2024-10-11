@@ -69,7 +69,7 @@ class ParseMethod
         $params = $parsed['param'];
         foreach ($params as $i => $str) {
             \preg_match('/^(?:([^=]*?)\s)?([^\s=]+)(?:\s*=\s*(.+))?$/', $str, $matches);
-            $matches = \array_replace(array(null, null, null), $matches);
+            $matches = \array_replace([null, null, null], $matches);
             $name = $matches[2];
             $paramInfo = array(
                 'isVariadic' => \strpos($name, '...') !== false,
@@ -167,14 +167,14 @@ class ParseMethod
         $endParam = false;
         if ($char === ',') {
             $endParam = $this->paramParseInfo['depth'] === 1;
-        } elseif (\in_array($char, array('\'', '"'), true)) {
+        } elseif (\in_array($char, ['\'', '"'], true)) {
             // we're opening a quoted string
             $this->paramParseInfo['strOpenedWith'] = $char;
         } elseif (\preg_match('#\G\s*=>\s*#', $this->paramParseInfo['str'], $matches, 0, $this->paramParseInfo['pos'])) {
             $this->paramParseInfo['pos'] += \strlen($matches[0]) - 1;
-        } elseif (\in_array($char, array('<', '(', '[', '{'), true)) {
+        } elseif (\in_array($char, ['<', '(', '[', '{'], true)) {
             $this->paramParseInfo['depth']++;
-        } elseif (\in_array($char, array('>', ')', ']', '}'), true)) {
+        } elseif (\in_array($char, ['>', ')', ']', '}'], true)) {
             $endParam = $this->paramParseInfo['depth'] === 1;
             $this->paramParseInfo['depth']--;
         }

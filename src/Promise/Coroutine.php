@@ -190,8 +190,8 @@ final class Coroutine implements PromiseInterface
     {
         $this->currentPromise = Create::promiseFor($yielded)
             ->then(
-                array($this, 'handleSuccess'),
-                array($this, 'handleFailure')
+                [$this, 'handleSuccess'],
+                [$this, 'handleFailure']
             );
     }
 

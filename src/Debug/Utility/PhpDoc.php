@@ -81,7 +81,7 @@ class PhpDoc
     public function __construct($cfg = array())
     {
         $this->cfg = \array_merge(array(
-            'sanitizer' => array('bdk\Debug\Utility\HtmlSanitize', 'sanitize'),
+            'sanitizer' => ['bdk\Debug\Utility\HtmlSanitize', 'sanitize'],
         ), $cfg);
         $this->helper = new Helper();
         $this->parsers = new Parsers($this->helper);
@@ -99,7 +99,7 @@ class PhpDoc
     {
         $this->reflector = Reflection::getReflector($what, true) ?: null;
         $comment = $this->reflector
-            ? (\is_callable(array($this->reflector, 'getDocComment'))
+            ? (\is_callable([$this->reflector, 'getDocComment'])
                 ? $this->reflector->getDocComment()
                 : '')
             : $what;
@@ -211,7 +211,7 @@ class PhpDoc
      */
     private function separateComment($comment)
     {
-        $matches = array();
+        $matches = [];
         $strTags = '';
         if (\preg_match('/^@/m', $comment, $matches, PREG_OFFSET_CAPTURE)) {
             // we have tags
@@ -222,7 +222,7 @@ class PhpDoc
                 ? \substr($comment, 0, $pos - 1)
                 : '';
         }
-        return array($comment, $strTags);
+        return [$comment, $strTags];
     }
 
     /**
@@ -287,7 +287,7 @@ class PhpDoc
             ? $this->parseTagRegex($parser, $tagStr)
             : \array_merge(
                 \array_fill_keys($parser['parts'], null),
-                \array_fill_keys(\array_intersect($parser['parts'], array('desc', 'summary')), '')
+                \array_fill_keys(\array_intersect($parser['parts'], ['desc', 'summary']), '')
             );
         foreach ((array) $parser['callable'] as $callable) {
             $parsed = \call_user_func(
@@ -346,7 +346,7 @@ class PhpDoc
         $regexNotTag = '(?P<value>(?:(?!^@).)*)';
         $regexTags = '#^@(?P<tag>[\w-]+)[ \t]*' . $regexNotTag . '#imsu';
         \preg_match_all($regexTags, $str, $matches, PREG_SET_ORDER);
-        $singleTags = array('package', 'return');
+        $singleTags = ['package', 'return'];
         $return = array();
         foreach ($matches as $match) {
             $value = $match['value'];
@@ -377,7 +377,7 @@ class PhpDoc
         if (!$this->reflector) {
             return $parsed;
         }
-        if (\strtolower($comment) === '{@inheritdoc}') {
+        if ($comment === '' || \strtolower($comment) === '{@inheritdoc}') {
             // phpDoc considers this non-standard
             return $this->parseParent($this->reflector);
         }

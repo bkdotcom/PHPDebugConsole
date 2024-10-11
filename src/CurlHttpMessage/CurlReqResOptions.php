@@ -58,11 +58,11 @@ class CurlReqResOptions
      */
     private function methodMayHaveBody($method = null)
     {
-        $methodsNoRequestBody = array(
+        $methodsNoRequestBody = [
             'GET',
             'HEAD',
             'TRACE',
-        );
+        ];
         $method = $method ?: $this->request->getMethod();
         return \in_array($method, $methodsNoRequestBody, true) === false;
     }
@@ -151,7 +151,7 @@ class CurlReqResOptions
         }
 
         $this->curlOptions[CURLOPT_READFUNCTION] = static function ($curl, $handle, $len) use ($body) {
-            array($curl, $handle); // suppress unused warning
+            [$curl, $handle]; // suppress unused warning
             return $body->read($len);
         };
     }
@@ -167,7 +167,7 @@ class CurlReqResOptions
 
         if ($this->request->hasHeader('Content-Length') === false && $this->methodMayHaveBody()) {
             // ensure we send Content-Length header
-            $requestHeaders['Content-Length'] = array();
+            $requestHeaders['Content-Length'] = [];
         }
 
         $headers = $this->requestHeadersToHeaders($requestHeaders);
@@ -204,10 +204,10 @@ class CurlReqResOptions
 
             if ($nameLower === 'content-length') {
                 if (\array_key_exists(CURLOPT_POSTFIELDS, $this->curlOptions)) {
-                    $values = array(\strlen($this->curlOptions[CURLOPT_POSTFIELDS]));
+                    $values = [\strlen($this->curlOptions[CURLOPT_POSTFIELDS])];
                 } elseif (\array_key_exists(CURLOPT_READFUNCTION, $this->curlOptions) === false) {
                     // Force content length to '0' if body is empty
-                    $values = array(0);
+                    $values = [0];
                 }
             }
 

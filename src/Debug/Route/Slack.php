@@ -63,7 +63,7 @@ class Slack extends AbstractErrorRoute
      */
     private function assertCfg()
     {
-        if (\in_array($this->cfg['use'], array('auto', 'api', 'webhook'), true) === false) {
+        if (\in_array($this->cfg['use'], ['auto', 'api', 'webhook'], true) === false) {
             throw new RuntimeException(\sprintf(
                 '%s: Invalid cfg value.  `use` must be one of "auto", "api", or "webhook"',
                 __CLASS__
@@ -116,16 +116,16 @@ class Slack extends AbstractErrorRoute
         $messages[] = (new SlackMessage())
             ->withHeader($icon . ' ' . $error['typeStr'])
             ->withText($icon . ' ' . $error['typeStr'] . "\n" . $error->getMessageText())
-            ->withContext(array(
+            ->withContext([
                 $this->getRequestMethodUri(),
-            ))
+            ])
             ->withSection(array(
                 'text' => $error->getMessageText(),
                 'type' => 'plain_text',
             ))
-            ->withContext(array(
+            ->withContext([
                 $error['fileAndLine'],
-            ));
+            ]);
         if ($error->isFatal() && $error['backtrace']) {
             $messages[] = $this->buildMessageBacktrace($error);
         }

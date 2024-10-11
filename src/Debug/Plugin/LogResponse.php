@@ -42,8 +42,8 @@ class LogResponse extends AbstractLogReqRes implements SubscriberInterface
     {
         return array(
             Debug::EVENT_BOOTSTRAP => 'onBootstrap',
-            Debug::EVENT_CONFIG => array('onConfig', -1),
-            Debug::EVENT_OUTPUT => array('logResponse', PHP_INT_MAX),
+            Debug::EVENT_CONFIG => ['onConfig', -1],
+            Debug::EVENT_OUTPUT => ['logResponse', PHP_INT_MAX],
         );
     }
 

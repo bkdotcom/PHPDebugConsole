@@ -49,13 +49,18 @@ class Component extends CApplicationComponent
             'session' => false,
         ),
         'logFiles' => array(
-            'filesExclude' => array(
+            'filesExclude' => [
                 '/framework/',
                 '/protected/components/system/',
                 '/vendor/',
-            ),
+            ],
         ),
         'yii' => array(
+            'pathsIgnoreError' => [
+                ':system:',
+                // ':webroot:/protected/extensions',
+                ':webroot:/protected/components',
+            ],
             'ignoredErrors' => true,
             'log' => true,
             'pdo' => true,

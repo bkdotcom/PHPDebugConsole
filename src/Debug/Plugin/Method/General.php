@@ -25,7 +25,7 @@ class General implements SubscriberInterface
     use CustomMethodTrait;
 
     /** @var string[] */
-    protected $methods = array(
+    protected $methods = [
         'email',
         'errorStats',
         'getDump',
@@ -34,7 +34,7 @@ class General implements SubscriberInterface
         'obEnd',
         'obStart',
         'setErrorCaller',
-    );
+    ];
 
     /**
      * Send an email
@@ -81,7 +81,7 @@ class General implements SubscriberInterface
     {
         $stats = array(
             'counts' => \array_fill_keys(
-                array('deprecated','error','fatal','notice','strict','warning'),
+                ['deprecated','error','fatal','notice','strict','warning'],
                 array('inConsole' => 0, 'notInConsole' => 0, 'suppressed' => 0)
             ),
             'inConsole' => 0,

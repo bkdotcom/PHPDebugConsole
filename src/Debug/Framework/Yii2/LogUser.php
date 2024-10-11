@@ -61,12 +61,12 @@ class LogUser
 
         $debug = $this->debug->rootInstance->getChannel('User');
         $debug->eventManager->subscribe(Debug::EVENT_LOG, function (LogEntry $logEntry) {
-            $captions = array('roles', 'permissions');
+            $captions = ['roles', 'permissions'];
             $isRolesPermissions = $logEntry['method'] === 'table' && \in_array($logEntry->getMeta('caption'), $captions, true);
             if (!$isRolesPermissions) {
                 return;
             }
-            $logEntry['args'] = array($this->tableTsToString($logEntry['args'][0]));
+            $logEntry['args'] = [$this->tableTsToString($logEntry['args'][0])];
         });
 
         $this->logUserIdentity($debug);
@@ -109,13 +109,13 @@ class LogUser
                 return;
             }
             $user = $this->debugModule->module->get('user', false);
-            $cols = array(
+            $cols = [
                 'description',
                 'ruleName',
                 'data',
                 'createdAt',
                 'updatedAt',
-            );
+            ];
             $debug->table('roles', $authManager->getRolesByUser($user->id), $cols);
             $debug->table('permissions', $authManager->getPermissionsByUser($user->id), $cols);
         } catch (Exception $e) {
@@ -133,7 +133,7 @@ class LogUser
     private function tableTsToString($rows)
     {
         foreach ($rows as $i => $row) {
-            $tsCols = array('createdAt', 'updatedAt');
+            $tsCols = ['createdAt', 'updatedAt'];
             $nonEmptyTsVals = \array_filter(\array_intersect_key($row, \array_flip($tsCols)));
             foreach ($nonEmptyTsVals as $key => $val) {
                 $val = $val instanceof Abstraction

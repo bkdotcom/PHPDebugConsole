@@ -19,7 +19,7 @@ class HandlerStack
     private $handler;
 
     /** @var list<list{callable,string|null}> */
-    private $stack = array();
+    private $stack = [];
 
     /** @var handler|null */
     private $stackCallable;
@@ -88,7 +88,7 @@ class HandlerStack
     public function push(callable $middleware, $name = null)
     {
         $this->assertName($name);
-        $this->stack[] = array($middleware, $name);
+        $this->stack[] = [$middleware, $name];
         $this->stackCallable = null;
     }
 
@@ -103,7 +103,7 @@ class HandlerStack
     public function unshift(callable $middleware, $name = null)
     {
         $this->assertName($name);
-        \array_unshift($this->stack, array($middleware, $name));
+        \array_unshift($this->stack, [$middleware, $name]);
         $this->stackCallable = null;
     }
 
@@ -229,10 +229,10 @@ class HandlerStack
     private function splice($findName, $withName, callable $middleware, $before)
     {
         $index = $this->findByName($findName);
-        $insert = array($middleware, $withName);
+        $insert = [$middleware, $withName];
         $replacement = $before
-            ? array($insert, $this->stack[$index])
-            : array($this->stack[$index], $insert);
+            ? [$insert, $this->stack[$index]]
+            : [$this->stack[$index], $insert];
         \array_splice($this->stack, $index, 1, $replacement);
     }
 

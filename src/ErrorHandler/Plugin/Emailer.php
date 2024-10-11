@@ -64,10 +64,10 @@ class Emailer extends AbstractComponent implements SubscriberInterface
     public function getSubscriptions()
     {
         return array(
-            ErrorHandler::EVENT_ERROR => array(
-                array('onErrorHighPri', PHP_INT_MAX - 1),
-                array('onErrorLowPri', PHP_INT_MAX * -1 + 1),
-            ),
+            ErrorHandler::EVENT_ERROR => [
+                ['onErrorHighPri', PHP_INT_MAX - 1],
+                ['onErrorLowPri', PHP_INT_MAX * -1 + 1],
+            ],
             EventManager::EVENT_PHP_SHUTDOWN => 'onPhpShutdown',
         );
     }
@@ -174,12 +174,12 @@ class Emailer extends AbstractComponent implements SubscriberInterface
         if ($this->cfg['emailBacktraceDumper']) {
             return \call_user_func($this->cfg['emailBacktraceDumper'], $backtrace);
         }
-        $search = array(
+        $search = [
             ")\n\n",
-        );
-        $replace = array(
+        ];
+        $replace = [
             ")\n",
-        );
+        ];
         $str = \print_r($backtrace, true);
         $str = \preg_replace('#\bArray\n\(#', 'array(', $str);
         $str = \preg_replace('/\barray\s+\(\s+\)/s', 'array()', $str); // single-lineify empty arrays
@@ -221,15 +221,15 @@ class Emailer extends AbstractComponent implements SubscriberInterface
      */
     private function buildBodyValues(Error $error)
     {
-        $string = \implode("\n", array(
+        $string = \implode("\n", [
             'datetime: ' . \date($this->cfg['dateTimeFmt']),
             'type: ' . $error['type'] . ' (' . $error['typeStr'] . ')',
             'message: ' . $error->getMessageText(),
             'file: ' . $error['file'],
             'line: ' . $error['line'],
-        )) . "\n";
+        ]) . "\n";
         if ($this->isCli === false) {
-            $string .= \implode("\n", array(
+            $string .= \implode("\n", [
                 'remote_addr: ' . $this->serverParams['REMOTE_ADDR'],
                 'http_host: ' . $this->serverParams['HTTP_HOST'],
                 'referer: ' . (isset($this->serverParams['HTTP_REFERER'])
@@ -237,7 +237,7 @@ class Emailer extends AbstractComponent implements SubscriberInterface
                     : 'null'),
                 'request method: ' . $this->serverParams['REQUEST_METHOD'],
                 'request uri: ' . $this->serverParams['REQUEST_URI'],
-            )) . "\n";
+            ]) . "\n";
         }
         return $string;
     }

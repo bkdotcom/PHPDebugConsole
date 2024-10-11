@@ -156,7 +156,7 @@ class Utf8
         }
         // 'Windows-1252' detection only seems to work in PHP-8 ?
         // we won't include... ISO-8859-1  too many false positive
-        $encodings = array('ASCII', 'UTF-8');
+        $encodings = ['ASCII', 'UTF-8'];
         $encoding = \mb_detect_encoding($str, $encodings, true);
         if ($encoding === false) {
             // Assume Windows-1252

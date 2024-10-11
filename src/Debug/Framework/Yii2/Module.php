@@ -56,11 +56,11 @@ class Module extends BaseModule implements BootstrapInterface
             'session' => false,
         ),
         'logFiles' => array(
-            'filesExclude' => array(
+            'filesExclude' => [
                 '/framework/',
                 '/protected/components/system/',
                 '/vendor/',
-            ),
+            ],
         ),
         'yii' => array(
             'events' => true,

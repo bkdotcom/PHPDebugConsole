@@ -129,7 +129,7 @@ class Section extends AbstractItem
                 'image' => null,
                 'title' => null,
             ), $image);
-            $image = \array_intersect_key($image, \array_flip(array('image', 'title')));
+            $image = \array_intersect_key($image, \array_flip(['image', 'title']));
             self::assertUrl($image['image']);
             $new->fields['images'][] = self::normalizeContent($image);
         }
@@ -151,7 +151,7 @@ class Section extends AbstractItem
     {
         $actions = \is_array($actions)
             ? $actions
-            : array($actions);
+            : [$actions];
         if (\count($actions) > 4) {
             throw new OverflowException('There can be a maximum of 4 actions (whatever their type)');
         }

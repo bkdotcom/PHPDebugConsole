@@ -71,7 +71,7 @@ class Data
             return $data;
         }
         $data = $this->arrayUtil->pathGet($this->data, $path);
-        return \is_array($data) && \in_array($path, array('logSummary'), true)
+        return \is_array($data) && \in_array($path, ['logSummary'], true)
             ? $this->arrayUtil->copy($data, false)
             : $data;
     }
@@ -99,7 +99,7 @@ class Data
             $key = \is_array($path)
                 ? $path[0]
                 : $path;
-            $setLogDest = \in_array($key, array('alerts', 'log', 'logSummary'), true);
+            $setLogDest = \in_array($key, ['alerts', 'log', 'logSummary'], true);
             $this->arrayUtil->pathSet($this->data, $path, $value);
         } elseif (\is_array($path)) {
             $this->data = \array_merge($this->data, $path);
@@ -187,7 +187,7 @@ class Data
                 continue;
             }
             $method = $logEntry['method'];
-            if (\in_array($method, array('group', 'groupCollapsed'), true)) {
+            if (\in_array($method, ['group', 'groupCollapsed'], true)) {
                 $depth++;
             } elseif ($method === 'groupEnd') {
                 $depth--;

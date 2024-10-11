@@ -72,7 +72,7 @@ class MySqli extends mysqliBase
             $debug = $debug->getChannel('MySqli', array('channelIcon' => $this->icon));
         }
         $this->debug = $debug;
-        $debug->eventManager->subscribe(Debug::EVENT_OUTPUT, array($this, 'onDebugOutput'), 1);
+        $debug->eventManager->subscribe(Debug::EVENT_OUTPUT, [$this, 'onDebugOutput'], 1);
         $debug->addPlugin($debug->pluginHighlight);
     }
 
@@ -102,10 +102,10 @@ class MySqli extends mysqliBase
             return $return;
         }
         $this->savePoints = $name !== null
-            ? array($name)
-            : array();
-        $infoParams = \array_filter(array('begin_transaction', $name, $this->meta()));
-        \call_user_func_array(array($this->debug, 'info'), $infoParams);
+            ? [$name]
+            : [];
+        $infoParams = \array_filter(['begin_transaction', $name, $this->meta()]);
+        \call_user_func_array([$this->debug, 'info'], $infoParams);
         return $return;
     }
 
@@ -157,7 +157,7 @@ class MySqli extends mysqliBase
     #[\ReturnTypeWillChange]
     public function query($query, $resultMode = MYSQLI_STORE_RESULT)
     {
-        return $this->profileCall('query', $query, array($query, $resultMode));
+        return $this->profileCall('query', $query, [$query, $resultMode]);
     }
 
     /**
@@ -218,7 +218,7 @@ class MySqli extends mysqliBase
             $this->debug->warn($this->error);
             return $return;
         }
-        $this->savePoints = array();
+        $this->savePoints = [];
         if ($name !== null) {
             $this->logWithStyling('warn', 'passing $name param to %cmysqli::rollback()%c does not %cROLLBACK TO name%c as you would expect!');
         }
@@ -362,7 +362,7 @@ class MySqli extends mysqliBase
         if ($method === 'execute_query') {
             $info->setParams($args[1]);
         }
-        $return = \call_user_func_array(array('mysqli', $method), $args);
+        $return = \call_user_func_array(['mysqli', $method], $args);
         $exception = !$return
             ? new Exception($this->error, $this->errno)
             : null;
@@ -381,7 +381,7 @@ class MySqli extends mysqliBase
      *
      * @SuppressWarnings(PHPMD.UnusedPrivateMethod) -> called via DatabaseTrait
      */
-    private function serverInfo()
+    protected function serverInfo()
     {
         $matches = array();
         \preg_match_all('#([^:]+): ([a-zA-Z0-9.]+)\s*#', $this->stat(), $matches);

@@ -55,7 +55,7 @@ class Cases extends AbstractSection
      */
     protected function getClasses(array $info)
     {
-        return array('case');
+        return ['case'];
     }
 
     /**
@@ -63,6 +63,6 @@ class Cases extends AbstractSection
      */
     protected function getModifiers(array $info)
     {
-        return array();
+        return [];
     }
 }

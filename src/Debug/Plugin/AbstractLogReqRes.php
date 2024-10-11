@@ -63,7 +63,7 @@ class AbstractLogReqRes
                 ? 'with the wrong Content-Type'
                 : 'without a Content-Type header'
         );
-        $formTypes = array(ContentType::FORM, ContentType::FORM_MULTIPART);
+        $formTypes = [ContentType::FORM, ContentType::FORM_MULTIPART];
         if ($requestMethod === 'POST' && \in_array($contentTypeUser, $formTypes, true)) {
             $message .= "\n" . 'Pay no attention to $_POST and instead use php://input';
         }
@@ -85,15 +85,15 @@ class AbstractLogReqRes
     protected function detectContentType($content, $mediaTypeUser)
     {
         $mediaTypeDetected = $this->debug->stringUtil->contentType($content);
-        $xmlTypes = array(ContentType::XML, 'application/xml');
+        $xmlTypes = [ContentType::XML, 'application/xml'];
         $userIsXml = \in_array($mediaTypeUser, $xmlTypes, true)
             || \preg_match('/application\\/\S+\+xml/', $mediaTypeUser);
         if (
-            \array_filter(array(
+            \array_filter([
                 \in_array($mediaTypeDetected, $xmlTypes, true) && $userIsXml,
-                $mediaTypeDetected === ContentType::TXT && \in_array($mediaTypeUser, array(ContentType::FORM, ContentType::FORM_MULTIPART), true),
+                $mediaTypeDetected === ContentType::TXT && \in_array($mediaTypeUser, [ContentType::FORM, ContentType::FORM_MULTIPART], true),
                 $mediaTypeDetected === 'application/x-empty',
-            ))
+            ])
         ) {
             $mediaTypeDetected = $mediaTypeUser;
         }

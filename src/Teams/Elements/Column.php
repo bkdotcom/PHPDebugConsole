@@ -284,7 +284,7 @@ class Column extends AbstractToggleableItem implements ElementInterface
      */
     private static function assertWidth($val, $method)
     {
-        $tests = array(
+        $tests = [
             static function ($val) {
                 return $val === null;
             },
@@ -299,7 +299,7 @@ class Column extends AbstractToggleableItem implements ElementInterface
                 $isStrOrNum = \is_string($val) || \is_numeric($val);
                 return $isStrOrNum && \preg_match('/^\d+(.\d+)?$/', (string) $val) === 1;
             },
-        );
+        ];
         $message = $method . ' - width should be one of the Enums::COLUMN_WIDTH_x constants, number representing relative width, or pixel value';
         self::assertAnyOf($val, $tests, $message);
     }

@@ -57,7 +57,7 @@ class SerializeLog
         }
         $debug->setCfg($data['config'], Debug::CONFIG_NO_RETURN);
         unset($data['config'], $data['version']);
-        foreach (array('alerts', 'log', 'logSummary') as $cat) {
+        foreach (['alerts', 'log', 'logSummary'] as $cat) {
             $data[$cat] = self::importGroup($cat, $data[$cat]);
         }
         foreach ($data as $k => $v) {
@@ -130,7 +130,7 @@ class SerializeLog
         $strStart = 'START DEBUG';
         $strEnd = 'END DEBUG';
         $regex = '/' . $strStart . '[\r\n]+(.+)[\r\n]+' . $strEnd . '/s';
-        $matches = array();
+        $matches = [];
         if (\preg_match($regex, $str, $matches)) {
             $str = $matches[1];
         }
@@ -146,7 +146,7 @@ class SerializeLog
      */
     private static function importLogEntry(array $vals)
     {
-        $vals = \array_replace(array('', array(), array()), $vals);
+        $vals = \array_replace(['', array(), array()], $vals);
         $vals[1] = self::importLegacy($vals[1]);
         $logEntry = new LogEntry(self::$debug, $vals[0], $vals[1], $vals[2]);
         if (self::$isLegacyData && $vals[0] === 'table') {
@@ -303,15 +303,15 @@ class SerializeLog
      */
     private static function serializeGetData(Debug $debug)
     {
-        $data = \array_intersect_key($debug->data->get(), \array_flip(array(
+        $data = \array_intersect_key($debug->data->get(), \array_flip([
             'alerts',
             'classDefinitions',
             'log',
             'logSummary',
             'requestId',
             'runtime',
-        )));
-        foreach (array('alerts', 'log', 'logSummary') as $cat) {
+        ]));
+        foreach (['alerts', 'log', 'logSummary'] as $cat) {
             $data[$cat] = self::serializeGroup($data[$cat]);
         }
         return $data;
@@ -379,10 +379,10 @@ class SerializeLog
         if (!$serialized) {
             return false;
         }
-        return Php::unserializeSafe($serialized, array(
+        return Php::unserializeSafe($serialized, [
             'bdk\\Debug\\Abstraction\\Abstraction',
             'bdk\\Debug\\Abstraction\\Object\\Abstraction',
             'bdk\\PubSub\\ValueStore',
-        ));
+        ]);
     }
 }

@@ -72,12 +72,12 @@ class LogRouteMeta
         $backtrace = \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 13);
         foreach ($backtrace as $i => $frame) {
             $method = $frame['class'] . '::' . $frame['function'];
-            if (\in_array($method, array('CLogger::log', 'YiiBase::log'), true) === false) {
+            if (\in_array($method, ['CLogger::log', 'YiiBase::log'], true) === false) {
                 continue;
             }
             $callerInfo = $frame;
             // check if log called by some other wrapper method
-            if (\in_array($backtrace[$i + 1]['function'], array('log', 'error', 'warn', 'warning'), true)) {
+            if (\in_array($backtrace[$i + 1]['function'], ['log', 'error', 'warn', 'warning'], true)) {
                 $callerInfo = $backtrace[$i + 1];
             }
             break;
@@ -94,10 +94,10 @@ class LogRouteMeta
      */
     private function messageMetaCaller(array $logEntry)
     {
-        if (\in_array($logEntry['level'], array(CLogger::LEVEL_ERROR, CLogger::LEVEL_WARNING), true) === false) {
+        if (\in_array($logEntry['level'], [CLogger::LEVEL_ERROR, CLogger::LEVEL_WARNING], true) === false) {
             return $logEntry;
         }
-        if (\array_intersect_key($logEntry['meta'], \array_flip(array('file', 'line')))) {
+        if (\array_intersect_key($logEntry['meta'], \array_flip(['file', 'line']))) {
             return $logEntry;
         }
         $callerInfo = $this->getCallerInfo();
@@ -123,7 +123,7 @@ class LogRouteMeta
         $logEntry['channel'] = $this->debug->getChannel('app');
         if (!empty($logEntry['trace']) && \strpos($logEntry['trace'][0]['file'], 'starship/RestfullYii') !== false) {
             $logEntry['channel'] = $this->debug->getChannel('RestfullYii');
-            $logEntry['trace'] = array();
+            $logEntry['trace'] = [];
             $logEntry['meta']['icon'] = 'fa fa-code-fork';
             unset(
                 $logEntry['meta']['file'],
@@ -177,7 +177,7 @@ class LogRouteMeta
         ));
         $logEntry['message'] = \preg_replace('# (to|from) cache$#', '', $logEntry['message']);
         $logEntry['meta']['icon'] = $icon;
-        $logEntry['trace'] = array();
+        $logEntry['trace'] = [];
         if ($logEntry['level'] === CLogger::LEVEL_TRACE) {
             $logEntry['level'] = CLogger::LEVEL_INFO;
         }
@@ -220,7 +220,7 @@ class LogRouteMeta
             $logEntry['meta']['line'] = $logEntry['trace'][0]['line'];
             if ($logEntry['level'] === CLogger::LEVEL_ERROR) {
                 $logEntry['meta']['trace'] = $logEntry['trace'];
-                $logEntry['trace'] = array();
+                $logEntry['trace'] = [];
             }
         }
         return $logEntry;

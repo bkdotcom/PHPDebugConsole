@@ -27,11 +27,11 @@ class Stream extends AbstractRoute
     /** @var array<string,mixed> */
     protected $cfg = array(
         'ansi' => 'default',        // default | true | false  (STDOUT & STDERR streams will default to true)
-        'channels' => array('*'),
-        'channelsExclude' => array(
+        'channels' => ['*'],
+        'channelsExclude' => [
             'events',
             'files',
-        ),
+        ],
         'output' => false,          // kept in sync with Debug->cfg['output']
         'stream' => 'php://stderr', // filepath/uri/resource
     );

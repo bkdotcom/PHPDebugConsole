@@ -83,7 +83,7 @@ class Discord extends AbstractErrorRoute
                 . $error->getMessageText() . "\n"
                 . $error['fileAndLine'],
         );
-        return array($message);
+        return [$message];
     }
 
     /**

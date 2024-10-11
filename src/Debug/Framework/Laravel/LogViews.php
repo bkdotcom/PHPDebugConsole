@@ -82,7 +82,7 @@ class LogViews
 
         $info = \array_filter(array(
             'name' => $name,
-            'params' => \call_user_func(array($this, 'logViewParams'), $view),
+            'params' => \call_user_func([$this, 'logViewParams'], $view),
             'path' => $pathStr
                 ? $this->debug->abstracter->crateWithVals(
                     \ltrim(\str_replace(\base_path(), '', $pathStr), '/'),

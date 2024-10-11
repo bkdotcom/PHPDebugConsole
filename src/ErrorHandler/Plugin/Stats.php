@@ -73,10 +73,10 @@ class Stats extends AbstractComponent implements SubscriberInterface
     public function getSubscriptions()
     {
         return array(
-            ErrorHandler::EVENT_ERROR => array(
-                array('onErrorHighPri', PHP_INT_MAX),
-                array('onErrorLowPri', PHP_INT_MAX * -1),
-            ),
+            ErrorHandler::EVENT_ERROR => [
+                ['onErrorHighPri', PHP_INT_MAX],
+                ['onErrorLowPri', PHP_INT_MAX * -1],
+            ],
         );
     }
 

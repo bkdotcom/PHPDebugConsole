@@ -24,7 +24,7 @@ class HtmlBuild
      *
      * @var list<string>
      */
-    public static $omitIfEmptyAttrib = array('class', 'style', 'title');
+    public static $omitIfEmptyAttrib = ['class', 'style', 'title'];
 
     /**
      * Build name="value"
@@ -97,7 +97,7 @@ class HtmlBuild
     private static function buildAttribValArray($name, $values = array())
     {
         if ($name === 'style') {
-            $keyValues = array();
+            $keyValues = [];
             foreach ($values as $key => $val) {
                 $keyValues[] = $key . ':' . $val . ';';
             }
@@ -119,7 +119,7 @@ class HtmlBuild
     {
         // opposite behavior of filter_var FILTER_VALIDATE_BOOLEAN
         //    treat as true unless explicitly falsy value
-        $boolValue = !\in_array(\strtolower((string) $value), array('', 0, '0', 'false', 'no', 'off'), true);
+        $boolValue = !\in_array(\strtolower((string) $value), ['', 0, '0', 'false', 'no', 'off'], true);
         if (\in_array($name, Html::$htmlBoolAttrEnum, true) === false) {
             return $boolValue
                 ? $name // even if not a recognized boolean attribute... we will output name="name"
@@ -127,9 +127,9 @@ class HtmlBuild
         }
         // non "true"/"false" bool attributes
         $enumValues = array(
-            'autocapitalize' => array('off', 'on', true), // also takes other values ("sentences", "words", "characters")
-            'autocomplete' => array('off', 'on', true), // other values also accepted
-            'translate' => array('no', 'yes', false),
+            'autocapitalize' => ['off', 'on', true], // also takes other values ("sentences", "words", "characters")
+            'autocomplete' => ['off', 'on', true], // other values also accepted
+            'translate' => ['no', 'yes', false],
         );
         if (isset($enumValues[$name]) === false) {
             // "true" or "false"
@@ -193,7 +193,7 @@ class HtmlBuild
         if ($val === null) {
             return 'null';
         }
-        if (\in_array($name, array('class', 'id'), true)) {
+        if (\in_array($name, ['class', 'id'], true)) {
             return $name;
         }
         if (\is_array($val)) {

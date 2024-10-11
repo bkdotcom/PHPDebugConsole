@@ -121,7 +121,7 @@ class HtmlStringBinary
     private function dumpPost(Abstraction $abs, $tagName)
     {
         return function ($dumped) use ($abs, $tagName) {
-            $lis = array();
+            $lis = [];
             if ($abs['contentType']) {
                 $lis[] = '<li>mime type = <span class="content-type t_string">' . $abs['contentType'] . '</span></li>';
             }
@@ -133,7 +133,7 @@ class HtmlStringBinary
                 . $this->debug->html->buildTag(
                     'ul',
                     \array_filter(array(
-                        'class' => array('list-unstyled', 'value-container'),
+                        'class' => ['list-unstyled', 'value-container'],
                         'data-type' => $abs['type'],
                         'data-type-more' => $abs['typeMore'],
                     )),

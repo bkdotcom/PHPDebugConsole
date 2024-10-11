@@ -153,7 +153,7 @@ class Debug extends AbstractDebug
                                 //   all other errors are "warn"
                                 //   (default set in constructor)
         'exitCheck' => true,
-        'extensionsCheck' => array('curl', 'mbString'),
+        'extensionsCheck' => ['curl', 'mbString'],
         'headerMaxAll' => 250000,
         'headerMaxPer' => null,
         'key' => null,
@@ -174,7 +174,7 @@ class Debug extends AbstractDebug
         'logResponse' => 'auto',
         'logResponseMaxLen' => '1 MB',
         'logRuntime' => true,
-        'logServerKeys' => array('REMOTE_ADDR','REQUEST_TIME','REQUEST_URI','SERVER_ADDR','SERVER_NAME'),
+        'logServerKeys' => ['REMOTE_ADDR','REQUEST_TIME','REQUEST_URI','SERVER_ADDR','SERVER_NAME'],
         'onBootstrap' => null,      // callable
         'onLog' => null,            // callable
         'onOutput' => null,         // callable
@@ -254,9 +254,9 @@ class Debug extends AbstractDebug
                 'class' => 'bdk\Debug\Plugin\Runtime',
             ),
         ),
-        'redactKeys' => array(      // case-insensitive
+        'redactKeys' => [      // case-insensitive
             'password',
-        ),
+        ],
         // 'redactReplace'          // callable (default defined in Plugin/Redaction)
         'route' => 'auto',          // 'auto', 'chromeLogger', 'firephp', 'html', 'serverLog', 'script', 'steam', 'text', or RouteInterface,
                                     //   if 'auto', will be determined automatically
@@ -337,7 +337,7 @@ class Debug extends AbstractDebug
     {
         $args = \func_get_args();
         /** @var mixed[] make psalm happy */
-        $args = \array_replace(array(null, true, true), $args);
+        $args = \array_replace([null, true, true], $args);
         if (\is_array($args[0])) {
             $args[0]['debug'] = self::META;
             return $args[0];

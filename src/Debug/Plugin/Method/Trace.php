@@ -26,9 +26,9 @@ class Trace implements SubscriberInterface
     use CustomMethodTrait;
 
     /** @var string[] */
-    protected $methods = array(
+    protected $methods = [
         'trace',
-    );
+    ];
 
     /**
      * Constructor
@@ -66,11 +66,11 @@ class Trace implements SubscriberInterface
             $this->getTraceArgs(\func_get_args(), $argsDefault),
             array(),
             $argsDefault,
-            array(
+            [
                 'caption',
                 'inclContext',
                 'limit',
-            )
+            ]
         );
         $this->doTrace($logEntry);
         $this->debug->log($logEntry);
@@ -116,7 +116,7 @@ class Trace implements SubscriberInterface
     {
         $meta = \array_merge(array(
             'caption' => 'trace',
-            'columns' => array('file','line','function'),
+            'columns' => ['file','line','function'],
             'detectFiles' => true,
             'inclArgs' => null,  // incl arguments with context?
                                  // will default to $inclContext
@@ -159,7 +159,7 @@ class Trace implements SubscriberInterface
             }
         }
         $logEntry['meta'] = $meta;
-        $logEntry['args'] = array($trace);
+        $logEntry['args'] = [$trace];
     }
 
     /**

@@ -52,15 +52,15 @@ class Methods extends AbstractSection
         if (!$this->opts['collect']) {
             return $html;
         }
-        $magicMethods = \array_intersect(array('__call', '__callStatic'), \array_keys($abs['methods']));
+        $magicMethods = \array_intersect(['__call', '__callStatic'], \array_keys($abs['methods']));
         $html .= $this->magicMethodInfo($magicMethods);
         $html .= $this->dumpItems($abs, 'methods', array());
-        return \str_replace(array(
+        return \str_replace([
             ' data-deprecated-desc="null"',
             ' data-implements="null"',
             ' data-throws="null"',
             ' <span class="t_type"></span>',
-        ), '', $html);
+        ], '', $html);
     }
 
     /**
@@ -78,7 +78,7 @@ class Methods extends AbstractSection
                     . '<ul class="list-unstyled"><li>'
                     . $this->valDumper->dump($info['returnValue'], array(
                         'attribs' => array(
-                            'class' => array('return-value'),
+                            'class' => ['return-value'],
                         ),
                     ))
                     . '</li></ul>'
@@ -124,7 +124,7 @@ class Methods extends AbstractSection
      */
     protected function dumpParams(array $info)
     {
-        $params = \array_map(array($this, 'dumpParam'), $info['params']);
+        $params = \array_map([$this, 'dumpParam'], $info['params']);
         return '<span class="t_punct">(</span>'
             . \implode('<span class="t_punct">,</span>' . "\n", $params)
             . '<span class="t_punct">)</span>';
@@ -178,7 +178,7 @@ class Methods extends AbstractSection
         return ' <span class="t_operator">=</span> '
             . $this->valDumper->dump($defaultValue, array(
                 'attribs' => array(
-                    'class' => array('t_parameter-default'),
+                    'class' => ['t_parameter-default'],
                 ),
                 'tagName' => 'span',
             ));
@@ -252,7 +252,7 @@ class Methods extends AbstractSection
                 . $this->valDumper->dump($name, array(
                     'addQuotes' => false,
                     'attribs' => array(
-                        'class' => array('t_identifier'),
+                        'class' => ['t_identifier'],
                     ),
                 ))
                 . '<span class="t_operator">=</span> ' . $this->valDumper->dump($value)
@@ -287,7 +287,7 @@ class Methods extends AbstractSection
      */
     protected function getClasses(array $info)
     {
-        $visClasses = \array_diff((array) $info['visibility'], array('debug'));
+        $visClasses = \array_diff((array) $info['visibility'], ['debug']);
         $classes = \array_keys(\array_filter(array(
             'isAbstract' => $info['isAbstract'],
             'isDeprecated' => $info['isDeprecated'],

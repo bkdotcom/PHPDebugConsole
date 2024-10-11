@@ -28,10 +28,10 @@ class Count implements SubscriberInterface
     private $counts = array();
 
     /** @var string[] */
-    protected $methods = array(
+    protected $methods = [
         'count',
         'countReset',
-    );
+    ];
 
     /**
      * Constructor
@@ -117,10 +117,10 @@ class Count implements SubscriberInterface
         }
         $count = $this->incCount($dataLabel, $flags & Debug::COUNT_NO_INC);
         if (!($flags & Debug::COUNT_NO_OUT)) {
-            $logEntry['args'] = array(
+            $logEntry['args'] = [
                 (string) $label,
                 $count,
-            );
+            ];
             $debug->log($logEntry);
         }
         return $count;
@@ -136,7 +136,7 @@ class Count implements SubscriberInterface
     private function doCountReset(LogEntry $logEntry)
     {
         $args = $logEntry['args'];
-        list($label, $flags) = \array_slice(\array_replace(array('default', 0), $args), 0, 2);
+        list($label, $flags) = \array_slice(\array_replace(['default', 0], $args), 0, 2);
         // label may be omitted and only flags passed as a single argument
         //   (excluding potential meta argument)
         if (\count($args) === 1 && \is_int($args[0])) {
@@ -146,10 +146,10 @@ class Count implements SubscriberInterface
         $logEntry['args'] = array('Counter \'' . $label . '\' doesn\'t exist.');
         if (isset($this->counts[$label])) {
             $this->counts[$label] = 0;
-            $logEntry['args'] = array(
+            $logEntry['args'] = [
                 (string) $label,
                 0,
-            );
+            ];
         }
         if (!($flags & Debug::COUNT_NO_OUT)) {
             $debug = $logEntry->getSubject();
@@ -167,7 +167,7 @@ class Count implements SubscriberInterface
     private function args(LogEntry $logEntry)
     {
         $args = $logEntry['args'];
-        list($label, $flags) = \array_slice(\array_replace(array(null, 0), $args), 0, 2);
+        list($label, $flags) = \array_slice(\array_replace([null, 0], $args), 0, 2);
         // label may be omitted and only flags passed as a single argument
         //   (excluding potential meta argument)
         if (\count($args) === 1 && \is_int($args[0])) {

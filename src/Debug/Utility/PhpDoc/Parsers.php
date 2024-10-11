@@ -23,7 +23,7 @@ class Parsers
     /** @var Helper */
     protected $helper;
     /** @var ParserInfo[] */
-    protected $parsers = array();
+    protected $parsers = [];
     /** @var ParseMethod */
     protected $parseMethod;
     /** @var ParseParam */
@@ -64,8 +64,8 @@ class Parsers
         }
         // if not found, last parser was default
         return \array_merge(array(
-            'callable' => array(),
-            'parts' => array(),
+            'callable' => [],
+            'parts' => [],
             'regex' => null,
         ), $parser);
     }
@@ -140,7 +140,7 @@ class Parsers
      */
     private static function extractTypeFromBodyTest2($char)
     {
-        if (\in_array($char, array('\'', '"'), true)) {
+        if (\in_array($char, ['\'', '"'], true)) {
             // we're opening a quoted string
             self::$typeInfo['strOpenedWith'] = $char;
         } elseif (\preg_match('#\G\s*[|&]\s*#', self::$typeInfo['str'], $matches, 0, self::$typeInfo['pos'])) {
@@ -150,9 +150,9 @@ class Parsers
             // whitespace found (not surrounding | or &)..  end of type
             self::$typeInfo['pos']--;
             return false;
-        } elseif (\in_array($char, array('<', '(', '[', '{'), true)) {
+        } elseif (\in_array($char, ['<', '(', '[', '{'], true)) {
             self::$typeInfo['depth']++;
-        } elseif (\in_array($char, array('>', ')', ']', '}'), true)) {
+        } elseif (\in_array($char, ['>', ')', ']', '}'], true)) {
             self::$typeInfo['depth']--;
         }
         return true;
@@ -167,12 +167,12 @@ class Parsers
     {
         $this->parsers = array(
             array(
-                'callable' => array(
-                    array($this, 'extractTypeFromBody'),
+                'callable' => [
+                    [$this, 'extractTypeFromBody'],
                     $this->parseParam,
-                ),
-                'parts' => array('type', 'name', 'desc'),
-                'tags' => array('param', 'property', 'property-read', 'property-write', 'var'),
+                ],
+                'parts' => ['type', 'name', 'desc'],
+                'tags' => ['param', 'property', 'property-read', 'property-write', 'var'],
             ),
             $this->parserReturnThrows(),
             $this->parserMethod(),
@@ -192,12 +192,12 @@ class Parsers
     private function parserAuthor()
     {
         return array(
-            'parts' => array('name', 'email', 'desc'),
+            'parts' => ['name', 'email', 'desc'],
             'regex' => '/^(?P<name>[^<]+)'
                 . '(?:\s+<(?P<email>\S*)>)?'
                 . '(?:\s+(?P<desc>.*))?' // desc isn't part of the standard
                 . '$/s',
-            'tags' => array('author'),
+            'tags' => ['author'],
         );
     }
 
@@ -209,9 +209,9 @@ class Parsers
     private function parserDefault()
     {
         return array(
-            'parts' => array('desc'),
+            'parts' => ['desc'],
             'regex' => '/^(?P<desc>.*?)$/s',
-            'tags' => array(),
+            'tags' => [],
         );
     }
 
@@ -223,10 +223,10 @@ class Parsers
     private function parserLink()
     {
         return array(
-            'parts' => array('uri', 'desc'),
+            'parts' => ['uri', 'desc'],
             'regex' => '/^(?P<uri>\S+)'
                 . '(?:\s+(?P<desc>.*))?$/s',
-            'tags' => array('link'),
+            'tags' => ['link'],
         );
     }
 
@@ -241,10 +241,10 @@ class Parsers
     private function parserMethod()
     {
         return array(
-            'callable' => array(
+            'callable' => [
                 $this->parseMethod,
-            ),
-            'parts' => array('static', 'type', 'name', 'param', 'desc', 'paramsAndDesc'),
+            ],
+            'parts' => ['static', 'type', 'name', 'param', 'desc', 'paramsAndDesc'],
             'regex' => '/^'
                 . '(?:(?P<static>static)\s+)?'
                 . '(?:(?P<type>[^()]*?)\s+)?'
@@ -252,7 +252,7 @@ class Parsers
                 . '\s*' // shouldn't be any space between method name & opening paren, but we'll allow it
                 . '(?P<paramsAndDesc>\(.*\).*)'
                 . '$/is',
-            'tags' => array('method'),
+            'tags' => ['method'],
         );
     }
 
@@ -264,8 +264,8 @@ class Parsers
     private function parserReturnThrows()
     {
         return array(
-            'callable' => array(
-                array($this, 'extractTypeFromBody'),
+            'callable' => [
+                [$this, 'extractTypeFromBody'],
                 /**
                  * @psalm-param TagInfo $info
                  */
@@ -273,11 +273,11 @@ class Parsers
                     $parsed['type'] = $info['phpDoc']->type->normalize($parsed['type'], $info['className'], $info['fullyQualifyType']);
                     return $parsed;
                 },
-            ),
-            'parts' => array('type', 'desc'),
+            ],
+            'parts' => ['type', 'desc'],
             'regex' => '/^(?P<type>.*?)'
                 . '(?:\s+(?P<desc>.*))?$/s',
-            'tags' => array('return', 'throws'),
+            'tags' => ['return', 'throws'],
         );
     }
 
@@ -289,12 +289,12 @@ class Parsers
     private function parserSee()
     {
         return array(
-            'parts' => array('uri', 'fqsen', 'desc'),
+            'parts' => ['uri', 'fqsen', 'desc'],
             'regex' => '/^(?:'
                 . '(?P<uri>https?:\/\/\S+)|(?P<fqsen>\S+)'
                 . ')'
                 . '(?:\s+(?P<desc>.*))?$/s',
-            'tags' => array('see'),
+            'tags' => ['see'],
         );
     }
 
@@ -306,13 +306,13 @@ class Parsers
     private function parserVersion()
     {
         return array(
-            'parts' => array('version', 'desc'),
+            'parts' => ['version', 'desc'],
             'regex' => '/^'
                 . '(?P<version>\d+(?:\.\d+){0,2})?'
                 . '\s*'
                 . '(?P<desc>.*)'
                 . '$/s',
-            'tags' => array('deprecated', 'since', 'version'),
+            'tags' => ['deprecated', 'since', 'version'],
         );
     }
 }

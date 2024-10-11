@@ -56,9 +56,9 @@ class Base extends AbstractComponent
     protected $channelNameRoot;
 
     /** @var list<string> */
-    protected $readOnly = array(
+    protected $readOnly = [
         'valDumper',
-    );
+    ];
 
     /** @var Substitution */
     protected $substitution;
@@ -99,10 +99,10 @@ class Base extends AbstractComponent
         if ($method === 'alert') {
             return $this->methodAlert($logEntry);
         }
-        if (\in_array($method, array('group', 'groupCollapsed', 'groupEnd', 'groupSummary'), true)) {
+        if (\in_array($method, ['group', 'groupCollapsed', 'groupEnd', 'groupSummary'], true)) {
             return $this->methodGroup($logEntry);
         }
-        if (\in_array($method, array('profileEnd', 'table', 'trace'), true)) {
+        if (\in_array($method, ['profileEnd', 'table', 'trace'], true)) {
             return $this->methodTabular($logEntry);
         }
         $return = $this->methodDefault($logEntry);
@@ -161,7 +161,7 @@ class Base extends AbstractComponent
     {
         $method = $logEntry->getMeta('level');
         if ($logEntry->containsSubstitutions()) {
-            $logEntry['method'] = \in_array($method, array('info', 'success'), true)
+            $logEntry['method'] = \in_array($method, ['info', 'success'], true)
                 ? 'info'
                 : 'log';
             $args = $this->substitution->process($logEntry['args']);
@@ -179,10 +179,10 @@ class Base extends AbstractComponent
             'warn' => 'log', // Just use log method... Chrome adds backtrace to warn(), which we don't want
         );
         $logEntry['method'] = $methodMap[$method];
-        $logEntry['args'] = array(
+        $logEntry['args'] = [
             '%c' . $logEntry['args'][0],
             \preg_replace('/\n\s*/', ' ', $style),
-        );
+        ];
     }
 
     /**
@@ -196,7 +196,7 @@ class Base extends AbstractComponent
     {
         $method = $logEntry['method'];
         $args = $logEntry['args'];
-        if (\in_array($method, array('assert', 'clear', 'error', 'info', 'log', 'warn'), true)) {
+        if (\in_array($method, ['assert', 'clear', 'error', 'info', 'log', 'warn'], true)) {
             if ($logEntry->containsSubstitutions()) {
                 $args = $this->substitution->process($args);
             }
@@ -259,7 +259,7 @@ class Base extends AbstractComponent
         foreach ($rows as $rowKey => $row) {
             $rows[$rowKey] = $this->methodTabularRow($row, $rowKey, $forceArray, $undefinedAs);
         }
-        $logEntry['args'] = array($rows);
+        $logEntry['args'] = [$rows];
         $this->tableInfo = array();
     }
 

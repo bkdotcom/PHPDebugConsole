@@ -80,7 +80,7 @@ class Profile implements SubscriberInterface
         $this->debug = $event->getSubject();
         $cfgDebug = $event['debug'];
         $valActions = \array_intersect_key(array(
-            'enableProfiling' => array($this, 'onCfgEnableProfiling'),
+            'enableProfiling' => [$this, 'onCfgEnableProfiling'],
         ), $cfgDebug);
         foreach ($valActions as $key => $callable) {
             /** @psalm-suppress TooManyArguments */
@@ -132,7 +132,7 @@ class Profile implements SubscriberInterface
             return $debug->log(new LogEntry(
                 $debug,
                 __FUNCTION__,
-                array($msg)
+                [$msg]
             ));
         }
         return $this->doProfile(new LogEntry(
@@ -141,7 +141,7 @@ class Profile implements SubscriberInterface
             \func_get_args(),
             array(),
             $debug->rootInstance->getMethodDefaultArgs(__METHOD__),
-            array('name')
+            ['name']
         ));
     }
 
@@ -166,7 +166,7 @@ class Profile implements SubscriberInterface
             \func_get_args(),
             array(),
             $this->debug->rootInstance->getMethodDefaultArgs(__METHOD__),
-            array('name')
+            ['name']
         );
         $this->doProfileEnd($logEntry);
         return $this->debug;
@@ -194,14 +194,14 @@ class Profile implements SubscriberInterface
             // move it to end (last started)
             unset($this->instances[$name]);
             $this->instances[$name] = $instance;
-            $logEntry['args'] = array('Profile \'' . $name . '\' restarted');
+            $logEntry['args'] = ['Profile \'' . $name . '\' restarted'];
             $debug->log($logEntry);
             return $debug;
         }
         $instance = new ProfileInstance();
         $instance->start();
         $this->instances[$name] = $instance;
-        $logEntry['args'] = array('Profile \'' . $name . '\' started');
+        $logEntry['args'] = ['Profile \'' . $name . '\' started'];
         return $debug->log($logEntry);
     }
 
@@ -245,7 +245,7 @@ class Profile implements SubscriberInterface
         $instance = $this->instances[$name];
         $data = $instance->end();
         if (!$data) {
-            return array($caption, 'no data');
+            return [$caption, 'no data'];
         }
         $tableInfo = \array_replace_recursive(array(
             'rows' => \array_fill_keys(\array_keys($data), array()),
@@ -262,9 +262,9 @@ class Profile implements SubscriberInterface
         $logEntry->setMeta(array(
             'caption' => $caption,
             'tableInfo' => $tableInfo,
-            'totalCols' => array('ownTime'),
+            'totalCols' => ['ownTime'],
         ));
-        return array($data);
+        return [$data];
     }
 
     /**
@@ -295,9 +295,9 @@ class Profile implements SubscriberInterface
         if ($cfgAll['enableProfiling'] && $cfgAll['collect']) {
             static::$profilingEnabled = true;
             FileStreamWrapper::setEventManager($this->debug->eventManager);
-            FileStreamWrapper::setPathsExclude(\array_merge(FileStreamWrapper::getPathsExclude(), array(
+            FileStreamWrapper::setPathsExclude(\array_merge(FileStreamWrapper::getPathsExclude(), [
                 __DIR__ . '/../../',
-            )));
+            ]));
             FileStreamWrapper::register();
         }
         return $val;

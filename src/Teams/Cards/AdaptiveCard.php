@@ -39,7 +39,7 @@ class AdaptiveCard extends AbstractCard
     protected $fields = array();
 
     /** @var float[] */
-    private $supportedVersions = array(1.0, 1.1, 1.2, 1.3, 1.4, 1.5);
+    private $supportedVersions = [1.0, 1.1, 1.2, 1.3, 1.4, 1.5];
 
     /**
      * Constructor

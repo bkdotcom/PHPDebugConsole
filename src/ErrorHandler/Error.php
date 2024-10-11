@@ -39,7 +39,7 @@ class Error extends AbstractError
         unset($this->values['constructor']);
         $errorCaller = $errHandler->get('errorCaller');
         if ($errorCaller) {
-            $errorCallerVals = \array_intersect_key($errorCaller, \array_flip(array('file', 'line')));
+            $errorCallerVals = \array_intersect_key($errorCaller, \array_flip(['file', 'line']));
             $this->values = \array_merge($this->values, $errorCallerVals);
         }
     }

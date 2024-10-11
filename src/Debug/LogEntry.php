@@ -102,7 +102,7 @@ class LogEntry extends Event implements JsonSerializable
             ));
         }
         $cfgRestore = array();
-        if (\in_array($this->values['method'], array('profileEnd', 'table', 'trace'), true)) {
+        if (\in_array($this->values['method'], ['profileEnd', 'table', 'trace'], true)) {
             $maxDepth = $this->subject->getCfg('maxDepth');
             if ($maxDepth === 1) {
                 $this->subject->setCfg('maxDepth', 2, Debug::CONFIG_NO_RETURN);
@@ -286,7 +286,7 @@ class LogEntry extends Event implements JsonSerializable
             return;
         }
         if (!isset($meta['attribs']['class'])) {
-            $meta['attribs']['class'] = array();
+            $meta['attribs']['class'] = [];
         } elseif (\is_string($meta['attribs']['class'])) {
             $meta['attribs']['class'] = \explode(' ', $meta['attribs']['class']);
         }

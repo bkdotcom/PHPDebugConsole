@@ -14,21 +14,23 @@ namespace bdk\Debug\Collector;
 
 use bdk\Debug;
 use bdk\Debug\Collector\DatabaseTrait;
-use bdk\Debug\Collector\DoctrineLogger\CompatTrait;
+use bdk\Debug\Collector\Doctrine\LoggerCompatTrait;
 use bdk\Debug\Collector\StatementInfo;
 use bdk\PubSub\Event;
 use Doctrine\DBAL\Connection;
-use Doctrine\DBAL\Logging\SQLLogger;
+use Doctrine\DBAL\Logging\SQLLogger as SQLLoggerInterface;
 
 /**
  * Log Doctrine queries
  *
  * http://doctrine-project.org
+ *
+ * Deprecated as of Doctrine 3.2
  */
-class DoctrineLogger implements SQLLogger
+class DoctrineLogger implements SQLLoggerInterface
 {
     use DatabaseTrait;
-    use CompatTrait;
+    use LoggerCompatTrait;
 
     /** @var StatementInfo|null */
     protected $statementInfo;
@@ -60,7 +62,7 @@ class DoctrineLogger implements SQLLogger
         }
         $this->connection = $connection;
         $this->debug = $debug;
-        $this->debug->eventManager->subscribe(Debug::EVENT_OUTPUT, array($this, 'onDebugOutput'), 1);
+        $this->debug->eventManager->subscribe(Debug::EVENT_OUTPUT, [$this, 'onDebugOutput'], 1);
         $this->debug->addPlugin($debug->pluginHighlight);
     }
 
@@ -88,18 +90,13 @@ class DoctrineLogger implements SQLLogger
                 'level' => 'info',
             )),
         ));
-        \call_user_func_array(array($debug, 'groupCollapsed'), $groupParams);
-        $debug->log('logged operations: ', \count($this->loggedStatements));
-        $debug->time('total time', $this->getTimeSpent());
-        $debug->log('max memory usage', $debug->utility->getBytes($this->getPeakMemoryUsage()));
-        if ($connectionInfo) {
-            $debug->log('connection info', $connectionInfo);
-        }
+        \call_user_func_array([$debug, 'groupCollapsed'], $groupParams);
+        $this->logRuntime($debug);
         $debug->groupEnd();  // groupCollapsed
         $debug->groupEnd();  // groupSummary
     }
 
-    // startQuery defined in DoctrineLoggerTrait
+    // startQuery defined in Doctrine\CompatTrait
 
     /**
      * {@inheritDoc}

@@ -237,7 +237,7 @@ class LogPhp implements SubscriberInterface
     {
         $msgLines = array();
         $eAll = E_ALL | E_STRICT;
-        if (\in_array(\error_reporting(), array(-1, $eAll), true) === false) {
+        if (\in_array(\error_reporting(), [-1, $eAll], true) === false) {
             $errorReporting = $this->debug->errorHandler->errorReporting();
             $msgLines[] = 'PHP\'s %cerror_reporting%c is set to `%c' . $this->debug->errorLevel->toConstantString() . '%c` rather than `%cE_ALL | E_STRICT%c`';
             if ($errorReporting === $eAll) {
@@ -322,7 +322,7 @@ class LogPhp implements SubscriberInterface
      */
     private function logWithSubstitution($msg)
     {
-        $args = array($msg);
+        $args = [$msg];
         $styleMono = 'font-family:monospace; opacity:0.8;';
         $styleReset = 'font-family:inherit; white-space:pre-wrap;';
         $cCount = \substr_count($msg, '%c');
@@ -335,7 +335,7 @@ class LogPhp implements SubscriberInterface
             'file' => null,
             'line' => null,
         ));
-        \call_user_func_array(array($this->debug, 'warn'), $args);
+        \call_user_func_array([$this->debug, 'warn'], $args);
     }
 
     /**

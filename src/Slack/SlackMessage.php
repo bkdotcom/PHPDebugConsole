@@ -97,7 +97,7 @@ class SlackMessage implements JsonSerializable
      */
     public function __call($method, array $args)
     {
-        $factoryMethods = array(
+        $factoryMethods = [
             'withActions',
             'withContext',
             'withDivider',
@@ -106,11 +106,11 @@ class SlackMessage implements JsonSerializable
             'withInput',
             'withSection',
             'withVideo',
-        );
+        ];
         if (\in_array($method, $factoryMethods, true)) {
             $method = \strtolower(\substr($method, 4));
             /** @var array<string,mixed> */
-            $block = \call_user_func_array(array($this->getBlockFactory(), $method), $args);
+            $block = \call_user_func_array([$this->getBlockFactory(), $method], $args);
             return $this->withBlock($block);
         }
         throw new BadMethodCallException($method . ' is not a recognized method');
@@ -192,7 +192,7 @@ class SlackMessage implements JsonSerializable
     {
         if (\is_array($attachment) === false) {
             /** @var array<string,mixed> */
-            $attachment = \call_user_func_array(array($this->getBlockFactory(), 'attachment'), \func_get_args());
+            $attachment = \call_user_func_array([$this->getBlockFactory(), 'attachment'], \func_get_args());
         }
         $new = clone $this;
         /**

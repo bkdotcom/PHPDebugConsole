@@ -35,7 +35,7 @@ class FileStreamWrapperBase
     public $context;
 
     /** @var list<string> */
-    public static $filesTransformed = array();
+    public static $filesTransformed = [];
 
     /** @var Manager|null */
     protected static $eventManager;
@@ -44,10 +44,10 @@ class FileStreamWrapperBase
     protected static $isRegistered = false;
 
     /** @var list<string> */
-    protected static $protocols = array('file', 'phar');
+    protected static $protocols = ['file', 'phar'];
 
     /** @var list<string> paths to exclude from adding tick declaration */
-    protected static $pathsExclude = array();
+    protected static $pathsExclude = [];
 
     /**
      * Register this stream wrapper
@@ -142,7 +142,7 @@ class FileStreamWrapperBase
     protected function getResource($file, $mode, $options, &$openedPath)
     {
         $useIncludePath = (bool) ($options & STREAM_USE_PATH);
-        $args = $this->popNull(array($file, $mode, $useIncludePath, $this->context));
+        $args = $this->popNull([$file, $mode, $useIncludePath, $this->context]);
         /** @var resource|false */
         $resource = \call_user_func_array('fopen', $args);
         /*
@@ -174,7 +174,7 @@ class FileStreamWrapperBase
             return false;
         }
         $useIncludePath = (bool) ($options & STREAM_USE_PATH);
-        $args = $this->popNull(array($file, $useIncludePath, $this->context));
+        $args = $this->popNull([$file, $useIncludePath, $this->context]);
         /** @var string|false */
         $content = \call_user_func_array('file_get_contents', $args);
         $resolvedPath = \stream_resolve_include_path($file);

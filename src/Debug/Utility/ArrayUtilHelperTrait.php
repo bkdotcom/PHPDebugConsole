@@ -41,7 +41,7 @@ trait ArrayUtilHelperTrait
         if (\is_array($value) || $value instanceof ArrayAccess) {
             return;
         }
-        if ($path === array()) {
+        if ($path === []) {
             throw new InvalidArgumentException(\sprintf(
                 'Array or ArrayAccess expected.  %s provided.',
                 Php::getDebugType($value)
@@ -138,7 +138,7 @@ trait ArrayUtilHelperTrait
      */
     private static function isValidKey($val)
     {
-        $validTypes = array('string', 'int', 'float', 'bool', 'resource', 'null');
+        $validTypes = ['string', 'int', 'float', 'bool', 'resource', 'null'];
         return \in_array(Php::getDebugType($val), $validTypes, true);
     }
 
@@ -232,7 +232,7 @@ trait ArrayUtilHelperTrait
      */
     private static function specialKey($key, array &$path, &$array)
     {
-        if (\in_array($key, array('__end__', '__push__', '__reset__'), true) === false) {
+        if (\in_array($key, ['__end__', '__push__', '__reset__'], true) === false) {
             return false;
         }
         if (\is_array($array) === false) {

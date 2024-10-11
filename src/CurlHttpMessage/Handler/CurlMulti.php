@@ -17,7 +17,7 @@ class CurlMulti extends Curl
     private $active = 0;
 
     /** @var resource[]|\CurlHandle[] Idle curl handles */
-    private $idleHandles = array();
+    private $idleHandles = [];
 
     /** @var CurlMultiHandle|resource|null|false */
     private $multiHandle;

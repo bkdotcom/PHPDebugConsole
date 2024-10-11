@@ -35,16 +35,16 @@ class ChromeLogger extends AbstractRoute
 
     /** @var array<string,mixed> */
     protected $cfg = array(
-        'channels' => array('*'),
-        'channelsExclude' => array(
+        'channels' => ['*'],
+        'channelsExclude' => [
             'events',
             'files',
-        ),
+        ],
         'group' => true, // contain/wrap log in a group?
     );
 
     /** @var list<string> */
-    protected $consoleMethods = array(
+    protected $consoleMethods = [
         'assert',
         // 'count',    // output as log
         'error',
@@ -58,7 +58,7 @@ class ChromeLogger extends AbstractRoute
         'timeEnd',  // PHPDebugConsole never generates a timeEnd entry
         'trace',
         'warn',
-    );
+    ];
 
     /**
      * @var array header data
@@ -66,8 +66,8 @@ class ChromeLogger extends AbstractRoute
     // phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
     protected $jsonData = array(
         'version' => Debug::VERSION,
-        'columns' => array('log', 'backtrace', 'type'),
-        'rows' => array(),
+        'columns' => ['log', 'backtrace', 'type'],
+        'rows' => [],
     );
 
     /**
@@ -104,10 +104,10 @@ class ChromeLogger extends AbstractRoute
             $encoded = $this->assertEncodedLength($encoded);
         }
         if ($this->jsonData['rows']) {
-            $event['headers'][] = array(self::HEADER_NAME, $encoded);
+            $event['headers'][] = [self::HEADER_NAME, $encoded];
         }
         $this->data = array();
-        $this->jsonData['rows'] = array();
+        $this->jsonData['rows'] = [];
         $this->dumper->crateRaw = true;
     }
 
@@ -125,11 +125,11 @@ class ChromeLogger extends AbstractRoute
         } elseif (\in_array($method, $this->consoleMethods, true) === false) {
             $method = 'log';
         }
-        $this->jsonData['rows'][] = array(
+        $this->jsonData['rows'][] = [
             $args,
             isset($meta['file']) ? $meta['file'] . ': ' . $meta['line'] : null,
             $method === 'log' ? '' : $method,
-        );
+        ];
     }
 
     /**
@@ -145,13 +145,13 @@ class ChromeLogger extends AbstractRoute
         if (\strlen($encoded) <= $max) {
             return $encoded;
         }
-        $this->jsonData['rows'] = array(
-            array(
-                array('chromeLogger: unable to abridge log to ' . $this->debug->utility->getBytes($max)),
+        $this->jsonData['rows'] = [
+            [
+                ['chromeLogger: unable to abridge log to ' . $this->debug->utility->getBytes($max)],
                 null,
                 'warn',
-            ),
-        );
+            ],
+        ];
         return $this->encode($this->jsonData);
     }
 
@@ -162,17 +162,17 @@ class ChromeLogger extends AbstractRoute
      */
     protected function buildJsonData()
     {
-        $this->jsonData['rows'] = array();
+        $this->jsonData['rows'] = [];
         $this->processAlerts();
         $this->processSummary();
         $this->processLog();
-        $heading = array('PHP', $this->getRequestMethodUri());
+        $heading = ['PHP', $this->getRequestMethodUri()];
         if (!$this->cfg['group']) {
-            \array_unshift($this->jsonData['rows'], array($heading, null, 'info'));
+            \array_unshift($this->jsonData['rows'], [$heading, null, 'info']);
             return;
         }
-        \array_unshift($this->jsonData['rows'], array($heading, null, 'groupCollapsed'));
-        \array_push($this->jsonData['rows'], array(array(), null, 'groupEnd'));
+        \array_unshift($this->jsonData['rows'], [$heading, null, 'groupCollapsed']);
+        \array_push($this->jsonData['rows'], [[], null, 'groupEnd']);
     }
 
     /**
@@ -208,10 +208,10 @@ class ChromeLogger extends AbstractRoute
      */
     protected function getMaxLength()
     {
-        $maxVals = \array_filter(array(
+        $maxVals = \array_filter([
             $this->debug->utility->getBytes($this->debug->getCfg('headerMaxAll', Debug::CONFIG_DEBUG), true),
             $this->debug->utility->getBytes($this->debug->getCfg('headerMaxPer', Debug::CONFIG_DEBUG), true),
-        ));
+        ]);
         return \min($maxVals);
     }
 
@@ -227,7 +227,7 @@ class ChromeLogger extends AbstractRoute
         \array_unshift($this->data['alerts'], new LogEntry(
             $this->debug,
             'alert',
-            array('Log abridged due to header size constraint'),
+            ['Log abridged due to header size constraint'],
             array(
                 'level' => 'info',
             )
@@ -238,7 +238,7 @@ class ChromeLogger extends AbstractRoute
         */
         $logBack = array();
         foreach ($this->data['log'] as $i => $logEntry) {
-            if (\in_array($logEntry['method'], array('assert', 'error', 'warn'), true) === false) {
+            if (\in_array($logEntry['method'], ['assert', 'error', 'warn'], true) === false) {
                 unset($this->data['log'][$i]);
                 $logBack[$i] = $logEntry;
             }
@@ -264,7 +264,7 @@ class ChromeLogger extends AbstractRoute
         /*
             Remove non-essential summary entries
         */
-        $summaryRemove = array(
+        $summaryRemove = [
             '$_COOKIE',
             '$_POST',
             'Built In',
@@ -276,7 +276,7 @@ class ChromeLogger extends AbstractRoute
             'php://input',
             'session.cache_limiter',
             'session_save_path',
-        );
+        ];
         $summaryRemoveRegex = '/^(' . \implode('|', \array_map(static function ($val) {
             return \preg_quote($val, '/');
         }, $summaryRemove)) . ')/';
@@ -311,9 +311,9 @@ class ChromeLogger extends AbstractRoute
             $method = $logEntry['method'];
             if ($method === 'groupEnd') {
                 $depth++;
-            // https://bugs.xdebug.org/view.php?id=2095
-            // phpcs:ignore SlevomatCodingStandard.Namespaces.FullyQualifiedGlobalFunctions.NonFullyQualified
-            } elseif (in_array($method, array('group', 'groupCollapsed'), true)) {
+                // https://bugs.xdebug.org/view.php?id=2095
+                // phpcs:ignore SlevomatCodingStandard.Namespaces.FullyQualifiedGlobalFunctions.NonFullyQualified
+            } elseif (in_array($method, ['group', 'groupCollapsed'], true)) {
                 $depth--;
             } elseif ($groupOnly) {
                 continue;
@@ -342,16 +342,16 @@ class ChromeLogger extends AbstractRoute
     protected function translateJsonValues($json)
     {
         return \str_replace(
-            array(
+            [
                 \json_encode(Type::TYPE_FLOAT_INF),
                 \json_encode(Type::TYPE_FLOAT_NAN),
                 \json_encode(Abstracter::UNDEFINED),
-            ),
-            array(
+            ],
+            [
                 '"INF"',
                 '"NaN"',
                 'null',
-            ),
+            ],
             $json
         );
     }

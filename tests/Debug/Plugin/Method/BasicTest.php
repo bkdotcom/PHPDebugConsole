@@ -63,7 +63,7 @@ class BasicTest extends DebugTestFramework
                 } elseif ($route instanceof \bdk\Debug\Route\Wamp) {
                     $logEntry['method'] = 'log';
                     $logEntry['args'] = array('something completely different');
-                    $meta = \array_diff_key($logEntry['meta'], \array_flip(array('caption', 'inclContext', 'limit', 'requestId', 'sortable', 'tableInfo')));
+                    $meta = \array_diff_key($logEntry['meta'], \array_flip(['caption', 'inclContext', 'limit', 'requestId', 'sortable', 'tableInfo']));
                     $logEntry['meta'] = $meta;
                 }
             }

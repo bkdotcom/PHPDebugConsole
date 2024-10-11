@@ -17,7 +17,7 @@ namespace bdk\Backtrace;
 class Normalizer
 {
     /** @var array */
-    private static $backtraceTemp = array();
+    private static $backtraceTemp = [];
 
     /** @var array */
     private static $frameDefault = array(
@@ -38,7 +38,7 @@ class Normalizer
      */
     public static function normalize($backtrace)
     {
-        self::$backtraceTemp = array();
+        self::$backtraceTemp = [];
         $frameTemp = array(
             'class' => null,
             'include_filename' => null,
@@ -51,7 +51,7 @@ class Normalizer
             $frame = \array_merge(self::$frameDefault, $frameTemp, $backtrace[$i]);
             $frame = self::normalizeFrameFile($frame, $backtrace[$i + 1]);
             $frame = self::normalizeFrameFunction($frame);
-            if (\in_array($frame['function'], array('call_user_func', 'call_user_func_array'), true)) {
+            if (\in_array($frame['function'], ['call_user_func', 'call_user_func_array'], true)) {
                 // don't include this frame
                 //   backtrace only includes when used within namespace and not fully-qualified
                 //   \call_user_func(); // not in trace... same as calling func directly
@@ -79,12 +79,12 @@ class Normalizer
     private static function normalizeFrameFile(array $frame, array &$frameNext)
     {
         $regexEvalCode = '/^(.+)\((\d+)\) : eval\(\)\'d code$/';
-        $matches = array();
+        $matches = [];
         if ($frame['file'] === null) {
             // use file/line from next frame
             $frame = \array_merge(
                 $frame,
-                \array_intersect_key($frameNext, \array_flip(array('file', 'line')))
+                \array_intersect_key($frameNext, \array_flip(['file', 'line']))
             );
         }
         if (\preg_match($regexEvalCode, (string) $frame['file'], $matches)) {
@@ -95,7 +95,7 @@ class Normalizer
             $frame['line'] = (int) $matches[2];
             if (isset($frameNext['include_filename'])) {
                 // xdebug_get_function_stack puts the eval'd code in include_filename
-                $frameNext['params'] = array($frameNext['include_filename']);
+                $frameNext['params'] = [$frameNext['include_filename']];
                 $frameNext['class'] = null;
                 $frameNext['function'] = 'eval';
                 $frameNext['include_filename'] = null;
@@ -104,7 +104,7 @@ class Normalizer
         if ($frame['include_filename']) {
             // xdebug_get_function_stack
             $frame['class'] = null;
-            $frame['args'] = array($frame['include_filename']);
+            $frame['args'] = [$frame['include_filename']];
             $frame['function'] = 'include or require';
         }
         return $frame;

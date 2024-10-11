@@ -105,8 +105,8 @@ class HtmlStringEncoded
     private function buildTabsAndPanes(Abstraction $abs)
     {
         $tabs = array(
-            'panes' => array(),
-            'tabs' => array(),
+            'panes' => [],
+            'tabs' => [],
         );
         $index = 1;
         do {

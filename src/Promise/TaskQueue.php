@@ -27,7 +27,7 @@ class TaskQueue
     public function __construct($withShutdown = true)
     {
         if ($withShutdown) {
-            \register_shutdown_function(array($this, 'onShutdown'));
+            \register_shutdown_function([$this, 'onShutdown']);
         }
     }
 

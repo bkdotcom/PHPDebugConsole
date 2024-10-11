@@ -87,7 +87,7 @@ class Substitution
     private function processArgs()
     {
         $args = $this->subInfo['args'];
-        $string = \preg_replace_callback($this->subRegex, array($this, 'processSubsCallback'), $args[0]);
+        $string = \preg_replace_callback($this->subRegex, [$this, 'processSubsCallback'], $args[0]);
         $args = $this->subInfo['args'];
         if (!$this->subInfo['options']['style']) {
             $this->subInfo['typeCounts']['c'] = 0;

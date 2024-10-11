@@ -20,7 +20,7 @@ class Profile
     /** @var array profile data */
     protected $data = array();
     /** @var list<array{function:non-empty-string,subTime:float,tsStart:float}> */
-    protected $funcStack = array();
+    protected $funcStack = [];
     /** @var bool */
     protected $isProfiling = false;
     /** @var non-empty-string */
@@ -28,7 +28,7 @@ class Profile
     /** @var non-empty-string Ignore methods in these namespaces */
     protected $nsIgnoreRegex;
     /** @var list<non-empty-string> */
-    protected $rootStack = array();
+    protected $rootStack = [];
     /** @var float|null */
     protected $timeLastTick = null;
     /** @var array */
@@ -41,7 +41,7 @@ class Profile
      */
     public function __construct($namespacesIgnore = array())
     {
-        $namespacesIgnore = \array_merge(array($this->namespace), (array) $namespacesIgnore);
+        $namespacesIgnore = \array_merge([$this->namespace], (array) $namespacesIgnore);
         $namespacesIgnore = \array_unique($namespacesIgnore);
         $this->nsIgnoreRegex = \str_replace('\\', '\\\\', '#^(' . \implode('|', $namespacesIgnore) . ')(\\|$)#');
     }
@@ -53,7 +53,7 @@ class Profile
      */
     public function end()
     {
-        \unregister_tick_function(array($this, 'tickFunction'));
+        \unregister_tick_function([$this, 'tickFunction']);
         while ($this->funcStack) {
             $this->popStack();
         }
@@ -67,9 +67,9 @@ class Profile
             return $row;
         }, $this->data);
         $this->data = array();
-        $this->funcStack = array();
+        $this->funcStack = [];
         $this->isProfiling = false;
-        $this->rootStack = array();
+        $this->rootStack = [];
         return $data;
     }
 
@@ -89,7 +89,7 @@ class Profile
             $class = isset($frame['class']) ? $frame['class'] . '::' : '';
             $this->rootStack[] = $class . $frame['function'];
         }
-        \register_tick_function(array($this, 'tickFunction'));
+        \register_tick_function([$this, 'tickFunction']);
         $this->isProfiling = true;
         $this->timeLastTick = \microtime(true);
         return true;
@@ -116,11 +116,11 @@ class Profile
             $this->timeLastTick = \microtime(true);
             return;
         }
-        $conditionsMet = \array_filter(array(
+        $conditionsMet = \array_filter([
             $stackCount < 1,
             $stackCount === $stackCountInternal,        // no change in stack
             \preg_match($this->nsIgnoreRegex, $class),
-        ));
+        ]);
         if ($conditionsMet) {
             $this->timeLastTick = \microtime(true);
             return;

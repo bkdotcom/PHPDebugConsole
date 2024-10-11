@@ -222,8 +222,6 @@ class MethodParams
             // @see https://bugs.php.net/bug.php?id=73632
             $index = \strrpos($name, '\\');
             $name = \substr($name, $index + 1);
-            // \bdk\Debug::log('namespace', $refParameter->getDeclaringClass()->getNamespaceName());
-            // \bdk\Debug::log('namespace', $refParameter->getDeclaringFunction()->getNamespaceName());
         }
         return $name;
     }
@@ -287,7 +285,7 @@ class MethodParams
             return Abstracter::UNDEFINED;
         }
         $defaultValue = $param['defaultValue'];
-        if (\in_array($defaultValue, array('true', 'false', 'null'), true)) {
+        if (\in_array($defaultValue, ['true', 'false', 'null'], true)) {
             return \json_decode($defaultValue);
         }
         if (\is_numeric($defaultValue)) {

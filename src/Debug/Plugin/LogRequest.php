@@ -177,7 +177,7 @@ class LogRequest extends AbstractLogReqRes implements SubscriberInterface
         $this->assertCorrectContentType($mediaType, $mediaTypeUser, $method);
         if (
             $method === 'POST'
-            && \in_array($mediaType, array(ContentType::FORM, ContentType::FORM_MULTIPART), true)
+            && \in_array($mediaType, [ContentType::FORM, ContentType::FORM_MULTIPART], true)
             && $parsedBody
         ) {
             $this->debug->log('$_POST', $parsedBody, $this->debug->meta('redact'));

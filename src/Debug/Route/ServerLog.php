@@ -26,8 +26,8 @@ class ServerLog extends ChromeLogger
 
     /** @var array<string,mixed> */
     protected $cfg = array(
-        'channels' => array('*'),
-        'channelsExclude' => array(),
+        'channels' => ['*'],
+        'channelsExclude' => [],
         'filenamePrefix' => 'serverLog_',
         'gcProb' => 0.10,               // (0-1) probability of running garbage collection
         'group' => true,                // contain/wrap log in a group?
@@ -78,10 +78,10 @@ class ServerLog extends ChromeLogger
                     )
                 )
                 : 'error writing log';
-            $event['headers'][] = array(self::HEADER_NAME, $url);
+            $event['headers'][] = [self::HEADER_NAME, $url];
         }
         $this->data = array();
-        $this->jsonData['rows'] = array();
+        $this->jsonData['rows'] = [];
         $this->dumper->crateRaw = true;
     }
 

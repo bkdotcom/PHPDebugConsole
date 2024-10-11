@@ -28,7 +28,7 @@ class Php
     const IS_CALLABLE_NO_CALL = 8; // don't test for __call / __callStatic methods
 
     /** @var string[] list of allowed-to-be-unserialized classes passed to unserializeSafe */
-    protected static $allowedClasses = array();
+    protected static $allowedClasses = [];
 
     /**
      * Assert that a value is of a certain type
@@ -142,7 +142,7 @@ class Php
     public static function getIniFiles()
     {
         return \array_merge(
-            array(\php_ini_loaded_file()),
+            [\php_ini_loaded_file()],
             \array_filter(\preg_split('#\s*[,\r\n]+\s*#', \trim((string) \php_ini_scanned_files())))
         );
     }
@@ -159,7 +159,7 @@ class Php
      * @param string|array $val  value to check
      * @param int          $opts bitmask of IS_CALLABLE_x constants
      *                         IS_CALLABLE_ARRAY_ONLY
-     *                             must be array(x, 'method')
+     *                             must be `[x, 'method']`
      *                             (does not apply for Closure and invokable obj)
      *                         IS_CALLABLE_OBJ_ONLY
      *                             if array, first value must be object
@@ -229,7 +229,7 @@ class Php
             return \unserialize($serialized);
         }
         if ($allowedClasses === false) {
-            $allowedClasses = array();
+            $allowedClasses = [];
         }
         $allowedClasses[] = 'stdClass';
         self::$allowedClasses = \array_unique($allowedClasses);
@@ -343,7 +343,7 @@ class Php
     }
 
     /**
-     * Test if array(obj, 'method') is callable
+     * Test if `[obj, 'method']` is callable
      *
      * @param array $val  array to test
      * @param int   $opts bitmask of IS_CALLABLE_x constants
@@ -364,7 +364,7 @@ class Php
     }
 
     /**
-     * Test if array('string', 'method') is callable
+     * Test if `['string', 'method']` is callable
      *
      * @param array $val  array to test
      * @param int   $opts bitmask of IS_CALLABLE_x constants
@@ -400,10 +400,10 @@ class Php
      */
     private static function unserializeSafeModify($serialized)
     {
-        $matches = array();
+        $matches = [];
         $offset = 0;
         $regex = '/(^|;)([OC]):(\d+):"([\w\\\\]+)":(\d+):\{/';
-        $regexKeys = array('full', 'prefix', 'type', 'strlen', 'classname', 'length');
+        $regexKeys = ['full', 'prefix', 'type', 'strlen', 'classname', 'length'];
         $serializedNew = '';
         while (\preg_match($regex, $serialized, $matches, PREG_OFFSET_CAPTURE, $offset)) {
             /** @var array<string,int> */
@@ -438,7 +438,10 @@ class Php
     private static function unserializeSafeModifyMatch($matches, $offsets, &$offset)
     {
         $offset = $offsets['full'] + \strlen($matches['full']);
-        if (\strlen($matches['classname']) !== (int) $matches['strlen'] || \in_array($matches['classname'], self::$allowedClasses, true)) {
+        if (
+            \strlen($matches['classname']) !== (int) $matches['strlen']
+            || \in_array($matches['classname'], self::$allowedClasses, true)
+        ) {
             return $matches['full'];
         }
         if ($matches['type'] === 'O') {

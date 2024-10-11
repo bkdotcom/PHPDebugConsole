@@ -31,6 +31,7 @@ use Exception;
  * @property-read integer   $memoryStart
  * @property-read integer   $memoryUsage
  * @property-read array     $params
+ * @property-read bool      $prettified
  * @property-read integer   $rowCount      number of rows affected by the last DELETE, INSERT, or UPDATE statement
  *                                          or number of rows returned by SELECT statement
  * @property-read string    $sql
@@ -72,7 +73,7 @@ class StatementInfo extends AbstractComponent
     protected $types;
 
     /** @var list<string> */
-    protected $readOnly = array(
+    protected $readOnly = [
         'duration',
         'exception',
         'isSuccess',
@@ -86,7 +87,7 @@ class StatementInfo extends AbstractComponent
         'timeEnd',
         'timeStart',
         'types',
-    );
+    ];
 
     /** @var array<int,string> */
     protected static $constants = array();
@@ -124,8 +125,10 @@ class StatementInfo extends AbstractComponent
         return array(
             'duration' => $this->duration,
             'exception' => $this->exception,
+            'isSuccess' => $this->isSuccess,
             'memoryUsage' => $this->memoryUsage,
             'params' => $this->params,
+            'prettified' => $this->prettified,
             'rowCount' => $this->rowCount,
             'sql' => $this->sql,
             'types' => $this->types,
@@ -273,13 +276,13 @@ class StatementInfo extends AbstractComponent
             return $label;
         }
         $label = $parsed['method']; // method + table
-        $afterWhereKeys = array('groupBy', 'having', 'window', 'orderBy', 'limit', 'for');
+        $afterWhereKeys = ['groupBy', 'having', 'window', 'orderBy', 'limit', 'for'];
         $afterWhereValues = \array_intersect_key($parsed, \array_flip($afterWhereKeys));
         $haveMore = \count($afterWhereValues) > 0;
         if ($parsed['where'] && \strlen($parsed['where']) < 35) {
             $label .= $parsed['afterMethod'] ? ' (…)' : '';
             $label .= ' WHERE ' . $parsed['where'];
-        } elseif (\array_filter(array($parsed['afterMethod'], $parsed['where']))) {
+        } elseif (\array_filter([$parsed['afterMethod'], $parsed['where']])) {
             $haveMore = true;
         }
         if ($haveMore) {

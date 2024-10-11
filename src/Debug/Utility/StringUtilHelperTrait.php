@@ -42,7 +42,7 @@ trait StringUtilHelperTrait
         } elseif ($isNumericB && \is_string($valA)) {
             $valB = (string) $valB;
         }
-        return array($valA, $valB);
+        return [$valA, $valB];
     }
 
     /**
@@ -100,10 +100,10 @@ trait StringUtilHelperTrait
         }
         $stats = array(
             // how many chars found, percent expected for random binary, allowed deviation
-            'lower' => array(\preg_match_all('/[a-z]/', $val), 40.626, 10),
-            'num' => array(\preg_match_all('/[0-9]/', $val), 15.625, 8),
-            'other' => array(\preg_match_all('/[+\/]/', $val), 3.125, 5),
-            'upper' => array(\preg_match_all('/[A-Z]/', $val), 40.625, 10),
+            'lower' => [\preg_match_all('/[a-z]/', $val), 40.626, 10],
+            'num' => [\preg_match_all('/[0-9]/', $val), 15.625, 8],
+            'other' => [\preg_match_all('/[+\/]/', $val), 3.125, 5],
+            'upper' => [\preg_match_all('/[A-Z]/', $val), 40.625, 10],
         );
         foreach ($stats as $stat) {
             $per = $stat[0] * 100 / $strlen;
@@ -153,10 +153,10 @@ trait StringUtilHelperTrait
     private static function interpolateAssertArgs($message, $context)
     {
         if (
-            \count(\array_filter(array(
+            \count(\array_filter([
                 \is_string($message),
                 \is_object($message) && \method_exists($message, '__toString'),
-            ))) === 0
+            ])) === 0
         ) {
             throw new \InvalidArgumentException(\sprintf(
                 __NAMESPACE__ . '::interpolate()\'s $message expects string or Stringable object. %s provided.',
@@ -164,10 +164,10 @@ trait StringUtilHelperTrait
             ));
         }
         if (
-            \count(\array_filter(array(
+            \count(\array_filter([
                 \is_array($context),
                 \is_object($context),
-            ))) === 0
+            ])) === 0
         ) {
             throw new \InvalidArgumentException(\sprintf(
                 __NAMESPACE__ . '::interpolate()\'s $context expects array or object. %s provided.',
@@ -189,11 +189,11 @@ trait StringUtilHelperTrait
         foreach ($placeholders as $placeholder) {
             $val = self::interpolateValue($placeholder);
             if (
-                \array_filter(array(
+                \array_filter([
                     $val === null,
                     \is_array($val),
                     \is_object($val) && \method_exists($val, '__toString') === false,
-                ))
+                ])
             ) {
                 continue;
             }

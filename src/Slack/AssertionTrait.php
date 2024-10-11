@@ -25,7 +25,7 @@ trait AssertionTrait
      */
     protected static function assertAccessory($accessory)
     {
-        $validAccessoryTypes = array(
+        $validAccessoryTypes = [
             'image',
             'button',
             'checkboxes',
@@ -35,7 +35,7 @@ trait AssertionTrait
             'radio_buttons',
             'static_select',
             'timePicker,',
-        );
+        ];
         self::assertArrayWithType($accessory, 'accessory');
         if (\in_array($accessory['type'], $validAccessoryTypes, true) === false) {
             throw new InvalidArgumentException(\sprintf('Invalid accessory.  %s is an invalid type.', $accessory['type']));
@@ -107,7 +107,7 @@ trait AssertionTrait
      */
     protected static function assertData(array $values, array $dataDefault)
     {
-        $unknownData = \array_diff_key($values, $dataDefault, \array_flip(array('icon')));
+        $unknownData = \array_diff_key($values, $dataDefault, \array_flip(['icon']));
         if ($unknownData) {
             throw new InvalidArgumentException('SlackMessage: Unknown values: ' . \implode(', ', \array_keys($unknownData)));
         }
@@ -211,7 +211,7 @@ trait AssertionTrait
      */
     protected static function assertInputElement($element)
     {
-        $validElementTypes = array(
+        $validElementTypes = [
             'checkboxes',
             'datepicker',
             'datetimepicker',
@@ -222,7 +222,7 @@ trait AssertionTrait
             'radio_buttons',
             'timePicker,',
             'url_text_input',
-        );
+        ];
         self::assertArrayWithType($element, 'input block');
         if (\in_array($element['type'], $validElementTypes, true) === false) {
             throw new InvalidArgumentException(\sprintf('invalid input block.  %s is an invalid type.', $element['type']));

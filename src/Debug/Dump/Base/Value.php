@@ -271,7 +271,7 @@ class Value extends AbstractValue
      */
     protected function dumpUnknown(Abstraction $abs)
     {
-        $values = \array_diff_key($abs->getValues(), \array_flip(array('brief', 'typeMore')));
+        $values = \array_diff_key($abs->getValues(), \array_flip(['brief', 'typeMore']));
         \ksort($values);
         return $values;
     }

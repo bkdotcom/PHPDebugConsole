@@ -91,7 +91,7 @@ class Value extends TextValue
             $identifier = "\e[1m" . $this->highlightChars($parts['identifier']) . "\e[22m";
             $this->escapeReset = $escapeReset;
         }
-        $parts = \array_filter(array($namespaceOut, $classnameOut, $identifier), 'strlen');
+        $parts = \array_filter([$namespaceOut, $classnameOut, $identifier], 'strlen');
         return \implode($operator, $parts);
     }
 

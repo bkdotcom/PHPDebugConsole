@@ -147,11 +147,11 @@ abstract class AbstractErrorHandler extends AbstractComponent
         $callables = \array_map(static function ($subscriberInfo) {
             return $subscriberInfo['callable'];
         }, $this->eventManager->getSubscribers(self::EVENT_ERROR));
-        if ($this->cfg['enableEmailer'] && \in_array(array($this->getEmailer(), 'onErrorHighPri'), $callables, true) === false) {
+        if ($this->cfg['enableEmailer'] && \in_array([$this->getEmailer(), 'onErrorHighPri'], $callables, true) === false) {
             $this->cfg['enableStats'] = true;
             $this->eventManager->addSubscriberInterface($this->emailer);
         }
-        if ($this->cfg['enableStats'] && \in_array(array($this->getStats(), 'onErrorHighPri'), $callables, true) === false) {
+        if ($this->cfg['enableStats'] && \in_array([$this->getStats(), 'onErrorHighPri'], $callables, true) === false) {
             $this->eventManager->addSubscriberInterface($this->stats);
         }
     }
@@ -167,10 +167,10 @@ abstract class AbstractErrorHandler extends AbstractComponent
     {
         if (!$this->backtrace) {
             $this->backtrace = new Backtrace();
-            $this->backtrace->addInternalClass(array(
+            $this->backtrace->addInternalClass([
                 'bdk\\ErrorHandler',
                 'bdk\\PubSub\\',
-            ));
+            ]);
         }
         return $this->backtrace;
     }
@@ -185,7 +185,7 @@ abstract class AbstractErrorHandler extends AbstractComponent
         /*
             set and restore error handler to determine the current error handler
         */
-        $errHandlerCur = \set_error_handler(array($this, 'handleError'));
+        $errHandlerCur = \set_error_handler([$this, 'handleError']);
         \restore_error_handler();
         return $errHandlerCur;
     }
@@ -200,7 +200,7 @@ abstract class AbstractErrorHandler extends AbstractComponent
         /*
             set and restore exception handler to determine the current error handler
         */
-        $exHandlerCur = \set_exception_handler(array($this, 'handleException'));
+        $exHandlerCur = \set_exception_handler([$this, 'handleException']);
         \restore_exception_handler();
         return $exHandlerCur;
     }
@@ -378,7 +378,7 @@ abstract class AbstractErrorHandler extends AbstractComponent
         for ($i = 1; $i < $count; $i++) {
             if (
                 isset($backtrace[$i - 1]['function'])
-                && \in_array($backtrace[$i - 1]['function'], array('trigger_error', 'user_error'), true)
+                && \in_array($backtrace[$i - 1]['function'], ['trigger_error', 'user_error'], true)
                 && \strpos($backtrace[$i]['function'], '->__toString') !== false
             ) {
                 $error->stopPropagation();

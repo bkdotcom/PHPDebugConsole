@@ -65,9 +65,9 @@ class EventsSubscriber
      */
     public function onWildcardEvent($name = null, $payload = array())
     {
-        $groupParams = array($name);
+        $groupParams = [$name];
         if (\preg_match('/^(\S+):\s+(\S+)$/', $name, $matches)) {
-            $groupParams = array($matches[1], $matches[2]);
+            $groupParams = [$matches[1], $matches[2]];
         }
         $groupParams[] = $this->debug->meta(array(
             'argsAsParams' => false,

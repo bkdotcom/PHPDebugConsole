@@ -45,11 +45,11 @@ class RejectedPromise extends Promise
         if (!$onRejected) {
             return $this;
         }
-        array($onFulfilled); // suppress unused
+        [$onFulfilled]; // suppress unused
 
         $queue = self::queue();
         $result = $this->result;
-        $promise = new Promise(array($queue, 'run'));
+        $promise = new Promise([$queue, 'run']);
         $queue->add(static function () use ($promise, $result, $onRejected) {
             if ($promise->isSettled()) {
                 return;

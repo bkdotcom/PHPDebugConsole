@@ -22,7 +22,7 @@ use bdk\Debug\Utility\UseStatements;
 class Type
 {
     /** @var list<string> */
-    public $types = array(
+    public $types = [
         'null',
         'mixed', 'scalar',
         'bool', 'boolean', 'true', 'false',
@@ -40,7 +40,7 @@ class Type
         'resource', 'closed-resource', 'open-resource',
         'key-of', 'value-of',
         'never', 'never-return', 'never-returns', 'no-return',
-    );
+    ];
 
     /**
      * Convert "self[]|null" to array
@@ -54,7 +54,7 @@ class Type
      */
     public function normalize($type, $className, $fullyQualifyType = 0)
     {
-        if (\in_array($type, array('', null), true)) {
+        if (\in_array($type, ['', null], true)) {
             return null;
         }
         if (\preg_match('/array[<([{]/', $type)) {

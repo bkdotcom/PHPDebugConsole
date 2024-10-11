@@ -59,11 +59,11 @@ class ErrorLogger implements SubscriberInterface
     public function getSubscriptions()
     {
         return array(
-            Debug::EVENT_OUTPUT => array('onDebugOutput', 1),
-            ErrorHandler::EVENT_ERROR => array(
-                array('onErrorLow', -1),
-                array('onErrorHigh', 1),
-            ),
+            Debug::EVENT_OUTPUT => ['onDebugOutput', 1],
+            ErrorHandler::EVENT_ERROR => [
+                ['onErrorLow', -1],
+                ['onErrorHigh', 1],
+            ],
         );
     }
 
@@ -121,7 +121,7 @@ class ErrorLogger implements SubscriberInterface
         if ($error['exception']) {
             // Yii's exception handler calls `restore_error_handler()`
             //   make sure it restores to our error handler
-            \set_error_handler(array($this->debug->errorHandler, 'handleError'));
+            \set_error_handler([$this->debug->errorHandler, 'handleError']);
             $this->component->yiiApp->handleException($error['exception']);
         } elseif ($error['category'] === Error::CAT_FATAL) {
             $this->republishShutdown();
@@ -139,7 +139,7 @@ class ErrorLogger implements SubscriberInterface
      */
     private function isIgnorableError(Error $error)
     {
-        $ignorableCats = array(Error::CAT_DEPRECATED, Error::CAT_NOTICE, Error::CAT_STRICT, Error::CAT_WARNING);
+        $ignorableCats = [Error::CAT_DEPRECATED, Error::CAT_NOTICE, Error::CAT_STRICT, Error::CAT_WARNING];
         if (\in_array($error['category'], $ignorableCats, true) === false) {
             return false;
         }

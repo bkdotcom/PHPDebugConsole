@@ -24,7 +24,7 @@ use bdk\Debug\Utility\Html;
  */
 class HtmlSanitize
 {
-    public static $tagsWhitelist = array(
+    public static $tagsWhitelist = [
         'a',
         'abbr',
         'b',
@@ -87,7 +87,7 @@ class HtmlSanitize
         'ul',
         'var',
         'wbr',
-    );
+    ];
 
     /**
      * allowed attributes per tag
@@ -97,15 +97,15 @@ class HtmlSanitize
      * phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
      */
     public static $attributes = array(
-        'a' => array('href'),
-        'blockquote' => array('cite'),
-        'del' => array('cite'),
-        'div' => array('itemscope', 'itemtype'),
-        'img' => array('alt', 'loading', 'longdesc', 'src'),
-        'ins' => array('cite'),
-        'q' => array('cite'),
-        'source' => array('srcset'),
-        'all' => array(
+        'a' => ['href'],
+        'blockquote' => ['cite'],
+        'del' => ['cite'],
+        'div' => ['itemscope', 'itemtype'],
+        'img' => ['alt', 'loading', 'longdesc', 'src'],
+        'ins' => ['cite'],
+        'q' => ['cite'],
+        'source' => ['srcset'],
+        'all' => [
             'abbr',
             'accept',
             'accept-charset',
@@ -174,7 +174,7 @@ class HtmlSanitize
             'value',
             'width',
             'itemprop',
-        ),
+        ],
     );
 
     /**
@@ -244,7 +244,7 @@ class HtmlSanitize
     private static function sanitizeAttributes($tagName, $attribString)
     {
         $attributesAllowed = \array_merge(
-            isset(self::$attributes[$tagName]) ? self::$attributes[$tagName] : array(),
+            isset(self::$attributes[$tagName]) ? self::$attributes[$tagName] : [],
             self::$attributes['all']
         );
         $attribs = Html::parseAttribString($attribString);

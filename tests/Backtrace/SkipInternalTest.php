@@ -87,7 +87,7 @@ class SkipInternalTest extends TestCase
             'file' => __FILE__,
             'function' => 'bdk\Test\Backtrace\Fixture\SkipMe\Thing->a',
             'line' => $line,
-        ), \array_diff_key($trace[0], \array_flip(array('object'))));
+        ), \array_diff_key($trace[0], \array_flip(['object'])));
         self::assertInstanceOf('bdk\Test\Backtrace\Fixture\SkipMe\Thing', $trace[0]['object']);
     }
 
@@ -113,7 +113,7 @@ class SkipInternalTest extends TestCase
             'file' => __FILE__,
             'function' => 'bdk\Test\Backtrace\Fixture\Thing2->a',
             'line' => $line,
-        ), \array_diff_key($trace[0], \array_flip(array('object'))));
+        ), \array_diff_key($trace[0], \array_flip(['object'])));
         self::assertInstanceOf('bdk\Test\Backtrace\Fixture\Thing2', $trace[0]['object']);
     }
 

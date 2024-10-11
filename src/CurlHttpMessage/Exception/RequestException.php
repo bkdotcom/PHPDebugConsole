@@ -58,7 +58,7 @@ class RequestException extends RuntimeException
             ? (int) \floor($response->getStatusCode() / 100)
             : 0;
 
-        $class = \in_array($level, array(4, 5), true)
+        $class = \in_array($level, [4, 5], true)
             ? __NAMESPACE__ . '\\BadResponseException'
             : __CLASS__;
 

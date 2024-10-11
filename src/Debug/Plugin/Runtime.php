@@ -37,7 +37,7 @@ class Runtime extends AbstractComponent implements SubscriberInterface
         return array(
             Debug::EVENT_OUTPUT => 'onOutput',
             Debug::EVENT_PLUGIN_INIT => 'onPluginInit',
-            EventManager::EVENT_PHP_SHUTDOWN => array('onShutdown', PHP_INT_MAX),
+            EventManager::EVENT_PHP_SHUTDOWN => ['onShutdown', PHP_INT_MAX],
         );
     }
 

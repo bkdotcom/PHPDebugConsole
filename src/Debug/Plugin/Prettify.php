@@ -25,9 +25,9 @@ class Prettify implements SubscriberInterface
     use CustomMethodTrait;
 
     /** @var string[] */
-    protected $methods = array(
+    protected $methods = [
         'prettify',
-    );
+    ];
 
     /** @var bool */
     private $highlightAdded = false;
@@ -48,7 +48,7 @@ class Prettify implements SubscriberInterface
     {
         return array(
             Debug::EVENT_CUSTOM_METHOD => 'onCustomMethod',
-            Debug::EVENT_PRETTIFY => array('onPrettify', -1),
+            Debug::EVENT_PRETTIFY => ['onPrettify', -1],
         );
     }
 
@@ -61,7 +61,7 @@ class Prettify implements SubscriberInterface
      */
     public function onPrettify(Event $event)
     {
-        $matches = array();
+        $matches = [];
         if (\preg_match('#\b(html|json|sql|xml)\b#', (string) $event['contentType'], $matches) !== 1) {
             return;
         }

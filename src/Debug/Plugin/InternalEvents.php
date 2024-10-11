@@ -39,18 +39,18 @@ class InternalEvents implements SubscriberInterface
               "php.shutdown" log entry
         */
         return array(
-            Debug::EVENT_DUMP_CUSTOM => array('onDumpCustom', -1),
-            Debug::EVENT_OUTPUT => array(
-                array('onOutput', 1),
-                array('onOutputHeaders', -1),
-            ),
+            Debug::EVENT_DUMP_CUSTOM => ['onDumpCustom', -1],
+            Debug::EVENT_OUTPUT => [
+                ['onOutput', 1],
+                ['onOutputHeaders', -1],
+            ],
             Debug::EVENT_PLUGIN_INIT => 'onPluginInit',
-            ErrorHandler::EVENT_ERROR => array('onError', -1),
-            EventManager::EVENT_PHP_SHUTDOWN => array(
-                array('onShutdownHigh', PHP_INT_MAX),
-                array('onShutdownHigh2', PHP_INT_MAX - 10),
-                array('onShutdownLow', PHP_INT_MAX * -1),
-            ),
+            ErrorHandler::EVENT_ERROR => ['onError', -1],
+            EventManager::EVENT_PHP_SHUTDOWN => [
+                ['onShutdownHigh', PHP_INT_MAX],
+                ['onShutdownHigh2', PHP_INT_MAX - 10],
+                ['onShutdownLow', PHP_INT_MAX * -1],
+            ],
         );
     }
 
@@ -61,7 +61,7 @@ class InternalEvents implements SubscriberInterface
      */
     public function onDebugLogShutdown()
     {
-        $this->debug->eventManager->unsubscribe(Debug::EVENT_LOG, array($this, __FUNCTION__));
+        $this->debug->eventManager->unsubscribe(Debug::EVENT_LOG, [$this, __FUNCTION__]);
         $this->debug->info('php.shutdown', $this->debug->meta(array(
             'attribs' => array(
                 'class' => 'php-shutdown',
@@ -198,7 +198,7 @@ class InternalEvents implements SubscriberInterface
      */
     public function onShutdownHigh2()
     {
-        $this->debug->eventManager->subscribe(Debug::EVENT_LOG, array($this, 'onDebugLogShutdown'));
+        $this->debug->eventManager->subscribe(Debug::EVENT_LOG, [$this, 'onDebugLogShutdown']);
     }
 
     /**
@@ -210,7 +210,7 @@ class InternalEvents implements SubscriberInterface
      */
     public function onShutdownLow()
     {
-        $this->debug->eventManager->unsubscribe(Debug::EVENT_LOG, array($this, 'onDebugLogShutdown'));
+        $this->debug->eventManager->unsubscribe(Debug::EVENT_LOG, [$this, 'onDebugLogShutdown']);
         if ($this->testEmailLog()) {
             $this->debug->getRoute('email')->processLogEntries(new Event($this->debug));
         }
@@ -233,10 +233,10 @@ class InternalEvents implements SubscriberInterface
             return;
         }
         $findExit = $this->debug->findExit;
-        $findExit->setSkipClasses(array(
+        $findExit->setSkipClasses([
             __CLASS__,
             \get_class($this->debug->eventManager),
-        ));
+        ]);
         $info = $findExit->find();
         if ($info) {
             $this->debug->warn(
@@ -342,7 +342,7 @@ class InternalEvents implements SubscriberInterface
             return false;
         }
         $emailLog = $this->debug->getCfg('emailLog', Debug::CONFIG_DEBUG);
-        if (\in_array($emailLog, array(true, 'always'), true)) {
+        if (\in_array($emailLog, [true, 'always'], true)) {
             return true;
         }
         if ($emailLog === 'onError') {

@@ -164,10 +164,10 @@ class OAuth extends OAuthBase
      */
     private function additionalInfo($url)
     {
-        $debugInfo = \array_diff_key($this->getDebugInfo(), \array_flip(array(
+        $debugInfo = \array_diff_key($this->getDebugInfo(), \array_flip([
             'headers_sent', 'body_sent', 'headers_recv', 'body_recv',
             // "sbs" may be only key remaining
-        )));
+        ]));
         $lastResponseInfo = \array_merge(array(
             'download_content_length' => 0,
             'size_download' => 0,
@@ -219,7 +219,7 @@ class OAuth extends OAuthBase
      */
     private function oauthParams()
     {
-        $oauthParamKeys = array(
+        $oauthParamKeys = [
             'oauth_consumer_key',
             'oauth_nonce',
             'oauth_signature',
@@ -227,7 +227,7 @@ class OAuth extends OAuthBase
             'oauth_timestamp',
             'oauth_token',
             'oauth_version',
-        );
+        ];
         $oauthParams = array();
         $debugInfo = $this->getDebugInfo();
         if (\preg_match('/^Authorization:\s+([^\r]+)/m', $debugInfo['headers_sent'], $matches)) {
@@ -263,7 +263,7 @@ class OAuth extends OAuthBase
         $return = false;
         $this->debugger->time();
         try {
-            $return = \call_user_func_array(array('OAuth', $method), $args);
+            $return = \call_user_func_array(['OAuth', $method], $args);
         } catch (OAuthException $e) {
             $this->exception = $e;
         }

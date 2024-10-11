@@ -53,7 +53,7 @@ class Constants extends AbstractSection
      */
     protected function getClasses(array $info)
     {
-        $visClasses = \array_diff((array) $info['visibility'], array('debug'));
+        $visClasses = \array_diff((array) $info['visibility'], ['debug']);
         $classes = \array_keys(\array_filter(array(
             'constant' => true,
             'isFinal' => $info['isFinal'],

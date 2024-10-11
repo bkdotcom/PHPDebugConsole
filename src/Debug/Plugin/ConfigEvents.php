@@ -35,8 +35,8 @@ class ConfigEvents implements SubscriberInterface
     public function getSubscriptions()
     {
         return array(
-            Debug::EVENT_BOOTSTRAP => array('onBootstrap', PHP_INT_MAX * -1),
-            Debug::EVENT_CONFIG => array('onConfig', PHP_INT_MAX),
+            Debug::EVENT_BOOTSTRAP => ['onBootstrap', PHP_INT_MAX * -1],
+            Debug::EVENT_CONFIG => ['onConfig', PHP_INT_MAX],
         );
     }
 
@@ -65,18 +65,18 @@ class ConfigEvents implements SubscriberInterface
         $this->debug = $event->getSubject();
         $cfgDebug = $this->onConfigInit($event->getValues());
         $valActions = \array_intersect_key(array(
-            'channels' => array($this, 'onCfgChannels'),
-            'emailFrom' => array($this, 'onCfgEmail'),
-            'emailFunc' => array($this, 'onCfgEmail'),
-            'emailTo' => array($this, 'onCfgEmail'),
-            'key' => array($this, 'onCfgKey'),
-            'logEnvInfo' => array($this, 'onCfgList'),
-            'logRequestInfo' => array($this, 'onCfgList'),
-            'logResponse' => array($this, 'onCfgLogResponse'),
-            'onBootstrap' => array($this, 'onCfgOnBootstrap'),
-            'onLog' => array($this, 'onCfgReplaceSubscriber'),
-            'onMiddleware' => array($this, 'onCfgReplaceSubscriber'),
-            'onOutput' => array($this, 'onCfgReplaceSubscriber'),
+            'channels' => [$this, 'onCfgChannels'],
+            'emailFrom' => [$this, 'onCfgEmail'],
+            'emailFunc' => [$this, 'onCfgEmail'],
+            'emailTo' => [$this, 'onCfgEmail'],
+            'key' => [$this, 'onCfgKey'],
+            'logEnvInfo' => [$this, 'onCfgList'],
+            'logRequestInfo' => [$this, 'onCfgList'],
+            'logResponse' => [$this, 'onCfgLogResponse'],
+            'onBootstrap' => [$this, 'onCfgOnBootstrap'],
+            'onLog' => [$this, 'onCfgReplaceSubscriber'],
+            'onMiddleware' => [$this, 'onCfgReplaceSubscriber'],
+            'onOutput' => [$this, 'onCfgReplaceSubscriber'],
         ), $cfgDebug);
         foreach ($valActions as $key => $callable) {
             /** @psalm-suppress TooManyArguments */
@@ -234,11 +234,11 @@ class ConfigEvents implements SubscriberInterface
                 'HTTP_USER_AGENT' => '',
             ), $this->debug->serverRequest->getServerParams());
             $val = \count(
-                \array_filter(array(
+                \array_filter([
                     \strpos($this->debug->getInterface(), 'http') !== false,
                     $serverParams['HTTP_SOAPACTION'],
                     \stripos($serverParams['HTTP_USER_AGENT'], 'curl') !== false,
-                ))
+                ])
             ) > 0;
         }
         return $val;
@@ -319,7 +319,7 @@ class ConfigEvents implements SubscriberInterface
                 // remove current collect & output values,
                 //   so don't trigger updates for existing values
                 $this->debug->getCfg(null, Debug::CONFIG_DEBUG),
-                \array_flip(array('collect', 'output'))
+                \array_flip(['collect', 'output'])
             ),
             $cfgDebug
         );

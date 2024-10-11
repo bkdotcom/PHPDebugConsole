@@ -31,10 +31,10 @@ class LogFiles extends AbstractComponent implements SubscriberInterface
             'nested' => false,
         ),
         'condense' => true,
-        'filesExclude' => array(
+        'filesExclude' => [
             'closure://function',
             '/vendor/',
-        ),
+        ],
     );
 
     /** @var array<string,int> */
@@ -51,7 +51,7 @@ class LogFiles extends AbstractComponent implements SubscriberInterface
     {
         return array(
             Debug::EVENT_CONFIG => 'onConfig',
-            Debug::EVENT_OUTPUT => array('onOutput', PHP_INT_MAX),
+            Debug::EVENT_OUTPUT => ['onOutput', PHP_INT_MAX],
         );
     }
 

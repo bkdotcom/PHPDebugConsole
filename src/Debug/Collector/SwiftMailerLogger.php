@@ -69,7 +69,7 @@ class SwiftMailerLogger implements Swift_Events_CommandListener, Swift_Events_Re
         } elseif ($debug === $debug->rootInstance) {
             $debug = $debug->getChannel('SwiftMailer', array('channelIcon' => $this->icon));
         }
-        $debug->rootInstance->eventManager->subscribe(EventManager::EVENT_PHP_SHUTDOWN, array($this, 'onShutdown'), PHP_INT_MAX * -1 + 1);
+        $debug->rootInstance->eventManager->subscribe(EventManager::EVENT_PHP_SHUTDOWN, [$this, 'onShutdown'], PHP_INT_MAX * -1 + 1);
         $this->debug = $debug;
         $this->iconMeta = $this->debug->meta('icon', $this->icon);
         $this->transports = new SplObjectStorage();
@@ -129,12 +129,12 @@ class SwiftMailerLogger implements Swift_Events_CommandListener, Swift_Events_Re
         $debugArgs = array($entry);
         $matches = array();
         if (\preg_match('#^(([-+><])\2) (.+)$#s', $entry, $matches)) {
-            $debugArgs = array($matches[1] . ':', $matches[3]);
+            $debugArgs = [$matches[1] . ':', $matches[3]];
         }
         if ($this->useIcon) {
             $debugArgs[] = $this->iconMeta;
         }
-        \call_user_func_array(array($this->debug, 'log'), $debugArgs);
+        \call_user_func_array([$this->debug, 'log'], $debugArgs);
     }
 
     /**

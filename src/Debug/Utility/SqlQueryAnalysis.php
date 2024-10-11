@@ -44,29 +44,29 @@ class SqlQueryAnalysis
      */
     public function analyze($sql)
     {
-        \array_map(array($this, 'performQueryAnalysisTest'), array(
-            array(\preg_match('/^\s*SELECT\s*`?[a-zA-Z0-9]*`?\.?\*/i', $sql) === 1,
+        \array_map([$this, 'performQueryAnalysisTest'], [
+            [\preg_match('/^\s*SELECT\s*`?[a-zA-Z0-9]*`?\.?\*/i', $sql) === 1,
                 'Use %cSELECT *%c only if you need all columns from table',
-            ),
-            array(\stripos($sql, 'ORDER BY RAND()') !== false,
+            ],
+            [\stripos($sql, 'ORDER BY RAND()') !== false,
                 '%cORDER BY RAND()%c is slow, avoid if you can.',
-            ),
-            array(\strpos($sql, '!=') !== false,
+            ],
+            [\strpos($sql, '!=') !== false,
                 'The %c!=%c operator is not standard. Use the %c<>%c operator instead.',
-            ),
-            array(\preg_match('/^SELECT\s/i', $sql) && \stripos($sql, 'WHERE') === false,
+            ],
+            [\preg_match('/^SELECT\s/i', $sql) && \stripos($sql, 'WHERE') === false,
                 'The %cSELECT%c statement has no %cWHERE%c clause and could examine many more rows than intended',
-            ),
+            ],
             static function () use ($sql) {
-                $matches = array();
+                $matches = [];
                 return \preg_match('/LIKE\s+[\'"](%.*?)[\'"]/i', $sql, $matches)
                     ? 'An argument has a leading wildcard character: %c' . $matches[1] . '%c and cannot use an index if one exists.'
                     : false;
             },
-            array(\preg_match('/LIMIT\s/i', $sql) && \stripos($sql, 'ORDER BY') === false,
+            [\preg_match('/LIMIT\s/i', $sql) && \stripos($sql, 'ORDER BY') === false,
                 '%cLIMIT%c without %cORDER BY%c causes non-deterministic results',
-            ),
-        ));
+            ],
+        ]);
     }
 
     /**
@@ -82,23 +82,23 @@ class SqlQueryAnalysis
     {
         if ($test instanceof Closure) {
             $test = $test();
-            $test = array(
+            $test = [
                 $test,
                 $test,
-            );
+            ];
         }
         if ($test[0] === false) {
             return;
         }
-        $params = array(
+        $params = [
             $test[1],
-        );
+        ];
         $cCount = \substr_count($params[0], '%c');
         for ($i = 0; $i < $cCount; $i += 2) {
             $params[] = 'font-family:monospace';
             $params[] = '';
         }
         $params[] = $this->debug->meta('uncollapse', false);
-        \call_user_func_array(array($this->debug, 'warn'), $params);
+        \call_user_func_array([$this->debug, 'warn'], $params);
     }
 }

@@ -45,14 +45,14 @@ abstract class AbstractValue extends AbstractComponent
     protected $optionsCurrent = array();
 
     /** @var list<Type::TYPE_*> */
-    protected $simpleTypes = array(
+    protected $simpleTypes = [
         Type::TYPE_ARRAY,
         Type::TYPE_BOOL,
         Type::TYPE_FLOAT,
         Type::TYPE_INT,
         Type::TYPE_NULL,
         Type::TYPE_STRING,
-    );
+    ];
 
     /**
      * Constructor
@@ -215,8 +215,8 @@ abstract class AbstractValue extends AbstractComponent
      */
     protected function doDump($val)
     {
-        $opts = $this->optionsCurrent;
-        $method = 'dump' . \ucfirst($opts['type']);
+        $type = $this->optionsCurrent['type'];
+        $method = 'dump' . \ucfirst($type);
         return $val instanceof Abstraction
             ? $this->dumpAbstraction($val)
             : $this->{$method}($val);
@@ -373,13 +373,13 @@ abstract class AbstractValue extends AbstractComponent
     }
 
     /**
-     * Split identifier into classname, operator, & identifier.
+     * Split identifier into classname, operator, & name.
      *
      * classname may be namespace\classname
      * identifier = classname, constant function, or property
      *
      * @param Abstraction|array|string $val  classname or classname(::|->)name (method/property/const)
-     * @param string                   $what ("classname"), "const", or "function"
+     * @param string                   $what ("classname"), "const", or "method"
      *
      * @return array
      */
@@ -388,22 +388,22 @@ abstract class AbstractValue extends AbstractComponent
         if ($val instanceof Abstraction) {
             $val = $val['value'];
         }
-        $parts = \array_fill_keys(array('classname', 'identifier', 'namespace', 'operator'), '');
+        $parts = \array_fill_keys(['classname', 'name', 'namespace', 'operator'], '');
         $parts['classname'] = $val;
         $matches = array();
         if (\is_array($val)) {
             $parts['classname'] = $val[0];
             $parts['operator'] = '::';
-            $parts['identifier'] = $val[1];
+            $parts['name'] = $val[1];
         } elseif (\preg_match('/^(.+)(::|->)(.+)$/', $val, $matches)) {
             $parts['classname'] = $matches[1];
             $parts['operator'] = $matches[2];
-            $parts['identifier'] = $matches[3];
-        } elseif (\in_array($what, array('const', 'function'), true)) {
+            $parts['name'] = $matches[3];
+        } elseif (\in_array($what, ['const', 'method', 'function'], true)) {
             \preg_match('/^(.+\\\\)?(.+)$/', $val, $matches);
             $parts['classname'] = '';
             $parts['namespace'] = $matches[1];
-            $parts['identifier'] = $matches[2];
+            $parts['name'] = $matches[2];
         }
         return $parts;
     }

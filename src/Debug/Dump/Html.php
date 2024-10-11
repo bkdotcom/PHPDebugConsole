@@ -75,7 +75,7 @@ class Html extends Base
         }
         $this->valDumper->string->detectFiles = $meta['detectFiles'];
         $this->logEntryAttribs = $this->debug->arrayUtil->mergeDeep(array(
-            'class' => array('m_' . $logEntry['method']),
+            'class' => ['m_' . $logEntry['method']],
             'data-channel' => $channelName !== $this->channelNameRoot
                 ? $channelName
                 : null,
@@ -179,7 +179,7 @@ class Html extends Base
             ));
             $meta['sanitizeFirst'] = false;
         }
-        return array($args, $meta);
+        return [$args, $meta];
     }
 
     /**
@@ -193,7 +193,7 @@ class Html extends Base
     {
         list($args, $meta) = $this->handleSubstitutions($logEntry);
         $attribs = \array_merge(array(
-            'class' => array(),
+            'class' => [],
             'role' => 'alert',
         ), $this->logEntryAttribs);
         $attribs['class'][] = 'alert-' . $meta['level'];
@@ -288,10 +288,10 @@ class Html extends Base
             'tableInfo' => array(),
         ), $logEntry['meta']);
         if ($logEntry['method'] === 'trace') {
-            $meta['onBuildRow'][] = array($this->helper, 'tableMarkupFunction');
+            $meta['onBuildRow'][] = [$this->helper, 'tableMarkupFunction'];
         }
         if ($logEntry->getMeta('inclContext')) {
-            $meta['onBuildRow'][] = array($this->helper, 'tableAddContextRow');
+            $meta['onBuildRow'][] = [$this->helper, 'tableAddContextRow'];
         }
         return $this->html->buildTag(
             'li',

@@ -27,7 +27,7 @@ class StopWatch
         'labels' => array(
             // label => array(accumulatedTime, lastStartedTime|null)
         ),
-        'stack' => array(),
+        'stack' => [],
     );
 
     /**
@@ -40,12 +40,12 @@ class StopWatch
         $requestTimeDefault = isset($_SERVER['REQUEST_TIME_FLOAT'])
             ? $_SERVER['REQUEST_TIME_FLOAT']
             : \microtime(true);
-        $this->timers['labels']['requestTime'] = array(
+        $this->timers['labels']['requestTime'] = [
             0,
             isset($vals['requestTime'])
                 ? $vals['requestTime']
                 : $requestTimeDefault,
-        );
+        ];
     }
 
     /**
@@ -64,7 +64,7 @@ class StopWatch
         if ($label === null) {
             $label = 'time';
             $elapsedMicro = $this->timers['stack']
-                ? array(0, \end($this->timers['stack']))
+                ? [0, \end($this->timers['stack'])]
                 : $this->timers['labels']['requestTime'];
         } elseif (isset($this->timers['labels'][$label])) {
             $elapsedMicro = $this->timers['labels'][$label];
@@ -88,8 +88,8 @@ class StopWatch
     public function reset()
     {
         $this->timers = array(
-            'labels' => \array_intersect_key($this->timers['labels'], \array_flip(array('requestTime'))),
-            'stack' => array(),
+            'labels' => \array_intersect_key($this->timers['labels'], \array_flip(['requestTime'])),
+            'stack' => [],
         );
     }
 
@@ -109,7 +109,7 @@ class StopWatch
         }
         if (isset($this->timers['labels'][$label]) === false) {
             // new label timer
-            $this->timers['labels'][$label] = array(0, \microtime(true));
+            $this->timers['labels'][$label] = [0, \microtime(true)];
         } elseif ($this->timers['labels'][$label][1] === null) {
             // paused timer -> unpause (no microtime)
             $this->timers['labels'][$label][1] = \microtime(true);
@@ -136,7 +136,7 @@ class StopWatch
             \array_pop($this->timers['stack']);
             return $elapsed;
         }
-        $this->timers['labels'][$labelOut] = array($elapsed, null);
+        $this->timers['labels'][$labelOut] = [$elapsed, null];
         return $elapsed;
     }
 }

@@ -114,9 +114,9 @@ class Wamp implements RouteInterface
         return array(
             Debug::EVENT_BOOTSTRAP => 'onBootstrap',
             Debug::EVENT_CONFIG => 'onConfig',
-            Debug::EVENT_LOG => array('onLog', PHP_INT_MAX * -1),
-            ErrorHandler::EVENT_ERROR => array('onError', -1),    // assumes errorhandler is using same dispatcher.. as should be
-            EventManager::EVENT_PHP_SHUTDOWN => array('onShutdown', PHP_INT_MAX * -1),
+            Debug::EVENT_LOG => ['onLog', PHP_INT_MAX * -1],
+            ErrorHandler::EVENT_ERROR => ['onError', -1],    // assumes errorhandler is using same dispatcher.. as should be
+            EventManager::EVENT_PHP_SHUTDOWN => ['onShutdown', PHP_INT_MAX * -1],
         );
     }
 
@@ -185,11 +185,11 @@ class Wamp implements RouteInterface
         $this->processLogEntry(new LogEntry(
             $this->debug->getChannel('phpError'),
             'errorNotConsoled',
-            array(
+            [
                 $error['typeStr'] . ':',
                 $error['message'],
                 $error['fileAndLine'],
-            ),
+            ],
             array(
                 'attribs' => array(
                     'class' => $error['type'] & $this->debug->getCfg('errorMask', Debug::CONFIG_DEBUG)
@@ -229,7 +229,7 @@ class Wamp implements RouteInterface
         $this->processLogEntry(new LogEntry(
             $this->debug,
             'endOutput',
-            array(),
+            [],
             array(
                 'responseCode' => \strpos($this->debug->getInterface(), 'http') !== false
                     ? $this->debug->getResponseCode()
@@ -294,7 +294,7 @@ class Wamp implements RouteInterface
             $meta = \array_merge($meta, $metaNew);
         }
         $this->processNewClasses($classesNew, $meta);
-        $this->wamp->publish($this->topic, array($logEntry['method'], $args, $meta));
+        $this->wamp->publish($this->topic, [$logEntry['method'], $args, $meta]);
     }
 
     /**
@@ -333,7 +333,7 @@ class Wamp implements RouteInterface
         $this->processLogEntryViaEvent(new LogEntry(
             $this->debug,
             'groupSummary',
-            array(),
+            [],
             array(
                 'priority' => $priority,
             )
@@ -344,7 +344,7 @@ class Wamp implements RouteInterface
         $this->processLogEntryViaEvent(new LogEntry(
             $this->debug,
             'groupEnd',
-            array(),
+            [],
             array(
                 'closesSummary' => true,
             )
@@ -370,11 +370,11 @@ class Wamp implements RouteInterface
         $this->processLogEntry(new LogEntry(
             $this->debug,
             'meta',
-            array(
+            [
                 array(
                     'classDefinitions' => $classDefinitions,
                 ),
-            )
+            ]
         ));
     }
 
@@ -394,9 +394,9 @@ class Wamp implements RouteInterface
         $this->processLogEntry(new LogEntry(
             $this->debug,
             'meta',
-            array(
+            [
                 $this->helper->getMeta(),
-            ),
+            ],
             $this->helper->getMetaConfig()
         ));
 

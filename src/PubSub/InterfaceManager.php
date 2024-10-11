@@ -88,16 +88,16 @@ class InterfaceManager
     {
         // test if single subscriber
         //   ie, 'eventName' => 'method',
-        //      or 'eventName' => array('method'), etc
+        //      or 'eventName' => ['method'], etc
         $subscriberInfo = self::normalizeSubscriber($interface, $mixed);
         if ($subscriberInfo) {
-            return array($subscriberInfo);
+            return [$subscriberInfo];
         }
         if (\is_array($mixed) === false) {
             return false;
         }
         // multiple subscribers
-        $eventSubscribers = array();
+        $eventSubscribers = [];
         /** @var mixed $mixed2 */
         foreach ($mixed as $mixed2) {
             $subscriberInfo = self::normalizeSubscriber($interface, $mixed2);
@@ -127,7 +127,7 @@ class InterfaceManager
             'priority' => Manager::DEFAULT_PRIORITY,
         );
         if (\is_string($mixed)) {
-            $subscriberInfo['callable'] = array($interface, $mixed);
+            $subscriberInfo['callable'] = [$interface, $mixed];
             return $subscriberInfo;
         }
         if ($mixed instanceof Closure) {
@@ -153,7 +153,7 @@ class InterfaceManager
         /** @var mixed */
         $callable = $subscriberInfo['callable'];
         if (\is_string($callable)) {
-            $subscriberInfo['callable'] = array($interface, $callable);
+            $subscriberInfo['callable'] = [$interface, $callable];
         }
         return \is_callable($subscriberInfo['callable'], true)
         	? $subscriberInfo

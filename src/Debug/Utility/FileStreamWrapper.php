@@ -62,7 +62,7 @@ class FileStreamWrapper extends FileStreamWrapperBase
     public function dir_opendir($path, $options = 0)
     {
         static::unregister();
-        $args = $this->popNull(array($path, $this->context));
+        $args = $this->popNull([$path, $this->context]);
         /** @var resource|false */
         $this->resource = \call_user_func_array('opendir', $args);
         static::register();
@@ -112,7 +112,7 @@ class FileStreamWrapper extends FileStreamWrapperBase
     {
         static::unregister();
         $isRecursive = (bool) ($options & STREAM_MKDIR_RECURSIVE);
-        $args = $this->popNull(array($path, $mode, $isRecursive, $this->context));
+        $args = $this->popNull([$path, $mode, $isRecursive, $this->context]);
         /** @var bool */
         $result = \call_user_func_array('mkdir', $args);
         static::register();
@@ -132,7 +132,7 @@ class FileStreamWrapper extends FileStreamWrapperBase
     public function rename($pathFrom, $pathTo)
     {
         static::unregister();
-        $args = $this->popNull(array($pathFrom, $pathTo, $this->context));
+        $args = $this->popNull([$pathFrom, $pathTo, $this->context]);
         /** @var bool */
         $result = \call_user_func_array('rename', $args);
         static::register();
@@ -154,7 +154,7 @@ class FileStreamWrapper extends FileStreamWrapperBase
     public function rmdir($path, $options)
     {
         static::unregister();
-        $args = $this->popNull(array($path, $this->context));
+        $args = $this->popNull([$path, $this->context]);
         /** @var bool */
         $result = \call_user_func_array('rmdir', $args);
         static::register();
@@ -242,14 +242,14 @@ class FileStreamWrapper extends FileStreamWrapperBase
         if (!$this->resource) {
             return false;
         }
-        $validOperations = array(
+        $validOperations = [
             LOCK_SH,
             LOCK_EX,
             LOCK_UN,
             LOCK_SH | LOCK_NB,
             LOCK_EX | LOCK_NB,
             LOCK_UN | LOCK_NB,
-        );
+        ];
         if ($operation === 0) {
             // phpunit 9.5.5 issue ??
             $operation = LOCK_EX;

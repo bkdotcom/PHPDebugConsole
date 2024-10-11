@@ -140,7 +140,7 @@ class PropertiesDom
     private function getProps($obj)
     {
         $dump = \print_r($obj, true);
-        $matches = array();
+        $matches = [];
         \preg_match_all('/^\s+\[(.+?)\] => /m', $dump, $matches);
         $props = \array_fill_keys($matches[1], null);
         if ($obj instanceof DOMNode) {

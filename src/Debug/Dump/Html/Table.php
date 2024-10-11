@@ -81,7 +81,7 @@ class Table
     {
         $tBody = '';
         $this->options['onBuildRow'] = \is_callable($this->options['onBuildRow'])
-            ? array($this->options['onBuildRow'])
+            ? [$this->options['onBuildRow']]
             : (array) $this->options['onBuildRow'];
         foreach ($rows as $k => $row) {
             $rowInfo = \array_merge(
@@ -208,7 +208,7 @@ class Table
         $str .= $this->debug->html->buildTag(
             'th',
             $this->debug->arrayUtil->mergeDeep($rowKeyParsed['attribs'], array(
-                'class' => array('t_key', 'text-right'),
+                'class' => ['t_key', 'text-right'],
                 'scope' => 'row',
             )),
             $rowKeyParsed['innerhtml']

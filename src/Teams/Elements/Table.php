@@ -250,7 +250,7 @@ class Table extends AbstractElement
                 self::getDebugType($rows)
             ));
         }
-        $rowsNew = array();
+        $rowsNew = [];
         /** @var mixed $row */
         foreach ($rows as $row) {
             $rowsNew[] = self::asRow($row);
@@ -270,7 +270,7 @@ class Table extends AbstractElement
      */
     private static function assertWidth($val, $method)
     {
-        $tests = array(
+        $tests = [
             static function ($val) {
                 return $val === null;
             },
@@ -281,7 +281,7 @@ class Table extends AbstractElement
                 $isStrOrNum = \is_string($val) || \is_numeric($val);
                 return $isStrOrNum && \preg_match('/^\d+(.\d+)?$/', (string) $val) === 1;
             },
-        );
+        ];
         $message = $method . ' - width should be number representing relative width, or pixel value';
         self::assertAnyOf($val, $tests, $message);
     }

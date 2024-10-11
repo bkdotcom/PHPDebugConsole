@@ -13,6 +13,7 @@
 namespace bdk\Debug\Collector\SimpleCache;
 
 use bdk\Debug\AbstractComponent;
+use bdk\Debug\Utility\Php as PhpUtil;
 use Exception;
 
 /**
@@ -51,7 +52,7 @@ class CallInfo extends AbstractComponent
     protected $timeStart;
 
     /** @var list<string> */
-    protected $readOnly = array(
+    protected $readOnly = [
         'duration',
         'exception',
         'keyOrKeys',
@@ -61,7 +62,7 @@ class CallInfo extends AbstractComponent
         'method',
         'timeEnd',
         'timeStart',
-    );
+    ];
 
     /**
      * @param string $method    method called
@@ -98,7 +99,7 @@ class CallInfo extends AbstractComponent
      */
     public function end($exception = null)
     {
-        \bdk\Debug\Utility\Php::assertType($exception, 'Exception');
+        PhpUtil::assertType($exception, 'Exception');
 
         $this->exception = $exception;
         $this->timeEnd = \microtime(true);

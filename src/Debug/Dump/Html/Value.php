@@ -71,7 +71,7 @@ class Value extends BaseValue
         if ($date) {
             $this->optionSet('postDump', function ($dumped, $opts) use ($val, $date) {
                 $attribsContainer = array(
-                    'class' => array('timestamp', 'value-container'),
+                    'class' => ['timestamp', 'value-container'],
                     'title' => $date,
                 );
                 if ($opts['tagName'] === 'td') {
@@ -118,6 +118,7 @@ class Value extends BaseValue
 
     /**
      * Wrap classname in span.classname
+     *
      * if namespaced additionally wrap namespace in span.namespace
      * If callable, also wrap with .t_operator and .t_identifier
      *
@@ -131,7 +132,7 @@ class Value extends BaseValue
      */
     public function markupIdentifier($val, $what = 'classname', $tagName = 'span', $attribs = array(), $wbr = false)
     {
-        $parts = \array_map(array($this->string, 'dump'), $this->parseIdentifier($val, $what));
+        $parts = \array_map([$this->string, 'dump'], $this->parseIdentifier($val, $what));
         $class = 'classname';
         $classOrNamespace = $this->wrapNamespace($parts['classname']);
         if ($parts['namespace']) {
@@ -141,16 +142,16 @@ class Value extends BaseValue
         $classOrNamespace = $this->html->buildTag(
             $tagName,
             $this->debug->arrayUtil->mergeDeep(array(
-                'class' => array($class),
+                'class' => [$class],
             ), (array) $attribs),
             $classOrNamespace
         ) . '<wbr />';
         $classOrNamespace = \preg_replace('#<' . $tagName . '[^>]*></' . $tagName . '><wbr />#', '', $classOrNamespace);
-        $parts2 = \array_filter(\array_intersect_key($parts, \array_flip(array('operator', 'identifier'))));
+        $parts2 = \array_filter(\array_intersect_key($parts, \array_flip(['operator', 'name'])));
         foreach ($parts2 as $key => $value) {
             $parts[$key] = '<span class="t_' . $key . '">' . $value . '</span>';
         }
-        $html = \implode($parts['operator'], \array_filter(array($classOrNamespace, $parts['identifier'])));
+        $html = \implode($parts['operator'], \array_filter([$classOrNamespace, $parts['name']]));
         return $wbr === false
             ? \str_replace('<wbr />', '', $html)
             : $html;
@@ -168,7 +169,7 @@ class Value extends BaseValue
     {
         if ($what === 'attribs' && empty($val['class'])) {
             // make sure class is set
-            $val['class'] = array();
+            $val['class'] = [];
         }
         parent::optionSet($what, $val);
     }
@@ -397,7 +398,7 @@ class Value extends BaseValue
     protected function getPerValueOptions($val, $opts)
     {
         $attribs = array(
-            'class' => array(),
+            'class' => [],
         );
         if ($val instanceof Abstraction && \is_array($val['attribs'])) {
             $attribs = \array_merge(

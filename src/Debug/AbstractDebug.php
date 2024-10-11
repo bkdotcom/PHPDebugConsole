@@ -53,10 +53,10 @@ abstract class AbstractDebug
     protected $rootInstance;
 
     /** @var list<string> */
-    protected $readOnly = array(
+    protected $readOnly = [
         'parentInstance',
         'rootInstance',
-    );
+    ];
 
     /**
      * Constructor
@@ -122,7 +122,7 @@ abstract class AbstractDebug
         if (!self::$instance) {
             new static();
         }
-        return \call_user_func_array(array(self::$instance, $methodName), $args);
+        return \call_user_func_array([self::$instance, $methodName], $args);
     }
 
     /**
@@ -186,7 +186,7 @@ abstract class AbstractDebug
                 $this->cfg['logServerKeys'] = array();
                 return $val;
             },
-            'serviceProvider' => array($this, 'onCfgServiceProvider'),
+            'serviceProvider' => [$this, 'onCfgServiceProvider'],
         ), $cfg);
         foreach ($valActions as $key => $callable) {
             /** @psalm-suppress TooManyArguments */
@@ -304,8 +304,8 @@ abstract class AbstractDebug
         $this->bootstrapContainer($cfgBootstrap);
 
         $this->config = $this->container['config'];
-        $this->container->setCfg('onInvoke', array($this->config, 'onContainerInvoke'));
-        $this->serviceContainer->setCfg('onInvoke', array($this->config, 'onContainerInvoke'));
+        $this->container->setCfg('onInvoke', [$this->config, 'onContainerInvoke']);
+        $this->serviceContainer->setCfg('onInvoke', [$this->config, 'onContainerInvoke']);
         $this->eventManager->addSubscriberInterface($this->container['pluginManager']);
 
         if (!$this->parentInstance) {
@@ -316,7 +316,7 @@ abstract class AbstractDebug
             $this->data->set('entryCountInitial', $this->data->get('log/__count__'));
         }
 
-        $this->eventManager->subscribe(Debug::EVENT_CONFIG, array($this, 'onConfig'));
+        $this->eventManager->subscribe(Debug::EVENT_CONFIG, [$this, 'onConfig']);
         $this->config->set($cfg, Debug::CONFIG_NO_RETURN);
         $this->eventManager->publish(Debug::EVENT_BOOTSTRAP, $this);
     }

@@ -96,7 +96,7 @@ class WampCrate
         if ($this->detectFiles) {
             $meta['foundFiles'] = $this->foundFiles();
         }
-        return array($args, $meta, $this->classesNew);
+        return [$args, $meta, $this->classesNew];
     }
 
     /**

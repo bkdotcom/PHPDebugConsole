@@ -38,7 +38,7 @@ class Helper
             summary ends with empty whitespace line or "." followed by \n
         */
         $split = \preg_split('/(\.[\r\n]+|[\r\n]{2})/', $comment, 2, PREG_SPLIT_DELIM_CAPTURE);
-        $split = \array_replace(array('', '', ''), $split);
+        $split = \array_replace(['', '', ''], $split);
         // assume that summary and desc won't be "0"..  remove empty value and merge
         return \array_filter(array(
             'desc' => self::trimDesc($split[2]),

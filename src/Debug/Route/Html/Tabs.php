@@ -45,8 +45,8 @@ class Tabs
     public function buildTabList()
     {
         $channels = $this->debug->getChannelsTop();
-        \uasort($channels, array($this, 'sortChannelCallback'));
-        $tabs = array();
+        \uasort($channels, [$this, 'sortChannelCallback']);
+        $tabs = [];
         foreach ($channels as $instance) {
             if ($instance->getCfg('output', Debug::CONFIG_DEBUG)) {
                 $tabs[] = $this->buildTab($instance);
@@ -71,7 +71,7 @@ class Tabs
         */
         $this->debug->arrayUtil->sortWithOrder(
             $channels,
-            array('Request / Response', 'Files'),
+            ['Request / Response', 'Files'],
             'key'
         );
         $html = '<div class="tab-panes"' . ($this->route->getCfg('outputScript') ? ' style="display:none;"' : '') . '>' . "\n";

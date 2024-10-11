@@ -49,7 +49,7 @@ class FulfilledPromise extends Promise // implements PromiseInterface
 
         $queue = self::queue();
         $result = $this->result;
-        $promise = new Promise(array($queue, 'run'));
+        $promise = new Promise([$queue, 'run']);
         $queue->add(static function () use ($promise, $result, $onFulfilled) {
             if ($promise->isSettled()) {
                 return;

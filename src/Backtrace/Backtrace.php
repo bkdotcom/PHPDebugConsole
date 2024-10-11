@@ -78,7 +78,7 @@ class Backtrace
         $limit = $limit ?: null;
         $trace = $exception
             ? self::getExceptionTrace($exception)
-            : (\array_reverse(Xdebug::getFunctionStack() ?: array())
+            : (\array_reverse(Xdebug::getFunctionStack() ?: [])
                 ?: \debug_backtrace($debugBacktraceOpts, $limit > 0 ? $limit + 2 : 0));
         $trace = Normalizer::normalize($trace);
         $trace = SkipInternal::removeInternalFrames($trace);
@@ -185,11 +185,11 @@ class Backtrace
             $return['classCalled'] = $return['class'];
         }
         if (isset($backtrace[$iFileLine])) {
-            $fileLineVals = \array_intersect_key($backtrace[$iFileLine], \array_flip(array(
+            $fileLineVals = \array_intersect_key($backtrace[$iFileLine], \array_flip([
                 'evalLine',
                 'file',
                 'line',
-            )));
+            ]));
             $return = \array_merge($return, $fileLineVals);
         }
         if ($return['type'] === '->') {
@@ -235,14 +235,14 @@ class Backtrace
     private static function getExceptionTrace($exception)
     {
         if ($exception instanceof ParseError) {
-            return array();
+            return [];
         }
         $trace = $exception->getTrace();
         $fileLine = array(
             'file' => $exception->getFile(),
             'line' => $exception->getLine(),
         );
-        if (\array_intersect_assoc($fileLine, \reset($trace) ?: array()) !== $fileLine) {
+        if (\array_intersect_assoc($fileLine, \reset($trace) ?: []) !== $fileLine) {
             \array_unshift($trace, $fileLine);
         }
         return $trace;

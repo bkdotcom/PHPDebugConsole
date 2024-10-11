@@ -30,10 +30,10 @@ class Table implements SubscriberInterface
     private $logEntry;
 
     /** @var string[] */
-    protected $methods = array(
+    protected $methods = [
         'table',
         'doTable',
-    );
+    ];
 
     /**
      * Constructor
@@ -92,7 +92,7 @@ class Table implements SubscriberInterface
         $maxDepth = isset($cfg['maxDepth'])
             ? $cfg['maxDepth']
             : $this->debug->getCfg('maxDepth');
-        if (\in_array($maxDepth, array(1, 2), true)) {
+        if (\in_array($maxDepth, [1, 2], true)) {
             $cfg['maxDepth'] = 3;
         }
         if ($cfg) {
@@ -126,7 +126,7 @@ class Table implements SubscriberInterface
         );
 
         if ($table->haveRows()) {
-            $logEntry['args'] = array($table->getRows());
+            $logEntry['args'] = [$table->getRows()];
             $logEntry['meta'] = $table->getMeta();
             return;
         }
@@ -136,7 +136,7 @@ class Table implements SubscriberInterface
         if ($logEntry->getMeta('caption')) {
             \array_unshift($logEntry['args'], $logEntry->getMeta('caption'));
         } elseif (\count($logEntry['args']) === 0) {
-            $logEntry['args'] = array('No arguments passed to table()');
+            $logEntry['args'] = ['No arguments passed to table()'];
         }
         $logEntry['meta'] = $table->getMeta();
     }
@@ -154,15 +154,15 @@ class Table implements SubscriberInterface
         $args = $this->logEntry['args'];
         $argCount = \count($args);
         $other = Abstracter::UNDEFINED;
-        $logEntry['args'] = array();
+        $logEntry['args'] = [];
         for ($i = 0; $i < $argCount; $i++) {
             $isOther = $this->testArg($args[$i]);
             if ($isOther && $other === Abstracter::UNDEFINED) {
                 $other = $args[$i];
             }
         }
-        if ($logEntry['args'] === array() && $other !== Abstracter::UNDEFINED) {
-            $logEntry['args'] = array($other);
+        if ($logEntry['args'] === [] && $other !== Abstracter::UNDEFINED) {
+            $logEntry['args'] = [$other];
         }
     }
 
@@ -199,8 +199,8 @@ class Table implements SubscriberInterface
      */
     private function testArgArray($val)
     {
-        if ($this->logEntry['args'] === array()) {
-            $this->logEntry['args'] = array($val);
+        if ($this->logEntry['args'] === []) {
+            $this->logEntry['args'] = [$val];
         } elseif (!$this->logEntry->getMeta('columns')) {
             $this->logEntry->setMeta('columns', $val);
         }
@@ -216,8 +216,8 @@ class Table implements SubscriberInterface
     private function testArgObject($val)
     {
         // Traversable or other
-        if ($this->logEntry['args'] === array()) {
-            $this->logEntry['args'] = array($val);
+        if ($this->logEntry['args'] === []) {
+            $this->logEntry['args'] = [$val];
         }
     }
 }

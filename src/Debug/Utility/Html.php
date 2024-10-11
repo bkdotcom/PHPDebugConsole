@@ -35,9 +35,9 @@ class Html
      *
      * @var array
      */
-    public static $tagsEmpty = array(
+    public static $tagsEmpty = [
         'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr',
-    );
+    ];
 
     /**
      * The presence of these attributes = true / absence = false
@@ -48,7 +48,7 @@ class Html
      *
      * @link https://developer.mozilla.org/en-US/docs/Glossary/Boolean/HTML
      */
-    public static $htmlBoolAttr = array(
+    public static $htmlBoolAttr = [
         // GLOBAL
         'hidden', 'itemscope',
 
@@ -78,14 +78,14 @@ class Html
         'scrolling',// <iframe>
         'seamless', // <iframe> - removed from draft
         'sortable', // <table> - removed from draft
-    );
+    ];
 
     /**
      * Enum attributes that behave like bool, but have "true" / "false" value
      *
      * @var array
      */
-    public static $htmlBoolAttrEnum = array(
+    public static $htmlBoolAttrEnum = [
         'autocapitalize', // on|off (other values also accepted)
         'autocomplete', // on|off (other values also accepted)
         'translate', // yes|no
@@ -93,7 +93,7 @@ class Html
         // "true"/"false" :
         'aria-checked', 'aria-expanded', 'aria-grabbed', 'aria-hidden', 'aria-pressed', 'aria-selected',
         'contenteditable', 'draggable', 'spellcheck',
-    );
+    ];
 
     /**
      * Build attribute string

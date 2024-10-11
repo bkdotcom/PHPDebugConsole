@@ -76,9 +76,9 @@ class Cake4 extends BasePlugin
         $config = \array_merge(array(
             'errorHandler' => array(
                 'continueToPrevHandler' => false,
-                'onError' => array($this, 'onError'),
+                'onError' => [$this, 'onError'],
             ),
-            'onMiddleware' => array($this, 'onMiddleware'),
+            'onMiddleware' => [$this, 'onMiddleware'],
         ), Configure::read('PHPDebugConsole', array()));
         $this->debug = new Debug($config);
 

@@ -93,7 +93,7 @@ class CacheEventsSubscriber
     public function subscribe(Dispatcher $dispatcher)
     {
         foreach (\array_keys($this->classMap) as $eventClass) {
-            $dispatcher->listen($eventClass, array($this, 'onCacheEvent'));
+            $dispatcher->listen($eventClass, [$this, 'onCacheEvent']);
         }
     }
 }

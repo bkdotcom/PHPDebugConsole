@@ -85,7 +85,7 @@ class Type
             case self::TYPE_ARRAY:
                 return $this->getTypeArray($val);
             case self::TYPE_BOOL:
-                return array(self::TYPE_BOOL, \json_encode($val));
+                return [self::TYPE_BOOL, \json_encode($val)];
             case self::TYPE_FLOAT:
                 return $this->getTypeFloat($val);
             case self::TYPE_INT:
@@ -93,13 +93,13 @@ class Type
             case self::TYPE_OBJECT:
                 return $this->getTypeObject($val);
             case self::TYPE_RESOURCE:
-                return array(self::TYPE_RESOURCE, self::TYPE_RAW);
+                return [self::TYPE_RESOURCE, self::TYPE_RAW];
             case self::TYPE_STRING:
                 return $this->abstracter->abstractString->getType($val);
             case self::TYPE_UNKNOWN:
                 return $this->getTypeUnknown($val);
             default:
-                return array($type, null);
+                return [$type, null];
         }
     }
 
@@ -131,7 +131,7 @@ class Type
         if (\count($val) === 2 && $this->abstracter->debug->php->isCallable($val, Php::IS_CALLABLE_ARRAY_ONLY)) {
             $type = self::TYPE_CALLABLE;
         }
-        return array($type, $typeMore);
+        return [$type, $typeMore];
     }
 
     /**
@@ -154,7 +154,7 @@ class Type
         } elseif ($this->isTimestamp($val)) {
             $typeMore = self::TYPE_TIMESTAMP;
         }
-        return array(self::TYPE_FLOAT, $typeMore);
+        return [self::TYPE_FLOAT, $typeMore];
     }
 
     /**
@@ -171,7 +171,7 @@ class Type
         $typeMore = $this->isTimestamp($val)
             ? self::TYPE_TIMESTAMP
             : null;
-        return array(self::TYPE_INT, $typeMore);
+        return [self::TYPE_INT, $typeMore];
     }
 
     /**
@@ -189,7 +189,7 @@ class Type
             $type = $object['type'];
             $typeMore = $object['typeMore'];
         }
-        return array($type, $typeMore);
+        return [$type, $typeMore];
     }
 
     /**
@@ -238,6 +238,6 @@ class Type
             $type = self::TYPE_RESOURCE;
             $typeMore = self::TYPE_RAW;  // needs abstracted
         }
-        return array($type, $typeMore);
+        return [$type, $typeMore];
     }
 }

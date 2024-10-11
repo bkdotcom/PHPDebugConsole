@@ -132,7 +132,7 @@ abstract class AbstractSection
             '3_name' => $this->valDumper->dump($name, array(
                 'addQuotes' => \preg_match('#[\s\r\n]#u', $name) === 1 || $name === '',
                 'attribs' => array(
-                    'class' => array('t_identifier'),
+                    'class' => ['t_identifier'],
                     'title' => $cfg['phpDocOutput']
                         ? $this->helper->dumpPhpDoc($info['phpDoc']['summary'])
                         : '',
@@ -211,7 +211,7 @@ abstract class AbstractSection
             $keys = \array_keys($itemsFiltered);
             $items = \array_diff_key($items, $itemsFiltered);
             $itemOutCount += \count($itemsFiltered);
-            $html .= $itemsFiltered && \in_array($classNameCur, array($className, 'stdClass'), true) === false
+            $html .= $itemsFiltered && \in_array($classNameCur, [$className, 'stdClass'], true) === false
                 ? $this->buildInheritedFromHeading($classNameCur)
                 : '';
             $html .= $this->dumpItemsFiltered($abs, $keys, $cfg);

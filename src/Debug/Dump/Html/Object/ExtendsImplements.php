@@ -65,7 +65,7 @@ class ExtendsImplements
      *
      * @return string html fragment
      */
-    public function dumpImplements(ObjectAbstraction $abs) //  array $interfacesCollapse = array()
+    public function dumpImplements(ObjectAbstraction $abs)
     {
         $interfaces = $this->getItems($abs, 'implements');
         return $this->dumpExtendsImplements($interfaces, 'implements', 'implements', 'interface', $abs['interfacesCollapse']);

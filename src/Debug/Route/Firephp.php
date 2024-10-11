@@ -28,11 +28,11 @@ class Firephp extends AbstractRoute
 
     /** @var array<string,mixed> */
     protected $cfg = array(
-        'channels' => array('*'),
-        'channelsExclude' => array(
+        'channels' => ['*'],
+        'channelsExclude' => [
             'events',
             'files',
-        ),
+        ],
         'messageLimit' => 99999,
     );
 
@@ -79,13 +79,13 @@ class Firephp extends AbstractRoute
         $this->dumper->crateRaw = false;
         $this->outputEvent = $event;
         $this->data = $this->debug->data->get();
-        $event['headers'][] = array('X-Wf-Protocol-1', 'http://meta.wildfirehq.org/Protocol/JsonStream/0.2');
-        $event['headers'][] = array('X-Wf-1-Plugin-1', 'http://meta.firephp.org/Wildfire/Plugin/FirePHP/Library-FirePHPCore/' . self::FIREPHP_PROTO_VER);
-        $event['headers'][] = array('X-Wf-1-Structure-1', 'http://meta.firephp.org/Wildfire/Structure/FirePHP/FirebugConsole/0.1');
+        $event['headers'][] = ['X-Wf-Protocol-1', 'http://meta.wildfirehq.org/Protocol/JsonStream/0.2'];
+        $event['headers'][] = ['X-Wf-1-Plugin-1', 'http://meta.firephp.org/Wildfire/Plugin/FirePHP/Library-FirePHPCore/' . self::FIREPHP_PROTO_VER];
+        $event['headers'][] = ['X-Wf-1-Structure-1', 'http://meta.firephp.org/Wildfire/Structure/FirePHP/FirebugConsole/0.1'];
         $this->processLogEntryViaEvent(new LogEntry(
             $this->debug,
             'groupCollapsed',
-            array('PHP: ' . $this->getRequestMethodUri())
+            ['PHP: ' . $this->getRequestMethodUri()]
         ));
         $this->processAlerts();
         $this->processSummary();
@@ -94,7 +94,7 @@ class Firephp extends AbstractRoute
             $this->debug,
             'groupEnd'
         ));
-        $event['headers'][] = array('X-Wf-1-Index', $this->messageIndex);
+        $event['headers'][] = ['X-Wf-1-Index', $this->messageIndex];
         $this->data = array();
         $this->dumper->crateRaw = true;
     }
@@ -114,13 +114,13 @@ class Firephp extends AbstractRoute
         $value = null;
         if ($method === 'alert') {
             $value = $this->methodAlert($logEntry);
-        } elseif (\in_array($method, array('group', 'groupCollapsed'), true)) {
+        } elseif (\in_array($method, ['group', 'groupCollapsed'], true)) {
             $logEntry['firephpMeta']['Label'] = $args[0];
             $logEntry['firephpMeta']['Collapsed'] = $method === 'groupCollapsed'
                 // yes, strings
                 ? 'true'
                 : 'false';
-        } elseif (\in_array($method, array('profileEnd', 'table', 'trace'), true)) {
+        } elseif (\in_array($method, ['profileEnd', 'table', 'trace'], true)) {
             $value = $this->methodTabular($logEntry);
         } elseif (\count($args)) {
             $this->dumper->processLogEntry($logEntry);
@@ -201,9 +201,9 @@ class Firephp extends AbstractRoute
         $value = $args[0];
         if ($firephpTable) {
             $value = array();
-            $value[] = \array_merge(array(''), \array_keys(\current($args[0])));
+            $value[] = \array_merge([''], \array_keys(\current($args[0])));
             foreach ($args[0] as $k => $row) {
-                $value[] = \array_merge(array($k), \array_values($row));
+                $value[] = \array_merge([$k], \array_values($row));
             }
         }
         return $this->dumper->valDumper->dump($value);
@@ -220,10 +220,10 @@ class Firephp extends AbstractRoute
     private function setFirephpHeader($meta, $value = null)
     {
         \ksort($meta);  // for consistency / testing
-        $msg = \json_encode(array(
+        $msg = \json_encode([
             $meta,
             $value,
-        ), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         $structureIndex = 1;    // refers to X-Wf-1-Structure-1
         $parts = \explode("\n", \rtrim(\chunk_split($msg, 5000, "\n")));
         $numParts = \count($parts);
@@ -234,7 +234,7 @@ class Firephp extends AbstractRoute
             $headerValue = ($i === 0 ? \strlen($msg) : '')
                 . '|' . $part . '|'
                 . ($i < $numParts - 1 ? '\\' : '');
-            $this->outputEvent['headers'][] = array($headerName, $headerValue);
+            $this->outputEvent['headers'][] = [$headerName, $headerValue];
         }
     }
 

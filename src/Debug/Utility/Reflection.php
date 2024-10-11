@@ -313,9 +313,9 @@ class Reflection
      */
     private static function getReflectorFromString($string)
     {
-        $matches = array();
+        $matches = [];
         \preg_match(self::$regex, $string, $matches);
-        $defaults = \array_fill_keys(array('class', 'constant', 'property', 'method', 'function'), null);
+        $defaults = \array_fill_keys(['class', 'constant', 'property', 'method', 'function'], null);
         $matches = \array_merge($defaults, $matches);
         if ($matches['method']) {
             return new ReflectionMethod($matches['class'], $matches['method']);

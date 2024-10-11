@@ -78,7 +78,7 @@ class StringUtil
         } elseif (\in_array($operator, $operators, true) === false) {
             throw new InvalidArgumentException(__METHOD__ . ' - Invalid operator passed');
         }
-        if (\in_array($operator, array('===', '!=='), true) === false) {
+        if (\in_array($operator, ['===', '!=='], true) === false) {
             list($valA, $valB) = static::compareTypeJuggle($valA, $valB);
         }
         return static::doCompare($valA, $valB, $operator);
@@ -125,7 +125,7 @@ class StringUtil
         static::interpolateAssertArgs($message, $context);
         self::$interpContext = $context;
         self::$interpIsArrayAccess = \is_array($context) || $context instanceof \ArrayAccess;
-        $matches = array();
+        $matches = [];
         \preg_match_all('/\{([a-zA-Z0-9._\\/-]+)\}/', (string) $message, $matches);
         $placeholders = \array_unique($matches[1]);
         $replaceVals = self::interpolateValues($placeholders);

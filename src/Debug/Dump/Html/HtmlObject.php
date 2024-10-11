@@ -80,14 +80,14 @@ class HtmlObject
         $this->phpDoc = new PhpDoc($valDumper, $helper);
         $this->properties = new Properties($valDumper, $helper, $html);
         $this->sectionCallables = array(
-            'attributes' => array($this, 'dumpAttributes'),
-            'cases' => array($this->cases, 'dump'),
-            'constants' => array($this->constants, 'dump'),
-            'extends' => array($this->extendsImplements, 'dumpExtends'),
-            'implements' => array($this->extendsImplements, 'dumpImplements'),
-            'methods' => array($this->methods, 'dump'),
-            'phpDoc' => array($this->phpDoc, 'dump'),
-            'properties' => array($this->properties, 'dump'),
+            'attributes' => [$this, 'dumpAttributes'],
+            'cases' => [$this->cases, 'dump'],
+            'constants' => [$this->constants, 'dump'],
+            'extends' => [$this->extendsImplements, 'dumpExtends'],
+            'implements' => [$this->extendsImplements, 'dumpImplements'],
+            'methods' => [$this->methods, 'dump'],
+            'phpDoc' => [$this->phpDoc, 'dump'],
+            'properties' => [$this->properties, 'dump'],
         );
     }
 
@@ -139,12 +139,12 @@ class HtmlObject
     {
         // remove <dt>'s that have no <dd>'
         $html = \preg_replace('#(?:<dt>(?:phpDoc)</dt>\n)+(<dt|</dl)#', '$1', $html);
-        $html = \str_replace(array(
+        $html = \str_replace([
             ' data-attributes="null"',
             ' data-chars="[]"',
             ' data-declared-prev="null"',
             ' data-inherited-from="null"',
-        ), '', $html);
+        ], '', $html);
         return $html;
     }
 
@@ -283,7 +283,7 @@ class HtmlObject
         $len = 0;
         $val = $this->getToStringVal($abs, $len);
         $valAppend = '';
-        $classes = array('t_stringified');
+        $classes = ['t_stringified'];
         if ($val === $abs['className']) {
             return '';
         }
@@ -298,11 +298,11 @@ class HtmlObject
             'span',
             array(
                 'class' => \array_merge($classes, $parsed['attribs']['class']),
-                'title' => \implode(' : ', \array_filter(array(
+                'title' => \implode(' : ', \array_filter([
                     !$abs['stringified'] ? '__toString()' : null,
                     // ie a timestamp will have a human readable date in title
                     isset($parsed['attribs']['title']) ? $parsed['attribs']['title'] : null,
-                ))),
+                ])),
             ),
             $parsed['innerhtml'] . $valAppend
         ) . "\n";

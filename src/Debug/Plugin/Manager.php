@@ -33,13 +33,13 @@ class Manager implements SubscriberInterface, PluginInterface
     use CustomMethodTrait;
 
     /** @var string[] */
-    protected $methods = array(
+    protected $methods = [
         'addPlugin',
         'addPlugins',
         'hasPlugin',
         'getPlugin',
         'removePlugin',
-    );
+    ];
 
     /** @var SplObjectStorage */
     protected $registeredPlugins;
@@ -385,6 +385,6 @@ class Manager implements SubscriberInterface, PluginInterface
     {
         return $mixed instanceof Closure
             ? $mixed
-            : array($plugin, $mixed);
+            : [$plugin, $mixed];
     }
 }

@@ -83,10 +83,10 @@ class Teams extends AbstractErrorRoute
      */
     private function buildBacktraceTable(Error $error)
     {
-        $rows = array(
-            (new TeamsTableRow(array('file', 'line', 'function')))
+        $rows = [
+            (new TeamsTableRow(['file', 'line', 'function']))
                 ->withStyle(Enums::CONTAINER_STYLE_ATTENTION),
-        );
+        ];
         $frameDefault = array('file' => null, 'line' => null, 'function' => null);
         foreach ($error['backtrace'] as $frame) {
             $frame = \array_merge($frameDefault, $frame);
@@ -132,7 +132,7 @@ class Teams extends AbstractErrorRoute
         if ($error->isFatal() && $error['backtrace']) {
             $card = $card->withAddedElement($this->buildBacktraceTable($error));
         }
-        return array($card);
+        return [$card];
     }
 
     /**

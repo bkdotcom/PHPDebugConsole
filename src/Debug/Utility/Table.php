@@ -445,7 +445,7 @@ class Table
     {
         unset($rowInfo['classes']);
         $rowInfo = \array_filter($rowInfo, static function ($val) {
-            return \in_array($val, array(null, false, ''), true) === false;
+            return \in_array($val, [null, false, ''], true) === false;
         });
         if (!$rowInfo) {
             return;

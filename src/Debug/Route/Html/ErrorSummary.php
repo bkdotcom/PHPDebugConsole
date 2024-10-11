@@ -106,7 +106,7 @@ class ErrorSummary
                 ? $this->routeHtml->debug->getChannel('phpError')
                 : $this->debug,
             'alert',
-            array($summary),
+            [$summary],
             array(
                 'attribs' => array(
                     'class' => array(

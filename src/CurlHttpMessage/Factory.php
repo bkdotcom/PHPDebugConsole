@@ -40,11 +40,11 @@ class Factory
     public function __construct($factories = array())
     {
         $this->factories = \array_merge(array(
-            'curlReqRes' => array($this, 'buildCurlReqRes'),
-            'request' => array($this, 'buildRequest'),
-            'response' => array($this, 'buildResponse'),
-            'stack' => array($this, 'buildStack'),
-            'stream' => array($this, 'buildStream'),
+            'curlReqRes' => [$this, 'buildCurlReqRes'],
+            'request' => [$this, 'buildRequest'],
+            'response' => [$this, 'buildResponse'],
+            'stack' => [$this, 'buildStack'],
+            'stream' => [$this, 'buildStream'],
         ), $factories);
     }
 

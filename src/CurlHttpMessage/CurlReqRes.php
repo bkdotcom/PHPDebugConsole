@@ -339,14 +339,14 @@ class CurlReqRes
      */
     protected function finishError()
     {
-        static $networkErrors = array(
+        static $networkErrors = [
             CURLE_COULDNT_CONNECT,
             CURLE_COULDNT_RESOLVE_HOST,
             CURLE_COULDNT_RESOLVE_PROXY,
             CURLE_GOT_NOTHING,
             CURLE_OPERATION_TIMEOUTED,
             CURLE_SSL_CONNECT_ERROR,
-        );
+        ];
 
         $infoUrl = 'see https://curl.haxx.se/libcurl/c/libcurl-errors.html';
         $message = \sprintf('cURL error %s: %s (%s)', $this->errno, $this->error, $infoUrl);

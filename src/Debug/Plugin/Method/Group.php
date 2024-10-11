@@ -36,13 +36,13 @@ class Group implements SubscriberInterface
     protected $groupStack;
 
     /** @var string[] */
-    protected $methods = array(
+    protected $methods = [
         'group',
         'groupCollapsed',
         'groupEnd',
         'groupSummary',
         'groupUncollapse',
-    );
+    ];
 
     /**
      * Constructor
@@ -67,17 +67,17 @@ class Group implements SubscriberInterface
      */
     public function __call($method, array $args)
     {
-        $methods = array(
+        $methods = [
             'getCurrentGroups',
             'getCurrentPriority',
             'getDepth',
             'reset',
             'setLogDest',
-        );
+        ];
         if (\in_array($method, $methods, true) === false) {
             throw new BadMethodCallException(__CLASS__ . '::' . $method . ' is inaccessible');
         }
-        return \call_user_func_array(array($this->groupStack, $method), $args);
+        return \call_user_func_array([$this->groupStack, $method], $args);
     }
 
     /**
@@ -175,7 +175,7 @@ class Group implements SubscriberInterface
             \func_get_args(),
             array(),
             $this->debug->rootInstance->getMethodDefaultArgs(__METHOD__),
-            array('priority')
+            ['priority']
         ));
         return $this->debug;
     }
@@ -225,9 +225,9 @@ class Group implements SubscriberInterface
         if ($collect === false) {
             return;
         }
-        if ($logEntry['args'] === array()) {
+        if ($logEntry['args'] === []) {
             // give a default label
-            $logEntry['args'] = array('group');
+            $logEntry['args'] = ['group'];
             $caller = $this->debug->backtrace->getCallerInfo(0, Backtrace::INCL_ARGS);
             $args = $this->autoArgs($caller);
             if ($args) {
@@ -321,7 +321,7 @@ class Group implements SubscriberInterface
             $functionStartLine = $refMethod->getStartLine();
             $file = $refMethod->getFileName();
             $function = $caller['classCalled'] . $caller['type'] . $caller['function'];
-        } elseif (\in_array($caller['function'], array('include', 'include_once', 'require', 'require_once'), true) === false) {
+        } elseif (\in_array($caller['function'], ['include', 'include_once', 'require', 'require_once'], true) === false) {
             $refFunction = new ReflectionFunction($caller['function']);
             $functionStartLine = $refFunction->getStartLine();
             $file = $refFunction->getFileName();
@@ -421,11 +421,11 @@ class Group implements SubscriberInterface
             $debug->log(new LogEntry(
                 $debug,
                 'groupEndValue',
-                array('return', $returnValue),
+                ['return', $returnValue],
                 $logEntry->getMeta()
             ));
         }
-        $logEntry['args'] = array();
+        $logEntry['args'] = [];
         $debug->log($logEntry);
     }
 
@@ -442,7 +442,7 @@ class Group implements SubscriberInterface
         $debug = $logEntry->getSubject();
         $debug->data->set('logDest', 'auto');
         $logEntry['appendLog'] = false;     // don't actually log
-        $logEntry['args'] = array();
+        $logEntry['args'] = [];
         $logEntry['forcePublish'] = true;   // Publish the Debug::EVENT_LOG event (regardless of cfg.collect)
         $logEntry->setMeta('closesSummary', true);
         $debug->log($logEntry);

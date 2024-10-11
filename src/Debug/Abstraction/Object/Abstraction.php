@@ -24,20 +24,20 @@ use bdk\PubSub\ValueStore;
 class Abstraction extends BaseAbstraction
 {
     /** @var list<string> */
-    protected static $keysTemp = array(
+    protected static $keysTemp = [
         'collectPropertyValues',
         'fullyQualifyPhpDocType',
         'hist',
         'isTraverseOnly',
         'propertyOverrideValues',
         'reflector',
-    );
+    ];
 
     /** @var ValueStore */
     private $inherited;
 
     /** @var list<string> */
-    private $sortableValues = array('attributes', 'cases', 'constants', 'methods', 'properties');
+    private $sortableValues = ['attributes', 'cases', 'constants', 'methods', 'properties'];
 
     /**
      * Constructor
@@ -266,7 +266,7 @@ class Abstraction extends BaseAbstraction
      */
     protected function sortData(array $array)
     {
-        $sortVisOrder = array('public', 'magic', 'magic-read', 'magic-write', 'protected', 'private', 'debug');
+        $sortVisOrder = ['public', 'magic', 'magic-read', 'magic-write', 'protected', 'private', 'debug'];
         $sortData = array(
             'name' => array(),
             'vis' => array(),

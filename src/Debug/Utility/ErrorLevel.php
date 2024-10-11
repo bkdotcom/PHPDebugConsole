@@ -77,7 +77,7 @@ class ErrorLevel
          * }
          */
         $flags = array(
-            'off' => array(),
+            'off' => [],
             'on' => \array_keys(self::filterConstantsByLevel($allConstants, $errorReportingLevel)), // excludes E_ALL
         );
         $eAll = $allConstants['E_ALL'];
@@ -146,8 +146,8 @@ class ErrorLevel
     private static function getNegateFlags($errorReportingLevel, $allConstants, $eAll, $explicitStrict)
     {
         $flags = array(
-            'off' => array(),
-            'on' => array('E_ALL'),
+            'off' => [],
+            'on' => ['E_ALL'],
         );
         foreach ($allConstants as $constName => $constValue) {
             $isExplicit = $explicitStrict && $constName === 'E_STRICT';

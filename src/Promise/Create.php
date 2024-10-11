@@ -34,10 +34,10 @@ final class Create
         }
 
         // Return a new promise that shadows the given thenable.
-        $waitFn = \method_exists($value, 'wait') ? array($value, 'wait') : null;
-        $cancelFn = \method_exists($value, 'cancel') ? array($value, 'cancel') : null;
+        $waitFn = \method_exists($value, 'wait') ? [$value, 'wait'] : null;
+        $cancelFn = \method_exists($value, 'cancel') ? [$value, 'cancel'] : null;
         $promise = new Promise($waitFn, $cancelFn);
-        $value->then(array($promise, 'resolve'), array($promise, 'reject'));
+        $value->then([$promise, 'resolve'], [$promise, 'reject']);
         return $promise;
     }
 
@@ -88,6 +88,6 @@ final class Create
             return new ArrayIterator($value);
         }
 
-        return new ArrayIterator(array($value));
+        return new ArrayIterator([$value]);
     }
 }

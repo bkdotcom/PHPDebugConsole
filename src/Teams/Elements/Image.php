@@ -138,14 +138,14 @@ class Image extends AbstractElement
      */
     public function withHeight($height)
     {
-        $tests = array(
+        $tests = [
             static function ($val) {
                 self::assertPx($val, __METHOD__, 'height');
             },
             static function ($val) {
                 self::assertEnumValue($val, 'HEIGHT_', 'height');
             },
-        );
+        ];
         $isValid = false;
         foreach ($tests as $callable) {
             try {

@@ -35,7 +35,7 @@ class Properties extends AbstractSection
         if ($abs['isInterface']) {
             return '';
         }
-        $magicMethods = \array_intersect(array('__get', '__set'), \array_keys($abs['methods']));
+        $magicMethods = \array_intersect(['__get', '__set'], \array_keys($abs['methods']));
         $html = '<dt class="properties">' . $this->getLabel($abs) . '</dt>' . "\n";
         $html .= $this->magicMethodInfo($magicMethods);
         $html .= $this->dumpItems($abs, 'properties', $cfg);
@@ -47,7 +47,7 @@ class Properties extends AbstractSection
      */
     protected function getClasses(array $info)
     {
-        $visClasses = \array_diff((array) $info['visibility'], array('debug'));
+        $visClasses = \array_diff((array) $info['visibility'], ['debug']);
         $classes = \array_keys(\array_filter(array(
             'debug-value' => $info['valueFrom'] === 'debug',
             'debuginfo-excluded' => $info['debugInfoExcluded'],

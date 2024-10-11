@@ -62,7 +62,7 @@ class Promise implements PromiseInterface
     public function __call($method, array $args)
     {
         if (\preg_match('/^is([A-Z][a-z]+)$/', $method)) {
-            $args = array($this);
+            $args = [$this];
         }
         return $this->__callStatic($method, $args);
     }
@@ -80,17 +80,17 @@ class Promise implements PromiseInterface
     public static function __callStatic($method, array $args)
     {
         $isClass = 'bdk\\Promise\\Is';
-        $utilClasses = array(
+        $utilClasses = [
             'bdk\\Promise\\Utils',
             'bdk\\Promise\\Create',
-        );
+        ];
         if (\preg_match('/^is([A-Z][a-z]+)$/', $method, $matches) && \method_exists($isClass, \strtolower($matches[1]))) {
-            $callable = array($isClass, \strtolower($matches[1]));
+            $callable = [$isClass, \strtolower($matches[1])];
             return $callable($args[0]);
         }
         foreach ($utilClasses as $class) {
             if (\method_exists($class, $method)) {
-                return \call_user_func_array(array($class, $method), $args);
+                return \call_user_func_array([$class, $method], $args);
             }
         }
         throw new BadMethodCallException(\sprintf(
@@ -115,8 +115,8 @@ class Promise implements PromiseInterface
         \bdk\Promise\Utils::assertType($onRejected, 'callable');
 
         if ($this->state === self::PENDING) {
-            $promise = new static(null, array($this, 'cancel'));
-            $this->handlers[] = array($promise, $onFulfilled, $onRejected);
+            $promise = new static(null, [$this, 'cancel']);
+            $this->handlers[] = [$promise, $onFulfilled, $onRejected];
             $promise->waitList = $this->waitList;
             $promise->waitList[] = $this;
             return $promise;

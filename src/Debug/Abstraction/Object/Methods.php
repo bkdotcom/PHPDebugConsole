@@ -215,7 +215,7 @@ class Methods extends AbstractInheritable
         $phpDoc = $this->helper->getPhpDoc($abs['reflector'], $abs['fullyQualifyPhpDocType']);
         if (
             empty($phpDoc['method'])
-            && \array_intersect_key($abs['methods'], \array_flip(array('__call', '__callStatic')))
+            && \array_intersect_key($abs['methods'], \array_flip(['__call', '__callStatic']))
         ) {
             // phpDoc doesn't contain any @method tags,
             // we've got __call and/or __callStatic method:  check if parent classes have @method tags
@@ -300,7 +300,7 @@ class Methods extends AbstractInheritable
             $refMethods = $reflector->getMethods();
             if ($this->minimal) {
                 $refMethods = \array_filter($refMethods, static function (ReflectionMethod $refMethod) {
-                    return \in_array($refMethod->getName(), array('__toString', '__get', '__set'), true);
+                    return \in_array($refMethod->getName(), ['__toString', '__get', '__set'], true);
                 });
             }
             foreach ($refMethods as $refMethod) {
@@ -371,7 +371,7 @@ class Methods extends AbstractInheritable
             'isFinal' => $refMethod->isFinal(),
             'isStatic' => $refMethod->isStatic(),
             'params' => $this->params->getParams($abs, $refMethod, $phpDoc),
-            'phpDoc' => \array_diff_key($phpDoc, \array_flip(array('param', 'return'))),
+            'phpDoc' => \array_diff_key($phpDoc, \array_flip(['param', 'return'])),
             'return' => array(
                 'desc' => $returnTag['desc'],
                 'type' => $this->helper->getType($returnTag['type'], $refMethod),

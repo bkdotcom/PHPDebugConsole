@@ -71,7 +71,7 @@ class FileTree
             \array_shift($dirs);
             $dirs[0] = '/' . $dirs[0];
             if ($path === 'closure://function') {
-                $dirs = array($path);
+                $dirs = [$path];
             }
             $node = &$this->getTreeNode($tree, $dirs);
             \array_unshift($node, new Abstraction(Type::TYPE_STRING, array(
@@ -149,7 +149,7 @@ class FileTree
     private function condenseTreeFrame($cur, &$stack)
     {
         foreach ($cur['src'] as $k => &$val) {
-            list($keys, $val) = $this->walkBranch(array($k), $val);
+            list($keys, $val) = $this->walkBranch([$k], $val);
             if (\is_array($val) === false) {
                 // leaf (file)
                 $cur['out'][] = $val;
@@ -220,7 +220,7 @@ class FileTree
             $val = &$val[$key];
             $keys[] = $key;
         }
-        return array($keys, $val);
+        return [$keys, $val];
     }
 
     /**

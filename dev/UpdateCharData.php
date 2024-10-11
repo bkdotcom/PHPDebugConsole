@@ -114,7 +114,7 @@ class UpdateCharData
 	{
 		$parts = \explode(';	', $row, 3);
 		$parts = \array_map('trim', $parts);
-		$parts = \array_combine(array('charACodePoint', 'charBCodePoint', 'comment'), $parts);
+		$parts = \array_combine(['charACodePoint', 'charBCodePoint', 'comment'], $parts);
 
 		$parts['charACodePoint'] = \implode(' ', \array_map(static function ($codePoint) {
 			// remove leading 00 pairs

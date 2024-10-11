@@ -119,7 +119,7 @@ trait CardUtilityTrait
      */
     protected function assertFallback($fallback, $instanceOf, $message)
     {
-        $tests = array(
+        $tests = [
             static function ($val) {
                 return $val === null;
             },
@@ -129,7 +129,7 @@ trait CardUtilityTrait
             static function ($val) {
                 self::assertEnumValue($val, 'FALLBACK_', 'width');
             },
-        );
+        ];
         self::assertAnyOf($fallback, $tests, $message);
     }
 

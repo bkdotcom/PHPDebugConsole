@@ -218,7 +218,7 @@ class Helper
         foreach ($args as $i => $v) {
             list($type, $typeMore) = $this->debug->abstracter->type->getType($v);
             $isNumericString = $type === Type::TYPE_STRING
-                && \in_array($typeMore, array(Type::TYPE_STRING_NUMERIC, Type::TYPE_TIMESTAMP), true);
+                && \in_array($typeMore, [Type::TYPE_STRING_NUMERIC, Type::TYPE_TIMESTAMP], true);
             $args[$i] = $this->dumper->valDumper->dump($v, array(
                 'addQuotes' => $i !== 0 || $isNumericString || $type !== Type::TYPE_STRING, // $this->dumper->valDumper->string->isEncoded($v) ||
                 'sanitize' => $i === 0

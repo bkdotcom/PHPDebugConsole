@@ -55,7 +55,7 @@ abstract class AbstractManager
         if ($return === null) {
             return;
         }
-        if (\in_array($event['return'], array(null, ''), true) === false) {
+        if (\in_array($event['return'], [null, ''], true) === false) {
             // event already has non-null return value
             return;
         }
@@ -203,7 +203,7 @@ abstract class AbstractManager
         $priority = $subscriberInfo['priority'];
         foreach ($this->subscriberStack[$stackIndex]['subscribers'] as $i => $subscriberInfoCur) {
             if ($priority > $subscriberInfoCur['priority']) {
-                \array_splice($this->subscriberStack[$stackIndex]['subscribers'], $i, 0, array($subscriberInfo));
+                \array_splice($this->subscriberStack[$stackIndex]['subscribers'], $i, 0, [$subscriberInfo]);
                 return;
             }
         }

@@ -100,7 +100,7 @@ class AbstractArray extends AbstractComponent
             $className = $this->abstracter->debug->php->friendlyClassName($array[0]);
         }
         return new Abstraction(Type::TYPE_CALLABLE, array(
-            'value' => array($className, $array[1]),
+            'value' => [$className, $array[1]],
         ));
     }
 

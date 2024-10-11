@@ -230,7 +230,7 @@ class Utf8Buffer
         }
         $this->incStat($type, $len);
         $subStr = \substr($this->str, $start, $len);
-        $this->stats['blocks'][] = array($type, $subStr);
+        $this->stats['blocks'][] = [$type, $subStr];
     }
 
     /**

@@ -184,7 +184,7 @@ class LogRoute extends CLogRoute
     protected function normalizeMessage(array $logEntry)
     {
         $logEntry = \array_combine(
-            array('message', 'level', 'category', 'time'),
+            ['message', 'level', 'category', 'time'],
             $logEntry
         );
         $logEntry = \array_merge($logEntry, array(
@@ -349,14 +349,14 @@ class LogRoute extends CLogRoute
     {
         $debug = $logEntry['channel'];
         $method = $this->levelMap[$logEntry['level']];
-        $args = \array_filter(array(
+        $args = \array_filter([
             \ltrim($logEntry['category'] . ':', ':'),
             $logEntry['message'],
-        ));
+        ]);
         if ($logEntry['meta']) {
             $args[] = $debug->meta($logEntry['meta']);
         }
-        \call_user_func_array(array($debug, $method), $args);
+        \call_user_func_array([$debug, $method], $args);
     }
 
     /**
@@ -381,8 +381,8 @@ class LogRoute extends CLogRoute
         $duration = $logEntry['time'] - $logEntryBegin['time'];
         $debug = $logEntry['channel'];
         $method = $this->levelMap[$logEntry['level']];
-        $args = array($message, $duration);
-        \call_user_func_array(array($debug, $method), $args);
+        $args = [$message, $duration];
+        \call_user_func_array([$debug, $method], $args);
     }
 
     /**
@@ -403,11 +403,11 @@ class LogRoute extends CLogRoute
         $caption = $logEntry['category']
             ? $logEntry['category'] . ': ' . $logEntry['message']
             : $logEntry['message'];
-        $logEntry['meta']['columns'] = array('file', 'line');
+        $logEntry['meta']['columns'] = ['file', 'line'];
         $logEntry['meta']['trace'] = $logEntry['trace'];
         $debug = $logEntry['channel'];
         $method = $this->levelMap[$logEntry['level']];
-        $args = array(false, $caption, $debug->meta($logEntry['meta']));
-        \call_user_func_array(array($debug, $method), $args);
+        $args = [false, $caption, $debug->meta($logEntry['meta'])];
+        \call_user_func_array([$debug, $method], $args);
     }
 }

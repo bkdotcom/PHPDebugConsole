@@ -108,7 +108,7 @@ class Utility
         if ($returnInt) {
             return (int) $size;
         }
-        $units = array('B', 'kB', 'MB', 'GB', 'TB', 'PB');
+        $units = ['B', 'kB', 'MB', 'GB', 'TB', 'PB'];
         $exp = (int) \floor(\log((float) $size, 1024));
         $pow = \pow(1024, $exp);
         /** @psalm-suppress RedundantCast */
@@ -154,7 +154,7 @@ class Utility
         $list = headers_list();
         $headers = array();
         foreach ($list as $header) {
-            list($key, $value) = \array_replace(array('', ''), \explode(': ', $header, 2));
+            list($key, $value) = \array_replace(['', ''], \explode(': ', $header, 2));
             $headers[$key][] = $value;
         }
         return $headers;
@@ -201,14 +201,14 @@ class Utility
             $dirParts = \array_slice($parts, 0, $i);
             $gitHeadFilepath = \implode(DIRECTORY_SEPARATOR, \array_merge(
                 $dirParts,
-                array('.git', 'HEAD')
+                ['.git', 'HEAD']
             ));
             if (\file_exists($gitHeadFilepath)) {
                 $fileLines = \file($gitHeadFilepath);
                 // line 0 should be something like:
                 // ref: refs/heads/branchName
                 $parts = \array_replace(
-                    array(null, null, ''),
+                    [null, null, ''],
                     \explode('/', $fileLines[0], 3)
                 );
                 return \trim($parts[2]);
@@ -230,7 +230,7 @@ class Utility
     public static function httpMethodHasBody($method)
     {
         // don't expect a request body for these methods
-        $noBodyMethods = array('CONNECT', 'DELETE', 'GET', 'HEAD', 'OPTIONS', 'TRACE');
+        $noBodyMethods = ['CONNECT', 'DELETE', 'GET', 'HEAD', 'OPTIONS', 'TRACE'];
         return \in_array($method, $noBodyMethods, true) === false;
     }
 
@@ -372,9 +372,9 @@ class Utility
         if (\preg_match('/^[\d,]+$/', $size)) {
             return (int) \str_replace(',', '', $size);
         }
-        $matches = array();
+        $matches = [];
         if (\preg_match('/^([\d,.]+)\s?([kmgtp])?b?$/i', $size, $matches)) {
-            $matches = \array_replace(array('', '', ''), $matches);
+            $matches = \array_replace(['', '', ''], $matches);
             $size = (float) \str_replace(',', '', $matches[1]);
             switch (\strtolower($matches[2])) {
                 case 'p':

@@ -27,12 +27,12 @@ class Channel implements SubscriberInterface
     private $channels = array();
 
     /** @var string[] */
-    protected $methods = array(
+    protected $methods = [
         'getChannel',
         'getChannels',
         'getChannelsTop',
         'getPropagateValues',
-    );
+    ];
 
     /**
      * Return a named sub-instance... if channel does not exist, it will be created
@@ -148,18 +148,18 @@ class Channel implements SubscriberInterface
      */
     public function getPropagateValues($cfg)
     {
-        $cfg = \array_diff_key($cfg, \array_flip(array(
+        $cfg = \array_diff_key($cfg, \array_flip([
             'errorHandler',
             'routeStream',
-        )));
-        $cfg['debug'] = \array_diff_key($cfg['debug'], \array_flip(array(
+        ]));
+        $cfg['debug'] = \array_diff_key($cfg['debug'], \array_flip([
             'channelIcon',
             'channelName',
             'onBootstrap',
             'onLog',
             'onOutput',
             'route',
-        )));
+        ]));
         foreach ($cfg as $k => $v) {
             if ($v === array()) {
                 unset($cfg[$k]);

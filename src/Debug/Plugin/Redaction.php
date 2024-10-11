@@ -45,10 +45,10 @@ class Redaction extends AbstractComponent implements SubscriberInterface
     );
 
     /** @var string[] */
-    protected $methods = array(
+    protected $methods = [
         'redact',
         'redactHeaders',
-    );
+    ];
 
     /**
      * Constructor
@@ -56,7 +56,7 @@ class Redaction extends AbstractComponent implements SubscriberInterface
     public function __construct()
     {
         $this->cfg['redactReplace'] = static function ($str, $key = null) {
-            array($str, $key); // phpmd suppress
+            [$str, $key]; // phpmd suppress
             return self::REPLACEMENT;
         };
     }
@@ -82,7 +82,7 @@ class Redaction extends AbstractComponent implements SubscriberInterface
         return array(
             Debug::EVENT_CONFIG => 'onConfig',
             Debug::EVENT_CUSTOM_METHOD => 'onCustomMethod',
-            Debug::EVENT_LOG => array('onLog', PHP_INT_MAX),
+            Debug::EVENT_LOG => ['onLog', PHP_INT_MAX],
             Debug::EVENT_PLUGIN_INIT => 'onPluginInit',
         );
     }
@@ -102,8 +102,8 @@ class Redaction extends AbstractComponent implements SubscriberInterface
         }
         $cfg = \array_intersect_key($configs['debug'], $this->cfg);
         $valActions = \array_intersect_key(array(
-            'redactKeys' => array($this, 'onCfgRedactKeys'),
-            'redactStrings' => array($this, 'onCfgRedactStrings'),
+            'redactKeys' => [$this, 'onCfgRedactKeys'],
+            'redactStrings' => [$this, 'onCfgRedactStrings'],
         ), $cfg);
         $this->cfg = \array_merge($this->cfg, $cfg);
         foreach ($valActions as $key => $callable) {
@@ -274,7 +274,7 @@ class Redaction extends AbstractComponent implements SubscriberInterface
                 $startLine = $line;
                 return;
             }
-            list($name, $value) = \array_replace(array(null, null), \explode(':', $line, 2));
+            list($name, $value) = \array_replace([null, null], \explode(':', $line, 2));
             $name = \trim($name);
             if (isset($headers[$name]) === false) {
                 $headers[$name] = array();
@@ -283,7 +283,7 @@ class Redaction extends AbstractComponent implements SubscriberInterface
                 ? \trim($value)
                 : null;
         });
-        return array($startLine, $headers);
+        return [$startLine, $headers];
     }
 
     /**
@@ -361,7 +361,7 @@ class Redaction extends AbstractComponent implements SubscriberInterface
      */
     protected function redactHeaderValue($name, $value)
     {
-        if (\in_array($name, array('Authorization', 'Proxy-Authorization'), true) === false) {
+        if (\in_array($name, ['Authorization', 'Proxy-Authorization'], true) === false) {
             return $this->redactString((string) $value, $name);
         }
         if (\strpos($value, 'Basic') === 0) {

@@ -79,8 +79,8 @@ class LogEnv implements SubscriberInterface
     {
         $name = $this->debug->getCfg('sessionName', Debug::CONFIG_DEBUG);
         $names = $name
-            ? array($name)
-            : array('PHPSESSID', 'SESSIONID', 'SESSION_ID', 'SESSID', 'SESS_ID');
+            ? [$name]
+            : ['PHPSESSID', 'SESSIONID', 'SESSION_ID', 'SESSID', 'SESS_ID'];
         $namesFound = array();
         $useCookies = \filter_var($this->iniValues['sessionUseCookies'], FILTER_VALIDATE_BOOLEAN);
         if ($useCookies) {
@@ -182,7 +182,7 @@ class LogEnv implements SubscriberInterface
                 'valCompare' => false,
             ),
         );
-        \array_walk($settings, array($this, 'assertSetting'));
+        \array_walk($settings, [$this, 'assertSetting']);
         $this->debug->log('session.cache_limiter', \ini_get('session.cache_limiter'));
         if (\session_module_name() === 'files') {
             // aka session.save_handler

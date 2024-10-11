@@ -52,13 +52,13 @@ class Abstracter extends AbstractComponent
     protected $type;
 
     /** @var list<string> */
-    protected $readOnly = array(
+    protected $readOnly = [
         'abstractArray',
         'abstractObject',
         'abstractString',
         'debug',
         'type',
-    );
+    ];
 
     /** @var array>string,mixed> */
     protected $cfg = array(
@@ -66,16 +66,16 @@ class Abstracter extends AbstractComponent
                           //    see also AbstractObject::$cfgFlags where each key
                           //    can be set to true/false as a cfg value here
         'fullyQualifyPhpDocType' => false,
-        'interfacesCollapse' => array(
+        'interfacesCollapse' => [
             'ArrayAccess',
             'BackedEnum',
             'Countable',
             'Iterator',
             'IteratorAggregate',
             'UnitEnum',
-        ),
+        ],
         'maxDepth' => 0, // value < 1 : no max-depth
-        'objectSectionOrder' => array(
+        'objectSectionOrder' => [
             'attributes',
             'extends',
             'implements',
@@ -84,11 +84,11 @@ class Abstracter extends AbstractComponent
             'properties',
             'methods',
             'phpDoc',
-        ),
-        'objectsExclude' => array(
+        ],
+        'objectsExclude' => [
             // __NAMESPACE__ added in constructor
             'DOMNode',
-        ),
+        ],
         'objectSort' => 'inheritance visibility name',
         'objectsWhitelist' => null,     // will be used if array
         'stringMaxLen' => array(
@@ -157,7 +157,7 @@ class Abstracter extends AbstractComponent
         if (!$typeInfo) {
             return $mixed;
         }
-        return $typeInfo === array(Type::TYPE_ARRAY, Type::TYPE_RAW)
+        return $typeInfo === [Type::TYPE_ARRAY, Type::TYPE_RAW]
             ? $this->abstractArray->crate($mixed, $method, $hist)
             : $this->getAbstraction($mixed, $method, $typeInfo, $hist);
     }
@@ -283,11 +283,11 @@ class Abstracter extends AbstractComponent
         if ($type === Type::TYPE_BOOL) {
             return false;
         }
-        if (\in_array($typeMore, array(Type::TYPE_ABSTRACTION, Type::TYPE_STRING_NUMERIC), true)) {
+        if (\in_array($typeMore, [Type::TYPE_ABSTRACTION, Type::TYPE_STRING_NUMERIC], true)) {
             return false;
         }
         return $typeMore
-            ? array($type, $typeMore)
+            ? [$type, $typeMore]
             : false;
     }
 
@@ -320,7 +320,7 @@ class Abstracter extends AbstractComponent
     protected function postSetCfg($cfg = array(), $prev = array())
     {
         $debugClass = \get_class($this->debug);
-        if (!\array_intersect(array('*', $debugClass), $this->cfg['objectsExclude'])) {
+        if (!\array_intersect(['*', $debugClass], $this->cfg['objectsExclude'])) {
             $this->cfg['objectsExclude'][] = $debugClass;
         }
         if (isset($cfg['stringMaxLen'])) {
@@ -352,14 +352,14 @@ class Abstracter extends AbstractComponent
      */
     private function setCfgDependencies($cfg)
     {
-        $keysArr = array(
+        $keysArr = [
             'maxDepth',
-        );
-        $keysStr = array(
+        ];
+        $keysStr = [
             'stringMaxLen',
             'stringMaxLenBrief',
             'stringMinLen',
-        );
+        ];
         $arrCfg = \array_intersect_key($cfg, \array_flip($keysArr));
         if ($arrCfg) {
             $this->abstractArray->setCfg($arrCfg);
@@ -368,7 +368,7 @@ class Abstracter extends AbstractComponent
         if ($objCfg) {
             $this->abstractObject->setCfg($objCfg);
         }
-        $strCfg = \array_intersect_key($cfg, \array_flip(array('brief')) + \array_flip($keysStr));
+        $strCfg = \array_intersect_key($cfg, \array_flip(['brief']) + \array_flip($keysStr));
         if ($strCfg) {
             $this->abstractString->setCfg($strCfg);
         }

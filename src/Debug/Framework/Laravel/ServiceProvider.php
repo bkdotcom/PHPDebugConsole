@@ -116,7 +116,7 @@ class ServiceProvider extends BaseServiceProvider
                 'indexLabel' => 'model',
                 'rows' => $tableInfoRows,
             ),
-            'totalCols' => array(TableRow::SCALAR),
+            'totalCols' => [TableRow::SCALAR],
         )));
     }
 
@@ -240,13 +240,13 @@ class ServiceProvider extends BaseServiceProvider
         }
         $this->app['events']->listen('eloquent.retrieved:*', function ($event, $models) {
             // "use" our function params so things (ie phpmd) don't complain
-            array($event);
+            [$event];
             foreach (\array_filter($models) as $model) {
                 $class = \get_class($model);
                 $this->modelCounts[$class] = (int) ($this->modelCounts[$class] ?? 0) + 1;
             }
         });
-        $this->debug->eventManager->subscribe(Debug::EVENT_OUTPUT, array($this, 'onOutput'));
+        $this->debug->eventManager->subscribe(Debug::EVENT_OUTPUT, [$this, 'onOutput']);
     }
 
     /**

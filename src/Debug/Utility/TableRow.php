@@ -130,7 +130,7 @@ class TableRow
             $this->info['classes'][$key] = false;
             $values[$key] = $this->getValue($key);
         }
-        if (\array_keys($values) === array(self::SCALAR)) {
+        if (\array_keys($values) === [self::SCALAR]) {
             $this->info['isScalar'] = true;
         }
         return $values;

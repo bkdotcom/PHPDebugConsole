@@ -52,7 +52,7 @@ class EventSubscribers implements SubscriberInterface
             Debug::EVENT_CUSTOM_METHOD => 'onCustomMethod',
             Debug::EVENT_OBJ_ABSTRACT_END => 'onDebugObjAbstractEnd',
             Debug::EVENT_OBJ_ABSTRACT_START => 'onDebugObjAbstractStart',
-            Debug::EVENT_OUTPUT => array('onDebugOutput', 1),
+            Debug::EVENT_OUTPUT => ['onDebugOutput', 1],
             Debug::EVENT_OUTPUT_LOG_ENTRY => 'onDebugOutputLogEntry',
         );
     }
@@ -137,7 +137,7 @@ class EventSubscribers implements SubscriberInterface
             return;
         }
         // embolden the primary files
-        \array_walk_recursive($logEntry['args'][0]['value'], array($this, 'stylizeFileAbstraction'));
+        \array_walk_recursive($logEntry['args'][0]['value'], [$this, 'stylizeFileAbstraction']);
     }
 
     /**

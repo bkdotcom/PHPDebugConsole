@@ -24,12 +24,12 @@ class Time implements SubscriberInterface
     use CustomMethodTrait;
 
     /** @var string[] */
-    protected $methods = array(
+    protected $methods = [
         'time',
         'timeEnd',
         'timeGet',
         'timeLog',
-    );
+    ];
 
     /**
      * Constructor
@@ -71,7 +71,7 @@ class Time implements SubscriberInterface
         $label = \array_values(\array_diff_key($args, $floats))[0];
         if ($floats) {
             $duration = \reset($floats);
-            $logEntry['args'] = array($label);
+            $logEntry['args'] = [$label];
             $this->appendLogEntry($duration, $logEntry);
             return $this->debug;
         }
@@ -178,7 +178,7 @@ class Time implements SubscriberInterface
         $args[0] = $label . ': ';
         \array_splice($args, 1, 0, $elapsed);
         $logEntry['args'] = $args;
-        $logEntry['meta'] = \array_diff_key($meta, \array_flip(array('precision', 'silent', 'template', 'unit')));
+        $logEntry['meta'] = \array_diff_key($meta, \array_flip(['precision', 'silent', 'template', 'unit']));
         return $this->debug->log($logEntry);
     }
 
@@ -211,8 +211,8 @@ class Time implements SubscriberInterface
         $debug->log(new LogEntry(
             $debug,
             'time',
-            array($str),
-            \array_diff_key($meta, \array_flip(array('precision', 'silent', 'template', 'unit')))
+            [$str],
+            \array_diff_key($meta, \array_flip(['precision', 'silent', 'template', 'unit']))
         ));
     }
 
@@ -234,8 +234,8 @@ class Time implements SubscriberInterface
         $debug->log(new LogEntry(
             $debug,
             $logEntry['method'],
-            array('Timer \'' . $label . '\' does not exist'),
-            \array_diff_key($meta, \array_flip(array('precision', 'silent', 'unit')))
+            ['Timer \'' . $label . '\' does not exist'],
+            \array_diff_key($meta, \array_flip(['precision', 'silent', 'unit']))
         ));
     }
 
@@ -261,7 +261,7 @@ class Time implements SubscriberInterface
                 'unit' => 'auto',
             ),
             $defaultArgs,
-            \array_intersect(\array_keys($defaultArgs), array('return')) // convert return to meta if it's an arg
+            \array_intersect(\array_keys($defaultArgs), ['return']) // convert return to meta if it's an arg
         );
         if ($logEntry['numArgs'] === 1 && \is_bool($logEntry['args'][0])) {
             // first and only arg is bool..  treat as 'log' param

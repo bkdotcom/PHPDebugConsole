@@ -28,9 +28,9 @@ class Route extends AbstractComponent implements SubscriberInterface
     use CustomMethodTrait;
 
     /** @var string[] */
-    protected $methods = array(
+    protected $methods = [
         'getDefaultRoute',
-    );
+    ];
 
     /** @var bool */
     private $isBootstrapped = false;
@@ -41,10 +41,10 @@ class Route extends AbstractComponent implements SubscriberInterface
     public function getSubscriptions()
     {
         return array(
-            Debug::EVENT_BOOTSTRAP => array('onBootstrap', PHP_INT_MAX * -1),
+            Debug::EVENT_BOOTSTRAP => ['onBootstrap', PHP_INT_MAX * -1],
             Debug::EVENT_CONFIG => 'onConfig',
             Debug::EVENT_CUSTOM_METHOD => 'onCustomMethod',
-            Debug::EVENT_OUTPUT => array('onOutput', PHP_INT_MAX),
+            Debug::EVENT_OUTPUT => ['onOutput', PHP_INT_MAX],
         );
     }
 
@@ -107,7 +107,7 @@ class Route extends AbstractComponent implements SubscriberInterface
             return;
         }
         $valActions = array(
-            'route' => array($this, 'onCfgRoute'),
+            'route' => [$this, 'onCfgRoute'],
         );
         $valActions = \array_intersect_key($valActions, $cfg);
         foreach ($valActions as $key => $callable) {

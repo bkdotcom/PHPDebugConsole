@@ -52,11 +52,11 @@ class EventSubscribers implements SubscriberInterface
     {
         return array(
             Debug::EVENT_OBJ_ABSTRACT_END => 'onDebugObjAbstractEnd',
-            Debug::EVENT_OUTPUT => array('onDebugOutput', 1),
-            ErrorHandler::EVENT_ERROR => array(
-                array('onErrorLow', -1),
-                array('onErrorHigh', 1),
-            ),
+            Debug::EVENT_OUTPUT => ['onDebugOutput', 1],
+            ErrorHandler::EVENT_ERROR => [
+                ['onErrorLow', -1],
+                ['onErrorHigh', 1],
+            ],
         );
     }
 
@@ -94,7 +94,7 @@ class EventSubscribers implements SubscriberInterface
      */
     public function onErrorHigh(Error $error)
     {
-        if (\in_array($error['category'], array(Error::CAT_DEPRECATED, Error::CAT_NOTICE, Error::CAT_STRICT), true)) {
+        if (\in_array($error['category'], [Error::CAT_DEPRECATED, Error::CAT_NOTICE, Error::CAT_STRICT], true)) {
             /*
                 "Ignore" minor internal framework errors
             */

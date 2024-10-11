@@ -135,11 +135,11 @@ class HtmlString
      */
     public function isEncoded($val)
     {
-        $typesEncoded = array(
+        $typesEncoded = [
             Type::TYPE_STRING_BASE64,
             Type::TYPE_STRING_JSON,
             Type::TYPE_STRING_SERIALIZED,
-        );
+        ];
         return $val instanceof Abstraction && \in_array($val['typeMore'], $typesEncoded, true);
     }
 
@@ -154,8 +154,8 @@ class HtmlString
     {
         // display \r, \n, & \t
         $str = \preg_replace_callback('/(\r\n|\r|\n)/', static function ($matches) {
-            $search = array("\r", "\n");
-            $replace = array('<span class="ws_r"></span>', '<span class="ws_n"></span>' . "\n");
+            $search = ["\r", "\n"];
+            $replace = ['<span class="ws_r"></span>', '<span class="ws_n"></span>' . "\n"];
             return \str_replace($search, $replace, $matches[1]);
         }, $str);
         return \str_replace("\t", '<span class="ws_t">' . "\t" . '</span>', $str);
@@ -211,10 +211,10 @@ class HtmlString
             array(
                 'class' => $info['class'],
                 'data-abbr' => $info['abbr'],
-                'title' => \implode(': ', \array_filter(array(
+                'title' => \implode(': ', \array_filter([
                     '\\x' . \str_pad(\dechex(\ord($info['char'])), 2, '0', STR_PAD_LEFT),
                     $info['desc'],
-                ))),
+                ])),
             ),
             $info['replaceWith']
         );
@@ -235,10 +235,10 @@ class HtmlString
             array(
                 'class' => $info['class'],
                 'data-code-point' => $codePoint,
-                'title' => \implode(': ', \array_filter(array(
+                'title' => \implode(': ', \array_filter([
                     'U-' . $codePoint,
                     $info['desc'],
-                ))),
+                ])),
             ),
             $info['replaceWith']
         );

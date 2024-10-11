@@ -23,7 +23,7 @@ class EventServiceProvider extends BaseEventServiceProvider
 {
     protected $listen = [
         KernelEvents::REQUEST => [
-            array(ServiceProvider::class, 'onRequest'),
+            [ServiceProvider::class, 'onRequest'],
         ],
     ];
 }

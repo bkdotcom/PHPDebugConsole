@@ -119,7 +119,7 @@ class PhpCurlClass extends Curl
     /**
      * Log request and response
      *
-     * @param array $options [description]
+     * @param array $options options
      *
      * @return void
      */
@@ -135,7 +135,7 @@ class PhpCurlClass extends Curl
             $pointer = $options['CURLOPT_STDERR'];
             \rewind($pointer);
             $verboseOutput = \stream_get_contents($pointer);
-            $matches = array();
+            $matches = [];
             \preg_match_all('/> (.*?)\r\n\r\n/s', $verboseOutput, $matches);
             $this->rawRequestHeaders = \end($matches[1]);
             $this->requestHeaders = $this->reflection['parseReqHeaders']->invoke($this, $this->rawRequestHeaders);

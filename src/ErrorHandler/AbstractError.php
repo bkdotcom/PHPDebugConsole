@@ -30,12 +30,12 @@ class AbstractError extends Event
 
     /** @var array<string,list<int>> */
     protected static $errCategories = array(
-        self::CAT_DEPRECATED => array( E_DEPRECATED, E_USER_DEPRECATED ),
-        self::CAT_ERROR      => array( E_USER_ERROR, E_RECOVERABLE_ERROR ),
-        self::CAT_FATAL      => array( E_ERROR, E_PARSE, E_COMPILE_ERROR, E_CORE_ERROR ),
-        self::CAT_NOTICE     => array( E_NOTICE, E_USER_NOTICE ),
-        self::CAT_STRICT     => array( E_STRICT ),
-        self::CAT_WARNING    => array( E_WARNING, E_CORE_WARNING, E_COMPILE_WARNING, E_USER_WARNING ),
+        self::CAT_DEPRECATED => [E_DEPRECATED, E_USER_DEPRECATED],
+        self::CAT_ERROR      => [E_USER_ERROR, E_RECOVERABLE_ERROR],
+        self::CAT_FATAL      => [E_ERROR, E_PARSE, E_COMPILE_ERROR, E_CORE_ERROR],
+        self::CAT_NOTICE     => [E_NOTICE, E_USER_NOTICE],
+        self::CAT_STRICT     => [E_STRICT],
+        self::CAT_WARNING    => [E_WARNING, E_CORE_WARNING, E_COMPILE_WARNING, E_USER_WARNING],
     );
 
     /** @var array<int,string> */
@@ -59,12 +59,12 @@ class AbstractError extends Event
     );
 
     /** @var list<int> */
-    protected static $userErrors = array(
+    protected static $userErrors = [
         E_USER_DEPRECATED,
         E_USER_ERROR,
         E_USER_NOTICE,
         E_USER_WARNING,
-    );
+    ];
 
     /**
      * Store fatal non-Exception backtrace
@@ -145,7 +145,7 @@ class AbstractError extends Event
      */
     private function assertValues($values)
     {
-        $keysMustHave = array('type', 'message', 'file', 'line');
+        $keysMustHave = ['type', 'message', 'file', 'line'];
         $values = \array_merge($this->values, $values);
         $valuesCheck = \array_intersect_key($values, \array_flip($keysMustHave));
         $keys = \array_keys(\array_filter($valuesCheck, static function ($val) {
@@ -154,7 +154,7 @@ class AbstractError extends Event
         if (\array_intersect($keysMustHave, $keys) !== $keysMustHave) {
             throw new InvalidArgumentException('Error values must include: type, message, file, & line');
         }
-        $validTypes = \array_diff_key(self::$errTypes, \array_flip(array(E_ALL)));
+        $validTypes = \array_diff_key(self::$errTypes, \array_flip([E_ALL]));
         if (\array_key_exists($values['type'], $validTypes) === false) {
             throw new InvalidArgumentException('invalid error type specified');
         }
@@ -184,7 +184,7 @@ class AbstractError extends Event
             $this->values['file'] = $matches[1];
             $this->values['line'] = (int) $matches[2];
         }
-        if ($this->backtrace === null && \in_array($this->values['type'], array(E_ERROR, E_USER_ERROR), true) && $this->values['exception'] === null) {
+        if ($this->backtrace === null && \in_array($this->values['type'], [E_ERROR, E_USER_ERROR], true) && $this->values['exception'] === null) {
             // will return empty unless xdebug extension installed/enabled
             $this->backtrace = $this->subject->backtrace->get();
         }
@@ -218,7 +218,7 @@ class AbstractError extends Event
     {
         $this->values = \array_merge(
             $this->values,
-            \array_intersect_key($values, \array_flip(array('type', 'message', 'file', 'line')))
+            \array_intersect_key($values, \array_flip(['type', 'message', 'file', 'line']))
         );
         $this->setValuesInitDefault();
         $this->values = \array_merge($this->values, $values);

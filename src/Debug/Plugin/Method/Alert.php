@@ -24,12 +24,12 @@ class Alert implements SubscriberInterface
     use CustomMethodTrait;
 
     /** @var array<int,string> */
-    protected $levelsAllowed = array('danger', 'error', 'info', 'success', 'warn', 'warning');
+    protected $levelsAllowed = ['danger', 'error', 'info', 'success', 'warn', 'warning'];
 
     /** @var string[] */
-    protected $methods = array(
+    protected $methods = [
         'alert',
-    );
+    ];
 
     /**
      * Constructor
@@ -131,11 +131,11 @@ class Alert implements SubscriberInterface
      */
     private function setArgs(LogEntry $logEntry)
     {
-        $args = \array_replace(array(
+        $args = \array_replace([
             '',
             $logEntry->getMeta('level'),
             $logEntry->getMeta('dismissible'),
-        ), $logEntry['args']);
+        ], $logEntry['args']);
 
         if ($this->hasSubstitutions($logEntry)) {
             return;

@@ -65,7 +65,7 @@ class AbstractAsyncMiddleware extends AbstractComponent
         } elseif ($debug === $debug->rootInstance) {
             $debug = $debug->getChannel($this->cfg['label'], array('channelIcon' => $this->cfg['icon']));
         }
-        $debug->eventManager->subscribe(Debug::EVENT_OUTPUT_LOG_ENTRY, array($this, 'onOutputLogEntry'));
+        $debug->eventManager->subscribe(Debug::EVENT_OUTPUT_LOG_ENTRY, [$this, 'onOutputLogEntry']);
         $this->debug = $debug;
     }
 
@@ -77,7 +77,7 @@ class AbstractAsyncMiddleware extends AbstractComponent
     public function __invoke(callable $nextHandler)
     {
         $this->nextHandler = $nextHandler;
-        return array($this, 'onRequest');
+        return [$this, 'onRequest'];
     }
 
     /**

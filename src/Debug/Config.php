@@ -31,7 +31,7 @@ class Config
 
     /** @var array<string,list<string|list<string>>> */
     protected $configKeys = array(
-        'abstracter' => array(
+        'abstracter' => [
             'brief',
             'caseAttributeCollect',
             'caseAttributeOutput',
@@ -69,10 +69,10 @@ class Config
             'stringMinLen',
             'toStringOutput',
             'useDebugInfo',
-        ),
-        'debug' => array(
+        ],
+        'debug' => [
             // any key not found falls under 'debug'...
-        ),
+        ],
         'errorHandler' => array(
             'continueToPrevHandler',
             'errorFactory',
@@ -83,7 +83,7 @@ class Config
             'onEUserError',
             'suppressNever',
             'enableEmailer',
-            'emailer' => array(
+            'emailer' => [
                 'dateTimeFmt',
                 'emailBacktraceDumper',
                 // 'emailFrom',
@@ -93,14 +93,14 @@ class Config
                 'emailThrottledSummary',
                 'emailTraceMask',
                 // 'emailTo',
-            ),
+            ],
             'enableStats',
-            'stats' => array(
+            'stats' => [
                 'dataStoreFactory',
                 'errorStatsFile',
-            ),
+            ],
         ),
-        'routeHtml' => array(
+        'routeHtml' => [
             'css',
             'drawer',
             'filepathCss',
@@ -110,11 +110,11 @@ class Config
             'outputScript',
             'sidebar',
             'tooltip',
-        ),
-        'routeStream' => array(
+        ],
+        'routeStream' => [
             'ansi',
             'stream',
-        ),
+        ],
     );
 
     /**
@@ -367,10 +367,10 @@ class Config
 
     /**
      * Normalize string path
-     * Returns either
-     *     array('*')             all config values grouped by class
-     *     array('class')         we want all config values for class
-     *     array('class', key...) want specific value from this class'
+     * Returns one of
+     *     ['*']             all config values grouped by class
+     *     ['class']         we want all config values for class
+     *     ['class', key...] want specific value from this class'
      *
      * 'class' may be debug
      *
@@ -383,8 +383,8 @@ class Config
         if (\is_string($path)) {
             $path = \array_filter(\preg_split('#[\./]#', $path), 'strlen');
         }
-        if (\in_array($path, array(null, array()), true) || $path[0] === '*') {
-            return array('*');
+        if (\in_array($path, [null, []], true) || $path[0] === '*') {
+            return ['*'];
         }
         if (\end($path) === '*') {
             \array_pop($path);
@@ -410,7 +410,7 @@ class Config
         $pathNew = $this->debug->arrayUtil->searchRecursive($path[0], $this->configKeys, true);
         $pathNew =  $pathNew
             ? $pathNew
-            : \array_merge(array('debug'), $path);
+            : \array_merge(['debug'], $path);
         if (\end($pathNew) !== \end($path)) {
             \array_pop($pathNew);
             $pathNew[] = \end($path);

@@ -69,7 +69,7 @@ class FollowLocation
      */
     private function assertScheme(CurlReqRes $curlReqRes, UriInterface $uri)
     {
-        $allowed = array('http', 'https');
+        $allowed = ['http', 'https'];
         if (\in_array($uri->getScheme(), $allowed, true) === false) {
             throw new BadResponseException(
                 \sprintf(

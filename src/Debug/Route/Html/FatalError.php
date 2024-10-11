@@ -100,21 +100,21 @@ class FatalError
         $cfgWas = $this->debug->setCfg(array(
             'maxDepth' => 0,
             // Don't inspect objects when dumping trace arguments...  potentially huge objects
-            'objectsExclude' => array('*'),
+            'objectsExclude' => ['*'],
         ), Debug::CONFIG_NO_PUBLISH);
         $logEntry = new LogEntry(
             $this->debug,
             'table',
-            array(),
+            [],
             array(
                 'attribs' => array(
                     'class' => 'trace trace-context table-bordered',
                 ),
                 'inclContext' => true,
-                'onBuildRow' => array(
-                    array($this->routeHtml->dumper->helper, 'tableMarkupFunction'),
-                    array($this->routeHtml->dumper->helper, 'tableAddContextRow'),
-                ),
+                'onBuildRow' => [
+                    [$this->routeHtml->dumper->helper, 'tableMarkupFunction'],
+                    [$this->routeHtml->dumper->helper, 'tableAddContextRow'],
+                ],
                 'trace' => $trace,
             )
         );

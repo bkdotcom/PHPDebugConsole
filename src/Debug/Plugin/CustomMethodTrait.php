@@ -53,7 +53,7 @@ trait CustomMethodTrait
             $args[] = $this->debug->meta($meta);
         }
         $logEntry['handled'] = true;
-        $logEntry['return'] = \call_user_func_array(array($this, $method), $args);
+        $logEntry['return'] = \call_user_func_array([$this, $method], $args);
         $logEntry->stopPropagation();
     }
 }

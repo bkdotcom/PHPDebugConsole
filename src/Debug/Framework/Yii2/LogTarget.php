@@ -21,9 +21,9 @@ use yii\log\Target;
  */
 class LogTarget extends Target
 {
-    public $except = array(
+    public $except = [
         'yii\db\Command::query',
-    );
+    ];
 
     public $exportInterval = 1;
 
@@ -112,7 +112,7 @@ class LogTarget extends Target
         $debug = $message['channel'];
         $method = $this->levelMap[$message['level']];
         $args = $this->handleMessageArgs($message);
-        \call_user_func_array(array($debug, $method), $args);
+        \call_user_func_array([$debug, $method], $args);
     }
 
     /**
@@ -124,19 +124,19 @@ class LogTarget extends Target
      */
     private function handleMessageArgs($message)
     {
-        $args = \array_filter(array(
+        $args = \array_filter([
             \ltrim($message['category'] . ':', ':'),
             $message['text'],
-        ));
+        ]);
         if ($message['level'] === Logger::LEVEL_PROFILE_END) {
             $messageBegin = \array_pop($this->profileStack);
             $text = \ltrim($messageBegin['category'] . ': ' . $messageBegin['text'], ': ');
             $duration = $message['timestamp'] - $messageBegin['timestamp'];
-            $args = array($text, $duration);
+            $args = [$text, $duration];
         } elseif ($message['level'] === Logger::LEVEL_TRACE) {
             $caption = \ltrim($message['category'] . ': ' . $message['text'], ': ');
             $message['meta']['trace'] = $message['trace'];
-            $args = array(false, $caption);
+            $args = [false, $caption];
         }
         if ($message['meta']) {
             $args[] = $message['channel']->meta($message['meta']);
@@ -278,22 +278,22 @@ class LogTarget extends Target
      */
     private function normalizeMessage($message)
     {
-        $message = \array_replace(array(
+        $message = \array_replace([
             null,
             null,
             null,
             null,
-            array(),
+            [],
             null,
-        ), $message);
-        $message = \array_combine(array(
+        ], $message);
+        $message = \array_combine([
             'text',
             'level',
             'category',
             'timestamp',
             'trace',
             'memory',
-        ), $message);
+        ], $message);
         if ($message['level'] === Logger::LEVEL_TRACE && empty($message['trace'])) {
             $message['level'] = Logger::LEVEL_INFO;
         }

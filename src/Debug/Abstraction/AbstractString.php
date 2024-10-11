@@ -18,6 +18,7 @@ use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Utility\Utf8;
+use bdk\Debug\Utility\Utf8Buffer;
 use bdk\HttpMessage\Utility\ContentType;
 
 /**
@@ -88,15 +89,15 @@ class AbstractString extends AbstractComponent
             Abstracter::UNDEFINED => Type::TYPE_UNDEFINED,
         );
         if (isset($debugVals[$val])) {
-            return array($debugVals[$val], null);
+            return [$debugVals[$val], null];
         }
         if (\is_numeric($val) === false) {
-            return array(Type::TYPE_STRING, $this->getTypeMore($val));
+            return [Type::TYPE_STRING, $this->getTypeMore($val)];
         }
         $typeMore = $this->abstracter->type->isTimestamp($val)
             ? Type::TYPE_TIMESTAMP
             : Type::TYPE_STRING_NUMERIC;
-        return array(Type::TYPE_STRING, $typeMore);
+        return [Type::TYPE_STRING, $typeMore];
     }
 
     /**
@@ -111,7 +112,7 @@ class AbstractString extends AbstractComponent
     {
         $typeMore = $abs['typeMore'];
         if ($abs['brief'] && $typeMore !== Type::TYPE_STRING_BINARY) {
-            $matches = array();
+            $matches = [];
             $maxLen = $abs['maxlen'] > -1
                 ? $abs['maxlen']
                 : 128;
@@ -194,7 +195,7 @@ class AbstractString extends AbstractComponent
         if ($strLenMime > -1 && $abs['strlen'] > $strLenMime) {
             $abs['contentType'] = $this->debug->stringUtil->contentType($abs['valueRaw']);
         }
-        $buffer = new \bdk\Debug\Utility\Utf8Buffer($abs['valueRaw']);
+        $buffer = new Utf8Buffer($abs['valueRaw']);
         $info = $buffer->analyze();
         $abs['percentBinary'] = $info['percentBinary'];
         if ($abs['brief'] && !empty($abs['contentType'])) {
@@ -221,7 +222,7 @@ class AbstractString extends AbstractComponent
      */
     private function getAbsBinaryChunked(Abstraction $abs)
     {
-        $buffer = new \bdk\Debug\Utility\Utf8Buffer($abs['value']);
+        $buffer = new Utf8Buffer($abs['value']);
         $info = $buffer->analyze();
         $abs['chunks'] = \array_map(static function ($chunk) {
             if ($chunk[0] === Utf8::TYPE_OTHER) {

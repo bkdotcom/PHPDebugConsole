@@ -21,13 +21,11 @@ class Highlight implements AssetProviderInterface
 {
     /**
      * {@inheritDoc}
-     *
-     * @return array
      */
     public function getAssets() // phpcs:ignore SlevomatCodingStandard.Functions.FunctionLength
     {
         return array(
-            'css' => array(
+            'css' => [
                 './js/prism.css',
                 '.debug pre[class*="language-"] {
                     padding: 0;
@@ -52,8 +50,8 @@ class Highlight implements AssetProviderInterface
                 .debug pre[class*="language-"].line-numbers {
                     padding-left: 3.8em;
                 }',
-            ),
-            'script' => array(
+            ],
+            'script' => [
                 './js/prism.js',
                 'Prism.manual = true;
                 (function(){
@@ -121,7 +119,7 @@ class Highlight implements AssetProviderInterface
                         }
                     })
                 }());',
-            ),
+            ],
         );
     }
 }

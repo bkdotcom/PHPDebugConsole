@@ -27,7 +27,7 @@ class TableCell extends AbstractItem
     public function __construct($items = array())
     {
         if (\is_array($items) === false && !($items instanceof Traversable)) {
-            $items = array($items);
+            $items = [$items];
         }
         parent::__construct(array(
             'backgroundImage' => null,
@@ -255,7 +255,7 @@ class TableCell extends AbstractItem
      */
     private function asItems($items)
     {
-        $itemsNew = array();
+        $itemsNew = [];
         /**
          * @var array-key $i
          * @var mixed     $item

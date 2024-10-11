@@ -1,6 +1,6 @@
 <?php
 
-namespace bdk\Debug\Collector\DoctrineLogger;
+namespace bdk\Debug\Collector\Doctrine;
 
 use bdk\Debug\Collector\StatementInfo;
 
@@ -8,11 +8,11 @@ use bdk\Debug\Collector\StatementInfo;
     Wrap in condition.
     PHPUnit code coverage scans all files and will conflict
 */
-if (\trait_exists(__NAMESPACE__ . '\\CompatTrait', false) === false) {
+if (\trait_exists(__NAMESPACE__ . '\\LoggerCompatTrait', false) === false) {
     /**
-     * Method signature for Php >= 8.4
+     * Method signature for Php < 8.4
      */
-    trait CompatTrait
+    trait LoggerCompatTrait
     {
         /**
          * Logs a SQL statement somewhere.
@@ -25,7 +25,7 @@ if (\trait_exists(__NAMESPACE__ . '\\CompatTrait', false) === false) {
          *
          * @phpcs:disable Generic.Classes.DuplicateClassName.Found
          */
-        public function startQuery($sql, ?array $params = null, ?array $types = null)
+        public function startQuery($sql, array $params = null, array $types = null)
         {
             $this->statementInfo = new StatementInfo($sql, $params, $types);
         }

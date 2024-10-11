@@ -29,7 +29,7 @@ class ReqRes implements SubscriberInterface
     use CustomMethodTrait;
 
     /** @var string[] */
-    protected $methods = array(
+    protected $methods = [
         'getHeaders',
         'getInterface',
         'getResponseCode',
@@ -39,7 +39,7 @@ class ReqRes implements SubscriberInterface
         'isCli',
         'requestId',
         'writeToResponse',
-    );
+    ];
 
     /**
      * {@inheritDoc}
@@ -171,9 +171,9 @@ class ReqRes implements SubscriberInterface
         }
         $protocol = $this->getServerParam('SERVER_PROTOCOL') ?: 'HTTP/1.0';
         $code = $this->getResponseCode();
-        $headersAll = array(
+        $headersAll = [
             $protocol . ' ' . $code . ' ' . ResponseUtil::codePhrase($code),
-        );
+        ];
         foreach ($headers as $k => $vals) {
             foreach ($vals as $val) {
                 $headersAll[] = $k . ': ' . $val;
@@ -267,9 +267,9 @@ class ReqRes implements SubscriberInterface
             // By default, PHP will output a Content-Type header if this ini value is non-empty
             $contentTypeDefault = $contentTypeDefault . '; charset=' . $charset;
             $contentTypeDefault = \preg_replace('/; charset=$/', '', $contentTypeDefault);
-            $headersDefault['Content-Type'] = array(
+            $headersDefault['Content-Type'] = [
                 $contentTypeDefault,
-            );
+            ];
         }
         $keysLower = \array_map('strtolower', \array_keys($headers));
         foreach ($headersDefault as $k => $v) {

@@ -21,7 +21,7 @@ class AbstractComponent
     protected $cfg = array();
 
     /** @var list<string> */
-    protected $readOnly = array();
+    protected $readOnly = [];
 
     /** @var callable */
     protected $setCfgMergeCallable = 'array_replace_recursive';

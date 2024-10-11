@@ -89,8 +89,8 @@ class GroupStack
         }
         $this->getCurrentGroupsInit($where);
         $logEntries = $where === 'main'
-            ? $this->debug->data->get(array('log'))
-            : $this->debug->data->get(array('logSummary', $where));
+            ? $this->debug->data->get(['log'])
+            : $this->debug->data->get(['logSummary', $where]);
         /*
             curDepth will fluctuate as we go back through log
             minDepth will decrease as we work our way down/up the groups
@@ -288,7 +288,7 @@ class GroupStack
     private function getCurrentGroupsPLE(LogEntry $logEntry, $index)
     {
         $method = $logEntry['method'];
-        if (\in_array($method, array('group', 'groupCollapsed'), true)) {
+        if (\in_array($method, ['group', 'groupCollapsed'], true)) {
             $this->currentInfo['curDepth']--;
         } elseif ($method === 'groupEnd') {
             $this->currentInfo['curDepth']++;

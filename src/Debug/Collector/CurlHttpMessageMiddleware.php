@@ -54,7 +54,7 @@ class CurlHttpMessageMiddleware extends AbstractAsyncMiddleware
         );
         $this->onRedirectOrig = $options['onRedirect'];
         if ($requestInfo['isAsynchronous'] === false) {
-            $curlReqRes->setOption('onRedirect', array($this, 'onRedirect'));
+            $curlReqRes->setOption('onRedirect', [$this, 'onRedirect']);
         }
         $this->logRequest($request, $requestInfo);
         return $this->doRequest($curlReqRes, $requestInfo);

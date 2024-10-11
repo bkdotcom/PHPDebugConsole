@@ -89,7 +89,7 @@ class BaseObject
     {
         $vis = (array) $info['visibility'];
         foreach ($vis as $i => $v) {
-            if (\in_array($v, array('magic', 'magic-read', 'magic-write'), true)) {
+            if (\in_array($v, ['magic', 'magic-read', 'magic-write'], true)) {
                 $vis[$i] = '✨ ' . $v;    // "sparkles": there is no magic-wand unicode char
             } elseif ($v === 'private' && $info['isInherited']) {
                 $vis[$i] = '🔒 ' . $v;

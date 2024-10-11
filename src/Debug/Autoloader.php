@@ -50,7 +50,7 @@ class Autoloader
             'bdk\\Teams\\' => __DIR__ . '/../Teams',
             'bdk\\Test\\Debug\\' => __DIR__ . '/../../tests/Debug',
         );
-        return \spl_autoload_register(array($this, 'autoload'));
+        return \spl_autoload_register([$this, 'autoload']);
     }
 
     /**
@@ -60,7 +60,7 @@ class Autoloader
      */
     public function unregister()
     {
-        return \spl_autoload_unregister(array($this, 'autoload'));
+        return \spl_autoload_unregister([$this, 'autoload']);
     }
 
     /**

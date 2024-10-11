@@ -14,7 +14,7 @@ abstract class AbstractBlockFactory
 
     /** @var array<string,list<string>> */
     protected static $validElementTypes = array(
-        'actions' => array(
+        'actions' => [
             'button',
             'checkboxes',
             'datepicker',
@@ -23,12 +23,12 @@ abstract class AbstractBlockFactory
             'overflow',
             'radio_buttons',
             'timepicker',
-        ),
-        'context' => array(
+        ],
+        'context' => [
             'image',
             'mrkdwn',
             'plain_text',
-        ),
+        ],
     );
 
     /**

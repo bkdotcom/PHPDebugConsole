@@ -62,7 +62,7 @@ class PropertiesInstance extends Properties
         }
         $obj = $abs->getSubject();
         // temporarily store __debugInfo values in abstraction
-        $abs['debugInfo'] = \call_user_func(array($obj, '__debugInfo'));
+        $abs['debugInfo'] = \call_user_func([$obj, '__debugInfo']);
         $properties = $this->addDebugWalk($abs);
         /*
             What remains in debugInfo are __debugInfo only values

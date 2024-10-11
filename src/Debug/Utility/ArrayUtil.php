@@ -64,7 +64,7 @@ class ArrayUtil
     {
         $arrays = \array_slice(\func_get_args(), 1);
         self::assertContainsOnly($arrays, 'array', __FUNCTION__);
-        return \array_reduce($arrays, array(__CLASS__, 'diffAssocRecursiveWalk'), $array1);
+        return \array_reduce($arrays, [__CLASS__, 'diffAssocRecursiveWalk'], $array1);
     }
 
     /**
@@ -137,7 +137,7 @@ class ArrayUtil
     {
         $arrays = \array_slice(\func_get_args(), 1);
         self::assertContainsOnly($arrays, 'array', __FUNCTION__);
-        return \array_reduce($arrays, array(__CLASS__, 'mergeDeepWalk'), $array1);
+        return \array_reduce($arrays, [__CLASS__, 'mergeDeepWalk'], $array1);
     }
 
     /**
@@ -229,10 +229,10 @@ class ArrayUtil
     {
         $key = \array_search($search, $array, true);
         if ($key !== false) {
-            return array($key);
+            return [$key];
         }
         if ($byKey && self::isValidKey($search) && \array_key_exists($search, $array)) {
-            return array($search);
+            return [$search];
         }
         return self::searchRecursiveWalk($search, $array, $byKey);
     }
@@ -350,7 +350,7 @@ class ArrayUtil
             }
             $pathTest = self::searchRecursive($search, $val, $byKey);
             if ($pathTest) {
-                return \array_merge(array($key), $pathTest);
+                return \array_merge([$key], $pathTest);
             }
         }
         return false;

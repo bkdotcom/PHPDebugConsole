@@ -45,10 +45,14 @@ class BdkDebugBundleListener implements EventSubscriberInterface
         ),
         'css' => '.debug .empty {border:none; padding:inherit;}',
         'logFiles' => array(
-            'filesExclude' => array(
+            'filesExclude' => [
                 '/var/cache/',
                 '/vendor/',
-            ),
+            ],
+        ),
+        'routeNonHtml' => null,
+        'routeServerLog' => array(
+            'logDir' => null,
         ),
     );
 
@@ -94,12 +98,12 @@ class BdkDebugBundleListener implements EventSubscriberInterface
             return;
         }
         $this->debug->setCfg($this->debugCfg, Debug::CONFIG_NO_RETURN);
-        $this->debug->eventManager->subscribe(Debug::EVENT_LOG, array($this, 'onDebugLog'));
-        $this->debug->eventManager->subscribe(Debug::EVENT_OBJ_ABSTRACT_START, array($this, 'onObjAbstractStart'));
+        $this->debug->eventManager->subscribe(Debug::EVENT_LOG, [$this, 'onDebugLog']);
+        $this->debug->eventManager->subscribe(Debug::EVENT_OBJ_ABSTRACT_START, [$this, 'onObjAbstractStart']);
     }
 
     /**
-     * php.debug event listener
+     * Debug::EVENT_LOG event listener
      *
      * @param LogEntry $logEntry LogEntry instance
      *

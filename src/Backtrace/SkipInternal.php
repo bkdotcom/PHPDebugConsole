@@ -34,7 +34,7 @@ class SkipInternal
             __NAMESPACE__ => 0,
         ),
         'levelCurrent' => null,
-        'levels' => array(0),
+        'levels' => [0],
         'regex' => null,
     );
 
@@ -127,7 +127,7 @@ class SkipInternal
     private static function buildSkipRegex()
     {
         $levelCurrent = self::$internalClasses['levelCurrent'];
-        $classes = array();
+        $classes = [];
         foreach (self::$internalClasses['classes'] as $class => $level) {
             if ($level <= $levelCurrent) {
                 $classes[] = $class;
@@ -159,7 +159,7 @@ class SkipInternal
         }
         for ($i = $index - 1; $i > 0; $i--) {
             $class = self::getClass($backtrace[$i]);
-            if (\in_array($class, array(null, 'ReflectionMethod'), true) === false) {
+            if (\in_array($class, [null, 'ReflectionMethod'], true) === false) {
                 // class method (but not ReflectionMethod)
                 break;
             }
@@ -203,7 +203,7 @@ class SkipInternal
      */
     private static function isPhpDefinedFunction($function)
     {
-        if (\in_array($function, array('include', 'include_once', 'include or require', 'require', 'require_once'), true)) {
+        if (\in_array($function, ['include', 'include_once', 'include or require', 'require', 'require_once'], true)) {
             return true;
         }
         if (\function_exists($function) === false) {

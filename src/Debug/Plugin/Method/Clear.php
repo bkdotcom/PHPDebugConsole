@@ -40,9 +40,9 @@ class Clear implements SubscriberInterface
     private $isRootInstance = false;
 
     /** @var string[] */
-    protected $methods = array(
+    protected $methods = [
         'clear',
-    );
+    ];
 
     /**
      * Constructor
@@ -80,7 +80,7 @@ class Clear implements SubscriberInterface
             \func_get_args(),
             array(),
             $debug->rootInstance->getMethodDefaultArgs(__METHOD__),
-            array('bitmask')
+            ['bitmask']
         );
         $this->doClear($logEntry);
         // even if cleared from within summary, let's log this in primary log
@@ -116,7 +116,7 @@ class Clear implements SubscriberInterface
         $cleared[] = $this->clearSummary($bitmask);
         $this->clearErrors($bitmask);
         if (($bitmask & Debug::CLEAR_ALL) === Debug::CLEAR_ALL) {
-            $cleared = array('everything');
+            $cleared = ['everything'];
         }
         $args = $this->getLogArgs($cleared);
         $this->debug->data->set($this->data);
@@ -214,7 +214,7 @@ class Clear implements SubscriberInterface
         $errorsNotCleared = array();
 
         $log = \array_filter($log, function (LogEntry $logEntry) use ($clear, &$errorsNotCleared) {
-            if (\in_array($logEntry['method'], array('error', 'warn'), true) === false) {
+            if (\in_array($logEntry['method'], ['error', 'warn'], true) === false) {
                 return true;
             }
             $clear2 = $this->channelName
@@ -265,8 +265,8 @@ class Clear implements SubscriberInterface
     private function clearLogHelper(array &$log, $clearErrors = false)
     {
         $keep = $clearErrors
-            ? array()
-            : array('error', 'warn');
+            ? []
+            : ['error', 'warn'];
         if ($keep || $this->channelName) {
             $this->clearLogHelperFilter($log, $keep);
         }

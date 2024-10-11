@@ -111,7 +111,7 @@ class Abstraction extends Event
             return;
         }
         if (!isset($values['attribs']['class'])) {
-            $this->values['attribs']['class'] = array();
+            $this->values['attribs']['class'] = [];
             \ksort($this->values['attribs']);
         } elseif (\is_string($values['attribs']['class'])) {
             $this->values['attribs']['class'] = \explode(' ', $values['attribs']['class']);

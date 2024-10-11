@@ -58,9 +58,9 @@ class GroupCleanup implements SubscriberInterface
     public function getSubscriptions()
     {
         return array(
-            Debug::EVENT_OUTPUT => array('onOutput', PHP_INT_MAX),
+            Debug::EVENT_OUTPUT => ['onOutput', PHP_INT_MAX],
             Debug::EVENT_PLUGIN_INIT => 'onPluginInit',
-            EventManager::EVENT_PHP_SHUTDOWN => array('onShutdown', PHP_INT_MAX),
+            EventManager::EVENT_PHP_SHUTDOWN => ['onShutdown', PHP_INT_MAX],
         );
     }
 
@@ -227,7 +227,7 @@ class GroupCleanup implements SubscriberInterface
         $logEntry = $this->log[$index];
         $method = $logEntry['method'];
         $stackCount = $this->cleanupInfo['stackCount'];
-        if (\in_array($method, array('group', 'groupCollapsed'), true)) {
+        if (\in_array($method, ['group', 'groupCollapsed'], true)) {
             $this->cleanupInfo['stack'][] = array(
                 'childCount' => 0,  // includes any child groups
                 'depth' => $stackCount,

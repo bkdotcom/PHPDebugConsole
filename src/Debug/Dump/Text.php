@@ -102,7 +102,7 @@ class Text extends Base
         foreach ($args as $i => $v) {
             list($type, $typeMore) = $this->debug->abstracter->type->getType($v);
             $isNumericString = $type === Type::TYPE_STRING
-                && \in_array($typeMore, array(Type::TYPE_STRING_NUMERIC, Type::TYPE_TIMESTAMP), true);
+                && \in_array($typeMore, [Type::TYPE_STRING_NUMERIC, Type::TYPE_TIMESTAMP], true);
             $args[$i] = $this->valDumper->dump($v, array(
                 'addQuotes' => $i !== 0 || $isNumericString || $type !== Type::TYPE_STRING,
                 'type' => $type,
@@ -245,7 +245,7 @@ class Text extends Base
         ), $logEntry['meta']);
         $label = \array_shift($args);
         $label = $meta['isFuncName']
-            ? $this->valDumper->markupIdentifier($label, 'function')
+            ? $this->valDumper->markupIdentifier($label, 'method')
             : $this->valDumper->dump($label, array('addQuotes' => false));
         foreach ($args as $k => $v) {
             $args[$k] = $this->valDumper->dump($v);

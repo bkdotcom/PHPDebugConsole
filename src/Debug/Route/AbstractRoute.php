@@ -45,8 +45,8 @@ abstract class AbstractRoute extends AbstractComponent implements RouteInterface
 
     /** @var array<string,mixed> */
     protected $cfg = array(
-        'channels' => array('*'),
-        'channelsExclude' => array(),
+        'channels' => ['*'],
+        'channelsExclude' => [],
     );
 
     /** @var array<string,mixed> */
@@ -82,10 +82,10 @@ abstract class AbstractRoute extends AbstractComponent implements RouteInterface
     public function getSubscriptions()
     {
         return array(
-            Debug::EVENT_OUTPUT => array(
+            Debug::EVENT_OUTPUT => [
                 'setChannelName',
                 'processLogEntries',
-            ),
+            ],
         );
     }
 
@@ -285,10 +285,10 @@ abstract class AbstractRoute extends AbstractComponent implements RouteInterface
             return $this->shouldIncludeCache[$channelName];
         }
         if (empty($this->cfg['channels'])) {
-            $this->cfg['channels'] = array('*');
+            $this->cfg['channels'] = ['*'];
         }
         if (!isset($this->cfg['channelsExclude'])) {
-            $this->cfg['channelsExclude'] = array();
+            $this->cfg['channelsExclude'] = [];
         }
         $include = $this->testChannelNameMatch($channelName, $this->cfg['channels'])
             && !$this->testChannelNameMatch($channelName, $this->cfg['channelsExclude']);

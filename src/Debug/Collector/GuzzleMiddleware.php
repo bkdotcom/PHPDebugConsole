@@ -62,7 +62,7 @@ class GuzzleMiddleware extends AbstractAsyncMiddleware
                 ? $options['allow_redirects']['on_redirect']
                 : null;
             if ($requestInfo['isAsynchronous'] === false) {
-                $options['allow_redirects']['on_redirect'] = array($this, 'onRedirect');
+                $options['allow_redirects']['on_redirect'] = [$this, 'onRedirect'];
             }
         }
         $this->logRequest($request, $requestInfo);

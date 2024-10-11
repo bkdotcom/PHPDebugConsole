@@ -114,12 +114,12 @@ class Definition
         $valueStoreKey = PHP_VERSION_ID >= 70000 && $reflector->isAnonymous()
             ? $className . '|' . \md5($reflector->getName())
             : $className;
-        $dataPath = array('classDefinitions', $valueStoreKey);
+        $dataPath = ['classDefinitions', $valueStoreKey];
         $valueStore = $this->debug->data->get($dataPath);
         if ($valueStore) {
             return $valueStore;
         }
-        if (\array_filter(array($values['isMaxDepth'], $values['isExcluded']))) {
+        if (\array_filter([$values['isMaxDepth'], $values['isExcluded']])) {
             return $this->getValueStoreDefault();
         }
         $abs = new ObjectAbstraction($this->getValueStoreDefault(), $this->getInitValues($values));
@@ -297,7 +297,7 @@ class Definition
     protected function getInterfaces(ReflectionClass $reflector)
     {
         $interfaces = array();
-        $remove = array();
+        $remove = [];
         foreach ($reflector->getInterfaces() as $classname => $refClass) {
             if (\in_array($classname, $remove, true)) {
                 continue;

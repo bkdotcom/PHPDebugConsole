@@ -25,9 +25,9 @@ class Output implements SubscriberInterface
     use CustomMethodTrait;
 
     /** @var string[] */
-    protected $methods = array(
+    protected $methods = [
         'output',
-    );
+    ];
 
     /**
      * Constructor

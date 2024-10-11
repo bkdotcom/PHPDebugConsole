@@ -25,15 +25,15 @@ class Script extends AbstractRoute
 {
     /** @var array<string,mixed> */
     protected $cfg = array(
-        'channels' => array('*'),
-        'channelsExclude' => array(
+        'channels' => ['*'],
+        'channelsExclude' => [
             'events',
             'files',
-        ),
+        ],
     );
 
     /** @var list<string> */
-    protected $consoleMethods = array(
+    protected $consoleMethods = [
         'assert',
         // 'count',    // output as log
         'error',
@@ -47,7 +47,7 @@ class Script extends AbstractRoute
         'timeEnd',  // PHPDebugConsole never generates a timeEnd entry
         'trace',
         'warn',
-    );
+    ];
 
     /**
      * Constructor
@@ -78,11 +78,11 @@ class Script extends AbstractRoute
         $str .= $this->processLogEntryViaEvent(new LogEntry(
             $this->debug,
             'groupCollapsed',
-            array(
+            [
                 'PHP',
                 $this->getRequestMethodUri(),
                 $this->getErrorSummary(),
-            )
+            ]
         ));
         $str .= $this->processAlerts();
         $str .= $this->processSummary();
@@ -107,7 +107,7 @@ class Script extends AbstractRoute
     public function processLogEntry(LogEntry $logEntry)
     {
         $method = $logEntry['method'];
-        if (\in_array($method, array('table', 'trace'), true)) {
+        if (\in_array($method, ['table', 'trace'], true)) {
             $logEntry->setMeta(array(
                 'forceArray' => false,
                 'undefinedAs' => Abstracter::UNDEFINED,
@@ -116,19 +116,19 @@ class Script extends AbstractRoute
         $this->dumper->processLogEntry($logEntry);
         $str = $this->buildConsoleCall($logEntry);
         $str = \str_replace(
-            array(
+            [
                 // ensure that </script> doesn't appear inside our <script>
                 '</script>',
                 \json_encode(Type::TYPE_FLOAT_INF),
                 \json_encode(Type::TYPE_FLOAT_NAN),
                 \json_encode(Abstracter::UNDEFINED),
-            ),
-            array(
+            ],
+            [
                 '<\\/script>',
                 'Infinity',
                 'NaN',
                 'undefined',
-            ),
+            ],
             $str
         );
         return $str;

@@ -38,19 +38,19 @@ trait AssertSettingTrait
             'valCompare' => true,
         ), $setting));
         /** @var array{0:bool,1:string} */
-        $params = array(
+        $params = [
             $this->debug->stringUtil->compare($setting['valActual'], $setting['valCompare'], $setting['operator']),
             $setting['name']
                 ? '%c' . $setting['name'] . '%c: ' . $setting['msg']
                 : $setting['msg'],
-        );
+        ];
         $cCount = \substr_count($params[1], '%c');
         for ($i = 0; $i < $cCount; $i += 2) {
             $params[] = 'font-family:monospace;';
             $params[] = '';
         }
         $params = \array_merge($params, $setting['addParams']);
-        \call_user_func_array(array($this->debug, 'assert'), $params);
+        \call_user_func_array([$this->debug, 'assert'], $params);
     }
 
     /**
@@ -76,7 +76,7 @@ trait AssertSettingTrait
         $valFriendly = $this->valFriendly($setting);
         $setting['msg'] = \sprintf(
             '%s %s',
-            \in_array($setting['operator'], array('===', '==', '=', 'eq'), true)
+            \in_array($setting['operator'], ['===', '==', '=', 'eq'], true)
                 ? 'should be'
                 : 'should not be',
             $valFriendly

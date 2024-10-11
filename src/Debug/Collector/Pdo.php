@@ -332,21 +332,8 @@ class Pdo extends PdoBase
      *
      * @SuppressWarnings(PHPMD.UnusedPrivateMethod) -> called via DatabaseTrait
      */
-    private function serverInfo()
+    protected function serverInfo()
     {
-        $driverName = $this->pdo->getAttribute(PdoBase::ATTR_DRIVER_NAME);
-        // parse server info
-        $serverInfo = $driverName !== 'sqlite'
-            ? $this->pdo->getAttribute(PdoBase::ATTR_SERVER_INFO)
-            : '';
-        $matches = array();
-        \preg_match_all('/([^:]+): ([a-zA-Z0-9.]+)\s*/', $serverInfo, $matches);
-        $serverInfo = \array_map(static function ($val) {
-            /** @psalm-suppress InvalidOperand */
-            return $val * 1;
-        }, \array_combine($matches[1], $matches[2]));
-        $serverInfo['Version'] = $this->pdo->getAttribute(PdoBase::ATTR_SERVER_VERSION);
-        \ksort($serverInfo);
-        return $serverInfo;
+        return $this->pdoServerInfo($this->pdo);
     }
 }

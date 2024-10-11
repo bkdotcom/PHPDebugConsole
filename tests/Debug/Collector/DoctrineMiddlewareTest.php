@@ -2,16 +2,20 @@
 
 namespace bdk\Test\Debug\Collector;
 
-use bdk\Debug\Collector\DoctrineLogger;
+use bdk\Debug\Collector\DoctrineMiddleware;
 use bdk\Debug\Utility\Reflection;
 use bdk\Test\Debug\DebugTestFramework;
 use Doctrine\DBAL\DriverManager;
 
 /**
  * @covers \bdk\Debug\Collector\DoctrineLogger
+ * @covers \bdk\Debug\Collector\DoctrineMiddleware
+ * @covers \bdk\Debug\Collector\Doctrine\Connection
+ * @covers \bdk\Debug\Collector\Doctrine\Driver
+ * @covers \bdk\Debug\Collector\Doctrine\Statement
  * @covers \bdk\Debug\Utility\Sql
  */
-class DoctrineLoggerTest extends DebugTestFramework
+class DoctrineMiddlewareTest extends DebugTestFramework
 {
     /**
      * setUp is executed before each test
@@ -36,9 +40,7 @@ class DoctrineLoggerTest extends DebugTestFramework
         $statement = $conn->prepare('SELECT *
             FROM `bob`
             WHERE e < :datetime');
-        \method_exists($statement, 'bindValue')
-            ? $statement->bindValue(':datetime', $datetime, \Doctrine\DBAL\ParameterType::STRING)
-            : $statement->bindParam(':datetime', $datetime, \PDO::PARAM_STR);
+        $statement->bindValue(':datetime', $datetime, \Doctrine\DBAL\ParameterType::STRING);
         \method_exists($statement, 'executeQuery')
             ? $statement->executeQuery()
             : $statement->execute();
@@ -50,9 +52,7 @@ class DoctrineLoggerTest extends DebugTestFramework
             \class_exists('Doctrine\DBAL\ArrayParameterType')
                 ? \Doctrine\DBAL\ArrayParameterType::INTEGER
                 : \Doctrine\DBAL\Connection::PARAM_INT_ARRAY,
-            \class_exists('\Doctrine\DBAL\ParameterType')
-                ? \Doctrine\DBAL\ParameterType::STRING
-                : \PDO::PARAM_STR,
+            \Doctrine\DBAL\ParameterType::STRING // pre Doctrine 4.x this maps to PDO::PARAM_STR
         ];
 
         $stmt = $conn->executeQuery($sql, $values, $types);
@@ -66,11 +66,15 @@ class DoctrineLoggerTest extends DebugTestFramework
         $runtimeOutput = <<<'EOD'
 %A
 <li class="level-info m_group" data-channel="general.Doctrine" data-icon="fa fa-database">
-<div class="group-header"><span class="font-weight-bold group-label">Doctrine:</span> <span class="t_string">sqlite:///:memory:</span></div>
+<div class="group-header"><span class="font-weight-bold group-label">Doctrine:</span> <span class="t_string">pdo-sqlite:///:memory:</span></div>
 <ul class="group-body">
 <li class="m_log" data-channel="general.Doctrine"><span class="no-quotes t_string">logged operations: </span><span class="t_int">3</span></li>
 <li class="m_time" data-channel="general.Doctrine"><span class="no-quotes t_string">total time: %f %s</span></li>
 <li class="m_log" data-channel="general.Doctrine"><span class="no-quotes t_string">max memory usage</span> = <span class="t_string">%f %s</span></li>
+<li class="m_log" data-channel="general.Doctrine"><span class="no-quotes t_string">server info</span> = <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
+<ul class="array-inner list-unstyled">
+	<li><span class="t_key">Version</span><span class="t_operator">=&gt;</span><span class="t_string">%s</span></li>
+</ul><span class="t_punct">)</span></span></li>
 </ul>
 </li>
 %A
@@ -78,6 +82,13 @@ EOD;
         // \bdk\Debug::varDump('expect', $runtimeOutput);
         // \bdk\Debug::varDump('actual', $output);
         self::assertStringMatchesFormatNormalized($runtimeOutput, $output);
+
+        // Doctrine 4.x Doctrine\DBAL\ParameterType is an enum
+        // pre Doctrine 4.x Doctrine\DBAL\ParameterType::STRING maps to PDO::PARAM_STR value
+        $parameterTypeTd = \function_exists('enum_exists') && \enum_exists('Doctrine\DBAL\ParameterType')
+            ? '<td class="t_identifier" data-type-more="const" title="Represents the SQL CHAR, VARCHAR, or other string data type.
+Statement parameter type."><span class="classname"><span class="namespace">Doctrine\DBAL\</span>ParameterType</span><span class="t_operator">::</span><span class="t_name">STRING</span></td>'
+            : '<td class="t_identifier" data-type-more="const" title="value: 2"><span class="classname">PDO</span><span class="t_operator">::</span><span class="t_name">PARAM_STR</span></td>';
 
         $select1expect = <<<EOD
 %A
@@ -97,13 +108,14 @@ WHERE
 <tr><th>&nbsp;</th><th scope="col">value</th><th scope="col">type</th></tr>
 </thead>
 <tbody>
-<tr><th class="t_key t_string text-right" scope="row">:datetime</th><td class="t_string">{$datetime}</td><td class="t_identifier" data-type-more="const" title="value: 2"><span class="classname">PDO</span><span class="t_operator">::</span><span class="t_name">PARAM_STR</span></td></tr>
+<tr><th class="t_key t_string text-right" scope="row">:datetime</th><td class="t_string">{$datetime}</td>{$parameterTypeTd}</tr>
 </tbody>
 </table>
 </li>
 <li class="m_time" data-channel="general.Doctrine"><span class="no-quotes t_string">duration: %f %s</span></li>
 <li class="m_log" data-channel="general.Doctrine"><span class="no-quotes t_string">memory usage</span> = <span class="t_string">%f %s</span></li>
 <li class="m_warn" data-channel="general.Doctrine" data-detect-files="true" data-file="%s" data-line="%d" data-uncollapse="false"><span class="no-quotes t_string">Use <span style="font-family:monospace">SELECT *</span><span> only if you need all columns from table</span></span></li>
+<li class="m_log" data-channel="general.Doctrine"><span class="no-quotes t_string">rowCount</span> = <span class="t_int">0</span></li>
 </ul>
 </li>
 %A
@@ -112,17 +124,27 @@ EOD;
         // \bdk\Debug::varDump('actual', $output);
         self::assertStringMatchesFormatNormalized($select1expect, $output);
 
-        $select2expect = <<<'EOD'
+        $params =\method_exists($statement, 'bindValue') && \is_int(\Doctrine\DBAL\ParameterType::STRING) === false
+            ? '<tr><th class="t_int t_key text-right" scope="row">1</th><td class="t_string">foo</td><td class="t_identifier" data-type-more="const" title="Represents the SQL INTEGER data type.
+                    Statement parameter type."><span class="classname"><span class="namespace">Doctrine\DBAL\</span>ParameterType</span><span class="t_operator">::</span><span class="t_name">INTEGER</span></td></tr>
+                <tr><th class="t_int t_key text-right" scope="row">2</th><td class="t_string">bar</td><td class="t_identifier" data-type-more="const" title="Represents the SQL INTEGER data type.
+                    Statement parameter type."><span class="classname"><span class="namespace">Doctrine\DBAL\</span>ParameterType</span><span class="t_operator">::</span><span class="t_name">INTEGER</span></td></tr>
+                <tr><th class="t_int t_key text-right" scope="row">3</th><td class="t_string">declined</td><td class="t_identifier" data-type-more="const" title="Represents the SQL CHAR, VARCHAR, or other string data type.
+                    Statement parameter type."><span class="classname"><span class="namespace">Doctrine\DBAL\</span>ParameterType</span><span class="t_operator">::</span><span class="t_name">STRING</span></td></tr>'
+            : '<tr><th class="t_int t_key text-right" scope="row">1</th><td class="t_string">foo</td><td class="t_identifier" data-type-more="const" title="value: 1"><span class="classname">PDO</span><span class="t_operator">::</span><span class="t_name">PARAM_INT</span></td></tr>
+                <tr><th class="t_int t_key text-right" scope="row">2</th><td class="t_string">bar</td><td class="t_identifier" data-type-more="const" title="value: 1"><span class="classname">PDO</span><span class="t_operator">::</span><span class="t_name">PARAM_INT</span></td></tr>
+                <tr><th class="t_int t_key text-right" scope="row">3</th><td class="t_string">declined</td><td class="t_identifier" data-type-more="const" title="value: 2"><span class="classname">PDO</span><span class="t_operator">::</span><span class="t_name">PARAM_STR</span></td></tr>';
+        $select2expect = <<<EOD
 %A
 <li class="m_group" data-channel="general.Doctrine" data-icon="fa fa-database" id="statementInfo3">
-<div class="group-header"><span class="group-label">select * from bob…</span></div>
+<div class="group-header"><span class="group-label">select * from bob WHERE k in (?, ?) and v = ?</span></div>
 <ul class="group-body">
 <li class="m_log no-indent" data-channel="general.Doctrine"><span class="highlight language-sql no-quotes t_string">select
   *
 from
   bob
 where
-  k in (?)
+  k in (?, ?)
   and v = ?</span></li>
 <li class="m_table" data-channel="general.Doctrine">
 <table class="sortable table-bordered">
@@ -131,18 +153,14 @@ where
 <tr><th>&nbsp;</th><th scope="col">value</th><th scope="col">type</th></tr>
 </thead>
 <tbody>
-<tr><th class="t_int t_key text-right" scope="row">0</th><td class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
-<ul class="array-inner list-unstyled">
-    <li><span class="t_int t_key">0</span><span class="t_operator">=&gt;</span><span class="t_string">foo</span></li>
-    <li><span class="t_int t_key">1</span><span class="t_operator">=&gt;</span><span class="t_string">bar</span></li>
-</ul><span class="t_punct">)</span></td><td class="t_identifier" data-type-more="const" title="value: 101"><span class="classname"><span class="namespace">Doctrine\DBAL\</span>Connection</span><span class="t_operator">::</span><span class="t_name">PARAM_INT_ARRAY</span></td></tr>
-<tr><th class="t_int t_key text-right" scope="row">1</th><td class="t_string">declined</td><td class="t_identifier" data-type-more="const" title="value: 2"><span class="classname">PDO</span><span class="t_operator">::</span><span class="t_name">PARAM_STR</span></td></tr>
+{$params}
 </tbody>
 </table>
 </li>
 <li class="m_time" data-channel="general.Doctrine"><span class="no-quotes t_string">duration: %f %s</span></li>
 <li class="m_log" data-channel="general.Doctrine"><span class="no-quotes t_string">memory usage</span> = <span class="t_string">%f %s</span></li>
 <li class="m_warn" data-channel="general.Doctrine" data-detect-files="true" data-file="%s" data-line="%d" data-uncollapse="false"><span class="no-quotes t_string">Use <span style="font-family:monospace">SELECT *</span><span> only if you need all columns from table</span></span></li>
+<li class="m_log" data-channel="general.Doctrine"><span class="no-quotes t_string">rowCount</span> = <span class="t_int">0</span></li>
 </ul>
 </li>
 %A
@@ -154,17 +172,20 @@ EOD;
 
     public function getConnection()
     {
-        $supportsLogger = \method_exists('Doctrine\DBAL\Configuration', 'setSQLLogger');
-        if ($supportsLogger === false) {
-            $this->markTestSkipped('This version of Doctrine does not support setSQLLogger');
+        $supportsMiddleware = \method_exists('Doctrine\DBAL\Configuration', 'setMiddlewares');
+        if ($supportsMiddleware === false) {
+            $this->markTestSkipped('This version of Doctrine does not support middlewares');
             return false;
         }
 
-        $conn = DriverManager::getConnection(array(
-            'url' => 'sqlite:///:memory:',
-        ));
-        $logger = new DoctrineLogger($conn);
-        $conn->getConfiguration()->setSQLLogger($logger);
+        $dsnParser = new \Doctrine\DBAL\Tools\DsnParser();
+        $params = $dsnParser->parse('pdo-sqlite:///:memory:');
+        $conn = DriverManager::getConnection(
+            $params,
+            (new \Doctrine\DBAL\Configuration())->setMiddlewares([
+                new DoctrineMiddleware(),
+            ])
+        );
 
         $this->createScheme($conn);
         return $conn;

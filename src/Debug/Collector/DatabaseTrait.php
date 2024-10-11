@@ -14,6 +14,7 @@ namespace bdk\Debug\Collector;
 
 use bdk\Debug;
 use bdk\Debug\Collector\StatementInfo;
+use Pdo as PdoBase;
 
 /**
  * Used by DoctrineLogger, MySqli, and Pdo
@@ -77,6 +78,16 @@ trait DatabaseTrait
     }
 
     /**
+     * Extend me to return the current database name
+     *
+     * @return string|null
+     */
+    protected function currentDatabase()
+    {
+        return null;
+    }
+
+    /**
      * Log runtime information
      *
      * @param Debug $debug Debug instance
@@ -92,9 +103,12 @@ trait DatabaseTrait
         $debug->log('logged operations: ', \count($this->loggedStatements));
         $debug->time('total time', $this->getTimeSpent());
         $debug->log('max memory usage', $debug->utility->getBytes($this->getPeakMemoryUsage()));
-        $debug->log('server info', $this->serverInfo());
+        $serverInfo = $this->serverInfo();
+        if ($serverInfo) {
+            $debug->log('server info', $serverInfo);
+        }
         if ($this->prettified() === false) {
-            $debug->info('install jdorn/sql-formatter to prettify logged sql statements');
+            $debug->info('require jdorn/sql-formatter to prettify logged sql statements');
         }
     }
 
@@ -136,6 +150,31 @@ trait DatabaseTrait
     }
 
     /**
+     * Return server information
+     *
+     * @return array
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod) -> called via DatabaseTrait
+     */
+    protected function pdoServerInfo(PdoBase $pdo)
+    {
+        $driverName = $pdo->getAttribute(PdoBase::ATTR_DRIVER_NAME);
+        // parse server info
+        $serverInfo = $driverName !== 'sqlite'
+            ? $pdo->getAttribute(PdoBase::ATTR_SERVER_INFO)
+            : '';
+        $matches = array();
+        \preg_match_all('/([^:]+): ([a-zA-Z0-9.]+)\s*/', $serverInfo, $matches);
+        $serverInfo = \array_map(static function ($val) {
+            /** @psalm-suppress InvalidOperand */
+            return $val * 1;
+        }, \array_combine($matches[1], $matches[2]));
+        $serverInfo['Version'] = $pdo->getAttribute(PdoBase::ATTR_SERVER_VERSION);
+        \ksort($serverInfo);
+        return $serverInfo;
+    }
+
+    /**
      * Were attempts to prettify successful?
      *
      * @return bool
@@ -153,5 +192,15 @@ trait DatabaseTrait
             }
         }
         return $falseCount === 0;
+    }
+
+    /**
+     * Extend me to return database server information
+     *
+     * @return array
+     */
+    protected function serverInfo()
+    {
+        return array();
     }
 }

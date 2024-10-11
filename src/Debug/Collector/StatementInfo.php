@@ -340,12 +340,14 @@ class StatementInfo extends AbstractComponent
                 continue;
             }
             $type = $this->types[$name];
-            $params[$name]['type'] = isset(self::$constants[$type])
-                ? new Abstraction(Type::TYPE_CONST, array(
-                    'name' => self::$constants[$type],
-                    'value' => $type,
+            $isIntOrString = \is_int($type) || \is_string($type);
+            $params[$name]['type'] = $isIntOrString && isset(self::$constants[$type])
+                ? new Abstraction(Type::TYPE_IDENTIFIER, array(
+                    'backedValue' => $type,
+                    'typeMore' => 'const',
+                    'value' => self::$constants[$type],
                 ))
-                : $type; // integer value
+                : $type; // integer value (or enum)
         }
         $this->debug->table('parameters', $params);
     }
@@ -399,7 +401,7 @@ class StatementInfo extends AbstractComponent
     private function setConstants()
     {
         $this->setConstantsPdo();
-        if (\class_exists('Doctrine\\DBAL\\Connection')) {
+        if (\defined('Doctrine\\DBAL\\Connection::PARAM_INT_ARRAY')) {
             self::$constants += array(
                 \Doctrine\DBAL\Connection::PARAM_INT_ARRAY => 'Doctrine\\DBAL\\Connection::PARAM_INT_ARRAY',
                 \Doctrine\DBAL\Connection::PARAM_STR_ARRAY => 'Doctrine\\DBAL\\Connection::PARAM_STR_ARRAY',

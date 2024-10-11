@@ -2,6 +2,7 @@
 
 namespace bdk\Test\Debug\Mock;
 
+use bdk\Test\Debug\Mock\SimpleCache\CompatTrait;
 use Psr\SimpleCache\CacheInterface;
 
 /**
@@ -9,6 +10,8 @@ use Psr\SimpleCache\CacheInterface;
  */
 class SimpleCache implements CacheInterface
 {
+    use CompatTrait;
+
     /**
      * @var array
      */
@@ -51,7 +54,7 @@ class SimpleCache implements CacheInterface
         return null;
     }
 
-    public function get($key, $default = null)
+    protected function doGet($key, $default = null)
     {
         $this->resetLastGetInfo($key);
         if (!isset($this->items[$key])) {
@@ -74,7 +77,7 @@ class SimpleCache implements CacheInterface
         return \unserialize($item['v']);
     }
 
-    public function set($key, $value, $ttl = null)
+    protected function doSet($key, $value, $ttl = null)
     {
         $expire = $this->expiry($ttl);
         $this->size -= isset($this->items[$key])
@@ -93,7 +96,7 @@ class SimpleCache implements CacheInterface
         return true;
     }
 
-    public function delete($key)
+    protected function doDelete($key)
     {
         $exists = $this->has($key);
         if ($exists) {
@@ -103,14 +106,14 @@ class SimpleCache implements CacheInterface
         return $exists;
     }
 
-    public function clear()
+    protected function doClear()
     {
         $this->items = array();
         $this->size = 0;
         return true;
     }
 
-    public function getMultiple($keys, $default = null)
+    protected function doGetMultiple($keys, $default = null)
     {
         $values = array();
         foreach ($keys as $key) {
@@ -119,25 +122,31 @@ class SimpleCache implements CacheInterface
         return $values;
     }
 
-    public function setMultiple($values, $ttl = null)
+    protected function doSetMultiple($values, $ttl = null)
     {
-        $success = array();
+        $haveError = false;
         foreach ($values as $key => $value) {
-            $success[$key] = $this->set($key, $value, $ttl);
+            $success = $this->set($key, $value, $ttl);
+            if ($success === false) {
+                $haveError = true;
+            }
         }
-        return $success;
+        return $haveError === false;
     }
 
-    public function deleteMultiple($keys)
+    protected function doDeleteMultiple($keys)
     {
-        $success = array();
+        $haveError = false;
         foreach ($keys as $key) {
-            $success[$key] = $this->delete($key);
+            $success = $this->delete($key);
+            if ($success === false) {
+                $haveError = true;
+            }
         }
-        return $success;
+        return $haveError === false;
     }
 
-    public function has($key)
+    protected function doHas($key)
     {
         if (!\array_key_exists($key, $this->items)) {
             // key not in cache
@@ -213,7 +222,7 @@ class SimpleCache implements CacheInterface
     /**
      * Move key to last position
      *
-     * @param sttring $key key
+     * @param string $key key
      *
      * @return void
      */

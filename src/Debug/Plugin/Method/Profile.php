@@ -251,13 +251,10 @@ class Profile implements SubscriberInterface
             'rows' => \array_fill_keys(\array_keys($data), array()),
         ), $logEntry->getMeta('tableInfo', array()));
         foreach (\array_keys($data) as $k) {
-            $tableInfo['rows'][$k]['key'] = new Abstraction(
-                Type::TYPE_CALLABLE,
-                array(
-                    'hideType' => true, // don't output 'callable'
-                    'value' => $k,
-                )
-            );
+            $tableInfo['rows'][$k]['key'] = new Abstraction(Type::TYPE_IDENTIFIER, array(
+                'typeMore' => 'method',
+                'value' => $k,
+            ));
         }
         $logEntry->setMeta(array(
             'caption' => $caption,

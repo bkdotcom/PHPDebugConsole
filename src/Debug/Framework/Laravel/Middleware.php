@@ -336,10 +336,10 @@ class Middleware
             )
         );
         $debug->log(
-            $this->debug->abstracter->crateWithVals(
-                \get_class($this->container['session']),
-                array('typeMore' => Type::TYPE_STRING_CLASSNAME)
-            )
+            $this->debug->abstracter->crateWithVals(\get_class($this->container['session']), array(
+                'type' => Type::TYPE_IDENTIFIER,
+                'typeMore' => 'className',
+            ))
         );
         $debug->log(
             $this->container['session']->all()
@@ -356,6 +356,6 @@ class Middleware
      */
     protected function shouldCollect($name, $default = false)
     {
-        return $this->container['config']->get('phpDebugConsole.collect.' . $name, $default);
+        return $this->container['config']->get('phpDebugConsole.laravel.' . $name, $default);
     }
 }

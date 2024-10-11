@@ -11,7 +11,6 @@ use bdk\Debug\LogEntry;
 use bdk\Test\Debug\DebugTestFramework;
 use bdk\Test\Debug\Fixture\TestObj;
 use bdk\Test\Debug\Helper;
-use PHP_CodeSniffer\Tokenizers\PHP;
 use ReflectionObject;
 
 /**
@@ -208,7 +207,7 @@ EOD;
                             }
                         });
                     },
-                    'html' => '<li class="m_log"><div class="groupByInheritance t_object" data-accessible="public"><span class="classname">Closure</span>
+                    'html' => '<li class="m_log"><div class="groupByInheritance t_object" data-accessible="public"><span class="t_identifier" data-type-more="className"><span class="classname">Closure</span></span>
                         <dl class="object-inner">
                         <dt class="modifiers">modifiers</dt>
                         <dd class="t_modifier_final">final</dd>
@@ -309,9 +308,9 @@ EOD;
                         self::assertStringStartsWith(
                             '<li class="m_log"><div class="groupByInheritance t_object" data-accessible="public">'
                             . '<span class="t_string t_stringified" title="__toString()">abracadabra</span>' . "\n"
-                            . '<span class="classname" title="PhpDoc Summary' . "\n"
+                            . '<span class="t_identifier" data-type-more="className" title="PhpDoc Summary' . "\n"
                             . "\n"
-                            . 'PhpDoc Description"><span class="namespace">bdk\Test\Debug\Fixture\</span>TestObj</span>',
+                            . 'PhpDoc Description"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>TestObj</span></span>',
                             $str
                         );
 
@@ -357,7 +356,7 @@ EOD;
                             "\t" . '<li><span class="t_key">numeric</span><span class="t_operator">=&gt;</span><span class="t_string" data-type-more="numeric">123</span></li>',
                             "\t" . '<li><span class="t_key">string</span><span class="t_operator">=&gt;</span><span class="t_string">cheese</span></li>',
                             "\t" . '<li><span class="t_key">bool</span><span class="t_operator">=&gt;</span><span class="t_bool" data-type-more="true">true</span></li>',
-                            "\t" . '<li><span class="t_key">obj</span><span class="t_operator">=&gt;</span><div class="groupByInheritance t_object" data-accessible="public"><span class="classname">stdClass</span>',
+                            "\t" . '<li><span class="t_key">obj</span><span class="t_operator">=&gt;</span><div class="groupByInheritance t_object" data-accessible="public"><span class="t_identifier" data-type-more="className"><span class="classname">stdClass</span></span>',
                             (PHP_VERSION_ID >= 80200
                                 ? '<dl class="object-inner">' . "\n"
                                     . '<dt class="attributes">attributes</dt>' . "\n"
@@ -369,11 +368,11 @@ EOD;
                             '</dl>',
                             '</div></li>',
                             '</ul><span class="t_punct">)</span></span></dd>',
-                            '<dd class="private property"><span class="t_modifier_private">private</span> <span class="no-quotes t_identifier t_string">debug</span> <span class="t_operator">=</span> <div class="t_object"><span class="classname"><span class="namespace">bdk\</span>Debug</span>',
+                            '<dd class="private property"><span class="t_modifier_private">private</span> <span class="no-quotes t_identifier t_string">debug</span> <span class="t_operator">=</span> <div class="t_object"><span class="t_identifier" data-type-more="className"><span class="classname"><span class="namespace">bdk\</span>Debug</span></span>',
                             '<span class="excluded">NOT INSPECTED</span></div></dd>',
-                            '<dd class="private property"><span class="t_modifier_private">private</span> <span class="no-quotes t_identifier t_string">instance</span> <span class="t_operator">=</span> <div class="t_object"><span class="classname" title="PhpDoc Summary',
+                            '<dd class="private property"><span class="t_modifier_private">private</span> <span class="no-quotes t_identifier t_string">instance</span> <span class="t_operator">=</span> <div class="t_object"><span class="t_identifier" data-type-more="className" title="PhpDoc Summary',
                             '',
-                            'PhpDoc Description"><span class="namespace">bdk\Test\Debug\Fixture\</span>TestObj</span>',
+                            'PhpDoc Description"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>TestObj</span></span>',
                             '<span class="t_recursion">*RECURSION*</span></div></dd>',
                             '<dd class="debuginfo-excluded private property"><span class="t_modifier_private">private</span> <span class="no-quotes t_identifier t_string">propNoDebug</span> <span class="t_operator">=</span> <span class="t_string">not included in __debugInfo</span></dd>',
                             '<dd class="debuginfo-value private property" data-declared-prev="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_private">private</span> <span class="t_type">string</span> <span class="no-quotes t_identifier t_string" title="Private Property.">propPrivate</span> <span class="t_operator">=</span> <span class="t_string">redefined in Test (private) (alternate value via __debugInfo)</span></dd>',
@@ -419,9 +418,9 @@ EOD;
                                 '<ul class="list-unstyled">',
                                 '<li><span class="no-quotes t_identifier t_string">foo</span><span class="t_operator">=</span> <span class="t_int">42</span></li>',
                                 '<li><span class="no-quotes t_identifier t_string">bar</span><span class="t_operator">=</span> <span class="t_string">test</span></li>',
-                                '<li><span class="no-quotes t_identifier t_string">baz</span><span class="t_operator">=</span> <div class="t_object"><span class="classname" title="PhpDoc Summary',
+                                '<li><span class="no-quotes t_identifier t_string">baz</span><span class="t_operator">=</span> <div class="t_object"><span class="t_identifier" data-type-more="className" title="PhpDoc Summary',
                                     '',
-                                    'PhpDoc Description"><span class="namespace">bdk\Test\Debug\Fixture\</span>TestObj</span>',
+                                    'PhpDoc Description"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>TestObj</span></span>',
                                     '<span class="t_recursion">*RECURSION*</span></div></li>',
                                     '</ul></dd>',
                             '<dd class="method protected"><span class="t_modifier_protected">protected</span> <span class="t_identifier" title="This method is protected">methodProtected</span><span class="t_punct">(</span><span class="parameter"><span class="t_type"><span class="classname"><span class="namespace">bdk\Debug\Abstraction\</span>Abstraction</span><span class="t_punct">[]</span></span> <span class="t_parameter-name" title="first param">$param1</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span></dd>',
@@ -443,7 +442,7 @@ EOD;
                             '<dd class="isStatic magic method" data-inherited-from="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_magic">magic</span> <span class="t_modifier_static">static</span> <span class="t_identifier" title="I&#039;m a static magic method">prestoStatic</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name">$noDefault</span></span><span class="t_punct">,</span>',
                                 '<span class="parameter"><span class="t_parameter-name">$arr</span> <span class="t_operator">=</span> <span class="t_array t_parameter-default"><span class="t_keyword">array</span><span class="t_punct">()</span></span></span><span class="t_punct">,</span>',
                                 '<span class="parameter"><span class="t_parameter-name">$opts</span> <span class="t_operator">=</span> <span class="t_parameter-default t_string">array(&#039;a&#039;=&gt;&#039;ay&#039;,&#039;b&#039;=&gt;&#039;bee&#039;)</span></span><span class="t_punct">,</span>',
-                                '<span class="parameter"><span class="t_parameter-name">$val</span> <span class="t_operator">=</span> <span class="t_const t_parameter-default" title="value: &quot;defined in TestBase&quot;"><span class="classname">self</span><span class="t_operator">::</span><span class="t_identifier">MY_CONSTANT</span></span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span></dd>',
+                                '<span class="parameter"><span class="t_parameter-name">$val</span> <span class="t_operator">=</span> <span class="t_identifier t_parameter-default" data-type-more="const" title="value: &quot;defined in TestBase&quot;"><span class="classname">self</span><span class="t_operator">::</span><span class="t_name">MY_CONSTANT</span></span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span></dd>',
                             '<dt>phpDoc</dt>',
                         ));
                         if (PHP_VERSION_ID < 80100) {
@@ -508,10 +507,6 @@ EOD;
                         self::assertStringContainsString($expect, $html);
 
                         // methods
-                        $constName = \defined('HHVM_VERSION')
-                            ? '<span class="classname">\\bdk\\Test\\\Debug\\\Test2Base</span><span class="t_operator">::</span><span class="t_identifier">WORD</span>'
-                            : '<span class="classname">self</span><span class="t_operator">::</span><span class="t_identifier">WORD</span>';
-
                         $expect = \implode("\n", array(
                             '<dt class="methods">methods</dt>',
                             '<dd class="info magic">This object has a <code>__call</code> method</dd>',
@@ -520,9 +515,9 @@ EOD;
                                 '<span class="parameter"><span class="t_type">array</span> <span class="t_parameter-name" title="Arguments passed">$args</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">mixed</span></dd>',
                             '<dd class="method public" data-inherited-from="bdk\Test\Debug\Fixture\Test2Base"><span class="t_modifier_public">public</span> <span class="t_identifier" title="get magic method">__get</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="what we\'re getting">$key</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">mixed</span></dd>',
                             \version_compare(PHP_VERSION, '5.4.6', '>=')
-                                ? '<dd class="method public" data-inherited-from="bdk\Test\Debug\Fixture\Test2Base"><span class="t_modifier_public">public</span> <span class="t_identifier" title="Test constant as default value">constDefault</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="only php &amp;gt;= 5.4.6 can get the name of the constant used">$param</span> <span class="t_operator">=</span> <span class="t_const t_parameter-default" title="value: &quot;bird&quot;">' . $constName . '</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span></dd>'
+                                ? '<dd class="method public" data-inherited-from="bdk\Test\Debug\Fixture\Test2Base"><span class="t_modifier_public">public</span> <span class="t_identifier" title="Test constant as default value">constDefault</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="only php &amp;gt;= 5.4.6 can get the name of the constant used">$param</span> <span class="t_operator">=</span> <span class="t_identifier t_parameter-default" data-type-more="const" title="value: &quot;bird&quot;"><span class="classname">self</span><span class="t_operator">::</span><span class="t_name">WORD</span></span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span></dd>'
                                 : '<dd class="method public" data-inherited-from="bdk\Test\Debug\Fixture\Test2Base"><span class="t_modifier_public">public</span> <span class="t_identifier" title="Test constant as default value">constDefault</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="only php &amp;gt;= 5.4.6 can get the name of the constant used">$param</span> <span class="t_operator">=</span> <span class="t_parameter-default t_string">bird</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span></dd>',
-                            '<dd class="magic method" data-inherited-from="bdk\Test\Debug\Fixture\Test2Base"><span class="t_modifier_magic">magic</span> <span class="t_identifier" title="test constant as param">methConstTest</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$mode</span> <span class="t_operator">=</span> <span class="t_const t_parameter-default" title="value: &quot;bird&quot;"><span class="classname">self</span><span class="t_operator">::</span><span class="t_identifier">WORD</span></span></span><span class="t_punct">)</span></dd>',
+                            '<dd class="magic method" data-inherited-from="bdk\Test\Debug\Fixture\Test2Base"><span class="t_modifier_magic">magic</span> <span class="t_identifier" title="test constant as param">methConstTest</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$mode</span> <span class="t_operator">=</span> <span class="t_identifier t_parameter-default" data-type-more="const" title="value: &quot;bird&quot;"><span class="classname">self</span><span class="t_operator">::</span><span class="t_name">WORD</span></span></span><span class="t_punct">)</span></dd>',
                             '</dl>',
                         ));
                         if (PHP_VERSION_ID >= 80100) {
@@ -726,7 +721,7 @@ EOD;
                     'html' => static function ($html) {
                         // echo 'html = ' . $html . "\n";
                         $expect = \trim(\preg_replace('/^\s+/m', '', '
-                            <li class="m_log"><div class="groupByInheritance t_object" data-accessible="public"><span class="classname" title="&amp;quot;Array Shapes&amp;quot; and &amp;quot;General Arrays&amp;quot;"><span class="namespace">bdk\Test\Debug\Fixture\</span>ArrayDocs</span>
+                            <li class="m_log"><div class="groupByInheritance t_object" data-accessible="public"><span class="t_identifier" data-type-more="className" title="&amp;quot;Array Shapes&amp;quot; and &amp;quot;General Arrays&amp;quot;"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>ArrayDocs</span></span>
                             <dl class="object-inner">
                             <dt class="properties">properties</dt>
                             <dd class="property public"><span class="t_modifier_public">public</span> <span class="t_type">non-empty-array</span><span class="t_punct">&lt;</span><span class="t_type">string</span><span class="t_punct">,</span> <span class="t_type">array</span><span class="t_punct">&lt;</span><span class="t_type">int</span><span class="t_punct">,</span> <span class="t_type">int</span><span class="t_punct">|</span><span class="t_type">string</span><span class="t_punct">&gt;</span><span class="t_punct">|</span><span class="t_type">int</span><span class="t_punct">|</span><span class="t_type">string</span><span class="t_punct">&gt;</span><span class="t_type"><span class="t_punct">[]</span></span> <span class="no-quotes t_identifier t_string" title="General Description">general</span> <span class="t_operator">=</span> <span class="t_null">null</span></dd>
@@ -869,7 +864,7 @@ EOD;
                     ),
                 ),
                 array(
-                    'html' => '<li class="m_log"><div class="groupByInheritance t_object" data-accessible="public"><span class="classname">stdClass</span>
+                    'html' => '<li class="m_log"><div class="groupByInheritance t_object" data-accessible="public"><span class="t_identifier" data-type-more="className"><span class="classname">stdClass</span></span>
                         <dl class="object-inner">
                         %A<dt class="properties">properties</dt>
                         ' . (PHP_VERSION_ID >= 70400 ? '<dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier t_string"></span> <span class="t_operator">=</span> <span class="t_string">empty</span></dd>' . "\n" : '')
@@ -909,16 +904,16 @@ EOD;
                         '',
                     ),
                     'firephp' => 'X-Wf-1-1-1-%d: 78|[{"Type":"LOG"},{"___class_name":"bdk\\\\Test\\\\Debug\\\\Fixture\\\\ParamConstants"}]|',
-                    'html' => '<li class="m_log"><div class="groupByInheritance t_object" data-accessible="public"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>ParamConstants</span>
+                    'html' => '<li class="m_log"><div class="groupByInheritance t_object" data-accessible="public"><span class="t_identifier" data-type-more="className"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>ParamConstants</span></span>
                         <dl class="object-inner">
                             <dt class="constants">constants</dt>
                             <dd class="constant public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string">CLASS_CONST</span> <span class="t_operator">=</span> <span class="t_string">bar</span></dd>
                             <dt class="properties">no properties</dt>
                             <dt class="methods">methods</dt>
-                            <dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier">test</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$foo</span> <span class="t_operator">=</span> <span class="t_const t_parameter-default" title="value: &quot;bar&quot;"><span class="classname">self</span><span class="t_operator">::</span><span class="t_identifier">CLASS_CONST</span></span></span><span class="t_punct">,</span>
-                            <span class="parameter"><span class="t_parameter-name">$bar</span> <span class="t_operator">=</span> <span class="t_const t_parameter-default" title="value: 0"><span class="t_identifier">SEEK_SET</span></span></span><span class="t_punct">,</span>
-                            <span class="parameter"><span class="t_parameter-name">$baz</span> <span class="t_operator">=</span> <span class="t_const t_parameter-default" title="value: &quot;foo&quot;"><span class="namespace">bdk\Test\Debug\Fixture\</span><span class="t_identifier">NAMESPACE_CONST</span></span></span><span class="t_punct">,</span>
-                            <span class="parameter"><span class="t_parameter-name">$biz</span> <span class="t_operator">=</span> <span class="t_const t_parameter-default" title="value: &quot;defined in TestBase&quot;"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>TestBase</span><span class="t_operator">::</span><span class="t_identifier">MY_CONSTANT</span></span></span><span class="t_punct">)</span></dd>
+                            <dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier">test</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$foo</span> <span class="t_operator">=</span> <span class="t_identifier t_parameter-default" data-type-more="const" title="value: &quot;bar&quot;"><span class="classname">self</span><span class="t_operator">::</span><span class="t_name">CLASS_CONST</span></span></span><span class="t_punct">,</span>
+                            <span class="parameter"><span class="t_parameter-name">$bar</span> <span class="t_operator">=</span> <span class="t_identifier t_parameter-default" data-type-more="const" title="value: 0"><span class="t_name">SEEK_SET</span></span></span><span class="t_punct">,</span>
+                            <span class="parameter"><span class="t_parameter-name">$baz</span> <span class="t_operator">=</span> <span class="t_identifier t_parameter-default" data-type-more="const" title="value: &quot;foo&quot;"><span class="namespace">bdk\Test\Debug\Fixture\</span><span class="t_name">NAMESPACE_CONST</span></span></span><span class="t_punct">,</span>
+                            <span class="parameter"><span class="t_parameter-name">$biz</span> <span class="t_operator">=</span> <span class="t_identifier t_parameter-default" data-type-more="const" title="value: &quot;defined in TestBase&quot;"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>TestBase</span><span class="t_operator">::</span><span class="t_name">MY_CONSTANT</span></span></span><span class="t_punct">)</span></dd>
                         </dl>
                         </div></li>',
                     'script' => 'console.log({"___class_name":"bdk\\\\Test\\\\Debug\\\\Fixture\\\\ParamConstants"});',
@@ -935,32 +930,36 @@ EOD;
                         $params = $abs['methods']['test']['params'];
                         $defaultValuesExpect = array(
                             array(
+                                'backedValue' => 'bar',
                                 'debug' => Abstracter::ABSTRACTION,
-                                'name' => 'self::CLASS_CONST',
-                                'type' => Type::TYPE_CONST,
-                                'value' => 'bar',
+                                'type' => Type::TYPE_IDENTIFIER,
+                                'typeMore' => 'const',
+                                'value' => 'self::CLASS_CONST',
                             ),
                             array(
+                                'backedValue' => 0,
                                 'debug' => Abstracter::ABSTRACTION,
-                                'name' => 'SEEK_SET',
-                                'type' => Type::TYPE_CONST,
-                                'value' => 0,
+                                'type' => Type::TYPE_IDENTIFIER,
+                                'typeMore' => 'const',
+                                'value' => 'SEEK_SET',
                             ),
                             array(
+                                'backedValue' => 'foo',
                                 'debug' => Abstracter::ABSTRACTION,
-                                'name' => 'bdk\Test\Debug\Fixture\NAMESPACE_CONST',
-                                'type' => Type::TYPE_CONST,
-                                'value' => 'foo',
+                                'type' => Type::TYPE_IDENTIFIER,
+                                'typeMore' => 'const',
+                                'value' => 'bdk\Test\Debug\Fixture\NAMESPACE_CONST',
                             ),
                             array(
+                                'backedValue' => 'defined in TestBase',
                                 'debug' => Abstracter::ABSTRACTION,
-                                'name' => 'bdk\Test\Debug\Fixture\TestBase::MY_CONSTANT',
-                                'type' => Type::TYPE_CONST,
-                                'value' => 'defined in TestBase',
+                                'type' => Type::TYPE_IDENTIFIER,
+                                'typeMore' => 'const',
+                                'value' => 'bdk\Test\Debug\Fixture\TestBase::MY_CONSTANT',
                             ),
                         );
                         foreach ($params as $i => $param) {
-                            self::assertSame($param['defaultValue'], $defaultValuesExpect[$i]);
+                            self::assertSame($defaultValuesExpect[$i], $param['defaultValue']);
                         }
                     },
                 ),
@@ -1267,7 +1266,7 @@ EOD;
                     '',
                 ),
                 'firephp' => 'X-Wf-1-1-1-%d: %d|[{"Label":"anonymous","Type":"LOG"},{"___class_name":"stdClass@anonymous","(public) thing":"hammer","(debug) file":"' . $filepath . '","(debug) line":' . $line . '}]|',
-                'html' => '<li class="m_log"><span class="no-quotes t_string">anonymous</span> = <div class="groupByInheritance t_object" data-accessible="public"><span class="classname" title="I extend stdClass">stdClass@anonymous</span>
+                'html' => '<li class="m_log"><span class="no-quotes t_string">anonymous</span> = <div class="groupByInheritance t_object" data-accessible="public"><span class="t_identifier" data-type-more="className" title="I extend stdClass"><span class="classname">stdClass@anonymous</span></span>
                     <dl class="object-inner">
                     ' . (PHP_VERSION_ID >= 80000
                         ? '<dt class="attributes">attributes</dt>
@@ -1681,7 +1680,8 @@ EOD;
                         . '<span class="t_modifier_public">public</span> '
                         . (PHP_VERSION_ID >= 80400 ? '<span class="t_modifier_protected-set">protected(set)</span> ' : '' )
                         . '<span class="t_modifier_readonly">readonly</span> '
-                        . '<span class="t_type">string</span> <span class="no-quotes t_identifier t_string">title</span> <span class="t_operator">=</span> <span class="t_string" data-type-more="numeric">42</span></dd>';
+                        . '<span class="t_type">string</span> '
+                        . '<span class="no-quotes t_identifier t_string">title</span> <span class="t_operator">=</span> <span class="t_string" data-type-more="numeric">42</span></dd>';
                     self::assertStringContainsString($propExpect, $html);
                 },
             )
@@ -1726,7 +1726,8 @@ EOD;
                             . '<span class="t_modifier_public">public</span> '
                             . (PHP_VERSION_ID >= 80400 ? '<span class="t_modifier_protected-set">protected(set)</span> ' : '')
                             . '<span class="t_modifier_readonly">readonly</span> '
-                            . '<span class="t_type">string</span> <span class="no-quotes t_identifier t_string" title="$status">status</span> <span class="t_operator">=</span> <span class="t_string">active</span></dd>',
+                            . '<span class="t_type">string</span> '
+                            . '<span class="no-quotes t_identifier t_string" title="$status">status</span> <span class="t_operator">=</span> <span class="t_string">active</span></dd>',
                         $html
                     );
                 },
@@ -1990,7 +1991,7 @@ EOD;
                 'html' => '<li class="m_log"><span class="no-quotes t_string">array</span> = <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
                     <ul class="array-inner list-unstyled">
                     <li><span class="t_key">foo</span><span class="t_operator">=&gt;</span><span class="t_string">bar</span></li>
-                    <li><span class="t_key">tooDeep</span><span class="t_operator">=&gt;</span><div class="t_object"><span class="classname">stdClass</span>
+                    <li><span class="t_key">tooDeep</span><span class="t_operator">=&gt;</span><div class="t_object"><span class="t_identifier" data-type-more="className"><span class="classname">stdClass</span></span>
                         <span class="t_maxDepth">*MAX DEPTH*</span></div></li>
                     <li><span class="t_key">ding</span><span class="t_operator">=&gt;</span><span class="t_string">dong</span></li>
                     </ul><span class="t_punct">)</span></span></li>',

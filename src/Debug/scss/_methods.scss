@@ -1,3 +1,9 @@
+ul.group-body {
+  > li {
+    margin: 0;
+  }
+}
+
 .m_assert,
 .m_clear,
 .m_count,
@@ -6,9 +12,8 @@
 .m_info,
 .m_log,
 .m_warn {
-  // We use display: table so that background-color doesn't fill entire width;
   position: relative;
-  display: table;
+  width: fit-content; // previously using display: table;
   padding-left: 10px;
   text-indent: -10px;
   padding-right: 0.33em;
@@ -35,7 +40,7 @@
 
 .m_group {
   .group-header {
-    display: table;
+    width: fit-content;  // previously using display: table;
     white-space: nowrap;
     i.fa-warning {
       color: #cdcb06;

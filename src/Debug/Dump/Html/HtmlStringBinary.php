@@ -54,16 +54,17 @@ class HtmlStringBinary
     public function dump(Abstraction $abs)
     {
         $tagName = $this->valDumper->optionGet('tagName');
-        $this->valDumper->optionSet('tagName', null);
         $str = $this->dumpBasic($abs);
         $strLenDiff = $abs['strlen'] - $abs['strlenValue'];
         if ($abs['strlenValue'] && $strLenDiff) {
             $str .= '<span class="maxlen">&hellip; ' . $strLenDiff . ' more bytes (not logged)</span>';
         }
         if ($abs['brief']) {
+            $this->valDumper->optionSet('tagName', null);
             return $this->dumpBrief($str, $abs);
         }
         if ($abs['percentBinary'] > 33 || $abs['contentType']) {
+            $this->valDumper->optionSet('tagName', null);
             $this->valDumper->optionSet('postDump', $this->dumpPost($abs, $tagName));
         }
         return $str;

@@ -110,7 +110,7 @@ class CharReplacementAndSanitizationTest extends DebugTestFramework
                         }, \array_slice($messages, 1));
                         $definition = $logEntry->getSubject()->data->get('classDefinitions.bdk\Test\Debug\Fixture\Con𝘧usableIdenti𝘧iers')->jsonSerialize();
                         $definition = Helper::deObjectifyData($definition);
-                        $definition = \array_diff_key($definition, \array_flip(array(
+                        $definition = \array_diff_key($definition, \array_flip([
                             // the act of dumping and checking for these options has side effect of adding values
                             'addQuotes',
                             'attribs',
@@ -127,19 +127,19 @@ class CharReplacementAndSanitizationTest extends DebugTestFramework
                             'sanitizeFirst',
                             'scopeClass',
                             'tagName',
-                            'typeMore',
+                            // 'typeMore',
                             'uncollapse',
                             'visualWhiteSpace',
                             'what',
-                        )));
-                        $definition['properties']['array']['value']['value']['__debug_key_order__'] = array(
+                        ]));
+                        $definition['properties']['array']['value']['value']['__debug_key_order__'] = [
                             'int',
                             'password',
                             'poop',
                             'string',
                             'ctrl chars and whatnot',
                             'af8af85a7694926703b9690c2eb6d1fc',
-                        );
+                        ];
                         $expect = array(
                             array(
                                 'meta',
@@ -176,8 +176,8 @@ class CharReplacementAndSanitizationTest extends DebugTestFramework
                                                             'percentBinary' => 1 / 9 * 100,
                                                             'strlen' => 9,
                                                             'strlenValue' => 9,
-                                                            'type' => 'string',
-                                                            'typeMore' => 'binary',
+                                                            'type' => Type::TYPE_STRING,
+                                                            'typeMore' => Type::TYPE_STRING_BINARY,
                                                             'value' => '',
                                                         ),
                                                     ),
@@ -210,6 +210,7 @@ class CharReplacementAndSanitizationTest extends DebugTestFramework
                                         'debug' => Abstracter::ABSTRACTION,
                                         'inheritsFrom' => 'bdk\Test\Debug\Fixture\Con𝘧usableIdenti𝘧iers',
                                         'type' => Type::TYPE_OBJECT,
+                                        // 'typeMore' => null,
                                     ), // abstraction
                                 ), // args
                             ), // logentry

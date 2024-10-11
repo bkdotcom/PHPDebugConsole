@@ -5,6 +5,7 @@ namespace bdk\Test\Debug\Type;
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Type;
+use bdk\Debug\LogEntry;
 use bdk\Test\Debug\DebugTestFramework;
 
 /**
@@ -30,32 +31,6 @@ class BasicTest extends DebugTestFramework
         $ts = \time();
         $datetime = \gmdate(self::DATETIME_FORMAT, $ts);
         $test = new \bdk\Test\Debug\Fixture\TestObj();
-
-        $fhOpen = \fopen(__FILE__, 'r');
-        $resourceOpenEntryExpect = array(
-            'method' => 'log',
-            'args' => array(
-                array(
-                    'debug' => Abstracter::ABSTRACTION,
-                    'type' => Type::TYPE_RESOURCE,
-                    'value' => \print_r($fhOpen, true) . ': stream',
-                ),
-            ),
-            'meta' => array(),
-        );
-
-        $fhClosed = \fopen(__FILE__, 'r');
-        $resourceClosedEntryExpect = array(
-            'method' => 'log',
-            'args' => array(
-                array(
-                    'debug' => Abstracter::ABSTRACTION,
-                    'type' => Type::TYPE_RESOURCE,
-                    'value' => \print_r($fhClosed, true) . ': stream',
-                ),
-            ),
-            'meta' => array(),
-        );
 
         $tests = array(
             'bool.true' => array(
@@ -94,7 +69,7 @@ class BasicTest extends DebugTestFramework
                 array(array($test,'testBaseStatic')),
                 array(
                     'chromeLogger' => '[["callable: bdk\\\Test\\\Debug\\\Fixture\\\TestObj::testBaseStatic"],null,""]',
-                    'html' => '<li class="m_log"><span class="t_callable"><span class="t_type">callable</span> <span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>TestObj</span><span class="t_operator">::</span><span class="t_identifier">testBaseStatic</span></span></li>',
+                    'html' => '<li class="m_log"><span class="t_type">callable</span> <span class="t_identifier"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>TestObj</span><span class="t_operator">::</span><span class="t_name">testBaseStatic</span></span></li>',
                     'script' => 'console.log("callable: bdk\\\Test\\\Debug\\\Fixture\\\TestObj::testBaseStatic");',
                     'streamAnsi' => "callable: \e[38;5;250mbdk\Test\Debug\Fixture\\\e[0m\e[1mTestObj\e[22m\e[38;5;224m::\e[0m\e[1mtestBaseStatic\e[22m",
                     'text' => 'callable: bdk\Test\Debug\Fixture\TestObj::testBaseStatic',
@@ -129,21 +104,19 @@ class BasicTest extends DebugTestFramework
                             array(
                                 'brief' => false,
                                 'debug' => Abstracter::ABSTRACTION,
-                                // 'strlen' => 23,
-                                // 'strlenValue' => 23,
-                                'type' => Type::TYPE_STRING,
-                                'typeMore' => Type::TYPE_STRING_CLASSNAME,
+                                'type' => Type::TYPE_IDENTIFIER,
+                                'typeMore' => 'className',
                                 'value' => 'SomeNamespace\Classname',
                             ),
                         ),
                         'meta' => array(),
                     ),
-                    'html' => '<li class="m_log"><span class="classname no-quotes t_string" data-type-more="classname"><span class="namespace">SomeNamespace\</span>Classname</span></li>',
+                    'html' => '<li class="m_log"><span class="t_identifier" data-type-more="className"><span class="classname"><span class="namespace">SomeNamespace\</span>Classname</span></span></li>',
                     'text' => 'SomeNamespace\Classname',
                 ),
             ),
 
-            'constant' => array(
+            'constant.deprecated' => array(
                 'log',
                 array(
                     Debug::getInstance()->abstracter->crateWithVals(
@@ -170,7 +143,7 @@ class BasicTest extends DebugTestFramework
                         'meta' => array(),
                     ),
                     'chromeLogger' => '[["Test\\\\Thing::TEST_CONSTANT"],null,""]',
-                    'html' => '<li class="m_log"><span class="t_const" title="value: &quot;constant value&quot;"><span class="classname"><span class="namespace">Test\</span>Thing</span><span class="t_operator">::</span><span class="t_identifier">TEST_CONSTANT</span></span></li>',
+                    'html' => '<li class="m_log"><span class="t_identifier" data-type-more="const" title="value: &quot;constant value&quot;"><span class="classname"><span class="namespace">Test\</span>Thing</span><span class="t_operator">::</span><span class="t_name">TEST_CONSTANT</span></span></li>',
                     'script' => 'console.log("Test\\\\Thing::TEST_CONSTANT");',
                     'streamAnsi' => "\e[38;5;250mTest\\\e[0m\e[1mThing\e[22m\e[38;5;224m::\e[0m\e[1mTEST_CONSTANT\e[22m",
                     'text' => 'Test\Thing::TEST_CONSTANT',
@@ -217,7 +190,7 @@ class BasicTest extends DebugTestFramework
                         'meta' => array(),
                     ),
                     'chromeLogger' => '[["Test\\\\Namespace\\\\SOME_CONSTANT"],null,""]',
-                    'html' => '<li class="m_log"><span class="t_const" title="value: &quot;constant value&quot;"><span class="namespace">Test\Namespace\</span><span class="t_identifier">SOME_CONSTANT</span></span></li>',
+                    'html' => '<li class="m_log"><span class="t_identifier" data-type-more="const" title="value: &quot;constant value&quot;"><span class="namespace">Test\Namespace\</span><span class="t_name">SOME_CONSTANT</span></span></li>',
                     'script' => 'console.log("Test\\\\Namespace\\\\SOME_CONSTANT");',
                     'streamAnsi' => "\e[38;5;250mTest\Namespace\\\e[0m\e[38;5;224m\e[0m\e[1mSOME_CONSTANT\e[22m",
                     'text' => 'Test\Namespace\SOME_CONSTANT',
@@ -234,6 +207,22 @@ class BasicTest extends DebugTestFramework
                             ),
                         ),
                     ),
+                ),
+            ),
+
+            'dereference' => array(
+                'log',
+                array(),
+                array(
+                    'custom' => static function (LogEntry $logEntry) {
+                        $debug = $logEntry->getSubject();
+                        $src = 'success';
+                        $ref = &$src;
+                        $debug->log('ref', $ref);
+                        $src = 'fail';
+                        $output = $debug->output();
+                        self::assertStringContainsString('success', $output);
+                    },
                 ),
             ),
 
@@ -329,34 +318,63 @@ class BasicTest extends DebugTestFramework
                 ),
             ),
 
-            'resource.closed`' => array(
-                'log',
-                array($fhClosed),
-                array(
-                    'entry' => $resourceClosedEntryExpect,
-                    'chromeLogger' => '[["Resource id #' . (int) $fhClosed . ': stream"],null,""]',
-                    'html' => '<li class="m_log"><span class="t_resource">Resource id #' . (int) $fhClosed . ': stream</span></li>',
-                    'script' => 'console.log("Resource id #' . (int) $fhClosed . ': stream");',
-                    'text' => 'Resource id #' . (int) $fhClosed . ': stream',
-                    'wamp' => \json_decode(\json_encode($resourceClosedEntryExpect), true),
-                ),
-            ),
+            'resource.closed`' => static function () {
+                $fhClosed = \fopen(__FILE__, 'r');
+                $resourceClosedEntryExpect = array(
+                    'method' => 'log',
+                    'args' => array(
+                        array(
+                            'debug' => Abstracter::ABSTRACTION,
+                            'type' => Type::TYPE_RESOURCE,
+                            'value' => \print_r($fhClosed, true) . ': stream',
+                        ),
+                    ),
+                    'meta' => array(),
+                );
 
-            'resource.open' => array(
-                'log',
-                array($fhOpen),
-                array(
-                    'custom' => static function () use ($fhOpen) {
-                        \fclose($fhOpen);
-                    },
-                    'entry' => $resourceOpenEntryExpect,
-                    'chromeLogger' => '[["Resource id #' . (int) $fhOpen . ': stream"],null,""]',
-                    'html' => '<li class="m_log"><span class="t_resource">Resource id #' . (int) $fhOpen . ': stream</span></li>',
-                    'script' => 'console.log("Resource id #' . (int) $fhOpen . ': stream");',
-                    'text' => 'Resource id #' . (int) $fhOpen . ': stream',
-                    'wamp' => \json_decode(\json_encode($resourceOpenEntryExpect), true),
-                ),
-            ),
+                return array(
+                    'log',
+                    array($fhClosed),
+                    array(
+                        'entry' => $resourceClosedEntryExpect,
+                        'chromeLogger' => '[["Resource id #' . (int) $fhClosed . ': stream"],null,""]',
+                        'html' => '<li class="m_log"><span class="t_resource">Resource id #' . (int) $fhClosed . ': stream</span></li>',
+                        'script' => 'console.log("Resource id #' . (int) $fhClosed . ': stream");',
+                        'text' => 'Resource id #' . (int) $fhClosed . ': stream',
+                        'wamp' => \json_decode(\json_encode($resourceClosedEntryExpect), true),
+                    ),
+                );
+            },
+
+            'resource.open' => static function () {
+                $fhOpen = \fopen(__FILE__, 'r');
+                $resourceOpenEntryExpect = array(
+                    'method' => 'log',
+                    'args' => array(
+                        array(
+                            'debug' => Abstracter::ABSTRACTION,
+                            'type' => Type::TYPE_RESOURCE,
+                            'value' => \print_r($fhOpen, true) . ': stream',
+                        ),
+                    ),
+                    'meta' => array(),
+                );
+                return array(
+                    'log',
+                    array($fhOpen),
+                    array(
+                        'custom' => static function () use ($fhOpen) {
+                            \fclose($fhOpen);
+                        },
+                        'entry' => $resourceOpenEntryExpect,
+                        'chromeLogger' => '[["Resource id #' . (int) $fhOpen . ': stream"],null,""]',
+                        'html' => '<li class="m_log"><span class="t_resource">Resource id #' . (int) $fhOpen . ': stream</span></li>',
+                        'script' => 'console.log("Resource id #' . (int) $fhOpen . ': stream");',
+                        'text' => 'Resource id #' . (int) $fhOpen . ': stream',
+                        'wamp' => \json_decode(\json_encode($resourceOpenEntryExpect), true),
+                    ),
+                );
+            },
 
             'string.numeric' => array(
                 'log',
@@ -650,23 +668,13 @@ class BasicTest extends DebugTestFramework
                 ),
             ),
         );
-        // $tests = \array_intersect_key($tests, \array_flip(array('callable')));
-        return $tests;
-    }
 
-    /**
-     * Test that scalar reference vals get dereferenced
-     * Sine passed by-value to log... nothing special being done
-     *
-     * @return void
-     */
-    public function testDereferenceBasic()
-    {
-        $src = 'success';
-        $ref = &$src;
-        $this->debug->log('ref', $ref);
-        // $src = 'fail';
-        $output = $this->debug->output();
-        self::assertStringContainsString('success', $output);
+        // $tests = \array_intersect_key($tests, \array_flip(array('callable')));
+
+        return \array_map(function ($test) {
+            return \is_callable($test)
+            ? $test()
+            : $test;
+        }, $tests);
     }
 }

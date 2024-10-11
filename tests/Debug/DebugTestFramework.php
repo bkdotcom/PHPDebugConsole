@@ -14,6 +14,7 @@ use bdk\PhpUnitPolyfill\AssertionTrait;
 use bdk\PubSub\Event;
 use bdk\Test\Debug\Helper;
 use Closure;
+use ReflectionMethod;
 use RuntimeException;
 
 /**
@@ -667,7 +668,7 @@ class DebugTestFramework extends DOMTestCase
     private function tstMethodOutput($test, $routeObj, LogEntry $logEntry, $expect)
     {
         $asString = \is_string($expect);
-        if (\in_array($test, array('chromeLogger','firephp','serverLog','wamp'), true)) {
+        if (\in_array($test, array('chromeLogger', 'firephp', 'serverLog', 'wamp'), true)) {
             // remove data - sans the logEntry we're interested in
             $dataBackup = array(
                 'alerts' => $this->debug->data->get('alerts'),
@@ -759,7 +760,7 @@ class DebugTestFramework extends DOMTestCase
         }
         $refMethods = &self::getSharedVar('reflectionMethods');
         if (!isset($refMethods[$test])) {
-            $refMethod = new \ReflectionMethod($routeObj, 'processLogEntryViaEvent');
+            $refMethod = new ReflectionMethod($routeObj, 'processLogEntryViaEvent');
             $refMethod->setAccessible(true);
             $refMethods[$test] = $refMethod;
         }

@@ -101,8 +101,10 @@ class Value extends BaseValue
         $opts = $this->getPerValueOptions($val, $opts);
         $this->optionStackPush($opts);
         $val = $this->doDump($val);
-        $this->optionsCurrent['attribs']['class'][] = 't_' . $this->optionsCurrent['type'];
-        if (\in_array($this->optionsCurrent['typeMore'], array(null, Type::TYPE_RAW), true) === false) {
+        if ($this->optionsCurrent['type']) {
+            $this->optionsCurrent['attribs']['class'][] = 't_' . $this->optionsCurrent['type'];
+        }
+        if (\in_array($this->optionsCurrent['typeMore'], [null, Type::TYPE_RAW], true) === false) {
             $this->optionsCurrent['attribs']['data-type-more'] = \trim($this->optionsCurrent['typeMore']);
         }
         $tagName = $this->optionsCurrent['tagName'];
@@ -265,8 +267,14 @@ class Value extends BaseValue
      */
     protected function dumpCallable(Abstraction $abs)
     {
+        $this->optionSet('type', null); // don't output t_callable class
+        if ($this->optionGet('tagName') !== 'td') {
+            $this->optionSet('tagName', null);
+        }
         return (!$abs['hideType'] ? '<span class="t_type">callable</span> ' : '')
-            . $this->markupIdentifier($abs);
+            . '<span class="t_identifier">'
+            . $this->markupIdentifier($abs)
+            . '</span>';
     }
 
     /**
@@ -277,13 +285,18 @@ class Value extends BaseValue
      * @param Abstraction $abs const abstraction
      *
      * @return string
+     *
+     * @deprecated 3.3
      */
     protected function dumpConst(Abstraction $abs)
     {
-        $this->optionSet('attribs.title', isset($abs['value'])
-            ? 'value: ' . $this->debug->getDump('text')->valDumper->dump($abs['value'])
-            : null);
-        return $this->markupIdentifier($abs['name'], 'const');
+        $this->optionSet('type', Type::TYPE_IDENTIFIER);
+        $this->optionSet('typeMore', 'const');
+        return $this->dumpIdentifier(new Abstraction(Type::TYPE_IDENTIFIER, array(
+            'backedValue' => $abs['value'],
+            'typeMore' => 'const',
+            'value' => $abs['name'],
+        )));
     }
 
     /**
@@ -301,6 +314,21 @@ class Value extends BaseValue
         }
         $this->checkTimestamp($val, $abs);
         return $val;
+    }
+
+    /**
+     * Dump identifier (constant, classname, method, property)
+     *
+     * @param Abstraction $abs const abstraction
+     *
+     * @return string
+     */
+    protected function dumpIdentifier(Abstraction $abs)
+    {
+        if (isset($abs['backedValue'])) {
+            $this->optionSet('attribs.title', 'value: ' . $this->debug->getDump('text')->valDumper->dump($abs['backedValue']));
+        }
+        return $this->markupIdentifier($abs['value'], $abs['typeMore']);
     }
 
     /**

@@ -86,9 +86,9 @@ class Value extends TextValue
         $namespaceOut = $parts['namespace']
             ? $this->markupIdentifierNamespace($parts['namespace'])
             : '';
-        if ($parts['identifier']) {
+        if ($parts['name']) {
             $this->escapeReset = "\e[0;1m";
-            $identifier = "\e[1m" . $this->highlightChars($parts['identifier']) . "\e[22m";
+            $identifier = "\e[1m" . $this->highlightChars($parts['name']) . "\e[22m";
             $this->escapeReset = $escapeReset;
         }
         $parts = \array_filter([$namespaceOut, $classnameOut, $identifier], 'strlen');
@@ -189,10 +189,15 @@ class Value extends TextValue
      * @param Abstraction $abs constant abstraction
      *
      * @return string
+     *
+     * @deprecated 3.3
      */
     protected function dumpConst(Abstraction $abs)
     {
-        return $this->markupIdentifier($abs['name'], 'const');
+        return $this->dumpIdentifier(new Abstraction(Type::TYPE_IDENTIFIER, array(
+            'typeMore' => 'const',
+            'value' => $abs['name'],
+        )));
     }
 
     /**
@@ -217,6 +222,18 @@ class Value extends TextValue
         return $date
             ? '📅 ' . $val . ' ' . $this->cfg['escapeCodes']['muted'] . '(' . $date . ')' . $this->escapeReset
             : $val;
+    }
+
+    /**
+     * Dump identifier (constant, classname, method, property)
+     *
+     * @param Abstraction $abs constant abstraction
+     *
+     * @return string
+     */
+    protected function dumpIdentifier(Abstraction $abs)
+    {
+        return $this->markupIdentifier($abs['value'], $abs['typeMore']);
     }
 
     /**

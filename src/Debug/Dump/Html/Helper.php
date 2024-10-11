@@ -194,7 +194,7 @@ class Helper
     public function tableMarkupFunction($html, array $row)
     {
         if (isset($row['function'])) {
-            $replace = $this->dumper->valDumper->markupIdentifier($row['function'], 'function', 'span', array(), true);
+            $replace = $this->dumper->valDumper->markupIdentifier($row['function'], 'method', 'span', array(), true);
             $replace = '<td class="col-function no-quotes t_string">' . $replace . '</td>';
             $html = \str_replace(
                 '<td class="t_string">' . \htmlspecialchars($row['function']) . '</td>',

@@ -97,6 +97,8 @@ class Value extends AbstractValue
      * @param Abstraction $abs constant abstraction
      *
      * @return string
+     *
+     * @deprecated 3.3
      */
     protected function dumpConst(Abstraction $abs)
     {
@@ -114,6 +116,18 @@ class Value extends AbstractValue
         return $date
             ? $val . ' (' . $date . ')'
             : $val;
+    }
+
+    /**
+     * Dump identifier
+     *
+     * @param Abstraction $abs constant abstraction
+     *
+     * @return string
+     */
+    protected function dumpIdentifier(Abstraction $abs)
+    {
+        return $abs['value'];
     }
 
     /**

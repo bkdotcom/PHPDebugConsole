@@ -179,7 +179,8 @@ class Cake4 extends BasePlugin
                     'subject' => $debug->abstracter->crateWithVals(
                         \get_class($event->getSubject()),
                         array(
-                            'typeMore' => Type::TYPE_STRING_CLASSNAME,
+                            'type' => Type::TYPE_IDENTIFIER,
+                            'typeMore' => 'className',
                         )
                     ),
                 );

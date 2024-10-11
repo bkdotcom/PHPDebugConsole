@@ -11,7 +11,7 @@ enum Meals
     const REGULAR_CONSTANT = 'test';
     const ENUM_VALUE = self::DINNER;
 
-    /** The most important meal */
+    /** The <b>most</b> important meal */
     case BREAKFAST;
 
     #[ExampleCaseAttribute]

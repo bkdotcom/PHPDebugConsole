@@ -423,7 +423,7 @@ class GroupTest extends DebugTestFramework
                 ),
                 'firephp' => 'X-Wf-1-1-1-7: 113|[{"Collapsed":"false","Label":"bdk\\\Test\\\Debug\\\Fixture\\\CallerInfoParent->extendMe","Type":"GROUP_START"},null]|',
                 'html' => '<li class="expanded m_group">
-                    <div class="group-header"><span class="font-weight-bold group-label"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>CallerInfoParent</span><span class="t_operator">-&gt;</span><span class="t_identifier">extendMe</span>(</span><span class="t_string">foo</span>, <span class="t_int">10</span><span class="font-weight-bold group-label">)</span></div>
+                    <div class="group-header"><span class="font-weight-bold group-label"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>CallerInfoParent</span><span class="t_operator">-&gt;</span><span class="t_name">extendMe</span>(</span><span class="t_string">foo</span>, <span class="t_int">10</span><span class="font-weight-bold group-label">)</span></div>
                     <ul class="group-body">',
                 'script' => 'console.group("bdk\\\\Test\\\\Debug\\\\Fixture\\\\CallerInfoParent->extendMe","foo",10);',
                 'text' => '▸ bdk\Test\Debug\Fixture\CallerInfoParent->extendMe("foo", 10)',
@@ -488,7 +488,7 @@ class GroupTest extends DebugTestFramework
                 ),
                 'firephp' => 'X-Wf-1-1-1-9: 117|[{"Collapsed":"false","Label":"bdk\\\Test\\\Debug\\\Fixture\\\CallerInfoParent::staticParent","Type":"GROUP_START"},null]|',
                 'html' => '<li class="expanded m_group">
-                    <div class="group-header"><span class="font-weight-bold group-label"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>CallerInfoParent</span><span class="t_operator">::</span><span class="t_identifier">staticParent</span></span></div>
+                    <div class="group-header"><span class="font-weight-bold group-label"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>CallerInfoParent</span><span class="t_operator">::</span><span class="t_name">staticParent</span></span></div>
                     <ul class="group-body">',
                 'script' => 'console.group("bdk\\\Test\\\Debug\\\Fixture\\\CallerInfoParent::staticParent");',
                 'text' => '▸ bdk\Test\Debug\Fixture\CallerInfoParent::staticParent',
@@ -522,7 +522,7 @@ class GroupTest extends DebugTestFramework
                 ),
                 'firephp' => 'X-Wf-1-1-1-10: 117|[{"Collapsed":"false","Label":"bdk\\\Test\\\Debug\\\Fixture\\\CallerInfoParent::staticParent","Type":"GROUP_START"},null]|',
                 'html' => '<li class="expanded m_group">
-                    <div class="group-header"><span class="font-weight-bold group-label"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>CallerInfoParent</span><span class="t_operator">::</span><span class="t_identifier">staticParent</span></span></div>
+                    <div class="group-header"><span class="font-weight-bold group-label"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>CallerInfoParent</span><span class="t_operator">::</span><span class="t_name">staticParent</span></span></div>
                     <ul class="group-body">',
                 'script' => 'console.group("bdk\\\Test\\\Debug\\\Fixture\\\CallerInfoParent::staticParent");',
                 'text' => '▸ bdk\Test\Debug\Fixture\CallerInfoParent::staticParent',

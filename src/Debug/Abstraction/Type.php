@@ -31,6 +31,11 @@ class Type
     const TYPE_RESOURCE = 'resource';
     const TYPE_STRING = 'string';
     const TYPE_CONST = 'const'; // non-native type (Abstraction: we store name and value)
+                                // deprecated (use TYPE_IDENTIFIER)
+    const TYPE_IDENTIFIER = 'identifier'; // constant, className, method, property
+                                            // value: identifier
+                                            // backedValue: underlying const or property value
+                                            // typeMore: 'const', 'className', 'method', 'property'
     const TYPE_NOT_INSPECTED = 'notInspected'; // non-native type
     const TYPE_RECURSION = 'recursion'; // non-native type
     const TYPE_UNDEFINED = 'undefined'; // non-native type
@@ -46,7 +51,7 @@ class Type
     const TYPE_FLOAT_NAN = "\x00nan\x00";
     const TYPE_STRING_BASE64 = 'base64';
     const TYPE_STRING_BINARY = 'binary';
-    const TYPE_STRING_CLASSNAME = 'classname';
+    const TYPE_STRING_CLASSNAME = 'classname'; // deprecated (use TYPE_IDENTIFIER)
     const TYPE_STRING_JSON = 'json';
     const TYPE_STRING_LONG = 'maxLen';
     const TYPE_STRING_NUMERIC = 'numeric';

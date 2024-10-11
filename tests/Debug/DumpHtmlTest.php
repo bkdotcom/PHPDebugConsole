@@ -24,15 +24,15 @@ class DumpHtmlTest extends DebugTestFramework
             $valDumper->markupIdentifier('Foo\\Bar')
         );
         $this->assertSame(
-            '<span class="classname"><span class="namespace">Foo\</span>Bar</span><span class="t_operator">::</span><span class="t_identifier">baz</span>',
+            '<span class="classname"><span class="namespace">Foo\</span>Bar</span><span class="t_operator">::</span><span class="t_name">baz</span>',
             $valDumper->markupIdentifier('Foo\\Bar::baz')
         );
         $this->assertSame(
-            '<span class="classname"><span class="namespace">Foo\</span>Bar</span><span class="t_operator">-&gt;</span><span class="t_identifier">baz</span>',
+            '<span class="classname"><span class="namespace">Foo\</span>Bar</span><span class="t_operator">-&gt;</span><span class="t_name">baz</span>',
             $valDumper->markupIdentifier('Foo\\Bar->baz')
         );
         $this->assertSame(
-            '<span class="classname"><span class="namespace">Foo\</span>Bar</span><span class="t_operator">::</span><span class="t_identifier">Baz</span>',
+            '<span class="classname"><span class="namespace">Foo\</span>Bar</span><span class="t_operator">::</span><span class="t_name">Baz</span>',
             $valDumper->markupIdentifier(array('Foo\\Bar', 'Baz'))
         );
 
@@ -50,7 +50,7 @@ class DumpHtmlTest extends DebugTestFramework
 
         // test wbr
         $this->assertSame(
-            '<span class="classname"><span class="namespace">Foo\<wbr /></span>Bar</span><wbr /><span class="t_operator">-&gt;</span><span class="t_identifier">baz</span>',
+            '<span class="classname"><span class="namespace">Foo\<wbr /></span>Bar</span><wbr /><span class="t_operator">-&gt;</span><span class="t_name">baz</span>',
             $valDumper->markupIdentifier('Foo\\Bar->baz', 'classname', 'span', null, true)
         );
     }

@@ -50,7 +50,7 @@ class EnumTest extends DebugTestFramework
                                 'isFinal' => false,
                                 'phpDoc' => array(
                                     'desc' => '',
-                                    'summary' => 'The most important meal',
+                                    'summary' => 'The <b>most</b> important meal',
                                 ),
                                 'value' => Abstracter::UNDEFINED,
                                 'visibility' => 'public',
@@ -85,8 +85,8 @@ class EnumTest extends DebugTestFramework
                         // \bdk\Debug::varDump('actual', $cases);
                         self::assertSame($expect, $cases);
                     },
-                    'html' => '<li class="m_log"><div class="groupByInheritance t_object" data-accessible="public"><span class="t_const" title="The most important meal
-                        Meals PHPDoc"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\Enum\</span>Meals</span><span class="t_operator">::</span><span class="t_identifier">BREAKFAST</span></span>
+                    'html' => '<li class="m_log"><div class="groupByInheritance t_object" data-accessible="public"><span class="t_identifier" data-type-more="const" title="The &lt;b&gt;most&lt;/b&gt; important meal
+                        Meals PHPDoc"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\Enum\</span>Meals</span><span class="t_operator">::</span><span class="t_name">BREAKFAST</span></span>
                         <dl class="object-inner">
                         <dt class="modifiers">modifiers</dt>
                         <dd class="t_modifier_final">final</dd>
@@ -95,25 +95,61 @@ class EnumTest extends DebugTestFramework
                         <dt>implements</dt>
                         <dd class="interface toggle-off"><span class="classname">UnitEnum</span></dd>
                         <dt class="constants">constants</dt>
-                        <dd class="constant public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string">ENUM_VALUE</span> <span class="t_operator">=</span> <span class="t_const" title="What&#039;s for dinner?
-                            Meals PHPDoc"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\Enum\</span>Meals</span><span class="t_operator">::</span><span class="t_identifier">DINNER</span></span></dd>
+                        <dd class="constant public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string">ENUM_VALUE</span> <span class="t_operator">=</span> <span class="t_identifier" data-type-more="const" title="What&#039;s for dinner?
+                            Meals PHPDoc"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\Enum\</span>Meals</span><span class="t_operator">::</span><span class="t_name">DINNER</span></span></dd>
                         <dd class="constant public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string">REGULAR_CONSTANT</span> <span class="t_operator">=</span> <span class="t_string">test</span></dd>
                         <dt class="cases">cases</dt>
-                        <dd class="case"><span class="no-quotes t_identifier t_string" title="The most important meal">BREAKFAST</span></dd>
+                        <dd class="case"><span class="no-quotes t_identifier t_string" title="The &lt;b&gt;most&lt;/b&gt; important meal">BREAKFAST</span></dd>
                         <dd class="case"><span class="no-quotes t_identifier t_string" title="What&#039;s for dinner?">DINNER</span></dd>
                         <dd class="case" data-attributes="[{&quot;arguments&quot;:[],&quot;name&quot;:&quot;bdk\\\\Test\\\\Debug\\\\Fixture\\\\Enum\\\\ExampleCaseAttribute&quot;}]"><span class="no-quotes t_identifier t_string">LUNCH</span></dd>
                         <dt class="properties">properties</dt>
                         <dd class="isReadOnly property ' . (PHP_VERSION_ID >= 80400 ? 'protected-set ' : '') . 'public">'
                             . '<span class="t_modifier_public">public</span> '
                             . (PHP_VERSION_ID >= 80400 ? '<span class="t_modifier_protected-set">protected(set)</span> ' : '')
-                            . '<span class="t_modifier_readonly">readonly</span> <span class="t_type">string</span> <span class="no-quotes t_identifier t_string">name</span> <span class="t_operator">=</span> <span class="t_string">BREAKFAST</span></dd>
+                            . '<span class="t_modifier_readonly">readonly</span> <span class="t_type">string</span> '
+                            . '<span class="no-quotes t_identifier t_string">name</span> <span class="t_operator">=</span> <span class="t_string">BREAKFAST</span></dd>
                         <dt class="methods">methods</dt>
                         <dd class="isStatic method public" data-implements="UnitEnum"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="t_identifier">cases</span><span class="t_punct">(</span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">array</span></dd>
-                        <dd class="isStatic method public"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="t_identifier" title="Prepare a meal">prepare</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="enum">$meal</span> <span class="t_operator">=</span> <span class="t_const t_parameter-default" title="The most important meal
-                            Meals PHPDoc"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\Enum\</span>Meals</span><span class="t_operator">::</span><span class="t_identifier">BREAKFAST</span></span></span><span class="t_punct">,</span>
-                            <span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="constant">$extra</span> <span class="t_operator">=</span> <span class="t_const t_parameter-default" title="value: &quot;test&quot;"><span class="classname">self</span><span class="t_operator">::</span><span class="t_identifier">REGULAR_CONSTANT</span></span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span></dd>
+                        <dd class="isStatic method public"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="t_identifier" title="Prepare a meal">prepare</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="enum">$meal</span> <span class="t_operator">=</span> <span class="t_identifier t_parameter-default" data-type-more="const" title="The &lt;b&gt;most&lt;/b&gt; important meal
+                            Meals PHPDoc"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\Enum\</span>Meals</span><span class="t_operator">::</span><span class="t_name">BREAKFAST</span></span></span><span class="t_punct">,</span>
+                            <span class="parameter"><span class="t_type">string</span> <span class="t_parameter-name" title="constant">$extra</span> <span class="t_operator">=</span> <span class="t_identifier t_parameter-default" data-type-more="const" title="value: &quot;test&quot;"><span class="classname">self</span><span class="t_operator">::</span><span class="t_name">REGULAR_CONSTANT</span></span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span></dd>
                         </dl>
                         </div></li>',
+                ),
+            ),
+
+            'basic.group' => array(
+                'group',
+                array(
+                    \bdk\Test\Debug\Fixture\Enum\Meals::BREAKFAST,
+                ),
+                array(
+                    'html' => '<li class="expanded m_group">
+                        <div class="group-header"><span class="font-weight-bold group-label"><span class="t_identifier" data-type-more="const" title="The &lt;b&gt;most&lt;/b&gt; important meal
+                        Meals PHPDoc"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\Enum\</span>Meals</span><span class="t_operator">::</span><span class="t_name">BREAKFAST</span></span></span></div>
+                        <ul class="group-body">',
+                ),
+            ),
+
+            'basic.table' => array(
+                'table',
+                array(
+                    array(
+                        'enum' => \bdk\Test\Debug\Fixture\Enum\Meals::BREAKFAST,
+                    )
+                ),
+                array(
+                    'html' => '<li class="m_table">
+                        <table class="sortable table-bordered">
+                        <thead>
+                            <tr><th>&nbsp;</th><th scope="col">value</th></tr>
+                        </thead>
+                        <tbody>
+                        <tr><th class="t_key t_string text-right" scope="row">enum</th><td class="t_identifier" data-type-more="const" title="The &lt;b&gt;most&lt;/b&gt; important meal
+                            Meals PHPDoc"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\Enum\</span>Meals</span><span class="t_operator">::</span><span class="t_name">BREAKFAST</span></td></tr>
+                        </tbody>
+                        </table>
+                        </li>',
                 ),
             ),
 
@@ -197,7 +233,7 @@ class EnumTest extends DebugTestFramework
                             ),
                         ), $cases);
                     },
-                    'html' => '<li class="m_log"><div class="groupByInheritance t_object" data-accessible="public"><span class="t_const"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\Enum\</span>MealsBacked</span><span class="t_operator">::</span><span class="t_identifier">BREAKFAST</span></span>
+                    'html' => '<li class="m_log"><div class="groupByInheritance t_object" data-accessible="public"><span class="t_identifier" data-type-more="const"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\Enum\</span>MealsBacked</span><span class="t_operator">::</span><span class="t_name">BREAKFAST</span></span>
                         <dl class="object-inner">
                         <dt class="modifiers">modifiers</dt>
                         <dd class="t_modifier_final">final</dd>
@@ -212,7 +248,7 @@ class EnumTest extends DebugTestFramework
                             </ul>
                         </dd>
                         <dt class="constants">constants</dt>
-                        <dd class="constant public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string">ENUM_VALUE</span> <span class="t_operator">=</span> <span class="t_const"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\Enum\</span>MealsBacked</span><span class="t_operator">::</span><span class="t_identifier">DINNER</span></span></dd>
+                        <dd class="constant public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string">ENUM_VALUE</span> <span class="t_operator">=</span> <span class="t_identifier" data-type-more="const"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\Enum\</span>MealsBacked</span><span class="t_operator">::</span><span class="t_name">DINNER</span></span></dd>
                         <dd class="constant public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string">REGULAR_CONSTANT</span> <span class="t_operator">=</span> <span class="t_string">test</span></dd>
                         <dt class="cases">cases</dt>
                         <dd class="case"><span class="no-quotes t_identifier t_string">BREAKFAST</span> <span class="t_operator">=</span> <span class="t_string">breakfast</span></dd>
@@ -222,11 +258,13 @@ class EnumTest extends DebugTestFramework
                         <dd class="isReadOnly property ' . (PHP_VERSION_ID >= 80400 ? 'protected-set ' : '') . 'public">'
                             . '<span class="t_modifier_public">public</span> '
                             . (PHP_VERSION_ID >= 80400 ? '<span class="t_modifier_protected-set">protected(set)</span> ' : '')
-                            . '<span class="t_modifier_readonly">readonly</span> <span class="t_type">string</span> <span class="no-quotes t_identifier t_string">name</span> <span class="t_operator">=</span> <span class="t_string">BREAKFAST</span></dd>
+                            . '<span class="t_modifier_readonly">readonly</span> <span class="t_type">string</span> '
+                            . '<span class="no-quotes t_identifier t_string">name</span> <span class="t_operator">=</span> <span class="t_string">BREAKFAST</span></dd>
                         <dd class="isReadOnly property ' . (PHP_VERSION_ID >= 80400 ? 'protected-set ' : '') . 'public">'
                             . '<span class="t_modifier_public">public</span> '
                             . (PHP_VERSION_ID >= 80400 ? '<span class="t_modifier_protected-set">protected(set)</span> ' : '')
-                            . '<span class="t_modifier_readonly">readonly</span> <span class="t_type">string</span> <span class="no-quotes t_identifier t_string">value</span> <span class="t_operator">=</span> <span class="t_string">breakfast</span></dd>
+                            . '<span class="t_modifier_readonly">readonly</span> <span class="t_type">string</span> '
+                            . '<span class="no-quotes t_identifier t_string">value</span> <span class="t_operator">=</span> <span class="t_string">breakfast</span></dd>
                         <dt class="methods">methods</dt>
                         <dd class="isStatic method public" data-implements="UnitEnum"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="t_identifier">cases</span><span class="t_punct">(</span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">array</span></dd>
                         <dd class="isStatic method public" data-implements="BackedEnum"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="t_identifier">from</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">string</span><span class="t_punct">|</span><span class="t_type">int</span> <span class="t_parameter-name">$value</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">static</span></dd>

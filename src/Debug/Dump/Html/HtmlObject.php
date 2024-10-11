@@ -112,8 +112,7 @@ class HtmlObject
                 . $className . "\n" . '<span class="excluded">NOT INSPECTED</span>';
         }
         if (($abs['cfgFlags'] & AbstractObject::BRIEF) && \strpos(\json_encode($abs['implements']), '"UnitEnum"') !== false) {
-            $this->valDumper->optionSet('tagName', null);
-            return $className;
+            return $this->dumpEnumBrief($abs);
         }
         $html = $this->dumpToString($abs)
             . $className . "\n"
@@ -146,6 +145,29 @@ class HtmlObject
             ' data-inherited-from="null"',
         ], '', $html);
         return $html;
+    }
+
+    /**
+     * Dump "brief" output for Enum
+     *
+     * @param ObjectAbstraction $abs Object Abstraction instance
+     *
+     * @return string html fragment
+     */
+    private function dumpEnumBrief(ObjectAbstraction $abs)
+    {
+        $className = $this->dumpClassName($abs);
+        $parsed = $this->html->parseTag($className);
+        $attribs = $this->valDumper->debug->arrayUtil->mergeDeep(
+            $this->valDumper->optionGet('attribs'),
+            $parsed['attribs']
+        );
+        if ($this->valDumper->optionGet('tagName') !== 'td') {
+            $this->valDumper->optionSet('tagName', 'span');
+        }
+        $this->valDumper->optionSet('type', null); // exclude t_object classname
+        $this->valDumper->optionSet('attribs', $attribs);
+        return $parsed['innerhtml'];
     }
 
     /**
@@ -220,7 +242,6 @@ class HtmlObject
 
     /**
      * Dump className of object
-     * ClassName may be wrapped in a span that includes phpDoc summary / desc
      *
      * @param ObjectAbstraction $abs Object Abstraction instance
      *
@@ -229,22 +250,24 @@ class HtmlObject
     protected function dumpClassName(ObjectAbstraction $abs)
     {
         $phpDocOutput = $abs['cfgFlags'] & AbstractObject::PHPDOC_OUTPUT;
-        $title = $phpDocOutput
-            ? $this->helper->dumpPhpDoc($abs['phpDoc']['summary'] . "\n\n" . $abs['phpDoc']['desc'])
-            : null;
-        if (\strpos(\json_encode($abs['implements']), '"UnitEnum"') !== false) {
-            return $this->html->buildTag(
-                'span',
-                \array_filter(array(
-                    'class' => \array_merge($this->valDumper->optionGet('attribs')['class'], array('t_const')),
-                    'title' => $title,
-                )),
-                $this->valDumper->markupIdentifier($abs['className'] . '::' . $abs['properties']['name']['value'])
+        $attribs = array(
+            'title' => $phpDocOutput
+                ? $this->helper->dumpPhpDoc($abs['phpDoc']['summary'] . "\n\n" . $abs['phpDoc']['desc'])
+                : null,
+        );
+        $absValues = \strpos(\json_encode($abs['implements']), '"UnitEnum"') !== false
+            ? array(
+                'attribs' => $attribs,
+                'typeMore' => 'const',
+                'value' => $abs['className'] . '::' . $abs['properties']['name']['value'],
+            )
+            : array(
+                'attribs' => $attribs,
+                'typeMore' => 'className',
+                'value' => $abs['className'],
             );
-        }
-        return $this->valDumper->markupIdentifier($abs['className'], 'classname', 'span', array(
-            'title' => $title,
-        ));
+        $absTemp = new Abstraction(Type::TYPE_IDENTIFIER, $absValues);
+        return $this->valDumper->dump($absTemp);
     }
 
     /**

@@ -111,13 +111,12 @@
 
   function addIcons ($node) {
     $.each(config$1.iconsObject, function (selector, v) {
-      var prepend = true;
       var sMatches = selector.match(/(?:parent(\S+)\s)?(?:context(\S+)\s)?(.*)$/);
       var vMatches = typeof v === 'string'
         ? v.match(/^([ap])\s*:(.+)$/)
         : null;
+      var prepend = !vMatches || vMatches[1] === 'p';
       var $found;
-      var $existingIcon;
       if (sMatches) {
         if (sMatches[1] && $node.parent().filter(sMatches[1]).length === 0) {
           return
@@ -128,20 +127,26 @@
         selector = sMatches[3];
       }
       if (vMatches) {
-        prepend = vMatches[1] === 'p';
         v = vMatches[2];
       }
       $found = $node.find(selector);
-      if (prepend === false) {
-        $found.append(v);
+      if (prepend) {
+        addIconPrepend($found, v);
         return
       }
-      $existingIcon = $found.find('> i:first-child + i').after(v);
-      $found = $found.not($existingIcon.parent());
-      $existingIcon = $found.find('> i:first-child').after(v);
-      $found = $found.not($existingIcon.parent());
-      $found.prepend(v);
+      $found.append(v);
     });
+  }
+
+  function addIconPrepend ($dest, icon) {
+    // add icon to destinations having two icons
+    var $existingIcon = $dest.find('> i:first-child + i').after(icon);
+    $dest = $dest.not($existingIcon.parent());
+    // add icon to destinations having one icon
+    $existingIcon = $dest.find('> i:first-child').after(icon);
+    $dest = $dest.not($existingIcon.parent());
+    // add icon to destination that did not have icon
+    $dest.prepend(icon);
   }
 
   /**
@@ -149,12 +154,15 @@
    * Minimal DOM manipulation -> apply to all descendants
    */
   function enhance$1 ($node) {
-    $node.find('> .classname, > .t_const').each(function () {
-      var $classname = $(this);
-      var $target = $classname.next();
-      var isEnhanced = $classname.data('toggle') === 'object';
+    var selectors = $node.find('> .t_identifier').length
+      ? ['> .t_identifier']
+      : ['> .classname', '> .t_const'];
+    $node.find(selectors.join(',')).each(function () {
+      var $toggle = $(this);
+      var $target = $toggle.next();
+      var isEnhanced = $toggle.data('toggle') === 'object';
       if ($target.is('.t_maxDepth, .t_recursion, .excluded')) {
-        $classname.addClass('empty');
+        $toggle.addClass('empty');
         return
       }
       if (isEnhanced) {
@@ -163,7 +171,7 @@
       if ($target.length === 0) {
         return
       }
-      $classname.wrap('<span data-toggle="object"></span>')
+      $toggle.wrap('<span data-toggle="object"></span>')
         .after(' <i class="fa ' + config$1.iconsExpand.expand + '"></i>');
       $target.hide();
     });
@@ -2212,17 +2220,31 @@
    * Build the value displayed when group is collapsed
    */
   function buildReturnVal ($return) {
+    var selectors = [];
     var type = getNodeType($return);
     var typeMore = type[1];
     type = type[0];
-    if (['bool', 'callable', 'const', 'float', 'int', 'null', 'resource', 'unknown'].indexOf(type) > -1 || ['numeric', 'timestamp'].indexOf(typeMore) > -1) {
+    if (['bool', 'callable', 'const', 'float', 'identifier', 'int', 'null', 'resource', 'unknown'].indexOf(type) > -1 || ['numeric', 'timestamp'].indexOf(typeMore) > -1) {
       return $return[0].outerHTML
     }
     if (type === 'string') {
       return buildReturnValString($return, typeMore)
     }
     if (type === 'object') {
-      return $return.find('> .classname, > [data-toggle] > .classname, > .t_const, > [data-toggle] > .t_const')[0].outerHTML
+      if ($return.find('> .t_identifier').length) {
+        // newer style markup classname wrapped in t_identifier
+        selectors = [
+          '> .t_identifier',
+        ];
+        return $return.find(selectors.join(','))[0].outerHTML
+      }
+      selectors = [
+        '> .classname',
+        '> .t_const',
+        '> [data-toggle] > .classname',
+        '> [data-toggle] > .t_const',
+      ];
+      return $return.find(selectors.join(','))[0].outerHTML
     }
     if (type === 'array' && $return[0].textContent === 'array()') {
       return $return[0].outerHTML.replace('t_array', 't_array expanded')
@@ -6588,31 +6610,24 @@
   $.fn.debugEnhance = function (method, arg1, arg2) {
     switch (method) {
       case 'sidebar':
-        debugEnhanceSidebar(this, arg1);
-        break
+        return debugEnhanceSidebar(this, arg1)
       case 'buildChannelList':
         return buildChannelList(arg1, arg2, arguments[3])
       case 'collapse':
-        this.each(function () {
+        return this.each(function () {
           collapse($(this), arg1);
-        });
-        break
+        })
       case 'expand':
-        this.each(function () {
+        return this.each(function () {
           expand($(this));
-        });
-        break
+        })
       case 'init':
-        debugEnhanceInit(this, arg1);
-        break
+        return debugEnhanceInit(this, arg1)
       case 'setConfig':
-        debugEnhanceSetConfig(this, arg1);
-        break
+        return debugEnhanceSetConfig(this, arg1)
       default:
-        debugEnhanceDefault(this);
-        break;
+        return debugEnhanceDefault(this)
     }
-    return this
   };
 
   $(function () {
@@ -6638,6 +6653,7 @@
     if (!config$a.get('drawer')) {
       $node.debugEnhance();
     }
+    return $node
   }
 
   function debugEnhanceDefault ($node) {
@@ -6671,11 +6687,12 @@
       }
       // console.groupEnd()
     });
+    return $node
   }
 
   function debugEnhanceSetConfig ($node, arg1) {
     if (typeof arg1 !== 'object') {
-      return
+      return $node
     }
     config$a.set(arg1);
     // update log entries that have already been enhanced
@@ -6684,6 +6701,7 @@
       .closest('.debug')
       .add($node)
       .trigger('config.debug.updated', 'linkFilesTemplate');
+    return $node
   }
 
   function debugEnhanceSidebar ($node, arg1) {
@@ -6694,6 +6712,7 @@
     } else if (arg1 === 'close') {
       close$2($node);
     }
+    return $node
   }
 
   /**
@@ -6730,7 +6749,7 @@
     /*
       Copy strings/floats/ints to clipboard when clicking
     */
-    return new window.ClipboardJS('.debug .t_string, .debug .t_int, .debug .t_float, .debug .t_key', {
+    return new window.ClipboardJS('.debug .t_float, .debug .t_identifier, .debug .t_int, .debug .t_key, .debug .t_string', {
       target: function (trigger) {
         var range;
         if ($(trigger).is('a')) {

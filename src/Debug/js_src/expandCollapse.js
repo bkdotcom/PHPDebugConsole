@@ -80,17 +80,31 @@ export function toggle (node) {
  * Build the value displayed when group is collapsed
  */
 function buildReturnVal ($return) {
+  var selectors = []
   var type = getNodeType($return)
   var typeMore = type[1]
   type = type[0]
-  if (['bool', 'callable', 'const', 'float', 'int', 'null', 'resource', 'unknown'].indexOf(type) > -1 || ['numeric', 'timestamp'].indexOf(typeMore) > -1) {
+  if (['bool', 'callable', 'const', 'float', 'identifier', 'int', 'null', 'resource', 'unknown'].indexOf(type) > -1 || ['numeric', 'timestamp'].indexOf(typeMore) > -1) {
     return $return[0].outerHTML
   }
   if (type === 'string') {
     return buildReturnValString($return, typeMore)
   }
   if (type === 'object') {
-    return $return.find('> .classname, > [data-toggle] > .classname, > .t_const, > [data-toggle] > .t_const')[0].outerHTML
+    if ($return.find('> .t_identifier').length) {
+      // newer style markup classname wrapped in t_identifier
+      selectors = [
+        '> .t_identifier',
+      ]
+      return $return.find(selectors.join(','))[0].outerHTML
+    }
+    selectors = [
+      '> .classname',
+      '> .t_const',
+      '> [data-toggle] > .classname',
+      '> [data-toggle] > .t_const',
+    ]
+    return $return.find(selectors.join(','))[0].outerHTML
   }
   if (type === 'array' && $return[0].textContent === 'array()') {
     return $return[0].outerHTML.replace('t_array', 't_array expanded')

@@ -231,7 +231,8 @@ class Component extends CApplicationComponent
         $debug->log('session class', $debug->abstracter->crateWithVals(
             \get_class($session),
             array(
-                'typeMore' => Type::TYPE_STRING_CLASSNAME,
+                'type' => Type::TYPE_IDENTIFIER,
+                'typeMore' => 'className',
             )
         ));
 

@@ -133,10 +133,12 @@ class CollectEvents implements SubscriberInterface
         foreach ($tableData as &$info) {
             unset($info['index']);
             $info['senderClass'] = $this->debug->abstracter->crateWithVals($info['senderClass'], array(
-                'typeMore' => Type::TYPE_STRING_CLASSNAME,
+                'type' => Type::TYPE_IDENTIFIER,
+                'typeMore' => 'className',
             ));
             $info['eventClass'] = $this->debug->abstracter->crateWithVals($info['eventClass'], array(
-                'typeMore' => Type::TYPE_STRING_CLASSNAME,
+                'type' => Type::TYPE_IDENTIFIER,
+                'typeMore' => 'className',
             ));
         }
 

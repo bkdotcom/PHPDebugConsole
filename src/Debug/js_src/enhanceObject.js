@@ -16,13 +16,12 @@ export function init ($delegateNode) {
 
 function addIcons ($node) {
   $.each(config.iconsObject, function (selector, v) {
-    var prepend = true
     var sMatches = selector.match(/(?:parent(\S+)\s)?(?:context(\S+)\s)?(.*)$/)
     var vMatches = typeof v === 'string'
       ? v.match(/^([ap])\s*:(.+)$/)
       : null
+    var prepend = !vMatches || vMatches[1] === 'p'
     var $found
-    var $existingIcon
     if (sMatches) {
       if (sMatches[1] && $node.parent().filter(sMatches[1]).length === 0) {
         return
@@ -33,20 +32,26 @@ function addIcons ($node) {
       selector = sMatches[3]
     }
     if (vMatches) {
-      prepend = vMatches[1] === 'p'
       v = vMatches[2]
     }
     $found = $node.find(selector)
-    if (prepend === false) {
-      $found.append(v)
+    if (prepend) {
+      addIconPrepend($found, v)
       return
     }
-    $existingIcon = $found.find('> i:first-child + i').after(v)
-    $found = $found.not($existingIcon.parent())
-    $existingIcon = $found.find('> i:first-child').after(v)
-    $found = $found.not($existingIcon.parent())
-    $found.prepend(v)
+    $found.append(v)
   })
+}
+
+function addIconPrepend ($dest, icon) {
+  // add icon to destinations having two icons
+  var $existingIcon = $dest.find('> i:first-child + i').after(icon)
+  $dest = $dest.not($existingIcon.parent())
+  // add icon to destinations having one icon
+  $existingIcon = $dest.find('> i:first-child').after(icon)
+  $dest = $dest.not($existingIcon.parent())
+  // add icon to destination that did not have icon
+  $dest.prepend(icon)
 }
 
 /**
@@ -54,12 +59,15 @@ function addIcons ($node) {
  * Minimal DOM manipulation -> apply to all descendants
  */
 export function enhance ($node) {
-  $node.find('> .classname, > .t_const').each(function () {
-    var $classname = $(this)
-    var $target = $classname.next()
-    var isEnhanced = $classname.data('toggle') === 'object'
+  var selectors = $node.find('> .t_identifier').length
+    ? ['> .t_identifier']
+    : ['> .classname', '> .t_const']
+  $node.find(selectors.join(',')).each(function () {
+    var $toggle = $(this)
+    var $target = $toggle.next()
+    var isEnhanced = $toggle.data('toggle') === 'object'
     if ($target.is('.t_maxDepth, .t_recursion, .excluded')) {
-      $classname.addClass('empty')
+      $toggle.addClass('empty')
       return
     }
     if (isEnhanced) {
@@ -68,7 +76,7 @@ export function enhance ($node) {
     if ($target.length === 0) {
       return
     }
-    $classname.wrap('<span data-toggle="object"></span>')
+    $toggle.wrap('<span data-toggle="object"></span>')
       .after(' <i class="fa ' + config.iconsExpand.expand + '"></i>')
     $target.hide()
   })

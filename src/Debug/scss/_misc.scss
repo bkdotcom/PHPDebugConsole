@@ -93,14 +93,17 @@ use ::after pseudo element to replace the char with abbreviation
 .char-control[data-abbr]::after {
   content: attr(data-abbr);
   display: block;
-  line-height: 1em;
   text-indent: 0;
+  
+  line-height: 1.25em;
+  position: relative;
+  top: -0.25em;
+  font-size: 0.66em;
 
-  padding: .05em .5em;
+  padding: 0.05em 0.5em 0;
   background-color: silver;
   color: $color-fg-binary;
   font-family: monospace !important;
-  // pointer-events: none;
 }
 
 .maxlen {

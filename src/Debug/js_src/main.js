@@ -56,32 +56,24 @@ loadDeps([
 $.fn.debugEnhance = function (method, arg1, arg2) {
   switch (method) {
     case 'sidebar':
-      debugEnhanceSidebar(this, arg1)
-      break
+      return debugEnhanceSidebar(this, arg1)
     case 'buildChannelList':
       return enhanceMain.buildChannelList(arg1, arg2, arguments[3])
-      break
     case 'collapse':
-      this.each(function () {
+      return this.each(function () {
         expandCollapse.collapse($(this), arg1)
       })
-      break
     case 'expand':
-      this.each(function () {
+      return this.each(function () {
         expandCollapse.expand($(this))
       })
-      break
     case 'init':
-      debugEnhanceInit(this, arg1)
-      break
+      return debugEnhanceInit(this, arg1)
     case 'setConfig':
-      debugEnhanceSetConfig(this, arg1)
-      break
+      return debugEnhanceSetConfig(this, arg1)
     default:
-      debugEnhanceDefault(this)
-      break;
+      return debugEnhanceDefault(this)
   }
-  return this
 }
 
 $(function () {
@@ -107,6 +99,7 @@ function debugEnhanceInit ($node, arg1) {
   if (!config.get('drawer')) {
     $node.debugEnhance()
   }
+  return $node
 }
 
 function debugEnhanceDefault ($node) {
@@ -140,11 +133,12 @@ function debugEnhanceDefault ($node) {
     }
     // console.groupEnd()
   })
+  return $node
 }
 
 function debugEnhanceSetConfig ($node, arg1) {
   if (typeof arg1 !== 'object') {
-    return
+    return $node
   }
   config.set(arg1)
   // update log entries that have already been enhanced
@@ -153,6 +147,7 @@ function debugEnhanceSetConfig ($node, arg1) {
     .closest('.debug')
     .add($node)
     .trigger('config.debug.updated', 'linkFilesTemplate')
+  return $node
 }
 
 function debugEnhanceSidebar ($node, arg1) {
@@ -163,6 +158,7 @@ function debugEnhanceSidebar ($node, arg1) {
   } else if (arg1 === 'close') {
     sidebar.close($node)
   }
+  return $node
 }
 
 /**
@@ -199,7 +195,7 @@ function initClipboardJs () {
   /*
     Copy strings/floats/ints to clipboard when clicking
   */
-  return new window.ClipboardJS('.debug .t_string, .debug .t_int, .debug .t_float, .debug .t_key', {
+  return new window.ClipboardJS('.debug .t_float, .debug .t_identifier, .debug .t_int, .debug .t_key, .debug .t_string', {
     target: function (trigger) {
       var range
       if ($(trigger).is('a')) {

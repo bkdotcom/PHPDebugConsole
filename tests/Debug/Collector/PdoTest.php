@@ -183,10 +183,11 @@ EOD;
                         ':datetime' => array(
                             'value' => $datetime,
                             'type' => array(
+                                'backedValue' => 2,
                                 'debug' => Abstracter::ABSTRACTION,
-                                'name' => 'PDO::PARAM_STR',
-                                'type' => Type::TYPE_CONST,
-                                'value' => 2,
+                                'type' => Type::TYPE_IDENTIFIER,
+                                'typeMore' => 'const',
+                                'value' => 'PDO::PARAM_STR',
                             ),
                         ),
                     ),

@@ -81,7 +81,7 @@ class ProfileTest extends DebugTestFramework
                     self::assertGreaterThanOrEqual(0.75 * 2, $c['totalTime']);
                     self::assertLessThan(0.75 * 2 + 0.01, $c['ownTime']);
                     \ksort($logEntry['meta']);
-                    self::assertEquals(array(
+                    $expect = array(
                         'caption' => "Profile 'Profile 1' Results",
                         'name' => 'Profile 1',
                         'sortable' => true,
@@ -103,27 +103,30 @@ class ProfileTest extends DebugTestFramework
                             'indexLabel' => null,
                             'rows' => array(
                                 'bdk\Test\Debug\Plugin\Method\ProfileTest::a' => array(
-                                    'key' => new Abstraction(Type::TYPE_CALLABLE, array(
-                                        'hideType' => true, // don't output 'callable'
+                                    'key' => new Abstraction(Type::TYPE_IDENTIFIER, array(
+                                        'typeMore' => 'method',
                                         'value' => 'bdk\Test\Debug\Plugin\Method\ProfileTest::a',
                                     )),
                                 ),
                                 'bdk\Test\Debug\Plugin\Method\ProfileTest::b' => array(
-                                    'key' => new Abstraction(Type::TYPE_CALLABLE, array(
-                                        'hideType' => true, // don't output 'callable'
+                                    'key' => new Abstraction(Type::TYPE_IDENTIFIER, array(
+                                        'typeMore' => 'method',
                                         'value' => 'bdk\Test\Debug\Plugin\Method\ProfileTest::b',
                                     )),
                                 ),
                                 'bdk\Test\Debug\Plugin\Method\ProfileTest::c' => array(
-                                    'key' => new Abstraction(Type::TYPE_CALLABLE, array(
-                                        'hideType' => true, // don't output 'callable'
+                                    'key' => new Abstraction(Type::TYPE_IDENTIFIER, array(
+                                        'typeMore' => 'method',
                                         'value' => 'bdk\Test\Debug\Plugin\Method\ProfileTest::c',
                                     )),
                                 ),
                             ),
                             'summary' => '',
                         ),
-                    ), $logEntry['meta']);
+                    );
+                    // \bdk\Debug::varDump('expect', \bdk\Test\Debug\Helper::deObjectifyData($expect));
+                    // \bdk\Debug::varDump('actual', \bdk\Test\Debug\Helper::deObjectifyData($logEntry['meta']));
+                    self::assertEquals($expect, $logEntry['meta']);
                 },
                 'chromeLogger' => '[[{"bdk\\\Test\\\Debug\\\Plugin\\\Method\\\ProfileTest::a":{"calls":1,"totalTime":%f,"ownTime":%f},"bdk\\\Test\\\Debug\\\Plugin\\\Method\\\ProfileTest::b":{"calls":1,"totalTime":%f,"ownTime":%f},"bdk\\\Test\\\Debug\\\Plugin\\\Method\\\ProfileTest::c":{"calls":2,"totalTime":%f,"ownTime":%f}}],null,"table"]',
                 'firephp' => 'X-Wf-1-1-1-2: %d|[{"Label":"Profile \'Profile 1\' Results","Type":"TABLE"},[["","calls","totalTime","ownTime"],["bdk\\\Test\\\Debug\\\Plugin\\\Method\\\ProfileTest::a",1,%f,%f],["bdk\\\Test\\\Debug\\\Plugin\\\Method\\\ProfileTest::b",1,%f,%f],["bdk\\\Test\\\Debug\\\Plugin\\\Method\\\ProfileTest::c",2,%f,%f]]]|',
@@ -134,9 +137,9 @@ class ProfileTest extends DebugTestFramework
                         <tr><th>&nbsp;</th><th scope="col">calls</th><th scope="col">totalTime</th><th scope="col">ownTime</th></tr>
                     </thead>
                     <tbody>
-                        <tr><th class="t_callable t_key text-right" scope="row"><span class="classname"><span class="namespace">bdk\Test\Debug\Plugin\Method\</span>ProfileTest</span><span class="t_operator">::</span><span class="t_identifier">a</span></th><td class="t_int">1</td><td class="t_float">%f</td><td class="t_float">%f</td></tr>
-                        <tr><th class="t_callable t_key text-right" scope="row"><span class="classname"><span class="namespace">bdk\Test\Debug\Plugin\Method\</span>ProfileTest</span><span class="t_operator">::</span><span class="t_identifier">b</span></th><td class="t_int">1</td><td class="t_float">%f</td><td class="t_float">%f</td></tr>
-                        <tr><th class="t_callable t_key text-right" scope="row"><span class="classname"><span class="namespace">bdk\Test\Debug\Plugin\Method\</span>ProfileTest</span><span class="t_operator">::</span><span class="t_identifier">c</span></th><td class="t_int">2</td><td class="t_float">%f</td><td class="t_float">%f</td></tr>
+                        <tr><th class="t_identifier t_key text-right" data-type-more="method" scope="row"><span class="classname"><span class="namespace">bdk\Test\Debug\Plugin\Method\</span>ProfileTest</span><span class="t_operator">::</span><span class="t_name">a</span></th><td class="t_int">1</td><td class="t_float">%f</td><td class="t_float">%f</td></tr>
+                        <tr><th class="t_identifier t_key text-right" data-type-more="method" scope="row"><span class="classname"><span class="namespace">bdk\Test\Debug\Plugin\Method\</span>ProfileTest</span><span class="t_operator">::</span><span class="t_name">b</span></th><td class="t_int">1</td><td class="t_float">%f</td><td class="t_float">%f</td></tr>
+                        <tr><th class="t_identifier t_key text-right" data-type-more="method" scope="row"><span class="classname"><span class="namespace">bdk\Test\Debug\Plugin\Method\</span>ProfileTest</span><span class="t_operator">::</span><span class="t_name">c</span></th><td class="t_int">2</td><td class="t_float">%f</td><td class="t_float">%f</td></tr>
                     </tbody>
                     <tfoot>
                         <tr><td>&nbsp;</td><td></td><td></td><td class="t_float">%f</td></tr>

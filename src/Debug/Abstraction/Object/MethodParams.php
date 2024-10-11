@@ -196,9 +196,10 @@ class MethodParams
             if ($defaultValue instanceof UnitEnum) {
                 $defaultValue = $this->abstracter->crate($defaultValue, $this->abs['debugMethod']);
             } elseif (PHP_VERSION_ID >= 50406 && $refParameter->isDefaultValueConstant()) {
-                $defaultValue = new Abstraction(Type::TYPE_CONST, array(
-                    'name' => $this->getConstantName($refParameter),
-                    'value' => $defaultValue,
+                $defaultValue = new Abstraction(Type::TYPE_IDENTIFIER, array(
+                    'backedValue' => $defaultValue,
+                    'typeMore' => 'const',
+                    'value' => $this->getConstantName($refParameter),
                 ));
             }
         }
@@ -238,15 +239,17 @@ class MethodParams
     private function phpDocConstant($defaultValue, $className, array $matches)
     {
         if ($matches['classname'] === 'self' && \defined($className . '::' . $matches['const'])) {
-            return new Abstraction(Type::TYPE_CONST, array(
-                'name' => $defaultValue,
-                'value' => \constant($className . '::' . $matches['const']),
+            return new Abstraction(Type::TYPE_IDENTIFIER, array(
+                'backedValue' => \constant($className . '::' . $matches['const']),
+                'typeMore' => 'const',
+                'value' => $defaultValue, // constant name
             ));
         }
         if (\defined($defaultValue)) {
-            return new Abstraction(Type::TYPE_CONST, array(
-                'name' => $defaultValue,
-                'value' => \constant($defaultValue),
+            return new Abstraction(Type::TYPE_IDENTIFIER, array(
+                'backedValue' => \constant($defaultValue),
+                'typeMore' => 'const',
+                'value' => $defaultValue, // constant name
             ));
         }
         return $defaultValue;

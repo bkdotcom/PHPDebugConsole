@@ -22,7 +22,7 @@ use Closure;
 use RuntimeException;
 
 /**
- * Output object as HTML
+ * Output value with HTML markup
  *
  * @property-read HtmlStringBinary  $binary
  * @property-read HtmlStringEncoded $encoded
@@ -176,9 +176,6 @@ class HtmlString
         if ($abs['strlenValue'] === null) {
             $abs['strlenValue'] = $abs['strlen'];
         }
-        if ($abs['typeMore'] === Type::TYPE_STRING_CLASSNAME) {
-            return $this->dumpClassname($abs);
-        }
         if ($abs['typeMore'] === Type::TYPE_STRING_BINARY) {
             return $this->binary->dump($abs);
         }
@@ -273,23 +270,6 @@ class HtmlString
                 '<span class="prettified">(prettified)</span> ' . $dumped
             );
         };
-    }
-
-    /**
-     * Dump classname
-     *
-     * @param Abstraction $abs String abstraction
-     *
-     * @return string html fragment
-     */
-    private function dumpClassname(Abstraction $abs)
-    {
-        $val = $this->valDumper->markupIdentifier($abs['value'], 'classname');
-        $parsed = $this->debug->html->parseTag($val);
-        $attribs = $this->valDumper->optionGet('attribs');
-        $attribs = $this->debug->arrayUtil->mergeDeep($attribs, $parsed['attribs']);
-        $this->valDumper->optionSet('attribs', $attribs);
-        return $parsed['innerhtml'];
     }
 
     /**

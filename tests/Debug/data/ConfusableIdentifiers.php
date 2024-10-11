@@ -19,6 +19,7 @@ return array(
         )
         : array(),
     'cases' => array(),
+    'cfgFlags' => 29360127,
     'className' => 'bdk\Test\Debug\Fixture\Con𝘧usableIdenti𝘧iers',
     'constants' => array(
         'ᖴOO' => array(
@@ -51,6 +52,7 @@ return array(
             'visibility' => 'public',
         ),
     ),
+    'debugMethod' => 'log',
     'definition' => array(
         'extensionName' => false,
         'fileName' => TEST_DIR . '/Debug/Fixture/ConfusableIdentifiers.php',
@@ -67,15 +69,18 @@ return array(
         : array(
             'bdk\Test\Debug\Fix𝐭ure\Con𝘧usableInteᴦface',
         ),
+    'interfacesCollapse' => array(),
     'isAbstract' => false,
     'isAnonymous' => false,
     'isExcluded' => false,
     'isFinal' => false,
     'isInterface' => false,
+    'isMaxDepth' => false,
     'isReadOnly' => false,
+    'isRecursion' => false,
     'isTrait' => false,
+    'keys' => array(),
     'methods' => array(
-
         '__call' => array(
             'attributes' => array(),
             'declaredLast' => 'bdk\Test\Debug\Fixture\Con𝘧usableIdenti𝘧iers',
@@ -311,10 +316,11 @@ return array(
                 array(
                     'attributes' => array(),
                     'defaultValue' => array(
+                        'backedValue' => 'fσo',
                         'debug' => Abstracter::ABSTRACTION,
-                        'name' => 'self::ᖴOO',
-                        'type' => Type::TYPE_CONST,
-                        'value' => 'fσo',
+                        'type' => Type::TYPE_IDENTIFIER,
+                        'typeMore' => 'const',
+                        'value' => 'self::ᖴOO',
                     ),
                     'desc' => '',
                     'isOptional' => false,
@@ -519,6 +525,7 @@ return array(
             'visibility' => ['public'],
         ),
     ),
+    'scopeClass' => 'bdk\Test\Debug\CharReplacementAndSanitizationTest',
     'sectionOrder' => array(
         'attributes',
         'extends',
@@ -532,13 +539,7 @@ return array(
     'sort' => 'inheritance visibility name',
     'stringified' => null,
     'traverseValues' => array(),
-    'viaDebugInfo' => false,
     'type' => Type::TYPE_OBJECT,
-    'debugMethod' => 'log',
-    'keys' => array(),
-    'isMaxDepth' => false,
-    'isRecursion' => false,
-    'cfgFlags' => 29360127,
-    'interfacesCollapse' => array(),
-    'scopeClass' => 'bdk\Test\Debug\CharReplacementAndSanitizationTest',
+    'typeMore' => null,
+    'viaDebugInfo' => false,
 );

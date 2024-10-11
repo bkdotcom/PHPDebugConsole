@@ -105,7 +105,8 @@ class UserInfo
             $debug->log('authManager class', $debug->abstracter->crateWithVals(
                 \get_class($authManager),
                 array(
-                    'typeMore' => Type::TYPE_STRING_CLASSNAME,
+                    'type' => Type::TYPE_IDENTIFIER,
+                    'typeMore' => 'className',
                 )
             ));
 
@@ -114,7 +115,8 @@ class UserInfo
                 $debug->log('accessManager class', $debug->abstracter->crateWithVals(
                     \get_class($accessManager),
                     array(
-                        'typeMore' => Type::TYPE_STRING_CLASSNAME,
+                        'type' => Type::TYPE_IDENTIFIER,
+                        'typeMore' => 'className',
                     )
                 ));
             }

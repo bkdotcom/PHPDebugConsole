@@ -93,6 +93,10 @@ li[class*=m_] > .t_array.array-file-tree > .array-inner {
   margin-left: -10px;
 }
 
+.t_identifier[title] {
+  border-bottom: 1px dashed blue;
+}
+
 .t_object {
   display: inline;
 
@@ -203,9 +207,7 @@ li[class*=m_] > .t_array.array-file-tree > .array-inner {
   }
 
   .method .parameter .t_parameter-name[title],
-  .t_identifier[title],
   .t_type[title] {
-    // text-decoration: underline;
     border-bottom: 1px dashed blue;
   }
 

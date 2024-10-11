@@ -23,6 +23,15 @@ use bdk\Test\Debug\DebugTestFramework;
  */
 class ArrayTest extends DebugTestFramework
 {
+    /**
+     * @dataProvider providerTestMethod
+     */
+    public function testMethod($method = null, $args = array(), array $tests = array())
+    {
+        parent::$allowError = true;
+        parent::testMethod($method, $args, $tests);
+    }
+
     public static function providerTestMethod()
     {
 		// indented with tab
@@ -32,7 +41,7 @@ class ArrayTest extends DebugTestFramework
             	<li><span class="t_int t_key">0</span><span class="t_operator">=&gt;</span><span class="t_string">a</span></li>
             	<li><span class="t_key">foo</span><span class="t_operator">=&gt;</span><span class="t_string">bar</span></li>
             	<li><span class="t_int t_key">1</span><span class="t_operator">=&gt;</span><span class="t_string">c</span></li>
-                <li><span class="t_key">obj</span><span class="t_operator">=&gt;</span><div class="groupByInheritance t_object" data-accessible="public"><span class="classname">stdClass</span>
+                <li><span class="t_key">obj</span><span class="t_operator">=&gt;</span><div class="groupByInheritance t_object" data-accessible="public"><span class="t_identifier" data-type-more="className"><span class="classname">stdClass</span></span>
                     <dl class="object-inner">
                     ' . (PHP_VERSION_ID >= 80200
                         ? '<dt class="attributes">attributes</dt>
@@ -97,7 +106,7 @@ EOD;
                     array(Debug::getInstance(), 'getInstance'),
                 ),
                 array(
-                    'html' => '<li class="m_log"><span class="t_callable"><span class="t_type">callable</span> <span class="classname"><span class="namespace">bdk\</span>Debug</span><span class="t_operator">::</span><span class="t_identifier">getInstance</span></span></li>',
+                    'html' => '<li class="m_log"><span class="t_type">callable</span> <span class="t_identifier"><span class="classname"><span class="namespace">bdk\</span>Debug</span><span class="t_operator">::</span><span class="t_name">getInstance</span></span></li>',
                     'script' => 'console.log("callable: bdk\\\\Debug::getInstance");',
                     'streamAnsi' => "callable: \e[38;5;250mbdk\\\e[0m\e[1mDebug\e[22m\e[38;5;224m::\e[0m\e[1mgetInstance\e[22m",
                     'text' => 'callable: bdk\Debug::getInstance',
@@ -218,7 +227,7 @@ EOD;
                         '',
                     ),
                     'firephp' => 'X-Wf-1-1-1-%d: 57|[{"Type":"LOG"},"callable: stdClass@anonymous::myMethod"]|',
-                    'html' => '<li class="m_log"><span class="t_callable"><span class="t_type">callable</span> <span class="classname">stdClass@anonymous</span><span class="t_operator">::</span><span class="t_identifier">myMethod</span></span></li>',
+                    'html' => '<li class="m_log"><span class="t_type">callable</span> <span class="t_identifier"><span class="classname">stdClass@anonymous</span><span class="t_operator">::</span><span class="t_name">myMethod</span></span></li>',
                     'script' => 'console.log("callable: stdClass@anonymous::myMethod");',
                     'text' => 'callable: stdClass@anonymous::myMethod',
                     // 'wamp' =>

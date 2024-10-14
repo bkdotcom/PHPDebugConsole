@@ -132,7 +132,7 @@ class Connection extends AbstractConnectionMiddleware
         $params = \array_merge(array(
             'dbname' => null,
             'driver' => null,
-            'host' => null,
+            'host' => 'localhost',
             'memory' => false,
             'password' => null,
             'user' => null,
@@ -147,7 +147,8 @@ class Connection extends AbstractConnectionMiddleware
         $keysNew = \array_values(\array_intersect_key($map, $rename));
         $renamed = \array_combine($keysNew, \array_values($rename));
         $parts = \array_merge($renamed, $params);
-        if ($params['memory']) {
+        if ($params['memory'] || $params['dbname'] === ':memory:') {
+            $params['memory'] = true;
             $parts['path'] = ':memory:';
         }
         $parts['scheme'] = \str_replace('_', '-', $parts['scheme']);

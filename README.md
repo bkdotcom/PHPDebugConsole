@@ -35,7 +35,7 @@ Browser/javascript like console class for PHP
 
 ## Installation
 
-This library supports PHP 5.4 - 8.3
+This library supports PHP 5.4 - 8.4
 
 It is installable and autoloadable via [Composer](https://getcomposer.org/) as [bdk/debug](https://packagist.org/packages/bdk/debug).
 
@@ -102,7 +102,7 @@ $monolog->critical('all your base are belong to them');
 
 ## Tests / Quality
 
-![Supported PHP versions](https://img.shields.io/static/v1?label=PHP&message=5.4%20-%208.3&color=blue)
+![Supported PHP versions](https://img.shields.io/static/v1?label=PHP&message=5.4%20-%208.4&color=blue)
 ![Build Status](https://img.shields.io/github/actions/workflow/status/bkdotcom/PHPDebugConsole/phpunit.yml.svg?branch=master&logo=github)
 [![Codacy Score](https://img.shields.io/codacy/grade/e950849edfd9463b993386080d39875e/master.svg?logo=codacy)](https://app.codacy.com/gh/bkdotcom/PHPDebugConsole/dashboard)
 [![Maintainability](https://img.shields.io/codeclimate/maintainability/bkdotcom/PHPDebugConsole.svg?logo=codeclimate)](https://codeclimate.com/github/bkdotcom/PHPDebugConsole)

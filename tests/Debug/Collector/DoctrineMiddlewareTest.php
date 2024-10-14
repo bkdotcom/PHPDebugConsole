@@ -178,10 +178,11 @@ EOD;
             return false;
         }
 
-        $dsnParser = new \Doctrine\DBAL\Tools\DsnParser();
-        $params = $dsnParser->parse('pdo-sqlite:///:memory:');
         $conn = DriverManager::getConnection(
-            $params,
+            array(
+                'dbname' => ':memory:',
+                'driver' => 'pdo_sqlite',
+            ),
             (new \Doctrine\DBAL\Configuration())->setMiddlewares([
                 new DoctrineMiddleware(),
             ])

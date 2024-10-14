@@ -21,10 +21,10 @@ class Statement extends AbstractStatementMiddleware
     private $sql;
 
     /** @var array<int,mixed>|array<string,mixed> */
-    private array $params = [];
+    private $params = [];
 
     /** @var array<int,ParameterType>|array<string,ParameterType> */
-    private array $types = [];
+    private $types = [];
 
     /**
      * Constructor

@@ -36,7 +36,7 @@ class DoctrineLoggerTest extends DebugTestFramework
         $statement = $conn->prepare('SELECT *
             FROM `bob`
             WHERE e < :datetime');
-        \method_exists($statement, 'bindValue')
+        \class_exists('Doctrine\DBAL\ParameterType')
             ? $statement->bindValue(':datetime', $datetime, \Doctrine\DBAL\ParameterType::STRING)
             : $statement->bindParam(':datetime', $datetime, \PDO::PARAM_STR);
         \method_exists($statement, 'executeQuery')

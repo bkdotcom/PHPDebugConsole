@@ -14,6 +14,7 @@ namespace bdk\Debug\Framework\Symfony\DebugBundle\EventListener;
 
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Collector\DoctrineLogger;
 use bdk\Debug\LogEntry;
 use Doctrine\Bundle\DoctrineBundle\Registry as DoctrineRegistry;
@@ -136,7 +137,10 @@ class BdkDebugBundleListener implements EventSubscriberInterface
             $logEntry['args'] = [
                 'Notified event "%s" to listener %s',
                 $matches['event'],
-                $matches['listener'],
+                new Abstraction(Type::TYPE_IDENTIFIER, array(
+                    'typeMore' => Type::TYPE_IDENTIFIER_METHOD,
+                    'value' => $matches['listener'],
+                ))
             ];
         }
         if ($logEntry->getMeta('psr3level') !== LogLevel::CRITICAL) {

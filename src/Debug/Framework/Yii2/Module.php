@@ -222,7 +222,7 @@ class Module extends BaseModule implements BootstrapInterface
             \get_class($session),
             array(
                 'type' => Type::TYPE_IDENTIFIER,
-                'typeMore' => 'className',
+                'typeMore' => Type::TYPE_IDENTIFIER_CLASSNAME,
             )
         ));
 

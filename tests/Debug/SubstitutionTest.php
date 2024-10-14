@@ -83,7 +83,7 @@ class SubstitutionTest extends DebugTestFramework
                     . '"' . $datetime->format(\DateTime::ISO8601) . '"'
                     . ']]|',
                 'html' => '<li class="m_log"><span class="no-quotes t_string">'
-                    . '<span class="t_type">callable</span> <span class="t_identifier"><span class="classname"><span class="namespace">' . __NAMESPACE__ . '\</span>SubstitutionTest</span><span class="t_operator">::</span><span class="t_name">' . __FUNCTION__ . '</span></span>'
+                    . '<span class="t_type">callable</span> <span class="t_identifier" data-type-more="callable"><span class="classname"><span class="namespace">' . __NAMESPACE__ . '\</span>SubstitutionTest</span><span class="t_operator">::</span><span class="t_name">' . __FUNCTION__ . '</span></span>'
                     . ' <span class="classname">Closure</span>'
                     . ' ' . $datetime->format(\DateTime::ISO8601)
                     . '</span></li>',

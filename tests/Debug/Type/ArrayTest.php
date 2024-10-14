@@ -106,7 +106,7 @@ EOD;
                     array(Debug::getInstance(), 'getInstance'),
                 ),
                 array(
-                    'html' => '<li class="m_log"><span class="t_type">callable</span> <span class="t_identifier"><span class="classname"><span class="namespace">bdk\</span>Debug</span><span class="t_operator">::</span><span class="t_name">getInstance</span></span></li>',
+                    'html' => '<li class="m_log"><span class="t_type">callable</span> <span class="t_identifier" data-type-more="callable"><span class="classname"><span class="namespace">bdk\</span>Debug</span><span class="t_operator">::</span><span class="t_name">getInstance</span></span></li>',
                     'script' => 'console.log("callable: bdk\\\\Debug::getInstance");',
                     'streamAnsi' => "callable: \e[38;5;250mbdk\\\e[0m\e[1mDebug\e[22m\e[38;5;224m::\e[0m\e[1mgetInstance\e[22m",
                     'text' => 'callable: bdk\Debug::getInstance',
@@ -227,7 +227,7 @@ EOD;
                         '',
                     ),
                     'firephp' => 'X-Wf-1-1-1-%d: 57|[{"Type":"LOG"},"callable: stdClass@anonymous::myMethod"]|',
-                    'html' => '<li class="m_log"><span class="t_type">callable</span> <span class="t_identifier"><span class="classname">stdClass@anonymous</span><span class="t_operator">::</span><span class="t_name">myMethod</span></span></li>',
+                    'html' => '<li class="m_log"><span class="t_type">callable</span> <span class="t_identifier" data-type-more="callable"><span class="classname">stdClass@anonymous</span><span class="t_operator">::</span><span class="t_name">myMethod</span></span></li>',
                     'script' => 'console.log("callable: stdClass@anonymous::myMethod");',
                     'text' => 'callable: stdClass@anonymous::myMethod',
                     // 'wamp' =>

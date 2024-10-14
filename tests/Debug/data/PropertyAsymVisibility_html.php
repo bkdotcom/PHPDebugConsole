@@ -1,7 +1,7 @@
 <?php
 
 $htmlExpect = '
-<li class="m_log"><div class="groupByInheritance t_object" data-accessible="public"><span class="classname" title="PHP 8.4 Property Asymmetric Visibility"><span class="namespace">bdk\Test\Debug\Fixture\</span>PropertyAsymVisibility</span>
+<li class="m_log"><div class="groupByInheritance t_object" data-accessible="public"><span class="t_identifier" data-type-more="className" title="PHP 8.4 Property Asymmetric Visibility"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>PropertyAsymVisibility</span></span>
 <dl class="object-inner">
 <dt class="properties">properties</dt>
     <dd class="property protected-set public"><span class="t_modifier_public">public</span> <span class="t_modifier_protected-set">protected(set)</span> <span class="t_type">string</span> <span class="no-quotes t_identifier t_string">name</span></dd>

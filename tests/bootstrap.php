@@ -18,6 +18,12 @@ require __DIR__ . '/../vendor/autoload.php';
 require __DIR__ . '/bootstrapFunctionReplace.php';
 require __DIR__ . '/Debug/Fixture/ConfusableIdentifiers.php';
 
+\spl_autoload_register(static function ($className) {
+    if ($className === 'Doctrine\DBAL\Logging\SQLLogger') {
+        require __DIR__ . '/Debug/Mock/SqlLogger.php';
+    }
+});
+
 \define('TEST_DIR', __DIR__);
 
 \ini_set('xdebug.var_display_max_depth', 3);

@@ -205,7 +205,7 @@ class HtmlObject
         return '<dt class="attributes">attributes</dt>' . "\n"
             . \implode(\array_map(function ($info) {
                 return '<dd class="attribute">'
-                    . $this->valDumper->markupIdentifier($info['name'], 'classname')
+                    . $this->valDumper->markupIdentifier($info['name'], 'className')
                     . $this->dumpAttributeArgs($info['arguments'])
                     . '</dd>' . "\n";
             }, $attributes));
@@ -258,12 +258,12 @@ class HtmlObject
         $absValues = \strpos(\json_encode($abs['implements']), '"UnitEnum"') !== false
             ? array(
                 'attribs' => $attribs,
-                'typeMore' => 'const',
+                'typeMore' => Type::TYPE_IDENTIFIER_CONST,
                 'value' => $abs['className'] . '::' . $abs['properties']['name']['value'],
             )
             : array(
                 'attribs' => $attribs,
-                'typeMore' => 'className',
+                'typeMore' => Type::TYPE_IDENTIFIER_CLASSNAME,
                 'value' => $abs['className'],
             );
         $absTemp = new Abstraction(Type::TYPE_IDENTIFIER, $absValues);

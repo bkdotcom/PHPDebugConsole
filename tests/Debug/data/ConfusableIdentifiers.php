@@ -319,7 +319,7 @@ return array(
                         'backedValue' => 'fσo',
                         'debug' => Abstracter::ABSTRACTION,
                         'type' => Type::TYPE_IDENTIFIER,
-                        'typeMore' => 'const',
+                        'typeMore' => Type::TYPE_IDENTIFIER_CONST,
                         'value' => 'self::ᖴOO',
                     ),
                     'desc' => '',

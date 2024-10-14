@@ -100,7 +100,7 @@ class ExtendsImplements
                             'toggle-off' => \in_array($className, $interfacesCollapse, true),
                         ),
                     ),
-                    $this->valDumper->markupIdentifier($className, 'classname')
+                    $this->valDumper->markupIdentifier($className, 'className')
                 )
                 . (\is_array($v) ? "\n" . self::buildTree($v, $cssClass, $interfacesCollapse) : '')
                 . '</li>' . "\n";
@@ -138,7 +138,7 @@ class ExtendsImplements
                                 'toggle-off' => \in_array($className, $interfacesCollapse, true),
                             ),
                         ),
-                        $this->valDumper->markupIdentifier($className, 'classname')
+                        $this->valDumper->markupIdentifier($className, 'className')
                     ) . "\n";
                 }, $listOrTree));
         }

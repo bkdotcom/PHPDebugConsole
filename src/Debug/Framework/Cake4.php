@@ -180,7 +180,7 @@ class Cake4 extends BasePlugin
                         \get_class($event->getSubject()),
                         array(
                             'type' => Type::TYPE_IDENTIFIER,
-                            'typeMore' => 'className',
+                            'typeMore' => Type::TYPE_IDENTIFIER_CLASSNAME,
                         )
                     ),
                 );

@@ -153,7 +153,7 @@ class ServiceProvider extends BaseServiceProvider
                         'data-file' => $ref->getFileName(),
                     ),
                     'type' => Type::TYPE_IDENTIFIER,
-                    'typeMore' => 'className',
+                    'typeMore' => Type::TYPE_IDENTIFIER_CLASSNAME,
                 )),
             );
         }

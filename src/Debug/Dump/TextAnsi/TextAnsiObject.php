@@ -44,7 +44,7 @@ class TextAnsiObject extends TextObject
      */
     public function dump(ObjectAbstraction $abs)
     {
-        $className = $this->valDumper->markupIdentifier($abs['className'], 'classname');
+        $className = $this->valDumper->markupIdentifier($abs['className'], 'className');
         $escapeCodes = $this->valDumper->getCfg('escapeCodes');
         $escapeReset = $this->valDumper->escapeReset;
         if ($abs['isRecursion']) {

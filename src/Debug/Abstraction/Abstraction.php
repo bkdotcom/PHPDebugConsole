@@ -107,13 +107,18 @@ class Abstraction extends Event
      */
     protected function onSet($values = array())
     {
-        if ($this->values['type'] === Type::TYPE_CONST) {
+        if ($this->values['type'] === Type::TYPE_CONST && $this->getValue('name') !== null) {
             \trigger_error('Deprecated: TYPE_CONST', \E_USER_DEPRECATED);
+            $this->values['type'] = Type::TYPE_IDENTIFIER;
+            $this->values['typeMore'] = Type::TYPE_IDENTIFIER_CONST;
+            $this->values['backedValue'] = $this->values['value'];
+            $this->values['value'] = $this->values['name'];
+            unset($this->values['name']);
         }
         if ($this->getValue('typeMore') === Type::TYPE_STRING_CLASSNAME) {
             \trigger_error('Deprecated: TYPE_STRING_CLASSNAME', \E_USER_DEPRECATED);
             $this->values['type'] = Type::TYPE_IDENTIFIER;
-            $this->values['typeMore'] = 'className';
+            $this->values['typeMore'] = Type::TYPE_IDENTIFIER_CLASSNAME;
         }
         if (isset($values['attribs']) === false) {
             return;

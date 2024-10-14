@@ -124,15 +124,15 @@ class Value extends BaseValue
      * if namespaced additionally wrap namespace in span.namespace
      * If callable, also wrap with .t_operator and .t_identifier
      *
-     * @param mixed  $val     classname or classname(::|->)name (method/property/const)
-     * @param string $what    ("classname"), "const", or "function" - specify what we're marking if ambiguous
-     * @param string $tagName ("span") html tag to use
-     * @param array  $attribs (optional) additional html attributes for classname span (such as title)
-     * @param bool   $wbr     (false) whether to add a <wbr /> after the classname
+     * @param string|array $val     classname or classname(::|->)name (method/property/const)
+     * @param string       $what    ("className"), "const", or "function" - specify what we're marking if ambiguous
+     * @param string       $tagName ("span") html tag to use
+     * @param array        $attribs (optional) additional html attributes for classname span (such as title)
+     * @param bool         $wbr     (false) whether to add a <wbr /> after the classname
      *
      * @return string html snippet
      */
-    public function markupIdentifier($val, $what = 'classname', $tagName = 'span', $attribs = array(), $wbr = false)
+    public function markupIdentifier($val, $what = 'className', $tagName = 'span', $attribs = array(), $wbr = false)
     {
         $parts = \array_map([$this->string, 'dump'], $this->parseIdentifier($val, $what));
         $class = 'classname';
@@ -271,32 +271,10 @@ class Value extends BaseValue
         if ($this->optionGet('tagName') !== 'td') {
             $this->optionSet('tagName', null);
         }
-        return (!$abs['hideType'] ? '<span class="t_type">callable</span> ' : '')
-            . '<span class="t_identifier">'
-            . $this->markupIdentifier($abs)
+        return '<span class="t_type">callable</span> '
+            . '<span class="t_identifier" data-type-more="callable">'
+            . $this->markupIdentifier($abs['value'], 'callable')
             . '</span>';
-    }
-
-    /**
-     * Dump "const" abstraction as html
-     *
-     * Object constant or method param's default value
-     *
-     * @param Abstraction $abs const abstraction
-     *
-     * @return string
-     *
-     * @deprecated 3.3
-     */
-    protected function dumpConst(Abstraction $abs)
-    {
-        $this->optionSet('type', Type::TYPE_IDENTIFIER);
-        $this->optionSet('typeMore', 'const');
-        return $this->dumpIdentifier(new Abstraction(Type::TYPE_IDENTIFIER, array(
-            'backedValue' => $abs['value'],
-            'typeMore' => 'const',
-            'value' => $abs['name'],
-        )));
     }
 
     /**

@@ -112,7 +112,7 @@ class Html extends Base
             $opts['tagName'] = null;
             $toStr = (string) $val; // objects __toString or its classname
             return $toStr === $val['className']
-                ? $this->valDumper->markupIdentifier($toStr, 'classname')
+                ? $this->valDumper->markupIdentifier($toStr, 'className')
                 : $this->valDumper->dump($toStr, $opts);
         }
         return $this->valDumper->dump($val);

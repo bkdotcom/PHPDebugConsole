@@ -104,19 +104,19 @@ class ProfileTest extends DebugTestFramework
                             'rows' => array(
                                 'bdk\Test\Debug\Plugin\Method\ProfileTest::a' => array(
                                     'key' => new Abstraction(Type::TYPE_IDENTIFIER, array(
-                                        'typeMore' => 'method',
+                                        'typeMore' => Type::TYPE_IDENTIFIER_METHOD,
                                         'value' => 'bdk\Test\Debug\Plugin\Method\ProfileTest::a',
                                     )),
                                 ),
                                 'bdk\Test\Debug\Plugin\Method\ProfileTest::b' => array(
                                     'key' => new Abstraction(Type::TYPE_IDENTIFIER, array(
-                                        'typeMore' => 'method',
+                                        'typeMore' => Type::TYPE_IDENTIFIER_METHOD,
                                         'value' => 'bdk\Test\Debug\Plugin\Method\ProfileTest::b',
                                     )),
                                 ),
                                 'bdk\Test\Debug\Plugin\Method\ProfileTest::c' => array(
                                     'key' => new Abstraction(Type::TYPE_IDENTIFIER, array(
-                                        'typeMore' => 'method',
+                                        'typeMore' => Type::TYPE_IDENTIFIER_METHOD,
                                         'value' => 'bdk\Test\Debug\Plugin\Method\ProfileTest::c',
                                     )),
                                 ),

@@ -46,7 +46,7 @@ class TextObject extends BaseObject
      */
     public function dump(ObjectAbstraction $abs)
     {
-        $className = $this->valDumper->markupIdentifier($abs['className'], 'classname');
+        $className = $this->valDumper->markupIdentifier($abs['className'], 'className');
         if ($abs['isRecursion']) {
             return $className . ' *RECURSION*';
         }

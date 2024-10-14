@@ -344,7 +344,7 @@ class StatementInfo extends AbstractComponent
             $params[$name]['type'] = $isIntOrString && isset(self::$constants[$type])
                 ? new Abstraction(Type::TYPE_IDENTIFIER, array(
                     'backedValue' => $type,
-                    'typeMore' => 'const',
+                    'typeMore' => Type::TYPE_IDENTIFIER_CONST,
                     'value' => self::$constants[$type],
                 ))
                 : $type; // integer value (or enum)

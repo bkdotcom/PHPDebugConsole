@@ -106,7 +106,7 @@ class UserInfo
                 \get_class($authManager),
                 array(
                     'type' => Type::TYPE_IDENTIFIER,
-                    'typeMore' => 'className',
+                    'typeMore' => Type::TYPE_IDENTIFIER_CLASSNAME,
                 )
             ));
 
@@ -116,7 +116,7 @@ class UserInfo
                     \get_class($accessManager),
                     array(
                         'type' => Type::TYPE_IDENTIFIER,
-                        'typeMore' => 'className',
+                        'typeMore' => Type::TYPE_IDENTIFIER_CLASSNAME,
                     )
                 ));
             }

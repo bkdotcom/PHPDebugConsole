@@ -130,7 +130,7 @@ class LogViews
             $data[$k] = $type === 'object'
                 ? $this->debug->abstracter->crateWithVals(\get_class($v), array(
                     'type' => Type::TYPE_IDENTIFIER,
-                    'typeMore' => 'className',
+                    'typeMore' => Type::TYPE_IDENTIFIER_CLASSNAME,
                 ))
                 : $type;
         }

@@ -198,7 +198,7 @@ class MethodParams
             } elseif (PHP_VERSION_ID >= 50406 && $refParameter->isDefaultValueConstant()) {
                 $defaultValue = new Abstraction(Type::TYPE_IDENTIFIER, array(
                     'backedValue' => $defaultValue,
-                    'typeMore' => 'const',
+                    'typeMore' => Type::TYPE_IDENTIFIER_CONST,
                     'value' => $this->getConstantName($refParameter),
                 ));
             }
@@ -241,14 +241,14 @@ class MethodParams
         if ($matches['classname'] === 'self' && \defined($className . '::' . $matches['const'])) {
             return new Abstraction(Type::TYPE_IDENTIFIER, array(
                 'backedValue' => \constant($className . '::' . $matches['const']),
-                'typeMore' => 'const',
+                'typeMore' => Type::TYPE_IDENTIFIER_CONST,
                 'value' => $defaultValue, // constant name
             ));
         }
         if (\defined($defaultValue)) {
             return new Abstraction(Type::TYPE_IDENTIFIER, array(
                 'backedValue' => \constant($defaultValue),
-                'typeMore' => 'const',
+                'typeMore' => Type::TYPE_IDENTIFIER_CONST,
                 'value' => $defaultValue, // constant name
             ));
         }

@@ -69,12 +69,12 @@ class Value extends TextValue
     /**
      * Add ansi escape sequences for classname type strings
      *
-     * @param mixed  $val  classname or classname(::|->)name (method/property/const)
-     * @param string $what ("classname"), "const", or "function" - specify what we're marking if ambiguous
+     * @param string|array $val  classname or classname(::|->)name (method/property/const)
+     * @param string       $what ("classname"), "const", or "function" - specify what we're marking if ambiguous
      *
      * @return string
      */
-    public function markupIdentifier($val, $what = 'classname')
+    public function markupIdentifier($val, $what = 'className')
     {
         $parts = $this->parseIdentifier($val, $what);
         $escapeReset = $this->escapeReset;
@@ -181,23 +181,6 @@ class Value extends TextValue
         return $val
             ? $this->cfg['escapeCodes']['true'] . 'true' . $this->escapeReset
             : $this->cfg['escapeCodes']['false'] . 'false' . $this->escapeReset;
-    }
-
-    /**
-     * Dump constant
-     *
-     * @param Abstraction $abs constant abstraction
-     *
-     * @return string
-     *
-     * @deprecated 3.3
-     */
-    protected function dumpConst(Abstraction $abs)
-    {
-        return $this->dumpIdentifier(new Abstraction(Type::TYPE_IDENTIFIER, array(
-            'typeMore' => 'const',
-            'value' => $abs['name'],
-        )));
     }
 
     /**

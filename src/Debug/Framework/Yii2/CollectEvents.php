@@ -134,11 +134,11 @@ class CollectEvents implements SubscriberInterface
             unset($info['index']);
             $info['senderClass'] = $this->debug->abstracter->crateWithVals($info['senderClass'], array(
                 'type' => Type::TYPE_IDENTIFIER,
-                'typeMore' => 'className',
+                'typeMore' => Type::TYPE_IDENTIFIER_CLASSNAME,
             ));
             $info['eventClass'] = $this->debug->abstracter->crateWithVals($info['eventClass'], array(
                 'type' => Type::TYPE_IDENTIFIER,
-                'typeMore' => 'className',
+                'typeMore' => Type::TYPE_IDENTIFIER_CLASSNAME,
             ));
         }
 

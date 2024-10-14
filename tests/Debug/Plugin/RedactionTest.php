@@ -4,6 +4,7 @@ namespace bdk\Test\Debug\Plugin;
 
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
+use bdk\Debug\Abstraction\Type;
 use bdk\Debug\LogEntry;
 use bdk\Test\Debug\DebugTestFramework;
 
@@ -120,8 +121,8 @@ class RedactionTest extends DebugTestFramework
                                 'brief' => false,
                                 // 'strlen' => 136,
                                 // 'strlenValue' => 136,
-                                'type' => 'string',
-                                'typeMore' => 'base64',
+                                'type' => Type::TYPE_STRING,
+                                'typeMore' => Type::TYPE_STRING_BASE64,
                                 'value' => $base64snip,
                                 'valueDecoded' => array(
                                     'attribs' => array(
@@ -133,8 +134,8 @@ class RedactionTest extends DebugTestFramework
                                     'prettifiedTag' => true,
                                     // 'strlen' => 126,
                                     // 'strlenValue' => 126,
-                                    'type' => 'string',
-                                    'typeMore' => 'json',
+                                    'type' => Type::TYPE_STRING,
+                                    'typeMore' => Type::TYPE_STRING_JSON,
                                     'value' => \str_replace('redactBlock', '█████████', \json_encode(array(
                                         'poop' => '💩',
                                         'int' => 42,

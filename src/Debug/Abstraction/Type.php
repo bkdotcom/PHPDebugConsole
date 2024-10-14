@@ -32,7 +32,7 @@ class Type
     const TYPE_STRING = 'string';
     const TYPE_CONST = 'const'; // non-native type (Abstraction: we store name and value)
                                 // deprecated (use TYPE_IDENTIFIER)
-    const TYPE_IDENTIFIER = 'identifier'; // constant, className, method, property
+    const TYPE_IDENTIFIER = 'identifier'; // const, className, method, property
                                             // value: identifier
                                             // backedValue: underlying const or property value
                                             // typeMore: 'const', 'className', 'method', 'property'
@@ -49,6 +49,9 @@ class Type
     const TYPE_RAW = 'raw'; // raw object or array
     const TYPE_FLOAT_INF = "\x00inf\x00";
     const TYPE_FLOAT_NAN = "\x00nan\x00";
+    const TYPE_IDENTIFIER_CLASSNAME = 'className';
+    const TYPE_IDENTIFIER_CONST = 'const';
+    const TYPE_IDENTIFIER_METHOD = 'method';
     const TYPE_STRING_BASE64 = 'base64';
     const TYPE_STRING_BINARY = 'binary';
     const TYPE_STRING_CLASSNAME = 'classname'; // deprecated (use TYPE_IDENTIFIER)

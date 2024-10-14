@@ -252,7 +252,7 @@ class Profile implements SubscriberInterface
         ), $logEntry->getMeta('tableInfo', array()));
         foreach (\array_keys($data) as $k) {
             $tableInfo['rows'][$k]['key'] = new Abstraction(Type::TYPE_IDENTIFIER, array(
-                'typeMore' => 'method',
+                'typeMore' => Type::TYPE_IDENTIFIER_METHOD,
                 'value' => $k,
             ));
         }

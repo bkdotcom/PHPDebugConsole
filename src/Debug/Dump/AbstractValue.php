@@ -378,16 +378,13 @@ abstract class AbstractValue extends AbstractComponent
      * classname may be namespace\classname
      * identifier = classname, constant function, or property
      *
-     * @param Abstraction|array|string $val  classname or classname(::|->)name (method/property/const)
-     * @param string                   $what ("classname"), "const", or "method"
+     * @param string|array $val  classname or classname(::|->)name (method/property/const)
+     * @param string       $what ("classname"), "const", or "method"
      *
      * @return array
      */
-    protected function parseIdentifier($val, $what = 'classname')
+    protected function parseIdentifier($val, $what = 'className')
     {
-        if ($val instanceof Abstraction) {
-            $val = $val['value'];
-        }
         $parts = \array_fill_keys(['classname', 'name', 'namespace', 'operator'], '');
         $parts['classname'] = $val;
         $matches = array();

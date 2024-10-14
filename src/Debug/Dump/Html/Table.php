@@ -115,7 +115,7 @@ class Table
         }
         $class = $this->dumper->valDumper->markupIdentifier(
             $this->options['tableInfo']['class'],
-            'classname',
+            'className',
             'span',
             array(
                 'title' => $this->options['tableInfo']['summary'] ?: null,
@@ -170,7 +170,7 @@ class Table
         foreach ($this->options['tableInfo']['columns'] as $colInfo) {
             $label = $colInfo['key'];
             if (isset($colInfo['class'])) {
-                $label .= ' ' . $this->dumper->valDumper->markupIdentifier($colInfo['class'], 'classname');
+                $label .= ' ' . $this->dumper->valDumper->markupIdentifier($colInfo['class'], 'className');
             }
             $labels[] = $label;
         }
@@ -218,7 +218,7 @@ class Table
         */
         if ($this->options['tableInfo']['haveObjRow']) {
             $str .= $rowInfo['class']
-                ? $this->dumper->valDumper->markupIdentifier($rowInfo['class'], 'classname', 'td', array(
+                ? $this->dumper->valDumper->markupIdentifier($rowInfo['class'], 'className', 'td', array(
                     'title' => $rowInfo['summary'] ?: null,
                 ))
                 : '<td class="t_undefined"></td>';

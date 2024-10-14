@@ -232,7 +232,7 @@ class Component extends CApplicationComponent
             \get_class($session),
             array(
                 'type' => Type::TYPE_IDENTIFIER,
-                'typeMore' => 'className',
+                'typeMore' => Type::TYPE_IDENTIFIER_CLASSNAME,
             )
         ));
 

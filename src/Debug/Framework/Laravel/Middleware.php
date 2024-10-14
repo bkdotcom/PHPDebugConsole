@@ -338,7 +338,7 @@ class Middleware
         $debug->log(
             $this->debug->abstracter->crateWithVals(\get_class($this->container['session']), array(
                 'type' => Type::TYPE_IDENTIFIER,
-                'typeMore' => 'className',
+                'typeMore' => Type::TYPE_IDENTIFIER_CLASSNAME,
             ))
         );
         $debug->log(

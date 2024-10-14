@@ -467,7 +467,7 @@ EOD;
                         <tr><th class="t_int t_key text-right" scope="row">0</th><td class="t_string">a</td></tr>
                         <tr><th class="t_int t_key text-right" scope="row">1</th><td class="t_string">2233-03-22T00:00:00%i</td></tr>
                         <tr><th class="t_int t_key text-right" scope="row">2</th><td class="t_resource">Resource id #%d: stream</td></tr>
-                        <tr><th class="t_int t_key text-right" scope="row">3</th><td><span class="t_type">callable</span> <span class="t_identifier"><span class="classname"><span class="namespace">bdk\Test\Debug\Plugin\Method\</span>TableTest</span><span class="t_operator">::</span><span class="t_name">providerTestMethod</span></span></td></tr>
+                        <tr><th class="t_int t_key text-right" scope="row">3</th><td><span class="t_type">callable</span> <span class="t_identifier" data-type-more="callable"><span class="classname"><span class="namespace">bdk\Test\Debug\Plugin\Method\</span>TableTest</span><span class="t_operator">::</span><span class="t_name">providerTestMethod</span></span></td></tr>
                         <tr><th class="t_int t_key text-right" scope="row">4</th><td class="groupByInheritance t_object" data-accessible="public"><span class="t_identifier" data-type-more="className"><span class="classname">Closure</span></span>
                             <dl class="object-inner">
                             <dt class="modifiers">modifiers</dt>

@@ -31,15 +31,12 @@ class Value extends AbstractValue
     /**
      * Extend me to format classname/constant, etc
      *
-     * @param mixed $val classname or classname(::|->)name (method/property/const)
+     * @param string|array $val classname or classname(::|->)name (method/property/const)
      *
      * @return string
      */
     public function markupIdentifier($val)
     {
-        if ($val instanceof Abstraction) {
-            $val = $val['value'];
-        }
         if (\is_array($val)) {
             $val = $val[0] . '::' . $val[1];
         }
@@ -87,22 +84,8 @@ class Value extends AbstractValue
      */
     protected function dumpCallable(Abstraction $abs)
     {
-        return (!$abs['hideType'] ? 'callable: ' : '')
-             . $this->markupIdentifier($abs);
-    }
-
-    /**
-     * Dump constant
-     *
-     * @param Abstraction $abs constant abstraction
-     *
-     * @return string
-     *
-     * @deprecated 3.3
-     */
-    protected function dumpConst(Abstraction $abs)
-    {
-        return $abs['name'];
+        return 'callable: '
+            . $this->markupIdentifier($abs['value']);
     }
 
     /**

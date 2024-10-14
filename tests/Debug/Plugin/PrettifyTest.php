@@ -60,7 +60,7 @@ class PrettifyTest extends DebugTestFramework
             new Abstraction(Type::TYPE_STRING, array(
                 // 'strlen' => 24,
                 // 'strlenValue' => 24,
-                'typeMore' => 'json',
+                'typeMore' => Type::TYPE_STRING_JSON,
                 'value' => \json_encode($data, JSON_PRETTY_PRINT),
                 'attribs' => array(
                     'class' => array('highlight', 'language-json', 'no-quotes'),

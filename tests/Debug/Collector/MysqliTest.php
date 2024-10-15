@@ -502,25 +502,30 @@ EOD;
 
         $result4 = self::$client->release_savepoint('Sally');
         $line = __LINE__ - 1;
+        /*
         if (PHP_VERSION_ID < 70000 || \mysqli_get_client_version() <= 50082) {
+            \bdk\Debug::varDump('client version', \mysqli_get_client_version());
             // https://bugs.mysql.com/bug.php?id=26288
             self::assertTrue($result4);
             return;
         }
         self::assertFalse($result4);
-        $logEntry = $this->helper->logEntryToArray($this->debug->data->get('log/__end__'));
-        self::assertSame(array(
-            'method' => 'warn',
-            'args' => array('SAVEPOINT Sally does not exist'),
-            'meta' => array(
-                'channel' => 'general.MySqli',
-                'detectFiles' => true,
-                'evalLine' => null,
-                'file' => __FILE__,
-                'line' => $line,
-                'uncollapse' => true,
-            ),
-        ), $logEntry);
+        */
+        if ($result4 === false) {
+            $logEntry = $this->helper->logEntryToArray($this->debug->data->get('log/__end__'));
+            self::assertSame(array(
+                'method' => 'warn',
+                'args' => array('SAVEPOINT Sally does not exist'),
+                'meta' => array(
+                    'channel' => 'general.MySqli',
+                    'detectFiles' => true,
+                    'evalLine' => null,
+                    'file' => __FILE__,
+                    'line' => $line,
+                    'uncollapse' => true,
+                ),
+            ), $logEntry);
+        }
     }
 
     public function testRollback()

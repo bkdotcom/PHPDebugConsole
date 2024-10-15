@@ -227,15 +227,19 @@ class Subscriber implements SubscriberInterface
             test if stat() throws an error (ie "Property access is not allowed yet")
             if so, don't collect property values
         */
-        \set_error_handler(static function ($errno, $errstr) {
-            throw new RuntimeException($errstr, $errno); // @codeCoverageIgnore
+        $haveError = false;
+        \set_error_handler(static function ($errno, $errstr) use (&$haveError) {
+            $haveError = true;
         }, E_ALL);
         try {
             $mysqli = $abs->getSubject();
             $mysqli->stat();
         } catch (Error $e) {
-            $abs['collectPropertyValues'] = false;
+            $haveError = true;
         } catch (RuntimeException $e) {
+            $haveError = true;
+        }
+        if ($haveError) {
             $abs['collectPropertyValues'] = false;
         }
         \restore_error_handler();

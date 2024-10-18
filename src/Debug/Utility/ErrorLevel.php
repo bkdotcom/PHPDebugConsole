@@ -60,15 +60,20 @@ class ErrorLevel
      *
      * @param int    $errorReportingLevel Error Level (bitmask) value
      * @param string $phpVer              (PHP_VERSION) php Version
-     * @param bool   $explicitStrict      (true) if level === E_ALL, always include/exclude E_STRICT for disambiguation / portability
+     * @param bool   $explicitStrict      if level === E_ALL, always include/exclude E_STRICT for disambiguation / portability
+     *                                      defaults to true if $phpVer < 8.0, false otherwise
      *
      * @return string
      */
-    public static function toConstantString($errorReportingLevel = null, $phpVer = null, $explicitStrict = true)
+    public static function toConstantString($errorReportingLevel = null, $phpVer = null, $explicitStrict = null)
     {
         $errorReportingLevel = $errorReportingLevel === null
             ? \error_reporting()
             : $errorReportingLevel;
+        $phpVer = $phpVer ?: PHP_VERSION;
+        if (\is_bool($explicitStrict) === false) {
+            $explicitStrict = \version_compare($phpVer, '8.0.0', '<');
+        }
         $allConstants = self::getConstants($phpVer); // includes E_ALL
         /**
          * @var array{

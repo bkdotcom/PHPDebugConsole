@@ -176,6 +176,9 @@ class LogPhpTest extends DebugTestFramework
         */
         \error_reporting(E_ALL & ~E_NOTICE);
         $refMethod->invoke($logPhp);
+        $current = PHP_VERSION_ID >= 80000
+            ? 'E_ALL & ~E_NOTICE'
+            : '( E_ALL | E_STRICT ) & ~E_NOTICE';
         $preferred = PHP_VERSION_ID >= 80400
             ? 'E_ALL'
             : 'E_ALL | E_STRICT';
@@ -183,7 +186,7 @@ class LogPhpTest extends DebugTestFramework
             'entry' => array(
                 'method' => 'warn',
                 'args' => array(
-                    'PHP\'s %cerror_reporting%c is set to `%cE_ALL & ~E_NOTICE%c` rather than `%c' . $preferred . '%c`' . "\n"
+                    'PHP\'s %cerror_reporting%c is set to `%c' . $current . '%c` rather than `%c' . $preferred . '%c`' . "\n"
                         . 'PHPDebugConsole is disregarding %cerror_reporting%c value (this is configurable)',
                     'font-family:monospace; opacity:0.8;',
                     'font-family:inherit; white-space:pre-wrap;',
@@ -220,7 +223,7 @@ class LogPhpTest extends DebugTestFramework
             array(
                 'method' => 'warn',
                 'args' => array(
-                    'PHP\'s %cerror_reporting%c is set to `%cE_ALL & ~E_NOTICE%c` rather than `%c' . $preferred . '%c`',
+                    'PHP\'s %cerror_reporting%c is set to `%c' . $current . '%c` rather than `%c' . $preferred . '%c`',
                     'font-family:monospace; opacity:0.8;',
                     'font-family:inherit; white-space:pre-wrap;',
                     'font-family:monospace; opacity:0.8;',
@@ -268,7 +271,7 @@ class LogPhpTest extends DebugTestFramework
             array(
                 'method' => 'warn',
                 'args' => array(
-                    'PHP\'s %cerror_reporting%c is set to `%cE_ALL & ~E_NOTICE%c` rather than `%c' . $preferred . '%c`',
+                    'PHP\'s %cerror_reporting%c is set to `%c' . $current . '%c` rather than `%c' . $preferred . '%c`',
                     'font-family:monospace; opacity:0.8;',
                     'font-family:inherit; white-space:pre-wrap;',
                     'font-family:monospace; opacity:0.8;',
@@ -288,7 +291,7 @@ class LogPhpTest extends DebugTestFramework
             array(
                 'method' => 'warn',
                 'args' => array(
-                    'PHPDebugConsole\'s errorHandler is also using a errorReporting value of `%cE_ALL & ~E_NOTICE%c`',
+                    'PHPDebugConsole\'s errorHandler is also using a errorReporting value of `%c' . $current . '%c`',
                     'font-family:monospace; opacity:0.8;',
                     'font-family:inherit; white-space:pre-wrap;',
                 ),
@@ -343,7 +346,7 @@ class LogPhpTest extends DebugTestFramework
             array(
                 'method' => 'warn',
                 'args' => array(
-                    'PHP\'s %cerror_reporting%c is set to `%cE_ALL & ~E_NOTICE%c` rather than `%c' . $preferred . '%c`',
+                    'PHP\'s %cerror_reporting%c is set to `%c' . $current . '%c` rather than `%c' . $preferred . '%c`',
                     'font-family:monospace; opacity:0.8;',
                     'font-family:inherit; white-space:pre-wrap;',
                     'font-family:monospace; opacity:0.8;',
@@ -363,7 +366,7 @@ class LogPhpTest extends DebugTestFramework
             array(
                 'method' => 'warn',
                 'args' => array(
-                    'PHPDebugConsole\'s errorHandler is using a errorReporting value of `%cE_ALL & ~E_NOTICE & ~E_DEPRECATED%c`',
+                    'PHPDebugConsole\'s errorHandler is using a errorReporting value of `%c' . $current . ' & ~E_DEPRECATED%c`',
                     'font-family:monospace; opacity:0.8;',
                     'font-family:inherit; white-space:pre-wrap;',
                 ),

@@ -31,6 +31,7 @@ class LogRoute extends CLogRoute
     /** @var Debug */
     private $debug;
 
+    /** @var array<non-empty-string,string> */
     private $levelMap = array(
         CLogger::LEVEL_ERROR => 'error',
         CLogger::LEVEL_INFO => 'log',
@@ -131,6 +132,7 @@ class LogRoute extends CLogRoute
      *
      * @return void
      */
+    #[\Override]
     public function init()
     {
         parent::init();
@@ -148,14 +150,15 @@ class LogRoute extends CLogRoute
     protected function isExcluded(array $logEntry)
     {
         $category = $logEntry[2];
+        $level = $logEntry[1];
         if (\strpos($category, 'system.db.') === 0 && \preg_match('/^(Opening|Closing)/', $logEntry[0])) {
             return false;
         }
-        if ($category === 'application' && $logEntry[1] === 'trace' && \preg_match('/^(Begin|Commit|Rollback) transaction/', $logEntry[0])) {
-            // we will og these via our PDO collector
+        if ($category === 'application' && $level === CLogger::LEVEL_TRACE && \preg_match('/^(Begin|Commit|Rollback) transaction/', $logEntry[0])) {
+            // we will log these via our PDO collector
             return true;
         }
-        if ($logEntry[1] === 'warning') {
+        if ($level === CLogger::LEVEL_WARNING) {
             $hash = \md5($logEntry[0]);
             if (isset($this->messageHashes[$hash])) {
                 // we've already logged this warning
@@ -176,15 +179,15 @@ class LogRoute extends CLogRoute
     private function isExcludedTest($category)
     {
         $category = \trim(\strtolower($category));
+        $isMatch = false;
         foreach ($this->except as $except) {
-            //  If found, we skip
             if (\trim(\strtolower($except)) === $category) {
-                return true;
+                $isMatch = true;
+            } elseif ($except[0] === '/' && \preg_match($except, $category)) {
+                $isMatch = true;
             }
-            //  Check for regex
-            return $except[0] === '/' && \preg_match($except, $category);
         }
-        return false;
+        return $isMatch;
     }
 
     /**
@@ -196,48 +199,11 @@ class LogRoute extends CLogRoute
      */
     protected function normalizeMessage(array $logEntry)
     {
-        $logEntry = \array_combine(
-            ['message', 'level', 'category', 'time'],
-            $logEntry
-        );
-        $logEntry = \array_merge($logEntry, array(
+        $keys = ['message', 'level', 'category', 'time'];
+        return \array_merge(array(
             'channel' => $this->debug,
             'meta' => array(),
-            'trace' => array(),
-        ));
-        $haveTrace = $logEntry['level'] === CLogger::LEVEL_TRACE || (YII_DEBUG && YII_TRACE_LEVEL > 0);
-        return $haveTrace
-            ? $this->parseTrace($logEntry)
-            : $logEntry;
-    }
-
-    /**
-     * Yii's logger appends trace info to log message as a string
-     * extract it and move to 'trace'
-     *
-     * @param array $logEntry key/valued logEntry
-     *
-     * @return array
-     */
-    private function parseTrace(array $logEntry)
-    {
-        // if YII_DEBUG is on, we may have trace info
-        $regex = '#^in (.+) \((\d+)\)$#m';
-        $matches = array();
-        \preg_match_all($regex, $logEntry['message'], $matches, PREG_SET_ORDER);
-        // remove the trace info from the message
-        $logEntry['message'] = \rtrim(\preg_replace($regex, '', $logEntry['message']));
-        foreach ($matches as $line) {
-            $file = $line[1];
-            if (\strpos($file, __DIR__) === 0) {
-                continue;
-            }
-            $logEntry['trace'][] = array(
-                'file' => $file,
-                'line' => (int) $line[2],
-            );
-        }
-        return $logEntry;
+        ), \array_combine($keys, $logEntry));
     }
 
     /**
@@ -260,7 +226,7 @@ class LogRoute extends CLogRoute
                 $this->processLogEntry($message);
             }
             //  Processed, clear!
-            $this->logs = null;
+            $this->logs = array();
         } catch (Exception $e) {
             \trigger_error(__METHOD__ . ': Exception processing application logs: ' . $e->getMessage());
         }
@@ -387,13 +353,13 @@ class LogRoute extends CLogRoute
             $this->stack[] = $logEntry;
             return;
         }
+        $debug = $logEntry['channel'];
+        $method = $this->levelMap[$logEntry['level']];
         $logEntryBegin = \array_pop($this->stack);
         $message = $logEntryBegin['category']
             ? $logEntryBegin['category'] . ': ' . $logEntryBegin['message']
             : $logEntryBegin['message'];
         $duration = $logEntry['time'] - $logEntryBegin['time'];
-        $debug = $logEntry['channel'];
-        $method = $this->levelMap[$logEntry['level']];
         $args = [$message, $duration];
         \call_user_func_array([$debug, $method], $args);
     }
@@ -407,19 +373,17 @@ class LogRoute extends CLogRoute
      */
     private function processLogEntryTrace(array $logEntry)
     {
-        if (\count($logEntry['trace']) <= 1) {
+        if (empty($logEntry['meta']['trace'])) {
             $logEntry['level'] = CLogger::LEVEL_INFO;
             $this->processLogEntryDefault($logEntry);
             return;
         }
-
+        $debug = $logEntry['channel'];
+        $method = $this->levelMap[$logEntry['level']];
         $caption = $logEntry['category']
             ? $logEntry['category'] . ': ' . $logEntry['message']
             : $logEntry['message'];
         $logEntry['meta']['columns'] = ['file', 'line'];
-        $logEntry['meta']['trace'] = $logEntry['trace'];
-        $debug = $logEntry['channel'];
-        $method = $this->levelMap[$logEntry['level']];
         $args = [false, $caption, $debug->meta($logEntry['meta'])];
         \call_user_func_array([$debug, $method], $args);
     }

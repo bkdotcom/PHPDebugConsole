@@ -19,7 +19,6 @@ use bdk\Debug;
 use bdk\Debug\LogEntry;
 use bdk\Debug\ServiceProvider;
 use bdk\PubSub\Event;
-use InvalidArgumentException;
 use ReflectionMethod;
 
 /**

@@ -268,8 +268,7 @@ class StatementInfo extends AbstractComponent
      */
     private function getGroupLabel()
     {
-        $label = $this->sql;
-        $label = \preg_replace('/[\r\n\s]+/', ' ', $label);
+        $label = \preg_replace('/[\r\n\s]+/', ' ', $this->sql);
         $label = $this->debug->sql->replaceParams($label, $this->params);
         $parsed = $this->debug->sql->parse($label);
         if ($parsed === false) {

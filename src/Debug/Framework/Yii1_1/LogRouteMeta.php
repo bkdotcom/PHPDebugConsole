@@ -121,13 +121,13 @@ class LogRouteMeta
     {
         $logEntry['category'] = null;
         $logEntry['channel'] = $this->debug->getChannel('app');
-        if (!empty($logEntry['trace']) && \strpos($logEntry['trace'][0]['file'], 'starship/RestfullYii') !== false) {
+        if (!empty($logEntry['meta']['trace']) && \strpos($logEntry['meta']['trace'][0]['file'], 'starship/RestfullYii') !== false) {
             $logEntry['channel'] = $this->debug->getChannel('RestfullYii');
-            $logEntry['trace'] = [];
             $logEntry['meta']['icon'] = 'fa fa-code-fork';
             unset(
                 $logEntry['meta']['file'],
-                $logEntry['meta']['line']
+                $logEntry['meta']['line'],
+                $logEntry['meta']['trace']
             );
         }
         return $logEntry;
@@ -177,7 +177,7 @@ class LogRouteMeta
         ));
         $logEntry['message'] = \preg_replace('# (to|from) cache$#', '', $logEntry['message']);
         $logEntry['meta']['icon'] = $icon;
-        $logEntry['trace'] = [];
+        unset($logEntry['meta']['trace']);
         if ($logEntry['level'] === CLogger::LEVEL_TRACE) {
             $logEntry['level'] = CLogger::LEVEL_INFO;
         }
@@ -206,8 +206,7 @@ class LogRouteMeta
     }
 
     /**
-     * If trace is present, set file & line meta
-     * If CLogger::LEVEL_ERROR, move trace to meta
+     * Extract trace info from message
      *
      * @param array $logEntry key/valued Yii log entry
      *
@@ -215,13 +214,46 @@ class LogRouteMeta
      */
     private function messageMetaTrace(array $logEntry)
     {
-        if ($logEntry['trace']) {
-            $logEntry['meta']['file'] = $logEntry['trace'][0]['file'];
-            $logEntry['meta']['line'] = $logEntry['trace'][0]['line'];
-            if ($logEntry['level'] === CLogger::LEVEL_ERROR) {
-                $logEntry['meta']['trace'] = $logEntry['trace'];
-                $logEntry['trace'] = [];
+        $haveTrace = $logEntry['level'] === CLogger::LEVEL_TRACE || (YII_DEBUG && YII_TRACE_LEVEL > 0);
+        if ($haveTrace) {
+            $logEntry = $this->parseTrace($logEntry);
+        }
+        if (!empty($logEntry['meta']['trace'])) {
+            $logEntry['meta']['file'] = $logEntry['meta']['trace'][0]['file'];
+            $logEntry['meta']['line'] = $logEntry['meta']['trace'][0]['line'];
+        }
+        return $logEntry;
+    }
+
+    /**
+     * Yii's logger appends trace info to log message as a string
+     * extract it and move to `meta['trace']`
+     *
+     * @param array $logEntry key/valued logEntry
+     *
+     * @return array
+     */
+    private function parseTrace(array $logEntry)
+    {
+        // if YII_DEBUG is on, we may have trace info
+        $regex = '#^in (.+) \((\d+)\)$#m';
+        $matches = array();
+        \preg_match_all($regex, $logEntry['message'], $matches, PREG_SET_ORDER);
+        // remove the trace info from the message
+        $logEntry['message'] = \rtrim(\preg_replace($regex, '', $logEntry['message']));
+        $trace = [];
+        foreach ($matches as $line) {
+            $file = $line[1];
+            if (\strpos($file, __DIR__) === 0) {
+                continue;
             }
+            $trace[] = array(
+                'file' => $file,
+                'line' => (int) $line[2],
+            );
+        }
+        if ($trace) {
+            $logEntry['meta']['trace'] = $trace;
         }
         return $logEntry;
     }

@@ -192,6 +192,7 @@ class ErrorLogger implements SubscriberInterface
         );
         foreach ($hashes as $hash) {
             $error = $this->debug->errorHandler->get('error', $hash);
+            $error['isSuppressed'] = true;
             $debug->log($error);
         }
         $debug->groupEnd();

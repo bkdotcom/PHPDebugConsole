@@ -54,9 +54,9 @@ class ErrorHandler extends AbstractErrorHandler
             'continueToPrevHandler' => true,    // whether to continue to previously defined handler (if there is/was a prev handler)
                                                 //   prev handler will not be called if error event propagation stopped
             'errorFactory' => [$this, 'errorFactory'],
-            'errorReporting' => E_ALL | E_STRICT,   // what errors are handled by handler?
-                                                    //   bitmask or "system" to use runtime value
-                                                    //   note: if using "system", suppressed errors (via @ operator) will not be handled (we'll still handle fatal category)
+            'errorReporting' => E_ALL,  // what errors are handled by handler?
+                                        //   bitmask or "system" to use runtime value
+                                        //   note: if using "system", suppressed errors (via @ operator) will not be handled (we'll still handle fatal category)
             'errorThrow' => 0,          // bitmask: error types that should converted to ErrorException and thrown
             'onError' => null,          // callable : shortcut for subscribing to errorHandler.error Event
                                         //   will receive error Event object
@@ -108,7 +108,7 @@ class ErrorHandler extends AbstractErrorHandler
             ? \error_reporting() // note: error could be "suppressed"
             : $this->cfg['errorReporting'];
         if ($errorReporting === -1) {
-            $errorReporting = E_ALL | E_STRICT;
+            $errorReporting = E_ALL;
         }
         return $errorReporting;
     }

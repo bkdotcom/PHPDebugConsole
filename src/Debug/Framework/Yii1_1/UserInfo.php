@@ -101,23 +101,23 @@ class UserInfo
             if (!($yiiApp instanceof CWebApplication)) {
                 return;
             }
+
+            $typeIdentifierClassnameVals = array(
+                'type' => Type::TYPE_IDENTIFIER,
+                'typeMore' => Type::TYPE_IDENTIFIER_CLASSNAME,
+            );
+
             $authManager = $yiiApp->getAuthManager();
             $debug->log('authManager class', $debug->abstracter->crateWithVals(
                 \get_class($authManager),
-                array(
-                    'type' => Type::TYPE_IDENTIFIER,
-                    'typeMore' => Type::TYPE_IDENTIFIER_CLASSNAME,
-                )
+                $typeIdentifierClassnameVals
             ));
 
             $accessManager = $yiiApp->getComponent('accessManager');
             if ($accessManager) {
                 $debug->log('accessManager class', $debug->abstracter->crateWithVals(
                     \get_class($accessManager),
-                    array(
-                        'type' => Type::TYPE_IDENTIFIER,
-                        'typeMore' => Type::TYPE_IDENTIFIER_CLASSNAME,
-                    )
+                    $typeIdentifierClassnameVals
                 ));
             }
         } catch (Exception $e) {

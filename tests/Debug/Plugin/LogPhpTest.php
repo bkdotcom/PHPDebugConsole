@@ -8,6 +8,7 @@ use bdk\Debug\Plugin\LogPhp;
 use bdk\HttpMessage\ServerRequestExtended as ServerRequest;
 use bdk\PubSub\Event;
 use bdk\Test\Debug\DebugTestFramework;
+use PHP_CodeSniffer\Tokenizers\PHP;
 
 /**
  * PHPUnit tests for LogPhp plugin
@@ -173,13 +174,16 @@ class LogPhpTest extends DebugTestFramework
         /*
             Test error_reporting != "all" but debug is "all"
         */
-        \error_reporting(E_ALL & ~E_STRICT);
+        \error_reporting(E_ALL & ~E_NOTICE);
         $refMethod->invoke($logPhp);
+        $preferred = PHP_VERSION_ID >= 80400
+            ? 'E_ALL'
+            : 'E_ALL | E_STRICT';
         $this->testMethod(null, array(), array(
             'entry' => array(
                 'method' => 'warn',
                 'args' => array(
-                    'PHP\'s %cerror_reporting%c is set to `%cE_ALL & ~E_STRICT%c` rather than `%cE_ALL | E_STRICT%c`' . "\n"
+                    'PHP\'s %cerror_reporting%c is set to `%cE_ALL & ~E_NOTICE%c` rather than `%c' . $preferred . '%c`' . "\n"
                         . 'PHPDebugConsole is disregarding %cerror_reporting%c value (this is configurable)',
                     'font-family:monospace; opacity:0.8;',
                     'font-family:inherit; white-space:pre-wrap;',
@@ -216,7 +220,7 @@ class LogPhpTest extends DebugTestFramework
             array(
                 'method' => 'warn',
                 'args' => array(
-                    'PHP\'s %cerror_reporting%c is set to `%cE_ALL & ~E_STRICT%c` rather than `%cE_ALL | E_STRICT%c`',
+                    'PHP\'s %cerror_reporting%c is set to `%cE_ALL & ~E_NOTICE%c` rather than `%c' . $preferred . '%c`',
                     'font-family:monospace; opacity:0.8;',
                     'font-family:inherit; white-space:pre-wrap;',
                     'font-family:monospace; opacity:0.8;',
@@ -253,7 +257,7 @@ class LogPhpTest extends DebugTestFramework
         /*
             Test debug != all (but has same value as error_reporting)
         */
-        $this->debug->setCfg('errorReporting', E_ALL & ~E_STRICT);
+        $this->debug->setCfg('errorReporting', E_ALL & ~E_NOTICE);
         $refMethod->invoke($logPhp);
         $log = $this->debug->data->get('log');
         $log = \array_slice($log, -2);
@@ -264,7 +268,7 @@ class LogPhpTest extends DebugTestFramework
             array(
                 'method' => 'warn',
                 'args' => array(
-                    'PHP\'s %cerror_reporting%c is set to `%cE_ALL & ~E_STRICT%c` rather than `%cE_ALL | E_STRICT%c`',
+                    'PHP\'s %cerror_reporting%c is set to `%cE_ALL & ~E_NOTICE%c` rather than `%c' . $preferred . '%c`',
                     'font-family:monospace; opacity:0.8;',
                     'font-family:inherit; white-space:pre-wrap;',
                     'font-family:monospace; opacity:0.8;',
@@ -284,7 +288,7 @@ class LogPhpTest extends DebugTestFramework
             array(
                 'method' => 'warn',
                 'args' => array(
-                    'PHPDebugConsole\'s errorHandler is also using a errorReporting value of `%cE_ALL & ~E_STRICT%c`',
+                    'PHPDebugConsole\'s errorHandler is also using a errorReporting value of `%cE_ALL & ~E_NOTICE%c`',
                     'font-family:monospace; opacity:0.8;',
                     'font-family:inherit; white-space:pre-wrap;',
                 ),
@@ -303,7 +307,7 @@ class LogPhpTest extends DebugTestFramework
         /*
             Test debug != all (value different than error_reporting)
         */
-        $this->debug->setCfg('errorReporting', E_ALL & ~E_STRICT & ~E_DEPRECATED);
+        $this->debug->setCfg('errorReporting', E_ALL & ~E_NOTICE & ~E_DEPRECATED);
         $refMethod->invoke($logPhp);
         /*
         $this->testMethod(null, array(), array(
@@ -339,7 +343,7 @@ class LogPhpTest extends DebugTestFramework
             array(
                 'method' => 'warn',
                 'args' => array(
-                    'PHP\'s %cerror_reporting%c is set to `%cE_ALL & ~E_STRICT%c` rather than `%cE_ALL | E_STRICT%c`',
+                    'PHP\'s %cerror_reporting%c is set to `%cE_ALL & ~E_NOTICE%c` rather than `%c' . $preferred . '%c`',
                     'font-family:monospace; opacity:0.8;',
                     'font-family:inherit; white-space:pre-wrap;',
                     'font-family:monospace; opacity:0.8;',
@@ -359,7 +363,7 @@ class LogPhpTest extends DebugTestFramework
             array(
                 'method' => 'warn',
                 'args' => array(
-                    'PHPDebugConsole\'s errorHandler is using a errorReporting value of `%cE_ALL & ~E_STRICT & ~E_DEPRECATED%c`',
+                    'PHPDebugConsole\'s errorHandler is using a errorReporting value of `%cE_ALL & ~E_NOTICE & ~E_DEPRECATED%c`',
                     'font-family:monospace; opacity:0.8;',
                     'font-family:inherit; white-space:pre-wrap;',
                 ),
@@ -378,8 +382,8 @@ class LogPhpTest extends DebugTestFramework
         /*
             Reset
         */
-        \error_reporting(E_ALL | E_STRICT);
-        $this->debug->setCfg('errorReporting', E_ALL | E_STRICT);
+        \error_reporting(E_ALL);
+        $this->debug->setCfg('errorReporting', E_ALL);
         $this->debug->setCfG('logEnvInfo.errorReporting', false);
     }
 }

@@ -319,13 +319,13 @@ EOD;
 
                         // extends
                         self::assertStringContainsString('<dt>extends</dt>' . "\n" .
-                            '<dd class="extends"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>TestBase</span></dd>', $str);
+                            '<dd class="extends t_identifier" data-type-more="className"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>TestBase</span></dd>', $str);
 
                         // implements
                         if (PHP_VERSION_ID >= 80000) {
                             self::assertStringContainsString(\implode("\n", array(
                                 '<dt>implements</dt>',
-                                '<dd class="interface"><span class="classname">Stringable</span></dd>',
+                                '<dd class="interface t_identifier" data-type-more="className"><span class="classname">Stringable</span></dd>',
                             )), $str);
                         } else {
                             self::assertStringNotContainsString('<dt>implements</dt>', $str);
@@ -1273,13 +1273,13 @@ EOD;
                             <dd class="attribute"><span class="classname">AnonymousAttribute</span></dd>'
                         : '') . '
                     <dt>extends</dt>
-                        <dd class="extends"><span class="classname">stdClass</span></dd>
+                        <dd class="extends t_identifier" data-type-more="className"><span class="classname">stdClass</span></dd>
                     <dt>implements</dt>
                         <dd class="implements">
                         <ul class="list-unstyled">
-                        <li><span class="interface toggle-off"><span class="classname">IteratorAggregate</span></span>
+                        <li><span class="interface t_identifier toggle-off" data-type-more="className"><span class="classname">IteratorAggregate</span></span>
                         <ul class="list-unstyled">
-                        <li><span class="interface"><span class="classname">Traversable</span></span></li>
+                        <li><span class="interface t_identifier" data-type-more="className"><span class="classname">Traversable</span></span></li>
                         </ul>
                         </li>
                         </ul>
@@ -1595,11 +1595,11 @@ EOD;
                     $expect = '<dt>extends</dt>
                         <dd class="extends">
                             <ul class="list-unstyled">
-                            <li><span class="extends"><span class="classname"><span class="namespace">Psr\Http\Message\</span>ServerRequestInterface</span></span>
+                            <li><span class="extends t_identifier" data-type-more="className"><span class="classname"><span class="namespace">Psr\Http\Message\</span>ServerRequestInterface</span></span>
                                 <ul class="list-unstyled">
-                                <li><span class="extends"><span class="classname"><span class="namespace">Psr\Http\Message\</span>RequestInterface</span></span>
-                                        <ul class="list-unstyled">
-                                    <li><span class="extends"><span class="classname"><span class="namespace">Psr\Http\Message\</span>MessageInterface</span></span></li>
+                                <li><span class="extends t_identifier" data-type-more="className"><span class="classname"><span class="namespace">Psr\Http\Message\</span>RequestInterface</span></span>
+                                    <ul class="list-unstyled">
+                                    <li><span class="extends t_identifier" data-type-more="className"><span class="classname"><span class="namespace">Psr\Http\Message\</span>MessageInterface</span></span></li>
                                     </ul>
                                 </li>
                                 </ul>

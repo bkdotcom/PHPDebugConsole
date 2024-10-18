@@ -80,7 +80,7 @@ class Connection extends AbstractConnectionMiddleware
         return new Statement(
             parent::prepare($sql),
             $this,
-            $sql,
+            $sql
         );
     }
 
@@ -127,6 +127,11 @@ class Connection extends AbstractConnectionMiddleware
         parent::rollBack();
     }
 
+    /**
+     * Build DSN url from params
+     *
+     * @return string
+     */
     private function buildDsn()
     {
         $params = \array_merge(array(

@@ -49,10 +49,7 @@ class Php
      */
     public static function assertType($value, $type, $allowNull = true)
     {
-        if ($allowNull && $value === null) {
-            return;
-        }
-        if (self::assertTypeCheck($value, $type)) {
+        if (($allowNull && $value === null) || self::assertTypeCheck($value, $type)) {
             return;
         }
         throw new InvalidArgumentException(\sprintf(
@@ -263,7 +260,6 @@ class Php
             default:
                 return \is_a($value, $type);
         }
-        return false;
     }
 
     /**

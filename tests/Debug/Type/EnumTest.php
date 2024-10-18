@@ -93,7 +93,7 @@ class EnumTest extends DebugTestFramework
                         <dt class="attributes">attributes</dt>
                         <dd class="attribute"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\Enum\</span>ExampleAttribute</span></dd>
                         <dt>implements</dt>
-                        <dd class="interface toggle-off"><span class="classname">UnitEnum</span></dd>
+                        <dd class="interface t_identifier toggle-off" data-type-more="className"><span class="classname">UnitEnum</span></dd>
                         <dt class="constants">constants</dt>
                         <dd class="constant public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string">ENUM_VALUE</span> <span class="t_operator">=</span> <span class="t_identifier" data-type-more="const" title="What&#039;s for dinner?
                             Meals PHPDoc"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\Enum\</span>Meals</span><span class="t_operator">::</span><span class="t_name">DINNER</span></span></dd>
@@ -240,9 +240,9 @@ class EnumTest extends DebugTestFramework
                         <dt>implements</dt>
                         <dd class="implements">
                             <ul class="list-unstyled">
-                                <li><span class="interface toggle-off"><span class="classname">BackedEnum</span></span>
+                                <li><span class="interface t_identifier toggle-off" data-type-more="className"><span class="classname">BackedEnum</span></span>
                                     <ul class="list-unstyled">
-                                        <li><span class="interface toggle-off"><span class="classname">UnitEnum</span></span></li>
+                                        <li><span class="interface t_identifier toggle-off" data-type-more="className"><span class="classname">UnitEnum</span></span></li>
                                     </ul>
                                 </li>
                             </ul>

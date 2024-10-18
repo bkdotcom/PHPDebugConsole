@@ -17,6 +17,7 @@ use bdk\Debug\Abstraction\Object\Abstraction as ObjectAbstraction;
 use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Dump\Base\Value as BaseValue;
 use bdk\Debug\Dump\Html as Dumper;
+use bdk\Debug\Dump\Html\HtmlArray;
 use bdk\Debug\Dump\Html\HtmlObject;
 use bdk\Debug\Dump\Html\HtmlString;
 
@@ -27,6 +28,9 @@ use bdk\Debug\Dump\Html\HtmlString;
  */
 class Value extends BaseValue
 {
+    /** @var HtmlArray array dumper */
+    public $array;
+
     /** @var HtmlString string dumper */
     public $string;
 
@@ -45,6 +49,7 @@ class Value extends BaseValue
     {
         parent::__construct($dumper); // sets debug and dumper
         $this->html = $this->debug->html;
+        $this->array = new HtmlArray($this);
         $this->string = new HtmlString($this);
         $this->optionStackPush(array(
             'charHighlight' => true,
@@ -181,69 +186,7 @@ class Value extends BaseValue
      */
     protected function dumpArray(array $array, $abs = null)
     {
-        \bdk\Debug\Utility\Php::assertType($abs, 'bdk\Debug\Abstraction\Abstraction');
-
-        $opts = \array_merge(array(
-            'asFileTree' => false,
-            'expand' => null,
-            'isMaxDepth' => false,
-            'showListKeys' => true,
-        ), $this->optionGet());
-        if ($opts['isMaxDepth']) {
-            $this->optionSet('attribs.class.__push__', 'max-depth');
-            return '<span class="t_keyword">array</span> <span class="t_maxDepth">*MAX DEPTH*</span>';
-        }
-        if (empty($array)) {
-            return '<span class="t_keyword">array</span><span class="t_punct">()</span>';
-        }
-        if ($opts['expand'] !== null) {
-            $this->optionSet('attribs.data-expand', $opts['expand']);
-        }
-        if ($opts['asFileTree']) {
-            $this->optionSet('attribs.class.__push__', 'array-file-tree');
-        }
-        $keys = isset($abs['keys']) ? $abs['keys'] : array();
-        $outputKeys = $opts['showListKeys'] || !$this->debug->arrayUtil->isList($array);
-        return '<span class="t_keyword">array</span><span class="t_punct">(</span>' . "\n"
-            . '<ul class="array-inner list-unstyled">' . "\n"
-            . $this->dumpArrayValues($array, $outputKeys, $keys)
-            . '</ul><span class="t_punct">)</span>';
-    }
-
-    /**
-     * Dump an array key/value pair
-     *
-     * @param array $array      array to output
-     * @param bool  $outputKeys include key with value?
-     * @param array $absKeys    keys that required abstraction (ie, non-utf8, or containing confusable characters)
-     *
-     * @return string
-     */
-    private function dumpArrayValues(array $array, $outputKeys, array $absKeys)
-    {
-        $html = '';
-        foreach ($array as $key => $val) {
-            if (isset($absKeys[$key])) {
-                $key = $absKeys[$key];
-            }
-            $html .= $outputKeys
-                ? "\t" . '<li>'
-                    . $this->html->buildTag(
-                        'span',
-                        array(
-                            'class' => array(
-                                't_int' => \is_int($key),
-                                't_key' => true,
-                            ),
-                        ),
-                        $this->dump($key, array('tagName' => null)) // don't wrap it
-                    )
-                    . '<span class="t_operator">=&gt;</span>'
-                    . $this->dump($val)
-                . '</li>' . "\n"
-                : "\t" . $this->dump($val, array('tagName' => 'li')) . "\n";
-        }
-        return $html;
+        return $this->array->dump($array, $abs);
     }
 
     /**

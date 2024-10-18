@@ -65,7 +65,7 @@ class BdkDebugBundleListener implements EventSubscriberInterface
      * @param Kernel           $kernel           Kernel instance
      * @param DoctrineRegistry $doctrineRegistry Doctrine Registry
      */
-    public function __construct(Debug $debug, Kernel $kernel, DoctrineRegistry $doctrineRegistry, $logDir = null)
+    public function __construct(Debug $debug, Kernel $kernel, DoctrineRegistry $doctrineRegistry)
     {
         $this->debug = $debug;
         $this->debug->errorHandler->register();
@@ -133,15 +133,8 @@ class BdkDebugBundleListener implements EventSubscriberInterface
             $logEntry['appendLog'] = false;
             return;
         }
-        if ($channelName === 'general.event' && preg_match('/^Notified event "(?P<event>[^"]+)" to listener "(?P<listener>.+)"/', $logEntry['args'][0], $matches)) {
-            $logEntry['args'] = [
-                'Notified event "%s" to listener %s',
-                $matches['event'],
-                new Abstraction(Type::TYPE_IDENTIFIER, array(
-                    'typeMore' => Type::TYPE_IDENTIFIER_METHOD,
-                    'value' => $matches['listener'],
-                ))
-            ];
+        if ($channelName === 'general.event') {
+            $this->onDebugLogGeneralEvent($logEntry);
         }
         if ($logEntry->getMeta('psr3level') !== LogLevel::CRITICAL) {
             return;
@@ -220,5 +213,26 @@ class BdkDebugBundleListener implements EventSubscriberInterface
         $responseTypeIsHtml = $response->headers->has('Content-Type') === false || \strpos($response->headers->get('Content-Type'), 'html') !== false;
         return ($responseTypeIsHtml || $request->getRequestFormat() === 'html')
             && \stripos((string) $response->headers->get('Content-Disposition'), 'attachment;') === false;
+    }
+
+    /**
+     * Handle 'general.event' logEntry
+     *
+     * @param LogEntry $logEntry LogEntry instance
+     *
+     * @return void
+     */
+    private function onDebugLogGeneralEvent(LogEntry $logEntry)
+    {
+        if (\preg_match('/^Notified event "(?P<event>[^"]+)" to listener "(?P<listener>.+)"/', $logEntry['args'][0], $matches)) {
+            $logEntry['args'] = [
+                'Notified event "%s" to listener %s',
+                $matches['event'],
+                new Abstraction(Type::TYPE_IDENTIFIER, array(
+                    'typeMore' => Type::TYPE_IDENTIFIER_METHOD,
+                    'value' => $matches['listener'],
+                )),
+            ];
+        }
     }
 }

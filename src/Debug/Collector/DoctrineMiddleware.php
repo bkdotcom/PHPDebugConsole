@@ -38,7 +38,8 @@ class DoctrineMiddleware implements MiddlewareInterface
      *
      * @param Debug|null $debug Debug instance
      */
-    public function __construct(?Debug $debug = null) {
+    public function __construct(?Debug $debug = null)
+    {
         if (!$debug) {
             $debug = Debug::getChannel('Doctrine', array('channelIcon' => $this->icon));
         } elseif ($debug === $debug->rootInstance) {
@@ -54,4 +55,4 @@ class DoctrineMiddleware implements MiddlewareInterface
     {
         return new Driver($driver, $this->debug);
     }
- }
+}

@@ -98,8 +98,8 @@ class ErrorHandlerTest extends TestBase
         $this->errorHandler->setCfg('errorReporting', 'system');
         self::assertSame(\error_reporting(), $this->errorHandler->errorReporting());
         \error_reporting('-1');
-        self::assertSame(E_ALL | E_STRICT, $this->errorHandler->errorReporting());
-        $this->errorHandler->setCfg('errorReporting', E_ALL | E_STRICT);
+        self::assertSame(E_ALL, $this->errorHandler->errorReporting());
+        $this->errorHandler->setCfg('errorReporting', E_ALL);
     }
 
     public function testAsException()

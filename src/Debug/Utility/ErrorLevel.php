@@ -44,7 +44,7 @@ class ErrorLevel
             'E_USER_ERROR' => 256,
             'E_USER_WARNING' => 512,
             'E_USER_NOTICE' => 1024,
-            'E_STRICT' => \version_compare($phpVer, '5.0.0', '>=') ? 2048 : null,
+            'E_STRICT' => \version_compare($phpVer, '5.0.0', '>=') && \version_compare($phpVer, '8.4.0-dev', '<') ? 2048 : null,
             'E_RECOVERABLE_ERROR' => \version_compare($phpVer, '5.2.0', '>=') ? 4096 : null,
             'E_DEPRECATED' => \version_compare($phpVer, '5.3.0', '>=') ? 8192 : null,
             'E_USER_DEPRECATED' => \version_compare($phpVer, '5.3.0', '>=') ? 16384 : null,
@@ -93,6 +93,7 @@ class ErrorLevel
      * Calculate E_ALL for given php version
      *
      * E_ALL value:
+     *   >= 8.4  30719 (no more E_STRICT)
      *   >= 5.4: 32767
      *      5.3: 30719 (doesn't include E_STRICT)
      *      5.2: 6143 (doesn't include E_STRICT)

@@ -34,7 +34,7 @@ class AbstractError extends Event
         self::CAT_ERROR      => [E_USER_ERROR, E_RECOVERABLE_ERROR],
         self::CAT_FATAL      => [E_ERROR, E_PARSE, E_COMPILE_ERROR, E_CORE_ERROR],
         self::CAT_NOTICE     => [E_NOTICE, E_USER_NOTICE],
-        self::CAT_STRICT     => [E_STRICT],
+        self::CAT_STRICT     => [2048], // E_STRICT raises deprecation notice as of php 8.4
         self::CAT_WARNING    => [E_WARNING, E_CORE_WARNING, E_COMPILE_WARNING, E_USER_WARNING],
     );
 
@@ -50,7 +50,7 @@ class AbstractError extends Event
         E_NOTICE            => 'Notice',
         E_PARSE             => 'Parsing Error',     // handled via shutdown function
         E_RECOVERABLE_ERROR => 'Recoverable Error', // php 5.2 :  4096
-        E_STRICT            => 'Strict',            // php 5.0 :  2048
+        2048                => 'Strict',            // php 5.0 :  2048; deprecated as of php 8.5
         E_USER_DEPRECATED   => 'User Deprecated',   // php 5.3 : 16384
         E_USER_ERROR        => 'User Error',
         E_USER_NOTICE       => 'User Notice',
@@ -313,7 +313,7 @@ class AbstractError extends Event
     private function valHash()
     {
         $errMsg = $this->values['message'];
-        $dirParts = \array_slice(\explode(DIRECTORY_SEPARATOR , __DIR__), 0, 3);
+        $dirParts = \array_slice(\explode(DIRECTORY_SEPARATOR, __DIR__), 0, 3);
         $dirStart = \implode(DIRECTORY_SEPARATOR, $dirParts);
         // remove paths from message
         $errMsg = \preg_replace('/' . \preg_quote($dirStart, '/') . '[\S:]*/', $dirStart . '...', $errMsg);

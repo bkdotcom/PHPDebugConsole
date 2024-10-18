@@ -15,7 +15,7 @@ class EmailTest extends DebugTestFramework
     {
         parent::$allowError = true;
 
-        $this->debug->errorHandler->handleError(E_STRICT, 'your code sucks', __FILE__, __LINE__);
+        $this->debug->errorHandler->handleError(E_WARNING, 'your code sucks', __FILE__, __LINE__);
         $line = __LINE__ - 1;
         $this->debug->errorHandler->handleError(E_WARNING, 'hide me', __FILE__, __LINE__);
         $error = $this->debug->errorHandler->getLastError();
@@ -26,7 +26,7 @@ class EmailTest extends DebugTestFramework
         $this->assertSame('Debug Log: Error', $this->emailInfo['subject']);
         $stringExpect = 'Error(s):' . "\n"
             . __FILE__ . ':' . "\n"
-            . ' Line ' . $line . ': (Strict) your code sucks';
+            . ' Line ' . $line . ': (Warning) your code sucks';
         $this->assertStringContainsString($stringExpect, $this->emailInfo['body']);
         $data = \bdk\Debug\Utility\SerializeLog::unserialize($this->emailInfo['body']);
         $this->assertSame(array(

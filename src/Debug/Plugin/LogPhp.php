@@ -207,10 +207,9 @@ class LogPhp implements SubscriberInterface
     private function logPhpErDebug()
     {
         $msgLines = array();
-        $eAll = E_ALL | E_STRICT;
         $errorReporting = $this->debug->errorHandler->errorReporting();
         $errorReportingRaw = $this->debug->errorHandler->getCfg('errorReporting');
-        if ($errorReporting !== $eAll) {
+        if ($errorReporting !== E_ALL) {
             $errReportingStr = $this->debug->errorLevel->toConstantString($errorReporting);
             $msgLine = 'PHPDebugConsole\'s errorHandler is using a errorReporting value of '
                 . '`%c' . $errReportingStr . '%c`';
@@ -236,11 +235,15 @@ class LogPhp implements SubscriberInterface
     private function logPhpErPhp()
     {
         $msgLines = array();
-        $eAll = E_ALL | E_STRICT;
-        if (\in_array(\error_reporting(), [-1, $eAll], true) === false) {
+        $preferred = PHP_VERSION_ID >= 80400
+            ? 'E_ALL'
+            : 'E_ALL | E_STRICT';
+        if (\in_array(\error_reporting(), [-1, E_ALL], true) === false) {
             $errorReporting = $this->debug->errorHandler->errorReporting();
-            $msgLines[] = 'PHP\'s %cerror_reporting%c is set to `%c' . $this->debug->errorLevel->toConstantString() . '%c` rather than `%cE_ALL | E_STRICT%c`';
-            if ($errorReporting === $eAll) {
+            $msgLines[] = 'PHP\'s %cerror_reporting%c is set to '
+                . '`%c' . $this->debug->errorLevel->toConstantString() . '%c` '
+                . 'rather than `%c' . $preferred . '%c`';
+            if ($errorReporting === E_ALL) {
                 $msgLines[] = 'PHPDebugConsole is disregarding %cerror_reporting%c value (this is configurable)';
             }
         }

@@ -13,6 +13,7 @@ use bdk\Test\Debug\DebugTestFramework;
  * @covers \bdk\Debug\Dump\AbstractValue
  * @covers \bdk\Debug\Dump\Base\Value
  * @covers \bdk\Debug\Dump\Html
+ * @covers \bdk\Debug\Dump\Html\HtmlArray
  * @covers \bdk\Debug\Dump\Html\Value
  * @covers \bdk\Debug\Dump\Text
  * @covers \bdk\Debug\Dump\Text\Value

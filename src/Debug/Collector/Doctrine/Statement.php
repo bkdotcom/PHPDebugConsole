@@ -44,7 +44,9 @@ class Statement extends AbstractStatementMiddleware
         $this->sql = $sql;
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     public function bindValue($param, $value, $type = ParameterType::STRING): void
     {
         $this->params[$param] = $value;
@@ -52,7 +54,9 @@ class Statement extends AbstractStatementMiddleware
         parent::bindValue($param, $value, $type);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     public function execute($params = null): ResultInterface
     {
         $info = new StatementInfo(

@@ -12,7 +12,9 @@
 
 namespace bdk\Debug\Dump\Html\Object;
 
+use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\Object\Abstraction as ObjectAbstraction;
+use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Dump\Html\Helper;
 use bdk\Debug\Dump\Html\Value as ValDumper;
 use bdk\Debug\Utility\Html as HtmlUtil;
@@ -92,16 +94,17 @@ class ExtendsImplements
                 ? $k
                 : $v;
             $str .= '<li>'
-                . $this->html->buildTag(
-                    'span',
-                    array(
+                . $this->valDumper->dump(new Abstraction(Type::TYPE_IDENTIFIER, array(
+                    'typeMore' => Type::TYPE_IDENTIFIER_CLASSNAME,
+                    'value' => $className,
+                )), array(
+                    'attribs' => array(
                         'class' => array(
                             $cssClass => true,
                             'toggle-off' => \in_array($className, $interfacesCollapse, true),
                         ),
                     ),
-                    $this->valDumper->markupIdentifier($className, 'className')
-                )
+                ))
                 . (\is_array($v) ? "\n" . self::buildTree($v, $cssClass, $interfacesCollapse) : '')
                 . '</li>' . "\n";
         }
@@ -130,16 +133,18 @@ class ExtendsImplements
         if ($this->valDumper->debug->arrayUtil->isList($listOrTree)) {
             return '<dt>' . $label . '</dt>' . "\n"
                 . \implode(\array_map(function ($className) use ($itemClass, $interfacesCollapse) {
-                    return $this->html->buildTag(
-                        'dd',
-                        array(
+                    return $this->valDumper->dump(new Abstraction(Type::TYPE_IDENTIFIER, array(
+                        'typeMore' => Type::TYPE_IDENTIFIER_CLASSNAME,
+                        'value' => $className,
+                    )), array(
+                        'attribs' => array(
                             'class' => array(
                                 $itemClass => true,
                                 'toggle-off' => \in_array($className, $interfacesCollapse, true),
                             ),
                         ),
-                        $this->valDumper->markupIdentifier($className, 'className')
-                    ) . "\n";
+                        'tagName' => 'dd',
+                    )) . "\n";
                 }, $listOrTree));
         }
         return '<dt>' . $label . '</dt>' . "\n"

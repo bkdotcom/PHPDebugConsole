@@ -41,6 +41,7 @@ class OAuthTest extends DebugTestFramework
         ), $response);
         $logEntries = $this->getLogEntries();
         $logEntries[3]['args'][1] = \array_intersect_key($logEntries[3]['args'][1], \array_flip(['size_download', 'sbs']));
+
         $this->assertLogEntries(array(
             array(
                 'method' => 'groupCollapsed',
@@ -96,7 +97,7 @@ class OAuthTest extends DebugTestFramework
                 'method' => 'log',
                 'args' => array(
                     'request headers',
-                    'Authorization: OAuth oauth_consumer_key="key",oauth_signature_method="HMAC-SHA1",oauth_nonce="%s",oauth_timestamp="%d",oauth_version="1.0",oauth_signature="█████████"',
+                    '%AAuthorization: OAuth oauth_consumer_key="key",oauth_signature_method="HMAC-SHA1",oauth_nonce="%s",oauth_timestamp="%d",oauth_version="1.0",oauth_signature="█████████"%A',
                 ),
                 'meta' => array(
                     'channel' => 'general.OAuth',
@@ -244,7 +245,7 @@ class OAuthTest extends DebugTestFramework
                 'method' => 'log',
                 'args' => array(
                     'request headers',
-                    'Authorization: OAuth oauth_callback="http%3A%2F%2Fwww.bradkent.com%2F",oauth_consumer_key="key",oauth_signature_method="HMAC-SHA1",oauth_nonce="%s",oauth_timestamp="%d",oauth_version="1.0",oauth_signature="█████████"',
+                    '%AAuthorization: OAuth oauth_callback="http%3A%2F%2Fwww.bradkent.com%2F",oauth_consumer_key="key",oauth_signature_method="HMAC-SHA1",oauth_nonce="%s",oauth_timestamp="%d",oauth_version="1.0",oauth_signature="█████████"%A',
                 ),
                 'meta' => array(
                     'channel' => 'general.OAuth',
@@ -385,10 +386,10 @@ class OAuthTest extends DebugTestFramework
                 'method' => 'log',
                 'args' => array(
                     'request headers',
-                    implode('%A' . "\n", array(
+                    '%A' . implode('%A' . "\n", array(
                         'Authorization: OAuth oauth_consumer_key="key",oauth_signature_method="HMAC-SHA1",oauth_nonce="%s",oauth_timestamp="%d",oauth_version="1.0",oauth_signature="█████████"',
                         'Content-Type: application/x-www-form-urlencoded',
-                    )),
+                    )) . '%A',
                 ),
                 'meta' => array(
                     'channel' => 'general.OAuth',

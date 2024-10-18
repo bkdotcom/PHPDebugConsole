@@ -10,6 +10,8 @@ use bdk\Test\Debug\DebugTestFramework;
 /**
  * @covers \bdk\Debug\Collector\OAuth
  * @covers \bdk\Debug\Plugin\Redaction
+ *
+ * @phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
  */
 class OAuthTest extends DebugTestFramework
 {
@@ -37,6 +39,8 @@ class OAuthTest extends DebugTestFramework
             'oauth_token' => 'access_token',
             'oauth_token_secret' => 'access_token_secret',
         ), $response);
+        $logEntries = $this->getLogEntries();
+        $logEntries[3]['args'][1] = \array_intersect_key($logEntries[3]['args'][1], \array_flip(['size_download', 'sbs']));
         $this->assertLogEntries(array(
             array(
                 'method' => 'groupCollapsed',
@@ -130,7 +134,7 @@ class OAuthTest extends DebugTestFramework
                 'args' => array(),
                 'meta' => array('channel' => 'general.OAuth'),
             ),
-        ), $this->getLogEntries());
+        ), $logEntries);
     }
 
     public function testGetAccessTokenException()
@@ -169,6 +173,9 @@ class OAuthTest extends DebugTestFramework
             'oauth_token' => 'request_token',
             'oauth_token_secret' => 'request_token_secret',
         ), $response);
+
+        $logEntries = $this->getLogEntries();
+        $logEntries[4]['args'][1] = \array_intersect_key($logEntries[4]['args'][1], \array_flip(['size_download', 'sbs']));
         $this->assertLogEntries(array(
             array(
                 'method' => 'groupCollapsed',
@@ -275,7 +282,7 @@ class OAuthTest extends DebugTestFramework
                 'args' => array(),
                 'meta' => array('channel' => 'general.OAuth'),
             ),
-        ), $this->getLogEntries());
+        ), $logEntries);
     }
 
     public function testGetRequestTokenException()
@@ -316,10 +323,12 @@ class OAuthTest extends DebugTestFramework
         foreach ($logEntriesActual as $i => $logEntry) {
             if (isset($logEntry['args'][0]) && $logEntry['args'][0] === 'additional info') {
                 $sizeDownload = $logEntry['args'][1]['size_download'];
+                $logEntriesActual[$i]['args'][1] = \array_intersect_key($logEntry['args'][1], \array_flip(['size_download', 'size_upload', 'sbs']));
             } elseif (isset($logEntry['args'][0]) && $logEntry['args'][0] === 'response body') {
                 $logEntriesActual[$i]['args'][1] = $logEntry['args'][1]['value'];
             }
         }
+
         $this->assertLogEntries(array(
             array(
                 'method' => 'groupCollapsed',

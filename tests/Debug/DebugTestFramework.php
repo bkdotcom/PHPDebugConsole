@@ -477,9 +477,10 @@ class DebugTestFramework extends DOMTestCase
             $expectStr = \preg_replace('/=>\s*\n\s*array /', '=> array', \var_export($expectArr, true));
             $actualStr = \preg_replace('/=>\s*\n\s*array /', '=> array', \var_export($actualArr, true));
             try {
-                self::assertStringMatchesFormat($expectStr, $actualStr, 'LogEntry ' . $i . ' does not match');
+                self::assertStringMatchesFormatNormalized($expectStr, $actualStr, 'LogEntry ' . $i . ' does not match', false);
             } catch (\Exception $e) {
-                // echo 'actual = ' . $actualStr . "\n";
+                // echo 'actual = ' . self::normalizeString($actualStr) . "\n";
+                // echo 'expect = ' . self::normalizeString($expectStr) . "\n";
                 throw $e;
             }
         }
@@ -843,11 +844,11 @@ class DebugTestFramework extends DOMTestCase
      *
      * @return void
      */
-    protected static function assertStringMatchesFormatNormalized($expect, $actual, $message = null)
+    protected static function assertStringMatchesFormatNormalized($expect, $actual, $message = null, $keepCr = true)
     {
         $args = array(
-            self::normalizeString($expect),
-            self::normalizeString($actual),
+            self::normalizeString($expect, $keepCr),
+            self::normalizeString($actual, $keepCr),
         );
         if ($message) {
             $args[] = $message;
@@ -855,11 +856,13 @@ class DebugTestFramework extends DOMTestCase
         \call_user_func_array(array('PHPUnit\Framework\TestCase', 'assertStringMatchesFormat'), $args);
     }
 
-    private static function normalizeString($string)
+    private static function normalizeString($string, $keepCr = true)
     {
         $string = \preg_replace('#^\s+#m', '', $string);
         // @see https://github.com/sebastianbergmann/phpunit/issues/3040
-        $string = \str_replace("\r", '[\\r]', $string);
+        $string = $keepCr
+            ? \str_replace("\r", '[\\r]', $string)
+            : \str_replace("\r", '', $string);
         if (PHP_VERSION_ID < 80100) {
             $string = \str_replace('&#039;', '\'', $string);
         }

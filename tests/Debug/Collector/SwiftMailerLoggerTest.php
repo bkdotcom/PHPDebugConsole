@@ -4,6 +4,7 @@ namespace bdk\Test\Debug\Collector;
 
 use bdk\Debug\Collector\SwiftMailerLogger;
 use bdk\PubSub\Manager as EventManager;
+use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 use bdk\Test\Debug\DebugTestFramework;
 use Swift_Events_CommandEvent;
 use Swift_Events_ResponseEvent;
@@ -15,6 +16,7 @@ use Swift_Message;
 use Swift_SendmailTransport;
 use Swift_TransportException;
 
+
 /**
  * @covers \bdk\Debug\Collector\SwiftMailerLogger
  *
@@ -22,6 +24,8 @@ use Swift_TransportException;
  */
 class SwiftMailerLoggerTest extends DebugTestFramework
 {
+    use ExpectExceptionTrait;
+
     protected $logger;
     protected $transport;
 

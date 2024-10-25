@@ -454,7 +454,7 @@ class DebugTestFramework extends DOMTestCase
         self::assertTrue($isAbsType);
     }
 
-    protected static function assertLogEntries($expect, $actual)
+    protected static function assertLogEntries($expect, $actual = null)
     {
         if (\is_string($expect)) {
             // assume json
@@ -463,7 +463,9 @@ class DebugTestFramework extends DOMTestCase
                 throw new \Exception('json error: ' . \json_last_error() . ': ' . \json_last_error_msg());
             }
         }
-
+        if ($actual === null) {
+            $actual = self::getLogEntries();
+        }
         $actual = Helper::deObjectifyData($actual);
         self::assertCount(
             \count($expect),
@@ -483,15 +485,15 @@ class DebugTestFramework extends DOMTestCase
         }
     }
 
-    protected function getLogEntries($count = null, $where = 'log')
+    protected static function getLogEntries($count = null, $where = 'log')
     {
-        $logEntries = $this->debug->data->get($where);
-        if (\in_array($where, array('log','alerts'), true) || \preg_match('#^logSummary[\./]\d+$#', $where)) {
+        $logEntries = \bdk\Debug::getInstance()->data->get($where);
+        if (\in_array($where, ['log', 'alerts'], true) || \preg_match('#^logSummary[\./]\d+$#', $where)) {
             if ($count) {
                 $logEntries = \array_slice($logEntries, 0 - $count);
             }
         }
-        return $this->helper->deObjectifyData($logEntries);
+        return Helper::deObjectifyData($logEntries);
     }
 
     private static function memoryUsage()

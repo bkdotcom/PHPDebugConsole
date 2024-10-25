@@ -22,13 +22,48 @@ trait AssertSettingTrait
     /**
      * Assert ini setting is/is-not specified value
      *
-     * @param array<string,mixed> $setting setting name, "type", comparison value, operator
+     * Multiple method signatures
+     *   assertSetting($name[, $valCompare[, $opts]])
+     *   assertSetting($name[, $opts])
+     *   assertSetting($opts)
+     *
+     * @param string              $name       setting name (or array of options)
+     * @param mixed               $valCompare comparison value
+     * @param array<string,mixed> $opts       comparison operator, filter, message, etc
      *
      * @return void
+     *
+     * @phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter.FoundBeforeLastUsed
      */
-    protected function assertSetting(array $setting)
+    protected function assertSetting($name, $valCompare = true, array $opts = array())
     {
-        $setting = $this->assertSettingPrep(\array_merge(array(
+        $opts = $this->assertSettingOpts(\func_get_args());
+        /** @var array{0:bool,1:string} */
+        $params = [
+            $this->debug->stringUtil->compare($opts['valActual'], $opts['valCompare'], $opts['operator']),
+            $opts['name']
+                ? '%c' . $opts['name'] . '%c: ' . $opts['msg']
+                : $opts['msg'],
+        ];
+        $cCount = \substr_count($params[1], '%c');
+        for ($i = 0; $i < $cCount; $i += 2) {
+            $params[] = 'font-family:monospace;';
+            $params[] = '';
+        }
+        $params = \array_merge($params, $opts['addParams']);
+        \call_user_func_array([$this->debug, 'assert'], $params);
+    }
+
+    /**
+     * Get the assert options from passed arguments
+     *
+     * @param array $args Arguments passed to assertSetting
+     *
+     * @return array<string,mixed>
+     */
+    private function assertSettingOpts(array $args)
+    {
+        $optsDefault = array(
             'addParams' => array(),
             'filter' => FILTER_DEFAULT, // filter applied if getting value from ini val
             'msg' => '',    // (optional) message displayed if assertion fails
@@ -36,21 +71,18 @@ trait AssertSettingTrait
             'operator' => '==',
             'valActual' => '__use_ini_val__',
             'valCompare' => true,
-        ), $setting));
-        /** @var array{0:bool,1:string} */
-        $params = [
-            $this->debug->stringUtil->compare($setting['valActual'], $setting['valCompare'], $setting['operator']),
-            $setting['name']
-                ? '%c' . $setting['name'] . '%c: ' . $setting['msg']
-                : $setting['msg'],
-        ];
-        $cCount = \substr_count($params[1], '%c');
-        for ($i = 0; $i < $cCount; $i += 2) {
-            $params[] = 'font-family:monospace;';
-            $params[] = '';
+        );
+        $opts = array();
+        $argNames = array('name', 'valCompare', 'opts');
+        foreach ($args as $i => $arg) {
+            if (\is_array($arg)) {
+                $opts = \array_merge($opts, $arg);
+                break;
+            }
+            $opts[$argNames[$i]] = $arg;
         }
-        $params = \array_merge($params, $setting['addParams']);
-        \call_user_func_array([$this->debug, 'assert'], $params);
+        $opts = \array_merge($optsDefault, $opts);
+        return $this->assertSettingPrep($opts);
     }
 
     /**

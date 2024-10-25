@@ -10,6 +10,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * PHPUnit tests for Utility class
  *
+ * @covers \bdk\Debug\Utility
  * @covers \bdk\Debug\Utility\Php
  *
  * @SuppressWarnings(PHPMD.StaticAccess)
@@ -17,6 +18,61 @@ use PHPUnit\Framework\TestCase;
 class PhpTest extends TestCase
 {
     use AssertionTrait;
+
+
+    /**
+     * @param mixed       $value
+     * @param string      $type
+     * @param bool        $allowNull
+     * @param null|string $exceptionMessage
+     *
+     * @dataProvider providerAssertType
+     */
+    public function testAssertType($value, $type, $allowNull = true, $exceptionMessage = null)
+    {
+        if ($exceptionMessage !== null) {
+            $this->expectException('InvalidArgumentException');
+            $this->expectExceptionMessage($exceptionMessage);
+        }
+        Php::assertType($value, $type, $allowNull);
+        self::assertTrue(true);
+    }
+
+    public function providerAssertType()
+    {
+        return [
+            [array(), 'array', false],
+            ['call_user_func', 'callable', false],
+            [(object) array(), 'object', false],
+            [new \bdk\PubSub\Event(), 'bdk\PubSub\Event', false],
+
+            [array(), 'array', true],
+            ['call_user_func', 'callable'],
+            [(object) array(), 'object', true],
+            [new \bdk\PubSub\Event(), 'bdk\PubSub\Event', true],
+
+            [null, 'array', true ],
+            [null, 'callable', true],
+            [null, 'object', true],
+            [null, 'bdk\PubSub\Event', true],
+
+            [null, 'array', false, 'Expected array, got null'],
+            [null, 'callable', false, 'Expected callable, got null'],
+            [null, 'object', false, 'Expected object, got null'],
+            [null, 'bdk\PubSub\Event', false, 'Expected bdk\PubSub\Event, got null'],
+
+            [false, 'array', true, 'Expected array (or null), got bool'],
+            [false, 'callable', true, 'Expected callable (or null), got bool'],
+            [false, 'object', true, 'Expected object (or null), got bool'],
+            [false, 'bdk\PubSub\Event', true, 'Expected bdk\PubSub\Event (or null), got bool'],
+
+            [false, 'array', false, 'Expected array, got bool'],
+            [false, 'callable', false, 'Expected callable, got bool'],
+            [false, 'object', false, 'Expected object, got bool'],
+            [false, 'bdk\PubSub\Event', false, 'Expected bdk\PubSub\Event, got bool'],
+
+        ];
+    }
 
     /**
      * @param string $input

@@ -142,6 +142,23 @@ class Connection extends AbstractConnectionMiddleware
             'password' => null,
             'user' => null,
         ), $this->params);
+        $parts = $this->paramsToUrlParts($params);
+        $dsn = (string) UriUtil::fromParsed($parts);
+        if ($parts['path'] === ':memory:') {
+            $dsn = \str_replace('/localhost', '/', $dsn);
+        }
+        return $dsn;
+    }
+
+    /**
+     * Convert params to url parts
+     *
+     * @param array $params Connection params
+     *
+     * @return array
+     */
+    private function paramsToUrlParts(array $params)
+    {
         $map = array(
             'dbname' => 'path',
             'driver' => 'scheme',
@@ -157,11 +174,7 @@ class Connection extends AbstractConnectionMiddleware
             $parts['path'] = ':memory:';
         }
         $parts['scheme'] = \str_replace('_', '-', $parts['scheme']);
-        $dsn = (string) UriUtil::fromParsed($parts);
-        if ($params['memory']) {
-            $dsn = \str_replace('/localhost', '/', $dsn);
-        }
-        return $dsn;
+        return $parts;
     }
 
     /**

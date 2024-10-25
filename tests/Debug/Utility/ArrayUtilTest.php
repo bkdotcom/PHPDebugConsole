@@ -66,6 +66,38 @@ class ArrayUtilTest extends TestCase
         );
     }
 
+    public function testDiffStrict()
+    {
+        $arrayList = [
+            'bar',
+            'qux',
+            true,
+            null,
+            ['foo', 'bar'],
+            1,
+        ];
+        $array1 = array(
+            'foo' => 'bar',
+            'baz' => 'qux',
+            'bool' => true,
+            'null' => null,
+            'array' => ['foo','bar'],
+            'int' => 1,
+        );
+        $array2 = array(true);
+        $array3 = array('qux');
+        $expect = array(
+            'foo' => 'bar',
+            // 'baz' => 'qux',
+            // 'bool' => true,
+            'null' => null,
+            'array' => ['foo','bar'],
+            'int' => 1,
+        );
+        $this->assertSame($expect, ArrayUtil::diffStrict($array1, $array2, $array3));
+        $this->assertSame(\array_values($expect), ArrayUtil::diffStrict($arrayList, $array2, $array3));
+    }
+
     /**
      * @dataProvider providerIsList
      */

@@ -193,11 +193,7 @@ class MySqli extends mysqliBase
             $this->debug->warn($this->error);
             return $return;
         }
-        $index = \array_search($name, $this->savePoints, true);
-        if ($index !== false) {
-            unset($this->savePoints[$index]);
-            $this->savePoints = \array_values($this->savePoints);
-        }
+        $this->savePoints = $this->debug->arrayUtil->diffStrict($this->savePoints, [$name]);
         if (PHP_VERSION_ID < 70000) {
             $this->savePoints[] = $name;
         }
@@ -237,10 +233,7 @@ class MySqli extends mysqliBase
             $this->debug->warn($this->error);
             return $return;
         }
-        $index = \array_search($name, $this->savePoints, true);
-        if ($index !== false) {
-            \array_splice($this->savePoints, $index, 1);
-        }
+        $this->savePoints = $this->debug->arrayUtil->diffStrict($this->savePoints, [$name]);
         $this->savePoints[] = $name;
         $this->debug->info('savepoint', $name);
         return $return;

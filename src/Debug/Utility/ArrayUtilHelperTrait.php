@@ -114,6 +114,25 @@ trait ArrayUtilHelperTrait
     }
 
     /**
+     * Remove values from array
+     *
+     * @param array $array  Array to modify
+     * @param array $array2 Array values to remove
+     *
+     * @return array Array containing all the entries from array that are not present in array2
+     */
+    private static function diffStrictWalk(array $array, array $array2)
+    {
+        foreach ($array2 as $value) {
+            $key = \array_search($value, $array, true);
+            if ($key !== false) {
+                unset($array[$key]);
+            }
+        }
+        return $array;
+    }
+
+    /**
      * Check that value is not an array
      *
      * @param mixed $value Value to test

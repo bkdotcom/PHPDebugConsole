@@ -9,6 +9,7 @@ use Doctrine\DBAL\DriverManager;
 
 /**
  * @covers \bdk\Debug\Collector\DoctrineLogger
+ * @covers \bdk\Debug\Collector\Doctrine\LoggerCompatTrait
  * @covers \bdk\Debug\Utility\Sql
  */
 class DoctrineLoggerTest extends DebugTestFramework

@@ -103,7 +103,7 @@ function debugEnhanceInit ($node, arg1) {
 }
 
 function debugEnhanceDefault ($node) {
-  $node.each(function () {
+  return $node.each(function () {
     var $self = $(this)
     var $parentLis = {}
     if ($self.hasClass('debug')) {
@@ -118,7 +118,6 @@ function debugEnhanceDefault ($node) {
     if ($self.hasClass('filter-hidden') && $self.hasClass('m_group') === false) {
       return
     }
-    // console.group('debugEnhance')
     if ($self.hasClass('group-body')) {
       enhanceEntries.enhanceEntries($self)
     } else if ($self.is('li, div') && $self.prop('class').match(/\bm_/) !== null) {
@@ -131,9 +130,7 @@ function debugEnhanceDefault ($node) {
       })
       enhanceEntries.enhanceValue($self, $parentLis)
     }
-    // console.groupEnd()
   })
-  return $node
 }
 
 function debugEnhanceSetConfig ($node, arg1) {

@@ -21,7 +21,6 @@ use bdk\Debug\Abstraction\Object\Methods;
 use bdk\Debug\Abstraction\Object\Properties;
 use bdk\PubSub\ValueStore;
 use ReflectionClass;
-use ReflectionEnum;
 
 /**
  * Abstracter: Gather class definition info common across all instances
@@ -322,14 +321,7 @@ class Definition
         }
         $remove = \array_unique($remove);
         $interfaces = \array_diff_key($interfaces, \array_flip($remove));
-        // remove values... array_diff complains about array to string conversion
-        foreach ($remove as $classname) {
-            $key = \array_search($classname, $interfaces, true);
-            if ($key !== false) {
-                unset($interfaces[$key]);
-            }
-        }
-        return $interfaces;
+        return $this->debug->arrayUtil->diffStrict($interfaces, $remove);
     }
 
     /**

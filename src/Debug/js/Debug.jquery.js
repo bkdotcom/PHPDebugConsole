@@ -2220,7 +2220,6 @@
    * Build the value displayed when group is collapsed
    */
   function buildReturnVal ($return) {
-    var selectors = [];
     var type = getNodeType($return);
     var typeMore = type[1];
     type = type[0];
@@ -2231,25 +2230,27 @@
       return buildReturnValString($return, typeMore)
     }
     if (type === 'object') {
-      if ($return.find('> .t_identifier').length) {
-        // newer style markup classname wrapped in t_identifier
-        selectors = [
-          '> .t_identifier',
-        ];
-        return $return.find(selectors.join(','))[0].outerHTML
-      }
-      selectors = [
-        '> .classname',
-        '> .t_const',
-        '> [data-toggle] > .classname',
-        '> [data-toggle] > .t_const',
-      ];
-      return $return.find(selectors.join(','))[0].outerHTML
+      return buildReturnValObject($return)
     }
     if (type === 'array' && $return[0].textContent === 'array()') {
       return $return[0].outerHTML.replace('t_array', 't_array expanded')
     }
     return '<span class="t_keyword">' + type + '</span>'
+  }
+
+  function buildReturnValObject ($return) {
+    var selectors = $return.find('> .t_identifier').length
+      ? [
+        // newer style markup classname wrapped in t_identifier
+        '> .t_identifier',
+      ]
+      : [
+        '> .classname',
+        '> .t_const',
+        '> [data-toggle] > .classname',
+        '> [data-toggle] > .t_const',
+      ];
+    return $return.find(selectors.join(','))[0].outerHTML
   }
 
   function buildReturnValString ($return, typeMore) {
@@ -6657,7 +6658,7 @@
   }
 
   function debugEnhanceDefault ($node) {
-    $node.each(function () {
+    return $node.each(function () {
       var $self = $(this);
       var $parentLis = {};
       if ($self.hasClass('debug')) {
@@ -6672,7 +6673,6 @@
       if ($self.hasClass('filter-hidden') && $self.hasClass('m_group') === false) {
         return
       }
-      // console.group('debugEnhance')
       if ($self.hasClass('group-body')) {
         enhanceEntries($self);
       } else if ($self.is('li, div') && $self.prop('class').match(/\bm_/) !== null) {
@@ -6685,9 +6685,7 @@
         });
         enhanceValue$1($self, $parentLis);
       }
-      // console.groupEnd()
-    });
-    return $node
+    })
   }
 
   function debugEnhanceSetConfig ($node, arg1) {

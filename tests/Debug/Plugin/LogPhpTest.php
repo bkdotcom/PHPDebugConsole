@@ -47,7 +47,11 @@ class LogPhpTest extends DebugTestFramework
         $logPhp->onBootstrap(new Event($this->debug));
 
         $logEntries = $this->helper->deObjectifyData($this->debug->data->get('log'));
-        self::assertSame(array('PHP Version', PHP_VERSION), $logEntries[0]['args']);
+        self::assertStringMatchesFormat(
+            \json_encode(['PHP Version', PHP_VERSION . '%s']),
+            \json_encode($logEntries[0]['args'])
+        );
+
         $found = array(
             'dateTimezone' => null,
             'iniFiles' => null,
@@ -179,7 +183,7 @@ class LogPhpTest extends DebugTestFramework
         $current = PHP_VERSION_ID >= 80000
             ? 'E_ALL & ~E_NOTICE'
             : '( E_ALL | E_STRICT ) & ~E_NOTICE';
-        $preferred = PHP_VERSION_ID >= 80400
+        $preferred = PHP_VERSION_ID >= 80000
             ? 'E_ALL'
             : 'E_ALL | E_STRICT';
         $this->testMethod(null, array(), array(

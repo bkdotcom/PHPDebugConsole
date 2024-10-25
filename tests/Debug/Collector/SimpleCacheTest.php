@@ -12,6 +12,7 @@ use bdk\Test\Debug\Mock\SimpleCache as SimpleCacheMock;
  *
  * @covers \bdk\Debug\Collector\SimpleCache
  * @covers \bdk\Debug\Collector\SimpleCache\CallInfo
+ * @covers \bdk\Debug\Collector\SimpleCache\CompatTrait
  */
 class SimpleCacheTest extends DebugTestFramework
 {

@@ -26,7 +26,12 @@
       <directory suffix=".php">src</directory>
     </include>
     <exclude>
+      <file>src/Debug/Collector/Debug/Pdo/CompatTrait.php</file>
       <file>src/Debug/Collector/Doctrine/LoggerCompatTrait_legacy.php</file>
+      <file>src/Debug/Collector/Doctrine/LoggerCompatTrait.php</file>
+      <file>src/Debug/Collector/MonologHandler/CompatTrait.php</file>
+      <file>src/Debug/Collector/Pdo/CompatTrait.php</file>
+      <file>src/Debug/Collector/SimpleCache/CompatTrait.php</file>
       <file>src/Debug/Dump/charData.php</file>
       <directory>src/Debug/Framework</directory>
       <directory>src/Debug/node_modules</directory>

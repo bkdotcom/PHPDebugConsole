@@ -68,6 +68,34 @@ class ArrayUtil
     }
 
     /**
+     * Remove values from array that are present in any of the other arrays.
+     *
+     * Returns an array containing all the values from array that are not present in any of the other arrays.
+     * Returned array will be reindexed if input array is a list
+     *
+     * unlike `array_diff`, does not complains about array to string conversion
+     *
+     * @param array $array1    array to compare from
+     * @param array ...$array2 arrays to compare against
+     *
+     * @return array
+     *
+     * @throws InvalidArgumentException
+     *
+     * @since 3.3
+     */
+    public static function diffStrict(array $array1, $array2) // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
+    {
+        $arrays = \array_slice(\func_get_args(), 1);
+        self::assertContainsOnly($arrays, 'array', __FUNCTION__);
+        $array = \array_reduce($arrays, [__CLASS__, 'diffStrictWalk'], $array1);
+        if (self::isList($array1)) {
+            $array = \array_values($array);
+        }
+        return $array;
+    }
+
+    /**
      * Is passed argument a simple array with all-integer keys in sequence from 0 to n?
      *
      * @param mixed $val       Value to check

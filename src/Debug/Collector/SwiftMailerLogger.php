@@ -31,7 +31,13 @@ use Swift_TransportException;
 /**
  * A SwiftMailer adapter
  */
-class SwiftMailerLogger implements Swift_Events_CommandListener, Swift_Events_ResponseListener, Swift_Events_SendListener, Swift_Events_TransportChangeListener, Swift_Events_TransportExceptionListener, Swift_Plugins_Logger
+class SwiftMailerLogger implements
+    Swift_Events_CommandListener,
+    Swift_Events_ResponseListener,
+    Swift_Events_SendListener,
+    Swift_Events_TransportChangeListener,
+    Swift_Events_TransportExceptionListener,
+    Swift_Plugins_Logger
 {
     /** @var list<string> */
     protected $messages = array();
@@ -54,7 +60,7 @@ class SwiftMailerLogger implements Swift_Events_CommandListener, Swift_Events_Re
     /**
      * Constructor
      *
-     * @param Debu|null $debug (optional) Specify PHPDebugConsole instance
+     * @param Debug|null $debug (optional) Specify PHPDebugConsole instance
      *                           if not passed, will create Slim channel on singleton instance
      *                           if root channel is specified, will create a SwiftMailer channel
      *

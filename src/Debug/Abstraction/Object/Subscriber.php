@@ -228,8 +228,9 @@ class Subscriber implements SubscriberInterface
             if so, don't collect property values
         */
         $haveError = false;
-        \set_error_handler(static function ($errno, $errstr) use (&$haveError) {
+        \set_error_handler(static function () use (&$haveError) {
             $haveError = true;
+            return true;
         }, E_ALL);
         try {
             $mysqli = $abs->getSubject();

@@ -38,15 +38,19 @@ class LogPhp implements SubscriberInterface
     private $debug;
     /** @var array<string,mixed> */
     private $iniValues = array();
+    /** @var array<string,mixed> */
+    private $detectFilesFalseMeta = array(
+        'detectFiles' => false,
+        'file' => null,
+        'line' => null,
+    );
 
     /**
      * Constructor
      */
     public function __construct()
     {
-        $this->iniValues = array(
-            'dateTimezone' => \ini_get('date.timezone'),
-        );
+        $this->iniValues = array('dateTimezone' => \ini_get('date.timezone'));
     }
 
     /**
@@ -54,9 +58,7 @@ class LogPhp implements SubscriberInterface
      */
     public function getSubscriptions()
     {
-        return array(
-            Debug::EVENT_BOOTSTRAP => 'onBootstrap',
-        );
+        return array(Debug::EVENT_BOOTSTRAP => 'onBootstrap');
     }
 
     /**
@@ -86,18 +88,13 @@ class LogPhp implements SubscriberInterface
         if (!$this->debug->getCfg('logEnvInfo.phpInfo', Debug::CONFIG_DEBUG)) {
             return;
         }
-        $this->debug->log('PHP Version', PHP_VERSION);
+        $this->logPhpVersion();
         $this->logPhpIni();
         $this->logTimezone();
         $this->logPhpMemoryLimit();
-        $this->assertSetting(array(
-            'name' => 'expose_php',
-            'valCompare' => false,
-        ));
-        $this->assertSetting(array(
-            'name' => 'default_charset',
+        $this->assertSetting('expose_php', false);
+        $this->assertSetting('default_charset', '', array(
             'operator' => '!=',
-            'valCompare' => '',
         ));
         $this->assertExtensions();
         $this->assertMbStringSettings();
@@ -105,9 +102,10 @@ class LogPhp implements SubscriberInterface
     }
 
     /**
-     * Log Error Reporting settings if
-     * PHP's error reporting !== (E_ALL | E_STRICT)
-     * PHPDebugConsole is not logging (E_ALL | E_STRICT)
+     * Log Error Reporting settings
+     *
+     * Log if PHP's error reporting !== E_ALL
+     * Or if PHPDebugConsole is not logging E_ALL
      *
      * @return void
      */
@@ -118,6 +116,25 @@ class LogPhp implements SubscriberInterface
         }
         $this->logPhpErPhp();
         $this->logPhpErDebug();
+    }
+
+    /**
+     * Log php version
+     *
+     * @return void
+     */
+    protected function logPhpVersion()
+    {
+        $version = PHP_VERSION;
+        $version .= ' (' . PHP_SAPI . ')';
+        $buildDate = $this->phpBuildDate();
+        if ($buildDate) {
+            $ts = \strtotime($buildDate);
+            $datetime = \date('Y-m-d H:i:s T', $ts);
+            $version .= ' (built: ' . $datetime . ')';
+        }
+        $version .= ' (' . (PHP_ZTS ? 'TS' : 'NTS') . ')';
+        $this->debug->log('PHP Version', $version);
     }
 
     /**
@@ -168,11 +185,7 @@ class LogPhp implements SubscriberInterface
             }
             $this->debug->warn(
                 $extension . ' extension is not loaded',
-                $this->debug->meta(array(
-                    'detectFiles' => false,
-                    'file' => null,
-                    'line' => null,
-                ))
+                $this->debug->meta($this->detectFilesFalseMeta)
             );
         }
     }
@@ -186,16 +199,12 @@ class LogPhp implements SubscriberInterface
     {
         if (PHP_VERSION_ID < 50600) {
             // default_charset should be used for php >= 5.6
-            $this->assertSetting(array(
-                'name' => 'mb_string.internal_encoding',
+            $this->assertSetting('mb_string.internal_encoding', '', array(
                 'operator' => '!=',
-                'valCompare' => '',
             ));
         }
-        $this->assertSetting(array(
+        $this->assertSetting('mbstring.func_overload', false, array(
             'msg' => 'Multi-byte string function overloading is enabled (is evil)',
-            'name' => 'mbstring.func_overload',
-            'valCompare' => false,
         ));
     }
 
@@ -211,8 +220,7 @@ class LogPhp implements SubscriberInterface
         $errorReportingRaw = $this->debug->errorHandler->getCfg('errorReporting');
         if ($errorReporting !== E_ALL) {
             $errReportingStr = $this->debug->errorLevel->toConstantString($errorReporting);
-            $msgLine = 'PHPDebugConsole\'s errorHandler is using a errorReporting value of '
-                . '`%c' . $errReportingStr . '%c`';
+            $msgLine = 'PHPDebugConsole\'s errorHandler is using a errorReporting value of `%c' . $errReportingStr . '%c`';
             if ($errorReportingRaw === 'system') {
                 $msgLine = 'PHPDebugConsole\'s errorHandler is set to "system" (not all errors will be shown)';
             } elseif ($errorReporting === \error_reporting()) {
@@ -235,7 +243,7 @@ class LogPhp implements SubscriberInterface
     private function logPhpErPhp()
     {
         $msgLines = array();
-        $preferred = PHP_VERSION_ID >= 80400
+        $preferred = PHP_VERSION_ID >= 80000
             ? 'E_ALL'
             : 'E_ALL | E_STRICT';
         if (\in_array(\error_reporting(), [-1, E_ALL], true) === false) {
@@ -333,11 +341,7 @@ class LogPhp implements SubscriberInterface
             $args[] = $styleMono;
             $args[] = $styleReset;
         }
-        $args[] = $this->debug->meta(array(
-            'detectFiles' => false,
-            'file' => null,
-            'line' => null,
-        ));
+        $args[] = $this->debug->meta($this->detectFilesFalseMeta);
         \call_user_func_array([$this->debug, 'warn'], $args);
     }
 
@@ -348,17 +352,30 @@ class LogPhp implements SubscriberInterface
      */
     private function logXdebug()
     {
-        $haveXdebug = \extension_loaded('xdebug');
-        if (!$haveXdebug) {
-            $this->debug->log('Xdebug is not installed');
-            return;
-        }
         $xdebugVer = \phpversion('xdebug');
+        $msg = $xdebugVer
+            ? 'Xdebug v' . $xdebugVer . ' is installed'
+            : 'Xdebug is not installed';
         if (\version_compare($xdebugVer, '3.0.0', '>=')) {
-            $mode = \ini_get('xdebug.mode') ?: 'off';
-            $this->debug->log('Xdebug v' . $xdebugVer . ' is installed (mode: ' . $mode . ')');
-            return;
+            $msg .= ' (mode: ' . (\ini_get('xdebug.mode') ?: 'off') . ')';
         }
-        $this->debug->log('Xdebug v' . $xdebugVer . ' is installed');
+        $this->debug->log($msg);
+    }
+
+    /**
+     * Return the build date of the PHP binary
+     *
+     * @return string|null
+     */
+    protected function phpBuildDate()
+    {
+        \ob_start();
+        \phpinfo(INFO_GENERAL);
+        $phpInfo = \ob_get_clean();
+        $phpInfo = \strip_tags($phpInfo);
+        \preg_match('/Build Date (?:=> )?([^\n]*)/', $phpInfo, $matches);
+        return $matches
+            ? $matches[1]
+            : null;
     }
 }

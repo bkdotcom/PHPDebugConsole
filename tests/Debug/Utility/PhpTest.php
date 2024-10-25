@@ -4,6 +4,7 @@ namespace bdk\Test\Debug\Utility;
 
 use bdk\Debug\Utility\Php;
 use bdk\PhpUnitPolyfill\AssertionTrait;
+use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 use bdk\Test\Debug\Fixture\TestObj;
 use PHPUnit\Framework\TestCase;
 
@@ -18,7 +19,7 @@ use PHPUnit\Framework\TestCase;
 class PhpTest extends TestCase
 {
     use AssertionTrait;
-
+    use ExpectExceptionTrait;
 
     /**
      * @param mixed       $value

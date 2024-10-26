@@ -125,16 +125,15 @@ class LogPhp implements SubscriberInterface
      */
     protected function logPhpVersion()
     {
-        $version = PHP_VERSION;
-        $version .= ' (' . PHP_SAPI . ')';
         $buildDate = $this->phpBuildDate();
+        $this->debug->log('PHP Version', PHP_VERSION);
+        $this->debug->log('Server API', PHP_SAPI);
         if ($buildDate) {
             $ts = \strtotime($buildDate);
-            $datetime = \date('Y-m-d H:i:s T', $ts);
-            $version .= ' (built: ' . $datetime . ')';
+            $buildDateTime = \date('Y-m-d H:i:s T', $ts);
+            $this->debug->log('Build Date', $buildDateTime);
         }
-        $version .= ' (' . (PHP_ZTS ? 'TS' : 'NTS') . ')';
-        $this->debug->log('PHP Version', $version);
+        $this->debug->log('Thread Safe', PHP_ZTS ? 'yes' : 'no');
     }
 
     /**

@@ -174,7 +174,7 @@ class Debug extends AbstractDebug
         'logResponse' => 'auto',
         'logResponseMaxLen' => '1 MB',
         'logRuntime' => true,
-        'logServerKeys' => ['REMOTE_ADDR','REQUEST_TIME','REQUEST_URI','SERVER_ADDR','SERVER_NAME'],
+        'logServerKeys' => ['DOCUMENT_ROOT','REMOTE_ADDR','REQUEST_TIME','REQUEST_URI','SERVER_ADDR','SERVER_NAME'],
         'onBootstrap' => null,      // callable
         'onLog' => null,            // callable
         'onOutput' => null,         // callable

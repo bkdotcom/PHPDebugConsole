@@ -16,7 +16,6 @@ use Swift_Message;
 use Swift_SendmailTransport;
 use Swift_TransportException;
 
-
 /**
  * @covers \bdk\Debug\Collector\SwiftMailerLogger
  *

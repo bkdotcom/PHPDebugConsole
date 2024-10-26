@@ -48,8 +48,20 @@ class LogPhpTest extends DebugTestFramework
 
         $logEntries = $this->helper->deObjectifyData($this->debug->data->get('log'));
         self::assertStringMatchesFormat(
-            \json_encode(['PHP Version', PHP_VERSION . '%s']),
+            \json_encode(['PHP Version', PHP_VERSION]),
             \json_encode($logEntries[0]['args'])
+        );
+        self::assertStringMatchesFormat(
+            \json_encode(['Server API', PHP_SAPI]),
+            \json_encode($logEntries[1]['args'])
+        );
+        self::assertStringMatchesFormat(
+            \json_encode(['Build Date', '%s']),
+            \json_encode($logEntries[2]['args'])
+        );
+        self::assertStringMatchesFormat(
+            \json_encode(['Thread Safe', PHP_ZTS ? 'yes' : 'no']),
+            \json_encode($logEntries[3]['args'])
         );
 
         $found = array(

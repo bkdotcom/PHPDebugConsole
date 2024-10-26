@@ -196,7 +196,7 @@ class StringUtil
         if (\is_string($val) === false) {
             return false;
         }
-        if (\preg_match('/^(\[.+\]|\{.+\})$/s', $val) !== 1) {
+        if (\preg_match('/^\s*(\[.+\]|\{.+\})\s*$/s', $val) !== 1) {
             return false;
         }
         if (\function_exists('json_validate')) {

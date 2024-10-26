@@ -238,9 +238,31 @@ class Factory
         if ($body instanceof StreamInterface) {
             $body = (string) $body;
         }
-        if (\is_string($body) && \preg_match('/\{.+\}/s', $body)) {
+        if (\is_string($body) && self::isJson($body)) {
             return $this->types['json'];
         }
         return '';
+    }
+
+    /**
+     * Test if value is a json encoded object or array
+     *
+     * @param mixed $val value to test
+     *
+     * @return bool
+     */
+    private static function isJson($val)
+    {
+        if (\is_string($val) === false) {
+            return false;
+        }
+        if (\preg_match('/^\s*(\[.+\]|\{.+\})\s*$/s', $val) !== 1) {
+            return false;
+        }
+        if (\function_exists('json_validate')) {
+            return \json_validate($val, JSON_INVALID_UTF8_IGNORE);
+        }
+        \json_decode($val); // @codeCoverageIgnore
+        return \json_last_error() === JSON_ERROR_NONE; // @codeCoverageIgnore
     }
 }

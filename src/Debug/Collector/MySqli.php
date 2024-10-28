@@ -61,7 +61,7 @@ class MySqli extends mysqliBase
      */
     public function __construct($host = null, $username = null, $passwd = null, $dbname = null, $port = null, $socket = null, $debug = null) // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
     {
-        \bdk\Debug\Utility\Php::assertType($debug, 'bdk\Debug');
+        \bdk\Debug\Utility::assertType($debug, 'bdk\Debug');
 
         $this->doConstruct(\func_num_args()
             ? \array_slice(\func_get_args(), 0, 6)

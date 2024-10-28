@@ -106,7 +106,7 @@ class Middleware
      */
     protected function getUserInformation($user = null)
     {
-        \bdk\Debug\Utility\Php::assertType($user, 'Illuminate\Foundation\Auth\User');
+        $this->debug->utility->assertType($user, 'Illuminate\Foundation\Auth\User');
 
         // Defaults
         if ($user === null) {

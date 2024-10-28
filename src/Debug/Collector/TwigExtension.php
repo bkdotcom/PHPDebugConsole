@@ -37,8 +37,8 @@ class TwigExtension extends ProfilerExtension
      */
     public function __construct($debug = null, $profile = null)
     {
-        \bdk\Debug\Utility\Php::assertType($debug, 'bdk\Debug');
-        \bdk\Debug\Utility\Php::assertType($profile, 'Twig\Profiler\Profile');
+        \bdk\Debug\Utility::assertType($debug, 'bdk\Debug');
+        \bdk\Debug\Utility::assertType($profile, 'Twig\Profiler\Profile');
 
         if (!$debug) {
             $debug = Debug::getChannel('Twig', array('channelIcon' => $this->icon));

@@ -60,6 +60,12 @@ class ChromeLogger extends AbstractRoute
         'warn',
     ];
 
+    /** @var int Current group depth  */
+    protected $depth = 0;
+
+    /** @var bool Whether we're only collecting groups due to header size limit */
+    protected $groupOnly = false;
+
     /**
      * @var array header data
      */
@@ -69,6 +75,9 @@ class ChromeLogger extends AbstractRoute
         'columns' => ['log', 'backtrace', 'type'],
         'rows' => [],
     );
+
+    /** @var int Maximum header length */
+    protected $max = 0;
 
     /**
      * Constructor
@@ -90,15 +99,16 @@ class ChromeLogger extends AbstractRoute
      */
     public function processLogEntries($event = null)
     {
-        $this->debug->php->assertType($event, 'bdk\PubSub\Event');
+        $this->debug->utility->assertType($event, 'bdk\PubSub\Event');
 
         $this->dumper->crateRaw = false;
         $this->data = $this->debug->data->get();
+        $this->data['log']  = \array_values($this->data['log']);
         $this->buildJsonData();
-        $max = $this->getMaxLength();
+        $this->max = $this->getMaxLength();
         $encoded = $this->encode($this->jsonData);
-        if ($max && \strlen($encoded) > $max) {
-            $this->reduceData($max);
+        if ($this->max && \strlen($encoded) > $this->max) {
+            $this->reduceData();
             $this->buildJsonData();
             $encoded = $this->encode($this->jsonData);
             $encoded = $this->assertEncodedLength($encoded);
@@ -141,13 +151,12 @@ class ChromeLogger extends AbstractRoute
      */
     private function assertEncodedLength($encoded)
     {
-        $max = $this->getMaxLength();
-        if (\strlen($encoded) <= $max) {
+        if (\strlen($encoded) <= $this->max) {
             return $encoded;
         }
         $this->jsonData['rows'] = [
             [
-                ['chromeLogger: unable to abridge log to ' . $this->debug->utility->getBytes($max)],
+                ['chromeLogger: unable to abridge log to ' . $this->debug->utility->getBytes($this->max)],
                 null,
                 'warn',
             ],
@@ -218,11 +227,9 @@ class ChromeLogger extends AbstractRoute
     /**
      * Attempt to remove log entries to get header length < max
      *
-     * @param int $max maximum header length
-     *
      * @return void
      */
-    protected function reduceData($max)
+    protected function reduceData()
     {
         \array_unshift($this->data['alerts'], new LogEntry(
             $this->debug,
@@ -247,10 +254,10 @@ class ChromeLogger extends AbstractRoute
             Data is now just alerts, summary, and errors
         */
         $strlen = $this->calcHeaderSize();
-        $avail = $max - $strlen;
+        $avail = $this->max - $strlen;
         if ($avail > 128) {
             // we've got enough room to fill with additional entries
-            $this->reduceDataFill($max, $logBack);
+            $this->reduceDataFill($logBack);
         }
     }
 
@@ -293,43 +300,59 @@ class ChromeLogger extends AbstractRoute
     /**
      * Add back log entries until we're out of space
      *
-     * @param int   $max     maximum header length
      * @param array $logBack logEntries removed in initial pass
      *
      * @return void
      */
-    protected function reduceDataFill($max, $logBack = array())
+    protected function reduceDataFill($logBack = array())
     {
         $indexes = \array_reverse(\array_keys($logBack));
-        $depth = 0;
-        $groupOnly = false;
+        $this->depth = 0;
+        $this->groupOnly = false;
         /*
             work our way backwards through the log until we fill the avail header length
         */
         foreach ($indexes as $i) {
             $logEntry = $logBack[$i];
-            $method = $logEntry['method'];
-            if ($method === 'groupEnd') {
-                $depth++;
-                // https://bugs.xdebug.org/view.php?id=2095
-                // phpcs:ignore SlevomatCodingStandard.Namespaces.FullyQualifiedGlobalFunctions.NonFullyQualified
-            } elseif (in_array($method, ['group', 'groupCollapsed'], true)) {
-                $depth--;
-            } elseif ($groupOnly) {
-                continue;
-            }
-            $this->data['log'][$i] = $logEntry;
-            $strlen = $this->calcHeaderSize();
-            if ($groupOnly && $depth === 0) {
+            $continue = $this->reduceDataFillWalk($logEntry, $i);
+            if ($continue === false) {
                 break;
-            }
-            if ($strlen + (40 * $depth) > $max) {
-                unset($this->data['log'][$i]);
-                $groupOnly = true;
             }
         }
         \ksort($this->data['log']);
         $this->data['log'] = \array_values($this->data['log']);
+    }
+
+    /**
+     * Add back log entries until we're out of space
+     *
+     * @param LogEntry   $logEntry LogEntry instance
+     * @param int|string $index    LogEntry index
+     *
+     * @return bool whether to continue
+     */
+    private function reduceDataFillWalk(LogEntry $logEntry, $index)
+    {
+        $method = $logEntry['method'];
+        if ($method === 'groupEnd') {
+            $this->depth++;
+            // https://bugs.xdebug.org/view.php?id=2095
+            // phpcs:ignore SlevomatCodingStandard.Namespaces.FullyQualifiedGlobalFunctions.NonFullyQualified
+        } elseif (in_array($method, ['group', 'groupCollapsed'], true)) {
+            $this->depth--;
+        } elseif ($this->groupOnly) {
+            return true;
+        }
+        $this->data['log'][$index] = $logEntry;
+        $strlen = $this->calcHeaderSize();
+        if ($this->groupOnly && $this->depth === 0) {
+            return false;
+        }
+        if ($strlen + (40 * $this->depth) > $this->max) {
+            unset($this->data['log'][$index]);
+            $this->groupOnly = true;
+        }
+        return true;
     }
 
     /**

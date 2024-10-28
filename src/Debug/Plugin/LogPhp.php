@@ -50,7 +50,9 @@ class LogPhp implements SubscriberInterface
      */
     public function __construct()
     {
-        $this->iniValues = array('dateTimezone' => \ini_get('date.timezone'));
+        $this->iniValues = array(
+            'dateTimezone' => \ini_get('date.timezone'),
+        );
     }
 
     /**
@@ -58,7 +60,9 @@ class LogPhp implements SubscriberInterface
      */
     public function getSubscriptions()
     {
-        return array(Debug::EVENT_BOOTSTRAP => 'onBootstrap');
+        return array(
+            Debug::EVENT_BOOTSTRAP => 'onBootstrap',
+        );
     }
 
     /**
@@ -125,7 +129,7 @@ class LogPhp implements SubscriberInterface
      */
     protected function logPhpVersion()
     {
-        $buildDate = $this->phpBuildDate();
+        $buildDate = $this->debug->php->buildDate();
         $this->debug->log('PHP Version', PHP_VERSION);
         $this->debug->log('Server API', PHP_SAPI);
         if ($buildDate) {
@@ -359,22 +363,5 @@ class LogPhp implements SubscriberInterface
             $msg .= ' (mode: ' . (\ini_get('xdebug.mode') ?: 'off') . ')';
         }
         $this->debug->log($msg);
-    }
-
-    /**
-     * Return the build date of the PHP binary
-     *
-     * @return string|null
-     */
-    protected function phpBuildDate()
-    {
-        \ob_start();
-        \phpinfo(INFO_GENERAL);
-        $phpInfo = \ob_get_clean();
-        $phpInfo = \strip_tags($phpInfo);
-        \preg_match('/Build Date (?:=> )?([^\n]*)/', $phpInfo, $matches);
-        return $matches
-            ? $matches[1]
-            : null;
     }
 }

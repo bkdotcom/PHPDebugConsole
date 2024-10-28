@@ -15,6 +15,7 @@ namespace bdk\Debug\Abstraction\Object;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
 use bdk\Debug\Abstraction\Object\Abstraction as ObjectAbstraction;
+use bdk\Debug\Utility;
 use bdk\Debug\Utility\Php as PhpUtil;
 use bdk\Debug\Utility\PhpDoc;
 use ReflectionAttribute;
@@ -216,7 +217,7 @@ class Helper
      */
     protected static function getTypeString($type = null)
     {
-        PhpUtil::assertType($type, 'ReflectionType');
+        Utility::assertType($type, 'ReflectionType');
         if ($type === null) {
             return null;
         }

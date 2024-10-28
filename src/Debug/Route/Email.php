@@ -63,7 +63,7 @@ class Email implements RouteInterface
      */
     public function processLogEntries($event = null)
     {
-        $this->debug->php->assertType($event, 'bdk\PubSub\Event');
+        $this->debug->utility->assertType($event, 'bdk\PubSub\Event');
 
         $debug = $event->getSubject();
         $this->debug->email(

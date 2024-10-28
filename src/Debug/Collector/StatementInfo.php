@@ -102,8 +102,8 @@ class StatementInfo extends AbstractComponent
      */
     public function __construct($sql, $params = array(), $types = array())
     {
-        \bdk\Debug\Utility\Php::assertType($params, 'array');
-        \bdk\Debug\Utility\Php::assertType($types, 'array');
+        \bdk\Debug\Utility::assertType($params, 'array');
+        \bdk\Debug\Utility::assertType($types, 'array');
 
         $this->memoryStart = \memory_get_usage(false);
         $this->params = $params ?: array();
@@ -180,7 +180,7 @@ class StatementInfo extends AbstractComponent
      */
     public function end($exception = null, $rowCount = null)
     {
-        \bdk\Debug\Utility\Php::assertType($exception, 'Exception');
+        \bdk\Debug\Utility::assertType($exception, 'Exception');
 
         $this->exception = $exception;
         $this->rowCount = $rowCount;

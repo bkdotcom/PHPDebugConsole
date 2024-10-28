@@ -249,7 +249,7 @@ class Wamp implements RouteInterface
      */
     public function processLogEntries($event = null) // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
     {
-        $this->debug->php->assertType($event, 'bdk\PubSub\Event');
+        $this->debug->utility->assertType($event, 'bdk\PubSub\Event');
 
         $data = $this->debug->data->get();
         foreach ($data['alerts'] as $logEntry) {

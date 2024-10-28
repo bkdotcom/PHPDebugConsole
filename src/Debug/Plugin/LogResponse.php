@@ -13,6 +13,7 @@
 namespace bdk\Debug\Plugin;
 
 use bdk\Debug;
+use bdk\HttpMessage\Utility\Stream as StreamUtility;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
 
@@ -126,7 +127,7 @@ class LogResponse extends AbstractLogReqRes implements SubscriberInterface
         $contentLength = \strlen($content);
         if ($this->debug->response) {
             $content = $this->debug->response->getBody();
-            $contentLength = $content->getSize() ?: \strlen($this->debug->utility->getStreamContents($content));
+            $contentLength = $content->getSize() ?: \strlen(StreamUtility::getContents($content));
         }
         return array(
             'content' => $content,

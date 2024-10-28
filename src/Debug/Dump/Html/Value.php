@@ -70,7 +70,7 @@ class Value extends BaseValue
      */
     public function checkTimestamp($val, $abs = null)
     {
-        \bdk\Debug\Utility\Php::assertType($abs, 'bdk\Debug\Abstraction\Abstraction');
+        $this->debug->utility->assertType($abs, 'bdk\Debug\Abstraction\Abstraction');
 
         $date = parent::checkTimestamp($val, $abs);
         if ($date) {
@@ -225,7 +225,7 @@ class Value extends BaseValue
      */
     protected function dumpFloat($val, $abs = null)
     {
-        \bdk\Debug\Utility\Php::assertType($abs, 'bdk\Debug\Abstraction\Abstraction');
+        $this->debug->utility->assertType($abs, 'bdk\Debug\Abstraction\Abstraction');
 
         if ($val === Type::TYPE_FLOAT_INF) {
             return 'INF';
@@ -295,7 +295,7 @@ class Value extends BaseValue
      */
     protected function dumpString($val, $abs = null)
     {
-        \bdk\Debug\Utility\Php::assertType($abs, 'bdk\Debug\Abstraction\Abstraction');
+        $this->debug->utility->assertType($abs, 'bdk\Debug\Abstraction\Abstraction');
 
         return $this->string->dump($val, $abs);
     }

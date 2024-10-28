@@ -13,8 +13,8 @@
 namespace bdk\Debug;
 
 use bdk\Debug;
-use Exception;
-use Psr\Http\Message\StreamInterface;
+use bdk\Debug\Utility\Php as PhpUtil;
+use InvalidArgumentException;
 use RuntimeException;
 
 /**
@@ -22,6 +22,36 @@ use RuntimeException;
  */
 class Utility
 {
+    /**
+     * Assert that a value is of a certain type
+     *
+     * PHPDebugConsole supports an extreme range of PHP versions : 5.4 - 8.4 (and beyond)
+     * `func(MyObj $obj = null)` has been deprecated in PHP 8.4
+     * must now be `func(?MyObj $obj = null)` (which is a php 7.1 feature)
+     * Workaround - remove type-hint when we allow null (not ideal) and call assertType
+     * When we drop support for php < 7.1, we can remove this method and do proper type-hinting
+     *
+     * @param mixed  $value     Value to test
+     * @param string $type      "array", "callable", "object", or className
+     * @param bool   $allowNull (true) allow null?
+     *
+     * @return void
+     *
+     * @throws InvalidArgumentException
+     */
+    public static function assertType($value, $type, $allowNull = true)
+    {
+        if (($allowNull && $value === null) || self::assertTypeCheck($value, $type)) {
+            return;
+        }
+        throw new InvalidArgumentException(\sprintf(
+            'Expected %s%s, got %s',
+            $type,
+            $allowNull ? ' (or null)' : '',
+            PhpUtil::getDebugType($value)
+        ));
+    }
+
     /**
      * Emit headers queued for output directly using `header()`
      *
@@ -143,6 +173,8 @@ class Utility
     /**
      * Returns sent/pending response headers
      *
+     * It is preferred to use PSR-7 (Http-Messaage) response interface over this method
+     *
      * The keys represent the header name as it will be sent over the wire, and
      * each value is an array of strings associated with the header.
      *
@@ -158,27 +190,6 @@ class Utility
             $headers[$key][] = $value;
         }
         return $headers;
-    }
-
-    /**
-     * Get stream contents without affecting pointer
-     *
-     * @param StreamInterface $stream StreamInterface
-     *
-     * @return string
-     */
-    public static function getStreamContents(StreamInterface $stream)
-    {
-        try {
-            $pos = $stream->tell();
-            $body = (string) $stream; // __toString() is like getContents(), but without throwing exceptions
-            $stream->seek($pos);
-            return $body;
-            // @codeCoverageIgnoreStart
-        } catch (Exception $e) {
-            return '';
-            // @codeCoverageIgnoreEnd
-        }
     }
 
     /**
@@ -276,6 +287,28 @@ class Utility
                 : \strnatcasecmp($dirA, $dirB);
         });
         return $files;
+    }
+
+    /**
+     * Test if value is of a certain type
+     *
+     * @param mixed  $value Value to test
+     * @param string $type  "array", "callable", "object", or className
+     *
+     * @return bool
+     */
+    private static function assertTypeCheck($value, $type)
+    {
+        switch ($type) {
+            case 'array':
+                return \is_array($value);
+            case 'callable':
+                return \is_callable($value);
+            case 'object':
+                return \is_object($value);
+            default:
+                return \is_a($value, $type);
+        }
     }
 
     /**

@@ -68,7 +68,7 @@ class LogRoute extends CLogRoute
      */
     public function __construct($debug = null, $opts = array())
     {
-        \bdk\Debug\Utility\Php::assertType($debug, 'bdk\Debug');
+        \bdk\Debug\Utility::assertType($debug, 'bdk\Debug');
 
         if (!$debug) {
             $debug = Debug::getChannel('Yii');

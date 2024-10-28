@@ -89,7 +89,7 @@ class HtmlString
      */
     public function dump($val, $abs = null)
     {
-        \bdk\Debug\Utility\Php::assertType($abs, 'bdk\Debug\Abstraction\Abstraction');
+        $this->debug->utility->assertType($abs, 'bdk\Debug\Abstraction\Abstraction');
 
         if (\is_numeric($val)) {
             $this->valDumper->checkTimestamp($val, $abs);

@@ -30,7 +30,7 @@ class GuzzleMiddleware extends AbstractAsyncMiddleware
      */
     public function __construct($cfg = array(), $debug = null)
     {
-        \bdk\Debug\Utility\Php::assertType($debug, 'bdk\Debug');
+        \bdk\Debug\Utility::assertType($debug, 'bdk\Debug');
 
         $this->cfg = \array_merge($this->cfg, array(
             'idPrefix' => 'guzzle_',

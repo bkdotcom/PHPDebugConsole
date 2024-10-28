@@ -87,7 +87,7 @@ class Table
      */
     public function __construct($rows = array(), array $meta = array(), $debug = null)
     {
-        \bdk\Debug\Utility\Php::assertType($debug, 'bdk\Debug');
+        \bdk\Debug\Utility::assertType($debug, 'bdk\Debug');
 
         $this->debug = $debug ?: Debug::getInstance();
         $this->initMeta($meta);

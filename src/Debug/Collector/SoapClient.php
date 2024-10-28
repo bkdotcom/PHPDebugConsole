@@ -56,7 +56,7 @@ class SoapClient extends SoapClientBase
      */
     public function __construct($wsdl, $options = array(), $debug = null)
     {
-        \bdk\Debug\Utility\Php::assertType($debug, 'bdk\Debug');
+        \bdk\Debug\Utility::assertType($debug, 'bdk\Debug');
 
         if (!$debug) {
             $debug = Debug::getChannel('Soap', array('channelIcon' => $this->icon));
@@ -269,7 +269,7 @@ class SoapClient extends SoapClientBase
      */
     private function logConstruct($wsdl, $options, $exception = null)
     {
-        \bdk\Debug\Utility\Php::assertType($exception, 'Exception');
+        \bdk\Debug\Utility::assertType($exception, 'Exception');
 
         $this->debug->groupCollapsed('SoapClient::__construct', $wsdl ?: 'non-WSDL mode', $this->debug->meta('icon', $this->icon));
         if ($wsdl && !empty($options['list_functions'])) {
@@ -305,7 +305,7 @@ class SoapClient extends SoapClientBase
      */
     private function logReqRes($action, $exception = null, $logParsedFault = false)
     {
-        \bdk\Debug\Utility\Php::assertType($exception, 'Exception');
+        \bdk\Debug\Utility::assertType($exception, 'Exception');
 
         $fault = null;
         $xmlRequest = $this->debugGetXmlRequest($action);

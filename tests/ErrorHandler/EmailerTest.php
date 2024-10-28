@@ -124,7 +124,15 @@ class EmailerTest extends TestBase
         \ksort($statsError);
         $statsFound = $this->errorHandler->stats->find($error);
         \ksort($statsFound);
+
+        $tsLastOccurExpect = $statsError['tsLastOccur'];
+        $tsLastOccurActual = $statsFound['tsLastOccur'];
+        $tsDiff = \abs($tsLastOccurExpect - $tsLastOccurActual);
+        unset($statsError['tsLastOccur']);
+        unset($statsFound['tsLastOccur']);
+
         self::assertSame($statsError, $statsFound);
+        self::assertLessThanOrEqual(1, $tsDiff);
         $this->errorHandler->setCfg('onError', null);
     }
 

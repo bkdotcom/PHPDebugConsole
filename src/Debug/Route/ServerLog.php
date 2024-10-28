@@ -63,7 +63,7 @@ class ServerLog extends ChromeLogger
      */
     public function processLogEntries($event = null)
     {
-        $this->debug->php->assertType($event, 'bdk\PubSub\Event');
+        $this->debug->utility->assertType($event, 'bdk\PubSub\Event');
 
         $this->dumper->crateRaw = false;
         $this->collectGarbage();

@@ -243,7 +243,7 @@ abstract class AbstractDebug
      */
     public function publishBubbleEvent($eventName, Event $event, $debug = null)
     {
-        $this->php->assertType($debug, 'bdk\Debug');
+        $this->utility->assertType($debug, 'bdk\Debug');
         if ($debug === null) {
             $subject = $event->getSubject();
             /** @var Debug */

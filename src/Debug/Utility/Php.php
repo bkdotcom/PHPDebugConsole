@@ -14,7 +14,6 @@ namespace bdk\Debug\Utility;
 
 use bdk\Debug\Utility\Reflection;
 use Exception;
-use InvalidArgumentException;
 use UnitEnum;
 
 /**
@@ -31,33 +30,20 @@ class Php
     protected static $allowedClasses = [];
 
     /**
-     * Assert that a value is of a certain type
+     * Return the build date of the PHP binary
      *
-     * PHPDebugConsole supports an extreme range of PHP versions : 5.4 - 8.4 (and beyond)
-     * `func(MyObj $obj = null)` has been deprecated in PHP 8.4
-     * must now be `func(?MyObj $obj = null)` (which is a php 7.1 feature)
-     * Workaround - remove type-hint when we allow null (not ideal) and call assertType
-     * When we drop support for php < 7.1, we can remove this method and do proper type-hinting
-     *
-     * @param mixed  $value     Value to test
-     * @param string $type      "array", "callable", "object", or className
-     * @param bool   $allowNull (true) allow null?
-     *
-     * @return void
-     *
-     * @throws InvalidArgumentException
+     * @return string|null
      */
-    public static function assertType($value, $type, $allowNull = true)
+    public function buildDate()
     {
-        if (($allowNull && $value === null) || self::assertTypeCheck($value, $type)) {
-            return;
-        }
-        throw new InvalidArgumentException(\sprintf(
-            'Expected %s%s, got %s',
-            $type,
-            $allowNull ? ' (or null)' : '',
-            self::getDebugType($value)
-        ));
+        \ob_start();
+        \phpinfo(INFO_GENERAL);
+        $phpInfo = \ob_get_clean();
+        $phpInfo = \strip_tags($phpInfo);
+        \preg_match('/Build Date (?:=> )?([^\n]*)/', $phpInfo, $matches);
+        return $matches
+            ? $matches[1]
+            : null;
     }
 
     /**
@@ -238,28 +224,6 @@ class Php
         }
         $serialized = self::unserializeSafeModify($serialized);
         return \unserialize($serialized);
-    }
-
-    /**
-     * Test if value is of a certain type
-     *
-     * @param mixed  $value Value to test
-     * @param string $type  "array", "callable", "object", or className
-     *
-     * @return bool
-     */
-    private static function assertTypeCheck($value, $type)
-    {
-        switch ($type) {
-            case 'array':
-                return \is_array($value);
-            case 'callable':
-                return \is_callable($value);
-            case 'object':
-                return \is_object($value);
-            default:
-                return \is_a($value, $type);
-        }
     }
 
     /**

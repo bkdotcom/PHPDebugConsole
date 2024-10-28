@@ -115,7 +115,7 @@ class Value extends TextValue
      */
     protected function dumpArray(array $array, $abs = null)
     {
-        \bdk\Debug\Utility\Php::assertType($abs, 'bdk\Debug\Abstraction\Abstraction');
+        $this->debug->utility->assertType($abs, 'bdk\Debug\Abstraction\Abstraction');
 
         $this->valDepth++;
         $isNested = $this->valDepth > 0;
@@ -193,7 +193,7 @@ class Value extends TextValue
      */
     protected function dumpFloat($val, $abs = null)
     {
-        \bdk\Debug\Utility\Php::assertType($abs, 'bdk\Debug\Abstraction\Abstraction');
+        $this->debug->utility->assertType($abs, 'bdk\Debug\Abstraction\Abstraction');
 
         if ($val === Type::TYPE_FLOAT_INF) {
             $val = 'INF';
@@ -263,7 +263,7 @@ class Value extends TextValue
      */
     protected function dumpString($val, $abs = null)
     {
-        \bdk\Debug\Utility\Php::assertType($abs, 'bdk\Debug\Abstraction\Abstraction');
+        $this->debug->utility->assertType($abs, 'bdk\Debug\Abstraction\Abstraction');
 
         if (\is_numeric($val)) {
             return $this->dumpStringNumeric($val, $abs);
@@ -337,7 +337,7 @@ class Value extends TextValue
      */
     private function dumpStringNumeric($val, $abs = null)
     {
-        \bdk\Debug\Utility\Php::assertType($abs, 'bdk\Debug\Abstraction\Abstraction');
+        $this->debug->utility->assertType($abs, 'bdk\Debug\Abstraction\Abstraction');
 
         $escapeCodes = $this->cfg['escapeCodes'];
         $date = $this->checkTimestamp($val, $abs);

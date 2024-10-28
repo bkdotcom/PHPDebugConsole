@@ -82,7 +82,7 @@ class Value extends BaseValue
      */
     protected function dumpArray(array $array, $abs = null)
     {
-        \bdk\Debug\Utility\Php::assertType($abs, 'bdk\Debug\Abstraction\Abstraction');
+        $this->debug->utility->assertType($abs, 'bdk\Debug\Abstraction\Abstraction');
 
         $isNested = $this->valDepth > 0;
         $this->valDepth++;
@@ -120,7 +120,7 @@ class Value extends BaseValue
      */
     protected function dumpFloat($val, $abs = null)
     {
-        \bdk\Debug\Utility\Php::assertType($abs, 'bdk\Debug\Abstraction\Abstraction');
+        $this->debug->utility->assertType($abs, 'bdk\Debug\Abstraction\Abstraction');
 
         if ($val === Type::TYPE_FLOAT_INF) {
             return 'INF';
@@ -166,7 +166,7 @@ class Value extends BaseValue
      */
     protected function dumpString($val, $abs = null)
     {
-        \bdk\Debug\Utility\Php::assertType($abs, 'bdk\Debug\Abstraction\Abstraction');
+        $this->debug->utility->assertType($abs, 'bdk\Debug\Abstraction\Abstraction');
 
         $date = \is_numeric($val)
             ? $this->checkTimestamp($val, $abs)

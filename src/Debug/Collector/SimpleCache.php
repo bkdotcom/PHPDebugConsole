@@ -53,7 +53,7 @@ class SimpleCache implements CacheInterface
      */
     public function __construct(CacheInterface $cache, $debug = null)
     {
-        \bdk\Debug\Utility\Php::assertType($debug, 'bdk\Debug');
+        \bdk\Debug\Utility::assertType($debug, 'bdk\Debug');
 
         if (!$debug) {
             $debug = Debug::getChannel('SimpleCache', array('channelIcon' => $this->icon));

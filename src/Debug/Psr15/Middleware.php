@@ -40,7 +40,7 @@ class Middleware extends AbstractComponent implements MiddlewareInterface
      */
     public function __construct($debug = null, $cfg = array())
     {
-        \bdk\Debug\Utility\Php::assertType($debug, 'bdk\Debug');
+        \bdk\Debug\Utility::assertType($debug, 'bdk\Debug');
 
         $this->debug = $debug ?: Debug::getInstance();
         $this->cfg = \array_merge(array(

@@ -47,22 +47,23 @@ class LogPhpTest extends DebugTestFramework
         $logPhp->onBootstrap(new Event($this->debug));
 
         $logEntries = $this->helper->deObjectifyData($this->debug->data->get('log'));
-        self::assertStringMatchesFormat(
-            \json_encode(['PHP Version', PHP_VERSION]),
-            \json_encode($logEntries[0]['args'])
+
+        $tests = array(
+            ['PHP Version', PHP_VERSION],
+            ['Server API', PHP_SAPI],
+            ['Build Date', '%s'], // php >= 7.0
+            ['Thread Safe', PHP_ZTS ? 'yes' : 'no'],
         );
-        self::assertStringMatchesFormat(
-            \json_encode(['Server API', PHP_SAPI]),
-            \json_encode($logEntries[1]['args'])
-        );
-        self::assertStringMatchesFormat(
-            \json_encode(['Build Date', '%s']),
-            \json_encode($logEntries[2]['args'])
-        );
-        self::assertStringMatchesFormat(
-            \json_encode(['Thread Safe', PHP_ZTS ? 'yes' : 'no']),
-            \json_encode($logEntries[3]['args'])
-        );
+        $buildDate = $this->debug->php->buildDate();
+        if ($buildDate === null) {
+            \array_splice($tests, 2, 1);
+        }
+        foreach ($tests as $i => $expectArgs) {
+            self::assertStringMatchesFormat(
+                \json_encode($expectArgs),
+                \json_encode($logEntries[$i]['args'])
+            );
+        }
 
         $found = array(
             'dateTimezone' => null,

@@ -41,7 +41,7 @@ class EventsSubscriber
      */
     public function __construct($debug = null)
     {
-        \bdk\Debug\Utility\Php::assertType($debug, 'bdk\Debug');
+        \bdk\Debug\Utility::assertType($debug, 'bdk\Debug');
 
         $channelOptions = array(
             'channelIcon' => $this->icon,

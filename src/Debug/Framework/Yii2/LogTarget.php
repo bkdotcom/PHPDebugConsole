@@ -51,7 +51,7 @@ class LogTarget extends Target
      */
     public function __construct($debug = null, $config = array())
     {
-        \bdk\Debug\Utility\Php::assertType($debug, 'bdk\Debug');
+        \bdk\Debug\Utility::assertType($debug, 'bdk\Debug');
 
         if (!$debug) {
             $debug = Debug::getChannel('Yii');

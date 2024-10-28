@@ -128,7 +128,7 @@ class Factory
      */
     public static function buildStack($handler = null)
     {
-        \bdk\Debug\Utility\Php::assertType($handler, 'callable');
+        \bdk\Debug\Utility::assertType($handler, 'callable');
         if ($handler === null) {
             $syncHandler = new Curl();
             $asyncHandler = new CurlMulti();

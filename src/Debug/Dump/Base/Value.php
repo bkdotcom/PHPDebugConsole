@@ -48,7 +48,7 @@ class Value extends AbstractValue
      */
     protected function dumpArray(array $array, $abs = null)
     {
-        \bdk\Debug\Utility\Php::assertType($abs, 'bdk\Debug\Abstraction\Abstraction');
+        $this->debug->utility->assertType($abs, 'bdk\Debug\Abstraction\Abstraction');
 
         if ($this->optionGet('isMaxDepth')) {
             return 'array *MAX DEPTH*';
@@ -93,7 +93,7 @@ class Value extends AbstractValue
      */
     protected function dumpFloat($val, $abs = null)
     {
-        \bdk\Debug\Utility\Php::assertType($abs, 'bdk\Debug\Abstraction\Abstraction');
+        $this->debug->utility->assertType($abs, 'bdk\Debug\Abstraction\Abstraction');
 
         $date = $this->checkTimestamp($val, $abs);
         return $date
@@ -118,7 +118,7 @@ class Value extends AbstractValue
      */
     protected function dumpInt($val, $abs = null)
     {
-        \bdk\Debug\Utility\Php::assertType($abs, 'bdk\Debug\Abstraction\Abstraction');
+        $this->debug->utility->assertType($abs, 'bdk\Debug\Abstraction\Abstraction');
 
         $val = $this->dumpFloat($val, $abs);
         return \is_string($val)
@@ -183,7 +183,7 @@ class Value extends AbstractValue
      */
     protected function dumpString($val, $abs = null)
     {
-        \bdk\Debug\Utility\Php::assertType($abs, 'bdk\Debug\Abstraction\Abstraction');
+        $this->debug->utility->assertType($abs, 'bdk\Debug\Abstraction\Abstraction');
 
         if (\is_numeric($val)) {
             $date = $this->checkTimestamp($val, $abs);

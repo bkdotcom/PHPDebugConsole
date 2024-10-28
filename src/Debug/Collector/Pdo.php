@@ -46,7 +46,7 @@ class Pdo extends PdoBase
      */
     public function __construct(PdoBase $pdo, $debug = null)
     {
-        \bdk\Debug\Utility\Php::assertType($debug, 'bdk\Debug');
+        \bdk\Debug\Utility::assertType($debug, 'bdk\Debug');
 
         if (!$debug) {
             $debug = Debug::getChannel('PDO', array('channelIcon' => $this->icon));

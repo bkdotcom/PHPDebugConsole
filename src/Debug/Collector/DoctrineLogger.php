@@ -52,8 +52,8 @@ class DoctrineLogger implements SQLLoggerInterface
      */
     public function __construct($connection = null, $debug = null)
     {
-        \bdk\Debug\Utility\Php::assertType($connection, 'Doctrine\DBAL\Connection');
-        \bdk\Debug\Utility\Php::assertType($debug, 'bdk\Debug');
+        \bdk\Debug\Utility::assertType($connection, 'Doctrine\DBAL\Connection');
+        \bdk\Debug\Utility::assertType($debug, 'bdk\Debug');
 
         if (!$debug) {
             $debug = Debug::getChannel('Doctrine', array('channelIcon' => $this->icon));

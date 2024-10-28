@@ -14,6 +14,7 @@ namespace bdk\Debug\Plugin;
 
 use bdk\Debug;
 use bdk\HttpMessage\Utility\ContentType;
+use bdk\HttpMessage\Utility\Stream as StreamUtility;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
 
@@ -131,7 +132,7 @@ class LogRequest extends AbstractLogReqRes implements SubscriberInterface
     private function logInput($method, $contentType)
     {
         $request = $this->debug->serverRequest;
-        $input = $this->debug->utility->getStreamContents($request->getBody());
+        $input = StreamUtility::getContents($request->getBody());
         $methodExpectBody = $this->debug->utility->httpMethodHasBody($method);
         $logInput = $input
             || $methodExpectBody
@@ -170,7 +171,7 @@ class LogRequest extends AbstractLogReqRes implements SubscriberInterface
         $method = $request->getMethod();
         $mediaTypeUser = (string) $request->getMediaType();
         $mediaType = $this->detectContentType(
-            $this->debug->utility->getStreamContents($request->getBody()),
+            StreamUtility::getContents($request->getBody()),
             $mediaTypeUser
         );
         $parsedBody = $request->getParsedBody();

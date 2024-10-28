@@ -12,7 +12,7 @@
 
 namespace bdk\Debug\Utility;
 
-use bdk\Debug\Utility;
+use bdk\HttpMessage\Utility\Stream as StreamUtility;
 use bdk\Debug\Utility\StringUtilHelperTrait;
 use bdk\HttpMessage\Utility\ContentType;
 use DOMDocument;
@@ -94,7 +94,7 @@ class StringUtil
     public static function contentType($val)
     {
         if ($val instanceof StreamInterface) {
-            $val = Utility::getStreamContents($val);
+            $val = StreamUtility::getContents($val);
         }
         $finfo = new finfo(FILEINFO_MIME_TYPE);
         $contentType = $finfo->buffer($val);

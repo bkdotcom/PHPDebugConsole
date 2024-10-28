@@ -46,7 +46,7 @@ class PdoCollector
      */
     public function collect($dbConnection = null)
     {
-        \bdk\Debug\Utility\Php::assertType($dbConnection, 'CDbConnection');
+        \bdk\Debug\Utility::assertType($dbConnection, 'CDbConnection');
 
         if ($this->component->shouldCollect('pdo') === false) {
             return;

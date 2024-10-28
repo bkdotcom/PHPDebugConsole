@@ -20,7 +20,7 @@ require __DIR__ . '/Debug/Fixture/ConfusableIdentifiers.php';
 
 \spl_autoload_register(static function ($className) {
     if ($className === 'Doctrine\DBAL\Logging\SQLLogger') {
-        require __DIR__ . '/Debug/Mock/SqlLogger.php';
+        require __DIR__ . '/Debug/Mock/SQLLogger.php';
     }
 });
 

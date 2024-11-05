@@ -71,8 +71,6 @@ class OAuthTest extends DebugTestFramework
                         'oauth_timestamp' => array(
                             'brief' => false,
                             'debug' => Abstracter::ABSTRACTION,
-                            // 'strlen' => 10,
-                            // 'strlenValue' => 10,
                             'type' => Type::TYPE_STRING,
                             'typeMore' => Type::TYPE_TIMESTAMP,
                             'value' => '%d'
@@ -359,8 +357,6 @@ class OAuthTest extends DebugTestFramework
                         'oauth_timestamp' => array(
                             'brief' => false,
                             'debug' => Abstracter::ABSTRACTION,
-                            // 'strlen' => 10,
-                            // 'strlenValue' => 10,
                             'type' => Type::TYPE_STRING,
                             'typeMore' => Type::TYPE_TIMESTAMP,
                             'value' => '%d',
@@ -462,8 +458,6 @@ class OAuthTest extends DebugTestFramework
                         'oauth_timestamp' => array(
                             'brief' => false,
                             'debug' => Abstracter::ABSTRACTION,
-                            // 'strlen' => 10,
-                            // 'strlenValue' => 10,
                             'type' => Type::TYPE_STRING,
                             'typeMore' => Type::TYPE_TIMESTAMP,
                             'value' => '%s',

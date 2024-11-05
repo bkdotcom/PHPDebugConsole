@@ -187,6 +187,7 @@ class Abstracter extends AbstractComponent
         $typeInfo = $typeInfo['type']
             ? \array_values($typeInfo)
             : array();
+        unset($values['type']);
         $abs = $this->getAbstraction($mixed, __FUNCTION__, $typeInfo);
         foreach ($values as $k => $v) {
             $abs[$k] = $v;

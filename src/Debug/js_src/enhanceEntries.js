@@ -82,6 +82,7 @@ export function enhanceValue (node, $entry) {
 function addIcons ($node) {
   var $caption
   var $icon = determineIcon($node)
+  var isNested = false
   addIconsMisc($node)
   if (!$icon) {
     return
@@ -91,8 +92,10 @@ function addIcons ($node) {
     $node = $node.find('> .group-header .group-label').eq(0)
   } else if ($node.find('> table').length) {
     // table... we'll prepend icon to caption
+    isNested = $node.parent('.no-indent').length > 0
     $caption = $node.find('> table > caption')
-    if (!$caption.length) {
+    if ($caption.length === 0 && isNested === false) {
+      // add caption
       $caption = $('<caption>')
       $node.find('> table').prepend($caption)
     }

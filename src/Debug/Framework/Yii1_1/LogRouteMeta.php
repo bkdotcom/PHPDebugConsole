@@ -214,20 +214,33 @@ class LogRouteMeta
      */
     private function messageMetaTrace(array $logEntry)
     {
-        $haveTrace = $logEntry['level'] === CLogger::LEVEL_TRACE || (YII_DEBUG && YII_TRACE_LEVEL > 0);
-        if ($haveTrace) {
+        $checkTrace = $logEntry['level'] === CLogger::LEVEL_TRACE || (YII_DEBUG && YII_TRACE_LEVEL > 0);
+        if ($checkTrace) {
             $logEntry = $this->parseTrace($logEntry);
         }
-        if (!empty($logEntry['meta']['trace'])) {
-            $logEntry['meta']['file'] = $logEntry['meta']['trace'][0]['file'];
-            $logEntry['meta']['line'] = $logEntry['meta']['trace'][0]['line'];
+        if (empty($logEntry['meta']['trace'])) {
+            return $logEntry;
         }
+        $logEntry['meta']['file'] = $logEntry['meta']['trace'][0]['file'];
+        $logEntry['meta']['line'] = $logEntry['meta']['trace'][0]['line'];
+        // only keep trace info for trace & error levels
+        if (\in_array($logEntry['level'], [CLogger::LEVEL_TRACE, CLogger::LEVEL_ERROR], true) === false) {
+            unset($logEntry['meta']['trace']);
+            return $logEntry;
+        }
+        $logEntry['meta']['tableInfo'] = array(
+            'columns' => [
+                array('key' => 'file'),
+                array('key' => 'line'),
+            ],
+        );
         return $logEntry;
     }
 
     /**
      * Yii's logger appends trace info to log message as a string
-     * extract it and move to `meta['trace']`
+     *
+     * Extract it from message and move to `meta['trace']`
      *
      * @param array $logEntry key/valued logEntry
      *

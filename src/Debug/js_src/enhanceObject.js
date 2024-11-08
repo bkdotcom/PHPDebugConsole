@@ -16,31 +16,37 @@ export function init ($delegateNode) {
 
 function addIcons ($node) {
   $.each(config.iconsObject, function (selector, v) {
-    var sMatches = selector.match(/(?:parent(\S+)\s)?(?:context(\S+)\s)?(.*)$/)
+    var $found = addIconFind($node, selector)
     var vMatches = typeof v === 'string'
       ? v.match(/^([ap])\s*:(.+)$/)
       : null
     var prepend = !vMatches || vMatches[1] === 'p'
-    var $found
-    if (sMatches) {
-      if (sMatches[1] && $node.parent().filter(sMatches[1]).length === 0) {
-        return
-      }
-      if (sMatches[2]) {
-        $node = $node.filter(sMatches[2])
-      }
-      selector = sMatches[3]
-    }
     if (vMatches) {
       v = vMatches[2]
     }
-    $found = $node.find(selector)
     if (prepend) {
       addIconPrepend($found, v)
       return
     }
     $found.append(v)
   })
+}
+
+function addIconFind ($node, selector) {
+  var sMatches = selector.match(/(?:parent(:\S+)\s)?(?:context(\S+)\s)?(.*)$/)
+  if (sMatches === null) {
+    return $node.find(selector)
+  }
+  if (sMatches[1] && $node.parent().filter(sMatches[1]).length === 0) {
+    // no matches on parent selector.
+    return $()
+  }
+  selector = sMatches[3]
+  if (sMatches[2]) {
+    // think of this as scss/sass's & selector
+    return $node.filter(sMatches[2]).find(selector)
+  }
+  return $node.find(selector)
 }
 
 function addIconPrepend ($dest, icon) {

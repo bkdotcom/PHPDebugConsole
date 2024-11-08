@@ -252,18 +252,31 @@ class FindExit
                 'file' => null,
                 'function' => '',
             ), $frame);
-            if (\strpos($frame['function'], 'call_user_func:') === 0) {
-                continue;
-            }
-            if (\in_array($frame['class'], $this->classesSkip, true)) {
-                continue;
-            }
-            if ($this->isFrameInternal($frame) === false) {
+            $found = $this->getLastFrameTest($frame);
+            if ($found) {
                 break;
             }
         }
         \ini_set('xdebug.var_display_max_depth', $maxDepthBak);
         return $frame;
+    }
+
+    /**
+     * Test if frame is "non-internal"
+     *
+     * @param array $frame Backtrace frame
+     *
+     * @return bool true if frame is not skipped and is internal
+     */
+    private function getLastFrameTest(array $frame)
+    {
+        if (\strpos($frame['function'], 'call_user_func:') === 0) {
+            return false;
+        }
+        if (\in_array($frame['class'], $this->classesSkip, true)) {
+            return false;
+        }
+        return $this->isFrameInternal($frame) === false;
     }
 
     /**

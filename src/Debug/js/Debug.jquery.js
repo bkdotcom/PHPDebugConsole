@@ -111,31 +111,37 @@
 
   function addIcons ($node) {
     $.each(config$1.iconsObject, function (selector, v) {
-      var sMatches = selector.match(/(?:parent(\S+)\s)?(?:context(\S+)\s)?(.*)$/);
+      var $found = addIconFind($node, selector);
       var vMatches = typeof v === 'string'
         ? v.match(/^([ap])\s*:(.+)$/)
         : null;
       var prepend = !vMatches || vMatches[1] === 'p';
-      var $found;
-      if (sMatches) {
-        if (sMatches[1] && $node.parent().filter(sMatches[1]).length === 0) {
-          return
-        }
-        if (sMatches[2]) {
-          $node = $node.filter(sMatches[2]);
-        }
-        selector = sMatches[3];
-      }
       if (vMatches) {
         v = vMatches[2];
       }
-      $found = $node.find(selector);
       if (prepend) {
         addIconPrepend($found, v);
         return
       }
       $found.append(v);
     });
+  }
+
+  function addIconFind ($node, selector) {
+    var sMatches = selector.match(/(?:parent(:\S+)\s)?(?:context(\S+)\s)?(.*)$/);
+    if (sMatches === null) {
+      return $node.find(selector)
+    }
+    if (sMatches[1] && $node.parent().filter(sMatches[1]).length === 0) {
+      // no matches on parent selector.
+      return $()
+    }
+    selector = sMatches[3];
+    if (sMatches[2]) {
+      // think of this as scss/sass's & selector
+      return $node.filter(sMatches[2]).find(selector)
+    }
+    return $node.find(selector)
   }
 
   function addIconPrepend ($dest, icon) {
@@ -729,7 +735,8 @@
   function createFileLink (string, remove, foundFiles) {
     var $replace;
     var $string = $(string);
-    var attrs = string.attributes;
+    var attrs = string.attributes; // attrs is not a plain object, but an array of attribute nodes
+                                  //    which contain both the name and value
     var text = $.trim($string.text());
     var matches = createFileLinkMatches($string, foundFiles);
     var isUpdate = remove !== true && $string.hasClass('file-link');
@@ -738,7 +745,7 @@
       create($string.closest('.m_trace'));
       return
     }
-    if (!matches.length) {
+    if (matches.length < 1) {
       return
     }
 
@@ -754,21 +761,17 @@
       replace: $replace[0].outerHTML
     })
     */
-    /*
-      attrs is not a plain object, but an array of attribute nodes
-      which contain both the name and value
-    */
     if (isUpdate === false) {
       createFileLinkUpdateAttr($string, $replace, attrs);
     }
-    if ($string.is('td, th, li')) {
-      $string.html(remove
-        ? text
-        : $replace
-      );
+    if ($string.is('td, th, li') === false) {
+      $string.replaceWith($replace);
       return
     }
-    $string.replaceWith($replace);
+    $string.html(remove
+      ? text
+      : $replace
+    );
   }
 
   function createFileLinkUpdateAttr ($string, $replace, attrs) {
@@ -969,20 +972,25 @@
   function determineIcon ($node) {
     var $icon;
     var $node2;
-    var selector;
     if ($node.data('icon')) {
       return $node.data('icon').match('<')
         ? $($node.data('icon'))
         : $('<i>').addClass($node.data('icon'))
     }
     if ($node.hasClass('m_group')) {
-      return $icon
+      return $icon // undefined / groupIcon will be added separately
     }
     $node2 = $node.hasClass('group-header')
       ? $node.parent()
       : $node;
+    return determineIconFromConfig($node2)
+  }
+
+  function determineIconFromConfig ($node) {
+    var $icon;
+    var selector;
     for (selector in config$3.iconsMethods) {
-      if ($node2.is(selector)) {
+      if ($node.is(selector)) {
         $icon = $(config$3.iconsMethods[selector]);
         break
       }
@@ -1970,11 +1978,13 @@
       // start with (add) if there are other channels
       // console.log('buildChannelLi name root', nameRoot)
       $ul.append(buildChannelLi(
-        nameRoot, // name
+        {
+          name: nameRoot,
+          options: {},
+        },
         nameRoot, // value
         true, // isChecked
-        true, // isRoot
-        {} // options
+        true // isRoot
       ));
     }
     $lis = buildChannelLis(channels, nameRoot, checkedChannels, prepend);
@@ -2008,14 +2018,14 @@
         return
       }
       channel = channels[channelName];
+      channel.name = channelName;
       $li = buildChannelLi(
-        channelName,
+        channel,
         value,
         checkedChannels !== undefined
           ? checkedChannels.indexOf(value) > -1
           : channel.options.show,
-        channelName === nameRoot,
-        channel.options
+        channelName === nameRoot
       );
       if (Object.keys(channel.channels).length) {
         $li.append(buildChannelList(channel.channels, nameRoot, checkedChannels, value + '.'));
@@ -2028,7 +2038,7 @@
   /**
    * Build a single LI element without any children
    */
-  function buildChannelLi (channelName, value, isChecked, isRoot, options) {
+  function buildChannelLi (channel, value, isChecked, isRoot) {
     var $label;
     var $li;
     $label = $('<label>', {
@@ -2039,11 +2049,11 @@
       'data-toggle': 'channel',
       type: 'checkbox',
       value: value
-    })).append(channelName);
+    })).append(channel.name);
     $label.toggleClass('active', isChecked);
     $li = $('<li>').append($label);
-    if (options.icon) {
-      $li.find('input').after($('<i>', { class: options.icon }));
+    if (channel.options.icon) {
+      $li.find('input').after($('<i>', { class: channel.options.icon }));
     }
     return $li
   }

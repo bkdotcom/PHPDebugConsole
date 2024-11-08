@@ -128,11 +128,13 @@ export function buildChannelList (channels, nameRoot, checkedChannels, prepend) 
     // start with (add) if there are other channels
     // console.log('buildChannelLi name root', nameRoot)
     $ul.append(buildChannelLi(
-      nameRoot, // name
+      {
+        name: nameRoot,
+        options: {},
+      },
       nameRoot, // value
       true, // isChecked
-      true, // isRoot
-      {} // options
+      true // isRoot
     ))
   }
   $lis = buildChannelLis(channels, nameRoot, checkedChannels, prepend)
@@ -166,14 +168,14 @@ function buildChannelLis (channels, nameRoot, checkedChannels, prepend) {
       return
     }
     channel = channels[channelName]
+    channel.name = channelName
     $li = buildChannelLi(
-      channelName,
+      channel,
       value,
       checkedChannels !== undefined
         ? checkedChannels.indexOf(value) > -1
         : channel.options.show,
-      channelName === nameRoot,
-      channel.options
+      channelName === nameRoot
     )
     if (Object.keys(channel.channels).length) {
       $li.append(buildChannelList(channel.channels, nameRoot, checkedChannels, value + '.'))
@@ -186,7 +188,7 @@ function buildChannelLis (channels, nameRoot, checkedChannels, prepend) {
 /**
  * Build a single LI element without any children
  */
-function buildChannelLi (channelName, value, isChecked, isRoot, options) {
+function buildChannelLi (channel, value, isChecked, isRoot) {
   var $label
   var $li
   $label = $('<label>', {
@@ -197,11 +199,11 @@ function buildChannelLi (channelName, value, isChecked, isRoot, options) {
     'data-toggle': 'channel',
     type: 'checkbox',
     value: value
-  })).append(channelName)
+  })).append(channel.name)
   $label.toggleClass('active', isChecked)
   $li = $('<li>').append($label)
-  if (options.icon) {
-    $li.find('input').after($('<i>', { class: options.icon }))
+  if (channel.options.icon) {
+    $li.find('input').after($('<i>', { class: channel.options.icon }))
   }
   return $li
 }

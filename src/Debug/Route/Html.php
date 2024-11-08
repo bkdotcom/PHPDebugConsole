@@ -206,12 +206,8 @@ class Html extends AbstractRoute
     {
         $return = '';
         foreach ($assets as $asset) {
-            if (\preg_match('#[\r\n]#', $asset)) {
-                $return .= $asset . "\n";
-                continue;
-            }
-            // single line... potential filepath
-            if (\file_exists($asset)) {
+            // isFile "safely" checks if the value is an existing regular file
+            if ($this->debug->utility->isFile($asset)) {
                 $asset = \file_get_contents($asset);
             }
             if ($asset === false) {

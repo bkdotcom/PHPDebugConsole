@@ -139,7 +139,8 @@ function createFileLinksTraceProcessTr($tr, isUpdate) {
 function createFileLink (string, remove, foundFiles) {
   var $replace
   var $string = $(string)
-  var attrs = string.attributes
+  var attrs = string.attributes // attrs is not a plain object, but an array of attribute nodes
+                                //    which contain both the name and value
   var text = $.trim($string.text())
   var matches = createFileLinkMatches($string, foundFiles)
   var isUpdate = remove !== true && $string.hasClass('file-link')
@@ -148,7 +149,7 @@ function createFileLink (string, remove, foundFiles) {
     create($string.closest('.m_trace'))
     return
   }
-  if (!matches.length) {
+  if (matches.length < 1) {
     return
   }
 
@@ -164,21 +165,17 @@ function createFileLink (string, remove, foundFiles) {
     replace: $replace[0].outerHTML
   })
   */
-  /*
-    attrs is not a plain object, but an array of attribute nodes
-    which contain both the name and value
-  */
   if (isUpdate === false) {
     createFileLinkUpdateAttr($string, $replace, attrs)
   }
-  if ($string.is('td, th, li')) {
-    $string.html(remove
-      ? text
-      : $replace
-    )
+  if ($string.is('td, th, li') === false) {
+    $string.replaceWith($replace)
     return
   }
-  $string.replaceWith($replace)
+  $string.html(remove
+    ? text
+    : $replace
+  )
 }
 
 function createFileLinkUpdateAttr ($string, $replace, attrs) {

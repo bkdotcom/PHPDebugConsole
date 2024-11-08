@@ -43,7 +43,7 @@ var config = {
     '> .property.isDynamic': '<i class="fa fa-warning" title="Dynamic"></i>',
     '> .property.isPromoted': '<i class="fa fa-arrow-up" title="Promoted"></i>',
     '> .property.getHook, > .property.setHook': function () {
-      var title = 'set hook';
+      var title = 'set hook'
       if ($(this).hasClass('getHook') && $(this).hasClass('setHook')) {
         title = 'get and set hooks'
       } else if ($(this).hasClass('getHook')) {

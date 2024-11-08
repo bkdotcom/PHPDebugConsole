@@ -186,17 +186,30 @@ class Data
             if ($inGroup === false) {
                 continue;
             }
-            $method = $logEntry['method'];
-            if (\in_array($method, ['group', 'groupCollapsed'], true)) {
-                $depth++;
-            } elseif ($method === 'groupEnd') {
-                $depth--;
-            }
+            $depth = $this->findGroupEndDepth($logEntry['method'], $depth);
             if ($depth === 0) {
                 return $key;
             }
         }
         return false;
+    }
+
+    /**
+     * Increment or decrement current group depth
+     *
+     * @param string $method LogEntry method
+     * @param int    $depth  group depth
+     *
+     * @return int
+     */
+    private function findGroupEndDepth($method, $depth)
+    {
+        if (\in_array($method, ['group', 'groupCollapsed'], true)) {
+            $depth++;
+        } elseif ($method === 'groupEnd') {
+            $depth--;
+        }
+        return $depth;
     }
 
     /**

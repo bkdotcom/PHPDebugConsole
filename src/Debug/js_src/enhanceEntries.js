@@ -131,20 +131,25 @@ function addIconsMisc ($node) {
 function determineIcon ($node) {
   var $icon
   var $node2
-  var selector
   if ($node.data('icon')) {
     return $node.data('icon').match('<')
       ? $($node.data('icon'))
       : $('<i>').addClass($node.data('icon'))
   }
   if ($node.hasClass('m_group')) {
-    return $icon
+    return $icon // undefined / groupIcon will be added separately
   }
   $node2 = $node.hasClass('group-header')
     ? $node.parent()
     : $node
+  return determineIconFromConfig($node2)
+}
+
+function determineIconFromConfig ($node) {
+  var $icon
+  var selector
   for (selector in config.iconsMethods) {
-    if ($node2.is(selector)) {
+    if ($node.is(selector)) {
       $icon = $(config.iconsMethods[selector])
       break
     }

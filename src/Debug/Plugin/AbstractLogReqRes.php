@@ -24,7 +24,7 @@ class AbstractLogReqRes
     protected $cfg = array(
         'channelName' => 'Request / Response',
         'channelOpts' => array(
-            'channelIcon' => 'fa fa-exchange',
+            'channelIcon' => ':send-receive:',
             'channelSort' => 10,
             'nested' => false,
         ),

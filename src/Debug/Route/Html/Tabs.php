@@ -127,10 +127,7 @@ class Tabs
             $isActive = true;
             $label = 'Log';
         }
-        $channelIcon = $debug->getCfg('channelIcon', Debug::CONFIG_DEBUG);
-        if ($channelIcon && \strpos($channelIcon, '<') === false) {
-            $channelIcon = '<i class="' . $channelIcon . '"></i>';
-        }
+        $channelIcon = $this->route->buildIcon($debug->getCfg('channelIcon', Debug::CONFIG_DEBUG));
         return $this->debug->html->buildTag(
             'a',
             array(

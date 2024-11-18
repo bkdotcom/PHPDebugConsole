@@ -36,19 +36,19 @@ class Module extends BaseModule implements BootstrapInterface
     private $configDefault = array(
         'channels' => array(
             'events' => array(
-                'channelIcon' => 'fa fa-bell-o',
+                'channelIcon' => ':event:',
                 'nested' => false,
             ),
             'PDO' => array(
-                'channelIcon' => 'fa fa-database',
+                'channelIcon' => ':database:',
                 'channelShow' => false,
             ),
             'Session' => array(
-                'channelIcon' => 'fa fa-suitcase',
+                'channelIcon' => ':suitcase:',
                 'nested' => false,
             ),
             'User' => array(
-                'channelIcon' => 'fa fa-user-o',
+                'channelIcon' => ':user:',
                 'nested' => false,
             ),
         ),

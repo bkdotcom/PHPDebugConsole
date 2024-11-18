@@ -164,7 +164,7 @@ class Cake4 extends BasePlugin
     protected function logEvents()
     {
         $debug = $this->debug->getChannel('Events', array(
-            'channelIcon' => 'fa fa-bell-o',
+            'channelIcon' => ':event:',
             'nested' => false,
         ));
 

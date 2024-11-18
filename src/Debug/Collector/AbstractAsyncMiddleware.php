@@ -29,8 +29,8 @@ class AbstractAsyncMiddleware extends AbstractComponent
 {
     protected $cfg = array(
         'asyncResponseWithRequest' => true,
-        'icon' => 'fa fa-exchange',
-        'iconAsync' => 'fa fa-random',
+        'icon' => ':send-receive:',
+        'iconAsync' => ':asynchronous:',
         'idPrefix' => '',
         'inclRequestBody' => false,
         'inclResponseBody' => false,

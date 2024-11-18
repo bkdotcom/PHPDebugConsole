@@ -55,11 +55,10 @@ class UserInfo
             return;
         }
 
-        $channelOpts = array(
-            'channelIcon' => 'fa fa-user-o',
+        $debug = $this->component->debug->rootInstance->getChannel('User', array(
+            'channelIcon' => ':user:',
             'nested' => false,
-        );
-        $debug = $this->component->debug->rootInstance->getChannel('User', $channelOpts);
+        ));
 
         $this->logIdentityData($user, $debug);
         $this->logAuthClass($debug);

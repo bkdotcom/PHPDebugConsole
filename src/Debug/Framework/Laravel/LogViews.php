@@ -52,7 +52,7 @@ class LogViews
             return;
         }
         $this->viewChannel = $this->debug->getChannel('Views', array(
-            'channelIcon' => 'fa fa-file-text-o',
+            'channelIcon' => ':template:',
         ));
         $this->app['events']->listen(
             'composing:*',

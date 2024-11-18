@@ -22,7 +22,7 @@ use Twig\Profiler\Profile;
 class TwigExtension extends ProfilerExtension
 {
     /** @var string */
-    protected $icon = 'fa fa-file-text-o';
+    protected $icon = ':template:';
 
     /** @var Debug */
     private $debug;

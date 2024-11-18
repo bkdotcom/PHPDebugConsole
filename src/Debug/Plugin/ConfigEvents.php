@@ -18,6 +18,8 @@ use bdk\PubSub\SubscriberInterface;
 
 /**
  * Handle configuration changes
+ *
+ * This plugin only exists on the root Debug instance and only handles changes to the root instance
  */
 class ConfigEvents implements SubscriberInterface
 {
@@ -26,6 +28,7 @@ class ConfigEvents implements SubscriberInterface
 
     /** @var bool */
     private $isBootstrapped = false;
+
     /** @var bool */
     private $isConfigured = false;
 
@@ -90,7 +93,7 @@ class ConfigEvents implements SubscriberInterface
      *
      * Ensure that channels is a "tree" vs "flat"
      *
-     * @param string $val channels config value
+     * @param array $val channels config value
      *
      * @return array channels tree
      *

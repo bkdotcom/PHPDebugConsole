@@ -28,7 +28,7 @@ class EventsSubscriber
     protected $eventDispatcher;
 
     /** @var string */
-    protected $icon = 'fa fa-bell-o';
+    protected $icon = ':event:';
 
     /**
      * Constructor

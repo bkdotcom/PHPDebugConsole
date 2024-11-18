@@ -35,14 +35,14 @@ class BdkDebugBundleListener implements EventSubscriberInterface
     private $debugCfg = array(
         'channels' => array(
             'event' => array(
-                'channelIcon' => 'fa fa-bell-o',
+                'channelIcon' => ':event:',
                 'channelShow' => false,
             ),
             'request' => array(
-                'channelIcon' => 'fa fa-arrow-left',
+                'channelIcon' => ':request:',
             ),
             'security' => array(
-                'channelIcon' => 'fa fa-shield',
+                'channelIcon' => ':security:',
             ),
         ),
         'css' => '.debug .empty {border:none; padding:inherit;}',

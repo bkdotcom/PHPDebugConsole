@@ -2005,34 +2005,37 @@
   }
 
   function buildChannelLis (channels, nameRoot, checkedChannels, prepend) {
-    var $li;
     var $lis = [];
     var channel;
     var channelNames = Object.keys(channels).sort(function (a, b) {
       return a.localeCompare(b)
     });
     $.each(channelNames, function (i, channelName) {
-      var value = buildChannelValue(channelName, prepend, nameRoot);
       if (channelName === 'phpError') {
         // phpError is a special channel
         return
       }
       channel = channels[channelName];
       channel.name = channelName;
-      $li = buildChannelLi(
-        channel,
-        value,
-        checkedChannels !== undefined
-          ? checkedChannels.indexOf(value) > -1
-          : channel.options.show,
-        channelName === nameRoot
-      );
-      if (Object.keys(channel.channels).length) {
-        $li.append(buildChannelList(channel.channels, nameRoot, checkedChannels, value + '.'));
-      }
-      $lis.push($li);
+      $lis.push(buildChannelLisIterator(channel, nameRoot, checkedChannels, prepend));
     });
     return $lis
+  }
+
+  function buildChannelLisIterator (channel, nameRoot, checkedChannels, prepend) {
+    var value = buildChannelValue(channel.name, prepend, nameRoot);
+    var $li = buildChannelLi(
+      channel,
+      value,
+      checkedChannels !== undefined
+        ? checkedChannels.indexOf(value) > -1
+        : channel.options.show,
+      channel.name === nameRoot
+    );
+    if (Object.keys(channel.channels).length) {
+      $li.append(buildChannelList(channel.channels, nameRoot, checkedChannels, value + '.'));
+    }
+    return $li
   }
 
   /**

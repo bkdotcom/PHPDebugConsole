@@ -220,11 +220,10 @@ class Component extends CApplicationComponent
             return;
         }
 
-        $channelOpts = array(
-            'channelIcon' => 'fa fa-suitcase',
+        $debug = $this->debug->rootInstance->getChannel('Session', array(
+            'channelIcon' => ':session:',
             'nested' => false,
-        );
-        $debug = $this->debug->rootInstance->getChannel('Session', $channelOpts);
+        ));
 
         $debug->log('session id', $session->sessionID);
         $debug->log('session name', $session->sessionName);

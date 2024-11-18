@@ -66,7 +66,7 @@ class InternalEvents implements SubscriberInterface
             'attribs' => array(
                 'class' => 'php-shutdown',
             ),
-            'icon' => 'fa fa-power-off',
+            'icon' => ':shutdown:',
         )));
     }
 

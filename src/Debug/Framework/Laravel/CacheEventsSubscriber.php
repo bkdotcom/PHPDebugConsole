@@ -39,7 +39,7 @@ class CacheEventsSubscriber
     /** @var array<string,mixed> */
     protected $options = array(
         'collectValues' => true,
-        'icon' => 'fa fa-cube',
+        'icon' => ':cache:',
     );
 
     /**

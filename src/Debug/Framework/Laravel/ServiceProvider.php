@@ -101,7 +101,7 @@ class ServiceProvider extends BaseServiceProvider
     public function onOutput()
     {
         $debug = $this->debug->getChannel('Models', array(
-            'channelIcon' => 'fa fa-cubes',
+            'channelIcon' => ':models:',
             'nested' => false,
         ));
         $tableInfoRows = array();
@@ -190,7 +190,7 @@ class ServiceProvider extends BaseServiceProvider
         $config = $this->app['config']->all();
         \ksort($config);
         $configChannel = $this->debug->getChannel('Config', array(
-            'channelIcon' => 'fa fa-cogs',
+            'channelIcon' => ':config:',
             'nested' => false,
         ));
         $configChannel->log($config);

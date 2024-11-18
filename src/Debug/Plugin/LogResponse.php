@@ -105,7 +105,7 @@ class LogResponse extends AbstractLogReqRes implements SubscriberInterface
                 'attribs' => array(
                     'style' => $this->headerStyle,
                 ),
-                'icon' => 'fa fa-arrow-left',
+                'icon' => ':receive:',
             ))
         );
         $this->logResponseHeaders();

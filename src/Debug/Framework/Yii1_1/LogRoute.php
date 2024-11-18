@@ -291,7 +291,7 @@ class LogRoute extends CLogRoute
             ))),
             array(
                 'appendGroup' => $groupId,
-                'icon' => 'fa fa-cube',
+                'icon' => ':cache:',
                 'level' => 'info',
             )
         ));

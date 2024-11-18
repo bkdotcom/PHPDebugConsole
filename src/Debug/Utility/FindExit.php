@@ -114,9 +114,7 @@ class FindExit
      */
     public function setSkipClasses($classes)
     {
-        $classes = (array) $classes;
-        $classes[] = __CLASS__;
-        $this->classesSkip = $classes;
+        $this->classesSkip = \array_merge((array) $classes, [__CLASS__]);
     }
 
     /**
@@ -173,12 +171,9 @@ class FindExit
                 : null;
         }
         if ($token[0] === T_FUNCTION) {
-            $this->handleTfunction($tokenNext);
+            $this->handleTFunction($tokenNext);
         }
-        if (!$this->inFunc) {
-            return false;
-        }
-        if ($this->funcStack) {
+        if (!$this->inFunc || $this->funcStack) {
             return false;
         }
         return $token[0] === T_EXIT
@@ -187,7 +182,7 @@ class FindExit
     }
 
     /**
-     * keep track of bracket depth
+     * Keep track of bracket depth
      *
      * @param string $token token string
      *
@@ -197,16 +192,17 @@ class FindExit
     {
         if ($token === '{') {
             $this->depth++;
-        } elseif ($token === '}') {
-            $this->depth--;
-            if (\end($this->funcStack) === $this->depth) {
-                \array_pop($this->funcStack);
-            }
-            if ($this->function && $this->depth === 0 && $this->inFunc) {
-                return false;
-            }
+            return true;
         }
-        return true;
+        if ($token !== '}') {
+            return true;
+        }
+        // token === '}
+        $this->depth--;
+        if (\end($this->funcStack) === $this->depth) {
+            \array_pop($this->funcStack);
+        }
+        return !($this->function && $this->depth === 0 && $this->inFunc);
     }
 
     /**
@@ -216,7 +212,7 @@ class FindExit
      *
      * @return void
      */
-    private function handleTfunction($tokenNext)
+    private function handleTFunction($tokenNext)
     {
         if ($this->inFunc) {
             $this->funcStack[] = $this->depth;

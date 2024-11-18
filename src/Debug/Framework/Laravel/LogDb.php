@@ -58,7 +58,7 @@ class LogDb
         $dbManager = $this->app['db'];
 
         $dbChannel = $this->debug->getChannel('Db', array(
-            'channelIcon' => 'fa fa-database',
+            'channelIcon' => ':database:',
         ));
 
         try {

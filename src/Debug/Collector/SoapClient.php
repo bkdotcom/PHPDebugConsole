@@ -32,7 +32,7 @@ class SoapClient extends SoapClientBase
     private $debug;
 
     /** @var string */
-    protected $icon = 'fa fa-exchange';
+    protected $icon = ':send-receive:';
 
     /** @var \DOMDocument */
     private $dom;

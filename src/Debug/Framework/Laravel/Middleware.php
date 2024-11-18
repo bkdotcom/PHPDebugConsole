@@ -203,7 +203,7 @@ class Middleware
         $debug = $this->debug->rootInstance->getChannel(
             'User',
             array(
-                'channelIcon' => 'fa fa-user-o',
+                'channelIcon' => ':user:',
                 'nested' => false,
             )
         );
@@ -331,7 +331,7 @@ class Middleware
         $debug = $this->debug->rootInstance->getChannel(
             'Session',
             array(
-                'channelIcon' => 'fa fa-suitcase',
+                'channelIcon' => ':session:',
                 'nested' => false,
             )
         );

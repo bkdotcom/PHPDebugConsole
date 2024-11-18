@@ -95,6 +95,24 @@ class Html extends AbstractRoute
     }
 
     /**
+     * Build icon markup
+     *
+     * @param string|null $icon Icon css class or html markup
+     *
+     * @return string
+     */
+    public function buildIcon($icon)
+    {
+        if (empty($icon)) {
+            return '';
+        }
+        if (\strpos($icon, '<') === false) {
+            $icon = '<i class="' . $icon . '" aria-hidden="true"></i>';
+        }
+        return $icon;
+    }
+
+    /**
      * Return all assets or return assets of specific type ("css" or "script")
      *
      * @param string $what (optional) specify "css" or "script"
@@ -314,7 +332,7 @@ class Html extends AbstractRoute
     private function buildLoading()
     {
         return $this->cfg['outputScript']
-            ? '<div class="loading">Loading <i class="fa fa-spinner fa-pulse fa-2x fa-fw" aria-hidden="true"></i></div>' . "\n"
+            ? '<div class="loading">Loading ' . $this->buildIcon($this->debug->getCfg('icons.loading', Debug::CONFIG_DEBUG)) . '</div>' . "\n"
             : '';
     }
 

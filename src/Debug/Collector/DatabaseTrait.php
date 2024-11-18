@@ -25,7 +25,7 @@ trait DatabaseTrait
     protected $loggedStatements = array();
 
     /** @var string */
-    protected $icon = 'fa fa-database';
+    protected $icon = ':database:';
 
     /**
      * Logs StatementInfo

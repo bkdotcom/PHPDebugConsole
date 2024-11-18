@@ -27,7 +27,7 @@ class OAuth extends OAuthBase
     protected $debugger;
 
     /** @var string */
-    protected $icon = 'fa fa-handshake-o';
+    protected $icon = ':authorize:';
 
     /** @var float */
     private $elapsed;
@@ -198,15 +198,15 @@ class OAuth extends OAuthBase
         // values available in the headers or elsewhere
         $this->debugger->log('OAuth Parameters', $this->oauthParams(), $this->debugger->meta('cfg', 'abstracter.stringMinLen.encoded', -1));
         $this->debugger->log('additional info', $this->additionalInfo($url));
-        $this->debugger->log('request headers', $this->debugger->redactHeaders($debugInfo['headers_sent']), $this->debugger->meta('icon', 'fa fa-arrow-right'));
+        $this->debugger->log('request headers', $this->debugger->redactHeaders($debugInfo['headers_sent']), $this->debugger->meta('icon', ':send:'));
         if (isset($debugInfo['body_sent'])) {
             $this->debugger->log('request body', $debugInfo['body_sent'], $this->debugger->meta(array(
-                'icon' => 'fa fa-arrow-right',
+                'icon' => ':send:',
                 'redact' => true,
             )));
         }
-        $this->debugger->log('response headers', $debugInfo['headers_recv'], $this->debugger->meta('icon', 'fa fa-arrow-left'));
-        $this->debugger->log('response body', $debugInfo['body_recv'], $this->debugger->meta('icon', 'fa fa-arrow-left'));
+        $this->debugger->log('response headers', $debugInfo['headers_recv'], $this->debugger->meta('icon', ':receive:'));
+        $this->debugger->log('response body', $debugInfo['body_recv'], $this->debugger->meta('icon', ':receive:'));
         if ($this->exception) {
             $this->debugger->warn(\get_class($this->exception), $this->exception->getMessage());
         }

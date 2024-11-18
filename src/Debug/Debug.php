@@ -123,7 +123,7 @@ class Debug extends AbstractDebug
 
     /** @var array<string,mixed> */
     protected $cfg = array(
-        'channelIcon' => 'fa fa-list-ul',
+        'channelIcon' => ':log:',
         'channelName' => 'general', // channel or tab name
         'channels' => array(
             /*
@@ -156,6 +156,30 @@ class Debug extends AbstractDebug
         'extensionsCheck' => ['curl', 'mbString'],
         'headerMaxAll' => 250000,
         'headerMaxPer' => null,
+        'icons' => array(
+            'asynchronous' => 'fa fa-random',
+            'authorize' => 'fa fa-handshake-o',
+            'cache' => 'fa fa-cube',
+            'component' => 'fa fa-puzzle-piece',
+            'config' => 'fa fa-cogs',
+            'database' => 'fa fa-database',
+            'email' => 'fa fa-envelope-o',
+            'event' => 'fa fa-bell-o',
+            'files' => 'fa fa-files-o',
+            'github' => 'fa fa-github fa-lg',
+            'loading' => 'fa fa-spinner fa-pulse fa-2x fa-fw',
+            'log' => 'fa fa-list-ul',
+            'models' => 'fa fa-cubes',
+            'php' => '<i class="fa" style="position:relative; top:2px; font-size:15px;">🐘</i>',
+            'receive' => 'fa fa-arrow-left',
+            'security' => 'fa fa-shield',
+            'send' => 'fa fa-arrow-right',
+            'send-receive' => 'fa fa-exchange',
+            'session' => 'fa fa-suitcase',
+            'shutdown' => 'fa fa-power-off',
+            'template' => 'fa fa-file-text-o',
+            'user' => 'fa fa-user-o',
+        ),
         'key' => null,
         'logEnvInfo' => array(  // may be set by passing a list
             'errorReporting' => true,
@@ -181,78 +205,30 @@ class Debug extends AbstractDebug
         'output'    => false,       // output the log?
         'outputHeaders' => true,    // ie, ChromeLogger and/or firePHP headers
         'plugins' => array(
-            'channel' => array(
-                'class' => 'bdk\Debug\Plugin\Channel',
-            ),
-            'configEvents' => array(
-                'class' => 'bdk\Debug\Plugin\ConfigEvents',
-            ),
-            'internalEvents' => array(
-                'class' => 'bdk\Debug\Plugin\InternalEvents',
-            ),
-            'logEnv' => array(
-                'class' => 'bdk\Debug\Plugin\LogEnv',
-            ),
-            'logFiles' => array(
-                'class' => 'bdk\Debug\Plugin\LogFiles',
-            ),
-            'logPhp' => array(
-                'class' => 'bdk\Debug\Plugin\LogPhp',
-            ),
-            'logRequest' => array(
-                'class' => 'bdk\Debug\Plugin\LogRequest',
-            ),
-            'logResponse' => array(
-                'class' => 'bdk\Debug\Plugin\LogResponse',
-            ),
-            'methodAlert' => array(
-                'class' => 'bdk\Debug\Plugin\Method\Alert',
-            ),
-            'methodBasic' => array(
-                'class' => 'bdk\Debug\Plugin\Method\Basic',
-            ),
-            'methodClear' => array(
-                'class' => 'bdk\Debug\Plugin\Method\Clear',
-            ),
-            'methodCount' => array(
-                'class' => 'bdk\Debug\Plugin\Method\Count',
-            ),
-            'methodGeneral' => array(
-                'class' => 'bdk\Debug\Plugin\Method\General',
-            ),
-            'methodGroup' => array(
-                'class' => 'bdk\Debug\Plugin\Method\Group',
-            ),
-            'methodOutput' => array(
-                'class' => 'bdk\Debug\Plugin\Method\Output',
-            ),
-            'methodProfile' => array(
-                'class' => 'bdk\Debug\Plugin\Method\Profile',
-            ),
-            'methodReqRes' => array(
-                'class' => 'bdk\Debug\Plugin\Method\ReqRes',
-            ),
-            'methodTable' => array(
-                'class' => 'bdk\Debug\Plugin\Method\Table',
-            ),
-            'methodTime' => array(
-                'class' => 'bdk\Debug\Plugin\Method\Time',
-            ),
-            'methodTrace' => array(
-                'class' => 'bdk\Debug\Plugin\Method\Trace',
-            ),
-            'prettify' => array(
-                'class' => 'bdk\Debug\Plugin\Prettify',
-            ),
-            'redaction' => array(
-                'class' => 'bdk\Debug\Plugin\Redaction',
-            ),
-            'route' => array(
-                'class' => 'bdk\Debug\Plugin\Route',
-            ),
-            'runtime' => array(
-                'class' => 'bdk\Debug\Plugin\Runtime',
-            ),
+            'channel' => array( 'class' => 'bdk\Debug\Plugin\Channel' ),
+            'configEvents' => array( 'class' => 'bdk\Debug\Plugin\ConfigEvents' ),
+            'internalEvents' => array( 'class' => 'bdk\Debug\Plugin\InternalEvents' ),
+            'logEnv' => array( 'class' => 'bdk\Debug\Plugin\LogEnv' ),
+            'logFiles' => array( 'class' => 'bdk\Debug\Plugin\LogFiles' ),
+            'logPhp' => array( 'class' => 'bdk\Debug\Plugin\LogPhp' ),
+            'logRequest' => array( 'class' => 'bdk\Debug\Plugin\LogRequest' ),
+            'logResponse' => array( 'class' => 'bdk\Debug\Plugin\LogResponse' ),
+            'methodAlert' => array( 'class' => 'bdk\Debug\Plugin\Method\Alert' ),
+            'methodBasic' => array( 'class' => 'bdk\Debug\Plugin\Method\Basic' ),
+            'methodClear' => array( 'class' => 'bdk\Debug\Plugin\Method\Clear' ),
+            'methodCount' => array( 'class' => 'bdk\Debug\Plugin\Method\Count' ),
+            'methodGeneral' => array( 'class' => 'bdk\Debug\Plugin\Method\General' ),
+            'methodGroup' => array( 'class' => 'bdk\Debug\Plugin\Method\Group' ),
+            'methodOutput' => array( 'class' => 'bdk\Debug\Plugin\Method\Output' ),
+            'methodProfile' => array( 'class' => 'bdk\Debug\Plugin\Method\Profile' ),
+            'methodReqRes' => array( 'class' => 'bdk\Debug\Plugin\Method\ReqRes' ),
+            'methodTable' => array( 'class' => 'bdk\Debug\Plugin\Method\Table' ),
+            'methodTime' => array( 'class' => 'bdk\Debug\Plugin\Method\Time' ),
+            'methodTrace' => array( 'class' => 'bdk\Debug\Plugin\Method\Trace' ),
+            'prettify' => array( 'class' => 'bdk\Debug\Plugin\Prettify' ),
+            'redaction' => array( 'class' => 'bdk\Debug\Plugin\Redaction' ),
+            'route' => array( 'class' => 'bdk\Debug\Plugin\Route' ),
+            'runtime' => array( 'class' => 'bdk\Debug\Plugin\Runtime' ),
         ),
         'redactKeys' => [      // case-insensitive
             'password',

@@ -134,6 +134,7 @@ class ConfigTest extends DebugTestFramework
             'extensionsCheck',
             'headerMaxAll',
             'headerMaxPer',
+            'icons',
             'logEnvInfo',
             'logFiles',
             'logRequestInfo',

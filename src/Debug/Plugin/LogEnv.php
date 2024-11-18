@@ -123,7 +123,7 @@ class LogEnv implements SubscriberInterface
             'font-weight:bold;',
             'font-size:1.5em; background-color:#DDD; padding:0 .3em;',
             $branch,
-            $this->debug->meta('icon', 'fa fa-github fa-lg')
+            $this->debug->meta('icon', ':github:')
         );
         $this->debug->groupEnd();
     }
@@ -146,7 +146,7 @@ class LogEnv implements SubscriberInterface
 
         $debugWas = $this->debug;
         $this->debug = $this->debug->rootInstance->getChannel('Session', array(
-            'channelIcon' => 'fa fa-suitcase',
+            'channelIcon' => ':session:',
             'nested' => false,
         ));
         $this->logSessionSettings($namePassed);

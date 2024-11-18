@@ -26,7 +26,7 @@ class LogFiles extends AbstractComponent implements SubscriberInterface
     protected $cfg = array(
         'asTree' => true,
         'channelOpts' => array(
-            'channelIcon' => 'fa fa-files-o',
+            'channelIcon' => ':files:',
             'channelSort' => -10,
             'nested' => false,
         ),

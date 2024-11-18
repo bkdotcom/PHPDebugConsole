@@ -31,7 +31,7 @@ class DoctrineMiddleware implements MiddlewareInterface
     protected $debug;
 
     /** @var string */
-    protected $icon = 'fa fa-database';
+    protected $icon = ':database:';
 
     /**
      * Constructor

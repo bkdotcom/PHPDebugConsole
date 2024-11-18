@@ -21,7 +21,7 @@ class HtmlTest extends DebugTestFramework
             'outputHeaders' => false,
             'outputScript' => true,
         ));
-        $this->assertStringMatchesFormat('<div class="debug"%s>
+        $expect = '<div class="debug"%s>
 <style type="text/css">%a</style>
 <script>%s</script>
 <script>%a</script>
@@ -40,7 +40,11 @@ class HtmlTest extends DebugTestFramework
 </div>
 %A</div>
 </div>
-', $this->debug->output());
+';
+        $output = $this->debug->output();
+        // \bdk\Debug::varDump('expect', $expect);
+        // \bdk\Debug::varDump('actual', $output);
+        $this->assertStringMatchesFormat($expect, $output);
     }
 
     public function testAssets()

@@ -180,11 +180,8 @@ abstract class AbstractDebug
             return;
         }
         $valActions = \array_intersect_key(array(
-            'logServerKeys' => function ($val) {
-                // don't append, replace
-                $this->cfg['logServerKeys'] = array();
-                return $val;
-            },
+            'channelIcon' => [$this, 'onCfgChannelIcon'],
+            'logServerKeys' => [$this, 'onCfgLogServerKeys'],
             'serviceProvider' => [$this, 'onCfgServiceProvider'],
         ), $cfg);
         foreach ($valActions as $key => $callable) {
@@ -192,19 +189,7 @@ abstract class AbstractDebug
             $cfg[$key] = $callable($cfg[$key]);
         }
         $this->cfg = $this->arrayUtil->mergeDeep($this->cfg, $cfg);
-        /*
-            propagate updated vals to child channels
-        */
-        $channels = $this->getChannels(false, true);
-        if (empty($channels)) {
-            return;
-        }
-        $event['debug'] = $cfg;
-        $cfg = $this->rootInstance->getPlugin('channel')->getPropagateValues($event->getValues());
-        unset($cfg['currentSubject'], $cfg['isTarget']);
-        foreach ($channels as $channel) {
-            $channel->config->set($cfg);
-        }
+        $this->onConfigPropagate($event, $cfg);
     }
 
     /**
@@ -400,6 +385,57 @@ abstract class AbstractDebug
         if (isset($cfg['parent'])) {
             $this->parentInstance = $cfg['parent'];
             $this->rootInstance = $this->parentInstance->rootInstance;
+        }
+    }
+
+    /**
+     * Handle "channelIcon" config update
+     *
+     * @param string|null $val config value
+     *
+     * @return string|null
+     */
+    private function onCfgChannelIcon($val)
+    {
+        if (\preg_match('/^:(.+):$/', (string) $val, $matches)) {
+            $val = $this->getCfg('icons.' . $matches[1], Debug::CONFIG_DEBUG);
+        }
+        return $val;
+    }
+
+    /**
+     * Handle "channelIcon" config update
+     *
+     * @param string|null $val config value
+     *
+     * @return string|null
+     */
+    private function onCfgLogServerKeys($val)
+    {
+        // don't append, replace
+        $this->cfg['logServerKeys'] = array();
+        return $val;
+    }
+
+    /**
+     * Propagate updated vals to child channels
+     *
+     * @param Event $event Debug::EVENT_CONFIG Event instance
+     * @param array $cfg   Debug config values
+     *
+     * @return void
+     */
+    private function onConfigPropagate(Event $event, array $cfg)
+    {
+        $channels = $this->getChannels(false, true);
+        if (empty($channels)) {
+            return;
+        }
+        $event['debug'] = $cfg;
+        $cfg = $this->rootInstance->getPlugin('channel')->getPropagateValues($event->getValues());
+        unset($cfg['currentSubject'], $cfg['isTarget']);
+        foreach ($channels as $channel) {
+            $channel->config->set($cfg);
         }
     }
 }

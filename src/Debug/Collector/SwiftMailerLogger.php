@@ -43,7 +43,7 @@ class SwiftMailerLogger implements
     protected $messages = array();
 
     /** @var string */
-    protected $icon = 'fa fa-envelope-o';
+    protected $icon = ':email:';
 
     /** @var string */
     protected $iconMeta;

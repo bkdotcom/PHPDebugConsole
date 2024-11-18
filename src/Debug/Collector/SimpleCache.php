@@ -36,7 +36,7 @@ class SimpleCache implements CacheInterface
     protected $cache;
 
     /** @var string */
-    protected $icon = 'fa fa-cube';
+    protected $icon = ':cache:';
 
     /** @var list<CallInfo> */
     protected $loggedActions = array();

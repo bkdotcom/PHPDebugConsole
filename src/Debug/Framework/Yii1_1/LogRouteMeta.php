@@ -145,7 +145,7 @@ class LogRouteMeta
     private function messageMetaSystem(array $logEntry)
     {
         $channelName = 'system misc';
-        $icon = 'fa fa-cogs';
+        $icon = ':config:';
         $logEntry['channel'] = $this->debug->getChannel($channelName, array(
             'icon' => $icon,
         ));
@@ -169,7 +169,7 @@ class LogRouteMeta
             return $logEntry;
         }
         $channelName = \str_replace('system.caching.', '', $logEntry['category']);
-        $icon = 'fa fa-cube';
+        $icon = ':cache:';
         $logEntry['category'] = $channelName;
         $logEntry['channel'] = $this->debug->getChannel($channelName, array(
             'channelIcon' => $icon,
@@ -196,7 +196,7 @@ class LogRouteMeta
     private function messageMetaSystemCmodule(array $logEntry)
     {
         $channelName = 'CModule';
-        $icon = 'fa fa-puzzle-piece';
+        $icon = ':component:';
         $logEntry['channel'] = $this->debug->getChannel($channelName, array(
             'channelIcon' => $icon,
             'channelShow' => false,

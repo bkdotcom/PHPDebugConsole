@@ -32,7 +32,7 @@ class PhpCurlClass extends Curl
     private $debug;
 
     /** @var string */
-    private $icon = 'fa fa-exchange';
+    private $icon = ':send-receive:';
 
     /** @var array<string,mixed> */
     private $debugOptions = array(

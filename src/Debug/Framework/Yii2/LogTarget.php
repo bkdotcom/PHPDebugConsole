@@ -201,7 +201,7 @@ class LogTarget extends Target
      */
     private function messageMetaCaching($message)
     {
-        $icon = 'fa fa-cube';
+        $icon = ':cache:';
         $message['category'] = null;
         $message['channel'] = $this->debug->getChannel('Cache', array(
             'channelIcon' => $icon,
@@ -221,7 +221,7 @@ class LogTarget extends Target
      */
     private function messageMetaConnection($message)
     {
-        $icon = 'fa fa-database';
+        $icon = ':database:';
         $message['category'] = null;
         $message['channel'] = $this->debug->getChannel('PDO', array(
             'channelIcon' => $icon,
@@ -241,7 +241,7 @@ class LogTarget extends Target
      */
     private function messageMetaModule($message)
     {
-        $icon = 'fa fa-puzzle-piece';
+        $icon = ':component:';
         $message['channel'] = $this->debug->getChannel($message['category'], array(
             'channelIcon' => $icon,
         ));
@@ -260,7 +260,7 @@ class LogTarget extends Target
      */
     private function messageMetaView($message)
     {
-        $icon = 'fa fa-file-text-o';
+        $icon = ':template:';
         $message['channel'] = $this->debug->getChannel($message['category'], array(
             'channelIcon' => $icon,
         ));

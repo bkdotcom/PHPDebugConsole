@@ -28,7 +28,7 @@ class LogPhp implements SubscriberInterface
     /** @var array<string,mixed> */
     protected $cfg = array(
         'channelOpts' => array(
-            'channelIcon' => '<i class="fa" style="position:relative; top:2px; font-size:15px;">🐘</i>',
+            'channelIcon' => ':php:',
             'channelSort' => 10,
             'nested' => false,
         ),

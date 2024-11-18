@@ -87,7 +87,28 @@ class ComposerScripts
         $info = array(
             'haveSlevomat' => false,
         );
-        $isCi = \filter_var(\getenv('CI'), FILTER_VALIDATE_BOOLEAN);
+        self::installUnitTestDependencies();
+        if (\filter_var(\getenv('CI'), FILTER_VALIDATE_BOOLEAN)) {
+            return $info;
+        }
+        if (PHP_VERSION_ID >= 80000) {
+            \exec($composer . ' require vimeo/psalm ^5.22.2 --dev --with-all-dependencies --no-scripts');
+        }
+        if (PHP_VERSION_ID >= 70200) {
+            \exec($composer . ' require slevomat/coding-standard ^8.9.0 --dev --no-scripts');
+            $info['haveSlevomat'] = true;
+        }
+        return $info;
+    }
+
+    /**
+     * Install dependencies needed for unit tests
+     *
+     * @return void
+     */
+    private static function installUnitTestDependencies()
+    {
+        $composer = $GLOBALS['argv'][0];
         PHP_VERSION_ID >= 80000
             // need a newer version to avoid ReturnTypeWillChange fatal
             // v 2.0 requires php 7.0
@@ -100,17 +121,6 @@ class ComposerScripts
         if (PHP_VERSION_ID >= 50500) {
             \exec($composer . ' require guzzlehttp/guzzle --dev --no-scripts');
         }
-        if ($isCi) {
-            return $info;
-        }
-        if (PHP_VERSION_ID >= 80000) {
-            \exec($composer . ' require vimeo/psalm ^5.22.2 --dev --with-all-dependencies --no-scripts');
-        }
-        if (PHP_VERSION_ID >= 70200) {
-            \exec($composer . ' require slevomat/coding-standard ^8.9.0 --dev --no-scripts');
-            $info['haveSlevomat'] = true;
-        }
-        return $info;
     }
 
     /**

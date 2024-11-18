@@ -351,12 +351,15 @@ EOD;
 
         $channelsBack = \bdk\Debug\Utility\Reflection::propGet($this->debug->getPlugin('channel'), 'channels');
         \bdk\Debug\Utility\Reflection::propSet($this->debug->getPlugin('channel'), 'channels', array());
+
         $baz = $this->debug->getChannel('baz');
         $baz->getChannel('general.foo.bar', array(
             'channelIcon' => 'fa fa-asterisk',
         ));
+
         $foo = $this->debug->getChannel('foo');
         self::assertSame(null, $foo->getCfg('channelIcon'));
+
         $bar = $foo->getChannel('bar');
         self::assertSame('fa fa-asterisk', $bar->getCfg('channelIcon'));
 

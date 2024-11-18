@@ -74,7 +74,7 @@ class LogRequest extends AbstractLogReqRes implements SubscriberInterface
                 'attribs' => array(
                     'style' => $this->headerStyle,
                 ),
-                'icon' => 'fa fa-arrow-right',
+                'icon' => ':send:',
             ))
         );
         $this->debug->alert(

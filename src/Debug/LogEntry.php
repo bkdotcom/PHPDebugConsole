@@ -263,6 +263,9 @@ class LogEntry extends Event implements JsonSerializable
         if (isset($values['meta']['appendGroup'])) {
             $this->values['meta']['appendGroup'] = $this->subject->html->sanitizeId($values['meta']['appendGroup']);
         }
+        if (isset($values['meta']['icon']) && \preg_match('/^:(.+):$/', $values['meta']['icon'], $matches)) {
+            $this->values['meta']['icon'] = $this->subject->getCfg('icons.' . $matches[1], Debug::CONFIG_DEBUG);
+        }
         $this->onSetMetaAttribs();
         if (\array_key_exists('channel', $values['meta'])) {
             $this->onSetMetaChannel();

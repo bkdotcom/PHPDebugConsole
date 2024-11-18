@@ -80,7 +80,7 @@ class PdoCollector
         }
         // nest the PDO channel under our Yii channel
         return $this->component->debug->getChannel($channelName, array(
-            'channelIcon' => 'fa fa-database',
+            'channelIcon' => ':database:',
             'channelShow' => false,
         ));
     }

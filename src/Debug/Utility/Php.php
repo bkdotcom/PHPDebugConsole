@@ -36,6 +36,10 @@ class Php
      */
     public function buildDate()
     {
+        if (\defined('PHP_BUILD_DATE')) {
+            return PHP_BUILD_DATE;
+        }
+
         \ob_start();
         \phpinfo(INFO_GENERAL);
         $phpInfo = \ob_get_clean();

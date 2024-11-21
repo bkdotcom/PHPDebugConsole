@@ -95,7 +95,7 @@ class ComposerScripts
             \exec($composer . ' require vimeo/psalm ^5.22.2 --dev --with-all-dependencies --no-scripts');
         }
         if (PHP_VERSION_ID >= 70200) {
-            \exec($composer . ' require slevomat/coding-standard ^8.9.0 --dev --no-scripts');
+            \exec($composer . ' require slevomat/coding-standard ^8.9.0 --dev --with-all-dependencies --no-scripts');
             $info['haveSlevomat'] = true;
         }
         return $info;

@@ -2,30 +2,20 @@
 // data types and "tokens"
 //
 
-$color-identifier: #039;
-$color-keyword: #07a;
-$color-type: #693;
-$color-key-bracket: #999;
-$color-punct: #999;
-$color-operator: #a67f59;
-
-$color-true: #993;
 $color-true-shadow: rgba(153, 153, 51, 0.5);
-$color-false: #c33;
 $color-false-shadow: rgba(204, 51, 51, 0.5);
-$color-numeric: #009;
-$color-recursion: #f00;
-$color-string: #333;
-$color-stringified: rgba(0, 200, 200, 0.6);
+$color-stringified-shadow: rgba(0, 200, 200, 0.6);
 
-.t_type { color: $color-type; }
+.t_type { 
+  color: var(--color-type); 
+}
 
 .t_bool[data-type-more=true] {
-  color: $color-true;
+  color: var(--color-true);
   text-shadow: 1px 1px 2px $color-true-shadow;
 }
 .t_bool[data-type-more=false] {
-  color: $color-false;
+  color: var(--color-false);
   text-shadow: 1px 1px 2px $color-false-shadow;
 }
 
@@ -43,7 +33,7 @@ $color-stringified: rgba(0, 200, 200, 0.6);
 // property-name, constant-name, method-name
 //
 .t_identifier {
-  color: $color-identifier;
+  color: var(--color-identifier);
   font-weight: bold;
   font-family: monospace;
   white-space: nowrap;
@@ -55,14 +45,14 @@ $color-stringified: rgba(0, 200, 200, 0.6);
 .t_float,
 .t_string[data-type-more=numeric],
 .t_string[data-type-more=timestamp] {
-  font-family: $font-family-numeric !important;
-  color: $color-numeric;
+  font-family: var(--font-family-numeric) !important;
+  color: var(--color-numeric);
   font-size: 1.15em;
   line-height: 1.15em;
   &::before,
   &::after {
     // undo font-size increase got
-    font-family: $font-family;
+    font-family: var(--font-family);
     font-size: 0.8695em;
   }
 }
@@ -74,8 +64,8 @@ $color-stringified: rgba(0, 200, 200, 0.6);
   }
   &::before,
   &::after {
-    font-family: $font-family;
-    color: $color-key-bracket;
+    font-family: var(--font-family);
+    color: var(--color-key-bracket);
   }
   &::before {
     content: '[';
@@ -87,13 +77,19 @@ $color-stringified: rgba(0, 200, 200, 0.6);
   }
   &.t_int { white-space: nowrap; }
 }
-.t_keyword { color: $color-keyword; }
-.t_null { opacity: 0.3; }
+.t_keyword { 
+  color: var(--color-keyword);
+}
+.t_null { 
+  color: var(--color-t-null);
+}
 .t_operator {
-  color: $color-operator;
+  color: var(--color-operator);
   white-space: nowrap !important; //  override .debug .t_string > *
 }
-.t_punct { color: $color-punct; }
+.t_punct { 
+  color: var(--color-punct);
+}
 
 .excluded,
 .t_maxDepth,
@@ -101,7 +97,7 @@ $color-stringified: rgba(0, 200, 200, 0.6);
 .t_recursion,
 .t_unknown {
   font-weight: bold;
-  color: $color-recursion;
+  color: var(--color-recursion);
 }
 .t_resource { font-style: italic; }
 .t_string {
@@ -109,9 +105,9 @@ $color-stringified: rgba(0, 200, 200, 0.6);
   word-break: break-all;
   &::before,
   &::after {
-    font-family: $font-family;
-    opacity: 0.33;
-    color: $color-string;
+    font-family: var(--font-family);
+    // color: var(--color-quote);
+    opacity: 0.6;
   }
   &::before { content: open-quote; }
   &::after { content: close-quote; }
@@ -127,7 +123,9 @@ $color-stringified: rgba(0, 200, 200, 0.6);
     white-space: pre;
   }
 }
-.t_stringified { text-shadow: 0 0 2px $color-stringified; }
+.t_stringified { 
+  text-shadow: 0 0 2px $color-stringified-shadow; 
+}
 .t_undefined::after {
   content: "undefined";
   opacity: 0.3;

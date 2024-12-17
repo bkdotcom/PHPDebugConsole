@@ -13,20 +13,29 @@
 $namespace-prefix: 'tippy';
 $arrow-size: 16px;
 
-$color: white;
-$transparent-light: rgba(0, 8, 16, 0.08);
-$transparent-dark: rgba(0, 8, 16, 0.3);
-$transparent-darker: rgba(0, 8, 16, 0.5);
+& {
+  --color-tippy-bg: white;
+  --color-arrow-border: rgba(0, 8, 16, 0.75);
+  --color-border: rgba(0, 8, 16, 0.3);
+  --color-shadow: rgba(0, 8, 16, 0.08);
+}
+
+&[data-theme=dark] {
+  --color-tippy-bg: #111;
+  --color-border: rgba(255, 255, 255, 0.3);
+  --color-shadow: rgba(255, 255, 255, 0.25);
+  --color-arrow-border: rgba(255, 255, 255, 0.75);
+}
 
 .#{$namespace-prefix}-box {
-  background-color: $color;
+  background-color: var(--color-tippy-bg);
   background-clip: padding-box;
-  border: 2px solid $transparent-dark;
+  border: 2px solid var(--color-border);
   border-radius: 4px;
   outline: 0;
   transition-property: transform, visibility, opacity;
-  color: #333;
-  box-shadow: 0 4px 14px -2px $transparent-light;
+  // color: #333;
+  box-shadow: 0 4px 14px -2px var(--color-shadow);
 
   .#{$namespace-prefix}-content {
     padding: 5px 9px;
@@ -35,13 +44,13 @@ $transparent-darker: rgba(0, 8, 16, 0.5);
   }
 
   > .#{$namespace-prefix}-backdrop {
-    background-color: $color;
+    background-color: var(--color-tippy-bg);
   }
 
   > .#{$namespace-prefix}-arrow {
     width: $arrow-size;
     height: $arrow-size;
-    color: #333;
+    // color: #333;
 
     &::before {
       content: "";
@@ -73,12 +82,12 @@ $transparent-darker: rgba(0, 8, 16, 0.5);
         bottom: -7px;
         left: 0;
         border-width: 8px 8px 0;
-        border-top-color: $color;
+        border-top-color: var(--color-tippy-bg);
         transform-origin: center top;
       }
 
       &::after {
-        border-top-color: $transparent-darker;
+        border-top-color: var(--color-arrow-border);
         border-width: 7px 7px 0;
         top: $arrow-size + 1;
         left: 1px;
@@ -104,12 +113,12 @@ $transparent-darker: rgba(0, 8, 16, 0.5);
         top: -6px;
         left: 0;
         border-width: 0 8px 8px;
-        border-bottom-color: $color;
+        border-bottom-color: var(--color-tippy-bg);
         transform-origin: center bottom;
       }
 
       &::after {
-        border-bottom-color: $transparent-darker;
+        border-bottom-color: var(--color-arrow-border);
         border-width: 0 7px 7px;
         bottom: $arrow-size + 1;
         left: 1px;
@@ -130,11 +139,11 @@ $transparent-darker: rgba(0, 8, 16, 0.5);
   &[data-placement^='left'] {
     > .#{$namespace-prefix}-arrow {
       &::before {
-        border-left-color: $color;
+        border-left-color: var(--color-tippy-bg);
       }
 
       &::after {
-        border-left-color: $transparent-darker;
+        border-left-color: var(--color-arrow-border);
         border-width: 7px 0 7px 7px;
         left: $arrow-size + 1;
         top: 1px;
@@ -155,7 +164,7 @@ $transparent-darker: rgba(0, 8, 16, 0.5);
   &[data-placement^='right'] {
     > .#{$namespace-prefix}-arrow {
       &::before {
-        border-right-color: $color;
+        border-right-color: var(--color-tippy-bg);
         right: $arrow-size;
       }
 
@@ -163,7 +172,7 @@ $transparent-darker: rgba(0, 8, 16, 0.5);
         border-width: 7px 7px 7px 0;
         right: $arrow-size + 1;
         top: 1px;
-        border-right-color: $transparent-darker;
+        border-right-color: var(--color-arrow-border);
       }
     }
 

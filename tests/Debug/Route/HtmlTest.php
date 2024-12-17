@@ -23,8 +23,8 @@ class HtmlTest extends DebugTestFramework
         ));
         $expect = '<div class="debug"%s>
 <style type="text/css">%a</style>
-<script>%s</script>
-<script>%a</script>
+<script defer>%s</script>
+<script defer>%a</script>
 <header class="debug-bar debug-menu-bar">PHPDebugConsole<nav role="tablist" style="display:none;">%A</nav></header>
 <div class="loading">Loading <i class="fa fa-spinner fa-pulse fa-2x fa-fw" aria-hidden="true"></i></div>
 <div class="tab-panes" style="display:none;">

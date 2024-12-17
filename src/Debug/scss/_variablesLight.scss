@@ -1,0 +1,91 @@
+@use 'sass:color';
+
+.debug {
+  --color-bg: #fff;
+  --color-fg: #111;
+  --color-bg-2: #f3f3f3;
+  --color-fg-2: #6e6e6e;
+  --color-bg-2-hover: #{color.adjust(#f3f3f3, $lightness: -10%)};
+  --color-fg-hover: #333;
+  --color-resize-handle: #{color.adjust(#f3f3f3, $lightness: -10%)};
+  --color-ui-border: #d0d0d0;
+  
+  --color-button-fg: #111;
+  --color-button-bg: #f0f0f0;
+  --color-button-bg-hover: #dde6f0;
+  --color-button-border: #afafaf;
+
+  --color-fa-inverse: #fff;
+  --color-secondary-bg: #666;
+  --color-secondary-fg: #fff;
+
+  --color-a: #00e;
+  --color-a-visited: #551a8b;
+  --color-a-hover: #e00;
+  --color-header: purple;
+
+  --color-assert-bg: rgba(255, 204, 204, 0.75);
+  --color-assert-fg: #111;
+
+  --color-error-bg: #fcebeb;
+  --color-error-border: #d8000c;
+  --color-error-fg: #d8000c;
+  --color-error-link: #843534;
+  
+  --color-info-bg: #d9edf7ee;
+  --color-info-border: #bce8f1;
+  --color-info-fg: #31708f;
+  --color-info-link: #245269;
+  
+  --color-success-bg: #dff0d8ee;
+  --color-success-border: #d6e9c6;
+  --color-success-fg: #3c763d;
+  --color-success-link: #2b542c;
+  
+  --color-warn-bg: #fef6d5;
+  --color-warn-border: #faebcc;
+  --color-warn-fg: #8a6d3b;
+  --color-warn-link: #66512c;
+
+  --color-classname: color-mix(in lch, currentColor, #8d0c4c);
+  --color-namespace: inherit;
+  --opacity-namespace: 0.5;
+  --color-identifier: #039;
+  --color-numeric: #009;
+  --color-timestamp: #009;
+  // --color-quote: #333c;
+
+  --color-array-file-tree-key: #119;
+  --color-key-bracket: #999;
+  --color-keyword: #07a;
+  --color-operator: #a67f59;
+  --color-param: #263;
+  --color-punct: #999;
+  --color-type: #9d4;
+  --color-true: #393;
+  --color-false: #c33;
+  --color-recursion: #f00;
+  --color-t-null: #c7c7c74c;
+
+  --color-prettified: #000b9b; /* the word "prettified" */
+  --color-unicode-bg: #c0c0ff;
+  --color-binary-bg: #c0c0c0;
+  --color-binary-fg: #003;
+
+  --color-object-debug: #000b9bee;
+  --color-object-heading: #4f16b0;
+  --color-object-magic: #f80e;
+  --color-object-private: #00000082;
+  --color-object-protected: #000000c6;
+  --color-object-public: inherit;
+  --color-object-virtual: #ccaaFF;
+  --color-object-warning: #F00;
+
+  --color-object-static: #da0d87ee;
+  --color-object-final: #f00e;
+
+  --color-table-th-bg: rgba(0, 0, 0, 0.1);
+  --color-table-hover-fg: #212529;
+  --color-table-hover-bg: rgba(0, 0, 0, 0.075);
+  --color-table-undefined-bg: rgba(0, 0, 0, 0.1);
+}

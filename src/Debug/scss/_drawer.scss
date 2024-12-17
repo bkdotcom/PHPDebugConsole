@@ -3,7 +3,6 @@
   bottom: 0;
   left: 0;
   width: 100%;
-  background-color: #fff;
   z-index: 1049;
 
   // debug-drawer is closed (pushed offscreen) by default
@@ -27,11 +26,11 @@
     border-radius: 5px 5px 0 0;
     padding: 4px 14px;
     font-size: 16px;
-    background: $lite-grey;
+    background: var(--color-bg-2);
     cursor: pointer;
     transition: all 0.5s;
     &:hover {
-      background: darken($lite-grey, 10%);
+      background: var(--color-bg-2-hover);
     }
     .debug-error-counts {
       margin-left: 0.5em;
@@ -51,9 +50,9 @@
     height: 4px;
     width: 100%;
     opacity: 0;
-    border-top: 1px solid $border-color;
-    border-bottom: 1px solid $border-color;
-    background: darken($lite-grey, 10%);
+    border-top: 1px solid var(--color-ui-border);
+    border-bottom: 1px solid var(--color-ui-border);
+    background: var(--color-resize-handle);
     transition: all 0.25s ease-out;
     // transition-timing-function: ease-out;
   }
@@ -72,7 +71,7 @@
         display: inline-block;
       }
     }
-    & .debug-resize-handle {
+    .debug-resize-handle {
       cursor: ns-resize;
       &:hover {
         opacity: 1;

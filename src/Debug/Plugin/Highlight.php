@@ -26,7 +26,7 @@ class Highlight implements AssetProviderInterface
     {
         return array(
             'css' => [
-                './js/prism.css',
+                './css/PrismJsLightDark.css',
                 '.debug pre[class*="language-"] {
                     padding: 0;
                     margin: 0.25em 0 0.25em 0;

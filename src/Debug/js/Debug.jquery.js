@@ -1,8 +1,6 @@
 (function ($) {
   'use strict';
 
-  $ = $ && Object.prototype.hasOwnProperty.call($, 'default') ? $['default'] : $;
-
   Object.keys = Object.keys || function (o) {
     if (o !== Object(o)) {
       throw new TypeError('Object.keys called on a non-object')
@@ -17,18 +15,18 @@
     return k
   };
 
-  var config;
+  var config$a;
 
-  function init($root)
+  function init$c($root)
   {
-    config = $root.data('config').get();
+    config$a = $root.data('config').get();
   }
 
   /**
    * Adds expand/collapse functionality to array
    * does not enhance values
    */
-  function enhance ($node) {
+  function enhance$1 ($node) {
     // console.log('enhanceArray', $node[0])
     var $arrayInner = $node.find('> .array-inner');
     var isEnhanced = $node.find(' > .t_array-expand').length > 0;
@@ -46,7 +44,7 @@
       return
     }
     enhanceArrayAddMarkup($node);
-    $.each(config.iconsArray, function (selector, v) {
+    $.each(config$a.iconsArray, function (selector, v) {
       $node.find(selector).prepend(v);
     });
     $node.debugEnhance(enhanceArrayIsExpanded($node) ? 'expand' : 'collapse');
@@ -70,13 +68,13 @@
     }
     $expander = $('<span class="t_array-expand" data-toggle="array">' +
         '<span class="t_keyword">array</span><span class="t_punct">(</span> ' +
-        '<i class="fa ' + config.iconsExpand.expand + '"></i>&middot;&middot;&middot; ' +
+        '<i class="fa ' + config$a.iconsExpand.expand + '"></i>&middot;&middot;&middot; ' +
         '<span class="t_punct">)</span>' +
       '</span>');
     // add expand/collapse
     $node.find('> .t_keyword').first()
       .wrap('<span class="t_array-collapse" data-toggle="array">')
-      .after('<span class="t_punct">(</span> <i class="fa ' + config.iconsExpand.collapse + '"></i>')
+      .after('<span class="t_punct">(</span> <i class="fa ' + config$a.iconsExpand.collapse + '"></i>')
       .parent().next().remove(); // remove original '('
     $node.prepend($expander);
   }
@@ -95,10 +93,10 @@
     return expand || $node.hasClass('array-file-tree')
   }
 
-  var config$1;
+  var config$9;
 
-  function init$1 ($delegateNode) {
-    config$1 = $delegateNode.data('config').get();
+  function init$b ($delegateNode) {
+    config$9 = $delegateNode.data('config').get();
     $delegateNode.on('click', '[data-toggle=vis]', function () {
       toggleVis(this);
       return false
@@ -109,8 +107,8 @@
     });
   }
 
-  function addIcons ($node) {
-    $.each(config$1.iconsObject, function (selector, v) {
+  function addIcons$1 ($node) {
+    $.each(config$9.iconsObject, function (selector, v) {
       var $found = addIconFind($node, selector);
       var vMatches = typeof v === 'string'
         ? v.match(/^([ap])\s*:(.+)$/)
@@ -159,7 +157,7 @@
    * Adds toggle icon & hides target
    * Minimal DOM manipulation -> apply to all descendants
    */
-  function enhance$1 ($node) {
+  function enhance ($node) {
     var selectors = $node.find('> .t_identifier').length
       ? ['> .t_identifier']
       : ['> .classname', '> .t_const'];
@@ -178,7 +176,7 @@
         return
       }
       $toggle.wrap('<span data-toggle="object"></span>')
-        .after(' <i class="fa ' + config$1.iconsExpand.expand + '"></i>');
+        .after(' <i class="fa ' + config$9.iconsExpand.expand + '"></i>');
       $target.hide();
     });
   }
@@ -199,7 +197,7 @@
     }
     enhanceInterfaces($obj);
     visToggles($inner, accessible);
-    addIcons($inner);
+    addIcons$1($inner);
     $inner.find('> .property.forceShow').show().find('> .t_array').debugEnhance('expand');
     if (callPostToggle) {
       postToggle($obj, callPostToggle === 'allDesc');
@@ -371,19 +369,19 @@
     $obj.trigger('expanded.debug.object');
   }
 
-  var enhanceObject = /*#__PURE__*/Object.freeze({
+  var enhanceObject$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
-    init: init$1,
-    enhance: enhance$1,
-    enhanceInner: enhanceInner
+    enhance: enhance,
+    enhanceInner: enhanceInner,
+    init: init$b
   });
 
-  var enhanceObject$1;
-  var enhanceValue;
+  var enhanceObject;
+  var enhanceValue$1;
 
-  function init$2($root, enhanceVal, enhanceObj) {
-    enhanceValue = enhanceVal;
-    enhanceObject$1 = enhanceObj;
+  function init$a($root, enhanceVal, enhanceObj) {
+    enhanceValue$1 = enhanceVal;
+    enhanceObject = enhanceObj;
     $root.on('click', '.close[data-dismiss=alert]', function () {
       $(this).parent().remove();
     });
@@ -394,7 +392,7 @@
     $root.on('expand.debug.group', onExpandGroup);
     $root.on('expand.debug.object', onExpandObject);
     $root.on('expanded.debug.next', '.context', function (e) {
-      enhanceValue($(e.target).find('> td > .t_array'), $(e.target).closest('li'));
+      enhanceValue$1($(e.target).find('> td > .t_array'), $(e.target).closest('li'));
     });
     $root.on('expanded.debug.array expanded.debug.group expanded.debug.object', onExpanded);
   }
@@ -435,7 +433,7 @@
     var $entry = $node.closest('li[class*=m_]');
     e.stopPropagation();
     $node.find('> .array-inner > li > :last-child, > .array-inner > li[class]').each(function () {
-      enhanceValue(this, $entry);
+      enhanceValue$1(this, $entry);
     });
   }
 
@@ -457,9 +455,9 @@
         '> .property > :last-child,' +
         '> .method .t_string'
       ).each(function () {
-        enhanceValue(this, $entry);
+        enhanceValue$1(this, $entry);
       });
-    enhanceObject$1.enhanceInner($node);
+    enhanceObject.enhanceInner($node);
   }
 
   function onExpanded (e) {
@@ -596,14 +594,14 @@
     return num
   }
 
-  var config$2;
+  var config$8;
 
-  function init$3 ($root) {
-    config$2 = $root.data('config').get();
+  function init$9 ($root) {
+    config$8 = $root.data('config').get();
     $root.on('config.debug.updated', function (e, changedOpt) {
       e.stopPropagation();
       if (changedOpt === 'linkFilesTemplate') {
-        config$2 = $root.data('config').get();
+        config$8 = $root.data('config').get();
         update($root);
       }
     });
@@ -613,7 +611,7 @@
    * Linkify files if not already done or update already linked files
    */
   function update ($group) {
-    var remove = !config$2.linkFiles || config$2.linkFilesTemplate.length === 0;
+    var remove = !config$8.linkFiles || config$8.linkFilesTemplate.length === 0;
     $group.find('li[data-detect-files]').each(function () {
       create($(this), $(this).find('.t_string'), remove);
     });
@@ -627,7 +625,7 @@
       return this.innerText.match(/^file$/)
     });
     var detectFiles = $entry.data('detectFiles') === true || $objects.length > 0;
-    if (!config$2.linkFiles && !remove) {
+    if (!config$8.linkFiles && !remove) {
       return
     }
     if (detectFiles === false) {
@@ -655,7 +653,7 @@
       file: file,
       line: line || 1
     };
-    return config$2.linkFilesTemplate.replace(
+    return config$8.linkFilesTemplate.replace(
       /%(\w*)\b/g,
       function (m, key) {
         return Object.prototype.hasOwnProperty.call(data, key)
@@ -846,16 +844,16 @@
     return text.match(/^(\/.+\.php)(?: \(line (\d+)(, eval'd line \d+)?\))?$/) || []
   }
 
-  var config$3;
+  var config$7;
   var toExpandQueue = [];
   var processingQueue = false;
 
-  function init$4 ($root) {
-    config$3 = $root.data('config').get();
-    init($root);
-    init$1($root);
-    init$2($root, enhanceValue$1, enhanceObject);
-    init$3($root);
+  function init$8 ($root) {
+    config$7 = $root.data('config').get();
+    init$c($root);
+    init$b($root);
+    init$a($root, enhanceValue, enhanceObject$1);
+    init$9($root);
   }
 
   /**
@@ -901,26 +899,26 @@
     $entry.trigger('enhanced.debug');
   }
 
-  function enhanceValue$1 (node, $entry) {
+  function enhanceValue (node, $entry) {
     var $node = $(node);
     if ($node.is('.t_array')) {
-      enhance($node);
-    } else if ($node.is('.t_object')) {
       enhance$1($node);
+    } else if ($node.is('.t_object')) {
+      enhance($node);
     } else if ($node.is('table')) {
       makeSortable($node);
     } else if ($node.is('.t_string')) {
       create($entry, $node);
     } else if ($node.is('.string-encoded.tabs-container')) {
       // console.warn('enhanceStringEncoded', $node)
-      enhanceValue$1($node.find('> .tab-pane.active > *'), $entry);
+      enhanceValue($node.find('> .tab-pane.active > *'), $entry);
     }
   }
 
   /**
    * add font-awesome icons
    */
-  function addIcons$1 ($node) {
+  function addIcons ($node) {
     var $caption;
     var $icon = determineIcon($node);
     var isNested = false;
@@ -953,12 +951,12 @@
     var $icon;
     var $node2;
     var selector;
-    for (selector in config$3.iconsMisc) {
+    for (selector in config$7.iconsMisc) {
       $node2 = $node.find(selector);
       if ($node2.length === 0) {
         continue
       }
-      $icon = $(config$3.iconsMisc[selector]);
+      $icon = $(config$7.iconsMisc[selector]);
       if ($node2.find('> i:first-child').hasClass($icon.attr('class'))) {
         // already have icon
         $icon = null;
@@ -989,9 +987,9 @@
   function determineIconFromConfig ($node) {
     var $icon;
     var selector;
-    for (selector in config$3.iconsMethods) {
+    for (selector in config$7.iconsMethods) {
       if ($node.is(selector)) {
-        $icon = $(config$3.iconsMethods[selector]);
+        $icon = $(config$7.iconsMethods[selector]);
         break
       }
     }
@@ -1011,18 +1009,18 @@
       }
       create($entry);
     }
-    addIcons$1($entry);
+    addIcons($entry);
     $entry.children().each(function () {
-      enhanceValue$1(this, $entry);
+      enhanceValue(this, $entry);
     });
   }
 
   function enhanceEntryTabular ($entry) {
     create($entry);
-    addIcons$1($entry);
+    addIcons($entry);
     if ($entry.hasClass('m_table')) {
       $entry.find('> table > tbody > tr > td').each(function () {
-        enhanceValue$1(this, $entry);
+        enhanceValue(this, $entry);
       });
     }
     // table may have a expand collapse row that's initially expanded
@@ -1035,12 +1033,12 @@
     // console.log('enhanceGroup', $group[0])
     var $toggle = $group.find('> .group-header');
     var $target = $toggle.next();
-    addIcons$1($group); // custom data-icon
-    addIcons$1($toggle); // expand/collapse
+    addIcons($group); // custom data-icon
+    addIcons($toggle); // expand/collapse
     $toggle.attr('data-toggle', 'group');
     $toggle.find('.t_array, .t_object').each(function () {
       $(this).data('expand', false);
-      enhanceValue$1(this, $group);
+      enhanceValue(this, $group);
     });
     $.each(['level-error', 'level-info', 'level-warn'], function (i, classname) {
       var $toggleIcon;
@@ -1071,7 +1069,7 @@
     processingQueue = false;
   }
 
-  var $root, config$4, origH, origPageY;
+  var $root$2, config$6, origH, origPageY;
 
   /**
    * @see https://stackoverflow.com/questions/5802467/prevent-scrolling-of-parent-element-when-inner-element-scroll-position-reaches-t
@@ -1085,24 +1083,24 @@
       : this.off('DOMMouseScroll mousewheel wheel')
   };
 
-  function init$5 ($debugRoot) {
-    $root = $debugRoot;
-    config$4 = $root.data('config');
-    if (!config$4.get('drawer')) {
+  function init$7 ($debugRoot) {
+    $root$2 = $debugRoot;
+    config$6 = $root$2.data('config');
+    if (!config$6.get('drawer')) {
       return
     }
 
-    $root.addClass('debug-drawer debug-enhanced-ui'); // debug-enhanced-ui class is deprecated
+    $root$2.addClass('debug-drawer debug-enhanced-ui'); // debug-enhanced-ui class is deprecated
 
-    addMarkup();
+    addMarkup$1();
 
-    $root.find('.tab-panes').scrollLock();
-    $root.find('.debug-resize-handle').on('mousedown', onMousedown);
-    $root.find('.debug-pull-tab').on('click', open);
-    $root.find('.debug-menu-bar .close').on('click', close);
+    $root$2.find('.tab-panes').scrollLock();
+    $root$2.find('.debug-resize-handle').on('mousedown', onMousedown);
+    $root$2.find('.debug-pull-tab').on('click', open$2);
+    $root$2.find('.debug-menu-bar .close').on('click', close$2);
 
-    if (config$4.get('persistDrawer') && config$4.get('openDrawer')) {
-      open();
+    if (config$6.get('persistDrawer') && config$6.get('openDrawer')) {
+      open$2();
     }
   }
 
@@ -1132,8 +1130,8 @@
     });
   }
 
-  function addMarkup () {
-    var $menuBar = $root.find('.debug-menu-bar');
+  function addMarkup$1 () {
+    var $menuBar = $root$2.find('.debug-menu-bar');
     $menuBar.before(
       '<div class="debug-pull-tab" title="Open PHPDebugConsole"><i class="fa fa-bug"></i><i class="fa fa-spinner fa-pulse"></i> PHP</div>' +
       '<div class="debug-resize-handle"></div>'
@@ -1143,23 +1141,23 @@
       '</button>');
   }
 
-  function open () {
-    $root.addClass('debug-drawer-open');
-    $root.debugEnhance();
+  function open$2 () {
+    $root$2.addClass('debug-drawer-open');
+    $root$2.debugEnhance();
     setHeight(); // makes sure height within min/max
-    $('body').css('marginBottom', ($root.height() + 8) + 'px');
+    $('body').css('marginBottom', ($root$2.height() + 8) + 'px');
     $(window).on('resize', setHeight);
-    if (config$4.get('persistDrawer')) {
-      config$4.set('openDrawer', true);
+    if (config$6.get('persistDrawer')) {
+      config$6.set('openDrawer', true);
     }
   }
 
-  function close () {
-    $root.removeClass('debug-drawer-open');
+  function close$2 () {
+    $root$2.removeClass('debug-drawer-open');
     $('body').css('marginBottom', '');
     $(window).off('resize', setHeight);
-    if (config$4.get('persistDrawer')) {
-      config$4.set('openDrawer', false);
+    if (config$6.get('persistDrawer')) {
+      config$6.set('openDrawer', false);
     }
   }
 
@@ -1173,10 +1171,10 @@
       // drawer isn't open / ignore resize
       return
     }
-    origH = $root.find('.tab-panes').height();
+    origH = $root$2.find('.tab-panes').height();
     origPageY = e.pageY;
     $('html').addClass('debug-resizing');
-    $root.parents()
+    $root$2.parents()
       .on('mousemove', onMousemove)
       .on('mouseup', onMouseup);
     e.preventDefault();
@@ -1184,15 +1182,15 @@
 
   function onMouseup () {
     $('html').removeClass('debug-resizing');
-    $root.parents()
+    $root$2.parents()
       .off('mousemove', onMousemove)
       .off('mouseup', onMouseup);
-    $('body').css('marginBottom', ($root.height() + 8) + 'px');
+    $('body').css('marginBottom', ($root$2.height() + 8) + 'px');
   }
 
   function setHeight (height, viaUser) {
-    var $body = $root.find('.tab-panes');
-    var menuH = $root.find('.debug-menu-bar').outerHeight();
+    var $body = $root$2.find('.tab-panes');
+    var menuH = $root$2.find('.debug-menu-bar').outerHeight();
     var minH = 20;
     // inaccurate if document.doctype is null : $(window).height()
     //    aka document.documentElement.clientHeight
@@ -1201,20 +1199,20 @@
     height = Math.min(height, maxH);
     height = Math.max(height, minH);
     $body.css('height', height);
-    if (viaUser && config$4.get('persistDrawer')) {
-      config$4.set('height', height);
+    if (viaUser && config$6.get('persistDrawer')) {
+      config$6.set('height', height);
     }
   }
 
   function checkHeight (height) {
-    var $body = $root.find('.tab-panes');
+    var $body = $root$2.find('.tab-panes');
     if (height && typeof height !== 'object') {
       return height
     }
     // no height passed -> use last or 100
     height = parseInt($body[0].style.height, 10);
-    if (!height && config$4.get('persistDrawer')) {
-      height = config$4.get('height');
+    if (!height && config$6.get('persistDrawer')) {
+      height = config$6.get('height');
     }
     return height || 100
   }
@@ -1222,6 +1220,7 @@
   /**
    * Filter entries
    */
+
 
   var channels = [];
   var tests = [
@@ -1488,17 +1487,21 @@
   var config$5;
   var KEYCODE_ESC = 27;
 
-  function init$7 ($debugRoot) {
+  function init$5 ($debugRoot) {
     $root$1 = $debugRoot;
     config$5 = $root$1.data('config');
 
     addDropdown();
 
     $root$1.find('.debug-options-toggle')
-      .on('click', onDebugOptionsToggle);
+      .on('click', onChangeDebugOptionsToggle);
+
+    $('select[name=theme]')
+      .on('change', onChangeTheme)
+      .val(config$5.get('theme'));
 
     $('input[name=debugCookie]')
-      .on('change', onDebugCookieChange)
+      .on('change', onChangeDebugCookie)
       .prop('checked', config$5.get('debugKey') && cookieGet('debug') === config$5.get('debugKey'));
     if (!config$5.get('debugKey')) {
       $('input[name=debugCookie]')
@@ -1507,16 +1510,16 @@
     }
 
     $('input[name=persistDrawer]')
-      .on('change', onPersistDrawerChange)
+      .on('change', onChangePersistDrawer)
       .prop('checked', config$5.get('persistDrawer'));
 
     $root$1.find('input[name=linkFiles]')
-      .on('change', onLinkFilesChange)
+      .on('change', onChangeLinkFiles)
       .prop('checked', config$5.get('linkFiles'))
       .trigger('change');
 
     $root$1.find('input[name=linkFilesTemplate]')
-      .on('change', onLinkFilesTemplateChange)
+      .on('change', onChangeLinkFilesTemplate)
       .val(config$5.get('linkFilesTemplate'));
   }
 
@@ -1528,6 +1531,11 @@
     );
     $menuBar.append('<div class="debug-options" aria-labelledby="debug-options-toggle">' +
         '<div class="debug-options-body">' +
+          'Theme <select name="theme">' +
+            '<option value="auto">Auto</option>' +
+            '<option value="light">Light</option>' +
+            '<option value="dark">Dark</option>' +
+          '</select>' +
           '<label><input type="checkbox" name="debugCookie" /> Debug Cookie</label>' +
           '<label><input type="checkbox" name="persistDrawer" /> Keep Open/Closed</label>' +
           '<label><input type="checkbox" name="linkFiles" /> Create file links</label>' +
@@ -1558,14 +1566,14 @@
     }
   }
 
-  function onDebugCookieChange () {
+  function onChangeDebugCookie () {
     var isChecked = $(this).is(':checked');
     isChecked
       ? cookieSet('debug', config$5.get('debugKey'), 7)
       : cookieRemove('debug');
   }
 
-  function onDebugOptionsToggle (e) {
+  function onChangeDebugOptionsToggle (e) {
     var isVis = $(this).closest('.debug-bar').find('.debug-options').is('.show');
     $root$1 = $(this).closest('.debug');
     isVis
@@ -1574,7 +1582,7 @@
     e.stopPropagation();
   }
 
-  function onLinkFilesChange () {
+  function onChangeLinkFiles () {
     var isChecked = $(this).prop('checked');
     var $formGroup = $(this).closest('.debug-options').find('input[name=linkFilesTemplate]').closest('.form-group');
     isChecked
@@ -1584,19 +1592,24 @@
     $('input[name=linkFilesTemplate]').trigger('change');
   }
 
-  function onLinkFilesTemplateChange () {
+  function onChangeLinkFilesTemplate () {
     var val = $(this).val();
     config$5.set('linkFilesTemplate', val);
     $root$1.trigger('config.debug.updated', 'linkFilesTemplate');
   }
 
-  function onPersistDrawerChange () {
+  function onChangePersistDrawer () {
     var isChecked = $(this).is(':checked');
     config$5.set({
       persistDrawer: isChecked,
       openDrawer: isChecked,
       openSidebar: true
     });
+  }
+
+  function onChangeTheme () {
+    config$5.set('theme', $(this).val());
+    $root$1.attr('data-theme', config$5.themeGet());
   }
 
   function open$1 () {
@@ -1611,7 +1624,7 @@
     $('body').off('keyup', onBodyKeyup);
   }
 
-  var config$6;
+  var config$4;
   var options;
   var methods; // method filters
   var initialized = false;
@@ -1653,16 +1666,16 @@
       '</div>' +
     '</div>';
 
-  function init$8 ($root) {
-    config$6 = $root.data('config') || $('body').data('config');
+  function init$4 ($root) {
+    config$4 = $root.data('config') || $('body').data('config');
     options = $root.find('> .tab-panes > .tab-primary').data('options') || {};
 
     if (options.sidebar) {
-      addMarkup$1($root);
+      addMarkup($root);
     }
 
-    if (config$6.get('persistDrawer') && !config$6.get('openSidebar')) {
-      close$2($root);
+    if (config$4.get('persistDrawer') && !config$4.get('openSidebar')) {
+      close($root);
     }
 
     $root.on('click', '.close[data-dismiss=alert]', onClickCloseAlert);
@@ -1707,9 +1720,9 @@
     var $debug = $(this).closest('.debug');
     var isVis = $debug.find('.debug-sidebar').is('.show');
     if (!isVis) {
-      open$2($debug);
+      open($debug);
     } else {
-      close$2($debug);
+      close($debug);
     }
   }
 
@@ -1741,7 +1754,7 @@
     });
   }
 
-  function addMarkup$1 ($node) {
+  function addMarkup ($node) {
     var $sidebar = $(sidebarHtml);
     var $expAll = $node.find('.tab-panes > .tab-primary > .tab-body > .expand-all');
     $node.find('.tab-panes > .tab-primary > .tab-body').before($sidebar);
@@ -1759,19 +1772,19 @@
     }, 500);
   }
 
-  function close$2 ($node) {
+  function close ($node) {
     $node.find('.debug-sidebar')
       .removeClass('show')
       .attr('style', '')
       .trigger('close.debug.sidebar');
-    config$6.set('openSidebar', false);
+    config$4.set('openSidebar', false);
   }
 
-  function open$2 ($node) {
+  function open ($node) {
     $node.find('.debug-sidebar')
       .addClass('show')
       .trigger('open.debug.sidebar');
-    config$6.set('openSidebar', true);
+    config$4.set('openSidebar', true);
   }
 
   /**
@@ -1858,28 +1871,29 @@
    * Add primary Ui elements
    */
 
-  var config$7;
-  var $root$2;
 
-  function init$9 ($debugRoot) {
-    $root$2 = $debugRoot;
-    config$7 = $root$2.data('config').get();
+  var config$3;
+  var $root;
+
+  function init$3 ($debugRoot) {
+    $root = $debugRoot;
+    config$3 = $root.data('config').get();
     updateMenuBar();
     addChannelToggles();
     addExpandAll();
     addNoti($('body'));
     enhanceErrorSummary();
-    init$5($root$2);
-    init$6($root$2);
-    init$8($root$2);
-    init$7($root$2);
+    init$7($root);
+    init$6($root);
+    init$4($root);
+    init$5($root);
     addErrorIcons();
-    $root$2.find('.loading').hide();
-    $root$2.addClass('enhanced');
+    $root.find('.loading').hide();
+    $root.addClass('enhanced');
   }
 
   function updateMenuBar () {
-    var $menuBar = $root$2.find('.debug-menu-bar');
+    var $menuBar = $root.find('.debug-menu-bar');
     var nav = $menuBar.find('nav').length
       ? $menuBar.find('nav')[0].outerHTML
       : '';
@@ -1890,9 +1904,9 @@
   }
 
   function addChannelToggles () {
-    var channelNameRoot = $root$2.data('channelNameRoot');
-    var $log = $root$2.find('> .tab-panes > .tab-primary');
-    var channels = $root$2.data('channels') || {};
+    var channelNameRoot = $root.data('channelNameRoot');
+    var $log = $root.find('> .tab-panes > .tab-primary');
+    var channels = $root.data('channels') || {};
     var $ul;
     var $toggles;
     if (!channelNameRoot) {
@@ -1913,10 +1927,10 @@
   }
 
   function addErrorIcons () {
-    var channelNameRoot = $root$2.data('channelNameRoot');
+    var channelNameRoot = $root.data('channelNameRoot');
     var counts = {
-      error: $root$2.find('.m_error[data-channel="' + channelNameRoot + '.phpError"]').length,
-      warn: $root$2.find('.m_warn[data-channel="' + channelNameRoot + '.phpError"]').length
+      error: $root.find('.m_error[data-channel="' + channelNameRoot + '.phpError"]').length,
+      warn: $root.find('.m_warn[data-channel="' + channelNameRoot + '.phpError"]').length
     };
     var $icon;
     var $icons = $('<span>', { class: 'debug-error-counts' });
@@ -1924,27 +1938,27 @@
       if (counts[what] === 0) {
         return
       }
-      $icon = $(config$7.iconsMethods['.m_' + what]).removeClass('fa-lg').addClass('text-' + what);
+      $icon = $(config$3.iconsMethods['.m_' + what]).removeClass('fa-lg').addClass('text-' + what);
       $icons.append($icon).append($('<span>', {
         class: 'badge',
         html: counts[what]
       }));
     });
-    $root$2.find('.debug-pull-tab').append($icons[0].outerHTML);
-    $root$2.find('.debug-menu-bar .float-right').prepend($icons);
+    $root.find('.debug-pull-tab').append($icons[0].outerHTML);
+    $root.find('.debug-menu-bar .float-right').prepend($icons);
   }
 
   function addExpandAll () {
     var $expandAll = $('<button>', {
       class: 'expand-all'
     }).html('<i class="fa fa-lg fa-plus"></i> Expand All Groups');
-    var $logBody = $root$2.find('> .tab-panes > .tab-primary > .tab-body');
+    var $logBody = $root.find('> .tab-panes > .tab-primary > .tab-body');
 
     // this is currently invoked before entries are enhance / empty class not yet added
     if ($logBody.find('.m_group:not(.empty)').length > 1) {
       $logBody.find('.debug-log-summary').before($expandAll);
     }
-    $root$2.on('click', '.expand-all', function () {
+    $root.on('click', '.expand-all', function () {
       $(this).closest('.debug').find('.m_group:not(.expanded)').debugEnhance('expand');
       return false
     });
@@ -1961,6 +1975,9 @@
       '</div>');
   }
 
+  /**
+   * @return {jQuery} $ul
+   */
   function buildChannelList (channels, nameRoot, checkedChannels, prepend) {
     var $lis = [];
     var $ul = $('<ul class="list-unstyled">');
@@ -2106,8 +2123,8 @@
    * ErrorSummary should be considered deprecated
    */
   function enhanceErrorSummary () {
-    var $errorSummary = $root$2.find('.m_alert.error-summary');
-    $errorSummary.find('h3:first-child').prepend(config$7.iconsMethods['.m_error']);
+    var $errorSummary = $root.find('.m_alert.error-summary');
+    $errorSummary.find('h3:first-child').prepend(config$3.iconsMethods['.m_error']);
     $errorSummary.find('.in-console li[class*=error-]').each(function () {
       var category = $(this).attr('class').replace('error-', '');
       var html = $(this).html();
@@ -2161,10 +2178,11 @@
    * handle expanding/collapsing arrays, groups, & objects
    */
 
-  var config$8;
 
-  function init$a ($delegateNode) {
-    config$8 = $delegateNode.data('config').get();
+  var config$2;
+
+  function init$2 ($delegateNode) {
+    config$2 = $delegateNode.data('config').get();
     $delegateNode.on('click', '[data-toggle=array]', onClickToggle);
     $delegateNode.on('click', '[data-toggle=group]', onClickToggle);
     $delegateNode.on('click', '[data-toggle=next]', function (e) {
@@ -2203,7 +2221,7 @@
   }
 
   function expand ($node) {
-    var icon = config$8.iconsExpand.collapse;
+    var icon = config$2.iconsExpand.collapse;
     var info = getNodeInfo($node);
     var eventNameDone = 'expanded.debug.' + info.what;
     // trigger while still hidden!
@@ -2299,7 +2317,7 @@
   }
 
   function collapseGroupObjectDone ($wrap, $toggle, eventNameDone) {
-    var icon = config$8.iconsExpand.expand;
+    var icon = config$2.iconsExpand.expand;
     $wrap.removeClass('expanded');
     iconUpdate($toggle, icon);
     $wrap.trigger(eventNameDone);
@@ -2316,7 +2334,7 @@
   }
 
   function collapseNextDone ($toggle, eventNameDone) {
-    var icon = config$8.iconsExpand.expand;
+    var icon = config$2.iconsExpand.expand;
     $toggle.removeClass('expanded');
     iconUpdate($toggle, icon);
     $toggle.next().trigger(eventNameDone);
@@ -2347,9 +2365,9 @@
       return true
     };
     if ($group.find('.m_error').filter(filter).length) {
-      icon = config$8.iconsMethods['.m_error'];
+      icon = config$2.iconsMethods['.m_error'];
     } else if ($group.find('.m_warn').filter(filter).length) {
-      icon = config$8.iconsMethods['.m_warn'];
+      icon = config$2.iconsMethods['.m_warn'];
     }
     return icon
   }
@@ -2423,7 +2441,7 @@
     var isExpanded = $group.hasClass('expanded');
     // console.log('groupUpdate', $toggle.text(), icon, haveVis)
     $group.toggleClass('empty', !haveVis); // 'empty' class just affects cursor
-    iconUpdate($toggle, config$8.iconsExpand[isExpanded ? 'collapse' : 'expand']);
+    iconUpdate($toggle, config$2.iconsExpand[isExpanded ? 'collapse' : 'expand']);
     if (!icon || isExpanded) {
       $toggle.find(selector).remove();
       return
@@ -2438,9 +2456,9 @@
   function iconUpdate ($toggle, classNameNew) {
     var $icon = $toggle.children('i').eq(0);
     if ($toggle.hasClass('group-header') && $toggle.parent().hasClass('empty')) {
-      classNameNew = config$8.iconsExpand.empty;
+      classNameNew = config$2.iconsExpand.empty;
     }
-    $.each(config$8.iconsExpand, function (i, className) {
+    $.each(config$2.iconsExpand, function (i, className) {
       $icon.toggleClass(className, className === classNameNew);
     });
   }
@@ -2454,7 +2472,8 @@
    * handle tabs
    */
 
-  function init$b ($delegateNode) {
+
+  function init$1 ($delegateNode) {
     // config = $delegateNode.data('config').get()
     var $tabPanes = $delegateNode.find('.tab-panes');
     $delegateNode.find('nav .nav-link').each(function (i, tab) {
@@ -2554,7 +2573,7 @@
     return node;
   }
 
-  function isElement(node) {
+  function isElement$1(node) {
     var OwnElement = getWindow(node).Element;
     return node instanceof OwnElement || node instanceof Element;
   }
@@ -2603,7 +2622,7 @@
     });
   }
 
-  function effect(_ref2) {
+  function effect$2(_ref2) {
     var state = _ref2.state;
     var initialStyles = {
       popper: {
@@ -2653,11 +2672,11 @@
     enabled: true,
     phase: 'write',
     fn: applyStyles,
-    effect: effect,
+    effect: effect$2,
     requires: ['computeStyles']
   };
 
-  function getBasePlacement(placement) {
+  function getBasePlacement$1(placement) {
     return placement.split('-')[0];
   }
 
@@ -2699,7 +2718,7 @@
       scaleY = element.offsetHeight > 0 ? round(clientRect.height) / element.offsetHeight || 1 : 1;
     }
 
-    var _ref = isElement(element) ? getWindow(element) : window,
+    var _ref = isElement$1(element) ? getWindow(element) : window,
         visualViewport = _ref.visualViewport;
 
     var addVisualOffsets = !isLayoutViewport() && isFixedStrategy;
@@ -2777,7 +2796,7 @@
 
   function getDocumentElement(element) {
     // $FlowFixMe[incompatible-return]: assume body is always available
-    return ((isElement(element) ? element.ownerDocument : // $FlowFixMe[prop-missing]
+    return ((isElement$1(element) ? element.ownerDocument : // $FlowFixMe[prop-missing]
     element.document) || window.document).documentElement;
   }
 
@@ -2907,7 +2926,7 @@
         options = _ref.options;
     var arrowElement = state.elements.arrow;
     var popperOffsets = state.modifiersData.popperOffsets;
-    var basePlacement = getBasePlacement(state.placement);
+    var basePlacement = getBasePlacement$1(state.placement);
     var axis = getMainAxisFromPlacement(basePlacement);
     var isVertical = [left, right].indexOf(basePlacement) >= 0;
     var len = isVertical ? 'height' : 'width';
@@ -3098,7 +3117,7 @@
         _options$roundOffsets = options.roundOffsets,
         roundOffsets = _options$roundOffsets === void 0 ? true : _options$roundOffsets;
     var commonStyles = {
-      placement: getBasePlacement(state.placement),
+      placement: getBasePlacement$1(state.placement),
       variation: getVariation(state.placement),
       popper: state.elements.popper,
       popperRect: state.rects.popper,
@@ -3142,7 +3161,7 @@
     passive: true
   };
 
-  function effect$2(_ref) {
+  function effect(_ref) {
     var state = _ref.state,
         instance = _ref.instance,
         options = _ref.options;
@@ -3182,11 +3201,11 @@
     enabled: true,
     phase: 'write',
     fn: function fn() {},
-    effect: effect$2,
+    effect: effect,
     data: {}
   };
 
-  var hash = {
+  var hash$1 = {
     left: 'right',
     right: 'left',
     bottom: 'top',
@@ -3194,17 +3213,17 @@
   };
   function getOppositePlacement(placement) {
     return placement.replace(/left|right|bottom|top/g, function (matched) {
-      return hash[matched];
+      return hash$1[matched];
     });
   }
 
-  var hash$1 = {
+  var hash = {
     start: 'end',
     end: 'start'
   };
   function getOppositeVariationPlacement(placement) {
     return placement.replace(/start|end/g, function (matched) {
-      return hash$1[matched];
+      return hash[matched];
     });
   }
 
@@ -3351,7 +3370,7 @@
   }
 
   function getClientRectFromMixedType(element, clippingParent, strategy) {
-    return clippingParent === viewport ? rectToClientRect(getViewportRect(element, strategy)) : isElement(clippingParent) ? getInnerBoundingClientRect(clippingParent, strategy) : rectToClientRect(getDocumentRect(getDocumentElement(element)));
+    return clippingParent === viewport ? rectToClientRect(getViewportRect(element, strategy)) : isElement$1(clippingParent) ? getInnerBoundingClientRect(clippingParent, strategy) : rectToClientRect(getDocumentRect(getDocumentElement(element)));
   } // A "clipping parent" is an overflowable container with the characteristic of
   // clipping (or hiding) overflowing elements with a position different from
   // `initial`
@@ -3362,13 +3381,13 @@
     var canEscapeClipping = ['absolute', 'fixed'].indexOf(getComputedStyle(element).position) >= 0;
     var clipperElement = canEscapeClipping && isHTMLElement(element) ? getOffsetParent(element) : element;
 
-    if (!isElement(clipperElement)) {
+    if (!isElement$1(clipperElement)) {
       return [];
     } // $FlowFixMe[incompatible-return]: https://github.com/facebook/flow/issues/1414
 
 
     return clippingParents.filter(function (clippingParent) {
-      return isElement(clippingParent) && contains(clippingParent, clipperElement) && getNodeName(clippingParent) !== 'body';
+      return isElement$1(clippingParent) && contains(clippingParent, clipperElement) && getNodeName(clippingParent) !== 'body';
     });
   } // Gets the maximum area that the element is visible in due to any number of
   // clipping parents
@@ -3397,7 +3416,7 @@
     var reference = _ref.reference,
         element = _ref.element,
         placement = _ref.placement;
-    var basePlacement = placement ? getBasePlacement(placement) : null;
+    var basePlacement = placement ? getBasePlacement$1(placement) : null;
     var variation = placement ? getVariation(placement) : null;
     var commonX = reference.x + reference.width / 2 - element.width / 2;
     var commonY = reference.y + reference.height / 2 - element.height / 2;
@@ -3482,7 +3501,7 @@
     var altContext = elementContext === popper ? reference : popper;
     var popperRect = state.rects.popper;
     var element = state.elements[altBoundary ? altContext : elementContext];
-    var clippingClientRect = getClippingRect(isElement(element) ? element : element.contextElement || getDocumentElement(state.elements.popper), boundary, rootBoundary, strategy);
+    var clippingClientRect = getClippingRect(isElement$1(element) ? element : element.contextElement || getDocumentElement(state.elements.popper), boundary, rootBoundary, strategy);
     var referenceClientRect = getBoundingClientRect(state.elements.reference);
     var popperOffsets = computeOffsets({
       reference: referenceClientRect,
@@ -3546,7 +3565,7 @@
         boundary: boundary,
         rootBoundary: rootBoundary,
         padding: padding
-      })[getBasePlacement(placement)];
+      })[getBasePlacement$1(placement)];
       return acc;
     }, {});
     return Object.keys(overflows).sort(function (a, b) {
@@ -3555,7 +3574,7 @@
   }
 
   function getExpandedFallbackPlacements(placement) {
-    if (getBasePlacement(placement) === auto) {
+    if (getBasePlacement$1(placement) === auto) {
       return [];
     }
 
@@ -3585,11 +3604,11 @@
         flipVariations = _options$flipVariatio === void 0 ? true : _options$flipVariatio,
         allowedAutoPlacements = options.allowedAutoPlacements;
     var preferredPlacement = state.options.placement;
-    var basePlacement = getBasePlacement(preferredPlacement);
+    var basePlacement = getBasePlacement$1(preferredPlacement);
     var isBasePlacement = basePlacement === preferredPlacement;
     var fallbackPlacements = specifiedFallbackPlacements || (isBasePlacement || !flipVariations ? [getOppositePlacement(preferredPlacement)] : getExpandedFallbackPlacements(preferredPlacement));
     var placements = [preferredPlacement].concat(fallbackPlacements).reduce(function (acc, placement) {
-      return acc.concat(getBasePlacement(placement) === auto ? computeAutoPlacement(state, {
+      return acc.concat(getBasePlacement$1(placement) === auto ? computeAutoPlacement(state, {
         placement: placement,
         boundary: boundary,
         rootBoundary: rootBoundary,
@@ -3607,7 +3626,7 @@
     for (var i = 0; i < placements.length; i++) {
       var placement = placements[i];
 
-      var _basePlacement = getBasePlacement(placement);
+      var _basePlacement = getBasePlacement$1(placement);
 
       var isStartVariation = getVariation(placement) === start;
       var isVertical = [top, bottom].indexOf(_basePlacement) >= 0;
@@ -3754,7 +3773,7 @@
   };
 
   function distanceAndSkiddingToXY(placement, rects, offset) {
-    var basePlacement = getBasePlacement(placement);
+    var basePlacement = getBasePlacement$1(placement);
     var invertDistance = [left, top].indexOf(basePlacement) >= 0 ? -1 : 1;
 
     var _ref = typeof offset === 'function' ? offset(Object.assign({}, rects, {
@@ -3855,7 +3874,7 @@
       padding: padding,
       altBoundary: altBoundary
     });
-    var basePlacement = getBasePlacement(state.placement);
+    var basePlacement = getBasePlacement$1(state.placement);
     var variation = getVariation(state.placement);
     var isBasePlacement = !variation;
     var mainAxis = getMainAxisFromPlacement(basePlacement);
@@ -4072,7 +4091,7 @@
     }, []);
   }
 
-  function debounce(fn) {
+  function debounce$1(fn) {
     var pending;
     return function () {
       if (!pending) {
@@ -4155,7 +4174,7 @@
           cleanupModifierEffects();
           state.options = Object.assign({}, defaultOptions, state.options, options);
           state.scrollParents = {
-            reference: isElement(reference) ? listScrollParents(reference) : reference.contextElement ? listScrollParents(reference.contextElement) : [],
+            reference: isElement$1(reference) ? listScrollParents(reference) : reference.contextElement ? listScrollParents(reference.contextElement) : [],
             popper: listScrollParents(popper)
           }; // Orders the modifiers based on their dependencies and `phase`
           // properties
@@ -4232,7 +4251,7 @@
         },
         // Async and optimistically optimized update – it will not be executed if
         // not necessary (debounced to run at most once-per-tick)
-        update: debounce(function () {
+        update: debounce$1(function () {
           return new Promise(function (resolve) {
             instance.forceUpdate();
             resolve(state);
@@ -4332,7 +4351,7 @@
   function invokeWithArgsOrReturn(value, args) {
     return typeof value === 'function' ? value.apply(void 0, args) : value;
   }
-  function debounce$1(fn, ms) {
+  function debounce(fn, ms) {
     // Avoid wrapping in `setTimeout` if ms is 0 anyway
     if (ms === 0) {
       return fn;
@@ -4369,7 +4388,7 @@
       return arr.indexOf(item) === index;
     });
   }
-  function getBasePlacement$1(placement) {
+  function getBasePlacement(placement) {
     return placement.split('-')[0];
   }
   function arrayFrom(value) {
@@ -4388,7 +4407,7 @@
   function div() {
     return document.createElement('div');
   }
-  function isElement$1(value) {
+  function isElement(value) {
     return ['Element', 'Fragment'].some(function (type) {
       return isType(value, type);
     });
@@ -4403,7 +4422,7 @@
     return !!(value && value._tippy && value._tippy.reference === value);
   }
   function getArrayOfElements(value) {
-    if (isElement$1(value)) {
+    if (isElement(value)) {
       return [value];
     }
 
@@ -4448,7 +4467,7 @@
           popperState = _ref.popperState,
           props = _ref.props;
       var interactiveBorder = props.interactiveBorder;
-      var basePlacement = getBasePlacement$1(popperState.placement);
+      var basePlacement = getBasePlacement(popperState.placement);
       var offsetData = popperState.modifiersData.offset;
 
       if (!offsetData) {
@@ -4773,7 +4792,7 @@
     } else {
       arrow.className = SVG_ARROW_CLASS;
 
-      if (isElement$1(value)) {
+      if (isElement(value)) {
         arrow.appendChild(value);
       } else {
         dangerouslySetInnerHTML(arrow, value);
@@ -4784,7 +4803,7 @@
   }
 
   function setContent(content, props) {
-    if (isElement$1(props.content)) {
+    if (isElement(props.content)) {
       dangerouslySetInnerHTML(content, '');
       content.appendChild(props.content);
     } else if (typeof props.content !== 'function') {
@@ -4902,7 +4921,7 @@
     var currentTransitionEndListener;
     var onFirstUpdate;
     var listeners = [];
-    var debouncedOnMouseMove = debounce$1(onMouseMove, props.interactiveDebounce);
+    var debouncedOnMouseMove = debounce(onMouseMove, props.interactiveDebounce);
     var currentTarget; // ===========================================================================
     // 🔑 Public members
     // ===========================================================================
@@ -5611,7 +5630,7 @@
 
       if (prevProps.interactiveDebounce !== nextProps.interactiveDebounce) {
         cleanupInteractiveMouseListeners();
-        debouncedOnMouseMove = debounce$1(onMouseMove, nextProps.interactiveDebounce);
+        debouncedOnMouseMove = debounce(onMouseMove, nextProps.interactiveDebounce);
       } // Ensure stale aria-expanded attributes are removed
 
 
@@ -5887,7 +5906,7 @@
     /* istanbul ignore else */
 
     {
-      var isSingleContentElement = isElement$1(passedProps.content);
+      var isSingleContentElement = isElement(passedProps.content);
       var isMoreThanOneReferenceElement = elements.length > 1;
       warnWhen(isSingleContentElement && isMoreThanOneReferenceElement, ['tippy() was passed an Element as the `content` prop, but more than', 'one tippy instance was created by this invocation. This means the', 'content element will only be appended to the last tippy instance.', '\n\n', 'Instead, pass the .innerHTML of the element, or use a function that', 'returns a cloned version of the element instead.', '\n\n', '1) content: element.innerHTML\n', '2) content: () => element.cloneNode(true)'].join(' '));
     }
@@ -5901,7 +5920,7 @@
 
       return acc;
     }, []);
-    return isElement$1(targets) ? instances[0] : instances;
+    return isElement(targets) ? instances[0] : instances;
   }
 
   tippy.defaultProps = defaultProps;
@@ -5912,7 +5931,7 @@
   // and causing transitions to break for singletons when the console is open, but
   // most notably for non-transform styles being used, `gpuAcceleration: false`.
 
-  var applyStylesModifier = Object.assign({}, applyStyles$1, {
+  Object.assign({}, applyStyles$1, {
     effect: function effect(_ref) {
       var state = _ref.state;
       var initialStyles = {
@@ -6088,7 +6107,7 @@
     render: render
   });
 
-  function init$c ($root) {
+  function init ($root) {
     delegate($root[0], {
       target: '.fa-hashtag, [title]',
       delay: [200, null], // show / hide delay (null = default)
@@ -6319,21 +6338,65 @@
     return '<span class="classname">' + val + '</span>'
   }
 
-  var config$9 = {
-    fontAwesomeCss: '//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css',
+  var config$1 = {
     clipboardSrc: '//cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js',
+    cssFontAwesome5: '' +
+      '.debug .fa-bell-o:before { content:"\\f0f3"; font-weight:400; }' +
+      '.debug .fa-calendar:before { content:"\\f073"; }' +
+      '.debug .fa-clock-o:before { content:"\\f017"; font-weight:400; }' +
+      '.debug .fa-clone:before { content:"\\f24d"; font-weight:400; }' +
+      '.debug .fa-envelope-o:before { content:"\\f0e0"; font-weight:400; }' +
+      '.debug .fa-exchange:before { content:"\\f362"; }' +
+      '.debug .fa-external-link:before { content:"\\f35d"; }' +
+      '.debug .fa-eye-slash:before { content:"\\f070"; font-weight:400; }' +
+      '.debug .fa-file-code-o:before { content:"\\f1c9"; font-weight:400; }' +
+      '.debug .fa-file-text-o:before { content:"\\f15c"; font-weight:400; }' +
+      '.debug .fa-files-o:before { content:"\\f0c5"; font-weight:400; }' +
+      '.debug .fa-hand-stop-o:before { content:"\\f256"; font-weight:400; }' +
+      '.debug .fa-minus-square-o:before { content:"\\f146"; font-weight:400; }' +
+      '.debug .fa-pencil:before { content:"\\f303" }' +
+      '.debug .fa-pie-chart:before { content:"\\f200"; }' +
+      '.debug .fa-plus-square-o:before { content:"\\f0fe"; font-weight:400; }' +
+      '.debug .fa-shield:before { content:"\\f3ed"; }' +
+      '.debug .fa-square-o:before { content:"\\f0c8"; font-weight:400; }' +
+      '.debug .fa-user-o:before { content:"\\f007"; }' +
+      '.debug .fa-warning:before { content:"\\f071"; }' +
+      '.debug .fa.fa-github { font-family: "Font Awesome 5 Brands"; }',
+    debugKey: getDebugKey(),
+    drawer: false,
+    fontAwesomeCss: '//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css',
+    iconsArray: {
+      '> .array-inner > li > .exclude-count': '<i class="fa fa-eye-slash"></i>'
+    },
     iconsExpand: {
       expand: 'fa-plus-square-o',
       collapse: 'fa-minus-square-o',
       empty: 'fa-square-o'
     },
+    // debug methods (not object methods)
+    iconsMethods: {
+      '.m_assert': '<i class="fa-lg"><b>&ne;</b></i>',
+      '.m_clear': '<i class="fa fa-lg fa-ban"></i>',
+      '.m_count': '<i class="fa fa-lg fa-plus-circle"></i>',
+      '.m_countReset': '<i class="fa fa-lg fa-plus-circle"></i>',
+      '.m_error': '<i class="fa fa-lg fa-times-circle"></i>',
+      '.m_group.expanded': '<i class="fa fa-lg fa-minus-square-o"></i>',
+      '.m_group': '<i class="fa fa-lg fa-plus-square-o"></i>',
+      '.m_info': '<i class="fa fa-lg fa-info-circle"></i>',
+      '.m_profile': '<i class="fa fa-lg fa-pie-chart"></i>',
+      '.m_profileEnd': '<i class="fa fa-lg fa-pie-chart"></i>',
+      '.m_time': '<i class="fa fa-lg fa-clock-o"></i>',
+      '.m_timeLog': '<i class="fa fa-lg fa-clock-o"></i>',
+      '.m_trace': '<i class="fa fa-list"></i>',
+      '.m_warn': '<i class="fa fa-lg fa-warning"></i>'
+    },
     iconsMisc: {
       '.string-encoded': '<i class="fa fa-barcode"></i>',
       '.timestamp': '<i class="fa fa-calendar"></i>'
     },
-    iconsArray: {
-      '> .array-inner > li > .exclude-count': '<i class="fa fa-eye-slash"></i>'
-    },
+    linkFiles: false,
+    linkFilesTemplate: 'subl://open?url=file://%file&line=%line',
+    localStorageKey: 'phpDebugConsole',
     iconsObject: {
       '> .t_modifier_abstract': '<i class="fa fa-circle-o"></i>',
       '> .t_modifier_final': '<i class="fa fa-hand-stop-o"></i>',
@@ -6380,63 +6443,20 @@
       '> .vis-toggles > span[data-toggle=vis][data-vis=debuginfo-excluded]': '<i class="fa fa-eye-slash"></i>',
       '> .vis-toggles > span[data-toggle=vis][data-vis=inherited]': '<i class="fa fa-clone"></i>'
     },
-    // debug methods (not object methods)
-    iconsMethods: {
-      '.m_assert': '<i class="fa-lg"><b>&ne;</b></i>',
-      '.m_clear': '<i class="fa fa-lg fa-ban"></i>',
-      '.m_count': '<i class="fa fa-lg fa-plus-circle"></i>',
-      '.m_countReset': '<i class="fa fa-lg fa-plus-circle"></i>',
-      '.m_error': '<i class="fa fa-lg fa-times-circle"></i>',
-      '.m_group.expanded': '<i class="fa fa-lg fa-minus-square-o"></i>',
-      '.m_group': '<i class="fa fa-lg fa-plus-square-o"></i>',
-      '.m_info': '<i class="fa fa-lg fa-info-circle"></i>',
-      '.m_profile': '<i class="fa fa-lg fa-pie-chart"></i>',
-      '.m_profileEnd': '<i class="fa fa-lg fa-pie-chart"></i>',
-      '.m_time': '<i class="fa fa-lg fa-clock-o"></i>',
-      '.m_timeLog': '<i class="fa fa-lg fa-clock-o"></i>',
-      '.m_trace': '<i class="fa fa-list"></i>',
-      '.m_warn': '<i class="fa fa-lg fa-warning"></i>'
-    },
-    debugKey: getDebugKey(),
-    drawer: false,
     persistDrawer: false,
-    linkFiles: false,
-    linkFilesTemplate: 'subl://open?url=file://%file&line=%line',
-    localStorageKey: 'phpDebugConsole',
-    useLocalStorage: true,
     tooltip: true,
-    cssFontAwesome5: '' +
-      '.debug .fa-bell-o:before { content:"\\f0f3"; font-weight:400; }' +
-      '.debug .fa-calendar:before { content:"\\f073"; }' +
-      '.debug .fa-clock-o:before { content:"\\f017"; font-weight:400; }' +
-      '.debug .fa-clone:before { content:"\\f24d"; font-weight:400; }' +
-      '.debug .fa-envelope-o:before { content:"\\f0e0"; font-weight:400; }' +
-      '.debug .fa-exchange:before { content:"\\f362"; }' +
-      '.debug .fa-external-link:before { content:"\\f35d"; }' +
-      '.debug .fa-eye-slash:before { content:"\\f070"; font-weight:400; }' +
-      '.debug .fa-file-code-o:before { content:"\\f1c9"; font-weight:400; }' +
-      '.debug .fa-file-text-o:before { content:"\\f15c"; font-weight:400; }' +
-      '.debug .fa-files-o:before { content:"\\f0c5"; font-weight:400; }' +
-      '.debug .fa-hand-stop-o:before { content:"\\f256"; font-weight:400; }' +
-      '.debug .fa-minus-square-o:before { content:"\\f146"; font-weight:400; }' +
-      '.debug .fa-pencil:before { content:"\\f303" }' +
-      '.debug .fa-pie-chart:before { content:"\\f200"; }' +
-      '.debug .fa-plus-square-o:before { content:"\\f0fe"; font-weight:400; }' +
-      '.debug .fa-shield:before { content:"\\f3ed"; }' +
-      '.debug .fa-square-o:before { content:"\\f0c8"; font-weight:400; }' +
-      '.debug .fa-user-o:before { content:"\\f007"; }' +
-      '.debug .fa-warning:before { content:"\\f071"; }' +
-      '.debug .fa.fa-github { font-family: "Font Awesome 5 Brands"; }'
+    useLocalStorage: true,
+    theme: 'auto'
   };
 
   function Config () {
     var storedConfig = null;
-    if (config$9.useLocalStorage) {
-      storedConfig = lsGet(config$9.localStorageKey);
+    if (config$1.useLocalStorage) {
+      storedConfig = lsGet(config$1.localStorageKey);
     }
-    this.config = $.extend({}, config$9, storedConfig || {});
+    this.config = $.extend({}, config$1, storedConfig || {});
     this.haveSavedConfig = typeof storedConfig === 'object';
-    this.localStorageKeys = ['persistDrawer', 'openDrawer', 'openSidebar', 'height', 'linkFiles', 'linkFilesTemplate'];
+    this.localStorageKeys = ['persistDrawer', 'openDrawer', 'openSidebar', 'height', 'linkFiles', 'linkFilesTemplate', 'theme'];
   }
 
   Config.prototype.get = function (key) {
@@ -6448,6 +6468,14 @@
     return typeof this.config[key] !== 'undefined'
       ? this.config[key]
       : null
+  };
+
+  Config.prototype.themeGet = function () {
+    var theme = this.get('theme');
+    if (theme === 'auto') {
+      theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    return theme
   };
 
   Config.prototype.set = function (key, val) {
@@ -6586,8 +6614,9 @@
    *    Add FontAwesome icons
    */
 
+
   var listenersRegistered = false;
-  var config$a = new Config();
+  var config = new Config();
 
   if (typeof $ === 'undefined') {
     throw new TypeError('PHPDebugConsole\'s JavaScript requires jQuery.')
@@ -6598,7 +6627,7 @@
   */
   loadDeps([
     {
-      src: config$a.get('fontAwesomeCss'),
+      src: config.get('fontAwesomeCss'),
       type: 'stylesheet',
       check: function () {
         var fontFamily = getFontFamily();
@@ -6609,12 +6638,12 @@
         var fontFamily = getFontFamily();
         var matches = fontFamily.match(/Font\s?Awesome.+(\d+)/);
         if (matches && matches[1] >= 5) {
-          addStyle(config$a.get('cssFontAwesome5'));
+          addStyle(config.get('cssFontAwesome5'));
         }
       }
     },
     {
-      src: config$a.get('clipboardSrc'),
+      src: config.get('clipboardSrc'),
       check: function () {
         return typeof window.ClipboardJS !== 'undefined'
       },
@@ -6625,108 +6654,107 @@
   ]);
 
   $.fn.debugEnhance = function (method, arg1, arg2) {
-    switch (method) {
-      case 'sidebar':
-        return debugEnhanceSidebar(this, arg1)
-      case 'buildChannelList':
-        return buildChannelList(arg1, arg2, arguments[3])
-      case 'collapse':
-        return this.each(function () {
-          collapse($(this), arg1);
-        })
-      case 'expand':
-        return this.each(function () {
-          expand($(this));
-        })
-      case 'init':
-        return debugEnhanceInit(this, arg1)
-      case 'setConfig':
-        return debugEnhanceSetConfig(this, arg1)
-      default:
-        return debugEnhanceDefault(this)
+    if (method === 'buildChannelList') {
+      // buildChannelList is a utility function that can be called without a jQuery object
+      return buildChannelList(arg1, arg2, arguments[3])
     }
+    this.each(function () {
+      var $node = $(this);
+      switch (method) {
+        case 'sidebar':
+          return debugEnhanceSidebar($node, arg1)
+        case 'collapse':
+          return collapse($node, arg1)
+        case 'expand':
+          return expand($node)
+        case 'init':
+          return debugEnhanceInit($node, arg1)
+        case 'setConfig':
+          return debugEnhanceSetConfig($node, arg1)
+        default:
+          return debugEnhanceDefault($node)
+      }
+    });
+    return this
   };
 
   $(function () {
-    $('.debug').each(function () {
-      $(this).debugEnhance('init');
-    });
+    $('.debug').debugEnhance('init');
+    $('.debug.debug-drawer').attr('data-theme', config.themeGet());
+    window.matchMedia('(prefers-color-scheme: dark)').onchange = function (e) {
+      $('.debug.debug-drawer').attr('data-theme', config.themeGet());
+    };
   });
 
   function debugEnhanceInit ($node, arg1) {
-    $node.data('config', config$a);
-    config$a.set($node.eq(0).data('options') || {});
+    $node.data('config', config);
+    config.set($node.eq(0).data('options') || {});
     if (typeof arg1 === 'object') {
-      config$a.set(arg1);
+      config.set(arg1);
     }
-    init$b($node);
-    if (config$a.get('tooltip')) {
-      init$c($node);
+    init$1($node);
+    if (config.get('tooltip')) {
+      init($node);
     }
-    init$4($node);
-    init$a($node);
+    init$8($node);
+    init$2($node);
     registerListeners();
-    init$9($node);
-    if (!config$a.get('drawer')) {
+    init$3($node);
+    if (!config.get('drawer')) {
       $node.debugEnhance();
     }
-    return $node
   }
 
   function debugEnhanceDefault ($node) {
-    return $node.each(function () {
-      var $self = $(this);
-      var $parentLis = {};
-      if ($self.hasClass('debug')) {
-        // console.warn('debugEnhance() : .debug')
-        $self.find('.debug-menu-bar > nav, .tab-panes').show();
-        $self.find('.tab-pane.active')
-          .find('.m_alert, .debug-log-summary, .debug-log')
-          .debugEnhance();
-        $self.trigger('refresh.debug');
-        return
-      }
-      if ($self.hasClass('filter-hidden') && $self.hasClass('m_group') === false) {
-        return
-      }
-      if ($self.hasClass('group-body')) {
-        enhanceEntries($self);
-      } else if ($self.is('li, div') && $self.prop('class').match(/\bm_/) !== null) {
-        // logEntry  (alerts use <div>)
-        enhanceEntry($self);
-      } else if ($self.prop('class').match(/\bt_/)) {
-        // value
-        $parentLis = $self.parents('li').filter(function () {
-          return $(this).prop('class').match(/\bm_/) !== null
-        });
-        enhanceValue$1($self, $parentLis);
-      }
-    })
+    // var $self = $(this)
+    var $parentLis = {};
+    if ($node.hasClass('debug')) {
+      // console.warn('debugEnhance() : .debug')
+      $node.find('.debug-menu-bar > nav, .tab-panes').show();
+      $node.find('.tab-pane.active')
+        .find('.m_alert, .debug-log-summary, .debug-log')
+        .debugEnhance();
+      $node.trigger('refresh.debug');
+      return
+    }
+    if ($node.hasClass('filter-hidden') && $node.hasClass('m_group') === false) {
+      return
+    }
+    if ($node.hasClass('group-body')) {
+      enhanceEntries($node);
+    } else if ($node.is('li, div') && $node.prop('class').match(/\bm_/) !== null) {
+      // logEntry  (alerts use <div>)
+      enhanceEntry($node);
+    } else if ($node.prop('class').match(/\bt_/)) {
+      // value
+      $parentLis = $node.parents('li').filter(function () {
+        return $(this).prop('class').match(/\bm_/) !== null
+      });
+      enhanceValue($node, $parentLis);
+    }
   }
 
   function debugEnhanceSetConfig ($node, arg1) {
     if (typeof arg1 !== 'object') {
-      return $node
+      return
     }
-    config$a.set(arg1);
+    config.set(arg1);
     // update log entries that have already been enhanced
     $node
       .find('.debug-log.enhanced')
       .closest('.debug')
       .add($node)
       .trigger('config.debug.updated', 'linkFilesTemplate');
-    return $node
   }
 
   function debugEnhanceSidebar ($node, arg1) {
     if (arg1 === 'add') {
-      addMarkup$1($node);
+      addMarkup($node);
     } else if (arg1 === 'open') {
-      open$2($node);
+      open($node);
     } else if (arg1 === 'close') {
-      close$2($node);
+      close($node);
     }
-    return $node
   }
 
   /**
@@ -6805,4 +6833,4 @@
     $('.debug-noti').html(html).addClass('animate').closest('.debug-noti-wrap').show();
   }
 
-}(window.jQuery));
+})(window.jQuery);

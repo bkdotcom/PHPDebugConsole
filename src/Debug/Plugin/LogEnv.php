@@ -121,7 +121,7 @@ class LogEnv implements SubscriberInterface
         $this->debug->log(
             '%cgit branch: %c%s',
             'font-weight:bold;',
-            'font-size:1.5em; background-color:#DDD; padding:0 .3em;',
+            'font-size:1.5em; background-color:#CCC; color:#000; padding:0 .3em;',
             $branch,
             $this->debug->meta('icon', ':github:')
         );

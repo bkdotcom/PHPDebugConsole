@@ -226,7 +226,7 @@ class Html extends AbstractRoute
         foreach ($assets as $asset) {
             // isFile "safely" checks if the value is an existing regular file
             if ($this->debug->utility->isFile($asset)) {
-                $asset = \file_get_contents($asset);
+                $asset = \ltrim(\file_get_contents($asset), "\xef\xbb\xbf");
             }
             if ($asset === false) {
                 $asset = '/* PHPDebugConsole: unable to read file ' . $asset . ' */';
@@ -346,8 +346,8 @@ class Html extends AbstractRoute
         if (!$this->cfg['outputScript']) {
             return '';
         }
-        return '<script>window.jQuery || document.write(\'<script src="' . $this->cfg['jqueryUrl'] . '"><\/script>\')</script>' . "\n"
-            . '<script>'
+        return '<script defer>window.jQuery || document.write(\'<script src="' . $this->cfg['jqueryUrl'] . '"><\/script>\')</script>' . "\n"
+            . '<script defer>'
                 . $this->getScript() . "\n"
             . '</script>' . "\n";
     }

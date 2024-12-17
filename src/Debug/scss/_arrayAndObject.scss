@@ -2,21 +2,12 @@
 // array & objects
 //
 
-$color-classname: #8d0c4c;
-$color-param: #263;
+@use 'sass:color';
 
-$color-debug: #000b9bee;
-$color-magic: #f80e;
-$color-private: #00000082;
-$color-protected: #000000c6;
-$color-public: inherit;
-$color-virtual: #ccaaFF;
-$color-warning: #F00;
-
-$color-static: #da0d87ee;
-$color-final: #f00e;
-
-.namespace { opacity: 0.5; }
+.namespace { 
+  color: var(--color-namespace);
+  opacity: var(--opacity-namespace);
+}
 
 .array-inner,
 .object-inner {
@@ -26,7 +17,7 @@ $color-final: #f00e;
 
 .classname {
   font-weight: bold;
-  color: color-mix(in lch, currentColor, $color-classname);
+  color: var(--color-classname);
 }
 
 // this is outside of .t_object because tooltip gets placed outside
@@ -39,7 +30,7 @@ $color-final: #f00e;
 // method parameter or attribute argument
 // this is outside of .t_object because tooltip gets placed outside
 .t_parameter-name {
-  color: $color-param;
+  color: var(--color-param);
 }
 
 .t_array {
@@ -65,11 +56,11 @@ $color-final: #f00e;
       margin-left: 0.25em;
     }
     .exclude-count {
-      background: $info-bg;
-      color: $info-fg;
+      background: var(--color-info-bg);
+      color: var(--color-info-fg);
     }
     .t_key {
-      color: #000040;
+      color: var(--color-array-file-tree-key);
       font-weight: bold;
     }
     .t_string,
@@ -94,7 +85,7 @@ li[class*=m_] > .t_array.array-file-tree > .array-inner {
 }
 
 .t_identifier[title] {
-  border-bottom: 1px dashed blue;
+  border-bottom: currentColor dashed 1px;
 }
 
 .t_object {
@@ -107,7 +98,7 @@ li[class*=m_] > .t_array.array-file-tree > .array-inner {
     margin: 0;
     font-size: inherit;
     font-style: italic;
-    color: $color-header;
+    color: var(--color-header);
   }
 
   .t_modifier_abstract, i.fa-circle-o {
@@ -115,26 +106,26 @@ li[class*=m_] > .t_array.array-file-tree > .array-inner {
     color: #9d2d2d
   }
   .t_modifier_debug {
-    color: $color-debug;
+    color: var(--color-object-debug);
   }
   .t_modifier_final {
-    color: $color-final;
+    color: var(--color-object-final);
     font-weight: bold;
   }
   .t_modifier_private,
   .t_modifier_private-set {
-    color: $color-private;
+    color: var(--color-object-private);
   }
   .t_modifier_protected,
   .t_modifier_protected-set {
-    color: $color-protected;
+    color: var(--color-object-protected);
   }
   .t_modifier_public {
-    color: $color-public;
+    color: var(--color-object-public);
   }
   .t_modifier_static {
     font-style: italic;
-    color: $color-static;
+    color: var(--color-object-static);
   }
 
   > .object-inner {
@@ -163,24 +154,24 @@ li[class*=m_] > .t_array.array-file-tree > .array-inner {
     }
     */
     > .t_modifier_abstract {
-      color: #333;
-      background-color: lighten(#c0c0c0, 15%);
+      color: var(--color-fg);
+      background-color: color.adjust(#c0c0c0, $lightness: 15%);
       border-color: #666;
     }
     > .t_modifier_final {
-      color: $error-fg;
-      background-color: lighten($error-bg, 10%);
-      border-color: $error-fg;
+      color: var(--color-error-fg);
+      background-color: color.adjust(#ffbabaee, $lightness: 10%);
+      border-color: var(--color-error-fg);
     }
     > .t_modifier_interface {
-      color: $info-fg;
-      background-color: $info-bg;
-      border-color: $info-fg;
+      color: var(--color-info-fg);
+      background-color: var(--color-info-bg);
+      border-color: var(--color-info-fg);
     }
     > .t_modifier_readonly {
-      color: $warn-fg;
-      background-color: $warn-bg;
-      border-color: $warn-fg;
+      color: var(--color-warn-fg);
+      background-color: var(--color-warn-bg);
+      border-color: var(--color-warn-fg);
       .fa-stack {
         font-size: 0.8em;
         margin-right: 0.33em;
@@ -190,7 +181,7 @@ li[class*=m_] > .t_array.array-file-tree > .array-inner {
       }
     }
     .heading {
-      color: #4f16b0;
+      color: var(--color-object-heading);
       text-decoration: underline;
       font-weight: bold;
     }
@@ -208,7 +199,7 @@ li[class*=m_] > .t_array.array-file-tree > .array-inner {
 
   .method .parameter .t_parameter-name[title],
   .t_type[title] {
-    border-bottom: 1px dashed blue;
+    border-bottom: currentColor dashed 1px;
   }
 
   .method {
@@ -219,7 +210,7 @@ li[class*=m_] > .t_array.array-file-tree > .array-inner {
       opacity: 0.66;
       i {
         opacity: 0.66; // inherits, want even lighter
-        color: $error-fg;
+        color: var(--color-error-fg);
         border-bottom: 0;
       }
     }
@@ -233,7 +224,7 @@ li[class*=m_] > .t_array.array-file-tree > .array-inner {
 
   .property {
     i.isVirtual {
-      color: $color-virtual;
+      color: var(--color-object-virtual);
       text-shadow: 0px 0px 1px #990099;
     }      
   }
@@ -248,11 +239,11 @@ li[class*=m_] > .t_array.array-file-tree > .array-inner {
 
   i.fa-flag,
   i.fa-warning {
-    color: $color-warning;
+    color: var(--color-object-warning);
   }
 
   i.fa-eye {
-    color: $color-debug;
+    color: var(--color-object-debug);
     font-size: 1.1em;
     border-bottom: 0;
   }
@@ -260,15 +251,15 @@ li[class*=m_] > .t_array.array-file-tree > .array-inner {
   .t_modifier_magic,
   .t_modifier_magic-read,
   .t_modifier_magic-write {
-    color: $color-magic;
+    color: var(--color-object-magic);
   }
   .debugInfo-excluded > i.fa-eye-slash { color: #999; }
 
   .info {
     // "this object has magic methods"
     display: inline-block;
-    background-color: $info-bg;
-    color: $info-fg;
+    background-color: var(--color-info-bg);
+    color: var(--color-info-fg);
   }
 }
 td.t_object {

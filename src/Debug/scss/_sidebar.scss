@@ -11,7 +11,8 @@
   position: absolute;
   box-sizing: border-box;
   width: $sidebar-w + $toggle-w;
-  background: $lite-grey;
+  background: var(--color-bg-2);
+  // color: var(--color-fg);
   height: 100%;
   transform: translateX(-$sidebar-w);
   transition: transform $trans-time;
@@ -63,17 +64,17 @@
     top: 0;
     height: 100%;
     width: $toggle-w;
-    background: $lite-grey;
-    border-left: 1px solid $border-color;
-    border-right: 1px solid $border-color;
+    background: var(--color-bg-2);
+    border-left: 1px solid var(--color-ui-border);
+    border-right: 1px solid var(--color-ui-border);
     cursor: pointer;
     display: flex;
-    color: $border-color;
+    color: var(--color-ui-border);
     text-align: center;
     z-index: 1;
     &:hover {
-      color: $grey-text;
-      background: darken($lite-grey, 10%);
+      color: var(--color-fg-2);
+      background: var(--color-bg-2-hover);
     }
     > div {
       margin: auto;
@@ -122,23 +123,23 @@
     }
   }
 
-  .fa-times-circle { color: $error-fg; }
-  .fa-warning { color: $warn-fg; }
-  .fa-info-circle { color: $info-fg; }
+  .fa-times-circle { color: var(--color-error-fg); }
+  .fa-warning { color: var(--color-warn-fg); }
+  .fa-info-circle { color: var(--color-info-fg); }
 
   .toggle {
     cursor: pointer;
     &.active {
-      background: darken($lite-grey, 10%);
+      background: var(--color-bg-2-hover);
       &:hover {
-        background: darken($lite-blue, 10%);
+        background: color-mix(in srgb, var(--color-button-bg-hover), #000 30%);
       }
     }
     &:hover,
     &:hover + ul {
-      background: $lite-blue;
+      background: var(--color-button-bg-hover);
       .toggle.active {
-        background: darken($lite-blue, 10%);
+        background: color-mix(in srgb, var(--color-button-bg-hover), #000 30%);
       }
     }
   }

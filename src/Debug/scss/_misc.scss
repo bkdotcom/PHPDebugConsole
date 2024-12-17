@@ -1,10 +1,3 @@
-$color-prettified: #000b9bee;
-$color-timestamp: #009;
-$color-bg-binary: #c0c0c0;
-$color-fg-binary: #003;
-$color-bg-maxlen: #ffcc77;
-$color-bg-unicode: #c0c0ff;
-
 .badge {
   display: inline-block;
   padding: 0.25em 0.4em 0.16em;
@@ -15,8 +8,8 @@ $color-bg-unicode: #c0c0ff;
   white-space: nowrap;
   vertical-align: bottom;
   border-radius: 0.25rem;
-  color: $secondary-fg;
-  background-color: $secondary-bg;
+  color: var(--color-secondary-fg);
+  background-color: var(--color-secondary-bg);
 }
 
 .expand-all {
@@ -53,8 +46,8 @@ $color-bg-unicode: #c0c0ff;
   }
 }
 
-.prettified { color: $color-prettified; }
-.timestamp { color: $color-timestamp; }
+.prettified { color: var(--color-prettified); }
+.timestamp { color: var(--color-timestamp); }
 
 .binary {
   padding: 0 0.3em;
@@ -68,12 +61,12 @@ $color-bg-unicode: #c0c0ff;
   cursor: pointer;
   &:hover {
     outline: 0;
-    color: #e00;
+    color: var(--color-a-hover);
   }
 }
 .binary {
-  background-color: $color-bg-binary;
-  color: $color-fg-binary;
+  background-color: var(--color-binary-bg);
+  color: var(--color-binary-fg);
   font-family: monospace !important;
   font-weight: bold;
 }
@@ -102,16 +95,17 @@ use ::after pseudo element to replace the char with abbreviation
 
   padding: 0.05em 0.5em 0;
   background-color: silver;
-  color: $color-fg-binary;
+  color: var(--color-binary-fg);
   font-family: monospace !important;
 }
 
 .maxlen {
-  background-color: $color-bg-maxlen;
+  color: var(--color-warn-fg);
+  background-color: var(--color-warn-bg);
 }
 .char-ws,
 .unicode {
-  background-color: $color-bg-unicode;
+  background-color: var(--color-unicode-bg);
   font-weight: normal; // many chars don't render as bold
 }
  

@@ -111,6 +111,9 @@ function addNoti ($root) {
     '</div>')
 }
 
+/**
+ * @return {jQuery} $ul
+ */
 export function buildChannelList (channels, nameRoot, checkedChannels, prepend) {
   var $lis = []
   var $ul = $('<ul class="list-unstyled">')

@@ -58,6 +58,7 @@ class Properties extends AbstractSection
             'isDynamic' => $info['declaredLast'] === null
                 && $info['valueFrom'] === 'value'
                 && $info['objClassName'] !== 'stdClass',
+            'isFinal' => $info['isFinal'],
             'isPromoted' => $info['isPromoted'],
             'isReadOnly' => $info['isReadOnly'],
             'isStatic' => $info['isStatic'],
@@ -94,10 +95,16 @@ class Properties extends AbstractSection
      */
     protected function getModifiers(array $info)
     {
-        $modifiers = (array) $info['visibility'];
-        return \array_merge($modifiers, \array_keys(\array_filter(array(
-            'readonly' => $info['isReadOnly'],
-            'static' => $info['isStatic'],
-        ))));
+        $modifiers = \array_merge(
+            array(
+                'final' => $info['isFinal'],
+            ),
+            \array_fill_keys((array) $info['visibility'], true),
+            array(
+                'readonly' => $info['isReadOnly'],
+                'static' => $info['isStatic'],
+            ),
+        );
+        return \array_keys(\array_filter($modifiers));
     }
 }

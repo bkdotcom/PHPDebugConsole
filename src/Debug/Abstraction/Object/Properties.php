@@ -41,6 +41,7 @@ class Properties extends AbstractInheritable
         'isDeprecated' => false,        // some internal php objects may raise a deprecation notice when accessing
                                         //    example: `DOMDocument::$actualEncoding`
                                         //    or may come from phpDoc tag
+        'isFinal' => false,             // PHP 8.0+
         'isPromoted' => false,
         'isReadOnly' => false,
         'isStatic' => false,
@@ -171,6 +172,7 @@ class Properties extends AbstractInheritable
                 : array(),
             'isDeprecated' => isset($phpDoc['deprecated']), // if inspecting an instance,
                                                             // we will also check if ReflectionProperty::getValue throws a deprecation notice
+            'isFinal' => PHP_VERSION_ID >= 80400 && $refProperty->isFinal(),
             'isPromoted' =>  PHP_VERSION_ID >= 80000 && $refProperty->isPromoted(),
             'isReadOnly' => PHP_VERSION_ID >= 80100 && $refProperty->isReadOnly(),
             'isStatic' => $refProperty->isStatic(),

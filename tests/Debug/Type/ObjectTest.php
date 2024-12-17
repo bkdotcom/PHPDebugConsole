@@ -1736,6 +1736,35 @@ EOD;
     }
 
     /**
+     * Test Php 8.4 features
+     */
+    public function testPhp84()
+    {
+        if (PHP_VERSION_ID < 80400) {
+            self::markTestSkipped('Test requires Php >= 8.4');
+        }
+        $this->testMethod(
+            'log',
+            array(
+                new \bdk\Test\Debug\Fixture\Php84(),
+            ),
+            array(
+                'entry' => static function (LogEntry $logEntry) {
+                    $abs = $logEntry['args'][0];
+                    self::assertTrue($abs['properties']['foo']['isFinal']);
+                },
+                'html' => static function ($html) {
+                    self::assertStringContainsString(
+                        '<dd class="isFinal property public"><span class="t_modifier_final">final</span> <span class="t_modifier_public">public</span> <span class="t_type">string</span> <span class="no-quotes t_identifier t_string">foo</span> <span class="t_operator">=</span> <span class="t_string">no extending me!</span></dd>',
+                        $html
+                    );
+                },
+            )
+        );
+
+    }
+
+    /**
      * Test Attributes
      */
     public function testAttributes()

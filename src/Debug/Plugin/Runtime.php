@@ -68,7 +68,7 @@ class Runtime extends AbstractComponent implements SubscriberInterface
         $this->debug->info(
             'Peak Memory Usage'
                 . ($isRouteHtml
-                    ? ' <span title="Includes debug overhead">?&#x20dd;</span>'
+                    ? ' <i class="fa fa-question-circle-o" title="Includes debug overhead"></i>'
                     : '')
                 . ': '
                 . $this->debug->utility->getBytes($vals['memoryPeakUsage']) . ' / '

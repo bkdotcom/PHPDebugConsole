@@ -404,6 +404,7 @@ EOD;
                 'debugInfoExcluded' => false,
                 'hooks' => array(),
                 'isDeprecated' => false,
+                'isFinal' => false,
                 'isPromoted' => false,
                 'isReadOnly' => false,
                 'isVirtual' => false,

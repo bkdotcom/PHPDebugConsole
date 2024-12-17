@@ -34,6 +34,6 @@ class RuntimeTest extends DebugTestFramework
         $logEntries = $this->helper->deObjectifyData($this->debug->data->get('logSummary')[1]);
 
         self::assertStringMatchesFormat('Built In %f %s', $logEntries[0]['args'][0]);
-        self::assertStringMatchesFormat('Peak Memory Usage <span title="Includes debug overhead">?&#x20dd;</span>: %f %s / %f %s', $logEntries[1]['args'][0]);
+        self::assertStringMatchesFormat('Peak Memory Usage <i class="fa fa-question-circle-o" title="Includes debug overhead"></i>: %f %s / %f %s', $logEntries[1]['args'][0]);
     }
 }

@@ -6133,13 +6133,16 @@
       return
     }
     $ref.data('titleOrig', title);
+    $ref.removeAttr('title');
+    $ref.addClass('hasTooltip');
     return tippyContentBuildTitle($ref, title)
   }
 
   function tippyContentBuildTitle($ref, title) {
+    var $parent = $ref.parent();
     title = refTitle($ref, title);
-    if ($ref.parent().hasClass('hasTooltip')) {
-      title = title + '<br /><br />' + tippyContent($ref.parent()[0]);
+    if ($parent.prop('title') || $parent.data('titleOrig')) {
+      title = title + '<br /><br />' + tippyContent($parent[0]);
     }
     return title.replace(/\n/g, '<br />')
   }
@@ -6231,9 +6234,9 @@
 
   function tippyOnHide (instance) {
     var $ref = $(instance.reference);
-    var title = $ref.data('titleOrig');
-    if (title) {
-      $ref.attr('title', title);
+    var titleOrig = $ref.data('titleOrig');
+    if (titleOrig) {
+      $ref.attr('title', titleOrig);
     }
     setTimeout(function () {
       instance.destroy();
@@ -6266,14 +6269,7 @@
   }
 
   function tippyOnShow (instance) {
-    var $ref = $(instance.reference);
-    $ref.removeAttr('title');
-    $ref.addClass('hasTooltip');
-    $ref.parents('.hasTooltip').each(function () {
-      if (this._tippy) {
-        this._tippy.hide();
-      }
-    });
+    // var $ref = $(instance.reference)
     return true
   }
 

@@ -37,6 +37,8 @@ class GuzzleMiddleware extends AbstractAsyncMiddleware
             'label' => 'Guzzle',
         ));
         parent::__construct($cfg, $debug);
+
+        $this->debug->backtrace->addInternalClass('GuzzleHttp\\', 1);
     }
 
     /**

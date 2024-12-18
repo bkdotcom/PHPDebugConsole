@@ -30,7 +30,6 @@ class SkipInternalTest extends TestCase
         ));
         SkipInternal::addInternalClass('bdk\\Backtrace');
         SkipInternal::addInternalClass('ReflectionMethod');
-        SkipInternal::addInternalClass('PHPUnit', 1);
     }
 
     public function tearDown(): void
@@ -119,6 +118,7 @@ class SkipInternalTest extends TestCase
 
     public function testRemoveInternalFramesAllInternal()
     {
+        SkipInternal::addInternalClass('PHPUnit', 1);
         SkipInternal::addInternalClass('bdk\\Test\\Backtrace');
 
         $trace = \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);

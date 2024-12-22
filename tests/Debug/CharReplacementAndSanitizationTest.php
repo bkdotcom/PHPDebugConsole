@@ -209,6 +209,7 @@ class CharReplacementAndSanitizationTest extends DebugTestFramework
                                         ),
                                         'debug' => Abstracter::ABSTRACTION,
                                         'inheritsFrom' => 'bdk\Test\Debug\Fixture\Con𝘧usableIdenti𝘧iers',
+                                        'isLazy' => false,
                                         'type' => Type::TYPE_OBJECT,
                                         // 'typeMore' => null,
                                     ), // abstraction

@@ -28,6 +28,7 @@ return array(
     'isExcluded' => false,
     'isFinal' => false,
     'isInterface' => false,
+    'isLazy' => false,
     'isMaxDepth' => false,
     'isReadOnly' => false,
     'isRecursion' => false,

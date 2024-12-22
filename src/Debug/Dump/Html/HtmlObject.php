@@ -283,6 +283,7 @@ class HtmlObject
             'abstract' => $abs['isAbstract'],
             'final' => $abs['isFinal'],
             'interface' => $abs['isInterface'],
+            'lazy' => $abs['isLazy'],
             'readonly' => $abs['isReadOnly'],
             'trait' => $abs['isTrait'],
         )));

@@ -167,6 +167,7 @@ class AbstractObject extends AbstractComponent
      *      isFinal
      *      methods
      *      phpDoc
+     *    see also Definition::$values
      *
      * @var array<string,mixed> Array of key/values
      */
@@ -176,6 +177,7 @@ class AbstractObject extends AbstractComponent
         'debugMethod' => '',
         'interfacesCollapse' => array(),  // cfg.interfacesCollapse
         'isExcluded' => false,  // don't exclude if we're debugging directly
+        'isLazy' => false,
         'isMaxDepth' => false,
         'isRecursion' => false,
         'keys' => array(),
@@ -333,6 +335,7 @@ class AbstractObject extends AbstractComponent
                 'debugMethod' => $method,
                 'interfacesCollapse' => \array_values(\array_intersect($reflector->getInterfaceNames(), $this->cfg['interfacesCollapse'])),
                 'isExcluded' => $hist && $this->isExcluded($obj),    // don't exclude if we're debugging directly
+                'isLazy' => PHP_VERSION_ID >= 80400 && \is_object($obj) ? $reflector->isUninitializedLazyObject($obj) : false,
                 'isMaxDepth' => $this->cfg['maxDepth'] && \count($hist) === $this->cfg['maxDepth'],
                 'isRecursion' => \in_array($obj, $hist, true),
                 'scopeClass' => $this->getScopeClass($hist),

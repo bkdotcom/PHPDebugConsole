@@ -15,6 +15,7 @@ namespace bdk\Debug\Abstraction\Object;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
+use bdk\Debug\Abstraction\Object\Abstraction as ObjectAbstraction;
 use Error;
 use ReflectionClass;
 use ReflectionProperty;
@@ -36,7 +37,9 @@ class PropertiesInstance extends Properties
         if ($abs['isTraverseOnly']) {
             return;
         }
-        $this->addValues($abs);
+        $abs['isLazy']
+            ? $this->addValuesLazy($abs)
+            : $this->addValues($abs);
         $obj = $abs->getSubject();
         if (\is_object($obj)) {
             $this->addDebug($abs); // use __debugInfo() values if useDebugInfo' && method exists
@@ -141,6 +144,35 @@ class PropertiesInstance extends Properties
     }
 
     /**
+     * Add property values for uninitialized (lazy) objects
+     *
+     * @param ObjectAbstraction $abs Object Abstraction instance
+     *
+     * @return void
+     */
+    private function addValuesLazy(ObjectAbstraction $abs)
+    {
+        $properties = $abs['properties'];
+        $reflector = $abs['reflector'];
+        $classProperties = $abs->getInheritedValues()['properties'];
+        $obj = $abs->getSubject();
+        foreach ($classProperties as $name => $propInfo) {
+            $isEager = false;
+            if ($propInfo['declaredOrig']) {
+                // declared property
+                $refProperty = $reflector->getProperty($name);
+                $isEager = $refProperty->isLazy($obj) === false;
+            }
+            $propInfo['isEager'] = $isEager;
+            $propInfo['value'] = Abstracter::UNDEFINED;
+            $properties[$name] = $isEager
+                ? $this->addValue($propInfo, $abs, $refProperty)
+                : $propInfo;
+        }
+        $abs['properties'] = $properties;
+    }
+
+    /**
      * Update property info with current value / declaration info
      *
      * @param Abstraction        $abs         Object Abstraction instance
@@ -150,7 +182,7 @@ class PropertiesInstance extends Properties
      *
      * @return array updated property info
      */
-    private function processProperty(Abstraction $abs, ReflectionProperty $refProperty, array $propInfo, $className)
+    private function processProperty(Abstraction $abs, ReflectionProperty $refProperty, array $propInfo, $className = null)
     {
         if ($abs['isAnonymous'] && $refProperty->isDefault() && $className === $abs['className']) {
             // Necessary for anonymous classes

@@ -374,6 +374,7 @@ EOD;
                 'isAnonymous' => false,
                 'isFinal' => false,
                 'isInterface' => false,
+                'isLazy' => false,
                 'isMaxDepth' => false,
                 'isReadOnly' => false,
                 'isTrait' => false,

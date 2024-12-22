@@ -95,15 +95,19 @@ class Properties extends AbstractSection
      */
     protected function getModifiers(array $info)
     {
+        $info = \array_merge(array(
+            'isEager' => null, // only collected on isLazy objects
+        ), $info);
         $modifiers = \array_merge(
             array(
+                'eager' => $info['isEager'],
                 'final' => $info['isFinal'],
             ),
             \array_fill_keys((array) $info['visibility'], true),
             array(
                 'readonly' => $info['isReadOnly'],
                 'static' => $info['isStatic'],
-            ),
+            )
         );
         return \array_keys(\array_filter($modifiers));
     }

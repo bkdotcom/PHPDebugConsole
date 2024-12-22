@@ -1761,7 +1761,56 @@ EOD;
                 },
             )
         );
+    }
 
+    /**
+     * Test Php 8.4's lazy object initialization
+     */
+    public function testPhp84Lazy()
+    {
+        if (PHP_VERSION_ID < 80400) {
+            self::markTestSkipped('Test requires Php >= 8.4');
+        }
+        $baseReflector = new \ReflectionClass(\bdk\Test\Debug\Fixture\TestBase::class);
+        $lazyObj = $baseReflector->newLazyProxy(static function (\bdk\Test\Debug\Fixture\TestBase $object) {
+            throw new \PHPUnit\Framework\Exception('Lazy object insitialized');
+        });
+
+        $baseReflector
+            ->getProperty('propPublic')
+            ->setRawValueWithoutLazyInitialization($lazyObj, 'I am available without initializing object');
+
+        $this->testMethod(
+            'log',
+            array(
+                $lazyObj,
+            ),
+            array(
+                'entry' => static function (LogEntry $logEntry) {
+                    $abs = $logEntry['args'][0];
+                    self::assertTrue($abs['isLazy']);
+                    $propEagerness = \array_map(static function (array $propInfo) {
+                        return $propInfo['isEager'];
+                    }, $abs['properties']);
+                    self::assertSame(array(
+                        'magicProp' => false,
+                        'magicReadProp' => false,
+                        'propPrivate' => false,
+                        'propProtected' => false,
+                        'propPublic' => true,
+                        'testBasePrivate' => false,
+                    ), $propEagerness);
+                },
+                'html' => static function ($html) {
+                    self::assertStringMatchesFormatNormalized(
+                        '%A<dt class="modifiers">modifiers</dt>
+                            <dd class="t_modifier_lazy">lazy</dd>%A',
+                        $html
+                    );
+                    self::assertStringContainsString('<dd class="property public"><span class="t_modifier_eager">eager</span> <span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string">propPublic</span> <span class="t_operator">=</span> <span class="t_string">I am available without initializing object</span></dd>', $html);
+                },
+            )
+        );
     }
 
     /**

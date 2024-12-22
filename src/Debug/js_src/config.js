@@ -64,6 +64,7 @@ var config = {
     '> .t_modifier_abstract': '<i class="fa fa-circle-o"></i>',
     '> .t_modifier_final': '<i class="fa fa-hand-stop-o"></i>',
     '> .t_modifier_interface': '<i class="fa fa-handshake-o"></i>',
+    '> .t_modifier_lazy': '👻 ',
     '> .t_modifier_readonly': '<span class="fa-stack">' +
       '<i class="fa fa-pencil fa-stack-1x"></i>' +
       '<i class="fa fa-ban fa-flip-horizontal fa-stack-2x text-muted"></i>' +

@@ -124,11 +124,14 @@ class Properties extends AbstractInheritable
      */
     private function addViaRef(Abstraction $abs)
     {
+        // use ReflectionClass (not ReflectionObject) to get get definition info
+        $reflectionClass = new ReflectionClass($abs['reflector']->getName());
+
         /*
             We trace our lineage to learn where properties are inherited from
         */
         $properties = $abs['properties'];
-        $this->traverseAncestors($abs['reflector'], function (ReflectionClass $reflector) use ($abs, &$properties) {
+        $this->traverseAncestors($reflectionClass, function (ReflectionClass $reflector) use ($abs, &$properties) {
             $className = $this->helper->getClassName($reflector);
             foreach ($reflector->getProperties() as $refProperty) {
                 if ($refProperty->isDefault() === false) {

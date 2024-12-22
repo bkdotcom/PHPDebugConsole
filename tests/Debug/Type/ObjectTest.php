@@ -1771,7 +1771,7 @@ EOD;
         if (PHP_VERSION_ID < 80400) {
             self::markTestSkipped('Test requires Php >= 8.4');
         }
-        $baseReflector = new \ReflectionClass(\bdk\Test\Debug\Fixture\TestBase::class);
+        $baseReflector = new \ReflectionClass('\\bdk\\Test\\Debug\\Fixture\\TestBase');
         $lazyObj = $baseReflector->newLazyProxy(static function (\bdk\Test\Debug\Fixture\TestBase $object) {
             throw new \PHPUnit\Framework\Exception('Lazy object insitialized');
         });

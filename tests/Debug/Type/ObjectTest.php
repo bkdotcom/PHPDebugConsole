@@ -1807,7 +1807,7 @@ EOD;
                             <dd class="t_modifier_lazy">lazy</dd>%A',
                         $html
                     );
-                    self::assertStringContainsString('<dd class="property public"><span class="t_modifier_eager">eager</span> <span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string">propPublic</span> <span class="t_operator">=</span> <span class="t_string">I am available without initializing object</span></dd>', $html);
+                    self::assertStringContainsString('<dd class="isEager property public"><span class="t_modifier_eager">eager</span> <span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string">propPublic</span> <span class="t_operator">=</span> <span class="t_string">I am available without initializing object</span></dd>', $html);
                 },
             )
         );

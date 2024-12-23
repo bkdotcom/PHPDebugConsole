@@ -58,6 +58,7 @@ class Properties extends AbstractSection
             'isDynamic' => $info['declaredLast'] === null
                 && $info['valueFrom'] === 'value'
                 && $info['objClassName'] !== 'stdClass',
+            'isEager' => !empty($info['isEager']),
             'isFinal' => $info['isFinal'],
             'isPromoted' => $info['isPromoted'],
             'isReadOnly' => $info['isReadOnly'],

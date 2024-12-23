@@ -103,10 +103,13 @@ li[class*=m_] > .t_array.array-file-tree > .array-inner {
 
   .t_modifier_abstract, i.fa-circle-o {
     font-weight: bold;
-    color: #9d2d2d
+    // color: #9d2d2d
   }
   .t_modifier_debug {
     color: var(--color-object-debug);
+  }
+  .t_modifier_eager {
+    color: var(--color-object-eager);
   }
   .t_modifier_final {
     color: var(--color-object-final);
@@ -139,10 +142,10 @@ li[class*=m_] > .t_array.array-file-tree > .array-inner {
       border-style: solid;
       border-width: 1px;
       border-radius: 4px;
-      padding: 0 .75em;
-      height: 1.75em;
+      padding: 0.33em .75em;
+      // height: 1.75em;
       text-indent: 0;
-      line-height: 1.5;
+      // line-height: 2;
       font-weight: bold;
     }
     /*
@@ -153,25 +156,28 @@ li[class*=m_] > .t_array.array-file-tree > .array-inner {
       height: 100%;
     }
     */
+    /*
     > .t_modifier_abstract {
-      color: var(--color-fg);
-      background-color: color.adjust(#c0c0c0, $lightness: 15%);
-      border-color: #666;
+      // color: var(--color-fg);
+      // background-color: color.adjust(#c0c0c0, $lightness: 15%);
+      border-color: var(--color-fg);
     }
+    */
     > .t_modifier_final {
       color: var(--color-error-fg);
-      background-color: color.adjust(#ffbabaee, $lightness: 10%);
-      border-color: var(--color-error-fg);
+      background-color: var(--color-error-bg);
+      border-color: var(--color-error-border);
     }
+    > .t_modifier_lazy,
     > .t_modifier_interface {
       color: var(--color-info-fg);
       background-color: var(--color-info-bg);
-      border-color: var(--color-info-fg);
+      border-color: var(--color-info-border);
     }
     > .t_modifier_readonly {
       color: var(--color-warn-fg);
       background-color: var(--color-warn-bg);
-      border-color: var(--color-warn-fg);
+      border-color: var(--color-warn-border);
       .fa-stack {
         font-size: 0.8em;
         margin-right: 0.33em;

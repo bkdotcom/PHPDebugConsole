@@ -56,16 +56,16 @@
   // --color-quote: #333c;
 
   --color-array-file-tree-key: #119;
+  --color-false: #c33;
   --color-key-bracket: #999;
   --color-keyword: #07a;
   --color-operator: #a67f59;
   --color-param: #263;
   --color-punct: #999;
-  --color-type: #9d4;
-  --color-true: #393;
-  --color-false: #c33;
   --color-recursion: #f00;
   --color-t-null: #c7c7c74c;
+  --color-true: #393;
+  --color-type: #9d4;
 
   --color-prettified: #000b9b; /* the word "prettified" */
   --color-unicode-bg: #c0c0ff;
@@ -73,8 +73,9 @@
   --color-binary-fg: #003;
 
   --color-object-debug: #000b9bee;
+  --color-object-eager: #bb0;
   --color-object-heading: #4f16b0;
-  --color-object-magic: #f80e;
+  --color-object-magic: #ff8800ee;
   --color-object-private: #00000082;
   --color-object-protected: #000000c6;
   --color-object-public: inherit;

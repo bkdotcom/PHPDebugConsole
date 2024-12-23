@@ -19,22 +19,22 @@
   --color-a-visited: #6ea8fe;
   --color-a-hover: #8bb9fe;
 
-  --color-error-bg: #2c0b0e;
+  --color-error-bg: #4d0e13;
   --color-error-border: #842029;
   --color-error-fg: #ea868f;
   --color-error-link: #ea868f;
   
-  --color-info-bg: #032830;
+  --color-info-bg: #043540;
   --color-info-border: #087990;
   --color-info-fg: #6edff6;
   --color-info-link: #6edff6;
   
-  --color-success-bg: #103424;
+  --color-success-bg: #12402b;
   --color-success-border: #467b68;
   --color-success-fg: #75b798;
   --color-success-link: #75b798;
   
-  --color-warn-bg: #332701;
+  --color-warn-bg: #444208;
   --color-warn-border: #997404;
   --color-warn-fg: #ffda6a;
   --color-warn-link: #ffda6a;
@@ -48,11 +48,13 @@
   --color-t-null: #c7c7c799;
 
   --color-array-file-tree-key: #c7c7FF;
-
+  --color-param: #4b4;
+  
   --color-prettified: #99f; /* the word "prettified" */
   --color-unicode-bg: #03316d;
   
   --color-object-debug: #66f;
+  --color-object-eager: #fe0;
   --color-object-heading: #99f;
   --color-object-private: #ccc6;
   --color-object-protected: #ccc9;

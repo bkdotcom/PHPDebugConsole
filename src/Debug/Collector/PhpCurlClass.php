@@ -219,8 +219,9 @@ class PhpCurlClass extends Curl
         if (\strlen($body) === 0) {
             return null;
         }
+        $contentType = $this->responseHeaders['content-type'];
         return $this->debugOptions['prettyResponseBody']
-            ? $this->debug->prettify($body, $this->responseHeaders['content-type'])
+            ? $this->debug->prettify($body, $contentType)
             : $body;
     }
 

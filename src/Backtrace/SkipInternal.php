@@ -165,7 +165,8 @@ class SkipInternal
         }
         for ($i = $index; $i > 0; $i--) {
             $frame = $backtrace[$i];
-            if (self::isSkippable($frame, $level) && self::isPhpDefinedFunction((string) $frame['function']) === false) {
+            $isPhpFuncOrClosure = self::isPhpDefinedFunction($frame['function']) || $frame['function'] === '{closure}';
+            if (self::isSkippable($frame, $level) && $isPhpFuncOrClosure === false) {
                 break;
             }
         }
@@ -210,7 +211,7 @@ class SkipInternal
         if (\in_array($function, ['include', 'include_once', 'include or require', 'require', 'require_once'], true)) {
             return true;
         }
-        if (\function_exists($function) === false) {
+        if (\function_exists((string) $function) === false) {
             return false;
         }
         $refFunction = new ReflectionFunction($function);
@@ -233,7 +234,7 @@ class SkipInternal
     {
         $class = self::getClass($frame);
         if (!$class) {
-            return self::isPhpDefinedFunction((string) $frame['function']) || $frame['function'] === '{closure}';
+            return self::isPhpDefinedFunction($frame['function']) || $frame['function'] === '{closure}';
         }
         if (\preg_match(static::$internalClasses['regex'], $class)) {
             return true;

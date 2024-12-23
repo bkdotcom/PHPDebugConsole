@@ -210,15 +210,8 @@ class AbstractAsyncMiddleware extends AbstractComponent
      */
     protected function getBody(MessageInterface $msg)
     {
-        $bodyStream = $msg->getBody();
-        $contentType = $msg->getHeader('Content-Type');
-        $contentType = $contentType
-            ? $contentType[0]
-            : null;
-        $body = StreamUtility::getContents($bodyStream);
-        if (\strlen($body) === 0) {
-            return '';
-        }
+        $contentType = $msg->getHeaderLine('Content-Type');
+        $body = StreamUtility::getContents($msg->getBody());
         $prettify = $msg instanceof RequestInterface
             ? $this->cfg['prettyRequestBody']
             : $this->cfg['prettyResponseBody'];

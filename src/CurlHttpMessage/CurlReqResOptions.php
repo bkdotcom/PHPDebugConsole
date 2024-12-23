@@ -202,6 +202,12 @@ class CurlReqResOptions
                 return;
             }
 
+            if ($nameLower === 'accept-encoding') {
+                // CURLOPT_ENCODING - Available as of cURL 7.10 and deprecated as of cURL 7.21.6.
+                $this->curlOptions[CURLOPT_ACCEPT_ENCODING] = implode(', ', $values); // available as of cURL 7.21.6.
+                return;
+            }
+
             if ($nameLower === 'content-length') {
                 if (\array_key_exists(CURLOPT_POSTFIELDS, $this->curlOptions)) {
                     $values = [\strlen($this->curlOptions[CURLOPT_POSTFIELDS])];

@@ -13,6 +13,7 @@
 namespace bdk\Debug\Plugin;
 
 use bdk\Debug;
+use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Plugin\CustomMethodTrait;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
@@ -104,7 +105,10 @@ class Prettify implements SubscriberInterface
                 'value' => $string,
             )
         );
-        return $event['value'];
+        // event['value'] should be an Abstraction instance
+        return \is_string($event['value']) || $event['value'] instanceof Abstraction && $event['value']['value']
+            ? $event['value']
+            : $string;
     }
 
     /**

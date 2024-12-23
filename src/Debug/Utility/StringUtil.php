@@ -276,7 +276,7 @@ class StringUtil
      *                                 we will add JSON_UNESCAPED_UNICODE IF source doesn't contain escaped unicode
      * @param int    $encodeFlagsAdd (JSON_PRETTY_PRINT) additional flags to add
      *
-     * @return string
+     * @return string|false false if invalid json
      */
     public static function prettyJson($json, $encodeFlags = 0, $encodeFlagsAdd = JSON_PRETTY_PRINT)
     {
@@ -289,7 +289,10 @@ class StringUtil
             // json doesn't appear to contain encoded unicode
             $flags |= JSON_UNESCAPED_UNICODE;
         }
-        return \json_encode(\json_decode($json), $flags);
+        $decoded = \json_decode($json);
+        return \json_last_error() === JSON_ERROR_NONE
+            ? \json_encode($decoded, $flags)
+            : false;
     }
 
     /**

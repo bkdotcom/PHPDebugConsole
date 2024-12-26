@@ -67,7 +67,7 @@ class FindExitTest extends TestCase
             'class' => 'bdk\\Test\\Debug\\Utility\\FindExitTest',
             'file' => __FILE__,
             'found' => 'exit',
-            'function' => (\version_compare($xdebugVer, '3.4.0.alpha', '>=') ? '' : __NAMESPACE__ . '\\')
+            'function' => (\version_compare($xdebugVer, '3.4.0.alpha', '>=') && PHP_VERSION_ID >= 80400 ? '' : __NAMESPACE__ . '\\')
                  . '{closure:' . __FILE__ . ':' . $lineBegin . '-' . $lineEnd . '}',
         );
         // \bdk\Debug::varDump('expect', $expect);

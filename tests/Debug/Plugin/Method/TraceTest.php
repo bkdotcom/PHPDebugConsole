@@ -213,6 +213,7 @@ class TraceTest extends DebugTestFramework
             'caption' => 'trace',
             'detectFiles' => true,
             'inclArgs' => false,
+            'inclInternal' => false,
             'limit' => 0,
             'sortable' => false,
             'tableInfo' => array(

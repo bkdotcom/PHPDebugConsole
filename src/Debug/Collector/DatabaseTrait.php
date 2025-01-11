@@ -14,6 +14,7 @@ namespace bdk\Debug\Collector;
 
 use bdk\Debug;
 use bdk\Debug\Collector\StatementInfo;
+use bdk\Debug\Collector\StatementInfoLogger;
 use Pdo as PdoBase;
 
 /**
@@ -27,6 +28,12 @@ trait DatabaseTrait
     /** @var string */
     protected $icon = ':database:';
 
+    /** @var StatementInfoLogger */
+    protected $statementInfoLogger;
+
+    /** @var Debug */
+    private $debug;
+
     /**
      * Logs StatementInfo
      *
@@ -37,7 +44,7 @@ trait DatabaseTrait
     public function addStatementInfo(StatementInfo $info)
     {
         $this->loggedStatements[] = $info;
-        $info->appendLog($this->debug);
+        $this->statementInfoLogger->log($info);
     }
 
     /**
@@ -78,6 +85,16 @@ trait DatabaseTrait
     }
 
     /**
+     * Get StatementInfoLogger
+     *
+     * @return StatementInfoLogger
+     */
+    public function getStatementInfoLogger()
+    {
+        return $this->statementInfoLogger;
+    }
+
+    /**
      * Extend me to return the current database name
      *
      * @return string|null
@@ -107,7 +124,7 @@ trait DatabaseTrait
         if ($serverInfo) {
             $debug->log('server info', $serverInfo);
         }
-        if ($this->prettified() === false) {
+        if ($this->statementInfoLogger->prettified() === false) {
             $debug->info('require jdorn/sql-formatter to prettify logged sql statements');
         }
     }
@@ -152,6 +169,8 @@ trait DatabaseTrait
     /**
      * Return server information
      *
+     * @param PdoBase $pdo Pdo instance
+     *
      * @return array
      *
      * @SuppressWarnings(PHPMD.UnusedPrivateMethod) -> called via DatabaseTrait
@@ -175,26 +194,6 @@ trait DatabaseTrait
     }
 
     /**
-     * Were attempts to prettify successful?
-     *
-     * @return bool
-     */
-    private function prettified()
-    {
-        $falseCount = 0;
-        foreach ($this->loggedStatements as $info) {
-            $prettified = $info->prettified;
-            if ($prettified === true) {
-                return true;
-            }
-            if ($prettified === false) {
-                $falseCount++;
-            }
-        }
-        return $falseCount === 0;
-    }
-
-    /**
      * Extend me to return database server information
      *
      * @return array
@@ -202,5 +201,27 @@ trait DatabaseTrait
     protected function serverInfo()
     {
         return array();
+    }
+
+    /**
+     * Initialize Debug and StatementInfoLogger
+     *
+     * @param Debug|null $debug       (optional) Specify PHPDebugConsole instance
+     *                                  if not passed, will create MySqli channel on singleton instance
+     *                                  if root channel is specified, will create a MySqli channel
+     * @param string     $channelName Channel name to use for debug instance
+     *
+     * @return void
+     */
+    protected function traitInit($debug, $channelName = 'SQL')
+    {
+        if (!$debug) {
+            $debug = Debug::getChannel($channelName, array('channelIcon' => $this->icon));
+        } elseif ($debug === $debug->rootInstance) {
+            $debug = $debug->getChannel($channelName, array('channelIcon' => $this->icon));
+        }
+        $this->debug = $debug;
+        $this->statementInfoLogger = new StatementInfoLogger($debug);
+        $debug->addPlugin($debug->pluginHighlight);
     }
 }

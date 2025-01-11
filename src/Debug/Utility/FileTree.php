@@ -141,8 +141,8 @@ class FileTree
     /**
      * Condense a tree frame
      *
-     * @param array                        $cur   current stack frame]
-     * @param array{out:array,src:array}[] $stack remaining stack]
+     * @param array                        $cur   current stack frame
+     * @param array{out:array,src:array}[] $stack remaining stack
      *
      * @return void
      */

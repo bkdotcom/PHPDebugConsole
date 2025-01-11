@@ -32,6 +32,7 @@ class Backtrace
 {
     const INCL_ARGS = 1;
     const INCL_OBJECT = 2;
+    const INCL_INTERNAL = 4; // whether to keep "internal" frames
 
     /** @var array */
     protected static $callerInfoDefault = array(
@@ -75,17 +76,20 @@ class Backtrace
     public static function get($options = 0, $limit = 0, $exception = null)
     {
         $debugBacktraceOpts = self::translateOptions($options);
-        $limit = $limit ?: null;
+        $sliceLimit = $limit ?: null;
+        $backtraceLimit = $limit > 0 ? $limit + 2 : 0;
         $trace = $exception
             ? self::getExceptionTrace($exception)
             : (\array_reverse(Xdebug::getFunctionStack() ?: [])
-                ?: \debug_backtrace($debugBacktraceOpts, $limit > 0 ? $limit + 2 : 0));
+                ?: \debug_backtrace($debugBacktraceOpts, $backtraceLimit));
         $trace = Normalizer::normalize($trace);
-        $trace = SkipInternal::removeInternalFrames($trace);
+        if (($options & self::INCL_INTERNAL) !== self::INCL_INTERNAL) {
+            $trace = SkipInternal::removeInternalFrames($trace);
+        }
         // keep the calling file & line, but toss the called function (what initiated trace)
         unset($trace[0]['function']);
         unset($trace[\count($trace) - 1]['function']);  // remove "{main}"
-        $trace = \array_slice($trace, 0, $limit);
+        $trace = \array_slice($trace, 0, $sliceLimit);
         $keysRemove = \array_filter(array(
             'args' => ($options & self::INCL_ARGS) !== self::INCL_ARGS,
             'object' => ($options & self::INCL_OBJECT) !== self::INCL_OBJECT,

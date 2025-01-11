@@ -56,7 +56,7 @@ class ErrorLogger implements SubscriberInterface
         $this->debug->errorHandler->register();
 
         $this->pathsIgnoreError = \array_map(static function ($path) {
-            $path = \preg_replace_callback('/:([\w\.]+):/', function (array $matches) {
+            $path = \preg_replace_callback('/:([\w\.]+):/', static function (array $matches) {
                 return Yii::getPathOfAlias($matches[1]);
             }, $path);
             return \preg_replace('#' . DIRECTORY_SEPARATOR . '+#', DIRECTORY_SEPARATOR, $path);

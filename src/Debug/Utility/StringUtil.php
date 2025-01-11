@@ -12,9 +12,9 @@
 
 namespace bdk\Debug\Utility;
 
-use bdk\HttpMessage\Utility\Stream as StreamUtility;
 use bdk\Debug\Utility\StringUtilHelperTrait;
 use bdk\HttpMessage\Utility\ContentType;
+use bdk\HttpMessage\Utility\Stream as StreamUtility;
 use DOMDocument;
 use finfo;
 use InvalidArgumentException;

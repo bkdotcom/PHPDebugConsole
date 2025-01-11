@@ -197,12 +197,12 @@ class InternalEventsTest extends DebugTestFramework
             ),
             'meta' => array(
                 'channel' => 'general.phpError',
-                'context' => null,
+                // 'context' => null,
                 'detectFiles' => true,
                 'errorCat' => 'fatal',
                 'errorHash' => '',
                 'errorType' => E_ERROR,
-                'evalLine' => null,
+                // 'evalLine' => null,
                 'file' => __FILE__,
                 'isSuppressed' => false,
                 'line' => $line,
@@ -309,7 +309,7 @@ class InternalEventsTest extends DebugTestFramework
                 ),
                 'meta' => array(
                     'detectFiles' => true,
-                    'evalLine' => null,
+                    // 'evalLine' => null,
                     'file' => __FILE__,
                     'line' => $exitLine,
                     'uncollapse' => true,

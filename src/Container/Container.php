@@ -112,7 +112,7 @@ class Container implements ArrayAccess
      *  - take the value as its first argument and the container as its second argument
      *  - return the modified value
      *
-     * @param string   $id       The unique identifier for the object
+     * @param string   $name     The unique identifier for the object
      * @param callable $callable A service definition to extend the original
      *
      * @return void
@@ -413,7 +413,7 @@ class Container implements ArrayAccess
     /**
      * Assert that the identifier exists
      *
-     * @param string $name Identifier of entry to check
+     * @param mixed $val Value to check
      *
      * @return void
      *
@@ -444,7 +444,7 @@ class Container implements ArrayAccess
     }
 
     /**
-     * Undocumented function
+     * Called when service or factory is invoked
      *
      * @param string $name  The service or factory name
      * @param mixed  $value The value returned by the definition

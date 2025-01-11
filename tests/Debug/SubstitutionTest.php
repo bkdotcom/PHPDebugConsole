@@ -404,7 +404,7 @@ class SubstitutionTest extends DebugTestFramework
                         }
                     } elseif (\in_array($method, array('error', 'warn'))) {
                         $test['meta']['detectFiles'] = true;
-                        $test['meta']['evalLine'] = null;
+                        // $test['meta']['evalLine'] = null;
                         $test['meta']['file'] = $this->file;
                         $test['meta']['line'] = $this->line;
                         $test['meta']['uncollapse'] = true;

@@ -126,19 +126,6 @@ class Abstraction extends BaseAbstraction
     }
 
     /**
-     * {@inheritDoc}
-     */
-    public function getValues()
-    {
-        $return = \array_replace_recursive(
-            $this->getInheritedValues(),
-            $this->values
-        );
-        \ksort($return, SORT_NATURAL);
-        return $return;
-    }
-
-    /**
      * Get instance related values
      *
      * @return array
@@ -149,6 +136,19 @@ class Abstraction extends BaseAbstraction
             $this->values,
             $this->getInheritedValues()
         );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getValues()
+    {
+        $return = \array_replace_recursive(
+            $this->getInheritedValues(),
+            $this->values
+        );
+        \ksort($return, SORT_NATURAL);
+        return $return;
     }
 
     /**

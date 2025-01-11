@@ -127,7 +127,6 @@ class Value extends BaseValue
      * Wrap classname in span.classname
      *
      * if namespaced additionally wrap namespace in span.namespace
-     * If callable, also wrap with .t_operator and .t_identifier
      *
      * @param string|array $val     classname or classname(::|->)name (method/property/const)
      * @param string       $what    ("className"), "const", or "function" - specify what we're marking if ambiguous
@@ -246,8 +245,9 @@ class Value extends BaseValue
      */
     protected function dumpIdentifier(Abstraction $abs)
     {
-        if (isset($abs['backedValue'])) {
-            $this->optionSet('attribs.title', 'value: ' . $this->debug->getDump('text')->valDumper->dump($abs['backedValue']));
+        if (isset($abs['backedValue']) && empty($this->optionGet('attribs.title'))) {
+            $valueAsString = $this->debug->getDump('text')->valDumper->dump($abs['backedValue']);
+            $this->optionSet('attribs.title', 'value: ' . $valueAsString);
         }
         return $this->markupIdentifier($abs['value'], $abs['typeMore']);
     }

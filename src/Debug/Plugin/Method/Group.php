@@ -429,10 +429,15 @@ class Group implements SubscriberInterface
         $debug = $logEntry->getSubject();
         $returnValue = $logEntry['args'][0];
         if ($returnValue !== Abstracter::UNDEFINED) {
+            $label = $logEntry->getMeta('label', 'return');
+            $args = $label
+                ? [$label, $returnValue]
+                : [$returnValue];
+            $logEntry->setMeta('label', null); // delete label meta
             $debug->log(new LogEntry(
                 $debug,
                 'groupEndValue',
-                ['return', $returnValue],
+                $args,
                 $logEntry->getMeta()
             ));
         }

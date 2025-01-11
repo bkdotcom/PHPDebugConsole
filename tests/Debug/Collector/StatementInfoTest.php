@@ -3,12 +3,14 @@
 namespace bdk\Test\Debug\Collector;
 
 use bdk\Debug\Collector\StatementInfo;
+use bdk\Debug\Collector\StatementInfoLogger;
 use bdk\Debug\Utility\Reflection;
 use bdk\Test\Debug\DebugTestFramework;
 use Exception;
 
 /**
  * @covers \bdk\Debug\Collector\StatementInfo
+ * @covers \bdk\Debug\Collector\StatementInfoLogger
  * @covers \bdk\Debug\Utility\Sql
  * @covers \bdk\Debug\Utility\SqlQueryAnalysis
  */
@@ -22,7 +24,13 @@ class StatementInfoTest extends DebugTestFramework
     public function setUp(): void
     {
         parent::setUp();
-        Reflection::propSet('bdk\Debug\Collector\StatementInfo', 'id', 0);
+        Reflection::propSet('bdk\Debug\Collector\StatementInfoLogger', 'id', 0);
+    }
+
+    public static function setUpBeforeClass(): void
+    {
+        parent::setUpBeforeClass();
+        Reflection::propSet('bdk\Debug\Collector\StatementInfoLogger', 'constants', array());
     }
 
     public function testConstruct()
@@ -63,7 +71,10 @@ class StatementInfoTest extends DebugTestFramework
         $exception = new Exception('it broke', 666);
         $info->end($exception, 1);
         $info->setDuration(0.0123);
-        $info->appendLog($this->debug);
+
+        $statementInfoLogger = new StatementInfoLogger($this->debug);
+        $statementInfoLogger->log($info);
+
         $logEntries = $this->getLogEntries();
         // echo \json_encode($logEntries, JSON_PRETTY_PRINT);
         $logEntriesExpectJson = <<<'EOD'
@@ -146,7 +157,6 @@ class StatementInfoTest extends DebugTestFramework
                 ],
                 "meta": {
                     "detectFiles": true,
-                    "evalLine": null,
                     "file": "\/Users\/bkent\/Dropbox\/htdocs\/common\/vendor\/bdk\/PHPDebugConsole\/tests\/Debug\/Collector\/StatementInfoTest.php",
                     "line": 53,
                     "uncollapse": false
@@ -159,7 +169,6 @@ class StatementInfoTest extends DebugTestFramework
                 ],
                 "meta": {
                     "detectFiles": true,
-                    "evalLine": null,
                     "file": "\/Users\/bkent\/Dropbox\/htdocs\/common\/vendor\/bdk\/PHPDebugConsole\/tests\/Debug\/Collector\/StatementInfoTest.php",
                     "line": 53,
                     "uncollapse": true

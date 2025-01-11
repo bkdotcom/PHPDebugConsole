@@ -32,7 +32,11 @@ class Base extends AbstractComponent
     /** @var Debug */
     public $debug;
 
-    /** @var array<string,string> */
+    /**
+     * Used to style console.log alerts
+     *
+     * @var array<string,string>
+     */
     protected $alertStyles = array(
         'common' => 'padding: 5px;
             line-height: 26px;

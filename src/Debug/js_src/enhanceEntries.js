@@ -201,6 +201,7 @@ function enhanceGroup ($group) {
     $(this).data('expand', false)
     enhanceValue(this, $group)
   })
+  /*
   $.each(['level-error', 'level-info', 'level-warn'], function (i, classname) {
     var $toggleIcon
     if ($group.hasClass(classname)) {
@@ -209,6 +210,7 @@ function enhanceGroup ($group) {
       $toggle.prepend($toggleIcon) // move icon
     }
   })
+  */
   if (
     $group.hasClass('expanded') ||
     $target.find('.m_error, .m_warn').not('.filter-hidden').not('[data-uncollapse=false]').length

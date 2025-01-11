@@ -56,13 +56,13 @@ class Component extends CApplicationComponent
             ],
         ),
         'yii' => array(
+            'ignoredErrors' => true,
+            'log' => true,
             'pathsIgnoreError' => [
                 ':system:',
                 // ':webroot:/protected/extensions',
                 ':webroot:/protected/components',
             ],
-            'ignoredErrors' => true,
-            'log' => true,
             'pdo' => true,
             'session' => true,
             'user' => true,

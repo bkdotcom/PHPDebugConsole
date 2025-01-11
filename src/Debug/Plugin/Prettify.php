@@ -90,7 +90,7 @@ class Prettify implements SubscriberInterface
      * add attributes to indicate value should be syntax highlighted
      *    html, json, xml
      *
-     * @param string $string      string to prettify]
+     * @param string $string      string to prettify
      * @param string $contentType mime type
      *
      * @return Abstraction|string
@@ -106,7 +106,7 @@ class Prettify implements SubscriberInterface
             )
         );
         // event['value'] should be an Abstraction instance
-        return \is_string($event['value']) || $event['value'] instanceof Abstraction && $event['value']['value']
+        return \is_string($event['value']) || ($event['value'] instanceof Abstraction && $event['value']['value'])
             ? $event['value']
             : $string;
     }

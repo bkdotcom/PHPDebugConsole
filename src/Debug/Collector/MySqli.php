@@ -41,9 +41,6 @@ class MySqli extends mysqliBase
     /** @var list<string> */
     protected $savePoints = array();
 
-    /** @var Debug */
-    private $debug;
-
     /**
      * Constructor
      *
@@ -66,14 +63,8 @@ class MySqli extends mysqliBase
         $this->doConstruct(\func_num_args()
             ? \array_slice(\func_get_args(), 0, 6)
             : array());
-        if (!$debug) {
-            $debug = Debug::getChannel('MySqli', array('channelIcon' => $this->icon));
-        } elseif ($debug === $debug->rootInstance) {
-            $debug = $debug->getChannel('MySqli', array('channelIcon' => $this->icon));
-        }
-        $this->debug = $debug;
-        $debug->eventManager->subscribe(Debug::EVENT_OUTPUT, [$this, 'onDebugOutput'], 1);
-        $debug->addPlugin($debug->pluginHighlight);
+        $this->traitInit($debug, 'MySqli');
+        $this->debug->eventManager->subscribe(Debug::EVENT_OUTPUT, [$this, 'onDebugOutput'], 1);
     }
 
     /**

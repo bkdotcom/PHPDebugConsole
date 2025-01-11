@@ -29,10 +29,12 @@ class AbstractLogReqRes
             'nested' => false,
         ),
     );
+
     /** @var \bdk\Debug|null */
     protected $debug;
+
     /** @var string */
-    protected $headerStyle = 'display:block; font-size:110%; font-weight:bold; padding:0.25em 0.5em; text-indent:0; border-bottom:#31708f 1px solid; background: linear-gradient(0deg, rgba(0,0,0,0.1) 0%, rgba(255,255,255,0.1) 100%);';
+    protected $headerStyle = 'width:auto; font-size:110%; font-weight:bold; padding:0.25em 0.5em; text-indent:0; border-bottom:var(--color-ui-border) 1px solid; background: linear-gradient(0deg, rgba(0,0,0,0.1) 0%, rgba(255,255,255,0.1) 100%);';
 
     /**
      * Display warning if body doesn't match supplied Content-Type

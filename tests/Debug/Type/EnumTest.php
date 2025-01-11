@@ -233,7 +233,7 @@ class EnumTest extends DebugTestFramework
                             ),
                         ), $cases);
                     },
-                    'html' => '<li class="m_log"><div class="groupByInheritance t_object" data-accessible="public"><span class="t_identifier" data-type-more="const"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\Enum\</span>MealsBacked</span><span class="t_operator">::</span><span class="t_name">BREAKFAST</span></span>
+                    'html' => '<li class="m_log"><div class="groupByInheritance t_object" data-accessible="public"><span class="t_identifier" data-type-more="const" title="value: &quot;breakfast&quot;"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\Enum\</span>MealsBacked</span><span class="t_operator">::</span><span class="t_name">BREAKFAST</span></span>
                         <dl class="object-inner">
                         <dt class="modifiers">modifiers</dt>
                         <dd class="t_modifier_final">final</dd>
@@ -248,7 +248,7 @@ class EnumTest extends DebugTestFramework
                             </ul>
                         </dd>
                         <dt class="constants">constants</dt>
-                        <dd class="constant public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string">ENUM_VALUE</span> <span class="t_operator">=</span> <span class="t_identifier" data-type-more="const"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\Enum\</span>MealsBacked</span><span class="t_operator">::</span><span class="t_name">DINNER</span></span></dd>
+                        <dd class="constant public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string">ENUM_VALUE</span> <span class="t_operator">=</span> <span class="t_identifier" data-type-more="const" title="value: &quot;dinner&quot;"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\Enum\</span>MealsBacked</span><span class="t_operator">::</span><span class="t_name">DINNER</span></span></dd>
                         <dd class="constant public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string">REGULAR_CONSTANT</span> <span class="t_operator">=</span> <span class="t_string">test</span></dd>
                         <dt class="cases">cases</dt>
                         <dd class="case"><span class="no-quotes t_identifier t_string">BREAKFAST</span> <span class="t_operator">=</span> <span class="t_string">breakfast</span></dd>

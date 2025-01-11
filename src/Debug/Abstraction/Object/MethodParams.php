@@ -258,8 +258,8 @@ class MethodParams
     /**
      * Get PhpDoc param info
      *
-     * @param string $name               param name
-     * @param array  $phpDocParamsByName [description]
+     * @param string $name               Param name
+     * @param array  $phpDocParamsByName Params defined in PhpDoc
      *
      * @return array
      */

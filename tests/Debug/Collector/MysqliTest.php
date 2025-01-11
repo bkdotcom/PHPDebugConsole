@@ -17,6 +17,7 @@ use bdk\Test\Debug\DebugTestFramework;
  * @covers \bdk\Debug\Collector\MySqli
  * @covers \bdk\Debug\Collector\MySqli\MySqliStmt
  * @covers \bdk\Debug\Collector\StatementInfo
+ * @covers \bdk\Debug\Collector\StatementInfoLogger
  * @covers \bdk\Debug\Utility\Sql
  */
 class MysqliTest extends DebugTestFramework
@@ -32,7 +33,7 @@ class MysqliTest extends DebugTestFramework
     public function setUp(): void
     {
         parent::setUp();
-        Reflection::propSet('bdk\Debug\Collector\StatementInfo', 'id', 0);
+        Reflection::propSet('bdk\Debug\Collector\StatementInfoLogger', 'id', 0);
     }
 
     public static function setUpBeforeClass(): void
@@ -52,7 +53,7 @@ EOD;
 EOD;
 
         $error = false;
-        \set_error_handler(function ($errType, $errMsg, $file, $line) use (&$error) {
+        \set_error_handler(static function ($errType, $errMsg, $file, $line) use (&$error) {
             $error = true;
             echo \sprintf('Error %s - %s:%s', $errMsg, $file, $line) . "\n";
         });
@@ -66,7 +67,13 @@ EOD;
             );
         } catch (\Exception $e) {
             $error = true;
-            echo __METHOD__ . ' Exception: ' . $e->getMessage() . "\n";
+            echo \sprintf(
+                '%s: Exception: %s - %s:%s',
+                __METHOD__,
+                $e->getMessage(),
+                $e->getFile(),
+                $e->getLine()
+            ) . "\n";
         }
 
         \restore_error_handler();
@@ -79,7 +86,7 @@ EOD;
         self::$client->query($createDb);
         self::$client->query($createTable);
 
-        \bdk\Debug\Utility\Reflection::propSet('bdk\\Debug\\Collector\\StatementInfo', 'constants', array());
+        \bdk\Debug\Utility\Reflection::propSet('bdk\\Debug\\Collector\\StatementInfoLogger', 'constants', array());
     }
 
     public static function tearDownAfterClass(): void
@@ -289,7 +296,6 @@ EOD;
                 "meta": {
                     "channel": "general.MySqli",
                     "detectFiles": true,
-                    "evalLine": null,
                     "file": "{$file}",
                     "line": {$line},
                     "uncollapse": false
@@ -301,7 +307,6 @@ EOD;
                 "meta": {
                     "channel": "general.MySqli",
                     "detectFiles": true,
-                    "evalLine": null,
                     "file": "{$file}",
                     "line": {$line},
                     "uncollapse": false
@@ -427,7 +432,6 @@ EOD;
                 "meta": {
                     "channel": "general.MySqli",
                     "detectFiles": true,
-                    "evalLine": null,
                     "file": "%s",
                     "line": {$line},
                     "uncollapse": false
@@ -445,7 +449,6 @@ EOD;
                 "meta": {
                     "channel": "general.MySqli",
                     "detectFiles": true,
-                    "evalLine": null,
                     "file": "%s",
                     "line": {$line},
                     "uncollapse": false
@@ -519,7 +522,7 @@ EOD;
                 'meta' => array(
                     'channel' => 'general.MySqli',
                     'detectFiles' => true,
-                    'evalLine' => null,
+                    // 'evalLine' => null,
                     'file' => __FILE__,
                     'line' => $line,
                     'uncollapse' => true,
@@ -584,7 +587,7 @@ EOD;
                 'meta' => array(
                     'channel' => 'general.MySqli',
                     'detectFiles' => true,
-                    'evalLine' => null,
+                    // 'evalLine' => null,
                     'file' => __FILE__,
                     'line' => $line,
                     'uncollapse' => true,
@@ -788,7 +791,6 @@ EOD;
                 "meta": {
                     "channel": "general.MySqli",
                     "detectFiles": true,
-                    "evalLine": null,
                     "file": "%s",
                     "line": $line,
                     "uncollapse": true

@@ -135,6 +135,7 @@
         <exclude name="Squiz.Commenting.LongConditionClosingComment.Missing" />
 
         <!-- PostStatementComment -->
+        <exclude name="Squiz.Commenting.PostStatementComment.AnnotationFound" />
         <exclude name="Squiz.Commenting.PostStatementComment.Found" />
 
         <!-- VariableComment -->

@@ -46,15 +46,16 @@ class Trace implements SubscriberInterface
      *
      * Params may be passed in any order
      *
-     * @param bool   $inclContext (`false`) Include code snippet
-     * @param string $caption     ('trace') Specify caption for the trace table
-     * @param int    $limit       (0) limit the number of stack frames returned.  By default (limit = 0) all stack frames are collected
+     * @param bool             $inclContext (`false`) Include code snippet
+     * @param string           $caption     ('trace') Specify caption for the trace table
+     * @param int              $limit       (0) limit the number of stack frames returned.  By default (limit = 0) all stack frames are collected
+     * @param array|\Exception $trace       Optionally specify trace
      *
      * @return Debug
      *
      * @since 3.3 added limit argument
      */
-    public function trace($inclContext = false, $caption = 'trace', $limit = 0)
+    public function trace($inclContext = false, $caption = 'trace', $limit = 0, $trace = null)
     {
         if (!$this->debug->getCfg('collect', Debug::CONFIG_DEBUG)) {
             return $this->debug;
@@ -70,6 +71,7 @@ class Trace implements SubscriberInterface
                 'caption',
                 'inclContext',
                 'limit',
+                'trace',
             ]
         );
         $this->doTrace($logEntry);
@@ -88,11 +90,14 @@ class Trace implements SubscriberInterface
     {
         $this->debug = $logEntry->getSubject();
         $meta = $this->getMeta($logEntry);
-        $trace = isset($meta['trace'])
+        $getOptions = $meta['inclArgs'] ? Backtrace::INCL_ARGS : 0;
+        $getOptions |= $meta['inclInternal'] ? Backtrace::INCL_INTERNAL : 0;
+        $trace = \is_array($meta['trace'])
             ? $meta['trace']
             : $this->debug->backtrace->get(
-                $meta['inclArgs'] ? Backtrace::INCL_ARGS : 0,
-                $meta['limit']
+                $getOptions,
+                $meta['limit'],
+                $meta['trace'] // null or Exception
             );
         if ($trace && $meta['inclContext']) {
             $trace = $this->debug->backtrace->addContext($trace);
@@ -122,9 +127,10 @@ class Trace implements SubscriberInterface
                                  // will default to $inclContext
                                  //   may want to set meta['cfg']['objectsExclude'] = '*'
             'inclContext' => false,
+            'inclInternal' => false,
             'limit' => 0,
             'sortable' => false,
-            'trace' => null,  // set to specify trace
+            'trace' => null,  // set to array or Exception to specify trace
         ), $logEntry['meta']);
 
         if ($meta['inclArgs'] === null) {
@@ -176,8 +182,10 @@ class Trace implements SubscriberInterface
         \array_walk($argsPassed, static function ($val) use (&$argsTyped) {
             $type = \gettype($val);
             $typeToKey = array(
+                'array' => 'trace',
                 'boolean' => 'inclContext',
                 'integer' => 'limit',
+                'object' => 'trace', // exception
                 'string' => 'caption',
             );
             $key = isset($typeToKey[$type])

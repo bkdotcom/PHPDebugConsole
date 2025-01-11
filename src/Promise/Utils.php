@@ -52,29 +52,6 @@ final class Utils
     }
 
     /**
-     * Test if value is of a certain type
-     *
-     * @param mixed  $value Value to test
-     * @param string $type  "array", "callable", "object", or className
-     *
-     * @return bool
-     */
-    private static function assertTypeCheck($value, $type)
-    {
-        switch ($type) {
-            case 'array':
-                return \is_array($value);
-            case 'callable':
-                return \is_callable($value);
-            case 'object':
-                return \is_object($value);
-            default:
-                return \is_a($value, $type);
-        }
-        return false;
-    }
-
-    /**
      * Get the global task queue used for promise resolution.
      *
      * This task queue MUST be run in an event loop in order for promises to be
@@ -336,6 +313,29 @@ final class Utils
             \ksort($results);
             return $results;
         });
+    }
+
+    /**
+     * Test if value is of a certain type
+     *
+     * @param mixed  $value Value to test
+     * @param string $type  "array", "callable", "object", or className
+     *
+     * @return bool
+     */
+    private static function assertTypeCheck($value, $type)
+    {
+        switch ($type) {
+            case 'array':
+                return \is_array($value);
+            case 'callable':
+                return \is_callable($value);
+            case 'object':
+                return \is_object($value);
+            default:
+                return \is_a($value, $type);
+        }
+        return false;
     }
 
     /**

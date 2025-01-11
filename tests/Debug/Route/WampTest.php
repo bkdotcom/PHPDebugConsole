@@ -54,12 +54,13 @@ class WampTest extends DebugTestFramework
                     array(
                         'caption' => 'trace',
                         'detectFiles' => true,
-                        'evalLine' => null,
+                        // 'evalLine' => null,
                         'file' => $this->file,
                         'foundFiles' => array(
                             __FILE__,
                         ),
                         'inclArgs' => false,
+                        'inclInternal' => false,
                         'limit' => 0,
                         'line' => $this->line,
                         'sortable' => false,

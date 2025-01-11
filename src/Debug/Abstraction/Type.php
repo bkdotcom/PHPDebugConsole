@@ -31,7 +31,7 @@ class Type
     const TYPE_RESOURCE = 'resource';
     const TYPE_STRING = 'string';
     const TYPE_CONST = 'const'; // non-native type (Abstraction: we store name and value)
-                                // deprecated (use TYPE_IDENTIFIER)
+                                //   deprecated (use TYPE_IDENTIFIER)
     const TYPE_IDENTIFIER = 'identifier'; // const, className, method, property
                                             // value: identifier
                                             // backedValue: underlying const or property value

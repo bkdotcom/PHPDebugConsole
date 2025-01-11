@@ -11,6 +11,7 @@ ul.group-body {
 .m_groupEndValue,
 .m_info,
 .m_log,
+.m_time,
 .m_warn {
   position: relative;
   width: fit-content; // previously using display: table;
@@ -40,9 +41,13 @@ ul.group-body {
 }
 
 .m_group {
+  width: fit-content;
   .group-header {
-    width: fit-content;  // previously using display: table;
+    // width: fit-content;  // previously using display: table;
     white-space: nowrap;
+    > i:first-child {
+      color: var(--color-fg)
+    }
     i.fa-warning {
       color: #cdcb06;
       margin-left: 0.33em;
@@ -62,6 +67,8 @@ ul.group-body {
     padding-left: 0.25rem;
   }
   &.expanded {
+    // background-color: inherit;
+    // color: inherit;
     > .group-body {
       display: block;
     }
@@ -69,15 +76,13 @@ ul.group-body {
 }
 
 .m_error,
-.m_group.level-error > .group-body,
-.m_group.level-error:not(.expanded) > .group-header > .level-error {
+*.level-error {
   background-color: var(--color-error-bg);
   color: var(--color-error-fg);
 }
 
 .m_info,
-.m_group.level-info > .group-body,
-.m_group.level-info:not(.expanded) > .group-header > .level-info {
+*.level-info {
   background-color: var(--color-info-bg);
   color: var(--color-info-fg);
 }
@@ -89,8 +94,7 @@ ul.group-body {
 }
 
 .m_warn,
-.m_group.level-warn > .group-body,
-.m_group.level-warn:not(.expanded) > .group-header > .level-warn {
+*.level-warn {
   background-color: var(--color-warn-bg);
   color: var(--color-warn-fg);
 }

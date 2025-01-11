@@ -22,7 +22,7 @@ class DoctrineLoggerTest extends DebugTestFramework
     public function setUp(): void
     {
         parent::setUp();
-        Reflection::propSet('bdk\Debug\Collector\StatementInfo', 'id', 0);
+        Reflection::propSet('bdk\Debug\Collector\StatementInfoLogger', 'id', 0);
     }
 
     public function testOutput()

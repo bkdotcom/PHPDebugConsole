@@ -360,7 +360,7 @@ class Clear implements SubscriberInterface
      * Update logEntry
      *
      * @param LogEntry $logEntry LogEntry instance
-     * @param array    $args     arguments]
+     * @param array    $args     arguments
      *
      * @return void
      */

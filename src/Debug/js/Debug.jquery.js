@@ -1040,14 +1040,16 @@
       $(this).data('expand', false);
       enhanceValue(this, $group);
     });
+    /*
     $.each(['level-error', 'level-info', 'level-warn'], function (i, classname) {
-      var $toggleIcon;
+      var $toggleIcon
       if ($group.hasClass(classname)) {
-        $toggleIcon = $toggle.children('i').eq(0);
-        $toggle.wrapInner('<span class="' + classname + '"></span>');
-        $toggle.prepend($toggleIcon); // move icon
+        $toggleIcon = $toggle.children('i').eq(0)
+        $toggle.wrapInner('<span class="' + classname + '"></span>')
+        $toggle.prepend($toggleIcon) // move icon
       }
-    });
+    })
+    */
     if (
       $group.hasClass('expanded') ||
       $target.find('.m_error, .m_warn').not('.filter-hidden').not('[data-uncollapse=false]').length

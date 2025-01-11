@@ -67,7 +67,7 @@ class Html extends Base
      */
     public function processLogEntry(LogEntry $logEntry)
     {
-        $meta = $this->setMetaDefaults($logEntry);
+        $meta = $this->mergeMetaDefaults($logEntry);
         $channelName = $logEntry->getChannelName();
         // phpError channel is handled separately
         if (!isset($this->channels[$channelName]) && $channelName !== $this->channelNameRoot . '.phpError') {
@@ -223,6 +223,26 @@ class Html extends Base
      */
     protected function methodDefault(LogEntry $logEntry)
     {
+        list($args, $meta) = $this->handleSubstitutions($logEntry);
+        $append = !empty($meta['context'])
+            ? $this->helper->buildContext($meta['context'], $meta['line'])
+            : '';
+        return $this->html->buildTag(
+            'li',
+            $this->methodDefaultAttribs($logEntry),
+            $this->helper->buildArgString($args, $meta) . $append
+        );
+    }
+
+    /**
+     * Get method html attributes
+     *
+     * @param LogEntry $logEntry LogEntry instance
+     *
+     * @return array
+     */
+    private function methodDefaultAttribs(LogEntry $logEntry)
+    {
         $meta = $logEntry['meta'];
         $attribs = $this->logEntryAttribs;
         if (isset($meta['file']) && $logEntry->getChannelName() !== $this->channelNameRoot . '.phpError') {
@@ -238,18 +258,13 @@ class Html extends Base
         if ($meta['errorCat']) {
             $attribs['class'][] = 'error-' . $meta['errorCat'];
         }
+        if ($meta['level']) {
+            $attribs['class'][] = 'level-' . $meta['level'];
+        }
         if ($meta['uncollapse'] === false) {
             $attribs['data-uncollapse'] = false;
         }
-        list($args, $meta) = $this->handleSubstitutions($logEntry);
-        $append = !empty($meta['context'])
-            ? $this->helper->buildContext($meta['context'], $meta['line'])
-            : '';
-        return $this->html->buildTag(
-            'li',
-            $attribs,
-            $this->helper->buildArgString($args, $meta) . $append
-        );
+        return $attribs;
     }
 
     /**
@@ -307,7 +322,7 @@ class Html extends Base
      *
      * @return array all meta values
      */
-    private function setMetaDefaults(LogEntry $logEntry)
+    private function mergeMetaDefaults(LogEntry $logEntry)
     {
         $meta = \array_merge(array(
             'attribs' => array(),
@@ -315,6 +330,7 @@ class Html extends Base
             'errorCat' => null,         // should only be applicable for error & warn methods
             'glue' => null,
             'icon' => null,
+            'level' => null,
             'sanitize' => true,         // apply htmlspecialchars to args?
             'sanitizeFirst' => null,    // apply htmlspecialchars to first arg?  (defaults to sanitize value)
             'uncollapse' => null,

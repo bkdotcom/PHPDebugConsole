@@ -20,9 +20,6 @@ class Connection extends AbstractConnectionMiddleware
 {
     use DatabaseTrait;
 
-    /** @var Debug */
-    protected $debug;
-
     /** @var array */
     private $params = array();
 
@@ -42,9 +39,8 @@ class Connection extends AbstractConnectionMiddleware
     {
         parent::__construct($connection);
         $this->params = $params;
-        $this->debug = $debug;
+        $this->traitInit($debug);
         $this->debug->eventManager->subscribe(Debug::EVENT_OUTPUT, [$this, 'onDebugOutput'], 1);
-        $this->debug->addPlugin($debug->pluginHighlight);
     }
 
     /**

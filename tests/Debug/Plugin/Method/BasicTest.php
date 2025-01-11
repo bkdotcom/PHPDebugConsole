@@ -81,6 +81,7 @@ class BasicTest extends DebugTestFramework
                         'caption' => 'trace',
                         'detectFiles' => true,
                         'inclArgs' => false,
+                        'inclInternal' => false,
                         'limit' => 0,
                         'sortable' => false,
                         'tableInfo' => array(
@@ -112,6 +113,7 @@ class BasicTest extends DebugTestFramework
                     array(
                         'detectFiles' => true,
                         'inclArgs' => false,
+                        'inclInternal' => false,
                         'format' => 'raw',
                         'foundFiles' => array(),
                     ),
@@ -553,17 +555,17 @@ class BasicTest extends DebugTestFramework
                         ),
                         'meta' => array(
                             'channel' => 'general.phpError',
-                            'context' => null,
+                            // 'context' => null,
                             'detectFiles' => true,
                             'errorCat' => 'warning',
                             'errorHash' => $logEntry->getMeta('errorHash'),
                             'errorType' => 2,
-                            'evalLine' => null,
+                            // 'evalLine' => null,
                             'file' => __FILE__,
                             'isSuppressed' => false,
                             'line' => 42,
                             'sanitize' => true,
-                            'trace' => null,
+                            // 'trace' => null,
                             'uncollapse' => true,
                         ),
                     ), $this->helper->logEntryToArray($logEntry));

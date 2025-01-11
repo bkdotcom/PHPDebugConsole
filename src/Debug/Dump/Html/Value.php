@@ -245,7 +245,7 @@ class Value extends BaseValue
      */
     protected function dumpIdentifier(Abstraction $abs)
     {
-        if (isset($abs['backedValue']) && empty($this->optionGet('attribs.title'))) {
+        if (isset($abs['backedValue']) && \in_array($this->optionGet('attribs.title'), [null, ''], true)) {
             $valueAsString = $this->debug->getDump('text')->valDumper->dump($abs['backedValue']);
             $this->optionSet('attribs.title', 'value: ' . $valueAsString);
         }

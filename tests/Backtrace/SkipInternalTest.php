@@ -118,8 +118,13 @@ class SkipInternalTest extends TestCase
 
     public function testRemoveInternalFramesAllInternal()
     {
-        SkipInternal::addInternalClass('PHPUnit', 1);
         SkipInternal::addInternalClass('bdk\\Test\\Backtrace');
+        SkipInternal::addInternalClass('PHPUnit_Framework_TestCase', 1);
+        SkipInternal::addInternalClass('PHPUnit_Framework_TestResult', 1);
+        SkipInternal::addInternalClass('PHPUnit_Framework_TestSuite', 1);
+        SkipInternal::addInternalClass('PHPUnit_TextUI_Command', 1);
+        SkipInternal::addInternalClass('PHPUnit_TextUI_TestRunner', 1);
+        SkipInternal::addInternalClass('PHPUnit', 1);
 
         $trace = \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
         $trace = Normalizer::normalize($trace);

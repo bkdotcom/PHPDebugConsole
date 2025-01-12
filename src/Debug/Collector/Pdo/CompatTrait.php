@@ -1,9 +1,19 @@
 <?php // phpcs:ignore PSR1.Files.SideEffects.FoundWithSymbol
 
 /**
- * PHP 8 requires signatures to match.. which relies on variadic....
- * to maintain compatibility with ancient PHP we'll do this via trait
+ * This file is part of PHPDebugConsole
+ *
+ * @package   PHPDebugConsole
+ * @author    Brad Kent <bkfake-github@yahoo.com>
+ * @license   http://opensource.org/licenses/MIT MIT
+ * @copyright 2014-2025 Brad Kent
+ * @since     2.3
  */
+
+/*
+    PHP 8 requires signatures to match.. which relies on variadic....
+    to maintain compatibility with ancient PHP we'll do this via trait
+*/
 
 namespace bdk\Debug\Collector\Pdo;
 

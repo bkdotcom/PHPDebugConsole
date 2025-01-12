@@ -1,6 +1,13 @@
 <?php
 
-namespace bdk\Promise;
+/**
+ * @package   bdk\promise
+ * @author    Brad Kent <bkfake-github@yahoo.com>
+ * @license   http://opensource.org/licenses/MIT MIT
+ * @copyright 2023-2025 Brad Kent
+ */
+
+ namespace bdk\Promise;
 
 use bdk\Promise\PromiseInterface;
 

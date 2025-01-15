@@ -17,6 +17,7 @@ use bdk\Debug\AbstractComponent;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\Type;
 use bdk\Debug\LogEntry;
+use bdk\PubSub\Event;
 use bdk\HttpMessage\Utility\ContentType;
 
 /**
@@ -26,7 +27,7 @@ class StatementInfoLogger extends AbstractComponent
 {
     /** @var array<string,mixed> */
     protected $cfg = array(
-        'durationSlowMs' => 500, // milliseconds
+        'slowQueryDurationMs' => 500, // milliseconds
     );
 
     /** @var array<int,string> */
@@ -53,10 +54,13 @@ class StatementInfoLogger extends AbstractComponent
     public function __construct(Debug $debug, array $cfg = array())
     {
         $this->debug = $debug;
+        $cfgDefault = \array_intersect_key($debug->getCfg(null, Debug::CONFIG_DEBUG), $this->cfg);
+        $cfg = \array_merge($cfgDefault, $cfg);
         $this->setCfg($cfg);
         if (!self::$constants) {
             $this->setConstants();
         }
+        $this->debug->eventManager->subscribe(Debug::EVENT_CONFIG, [$this, 'onConfig']);
     }
 
     /**
@@ -103,6 +107,22 @@ class StatementInfoLogger extends AbstractComponent
         }
         $this->logSlowQuery();
         $this->debug->groupEnd();
+    }
+
+    /**
+     * Debug::EVENT_CONFIG subscriber
+     *
+     * @param Event $event Event instance
+     *
+     * @return void
+     */
+    public function onConfig(Event $event)
+    {
+        if (!$event['isTarget'] || !$event['debug']) {
+            return;
+        }
+        $cfg = \array_intersect_key($event['debug'], $this->cfg);
+        $this->setCfg($cfg);
     }
 
     /**
@@ -157,7 +177,7 @@ class StatementInfoLogger extends AbstractComponent
         if ($this->info->duration !== null) {
             $this->debug->time('duration', $this->info->duration, $this->debug->meta(
                 'level',
-                $this->info->duration * 1000 >= $this->cfg['durationSlowMs']
+                $this->info->duration * 1000 >= $this->cfg['slowQueryDurationMs']
                     ? 'warn' // highlight duration for slow queries
                     : null
             ));
@@ -248,7 +268,7 @@ class StatementInfoLogger extends AbstractComponent
      */
     private function logSlowQuery()
     {
-        if ($this->info->duration * 1000 < $this->cfg['durationSlowMs']) {
+        if ($this->info->duration * 1000 < $this->cfg['slowQueryDurationMs']) {
             return;
         }
         $this->debug->log(new LogEntry(

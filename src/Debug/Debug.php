@@ -230,7 +230,7 @@ class Debug extends AbstractDebug
             'route' => array( 'class' => 'bdk\Debug\Plugin\Route' ),
             'runtime' => array( 'class' => 'bdk\Debug\Plugin\Runtime' ),
         ),
-        'redactKeys' => [      // case-insensitive
+        'redactKeys' => [           // case-insensitive
             'password',
         ],
         // 'redactReplace'          // callable (default defined in Plugin/Redaction)
@@ -239,7 +239,8 @@ class Debug extends AbstractDebug
                                     //   if null, no output (unless output plugin added manually)
         'routeNonHtml' => 'serverLog',
         'serviceProvider' => array(), // ServiceProviderInterface, array, or callable that receives Container as param
-        'sessionName' => null,  // if logging session data (see logEnvInfo), optionally specify session name
+        'sessionName' => null,      // if logging session data (see logEnvInfo), optionally specify session name
+        'slowQueryDurationMs' => 500,
         'wampPublisher' => array(
             // wampPublisher
             //    required if using Wamp route

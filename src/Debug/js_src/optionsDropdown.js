@@ -49,11 +49,11 @@ function addDropdown () {
   )
   $menuBar.append('<div class="debug-options" aria-labelledby="debug-options-toggle">' +
       '<div class="debug-options-body">' +
-        'Theme <select name="theme">' +
+        '<label>Theme <select name="theme">' +
           '<option value="auto">Auto</option>' +
           '<option value="light">Light</option>' +
           '<option value="dark">Dark</option>' +
-        '</select>' +
+        '</select></label>' +
         '<label><input type="checkbox" name="debugCookie" /> Debug Cookie</label>' +
         '<label><input type="checkbox" name="persistDrawer" /> Keep Open/Closed</label>' +
         '<label><input type="checkbox" name="linkFiles" /> Create file links</label>' +

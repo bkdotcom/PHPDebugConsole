@@ -80,7 +80,6 @@ $.fn.debugEnhance = function (method, arg1, arg2) {
 
 $(function () {
   $('.debug').debugEnhance('init')
-  $('.debug.debug-drawer').attr('data-theme', config.themeGet())
   window.matchMedia('(prefers-color-scheme: dark)').onchange = function (e) {
     $('.debug.debug-drawer').attr('data-theme', config.themeGet())
   }
@@ -103,6 +102,10 @@ function debugEnhanceInit ($node, arg1) {
   if (!config.get('drawer')) {
     $node.debugEnhance()
   }
+  if ($node.hasClass('debug-drawer')) {
+    $node.attr('data-theme', config.themeGet())
+  }
+  $node.trigger('init.debug')
 }
 
 function debugEnhanceDefault ($node) {

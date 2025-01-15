@@ -17,6 +17,7 @@ use bdk\Debug\Framework\Yii1_1\Component as DebugComponent;
 use bdk\Debug\Framework\Yii1_1\LogRoute;
 use bdk\ErrorHandler;
 use bdk\ErrorHandler\Error;
+use Bdk\PubSub\Event;
 use bdk\PubSub\Manager as EventManager;
 use bdk\PubSub\SubscriberInterface;
 use Yii;
@@ -55,12 +56,26 @@ class ErrorLogger implements SubscriberInterface
         $this->debug->errorHandler->unregister();
         $this->debug->errorHandler->register();
 
-        $this->pathsIgnoreError = \array_map(static function ($path) {
+        $this->addIgnorePath($this->debug->getCfg('yii.pathsIgnoreError'));
+    }
+
+    /**
+     * Add path to ignore
+     *
+     * @param string|array $path Path(s) to ignore
+     *
+     * @return void
+     */
+    public function addIgnorePath($path)
+    {
+        \array_map(function ($path) {
             $path = \preg_replace_callback('/:([\w\.]+):/', static function (array $matches) {
                 return Yii::getPathOfAlias($matches[1]);
             }, $path);
-            return \preg_replace('#' . DIRECTORY_SEPARATOR . '+#', DIRECTORY_SEPARATOR, $path);
-        }, $this->debug->getCfg('yii.pathsIgnoreError'));
+            $path = \preg_replace('#' . DIRECTORY_SEPARATOR . '+#', DIRECTORY_SEPARATOR, $path);
+            $this->pathsIgnoreError[] = $path;
+        }, (array) $path);
+        $this->pathsIgnoreError = \array_unique($this->pathsIgnoreError);
     }
 
     /**
@@ -69,12 +84,27 @@ class ErrorLogger implements SubscriberInterface
     public function getSubscriptions()
     {
         return array(
+            Debug::EVENT_CONFIG => 'onDebugConfig',
             Debug::EVENT_OUTPUT => ['onDebugOutput', 1],
             ErrorHandler::EVENT_ERROR => [
                 ['onErrorLow', -1],
                 ['onErrorHigh', 1],
             ],
         );
+    }
+
+    /**
+     * Debug::EVENT_CONFIG subscriber
+     *
+     * @param Event $event Event instance
+     *
+     * @return void
+     */
+    public function onDebugConfig(Event $event)
+    {
+        if ($event['isTarget'] && isset($event['debug']['yii']['pathsIgnoreError'])) {
+            $this->addIgnorePath($event['debug']['yii']['pathsIgnoreError']);
+        }
     }
 
     /**

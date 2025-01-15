@@ -238,17 +238,17 @@ class Html extends AbstractRoute
     }
 
     /**
-     * Build HTML output
+     * Build debug attributes
      *
-     * @return string
+     * @return array
      */
-    private function buildOutput()
+    private function buildAttribs()
     {
         $lftDefault = \strtr(\ini_get('xdebug.file_link_format'), array(
             '%f' => '%file',
             '%l' => '%line',
         ));
-        $str = '<div' . $this->debug->html->buildAttribString(array(
+        return array(
             'class' => 'debug',
             // channel list gets built as log processed...  we'll str_replace this...
             'data-channel-name-root' => $this->channelNameRoot,
@@ -258,19 +258,7 @@ class Html extends AbstractRoute
                 'linkFilesTemplateDefault' => $lftDefault ?: null,
                 'tooltip' => $this->cfg['tooltip'],
             ),
-        )) . ">\n"
-            . $this->buildStyleTag()
-            . $this->buildScriptTag()
-            . $this->buildHeader()
-            . $this->buildLoading()
-            . $this->tabs->buildTabPanes()
-            . '</div>' . "\n"; // close .debug
-
-        $str = \preg_replace('#(<ul[^>]*>)\s+</ul>#', '$1</ul>', $str); // ugly, but want to be able to use :empty
-        $str = \strtr($str, array(
-            '{{channels}}' => \htmlspecialchars(\json_encode($this->buildChannelTree(), JSON_FORCE_OBJECT)),
-        ));
-        return $str;
+        );
     }
 
     /**
@@ -334,6 +322,28 @@ class Html extends AbstractRoute
         return $this->cfg['outputScript']
             ? '<div class="loading">Loading ' . $this->buildIcon($this->debug->getCfg('icons.loading', Debug::CONFIG_DEBUG)) . '</div>' . "\n"
             : '';
+    }
+
+    /**
+     * Build HTML output
+     *
+     * @return string
+     */
+    private function buildOutput()
+    {
+        $str = '<div' . $this->debug->html->buildAttribString($this->buildAttribs()) . ">\n"
+            . $this->buildStyleTag()
+            . $this->buildScriptTag()
+            . $this->buildHeader()
+            . $this->buildLoading()
+            . $this->tabs->buildTabPanes()
+            . '</div>' . "\n"; // close .debug
+
+        $str = \preg_replace('#(<ul[^>]*>)\s+</ul>#', '$1</ul>', $str); // ugly, but want to be able to use :empty
+        $str = \strtr($str, array(
+            '{{channels}}' => \htmlspecialchars(\json_encode($this->buildChannelTree(), JSON_FORCE_OBJECT)),
+        ));
+        return $str;
     }
 
     /**

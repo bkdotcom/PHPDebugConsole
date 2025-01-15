@@ -154,6 +154,7 @@ class ConfigTest extends DebugTestFramework
             'serviceProvider',
             'sessionName',
             'wampPublisher',
+            'slowQueryDurationMs',
             'container',
         );
         \sort($debugKeys);

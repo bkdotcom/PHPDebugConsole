@@ -98,10 +98,11 @@ class Base extends AbstractComponent
     public function processLogEntry(LogEntry $logEntry)
     {
         $method = $logEntry['method'];
+        $methodBuild = 'method' . \ucfirst($method);
         $meta = $logEntry->getMeta();
         $this->valDumper->optionStackPush($meta);
-        if ($method === 'alert') {
-            return $this->methodAlert($logEntry);
+        if (\method_exists($this, $methodBuild)) {
+            return $this->{$methodBuild}($logEntry);
         }
         if (\in_array($method, ['group', 'groupCollapsed', 'groupEnd', 'groupSummary'], true)) {
             return $this->methodGroup($logEntry);

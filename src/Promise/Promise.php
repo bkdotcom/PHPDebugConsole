@@ -21,6 +21,11 @@ use Throwable;
  *
  * @link https://promisesaplus.com/
  *
+ * @method bool isPending()
+ * @method bool isSettled()
+ * @method bool isFulfilled()
+ * @method bool isRejected()
+ *
  * @psalm-consistent-constructor
  */
 class Promise implements PromiseInterface
@@ -185,9 +190,8 @@ class Promise implements PromiseInterface
             if ($this->state === self::FULFILLED) {
                 return $this->result;
             }
-            // It's rejected so "unwrap" and throw an exception.
-            $exception = self::exceptionFor($this->result);
-            throw $exception;
+            // It's rejected so throw an exception.
+            throw self::exceptionFor($this->result);
         }
     }
 
@@ -301,11 +305,9 @@ class Promise implements PromiseInterface
         $this->waitFn = null;
         $this->cancelFn = null;
 
-        if (!$handlers) {
-            return;
+        if ($handlers) {
+            $this->settleInvokeHandlers($state, $value, $handlers);
         }
-
-        $this->settleInvokeHandlers($state, $value, $handlers);
     }
 
     /**
@@ -417,12 +419,17 @@ class Promise implements PromiseInterface
         if ($this->state !== self::PENDING) {
             return;
         }
+
+        $haveWait = false;
         if ($this->waitFn) {
             $this->invokeWaitFn();
+            $haveWait = true;
         } elseif ($this->waitList) {
             $this->invokeWaitList();
-        } else {
-            // If there's no wait function, then reject the promise.
+            $haveWait = true;
+        }
+
+        if (!$haveWait) {
             $this->reject('Cannot wait on a promise that has no wait function.'
                 . ' You must provide a wait function when constructing the promise'
                 . ' to be able to wait on it.');

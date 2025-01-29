@@ -98,7 +98,7 @@ class Methods extends AbstractSection
         return $this->html->buildTag(
             'span',
             array(
-                'class' => 't_identifier',
+                'class' => ['t_identifier'],
                 'title' => $this->opts['phpDocOutput']
                     ? $this->helper->dumpPhpDoc(
                         $info['phpDoc']['summary']

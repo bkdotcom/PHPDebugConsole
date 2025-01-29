@@ -17,8 +17,8 @@ use bdk\Debug\AbstractComponent;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\Type;
 use bdk\Debug\LogEntry;
-use bdk\PubSub\Event;
 use bdk\HttpMessage\Utility\ContentType;
+use bdk\PubSub\Event;
 
 /**
  * Log sql statement info

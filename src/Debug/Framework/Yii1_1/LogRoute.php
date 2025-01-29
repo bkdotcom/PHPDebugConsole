@@ -210,8 +210,6 @@ class LogRoute extends CLogRoute
     /**
      * Route log messages to PHPDebugConsole
      *
-     * Extends CLogRoute
-     *
      * @param array $logs list of log messages
      *
      * @return void

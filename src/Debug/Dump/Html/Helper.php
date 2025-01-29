@@ -89,7 +89,7 @@ class Helper
             ),
             '<code class="language-php">'
                 . \htmlspecialchars(\implode($lines))
-            . '</code>'
+                . '</code>'
         );
     }
 
@@ -121,6 +121,35 @@ class Helper
                 'visualWhiteSpace' => false,
             ), $opts)
         );
+    }
+
+    /**
+     * Markup filepath
+     *
+     * Wrap directory components
+     *
+     * @param string $filePath     filepath (ie /var/www/html/index.php)
+     * @param string $commonPrefix prefix shared by current group of files
+     *
+     * @return string
+     */
+    public function markupFilePath($filePath, $commonPrefix = '')
+    {
+        if ($filePath === 'eval()\'d code') {
+            return \htmlspecialchars($filePath);
+        }
+        $fileParts = $this->parseFilePath($filePath, $commonPrefix);
+        $dumpOpts = array(
+            'tagName' => null,
+        );
+        return ($fileParts['docRoot'] ? '<span class="file-docroot">DOCUMENT_ROOT</span>' : '')
+            . ($fileParts['relPathCommon']
+                ? '<span class="file-basepath">' . $this->dumper->valDumper->dump($fileParts['relPathCommon'], $dumpOpts) . '</span>'
+                : '')
+            . ($fileParts['relPath']
+                ? '<span class="file-relpath">' . $this->dumper->valDumper->dump($fileParts['relPath'], $dumpOpts) . '</span>'
+                : '')
+            . '<span class="file-basename">' . $this->dumper->valDumper->dump($fileParts['baseName'], $dumpOpts) . '</span>';
     }
 
     /**
@@ -165,48 +194,48 @@ class Helper
         if (empty($rowInfo['context']) || $rowInfo['context'] === Abstracter::UNDEFINED) {
             return $html;
         }
-        $html = \str_replace('<tr>', '<tr' . ($index === 0 ? ' class="expanded"' : '') . ' data-toggle="next">', $html);
+        $html = \preg_replace_callback('/^<tr([^>]*)>/', function ($matches) use ($index) {
+            $attribs = $this->debug->html->parseAttribString($matches[1]);
+            $attribs['class']['expanded'] = $index === 0;
+            $attribs['data-toggle'] = 'next';
+            return '<tr' . $this->debug->html->buildAttribString($attribs) . '>';
+        }, $html);
         $html .= '<tr class="context" ' . ($index === 0 ? 'style="display:table-row;"' : '' ) . '>'
             . '<td colspan="4">'
                 . $this->buildContext($rowInfo['context'], $row['line'])
-                . '{{arguments}}'
+                . $this->buildContextArguments($rowInfo['args'])
             . '</td>' . "\n"
             . '</tr>' . "\n";
-        $crateRawWas = $this->dumper->crateRaw;
-        $this->dumper->crateRaw = true;
-        // set maxDepth for args
-        $maxDepthBak = $this->debug->getCfg('maxDepth');
-        if ($maxDepthBak > 0) {
-            $this->debug->setCfg('maxDepth', $maxDepthBak + 1, Debug::CONFIG_NO_PUBLISH);
-        }
-        $args = \is_array($rowInfo['args']) && \count($rowInfo['args']) > 0
-            ? '<hr />Arguments = ' . $this->dumper->valDumper->dump($rowInfo['args'])
-            : '';
-        $this->debug->setCfg('maxDepth', $maxDepthBak, Debug::CONFIG_NO_PUBLISH | Debug::CONFIG_NO_RETURN);
-        $this->dumper->crateRaw = $crateRawWas;
-        return \str_replace('{{arguments}}', $args, $html);
+        return $html;
     }
 
     /**
      * Format trace table's function column
      *
-     * @param string $html <tr>...</tr>
-     * @param array  $row  row values
+     * @param string $html    <tr>...</tr>
+     * @param array  $row     Row values
+     * @param array  $rowInfo Row info / meta
      *
      * @return string
      */
-    public function tableMarkupFunction($html, array $row)
+    public function tableTraceRow($html, array $row, array $rowInfo)
     {
-        if (isset($row['function'])) {
-            $replace = $this->dumper->valDumper->markupIdentifier($row['function'], 'method', 'span', array(), true);
-            $replace = '<td class="col-function no-quotes t_string">' . $replace . '</td>';
-            $html = \str_replace(
-                '<td class="t_string">' . \htmlspecialchars($row['function']) . '</td>',
-                $replace,
-                $html
-            );
-        }
-        return $html;
+        \preg_match_all('|
+            <(?P<tagname>t[hd])(?P<attribs>[^>]*)>
+            (?P<innerHtml>.*?)
+            </t[hd]>
+            |xs', $html, $cells, PREG_SET_ORDER);
+
+        $cells[1]['innerHtml'] = $this->markupFilePath($row['file'], $rowInfo['commonFilePrefix']);
+        $cells[3]['innerHtml'] = $cells[3]['innerHtml']
+            ? $this->dumper->valDumper->markupIdentifier($row['function'], 'method', 'span', array(), true)
+            : '';
+        $trAttribs = \strpos($cells[1]['innerHtml'], 'DOCUMENT_ROOT') !== false
+            ? ' data-file="' . \htmlspecialchars($row['file']) . '"'
+            : '';
+        return '<tr' . $trAttribs . '>' . \join('', \array_map(static function ($parts) {
+            return '<' . $parts['tagname'] . $parts['attribs'] . '>' . $parts['innerHtml'] . '</' . $parts['tagname'] . '>';
+        }, $cells)) . '</tr>';
     }
 
     /**
@@ -233,6 +262,31 @@ class Helper
                 'visualWhiteSpace' => $i !== 0 || $type !== Type::TYPE_STRING,
             ));
         }
+        return $args;
+    }
+
+    /**
+     * Dump context arguments
+     *
+     * @param string|array $args Arguments from backtrace
+     *
+     * @return string
+     */
+    private function buildContextArguments($args)
+    {
+        if (\is_array($args) === false || \count($args) === 0) {
+            return '';
+        }
+        $crateRawWas = $this->dumper->crateRaw;
+        $this->dumper->crateRaw = true;
+        // set maxDepth for args
+        $maxDepthBak = $this->debug->getCfg('maxDepth');
+        if ($maxDepthBak > 0) {
+            $this->debug->setCfg('maxDepth', $maxDepthBak + 1, Debug::CONFIG_NO_PUBLISH);
+        }
+        $args = '<hr />Arguments = ' . $this->dumper->valDumper->dump($args);
+        $this->debug->setCfg('maxDepth', $maxDepthBak, Debug::CONFIG_NO_PUBLISH | Debug::CONFIG_NO_RETURN);
+        $this->dumper->crateRaw = $crateRawWas;
         return $args;
     }
 
@@ -270,5 +324,41 @@ class Helper
             $type .= '<span class="t_punct">' . \str_repeat('[]', $arrayCount) . '</span>';
         }
         return '<span class="t_type">' . $type . '</span>';
+    }
+
+    /**
+     * Parse file path into parts
+     *
+     * @param string $filePath     filepath (ie /var/www/html/index.php)
+     * @param string $commonPrefix prefix shared by current group of files
+     *
+     * @return array
+     */
+    private function parseFilePath($filePath, $commonPrefix)
+    {
+        $docRoot = $this->debug->serverRequest->getServerParam('DOCUMENT_ROOT');
+        $baseName = \basename($filePath);
+        $containsDocRoot = \strpos($filePath, $docRoot) === 0;
+        $basePath = '';
+        $relPath = \substr($filePath, 0, 0 - \strlen($baseName));
+        if ($commonPrefix || $containsDocRoot) {
+            $strLengths = \array_intersect_key(
+                [\strlen($commonPrefix), \strlen($docRoot)],
+                \array_filter([$commonPrefix, $containsDocRoot])
+            );
+            $maxLen = \max($strLengths);
+            $basePath = \substr($relPath, 0, $maxLen);
+            $relPath = \substr($relPath, $maxLen);
+            if ($containsDocRoot) {
+                $basePath = \substr($basePath, \strlen($docRoot));
+            }
+        }
+        // phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys
+        return array(
+            'docRoot' => $containsDocRoot ? $docRoot : '',
+            'relPathCommon' => $basePath,
+            'relPath' => $relPath,
+            'baseName' => $baseName,
+        );
     }
 }

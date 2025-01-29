@@ -100,6 +100,9 @@ class ServiceProvider implements ServiceProviderInterface
                 'emailer' => array(
                     'emailBacktraceDumper' => static function ($backtrace) use ($debug) {
                         $backtrace = \array_map(static function ($frame) {
+                            if (empty($frame['evalLine'])) {
+                                unset($frame['evalLine']);
+                            }
                             if (!empty($frame['context'])) {
                                 $frame['context'] = \array_map(static function ($line) {
                                     return \rtrim($line, "\n");

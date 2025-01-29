@@ -164,6 +164,7 @@ class Debug extends AbstractDebug
             'config' => 'fa fa-cogs',
             'database' => 'fa fa-database',
             'email' => 'fa fa-envelope-o',
+            'error' => 'fa fa-times-circle',
             'event' => 'fa fa-bell-o',
             'files' => 'fa fa-files-o',
             'github' => 'fa fa-github fa-lg',
@@ -179,6 +180,7 @@ class Debug extends AbstractDebug
             'shutdown' => 'fa fa-power-off',
             'template' => 'fa fa-file-text-o',
             'user' => 'fa fa-user-o',
+            'warning' => 'fa fa-warning',
         ),
         'key' => null,
         'logEnvInfo' => array(  // may be set by passing a list

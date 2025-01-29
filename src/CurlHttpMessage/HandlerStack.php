@@ -220,7 +220,7 @@ class HandlerStack
     {
         return \is_object($value)
             ? \get_class($value)
-            : \gettype($value);
+            : \strtolower(\gettype($value));
     }
 
     /**

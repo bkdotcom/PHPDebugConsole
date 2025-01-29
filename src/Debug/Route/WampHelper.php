@@ -41,6 +41,7 @@ class WampHelper
     {
         $default = array(
             'argv' => array(),
+            'DOCUMENT_ROOT' => null,
             'HTTPS' => null,
             'HTTP_HOST' => null,
             'processId' => \getmypid(),

@@ -75,6 +75,9 @@ class WampTest extends DebugTestFramework
                             'indexLabel' => null,
                             'rows' => array(),
                             'summary' => '',
+                            'commonRowInfo' => array(
+                                'commonFilePrefix' => '/path/to/file.php',
+                            ),
                         ),
                         'trace' => $frames,
                         'uncollapse' => true,

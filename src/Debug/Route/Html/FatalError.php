@@ -112,7 +112,7 @@ class FatalError
                 ),
                 'inclContext' => true,
                 'onBuildRow' => [
-                    [$this->routeHtml->dumper->helper, 'tableMarkupFunction'],
+                    [$this->routeHtml->dumper->helper, 'tableTraceRow'],
                     [$this->routeHtml->dumper->helper, 'tableAddContextRow'],
                 ],
                 'trace' => $trace,

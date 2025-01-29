@@ -99,9 +99,7 @@ class AbstractComponent
             return $this->{$first}->getCfg(\array_slice($path, 1));
         }
         $return = $this->cfg;
-        $path = \array_reverse($path);
-        while ($path) {
-            $key = \array_pop($path);
+        foreach ($path as $key) {
             if (isset($return[$key])) {
                 $return = $return[$key];
                 continue;

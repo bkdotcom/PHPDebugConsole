@@ -34,7 +34,7 @@ class Php
      *
      * @return string|null
      */
-    public function buildDate()
+    public static function buildDate()
     {
         if (\defined('PHP_BUILD_DATE')) {
             return PHP_BUILD_DATE;

@@ -39,6 +39,30 @@ class StringUtil
     private static $interpIsArrayAccess = false;
 
     /**
+     * Find the longest common prefix for provided strings
+     *
+     * @param string[] $strings Strings to compare
+     *
+     * @return string
+     */
+    public static function commonPrefix(array $strings)
+    {
+        self::assertStrings($strings);
+
+        if (empty($strings)) {
+            return '';
+        }
+
+        \sort($strings);
+        $s1 = $strings[0];    // First string
+        $s2 = \end($strings); // Last string
+        $len = \min(\strlen($s1), \strlen($s2));
+        for ($i = 0; $i < $len && $s1[$i] === $s2[$i]; $i++);
+
+        return \substr($s1, 0, $i);
+    }
+
+    /**
      * Compare two values specifying operator
      *
      * By default, returns -1 if the first version is lower than the second,

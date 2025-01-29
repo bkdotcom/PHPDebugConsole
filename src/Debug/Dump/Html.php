@@ -90,13 +90,12 @@ class Html extends Base
     /**
      * Coerce value to string
      *
-     * Extends Base
-     *
      * @param mixed $val  value
      * @param array $opts $options passed to dump
      *
      * @return string
      */
+    #[\Override]
     public function substitutionAsString($val, $opts)
     {
         $type = $this->debug->abstracter->type->getType($val)[0];
@@ -120,6 +119,8 @@ class Html extends Base
 
     /**
      * Get & reset logged channels
+     *
+     * Note:  may return empty array of nothing (or only errors) logged
      *
      * @return \bdk\Debug[]
      */
@@ -189,6 +190,7 @@ class Html extends Base
      *
      * @return string
      */
+    #[\Override]
     protected function methodAlert(LogEntry $logEntry)
     {
         list($args, $meta) = $this->handleSubstitutions($logEntry);
@@ -221,6 +223,7 @@ class Html extends Base
      *
      * @return string
      */
+    #[\Override]
     protected function methodDefault(LogEntry $logEntry)
     {
         list($args, $meta) = $this->handleSubstitutions($logEntry);
@@ -274,6 +277,7 @@ class Html extends Base
      *
      * @return string
      */
+    #[\Override]
     protected function methodGroup(LogEntry $logEntry)
     {
         return $this->group->build($logEntry, $this->logEntryAttribs);
@@ -282,15 +286,14 @@ class Html extends Base
     /**
      * Handle profile(End), table, & trace methods
      *
-     * Extends Base
-     *
      * @param LogEntry $logEntry LogEntry instance
      *
      * @return string
      */
+    #[\Override]
     protected function methodTabular(LogEntry $logEntry)
     {
-        $meta = $this->debug->arrayUtil->mergeDeep(array(
+        $tableOptions = $this->debug->arrayUtil->mergeDeep(array(
             'attribs' => array(
                 'class' => \array_keys(\array_filter(array(
                     'sortable' => $logEntry->getMeta('sortable'),
@@ -298,21 +301,45 @@ class Html extends Base
                     'trace-context' => $logEntry->getMeta('inclContext'),
                 ))),
             ),
-            'caption' => null,
             'onBuildRow' => array(),
-            'tableInfo' => array(),
         ), $logEntry['meta']);
-        if ($logEntry['method'] === 'trace') {
-            $meta['onBuildRow'][] = [$this->helper, 'tableMarkupFunction'];
-        }
         if ($logEntry->getMeta('inclContext')) {
-            $meta['onBuildRow'][] = [$this->helper, 'tableAddContextRow'];
+            $tableOptions['onBuildRow'][] = [$this->helper, 'tableAddContextRow'];
         }
         return $this->html->buildTag(
             'li',
             $this->logEntryAttribs,
-            "\n" . $this->table->build($logEntry['args'][0], $meta) . "\n"
+            "\n" . $this->table->build($logEntry['args'][0], $tableOptions) . "\n"
         );
+    }
+
+    /**
+     * Handle trace methods
+     *
+     * @param LogEntry $logEntry LogEntry instance
+     *
+     * @return string
+     */
+    protected function methodTrace(LogEntry $logEntry)
+    {
+        $meta = $this->debug->arrayUtil->mergeDeep(array(
+            'onBuildRow' => array(
+                [$this->helper, 'tableTraceRow'],
+            ),
+            'tableInfo' => array(
+                'columns' => array(
+                    0 => array('attribs' => array(
+                        'class' => ['no-quotes'],
+                    )),
+                    2 => array('attribs' => array(
+                        'class' => ['no-quotes', 't_identifier'],
+                    )),
+                ),
+            ),
+        ), $logEntry['meta']);
+        \ksort($meta['tableInfo']['columns']);
+        $logEntry['meta'] = $meta;
+        return $this->methodTabular($logEntry);
     }
 
     /**

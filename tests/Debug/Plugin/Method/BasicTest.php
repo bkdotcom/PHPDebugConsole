@@ -77,7 +77,8 @@ class BasicTest extends DebugTestFramework
                     // we're doing the custom stuff via Debug::EVENT_OUTPUT_LOG_ENTRY, so logEntry should still be trace
                     self::assertSame('trace', $logEntry['method']);
                     self::assertIsArray($logEntry['args'][0]);
-                    self::assertSame(array(
+                    $filepaths = \array_column($logEntry['args'][0], 'file');
+                    $metaExpect = array(
                         'caption' => 'trace',
                         'detectFiles' => true,
                         'inclArgs' => false,
@@ -95,8 +96,12 @@ class BasicTest extends DebugTestFramework
                             'indexLabel' => null,
                             'rows' => array(),
                             'summary' => '',
+                            'commonRowInfo' => array(
+                                'commonFilePrefix' => \bdk\Debug\Utility\StringUtil::commonPrefix($filepaths),
+                            ),
                         ),
-                    ), $logEntry['meta']);
+                    );
+                    self::assertSame($metaExpect, $logEntry['meta']);
                 },
                 'chromeLogger' => array(
                     array('this was a trace'),

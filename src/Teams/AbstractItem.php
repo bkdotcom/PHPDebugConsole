@@ -128,7 +128,6 @@ class AbstractItem implements ItemInterface
             default:
                 return \is_a($value, $type);
         }
-        return false;
     }
 
     /**

@@ -102,6 +102,25 @@ class Container implements ArrayAccess
     }
 
     /**
+     * Magic method
+     *
+     * Provide insight into the container
+     * exclude raw & values
+     *
+     * @return array
+     */
+    public function __debugInfo()
+    {
+        return array(
+            'cfg' => $this->cfg,
+            'invoked' => $this->invoked,
+            'keys' => $this->keys,
+            'raw' => "\x00notInspected\x00",
+            'values' => "\x00notInspected\x00",
+        );
+    }
+
+    /**
      * Extends an object definition.
      *
      * Useful for
@@ -440,7 +459,7 @@ class Container implements ArrayAccess
     {
         return \is_object($value)
             ? \get_class($value)
-            : \gettype($value);
+            : \strtolower(\gettype($value));
     }
 
     /**

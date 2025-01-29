@@ -19,6 +19,13 @@ class BacktraceTest extends TestCase
 
     protected static $line = 0;
 
+    public function __call($method, $args)
+    {
+        if ($method === 'getCallerInfoHelper') {
+            return $this->getCallerInfoHelper();
+        }
+    }
+
     public static function setUpBeforeClass(): void
     {
         $xdebugVer = \phpversion('xdebug');
@@ -235,6 +242,16 @@ class BacktraceTest extends TestCase
                 'type' => '->',
             ),
         ), $callerInfoStack);
+    }
+
+    public function testGetRenameFunctions()
+    {
+        $magic = new Fixture\Magic();
+        $magic->test();
+
+        $trace = $magic->trace;
+
+        self::assertSame('bdk\Test\Backtrace\Fixture\Magic->__call(\'test\')', $trace[1]['function']);
     }
 
     private function getCallerInfoEval()

@@ -75,7 +75,7 @@ class SimpleCache implements CacheInterface
      *
      * @throws BadMethodCallException
      */
-    public function __call($method, $args)
+    public function __call($method, array $args)
     {
         if (\method_exists($this->cache, $method) === false) {
             throw new BadMethodCallException('method ' . __CLASS__ . '::' . $method . ' is not defined');

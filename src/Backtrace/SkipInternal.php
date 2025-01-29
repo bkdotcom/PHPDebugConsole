@@ -269,8 +269,8 @@ class SkipInternal
      */
     private static function getClass(array $frame)
     {
-        return \preg_match(self::$classMethodRegex, (string) $frame['function'], $matches)
-            ? $matches['class']
+        return \preg_match(\bdk\Backtrace::REGEX_FUNCTION, (string) $frame['function'], $matches)
+            ? $matches['classname']
             : null;
     }
 }

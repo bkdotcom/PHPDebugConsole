@@ -342,7 +342,6 @@ final class Utils
             default:
                 return \is_a($value, $type);
         }
-        return false;
     }
 
     /**
@@ -356,6 +355,6 @@ final class Utils
     {
         return \is_object($value)
             ? \get_class($value)
-            : \gettype($value);
+            : \strtolower(\gettype($value));
     }
 }

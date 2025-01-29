@@ -36,6 +36,7 @@ abstract class AbstractDebug
 
     /** @var Container */
     protected $container;
+
     /** @var Container */
     protected $serviceContainer;
 
@@ -181,6 +182,7 @@ abstract class AbstractDebug
         }
         $valActions = \array_intersect_key(array(
             'channelIcon' => [$this, 'onCfgChannelIcon'],
+            'channels' => [$this, 'onCfgChannels'],
             'logServerKeys' => [$this, 'onCfgLogServerKeys'],
             'serviceProvider' => [$this, 'onCfgServiceProvider'],
         ), $cfg);
@@ -206,7 +208,7 @@ abstract class AbstractDebug
         foreach ($rawValues as $k => $v) {
             if (\in_array($k, $services, true)) {
                 $this->serviceContainer[$k] = $v;
-                unset($val[$k]);
+                unset($rawValues[$k]);
                 continue;
             }
             $this->container[$k] = $v;
@@ -222,7 +224,7 @@ abstract class AbstractDebug
      * @param Event      $event     Event instance
      * @param Debug|null $debug     Specify Debug instance to start on.
      *                                If not specified will check if getSubject returns Debug instance
-     *                                Fallback: this->debug
+     *                                Fallback: this
      *
      * @return Event
      */
@@ -404,6 +406,24 @@ abstract class AbstractDebug
     }
 
     /**
+     * Handle "channels" config update
+     *
+     * @param array $val config value
+     *
+     * @return array
+     */
+    private function onCfgChannels($val)
+    {
+        foreach ($val as $channelName => $channelCfg) {
+            if ($this->hasChannel($channelName)) {
+                $this->getChannel($channelName)->config->set($channelCfg);
+                unset($val[$channelName]);
+            }
+        }
+        return $val;
+    }
+
+    /**
      * Handle "channelIcon" config update
      *
      * @param string|null $val config value
@@ -434,6 +454,9 @@ abstract class AbstractDebug
         $event['debug'] = $cfg;
         $cfg = $this->rootInstance->getPlugin('channel')->getPropagateValues($event->getValues());
         unset($cfg['currentSubject'], $cfg['isTarget']);
+        if (empty($cfg)) {
+            return;
+        }
         foreach ($channels as $channel) {
             $channel->config->set($cfg);
         }

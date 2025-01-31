@@ -737,7 +737,12 @@
                                   //    which contain both the name and value
     var text = $.trim($string.text());
     var matches = createFileLinkMatches($string, foundFiles);
-    var isUpdate = remove !== true && $string.hasClass('file-link');
+    var action = 'create';
+    if (remove) {
+      action = 'remove';
+    } else if ($string.hasClass('file-link')) {
+      action = 'update';
+    }
     if ($string.closest('.m_trace').length) {
       // not recursion...  will end up calling createFileLinksTrace
       create($string.closest('.m_trace'));
@@ -747,19 +752,18 @@
       return
     }
 
-    $replace = createFileLinkReplace($string, matches, text, remove, isUpdate);
+    $replace = createFileLinkReplace($string, matches, text, action);
 
     /*
     console.warn('createFileLink', {
-      remove: remove,
-      isUpdate: isUpdate,
+      action: action,
       matches: matches,
       // stringOuterHTML: string.outerHTML,
       stringText: text,
       replace: $replace[0].outerHTML
     })
     */
-    if (isUpdate === false) {
+    if (action !== 'update') {
       createFileLinkUpdateAttr($string, $replace, attrs);
     }
     if ($string.is('td, th, li') === false) {
@@ -795,14 +799,14 @@
     }
   }
 
-  function createFileLinkReplace ($string, matches, text, remove, isUpdate) {
+  function createFileLinkReplace ($string, matches, text, action) {
     var $replace;
-    if (remove) {
+    if (action === 'remove') {
       $replace = $('<span>', {
         text: text
       });
       $string.removeClass('file-link'); // remove so doesn't get added to $replace
-    } else if (isUpdate) {
+    } else if (action === 'update') {
       $replace = $string;
       $replace.prop('href', buildFileLink(matches[1], matches[2]));
     } else {
@@ -919,9 +923,7 @@
    * add font-awesome icons
    */
   function addIcons ($node) {
-    var $caption;
     var $icon = determineIcon($node);
-    var isNested = false;
     addIconsMisc($node);
     if (!$icon) {
       return
@@ -930,15 +932,7 @@
       // custom icon..   add to .group-label
       $node = $node.find('> .group-header .group-label').eq(0);
     } else if ($node.find('> table').length) {
-      // table... we'll prepend icon to caption
-      isNested = $node.parent('.no-indent').length > 0;
-      $caption = $node.find('> table > caption');
-      if ($caption.length === 0 && isNested === false) {
-        // add caption
-        $caption = $('<caption>');
-        $node.find('> table').prepend($caption);
-      }
-      $node = $caption;
+      $node = addIconsTableNode($node);
     }
     if ($node.find('> i:first-child').hasClass($icon.attr('class'))) {
       // already have icon
@@ -965,6 +959,22 @@
       $node2.prepend($icon);
       $icon = null;
     }
+  }
+
+  /**
+   * table... we'll prepend icon to caption
+   *
+   * @return jQuery caption node
+   */
+  function addIconsTableNode ($node) {
+    var isNested = $node.parent('.no-indent').length > 0;
+    var $caption = $node.find('> table > caption');
+    if ($caption.length === 0 && isNested === false) {
+      // add caption
+      $caption = $('<caption>');
+      $node.find('> table').prepend($caption);
+    }
+    return $caption
   }
 
   function determineIcon ($node) {
@@ -2235,7 +2245,7 @@
       return
     }
     // group, object, & next
-    expandGroupObjNext(info.$toggle, info.$classTarget, info.$evtTarget, icon, eventNameDone);
+    expandGroupObjNext(info, icon, eventNameDone);
   }
 
   function toggle (node) {
@@ -2342,16 +2352,21 @@
     $toggle.next().trigger(eventNameDone);
   }
 
-  function expandGroupObjNext ($toggle, $classTarget, $evtTarget, icon, eventNameDone) {
-    $toggle.next().slideDown('fast', function () {
+  /**
+   * @param {*} icon          toggle, classTarget, & evtTarget
+   * @param {*} icon          the icon to update toggle with
+   * @param {*} eventNameDone the event name
+   */
+  function expandGroupObjNext (nodes, icon, eventNameDone) {
+    nodes.$toggle.next().slideDown('fast', function () {
       var $groupEndValue = $(this).find('> .m_groupEndValue');
       if ($groupEndValue.length) {
         // remove value from label
-        $toggle.find('.group-label').last().nextAll().remove();
+        nodes.$toggle.find('.group-label').last().nextAll().remove();
       }
-      $classTarget.addClass('expanded');
-      iconUpdate($toggle, icon);
-      $evtTarget.trigger(eventNameDone);
+      nodes.$classTarget.addClass('expanded');
+      iconUpdate(nodes.$toggle, icon);
+      nodes.$evtTarget.trigger(eventNameDone);
     });
   }
 

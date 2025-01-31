@@ -60,7 +60,7 @@ class Trace implements SubscriberInterface
         if (!$this->debug->getCfg('collect', Debug::CONFIG_DEBUG)) {
             return $this->debug;
         }
-        $argsDefault = $this->debug->rootInstance->getMethodDefaultArgs(__METHOD__);
+        $argsDefault = $this->debug->rootInstance->reflection->getMethodDefaultArgs(__METHOD__);
         $logEntry = new LogEntry(
             $this->debug,
             __FUNCTION__,

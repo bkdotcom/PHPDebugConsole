@@ -326,17 +326,20 @@ class Html extends Base
             'onBuildRow' => array(
                 [$this->helper, 'tableTraceRow'],
             ),
-            'tableInfo' => array(
-                'columns' => array(
-                    0 => array('attribs' => array(
-                        'class' => ['no-quotes'],
-                    )),
-                    2 => array('attribs' => array(
-                        'class' => ['no-quotes', 't_identifier'],
-                    )),
-                ),
-            ),
         ), $logEntry['meta']);
+        $meta['tableInfo']['columns'] = $this->debug->arrayUtil->mergeDeep(
+            // we may not have function column, so  use \array_intersect_key
+            \array_intersect_key(array(
+                0 => array('attribs' => array(
+                    'class' => ['no-quotes'],
+                )),
+                2 => array('attribs' => array(
+                    'class' => ['no-quotes', 't_identifier'],
+                )),
+            ), $meta['tableInfo']['columns']),
+            $meta['tableInfo']['columns']
+        );
+        // mergeDeep may leave keys out of order
         \ksort($meta['tableInfo']['columns']);
         $logEntry['meta'] = $meta;
         return $this->methodTabular($logEntry);

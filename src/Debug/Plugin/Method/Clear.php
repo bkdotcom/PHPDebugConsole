@@ -79,7 +79,7 @@ class Clear implements SubscriberInterface
             __FUNCTION__,
             \func_get_args(),
             array(),
-            $debug->rootInstance->getMethodDefaultArgs(__METHOD__),
+            $debug->rootInstance->reflection->getMethodDefaultArgs(__METHOD__),
             ['bitmask']
         );
         $this->doClear($logEntry);

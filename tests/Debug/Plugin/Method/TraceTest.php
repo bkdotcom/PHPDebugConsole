@@ -329,4 +329,45 @@ EOD;
             )
         );
     }
+
+    public function testTraceNoFunction()
+    {
+        $this->testMethod(
+            'trace',
+            [
+                [
+                    array(
+                        'file' => '/var/w𝕨w/site/file.php',
+                        'line' => 123,
+                        'function' => 'func',
+                    ),
+                    array(
+                        'file' => '/var/w𝕨w/site/𝓋endor/𝒻ile.php',
+                        'line' => 123,
+                        'function' => 'func',
+                    ),
+                ],
+                \bdk\Debug::meta('columns', ['file', 'line']),
+            ],
+            array(
+                'html' => static function ($html) {
+                    $expect = '<li class="m_trace" data-detect-files="true">
+                        <table class="table-bordered">
+                        <caption>trace</caption>
+                        <thead>
+                            <tr><th>&nbsp;</th><th scope="col">file</th><th scope="col">line</th></tr>
+                        </thead>
+                        <tbody>
+                        <tr><th class="t_int t_key text-right" scope="row">0</th><td class="no-quotes t_string"><span class="file-basepath">/var/w<span class="unicode" data-code-point="1D568" title="U-1D568: MATHEMATICAL DOUBLE-STRUCK SMALL W">𝕨</span>w/site/</span><span class="file-basename">file.php</span></td><td class="t_int">123</td></tr>
+                        <tr><th class="t_int t_key text-right" scope="row">1</th><td class="no-quotes t_string"><span class="file-basepath">/var/w<span class="unicode" data-code-point="1D568" title="U-1D568: MATHEMATICAL DOUBLE-STRUCK SMALL W">𝕨</span>w/site/</span><span class="file-relpath"><span class="unicode" data-code-point="1D4CB" title="U-1D4CB: MATHEMATICAL SCRIPT SMALL V">𝓋</span>endor/</span><span class="file-basename"><span class="unicode" data-code-point="1D4BB" title="U-1D4BB: MATHEMATICAL SCRIPT SMALL F">𝒻</span>ile.php</span></td><td class="t_int">123</td></tr>
+                        </tbody>
+                        </table>
+                        </li>';
+                    self::assertStringMatchesFormatNormalized($expect, $html);
+                },
+            )
+        );
+    }
+
+
 }

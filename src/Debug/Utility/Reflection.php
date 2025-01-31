@@ -33,6 +33,9 @@ use UnitEnum;
  */
 class Reflection
 {
+    /** @var array<string,array> */
+    protected static $methodDefaultArgs = array();
+
     /** @var non-empty-string */
     private static $regex = '/^(?:
             (?:
@@ -67,6 +70,34 @@ class Reflection
         return \method_exists($reflector, 'getDeclaringClass')
             ? $reflector->getDeclaringClass()->getName()
             : $reflector->getName();
+    }
+
+    /**
+     * Get Method's default argument list
+     *
+     * @param string $method Method identifier
+     *
+     * @return array
+     */
+    public static function getMethodDefaultArgs($method)
+    {
+        if (isset(self::$methodDefaultArgs[$method])) {
+            return self::$methodDefaultArgs[$method];
+        }
+        $regex = '/^(?P<class>[\w\\\]+)::(?P<method>\w+)(?:\(\))?$/';
+        \preg_match($regex, $method, $matches);
+        $refMethod = new ReflectionMethod($matches['class'], $matches['method']);
+        $params = $refMethod->getParameters();
+        $defaultArgs = array();
+        foreach ($params as $refParameter) {
+            $name = $refParameter->getName();
+            $defaultArgs[$name] = $refParameter->isOptional()
+                ? $refParameter->getDefaultValue()
+                : null;
+        }
+        unset($defaultArgs['args']);
+        self::$methodDefaultArgs[$method] = $defaultArgs;
+        return $defaultArgs;
     }
 
     /**

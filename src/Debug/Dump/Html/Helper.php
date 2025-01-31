@@ -227,9 +227,9 @@ class Helper
             |xs', $html, $cells, PREG_SET_ORDER);
 
         $cells[1]['innerHtml'] = $this->markupFilePath($row['file'], $rowInfo['commonFilePrefix']);
-        $cells[3]['innerHtml'] = $cells[3]['innerHtml']
-            ? $this->dumper->valDumper->markupIdentifier($row['function'], 'method', 'span', array(), true)
-            : '';
+        if (isset($cells[3])) {
+            $cells[3]['innerHtml'] = $this->dumper->valDumper->markupIdentifier($row['function'], 'method', 'span', array(), true);
+        }
         $trAttribs = \strpos($cells[1]['innerHtml'], 'DOCUMENT_ROOT') !== false
             ? ' data-file="' . \htmlspecialchars($row['file']) . '"'
             : '';

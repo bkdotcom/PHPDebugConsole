@@ -59,7 +59,7 @@ export function expand ($node) {
     return
   }
   // group, object, & next
-  expandGroupObjNext(info.$toggle, info.$classTarget, info.$evtTarget, icon, eventNameDone)
+  expandGroupObjNext(info, icon, eventNameDone)
 }
 
 export function toggle (node) {
@@ -166,16 +166,21 @@ function collapseNextDone ($toggle, eventNameDone) {
   $toggle.next().trigger(eventNameDone)
 }
 
-function expandGroupObjNext ($toggle, $classTarget, $evtTarget, icon, eventNameDone) {
-  $toggle.next().slideDown('fast', function () {
+/**
+ * @param {*} icon          toggle, classTarget, & evtTarget
+ * @param {*} icon          the icon to update toggle with
+ * @param {*} eventNameDone the event name
+ */
+function expandGroupObjNext (nodes, icon, eventNameDone) {
+  nodes.$toggle.next().slideDown('fast', function () {
     var $groupEndValue = $(this).find('> .m_groupEndValue')
     if ($groupEndValue.length) {
       // remove value from label
-      $toggle.find('.group-label').last().nextAll().remove()
+      nodes.$toggle.find('.group-label').last().nextAll().remove()
     }
-    $classTarget.addClass('expanded')
-    iconUpdate($toggle, icon)
-    $evtTarget.trigger(eventNameDone)
+    nodes.$classTarget.addClass('expanded')
+    iconUpdate(nodes.$toggle, icon)
+    nodes.$evtTarget.trigger(eventNameDone)
   })
 }
 

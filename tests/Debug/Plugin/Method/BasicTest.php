@@ -230,17 +230,6 @@ class BasicTest extends DebugTestFramework
         );
     }
 
-    public function testMethodDefaultArgs()
-    {
-        // covers AbstractDebug::getMethodDefaultArgs
-        \bdk\Debug\Utility\Reflection::propSet('bdk\Debug\AbstractDebug', 'methodDefaultArgs', array());
-        $this->debug->alert('test');
-        self::assertSame('alert', $this->debug->data->get('alerts/__end__/method'));
-
-        $this->debug->assert(false);
-        self::assertSame('assert', $this->debug->data->get('log/__end__/method'));
-    }
-
     public function testLogEntryWithCfg()
     {
         $this->debug->log('hello', Debug::meta('cfg', 'stringMaxLen', 3));

@@ -150,7 +150,7 @@ class Group implements SubscriberInterface
             __FUNCTION__,
             \func_get_args(),
             array(),
-            $this->debug->rootInstance->getMethodDefaultArgs(__METHOD__)
+            $this->debug->rootInstance->reflection->getMethodDefaultArgs(__METHOD__)
         ));
         return $this->debug;
     }
@@ -174,7 +174,7 @@ class Group implements SubscriberInterface
             __FUNCTION__,
             \func_get_args(),
             array(),
-            $this->debug->rootInstance->getMethodDefaultArgs(__METHOD__),
+            $this->debug->rootInstance->reflection->getMethodDefaultArgs(__METHOD__),
             ['priority']
         ));
         return $this->debug;

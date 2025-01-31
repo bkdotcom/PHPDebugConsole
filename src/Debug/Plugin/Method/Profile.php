@@ -140,7 +140,7 @@ class Profile implements SubscriberInterface
             __FUNCTION__,
             \func_get_args(),
             array(),
-            $debug->rootInstance->getMethodDefaultArgs(__METHOD__),
+            $debug->rootInstance->reflection->getMethodDefaultArgs(__METHOD__),
             ['name']
         ));
     }
@@ -165,7 +165,7 @@ class Profile implements SubscriberInterface
             __FUNCTION__,
             \func_get_args(),
             array(),
-            $this->debug->rootInstance->getMethodDefaultArgs(__METHOD__),
+            $this->debug->rootInstance->reflection->getMethodDefaultArgs(__METHOD__),
             ['name']
         );
         $this->doProfileEnd($logEntry);

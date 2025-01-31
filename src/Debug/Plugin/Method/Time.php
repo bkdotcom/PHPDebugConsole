@@ -63,7 +63,11 @@ class Time implements SubscriberInterface
      */
     public function time($label = null, $duration = null)
     {
-        $logEntry = $this->timeLogEntry(__FUNCTION__, \func_get_args(), $this->debug->rootInstance->getMethodDefaultArgs(__METHOD__));
+        $logEntry = $this->timeLogEntry(
+            __FUNCTION__,
+            \func_get_args(),
+            $this->debug->rootInstance->reflection->getMethodDefaultArgs(__METHOD__)
+        );
         $args = $logEntry['args'];
         $floats = \array_filter($args, static function ($val) {
             return \is_float($val);
@@ -106,7 +110,11 @@ class Time implements SubscriberInterface
      */
     public function timeEnd($label = null, $log = true, $return = 'auto')
     {
-        $logEntry = $this->timeLogEntry(__FUNCTION__, \func_get_args(), $this->debug->rootInstance->getMethodDefaultArgs(__METHOD__));
+        $logEntry = $this->timeLogEntry(
+            __FUNCTION__,
+            \func_get_args(),
+            $this->debug->rootInstance->reflection->getMethodDefaultArgs(__METHOD__)
+        );
         $debug = $logEntry->getSubject();
         $label = $logEntry['args'][0];
         $elapsed = $debug->stopWatch->stop($label);
@@ -141,7 +149,11 @@ class Time implements SubscriberInterface
      */
     public function timeGet($label = null, $log = true, $return = 'auto')
     {
-        $logEntry = $this->timeLogEntry(__FUNCTION__, \func_get_args(), $this->debug->rootInstance->getMethodDefaultArgs(__METHOD__));
+        $logEntry = $this->timeLogEntry(
+            __FUNCTION__,
+            \func_get_args(),
+            $this->debug->rootInstance->reflection->getMethodDefaultArgs(__METHOD__)
+        );
         $debug = $logEntry->getSubject();
         $label = $logEntry['args'][0];
         $elapsed = $debug->stopWatch->get($label, $label);
@@ -165,7 +177,11 @@ class Time implements SubscriberInterface
      */
     public function timeLog($label = null, $args = null)
     {
-        $logEntry = $this->timeLogEntry(__FUNCTION__, \func_get_args(), $this->debug->rootInstance->getMethodDefaultArgs(__METHOD__));
+        $logEntry = $this->timeLogEntry(
+            __FUNCTION__,
+            \func_get_args(),
+            $this->debug->rootInstance->reflection->getMethodDefaultArgs(__METHOD__)
+        );
         $args = $logEntry['args'];
         $meta = $logEntry['meta'];
         $label = $args[0];

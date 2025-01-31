@@ -226,14 +226,7 @@ class LogRouteMeta
         // only keep trace info for trace & error levels
         if (\in_array($logEntry['level'], [CLogger::LEVEL_TRACE, CLogger::LEVEL_ERROR], true) === false) {
             unset($logEntry['meta']['trace']);
-            return $logEntry;
         }
-        $logEntry['meta']['tableInfo'] = array(
-            'columns' => [
-                array('key' => 'file'),
-                array('key' => 'line'),
-            ],
-        );
         return $logEntry;
     }
 

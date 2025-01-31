@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2024 Brad Kent
+ * @copyright 2014-2025 Brad Kent
  * @since     3.0.4
  */
 
@@ -126,19 +126,6 @@ class Abstraction extends BaseAbstraction
     }
 
     /**
-     * {@inheritDoc}
-     */
-    public function getValues()
-    {
-        $return = \array_replace_recursive(
-            $this->getInheritedValues(),
-            $this->values
-        );
-        \ksort($return, SORT_NATURAL);
-        return $return;
-    }
-
-    /**
      * Get instance related values
      *
      * @return array
@@ -149,6 +136,19 @@ class Abstraction extends BaseAbstraction
             $this->values,
             $this->getInheritedValues()
         );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getValues()
+    {
+        $return = \array_replace_recursive(
+            $this->getInheritedValues(),
+            $this->values
+        );
+        \ksort($return, SORT_NATURAL);
+        return $return;
     }
 
     /**

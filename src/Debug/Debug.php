@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2024 Brad Kent
+ * @copyright 2014-2025 Brad Kent
  * @since     1.0
  *
  * @link http://www.github.com/bkdotcom/PHPDebugConsole
@@ -119,7 +119,7 @@ class Debug extends AbstractDebug
     const EVENT_STREAM_WRAP = 'debug.streamWrap';
 
     const META = "\x00meta\x00";
-    const VERSION = '3.3';
+    const VERSION = '3.4';
 
     /** @var array<string,mixed> */
     protected $cfg = array(
@@ -164,6 +164,7 @@ class Debug extends AbstractDebug
             'config' => 'fa fa-cogs',
             'database' => 'fa fa-database',
             'email' => 'fa fa-envelope-o',
+            'error' => 'fa fa-times-circle',
             'event' => 'fa fa-bell-o',
             'files' => 'fa fa-files-o',
             'github' => 'fa fa-github fa-lg',
@@ -179,6 +180,7 @@ class Debug extends AbstractDebug
             'shutdown' => 'fa fa-power-off',
             'template' => 'fa fa-file-text-o',
             'user' => 'fa fa-user-o',
+            'warning' => 'fa fa-warning',
         ),
         'key' => null,
         'logEnvInfo' => array(  // may be set by passing a list
@@ -230,7 +232,7 @@ class Debug extends AbstractDebug
             'route' => array( 'class' => 'bdk\Debug\Plugin\Route' ),
             'runtime' => array( 'class' => 'bdk\Debug\Plugin\Runtime' ),
         ),
-        'redactKeys' => [      // case-insensitive
+        'redactKeys' => [           // case-insensitive
             'password',
         ],
         // 'redactReplace'          // callable (default defined in Plugin/Redaction)
@@ -239,7 +241,8 @@ class Debug extends AbstractDebug
                                     //   if null, no output (unless output plugin added manually)
         'routeNonHtml' => 'serverLog',
         'serviceProvider' => array(), // ServiceProviderInterface, array, or callable that receives Container as param
-        'sessionName' => null,  // if logging session data (see logEnvInfo), optionally specify session name
+        'sessionName' => null,      // if logging session data (see logEnvInfo), optionally specify session name
+        'slowQueryDurationMs' => 500,
         'wampPublisher' => array(
             // wampPublisher
             //    required if using Wamp route

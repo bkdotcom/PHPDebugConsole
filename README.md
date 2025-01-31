@@ -2,6 +2,8 @@
 
 Browser/javascript like console class for PHP
 
+Log, Debug, Inspect
+
 **Website/Usage/Examples:** <http://www.bradkent.com/php/debug>
 
 * PHP port of the [javascript web console api](https://developer.mozilla.org/en-US/docs/Web/API/console)

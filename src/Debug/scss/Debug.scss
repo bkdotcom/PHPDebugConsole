@@ -2,41 +2,22 @@
   Base debug CSS
   use setCfg('css', 'more css'); to add rules / override default
 */
+
+@import "variablesLight";
+@import "variablesDark";
+
 .debug {
 
-  $font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
-  $font-family-numeric: Courier New, monospace, Ariel;
+  --font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+  --font-family-numeric: Courier New, monospace, Ariel;
+  --font-size: 13px;
 
-  $color-white: #fff;
-  $default-fg: #111;
-
-  $secondary-bg: #666;
-  $secondary-fg: #fff;
-  $info-bg: #d9edf7;
-  $info-fg: #31708f;
-  $error-bg: #ffbaba;
-  $error-fg: #d8000c;
-  $success-bg: #dff0d8;
-  $success-fg: #3c763d;
-  $warn-bg: #fefbe5;
-  $warn-fg: #8a6d3b;
-
-  $color-header: purple;
-
-  $grey-text: #6e6e6e;
-  $lite-grey: #f3f3f3;
-  // $text-muted: #777;
-  $border-color: #d0d0d0;
-  $lite-blue: #dde6f0;
+  font-size: var(--font-size);
 
   $color-tab-assert-border: #da8585;
   $color-tab-warn-border: #e4cb0f;
   $color-tab-error-border: #f00;
   $color-tab-active-border: #4071e1;
-
-  $font-size: 13px;
-
-  font-size: $font-size;
 
   @import "base";
 
@@ -66,14 +47,14 @@
     padding-left: 0;
   }
 
-  // specific log entry created in Output to separate entries occurring after shutdown
+  // specific log entry created in output to separate entries occurring after shutdown
   li.php-shutdown {
     display: block;
-    border-bottom: $info-fg solid 1px;
+    border-bottom: var(--color-info-fg) solid 1px;
   }
 
   .fa {
-    line-height: 1;  // fontAwesome sets this, but our debug
+    line-height: 1;  // fontAwesome normally sets this
   }
 
   @import "alerts";

@@ -4,7 +4,7 @@
  * @package   Backtrace
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2020-2024 Brad Kent
+ * @copyright 2020-2025 Brad Kent
  * @since     v2.2
  * @link      http://www.github.com/bkdotcom/Backtrace
  */
@@ -32,6 +32,9 @@ class Backtrace
 {
     const INCL_ARGS = 1;
     const INCL_OBJECT = 2;
+    const INCL_INTERNAL = 4; // whether to keep "internal" frames
+
+    const REGEX_FUNCTION = '/^(?P<classname>.+)(?P<type>::|->)(?P<method>.+)$/';
 
     /** @var array */
     protected static $callerInfoDefault = array(
@@ -67,33 +70,21 @@ class Backtrace
      * Uses passed exception, xdebug_get_function_stack, or debug_backtrace
      *
      * @param int|null              $options   bitmask of options
-     * @param int                   $limit     limit the number of stack frames returned.
+     * @param int                   $limit     limit the number of stack frames returned
      * @param \Exception|\Throwable $exception (optional) Exception from which to get backtrace
      *
      * @return array[]
      */
     public static function get($options = 0, $limit = 0, $exception = null)
     {
-        $debugBacktraceOpts = self::translateOptions($options);
-        $limit = $limit ?: null;
+        $debugBacktraceOpts = self::translateOptions($options) & ~DEBUG_BACKTRACE_IGNORE_ARGS;
+        $backtraceLimit = $limit > 0 ? $limit + 2 : 0;
         $trace = $exception
             ? self::getExceptionTrace($exception)
             : (\array_reverse(Xdebug::getFunctionStack() ?: [])
-                ?: \debug_backtrace($debugBacktraceOpts, $limit > 0 ? $limit + 2 : 0));
+                ?: \debug_backtrace($debugBacktraceOpts, $backtraceLimit));
         $trace = Normalizer::normalize($trace);
-        $trace = SkipInternal::removeInternalFrames($trace);
-        // keep the calling file & line, but toss the called function (what initiated trace)
-        unset($trace[0]['function']);
-        unset($trace[\count($trace) - 1]['function']);  // remove "{main}"
-        $trace = \array_slice($trace, 0, $limit);
-        $keysRemove = \array_filter(array(
-            'args' => ($options & self::INCL_ARGS) !== self::INCL_ARGS,
-            'object' => ($options & self::INCL_OBJECT) !== self::INCL_OBJECT,
-        ));
-        return \array_map(static function ($frame) use ($keysRemove) {
-            $frame = \array_diff_key($frame, $keysRemove);
-            return $frame;
-        }, $trace);
+        return self::getFinish($trace, $options, $limit);
     }
 
     /**
@@ -249,6 +240,73 @@ class Backtrace
     }
 
     /**
+     * Take normalized backtrace and finish it up
+     *
+     * @param array $trace   backtrace frames
+     * @param int   $options bitmask of options
+     * @param int   $limit   limit the number of stack frames returned
+     *
+     * @return array
+     */
+    private static function getFinish(array $trace, $options, $limit)
+    {
+        $sliceLimit = $limit ?: null;
+        if (($options & self::INCL_INTERNAL) !== self::INCL_INTERNAL) {
+            $trace = SkipInternal::removeInternalFrames($trace);
+        }
+        // keep the calling file & line, but toss the called function (what initiated trace)
+        unset($trace[0]['function']);
+        unset($trace[\count($trace) - 1]['function']);  // remove "{main}"
+        $trace = \array_slice($trace, 0, $sliceLimit);
+        if (($options & self::INCL_ARGS) !== self::INCL_ARGS) {
+            $trace = self::getRenameFunctions($trace);
+        }
+        return self::getRemoveKeys($trace, $options);
+    }
+
+    /**
+     * Rename __call & __callStatic to include method name
+     *
+     * @param array $trace backtrace frames
+     *
+     * @return array
+     */
+    private static function getRenameFunctions(array $trace)
+    {
+        $count = \count($trace);
+        for ($i = 1; $i < $count - 1; $i++) {
+            \preg_match(self::REGEX_FUNCTION, $trace[$i]['function'], $matches);
+            if ($matches && \in_array($matches['method'], ['__call', '__callStatic'], true) && $trace[$i]['args']) {
+                $trace[$i]['function'] = \sprintf(
+                    '%s(\'%s\')',
+                    $trace[$i]['function'],
+                    \addslashes(\reset($trace[$i]['args']))
+                );
+            }
+        }
+        return $trace;
+    }
+
+    /**
+     * Remove the keys we don't want
+     *
+     * @param array $trace   backtrace frames
+     * @param int   $options bitmask of options
+     *
+     * @return array
+     */
+    private static function getRemoveKeys(array $trace, $options)
+    {
+        $keysRemove = \array_filter(array(
+            'args' => ($options & self::INCL_ARGS) !== self::INCL_ARGS,
+            'object' => ($options & self::INCL_OBJECT) !== self::INCL_OBJECT,
+        ));
+        return \array_map(static function ($frame) use ($keysRemove) {
+            return \array_diff_key($frame, $keysRemove);
+        }, $trace);
+    }
+
+    /**
      * Parsed "normalized" function into class, type, & function components
      *
      * @param string $function Function string to parse
@@ -257,9 +315,9 @@ class Backtrace
      */
     private static function parseFunction($function)
     {
-        return \preg_match('/^(?<class>\S+)(?<type>::|->)(?<method>\S+)$/', $function, $matches)
+        return \preg_match(self::REGEX_FUNCTION, $function, $matches)
             ? array(
-                'class' => $matches['class'],
+                'class' => $matches['classname'],
                 'function' => $matches['method'],
                 'type' => $matches['type'],
             )

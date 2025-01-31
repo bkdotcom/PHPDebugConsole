@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2024 Brad Kent
+ * @copyright 2014-2025 Brad Kent
  * @since     3.0b1
  */
 
@@ -141,8 +141,8 @@ class FileTree
     /**
      * Condense a tree frame
      *
-     * @param array                        $cur   current stack frame]
-     * @param array{out:array,src:array}[] $stack remaining stack]
+     * @param array                        $cur   current stack frame
+     * @param array{out:array,src:array}[] $stack remaining stack
      *
      * @return void
      */

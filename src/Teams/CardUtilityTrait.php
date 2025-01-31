@@ -1,6 +1,13 @@
 <?php
 
-namespace bdk\Teams;
+/**
+ * @package   bdk\teams
+ * @author    Brad Kent <bkfake-github@yahoo.com>
+ * @license   http://opensource.org/licenses/MIT MIT
+ * @copyright 2023-2025 Brad Kent
+ */
+
+ namespace bdk\Teams;
 
 use bdk\HttpMessage\Utility\Uri as UriUtility;
 use bdk\Teams\Enums;
@@ -263,7 +270,7 @@ trait CardUtilityTrait
     {
         return \is_object($value)
             ? \get_class($value)
-            : \gettype($value);
+            : \strtolower(\gettype($value));
     }
 
     /**

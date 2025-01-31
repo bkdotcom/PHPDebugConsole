@@ -6,13 +6,14 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2024 Brad Kent
+ * @copyright 2014-2025 Brad Kent
  * @since     3.1
  */
 
 namespace bdk\Debug\Plugin;
 
 use bdk\Debug;
+use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Plugin\CustomMethodTrait;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
@@ -89,7 +90,7 @@ class Prettify implements SubscriberInterface
      * add attributes to indicate value should be syntax highlighted
      *    html, json, xml
      *
-     * @param string $string      string to prettify]
+     * @param string $string      string to prettify
      * @param string $contentType mime type
      *
      * @return Abstraction|string
@@ -104,7 +105,10 @@ class Prettify implements SubscriberInterface
                 'value' => $string,
             )
         );
-        return $event['value'];
+        // event['value'] should be an Abstraction instance
+        return \is_string($event['value']) || ($event['value'] instanceof Abstraction && $event['value']['value'])
+            ? $event['value']
+            : $string;
     }
 
     /**

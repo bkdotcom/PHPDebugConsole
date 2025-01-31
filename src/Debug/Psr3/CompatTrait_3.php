@@ -1,6 +1,16 @@
 <?php
 
-namespace bdk\Debug\Psr3;
+/**
+ * This file is part of PHPDebugConsole
+ *
+ * @package   PHPDebugConsole
+ * @author    Brad Kent <bkfake-github@yahoo.com>
+ * @license   http://opensource.org/licenses/MIT MIT
+ * @copyright 2014-2025 Brad Kent
+ * @since     3.0.1
+ */
+
+ namespace bdk\Debug\Psr3;
 
 /*
     Wrap in condition.

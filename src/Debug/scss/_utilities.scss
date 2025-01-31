@@ -5,7 +5,7 @@
 
 .p0 { padding: 0 !important; }
 
-.fa-inverse { color: $color-white; }
+.fa-inverse { color: var(--color-fa-inverse); }
 .fa-stack { line-height: 2em; }
 .fa-stack-1x { line-height: inherit; }
 .fa-stack-2x { font-size: 2em; }
@@ -22,24 +22,24 @@
 
 // no primary
 .bg-secondary {
-  background-color: $secondary-bg !important;
-  color: $secondary-fg !important;
+  background-color: var(--color-secondary-bg) !important;
+  color: var(--color-secondary-fg) !important;
 }
 .bg-success {
-  background-color: $success-bg !important;
-  color: $success-fg !important;
+  background-color: var(--color-success-bg) !important;
+  color: var(--color-success-fg) !important;
 }
 .bg-error {
-  background-color: $error-bg !important;
-  color: $error-fg !important;
+  background-color: var(--color-error-bg) !important;
+  color: var(--color-error-fg) !important;
 }
 .bg-warn {
-  background-color: $warn-bg !important;
-  color: $warn-fg !important;
+  background-color: var(--color-warn-bg) !important;
+  color: var(--color-warn-fg) !important;
 }
 .bg-info {
-  background-color: $info-bg !important;
-  color: $info-fg !important;
+  background-color: var(--color-info-bg) !important;
+  color: var(--color-info-fg) !important;
 }
 
 .fw-bold { font-weight: 700; }
@@ -56,9 +56,8 @@
 .text-left { text-align: left !important; }
 .text-right { text-align: right !important; }
 
-// .text-muted { color: color-mix(in srgb, currentColor 80%, transparent); }
+.text-error { color: var(--color-error-fg); }
+.text-info { color: var(--color-info-fg); }
 .text-muted { opacity: .5; }
-.text-success { color: $success-fg; }
-.text-error { color: $error-fg; }
-.text-info { color: $info-fg; }
-.text-warn { color: $warn-fg; }
+.text-success { color: var(--color-success-fg); }
+.text-warn { color: var(--color-warn-fg); }

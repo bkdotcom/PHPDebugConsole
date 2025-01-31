@@ -60,7 +60,7 @@ class LoggerTest extends DebugTestFramework
         $this->debug->logger->emergency('Emergency broadcast system');
         $metaExpect = array(
             'detectFiles' => true,
-            'evalLine' => null,
+            // 'evalLine' => null,
             'file' => __FILE__,
             'line' => __LINE__ - 5,
             'psr3level' => 'emergency',
@@ -78,7 +78,7 @@ class LoggerTest extends DebugTestFramework
         $this->debug->logger->critical('Critical test');
         $metaExpect = array(
             'detectFiles' => true,
-            'evalLine' => null,
+            // 'evalLine' => null,
             'file' => __FILE__,
             'line' => __LINE__ - 5,
             'psr3level' => 'critical',
@@ -102,7 +102,7 @@ class LoggerTest extends DebugTestFramework
         ));
         $metaSubset = array(
             'detectFiles' => true,
-            'evalLine' => null,
+            // 'evalLine' => null,
             'file' => __FILE__,
             'line' => __LINE__ - 8, // line of Exception
             'uncollapse' => true,
@@ -129,7 +129,7 @@ class LoggerTest extends DebugTestFramework
             ),
             'meta' => array(
                 'detectFiles' => true,
-                'evalLine' => null,
+                // 'evalLine' => null,
                 'file' => __FILE__,
                 'glue' => ', ',
                 'line' => $logEntryArray['meta']['line'],
@@ -161,7 +161,7 @@ class LoggerTest extends DebugTestFramework
             ),
             'meta' => array(
                 'detectFiles' => true,
-                'evalLine' => null,
+                // 'evalLine' => null,
                 'file' => __FILE__,
                 'glue' => ', ',
                 'line' => $logEntryArray['meta']['line'],
@@ -176,7 +176,7 @@ class LoggerTest extends DebugTestFramework
         $this->debug->logger->error('Error test');
         $meta = array(
             'detectFiles' => true,
-            'evalLine' => null,
+            // 'evalLine' => null,
             'file' => __FILE__,
             'line' => __LINE__ - 5,
             'psr3level' => 'error',
@@ -194,7 +194,7 @@ class LoggerTest extends DebugTestFramework
         $this->debug->logger->warning('You\'ve been warned');
         $meta = array(
             'detectFiles' => true,
-            'evalLine' => null,
+            // 'evalLine' => null,
             'file' => __FILE__,
             'line' => __LINE__ - 5,
             'psr3level' => 'warning',
@@ -212,7 +212,7 @@ class LoggerTest extends DebugTestFramework
         $this->debug->logger->notice('Final Notice');
         $meta = array(
             'detectFiles' => true,
-            'evalLine' => null,
+            // 'evalLine' => null,
             'file' => __FILE__,
             'line' => __LINE__ - 5,
             'psr3level' => 'notice',

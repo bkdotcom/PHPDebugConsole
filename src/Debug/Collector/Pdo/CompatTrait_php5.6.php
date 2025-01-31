@@ -1,6 +1,16 @@
 <?php
 
-namespace bdk\Debug\Collector\Pdo;
+/**
+ * This file is part of PHPDebugConsole
+ *
+ * @package   PHPDebugConsole
+ * @author    Brad Kent <bkfake-github@yahoo.com>
+ * @license   http://opensource.org/licenses/MIT MIT
+ * @copyright 2014-2025 Brad Kent
+ * @since     2.3
+ */
+
+ namespace bdk\Debug\Collector\Pdo;
 
 /**
  * @phpcs:disable Generic.Classes.DuplicateClassName.Found

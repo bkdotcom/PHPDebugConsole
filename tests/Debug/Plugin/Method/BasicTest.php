@@ -77,10 +77,12 @@ class BasicTest extends DebugTestFramework
                     // we're doing the custom stuff via Debug::EVENT_OUTPUT_LOG_ENTRY, so logEntry should still be trace
                     self::assertSame('trace', $logEntry['method']);
                     self::assertIsArray($logEntry['args'][0]);
-                    self::assertSame(array(
+                    $filepaths = \array_column($logEntry['args'][0], 'file');
+                    $metaExpect = array(
                         'caption' => 'trace',
                         'detectFiles' => true,
                         'inclArgs' => false,
+                        'inclInternal' => false,
                         'limit' => 0,
                         'sortable' => false,
                         'tableInfo' => array(
@@ -94,8 +96,12 @@ class BasicTest extends DebugTestFramework
                             'indexLabel' => null,
                             'rows' => array(),
                             'summary' => '',
+                            'commonRowInfo' => array(
+                                'commonFilePrefix' => \bdk\Debug\Utility\StringUtil::commonPrefix($filepaths),
+                            ),
                         ),
-                    ), $logEntry['meta']);
+                    );
+                    self::assertSame($metaExpect, $logEntry['meta']);
                 },
                 'chromeLogger' => array(
                     array('this was a trace'),
@@ -112,6 +118,7 @@ class BasicTest extends DebugTestFramework
                     array(
                         'detectFiles' => true,
                         'inclArgs' => false,
+                        'inclInternal' => false,
                         'format' => 'raw',
                         'foundFiles' => array(),
                     ),
@@ -221,17 +228,6 @@ class BasicTest extends DebugTestFramework
                 'wamp' => $entry,
             )
         );
-    }
-
-    public function testMethodDefaultArgs()
-    {
-        // covers AbstractDebug::getMethodDefaultArgs
-        \bdk\Debug\Utility\Reflection::propSet('bdk\Debug\AbstractDebug', 'methodDefaultArgs', array());
-        $this->debug->alert('test');
-        self::assertSame('alert', $this->debug->data->get('alerts/__end__/method'));
-
-        $this->debug->assert(false);
-        self::assertSame('assert', $this->debug->data->get('log/__end__/method'));
     }
 
     public function testLogEntryWithCfg()
@@ -553,17 +549,17 @@ class BasicTest extends DebugTestFramework
                         ),
                         'meta' => array(
                             'channel' => 'general.phpError',
-                            'context' => null,
+                            // 'context' => null,
                             'detectFiles' => true,
                             'errorCat' => 'warning',
                             'errorHash' => $logEntry->getMeta('errorHash'),
                             'errorType' => 2,
-                            'evalLine' => null,
+                            // 'evalLine' => null,
                             'file' => __FILE__,
                             'isSuppressed' => false,
                             'line' => 42,
                             'sanitize' => true,
-                            'trace' => null,
+                            // 'trace' => null,
                             'uncollapse' => true,
                         ),
                     ), $this->helper->logEntryToArray($logEntry));

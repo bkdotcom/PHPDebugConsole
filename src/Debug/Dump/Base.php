@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2024 Brad Kent
+ * @copyright 2014-2025 Brad Kent
  * @since     2.0
  */
 
@@ -32,7 +32,11 @@ class Base extends AbstractComponent
     /** @var Debug */
     public $debug;
 
-    /** @var array<string,string> */
+    /**
+     * Used to style console.log alerts
+     *
+     * @var array<string,string>
+     */
     protected $alertStyles = array(
         'common' => 'padding: 5px;
             line-height: 26px;
@@ -94,10 +98,11 @@ class Base extends AbstractComponent
     public function processLogEntry(LogEntry $logEntry)
     {
         $method = $logEntry['method'];
+        $methodBuild = 'method' . \ucfirst($method);
         $meta = $logEntry->getMeta();
         $this->valDumper->optionStackPush($meta);
-        if ($method === 'alert') {
-            return $this->methodAlert($logEntry);
+        if (\method_exists($this, $methodBuild)) {
+            return $this->{$methodBuild}($logEntry);
         }
         if (\in_array($method, ['group', 'groupCollapsed', 'groupEnd', 'groupSummary'], true)) {
             return $this->methodGroup($logEntry);

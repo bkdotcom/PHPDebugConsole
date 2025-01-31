@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2024 Brad Kent
+ * @copyright 2014-2025 Brad Kent
  * @since     3.0b1
  */
 
@@ -23,6 +23,14 @@ class Channel implements SubscriberInterface
 {
     use CustomMethodTrait;
 
+    /**
+     * Split on "."
+     * Split on "/" not adjacent to whitespace
+     *
+     * @var string
+     */
+    const NAME_SPLIT_REGEX = '#(\.|(?<!\s)/(?!\s))#';
+
     /** @var array<string,Debug> */
     private $channels = array();
 
@@ -32,6 +40,7 @@ class Channel implements SubscriberInterface
         'getChannels',
         'getChannelsTop',
         'getPropagateValues',
+        'hasChannel',
     ];
 
     /**
@@ -49,10 +58,8 @@ class Channel implements SubscriberInterface
      */
     public function getChannel($name, $config = array())
     {
-        // Split on "."
-        // Split on "/" not adjacent to whitespace
         $names = \is_string($name)
-            ? \preg_split('#(\.|(?<!\s)/(?!\s))#', $name)
+            ? \preg_split(self::NAME_SPLIT_REGEX, $name)
             : $name;
         $name = \array_shift($names);
         if ($name === $this->debug->rootInstance->getCfg('channelName', Debug::CONFIG_DEBUG)) {
@@ -166,6 +173,33 @@ class Channel implements SubscriberInterface
             }
         }
         return $cfg;
+    }
+
+    /**
+     * Has channel been created?
+     *
+     * @param string|array $name channel name (or channel path)
+     *
+     * @return bool
+     */
+    public function hasChannel($name)
+    {
+        $names = \is_string($name)
+            ? \preg_split(self::NAME_SPLIT_REGEX, $name)
+            : $name;
+        $name = \array_shift($names);
+        if ($name === $this->debug->rootInstance->getCfg('channelName', Debug::CONFIG_DEBUG)) {
+            return $names
+                ? $this->debug->rootInstance->hasChannel($names)
+                : true;
+        }
+        $curChannelName = $this->debug->getCfg('channelName', Debug::CONFIG_DEBUG);
+        if (isset($this->channels[$curChannelName][$name]) === false) {
+            return false;
+        }
+        return $names
+            ? $this->channels[$curChannelName][$name]->hasChannel($names)
+            : true;
     }
 
     /**

@@ -2,20 +2,64 @@ import $ from 'jquery'
 import * as http from './http.js' // cookie & query utils
 
 var config = {
-  fontAwesomeCss: '//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css',
   clipboardSrc: '//cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js',
+  cssFontAwesome5: '' +
+    '.debug .fa-bell-o:before { content:"\\f0f3"; font-weight:400; }' +
+    '.debug .fa-calendar:before { content:"\\f073"; }' +
+    '.debug .fa-clock-o:before { content:"\\f017"; font-weight:400; }' +
+    '.debug .fa-clone:before { content:"\\f24d"; font-weight:400; }' +
+    '.debug .fa-envelope-o:before { content:"\\f0e0"; font-weight:400; }' +
+    '.debug .fa-exchange:before { content:"\\f362"; }' +
+    '.debug .fa-external-link:before { content:"\\f35d"; }' +
+    '.debug .fa-eye-slash:before { content:"\\f070"; font-weight:400; }' +
+    '.debug .fa-file-code-o:before { content:"\\f1c9"; font-weight:400; }' +
+    '.debug .fa-file-text-o:before { content:"\\f15c"; font-weight:400; }' +
+    '.debug .fa-files-o:before { content:"\\f0c5"; font-weight:400; }' +
+    '.debug .fa-hand-stop-o:before { content:"\\f256"; font-weight:400; }' +
+    '.debug .fa-minus-square-o:before { content:"\\f146"; font-weight:400; }' +
+    '.debug .fa-pencil:before { content:"\\f303" }' +
+    '.debug .fa-pie-chart:before { content:"\\f200"; }' +
+    '.debug .fa-plus-square-o:before { content:"\\f0fe"; font-weight:400; }' +
+    '.debug .fa-shield:before { content:"\\f3ed"; }' +
+    '.debug .fa-square-o:before { content:"\\f0c8"; font-weight:400; }' +
+    '.debug .fa-user-o:before { content:"\\f007"; }' +
+    '.debug .fa-warning:before { content:"\\f071"; }' +
+    '.debug .fa.fa-github { font-family: "Font Awesome 5 Brands"; }',
+  debugKey: getDebugKey(),
+  drawer: false,
+  fontAwesomeCss: '//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css',
+  iconsArray: {
+    '> .array-inner > li > .exclude-count': '<i class="fa fa-eye-slash"></i>'
+  },
   iconsExpand: {
     expand: 'fa-plus-square-o',
     collapse: 'fa-minus-square-o',
     empty: 'fa-square-o'
   },
+  // debug methods (not object methods)
+  iconsMethods: {
+    '.m_assert': '<i class="fa-lg"><b>&ne;</b></i>',
+    '.m_clear': '<i class="fa fa-lg fa-ban"></i>',
+    '.m_count': '<i class="fa fa-lg fa-plus-circle"></i>',
+    '.m_countReset': '<i class="fa fa-lg fa-plus-circle"></i>',
+    '.m_error': '<i class="fa fa-lg fa-times-circle"></i>',
+    '.m_group.expanded': '<i class="fa fa-lg fa-minus-square-o"></i>',
+    '.m_group': '<i class="fa fa-lg fa-plus-square-o"></i>',
+    '.m_info': '<i class="fa fa-lg fa-info-circle"></i>',
+    '.m_profile': '<i class="fa fa-lg fa-pie-chart"></i>',
+    '.m_profileEnd': '<i class="fa fa-lg fa-pie-chart"></i>',
+    '.m_time': '<i class="fa fa-lg fa-clock-o"></i>',
+    '.m_timeLog': '<i class="fa fa-lg fa-clock-o"></i>',
+    '.m_trace': '<i class="fa fa-list"></i>',
+    '.m_warn': '<i class="fa fa-lg fa-warning"></i>'
+  },
   iconsMisc: {
     '.string-encoded': '<i class="fa fa-barcode"></i>',
     '.timestamp': '<i class="fa fa-calendar"></i>'
   },
-  iconsArray: {
-    '> .array-inner > li > .exclude-count': '<i class="fa fa-eye-slash"></i>'
-  },
+  linkFiles: false,
+  linkFilesTemplate: 'subl://open?url=file://%file&line=%line',
+  localStorageKey: 'phpDebugConsole',
   iconsObject: {
     '> .t_modifier_abstract': '<i class="fa fa-circle-o"></i>',
     '> .t_modifier_final': '<i class="fa fa-hand-stop-o"></i>',
@@ -63,53 +107,10 @@ var config = {
     '> .vis-toggles > span[data-toggle=vis][data-vis=debuginfo-excluded]': '<i class="fa fa-eye-slash"></i>',
     '> .vis-toggles > span[data-toggle=vis][data-vis=inherited]': '<i class="fa fa-clone"></i>'
   },
-  // debug methods (not object methods)
-  iconsMethods: {
-    '.m_assert': '<i class="fa-lg"><b>&ne;</b></i>',
-    '.m_clear': '<i class="fa fa-lg fa-ban"></i>',
-    '.m_count': '<i class="fa fa-lg fa-plus-circle"></i>',
-    '.m_countReset': '<i class="fa fa-lg fa-plus-circle"></i>',
-    '.m_error': '<i class="fa fa-lg fa-times-circle"></i>',
-    '.m_group.expanded': '<i class="fa fa-lg fa-minus-square-o"></i>',
-    '.m_group': '<i class="fa fa-lg fa-plus-square-o"></i>',
-    '.m_info': '<i class="fa fa-lg fa-info-circle"></i>',
-    '.m_profile': '<i class="fa fa-lg fa-pie-chart"></i>',
-    '.m_profileEnd': '<i class="fa fa-lg fa-pie-chart"></i>',
-    '.m_time': '<i class="fa fa-lg fa-clock-o"></i>',
-    '.m_timeLog': '<i class="fa fa-lg fa-clock-o"></i>',
-    '.m_trace': '<i class="fa fa-list"></i>',
-    '.m_warn': '<i class="fa fa-lg fa-warning"></i>'
-  },
-  debugKey: getDebugKey(),
-  drawer: false,
   persistDrawer: false,
-  linkFiles: false,
-  linkFilesTemplate: 'subl://open?url=file://%file&line=%line',
-  localStorageKey: 'phpDebugConsole',
-  useLocalStorage: true,
   tooltip: true,
-  cssFontAwesome5: '' +
-    '.debug .fa-bell-o:before { content:"\\f0f3"; font-weight:400; }' +
-    '.debug .fa-calendar:before { content:"\\f073"; }' +
-    '.debug .fa-clock-o:before { content:"\\f017"; font-weight:400; }' +
-    '.debug .fa-clone:before { content:"\\f24d"; font-weight:400; }' +
-    '.debug .fa-envelope-o:before { content:"\\f0e0"; font-weight:400; }' +
-    '.debug .fa-exchange:before { content:"\\f362"; }' +
-    '.debug .fa-external-link:before { content:"\\f35d"; }' +
-    '.debug .fa-eye-slash:before { content:"\\f070"; font-weight:400; }' +
-    '.debug .fa-file-code-o:before { content:"\\f1c9"; font-weight:400; }' +
-    '.debug .fa-file-text-o:before { content:"\\f15c"; font-weight:400; }' +
-    '.debug .fa-files-o:before { content:"\\f0c5"; font-weight:400; }' +
-    '.debug .fa-hand-stop-o:before { content:"\\f256"; font-weight:400; }' +
-    '.debug .fa-minus-square-o:before { content:"\\f146"; font-weight:400; }' +
-    '.debug .fa-pencil:before { content:"\\f303" }' +
-    '.debug .fa-pie-chart:before { content:"\\f200"; }' +
-    '.debug .fa-plus-square-o:before { content:"\\f0fe"; font-weight:400; }' +
-    '.debug .fa-shield:before { content:"\\f3ed"; }' +
-    '.debug .fa-square-o:before { content:"\\f0c8"; font-weight:400; }' +
-    '.debug .fa-user-o:before { content:"\\f007"; }' +
-    '.debug .fa-warning:before { content:"\\f071"; }' +
-    '.debug .fa.fa-github { font-family: "Font Awesome 5 Brands"; }'
+  useLocalStorage: true,
+  theme: 'auto'
 }
 
 export function Config () {
@@ -119,7 +120,7 @@ export function Config () {
   }
   this.config = $.extend({}, config, storedConfig || {})
   this.haveSavedConfig = typeof storedConfig === 'object'
-  this.localStorageKeys = ['persistDrawer', 'openDrawer', 'openSidebar', 'height', 'linkFiles', 'linkFilesTemplate']
+  this.localStorageKeys = ['persistDrawer', 'openDrawer', 'openSidebar', 'height', 'linkFiles', 'linkFilesTemplate', 'theme']
 }
 
 Config.prototype.get = function (key) {
@@ -131,6 +132,14 @@ Config.prototype.get = function (key) {
   return typeof this.config[key] !== 'undefined'
     ? this.config[key]
     : null
+}
+
+Config.prototype.themeGet = function () {
+  var theme = this.get('theme')
+  if (theme === 'auto') {
+    theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  }
+  return theme
 }
 
 Config.prototype.set = function (key, val) {

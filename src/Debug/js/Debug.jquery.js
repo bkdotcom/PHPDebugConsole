@@ -737,7 +737,12 @@
                                   //    which contain both the name and value
     var text = $.trim($string.text());
     var matches = createFileLinkMatches($string, foundFiles);
-    var isUpdate = remove !== true && $string.hasClass('file-link');
+    var action = 'create';
+    if (remove) {
+      action = 'remove';
+    } else if ($string.hasClass('file-link')) {
+      action = 'update';
+    }
     if ($string.closest('.m_trace').length) {
       // not recursion...  will end up calling createFileLinksTrace
       create($string.closest('.m_trace'));
@@ -747,19 +752,18 @@
       return
     }
 
-    $replace = createFileLinkReplace($string, matches, text, remove, isUpdate);
+    $replace = createFileLinkReplace($string, matches, text, action);
 
     /*
     console.warn('createFileLink', {
-      remove: remove,
-      isUpdate: isUpdate,
+      action: action,
       matches: matches,
       // stringOuterHTML: string.outerHTML,
       stringText: text,
       replace: $replace[0].outerHTML
     })
     */
-    if (isUpdate === false) {
+    if (action !== 'update') {
       createFileLinkUpdateAttr($string, $replace, attrs);
     }
     if ($string.is('td, th, li') === false) {
@@ -795,14 +799,14 @@
     }
   }
 
-  function createFileLinkReplace ($string, matches, text, remove, isUpdate) {
+  function createFileLinkReplace ($string, matches, text, action) {
     var $replace;
-    if (remove) {
+    if (action === 'remove') {
       $replace = $('<span>', {
         text: text
       });
       $string.removeClass('file-link'); // remove so doesn't get added to $replace
-    } else if (isUpdate) {
+    } else if (action === 'update') {
       $replace = $string;
       $replace.prop('href', buildFileLink(matches[1], matches[2]));
     } else {
@@ -919,9 +923,7 @@
    * add font-awesome icons
    */
   function addIcons ($node) {
-    var $caption;
     var $icon = determineIcon($node);
-    var isNested = false;
     addIconsMisc($node);
     if (!$icon) {
       return
@@ -930,15 +932,7 @@
       // custom icon..   add to .group-label
       $node = $node.find('> .group-header .group-label').eq(0);
     } else if ($node.find('> table').length) {
-      // table... we'll prepend icon to caption
-      isNested = $node.parent('.no-indent').length > 0;
-      $caption = $node.find('> table > caption');
-      if ($caption.length === 0 && isNested === false) {
-        // add caption
-        $caption = $('<caption>');
-        $node.find('> table').prepend($caption);
-      }
-      $node = $caption;
+      $node = addIconsTableNode($node);
     }
     if ($node.find('> i:first-child').hasClass($icon.attr('class'))) {
       // already have icon
@@ -965,6 +959,22 @@
       $node2.prepend($icon);
       $icon = null;
     }
+  }
+
+  /**
+   * table... we'll prepend icon to caption
+   *
+   * @return jQuery caption node
+   */
+  function addIconsTableNode ($node) {
+    var isNested = $node.parent('.no-indent').length > 0;
+    var $caption = $node.find('> table > caption');
+    if ($caption.length === 0 && isNested === false) {
+      // add caption
+      $caption = $('<caption>');
+      $node.find('> table').prepend($caption);
+    }
+    return $caption
   }
 
   function determineIcon ($node) {
@@ -1040,14 +1050,16 @@
       $(this).data('expand', false);
       enhanceValue(this, $group);
     });
+    /*
     $.each(['level-error', 'level-info', 'level-warn'], function (i, classname) {
-      var $toggleIcon;
+      var $toggleIcon
       if ($group.hasClass(classname)) {
-        $toggleIcon = $toggle.children('i').eq(0);
-        $toggle.wrapInner('<span class="' + classname + '"></span>');
-        $toggle.prepend($toggleIcon); // move icon
+        $toggleIcon = $toggle.children('i').eq(0)
+        $toggle.wrapInner('<span class="' + classname + '"></span>')
+        $toggle.prepend($toggleIcon) // move icon
       }
-    });
+    })
+    */
     if (
       $group.hasClass('expanded') ||
       $target.find('.m_error, .m_warn').not('.filter-hidden').not('[data-uncollapse=false]').length
@@ -1494,10 +1506,14 @@
     addDropdown();
 
     $root$1.find('.debug-options-toggle')
-      .on('click', onDebugOptionsToggle);
+      .on('click', onChangeDebugOptionsToggle);
+
+    $('select[name=theme]')
+      .on('change', onChangeTheme)
+      .val(config$5.get('theme'));
 
     $('input[name=debugCookie]')
-      .on('change', onDebugCookieChange)
+      .on('change', onChangeDebugCookie)
       .prop('checked', config$5.get('debugKey') && cookieGet('debug') === config$5.get('debugKey'));
     if (!config$5.get('debugKey')) {
       $('input[name=debugCookie]')
@@ -1506,16 +1522,16 @@
     }
 
     $('input[name=persistDrawer]')
-      .on('change', onPersistDrawerChange)
+      .on('change', onChangePersistDrawer)
       .prop('checked', config$5.get('persistDrawer'));
 
     $root$1.find('input[name=linkFiles]')
-      .on('change', onLinkFilesChange)
+      .on('change', onChangeLinkFiles)
       .prop('checked', config$5.get('linkFiles'))
       .trigger('change');
 
     $root$1.find('input[name=linkFilesTemplate]')
-      .on('change', onLinkFilesTemplateChange)
+      .on('change', onChangeLinkFilesTemplate)
       .val(config$5.get('linkFilesTemplate'));
   }
 
@@ -1527,6 +1543,11 @@
     );
     $menuBar.append('<div class="debug-options" aria-labelledby="debug-options-toggle">' +
         '<div class="debug-options-body">' +
+          '<label>Theme <select name="theme">' +
+            '<option value="auto">Auto</option>' +
+            '<option value="light">Light</option>' +
+            '<option value="dark">Dark</option>' +
+          '</select></label>' +
           '<label><input type="checkbox" name="debugCookie" /> Debug Cookie</label>' +
           '<label><input type="checkbox" name="persistDrawer" /> Keep Open/Closed</label>' +
           '<label><input type="checkbox" name="linkFiles" /> Create file links</label>' +
@@ -1557,14 +1578,14 @@
     }
   }
 
-  function onDebugCookieChange () {
+  function onChangeDebugCookie () {
     var isChecked = $(this).is(':checked');
     isChecked
       ? cookieSet('debug', config$5.get('debugKey'), 7)
       : cookieRemove('debug');
   }
 
-  function onDebugOptionsToggle (e) {
+  function onChangeDebugOptionsToggle (e) {
     var isVis = $(this).closest('.debug-bar').find('.debug-options').is('.show');
     $root$1 = $(this).closest('.debug');
     isVis
@@ -1573,7 +1594,7 @@
     e.stopPropagation();
   }
 
-  function onLinkFilesChange () {
+  function onChangeLinkFiles () {
     var isChecked = $(this).prop('checked');
     var $formGroup = $(this).closest('.debug-options').find('input[name=linkFilesTemplate]').closest('.form-group');
     isChecked
@@ -1583,19 +1604,24 @@
     $('input[name=linkFilesTemplate]').trigger('change');
   }
 
-  function onLinkFilesTemplateChange () {
+  function onChangeLinkFilesTemplate () {
     var val = $(this).val();
     config$5.set('linkFilesTemplate', val);
     $root$1.trigger('config.debug.updated', 'linkFilesTemplate');
   }
 
-  function onPersistDrawerChange () {
+  function onChangePersistDrawer () {
     var isChecked = $(this).is(':checked');
     config$5.set({
       persistDrawer: isChecked,
       openDrawer: isChecked,
       openSidebar: true
     });
+  }
+
+  function onChangeTheme () {
+    config$5.set('theme', $(this).val());
+    $root$1.attr('data-theme', config$5.themeGet());
   }
 
   function open$1 () {
@@ -1961,6 +1987,9 @@
       '</div>');
   }
 
+  /**
+   * @return {jQuery} $ul
+   */
   function buildChannelList (channels, nameRoot, checkedChannels, prepend) {
     var $lis = [];
     var $ul = $('<ul class="list-unstyled">');
@@ -2216,7 +2245,7 @@
       return
     }
     // group, object, & next
-    expandGroupObjNext(info.$toggle, info.$classTarget, info.$evtTarget, icon, eventNameDone);
+    expandGroupObjNext(info, icon, eventNameDone);
   }
 
   function toggle (node) {
@@ -2323,16 +2352,21 @@
     $toggle.next().trigger(eventNameDone);
   }
 
-  function expandGroupObjNext ($toggle, $classTarget, $evtTarget, icon, eventNameDone) {
-    $toggle.next().slideDown('fast', function () {
+  /**
+   * @param {*} icon          toggle, classTarget, & evtTarget
+   * @param {*} icon          the icon to update toggle with
+   * @param {*} eventNameDone the event name
+   */
+  function expandGroupObjNext (nodes, icon, eventNameDone) {
+    nodes.$toggle.next().slideDown('fast', function () {
       var $groupEndValue = $(this).find('> .m_groupEndValue');
       if ($groupEndValue.length) {
         // remove value from label
-        $toggle.find('.group-label').last().nextAll().remove();
+        nodes.$toggle.find('.group-label').last().nextAll().remove();
       }
-      $classTarget.addClass('expanded');
-      iconUpdate($toggle, icon);
-      $evtTarget.trigger(eventNameDone);
+      nodes.$classTarget.addClass('expanded');
+      iconUpdate(nodes.$toggle, icon);
+      nodes.$evtTarget.trigger(eventNameDone);
     });
   }
 
@@ -6116,13 +6150,16 @@
       return
     }
     $ref.data('titleOrig', title);
+    $ref.removeAttr('title');
+    $ref.addClass('hasTooltip');
     return tippyContentBuildTitle($ref, title)
   }
 
   function tippyContentBuildTitle($ref, title) {
+    var $parent = $ref.parent();
     title = refTitle($ref, title);
-    if ($ref.parent().hasClass('hasTooltip')) {
-      title = title + '<br /><br />' + tippyContent($ref.parent()[0]);
+    if ($parent.prop('title') || $parent.data('titleOrig')) {
+      title = title + '<br /><br />' + tippyContent($parent[0]);
     }
     return title.replace(/\n/g, '<br />')
   }
@@ -6214,9 +6251,9 @@
 
   function tippyOnHide (instance) {
     var $ref = $(instance.reference);
-    var title = $ref.data('titleOrig');
-    if (title) {
-      $ref.attr('title', title);
+    var titleOrig = $ref.data('titleOrig');
+    if (titleOrig) {
+      $ref.attr('title', titleOrig);
     }
     setTimeout(function () {
       instance.destroy();
@@ -6249,14 +6286,7 @@
   }
 
   function tippyOnShow (instance) {
-    var $ref = $(instance.reference);
-    $ref.removeAttr('title');
-    $ref.addClass('hasTooltip');
-    $ref.parents('.hasTooltip').each(function () {
-      if (this._tippy) {
-        this._tippy.hide();
-      }
-    });
+    // var $ref = $(instance.reference)
     return true
   }
 
@@ -6322,20 +6352,64 @@
   }
 
   var config$1 = {
-    fontAwesomeCss: '//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css',
     clipboardSrc: '//cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js',
+    cssFontAwesome5: '' +
+      '.debug .fa-bell-o:before { content:"\\f0f3"; font-weight:400; }' +
+      '.debug .fa-calendar:before { content:"\\f073"; }' +
+      '.debug .fa-clock-o:before { content:"\\f017"; font-weight:400; }' +
+      '.debug .fa-clone:before { content:"\\f24d"; font-weight:400; }' +
+      '.debug .fa-envelope-o:before { content:"\\f0e0"; font-weight:400; }' +
+      '.debug .fa-exchange:before { content:"\\f362"; }' +
+      '.debug .fa-external-link:before { content:"\\f35d"; }' +
+      '.debug .fa-eye-slash:before { content:"\\f070"; font-weight:400; }' +
+      '.debug .fa-file-code-o:before { content:"\\f1c9"; font-weight:400; }' +
+      '.debug .fa-file-text-o:before { content:"\\f15c"; font-weight:400; }' +
+      '.debug .fa-files-o:before { content:"\\f0c5"; font-weight:400; }' +
+      '.debug .fa-hand-stop-o:before { content:"\\f256"; font-weight:400; }' +
+      '.debug .fa-minus-square-o:before { content:"\\f146"; font-weight:400; }' +
+      '.debug .fa-pencil:before { content:"\\f303" }' +
+      '.debug .fa-pie-chart:before { content:"\\f200"; }' +
+      '.debug .fa-plus-square-o:before { content:"\\f0fe"; font-weight:400; }' +
+      '.debug .fa-shield:before { content:"\\f3ed"; }' +
+      '.debug .fa-square-o:before { content:"\\f0c8"; font-weight:400; }' +
+      '.debug .fa-user-o:before { content:"\\f007"; }' +
+      '.debug .fa-warning:before { content:"\\f071"; }' +
+      '.debug .fa.fa-github { font-family: "Font Awesome 5 Brands"; }',
+    debugKey: getDebugKey(),
+    drawer: false,
+    fontAwesomeCss: '//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css',
+    iconsArray: {
+      '> .array-inner > li > .exclude-count': '<i class="fa fa-eye-slash"></i>'
+    },
     iconsExpand: {
       expand: 'fa-plus-square-o',
       collapse: 'fa-minus-square-o',
       empty: 'fa-square-o'
     },
+    // debug methods (not object methods)
+    iconsMethods: {
+      '.m_assert': '<i class="fa-lg"><b>&ne;</b></i>',
+      '.m_clear': '<i class="fa fa-lg fa-ban"></i>',
+      '.m_count': '<i class="fa fa-lg fa-plus-circle"></i>',
+      '.m_countReset': '<i class="fa fa-lg fa-plus-circle"></i>',
+      '.m_error': '<i class="fa fa-lg fa-times-circle"></i>',
+      '.m_group.expanded': '<i class="fa fa-lg fa-minus-square-o"></i>',
+      '.m_group': '<i class="fa fa-lg fa-plus-square-o"></i>',
+      '.m_info': '<i class="fa fa-lg fa-info-circle"></i>',
+      '.m_profile': '<i class="fa fa-lg fa-pie-chart"></i>',
+      '.m_profileEnd': '<i class="fa fa-lg fa-pie-chart"></i>',
+      '.m_time': '<i class="fa fa-lg fa-clock-o"></i>',
+      '.m_timeLog': '<i class="fa fa-lg fa-clock-o"></i>',
+      '.m_trace': '<i class="fa fa-list"></i>',
+      '.m_warn': '<i class="fa fa-lg fa-warning"></i>'
+    },
     iconsMisc: {
       '.string-encoded': '<i class="fa fa-barcode"></i>',
       '.timestamp': '<i class="fa fa-calendar"></i>'
     },
-    iconsArray: {
-      '> .array-inner > li > .exclude-count': '<i class="fa fa-eye-slash"></i>'
-    },
+    linkFiles: false,
+    linkFilesTemplate: 'subl://open?url=file://%file&line=%line',
+    localStorageKey: 'phpDebugConsole',
     iconsObject: {
       '> .t_modifier_abstract': '<i class="fa fa-circle-o"></i>',
       '> .t_modifier_final': '<i class="fa fa-hand-stop-o"></i>',
@@ -6383,53 +6457,10 @@
       '> .vis-toggles > span[data-toggle=vis][data-vis=debuginfo-excluded]': '<i class="fa fa-eye-slash"></i>',
       '> .vis-toggles > span[data-toggle=vis][data-vis=inherited]': '<i class="fa fa-clone"></i>'
     },
-    // debug methods (not object methods)
-    iconsMethods: {
-      '.m_assert': '<i class="fa-lg"><b>&ne;</b></i>',
-      '.m_clear': '<i class="fa fa-lg fa-ban"></i>',
-      '.m_count': '<i class="fa fa-lg fa-plus-circle"></i>',
-      '.m_countReset': '<i class="fa fa-lg fa-plus-circle"></i>',
-      '.m_error': '<i class="fa fa-lg fa-times-circle"></i>',
-      '.m_group.expanded': '<i class="fa fa-lg fa-minus-square-o"></i>',
-      '.m_group': '<i class="fa fa-lg fa-plus-square-o"></i>',
-      '.m_info': '<i class="fa fa-lg fa-info-circle"></i>',
-      '.m_profile': '<i class="fa fa-lg fa-pie-chart"></i>',
-      '.m_profileEnd': '<i class="fa fa-lg fa-pie-chart"></i>',
-      '.m_time': '<i class="fa fa-lg fa-clock-o"></i>',
-      '.m_timeLog': '<i class="fa fa-lg fa-clock-o"></i>',
-      '.m_trace': '<i class="fa fa-list"></i>',
-      '.m_warn': '<i class="fa fa-lg fa-warning"></i>'
-    },
-    debugKey: getDebugKey(),
-    drawer: false,
     persistDrawer: false,
-    linkFiles: false,
-    linkFilesTemplate: 'subl://open?url=file://%file&line=%line',
-    localStorageKey: 'phpDebugConsole',
-    useLocalStorage: true,
     tooltip: true,
-    cssFontAwesome5: '' +
-      '.debug .fa-bell-o:before { content:"\\f0f3"; font-weight:400; }' +
-      '.debug .fa-calendar:before { content:"\\f073"; }' +
-      '.debug .fa-clock-o:before { content:"\\f017"; font-weight:400; }' +
-      '.debug .fa-clone:before { content:"\\f24d"; font-weight:400; }' +
-      '.debug .fa-envelope-o:before { content:"\\f0e0"; font-weight:400; }' +
-      '.debug .fa-exchange:before { content:"\\f362"; }' +
-      '.debug .fa-external-link:before { content:"\\f35d"; }' +
-      '.debug .fa-eye-slash:before { content:"\\f070"; font-weight:400; }' +
-      '.debug .fa-file-code-o:before { content:"\\f1c9"; font-weight:400; }' +
-      '.debug .fa-file-text-o:before { content:"\\f15c"; font-weight:400; }' +
-      '.debug .fa-files-o:before { content:"\\f0c5"; font-weight:400; }' +
-      '.debug .fa-hand-stop-o:before { content:"\\f256"; font-weight:400; }' +
-      '.debug .fa-minus-square-o:before { content:"\\f146"; font-weight:400; }' +
-      '.debug .fa-pencil:before { content:"\\f303" }' +
-      '.debug .fa-pie-chart:before { content:"\\f200"; }' +
-      '.debug .fa-plus-square-o:before { content:"\\f0fe"; font-weight:400; }' +
-      '.debug .fa-shield:before { content:"\\f3ed"; }' +
-      '.debug .fa-square-o:before { content:"\\f0c8"; font-weight:400; }' +
-      '.debug .fa-user-o:before { content:"\\f007"; }' +
-      '.debug .fa-warning:before { content:"\\f071"; }' +
-      '.debug .fa.fa-github { font-family: "Font Awesome 5 Brands"; }'
+    useLocalStorage: true,
+    theme: 'auto'
   };
 
   function Config () {
@@ -6439,7 +6470,7 @@
     }
     this.config = $.extend({}, config$1, storedConfig || {});
     this.haveSavedConfig = typeof storedConfig === 'object';
-    this.localStorageKeys = ['persistDrawer', 'openDrawer', 'openSidebar', 'height', 'linkFiles', 'linkFilesTemplate'];
+    this.localStorageKeys = ['persistDrawer', 'openDrawer', 'openSidebar', 'height', 'linkFiles', 'linkFilesTemplate', 'theme'];
   }
 
   Config.prototype.get = function (key) {
@@ -6451,6 +6482,14 @@
     return typeof this.config[key] !== 'undefined'
       ? this.config[key]
       : null
+  };
+
+  Config.prototype.themeGet = function () {
+    var theme = this.get('theme');
+    if (theme === 'auto') {
+      theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    return theme
   };
 
   Config.prototype.set = function (key, val) {
@@ -6629,32 +6668,35 @@
   ]);
 
   $.fn.debugEnhance = function (method, arg1, arg2) {
-    switch (method) {
-      case 'sidebar':
-        return debugEnhanceSidebar(this, arg1)
-      case 'buildChannelList':
-        return buildChannelList(arg1, arg2, arguments[3])
-      case 'collapse':
-        return this.each(function () {
-          collapse($(this), arg1);
-        })
-      case 'expand':
-        return this.each(function () {
-          expand($(this));
-        })
-      case 'init':
-        return debugEnhanceInit(this, arg1)
-      case 'setConfig':
-        return debugEnhanceSetConfig(this, arg1)
-      default:
-        return debugEnhanceDefault(this)
+    if (method === 'buildChannelList') {
+      // buildChannelList is a utility function that can be called without a jQuery object
+      return buildChannelList(arg1, arg2, arguments[3])
     }
+    this.each(function () {
+      var $node = $(this);
+      switch (method) {
+        case 'sidebar':
+          return debugEnhanceSidebar($node, arg1)
+        case 'collapse':
+          return collapse($node, arg1)
+        case 'expand':
+          return expand($node)
+        case 'init':
+          return debugEnhanceInit($node, arg1)
+        case 'setConfig':
+          return debugEnhanceSetConfig($node, arg1)
+        default:
+          return debugEnhanceDefault($node)
+      }
+    });
+    return this
   };
 
   $(function () {
-    $('.debug').each(function () {
-      $(this).debugEnhance('init');
-    });
+    $('.debug').debugEnhance('init');
+    window.matchMedia('(prefers-color-scheme: dark)').onchange = function (e) {
+      $('.debug.debug-drawer').attr('data-theme', config.themeGet());
+    };
   });
 
   function debugEnhanceInit ($node, arg1) {
@@ -6674,43 +6716,44 @@
     if (!config.get('drawer')) {
       $node.debugEnhance();
     }
-    return $node
+    if ($node.hasClass('debug-drawer')) {
+      $node.attr('data-theme', config.themeGet());
+    }
+    $node.trigger('init.debug');
   }
 
   function debugEnhanceDefault ($node) {
-    return $node.each(function () {
-      var $self = $(this);
-      var $parentLis = {};
-      if ($self.hasClass('debug')) {
-        // console.warn('debugEnhance() : .debug')
-        $self.find('.debug-menu-bar > nav, .tab-panes').show();
-        $self.find('.tab-pane.active')
-          .find('.m_alert, .debug-log-summary, .debug-log')
-          .debugEnhance();
-        $self.trigger('refresh.debug');
-        return
-      }
-      if ($self.hasClass('filter-hidden') && $self.hasClass('m_group') === false) {
-        return
-      }
-      if ($self.hasClass('group-body')) {
-        enhanceEntries($self);
-      } else if ($self.is('li, div') && $self.prop('class').match(/\bm_/) !== null) {
-        // logEntry  (alerts use <div>)
-        enhanceEntry($self);
-      } else if ($self.prop('class').match(/\bt_/)) {
-        // value
-        $parentLis = $self.parents('li').filter(function () {
-          return $(this).prop('class').match(/\bm_/) !== null
-        });
-        enhanceValue($self, $parentLis);
-      }
-    })
+    // var $self = $(this)
+    var $parentLis = {};
+    if ($node.hasClass('debug')) {
+      // console.warn('debugEnhance() : .debug')
+      $node.find('.debug-menu-bar > nav, .tab-panes').show();
+      $node.find('.tab-pane.active')
+        .find('.m_alert, .debug-log-summary, .debug-log')
+        .debugEnhance();
+      $node.trigger('refresh.debug');
+      return
+    }
+    if ($node.hasClass('filter-hidden') && $node.hasClass('m_group') === false) {
+      return
+    }
+    if ($node.hasClass('group-body')) {
+      enhanceEntries($node);
+    } else if ($node.is('li, div') && $node.prop('class').match(/\bm_/) !== null) {
+      // logEntry  (alerts use <div>)
+      enhanceEntry($node);
+    } else if ($node.prop('class').match(/\bt_/)) {
+      // value
+      $parentLis = $node.parents('li').filter(function () {
+        return $(this).prop('class').match(/\bm_/) !== null
+      });
+      enhanceValue($node, $parentLis);
+    }
   }
 
   function debugEnhanceSetConfig ($node, arg1) {
     if (typeof arg1 !== 'object') {
-      return $node
+      return
     }
     config.set(arg1);
     // update log entries that have already been enhanced
@@ -6719,7 +6762,6 @@
       .closest('.debug')
       .add($node)
       .trigger('config.debug.updated', 'linkFilesTemplate');
-    return $node
   }
 
   function debugEnhanceSidebar ($node, arg1) {
@@ -6730,7 +6772,6 @@
     } else if (arg1 === 'close') {
       close($node);
     }
-    return $node
   }
 
   /**

@@ -121,6 +121,7 @@ class CharReplacementAndSanitizationTest extends DebugTestFramework
                             'glue',
                             'icon',
                             'interfacesCollapse',
+                            'level',
                             'options',
                             'postDump',
                             'sanitize',
@@ -158,6 +159,7 @@ class CharReplacementAndSanitizationTest extends DebugTestFramework
                                         'cfgFlags' => 29360127,
                                         'debugMethod' => 'log',
                                         'interfacesCollapse' => array(),
+                                        'isLazy' => false,
                                         'isMaxDepth' => false,
                                         'isRecursion' => false,
                                         'properties' => array(

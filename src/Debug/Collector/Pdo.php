@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2024 Brad Kent
+ * @copyright 2014-2025 Brad Kent
  * @since     2.3
  */
 
@@ -28,9 +28,6 @@ class Pdo extends PdoBase
     use CompatTrait;
     use DatabaseTrait;
 
-    /** @var Debug */
-    private $debug;
-
     /** @var PdoBase */
     protected $pdo;
 
@@ -47,17 +44,10 @@ class Pdo extends PdoBase
     public function __construct(PdoBase $pdo, $debug = null)
     {
         \bdk\Debug\Utility::assertType($debug, 'bdk\Debug');
-
-        if (!$debug) {
-            $debug = Debug::getChannel('PDO', array('channelIcon' => $this->icon));
-        } elseif ($debug === $debug->rootInstance) {
-            $debug = $debug->getChannel('PDO', array('channelIcon' => $this->icon));
-        }
+        $this->traitInit($debug, 'PDO');
         $this->pdo = $pdo;
-        $this->debug = $debug;
         $this->setAttribute(PdoBase::ATTR_STATEMENT_CLASS, ['bdk\Debug\Collector\Pdo\Statement', [$this]]);
-        $debug->eventManager->subscribe(Debug::EVENT_OUTPUT, [$this, 'onDebugOutput'], 1);
-        $debug->addPlugin($debug->pluginHighlight);
+        $this->debug->eventManager->subscribe(Debug::EVENT_OUTPUT, [$this, 'onDebugOutput'], 1);
     }
 
     /**

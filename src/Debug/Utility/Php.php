@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2024 Brad Kent
+ * @copyright 2014-2025 Brad Kent
  * @since     3.0b1
  */
 
@@ -34,7 +34,7 @@ class Php
      *
      * @return string|null
      */
-    public function buildDate()
+    public static function buildDate()
     {
         if (\defined('PHP_BUILD_DATE')) {
             return PHP_BUILD_DATE;

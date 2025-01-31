@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2024 Brad Kent
+ * @copyright 2014-2025 Brad Kent
  * @since     3.0b1
  */
 
@@ -98,7 +98,7 @@ class Methods extends AbstractSection
         return $this->html->buildTag(
             'span',
             array(
-                'class' => 't_identifier',
+                'class' => ['t_identifier'],
                 'title' => $this->opts['phpDocOutput']
                     ? $this->helper->dumpPhpDoc(
                         $info['phpDoc']['summary']

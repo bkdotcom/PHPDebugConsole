@@ -1,6 +1,16 @@
 <?php
 
-namespace bdk\Debug\Collector\Doctrine;
+/**
+ * This file is part of PHPDebugConsole
+ *
+ * @package   PHPDebugConsole
+ * @author    Brad Kent <bkfake-github@yahoo.com>
+ * @license   http://opensource.org/licenses/MIT MIT
+ * @copyright 2024-2025 Brad Kent
+ * @since     3.3
+ */
+
+ namespace bdk\Debug\Collector\Doctrine;
 
 use bdk\Debug\Collector\Doctrine\Connection;
 use bdk\Debug\Collector\StatementInfo;
@@ -59,11 +69,7 @@ class Statement extends AbstractStatementMiddleware
      */
     public function execute($params = null): ResultInterface
     {
-        $info = new StatementInfo(
-            $this->sql,
-            $this->params,
-            $this->types
-        );
+        $info = new StatementInfo($this->sql, $this->params, $this->types);
         $result  = parent::execute();
 
         $exception = null;

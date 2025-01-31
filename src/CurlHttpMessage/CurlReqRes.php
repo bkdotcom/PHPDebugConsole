@@ -1,6 +1,13 @@
 <?php
 
-namespace bdk\CurlHttpMessage;
+/**
+ * @package   bdk\curlhttpmessage
+ * @author    Brad Kent <bkfake-github@yahoo.com>
+ * @license   http://opensource.org/licenses/MIT MIT
+ * @copyright 2023-2025 Brad Kent
+ */
+
+ namespace bdk\CurlHttpMessage;
 
 use bdk\CurlHttpMessage\CurlReqResOptions;
 use bdk\CurlHttpMessage\Exception\NetworkException;
@@ -102,6 +109,8 @@ class CurlReqRes
     {
         $this->errno = \curl_errno($this->curlHandle);
         $this->error = \curl_error($this->curlHandle);
+
+        $this->renameHeaders();
 
         $this->unsetOptions();
         if ($this->curlHandleInternal) {
@@ -365,6 +374,30 @@ class CurlReqRes
             : new RequestException($message, $this->request);
 
         throw $exception;
+    }
+
+    /**
+     * Rename Content-Encoding and Content-Length headers if curl decompressed the content
+     *
+     * @return void
+     */
+    private function renameHeaders()
+    {
+        if ($this->response->hasHeader('Content-Encoding') === false) {
+            return;
+        }
+        // did curl decompress the content?
+        $sizeDownloaded = \curl_getinfo($this->getCurlHandle(), CURLINFO_SIZE_DOWNLOAD);
+        $sizeResponseBody = $this->response->getBody()->getSize();
+        if ($sizeDownloaded >= $sizeResponseBody) {
+            return;
+        }
+        $this->response = $this->response->withHeader('x-content-encoding', $this->response->getHeader('Content-Encoding'));
+        $this->response = $this->response->withoutHeader('Content-Encoding');
+        if ($this->response->hasHeader('Content-Length')) {
+            $this->response = $this->response->withHeader('x-content-length', $this->response->getHeader('Content-Length'));
+            $this->response = $this->response->withoutHeader('Content-Length');
+        }
     }
 
     /**

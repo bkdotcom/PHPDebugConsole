@@ -19,6 +19,7 @@ use bdk\Test\Debug\DebugTestFramework;
  * @covers \bdk\Debug\Collector\Pdo\CompatTrait
  * @covers \bdk\Debug\Collector\Pdo\Statement
  * @covers \bdk\Debug\Collector\StatementInfo
+ * @covers \bdk\Debug\Collector\StatementInfoLogger
  * @covers \bdk\Debug\Utility\Sql
  */
 class PdoTest extends DebugTestFramework
@@ -35,7 +36,7 @@ class PdoTest extends DebugTestFramework
     public function setUp(): void
     {
         parent::setUp();
-        Reflection::propSet('bdk\Debug\Collector\StatementInfo', 'id', 0);
+        Reflection::propSet('bdk\Debug\Collector\StatementInfoLogger', 'id', 0);
     }
 
     public static function setUpBeforeClass(): void
@@ -241,7 +242,7 @@ EOD;
                 'meta' => array(
                     'channel' => 'general.PDO',
                     'detectFiles' => true,
-                    'evalLine' => null,
+                    // 'evalLine' => null,
                     'file' => __FILE__,
                     'line' => $line,
                     'uncollapse' => false,

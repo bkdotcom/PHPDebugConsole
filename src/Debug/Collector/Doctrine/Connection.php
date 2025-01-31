@@ -1,6 +1,16 @@
 <?php
 
-namespace bdk\Debug\Collector\Doctrine;
+/**
+ * This file is part of PHPDebugConsole
+ *
+ * @package   PHPDebugConsole
+ * @author    Brad Kent <bkfake-github@yahoo.com>
+ * @license   http://opensource.org/licenses/MIT MIT
+ * @copyright 2024-2025 Brad Kent
+ * @since     3.3
+ */
+
+ namespace bdk\Debug\Collector\Doctrine;
 
 use bdk\Debug;
 use bdk\Debug\Collector\DatabaseTrait;
@@ -19,9 +29,6 @@ use ReflectionClass;
 class Connection extends AbstractConnectionMiddleware
 {
     use DatabaseTrait;
-
-    /** @var Debug */
-    protected $debug;
 
     /** @var array */
     private $params = array();
@@ -42,9 +49,8 @@ class Connection extends AbstractConnectionMiddleware
     {
         parent::__construct($connection);
         $this->params = $params;
-        $this->debug = $debug;
+        $this->traitInit($debug);
         $this->debug->eventManager->subscribe(Debug::EVENT_OUTPUT, [$this, 'onDebugOutput'], 1);
-        $this->debug->addPlugin($debug->pluginHighlight);
     }
 
     /**

@@ -1,6 +1,13 @@
 <?php
 
-namespace bdk\Promise;
+/**
+ * @package   bdk\promise
+ * @author    Brad Kent <bkfake-github@yahoo.com>
+ * @license   http://opensource.org/licenses/MIT MIT
+ * @copyright 2023-2025 Brad Kent
+ */
+
+ namespace bdk\Promise;
 
 use bdk\Promise;
 use bdk\Promise\Exception\AggregateException;
@@ -49,29 +56,6 @@ final class Utils
             $allowNull ? ' (or null)' : '',
             self::getDebugType($value)
         ));
-    }
-
-    /**
-     * Test if value is of a certain type
-     *
-     * @param mixed  $value Value to test
-     * @param string $type  "array", "callable", "object", or className
-     *
-     * @return bool
-     */
-    private static function assertTypeCheck($value, $type)
-    {
-        switch ($type) {
-            case 'array':
-                return \is_array($value);
-            case 'callable':
-                return \is_callable($value);
-            case 'object':
-                return \is_object($value);
-            default:
-                return \is_a($value, $type);
-        }
-        return false;
     }
 
     /**
@@ -339,6 +323,28 @@ final class Utils
     }
 
     /**
+     * Test if value is of a certain type
+     *
+     * @param mixed  $value Value to test
+     * @param string $type  "array", "callable", "object", or className
+     *
+     * @return bool
+     */
+    private static function assertTypeCheck($value, $type)
+    {
+        switch ($type) {
+            case 'array':
+                return \is_array($value);
+            case 'callable':
+                return \is_callable($value);
+            case 'object':
+                return \is_object($value);
+            default:
+                return \is_a($value, $type);
+        }
+    }
+
+    /**
      * Gets the type name of a variable in a way that is suitable for debugging
      *
      * @param mixed $value Value to inspect
@@ -349,6 +355,6 @@ final class Utils
     {
         return \is_object($value)
             ? \get_class($value)
-            : \gettype($value);
+            : \strtolower(\gettype($value));
     }
 }

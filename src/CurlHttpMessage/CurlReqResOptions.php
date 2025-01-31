@@ -1,6 +1,13 @@
 <?php
 
-namespace bdk\CurlHttpMessage;
+/**
+ * @package   bdk\curlhttpmessage
+ * @author    Brad Kent <bkfake-github@yahoo.com>
+ * @license   http://opensource.org/licenses/MIT MIT
+ * @copyright 2023-2025 Brad Kent
+ */
+
+ namespace bdk\CurlHttpMessage;
 
 use bdk\CurlHttpMessage\CurlReqRes;
 use bdk\CurlHttpMessage\Exception\BadResponseException;
@@ -199,6 +206,12 @@ class CurlReqResOptions
 
             // cURL does not support 'Expect-Continue', skip all 'EXPECT' headers
             if ($nameLower === 'expect') {
+                return;
+            }
+
+            if ($nameLower === 'accept-encoding') {
+                // CURLOPT_ENCODING - Available as of cURL 7.10 and deprecated as of cURL 7.21.6.
+                $this->curlOptions[CURLOPT_ACCEPT_ENCODING] = \implode(', ', $values); // available as of cURL 7.21.6.
                 return;
             }
 

@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2024 Brad Kent
+ * @copyright 2014-2025 Brad Kent
  * @since     2.3
  */
 
@@ -121,7 +121,7 @@ class LogEnv implements SubscriberInterface
         $this->debug->log(
             '%cgit branch: %c%s',
             'font-weight:bold;',
-            'font-size:1.5em; background-color:#DDD; padding:0 .3em;',
+            'font-size:1.5em; background-color:#CCC; color:#000; padding:0 .3em;',
             $branch,
             $this->debug->meta('icon', ':github:')
         );

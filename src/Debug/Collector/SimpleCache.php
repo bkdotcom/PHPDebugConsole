@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2024 Brad Kent
+ * @copyright 2014-2025 Brad Kent
  * @since     2.3
  */
 
@@ -75,7 +75,7 @@ class SimpleCache implements CacheInterface
      *
      * @throws BadMethodCallException
      */
-    public function __call($method, $args)
+    public function __call($method, array $args)
     {
         if (\method_exists($this->cache, $method) === false) {
             throw new BadMethodCallException('method ' . __CLASS__ . '::' . $method . ' is not defined');

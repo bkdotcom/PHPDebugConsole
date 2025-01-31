@@ -54,32 +54,35 @@ loadDeps([
 ])
 
 $.fn.debugEnhance = function (method, arg1, arg2) {
-  switch (method) {
-    case 'sidebar':
-      return debugEnhanceSidebar(this, arg1)
-    case 'buildChannelList':
-      return enhanceMain.buildChannelList(arg1, arg2, arguments[3])
-    case 'collapse':
-      return this.each(function () {
-        expandCollapse.collapse($(this), arg1)
-      })
-    case 'expand':
-      return this.each(function () {
-        expandCollapse.expand($(this))
-      })
-    case 'init':
-      return debugEnhanceInit(this, arg1)
-    case 'setConfig':
-      return debugEnhanceSetConfig(this, arg1)
-    default:
-      return debugEnhanceDefault(this)
+  if (method === 'buildChannelList') {
+    // buildChannelList is a utility function that can be called without a jQuery object
+    return enhanceMain.buildChannelList(arg1, arg2, arguments[3])
   }
+  this.each(function () {
+    var $node = $(this)
+    switch (method) {
+      case 'sidebar':
+        return debugEnhanceSidebar($node, arg1)
+      case 'collapse':
+        return expandCollapse.collapse($node, arg1)
+      case 'expand':
+        return expandCollapse.expand($node)
+      case 'init':
+        return debugEnhanceInit($node, arg1)
+      case 'setConfig':
+        return debugEnhanceSetConfig($node, arg1)
+      default:
+        return debugEnhanceDefault($node)
+    }
+  })
+  return this
 }
 
 $(function () {
-  $('.debug').each(function () {
-    $(this).debugEnhance('init')
-  })
+  $('.debug').debugEnhance('init')
+  window.matchMedia('(prefers-color-scheme: dark)').onchange = function (e) {
+    $('.debug.debug-drawer').attr('data-theme', config.themeGet())
+  }
 })
 
 function debugEnhanceInit ($node, arg1) {
@@ -99,43 +102,44 @@ function debugEnhanceInit ($node, arg1) {
   if (!config.get('drawer')) {
     $node.debugEnhance()
   }
-  return $node
+  if ($node.hasClass('debug-drawer')) {
+    $node.attr('data-theme', config.themeGet())
+  }
+  $node.trigger('init.debug')
 }
 
 function debugEnhanceDefault ($node) {
-  return $node.each(function () {
-    var $self = $(this)
-    var $parentLis = {}
-    if ($self.hasClass('debug')) {
-      // console.warn('debugEnhance() : .debug')
-      $self.find('.debug-menu-bar > nav, .tab-panes').show()
-      $self.find('.tab-pane.active')
-        .find('.m_alert, .debug-log-summary, .debug-log')
-        .debugEnhance()
-      $self.trigger('refresh.debug')
-      return
-    }
-    if ($self.hasClass('filter-hidden') && $self.hasClass('m_group') === false) {
-      return
-    }
-    if ($self.hasClass('group-body')) {
-      enhanceEntries.enhanceEntries($self)
-    } else if ($self.is('li, div') && $self.prop('class').match(/\bm_/) !== null) {
-      // logEntry  (alerts use <div>)
-      enhanceEntries.enhanceEntry($self)
-    } else if ($self.prop('class').match(/\bt_/)) {
-      // value
-      $parentLis = $self.parents('li').filter(function () {
-        return $(this).prop('class').match(/\bm_/) !== null
-      })
-      enhanceEntries.enhanceValue($self, $parentLis)
-    }
-  })
+  // var $self = $(this)
+  var $parentLis = {}
+  if ($node.hasClass('debug')) {
+    // console.warn('debugEnhance() : .debug')
+    $node.find('.debug-menu-bar > nav, .tab-panes').show()
+    $node.find('.tab-pane.active')
+      .find('.m_alert, .debug-log-summary, .debug-log')
+      .debugEnhance()
+    $node.trigger('refresh.debug')
+    return
+  }
+  if ($node.hasClass('filter-hidden') && $node.hasClass('m_group') === false) {
+    return
+  }
+  if ($node.hasClass('group-body')) {
+    enhanceEntries.enhanceEntries($node)
+  } else if ($node.is('li, div') && $node.prop('class').match(/\bm_/) !== null) {
+    // logEntry  (alerts use <div>)
+    enhanceEntries.enhanceEntry($node)
+  } else if ($node.prop('class').match(/\bt_/)) {
+    // value
+    $parentLis = $node.parents('li').filter(function () {
+      return $(this).prop('class').match(/\bm_/) !== null
+    })
+    enhanceEntries.enhanceValue($node, $parentLis)
+  }
 }
 
 function debugEnhanceSetConfig ($node, arg1) {
   if (typeof arg1 !== 'object') {
-    return $node
+    return
   }
   config.set(arg1)
   // update log entries that have already been enhanced
@@ -144,7 +148,6 @@ function debugEnhanceSetConfig ($node, arg1) {
     .closest('.debug')
     .add($node)
     .trigger('config.debug.updated', 'linkFilesTemplate')
-  return $node
 }
 
 function debugEnhanceSidebar ($node, arg1) {
@@ -155,7 +158,6 @@ function debugEnhanceSidebar ($node, arg1) {
   } else if (arg1 === 'close') {
     sidebar.close($node)
   }
-  return $node
 }
 
 /**

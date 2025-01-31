@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2024 Brad Kent
+ * @copyright 2014-2025 Brad Kent
  * @since     3.3
  */
 
@@ -24,7 +24,11 @@ use Yii;
  */
 class PdoCollector
 {
-	protected $component;
+    /** @var CApplicationComponent */
+    protected $component;
+
+    /** @var array<string,Pdo> */
+    protected $pdoInstances = array();
 
 	/**
 	 * Constructor
@@ -58,9 +62,23 @@ class PdoCollector
             // already wrapped
             return;
         }
-        $pdoChannel = $this->pdoGetChannel($dbConnection);
+        $connectionString = $dbConnection->connectionString;
+        $pdoChannel = $this->getChannel($dbConnection);
         $pdoCollector = new Pdo($pdo, $pdoChannel);
-        $this->pdoAttachCollector($dbConnection, $pdoCollector);
+        $this->updateDbConnection($dbConnection, $pdoCollector);
+        $this->pdoInstances[$connectionString] = $pdoCollector;
+    }
+
+    /**
+     * Get PDO instance for given connection string
+     *
+     * @param string $connectionString connection string
+     *
+     * @return Pdo
+     */
+    public function getInstance($connectionString)
+    {
+        return $this->pdoInstances[$connectionString];
     }
 
     /**
@@ -70,7 +88,7 @@ class PdoCollector
      *
      * @return Debug
      */
-    private function pdoGetChannel(CDbConnection $dbConnection)
+    private function getChannel(CDbConnection $dbConnection)
     {
         $channelName = 'PDO';
         if (\strpos($dbConnection->connectionString, 'master=true')) {
@@ -86,14 +104,14 @@ class PdoCollector
     }
 
     /**
-     * Attach PDO Collector to db connection
+     * Attach PDO Collector to dbConnection
      *
      * @param CDbConnection $dbConnection CDbConnection instance
      * @param Pdo           $pdoCollector PDO collector instance
      *
      * @return void
      */
-    private function pdoAttachCollector(CDbConnection $dbConnection, Pdo $pdoCollector)
+    private function updateDbConnection(CDbConnection $dbConnection, Pdo $pdoCollector)
     {
         $dbRefObj = new ReflectionObject($dbConnection);
         while (!$dbRefObj->hasProperty('_pdo')) {

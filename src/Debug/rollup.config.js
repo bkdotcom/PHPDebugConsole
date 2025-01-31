@@ -2,10 +2,11 @@
  * see https://github.com/mishoo/UglifyJS2/blob/master/README.md#minify-options
  */
 
-import { uglify } from 'rollup-plugin-uglify'
+// import uglify from '@lopatnov/rollup-plugin-uglify'
 import { nodeResolve } from '@rollup/plugin-node-resolve' // so can resolve tippy.js
 // import css from 'rollup-plugin-import-css'
 import replace from '@rollup/plugin-replace'
+import terser from '@rollup/plugin-terser'
 
 var tasks = [
   {
@@ -29,6 +30,7 @@ var tasks = [
       */
       nodeResolve(),
       replace({
+        preventAssignment: true,
         'process.env.NODE_ENV': JSON.stringify('development')
       })
     ]
@@ -57,13 +59,17 @@ if (process.env.NODE_ENV !== 'watch') {
       */
       nodeResolve(),
       replace({
+        preventAssignment: true,
         'process.env.NODE_ENV': JSON.stringify('production')
       }),
+      /*
       uglify({
         compress: {
           drop_console: true
         }
       })
+      */
+      terser()
     ]
   })
 }

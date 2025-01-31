@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2024 Brad Kent
+ * @copyright 2014-2025 Brad Kent
  * @since     2.3
  */
 
@@ -59,14 +59,15 @@ class LogEntry extends Event implements JsonSerializable
         $this->values = array(
             'appendLog' => true,
             'args' => $args,
-            'meta' => $meta,
+            'meta' => array(),
             'method' => $method,
             'numArgs' => 0,     // number of initial non-meta args passed (does not include added default values)
             'return' => null,
         );
+        $this->setMeta($meta);
         $metaExtracted = $this->metaExtract($this->values['args']);
         $this->mergeDefaultArgs($defaultArgs, $argsToMeta);
-        $this->values['meta'] = \array_merge($this->values['meta'], $metaExtracted);
+        $this->setMeta($metaExtracted);
         $this->onSet($this->values);
     }
 
@@ -113,6 +114,7 @@ class LogEntry extends Event implements JsonSerializable
             $this->values['args'][$i] = $this->subject->abstracter->crate($val, $this->values['method']);
         }
         $this->subject->setCfg($cfgRestore, Debug::CONFIG_NO_RETURN);
+        $this->removeNullMeta();
     }
 
     /**
@@ -178,6 +180,7 @@ class LogEntry extends Event implements JsonSerializable
 
     /**
      * Set meta value(s)
+     *
      * Value(s) get merged with existing values
      *
      * @param mixed $mixed (string) key or (array) key/value array
@@ -188,14 +191,23 @@ class LogEntry extends Event implements JsonSerializable
     public function setMeta($mixed, $val = null)
     {
         if (\is_array($mixed) === false) {
-            if ($val === null) {
-                /** @psalm-suppress EmptyArrayAccess */
-                unset($this->values['meta'][$mixed]);
-                return;
-            }
             $mixed = array($mixed => $val);
         }
+        if ($mixed === []) {
+            return;
+        }
         $this->setValue('meta', \array_merge($this->values['meta'], $mixed));
+    }
+
+    /**
+     * Remove null meta values
+     *
+     * @return void
+     */
+    private function removeNullMeta()
+    {
+        $remove = \array_filter($this->values['meta'], 'is_null');
+        $this->values['meta'] = \array_diff_key($this->values['meta'], $remove);
     }
 
     /**

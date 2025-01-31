@@ -1,12 +1,13 @@
 & {
   position: relative;
   clear: both;
-  font-family: $font-family;
+  font-family: var(--font-family);
   // font-size: 0.6em;
   line-height: normal;
   text-align: left;
   text-shadow: none;
-  color: $default-fg;
+  color: var(--color-fg);
+  background-color: var(--color-bg) !important;
 }
 
 * {
@@ -23,25 +24,25 @@
 
 a {
   text-decoration: none;
-  color: #00e;
-  &:visited { color: #551a8b; }
+  color: var(--color-a);
+  &:visited { color: var(--color-a-visited); }
   &:focus,
   &:hover { 
     // text-decoration: underline;
-    border-bottom: 1px dotted blue;
+    border-bottom: currentColor dotted 1px;
   }
   &:active,
   &:hover {
     outline: 0;
-    color: #e00;
+    color: var(--color-a-hover);
   }
   &.file-link { color: inherit; }
 }
 button {
-  color: inherit;
+  color: var(--color-button-fg);
   cursor: pointer;
-  background-color: #f0f0f0;
-  border-color: #afafaf;
+  background-color: var(--color-button-bg);
+  border-color: var(--color-button-border);
   font-weight: inherit;
   height: auto;
   letter-spacing: initial;
@@ -53,13 +54,18 @@ button {
   vertical-align: baseline;
   white-space: initial;
   &:hover {
-    background-color: $lite-blue;
+    background-color: var(--color-button-bg-hover);
   }
 }
 code {
   padding: 2px 4px;
   background-color: transparent;
   font-family: Menlo, Monaco, Consolas, "Courier New", monospace !important;
+}
+input,
+select {
+  color: var(--color-ff);
+  background-color: var(--color-bg);
 }
 pre code {
   display: block;
@@ -116,8 +122,8 @@ h3 {
   &:first-child { margin-top: 0; }
 }
 hr {
-  color: $default-fg;
-  background-color: $default-fg;
+  color: var(--color-fg);
+  background-color: var(--color-fg);
   border: 0;
   height: 1px;
 }

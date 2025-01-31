@@ -4,7 +4,7 @@
  * @package   Backtrace
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2020-2024 Brad Kent
+ * @copyright 2020-2025 Brad Kent
  * @since     v2.2
  * @link      http://www.github.com/bkdotcom/Backtrace
  */
@@ -40,6 +40,8 @@ class SkipInternal
 
     /** @var non-empty-string */
     private static $classMethodRegex = '/^(?<class>\S+)(?<type>::|->)(?<method>\S+)$/';
+
+    private static $viaRemoveInternalFrames = false;
 
     /**
      * Add a new namespace or classname to be used to determine when to
@@ -92,14 +94,12 @@ class SkipInternal
                 break;
             }
         }
-        $i = self::getFirstIndexRewind($backtrace, $i);
-        if ($i === $count) {
+
+        $i = self::getFirstIndexRewind($backtrace, $i, $level);
+        if ($i === $count && $level > 0) {
             // every frame was skipped
-            return $level > 0
-                ? self::getFirstIndex($backtrace, $offset, $level - 1)
-                : 0;
+            return self::getFirstIndex($backtrace, $offset, $level - 1);
         }
-        $i--;
         $i = \max($i, 0); // ensure we're >= 0
         return isset($backtrace[$i + $offset])
             ? $i + $offset
@@ -115,8 +115,12 @@ class SkipInternal
      */
     public static function removeInternalFrames($backtrace)
     {
+        self::$viaRemoveInternalFrames = true;
         $index = static::getFirstIndex($backtrace);
-        return \array_slice($backtrace, $index);
+        self::$viaRemoveInternalFrames = false;
+        return $index === \count($backtrace) - 1
+            ? $backtrace
+            : \array_slice($backtrace, $index);
     }
 
     /**
@@ -142,30 +146,31 @@ class SkipInternal
     }
 
     /**
-     * getFirstIndex may have skipped over (non object)function calls
+     * getFirstIndex may have skipped over (non object) function calls
+     *
      * back it up
      *
      * @param array $backtrace Backtrace
      * @param int   $index     Index after skipping frames
+     * @param int   $level     current level
      *
-     * @return int [description]
+     * @return int
      */
-    private static function getFirstIndexRewind(array $backtrace, $index)
+    private static function getFirstIndexRewind(array $backtrace, $index, $level)
     {
         $count = \count($backtrace);
-        if ($index && $index === $count && self::getClass($backtrace[$index - 1]) === null) {
-            // every frame was skipped and first frame is include, or similar
+        $index = \min($index, $count - 1);
+        if ($index === $count - 1 && self::$viaRemoveInternalFrames) {
             return $index;
         }
-        for ($i = $index - 1; $i > 0; $i--) {
-            $class = self::getClass($backtrace[$i]);
-            if (\in_array($class, [null, 'ReflectionMethod'], true) === false) {
-                // class method (but not ReflectionMethod)
+        for ($i = $index; $i > 0; $i--) {
+            $frame = $backtrace[$i];
+            $isPhpFuncOrClosure = self::isPhpDefinedFunction($frame['function']) || $frame['function'] === '{closure}';
+            if (self::isSkippable($frame, $level) && $isPhpFuncOrClosure === false) {
                 break;
             }
-            $index = $i;
         }
-        return $index;
+        return $i;
     }
 
     /**
@@ -206,7 +211,7 @@ class SkipInternal
         if (\in_array($function, ['include', 'include_once', 'include or require', 'require', 'require_once'], true)) {
             return true;
         }
-        if (\function_exists($function) === false) {
+        if (\function_exists((string) $function) === false) {
             return false;
         }
         $refFunction = new ReflectionFunction($function);
@@ -221,7 +226,7 @@ class SkipInternal
      *    * class belongs to internalClasses
      *
      * @param array $frame backtrace frame
-     * @param int   $level when classes to consider internal
+     * @param int   $level which classes to consider internal
      *
      * @return bool
      */
@@ -229,7 +234,7 @@ class SkipInternal
     {
         $class = self::getClass($frame);
         if (!$class) {
-            return self::isPhpDefinedFunction((string) $frame['function']);
+            return self::isPhpDefinedFunction($frame['function']) || $frame['function'] === '{closure}';
         }
         if (\preg_match(static::$internalClasses['regex'], $class)) {
             return true;
@@ -241,7 +246,7 @@ class SkipInternal
      * Test frame against internal classes
      *
      * @param class-string $class    class name
-     * @param int          $levelMax MAximum level
+     * @param int          $levelMax Maximum level
      *
      * @return bool
      */
@@ -264,8 +269,8 @@ class SkipInternal
      */
     private static function getClass(array $frame)
     {
-        return \preg_match(self::$classMethodRegex, (string) $frame['function'], $matches)
-            ? $matches['class']
+        return \preg_match(\bdk\Backtrace::REGEX_FUNCTION, (string) $frame['function'], $matches)
+            ? $matches['classname']
             : null;
     }
 }

@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2024 Brad Kent
+ * @copyright 2014-2025 Brad Kent
  * @since     2.3
  */
 
@@ -38,9 +38,6 @@ class DoctrineLogger implements SQLLoggerInterface
     /** @var Connection */
     private $connection;
 
-    /** @var Debug */
-    private $debug;
-
     /**
      * Constructor
      *
@@ -54,16 +51,9 @@ class DoctrineLogger implements SQLLoggerInterface
     {
         \bdk\Debug\Utility::assertType($connection, 'Doctrine\DBAL\Connection');
         \bdk\Debug\Utility::assertType($debug, 'bdk\Debug');
-
-        if (!$debug) {
-            $debug = Debug::getChannel('Doctrine', array('channelIcon' => $this->icon));
-        } elseif ($debug === $debug->rootInstance) {
-            $debug = $debug->getChannel('Doctrine', array('channelIcon' => $this->icon));
-        }
+        $this->traitInit($debug, 'Doctrine');
         $this->connection = $connection;
-        $this->debug = $debug;
         $this->debug->eventManager->subscribe(Debug::EVENT_OUTPUT, [$this, 'onDebugOutput'], 1);
-        $this->debug->addPlugin($debug->pluginHighlight);
     }
 
     /**
@@ -105,7 +95,6 @@ class DoctrineLogger implements SQLLoggerInterface
     {
         $statementInfo = $this->statementInfo;
         $statementInfo->end();
-        $statementInfo->appendLog($this->debug);
-        $this->loggedStatements[] = $statementInfo;
+        $this->addStatementInfo($statementInfo);
     }
 }

@@ -6,14 +6,14 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2024 Brad Kent
+ * @copyright 2014-2025 Brad Kent
  * @since     3.3
  */
 
 namespace bdk\Debug\Framework\Laravel;
 
-use bdk\Debug;
 use bdk\Debug\Collector\StatementInfo;
+use bdk\Debug\Collector\StatementInfoLogger;
 use Exception;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Database\DatabaseManager;
@@ -29,6 +29,7 @@ class LogDb
 
     protected $app;
     protected $serviceProvider;
+    protected $statementInfoLogger;
 
     /**
      * Constructor
@@ -40,7 +41,10 @@ class LogDb
     {
         $this->serviceProvider = $serviceProvider;
         $this->app = $app;
-        $this->debug = $serviceProvider->debug;
+        $this->debug = $serviceProvider->debug->getChannel('Db', array(
+            'channelIcon' => ':database:',
+        ));
+        $this->statementInfoLogger = new StatementInfoLogger($this->debug);
     }
 
     /**
@@ -57,18 +61,14 @@ class LogDb
         /** @var \Illuminate\Database\DatabaseManager */
         $dbManager = $this->app['db'];
 
-        $dbChannel = $this->debug->getChannel('Db', array(
-            'channelIcon' => ':database:',
-        ));
-
         try {
-            $this->dbListen($dbManager, $dbChannel);
+            $this->dbListen($dbManager);
         } catch (Exception $e) {
             $this->debug->warn($e->getMessage());
         }
 
         try {
-            $this->dbSubscribe($dbManager, $dbChannel);
+            $this->dbSubscribe($dbManager);
         } catch (Exception $e) {
             $this->debug->log('exception', $e->getMessage());
         }
@@ -77,23 +77,22 @@ class LogDb
     /**
      * Build DatabaseManager event handler
      *
-     * @param Debug       $dbChannel  PHPDebugConsole channel
      * @param string|null $msg        Group message
      * @param bool        $isGroupEnd (false) groupEnd ?
      *
      * @return Closure
      */
-    private function buildDbEventHandler(Debug $dbChannel, $msg, $isGroupEnd = false)
+    private function buildDbEventHandler($msg, $isGroupEnd = false)
     {
-        return static function () use ($dbChannel, $msg, $isGroupEnd) {
+        return function () use ($msg, $isGroupEnd) {
             if ($isGroupEnd === false) {
-                $dbChannel->group($msg);
+                $this->debug->group($msg);
                 return;
             }
             if ($msg) {
-                $dbChannel->log($msg);
+                $this->debug->log($msg);
             }
-            $dbChannel->groupEnd();
+            $this->debug->groupEnd();
         };
     }
 
@@ -101,14 +100,13 @@ class LogDb
      * Register a database query listener with the connection.
      *
      * @param DatabaseManager $dbManager DatabaseManager instance
-     * @param Debug           $dbChannel Debug instance
      *
      * @return void
      */
-    protected function dbListen(DatabaseManager $dbManager, Debug $dbChannel)
+    protected function dbListen(DatabaseManager $dbManager)
     {
         // listen found in Illuminate\Database\Connection
-        $dbManager->listen(function ($query, $bindings = null, $time = null, $connection = null) use ($dbManager, $dbChannel) {
+        $dbManager->listen(function ($query, $bindings = null, $time = null, $connection = null) use ($dbManager) {
             if (!$this->serviceProvider->shouldCollect('db', true)) {
                 // We've turned off collecting after the listener was attached
                 return;
@@ -129,8 +127,8 @@ class LogDb
                 $query,
                 $connection->prepareBindings($bindings)
             );
-            $statementInfo->setDuration($time);
-            $statementInfo->appendLog($dbChannel);
+            $statementInfo->setDuration($time / 1000); // time was passed in milliseconds
+            $this->statementInfoLogger->log($statementInfo);
         });
     }
 
@@ -138,38 +136,37 @@ class LogDb
      * Listen to database events
      *
      * @param DatabaseManager $dbManager DatabaseManager instance
-     * @param Debug           $dbChannel Debug instance
      *
      * @return void
      */
-    private function dbSubscribe(DatabaseManager $dbManager, Debug $dbChannel)
+    private function dbSubscribe(DatabaseManager $dbManager)
     {
         $eventDispatcher = $dbManager->getEventDispatcher();
 
         $eventDispatcher->listen(
             \Illuminate\Database\Events\TransactionBeginning::class,
-            $this->buildDbEventHandler($dbChannel, 'Begin Transaction')
+            $this->buildDbEventHandler('Begin Transaction')
         );
         $eventDispatcher->listen(
             \Illuminate\Database\Events\TransactionCommitted::class,
-            $this->buildDbEventHandler($dbChannel, null, true)
+            $this->buildDbEventHandler(null, true)
         );
         $eventDispatcher->listen(
             \Illuminate\Database\Events\TransactionRolledBack::class,
-            $this->buildDbEventHandler($dbChannel, 'rollback', true)
+            $this->buildDbEventHandler('rollback', true)
         );
 
         $eventDispatcher->listen(
             'connection.*.beganTransaction',
-            $this->buildDbEventHandler($dbChannel, 'Begin Transaction')
+            $this->buildDbEventHandler('Begin Transaction')
         );
         $eventDispatcher->listen(
             'connection.*.committed',
-            $this->buildDbEventHandler($dbChannel, null, true)
+            $this->buildDbEventHandler(null, true)
         );
         $eventDispatcher->listen(
             'connection.*.rollingBack',
-            $this->buildDbEventHandler($dbChannel, 'rollback', true)
+            $this->buildDbEventHandler('rollback', true)
         );
     }
 }

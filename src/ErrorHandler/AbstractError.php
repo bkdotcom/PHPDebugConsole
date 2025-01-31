@@ -4,7 +4,7 @@
  * @package   bdk\ErrorHandler
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2024 Brad Kent
+ * @copyright 2014-2025 Brad Kent
  * @since     v3.3
  */
 
@@ -40,6 +40,7 @@ class AbstractError extends Event
 
     /** @var array<int,string> */
     protected static $errTypes = array(
+        2048                => 'Strict',            // php 5.0 :  2048; deprecated as of php 8.5
         E_ALL               => 'E_ALL',             // listed here for completeness
         E_COMPILE_ERROR     => 'Compile Error',     // handled via shutdown function
         E_COMPILE_WARNING   => 'Compile Warning',   // handled?
@@ -50,7 +51,6 @@ class AbstractError extends Event
         E_NOTICE            => 'Notice',
         E_PARSE             => 'Parsing Error',     // handled via shutdown function
         E_RECOVERABLE_ERROR => 'Recoverable Error', // php 5.2 :  4096
-        2048                => 'Strict',            // php 5.0 :  2048; deprecated as of php 8.5
         E_USER_DEPRECATED   => 'User Deprecated',   // php 5.3 : 16384
         E_USER_ERROR        => 'User Error',
         E_USER_NOTICE       => 'User Notice',

@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2024 Brad Kent
+ * @copyright 2014-2025 Brad Kent
  * @since     v3.0
  */
 
@@ -102,6 +102,25 @@ class Container implements ArrayAccess
     }
 
     /**
+     * Magic method
+     *
+     * Provide insight into the container
+     * exclude raw & values
+     *
+     * @return array
+     */
+    public function __debugInfo()
+    {
+        return array(
+            'cfg' => $this->cfg,
+            'invoked' => $this->invoked,
+            'keys' => $this->keys,
+            'raw' => "\x00notInspected\x00",
+            'values' => "\x00notInspected\x00",
+        );
+    }
+
+    /**
      * Extends an object definition.
      *
      * Useful for
@@ -112,7 +131,7 @@ class Container implements ArrayAccess
      *  - take the value as its first argument and the container as its second argument
      *  - return the modified value
      *
-     * @param string   $id       The unique identifier for the object
+     * @param string   $name     The unique identifier for the object
      * @param callable $callable A service definition to extend the original
      *
      * @return void
@@ -413,7 +432,7 @@ class Container implements ArrayAccess
     /**
      * Assert that the identifier exists
      *
-     * @param string $name Identifier of entry to check
+     * @param mixed $val Value to check
      *
      * @return void
      *
@@ -440,11 +459,11 @@ class Container implements ArrayAccess
     {
         return \is_object($value)
             ? \get_class($value)
-            : \gettype($value);
+            : \strtolower(\gettype($value));
     }
 
     /**
-     * Undocumented function
+     * Called when service or factory is invoked
      *
      * @param string $name  The service or factory name
      * @param mixed  $value The value returned by the definition

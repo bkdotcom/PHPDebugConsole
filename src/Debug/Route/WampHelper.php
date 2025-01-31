@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2024 Brad Kent
+ * @copyright 2014-2025 Brad Kent
  * @since     3.3
  */
 
@@ -41,6 +41,7 @@ class WampHelper
     {
         $default = array(
             'argv' => array(),
+            'DOCUMENT_ROOT' => null,
             'HTTPS' => null,
             'HTTP_HOST' => null,
             'processId' => \getmypid(),

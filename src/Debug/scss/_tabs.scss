@@ -10,15 +10,15 @@ nav[role=tablist] {
   a {
     display: inline-block;
     padding: 0 13px;
-    font-size: $font-size;
+    font-size: var(--font-size);
     line-height: 20px;
     vertical-align: top;
-    color: $default-fg;
+    color: var(--color-fg);
     cursor: pointer;
     &:hover {
       text-decoration: none;
       &:not(.active) {
-        background: darken($lite-grey, 5%);
+        background: var(--color-bg-2-hover);
       }
     }
     &.active {
@@ -39,7 +39,6 @@ nav[role=tablist] {
     }
     .tab-body {
       padding: 10px 12px 5px;
-      background-color: #fff;
       overflow: auto;
     }
   }

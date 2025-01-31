@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2024 Brad Kent
+ * @copyright 2014-2025 Brad Kent
  * @since     3.0b1
  */
 
@@ -100,6 +100,9 @@ class ServiceProvider implements ServiceProviderInterface
                 'emailer' => array(
                     'emailBacktraceDumper' => static function ($backtrace) use ($debug) {
                         $backtrace = \array_map(static function ($frame) {
+                            if (empty($frame['evalLine'])) {
+                                unset($frame['evalLine']);
+                            }
                             if (!empty($frame['context'])) {
                                 $frame['context'] = \array_map(static function ($line) {
                                     return \rtrim($line, "\n");

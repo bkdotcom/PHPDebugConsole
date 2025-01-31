@@ -64,25 +64,32 @@ ul.list-unstyled > li:has(.show-more-container) {
   bottom: -1px;
   width: 100%;
   height: 55px;
-  background-image: linear-gradient(to bottom, rgba(white, 0), rgba(white, 0.75));
+  background-image: linear-gradient(to bottom, rgb(from var(--color-bg) r g b / 0), rgb(from var(--color-bg) r g b / 0.75));
   pointer-events: none;
 }
 .level-error .show-more-fade,
-.m_error .show-more-fade { background-image: linear-gradient(to bottom, rgba($error-bg, 0), $error-bg); }
+.m_error .show-more-fade { 
+  background-image: linear-gradient(to bottom, rgb(from var(--color-error-bg) r g b / 0), var(--color-error-bg));
+}
 .level-info .show-more-fade,
-.m_info .show-more-fade { background-image: linear-gradient(to bottom, rgba($info-bg, 0), $info-bg); }
+.m_info .show-more-fade { 
+  background-image: linear-gradient(to bottom, rgb(from var(--color-info-bg) r g b / 0), var(--color-info-bg)); 
+}
 .level-warn .show-more-fade,
-.m_warn .show-more-fade { background-image: linear-gradient(to bottom, rgba($warn-bg, 0), $warn-bg); }
+.m_warn .show-more-fade { 
+  background-image: linear-gradient(to bottom, rgb(from var(--color-warn-bg) r g b / 0), var(--color-warn-bg)); 
+}
 [title]:hover .show-more-fade {
-  background-image: linear-gradient(to bottom, rgba(#c9c9c9, 0), #c9c9c9);
+  background-image: linear-gradient(to bottom, rgb(from #c9c9c9 r g b / 0), #c9c9c9);
 }
 .show-more,
 .show-less {
   display: table;
   box-shadow: 1px 1px 0 0 rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(0, 0, 0, 0.2);
   border-radius: 2px;
-  background-color: #eee;
+  // border: 1px solid var(--color-button-border);
+  // color: var(--color-button-fg);
+  // background-color: var(--color-button-bg);
 }
 
 //

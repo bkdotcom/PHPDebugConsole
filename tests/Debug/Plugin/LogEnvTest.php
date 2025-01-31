@@ -227,7 +227,7 @@ class LogEnvTest extends DebugTestFramework
                 'args' => array(
                     '%%cgit branch: %%c%%s',
                     'font-weight:bold;',
-                    'font-size:1.5em; background-color:#DDD; padding:0 .3em;',
+                    'font-size:1.5em; background-color:#CCC; color:#000; padding:0 .3em;',
                     'UnitTest',
                 ),
                 'meta' => array(

@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2024 Brad Kent
+ * @copyright 2014-2025 Brad Kent
  * @since     2.3
  */
 
@@ -56,13 +56,13 @@ class Component extends CApplicationComponent
             ],
         ),
         'yii' => array(
+            'ignoredErrors' => true,
+            'log' => true,
             'pathsIgnoreError' => [
                 ':system:',
                 // ':webroot:/protected/extensions',
                 ':webroot:/protected/components',
             ],
-            'ignoredErrors' => true,
-            'log' => true,
             'pdo' => true,
             'session' => true,
             'user' => true,

@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2024 Brad Kent
+ * @copyright 2014-2025 Brad Kent
  * @since     2.3
  */
 
@@ -26,7 +26,7 @@ class Highlight implements AssetProviderInterface
     {
         return array(
             'css' => [
-                './js/prism.css',
+                './css/PrismJsLightDark.css',
                 '.debug pre[class*="language-"] {
                     padding: 0;
                     margin: 0.25em 0 0.25em 0;

@@ -363,6 +363,7 @@ EOD;
         $expect = $expectUnserialized;
 
         unset($expect['log'][1][1][1]['collectMethods']);
+        // unset($expect['logSummary'][0][6][2]); // remove empty meta  (null meta no longer stored as of 3.4)
         // serialized did not include these values
         $expect['log'][1][1][1] = \array_merge(
             array(
@@ -378,6 +379,7 @@ EOD;
                 'isMaxDepth' => false,
                 'isReadOnly' => false,
                 'isTrait' => false,
+                'methodsWithStaticVars' => array(),
                 'sectionOrder' => array(
                     'attributes',
                     'extends',
@@ -389,7 +391,6 @@ EOD;
                     'phpDoc',
                 ),
                 'sort' => '',
-                'methodsWithStaticVars' => array(),
                 'keys' => array(),
                 'typeMore' => null,
             ),
@@ -433,6 +434,8 @@ EOD;
         }
 
         $expect = \array_intersect_key($expect, \array_flip($keysCompare));
+        \ksort($expect['log'][1][1][1]);
+        \ksort($expect['log'][1][1][1]['properties']['foo']);
         $actual = \array_intersect_key(
             $this->helper->deObjectifyData($unserialized, true, false, true),
             \array_flip($keysCompare)

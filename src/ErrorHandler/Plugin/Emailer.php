@@ -4,7 +4,7 @@
  * @package   bdk\ErrorHandler
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2024 Brad Kent
+ * @copyright 2014-2025 Brad Kent
  * @since     v3.2
  */
 
@@ -13,6 +13,7 @@ namespace bdk\ErrorHandler\Plugin;
 use bdk\ErrorHandler;
 use bdk\ErrorHandler\AbstractComponent;
 use bdk\ErrorHandler\Error;
+use bdk\PubSub\Event;
 use bdk\PubSub\Manager as EventManager;
 use bdk\PubSub\SubscriberInterface;
 
@@ -25,6 +26,8 @@ use bdk\PubSub\SubscriberInterface;
  */
 class Emailer extends AbstractComponent implements SubscriberInterface
 {
+    const EVENT_EMAIL = 'errorHandler.email';
+
     /** @var \bdk\ErrorHandler\Plugin\Stats */
     private $stats = null;
 
@@ -121,8 +124,6 @@ class Emailer extends AbstractComponent implements SubscriberInterface
         }
         if ($error['email']) {
             $this->emailErr($error);
-            $error['stats']['email']['emailedTo'] = $this->cfg['emailTo'];
-            $error['stats']['email']['timestamp'] = \time();
         }
     }
 
@@ -312,11 +313,20 @@ class Emailer extends AbstractComponent implements SubscriberInterface
             $emailBody .= 'Error has occurred ' . $countSince . ' times since last email (' . $dateTimePrev . ').' . "\n\n";
         }
         $emailBody .= $this->buildBodyError($error);
-        $this->email(
-            $this->cfg['emailTo'],
-            $this->getSubject($error),
-            $emailBody
-        );
+
+        $values = $error->getSubject()->eventManager->publish(self::EVENT_EMAIL, new Event(
+            $error,
+            array(
+                'body' => $emailBody,
+                'subject' => $this->getSubject($error),
+                'to' => $this->cfg['emailTo'],
+            )
+        ))->getValues();
+
+        $this->email($values['to'], $values['subject'], $values['body']);
+
+        $error['stats']['email']['emailedTo'] = $values['to'];
+        $error['stats']['email']['timestamp'] = \time();
     }
 
     /**

@@ -1,6 +1,13 @@
 <?php
 
-namespace bdk\Teams\Elements;
+/**
+ * @package   bdk\teams
+ * @author    Brad Kent <bkfake-github@yahoo.com>
+ * @license   http://opensource.org/licenses/MIT MIT
+ * @copyright 2023-2025 Brad Kent
+ */
+
+ namespace bdk\Teams\Elements;
 
 use InvalidArgumentException;
 

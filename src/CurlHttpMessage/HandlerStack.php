@@ -1,6 +1,13 @@
 <?php
 
-namespace bdk\CurlHttpMessage;
+/**
+ * @package   bdk\curlhttpmessage
+ * @author    Brad Kent <bkfake-github@yahoo.com>
+ * @license   http://opensource.org/licenses/MIT MIT
+ * @copyright 2023-2025 Brad Kent
+ */
+
+ namespace bdk\CurlHttpMessage;
 
 use bdk\Promise\PromiseInterface;
 use InvalidArgumentException;
@@ -213,7 +220,7 @@ class HandlerStack
     {
         return \is_object($value)
             ? \get_class($value)
-            : \gettype($value);
+            : \strtolower(\gettype($value));
     }
 
     /**

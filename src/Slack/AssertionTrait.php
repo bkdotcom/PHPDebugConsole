@@ -1,6 +1,13 @@
 <?php
 
-namespace bdk\Slack;
+/**
+ * @package   bdk\slack
+ * @author    Brad Kent <bkfake-github@yahoo.com>
+ * @license   http://opensource.org/licenses/MIT MIT
+ * @copyright 2023-2025 Brad Kent
+ */
+
+ namespace bdk\Slack;
 
 use InvalidArgumentException;
 use LengthException;
@@ -157,7 +164,7 @@ trait AssertionTrait
         \array_walk($elements, static function ($element, $index) use ($where) {
             $index = (string) $index;
             self::assertArrayWithType($element, 'element', $index);
-            if (\in_array($element['type'], self::$validElementTypes[$where], true) === false) {
+            if (\in_array($element['type'], AbstractBlockFactory::$validElementTypes[$where], true) === false) {
                 throw new InvalidArgumentException(\sprintf(
                     '%s block:  Invalid element (index %s).  %s is an invalid type.',
                     $where,
@@ -269,6 +276,6 @@ trait AssertionTrait
     {
         return \is_object($value)
             ? \get_class($value)
-            : \gettype($value);
+            : \strtolower(\gettype($value));
     }
 }

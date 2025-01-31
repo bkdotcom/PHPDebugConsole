@@ -1,6 +1,3 @@
-$hover-bg: rgba(0, 0, 0, 0.075);
-$hover-fg: #212529;
-
 table {
   width: auto;
   border-collapse: collapse;
@@ -27,14 +24,14 @@ table {
   td {
     &.classname { font-weight: bold; }
     &.t_undefined {
-      background-color: rgba(0, 0, 0, 0.1);
+      background-color: var(--color-table-undefined-bg);
       &::after { content: none; }
     }
   }
   th,
   tfoot td {
     font-weight: bold;
-    background-color: rgba(0, 0, 0, 0.1);
+    background-color: var(--color-table-th-bg);
   }
   thead th {
     text-align: center;
@@ -48,8 +45,8 @@ table {
   tr[data-toggle] {
     cursor: default;
     &:hover {
-      color: $hover-fg;
-      background-color: $hover-bg;
+      color: var(--color-table-hover-fg);
+      background-color: var(--color-table-hover-bg);
     }
   }
   tbody th.t_int,
@@ -73,8 +70,8 @@ table.table-hover {
     tr {
       cursor: default;
       &:hover {
-        color: $hover-fg;
-        background-color: $hover-bg;
+        color: var(--color-table-hover-fg);
+        background-color: var(--color-table-hover-bg);
       }
     }
   }
@@ -84,7 +81,10 @@ table.table-hover {
 table.table-sort {
   > thead th {
     cursor: default;
-    &:hover { background-color: rgba(0, 0, 0, 0.25); }
+    &:hover { 
+      color: var(--color-table-hover-fg);
+      background-color: var(--color-table-hover-bg);
+    }
   }
   .sort-arrows {
     text-align: center;
@@ -108,9 +108,9 @@ table.trace-context {
   tr.context {
     display: none;
     td {
-      color: $default-fg;
+      color: var(--color-fg);
       max-width: 1px;   // prevents content expanding ¯\_(ツ)_/¯
-      background-color: #f5f2f0;
+      // background-color: #f5f2f0;
       padding: 0.75em;
       hr {
         margin: 1em 0;

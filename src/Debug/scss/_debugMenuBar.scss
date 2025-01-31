@@ -8,7 +8,7 @@
   background-color: rgba(0, 0, 0, 0.2);
   margin-bottom: 10px;
   a {
-    color: $grey-text;
+    color: var(--color-fg-2);
   }
   button {
     border-radius: 0;
@@ -53,20 +53,20 @@
 }
 
 .debug-bar {
-  border-top: 1px solid $border-color;
-  border-bottom: 1px solid $border-color;
-  color: $grey-text;
+  border-top: 1px solid var(--color-ui-border);
+  border-bottom: 1px solid var(--color-ui-border);
   padding: 0 34px 0 6px;
-  background: $lite-grey;
-  font-size: 16px;
   margin-bottom: 0;
+  color: var(--color-fg-2);
+  background: var(--color-bg-2);
+  font-size: 16px;
 
   a,
   button,
   label {
     &:focus,
     &:hover {
-      color: #333;
+      color: var(--color-fg-hover);
       text-decoration: none;
     }
   }

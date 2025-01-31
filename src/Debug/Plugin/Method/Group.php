@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2024 Brad Kent
+ * @copyright 2014-2025 Brad Kent
  * @since     3.0b1
  */
 
@@ -150,7 +150,7 @@ class Group implements SubscriberInterface
             __FUNCTION__,
             \func_get_args(),
             array(),
-            $this->debug->rootInstance->getMethodDefaultArgs(__METHOD__)
+            $this->debug->rootInstance->reflection->getMethodDefaultArgs(__METHOD__)
         ));
         return $this->debug;
     }
@@ -174,7 +174,7 @@ class Group implements SubscriberInterface
             __FUNCTION__,
             \func_get_args(),
             array(),
-            $this->debug->rootInstance->getMethodDefaultArgs(__METHOD__),
+            $this->debug->rootInstance->reflection->getMethodDefaultArgs(__METHOD__),
             ['priority']
         ));
         return $this->debug;
@@ -429,10 +429,15 @@ class Group implements SubscriberInterface
         $debug = $logEntry->getSubject();
         $returnValue = $logEntry['args'][0];
         if ($returnValue !== Abstracter::UNDEFINED) {
+            $label = $logEntry->getMeta('label', 'return');
+            $args = $label
+                ? [$label, $returnValue]
+                : [$returnValue];
+            $logEntry->setMeta('label', null); // delete label meta
             $debug->log(new LogEntry(
                 $debug,
                 'groupEndValue',
-                ['return', $returnValue],
+                $args,
                 $logEntry->getMeta()
             ));
         }

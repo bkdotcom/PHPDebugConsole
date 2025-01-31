@@ -12,10 +12,14 @@ export function init ($debugRoot) {
   addDropdown()
 
   $root.find('.debug-options-toggle')
-    .on('click', onDebugOptionsToggle)
+    .on('click', onChangeDebugOptionsToggle)
+
+  $('select[name=theme]')
+    .on('change', onChangeTheme)
+    .val(config.get('theme'))
 
   $('input[name=debugCookie]')
-    .on('change', onDebugCookieChange)
+    .on('change', onChangeDebugCookie)
     .prop('checked', config.get('debugKey') && cookieGet('debug') === config.get('debugKey'))
   if (!config.get('debugKey')) {
     $('input[name=debugCookie]')
@@ -24,16 +28,16 @@ export function init ($debugRoot) {
   }
 
   $('input[name=persistDrawer]')
-    .on('change', onPersistDrawerChange)
+    .on('change', onChangePersistDrawer)
     .prop('checked', config.get('persistDrawer'))
 
   $root.find('input[name=linkFiles]')
-    .on('change', onLinkFilesChange)
+    .on('change', onChangeLinkFiles)
     .prop('checked', config.get('linkFiles'))
     .trigger('change')
 
   $root.find('input[name=linkFilesTemplate]')
-    .on('change', onLinkFilesTemplateChange)
+    .on('change', onChangeLinkFilesTemplate)
     .val(config.get('linkFilesTemplate'))
 }
 
@@ -45,6 +49,11 @@ function addDropdown () {
   )
   $menuBar.append('<div class="debug-options" aria-labelledby="debug-options-toggle">' +
       '<div class="debug-options-body">' +
+        '<label>Theme <select name="theme">' +
+          '<option value="auto">Auto</option>' +
+          '<option value="light">Light</option>' +
+          '<option value="dark">Dark</option>' +
+        '</select></label>' +
         '<label><input type="checkbox" name="debugCookie" /> Debug Cookie</label>' +
         '<label><input type="checkbox" name="persistDrawer" /> Keep Open/Closed</label>' +
         '<label><input type="checkbox" name="linkFiles" /> Create file links</label>' +
@@ -75,14 +84,14 @@ function onBodyKeyup (e) {
   }
 }
 
-function onDebugCookieChange () {
+function onChangeDebugCookie () {
   var isChecked = $(this).is(':checked')
   isChecked
     ? cookieSet('debug', config.get('debugKey'), 7)
     : cookieRemove('debug')
 }
 
-function onDebugOptionsToggle (e) {
+function onChangeDebugOptionsToggle (e) {
   var isVis = $(this).closest('.debug-bar').find('.debug-options').is('.show')
   $root = $(this).closest('.debug')
   isVis
@@ -91,7 +100,7 @@ function onDebugOptionsToggle (e) {
   e.stopPropagation()
 }
 
-function onLinkFilesChange () {
+function onChangeLinkFiles () {
   var isChecked = $(this).prop('checked')
   var $formGroup = $(this).closest('.debug-options').find('input[name=linkFilesTemplate]').closest('.form-group')
   isChecked
@@ -101,19 +110,24 @@ function onLinkFilesChange () {
   $('input[name=linkFilesTemplate]').trigger('change')
 }
 
-function onLinkFilesTemplateChange () {
+function onChangeLinkFilesTemplate () {
   var val = $(this).val()
   config.set('linkFilesTemplate', val)
   $root.trigger('config.debug.updated', 'linkFilesTemplate')
 }
 
-function onPersistDrawerChange () {
+function onChangePersistDrawer () {
   var isChecked = $(this).is(':checked')
   config.set({
     persistDrawer: isChecked,
     openDrawer: isChecked,
     openSidebar: true
   })
+}
+
+function onChangeTheme () {
+  config.set('theme', $(this).val())
+  $root.attr('data-theme', config.themeGet())
 }
 
 function open () {

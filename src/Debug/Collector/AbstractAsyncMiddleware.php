@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2024 Brad Kent
+ * @copyright 2014-2025 Brad Kent
  * @since     2.3
  */
 
@@ -210,15 +210,8 @@ class AbstractAsyncMiddleware extends AbstractComponent
      */
     protected function getBody(MessageInterface $msg)
     {
-        $bodyStream = $msg->getBody();
-        $contentType = $msg->getHeader('Content-Type');
-        $contentType = $contentType
-            ? $contentType[0]
-            : null;
-        $body = StreamUtility::getContents($bodyStream);
-        if (\strlen($body) === 0) {
-            return '';
-        }
+        $contentType = $msg->getHeaderLine('Content-Type');
+        $body = StreamUtility::getContents($msg->getBody());
         $prettify = $msg instanceof RequestInterface
             ? $this->cfg['prettyRequestBody']
             : $this->cfg['prettyResponseBody'];

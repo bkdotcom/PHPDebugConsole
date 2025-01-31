@@ -106,22 +106,31 @@ class TraceTest extends DebugTestFramework
                         . '<tr><th>&nbsp;</th><th scope="col">file</th><th scope="col">line</th><th scope="col">function</th></tr>' . "\n"
                         . '</thead>', $output);
                     $matches = array();
-                    \preg_match_all('#<tr>'
-                        . '<th.*?>(.*?)</th>'
-                        . '<td.*?>(.*?)</td>'
-                        . '<td.*?>(.*?)</td>'
-                        . '<td(.*?)>(.*?)</td>'
-                        . '</tr>#is', $output, $matches, PREG_SET_ORDER);
+                    \preg_match_all('#<tr[^>]*>'
+                        . '<th[^>]*>(.*?)</th>'
+                        . '<t[hd][^>]*>(.*?)</t[hd]>'
+                        . '<t[hd][^>]*>(.*?)</t[hd]>'
+                        . '<t[hd]([^>]*)>(.*?)</t[hd]>'
+                        . '</tr>#s', $output, $matches, PREG_SET_ORDER);
+                    // \bdk\Debug::varDump('html', $output);
+                    // \bdk\Debug::varDump('matches', $matches);
+                    // \bdk\Debug::varDump('trace', $trace);
+                    // \bdk\Debug::varDump('meta', $logEntry['meta']);
                     $count = \count($matches);
+                    $filePaths = \array_column($trace, 'file');
+                    $filePaths = \array_slice($filePaths, 1); // remove eval()'d code frame
+                    $commonPrefix = $this->debug->stringUtil->commonPrefix($filePaths);
                     for ($i = 1; $i < $count; $i++) {
+                        // build expected values
                         $valuesExpect = \array_merge(
-                            array((string) $i),
-                            \array_values($trace[$i])
+                            array((string) ($i - 1)),
+                            \array_values($trace[$i - 1])
                         );
-                        $valuesExpect[1] = $valuesExpect[1] === null ? 'null' : $valuesExpect[1];
+                        $valuesExpect[1] = $valuesExpect[1] === null ? 'null' : $this->debug->getDump('html')->helper->markupFilePath($valuesExpect[1], $commonPrefix); // file
                         $valuesExpect[2] = $valuesExpect[2] === null ? 'null' : (string) $valuesExpect[2];
                         $valuesExpect[3] = $this->debug->getDump('html')->valDumper->markupIdentifier($valuesExpect[3], 'function', 'span', array(), true);
 
+                        // build actual values
                         $valuesActual = $matches[$i];
                         \array_shift($valuesActual);
                         $attribs = $valuesActual[3];
@@ -130,6 +139,9 @@ class TraceTest extends DebugTestFramework
                         if (\strpos($attribs, 't_undefined') !== false) {
                             $valuesActual[3] = $this->debug->getDump('html')->valDumper->markupIdentifier(Abstracter::UNDEFINED, 'function', 'span', array(), true);
                         }
+
+                        // \bdk\Debug::varDump('valuesExpect', $i, $valuesExpect);
+                        // \bdk\Debug::varDump('valuesActual', $i, $valuesActual);
 
                         self::assertSame($valuesExpect, $valuesActual);
                     }
@@ -161,45 +173,6 @@ class TraceTest extends DebugTestFramework
         );
     }
 
-    /*
-    public function testTraceInvalidCaption()
-    {
-        $line = __LINE__ + 1;
-        $this->debug->trace(false, false);
-        $logEntryError = $this->debug->data->get('log/0');
-        $logEntryTrace = $this->debug->data->get('log/1');
-        self::assertSame(array(
-            'method' => 'warn',
-            'args' => array('trace caption should be a string.  bool provided'),
-            'meta' => array(
-                'detectFiles' => true,
-                'evalLine' => null,
-                'file' => __FILE__,
-                'line' => $line,
-                'uncollapse' => true,
-            ),
-        ), $this->helper->logEntryToArray($logEntryError));
-        self::assertSame('trace', $logEntryTrace['method']);
-        self::assertSame('trace', $logEntryTrace['meta']['caption']);
-
-        $line = __LINE__ + 1;
-        $this->debug->trace(false, (object) array());
-        $logEntryError = $this->debug->data->get('log/2');
-        // $logEntryTrace = $this->debug->data->get('log/3');
-        self::assertSame(array(
-            'method' => 'warn',
-            'args' => array('trace caption should be a string.  stdClass provided'),
-            'meta' => array(
-                'detectFiles' => true,
-                'evalLine' => null,
-                'file' => __FILE__,
-                'line' => $line,
-                'uncollapse' => true,
-            ),
-        ), $this->helper->logEntryToArray($logEntryError));
-    }
-    */
-
     public function testTraceProvided()
     {
         $frames = array(
@@ -213,6 +186,7 @@ class TraceTest extends DebugTestFramework
             'caption' => 'trace',
             'detectFiles' => true,
             'inclArgs' => false,
+            'inclInternal' => false,
             'limit' => 0,
             'sortable' => false,
             'tableInfo' => array(
@@ -226,6 +200,9 @@ class TraceTest extends DebugTestFramework
                 'indexLabel' => null,
                 'rows' => array(),
                 'summary' => '',
+                'commonRowInfo' => array(
+                    'commonFilePrefix' => '/path/to/file.php',
+                ),
             ),
         );
         $this->testMethod(
@@ -314,4 +291,83 @@ EOD;
             )
         );
     }
+
+    public function testTraceChars()
+    {
+        $this->testMethod(
+            'trace',
+            [
+                [
+                    array(
+                        'file' => '/var/w𝕨w/site/file.php',
+                        'line' => 123,
+                        'function' => 'func',
+                    ),
+                    array(
+                        'file' => '/var/w𝕨w/site/𝓋endor/𝒻ile.php',
+                        'line' => 123,
+                        'function' => 'func',
+                    ),
+                ],
+            ],
+            array(
+                'html' => static function ($html) {
+                    $expect = '<li class="m_trace" data-detect-files="true">
+                        <table class="table-bordered">
+                        <caption>trace</caption>
+                        <thead>
+                            <tr><th>&nbsp;</th><th scope="col">file</th><th scope="col">line</th><th scope="col">function</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><th class="t_int t_key text-right" scope="row">0</th><td class="no-quotes t_string"><span class="file-basepath">/var/w<span class="unicode" data-code-point="1D568" title="U-1D568: MATHEMATICAL DOUBLE-STRUCK SMALL W">𝕨</span>w/site/</span><span class="file-basename">file.php</span></td><td class="t_int">123</td><td class="no-quotes t_identifier t_string"><span class="t_name">func</span></td></tr>
+                            <tr><th class="t_int t_key text-right" scope="row">1</th><td class="no-quotes t_string"><span class="file-basepath">/var/w<span class="unicode" data-code-point="1D568" title="U-1D568: MATHEMATICAL DOUBLE-STRUCK SMALL W">𝕨</span>w/site/</span><span class="file-relpath"><span class="unicode" data-code-point="1D4CB" title="U-1D4CB: MATHEMATICAL SCRIPT SMALL V">𝓋</span>endor/</span><span class="file-basename"><span class="unicode" data-code-point="1D4BB" title="U-1D4BB: MATHEMATICAL SCRIPT SMALL F">𝒻</span>ile.php</span></td><td class="t_int">123</td><td class="no-quotes t_identifier t_string"><span class="t_name">func</span></td></tr>
+                        </tbody>
+                        </table>
+                        </li>';
+                    self::assertStringMatchesFormatNormalized($expect, $html);
+                },
+            )
+        );
+    }
+
+    public function testTraceNoFunction()
+    {
+        $this->testMethod(
+            'trace',
+            [
+                [
+                    array(
+                        'file' => '/var/w𝕨w/site/file.php',
+                        'line' => 123,
+                        'function' => 'func',
+                    ),
+                    array(
+                        'file' => '/var/w𝕨w/site/𝓋endor/𝒻ile.php',
+                        'line' => 123,
+                        'function' => 'func',
+                    ),
+                ],
+                \bdk\Debug::meta('columns', ['file', 'line']),
+            ],
+            array(
+                'html' => static function ($html) {
+                    $expect = '<li class="m_trace" data-detect-files="true">
+                        <table class="table-bordered">
+                        <caption>trace</caption>
+                        <thead>
+                            <tr><th>&nbsp;</th><th scope="col">file</th><th scope="col">line</th></tr>
+                        </thead>
+                        <tbody>
+                        <tr><th class="t_int t_key text-right" scope="row">0</th><td class="no-quotes t_string"><span class="file-basepath">/var/w<span class="unicode" data-code-point="1D568" title="U-1D568: MATHEMATICAL DOUBLE-STRUCK SMALL W">𝕨</span>w/site/</span><span class="file-basename">file.php</span></td><td class="t_int">123</td></tr>
+                        <tr><th class="t_int t_key text-right" scope="row">1</th><td class="no-quotes t_string"><span class="file-basepath">/var/w<span class="unicode" data-code-point="1D568" title="U-1D568: MATHEMATICAL DOUBLE-STRUCK SMALL W">𝕨</span>w/site/</span><span class="file-relpath"><span class="unicode" data-code-point="1D4CB" title="U-1D4CB: MATHEMATICAL SCRIPT SMALL V">𝓋</span>endor/</span><span class="file-basename"><span class="unicode" data-code-point="1D4BB" title="U-1D4BB: MATHEMATICAL SCRIPT SMALL F">𝒻</span>ile.php</span></td><td class="t_int">123</td></tr>
+                        </tbody>
+                        </table>
+                        </li>';
+                    self::assertStringMatchesFormatNormalized($expect, $html);
+                },
+            )
+        );
+    }
+
+
 }

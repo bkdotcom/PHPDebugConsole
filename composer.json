@@ -91,6 +91,9 @@
     "update-char-data": [
       "bdk\\Debug\\Dev\\UpdateCharData::update"
     ],
+    "update-copyright": [
+      "bdk\\Debug\\Dev\\UpdateCopyright::update"
+    ],
     "update-phpcs": [
       "bdk\\Debug\\Dev\\ComposerScripts::updatePhpCsXml"
     ],
@@ -103,6 +106,7 @@
     "cs": "check coding standards",
     "test": "run unit tests",
     "update-char-data": "rebuild confusable char latest unicode data",
+    "update-copyright": "update copyright tags",
     "update-phpcs": "update phpcs.xml.dist & phpcs.slevomat.xml",
     "webserver": "run php's internal webserver"
   },

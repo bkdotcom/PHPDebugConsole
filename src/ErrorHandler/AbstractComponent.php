@@ -4,7 +4,7 @@
  * @package   bdk\ErrorHandler
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2024 Brad Kent
+ * @copyright 2014-2025 Brad Kent
  * @since     v3.3
  */
 
@@ -99,9 +99,7 @@ class AbstractComponent
             return $this->{$first}->getCfg(\array_slice($path, 1));
         }
         $return = $this->cfg;
-        $path = \array_reverse($path);
-        while ($path) {
-            $key = \array_pop($path);
+        foreach ($path as $key) {
             if (isset($return[$key])) {
                 $return = $return[$key];
                 continue;

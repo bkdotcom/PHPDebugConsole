@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2024 Brad Kent
+ * @copyright 2014-2025 Brad Kent
  * @since     3.3
  */
 
@@ -226,14 +226,7 @@ class LogRouteMeta
         // only keep trace info for trace & error levels
         if (\in_array($logEntry['level'], [CLogger::LEVEL_TRACE, CLogger::LEVEL_ERROR], true) === false) {
             unset($logEntry['meta']['trace']);
-            return $logEntry;
         }
-        $logEntry['meta']['tableInfo'] = array(
-            'columns' => [
-                array('key' => 'file'),
-                array('key' => 'line'),
-            ],
-        );
         return $logEntry;
     }
 

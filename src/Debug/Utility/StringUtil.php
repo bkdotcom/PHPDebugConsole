@@ -6,15 +6,15 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2024 Brad Kent
+ * @copyright 2014-2025 Brad Kent
  * @since     1.2
  */
 
 namespace bdk\Debug\Utility;
 
-use bdk\HttpMessage\Utility\Stream as StreamUtility;
 use bdk\Debug\Utility\StringUtilHelperTrait;
 use bdk\HttpMessage\Utility\ContentType;
+use bdk\HttpMessage\Utility\Stream as StreamUtility;
 use DOMDocument;
 use finfo;
 use InvalidArgumentException;
@@ -37,6 +37,30 @@ class StringUtil
     private static $interpContext = array();
     /** @var bool */
     private static $interpIsArrayAccess = false;
+
+    /**
+     * Find the longest common prefix for provided strings
+     *
+     * @param string[] $strings Strings to compare
+     *
+     * @return string
+     */
+    public static function commonPrefix(array $strings)
+    {
+        self::assertStrings($strings);
+
+        if (empty($strings)) {
+            return '';
+        }
+
+        \sort($strings);
+        $s1 = $strings[0];    // First string
+        $s2 = \end($strings); // Last string
+        $len = \min(\strlen($s1), \strlen($s2));
+        for ($i = 0; $i < $len && $s1[$i] === $s2[$i]; $i++);
+
+        return \substr($s1, 0, $i);
+    }
 
     /**
      * Compare two values specifying operator
@@ -276,7 +300,7 @@ class StringUtil
      *                                 we will add JSON_UNESCAPED_UNICODE IF source doesn't contain escaped unicode
      * @param int    $encodeFlagsAdd (JSON_PRETTY_PRINT) additional flags to add
      *
-     * @return string
+     * @return string|false false if invalid json
      */
     public static function prettyJson($json, $encodeFlags = 0, $encodeFlagsAdd = JSON_PRETTY_PRINT)
     {
@@ -289,7 +313,10 @@ class StringUtil
             // json doesn't appear to contain encoded unicode
             $flags |= JSON_UNESCAPED_UNICODE;
         }
-        return \json_encode(\json_decode($json), $flags);
+        $decoded = \json_decode($json);
+        return \json_last_error() === JSON_ERROR_NONE
+            ? \json_encode($decoded, $flags)
+            : false;
     }
 
     /**

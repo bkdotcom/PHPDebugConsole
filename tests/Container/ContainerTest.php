@@ -16,6 +16,26 @@ class ContainerTest extends TestCase
 {
     use ExpectExceptionTrait;
 
+    public function testDebugInfo()
+    {
+        $params = array('param' => 'value');
+        $container = new Container($params);
+
+        $expect = array(
+            'cfg' => array(
+                'allowOverride' => false,
+                'onInvoke' => null,
+            ),
+            'invoked' => array(),
+            'keys' => array(
+                'param' => true,
+            ),
+            'raw' => "\x00notInspected\x00",
+            'values' => "\x00notInspected\x00",
+        );
+        $this->assertSame($expect, $container->__debugInfo());
+    }
+
     public function testConstructorParams()
     {
         $params = array('param' => 'value');
@@ -37,6 +57,22 @@ class ContainerTest extends TestCase
             return 'And now for something completely different';
         };
         $this->assertSame('And now for something completely different', $container['service']);
+    }
+
+    public function testExtend()
+    {
+        $container = new Container();
+        $container['service'] = function () {
+            return new Fixture\Service();
+        };
+        $container->extend('service', static function (Fixture\Service $service, Container $container) {
+            $service->value = 'extended';
+            return $service;
+        });
+
+        $service = $container['service'];
+        $this->assertInstanceOf('bdk\\Test\\Container\\Fixture\\Service', $service);
+        $this->assertSame('extended', $service->value);
     }
 
     public function testOnInvokeCallback()

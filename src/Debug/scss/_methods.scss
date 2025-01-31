@@ -11,6 +11,7 @@ ul.group-body {
 .m_groupEndValue,
 .m_info,
 .m_log,
+.m_time,
 .m_warn {
   position: relative;
   width: fit-content; // previously using display: table;
@@ -28,7 +29,8 @@ ul.group-body {
   }
 }
 .m_assert {
-  background-color: rgba(255, 204, 204, 0.75);
+  background-color: var(--color-assert-bg);
+  color: var(--color-assert-fg);
   > i {
     margin-right: 0.33em;
     margin-bottom: -0.2em;
@@ -39,9 +41,13 @@ ul.group-body {
 }
 
 .m_group {
+  width: fit-content;
   .group-header {
-    width: fit-content;  // previously using display: table;
+    // width: fit-content;  // previously using display: table;
     white-space: nowrap;
+    > i:first-child {
+      color: var(--color-fg)
+    }
     i.fa-warning {
       color: #cdcb06;
       margin-left: 0.33em;
@@ -61,6 +67,8 @@ ul.group-body {
     padding-left: 0.25rem;
   }
   &.expanded {
+    // background-color: inherit;
+    // color: inherit;
     > .group-body {
       display: block;
     }
@@ -68,30 +76,29 @@ ul.group-body {
 }
 
 .m_error,
-.m_group.level-error > .group-body,
-.m_group.level-error:not(.expanded) > .group-header > .level-error {
-  background-color: $error-bg;
-  color: $error-fg;
+*.level-error {
+  background-color: var(--color-error-bg);
+  color: var(--color-error-fg);
 }
 
 .m_info,
-.m_group.level-info > .group-body,
-.m_group.level-info:not(.expanded) > .group-header > .level-info {
-  background-color: $info-bg;
-  color: $info-fg;
+*.level-info {
+  background-color: var(--color-info-bg);
+  color: var(--color-info-fg);
 }
 
+/*
 .m_trace {
   .classname {
     color: #146314;
   }
 }
+*/
 
 .m_warn,
-.m_group.level-warn > .group-body,
-.m_group.level-warn:not(.expanded) > .group-header > .level-warn {
-  background-color: $warn-bg;
-  color: $warn-fg;
+*.level-warn {
+  background-color: var(--color-warn-bg);
+  color: var(--color-warn-fg);
 }
 
 li[data-channel="general.phpError"] {
@@ -99,7 +106,7 @@ li[data-channel="general.phpError"] {
   > .t_string:nth-child(4) {
     opacity: 0.7;
     &::before {
-      content: "\A";
+      content: "\A"; // nl line-feed
     }
     &::after {
       content: none;
@@ -108,7 +115,7 @@ li[data-channel="general.phpError"] {
 
   &.error-fatal {
     padding: 10px 10px 10px 20px; // extra left padding for text-indent
-    border-left: solid 2px $error-fg;
+    border-left: solid 2px var(--color-error-fg);
     > .t_string:nth-child(2) {
       display: inline-block;
       margin-bottom: 5px;
@@ -116,7 +123,7 @@ li[data-channel="general.phpError"] {
       font-size: 1.2em;
     }
     > .t_string:nth-child(3)::before {
-      content: "\A";
+      content: "\A"; // nl line-feed
     }
   }
 }

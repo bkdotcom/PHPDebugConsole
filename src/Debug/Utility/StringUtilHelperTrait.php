@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2024 Brad Kent
+ * @copyright 2014-2025 Brad Kent
  * @since     3.3
  */
 
@@ -14,12 +14,36 @@ namespace bdk\Debug\Utility;
 
 use bdk\Debug\Utility\ArrayUtil;
 use bdk\Debug\Utility\Php;
+use InvalidArgumentException;
 
 /**
  * String utility helper methods
  */
 trait StringUtilHelperTrait
 {
+    /**
+     * Get the strings to process for self::commonPrefix()
+     *
+     * @param string[] $values List of strings
+     *
+     * @return void
+     *
+     * @throws InvalidArgumentException
+     */
+    private static function assertStrings($values)
+    {
+        foreach ($values as $i => $value) {
+            if (\is_string($value)) {
+                continue;
+            }
+            throw new InvalidArgumentException(\sprintf(
+                'commonPrefix() - Expects a list of strings.  Found %s at index %s',
+                Php::getDebugType($value),
+                $i
+            ));
+        }
+    }
+
     /**
      * Typecast values for comparison like Php 8 does it
      *

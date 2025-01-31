@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2024 Brad Kent
+ * @copyright 2014-2025 Brad Kent
  * @since     2.1
  */
 
@@ -249,24 +249,26 @@ class HtmlObject
      */
     protected function dumpClassName(ObjectAbstraction $abs)
     {
+        $isEnum = \strpos(\json_encode($abs['implements']), '"UnitEnum"') !== false;
         $phpDocOutput = $abs['cfgFlags'] & AbstractObject::PHPDOC_OUTPUT;
-        $attribs = array(
-            'title' => $phpDocOutput
-                ? $this->helper->dumpPhpDoc($abs['phpDoc']['summary'] . "\n\n" . $abs['phpDoc']['desc'])
-                : null,
-        );
-        $absValues = \strpos(\json_encode($abs['implements']), '"UnitEnum"') !== false
-            ? array(
-                'attribs' => $attribs,
-                'typeMore' => Type::TYPE_IDENTIFIER_CONST,
-                'value' => $abs['className'] . '::' . $abs['properties']['name']['value'],
-            )
-            : array(
-                'attribs' => $attribs,
-                'typeMore' => Type::TYPE_IDENTIFIER_CLASSNAME,
-                'value' => $abs['className'],
-            );
-        $absTemp = new Abstraction(Type::TYPE_IDENTIFIER, $absValues);
+        $title = $isEnum && isset($abs['properties']['value'])
+            ? 'value: ' . $this->valDumper->debug->getDump('text')->valDumper->dump($abs['properties']['value']['value'])
+            : '';
+        if ($phpDocOutput) {
+            $phpDoc = \trim($abs['phpDoc']['summary'] . "\n\n" . $abs['phpDoc']['desc']);
+            $title .= "\n\n" . $this->helper->dumpPhpDoc($phpDoc);
+        }
+        $absTemp = new Abstraction(Type::TYPE_IDENTIFIER, array(
+            'attribs' => array(
+                'title' => \trim($title),
+            ),
+            'typeMore' => $isEnum
+                ? Type::TYPE_IDENTIFIER_CONST
+                : Type::TYPE_IDENTIFIER_CLASSNAME,
+            'value' => $isEnum
+                ? $abs['className'] . '::' . $abs['properties']['name']['value']
+                : $abs['className'],
+        ));
         return $this->valDumper->dump($absTemp);
     }
 

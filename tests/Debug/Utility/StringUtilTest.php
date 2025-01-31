@@ -48,6 +48,23 @@ EOD;
     }
 
     /**
+     * @dataProvider providerCommonPrefix
+     */
+    public function testCommonPrefix($in, $expect)
+    {
+        $ret = StringUtil::commonPrefix($in);
+        self::assertSame($expect, $ret);
+    }
+
+    public function testCommonPrefixException()
+    {
+        $this->expectException('InvalidArgumentException');
+        $this->expectExceptionMessage('commonPrefix() - Expects a list of strings.  Found bool at index 1');
+        StringUtil::commonPrefix(['foo', false]);
+    }
+
+
+    /**
      * Test compare method
      *
      * @param mixed       $valA     Value A
@@ -252,6 +269,16 @@ WHERE·
 
 EOD;
         self::assertSame($expect, StringUtil::prettyXml($xml));
+    }
+
+    public static function providerCommonPrefix()
+    {
+        return array(
+            'empty' => [[], ''],
+            'single' => [['foo'], 'foo'],
+            'single2' => [['foo', 'bar'], ''],
+            'single3' => [['foo', 'foobar'], 'foo'],
+        );
     }
 
     public static function providerCompare()

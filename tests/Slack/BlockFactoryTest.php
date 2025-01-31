@@ -112,7 +112,7 @@ class BlockFactoryTest extends TestCase
                 ],
                 [
                     'expectException' => 'InvalidArgumentException',
-                    'expectExceptionMessage' => 'actions block:  elements must be array.  NULL provided.',
+                    'expectExceptionMessage' => 'actions block:  elements must be array.  null provided.',
                 ],
             ],
 
@@ -178,7 +178,7 @@ class BlockFactoryTest extends TestCase
                 ],
                 [
                     'expectException' => 'UnexpectedValueException',
-                    'expectExceptionMessage' => 'context block:  elements must be array.  NULL provided.',
+                    'expectExceptionMessage' => 'context block:  elements must be array.  null provided.',
                 ],
             ],
 

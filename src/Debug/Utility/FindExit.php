@@ -1,6 +1,16 @@
 <?php
 
-namespace bdk\Debug\Utility;
+/**
+ * This file is part of PHPDebugConsole
+ *
+ * @package   PHPDebugConsole
+ * @author    Brad Kent <bkfake-github@yahoo.com>
+ * @license   http://opensource.org/licenses/MIT MIT
+ * @copyright 2020-2025 Brad Kent
+ * @since     3.0
+ */
+
+ namespace bdk\Debug\Utility;
 
 use bdk\Backtrace\Xdebug;
 use Reflector;

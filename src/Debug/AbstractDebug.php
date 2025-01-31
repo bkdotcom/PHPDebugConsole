@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2024 Brad Kent
+ * @copyright 2014-2025 Brad Kent
  * @since     3.0b1
  */
 
@@ -19,7 +19,6 @@ use bdk\Debug;
 use bdk\Debug\LogEntry;
 use bdk\Debug\ServiceProvider;
 use bdk\PubSub\Event;
-use ReflectionMethod;
 
 /**
  * Handle underlying Debug bootstrapping and config
@@ -36,14 +35,12 @@ abstract class AbstractDebug
 
     /** @var Container */
     protected $container;
+
     /** @var Container */
     protected $serviceContainer;
 
     /** @var Debug|null */
     protected static $instance;
-
-    /** @var array<string,array> */
-    protected static $methodDefaultArgs = array();
 
     /** @var Debug|null */
     protected $parentInstance;
@@ -181,6 +178,7 @@ abstract class AbstractDebug
         }
         $valActions = \array_intersect_key(array(
             'channelIcon' => [$this, 'onCfgChannelIcon'],
+            'channels' => [$this, 'onCfgChannels'],
             'logServerKeys' => [$this, 'onCfgLogServerKeys'],
             'serviceProvider' => [$this, 'onCfgServiceProvider'],
         ), $cfg);
@@ -206,7 +204,7 @@ abstract class AbstractDebug
         foreach ($rawValues as $k => $v) {
             if (\in_array($k, $services, true)) {
                 $this->serviceContainer[$k] = $v;
-                unset($val[$k]);
+                unset($rawValues[$k]);
                 continue;
             }
             $this->container[$k] = $v;
@@ -222,7 +220,7 @@ abstract class AbstractDebug
      * @param Event      $event     Event instance
      * @param Debug|null $debug     Specify Debug instance to start on.
      *                                If not specified will check if getSubject returns Debug instance
-     *                                Fallback: this->debug
+     *                                Fallback: this
      *
      * @return Event
      */
@@ -230,48 +228,16 @@ abstract class AbstractDebug
     {
         $this->utility->assertType($debug, 'bdk\Debug');
         if ($debug === null) {
-            $subject = $event->getSubject();
-            /** @var Debug */
-            $debug = $subject instanceof Debug
-                ? $subject
-                : $this;
+            $debug = $event->getSubject();
+        }
+        if (!($debug instanceof Debug)) {
+            $debug = $this;
         }
         do {
             $debug->eventManager->publish($eventName, $event);
-            if (!$debug->parentInstance) {
-                break;
-            }
             $debug = $debug->parentInstance;
-        } while (!$event->isPropagationStopped());
+        } while ($debug && !$event->isPropagationStopped());
         return $event;
-    }
-
-    /**
-     * Get Method's default argument list
-     *
-     * @param string $method Method identifier
-     *
-     * @return array
-     */
-    public static function getMethodDefaultArgs($method)
-    {
-        if (isset(self::$methodDefaultArgs[$method])) {
-            return self::$methodDefaultArgs[$method];
-        }
-        $regex = '/^(?P<class>[\w\\\]+)::(?P<method>\w+)(?:\(\))?$/';
-        \preg_match($regex, $method, $matches);
-        $refMethod = new ReflectionMethod($matches['class'], $matches['method']);
-        $params = $refMethod->getParameters();
-        $defaultArgs = array();
-        foreach ($params as $refParameter) {
-            $name = $refParameter->getName();
-            $defaultArgs[$name] = $refParameter->isOptional()
-                ? $refParameter->getDefaultValue()
-                : null;
-        }
-        unset($defaultArgs['args']);
-        self::$methodDefaultArgs[$method] = $defaultArgs;
-        return $defaultArgs;
     }
 
     /**
@@ -404,6 +370,24 @@ abstract class AbstractDebug
     }
 
     /**
+     * Handle "channels" config update
+     *
+     * @param array $val config value
+     *
+     * @return array
+     */
+    private function onCfgChannels($val)
+    {
+        foreach ($val as $channelName => $channelCfg) {
+            if ($this->hasChannel($channelName)) {
+                $this->getChannel($channelName)->config->set($channelCfg);
+                unset($val[$channelName]);
+            }
+        }
+        return $val;
+    }
+
+    /**
      * Handle "channelIcon" config update
      *
      * @param string|null $val config value
@@ -434,6 +418,9 @@ abstract class AbstractDebug
         $event['debug'] = $cfg;
         $cfg = $this->rootInstance->getPlugin('channel')->getPropagateValues($event->getValues());
         unset($cfg['currentSubject'], $cfg['isTarget']);
+        if (empty($cfg)) {
+            return;
+        }
         foreach ($channels as $channel) {
             $channel->config->set($cfg);
         }

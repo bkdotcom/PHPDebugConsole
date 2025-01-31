@@ -48,6 +48,22 @@ class ReflectionTest extends TestCase
         }
     }
 
+    public function testMethodDefaultArgs()
+    {
+        $args = Reflection::getMethodDefaultArgs('bdk\Debug\Plugin\Method\Clear::clear');
+        self::assertSame(array(
+            'bitmask' => \bdk\Debug::CLEAR_LOG,
+        ), $args);
+
+        $args = Reflection::getMethodDefaultArgs('bdk\Debug\Plugin\Method\Trace::trace');
+        self::assertSame(array(
+            'inclContext' => false,
+            'caption' => 'trace',
+            'limit' => 0,
+            'trace' => null,
+        ), $args);
+    }
+
     /**
      * @dataProvider providerGetParentReflector
      */

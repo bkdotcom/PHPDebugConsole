@@ -143,7 +143,12 @@ function createFileLink (string, remove, foundFiles) {
                                 //    which contain both the name and value
   var text = $.trim($string.text())
   var matches = createFileLinkMatches($string, foundFiles)
-  var isUpdate = remove !== true && $string.hasClass('file-link')
+  var action = 'create'
+  if (remove) {
+    action = 'remove'
+  } else if ($string.hasClass('file-link')) {
+    action = 'update'
+  }
   if ($string.closest('.m_trace').length) {
     // not recursion...  will end up calling createFileLinksTrace
     create($string.closest('.m_trace'))
@@ -153,19 +158,18 @@ function createFileLink (string, remove, foundFiles) {
     return
   }
 
-  $replace = createFileLinkReplace($string, matches, text, remove, isUpdate)
+  $replace = createFileLinkReplace($string, matches, text, action)
 
   /*
   console.warn('createFileLink', {
-    remove: remove,
-    isUpdate: isUpdate,
+    action: action,
     matches: matches,
     // stringOuterHTML: string.outerHTML,
     stringText: text,
     replace: $replace[0].outerHTML
   })
   */
-  if (isUpdate === false) {
+  if (action !== 'update') {
     createFileLinkUpdateAttr($string, $replace, attrs)
   }
   if ($string.is('td, th, li') === false) {
@@ -201,14 +205,14 @@ function createFileLinkUpdateAttr ($string, $replace, attrs) {
   }
 }
 
-function createFileLinkReplace ($string, matches, text, remove, isUpdate) {
+function createFileLinkReplace ($string, matches, text, action) {
   var $replace
-  if (remove) {
+  if (action === 'remove') {
     $replace = $('<span>', {
       text: text
     })
     $string.removeClass('file-link') // remove so doesn't get added to $replace
-  } else if (isUpdate) {
+  } else if (action === 'update') {
     $replace = $string
     $replace.prop('href', buildFileLink(matches[1], matches[2]))
   } else {

@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2024 Brad Kent
+ * @copyright 2014-2025 Brad Kent
  * @since     2.3
  */
 
@@ -14,6 +14,7 @@ namespace bdk\Debug\Framework\Yii1_1;
 
 use bdk\Debug;
 use bdk\Debug\Collector\StatementInfo;
+use bdk\Debug\Collector\StatementInfoLogger;
 use bdk\Debug\LogEntry;
 use CLogger;
 use CLogRoute;
@@ -209,8 +210,6 @@ class LogRoute extends CLogRoute
     /**
      * Route log messages to PHPDebugConsole
      *
-     * Extends CLogRoute
-     *
      * @param array $logs list of log messages
      *
      * @return void
@@ -266,9 +265,13 @@ class LogRoute extends CLogRoute
      */
     private function processSqlCachingLogEntry(array $logEntry)
     {
-        // this is an accurate way to get channel for saved to cache... not so much for from cache
-        //  we have no connectionString to channel mapping
-        $groupId = StatementInfo::lastGroupId();
+        $returnValue = 'saved to cache';
+        if (\strpos($logEntry['message'], 'Serving') === 0) {
+            $this->processSqlCachingLogEntryServe($logEntry);
+            $returnValue = 'from cache';
+        }
+
+        $groupId = StatementInfoLogger::lastGroupId();
         $groupLogEntry = $this->debug->data->get('log.' . $groupId);
         if (empty($groupLogEntry)) {
             // collect is/was off?
@@ -276,13 +279,6 @@ class LogRoute extends CLogRoute
         }
 
         $debug = $groupLogEntry->getSubject();
-        $returnValue = 'saved to cache';
-        if (\strpos($logEntry['message'], 'Serving') === 0) {
-            $this->processSqlCachingLogEntryServe($logEntry, $debug);
-            $groupId = StatementInfo::lastGroupId();
-            $returnValue = 'from cache';
-        }
-
         $debug->log(new LogEntry(
             $debug,
             'groupEndValue',
@@ -303,16 +299,25 @@ class LogRoute extends CLogRoute
      * If we have a "Serving" log entry, process it as a statementInfo log entry
      *
      * @param array $logEntry our key/value'd log entry
-     * @param Debug $debug    Debug instance
      *
      * @return void
      */
-    private function processSqlCachingLogEntryServe(array $logEntry, Debug $debug)
+    private function processSqlCachingLogEntryServe(array $logEntry)
     {
-        $regEx = '/^Serving "yii:dbquery:\S+:\S*:\S+:(.*?)(?::(a:\d+:\{.*\}))?" from cache$/s';
+        $regEx = '/^Serving\ "
+            yii:dbquery:[^:]+:
+            (?P<connectionString>\S+:\S+):
+            (?P<userName>\S+):
+            (?P<sql>.*?)
+            (?::(?P<params>a:\d+:\{.*\}))?
+            "\ from\ cache$/sx';
         \preg_match($regEx, $logEntry['message'], $matches);
-        $statementInfo = new StatementInfo($matches[1], $matches[2] ? \unserialize($matches[2]) : array());
-        $statementInfo->appendLog($debug, array(
+        $statementInfo = new StatementInfo(
+            $matches['sql'],
+            $matches['params'] ? \unserialize($matches['params']) : array()
+        );
+        $pdo = Yii::app()->phpDebugConsole->pdoCollector->getInstance($matches['connectionString']);
+        $pdo->getStatementInfoLogger()->log($statementInfo, array(
             'attribs' => array('class' => 'logentry-muted'),
         ));
     }

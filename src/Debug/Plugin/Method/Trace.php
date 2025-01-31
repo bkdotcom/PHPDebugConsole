@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2024 Brad Kent
+ * @copyright 2014-2025 Brad Kent
  * @since     3.0b1
  */
 
@@ -46,20 +46,21 @@ class Trace implements SubscriberInterface
      *
      * Params may be passed in any order
      *
-     * @param bool   $inclContext (`false`) Include code snippet
-     * @param string $caption     ('trace') Specify caption for the trace table
-     * @param int    $limit       (0) limit the number of stack frames returned.  By default (limit = 0) all stack frames are collected
+     * @param bool             $inclContext (`false`) Include code snippet
+     * @param string           $caption     ('trace') Specify caption for the trace table
+     * @param int              $limit       (0) limit the number of stack frames returned.  By default (limit = 0) all stack frames are collected
+     * @param array|\Exception $trace       Optionally specify trace
      *
      * @return Debug
      *
      * @since 3.3 added limit argument
      */
-    public function trace($inclContext = false, $caption = 'trace', $limit = 0)
+    public function trace($inclContext = false, $caption = 'trace', $limit = 0, $trace = null)
     {
         if (!$this->debug->getCfg('collect', Debug::CONFIG_DEBUG)) {
             return $this->debug;
         }
-        $argsDefault = $this->debug->rootInstance->getMethodDefaultArgs(__METHOD__);
+        $argsDefault = $this->debug->rootInstance->reflection->getMethodDefaultArgs(__METHOD__);
         $logEntry = new LogEntry(
             $this->debug,
             __FUNCTION__,
@@ -70,6 +71,7 @@ class Trace implements SubscriberInterface
                 'caption',
                 'inclContext',
                 'limit',
+                'trace',
             ]
         );
         $this->doTrace($logEntry);
@@ -88,21 +90,77 @@ class Trace implements SubscriberInterface
     {
         $this->debug = $logEntry->getSubject();
         $meta = $this->getMeta($logEntry);
-        $trace = isset($meta['trace'])
-            ? $meta['trace']
-            : $this->debug->backtrace->get(
-                $meta['inclArgs'] ? Backtrace::INCL_ARGS : 0,
-                $meta['limit']
-            );
-        if ($trace && $meta['inclContext']) {
-            $trace = $this->debug->backtrace->addContext($trace);
+        $trace = $this->getTrace($logEntry);
+        $files = [];
+        foreach ($trace as $frame) {
+            if (empty($frame['evalLine']) && !empty($frame['file'])) {
+                $files[] = $frame['file'];
+            }
+        }
+        $meta['tableInfo']['commonRowInfo'] = array(
+            'commonFilePrefix' => $this->debug->stringUtil->commonPrefix($files),
+        );
+        if ($meta['inclContext']) {
             $this->debug->addPlugin($this->debug->pluginHighlight, 'highlight');
         }
         unset($meta['trace']);
-        $logEntry['args'] = array($trace);
+        $logEntry['args'] = [$trace];
         $logEntry['meta'] = $meta;
         $this->evalRows($logEntry);
         $this->debug->rootInstance->getPlugin('methodTable')->doTable($logEntry);
+    }
+
+    /**
+     * Extract the trace from the log entry or generate it
+     *
+     * @param LogEntry $logEntry LogEntry instance
+     *
+     * @return array
+     */
+    private function getTrace(LogEntry $logEntry)
+    {
+        $meta = $this->getMeta($logEntry);
+        $getOptions = $meta['inclArgs'] ? Backtrace::INCL_ARGS : 0;
+        $getOptions |= $meta['inclInternal'] ? Backtrace::INCL_INTERNAL : 0;
+        $trace = \is_array($meta['trace'])
+            ? $meta['trace']
+            : $this->debug->backtrace->get(
+                $getOptions,
+                $meta['limit'],
+                $meta['trace'] // null or Exception
+            );
+        if ($meta['inclInternal']) {
+            $trace = $this->removeMinInternal($trace);
+        }
+        if ($meta['inclContext']) {
+            $trace = $this->debug->backtrace->addContext($trace);
+        }
+        return $trace;
+    }
+
+    /**
+     * Remove Internal Frames
+     *
+     * @param array $trace Backtrace frames
+     *
+     * @return array
+     */
+    private function removeMinInternal(array $trace)
+    {
+        $count = \count($trace);
+        $internalClasses = [
+            __CLASS__,
+            'bdk\PubSub\Manager',
+        ];
+        for ($i = 3; $i < $count; $i++) {
+            $frame = $trace[$i];
+            \preg_match('/^(?P<classname>.+)->(?P<function>.+)$/', $frame['function'], $matches);
+            $isInternal = \in_array($matches['classname'], $internalClasses, true) || $frame['function'] === 'bdk\Debug->publishBubbleEvent';
+            if ($isInternal === false) {
+                break;
+            }
+        }
+        return \array_slice($trace, $i);
     }
 
     /**
@@ -122,9 +180,10 @@ class Trace implements SubscriberInterface
                                  // will default to $inclContext
                                  //   may want to set meta['cfg']['objectsExclude'] = '*'
             'inclContext' => false,
+            'inclInternal' => false,
             'limit' => 0,
             'sortable' => false,
-            'trace' => null,  // set to specify trace
+            'trace' => null,  // set to array or Exception to specify trace
         ), $logEntry['meta']);
 
         if ($meta['inclArgs'] === null) {
@@ -176,8 +235,10 @@ class Trace implements SubscriberInterface
         \array_walk($argsPassed, static function ($val) use (&$argsTyped) {
             $type = \gettype($val);
             $typeToKey = array(
+                'array' => 'trace',
                 'boolean' => 'inclContext',
                 'integer' => 'limit',
+                'object' => 'trace', // exception
                 'string' => 'caption',
             );
             $key = isset($typeToKey[$type])

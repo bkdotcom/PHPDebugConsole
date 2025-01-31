@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2024 Brad Kent
+ * @copyright 2014-2025 Brad Kent
  * @since     3.0.5
  */
 
@@ -140,7 +140,7 @@ class Profile implements SubscriberInterface
             __FUNCTION__,
             \func_get_args(),
             array(),
-            $debug->rootInstance->getMethodDefaultArgs(__METHOD__),
+            $debug->rootInstance->reflection->getMethodDefaultArgs(__METHOD__),
             ['name']
         ));
     }
@@ -165,7 +165,7 @@ class Profile implements SubscriberInterface
             __FUNCTION__,
             \func_get_args(),
             array(),
-            $this->debug->rootInstance->getMethodDefaultArgs(__METHOD__),
+            $this->debug->rootInstance->reflection->getMethodDefaultArgs(__METHOD__),
             ['name']
         );
         $this->doProfileEnd($logEntry);

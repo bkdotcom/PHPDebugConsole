@@ -80,9 +80,7 @@ export function enhanceValue (node, $entry) {
  * add font-awesome icons
  */
 function addIcons ($node) {
-  var $caption
   var $icon = determineIcon($node)
-  var isNested = false
   addIconsMisc($node)
   if (!$icon) {
     return
@@ -91,15 +89,7 @@ function addIcons ($node) {
     // custom icon..   add to .group-label
     $node = $node.find('> .group-header .group-label').eq(0)
   } else if ($node.find('> table').length) {
-    // table... we'll prepend icon to caption
-    isNested = $node.parent('.no-indent').length > 0
-    $caption = $node.find('> table > caption')
-    if ($caption.length === 0 && isNested === false) {
-      // add caption
-      $caption = $('<caption>')
-      $node.find('> table').prepend($caption)
-    }
-    $node = $caption
+    $node = addIconsTableNode($node)
   }
   if ($node.find('> i:first-child').hasClass($icon.attr('class'))) {
     // already have icon
@@ -126,6 +116,22 @@ function addIconsMisc ($node) {
     $node2.prepend($icon)
     $icon = null
   }
+}
+
+/**
+ * table... we'll prepend icon to caption
+ *
+ * @return jQuery caption node
+ */
+function addIconsTableNode ($node) {
+  var isNested = $node.parent('.no-indent').length > 0
+  var $caption = $node.find('> table > caption')
+  if ($caption.length === 0 && isNested === false) {
+    // add caption
+    $caption = $('<caption>')
+    $node.find('> table').prepend($caption)
+  }
+  return $caption
 }
 
 function determineIcon ($node) {
@@ -201,6 +207,7 @@ function enhanceGroup ($group) {
     $(this).data('expand', false)
     enhanceValue(this, $group)
   })
+  /*
   $.each(['level-error', 'level-info', 'level-warn'], function (i, classname) {
     var $toggleIcon
     if ($group.hasClass(classname)) {
@@ -209,6 +216,7 @@ function enhanceGroup ($group) {
       $toggle.prepend($toggleIcon) // move icon
     }
   })
+  */
   if (
     $group.hasClass('expanded') ||
     $target.find('.m_error, .m_warn').not('.filter-hidden').not('[data-uncollapse=false]').length

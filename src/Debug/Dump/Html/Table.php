@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2024 Brad Kent
+ * @copyright 2014-2025 Brad Kent
  * @since     2.3
  */
 
@@ -27,6 +27,28 @@ class Table
 
     /** @var array<string,mixed> */
     protected $options;
+
+    /** @var array<string,mixed> */
+    private $optionsDefault = array(
+        'attribs' => array(),
+        'caption' => '',
+        'onBuildRow' => null,   // callable (or array of callables)
+        'tableInfo' => array(
+            'class' => null,  // class name of table object
+            'columns' => array(),
+            'commonRowInfo' => array(
+                'attribs' => array(),
+                'class' => null,
+                'key' => null,
+                'summary' => '',
+            ),
+            'haveObjRow' => false,
+            'indexLabel' => null,
+            'rows' => array(),
+            'summary' => '', // title attr on class
+        ),
+    );
+
 
     /**
      * Constructor
@@ -53,12 +75,8 @@ class Table
      */
     public function build($rows, $options = array())
     {
-        $this->options = \array_merge(array(
-            'attribs' => array(),
-            'caption' => '',
-            'onBuildRow' => null,   // callable (or array of callables)
-            'tableInfo' => array(),
-        ), $options);
+        $this->buildInitOptions($options);
+
         return $this->debug->html->buildTag(
             'table',
             $this->options['attribs'],
@@ -68,6 +86,27 @@ class Table
                 . $this->buildBody($rows)
                 . $this->buildFooter()
         );
+    }
+
+    /**
+     * Initialize options
+     *
+     * @param array $options table options and info
+     *
+     * @return void
+     */
+    private function buildInitOptions(array $options)
+    {
+        $this->options = \array_replace_recursive($this->optionsDefault, $options);
+
+        foreach ($this->options['tableInfo']['columns'] as $k => $colInfo) {
+            $this->options['tableInfo']['columns'][$k] = \array_merge(array(
+                'attribs' => array(),
+                'class' => null,
+                'key' => '',
+                'total' => null,
+            ), $colInfo);
+        }
     }
 
     /**
@@ -85,12 +124,7 @@ class Table
             : (array) $this->options['onBuildRow'];
         foreach ($rows as $k => $row) {
             $rowInfo = \array_merge(
-                array(
-                    'attribs' => array(),
-                    'class' => null,
-                    'key' => null,
-                    'summary' => '',
-                ),
+                $this->options['tableInfo']['commonRowInfo'],
                 isset($this->options['tableInfo']['rows'][$k])
                     ? $this->options['tableInfo']['rows'][$k]
                     : array()
@@ -118,7 +152,7 @@ class Table
             'className',
             'span',
             array(
-                'title' => $this->options['tableInfo']['summary'] ?: null,
+                'title' => $this->options['tableInfo']['summary'],
             )
         );
         $caption = $caption
@@ -200,21 +234,10 @@ class Table
     {
         $str = '';
         $rowKey = $rowInfo['key'] ?: $rowKey;
-        $rowKeyParsed = $this->debug->html->parseTag($this->dumper->valDumper->dump($rowKey));
         $str .= '<tr' . $this->debug->html->buildAttribString($rowInfo['attribs']) . '>';
+        $str .= $this->buildRowKey($rowKey);
         /*
-            Output key
-        */
-        $str .= $this->debug->html->buildTag(
-            'th',
-            $this->debug->arrayUtil->mergeDeep($rowKeyParsed['attribs'], array(
-                'class' => ['t_key', 'text-right'],
-                'scope' => 'row',
-            )),
-            $rowKeyParsed['innerhtml']
-        );
-        /*
-            Output row's classname
+            Output row's classname (if row is an object)
         */
         if ($this->options['tableInfo']['haveObjRow']) {
             $str .= $rowInfo['class']
@@ -226,11 +249,36 @@ class Table
         /*
             Output values
         */
+        $i = 0;
         foreach ($row as $v) {
-            $str .= $this->dumper->valDumper->dump($v, array('tagName' => 'td'));
+            $str .= $this->dumper->valDumper->dump($v, array(
+                'attribs' => $this->options['tableInfo']['columns'][$i]['attribs'],
+                'tagName' => 'td',
+            ));
+            $i++;
         }
-        $str .= '</tr>' . "\n";
-        return $this->onBuildRow($str, $row, $rowInfo, $rowKey);
+        $str .= '</tr>';
+        return $this->onBuildRow($str, $row, $rowInfo, $rowKey) . "\n";
+    }
+
+    /**
+     * Build row's key/index th tag
+     *
+     * @param string|int $rowKey Row's index
+     *
+     * @return string
+     */
+    private function buildRowKey($rowKey)
+    {
+        $rowKeyParsed = $this->debug->html->parseTag($this->dumper->valDumper->dump($rowKey));
+        return $this->debug->html->buildTag(
+            'th',
+            $this->debug->arrayUtil->mergeDeep($rowKeyParsed['attribs'], array(
+                'class' => ['t_key', 'text-right'],
+                'scope' => 'row',
+            )),
+            $rowKeyParsed['innerhtml']
+        );
     }
 
     /**

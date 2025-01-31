@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2024 Brad Kent
+ * @copyright 2014-2025 Brad Kent
  * @since     3.3
  */
 
@@ -31,7 +31,7 @@ class Type
     const TYPE_RESOURCE = 'resource';
     const TYPE_STRING = 'string';
     const TYPE_CONST = 'const'; // non-native type (Abstraction: we store name and value)
-                                // deprecated (use TYPE_IDENTIFIER)
+                                //   deprecated (use TYPE_IDENTIFIER)
     const TYPE_IDENTIFIER = 'identifier'; // const, className, method, property
                                             // value: identifier
                                             // backedValue: underlying const or property value

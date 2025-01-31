@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2024 Brad Kent
+ * @copyright 2014-2025 Brad Kent
  * @since     2.2
  */
 
@@ -79,7 +79,7 @@ class Clear implements SubscriberInterface
             __FUNCTION__,
             \func_get_args(),
             array(),
-            $debug->rootInstance->getMethodDefaultArgs(__METHOD__),
+            $debug->rootInstance->reflection->getMethodDefaultArgs(__METHOD__),
             ['bitmask']
         );
         $this->doClear($logEntry);
@@ -360,7 +360,7 @@ class Clear implements SubscriberInterface
      * Update logEntry
      *
      * @param LogEntry $logEntry LogEntry instance
-     * @param array    $args     arguments]
+     * @param array    $args     arguments
      *
      * @return void
      */

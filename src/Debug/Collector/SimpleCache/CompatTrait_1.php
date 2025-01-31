@@ -6,7 +6,7 @@
  * @package   PHPDebugConsole
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
- * @copyright 2014-2024 Brad Kent
+ * @copyright 2014-2025 Brad Kent
  * @since     3.3
  */
 
@@ -25,7 +25,7 @@ if (\trait_exists(__NAMESPACE__ . '\\CompatTrait', false) === false) {
         /**
          * {@inheritDoc}
          */
-        public function get($key, $default = null)
+        public function get($key, $default = null) // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
         {
             return $this->profileCall('get', \func_get_args(), false, $key);
         }
@@ -33,7 +33,7 @@ if (\trait_exists(__NAMESPACE__ . '\\CompatTrait', false) === false) {
         /**
          * {@inheritDoc}
          */
-        public function set($key, $value, $ttl = null)
+        public function set($key, $value, $ttl = null) // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
         {
             return $this->profileCall('set', \func_get_args(), true, $key);
         }
@@ -57,7 +57,7 @@ if (\trait_exists(__NAMESPACE__ . '\\CompatTrait', false) === false) {
         /**
          * {@inheritDoc}
          */
-        public function getMultiple($keys, $default = null)
+        public function getMultiple($keys, $default = null) // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
         {
             $keysDebug = $this->keysDebug($keys);
             return $this->profileCall('getMultiple', \func_get_args(), false, $keysDebug);
@@ -66,7 +66,7 @@ if (\trait_exists(__NAMESPACE__ . '\\CompatTrait', false) === false) {
         /**
          * {@inheritDoc}
          */
-        public function setMultiple($values, $ttl = null)
+        public function setMultiple($values, $ttl = null) // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
         {
             $keysDebug = $this->keysDebug($values, true);
             return $this->profileCall('setMultiple', \func_get_args(), true, $keysDebug);

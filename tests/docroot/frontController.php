@@ -1,5 +1,7 @@
 <?php
 
+use \bdk\HttpMessage\ServerRequest;
+
 /**
  * php -S 127.0.0.1:8080 frontController.php
  *
@@ -12,7 +14,7 @@ if (!\defined('STDERR')) {
     \define('STDERR', \fopen('php://stderr', 'wb'));
 }
 
-$serverRequest = \bdk\HttpMessage\ServerRequest::fromGlobals();
+$serverRequest = ServerRequest::fromGlobals();
 $serverParams = $serverRequest->getServerParams();
 $requestUri = $serverRequest->getUri();
 
@@ -63,7 +65,11 @@ if ($realpath && \is_file($realpath)) {
         return;
     }
     if (\strtolower(\substr($realpath, -4)) === '.php') {
+        \ob_start();
         include $realpath;
+        $body = compressResponse($serverRequest, \ob_get_clean());
+        header('Content-Length: ' . \strlen($body));
+        echo $body;
         return;
     }
     // serve from filesystem
@@ -86,7 +92,11 @@ foreach ($extensions as $ext => $contentType) {
         continue;
     }
     \header('Content-Type: ' . $contentType);
+    \ob_start();
     include $realpath;
+    $body = compressResponse($serverRequest, \ob_get_clean());
+    header('Content-Length: ' . \strlen($body));
+    echo $body;
     return;
 }
 
@@ -101,4 +111,20 @@ function notFound()
 {
     \header('HTTP/1.1 404 Not Found');
     echo '<h1>404 Not Found</h1>';
+}
+
+function compressResponse(ServerRequest $serverRequest, $responseBody)
+{
+    $acceptEncoding = $serverRequest->getHeaderLine('Accept-Encoding');
+    $acceptEncodings = \explode(', ', \strtolower($acceptEncoding));
+    foreach ($acceptEncodings as $encoding) {
+        if ($encoding === 'deflate') {
+            \header('Content-Encoding: deflate');
+            return \gzcompress($responseBody);
+        } elseif ($encoding === 'gzip') {
+            \header('Content-Encoding: gzip');
+            return \gzencode($responseBody);
+        }
+    }
+    return $responseBody;
 }

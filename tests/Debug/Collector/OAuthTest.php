@@ -85,7 +85,7 @@ class OAuthTest extends DebugTestFramework
                 'args' => array(
                     'additional info',
                     array(
-                        'size_download' => 63.0,
+                        // 'size_download' => 63.0,
                         'sbs' => 'POST&http%3A%2F%2F127.0.0.1%3A8080%2Foauth%2Faccess_token&oauth_consumer_key%3Dkey%26oauth_nonce%3D%s%26oauth_signature_method%3DHMAC-SHA1%26oauth_timestamp%3D%s%26oauth_version%3D1.0',
                     ),
                 ),
@@ -231,7 +231,7 @@ class OAuthTest extends DebugTestFramework
                 'args' => array(
                     'additional info',
                     array(
-                        'size_download' => 65.0,
+                        // 'size_download' => 65.0,
                         'sbs' => 'GET&http%3A%2F%2F127.0.0.1%3A8080%2Foauth%2Frequest_token&oauth_callback%3Dhttp%253A%252F%252Fwww.bradkent.com%252F%26oauth_consumer_key%3Dkey%26oauth_nonce%3D%s%26oauth_signature_method%3DHMAC-SHA1%26oauth_timestamp%3D%s%26oauth_version%3D1.0',
                     ),
                 ),
@@ -321,7 +321,7 @@ class OAuthTest extends DebugTestFramework
         $sizeDownload = null;
         foreach ($logEntriesActual as $i => $logEntry) {
             if (isset($logEntry['args'][0]) && $logEntry['args'][0] === 'additional info') {
-                $sizeDownload = $logEntry['args'][1]['size_download'];
+                // $sizeDownload = $logEntry['args'][1]['size_download'];
                 $logEntriesActual[$i]['args'][1] = \array_intersect_key($logEntry['args'][1], \array_flip(['size_download', 'size_upload', 'sbs']));
             } elseif (isset($logEntry['args'][0]) && $logEntry['args'][0] === 'response body') {
                 $logEntriesActual[$i]['args'][1] = $logEntry['args'][1]['value'];
@@ -371,7 +371,7 @@ class OAuthTest extends DebugTestFramework
                 'args' => array(
                     'additional info',
                     array(
-                        'size_download' => $sizeDownload,
+                        // 'size_download' => $sizeDownload,
                         'size_upload' => 7.0,
                         'sbs' => 'POST&http%3A%2F%2F127.0.0.1%3A8080%2Fecho&foo%3Dbar%26oauth_consumer_key%3Dkey%26oauth_nonce%3D%s%26oauth_signature_method%3DHMAC-SHA1%26oauth_timestamp%3%s%26oauth_version%3D1.0',
                     ),

@@ -8,6 +8,7 @@ use bdk\Test\CurlHttpMessage\TestCase;
 
 /**
  * @covers bdk\CurlHttpMessage\Handler\CurlMulti
+ * @covers bdk\CurlHttpMessage\CurlReqRes
  */
 class CurlMultiTest extends TestCase
 {

@@ -9,6 +9,7 @@ use bdk\Test\Debug\DebugTestFramework;
 /**
  * PHPUnit tests for Debug::trace() method
  *
+ * @covers \bdk\Debug\Dump\Html
  * @covers \bdk\Debug\Dump\Html\Helper
  * @covers \bdk\Debug\Dump\Html\HtmlString
  * @covers \bdk\Debug\Dump\Html\Table
@@ -369,5 +370,19 @@ EOD;
         );
     }
 
-
+    // this test needs improvement
+    public function testInclInternal()
+    {
+        $this->testMethod(
+            'trace',
+            [
+                \bdk\Debug::meta('inclInternal')
+            ],
+            array(
+                'entry' => static function (LogEntry $logEntry) {
+                    self::assertSame('bdk\Debug->__call(\'trace\')', $logEntry['args'][0][0]['function']);
+                },
+            )
+        );
+    }
 }

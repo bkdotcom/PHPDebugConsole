@@ -68,6 +68,19 @@ class CurlReqResTest extends TestCase
     }
     */
 
+    public function testEncoding()
+    {
+        $request = $this->factory->request('GET', $this->baseUrl . '/echo?poop', array(
+            'Accept-Encoding' => 'gzip',
+        ));
+        $curlReqRes = $this->factory->curlReqRes($request);
+        $response = $curlReqRes->exec();
+
+        self::assertSame('gzip', $response->getHeaderLine('x-content-encoding'));
+        $data = \json_decode((string) $response->getBody(), true);
+        self::assertIsArray($data);
+    }
+
     public function testExec()
     {
         $request = $this->factory->request('GET', $this->baseUrl . '/echo');

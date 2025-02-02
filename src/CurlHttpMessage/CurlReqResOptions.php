@@ -210,8 +210,14 @@ class CurlReqResOptions
             }
 
             if ($nameLower === 'accept-encoding') {
-                // CURLOPT_ENCODING - Available as of cURL 7.10 and deprecated as of cURL 7.21.6.
-                $this->curlOptions[CURLOPT_ACCEPT_ENCODING] = \implode(', ', $values); // available as of cURL 7.21.6.
+                $values = \implode(', ', $values);
+                if (\defined('CURLOPT_ACCEPT_ENCODING')) {
+                    // available as of cURL 7.21.6.
+                    $this->curlOptions[CURLOPT_ACCEPT_ENCODING] = $values;
+                } elseif (\defined('CURLOPT_ENCODING')) {
+                    // CURLOPT_ENCODING - Available as of cURL 7.10 and deprecated as of cURL 7.21.6.
+                    $this->curlOptions[CURLOPT_ENCODING] = $values;
+                }
                 return;
             }
 

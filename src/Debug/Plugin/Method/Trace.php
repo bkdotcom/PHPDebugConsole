@@ -155,7 +155,7 @@ class Trace implements SubscriberInterface
         for ($i = 3; $i < $count; $i++) {
             $frame = $trace[$i];
             \preg_match('/^(?P<classname>.+)->(?P<function>.+)$/', $frame['function'], $matches);
-            $isInternal = \in_array($matches['classname'], $internalClasses, true) || $frame['function'] === 'bdk\Debug->publishBubbleEvent';
+            $isInternal = \in_array($matches['classname'], $internalClasses, true) || $matches['function'] === 'publishBubbleEvent';
             if ($isInternal === false) {
                 break;
             }

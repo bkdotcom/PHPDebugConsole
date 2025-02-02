@@ -380,7 +380,9 @@ EOD;
             ],
             array(
                 'entry' => static function (LogEntry $logEntry) {
-                    self::assertSame('bdk\Debug->__call(\'trace\')', $logEntry['args'][0][0]['function']);
+                    // bdk\AbstractDebug for php 5.x
+                    // bdk\Debug for php 7.x +
+                    self::assertStringMatchesFormat('bdk\%ADebug->__call(\'trace\')', $logEntry['args'][0][0]['function']);
                 },
             )
         );

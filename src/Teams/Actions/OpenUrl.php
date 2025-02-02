@@ -7,7 +7,7 @@
  * @copyright 2023-2025 Brad Kent
  */
 
- namespace bdk\Teams\Actions;
+namespace bdk\Teams\Actions;
 
 use Psr\Http\Message\UriInterface;
 use RuntimeException;

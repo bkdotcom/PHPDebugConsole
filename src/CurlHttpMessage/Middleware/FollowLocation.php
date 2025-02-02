@@ -7,7 +7,7 @@
  * @copyright 2023-2025 Brad Kent
  */
 
- namespace bdk\CurlHttpMessage\Middleware;
+namespace bdk\CurlHttpMessage\Middleware;
 
 use bdk\CurlHttpMessage\CurlReqRes;
 use bdk\CurlHttpMessage\Exception\BadResponseException;

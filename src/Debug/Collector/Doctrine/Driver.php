@@ -10,7 +10,7 @@
  * @since     3.3
  */
 
- namespace bdk\Debug\Collector\Doctrine;
+namespace bdk\Debug\Collector\Doctrine;
 
 use bdk\Debug;
 use Doctrine\DBAL\Driver as DriverInterface;

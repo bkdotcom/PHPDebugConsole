@@ -7,7 +7,7 @@
  * @copyright 2023-2025 Brad Kent
  */
 
- namespace bdk\Promise;
+namespace bdk\Promise;
 
 use bdk\Promise;
 use bdk\Promise\Exception\AggregateException;

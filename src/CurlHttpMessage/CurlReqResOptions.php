@@ -7,7 +7,7 @@
  * @copyright 2023-2025 Brad Kent
  */
 
- namespace bdk\CurlHttpMessage;
+namespace bdk\CurlHttpMessage;
 
 use bdk\CurlHttpMessage\CurlReqRes;
 use bdk\CurlHttpMessage\Exception\BadResponseException;
@@ -123,7 +123,7 @@ class CurlReqResOptions
             $this->curlOptions[CURLOPT_CUSTOMREQUEST] = $method;
         }
 
-        if ($this->methodMayHaveBody($method)) {
+        if ($this->methodMayHaveBody($method) && $this->request->getBody()->getSize() > 0) {
             $this->setOptionsBodyContent();
         }
     }
@@ -137,10 +137,6 @@ class CurlReqResOptions
     {
         $body     = $this->request->getBody();
         $bodySize = $body->getSize();
-
-        if ($bodySize === 0) {
-            return;
-        }
 
         if ($body->isSeekable()) {
             $body->rewind();
@@ -210,14 +206,7 @@ class CurlReqResOptions
             }
 
             if ($nameLower === 'accept-encoding') {
-                $values = \implode(', ', $values);
-                if (\defined('CURLOPT_ACCEPT_ENCODING')) {
-                    // available as of cURL 7.21.6.
-                    $this->curlOptions[CURLOPT_ACCEPT_ENCODING] = $values;
-                } elseif (\defined('CURLOPT_ENCODING')) {
-                    // CURLOPT_ENCODING - Available as of cURL 7.10 and deprecated as of cURL 7.21.6.
-                    $this->curlOptions[CURLOPT_ENCODING] = $values;
-                }
+                $this->requestHeadersAcceptEncoding($values);
                 return;
             }
 
@@ -235,6 +224,25 @@ class CurlReqResOptions
             }
         });
         return $headers;
+    }
+
+    /**
+     * Handle Accept-Encoding header values
+     *
+     * @param string[] $values Accept-Encoding header values
+     *
+     * @return void
+     */
+    private function requestHeadersAcceptEncoding(array $values)
+    {
+        $values = \implode(', ', $values);
+        if (\defined('CURLOPT_ACCEPT_ENCODING')) {
+            // available as of cURL 7.21.6.
+            $this->curlOptions[CURLOPT_ACCEPT_ENCODING] = $values;
+        } elseif (\defined('CURLOPT_ENCODING')) {
+            // CURLOPT_ENCODING - Available as of cURL 7.10 and deprecated as of cURL 7.21.6.
+            $this->curlOptions[CURLOPT_ENCODING] = $values;
+        }
     }
 
     /**

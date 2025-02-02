@@ -7,7 +7,7 @@
  * @copyright 2023-2025 Brad Kent
  */
 
- namespace bdk\Teams;
+namespace bdk\Teams;
 
 /**
  * The base object off of which Elements and Actions are built

@@ -7,7 +7,7 @@
  * @copyright 2023-2025 Brad Kent
  */
 
- namespace bdk\Teams\Cards;
+namespace bdk\Teams\Cards;
 
 use bdk\Teams\Actions\ActionInterface;
 use bdk\Teams\Elements\ElementInterface;

@@ -9,6 +9,7 @@ use bdk\Test\CurlHttpMessage\TestCase;
 
 /**
  * @covers \bdk\CurlHttpMessage\CurlReqRes
+ * @covers \bdk\CurlHttpMessage\CurlReqResOptions
  */
 class CurlReqResTest extends TestCase
 {

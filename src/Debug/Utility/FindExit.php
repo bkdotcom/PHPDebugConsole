@@ -10,7 +10,7 @@
  * @since     3.0
  */
 
- namespace bdk\Debug\Utility;
+namespace bdk\Debug\Utility;
 
 use bdk\Backtrace\Xdebug;
 use Reflector;

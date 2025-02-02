@@ -10,7 +10,7 @@
  * @since     3.0.1
  */
 
- namespace bdk\Debug\Psr3;
+namespace bdk\Debug\Psr3;
 
 /*
     Wrap in condition.

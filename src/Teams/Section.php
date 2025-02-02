@@ -7,7 +7,7 @@
  * @copyright 2023-2025 Brad Kent
  */
 
- namespace bdk\Teams;
+namespace bdk\Teams;
 
 use bdk\Teams\AbstractItem;
 use bdk\Teams\Actions\ActionInterface;

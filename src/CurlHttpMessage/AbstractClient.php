@@ -7,7 +7,7 @@
  * @copyright 2023-2025 Brad Kent
  */
 
- namespace bdk\CurlHttpMessage;
+namespace bdk\CurlHttpMessage;
 
 use bdk\CurlHttpMessage\Exception\BadResponseException;
 use bdk\CurlHttpMessage\Exception\NetworkException;

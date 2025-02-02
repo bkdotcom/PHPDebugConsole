@@ -10,7 +10,7 @@
  * @since     2.3
  */
 
- namespace bdk\Debug\Collector\Pdo;
+namespace bdk\Debug\Collector\Pdo;
 
 /**
  * @phpcs:disable Generic.Classes.DuplicateClassName.Found

@@ -7,7 +7,7 @@
  * @copyright 2023-2025 Brad Kent
  */
 
- namespace bdk\CurlHttpMessage\Handler;
+namespace bdk\CurlHttpMessage\Handler;
 
 use bdk\CurlHttpMessage\CurlReqRes;
 use bdk\Promise;

@@ -7,7 +7,7 @@
  * @copyright 2023-2025 Brad Kent
  */
 
- namespace bdk\CurlHttpMessage\Exception;
+namespace bdk\CurlHttpMessage\Exception;
 
 use bdk\CurlHttpMessage\Exception\RequestException;
 

@@ -10,7 +10,7 @@
  * @since     3.3
  */
 
- namespace bdk\Debug\Collector;
+namespace bdk\Debug\Collector;
 
  use bdk\Debug;
  use bdk\Debug\Collector\Doctrine\Driver;

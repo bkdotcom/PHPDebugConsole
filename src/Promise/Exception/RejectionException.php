@@ -7,7 +7,7 @@
  * @copyright 2023-2025 Brad Kent
  */
 
- namespace bdk\Promise\Exception;
+namespace bdk\Promise\Exception;
 
 use JsonSerializable;
 use RuntimeException;

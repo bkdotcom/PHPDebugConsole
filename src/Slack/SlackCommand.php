@@ -7,7 +7,7 @@
  * @copyright 2023-2025 Brad Kent
  */
 
- namespace bdk\Slack;
+namespace bdk\Slack;
 
 use BadMethodCallException;
 use Psr\Http\Message\ServerRequestInterface;

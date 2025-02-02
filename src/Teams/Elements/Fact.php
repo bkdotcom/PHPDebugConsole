@@ -7,7 +7,7 @@
  * @copyright 2023-2025 Brad Kent
  */
 
- namespace bdk\Teams\Elements;
+namespace bdk\Teams\Elements;
 
 use bdk\Teams\AbstractItem;
 

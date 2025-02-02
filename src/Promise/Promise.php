@@ -7,7 +7,7 @@
  * @copyright 2023-2025 Brad Kent
  */
 
- namespace bdk;
+namespace bdk;
 
 use BadMethodCallException;
 use bdk\Promise\Exception\CancellationException;

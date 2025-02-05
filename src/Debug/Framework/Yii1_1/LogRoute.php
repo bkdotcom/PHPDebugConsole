@@ -338,6 +338,9 @@ class LogRoute extends CLogRoute
             $logEntry['message'],
         ]);
         if ($logEntry['meta']) {
+            if (!empty($logEntry['meta']['trace'])) {
+                $logEntry['meta']['columns'] = ['file', 'line'];
+            }
             $args[] = $debug->meta($logEntry['meta']);
         }
         \call_user_func_array([$debug, $method], $args);

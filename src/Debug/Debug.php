@@ -165,6 +165,7 @@ class Debug extends AbstractDebug
             'database' => 'fa fa-database',
             'email' => 'fa fa-envelope-o',
             'error' => 'fa fa-times-circle',
+            'error-suppressed' => 'fa fa-at fa-lg',
             'event' => 'fa fa-bell-o',
             'files' => 'fa fa-files-o',
             'github' => 'fa fa-github fa-lg',

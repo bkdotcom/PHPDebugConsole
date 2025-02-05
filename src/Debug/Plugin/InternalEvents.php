@@ -290,6 +290,9 @@ class InternalEvents implements SubscriberInterface
                 'errorType' => $error['type'],
                 'evalLine' => $error['evalLine'],
                 'file' => $error['file'],
+                'icon' => $error['isSuppressed']
+                    ? ':error-suppressed:'
+                    : null,
                 'isSuppressed' => $error['isSuppressed'], // set via event subscriber vs "@"" code prefix
                 'line' => $error['line'],
                 'sanitize' => $error['isHtml'] === false,

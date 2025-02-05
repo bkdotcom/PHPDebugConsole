@@ -241,18 +241,16 @@ class WampCrate
     private function getErrorTraceMeta(LogEntry $logEntry)
     {
         $inclContextDefault = $logEntry->getMeta('errorCat') === 'fatal';
+        $meta = $logEntry['meta'];
+        $meta['inclContext'] = $logEntry->getMeta('inclContext', $inclContextDefault);
         $logEntryTmp = new LogEntry(
             $this->debug,
             'trace',
             array(),
-            array(
-                'inclContext' => $logEntry->getMeta('inclContext', $inclContextDefault),
-                'trace' => $logEntry->getMeta('trace'),
-            )
+            $meta
         );
         $this->debug->rootInstance->getPlugin('methodTrace')->doTrace($logEntryTmp);
         return \array_replace_recursive(
-            $logEntry['meta'],
             $logEntryTmp['meta'],
             array(
                 'trace' => $logEntryTmp['args'][0],

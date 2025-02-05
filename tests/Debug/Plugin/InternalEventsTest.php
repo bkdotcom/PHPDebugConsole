@@ -249,6 +249,45 @@ class InternalEventsTest extends DebugTestFramework
         self::assertFalse($error['inConsole']);
     }
 
+    public function testErrorSuppressed()
+    {
+        $file = __FILE__;
+        $line = __LINE__;
+        $error = new Error($this->debug->errorHandler, array(
+            'file' => $file,
+            'isSuppressed' => true,
+            'line' => $line,
+            'message' => 'stern warning',
+            'type' => E_USER_WARNING,
+        ));
+        $this->debug->getPlugin('internalEvents')->onError($error);
+        $logEntry = $this->debug->data->get('log/__end__');
+        $logEntryValues = $logEntry->getValues();
+        unset($logEntryValues['meta']['errorHash']);
+        self::assertSame(array(
+            'appendLog' => true,
+            'args' => array(
+                'User Warning:',
+                'stern warning',
+                $file . ' (line ' . $line . ')',
+            ),
+            'meta' => array(
+                'detectFiles' => true,
+                'file' => $file,
+                'line' => $line,
+                'uncollapse' => true,
+                'errorCat' => 'warning',
+                'errorType' => E_USER_WARNING,
+                'icon' => "fa fa-at fa-lg",
+                'isSuppressed' => true,
+                'sanitize' => true,
+            ),
+            'method' => 'warn',
+            'numArgs' => 3,
+            'return' => null,
+        ), $logEntryValues);
+    }
+
     public function testShutdown()
     {
         if (false) {

@@ -64,8 +64,7 @@ class ErrorSummaryTest extends DebugTestFramework
         )));
         $output = \ob_get_clean();
         \bdk\Debug\Utility\Reflection::propSet($this->debug->errorHandler, 'backtrace', null);
-        // $expectMatch = '%a<tr class="context" style="display:table-row;"><td colspan="4"><pre class="highlight line-numbers" data-line="%d" data-start="%d"><code class="language-php">%a';
-        $expectMatch = '%a<li class="error-fatal m_error" data-channel="general.phpError" data-detect-files="true"><span class="no-quotes t_string">Fatal Error: </span><span class="t_string">fatality</span>, <span class="t_string">' . __FILE__ . ' (line %d)</span><pre class="highlight line-numbers" data-line="%d" data-start="%d"><code class="language-php">%a';
+        $expectMatch = '%a<li class="error-fatal m_error" data-channel="general.phpError" data-detect-files="true"><span class="no-quotes t_string">Fatal Error: </span><span class="t_string">fatality</span>, <span class="t_string">' . __FILE__ . ' (line %d)</span><pre class="highlight line-numbers" data-line="%d" data-line-offset="%d" data-start="%d"><code class="language-php">%a';
         $this->assertStringMatchesFormat($expectMatch, $output);
     }
 }

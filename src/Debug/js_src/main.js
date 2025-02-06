@@ -109,7 +109,6 @@ function debugEnhanceInit ($node, arg1) {
 }
 
 function debugEnhanceDefault ($node) {
-  // var $self = $(this)
   var $parentLis = {}
   if ($node.hasClass('debug')) {
     // console.warn('debugEnhance() : .debug')

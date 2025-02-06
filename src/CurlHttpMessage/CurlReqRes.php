@@ -192,10 +192,7 @@ class CurlReqRes
         $optRef = &$this->options;
         while ($path) {
             $key = \array_pop($path);
-            if (\is_array($optRef) === false) {
-                return null;
-            }
-            if (isset($optRef[$key])) {
+            if (\is_array($optRef) && isset($optRef[$key])) {
                 $optRef = &$optRef[$key];
                 continue;
             }

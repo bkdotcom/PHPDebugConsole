@@ -11,6 +11,7 @@ use PHPUnit\Framework\TestCase;
  * @author BradKent <bkfake-github@yahoo.com>
  *
  * @covers \bdk\Container
+ * @covers \bdk\Container\Utility
  */
 class ContainerTest extends TestCase
 {

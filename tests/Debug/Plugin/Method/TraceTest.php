@@ -270,7 +270,7 @@ class TraceTest extends DebugTestFramework
 <tr class="expanded" data-toggle="next">
 EOD;
                     self::assertStringContainsString($expectStartsWith, $output);
-                    $expectMatch = '%a<tr class="context" style="display:table-row;"><td colspan="4"><pre class="highlight line-numbers" data-line="%d" data-start="%d"><code class="language-php">%a';
+                    $expectMatch = '%a<tr class="context" style="display:table-row;"><td colspan="4"><pre class="highlight line-numbers" data-line="%d" data-line-offset="%d" data-start="%d"><code class="language-php">%a';
                     self::assertStringMatchesFormat($expectMatch, $output);
                     $expectContains = '</code></pre><hr />Arguments = <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>';
                     self::assertStringContainsString($expectContains, $output);

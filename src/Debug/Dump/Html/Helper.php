@@ -85,6 +85,7 @@ class Helper
             array(
                 'class' => 'highlight line-numbers',
                 'data-line' => $lineNum,
+                'data-line-offset' => \key($lines), // needed for line-highlight
                 'data-start' => \key($lines),
             ),
             '<code class="language-php">'

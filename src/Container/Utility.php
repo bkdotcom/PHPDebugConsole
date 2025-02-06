@@ -65,10 +65,42 @@ class Utility
         if (\is_array($val)) {
             return $val;
         }
-        $msg = 'toRawValues expects Container, ServiceProviderInterface, callable, or key->value array. %s provided';
-        $type = \is_object($val)
-            ? \get_class($val)
-            : \gettype($val);
-        throw new InvalidArgumentException(\sprintf($msg, $type));
+        throw new InvalidArgumentException(\sprintf(
+            'toRawValues expects Container, ServiceProviderInterface, callable, or key->value array. %s provided',
+            self::getDebugType($val)
+        ));
+    }
+
+    /**
+     * Assert that the identifier exists
+     *
+     * @param mixed $val Value to check
+     *
+     * @return void
+     *
+     * @throws InvalidArgumentException If the identifier is not defined
+     */
+    public static function assertInvokable($val)
+    {
+        if (\is_object($val) === false || \method_exists($val, '__invoke') === false) {
+            throw new InvalidArgumentException(\sprintf(
+                'Closure or invokable object expected.  %s provided',
+                self::getDebugType($val)
+            ));
+        }
+    }
+
+    /**
+     * Gets the type name of a variable in a way that is suitable for debugging
+     *
+     * @param mixed $value Value to inspect
+     *
+     * @return string
+     */
+    protected static function getDebugType($value)
+    {
+        return \is_object($value)
+            ? \get_class($value)
+            : \strtolower(\gettype($value));
     }
 }

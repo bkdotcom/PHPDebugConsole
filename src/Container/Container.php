@@ -14,6 +14,7 @@ namespace bdk;
 
 use ArrayAccess;
 use bdk\Container\ServiceProviderInterface;
+use bdk\Container\Utility;
 use InvalidArgumentException;
 use OutOfBoundsException;
 use RuntimeException;
@@ -139,8 +140,8 @@ class Container implements ArrayAccess
     public function extend($name, $callable)
     {
         $this->assertExists($name);
-        $this->assertInvokable($this->values[$name]);
-        $this->assertInvokable($callable);
+        Utility::assertInvokable($this->values[$name]);
+        Utility::assertInvokable($callable);
 
         $this->extenders[$name] = $callable;
     }
@@ -160,7 +161,7 @@ class Container implements ArrayAccess
      */
     public function factory($invokable)
     {
-        $this->assertInvokable($invokable);
+        Utility::assertInvokable($invokable);
         $this->factories->attach($invokable);
         return $invokable;
     }
@@ -335,7 +336,7 @@ class Container implements ArrayAccess
      */
     public function protect($invokable)
     {
-        $this->assertInvokable($invokable);
+        Utility::assertInvokable($invokable);
         $this->protected->attach($invokable);
         return $invokable;
     }
@@ -427,39 +428,6 @@ class Container implements ArrayAccess
                 \sprintf('Unknown identifier: "%s"', $name)
             );
         }
-    }
-
-    /**
-     * Assert that the identifier exists
-     *
-     * @param mixed $val Value to check
-     *
-     * @return void
-     *
-     * @throws InvalidArgumentException If the identifier is not defined
-     */
-    private function assertInvokable($val)
-    {
-        if (\is_object($val) === false || \method_exists($val, '__invoke') === false) {
-            throw new InvalidArgumentException(\sprintf(
-                'Closure or invokable object expected.  %s provided',
-                $this->getDebugType($val)
-            ));
-        }
-    }
-
-    /**
-     * Gets the type name of a variable in a way that is suitable for debugging
-     *
-     * @param mixed $value Value to inspect
-     *
-     * @return string
-     */
-    protected static function getDebugType($value)
-    {
-        return \is_object($value)
-            ? \get_class($value)
-            : \strtolower(\gettype($value));
     }
 
     /**

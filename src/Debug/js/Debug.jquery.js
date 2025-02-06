@@ -731,11 +731,7 @@
   }
 
   function createFileLink (string, remove, foundFiles) {
-    var $replace;
     var $string = $(string);
-    var attrs = string.attributes; // attrs is not a plain object, but an array of attribute nodes
-                                  //    which contain both the name and value
-    var text = $.trim($string.text());
     var matches = createFileLinkMatches($string, foundFiles);
     var action = 'create';
     if (remove) {
@@ -751,32 +747,29 @@
     if (matches.length < 1) {
       return
     }
+    createFileLinkDo($string, matches, action);
+  }
 
-    $replace = createFileLinkReplace($string, matches, text, action);
-
-    /*
-    console.warn('createFileLink', {
-      action: action,
-      matches: matches,
-      // stringOuterHTML: string.outerHTML,
-      stringText: text,
-      replace: $replace[0].outerHTML
-    })
-    */
-    if (action !== 'update') {
-      createFileLinkUpdateAttr($string, $replace, attrs);
+  function createFileLinkDo ($string, matches, action) {
+    var text = $.trim($string.text());
+    var $replace = createFileLinkReplace($string, matches, text, action);
+    if (action === 'create') {
+      createFileLinkUpdateAttr($string, $replace);
     }
     if ($string.is('td, th, li') === false) {
       $string.replaceWith($replace);
       return
     }
-    $string.html(remove
+    $string.html(action === 'remove'
       ? text
       : $replace
     );
   }
 
-  function createFileLinkUpdateAttr ($string, $replace, attrs) {
+  function createFileLinkUpdateAttr ($string, $replace) {
+    // attributes is not a plain object, but an array of attribute nodes
+    //   which contain both the name and value
+    var attrs = $string[0].attributes;
     $.each(attrs, function () {
       if (typeof this === 'undefined') {
         return // continue
@@ -1498,6 +1491,24 @@
   var $root$1;
   var config$5;
   var KEYCODE_ESC = 27;
+  var menu = '<div class="debug-options" aria-labelledby="debug-options-toggle">' +
+    '<div class="debug-options-body">' +
+      '<label>Theme <select name="theme">' +
+        '<option value="auto">Auto</option>' +
+        '<option value="light">Light</option>' +
+        '<option value="dark">Dark</option>' +
+      '</select></label>' +
+      '<label><input type="checkbox" name="debugCookie" /> Debug Cookie</label>' +
+      '<label><input type="checkbox" name="persistDrawer" /> Keep Open/Closed</label>' +
+      '<label><input type="checkbox" name="linkFiles" /> Create file links</label>' +
+      '<div class="form-group">' +
+        '<label for="linkFilesTemplate">Link Template</label>' +
+        '<input id="linkFilesTemplate" name="linkFilesTemplate" />' +
+      '</div>' +
+      '<hr class="dropdown-divider" />' +
+      '<a href="http://www.bradkent.com/php/debug" target="_blank">Documentation</a>' +
+    '</div>' +
+    '</div>';
 
   function init$5 ($debugRoot) {
     $root$1 = $debugRoot;
@@ -1508,20 +1519,17 @@
     $root$1.find('.debug-options-toggle')
       .on('click', onChangeDebugOptionsToggle);
 
-    $('select[name=theme]')
+    $root$1.find('select[name=theme]')
       .on('change', onChangeTheme)
       .val(config$5.get('theme'));
 
-    $('input[name=debugCookie]')
+    $root$1.find('input[name=debugCookie]')
       .on('change', onChangeDebugCookie)
-      .prop('checked', config$5.get('debugKey') && cookieGet('debug') === config$5.get('debugKey'));
-    if (!config$5.get('debugKey')) {
-      $('input[name=debugCookie]')
-        .prop('disabled', true)
-        .closest('label').addClass('disabled');
-    }
+      .prop('checked', config$5.get('debugKey') && cookieGet('debug') === config$5.get('debugKey'))
+      .prop('disabled', !config$5.get('debugKey'))
+      .closest('label').toggleClass('disabled', !config$5.get('debugKey'));
 
-    $('input[name=persistDrawer]')
+    $root$1.find('input[name=persistDrawer]')
       .on('change', onChangePersistDrawer)
       .prop('checked', config$5.get('persistDrawer'));
 
@@ -1541,25 +1549,7 @@
         '<i class="fa fa-ellipsis-v fa-fw"></i>' +
       '</button>'
     );
-    $menuBar.append('<div class="debug-options" aria-labelledby="debug-options-toggle">' +
-        '<div class="debug-options-body">' +
-          '<label>Theme <select name="theme">' +
-            '<option value="auto">Auto</option>' +
-            '<option value="light">Light</option>' +
-            '<option value="dark">Dark</option>' +
-          '</select></label>' +
-          '<label><input type="checkbox" name="debugCookie" /> Debug Cookie</label>' +
-          '<label><input type="checkbox" name="persistDrawer" /> Keep Open/Closed</label>' +
-          '<label><input type="checkbox" name="linkFiles" /> Create file links</label>' +
-          '<div class="form-group">' +
-            '<label for="linkFilesTemplate">Link Template</label>' +
-            '<input id="linkFilesTemplate" name="linkFilesTemplate" />' +
-          '</div>' +
-          '<hr class="dropdown-divider" />' +
-          '<a href="http://www.bradkent.com/php/debug" target="_blank">Documentation</a>' +
-        '</div>' +
-      '</div>'
-    );
+    $menuBar.append(menu);
     if (!config$5.get('drawer')) {
       $menuBar.find('input[name=persistDrawer]').closest('label').remove();
     }
@@ -6723,7 +6713,6 @@
   }
 
   function debugEnhanceDefault ($node) {
-    // var $self = $(this)
     var $parentLis = {};
     if ($node.hasClass('debug')) {
       // console.warn('debugEnhance() : .debug')

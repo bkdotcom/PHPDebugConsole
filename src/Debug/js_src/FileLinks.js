@@ -137,11 +137,7 @@ function createFileLinksTraceProcessTr($tr, isUpdate) {
 }
 
 function createFileLink (string, remove, foundFiles) {
-  var $replace
   var $string = $(string)
-  var attrs = string.attributes // attrs is not a plain object, but an array of attribute nodes
-                                //    which contain both the name and value
-  var text = $.trim($string.text())
   var matches = createFileLinkMatches($string, foundFiles)
   var action = 'create'
   if (remove) {
@@ -157,32 +153,29 @@ function createFileLink (string, remove, foundFiles) {
   if (matches.length < 1) {
     return
   }
+  createFileLinkDo($string, matches, action)
+}
 
-  $replace = createFileLinkReplace($string, matches, text, action)
-
-  /*
-  console.warn('createFileLink', {
-    action: action,
-    matches: matches,
-    // stringOuterHTML: string.outerHTML,
-    stringText: text,
-    replace: $replace[0].outerHTML
-  })
-  */
-  if (action !== 'update') {
-    createFileLinkUpdateAttr($string, $replace, attrs)
+function createFileLinkDo ($string, matches, action) {
+  var text = $.trim($string.text())
+  var $replace = createFileLinkReplace($string, matches, text, action)
+  if (action === 'create') {
+    createFileLinkUpdateAttr($string, $replace)
   }
   if ($string.is('td, th, li') === false) {
     $string.replaceWith($replace)
     return
   }
-  $string.html(remove
+  $string.html(action === 'remove'
     ? text
     : $replace
   )
 }
 
-function createFileLinkUpdateAttr ($string, $replace, attrs) {
+function createFileLinkUpdateAttr ($string, $replace) {
+  // attributes is not a plain object, but an array of attribute nodes
+  //   which contain both the name and value
+  var attrs = $string[0].attributes
   $.each(attrs, function () {
     if (typeof this === 'undefined') {
       return // continue

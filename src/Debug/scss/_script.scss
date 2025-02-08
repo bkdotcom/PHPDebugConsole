@@ -38,11 +38,14 @@ i.fa-calendar { font-size: 1.1em; }
 }
 
 .vis-toggles span:hover,
-[data-toggle=interface]:hover { background-color: rgba(0, 0, 0, 0.1); }
+[data-toggle=interface]:hover { 
+  background: color-mix(in lch, var(--color-button-fg) 20%, transparent);
+}
 
 .vis-toggles .toggle-off,
-.interface {
-  &.toggle-off { opacity: 0.5; }
+.interface.toggle-off,
+.interface.toggle-off * {
+  color: color-mix(in lch, var(--color-fg) 50%, transparent);
 }
 
 //

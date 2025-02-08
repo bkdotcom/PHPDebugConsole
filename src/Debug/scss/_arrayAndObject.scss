@@ -84,7 +84,8 @@ li[class*=m_] > .t_array.array-file-tree > .array-inner {
   margin-left: -10px;
 }
 
-.t_identifier[title] {
+.t_identifier[title],
+.t_identifier.hasTooltip {
   border-bottom: currentColor dashed 1px;
 }
 
@@ -134,6 +135,9 @@ li[class*=m_] > .t_array.array-file-tree > .array-inner {
   > .object-inner {
     > .modifiers {
       display: none;
+    }
+    > dd {
+      width: fit-content;
     }
     > dd[class*=t_modifier_] {
       display: inline-block;

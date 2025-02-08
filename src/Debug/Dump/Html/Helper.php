@@ -211,7 +211,7 @@ class Helper
     }
 
     /**
-     * Format trace table's function column
+     * Format trace table's filepath & function columns
      *
      * @param string $html    <tr>...</tr>
      * @param array  $row     Row values
@@ -228,7 +228,7 @@ class Helper
             |xs', $html, $cells, PREG_SET_ORDER);
 
         $cells[1]['innerHtml'] = $this->markupFilePath($row['file'], $rowInfo['commonFilePrefix']);
-        if (isset($cells[3])) {
+        if (isset($cells[3]) && $row['function'] !== Abstracter::UNDEFINED) {
             $cells[3]['innerHtml'] = $this->dumper->valDumper->markupIdentifier($row['function'], 'method', 'span', array(), true);
         }
         $trAttribs = \strpos($cells[1]['innerHtml'], 'DOCUMENT_ROOT') !== false

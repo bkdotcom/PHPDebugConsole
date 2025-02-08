@@ -27,7 +27,9 @@
 .hasTooltip:not(a),
 *[title]:not(a) {
   cursor: help;
-  &:hover { background-color: rgba(0, 0, 0, 0.05); }
+  &:hover { 
+    background: color-mix(in lch, var(--color-button-fg) 20%, transparent);
+  }
 }
 
 *[data-toggle] { 

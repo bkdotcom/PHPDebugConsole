@@ -44,7 +44,7 @@ It is installable and autoloadable via [Composer](https://getcomposer.org/) as [
 ```json
 {
     "require": {
-        "bdk/debug": "^3.3",
+        "bdk/debug": "^3.4",
     }
 }
 ```

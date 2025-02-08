@@ -114,7 +114,7 @@ export function enhanceInner ($obj) {
 
 function enhanceInterfaces ($obj) {
   var $inner = $obj.find('> .object-inner')
-  $inner.find('> dd > ul > li > .interface, > dd > ul > li > .interface + ul .interface')
+  $inner.find('> dd.interface, > dd.implements .interface')
     .each(function () {
       var iface = $(this).text()
       if (findInterfaceMethods($obj, iface).length === 0) {

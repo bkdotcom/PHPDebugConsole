@@ -71,7 +71,8 @@ function refTitleDeprecated ($ref, title) {
 
 function refTitleImplements ($ref, title) {
   var className = $ref.parent().data('implements')
-  var $interface = $ref.closest('.object-inner').find('> .implements span[data-interface]').filter(function ($node) {
+  var selector = '> dd.interface, > dd.implements .interface';
+  var $interface = $ref.closest('.object-inner').find(selector).filter(function ($node) {
     return $(this).data('interface') === className
   })
   return title + ' ' + $interface[0].innerHTML

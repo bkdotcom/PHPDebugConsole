@@ -15,7 +15,6 @@ namespace bdk\Debug\Collector\Doctrine;
 use bdk\Debug;
 use bdk\Debug\Collector\DatabaseTrait;
 use bdk\Debug\Collector\StatementInfo;
-use bdk\HttpMessage\Utility\Uri as UriUtil;
 use bdk\PubSub\Event;
 use Doctrine\DBAL\Driver\Connection as ConnectionInterface;
 use Doctrine\DBAL\Driver\Middleware\AbstractConnectionMiddleware;
@@ -29,9 +28,6 @@ use ReflectionClass;
 class Connection extends AbstractConnectionMiddleware
 {
     use DatabaseTrait;
-
-    /** @var array */
-    private $params = array();
 
     /**
      * Constructor
@@ -66,10 +62,11 @@ class Connection extends AbstractConnectionMiddleware
         $debug->groupSummary(0);
         $groupParams = \array_filter([
             'Doctrine',
-            $this->buildDsn(),
+            \bdk\Debug\Utility\Sql::buildDsn($this->params),
             $this->meta(array(
                 'argsAsParams' => false,
                 'level' => 'info',
+                'redact' => true,
             )),
         ]);
         \call_user_func_array([$debug, 'groupCollapsed'], $groupParams);
@@ -131,56 +128,6 @@ class Connection extends AbstractConnectionMiddleware
     {
         $this->debug->info('rollBack', $this->meta());
         parent::rollBack();
-    }
-
-    /**
-     * Build DSN url from params
-     *
-     * @return string
-     */
-    private function buildDsn()
-    {
-        $params = \array_merge(array(
-            'dbname' => null,
-            'driver' => null,
-            'host' => 'localhost',
-            'memory' => false,
-            'password' => null,
-            'user' => null,
-        ), $this->params);
-        $parts = $this->paramsToUrlParts($params);
-        $dsn = (string) UriUtil::fromParsed($parts);
-        if ($parts['path'] === ':memory:') {
-            $dsn = \str_replace('/localhost', '/', $dsn);
-        }
-        return $dsn;
-    }
-
-    /**
-     * Convert params to url parts
-     *
-     * @param array $params Connection params
-     *
-     * @return array
-     */
-    private function paramsToUrlParts(array $params)
-    {
-        $map = array(
-            'dbname' => 'path',
-            'driver' => 'scheme',
-            'password' => 'pass',
-        );
-        \ksort($params);
-        $rename = \array_intersect_key($params, $map);
-        $keysNew = \array_values(\array_intersect_key($map, $rename));
-        $renamed = \array_combine($keysNew, \array_values($rename));
-        $parts = \array_merge($renamed, $params);
-        if ($params['memory'] || $params['dbname'] === ':memory:') {
-            $params['memory'] = true;
-            $parts['path'] = ':memory:';
-        }
-        $parts['scheme'] = \str_replace('_', '-', $parts['scheme']);
-        return $parts;
     }
 
     /**

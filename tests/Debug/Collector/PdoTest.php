@@ -98,7 +98,7 @@ EOD;
         $stmt->execute(array(
             'datetime' => '2022-05-18 13:10:00',
         ));
-        $statements = self::$client->getLoggedStatements();
+        $statements = self::$client->getStatementInfoLogger()->getLoggedStatements();
         $stmtInfo = \end($statements);
         $this->assertSame(array(
             'datetime' => '2022-05-18 13:10:00',

@@ -137,6 +137,7 @@ class HtmlString
     {
         $typesEncoded = [
             Type::TYPE_STRING_BASE64,
+            Type::TYPE_STRING_FORM,
             Type::TYPE_STRING_JSON,
             Type::TYPE_STRING_SERIALIZED,
         ];

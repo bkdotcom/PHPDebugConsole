@@ -78,11 +78,10 @@ class Backtrace
     public static function get($options = 0, $limit = 0, $exception = null)
     {
         $debugBacktraceOpts = self::translateOptions($options) & ~DEBUG_BACKTRACE_IGNORE_ARGS;
-        $backtraceLimit = $limit > 0 ? $limit + 2 : 0;
         $trace = $exception
             ? self::getExceptionTrace($exception)
             : (\array_reverse(Xdebug::getFunctionStack() ?: [])
-                ?: \debug_backtrace($debugBacktraceOpts, $backtraceLimit));
+                ?: \debug_backtrace($debugBacktraceOpts));
         $trace = Normalizer::normalize($trace);
         return self::getFinish($trace, $options, $limit);
     }

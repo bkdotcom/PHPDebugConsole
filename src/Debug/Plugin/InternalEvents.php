@@ -281,23 +281,7 @@ class InternalEvents implements SubscriberInterface
             $error['typeStr'] . ':',
             $error['message'],
             $error['fileAndLine'],
-            $this->debug->meta(array(
-                'context' => $error['category'] === Error::CAT_FATAL && $error['backtrace'] === null
-                    ? $error['context']
-                    : null,
-                'errorCat' => $error['category'],
-                'errorHash' => $error['hash'],
-                'errorType' => $error['type'],
-                'evalLine' => $error['evalLine'],
-                'file' => $error['file'],
-                'icon' => $error['isSuppressed']
-                    ? ':error-suppressed:'
-                    : null,
-                'isSuppressed' => $error['isSuppressed'], // set via event subscriber vs "@"" code prefix
-                'line' => $error['line'],
-                'sanitize' => $error['isHtml'] === false,
-                'trace' => $error['backtrace'],
-            ))
+            $this->debug->meta($this->errorMetaValues($error))
         );
         // We've captured the error and are logging / viewing it with debugger.
         //    typically no reason for php to log the error...
@@ -307,6 +291,34 @@ class InternalEvents implements SubscriberInterface
         // Prevent ErrorHandler\Plugin\Emailer from sending email.
         // Since we're collecting log info, we send email on shutdown
         $error['email'] = false;
+    }
+
+    /**
+     * Get error LogEntry meta values
+     *
+     * @param Error $error Error instance
+     *
+     * @return array
+     */
+    private function errorMetaValues(Error $error)
+    {
+        return array(
+            'context' => $error['category'] === Error::CAT_FATAL && $error['backtrace'] === null
+                ? $error['context']
+                : null,
+            'errorCat' => $error['category'],
+            'errorHash' => $error['hash'],
+            'errorType' => $error['type'],
+            'evalLine' => $error['evalLine'],
+            'file' => $error['file'],
+            'icon' => $error['isSuppressed']
+                ? ':error-suppressed:'
+                : null,
+            'isSuppressed' => $error['isSuppressed'], // set via event subscriber vs "@"" code prefix
+            'line' => $error['line'],
+            'sanitize' => $error['isHtml'] === false,
+            'trace' => $error['backtrace'],
+        );
     }
 
     /**

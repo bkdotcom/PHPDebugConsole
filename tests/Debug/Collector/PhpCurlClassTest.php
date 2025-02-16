@@ -18,6 +18,8 @@ class PhpCurlClassTest extends DebugTestFramework
     {
         $curl = new PhpCurlClass(array(
             'inclInfo' => true,
+            'inclOptions' => true,
+            'inclRequestBody' => true,
             'inclResponseBody' => true,
             'verbose' => true,
         ));
@@ -50,16 +52,25 @@ class PhpCurlClassTest extends DebugTestFramework
                             <li><span class="t_key">CURLOPT_POSTFIELDS</span><span class="t_operator">=&gt;</span><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
                                 <ul class="array-inner list-unstyled">
                                 <li><span class="t_key">username</span><span class="t_operator">=&gt;</span><span class="t_string">myusername</span></li>
-                                <li><span class="t_key">password</span><span class="t_operator">=&gt;</span><span class="t_string">mypassword</span></li>
+                                <li><span class="t_key">password</span><span class="t_operator">=&gt;</span><span class="t_string">█████████</span></li>
                                 </ul><span class="t_punct">)</span></span></li>
                             %A
                             <li><span class="t_key">CURLOPT_VERBOSE</span><span class="t_operator">=&gt;</span><span class="t_bool" data-type-more="true">true</span></li>
                         </ul><span class="t_punct">)</span></span></li>
                     <li class="m_log" data-channel="general.Curl">%srequest headers</span> = <span class="t_string">POST /echo HTTP/1.1%A</li>
+                    <li class="m_log" data-channel="general.Curl"><span class="no-quotes t_string">request body</span> = <span class="string-encoded tabs-container" data-type-more="form">
+                        <nav role="tablist"><a class="nav-link" data-target=".tab-1" data-toggle="tab" role="tab">form</a><a class="active nav-link" data-target=".tab-2" data-toggle="tab" role="tab">parsed</a></nav>
+                        <div class="tab-1 tab-pane" role="tabpanel"><span class="no-quotes t_string">username=myusername&amp;password=█████████</span></div>
+                        <div class="active tab-2 tab-pane" role="tabpanel"><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
+                        <ul class="array-inner list-unstyled">
+                            <li><span class="t_key">username</span><span class="t_operator">=&gt;</span><span class="t_string">myusername</span></li>
+                            <li><span class="t_key">password</span><span class="t_operator">=&gt;</span><span class="t_string">█████████</span></li>
+                        </ul><span class="t_punct">)</span></span></div>
+                        </span></li>
                     <li class="m_time" data-channel="general.Curl"><span class="no-quotes t_string">time: %f %s</span></li>
                     <li class="m_log" data-channel="general.Curl"><span class="no-quotes t_string">response headers</span> = <span class="t_string">HTTP/1.1 200 OK%a</span></li>
                     <li class="m_log" data-channel="general.Curl"><span class="no-quotes t_string">response body</span> = <span class="string-encoded tabs-container" data-type-more="json">
-                        <nav role="tablist"><a class="nav-link" data-target=".tab-1" data-toggle="tab" role="tab">json</a><a class="active nav-link" data-target=".tab-2" data-toggle="tab" role="tab">decoded</a></nav>
+                        <nav role="tablist"><a class="nav-link" data-target=".tab-1" data-toggle="tab" role="tab">json</a><a class="active nav-link" data-target=".tab-2" data-toggle="tab" role="tab">parsed</a></nav>
                         <div class="tab-1 tab-pane" role="tabpanel"><span class="value-container" data-type="string"><span class="prettified">(prettified)</span> <span class="highlight language-json no-quotes t_string">{
                             &quot;queryParams&quot;: [],
                             &quot;headers&quot;: &quot;POST \/echo HTTP\/1.1\r\nHost: 127.0.0.1:8080\r\nUser-Agent: %s\r\nAccept: *\/*\r\nContent-Length: 39\r\nContent-Type: application\/x-www-form-urlencoded&quot;,
@@ -88,11 +99,11 @@ class PhpCurlClassTest extends DebugTestFramework
             </li>';
         $this->outputTest(array(
             'html' => static function ($htmlActual) use ($htmlExpect) {
-                self::assertSame(2, \preg_match_all('/password=█████████/', $htmlActual), 'Did not find redacted password twice');
+                self::assertSame(3, \preg_match_all('/password=█████████/', $htmlActual), 'Did not find redacted password three times');
                 $htmlActual = \preg_replace('#^\s+#m', '', $htmlActual);
                 $htmlExpect = \preg_replace('#^\s+#m', '', $htmlExpect);
-                // echo 'expect: ' . $htmlExpect . "\n";
-                // echo 'actual: ' . $htmlActual . "\n\n";
+                // \bdk\Debug::varDump('expect', $htmlExpect);
+                // \bdk\Debug::varDump('actual', $htmlActual);
                 self::assertStringMatchesFormat('%A' . $htmlExpect . '%A', $htmlActual);
             },
         ));
@@ -102,6 +113,8 @@ class PhpCurlClassTest extends DebugTestFramework
     {
         $curl = new PhpCurlClass(array(
             // 'inclInfo' => true,
+            'inclOptions' => true,
+            'inclRequestBody' => true,
             'inclResponseBody' => true,
             // 'verbose' => true,
         ), $this->debug);
@@ -133,6 +146,8 @@ class PhpCurlClassTest extends DebugTestFramework
     {
         $curl = new PhpCurlClass(array(
             // 'inclInfo' => true,
+            'inclOptions' => true,
+            'inclRequestBody' => true,
             'inclResponseBody' => true,
             // 'verbose' => true,
         ), $this->debug);
@@ -158,7 +173,7 @@ class PhpCurlClassTest extends DebugTestFramework
                         <li class="m_time" data-channel="general.Curl"><span class="no-quotes t_string">time: %f %s</span></li>
                         <li class="m_log" data-channel="general.Curl"><span class="no-quotes t_string">response headers</span> = <span class="t_string">HTTP/1.1 302 Found%a</span></li>
                         <li class="m_log" data-channel="general.Curl"><span class="no-quotes t_string">response body</span> = <span class="string-encoded tabs-container" data-type-more="json">
-                            <nav role="tablist"><a class="nav-link" data-target=".tab-1" data-toggle="tab" role="tab">json</a><a class="active nav-link" data-target=".tab-2" data-toggle="tab" role="tab">decoded</a></nav>
+                            <nav role="tablist"><a class="nav-link" data-target=".tab-1" data-toggle="tab" role="tab">json</a><a class="active nav-link" data-target=".tab-2" data-toggle="tab" role="tab">parsed</a></nav>
                             <div class="tab-1 tab-pane" role="tabpanel"><span class="value-container" data-type="string"><span class="prettified">(prettified)</span> <span class="highlight language-json no-quotes t_string">{
                                 &quot;queryParams&quot;: [],
                                 &quot;headers&quot;: &quot;GET \/echo HTTP\/1.1\r\nHost: 127.0.0.1:8080\r\nUser-Agent: %s\r\nAccept: *\/*&quot;,
@@ -185,6 +200,8 @@ class PhpCurlClassTest extends DebugTestFramework
     {
         $curl = new PhpCurlClass(array(
             // 'inclInfo' => true,
+            'inclOptions' => true,
+            'inclRequestBody' => true,
             'inclResponseBody' => true,
             // 'verbose' => true,
         ), $this->debug);

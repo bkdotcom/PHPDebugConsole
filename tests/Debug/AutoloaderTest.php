@@ -30,6 +30,18 @@ class AutoloaderTest extends DebugTestFramework
         self::assertSame($countPre - 1, \count(\spl_autoload_functions()));
     }
 
+    public function testAddClass()
+    {
+        $return = static::$autoloader->addClass('bdk\\Test\\Debug\\Fixture\\TestObj', __DIR__ . '/Fixture/TestObj.php');
+        self::assertSame(static::$autoloader, $return);
+    }
+
+    public function testAddPsr4()
+    {
+        $return = static::$autoloader->addPsr4('bdk\\Test\\Debug\\Fixture\\', __DIR__ . '/Fixture');
+        self::assertSame(static::$autoloader, $return);
+    }
+
     public function testAutoloadClassMap()
     {
         $classMap = \bdk\Debug\Utility\Reflection::propGet(static::$autoloader, 'classMap');

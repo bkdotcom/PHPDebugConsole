@@ -13,6 +13,7 @@
 namespace bdk\Debug\Collector;
 
 use bdk\Debug;
+use bdk\Debug\Abstraction\Type;
 use Curl\Curl;
 use ReflectionObject;
 
@@ -37,6 +38,8 @@ class PhpCurlClass extends Curl
     /** @var array<string,mixed> */
     private $debugOptions = array(
         'inclInfo' => false,
+        'inclOptions' => false,
+        'inclRequestBody' => false,
         'inclResponseBody' => false,
         'label' => 'Curl',
         'prettyResponseBody' => true,
@@ -109,7 +112,9 @@ class PhpCurlClass extends Curl
             ))
         );
         $this->debug->time($this->debugOptions['label']);
-        $this->debug->log('options', $options);
+        if ($this->debugOptions['inclOptions']) {
+            $this->debug->log('options', $options, $this->debug->meta('redact'));
+        }
         $return = parent::exec($handle);
         $this->execLog($options);
         $this->debug->groupEnd();
@@ -191,11 +196,11 @@ class PhpCurlClass extends Curl
     /**
      * Get the http method used (GET, POST, etc)
      *
-     * @param array $options our human readable curl options
+     * @param array $options Our human readable curl options
      *
      * @return string
      */
-    private function getHttpMethod($options)
+    private function getHttpMethod(array $options)
     {
         $method = 'GET';
         if (isset($options['CURLOPT_CUSTOMREQUEST'])) {
@@ -233,10 +238,10 @@ class PhpCurlClass extends Curl
      *
      * @return void
      */
-    private function logRequestResponse($verboseOutput, $options)
+    private function logRequestResponse($verboseOutput, array $options)
     {
         $duration = $this->debug->timeEnd($this->debugOptions['label'], false);
-        $this->debug->log('request headers', $this->debug->redactHeaders($this->rawRequestHeaders));
+        $this->logRequest($options);
         // Curl provides no means to get the request body
         if ($this->error) {
             $this->debug->backtrace->addInternalClass('Curl');
@@ -247,19 +252,43 @@ class PhpCurlClass extends Curl
             $this->debug->log('Redirect(s)', $matches[2]);
         }
         $this->debug->time($duration);
-        $this->debug->log('response headers', $this->rawResponseHeaders, $this->debug->meta('redact'));
-        if ($this->debugOptions['inclResponseBody']) {
-            $this->debug->log(
-                'response body',
-                $this->getResponseBody(),
-                $this->debug->meta('redact')
-            );
-        }
+        $this->logResponse();
         if ($this->debugOptions['inclInfo']) {
             $this->debug->log('info', $this->getInfo());
         }
         if ($verboseOutput) {
             $this->debug->log('verbose', $verboseOutput);
+        }
+    }
+
+    /**
+     * Log request headers and body
+     *
+     * @param array $options Curl options used for request
+     * 
+     * @return void
+     */
+    private function logRequest(array $options)
+    {
+        $this->debug->log('request headers', $this->debug->redactHeaders($this->rawRequestHeaders));
+        if ($this->debugOptions['inclRequestBody'] && isset($options['CURLOPT_POSTFIELDS'])) {
+            $requestBody = \is_array($options['CURLOPT_POSTFIELDS'])
+                ? $this->debug->abstracter->getAbstraction(\http_build_query($options['CURLOPT_POSTFIELDS']), null, [Type::TYPE_STRING, Type::TYPE_STRING_FORM])
+                : $options['CURLOPT_POSTFIELDS'];
+            $this->debug->log('request body', $requestBody, $this->debug->meta('redact'));
+        }
+    }
+
+    /**
+     * Log response headers and body
+     *
+     * @return void
+     */
+    private function logResponse()
+    {
+        $this->debug->log('response headers', $this->rawResponseHeaders, $this->debug->meta('redact'));
+        if ($this->debugOptions['inclResponseBody']) {
+            $this->debug->log('response body', $this->getResponseBody(), $this->debug->meta('redact'));
         }
     }
 }

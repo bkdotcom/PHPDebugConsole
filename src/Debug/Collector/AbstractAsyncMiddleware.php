@@ -16,6 +16,7 @@ use bdk\Debug;
 use bdk\Debug\AbstractComponent;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Utility;
+use bdk\HttpMessage\Utility\ContentType;
 use bdk\HttpMessage\Utility\Stream as StreamUtility;
 use Psr\Http\Message\MessageInterface;
 use Psr\Http\Message\RequestInterface;
@@ -23,7 +24,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\UriInterface;
 
 /**
- * PHPDebugConsole Middleware for Guzzle
+ * PHPDebugConsole Middleware for Guzzle & CurlHttpMessage
  */
 class AbstractAsyncMiddleware extends AbstractComponent
 {
@@ -179,6 +180,8 @@ class AbstractAsyncMiddleware extends AbstractComponent
     /**
      * Build request header string
      *
+     * Returned string is redacted
+     *
      * @param RequestInterface|ResponseInterface $message Request or Response
      *
      * @return string
@@ -215,6 +218,12 @@ class AbstractAsyncMiddleware extends AbstractComponent
         $prettify = $msg instanceof RequestInterface
             ? $this->cfg['prettyRequestBody']
             : $this->cfg['prettyResponseBody'];
+        if ($contentType === ContentType::FORM) {
+            return $this->debug->abstracter->getAbstraction($body, null, [
+                \bdk\Debug\Abstraction\Type::TYPE_STRING,
+                \bdk\Debug\Abstraction\Type::TYPE_STRING_FORM,
+            ]);
+        }
         return $prettify
             ? $this->debug->prettify($body, $contentType)
             : $body;

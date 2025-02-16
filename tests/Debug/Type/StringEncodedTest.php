@@ -177,7 +177,7 @@ class StringEncodedTest extends DebugTestFramework
                         '',
                     ),
                     'html' => '<li class="m_log"><span class="string-encoded tabs-container" data-type-more="base64">
-                        <nav role="tablist"><a class="nav-link" data-target=".tab-1" data-toggle="tab" role="tab">base64</a><a class="nav-link" data-target=".tab-2" data-toggle="tab" role="tab">json</a><a class="active nav-link" data-target=".tab-3" data-toggle="tab" role="tab">decoded</a></nav>
+                        <nav role="tablist"><a class="nav-link" data-target=".tab-1" data-toggle="tab" role="tab">base64</a><a class="nav-link" data-target=".tab-2" data-toggle="tab" role="tab">json</a><a class="active nav-link" data-target=".tab-3" data-toggle="tab" role="tab">parsed</a></nav>
                         <div class="tab-1 tab-pane" role="tabpanel"><span class="no-quotes t_string">' . $base64snip2 . '</span></div>
                         <div class="tab-2 tab-pane" role="tabpanel"><span class="value-container" data-type="string"><span class="prettified">(prettified)</span> <span class="highlight language-json no-quotes t_string">{
                             &quot;p\u043eop&quot;: &quot;\ud83d\udca9&quot;,
@@ -259,6 +259,62 @@ class StringEncodedTest extends DebugTestFramework
                     'text' => $base64snip3,
                 ),
             ),
+
+            // wrap in closure so methods are called during test vs pre-test when provider called
+            'form' => array(static function () {
+                return array(
+                    'log',
+                    array(
+                        \bdk\Debug::getInstance()->abstracter->getAbstraction(
+                            \http_build_query(array(
+                                'foo_bar' => 'baz 1',
+                                'foo bar' => 'baz 2',
+                                'foo.bar' => 'baz 3',
+                                'foo+bar' => 'baz 4',
+                                'password' => 'password',
+                            )),
+                            null,
+                            [Type::TYPE_STRING, Type::TYPE_STRING_FORM]
+                        ),
+                        \bdk\Debug::meta('redact'),
+                    ),
+                    array(
+                        'entry' => static function (LogEntry $logEntry) {
+                            self::assertInstanceof('bdk\\Debug\\Abstraction\\Abstraction', $logEntry['args'][0]);
+                            $expect = array(
+                                'brief' => false,
+                                'debug' => Abstracter::ABSTRACTION,
+                                'type' => Type::TYPE_STRING,
+                                'typeMore' => Type::TYPE_STRING_FORM,
+                                'value' => 'foo_bar=baz+1&foo+bar=baz+2&foo.bar=baz+3&foo%2Bbar=baz+4&password=█████████',
+                                'valueDecoded' => array(
+                                    'foo_bar' => 'baz 1',
+                                    'foo bar' => 'baz 2',
+                                    'foo.bar' => 'baz 3',
+                                    'foo+bar' => 'baz 4',
+                                    'password' => '█████████',
+                                ),
+                            );
+                            $actual = \bdk\Test\Debug\Helper::logEntryToArray($logEntry)['args'][0];
+                            // \bdk\Debug::varDump('expect', $expect);
+                            // \bdk\Debug::varDump('actual', $actual);
+                            self::assertSame($expect, $actual);
+                        },
+                        'html' => '<li class="m_log"><span class="string-encoded tabs-container" data-type-more="form">
+                            <nav role="tablist"><a class="nav-link" data-target=".tab-1" data-toggle="tab" role="tab">form</a><a class="active nav-link" data-target=".tab-2" data-toggle="tab" role="tab">parsed</a></nav>
+                            <div class="tab-1 tab-pane" role="tabpanel"><span class="no-quotes t_string">foo_bar=baz+1&amp;foo+bar=baz+2&amp;foo.bar=baz+3&amp;foo%2Bbar=baz+4&amp;password=█████████</span></div>
+                            <div class="active tab-2 tab-pane" role="tabpanel"><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
+                            <ul class="array-inner list-unstyled">
+                            <li><span class="t_key">foo_bar</span><span class="t_operator">=&gt;</span><span class="t_string">baz 1</span></li>
+                            <li><span class="t_key">foo bar</span><span class="t_operator">=&gt;</span><span class="t_string">baz 2</span></li>
+                            <li><span class="t_key">foo.bar</span><span class="t_operator">=&gt;</span><span class="t_string">baz 3</span></li>
+                            <li><span class="t_key">foo+bar</span><span class="t_operator">=&gt;</span><span class="t_string">baz 4</span></li>
+                            <li><span class="t_key">password</span><span class="t_operator">=&gt;</span><span class="t_string">█████████</span></li>
+                            </ul><span class="t_punct">)</span></span></div>
+                            </span></li>',
+                    ),
+                );
+            }),
 
             'json.long' => array(
                 'log',

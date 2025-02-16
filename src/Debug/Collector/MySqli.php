@@ -69,6 +69,8 @@ class MySqli extends mysqliBase
 
     /**
      * {@inheritDoc}
+     *
+     * @disregard P1038 method is not compatible
      */
     #[\ReturnTypeWillChange]
     public function autocommit($mode)
@@ -80,6 +82,8 @@ class MySqli extends mysqliBase
 
     /**
      * {@inheritDoc}
+     *
+     * @disregard P1038 method is not compatible
      */
     #[\ReturnTypeWillChange]
     public function begin_transaction($flags = 0, $name = null)
@@ -102,6 +106,8 @@ class MySqli extends mysqliBase
 
     /**
      * {@inheritDoc}
+     *
+     * @disregard P1038 method is not compatible
      */
     #[\ReturnTypeWillChange]
     public function commit($flags = 0, $name = null)
@@ -126,6 +132,8 @@ class MySqli extends mysqliBase
 
     /**
      * {@inheritDoc}
+     *
+     * @disregard P1038 method is not compatible
      */
     #[\ReturnTypeWillChange]
     public function multi_query($query)
@@ -135,6 +143,8 @@ class MySqli extends mysqliBase
 
     /**
      * {@inheritDoc}
+     *
+     * @disregard P1038 method is not compatible
      */
     #[\ReturnTypeWillChange]
     public function prepare($query)
@@ -144,6 +154,8 @@ class MySqli extends mysqliBase
 
     /**
      * {@inheritDoc}
+     *
+     * @disregard P1038 method is not compatible
      */
     #[\ReturnTypeWillChange]
     public function query($query, $resultMode = MYSQLI_STORE_RESULT)
@@ -153,16 +165,24 @@ class MySqli extends mysqliBase
 
     /**
      * {@inheritDoc}
+     *
+     * @disregard P1038 method is not compatible
      */
     #[\ReturnTypeWillChange]
     public function real_connect($host = null, $username = null, $passwd = null, $dbname = null, $port = null, $socket = null, $flags = null)
     {
         $this->connectionAttempted = true;
+        $this->params = \array_combine(
+            ['host', 'username', 'password', 'dbname', 'port', 'socket'],
+            [$host, $username, $passwd, $dbname, $port, $socket]
+        );
         return parent::real_connect($host, $username, $passwd, $dbname, $port, $socket, (int) $flags);
     }
 
     /**
      * {@inheritDoc}
+     *
+     * @disregard P1038 method is not compatible
      */
     #[\ReturnTypeWillChange]
     public function real_query($query)
@@ -172,6 +192,8 @@ class MySqli extends mysqliBase
 
     /**
      * {@inheritDoc}
+     *
+     * @disregard P1038 method is not compatible
      */
     #[\ReturnTypeWillChange]
     public function release_savepoint($name)
@@ -193,6 +215,8 @@ class MySqli extends mysqliBase
 
     /**
      * {@inheritDoc}
+     *
+     * @disregard P1038 method is not compatible
      */
     #[\ReturnTypeWillChange]
     public function rollBack($flags = 0, $name = null)
@@ -215,6 +239,8 @@ class MySqli extends mysqliBase
 
     /**
      * {@inheritDoc}
+     *
+     * @disregard P1038 method is not compatible
      */
     #[\ReturnTypeWillChange]
     public function savepoint($name)
@@ -232,6 +258,8 @@ class MySqli extends mysqliBase
 
     /**
      * {@inheritDoc}
+     *
+     * @disregard P1038 method is not compatible
      */
     #[\ReturnTypeWillChange]
     public function stmt_init()
@@ -262,7 +290,7 @@ class MySqli extends mysqliBase
             throw new RuntimeException($errstr, $errno);
         }, E_ALL);
         try {
-            $this->logRuntime($debug);
+            $this->logRuntime($debug, $this->connectionString());
         } catch (RuntimeException $e) {
             $debug->group('MySqli Error', $debug->meta(array('level' => 'error')));
             $debug->log('Connection Error');
@@ -271,6 +299,18 @@ class MySqli extends mysqliBase
         \restore_error_handler();
         $debug->groupEnd(); // groupCollapsed
         $debug->groupEnd(); // groupSummary
+    }
+
+    /**
+     * Get connection params represented as a connection string / dsn
+     *
+     * @return string|null
+     */
+    private function connectionString()
+    {
+        return $this->params
+            ? \bdk\Debug\Utility\Sql::buildDsn(\array_merge(array('scheme' => 'mysql'), $this->params))
+            : null;
     }
 
     /**
@@ -313,7 +353,7 @@ class MySqli extends mysqliBase
         $paramsDefault = array(
             'host' => \ini_get('mysqli.default_host'),
             'username' => \ini_get('mysqli.default_user'),
-            'passwd' => \ini_get('mysqli.default_pw'),
+            'password' => \ini_get('mysqli.default_pw'),
             'dbname' => '',
             'port' => \ini_get('mysqli.default_port'),
             'socket' => \ini_get('mysqli.default_socket'),
@@ -322,7 +362,8 @@ class MySqli extends mysqliBase
         $params = \array_combine(\array_keys($paramsDefault), $params);
         $p = \array_merge($paramsDefault, \array_filter($params));
         $this->connectionAttempted = true;
-        parent::__construct($p['host'], $p['username'], $p['passwd'], $p['dbname'], $p['port'], $p['socket']);
+        $this->params = $p;
+        parent::__construct($p['host'], $p['username'], $p['password'], $p['dbname'], $p['port'], $p['socket']);
     }
 
     /**

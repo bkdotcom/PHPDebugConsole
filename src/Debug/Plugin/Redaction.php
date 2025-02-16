@@ -393,16 +393,18 @@ class Redaction extends AbstractComponent implements SubscriberInterface
         if (\is_string($key) && \array_key_exists($key, $this->cfg['redactKeys'])) {
             return \call_user_func($this->cfg['redactReplace'], $val, $key);
         }
-        $val = \preg_replace_callback('#(https?://\w+:)(\w+)(@)#', function ($matches) {
+        $val = \preg_replace_callback('#([a-z\-]{3,9}://.+:)(.+)(@)#i', function ($matches) {
             $replacement = \call_user_func($this->cfg['redactReplace'], $matches[2]);
             return $matches[1] . $replacement . $matches[3];
         }, $val);
         foreach ($this->cfg['redactKeys'] as $key => $regex) {
             $val = \preg_replace_callback($regex, function ($matches) use ($key) {
                 $matches = \array_filter($matches, 'strlen');
-                $substr = \end($matches);
-                $replacement = \call_user_func($this->cfg['redactReplace'], $substr, $key);
-                return \str_replace($substr, $replacement, $matches[0]);
+                $keyVal = $matches[0];
+                $val = \end($matches);
+                $replacement = \call_user_func($this->cfg['redactReplace'], $val, $key);
+                $strpos = \strrpos($keyVal, $val);
+                return \substr_replace($keyVal, $replacement, $strpos, \strlen($val));
             }, $val);
         }
         foreach ($this->cfg['redactStrings'] as $search => $replace) {

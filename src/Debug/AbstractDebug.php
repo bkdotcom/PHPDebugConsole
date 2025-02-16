@@ -30,6 +30,9 @@ abstract class AbstractDebug
     /** @var array<string,mixed> */
     protected $cfg = array();
 
+    /** @var bool */
+    protected $bootstrapped = false;
+
     /** @var \bdk\Debug\Config */
     protected $config;
 
@@ -269,6 +272,7 @@ abstract class AbstractDebug
         $this->eventManager->subscribe(Debug::EVENT_CONFIG, [$this, 'onConfig']);
         $this->config->set($cfg, Debug::CONFIG_NO_RETURN);
         $this->eventManager->publish(Debug::EVENT_BOOTSTRAP, $this);
+        $this->bootstrapped = true;
     }
 
     /**
@@ -418,6 +422,14 @@ abstract class AbstractDebug
         $event['debug'] = $cfg;
         $cfg = $this->rootInstance->getPlugin('channel')->getPropagateValues($event->getValues());
         unset($cfg['currentSubject'], $cfg['isTarget']);
+        if ($this->bootstrapped === false) {
+            // edge case:
+            //  channel created via plugin constructor or EVENT_PLUGIN_INIT
+            //  with channelShow: false
+            //  bootstrap propagates initial config with channelShow: true
+            //  channels should be created via EVENT_BOOTSTRAP handler
+            unset($cfg['debug']['channelShow']);
+        }
         if (empty($cfg)) {
             return;
         }

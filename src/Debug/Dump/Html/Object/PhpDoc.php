@@ -56,6 +56,11 @@ class PhpDoc
         $phpDoc = $this->getItems($phpDoc);
         $str = '<dt>phpDoc</dt>' . "\n";
         foreach ($phpDoc as $tagName => $values) {
+            if ($tagName === 'package') {
+                $values['tagName'] = 'package';
+                $str .= $this->dumpTag($values);
+                continue;
+            }
             foreach ($values as $tagData) {
                 $tagData['tagName'] = $tagName;
                 $str .= $this->dumpTag($tagData);

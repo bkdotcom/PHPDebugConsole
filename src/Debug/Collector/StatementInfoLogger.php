@@ -42,6 +42,9 @@ class StatementInfoLogger extends AbstractComponent
     /** @var int */
     protected static $id = 0;
 
+    /** @var list<StatementInfo> */
+    protected $loggedStatements = array();
+
     /** @var int */
     private $prettifyErrors = 0;
 
@@ -61,6 +64,53 @@ class StatementInfoLogger extends AbstractComponent
             $this->setConstants();
         }
         $this->debug->eventManager->subscribe(Debug::EVENT_CONFIG, [$this, 'onConfig']);
+    }
+
+    /**
+     * Returns the accumulated execution time of statements
+     *
+     * @return float
+     */
+    public function getTimeSpent()
+    {
+        return \array_reduce($this->loggedStatements, static function ($val, StatementInfo $info) {
+            return $val + $info->duration;
+        });
+    }
+
+    /**
+     * Returns the peak memory usage while performing statements
+     *
+     * @return int
+     */
+    public function getPeakMemoryUsage()
+    {
+        return \array_reduce($this->loggedStatements, static function ($carry, StatementInfo $info) {
+            $mem = $info->memoryUsage;
+            return $mem > $carry
+                ? $mem
+                : $carry;
+        });
+    }
+
+    /**
+     * Returns the list of executed statements as StatementInfo objects
+     *
+     * @return StatementInfo[]
+     */
+    public function getLoggedCount()
+    {
+        return \count($this->loggedStatements);
+    }
+
+    /**
+     * Returns the list of executed statements as StatementInfo objects
+     *
+     * @return StatementInfo[]
+     */
+    public function getLoggedStatements()
+    {
+        return $this->loggedStatements;
     }
 
     /**
@@ -84,6 +134,7 @@ class StatementInfoLogger extends AbstractComponent
     public function log(StatementInfo $info, array $metaOverride = array())
     {
         $this->info = $info;
+        $this->loggedStatements[] = $info;
         $label = $this->getGroupLabel();
         $this->debug->groupCollapsed($label, $this->debug->meta(\array_merge(array(
             'boldLabel' => false,

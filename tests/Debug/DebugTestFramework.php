@@ -270,6 +270,9 @@ class DebugTestFramework extends DOMTestCase
      */
     public function testMethod($method = null, $args = array(), array $tests = array())
     {
+        if ($method instanceof Closure) {
+            list($method, $args, $tests) = $method($this);
+        }
         $countPath = $method === 'alert'
             ? 'alerts/__count__'
             : 'log/__count__';

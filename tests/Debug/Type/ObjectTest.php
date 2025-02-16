@@ -456,6 +456,7 @@ EOD;
                         self::assertStringContainsString(\implode("\n", array(
                             '<dt>phpDoc</dt>',
                             '<dd class="phpdoc phpdoc-link"><span class="phpdoc-tag">link</span><span class="t_operator">:</span> <a href="http://www.bradkent.com/php/debug" target="_blank">PHPDebugConsole Homepage</a></dd>',
+                            '<dd class="phpdoc phpdoc-package"><span class="phpdoc-tag">package</span><span class="t_operator">:</span> bdk\Debug</dd>',
                             '</dl>',
                         )), $str);
                     },

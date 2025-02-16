@@ -11,7 +11,8 @@ use stdClass;
  *
  * PhpDoc Description
  *
- * @link http://www.bradkent.com/php/debug PHPDebugConsole Homepage
+ * @link    http://www.bradkent.com/php/debug PHPDebugConsole Homepage
+ * @package bdk\Debug
  */
 #[\AllowDynamicProperties]
 class TestObj extends TestBase

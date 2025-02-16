@@ -20,6 +20,7 @@ use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Utility\Utf8;
 use bdk\Debug\Utility\Utf8Buffer;
 use bdk\HttpMessage\Utility\ContentType;
+use bdk\HttpMessage\Utility\ParseStr;
 
 /**
  * Abstracter:  Methods used to abstract objects
@@ -63,6 +64,9 @@ class AbstractString extends AbstractComponent
                 break;
             case Type::TYPE_STRING_BINARY:
                 $abs = $this->getAbsBinary($abs);
+                break;
+            case Type::TYPE_STRING_FORM:
+                $abs = $this->getAbsForm($abs);
                 break;
             case Type::TYPE_STRING_JSON:
                 $abs = $this->getAbsJson($abs, $crateVals);
@@ -239,6 +243,21 @@ class AbstractString extends AbstractComponent
     }
 
     /**
+     * Get form-urlencoded abstraction
+     *
+     * @param Abstraction $abs Abstraction
+     *
+     * @return Abstraction
+     */
+    private function getAbsForm(Abstraction $abs)
+    {
+        if (empty($abs['valueDecoded'])) {
+            $abs['valueDecoded'] = ParseStr::parse($abs['valueRaw']);
+        }
+        return $abs;
+    }
+
+    /**
      * Get json abstraction
      *
      * @param Abstraction $abs       Abstraction
@@ -333,7 +352,7 @@ class AbstractString extends AbstractComponent
         $strLenEncoded = $this->cfg['stringMinLen']['encoded'];
         $typeMore = null;
         if ($strLenEncoded > -1 && $strLen >= $strLenEncoded) {
-            $typeMore = $this->getTypeStringEncoded($val);
+            $typeMore = $this->getTypeMoreEncoded($val);
         }
         if ($typeMore) {
             return $typeMore;
@@ -355,7 +374,7 @@ class AbstractString extends AbstractComponent
      *
      * @return Type::TYPE_STRING_*|null
      */
-    private function getTypeStringEncoded($val)
+    private function getTypeMoreEncoded($val)
     {
         if ($this->debug->stringUtil->isBase64Encoded($val)) {
             return Type::TYPE_STRING_BASE64;

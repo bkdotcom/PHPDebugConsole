@@ -820,8 +820,8 @@ EOD;
             },
             {
                 "method": "log",
-                "args": ["database", "test"],
-                "meta": []
+                "args": ["connection string", "mysql://root:█████████@localhost:3306/test"],
+                "meta": {"redact": true}
             },
             {
                 "method": "log",

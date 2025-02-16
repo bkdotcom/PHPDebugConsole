@@ -22,9 +22,6 @@ use Pdo as PdoBase;
  */
 trait DatabaseTrait
 {
-    /** @var list<StatementInfo> */
-    protected $loggedStatements = array();
-
     /** @var string */
     protected $icon = ':database:';
 
@@ -33,6 +30,9 @@ trait DatabaseTrait
 
     /** @var Debug */
     private $debug;
+
+    /** @var array connection params */
+    private $params;
 
     /**
      * Logs StatementInfo
@@ -43,45 +43,7 @@ trait DatabaseTrait
      */
     public function addStatementInfo(StatementInfo $info)
     {
-        $this->loggedStatements[] = $info;
         $this->statementInfoLogger->log($info);
-    }
-
-    /**
-     * Returns the accumulated execution time of statements
-     *
-     * @return float
-     */
-    public function getTimeSpent()
-    {
-        return \array_reduce($this->loggedStatements, static function ($val, StatementInfo $info) {
-            return $val + $info->duration;
-        });
-    }
-
-    /**
-     * Returns the peak memory usage while performing statements
-     *
-     * @return int
-     */
-    public function getPeakMemoryUsage()
-    {
-        return \array_reduce($this->loggedStatements, static function ($carry, StatementInfo $info) {
-            $mem = $info->memoryUsage;
-            return $mem > $carry
-                ? $mem
-                : $carry;
-        });
-    }
-
-    /**
-     * Returns the list of executed statements as StatementInfo objects
-     *
-     * @return StatementInfo[]
-     */
-    public function getLoggedStatements()
-    {
-        return $this->loggedStatements;
     }
 
     /**
@@ -107,19 +69,21 @@ trait DatabaseTrait
     /**
      * Log runtime information
      *
-     * @param Debug $debug Debug instance
+     * @param Debug  $debug            Debug instance
+     * @param string $connectionString (optional) connection string
      *
      * @return void
      */
-    private function logRuntime(Debug $debug)
+    private function logRuntime(Debug $debug, $connectionString = null)
     {
-        $database = $this->currentDatabase();
-        if ($database) {
+        if ($connectionString) {
+            $debug->log('connection string', $connectionString, $debug->meta('redact'));
+        } elseif ($database = $this->currentDatabase()) {
             $debug->log('database', $database);
         }
-        $debug->log('logged operations: ', \count($this->loggedStatements));
-        $debug->time('total time', $this->getTimeSpent());
-        $debug->log('max memory usage', $debug->utility->getBytes($this->getPeakMemoryUsage()));
+        $debug->log('logged operations: ', $this->statementInfoLogger->getLoggedCount());
+        $debug->time('total time', $this->statementInfoLogger->getTimeSpent());
+        $debug->log('max memory usage', $debug->utility->getBytes($this->statementInfoLogger->getPeakMemoryUsage()));
         $serverInfo = $this->serverInfo();
         if ($serverInfo) {
             $debug->log('server info', $serverInfo);

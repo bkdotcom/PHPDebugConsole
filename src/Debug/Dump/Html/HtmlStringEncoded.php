@@ -173,6 +173,37 @@ class HtmlStringEncoded
     }
 
     /**
+     * Get tab labels
+     *
+     * @param string $typeMore typeMore
+     *
+     * @return array
+     */
+    private function tabLabels($typeMore)
+    {
+        $labelsRaw = array(
+            Type::TYPE_STRING_BASE64 => 'base64',
+            Type::TYPE_STRING_FORM => 'form',
+            Type::TYPE_STRING_JSON => 'json',
+            Type::TYPE_STRING_SERIALIZED => 'serialized',
+        );
+        $labelsDecoded = array(
+            Type::TYPE_STRING_BASE64 => 'decoded',
+            Type::TYPE_STRING_FORM => 'parsed',
+            Type::TYPE_STRING_JSON => 'parsed',
+            Type::TYPE_STRING_SERIALIZED => 'unserialized',
+        );
+        return array(
+            'decoded' => isset($labelsDecoded[$typeMore])
+                ? $labelsDecoded[$typeMore]
+                : 'decoded',
+            'raw' =>  isset($labelsRaw[$typeMore])
+                ? $labelsRaw[$typeMore]
+                : 'raw',
+        );
+    }
+
+    /**
      * Dump encoded string (base64, json, serialized)
      *
      * @param Abstraction $abs full value abstraction
@@ -184,9 +215,10 @@ class HtmlStringEncoded
         $attribs = $this->valDumper->optionGet('attribs');
         $attribs['class'][] = 'no-quotes';
         $attribs['class'][] = 't_' . $abs['type'];
+        $labels = $this->tabLabels($abs['typeMore']);
         $vals = array(
-            'labelDecoded' => 'decoded',
-            'labelRaw' => 'raw',
+            'labelDecoded' => $labels['decoded'],
+            'labelRaw' => $labels['raw'],
             'valRaw' => $this->debug->html->buildTag(
                 'span',
                 $attribs,
@@ -217,25 +249,33 @@ class HtmlStringEncoded
         if ($strLenDiff) {
             $vals['valRaw'] .= '<span class="maxlen">&hellip; ' . $strLenDiff . ' more bytes (not logged)</span>';
         }
-        switch ($abs['typeMore']) {
-            case Type::TYPE_STRING_BASE64:
-                $vals['labelRaw'] = 'base64';
-                break;
-            case Type::TYPE_STRING_JSON:
-                $vals['labelRaw'] = 'json';
-                if ($abs['brief']) {
-                    return $vals;
-                }
-                if ($abs['prettified'] || $strLenDiff) {
-                    $abs['typeMore'] = null; // unset typeMore to prevent loop
-                    $vals['valRaw'] = $this->valDumper->dump($abs);
-                    $abs['typeMore'] = Type::TYPE_STRING_JSON;
-                }
-                break;
-            case Type::TYPE_STRING_SERIALIZED:
-                $vals['labelDecoded'] = 'unserialized';
-                $vals['labelRaw'] = 'serialized';
-                break;
+        $method = 'tabValuesFinish' . \ucfirst($abs['typeMore']);
+        if (\method_exists($this, $method)) {
+            $vals = $this->$method($vals, $abs);
+        }
+        return $vals;
+    }
+
+    /**
+     * Finish json abstraction
+     *
+     * @param array       $vals context values for string interpolation
+     * @param Abstraction $abs  full value abstraction
+     *
+     * @return array
+     *
+     * @disregard P1003 Symbol declared but not used
+     */
+    private function tabValuesFinishJson($vals, Abstraction $abs)
+    {
+        if ($abs['brief']) {
+            return $vals;
+        }
+        $strLenDiff = $abs['strlen'] - $abs['strlenValue'];
+        if ($abs['prettified'] || $strLenDiff) {
+            $abs['typeMore'] = null; // unset typeMore to prevent loop
+            $vals['valRaw'] = $this->valDumper->dump($abs);
+            $abs['typeMore'] = Type::TYPE_STRING_JSON;
         }
         return $vals;
     }

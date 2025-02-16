@@ -235,7 +235,7 @@ class Component extends CApplicationComponent
             )
         ));
 
-        $sessionVals = $session->toArray();
+        $sessionVals = $session->toArray() ?: array();
         \ksort($sessionVals);
         $debug->log($sessionVals);
     }

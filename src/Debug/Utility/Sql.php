@@ -13,6 +13,7 @@
 namespace bdk\Debug\Utility;
 
 use bdk\Debug\Utility\ArrayUtil;
+use bdk\HttpMessage\Utility\Uri as UriUtil;
 use DateTime;
 
 /**
@@ -20,6 +21,21 @@ use DateTime;
  */
 class Sql
 {
+    /**
+     * Build DSN url from params
+     *
+     * @return string
+     */
+    public static function buildDsn(array $params)
+    {
+        $parts = self::buildDsnParamsToUrlParts($params);
+        $dsn = (string) UriUtil::fromParsed($parts);
+        if ($parts['path'] === ':memory:') {
+            $dsn = \str_replace('/localhost', '/', $dsn);
+        }
+        return $dsn;
+    }
+
     /**
      * "Parse" the sql statement to get a label
      *
@@ -84,6 +100,39 @@ class Sql
             $strposOffset = $pos + \strlen($value);
         }
         return $sql;
+    }
+
+    /**
+     * Convert params to url parts
+     *
+     * @param array $params Connection params
+     *
+     * @return array
+     */
+    private static function buildDsnParamsToUrlParts(array $params)
+    {
+        $map = array(
+            'dbname' => 'path',
+            'driver' => 'scheme',
+        );
+        \ksort($params);
+        $rename = \array_intersect_key($params, $map);
+        $keysNew = \array_values(\array_intersect_key($map, $rename));
+        $renamed = \array_combine($keysNew, \array_values($rename));
+        $paramsDefault = array(
+            'host' => 'localhost',
+            'memory' => false,
+            'path' => null,
+            // password, pass, or passwd
+            // username or user
+            'scheme' => null,
+        );
+        $parts = \array_merge($paramsDefault, $renamed, $params);
+        if ($parts['memory']) {
+            $parts['path'] = ':memory:';
+        }
+        $parts['scheme'] = \str_replace('_', '-', (string) $parts['scheme']);
+        return $parts;
     }
 
     /**

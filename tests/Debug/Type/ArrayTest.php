@@ -5,6 +5,7 @@ namespace bdk\Test\Debug\Type;
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Type;
+use bdk\Debug\LogEntry;
 use bdk\Test\Debug\DebugTestFramework;
 
 /**
@@ -113,6 +114,108 @@ EOD;
                     'text' => 'callable: bdk\Debug::getInstance',
                 ),
             ),
+            'empty' => array(
+                'log',
+                array(
+                    array(),
+                ),
+                array(
+                    'entry' => array(
+                        'method' => 'log',
+                        'args' => array(
+                            array(),
+                        ),
+                        'meta' => array(),
+                    ),
+                    'html' => '<li class="m_log"><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span></li>',
+                    'text' => 'array()',
+                ),
+            ),
+            'fileTree' => array(static function () {
+                $files = array(
+                    '/var/www/bootstrap.php',
+                    '/var/www/index.php',
+                );
+                $excluded = array(
+                    '/var/www/excludedDir' => 2,
+                );
+                $fileTreeUtil = new \bdk\Debug\Utility\FileTree();
+                $fileTree = $fileTreeUtil->filesToTree($files, $excluded, true);
+                return array(
+                    'log',
+                    array(
+                        \bdk\Debug::getInstance()->abstracter->crateWithVals(
+                            $fileTree,
+                            array(
+                                'options' => array(
+                                    'asFileTree' => true,
+                                    'expand' => true,
+                                ),
+                            )
+                        ),
+                    ),
+                    array(
+                        'entry' => static function (LogEntry $logEntry) {
+                            $expect = array(
+                                'debug' => Abstracter::ABSTRACTION,
+                                'options' => array(
+                                    'asFileTree' => true,
+                                    'expand' => true,
+                                ),
+                                'type' => Type::TYPE_ARRAY,
+                                'value' => array(
+                                    '/var/www' => array(
+                                        'excludedDir' => array(
+                                            array(
+                                                'attribs' => array(
+                                                    'class' => ['exclude-count'],
+                                                ),
+                                                'debug' => Abstracter::ABSTRACTION,
+                                                'type' => Type::TYPE_STRING,
+                                                'value' => '2 omitted',
+                                            ),
+                                        ),
+                                        array(
+                                            'attribs' => array(
+                                                'class' => [],
+                                                'data-file' => '/var/www/bootstrap.php',
+                                            ),
+                                            'debug' => Abstracter::ABSTRACTION,
+                                            'type' => Type::TYPE_STRING,
+                                            'value' => 'bootstrap.php',
+                                        ),
+                                        array(
+                                            'attribs' => array(
+                                                'class' => [],
+                                                'data-file' => '/var/www/index.php',
+                                            ),
+                                            'debug' => Abstracter::ABSTRACTION,
+                                            'type' => Type::TYPE_STRING,
+                                            'value' => 'index.php',
+                                        ),
+                                    ),
+                                ),
+                            );
+                            $actual = \bdk\Test\Debug\Helper::logEntryToArray($logEntry)['args'][0];
+                            // \bdk\Debug::varDump('expect', $expect);
+                            // \bdk\Debug::varDump('actual', $actual);
+                            self::assertSame($expect, $actual);
+                        },
+                        'html' => '<li class="m_log"><span class="array-file-tree t_array" data-expand="true"><span class="t_keyword">array</span><span class="t_punct">(</span>
+                            <ul class="array-inner list-unstyled">
+                                <li><span class="t_key">/var/www</span><span class="t_operator">=&gt;</span><span class="array-file-tree t_array" data-expand="true"><span class="t_keyword">array</span><span class="t_punct">(</span>
+                                <ul class="array-inner list-unstyled">
+                                    <li><span class="t_key">excludedDir</span><span class="t_operator">=&gt;</span><span class="array-file-tree t_array" data-expand="true"><span class="t_keyword">array</span><span class="t_punct">(</span>
+                                    <ul class="array-inner list-unstyled">
+                                        <li><span class="t_int t_key">0</span><span class="t_operator">=&gt;</span><span class="exclude-count t_string">2 omitted</span></li>
+                                    </ul><span class="t_punct">)</span></span></li>
+                                    <li><span class="t_int t_key">0</span><span class="t_operator">=&gt;</span><span class="t_string" data-file="/var/www/bootstrap.php">bootstrap.php</span></li>
+                                    <li><span class="t_int t_key">1</span><span class="t_operator">=&gt;</span><span class="t_string" data-file="/var/www/index.php">index.php</span></li>
+                                </ul><span class="t_punct">)</span></span></li>
+                            </ul><span class="t_punct">)</span></span></li>',
+                    ),
+                );
+            }),
             'keys' => array(
                 'log',
                 array(

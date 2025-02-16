@@ -52,13 +52,14 @@ class Type
     const TYPE_IDENTIFIER_CLASSNAME = 'className';
     const TYPE_IDENTIFIER_CONST = 'const';
     const TYPE_IDENTIFIER_METHOD = 'method';
-    const TYPE_STRING_BASE64 = 'base64';
-    const TYPE_STRING_BINARY = 'binary';
-    const TYPE_STRING_CLASSNAME = 'classname'; // deprecated (use TYPE_IDENTIFIER)
-    const TYPE_STRING_JSON = 'json';
+    const TYPE_STRING_BASE64 = 'base64';            // "encoded" / auto-detected
+    const TYPE_STRING_BINARY = 'binary';            // string that contains non-utf8
+    const TYPE_STRING_CLASSNAME = 'classname';      // deprecated (use TYPE_IDENTIFIER)
+    const TYPE_STRING_FORM = 'form';                // "encoded" / NOT auto-detected
+    const TYPE_STRING_JSON = 'json';                // "encoded" / auto-detected
     const TYPE_STRING_LONG = 'maxLen';
     const TYPE_STRING_NUMERIC = 'numeric';
-    const TYPE_STRING_SERIALIZED = 'serialized';
+    const TYPE_STRING_SERIALIZED = 'serialized';    // encoded / auto-detected
     const TYPE_TIMESTAMP = 'timestamp';
 
     protected $abstracter;
@@ -104,8 +105,6 @@ class Type
                 return [self::TYPE_RESOURCE, self::TYPE_RAW];
             case self::TYPE_STRING:
                 return $this->abstracter->abstractString->getType($val);
-            case self::TYPE_UNKNOWN:
-                return $this->getTypeUnknown($val);
             default:
                 return [$type, null];
         }
@@ -221,31 +220,14 @@ class Type
         if (isset($map[$type])) {
             $type = $map[$type];
         }
-        return $type;
-    }
-
-    /**
-     * Get "unknown" type & typeMore
-     *
-     * @param mixed $val value of unknown type (likely closed resource)
-     *
-     * @return list{self::TYPE_*,self::TYPE_*|null} type and typeMore
-     *
-     * @SuppressWarnings(PHPMD.DevelopmentCodeFragment)
-     */
-    private function getTypeUnknown($val)
-    {
-        $type = self::TYPE_UNKNOWN;
-        $typeMore = null;
-        /*
+        if ($type === self::TYPE_UNKNOWN && \strpos(\print_r($val, true), 'Resource') === 0) {
+            /*
             closed resource?
             is_resource() returns false for a closed resource
-            gettype  returns 'unknown type' or 'resource (closed)'
-        */
-        if (\strpos(\print_r($val, true), 'Resource') === 0) {
+            gettype() returns 'unknown type' or 'resource (closed)'
+            */
             $type = self::TYPE_RESOURCE;
-            $typeMore = self::TYPE_RAW;  // needs abstracted
         }
-        return [$type, $typeMore];
+        return $type;
     }
 }

@@ -109,8 +109,8 @@ class TableTest extends DebugTestFramework
 <tr><th>&nbsp;</th><th scope="col">name</th><th scope="col">age</th><th scope="col">sex</th><th scope="col">Naughty</th><th scope="col">extracol</th></tr>
 </thead>
 <tbody>
-<tr><th class="t_int t_key text-right" scope="row">4</th><td class="t_string">Bob</td><td class="t_string" data-type-more="numeric">12</td><td class="t_string">M</td><td class="t_bool" data-type-more="false">false</td><td class="t_undefined"></td></tr>
-<tr><th class="t_int t_key text-right" scope="row">2</th><td class="t_string">Sally</td><td class="t_string" data-type-more="numeric">10</td><td class="t_string">F</td><td class="t_bool" data-type-more="true">true</td><td class="t_string">yes</td></tr>
+<tr><th class="t_int t_key text-right" scope="row">4</th><td class="t_string">Bob</td><td class="t_string" data-type-more="numeric">12</td><td class="t_string">M</td><td class="t_bool text-center" data-type-more="false"></td><td class="t_undefined"></td></tr>
+<tr><th class="t_int t_key text-right" scope="row">2</th><td class="t_string">Sally</td><td class="t_string" data-type-more="numeric">10</td><td class="t_string">F</td><td class="t_bool text-center" data-type-more="true"><i class="fa fa-check"></i></td><td class="t_string">yes</td></tr>
 </tbody>
 </table>
 </li>
@@ -256,7 +256,15 @@ EOD;
 
             'superfluousArgs' => array(
                 'table',
-                array('arg1', 'arg2 is not logged', $rowsA, 'arg4 is not logged'),
+                array('arg1', 'arg2 is not logged', $rowsA, 'arg4 is not logged', \bdk\Debug::meta('tableInfo', array(
+                    'columns' => array(
+                        'Naughty' => array(
+                            'attribs' => array('class' => ['text-center']),
+                            'falseAs' => '',
+                            'trueAs' => '<i class="fa fa-check"></i>',
+                        ),
+                    ),
+                ))),
                 array(
                     'entry' => array(
                         'method' => 'table',
@@ -270,7 +278,14 @@ EOD;
                                     array('key' => 'name'),
                                     array('key' => 'age'),
                                     array('key' => 'sex'),
-                                    array('key' => 'Naughty'),
+                                    array(
+                                        'attribs' => array(
+                                            'class' => ['text-center'],
+                                        ),
+                                        'falseAs' => '',
+                                        'trueAs' => '<i class="fa fa-check"></i>',
+                                        'key' => 'Naughty',
+                                    ),
                                     array('key' => 'extracol'),
                                 ),
                                 'haveObjRow' => false,
@@ -323,7 +338,15 @@ EOD;
             // 5 rowsA
             array(
                 'table',
-                array('table caption', $rowsA),
+                array('table caption', $rowsA, \bdk\Debug::meta('tableInfo', array(
+                    'columns' => array(
+                        'Naughty' => array(
+                            'attribs' => array('class' => ['text-center']),
+                            'falseAs' => '',
+                            'trueAs' => '<i class="fa fa-check"></i>',
+                        ),
+                    ),
+                ))),
                 array(
                     'entry' => array(
                         'method' => 'table',
@@ -337,7 +360,14 @@ EOD;
                                     array('key' => 'name'),
                                     array('key' => 'age'),
                                     array('key' => 'sex'),
-                                    array('key' => 'Naughty'),
+                                    array(
+                                        'attribs' => array(
+                                            'class' => ['text-center'],
+                                        ),
+                                        'falseAs' => '',
+                                        'trueAs' => '<i class="fa fa-check"></i>',
+                                        'key' => 'Naughty',
+                                    ),
                                     array('key' => 'extracol'),
                                 ),
                                 'haveObjRow' => false,
@@ -515,6 +545,15 @@ EOD;
                 array(
                     'traversable',
                     new \bdk\Test\Debug\Fixture\TestTraversable($rowsA),
+                    \bdk\Debug::meta('tableInfo', array(
+                        'columns' => array(
+                            'Naughty' => array(
+                                'attribs' => array('class' => ['text-center']),
+                                'falseAs' => '',
+                                'trueAs' => '<i class="fa fa-check"></i>',
+                            ),
+                        ),
+                    )),
                 ),
                 array(
                     'html' => \str_replace('table caption', 'traversable (<span class="classname" title="I implement Traversable!"><span class="namespace">bdk\Test\Debug\Fixture\</span>TestTraversable</span>)', $rowsAHtml),
@@ -689,7 +728,15 @@ EOD;
 
             'inclContext' => array(
                 'table',
-                array('table caption', $rowsA, Debug::meta('inclContext')),
+                array('table caption', $rowsA, \bdk\Debug::meta('inclContext'), \bdk\Debug::meta('tableInfo', array(
+                    'columns' => array(
+                        'Naughty' => array(
+                            'attribs' => array('class' => ['text-center']),
+                            'falseAs' => '',
+                            'trueAs' => '<i class="fa fa-check"></i>',
+                        ),
+                    ),
+                ))),
                 array(
                     'entry' => array(
                         'method' => 'table',
@@ -703,7 +750,14 @@ EOD;
                                     array('key' => 'name'),
                                     array('key' => 'age'),
                                     array('key' => 'sex'),
-                                    array('key' => 'Naughty'),
+                                    array(
+                                        'attribs' => array(
+                                            'class' => ['text-center'],
+                                        ),
+                                        'falseAs' => '',
+                                        'trueAs' => '<i class="fa fa-check"></i>',
+                                        'key' => 'Naughty',
+                                    ),
                                     array('key' => 'extracol'),
                                 ),
                                 'haveObjRow' => false,

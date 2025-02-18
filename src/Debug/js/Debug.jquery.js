@@ -558,13 +558,23 @@
   function rowComparator (colIndex, dir, collator) {
     var floatRe = /^([+-]?(?:0|[1-9]\d*)(?:\.\d*)?)(?:[eE]([+-]?\d+))?$/;
     return function sortFunction (trA, trB) {
-      var a = trA.cells[colIndex].textContent.trim();
-      var b = trB.cells[colIndex].textContent.trim();
-      var aFloatMatches = a.match(floatRe);
-      var bFloatMatches = b.match(floatRe);
+      var aCell = trA.cells[colIndex];
+      var bCell = trB.cells[colIndex];
+      var aText = aCell.textContent.trim();
+      var bText = bCell.textContent.trim();
+      var aTypeMore = aCell.getAttribute('data-type-more');
+      var bTypeMore = bCell.getAttribute('data-type-more');
+      var aFloatMatches = aText.match(floatRe);
+      var bFloatMatches = bText.match(floatRe);
+      if (['true','false'].indexOf(aTypeMore) > -1) {
+        aText = aTypeMore;
+      }
+      if (['true','false'].indexOf(bTypeMore) > -1) {
+        bText = bTypeMore;
+      }
       return aFloatMatches && bFloatMatches
         ? dir * compareFloat(toFixed(aFloatMatches), toFixed(bFloatMatches))
-        : dir * compare(a, b, collator)
+        : dir * compare(aText, bText, collator)
     }
   }
 

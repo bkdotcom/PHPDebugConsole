@@ -51,9 +51,12 @@ class Table
             'columns' => array(
                 /*
                 array(
+                    attribs
                     key
                     class
                     total
+                    falseAs: ''
+                    trueAs: ''
                 )
                 */
             ),
@@ -208,16 +211,19 @@ class Table
      */
     private function initTableInfoColumns()
     {
-        $columns = array();
         $columnNames = $this->meta['columnNames'];
         $keys = $this->meta['columns'] ?: self::colKeys($this->rows);
-        foreach ($keys as $key) {
-            $columns[$key] = array(
+        $columns = \array_fill_keys($keys, array());
+        \array_walk($columns, function (&$column, $key) use ($columnNames) {
+            $default = isset($this->meta['tableInfo']['columns'][$key])
+                ? $this->meta['tableInfo']['columns'][$key]
+                : array();
+            $column = \array_merge($default, array(
                 'key' => isset($columnNames[$key])
                     ? $columnNames[$key]
                     : $key,
-            );
-        }
+            ));
+        });
         foreach ($this->meta['totalCols'] as $i => $key) {
             if (isset($columns[$key]) === false) {
                 unset($this->meta['totalCols'][$i]);
@@ -376,7 +382,9 @@ class Table
         $columns = array();
         foreach ($this->meta['tableInfo']['columns'] as $colInfo) {
             $columns[] = \array_filter($colInfo, static function ($val) {
-                return \strlen((string) $val) > 0;
+                return \is_array($val)
+                    ? !empty($val)
+                    : $val !== null && $val !== false;;
             });
         }
         $this->meta['tableInfo']['columns'] = $columns;
@@ -396,7 +404,6 @@ class Table
                 $this->meta['tableInfo']
             );
         }
-        // $this->logEntry['meta'] = $this->meta;
     }
 
     /**

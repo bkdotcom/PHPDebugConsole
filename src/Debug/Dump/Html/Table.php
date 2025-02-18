@@ -103,8 +103,10 @@ class Table
             $this->options['tableInfo']['columns'][$k] = \array_merge(array(
                 'attribs' => array(),
                 'class' => null,
+                'falseAs' => null,
                 'key' => '',
                 'total' => null,
+                'trueAs' => null,
             ), $colInfo);
         }
     }
@@ -179,7 +181,10 @@ class Table
             if (\is_float($totalVal)) {
                 $totalVal = \round($totalVal, 6);
             }
-            $cells[] = $this->dumper->valDumper->dump($totalVal, array('tagName' => 'td'));
+            $cells[] = $this->dumper->valDumper->dump($totalVal, array(
+                'attribs' => $colInfo['attribs'],
+                'tagName' => 'td',
+            ));
             $haveTotal = true;
         }
         if (!$haveTotal) {
@@ -203,7 +208,7 @@ class Table
         $labels = array();
         foreach ($this->options['tableInfo']['columns'] as $colInfo) {
             $label = $colInfo['key'];
-            if (isset($colInfo['class'])) {
+            if (!empty($colInfo['class'])) {
                 $label .= ' ' . $this->dumper->valDumper->markupIdentifier($colInfo['class'], 'className');
             }
             $labels[] = $label;
@@ -251,10 +256,17 @@ class Table
         */
         $i = 0;
         foreach ($row as $v) {
-            $str .= $this->dumper->valDumper->dump($v, array(
-                'attribs' => $this->options['tableInfo']['columns'][$i]['attribs'],
+            $colInfo = $this->options['tableInfo']['columns'][$i];
+            $td = $this->dumper->valDumper->dump($v, array(
+                'attribs' => $colInfo['attribs'],
                 'tagName' => 'td',
             ));
+            if ($v === true && $colInfo['trueAs'] !== null) {
+                $td = \str_replace('>true<', '>' . $colInfo['trueAs'] . '<', $td);
+            } elseif ($v === false && $colInfo['falseAs'] !== null) {
+                $td = \str_replace('>false<', '>' . $colInfo['falseAs'] . '<', $td);
+            }
+            $str .= $td;
             $i++;
         }
         $str .= '</tr>';

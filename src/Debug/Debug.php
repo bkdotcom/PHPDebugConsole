@@ -159,7 +159,7 @@ class Debug extends AbstractDebug
         'headerMaxPer' => null,
         'i18n' => array(
             'defaultDomain' => 'bdk-debug',
-            'filepath' => __DIR__ . '/../../trans/{domain}/{locale}.php',
+            'filepath' =>  './../../trans/{domain}/{locale}.php',
         ),
         'icons' => array(
             'asynchronous' => 'fa fa-random',

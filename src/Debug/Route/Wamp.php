@@ -53,8 +53,8 @@ class Wamp implements RouteInterface
         'output' => false,      // kept in sync with debug->cfg['output']
     );
 
-    /** @var list<string> */
-    protected $channelNames = array();
+    /** @var list<string> channels we have encountered */
+    protected $channelKeys = array();
 
     /**
      * Utility for "crating" up our values & abstractions for transport
@@ -279,12 +279,13 @@ class Wamp implements RouteInterface
         ), $logEntry['meta']);
         $classesNew = array();
         if ($logEntry->getSubject() !== $this->debug) {
-            $meta['channel'] = $logEntry->getChannelName();
-            if (\in_array($meta['channel'], $this->channelNames, true) === false) {
+            $meta['channel'] = $logEntry->getChannelKey();
+            if (\in_array($meta['channel'], $this->channelKeys, true) === false) {
                 $meta['channelIcon'] = $logEntry->getSubject()->getCfg('channelIcon', Debug::CONFIG_DEBUG);
+                $meta['channelName'] = $logEntry->getSubject()->getCfg('channelName', Debug::CONFIG_DEBUG);
                 $meta['channelShow'] = $logEntry->getSubject()->getCfg('channelShow', Debug::CONFIG_DEBUG);
                 $meta['channelSort'] = $logEntry->getSubject()->getCfg('channelSort', Debug::CONFIG_DEBUG);
-                $this->channelNames[] = $meta['channel'];
+                $this->channelKeys[] = $meta['channel'];
             }
         }
         if ($logEntry['return']) {

@@ -144,10 +144,10 @@ class LogRouteMeta
      */
     private function messageMetaSystem(array $logEntry)
     {
-        $channelName = 'system misc';
         $icon = ':config:';
-        $logEntry['channel'] = $this->debug->getChannel($channelName, array(
-            'icon' => $icon,
+        $logEntry['channel'] = $this->debug->getChannel('system-misc', array(
+            'channelIcon' => $icon,
+            'channelName' => 'system misc',
         ));
         $logEntry['meta']['icon'] = $icon;
         return $logEntry;
@@ -168,10 +168,10 @@ class LogRouteMeta
             // Leave as is for now. We'll convert to POO / statementInfo log entry
             return $logEntry;
         }
-        $channelName = \str_replace('system.caching.', '', $logEntry['category']);
+        $channelKey = \str_replace('system.caching.', '', $logEntry['category']);
         $icon = ':cache:';
-        $logEntry['category'] = $channelName;
-        $logEntry['channel'] = $this->debug->getChannel($channelName, array(
+        $logEntry['category'] = $channelKey;
+        $logEntry['channel'] = $this->debug->getChannel($channelKey, array(
             'channelIcon' => $icon,
             'channelShow' => false,
         ));
@@ -195,9 +195,8 @@ class LogRouteMeta
      */
     private function messageMetaSystemCmodule(array $logEntry)
     {
-        $channelName = 'CModule';
         $icon = ':component:';
-        $logEntry['channel'] = $this->debug->getChannel($channelName, array(
+        $logEntry['channel'] = $this->debug->getChannel('CModule', array(
             'channelIcon' => $icon,
             'channelShow' => false,
         ));

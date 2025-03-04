@@ -57,14 +57,16 @@ class CacheEventsSubscriber
         \bdk\Debug\Utility::assertType($debug, 'bdk\Debug');
 
         $this->options = \array_merge($this->options, $options);
+        $channelKey = 'cache';
         $channelOptions = array(
             'channelIcon' => $this->options['icon'],
+            'channelName' => 'channel.cache|trans',
             'channelShow' => false,
         );
         if (!$debug) {
-            $debug = Debug::getChannel('cache', $channelOptions);
+            $debug = Debug::getChannel($channelKey, $channelOptions);
         } elseif ($debug === $debug->rootInstance) {
-            $debug = $debug->getChannel('cache', $channelOptions);
+            $debug = $debug->getChannel($channelKey, $channelOptions);
         }
         $this->debug = $debug;
     }

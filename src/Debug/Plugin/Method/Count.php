@@ -112,7 +112,7 @@ class Count implements SubscriberInterface
                 'file' => $callerInfo['file'],
                 'line' => $callerInfo['line'],
             ), $logEntry['meta']);
-            $label = 'count';
+            $label = $this->debug->i18n->trans('method.count.label-count');
             $dataLabel = $logEntry['meta']['file'] . ': ' . $logEntry['meta']['line'];
         }
         $count = $this->incCount($dataLabel, $flags & Debug::COUNT_NO_INC);
@@ -136,14 +136,15 @@ class Count implements SubscriberInterface
     private function doCountReset(LogEntry $logEntry)
     {
         $args = $logEntry['args'];
-        list($label, $flags) = \array_slice(\array_replace(['default', 0], $args), 0, 2);
+        $labelDefault = $this->debug->i18n->trans('method.count.label-default'); // 'default'
+        list($label, $flags) = \array_slice(\array_replace([$labelDefault, 0], $args), 0, 2);
         // label may be omitted and only flags passed as a single argument
         //   (excluding potential meta argument)
         if (\count($args) === 1 && \is_int($args[0])) {
-            $label = 'default';
+            $label = $labelDefault; // 'default'
             $flags = $args[0];
         }
-        $logEntry['args'] = array('Counter \'' . $label . '\' doesn\'t exist.');
+        $logEntry['args'] = [$this->debug->i18n->trans('method.count.not-exist', array('label' => $label))];
         if (isset($this->counts[$label])) {
             $this->counts[$label] = 0;
             $logEntry['args'] = [

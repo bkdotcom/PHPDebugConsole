@@ -36,6 +36,7 @@ class Autoloader
             'bdk\\Debug' => __DIR__ . '/Debug.php',
             'bdk\\Debug\\Utility' => __DIR__ . '/Utility/Utility.php',
             'bdk\\ErrorHandler' => __DIR__ . '/../ErrorHandler/ErrorHandler.php',
+            'bdk\\I18n' => __DIR__ . '/../I18n/I18n.php',
             'bdk\\Promise' => __DIR__ . '/../Promise/Promise.php',
         );
         $this->psr4Map = array(
@@ -44,6 +45,7 @@ class Autoloader
             'bdk\\CurlHttpMessage\\' => __DIR__ . '/../CurlHttpMessage',
             'bdk\\Debug\\' => __DIR__,
             'bdk\\ErrorHandler\\' => __DIR__ . '/../ErrorHandler',
+            'bdk\\I18n\\' => __DIR__ . '/../I18n',
             'bdk\\Promise\\' => __DIR__ . '/../Promise',
             'bdk\\PubSub\\' => __DIR__ . '/../PubSub',
             'bdk\\Slack\\' => __DIR__ . '/../Slack',

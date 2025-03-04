@@ -28,7 +28,7 @@ class LogFilesTest extends DebugTestFramework
         self::assertSame(array(), $this->debug->data->get('log'));
 
         // test no files
-        $this->debug->getChannel('Files', array('nested' => false))->clear(Debug::CLEAR_SILENT);
+        $this->debug->getChannel('files', array('nested' => false))->clear(Debug::CLEAR_SILENT);
         $this->debug->setCfg('logEnvInfo', array('files' => true));
         $logFiles->setFiles(array(
             'path/to/file.php',
@@ -43,10 +43,11 @@ class LogFilesTest extends DebugTestFramework
             array(
                 'method' => 'info',
                 'args' => array(
-                    '1 files required',
+                    'files required',
+                    1,
                 ),
                 'meta' => array(
-                    'channel' => 'Files',
+                    'channel' => 'files',
                 ),
             ),
             array(
@@ -55,7 +56,7 @@ class LogFilesTest extends DebugTestFramework
                     'All files excluded from logging',
                 ),
                 'meta' => array(
-                    'channel' => 'Files',
+                    'channel' => 'files',
                 ),
             ),
             array(
@@ -66,13 +67,13 @@ class LogFilesTest extends DebugTestFramework
                     '',
                 ),
                 'meta' => array(
-                    'channel' => 'Files',
+                    'channel' => 'files',
                 ),
             ),
         ), $logEntries);
 
         // test asTree = true;
-        $this->debug->getChannel('Files')->clear(Debug::CLEAR_SILENT);
+        $this->debug->getChannel('files')->clear(Debug::CLEAR_SILENT);
         $logFiles->setCfg('filesExclude', array(
             '/excludedDir',
             'closure://function',
@@ -90,19 +91,21 @@ class LogFilesTest extends DebugTestFramework
             array(
                 'method' => 'info',
                 'args' => array(
-                    '4 files required',
+                    'files required',
+                    4,
                 ),
                 'meta' => array(
-                    'channel' => 'Files',
+                    'channel' => 'files',
                 ),
             ),
             array(
                 'method' => 'info',
                 'args' => array(
-                    '2 files logged',
+                    'files logged',
+                    2,
                 ),
                 'meta' => array(
-                    'channel' => 'Files',
+                    'channel' => 'files',
                 ),
             ),
             array(
@@ -162,14 +165,14 @@ class LogFilesTest extends DebugTestFramework
                     ),
                 ),
                 'meta' => array(
-                    'channel' => 'Files',
+                    'channel' => 'files',
                     'detectFiles' => true,
                 ),
             ),
         ), $logEntries);
 
         // test asTree = false;
-        $this->debug->getChannel('Files')->clear(Debug::CLEAR_SILENT);
+        $this->debug->getChannel('files')->clear(Debug::CLEAR_SILENT);
         $logFiles->setCfg('asTree', false);
         $logFiles->onOutput($event);
         $logEntries = $this->debug->data->get('log');
@@ -179,19 +182,21 @@ class LogFilesTest extends DebugTestFramework
             array(
                 'method' => 'info',
                 'args' => array(
-                    '4 files required',
+                    'files required',
+                    4,
                 ),
                 'meta' => array(
-                    'channel' => 'Files',
+                    'channel' => 'files',
                 ),
             ),
             array(
                 'method' => 'info',
                 'args' => array(
-                    '2 files logged',
+                    'files logged',
+                    2,
                 ),
                 'meta' => array(
-                    'channel' => 'Files',
+                    'channel' => 'files',
                 ),
             ),
             array(
@@ -203,7 +208,7 @@ class LogFilesTest extends DebugTestFramework
                     ),
                 ),
                 'meta' => array(
-                    'channel' => 'Files',
+                    'channel' => 'files',
                     'detectFiles' => true,
                 ),
             ),
@@ -217,7 +222,7 @@ class LogFilesTest extends DebugTestFramework
                     ),
                 ),
                 'meta' => array(
-                    'channel' => 'Files',
+                    'channel' => 'files',
                 ),
             ),
         ), $logEntries);

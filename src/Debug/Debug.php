@@ -119,12 +119,13 @@ class Debug extends AbstractDebug
     const EVENT_STREAM_WRAP = 'debug.streamWrap';
 
     const META = "\x00meta\x00";
-    const VERSION = '3.4';
+    const VERSION = '3.5';
 
     /** @var array<string,mixed> */
     protected $cfg = array(
         'channelIcon' => ':log:',
-        'channelName' => 'general', // channel or tab name
+        'channelKey' => 'general', // programmatic channel key
+        'channelName' => 'general', // name displayed to user (defaults to channelKey)
         'channels' => array(
             /*
             channelName => array(
@@ -156,6 +157,10 @@ class Debug extends AbstractDebug
         'extensionsCheck' => ['curl', 'mbString'],
         'headerMaxAll' => 250000,
         'headerMaxPer' => null,
+        'i18n' => array(
+            'defaultDomain' => 'bdk-debug',
+            'filepath' => __DIR__ . '/../../trans/{domain}/{locale}.php',
+        ),
         'icons' => array(
             'asynchronous' => 'fa fa-random',
             'authorize' => 'fa fa-handshake-o',
@@ -211,6 +216,7 @@ class Debug extends AbstractDebug
             'channel' => array( 'class' => 'bdk\Debug\Plugin\Channel' ),
             'configEvents' => array( 'class' => 'bdk\Debug\Plugin\ConfigEvents' ),
             'internalEvents' => array( 'class' => 'bdk\Debug\Plugin\InternalEvents' ),
+            'javascriptStrings' => array( 'class' => 'bdk\Debug\Plugin\JavascriptStrings' ),
             'logEnv' => array( 'class' => 'bdk\Debug\Plugin\LogEnv' ),
             'logFiles' => array( 'class' => 'bdk\Debug\Plugin\LogFiles' ),
             'logPhp' => array( 'class' => 'bdk\Debug\Plugin\LogPhp' ),

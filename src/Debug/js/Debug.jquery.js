@@ -1,4 +1,4 @@
-(function ($) {
+var phpDebugConsole = (function (exports, $) {
   'use strict';
 
   Object.keys = Object.keys || function (o) {
@@ -93,10 +93,14 @@
     return expand || $node.hasClass('array-file-tree')
   }
 
+  // config values
   var config$9;
+
+  var dict;
 
   function init$b ($delegateNode) {
     config$9 = $delegateNode.data('config').get();
+    dict = $delegateNode.data('config').dict;
     $delegateNode.on('click', '[data-toggle=vis]', function () {
       toggleVis(this);
       return false
@@ -108,20 +112,21 @@
   }
 
   function addIcons$1 ($node) {
-    $.each(config$9.iconsObject, function (selector, v) {
+    $.each(config$9.iconsObject, function (selector, icon) {
       var $found = addIconFind($node, selector);
-      var vMatches = typeof v === 'string'
-        ? v.match(/^([ap])\s*:(.+)$/)
+      var matches = typeof icon === 'string'
+        ? icon.match(/^([ap])\s*:(.+)$/)
         : null;
-      var prepend = !vMatches || vMatches[1] === 'p';
-      if (vMatches) {
-        v = vMatches[2];
+      var prepend = !matches || matches[1] === 'p';
+      if (matches) {
+        icon = matches[2];
       }
+      icon = dict.replaceTokens(icon);
       if (prepend) {
-        addIconPrepend($found, v);
+        addIconPrepend($found, icon);
         return
       }
-      $found.append(v);
+      $found.append(icon);
     });
   }
 
@@ -1240,7 +1245,7 @@
   var channels = [];
   var tests = [
     function ($node) {
-      var channel = $node.data('channel') || $node.closest('.debug').data('channelNameRoot');
+      var channel = $node.data('channel') || $node.closest('.debug').data('channelKeyRoot');
       return channels.indexOf(channel) > -1
     }
   ];
@@ -1248,7 +1253,7 @@
     function ($root) {
       var $checkboxes = $root.find('input[data-toggle=channel]');
       if ($checkboxes.length === 0) {
-        channels = [$root.data('channelNameRoot')];
+        channels = [$root.data('channelKeyRoot')];
         return
       }
       channels = [];
@@ -1331,7 +1336,7 @@
   }
 
   function applyFilter ($root) {
-    var channelNameRoot = $root.data('channelNameRoot');
+    var channelKeyRoot = $root.data('channelKeyRoot');
     var i;
     var len;
     var sort = [];
@@ -1355,16 +1360,16 @@
     });
     for (i = 0, len = sort.length; i < len; i++) {
       var $node = sort[i].node;
-      applyFilterToNode($node, channelNameRoot);
+      applyFilterToNode($node, channelKeyRoot);
     }
     hideSummarySeparator($root.find('> .tab-panes > .tab-pane.active'));
     updateFilterStatus($root);
   }
 
-  function applyFilterToNode ($node, channelNameRoot) {
+  function applyFilterToNode ($node, channelKeyRoot) {
     var hiddenWas = $node.is('.filter-hidden');
     var isVis = true;
-    if ($node.data('channel') === channelNameRoot + '.phpError') {
+    if ($node.data('channel') === channelKeyRoot + '.phpError') {
       // php Errors are filtered separately
       return
     }
@@ -1503,20 +1508,20 @@
   var KEYCODE_ESC = 27;
   var menu = '<div class="debug-options" aria-labelledby="debug-options-toggle">' +
     '<div class="debug-options-body">' +
-      '<label>Theme <select name="theme">' +
-        '<option value="auto">Auto</option>' +
-        '<option value="light">Light</option>' +
-        '<option value="dark">Dark</option>' +
+      '<label>{string:cfg.theme} <select name="theme">' +
+        '<option value="auto">{string:cfg.theme.auto}</option>' +
+        '<option value="light">{string:cfg.theme.light}</option>' +
+        '<option value="dark">{string:cfg.theme.dark}</option>' +
       '</select></label>' +
-      '<label><input type="checkbox" name="debugCookie" /> Debug Cookie</label>' +
-      '<label><input type="checkbox" name="persistDrawer" /> Keep Open/Closed</label>' +
-      '<label><input type="checkbox" name="linkFiles" /> Create file links</label>' +
+      '<label><input type="checkbox" name="debugCookie" /> {string:cfg.cookie}</label>' +
+      '<label><input type="checkbox" name="persistDrawer" /> {string:cfg.persist-drawer}</label>' +
+      '<label><input type="checkbox" name="linkFiles" /> {string:cfg.link-files}</label>' +
       '<div class="form-group">' +
-        '<label for="linkFilesTemplate">Link Template</label>' +
+        '<label for="linkFilesTemplate">{string:cfg.link-template}</label>' +
         '<input id="linkFilesTemplate" name="linkFilesTemplate" />' +
       '</div>' +
       '<hr class="dropdown-divider" />' +
-      '<a href="http://www.bradkent.com/php/debug" target="_blank">Documentation</a>' +
+      '<a href="http://www.bradkent.com/php/debug" target="_blank">{string:cfg.documentation}</a>' +
     '</div>' +
     '</div>';
 
@@ -1559,6 +1564,7 @@
         '<i class="fa fa-ellipsis-v fa-fw"></i>' +
       '</button>'
     );
+    menu = config$5.dict.replaceTokens(menu);
     $menuBar.append(menu);
     if (!config$5.get('drawer')) {
       $menuBar.find('input[name=persistDrawer]').closest('label').remove();
@@ -1641,11 +1647,11 @@
   var methods; // method filters
   var initialized = false;
   var methodLabels = {
-    alert: '<i class="fa fa-fw fa-lg fa-bullhorn"></i>Alerts',
-    error: '<i class="fa fa-fw fa-lg fa-times-circle"></i>Error',
-    warn: '<i class="fa fa-fw fa-lg fa-warning"></i>Warning',
-    info: '<i class="fa fa-fw fa-lg fa-info-circle"></i>Info',
-    other: '<i class="fa fa-fw fa-lg fa-sticky-note-o"></i>Other'
+    alert: '<i class="fa fa-fw fa-lg fa-bullhorn"></i>{string:side.alert}',
+    error: '<i class="fa fa-fw fa-lg fa-times-circle"></i>{string:side.error}}',
+    warn: '<i class="fa fa-fw fa-lg fa-warning"></i>{string:side.warning}',
+    info: '<i class="fa fa-fw fa-lg fa-info-circle"></i>{string:side.info}',
+    other: '<i class="fa fa-fw fa-lg fa-sticky-note-o"></i>{string:side.other}',
   };
   var sidebarHtml = '' +
     '<div class="debug-sidebar show no-transition">' +
@@ -1664,17 +1670,17 @@
       '<div class="sidebar-content">' +
         '<ul class="list-unstyled debug-filters">' +
           '<li class="php-errors">' +
-            '<span><i class="fa fa-fw fa-lg fa-code"></i>PHP Errors</span>' +
+            '<span><i class="fa fa-fw fa-lg fa-code"></i>{string:side.php-errors}</span>' +
             '<ul class="list-unstyled">' +
             '</ul>' +
           '</li>' +
           '<li class="channels">' +
-            '<span><i class="fa fa-fw fa-lg fa-list-ul"></i>Channels</span>' +
+            '<span><i class="fa fa-fw fa-lg fa-list-ul"></i>{string:side-channels}</span>' +
             '<ul class="list-unstyled">' +
             '</ul>' +
           '</li>' +
         '</ul>' +
-        '<button class="expand-all" style="display:none;"><i class="fa fa-lg fa-plus"></i> Exp All Groups</button>' +
+        '<button class="expand-all" style="display:none;"><i class="fa fa-lg fa-plus"></i> {string:side.expand-all-groups}</button>' +
       '</div>' +
     '</div>';
 
@@ -1767,7 +1773,7 @@
   }
 
   function addMarkup ($node) {
-    var $sidebar = $(sidebarHtml);
+    var $sidebar = $(config$4.dict.replaceTokens(sidebarHtml));
     var $expAll = $node.find('.tab-panes > .tab-primary > .tab-body > .expand-all');
     $node.find('.tab-panes > .tab-primary > .tab-body').before($sidebar);
 
@@ -1803,7 +1809,7 @@
    * @param $node debugroot
    */
   function addMethodToggles ($node) {
-    var channelNameRoot = $node.data('channelNameRoot');
+    var channelKeyRoot = $node.data('channelKeyRoot');
     var $filters = $node.find('.debug-filters');
     var $entries = $node.find('.tab-primary').find('> .tab-body > .m_alert, .group-body > *');
     var val;
@@ -1811,7 +1817,7 @@
     for (val in methodLabels) {
       haveEntry = val === 'other'
         ? $entries.not('.m_alert, .m_error, .m_warn, .m_info').length > 0
-        : $entries.filter('.m_' + val).not('[data-channel="' + channelNameRoot + '.phpError"]').length > 0;
+        : $entries.filter('.m_' + val).not('[data-channel="' + channelKeyRoot + '.phpError"]').length > 0;
       $filters.append(
         $('<li />').append(
           $('<label class="toggle active" />').toggleClass('disabled', !haveEntry).append(
@@ -1822,7 +1828,7 @@
               value: val
             })
           ).append(
-            $('<span>').append(methodLabels[val])
+            $('<span>').append(config$4.dict.replaceTokens(methodLabels[val]))
           )
         )
       );
@@ -1916,18 +1922,18 @@
   }
 
   function addChannelToggles () {
-    var channelNameRoot = $root.data('channelNameRoot');
+    var channelKeyRoot = $root.data('channelKeyRoot');
     var $log = $root.find('> .tab-panes > .tab-primary');
     var channels = $root.data('channels') || {};
     var $ul;
     var $toggles;
-    if (!channelNameRoot) {
+    if (!channelKeyRoot) {
       return
     }
-    if (!channels[channelNameRoot]) {
+    if (!channels[channelKeyRoot]) {
       return
     }
-    $ul = buildChannelList(channels[channelNameRoot].channels, channelNameRoot);
+    $ul = buildChannelList(channels[channelKeyRoot].channels, channelKeyRoot);
     if ($ul.html().length) {
       $toggles = $('<fieldset />', {
         class: 'channels'
@@ -1939,10 +1945,10 @@
   }
 
   function addErrorIcons () {
-    var channelNameRoot = $root.data('channelNameRoot');
+    var channelKeyRoot = $root.data('channelKeyRoot');
     var counts = {
-      error: $root.find('.m_error[data-channel="' + channelNameRoot + '.phpError"]').length,
-      warn: $root.find('.m_warn[data-channel="' + channelNameRoot + '.phpError"]').length
+      error: $root.find('.m_error[data-channel="' + channelKeyRoot + '.phpError"]').length,
+      warn: $root.find('.m_warn[data-channel="' + channelKeyRoot + '.phpError"]').length
     };
     var $icon;
     var $icons = $('<span>', { class: 'debug-error-counts' });
@@ -2099,7 +2105,7 @@
     for (i = 0; i < channels.length; i++) {
       ref = channelTree;
       channel = channels[i];
-      path = channel.name.split('.');
+      path = channel.key.split('.');
       if (path.length > 1 && path[0] === channels[0].name) {
         path.shift();
       }
@@ -6352,6 +6358,27 @@
     return '<span class="classname">' + val + '</span>'
   }
 
+  function Dict (strings) {
+    this.strings = strings;
+  }
+
+  Dict.prototype.get = function (key) {
+    return this.strings[key]
+        ? this.strings[key]
+        : '{' + key + '}'
+  };
+
+  Dict.prototype.replaceTokens = function (str) {
+    var self = this;
+    return str.replace(/\{string:([^}]*)\}/g, function (match, p1) {
+      return self.get(p1)
+    })
+  };
+
+  Dict.prototype.update = function (strings) {
+    this.strings = Object.assign(this.strings, strings);
+  };
+
   var config$1 = {
     clipboardSrc: '//cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js',
     cssFontAwesome5: '' +
@@ -6422,46 +6449,85 @@
         '</span>',
       '> .t_modifier_trait': '<i class="fa fa-puzzle-piece"></i>',
       '> .info.magic': '<i class="fa fa-fw fa-magic"></i>',
-      'parent:not(.groupByInheritance) > dd[data-inherited-from]:not(.private-ancestor)': '<i class="fa fa-fw fa-clone" title="Inherited"></i>',
-      'parent:not(.groupByInheritance) > dd.private-ancestor': '<i class="fa fa-lock" title="Private ancestor"></i>',
-      '> dd[data-attributes]': '<i class="fa fa-hashtag" title="Attributes"></i>',
-      '> dd[data-declared-prev]': '<i class="fa fa-fw fa-repeat" title="Overrides"></i>',
-      '> .method.isAbstract': '<i class="fa fa-circle-o" title="abstract method"></i>',
-      '> .method.isDeprecated': '<i class="fa fa-fw fa-arrow-down" title="Deprecated"></i>',
-      '> .method.isFinal': '<i class="fa fa-hand-stop-o" title="Final"></i>',
-      '> .method > .t_modifier_magic': '<i class="fa fa-magic" title="magic method"></i>',
-      '> .method > .parameter.isPromoted': '<i class="fa fa-arrow-up" title="Promoted"></i>',
-      '> .method > .parameter[data-attributes]': '<i class="fa fa-hashtag" title="Attributes"></i>',
-      '> .method[data-implements]': '<i class="fa fa-handshake-o" title="Implements"></i>',
-      '> .method[data-throws]': '<i class="fa fa-flag" title="Throws"></i>',
-      '> .property.debuginfo-value': '<i class="fa fa-eye" title="via __debugInfo()"></i>',
-      '> .property.debuginfo-excluded': '<i class="fa fa-eye-slash" title="not included in __debugInfo"></i>',
-      '> .property.isDynamic': '<i class="fa fa-warning" title="Dynamic"></i>',
-      '> .property.isPromoted': '<i class="fa fa-arrow-up" title="Promoted"></i>',
+      'parent:not(.groupByInheritance) > dd[data-inherited-from]:not(.private-ancestor)': '<i class="fa fa-fw fa-clone" title="{string:inherited}"></i>',
+      'parent:not(.groupByInheritance) > dd.private-ancestor': '<i class="fa fa-lock" title="{string:private-ancestor}"></i>',
+      '> dd[data-attributes]': '<i class="fa fa-hashtag" title="{string:attributes}"></i>',
+      '> dd[data-declared-prev]': '<i class="fa fa-fw fa-repeat" title="{string:overrides}"></i>',
+      '> .method.isAbstract': '<i class="fa fa-circle-o" title="{string:method.abstract}"></i>',
+      '> .method.isDeprecated': '<i class="fa fa-fw fa-arrow-down" title="{string:deprecated}"></i>',
+      '> .method.isFinal': '<i class="fa fa-hand-stop-o" title="{string:final}"></i>',
+      '> .method > .t_modifier_magic': '<i class="fa fa-magic" title="{string:method.magic}"></i>',
+      '> .method > .parameter.isPromoted': '<i class="fa fa-arrow-up" title="{string:promoted}"></i>',
+      '> .method > .parameter[data-attributes]': '<i class="fa fa-hashtag" title="{string:attributes}"></i>',
+      '> .method[data-implements]': '<i class="fa fa-handshake-o" title="{string:implements}"></i>',
+      '> .method[data-throws]': '<i class="fa fa-flag" title="{string:throws}"></i>',
+      '> .property.debuginfo-value': '<i class="fa fa-eye" title="{string:debugInfo-value}"></i>',
+      '> .property.debuginfo-excluded': '<i class="fa fa-eye-slash" title="{string:debugInfo-excluded}"></i>',
+      '> .property.isDynamic': '<i class="fa fa-warning" title="{string:dynamic}"></i>',
+      '> .property.isPromoted': '<i class="fa fa-arrow-up" title="{string:promoted}"></i>',
       '> .property.getHook, > .property.setHook': function () {
-        var title = 'set hook';
+        var title = '{string:hook.set}';
         if ($(this).hasClass('getHook') && $(this).hasClass('setHook')) {
-          title = 'get and set hooks';
+          title = '{string:hook.both}';
         } else if ($(this).hasClass('getHook')) {
-          title = 'get hook';
+          title = '{string:hook.get}';
         }
         return $('<i class="fa">🪝</i>').prop('title', title)
       },
-      '> .property.isDeprecated': '<i class="fa fa-fw fa-arrow-down" title="Deprecated"></i>',
-      '> .property.isVirtual': '<i class="fa fa-cloud isVirtual" title="Virtual"></i>',
-      '> .property.isWriteOnly': '<i class="fa fa-eye-slash" title="Write-only"></i>',
-      '> .property > .t_modifier_magic': '<i class="fa fa-magic" title="magic property"></i>',
-      '> .property > .t_modifier_magic-read': '<i class="fa fa-magic" title="magic property"></i>',
-      '> .property > .t_modifier_magic-write': '<i class="fa fa-magic" title="magic property"></i>',
+      '> .property.isDeprecated': '<i class="fa fa-fw fa-arrow-down" title="{string:deprecated}"></i>',
+      '> .property.isVirtual': '<i class="fa fa-cloud isVirtual" title="{string:virtual}"></i>',
+      '> .property.isWriteOnly': '<i class="fa fa-eye-slash" title="{string:write-only}"></i>',
+      '> .property > .t_modifier_magic': '<i class="fa fa-magic" title="{string:property.magic}"></i>',
+      '> .property > .t_modifier_magic-read': '<i class="fa fa-magic" title="{string:property.magic}"></i>',
+      '> .property > .t_modifier_magic-write': '<i class="fa fa-magic" title="{string:property.magic}"></i>',
       '> .vis-toggles > span[data-toggle=vis][data-vis=private]': '<i class="fa fa-user-secret"></i>',
       '> .vis-toggles > span[data-toggle=vis][data-vis=protected]': '<i class="fa fa-shield"></i>',
       '> .vis-toggles > span[data-toggle=vis][data-vis=debuginfo-excluded]': '<i class="fa fa-eye-slash"></i>',
       '> .vis-toggles > span[data-toggle=vis][data-vis=inherited]': '<i class="fa fa-clone"></i>'
     },
     persistDrawer: false,
+    strings: {
+      'attributes': 'Attributes',
+      'cfg.cookie': 'Debug cookie',
+      'cfg.documentation': 'Documentation',
+      'cfg.link-files': 'Create file links',
+      'cfg.link-template': 'Link template',
+      'cfg.persist-drawer': 'Keep open/closed',
+      'cfg.theme': 'Theme',
+      'cfg.theme.auto': 'Auto',
+      'cfg.theme.dark': 'Dark',
+      'cfg.theme.light': 'Light',
+      'debugInfo-excluded': 'not included in __debugInfo',
+      'debugInfo-value': 'via __debugInfo()',
+      'deprecated': 'Deprecated',
+      'dynamic': 'Dynamic',
+      'final': 'Final',
+      'hook.both': 'Get and set hooks',
+      'hook.get': 'Get hook',
+      'hook.set': 'Set hook',
+      'implements': 'Implements',
+      'inherited': 'Inherited',
+      'method.abstract': 'Abstract method',
+      'method.magic': 'Magic method',
+      'overrides': 'Overrides',
+      'private-ancestor': 'Private ancestor',
+      'promoted': 'Promoted',
+      'property.magic': 'Magic property',
+      'side.alert': 'Alert',
+      'side.channels': 'Channels',
+      'side.error': 'Error',
+      'side.expand-all-groups': 'Exp All Groups',
+      'side.info': 'Info',
+      'side.other': 'Other',
+      'side.php-errors': 'PHP Errors',
+      'side.warning': 'Warning',
+      'throws': 'Throws',
+      'virtual': 'Virtual',
+      'write-only': 'Write-only',
+    },
+    theme: 'auto',
     tooltip: true,
     useLocalStorage: true,
-    theme: 'auto'
   };
 
   function Config () {
@@ -6469,7 +6535,8 @@
     if (config$1.useLocalStorage) {
       storedConfig = lsGet(config$1.localStorageKey);
     }
-    this.config = $.extend({}, config$1, storedConfig || {});
+    this.config = $.extend(true, {}, config$1, storedConfig || {});
+    this.dict = new Dict(this.config.strings);
     this.haveSavedConfig = typeof storedConfig === 'object';
     this.localStorageKeys = ['persistDrawer', 'openDrawer', 'openSidebar', 'height', 'linkFiles', 'linkFilesTemplate', 'theme'];
   }
@@ -6500,9 +6567,9 @@
     } else {
       setVals[key] = val;
     }
-    // console.log('config.set', setVals)
-    for (var k in setVals) {
-      this.config[k] = setVals[k];
+    this.config = $.extend(true, {}, this.config, setVals);
+    if (setVals.strings) {
+      this.dict.update(setVals.strings);
     }
     if (this.config.useLocalStorage) {
       this.updateStorage(setVals);
@@ -6667,6 +6734,10 @@
       }
     }
   ]);
+
+  function setCfg (cfg) {
+    config.set(cfg);
+  }
 
   $.fn.debugEnhance = function (method, arg1, arg2) {
     if (method === 'buildChannelList') {
@@ -6850,4 +6921,8 @@
     $('.debug-noti').html(html).addClass('animate').closest('.debug-noti-wrap').show();
   }
 
-})(window.jQuery);
+  exports.setCfg = setCfg;
+
+  return exports;
+
+})({}, window.jQuery);

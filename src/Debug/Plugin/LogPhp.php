@@ -27,8 +27,10 @@ class LogPhp implements SubscriberInterface
 
     /** @var array<string,mixed> */
     protected $cfg = array(
-        'channelOpts' => array(
+        'channelKey' => 'php',
+        'channelOptions' => array(
             'channelIcon' => ':php:',
+            'channelName' => 'php',
             'channelSort' => 10,
             'nested' => false,
         ),
@@ -74,7 +76,7 @@ class LogPhp implements SubscriberInterface
      */
     public function onBootstrap(Event $event)
     {
-        $this->debug = $event->getSubject()->getChannel('php', $this->cfg['channelOpts']);
+        $this->debug = $event->getSubject()->getChannel($this->cfg['channelKey'], $this->cfg['channelOptions']);
         $collectWas = $this->debug->setCfg('collect', true);
         $this->logPhpInfo();
         $this->logPhpEr();
@@ -130,14 +132,16 @@ class LogPhp implements SubscriberInterface
     protected function logPhpVersion()
     {
         $buildDate = $this->debug->php->buildDate();
-        $this->debug->log('PHP Version', PHP_VERSION);
-        $this->debug->log('Server API', PHP_SAPI);
+        $this->debug->log('PHP ' . $this->debug->i18n->trans('version'), PHP_VERSION);
+        $this->debug->log($this->debug->i18n->trans('php.server-api'), PHP_SAPI);
         if ($buildDate) {
             $ts = \strtotime($buildDate);
             $buildDateTime = \date('Y-m-d H:i:s T', $ts);
-            $this->debug->log('Build Date', $buildDateTime);
+            $this->debug->log($this->debug->i18n->trans('php.build-date'), $buildDateTime);
         }
-        $this->debug->log('Thread Safe', PHP_ZTS ? 'yes' : 'no');
+        $this->debug->log($this->debug->i18n->trans('php.thread-safe'), PHP_ZTS
+            ? $this->debug->i18n->trans('yes')
+            : $this->debug->i18n->trans('no'));
     }
 
     /**
@@ -187,7 +191,7 @@ class LogPhp implements SubscriberInterface
                 continue;
             }
             $this->debug->warn(
-                $extension . ' extension is not loaded',
+                $this->debug->i18n->trans('php.extension-not-loaded', array('extension' => $extension)),
                 $this->debug->meta($this->detectFilesFalseMeta)
             );
         }
@@ -207,7 +211,7 @@ class LogPhp implements SubscriberInterface
             ));
         }
         $this->assertSetting('mbstring.func_overload', false, array(
-            'msg' => 'Multi-byte string function overloading is enabled (is evil)',
+            'msg' => $this->debug->i18n->trans('php.mbstring.func_overload'),
         ));
     }
 
@@ -223,12 +227,11 @@ class LogPhp implements SubscriberInterface
         $errorReportingRaw = $this->debug->errorHandler->getCfg('errorReporting');
         if ($errorReporting !== E_ALL) {
             $errReportingStr = $this->debug->errorLevel->toConstantString($errorReporting);
-            $msgLine = 'PHPDebugConsole\'s errorHandler is using a errorReporting value of `%c' . $errReportingStr . '%c`';
+            $msgLine = $this->debug->i18n->trans('error-handler.value', array('value' => '`%c' . $errReportingStr . '%c`'));
             if ($errorReportingRaw === 'system') {
-                $msgLine = 'PHPDebugConsole\'s errorHandler is set to "system" (not all errors will be shown)';
+                $msgLine = $this->debug->i18n->trans('error-handler.system');
             } elseif ($errorReporting === \error_reporting()) {
-                $msgLine = 'PHPDebugConsole\'s errorHandler is also using a errorReporting value of '
-                    . '`%c' . $errReportingStr . '%c`';
+                $msgLine = $this->debug->i18n->trans('error-handler.match', array('value' => '`%c' . $errReportingStr . '%c`'));
             }
             $msgLines[] = $msgLine;
         }
@@ -251,11 +254,13 @@ class LogPhp implements SubscriberInterface
             : 'E_ALL | E_STRICT';
         if (\in_array(\error_reporting(), [-1, E_ALL], true) === false) {
             $errorReporting = $this->debug->errorHandler->errorReporting();
-            $msgLines[] = 'PHP\'s %cerror_reporting%c is set to '
-                . '`%c' . $this->debug->errorLevel->toConstantString() . '%c` '
-                . 'rather than `%c' . $preferred . '%c`';
+            $msgLines[] = $this->debug->i18n->trans('error-handler.php', array(
+                'key' => '%cerror_reporting%c',
+                'preferred' => '`%c' . $preferred . '%c`',
+                'value' => '`%c' . $this->debug->errorLevel->toConstantString() . '%c`',
+            ));
             if ($errorReporting === E_ALL) {
-                $msgLines[] = 'PHPDebugConsole is disregarding %cerror_reporting%c value (this is configurable)';
+                $msgLines[] = $this->debug->i18n->trans('error-handler.ignore', array('value' => '%cerror_reporting%c'));
             }
         }
         $msg = \implode("\n", $msgLines);
@@ -273,11 +278,11 @@ class LogPhp implements SubscriberInterface
     {
         $iniFiles = $this->debug->php->getIniFiles();
         if (\count($iniFiles) === 1) {
-            $this->debug->log('ini location', $iniFiles[0], $this->debug->meta('detectFiles'));
+            $this->debug->log($this->debug->i18n->trans('php.ini-location'), $iniFiles[0], $this->debug->meta('detectFiles'));
             return;
         }
         $this->debug->log(
-            'ini files',
+            $this->debug->i18n->trans('php.ini-files'),
             $this->debug->abstracter->crateWithVals(
                 $iniFiles,
                 array(
@@ -301,7 +306,7 @@ class LogPhp implements SubscriberInterface
         $memoryLimit === '-1'
             // overkill, but lets use assertSetting, which applies some styling
             ? $this->assertSetting(array(
-                'msg' => 'should not be -1 (no limit)',
+                'msg' => $this->debug->i18n->trans('assert.should-not-be') . ' -1 (' . $this->debug->i18n->trans('no-limit') . ')',
                 'name' => 'memory_limit',
                 'operator' => '!=',
                 'valActual' => '-1',
@@ -323,7 +328,7 @@ class LogPhp implements SubscriberInterface
             $this->debug->log('date.timezone', $dateTimezone);
             return;
         }
-        $this->debug->assert(false, '%cdate.timezone%c is not set', 'font-family:monospace;', '');
+        $this->debug->assert(false, '%cdate.timezone%c ' . $this->debug->i18n->trans('is-set-not'), 'font-family:monospace;', '');
         $this->debug->log('date_default_timezone_get()', \date_default_timezone_get());
     }
 
@@ -357,8 +362,8 @@ class LogPhp implements SubscriberInterface
     {
         $xdebugVer = \phpversion('xdebug');
         $msg = $xdebugVer
-            ? 'Xdebug v' . $xdebugVer . ' is installed'
-            : 'Xdebug is not installed';
+            ? 'Xdebug v' . $xdebugVer . ' ' . $this->debug->i18n->trans('is-installed')
+            : 'Xdebug ' . $this->debug->i18n->trans('is-installed-not');
         if (\version_compare($xdebugVer, '3.0.0', '>=')) {
             $msg .= ' (mode: ' . (\ini_get('xdebug.mode') ?: 'off') . ')';
         }

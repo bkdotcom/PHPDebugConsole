@@ -77,16 +77,16 @@ trait DatabaseTrait
     private function logRuntime(Debug $debug, $connectionString = null)
     {
         if ($connectionString) {
-            $debug->log('connection string', $connectionString, $debug->meta('redact'));
+            $debug->log($debug->i18n->trans('db.connection-string'), $connectionString, $debug->meta('redact'));
         } elseif ($database = $this->currentDatabase()) {
             $debug->log('database', $database);
         }
-        $debug->log('logged operations: ', $this->statementInfoLogger->getLoggedCount());
-        $debug->time('total time', $this->statementInfoLogger->getTimeSpent());
-        $debug->log('max memory usage', $debug->utility->getBytes($this->statementInfoLogger->getPeakMemoryUsage()));
+        $debug->log($this->debug->i18n->trans('runtime.logged-operations') . ': ', $this->statementInfoLogger->getLoggedCount());
+        $debug->time($this->debug->i18n->trans('runtime.total-time'), $this->statementInfoLogger->getTimeSpent());
+        $debug->log($this->debug->i18n->trans('runtime.memory.peak'), $debug->utility->getBytes($this->statementInfoLogger->getPeakMemoryUsage()));
         $serverInfo = $this->serverInfo();
         if ($serverInfo) {
-            $debug->log('server info', $serverInfo);
+            $debug->log($this->debug->i18n->trans('server.info'), $serverInfo);
         }
         if ($this->statementInfoLogger->prettified() === false) {
             $debug->info('require jdorn/sql-formatter to prettify logged sql statements');
@@ -179,13 +179,18 @@ trait DatabaseTrait
      */
     protected function traitInit($debug, $channelName = 'SQL')
     {
+        $channelKey = \strtolower($channelName);
+        $channelOptions = array(
+            'channelIcon' => $this->icon,
+            'channelName' => $channelName,
+        );
         if (!$debug) {
-            $debug = Debug::getChannel($channelName, array('channelIcon' => $this->icon));
+            $debug = Debug::getChannel($channelKey, $channelOptions);
         } elseif ($debug === $debug->rootInstance) {
-            $debug = $debug->getChannel($channelName, array('channelIcon' => $this->icon));
+            $debug = $debug->getChannel($channelKey, $channelOptions);
         }
         $this->debug = $debug;
         $this->statementInfoLogger = new StatementInfoLogger($debug);
-        $debug->addPlugin($debug->pluginHighlight);
+        $debug->addPlugin($debug->pluginHighlight, 'highlight');
     }
 }

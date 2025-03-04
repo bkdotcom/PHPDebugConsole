@@ -1,9 +1,13 @@
 import $ from 'jquery'
 
+// config values
 var config
+
+var dict
 
 export function init ($delegateNode) {
   config = $delegateNode.data('config').get()
+  dict = $delegateNode.data('config').dict
   $delegateNode.on('click', '[data-toggle=vis]', function () {
     toggleVis(this)
     return false
@@ -15,20 +19,21 @@ export function init ($delegateNode) {
 }
 
 function addIcons ($node) {
-  $.each(config.iconsObject, function (selector, v) {
+  $.each(config.iconsObject, function (selector, icon) {
     var $found = addIconFind($node, selector)
-    var vMatches = typeof v === 'string'
-      ? v.match(/^([ap])\s*:(.+)$/)
+    var matches = typeof icon === 'string'
+      ? icon.match(/^([ap])\s*:(.+)$/)
       : null
-    var prepend = !vMatches || vMatches[1] === 'p'
-    if (vMatches) {
-      v = vMatches[2]
+    var prepend = !matches || matches[1] === 'p'
+    if (matches) {
+      icon = matches[2]
     }
+    icon = dict.replaceTokens(icon)
     if (prepend) {
-      addIconPrepend($found, v)
+      addIconPrepend($found, icon)
       return
     }
-    $found.append(v)
+    $found.append(icon)
   })
 }
 

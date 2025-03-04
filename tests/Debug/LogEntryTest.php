@@ -44,11 +44,11 @@ class LogEntryTest extends DebugTestFramework
                 'attribs' => array(
                     'class' => 'ding dong',
                 ),
-                'channel' => 'Request / Response'
+                'channel' => 'request-response',
             )
         );
         $json = \json_encode($logEntry);
-        self::assertSame('{"method":"log","args":["string",true,false,null,42],"meta":{"attribs":{"class":["ding","dong"]},"channel":"Request \/ Response"}}', $json);
+        self::assertSame('{"method":"log","args":["string",true,false,null,42],"meta":{"attribs":{"class":["ding","dong"]},"channel":"request-response"}}', $json);
     }
 
     public function testSpecifyChannel()

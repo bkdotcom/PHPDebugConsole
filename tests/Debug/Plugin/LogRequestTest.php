@@ -53,35 +53,33 @@ class LogRequestTest extends DebugTestFramework
         $logReqRes = $this->debug->getPlugin('logRequest');
         $logReqRes->logRequest();
 
-        self::assertEquals(
-            array(
-                'method' => 'log',
-                'args' => array(
-                    'php://input',
-                    array(
-                        'attribs' => array(
-                            'class' => array('highlight', 'language-json', 'no-quotes'),
-                        ),
-                        'brief' => false,
-                        'contentType' => ContentType::JSON,
-                        'debug' => Abstracter::ABSTRACTION,
-                        'prettified' => true,
-                        'prettifiedTag' => true,
-                        // 'strlen' => 24,
-                        // 'strlenValue' => 24,
-                        'type' => Type::TYPE_STRING,
-                        'typeMore' => Type::TYPE_STRING_JSON,
-                        'value' => \json_encode(\json_decode($requestBody), JSON_PRETTY_PRINT),
-                        'valueDecoded' => \json_decode($requestBody, true),
+        $expect = array(
+            'method' => 'log',
+            'args' => array(
+                'php://input',
+                array(
+                    'attribs' => array(
+                        'class' => array('highlight', 'language-json', 'no-quotes'),
                     ),
-                ),
-                'meta' => array(
-                    'channel' => 'Request / Response',
-                    'redact' => true,
+                    'brief' => false,
+                    'contentType' => ContentType::JSON,
+                    'debug' => Abstracter::ABSTRACTION,
+                    'prettified' => true,
+                    'prettifiedTag' => true,
+                    // 'strlen' => 24,
+                    // 'strlenValue' => 24,
+                    'type' => Type::TYPE_STRING,
+                    'typeMore' => Type::TYPE_STRING_JSON,
+                    'value' => \json_encode(\json_decode($requestBody), JSON_PRETTY_PRINT),
+                    'valueDecoded' => \json_decode($requestBody, true),
                 ),
             ),
-            $this->helper->logEntryToArray($this->debug->data->get('log/2'))
+            'meta' => array(
+                'channel' => 'request-response',
+                'redact' => true,
+            ),
         );
+        self::assertEquals($expect, $this->helper->logEntryToArray($this->debug->data->get('log/2')));
     }
 
     public function testJsonRequestWrongType()
@@ -105,7 +103,7 @@ class LogRequestTest extends DebugTestFramework
                 'args' => array('It appears application/json was received with the wrong Content-Type' . "\n"
                     . 'Pay no attention to $_POST and instead use php://input'),
                 'meta' => array(
-                    'channel' => 'Request / Response',
+                    'channel' => 'request-response',
                     'detectFiles' => false,
                     // 'evalLine' => null,
                     // 'file' => null,
@@ -138,7 +136,7 @@ class LogRequestTest extends DebugTestFramework
                     ),
                 ),
                 'meta' => array(
-                    'channel' => 'Request / Response',
+                    'channel' => 'request-response',
                     'redact' => true,
                 ),
             ),
@@ -203,7 +201,7 @@ class LogRequestTest extends DebugTestFramework
                 'method' => 'log',
                 'args' => array('$_POST', $post),
                 'meta' => array(
-                    'channel' => 'Request / Response',
+                    'channel' => 'request-response',
                     'redact' => true,
                 ),
             ),
@@ -231,7 +229,7 @@ class LogRequestTest extends DebugTestFramework
                 'method' => 'log',
                 'args' => array('$_POST', $post),
                 'meta' => array(
-                    'channel' => 'Request / Response',
+                    'channel' => 'request-response',
                     'redact' => true,
                 ),
             ),
@@ -261,7 +259,7 @@ class LogRequestTest extends DebugTestFramework
                 'method' => 'log',
                 'args' => array('$_POST', $post),
                 'meta' => array(
-                    'channel' => 'Request / Response',
+                    'channel' => 'request-response',
                     'redact' => true,
                 ),
             ),
@@ -321,7 +319,7 @@ class LogRequestTest extends DebugTestFramework
                     ),
                     'meta' => array(
                         'caption' => 'request headers',
-                        'channel' => 'Request / Response',
+                        'channel' => 'request-response',
                         'sortable' => true,
                         'tableInfo' => array(
                             'class' => null,
@@ -367,7 +365,7 @@ class LogRequestTest extends DebugTestFramework
                     ),
                     'meta' => array(
                         'caption' => '$_COOKIE',
-                        'channel' => 'Request / Response',
+                        'channel' => 'request-response',
                         'redact' => true,
                         'sortable' => true,
                         'tableInfo' => array(
@@ -400,7 +398,7 @@ class LogRequestTest extends DebugTestFramework
                         ),
                     )),
                     'meta' => array(
-                        'channel' => 'Request / Response',
+                        'channel' => 'request-response',
                     ),
                 ),
             ),
@@ -424,7 +422,7 @@ class LogRequestTest extends DebugTestFramework
                 'method' => 'warn',
                 'args' => array('POST request with no body'),
                 'meta' => array(
-                    'channel' => 'Request / Response',
+                    'channel' => 'request-response',
                     'detectFiles' => false,
                     // 'evalLine' => null,
                     // 'file' => null,
@@ -476,7 +474,7 @@ class LogRequestTest extends DebugTestFramework
                     ),
                 ),
                 'meta' => array(
-                    'channel' => 'Request / Response',
+                    'channel' => 'request-response',
                     'redact' => true,
                 ),
             ),
@@ -530,7 +528,7 @@ class LogRequestTest extends DebugTestFramework
                 'method' => 'warn',
                 'args' => array('GET request with body'),
                 'meta' => array(
-                    'channel' => 'Request / Response',
+                    'channel' => 'request-response',
                     'detectFiles' => false,
                     // 'evalLine' => null,
                     // 'file' => null,

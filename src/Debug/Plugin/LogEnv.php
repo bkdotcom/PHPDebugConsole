@@ -119,7 +119,7 @@ class LogEnv implements SubscriberInterface
         }
         $this->debug->groupSummary(1);
         $this->debug->log(
-            '%cgit branch: %c%s',
+            '%c' . $this->debug->i18n->trans('env.git.branch') . ': %c%s',
             'font-weight:bold;',
             'font-size:1.5em; background-color:#CCC; color:#000; padding:0 .3em;',
             $branch,
@@ -145,8 +145,10 @@ class LogEnv implements SubscriberInterface
         $namePassed = $this->getPassedSessionName();
 
         $debugWas = $this->debug;
-        $this->debug = $this->debug->rootInstance->getChannel('Session', array(
+        $channelKey = 'session';
+        $this->debug = $this->debug->rootInstance->getChannel($channelKey, array(
             'channelIcon' => ':session:',
+            'channelName' => 'channel.session|trans',
             'nested' => false,
         ));
         $this->logSessionSettings($namePassed);
@@ -170,7 +172,7 @@ class LogEnv implements SubscriberInterface
                 'valCompare' => 0,
             ),
             array(
-                'msg' => 'should not be PHPSESSID (just as %cexpose_php%c should be disabled)',
+                'msg' => $this->debug->i18n->trans('session.name.assert', array('expose_php' => '%cexpose_php%c')),
                 'name' => 'session.name',
                 'operator' => '!=',
                 'valActual' => $namePassed ?: \ini_get('session.name'),
@@ -204,15 +206,15 @@ class LogEnv implements SubscriberInterface
         $namePrev = null;
         if (session_status() !== PHP_SESSION_ACTIVE) {
             if ($sessionNamePassed === null) {
-                $this->debug->log('Session Inactive / No session id passed in request');
+                $this->debug->log($this->debug->i18n->trans('session.inactive'));
                 return;
             }
             $namePrev = session_name($sessionNamePassed);
             session_start();
         }
         if (session_status() === PHP_SESSION_ACTIVE) {
-            $this->debug->log('session name', session_name());
-            $this->debug->log('session id', \session_id());
+            $this->debug->log($this->debug->i18n->trans('session.name'), session_name());
+            $this->debug->log($this->debug->i18n->trans('session.id'), \session_id());
             $sessionVals = $_SESSION;
             \ksort($sessionVals);
             $this->debug->log('$_SESSION', $sessionVals, $this->debug->meta('redact'));

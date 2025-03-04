@@ -105,6 +105,8 @@ class ChannelTest extends DebugTestFramework
 
         // nothing actually cleared (bitmask = 0)
         $data = $this->genLog($this->debug);
+        // \bdk\Debug::varDump('expect', $dataExpect);
+        // \bdk\Debug::varDump('actual', $data);
         self::assertSame($dataExpect, $data);
 
         // nothing actually cleared (bitmask = 0)
@@ -176,6 +178,8 @@ class ChannelTest extends DebugTestFramework
             ),
         );
         $data = $this->genLog($this->debugFoo, Debug::CLEAR_ALL);
+        // \bdk\Debug::varDump('expect', $dataFooClearedExpect);
+        // \bdk\Debug::varDump('actual', $data);
         self::assertSame($dataFooClearedExpect, $data);
     }
 
@@ -183,7 +187,7 @@ class ChannelTest extends DebugTestFramework
     {
         $this->genLog();
         $htmlFoo = <<<EOD
-        <div class="debug" data-channel-name-root="general.foo" data-channels="{&quot;general&quot;:{&quot;channels&quot;:{&quot;foo&quot;:{&quot;channels&quot;:{},&quot;options&quot;:{&quot;icon&quot;:null,&quot;show&quot;:true}}},&quot;options&quot;:{&quot;icon&quot;:&quot;fa fa-list-ul&quot;,&quot;show&quot;:true}}}" data-options="{&quot;drawer&quot;:true,&quot;linkFilesTemplateDefault&quot;:null,&quot;tooltip&quot;:true}">
+        <div class="debug" data-channel-key-root="general.foo" data-channels="{&quot;general&quot;:{&quot;channels&quot;:{&quot;foo&quot;:{&quot;channels&quot;:{},&quot;options&quot;:{&quot;icon&quot;:null,&quot;show&quot;:true}}},&quot;options&quot;:{&quot;icon&quot;:&quot;fa fa-list-ul&quot;,&quot;show&quot;:true}}}" data-options="{&quot;drawer&quot;:true,&quot;linkFilesTemplateDefault&quot;:null,&quot;tooltip&quot;:true}">
             <header class="debug-bar debug-menu-bar">PHPDebugConsole<nav role="tablist"></nav></header>
             <div class="tab-panes">
                 <div class="active debug-tab-general-foo tab-pane tab-primary" data-options="{&quot;sidebar&quot;:true}" role="tabpanel">
@@ -220,7 +224,7 @@ class ChannelTest extends DebugTestFramework
         </div>
 EOD;
         $html = <<<EOD
-        <div class="debug" data-channel-name-root="general" data-channels="{&quot;general&quot;:{&quot;channels&quot;:{&quot;foo&quot;:{&quot;channels&quot;:{},&quot;options&quot;:{&quot;icon&quot;:null,&quot;show&quot;:true}}},&quot;options&quot;:{&quot;icon&quot;:&quot;fa fa-list-ul&quot;,&quot;show&quot;:true}}}" data-options="{&quot;drawer&quot;:true,&quot;linkFilesTemplateDefault&quot;:null,&quot;tooltip&quot;:true}">
+        <div class="debug" data-channel-key-root="general" data-channels="{&quot;general&quot;:{&quot;channels&quot;:{&quot;foo&quot;:{&quot;channels&quot;:{},&quot;options&quot;:{&quot;icon&quot;:null,&quot;show&quot;:true}}},&quot;options&quot;:{&quot;icon&quot;:&quot;fa fa-list-ul&quot;,&quot;show&quot;:true}}}" data-options="{&quot;drawer&quot;:true,&quot;linkFilesTemplateDefault&quot;:null,&quot;tooltip&quot;:true}">
             <header class="debug-bar debug-menu-bar">PHPDebugConsole<nav role="tablist">%A</nav></header>
             <div class="tab-panes">
                 %A<div class="active debug-tab-general tab-pane tab-primary" data-options="{&quot;sidebar&quot;:true}" role="tabpanel">
@@ -240,8 +244,8 @@ EOD;
                                     </li>
                                 </ul>
                             </li>
-                            <li class="m_info"><span class="no-quotes t_string">Built In %f %s</span></li>
-                            <li class="m_info"><span class="no-quotes t_string">Peak Memory Usage <i class="fa fa-question-circle-o" title="Includes debug overhead"></i>: %f MB / %s</span></li>
+                            <li class="m_info"><span class="no-quotes t_string">Built in %f %s</span></li>
+                            <li class="m_info"><span class="no-quotes t_string">Peak memory usage <i class="fa fa-question-circle-o" title="Includes debug overhead"></i>: %f MB / %s</span></li>
                             <li class="expanded m_group" data-channel="general.foo">
                                 <div class="group-header"><span class="font-weight-bold group-label">foo: sum 0 / group 1</span></div>
                                 <ul class="group-body">
@@ -282,9 +286,9 @@ EOD;
 EOD;
         $this->eventCounter = array();
         $this->debugFoo->eventManager->subscribe(Debug::EVENT_OUTPUT, function (Event $event) {
-            $channelName = $event->getSubject()->getCfg('channelName');
-            $this->eventCounter[$channelName . '.debug.output'] = isset($this->eventCounter[$channelName . '.debug.output'])
-                ? $this->eventCounter[$channelName . '.debug.output'] + 1
+            $channelKey = $event->getSubject()->getCfg('channelKey', Debug::CONFIG_DEBUG);
+            $this->eventCounter[$channelKey . '.debug.output'] = isset($this->eventCounter[$channelKey . '.debug.output'])
+                ? $this->eventCounter[$channelKey . '.debug.output'] + 1
                 : 1;
         });
         $this->outputTest(array(
@@ -430,8 +434,8 @@ EOD;
         $data['groupPriorityStack'] = self::getSharedVar('reflectionProperties')['groupPriorityStack']->getValue($groupStack);
         $data['groupStacks'] = \array_map(static function ($stack) {
             foreach ($stack as $k2 => $info) {
-                $channelName = $info['channel']->getCfg('channelName');
-                $stack[$k2]['channel'] = $channelName;
+                $channelKey = $info['channel']->getCfg('channelKey', Debug::CONFIG_DEBUG);
+                $stack[$k2]['channel'] = $channelKey;
             }
             return $stack;
         }, self::getSharedVar('reflectionProperties')['groupStacks']->getValue($groupStack));

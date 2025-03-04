@@ -40,13 +40,14 @@ class Cases extends AbstractSection
         if (!$cfg['output']) {
             return '';
         }
+        $label = $this->debug->i18n->trans('object.cases');
         if (!$cfg['collect']) {
-            return '<dt class="cases">cases <i>not collected</i></dt>' . "\n";
+            return '<dt class="cases">' . $label . ' <i>' . $this->debug->i18n->trans('object.not-collected') . '</i></dt>' . "\n";
         }
         if (!$abs['cases']) {
-            return '<dt class="cases"><i>no cases!</i></dt>' . "\n";
+            return '<dt class="cases"><i>' . $this->debug->i18n->trans('object.cases.none') . '</i></dt>' . "\n";
         }
-        return '<dt class="cases">cases</dt>' . "\n"
+        return '<dt class="cases">' . $label . '</dt>' . "\n"
             . $this->dumpItems($abs, 'cases', $cfg);
     }
 

@@ -30,15 +30,15 @@ abstract class AbstractRoute extends AbstractComponent implements RouteInterface
     protected $appendsHeaders = false;
 
     /** @var string|bool */
-    protected $channelName = null;
+    protected $channelKey = null;
 
     /**
-     * channelName of instance initiating the output!
-     * Not the rootInstance channelName
+     * channelKey of instance initiating the output!
+     * Not the rootInstance channelKey
      *
      * @var string
      */
-    protected $channelNameRoot = '';
+    protected $channelKeyRoot = '';
 
     /** @var string */
     protected $channelRegex = '';
@@ -55,7 +55,7 @@ abstract class AbstractRoute extends AbstractComponent implements RouteInterface
     /** @var \bdk\Debug\Dump\Base */
     protected $dumper;
 
-    /** @var array channelName => bool */
+    /** @var array channelKey => bool */
     private $shouldIncludeCache = array();
 
     /**
@@ -178,7 +178,7 @@ abstract class AbstractRoute extends AbstractComponent implements RouteInterface
     }
 
     /**
-     * Set channelName values
+     * Set channelKey values
      *
      * @param Event $event Event instance
      *
@@ -187,9 +187,9 @@ abstract class AbstractRoute extends AbstractComponent implements RouteInterface
     public function setChannelName(Event $event)
     {
         $debug = $event->getSubject();
-        $this->channelName = $debug->getCfg('channelName', Debug::CONFIG_DEBUG);
-        $this->channelNameRoot = $debug->getCfg('channelName', Debug::CONFIG_DEBUG);
-        $this->setChannelRegex('#^' . \preg_quote($this->channelName, '#') . '(\.|$)#');
+        $this->channelKey = $debug->getCfg('channelKey', Debug::CONFIG_DEBUG);
+        $this->channelKeyRoot = $debug->getCfg('channelKey', Debug::CONFIG_DEBUG);
+        $this->setChannelRegex('#^' . \preg_quote($this->channelKey, '#') . '(\.|$)#');
     }
 
     /**
@@ -213,7 +213,7 @@ abstract class AbstractRoute extends AbstractComponent implements RouteInterface
      */
     protected function channelTest(LogEntry $logEntry)
     {
-        return \preg_match($this->channelRegex, $logEntry->getChannelName()) === 1;
+        return \preg_match($this->channelRegex, $logEntry->getChannelKey()) === 1;
     }
 
     /**
@@ -279,10 +279,10 @@ abstract class AbstractRoute extends AbstractComponent implements RouteInterface
      */
     protected function shouldInclude(LogEntry $logEntry)
     {
-        $channelName = $logEntry->getChannelName();
-        $channelName = \strtolower($channelName);
-        if (isset($this->shouldIncludeCache[$channelName])) {
-            return $this->shouldIncludeCache[$channelName];
+        $channelKey = $logEntry->getChannelKey();
+        $channelKey = \strtolower($channelKey);
+        if (isset($this->shouldIncludeCache[$channelKey])) {
+            return $this->shouldIncludeCache[$channelKey];
         }
         if (empty($this->cfg['channels'])) {
             $this->cfg['channels'] = ['*'];
@@ -290,24 +290,24 @@ abstract class AbstractRoute extends AbstractComponent implements RouteInterface
         if (!isset($this->cfg['channelsExclude'])) {
             $this->cfg['channelsExclude'] = [];
         }
-        $include = $this->testChannelNameMatch($channelName, $this->cfg['channels'])
-            && !$this->testChannelNameMatch($channelName, $this->cfg['channelsExclude']);
-        $this->shouldIncludeCache[$channelName] = $include;
+        $include = $this->testChannelKeyMatch($channelKey, $this->cfg['channels'])
+            && !$this->testChannelKeyMatch($channelKey, $this->cfg['channelsExclude']);
+        $this->shouldIncludeCache[$channelKey] = $include;
         return $include;
     }
 
     /**
      * Test if string matches against list of strings
      *
-     * @param string $channelName  channelName to test
-     * @param array  $channelNames list of channelNames (may include wildcard '*')
+     * @param string $channelKey  channelKey to test
+     * @param array  $channelKeys list of channelKeys (may include wildcard '*')
      *
      * @return bool
      */
-    private function testChannelNameMatch($channelName, $channelNames = array())
+    private function testChannelKeyMatch($channelKey, $channelKeys = array())
     {
-        foreach ($channelNames as $channelNameTest) {
-            if ($this->testChannelName($channelName, $channelNameTest)) {
+        foreach ($channelKeys as $channelKeyTest) {
+            if ($this->testChannelKey($channelKey, $channelKeyTest)) {
                 return true;
             }
         }
@@ -315,25 +315,25 @@ abstract class AbstractRoute extends AbstractComponent implements RouteInterface
     }
 
     /**
-     * Test if channel name matches test value
+     * Test if channel key matches test value
      *
-     * @param string $channelName     channelName to test
-     * @param string $channelNameTest test string
+     * @param string $channelKey     channelKey to test
+     * @param string $channelKeyTest test string
      *
      * @return bool
      */
-    private function testChannelName($channelName, $channelNameTest)
+    private function testChannelKey($channelKey, $channelKeyTest)
     {
-        $channelNameTest = \strtolower($channelNameTest);
-        if ($channelNameTest === '*') {
+        $channelKeyTest = \strtolower($channelKeyTest);
+        if ($channelKeyTest === '*') {
             return true;
         }
-        if ($channelNameTest === $channelName) {
+        if ($channelKeyTest === $channelKey) {
             return true;
         }
-        if (\substr($channelNameTest, -1, 1) === '*') {
-            $prefix = \rtrim($channelNameTest, '*');
-            if (\strpos($channelName, $prefix) === 0) {
+        if (\substr($channelKeyTest, -1, 1) === '*') {
+            $prefix = \rtrim($channelKeyTest, '*');
+            if (\strpos($channelKey, $prefix) === 0) {
                 return true;
             }
         }

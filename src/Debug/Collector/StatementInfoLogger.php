@@ -154,7 +154,7 @@ class StatementInfoLogger extends AbstractComponent
             $this->debug->warn(\get_class($info->exception) . ': ' . \trim($msg));
             $this->debug->groupUncollapse();
         } elseif ($info->rowCount !== null) {
-            $this->debug->log('rowCount', $info->rowCount);
+            $this->debug->log($this->debug->i18n->trans('row-count'), $info->rowCount);
         }
         $this->logSlowQuery();
         $this->debug->groupEnd();
@@ -226,7 +226,7 @@ class StatementInfoLogger extends AbstractComponent
     private function logDurationMemory()
     {
         if ($this->info->duration !== null) {
-            $this->debug->time('duration', $this->info->duration, $this->debug->meta(
+            $this->debug->time($this->debug->i18n->trans('duration'), $this->info->duration, $this->debug->meta(
                 'level',
                 $this->info->duration * 1000 >= $this->cfg['slowQueryDurationMs']
                     ? 'warn' // highlight duration for slow queries
@@ -235,7 +235,7 @@ class StatementInfoLogger extends AbstractComponent
         }
         if ($this->info->memoryUsage !== null) {
             $memory = $this->debug->utility->getBytes($this->info->memoryUsage);
-            $this->debug->log('memory usage', $memory);
+            $this->debug->log($this->debug->i18n->trans('runtime.memory.usage'), $memory);
         }
     }
 
@@ -251,7 +251,7 @@ class StatementInfoLogger extends AbstractComponent
         }
         $this->info->types
             ? $this->logParamsTypes()
-            : $this->debug->log('parameters', $this->info->params);
+            : $this->debug->log($this->debug->i18n->trans('parameters'), $this->info->params);
     }
 
     /**
@@ -279,7 +279,7 @@ class StatementInfoLogger extends AbstractComponent
                 ))
                 : $type; // integer value (or enum)
         }
-        $this->debug->table('parameters', $params);
+        $this->debug->table($this->debug->i18n->trans('parameters'), $params);
     }
 
     /**

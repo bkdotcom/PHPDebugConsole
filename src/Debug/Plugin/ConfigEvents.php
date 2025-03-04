@@ -311,7 +311,7 @@ class ConfigEvents implements SubscriberInterface
     {
         $cfgDebug = $configs['debug'];
         if (isset($configs['routeStream']['stream'])) {
-            $this->debug->addPlugin($this->debug->getRoute('stream'));
+            $this->debug->addPlugin($this->debug->getRoute('stream'), 'stream');
         }
         if (empty($cfgDebug) || $this->isConfigured) {
             return $cfgDebug;

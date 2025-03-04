@@ -23,16 +23,16 @@ class HtmlTest extends DebugTestFramework
         ));
         $expect = '<div class="debug"%s>
 <style type="text/css">%a</style>
-<script defer>%s</script>
-<script defer>%a</script>
+<script>%s</script>
+<script>%a</script>
 <header class="debug-bar debug-menu-bar">PHPDebugConsole<nav role="tablist" style="display:none;">%A</nav></header>
 <div class="loading">Loading <i class="fa fa-spinner fa-pulse fa-2x fa-fw" aria-hidden="true"></i></div>
 <div class="tab-panes" style="display:none;">
 %A<div class="active debug-tab-general tab-pane tab-primary" data-options="{&quot;sidebar&quot;:true}" role="tabpanel">
 <div class="tab-body">
 <ul class="debug-log-summary group-body">
-<li class="m_info"><span class="no-quotes t_string">Built In %f %s</span></li>
-<li class="m_info"><span class="no-quotes t_string">Peak Memory Usage <i class="fa fa-question-circle-o" title="Includes debug overhead"></i>: %s / %s</span></li>
+<li class="m_info"><span class="no-quotes t_string">Built in %f %s</span></li>
+<li class="m_info"><span class="no-quotes t_string">Peak memory usage <i class="fa fa-question-circle-o" title="Includes debug overhead"></i>: %s / %s</span></li>
 %A</ul>
 <hr />
 <ul class="debug-log group-body"></ul>
@@ -63,12 +63,12 @@ class HtmlTest extends DebugTestFramework
 
         // test add/remove assetProvider
         $highlight = new \bdk\Debug\Plugin\Highlight();
-        $this->debug->routeHtml->addAssetProvider($highlight);
+        $this->debug->addPlugin($highlight);
         $this->assertCount(2, $this->debug->routeHtml->getAssets('css'));
-        $this->assertCount(3, $this->debug->routeHtml->getAssets('script'));
-        $this->debug->routeHtml->removeAssetProvider($highlight);
+        $this->assertCount(4, $this->debug->routeHtml->getAssets('script')); // primary, strings, & 2 highlight scripts
+        $this->debug->removePlugin($highlight);
         $this->assertCount(0, $this->debug->routeHtml->getAssets('css'));
-        $this->assertCount(1, $this->debug->routeHtml->getAssets('script'));
+        $this->assertCount(2, $this->debug->routeHtml->getAssets('script'));    // primary script & strings
         $this->assertFalse($this->debug->routeHtml->removeAsset('css', 'does not exist'));
     }
 }

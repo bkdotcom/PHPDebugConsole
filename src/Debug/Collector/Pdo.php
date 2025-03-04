@@ -238,12 +238,11 @@ class Pdo extends PdoBase
         $debug = $this->debug;
         $debug->groupSummary(0);
 
-        $nameParts = \explode('.', $debug->getCfg('channelName', Debug::CONFIG_DEBUG));
-        $name = \end($nameParts);
+        $name = $debug->getCfg('channelName', Debug::CONFIG_DEBUG);
         $driverName = $this->pdo->getAttribute(PdoBase::ATTR_DRIVER_NAME);
 
         $groupParams = \array_filter([
-            ($name !== 'general' ? $name : 'PDO') . ' info',
+            $debug->i18n->trans('info.for.x', array('x' => $name)),
             $driverName,
             $driverName !== 'sqlite'
                 ? $this->pdo->getAttribute(PdoBase::ATTR_CONNECTION_STATUS)

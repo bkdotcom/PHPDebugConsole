@@ -7,7 +7,6 @@ use bdk\Debug\Plugin\Manager;
 use bdk\PhpUnitPolyfill\AssertionTrait;
 use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 use bdk\PubSub\Event;
-use bdk\Test\Debug\DebugTestFramework;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -84,25 +83,31 @@ class ManagerTest extends TestCase
 
     public function testAddRemoveAssetProvider()
     {
-        $plugin = new \bdk\Debug\Plugin\Highlight();
+        $routeHtml = static::$debug->getRoute('html');
+
+        $highlightPlugin = new \bdk\Debug\Plugin\Highlight();
 
         // our debug singleton may already have registered highlight assetprovider
         // remove so we can see that it gets added
-        static::$debug->getRoute('html')->removeAssetProvider($plugin);
+        // static::$debug->getRoute('html')->removeAssetProvider($plugin);
+        static::$debug->removePlugin('highlight');
 
-        $assetsBefore =static::$debug->getRoute('html')->getAssets();
-        $return = self::$manager->addPlugin($plugin, 'highlight');
+        $assetsBefore = $routeHtml->getAssets();
+        $return = static::$debug->addPlugin($highlightPlugin, 'highlight');
         self::assertEquals(static::$debug, $return);
-        $assetsAfter = static::$debug->getRoute('html')->getAssets();
+
+        $assetsAfter = $routeHtml->getAssets();
+
         $assetsNew = array(
             'css' => \array_diff($assetsAfter['css'], $assetsBefore['css']),
             'script' => \array_diff($assetsAfter['script'], $assetsBefore['script']),
         );
+
         self::assertCount(2, $assetsNew['css']);
         self::assertCount(2, $assetsNew['script']);
 
-        self::$manager->removePlugin('highlight');
-        $assetsAfter = static::$debug->getRoute('html')->getAssets();
+        static::$debug->removePlugin('highlight');
+        $assetsAfter = $routeHtml->getAssets();
         self::assertEmpty(\array_merge(
             \array_intersect($assetsNew['css'], $assetsAfter['css']),
             \array_intersect($assetsNew['script'], $assetsAfter['script'])

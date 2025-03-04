@@ -18,7 +18,8 @@ var tasks = [
       globals: {
         clipboardjs: 'window.ClipboardJS',
         jquery: 'window.jQuery'
-      }
+      },
+      name: 'phpDebugConsole'
     },
     plugins: [
       /*

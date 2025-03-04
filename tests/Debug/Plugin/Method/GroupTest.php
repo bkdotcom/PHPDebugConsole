@@ -898,7 +898,7 @@ class GroupTest extends DebugTestFramework
             'main' => 0,
         ), $onOutputVals['groupStacksB']);
         $outputExpect = <<<'EOD'
-<div class="debug" data-channel-name-root="general" data-channels="%s" data-options="{&quot;drawer&quot;:true,&quot;linkFilesTemplateDefault&quot;:null,&quot;tooltip&quot;:true}">
+<div class="debug" data-channel-key-root="general" data-channels="%s" data-options="{&quot;drawer&quot;:true,&quot;linkFilesTemplateDefault&quot;:null,&quot;tooltip&quot;:true}">
     <header class="debug-bar debug-menu-bar">PHPDebugConsole<nav role="tablist">%A</nav></header>
     <div class="tab-panes">
         %A<div class="active debug-tab-general tab-pane tab-primary" data-options="{&quot;sidebar&quot;:true}" role="tabpanel">
@@ -911,8 +911,8 @@ class GroupTest extends DebugTestFramework
                             <li class="m_log"><span class="no-quotes t_string">in inner</span></li>
                         </ul>
                     </li>
-                    <li class="m_info"><span class="no-quotes t_string">Built In %f %s</span></li>
-                    <li class="m_info"><span class="no-quotes t_string">Peak Memory Usage <i class="fa fa-question-circle-o" title="Includes debug overhead"></i>: %s MB / %s</span></li>
+                    <li class="m_info"><span class="no-quotes t_string">Built in %f %s</span></li>
+                    <li class="m_info"><span class="no-quotes t_string">Peak memory usage <i class="fa fa-question-circle-o" title="Includes debug overhead"></i>: %s MB / %s</span></li>
                 %A</ul>
                 <hr />
                 <ul class="debug-log group-body"></ul>

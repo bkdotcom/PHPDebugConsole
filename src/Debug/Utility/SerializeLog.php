@@ -276,19 +276,20 @@ class SerializeLog
     private static function serializeGetConfig(Debug $debug)
     {
         $rootInstance = $debug->rootInstance;
-        $channelNameRoot = $rootInstance->getCfg('channelName', Debug::CONFIG_DEBUG);
-        $channels = \array_map(static function (Debug $channel) use ($channelNameRoot) {
-            $channelName = $channel->getCfg('channelName', Debug::CONFIG_DEBUG);
+        $channelKeyRoot = $rootInstance->getCfg('channelKey', Debug::CONFIG_DEBUG);
+        $channels = \array_map(static function (Debug $channel) use ($channelKeyRoot) {
+            $channelKey = $channel->getCfg('channelKey', Debug::CONFIG_DEBUG);
             return array(
                 'channelIcon' => $channel->getCfg('channelIcon', Debug::CONFIG_DEBUG),
                 'channelShow' => $channel->getCfg('channelShow', Debug::CONFIG_DEBUG),
                 'channelSort' => $channel->getCfg('channelSort', Debug::CONFIG_DEBUG),
-                'nested' => \strpos($channelName, $channelNameRoot . '.') === 0,
+                'nested' => \strpos($channelKey, $channelKeyRoot . '.') === 0,
             );
         }, $rootInstance->getChannels(true, true));
         return array(
             'channelIcon' => $rootInstance->getCfg('channelIcon', Debug::CONFIG_DEBUG),
-            'channelName' => $channelNameRoot,
+            'channelKey' => $channelKeyRoot,
+            'channelName' => $rootInstance->getCfg('channelName', Debug::CONFIG_DEBUG),
             'channels' => $channels,
             'logRuntime' => $rootInstance->getCfg('logRuntime', Debug::CONFIG_DEBUG),
         );

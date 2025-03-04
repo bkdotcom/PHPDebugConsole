@@ -55,7 +55,7 @@ class Trace implements SubscriberInterface
      *
      * @since 3.3 added limit argument
      */
-    public function trace($inclContext = false, $caption = 'trace', $limit = 0, $trace = null)
+    public function trace($inclContext = false, $caption = null, $limit = 0, $trace = null)
     {
         if (!$this->debug->getCfg('collect', Debug::CONFIG_DEBUG)) {
             return $this->debug;
@@ -173,7 +173,7 @@ class Trace implements SubscriberInterface
     private function getMeta(LogEntry $logEntry)
     {
         $meta = \array_merge(array(
-            'caption' => 'trace',
+            'caption' => $this->debug->i18n->trans('method.trace'),
             'columns' => ['file','line','function'],
             'detectFiles' => true,
             'inclArgs' => null,  // incl arguments with context?
@@ -250,9 +250,10 @@ class Trace implements SubscriberInterface
             }
             $argsTyped[] = $val;
         });
-        if (!empty($argsTyped['limit'])) {
-            $argsDefault['caption'] = 'trace (limited to ' . $argsTyped['limit'] . ')';
-        }
+        $argsDefault['caption'] = !empty($argsTyped['limit'])
+            ? $this->debug->i18n->trans('method.trace')
+                . ' (' . $this->debug->i18n->trans('method.trace.limited', array('limit' => $argsTyped['limit'])) . ')'
+            : $this->debug->i18n->trans('method.trace');
         $args = \array_merge($argsDefault, $argsTyped);
         return \array_values($args);
     }

@@ -55,10 +55,16 @@ class SimpleCache implements CacheInterface
     {
         \bdk\Debug\Utility::assertType($debug, 'bdk\Debug');
 
+        $channelKey = 'SimpleCache';
+        $channelOptions = array(
+            'channelIcon' => $this->icon,
+            'channelname' => 'SimpleCache',
+        );
+
         if (!$debug) {
-            $debug = Debug::getChannel('SimpleCache', array('channelIcon' => $this->icon));
+            $debug = Debug::getChannel($channelKey, $channelOptions);
         } elseif ($debug === $debug->rootInstance) {
-            $debug = $debug->getChannel('SimpleCache', array('channelIcon' => $this->icon));
+            $debug = $debug->getChannel($channelKey, $channelOptions);
         }
         $this->cache = $cache;
         $this->debug = $debug;
@@ -110,9 +116,9 @@ class SimpleCache implements CacheInterface
                 'level' => 'info',
             ))
         );
-        $debug->log('logged operations: ', \count($this->loggedActions));
-        $debug->log('total time: ', $this->getTimeSpent());
-        $debug->log('max memory usage', $debug->utility->getBytes($this->getPeakMemoryUsage()));
+        $debug->log($debug->i18n->trans('runtime.logged-operations') . ': ', \count($this->loggedActions));
+        $debug->log($debug->i18n->trans('runtime.total-time'), $this->getTimeSpent());
+        $debug->log($debug->i18n->trans('runtime.memory.peak'), $debug->utility->getBytes($this->getPeakMemoryUsage()));
         $debug->groupEnd();
         $debug->groupEnd();
     }

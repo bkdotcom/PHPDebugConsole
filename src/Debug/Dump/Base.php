@@ -57,7 +57,7 @@ class Base extends AbstractComponent
     );
 
     /** @var string */
-    protected $channelNameRoot;
+    protected $channelKeyRoot;
 
     /** @var list<string> */
     protected $readOnly = [
@@ -83,7 +83,7 @@ class Base extends AbstractComponent
         $this->debug = $debug;
         $this->substitution = new Substitution($this);
         $this->valDumper = $this->getValDumper();
-        $this->channelNameRoot = $this->debug->rootInstance->getCfg('channelName', Debug::CONFIG_DEBUG);
+        $this->channelKeyRoot = $this->debug->rootInstance->getCfg('channelKey', Debug::CONFIG_DEBUG);
     }
 
     /**

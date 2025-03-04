@@ -29,9 +29,12 @@ class CurlHttpMessageMiddleware extends AbstractAsyncMiddleware
     {
         \bdk\Debug\Utility::assertType($debug, 'bdk\Debug');
 
-        $this->cfg = \array_merge($this->cfg, array(
+        $this->cfg = \array_replace_recursive($this->cfg, array(
+            'channelKey' => 'CurlHttpMessage',
+            'channelOptions' => array(
+                'channelName' => 'CurlHttpMessage',
+            ),
             'idPrefix' => 'curl_',
-            'label' => 'CurlHttpMessage',
         ));
         parent::__construct($cfg, $debug);
     }
@@ -100,7 +103,7 @@ class CurlHttpMessageMiddleware extends AbstractAsyncMiddleware
     protected function doRequest(CurlReqRes $curlReqRes, array $requestInfo)
     {
         // start timer
-        $this->debug->time($this->cfg['label'] . ':' . $requestInfo['requestId']);
+        $this->debug->time($this->cfg['channelKey'] . ':' . $requestInfo['requestId']);
         $handler = $this->nextHandler;
         return $handler($curlReqRes)->then(
             function (ResponseInterface $response) use ($requestInfo) {

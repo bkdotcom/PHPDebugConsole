@@ -55,7 +55,7 @@ class LogResponseTest extends DebugTestFramework
         self::assertCount(4, $logEntries);
 
         self::assertSame('Response', $logEntries[0]['args'][0]);
-        self::assertSame('Request / Response', $logEntries[0]['meta']['channel']);
+        self::assertSame('request-response', $logEntries[0]['meta']['channel']);
 
         self::assertSame('table', $logEntries[1]['method']);
         self::assertSame(array(
@@ -122,7 +122,7 @@ class LogResponseTest extends DebugTestFramework
         self::assertCount(4, $logEntries);
 
         self::assertSame('Response', $logEntries[0]['args'][0]);
-        self::assertSame('Request / Response', $logEntries[0]['meta']['channel']);
+        self::assertSame('request-response', $logEntries[0]['meta']['channel']);
 
         self::assertSame('table', $logEntries[1]['method']);
         self::assertSame('response headers', $logEntries[1]['meta']['caption']);

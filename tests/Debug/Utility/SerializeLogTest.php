@@ -57,6 +57,7 @@ class SerializeLogTest extends DebugTestFramework
             'classDefinitions' => $this->helper->deObjectifyData($debug->data->get('classDefinitions')),
             'config' => array(
                 'channelIcon' => $debug->getCfg('channelIcon', Debug::CONFIG_DEBUG),
+                'channelKey' => $debug->getCfg('channelKey', Debug::CONFIG_DEBUG),
                 'channelName' => $channelNameRoot,
                 'channels' => \array_map(static function (Debug $channel) use ($channelNameRoot) {
                     $channelName = $channel->getCfg('channelName', Debug::CONFIG_DEBUG);

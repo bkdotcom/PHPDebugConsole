@@ -47,35 +47,35 @@ class Channel implements SubscriberInterface
      * Return a named sub-instance... if channel does not exist, it will be created
      *
      * Channels can be used to categorize log data... for example, may have a framework channel, database channel, library-x channel, etc
-     * Channels may have subchannels
+     * Channels may have sub-channels
      *
-     * @param string|array $name   channel name (or channel path)
+     * @param string|array $path   channel key/name/path
      * @param array        $config channel specific configuration
      *
      * @return Debug new or existing `Debug` instance
      *
      * @since 2.3
      */
-    public function getChannel($name, $config = array())
+    public function getChannel($path, $config = array())
     {
-        $names = \is_string($name)
-            ? \preg_split(self::NAME_SPLIT_REGEX, $name)
-            : $name;
-        $name = \array_shift($names);
-        if ($name === $this->debug->rootInstance->getCfg('channelName', Debug::CONFIG_DEBUG)) {
-            return $names
-                ? $this->debug->rootInstance->getChannel($names, $config)
+        $path = \is_string($path)
+            ? \preg_split(self::NAME_SPLIT_REGEX, $path)
+            : $path;
+        $key = \array_shift($path);
+        if ($key === $this->debug->rootInstance->getCfg('channelKey', Debug::CONFIG_DEBUG)) {
+            return $path
+                ? $this->debug->rootInstance->getChannel($path, $config)
                 : $this->debug->rootInstance;
         }
-        $curChannelName = $this->debug->getCfg('channelName', Debug::CONFIG_DEBUG);
-        if (!isset($this->channels[$curChannelName][$name])) {
-            $this->channels[$curChannelName][$name] = $this->createChannel($name, $names
+        $curChannelKey = $this->debug->getCfg('channelKey', Debug::CONFIG_DEBUG);
+        if (!isset($this->channels[$curChannelKey][$key])) {
+            $this->channels[$curChannelKey][$key] = $this->createChannel($key, $path
                 ? array()
                 : $config);
         }
-        $channel = $this->channels[$curChannelName][$name];
-        if ($names) {
-            $channel = $channel->getChannel($names, $config);
+        $channel = $this->channels[$curChannelKey][$key];
+        if ($path) {
+            $channel = $channel->getChannel($path, $config);
         }
         unset($config['nested']);
         if ($config) {
@@ -96,19 +96,19 @@ class Channel implements SubscriberInterface
      */
     public function getChannels($allDescendants = false, $inclTop = false)
     {
-        $curChannelName = $this->debug->getCfg('channelName', Debug::CONFIG_DEBUG);
-        $channels = isset($this->channels[$curChannelName])
-            ? $this->channels[$curChannelName]
+        $curChannelKey = $this->debug->getCfg('channelKey', Debug::CONFIG_DEBUG);
+        $channels = isset($this->channels[$curChannelKey])
+            ? $this->channels[$curChannelKey]
             : array();
         if ($allDescendants) {
             $debug = $this->debug;
             $channelsNew = array();
             foreach ($channels as $channel) {
-                $channelName = $channel->getCfg('channelName', Debug::CONFIG_DEBUG);
+                $channelKey = $channel->getCfg('channelKey', Debug::CONFIG_DEBUG);
                 $channelsNew = \array_merge(
                     $channelsNew,
                     array(
-                        $channelName => $channel,
+                        $channelKey => $channel,
                     ),
                     $channel->getChannels(true)
                 );
@@ -130,17 +130,17 @@ class Channel implements SubscriberInterface
      */
     public function getChannelsTop()
     {
-        $channelName = $this->debug->getCfg('channelName', Debug::CONFIG_DEBUG);
+        $channelKey = $this->debug->getCfg('channelKey', Debug::CONFIG_DEBUG);
         $channels = array(
-            $channelName => $this->debug,
+            $channelKey => $this->debug,
         );
         if ($this->debug->parentInstance) {
             return $channels;
         }
-        foreach ($this->debug->rootInstance->getChannels(false, true) as $name => $channel) {
-            $fqn = $channel->getCfg('channelName', Debug::CONFIG_DEBUG);
+        foreach ($this->debug->rootInstance->getChannels(false, true) as $key => $channel) {
+            $fqn = $channel->getCfg('channelKey', Debug::CONFIG_DEBUG);
             if (\strpos($fqn, '.') === false) {
-                $channels[$name] = $channel;
+                $channels[$key] = $channel;
             }
         }
         return $channels;
@@ -161,6 +161,7 @@ class Channel implements SubscriberInterface
         ]));
         $cfg['debug'] = \array_diff_key($cfg['debug'], \array_flip([
             'channelIcon',
+            'channelKey',
             'channelName',
             'onBootstrap',
             'onLog',
@@ -178,57 +179,58 @@ class Channel implements SubscriberInterface
     /**
      * Has channel been created?
      *
-     * @param string|array $name channel name (or channel path)
+     * @param string|array $path channel name (or channel path)
      *
      * @return bool
      */
-    public function hasChannel($name)
+    public function hasChannel($path)
     {
-        $names = \is_string($name)
-            ? \preg_split(self::NAME_SPLIT_REGEX, $name)
-            : $name;
-        $name = \array_shift($names);
-        if ($name === $this->debug->rootInstance->getCfg('channelName', Debug::CONFIG_DEBUG)) {
-            return $names
-                ? $this->debug->rootInstance->hasChannel($names)
+        $path = \is_string($path)
+            ? \preg_split(self::NAME_SPLIT_REGEX, $path)
+            : $path;
+        $key = \array_shift($path);
+        if ($key === $this->debug->rootInstance->getCfg('channelKey', Debug::CONFIG_DEBUG)) {
+            return $path
+                ? $this->debug->rootInstance->hasChannel($path)
                 : true;
         }
-        $curChannelName = $this->debug->getCfg('channelName', Debug::CONFIG_DEBUG);
-        if (isset($this->channels[$curChannelName][$name]) === false) {
+        $curChannelKey = $this->debug->getCfg('channelKey', Debug::CONFIG_DEBUG);
+        if (isset($this->channels[$curChannelKey][$key]) === false) {
             return false;
         }
-        return $names
-            ? $this->channels[$curChannelName][$name]->hasChannel($names)
+        return $path
+            ? $this->channels[$curChannelKey][$key]->hasChannel($path)
             : true;
     }
 
     /**
      * Create a child channel
      *
-     * @param string $name   Channel name
+     * @param string $key    Channel name
      * @param array  $config channel config
      *
      * @return array
      */
-    private function createChannel($name, $config)
+    private function createChannel($key, $config)
     {
         $cfg = $this->debug->getCfg(null, Debug::CONFIG_INIT);
-        $channelNameCur = $cfg['debug']['channelName'];
+        $channelKeyCur = $cfg['debug']['channelKey'];
         $cfg = $this->getPropagateValues($cfg);
         $cfg['debug'] = \array_merge(
             $cfg['debug'],
             array(
                 'channelIcon' => null,
+                'channelName' => $key,
                 'nested' => true, // true = regular child channel, false = tab
             ),
-            isset($cfg['debug']['channels'][$name])
-                ? $cfg['debug']['channels'][$name]
+            isset($cfg['debug']['channels'][$key])
+                ? $cfg['debug']['channels'][$key]
                 : array(),
             $config
         );
-        $cfg['debug']['channelName'] = $cfg['debug']['nested'] || $this->debug->parentInstance
-            ? $channelNameCur . '.' . $name
-            : $name;
+        $cfg['debug']['channelKey'] = $cfg['debug']['nested'] || $this->debug->parentInstance
+            ? $channelKeyCur . '.' . $key
+            : $key;
         $cfg['debug']['parent'] = $this->debug;
         unset($cfg['debug']['nested']);
         return new Debug($cfg);

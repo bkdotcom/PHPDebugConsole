@@ -136,7 +136,7 @@ class Table implements SubscriberInterface
         if ($logEntry->getMeta('caption')) {
             \array_unshift($logEntry['args'], $logEntry->getMeta('caption'));
         } elseif (\count($logEntry['args']) === 0) {
-            $logEntry['args'] = ['No arguments passed to table()'];
+            $logEntry['args'] = [$this->debug->i18n->trans('method.table.no-args')];
         }
         $logEntry['meta'] = $table->getMeta();
     }

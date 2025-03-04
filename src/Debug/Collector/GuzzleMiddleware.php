@@ -32,9 +32,12 @@ class GuzzleMiddleware extends AbstractAsyncMiddleware
     {
         \bdk\Debug\Utility::assertType($debug, 'bdk\Debug');
 
-        $this->cfg = \array_merge($this->cfg, array(
+        $this->cfg = \array_replace_recursive($this->cfg, array(
+            'channelKey' => 'Guzzle',
+            'channelOptions' => array(
+                'channelName' => 'Guzzle',
+            ),
             'idPrefix' => 'guzzle_',
-            'label' => 'Guzzle',
         ));
         parent::__construct($cfg, $debug);
 
@@ -116,7 +119,7 @@ class GuzzleMiddleware extends AbstractAsyncMiddleware
     protected function doRequest(RequestInterface $request, array $options, array $requestInfo)
     {
         // start timer
-        $this->debug->time($this->cfg['label'] . ':' . $requestInfo['requestId']);
+        $this->debug->time($this->cfg['channelKey'] . ':' . $requestInfo['requestId']);
         $handler = $this->nextHandler;
         return $handler($request, $options)->then(
             function (ResponseInterface $response) use ($requestInfo) {

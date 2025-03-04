@@ -124,11 +124,10 @@ class Profile implements SubscriberInterface
         }
         if (!$debug->getCfg('enableProfiling', Debug::CONFIG_DEBUG)) {
             $callerInfo = $debug->backtrace->getCallerInfo();
-            $msg = \sprintf(
-                'Profile: Unable to start - enableProfiling opt not set.  %s on line %s.',
-                $callerInfo['file'],
-                $callerInfo['line']
-            );
+            $msg = $debug->i18n->trans('method.profile.enableProfiling.false', array(
+                'file' => $callerInfo['file'],
+                'line' => $callerInfo['line'],
+            ));
             return $debug->log(new LogEntry(
                 $debug,
                 __FUNCTION__,
@@ -223,8 +222,8 @@ class Profile implements SubscriberInterface
         $logEntry['args'] = isset($this->instances[$name])
             ? $this->doProfileEndArgs($logEntry)
             : ($name !== null
-                ? 'profileEnd: No such Profile: ' . $name
-                : 'profileEnd: Not currently profiling'
+                ? 'profileEnd: ' . $this->debug->i18n->trans('method.profile.not-found') . ': ' . $name
+                : 'profileEnd: ' . $this->debug->i18n->trans('method.profile.not-active')
             );
         $debug->rootInstance->getPlugin('methodTable')->doTable($logEntry);
         $debug->log($logEntry);
@@ -241,11 +240,11 @@ class Profile implements SubscriberInterface
     private function doProfileEndArgs(LogEntry $logEntry)
     {
         $name = $logEntry['meta']['name'];
-        $caption = 'Profile \'' . $name . '\' Results';
+        $caption = $this->debug->i18n->trans('method.profile.results.name', array('name' => $name));
         $instance = $this->instances[$name];
         $data = $instance->end();
         if (!$data) {
-            return [$caption, 'no data'];
+            return [$caption, $this->debug->i18n->trans('method.profile.no-data')];
         }
         $tableInfo = \array_replace_recursive(array(
             'rows' => \array_fill_keys(\array_keys($data), array()),

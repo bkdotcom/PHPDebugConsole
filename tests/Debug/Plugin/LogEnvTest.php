@@ -107,7 +107,7 @@ class LogEnvTest extends DebugTestFramework
                     ),
                 ),
                 'meta' => array(
-                    'channel' => 'Session',
+                    'channel' => 'session',
                     'redact' => true,
                 ),
             ),
@@ -146,7 +146,7 @@ class LogEnvTest extends DebugTestFramework
                     ),
                 ),
                 'meta' => array(
-                    'channel' => 'Session',
+                    'channel' => 'session',
                     'redact' => true,
                 ),
             ),
@@ -183,7 +183,7 @@ class LogEnvTest extends DebugTestFramework
                     ),
                 ),
                 'meta' => array(
-                    'channel' => 'Session',
+                    'channel' => 'session',
                     'redact' => true,
                 ),
             ),

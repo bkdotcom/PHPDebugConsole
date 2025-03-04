@@ -21,6 +21,22 @@ use OutOfBoundsException;
  */
 class FileTree
 {
+    protected $cfg = array(
+        'strings' => array(
+            'omitted' => 'omitted',
+        ),
+    );
+
+    /**
+     * Constructor
+     *
+     * @param array<string,mixed> $cfg configuration
+     */
+    public function __construct($cfg = array())
+    {
+        $this->cfg = \array_replace_recursive($this->cfg, $cfg);
+    }
+
     /**
      * Convert list of filepaths to a tree structure
      *
@@ -78,7 +94,7 @@ class FileTree
                 'attribs' => array(
                     'class' => 'exclude-count',
                 ),
-                'value' => $count . ' omitted',
+                'value' => $count . ' ' . $this->cfg['strings']['omitted'],
             )));
         }
         return $tree;
@@ -234,7 +250,8 @@ class FileTree
     private function walkBranchTestLeaf($keys, $val)
     {
         $valFirst = \current($val);
-        $isOmittedCount = \preg_match('/^\d+ omitted/', (string) $valFirst) === 1;
+        $regex = '/^\d+ '. \preg_quote($this->cfg['strings']['omitted'], '/') . '/';
+        $isOmittedCount = \preg_match($regex, (string) $valFirst) === 1;
         if ($isOmittedCount) {
             return $val;
         }

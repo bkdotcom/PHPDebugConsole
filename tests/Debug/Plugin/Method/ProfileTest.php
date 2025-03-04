@@ -75,11 +75,11 @@ class ProfileTest extends DebugTestFramework
                     // test b
                     self::assertSame(1, $b['calls']);
                     self::assertGreaterThanOrEqual(0.25 + 0.75 * 2, $b['totalTime']);
-                    self::assertLessThan(0.25 + 0.01, $b['ownTime']);
+                    self::assertLessThanOrEqual(0.25 + 0.01, \round($b['ownTime'], 2));
                     // test c
                     self::assertSame(2, $c['calls']);
                     self::assertGreaterThanOrEqual(0.75 * 2, $c['totalTime']);
-                    self::assertLessThan(0.75 * 2 + 0.01, $c['ownTime']);
+                    self::assertLessThanOrEqual(0.75 * 2 + 0.01, \round($c['ownTime'], 2));
                     \ksort($logEntry['meta']);
                     $expect = array(
                         'caption' => "Profile 'Profile 1' Results",

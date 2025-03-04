@@ -51,9 +51,12 @@ class LogViews
         if (!$this->serviceProvider->shouldCollect('laravel', true)) {
             return;
         }
-        $this->viewChannel = $this->debug->getChannel('Views', array(
+        $channelKey = 'views';
+        $channelOptions = array(
             'channelIcon' => ':template:',
-        ));
+            'channelName' => 'channel.views|trans',
+        );
+        $this->viewChannel = $this->debug->getChannel($channelKey, $channelOptions);
         $this->app['events']->listen(
             'composing:*',
             function ($view, $data = []) {

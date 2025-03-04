@@ -49,10 +49,15 @@ class OAuth extends OAuthBase
     public function __construct($consumerKey, $consumerSecret, $signatureMethod = OAUTH_SIG_METHOD_HMACSHA1, $authType = OAUTH_AUTH_TYPE_AUTHORIZATION, $debug = null)
     {
         parent::__construct($consumerKey, $consumerSecret, $signatureMethod, $authType);
+        $channelKey = 'OAuth';
+        $channelOptions = array(
+            'channelIcon' => $this->icon,
+            'channelName' => 'OAuth',
+        );
         if ($debug === null) {
-            $debug = Debug::getChannel('OAuth', array('channelIcon' => $this->icon));
+            $debug = Debug::getChannel($channelKey, $channelOptions);
         } elseif ($debug === $debug->rootInstance) {
-            $debug = $debug->getChannel('OAuth', array('channelIcon' => $this->icon));
+            $debug = $debug->getChannel($channelKey, $channelOptions);
         }
         $this->enableDebug();
         $this->debugger = $debug;
@@ -196,17 +201,17 @@ class OAuth extends OAuthBase
         $this->debugger->time($this->elapsed);
         $debugInfo = $this->getDebugInfo();
         // values available in the headers or elsewhere
-        $this->debugger->log('OAuth Parameters', $this->oauthParams(), $this->debugger->meta('cfg', 'abstracter.stringMinLen.encoded', -1));
-        $this->debugger->log('additional info', $this->additionalInfo($url));
-        $this->debugger->log('request headers', $this->debugger->redactHeaders($debugInfo['headers_sent']), $this->debugger->meta('icon', ':send:'));
+        $this->debugger->log('OAuth ' . $this->debugger->i18n->trans('parameters'), $this->oauthParams(), $this->debugger->meta('cfg', 'abstracter.stringMinLen.encoded', -1));
+        $this->debugger->log($this->debugger->i18n->trans('info.additional'), $this->additionalInfo($url));
+        $this->debugger->log($this->debugger->i18n->trans('request.headers'), $this->debugger->redactHeaders($debugInfo['headers_sent']), $this->debugger->meta('icon', ':send:'));
         if (isset($debugInfo['body_sent'])) {
-            $this->debugger->log('request body', $debugInfo['body_sent'], $this->debugger->meta(array(
+            $this->debugger->log($this->debugger->i18n->trans('request.body'), $debugInfo['body_sent'], $this->debugger->meta(array(
                 'icon' => ':send:',
                 'redact' => true,
             )));
         }
-        $this->debugger->log('response headers', $debugInfo['headers_recv'], $this->debugger->meta('icon', ':receive:'));
-        $this->debugger->log('response body', $debugInfo['body_recv'], $this->debugger->meta('icon', ':receive:'));
+        $this->debugger->log($this->debugger->i18n->trans('response.headers'), $debugInfo['headers_recv'], $this->debugger->meta('icon', ':receive:'));
+        $this->debugger->log($this->debugger->i18n->trans('response.body'), $debugInfo['body_recv'], $this->debugger->meta('icon', ':receive:'));
         if ($this->exception) {
             $this->debugger->warn(\get_class($this->exception), $this->exception->getMessage());
         }

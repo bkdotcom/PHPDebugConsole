@@ -219,7 +219,7 @@ class Time implements SubscriberInterface
         }
         $label = isset($logEntry['args'][0])
             ? $logEntry['args'][0]
-            : 'time';
+            : $debug->i18n->trans('method.time.label-default'); // 'time'
         $str = \strtr($meta['template'], array(
             '%label' => $label,
             '%time' => $debug->utility->formatDuration($elapsed, $meta['unit'], $meta['precision']),
@@ -250,7 +250,7 @@ class Time implements SubscriberInterface
         $debug->log(new LogEntry(
             $debug,
             $logEntry['method'],
-            ['Timer \'' . $label . '\' does not exist'],
+            [$this->debug->i18n->trans('method.time.not-exist', array('label' => $label))],
             \array_diff_key($meta, \array_flip(['precision', 'silent', 'unit']))
         ));
     }

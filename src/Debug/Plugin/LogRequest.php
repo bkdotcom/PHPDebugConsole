@@ -52,7 +52,7 @@ class LogRequest extends AbstractLogReqRes implements SubscriberInterface
      */
     public function onBootstrap(Event $event)
     {
-        $this->debug = $event->getSubject()->getChannel($this->cfg['channelName'], $this->cfg['channelOpts']);
+        $this->debug = $event->getSubject()->getChannel($this->cfg['channelKey'], $this->cfg['channelOptions']);
         $collectWas = $this->debug->setCfg('collect', true);
         $this->logRequest();
         $this->debug->setCfg('collect', $collectWas, Debug::CONFIG_NO_RETURN);
@@ -69,7 +69,7 @@ class LogRequest extends AbstractLogReqRes implements SubscriberInterface
             return;
         }
         $this->debug->log(
-            'Request',
+            $this->debug->i18n->trans('request'),
             $this->debug->meta(array(
                 'attribs' => array(
                     'style' => $this->headerStyle,
@@ -148,12 +148,12 @@ class LogRequest extends AbstractLogReqRes implements SubscriberInterface
         ));
         if ($input) {
             if ($methodExpectBody === false) {
-                $this->debug->warn($method . ' request with body', $meta);
+                $this->debug->warn($this->debug->i18n->trans('request.method.body.with', array('method' => $method)), $meta);
             }
             $input = $this->debug->prettify($input, $contentType);
             $this->debug->log('php://input', $input, $this->debug->meta('redact'));
         } elseif (!$request->getUploadedFiles()) {
-            $this->debug->warn($method . ' request with no body', $meta);
+            $this->debug->warn($this->debug->i18n->trans('request.method.body.without', array('method' => $method)), $meta);
         }
     }
 
@@ -238,7 +238,7 @@ class LogRequest extends AbstractLogReqRes implements SubscriberInterface
         }, $headers);
         if ($headers) {
             \ksort($headers, SORT_NATURAL);
-            $this->debug->table('request headers', $headers);
+            $this->debug->table($this->debug->i18n->trans('request.headers'), $headers);
         }
     }
 

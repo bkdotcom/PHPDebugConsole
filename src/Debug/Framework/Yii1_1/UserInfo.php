@@ -55,8 +55,9 @@ class UserInfo
             return;
         }
 
-        $debug = $this->component->debug->rootInstance->getChannel('User', array(
+        $debug = $this->component->debug->rootInstance->getChannel('user', array(
             'channelIcon' => ':user:',
+            'channelName' => 'channel.user|trans',
             'nested' => false,
         ));
 

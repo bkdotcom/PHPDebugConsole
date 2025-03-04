@@ -53,6 +53,10 @@ loadDeps([
   }
 ])
 
+export function setCfg (cfg) {
+  config.set(cfg)
+}
+
 $.fn.debugEnhance = function (method, arg1, arg2) {
   if (method === 'buildChannelList') {
     // buildChannelList is a utility function that can be called without a jQuery object

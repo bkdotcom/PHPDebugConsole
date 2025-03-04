@@ -191,7 +191,7 @@ class WampTest extends DebugTestFramework
         self::assertSame(array(
             'format' => 'raw',
             'requestId' => $this->debug->data->get('requestId'),
-            'channelNameRoot' => 'general',
+            'channelKeyRoot' => 'general',
             'debugVersion' => Debug::VERSION,
             'drawer' => true,
             'interface' => 'http',

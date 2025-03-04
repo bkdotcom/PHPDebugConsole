@@ -40,18 +40,18 @@ function updateMenuBar () {
 }
 
 function addChannelToggles () {
-  var channelNameRoot = $root.data('channelNameRoot')
+  var channelKeyRoot = $root.data('channelKeyRoot')
   var $log = $root.find('> .tab-panes > .tab-primary')
   var channels = $root.data('channels') || {}
   var $ul
   var $toggles
-  if (!channelNameRoot) {
+  if (!channelKeyRoot) {
     return
   }
-  if (!channels[channelNameRoot]) {
+  if (!channels[channelKeyRoot]) {
     return
   }
-  $ul = buildChannelList(channels[channelNameRoot].channels, channelNameRoot)
+  $ul = buildChannelList(channels[channelKeyRoot].channels, channelKeyRoot)
   if ($ul.html().length) {
     $toggles = $('<fieldset />', {
       class: 'channels'
@@ -63,10 +63,10 @@ function addChannelToggles () {
 }
 
 function addErrorIcons () {
-  var channelNameRoot = $root.data('channelNameRoot')
+  var channelKeyRoot = $root.data('channelKeyRoot')
   var counts = {
-    error: $root.find('.m_error[data-channel="' + channelNameRoot + '.phpError"]').length,
-    warn: $root.find('.m_warn[data-channel="' + channelNameRoot + '.phpError"]').length
+    error: $root.find('.m_error[data-channel="' + channelKeyRoot + '.phpError"]').length,
+    warn: $root.find('.m_warn[data-channel="' + channelKeyRoot + '.phpError"]').length
   }
   var $icon
   var $icons = $('<span>', { class: 'debug-error-counts' })
@@ -223,7 +223,7 @@ function channelsToTree (channels) {
   for (i = 0; i < channels.length; i++) {
     ref = channelTree
     channel = channels[i]
-    path = channel.name.split('.')
+    path = channel.key.split('.')
     if (path.length > 1 && path[0] === channels[0].name) {
       path.shift()
     }

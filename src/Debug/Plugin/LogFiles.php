@@ -14,6 +14,7 @@ namespace bdk\Debug\Plugin;
 
 use bdk\Debug;
 use bdk\Debug\AbstractComponent;
+use bdk\Debug\Utility\FileTree;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
 
@@ -25,8 +26,10 @@ class LogFiles extends AbstractComponent implements SubscriberInterface
     /** @var array<string,mixed> */
     protected $cfg = array(
         'asTree' => true,
-        'channelOpts' => array(
+        'channelKey' => 'files',
+        'channelOptions' => array(
             'channelIcon' => ':files:',
+            'channelName' => 'channel.files|trans',
             'channelSort' => -10,
             'nested' => false,
         ),
@@ -89,7 +92,7 @@ class LogFiles extends AbstractComponent implements SubscriberInterface
             return;
         }
 
-        $this->debug = $debug->getChannel('Files', $this->cfg['channelOpts']);
+        $this->debug = $debug->getChannel($this->cfg['channelKey'], $this->cfg['channelOptions']);
 
         $this->output();
     }
@@ -109,14 +112,14 @@ class LogFiles extends AbstractComponent implements SubscriberInterface
         $files = $this->filter($files);
         $countLogged = \count($files);
 
-        $this->debug->info($countIncluded . ' files required');
+        $this->debug->info($this->debug->i18n->trans('files.required'), $countIncluded);
         if (empty($files)) {
-            $this->debug->info('All files excluded from logging');
-            $this->debug->log('See %clogFiles.filesExclude%c config', 'font-family: monospace;', '');
+            $this->debug->info($this->debug->i18n->trans('files.excluded.all'));
+            $this->debug->log($this->debug->i18n->trans('config.see', array('key' => '%clogFiles.filesExclude%c')), 'font-family: monospace;', '');
             return;
         }
         if ($countLogged !== $countIncluded) {
-            $this->debug->info($countLogged . ' files logged');
+            $this->debug->info($this->debug->i18n->trans('files.logged'), $countLogged);
         }
 
         return $this->cfg['asTree']
@@ -200,8 +203,7 @@ class LogFiles extends AbstractComponent implements SubscriberInterface
             $strpos = \strpos($dir, DIRECTORY_SEPARATOR, $strlen) ?: 0;
             $path = \substr($dir, 0, $strpos);
         }
-        $path = \rtrim($path, DIRECTORY_SEPARATOR);
-        return $path;
+        return \rtrim($path, DIRECTORY_SEPARATOR);
     }
 
     /**
@@ -222,7 +224,7 @@ class LogFiles extends AbstractComponent implements SubscriberInterface
         );
         if ($this->excludedCounts) {
             $this->debug->log(
-                \array_sum($this->excludedCounts) . ' excluded files',
+                $this->debug->i18n->trans('files.excluded.count', array('count' => \array_sum($this->excludedCounts))),
                 $this->excludedCounts
             );
         }
@@ -237,7 +239,11 @@ class LogFiles extends AbstractComponent implements SubscriberInterface
      */
     private function logFilesAsTree($files)
     {
-        $fileTree = new \bdk\Debug\Utility\FileTree();
+        $fileTree = new FileTree(array(
+            'strings' => array(
+                'omitted' => $this->debug->i18n->trans('omitted'),
+            ),
+        ));
         $files = $fileTree->filesToTree($files, $this->excludedCounts, $this->cfg['condense']);
         $maxDepthBak = $this->debug->setCfg('maxDepth', 0, Debug::CONFIG_NO_PUBLISH);
         $this->debug->log(

@@ -240,7 +240,7 @@ class InternalEvents implements SubscriberInterface
         $info = $findExit->find();
         if ($info) {
             $this->debug->warn(
-                'Potentially shutdown via ' . $info['found'] . ': ',
+                $this->debug->i18n->trans('php.exit.token', array('token' => $info['found'])) . ':',
                 \sprintf('%s (line %s)', $info['file'], $info['line']),
                 $this->debug->meta(array(
                     'file' => $info['file'],

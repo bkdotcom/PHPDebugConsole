@@ -57,7 +57,8 @@ class ExtendsImplements
     public function dumpExtends(ObjectAbstraction $abs)
     {
         $extends = $this->getItems($abs, 'extends');
-        return $this->dumpExtendsImplements($extends, 'extends', 'extends', 'extends');
+        $label = $this->valDumper->debug->i18n->trans('object.extends');
+        return $this->dumpExtendsImplements($extends, $label, 'extends', 'extends');
     }
 
     /**
@@ -70,7 +71,8 @@ class ExtendsImplements
     public function dumpImplements(ObjectAbstraction $abs)
     {
         $interfaces = $this->getItems($abs, 'implements');
-        return $this->dumpExtendsImplements($interfaces, 'implements', 'implements', 'interface', $abs['interfacesCollapse']);
+        $label = $this->valDumper->debug->i18n->trans('object.implements');
+        return $this->dumpExtendsImplements($interfaces, $label, 'implements', 'interface', $abs['interfacesCollapse']);
     }
 
     /**

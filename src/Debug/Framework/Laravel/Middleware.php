@@ -200,13 +200,13 @@ class Middleware
                 continue;
             }
         }
-        $debug = $this->debug->rootInstance->getChannel(
-            'User',
-            array(
-                'channelIcon' => ':user:',
-                'nested' => false,
-            )
+        $channelKey = 'user';
+        $channelOptions = array(
+            'channelIcon' => ':user:',
+            'channelName' => 'channel.user|trans',
+            'nested' => false,
         );
+        $debug = $this->debug->rootInstance->getChannel($channelKey, $channelOptions);
         $debug->log('Laravel auth', $this->authData);
         $this->authData = array();
     }
@@ -328,13 +328,13 @@ class Middleware
         if (!$this->shouldCollect('session', false)) {
             return;
         }
-        $debug = $this->debug->rootInstance->getChannel(
-            'Session',
-            array(
-                'channelIcon' => ':session:',
-                'nested' => false,
-            )
+        $channelKey = 'session';
+        $channelOptions = array(
+            'channelIcon' => ':session:',
+            'channelName' => 'channel.session|trans',
+            'nested' => false,
         );
+        $debug = $this->debug->rootInstance->getChannel($channelKey, $channelOptions);
         $debug->log(
             $this->debug->abstracter->crateWithVals(\get_class($this->container['session']), array(
                 'type' => Type::TYPE_IDENTIFIER,

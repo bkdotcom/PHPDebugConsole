@@ -109,8 +109,8 @@ trait AssertSettingTrait
         $setting['msg'] = \sprintf(
             '%s %s',
             \in_array($setting['operator'], ['===', '==', '=', 'eq'], true)
-                ? 'should be'
-                : 'should not be',
+                ? $this->debug->i18n->trans('assert.should-be')
+                : $this->debug->i18n->trans('assert.should-not-be'),
             $valFriendly
         );
         if (\substr($valFriendly, 0, 1) === '<') {
@@ -129,10 +129,12 @@ trait AssertSettingTrait
     private function valFriendly(array $setting)
     {
         if ($setting['filter'] === FILTER_VALIDATE_BOOLEAN) {
-            return $setting['valCompare'] ? 'enabled' : 'disabled';
+            return $setting['valCompare']
+                ? $this->debug->i18n->trans('assert.enabled')
+                : $this->debug->i18n->trans('assert.disabled');
         }
         if ($setting['valCompare'] === '') {
-            return 'empty';
+            return $this->debug->i18n->trans('assert.empty');
         }
         return \is_string($setting['valCompare'])
             ? '<span class="t_string">' . \htmlspecialchars($setting['valCompare']) . '</span>'

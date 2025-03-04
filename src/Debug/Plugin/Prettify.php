@@ -76,7 +76,7 @@ class Prettify implements SubscriberInterface
             'prettifiedTag' => $event['isPrettified'],
         ));
         if ($this->highlightAdded === false) {
-            $this->debug->addPlugin($this->debug->pluginHighlight);
+            $this->debug->addPlugin($this->debug->pluginHighlight, 'highlight');
             $this->highlightAdded = true;
         }
         $event->stopPropagation();

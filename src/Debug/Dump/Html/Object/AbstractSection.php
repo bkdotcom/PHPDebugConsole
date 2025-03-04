@@ -12,6 +12,7 @@
 
 namespace bdk\Debug\Dump\Html\Object;
 
+use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
@@ -25,6 +26,9 @@ use bdk\Debug\Utility\Html as HtmlUtil;
  */
 abstract class AbstractSection
 {
+    /** @var Debug */
+    protected $debug;
+
     /** @var Helper */
     protected $helper;
 
@@ -43,6 +47,7 @@ abstract class AbstractSection
      */
     public function __construct(ValDumper $valDumper, Helper $helper, HtmlUtil $html)
     {
+        $this->debug = $valDumper->debug;
         $this->valDumper = $valDumper;
         $this->helper = $helper;
         $this->html = $html;
@@ -337,9 +342,12 @@ abstract class AbstractSection
         $methods = \array_map(static function ($method) {
             return '<code>' . $method . '</code>';
         }, $methods);
-        $methods = \count($methods) === 1
-            ? 'a ' . \reset($methods) . ' method'
-            : \implode(' and ', $methods) . ' methods';
-        return '<dd class="info magic">This object has ' . $methods . '</dd>' . "\n";
+        $methods = \array_values($methods);
+        return '<dd class="info magic">'
+            . (\count($methods) === 1
+                ? $this->debug->i18n->trans('object.methods.magic.1', array('method' => $methods[0]))
+                : $this->debug->i18n->trans('object.methods.magic.2', array('method1' => $methods[0], 'method2' => $methods[1]))
+            )
+            . '</dd>' . "\n";
     }
 }

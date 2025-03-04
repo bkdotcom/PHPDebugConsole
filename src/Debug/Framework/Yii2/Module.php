@@ -43,11 +43,11 @@ class Module extends BaseModule implements BootstrapInterface
                 'channelIcon' => ':database:',
                 'channelShow' => false,
             ),
-            'Session' => array(
+            'session' => array(
                 'channelIcon' => ':suitcase:',
                 'nested' => false,
             ),
-            'User' => array(
+            'user' => array(
                 'channelIcon' => ':user:',
                 'nested' => false,
             ),
@@ -214,11 +214,11 @@ class Module extends BaseModule implements BootstrapInterface
 
         $session->open();
 
-        $debug = $this->debug->rootInstance->getChannel('Session');
+        $debug = $this->debug->rootInstance->getChannel('session');
 
-        $debug->log('session id', $session->id);
-        $debug->log('session name', $session->name);
-        $debug->log('session class', $debug->abstracter->crateWithVals(
+        $debug->log($debug->i18n->trans('session.id'), $session->id);
+        $debug->log($debug->i18n->trans('session.name'), $session->name);
+        $debug->log($debug->i18n->trans('session.class'), $debug->abstracter->crateWithVals(
             \get_class($session),
             array(
                 'type' => Type::TYPE_IDENTIFIER,

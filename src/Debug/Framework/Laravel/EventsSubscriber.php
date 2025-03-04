@@ -43,14 +43,16 @@ class EventsSubscriber
     {
         \bdk\Debug\Utility::assertType($debug, 'bdk\Debug');
 
+        $channelKey = 'events';
         $channelOptions = array(
             'channelIcon' => $this->icon,
+            'channelName' => 'channel.events|trans',
             'channelShow' => false,
         );
         if (!$debug) {
-            $debug = Debug::getChannel('events', $channelOptions);
+            $debug = Debug::getChannel($channelKey, $channelOptions);
         } elseif ($debug === $debug->rootInstance) {
-            $debug = $debug->getChannel('events', $channelOptions);
+            $debug = $debug->getChannel($channelKey, $channelOptions);
         }
         $this->debug = $debug;
     }

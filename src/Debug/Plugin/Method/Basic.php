@@ -70,11 +70,13 @@ class Basic implements SubscriberInterface
         if (!$args) {
             // add default message
             $callerInfo = $this->debug->backtrace->getCallerInfo();
-            $fileAndLine = \sprintf('%s (line %s, eval\'d line %s)', $callerInfo['file'], $callerInfo['line'], $callerInfo['evalLine']);
-            $fileAndLine = \str_replace(', eval\'d line )', ')', $fileAndLine);
+            $labelLine = $this->debug->i18n->trans('line');
+            $labelLineEvaled = $this->debug->i18n->trans('line.eval');
             $args = [
-                'Assertion failed:',
-                $fileAndLine,
+                $this->debug->i18n->trans('method.assert.failed') . ':',
+                $callerInfo['evalLine']
+                    ? \sprintf('%s (%s %s, %s %s)', $callerInfo['file'], $labelLine, $callerInfo['line'], $labelLineEvaled, $callerInfo['evalLine'])
+                    : \sprintf('%s (%s %s)', $callerInfo['file'], $labelLine, $callerInfo['line']),
             ];
             $logEntry->setMeta('detectFiles', true);
         }

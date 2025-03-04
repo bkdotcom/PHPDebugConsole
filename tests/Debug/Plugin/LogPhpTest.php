@@ -49,7 +49,7 @@ class LogPhpTest extends DebugTestFramework
         $logEntries = $this->helper->deObjectifyData($this->debug->data->get('log'));
 
         $tests = array(
-            ['PHP Version', PHP_VERSION],
+            ['PHP version', PHP_VERSION],
             ['Server API', PHP_SAPI],
             ['Build Date', '%s'], // php >= 7.0
             ['Thread Safe', PHP_ZTS ? 'yes' : 'no'],

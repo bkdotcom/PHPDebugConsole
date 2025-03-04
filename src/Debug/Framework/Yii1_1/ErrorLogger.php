@@ -215,11 +215,7 @@ class ErrorLogger implements SubscriberInterface
         $count = \count($hashes);
         $debug = $this->debug;
         $debug->groupSummary();
-        $debug->group(
-            $count === 1
-                ? '1 ignored error'
-                : $count . ' ignored errors'
-        );
+        $debug->group($debug->i18n->trans('error.ignored.count', array('count' => $count)));
         foreach ($hashes as $hash) {
             $error = $this->debug->errorHandler->get('error', $hash);
             $error['isSuppressed'] = true;

@@ -6,11 +6,11 @@ var options
 var methods // method filters
 var initialized = false
 var methodLabels = {
-  alert: '<i class="fa fa-fw fa-lg fa-bullhorn"></i>Alerts',
-  error: '<i class="fa fa-fw fa-lg fa-times-circle"></i>Error',
-  warn: '<i class="fa fa-fw fa-lg fa-warning"></i>Warning',
-  info: '<i class="fa fa-fw fa-lg fa-info-circle"></i>Info',
-  other: '<i class="fa fa-fw fa-lg fa-sticky-note-o"></i>Other'
+  alert: '<i class="fa fa-fw fa-lg fa-bullhorn"></i>{string:side.alert}',
+  error: '<i class="fa fa-fw fa-lg fa-times-circle"></i>{string:side.error}}',
+  warn: '<i class="fa fa-fw fa-lg fa-warning"></i>{string:side.warning}',
+  info: '<i class="fa fa-fw fa-lg fa-info-circle"></i>{string:side.info}',
+  other: '<i class="fa fa-fw fa-lg fa-sticky-note-o"></i>{string:side.other}',
 }
 var sidebarHtml = '' +
   '<div class="debug-sidebar show no-transition">' +
@@ -29,17 +29,17 @@ var sidebarHtml = '' +
     '<div class="sidebar-content">' +
       '<ul class="list-unstyled debug-filters">' +
         '<li class="php-errors">' +
-          '<span><i class="fa fa-fw fa-lg fa-code"></i>PHP Errors</span>' +
+          '<span><i class="fa fa-fw fa-lg fa-code"></i>{string:side.php-errors}</span>' +
           '<ul class="list-unstyled">' +
           '</ul>' +
         '</li>' +
         '<li class="channels">' +
-          '<span><i class="fa fa-fw fa-lg fa-list-ul"></i>Channels</span>' +
+          '<span><i class="fa fa-fw fa-lg fa-list-ul"></i>{string:side-channels}</span>' +
           '<ul class="list-unstyled">' +
           '</ul>' +
         '</li>' +
       '</ul>' +
-      '<button class="expand-all" style="display:none;"><i class="fa fa-lg fa-plus"></i> Exp All Groups</button>' +
+      '<button class="expand-all" style="display:none;"><i class="fa fa-lg fa-plus"></i> {string:side.expand-all-groups}</button>' +
     '</div>' +
   '</div>'
 
@@ -132,7 +132,7 @@ function preFilter ($root) {
 }
 
 export function addMarkup ($node) {
-  var $sidebar = $(sidebarHtml)
+  var $sidebar = $(config.dict.replaceTokens(sidebarHtml))
   var $expAll = $node.find('.tab-panes > .tab-primary > .tab-body > .expand-all')
   $node.find('.tab-panes > .tab-primary > .tab-body').before($sidebar)
 
@@ -168,7 +168,7 @@ export function open ($node) {
  * @param $node debugroot
  */
 function addMethodToggles ($node) {
-  var channelNameRoot = $node.data('channelNameRoot')
+  var channelKeyRoot = $node.data('channelKeyRoot')
   var $filters = $node.find('.debug-filters')
   var $entries = $node.find('.tab-primary').find('> .tab-body > .m_alert, .group-body > *')
   var val
@@ -176,7 +176,7 @@ function addMethodToggles ($node) {
   for (val in methodLabels) {
     haveEntry = val === 'other'
       ? $entries.not('.m_alert, .m_error, .m_warn, .m_info').length > 0
-      : $entries.filter('.m_' + val).not('[data-channel="' + channelNameRoot + '.phpError"]').length > 0
+      : $entries.filter('.m_' + val).not('[data-channel="' + channelKeyRoot + '.phpError"]').length > 0
     $filters.append(
       $('<li />').append(
         $('<label class="toggle active" />').toggleClass('disabled', !haveEntry).append(
@@ -187,7 +187,7 @@ function addMethodToggles ($node) {
             value: val
           })
         ).append(
-          $('<span>').append(methodLabels[val])
+          $('<span>').append(config.dict.replaceTokens(methodLabels[val]))
         )
       )
     )

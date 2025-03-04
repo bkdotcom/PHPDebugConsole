@@ -129,7 +129,7 @@ EOD;
             'method' => 'info',
             'args' => array('autocommit', false),
             'meta' => array(
-                'channel' => 'general.MySqli',
+                'channel' => 'general.mysqli',
             ),
         ), $logEntry);
     }
@@ -156,7 +156,7 @@ EOD;
                 "args": ["INSERT INTO `bob`\u2026"],
                 "meta": {
                     "attribs": {"id": "statementInfo1", "class":[]},
-                    "boldLabel": false, "channel": "general.MySqli", "icon": "fa fa-database"
+                    "boldLabel": false, "channel": "general.mysqli", "icon": "fa fa-database"
                 }
             },
             "0": {
@@ -182,7 +182,7 @@ EOD;
                 ],
                 "meta": {
                     "attribs": {"class": ["no-indent"]},
-                    "channel": "general.MySqli"
+                    "channel": "general.mysqli"
                 }
             },
             "1": {
@@ -192,27 +192,27 @@ EOD;
                     "%s",
                     42
                 ]],
-                "meta": {"channel": "general.MySqli"}
+                "meta": {"channel": "general.mysqli"}
             },
             "2": {
                 "method": "time",
                 "args": ["duration: %s"],
-                "meta": {"channel": "general.MySqli"}
+                "meta": {"channel": "general.mysqli"}
             },
             "3": {
                 "method": "log",
-                "args": ["memory usage", "%s"],
-                "meta": {"channel": "general.MySqli"}
+                "args": ["Memory usage", "%s"],
+                "meta": {"channel": "general.mysqli"}
             },
             "4": {
                 "method": "log",
                 "args": ["rowCount", 1],
-                "meta": {"channel": "general.MySqli"}
+                "meta": {"channel": "general.mysqli"}
             },
             "5": {
                 "method": "groupEnd",
                 "args": [],
-                "meta": {"channel": "general.MySqli"}
+                "meta": {"channel": "general.mysqli"}
             }
         }
 EOD;
@@ -245,7 +245,7 @@ EOD;
                 "args": ["SELECT CURRENT_USER();SELECT `t` from `bob`\u2026"],
                 "meta": {
                     "attribs": {"id": "statementInfo1", "class":[]},
-                    "boldLabel": false, "channel": "general.MySqli", "icon": "fa fa-database"
+                    "boldLabel": false, "channel": "general.mysqli", "icon": "fa fa-database"
                 }
             },
             "0": {
@@ -271,18 +271,18 @@ EOD;
                 ],
                 "meta": {
                     "attribs": {"class": ["no-indent"] },
-                    "channel": "general.MySqli"
+                    "channel": "general.mysqli"
                 }
             },
             "1": {
                 "method": "time",
                 "args": ["duration: %s"],
-                "meta": {"channel": "general.MySqli"}
+                "meta": {"channel": "general.mysqli"}
             },
             "2": {
                 "method": "log",
-                "args": ["memory usage", "%s"],
-                "meta": {"channel": "general.MySqli"}
+                "args": ["Memory usage", "%s"],
+                "meta": {"channel": "general.mysqli"}
             },
             "3": {
                 "method": "warn",
@@ -294,7 +294,7 @@ EOD;
                     ""
                 ],
                 "meta": {
-                    "channel": "general.MySqli",
+                    "channel": "general.mysqli",
                     "detectFiles": true,
                     "file": "{$file}",
                     "line": {$line},
@@ -305,7 +305,7 @@ EOD;
                 "method": "warn",
                 "args": ["%%cLIMIT%%c without %%cORDER BY%%c causes non-deterministic results", "font-family:monospace", "", "font-family:monospace", ""],
                 "meta": {
-                    "channel": "general.MySqli",
+                    "channel": "general.mysqli",
                     "detectFiles": true,
                     "file": "{$file}",
                     "line": {$line},
@@ -315,7 +315,7 @@ EOD;
             "5": {
                 "method": "groupEnd",
                 "args": [],
-                "meta": {"channel": "general.MySqli"}
+                "meta": {"channel": "general.mysqli"}
             }
         }
 EOD;
@@ -346,7 +346,7 @@ EOD;
                 "args": ["INSERT INTO `bob`\u2026"],
                 "meta": {
                     "attribs": {"id": "statementInfo1", "class":[]},
-                    "boldLabel": false, "channel": "general.MySqli", "icon": "fa fa-database"
+                    "boldLabel": false, "channel": "general.mysqli", "icon": "fa fa-database"
                 }
             },
             "0": {
@@ -354,7 +354,7 @@ EOD;
                 "args": [
                     {"attribs": {"class": ["highlight", "language-sql", "no-quotes"] }, "brief": false, "contentType": "application\/sql", "debug": "\u0000debug\u0000", "prettified": true, "prettifiedTag": false, "type": "string", "typeMore": null, "value": "INSERT INTO `bob` (`t`, `e`, `ct`) \nVALUES \n  (?, ?, ?)"}
                 ],
-                "meta": {"attribs": {"class": ["no-indent"] }, "channel": "general.MySqli"}
+                "meta": {"attribs": {"class": ["no-indent"] }, "channel": "general.mysqli"}
             },
             "1": {
                 "method": "table",
@@ -365,27 +365,27 @@ EOD;
                         {"value": 42, "type": "i"}
                     ]
                 ],
-                "meta": {"caption": "parameters", "channel": "general.MySqli", "sortable": true, "tableInfo": {"class": null, "columns": [{"key": "value"}, {"key": "type"} ], "haveObjRow": false, "indexLabel": null, "rows": [], "summary": "" } }
+                "meta": {"caption": "parameters", "channel": "general.mysqli", "sortable": true, "tableInfo": {"class": null, "columns": [{"key": "value"}, {"key": "type"} ], "haveObjRow": false, "indexLabel": null, "rows": [], "summary": "" } }
             },
             "2": {
                 "method": "time",
                 "args": ["duration: %s"],
-                "meta": {"channel": "general.MySqli"}
+                "meta": {"channel": "general.mysqli"}
             },
             "3": {
                 "method": "log",
-                "args": ["memory usage", "%s"],
-                "meta": {"channel": "general.MySqli"}
+                "args": ["Memory usage", "%s"],
+                "meta": {"channel": "general.mysqli"}
             },
             "4": {
                 "method": "log",
                 "args": ["rowCount", 1 ],
-                "meta": {"channel": "general.MySqli"}
+                "meta": {"channel": "general.mysqli"}
             },
             "5": {
                 "method": "groupEnd",
                 "args": [],
-                "meta": {"channel": "general.MySqli"}
+                "meta": {"channel": "general.mysqli"}
             }
         }
 EOD;
@@ -413,24 +413,24 @@ EOD;
                 "args": ["SELECT * from `bob`"],
                 "meta": {
                     "attribs": {"id": "statementInfo1", "class":[]},
-                    "boldLabel": false, "channel": "general.MySqli", "icon": "fa fa-database"
+                    "boldLabel": false, "channel": "general.mysqli", "icon": "fa fa-database"
                 }
             },
             "0": {
                 "method": "time",
                 "args": ["duration: %s"],
-                "meta": {"channel": "general.MySqli"}
+                "meta": {"channel": "general.mysqli"}
             },
             "1": {
                 "method": "log",
-                "args": ["memory usage", "%s"],
-                "meta": {"channel": "general.MySqli"}
+                "args": ["Memory usage", "%s"],
+                "meta": {"channel": "general.mysqli"}
             },
             "2": {
                 "method": "warn",
                 "args": ["Use %%cSELECT *%%c only if you need all columns from table", "font-family:monospace", ""],
                 "meta": {
-                    "channel": "general.MySqli",
+                    "channel": "general.mysqli",
                     "detectFiles": true,
                     "file": "%s",
                     "line": {$line},
@@ -447,7 +447,7 @@ EOD;
                     ""
                 ],
                 "meta": {
-                    "channel": "general.MySqli",
+                    "channel": "general.mysqli",
                     "detectFiles": true,
                     "file": "%s",
                     "line": {$line},
@@ -457,12 +457,12 @@ EOD;
             "4": {
                 "method": "log",
                 "args": ["rowCount", -1 ],
-                "meta": {"channel": "general.MySqli"}
+                "meta": {"channel": "general.mysqli"}
             },
             "5": {
                 "method": "groupEnd",
                 "args": [],
-                "meta": {"channel": "general.MySqli"}
+                "meta": {"channel": "general.mysqli"}
             }
         }
 
@@ -495,7 +495,7 @@ EOD;
             'method' => 'info',
             'args' => array('savepoint', 'Sally'),
             'meta' => array(
-                'channel' => 'general.MySqli',
+                'channel' => 'general.mysqli',
             ),
         ), $logEntry);
         $result3 = self::$client->release_savepoint('Sally');
@@ -520,7 +520,7 @@ EOD;
                 'method' => 'warn',
                 'args' => array('SAVEPOINT Sally does not exist'),
                 'meta' => array(
-                    'channel' => 'general.MySqli',
+                    'channel' => 'general.mysqli',
                     'detectFiles' => true,
                     // 'evalLine' => null,
                     'file' => __FILE__,
@@ -545,7 +545,7 @@ EOD;
                     "method": "info",
                     "args": ["rollBack"],
                     "meta": {
-                        "channel": "general.MySqli",
+                        "channel": "general.mysqli",
                         "icon": "fa fa-database"
                     }
                 }
@@ -585,7 +585,7 @@ EOD;
                     '',
                 ),
                 'meta' => array(
-                    'channel' => 'general.MySqli',
+                    'channel' => 'general.mysqli',
                     'detectFiles' => true,
                     // 'evalLine' => null,
                     'file' => __FILE__,
@@ -601,7 +601,7 @@ EOD;
                     'rolled back',
                 ),
                 'meta' => array(
-                    'channel' => 'general.MySqli',
+                    'channel' => 'general.mysqli',
                 ),
             ),
             */
@@ -609,7 +609,7 @@ EOD;
                 'method' => 'info',
                 'args' => array('rollBack'),
                 'meta' => array(
-                    'channel' => 'general.MySqli',
+                    'channel' => 'general.mysqli',
                     'icon' => 'fa fa-database',
                 ),
             ),
@@ -628,7 +628,7 @@ EOD;
             'method' => 'info',
             'args' => array('savepoint', 'Sally'),
             'meta' => array(
-                'channel' => 'general.MySqli',
+                'channel' => 'general.mysqli',
             ),
         ), $logEntry);
     }
@@ -654,14 +654,14 @@ EOD;
                 "0": {
                     "method": "info",
                     "args": ["begin_transaction"],
-                    "meta": {"channel": "general.MySqli", "icon": "fa fa-database"}
+                    "meta": {"channel": "general.mysqli", "icon": "fa fa-database"}
                 },
                 "statementInfo1": {
                     "method": "groupCollapsed",
                     "args": ["INSERT INTO `bob`\u2026"],
                     "meta": {
                         "attribs": {"id": "statementInfo1", "class":[]},
-                        "boldLabel": false, "channel": "general.MySqli", "icon": "fa fa-database"
+                        "boldLabel": false, "channel": "general.mysqli", "icon": "fa fa-database"
                     }
                 },
                 "1": {
@@ -681,32 +681,32 @@ EOD;
                             "value": "INSERT INTO `bob` (`t`) \nVALUES \n  (\"test\")"
                         }
                     ],
-                    "meta": {"attribs": {"class": ["no-indent"] }, "channel": "general.MySqli"}
+                    "meta": {"attribs": {"class": ["no-indent"] }, "channel": "general.mysqli"}
                 },
                 "2": {
                     "method": "time",
                     "args": ["duration: %s"],
-                    "meta": {"channel": "general.MySqli"}
+                    "meta": {"channel": "general.mysqli"}
                 },
                 "3": {
                     "method": "log",
-                    "args": ["memory usage", "%s"],
-                    "meta": {"channel": "general.MySqli"}
+                    "args": ["Memory usage", "%s"],
+                    "meta": {"channel": "general.mysqli"}
                 },
                 "4": {
                     "method": "log",
                     "args": ["rowCount", 1 ],
-                    "meta": {"channel": "general.MySqli"}
+                    "meta": {"channel": "general.mysqli"}
                 },
                 "5": {
                     "method": "groupEnd",
                     "args": [],
-                    "meta": {"channel": "general.MySqli"}
+                    "meta": {"channel": "general.mysqli"}
                 },
                 "6": {
                     "method": "info",
                     "args": ["commit"],
-                    "meta": {"channel": "general.MySqli", "icon": "fa fa-database"}
+                    "meta": {"channel": "general.mysqli", "icon": "fa fa-database"}
                 }
             }
 EOD;
@@ -727,7 +727,7 @@ EOD;
                 "method": "info",
                 "args": ["begin_transaction", "Billy"],
                 "meta": {
-                    "channel": "general.MySqli",
+                    "channel": "general.mysqli",
                     "icon": "fa fa-database"
                 }
             },
@@ -737,7 +737,7 @@ EOD;
                 "meta": {
                     "attribs": {"id": "statementInfo1", "class":[]},
                     "boldLabel": false,
-                    "channel": "general.MySqli",
+                    "channel": "general.mysqli",
                     "icon": "fa fa-database"
                 }
             },
@@ -762,34 +762,34 @@ EOD;
                     "attribs": {
                         "class": ["no-indent"]
                     },
-                    "channel": "general.MySqli"
+                    "channel": "general.mysqli"
                 }
             },
             "2": {
                 "method": "time",
                 "args": ["duration: %s"],
-                "meta": {"channel": "general.MySqli"}
+                "meta": {"channel": "general.mysqli"}
             },
             "3": {
                 "method": "log",
-                "args": ["memory usage", "%s"],
-                "meta": {"channel": "general.MySqli"}
+                "args": ["Memory usage", "%s"],
+                "meta": {"channel": "general.mysqli"}
             },
             "4": {
                 "method": "log",
                 "args": ["rowCount", 1],
-                "meta": {"channel": "general.MySqli"}
+                "meta": {"channel": "general.mysqli"}
             },
             "5": {
                 "method": "groupEnd",
                 "args": [],
-                "meta": {"channel": "general.MySqli"}
+                "meta": {"channel": "general.mysqli"}
             },
             "6": {
                 "method": "warn",
                 "args": ["passing \$name param to mysqli::commit() does nothing!"],
                 "meta": {
-                    "channel": "general.MySqli",
+                    "channel": "general.mysqli",
                     "detectFiles": true,
                     "file": "%s",
                     "line": $line,
@@ -799,7 +799,7 @@ EOD;
             "7": {
                 "method": "info",
                 "args": ["commit"],
-                "meta": {"channel": "general.MySqli", "icon": "fa fa-database"}
+                "meta": {"channel": "general.mysqli", "icon": "fa fa-database"}
             }
         }
 EOD;
@@ -820,28 +820,28 @@ EOD;
             },
             {
                 "method": "log",
-                "args": ["connection string", "mysql://root:█████████@localhost:3306/test"],
+                "args": ["Connection string", "mysql://root:█████████@localhost:3306/test"],
                 "meta": {"redact": true}
             },
             {
                 "method": "log",
-                "args": ["logged operations: ", 4],
+                "args": ["Logged operations: ", 4],
                 "meta": []
             },
             {
                 "method": "time",
-                "args": ["total time: %s"],
+                "args": ["Total time: %s"],
                 "meta": []
             },
             {
                 "method": "log",
-                "args": ["max memory usage", "%s"],
+                "args": ["Peak memory usage", "%s"],
                 "meta": []
             },
             {
                 "method": "log",
                 "args": [
-                    "server info",
+                    "Server info",
                     {
                         "Flush tables": 1,
                         "Open tables": 1417,

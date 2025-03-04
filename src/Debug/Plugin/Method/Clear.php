@@ -25,7 +25,7 @@ class Clear implements SubscriberInterface
     use CustomMethodTrait;
 
     /** @var string|null */
-    private $channelName = null;
+    private $channelKey = null;
 
     /** @var array<string,mixed> */
     private $data = array();
@@ -101,10 +101,10 @@ class Clear implements SubscriberInterface
     {
         $this->debug = $logEntry->getSubject();
         $this->data = $this->debug->data->get();
-        $this->channelName = $this->debug->parentInstance
-            ? $logEntry->getChannelName() // just clear this specific channel
+        $this->channelKey = $this->debug->parentInstance
+            ? $logEntry->getChannelKey() // just clear this specific channel
             : null;
-        $this->channelRegex = '#^' . \preg_quote($this->channelName ?: '', '#') . '(\.|$)#';
+        $this->channelRegex = '#^' . \preg_quote($this->channelKey ?: '', '#') . '(\.|$)#';
         $this->isRootInstance = $this->debug->rootInstance === $this->debug;
         $bitmask = $logEntry['meta']['bitmask'];
         if ($bitmask === Debug::CLEAR_SILENT) {
@@ -116,7 +116,7 @@ class Clear implements SubscriberInterface
         $cleared[] = $this->clearSummary($bitmask);
         $this->clearErrors($bitmask);
         if (($bitmask & Debug::CLEAR_ALL) === Debug::CLEAR_ALL) {
-            $cleared = ['everything'];
+            $cleared = [$this->debug->i18n->trans('method.clear.all')];
         }
         $args = $this->getLogArgs($cleared);
         $this->debug->data->set($this->data);
@@ -133,7 +133,7 @@ class Clear implements SubscriberInterface
      */
     private function channelTest(LogEntry $logEntry)
     {
-        return $this->isRootInstance || \preg_match($this->channelRegex, $logEntry->getChannelName());
+        return $this->isRootInstance || \preg_match($this->channelRegex, $logEntry->getChannelKey());
     }
 
     /**
@@ -149,9 +149,9 @@ class Clear implements SubscriberInterface
         if (!$clearAlerts) {
             return null;
         }
-        if ($this->channelName === null) {
+        if ($this->channelKey === null) {
             $this->data['alerts'] = array();
-            return 'alerts';
+            return $this->debug->i18n->trans('method.clear.alerts');
         }
         foreach ($this->data['alerts'] as $i => $logEntry) {
             if ($this->channelTest($logEntry)) {
@@ -159,7 +159,7 @@ class Clear implements SubscriberInterface
             }
         }
         $this->data['alerts'] = \array_values($this->data['alerts']);
-        return 'alerts';
+        return $this->debug->i18n->trans('method.clear.alerts');
     }
 
     /**
@@ -217,8 +217,8 @@ class Clear implements SubscriberInterface
             if (\in_array($logEntry['method'], ['error', 'warn'], true) === false) {
                 return true;
             }
-            $clear2 = $this->channelName
-                ? $clear && $logEntry->getChannelName() === $this->channelName
+            $clear2 = $this->channelKey
+                ? $clear && $logEntry->getChannelKey() === $this->channelKey
                 : $clear;
             if ($clear2) {
                 return false;
@@ -245,11 +245,13 @@ class Clear implements SubscriberInterface
         $return = null;
         $clearErrors = (bool) ($flags & Debug::CLEAR_LOG_ERRORS);
         if ($flags & Debug::CLEAR_LOG) {
-            $return = 'log (' . ($clearErrors ? 'incl errors' : 'sans errors') . ')';
+            $return = $clearErrors
+                ? $this->debug->i18n->trans('method.clear.log.with-errors')
+                : $this->debug->i18n->trans('method.clear.log.without-errors');
             $this->entriesKeep = $this->debug->rootInstance->getPlugin('methodGroup')->getCurrentGroups('main');
             $this->clearLogHelper($this->data['log'], $clearErrors);
         } elseif ($clearErrors) {
-            $return = 'errors';
+            $return = $this->debug->i18n->trans('method.clear.errors');
         }
         return $return;
     }
@@ -267,7 +269,7 @@ class Clear implements SubscriberInterface
         $keep = $clearErrors
             ? []
             : ['error', 'warn'];
-        if ($keep || $this->channelName) {
+        if ($keep || $this->channelKey) {
             $this->clearLogHelperFilter($log, $keep);
         }
         $log = \array_values($this->entriesKeep);
@@ -285,8 +287,8 @@ class Clear implements SubscriberInterface
     {
         // we need to go through and filter based on method and/or channel
         foreach ($log as $k => $logEntry) {
-            $channelName = $logEntry->getChannelName();
-            $channelMatch = !$this->channelName || $channelName === $this->channelName;
+            $channelKey = $logEntry->getChannelKey();
+            $channelMatch = !$this->channelKey || $channelKey === $this->channelKey;
             if (\in_array($logEntry['method'], $keep, true) || !$channelMatch) {
                 $this->entriesKeep[$k] = $logEntry;
             }
@@ -305,10 +307,11 @@ class Clear implements SubscriberInterface
     {
         $clearSummary = (bool) ($flags & Debug::CLEAR_SUMMARY);
         $clearErrors = (bool) ($flags & Debug::CLEAR_SUMMARY_ERRORS);
+        $earlyReturnMessage = $clearErrors
+            ? $this->debug->i18n->trans('method.clear.summary.errors')
+            : null;
         if (!$clearSummary) {
-            return $clearErrors
-                ? 'summary errors'
-                : null;
+            return $earlyReturnMessage;
         }
         $groupPlugin = $this->debug->rootInstance->getPlugin('methodGroup');
         $curPriority = $groupPlugin->getCurrentPriority(); // 'main'|int
@@ -322,7 +325,9 @@ class Clear implements SubscriberInterface
             $this->entriesKeep = $groupPlugin->getCurrentGroups($priority);
             $this->clearLogHelper($this->data['logSummary'][$priority], $clearErrors);
         }
-        return 'summary (' . ($clearErrors ? 'incl errors' : 'sans errors') . ')';
+        return $clearErrors
+            ? $this->debug->i18n->trans('method.clear.summary.with-errors')
+            : $this->debug->i18n->trans('method.clear.summary.without-errors');
     }
 
     /**
@@ -339,18 +344,19 @@ class Clear implements SubscriberInterface
             return array();
         }
         $count = \count($cleared);
+        $and = $this->debug->i18n->trans('and');
         $glue = $count === 2
-            ? ' and '
+            ? ' ' . $and . ' '
             : ', ';
         if ($count > 2) {
-            $cleared[$count - 1] = 'and ' . $cleared[$count - 1];
+            $cleared[$count - 1] = $and . ' ' . $cleared[$count - 1];
         }
-        $msg = 'Cleared ' . \implode($glue, $cleared);
-        if ($this->channelName) {
+        $msg = $this->debug->i18n->trans('method.clear.cleared') . ' ' . \implode($glue, $cleared);
+        if ($this->channelKey) {
             return array(
                 $msg . ' %c(%s)',
                 'background-color:#c0c0c0; padding:0 .33em;',
-                $this->channelName,
+                $this->channelKey,
             );
         }
         return array($msg);

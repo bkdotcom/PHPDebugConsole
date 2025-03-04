@@ -40,10 +40,15 @@ class DoctrineMiddleware implements MiddlewareInterface
      */
     public function __construct(?Debug $debug = null)
     {
+        $channelKey = 'Doctrine';
+        $channelOptions = array(
+            'channelIcon' => $this->icon,
+            'channelName' => 'Doctrine',
+        );
         if (!$debug) {
-            $debug = Debug::getChannel('Doctrine', array('channelIcon' => $this->icon));
+            $debug = Debug::getChannel($channelKey, $channelOptions);
         } elseif ($debug === $debug->rootInstance) {
-            $debug = $debug->getChannel('Doctrine', array('channelIcon' => $this->icon));
+            $debug = $debug->getChannel($channelKey, $channelOptions);
         }
         $this->debug = $debug;
     }

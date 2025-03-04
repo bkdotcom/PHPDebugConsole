@@ -90,15 +90,19 @@ class PdoCollector
      */
     private function getChannel(CDbConnection $dbConnection)
     {
+        $channelKey = 'pdo';
         $channelName = 'PDO';
         if (\strpos($dbConnection->connectionString, 'master=true')) {
+            $channelKey .= '_master';
             $channelName .= ' (master)';
         } elseif (\strpos($dbConnection->connectionString, 'slave=true')) {
+            $channelKey .= '_slave';
             $channelName .= ' (slave)';
         }
         // nest the PDO channel under our Yii channel
-        return $this->component->debug->getChannel($channelName, array(
+        return $this->component->debug->getChannel($channelKey, array(
             'channelIcon' => ':database:',
+            'channelName' => $channelName,
             'channelShow' => false,
         ));
     }

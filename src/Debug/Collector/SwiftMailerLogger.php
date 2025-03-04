@@ -70,10 +70,15 @@ class SwiftMailerLogger implements
     {
         \bdk\Debug\Utility::assertType($debug, 'bdk\Debug');
 
+        $channelKey = 'SwiftMailer';
+        $channelOptions = array(
+            'channelIcon' => $this->icon,
+            'channelName' => 'SwiftMailer',
+        );
         if (!$debug) {
-            $debug = Debug::getChannel('SwiftMailer', array('channelIcon' => $this->icon));
+            $debug = Debug::getChannel($channelKey, $channelOptions);
         } elseif ($debug === $debug->rootInstance) {
-            $debug = $debug->getChannel('SwiftMailer', array('channelIcon' => $this->icon));
+            $debug = $debug->getChannel($channelKey, $channelOptions);
         }
         $debug->rootInstance->eventManager->subscribe(EventManager::EVENT_PHP_SHUTDOWN, [$this, 'onShutdown'], PHP_INT_MAX * -1 + 1);
         $this->debug = $debug;
@@ -94,12 +99,12 @@ class SwiftMailerLogger implements
     {
         $msg = $event->getMessage();
         $this->debug->groupCollapsed(
-            'sending email',
+            $this->debug->i18n->trans('email.sending'),
             $this->formatEmailAddresses($msg->getTo()),
             $msg->getSubject(),
             $this->iconMeta
         );
-        $this->debug->log('headers', $msg->getHeaders()->toString());
+        $this->debug->log($this->debug->i18n->trans('headers'), $msg->getHeaders()->toString());
         $this->useIcon = false; // don't use icon within group;
     }
 

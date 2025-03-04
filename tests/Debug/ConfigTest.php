@@ -120,6 +120,7 @@ class ConfigTest extends DebugTestFramework
             // 'arrayShowListKeys',
             'channels',
             'channelIcon',
+            'channelKey',
             'channelName',
             'channelShow',
             'channelSort',
@@ -134,6 +135,7 @@ class ConfigTest extends DebugTestFramework
             'extensionsCheck',
             'headerMaxAll',
             'headerMaxPer',
+            'i18n',
             'icons',
             'logEnvInfo',
             'logFiles',
@@ -349,7 +351,7 @@ class ConfigTest extends DebugTestFramework
         };
         $this->debug->setCfg($cfgName, $closure1);
         $closure2 = static function ($event, $name) {
-            echo 'closure 2 ' . $event->getSubject()->getCfg('channelName', Debug::CONFIG_DEBUG) . ' ' . $name . "\n";
+            echo 'closure 2 ' . $event->getSubject()->getCfg('channelKey', Debug::CONFIG_DEBUG) . ' ' . $name . "\n";
         };
         $this->debug->setCfg($cfgName, $closure2);
         $closure1isSub = false;

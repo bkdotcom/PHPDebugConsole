@@ -40,10 +40,16 @@ class TwigExtension extends ProfilerExtension
         \bdk\Debug\Utility::assertType($debug, 'bdk\Debug');
         \bdk\Debug\Utility::assertType($profile, 'Twig\Profiler\Profile');
 
+        $channelKey = 'Twig';
+        $channelOptions = array(
+            'channelIcon' => $this->icon,
+            'channelName' => 'Twig',
+        );
+
         if (!$debug) {
-            $debug = Debug::getChannel('Twig', array('channelIcon' => $this->icon));
+            $debug = Debug::getChannel($channelKey, $channelOptions);
         } elseif ($debug === $debug->rootInstance) {
-            $debug = $debug->getChannel('Twig', array('channelIcon' => $this->icon));
+            $debug = $debug->getChannel($channelKey, $channelOptions);
         }
         if (!$profile) {
             $profile = new Profile();

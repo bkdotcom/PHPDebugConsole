@@ -112,7 +112,7 @@ class BdkDebugBundleListener implements EventSubscriberInterface
             return;
         }
         $this->debug->groupSummary();
-        $this->debug->info('Symfony version', \Symfony\Component\HttpKernel\Kernel::VERSION);
+        $this->debug->info('Symfony ' . $this->debug->i18n->trans('version'), \Symfony\Component\HttpKernel\Kernel::VERSION);
         $this->debug->groupEnd();
         $this->debug->setCfg($this->debugCfg, Debug::CONFIG_NO_RETURN);
         $this->debug->eventManager->subscribe(Debug::EVENT_LOG, [$this, 'onDebugLog']);
@@ -128,12 +128,12 @@ class BdkDebugBundleListener implements EventSubscriberInterface
      */
     public function onDebugLog(LogEntry $logEntry)
     {
-        $channelName = $logEntry->getSubject()->getCfg('channelName');
-        if ($channelName === 'general.doctrine') {
+        $channelKey = $logEntry->getChannelKey();
+        if ($channelKey === 'general.doctrine') {
             $logEntry['appendLog'] = false;
             return;
         }
-        if ($channelName === 'general.event') {
+        if ($channelKey === 'general.event') {
             $this->onDebugLogGeneralEvent($logEntry);
         }
         if ($logEntry->getMeta('psr3level') !== LogLevel::CRITICAL) {

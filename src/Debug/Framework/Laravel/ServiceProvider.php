@@ -55,7 +55,7 @@ class ServiceProvider extends BaseServiceProvider
         ));
         $this->debug = new Debug($config);
         $this->debug->eventManager->subscribe(Debug::EVENT_LOG, static function (LogEntry $logEntry) {
-            if ($logEntry->getChannelName() === 'general.local') {
+            if ($logEntry->getChannelKey() === 'general.local') {
                 $logEntry->setMeta('channel', null);
             }
         });
@@ -100,10 +100,13 @@ class ServiceProvider extends BaseServiceProvider
      */
     public function onOutput()
     {
-        $debug = $this->debug->getChannel('Models', array(
+        $channelKey = 'models';
+        $channelOptions = array(
             'channelIcon' => ':models:',
+            'channelName' => 'channel.models|trans',
             'nested' => false,
-        ));
+        );
+        $debug = $this->debug->getChannel($channelKey, $channelOptions);
         $tableInfoRows = array();
         $modelCounts = $this->buildModelCountTable($tableInfoRows);
         $debug->table('Model Usage', $modelCounts, $debug->meta(array(
@@ -189,10 +192,13 @@ class ServiceProvider extends BaseServiceProvider
         }
         $config = $this->app['config']->all();
         \ksort($config);
-        $configChannel = $this->debug->getChannel('Config', array(
+        $channelKey = 'config';
+        $channelOptions = array(
             'channelIcon' => ':config:',
+            'channelName' => 'channel.config|trans',
             'nested' => false,
-        ));
+        );
+        $configChannel = $this->debug->getChannel($channelKey, $channelOptions);
         $configChannel->log($config);
     }
 
@@ -222,9 +228,9 @@ class ServiceProvider extends BaseServiceProvider
         }
         $this->debug->groupSummary();
         $this->debug->group('Laravel', $this->debug->meta('level', 'info'));
-        $this->debug->log('version', $this->app::VERSION);
-        $this->debug->log('environment', $this->app->environment());
-        $this->debug->log('locale', $this->app->getLocale());
+        $this->debug->log($this->debug->i18n->trans('version'), $this->app::VERSION);
+        $this->debug->log($this->debug->i18n->trans('environment'), $this->app->environment());
+        $this->debug->log($this->debug->i18n->trans('locale'), $this->app->getLocale());
         $this->debug->groupEnd();
         $this->debug->groupEnd();
     }

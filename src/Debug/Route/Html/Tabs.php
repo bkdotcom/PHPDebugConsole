@@ -71,7 +71,7 @@ class Tabs
         */
         $this->debug->arrayUtil->sortWithOrder(
             $channels,
-            ['Request / Response', 'Files'],
+            ['request-response', 'files'],
             'key'
         );
         $html = '<div class="tab-panes"' . ($this->route->getCfg('outputScript') ? ' style="display:none;"' : '') . '>' . "\n";
@@ -120,12 +120,13 @@ class Tabs
      */
     private function buildTab(Debug $debug)
     {
+        $key = $debug->getCfg('channelKey', Debug::CONFIG_DEBUG);
         $name = $debug->getCfg('channelName', Debug::CONFIG_DEBUG);
         $isActive = false;
         $label = $name;
         if ($debug === $this->debug) {
             $isActive = true;
-            $label = 'Log';
+            $label = $this->debug->i18n->trans('channel.log');
         }
         $channelIcon = $this->route->buildIcon($debug->getCfg('channelIcon', Debug::CONFIG_DEBUG));
         return $this->debug->html->buildTag(
@@ -135,7 +136,7 @@ class Tabs
                     'active' => $isActive,
                     'nav-link' => true,
                 ),
-                'data-target' => '.' . $this->nameToClassname($name),
+                'data-target' => '.' . $this->keyToClassname($key),
                 'data-toggle' => 'tab',
                 'role' => 'tab',
             ),
@@ -152,14 +153,14 @@ class Tabs
      */
     private function buildTabPane(Debug $debug)
     {
-        $name = $debug->getCfg('channelName', Debug::CONFIG_DEBUG);
+        $key = $debug->getCfg('channelKey', Debug::CONFIG_DEBUG);
         $isActive = $debug === $this->debug;
-        $this->route->setChannelRegex('#^' . \preg_quote($name, '#') . '(\.|$)#');
+        $this->route->setChannelRegex('#^' . \preg_quote($key, '#') . '(\.|$)#');
         return $this->debug->html->buildTag(
             'div',
             array(
                 'class' => array(
-                    $this->nameToClassname($name) => true,
+                    $this->keyToClassname($key) => true,
                     'active' => $isActive,
                     'tab-pane' => true,
                     'tab-primary' => $isActive,
@@ -198,14 +199,14 @@ class Tabs
     }
 
     /**
-     * Translate channel name to classname
+     * Translate channel key to classname
      *
-     * @param string $name channelName
+     * @param string $key channel key
      *
      * @return string
      */
-    private function nameToClassname($name)
+    private function keyToClassname($key)
     {
-        return 'debug-tab-' . \preg_replace('/\W+/', '-', \strtolower($name));
+        return 'debug-tab-' . \preg_replace('/\W+/', '-', \strtolower($key));
     }
 }

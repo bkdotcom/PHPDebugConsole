@@ -74,7 +74,7 @@ class Methods extends AbstractSection
             . $this->dumpReturnType($info)
             . $this->dumpStaticVars($info)
             . ($name === '__toString'
-                ? "\n" . '<h3>return value</h3>' . "\n"
+                ? "\n" . '<h3>' . $this->debug->i18n->trans('object.methods.return-value') . '</h3>' . "\n"
                     . '<ul class="list-unstyled"><li>'
                     . $this->valDumper->dump($info['returnValue'], array(
                         'attribs' => array(
@@ -245,7 +245,7 @@ class Methods extends AbstractSection
         if (!$this->opts['staticVarOutput'] || empty($info['staticVars'])) {
             return '';
         }
-        $html = "\n" . '<h3>static variables</h3>' . "\n";
+        $html = "\n" . '<h3>' . $this->debug->i18n->trans('object.methods.static-variables') . '</h3>' . "\n";
         $html .= '<ul class="list-unstyled">' . "\n";
         foreach ($info['staticVars'] as $name => $value) {
             $html .= '<li>'
@@ -308,11 +308,11 @@ class Methods extends AbstractSection
     protected function getLabel(ObjectAbstraction $abs)
     {
         if (!($abs['cfgFlags'] & AbstractObject::METHOD_COLLECT)) {
-            return 'methods <i>not collected</i>';
+            return $this->debug->i18n->trans('object.methods') . ' <i>' . $this->debug->i18n->trans('object.not-collected') . '</i>';
         }
         return \count($abs['methods']) > 0
-            ? 'methods'
-            : 'no methods';
+            ? $this->debug->i18n->trans('object.methods')
+            : $this->debug->i18n->trans('object.methods.none');
     }
 
     /**

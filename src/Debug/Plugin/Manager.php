@@ -37,15 +37,19 @@ class Manager implements SubscriberInterface, PluginInterface
         'addPlugin',
         'addPlugins',
         'hasPlugin',
+        'getAssetProviders',
         'getPlugin',
         'removePlugin',
     ];
 
+    /** @var array<non-empty-string,AssetProviderInterface|SubscriberInterface> */
+    protected $namedPlugins = array();
+
     /** @var SplObjectStorage */
     protected $registeredPlugins;
 
-    /** @var array<non-empty-string,AssetProviderInterface|SubscriberInterface> */
-    protected $namedPlugins = array();
+    /** @var AssetProviderInterface[] */
+    private $assetProviders = array();
 
     /** @var bool */
     private $isBootstrapped = false;
@@ -77,7 +81,7 @@ class Manager implements SubscriberInterface, PluginInterface
             $plugin->setDebug($this->debug);
         }
         if ($plugin instanceof AssetProviderInterface) {
-            $this->debug->rootInstance->getRoute('html')->addAssetProvider($plugin);
+            $this->assetProviders[] = $plugin;
         }
         if ($plugin instanceof SubscriberInterface) {
             $this->addSubscriberInterface($plugin);
@@ -134,6 +138,19 @@ class Manager implements SubscriberInterface, PluginInterface
         }
         \ksort($plugins);
         return $plugins;
+    }
+
+    /**
+     * Get all registered asset providers
+     * Clears the enqueued asset providers
+     *
+     * @return AssetProviderInterface[]
+     */
+    public function getAssetProviders()
+    {
+        $providers = $this->assetProviders;
+        $this->assetProviders = array();
+        return $providers;
     }
 
     /**
@@ -229,7 +246,7 @@ class Manager implements SubscriberInterface, PluginInterface
         }
         $this->registeredPlugins->detach($plugin);
         if ($plugin instanceof AssetProviderInterface) {
-            $this->debug->rootInstance->getRoute('html')->removeAssetProvider($plugin);
+            $this->removeAssetProvider($plugin);
         }
         if ($plugin instanceof SubscriberInterface) {
             $this->debug->eventManager->removeSubscriberInterface($plugin);
@@ -344,6 +361,21 @@ class Manager implements SubscriberInterface, PluginInterface
     }
 
     /**
+     * Determine callable from raw SubscriberInterface::getSubscribers  return value
+     *
+     * @param SubscriberInterface $plugin SubscriberInterface instance
+     * @param mixed               $mixed  Closure or method name (array not yet supported)
+     *
+     * @return callable
+     */
+    private function getSubscriberCallable(SubscriberInterface $plugin, $mixed)
+    {
+        return $mixed instanceof Closure
+            ? $mixed
+            : [$plugin, $mixed];
+    }
+
+    /**
      * Instantiate plugin
      *
      * @param object|array|classname $plugin Plugin info
@@ -374,17 +406,24 @@ class Manager implements SubscriberInterface, PluginInterface
     }
 
     /**
-     * Determine callable from raw SubscriberInterface::getSubscribers  return value
+     * Remove asset provider from list
      *
-     * @param SubscriberInterface $plugin SubscriberInterface instance
-     * @param mixed               $mixed  Closure or method name (array not yet supported)
+     * @param AssetProviderInterface $assetProvider Asset provider
      *
-     * @return callable
+     * @return void
      */
-    private function getSubscriberCallable(SubscriberInterface $plugin, $mixed)
+    private function removeAssetProvider(AssetProviderInterface $assetProvider)
     {
-        return $mixed instanceof Closure
-            ? $mixed
-            : [$plugin, $mixed];
+        $key = \array_search($assetProvider, $this->assetProviders, true);
+        if ($key !== false) {
+            unset($this->assetProviders[$key]);
+        }
+        // route may have already pulled assets / remove them
+        $routeHtml = $this->debug->rootInstance->getRoute('html');
+        foreach ($assetProvider->getAssets() as $type => $assetsOfType) {
+            foreach ((array) $assetsOfType as $asset) {
+                $routeHtml->removeAsset($type, $asset);
+            }
+        }
     }
 }

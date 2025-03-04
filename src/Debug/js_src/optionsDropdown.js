@@ -6,20 +6,20 @@ var config
 var KEYCODE_ESC = 27
 var menu = '<div class="debug-options" aria-labelledby="debug-options-toggle">' +
   '<div class="debug-options-body">' +
-    '<label>Theme <select name="theme">' +
-      '<option value="auto">Auto</option>' +
-      '<option value="light">Light</option>' +
-      '<option value="dark">Dark</option>' +
+    '<label>{string:cfg.theme} <select name="theme">' +
+      '<option value="auto">{string:cfg.theme.auto}</option>' +
+      '<option value="light">{string:cfg.theme.light}</option>' +
+      '<option value="dark">{string:cfg.theme.dark}</option>' +
     '</select></label>' +
-    '<label><input type="checkbox" name="debugCookie" /> Debug Cookie</label>' +
-    '<label><input type="checkbox" name="persistDrawer" /> Keep Open/Closed</label>' +
-    '<label><input type="checkbox" name="linkFiles" /> Create file links</label>' +
+    '<label><input type="checkbox" name="debugCookie" /> {string:cfg.cookie}</label>' +
+    '<label><input type="checkbox" name="persistDrawer" /> {string:cfg.persist-drawer}</label>' +
+    '<label><input type="checkbox" name="linkFiles" /> {string:cfg.link-files}</label>' +
     '<div class="form-group">' +
-      '<label for="linkFilesTemplate">Link Template</label>' +
+      '<label for="linkFilesTemplate">{string:cfg.link-template}</label>' +
       '<input id="linkFilesTemplate" name="linkFilesTemplate" />' +
     '</div>' +
     '<hr class="dropdown-divider" />' +
-    '<a href="http://www.bradkent.com/php/debug" target="_blank">Documentation</a>' +
+    '<a href="http://www.bradkent.com/php/debug" target="_blank">{string:cfg.documentation}</a>' +
   '</div>' +
   '</div>'
 
@@ -62,6 +62,7 @@ function addDropdown () {
       '<i class="fa fa-ellipsis-v fa-fw"></i>' +
     '</button>'
   )
+  menu = config.dict.replaceTokens(menu)
   $menuBar.append(menu)
   if (!config.get('drawer')) {
     $menuBar.find('input[name=persistDrawer]').closest('label').remove()

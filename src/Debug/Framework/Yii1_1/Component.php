@@ -82,7 +82,7 @@ class Component extends CApplicationComponent
         */
         $logEntries = $debugRootInstance->data->get('log');
         $logEntries = \array_filter($logEntries, static function (LogEntry $logEntry) {
-            return $logEntry->getChannelName() !== 'Session';
+            return $logEntry->getChannelKey() !== 'session';
         });
         $debugRootInstance->data->set('log', \array_values($logEntries));
 
@@ -220,14 +220,15 @@ class Component extends CApplicationComponent
             return;
         }
 
-        $debug = $this->debug->rootInstance->getChannel('Session', array(
+        $debug = $this->debug->rootInstance->getChannel('session', array(
             'channelIcon' => ':session:',
+            'channelName' => 'channel.session|trans',
             'nested' => false,
         ));
 
-        $debug->log('session id', $session->sessionID);
-        $debug->log('session name', $session->sessionName);
-        $debug->log('session class', $debug->abstracter->crateWithVals(
+        $debug->log($this->debug->i18n('session.id'), $session->sessionID);
+        $debug->log($this->debug->i18n('session.name'), $session->sessionName);
+        $debug->log($this->debug->i18n('session.class'), $debug->abstracter->crateWithVals(
             \get_class($session),
             array(
                 'type' => Type::TYPE_IDENTIFIER,

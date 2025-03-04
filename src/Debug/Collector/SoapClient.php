@@ -15,6 +15,7 @@ namespace bdk\Debug\Collector;
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\Type;
+use DOMDocument;
 use Exception;
 use SoapClient as SoapClientBase;
 use SoapFault;
@@ -34,7 +35,7 @@ class SoapClient extends SoapClientBase
     /** @var string */
     protected $icon = ':send-receive:';
 
-    /** @var \DOMDocument */
+    /** @var DOMDocument */
     private $dom;
 
     /**
@@ -59,15 +60,16 @@ class SoapClient extends SoapClientBase
         \bdk\Debug\Utility::assertType($debug, 'bdk\Debug');
 
         if (!$debug) {
-            $debug = Debug::getChannel('Soap', array('channelIcon' => $this->icon));
+            $debug = Debug::getChannel('Soap', array('icon' => $this->icon));
         } elseif ($debug === $debug->rootInstance) {
-            $debug = $debug->getChannel('Soap', array('channelIcon' => $this->icon));
+            $debug = $debug->getChannel('Soap', array('icon' => $this->icon));
         }
         $this->debug = $debug;
-        $this->dom = new \DOMDocument();
+
+        $this->dom = new DOMDocument();
         $this->dom->preserveWhiteSpace = false;
         $this->dom->formatOutput = true;
-        $debug->addPlugin($debug->pluginHighlight);
+        $debug->addPlugin($debug->pluginHighlight, 'highlight');
         $options['trace'] = true;
         $exception = null;
         try {
@@ -286,7 +288,7 @@ class SoapClient extends SoapClientBase
             );
         }
         if ($wsdl && !empty($options['list_types'])) {
-            $this->debug->log('types', $this->debugGetTypes());
+            $this->debug->log($this->debug->i18n->trans('types'), $this->debugGetTypes());
         }
         if ($exception) {
             $this->debug->warn(\get_class($exception), \trim($exception->getMessage()));
@@ -313,15 +315,15 @@ class SoapClient extends SoapClientBase
         $this->debug->groupCollapsed('soap', $action, $this->debug->meta('icon', $this->icon));
         if ($xmlRequest) {
             $headers = $this->__getLastRequestHeaders();
-            $this->debug->log('request headers', $this->debug->redactHeaders($headers));
-            $this->logXml('request body', $xmlRequest);
+            $this->debug->log($this->debug->i18n->trans('request.headers'), $this->debug->redactHeaders($headers));
+            $this->logXml($this->debug->i18n->trans('request.body'), $xmlRequest);
         }
         $responseHeaders = $this->__getLastResponseHeaders();
         if ($responseHeaders) {
-            $this->debug->log('response headers', $responseHeaders, $this->debug->meta('redact'));
+            $this->debug->log($this->debug->i18n->trans('response.headers'), $responseHeaders, $this->debug->meta('redact'));
         }
         if ($xmlResponse) {
-            $this->logXml('response body', $xmlResponse);
+            $this->logXml($this->debug->i18n->trans('response.body'), $xmlResponse);
         }
         if ($exception) {
             $this->debug->warn(\get_class($exception), \trim($exception->getMessage()));

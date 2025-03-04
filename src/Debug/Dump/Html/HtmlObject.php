@@ -12,6 +12,7 @@
 
 namespace bdk\Debug\Dump\Html;
 
+use bdk\Debug;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
 use bdk\Debug\Abstraction\Object\Abstraction as ObjectAbstraction;
@@ -39,6 +40,9 @@ class HtmlObject
 
     /** @var Constants */
     protected $constants;
+
+    /** @var Debug */
+    protected $debug;
 
     /** @var ExtendsImplements */
     protected $extendsImplements;
@@ -70,6 +74,7 @@ class HtmlObject
      */
     public function __construct(ValDumper $valDumper, Helper $helper, HtmlUtil $html)
     {
+        $this->debug = $valDumper->debug;
         $this->valDumper = $valDumper;
         $this->helper = $helper;
         $this->html = $html;
@@ -102,14 +107,14 @@ class HtmlObject
     {
         $className = $this->dumpClassName($abs);
         if ($abs['isRecursion']) {
-            return $className . "\n" . '<span class="t_recursion">*RECURSION*</span>';
+            return $className . "\n" . '<span class="t_recursion">*' . $this->debug->i18n->trans('recursion') . '*</span>';
         }
         if ($abs['isMaxDepth']) {
-            return $className . "\n" . '<span class="t_maxDepth">*MAX DEPTH*</span>';
+            return $className . "\n" . '<span class="t_maxDepth">*' . $this->debug->i18n->trans('max-depth') . '*</span>';
         }
         if ($abs['isExcluded']) {
             return $this->dumpToString($abs)
-                . $className . "\n" . '<span class="excluded">NOT INSPECTED</span>';
+                . $className . "\n" . '<span class="excluded">' . $this->debug->i18n->trans('not-inspected') . '</span>';
         }
         if (($abs['cfgFlags'] & AbstractObject::BRIEF) && \strpos(\json_encode($abs['implements']), '"UnitEnum"') !== false) {
             return $this->dumpEnumBrief($abs);
@@ -202,7 +207,7 @@ class HtmlObject
             return '';
         }
         $attributes = $abs->sort($attributes, $abs['sort']);
-        return '<dt class="attributes">attributes</dt>' . "\n"
+        return '<dt class="attributes">' . $this->debug->i18n->trans('object.attributes') . '</dt>' . "\n"
             . \implode(\array_map(function ($info) {
                 return '<dd class="attribute">'
                     . $this->valDumper->markupIdentifier($info['name'], 'className')
@@ -291,7 +296,7 @@ class HtmlObject
         )));
         return empty($modifiers)
             ? ''
-            : '<dt class="modifiers">modifiers</dt>' . "\n"
+            : '<dt class="modifiers">' . $this->debug->i18n->trans('modifiers') . '</dt>' . "\n"
                 . \implode('', \array_map(static function ($modifier) {
                     return '<dd class="t_modifier_' . $modifier . '">' . $modifier . '</dd>' . "\n";
                 }, $modifiers));

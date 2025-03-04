@@ -236,7 +236,7 @@ class General implements SubscriberInterface
         $caller = $this->debug->backtrace->getCallerInfo();
         $this->debug->errorHandler->handleError(
             E_USER_NOTICE,
-            '"' . $property . '" is not accessible',
+            $this->debug->i18n->trans('general.dump-route.not-accessible', array('property' => $property)),
             $caller['file'],
             $caller['line']
         );

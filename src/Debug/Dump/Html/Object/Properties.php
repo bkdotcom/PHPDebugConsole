@@ -82,11 +82,11 @@ class Properties extends AbstractSection
     protected function getLabel(ObjectAbstraction $abs)
     {
         if (\count($abs['properties']) === 0) {
-            return 'no properties';
+            return $this->debug->i18n->trans('object.properties.none');
         }
-        $label = 'properties';
+        $label = $this->debug->i18n->trans('object.properties');
         if ($abs['viaDebugInfo']) {
-            $label .= ' <span class="text-muted">(via __debugInfo)</span>';
+            $label .= ' <span class="text-muted">(' . $this->debug->i18n->trans('object.debugInfo-value') . ')</span>';
         }
         return $label;
     }

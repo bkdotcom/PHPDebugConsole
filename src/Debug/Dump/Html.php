@@ -68,16 +68,16 @@ class Html extends Base
     public function processLogEntry(LogEntry $logEntry)
     {
         $meta = $this->mergeMetaDefaults($logEntry);
-        $channelName = $logEntry->getChannelName();
+        $channelKey = $logEntry->getChannelKey();
         // phpError channel is handled separately
-        if (!isset($this->channels[$channelName]) && $channelName !== $this->channelNameRoot . '.phpError') {
-            $this->channels[$channelName] = $logEntry->getSubject();
+        if (!isset($this->channels[$channelKey]) && $channelKey !== $this->channelKeyRoot . '.phpError') {
+            $this->channels[$channelKey] = $logEntry->getSubject();
         }
         $this->valDumper->string->detectFiles = $meta['detectFiles'];
         $this->logEntryAttribs = $this->debug->arrayUtil->mergeDeep(array(
             'class' => ['m_' . $logEntry['method']],
-            'data-channel' => $channelName !== $this->channelNameRoot
-                ? $channelName
+            'data-channel' => $channelKey !== $this->channelKeyRoot
+                ? $channelKey
                 : null,
             'data-detect-files' => $meta['detectFiles'],
             'data-icon' => $meta['icon'],
@@ -248,7 +248,7 @@ class Html extends Base
     {
         $meta = $logEntry['meta'];
         $attribs = $this->logEntryAttribs;
-        if (isset($meta['file']) && $logEntry->getChannelName() !== $this->channelNameRoot . '.phpError') {
+        if (isset($meta['file']) && $logEntry->getChannelKey() !== $this->channelKeyRoot . '.phpError') {
             // PHP errors will have file & line as one of the arguments
             //    so no need to store file & line as data args
             $meta = \array_merge(array('evalLine' => null), $meta);

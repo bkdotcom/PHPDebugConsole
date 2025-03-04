@@ -37,13 +37,14 @@ class Constants extends AbstractSection
         if (!$cfg['output']) {
             return '';
         }
+        $label = $this->debug->i18n->trans('object.constants');
         if (!$cfg['collect']) {
-            return '<dt class="constants">constants <i>not collected</i></dt>' . "\n";
+            return '<dt class="constants">' . $label . ' <i>' . $this->debug->i18n->trans('object.not-collected') . '</i></dt>' . "\n";
         }
         if (!$abs['constants']) {
             return '';
         }
-        $html = '<dt class="constants">constants</dt>' . "\n";
+        $html = '<dt class="constants">' . $label . '</dt>' . "\n";
         $html .= $this->dumpItems($abs, 'constants', $cfg);
         return $html;
     }

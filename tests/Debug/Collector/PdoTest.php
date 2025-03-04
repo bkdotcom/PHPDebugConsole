@@ -150,7 +150,7 @@ EOD;
                         'class' => array(),
                     ),
                     'boldLabel' => false,
-                    'channel' => 'general.PDO',
+                    'channel' => 'general.pdo',
                     'icon' => 'fa fa-database',
                 ),
             ),
@@ -175,7 +175,7 @@ EOD;
                     'attribs' => array(
                         'class' => array('no-indent'),
                     ),
-                    'channel' => 'general.PDO',
+                    'channel' => 'general.pdo',
                 ),
             ),
             array(
@@ -196,7 +196,7 @@ EOD;
                 ),
                 'meta' => array(
                     'caption' => 'parameters',
-                    'channel' => 'general.PDO',
+                    'channel' => 'general.pdo',
                     'sortable' => true,
                     'tableInfo' => array(
                         'class' => null,
@@ -218,18 +218,18 @@ EOD;
                     'duration: %f %ss',
                 ),
                 'meta' => array(
-                    'channel' => 'general.PDO',
+                    'channel' => 'general.pdo',
                 ),
             ),
             array(
                 'asString' => true,
                 'method' => 'log',
                 'args' => array(
-                    'memory usage',
+                    'Memory usage',
                     '%d B',
                 ),
                 'meta' => array(
-                    'channel' => 'general.PDO',
+                    'channel' => 'general.pdo',
                 ),
             ),
             array(
@@ -240,7 +240,7 @@ EOD;
                     '',
                 ),
                 'meta' => array(
-                    'channel' => 'general.PDO',
+                    'channel' => 'general.pdo',
                     'detectFiles' => true,
                     // 'evalLine' => null,
                     'file' => __FILE__,
@@ -255,14 +255,14 @@ EOD;
                     1,
                 ),
                 'meta' => array(
-                    'channel' => 'general.PDO',
+                    'channel' => 'general.pdo',
                 ),
             ),
             array(
                 'method' => 'groupEnd',
                 'args' => array(),
                 'meta' => array(
-                    'channel' => 'general.PDO',
+                    'channel' => 'general.pdo',
                 ),
             ),
         );
@@ -305,23 +305,23 @@ EOD;
                         "id": "statementInfo1",
                         "class": []
                     },
-                    "boldLabel": false, "channel": "general.PDO", "icon": "fa fa-database"
+                    "boldLabel": false, "channel": "general.pdo", "icon": "fa fa-database"
                 }
             },
             "0": {
                 "method": "time",
                 "args": ["duration: 46.0148 \u03bcs"],
-                "meta": {"channel": "general.PDO"}
+                "meta": {"channel": "general.pdo"}
             },
             "1": {
                 "method": "log",
-                "args": ["memory usage", "0 B"],
-                "meta": {"channel": "general.PDO"}
+                "args": ["Memory usage", "0 B"],
+                "meta": {"channel": "general.pdo"}
             },
             "2": {
                 "method": "groupEnd",
                 "args": [],
-                "meta": {"channel": "general.PDO"}
+                "meta": {"channel": "general.pdo"}
             }
         }
 EOD;
@@ -349,12 +349,12 @@ EOD;
             {
                 "method": "info",
                 "args": ["beginTransaction"],
-                "meta": {"channel": "general.PDO", "icon": "fa fa-database"}
+                "meta": {"channel": "general.pdo", "icon": "fa fa-database"}
             },
             {
                 "method": "info",
                 "args": ["commit"],
-                "meta": {"channel": "general.PDO", "icon": "fa fa-database"}
+                "meta": {"channel": "general.pdo", "icon": "fa fa-database"}
             }
         ]
 EOD;
@@ -370,12 +370,12 @@ EOD;
             {
                 "method": "info",
                 "args": ["beginTransaction"],
-                "meta": {"channel": "general.PDO", "icon": "fa fa-database"}
+                "meta": {"channel": "general.pdo", "icon": "fa fa-database"}
             },
             {
                 "method": "info",
                 "args": ["rollBack"],
-                "meta": {"channel": "general.PDO", "icon": "fa fa-database"}
+                "meta": {"channel": "general.pdo", "icon": "fa fa-database"}
             }
         ]
 EOD;
@@ -393,35 +393,35 @@ EOD;
             {
                 "method": "groupCollapsed",
                 "args": ["PDO info", "sqlite"],
-                "meta": {"argsAsParams": false, "channel": "general.PDO", "icon": "fa fa-database", "level": "info"}
+                "meta": {"argsAsParams": false, "channel": "general.pdo", "icon": "fa fa-database", "level": "info"}
             },
             {
                 "method": "log",
-                "args": ["logged operations: ", 8],
-                "meta": {"channel": "general.PDO"}
+                "args": ["Logged operations: ", 8],
+                "meta": {"channel": "general.pdo"}
             },
             {
                 "method": "time",
-                "args": ["total time: 2.28 ms"],
-                "meta": {"channel": "general.PDO"}
+                "args": ["Total time: 2.28 ms"],
+                "meta": {"channel": "general.pdo"}
             },
             {
                 "method": "log",
-                "args": ["max memory usage", "280.73 kB"],
-                "meta": {"channel": "general.PDO"}
+                "args": ["Peak memory usage", "280.73 kB"],
+                "meta": {"channel": "general.pdo"}
             },
             {
                 "method": "log",
                 "args": [
-                    "server info",
+                    "Server info",
                     {"Version": "3.36.0"}
                 ],
-                "meta": {"channel": "general.PDO"}
+                "meta": {"channel": "general.pdo"}
             },
             {
                 "method": "groupEnd",
                 "args": [],
-                "meta": {"channel": "general.PDO"}
+                "meta": {"channel": "general.pdo"}
             }
         ]
 EOD;

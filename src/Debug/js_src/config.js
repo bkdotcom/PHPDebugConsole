@@ -1,5 +1,6 @@
 import $ from 'jquery'
 import * as http from './http.js' // cookie & query utils
+import { Dict } from './Dict.js'
 
 var config = {
   clipboardSrc: '//cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js',
@@ -71,46 +72,85 @@ var config = {
       '</span>',
     '> .t_modifier_trait': '<i class="fa fa-puzzle-piece"></i>',
     '> .info.magic': '<i class="fa fa-fw fa-magic"></i>',
-    'parent:not(.groupByInheritance) > dd[data-inherited-from]:not(.private-ancestor)': '<i class="fa fa-fw fa-clone" title="Inherited"></i>',
-    'parent:not(.groupByInheritance) > dd.private-ancestor': '<i class="fa fa-lock" title="Private ancestor"></i>',
-    '> dd[data-attributes]': '<i class="fa fa-hashtag" title="Attributes"></i>',
-    '> dd[data-declared-prev]': '<i class="fa fa-fw fa-repeat" title="Overrides"></i>',
-    '> .method.isAbstract': '<i class="fa fa-circle-o" title="abstract method"></i>',
-    '> .method.isDeprecated': '<i class="fa fa-fw fa-arrow-down" title="Deprecated"></i>',
-    '> .method.isFinal': '<i class="fa fa-hand-stop-o" title="Final"></i>',
-    '> .method > .t_modifier_magic': '<i class="fa fa-magic" title="magic method"></i>',
-    '> .method > .parameter.isPromoted': '<i class="fa fa-arrow-up" title="Promoted"></i>',
-    '> .method > .parameter[data-attributes]': '<i class="fa fa-hashtag" title="Attributes"></i>',
-    '> .method[data-implements]': '<i class="fa fa-handshake-o" title="Implements"></i>',
-    '> .method[data-throws]': '<i class="fa fa-flag" title="Throws"></i>',
-    '> .property.debuginfo-value': '<i class="fa fa-eye" title="via __debugInfo()"></i>',
-    '> .property.debuginfo-excluded': '<i class="fa fa-eye-slash" title="not included in __debugInfo"></i>',
-    '> .property.isDynamic': '<i class="fa fa-warning" title="Dynamic"></i>',
-    '> .property.isPromoted': '<i class="fa fa-arrow-up" title="Promoted"></i>',
+    'parent:not(.groupByInheritance) > dd[data-inherited-from]:not(.private-ancestor)': '<i class="fa fa-fw fa-clone" title="{string:inherited}"></i>',
+    'parent:not(.groupByInheritance) > dd.private-ancestor': '<i class="fa fa-lock" title="{string:private-ancestor}"></i>',
+    '> dd[data-attributes]': '<i class="fa fa-hashtag" title="{string:attributes}"></i>',
+    '> dd[data-declared-prev]': '<i class="fa fa-fw fa-repeat" title="{string:overrides}"></i>',
+    '> .method.isAbstract': '<i class="fa fa-circle-o" title="{string:method.abstract}"></i>',
+    '> .method.isDeprecated': '<i class="fa fa-fw fa-arrow-down" title="{string:deprecated}"></i>',
+    '> .method.isFinal': '<i class="fa fa-hand-stop-o" title="{string:final}"></i>',
+    '> .method > .t_modifier_magic': '<i class="fa fa-magic" title="{string:method.magic}"></i>',
+    '> .method > .parameter.isPromoted': '<i class="fa fa-arrow-up" title="{string:promoted}"></i>',
+    '> .method > .parameter[data-attributes]': '<i class="fa fa-hashtag" title="{string:attributes}"></i>',
+    '> .method[data-implements]': '<i class="fa fa-handshake-o" title="{string:implements}"></i>',
+    '> .method[data-throws]': '<i class="fa fa-flag" title="{string:throws}"></i>',
+    '> .property.debuginfo-value': '<i class="fa fa-eye" title="{string:debugInfo-value}"></i>',
+    '> .property.debuginfo-excluded': '<i class="fa fa-eye-slash" title="{string:debugInfo-excluded}"></i>',
+    '> .property.isDynamic': '<i class="fa fa-warning" title="{string:dynamic}"></i>',
+    '> .property.isPromoted': '<i class="fa fa-arrow-up" title="{string:promoted}"></i>',
     '> .property.getHook, > .property.setHook': function () {
-      var title = 'set hook'
+      var title = '{string:hook.set}'
       if ($(this).hasClass('getHook') && $(this).hasClass('setHook')) {
-        title = 'get and set hooks'
+        title = '{string:hook.both}'
       } else if ($(this).hasClass('getHook')) {
-        title = 'get hook'
+        title = '{string:hook.get}'
       }
       return $('<i class="fa">🪝</i>').prop('title', title)
     },
-    '> .property.isDeprecated': '<i class="fa fa-fw fa-arrow-down" title="Deprecated"></i>',
-    '> .property.isVirtual': '<i class="fa fa-cloud isVirtual" title="Virtual"></i>',
-    '> .property.isWriteOnly': '<i class="fa fa-eye-slash" title="Write-only"></i>',
-    '> .property > .t_modifier_magic': '<i class="fa fa-magic" title="magic property"></i>',
-    '> .property > .t_modifier_magic-read': '<i class="fa fa-magic" title="magic property"></i>',
-    '> .property > .t_modifier_magic-write': '<i class="fa fa-magic" title="magic property"></i>',
+    '> .property.isDeprecated': '<i class="fa fa-fw fa-arrow-down" title="{string:deprecated}"></i>',
+    '> .property.isVirtual': '<i class="fa fa-cloud isVirtual" title="{string:virtual}"></i>',
+    '> .property.isWriteOnly': '<i class="fa fa-eye-slash" title="{string:write-only}"></i>',
+    '> .property > .t_modifier_magic': '<i class="fa fa-magic" title="{string:property.magic}"></i>',
+    '> .property > .t_modifier_magic-read': '<i class="fa fa-magic" title="{string:property.magic}"></i>',
+    '> .property > .t_modifier_magic-write': '<i class="fa fa-magic" title="{string:property.magic}"></i>',
     '> .vis-toggles > span[data-toggle=vis][data-vis=private]': '<i class="fa fa-user-secret"></i>',
     '> .vis-toggles > span[data-toggle=vis][data-vis=protected]': '<i class="fa fa-shield"></i>',
     '> .vis-toggles > span[data-toggle=vis][data-vis=debuginfo-excluded]': '<i class="fa fa-eye-slash"></i>',
     '> .vis-toggles > span[data-toggle=vis][data-vis=inherited]': '<i class="fa fa-clone"></i>'
   },
   persistDrawer: false,
+  strings: {
+    'attributes': 'Attributes',
+    'cfg.cookie': 'Debug cookie',
+    'cfg.documentation': 'Documentation',
+    'cfg.link-files': 'Create file links',
+    'cfg.link-template': 'Link template',
+    'cfg.persist-drawer': 'Keep open/closed',
+    'cfg.theme': 'Theme',
+    'cfg.theme.auto': 'Auto',
+    'cfg.theme.dark': 'Dark',
+    'cfg.theme.light': 'Light',
+    'debugInfo-excluded': 'not included in __debugInfo',
+    'debugInfo-value': 'via __debugInfo()',
+    'deprecated': 'Deprecated',
+    'dynamic': 'Dynamic',
+    'final': 'Final',
+    'hook.both': 'Get and set hooks',
+    'hook.get': 'Get hook',
+    'hook.set': 'Set hook',
+    'implements': 'Implements',
+    'inherited': 'Inherited',
+    'method.abstract': 'Abstract method',
+    'method.magic': 'Magic method',
+    'overrides': 'Overrides',
+    'private-ancestor': 'Private ancestor',
+    'promoted': 'Promoted',
+    'property.magic': 'Magic property',
+    'side.alert': 'Alert',
+    'side.channels': 'Channels',
+    'side.error': 'Error',
+    'side.expand-all-groups': 'Exp All Groups',
+    'side.info': 'Info',
+    'side.other': 'Other',
+    'side.php-errors': 'PHP Errors',
+    'side.warning': 'Warning',
+    'throws': 'Throws',
+    'virtual': 'Virtual',
+    'write-only': 'Write-only',
+  },
+  theme: 'auto',
   tooltip: true,
   useLocalStorage: true,
-  theme: 'auto'
 }
 
 export function Config () {
@@ -118,7 +158,8 @@ export function Config () {
   if (config.useLocalStorage) {
     storedConfig = http.lsGet(config.localStorageKey)
   }
-  this.config = $.extend({}, config, storedConfig || {})
+  this.config = $.extend(true, {}, config, storedConfig || {})
+  this.dict = new Dict(this.config.strings)
   this.haveSavedConfig = typeof storedConfig === 'object'
   this.localStorageKeys = ['persistDrawer', 'openDrawer', 'openSidebar', 'height', 'linkFiles', 'linkFilesTemplate', 'theme']
 }
@@ -149,9 +190,9 @@ Config.prototype.set = function (key, val) {
   } else {
     setVals[key] = val
   }
-  // console.log('config.set', setVals)
-  for (var k in setVals) {
-    this.config[k] = setVals[k]
+  this.config = $.extend(true, {}, this.config, setVals)
+  if (setVals.strings) {
+    this.dict.update(setVals.strings)
   }
   if (this.config.useLocalStorage) {
     this.updateStorage(setVals)

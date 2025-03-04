@@ -202,23 +202,23 @@ class CountTest extends DebugTestFramework
             array(
                 'entry' => array(
                     'method' => 'countReset',
-                    'args' => array('Counter \'noExisty\' doesn\'t exist.'),
+                    'args' => array('Counter \'noExisty\' does not exist'),
                     'meta' => array(),
                 ),
                 'chromeLogger' => array(
-                    array('Counter \'noExisty\' doesn\'t exist.'),
+                    array('Counter \'noExisty\' does not exist'),
                     null,
                     '',
                 ),
-                'firephp' => 'X-Wf-1-1-1-73: 52|[{"Type":"LOG"},"Counter \'noExisty\' doesn\'t exist."]|',
+                'firephp' => 'X-Wf-1-1-1-73: 52|[{"Type":"LOG"},"Counter \'noExisty\' does not exist"]|',
                 'html' => PHP_VERSION_ID >= 80100
-                    ? '<li class="m_countReset"><span class="no-quotes t_string">Counter &#039;noExisty&#039; doesn&#039;t exist.</span></li>'
-                    : '<li class="m_countReset"><span class="no-quotes t_string">Counter \'noExisty\' doesn\'t exist.</span></li>',
-                'script' => 'console.log("Counter \'noExisty\' doesn\'t exist.");',
-                'text' => '✚ Counter \'noExisty\' doesn\'t exist.',
+                    ? '<li class="m_countReset"><span class="no-quotes t_string">Counter &#039;noExisty&#039; does not exist</span></li>'
+                    : '<li class="m_countReset"><span class="no-quotes t_string">Counter \'noExisty\' does not exist</span></li>',
+                'script' => 'console.log("Counter \'noExisty\' does not exist");',
+                'text' => '✚ Counter \'noExisty\' does not exist',
                 'wamp' => array(
                     'countReset',
-                    array('Counter \'noExisty\' doesn\'t exist.'),
+                    array('Counter \'noExisty\' does not exist'),
                     array(),
                 ),
             )

@@ -77,7 +77,7 @@ class FatalError
      */
     protected function buildMoreInfo(Error $error)
     {
-        $this->debug->addPlugin($this->debug->pluginHighlight);
+        $this->debug->addPlugin($this->debug->pluginHighlight, 'highlight');
         $backtrace = $error['backtrace'];
         if (\is_array($backtrace) && \count($backtrace) > 1) {
             return $this->buildBacktrace($backtrace);

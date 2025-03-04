@@ -279,7 +279,7 @@ class MySqli extends mysqliBase
         $debug = $event->getSubject();
         $debug->groupSummary(0);
         $debug->groupCollapsed(
-            'MySqli info',
+            $debug->i18n->trans('info.for.x', array('x' => 'MySqli')),
             $this->host_info,
             $this->meta(array(
                 'argsAsParams' => false,
@@ -292,8 +292,8 @@ class MySqli extends mysqliBase
         try {
             $this->logRuntime($debug, $this->connectionString());
         } catch (RuntimeException $e) {
-            $debug->group('MySqli Error', $debug->meta(array('level' => 'error')));
-            $debug->log('Connection Error');
+            $debug->group('MySqli ' . $debug->i18n->trans('error'), $debug->meta(array('level' => 'error')));
+            $debug->log($debug->i18n->trans('db.connection-error'));
             $debug->groupEnd();
         }
         \restore_error_handler();

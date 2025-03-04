@@ -62,7 +62,7 @@ class OAuthTest extends DebugTestFramework
             array(
                 'method' => 'log',
                 'args' => array(
-                    'OAuth Parameters',
+                    'OAuth parameters',
                     array(
                         'oauth_consumer_key' => 'key',
                         'oauth_nonce' => '%s',
@@ -203,7 +203,7 @@ class OAuthTest extends DebugTestFramework
             array(
                 'method' => 'log',
                 'args' => array(
-                    'OAuth Parameters',
+                    'OAuth parameters',
                     array(
                         'oauth_callback' => 'http://www.bradkent.com/',
                         'oauth_consumer_key' => 'key',
@@ -348,7 +348,7 @@ class OAuthTest extends DebugTestFramework
             array(
                 'method' => 'log',
                 'args' => array(
-                    'OAuth Parameters',
+                    'OAuth parameters',
                     array(
                         'oauth_consumer_key' => 'key',
                         'oauth_nonce' => '%s',
@@ -449,7 +449,7 @@ class OAuthTest extends DebugTestFramework
             array(
                 'method' => 'log',
                 'args' => array(
-                    'OAuth Parameters',
+                    'OAuth parameters',
                     array(
                         'oauth_consumer_key' => 'key',
                         'oauth_nonce' => '%s',

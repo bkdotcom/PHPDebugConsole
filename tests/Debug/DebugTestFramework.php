@@ -586,7 +586,7 @@ class DebugTestFramework extends DOMTestCase
         $this->debug->errorHandler->setData('lastErrors', array());
         $channels = Reflection::propGet($this->debug->getPlugin('channel'), 'channels');
         $channels = array(
-            'general' => \array_intersect_key($channels['general'], \array_flip(array('Request / Response'))),
+            'general' => \array_intersect_key($channels['general'], \array_flip(array('request-response'))),
         );
         Reflection::propSet($this->debug->getPlugin('channel'), 'channels', $channels);
         // Reflection::propSet($this->debug->getPlugin('methodReqRes'), 'serverParams', array());

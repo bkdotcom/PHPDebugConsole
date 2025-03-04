@@ -181,6 +181,7 @@ abstract class AbstractDebug
         }
         $valActions = \array_intersect_key(array(
             'channelIcon' => [$this, 'onCfgChannelIcon'],
+            'channelName' => [$this, 'onCfgChannelName'],
             'channels' => [$this, 'onCfgChannels'],
             'logServerKeys' => [$this, 'onCfgLogServerKeys'],
             'serviceProvider' => [$this, 'onCfgServiceProvider'],
@@ -369,6 +370,21 @@ abstract class AbstractDebug
     {
         if (\preg_match('/^:(.+):$/', (string) $val, $matches)) {
             $val = $this->getCfg('icons.' . $matches[1], Debug::CONFIG_DEBUG);
+        }
+        return $val;
+    }
+
+    /**
+     * Handle "channelName" config update
+     *
+     * @param string|null $val config value
+     *
+     * @return string|null
+     */
+    private function onCfgChannelName($val)
+    {
+        if (\preg_match('/^(.+)\|trans$/', $val, $matches)) {
+            $val = $this->i18n->trans($matches[1]);
         }
         return $val;
     }

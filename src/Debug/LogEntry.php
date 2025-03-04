@@ -131,9 +131,21 @@ class LogEntry extends Event implements JsonSerializable
             'meta' => $this->values['meta'],
         );
         if ($this->subject->parentInstance) {
-            $return['meta']['channel'] = $this->getChannelName();
+            $return['meta']['channel'] = $this->getChannelKey();
         }
         return $return;
+    }
+
+    /**
+     * Return channel key
+     *
+     * shortcut for getSubject()->getCfg('channelKey')
+     *
+     * @return string
+     */
+    public function getChannelKey()
+    {
+        return $this->subject->getCfg('channelKey', Debug::CONFIG_DEBUG);
     }
 
     /**

@@ -73,7 +73,7 @@ class WampHelper
     public function getMetaConfig()
     {
         return array(
-            'channelNameRoot' => $this->debug->rootInstance->getCfg('channelName', Debug::CONFIG_DEBUG),
+            'channelKeyRoot' => $this->debug->rootInstance->getCfg('channelKey', Debug::CONFIG_DEBUG),
             'debugVersion' => Debug::VERSION,
             'drawer' => $this->debug->getCfg('routeHtml.drawer'),
             'interface' => $this->debug->getInterface(),

@@ -64,11 +64,11 @@ class Runtime extends AbstractComponent implements SubscriberInterface
         /** @psalm-suppress TypeDoesNotContainType */
         $isRouteHtml = $route && \get_class($route) === 'bdk\\Debug\\Route\\Html';
         $this->debug->groupSummary(1);
-        $this->debug->info('Built In ' . $this->debug->utility->formatDuration($vals['runtime']));
+        $this->debug->info($this->debug->i18n->trans('runtime.duration', array('duration' => $this->debug->utility->formatDuration($vals['runtime']))));
         $this->debug->info(
-            'Peak Memory Usage'
+            $this->debug->i18n->trans('runtime.memory.peak')
                 . ($isRouteHtml
-                    ? ' <i class="fa fa-question-circle-o" title="Includes debug overhead"></i>'
+                    ? ' <i class="fa fa-question-circle-o" title="' . $this->debug->i18n->trans('runtime.memory.overhead') . '"></i>'
                     : '')
                 . ': '
                 . $this->debug->utility->getBytes($vals['memoryPeakUsage']) . ' / '

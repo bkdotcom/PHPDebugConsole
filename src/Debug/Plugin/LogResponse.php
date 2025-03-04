@@ -57,7 +57,7 @@ class LogResponse extends AbstractLogReqRes implements SubscriberInterface
      */
     public function onBootstrap(Event $event)
     {
-        $this->debug = $event->getSubject()->getChannel($this->cfg['channelName'], $this->cfg['channelOpts']);
+        $this->debug = $event->getSubject()->getChannel($this->cfg['channelKey'], $this->cfg['channelOptions']);
     }
 
     /**
@@ -100,7 +100,7 @@ class LogResponse extends AbstractLogReqRes implements SubscriberInterface
             return;
         }
         $this->debug->log(
-            'Response',
+            $this->debug->i18n->trans('response'),
             $this->debug->meta(array(
                 'attribs' => array(
                     'style' => $this->headerStyle,
@@ -150,11 +150,13 @@ class LogResponse extends AbstractLogReqRes implements SubscriberInterface
         $logContent = $this->testLogResponseContent($contentType, $responseInfo['contentLength']);
 
         if (\headers_sent($file, $line)) {
-            $this->debug->log('Output started at ' . $file . '::' . $line, $this->debug->meta(array(
+            $metaVals = array(
                 'detectFiles' => true,
                 'file' => $file,
                 'line' => $line,
-            )));
+            );
+            $message = $this->debug->i18n->trans('response.output.started', $metaVals);
+            $this->debug->log($message, $this->debug->meta($metaVals));
         }
 
         if ($logContent === false) {
@@ -162,7 +164,7 @@ class LogResponse extends AbstractLogReqRes implements SubscriberInterface
         }
 
         $this->debug->log(
-            'response content (%c%s%c)',
+            $this->debug->i18n->trans('response.body') . ' (%c%s%c)',
             'font-family: monospace;',
             $contentType,
             '',
@@ -181,7 +183,7 @@ class LogResponse extends AbstractLogReqRes implements SubscriberInterface
         $headers = \array_map(static function ($vals) {
             return \implode("\n", $vals);
         }, $this->debug->getResponseHeaders());
-        $this->debug->table('response headers', $headers);
+        $this->debug->table($this->debug->i18n->trans('response.headers'), $headers);
     }
 
     /**
@@ -208,13 +210,15 @@ class LogResponse extends AbstractLogReqRes implements SubscriberInterface
     {
         // only log response for json and xml
         if (\preg_match('#\b(json|xml)\b#', $contentType) !== 1) {
-            $this->debug->log('Not logging response body for Content-Type "' . $contentType . '"');
+            $this->debug->log($this->debug->i18n->trans('response.body.not.logged', array(
+                'contentType' => $contentType,
+            )));
             !$contentLength || $this->debug->log('Content-Length', $contentLength);
             return false;
         }
 
         if ($contentLength === 0) {
-            $this->debug->log('Empty response body.  We may have been unable to capture output.');
+            $this->debug->log($this->debug->i18n->trans('response.body.empty'));
             return false;
         }
 
@@ -222,7 +226,9 @@ class LogResponse extends AbstractLogReqRes implements SubscriberInterface
         $maxLen = $this->debug->utility->getBytes($maxLen, true);
 
         if ($maxLen && $contentLength > $maxLen) {
-            $this->debug->log('response too large (' . $this->debug->utility->getBytes($contentLength) . ') to output');
+            $this->debug->log($this->debug->i18n->trans('response.body.large', array(
+                'contentLength' => $this->debug->utility->getBytes($contentLength),
+            )));
             return false;
         }
 

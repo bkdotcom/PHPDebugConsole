@@ -7,7 +7,7 @@ import $ from 'jquery'
 var channels = []
 var tests = [
   function ($node) {
-    var channel = $node.data('channel') || $node.closest('.debug').data('channelNameRoot')
+    var channel = $node.data('channel') || $node.closest('.debug').data('channelKeyRoot')
     return channels.indexOf(channel) > -1
   }
 ]
@@ -15,7 +15,7 @@ var preFilterCallbacks = [
   function ($root) {
     var $checkboxes = $root.find('input[data-toggle=channel]')
     if ($checkboxes.length === 0) {
-      channels = [$root.data('channelNameRoot')]
+      channels = [$root.data('channelKeyRoot')]
       return
     }
     channels = []
@@ -98,7 +98,7 @@ export function addPreFilter (func) {
 }
 
 function applyFilter ($root) {
-  var channelNameRoot = $root.data('channelNameRoot')
+  var channelKeyRoot = $root.data('channelKeyRoot')
   var i
   var len
   var sort = []
@@ -122,16 +122,16 @@ function applyFilter ($root) {
   })
   for (i = 0, len = sort.length; i < len; i++) {
     var $node = sort[i].node
-    applyFilterToNode($node, channelNameRoot)
+    applyFilterToNode($node, channelKeyRoot)
   }
   hideSummarySeparator($root.find('> .tab-panes > .tab-pane.active'))
   updateFilterStatus($root)
 }
 
-function applyFilterToNode ($node, channelNameRoot) {
+function applyFilterToNode ($node, channelKeyRoot) {
   var hiddenWas = $node.is('.filter-hidden')
   var isVis = true
-  if ($node.data('channel') === channelNameRoot + '.phpError') {
+  if ($node.data('channel') === channelKeyRoot + '.phpError') {
     // php Errors are filtered separately
     return
   }

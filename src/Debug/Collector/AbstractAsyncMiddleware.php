@@ -30,12 +30,15 @@ class AbstractAsyncMiddleware extends AbstractComponent
 {
     protected $cfg = array(
         'asyncResponseWithRequest' => true,
-        'icon' => ':send-receive:',
+        'channelKey' => 'http',
+        'channelOptions' => array(
+            'channelIcon' => ':send-receive:',
+            'channelName' => 'channel.http|trans',
+        ),
         'iconAsync' => ':asynchronous:',
         'idPrefix' => '',
         'inclRequestBody' => false,
         'inclResponseBody' => false,
-        'label' => 'http request',
         'prettyRequestBody' => true,
         'prettyResponseBody' => true,
     );
@@ -64,9 +67,9 @@ class AbstractAsyncMiddleware extends AbstractComponent
         Utility::assertType($debug, 'bdk\Debug');
         $this->setCfg($cfg);
         if (!$debug) {
-            $debug = Debug::getChannel($this->cfg['label'], array('channelIcon' => $this->cfg['icon']));
+            $debug = Debug::getChannel($this->cfg['channelKey'], $this->cfg['channelOptions']);
         } elseif ($debug === $debug->rootInstance) {
-            $debug = $debug->getChannel($this->cfg['label'], array('channelIcon' => $this->cfg['icon']));
+            $debug = $debug->getChannel($this->cfg['channelKey'], $this->cfg['channelOptions']);
         }
         $debug->eventManager->subscribe(Debug::EVENT_OUTPUT_LOG_ENTRY, [$this, 'onOutputLogEntry']);
         $this->debug = $debug;
@@ -163,11 +166,11 @@ class AbstractAsyncMiddleware extends AbstractComponent
      */
     protected function asyncResponseGroup(RequestInterface $request, $response, array $meta = array(), $isError = false)
     {
-        $meta['icon'] = $this->cfg['icon'];
+        $meta['icon'] = $this->cfg['channelOptions']['channelIcon'];
         $this->debug->groupCollapsed(
-            $this->cfg['label'] . ' ' . ($isError
-                ? 'Error'
-                : 'Response'),
+            $this->cfg['channelOptions']['channelName'] . ' ' . ($isError
+                ? $this->debug->i18n->trans('error')
+                : $this->debug->i18n->trans('response')),
             $request->getMethod(),
             (string) $request->getUri(),
             $response
@@ -240,11 +243,11 @@ class AbstractAsyncMiddleware extends AbstractComponent
     protected function logRequest(RequestInterface $request, array $requestInfo)
     {
         $this->debug->groupCollapsed(
-            $this->cfg['label'],
+            $this->cfg['channelOptions']['channelName'],
             $request->getMethod(),
             (string) $request->getUri(),
             $this->debug->meta(array(
-                'icon' => $this->cfg['icon'],
+                'icon' => $this->cfg['channelOptions']['channelIcon'],
                 'id' => $this->cfg['idPrefix'] . $requestInfo['requestId'],
                 'redact' => true,
             ))
@@ -252,7 +255,10 @@ class AbstractAsyncMiddleware extends AbstractComponent
         if ($requestInfo['isAsynchronous']) {
             $this->debug->info('asynchronous', $this->debug->meta('icon', $this->cfg['iconAsync']));
         }
-        $this->debug->log('request headers', $this->buildHeadersString($request));
+        $this->debug->log(
+            $this->debug->i18n->trans('request.headers'),
+            $this->buildHeadersString($request)
+        );
         $this->logRequestBody($request);
         if ($requestInfo['isAsynchronous']) {
             $this->debug->groupEnd();
@@ -277,7 +283,11 @@ class AbstractAsyncMiddleware extends AbstractComponent
         if ($methodHasBody === false && $body === '') {
             return;
         }
-        $this->debug->log('request body', $body, $this->debug->meta('redact'));
+        $this->debug->log(
+            $this->debug->i18n->trans('request.body'),
+            $body,
+            $this->debug->meta('redact')
+        );
     }
 
     /**
@@ -294,7 +304,7 @@ class AbstractAsyncMiddleware extends AbstractComponent
         Utility::assertType($response, 'Psr\Http\Message\ResponseInterface');
         Utility::assertType($rejectReason, 'Exception');
 
-        $duration = $this->debug->timeEnd($this->cfg['label'] . ':' . $requestInfo['requestId'], false);
+        $duration = $this->debug->timeEnd($this->cfg['channelKey'] . ':' . $requestInfo['requestId'], false);
         $metaAppend = $requestInfo['isAsynchronous'] && $this->cfg['asyncResponseWithRequest']
             ? $this->debug->meta('appendGroup', $this->cfg['idPrefix'] . $requestInfo['requestId'])
             : $this->debug->meta();
@@ -306,10 +316,10 @@ class AbstractAsyncMiddleware extends AbstractComponent
         if (!$response) {
             return;
         }
-        $this->debug->log('response headers', $this->buildHeadersString($response), $metaAppend);
+        $this->debug->log($this->debug->i18n->trans('response.headers'), $this->buildHeadersString($response), $metaAppend);
         if ($this->cfg['inclResponseBody']) {
             $this->debug->log(
-                'response body',
+                $this->debug->i18n->trans('response.body'),
                 $this->getBody($response),
                 $this->debug->meta('redact'),
                 $metaAppend

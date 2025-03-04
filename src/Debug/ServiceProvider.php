@@ -49,6 +49,7 @@ class ServiceProvider implements ServiceProviderInterface
             'errorHandler',
             'errorLevel',
             'html',
+            'i18n',
             'phpDoc',
             'pluginHighlight',
             'response',
@@ -126,6 +127,12 @@ class ServiceProvider implements ServiceProviderInterface
         };
         $container['eventManager'] = static function () {
             return new \bdk\PubSub\Manager();
+        };
+        $container['i18n'] = static function (Container $container) {
+            return new \bdk\I18n(
+                $container['serverRequest'],
+                $container['debug']->getCfg('i18n', Debug::CONFIG_INIT)
+            );
         };
         $container['pluginManager'] = static function () {
             return new \bdk\Debug\Plugin\Manager();

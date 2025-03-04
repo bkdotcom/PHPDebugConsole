@@ -274,11 +274,11 @@ class ChromeLogger extends AbstractRoute
         $summaryRemove = [
             '$_COOKIE',
             '$_POST',
-            'Built In',
+            'Built in',
             'ini location',
             'git branch',
             'memory_limit',
-            'Peak Memory Usage',
+            'Peak memory usage',
             'PHP Version',
             'php://input',
             'session.cache_limiter',

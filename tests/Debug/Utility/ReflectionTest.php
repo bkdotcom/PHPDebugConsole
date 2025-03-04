@@ -58,7 +58,7 @@ class ReflectionTest extends TestCase
         $args = Reflection::getMethodDefaultArgs('bdk\Debug\Plugin\Method\Trace::trace');
         self::assertSame(array(
             'inclContext' => false,
-            'caption' => 'trace',
+            'caption' => null,
             'limit' => 0,
             'trace' => null,
         ), $args);

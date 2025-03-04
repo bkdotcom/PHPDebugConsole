@@ -22,9 +22,10 @@ class AbstractLogReqRes
 {
     /** @var array<string,mixed> */
     protected $cfg = array(
-        'channelName' => 'Request / Response',
-        'channelOpts' => array(
+        'channelKey' => 'request-response',
+        'channelOptions' => array(
             'channelIcon' => ':send-receive:',
+            'channelName' => 'channel.request-response|trans',
             'channelSort' => 10,
             'nested' => false,
         ),
@@ -55,19 +56,15 @@ class AbstractLogReqRes
         if ($contentTypeDetected === $contentTypeUser) {
             return;
         }
-        $message = \sprintf(
-            'It appears %s %s %s',
-            $contentTypeDetected,
-            $requestMethod
-                ? 'was received'
-                : 'is being sent',
-            $contentTypeUser
-                ? 'with the wrong Content-Type'
-                : 'without a Content-Type header'
-        );
+        $message = $requestMethod
+            ? ($contentTypeUser ? 'request.incorrect.contentType' : 'request.without.contentType')
+            : ($contentTypeUser ? 'response.incorrect.contentType' : 'response.without.contentType');
+        $message = $this->debug->i18n->trans($message, array(
+            'contentTypeDetected' => $contentTypeDetected,
+        ));
         $formTypes = [ContentType::FORM, ContentType::FORM_MULTIPART];
         if ($requestMethod === 'POST' && \in_array($contentTypeUser, $formTypes, true)) {
-            $message .= "\n" . 'Pay no attention to $_POST and instead use php://input';
+            $message .= "\n" . $this->debug->i18n->trans('request.use.php.input');
         }
         $this->debug->warn($message, $this->debug->meta(array(
             'detectFiles' => false,

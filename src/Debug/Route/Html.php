@@ -79,22 +79,6 @@ class Html extends AbstractRoute
     }
 
     /**
-     * Get and register assets from passed provider
-     *
-     * @param AssetProviderInterface $assetProvider Asset provider
-     *
-     * @return void
-     */
-    public function addAssetProvider(AssetProviderInterface $assetProvider)
-    {
-        foreach ($assetProvider->getAssets() as $type => $assetsOfType) {
-            foreach ((array) $assetsOfType as $asset) {
-                $this->addAsset($type, $asset);
-            }
-        }
-    }
-
-    /**
      * Build icon markup
      *
      * @param string|null $icon Icon css class or html markup
@@ -121,6 +105,9 @@ class Html extends AbstractRoute
      */
     public function getAssets($what = null)
     {
+        foreach ($this->debug->getAssetProviders() as $assetProvider) {
+            $this->processAssetProvider($assetProvider);
+        }
         if ($what === null) {
             return $this->assets;
         }
@@ -136,7 +123,8 @@ class Html extends AbstractRoute
      */
     public function getCss()
     {
-        return $this->buildAssetOutput($this->assets['css'])
+        $assets = $this->getAssets('css');
+        return $this->buildAssetOutput($assets)
             . $this->cfg['css'];
     }
 
@@ -147,7 +135,8 @@ class Html extends AbstractRoute
      */
     public function getScript()
     {
-        return $this->buildAssetOutput($this->assets['script']);
+        $assets = $this->getAssets('script');
+        return $this->buildAssetOutput($assets);
     }
 
     /**
@@ -177,7 +166,7 @@ class Html extends AbstractRoute
     }
 
     /**
-     * Add/register css or javascript
+     * Remove css or javascript asset
      *
      * @param string $what  "css" or "script"
      * @param string $asset css, javascript, or filepath
@@ -195,22 +184,6 @@ class Html extends AbstractRoute
             }
         }
         return false;
-    }
-
-    /**
-     * UnRegister assets from passed provider
-     *
-     * @param AssetProviderInterface $assetProvider Asset provider
-     *
-     * @return void
-     */
-    public function removeAssetProvider(AssetProviderInterface $assetProvider)
-    {
-        foreach ($assetProvider->getAssets() as $type => $assetsOfType) {
-            foreach ((array) $assetsOfType as $asset) {
-                $this->removeAsset($type, $asset);
-            }
-        }
     }
 
     /**
@@ -251,7 +224,7 @@ class Html extends AbstractRoute
         return array(
             'class' => 'debug',
             // channel list gets built as log processed...  we'll str_replace this...
-            'data-channel-name-root' => $this->channelNameRoot,
+            'data-channel-key-root' => $this->channelKeyRoot,
             'data-channels' => '{{channels}}',
             'data-options' => array(
                 'drawer' => $this->cfg['drawer'],
@@ -356,8 +329,8 @@ class Html extends AbstractRoute
         if (!$this->cfg['outputScript']) {
             return '';
         }
-        return '<script defer>window.jQuery || document.write(\'<script src="' . $this->cfg['jqueryUrl'] . '"><\/script>\')</script>' . "\n"
-            . '<script defer>'
+        return '<script>window.jQuery || document.write(\'<script src="' . $this->cfg['jqueryUrl'] . '"><\/script>\')</script>' . "\n"
+            . '<script>'
                 . $this->getScript() . "\n"
             . '</script>' . "\n";
     }
@@ -405,6 +378,22 @@ class Html extends AbstractRoute
             $type = $assetTypes[$k];
             $this->removeAsset($type, $prev[$k]);
             $this->addAsset($type, $v);
+        }
+    }
+
+    /**
+     * Get and register assets from passed provider
+     *
+     * @param AssetProviderInterface $assetProvider Asset provider
+     *
+     * @return void
+     */
+    private function processAssetProvider(AssetProviderInterface $assetProvider)
+    {
+        foreach ($assetProvider->getAssets() as $type => $assetsOfType) {
+            foreach ((array) $assetsOfType as $asset) {
+                $this->addAsset($type, $asset);
+            }
         }
     }
 }

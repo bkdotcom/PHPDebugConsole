@@ -41,9 +41,12 @@ class LogDb
     {
         $this->serviceProvider = $serviceProvider;
         $this->app = $app;
-        $this->debug = $serviceProvider->debug->getChannel('Db', array(
+        $channelKey = 'db';
+        $channelOptions = array(
             'channelIcon' => ':database:',
-        ));
+            'channelName' => 'channel.db|trans',
+        );
+        $this->debug = $serviceProvider->debug->getChannel($channelKey, $channelOptions);
         $this->statementInfoLogger = new StatementInfoLogger($this->debug);
     }
 

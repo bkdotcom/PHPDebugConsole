@@ -24,6 +24,7 @@
       "src/Debug/Debug.php",
       "src/Debug/Utility/Utility.php",
       "src/ErrorHandler/ErrorHandler.php",
+      "src/I18n/I18n.php",
       "src/Promise/Promise.php"
     ],
     "psr-4": {
@@ -32,6 +33,7 @@
       "bdk\\CurlHttpMessage\\": "src/CurlHttpMessage/",
       "bdk\\Debug\\": "src/Debug/",
       "bdk\\ErrorHandler\\": "src/ErrorHandler/",
+      "bdk\\I18n\\": "src/I18n/",
       "bdk\\Promise\\": "src/Promise/",
       "bdk\\PubSub\\": "src/PubSub/",
       "bdk\\Slack\\": "src/Slack/",

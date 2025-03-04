@@ -343,7 +343,7 @@ class InternalEventsTest extends DebugTestFramework
             \array_unshift($logEntriesExpect, array(
                 'method' => 'warn',
                 'args' => array(
-                    'Potentially shutdown via exit: ',
+                    'Potentially shutdown via exit:',
                     __FILE__ . ' (line ' . $exitLine . ')',
                 ),
                 'meta' => array(
@@ -369,6 +369,7 @@ class InternalEventsTest extends DebugTestFramework
     {
         $unserialized = \bdk\Debug\Utility\SerializeLog::unserialize($string);
         $rootInstance = $this->debug->rootInstance;
+        $channelKeyRoot = $rootInstance->getCfg('channelKey', Debug::CONFIG_DEBUG);
         $channelNameRoot = $rootInstance->getCfg('channelName', Debug::CONFIG_DEBUG);
         $expect = array(
             'alerts' => $this->helper->deObjectifyData($this->debug->data->get('alerts'), false),
@@ -379,14 +380,15 @@ class InternalEventsTest extends DebugTestFramework
             'runtime' => $this->debug->data->get('runtime'),
             'config' => array(
                 'channelIcon' => $rootInstance->getCfg('channelIcon', Debug::CONFIG_DEBUG),
+                'channelKey' => $channelKeyRoot,
                 'channelName' => $channelNameRoot,
-                'channels' => \array_map(static function (Debug $channel) use ($channelNameRoot) {
-                    $channelName = $channel->getCfg('channelName', Debug::CONFIG_DEBUG);
+                'channels' => \array_map(static function (Debug $channel) use ($channelKeyRoot) {
+                    $channelKey = $channel->getCfg('channelKey', Debug::CONFIG_DEBUG);
                     return array(
                         'channelIcon' => $channel->getCfg('channelIcon', Debug::CONFIG_DEBUG),
                         'channelShow' => $channel->getCfg('channelShow', Debug::CONFIG_DEBUG),
                         'channelSort' => $channel->getCfg('channelSort', Debug::CONFIG_DEBUG),
-                        'nested' => \strpos($channelName, $channelNameRoot . '.') === 0,
+                        'nested' => \strpos($channelKey, $channelKeyRoot . '.') === 0,
                     );
                 }, $rootInstance->getChannels(true, true)),
                 'logRuntime' => $this->debug->getCfg('logRuntime'),

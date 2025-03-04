@@ -98,7 +98,7 @@ class EventSubscribers implements SubscriberInterface
                 $logEntry['handled'] = true;
                 break;
             case 'logPdo':
-                $debug->getChannel('PDO')->setCfg('collect', $arg0, Debug::CONFIG_NO_RETURN);
+                $debug->getChannel('pdo')->setCfg('collect', $arg0, Debug::CONFIG_NO_RETURN);
                 $logEntry->stopPropagation();
                 $logEntry['handled'] = true;
                 break;
@@ -130,7 +130,7 @@ class EventSubscribers implements SubscriberInterface
         if ($logEntry['method'] !== 'log') {
             return;
         }
-        if ($logEntry->getChannelName() !== 'Files') {
+        if ($logEntry->getChannelKey() !== 'files') {
             return;
         }
         if (!$logEntry->getMeta('detectFiles')) {

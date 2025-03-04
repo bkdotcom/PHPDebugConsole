@@ -90,6 +90,7 @@ class I18n
     {
         $this->serverRequest = $serverRequest;
         $this->cfg = \array_merge($this->cfg, $cfg);
+        $this->cfg['filepath'] = \preg_replace('/^\.\//', __DIR__ . '/', $this->cfg['filepath']);
         $this->messageFormatterClass = \class_exists('MessageFormatter', false)
             ? 'MessageFormatter'
             : 'bdk\I18n\MessageFormatter';

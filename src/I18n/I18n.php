@@ -223,7 +223,18 @@ class I18n
         if (empty($args)) {
             return $str;
         }
-        return \call_user_func([$this->messageFormatterClass, 'formatMessage'], $locale, $str, $args);
+        $return = \call_user_func([$this->messageFormatterClass, 'formatMessage'], $locale, $str, $args);
+        if (\strpos($return, '{key} is set to {value}') !== false) {
+            \bdk\Debug::varDump('i18ntest', array(
+                'str' => \func_get_arg(0),
+                'strNew' => $str,
+                'return' => $return,
+                'domain' => $domain,
+                'locale' => $locale,
+                'cfg' => $this->cfg,
+            ));
+        }
+        return $return;
     }
 
     /**

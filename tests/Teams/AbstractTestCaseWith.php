@@ -272,14 +272,20 @@ abstract class AbstractTestCaseWith extends TestCase
      *
      * @return object
      */
-    abstract protected static function itemFactory();
+    protected static function itemFactory()
+    {
+
+    }
 
     /**
      * Return test cases for provider.
      *
      * @return array
      */
-    abstract protected static function withTestCases();
+    protected static function withTestCases()
+    {
+
+    }
 
     protected static function assertAllWithMethodsTested()
     {

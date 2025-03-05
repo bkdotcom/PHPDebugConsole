@@ -28,7 +28,19 @@ function addIcons ($node) {
     if (matches) {
       icon = matches[2]
     }
-    icon = dict.replaceTokens(icon)
+    if (typeof icon === 'function') {
+      // wrap function in a function that calls replaceTokens on the result
+      var iconFunc = icon
+      icon = function () {
+        icon = iconFunc.apply(this, arguments)
+        if (typeof icon === 'object') {
+          icon = icon[0].outerHTML
+        }
+        return dict.replaceTokens(icon)
+      }
+    } else {
+      icon = dict.replaceTokens(icon)
+    }
     if (prepend) {
       addIconPrepend($found, icon)
       return

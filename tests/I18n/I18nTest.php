@@ -84,7 +84,7 @@ class I18nTest extends TestCase
 
     public function testParseExtCsvNoHandle()
     {
-        $method = new \ReflectionMethod(I18n::class, 'parseExtCsv');
+        $method = new \ReflectionMethod('bdk\I18n', 'parseExtCsv');
         $method->setAccessible(true);
         $return = $method->invoke(null, __DIR__ . '/bogusFile.csv');
         self::assertSame(array(), $return);

@@ -61,7 +61,7 @@ class ContextTest extends TestCase
         $line2 = __LINE__ + 1;
         $closure($php);
 
-        $trace = \array_reverse($GLOBALS['xdebug_trace']);
+        $trace = \array_reverse(isset($GLOBALS['xdebug_trace']) && \is_array($GLOBALS['xdebug_trace']) ? $GLOBALS['xdebug_trace'] : []);
         $trace = Normalizer::normalize($trace);
         $trace = \array_slice($trace, 0, 6);
         $trace = Backtrace::addContext($trace);

@@ -11,6 +11,8 @@ use Composer\Script\Event;
  */
 class ComposerScripts
 {
+    protected static $phpVersion;
+
     /**
      * Require slevomat/coding-standard if dev mode & PHP >= 7.1
      *
@@ -23,10 +25,11 @@ class ComposerScripts
      */
     public static function postUpdate(Event $event)
     {
-        /*
-            Test if Continuous Integration / Travis
-            @see https://docs.travis-ci.com/user/environment-variables/#default-environment-variables
-        */
+        $platform = \array_replace_recursive(array(
+            'php' => PHP_VERSION,
+        ), $event->getComposer()->getConfig()->get('platform') ?: array());
+        self::$phpVersion = $platform['php'];
+
         $haveSlevomat = false;
         if ($event->isDevMode()) {
             $info = self::installDependencies();
@@ -91,10 +94,10 @@ class ComposerScripts
         if (\filter_var(\getenv('CI'), FILTER_VALIDATE_BOOLEAN)) {
             return $info;
         }
-        if (PHP_VERSION_ID >= 80000) {
+        if (\version_compare(self::$phpVersion, '8.0.0', '>=')) {
             \exec($composer . ' require vimeo/psalm ^5.22.2 --dev --with-all-dependencies --no-scripts');
         }
-        if (PHP_VERSION_ID >= 70200) {
+        if (\version_compare(self::$phpVersion, '7.2.0', '>=')) {
             \exec($composer . ' require slevomat/coding-standard ^8.9.0 --dev --with-all-dependencies --no-scripts');
             $info['haveSlevomat'] = true;
         }
@@ -109,16 +112,16 @@ class ComposerScripts
     private static function installUnitTestDependencies()
     {
         $composer = $GLOBALS['argv'][0];
-        PHP_VERSION_ID >= 80000
+        \version_compare(self::$phpVersion, '8.8.0', '>=')
             // need a newer version to avoid ReturnTypeWillChange fatal
             // v 2.0 requires php 7.0
             ? \exec($composer . ' require twig/twig ~3.1 --dev --no-scripts')
             : \exec($composer . ' require twig/twig ~1.42 --dev --no-scripts');
-        if (PHP_VERSION_ID >= 70000) {
+        if (\version_compare(self::$phpVersion, '7.0.0', '>=')) {
             \exec($composer . ' require psr/http-server-middleware --dev --no-scripts');
             \exec($composer . ' require mindplay/middleman --dev --no-scripts');
         }
-        if (PHP_VERSION_ID >= 50500) {
+        if (\version_compare(self::$phpVersion, '5.5.0', '>=')) {
             \exec($composer . ' require guzzlehttp/guzzle --dev --no-scripts');
         }
     }

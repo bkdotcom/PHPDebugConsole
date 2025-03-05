@@ -78,18 +78,8 @@ class PhpCurlClass extends Curl
         if ($this->debugOptions['verbose']) {
             $this->verbose(true, \fopen('php://temp', 'rw'));
         }
-        /*
-            Do some reflection
-        */
-        $classRef = (new ReflectionObject($this))->getParentClass();
-        $optionsRef = $classRef->getProperty('options');
-        $optionsRef->setAccessible(true);
-        $parseReqHeadersRef = $classRef->getMethod('parseRequestHeaders');
-        $parseReqHeadersRef->setAccessible(true);
-        $this->reflection = array(
-            'options' => $optionsRef,
-            'parseReqHeaders' => $parseReqHeadersRef,
-        );
+
+        $this->setReflection();
     }
 
     /**
@@ -265,7 +255,7 @@ class PhpCurlClass extends Curl
      * Log request headers and body
      *
      * @param array $options Curl options used for request
-     * 
+     *
      * @return void
      */
     private function logRequest(array $options)
@@ -290,5 +280,23 @@ class PhpCurlClass extends Curl
         if ($this->debugOptions['inclResponseBody']) {
             $this->debug->log('response body', $this->getResponseBody(), $this->debug->meta('redact'));
         }
+    }
+
+    /**
+     * We need access to some parent privates
+     *
+     * @return void
+     */
+    private function setReflection()
+    {
+        $classRef = (new ReflectionObject($this))->getParentClass();
+        $optionsRef = $classRef->getProperty('options');
+        $optionsRef->setAccessible(true);
+        $parseReqHeadersRef = $classRef->getMethod('parseRequestHeaders');
+        $parseReqHeadersRef->setAccessible(true);
+        $this->reflection = array(
+            'options' => $optionsRef,
+            'parseReqHeaders' => $parseReqHeadersRef,
+        );
     }
 }

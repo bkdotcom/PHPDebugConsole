@@ -384,7 +384,7 @@ class Table
             $columns[] = \array_filter($colInfo, static function ($val) {
                 return \is_array($val)
                     ? !empty($val)
-                    : $val !== null && $val !== false;;
+                    : $val !== null && $val !== false;
             });
         }
         $this->meta['tableInfo']['columns'] = $columns;

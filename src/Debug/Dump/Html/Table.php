@@ -171,22 +171,20 @@ class Table
     protected function buildFooter()
     {
         $haveTotal = false;
-        $cells = array();
-        foreach ($this->options['tableInfo']['columns'] as $colInfo) {
+        $cells = \array_map(function ($colInfo) use (&$haveTotal) {
             if (isset($colInfo['total']) === false) {
-                $cells[] = '<td></td>';
-                continue;
+                return '<td></td>';
             }
+            $haveTotal = true;
             $totalVal = $colInfo['total'];
             if (\is_float($totalVal)) {
                 $totalVal = \round($totalVal, 6);
             }
-            $cells[] = $this->dumper->valDumper->dump($totalVal, array(
+            return $this->dumper->valDumper->dump($totalVal, array(
                 'attribs' => $colInfo['attribs'],
                 'tagName' => 'td',
             ));
-            $haveTotal = true;
-        }
+        }, $this->options['tableInfo']['columns']);
         if (!$haveTotal) {
             return '';
         }
@@ -247,30 +245,41 @@ class Table
         if ($this->options['tableInfo']['haveObjRow']) {
             $str .= $rowInfo['class']
                 ? $this->dumper->valDumper->markupIdentifier($rowInfo['class'], 'className', 'td', array(
-                    'title' => $rowInfo['summary'] ?: null,
+                    'title' => $rowInfo['summary'],
                 ))
                 : '<td class="t_undefined"></td>';
         }
         /*
             Output values
         */
-        $i = 0;
-        foreach ($row as $v) {
+        $str .= $this->buildRowCells($row);
+        $str .= '</tr>';
+        return $this->onBuildRow($str, $row, $rowInfo, $rowKey) . "\n";
+    }
+
+    /**
+     * Build the row's value cells
+     *
+     * @param mixed $row should be array or object abstraction
+     *
+     * @return string
+     */
+    private function buildRowCells($row)
+    {
+        $cells = \array_map(function ($val, $i) {
             $colInfo = $this->options['tableInfo']['columns'][$i];
-            $td = $this->dumper->valDumper->dump($v, array(
+            $td = $this->dumper->valDumper->dump($val, array(
                 'attribs' => $colInfo['attribs'],
                 'tagName' => 'td',
             ));
-            if ($v === true && $colInfo['trueAs'] !== null) {
+            if ($val === true && $colInfo['trueAs'] !== null) {
                 $td = \str_replace('>true<', '>' . $colInfo['trueAs'] . '<', $td);
-            } elseif ($v === false && $colInfo['falseAs'] !== null) {
+            } elseif ($val === false && $colInfo['falseAs'] !== null) {
                 $td = \str_replace('>false<', '>' . $colInfo['falseAs'] . '<', $td);
             }
-            $str .= $td;
-            $i++;
-        }
-        $str .= '</tr>';
-        return $this->onBuildRow($str, $row, $rowInfo, $rowKey) . "\n";
+            return $td;
+        }, \array_values($row), \range(0, \count($row) - 1));
+        return \implode('', $cells);
     }
 
     /**

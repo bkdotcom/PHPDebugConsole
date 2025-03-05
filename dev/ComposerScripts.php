@@ -112,7 +112,7 @@ class ComposerScripts
     private static function installUnitTestDependencies()
     {
         $composer = $GLOBALS['argv'][0];
-        \version_compare(self::$phpVersion, '8.8.0', '>=')
+        \version_compare(self::$phpVersion, '8.0.0', '>=')
             // need a newer version to avoid ReturnTypeWillChange fatal
             // v 2.0 requires php 7.0
             ? \exec($composer . ' require twig/twig ~3.1 --dev --no-scripts')

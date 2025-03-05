@@ -24,6 +24,8 @@ class Sql
     /**
      * Build DSN url from params
      *
+     * @param array $params Connection params
+     *
      * @return string
      */
     public static function buildDsn(array $params)

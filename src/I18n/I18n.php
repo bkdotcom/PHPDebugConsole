@@ -90,7 +90,6 @@ class I18n
     {
         $this->serverRequest = $serverRequest;
         $this->cfg = \array_merge($this->cfg, $cfg);
-        $this->cfg['filepath'] = \preg_replace('/^\.\//', __DIR__ . '/', $this->cfg['filepath']);
         $this->messageFormatterClass = \class_exists('MessageFormatter', false) && PHP_VERSION_ID >= 50500
             ? 'MessageFormatter'
             : 'bdk\I18n\MessageFormatter';
@@ -182,8 +181,7 @@ class I18n
         }, $userLocales);
         $userLocales = \array_filter($userLocales);
         $userLocales = $this->userLocaleInsertFallbacks($userLocales);
-        $userLocales = \array_unique($userLocales);
-        return \array_values($userLocales);
+        return \array_values(\array_unique($userLocales));
     }
 
     /**
@@ -223,23 +221,13 @@ class I18n
         if (empty($args)) {
             return $str;
         }
-        $return = \call_user_func([$this->messageFormatterClass, 'formatMessage'], $locale, $str, $args);
-        if (\strpos($return, '{key} is set to {value}') !== false) {
-            \bdk\Debug::varDump('i18ntest', array(
-                'str' => \func_get_arg(0),
-                'strNew' => $str,
-                'return' => $return,
-                'messageFormatterClass' => $this->messageFormatterClass,
-                'domain' => $domain,
-                'locale' => $locale,
-                'cfg' => $this->cfg,
-            ));
-        }
-        return $return;
+        return \call_user_func([$this->messageFormatterClass, 'formatMessage'], $locale, $str, $args);
     }
 
     /**
      * Get the filepath for a domain and locale
+     *
+     * Filepath is not validated
      *
      * @param string $domain Domain ('messages')
      * @param string $locale Locale ('en_US')

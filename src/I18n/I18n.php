@@ -91,7 +91,7 @@ class I18n
         $this->serverRequest = $serverRequest;
         $this->cfg = \array_merge($this->cfg, $cfg);
         $this->cfg['filepath'] = \preg_replace('/^\.\//', __DIR__ . '/', $this->cfg['filepath']);
-        $this->messageFormatterClass = \class_exists('MessageFormatter', false)
+        $this->messageFormatterClass = \class_exists('MessageFormatter', false) && PHP_VERSION_ID >= 50500
             ? 'MessageFormatter'
             : 'bdk\I18n\MessageFormatter';
         $this->userLocales = $this->getUserLocales();
@@ -229,6 +229,7 @@ class I18n
                 'str' => \func_get_arg(0),
                 'strNew' => $str,
                 'return' => $return,
+                'messageFormatterClass' => $this->messageFormatterClass,
                 'domain' => $domain,
                 'locale' => $locale,
                 'cfg' => $this->cfg,

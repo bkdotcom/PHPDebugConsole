@@ -200,6 +200,7 @@ return array(
     'word.omitted' => 'omitted',
     'word.parameters' => 'parameters',
     'word.types' => 'types',
+    'word.value' => 'value',
     'word.verbose' => 'verbose',
     'word.version' => 'version',
     'word.yes' => 'yes',

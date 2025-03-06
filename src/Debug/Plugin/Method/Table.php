@@ -17,6 +17,7 @@ use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Plugin\CustomMethodTrait;
 use bdk\Debug\Utility\Table as TableProcessor;
+use bdk\Debug\Utility\TableRow;
 use bdk\PubSub\SubscriberInterface;
 
 /**
@@ -121,7 +122,11 @@ class Table implements SubscriberInterface
             isset($logEntry['args'][0])
                 ? $logEntry['args'][0]
                 : null,
-            $logEntry['meta'],
+            \array_replace_recursive(array(
+                'columnNames' => array(
+                    TableRow::SCALAR => $this->debug->i18n->trans('word.value'),
+                ),
+            ), $logEntry['meta']),
             $this->debug
         );
 

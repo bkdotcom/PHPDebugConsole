@@ -17,6 +17,28 @@ class NumberFormatter
     /** @var array locale to localeconv info */
     private static $localeconv = array();
 
+    /** @var array default localeconv info */
+    private static $localeConvDefault = array(
+        'currency_symbol' => '$',
+        'decimal_point' => '.',
+        'frac_digits' => 2,
+        'grouping' => [3,3],
+        'int_curr_symbol' => 'USD ',
+        'int_frac_digits' => 2,
+        'mon_decimal_point' => '.',
+        'mon_grouping' => [3,3],
+        'mon_thousands_sep' => ',',
+        'negative_sign' => '-',
+        'n_cs_precedes' => 1,
+        'n_sep_by_space' => 0,
+        'n_sign_posn' => 1,
+        'positive_sign' => '',
+        'p_cs_precedes' => 1,
+        'p_sep_by_space' => 0,
+        'p_sign_posn' => 1,
+        'thousands_sep' => ',',
+    );
+
     /**
      * Constructor
      *
@@ -149,15 +171,25 @@ class NumberFormatter
      */
     private function localeconv()
     {
-        if (isset(self::$localeconv[$this->locale]) === false) {
-            $localeWasNumeric = \setlocale(LC_NUMERIC, 0);
-            $localeWasMonetary = \setlocale(LC_MONETARY, 0);
-            \setlocale(LC_NUMERIC, $this->locale);
-            \setlocale(LC_MONETARY, $this->locale);
-            self::$localeconv[$this->locale] = \localeconv();
-            \setlocale(LC_NUMERIC, $localeWasNumeric);
-            \setlocale(LC_MONETARY, $localeWasMonetary);
+        if (isset(self::$localeconv[$this->locale])) {
+            return self::$localeconv[$this->locale];
         }
-        return self::$localeconv[$this->locale];
+        $localeWasNumeric = \setlocale(LC_NUMERIC, 0);
+        $localeWasMonetary = \setlocale(LC_MONETARY, 0);
+        \setlocale(LC_NUMERIC, $this->locale);
+        \setlocale(LC_MONETARY, $this->locale);
+        $localeConv = \localeconv();
+        if ($localeConv['p_sign_posn'] === 127) {
+            // It would appear we don't have locale information
+            $localeConv = \array_filter($localeConv, static function ($value) {
+                $emptyVals = [127, '', []];
+                return \in_array($value, $emptyVals, true) === false;
+            });
+            $localeConv = \array_merge(self::$localeConvDefault, $localeConv);
+        }
+        \setlocale(LC_NUMERIC, $localeWasNumeric);
+        \setlocale(LC_MONETARY, $localeWasMonetary);
+        self::$localeconv[$this->locale] = $localeConv;
+        return $localeConv;
     }
 }

@@ -2,6 +2,7 @@
 
 namespace bdk\I18n;
 
+use bdk\I18n\NumberFormatter;
 use DomainException;
 
 /*

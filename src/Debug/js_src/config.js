@@ -124,6 +124,14 @@ var config = {
     'debugInfo-value': 'via __debugInfo()',
     'deprecated': 'Deprecated',
     'dynamic': 'Dynamic',
+
+    'error.cat.deprecated': 'Deprecated',
+    'error.cat.error': 'Error',
+    'error.cat.fatal': 'Fatal',
+    'error.cat.notice': 'Notice',
+    'error.cat.strict': 'Strict',
+    'error.cat.warning': 'Warning',
+
     'final': 'Final',
     'hook.both': 'Get and set hooks',
     'hook.get': 'Get hook',

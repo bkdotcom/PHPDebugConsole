@@ -292,7 +292,7 @@ class MySqli extends mysqliBase
         try {
             $this->logRuntime($debug, $this->connectionString());
         } catch (RuntimeException $e) {
-            $debug->group('MySqli ' . $debug->i18n->trans('error'), $debug->meta(array('level' => 'error')));
+            $debug->group('MySqli ' . $debug->i18n->trans('word.error'), $debug->meta(array('level' => 'error')));
             $debug->log($debug->i18n->trans('db.connection-error'));
             $debug->groupEnd();
         }

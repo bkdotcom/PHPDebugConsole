@@ -344,7 +344,7 @@ class Clear implements SubscriberInterface
             return array();
         }
         $count = \count($cleared);
-        $and = $this->debug->i18n->trans('and');
+        $and = $this->debug->i18n->trans('word.and');
         $glue = $count === 2
             ? ' ' . $and . ' '
             : ', ';

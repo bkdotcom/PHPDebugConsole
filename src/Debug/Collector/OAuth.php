@@ -201,7 +201,7 @@ class OAuth extends OAuthBase
         $this->debugger->time($this->elapsed);
         $debugInfo = $this->getDebugInfo();
         // values available in the headers or elsewhere
-        $this->debugger->log('OAuth ' . $this->debugger->i18n->trans('parameters'), $this->oauthParams(), $this->debugger->meta('cfg', 'abstracter.stringMinLen.encoded', -1));
+        $this->debugger->log('OAuth ' . $this->debugger->i18n->trans('word.parameters'), $this->oauthParams(), $this->debugger->meta('cfg', 'abstracter.stringMinLen.encoded', -1));
         $this->debugger->log($this->debugger->i18n->trans('info.additional'), $this->additionalInfo($url));
         $this->debugger->log($this->debugger->i18n->trans('request.headers'), $this->debugger->redactHeaders($debugInfo['headers_sent']), $this->debugger->meta('icon', ':send:'));
         if (isset($debugInfo['body_sent'])) {

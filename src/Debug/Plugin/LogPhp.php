@@ -132,7 +132,7 @@ class LogPhp implements SubscriberInterface
     protected function logPhpVersion()
     {
         $buildDate = $this->debug->php->buildDate();
-        $this->debug->log('PHP ' . $this->debug->i18n->trans('version'), PHP_VERSION);
+        $this->debug->log('PHP ' . $this->debug->i18n->trans('word.version'), PHP_VERSION);
         $this->debug->log($this->debug->i18n->trans('php.server-api'), PHP_SAPI);
         if ($buildDate) {
             $ts = \strtotime($buildDate);
@@ -140,8 +140,8 @@ class LogPhp implements SubscriberInterface
             $this->debug->log($this->debug->i18n->trans('php.build-date'), $buildDateTime);
         }
         $this->debug->log($this->debug->i18n->trans('php.thread-safe'), PHP_ZTS
-            ? $this->debug->i18n->trans('yes')
-            : $this->debug->i18n->trans('no'));
+            ? $this->debug->i18n->trans('word.yes')
+            : $this->debug->i18n->trans('word.no'));
     }
 
     /**
@@ -306,7 +306,7 @@ class LogPhp implements SubscriberInterface
         $memoryLimit === '-1'
             // overkill, but lets use assertSetting, which applies some styling
             ? $this->assertSetting(array(
-                'msg' => $this->debug->i18n->trans('assert.should-not-be') . ' -1 (' . $this->debug->i18n->trans('no-limit') . ')',
+                'msg' => $this->debug->i18n->trans('assert.should-not-be') . ' -1 (' . $this->debug->i18n->trans('php.memory.no-limit') . ')',
                 'name' => 'memory_limit',
                 'operator' => '!=',
                 'valActual' => '-1',

@@ -228,9 +228,9 @@ class ServiceProvider extends BaseServiceProvider
         }
         $this->debug->groupSummary();
         $this->debug->group('Laravel', $this->debug->meta('level', 'info'));
-        $this->debug->log($this->debug->i18n->trans('version'), $this->app::VERSION);
-        $this->debug->log($this->debug->i18n->trans('environment'), $this->app->environment());
-        $this->debug->log($this->debug->i18n->trans('locale'), $this->app->getLocale());
+        $this->debug->log($this->debug->i18n->trans('word.version'), $this->app::VERSION);
+        $this->debug->log($this->debug->i18n->trans('word.environment'), $this->app->environment());
+        $this->debug->log($this->debug->i18n->trans('word.locale'), $this->app->getLocale());
         $this->debug->groupEnd();
         $this->debug->groupEnd();
     }

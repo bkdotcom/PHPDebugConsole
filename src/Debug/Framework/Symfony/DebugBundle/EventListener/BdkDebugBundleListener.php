@@ -112,7 +112,7 @@ class BdkDebugBundleListener implements EventSubscriberInterface
             return;
         }
         $this->debug->groupSummary();
-        $this->debug->info('Symfony ' . $this->debug->i18n->trans('version'), \Symfony\Component\HttpKernel\Kernel::VERSION);
+        $this->debug->info('Symfony ' . $this->debug->i18n->trans('word.version'), \Symfony\Component\HttpKernel\Kernel::VERSION);
         $this->debug->groupEnd();
         $this->debug->setCfg($this->debugCfg, Debug::CONFIG_NO_RETURN);
         $this->debug->eventManager->subscribe(Debug::EVENT_LOG, [$this, 'onDebugLog']);

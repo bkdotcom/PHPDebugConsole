@@ -48,7 +48,8 @@ if (process.env.NODE_ENV !== 'watch') {
       globals: {
         clipboardjs: 'window.ClipboardJS',
         jquery: 'window.jQuery'
-      }
+      },
+      name: 'phpDebugConsole'
     },
     plugins: [
       /*

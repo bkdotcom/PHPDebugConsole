@@ -65,10 +65,10 @@ class HtmlTest extends DebugTestFramework
         $highlight = new \bdk\Debug\Plugin\Highlight();
         $this->debug->addPlugin($highlight);
         $this->assertCount(2, $this->debug->routeHtml->getAssets('css'));
-        $this->assertCount(4, $this->debug->routeHtml->getAssets('script')); // primary, strings, & 2 highlight scripts
+        $this->assertCount(3, $this->debug->routeHtml->getAssets('script')); // primary & 2 highlight scripts
         $this->debug->removePlugin($highlight);
         $this->assertCount(0, $this->debug->routeHtml->getAssets('css'));
-        $this->assertCount(2, $this->debug->routeHtml->getAssets('script'));    // primary script & strings
+        $this->assertCount(1, $this->debug->routeHtml->getAssets('script'));    // primary
         $this->assertFalse($this->debug->routeHtml->removeAsset('css', 'does not exist'));
     }
 }

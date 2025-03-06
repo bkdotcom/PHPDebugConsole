@@ -24,7 +24,7 @@ class JavascriptStrings implements AssetProviderInterface, PluginInterface
     /** @var Debug */
     private $debug;
 
-    /** @var array */
+    /** @var list<string> These keys have the prefix js. in the translation file */
     private $jsKeys = [
         'attributes',
         'cfg.cookie',
@@ -65,15 +65,31 @@ class JavascriptStrings implements AssetProviderInterface, PluginInterface
         'write-only',
     ];
 
+    /** @var list<string> */
+    private $sharedKeys = [
+        'error.cat.deprecated',
+        'error.cat.error',
+        'error.cat.fatal',
+        'error.cat.notice',
+        'error.cat.strict',
+        'error.cat.warning',
+    ];
+
     /**
      * {@inheritDoc}
      */
-    public function getAssets() // phpcs:ignore SlevomatCodingStandard.Functions.FunctionLength
+    public function getAssets()
     {
         $i18n = $this->debug->i18n;
+        if ($i18n->getLocale() === 'en') {
+            return array();
+        }
         $strings = array();
         foreach ($this->jsKeys as $key) {
             $strings[$key] = $i18n->trans('js.' . $key);
+        }
+        foreach ($this->sharedKeys as $key) {
+            $strings[$key] = $i18n->trans($key);
         }
         return array(
             'script' => ['

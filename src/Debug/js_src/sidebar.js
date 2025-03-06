@@ -7,7 +7,7 @@ var methods // method filters
 var initialized = false
 var methodLabels = {
   alert: '<i class="fa fa-fw fa-lg fa-bullhorn"></i>{string:side.alert}',
-  error: '<i class="fa fa-fw fa-lg fa-times-circle"></i>{string:side.error}}',
+  error: '<i class="fa fa-fw fa-lg fa-times-circle"></i>{string:side.error}',
   warn: '<i class="fa fa-fw fa-lg fa-warning"></i>{string:side.warning}',
   info: '<i class="fa fa-fw fa-lg fa-info-circle"></i>{string:side.info}',
   other: '<i class="fa fa-fw fa-lg fa-sticky-note-o"></i>{string:side.other}',
@@ -34,7 +34,7 @@ var sidebarHtml = '' +
           '</ul>' +
         '</li>' +
         '<li class="channels">' +
-          '<span><i class="fa fa-fw fa-lg fa-list-ul"></i>{string:side-channels}</span>' +
+          '<span><i class="fa fa-fw fa-lg fa-list-ul"></i>{string:side.channels}</span>' +
           '<ul class="list-unstyled">' +
           '</ul>' +
         '</li>' +
@@ -224,7 +224,7 @@ function phpErrorToggles ($node) {
       $('<li>').append(
         $('<label class="toggle active">').html(
           '<input type="checkbox" checked data-toggle="error" data-count="' + count + '" value="' + category + '" />' +
-          category + ' <span class="badge">' + count + '</span>'
+          config.dict.get('error.cat.' + category) + ' <span class="badge">' + count + '</span>'
         )
       )
     )

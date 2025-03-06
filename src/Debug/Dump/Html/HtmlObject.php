@@ -107,14 +107,14 @@ class HtmlObject
     {
         $className = $this->dumpClassName($abs);
         if ($abs['isRecursion']) {
-            return $className . "\n" . '<span class="t_recursion">*' . $this->debug->i18n->trans('recursion') . '*</span>';
+            return $className . "\n" . '<span class="t_recursion">*' . $this->debug->i18n->trans('abs.recursion') . '*</span>';
         }
         if ($abs['isMaxDepth']) {
-            return $className . "\n" . '<span class="t_maxDepth">*' . $this->debug->i18n->trans('max-depth') . '*</span>';
+            return $className . "\n" . '<span class="t_maxDepth">*' . $this->debug->i18n->trans('abs.max-depth') . '*</span>';
         }
         if ($abs['isExcluded']) {
             return $this->dumpToString($abs)
-                . $className . "\n" . '<span class="excluded">' . $this->debug->i18n->trans('not-inspected') . '</span>';
+                . $className . "\n" . '<span class="excluded">' . $this->debug->i18n->trans('abs.not-inspected') . '</span>';
         }
         if (($abs['cfgFlags'] & AbstractObject::BRIEF) && \strpos(\json_encode($abs['implements']), '"UnitEnum"') !== false) {
             return $this->dumpEnumBrief($abs);

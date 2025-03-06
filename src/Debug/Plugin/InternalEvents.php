@@ -278,7 +278,7 @@ class InternalEvents implements SubscriberInterface
             specify rootInstance as there's nothing to prevent calling Internal::onError() directly (from another instance)
         */
         $this->debug->rootInstance->getChannel('phpError')->{$method}(
-            $error['typeStr'] . ':',
+            $this->debug->i18n->trans('error.' . $error['type']) . ':',
             $error['message'],
             $error['fileAndLine'],
             $this->debug->meta($this->errorMetaValues($error))

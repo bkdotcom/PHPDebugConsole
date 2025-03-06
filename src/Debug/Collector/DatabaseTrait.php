@@ -86,7 +86,7 @@ trait DatabaseTrait
         $debug->log($this->debug->i18n->trans('runtime.memory.peak'), $debug->utility->getBytes($this->statementInfoLogger->getPeakMemoryUsage()));
         $serverInfo = $this->serverInfo();
         if ($serverInfo) {
-            $debug->log($this->debug->i18n->trans('server.info'), $serverInfo);
+            $debug->log($this->debug->i18n->trans('db.server-info'), $serverInfo);
         }
         if ($this->statementInfoLogger->prettified() === false) {
             $debug->info('require jdorn/sql-formatter to prettify logged sql statements');

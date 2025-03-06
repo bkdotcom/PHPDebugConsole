@@ -241,7 +241,7 @@ class LogFiles extends AbstractComponent implements SubscriberInterface
     {
         $fileTree = new FileTree(array(
             'strings' => array(
-                'omitted' => $this->debug->i18n->trans('omitted'),
+                'omitted' => $this->debug->i18n->trans('word.omitted'),
             ),
         ));
         $files = $fileTree->filesToTree($files, $this->excludedCounts, $this->cfg['condense']);

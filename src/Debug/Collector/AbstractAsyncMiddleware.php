@@ -169,7 +169,7 @@ class AbstractAsyncMiddleware extends AbstractComponent
         $meta['icon'] = $this->cfg['channelOptions']['channelIcon'];
         $this->debug->groupCollapsed(
             $this->cfg['channelOptions']['channelName'] . ' ' . ($isError
-                ? $this->debug->i18n->trans('error')
+                ? $this->debug->i18n->trans('word.error')
                 : $this->debug->i18n->trans('response')),
             $request->getMethod(),
             (string) $request->getUri(),

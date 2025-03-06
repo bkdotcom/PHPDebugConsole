@@ -288,7 +288,7 @@ class SoapClient extends SoapClientBase
             );
         }
         if ($wsdl && !empty($options['list_types'])) {
-            $this->debug->log($this->debug->i18n->trans('types'), $this->debugGetTypes());
+            $this->debug->log($this->debug->i18n->trans('word.types'), $this->debugGetTypes());
         }
         if ($exception) {
             $this->debug->warn(\get_class($exception), \trim($exception->getMessage()));

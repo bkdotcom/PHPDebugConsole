@@ -250,7 +250,7 @@ class PhpCurlClass extends Curl
             $this->debug->log($this->debug->i18n->trans('info'), $this->getInfo());
         }
         if ($verboseOutput) {
-            $this->debug->log($this->debug->i18n->trans('verbose'), $verboseOutput);
+            $this->debug->log($this->debug->i18n->trans('word.verbose'), $verboseOutput);
         }
     }
 

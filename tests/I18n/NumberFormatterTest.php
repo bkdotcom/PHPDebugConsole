@@ -18,6 +18,20 @@ class NumberFormatterTest extends TestCase
         $refProp = new \ReflectionProperty('bdk\\I18n\\NumberFormatter', 'localeconv');
         $refProp->setAccessible(true);
         $refProp->setValue(null, array(
+            'fr_CA' => array(
+                'currency_symbol' => '$',
+                'frac_digits' => 2,
+                'mon_decimal_point' => ',',
+                'mon_thousands_sep' => ' ',
+                'negative_sign' => '-',
+                'n_cs_precedes' => 0,
+                'n_sep_by_space' => 1,
+                'n_sign_posn' => 2,
+                'positive_sign' => '',
+                'p_cs_precedes' => 0,
+                'p_sep_by_space' => 1,
+                'p_sign_posn' => 1,
+            ),
             'te_0' => array(
                 'currency_symbol' => '₹',
                 'frac_digits' => 2,

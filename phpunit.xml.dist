@@ -60,9 +60,6 @@
     <testsuite name="ErrorHandler">
       <directory>tests/ErrorHandler</directory>
     </testsuite>
-    <testsuite name="I18n">
-      <directory>tests/I18n</directory>
-    </testsuite>
     <testsuite name="Promise">
       <directory>tests/Promise</directory>
       <file phpVersion="7.0.0" phpVersionOperator=">=">tests/PromisePhpCond/CoroutineTest.php</file>

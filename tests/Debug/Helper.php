@@ -116,7 +116,7 @@ class Helper
      */
     public static function logEntryToArray($logEntry, $withKeys = true, $dropEmptyMeta = false, $mergeWithClass = false)
     {
-        if (\is_array($logEntry) && \array_keys($logEntry) === array('method','args','meta')) {
+        if (\is_array($logEntry) && \array_keys($logEntry) === ['method', 'args', 'meta']) {
             return $logEntry;
         }
         if (!$logEntry || !($logEntry instanceof LogEntry)) {

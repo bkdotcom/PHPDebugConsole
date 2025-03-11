@@ -23,12 +23,12 @@ class EmailTest extends DebugTestFramework
 
         $this->debug->setCfg('route', 'email');
         $this->debug->output();
-        $this->assertSame('Debug Log: Error', $this->emailInfo['subject']);
+        $this->assertSame('Debug Log: Error', self::$emailInfo['subject']);
         $stringExpect = 'Error(s):' . "\n"
             . __FILE__ . ':' . "\n"
             . ' Line ' . $line . ': (Warning) your code sucks';
-        $this->assertStringContainsString($stringExpect, $this->emailInfo['body']);
-        $data = \bdk\Debug\Utility\SerializeLog::unserialize($this->emailInfo['body']);
+        $this->assertStringContainsString($stringExpect, self::$emailInfo['body']);
+        $data = \bdk\Debug\Utility\SerializeLog::unserialize(self::$emailInfo['body']);
         $this->assertSame(array(
             'config',
             'version',

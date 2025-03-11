@@ -168,7 +168,7 @@ class AbstractAsyncMiddleware extends AbstractComponent
     {
         $meta['icon'] = $this->cfg['channelOptions']['channelIcon'];
         $this->debug->groupCollapsed(
-            $this->cfg['channelOptions']['channelName'] . ' ' . ($isError
+            $this->debug->getCfg('channelName', Debug::CONFIG_DEBUG) . ' ' . ($isError
                 ? $this->debug->i18n->trans('word.error')
                 : $this->debug->i18n->trans('response')),
             $request->getMethod(),
@@ -243,7 +243,7 @@ class AbstractAsyncMiddleware extends AbstractComponent
     protected function logRequest(RequestInterface $request, array $requestInfo)
     {
         $this->debug->groupCollapsed(
-            $this->cfg['channelOptions']['channelName'],
+            $this->debug->getCfg('channelName', Debug::CONFIG_DEBUG),
             $request->getMethod(),
             (string) $request->getUri(),
             $this->debug->meta(array(

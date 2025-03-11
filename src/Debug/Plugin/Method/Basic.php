@@ -15,6 +15,7 @@ namespace bdk\Debug\Plugin\Method;
 use bdk\Debug;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Plugin\CustomMethodTrait;
+use bdk\Debug\Route\Stream;
 use bdk\ErrorHandler\Error;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
@@ -28,6 +29,10 @@ class Basic implements SubscriberInterface
 
     /** @var resource|null */
     private $cliOutputStream = null;
+
+    /** @var resource|null */
+    private $hasColorSupport = false;
+
     /** @var bool */
     private $isCli = false;
 
@@ -182,6 +187,7 @@ class Basic implements SubscriberInterface
         $this->isCli = $debug->isCli(false); // are we a cli app?  (disregard PSR7 ServerRequest obj)
         if ($this->isCli) {
             $this->cliOutputStream = STDERR;
+            $this->hasColorSupport = Stream::hasColorSupport($this->cliOutputStream);
         }
     }
 
@@ -198,11 +204,13 @@ class Basic implements SubscriberInterface
      */
     public function varDump()
     {
-        $isCli = $this->isCli;
-        $dumper = $this->debug->getDump($isCli ? 'textAnsi' : 'text');
-        $args = \array_map(static function ($val) use ($dumper, $isCli) {
+        $ansi = $this->isCli && $this->hasColorSupport;
+        $dumper = $this->debug->getDump($ansi
+            ? 'textAnsi'
+            : 'text');
+        $args = \array_map(static function ($val) use ($ansi, $dumper) {
             $new = $dumper->valDumper->dump($val);
-            if ($isCli) {
+            if ($ansi) {
                 $dumper->valDumper->escapeReset = "\e[0m";
             }
             $dumper->valDumper->setValDepth(0);
@@ -212,7 +220,7 @@ class Basic implements SubscriberInterface
             ? ', '
             : ' = ';
         $outStr = \implode($glue, $args);
-        if ($isCli) {
+        if ($this->isCli) {
             \fwrite($this->cliOutputStream, $outStr . "\n");
             return;
         }

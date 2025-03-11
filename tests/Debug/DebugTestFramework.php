@@ -30,7 +30,7 @@ class DebugTestFramework extends DOMTestCase
     public static $obLevels = 0;
 
     public static $debug;
-    public $emailInfo = array();
+    public static $emailInfo = array();
 
     protected static $helper;
     protected static $outputMemoryUsage = false;
@@ -191,9 +191,9 @@ class DebugTestFramework extends DOMTestCase
         $GLOBALS['sessionMock']['status'] = PHP_SESSION_NONE;
     }
 
-    public function emailMock($to, $subject, $body, $addHeadersStr)
+    public static function emailMock($to, $subject, $body, $addHeadersStr)
     {
-        $this->emailInfo = array(
+        self::$emailInfo = array(
             'to' => $to,
             'subject' => $subject,
             'body' => $body,
@@ -519,12 +519,12 @@ class DebugTestFramework extends DOMTestCase
     /**
      * @coversNothing
      */
-    protected function resetDebug()
+    protected static function resetDebug()
     {
         \bdk\Test\Debug\Mock\Php::$memoryLimit = null;
         self::$debug = Debug::getInstance(array(
             'collect' => true,
-            'emailFunc' => array($this, 'emailMock'),
+            'emailFunc' => array(__CLASS__, 'emailMock'),
             'emailLog' => false,
             'emailTo' => null,
             'logEnvInfo' => false,
@@ -575,27 +575,27 @@ class DebugTestFramework extends DOMTestCase
             'outputSent'    => false,
             'runtime'       => array(),
         );
-        $routeChromeLogger = $this->debug->routeChromeLogger;
+        $routeChromeLogger = self::$debug->routeChromeLogger;
         if ($routeChromeLogger) {
-            $this->debug->pluginManager->removePlugin($routeChromeLogger);
+            self::$debug->pluginManager->removePlugin($routeChromeLogger);
         }
-        $this->debug->data->set($resetValues);
-        $this->debug->stopWatch->reset();
-        $this->debug->errorHandler->setData('errors', array());
-        $this->debug->errorHandler->setData('errorCaller', array());
-        $this->debug->errorHandler->setData('lastErrors', array());
-        $channels = Reflection::propGet($this->debug->getPlugin('channel'), 'channels');
+        self::$debug->data->set($resetValues);
+        self::$debug->stopWatch->reset();
+        self::$debug->errorHandler->setData('errors', array());
+        self::$debug->errorHandler->setData('errorCaller', array());
+        self::$debug->errorHandler->setData('lastErrors', array());
+        $channels = Reflection::propGet(self::$debug->getPlugin('channel'), 'channels');
         $channels = array(
             'general' => \array_intersect_key($channels['general'], \array_flip(array('request-response'))),
         );
-        Reflection::propSet($this->debug->getPlugin('channel'), 'channels', $channels);
-        // Reflection::propSet($this->debug->getPlugin('methodReqRes'), 'serverParams', array());
-        Reflection::propSet($this->debug->abstracter->abstractObject->definition, 'default', null);
+        Reflection::propSet(self::$debug->getPlugin('channel'), 'channels', $channels);
+        // Reflection::propSet(self::$debug->getPlugin('methodReqRes'), 'serverParams', array());
+        Reflection::propSet(self::$debug->abstracter->abstractObject->definition, 'default', null);
 
         // make sure we still have wamp plugin registered
-        $wamp = $this->debug->getRoute('wamp');
+        $wamp = self::$debug->getRoute('wamp');
         $wamp->wamp->messages = array();
-        $this->debug->addPlugin($wamp);
+        self::$debug->addPlugin($wamp);
     }
 
     private function tstMethodPreTest($test, $expect, LogEntry $logEntry, $vals = array())
@@ -652,7 +652,10 @@ class DebugTestFramework extends DOMTestCase
         switch ($test) {
             case 'streamAnsi':
                 $routeObj = $this->debug->getRoute('stream');
-                $routeObj->setCfg('stream', 'php://temp');
+                $routeObj->setCfg(array(
+                    'ansi' => true,
+                    'stream' => 'php://temp',
+                ));
                 return $routeObj;
             case 'wamp':
                 return null;  // we'll rely on wamp's Debug::EVENT_LOG subscription

@@ -70,7 +70,7 @@ class InternalEventsTest extends DebugTestFramework
         // Test that not emailed if nothing logged
         //
         $internalEvents->onShutdownLow();
-        self::assertEmpty($this->emailInfo);
+        self::assertEmpty(self::$emailInfo);
 
         //
         // Test that emailed if something logged
@@ -78,11 +78,11 @@ class InternalEventsTest extends DebugTestFramework
         $this->debug->log('this is a test');
         $this->debug->log(new \DateTime());
         $internalEvents->onShutdownLow();
-        self::assertNotEmpty($this->emailInfo);
-        self::assertSame($this->debug->getCfg('emailTo'), $this->emailInfo['to']);
-        self::assertSame('Debug Log', $this->emailInfo['subject']);
-        self::assertContainsSerializedLog($this->emailInfo['body']);
-        $this->emailInfo = array();
+        self::assertNotEmpty(self::$emailInfo);
+        self::assertSame($this->debug->getCfg('emailTo'), self::$emailInfo['to']);
+        self::assertSame('Debug Log', self::$emailInfo['subject']);
+        self::assertContainsSerializedLog(self::$emailInfo['body']);
+        self::$emailInfo = array();
 
         $this->debug->setCfg('emailLog', 'onError');
 
@@ -90,14 +90,14 @@ class InternalEventsTest extends DebugTestFramework
         // Test that not emailed if no error
         //
         $internalEvents->onShutdownLow();
-        self::assertEmpty($this->emailInfo);
+        self::assertEmpty(self::$emailInfo);
 
         //
         // Test that not emailed for notice
         //
         $undefinedVar;  // notice
         $internalEvents->onShutdownLow();
-        self::assertEmpty($this->emailInfo);
+        self::assertEmpty(self::$emailInfo);
 
         //
         // Test that emailed if there's an error
@@ -105,17 +105,17 @@ class InternalEventsTest extends DebugTestFramework
         // 1 / 0; // warning
         $this->debug->errorHandler->handleError(E_WARNING, 'you have been warned', __FILE__, __LINE__);
         $internalEvents->onShutdownLow();
-        self::assertNotEmpty($this->emailInfo);
-        self::assertSame('Debug Log: Error', $this->emailInfo['subject']);
-        self::assertContainsSerializedLog($this->emailInfo['body']);
-        $this->emailInfo = array();
+        self::assertNotEmpty(self::$emailInfo);
+        self::assertSame('Debug Log: Error', self::$emailInfo['subject']);
+        self::assertContainsSerializedLog(self::$emailInfo['body']);
+        self::$emailInfo = array();
 
         //
         // Test that not emailed if disabled
         //
         $this->debug->setCfg('emailLog', false);
         $internalEvents->onShutdownLow();
-        self::assertEmpty($this->emailInfo);
+        self::assertEmpty(self::$emailInfo);
     }
 
     /*

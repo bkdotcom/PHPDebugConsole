@@ -26,7 +26,7 @@ class Stream extends AbstractRoute
 
     /** @var array<string,mixed> */
     protected $cfg = array(
-        'ansi' => 'default',        // default | true | false  (STDOUT & STDERR streams will default to true)
+        'ansi' => 'default',        // default | true | false
         'channels' => ['*'],
         'channelsExclude' => [
             'events',
@@ -59,6 +59,36 @@ class Stream extends AbstractRoute
             Debug::EVENT_LOG => 'onLog',
             Debug::EVENT_PLUGIN_INIT => 'init',
         );
+    }
+
+    /**
+     * Returns whether color output is supported
+     *
+     * @param resource $streamResource stream resouce
+     *
+     * @return bool
+     *
+     * @see https://github.com/composer/composer/blob/main/src/Composer/Util/Platform.php
+     * @see https://github.com/symfony/console/blob/7.2/Output/StreamOutput.php#L90
+     */
+    public static function hasColorSupport($streamResource)
+    {
+        if (self::ansiTestNo($streamResource)) {
+            return false;
+        }
+
+        if (self::ansiTestYes($streamResource)) {
+            return true;
+        }
+
+        if (\function_exists('posix_isatty')) {
+            return \posix_isatty($streamResource);
+        }
+
+        // See https://github.com/chalk/supports-color/blob/d4f413efaf8da045c5ab440ed418ef02dbb28bf1/index.js#L157
+        $term = (string) \getenv('TERM');
+        $termValues = 'screen|xterm|vt100|vt220|putty|rxvt|ansi|cygwin|linux';
+        return \preg_match('/^((' . $termValues . ').*)|(.*-256(color)?(-bce)?)$/', $term) === 1;
     }
 
     /**
@@ -121,8 +151,45 @@ class Stream extends AbstractRoute
      */
     private function ansiCheck()
     {
-        $meta = \stream_get_meta_data($this->fileHandle);
-        return ($this->cfg['ansi'] === true || $this->cfg['ansi'] === 'default') && $meta['wrapper_type'] === 'PHP';
+        return $this->cfg['ansi'] === true
+            || ($this->cfg['ansi'] === 'default' && self::hasColorSupport($this->fileHandle));
+    }
+
+    /**
+     * Test if environment indicates no ANSI support
+     *
+     * @param resource $streamResource stream resource
+     *
+     * @return bool
+     */
+    private static function ansiTestNo($streamResource)
+    {
+        $term = (string) \getenv('TERM');
+        return \count(\array_filter([
+            $term === 'dumb',
+            !\defined('STDOUT'),
+            isset($_SERVER['NO_COLOR']),
+            \getenv('NO_COLOR') !== false,
+            (\function_exists('stream_isatty') && \stream_isatty($streamResource) === false
+                // see https://github.com/composer/composer/issues/9690#issuecomment-779700967
+                && !\in_array(\strtoupper((string) \getenv('MSYSTEM')), ['MINGW32', 'MINGW64'], true)),
+        ])) > 0;
+    }
+
+    /**
+     * Test if environment indicates ANSI support
+     *
+     * @param resource $streamResource stream resource
+     *
+     * @return bool
+     */
+    private static function ansiTestYes($streamResource)
+    {
+        return \getenv('TERM_PROGRAM') === 'Hyper'
+            || \getenv('ANSICON') !== false
+            || \getenv('COLORTERM') !== false
+            || \getenv('ConEmuANSI') === 'ON'
+            || (\function_exists('sapi_windows_vt100_support') && \sapi_windows_vt100_support($streamResource));
     }
 
     /**

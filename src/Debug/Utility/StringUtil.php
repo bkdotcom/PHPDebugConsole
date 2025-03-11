@@ -336,7 +336,11 @@ class StringUtil
         }
         $success = true;
         // whitespace only, don't highlight
+        \set_error_handler(static function () {
+            // ignore error
+        });
         $sql = SqlFormatter::format($sql, false);
+        \restore_error_handler();
         // SqlFormatter borks bound params
         $sql = \strtr($sql, array(
             ' : ' => ' :',

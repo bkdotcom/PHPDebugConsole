@@ -96,7 +96,7 @@ class PhpCurlClass extends Curl
     {
         $options = $this->buildOptionsDebug();
         $this->debug->groupCollapsed(
-            $this->debugOptions['channelName'],
+            $this->debug->getCfg('channelName', Debug::CONFIG_DEBUG),
             $this->getHttpMethod($options),
             $options['CURLOPT_URL'],
             $this->debug->meta(array(

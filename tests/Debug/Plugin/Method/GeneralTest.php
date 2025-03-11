@@ -35,7 +35,7 @@ class GeneralTest extends DebugTestFramework
             'subject' => $subject,
             'body' => $body,
             'addHeadersStr' => 'From: testFrom@test.com',
-        ), $this->emailInfo);
+        ), self::$emailInfo);
     }
 
     /**

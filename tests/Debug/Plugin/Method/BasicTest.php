@@ -583,6 +583,7 @@ class BasicTest extends DebugTestFramework
     {
         $stream = \fopen('php://output', 'w');
         \bdk\Debug\Utility\Reflection::propSet($this->debug->getPlugin('methodBasic'), 'cliOutputStream', $stream);
+        \bdk\Debug\Utility\Reflection::propSet($this->debug->getPlugin('methodBasic'), 'hasColorSupport', true);
         $this->testMethod(
             'varDump',
             array(

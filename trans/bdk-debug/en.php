@@ -11,7 +11,7 @@ return array(
     'assert.should-be' => 'should be',
     'assert.should-not-be' => 'should not be',
 
-    'channel.cache' => 'cache',
+    'channel.cache' => 'Cache',
     'channel.config' => 'Config',
     'channel.db' => 'Db',
     'channel.events' => 'events',

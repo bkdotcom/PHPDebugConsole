@@ -1948,7 +1948,7 @@ var phpDebugConsole = (function (exports, $) {
     $ul = buildChannelList(channels[channelKeyRoot].channels, channelKeyRoot);
     if ($ul.html().length) {
       $toggles = $('<fieldset />', {
-        class: 'channels'
+        class: 'channels',
       })
         .append('<legend>Channels</legend>')
         .append($ul);
@@ -2008,79 +2008,79 @@ var phpDebugConsole = (function (exports, $) {
   /**
    * @return {jQuery} $ul
    */
-  function buildChannelList (channels, nameRoot, checkedChannels, prepend) {
+  function buildChannelList (channels, keyRoot, checkedChannels, prepend) {
     var $lis = [];
     var $ul = $('<ul class="list-unstyled">');
     /*
-    console.log('buildChannelList', {
-      nameRoot: nameRoot,
+    console.warn('buildChannelList', {
+      channels: channels,
+      keyRoot: keyRoot,
       prepend: prepend,
-      channels: channels
     })
     */
     prepend = prepend || '';
     if ($.isArray(channels)) {
       channels = channelsToTree(channels);
     } else if (prepend.length === 0 && Object.keys(channels).length) {
-      // start with (add) if there are other channels
-      // console.log('buildChannelLi name root', nameRoot)
+      // start with root.   Add if there are other channels
+      // console.log('buildChannelLi key root', keyRoot)
       $ul.append(buildChannelLi(
         {
-          name: nameRoot,
+          name: keyRoot,
           options: {},
         },
-        nameRoot, // value
+        keyRoot, // value
         true, // isChecked
         true // isRoot
       ));
     }
-    $lis = buildChannelLis(channels, nameRoot, checkedChannels, prepend);
+    $lis = buildChannelLis(channels, keyRoot, checkedChannels, prepend);
     for (var i = 0, len = $lis.length; i < len; i++) {
       $ul.append($lis[i]);
     }
     return $ul
   }
 
-  function buildChannelValue (channelName, prepend, nameRoot) {
-    var value = channelName;
+  function buildChannelValue (channelKey, prepend, keyRoot) {
+    var value = channelKey;
     if (prepend) {
-      value = prepend + channelName;
-    } else if (value !== nameRoot) {
-      value = nameRoot + '.' + value;
+      value = prepend + channelKey;
+    } else if (value !== keyRoot) {
+      value = keyRoot + '.' + value;
     }
     return value
   }
 
-  function buildChannelLis (channels, nameRoot, checkedChannels, prepend) {
+  function buildChannelLis (channels, keyRoot, checkedChannels, prepend) {
     var $lis = [];
     var channel;
-    var channelNames = Object.keys(channels).sort(function (a, b) {
+    var channelKeys = Object.keys(channels).sort(function (a, b) {
       return a.localeCompare(b)
     });
-    $.each(channelNames, function (i, channelName) {
-      if (channelName === 'phpError') {
+    $.each(channelKeys, function (i, channelKey) {
+      if (channelKey === 'phpError') {
         // phpError is a special channel
         return
       }
-      channel = channels[channelName];
-      channel.name = channelName;
-      $lis.push(buildChannelLisIterator(channel, nameRoot, checkedChannels, prepend));
+      channel = channels[channelKey];
+      channel.key = channelKey;
+      $lis.push(buildChannelLisIterator(channel, keyRoot, checkedChannels, prepend));
     });
     return $lis
   }
 
-  function buildChannelLisIterator (channel, nameRoot, checkedChannels, prepend) {
-    var value = buildChannelValue(channel.name, prepend, nameRoot);
+  function buildChannelLisIterator (channel, keyRoot, checkedChannels, prepend) {
+    var value = buildChannelValue(channel.key, prepend, keyRoot);
     var $li = buildChannelLi(
       channel,
       value,
       checkedChannels !== undefined
         ? checkedChannels.indexOf(value) > -1
         : channel.options.show,
-      channel.name === nameRoot
+      channel.key === keyRoot
     );
     if (Object.keys(channel.channels).length) {
-      $li.append(buildChannelList(channel.channels, nameRoot, checkedChannels, value + '.'));
+      $li.append(buildChannelList(channel.channels, keyRoot, checkedChannels, value + '.'));
     }
     return $li
   }
@@ -2141,6 +2141,7 @@ var phpDebugConsole = (function (exports, $) {
         };
       if (!channelTreeRef[path[i]]) {
         channelTreeRef[path[i]] = {
+          name: channel.name,
           options: options,
           channels: {}
         };

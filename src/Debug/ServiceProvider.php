@@ -131,7 +131,7 @@ class ServiceProvider implements ServiceProviderInterface
         $container['i18n'] = static function (Container $container) {
             return new \bdk\I18n(
                 $container['serverRequest'],
-                $container['debug']->getCfg('i18n', Debug::CONFIG_INIT)
+                $container['debug']->getCfg('i18n', Debug::CONFIG_DEBUG)
             );
         };
         $container['pluginManager'] = static function () {

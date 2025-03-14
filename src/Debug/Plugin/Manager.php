@@ -126,15 +126,12 @@ class Manager implements SubscriberInterface, PluginInterface
     {
         $plugins = array();
         $this->registeredPlugins->rewind();
+        $numericIndex = 0;
         while ($this->registeredPlugins->valid()) {
             $plugin = $this->registeredPlugins->current();
-            $pluginName = \array_search($plugin, $this->namedPlugins, true);
+            $index = \array_search($plugin, $this->namedPlugins, true) ?: $numericIndex++;
             $this->registeredPlugins->next();
-            if ($pluginName === false) {
-                $plugins[] = $plugin;
-                continue;
-            }
-            $plugins[$pluginName] = $plugin;
+            $plugins[$index] = $plugin;
         }
         \ksort($plugins);
         return $plugins;
@@ -233,7 +230,7 @@ class Manager implements SubscriberInterface, PluginInterface
             throw new InvalidArgumentException(\sprintf(
                 '%s expects %s.  %s provided',
                 __FUNCTION__,
-                'plugin name or object',
+                'plugin name or instance',
                 $this->debug->php->getDebugType($plugin)
             ));
         }
@@ -299,24 +296,14 @@ class Manager implements SubscriberInterface, PluginInterface
                 plugin subscribes to Debug::EVENT_PLUGIN_INIT
                 call subscriber directly
             */
-            \call_user_func(
-                $this->getSubscriberCallable($plugin, $subscriptions[Debug::EVENT_PLUGIN_INIT]),
-                new Event($this->debug),
-                Debug::EVENT_PLUGIN_INIT,
-                $this->debug->eventManager
-            );
+            $this->callPluginEventSubscriber($plugin, Debug::EVENT_PLUGIN_INIT, $subscriptions[Debug::EVENT_PLUGIN_INIT]);
         }
         if (isset($subscriptions[Debug::EVENT_BOOTSTRAP]) && $this->isBootstrapped) {
             /*
                 plugin subscribes to Debug::EVENT_BOOTSTRAP
                 and we've already bootstrapped
             */
-            \call_user_func(
-                $this->getSubscriberCallable($plugin, $subscriptions[Debug::EVENT_BOOTSTRAP]),
-                new Event($this->debug),
-                Debug::EVENT_BOOTSTRAP,
-                $this->debug->eventManager
-            );
+            $this->callPluginEventSubscriber($plugin, Debug::EVENT_BOOTSTRAP, $subscriptions[Debug::EVENT_BOOTSTRAP]);
         }
         $this->debug->eventManager->addSubscriberInterface($plugin);
     }
@@ -347,6 +334,27 @@ class Manager implements SubscriberInterface, PluginInterface
     }
 
     /**
+     * Call plugin's event subscriber directly
+     *
+     * @param SubscriberInterface $plugin    SubscriberInterface instance
+     * @param string              $eventName Event name (Debug::EVENT_PLUGIN_INIT or Debug::EVENT_BOOTSTRAP)
+     * @param mixed               $callable  closure or method name
+     *
+     * @return void
+     */
+    private function callPluginEventSubscriber(SubscriberInterface $plugin, $eventName, $callable)
+    {
+        \call_user_func(
+            $callable instanceof Closure
+                ? $callable
+                : [$plugin, $callable],
+            new Event($this->debug),
+            $eventName,
+            $this->debug->eventManager
+        );
+    }
+
+    /**
      * Remove plugin by name
      *
      * @param string $pluginName Plugin name
@@ -358,21 +366,6 @@ class Manager implements SubscriberInterface, PluginInterface
         return isset($this->namedPlugins[$pluginName])
             ? $this->namedPlugins[$pluginName]
             : false;
-    }
-
-    /**
-     * Determine callable from raw SubscriberInterface::getSubscribers  return value
-     *
-     * @param SubscriberInterface $plugin SubscriberInterface instance
-     * @param mixed               $mixed  Closure or method name (array not yet supported)
-     *
-     * @return callable
-     */
-    private function getSubscriberCallable(SubscriberInterface $plugin, $mixed)
-    {
-        return $mixed instanceof Closure
-            ? $mixed
-            : [$plugin, $mixed];
     }
 
     /**

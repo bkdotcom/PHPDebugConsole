@@ -2,6 +2,7 @@
 
 namespace bdk;
 
+use bdk\I18n\FileLoader;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -26,7 +27,7 @@ use Psr\Http\Message\ServerRequestInterface;
  *  so keys result in the format 'depth1.depth2.depth3...'
  *
  * You may register additional file type parsers with `registerExtParser('ext', callable)`
- * Ie we don't support yaml, but you could register a yaml parser
+ * Ie we don't support yaml out of the box, but you could register a yaml parser
  */
 class I18n
 {
@@ -37,13 +38,16 @@ class I18n
      * May specify domain specific filepath templates with "domainFilepath"
      *   (not necessary to include the {domain} placeholder)
      *
-     * localFirstChoice: will be given top priority..  perhaps comes from a route attribute
+     * localFirstChoice: will be given top priority..  perhaps comes from a route attribute, or framework determined locale
      * localeFallback: if no translation found, we'll try this locale
      *
      * @var array
      */
     private $cfg = array(
         'defaultDomain' => 'messages',
+        'displayNameFromData' => false, // availableLocales()...
+                                        //   should it load each file to get locale.displayName value ?
+                                        //   will fallback to Locale::getDisplayName() if available
         'domainFilepath' => array(),
         'filepath' => './trans/{domain}/{locale}.php',
         'localeFallback' => 'en',
@@ -58,7 +62,7 @@ class I18n
         ),
     );
 
-    /** @var array domain / locale / strings */
+    /** @var array domain => locale => strings */
     private $data = array();
 
     /**
@@ -68,17 +72,17 @@ class I18n
      */
     private $domainLocale = array();
 
+    /** @var FileLoader */
+    private $fileLoader;
+
+    /** @var classname */
+    private $messageFormatterClass = 'MessageFormatter';
+
     /** @var ServerRequestInterface */
     private $serverRequest;
 
     /** @var list<string> User's preferred locales */
     private $userLocales = [];
-
-    /** @var array<string,callable> */
-    private $extParsers = array();
-
-    /** @var string */
-    private $messageFormatterClass = 'MessageFormatter';
 
     /**
      * Constructor
@@ -88,54 +92,46 @@ class I18n
      */
     public function __construct(ServerRequestInterface $serverRequest, $cfg = array())
     {
+        $this->fileLoader = new FileLoader();
         $this->serverRequest = $serverRequest;
-        $this->cfg = \array_merge($this->cfg, $cfg);
         $this->messageFormatterClass = \class_exists('MessageFormatter', false) && PHP_VERSION_ID >= 50500
             ? 'MessageFormatter'
             : 'bdk\I18n\MessageFormatter';
-        $this->userLocales = $this->getUserLocales();
-        $this->registerExtParser('csv', array($this, 'parseExtCsv'));
-        $this->registerExtParser('json', static function ($filepath) {
-            $data = \json_decode(\file_get_contents($filepath), true);
-            return self::arrayFlatten($data);
-        });
-        $this->registerExtParser('php', static function ($filepath) {
-            $data = include $filepath;
-            return self::arrayFlatten($data);
-        });
-        $this->registerExtParser('ini', array($this, 'parseExtIni'));
-        $this->registerExtParser('properties', array($this, 'parseExtIni'));
+        $this->setCfg($cfg);
     }
 
     /**
-     * Flatten array
+     * Get a list of available locales for the given domain
      *
-     * Resulting array will have keys in the format 'depth1.depth2.depth3'
+     * This is useful for displaying a language selector to the user
      *
-     * This utility method is made public for use in custom file parsers
-     *
-     * @param array  $array    array to flatten
-     * @param string $joinWith ('.') string to join keys with
-     * @param string $prefix   @internal
+     * @param string $domain Domain (defaults to configured defaultDomain)
      *
      * @return array
      */
-    public static function arrayFlatten($array, $joinWith = '.', $prefix = '')
+    public function availableLocales($domain = null)
     {
-        $return = array();
-        foreach ($array as $key => $value) {
-            $newKey = $prefix . $key;
-            \is_array($value) === false
-                ? $return[$newKey] = $value
-                : $return = \array_merge($return, self::arrayFlatten($value, $joinWith, $newKey . $joinWith));
-        }
-        return $return;
+        $domain = $domain ?: $this->cfg['defaultDomain'];
+        $template = $this->filepathTemplate($domain);
+        $globTemplate = \strtr($template, array(
+            '{domain}' => $domain,
+            '{locale}' => '*',
+        ));
+        $regex = '#' . \str_replace('\\*', '(\w+)', \preg_quote($globTemplate, '#')) . '#';
+        $locales = array();
+        $filepaths = \glob($globTemplate);
+        \array_walk($filepaths, function ($filepath) use ($domain, &$locales, $regex) {
+            \preg_match($regex, $filepath, $matches);
+            $locale = $matches[1];
+            $locales[$locale] = $this->displayname($locale, $domain);
+        });
+        return $locales;
     }
 
     /**
      * Get the applied locale for the given domain
      *
-     * @param string|null $domain domain (defaults to configured defaultDomain)
+     * @param string|null $domain Domain (defaults to configured defaultDomain)
      *
      * @return string|false
      */
@@ -157,34 +153,6 @@ class I18n
     }
 
     /**
-     * Get user preferred locales
-     *
-     * returns a prioritized list of locales in the format 'en_US'
-     *
-     * @return string[]
-     */
-    public function getUserLocales()
-    {
-        $userLocales = array();
-        foreach ($this->cfg['priority'] as $priority) {
-            list($method, $params) = \array_replace(['', ''], \explode(':', $priority));
-            $params = \explode('.', $params);
-            $method = 'getLocaleFrom' . \ucfirst($method);
-            $locales = \call_user_func_array([$this, $method], $params);
-            $userLocales = \array_merge($userLocales, (array) $locales);
-        }
-        $userLocales = \array_map(function ($locale) {
-            $parsed = $this->parseLocale($locale);
-            return $parsed
-                ? \implode('_', \array_filter([$parsed['lang'], $parsed['region']]))
-                : false;
-        }, $userLocales);
-        $userLocales = \array_filter($userLocales);
-        $userLocales = $this->userLocaleInsertFallbacks($userLocales);
-        return \array_values(\array_unique($userLocales));
-    }
-
-    /**
      * Register extension parser.
      *
      * Define a custom file-extension parser
@@ -196,7 +164,34 @@ class I18n
      */
     public function registerExtParser($ext, $callable)
     {
-        $this->extParsers[$ext] = $callable;
+        $this->fileLoader->registerExtParser($ext, $callable);
+        return $this;
+    }
+
+    /**
+     * Set one or more config values
+     *
+     *    setCfg('key', 'value')
+     *    setCfg(array('k1'=>'v1', 'k2'=>'v2'))
+     *
+     * @param array|string $mixed key=>value array or key
+     * @param mixed        $value new value
+     *
+     * @return static
+     */
+    public function setCfg($mixed, $value = null)
+    {
+        if (\is_array($mixed) === false) {
+            $mixed = array($mixed => $value);
+        }
+        $this->cfg = \array_replace($this->cfg, $mixed);
+        $noResetKeys = ['defaultDomain', 'displayNameFromData'];
+        $haveResetKey = \count(\array_diff(\array_keys($mixed), $noResetKeys)) > 0;
+        if ($haveResetKey) {
+            $this->data = array();
+            $this->domainLocale = array();
+            $this->userLocales = $this->userLocales();
+        }
         return $this;
     }
 
@@ -218,10 +213,62 @@ class I18n
         $str = isset($this->data[$domain][$locale][$str])
             ? $this->data[$domain][$locale][$str]
             : $str;
-        if (empty($args)) {
-            return $str;
+        return $args
+            ? \call_user_func([$this->messageFormatterClass, 'formatMessage'], $locale, $str, $args)
+            : $str;
+    }
+
+    /**
+     * Get user preferred locales (in addition to configured firstChoice and fallback)
+     *
+     * Returns a prioritized list of locales in the format 'en_US'
+     *
+     * @return string[]
+     */
+    public function userLocales()
+    {
+        $userLocales = array();
+        foreach ($this->cfg['priority'] as $priority) {
+            list($method, $params) = \array_replace(['', ''], \explode(':', $priority));
+            $method = 'getLocaleFrom' . \ucfirst($method);
+            $params = \explode('.', $params);
+            $locales = \call_user_func_array([$this, $method], $params);
+            $userLocales = \array_merge($userLocales, (array) $locales);
         }
-        return \call_user_func([$this->messageFormatterClass, 'formatMessage'], $locale, $str, $args);
+        $userLocales = \array_map(function ($locale) {
+            $parsed = $this->parseLocale($locale);
+            return $parsed
+                ? \implode('_', \array_filter([$parsed['lang'], $parsed['region']]))
+                : false;
+        }, $userLocales);
+        $userLocales = \array_filter($userLocales);
+        $userLocales = $this->userLocaleInsertFallbacks($userLocales);
+        return \array_values(\array_unique($userLocales));
+    }
+
+    /**
+     * Return the display name for the given locale
+     *
+     * @param string $locale Locale ('en_US')
+     * @param string $domain Domain (defaults to configured defaultDomain)
+     *
+     * @return string
+     */
+    private function displayName($locale, $domain = null)
+    {
+        $domain = $domain ?: $this->cfg['defaultDomain'];
+        $messages = array();
+        if ($this->cfg['displayNameFromData']) {
+            $filepath = $this->filepathDomainLocale($domain, $locale);
+            $messages = $this->fileLoader->load($filepath);
+        }
+        $displayName = null;
+        if (isset($messages['locale.displayName'])) {
+            $displayName = $messages['locale.displayName'];
+        } elseif (\class_exists('Locale')) {
+            $displayName = \Locale::getDisplayName($locale, $locale);
+        }
+        return $displayName ?: $locale;
     }
 
     /**
@@ -236,18 +283,29 @@ class I18n
      */
     private function filepathDomainLocale($domain, $locale)
     {
-        $filepathTemplate = isset($this->cfg['domainFilepath'][$domain])
-            ? $this->cfg['domainFilepath'][$domain]
-            : $this->cfg['filepath'];
-        $filepath = \strtr($filepathTemplate, array(
+        return \strtr($this->filepathTemplate($domain), array(
             '{domain}' => $domain,
             '{locale}' => $locale,
         ));
-        return \preg_replace('/^.\//', __DIR__ . '/', $filepath);
     }
 
     /**
-     * Load the given domain and locale
+     * Return the filepath template for the given domain
+     *
+     * @param string $domain Domain ('messages')
+     *
+     * @return string
+     */
+    private function filepathTemplate($domain)
+    {
+        $template = isset($this->cfg['domainFilepath'][$domain])
+            ? $this->cfg['domainFilepath'][$domain]
+            : $this->cfg['filepath'];
+        return \preg_replace('/^.\//', __DIR__ . '/', $template);
+    }
+
+    /**
+     * Load the given domain + locale messages
      *
      * @param string $domain domain
      * @param string $locale locale
@@ -265,34 +323,16 @@ class I18n
             return;
         }
         $filepath = $this->filepathDomainLocale($domain, $locale);
-        $this->data[$domain][$locale] = $this->loadFile($filepath);
+        $this->data[$domain][$locale] = $this->fileLoader->load($filepath);
         $parsed = $this->parseLocale($locale);
         if ($parsed['region']) {
             // merge with non-region specific
             $filepath = $this->filepathDomainLocale($domain, $parsed['lang']);
             $this->data[$domain][$locale] = \array_merge(
-                $this->loadFile($filepath),
+                $this->fileLoader->load($filepath),
                 $this->data[$domain][$locale]
             );
         }
-    }
-
-    /**
-     * Get translations from given filepath
-     *
-     * @param string $filepath file path
-     *
-     * @return array
-     */
-    private function loadFile($filepath)
-    {
-        if (\is_file($filepath) === false) {
-            return array();
-        }
-        $ext = \substr(\strrchr($filepath, '.'), 1);
-        return isset($this->extParsers[$ext])
-            ? $this->extParsers[$ext]($filepath)
-            : array();
     }
 
     /**
@@ -345,70 +385,25 @@ class I18n
     }
 
     /**
-     * Parse csv translation file
-     *
-     * @param string $filepath file path
-     *
-     * @return array
-     *
-     * @disregard
-     */
-    private static function parseExtCsv($filepath)
-    {
-        try {
-            $handle = \fopen($filepath, 'r');
-        } catch (\Exception $e) {
-            $handle = false;
-        }
-        if ($handle === false) {
-            return array();
-        }
-        $return = array();
-        while (($data = \fgetcsv($handle, 2048, ',', '"', '\\')) !== false) {
-            if (\count($data) === 1 && empty($data[0])) {
-				// blank line
-				continue;
-            }
-            $data = \array_map('trim', $data);
-            $return[$data[0]] = $data[1];
-        }
-        \fclose($handle);
-        return $return;
-    }
-
-    /**
-     * Parse ini/properties file
-     *
-     * @param string $filepath file path
-     *
-     * @return array
-     */
-    private static function parseExtIni($filepath)
-    {
-        $parsed = \parse_ini_file($filepath, true) ?: array();
-        return self::arrayFlatten($parsed);
-    }
-
-    /**
      * Parse Accept-Language header value
      *
-     * @param string $locales Accept-Language header value
+     * @param string $headerValue Accept-Language header value
      *
      * @return array
      */
-    private static function parseHeaderVal($locales)
+    private static function parseHeaderVal($headerValue)
     {
-        $userLocales = array();
-        $locales = \array_filter(\preg_split('/,\s*/', $locales));
-        foreach ($locales as $locale) {
-            list($locale, $priority) = \array_replace(['', 1], \explode(';q=', $locale, 2));
+        $locales = array();
+        $headerValues = \array_filter(\preg_split('/,\s*/', $headerValue));
+        foreach ($headerValues as $value) {
+            list($locale, $priority) = \array_replace(['', 1], \explode(';q=', $value, 2));
             if (\is_numeric($priority) === false) {
                 continue;
             }
-            $userLocales[$locale] = $priority;
+            $locales[$locale] = $priority;
         }
-        \arsort($userLocales, SORT_NUMERIC);
-        return \array_keys($userLocales);
+        \arsort($locales, SORT_NUMERIC);
+        return \array_keys($locales);
     }
 
     /**
@@ -450,12 +445,18 @@ class I18n
         $fallback = \end($userLocales) === $this->cfg['localeFallback']
             ? \array_pop($userLocales)
             : null;
+        $firstChoices = [];
+        if (\reset($userLocales) === $this->cfg['localeFirstChoice']) {
+            $firstChoice = \array_shift($userLocales);
+            $lang = \explode('_', $firstChoice)[0];
+            $firstChoices = [$firstChoice, $lang];
+        }
         $localesSansRegion = [];
         foreach ($userLocales as $locale) {
             $lang = \explode('_', $locale)[0];
             $localesSansRegion[] = $lang;
         }
-        $userLocales = \array_merge($userLocales, $localesSansRegion, [$fallback]);
+        $userLocales = \array_merge($firstChoices, $userLocales, $localesSansRegion, [$fallback]);
         return \array_unique($userLocales);
     }
 }

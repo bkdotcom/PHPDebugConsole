@@ -250,7 +250,7 @@ class FileTree
     private function walkBranchTestLeaf($keys, $val)
     {
         $valFirst = \current($val);
-        $regex = '/^\d+ '. \preg_quote($this->cfg['strings']['omitted'], '/') . '/';
+        $regex = '/^\d+ ' . \preg_quote($this->cfg['strings']['omitted'], '/') . '/';
         $isOmittedCount = \preg_match($regex, (string) $valFirst) === 1;
         if ($isOmittedCount) {
             return $val;

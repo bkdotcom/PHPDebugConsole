@@ -1,7 +1,10 @@
 <?php
 
 return array(
+    'locale.displayName' => 'via locale.displayName',
     'gulf.of.mexico' => 'Gulf of Mexico',
     'hello' => 'howdy',
-    'user.likes' => '{name} likes {what}',
+    'user' => array(
+        'likes' => '{name} likes {what}',
+    ),
 );

@@ -264,6 +264,7 @@ abstract class AbstractDebug
 
         if (!$this->parentInstance) {
             // we're the root instance
+            $this->cfg['i18n'] = \array_merge($this->cfg['i18n'], $cfgBootstrap['i18n']);
             $this->serviceContainer['errorHandler'];
             $this->addPlugins($cfgBootstrap['plugins']);
             $this->data->set('requestId', $this->requestId());
@@ -287,6 +288,7 @@ abstract class AbstractDebug
     {
         $cfgDefault = array(
             'container' => array(),
+            'i18n' => array(),
             'parent' => null,
             'plugins' => $this->cfg['plugins'],
             'serviceProvider' => $this->cfg['serviceProvider'],
@@ -368,10 +370,9 @@ abstract class AbstractDebug
      */
     private function onCfgChannelIcon($val)
     {
-        if (\preg_match('/^:(.+):$/', (string) $val, $matches)) {
-            $val = $this->getCfg('icons.' . $matches[1], Debug::CONFIG_DEBUG);
-        }
-        return $val;
+        return \preg_match('/^:(.+):$/', (string) $val, $matches)
+            ? $this->getCfg('icons.' . $matches[1], Debug::CONFIG_DEBUG)
+            : $val;
     }
 
     /**
@@ -383,10 +384,9 @@ abstract class AbstractDebug
      */
     private function onCfgChannelName($val)
     {
-        if (\preg_match('/^(.+)\|trans$/', $val, $matches)) {
-            $val = $this->i18n->trans($matches[1]);
-        }
-        return $val;
+        return \preg_match('/^(.+)\|trans$/', $val, $matches)
+            ? $this->i18n->trans($matches[1])
+            : $val;
     }
 
     /**

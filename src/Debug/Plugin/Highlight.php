@@ -54,7 +54,7 @@ class Highlight implements AssetProviderInterface
             'script' => [
                 './js/prism.js',
                 'Prism.manual = true;
-                (function(){
+                (function ($) {
                     $("body").on("enhanced.debug expanded.debug.group shown.debug.tab", function (e) {
                         var $target = $(e.target)
                         var selector = ".highlight:visible"
@@ -118,7 +118,7 @@ class Highlight implements AssetProviderInterface
                             }, 100)
                         }
                     })
-                }());',
+                }(window.jQuery));',
             ],
         );
     }

@@ -191,6 +191,5 @@ trait DatabaseTrait
         }
         $this->debug = $debug;
         $this->statementInfoLogger = new StatementInfoLogger($debug);
-        $debug->addPlugin($debug->pluginHighlight, 'highlight');
     }
 }

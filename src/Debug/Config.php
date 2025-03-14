@@ -100,6 +100,7 @@ class Config
                 'errorStatsFile',
             ],
         ),
+        'i18n' => array(),
         'routeHtml' => [
             'css',
             'drawer',
@@ -166,7 +167,7 @@ class Config
      */
     public function onContainerInvoke($val, $name)
     {
-        if (!($val instanceof ConfigurableInterface)) {
+        if (!($val instanceof ConfigurableInterface) && !\method_exists($val, 'setCfg')) {
             $this->invokedServices[] = $name;
             return;
         }
@@ -317,9 +318,9 @@ class Config
         } elseif (isset($this->debug->{$debugProp})) {
             $obj = $this->debug->{$debugProp};
         }
-        return $obj
+        return $obj && \method_exists($obj, 'getCfg')
             ? $obj->getCfg(\implode('/', $path))
-            : null; // not invoked or invalid dump/route
+            : ($path ? null : array()); // not invoked or invalid dump/route
     }
 
     /**
@@ -475,8 +476,7 @@ class Config
         }
         if (isset($this->valuesPending[$debugProp])) {
             // update valuesPending
-            $this->valuesPending[$debugProp] = \array_merge($this->valuesPending[$debugProp], $cfg);
-            return;
+            $cfg = \array_merge($this->valuesPending[$debugProp], $cfg);
         }
         // set valuesPending
         $this->valuesPending[$debugProp] = $cfg;

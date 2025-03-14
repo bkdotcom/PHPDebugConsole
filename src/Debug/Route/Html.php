@@ -242,22 +242,22 @@ class Html extends AbstractRoute
     protected function buildChannelTree()
     {
         $channels = $this->dumper->channels;
-        $channelRoot = $this->debug->rootInstance;
         $tree = array();
         \ksort($channels, SORT_NATURAL | SORT_FLAG_CASE);
-        \array_walk($channels, static function (Debug $channel, $name) use ($channels, $channelRoot, &$tree) {
+        \array_walk($channels, function (Debug $channel, $key) use ($channels, &$tree) {
             $ref = &$tree;
-            $path = \explode('.', $name);
+            $path = \explode('.', $key);
             foreach ($path as $i => $k) {
                 // output may have only output general.foo
                 //   we still need general
                 $pathFq = \implode('.', \array_slice($path, 0, $i + 1));
                 $channel = isset($channels[$pathFq])
                     ? $channels[$pathFq]
-                    : $channelRoot->getChannel($pathFq);
+                    : $this->debug->rootInstance->getChannel($pathFq);
                 if (!isset($ref[$k])) {
                     $ref[$k] = array(
                         'channels' => array(),
+                        'name' => $channel->getCfg('channelName', Debug::CONFIG_DEBUG),
                         'options' => array(
                             'icon' => $channel->getCfg('channelIcon', Debug::CONFIG_DEBUG),
                             'show' => $channel->getCfg('channelShow', Debug::CONFIG_DEBUG),

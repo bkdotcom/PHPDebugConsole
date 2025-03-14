@@ -71,6 +71,7 @@ class ConfigTest extends DebugTestFramework
             'abstracter',
             'debug',
             'errorHandler',
+            'i18n',
             'routeHtml',
             'routeStream',
         );

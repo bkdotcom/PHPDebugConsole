@@ -226,9 +226,9 @@ class Component extends CApplicationComponent
             'nested' => false,
         ));
 
-        $debug->log($this->debug->i18n('session.id'), $session->sessionID);
-        $debug->log($this->debug->i18n('session.name'), $session->sessionName);
-        $debug->log($this->debug->i18n('session.class'), $debug->abstracter->crateWithVals(
+        $debug->log($this->debug->i18n->trans('session.id'), $session->sessionID);
+        $debug->log($this->debug->i18n->trans('session.name'), $session->sessionName);
+        $debug->log($this->debug->i18n->trans('session.class'), $debug->abstracter->crateWithVals(
             \get_class($session),
             array(
                 'type' => Type::TYPE_IDENTIFIER,

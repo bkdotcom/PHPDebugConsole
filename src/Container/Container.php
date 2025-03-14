@@ -381,19 +381,16 @@ class Container implements ArrayAccess
      *    setCfg(array('k1'=>'v1', 'k2'=>'v2'))
      *
      * @param array|string $mixed key=>value array or key
-     * @param mixed        $val   new value
+     * @param mixed        $value new value
      *
      * @return $this
      */
-    public function setCfg($mixed, $val = null)
+    public function setCfg($mixed, $value = null)
     {
-        if (\is_string($mixed)) {
-            $this->cfg[$mixed] = $val;
-            return $this;
+        if (\is_array($mixed) === false) {
+            $mixed = array($mixed => $value);
         }
-        if (\is_array($mixed)) {
-            $this->cfg = \array_merge($this->cfg, $mixed);
-        }
+        $this->cfg = \array_replace($this->cfg, $mixed);
         return $this;
     }
 

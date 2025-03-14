@@ -54,9 +54,42 @@ class I18nTest extends TestCase
             "en_UK",
             "en",
             "es",
-        ], $i18n->getUserLocales());
+        ], $i18n->userLocales());
         self::assertSame('Gulf of America', $i18n->trans('gulf.of.mexico'));
         self::assertSame('howdy', $i18n->trans('hello'));
+    }
+
+    public function testAvailableLocales()
+    {
+        $i18n = self::instantiateI18n('php');
+        self::assertSame(array(
+            'en' => 'English',
+            'en_US' => 'English (United States)',
+            'es' => 'español',
+        ), $i18n->availableLocales());
+    }
+
+    public function testAvailableLocalesDisplayNameFromData()
+    {
+        $i18n = self::instantiateI18n('php');
+        $i18n->setCfg('displayNameFromData', true);
+        self::assertSame(array(
+            'en' => 'via locale.displayName',
+            'en_US' => 'English (United States)',
+            'es' => 'español',
+        ), $i18n->availableLocales());
+    }
+
+    public function testRegisterExtParser()
+    {
+        $i18n = new I18n(new ServerRequest(), array(
+            'filepath' => __DIR__ . '/trans/t/{locale}.bob',
+        ));
+        $i18n->registerExtParser('bob', static function ($filepath) {
+            return \unserialize(\file_get_contents($filepath));
+        });
+        // \bdk\Debug::varDump('serialized', serialize(array('idea.bad' => 'serialized seems dumb')));
+        self::assertSame('serialized seems dumb', $i18n->trans('idea.bad'));
     }
 
     /**
@@ -82,25 +115,41 @@ class I18nTest extends TestCase
         self::assertSame($expected, $translated);
     }
 
-    public function testParseExtCsvNoHandle()
+    public static function providerTransCsv()
     {
-        $method = new \ReflectionMethod('bdk\I18n', 'parseExtCsv');
-        $method->setAccessible(true);
-        $return = $method->invoke(null, __DIR__ . '/bogusFile.csv');
-        self::assertSame(array(), $return);
+        return self::providerTrans('csv');
     }
 
-    public static function providerTrans($ext)
+    public static function providerTransIni()
+    {
+        return self::providerTrans('ini');
+    }
+
+    public static function providerTransJson()
+    {
+        return self::providerTrans('json');
+    }
+
+    public static function providerTransPhp()
+    {
+        return self::providerTrans('php');
+    }
+
+    private static function instantiateI18n($ext)
     {
         $serverRequest = (new ServerRequest())
             ->withHeader('Accept-Language', 'en-US, fr');
-        $i18n = new I18n($serverRequest, array(
+        return new I18n($serverRequest, array(
             'domainFilepath' => array(
                 'test' => __DIR__ . '/trans/t/{locale}.' . $ext,
             ),
             'filepath' => __DIR__ . '/trans/{domain}/{locale}.' . $ext,
         ));
+    }
 
+    private static function providerTrans($ext)
+    {
+        $i18n = self::instantiateI18n($ext);
         $tests = [
             'base lang fallback' => ['hello', 'howdy'],
             'region' => ['gulf.of.mexico', 'Gulf of America'],
@@ -126,25 +175,5 @@ class I18nTest extends TestCase
             $testsRenamed[$ext . ' ' . $k] = $params;
         }
         return $testsRenamed;
-    }
-
-    public static function providerTransCsv()
-    {
-        return self::providerTrans('csv');
-    }
-
-    public static function providerTransIni()
-    {
-        return self::providerTrans('ini');
-    }
-
-    public static function providerTransJson()
-    {
-        return self::providerTrans('json');
-    }
-
-    public static function providerTransPhp()
-    {
-        return self::providerTrans('php');
     }
 }

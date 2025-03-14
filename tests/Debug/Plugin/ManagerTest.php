@@ -52,7 +52,7 @@ class ManagerTest extends TestCase
     public function testRemoveInvalidArg()
     {
         $this->expectException('InvalidArgumentException');
-        $this->expectExceptionMessage('removePlugin expects plugin name or object.  bool provided');
+        $this->expectExceptionMessage('removePlugin expects plugin name or instance.  bool provided');
         self::$manager->removePlugin(true);
     }
 

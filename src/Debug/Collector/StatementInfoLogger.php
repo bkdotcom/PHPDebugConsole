@@ -63,6 +63,7 @@ class StatementInfoLogger extends AbstractComponent
         if (!self::$constants) {
             $this->setConstants();
         }
+        $this->debug->rootInstance->addPlugin($this->debug->pluginHighlight, 'highlight');
         $this->debug->eventManager->subscribe(Debug::EVENT_CONFIG, [$this, 'onConfig']);
     }
 

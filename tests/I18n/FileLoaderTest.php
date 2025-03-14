@@ -42,7 +42,7 @@ class FileLoaderTest extends TestCase
     {
         $fileLoader = new FileLoader();
         $fileLoader->registerExtParser('md', static function ($filepath) {
-            \user_error('some error', E_USER_ERROR);
+            \trigger_error('some error', E_USER_DEPRECATED);
         });
         $file = __DIR__ . '/trans/t/readme.md';
         $data = $fileLoader->load($file);

@@ -71,7 +71,7 @@ class FileLoaderTest extends TestCase
         $file = __DIR__ . '/trans/t/readme.md';
         $data = $fileLoader->load($file);
         self::assertSame(array(), $data);
-        self::assertSame('Load(/Users/bkent/Dropbox/htdocs/common/vendor/bdk/PHPDebugConsole/tests/I18n/trans/t/readme.md) did not return an array', $fileLoader->lastError);
+        self::assertSame('Load(' . $file . ') did not return an array', $fileLoader->lastError);
     }
 
     public function testParseCsvNoHandle()

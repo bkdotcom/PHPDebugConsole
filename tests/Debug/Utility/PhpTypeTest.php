@@ -4,6 +4,8 @@ namespace bdk\Test\Debug\Utility;
 
 use bdk\Debug\Utility\Php;
 use bdk\Debug\Utility\PhpType;
+use bdk\PhpUnitPolyfill\AssertionTrait;
+use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 use bdk\Test\Debug\DebugTestFramework;
 use bdk\Test\Debug\Fixture\TestObj;
 
@@ -17,6 +19,9 @@ use bdk\Test\Debug\Fixture\TestObj;
  */
 class PhpTypeTest extends DebugTestFramework
 {
+    use AssertionTrait;
+    use ExpectExceptionTrait;
+
     /**
      * @param mixed       $value
      * @param string      $type

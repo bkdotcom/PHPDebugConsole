@@ -36,26 +36,30 @@ final class Utils
      *
      * @param mixed  $value     Value to test
      * @param string $type      "array", "callable", "object", or className
-     * @param bool   $allowNull (true) allow null?
+     * @param string $paramName (optional) parameter name
      *
      * @return void
      *
      * @throws InvalidArgumentException
      */
-    public static function assertType($value, $type, $allowNull = true)
+    public static function assertType($value, $type, $paramName = null)
     {
-        if ($allowNull && $value === null) {
-            return;
-        }
         if (self::assertTypeCheck($value, $type)) {
             return;
         }
-        throw new InvalidArgumentException(\sprintf(
-            'Expected %s%s, got %s',
-            $type,
-            $allowNull ? ' (or null)' : '',
-            self::getDebugType($value)
-        ));
+        $frame = \debug_backtrace(\DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1];
+        $params = array(
+            '{actual}' => self::getDebugType($value),
+            '{expect}' => $type,
+            '{method}' => isset($frame['class'])
+                ? $frame['class'] . '::' . $frame['function'] . '()'
+                : $frame['function'] . '()',
+            '{param}' => '$' . $paramName,
+        );
+        $msg = $paramName
+            ? '{method}: {param} expects {expect}.  {actual} provided'
+            : '{method} expects {expect}.  {actual} provided';
+        throw new InvalidArgumentException(\strtr($msg, $params));
     }
 
     /**
@@ -326,22 +330,23 @@ final class Utils
      * Test if value is of a certain type
      *
      * @param mixed  $value Value to test
-     * @param string $type  "array", "callable", "object", or className
+     * @param string $type  php type(s) to check
      *
      * @return bool
      */
     private static function assertTypeCheck($value, $type)
     {
-        switch ($type) {
-            case 'array':
-                return \is_array($value);
-            case 'callable':
-                return \is_callable($value);
-            case 'object':
-                return \is_object($value);
-            default:
-                return \is_a($value, $type);
+        $types = ['array', 'bool', 'callable', 'float', 'int', 'null', 'numeric', 'object', 'string'];
+        foreach (\explode('|', $type) as $type) {
+            $method = 'is_' . $type;
+            $isType = \in_array($type, $types, true)
+                ? $method($value)
+                : \is_a($value, $type);
+            if ($isType) {
+                return true;
+            }
         }
+        return false;
     }
 
     /**
@@ -353,8 +358,13 @@ final class Utils
      */
     protected static function getDebugType($value)
     {
-        return \is_object($value)
-            ? \get_class($value)
-            : \strtolower(\gettype($value));
+        if (\is_object($value)) {
+            return \get_class($value);
+        }
+        return \strtr(\strtolower(\gettype($value)), array(
+            'boolean' => 'bool',
+            'double' => 'float',
+            'integer' => 'int',
+        ));
     }
 }

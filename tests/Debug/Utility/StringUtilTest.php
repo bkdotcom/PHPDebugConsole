@@ -59,7 +59,7 @@ EOD;
     public function testCommonPrefixException()
     {
         $this->expectException('InvalidArgumentException');
-        $this->expectExceptionMessage('commonPrefix() - Expects a list of strings.  Found bool at index 1');
+        $this->expectExceptionMessage('bdk\Debug\Utility\StringUtil::commonPrefix() expects array of string.  bool found at 1');
         StringUtil::commonPrefix(['foo', false]);
     }
 
@@ -87,7 +87,7 @@ EOD;
     public function testCompareException()
     {
         $this->expectException('InvalidArgumentException');
-        $this->expectExceptionMessage('bdk\Debug\Utility\StringUtil::compare - Invalid operator passed');
+        $this->expectExceptionMessage('bdk\Debug\Utility\StringUtil::compare() - Invalid operator passed');
         StringUtil::compare('1', '2', '3');
     }
 
@@ -141,14 +141,14 @@ EOD;
     public function testInterpolateInvalidMessage()
     {
         $this->expectException('InvalidArgumentException');
-        $this->expectExceptionMessage('bdk\Debug\Utility::interpolate()\'s $message expects string or Stringable object. bool provided.');
+        $this->expectExceptionMessage('bdk\Debug\Utility\StringUtil::interpolate(): $message expects string or Stringable object.  bool provided');
         StringUtil::interpolate(false, 'string');
     }
 
     public function testInterpolateInvalidContext()
     {
         $this->expectException('InvalidArgumentException');
-        $this->expectExceptionMessage('bdk\Debug\Utility::interpolate()\'s $context expects array or object. string provided.');
+        $this->expectExceptionMessage('bdk\Debug\Utility\StringUtil::interpolate(): $context expects string or object.  string provided');
         StringUtil::interpolate('message', 'string');
     }
 

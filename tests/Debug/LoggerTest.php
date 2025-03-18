@@ -354,7 +354,7 @@ class LoggerTest extends DebugTestFramework
     public function testExceptionInvalidLevel()
     {
         $this->expectException('InvalidArgumentException');
-        $this->expectExceptionMessage('"dang" is not a valid level');
+        $this->expectExceptionMessage('Invalid level: dang');
         $this->debug->logger->log('dang', 'this sucks');
     }
 }

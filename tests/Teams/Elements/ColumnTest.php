@@ -124,7 +124,7 @@ class ColumnTest extends AbstractTestCaseWith
             array('items', []),
             array('items', [['foo', 'bar']], true, 'Invalid column item found at index 0'),
             array('minHeight', ['42px']),
-            array('minHeight', [42], true, 'bdk\\Teams\\Elements\\Column::withMinHeight - Invalid pixel value (ie "42px"). integer provided.'),
+            array('minHeight', [42], true, 'bdk\\Teams\\Elements\\Column::withMinHeight - Invalid pixel value (ie "42px"). int provided.'),
             // array('rtl', []),
             array('selectAction', [new OpenUrl('http://example.com')]),
             array('selectAction', [new ShowCard()], true, 'Column selectAction does not support ShowCard'),

@@ -44,7 +44,7 @@ class SerializeLog
      */
     public static function import(array $data, $debug = null)
     {
-        \bdk\Debug\Utility::assertType($debug, 'bdk\Debug');
+        \bdk\Debug\Utility\PhpType::assertType($debug, 'bdk\Debug|null', 'debug');
 
         if (!$debug) {
             $debug = new Debug();

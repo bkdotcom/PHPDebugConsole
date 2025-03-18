@@ -246,7 +246,7 @@ class TableTest extends AbstractTestCaseWith
                     ['foo','bar'],
                 ],
             ]),
-            array('rows', [false], true, 'Invalid rows. Expecting iterator of rows. boolean provided.'),
+            array('rows', [false], true, 'Invalid rows. Expecting iterator of rows. bool provided.'),
             array('rows', [
                 [
                     false,

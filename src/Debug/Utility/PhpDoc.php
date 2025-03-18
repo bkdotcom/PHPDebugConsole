@@ -174,7 +174,7 @@ class PhpDoc
      */
     private function parse($comment, $reflector = null, $fullyQualifyType = 0, $sanitize = true)
     {
-        \bdk\Debug\Utility::assertType($reflector, 'Reflector');
+        \bdk\Debug\Utility\PhpType::assertType($reflector, 'Reflector|null', 'reflector');
 
         $this->reflector = $reflector;
         $this->fullyQualifyType = $fullyQualifyType;

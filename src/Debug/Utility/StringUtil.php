@@ -33,10 +33,6 @@ class StringUtil
 
     /** @var DOMDocument|null */
     protected static $domDocument;
-    /** @var array Interpolation context*/
-    private static $interpContext = array();
-    /** @var bool */
-    private static $interpIsArrayAccess = false;
 
     /**
      * Find the longest common prefix for provided strings
@@ -47,11 +43,11 @@ class StringUtil
      */
     public static function commonPrefix(array $strings)
     {
-        self::assertStrings($strings);
-
         if (empty($strings)) {
             return '';
         }
+
+        \bdk\Debug\Utility\ArrayUtil::assertContainsOnly($strings, 'string');
 
         \sort($strings);
         $s1 = $strings[0];    // First string
@@ -100,7 +96,7 @@ class StringUtil
             // one of the aliases
             $operator = $operators[$operator];
         } elseif (\in_array($operator, $operators, true) === false) {
-            throw new InvalidArgumentException(__METHOD__ . ' - Invalid operator passed');
+            throw new InvalidArgumentException(__METHOD__ . '() - ' . \bdk\Debug\Utility::trans('utility.string.invalid-operator'));
         }
         if (\in_array($operator, ['===', '!=='], true) === false) {
             list($valA, $valB) = static::compareTypeJuggle($valA, $valB);

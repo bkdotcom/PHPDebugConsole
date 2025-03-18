@@ -144,10 +144,9 @@ class Html
         if ($innerhtml instanceof Closure) {
             $innerhtml = \call_user_func($innerhtml);
             if (\is_string($innerhtml) === false) {
-                throw new UnexpectedValueException(\sprintf(
-                    'Innerhtml closure should return string.  Got %s',
-                    PhpUtil::getDebugType($innerhtml)
-                ));
+                throw new UnexpectedValueException(\bdk\Debug\Utility::trans('utility.html.innerhtml-return', array(
+                    'actual' => PhpUtil::getDebugType($innerhtml),
+                )));
             }
         }
         return \in_array($tagName, self::$tagsEmpty, true)

@@ -163,16 +163,14 @@ class Manager implements SubscriberInterface, PluginInterface
     public function getPlugin($pluginName)
     {
         if (\is_string($pluginName) === false) {
-            throw new InvalidArgumentException(\sprintf(
-                'getPlugin expects a string. %s provided',
-                $this->debug->php->getDebugType($pluginName)
-            ));
+            throw new InvalidArgumentException($this->debug->i18n->trans('exception.method-expects', array(
+                'actual' => $this->debug->php->getDebugType($pluginName),
+                'expect' => 'string',
+                'method' => __METHOD__ . '()',
+            )));
         }
         if ($this->hasPlugin($pluginName) === false) {
-            throw new OutOfBoundsException(\sprintf(
-                'getPlugin(%s) - no such plugin',
-                $pluginName
-            ));
+            throw new OutOfBoundsException(__METHOD__ . '(' . $pluginName . ') - ' . $this->debug->i18n->trans('plugin.not-exist'));
         }
         return $this->namedPlugins[$pluginName];
     }
@@ -227,12 +225,11 @@ class Manager implements SubscriberInterface, PluginInterface
         if (\is_string($plugin)) {
             $plugin = $this->findPluginByName($plugin);
         } elseif (\is_object($plugin) === false) {
-            throw new InvalidArgumentException(\sprintf(
-                '%s expects %s.  %s provided',
-                __FUNCTION__,
-                'plugin name or instance',
-                $this->debug->php->getDebugType($plugin)
-            ));
+            throw new InvalidArgumentException($this->debug->i18n->trans('exception.method-expects', array(
+                'actual' => $this->debug->php->getDebugType($plugin),
+                'expect' => 'plugin name or instance',
+                'method' => __METHOD__ . '()',
+            )));
         }
         if ($plugin === false) {
             return $this->debug;
@@ -324,13 +321,14 @@ class Manager implements SubscriberInterface, PluginInterface
         if ($plugin instanceof SubscriberInterface) {
             return;
         }
-        $backtrace = \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
-        throw new InvalidArgumentException(\sprintf(
-            '%s expects %s.  %s provided',
-            $backtrace[1]['function'],
-            '\\bdk\\Debug\\AssetProviderInterface and/or \\bdk\\PubSub\\SubscriberInterface',
-            $this->debug->php->getDebugType($plugin)
-        ));
+        $frame = \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1];
+        throw new InvalidArgumentException($this->debug->i18n->trans('exception.method-expects', array(
+            'actual' => $this->debug->php->getDebugType($plugin),
+            'expect' => '\\bdk\\Debug\\AssetProviderInterface and/or \\bdk\\PubSub\\SubscriberInterface',
+            'method' => isset($frame['class'])
+                ? $frame['class'] . '::' . $frame['function'] . '()'
+                : $frame['function'] . '()',
+        )));
     }
 
     /**
@@ -386,7 +384,7 @@ class Manager implements SubscriberInterface, PluginInterface
         if (\is_array($plugin)) {
             $cfg = $plugin;
             if (empty($cfg['class'])) {
-                throw new InvalidArgumentException(\sprintf('missing "class" value'));
+                throw new InvalidArgumentException($this->debug->i18n->trans('plugin.missing-class'));
             }
             $class = $cfg['class'];
             $plugin = new $class();

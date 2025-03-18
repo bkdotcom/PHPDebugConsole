@@ -187,6 +187,13 @@ class NumberFormatterTest extends TestCase
                 '42',
             ],
 
+            'integer.noLocaleConv' => [
+                'xx_xx',
+                3.14,
+                null,
+                '3.14',
+            ],
+
             'percent' => [
                 'en_US',
                 0.42,
@@ -197,10 +204,10 @@ class NumberFormatterTest extends TestCase
 
         return \array_map(static function ($test) {
             return \array_replace(array(
-                42,
+                'en_US',
+                1.23,
                 'default',
-                '42',
-                false,
+                1.23,
             ), $test);
         }, $tests);
     }

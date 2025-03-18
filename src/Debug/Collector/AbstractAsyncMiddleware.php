@@ -15,7 +15,6 @@ namespace bdk\Debug\Collector;
 use bdk\Debug;
 use bdk\Debug\AbstractComponent;
 use bdk\Debug\LogEntry;
-use bdk\Debug\Utility;
 use bdk\HttpMessage\Utility\ContentType;
 use bdk\HttpMessage\Utility\Stream as StreamUtility;
 use Psr\Http\Message\MessageInterface;
@@ -64,7 +63,7 @@ class AbstractAsyncMiddleware extends AbstractComponent
      */
     public function __construct($cfg = array(), $debug = null)
     {
-        Utility::assertType($debug, 'bdk\Debug');
+        \bdk\Debug\Utility\PhpType::assertType($debug, 'bdk\Debug|null', 'debug');
         $this->setCfg($cfg);
         if (!$debug) {
             $debug = Debug::getChannel($this->cfg['channelKey'], $this->cfg['channelOptions']);
@@ -301,8 +300,8 @@ class AbstractAsyncMiddleware extends AbstractComponent
      */
     protected function logResponse($response = null, array $requestInfo = array(), $rejectReason = null)
     {
-        Utility::assertType($response, 'Psr\Http\Message\ResponseInterface');
-        Utility::assertType($rejectReason, 'Exception');
+        \bdk\Debug\Utility\PhpType::assertType($response, 'Psr\Http\Message\ResponseInterface|null', 'response');
+        \bdk\Debug\Utility\PhpType::assertType($rejectReason, 'Exception|null', 'rejectReason');
 
         $duration = $this->debug->timeEnd($this->cfg['channelKey'] . ':' . $requestInfo['requestId'], false);
         $metaAppend = $requestInfo['isAsynchronous'] && $this->cfg['asyncResponseWithRequest']

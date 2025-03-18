@@ -72,7 +72,9 @@ class HtmlString
         }
         $getter = 'get' . \ucfirst($property);
         if (!\method_exists($this, $getter)) {
-            throw new RuntimeException('Access to undefined property: ' . __CLASS__ . '::' . $property);
+            throw new RuntimeException($this->debug->i18n->trans('exception.property-inaccessible', array(
+                'property' =>  __CLASS__ . '::' . $property,
+            )));
         }
         $val = $this->{$getter}();
         $this->lazy[$property] = $val;
@@ -89,7 +91,7 @@ class HtmlString
      */
     public function dump($val, $abs = null)
     {
-        $this->debug->utility->assertType($abs, 'bdk\Debug\Abstraction\Abstraction');
+        \bdk\Debug\Utility\PhpType::assertType($abs, 'bdk\Debug\Abstraction\Abstraction|null', 'abs');
 
         if (\is_numeric($val)) {
             $this->valDumper->checkTimestamp($val, $abs);

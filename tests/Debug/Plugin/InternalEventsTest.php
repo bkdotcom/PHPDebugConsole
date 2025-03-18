@@ -361,7 +361,7 @@ class InternalEventsTest extends DebugTestFramework
         self::assertSame($logEntriesExpect, $logEntries);
         self::assertContains(
             'x-debug-text: success',
-            \bdk\Debug\headers_list()
+            \bdk\Debug\Plugin\Method\headers_list()
         );
     }
 

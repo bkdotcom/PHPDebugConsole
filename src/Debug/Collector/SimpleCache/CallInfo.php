@@ -13,7 +13,6 @@
 namespace bdk\Debug\Collector\SimpleCache;
 
 use bdk\Debug\AbstractComponent;
-use bdk\Debug\Utility;
 use Exception;
 
 /**
@@ -99,7 +98,7 @@ class CallInfo extends AbstractComponent
      */
     public function end($exception = null)
     {
-        Utility::assertType($exception, 'Exception');
+        \bdk\Debug\Utility\PhpType::assertType($exception, 'Exception|null');
 
         $this->exception = $exception;
         $this->timeEnd = \microtime(true);

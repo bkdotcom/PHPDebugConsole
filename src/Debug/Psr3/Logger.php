@@ -54,7 +54,7 @@ class Logger extends AbstractLogger
      */
     public function __construct($debug = null)
     {
-        \bdk\Debug\Utility::assertType($debug, 'bdk\Debug');
+        \bdk\Debug\Utility\PhpType::assertType($debug, 'bdk\Debug|null', 'debug');
 
         if (!$debug) {
             $debug = Debug::getInstance();
@@ -82,10 +82,9 @@ class Logger extends AbstractLogger
     protected function assertValidLevel($level)
     {
         if (\in_array($level, $this->validLevels(), true) === false) {
-            throw new InvalidArgumentException(\sprintf(
-                '"%s" is not a valid level',
-                $level
-            ));
+            throw new InvalidArgumentException($this->debug->i18n->trans('psr3.invalid-level', array(
+                'level' => $level,
+            )));
         }
     }
 

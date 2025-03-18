@@ -54,7 +54,7 @@ class CacheEventsSubscriber
      */
     public function __construct($options = array(), $debug = null)
     {
-        \bdk\Debug\Utility::assertType($debug, 'bdk\Debug');
+        \bdk\Debug\Utility\PhpType::assertType($debug, 'bdk\Debug|null', 'debug');
 
         $this->options = \array_merge($this->options, $options);
         $channelKey = 'cache';

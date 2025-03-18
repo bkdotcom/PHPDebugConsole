@@ -21,22 +21,6 @@ use OutOfBoundsException;
  */
 class FileTree
 {
-    protected $cfg = array(
-        'strings' => array(
-            'omitted' => 'omitted',
-        ),
-    );
-
-    /**
-     * Constructor
-     *
-     * @param array<string,mixed> $cfg configuration
-     */
-    public function __construct($cfg = array())
-    {
-        $this->cfg = \array_replace_recursive($this->cfg, $cfg);
-    }
-
     /**
      * Convert list of filepaths to a tree structure
      *
@@ -94,7 +78,7 @@ class FileTree
                 'attribs' => array(
                     'class' => 'exclude-count',
                 ),
-                'value' => $count . ' ' . $this->cfg['strings']['omitted'],
+                'value' => $count . ' ' . \bdk\Debug\Utility::trans('word.omitted'),
             )));
         }
         return $tree;
@@ -121,7 +105,9 @@ class FileTree
             }
             $cur = &$cur[$subdir];
             if (\is_array($cur) === false) {
-                throw new OutOfBoundsException('Invalid path: ' . \implode('/', $path));
+                throw new OutOfBoundsException(\bdk\Debug\Utility::trans('exception.invalid-path', array(
+                    'path' => \implode('/', $path),
+                )));
             }
         }
         return $cur;
@@ -250,7 +236,7 @@ class FileTree
     private function walkBranchTestLeaf($keys, $val)
     {
         $valFirst = \current($val);
-        $regex = '/^\d+ ' . \preg_quote($this->cfg['strings']['omitted'], '/') . '/';
+        $regex = '/^\d+ ' . \preg_quote(\bdk\Debug\Utility::trans('word.omitted'), '/') . '/';
         $isOmittedCount = \preg_match($regex, (string) $valFirst) === 1;
         if ($isOmittedCount) {
             return $val;

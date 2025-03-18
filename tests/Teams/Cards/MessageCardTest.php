@@ -23,10 +23,64 @@ class MessageCardTest extends AbstractTestCaseWith
         ), $card->getMessage());
     }
 
+    /**
+     * @param mixed       $value
+     * @param string      $type
+     * @param string|null $paramName
+     * @param string|null $exceptionMessage
+     *
+     * @dataProvider providerAssertType
+     */
+    public function testAssertType($value, $type, $paramName = null, $exceptionMessage = null)
+    {
+        if ($exceptionMessage !== null) {
+            $this->expectException('InvalidArgumentException');
+            $this->expectExceptionMessage($exceptionMessage);
+        }
+        MessageCard::assertType($value, $type, $paramName);
+        self::assertTrue(true);
+    }
+
+    public function providerAssertType()
+    {
+        $method = __CLASS__ . '::testAssertType()';
+        return [
+            [array(), 'array'],
+            ['call_user_func', 'callable'],
+            [(object) array(), 'object'],
+            [new \bdk\PubSub\Event(), 'bdk\PubSub\Event'],
+
+            [array(), 'array|null'],
+            ['call_user_func', 'callable'],
+            [(object) array(), 'object|null'],
+            [new \bdk\PubSub\Event(), 'bdk\PubSub\Event|null'],
+
+            [null, 'array|null'],
+            [null, 'callable|null'],
+            [null, 'object|null'],
+            [null, 'bdk\PubSub\Event|null'],
+
+            [null, 'array', 'dingus', $method . ': $dingus expects array.  null provided'],
+            [null, 'callable', null, $method . ' expects callable.  null provided'],
+            [null, 'object', null, $method . ' expects object.  null provided'],
+            [null, 'bdk\PubSub\Event', null, $method . ' expects bdk\PubSub\Event.  null provided'],
+
+            [false, 'array|null', null, $method . ' expects array|null.  bool provided'],
+            [false, 'callable|null', 'dingus', $method . ': $dingus expects callable|null.  bool provided'],
+            [false, 'object|null', null, $method . ' expects object|null.  bool provided'],
+            [false, 'bdk\PubSub\Event|null', null, $method . ' expects bdk\PubSub\Event|null.  bool provided'],
+
+            [false, 'array', null, $method . ' expects array.  bool provided'],
+            [false, 'callable', null, $method . ' expects callable.  bool provided'],
+            [false, 'object', 'dingus', $method . ': $dingus expects object.  bool provided'],
+            [false, 'bdk\PubSub\Event', null, $method . ' expects bdk\PubSub\Event.  bool provided'],
+        ];
+    }
+
     public function testConstructException()
     {
         $this->expectException('InvalidArgumentException');
-        $this->expectExceptionMessage('bdk\Teams\Cards\MessageCard::__construct expects a string, numeric, stringable obj, or null. boolean provided.');
+        $this->expectExceptionMessage('bdk\Teams\Cards\MessageCard::__construct expects a string, numeric, stringable obj, or null. bool provided.');
         new MessageCard(true, false);
     }
 

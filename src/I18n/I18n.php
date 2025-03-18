@@ -200,7 +200,7 @@ class I18n
      *
      * @param string $str    string to translate
      * @param array  $args   optional arguments
-     * @param string $domain optional domain
+     * @param string $domain optional domain (defaults to defaultDomain)
      * @param string $locale optional locale
      *
      * @return string

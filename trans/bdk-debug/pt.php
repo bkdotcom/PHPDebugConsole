@@ -62,6 +62,18 @@ return array(
     'error.cat.warning' => 'Aviso',
 
     'error.ignored.count' => '{count, plural, one {# erro ignorado} other {# erros ignorados}}',
+
+    'exception.array-special-key' => '{method}: {key} can only be used on array value.  {actual} found',
+    'exception.invalid-path' => 'Invalid path: {path}',
+    'exception.method-expects' => '{method} expects {expect}.  {actual} provided',
+    'exception.method-expects-at' => '{method} expects {expect} at {path}.  {actual} found',
+    'exception.method-expects-only' => '{method} expects array of {expect}.  {actual} found at {index}',
+    'exception.method-expects-only-param' => '{method}: {param} expects array of {expect}.  {actual} found at {index}',
+    'exception.method-expects-param' => '{method}: {param} expects {expect}.  {actual} provided',
+    'exception.method-inaccessible' => 'Method {method} is not defined or is inaccessible',
+    'exception.property-inaccessible' => 'Property {property} is not defined or is inaccessible',
+    'exception.property-undefined' => 'Property {property} is not defined',
+
     'files.excluded.all' => 'Todos os arquivos excluídos do log',
     'files.excluded.count' => '{count, plural, one {# arquivo excluído} other {# arquivos excluídos}}',
     'files.logged' => 'arquivos registrados',
@@ -162,6 +174,11 @@ return array(
     'php.memory.no-limit' => 'sem limite',
     'php.server-api' => 'API do Servidor',
     'php.thread-safe' => 'Thread Safe',
+
+    'plugin.missing-class' => 'plugin array definition missing "class" value',
+    'plugin.not-exist' => 'no such plugin',
+    'psr3.invalid-level' => 'Invalid level: {level}',
+
     'request' => 'Requisição',
     'request.body' => 'corpo da requisição',
     'request.headers' => 'cabeçalhos da requisição',
@@ -190,6 +207,16 @@ return array(
     'session.inactive' => 'Sessão Inativa / Nenhum id de sessão passado na requisição',
     'session.name' => 'nome da sessão',
     'session.name.assert' => 'não deve ser PHPSESSID (assim como {expose_php} deve ser desativado)',
+
+    'utility.headers-sent' => 'Headers already sent: {file}, line {line}',
+    'utility.html.innerhtml-return' => 'InnerHtml closure should return string.  Got {actual}',
+    'utility.reflection.instance-prop-get' => 'propGet: object must be provided to retrieve value of {property}',
+    'utility.reflection.instance-prop-set' => 'propSet: object must be provided to set value of {property}',
+    'utility.stream.fail' => 'Failed to {verb} stream wrapper for {protocol}',
+    'utility.stream.unknown-path' => 'Unable to determine opened path',
+    'utility.string.invalid-operator' => 'Invalid operator passed',
+    'wamp.publisher-not-installed' => 'PHPDebugConsole does not include bdk\\WampPublisher.  Install separately',
+    'wamp.publisher-required' => 'Wamp route requires bdk\\WampPublisher.   Install separately.',
 
     // Miscellaneous / general words
     'word.and' => 'e',

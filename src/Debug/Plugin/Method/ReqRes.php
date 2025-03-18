@@ -30,6 +30,8 @@ class ReqRes implements SubscriberInterface
 
     /** @var string[] */
     protected $methods = [
+        'getEmittedHeader',
+        'getEmittedHeaders',
         'getHeaders',
         'getInterface',
         'getResponseCode',
@@ -49,6 +51,50 @@ class ReqRes implements SubscriberInterface
         return array(
             Debug::EVENT_CUSTOM_METHOD => 'onCustomMethod',
         );
+    }
+
+    /**
+     * Returns sent/pending response header values for specified header
+     *
+     * @param string      $key       ('Content-Type') header to return
+     * @param string|null $delimiter (', ') if string, then join the header values
+     *                                 if null, return array
+     *
+     * @return string|string[]
+     *
+     * @psalm-return ($delimiter is string ? string : string[])
+     */
+    public static function getEmittedHeader($key = 'Content-Type', $delimiter = ', ')
+    {
+        $headers = static::getEmittedHeaders();
+        $header = isset($headers[$key])
+            ? $headers[$key]
+            : array();
+        return \is_string($delimiter)
+            ? \implode($delimiter, $header)
+            : $header;
+    }
+
+    /**
+     * Returns sent/pending response headers
+     *
+     * It is preferred to use PSR-7 (Http-Messaage) response interface over this method
+     *
+     * The keys represent the header name as it will be sent over the wire, and
+     * each value is an array of strings associated with the header.
+     *
+     * @return array<string,list<string>>
+     */
+    public static function getEmittedHeaders()
+    {
+        // phpcs:ignore SlevomatCodingStandard.Namespaces.FullyQualifiedGlobalFunctions.NonFullyQualified
+        $list = headers_list();
+        $headers = array();
+        foreach ($list as $header) {
+            list($key, $value) = \array_replace(['', ''], \explode(': ', $header, 2));
+            $headers[$key][] = $value;
+        }
+        return $headers;
     }
 
     /**
@@ -164,7 +210,7 @@ class ReqRes implements SubscriberInterface
         $response = $this->debug->response;
         $headers = $response
             ? $response->getHeaders()
-            : $this->debug->utility->getEmittedHeaders();
+            : static::getEmittedHeaders();
         $headers = static::mergeDefaultHeaders($headers);
         if (!$asString) {
             return $headers;
@@ -245,10 +291,11 @@ class ReqRes implements SubscriberInterface
         if ($response instanceof HttpFoundationResponse) {
             return $this->writeToHttpFoundationResponse($response);
         }
-        throw new InvalidArgumentException(\sprintf(
-            'writeToResponse expects ResponseInterface or HttpFoundationResponse, but %s provided',
-            $this->debug->php->getDebugType($response)
-        ));
+        throw new InvalidArgumentException($this->debug->i18n->trans('exception.method-expects', array(
+            'actual' => $this->debug->php->getDebugType($response),
+            'expect' => 'ResponseInterface or HttpFoundationResponse',
+            'method' => __METHOD__ . '()',
+        )));
     }
 
     /**

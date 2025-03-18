@@ -46,8 +46,8 @@ class Mock implements Countable
      */
     public function __construct(array $queue = array(), $onFulfilled = null, $onRejected = null)
     {
-        \bdk\Debug\Utility::assertType($onFulfilled, 'callable');
-        \bdk\Debug\Utility::assertType($onRejected, 'callable');
+        \bdk\Debug\Utility\PhpType::assertType($onFulfilled, 'callable|null', 'onFullfilled');
+        \bdk\Debug\Utility\PhpType::assertType($onRejected, 'callable|null', 'onRejected');
 
         $this->onFulfilled = $onFulfilled;
         $this->onRejected = $onRejected;

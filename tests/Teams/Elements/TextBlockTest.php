@@ -97,11 +97,11 @@ class TextBlockTest extends AbstractTestCaseWith
             // array('horizontalAlignment', [Enums::HORIZONTAL_ALIGNMENT_CENTER]),
             // array('isSubtle', []),
             array('maxlines', [0]),
-            array('maxLines', [false], true, 'withMaxLines expects int or null. boolean provided.'),
+            array('maxLines', [false], true, 'withMaxLines expects int or null. bool provided.'),
             // array('size', [Enums::FONT_SIZE_DEFAULT]),
             // array('style', [Enums::TEXTBLOCK_STYLE_DEFAULT]),
             // array('text', ['hello world']),
-            // array('text', [false], true, 'bdk\Teams\Elements\TextBlock::withText expects a string or numeric value. boolean provided.'),
+            // array('text', [false], true, 'bdk\Teams\Elements\TextBlock::withText expects a string or numeric value. bool provided.'),
             // array('weight', [Enums::FONT_WEIGHT_DEFAULT]),
             // array('wrap', []),
             // inherited

@@ -997,7 +997,7 @@ EOD;
     public function testInaccessibleMethod()
     {
         $this->expectException('BadMethodCallException');
-        $this->expectExceptionMessage('bdk\Debug\Plugin\Method\Group::bogus is inaccessible');
+        $this->expectExceptionMessage('Method bdk\Debug\Plugin\Method\Group::bogus() is not defined or is inaccessible');
         $this->debug->getPlugin('methodGroup')->bogus();
     }
 

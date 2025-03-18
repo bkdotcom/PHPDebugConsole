@@ -43,7 +43,7 @@ class Pdo extends PdoBase
      */
     public function __construct(PdoBase $pdo, $debug = null)
     {
-        \bdk\Debug\Utility::assertType($debug, 'bdk\Debug');
+        \bdk\Debug\Utility\PhpType::assertType($debug, 'bdk\Debug|null', 'debug');
         $this->traitInit($debug, 'PDO');
         $this->pdo = $pdo;
         $this->setAttribute(PdoBase::ATTR_STATEMENT_CLASS, ['bdk\Debug\Collector\Pdo\Statement', [$this]]);

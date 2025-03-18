@@ -25,6 +25,45 @@ class ArrayUtil
     use ArrayUtilHelperTrait;
 
     /**
+     * Assert array contains only the specified type
+     *
+     * @param array  $array        Array to test
+     * @param string $expectedType php type(s) to check for
+     * @param string $paramName    (null) parameter name
+     * @param string $method       (null) method to report
+     *
+     * @return void
+     *
+     * @throws InvalidArgumentException
+     */
+    public static function assertContainsOnly(array $array, $expectedType, $paramName = null, $method = null)
+    {
+        list($i, $val) = [0, null];
+        try {
+            foreach ($array as $i => $val) {
+                \bdk\Debug\Utility\PhpType::assertType($val, $expectedType);
+            }
+            return;
+        } catch (\Exception $e) {
+            // empty catch
+        }
+        $msg = $paramName
+            ? 'exception.method-expects-only-param'
+            : 'exception.method-expects-only';
+        $frame = \debug_backtrace(\DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1];
+        $methodDefault = isset($frame['class'])
+            ? $frame['class'] . '::' . $frame['function']
+            : $frame['function'];
+        throw new InvalidArgumentException(\bdk\Debug\Utility::trans($msg, array(
+            'actual' => \bdk\Debug\Utility\Php::getDebugType($val),
+            'expect' => $expectedType,
+            'index' => $i,
+            'method' => ($method ?: $methodDefault) . '()',
+            'param' => '$' . $paramName,
+        )));
+    }
+
+    /**
      * "dereference" array
      * returns a copy of the array with references removed
      *
@@ -63,7 +102,9 @@ class ArrayUtil
     public static function diffAssocRecursive(array $array1, $array2) // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
     {
         $arrays = \array_slice(\func_get_args(), 1);
-        self::assertContainsOnly($arrays, 'array', __FUNCTION__);
+        foreach ($arrays as $i => $array) {
+            \bdk\Debug\Utility\PhpType::assertType($array, 'array', 'array' . ($i + 2));
+        }
         return \array_reduce($arrays, [__CLASS__, 'diffAssocRecursiveWalk'], $array1);
     }
 
@@ -87,7 +128,9 @@ class ArrayUtil
     public static function diffStrict(array $array1, $array2) // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
     {
         $arrays = \array_slice(\func_get_args(), 1);
-        self::assertContainsOnly($arrays, 'array', __FUNCTION__);
+        foreach ($arrays as $i => $array) {
+            \bdk\Debug\Utility\PhpType::assertType($array, 'array', 'array' . ($i + 2));
+        }
         $array = \array_reduce($arrays, [__CLASS__, 'diffStrictWalk'], $array1);
         if (self::isList($array1)) {
             $array = \array_values($array);
@@ -164,7 +207,9 @@ class ArrayUtil
     public static function mergeDeep(array $array1, $array2) // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
     {
         $arrays = \array_slice(\func_get_args(), 1);
-        self::assertContainsOnly($arrays, 'array', __FUNCTION__);
+        foreach ($arrays as $i => $array) {
+            \bdk\Debug\Utility\PhpType::assertType($array, 'array', 'array' . ($i + 2));
+        }
         return \array_reduce($arrays, [__CLASS__, 'mergeDeepWalk'], $array1);
     }
 
@@ -189,21 +234,21 @@ class ArrayUtil
         $path = \array_reverse(self::pathToArray($path));
         $curPath = array();
         while ($path) {
-            self::assertArrayAccess($array, $curPath);
+            self::assertArrayAccess($array, $curPath, __METHOD__);
             $key = \array_pop($path);
             $curPath[] = $key;
             if (isset($array[$key])) {
                 $array = &$array[$key];
                 continue;
             } elseif ($key === '__count__') {
-                self::assertCountable($array, \array_slice($curPath, 0, -1));
+                self::assertCountable($array, \array_slice($curPath, 0, -1), __METHOD__);
                 return \count($array);
             } elseif ($key === '__pop__') {
                 /** @var mixed */
                 $arrayNew = \array_pop($array);
                 $array = &$arrayNew;
                 continue;
-            } elseif (self::specialKey($key, $path, $array)) {
+            } elseif (self::specialKey($key, $path, $array, __METHOD__)) {
                 continue;
             }
             return $default;
@@ -229,7 +274,7 @@ class ArrayUtil
         $path = \array_reverse(self::pathToArray($path));
         while ($path) {
             $key = \array_pop($path);
-            if (self::specialKey($key, $path, $array)) {
+            if (self::specialKey($key, $path, $array, __METHOD__)) {
                 continue;
             } elseif ($val === '__unset__' && empty($path)) {
                 unset($array[$key]);
@@ -333,32 +378,6 @@ class ArrayUtil
             \array_slice($array, $offset + $length, null, true)
         );
         return $ret;
-    }
-
-    /**
-     * Assert array contains only the specified type
-     *
-     * @param array  $array         array to test
-     * @param string $expectedType  type to check for
-     * @param string $messagePrefix ('') exception prefix
-     *
-     * @return void
-     *
-     * @throws InvalidArgumentException
-     */
-    private static function assertContainsOnly(array $array, $expectedType, $messagePrefix = '')
-    {
-        foreach ($array as $val) {
-            $type = \bdk\Debug\Utility\Php::getDebugType($val);
-            if ($type !== $expectedType) {
-                throw new InvalidArgumentException(\ltrim(\sprintf(
-                    '%s:  Expected only %s.  %s found.',
-                    $messagePrefix,
-                    $expectedType,
-                    $type
-                ), ': '));
-            }
-        }
     }
 
     /**

@@ -179,22 +179,22 @@ class ServiceProvider implements ServiceProviderInterface
     protected function registerRoutes(Container $container)
     {
         $container['routeWamp'] = static function (Container $container) {
+            $debug = $container['debug'];
             try {
                 $wampPublisher = $container['wampPublisher'];
                 // @codeCoverageIgnoreStart
             } catch (RuntimeException $e) {
-                throw new RuntimeException('Wamp route requires \bdk\WampPublisher, which must be installed separately');
+                throw new RuntimeException($debug->i18n->trans('wamp.publisher-required'));
                 // @codeCoverageIgnoreEnd
             }
-            $debug = $container['debug'];
             return new \bdk\Debug\Route\Wamp($debug, $wampPublisher);
         };
         $container['wampPublisher'] = static function (Container $container) {
+            $debug = $container['debug'];
             // @codeCoverageIgnoreStart
             if (\class_exists('bdk\\WampPublisher') === false) {
-                throw new RuntimeException('PHPDebugConsole does not include WampPublisher.  Install separately');
+                throw new RuntimeException($debug->i18n->trans('wamp.publisher-not-installed'));
             }
-            $debug = $container['debug'];
             return new \bdk\WampPublisher(
                 $debug->getCfg('wampPublisher', Debug::CONFIG_INIT)
             );

@@ -13,8 +13,6 @@
 namespace bdk\Debug;
 
 use bdk\Debug;
-use bdk\Debug\Utility\Php as PhpUtil;
-use InvalidArgumentException;
 use RuntimeException;
 
 /**
@@ -22,36 +20,6 @@ use RuntimeException;
  */
 class Utility
 {
-    /**
-     * Assert that a value is of a certain type
-     *
-     * PHPDebugConsole supports an extreme range of PHP versions : 5.4 - 8.4 (and beyond)
-     * `func(MyObj $obj = null)` has been deprecated in PHP 8.4
-     * must now be `func(?MyObj $obj = null)` (which is a php 7.1 feature)
-     * Workaround - remove type-hint when we allow null (not ideal) and call assertType
-     * When we drop support for php < 7.1, we can remove this method and do proper type-hinting
-     *
-     * @param mixed  $value     Value to test
-     * @param string $type      "array", "callable", "object", or className
-     * @param bool   $allowNull (true) allow null?
-     *
-     * @return void
-     *
-     * @throws InvalidArgumentException
-     */
-    public static function assertType($value, $type, $allowNull = true)
-    {
-        if (($allowNull && $value === null) || self::assertTypeCheck($value, $type)) {
-            return;
-        }
-        throw new InvalidArgumentException(\sprintf(
-            'Expected %s%s, got %s',
-            $type,
-            $allowNull ? ' (or null)' : '',
-            PhpUtil::getDebugType($value)
-        ));
-    }
-
     /**
      * Emit headers queued for output directly using `header()`
      *
@@ -74,7 +42,10 @@ class Utility
         $line = 0;
         // phpcs:ignore SlevomatCodingStandard.Namespaces.FullyQualifiedGlobalFunctions.NonFullyQualified
         if (headers_sent($file, $line)) {
-            throw new RuntimeException('Headers already sent: ' . $file . ', line ' . $line);
+            throw new RuntimeException(self::trans('utility.headers-sent', array(
+                'file' => $file,
+                'line' => $line,
+            )));
         }
         foreach ($headers as $key => $val) {
             if (\is_int($key)) {
@@ -102,16 +73,13 @@ class Utility
         }
         switch ($format) {
             case 'us':
-                $val = $duration * 1000000;
-                $unit = 'μs';
+                list($val, $unit) = [$duration * 1000000, 'μs'];
                 break;
             case 'ms':
-                $val = $duration * 1000;
-                $unit = 'ms';
+                list($val, $unit) = [$duration * 1000, 'ms'];
                 break;
             default:
-                $val = $duration;
-                $unit = 'sec';
+                list($val, $unit) = [$duration, 'sec'];
         }
         if ($precision) {
             $val = \round($val, $precision);
@@ -157,17 +125,11 @@ class Utility
      *
      * @return string|string[]
      *
-     * @psalm-return ($delimiter is string ? string : string[])
+     * @deprecated use $debug->getEmittedHeader() instead
      */
     public static function getEmittedHeader($key = 'Content-Type', $delimiter = ', ')
     {
-        $headers = static::getEmittedHeaders();
-        $header = isset($headers[$key])
-            ? $headers[$key]
-            : array();
-        return \is_string($delimiter)
-            ? \implode($delimiter, $header)
-            : $header;
+        return \bdk\Debug\Plugin\Method\ReqRes::getEmittedHeader($key, $delimiter);
     }
 
     /**
@@ -179,17 +141,12 @@ class Utility
      * each value is an array of strings associated with the header.
      *
      * @return array<string,list<string>>
+     *
+     * @deprecated use $debug->getEmittedHeaders() instead
      */
     public static function getEmittedHeaders()
     {
-        // phpcs:ignore SlevomatCodingStandard.Namespaces.FullyQualifiedGlobalFunctions.NonFullyQualified
-        $list = headers_list();
-        $headers = array();
-        foreach ($list as $header) {
-            list($key, $value) = \array_replace(['', ''], \explode(': ', $header, 2));
-            $headers[$key][] = $value;
-        }
-        return $headers;
+        return \bdk\Debug\Plugin\Method\ReqRes::getEmittedHeaders();
     }
 
     /**
@@ -290,25 +247,17 @@ class Utility
     }
 
     /**
-     * Test if value is of a certain type
+     * Convenience wrapper for Debug's trans method
      *
-     * @param mixed  $value Value to test
-     * @param string $type  "array", "callable", "object", or className
+     * @param string $str    string to translate
+     * @param array  $args   optional arguments
+     * @param string $domain optional domain (defaults to defaultLocale)
      *
-     * @return bool
+     * @return string
      */
-    private static function assertTypeCheck($value, $type)
+    public static function trans($str, array $args = array(), $domain = null)
     {
-        switch ($type) {
-            case 'array':
-                return \is_array($value);
-            case 'callable':
-                return \is_callable($value);
-            case 'object':
-                return \is_object($value);
-            default:
-                return \is_a($value, $type);
-        }
+        return Debug::getInstance()->i18n->trans($str, $args, $domain);
     }
 
     /**

@@ -31,24 +31,6 @@ namespace bdk\Debug {
         $GLOBALS['collectedHeaders'][] = $vals;
     }
 
-    function headers_list()
-    {
-        $headersByName = array();
-        foreach ($GLOBALS['collectedHeaders'] as $pair) {
-            list($header, $replace) = $pair;
-            $name = \explode(': ', $header, 2)[0];
-            if ($replace || !isset($headersByName[$name])) {
-                $headersByName[$name] = array($header);
-                continue;
-            }
-            $headersByName[$name][] = $header;
-        }
-        $values = \array_values($headersByName);
-        return $values
-            ? \call_user_func_array('array_merge', $values)
-            : array();
-    }
-
     function headers_sent(&$file = null, &$line = null)
     {
         if ($GLOBALS['headersSent']) {
@@ -78,5 +60,25 @@ namespace bdk\Debug\Plugin {
     function session_status()
     {
         return $GLOBALS['sessionMock']['status'];
+    }
+}
+
+namespace bdk\Debug\Plugin\Method {
+    function headers_list()
+    {
+        $headersByName = array();
+        foreach ($GLOBALS['collectedHeaders'] as $pair) {
+            list($header, $replace) = $pair;
+            $name = \explode(': ', $header, 2)[0];
+            if ($replace || !isset($headersByName[$name])) {
+                $headersByName[$name] = array($header);
+                continue;
+            }
+            $headersByName[$name][] = $header;
+        }
+        $values = \array_values($headersByName);
+        return $values
+            ? \call_user_func_array('array_merge', $values)
+            : array();
     }
 }

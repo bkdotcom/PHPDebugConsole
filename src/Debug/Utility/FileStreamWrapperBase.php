@@ -88,7 +88,10 @@ class FileStreamWrapperBase
         foreach (static::$protocols as $protocol) {
             $result = \stream_wrapper_restore($protocol);
             if ($result === false) {
-                throw new UnexpectedValueException('Failed to restore stream wrapper for ' . $protocol);
+                throw new UnexpectedValueException(\bdk\Debug\Utility::trans('utility.stream.fail', array(
+                    'protocol' => $protocol,
+                    'verb' => 'restore',
+                )));
             }
         }
         static::$isRegistered = false;
@@ -151,7 +154,7 @@ class FileStreamWrapperBase
         if ($resource) {
             $meta = \stream_get_meta_data($resource);
             if (!isset($meta['uri'])) {
-                throw new UnexpectedValueException('Uri not in meta data');
+                throw new UnexpectedValueException(\bdk\Debug\Utility::trans('utility.stream.unknown-path'));
             }
             $openedPath = $meta['uri'];
         }
@@ -249,11 +252,17 @@ class FileStreamWrapperBase
     {
         $result = \stream_wrapper_unregister($protocol);
         if ($result === false) {
-            throw new UnexpectedValueException('Failed to unregister stream wrapper for ' . $protocol);
+            throw new UnexpectedValueException(\bdk\Debug\Utility::trans('utility.stream.fail', array(
+                'protocol' => $protocol,
+                'verb' => 'unregister',
+            )));
         }
         $result = \stream_wrapper_register($protocol, \get_called_class());
         if ($result === false) {
-            throw new UnexpectedValueException('Failed to register stream wrapper for ' . $protocol);
+            throw new UnexpectedValueException(\bdk\Debug\Utility::trans('utility.stream.fail', array(
+                'protocol' => $protocol,
+                'verb' => 'register',
+            )));
         }
     }
 

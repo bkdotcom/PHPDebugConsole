@@ -202,7 +202,7 @@ class SimpleCacheTest extends DebugTestFramework
     public function testGetLoggedActions()
     {
         $loggedActions = self::$cache->getLoggedActions();
-        $this->assertContainsOnly(
+        self::assertContainsOnly(
             'bdk\\Debug\\Collector\\SimpleCache\\CallInfo',
             $loggedActions
         );

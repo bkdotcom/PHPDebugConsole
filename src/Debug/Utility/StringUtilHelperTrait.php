@@ -21,28 +21,11 @@ use InvalidArgumentException;
  */
 trait StringUtilHelperTrait
 {
-    /**
-     * Get the strings to process for self::commonPrefix()
-     *
-     * @param string[] $values List of strings
-     *
-     * @return void
-     *
-     * @throws InvalidArgumentException
-     */
-    private static function assertStrings($values)
-    {
-        foreach ($values as $i => $value) {
-            if (\is_string($value)) {
-                continue;
-            }
-            throw new InvalidArgumentException(\sprintf(
-                'commonPrefix() - Expects a list of strings.  Found %s at index %s',
-                Php::getDebugType($value),
-                $i
-            ));
-        }
-    }
+    /** @var array|object Interpolation context*/
+    private static $interpContext = array();
+
+    /** @var bool */
+    private static $interpIsArrayAccess = false;
 
     /**
      * Typecast values for comparison like Php 8 does it
@@ -172,31 +155,25 @@ trait StringUtilHelperTrait
      *
      * @return void
      *
-     * @throws \InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     private static function interpolateAssertArgs($message, $context)
     {
-        if (
-            \count(\array_filter([
-                \is_string($message),
-                \is_object($message) && \method_exists($message, '__toString'),
-            ])) === 0
-        ) {
-            throw new \InvalidArgumentException(\sprintf(
-                __NAMESPACE__ . '::interpolate()\'s $message expects string or Stringable object. %s provided.',
-                Php::getDebugType($message)
-            ));
+        if (\is_string($message) === false && (\is_object($message) && \method_exists($message, '__toString')) === false) {
+            throw new InvalidArgumentException(\bdk\Debug\Utility::trans('exception.method-expects-param', array(
+                'actual' => Php::getDebugType($message),
+                'expect' => 'string or Stringable object',
+                'method' => \get_called_class() . '::interpolate()',
+                'param' => '$message',
+            )));
         }
-        if (
-            \count(\array_filter([
-                \is_array($context),
-                \is_object($context),
-            ])) === 0
-        ) {
-            throw new \InvalidArgumentException(\sprintf(
-                __NAMESPACE__ . '::interpolate()\'s $context expects array or object. %s provided.',
-                Php::getDebugType($context)
-            ));
+        if (\is_array($context) === false && \is_object($context) === false) {
+            throw new InvalidArgumentException(\bdk\Debug\Utility::trans('exception.method-expects-param', array(
+                'actual' => Php::getDebugType($context),
+                'expect' => 'string or object',
+                'method' => \get_called_class() . '::interpolate()',
+                'param' => '$context',
+            )));
         }
     }
 

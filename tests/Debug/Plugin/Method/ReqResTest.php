@@ -26,6 +26,62 @@ class ReqResTest extends DebugTestFramework
         ), \array_keys($this->debug->getPlugin('methodReqRes')->getSubscriptions()));
     }
 
+    /**
+     * Test
+     *
+     * @return void
+     */
+    public function testGetEmittedHeader()
+    {
+        $GLOBALS['collectedHeaders'] = array();
+        $GLOBALS['headersSent'] = array();
+        \bdk\Debug\Utility::emitHeaders(array(
+            'Content-Type' => 'application/json',
+            'Location' => 'http://www.test.com/',
+            'Content-Security-Policy' => array(
+                'foo',
+                'bar',
+            ),
+            array('Content-Length', 1234),
+        ));
+        self::assertSame('application/json', $this->debug->getEmittedHeader());
+        self::assertSame('foo, bar', $this->debug->getEmittedHeader('Content-Security-Policy'));
+        self::assertSame(array('foo', 'bar'), $this->debug->getEmittedHeader('Content-Security-Policy', null));
+        self::assertSame('', $this->debug->getEmittedHeader('Not-Sent'));
+        self::assertSame(array(), $this->debug->getEmittedHeader('Not-Sent', null));
+    }
+
+    /**
+     * Test
+     *
+     * @return void
+     */
+    public function testGetEmittedHeaders()
+    {
+        $GLOBALS['collectedHeaders'] = array();
+        $GLOBALS['headersSent'] = array();
+        \bdk\Debug\Utility::emitHeaders(array(
+            'Location' => 'http://www.test.com/',
+            'Content-Security-Policy' => array(
+                'foo',
+                'bar',
+            ),
+            array('Content-Length', 1234),
+        ));
+        self::assertSame(array(
+            'Location' => array(
+                'http://www.test.com/',
+            ),
+            'Content-Security-Policy' => array(
+                'foo',
+                'bar',
+            ),
+            'Content-Length' => array(
+                '1234',
+            ),
+        ), $this->debug->getEmittedHeaders());
+    }
+
     public function testGetInterface()
     {
         $this->debug->setCfg('serviceProvider', array(
@@ -192,7 +248,7 @@ class ReqResTest extends DebugTestFramework
     public function testWriteToResponseInvalid()
     {
         $this->expectException('InvalidArgumentException');
-        $this->expectExceptionMessage('writeToResponse expects ResponseInterface or HttpFoundationResponse, but null provided');
+        $this->expectExceptionMessage('bdk\Debug\Plugin\Method\ReqRes::writeToResponse() expects ResponseInterface or HttpFoundationResponse.  null provided');
         $this->debug->writeToResponse(null);
     }
 }

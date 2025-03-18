@@ -40,8 +40,8 @@ class Slim2
      */
     public function __construct($debug = null, $prevWriter = null)
     {
-        \bdk\Debug\Utility::assertType($debug, 'bdk\Debug');
-        \bdk\Debug\Utility::assertType($prevWriter, 'object'); // object not avail as type-hint until php 7.2
+        \bdk\Debug\Utility\PhpType::assertType($debug, 'bdk\Debug|null', 'debug');
+        \bdk\Debug\Utility\PhpType::assertType($prevWriter, 'object|null', 'prevWriter');
 
         if (!$debug) {
             $debug = Debug::getChannel('Slim');

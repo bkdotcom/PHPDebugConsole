@@ -74,7 +74,7 @@ class SlackMessageTest extends TestCase
     public function testWithDataInvalidBlocksThrowsException()
     {
         $this->expectException('InvalidArgumentException');
-        $this->expectExceptionMessage('SlackMessage: blocks should be array or null,  boolean provided.');
+        $this->expectExceptionMessage('SlackMessage: blocks should be array or null,  bool provided.');
         $slackMessage = new SlackMessage([
             'blocks' => false,
         ]);

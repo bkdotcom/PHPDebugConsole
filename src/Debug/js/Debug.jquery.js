@@ -2128,24 +2128,19 @@ var phpDebugConsole = (function (exports, $) {
 
   function channelsToTreeWalkPath (channel, path, channelTreeRef) {
     var i;
-    var options;
     for (i = 0; i < path.length; i++) {
-      options = i === path.length - 1
-        ? {
-          icon: channel.icon,
-          show: channel.show
-        }
-        : {
-          icon: null,
-          show: null
-        };
-      if (!channelTreeRef[path[i]]) {
-        channelTreeRef[path[i]] = {
-          name: channel.name,
-          options: options,
-          channels: {}
-        };
+      if (channelTreeRef[path[i]]) {
+        channelTreeRef = channelTreeRef[path[i]].channels;
+        continue;
       }
+      channelTreeRef[path[i]] = {
+        channels: {},
+        name: i === path.length - 1 ? channel.name : path[i],
+        options: {
+          icon: i === path.length - 1 ? channel.icon : null,
+          show: i === path.length - 1 ? channel.show : null,
+        },
+      };
       channelTreeRef = channelTreeRef[path[i]].channels;
     }
   }

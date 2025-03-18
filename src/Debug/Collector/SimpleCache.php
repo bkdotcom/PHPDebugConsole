@@ -53,7 +53,7 @@ class SimpleCache implements CacheInterface
      */
     public function __construct(CacheInterface $cache, $debug = null)
     {
-        \bdk\Debug\Utility::assertType($debug, 'bdk\Debug');
+        \bdk\Debug\Utility\PhpType::assertType($debug, 'bdk\Debug|null', 'debug');
 
         $channelKey = 'SimpleCache';
         $channelOptions = array(
@@ -84,7 +84,9 @@ class SimpleCache implements CacheInterface
     public function __call($method, array $args)
     {
         if (\method_exists($this->cache, $method) === false) {
-            throw new BadMethodCallException('method ' . __CLASS__ . '::' . $method . ' is not defined');
+            throw new BadMethodCallException($this->debug->i18n->trans('exception.method-inaccessible', array(
+                'method' => __CLASS__ . '::' . $method . '()',
+            )));
         }
         // we'll just pass the first arg since we don't know what we're dealing with
         $keys = !empty($args[0])

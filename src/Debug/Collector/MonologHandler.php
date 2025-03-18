@@ -47,9 +47,13 @@ class MonologHandler extends PsrHandler
             $logger = $debug->logger;
         } elseif ($debug instanceof LoggerInterface) {
             $logger = $debug;
-        }
-        if ($logger === null) {
-            throw new InvalidArgumentException('$debug must be instanceof bdk\Debug or Psr\Log\LoggerInterface');
+        } elseif ($debug) {
+            $debug = Debug::getInstance();
+            throw new InvalidArgumentException($debug->i18n->trans('exception.method-expects', array(
+                'actual' => $debug->php->getDebugType($debug),
+                'expect' => 'bdk\Debug or Psr\Log\LoggerInterface',
+                'method' => __METHOD__,
+            )));
         }
         parent::__construct($logger, $level, $bubble);
     }

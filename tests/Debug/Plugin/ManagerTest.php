@@ -39,7 +39,7 @@ class ManagerTest extends TestCase
     public function testAddInvalid()
     {
         $this->expectException('InvalidArgumentException');
-        $this->expectExceptionMessage('addPlugin expects \bdk\Debug\AssetProviderInterface and/or \bdk\PubSub\SubscriberInterface.  stdClass provided');
+        $this->expectExceptionMessage('addPlugin() expects \bdk\Debug\AssetProviderInterface and/or \bdk\PubSub\SubscriberInterface.  stdClass provided');
         self::$manager->addPlugin(new \stdClass());
     }
 
@@ -52,14 +52,14 @@ class ManagerTest extends TestCase
     public function testRemoveInvalidArg()
     {
         $this->expectException('InvalidArgumentException');
-        $this->expectExceptionMessage('removePlugin expects plugin name or instance.  bool provided');
+        $this->expectExceptionMessage('removePlugin() expects plugin name or instance.  bool provided');
         self::$manager->removePlugin(true);
     }
 
     public function testGetInvalid()
     {
         $this->expectException('InvalidArgumentException');
-        $this->expectExceptionMessage('getPlugin expects a string. int provided');
+        $this->expectExceptionMessage('bdk\Debug\Plugin\Manager::getPlugin() expects string.  int provided');
         self::$manager->getPlugin(69);
     }
 
@@ -172,7 +172,7 @@ class ManagerTest extends TestCase
     public function testAddPluginsNoClass()
     {
         $this->expectException('InvalidArgumentException');
-        $this->expectExceptionMessage('plugins[highlight]: missing "class" value');
+        $this->expectExceptionMessage('plugins[highlight]: plugin array definition missing "class" value');
         self::$manager->addPlugins(array(
             'highlight' => array(),
         ));
@@ -181,7 +181,7 @@ class ManagerTest extends TestCase
     public function testAddPluginsInvalid()
     {
         $this->expectException('InvalidArgumentException');
-        $this->expectExceptionMessage('plugins[highlight]: addPlugin expects \bdk\Debug\AssetProviderInterface and/or \bdk\PubSub\SubscriberInterface.  stdClass provided');
+        $this->expectExceptionMessage('plugins[highlight]: bdk\Debug\Plugin\Manager::addPlugin() expects \bdk\Debug\AssetProviderInterface and/or \bdk\PubSub\SubscriberInterface.  stdClass provided');
         self::$manager->addPlugins(array(
             'highlight' => new \stdClass(),
         ));

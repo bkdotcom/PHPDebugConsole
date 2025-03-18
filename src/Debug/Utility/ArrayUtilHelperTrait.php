@@ -26,8 +26,9 @@ trait ArrayUtilHelperTrait
     /**
      * Assert value is array or implements ArrayAccess
      *
-     * @param mixed                       $value Value to test
-     * @param array<array-key,string|int> $path  Path to value
+     * @param mixed                       $value  Value to test
+     * @param array<array-key,string|int> $path   Path to value
+     * @param string                      $method method doing the asserting
      *
      * @return void
      *
@@ -36,28 +37,32 @@ trait ArrayUtilHelperTrait
      *
      * @psalm-assert array|ArrayAccess $value
      */
-    private static function assertArrayAccess($value, array $path)
+    private static function assertArrayAccess($value, array $path, $method)
     {
         if (\is_array($value) || $value instanceof ArrayAccess) {
             return;
         }
         if ($path === []) {
-            throw new InvalidArgumentException(\sprintf(
-                'Array or ArrayAccess expected.  %s provided.',
-                Php::getDebugType($value)
-            ));
+            throw new InvalidArgumentException(\bdk\Debug\Utility::trans('exception.method-expects', array(
+                'actual' => Php::getDebugType($value),
+                'expect' => 'array or ArrayAccess',
+                'method' => $method . '()',
+            )));
         }
-        throw new UnexpectedValueException(\sprintf(
-            '%s is not an array or does not implement ArrayAccess',
-            \implode('.', $path)
-        ));
+        throw new UnexpectedValueException(\bdk\Debug\Utility::trans('exception.method-expects-at', array(
+            'actual' => Php::getDebugType($value),
+            'expect' => 'array or ArrayAccess',
+            'method' => $method . '()',
+            'path' => \implode('.', $path),
+        )));
     }
 
     /**
      * Assert value is array or implements ArrayAccess
      *
-     * @param mixed                       $value Value to test
-     * @param array<array-key,string|int> $path  Path to value
+     * @param mixed                       $value  Value to test
+     * @param array<array-key,string|int> $path   Path to value
+     * @param string                      $method method doing the asserting
      *
      * @return void
      *
@@ -65,16 +70,17 @@ trait ArrayUtilHelperTrait
      *
      * @psalm-assert array|Countable $value
      */
-    private static function assertCountable($value, array $path)
+    private static function assertCountable($value, array $path, $method)
     {
         if (\is_array($value) || $value instanceof Countable) {
             return;
         }
-        throw new UnexpectedValueException(\sprintf(
-            '%s (type of %s) is not an array or does not implement Countable',
-            \implode('.', $path),
-            Php::getDebugType($value)
-        ));
+        throw new UnexpectedValueException(\bdk\Debug\Utility::trans('exception.method-expects-at', array(
+            'actual' => Php::getDebugType($value),
+            'expect' => 'array or Countable',
+            'method' => $method . '()',
+            'path' => \implode('.', $path),
+        )));
     }
 
     /**
@@ -216,20 +222,17 @@ trait ArrayUtilHelperTrait
         if (\is_string($path)) {
             return \array_filter(\preg_split('#[\./]#', $path), 'strlen');
         }
+        $frame = \debug_backtrace(\DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1];
+        $params = array(
+            'actual' => Php::getDebugType($path),
+            'expect' => 'string or list of string|int',
+            'method' => $frame['class'] . '::' . $frame['function'] . '()',
+            'param' => '$path',
+        );
         if (\is_array($path) === false) {
-            throw new InvalidArgumentException(\sprintf(
-                'Path must be string or list of string|int.  %s provided.',
-                Php::getDebugType($path)
-            ));
+            throw new InvalidArgumentException(\bdk\Debug\Utility::trans('exception.method-expects-param', $params));
         }
-        \array_walk($path, static function ($val) {
-            if (\is_string($val) === false && \is_int($val) === false) {
-                throw new InvalidArgumentException(\sprintf(
-                    'Path array must consist only of string|int.  %s found.',
-                    Php::getDebugType($val)
-                ));
-            }
-        });
+        \bdk\Debug\Utility\ArrayUtil::assertContainsOnly($path, 'string|int', 'path', $frame['class'] . '::' . $frame['function']);
         /** @var array<array-key,string|int> */
         return $path;
     }
@@ -241,25 +244,26 @@ trait ArrayUtilHelperTrait
      *    handled:  __end__, __push__, __reset__
      *    not handled:  __count__, __pop__
      *
-     * @param string|int        $key   path key to test
-     * @param array<string|int> $path  the path
-     * @param array|ArrayAccess $array the current array (or ArrayAccess)
+     * @param string|int        $key    path key to test
+     * @param array<string|int> $path   the path
+     * @param array|ArrayAccess $array  the current array (or ArrayAccess)
+     * @param string            $method calling method
      *
      * @return bool whether key was handled
      *
      * @throws UnexpectedValueException
      */
-    private static function specialKey($key, array &$path, &$array)
+    private static function specialKey($key, array &$path, &$array, $method)
     {
         if (\in_array($key, ['__end__', '__push__', '__reset__'], true) === false) {
             return false;
         }
         if (\is_array($array) === false) {
-            throw new UnexpectedValueException(\sprintf(
-                '%s can only be used on array value.  %s provided.',
-                $key,
-                Php::getDebugType($array)
-            ));
+            throw new UnexpectedValueException(\bdk\Debug\Utility::trans('exception.array-special-key', array(
+                'actual' => Php::getDebugType($array),
+                'key' => $key,
+                'method' => $method . '()',
+            )));
         }
         switch ($key) {
             case '__end__':

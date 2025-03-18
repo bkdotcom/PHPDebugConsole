@@ -82,7 +82,7 @@ abstract class AbstractValue extends AbstractComponent
      */
     public function checkTimestamp($val, $abs = null)
     {
-        $this->debug->utility->assertType($abs, 'bdk\Debug\Abstraction\Abstraction');
+        \bdk\Debug\Utility\PhpType::assertType($abs, 'bdk\Debug\Abstraction\Abstraction|null', 'abs');
 
         if ($abs && $abs['typeMore'] === Type::TYPE_TIMESTAMP) {
             $datetime = new DateTime('@' . (int) $val);

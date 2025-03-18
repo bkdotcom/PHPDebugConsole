@@ -58,7 +58,7 @@ class SkipInternal
         if (\is_int($level) === false) {
             throw new InvalidArgumentException(\sprintf(
                 'level must be an integer. %s provided.',
-                \gettype($level)
+                \strtolower(\gettype($level))
             ));
         }
         if (\is_array($classes) === false) {

@@ -113,7 +113,7 @@ class SectionTest extends AbstractTestCaseWith
             }),
             array('facts', [[
                 'no sir' => false,
-            ]], true, 'bdk\Teams\Section::withFacts - fact value should be a string, numeric, or stringable obj. boolean provided'),
+            ]], true, 'bdk\Teams\Section::withFacts - fact value should be a string, numeric, or stringable obj. bool provided'),
             array('heroImage', ['http://example.com/superman.jpg', 'Super Dooper']),
             array('heroImage', [null]),
             array('images', [[
@@ -152,7 +152,7 @@ class SectionTest extends AbstractTestCaseWith
             array('text', ['blah blah']),
             array('title', ['text']),
             array('title', [null]),
-            array('title', [false], true, 'bdk\\Teams\\Section::withTitle expects a string, numeric, stringable obj, or null. boolean provided.'),
+            array('title', [false], true, 'bdk\\Teams\\Section::withTitle expects a string, numeric, stringable obj, or null. bool provided.'),
         );
     }
 }

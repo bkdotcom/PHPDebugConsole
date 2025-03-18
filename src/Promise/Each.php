@@ -36,8 +36,8 @@ final class Each
      */
     public static function of($iterable, $onFulfilled = null, $onRejected = null)
     {
-        \bdk\Promise\Utils::assertType($onFulfilled, 'callable');
-        \bdk\Promise\Utils::assertType($onRejected, 'callable');
+        \bdk\Promise\Utils::assertType($onFulfilled, 'callable|null', 'onFulfilled');
+        \bdk\Promise\Utils::assertType($onRejected, 'callable|null', 'onRejected');
 
         return (new EachPromise($iterable, array(
             'fulfilled' => $onFulfilled,
@@ -67,8 +67,8 @@ final class Each
         $onRejected = null
     )
     {
-        \bdk\Promise\Utils::assertType($onFulfilled, 'callable');
-        \bdk\Promise\Utils::assertType($onRejected, 'callable');
+        \bdk\Promise\Utils::assertType($onFulfilled, 'callable|null', 'onFulfilled');
+        \bdk\Promise\Utils::assertType($onRejected, 'callable|null', 'onRejected');
 
         return (new EachPromise($iterable, array(
             'concurrency' => $concurrency,
@@ -92,7 +92,7 @@ final class Each
      */
     public static function ofLimitAll($iterable, $concurrency, $onFulfilled = null)
     {
-        \bdk\Promise\Utils::assertType($onFulfilled, 'callable');
+        \bdk\Promise\Utils::assertType($onFulfilled, 'callable|null', 'onFulfilled');
 
         return self::ofLimit(
             $iterable,

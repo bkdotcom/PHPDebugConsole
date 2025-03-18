@@ -9,6 +9,7 @@ use bdk\HttpMessage\ServerRequestExtended as ServerRequest;
  * PHPUnit tests for Debug class
  *
  * @covers \bdk\Debug\Config
+ * @covers \bdk\Debug\ConfigNormalizer
  * @covers \bdk\Debug\Plugin\ConfigEvents
  * @covers \bdk\Debug\Plugin\AssertSettingTrait
  * @covers \bdk\Debug\Plugin\InternalEvents

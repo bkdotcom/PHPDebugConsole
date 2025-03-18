@@ -54,8 +54,8 @@ class Promise implements PromiseInterface
      */
     public function __construct($waitFn = null, $cancelFn = null)
     {
-        \bdk\Promise\Utils::assertType($waitFn, 'callable');
-        \bdk\Promise\Utils::assertType($cancelFn, 'callable');
+        \bdk\Promise\Utils::assertType($waitFn, 'callable|null', 'waitFn');
+        \bdk\Promise\Utils::assertType($cancelFn, 'callable|null', 'cancelFn');
 
         $this->waitFn = $waitFn;
         $this->cancelFn = $cancelFn;
@@ -123,8 +123,8 @@ class Promise implements PromiseInterface
      */
     public function then($onFulfilled = null, $onRejected = null)
     {
-        \bdk\Promise\Utils::assertType($onFulfilled, 'callable');
-        \bdk\Promise\Utils::assertType($onRejected, 'callable');
+        \bdk\Promise\Utils::assertType($onFulfilled, 'callable|null', 'onFulfilled');
+        \bdk\Promise\Utils::assertType($onRejected, 'callable|null', 'onRejected');
 
         if ($this->state === self::PENDING) {
             $promise = new static(null, [$this, 'cancel']);

@@ -52,7 +52,7 @@ class HtmlArray
      */
     public function dump(array $array, $abs = null)
     {
-        $this->debug->utility->assertType($abs, 'bdk\Debug\Abstraction\Abstraction');
+        \bdk\Debug\Utility\PhpType::assertType($abs, 'bdk\Debug\Abstraction\Abstraction|null', 'abs');
 
         $opts = $this->optionsGet();
         if ($opts['isMaxDepth']) {

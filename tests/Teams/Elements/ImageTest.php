@@ -72,7 +72,7 @@ class ImageTest extends AbstractTestCaseWith
             array('url', ['data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==']),
             array('url', ['http:///bogus'], true),
             // array('url', ['beans'], true, 'Invalid url (or data url)'),
-            // array('url', [true], true, 'Url should be a string. boolean provided.'),
+            // array('url', [true], true, 'Url should be a string. bool provided.'),
             array('altText', ['No image for you']),
             array('altText', [null]),
             array('backgroundColor', ['#BEEFED']),
@@ -90,7 +90,7 @@ class ImageTest extends AbstractTestCaseWith
             // array('size', [Enums::IMAGE_SIZE_AUTO]),
             // array('style', [Enums::IMAGE_STYLE_DEFAULT]),
             array('width', ['42px']),
-            array('width', [42], true, 'bdk\Teams\Elements\Image::withWidth - Invalid pixel value (ie "42px"). integer provided.'),
+            array('width', [42], true, 'bdk\Teams\Elements\Image::withWidth - Invalid pixel value (ie "42px"). int provided.'),
             array('width', ['42'], true, 'bdk\Teams\Elements\Image::withWidth - Invalid pixel value (ie "42px"). string provided.'),
         );
     }

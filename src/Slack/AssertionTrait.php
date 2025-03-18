@@ -274,8 +274,13 @@ trait AssertionTrait
      */
     protected static function getDebugType($value)
     {
-        return \is_object($value)
-            ? \get_class($value)
-            : \strtolower(\gettype($value));
+        if (\is_object($value)) {
+            return \get_class($value);
+        }
+        return \strtr(\strtolower(\gettype($value)), array(
+            'boolean' => 'bool',
+            'double' => 'float',
+            'integer' => 'int',
+        ));
     }
 }

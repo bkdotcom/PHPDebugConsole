@@ -206,10 +206,9 @@ class Reflection
             return $refProp->getValue();
         }
         if (\is_object($obj) === false) {
-            throw new InvalidArgumentException(\sprintf(
-                'propGet: object must be provided to retrieve instance value %s',
-                $prop
-            ));
+            throw new InvalidArgumentException(\bdk\Debug\Utility::trans('utility.reflection.instance-prop-get', array(
+                'property' => $obj . '::$' . $prop,
+            )));
         }
         return PHP_VERSION_ID < 70400 || $refProp->isInitialized($obj)
             ? $refProp->getValue($obj)
@@ -234,10 +233,9 @@ class Reflection
             return $refProp->setValue(null, $val);
         }
         if (\is_object($obj) === false) {
-            throw new InvalidArgumentException(\sprintf(
-                'propSet: object must be provided to set instance value %s',
-                $prop
-            ));
+            throw new InvalidArgumentException(\bdk\Debug\Utility::trans('utility.reflection.instance-prop-set', array(
+                'property' => $obj . '::$' . $prop,
+            )));
         }
         return $refProp->setValue($obj, $val);
     }
@@ -263,13 +261,12 @@ class Reflection
             $ref = $ref->getParentClass();
         } while ($ref);
         if ($refProp === null) {
-            throw new OutOfBoundsException(\sprintf(
-                'Property %s::$%s does not exist',
-                \is_string($obj)
-                    ? $obj
-                    : \get_class($obj),
-                $prop
-            ));
+            $className = \is_string($obj)
+                ? $obj
+                : \get_class($obj);
+            throw new OutOfBoundsException(\bdk\Debug\Utility::trans('exception.property-undefined', array(
+                'property' => $className . '::$' . $prop,
+            )));
         }
         $refProp->setAccessible(true);
         return $refProp;

@@ -30,7 +30,7 @@ class GuzzleMiddleware extends AbstractAsyncMiddleware
      */
     public function __construct($cfg = array(), $debug = null)
     {
-        \bdk\Debug\Utility::assertType($debug, 'bdk\Debug');
+        \bdk\Debug\Utility\PhpType::assertType($debug, 'bdk\Debug|null', 'debug');
 
         $this->cfg = \array_replace_recursive($this->cfg, array(
             'channelKey' => 'Guzzle',

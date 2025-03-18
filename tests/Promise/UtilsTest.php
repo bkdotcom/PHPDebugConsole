@@ -28,56 +28,54 @@ class UtilsTest extends TestCase
     /**
      * @param mixed       $value
      * @param string      $type
-     * @param bool        $allowNull
-     * @param null|string $exceptionMessage
+     * @param string|null $paramName
+     * @param string|null $exceptionMessage
      *
      * @dataProvider providerAssertType
      */
-    public function testAssertType($value, $type, $allowNull = true, $exceptionMessage = null)
+    public function testAssertType($value, $type, $paramName = null, $exceptionMessage = null)
     {
         if ($exceptionMessage !== null) {
             $this->expectException('InvalidArgumentException');
             $this->expectExceptionMessage($exceptionMessage);
         }
-        Utils::assertType($value, $type, $allowNull);
+        Utils::assertType($value, $type, $paramName);
         self::assertTrue(true);
     }
 
     public function providerAssertType()
     {
+        $method = __CLASS__ . '::testAssertType()';
         return [
-            [array(), 'array', false],
-            ['call_user_func', 'callable', false],
-            [(object) array(), 'object', false],
-            [new \bdk\PubSub\Event(), 'bdk\PubSub\Event', false],
-
-            [array(), 'array', true],
+            [array(), 'array'],
             ['call_user_func', 'callable'],
-            [(object) array(), 'object', true],
-            [new \bdk\PubSub\Event(), 'bdk\PubSub\Event', true],
+            [(object) array(), 'object'],
+            [new \bdk\PubSub\Event(), 'bdk\PubSub\Event'],
 
-            [null, 'array', true ],
-            [null, 'callable', true],
-            [null, 'object', true],
-            [null, 'bdk\PubSub\Event', true],
+            [array(), 'array|null'],
+            ['call_user_func', 'callable'],
+            [(object) array(), 'object|null'],
+            [new \bdk\PubSub\Event(), 'bdk\PubSub\Event|null'],
 
-            [(object) array(), 'array', true, 'Expected array (or null), got stdClass'],
+            [null, 'array|null'],
+            [null, 'callable|null'],
+            [null, 'object|null'],
+            [null, 'bdk\PubSub\Event|null'],
 
-            [null, 'array', false, 'Expected array, got null'],
-            [null, 'callable', false, 'Expected callable, got null'],
-            [null, 'object', false, 'Expected object, got null'],
-            [null, 'bdk\PubSub\Event', false, 'Expected bdk\PubSub\Event, got null'],
+            [null, 'array', 'dingus', $method . ': $dingus expects array.  null provided'],
+            [null, 'callable', null, $method . ' expects callable.  null provided'],
+            [null, 'object', null, $method . ' expects object.  null provided'],
+            [null, 'bdk\PubSub\Event', null, $method . ' expects bdk\PubSub\Event.  null provided'],
 
-            [false, 'array', true, 'Expected array (or null), got bool'],
-            [false, 'callable', true, 'Expected callable (or null), got bool'],
-            [false, 'object', true, 'Expected object (or null), got bool'],
-            [false, 'bdk\PubSub\Event', true, 'Expected bdk\PubSub\Event (or null), got bool'],
+            [false, 'array|null', null, $method . ' expects array|null.  bool provided'],
+            [false, 'callable|null', 'dingus', $method . ': $dingus expects callable|null.  bool provided'],
+            [false, 'object|null', null, $method . ' expects object|null.  bool provided'],
+            [false, 'bdk\PubSub\Event|null', null, $method . ' expects bdk\PubSub\Event|null.  bool provided'],
 
-            [false, 'array', false, 'Expected array, got bool'],
-            [false, 'callable', false, 'Expected callable, got bool'],
-            [false, 'object', false, 'Expected object, got bool'],
-            [false, 'bdk\PubSub\Event', false, 'Expected bdk\PubSub\Event, got bool'],
-
+            [false, 'array', null, $method . ' expects array.  bool provided'],
+            [false, 'callable', null, $method . ' expects callable.  bool provided'],
+            [false, 'object', 'dingus', $method . ': $dingus expects object.  bool provided'],
+            [false, 'bdk\PubSub\Event', null, $method . ' expects bdk\PubSub\Event.  bool provided'],
         ];
     }
 

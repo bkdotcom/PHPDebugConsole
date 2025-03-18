@@ -99,7 +99,7 @@ class ChromeLogger extends AbstractRoute
      */
     public function processLogEntries($event = null)
     {
-        $this->debug->utility->assertType($event, 'bdk\PubSub\Event');
+        \bdk\Debug\Utility\PhpType::assertType($event, 'bdk\PubSub\Event|null');
 
         $this->dumper->crateRaw = false;
         $this->data = $this->debug->data->get();

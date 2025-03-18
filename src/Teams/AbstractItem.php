@@ -41,6 +41,45 @@ class AbstractItem implements ItemInterface
     }
 
     /**
+     * Assert that a value is of a certain type
+     *
+     * Utility / internal method... public for testing
+     *
+     * Support extreme range of PHP versions : 5.4 - 8.4 (and beyond)
+     * `MyObj $obj = null` has been deprecated in PHP 8.4
+     * must now be `?MyObj $obj = null` (which is a php 7.1 feature)
+     * Workaround - remove type-hint when we allow null (not ideal) and call assertType
+     * When we drop support for php < 7.1, we can remove this method and do proper type-hinting
+     *
+     * @param mixed  $value     Value to test
+     * @param string $type      "array", "callable", "object", or className
+     * @param string $paramName (optional) parameter name
+     *
+     * @return void
+     *
+     * @throws InvalidArgumentException
+     */
+    public static function assertType($value, $type, $paramName = null)
+    {
+        if (self::assertTypeCheck($value, $type)) {
+            return;
+        }
+        $frame = \debug_backtrace(\DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1];
+        $params = array(
+            '{actual}' => self::getDebugType($value),
+            '{expect}' => $type,
+            '{method}' => isset($frame['class'])
+                ? $frame['class'] . '::' . $frame['function'] . '()'
+                : $frame['function'] . '()',
+            '{param}' => '$' . $paramName,
+        );
+        $msg = $paramName
+            ? '{method}: {param} expects {expect}.  {actual} provided'
+            : '{method} expects {expect}.  {actual} provided';
+        throw new InvalidArgumentException(\strtr($msg, $params));
+    }
+
+    /**
      * Return attribute/property value
      *
      * @param string $name Attribute name
@@ -75,59 +114,26 @@ class AbstractItem implements ItemInterface
     }
 
     /**
-     * Assert that a value is of a certain type
-     *
-     * Support extreme range of PHP versions : 5.4 - 8.4 (and beyond)
-     * `MyObj $obj = null` has been deprecated in PHP 8.4
-     * must now be `?MyObj $obj = null` (which is a php 7.1 feature)
-     * Workaround - remove type-hint when we allow null (not ideal) and call assertType
-     * When we drop support for php < 7.1, we can remove this method and do proper type-hinting
-     *
-     * @param mixed  $value     Value to test
-     * @param string $type      "array", "callable", "object", or className
-     * @param bool   $allowNull (true) allow null?
-     *
-     * @return void
-     *
-     * @throws InvalidArgumentException
-     */
-    protected static function assertType($value, $type, $allowNull = true)
-    {
-        if ($allowNull && $value === null) {
-            return;
-        }
-        if (self::assertTypeCheck($value, $type)) {
-            return;
-        }
-        throw new InvalidArgumentException(\sprintf(
-            'Expected %s%s, got %s',
-            $type,
-            $allowNull ? ' (or null)' : '',
-            self::getDebugType($value)
-        ));
-    }
-
-    /**
      * Test if value is of a certain type
      *
      * @param mixed  $value Value to test
-     * @param string $type  "array", "callable", "object", or className
+     * @param string $type  php type(s) to check
      *
      * @return bool
      */
     private static function assertTypeCheck($value, $type)
     {
-        // For teams we don't need 'array', 'callable', or 'object' tests
-        switch ($type) {
-            case 'array':
-                return \is_array($value);
-            case 'callable':
-                return \is_callable($value);
-            case 'object':
-                return \is_object($value);
-            default:
-                return \is_a($value, $type);
+        $types = ['array', 'bool', 'callable', 'float', 'int', 'null', 'numeric', 'object', 'string'];
+        foreach (\explode('|', $type) as $type) {
+            $method = 'is_' . $type;
+            $isType = \in_array($type, $types, true)
+                ? $method($value)
+                : \is_a($value, $type);
+            if ($isType) {
+                return true;
+            }
         }
+        return false;
     }
 
     /**

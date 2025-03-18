@@ -47,6 +47,7 @@ use DomainException;
  * A polyfill implementation of the MessageFormatter class provided by the intl extension.
  *
  * It only supports the following message formats:
+ *  * number formatting
  *  * plural formatting for english ('one' and 'other' selectors)
  *  * select format
  *  * simple parameters

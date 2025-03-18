@@ -70,7 +70,7 @@ class ShowCard extends AbstractAction
      */
     public function withCard($card = null)
     {
-        self::assertType($card, 'bdk\Teams\Cards\AdaptiveCard');
+        self::assertType($card, 'bdk\Teams\Cards\AdaptiveCard|null');
 
         return $this->with('card', $card);
     }

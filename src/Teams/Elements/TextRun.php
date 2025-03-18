@@ -172,7 +172,7 @@ class TextRun extends AbstractItem implements ElementInterface
      */
     public function withSelectAction($action = null)
     {
-        self::assertType($action, 'bdk\Teams\Actions\ActionInterface');
+        self::assertType($action, 'bdk\Teams\Actions\ActionInterface|null');
 
         if ($action && $action->get('type') === 'Action.ShowCard') {
             throw new InvalidArgumentException('TextRun selectAction does not support ShowCard');

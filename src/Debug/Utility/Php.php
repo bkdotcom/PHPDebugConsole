@@ -13,8 +13,6 @@
 namespace bdk\Debug\Utility;
 
 use bdk\Debug\Utility\Reflection;
-use Exception;
-use UnitEnum;
 
 /**
  * Php language utilities
@@ -64,7 +62,7 @@ class Php
         if ($reflector && \method_exists($reflector, 'getDeclaringClass')) {
             $reflector = $reflector->getDeclaringClass();
         }
-        return self::getDebugTypeObject($reflector->getName());
+        return \bdk\Debug\Utility\PhpType::getDebugTypeObject($reflector->getName());
     }
 
     /**
@@ -82,32 +80,7 @@ class Php
      */
     public static function getDebugType($val)
     {
-        if (PHP_VERSION_ID >= 80000 && \in_array(\gettype($val), ['array', 'object'], true) === false) {
-            return \get_debug_type($val);
-        }
-
-        switch (true) {
-            case $val === null:
-                return 'null';
-            case \is_bool($val):
-                return 'bool';
-            case \is_string($val):
-                return 'string';
-            case \is_array($val):
-                return self::isCallable($val)
-                    ? 'callable'
-                    : 'array';
-            case \is_int($val):
-                return 'int';
-            case \is_float($val):
-                return 'float';
-            case \is_object($val):
-                return self::getDebugTypeObject($val);
-            case $val instanceof \__PHP_Incomplete_Class:
-                return '__PHP_Incomplete_Class';
-            default:
-                return self::getDebugTypeResource($val);
-        }
+        return \bdk\Debug\Utility\PhpType::getDebugType($val);
     }
 
     /**
@@ -117,8 +90,7 @@ class Php
      */
     public static function getIncludedFiles()
     {
-        $includedFiles = \get_included_files();
-        return \bdk\Debug\Utility::sortFiles($includedFiles);
+        return \bdk\Debug\Utility::sortFiles(\get_included_files());
     }
 
     /**
@@ -160,20 +132,7 @@ class Php
      */
     public static function isCallable($val, $opts = 0)
     {
-        if (\is_object($val)) {
-            // test if Closure or obj with __invoke
-            return \is_callable($val, false);
-        }
-        if (\is_array($val)) {
-            return self::isCallableArray($val, $opts);
-        }
-        if ($opts & self::IS_CALLABLE_ARRAY_ONLY) {
-            return false;
-        }
-        $syntaxOnly = \is_string($val) && \preg_match('/(::|\\\)/', $val) !== 1
-            ? false // string without namespace: do a full check
-            : ($opts & self::IS_CALLABLE_SYNTAX_ONLY) === self::IS_CALLABLE_SYNTAX_ONLY;
-        return \is_callable($val, $syntaxOnly);
+        return \bdk\Debug\Utility\PhpType::isCallable($val, $opts);
     }
 
     /**
@@ -185,7 +144,7 @@ class Php
      */
     public static function isThrowable($val)
     {
-        return $val instanceof \Error || $val instanceof Exception;
+        return \bdk\Debug\Utility\PhpType::isThrowable($val);
     }
 
     /**
@@ -201,12 +160,10 @@ class Php
     /**
      * Unserialize while only allowing the specified classes to be unserialized
      *
-     * stdClass will always be allowed
-     *
      * Gracefully handle unsafe classes implementing Serializable
      *
      * @param string        $serialized     serialized string
-     * @param string[]|bool $allowedClasses allowed class names
+     * @param string[]|bool $allowedClasses allowed class names (stdClass will always be allowed)
      *
      * @return mixed
      */
@@ -228,131 +185,6 @@ class Php
         }
         $serialized = self::unserializeSafeModify($serialized);
         return \unserialize($serialized);
-    }
-
-    /**
-     * Get friendly class name
-     *
-     * @param object $obj Object to inspect
-     *
-     * @return string
-     */
-    private static function getDebugTypeObject($obj)
-    {
-        if ($obj instanceof UnitEnum) {
-            return \get_class($obj) . '::' . $obj->name;
-        }
-        $class = \is_object($obj)
-            ? \get_class($obj)
-            : $obj;
-        if (\strpos($class, '@') === false) {
-            return $class;
-        }
-        $class = \get_parent_class($class) ?: \key(\class_implements($class)) ?: 'class';
-        return $class . '@anonymous';
-    }
-
-    /**
-     * Get resource type
-     *
-     * This method is only used for php < 8.0
-     *
-     * @param mixed $val Resource
-     *
-     * @return string
-     */
-    private static function getDebugTypeResource($val)
-    {
-        // @phpcs:ignore Squiz.WhiteSpace.ScopeClosingBrace
-        \set_error_handler(static function () {});
-        $type = \get_resource_type($val);
-        \restore_error_handler();
-
-        if ($type === null) {
-            // closed resource (php < 7.2)
-            $type = 'closed';
-        }
-        if ($type === 'Unknown') {
-            $type = 'closed';
-        }
-
-        return 'resource (' . $type . ')';
-    }
-
-    /**
-     * Test if array is a callable
-     *
-     * We will ignore current context
-     *
-     * @param array $val  array to test
-     * @param int   $opts bitmask of IS_CALLABLE_x constants
-     *
-     * @return bool
-     */
-    private static function isCallableArray(array $val, $opts)
-    {
-        if (\is_callable($val, true) === false) {
-            return false;
-        }
-        $regexLabel = '/^[a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*$/';
-        if (\preg_match($regexLabel, $val[1]) !== 1) {
-            return false;
-        }
-        if (\is_object($val[0])) {
-            return self::isCallableArrayObj($val, $opts);
-        }
-        return $opts & self::IS_CALLABLE_OBJ_ONLY
-            ? false
-            : self::isCallableArrayString($val, $opts);
-    }
-
-    /**
-     * Test if `[obj, 'method']` is callable
-     *
-     * @param array $val  array to test
-     * @param int   $opts bitmask of IS_CALLABLE_x constants
-     *
-     * @return bool
-     */
-    private static function isCallableArrayObj(array $val, $opts)
-    {
-        if ($opts & self::IS_CALLABLE_SYNTAX_ONLY) {
-            return true;
-        }
-        if (\method_exists($val[0], $val[1])) {
-            return true;
-        }
-        return $opts & self::IS_CALLABLE_NO_CALL
-            ? false
-            : \method_exists($val[0], '__call');
-    }
-
-    /**
-     * Test if `['string', 'method']` is callable
-     *
-     * @param array $val  array to test
-     * @param int   $opts bitmask of IS_CALLABLE_x constants
-     *
-     * @return bool
-     */
-    private static function isCallableArrayString(array $val, $opts)
-    {
-        if ($opts & self::IS_CALLABLE_SYNTAX_ONLY) {
-            // is_callable syntaxOnly only tested if 1st val is obj or string
-            //    we'll test that string is a valid label
-            $regexClass = '/^(\\\\?[a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*)+$/';
-            return \preg_match($regexClass, $val[0]) === 1;
-        }
-        if (\class_exists($val[0], false) === false) {
-            // test if class exists before calling method_exists to avoid autoload attempt
-            return false;
-        }
-        if (\method_exists($val[0], $val[1])) {
-            return true;
-        }
-        return $opts & self::IS_CALLABLE_NO_CALL
-            ? false
-            : \method_exists($val[0], '__callStatic');
     }
 
     /**

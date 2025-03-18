@@ -63,7 +63,7 @@ class PhpCurlClass extends Curl
      */
     public function __construct($options = array(), $debug = null)
     {
-        \bdk\Debug\Utility::assertType($debug, 'bdk\Debug');
+        \bdk\Debug\Utility\PhpType::assertType($debug, 'bdk\Debug|null', 'debug');
 
         $this->debugOptions = \array_merge($this->debugOptions, $options);
         $channelOptions = array(

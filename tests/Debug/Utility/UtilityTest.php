@@ -17,60 +17,6 @@ class UtilityTest extends DebugTestFramework
 {
     use ExpectExceptionTrait;
 
-    /**
-     * @param mixed       $value
-     * @param string      $type
-     * @param bool        $allowNull
-     * @param null|string $exceptionMessage
-     *
-     * @dataProvider providerAssertType
-     */
-    public function testAssertType($value, $type, $allowNull = true, $exceptionMessage = null)
-    {
-        if ($exceptionMessage !== null) {
-            $this->expectException('InvalidArgumentException');
-            $this->expectExceptionMessage($exceptionMessage);
-        }
-        Utility::assertType($value, $type, $allowNull);
-        self::assertTrue(true);
-    }
-
-    public function providerAssertType()
-    {
-        return [
-            [array(), 'array', false],
-            ['call_user_func', 'callable', false],
-            [(object) array(), 'object', false],
-            [new \bdk\PubSub\Event(), 'bdk\PubSub\Event', false],
-
-            [array(), 'array', true],
-            ['call_user_func', 'callable'],
-            [(object) array(), 'object', true],
-            [new \bdk\PubSub\Event(), 'bdk\PubSub\Event', true],
-
-            [null, 'array', true ],
-            [null, 'callable', true],
-            [null, 'object', true],
-            [null, 'bdk\PubSub\Event', true],
-
-            [null, 'array', false, 'Expected array, got null'],
-            [null, 'callable', false, 'Expected callable, got null'],
-            [null, 'object', false, 'Expected object, got null'],
-            [null, 'bdk\PubSub\Event', false, 'Expected bdk\PubSub\Event, got null'],
-
-            [false, 'array', true, 'Expected array (or null), got bool'],
-            [false, 'callable', true, 'Expected callable (or null), got bool'],
-            [false, 'object', true, 'Expected object (or null), got bool'],
-            [false, 'bdk\PubSub\Event', true, 'Expected bdk\PubSub\Event (or null), got bool'],
-
-            [false, 'array', false, 'Expected array, got bool'],
-            [false, 'callable', false, 'Expected callable, got bool'],
-            [false, 'object', false, 'Expected object, got bool'],
-            [false, 'bdk\PubSub\Event', false, 'Expected bdk\PubSub\Event, got bool'],
-
-        ];
-    }
-
     public function testEmitHeaders()
     {
         Utility::emitHeaders(array());
@@ -132,62 +78,6 @@ class UtilityTest extends DebugTestFramework
         self::assertSame(\pow(2, 10), Utility::getBytes('1kb', true));
 
         self::assertSame(false, Utility::getBytes('bob'));
-    }
-
-    /**
-     * Test
-     *
-     * @return void
-     */
-    public function testGetEmittedHeader()
-    {
-        $GLOBALS['collectedHeaders'] = array();
-        $GLOBALS['headersSent'] = array();
-        Utility::emitHeaders(array(
-            'Content-Type' => 'application/json',
-            'Location' => 'http://www.test.com/',
-            'Content-Security-Policy' => array(
-                'foo',
-                'bar',
-            ),
-            array('Content-Length', 1234),
-        ));
-        self::assertSame('application/json', Utility::getEmittedHeader());
-        self::assertSame('foo, bar', Utility::getEmittedHeader('Content-Security-Policy'));
-        self::assertSame(array('foo', 'bar'), Utility::getEmittedHeader('Content-Security-Policy', null));
-        self::assertSame('', Utility::getEmittedHeader('Not-Sent'));
-        self::assertSame(array(), Utility::getEmittedHeader('Not-Sent', null));
-    }
-
-    /**
-     * Test
-     *
-     * @return void
-     */
-    public function testGetEmittedHeaders()
-    {
-        $GLOBALS['collectedHeaders'] = array();
-        $GLOBALS['headersSent'] = array();
-        Utility::emitHeaders(array(
-            'Location' => 'http://www.test.com/',
-            'Content-Security-Policy' => array(
-                'foo',
-                'bar',
-            ),
-            array('Content-Length', 1234),
-        ));
-        self::assertSame(array(
-            'Location' => array(
-                'http://www.test.com/',
-            ),
-            'Content-Security-Policy' => array(
-                'foo',
-                'bar',
-            ),
-            'Content-Length' => array(
-                '1234',
-            ),
-        ), Utility::getEmittedHeaders());
     }
 
     public function testGitBranch()

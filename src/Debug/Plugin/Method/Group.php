@@ -75,7 +75,9 @@ class Group implements SubscriberInterface
             'setLogDest',
         ];
         if (\in_array($method, $methods, true) === false) {
-            throw new BadMethodCallException(__CLASS__ . '::' . $method . ' is inaccessible');
+            throw new BadMethodCallException($this->debug->i18n->trans('exception.method-inaccessible', [
+                'method' => __CLASS__ . '::' . $method . '()',
+            ]));
         }
         return \call_user_func_array([$this->groupStack, $method], $args);
     }
@@ -145,13 +147,24 @@ class Group implements SubscriberInterface
      */
     public function groupEnd($value = Abstracter::UNDEFINED) // @phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
     {
-        $this->doGroupEnd(new LogEntry(
+        $logEntry = new LogEntry(
             $this->debug,
             __FUNCTION__,
             \func_get_args(),
             array(),
             $this->debug->rootInstance->reflection->getMethodDefaultArgs(__METHOD__)
-        ));
+        );
+        $haveOpen = $this->groupStack->haveOpenGroup();
+        if ($haveOpen === 2) {
+            // we're closing a summary group
+            $this->groupEndSummary($logEntry);
+        } elseif ($haveOpen === 1) {
+            $this->groupEndMain($logEntry);
+        }
+        $errorCaller = $this->debug->errorHandler->get('errorCaller');
+        if ($errorCaller && isset($errorCaller['groupDepth']) && $this->groupStack->getDepth() < $errorCaller['groupDepth']) {
+            $this->debug->errorHandler->setErrorCaller(false);
+        }
         return $this->debug;
     }
 
@@ -169,14 +182,20 @@ class Group implements SubscriberInterface
      */
     public function groupSummary($priority = 0) // @phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
     {
-        $this->doGroupSummary(new LogEntry(
+        $logEntry = new LogEntry(
             $this->debug,
             __FUNCTION__,
             \func_get_args(),
             array(),
             $this->debug->rootInstance->reflection->getMethodDefaultArgs(__METHOD__),
             ['priority']
-        ));
+        );
+        $this->groupStack->pushPriority($logEntry['meta']['priority']);
+        $this->debug->data->set('logDest', 'summary');
+        $logEntry['appendLog'] = false;     // don't actually log
+        $logEntry['forcePublish'] = true;   // publish the Debug::EVENT_LOG event (regardless of cfg.collect)
+        // groupSummary's Debug::EVENT_LOG event should happen on the root instance
+        $this->debug->rootInstance->log($logEntry);
         return $this->debug;
     }
 
@@ -192,7 +211,15 @@ class Group implements SubscriberInterface
         if ($this->debug->getCfg('collect', Debug::CONFIG_DEBUG) === false) {
             return $this->debug;
         }
-        $this->doGroupUncollapse(new LogEntry($this->debug, __FUNCTION__, \func_get_args()));
+        $logEntry = new LogEntry($this->debug, __FUNCTION__, \func_get_args());
+        $debug = $logEntry->getSubject();
+        $groups = $this->groupStack->getCurrentGroups();
+        foreach ($groups as $groupLogEntry) {
+            $groupLogEntry['method'] = 'group';
+        }
+        $logEntry['appendLog'] = false;     // don't actually log
+        $logEntry['forcePublish'] = true;   // publish the Debug::EVENT_LOG event (regardless of cfg.collect)
+        $debug->log($logEntry);
         return $this->debug;
     }
 
@@ -238,64 +265,6 @@ class Group implements SubscriberInterface
         $briefBak = $debug->abstracter->setCfg('brief', true);
         $debug->log($logEntry);
         $debug->abstracter->setCfg('brief', $briefBak);
-    }
-
-    /**
-     * Handle debug's groupEnd method
-     *
-     * @param LogEntry $logEntry LogEntry instance
-     *
-     * @return void
-     */
-    private function doGroupEnd(LogEntry $logEntry)
-    {
-        $haveOpen = $this->groupStack->haveOpenGroup();
-        if ($haveOpen === 2) {
-            // we're closing a summary group
-            $this->groupEndSummary($logEntry);
-        } elseif ($haveOpen === 1) {
-            $this->groupEndMain($logEntry);
-        }
-        $errorCaller = $this->debug->errorHandler->get('errorCaller');
-        if ($errorCaller && isset($errorCaller['groupDepth']) && $this->groupStack->getDepth() < $errorCaller['groupDepth']) {
-            $this->debug->errorHandler->setErrorCaller(false);
-        }
-    }
-
-    /**
-     * Handle debug's groupSummary method
-     *
-     * @param LogEntry $logEntry LogEntry instance
-     *
-     * @return void
-     */
-    private function doGroupSummary(LogEntry $logEntry)
-    {
-        $this->groupStack->pushPriority($logEntry['meta']['priority']);
-        $this->debug->data->set('logDest', 'summary');
-        $logEntry['appendLog'] = false;     // don't actually log
-        $logEntry['forcePublish'] = true;   // publish the Debug::EVENT_LOG event (regardless of cfg.collect)
-        // groupSummary's Debug::EVENT_LOG event should happen on the root instance
-        $this->debug->rootInstance->log($logEntry);
-    }
-
-    /**
-     * Handle debug's groupUncollapse method
-     *
-     * @param LogEntry $logEntry LogEntry instance
-     *
-     * @return void
-     */
-    private function doGroupUncollapse(LogEntry $logEntry)
-    {
-        $debug = $logEntry->getSubject();
-        $groups = $this->groupStack->getCurrentGroups();
-        foreach ($groups as $groupLogEntry) {
-            $groupLogEntry['method'] = 'group';
-        }
-        $logEntry['appendLog'] = false;     // don't actually log
-        $logEntry['forcePublish'] = true;   // publish the Debug::EVENT_LOG event (regardless of cfg.collect)
-        $debug->log($logEntry);
     }
 
     /**

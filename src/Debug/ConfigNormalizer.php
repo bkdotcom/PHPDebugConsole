@@ -90,7 +90,6 @@ class ConfigNormalizer
                 'errorStatsFile',
             ],
         ),
-        'i18n' => array(),
         'routeHtml' => [
             'css',
             'drawer',

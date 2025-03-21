@@ -24,6 +24,22 @@ use RuntimeException;
  */
 class ServiceProvider implements ServiceProviderInterface
 {
+    protected $utilities = [
+        'arrayUtil',
+        'configNormalizer',
+        'errorLevel',
+        'findExit',
+        'html',
+        'php',
+        'phpDoc',
+        'reflection',
+        'sql',
+        'stopWatch',
+        'stringUtil',
+        'utf8',
+        'utility',
+    ];
+
     /**
      * Register services and factories
      *
@@ -33,31 +49,24 @@ class ServiceProvider implements ServiceProviderInterface
      */
     public function register(Container $container)
     {
-        $this->registerCoreServices($container);
+        $this->registerCore($container);
         $this->registerRoutes($container);
         $this->registerUtilities($container);
         $this->registerMisc($container);
 
         /*
             These "services" are reused between channels
-            each debug "rootInstance" gets at most one instance of the following
+            these service definitions will be moved to a dedicated ServiceProvider that is shared between channels
         */
-        $container['services'] = [
-            'arrayUtil',
+        $container['services'] = \array_merge($this->utilities, [
             'backtrace',
             'data',
             'errorHandler',
-            'errorLevel',
-            'html',
             'i18n',
-            'phpDoc',
             'pluginHighlight',
-            'response',
+            'response',  // app may provide \Psr\Http\Message\ServerRequestInterface
             'serverRequest',
-            'stringUtil',
-            'utf8',
-            'utility',
-        ];
+        ]);
 
         // ensure that PHPDebugConsole receives ServerRequestExtended
         $container->extend('serverRequest', static function (ServerRequestInterface $serverRequest) {
@@ -66,13 +75,13 @@ class ServiceProvider implements ServiceProviderInterface
     }
 
     /**
-     * Register "core" services
+     * Register "core"
      *
      * @param Container $container Container instance
      *
      * @return void
      */
-    protected function registerCoreServices(Container $container) // phpcs:ignore SlevomatCodingStandard.Functions.FunctionLength
+    protected function registerCore(Container $container) // phpcs:ignore SlevomatCodingStandard.Functions.FunctionLength
     {
         $container['abstracter'] = static function (Container $container) {
             $debug = $container['debug'];
@@ -87,12 +96,13 @@ class ServiceProvider implements ServiceProviderInterface
             return $backtrace;
         };
         $container['config'] = static function (Container $container) {
-            $debug = $container['debug'];
-            return new \bdk\Debug\Config($debug);
+            return new \bdk\Debug\Config($container['debug'], $container['debug']->configNormalizer);
+        };
+        $container['configNormalizer'] = static function (Container $container) {
+            return new \bdk\Debug\ConfigNormalizer($container['debug']);
         };
         $container['data'] = static function (Container $container) {
-            $debug = $container['debug'];
-            return new \bdk\Debug\Data($debug);
+            return new \bdk\Debug\Data($container['debug']);
         };
         $container['errorHandler'] = static function (Container $container) {
             $debug = $container['debug'];
@@ -165,6 +175,7 @@ class ServiceProvider implements ServiceProviderInterface
             //    \Psr\Http\Message\ServerRequestInterface
             //    or
             //    \bdk\HttpMessage\ServerRequestExtendedInterface
+            // we'll ensure it becomes a ServerRequestExtended instance
             return \bdk\HttpMessage\Utility\ServerRequest::fromGlobals();
         };
     }
@@ -238,14 +249,14 @@ class ServiceProvider implements ServiceProviderInterface
         $container['sqlQueryAnalysis'] = static function (Container $container) {
             return new \bdk\Debug\Utility\SqlQueryAnalysis($container['debug']);
         };
-        $container['stringUtil'] = static function () {
-            return new \bdk\Debug\Utility\StringUtil();
-        };
         $container['stopWatch'] = static function (Container $container) {
             $debug = $container['debug'];
             return new \bdk\Debug\Utility\StopWatch(array(
                 'requestTime' => $debug->getServerParam('REQUEST_TIME_FLOAT'),
             ));
+        };
+        $container['stringUtil'] = static function () {
+            return new \bdk\Debug\Utility\StringUtil();
         };
         $container['utf8'] = static function () {
             return new \bdk\Debug\Utility\Utf8();

@@ -35,12 +35,13 @@ class Config
     /**
      * Constructor
      *
-     * @param Debug $debug debug instance
+     * @param Debug                 $debug      debug instance
+     * @param ConfigNormalizer|null $normalizer (optional) specify config normalizer
      */
-    public function __construct(Debug $debug)
+    public function __construct(Debug $debug, $normalizer = null)
     {
         $this->debug = $debug;
-        $this->normalizer = new ConfigNormalizer($debug);
+        $this->normalizer = $normalizer ?: new ConfigNormalizer($debug);
     }
 
     /**
@@ -146,7 +147,7 @@ class Config
             Now set the values
         */
         // debug uses a Debug::EVENT_CONFIG subscriber to get updated config values
-        unset($configs['debug']);
+        unset($configs['debug']); // 'debug' was set via event above
         foreach ($configs as $debugProp => $cfg) {
             $this->setPropCfg($debugProp, $cfg);
         }
@@ -279,14 +280,11 @@ class Config
     private function setPropCfg($debugProp, array $cfg)
     {
         $obj = null;
-        $matches = array();
         if (\in_array($debugProp, $this->invokedServices, true)) {
             $obj = $this->debug->{$debugProp};
-        } elseif (\preg_match('/^(dump|route)(.+)$/', $debugProp, $matches)) {
-            $cat = $matches[1];
-            $what = $matches[2];
-            $func = 'get' . \ucfirst($cat);
-            $obj = $this->debug->{$func}($what);
+        } elseif (\preg_match('/^(dump|route)(.+)$/', $debugProp) && isset($this->debug->{$debugProp})) {
+            // getDump and getRoute store the instance in debug's container
+            $obj = $this->debug->{$debugProp};
         }
         if (\is_object($obj)) {
             $this->debug->{$debugProp}->setCfg($cfg);

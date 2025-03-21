@@ -72,7 +72,7 @@ class ConfigTest extends DebugTestFramework
             'abstracter',
             'debug',
             'errorHandler',
-            'i18n',
+            // 'i18n',
             'routeHtml',
             'routeStream',
         );
@@ -126,6 +126,7 @@ class ConfigTest extends DebugTestFramework
             'channelName',
             'channelShow',
             'channelSort',
+            'container',
             'enableProfiling',
             'errorLogNormal',
             'errorMask',
@@ -159,7 +160,6 @@ class ConfigTest extends DebugTestFramework
             'sessionName',
             'wampPublisher',
             'slowQueryDurationMs',
-            'container',
         );
         \sort($debugKeys);
 

@@ -33,9 +33,6 @@ abstract class AbstractDebug
     /** @var bool */
     protected $bootstrapped = false;
 
-    /** @var \bdk\Debug\Config */
-    protected $config;
-
     /** @var Container */
     protected $container;
 
@@ -109,7 +106,7 @@ abstract class AbstractDebug
             /*
                 Treat as a special case
                 Want to initialize with the passed config vs initialize, then setCfg
-                ie _setCfg(array('route'=>'html')) via command line
+                ie Debug::setCfg(array('route'=>'html')) via command line
                 we don't want to first initialize with default STDERR output
             */
             $cfg = \is_array($args[0])
@@ -195,7 +192,7 @@ abstract class AbstractDebug
     }
 
     /**
-     * Update dependencies
+     * Update container values
      *
      * @param ServiceProviderInterface|callable|array $val dependency definitions
      *
@@ -206,9 +203,9 @@ abstract class AbstractDebug
         $rawValues = ContainerUtility::toRawValues($val);
         $services = $this->container['services'];
         foreach ($rawValues as $k => $v) {
+            unset($rawValues[$k]);
             if (\in_array($k, $services, true)) {
                 $this->serviceContainer[$k] = $v;
-                unset($rawValues[$k]);
                 continue;
             }
             $this->container[$k] = $v;
@@ -253,22 +250,28 @@ abstract class AbstractDebug
      */
     private function bootstrap($cfg)
     {
-        $cfgBootstrap = $this->bootstrapConfig($cfg);
-        $this->bootstrapSetInstances($cfgBootstrap);
-        $this->bootstrapContainer($cfgBootstrap);
+        $cfgBootstrap = $this->bootstrapConfigValues($cfg);
+        $this->bootstrapInstances($cfgBootstrap['parent']);
+        $this->bootstrapContainers($cfgBootstrap['container']);
+        $this->onCfgServiceProvider($cfgBootstrap['serviceProvider']);
 
-        $this->config = $this->container['config'];
-        $this->container->setCfg('onInvoke', [$this->config, 'onContainerInvoke']);
-        $this->serviceContainer->setCfg('onInvoke', [$this->config, 'onContainerInvoke']);
         $this->eventManager->addSubscriberInterface($this->container['pluginManager']);
+
+        $cfg = $this->configNormalizer->normalizeArray($cfg);
+        unset($cfg['debug']['serviceProvider'], $cfg['debug']['parent']);
 
         if (!$this->parentInstance) {
             // we're the root instance
-            $this->cfg['i18n'] = \array_merge($this->cfg['i18n'], $cfgBootstrap['i18n']);
-            $this->serviceContainer['errorHandler'];
-            $this->addPlugins($cfgBootstrap['plugins']);
+            $cfgBackup = $this->cfg;
+            $cfg = \array_merge(array('debug' => array()), $cfg);
+            $this->cfg = $this->arrayUtil->mergeDeep($this->cfg, $cfg['debug']);
+
+            $this->serviceContainer['errorHandler']; // instantiate errorHandler
+            $this->addPlugins($this->cfg['plugins']);
             $this->data->set('requestId', $this->requestId());
             $this->data->set('entryCountInitial', $this->data->get('log/__count__'));
+
+            $this->cfg = $cfgBackup;
         }
 
         $this->eventManager->subscribe(Debug::EVENT_CONFIG, [$this, 'onConfig']);
@@ -284,13 +287,11 @@ abstract class AbstractDebug
      *
      * @return array
      */
-    private function bootstrapConfig(&$cfg)
+    private function bootstrapConfigValues($cfg)
     {
         $cfgDefault = array(
             'container' => array(),
-            'i18n' => array(),
             'parent' => null,
-            'plugins' => $this->cfg['plugins'],
             'serviceProvider' => $this->cfg['serviceProvider'],
         );
 
@@ -303,46 +304,43 @@ abstract class AbstractDebug
             }
         }
 
-        unset(
-            $cfg['debug']['parent'],
-            $cfg['debug']['serviceProvider'],
-            $cfg['serviceProvider']
-        );
-
         return \array_replace_recursive($cfgDefault, $cfgValues);
     }
 
     /**
      * Initialize dependency containers
      *
-     * @param array $cfg Initial cfg values
+     * @param array $cfg Container configuration values
      *
      * @return void
      */
-    private function bootstrapContainer($cfg)
+    private function bootstrapContainers(array $cfg)
     {
         $this->container = new Container(
             array(
                 'debug' => $this,
             ),
-            $cfg['container']
+            $cfg
         );
         $this->container->registerProvider(new ServiceProvider());
         if (empty($this->parentInstance)) {
             // root instance
+            // create a new serviceContainer for our shared "services"
+            // move the services from the container to the serviceContainer (without instantiating them)
             $this->serviceContainer = new Container(
                 array(
                     'debug' => $this,
                 ),
-                $cfg['container']
+                $cfg
             );
             foreach ($this->container['services'] as $service) {
                 $this->serviceContainer[$service] = $this->container->raw($service);
                 unset($this->container[$service]);
             }
+            $this->serviceContainer->setCfg('onInvoke', [$this->config, 'onContainerInvoke']);
         }
         $this->serviceContainer = $this->rootInstance->serviceContainer;
-        $this->cfg['serviceProvider'] = $this->onCfgServiceProvider($cfg['serviceProvider']);
+        $this->container->setCfg('onInvoke', [$this->config, 'onContainerInvoke']);
     }
 
     /**
@@ -352,11 +350,11 @@ abstract class AbstractDebug
      *
      * @return void
      */
-    private function bootstrapSetInstances($cfg)
+    private function bootstrapInstances($parentInstance = null)
     {
         $this->rootInstance = $this;
-        if (isset($cfg['parent'])) {
-            $this->parentInstance = $cfg['parent'];
+        if ($parentInstance) {
+            $this->parentInstance = $parentInstance;
             $this->rootInstance = $this->parentInstance->rootInstance;
         }
     }

@@ -196,7 +196,7 @@ class ConfigEvents implements SubscriberInterface
     }
 
     /**
-     * Convert logEnvInfo & logRequestInfo values to key=>bool arrays
+     * Convert logEnvInfo & logRequestInfo values to key => bool arrays
      *
      * @param mixed  $val  value
      * @param string $name 'logEnvInfo'|'logRequestInfo'

@@ -3,6 +3,7 @@
 namespace bdk\Test\Container;
 
 use bdk\Container;
+use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -11,13 +12,13 @@ use PHPUnit\Framework\TestCase;
  */
 class ObjectBuilderTest extends TestCase
 {
+    use ExpectExceptionTrait;
+
     private $container;
-    private $objectBuilder;
 
     protected function setUp(): void
     {
         $this->container = new Container();
-        // $this->objectBuilder = new ObjectBuilder($this->container);
     }
 
     public function testBuildWithExistingClassInContainer()

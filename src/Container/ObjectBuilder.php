@@ -63,7 +63,7 @@ class ObjectBuilder
     ];
 
     /** @var Container */
-    private Container $container;
+    private $container;
 
     /** @var bool */
     private $useGetType = true; // php 7.0+ - Use this property to unit test legacy method of getting types

@@ -20,13 +20,14 @@ class ManagerTest extends TestCase
     protected static $debug;
     protected static $manager;
 
+
     public static function setUpBeforeClass(): void
     {
         static::$debug = Debug::getInstance();
         static::$manager = new Manager();
-        // static::$manager->setDebug(static::$debug);
         \bdk\Debug\Utility\Reflection::propSet(static::$manager, 'debug', static::$debug);
-        static::$manager->getSubscriptions()[Debug::EVENT_BOOTSTRAP](new Event(static::$debug));
+        $bootstrap = static::$manager->getSubscriptions()[Debug::EVENT_BOOTSTRAP];
+        $bootstrap(new Event(static::$debug));
     }
 
     public static function tearDownAfterClass(): void

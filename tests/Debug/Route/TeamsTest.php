@@ -7,6 +7,7 @@ use bdk\ErrorHandler\Error;
 use bdk\HttpMessage\Response;
 use bdk\HttpMessage\ServerRequestExtended as ServerRequest;
 use bdk\HttpMessage\Stream;
+use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 use bdk\Test\Debug\DebugTestFramework;
 use Psr\Http\Message\RequestInterface;
 
@@ -20,6 +21,8 @@ use Psr\Http\Message\RequestInterface;
  */
 class TeamsTest extends DebugTestFramework
 {
+    use ExpectExceptionTrait;
+
     /**
      * tearDown is executed after each test
      *

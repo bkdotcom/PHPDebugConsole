@@ -130,8 +130,8 @@ class FileLoader
         $return = array();
         while (($data = \fgetcsv($handle, 2048, ',', '"', '\\')) !== false) {
             if (\count($data) === 1 && empty($data[0])) {
-				// blank line
-				continue;
+                // blank line
+                continue;
             }
             $data = \array_map('trim', $data);
             $return[$data[0]] = $data[1];

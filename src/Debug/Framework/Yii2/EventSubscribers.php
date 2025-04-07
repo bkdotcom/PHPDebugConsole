@@ -29,21 +29,21 @@ class EventSubscribers implements SubscriberInterface
     protected $debug;
 
     /** @var DebugModule */
-	protected $debugModule;
+    protected $debugModule;
 
     /** @var list<string> Error hashes */
-	protected $ignoredErrors = array();
+    protected $ignoredErrors = array();
 
-	/**
-	 * Constructor
-	 *
-	 * @param DebugModule $debugModule DebugModule instance
-	 */
-	public function __construct(DebugModule $debugModule)
-	{
-		$this->debug = $debugModule->debug;
-		$this->debugModule = $debugModule;
-	}
+    /**
+     * Constructor
+     *
+     * @param DebugModule $debugModule DebugModule instance
+     */
+    public function __construct(DebugModule $debugModule)
+    {
+        $this->debug = $debugModule->debug;
+        $this->debugModule = $debugModule;
+    }
 
     /**
      * {@inheritDoc}
@@ -130,7 +130,7 @@ class EventSubscribers implements SubscriberInterface
             //    exit within shutdown procedure (that's us) = immediate exit
             //    so... unsubscribe the callables that have already been called and
             //    re-publish the shutdown event before calling yii's error handler
-        	$this->removeSubscribers(EventManager::EVENT_PHP_SHUTDOWN);
+            $this->removeSubscribers(EventManager::EVENT_PHP_SHUTDOWN);
             $this->debug->rootInstance->eventManager->publish(EventManager::EVENT_PHP_SHUTDOWN);
             $this->debugModule->module->errorHandler->handleError($error['type'], $error['message'], $error['file'], $error['line']);
         }

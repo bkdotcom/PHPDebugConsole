@@ -1,14 +1,12 @@
 <?php
 
-namespace bdk\Test\Debug\Utility;
+namespace bdk\Test\Container;
 
-use bdk\Debug\Utility\UseStatements;
+use bdk\Container\UseStatements;
 use PHPUnit\Framework\TestCase;
 
 /**
- * PHPUnit tests for Debug class
- *
- * @covers \bdk\Debug\Utility\UseStatements
+ * @covers \bdk\Container\UseStatements
  */
 class UseStatementsTest extends TestCase
 {
@@ -18,7 +16,7 @@ class UseStatementsTest extends TestCase
             $this->markTestSkipped('Use statement curly bracket syntax requires php 7.0+');
         }
 
-        $reflectionClass = new \ReflectionClass('bdk\Test\Debug\Fixture\UseStatements');
+        $reflectionClass = new \ReflectionClass('bdk\Test\Container\Fixture\UseStatements');
         $useStatements = UseStatements::getUseStatements($reflectionClass);
 
         $jsonExpect = '{

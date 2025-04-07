@@ -34,6 +34,7 @@
       <file>src/Debug/Collector/SimpleCache/CompatTrait.php</file>
       <file>src/Debug/Dump/charData.php</file>
       <directory>src/Debug/Framework</directory>
+      <directory>src/Debug/lang</directory>
       <directory>src/Debug/node_modules</directory>
       <directory>src/Psr7</directory>
     </exclude>

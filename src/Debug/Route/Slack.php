@@ -64,23 +64,31 @@ class Slack extends AbstractErrorRoute
     private function assertCfg()
     {
         if (\in_array($this->cfg['use'], ['auto', 'api', 'webhook'], true) === false) {
-            throw new RuntimeException(\sprintf(
-                '%s: Invalid cfg value.  `use` must be one of "auto", "api", or "webhook"',
-                __CLASS__
-            ));
+            throw new RuntimeException($this->debug->i18n->trans('exception.invalid-config-value', array(
+                'class' => __CLASS__,
+                'expect' => '"auto"|"api"|"webhook"',
+                'key' => 'use',
+            )));
         }
-        if ($this->cfg['token'] && $this->cfg['channel']) {
+        if (\in_array($this->cfg['use'], ['auto', 'api'], true) && $this->cfg['token'] && $this->cfg['channel']) {
+            // 'api'
             return;
         }
-        if ($this->cfg['webhookUrl']) {
+        if (\in_array($this->cfg['use'], ['auto', 'webhook'], true) && $this->cfg['webhookUrl']) {
+            // 'webhook'
             return;
         }
-        throw new RuntimeException(\sprintf(
-            '%s: missing config value(s).  Must configure %s.  Or define equivalent environment variable(s) (%s)',
-            __CLASS__,
-            'token+channel or webhookUrl',
-            'SLACK_TOKEN, SLACK_CHANNEL, SLACK_WEBHOOK_URL'
+        $missing = array(
+            'api' => ['token, channel', 'SLACK_TOKEN, SLACK_CHANNEL'],
+            'auto' => ['token,channel,webhookUrl', 'SLACK_TOKEN, SLACK_CHANNEL, SLACK_WEBHOOK_URL'],
+            'webhook' => ['webhookUrl', 'SLACK_WEBHOOK_URL'],
+        );
+        $message = $this->debug->i18n->trans('exception.missing-config-env-var', array(
+            'class' => __CLASS__,
+            'envVar' => $missing[$this->cfg['use']][1],
+            'key' => $missing[$this->cfg['use']][0],
         ));
+        throw new RuntimeException($message);
     }
 
     /**

@@ -30,6 +30,9 @@ return array(
     'db.duration' => 'duration',
     'db.row-count' => 'rowCount',
     'db.server-info' => 'Server info',
+
+    'deprecated.pluginInterface' => '{class} implements PluginInterface, which is deprecated.  Use SubscriberInterface with EVENT_PLUGIN_INIT OR EVENT_BOOTSTRAP subscriber instead.',
+
     'email.sending' => 'sending email',
     'env.git.branch' => 'git branch',
 
@@ -64,6 +67,7 @@ return array(
     'error.ignored.count' => '{count, plural, one {# ignored error} other {# ignored errors}}',
 
     'exception.array-special-key' => '{method}: {key} can only be used on array value.  {actual} found',
+    'exception.invalid-config-value' => '{class}: Invalid cfg value.  `{key}` must be {expect}',
     'exception.invalid-path' => 'Invalid path: {path}',
     'exception.method-expects' => '{method} expects {expect}.  {actual} provided',
     'exception.method-expects-at' => '{method} expects {expect} at {path}.  {actual} found',
@@ -71,6 +75,7 @@ return array(
     'exception.method-expects-only-param' => '{method}: {param} expects array of {expect}.  {actual} found at {index}',
     'exception.method-expects-param' => '{method}: {param} expects {expect}.  {actual} provided',
     'exception.method-inaccessible' => 'Method {method} is not defined or is inaccessible',
+    'exception.missing-config-env-var' => '{class}: missing config value(s): {key} or equivalent env-var(s): {envVar}',
     'exception.property-inaccessible' => 'Property {property} is not defined or is inaccessible',
     'exception.property-undefined' => 'Property {property} is not defined',
 
@@ -208,6 +213,13 @@ return array(
     'session.inactive' => 'Session Inactive / No session id passed in request',
     'session.name' => 'session name',
     'session.name.assert' => 'should not be PHPSESSID (just as {expose_php} should be disabled)',
+
+    'sql.analysis.select_all' => 'Use %cSELECT *%c only if you need all columns from table',
+    'sql.analysis.order_by_rand' => '%cORDER BY RAND()%c is slow, avoid if you can.',
+    'sql.analysis.not_standard' => 'The %c!=%c operator is not standard. Use the %c<>%c operator instead.',
+    'sql.analysis.no_where' => 'The %cSELECT%c statement has no %cWHERE%c clause and could examine many more rows than intended',
+    'sql.analysis.leading_wildcard' => 'An argument has a leading wildcard character: %c{arg}%c and cannot use an index if one exists.',
+    'sql.analysis.limit_no_order' => '%cLIMIT%c without %cORDER BY%c causes non-deterministic results',
 
     'utility.headers-sent' => 'Headers already sent: {file}, line {line}',
     'utility.html.innerhtml-return' => 'InnerHtml closure should return string.  Got {actual}',

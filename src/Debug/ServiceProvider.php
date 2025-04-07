@@ -26,7 +26,6 @@ class ServiceProvider implements ServiceProviderInterface
 {
     protected $utilities = [
         'arrayUtil',
-        'configNormalizer',
         'errorLevel',
         'findExit',
         'html',
@@ -34,6 +33,7 @@ class ServiceProvider implements ServiceProviderInterface
         'phpDoc',
         'reflection',
         'sql',
+        'sqlQueryAnalysis',
         'stopWatch',
         'stringUtil',
         'utf8',
@@ -60,6 +60,7 @@ class ServiceProvider implements ServiceProviderInterface
         */
         $container['services'] = \array_merge($this->utilities, [
             'backtrace',
+            'configNormalizer',
             'data',
             'errorHandler',
             'i18n',
@@ -222,47 +223,72 @@ class ServiceProvider implements ServiceProviderInterface
      */
     protected function registerUtilities(Container $container) // phpcs:ignore SlevomatCodingStandard.Functions.FunctionLength
     {
-        $container['arrayUtil'] = static function () {
+        $container['bdk\Debug\Utility\ArrayUtil'] = static function () {
             return new \bdk\Debug\Utility\ArrayUtil();
         };
-        $container['errorLevel'] = static function () {
+        $container->addAlias('arrayUtil', 'bdk\Debug\Utility\ArrayUtil');
+
+        $container['bdk\Debug\Utility\ErrorLevel'] = static function () {
             return new \bdk\Debug\Utility\ErrorLevel();
         };
-        $container['findExit'] = static function () {
+        $container->addAlias('errorLevel', 'bdk\Debug\Utility\ErrorLevel');
+
+        $container['bdk\Debug\Utility\FindExit'] = static function () {
             return new \bdk\Debug\Utility\FindExit();
         };
-        $container['html'] = static function () {
+        $container->addAlias('findExit', 'bdk\Debug\Utility\FindExit');
+
+        $container['bdk\Debug\Utility\Html'] = static function () {
             return new \bdk\Debug\Utility\Html();
         };
-        $container['php'] = static function () {
+        $container->addAlias('html', 'bdk\Debug\Utility\Html');
+
+        $container['bdk\Debug\Utility\Php'] = static function () {
             return new \bdk\Debug\Utility\Php();
         };
-        $container['phpDoc'] = static function () {
+        $container->addAlias('php', 'bdk\Debug\Utility\Php');
+
+        $container['bdk\Debug\Utility\PhpDoc'] = static function () {
             return new \bdk\Debug\Utility\PhpDoc();
         };
-        $container['reflection'] = static function () {
+        $container->addAlias('phpDoc', 'bdk\Debug\Utility\PhpDoc');
+
+        $container['bdk\Debug\Utility\Reflection'] = static function () {
             return new \bdk\Debug\Utility\Reflection();
         };
-        $container['sql'] = static function () {
+        $container->addAlias('reflection', 'bdk\Debug\Utility\Reflection');
+
+        $container['bdk\Debug\Utility\Sql'] = static function () {
             return new \bdk\Debug\Utility\Sql();
         };
-        $container['sqlQueryAnalysis'] = static function (Container $container) {
-            return new \bdk\Debug\Utility\SqlQueryAnalysis($container['debug']);
+        $container->addAlias('sql', 'bdk\Debug\Utility\Sql');
+
+        $container['bdk\Debug\Utility\SqlQueryAnalysis'] = static function () {
+            return new \bdk\Debug\Utility\SqlQueryAnalysis();
         };
-        $container['stopWatch'] = static function (Container $container) {
+        $container->addAlias('sqlQueryAnalysis', 'bdk\Debug\Utility\SqlQueryAnalysis');
+
+        $container['bdk\Debug\Utility\StopWatch'] = static function (Container $container) {
             $debug = $container['debug'];
             return new \bdk\Debug\Utility\StopWatch(array(
                 'requestTime' => $debug->getServerParam('REQUEST_TIME_FLOAT'),
             ));
         };
-        $container['stringUtil'] = static function () {
+        $container->addAlias('stopWatch', 'bdk\Debug\Utility\StopWatch');
+
+        $container['bdk\Debug\Utility\StringUtil'] = static function () {
             return new \bdk\Debug\Utility\StringUtil();
         };
-        $container['utf8'] = static function () {
+        $container->addAlias('stringUtil', 'bdk\Debug\Utility\StringUtil');
+
+        $container['bdk\Debug\Utility\Utf8'] = static function () {
             return new \bdk\Debug\Utility\Utf8();
         };
-        $container['utility'] = static function () {
+        $container->addAlias('utf8', 'bdk\Debug\Utility\Utf8');
+
+        $container['bdk\Debug\Utility'] = static function () {
             return new \bdk\Debug\Utility();
         };
+        $container->addAlias('utility', 'bdk\Debug\Utility');
     }
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace bdk\Test\Debug\Fixture;
+namespace bdk\Test\Container\Fixture;
 
 use My\Full\Classname as Another;
 // this is the same as use My\Full\NSname as NSname

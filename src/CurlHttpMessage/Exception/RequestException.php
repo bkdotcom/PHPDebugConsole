@@ -21,22 +21,22 @@ use Throwable;
  */
 class RequestException extends RuntimeException
 {
-	/** @var RequestInterface */
-	private $request;
+    /** @var RequestInterface */
+    private $request;
 
     /** @var ResponseInterface */
     private $response;
 
-	/**
-	 * Construct
-	 *
-	 * @param string                 $message       Exception message
-	 * @param RequestInterface       $request       Request object
+    /**
+     * Construct
+     *
+     * @param string                 $message       Exception message
+     * @param RequestInterface       $request       Request object
      * @param ResponseInterface|null $response      Response object
-	 * @param Exception|null         $prevException Previous exception
-	 */
-	public function __construct($message, RequestInterface $request, $response = null, $prevException = null)
-	{
+     * @param Exception|null         $prevException Previous exception
+     */
+    public function __construct($message, RequestInterface $request, $response = null, $prevException = null)
+    {
         \bdk\Debug\Utility\PhpType::assertType($response, 'Psr\Http\Message\ResponseInterface|null', 'response');
         \bdk\Debug\Utility\PhpType::assertType($prevException, 'Exception|null', 'prevException');
 
@@ -45,7 +45,7 @@ class RequestException extends RuntimeException
 
         $code = $response ? $response->getStatusCode() : 0;
         parent::__construct($message, $code, $prevException);
-	}
+    }
 
     /**
      * Build exception
@@ -74,15 +74,15 @@ class RequestException extends RuntimeException
         return new $class($message, $request, $response, $prevException);
     }
 
-	/**
-	 * Get the request
-	 *
-	 * @return RequestInterface
-	 */
-	public function getRequest()
-	{
-		return $this->request;
-	}
+    /**
+     * Get the request
+     *
+     * @return RequestInterface
+     */
+    public function getRequest()
+    {
+        return $this->request;
+    }
 
     /**
      * Get the response

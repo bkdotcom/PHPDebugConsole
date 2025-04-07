@@ -20,7 +20,7 @@ use bdk\Debug\LogEntry;
  */
 class Group
 {
-	/** @var Dumper  */
+    /** @var Dumper  */
     protected $dumper;
 
     /** @var \bdk\Debug\Utility\Html */
@@ -48,9 +48,9 @@ class Group
      *
      * @return string
      */
-	public function build(LogEntry $logEntry, array $logEntryAttribs)
-	{
-		$this->logEntryAttribs = $logEntryAttribs;
+    public function build(LogEntry $logEntry, array $logEntryAttribs)
+    {
+        $this->logEntryAttribs = $logEntryAttribs;
         $method = $logEntry['method'];
         if ($method === 'groupEnd') {
             return '</ul>' . "\n" . '</li>';
@@ -126,18 +126,18 @@ class Group
         ))));
 
         if (!$args) {
-			return '<span class="' . $labelClasses . '">' . $label . '</span>';
-		}
+            return '<span class="' . $labelClasses . '">' . $label . '</span>';
+        }
 
-		foreach ($args as $k => $v) {
-			$args[$k] = $this->dumper->valDumper->dump($v);
-		}
-		$argStr = \implode(', ', $args);
+        foreach ($args as $k => $v) {
+            $args[$k] = $this->dumper->valDumper->dump($v);
+        }
+        $argStr = \implode(', ', $args);
         return $meta['argsAsParams']
-        	? '<span class="' . $labelClasses . '">' . $label . '(</span>'
-        		. $argStr
-        		. '<span class="' . $labelClasses . '">)</span>'
-        	: '<span class="' . $labelClasses . '">' . $label . ':</span> '
-            	. $argStr;
+            ? '<span class="' . $labelClasses . '">' . $label . '(</span>'
+                . $argStr
+                . '<span class="' . $labelClasses . '">)</span>'
+            : '<span class="' . $labelClasses . '">' . $label . ':</span> '
+                . $argStr;
     }
 }

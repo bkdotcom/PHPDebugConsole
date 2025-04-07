@@ -61,12 +61,11 @@ class Discord extends AbstractErrorRoute
         if ($this->cfg['webhookUrl']) {
             return;
         }
-        throw new RuntimeException(\sprintf(
-            '%s: missing config value: %s.  Also tried env-var: %s',
-            __CLASS__,
-            'webhookUrl',
-            'DISCORD_WEBHOOK_URL'
-        ));
+        throw new RuntimeException($this->debug->i18n->trans('exception.missing-config-env-var', array(
+            'class' => __CLASS__,
+            'envVar' => 'DISCORD_WEBHOOK_URL',
+            'key' => 'webhookUrl',
+        )));
     }
 
     /**

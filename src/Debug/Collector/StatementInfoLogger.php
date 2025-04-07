@@ -344,7 +344,17 @@ class StatementInfoLogger extends AbstractComponent
      */
     protected function performQueryAnalysis()
     {
-        $this->debug->sqlQueryAnalysis->analyze($this->info->sql);
+        $issues = $this->debug->sqlQueryAnalysis->analyze($this->info->sql);
+        \array_walk($issues, function ($issue) {
+            $params = [$issue];
+            $cCount = \substr_count($params[0], '%c');
+            for ($i = 0; $i < $cCount; $i += 2) {
+                $params[] = 'font-family:monospace';
+                $params[] = '';
+            }
+            $params[] = $this->debug->meta('uncollapse', false);
+            \call_user_func_array([$this->debug, 'warn'], $params);
+        });
     }
 
     /**

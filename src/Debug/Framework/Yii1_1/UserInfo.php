@@ -27,19 +27,19 @@ use Yii;
  */
 class UserInfo
 {
-	protected $component;
+    protected $component;
 
-	/**
-	 * Constructor
-	 *
-	 * @param CApplicationComponent $component Debug component
-	 */
-	public function __construct(CApplicationComponent $component)
-	{
-		$this->component = $component;
-	}
+    /**
+     * Constructor
+     *
+     * @param CApplicationComponent $component Debug component
+     */
+    public function __construct(CApplicationComponent $component)
+    {
+        $this->component = $component;
+    }
 
-	/**
+    /**
      * Log current user info
      *
      * @return void

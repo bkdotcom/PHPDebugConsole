@@ -12,93 +12,116 @@
 
 namespace bdk\Debug\Utility;
 
-use bdk\Debug;
-use Closure;
-
 /**
  * Test SQL queries for common performance issues
  */
 class SqlQueryAnalysis
 {
-    /** @var Debug */
-    private $debug;
-
-    /**
-     * Constructor
-     *
-     * @param Debug $debug Debug instance
-     */
-    public function __construct(Debug $debug)
-    {
-        $this->debug = $debug;
-    }
-
     /**
      * Find common query performance issues
      *
      * @param string $sql SQL query
      *
-     * @return void
+     * @return array list of issues
      *
      * @link https://github.com/rap2hpoutre/mysql-xplain-xplain/blob/master/app/Explainer.php
      */
-    public function analyze($sql)
+    public static function analyze($sql)
     {
-        \array_map([$this, 'performQueryAnalysisTest'], [
-            [\preg_match('/^\s*SELECT\s*`?[a-zA-Z0-9]*`?\.?\*/i', $sql) === 1,
-                'Use %cSELECT *%c only if you need all columns from table',
-            ],
-            [\stripos($sql, 'ORDER BY RAND()') !== false,
-                '%cORDER BY RAND()%c is slow, avoid if you can.',
-            ],
-            [\strpos($sql, '!=') !== false,
-                'The %c!=%c operator is not standard. Use the %c<>%c operator instead.',
-            ],
-            [\preg_match('/^SELECT\s/i', $sql) && \stripos($sql, 'WHERE') === false,
-                'The %cSELECT%c statement has no %cWHERE%c clause and could examine many more rows than intended',
-            ],
-            static function () use ($sql) {
-                $matches = [];
-                return \preg_match('/LIKE\s+[\'"](%.*?)[\'"]/i', $sql, $matches)
-                    ? 'An argument has a leading wildcard character: %c' . $matches[1] . '%c and cannot use an index if one exists.'
-                    : false;
-            },
-            [\preg_match('/LIMIT\s/i', $sql) && \stripos($sql, 'ORDER BY') === false,
-                '%cLIMIT%c without %cORDER BY%c causes non-deterministic results',
-            ],
-        ]);
+        return \array_values(\array_filter([
+            self::testSelectAll($sql),
+            self::testOrderByRand($sql),
+            self::testNonStandardNotEqual($sql),
+            self::testNoWhere($sql),
+            self::testLikeLeadingWildcard($sql),
+            self::testLimitNoOrder($sql),
+        ]));
     }
 
     /**
-     * Process query analysis test and log result if test fails
+     * Test for leading wildcard in LIKE clause
      *
-     * @param array|Closure $test query test
+     * @param string $sql SQL query
      *
-     * @return void
-     *
-     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     * @return string|false message or false if no issue found
      */
-    private function performQueryAnalysisTest($test)
+    protected static function testLikeLeadingWildcard($sql)
     {
-        if ($test instanceof Closure) {
-            $test = $test();
-            $test = [
-                $test,
-                $test,
-            ];
-        }
-        if ($test[0] === false) {
-            return;
-        }
-        $params = [
-            $test[1],
-        ];
-        $cCount = \substr_count($params[0], '%c');
-        for ($i = 0; $i < $cCount; $i += 2) {
-            $params[] = 'font-family:monospace';
-            $params[] = '';
-        }
-        $params[] = $this->debug->meta('uncollapse', false);
-        \call_user_func_array([$this->debug, 'warn'], $params);
+        $matches = [];
+        return \preg_match('/LIKE\s+[\'"](%.*?)[\'"]/i', $sql, $matches)
+            ? \bdk\Debug::getInstance()->i18n->trans('sql.analysis.leading_wildcard', array(
+                'arg' => $matches[1],
+            ))
+            : false;
+    }
+
+    /**
+     * Test for LIMIT without ORDER BY
+     *
+     * @param string $sql SQL query
+     *
+     * @return string|false message or false if no issue found
+     */
+    protected static function testLimitNoOrder($sql)
+    {
+        return \preg_match('/LIMIT\s/i', $sql) && \stripos($sql, 'ORDER BY') === false
+            ? \bdk\Debug::getInstance()->i18n->trans('sql.analysis.limit_no_order')
+            : false;
+    }
+
+    /**
+     * Test for non-standard not-equal operator
+     *
+     * @param string $sql SQL query
+     *
+     * @return string|false message or false if no issue found
+     */
+    protected static function testNonStandardNotEqual($sql)
+    {
+        return \strpos($sql, '!=') !== false
+            ? \bdk\Debug::getInstance()->i18n->trans('sql.analysis.not_standard')
+            : false;
+    }
+
+    /**
+     * Test for WHERE clause
+     *
+     * @param string $sql SQL query
+     *
+     * @return string|false message or false if no issue found
+     */
+    protected static function testNoWhere($sql)
+    {
+        return \preg_match('/^SELECT\s/i', $sql) && \stripos($sql, 'WHERE') === false
+            ? \bdk\Debug::getInstance()->i18n->trans('sql.analysis.no_where')
+            : false;
+    }
+
+    /**
+     * Test for ORDER BY RAND()
+     *
+     * @param string $sql SQL query
+     *
+     * @return string|false message or false if no issue found
+     */
+    protected static function testOrderByRand($sql)
+    {
+        return \stripos($sql, 'ORDER BY RAND()') !== false
+            ? \bdk\Debug::getInstance()->i18n->trans('sql.analysis.order_by_rand')
+            : false;
+    }
+
+    /**
+     * Test for SELECT *
+     *
+     * @param string $sql SQL query
+     *
+     * @return string|false message or false if no issue found
+     */
+    protected static function testSelectAll($sql)
+    {
+        return \preg_match('/^\s*SELECT\s*`?[a-zA-Z0-9]*`?\.?\*/i', $sql) === 1
+            ? \bdk\Debug::getInstance()->i18n->trans('sql.analysis.select_all')
+            : false;
     }
 }

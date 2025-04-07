@@ -21,15 +21,15 @@ class ServiceProvider implements ServiceProviderInterface
     {
         $container['param'] = 'value';
 
-        $container['service'] = function () {
+        $container['service'] = static function () {
             return new Service();
         };
 
-        $container['factory'] = $container->factory(function () {
+        $container['factory'] = $container->factory(static function () {
             return new Service();
         });
 
-        $container['protected'] = $container->protect(function () {
+        $container['protected'] = $container->protect(static function () {
             return 'I am a test';
         });
     }

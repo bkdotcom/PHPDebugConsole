@@ -7,6 +7,7 @@ use bdk\ErrorHandler;
 use bdk\ErrorHandler\Error;
 use bdk\HttpMessage\Response;
 use bdk\HttpMessage\Stream;
+use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 use bdk\Test\Debug\DebugTestFramework;
 use Psr\Http\Message\RequestInterface;
 
@@ -18,6 +19,8 @@ use Psr\Http\Message\RequestInterface;
  */
 class SlackTest extends DebugTestFramework
 {
+    use ExpectExceptionTrait;
+
     protected static $persistErrors = array();
 
     /**
@@ -33,6 +36,36 @@ class SlackTest extends DebugTestFramework
         $this->debug->errorHandler->eventManager->unsubscribe(ErrorHandler::EVENT_ERROR, array($this, 'onErrorThrow'));
         $this->debug->errorHandler->eventManager->unsubscribe(ErrorHandler::EVENT_ERROR, array($this, 'onError'));
         parent::tearDown();
+    }
+
+    public function testAssertCfgInvalidUse()
+    {
+        $this->expectException('RuntimeException');
+        $this->expectExceptionMessage('bdk\Debug\Route\Slack: Invalid cfg value.  `use` must be "auto"|"api"|"webhook"');
+        $slack = $this->debug->getRoute('slack');
+        $slack->setCfg('use', 'bogus');
+        $error = new Error($this->debug->errorHandler, array(
+            'file' => __FILE__,
+            'line' => __LINE__,
+            'message' => 'Hi error',
+            'type' => E_WARNING,
+        ));
+        $slack->onError($error);
+    }
+
+    public function testAssertCfgMissingValues()
+    {
+        $this->expectException('RuntimeException');
+        $this->expectExceptionMessage('bdk\Debug\Route\Slack: missing config value(s): token,channel,webhookUrl or equivalent env-var(s): SLACK_TOKEN, SLACK_CHANNEL, SLACK_WEBHOOK_URL');
+        $slack = $this->debug->getRoute('slack');
+        $slack->setCfg('use', 'auto');
+        $error = new Error($this->debug->errorHandler, array(
+            'file' => __FILE__,
+            'line' => __LINE__,
+            'message' => 'Hi error',
+            'type' => E_WARNING,
+        ));
+        $slack->onError($error);
     }
 
     public function testSlackApi()
@@ -77,6 +110,7 @@ class SlackTest extends DebugTestFramework
             },
             'throttleMin' => 0,
             'token' => 'bogus-token',
+            'use' => 'auto',
             'webhookUrl' => $webhookUrl,
         ));
 

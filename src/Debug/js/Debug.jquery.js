@@ -1177,7 +1177,6 @@ var phpDebugConsole = (function (exports, $) {
     $root$2.addClass('debug-drawer-open');
     $root$2.debugEnhance();
     setHeight(); // makes sure height within min/max
-    $('body').css('marginBottom', ($root$2.height() + 8) + 'px');
     $(window).on('resize', setHeight);
     if (config$6.get('persistDrawer')) {
       config$6.set('openDrawer', true);
@@ -1186,11 +1185,11 @@ var phpDebugConsole = (function (exports, $) {
 
   function close$2 () {
     $root$2.removeClass('debug-drawer-open');
-    $('body').css('marginBottom', '');
     $(window).off('resize', setHeight);
     if (config$6.get('persistDrawer')) {
       config$6.set('openDrawer', false);
     }
+    setHeight(0);
   }
 
   function onMousemove (e) {
@@ -1217,9 +1216,11 @@ var phpDebugConsole = (function (exports, $) {
     $root$2.parents()
       .off('mousemove', onMousemove)
       .off('mouseup', onMouseup);
-    $('body').css('marginBottom', ($root$2.height() + 8) + 'px');
   }
 
+  /**
+   * Called on window resize or draw resize
+   */
   function setHeight (height, viaUser) {
     var $body = $root$2.find('.tab-panes');
     var menuH = $root$2.find('.debug-menu-bar').outerHeight();
@@ -1227,10 +1228,18 @@ var phpDebugConsole = (function (exports, $) {
     // inaccurate if document.doctype is null : $(window).height()
     //    aka document.documentElement.clientHeight
     var maxH = window.innerHeight - menuH - 50;
+    if (height === 0) {
+      // debug drawer closed
+      $('body').css('marginBottom', '');
+      $root$2.trigger('resize.debug');
+      return;
+    }
     height = checkHeight(height);
     height = Math.min(height, maxH);
     height = Math.max(height, minH);
     $body.css('height', height);
+    $('body').css('marginBottom', ($root$2.height() + 8) + 'px');
+    $root$2.trigger('resize.debug');
     if (viaUser && config$6.get('persistDrawer')) {
       config$6.set('height', height);
     }

@@ -3,6 +3,7 @@
 namespace bdk\Test\Debug\Route;
 
 use bdk\CurlHttpMessage\Handler\Mock;
+use bdk\ErrorHandler\Error;
 use bdk\HttpMessage\Response;
 use bdk\HttpMessage\ServerRequestExtended as ServerRequest;
 use bdk\HttpMessage\Stream;
@@ -30,6 +31,20 @@ class TeamsTest extends DebugTestFramework
         \bdk\Debug\Utility\Reflection::propSet($teamsRoute, 'teamsClient', null);
         $this->debug->removePlugin($teamsRoute);
         parent::tearDown();
+    }
+
+    public function testAssertCfgMissingValues()
+    {
+        $this->expectException('RuntimeException');
+        $this->expectExceptionMessage('bdk\Debug\Route\Teams: missing config value(s): webhookUrl or equivalent env-var(s): TEAMS_WEBHOOK_URL');
+        $teams = $this->debug->getRoute('teams');
+        $error = new Error($this->debug->errorHandler, array(
+            'file' => __FILE__,
+            'line' => __LINE__,
+            'message' => 'Hi error',
+            'type' => E_WARNING,
+        ));
+        $teams->onError($error);
     }
 
     public function testTeams()

@@ -238,7 +238,7 @@ class ConfigEvents implements SubscriberInterface
             ), $this->debug->serverRequest->getServerParams());
             $val = \count(
                 \array_filter([
-                    \strpos($this->debug->getInterface(), 'http') !== false,
+                    \strpos($this->debug->getInterface(), 'http') === 0,
                     $serverParams['HTTP_SOAPACTION'],
                     \stripos($serverParams['HTTP_USER_AGENT'], 'curl') !== false,
                 ])

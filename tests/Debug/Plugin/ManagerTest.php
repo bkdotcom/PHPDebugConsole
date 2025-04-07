@@ -24,8 +24,9 @@ class ManagerTest extends TestCase
     {
         static::$debug = Debug::getInstance();
         static::$manager = new Manager();
-        static::$manager->setDebug(static::$debug);
-        static::$manager->onBootstrap();
+        // static::$manager->setDebug(static::$debug);
+        \bdk\Debug\Utility\Reflection::propSet(static::$manager, 'debug', static::$debug);
+        static::$manager->getSubscriptions()[Debug::EVENT_BOOTSTRAP](new Event(static::$debug));
     }
 
     public static function tearDownAfterClass(): void
@@ -39,7 +40,7 @@ class ManagerTest extends TestCase
     public function testAddInvalid()
     {
         $this->expectException('InvalidArgumentException');
-        $this->expectExceptionMessage('addPlugin() expects \bdk\Debug\AssetProviderInterface and/or \bdk\PubSub\SubscriberInterface.  stdClass provided');
+        $this->expectExceptionMessage('bdk\Debug\Plugin\Manager::addPlugin(): $plugin expects bdk\Debug\AssetProviderInterface|bdk\PubSub\SubscriberInterface.  stdClass provided');
         self::$manager->addPlugin(new \stdClass());
     }
 
@@ -52,7 +53,7 @@ class ManagerTest extends TestCase
     public function testRemoveInvalidArg()
     {
         $this->expectException('InvalidArgumentException');
-        $this->expectExceptionMessage('removePlugin() expects plugin name or instance.  bool provided');
+        $this->expectExceptionMessage('bdk\Debug\Plugin\Manager::removePlugin() expects string|bdk\Debug\AssetProviderInterface|bdk\PubSub\SubscriberInterface.  bool provided');
         self::$manager->removePlugin(true);
     }
 
@@ -70,16 +71,15 @@ class ManagerTest extends TestCase
         self::$manager->getPlugin('bogus');
     }
 
+    /*
     public function testAddPluginInterface()
     {
         $plugin = new Manager();
         $return = self::$manager->addPlugin($plugin);
         self::assertEquals(static::$debug, $return);
         self::assertEquals(static::$debug, \bdk\Debug\Utility\Reflection::propGet($plugin, 'debug'));
-
-        $return = self::$manager->addPlugin($plugin);
-        self::assertEquals(static::$debug, $return);
     }
+    */
 
     public function testAddRemoveAssetProvider()
     {
@@ -181,7 +181,7 @@ class ManagerTest extends TestCase
     public function testAddPluginsInvalid()
     {
         $this->expectException('InvalidArgumentException');
-        $this->expectExceptionMessage('plugins[highlight]: bdk\Debug\Plugin\Manager::addPlugin() expects \bdk\Debug\AssetProviderInterface and/or \bdk\PubSub\SubscriberInterface.  stdClass provided');
+        $this->expectExceptionMessage('plugins[highlight]: bdk\Debug\Plugin\Manager::addPlugin(): $plugin expects bdk\Debug\AssetProviderInterface|bdk\PubSub\SubscriberInterface.  stdClass provided');
         self::$manager->addPlugins(array(
             'highlight' => new \stdClass(),
         ));

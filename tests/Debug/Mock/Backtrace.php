@@ -2,7 +2,7 @@
 
 namespace bdk\Test\Debug\Mock;
 
-class Backtrace
+class Backtrace extends \bdk\Backtrace
 {
     private static $return = array();
 
@@ -10,12 +10,12 @@ class Backtrace
     {
     }
 
-    public static function get()
+    public static function get($options = 0, $limit = 0, $exception = null)
     {
         return self::$return;
     }
 
-    public static function getCallerInfo()
+    public static function getCallerInfo($offset = 0, $options = 0)
     {
         return self::$return;
     }

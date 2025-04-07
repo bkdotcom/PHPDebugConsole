@@ -126,11 +126,29 @@ class Trace implements SubscriberInterface
             ? $meta['trace']
             : $this->debug->backtrace->get(
                 $getOptions,
-                $meta['limit'],
+                $meta['inclInternal']
+                    ? 0
+                    : $meta['limit'],
                 $meta['trace'] // null or Exception
             );
+        return $this->getTraceFinish($trace, $meta);
+    }
+
+    /**
+     * Apply final adjustments to the trace
+     *
+     * @param array $trace Backtrace frames
+     * @param array $meta  meta values
+     *
+     * @return array
+     */
+    private function getTraceFinish(array $trace, array $meta)
+    {
         if ($meta['inclInternal']) {
             $trace = $this->removeMinInternal($trace);
+        }
+        if ($meta['limit'] > 0) {
+            $trace = \array_slice($trace, 0, $meta['limit']);
         }
         if ($meta['inclContext']) {
             $trace = $this->debug->backtrace->addContext($trace);

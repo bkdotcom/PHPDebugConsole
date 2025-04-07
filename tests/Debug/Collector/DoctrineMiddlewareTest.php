@@ -73,7 +73,7 @@ class DoctrineMiddlewareTest extends DebugTestFramework
 <li class="m_log" data-channel="general.Doctrine"><span class="no-quotes t_string">Peak memory usage</span> = <span class="t_string">%f %s</span></li>
 <li class="m_log" data-channel="general.Doctrine"><span class="no-quotes t_string">Server info</span> = <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
 <ul class="array-inner list-unstyled">
-	<li><span class="t_key">Version</span><span class="t_operator">=&gt;</span><span class="t_string">%s</span></li>
+    <li><span class="t_key">Version</span><span class="t_operator">=&gt;</span><span class="t_string">%s</span></li>
 </ul><span class="t_punct">)</span></span></li>
 </ul>
 </li>

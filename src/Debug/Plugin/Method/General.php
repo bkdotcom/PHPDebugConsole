@@ -254,15 +254,12 @@ class General implements SubscriberInterface
     private function getDumpRouteInit($property, $classname)
     {
         /** @var \bdk\Debug\Dump\Base|RouteInterface */
-        $val = new $classname($this->debug);
+        $val = $this->debug->container->getObject($classname);
+        $this->debug->container->addAlias($property, $classname);
         if ($val instanceof ConfigurableInterface) {
             $cfg = $this->debug->getCfg($property, Debug::CONFIG_INIT);
             $val->setCfg($cfg);
         }
-        // update container
-        $this->debug->onCfgServiceProvider(array(
-            $property => $val,
-        ));
         return $val;
     }
 }

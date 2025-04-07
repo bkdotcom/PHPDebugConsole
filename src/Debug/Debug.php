@@ -158,8 +158,8 @@ class Debug extends AbstractDebug
         'headerMaxAll' => 250000,
         'headerMaxPer' => null,
         'i18n' => array(
-            'defaultDomain' => 'bdk-debug',
-            'filepath' =>  './../../trans/{domain}/{locale}.php',
+            'defaultDomain' => 'debug',
+            'filepath' =>  './../Debug/lang/{domain}/{locale}.php', // path relative to I18n class
         ),
         'icons' => array(
             'asynchronous' => 'fa fa-random',
@@ -243,7 +243,7 @@ class Debug extends AbstractDebug
             'password',
         ],
         // 'redactReplace'          // callable (default defined in Plugin/Redaction)
-        'route' => 'auto',          // 'auto', 'chromeLogger', 'firephp', 'html', 'serverLog', 'script', 'steam', 'text', or RouteInterface,
+        'route' => 'auto',          // 'auto', 'chromeLogger', 'firephp', 'html', 'serverLog', 'script', 'stream', 'text', or RouteInterface,
                                     //   if 'auto', will be determined automatically
                                     //   if null, no output (unless output plugin added manually)
         'routeNonHtml' => 'serverLog',

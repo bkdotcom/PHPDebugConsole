@@ -251,7 +251,7 @@ class Utility
      *
      * @param string $str    string to translate
      * @param array  $args   optional arguments
-     * @param string $domain optional domain (defaults to defaultLocale)
+     * @param string $domain optional domain (defaults to defaultDomain)
      *
      * @return string
      */

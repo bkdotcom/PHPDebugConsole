@@ -30,6 +30,9 @@ return array(
     'db.duration' => 'durée',
     'db.row-count' => 'nombre de lignes',
     'db.server-info' => 'Infos serveur',
+
+    'deprecated.pluginInterface' => '{class} implémente PluginInterface, qui est obsolète. Utilisez SubscriberInterface avec un abonné EVENT_PLUGIN_INIT OU EVENT_BOOTSTRAP à la place.',
+
     'email.sending' => 'envoi de courriel',
     'env.git.branch' => 'branche git',
 
@@ -64,6 +67,7 @@ return array(
     'error.ignored.count' => '{count, plural, one {# erreur ignorée} other {# erreurs ignorées}}',
 
     'exception.array-special-key' => '{method} : {key} ne peut être utilisé que sur une valeur de tableau. {actual} trouvé',
+    'exception.invalid-config-value' => '{class} : Valeur de configuration invalide. `{key}` doit être {expect}',
     'exception.invalid-path' => 'Chemin invalide : {path}',
     'exception.method-expects' => '{method} attend {expect}. {actual} fourni',
     'exception.method-expects-at' => '{method} attend {expect} à {path}. {actual} trouvé',
@@ -71,6 +75,7 @@ return array(
     'exception.method-expects-only-param' => '{method} : {param} attend un tableau de {expect}. {actual} trouvé à {index}',
     'exception.method-expects-param' => '{method} : {param} attend {expect}. {actual} fourni',
     'exception.method-inaccessible' => 'La méthode {method} n\'est pas définie ou est inaccessible',
+    'exception.missing-config-env-var' => '{class} : valeur(s) de configuration manquante(s) : {key} ou variable(s) d\'environnement équivalente(s) : {envVar}',
     'exception.property-inaccessible' => 'La propriété {property} n\'est pas définie ou est inaccessible',
     'exception.property-undefined' => 'La propriété {property} n\'est pas définie',
 
@@ -207,6 +212,13 @@ return array(
     'session.inactive' => 'Session inactive / Aucun id de session passé dans la requête',
     'session.name' => 'nom de session',
     'session.name.assert' => 'ne devrait pas être PHPSESSID (tout comme {expose_php} devrait être désactivé)',
+
+    'sql.analysis.select_all' => 'Utilisez %cSELECT *%c uniquement si vous avez besoin de toutes les colonnes de la table',
+    'sql.analysis.order_by_rand' => '%cORDER BY RAND()%c est lent, évitez-le si possible.',
+    'sql.analysis.not_standard' => 'L\'opérateur %c!=%c n\'est pas standard. Utilisez plutôt l\'opérateur %c<>%c.',
+    'sql.analysis.no_where' => 'La déclaration %cSELECT%c n\'a pas de clause %cWHERE%c et pourrait examiner beaucoup plus de lignes que prévu',
+    'sql.analysis.leading_wildcard' => 'Un argument contient un caractère générique en début : %c{arg}%c et ne peut pas utiliser un index si un existe.',
+    'sql.analysis.limit_no_order' => '%cLIMIT%c sans %cORDER BY%c entraîne des résultats non déterministes',
 
     'utility.headers-sent' => 'En-têtes déjà envoyés : {file}, ligne {line}',
     'utility.html.innerhtml-return' => 'La fermeture InnerHtml doit retourner une chaîne. Obtenu {actual}',

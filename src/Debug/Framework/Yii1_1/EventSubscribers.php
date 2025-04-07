@@ -30,17 +30,17 @@ use ReflectionObject;
  */
 class EventSubscribers implements SubscriberInterface
 {
-	protected $component;
+    protected $component;
 
-	/**
-	 * Constructor
-	 *
-	 * @param CApplicationComponent $component Debug component
-	 */
-	public function __construct(CApplicationComponent $component)
-	{
-		$this->component = $component;
-	}
+    /**
+     * Constructor
+     *
+     * @param CApplicationComponent $component Debug component
+     */
+    public function __construct(CApplicationComponent $component)
+    {
+        $this->component = $component;
+    }
 
     /**
      * {@inheritDoc}

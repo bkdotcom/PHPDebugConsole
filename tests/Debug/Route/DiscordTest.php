@@ -3,6 +3,7 @@
 namespace bdk\Test\Debug\Route;
 
 use bdk\CurlHttpMessage\Handler\Mock;
+use bdk\ErrorHandler\Error;
 use bdk\HttpMessage\Response;
 use bdk\HttpMessage\ServerRequestExtended as ServerRequest;
 use bdk\HttpMessage\Stream;
@@ -30,6 +31,20 @@ class DiscordTest extends DebugTestFramework
         \bdk\Debug\Utility\Reflection::propSet($discordRoute, 'client', null);
         $this->debug->removePlugin($discordRoute);
         parent::tearDown();
+    }
+
+    public function testAssertCfgMissingValues()
+    {
+        $this->expectException('RuntimeException');
+        $this->expectExceptionMessage('bdk\Debug\Route\Discord: missing config value(s): webhookUrl or equivalent env-var(s): DISCORD_WEBHOOK_URL');
+        $discord = $this->debug->getRoute('discord');
+        $error = new Error($this->debug->errorHandler, array(
+            'file' => __FILE__,
+            'line' => __LINE__,
+            'message' => 'Hi error',
+            'type' => E_WARNING,
+        ));
+        $discord->onError($error);
     }
 
     public function testDiscord()

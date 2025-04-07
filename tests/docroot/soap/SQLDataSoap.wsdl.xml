@@ -1,9 +1,9 @@
 <?xml version='1.0' encoding='UTF-8' ?>
 <definitions  name ='SQLDataSoap'   targetNamespace = 'http://127.0.0.1:8080/soap/wsdl'
-	 xmlns:tns='http://127.0.0.1:8080/soap/wsdl'
-	 xmlns:xsd='http://www.w3.org/2001/XMLSchema'
-	 xmlns:soap='http://schemas.xmlsoap.org/wsdl/soap/'
-	 xmlns='http://schemas.xmlsoap.org/wsdl/'>
+   xmlns:tns='http://127.0.0.1:8080/soap/wsdl'
+   xmlns:xsd='http://www.w3.org/2001/XMLSchema'
+   xmlns:soap='http://schemas.xmlsoap.org/wsdl/soap/'
+   xmlns='http://schemas.xmlsoap.org/wsdl/'>
   <types>
     <schema targetNamespace='http://www.SoapClient.com/xml/SQLDataSoap.xsd'
       xmlns='http://www.w3.org/2001/XMLSchema'>

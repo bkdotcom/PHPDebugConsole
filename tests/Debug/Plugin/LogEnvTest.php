@@ -121,6 +121,9 @@ class LogEnvTest extends DebugTestFramework
             'role' => 'developer',
         );
         $debug = new Debug(array(
+            'container' => array(
+                'allowOverride' => true,
+            ),
             'logEnvInfo' => array('session'),
             'logRequestInfo' => array(),
             'serviceProvider' => array(

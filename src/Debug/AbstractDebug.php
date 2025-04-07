@@ -36,9 +36,6 @@ abstract class AbstractDebug
     /** @var Container */
     protected $container;
 
-    /** @var Container */
-    protected $serviceContainer;
-
     /** @var Debug|null */
     protected static $instance;
 
@@ -50,6 +47,7 @@ abstract class AbstractDebug
 
     /** @var list<string> */
     protected $readOnly = [
+        'container',
         'parentInstance',
         'rootInstance',
     ];
@@ -131,9 +129,6 @@ abstract class AbstractDebug
      */
     public function __get($property)
     {
-        if ($this->serviceContainer->has($property)) {
-            return $this->serviceContainer[$property];
-        }
         if ($this->container->has($property)) {
             return $this->container[$property];
         }
@@ -152,9 +147,6 @@ abstract class AbstractDebug
      */
     public function __isset($property)
     {
-        if ($this->serviceContainer->has($property)) {
-            return true;
-        }
         if ($this->container->has($property)) {
             return true;
         }
@@ -201,13 +193,22 @@ abstract class AbstractDebug
     public function onCfgServiceProvider($val)
     {
         $rawValues = ContainerUtility::toRawValues($val);
-        $services = $this->container['services'];
+        $serviceNames = $this->container['services'];
+        $services = \array_intersect_key($rawValues, \array_flip($serviceNames));
+        $channels = $this->bootstrapped
+            ? $this->getChannels(true, true)
+            : array();
+        foreach ($services as $serviceName => $value) {
+            unset($rawValues[$serviceName]);
+            $this->container[$serviceName] = $value;
+            foreach ($channels as $channel) {
+                $channel->container[$serviceName] = function () use ($serviceName) {
+                    return $this->rootInstance->container[$serviceName];
+                };
+            }
+        }
         foreach ($rawValues as $k => $v) {
             unset($rawValues[$k]);
-            if (\in_array($k, $services, true)) {
-                $this->serviceContainer[$k] = $v;
-                continue;
-            }
             $this->container[$k] = $v;
         }
         return $rawValues;
@@ -252,7 +253,7 @@ abstract class AbstractDebug
     {
         $cfgBootstrap = $this->bootstrapConfigValues($cfg);
         $this->bootstrapInstances($cfgBootstrap['parent']);
-        $this->bootstrapContainers($cfgBootstrap['container']);
+        $this->bootstrapContainer($cfgBootstrap['container']);
         $this->onCfgServiceProvider($cfgBootstrap['serviceProvider']);
 
         $this->eventManager->addSubscriberInterface($this->container['pluginManager']);
@@ -266,7 +267,7 @@ abstract class AbstractDebug
             $cfg = \array_merge(array('debug' => array()), $cfg);
             $this->cfg = $this->arrayUtil->mergeDeep($this->cfg, $cfg['debug']);
 
-            $this->serviceContainer['errorHandler']; // instantiate errorHandler
+            $this->container['errorHandler']; // instantiate errorHandler
             $this->addPlugins($this->cfg['plugins']);
             $this->data->set('requestId', $this->requestId());
             $this->data->set('entryCountInitial', $this->data->get('log/__count__'));
@@ -314,39 +315,32 @@ abstract class AbstractDebug
      *
      * @return void
      */
-    private function bootstrapContainers(array $cfg)
+    private function bootstrapContainer(array $cfg)
     {
         $this->container = new Container(
             array(
-                'debug' => $this,
+                'bdk\Debug' => $this,
             ),
             $cfg
         );
+        $this->container->addAlias('debug', 'bdk\Debug');
         $this->container->registerProvider(new ServiceProvider());
-        if (empty($this->parentInstance)) {
-            // root instance
-            // create a new serviceContainer for our shared "services"
-            // move the services from the container to the serviceContainer (without instantiating them)
-            $this->serviceContainer = new Container(
-                array(
-                    'debug' => $this,
-                ),
-                $cfg
-            );
-            foreach ($this->container['services'] as $service) {
-                $this->serviceContainer[$service] = $this->container->raw($service);
-                unset($this->container[$service]);
+        if ($this->parentInstance) {
+            // we are a child instance
+            // shared services should come from root instance
+            foreach ($this->container['services'] as $serviceName) {
+                $this->container[$serviceName] = function () use ($serviceName) {
+                    return $this->rootInstance->container[$serviceName];
+                };
             }
-            $this->serviceContainer->setCfg('onInvoke', [$this->config, 'onContainerInvoke']);
         }
-        $this->serviceContainer = $this->rootInstance->serviceContainer;
         $this->container->setCfg('onInvoke', [$this->config, 'onContainerInvoke']);
     }
 
     /**
      * Set instance, rootInstance, & parentInstance
      *
-     * @param array $cfg Raw config passed to constructor
+     * @param static|null $parentInstance Parent instance (or null)
      *
      * @return void
      */

@@ -96,7 +96,7 @@ class LogResponse extends AbstractLogReqRes implements SubscriberInterface
      */
     public function logResponse()
     {
-        if ($this->testLogResponse() === false) {
+        if ($this->debug->rootInstance->getCfg('logResponse', Debug::CONFIG_DEBUG) === false) {
             return;
         }
         $this->debug->log(
@@ -184,18 +184,6 @@ class LogResponse extends AbstractLogReqRes implements SubscriberInterface
             return \implode("\n", $vals);
         }, $this->debug->getResponseHeaders());
         $this->debug->table($this->debug->i18n->trans('response.headers'), $headers);
-    }
-
-    /**
-     * Check if we should log response
-     *
-     * @return bool
-     */
-    private function testLogResponse()
-    {
-        $isHttp = \strpos($this->debug->getInterface(), 'http') === 0;
-        $logResponse = $this->debug->rootInstance->getCfg('logResponse', Debug::CONFIG_DEBUG);
-        return $isHttp && $logResponse;
     }
 
     /**

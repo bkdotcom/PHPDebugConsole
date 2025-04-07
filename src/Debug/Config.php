@@ -13,7 +13,6 @@
 namespace bdk\Debug;
 
 use bdk\Debug;
-use bdk\Debug\ConfigurableInterface;
 
 /**
  * Configuration manager
@@ -82,7 +81,8 @@ class Config
      */
     public function onContainerInvoke($val, $name)
     {
-        if (!($val instanceof ConfigurableInterface) && !\method_exists($val, 'setCfg')) {
+        $isConfigurable = \is_object($val) && \method_exists($val, 'setCfg');
+        if (!$isConfigurable) {
             $this->invokedServices[] = $name;
             return;
         }

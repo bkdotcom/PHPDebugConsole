@@ -16,6 +16,8 @@ use bdk\Debug;
 
 /**
  * Plugin Interface
+ *
+ * @deprecated 3.5 use \bdk\PubSub\SubscriberInterface with EVENT_PLUGIN_INIT or EVENT_BOOTSTRAP instead
  */
 interface PluginInterface
 {

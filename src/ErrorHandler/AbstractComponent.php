@@ -27,6 +27,15 @@ class AbstractComponent
     protected $setCfgMergeCallable = 'array_replace_recursive';
 
     /**
+     * Constructor
+     */
+    public function __construct()
+    {
+        // call setCfg() to trigger postSetCfg... which may contain initialization code
+        $this->setCfg($this->cfg);
+    }
+
+    /**
      * Magic getter
      *
      * Get inaccessible / undefined properties
@@ -116,6 +125,7 @@ class AbstractComponent
      *     setCfg(array('k1'=>'v1', 'k2'=>'v2'))
      *
      * Calls self::postSetCfg() with new values and previous values
+     *   postSetCfg will always receive key=>value arrays
      *
      * @param array|string $mixed key=>value array or key
      * @param mixed        $val   new value
@@ -124,19 +134,20 @@ class AbstractComponent
      */
     public function setCfg($mixed, $val = null)
     {
+        $prevSingleAsArray = array();
         $prev = null;
-        $prevArray = array();
         if (\is_string($mixed)) {
             $prev = isset($this->cfg[$mixed])
                 ? $this->cfg[$mixed]
                 : null;
-            $prevArray = array($mixed => $prev);
+            $prevSingleAsArray = array($mixed => $prev);
             $mixed = array($mixed => $val);
         } elseif (\is_array($mixed)) {
             $prev = \array_intersect_key($this->cfg, $mixed);
         }
         $this->cfg = \call_user_func($this->setCfgMergeCallable, $this->cfg, $mixed);
-        $this->postSetCfg($mixed, $prevArray ?: $prev);
+        $prevDefault = \array_fill_keys(\array_keys($mixed), null);
+        $this->postSetCfg($mixed, \array_merge($prevDefault, $prevSingleAsArray ?: $prev));
         return $prev;
     }
 

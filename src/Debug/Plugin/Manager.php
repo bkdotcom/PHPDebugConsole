@@ -28,7 +28,7 @@ use SplObjectStorage;
 /**
  * Plugin management
  */
-class Manager implements SubscriberInterface, PluginInterface
+class Manager implements SubscriberInterface
 {
     use CustomMethodTrait;
 
@@ -36,9 +36,9 @@ class Manager implements SubscriberInterface, PluginInterface
     protected $methods = [
         'addPlugin',
         'addPlugins',
-        'hasPlugin',
         'getAssetProviders',
         'getPlugin',
+        'hasPlugin',
         'removePlugin',
     ];
 
@@ -53,6 +53,9 @@ class Manager implements SubscriberInterface, PluginInterface
 
     /** @var bool */
     private $isBootstrapped = false;
+
+    /** @var array */
+    private $pluginCfg = array();
 
     /**
      * Constructor
@@ -73,12 +76,13 @@ class Manager implements SubscriberInterface, PluginInterface
      */
     public function addPlugin($plugin, $name = null)
     {
-        $this->assertPlugin($plugin);
+        // we don't check for RouteInterface (it extends SubscriberInterface)
+        \bdk\Debug\Utility\PhpType::assertType($plugin, 'bdk\Debug\AssetProviderInterface|bdk\PubSub\SubscriberInterface', 'plugin');
         if ($this->hasPlugin($plugin)) {
             return $this->debug;
         }
         if ($plugin instanceof PluginInterface) {
-            $plugin->setDebug($this->debug);
+            $this->addPluginInterface($plugin);
         }
         if ($plugin instanceof AssetProviderInterface) {
             $this->assetProviders[] = $plugin;
@@ -108,8 +112,9 @@ class Manager implements SubscriberInterface, PluginInterface
     {
         \array_walk($plugins, function ($plugin, $key) {
             try {
-                $plugin = $this->instantiatePlugin($plugin);
+                list($plugin, $this->pluginCfg) = $this->instantiatePlugin($plugin);
                 $this->addPlugin($plugin, $key);
+                $this->pluginCfg = array();
             } catch (InvalidArgumentException $e) {
                 throw new InvalidArgumentException(\sprintf('plugins[%s]: %s', $key, $e->getMessage()));
             }
@@ -181,7 +186,9 @@ class Manager implements SubscriberInterface, PluginInterface
     public function getSubscriptions()
     {
         return array(
-            Debug::EVENT_BOOTSTRAP => 'onBootstrap',
+            Debug::EVENT_BOOTSTRAP => function () {
+                $this->isBootstrapped = true;
+            },
             Debug::EVENT_CUSTOM_METHOD => 'onCustomMethod',
         );
     }
@@ -189,7 +196,7 @@ class Manager implements SubscriberInterface, PluginInterface
     /**
      * Test if we already have plugin
      *
-     * @param SubscriberInterface $plugin Plugin to check
+     * @param string|AssetProviderInterface|SubscriberInterface $plugin Plugin to check
      *
      * @return bool
      */
@@ -198,24 +205,15 @@ class Manager implements SubscriberInterface, PluginInterface
         if (\is_string($plugin)) {
             return isset($this->namedPlugins[$plugin]);
         }
-        $this->assertPlugin($plugin);
+        // we don't check for RouteInterface (it extends SubscriberInterface)
+        \bdk\Debug\Utility\PhpType::assertType($plugin, 'string|bdk\Debug\AssetProviderInterface|bdk\PubSub\SubscriberInterface');
         return $this->registeredPlugins->contains($plugin);
-    }
-
-    /**
-     * Debug::EVENT_BOOTSTRAP subscriber
-     *
-     * @return void
-     */
-    public function onBootstrap()
-    {
-        $this->isBootstrapped = true;
     }
 
     /**
      * Remove plugin
      *
-     * @param string|SubscriberInterface $plugin Plugin name or object implementing SubscriberInterface
+     * @param string|AssetProviderInterface|SubscriberInterface $plugin Plugin name or object implementing SubscriberInterface
      *
      * @return Debug
      * @throws InvalidArgumentException
@@ -224,16 +222,12 @@ class Manager implements SubscriberInterface, PluginInterface
     {
         if (\is_string($plugin)) {
             $plugin = $this->findPluginByName($plugin);
-        } elseif (\is_object($plugin) === false) {
-            throw new InvalidArgumentException($this->debug->i18n->trans('exception.method-expects', array(
-                'actual' => $this->debug->php->getDebugType($plugin),
-                'expect' => 'plugin name or instance',
-                'method' => __METHOD__ . '()',
-            )));
         }
         if ($plugin === false) {
             return $this->debug;
         }
+        // we don't check for RouteInterface (it extends SubscriberInterface)
+        \bdk\Debug\Utility\PhpType::assertType($plugin, 'string|bdk\Debug\AssetProviderInterface|bdk\PubSub\SubscriberInterface');
         $pluginName = \array_search($plugin, $this->namedPlugins, true);
         if ($pluginName !== false) {
             unset($this->namedPlugins[$pluginName]);
@@ -249,11 +243,22 @@ class Manager implements SubscriberInterface, PluginInterface
     }
 
     /**
-     * {@inheritDoc}
+     * Handle plugin implementing PluginInterface
+     *
+     * @param PluginInterface $plugin PluginInterface instance
+     *
+     * @return void
      */
-    public function setDebug(Debug $debug)
+    private function addPluginInterface(PluginInterface $plugin)
     {
-        $this->debug = $debug;
+        $this->debug->warn($this->debug->i18n->trans('deprecated.pluginInterface', array(
+            'class' => \get_class($plugin),
+        )), $this->debug->meta(array(
+            'detectFiles' => false,
+            'file' => null,
+            'line' => null,
+        )));
+        $plugin->setDebug($this->debug);
     }
 
     /**
@@ -293,7 +298,7 @@ class Manager implements SubscriberInterface, PluginInterface
                 plugin subscribes to Debug::EVENT_PLUGIN_INIT
                 call subscriber directly
             */
-            $this->callPluginEventSubscriber($plugin, Debug::EVENT_PLUGIN_INIT, $subscriptions[Debug::EVENT_PLUGIN_INIT]);
+            $this->callPluginEventSubscriber($plugin, Debug::EVENT_PLUGIN_INIT, $subscriptions[Debug::EVENT_PLUGIN_INIT], $this->pluginCfg);
         }
         if (isset($subscriptions[Debug::EVENT_BOOTSTRAP]) && $this->isBootstrapped) {
             /*
@@ -306,47 +311,22 @@ class Manager implements SubscriberInterface, PluginInterface
     }
 
     /**
-     * Validate plugin
-     *
-     * @param AssetProviderInterface|SubscriberInterface $plugin PHPDebugConsole plugin
-     *
-     * @return void
-     * @throws InvalidArgumentException
-     */
-    private function assertPlugin($plugin)
-    {
-        if ($plugin instanceof AssetProviderInterface) {
-            return;
-        }
-        if ($plugin instanceof SubscriberInterface) {
-            return;
-        }
-        $frame = \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1];
-        throw new InvalidArgumentException($this->debug->i18n->trans('exception.method-expects', array(
-            'actual' => $this->debug->php->getDebugType($plugin),
-            'expect' => '\\bdk\\Debug\\AssetProviderInterface and/or \\bdk\\PubSub\\SubscriberInterface',
-            'method' => isset($frame['class'])
-                ? $frame['class'] . '::' . $frame['function'] . '()'
-                : $frame['function'] . '()',
-        )));
-    }
-
-    /**
      * Call plugin's event subscriber directly
      *
-     * @param SubscriberInterface $plugin    SubscriberInterface instance
-     * @param string              $eventName Event name (Debug::EVENT_PLUGIN_INIT or Debug::EVENT_BOOTSTRAP)
-     * @param mixed               $callable  closure or method name
+     * @param SubscriberInterface $plugin      SubscriberInterface instance
+     * @param string              $eventName   Event name (Debug::EVENT_PLUGIN_INIT or Debug::EVENT_BOOTSTRAP)
+     * @param mixed               $callable    closure or method name
+     * @param array               $eventValues Event values
      *
      * @return void
      */
-    private function callPluginEventSubscriber(SubscriberInterface $plugin, $eventName, $callable)
+    private function callPluginEventSubscriber(SubscriberInterface $plugin, $eventName, $callable, array $eventValues = array())
     {
         \call_user_func(
             $callable instanceof Closure
                 ? $callable
                 : [$plugin, $callable],
-            new Event($this->debug),
+            new Event($this->debug, $eventValues),
             $eventName,
             $this->debug->eventManager
         );
@@ -371,7 +351,7 @@ class Manager implements SubscriberInterface, PluginInterface
      *
      * @param object|array|classname $plugin Plugin info
      *
-     * @return object
+     * @return array plugin instance and config
      *
      * @throws InvalidArgumentException
      */
@@ -386,14 +366,13 @@ class Manager implements SubscriberInterface, PluginInterface
             if (empty($cfg['class'])) {
                 throw new InvalidArgumentException($this->debug->i18n->trans('plugin.missing-class'));
             }
-            $class = $cfg['class'];
-            $plugin = new $class();
+            $plugin = $this->debug->container->getObject($cfg['class'], false);
             unset($cfg['class']);
         }
         if ($plugin instanceof ConfigurableInterface && !empty($cfg)) {
             $plugin->setCfg($cfg);
         }
-        return $plugin;
+        return [$plugin, $cfg];
     }
 
     /**

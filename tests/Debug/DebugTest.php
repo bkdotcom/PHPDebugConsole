@@ -10,7 +10,6 @@ use bdk\PubSub\Manager as EventManager;
 /**
  * PHPUnit tests for Debug class
  *
- * @covers \bdk\Container\Utility
  * @covers \bdk\Debug
  * @covers \bdk\Debug\AbstractDebug
  */

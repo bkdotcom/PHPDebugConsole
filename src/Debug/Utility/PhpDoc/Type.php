@@ -12,9 +12,9 @@
 
 namespace bdk\Debug\Utility\PhpDoc;
 
+use bdk\Container\UseStatements;
 use bdk\Debug\Utility\PhpDoc;
 use bdk\Debug\Utility\Reflection;
-use bdk\Debug\Utility\UseStatements;
 
 /**
  * PhpDoc parsing helper methods

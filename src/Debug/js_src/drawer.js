@@ -76,7 +76,6 @@ function open () {
   $root.addClass('debug-drawer-open')
   $root.debugEnhance()
   setHeight() // makes sure height within min/max
-  $('body').css('marginBottom', ($root.height() + 8) + 'px')
   $(window).on('resize', setHeight)
   if (config.get('persistDrawer')) {
     config.set('openDrawer', true)
@@ -85,11 +84,11 @@ function open () {
 
 function close () {
   $root.removeClass('debug-drawer-open')
-  $('body').css('marginBottom', '')
   $(window).off('resize', setHeight)
   if (config.get('persistDrawer')) {
     config.set('openDrawer', false)
   }
+  setHeight(0)
 }
 
 function onMousemove (e) {
@@ -116,9 +115,11 @@ function onMouseup () {
   $root.parents()
     .off('mousemove', onMousemove)
     .off('mouseup', onMouseup)
-  $('body').css('marginBottom', ($root.height() + 8) + 'px')
 }
 
+/**
+ * Called on window resize or draw resize
+ */
 function setHeight (height, viaUser) {
   var $body = $root.find('.tab-panes')
   var menuH = $root.find('.debug-menu-bar').outerHeight()
@@ -126,10 +127,18 @@ function setHeight (height, viaUser) {
   // inaccurate if document.doctype is null : $(window).height()
   //    aka document.documentElement.clientHeight
   var maxH = window.innerHeight - menuH - 50
+  if (height === 0) {
+    // debug drawer closed
+    $('body').css('marginBottom', '')
+    $root.trigger('resize.debug')
+    return;
+  }
   height = checkHeight(height)
   height = Math.min(height, maxH)
   height = Math.max(height, minH)
   $body.css('height', height)
+  $('body').css('marginBottom', ($root.height() + 8) + 'px')
+  $root.trigger('resize.debug')
   if (viaUser && config.get('persistDrawer')) {
     config.set('height', height)
   }

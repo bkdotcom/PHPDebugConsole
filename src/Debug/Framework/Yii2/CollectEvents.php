@@ -28,21 +28,21 @@ class CollectEvents implements SubscriberInterface
     protected $debug;
 
     /** @var DebugModule */
-	protected $debugModule;
+    protected $debugModule;
 
     /** @var list<array<string,mixed>> */
     private $collectedEvents = array();
 
-	/**
-	 * Constructor
-	 *
-	 * @param DebugModule $debugModule DebugModule instance
-	 */
-	public function __construct(DebugModule $debugModule)
-	{
-		$this->debug = $debugModule->debug;
-		$this->debugModule = $debugModule;
-	}
+    /**
+     * Constructor
+     *
+     * @param DebugModule $debugModule DebugModule instance
+     */
+    public function __construct(DebugModule $debugModule)
+    {
+        $this->debug = $debugModule->debug;
+        $this->debugModule = $debugModule;
+    }
 
     /**
      * Collect Yii events

@@ -14,12 +14,13 @@ namespace bdk\Debug\Plugin;
 
 use bdk\Debug;
 use bdk\Debug\AssetProviderInterface;
-use bdk\Debug\PluginInterface;
+use bdk\PubSub\Event;
+use bdk\PubSub\SubscriberInterface;
 
 /**
  * Provide strings for our javascript
  */
-class JavascriptStrings implements AssetProviderInterface, PluginInterface
+class JavascriptStrings implements AssetProviderInterface, SubscriberInterface
 {
     /** @var Debug */
     private $debug;
@@ -103,8 +104,22 @@ class JavascriptStrings implements AssetProviderInterface, PluginInterface
     /**
      * {@inheritDoc}
      */
-    public function setDebug(Debug $debug)
+    public function getSubscriptions()
     {
-        $this->debug = $debug;
+        return array(
+            Debug::EVENT_PLUGIN_INIT => 'onPluginInit',
+        );
+    }
+
+    /**
+     * Debug::EVENT_PLUGIN_INIT subscriber
+     *
+     * @param Event $event Debug::EVENT_PLUGIN_INIT Event instance
+     *
+     * @return void
+     */
+    public function onPluginInit(Event $event)
+    {
+        $this->debug = $event->getSubject();
     }
 }

@@ -90,7 +90,7 @@ class Channel implements SubscriberInterface
      * If $allDescendants == true :  key = "fully qualified" channel name
      *
      * @param bool $allDescendants (false) include all descendants?
-     * @param bool $inclTop        (false) whether to incl topmost channels (ie "tabs")
+     * @param bool $inclTop        (false) whether to incl topmost channels (ie "tabs") (only applicable on root channel)
      *
      * @return \bdk\Debug[] Does not include self
      */

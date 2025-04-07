@@ -13,6 +13,7 @@
 namespace bdk;
 
 use ArrayAccess;
+use bdk\Container\ObjectBuilder;
 use bdk\Container\ServiceProviderInterface;
 use bdk\Container\Utility;
 use InvalidArgumentException;
@@ -38,9 +39,14 @@ use SplObjectStorage;
 class Container implements ArrayAccess
 {
     /** @var array */
+    private $aliases = array();
+
+    /** @var array */
     private $cfg = array(
         'allowOverride' => false,  // whether can update already built service
-        'onInvoke' => null, // callable
+        'onInvoke' => null, // callable  callable will receive [value, name, container].
+                            //  value is the value returned by the service definition (or factory)
+                            //  reminder that value is mixed type (not necessarily an object)
     );
 
     /**
@@ -64,8 +70,8 @@ class Container implements ArrayAccess
      */
     private $invoked = array();
 
-    /** @var array<string,bool> */
-    private $keys = array();
+    /** @var ObjectBuilder */
+    private $objectBuilder;
 
     /**
      * Wrap anonymous functions with the protect() method to store them as value
@@ -113,12 +119,38 @@ class Container implements ArrayAccess
     public function __debugInfo()
     {
         return array(
+            'aliases' => $this->aliases,
             'cfg' => $this->cfg,
             'invoked' => $this->invoked,
-            'keys' => $this->keys,
             'raw' => "\x00notInspected\x00",
             'values' => "\x00notInspected\x00",
         );
+    }
+
+    /**
+     * Adds an alias for a value
+     *
+     * examples
+     *    'myUtility' => 'My\Namespace\MyUtility'
+     *    'someInterface' => 'My\Namespace\SomeImplementation'
+     *
+     * @param string $alias  The alias name
+     * @param string $actual The resolved name
+     *
+     * @return void
+     *
+     * @throws OutOfBoundsException If the $actual is invalid
+     */
+    public function addAlias($alias, $actual)
+    {
+        if (isset($this->values[$actual]) === false) {
+            throw new OutOfBoundsException(\sprintf(
+                'Unable to create alias "%s" for unknown identifier "%s"',
+                $alias,
+                $actual
+            ));
+        }
+        $this->aliases[$alias] = $actual;
     }
 
     /**
@@ -179,6 +211,23 @@ class Container implements ArrayAccess
     }
 
     /**
+     * Instantiate an object of the given class.
+     *
+     * Attempt to resolve any constructor arguments from the container.
+     *
+     * @param string $classname Classname of the object to instantiate
+     *
+     * @return object
+     */
+    public function getObject($classname)
+    {
+        if ($this->objectBuilder === null) {
+            $this->objectBuilder = new ObjectBuilder($this);
+        }
+        return $this->objectBuilder->build($classname);
+    }
+
+    /**
      * Do we have an entry for the given identifier.
      *
      * @param string $name Identifier of the entry to look for.
@@ -229,7 +278,7 @@ class Container implements ArrayAccess
     #[\ReturnTypeWillChange]
     public function offsetExists($name)
     {
-        return isset($this->keys[$name]);
+        return \array_key_exists($name, $this->values) || isset($this->aliases[$name]);
     }
 
     /**
@@ -279,13 +328,16 @@ class Container implements ArrayAccess
     #[\ReturnTypeWillChange]
     public function offsetSet($offset, $value)
     {
+        if (isset($this->aliases[$offset])) {
+            $offset = $this->aliases[$offset];
+        }
+
         if (isset($this->invoked[$offset]) && $this->cfg['allowOverride'] === false) {
             throw new RuntimeException(
                 \sprintf('Cannot update "%s" after it has been instantiated.', $offset)
             );
         }
 
-        $this->keys[$offset] = true;
         $this->values[$offset] = $value;
         unset(
             $this->invoked[$offset],
@@ -295,6 +347,8 @@ class Container implements ArrayAccess
 
     /**
      * ArrayAccess: Unsets a parameter or an object.
+     *
+     * if $name is an alias, the alias is removed (but not the actual value)
      *
      * @param string $name The unique identifier for the parameter or object
      *
@@ -306,6 +360,10 @@ class Container implements ArrayAccess
         if ($this->offsetExists($name) === false) {
             return;
         }
+        if (isset($this->aliases[$name])) {
+            unset($this->aliases[$name]);
+            return;
+        }
         if (\is_object($this->values[$name])) {
             unset(
                 $this->factories[$this->values[$name]],
@@ -314,10 +372,10 @@ class Container implements ArrayAccess
         }
         unset(
             $this->invoked[$name],
-            $this->keys[$name],
             $this->raw[$name],
             $this->values[$name]
         );
+        $this->aliases = \array_diff($this->aliases, [$name]);
     }
 
     /**
@@ -418,8 +476,11 @@ class Container implements ArrayAccess
      *
      * @throws OutOfBoundsException If the identifier is not defined
      */
-    private function assertExists($name)
+    private function assertExists(&$name)
     {
+        if (isset($this->aliases[$name])) {
+            $name = $this->aliases[$name];
+        }
         if ($this->offsetExists($name) === false) {
             throw new OutOfBoundsException(
                 \sprintf('Unknown identifier: "%s"', $name)

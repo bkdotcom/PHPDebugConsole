@@ -10,7 +10,7 @@
  * @since     2.3
  */
 
-namespace bdk\Debug\Utility;
+namespace bdk\Container;
 
 use ReflectionClass;
 

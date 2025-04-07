@@ -17,20 +17,29 @@ class ContainerTest extends TestCase
 {
     use ExpectExceptionTrait;
 
+    public function testAddAliasException()
+    {
+        $this->expectException('OutOfBoundsException');
+        $this->expectExceptionMessage('Unable to create alias "test" for unknown identifier "param"');
+        $container = new Container();
+        $container->addAlias('test', 'param');
+    }
+
     public function testDebugInfo()
     {
         $params = array('param' => 'value');
         $container = new Container($params);
+        $container->addAlias('test', 'param');
 
         $expect = array(
+            'aliases' => array(
+                'test' => 'param',
+            ),
             'cfg' => array(
                 'allowOverride' => false,
                 'onInvoke' => null,
             ),
             'invoked' => array(),
-            'keys' => array(
-                'param' => true,
-            ),
             'raw' => "\x00notInspected\x00",
             'values' => "\x00notInspected\x00",
         );
@@ -106,24 +115,24 @@ class ContainerTest extends TestCase
     public function testSetCfg()
     {
         $container = new Container();
-        $container['service'] = function () {
+        $container['someService'] = function () {
             return new Fixture\Service();
         };
         // can override if not yet invoked
-        $container['service'] = function () {
+        $container['someService'] = function () {
             return 'new';
         };
         // invoke it
-        $this->assertSame('new', $container['service']);
+        $this->assertSame('new', $container['someService']);
         $exceptionMessage = null;
         try {
-            $container['service'] = function () {
+            $container['someService'] = function () {
                 return 'new 2';
             };
         } catch (\Exception $e) {
             $exceptionMessage = $e->getMessage();
         }
-        $this->assertSame('Cannot update "service" after it has been instantiated.', $exceptionMessage);
+        $this->assertSame('Cannot update "someService" after it has been instantiated.', $exceptionMessage);
         $args = array();
         $container->setCfg('allowOverride', true);
         $container->setCfg(array(
@@ -131,12 +140,12 @@ class ContainerTest extends TestCase
                 $args = \func_get_args();
             },
         ));
-        $container['service'] = function () {
+        $container['someService'] = function () {
             return 'new 3';
         };
-        $this->assertSame('new 3', $container->get('service'));
+        $this->assertSame('new 3', $container->get('someService'));
         $this->assertSame('new 3', $args[0]);
-        $this->assertSame('service', $args[1]);
+        $this->assertSame('someService', $args[1]);
         $this->assertSame($container, $args[2]);
     }
 
@@ -370,12 +379,26 @@ class ContainerTest extends TestCase
         $container['service'] = function () {
             return new Fixture\Service();
         };
+        $container->addAlias('myAlias', 'param');
 
-        unset($container['undefined'], $container['param'], $container['service']);
-        $this->assertFalse(isset($container['param']));
+        unset($container['myAlias'], $container['undefined'], $container['service']);
+        $this->assertTrue(isset($container['param'])); // removing alias doesn't remove the aliasee
         $this->assertFalse(isset($container['service']));
-        $this->assertFalse($container->has('param'));
+        $this->assertTrue($container->has('param'));
         $this->assertFalse($container->has('service'));
+
+        $expect = array(
+            'aliases' => array(),
+            'cfg' => array(
+                'allowOverride' => false,
+                'onInvoke' => null,
+            ),
+            'invoked' => array(),
+            'raw' => "\x00notInspected\x00",
+            'values' => "\x00notInspected\x00",
+        );
+        $this->assertSame($expect, $container->__debugInfo());
+
     }
 
     public function testOffsetGetAssertsValidKey()

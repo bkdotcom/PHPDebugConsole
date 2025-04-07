@@ -30,15 +30,15 @@ class PdoCollector
     /** @var array<string,Pdo> */
     protected $pdoInstances = array();
 
-	/**
-	 * Constructor
-	 *
-	 * @param CApplicationComponent $component Debug component
-	 */
-	public function __construct(CApplicationComponent $component)
-	{
-		$this->component = $component;
-	}
+    /**
+     * Constructor
+     *
+     * @param CApplicationComponent $component Debug component
+     */
+    public function __construct(CApplicationComponent $component)
+    {
+        $this->component = $component;
+    }
 
     /**
      * Setup up PDO collector

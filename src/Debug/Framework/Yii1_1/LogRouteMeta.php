@@ -20,17 +20,17 @@ use CLogger;
  */
 class LogRouteMeta
 {
-	public $debug;
+    public $debug;
 
-	/**
-	 * Constructor
-	 *
-	 * @param Debug $debug Debug instance
-	 */
-	public function __construct(Debug $debug)
-	{
-		$this->debug = $debug;
-	}
+    /**
+     * Constructor
+     *
+     * @param Debug $debug Debug instance
+     */
+    public function __construct(Debug $debug)
+    {
+        $this->debug = $debug;
+    }
 
     /**
      * Update logEntry meta info

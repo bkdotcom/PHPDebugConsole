@@ -36,13 +36,13 @@ class ArrayTest extends DebugTestFramework
 
     public static function providerTestMethod()
     {
-		// indented with tab
+        // indented with tab
         $arrayDumpHtml = '
             <li class="m_log"><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
             <ul class="array-inner list-unstyled">
-            	<li><span class="t_int t_key">0</span><span class="t_operator">=&gt;</span><span class="t_string">a</span></li>
-            	<li><span class="t_key">foo</span><span class="t_operator">=&gt;</span><span class="t_string">bar</span></li>
-            	<li><span class="t_int t_key">1</span><span class="t_operator">=&gt;</span><span class="t_string">c</span></li>
+                <li><span class="t_int t_key">0</span><span class="t_operator">=&gt;</span><span class="t_string">a</span></li>
+                <li><span class="t_key">foo</span><span class="t_operator">=&gt;</span><span class="t_string">bar</span></li>
+                <li><span class="t_int t_key">1</span><span class="t_operator">=&gt;</span><span class="t_string">c</span></li>
                 <li><span class="t_key">obj</span><span class="t_operator">=&gt;</span><div class="groupByInheritance t_object" data-accessible="public"><span class="t_identifier" data-type-more="className"><span class="classname">stdClass</span></span>
                     <dl class="object-inner">
                     ' . (PHP_VERSION_ID >= 80200
@@ -56,8 +56,8 @@ class ArrayTest extends DebugTestFramework
                     </dl>
                     </div></li>
             </ul><span class="t_punct">)</span></span></li>';
-		// indented with 4 spaces
-		$arrayDumpText = <<<'EOD'
+        // indented with 4 spaces
+        $arrayDumpText = <<<'EOD'
 array(
     [0] => "a"
     [foo] => "bar"

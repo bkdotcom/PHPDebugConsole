@@ -100,7 +100,7 @@ abstract class AbstractRoute extends AbstractComponent implements RouteInterface
     {
         $str = '';
         foreach ($this->data['alerts'] as $logEntry) {
-            if ($this->channelTest($logEntry)) {
+            if ($this->testChannelRegex($logEntry->getChannelKey())) {
                 $str .= $this->processLogEntryViaEvent($logEntry);
             }
         }
@@ -116,7 +116,7 @@ abstract class AbstractRoute extends AbstractComponent implements RouteInterface
     {
         $str = '';
         foreach ($this->data['log'] as $logEntry) {
-            if ($this->channelTest($logEntry)) {
+            if ($this->testChannelRegex($logEntry->getChannelKey())) {
                 $str .= $this->processLogEntryViaEvent($logEntry);
             }
         }
@@ -137,7 +137,7 @@ abstract class AbstractRoute extends AbstractComponent implements RouteInterface
             $summaryData = \call_user_func_array('array_merge', $summaryData);
         }
         foreach ($summaryData as $logEntry) {
-            if ($this->channelTest($logEntry)) {
+            if ($this->testChannelRegex($logEntry->getChannelKey())) {
                 $str .= $this->processLogEntryViaEvent($logEntry);
             }
         }
@@ -187,9 +187,10 @@ abstract class AbstractRoute extends AbstractComponent implements RouteInterface
     public function setChannelName(Event $event)
     {
         $debug = $event->getSubject();
+        $isRoot = $debug === $debug->rootInstance;
         $this->channelKey = $debug->getCfg('channelKey', Debug::CONFIG_DEBUG);
         $this->channelKeyRoot = $debug->getCfg('channelKey', Debug::CONFIG_DEBUG);
-        $this->setChannelRegex('#^' . \preg_quote($this->channelKey, '#') . '(\.|$)#');
+        $this->setChannelRegex('#^' . ($isRoot ? '.+' : \preg_quote($this->channelKey, '#')) . '(\.|$)#');
     }
 
     /**
@@ -202,18 +203,6 @@ abstract class AbstractRoute extends AbstractComponent implements RouteInterface
     public function setChannelRegex($regex)
     {
         $this->channelRegex = $regex;
-    }
-
-    /**
-     * Test channel for inclusion
-     *
-     * @param LogEntry $logEntry LogEntry instance
-     *
-     * @return bool
-     */
-    protected function channelTest(LogEntry $logEntry)
-    {
-        return \preg_match($this->channelRegex, $logEntry->getChannelKey()) === 1;
     }
 
     /**
@@ -304,7 +293,7 @@ abstract class AbstractRoute extends AbstractComponent implements RouteInterface
      *
      * @return bool
      */
-    private function testChannelKeyMatch($channelKey, $channelKeys = array())
+    protected function testChannelKeyMatch($channelKey, $channelKeys = array())
     {
         foreach ($channelKeys as $channelKeyTest) {
             if ($this->testChannelKey($channelKey, $channelKeyTest)) {
@@ -318,7 +307,7 @@ abstract class AbstractRoute extends AbstractComponent implements RouteInterface
      * Test if channel key matches test value
      *
      * @param string $channelKey     channelKey to test
-     * @param string $channelKeyTest test string
+     * @param string $channelKeyTest key to test against
      *
      * @return bool
      */
@@ -338,5 +327,19 @@ abstract class AbstractRoute extends AbstractComponent implements RouteInterface
             }
         }
         return false;
+    }
+
+    /**
+     * Test channel for inclusion
+     *
+     * Channel must be the channel (or descendant) that we're outputting
+     *
+     * @param string $channelKey channelKey to test
+     *
+     * @return bool
+     */
+    private function testChannelRegex($channelKey)
+    {
+        return \preg_match($this->channelRegex, $channelKey) === 1;
     }
 }

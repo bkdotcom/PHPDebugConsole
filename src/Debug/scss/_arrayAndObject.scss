@@ -4,7 +4,7 @@
 
 @use 'sass:color';
 
-.namespace { 
+.namespace {
   color: var(--color-namespace);
   opacity: var(--opacity-namespace);
 }
@@ -236,7 +236,7 @@ li[class*=m_] > .t_array.array-file-tree > .array-inner {
     i.isVirtual {
       color: var(--color-object-virtual);
       text-shadow: 0px 0px 1px #990099;
-    }      
+    }
   }
 
   .private-ancestor:not(:hover) {

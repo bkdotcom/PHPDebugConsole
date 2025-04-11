@@ -9,7 +9,7 @@
   --color-fg-hover: #333;
   --color-resize-handle: #{color.adjust(#f3f3f3, $lightness: -10%)};
   --color-ui-border: #d0d0d0;
-  
+
   --color-button-fg: #111;
   --color-button-bg: #f0f0f0;
   --color-button-bg-hover: #dde6f0;
@@ -31,17 +31,17 @@
   --color-error-border: #d8000c;
   --color-error-fg: #d8000c;
   --color-error-link: #843534;
-  
+
   --color-info-bg: #d9edf7ee;
   --color-info-border: #bce8f1;
   --color-info-fg: #31708f;
   --color-info-link: #245269;
-  
+
   --color-success-bg: #dff0d8ee;
   --color-success-border: #d6e9c6;
   --color-success-fg: #3c763d;
   --color-success-link: #2b542c;
-  
+
   --color-warn-bg: #fef6d5;
   --color-warn-border: #faebcc;
   --color-warn-fg: #8a6d3b;

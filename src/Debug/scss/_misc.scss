@@ -27,13 +27,13 @@
 .hasTooltip:not(a),
 *[title]:not(a) {
   cursor: help;
-  &:hover { 
+  &:hover {
     background: color-mix(in lch, var(--color-button-fg) 20%, transparent);
   }
 }
 
-*[data-toggle] { 
-  cursor: pointer !important; 
+*[data-toggle] {
+  cursor: pointer !important;
 }
 
 .string-encoded {
@@ -89,7 +89,7 @@ use ::after pseudo element to replace the char with abbreviation
   content: attr(data-abbr);
   display: block;
   text-indent: 0;
-  
+
   line-height: 1.25em;
   position: relative;
   top: -0.25em;
@@ -110,7 +110,7 @@ use ::after pseudo element to replace the char with abbreviation
   background-color: var(--color-unicode-bg);
   font-weight: normal; // many chars don't render as bold
 }
- 
+
 ul[data-type-more=binary] > li.t_string {
   &::before { content: ""; }
   &::after { content: ""; }
@@ -130,8 +130,13 @@ ul[data-type-more=binary] > li.t_string {
 .ws_s,
 .ws_t,
 .ws_r,
-.ws_n,
-.ws_p { opacity: 0.33; }
+.ws_n { opacity: 0.33; }
+.char-ws {
+  .ws_s, .ws_t, .ws_r, .ws_n { opacity: revert; }
+}
+.ws_s::before {
+  content: "\00B7";  // middle dot
+}
 .ws_t::before {
   display: inline-block;
   content: "\203A"; // &rsaquo;

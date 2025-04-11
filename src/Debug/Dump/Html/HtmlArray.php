@@ -102,7 +102,10 @@ class HtmlArray
                                 't_key' => true,
                             ),
                         ),
-                        $this->valDumper->dump($key, array('tagName' => null)) // don't wrap it
+                        $this->valDumper->dump($key, array(
+                            'charHighlightTrim' => true, // highlight leading/trailing whitespace
+                            'tagName' => null, // don't wrap it
+                        ))
                     )
                     . '<span class="t_operator">=&gt;</span>'
                     . $this->valDumper->dump($val)

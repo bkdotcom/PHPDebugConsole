@@ -14,12 +14,16 @@ class ServerLogTest extends DebugTestFramework
 {
     public static function setUpBeforeClass(): void
     {
-        $logDir = TEST_DIR . '/../tmp/log';
-        $files = \glob($logDir . '/*.json');
-        foreach ($files as $filePath) {
-            \unlink($filePath);
+        try {
+            $logDir = TEST_DIR . '/../tmp/log';
+            $files = \glob($logDir . '/*.json');
+            foreach ($files as $filePath) {
+                \unlink($filePath);
+            }
+            \rmdir($logDir);
+        } catch (\Exception $e) {
+            // ignore
         }
-        \rmdir($logDir);
     }
 
     public function testConstruct()

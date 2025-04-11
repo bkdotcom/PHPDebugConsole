@@ -142,6 +142,7 @@ abstract class AbstractSection
                         ? $this->helper->dumpPhpDoc($info['phpDoc']['summary'])
                         : '',
                 ),
+                'charHighlightTrim' => true,
             )),
             '4_value' => $info['value'] !== Abstracter::UNDEFINED
                 ? '<span class="t_operator">=</span> ' . $this->valDumper->dump($info['value'], $cfg)

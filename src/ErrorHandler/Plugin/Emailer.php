@@ -169,8 +169,14 @@ class Emailer extends AbstractComponent implements SubscriberInterface
         $replace = [
             ")\n",
         ];
+        foreach ($trace as $i => $frame) {
+            if (!empty($frame['context'])) {
+                // remove newlines from context
+                $frame[$i]['context'] = \array_map('rtrim', $frame['context']);
+            }
+        }
         $str = \print_r($trace, true);
-        $str = \preg_replace('#\bArray\n\(#', 'array(', $str);
+        $str = \preg_replace('#\bArray\n\s*\(#', 'array(', $str);
         $str = \preg_replace('/\barray\s+\(\s+\)/s', 'array()', $str); // single-lineify empty arrays
         $str = \str_replace($search, $replace, $str);
         $str = \substr($str, 0, -1);

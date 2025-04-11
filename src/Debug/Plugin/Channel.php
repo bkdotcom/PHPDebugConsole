@@ -143,6 +143,7 @@ class Channel implements SubscriberInterface
                 $channels[$key] = $channel;
             }
         }
+        \uasort($channels, [$this, 'sortChannelCallback']);
         return $channels;
     }
 
@@ -201,6 +202,32 @@ class Channel implements SubscriberInterface
         return $path
             ? $this->channels[$curChannelKey][$key]->hasChannel($path)
             : true;
+    }
+
+    /**
+     * uasort callback
+     *
+     * @param Debug $channelA Debug instance
+     * @param Debug $channelB Debug instance
+     *
+     * @return int
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     */
+    public function sortChannelCallback(Debug $channelA, Debug $channelB)
+    {
+        $sortA = $channelA->getCfg('channelSort', Debug::CONFIG_DEBUG);
+        $sortB = $channelB->getCfg('channelSort', Debug::CONFIG_DEBUG);
+        $nameA = $channelA->getCfg('channelName', Debug::CONFIG_DEBUG);
+        $nameB = $channelB->getCfg('channelName', Debug::CONFIG_DEBUG);
+        // "root" channel should come first
+        if ($channelA === $this->debug) {
+            return -1;
+        }
+        if ($channelB === $this->debug) {
+            return 1;
+        }
+        return $sortB - $sortA ?: \strcasecmp($nameA, $nameB);
     }
 
     /**

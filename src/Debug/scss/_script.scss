@@ -38,7 +38,7 @@ i.fa-calendar { font-size: 1.1em; }
 }
 
 .vis-toggles span:hover,
-[data-toggle=interface]:hover { 
+[data-toggle=interface]:hover {
   background: color-mix(in lch, var(--color-button-fg) 20%, transparent);
 }
 
@@ -71,16 +71,16 @@ ul.list-unstyled > li:has(.show-more-container) {
   pointer-events: none;
 }
 .level-error .show-more-fade,
-.m_error .show-more-fade { 
+.m_error .show-more-fade {
   background-image: linear-gradient(to bottom, rgb(from var(--color-error-bg) r g b / 0), var(--color-error-bg));
 }
 .level-info .show-more-fade,
-.m_info .show-more-fade { 
-  background-image: linear-gradient(to bottom, rgb(from var(--color-info-bg) r g b / 0), var(--color-info-bg)); 
+.m_info .show-more-fade {
+  background-image: linear-gradient(to bottom, rgb(from var(--color-info-bg) r g b / 0), var(--color-info-bg));
 }
 .level-warn .show-more-fade,
-.m_warn .show-more-fade { 
-  background-image: linear-gradient(to bottom, rgb(from var(--color-warn-bg) r g b / 0), var(--color-warn-bg)); 
+.m_warn .show-more-fade {
+  background-image: linear-gradient(to bottom, rgb(from var(--color-warn-bg) r g b / 0), var(--color-warn-bg));
 }
 [title]:hover .show-more-fade {
   background-image: linear-gradient(to bottom, rgb(from #c9c9c9 r g b / 0), #c9c9c9);

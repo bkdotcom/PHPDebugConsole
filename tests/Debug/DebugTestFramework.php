@@ -113,7 +113,7 @@ class DebugTestFramework extends DOMTestCase
             */
             $this->testMethod(
                 'getCfg',
-                array('collect'),
+                ['collect'],
                 array(
                     'custom' => function () {
                     },
@@ -285,7 +285,7 @@ class DebugTestFramework extends DOMTestCase
             'return' => null,
             'output' => null,
         );
-        ArrayUtil::sortWithOrder($tests, array('entry'), 'key');
+        ArrayUtil::sortWithOrder($tests, ['entry'], 'key');
         // $tests = \array_diff_key($tests, \array_flip(array('streamAnsi')));
         if (\is_array($method)) {
             if (isset($method['dataPath'])) {
@@ -429,7 +429,7 @@ class DebugTestFramework extends DOMTestCase
         }
         $type = $type ?: $abs['type'];
         if ($type === 'object') {
-            $keys = array(
+            $keys = [
                 'cfgFlags',
                 'className',
                 'constants',
@@ -446,7 +446,7 @@ class DebugTestFramework extends DOMTestCase
                 'stringified',
                 'traverseValues',
                 'viaDebugInfo',
-            );
+            ];
             $keysMissing = \array_diff($keys, \array_keys($abs->getValues()));
             $isAbsType = $abs['type'] === 'object'
                 // && $var['className'] === 'stdClass'
@@ -524,15 +524,15 @@ class DebugTestFramework extends DOMTestCase
         \bdk\Test\Debug\Mock\Php::$memoryLimit = null;
         self::$debug = Debug::getInstance(array(
             'collect' => true,
-            'emailFunc' => array(__CLASS__, 'emailMock'),
+            'emailFunc' => [__CLASS__, 'emailMock'],
             'emailLog' => false,
             'emailTo' => null,
             'logEnvInfo' => false,
             'logFiles' => array(
-                'filesExclude' => array(
+                'filesExclude' => [
                     'closure://function',
                     '/vendor/',
-                ),
+                ],
             ),
             'logRequestInfo' => false,
             'logResponse' => false,
@@ -660,7 +660,11 @@ class DebugTestFramework extends DOMTestCase
             case 'wamp':
                 return null;  // we'll rely on wamp's Debug::EVENT_LOG subscription
             default:
-                return $this->debug->getRoute($test);
+                $route = $this->debug->getRoute($test);
+                if (\in_array($test, ['chromeLogger', 'serverLog'], true)) {
+                    $route->setCfg('channels', ['general']);
+                }
+                return $route;
         }
     }
 
@@ -677,7 +681,7 @@ class DebugTestFramework extends DOMTestCase
     private function tstMethodOutput($test, $routeObj, LogEntry $logEntry, $expect)
     {
         $asString = \is_string($expect);
-        if (\in_array($test, array('chromeLogger', 'firephp', 'serverLog', 'wamp'), true)) {
+        if (\in_array($test, ['chromeLogger', 'firephp', 'serverLog', 'wamp'], true)) {
             // remove data - sans the logEntry we're interested in
             $dataBackup = array(
                 'alerts' => $this->debug->data->get('alerts'),
@@ -685,7 +689,7 @@ class DebugTestFramework extends DOMTestCase
                 // 'logSummary' => $this->debug->data->get('logSummary'),
             );
             $this->debug->data->set('alerts', array());
-            $this->debug->data->set('log', array($logEntry));
+            $this->debug->data->set('log', [$logEntry]);
             /*
                 We'll call processLogEntries directly
             */
@@ -711,8 +715,8 @@ class DebugTestFramework extends DOMTestCase
                         Decode the chromelogger header and get rows data
                     */
                     $rows = \json_decode(\base64_decode($headers[0][1]), true)['rows'];
-                    // entry is nested inside a group
-                    $output = $rows[\count($rows) - 2];
+                    // entry is nested inside two groups
+                    $output = $rows[\count($rows) - 3];
                     if ($asString) {
                         $output = \json_encode($output);
                     }
@@ -735,7 +739,8 @@ class DebugTestFramework extends DOMTestCase
                     $filepath = TEST_DIR . '/../tmp' . $uri;
                     $json = \file_get_contents($filepath);
                     $rows = \json_decode($json, true)['rows'];
-                    $output = $rows[\count($rows) - 2];
+                    // entry is nested inside two groups
+                    $output = $rows[\count($rows) - 3];
                     if ($asString) {
                         $output = \json_encode($output);
                     }
@@ -802,11 +807,11 @@ class DebugTestFramework extends DOMTestCase
                 }
                 $outputExpect = \array_replace_recursive(array(
                     'topic' => $this->debug->getRoute('wamp')->topic,
-                    'args' => array(
+                    'args' => [
                         null,       // method
                         array(),    // args
                         array(),    // meta
-                    ),
+                    ],
                     'options' => array(),
                 ), $outputExpect);
                 $outputExpect['args'][2] = \array_merge(array(
@@ -852,14 +857,14 @@ class DebugTestFramework extends DOMTestCase
      */
     protected static function assertStringMatchesFormatNormalized($expect, $actual, $message = null, $keepCr = true)
     {
-        $args = array(
+        $args = [
             self::normalizeString($expect, $keepCr),
             self::normalizeString($actual, $keepCr),
-        );
+        ];
         if ($message) {
             $args[] = $message;
         }
-        \call_user_func_array(array('PHPUnit\Framework\TestCase', 'assertStringMatchesFormat'), $args);
+        \call_user_func_array(['PHPUnit\Framework\TestCase', 'assertStringMatchesFormat'], $args);
     }
 
     private static function normalizeString($string, $keepCr = true)

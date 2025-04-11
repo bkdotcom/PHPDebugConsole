@@ -115,6 +115,7 @@ class CharReplacementAndSanitizationTest extends DebugTestFramework
                             'addQuotes',
                             'attribs',
                             'charHighlight',
+                            'charHighlightTrim',
                             'charReplace',
                             'detectFiles',
                             'errorCat',

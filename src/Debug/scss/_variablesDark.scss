@@ -9,7 +9,7 @@
   --color-fg-hover: #c7c7c7;
   --color-resize-handle: #{color.adjust(#3c3c3c, $lightness: 25%)};
   --color-ui-border: #d0d0d066;
-  
+
   --color-button-fg: #f0f0f0;
   --color-button-bg: #222;
   --color-button-bg-hover: #1e1e44;
@@ -23,17 +23,17 @@
   --color-error-border: #842029;
   --color-error-fg: #ea868f;
   --color-error-link: #ea868f;
-  
+
   --color-info-bg: #043540;
   --color-info-border: #087990;
   --color-info-fg: #6edff6;
   --color-info-link: #6edff6;
-  
+
   --color-success-bg: #12402b;
   --color-success-border: #467b68;
   --color-success-fg: #75b798;
   --color-success-link: #75b798;
-  
+
   --color-warn-bg: #444208;
   --color-warn-border: #997404;
   --color-warn-fg: #ffda6a;
@@ -49,10 +49,10 @@
 
   --color-array-file-tree-key: #c7c7FF;
   --color-param: #4b4;
-  
+
   --color-prettified: #99f; /* the word "prettified" */
-  --color-unicode-bg: #03316d;
-  
+  --color-unicode-bg: #3778cc;
+
   --color-object-debug: #66f;
   --color-object-eager: #fe0;
   --color-object-heading: #99f;

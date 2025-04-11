@@ -97,6 +97,37 @@ class Html extends AbstractRoute
     }
 
     /**
+     * Build <script> tag
+     *
+     * @return string
+     */
+    public function buildScriptTag()
+    {
+        if (!$this->cfg['outputScript']) {
+            return '';
+        }
+        return '<script>window.jQuery || document.write(\'<script src="' . $this->cfg['jqueryUrl'] . '"><\/script>\')</script>' . "\n"
+            . '<script>'
+                . $this->getScript() . "\n"
+            . '</script>' . "\n";
+    }
+
+    /**
+     * Build <style> tag
+     *
+     * @return string
+     */
+    public function buildStyleTag()
+    {
+        if (!$this->cfg['outputCss']) {
+            return '';
+        }
+        return '<style type="text/css">' . "\n"
+                . $this->getCss() . "\n"
+            . '</style>' . "\n";
+    }
+
+    /**
      * Return all assets or return assets of specific type ("css" or "script")
      *
      * @param string $what (optional) specify "css" or "script"
@@ -117,7 +148,7 @@ class Html extends AbstractRoute
     }
 
     /**
-     * Return the log's CSS
+     * Return CSS
      *
      * @return string
      */
@@ -129,7 +160,7 @@ class Html extends AbstractRoute
     }
 
     /**
-     * Return the log's javascript
+     * Return javascript
      *
      * @return string
      */
@@ -317,37 +348,6 @@ class Html extends AbstractRoute
             '{{channels}}' => \htmlspecialchars(\json_encode($this->buildChannelTree(), JSON_FORCE_OBJECT)),
         ));
         return $str;
-    }
-
-    /**
-     * Build <script> tag
-     *
-     * @return string
-     */
-    private function buildScriptTag()
-    {
-        if (!$this->cfg['outputScript']) {
-            return '';
-        }
-        return '<script>window.jQuery || document.write(\'<script src="' . $this->cfg['jqueryUrl'] . '"><\/script>\')</script>' . "\n"
-            . '<script>'
-                . $this->getScript() . "\n"
-            . '</script>' . "\n";
-    }
-
-    /**
-     * Build <style> tag
-     *
-     * @return string
-     */
-    private function buildStyleTag()
-    {
-        if (!$this->cfg['outputCss']) {
-            return '';
-        }
-        return '<style type="text/css">' . "\n"
-                . $this->getCss() . "\n"
-            . '</style>' . "\n";
     }
 
     /**

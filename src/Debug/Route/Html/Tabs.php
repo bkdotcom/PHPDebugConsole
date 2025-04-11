@@ -45,7 +45,6 @@ class Tabs
     public function buildTabList()
     {
         $channels = $this->debug->getChannelsTop();
-        \uasort($channels, [$this, 'sortChannelCallback']);
         $tabs = [];
         foreach ($channels as $instance) {
             if ($instance->getCfg('output', Debug::CONFIG_DEBUG)) {
@@ -67,7 +66,7 @@ class Tabs
         $channels = $this->debug->getChannelsTop();
         /*
             Sort channel names.
-            We want "Request / Response" & "Files" to come first in case we're not outputting tab UI
+            Have "Request / Response" & "Files" to come first in case we're not outputting tab UI
         */
         $this->debug->arrayUtil->sortWithOrder(
             $channels,
@@ -83,32 +82,6 @@ class Tabs
         }
         $html .= '</div>' . "\n"; // close .tab-panes
         return $html;
-    }
-
-    /**
-     * uasort callback
-     *
-     * @param Debug $channelA Debug instance
-     * @param Debug $channelB Debug instance
-     *
-     * @return int
-     *
-     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
-     */
-    public function sortChannelCallback(Debug $channelA, Debug $channelB)
-    {
-        $sortA = $channelA->getCfg('channelSort', Debug::CONFIG_DEBUG);
-        $sortB = $channelB->getCfg('channelSort', Debug::CONFIG_DEBUG);
-        $nameA = $channelA->getCfg('channelName', Debug::CONFIG_DEBUG);
-        $nameB = $channelB->getCfg('channelName', Debug::CONFIG_DEBUG);
-        // "root" channel should come first
-        if ($channelA === $this->debug) {
-            return -1;
-        }
-        if ($channelB === $this->debug) {
-            return 1;
-        }
-        return $sortB - $sortA ?: \strcasecmp($nameA, $nameB);
     }
 
     /**

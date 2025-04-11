@@ -149,7 +149,7 @@ class HtmlString
     /**
      * Add whitespace markup
      *
-     * @param string $str string which to add whitespace html markup
+     * @param string $str String which to add whitespace html markup
      *
      * @return string
      */
@@ -289,7 +289,7 @@ class HtmlString
             $val = \htmlspecialchars($val);
         }
         if ($opts['charHighlight']) {
-            $val = $this->highlightChars($val);
+            $val = $this->highlightChars($val, $opts['charHighlightTrim']);
         }
         if ($opts['visualWhiteSpace']) {
             $val = $this->visualWhiteSpace($val);
@@ -326,11 +326,12 @@ class HtmlString
     /**
      * Highlight confusable and other characters
      *
-     * @param string $str HTML String to update
+     * @param string $str           HTML String to update
+     * @param bool   $highlightTrim (optional) highlight leading/trailing whitespace
      *
      * @return string
      */
-    private function highlightChars($str)
+    private function highlightChars($str, $highlightTrim = false)
     {
         $chars = $this->valDumper->findChars($str);
         $charInfo = \array_intersect_key($this->valDumper->charData, \array_flip($chars));
@@ -346,6 +347,13 @@ class HtmlString
                 ? $this->buildHighlightReplacementControl($info)
                 : $this->buildHighlightReplacementOther($info);
             $str = \str_replace($char, $replacement, $str);
+        }
+        if ($highlightTrim) {
+            $str = \preg_replace_callback('/(^\s+|\s+$)/', static function ($matches) {
+                $substr = $matches[1];
+                $substr = \str_replace(' ', '<span class="ws_s"> </span>', $substr);
+                return '<span class="char-ws" title="whitespace">' . $substr . '</span>';
+            }, $str);
         }
         return $str;
     }

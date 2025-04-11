@@ -27,7 +27,7 @@ a {
   color: var(--color-a);
   &:visited { color: var(--color-a-visited); }
   &:focus,
-  &:hover { 
+  &:hover {
     // text-decoration: underline;
     border-bottom: currentColor dotted 1px;
   }

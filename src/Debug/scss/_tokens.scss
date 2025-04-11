@@ -6,8 +6,8 @@ $color-true-shadow: rgba(153, 153, 51, 0.5);
 $color-false-shadow: rgba(204, 51, 51, 0.5);
 $color-stringified-shadow: rgba(0, 200, 200, 0.6);
 
-.t_type { 
-  color: var(--color-type); 
+.t_type {
+  color: var(--color-type);
 }
 
 .t_bool[data-type-more=true] {
@@ -77,17 +77,17 @@ $color-stringified-shadow: rgba(0, 200, 200, 0.6);
   }
   &.t_int { white-space: nowrap; }
 }
-.t_keyword { 
+.t_keyword {
   color: var(--color-keyword);
 }
-.t_null { 
+.t_null {
   color: var(--color-t-null);
 }
 .t_operator {
   color: var(--color-operator);
   white-space: nowrap !important; //  override .debug .t_string > *
 }
-.t_punct { 
+.t_punct {
   color: var(--color-punct);
 }
 
@@ -123,8 +123,8 @@ $color-stringified-shadow: rgba(0, 200, 200, 0.6);
     white-space: pre;
   }
 }
-.t_stringified { 
-  text-shadow: 0 0 2px $color-stringified-shadow; 
+.t_stringified {
+  text-shadow: 0 0 2px $color-stringified-shadow;
 }
 .t_undefined::after {
   content: "undefined";
@@ -134,7 +134,7 @@ $color-stringified-shadow: rgba(0, 200, 200, 0.6);
 .file-docroot {
   opacity: 0.35;
   font-style: italic;
-} 
+}
 .file-basepath {
   opacity: 0.5;
 }

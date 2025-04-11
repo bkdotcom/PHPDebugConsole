@@ -68,7 +68,7 @@ class ServerLog extends ChromeLogger
         $this->dumper->crateRaw = false;
         $this->collectGarbage();
         $this->data = $this->debug->data->get();
-        $this->buildJsonData();
+        $this->processChannels();
         if ($this->jsonData['rows']) {
             $url = $this->writeLogFile()
                 ? $this->debug->stringUtil->interpolate(

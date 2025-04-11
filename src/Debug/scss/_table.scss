@@ -81,7 +81,7 @@ table.table-hover {
 table.table-sort {
   > thead th {
     cursor: default;
-    &:hover { 
+    &:hover {
       color: var(--color-table-hover-fg);
       background-color: var(--color-table-hover-bg);
     }

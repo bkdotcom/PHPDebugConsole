@@ -68,6 +68,7 @@ abstract class AbstractValue extends AbstractComponent
         $this->optionStackPush(array(
             'addQuotes' => true,
             'charHighlight' => true,
+            'charHighlightTrim' => false,
             'charReplace' => true,
         ));
     }

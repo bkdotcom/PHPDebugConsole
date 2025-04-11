@@ -84,9 +84,7 @@ class Script extends AbstractRoute
                 $this->getErrorSummary(),
             ]
         ));
-        $str .= $this->processAlerts();
-        $str .= $this->processSummary();
-        $str .= $this->processLog();
+        $str .= $this->processChannels();
         $str .= $this->processLogEntryViaEvent(new LogEntry(
             $this->debug,
             'groupEnd'
@@ -135,6 +133,59 @@ class Script extends AbstractRoute
     }
 
     /**
+     * Process log entries for given channel
+     *
+     * @param Debug $instance Debug instance
+     *
+     * @return string
+     */
+    protected function processChannel(Debug $instance)
+    {
+        $key = $instance->getCfg('channelKey', Debug::CONFIG_DEBUG);
+        $name = $instance->getCfg('channelName', Debug::CONFIG_DEBUG);
+        $this->setChannelRegex('#^' . \preg_quote($key, '#') . '(\.|$)#');
+
+        if ($instance === $instance->rootInstance) {
+            $name = $this->debug->i18n->trans('channel.log');
+        }
+
+        return $this->processLogEntryViaEvent(new LogEntry(
+            $this->debug,
+            'groupCollapsed',
+            [$name]
+        ))
+            . $this->processAlerts()
+            . $this->processSummary()
+            . $this->processLog()
+            . $this->processLogEntryViaEvent(new LogEntry(
+                $this->debug,
+                'groupEnd'
+            ));
+    }
+
+    /**
+     * Process log entries grouped by top-level channels ("tabs")
+     *
+     * @return string
+     */
+    protected function processChannels()
+    {
+        $str = '';
+        $channels = $this->debug->getChannelsTop();
+        foreach ($channels as $instance) {
+            $key = $instance->getCfg('channelKey', Debug::CONFIG_DEBUG);
+            if (\in_array($key, $this->cfg['channelsExclude'], true)) {
+                continue;
+            }
+            if ($instance->getCfg('output', Debug::CONFIG_DEBUG) === false) {
+                continue;
+            }
+            $str .= $this->processChannel($instance);
+        }
+        return $str;
+    }
+
+    /**
      * Build the console.xxxx() call
      *
      * @param LogEntry $logEntry LogEntry instance
@@ -146,6 +197,7 @@ class Script extends AbstractRoute
         $method = $logEntry['method'];
         $args = $logEntry['args'];
         $meta = $logEntry['meta'];
+        $return = '';
         switch ($method) {
             case 'assert':
                 \array_unshift($args, false);
@@ -157,6 +209,9 @@ class Script extends AbstractRoute
                 }
                 break;
             case 'table':
+                if (!empty($meta['caption'])) {
+                    $return = 'console.log(' . \json_encode('%c' . $meta['caption']) . ', "font-size:1.33em; font-weight:bold;")' . "\n";
+                }
                 $args = $this->dumper->valDumper->dump($args);
                 break;
             default:
@@ -166,7 +221,7 @@ class Script extends AbstractRoute
         }
         $args = \json_encode($args, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         $args = \substr($args, 1, -1);
-        return 'console.' . $method . '(' . $args . ');' . "\n";
+        return $return . 'console.' . $method . '(' . $args . ');' . "\n";
     }
 
     /**

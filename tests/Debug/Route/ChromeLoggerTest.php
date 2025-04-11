@@ -82,30 +82,40 @@ class ChromeLoggerTest extends DebugTestFramework
         $header = \base64_decode($this->debug->getHeaders()[0][1], true);
         $rows = \json_decode($header, true)['rows'];
         self::assertSame(array(
-            array(
-                array(
+            [
+                [
                     'PHP',
                     'GET ' . (string) $this->debug->serverRequest->getUri(),
-                ),
+                ],
                 null,
                 'info',
-            ),
-            array(
-                array(
+            ],
+            [
+                ['Log'],
+                null,
+                'groupCollapsed',
+            ],
+            [
+                [
                     '%cLog abridged due to header size constraint',
                     'padding: 5px; line-height: 26px; font-size: 125%; font-weight: bold; background-color: #d9edf7; border: 1px solid #bce8f1; color: #31708f;',
-                ),
+                ],
                 null,
                 'info',
-            ),
-            array(
-                array(
+            ],
+            [
+                [
                     '%chello alert',
                     'padding: 5px; line-height: 26px; font-size: 125%; font-weight: bold; background-color: #ffbaba; border: 1px solid #d8000c; color: #d8000c;',
-                ),
+                ],
                 null,
                 '',
-            ),
+            ],
+            [
+                [],
+                null,
+                'groupEnd',
+            ],
         ), $rows);
     }
 
@@ -138,45 +148,55 @@ class ChromeLoggerTest extends DebugTestFramework
         $header = \base64_decode($this->debug->getHeaders()[0][1], true);
         $rows = \json_decode($header, true)['rows'];
         self::assertSame(array(
-            array(
-                array(
+            [
+                [
                     'PHP',
                     'GET ' . (string) $this->debug->serverRequest->getUri(),
-                ),
+                ],
                 null,
                 'info',
-            ),
-            array(
-                array(
+            ],
+            [
+                ['Log'],
+                null,
+                'groupCollapsed',
+            ],
+            [
+                [
                     '%cLog abridged due to header size constraint',
                     'padding: 5px; line-height: 26px; font-size: 125%; font-weight: bold; background-color: #d9edf7; border: 1px solid #bce8f1; color: #31708f;',
-                ),
+                ],
                 null,
                 'info',
-            ),
-            array(
-                array(
+            ],
+            [
+                [
                     '%chello alert',
                     'padding: 5px; line-height: 26px; font-size: 125%; font-weight: bold; background-color: #ffbaba; border: 1px solid #d8000c; color: #d8000c;',
-                ),
+                ],
                 null,
                 '',
-            ),
-            array(
-                array('group'),
+            ],
+            [
+                ['group'],
                 null,
                 'group',
-            ),
-            array(
-                array('test'),
+            ],
+            [
+                ['test'],
                 null,
                 '',
-            ),
-            array(
-                array(),
+            ],
+            [
+                [],
                 null,
                 'groupEnd',
-            ),
+            ],
+            [
+                [],
+                null,
+                'groupEnd',
+            ],
         ), $rows);
     }
 
@@ -193,22 +213,22 @@ class ChromeLoggerTest extends DebugTestFramework
         $this->debug->output();
         $header = \base64_decode($this->debug->getHeaders()[0][1], true);
         $rows = \json_decode($header, true)['rows'];
-        \array_splice($rows, 1, 2, array());
+        \array_splice($rows, 1, 4, array());
         self::assertSame(array(
-            array(
-                array(
+            [
+                [
                     'PHP',
                     '$: foo bar',
-                ),
+                ],
                 null,
                 'groupCollapsed',
-            ),
+            ],
             // extracted entries
-            array(
-                array(),
+            [
+                [],
                 null,
                 'groupEnd',
-            ),
+            ],
         ), $rows);
     }
 }

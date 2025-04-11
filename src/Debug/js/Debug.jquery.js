@@ -442,7 +442,9 @@ var phpDebugConsole = (function (exports, $) {
     var codePoint = $(this).data('codePoint');
     var url = 'https://symbl.cc/en/' + codePoint;
     e.stopPropagation();
-    window.open(url, 'unicode').focus();
+    if (codePoint) {
+      window.open(url, 'unicode').focus();
+    }
   }
 
   function onExpandArray (e) {

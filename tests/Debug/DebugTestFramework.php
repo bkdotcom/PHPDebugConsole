@@ -715,8 +715,8 @@ class DebugTestFramework extends DOMTestCase
                         Decode the chromelogger header and get rows data
                     */
                     $rows = \json_decode(\base64_decode($headers[0][1]), true)['rows'];
-                    // entry is nested inside two groups
-                    $output = $rows[\count($rows) - 3];
+                    // entry is nested inside group
+                    $output = $rows[\count($rows) - 2];
                     if ($asString) {
                         $output = \json_encode($output);
                     }
@@ -739,8 +739,8 @@ class DebugTestFramework extends DOMTestCase
                     $filepath = TEST_DIR . '/../tmp' . $uri;
                     $json = \file_get_contents($filepath);
                     $rows = \json_decode($json, true)['rows'];
-                    // entry is nested inside two groups
-                    $output = $rows[\count($rows) - 3];
+                    // entry is nested inside group
+                    $output = $rows[\count($rows) - 2];
                     if ($asString) {
                         $output = \json_encode($output);
                     }

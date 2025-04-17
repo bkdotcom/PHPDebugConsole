@@ -146,7 +146,7 @@ class ProfileTest extends DebugTestFramework
                     </tfoot>
                     </table>
                     </li>',
-                'script' => 'console.log("%%cProfile \'Profile 1\' Results", "font-size:1.33em; font-weight:bold;")' . "\n"
+                'script' => 'console.log("%%cProfile \'Profile 1\' Results", "font-size:1.20em; font-weight:bold;")' . "\n"
                     . 'console.table({"bdk\\\Test\\\Debug\\\Plugin\\\Method\\\ProfileTest::a":{"calls":1,"totalTime":%f,"ownTime":%f},"bdk\\\Test\\\Debug\\\Plugin\\\Method\\\ProfileTest::b":{"calls":1,"totalTime":%f,"ownTime":%f},"bdk\\\Test\\\Debug\\\Plugin\\\Method\\\ProfileTest::c":{"calls":2,"totalTime":%f,"ownTime":%f}});',
                 'text' => 'Profile \'Profile 1\' Results = array(
                     [bdk\Test\Debug\Plugin\Method\ProfileTest::a] => array(

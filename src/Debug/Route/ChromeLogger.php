@@ -40,7 +40,7 @@ class ChromeLogger extends AbstractRoute
             'events',
             'files',
         ],
-        'group' => true, // contain/wrap log in a group?
+        'group' => false, // contain/wrap log in a group?
     );
 
     /** @var list<string> */
@@ -102,14 +102,15 @@ class ChromeLogger extends AbstractRoute
         \bdk\Debug\Utility\PhpType::assertType($event, 'bdk\PubSub\Event|null');
 
         $this->dumper->crateRaw = false;
+
         $this->data = $this->debug->data->get();
         $this->data['log']  = \array_values($this->data['log']);
-        $this->processChannels();
+        $this->buildJsonData();
         $this->max = $this->getMaxLength();
         $encoded = $this->encode($this->jsonData);
         if ($this->max && \strlen($encoded) > $this->max) {
             $this->reduceData();
-            $this->processChannels();
+            $this->buildJsonData();
             $encoded = $this->encode($this->jsonData);
             $encoded = $this->assertEncodedLength($encoded);
         }
@@ -165,13 +166,27 @@ class ChromeLogger extends AbstractRoute
     }
 
     /**
+     * Build Chromelogger JSON
+     *
+     * @return void
+     */
+    protected function buildJsonData()
+    {
+        $this->jsonData['rows'] = [];
+        $this->processChannels();
+        if ($this->jsonData['rows']) {
+            $this->wrapWithGroup();
+        }
+    }
+
+    /**
      * Calculate header size
      *
      * @return int
      */
     protected function calcHeaderSize()
     {
-        $this->processChannels();
+        $this->buildJsonData();
         $encoded = $this->encode($this->jsonData);
         return \strlen(self::HEADER_NAME . ': ') + \strlen($encoded);
     }
@@ -202,73 +217,6 @@ class ChromeLogger extends AbstractRoute
             $this->debug->utility->getBytes($this->debug->getCfg('headerMaxPer', Debug::CONFIG_DEBUG), true),
         ]);
         return \min($maxVals);
-    }
-
-    /**
-     * Process log entries for given channel
-     *
-     * @param Debug $instance Debug instance
-     *
-     * @return void
-     */
-    protected function processChannel(Debug $instance)
-    {
-        $channelKey = $instance->getCfg('channelKey', Debug::CONFIG_DEBUG);
-        $name = $instance->getCfg('channelName', Debug::CONFIG_DEBUG);
-        $this->setChannelRegex('#^' . \preg_quote($channelKey, '#') . '(\.|$)#');
-
-        $include = $this->testChannelKeyMatch($channelKey, $this->cfg['channels'])
-            && !$this->testChannelKeyMatch($channelKey, $this->cfg['channelsExclude']);
-
-        if ($include === false) {
-            return;
-        }
-
-        if ($instance === $instance->rootInstance) {
-            $name = $this->debug->i18n->trans('channel.log');
-        }
-
-        return $this->processLogEntryViaEvent(new LogEntry(
-            $this->debug,
-            'groupCollapsed',
-            [$name]
-        ))
-            . $this->processAlerts()
-            . $this->processSummary()
-            . $this->processLog()
-            . $this->processLogEntryViaEvent(new LogEntry(
-                $this->debug,
-                'groupEnd'
-            ));
-    }
-
-    /**
-     * Process log entries grouped by top-level channels ("tabs")
-     *
-     * @return void
-     */
-    protected function processChannels()
-    {
-        $this->jsonData['rows'] = [];
-        $channels = $this->debug->getChannelsTop();
-        foreach ($channels as $instance) {
-            $key = $instance->getCfg('channelKey', Debug::CONFIG_DEBUG);
-            if (\in_array($key, $this->cfg['channelsExclude'], true)) {
-                continue;
-            }
-            if ($instance->getCfg('output', Debug::CONFIG_DEBUG) === false) {
-                continue;
-            }
-            $this->processChannel($instance);
-        }
-        $heading = ['PHP', $this->getRequestMethodUri()];
-        if (!$this->cfg['group']) {
-            // not wrapping in group, just prepend an info heading
-            \array_unshift($this->jsonData['rows'], [$heading, null, 'info']);
-            return;
-        }
-        \array_unshift($this->jsonData['rows'], [$heading, null, 'groupCollapsed']);
-        \array_push($this->jsonData['rows'], [[], null, 'groupEnd']);
     }
 
     /**
@@ -424,5 +372,22 @@ class ChromeLogger extends AbstractRoute
             ],
             $json
         );
+    }
+
+    /**
+     * Wrap log in a group
+     *
+     * @return void
+     */
+    protected function wrapWithGroup()
+    {
+        $headingArgs = ['PHP', $this->getRequestMethodUri()];
+        if (!$this->cfg['group']) {
+            // not wrapping in group -> prepend an info heading
+            \array_unshift($this->jsonData['rows'], [$headingArgs, null, 'info']);
+            return;
+        }
+        \array_unshift($this->jsonData['rows'], [$headingArgs, null, 'groupCollapsed']);
+        \array_push($this->jsonData['rows'], [[], null, 'groupEnd']);
     }
 }

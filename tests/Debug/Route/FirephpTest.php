@@ -96,7 +96,7 @@ class FirephpTest extends DebugTestFramework
     ],
     [
         "X-Wf-1-1-1-1",
-        "74|[{\"Collapsed\":\"true\",\"Label\":\"PHP: $: foo bar\",\"Type\":\"GROUP_START\"},null]|"
+        "62|[{\"Collapsed\":\"true\",\"Label\":\"Log\",\"Type\":\"GROUP_START\"},null]|"
     ],
     [
         "X-Wf-1-1-1-2",

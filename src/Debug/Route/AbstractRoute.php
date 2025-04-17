@@ -229,6 +229,70 @@ abstract class AbstractRoute extends AbstractComponent implements RouteInterface
     }
 
     /**
+     * Process log entries for given channel
+     *
+     * @param Debug $instance Debug instance
+     *
+     * @return string
+     */
+    protected function processChannel(Debug $instance)
+    {
+        $channelKey = $instance->getCfg('channelKey', Debug::CONFIG_DEBUG);
+        $name = $instance->getCfg('channelName', Debug::CONFIG_DEBUG);
+        $this->setChannelRegex('#^' . \preg_quote($channelKey, '#') . '(\.|$)#');
+
+        $include = $this->testChannelKeyMatch($channelKey, $this->cfg['channels'])
+            && !$this->testChannelKeyMatch($channelKey, $this->cfg['channelsExclude']);
+
+        if ($include === false) {
+            return '';
+        }
+
+        if ($instance === $instance->rootInstance) {
+            $name = $this->debug->i18n->trans('channel.log');
+        }
+
+        return $this->processLogEntryViaEvent(new LogEntry(
+            $this->debug,
+            'groupCollapsed',
+            [$name]
+        ))
+            . $this->processAlerts()
+            . $this->processSummary()
+            . $this->processLog()
+            . $this->processLogEntryViaEvent(new LogEntry(
+                $this->debug,
+                'groupEnd'
+            ));
+    }
+
+    /**
+     * Process log entries grouped by top-level channels ("tabs")
+     *
+     * Each channel will be wrapped in a groupCollapsed
+     *
+     * Call this via overridden `processLogEntries()` method
+     *
+     * @return string
+     */
+    protected function processChannels()
+    {
+        $str = '';
+        $channels = $this->debug->getChannelsTop();
+        foreach ($channels as $instance) {
+            $key = $instance->getCfg('channelKey', Debug::CONFIG_DEBUG);
+            if (\in_array($key, $this->cfg['channelsExclude'], true)) {
+                continue;
+            }
+            if ($instance->getCfg('output', Debug::CONFIG_DEBUG) === false) {
+                continue;
+            }
+            $str .= $this->processChannel($instance);
+        }
+        return $str;
+    }
+
+    /**
      * Publish Debug::EVENT_OUTPUT_LOG_ENTRY.
      * Return event['return'] if not empty
      * Otherwise, propagation not stopped, return result of processLogEntry()

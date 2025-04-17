@@ -32,7 +32,7 @@ class ChromeLoggerTest extends DebugTestFramework
             'headerMaxPer' => null,
             'route' => 'html',
         ));
-        $this->debug->routeChromeLogger->setCfg('group', true);
+        $this->debug->routeChromeLogger->setCfg('group', false);
     }
 
     public function testUnableToFitToMax()
@@ -210,10 +210,12 @@ class ChromeLoggerTest extends DebugTestFramework
                 )),
             ),
         ));
+        // $this->debug->getRoute('chromeLogger')->setCfg('group', true);
         $this->debug->output();
         $header = \base64_decode($this->debug->getHeaders()[0][1], true);
         $rows = \json_decode($header, true)['rows'];
-        \array_splice($rows, 1, 4, array());
+
+        \array_splice($rows, 2, 2, array());
         self::assertSame(array(
             [
                 [
@@ -221,9 +223,14 @@ class ChromeLoggerTest extends DebugTestFramework
                     '$: foo bar',
                 ],
                 null,
+                'info',
+            ],
+            [
+                ['Log'],
+                null,
                 'groupCollapsed',
             ],
-            // extracted entries
+            // 2 extracted entries
             [
                 [],
                 null,

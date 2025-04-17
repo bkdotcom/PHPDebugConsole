@@ -37,6 +37,8 @@ use ReflectionMethod;
  */
 class TableTest extends DebugTestFramework
 {
+    static protected $captionStyle = 'font-size:1.20em; font-weight:bold;';
+
     /**
      * Test
      *
@@ -297,7 +299,7 @@ EOD;
                     ),
                     'html' => \str_replace('table caption', 'arg1', $rowsAHtml),
                     'text' => \str_replace('table caption', 'arg1', $rowsAText),
-                    'script' => 'console.log("%%carg1", "font-size:1.33em; font-weight:bold;")' . "\n"
+                    'script' => 'console.log("%%carg1", "' . self::$captionStyle . '")' . "\n"
                         . $rowsAScript,
                     'firephp' => \str_replace('table caption', 'arg1', $rowsAFirephp),
                 ),
@@ -380,7 +382,7 @@ EOD;
                     ),
                     'html' => $rowsAHtml,
                     'text' => $rowsAText,
-                    'script' => 'console.log("%%ctable caption", "font-size:1.33em; font-weight:bold;")' . "\n"
+                    'script' => 'console.log("%%ctable caption", "' . self::$captionStyle . '")' . "\n"
                         . $rowsAScript,
                     'firephp' => $rowsAFirephp,
                 ),
@@ -436,7 +438,7 @@ EOD;
                                 [extracol] => "yes"
                             )
                         )',
-                    'script' => 'console.log("%%ctable caption", "font-size:1.33em; font-weight:bold;")' . "\n"
+                    'script' => 'console.log("%%ctable caption", "' . self::$captionStyle . '")' . "\n"
                         . 'console.table({"4":{"name":"Bob","extracol":undefined},"2":{"name":"Sally","extracol":"yes"}});',
                     'firephp' => 'X-Wf-1-1-1-20: %d|[{"Label":"table caption","Type":"TABLE"},[["","name","extracol"],[4,"Bob",null],[2,"Sally","yes"]]]|',
                 ),
@@ -525,7 +527,7 @@ EOD;
                                 (debug) file = "' . __FILE__ . '"
                                 (debug) line = %i
                     )',
-                    'script' => 'console.log("%%cflat", "font-size:1.33em; font-weight:bold;")' . "\n"
+                    'script' => 'console.log("%%cflat", "' . self::$captionStyle . '")' . "\n"
                         . 'console.table(['
                             . '"a",'
                             . '"2233-03-22T00:00:00%i",'
@@ -562,7 +564,7 @@ EOD;
                 array(
                     'html' => \str_replace('table caption', 'traversable (<span class="classname" title="I implement Traversable!"><span class="namespace">bdk\Test\Debug\Fixture\</span>TestTraversable</span>)', $rowsAHtml),
                     'text' => \str_replace('table caption', 'traversable', $rowsAText),
-                    'script' => 'console.log("%%ctraversable", "font-size:1.33em; font-weight:bold;")' . "\n"
+                    'script' => 'console.log("%%ctraversable", "' . self::$captionStyle . '")' . "\n"
                         . $rowsAScript,
                     'firephp' => 'X-Wf-1-1-1-5: 149|[{"Label":"traversable","Type":"TABLE"},[["","name","age","sex","Naughty","extracol"],[4,"Bob","12","M",false,null],[2,"Sally","10","F",true,"yes"]]]|',
                 ),
@@ -607,7 +609,7 @@ EOD;
                                 [extracol] => "yes"
                             )
                         )',
-                    'script' => 'console.log("%%ctraversable -o- traversables", "font-size:1.33em; font-weight:bold;")' . "\n"
+                    'script' => 'console.log("%%ctraversable -o- traversables", "' . self::$captionStyle . '")' . "\n"
                         . 'console.table({"4":{"___class_name":"bdk\\\Test\\\Debug\\\Fixture\\\TestTraversable","name":"Bob","age":"12","sex":"M","Naughty":false,"extracol":undefined},"2":{"___class_name":"bdk\\\Test\\\Debug\\\Fixture\\\TestTraversable","name":"Sally","age":"10","sex":"F","Naughty":true,"extracol":"yes"}});',
                     'firephp' => 'X-Wf-1-1-1-6: 272|[{"Label":"traversable -o- traversables","Type":"TABLE"},['
                         . '["","___class_name","name","age","sex","Naughty","extracol"],'
@@ -655,7 +657,7 @@ EOD;
                             [extracol] => "yes"
                         )
                     )',
-                    'script' => 'console.log("%%carray -o- objects", "font-size:1.33em; font-weight:bold;")' . "\n"
+                    'script' => 'console.log("%%carray -o- objects", "' . self::$captionStyle . '")' . "\n"
                         . 'console.table({"4":{"___class_name":"stdClass","name":"Bob","age":"12","sex":"M","Naughty":false,"extracol":undefined},"2":{"___class_name":"stdClass","name":"Sally","age":"10","sex":"F","Naughty":true,"extracol":"yes"}});',
                     'firephp' => 'X-Wf-1-1-1-7: 193|[{"Label":"array -o- objects","Type":"TABLE"},['
                         . '["","___class_name","name","age","sex","Naughty","extracol"],'
@@ -728,7 +730,7 @@ EOD;
                             [date2] => "2015-10-21T00:00:00%i"
                         )
                     )',
-                    'script' => 'console.log("%%cnot all col values of same type", "font-size:1.33em; font-weight:bold;")' . "\n"
+                    'script' => 'console.log("%%cnot all col values of same type", "' . self::$captionStyle . '")' . "\n"
                         . 'console.table([{"date":"1955-11-05T00:00:00%i","date2":"not a datetime"},{"date":"1985-10-26T00:00:00%i","date2":"2015-10-21T00:00:00%i"}]);',
                     'firephp' => 'X-Wf-1-1-1-8: 188|[{"Label":"not all col values of same type","Type":"TABLE"},[["","date","date2"],[0,"1955-11-05T00:00:00%i","not a datetime"],[1,"1985-10-26T00:00:00%i","2015-10-21T00:00:00%i"]]]|',
                 ),
@@ -787,7 +789,7 @@ EOD;
                     ),
                     'html' => \str_replace('table-bordered', 'table-bordered trace-context', $rowsAHtml),
                     'text' => $rowsAText,
-                    'script' => 'console.log("%%ctable caption", "font-size:1.33em; font-weight:bold;")' . "\n"
+                    'script' => 'console.log("%%ctable caption", "' . self::$captionStyle . '")' . "\n"
                         . $rowsAScript,
                     'firephp' => $rowsAFirephp,
                 ),
@@ -905,7 +907,7 @@ EOD;
                     [3] => <?xml version="1.0" encoding="UTF-8" standalone="no"?>
                     <fart/>
                 )',
-                'script' => 'console.log("%%cfoo", "font-size:1.33em; font-weight:bold;")' . "\n"
+                'script' => 'console.log("%%cfoo", "' . self::$captionStyle . '")' . "\n"
                     .'console.table(['
                         . '"8f fb fd c0 da c5 e6 2d 5a 6c c5 c5 5b fe 2f 57",'
                         . '"{\n    \"poop\": \"\\\ud83d\\\udca9\",\n    \"int\": 42,\n    \"password\": \"secret\"\n}",'

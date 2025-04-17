@@ -30,7 +30,7 @@ class ServerLog extends ChromeLogger
         'channelsExclude' => [],
         'filenamePrefix' => 'serverLog_',
         'gcProb' => 0.10,               // (0-1) probability of running garbage collection
-        'group' => true,                // contain/wrap log in a group?
+        'group' => false,               // contain/wrap log in a group?
         'lifetime' => 60,               // how long before can garbage collected (in seconds)
         'logDir' => null,               // where to store the log
                                         //   (defaults to DOCUMENT_ROOT . '/log' )

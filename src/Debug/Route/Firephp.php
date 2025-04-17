@@ -33,6 +33,7 @@ class Firephp extends AbstractRoute
             'events',
             'files',
         ],
+        'group' => false, // contain/wrap log in a group?
         'messageLimit' => 99999,
     );
 
@@ -82,18 +83,17 @@ class Firephp extends AbstractRoute
         $event['headers'][] = ['X-Wf-Protocol-1', 'http://meta.wildfirehq.org/Protocol/JsonStream/0.2'];
         $event['headers'][] = ['X-Wf-1-Plugin-1', 'http://meta.firephp.org/Wildfire/Plugin/FirePHP/Library-FirePHPCore/' . self::FIREPHP_PROTO_VER];
         $event['headers'][] = ['X-Wf-1-Structure-1', 'http://meta.firephp.org/Wildfire/Structure/FirePHP/FirebugConsole/0.1'];
-        $this->processLogEntryViaEvent(new LogEntry(
-            $this->debug,
-            'groupCollapsed',
-            ['PHP: ' . $this->getRequestMethodUri()]
-        ));
-        $this->processAlerts();
-        $this->processSummary();
-        $this->processLog();
-        $this->processLogEntryViaEvent(new LogEntry(
-            $this->debug,
-            'groupEnd'
-        ));
+        if ($this->cfg['group']) {
+            $this->processLogEntryViaEvent(new LogEntry(
+                $this->debug,
+                'groupCollapsed',
+                ['PHP: ' . $this->getRequestMethodUri()]
+            ));
+        }
+        $this->processChannels();
+        if ($this->cfg['group']) {
+            $this->processLogEntryViaEvent(new LogEntry($this->debug, 'groupEnd'));
+        }
         $event['headers'][] = ['X-Wf-1-Index', $this->messageIndex];
         $this->data = array();
         $this->dumper->crateRaw = true;
@@ -210,7 +210,22 @@ class Firephp extends AbstractRoute
     }
 
     /**
-     * set FirePHP log entry header(s)
+     * {@inheritDoc}
+     */
+    protected function processChannel(Debug $instance)
+    {
+        $messageIndexBefore = $this->messageIndex;
+        parent::processChannel($instance);
+        if ($this->messageIndex === $messageIndexBefore + 2) {
+            // we only output the group start and end
+            // remove the group start and end from the output
+            $this->messageIndex -= 2;
+            \array_splice($this->outputEvent['headers'], -2, 2);
+        }
+    }
+
+    /**
+     * Set FirePHP log entry header(s)
      *
      * @param array $meta  meta information
      * @param mixed $value value

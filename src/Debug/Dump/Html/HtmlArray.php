@@ -107,9 +107,8 @@ class HtmlArray
                             'tagName' => null, // don't wrap it
                         ))
                     )
-                    . '<span class="t_operator">=&gt;</span>'
-                    . $this->valDumper->dump($val)
-                . '</li>' . "\n"
+                    . '<span class="t_operator">=&gt;</span>' . $this->valDumper->dump($val)
+                    . '</li>' . "\n"
                 : "\t" . $this->valDumper->dump($val, array('tagName' => 'li')) . "\n";
         }
         return $html;

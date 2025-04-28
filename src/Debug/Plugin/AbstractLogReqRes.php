@@ -84,7 +84,7 @@ class AbstractLogReqRes
     protected function detectContentType($content, $mediaTypeUser)
     {
         $mediaTypeDetected = $this->debug->stringUtil->contentType($content);
-        $xmlTypes = [ContentType::XML, 'application/xml'];
+        $xmlTypes = [ContentType::XML, ContentType::XML_APP];
         $userIsXml = \in_array($mediaTypeUser, $xmlTypes, true)
             || \preg_match('/application\\/\S+\+xml/', $mediaTypeUser);
         if (

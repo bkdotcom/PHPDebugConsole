@@ -30,13 +30,13 @@ class Normalizer
     );
 
     /**
-     * "Normalize" backtrace from debug_backtrace() or xdebug_get_function_stack();
+     * "Normalize" backtrace from debug_backtrace(), xdebug_get_function_stack(), or exception::getTrace()
      *
-     * @param array $backtrace trace/stack from debug_backtrace() or xdebug_Get_function_stack()
+     * @param array $backtrace trace/stack to normalize
      *
      * @return array
      */
-    public static function normalize($backtrace)
+    public static function normalize(array $backtrace)
     {
         self::$backtraceTemp = [];
         $frameTemp = array(

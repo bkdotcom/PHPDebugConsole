@@ -45,7 +45,6 @@ class ServiceProvider extends BaseServiceProvider
         $this->mergeConfigFrom(__DIR__ . '/config.php', 'phpDebugConsole');
 
         $config = ArrayUtil::mergeDeep($this->app['config']->get('phpDebugConsole'), array(
-            'filepathScript' => './js/Debug.jquery.js',
             'logEnvInfo' => array(
                 'session' => false,
             ),

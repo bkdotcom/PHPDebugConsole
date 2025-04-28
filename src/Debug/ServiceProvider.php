@@ -56,7 +56,6 @@ class ServiceProvider implements ServiceProviderInterface
 
         /*
             These "services" are reused between channels
-            these service definitions will be moved to a dedicated ServiceProvider that is shared between channels
         */
         $container['services'] = \array_merge($this->utilities, [
             'backtrace',

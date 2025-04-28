@@ -82,7 +82,7 @@ class Backtrace
             ? self::getExceptionTrace($exception)
             : (\array_reverse(Xdebug::getFunctionStack() ?: [])
                 ?: \debug_backtrace($debugBacktraceOpts));
-        $trace = Normalizer::normalize($trace);
+        $trace = self::normalize($trace);
         return self::getFinish($trace, $options, $limit);
     }
 
@@ -113,7 +113,7 @@ class Backtrace
         */
         $phpOptions = static::translateOptions($options | self::INCL_OBJECT);
         $backtrace = \debug_backtrace($phpOptions, 28);
-        $backtrace = Normalizer::normalize($backtrace);
+        $backtrace = self::normalize($backtrace);
         $index = SkipInternal::getFirstIndex($backtrace, $offset);
         $index = \max($index, 1); // ensure we're >= 1
         $return = static::callerInfoBuild(\array_slice($backtrace, $index, 2));
@@ -152,6 +152,18 @@ class Backtrace
     public static function getFileLines($file, $start = null, $length = null)
     {
         return Context::getFileLines($file, $start, $length);
+    }
+
+    /**
+     * Convenience method for bdk\Backtrace\Normalizer::normalize()
+     *
+     * @param array $backtrace trace/stack to normalize
+     *
+     * @return array
+     */
+    public static function normalize(array $trace)
+    {
+        return Normalizer::normalize($trace);
     }
 
     /**

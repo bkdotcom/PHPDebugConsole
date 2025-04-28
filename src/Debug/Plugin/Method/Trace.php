@@ -123,7 +123,7 @@ class Trace implements SubscriberInterface
         $getOptions = $meta['inclArgs'] ? Backtrace::INCL_ARGS : 0;
         $getOptions |= $meta['inclInternal'] ? Backtrace::INCL_INTERNAL : 0;
         $trace = \is_array($meta['trace'])
-            ? $meta['trace']
+            ? $this->debug->backtrace->normalize($meta['trace'])
             : $this->debug->backtrace->get(
                 $getOptions,
                 $meta['inclInternal']

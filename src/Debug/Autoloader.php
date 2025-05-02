@@ -30,7 +30,7 @@ class Autoloader
      */
     public function register()
     {
-        $this->classMap = array(
+        $this->classMap = \array_unique(\array_merge($this->classMap, array(
             'bdk\\Backtrace' => __DIR__ . '/../Backtrace/Backtrace.php',
             'bdk\\Container' => __DIR__ . '/../Container/Container.php',
             'bdk\\Debug' => __DIR__ . '/Debug.php',
@@ -38,8 +38,8 @@ class Autoloader
             'bdk\\ErrorHandler' => __DIR__ . '/../ErrorHandler/ErrorHandler.php',
             'bdk\\I18n' => __DIR__ . '/../I18n/I18n.php',
             'bdk\\Promise' => __DIR__ . '/../Promise/Promise.php',
-        );
-        $this->psr4Map = array(
+        )));
+        $this->psr4Map = \array_unique(\array_merge($this->psr4Map, array(
             'bdk\\Backtrace\\' => __DIR__ . '/../Backtrace',
             'bdk\\Container\\' => __DIR__ . '/../Container',
             'bdk\\CurlHttpMessage\\' => __DIR__ . '/../CurlHttpMessage',
@@ -51,7 +51,7 @@ class Autoloader
             'bdk\\Slack\\' => __DIR__ . '/../Slack',
             'bdk\\Teams\\' => __DIR__ . '/../Teams',
             'bdk\\Test\\Debug\\' => __DIR__ . '/../../tests/Debug',
-        );
+        )));
         return \spl_autoload_register([$this, 'autoload']);
     }
 

@@ -1,4 +1,4 @@
-import $ from 'jquery'
+import $ from 'microDom'
 import * as http from './http.js' // cookie & query utils
 import { Dict } from './Dict.js'
 

@@ -1,4 +1,4 @@
-import $ from 'jquery'
+import $ from 'microDom'
 
 var config
 
@@ -18,7 +18,7 @@ export function enhance ($node) {
   if (isEnhanced) {
     return
   }
-  if ($.trim($arrayInner.html()).length < 1) {
+  if (($arrayInner.html() || '').trim().length < 1) {
     // empty array -> don't add expand/collapse
     $node.addClass('expanded').find('br').hide()
     /*
@@ -29,8 +29,8 @@ export function enhance ($node) {
     return
   }
   enhanceArrayAddMarkup($node)
-  $.each(config.iconsArray, function (selector, v) {
-    $node.find(selector).prepend(v)
+  $.each(config.iconsArray, function (value, selector) {
+    $node.find(selector).prepend(value)
   })
   $node.debugEnhance(enhanceArrayIsExpanded($node) ? 'expand' : 'collapse')
 }

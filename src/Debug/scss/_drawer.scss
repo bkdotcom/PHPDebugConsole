@@ -60,7 +60,6 @@
   &.debug-drawer-open {
     transform: translateY(0);
     height: auto;
-    // z-index: 1049;
     .debug-pull-tab {
       opacity: 0;
       transform: translateY(25px);

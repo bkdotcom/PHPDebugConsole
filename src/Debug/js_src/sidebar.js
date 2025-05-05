@@ -1,4 +1,4 @@
-import $ from 'jquery'
+import $ from 'microDom'
 import { addTest as addFilterTest, addPreFilter } from './filter.js'
 
 var config
@@ -184,7 +184,7 @@ function addMethodToggles ($node) {
             type: 'checkbox',
             checked: true,
             'data-toggle': 'method',
-            value: val
+            value: val,
           })
         ).append(
           $('<span>').append(config.dict.replaceTokens(methodLabels[val]))
@@ -213,7 +213,7 @@ function moveChannelToggles ($node) {
 function phpErrorToggles ($node) {
   var $togglesUl = $node.find('.debug-sidebar .php-errors ul')
   var categories = ['fatal', 'error', 'warning', 'deprecated', 'notice', 'strict']
-  $.each(categories, function (i, category) {
+  $.each(categories, function (category) {
     var count = category === 'fatal'
       ? $node.find('.m_alert.error-summary.have-fatal').length
       : $node.find('.error-' + category).filter('.m_error,.m_warn').length

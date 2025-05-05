@@ -2,22 +2,20 @@
  * handle expanding/collapsing arrays, groups, & objects
  */
 
-import $ from 'jquery'
+import $ from 'microDom'
 import { getNodeType } from './nodeType.js'
 
 var config
 
 export function init ($delegateNode) {
   config = $delegateNode.data('config').get()
-  $delegateNode.on('click', '[data-toggle=array]', onClickToggle)
-  $delegateNode.on('click', '[data-toggle=group]', onClickToggle)
+  $delegateNode.on('click', '[data-toggle=array], [data-toggle=group], [data-toggle=object]', onClickToggle)
   $delegateNode.on('click', '[data-toggle=next]', function (e) {
     if ($(e.target).closest('a, button').length) {
       return
     }
     return onClickToggle.call(this)
   })
-  $delegateNode.on('click', '[data-toggle=object]', onClickToggle)
   $delegateNode.on('collapsed.debug.group updated.debug.group', function (e) {
     groupUpdate($(e.target))
   })
@@ -187,7 +185,7 @@ function expandGroupObjNext (nodes, icon, eventNameDone) {
 function groupErrorIconGet ($group) {
   var icon = ''
   var channel = $group.data('channel')
-  var filter = function (i, node) {
+  var filter = function (node) {
     var $node = $(node)
     if ($node.hasClass('filter-hidden')) {
       // only collect hidden errors if of the same channel & channel also hidden
@@ -289,7 +287,7 @@ function iconUpdate ($toggle, classNameNew) {
   if ($toggle.hasClass('group-header') && $toggle.parent().hasClass('empty')) {
     classNameNew = config.iconsExpand.empty
   }
-  $.each(config.iconsExpand, function (i, className) {
+  $.each(config.iconsExpand, function (className) {
     $icon.toggleClass(className, className === classNameNew)
   })
 }

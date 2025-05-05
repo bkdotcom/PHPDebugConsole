@@ -1,4 +1,4 @@
-import $ from 'jquery'
+import $ from 'microDom'
 
 // config values
 var config
@@ -19,7 +19,7 @@ export function init ($delegateNode) {
 }
 
 function addIcons ($node) {
-  $.each(config.iconsObject, function (selector, icon) {
+  $.each(config.iconsObject, function (icon, selector) {
     var $found = addIconFind($node, selector)
     var matches = typeof icon === 'string'
       ? icon.match(/^([ap])\s*:(.+)$/)
@@ -181,7 +181,7 @@ function visTogglesGet (flags, accessible) {
     hasExcluded: '<span class="toggle-off" data-toggle="vis" data-vis="debuginfo-excluded">show excluded</span>',
     hasInherited: '<span class="toggle-on" data-toggle="vis" data-vis="inherited">hide inherited</span>',
   }
-  $.each(flags, function (name, val) {
+  $.each(flags, function (val, name) {
     if (val) {
       $visToggles.append(toggles[name])
     }
@@ -273,18 +273,18 @@ function postToggle ($obj, allDescendants) {
   var selector2 = allDescendants
     ? '.object-inner > .heading'
     : '> .object-inner > .heading'
-  $obj.find(selector).each(function (i, dt) {
+  $obj.find(selector).each(function (dt) {
     var $dds = $(dt).nextUntil('dt')
-    var $ddsVis = $dds.not('.heading').filter(function (index, node) {
-      return $(node).css('display') !== 'none'
+    var $ddsVis = $dds.not('.heading').filter(function (node) {
+      return $(node).style('display') !== 'none'
     })
     var allHidden = $dds.length > 0 && $ddsVis.length === 0
     $(dt).toggleClass('text-muted', allHidden)
   })
-  $obj.find(selector2).each(function (i, heading) {
+  $obj.find(selector2).each(function (heading) {
     var $dds = $(heading).nextUntil('dt, .heading')
-    var $ddsVis = $dds.filter(function (index, node) {
-      return $(node).css('display') !== 'none'
+    var $ddsVis = $dds.filter(function (node) {
+      return $(node).style('display') !== 'none'
     })
     var allHidden = $dds.length > 0 && $ddsVis.length === 0
     $(heading).toggleClass('text-muted', allHidden)

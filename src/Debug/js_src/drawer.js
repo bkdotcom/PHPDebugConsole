@@ -1,4 +1,4 @@
-import $ from 'jquery'
+import $ from 'microDom'
 
 var $root, config, origH, origPageY
 
@@ -41,7 +41,7 @@ function enableScrollLock ($node) {
     var st = this.scrollTop
     var sh = this.scrollHeight
     var h = $this.innerHeight()
-    var d = e.originalEvent.wheelDelta
+    var d = e.wheelDelta // was e.originalEvent.wheelDelta with jQuery
     var isUp = d > 0
     var prevent = function () {
       e.stopPropagation()
@@ -91,11 +91,6 @@ function close () {
   setHeight(0)
 }
 
-function onMousemove (e) {
-  var h = origH + (origPageY - e.pageY)
-  setHeight(h, true)
-}
-
 function onMousedown (e) {
   if (!$(e.target).closest('.debug-drawer').is('.debug-drawer-open')) {
     // drawer isn't open / ignore resize
@@ -108,6 +103,11 @@ function onMousedown (e) {
     .on('mousemove', onMousemove)
     .on('mouseup', onMouseup)
   e.preventDefault()
+}
+
+function onMousemove (e) {
+  var h = origH + (origPageY - e.pageY)
+  setHeight(h, true)
 }
 
 function onMouseup () {
@@ -129,15 +129,15 @@ function setHeight (height, viaUser) {
   var maxH = window.innerHeight - menuH - 50
   if (height === 0) {
     // debug drawer closed
-    $('body').css('marginBottom', '')
+    $('body').style('marginBottom', '')
     $root.trigger('resize.debug')
-    return;
+    return
   }
   height = checkHeight(height)
   height = Math.min(height, maxH)
   height = Math.max(height, minH)
-  $body.css('height', height)
-  $('body').css('marginBottom', ($root.height() + 8) + 'px')
+  $body.height(height)
+  $('body').style('marginBottom', ($root.height() + 8) + 'px')
   $root.trigger('resize.debug')
   if (viaUser && config.get('persistDrawer')) {
     config.set('height', height)

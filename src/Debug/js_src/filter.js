@@ -2,7 +2,7 @@
  * Filter entries
  */
 
-import $ from 'jquery'
+import $ from 'microDom'
 
 var channels = []
 var tests = [
@@ -46,17 +46,8 @@ export function init ($delegateNode) {
     applyFilter($root)
   })
   $delegateNode.on('shown.debug.tab', function (e) {
-    hideSummarySeparator($(e.target))
+    toggleSummarySeparator($(e.target))
   })
-}
-
-function hideSummarySeparator ($tabPane) {
-  $tabPane.find('> .tab-body > hr').toggleClass(
-    'filter-hidden',
-    $tabPane.find('> .tab-body').find(' > .debug-log-summary, > .debug-log').filter(function () {
-      return $(this).height() < 1
-    }).length > 0
-  )
 }
 
 function onCheckboxChange () {
@@ -87,6 +78,7 @@ function onToggleErrorChange () {
   $root.find('.m_error, .m_warn').parents('.m_group')
     .trigger('collapsed.debug.group')
   updateFilterStatus($root)
+  toggleSummarySeparator($root.find('> .tab-panes > .tab-pane.active'))
 }
 
 export function addTest (func) {
@@ -124,7 +116,7 @@ function applyFilter ($root) {
     var $node = sort[i].node
     applyFilterToNode($node, channelKeyRoot)
   }
-  hideSummarySeparator($root.find('> .tab-panes > .tab-pane.active'))
+  toggleSummarySeparator($root.find('> .tab-panes > .tab-pane.active'))
   updateFilterStatus($root)
 }
 
@@ -174,6 +166,15 @@ function isFilterVis ($node) {
     }
   }
   return isVis
+}
+
+function toggleSummarySeparator ($tabPane) {
+  $tabPane.find('> .tab-body > hr').toggleClass(
+    'filter-hidden',
+    $tabPane.find('> .tab-body').find(' > .debug-log-summary, > .debug-log').filter(function () {
+      return $(this).height() < 1
+    }).length > 0
+  )
 }
 
 function updateFilterStatus ($root) {

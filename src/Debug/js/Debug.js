@@ -33,7 +33,7 @@ var phpDebugConsole = (function (exports, $) {
     if (isEnhanced) {
       return
     }
-    if ($.trim($arrayInner.html()).length < 1) {
+    if (($arrayInner.html() || '').trim().length < 1) {
       // empty array -> don't add expand/collapse
       $node.addClass('expanded').find('br').hide();
       /*
@@ -44,8 +44,8 @@ var phpDebugConsole = (function (exports, $) {
       return
     }
     enhanceArrayAddMarkup($node);
-    $.each(config$a.iconsArray, function (selector, v) {
-      $node.find(selector).prepend(v);
+    $.each(config$a.iconsArray, function (value, selector) {
+      $node.find(selector).prepend(value);
     });
     $node.debugEnhance(enhanceArrayIsExpanded($node) ? 'expand' : 'collapse');
   }
@@ -112,7 +112,7 @@ var phpDebugConsole = (function (exports, $) {
   }
 
   function addIcons$1 ($node) {
-    $.each(config$9.iconsObject, function (selector, icon) {
+    $.each(config$9.iconsObject, function (icon, selector) {
       var $found = addIconFind($node, selector);
       var matches = typeof icon === 'string'
         ? icon.match(/^([ap])\s*:(.+)$/)
@@ -274,7 +274,7 @@ var phpDebugConsole = (function (exports, $) {
       hasExcluded: '<span class="toggle-off" data-toggle="vis" data-vis="debuginfo-excluded">show excluded</span>',
       hasInherited: '<span class="toggle-on" data-toggle="vis" data-vis="inherited">hide inherited</span>',
     };
-    $.each(flags, function (name, val) {
+    $.each(flags, function (val, name) {
       if (val) {
         $visToggles.append(toggles[name]);
       }
@@ -366,18 +366,18 @@ var phpDebugConsole = (function (exports, $) {
     var selector2 = allDescendants
       ? '.object-inner > .heading'
       : '> .object-inner > .heading';
-    $obj.find(selector).each(function (i, dt) {
+    $obj.find(selector).each(function (dt) {
       var $dds = $(dt).nextUntil('dt');
-      var $ddsVis = $dds.not('.heading').filter(function (index, node) {
-        return $(node).css('display') !== 'none'
+      var $ddsVis = $dds.not('.heading').filter(function (node) {
+        return $(node).style('display') !== 'none'
       });
       var allHidden = $dds.length > 0 && $ddsVis.length === 0;
       $(dt).toggleClass('text-muted', allHidden);
     });
-    $obj.find(selector2).each(function (i, heading) {
+    $obj.find(selector2).each(function (heading) {
       var $dds = $(heading).nextUntil('dt, .heading');
-      var $ddsVis = $dds.filter(function (index, node) {
-        return $(node).css('display') !== 'none'
+      var $ddsVis = $dds.filter(function (node) {
+        return $(node).style('display') !== 'none'
       });
       var allHidden = $dds.length > 0 && $ddsVis.length === 0;
       $(heading).toggleClass('text-muted', allHidden);
@@ -417,7 +417,7 @@ var phpDebugConsole = (function (exports, $) {
   function onClickShowLess () {
     var $container = $(this).closest('.show-more-container');
     $container.find('.show-more-wrapper')
-      .css('display', 'block')
+      .style('display', 'block')
       .animate({
         height: '70px'
       });
@@ -431,7 +431,7 @@ var phpDebugConsole = (function (exports, $) {
     $container.find('.show-more-wrapper').animate({
       height: $container.find('.t_string').height()
     }, 400, 'swing', function () {
-      $(this).css('display', 'inline');
+      $(this).style('display', 'inline');
     });
     $container.find('.show-more-fade').fadeOut();
     $container.find('.show-more').hide();
@@ -494,8 +494,9 @@ var phpDebugConsole = (function (exports, $) {
       // e.namespace = debug.object
       $strings = $target.find('> .object-inner')
         .find(['> dd.constant > .t_string',
-          '> dd.property:visible > .t_string',
-          '> dd.method > ul > li > .t_string.return-value'].join(', '));
+          '> dd.property > .t_string', // was '> dd.property:visible > .t_string'
+          '> dd.method > ul > li > .t_string.return-value'].join(', '))
+        .filter(':visible');
     } else {
       $strings = $();
     }
@@ -651,7 +652,7 @@ var phpDebugConsole = (function (exports, $) {
    */
   function create ($entry, $strings, remove) {
     var $objects = $entry.find('.t_object > .object-inner > .property.debug-value > .t_identifier').filter(function () {
-      return this.innerText.match(/^file$/)
+      return this.textContent.match(/^file$/)
     });
     var detectFiles = $entry.data('detectFiles') === true || $objects.length > 0;
     if (!config$8.linkFiles && !remove) {
@@ -780,7 +781,7 @@ var phpDebugConsole = (function (exports, $) {
   }
 
   function createFileLinkDo ($string, matches, action) {
-    var text = $.trim($string.text());
+    var text = $string.text().trim();
     var $replace = createFileLinkReplace($string, matches, text, action);
     if (action === 'create') {
       createFileLinkUpdateAttr($string, $replace);
@@ -844,7 +845,7 @@ var phpDebugConsole = (function (exports, $) {
 
   function createFileLinkMatches ($string, foundFiles) {
     var matches = [];
-    var text = $.trim($string.text());
+    var text = $string.text().trim();
     if ($string.data('file')) {
       // filepath specified in data-file attr
       return typeof $string.data('file') === 'boolean'
@@ -860,9 +861,8 @@ var phpDebugConsole = (function (exports, $) {
         line: 1
       };
       $string.parent().parent().find('> .property.debug-value').each(function () {
-        var prop = $(this).find('> .t_identifier')[0].innerText;
-        var $valNode = $(this).find('> *:last-child');
-        var val = $.trim($valNode[0].innerText);
+        var prop = $(this).find('> .t_identifier').text().trim();
+        var val = $(this).find('> *:last-child').text().trim();
         matches[prop] = val;
       });
       return [null, text, matches.line]
@@ -1144,7 +1144,7 @@ var phpDebugConsole = (function (exports, $) {
       var st = this.scrollTop;
       var sh = this.scrollHeight;
       var h = $this.innerHeight();
-      var d = e.originalEvent.wheelDelta;
+      var d = e.wheelDelta; // was e.originalEvent.wheelDelta with jQuery
       var isUp = d > 0;
       var prevent = function () {
         e.stopPropagation();
@@ -1194,11 +1194,6 @@ var phpDebugConsole = (function (exports, $) {
     setHeight(0);
   }
 
-  function onMousemove (e) {
-    var h = origH + (origPageY - e.pageY);
-    setHeight(h, true);
-  }
-
   function onMousedown (e) {
     if (!$(e.target).closest('.debug-drawer').is('.debug-drawer-open')) {
       // drawer isn't open / ignore resize
@@ -1211,6 +1206,11 @@ var phpDebugConsole = (function (exports, $) {
       .on('mousemove', onMousemove)
       .on('mouseup', onMouseup);
     e.preventDefault();
+  }
+
+  function onMousemove (e) {
+    var h = origH + (origPageY - e.pageY);
+    setHeight(h, true);
   }
 
   function onMouseup () {
@@ -1232,15 +1232,15 @@ var phpDebugConsole = (function (exports, $) {
     var maxH = window.innerHeight - menuH - 50;
     if (height === 0) {
       // debug drawer closed
-      $('body').css('marginBottom', '');
+      $('body').style('marginBottom', '');
       $root$2.trigger('resize.debug');
-      return;
+      return
     }
     height = checkHeight(height);
     height = Math.min(height, maxH);
     height = Math.max(height, minH);
-    $body.css('height', height);
-    $('body').css('marginBottom', ($root$2.height() + 8) + 'px');
+    $body.height(height);
+    $('body').style('marginBottom', ($root$2.height() + 8) + 'px');
     $root$2.trigger('resize.debug');
     if (viaUser && config$6.get('persistDrawer')) {
       config$6.set('height', height);
@@ -1307,17 +1307,8 @@ var phpDebugConsole = (function (exports, $) {
       applyFilter($root);
     });
     $delegateNode.on('shown.debug.tab', function (e) {
-      hideSummarySeparator($(e.target));
+      toggleSummarySeparator($(e.target));
     });
-  }
-
-  function hideSummarySeparator ($tabPane) {
-    $tabPane.find('> .tab-body > hr').toggleClass(
-      'filter-hidden',
-      $tabPane.find('> .tab-body').find(' > .debug-log-summary, > .debug-log').filter(function () {
-        return $(this).height() < 1
-      }).length > 0
-    );
   }
 
   function onCheckboxChange () {
@@ -1348,6 +1339,7 @@ var phpDebugConsole = (function (exports, $) {
     $root.find('.m_error, .m_warn').parents('.m_group')
       .trigger('collapsed.debug.group');
     updateFilterStatus($root);
+    toggleSummarySeparator($root.find('> .tab-panes > .tab-pane.active'));
   }
 
   function addTest (func) {
@@ -1385,7 +1377,7 @@ var phpDebugConsole = (function (exports, $) {
       var $node = sort[i].node;
       applyFilterToNode($node, channelKeyRoot);
     }
-    hideSummarySeparator($root.find('> .tab-panes > .tab-pane.active'));
+    toggleSummarySeparator($root.find('> .tab-panes > .tab-pane.active'));
     updateFilterStatus($root);
   }
 
@@ -1435,6 +1427,15 @@ var phpDebugConsole = (function (exports, $) {
       }
     }
     return isVis
+  }
+
+  function toggleSummarySeparator ($tabPane) {
+    $tabPane.find('> .tab-body > hr').toggleClass(
+      'filter-hidden',
+      $tabPane.find('> .tab-body').find(' > .debug-log-summary, > .debug-log').filter(function () {
+        return $(this).height() < 1
+      }).length > 0
+    );
   }
 
   function updateFilterStatus ($root) {
@@ -1848,7 +1849,7 @@ var phpDebugConsole = (function (exports, $) {
               type: 'checkbox',
               checked: true,
               'data-toggle': 'method',
-              value: val
+              value: val,
             })
           ).append(
             $('<span>').append(config$4.dict.replaceTokens(methodLabels[val]))
@@ -1877,7 +1878,7 @@ var phpDebugConsole = (function (exports, $) {
   function phpErrorToggles ($node) {
     var $togglesUl = $node.find('.debug-sidebar .php-errors ul');
     var categories = ['fatal', 'error', 'warning', 'deprecated', 'notice', 'strict'];
-    $.each(categories, function (i, category) {
+    $.each(categories, function (category) {
       var count = category === 'fatal'
         ? $node.find('.m_alert.error-summary.have-fatal').length
         : $node.find('.error-' + category).filter('.m_error,.m_warn').length;
@@ -1975,7 +1976,7 @@ var phpDebugConsole = (function (exports, $) {
     };
     var $icon;
     var $icons = $('<span>', { class: 'debug-error-counts' });
-    $.each(['error', 'warn'], function (i, what) {
+    $.each(['error', 'warn'], function (what) {
       if (counts[what] === 0) {
         return
       }
@@ -2030,7 +2031,7 @@ var phpDebugConsole = (function (exports, $) {
     })
     */
     prepend = prepend || '';
-    if ($.isArray(channels)) {
+    if (Array.isArray(channels)) {
       channels = channelsToTree(channels);
     } else if (prepend.length === 0 && Object.keys(channels).length) {
       // start with root.   Add if there are other channels
@@ -2068,7 +2069,7 @@ var phpDebugConsole = (function (exports, $) {
     var channelKeys = Object.keys(channels).sort(function (a, b) {
       return a.localeCompare(b)
     });
-    $.each(channelKeys, function (i, channelKey) {
+    $.each(channelKeys, function (channelKey) {
       if (channelKey === 'phpError') {
         // phpError is a special channel
         return
@@ -2142,7 +2143,7 @@ var phpDebugConsole = (function (exports, $) {
     for (i = 0; i < path.length; i++) {
       if (channelTreeRef[path[i]]) {
         channelTreeRef = channelTreeRef[path[i]].channels;
-        continue;
+        continue
       }
       channelTreeRef[path[i]] = {
         channels: {},
@@ -2220,15 +2221,13 @@ var phpDebugConsole = (function (exports, $) {
 
   function init$2 ($delegateNode) {
     config$2 = $delegateNode.data('config').get();
-    $delegateNode.on('click', '[data-toggle=array]', onClickToggle);
-    $delegateNode.on('click', '[data-toggle=group]', onClickToggle);
+    $delegateNode.on('click', '[data-toggle=array], [data-toggle=group], [data-toggle=object]', onClickToggle);
     $delegateNode.on('click', '[data-toggle=next]', function (e) {
       if ($(e.target).closest('a, button').length) {
         return
       }
       return onClickToggle.call(this)
     });
-    $delegateNode.on('click', '[data-toggle=object]', onClickToggle);
     $delegateNode.on('collapsed.debug.group updated.debug.group', function (e) {
       groupUpdate($(e.target));
     });
@@ -2398,7 +2397,7 @@ var phpDebugConsole = (function (exports, $) {
   function groupErrorIconGet ($group) {
     var icon = '';
     var channel = $group.data('channel');
-    var filter = function (i, node) {
+    var filter = function (node) {
       var $node = $(node);
       if ($node.hasClass('filter-hidden')) {
         // only collect hidden errors if of the same channel & channel also hidden
@@ -2500,7 +2499,7 @@ var phpDebugConsole = (function (exports, $) {
     if ($toggle.hasClass('group-header') && $toggle.parent().hasClass('empty')) {
       classNameNew = config$2.iconsExpand.empty;
     }
-    $.each(config$2.iconsExpand, function (i, className) {
+    $.each(config$2.iconsExpand, function (className) {
       $icon.toggleClass(className, className === classNameNew);
     });
   }
@@ -2518,7 +2517,7 @@ var phpDebugConsole = (function (exports, $) {
   function init$1 ($delegateNode) {
     // config = $delegateNode.data('config').get()
     var $tabPanes = $delegateNode.find('.tab-panes');
-    $delegateNode.find('nav .nav-link').each(function (i, tab) {
+    $delegateNode.find('nav .nav-link').each(function (tab) {
       initTab($(tab), $tabPanes);
     });
     $delegateNode.on('click', '[data-toggle=tab]', function () {
@@ -2526,7 +2525,7 @@ var phpDebugConsole = (function (exports, $) {
       return false
     });
     $delegateNode.on('shown.debug.tab', function (e) {
-      $(e.target).find('.m_alert, .group-body:visible').debugEnhance();
+      $(e.target).find('.m_alert, .group-body').filter(':visible').debugEnhance();
     });
   }
 
@@ -6220,7 +6219,7 @@ var phpDebugConsole = (function (exports, $) {
   function refTitleImplements ($ref, title) {
     var className = $ref.parent().data('implements');
     var selector = '> dd.interface, > dd.implements .interface';
-    var $interface = $ref.closest('.object-inner').find(selector).filter(function ($node) {
+    var $interface = $ref.closest('.object-inner').find(selector).filter(function () {
       return $(this).data('interface') === className
     });
     return title + ' ' + $interface[0].innerHTML
@@ -6341,7 +6340,7 @@ var phpDebugConsole = (function (exports, $) {
     var args = [];
     html += markupClassname(attribute.name);
     if (Object.keys(attribute.arguments).length) {
-      $.each(attribute.arguments, function (i, val) {
+      $.each(attribute.arguments, function (val, i) {
         arg = i.match(/^\d+$/) === null
           ? '<span class="t_parameter-name">' + i + '</span><span class="t_punct">:</span>'
           : '';
@@ -6952,4 +6951,4 @@ var phpDebugConsole = (function (exports, $) {
 
   return exports;
 
-})({}, window.jQuery);
+})({}, window.microDom);

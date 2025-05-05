@@ -1,4 +1,4 @@
-import $ from 'jquery'
+import $ from 'microDom'
 import { delegate } from 'tippy.js'
 
 export function init ($root) {
@@ -72,7 +72,7 @@ function refTitleDeprecated ($ref, title) {
 function refTitleImplements ($ref, title) {
   var className = $ref.parent().data('implements')
   var selector = '> dd.interface, > dd.implements .interface'
-  var $interface = $ref.closest('.object-inner').find(selector).filter(function ($node) {
+  var $interface = $ref.closest('.object-inner').find(selector).filter(function () {
     return $(this).data('interface') === className
   })
   return title + ' ' + $interface[0].innerHTML
@@ -193,7 +193,7 @@ function buildAttribute (attribute) {
   var args = []
   html += markupClassname(attribute.name)
   if (Object.keys(attribute.arguments).length) {
-    $.each(attribute.arguments, function (i, val) {
+    $.each(attribute.arguments, function (val, i) {
       arg = i.match(/^\d+$/) === null
         ? '<span class="t_parameter-name">' + i + '</span><span class="t_punct">:</span>'
         : ''

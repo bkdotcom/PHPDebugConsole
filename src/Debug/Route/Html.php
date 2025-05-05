@@ -52,8 +52,8 @@ class Html extends AbstractRoute
             'css' => '',            // additional "override" css
             'drawer' => true,
             'filepathCss' => __DIR__ . '/../css/Debug.css',
-            'filepathScript' => __DIR__ . '/../js/Debug.jquery.min.js',
-            'jqueryUrl' => '//ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js',
+            'filepathMicroDom' => __DIR__ . '/../js/microDom.min.js',
+            'filepathScript' => __DIR__ . '/../js/Debug.min.js',
             'outputCss' => true,
             'outputScript' => true,
             'sidebar' => true,
@@ -61,6 +61,7 @@ class Html extends AbstractRoute
         );
         $this->dumper = $debug->getDump('html');
         $this->addAsset('css', $this->cfg['filepathCss']);
+        $this->addAsset('script', $this->cfg['filepathMicroDom']);
         $this->addAsset('script', $this->cfg['filepathScript']);
     }
 
@@ -106,7 +107,7 @@ class Html extends AbstractRoute
         if (!$this->cfg['outputScript']) {
             return '';
         }
-        return '<script>window.jQuery || document.write(\'<script src="' . $this->cfg['jqueryUrl'] . '"><\/script>\')</script>' . "\n"
+        return ''
             . '<script>'
                 . $this->getScript() . "\n"
             . '</script>' . "\n";

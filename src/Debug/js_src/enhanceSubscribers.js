@@ -1,4 +1,4 @@
-import $ from 'jquery'
+import $ from 'microDom'
 
 var enhanceObject
 var enhanceValue
@@ -24,7 +24,7 @@ export function init($root, enhanceVal, enhanceObj) {
 function onClickShowLess () {
   var $container = $(this).closest('.show-more-container')
   $container.find('.show-more-wrapper')
-    .css('display', 'block')
+    .style('display', 'block')
     .animate({
       height: '70px'
     })
@@ -38,7 +38,7 @@ function onClickShowMore () {
   $container.find('.show-more-wrapper').animate({
     height: $container.find('.t_string').height()
   }, 400, 'swing', function () {
-    $(this).css('display', 'inline')
+    $(this).style('display', 'inline')
   })
   $container.find('.show-more-fade').fadeOut()
   $container.find('.show-more').hide()
@@ -101,8 +101,9 @@ function onExpanded (e) {
     // e.namespace = debug.object
     $strings = $target.find('> .object-inner')
       .find(['> dd.constant > .t_string',
-        '> dd.property:visible > .t_string',
+        '> dd.property > .t_string', // was '> dd.property:visible > .t_string'
         '> dd.method > ul > li > .t_string.return-value'].join(', '))
+      .filter(':visible')
   } else {
     $strings = $()
   }

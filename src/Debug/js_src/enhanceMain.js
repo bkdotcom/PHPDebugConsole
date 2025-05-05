@@ -2,7 +2,7 @@
  * Add primary Ui elements
  */
 
-import $ from 'jquery'
+import $ from 'microDom'
 import * as drawer from './drawer.js'
 import * as filter from './filter.js'
 import * as optionsMenu from './optionsDropdown.js'
@@ -70,7 +70,7 @@ function addErrorIcons () {
   }
   var $icon
   var $icons = $('<span>', { class: 'debug-error-counts' })
-  $.each(['error', 'warn'], function (i, what) {
+  $.each(['error', 'warn'], function (what) {
     if (counts[what] === 0) {
       return
     }
@@ -125,7 +125,7 @@ export function buildChannelList (channels, keyRoot, checkedChannels, prepend) {
   })
   */
   prepend = prepend || ''
-  if ($.isArray(channels)) {
+  if (Array.isArray(channels)) {
     channels = channelsToTree(channels)
   } else if (prepend.length === 0 && Object.keys(channels).length) {
     // start with root.   Add if there are other channels
@@ -163,7 +163,7 @@ function buildChannelLis (channels, keyRoot, checkedChannels, prepend) {
   var channelKeys = Object.keys(channels).sort(function (a, b) {
     return a.localeCompare(b)
   })
-  $.each(channelKeys, function (i, channelKey) {
+  $.each(channelKeys, function (channelKey) {
     if (channelKey === 'phpError') {
       // phpError is a special channel
       return
@@ -237,7 +237,7 @@ function channelsToTreeWalkPath (channel, path, channelTreeRef) {
   for (i = 0; i < path.length; i++) {
     if (channelTreeRef[path[i]]) {
       channelTreeRef = channelTreeRef[path[i]].channels
-      continue;
+      continue
     }
     channelTreeRef[path[i]] = {
       channels: {},

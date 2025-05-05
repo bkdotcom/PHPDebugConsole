@@ -1,4 +1,4 @@
-import $ from 'jquery'
+import $ from 'microDom'
 
 /**
  * Add sortability to given table

@@ -57,12 +57,11 @@ class Highlight implements AssetProviderInterface
                 (function ($) {
                     $("body").on("enhanced.debug expanded.debug.group shown.debug.tab", function (e) {
                         var $target = $(e.target)
-                        var selector = ".highlight:visible"
+                        var $elements
                         if (e.type === "enhanced" && $target.hasClass("m_group")) {
                             return
                         }
-                        // .add($target.filter(selector))
-                        $target.find(selector).removeClass("highlight").each(function () {
+                        $target.find(".highlight").filter(":visible").removeClass("highlight").each(function () {
                             var $high = $(this)
                             var $pre
                             var classes = $high.attr("class").split(" ")
@@ -85,8 +84,8 @@ class Highlight implements AssetProviderInterface
                                     }
                                 }
                                 $high.wrapInner(\'<pre><code class="\'+lang+\'"></code></pre>\')
-                                $pre = $high.find("pre").addClass(classesPre.join(" "))
-                                $.each($high[0].attributes, function() {
+                                $pre = $high.find("pre").addClass(classesPre)
+                                $.each($high[0].attributes, function () {
                                     if (!this.name.length) {
                                         return // continue
                                     }
@@ -118,7 +117,7 @@ class Highlight implements AssetProviderInterface
                             }, 100)
                         }
                     })
-                }(window.jQuery));',
+                }(window.microDom));',
             ],
         );
     }

@@ -190,6 +190,9 @@ li[class*=m_] > .t_array.array-file-tree > .array-inner {
         }
       }
     }
+    h3 {
+      color: var(--color-object-heading);
+    }
     .heading {
       color: var(--color-object-heading);
       text-decoration: underline;

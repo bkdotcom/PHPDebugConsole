@@ -1,4 +1,4 @@
-import $ from 'jquery'
+import $ from 'microDom'
 import { cookieGet, cookieRemove, cookieSet } from './http.js'
 
 var $root

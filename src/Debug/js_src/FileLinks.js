@@ -1,4 +1,4 @@
-import $ from 'jquery'
+import $ from 'microDom'
 
 var config
 
@@ -28,7 +28,7 @@ export function update ($group) {
  */
 export function create ($entry, $strings, remove) {
   var $objects = $entry.find('.t_object > .object-inner > .property.debug-value > .t_identifier').filter(function () {
-    return this.innerText.match(/^file$/)
+    return this.textContent.match(/^file$/)
   })
   var detectFiles = $entry.data('detectFiles') === true || $objects.length > 0
   if (!config.linkFiles && !remove) {
@@ -157,7 +157,7 @@ function createFileLink (string, remove, foundFiles) {
 }
 
 function createFileLinkDo ($string, matches, action) {
-  var text = $.trim($string.text())
+  var text = $string.text().trim()
   var $replace = createFileLinkReplace($string, matches, text, action)
   if (action === 'create') {
     createFileLinkUpdateAttr($string, $replace)
@@ -221,7 +221,7 @@ function createFileLinkReplace ($string, matches, text, action) {
 
 function createFileLinkMatches ($string, foundFiles) {
   var matches = []
-  var text = $.trim($string.text())
+  var text = $string.text().trim()
   if ($string.data('file')) {
     // filepath specified in data-file attr
     return typeof $string.data('file') === 'boolean'
@@ -237,9 +237,8 @@ function createFileLinkMatches ($string, foundFiles) {
       line: 1
     }
     $string.parent().parent().find('> .property.debug-value').each(function () {
-      var prop = $(this).find('> .t_identifier')[0].innerText
-      var $valNode = $(this).find('> *:last-child')
-      var val = $.trim($valNode[0].innerText)
+      var prop = $(this).find('> .t_identifier').text().trim()
+      var val = $(this).find('> *:last-child').text().trim()
       matches[prop] = val
     })
     return [null, text, matches.line]

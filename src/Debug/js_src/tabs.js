@@ -2,12 +2,12 @@
  * handle tabs
  */
 
-import $ from 'jquery'
+import $ from 'microDom'
 
 export function init ($delegateNode) {
   // config = $delegateNode.data('config').get()
   var $tabPanes = $delegateNode.find('.tab-panes')
-  $delegateNode.find('nav .nav-link').each(function (i, tab) {
+  $delegateNode.find('nav .nav-link').each(function (tab) {
     initTab($(tab), $tabPanes)
   })
   $delegateNode.on('click', '[data-toggle=tab]', function () {
@@ -15,7 +15,7 @@ export function init ($delegateNode) {
     return false
   })
   $delegateNode.on('shown.debug.tab', function (e) {
-    $(e.target).find('.m_alert, .group-body:visible').debugEnhance()
+    $(e.target).find('.m_alert, .group-body').filter(':visible').debugEnhance()
   })
 }
 

@@ -4,7 +4,7 @@
  *    Add FontAwesome icons
  */
 
-import $ from 'jquery' // external global
+import $ from 'microDom' // external global
 import './prototypeMethods.js'
 import * as enhanceEntries from './enhanceEntries.js'
 import * as enhanceMain from './enhanceMain.js'

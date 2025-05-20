@@ -2,9 +2,8 @@
 
 namespace bdk\Test\Debug\Framework\WordPress;
 
-use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
-use bdk\PubSub\Event;
+use bdk\PhpUnitPolyfill\AssertionTrait;
 use bdk\Test\Debug\DebugTestFramework;
 
 /**
@@ -12,6 +11,8 @@ use bdk\Test\Debug\DebugTestFramework;
  */
 class WpHttpTest extends DebugTestFramework
 {
+    use AssertionTrait;
+
     protected static $plugin;
 
     public static function setUpBeforeClass(): void

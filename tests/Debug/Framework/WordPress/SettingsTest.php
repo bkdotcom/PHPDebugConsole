@@ -3,10 +3,9 @@
 namespace bdk\Test\Debug\Framework\WordPress;
 
 use bdk\Debug;
+use bdk\PhpUnitPolyfill\AssertionTrait;
 use bdk\PubSub\Event;
 use bdk\Test\Debug\DebugTestFramework;
-
-use function PHPUnit\Framework\assertInstanceOf;
 
 /**
  * @covers \bdk\Debug\Framework\WordPress\Settings
@@ -15,6 +14,8 @@ use function PHPUnit\Framework\assertInstanceOf;
  */
 class SettingsTest extends DebugTestFramework
 {
+    use AssertionTrait;
+
     protected static $plugin;
 
     public static function setUpBeforeClass(): void
@@ -52,7 +53,7 @@ class SettingsTest extends DebugTestFramework
     public function testOnBootstrap()
     {
         self::$plugin->onBootstrap(new Event(self::$debug));
-        assertInstanceOf('Closure', $GLOBALS['wp_actions_filters']['actions']['admin_menu'][0]);
+        self::assertInstanceOf('Closure', $GLOBALS['wp_actions_filters']['actions']['admin_menu'][0]);
 
         $GLOBALS['wp_actions_filters']['actions']['admin_menu'][0]();
 

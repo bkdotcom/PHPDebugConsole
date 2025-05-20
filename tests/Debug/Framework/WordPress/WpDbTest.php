@@ -4,7 +4,7 @@ namespace bdk\Test\Debug\Framework\WordPress;
 
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
-use bdk\Debug\Abstraction\Type;
+use bdk\PhpUnitPolyfill\AssertionTrait;
 use bdk\PubSub\Event;
 use bdk\Test\Debug\DebugTestFramework;
 
@@ -13,6 +13,8 @@ use bdk\Test\Debug\DebugTestFramework;
  */
 class WpDbTest extends DebugTestFramework
 {
+    use AssertionTrait;
+
     protected static $plugin;
 
     public static function setUpBeforeClass(): void
@@ -20,7 +22,7 @@ class WpDbTest extends DebugTestFramework
         if (!\function_exists('get_option')) {
             require_once __DIR__ . '/mock_wordpress.php';
         }
-        wp_reset_mock();
+        \wp_reset_mock();
         self::resetDebug();
         self::$plugin = new \bdk\Debug\Framework\WordPress\WpDb();
         self::$plugin->onBootstrap(new Event(self::$debug));

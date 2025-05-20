@@ -3,6 +3,7 @@
 namespace bdk\Test\Debug\Framework\WordPress;
 
 use bdk\Debug;
+use bdk\PhpUnitPolyfill\AssertionTrait;
 use bdk\PubSub\Event;
 use bdk\Test\Debug\DebugTestFramework;
 
@@ -11,6 +12,8 @@ use bdk\Test\Debug\DebugTestFramework;
  */
 class ObjectCacheTest extends DebugTestFramework
 {
+    use AssertionTrait;
+
     protected static $plugin;
 
     public static function setUpBeforeClass(): void

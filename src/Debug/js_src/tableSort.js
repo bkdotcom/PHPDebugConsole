@@ -1,4 +1,4 @@
-import $ from 'microDom'
+import $ from 'zest'
 
 /**
  * Add sortability to given table

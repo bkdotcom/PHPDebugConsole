@@ -1,9 +1,11 @@
-import $ from 'microDom'
+import $ from 'zest'
 
+var dict
 var enhanceObject
 var enhanceValue
 
 export function init($root, enhanceVal, enhanceObj) {
+  dict = $root.data('config').dict
   enhanceValue = enhanceVal
   enhanceObject = enhanceObj
   $root.on('click', '.close[data-dismiss=alert]', function () {
@@ -79,7 +81,8 @@ function onExpandObject (e) {
   $node.find('> .object-inner')
     .find('> .constant > :last-child,' +
       '> .property > :last-child,' +
-      '> .method .t_string'
+      // '> .method > ul > li > .return-value,' +
+      '> .method > ul > li > :last-child' // static variables and return-value
     ).each(function () {
       enhanceValue(this, $entry)
     })
@@ -97,6 +100,9 @@ function onExpanded (e) {
   } else if ($target.hasClass('m_group')) {
     // e.namespace = debug.group
     $strings = $target.find('> .group-body > li > .t_string')
+  } else if ($target.hasClass('group-body')) {
+    // tab shown... triggers expanded
+    $strings = $target.find('> li > .t_string')
   } else if ($target.hasClass('t_object')) {
     // e.namespace = debug.object
     $strings = $target.find('> .object-inner')
@@ -121,7 +127,7 @@ function enhanceLongString ($node) {
     $stringWrap = $node.wrap('<div class="show-more-wrapper"></div>').parent()
     $stringWrap.append('<div class="show-more-fade"></div>')
     $container = $stringWrap.wrap('<div class="show-more-container"></div>').parent()
-    $container.append('<button type="button" class="show-more"><i class="fa fa-caret-down"></i> More</button>')
-    $container.append('<button type="button" class="show-less" style="display:none;"><i class="fa fa-caret-up"></i> Less</button>')
+    $container.append('<button type="button" class="show-more"><i class="fa fa-caret-down"></i> ' + dict.get('more') + '</button>')
+    $container.append('<button type="button" class="show-less" style="display:none;"><i class="fa fa-caret-up"></i> ' + dict.get('less') + '</button>')
   }
 }

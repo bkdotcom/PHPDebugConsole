@@ -1,4 +1,4 @@
-import $ from 'microDom'
+import $ from 'zest'
 import * as http from './http.js' // cookie & query utils
 import { Dict } from './Dict.js'
 
@@ -110,7 +110,7 @@ var config = {
   },
   persistDrawer: false,
   strings: {
-    'attributes': 'Attributes',
+    attributes: 'Attributes',
     'cfg.cookie': 'Debug cookie',
     'cfg.documentation': 'Documentation',
     'cfg.link-files': 'Create file links',
@@ -122,8 +122,8 @@ var config = {
     'cfg.theme.light': 'Light',
     'debugInfo-excluded': 'not included in __debugInfo',
     'debugInfo-value': 'via __debugInfo()',
-    'deprecated': 'Deprecated',
-    'dynamic': 'Dynamic',
+    deprecated: 'Deprecated',
+    dynamic: 'Dynamic',
 
     'error.cat.deprecated': 'Deprecated',
     'error.cat.error': 'Error',
@@ -132,17 +132,23 @@ var config = {
     'error.cat.strict': 'Strict',
     'error.cat.warning': 'Warning',
 
-    'final': 'Final',
+    final: 'Final',
     'hook.both': 'Get and set hooks',
     'hook.get': 'Get hook',
     'hook.set': 'Set hook',
-    'implements': 'Implements',
-    'inherited': 'Inherited',
+    implements: 'Implements',
+    inherited: 'Inherited',
+    less: 'Less',
     'method.abstract': 'Abstract method',
     'method.magic': 'Magic method',
-    'overrides': 'Overrides',
+    more: 'More',
+    overrides: 'Overrides',
+    'object.methods.magic.1': 'This object has a {method} method', // wampClient
+    'object.methods.magic.2': 'This object has {method1} and {method2} methods', // wampClient
+    'object.methods.return-value': 'return value', // wampClient
+    'object.methods.static-variables': 'static variables', // wampClient
     'private-ancestor': 'Private ancestor',
-    'promoted': 'Promoted',
+    promoted: 'Promoted',
     'property.magic': 'Magic property',
     'side.alert': 'Alert',
     'side.channels': 'Channels',
@@ -152,8 +158,8 @@ var config = {
     'side.other': 'Other',
     'side.php-errors': 'PHP Errors',
     'side.warning': 'Warning',
-    'throws': 'Throws',
-    'virtual': 'Virtual',
+    throws: 'Throws',
+    virtual: 'Virtual',
     'write-only': 'Write-only',
   },
   theme: 'auto',

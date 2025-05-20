@@ -2,7 +2,7 @@
  * Add primary Ui elements
  */
 
-import $ from 'microDom'
+import $ from 'zest'
 import * as drawer from './drawer.js'
 import * as filter from './filter.js'
 import * as optionsMenu from './optionsDropdown.js'

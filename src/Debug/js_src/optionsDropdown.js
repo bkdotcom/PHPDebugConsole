@@ -1,4 +1,4 @@
-import $ from 'microDom'
+import $ from 'zest'
 import { cookieGet, cookieRemove, cookieSet } from './http.js'
 
 var $root

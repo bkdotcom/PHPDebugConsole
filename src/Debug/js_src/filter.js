@@ -2,7 +2,7 @@
  * Filter entries
  */
 
-import $ from 'microDom'
+import $ from 'zest'
 
 var channels = []
 var tests = [

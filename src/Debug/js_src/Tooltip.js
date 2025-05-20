@@ -1,4 +1,4 @@
-import $ from 'microDom'
+import $ from 'zest'
 import { delegate } from 'tippy.js'
 
 export function init ($root) {

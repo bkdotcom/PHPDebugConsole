@@ -45,38 +45,37 @@ class Html extends AbstractRoute
      */
     public function __construct(Debug $debug)
     {
-        parent::__construct($debug);
+        $this->debug = $debug;;
         $this->errorSummary = new ErrorSummary($this, $debug->errorHandler);
         $this->tabs = new Tabs($this);
         $this->cfg = array(
             'css' => '',            // additional "override" css
             'drawer' => true,
             'filepathCss' => __DIR__ . '/../css/Debug.css',
-            'filepathMicroDom' => __DIR__ . '/../js/microDom.min.js',
             'filepathScript' => __DIR__ . '/../js/Debug.min.js',
+            'filepathZest' => __DIR__ . '/../js/zest.min.js',
             'outputCss' => true,
             'outputScript' => true,
             'sidebar' => true,
             'tooltip' => true,
         );
         $this->dumper = $debug->getDump('html');
-        $this->addAsset('css', $this->cfg['filepathCss']);
-        $this->addAsset('script', $this->cfg['filepathMicroDom']);
-        $this->addAsset('script', $this->cfg['filepathScript']);
+        $this->setCfg($this->cfg); // call to trigger postSetCfg
     }
 
     /**
      * Add/register css or javascript
      *
-     * @param string $what  "css" or "script"
-     * @param string $asset css, javascript, or filepath
+     * @param string $what     "css" or "script"
+     * @param string $asset    css, javascript, or filepath
+     * @param int    $priority (optional) priority of asset
      *
      * @return void
      */
-    public function addAsset($what, $asset)
+    public function addAsset($what, $asset, $priority = 0)
     {
-        $this->assets[$what][] = $this->normalizeAssetPath($asset);
-        $this->assets[$what] = \array_unique($this->assets[$what]);
+        $this->assets[$what][$priority][] = $this->normalizeAssetPath($asset);
+        $this->assets[$what][$priority] = \array_unique($this->assets[$what][$priority]);
     }
 
     /**
@@ -141,11 +140,16 @@ class Html extends AbstractRoute
             $this->processAssetProvider($assetProvider);
         }
         if ($what === null) {
-            return $this->assets;
+            return \array_map(static function ($assetsByPriority) {
+                \krsort($assetsByPriority, SORT_NUMERIC);
+                return \call_user_func_array('array_merge', $assetsByPriority);
+            }, $this->assets);
         }
-        return isset($this->assets[$what])
-            ? $this->assets[$what]
-            : array();
+        if (isset($this->assets[$what])) {
+            \krsort($this->assets[$what], SORT_NUMERIC);
+            return \call_user_func_array('array_merge', $this->assets[$what]);
+        }
+        return array();
     }
 
     /**
@@ -208,10 +212,11 @@ class Html extends AbstractRoute
     public function removeAsset($what, $asset)
     {
         $asset = $this->normalizeAssetPath($asset);
-        foreach ($this->assets[$what] as $k => $v) {
-            if ($v === $asset) {
-                unset($this->assets[$what][$k]);
-                $this->assets[$what] = \array_values($this->assets[$what]);
+        foreach ($this->assets[$what] as $priority => $assets) {
+            $index = \array_search($asset, $assets, true);
+            if ($index !== false) {
+                unset($this->assets[$what][$priority][$index]);
+                $this->assets[$what][$priority] = \array_values($this->assets[$what][$priority]);
                 return true;
             }
         }
@@ -370,15 +375,16 @@ class Html extends AbstractRoute
      */
     protected function postSetCfg($cfg = array(), $prev = array())
     {
-        $assetTypes = array(
-            'filepathCss' => 'css',
-            'filepathScript' => 'script',
+        $assetTypeAndPriority = array(
+            'filepathCss' => ['css', 0],
+            'filepathScript' => ['script', 0],
+            'filepathZest' => ['script', 1],
         );
-        $assetValues = \array_intersect_key($cfg, $assetTypes);
+        $assetValues = \array_intersect_key($cfg, $assetTypeAndPriority);
         foreach ($assetValues as $k => $v) {
-            $type = $assetTypes[$k];
+            list($type, $priority) = $assetTypeAndPriority[$k];
             $this->removeAsset($type, $prev[$k]);
-            $this->addAsset($type, $v);
+            $this->addAsset($type, $v, $priority);
         }
     }
 

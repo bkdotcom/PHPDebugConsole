@@ -94,7 +94,7 @@ class ConfigNormalizer
             'css',
             'drawer',
             'filepathCss',
-            'filepathMicroDom',
+            'filepathZest',
             'filepathScript',
             'outputCss',
             'outputScript',

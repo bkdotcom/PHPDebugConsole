@@ -1,4 +1,4 @@
-import $ from 'microDom'
+import $ from 'zest'
 
 var $root, config, origH, origPageY
 

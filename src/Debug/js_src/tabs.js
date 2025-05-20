@@ -2,7 +2,7 @@
  * handle tabs
  */
 
-import $ from 'microDom'
+import $ from 'zest'
 
 export function init ($delegateNode) {
   // config = $delegateNode.data('config').get()

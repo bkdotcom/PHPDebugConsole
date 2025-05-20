@@ -5,13 +5,13 @@ import terser from '@rollup/plugin-terser'
 var tasks = [
   {
     input: 'js_src/main.js',
-    external: ['clipboardjs', 'microDom'],
+    external: ['clipboardjs', 'zest'],
     output: {
       file: 'js/Debug.js',
       format: 'iife', // immediately invoked function expression
       globals: {
         clipboardjs: 'window.ClipboardJS',
-        microDom: 'window.microDom'
+        zest: 'window.zest'
       },
       name: 'phpDebugConsole'
     },
@@ -24,12 +24,12 @@ var tasks = [
     ]
   },
   {
-    input: 'js_src/microDom.js',
+    input: 'js_src/zest/Zest.js',
     output: {
-      file: 'js/microDom.js',
+      file: 'js/zest.js',
       format: 'iife', // immediately invoked function expression
       globals: {},
-      name: 'microDom'
+      name: 'zest'
     },
     plugins: [
       nodeResolve(),
@@ -44,13 +44,13 @@ var tasks = [
 if (process.env.NODE_ENV !== 'watch') {
   tasks.push({
     input: 'js_src/main.js',
-    external: ['clipboardjs', 'microDom'],
+    external: ['clipboardjs', 'zest'],
     output: {
       file: 'js/Debug.min.js',
       format: 'iife', // immediately invoked function expression
       globals: {
         clipboardjs: 'window.ClipboardJS',
-        microDom: 'window.microDom'
+        zest: 'window.zest'
       },
       name: 'phpDebugConsole'
     },
@@ -64,12 +64,12 @@ if (process.env.NODE_ENV !== 'watch') {
     ]
   })
   tasks.push({
-    input: 'js_src/microDom.js',
+    input: 'js_src/zest/Zest.js',
     output: {
-      file: 'js/microDom.min.js',
+      file: 'js/zest.min.js',
       format: 'iife', // immediately invoked function expression
       globals: {},
-      name: 'microDom'
+      name: 'zest'
     },
     plugins: [
       nodeResolve(),

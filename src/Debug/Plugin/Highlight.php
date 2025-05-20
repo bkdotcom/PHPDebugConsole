@@ -117,7 +117,7 @@ class Highlight implements AssetProviderInterface
                             }, 100)
                         }
                     })
-                }(window.microDom));',
+                }(window.zest));',
             ],
         );
     }

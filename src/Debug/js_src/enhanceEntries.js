@@ -1,4 +1,4 @@
-import $ from 'microDom'
+import $ from 'zest'
 import * as enhanceArray from './enhanceArray.js'
 import * as enhanceObject from './enhanceObject.js'
 import * as enhanceSubscribers from './enhanceSubscribers.js'

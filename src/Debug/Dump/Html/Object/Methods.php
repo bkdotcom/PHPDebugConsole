@@ -75,7 +75,7 @@ class Methods extends AbstractSection
             . $this->dumpStaticVars($info)
             . ($name === '__toString'
                 ? "\n" . '<h3>' . $this->debug->i18n->trans('object.methods.return-value') . '</h3>' . "\n"
-                    . '<ul class="list-unstyled"><li>'
+                    . '<ul class="list-unstyled"><li>' // the <ul> is for indentation
                     . $this->valDumper->dump($info['returnValue'], array(
                         'attribs' => array(
                             'class' => ['return-value'],
@@ -255,7 +255,7 @@ class Methods extends AbstractSection
                         'class' => ['t_identifier'],
                     ),
                 ))
-                . '<span class="t_operator">=</span> ' . $this->valDumper->dump($value)
+                . ' <span class="t_operator">=</span> ' . $this->valDumper->dump($value)
                 . '</li>' . "\n";
         }
         $html .= '</ul>';

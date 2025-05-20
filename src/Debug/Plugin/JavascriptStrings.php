@@ -47,8 +47,10 @@ class JavascriptStrings implements AssetProviderInterface, SubscriberInterface
         'hook.both',
         'implements',
         'inherited',
+        'less',
         'method.abstract',
         'method.magic',
+        'more',
         'overrides',
         'private-ancestor',
         'promoted',
@@ -74,6 +76,10 @@ class JavascriptStrings implements AssetProviderInterface, SubscriberInterface
         'error.cat.notice',
         'error.cat.strict',
         'error.cat.warning',
+        'object.methods.magic.1', // wampClient
+        'object.methods.magic.2', // wampClient
+        'object.methods.return-value', // wampClient
+        'object.methods.static-variables', // wampClient
     ];
 
     /**

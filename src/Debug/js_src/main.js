@@ -4,7 +4,7 @@
  *    Add FontAwesome icons
  */
 
-import $ from 'microDom' // external global
+import $ from 'zest' // external global
 import './prototypeMethods.js'
 import * as enhanceEntries from './enhanceEntries.js'
 import * as enhanceMain from './enhanceMain.js'

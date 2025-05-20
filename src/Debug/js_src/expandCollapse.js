@@ -2,7 +2,7 @@
  * handle expanding/collapsing arrays, groups, & objects
  */
 
-import $ from 'microDom'
+import $ from 'zest'
 import { getNodeType } from './nodeType.js'
 
 var config
@@ -97,17 +97,14 @@ function buildReturnVal ($return) {
 }
 
 function buildReturnValObject ($return) {
-  var selectors = $return.find('> .t_identifier').length
-    ? [
-      // newer style markup classname wrapped in t_identifier
-      '> .t_identifier',
-    ]
-    : [
-      '> .classname',
-      '> .t_const',
-      '> [data-toggle] > .classname',
-      '> [data-toggle] > .t_const',
-    ]
+  var selectors = [
+    '> .t_identifier', // initially collapsed and before enhanced with data-toggle
+    '> [data-toggle] > .t_identifier',
+    '> .classname',
+    '> .t_const',
+    '> [data-toggle] > .classname',
+    '> [data-toggle] > .t_const',
+  ]
   return $return.find(selectors.join(','))[0].outerHTML
 }
 

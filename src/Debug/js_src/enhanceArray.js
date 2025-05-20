@@ -1,4 +1,4 @@
-import $ from 'microDom'
+import $ from 'zest'
 
 var config
 

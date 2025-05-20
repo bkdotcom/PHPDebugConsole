@@ -1,4 +1,4 @@
-import $ from 'microDom'
+import $ from 'zest'
 
 var config
 
@@ -43,7 +43,6 @@ export function create ($entry, $strings, remove) {
     return
   }
   // don't remove data... link template may change
-  // $entry.removeData('detectFiles foundFiles')
   if ($entry.is('[data-file]')) {
     /*
       Log entry link
@@ -115,7 +114,7 @@ function createFileLinksTraceProcessTr($tr, isUpdate) {
     file: $tr.data('file') || $tds.eq(0).text(),
     line: $tr.data('line') || $tds.eq(1).text()
   }
-  var $a = $('<a>', {
+  var $a = $('<a/>', {
     class: 'file-link',
     href: buildFileLink(info.file, info.line),
     html: '<i class="fa fa-fw fa-external-link"></i>',
@@ -132,7 +131,7 @@ function createFileLinksTraceProcessTr($tr, isUpdate) {
   }
   $tds.last().after($('<td/>', {
     class: 'text-center',
-    html: $a
+    html: $a,
   }))
 }
 

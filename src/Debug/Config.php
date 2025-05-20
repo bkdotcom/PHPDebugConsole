@@ -173,7 +173,7 @@ class Config
             $keysWas = \array_keys($cfgWas);
             if ($debugProp !== 'debug' && \array_intersect($keys, $keysWas) !== $keys) {
                 // we didn't get all the expected previous values...
-                $cfgWas = $this->getPropCfg($debugProp, array());
+                $cfgWas = $this->getPropCfg($debugProp, array(), true, false);
                 $cfgWas = \array_intersect_key($cfgWas, $cfg);
             }
             $return[$debugProp] = $cfgWas;
@@ -279,13 +279,9 @@ class Config
      */
     private function setPropCfg($debugProp, array $cfg)
     {
-        $obj = null;
-        if (\in_array($debugProp, $this->invokedServices, true)) {
-            $obj = $this->debug->{$debugProp};
-        } elseif (\preg_match('/^(dump|route)(.+)$/', $debugProp) && isset($this->debug->{$debugProp})) {
-            // getDump and getRoute store the instance in debug's container
-            $obj = $this->debug->{$debugProp};
-        }
+        $obj = \in_array($debugProp, $this->invokedServices, true) || isset($this->debug->{$debugProp})
+            ? $this->debug->{$debugProp}
+            : null;
         if (\is_object($obj)) {
             $this->debug->{$debugProp}->setCfg($cfg);
             return;

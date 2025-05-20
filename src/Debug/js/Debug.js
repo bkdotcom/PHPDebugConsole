@@ -96,11 +96,11 @@ var phpDebugConsole = (function (exports, $) {
   // config values
   var config$9;
 
-  var dict;
+  var dict$1;
 
   function init$b ($delegateNode) {
     config$9 = $delegateNode.data('config').get();
-    dict = $delegateNode.data('config').dict;
+    dict$1 = $delegateNode.data('config').dict;
     $delegateNode.on('click', '[data-toggle=vis]', function () {
       toggleVis(this);
       return false
@@ -129,10 +129,10 @@ var phpDebugConsole = (function (exports, $) {
           if (typeof icon === 'object') {
             icon = icon[0].outerHTML;
           }
-          return dict.replaceTokens(icon)
+          return dict$1.replaceTokens(icon)
         };
       } else {
-        icon = dict.replaceTokens(icon);
+        icon = dict$1.replaceTokens(icon);
       }
       if (prepend) {
         addIconPrepend($found, icon);
@@ -393,10 +393,12 @@ var phpDebugConsole = (function (exports, $) {
     init: init$b
   });
 
+  var dict;
   var enhanceObject;
   var enhanceValue$1;
 
   function init$a($root, enhanceVal, enhanceObj) {
+    dict = $root.data('config').dict;
     enhanceValue$1 = enhanceVal;
     enhanceObject = enhanceObj;
     $root.on('click', '.close[data-dismiss=alert]', function () {
@@ -472,7 +474,8 @@ var phpDebugConsole = (function (exports, $) {
     $node.find('> .object-inner')
       .find('> .constant > :last-child,' +
         '> .property > :last-child,' +
-        '> .method .t_string'
+        // '> .method > ul > li > .return-value,' +
+        '> .method > ul > li > :last-child' // static variables and return-value
       ).each(function () {
         enhanceValue$1(this, $entry);
       });
@@ -490,6 +493,9 @@ var phpDebugConsole = (function (exports, $) {
     } else if ($target.hasClass('m_group')) {
       // e.namespace = debug.group
       $strings = $target.find('> .group-body > li > .t_string');
+    } else if ($target.hasClass('group-body')) {
+      // tab shown... triggers expanded
+      $strings = $target.find('> li > .t_string');
     } else if ($target.hasClass('t_object')) {
       // e.namespace = debug.object
       $strings = $target.find('> .object-inner')
@@ -514,8 +520,8 @@ var phpDebugConsole = (function (exports, $) {
       $stringWrap = $node.wrap('<div class="show-more-wrapper"></div>').parent();
       $stringWrap.append('<div class="show-more-fade"></div>');
       $container = $stringWrap.wrap('<div class="show-more-container"></div>').parent();
-      $container.append('<button type="button" class="show-more"><i class="fa fa-caret-down"></i> More</button>');
-      $container.append('<button type="button" class="show-less" style="display:none;"><i class="fa fa-caret-up"></i> Less</button>');
+      $container.append('<button type="button" class="show-more"><i class="fa fa-caret-down"></i> ' + dict.get('more') + '</button>');
+      $container.append('<button type="button" class="show-less" style="display:none;"><i class="fa fa-caret-up"></i> ' + dict.get('less') + '</button>');
     }
   }
 
@@ -667,7 +673,6 @@ var phpDebugConsole = (function (exports, $) {
       return
     }
     // don't remove data... link template may change
-    // $entry.removeData('detectFiles foundFiles')
     if ($entry.is('[data-file]')) {
       /*
         Log entry link
@@ -739,7 +744,7 @@ var phpDebugConsole = (function (exports, $) {
       file: $tr.data('file') || $tds.eq(0).text(),
       line: $tr.data('line') || $tds.eq(1).text()
     };
-    var $a = $('<a>', {
+    var $a = $('<a/>', {
       class: 'file-link',
       href: buildFileLink(info.file, info.line),
       html: '<i class="fa fa-fw fa-external-link"></i>',
@@ -756,7 +761,7 @@ var phpDebugConsole = (function (exports, $) {
     }
     $tds.last().after($('<td/>', {
       class: 'text-center',
-      html: $a
+      html: $a,
     }));
   }
 
@@ -2309,17 +2314,14 @@ var phpDebugConsole = (function (exports, $) {
   }
 
   function buildReturnValObject ($return) {
-    var selectors = $return.find('> .t_identifier').length
-      ? [
-        // newer style markup classname wrapped in t_identifier
-        '> .t_identifier',
-      ]
-      : [
-        '> .classname',
-        '> .t_const',
-        '> [data-toggle] > .classname',
-        '> [data-toggle] > .t_const',
-      ];
+    var selectors = [
+      '> .t_identifier', // initially collapsed and before enhanced with data-toggle
+      '> [data-toggle] > .t_identifier',
+      '> .classname',
+      '> .t_const',
+      '> [data-toggle] > .classname',
+      '> [data-toggle] > .t_const',
+    ];
     return $return.find(selectors.join(','))[0].outerHTML
   }
 
@@ -6505,7 +6507,7 @@ var phpDebugConsole = (function (exports, $) {
     },
     persistDrawer: false,
     strings: {
-      'attributes': 'Attributes',
+      attributes: 'Attributes',
       'cfg.cookie': 'Debug cookie',
       'cfg.documentation': 'Documentation',
       'cfg.link-files': 'Create file links',
@@ -6517,8 +6519,8 @@ var phpDebugConsole = (function (exports, $) {
       'cfg.theme.light': 'Light',
       'debugInfo-excluded': 'not included in __debugInfo',
       'debugInfo-value': 'via __debugInfo()',
-      'deprecated': 'Deprecated',
-      'dynamic': 'Dynamic',
+      deprecated: 'Deprecated',
+      dynamic: 'Dynamic',
 
       'error.cat.deprecated': 'Deprecated',
       'error.cat.error': 'Error',
@@ -6527,17 +6529,23 @@ var phpDebugConsole = (function (exports, $) {
       'error.cat.strict': 'Strict',
       'error.cat.warning': 'Warning',
 
-      'final': 'Final',
+      final: 'Final',
       'hook.both': 'Get and set hooks',
       'hook.get': 'Get hook',
       'hook.set': 'Set hook',
-      'implements': 'Implements',
-      'inherited': 'Inherited',
+      implements: 'Implements',
+      inherited: 'Inherited',
+      less: 'Less',
       'method.abstract': 'Abstract method',
       'method.magic': 'Magic method',
-      'overrides': 'Overrides',
+      more: 'More',
+      overrides: 'Overrides',
+      'object.methods.magic.1': 'This object has a {method} method', // wampClient
+      'object.methods.magic.2': 'This object has {method1} and {method2} methods', // wampClient
+      'object.methods.return-value': 'return value', // wampClient
+      'object.methods.static-variables': 'static variables', // wampClient
       'private-ancestor': 'Private ancestor',
-      'promoted': 'Promoted',
+      promoted: 'Promoted',
       'property.magic': 'Magic property',
       'side.alert': 'Alert',
       'side.channels': 'Channels',
@@ -6547,8 +6555,8 @@ var phpDebugConsole = (function (exports, $) {
       'side.other': 'Other',
       'side.php-errors': 'PHP Errors',
       'side.warning': 'Warning',
-      'throws': 'Throws',
-      'virtual': 'Virtual',
+      throws: 'Throws',
+      virtual: 'Virtual',
       'write-only': 'Write-only',
     },
     theme: 'auto',
@@ -6951,4 +6959,4 @@ var phpDebugConsole = (function (exports, $) {
 
   return exports;
 
-})({}, window.microDom);
+})({}, window.zest);

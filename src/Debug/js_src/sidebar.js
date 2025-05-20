@@ -1,4 +1,4 @@
-import $ from 'microDom'
+import $ from 'zest'
 import { addTest as addFilterTest, addPreFilter } from './filter.js'
 
 var config

@@ -33,8 +33,13 @@
       <file>src/Debug/Collector/Pdo/CompatTrait.php</file>
       <file>src/Debug/Collector/SimpleCache/CompatTrait.php</file>
       <file>src/Debug/Dump/charData.php</file>
-      <directory>src/Debug/Framework</directory>
       <directory>src/Debug/lang</directory>
+      <directory>src/Debug/Framework/Laravel</directory>
+      <directory>src/Debug/Framework/Symfony</directory>
+      <directory>src/Debug/Framework/Yii1_1</directory>
+      <directory>src/Debug/Framework/Yii2</directory>
+      <file>src/Debug/Framework/Cake4.php</file>
+      <file>src/Debug/Framework/Slim2.php</file>
       <directory>src/Debug/node_modules</directory>
       <directory>src/Psr7</directory>
     </exclude>

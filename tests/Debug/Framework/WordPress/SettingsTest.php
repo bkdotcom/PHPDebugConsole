@@ -3,6 +3,7 @@
 namespace bdk\Test\Debug\Framework\WordPress;
 
 use bdk\Debug;
+use bdk\Debug\Framework\WordPress\Settings as WordPressSettings;
 use bdk\PhpUnitPolyfill\AssertionTrait;
 use bdk\PubSub\Event;
 use bdk\Test\Debug\DebugTestFramework;
@@ -25,7 +26,7 @@ class SettingsTest extends DebugTestFramework
         }
         \wp_reset_mock();
         self::resetDebug();
-        self::$plugin = new \bdk\Debug\Framework\WordPress\Settings();
+        self::$plugin = new WordPressSettings();
         self::$plugin->setCfg('pluginFile', 'phpDebugConsole/phpdebugconsole.php');
     }
 
@@ -79,7 +80,7 @@ class SettingsTest extends DebugTestFramework
                 'PHPDebugConsole Settings',     // page title
                 'PHPDebugConsole',	            // menu title
                 'manage_options',	            // capability
-                self::$plugin::PAGE_SLUG_NAME,           // menu slug
+                WordPressSettings::PAGE_SLUG_NAME,      // menu slug
                 [self::$plugin, 'outputSettingsPage'],	// callable
                 null,				            // position
             ],

@@ -23,7 +23,6 @@ class HtmlTest extends DebugTestFramework
         ));
         $expect = '<div class="debug"%s>
 <style type="text/css">%a</style>
-<script>%s</script>
 <script>%a</script>
 <header class="debug-bar debug-menu-bar">PHPDebugConsole<nav role="tablist" style="display:none;">%A</nav></header>
 <div class="loading">Loading <i class="fa fa-spinner fa-pulse fa-2x fa-fw" aria-hidden="true"></i></div>
@@ -65,10 +64,10 @@ class HtmlTest extends DebugTestFramework
         $highlight = new \bdk\Debug\Plugin\Highlight();
         $this->debug->addPlugin($highlight);
         $this->assertCount(2, $this->debug->routeHtml->getAssets('css'));
-        $this->assertCount(3, $this->debug->routeHtml->getAssets('script')); // primary & 2 highlight scripts
+        $this->assertCount(4, $this->debug->routeHtml->getAssets('script')); // zest, debug, prism & highlight
         $this->debug->removePlugin($highlight);
         $this->assertCount(0, $this->debug->routeHtml->getAssets('css'));
-        $this->assertCount(1, $this->debug->routeHtml->getAssets('script'));    // primary
+        $this->assertCount(2, $this->debug->routeHtml->getAssets('script')); // zest & debug
         $this->assertFalse($this->debug->routeHtml->removeAsset('css', 'does not exist'));
     }
 }

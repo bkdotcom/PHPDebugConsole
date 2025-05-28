@@ -1,5 +1,6 @@
 /coverage
 /src/Debug/.sass-cache
+/src/Debug/coverage
 /src/Debug/node_modules
 /vendor
 .phpunit.result.cache

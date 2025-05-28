@@ -1,48 +1,41 @@
 import * as customSelectors from './customSelectors.js'
+import * as helper from '../helper.js'
 
 export function extendMicroDom (MicroDom) {
-  MicroDom.prototype.children = function (filter) {
+
+  function children(filter) {
     return this.alter((el) => el.children, filter)
   }
 
-  MicroDom.prototype.closest = function (selector) {
+  function closest (selector) {
     return this.alter((el) => {
-      if (typeof el.closest !== 'function') {
-        // console.warn('el.closest is not a function', el)
-        return []
-      }
-      return el.closest(selector)
+      return [9, 11].includes(el.nodeType)
+        ? []
+        : el.closest(selector)
     })
   }
 
-  MicroDom.prototype.find = function (mixed) {
+  function find(mixed) {
     if (typeof mixed === 'string') {
-      // const selector = helper.modifySelector(mixed)
-      // return this.alter((el) => el.querySelectorAll(selector))
       return this.alter((el) => customSelectors.querySelectorAll(mixed, el))
     }
-    var elements = []
-    if (mixed instanceof MicroDom) {
-      elements = Array.from(mixed)
-    } else if (mixed instanceof Node) {
-      elements = [mixed]
-    }
+    const elements = helper.argsToElements([mixed])
     return this.alter((el) => {
       const collected = []
-      for (let i = 0, len = elements.length; i < len; i++) {
-        if (el.contains(elements[i])) {
-          collected.push(elements[i])
+      for (const el2 of elements) {
+        if (el.contains(el2)) {
+          collected.push(el2)
         }
       }
       return collected
     })
   }
 
-  MicroDom.prototype.next = function (filter) {
+  function next (filter) {
     return this.alter((el) => el.nextElementSibling, filter)
   }
 
-  MicroDom.prototype.nextAll = function (filter) {
+  function nextAll (filter) {
     return this.alter((el) => {
       const collected = []
       while (el = el.nextElementSibling) {
@@ -52,7 +45,7 @@ export function extendMicroDom (MicroDom) {
     }, filter)
   }
 
-  MicroDom.prototype.nextUntil = function (selector, filter) {
+  function nextUntil (selector, filter) {
     return this.alter((el) => {
       const collected = []
       while ((el = el.nextElementSibling) && customSelectors.matches(el, selector) === false) {
@@ -62,11 +55,11 @@ export function extendMicroDom (MicroDom) {
     }, filter)
   }
 
-  MicroDom.prototype.parent = function (filter) {
+  function parent (filter) {
     return this.alter((el) => el.parentNode, filter)
   }
 
-  MicroDom.prototype.parents = function (filter) {
+  function parents (filter) {
     return this.alter((el) => {
       const collected = []
       while ((el = el.parentNode) && el !== document) {
@@ -76,21 +69,24 @@ export function extendMicroDom (MicroDom) {
     }, filter)
   }
 
-  MicroDom.prototype.parentsUntil = function (selector, filter) {
+  function parentsUntil (selector, filter) {
     return this.alter((el) => {
       const collected = []
-      while ((el = el.parentNode) && el.nodeName !== 'BODY' && customSelectors.matches(el, selector) === false) {
+      while ((el = el.parentNode) && customSelectors.matches(el, selector) === false) {
         collected.push(el)
+        if (el.nodeName === 'BODY') {
+          break
+        }
       }
       return collected
     }, filter)
   }
 
-  MicroDom.prototype.prev = function (filter) {
+  function prev (filter) {
     return this.alter((el) => el.previousElementSibling, filter)
   }
 
-  MicroDom.prototype.prevAll = function (filter) {
+  function prevAll (filter) {
     return this.alter((el) => {
       const collected = []
       while (el = el.previousElementSibling) {
@@ -100,7 +96,7 @@ export function extendMicroDom (MicroDom) {
     }, filter)
   }
 
-  MicroDom.prototype.prevUntil = function (selector, filter) {
+  function prevUntil (selector, filter) {
     return this.alter((el) => {
       const collected = []
       while ((el = el.previousElementSibling) && el.matches(selector) === false) {
@@ -110,9 +106,26 @@ export function extendMicroDom (MicroDom) {
     }, filter)
   }
 
-  MicroDom.prototype.siblings = function (filter) {
+  function siblings (filter) {
     return this.alter((el) => {
       return Array.from(el.parentNode.children).filter((child) => child !== el)
     }, filter)
   }
+
+  Object.assign(MicroDom.prototype, {
+    children,
+    closest,
+    find,
+    next,
+    nextAll,
+    nextUntil,
+    parent,
+    parents,
+    parentsUntil,
+    prev,
+    prevAll,
+    prevUntil,
+    siblings,
+  })
+
 }

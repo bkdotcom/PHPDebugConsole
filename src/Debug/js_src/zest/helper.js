@@ -1,6 +1,44 @@
+import * as customSelectors from './microDom/customSelectors.js'
+
 export var rand = "zest" + Math.random().toString().replace(/\D/g, '')
 
-export var camelCase = function (str) {
+/**
+ * "protected" helper method to convert arguments to elements
+ */
+export const argsToElements = function (args, el, index) {
+  const elements = []
+  while (args.length) {
+    const arg = args.shift()
+    if (typeof arg === 'string') {
+      let elementsAppend = []
+      let isCssSelector = false
+      if (!arg.includes('<')) {
+        // no "<"... are we text or a css selector?
+        try {
+          elementsAppend = customSelectors.querySelectorAll(arg)
+          isCssSelector = true
+        } catch {
+          // we didn't error... must have been a valid selector
+        }
+      }
+      if (isCssSelector === false) {
+        elementsAppend = createElements(arg)
+      }
+      args.unshift(...elementsAppend)
+    } else if (arg instanceof Node) {
+      elements.push(arg)
+    } else if (arg instanceof NodeList) {
+      elements.push(...arg)
+    } else if (typeof arg === 'object' && typeof arg[Symbol.iterator] === 'function') {
+      args.unshift(...arg)
+    } else if (typeof arg === 'function') {
+      args.unshift(arg.call(el, el, index))
+    }
+  }
+  return elements
+}
+
+export const camelCase = function (str) {
   const regex = /[-_\s]+/
   if (str.match(regex) === null) {
     return str
@@ -12,13 +50,13 @@ export var camelCase = function (str) {
   }).join('')
 }
 
-export var createElements = function (html) {
+export const createElements = function (html) {
   const element = document.createElement('template')
   element.innerHTML = html; // do not trim
   return element.content.childNodes;  // vs element.content.children
 }
 
-export var each = function (mixed, callback) {
+export const each = function (mixed, callback) {
   if (Array.isArray(mixed)) {
     return mixed.forEach((value, index) => callback.call(value, value, index))
   }
@@ -27,7 +65,7 @@ export var each = function (mixed, callback) {
   }
 }
 
-export var elInitMicroDomInfo = function (el) {
+export const elInitMicroDomInfo = function (el) {
   if (typeof el[rand] === 'undefined') {
     el[rand] = {
       data: {},
@@ -59,7 +97,7 @@ export var elMatches = function (el, selector) {
 }
 */
 
-export var extend = function ( ...args ) {
+export const extend = function ( ...args ) {
   const isDeep = typeof args[0] === 'boolean' ? args.shift() : false
   const target = args.shift()
   args.forEach((source) => {
@@ -78,7 +116,7 @@ export var extend = function ( ...args ) {
   return target
 }
 
-export var findDeepest = function (el) {
+export const findDeepest = function (el) {
   var children = el.children
   var depth = arguments[1] || 0
   var deepestEl = [el, depth]
@@ -105,7 +143,7 @@ function hash (str) {
 }
 */
 
-export var isNumeric = function (val) {
+export const isNumeric = function (val) {
   // parseFloat NaNs numeric-cast false positives ("")
   // ...but misinterprets leading-number strings, particularly hex literals ("0x...")
   // subtraction forces infinities to NaN
@@ -131,7 +169,7 @@ export var modifySelector = function (selector) {
 }
 */
 
-export var type = function (val) {
+export const type = function (val) {
   if (val === null || val === undefined) {
     return val + ''
   }

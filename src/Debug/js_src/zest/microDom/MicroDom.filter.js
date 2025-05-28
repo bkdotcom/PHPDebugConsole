@@ -1,4 +1,5 @@
 import * as customSelectors from './customSelectors.js'
+import * as helper from '../helper.js'
 
 export function extendMicroDom (MicroDom) {
 
@@ -20,13 +21,7 @@ export function extendMicroDom (MicroDom) {
       } else if (typeof mixed === 'function') {
         isMatch = mixed.call(el, el, i)
       } else {
-        var elements = []
-        if (mixed instanceof MicroDom) {
-          elements = Array.from(mixed)
-        } else if (mixed instanceof Node) {
-          elements = [mixed]
-        }
-        isMatch = elements.includes(el)
+        isMatch = helper.argsToElements([mixed]).includes(el)
       }
       if (notFilter) {
         isMatch = !isMatch
@@ -57,18 +52,13 @@ export function extendMicroDom (MicroDom) {
     }
     if (typeof mixed === 'function') {
       for (let i = 0, len = this.length; i < len; i++) {
-        if (callback.call(this[i], this[i], i)) {
+        if (mixed.call(this[i], this[i], i)) {
           return true
         }
       }
       return false
     }
-    var elements = []
-    if (selector instanceof Micro) {
-      elements = Array.from(selector)
-    } else if (selector instanceof Node) {
-      elements = [selector]
-    }
+    const elements = helper.argsToElements([mixed])
     for (let el of this) {
       for (let i = 0, len = elements.length; i < len; i++) {
         if (elements[i] === el) {

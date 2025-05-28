@@ -1,4 +1,4 @@
-import * as helper from '../helper.js' // cookie & query utils
+import * as helper from '../helper.js'
 
 const findEventHandlerInfo = function (el, events, selector, handler) {
   return (el[helper.rand]?.eventHandlers || []).filter((handlerInfo) => {
@@ -8,8 +8,27 @@ const findEventHandlerInfo = function (el, events, selector, handler) {
   })
 }
 
+const createEvent = function (eventOrName) {
+  const eventClasses = {
+    'PointerEvent': ['click', 'dblclick', 'mousedown', 'mousemove', 'mouseout', 'mouseover', 'mouseup'],
+    'SubmitEvent': ['submit'],
+    'FocusEvent': ['blur', 'focus'],
+    'KeyboardEvent': ['keydown', 'keypress', 'keyup'],
+    'WindowEvent': ['load', 'resize', 'scroll', 'unload'],
+  }
+  if (eventOrName instanceof Event) {
+    return eventOrName
+  }
+  for (const [eventClass, eventNames] of Object.entries(eventClasses)) {
+    if (eventNames.includes(eventOrName)) {
+      return new window[eventClass](eventOrName, {bubbles: true})
+    }
+  }
+  return new Event(eventOrName, {bubbles: true})
+}
+
 export function extendMicroDom (MicroDom) {
-  MicroDom.prototype.off = function ( ...args ) {
+  function off ( ...args ) {
     var events = args.length ? args.shift().split(' ') : []
     var selector = typeof args[0] === 'string' ? args.shift() : null
     var handler = args.length ? args.shift() : null
@@ -21,7 +40,7 @@ export function extendMicroDom (MicroDom) {
     })
   }
 
-  MicroDom.prototype.on = function ( ...args ) {
+  function on ( ...args ) {
     const events = args.shift().split(' ')
     const selector = typeof args[0] === 'string' ? args.shift() : null
     const handler = args.shift()
@@ -52,25 +71,27 @@ export function extendMicroDom (MicroDom) {
     })
   }
 
-  MicroDom.prototype.one = function ( ...args ) {
+  function one ( ...args ) {
     return this.on( ...args, true )
   }
 
-  MicroDom.prototype.trigger = function (eventName, extraParams) {
+  function trigger (eventName, extraParams) {
+    if (typeof extraParams === 'undefined') {
+      extraParams = []
+    }
     return this.each((el) => {
-      if (typeof eventName === 'string' && typeof el[eventName] === 'function') {
-        el[eventType]()
-        return
-      }
-      const event = typeof eventName === 'string'
-        ? new Event(eventName, {bubbles: true})
-        : eventName
-      if (typeof extraParams !== 'undefined') {
-        event.extraParams = Array.isArray(extraParams)
-          ? extraParams
-          : [extraParams]
-      }
+      const event = createEvent(eventName)
+      event.extraParams = Array.isArray(extraParams)
+        ? extraParams
+        : [extraParams]
       el.dispatchEvent(event)
     })
   }
+
+  Object.assign(MicroDom.prototype, {
+    off,
+    on,
+    one,
+    trigger,
+  })
 }

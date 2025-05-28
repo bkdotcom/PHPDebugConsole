@@ -13,7 +13,7 @@ function Zest (mixed, more) {
     // this is already a MicroDom instance
     return mixed
   }
-  if (mixed instanceof Node || mixed instanceof Window) {
+  if ( mixed instanceof Node || mixed === window) {
     return new MicroDom(mixed)
   }
   if (typeof mixed === 'undefined') {
@@ -27,10 +27,8 @@ function Zest (mixed, more) {
     document.addEventListener('DOMContentLoaded', mixed)
     return
   }
-  if (typeof mixed !== 'string') {
-    console.warn('what is this?', typeof mixed, mixed)
-  }
-  if (mixed.substr(0, 1) === '<') {
+  // we're a string... are we html/text or a selector?
+  if (mixed.includes('<')) {
     const elements = helper.createElements(mixed)
     const ret =  new MicroDom( ...elements )
     if (typeof more === 'object') {

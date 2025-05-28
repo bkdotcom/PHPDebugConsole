@@ -1,4 +1,4 @@
-import * as helper from '../helper.js' // cookie & query utils
+import * as helper from '../helper.js'
 
 export function extendMicroDom (MicroDom) {
 
@@ -11,7 +11,7 @@ export function extendMicroDom (MicroDom) {
     return duration
   }
 
-  MicroDom.prototype.animate = function (properties, duration = 400, easing = 'swing', complete) {
+  function animate (properties, duration = 400, easing = 'swing', complete) {
     duration = durationNorm(duration)
     const startTime = performance.now()
 
@@ -53,8 +53,8 @@ export function extendMicroDom (MicroDom) {
       const computedStyles = getComputedStyle(el)
       for (const property in properties) {
         const regex = /^(-=|\+=)?([\d\.]+)(\D+)?$/
-        const matchesUser = properties[property].toString().match(regex)
-        const matchesComputed = computedStyles[property].toString().match(regex)
+        const matchesUser = properties[property].toString().match(regex) || []
+        const matchesComputed = computedStyles[property].toString().match(regex) || []
         propInfo[property] = {
           end: parseFloat(properties[property]),
           start: parseFloat(computedStyles[property]) || 0,
@@ -66,7 +66,7 @@ export function extendMicroDom (MicroDom) {
     })
   }
 
-  MicroDom.prototype.fadeIn = function (duration = 400, onComplete) {
+  function fadeIn (duration = 400, onComplete) {
     duration = durationNorm(duration)
 
     return this.each((el) => {
@@ -85,7 +85,7 @@ export function extendMicroDom (MicroDom) {
     })
   }
 
-  MicroDom.prototype.fadeOut = function (duration = 400, onComplete) {
+  function fadeOut (duration = 400, onComplete) {
     duration = durationNorm(duration)
 
     return this.each((el) => {
@@ -103,14 +103,14 @@ export function extendMicroDom (MicroDom) {
     })
   }
 
-  MicroDom.prototype.hide = function () {
+  function hide () {
     return this.each( (el) => {
       helper.elInitMicroDomInfo(el)
       el.style.display = 'none'
     })
   }
 
-  MicroDom.prototype.show = function () {
+  function show () {
     return this.each((el) => {
       el.style.display = el[helper.rand]?.display
         ? el[helper.rand].display
@@ -118,7 +118,7 @@ export function extendMicroDom (MicroDom) {
     })
   }
 
-  MicroDom.prototype.slideDown = function (duration = 400, onComplete) {
+  function slideDown (duration = 400, onComplete) {
     duration = durationNorm(duration)
 
     return this.each((el) => {
@@ -159,7 +159,7 @@ export function extendMicroDom (MicroDom) {
     })
   }
 
-  MicroDom.prototype.slideUp = function (duration = 400, onComplete) {
+  function slideUp (duration = 400, onComplete) {
     duration = durationNorm(duration)
 
     return this.each((el) => {
@@ -191,7 +191,7 @@ export function extendMicroDom (MicroDom) {
     })
   }
 
-  MicroDom.prototype.toggle = function ( ...args ) {
+  function toggle ( ...args ) {
     if (typeof args[0] == 'boolean') {
       return this[args[0] ? 'show' : 'hide']()
     }
@@ -205,4 +205,16 @@ export function extendMicroDom (MicroDom) {
       el.style.display = display
     })
   }
+
+  Object.assign(MicroDom.prototype, {
+    animate,
+    fadeIn,
+    fadeOut,
+    hide,
+    show,
+    slideDown,
+    slideUp,
+    toggle,
+  })
+
 }

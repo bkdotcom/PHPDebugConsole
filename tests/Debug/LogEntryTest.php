@@ -13,20 +13,22 @@ class LogEntryTest extends DebugTestFramework
 {
     public function testAppendGroup()
     {
+        // this test originally tested that 'id' 'appendGroup' value and get sanitized to a valid id
+        //   we now only sanitize id when output as html attrib
         $logEntry = new LogEntry(
             $this->debug->getChannel('php', array('nested' => false)),
             'log',
             array('string', true, false, null, 42),
             array(
                 'appendGroup' => 'foo bar',
-                'id' => 'ding dong',
                 'channel' => null,
+                'id' => 'ding dong',
             )
         );
         self::assertSame(array(
-            'appendGroup' => 'foo_bar',
+            'appendGroup' => 'foo bar',
             'attribs' => array(
-                'id' => 'ding_dong',
+                'id' => 'ding dong',
                 'class' => array(),
             ),
         ), $logEntry->getMeta());

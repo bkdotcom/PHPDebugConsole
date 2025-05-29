@@ -284,9 +284,6 @@ class LogEntry extends Event implements JsonSerializable
         if (isset($values['meta']) === false) {
             return;
         }
-        if (isset($values['meta']['appendGroup'])) {
-            $this->values['meta']['appendGroup'] = $this->subject->html->sanitizeId($values['meta']['appendGroup']);
-        }
         if (isset($values['meta']['icon']) && \preg_match('/^:(.+):$/', $values['meta']['icon'], $matches)) {
             $this->values['meta']['icon'] = $this->subject->getCfg('icons.' . $matches[1], Debug::CONFIG_DEBUG);
         }
@@ -316,9 +313,6 @@ class LogEntry extends Event implements JsonSerializable
             $meta['attribs']['class'] = [];
         } elseif (\is_string($meta['attribs']['class'])) {
             $meta['attribs']['class'] = \explode(' ', $meta['attribs']['class']);
-        }
-        if (isset($meta['attribs']['id'])) {
-            $meta['attribs']['id'] = $this->subject->html->sanitizeId($meta['attribs']['id']);
         }
         $this->values['meta'] = $meta;
     }

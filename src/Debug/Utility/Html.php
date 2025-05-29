@@ -252,6 +252,7 @@ class Html
         if ($id === null) {
             return $id;
         }
+        // id must begin with a letter (a-z or A-Z)
         $id = \preg_replace('/^[^A-Za-z]+/', '', $id);
         // note that ":" and "." are  allowed chars but not practical... removing
         $id = \preg_replace('/[^a-zA-Z0-9_\-]+/', '_', $id);

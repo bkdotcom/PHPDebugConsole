@@ -125,6 +125,8 @@ class Data
      */
     public function appendLog(LogEntry $logEntry)
     {
+        // note: id (and appendGroup value) should not be numeric
+        //    array_merge may be applied to log entries -> numeric keys will be reindexed
         $id = $logEntry->getMeta('appendGroup');
         if ($id && $this->appendGroup($logEntry, $id)) {
             return;
@@ -181,6 +183,9 @@ class Data
     {
         $depth = 0;
         $inGroup = false;
+        if (\preg_match('/^\d+$/', $id)) {
+            $id = (int) $id;
+        }
         foreach ($logEntries as $key => $logEntry) {
             $inGroup = $inGroup || $key === $id;
             if ($inGroup === false) {

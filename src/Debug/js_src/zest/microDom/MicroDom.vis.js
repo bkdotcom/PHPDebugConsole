@@ -120,33 +120,21 @@ export function extendMicroDom (MicroDom) {
 
   function slideDown (duration = 400, onComplete) {
     duration = durationNorm(duration)
-
     return this.each((el) => {
-      var display = window.getComputedStyle(el).display
-      const height = el.offsetHeight
-
-      el.style.removeProperty('display')
-
-      if (display === 'none') {
-        display = 'block'
-      }
-
-      el.style.display = display
-      el.style.overflow = 'hidden'
-      el.style.height = 0
-      // el.style.paddingTop = 0
-      // el.style.paddingBottom = 0
-      // el.style.marginTop = 0
-      // el.style.marginBottom = 0
-      // el.offsetHeight
-      el.style.boxSizing = 'border-box'
-      el.style.transitionProperty = "height, margin, padding"
+      el.style.transitionProperty = 'height, margin, padding'
       el.style.transitionDuration = duration + 'ms'
-      el.style.height = height + 'px'
+      el.style.boxSizing = 'border-box'
+      el.style.overflow = 'hidden'
+      el.style.display = helper.elInitMicroDomInfo(el).display
+      el.style.height = el.scrollHeight + 'px'
       el.style.removeProperty('padding-top')
+      // el.style.paddingTop = 0
       el.style.removeProperty('padding-bottom')
+      // el.style.paddingBottom = 0
       el.style.removeProperty('margin-top')
+      // el.style.marginTop = 0
       el.style.removeProperty('margin-bottom')
+      // el.style.marginBottom = 0
       window.setTimeout( () => {
         el.style.removeProperty('height')
         el.style.removeProperty('overflow')
@@ -161,13 +149,10 @@ export function extendMicroDom (MicroDom) {
 
   function slideUp (duration = 400, onComplete) {
     duration = durationNorm(duration)
-
     return this.each((el) => {
       el.style.transitionProperty = 'height, margin, padding'
       el.style.transitionDuration = duration + 'ms'
       el.style.boxSizing = 'border-box'
-      el.style.height = el.offsetHeight + 'px'
-      // el.offsetHeight
       el.style.overflow = 'hidden'
       el.style.height = 0
       el.style.paddingTop = 0

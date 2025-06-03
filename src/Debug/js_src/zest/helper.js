@@ -2,26 +2,26 @@ import * as customSelectors from './microDom/customSelectors.js'
 
 export var rand = "zest" + Math.random().toString().replace(/\D/g, '')
 
+const computedDisplayValues = {
+  'div': 'block',
+  'table': 'table',
+  'tr': 'table-row',
+  'td': 'table-cell',
+  'th': 'table-cell',
+}
+
 /**
- * "protected" helper method to convert arguments to elements
+ * convert arguments to elements
+ *
+ * accepts text/html/css-selector, Node, NodeList, function, iterable
  */
 export const argsToElements = function (args, el, index) {
   const elements = []
   while (args.length) {
     const arg = args.shift()
     if (typeof arg === 'string') {
-      let elementsAppend = []
-      let isCssSelector = false
-      if (!arg.includes('<')) {
-        // no "<"... are we text or a css selector?
-        try {
-          elementsAppend = customSelectors.querySelectorAll(arg)
-          isCssSelector = true
-        } catch {
-          // we didn't error... must have been a valid selector
-        }
-      }
-      if (isCssSelector === false) {
+      let elementsAppend = isCssSelector(arg)
+      if (elementsAppend === false) {
         elementsAppend = createElements(arg)
       }
       args.unshift(...elementsAppend)
@@ -66,19 +66,34 @@ export const each = function (mixed, callback) {
 }
 
 export const elInitMicroDomInfo = function (el) {
-  if (typeof el[rand] === 'undefined') {
-    el[rand] = {
-      data: {},
-      // display
-      eventHandlers: [],
-    }
+  if (typeof el[rand] !== 'undefined') {
+    return el[rand]
   }
-  if (el !== window && typeof el[rand].display === 'undefined') {
-    const displayVal = window.getComputedStyle(el).display
-    if (displayVal !== 'none') {
-      el[rand].display = displayVal
-    }
+  el[rand] = {
+    data: {},
+    display: undefined,
+    eventHandlers: [],
   }
+  if (el === window) {
+    return el[rand]
+  }
+  const tagName = el.tagName.toLowerCase()
+  let displayVal = window.getComputedStyle(el).display
+  if (displayVal !== 'none') {
+    el[rand].display = displayVal
+    return el[rand]
+  }
+  if (computedDisplayValues[tagName]) {
+    el[rand].display = computedDisplayValues[tagName]
+    return el[rand]
+  }
+  const elTemp = document.createElement(tagName)
+  document.body.appendChild(elTemp)
+  displayVal = window.getComputedStyle(elTemp).display
+  document.body.removeChild(elTemp)
+  el[rand].display = displayVal
+  computedDisplayValues[tagName] = displayVal
+  return el[rand]
 }
 
 /*
@@ -142,6 +157,31 @@ function hash (str) {
   return hash.toString(16); // convert to hex
 }
 */
+
+const isCssSelector = function (val)
+{
+  if (val.includes('<')) {
+    return false
+  }
+  try {
+    let isCssSelector = true
+    const elements = customSelectors.querySelectorAll(val)
+    if (elements.length === 0 && val.match(/^([a-z][\w\-]*[\s,]*)+$/i)) {
+      // we didn't error, but we didn't find any elements and we have a string that looks like words
+      // "hello world" is a valid selector
+      const words = val.toLowerCase().split(/[\s,]+/)
+      // "i" and "a" omitted
+      const tags = 'div span form label input select option textarea button section nav img b p u em strong table tr td th ul ol dl li dt dd h1 h2 h3 h4 h5 h6'.split(' ')
+      isCssSelector = words.filter(x => tags.includes(x)).length > 0
+    }
+    if (isCssSelector) {
+      return elements
+    }
+  } catch {
+    // we got an error, so val is not a valid selector
+  }
+  return false
+}
 
 export const isNumeric = function (val) {
   // parseFloat NaNs numeric-cast false positives ("")

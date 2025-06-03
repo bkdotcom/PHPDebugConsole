@@ -26,8 +26,7 @@ export function extendMicroDom (MicroDom) {
     key = helper.camelCase(key)
     if (isStringable === false) {
       // store non-serializable value in special element property
-      helper.elInitMicroDomInfo(el)
-      el[helper.rand].data[key] = value
+      helper.elInitMicroDomInfo(el).data[key] = value
       return
     }
     el.dataset[key] = stringified

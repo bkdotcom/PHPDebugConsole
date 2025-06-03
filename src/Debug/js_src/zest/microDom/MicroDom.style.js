@@ -13,6 +13,9 @@ export function extendMicroDom (MicroDom) {
       return this[0]?.style; // return the style object
     }
     if (typeof args[0] === 'string' && args.length === 1) {
+      if (args[0].trim() === '') {
+        return this.removeAttr('style')
+      }
       if (args[0].includes(':')) {
         // if the string contains a colon, we're setting the style attribute
         return this.each((el) => {

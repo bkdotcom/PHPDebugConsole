@@ -215,12 +215,12 @@ return array(
     'session.name' => 'nome della sessione',
     'session.name.assert' => 'non dovrebbe essere PHPSESSID (così come {expose_php} dovrebbe essere disabilitato)',
 
-    'sql.analysis.select_all' => 'Usa %cSELECT *%c solo se hai bisogno di tutte le colonne dalla tabella',
-    'sql.analysis.order_by_rand' => '%cORDER BY RAND()%c è lento, evita se possibile.',
-    'sql.analysis.not_standard' => 'L\'operatore %c!=%c non è standard. Usa invece l\'operatore %c<>%c.',
-    'sql.analysis.no_where' => 'L\'istruzione %cSELECT%c non ha una clausola %cWHERE%c e potrebbe esaminare molte più righe del previsto',
     'sql.analysis.leading_wildcard' => 'Un argomento ha un carattere jolly iniziale: %c{arg}%c e non può utilizzare un indice se esiste.',
     'sql.analysis.limit_no_order' => '%cLIMIT%c senza %cORDER BY%c causa risultati non deterministici',
+    'sql.analysis.not_standard' => 'L\'operatore %c!=%c non è standard. Usa invece l\'operatore %c<>%c.',
+    'sql.analysis.no_where' => 'L\'istruzione %cSELECT%c non ha una clausola %cWHERE%c e potrebbe esaminare molte più righe del previsto',
+    'sql.analysis.order_by_rand' => '%cORDER BY RAND()%c è lento, evita se possibile.',
+    'sql.analysis.select_all' => 'Usa %cSELECT *%c solo se hai bisogno di tutte le colonne dalla tabella',
 
     'utility.headers-sent' => 'Intestazioni già inviate: {file}, linea {line}',
     'utility.html.innerhtml-return' => 'La chiusura di InnerHtml dovrebbe restituire una stringa. Ottenuto {actual}',

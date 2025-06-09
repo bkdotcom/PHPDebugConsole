@@ -170,6 +170,31 @@ class ArrayUtil
     }
 
     /**
+     * `array_map`, but callable will receive key as second parameter / keys will be preserved
+     * if additional arrays are passed, they will be passed as additional parameters
+     *
+     * If callback is null:
+     *   - we will perform the "zip" operation without the keys..
+     *   - returned array will be keyed based on the first array
+     *
+     * @param callable $callback A callable to run for each element
+     * @param array    $...array An array to run thru the callable
+     *
+     * @return array
+     */
+    public static function mapWithKeys($callback, array $array)
+    {
+        $keys = \array_keys($array);
+        $args = \func_get_args();
+        if ($callback !== null) {
+            // only inject keys if callback is not null (don't include keys for "zip" operation)
+            \array_splice($args, 2, 0, [$keys]);
+        }
+        $mappedValues = \call_user_func_array('array_map', $args);
+        return \array_combine($keys, $mappedValues);
+    }
+
+    /**
      * Applies the callback to all leafs of the given array
      *
      * Callable will receive the value and key
@@ -183,15 +208,11 @@ class ArrayUtil
      */
     public static function mapRecursive($callback, array $input)
     {
-        $keys = \array_keys($input);
-        return \array_combine(
-            $keys,
-            \array_map(static function ($val, $key) use ($callback) {
-                return \is_array($val)
-                    ? self::mapRecursive($callback, $val)
-                    : $callback($val, $key);
-            }, $input, $keys)
-        );
+        return self::mapWithKeys(static function ($val, $key) use ($callback) {
+            return \is_array($val)
+                ? self::mapRecursive($callback, $val)
+                : $callback($val, $key);
+        }, $input);
     }
 
     /**

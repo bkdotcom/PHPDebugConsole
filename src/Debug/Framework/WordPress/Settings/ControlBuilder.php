@@ -41,11 +41,11 @@ class ControlBuilder
     public function __construct(array $cfg = array(), $htmlUtil = null)
     {
         $this->cfg = \array_merge(array(
-            'haveValues' => false, // will use default value if no value is set
             'getValue' => static function (array $control) { // @phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
                 return null;
             },
             'groupName' => null, // controls will be grouped under this name in $_POST
+            'haveValues' => false, // will use default value if no value is set
         ), $cfg);
         $this->htmlUtil = $htmlUtil ?: new Html();
     }
@@ -87,31 +87,19 @@ class ControlBuilder
     public function fieldPrep(array $control)
     {
         $control = \array_merge($this->defaultProperties, $control);
-
         $control['name'] = $this->fieldPrepName($control);
 
         if (empty($control['id'])) {
             $control['id'] = \trim(\preg_replace('/[\[\]_]+/', '_', $control['name']), '_');
         }
 
-        if ($control['value'] === null && \is_callable($this->cfg['getValue'])) {
-            $control['value'] = $this->cfg['getValue']($control);
-        }
-        if ($control['value'] === null && $this->cfg['haveValues'] === false) {
-            $control['value'] = $control['default'];
-        }
+        $control = $this->fieldPrepValue($control);
 
         if (\in_array($control['type'], ['checkbox', 'radio', 'select'], true)) {
             $control = $this->fieldPrepCheckboxRadioSelect($control);
         }
 
-        $isCheckboxRadioGroup = \in_array($control['type'], ['checkbox', 'radio'], true) && \count($control['options']) > 1;
-        if (empty($control['wpLabelFor']) && !$isCheckboxRadioGroup) {
-            $control['wpLabelFor'] = $control['type'] === 'checkbox'
-                ? $control['options'][0]['id']
-                : $control['id'];
-        }
-        return $control;
+        return $this->fieldPrepWpLabelFor($control);
     }
 
     /**
@@ -167,7 +155,6 @@ class ControlBuilder
      */
     private function buildSelect(array $control)
     {
-        // $selected = (array) $control['value'];
         $options = array();
         if ($control['required']) {
             $options[] = $this->htmlUtil->buildTag('option', array(
@@ -219,6 +206,28 @@ class ControlBuilder
     }
 
     /**
+     * Get the field's name attribute
+     *
+     * @param array $info Control/option definition
+     *
+     * @return string
+     */
+    private function fieldPrepName(array $info)
+    {
+        if (empty($this->cfg['groupName'])) {
+            return $info['name'];
+        }
+        \preg_match_all('/\[?([^\[\]]+)\]?/', $info['name'], $matches);
+        $nameParts = $matches[1];
+        if ($nameParts[0] !== $this->cfg['groupName']) {
+            \array_unshift($nameParts, $this->cfg['groupName']);
+        }
+        return $nameParts[0] . (\count($nameParts) > 1
+            ? '[' . \implode('][', \array_slice($nameParts, 1)) . ']'
+            : '');
+    }
+
+    /**
      * Prep a checkbox / radio / select option
      *
      * @param array        $control Control definition
@@ -245,17 +254,8 @@ class ControlBuilder
             'value' => 'on',
         ), $option);
 
-        $value = $this->cfg['haveValues']
-            ? $this->cfg['getValue']($option)
-            : $control['value'];
-        if (\in_array($value, [true, false, null], true)) {
-            $value = \json_encode($value);
-        }
-
         return \array_merge(array(
-            'checked' => \in_array($option['value'], (array) $value, true)
-                || \in_array($key, (array) $value, true)
-                || ($value === 'true' && $option['value'] === 'on'),
+            'checked' => $this->isOptionChecked($control, $key, $option),
             'id' => \trim(\preg_replace(
                 '/[\[\]_]+/',
                 '_',
@@ -265,24 +265,62 @@ class ControlBuilder
     }
 
     /**
-     * Get the field's name attribute
+     * Set control value
      *
-     * @param array $info Control/option definition
+     * @param array $control Control definition
      *
-     * @return string
+     * @return array Updated control definition
      */
-    private function fieldPrepName(array $info)
+    private function fieldPrepValue(array $control)
     {
-        if (empty($this->cfg['groupName'])) {
-            return $info['name'];
+        if ($control['value'] === null && \is_callable($this->cfg['getValue'])) {
+            $control['value'] = $this->cfg['getValue']($control);
         }
-        \preg_match_all('/\[?([^\[\]]+)\]?/', $info['name'], $matches);
-        $nameParts = $matches[1];
-        if ($nameParts[0] !== $this->cfg['groupName']) {
-            \array_unshift($nameParts, $this->cfg['groupName']);
+        if ($control['value'] === null && $this->cfg['haveValues'] === false) {
+            $control['value'] = $control['default'];
         }
-        return $nameParts[0] . (\count($nameParts) > 1
-            ? '[' . \implode('][', \array_slice($nameParts, 1)) . ']'
-            : '');
+        return $control;
+    }
+
+    /**
+     * Set control options
+     *
+     * @param array $control Control definition
+     *
+     * @return array Updated control definition
+     */
+    private function fieldPrepWpLabelFor(array $control)
+    {
+        $isCheckboxRadioGroup = \in_array($control['type'], ['checkbox', 'radio'], true) && \count($control['options']) > 1;
+        $setWPLabelFor = empty($control['wpLabelFor']) && !$isCheckboxRadioGroup;
+        if (!$setWPLabelFor) {
+            return $control;
+        }
+        $control['wpLabelFor'] = $control['type'] === 'checkbox'
+            ? $control['options'][0]['id']
+            : $control['id'];
+        return $control;
+    }
+
+    /**
+     * Get checkbox / radio / select option value
+     *
+     * @param array     $control Control definition
+     * @param array-key $key     Option key/index
+     * @param array     $option  Option attributes
+     *
+     * @return bool
+     */
+    private function isOptionChecked(array $control, $key, array $option)
+    {
+        $value = $this->cfg['haveValues']
+            ? $this->cfg['getValue']($option)
+            : $control['value'];
+        if (\in_array($value, [true, false, null], true)) {
+            $value = \json_encode($value);
+        }
+        return \in_array($option['value'], (array) $value, true)
+            || \in_array($key, (array) $value, true)
+            || ($value === 'true' && $option['value'] === 'on');
     }
 }

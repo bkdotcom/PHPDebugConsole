@@ -157,7 +157,7 @@ class Backtrace
     /**
      * Convenience method for bdk\Backtrace\Normalizer::normalize()
      *
-     * @param array $backtrace trace/stack to normalize
+     * @param array $trace trace/stack to normalize
      *
      * @return array
      */

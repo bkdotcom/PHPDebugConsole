@@ -22,7 +22,7 @@ if (\trait_exists(__NAMESPACE__ . '\\CompatTrait', false) === false) {
     /**
      * Provide handle method (with return type-hint)
      */
-    trait CompatTrait
+    trait CompatTrait // @phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter Generic.CodeAnalysis.UnusedFunctionParameter
     {
         /**
          * Handles a record.

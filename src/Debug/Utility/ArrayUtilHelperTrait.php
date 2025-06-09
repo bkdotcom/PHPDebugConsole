@@ -223,14 +223,13 @@ trait ArrayUtilHelperTrait
             return \array_filter(\preg_split('#[\./]#', $path), 'strlen');
         }
         $frame = \debug_backtrace(\DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1];
-        $params = array(
-            'actual' => Php::getDebugType($path),
-            'expect' => 'string or list of string|int',
-            'method' => $frame['class'] . '::' . $frame['function'] . '()',
-            'param' => '$path',
-        );
         if (\is_array($path) === false) {
-            throw new InvalidArgumentException(\bdk\Debug\Utility::trans('exception.method-expects-param', $params));
+            throw new InvalidArgumentException(\bdk\Debug\Utility::trans('exception.method-expects-param', array(
+                'actual' => Php::getDebugType($path),
+                'expect' => 'string or list of string|int',
+                'method' => $frame['class'] . '::' . $frame['function'] . '()',
+                'param' => '$path',
+            )));
         }
         \bdk\Debug\Utility\ArrayUtil::assertContainsOnly($path, 'string|int', 'path', $frame['class'] . '::' . $frame['function']);
         /** @var array<array-key,string|int> */

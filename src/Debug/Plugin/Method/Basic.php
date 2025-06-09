@@ -76,7 +76,7 @@ class Basic implements SubscriberInterface
             // add default message
             $callerInfo = $this->debug->backtrace->getCallerInfo();
             $labelLine = $this->debug->i18n->trans('line');
-            $labelLineEvaled = $this->debug->i18n->trans('line.eval');
+            $labelLineEvaled = $this->debug->i18n->trans('line.evaled');
             $args = [
                 $this->debug->i18n->trans('method.assert.failed') . ':',
                 $callerInfo['evalLine']

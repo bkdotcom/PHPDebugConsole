@@ -97,21 +97,7 @@ class Settings extends AbstractComponent implements AssetProviderInterface, Subs
      */
     public function registerSettings()
     {
-        $groupValues = \get_option(self::GROUP_NAME);
-        $haveGroupValues = \is_array($groupValues);
-        $groupValues = $groupValues ?: array();
-        $this->controlBuilder = new ControlBuilder(array(
-            'getValue' => function (array $control) use ($groupValues) {
-                \preg_match_all('/\[?([^\[\]]+)\]?/', $control['name'], $matches);
-                $nameParts = $matches[1];
-                $default = isset($control['default'])
-                    ? $control['default']
-                    : null;
-                return $this->debug->arrayUtil->pathGet($groupValues, \array_slice($nameParts, 1), $default);
-            },
-            'groupName' => self::GROUP_NAME,
-            'haveValues' => $haveGroupValues,
-        ));
+        $this->initControlBuilder();
 
         \register_setting(self::GROUP_NAME, self::GROUP_NAME, array(
             // 'description' => 'Where does this show up?',
@@ -250,5 +236,29 @@ class Settings extends AbstractComponent implements AssetProviderInterface, Subs
             }
         }
         return $errors;
+    }
+
+    /**
+     * Inititalize ControlBuilder
+     *
+     * @return void
+     */
+    private function initControlBuilder()
+    {
+        $groupValues = \get_option(self::GROUP_NAME);
+        $haveGroupValues = \is_array($groupValues);
+        $groupValues = $groupValues ?: array();
+        $this->controlBuilder = new ControlBuilder(array(
+            'getValue' => function (array $control) use ($groupValues) {
+                \preg_match_all('/\[?([^\[\]]+)\]?/', $control['name'], $matches);
+                $nameParts = $matches[1];
+                $default = isset($control['default'])
+                    ? $control['default']
+                    : null;
+                return $this->debug->arrayUtil->pathGet($groupValues, \array_slice($nameParts, 1), $default);
+            },
+            'groupName' => self::GROUP_NAME,
+            'haveValues' => $haveGroupValues,
+        ));
     }
 }

@@ -15,6 +15,7 @@ use bdk\ErrorHandler\AbstractComponent;
 use bdk\ErrorHandler\Error;
 use bdk\ErrorHandler\Plugin\Emailer;
 use bdk\ErrorHandler\Plugin\Stats;
+use Exception;
 
 /**
  * Serves as base class for ErrorHandler
@@ -56,7 +57,7 @@ abstract class AbstractErrorHandler extends AbstractComponent
     /**
      * Temp store error exception caught/triggered inside __toString
      *
-     * @var \Exception|\Throwable|null
+     * @var Exception|\Throwable|null
      */
     private $toStringException = null;
 
@@ -74,12 +75,23 @@ abstract class AbstractErrorHandler extends AbstractComponent
     }
 
     /**
+     * Handle E_USER_ERROR and E_RECOVERABLE_ERROR
+     *
+     * Log user error if cfg['onEUserError'] === 'log' and propagation not stopped
+     *
+     * @param Error $error Error instance
+     *
+     * @return void
+     */
+    abstract protected function handleUserError(Error $error);
+
+    /**
      * Conditionally pass error or exception to previously defined handler
      *
      * @param Error $error Error instance
      *
      * @return bool
-     * @throws \Exception
+     * @throws Exception
      */
     protected function continueToPrevHandler(Error $error)
     {
@@ -110,7 +122,7 @@ abstract class AbstractErrorHandler extends AbstractComponent
      * @param Error $error Error instance
      *
      * @return void
-     * @throws \Exception
+     * @throws Exception
      */
     private function continueToPrevHandlerException(Error $error)
     {
@@ -330,7 +342,7 @@ abstract class AbstractErrorHandler extends AbstractComponent
      * @param Error $error Error instance
      *
      * @return void
-     * @throws \Exception re-throws caught exception
+     * @throws Exception re-throws caught exception
      */
     protected function toStringCheck(Error $error)
     {
@@ -345,17 +357,28 @@ abstract class AbstractErrorHandler extends AbstractComponent
         if ($error['type'] !== E_USER_ERROR) {
             return;
         }
+        $exception = $this->findMatchingExceptionInContext($error);
+        if ($exception) {
+            $this->toStringCheckTrigger($error, $exception);
+        }
+    }
+
+    /**
+     * Find exception in context
+     *
+     * @param Error $error Error instance
+     *
+     * @return Exception|null
+     */
+    private function findMatchingExceptionInContext(Error $error)
+    {
         $errMsg = $error['message'];
-        /*
-            Find exception in context
-            if found, check if error via __toString -> trigger_error
-        */
         foreach ($error['vars'] as $val) {
-            if ($val instanceof \Exception && ($val->getMessage() === $errMsg || (string) $val === $errMsg)) {
-                $this->toStringCheckTrigger($error, $val);
-                break;
+            if ($val instanceof Exception && ($val->getMessage() === $errMsg || (string) $val === $errMsg)) {
+                return $val;
             }
         }
+        return null;
     }
 
     /**
@@ -363,8 +386,8 @@ abstract class AbstractErrorHandler extends AbstractComponent
      *
      * Only utilized by PHP < 7.4
      *
-     * @param Error                 $error     Error instance
-     * @param \Throwable|\Exception $exception Exception
+     * @param Error                $error     Error instance
+     * @param Exception|\Throwable $exception Exception
      *
      * @return void
      */

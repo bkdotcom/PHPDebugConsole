@@ -82,7 +82,7 @@
       "php -f vendor/bdk/devutil/src/coverageChecker.php -- coverage/clover.xml"
     ],
     "cs" : [
-      "vendor/bin/phpcs -p -s --colors ./src"
+      "vendor/bin/phpcs -p -s --colors --ignore=./src/Debug/coverage ./src"
     ],
     "post-update-cmd": [
       "bdk\\Debug\\Dev\\ComposerScripts::postUpdate"

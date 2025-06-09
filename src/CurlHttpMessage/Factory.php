@@ -15,6 +15,7 @@ use bdk\CurlHttpMessage\Handler\Curl;
 use bdk\CurlHttpMessage\Handler\CurlMulti;
 use bdk\CurlHttpMessage\HandlerStack;
 use bdk\CurlHttpMessage\Middleware;
+use bdk\Debug\Utility\StringUtil;
 use bdk\HttpMessage\Request;
 use bdk\HttpMessage\Response;
 use bdk\HttpMessage\Stream;
@@ -181,21 +182,35 @@ class Factory
         if ($body === null) {
             return $message;
         }
-        $bodyIsEncoded = \is_string($body) || $body instanceof StreamInterface;
         $type = $this->inferContentType($message, $body);
         if ($type) {
             $message = $message->withHeader('Content-Type', $type);
             $type = \preg_replace('/;.*$/', '', $type);
         }
-        if ($type === 'application/json' && $bodyIsEncoded === false) {
-            $body = \json_encode($body, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-        } elseif ($type === 'application/x-www-form-urlencoded' && $bodyIsEncoded === false) {
-            $body = \http_build_query($body);
-        }
+        $body = $this->serializeBody($body, $type);
         $stream = $body instanceof StreamInterface
             ? $body
             : $this->stream($body);
         return $message->withBody($stream);
+    }
+
+    /**
+     * `json_encode` or `http_build_query` body if necessary
+     *
+     * @param mixed       $body Message body
+     * @param string|null $type Content-Type
+     *
+     * @return string|StreamInterface
+     */
+    private function serializeBody($body, $type)
+    {
+        $bodyIsSerialized = \is_string($body) || $body instanceof StreamInterface;
+        if ($type === 'application/json' && $bodyIsSerialized === false) {
+            $body = \json_encode($body, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        } elseif ($type === 'application/x-www-form-urlencoded' && $bodyIsSerialized === false) {
+            $body = \http_build_query($body);
+        }
+        return $body;
     }
 
     /**
@@ -245,7 +260,7 @@ class Factory
         if ($body instanceof StreamInterface) {
             $body = (string) $body;
         }
-        if (\is_string($body) && \bdk\Debug\Utility\StringUtil::isJson($body)) {
+        if (StringUtil::isJson($body)) {
             return $this->types['json'];
         }
         return '';

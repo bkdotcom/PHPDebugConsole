@@ -116,19 +116,18 @@ class Type
      */
     private function resolveTypeClass($type, $className, $fullyQualifyType = 0)
     {
-        $first = \substr($type, 0, \strpos($type, '\\') ?: 0) ?: $type;
         $className = $className ?: '';
-        $classReflector = Reflection::getReflector($className, true);
-        $useStatements = $classReflector
-            ? UseStatements::getUseStatements($classReflector)['class']
-            : array();
-        if (isset($useStatements[$first])) {
-            return $useStatements[$first] . \substr($type, \strlen($first));
+
+        $resolvedFromUse = $this->resolveFromUseStatements($type, $className);
+        if ($resolvedFromUse) {
+            return $resolvedFromUse;
         }
+
         $namespace = \substr($className, 0, \strrpos($className, '\\') ?: 0);
         if (!$namespace) {
             return $type;
         }
+
         /*
             Truly relative?  Or, does PhpDoc omit '\' ?
             Not 100% accurate, but check if assumed namespace'd class exists
@@ -137,5 +136,25 @@ class Type
         return \class_exists($namespace . '\\' . $type, $autoload)
             ? $namespace . '\\' . $type
             : $type;
+    }
+
+    /**
+     * Check if type-hint is defined in use statements
+     *
+     * @param string $type      Type-hint
+     * @param string $className Classname where element is defined
+     *
+     * @return string|false
+     */
+    private function resolveFromUseStatements($type, $className)
+    {
+        $first = \substr($type, 0, \strpos($type, '\\') ?: 0) ?: $type;
+        $classReflector = Reflection::getReflector($className, true);
+        $useStatements = $classReflector
+            ? UseStatements::getUseStatements($classReflector)['class']
+            : array();
+        return isset($useStatements[$first])
+            ? $useStatements[$first] . \substr($type, \strlen($first))
+            : false;
     }
 }

@@ -94,7 +94,11 @@ class ParseMethod
     private function parseParamAppend()
     {
         $pos = $this->paramParseInfo['pos'];
-        $param = \trim(\substr($this->paramParseInfo['str'], $this->paramParseInfo['startPos'], $pos - $this->paramParseInfo['startPos']));
+        $param = \trim(\substr(
+            $this->paramParseInfo['str'],
+            $this->paramParseInfo['startPos'],
+            $pos - $this->paramParseInfo['startPos']
+        ));
         if ($param !== '') {
             $this->paramParseInfo['params'][] = $param;
         }
@@ -122,7 +126,7 @@ class ParseMethod
         $continue = true;
         for ($strlen = \strlen($str); $this->paramParseInfo['pos'] < $strlen && $continue; $this->paramParseInfo['pos']++) {
             $char = $str[ $this->paramParseInfo['pos'] ];
-            $continue = $this->parseParamSplitTest1($char);
+            $continue = $this->analyzeChar($char);
         }
         $parsed['param'] = $this->paramParseInfo['params'];
         $parsed['desc'] = \trim(\substr($str, $this->paramParseInfo['startPos']));
@@ -135,14 +139,24 @@ class ParseMethod
      *
      * @param string $char Current character being tested
      *
-     * @return bool
+     * @return bool whether to continue parsing
      */
-    private function parseParamSplitTest1($char)
+    private function analyzeChar($char)
     {
-        if ($this->paramParseInfo['strOpenedWith'] === null) {
-            // we're not in a quoted string
-            return $this->parseParamTest2($char);
-        }
+        return $this->paramParseInfo['strOpenedWith'] === null
+            ? $this->analyzeCharOutsideString($char)
+            : $this->analyzeCharInsideString($char);
+    }
+
+    /**
+     * Analyze character inside a quoted string
+     *
+     * @param string $char Current character
+     *
+     * @return true Continue parsing
+     */
+    private function analyzeCharInsideString($char)
+    {
         if ($char === '\\') {
             // skip over character following backslash
             $this->paramParseInfo['pos']++;
@@ -154,15 +168,29 @@ class ParseMethod
     }
 
     /**
-     * Test and handle current character
+     * Analyze character outside a quoted string
      *
-     * We know we are outside of a quoted string
+     * @param string $char Current character
      *
-     * @param string $char current character
-     *
-     * @return bool whether to continue parsing
+     * @return bool Whether to continue parsing
      */
-    private function parseParamTest2($char)
+    private function analyzeCharOutsideString($char)
+    {
+        $endParam = $this->analyzeCharacterForParamEnd($char);
+        if ($endParam) {
+            $this->parseParamAppend();
+        }
+        return !$endParam || $this->paramParseInfo['depth'] !== 0;
+    }
+
+    /**
+     * Examine current character and adjust our current depth, position, and whether to end the current parameter
+     *
+     * @param string $char Current character
+     *
+     * @return bool Whether to end the current parameter
+     */
+    private function analyzeCharacterForParamEnd($char)
     {
         $endParam = false;
         if ($char === ',') {
@@ -170,17 +198,15 @@ class ParseMethod
         } elseif (\in_array($char, ['\'', '"'], true)) {
             // we're opening a quoted string
             $this->paramParseInfo['strOpenedWith'] = $char;
-        } elseif (\preg_match('#\G\s*=>\s*#', $this->paramParseInfo['str'], $matches, 0, $this->paramParseInfo['pos'])) {
-            $this->paramParseInfo['pos'] += \strlen($matches[0]) - 1;
         } elseif (\in_array($char, ['<', '(', '[', '{'], true)) {
             $this->paramParseInfo['depth']++;
         } elseif (\in_array($char, ['>', ')', ']', '}'], true)) {
             $endParam = $this->paramParseInfo['depth'] === 1;
             $this->paramParseInfo['depth']--;
+        } elseif (\preg_match('#\G\s*=>\s*#', $this->paramParseInfo['str'], $matches, 0, $this->paramParseInfo['pos'])) {
+            // current position is followed by the arrow operator (=>)
+            $this->paramParseInfo['pos'] += \strlen($matches[0]) - 1;
         }
-        if ($endParam) {
-            $this->parseParamAppend();
-        }
-        return !($endParam && $this->paramParseInfo['depth'] === 0);
+        return $endParam;
     }
 }

@@ -81,7 +81,7 @@ class ServiceProvider implements ServiceProviderInterface
      *
      * @return void
      */
-    protected function registerCore(Container $container) // phpcs:ignore SlevomatCodingStandard.Functions.FunctionLength
+    protected function registerCore(Container $container) // phpcs:ignore SlevomatCodingStandard.Functions.FunctionLength, SlevomatCodingStandard.Complexity.Cognitive
     {
         $container['abstracter'] = static function (Container $container) {
             $debug = $container['debug'];

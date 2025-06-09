@@ -44,7 +44,7 @@ class ErrorLevel
             'E_USER_ERROR' => 256,
             'E_USER_WARNING' => 512,
             'E_USER_NOTICE' => 1024,
-            'E_STRICT' => \version_compare($phpVer, '5.0.0', '>=') && \version_compare($phpVer, '8.4.0-dev', '<') ? 2048 : null,
+            'E_STRICT' => self::getConstValStrict($phpVer),
             'E_RECOVERABLE_ERROR' => \version_compare($phpVer, '5.2.0', '>=') ? 4096 : null,
             'E_DEPRECATED' => \version_compare($phpVer, '5.3.0', '>=') ? 8192 : null,
             'E_USER_DEPRECATED' => \version_compare($phpVer, '5.3.0', '>=') ? 16384 : null,
@@ -140,6 +140,20 @@ class ErrorLevel
     }
 
     /**
+     * Get the value of E_STRICT constant for givent php version
+     *
+     * @param string $phpVer (PHP_VERSION) PHP version
+     *
+     * @return int|null
+     */
+    private static function getConstValStrict($phpVer)
+    {
+        return \version_compare($phpVer, '5.0.0', '>=') && \version_compare($phpVer, '8.4.0-dev', '<')
+            ? 2048
+            : null;
+    }
+
+    /**
      * Get on/off flags starting with E_ALL
      *
      * @param int               $errorReportingLevel Error Level (bitmask) value
@@ -156,14 +170,10 @@ class ErrorLevel
             'on' => ['E_ALL'],
         );
         foreach ($allConstants as $constName => $constValue) {
-            $isExplicit = $explicitStrict && $constName === 'E_STRICT';
-            // only thing that may not be in E_ALL is E_STRICT
-            $inclInEall = self::inBitmask($constValue, $eAll);
-            $inclInLevel = self::inBitmask($constValue, $errorReportingLevel);
-            $incl = $inclInEall !== $inclInLevel || $isExplicit;
-            if ($incl === false) {
+            if (!self::shouldIncludeInFlags($constName, $constValue, $eAll, $errorReportingLevel, $explicitStrict)) {
                 continue;
             }
+            $inclInLevel = self::inBitmask($constValue, $errorReportingLevel);
             $onOrOff = $inclInLevel
                 ? 'on'
                 : 'off';
@@ -217,5 +227,29 @@ class ErrorLevel
         return \preg_match('/^\d+\.\d+$/', $phpVer)
             ? $phpVer . '.0'
             : $phpVer;
+    }
+
+    /**
+     * Determine if a constant should be included in the flags
+     *
+     * @param string $constName           Constant name
+     * @param int    $constValue          Constant value
+     * @param int    $eAll                E_ALL value
+     * @param int    $errorReportingLevel Error reporting level
+     * @param bool   $explicitStrict      Whether to explicitly include E_STRICT
+     *
+     * @return bool
+     */
+    private static function shouldIncludeInFlags($constName, $constValue, $eAll, $errorReportingLevel, $explicitStrict)
+    {
+        $isExplicit = $explicitStrict && $constName === 'E_STRICT';
+        // only thing that may not be in E_ALL is E_STRICT
+        $inclInEall = self::inBitmask($constValue, $eAll);
+        $inclInLevel = self::inBitmask($constValue, $errorReportingLevel);
+
+        // Include if
+        //   inclusion in E_ALL differs from inclusion in level,
+        //   or if it's E_STRICT and explicitStrict is true
+        return ($inclInEall !== $inclInLevel) || $isExplicit;
     }
 }

@@ -69,7 +69,7 @@ class WpHttp extends AbstractAsyncMiddleware implements SubscriberInterface
      *
      * @return void
      */
-    public function onResponse($responseInfo, $type, $class, $args, $url)
+    public function onResponse($responseInfo, $type, $class, $args, $url) //  @phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
     {
         if ($type !== 'response') {
             return;

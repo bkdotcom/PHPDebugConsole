@@ -101,7 +101,7 @@ class FileTree
             if (!isset($cur[$subdir])) {
                 // we're adding a dir..
                 $cur[$subdir] = array();
-                $this->sortDir($cur);
+                \uksort($cur, [$this, 'sortDir']);
             }
             $cur = &$cur[$subdir];
             if (\is_array($cur) === false) {
@@ -170,32 +170,24 @@ class FileTree
     /**
      * sort files with directories first
      *
-     * @param array $dir file & directory list
+     * @param string|int $keyA key "a" being compared
+     * @param string|int $keyB key "b" being compared
      *
-     * @return void
+     * @return int
      */
-    private function sortDir(&$dir)
+    private static function sortDir($keyA, $keyB)
     {
-        \uksort(
-            $dir,
-            /**
-             * @param string|int $keyA
-             * @param string|int $keyB
-             */
-            static function ($keyA, $keyB) {
-                $aIsDir = \is_string($keyA);
-                $bIsDir = \is_string($keyB);
-                if ($aIsDir) {
-                    return $bIsDir
-                        ? \strnatcasecmp($keyA, $keyB)
-                        : -1;
-                }
-                if ($bIsDir) {
-                    return 1;
-                }
-                return \strnatcasecmp((string) $keyA, (string) $keyB);
-            }
-        );
+        $aIsDir = \is_string($keyA);
+        $bIsDir = \is_string($keyB);
+        if ($aIsDir) {
+            return $bIsDir
+                ? \strnatcasecmp($keyA, $keyB)
+                : -1;
+        }
+        if ($bIsDir) {
+            return 1;
+        }
+        return \strnatcasecmp((string) $keyA, (string) $keyB);
     }
 
     /**

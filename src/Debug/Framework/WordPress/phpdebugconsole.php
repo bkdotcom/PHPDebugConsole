@@ -1,6 +1,6 @@
 <?php
 
-/*
+/**
  * Plugin Name: PhpDebugConsole
  * Plugin URI: https://bradkent.com/php/debug
  * Description: Display query, cache, and other helpful debugging information.  Provides new logging / debugging / inspecting / error-notification functionality
@@ -11,12 +11,17 @@
  * Requires PHP: 5.4
  */
 
-$path = \realpath(__DIR__ . '/../../../..');
+// determine where we are - PHPDebugConsole root or FrameWork/WordPress
+ $path = \realpath(__DIR__);
+ $pathBase = \strpos($path, 'Framework' . DIRECTORY_SEPARATOR . 'WordPress')
+    ? $path . '/../../../..'
+    : $path;
 
-require $path . '/src/Debug/Autoloader.php';
+require $pathBase . '/src/Debug/Autoloader.php';
 $autoloader = new \bdk\Debug\Autoloader();
-$autoloader->addPsr4('bdk\\HttpMessage\\', $path . '/vendor/bdk/http-message/src/HttpMessage');
-$autoloader->addPsr4('Psr\\Http\\Message\\', $path . '/vendor/psr/http-message/src');
+$autoloader->addPsr4('Psr\\Http\\Message\\', $pathBase . '/vendor/psr/http-message/src');
+$autoloader->addPsr4('bdk\\HttpMessage\\', $pathBase . '/vendor/bdk/http-message/src/HttpMessage');
+$autoloader->addClass('SqlFormatter', $pathBase . '/vendor/jdorn/sql-formatter/lib/SqlFormatter.php');
 $autoloader->register();
 
 $storedOptions = \get_option(\bdk\Debug\Framework\WordPress\Settings::GROUP_NAME) ?: array(
@@ -33,7 +38,6 @@ $config = \bdk\Debug\Utility\ArrayUtil::mergeDeep(
     array(
         'collect' => true,  // start with collection on as we bootstrap
         'emailFunc' => 'wp_mail',
-        'filepathScript' => './js/Debug.js', // @todo remove
         'plugins' => array(
             'routeDiscord' => array(
                 'class' => 'bdk\Debug\Route\Discord',

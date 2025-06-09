@@ -52,18 +52,14 @@ class Helper
         if (\count($args) === 0) {
             return '';
         }
-        $glueDefault = ', ';
-        $glueAfterFirst = true;
-        if (\is_string($args[0])) {
-            if (\preg_match('/[=:] ?$/', $args[0])) {
-                // first arg ends with "=" or ":"
-                $glueAfterFirst = false;
-                $args[0] = \rtrim($args[0]) . ' ';
-            } elseif (\count($args) === 2) {
-                $glueDefault = ' = ';
-            }
+
+        list($glue, $glueAfterFirst) = $this->getArgGlue($args, $meta['glue']);
+
+        if ($glueAfterFirst === false) {
+            // first arg is not glued
+            $args[0] = \rtrim($args[0]) . ' ';
         }
-        $glue = $meta['glue'] ?: $glueDefault;
+
         $args = $this->buildArgStringArgs($args, $meta);
         return $glueAfterFirst
             ? \implode($glue, $args)
@@ -249,12 +245,12 @@ class Helper
      */
     private function buildArgStringArgs(array $args, array $meta)
     {
-        foreach ($args as $i => $v) {
-            list($type, $typeMore) = $this->debug->abstracter->type->getType($v);
+        return \array_map(function ($arg, $i) use ($meta) {
+            list($type, $typeMore) = $this->debug->abstracter->type->getType($arg);
             $isNumericString = $type === Type::TYPE_STRING
                 && \in_array($typeMore, [Type::TYPE_STRING_NUMERIC, Type::TYPE_TIMESTAMP], true);
-            $args[$i] = $this->dumper->valDumper->dump($v, array(
-                'addQuotes' => $i !== 0 || $isNumericString || $type !== Type::TYPE_STRING, // $this->dumper->valDumper->string->isEncoded($v) ||
+            return $this->dumper->valDumper->dump($arg, array(
+                'addQuotes' => $i !== 0 || $isNumericString || $type !== Type::TYPE_STRING,
                 'sanitize' => $i === 0
                     ? $meta['sanitizeFirst']
                     : $meta['sanitize'],
@@ -262,8 +258,7 @@ class Helper
                 'typeMore' => $typeMore,
                 'visualWhiteSpace' => $i !== 0 || $type !== Type::TYPE_STRING,
             ));
-        }
-        return $args;
+        }, $args, \array_keys($args));
     }
 
     /**
@@ -289,6 +284,31 @@ class Helper
         $this->debug->setCfg('maxDepth', $maxDepthBak, Debug::CONFIG_NO_PUBLISH | Debug::CONFIG_NO_RETURN);
         $this->dumper->crateRaw = $crateRawWas;
         return $args;
+    }
+
+    /**
+     * Get argument "glue" and whether to glue after first arg
+     *
+     * @param array       $args     arguments
+     * @param string|null $metaGlue glue specified in meta values
+     *
+     * @return [string, bool] glue, glueAfterFirst
+     */
+    private function getArgGlue(array $args, $metaGlue)
+    {
+        $glueDefault = ', ';
+        $glueAfterFirst = true;
+        if (\is_string($args[0]) === false) {
+            return [$glueDefault, $glueAfterFirst];
+        }
+        if (\preg_match('/[=:] ?$/', $args[0])) {
+            // first arg ends with "=" or ":"
+            $glueAfterFirst = false;
+        } elseif (\count($args) === 2) {
+            $glueDefault = ' = ';
+        }
+        $glue = $metaGlue ?: $glueDefault;
+        return [$glue, $glueAfterFirst];
     }
 
     /**
@@ -337,7 +357,7 @@ class Helper
      */
     private function parseFilePath($filePath, $commonPrefix)
     {
-        $docRoot = $this->debug->serverRequest->getServerParam('DOCUMENT_ROOT');
+        $docRoot = (string) $this->debug->serverRequest->getServerParam('DOCUMENT_ROOT');
         $baseName = \basename($filePath);
         $containsDocRoot = \strpos($filePath, $docRoot) === 0;
         $basePath = '';

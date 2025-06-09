@@ -413,13 +413,7 @@ class ErrorHandler extends AbstractErrorHandler
     }
 
     /**
-     * Handle E_USER_ERROR and E_RECOVERABLE_ERROR
-     *
-     * Log user error if cfg['onEUserError'] === 'log' and propagation not stopped
-     *
-     * @param Error $error Error instance
-     *
-     * @return void
+     * {@inheritDoc}
      */
     protected function handleUserError(Error $error)
     {

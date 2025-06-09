@@ -49,8 +49,8 @@ class Channel implements SubscriberInterface
      * Channels can be used to categorize log data... for example, may have a framework channel, database channel, library-x channel, etc
      * Channels may have sub-channels
      *
-     * @param string|array $path   channel key/name/path
-     * @param array        $config channel specific configuration
+     * @param string|array $path   Channel key/name/path
+     * @param array        $config Channel specific configuration
      *
      * @return Debug new or existing `Debug` instance
      *
@@ -58,22 +58,14 @@ class Channel implements SubscriberInterface
      */
     public function getChannel($path, $config = array())
     {
-        $path = \is_string($path)
-            ? \preg_split(self::NAME_SPLIT_REGEX, $path)
-            : $path;
+        $path = $this->normalizePath($path);
         $key = \array_shift($path);
         if ($key === $this->debug->rootInstance->getCfg('channelKey', Debug::CONFIG_DEBUG)) {
             return $path
                 ? $this->debug->rootInstance->getChannel($path, $config)
                 : $this->debug->rootInstance;
         }
-        $curChannelKey = $this->debug->getCfg('channelKey', Debug::CONFIG_DEBUG);
-        if (!isset($this->channels[$curChannelKey][$key])) {
-            $this->channels[$curChannelKey][$key] = $this->createChannel($key, $path
-                ? array()
-                : $config);
-        }
-        $channel = $this->channels[$curChannelKey][$key];
+        $channel = $this->upsertChannel($key, $path, $config);
         if ($path) {
             $channel = $channel->getChannel($path, $config);
         }
@@ -92,7 +84,7 @@ class Channel implements SubscriberInterface
      * @param bool $allDescendants (false) include all descendants?
      * @param bool $inclTop        (false) whether to incl topmost channels (ie "tabs") (only applicable on root channel)
      *
-     * @return \bdk\Debug[] Does not include self
+     * @return Debug[] Does not include self
      */
     public function getChannels($allDescendants = false, $inclTop = false)
     {
@@ -126,7 +118,7 @@ class Channel implements SubscriberInterface
      *
      * (includes the general/root channel)
      *
-     * @return \bdk\Debug[]
+     * @return Debug[]
      */
     public function getChannelsTop()
     {
@@ -186,9 +178,7 @@ class Channel implements SubscriberInterface
      */
     public function hasChannel($path)
     {
-        $path = \is_string($path)
-            ? \preg_split(self::NAME_SPLIT_REGEX, $path)
-            : $path;
+        $path = $this->normalizePath($path);
         $key = \array_shift($path);
         if ($key === $this->debug->rootInstance->getCfg('channelKey', Debug::CONFIG_DEBUG)) {
             return $path
@@ -261,5 +251,39 @@ class Channel implements SubscriberInterface
         $cfg['debug']['parent'] = $this->debug;
         unset($cfg['debug']['nested']);
         return new Debug($cfg);
+    }
+
+    /**
+     * Return path as a list of strings
+     *
+     * @param array|string $path Channel key/name/path
+     *
+     * @return list<string>
+     */
+    private function normalizePath($path)
+    {
+        return \is_string($path)
+            ? \preg_split(self::NAME_SPLIT_REGEX, $path)
+            : $path;
+    }
+
+    /**
+     * Creates a channel on the current instance if it does not already exist
+     *
+     * @param string       $key    Cbannel key
+     * @param list<string> $path   Channel key/name/path
+     * @param array        $config Channel specific configuration
+     *
+     * @return Debug new or existing `Debug` instance
+     */
+    private function upsertChannel($key, $path, $config)
+    {
+        $curChannelKey = $this->debug->getCfg('channelKey', Debug::CONFIG_DEBUG);
+        if (!isset($this->channels[$curChannelKey][$key])) {
+            $this->channels[$curChannelKey][$key] = $this->createChannel($key, $path
+                ? array()
+                : $config);
+        }
+        return $this->channels[$curChannelKey][$key];
     }
 }

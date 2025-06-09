@@ -193,20 +193,26 @@ class SerializeLog
             if (\is_array($val) === false) {
                 return $val;
             }
-            if (!isset($val['debug']) || $val['debug'] !== Abstracter::ABSTRACTION) {
-                return self::importLegacy($val);
-            }
-            // we are an abstraction
-            $type = $val['type'];
-            unset($val['debug'], $val['type']);
-            if ($type !== Type::TYPE_OBJECT) {
-                return new Abstraction($type, $val);
-            }
-            $val['properties'] = self::importLegacy($val['properties']);
-            $val = self::importLegacyObj($val);
-            $valueStore = self::$debug->abstracter->abstractObject->definition->getValueStoreDefault();
-            return new ObjectAbstraction($valueStore, $val);
+            return isset($val['debug']) && $val['debug'] === Abstracter::ABSTRACTION
+                ? self::importLegacyAbstraction($val)
+                : self::importLegacy($val);
         }, $vals);
+    }
+
+    /**
+     * Import legacy abstraction
+     *
+     * @param array<string,mixed> $absValues Abstraction values
+     *
+     * @return Abstraction
+     */
+    private static function importLegacyAbstraction(array $absValues)
+    {
+        $type = $absValues['type'];
+        unset($absValues['debug'], $absValues['type']);
+        return $type === Type::TYPE_OBJECT
+            ? self::importLegacyObj($absValues)
+            : new Abstraction($type, $absValues);
     }
 
     /**
@@ -214,10 +220,11 @@ class SerializeLog
      *
      * @param array<string,mixed> $absValues Abstraction values
      *
-     * @return array<string,mixed>
+     * @return ObjectAbstraction
      */
     private static function importLegacyObj(array $absValues)
     {
+        $absValues['properties'] = self::importLegacy($absValues['properties']);
         $absValues = AbstractObject::buildValues($absValues);
         /**
          * @var array<string,array<string,mixed>> $absValues['methods']
@@ -233,7 +240,9 @@ class SerializeLog
         foreach ($absValues['properties'] as $name => $info) {
             $absValues['properties'][$name] = Properties::buildValues($info);
         }
-        return self::onImportObj($absValues);
+        $absValues = self::importLegacyObjConvert($absValues);
+        $valueStore = self::$debug->abstracter->abstractObject->definition->getValueStoreDefault();
+        return new ObjectAbstraction($valueStore, $absValues);
     }
 
     /**
@@ -243,7 +252,7 @@ class SerializeLog
      *
      * @return array<string,mixed>
      */
-    private static function onImportObj($absValues)
+    private static function importLegacyObjConvert($absValues)
     {
         if (isset($absValues['collectMethods'])) {
             if ($absValues['collectMethods'] === false) {

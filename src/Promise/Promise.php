@@ -97,19 +97,14 @@ class Promise implements PromiseInterface
             'bdk\\Promise\\Create',
         ];
         if (\preg_match('/^is([A-Z][a-z]+)$/', $method, $matches) && \method_exists($isClass, \strtolower($matches[1]))) {
-            $callable = [$isClass, \strtolower($matches[1])];
-            return $callable($args[0]);
+            return \call_user_func([$isClass, \strtolower($matches[1])], $args[0]);
         }
         foreach ($utilClasses as $class) {
             if (\method_exists($class, $method)) {
                 return \call_user_func_array([$class, $method], $args);
             }
         }
-        throw new BadMethodCallException(\sprintf(
-            'Undefined method: %s::%s()',
-            \get_called_class(),
-            $method
-        ));
+        throw new BadMethodCallException(\sprintf('Undefined method: %s::%s()', \get_called_class(), $method));
     }
 
     /**
@@ -224,17 +219,7 @@ class Promise implements PromiseInterface
         $this->waitFn = null;
         $this->waitList = array();
 
-        if ($this->cancelFn) {
-            $cancelFn = $this->cancelFn;
-            $this->cancelFn = null;
-            try {
-                $cancelFn();
-            } catch (Throwable $e) {
-                $this->reject($e);
-            } catch (Exception $e) {
-                $this->reject($e);
-            }
-        }
+        $this->invokeCancelFn();
 
         // Reject the promise only if it wasn't rejected in a then callback.
         /** @psalm-suppress RedundantCondition */
@@ -275,7 +260,7 @@ class Promise implements PromiseInterface
      * Resolve/reject the promise
      *
      * @param string $state self::FULFILLED OR self::REJECTED
-     * @param mixed  $value resolve value or reject reason
+     * @param mixed  $value Resolve value or reject reason
      *
      * @return void
      *
@@ -287,14 +272,8 @@ class Promise implements PromiseInterface
             // Ignore calls with the same resolution.
             return;
         }
-        if ($this->state !== self::PENDING) {
-            throw $this->state === $state
-                ? new LogicException('The promise is already ' . $state . '.')
-                : new LogicException('Cannot change a ' . $this->state . ' promise to ' . $state);
-        }
-        if ($value === $this) {
-            throw new LogicException('Cannot fulfill or reject a promise with itself');
-        }
+
+        $this->settleAssert($state, $value);
 
         // Clear out the state of the promise but stash the handlers.
         $handlers = $this->handlers;
@@ -305,8 +284,28 @@ class Promise implements PromiseInterface
         $this->waitFn = null;
         $this->cancelFn = null;
 
-        if ($handlers) {
-            $this->settleInvokeHandlers($state, $value, $handlers);
+        $this->settleInvokeHandlers($state, $value, $handlers);
+    }
+
+    /**
+     * Assert valid state and value
+     *
+     * @param string $state self::FULFILLED OR self::REJECTED
+     * @param mixed  $value Resolve value or reject reason
+     *
+     * @return void
+     *
+     * @throws LogicException
+     */
+    private function settleAssert($state, $value)
+    {
+        if ($this->state !== self::PENDING) {
+            throw $this->state === $state
+                ? new LogicException('The promise is already ' . $state . '.')
+                : new LogicException('Cannot change a ' . $this->state . ' promise to ' . $state);
+        }
+        if ($value === $this) {
+            throw new LogicException('Cannot fulfill or reject a promise with itself');
         }
     }
 
@@ -319,15 +318,16 @@ class Promise implements PromiseInterface
      *
      * @return void
      */
-    private function settleInvokeHandlers($state, $value, $handlers)
+    private function settleInvokeHandlers($state, $value, array $handlers)
     {
+        // may return early if there are no handlers
+
         /*
             could optimize.. if $value instance of self (not extended from)
             then We can just merge our handlers onto the next promise.
             $value->handlers = \array_merge($value->handlers, $handlers);
         */
-        $isThenable = \is_object($value) && \method_exists($value, 'then');
-        if ($isThenable) {
+        if (\is_object($value) && \method_exists($value, 'then')) {
             // value is some other thenable implementation
             //   invoke our handlers when value is resolved.
             $value->then(
@@ -444,6 +444,26 @@ class Promise implements PromiseInterface
     }
 
     /**
+     * Call cancel function if it exists.
+     *
+     * @return void
+     */
+    private function invokeCancelFn()
+    {
+        if ($this->cancelFn) {
+            $cancelFn = $this->cancelFn;
+            $this->cancelFn = null;
+            try {
+                $cancelFn();
+            } catch (Throwable $e) {
+                $this->reject($e);
+            } catch (Exception $e) {
+                $this->reject($e);
+            }
+        }
+    }
+
+    /**
      * Invoke the wait function
      *
      * @return void
@@ -477,7 +497,7 @@ class Promise implements PromiseInterface
     {
         $waitList = $this->waitList;
         $this->waitList = array();
-        foreach ($waitList as $result) {
+        \array_walk($waitList, static function ($result) {
             do {
                 $result->waitIfPending();
                 $result = $result->result;
@@ -486,6 +506,6 @@ class Promise implements PromiseInterface
             if ($result instanceof PromiseInterface) {
                 $result->wait(false);
             }
-        }
+        });
     }
 }

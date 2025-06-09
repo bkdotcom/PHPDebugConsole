@@ -108,24 +108,8 @@ class Firephp extends AbstractRoute
      */
     public function processLogEntry(LogEntry $logEntry)
     {
-        $method = $logEntry['method'];
-        $args = $logEntry['args'];
         $this->setFirephpMeta($logEntry);
-        $value = null;
-        if ($method === 'alert') {
-            $value = $this->methodAlert($logEntry);
-        } elseif (\in_array($method, ['group', 'groupCollapsed'], true)) {
-            $logEntry['firephpMeta']['Label'] = $args[0];
-            $logEntry['firephpMeta']['Collapsed'] = $method === 'groupCollapsed'
-                // yes, strings
-                ? 'true'
-                : 'false';
-        } elseif (\in_array($method, ['profileEnd', 'table', 'trace'], true)) {
-            $value = $this->methodTabular($logEntry);
-        } elseif (\count($args)) {
-            $this->dumper->processLogEntry($logEntry);
-            $value = $this->getValue($logEntry);
-        }
+        $value = $this->handleLogEntry($logEntry);
         if ($this->messageIndex < $this->cfg['messageLimit']) {
             $this->setFirephpHeader($logEntry['firephpMeta'], $value);
         } elseif ($this->messageIndex === $this->cfg['messageLimit']) {
@@ -137,31 +121,36 @@ class Firephp extends AbstractRoute
     }
 
     /**
-     * Get firephp value
+     * Handle log entry based on its method and return firephp value
      *
-     * @param LogEntry $logEntry LogEntry instance
+     * @param LogEntry $logEntry logEntry instance
      *
-     * @return mixed firephp value
+     * @return mixed
      */
-    private function getValue(LogEntry $logEntry)
+    private function handleLogEntry(LogEntry $logEntry)
     {
+        $method = $logEntry['method'];
         $args = $logEntry['args'];
-        if (\count($args) === 1) {
-            return $args[0];
-            // no label;
+        $value = null;
+        if ($method === 'alert') {
+            $value = $this->methodAlert($logEntry);
+        } elseif (\in_array($method, ['group', 'groupCollapsed'], true)) {
+            $value = $this->methodGroup($logEntry);
+        } elseif (\in_array($method, ['profileEnd', 'table', 'trace'], true)) {
+            $value = $this->methodTabular($logEntry);
+        } elseif (\count($args)) {
+            $this->dumper->processLogEntry($logEntry);
+            $value = $this->methodDefault($logEntry);
         }
-        $logEntry['firephpMeta']['Label'] = \array_shift($args);
-        return \count($args) > 1
-            ? $args // firephp only supports label/value...  we'll pass multiple values as an array
-            : $args[0];
+        return $value;
     }
 
     /**
-     * handle alert
+     * Handle alert method
      *
      * @param LogEntry $logEntry LogEntry instance
      *
-     * @return string
+     * @return string firephp value
      */
     private function methodAlert(LogEntry $logEntry)
     {
@@ -177,7 +166,46 @@ class Firephp extends AbstractRoute
         if ($logEntry->containsSubstitutions()) {
             $this->dumper->processLogEntry($logEntry);
         }
-        return $this->getValue($logEntry);
+        return $this->methodDefault($logEntry);
+    }
+
+    /**
+     * Handle methods that do not have a specific handler
+     *
+     * @param LogEntry $logEntry LogEntry instance
+     *
+     * @return mixed firephp value
+     */
+    private function methodDefault(LogEntry $logEntry)
+    {
+        $args = $logEntry['args'];
+        if (\count($args) === 1) {
+            return $args[0];
+            // no label;
+        }
+        $logEntry['firephpMeta']['Label'] = \array_shift($args);
+        return \count($args) > 1
+            ? $args // firephp only supports label/value...  we'll pass multiple values as an array
+            : $args[0];
+    }
+
+    /**
+     * Handle group and groupCollapsed methods
+     *
+     * @param LogEntry $logEntry LogEntry instance
+     *
+     * @return null
+     */
+    private function methodGroup(LogEntry $logEntry)
+    {
+        $args = $logEntry['args'];
+        $method = $logEntry['method'];
+        $logEntry['firephpMeta']['Label'] = $args[0];
+        $logEntry['firephpMeta']['Collapsed'] = $method === 'groupCollapsed'
+            // yes, strings
+            ? 'true'
+            : 'false';
+        return null;
     }
 
     /**

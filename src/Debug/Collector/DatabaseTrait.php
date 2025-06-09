@@ -76,10 +76,13 @@ trait DatabaseTrait
      */
     private function logRuntime(Debug $debug, $connectionString = null)
     {
+        $currentDatabase = $connectionString
+            ? null
+            : $this->currentDatabase();
         if ($connectionString) {
             $debug->log($debug->i18n->trans('db.connection-string'), $connectionString, $debug->meta('redact'));
-        } elseif ($database = $this->currentDatabase()) {
-            $debug->log('database', $database);
+        } elseif ($currentDatabase) {
+            $debug->log('database', $currentDatabase);
         }
         $debug->log($this->debug->i18n->trans('runtime.logged-operations') . ': ', $this->statementInfoLogger->getLoggedCount());
         $debug->time($this->debug->i18n->trans('runtime.total-time'), $this->statementInfoLogger->getTimeSpent());

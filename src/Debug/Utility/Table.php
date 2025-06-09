@@ -165,12 +165,6 @@ class Table
         $count = \count($curRowKeys);
         for ($i = 0; $i < $count; $i++) {
             $curKey = $curRowKeys[$i];
-            if ($colKeys && $curKey === $colKeys[0]) {
-                /** @psalm-var list<array-key> $newKeys */
-                $newKeys[] = $curKey;
-                \array_shift($colKeys);
-                continue;
-            }
             $position = \array_search($curKey, $colKeys, true);
             if ($position !== false) {
                 $segment = \array_splice($colKeys, 0, (int) $position + 1);
@@ -379,15 +373,14 @@ class Table
      */
     private function setMeta()
     {
-        $columns = array();
-        foreach ($this->meta['tableInfo']['columns'] as $colInfo) {
-            $columns[] = \array_filter($colInfo, static function ($val) {
+        $this->meta['tableInfo']['columns'] = \array_values(\array_map(static function ($colInfo) {
+            return \array_filter($colInfo, static function ($val) {
                 return \is_array($val)
                     ? !empty($val)
                     : $val !== null && $val !== false;
             });
-        }
-        $this->meta['tableInfo']['columns'] = $columns;
+        }, $this->meta['tableInfo']['columns']));
+
         unset(
             $this->meta['columns'],
             $this->meta['columnNames'],

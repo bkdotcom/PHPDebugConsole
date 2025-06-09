@@ -19,7 +19,7 @@ namespace bdk\Debug\Collector\MySqli;
 
 if (PHP_VERSION_ID >= 80200) {
     require __DIR__ . '/ExecuteQueryTrait_php8.2.php';
-} else {
+} else { // @phpcs:ignore bdk.ControlStructures.ElseStructure.NotAllowed
     /**
      * @phpcs:disable Generic.Classes.DuplicateClassName.Found
      */

@@ -92,16 +92,9 @@ class AbstractString extends AbstractComponent
             Abstracter::RECURSION => Type::TYPE_RECURSION,
             Abstracter::UNDEFINED => Type::TYPE_UNDEFINED,
         );
-        if (isset($debugVals[$val])) {
-            return [$debugVals[$val], null];
-        }
-        if (\is_numeric($val) === false) {
-            return [Type::TYPE_STRING, $this->getTypeMore($val)];
-        }
-        $typeMore = $this->abstracter->type->isTimestamp($val)
-            ? Type::TYPE_TIMESTAMP
-            : Type::TYPE_STRING_NUMERIC;
-        return [Type::TYPE_STRING, $typeMore];
+        return isset($debugVals[$val])
+            ? [$debugVals[$val], null]
+            : [Type::TYPE_STRING, $this->getTypeMore($val)];
     }
 
     /**
@@ -114,24 +107,38 @@ class AbstractString extends AbstractComponent
      */
     private function absFinish(Abstraction $abs)
     {
-        $typeMore = $abs['typeMore'];
-        if ($abs['brief'] && $typeMore !== Type::TYPE_STRING_BINARY) {
-            $matches = [];
-            $maxLen = $abs['maxlen'] > -1
-                ? $abs['maxlen']
-                : 128;
-            $regex = '/^([^\r\n]{1,' . $maxLen . '})/';
-            \preg_match($regex, $abs['value'], $matches);
-            $abs['value'] = $matches
-                ? $matches[1]
-                : \substr($abs['value'], 0, $maxLen);
-            $abs['strlenValue'] = \strlen($abs['value']);
-        }
+        $this->trimValueIfBrief($abs);
+
+        // cleanup length info
         if ($abs['strlen'] === $abs['strlenValue'] && $abs['strlen'] === \strlen($abs['value'])) {
             unset($abs['strlen'], $abs['strlenValue']);
         }
+
+        // remove temporary values
         unset($abs['maxlen'], $abs['valueRaw']);
         return $abs;
+    }
+
+    /**
+     * Trim the abstraction value if in brief mode and not binary
+     *
+     * @param Abstraction $abs Abstraction to modify
+     *
+     * @return void
+     */
+    private function trimValueIfBrief(Abstraction $abs)
+    {
+        if (!$abs['brief'] || $abs['typeMore'] === Type::TYPE_STRING_BINARY) {
+            return;
+        }
+        $maxLen = $abs['maxlen'] > -1 ? $abs['maxlen'] : 128;
+        $matches = [];
+        $regex = '/^([^\r\n]{1,' . $maxLen . '})/';
+        \preg_match($regex, $abs['value'], $matches);
+        $abs['value'] = $matches
+            ? $matches[1]
+            : \substr($abs['value'], 0, $maxLen);
+        $abs['strlenValue'] = \strlen($abs['value']);
     }
 
     /**
@@ -312,31 +319,43 @@ class AbstractString extends AbstractComponent
      * @param string $cat    category (ie base64, binary, other)
      * @param int    $strlen string length
      *
-     * @return int -1 for no limit
+     * @return int max length value (-1 for no limit)
      */
     private function getMaxLen($cat, $strlen)
     {
         $stringMaxLen = $this->cfg['brief']
             ? $this->cfg['stringMaxLenBrief']
             : $this->cfg['stringMaxLen'];
-        $maxLen = \array_key_exists($cat, $stringMaxLen)
+        $maxLen =  \array_key_exists($cat, $stringMaxLen)
             ? $stringMaxLen[$cat]
             : $stringMaxLen['other'];
-        if (\is_array($maxLen) === false) {
-            return $maxLen !== null
-                ? $maxLen
-                : -1;
+
+        if (\is_array($maxLen)) {
+            $maxLen = $this->getBreakpointBasedMaxLen($maxLen, $strlen);
         }
+        return $maxLen !== null
+            ? $maxLen
+            : -1;
+    }
+
+    /**
+     * Calculate max length based on breakpoints
+     *
+     * @param array $breakpoints array of breakpoint => length values
+     * @param int   $strlen      string length to check against breakpoints
+     *
+     * @return int max length value (-1 for no limit)
+     */
+    private function getBreakpointBasedMaxLen(array $breakpoints, $strlen)
+    {
         $len = -1;
-        foreach ($maxLen as $breakpoint => $lenNew) {
+        foreach ($breakpoints as $breakpoint => $lenNew) {
             if ($breakpoint > $strlen) {
                 break;
             }
             $len = $lenNew;
         }
-        return $len !== null
-            ? $len
-            : -1;
+        return $len;
     }
 
     /**
@@ -348,23 +367,20 @@ class AbstractString extends AbstractComponent
      */
     private function getTypeMore($val)
     {
-        $strLen = \strlen($val);
-        $strLenEncoded = $this->cfg['stringMinLen']['encoded'];
-        $typeMore = null;
-        if ($strLenEncoded > -1 && $strLen >= $strLenEncoded) {
-            $typeMore = $this->getTypeMoreEncoded($val);
-        }
+        $typeMore = \is_numeric($val)
+            ? $this->getTypeMoreNumeric($val)
+            : $this->getTypeMoreEncoded($val);
         if ($typeMore) {
             return $typeMore;
         }
         if ($this->debug->utf8->isUtf8($val) === false) {
             return Type::TYPE_STRING_BINARY;
         }
+        $strLen = \strlen($val);
         $maxlen = $this->getMaxLen('other', $strLen);
-        if ($maxlen > -1 && $strLen > $maxlen) {
-            return Type::TYPE_STRING_LONG;
-        }
-        return null;
+        return $maxlen > -1 && $strLen > $maxlen
+            ? Type::TYPE_STRING_LONG
+            : null;
     }
 
     /**
@@ -376,6 +392,12 @@ class AbstractString extends AbstractComponent
      */
     private function getTypeMoreEncoded($val)
     {
+        $strLen = \strlen($val);
+        $minLen = $this->cfg['stringMinLen']['encoded'];
+        if ($minLen < 0 || $strLen < $minLen) {
+            return null; // not long enough to test
+        }
+
         if ($this->debug->stringUtil->isBase64Encoded($val)) {
             return Type::TYPE_STRING_BASE64;
         }
@@ -386,5 +408,19 @@ class AbstractString extends AbstractComponent
             return Type::TYPE_STRING_SERIALIZED;
         }
         return null;
+    }
+
+    /**
+     * Determine if value is timestamp or plain numeric
+     *
+     * @param string $val numeric string value
+     *
+     * @return string
+     */
+    private function getTypeMoreNumeric($val)
+    {
+        return $this->abstracter->type->isTimestamp($val)
+            ? Type::TYPE_TIMESTAMP
+            : Type::TYPE_STRING_NUMERIC;
     }
 }

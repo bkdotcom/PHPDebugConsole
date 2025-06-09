@@ -139,7 +139,7 @@ class DataTest extends DebugTestFramework
         $this->debug->alert('Alerticus!', $this->debug->meta('id', 'alertId'));
         $refMethod = new \ReflectionMethod($this->debug->data, 'findLogEntry');
         $refMethod->setAccessible(true);
-        $this->assertSame('alerts', $refMethod->invoke($this->debug->data, 'alertId'));
+        $this->assertSame($this->debug->data->get('alerts'), $refMethod->invoke($this->debug->data, 'alertId'));
     }
 
     public function testSetData()

@@ -108,6 +108,38 @@ class ArrayUtilTest extends TestCase
             : self::assertFalse(ArrayUtil::isList($value, $inclEmpty));
     }
 
+    public function testMapWithKeys()
+    {
+        $array = array(
+            'foo' => 'bar',
+            'baz' => 'qux',
+        );
+        $array2 = ['one', 'two'];
+        $expect = array(
+            'foo' => 'FooBarOne',
+            'baz' => 'BazQuxTwo',
+        );
+        $array = ArrayUtil::mapWithKeys(static function ($val, $key, $other) {
+            return \ucfirst($key) . \ucfirst($val) . \ucfirst($other);
+        }, $array, $array2);
+        self::assertSame($expect, $array);
+    }
+
+    public function testMapWithKeysZip()
+    {
+        $a = ['uno' => 1, 'dos' => 2, 'tres' => 3, 'cuatro' => 4, 'cinco' => 5];
+        $b = ['one', 'two', 'three', 'four', 'five'];
+        $c = ['frog', 'dog', 'log', 'bog', 'fog'];
+        $expect = array(
+            'uno' => [1, 'one', 'frog'],
+            'dos' => [2, 'two', 'dog'],
+            'tres' => [3, 'three', 'log'],
+            'cuatro' => [4, 'four', 'bog'],
+            'cinco' => [5, 'five', 'fog'],
+        );
+        self::assertSame($expect, ArrayUtil::mapWithKeys(null, $a, $b, $c));
+    }
+
     public function testMapRecursive()
     {
         $array = array(

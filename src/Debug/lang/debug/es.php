@@ -215,12 +215,12 @@ return array(
     'session.name' => 'nombre de sesión',
     'session.name.assert' => 'no debería ser PHPSESSID (al igual que {expose_php} debería estar deshabilitado)',
 
-    'sql.analysis.select_all' => 'Use %cSELECT *%c solo si necesita todas las columnas de la tabla',
-    'sql.analysis.order_by_rand' => '%cORDER BY RAND()%c es lento, evítelo si puede.',
-    'sql.analysis.not_standard' => 'El operador %c!=%c no es estándar. Use el operador %c<>%c en su lugar.',
-    'sql.analysis.no_where' => 'La declaración %cSELECT%c no tiene cláusula %cWHERE%c y podría examinar muchas más filas de las previstas',
     'sql.analysis.leading_wildcard' => 'Un argumento tiene un carácter comodín inicial: %c{arg}%c y no puede usar un índice si existe uno.',
     'sql.analysis.limit_no_order' => '%cLIMIT%c sin %cORDER BY%c causa resultados no deterministas',
+    'sql.analysis.not_standard' => 'El operador %c!=%c no es estándar. Use el operador %c<>%c en su lugar.',
+    'sql.analysis.no_where' => 'La declaración %cSELECT%c no tiene cláusula %cWHERE%c y podría examinar muchas más filas de las previstas',
+    'sql.analysis.order_by_rand' => '%cORDER BY RAND()%c es lento, evítelo si puede.',
+    'sql.analysis.select_all' => 'Use %cSELECT *%c solo si necesita todas las columnas de la tabla',
 
     'utility.headers-sent' => 'Encabezados ya enviados: {file}, línea {line}',
     'utility.html.innerhtml-return' => 'El cierre de InnerHtml debería devolver una cadena. Obtenido {actual}',

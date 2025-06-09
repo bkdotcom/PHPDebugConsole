@@ -20,7 +20,7 @@ if (\trait_exists(__NAMESPACE__ . '\\CompatTrait', false) === false) {
     /**
      * Provide method signatures compatible with psr/simple-cache 3.x
      */
-    trait CompatTrait
+    trait CompatTrait // @phpcs:ignore Generic.Classes.DuplicateClassName.Found
     {
         /**
          * {@inheritDoc}

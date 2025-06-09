@@ -19,7 +19,7 @@ namespace bdk\Debug\Collector\Pdo;
 
 if (PHP_VERSION_ID >= 50600) {
     require __DIR__ . '/CompatTrait_php5.6.php';
-} else {
+} else { // @phpcs:ignore bdk.ControlStructures.ElseStructure.NotAllowed
     /**
      * @phpcs:disable Generic.Classes.DuplicateClassName.Found
      */

@@ -50,10 +50,7 @@ class FindExit
      */
     public function find()
     {
-        if (\extension_loaded('tokenizer') === false) {
-            return false; // @codeCoverageIgnore
-        }
-        if (Xdebug::isXdebugFuncStackAvail() === false) {
+        if (\extension_loaded('tokenizer') === false || Xdebug::isXdebugFuncStackAvail() === false) {
             return false; // @codeCoverageIgnore
         }
         $frame = $this->getLastFrame();
@@ -88,20 +85,17 @@ class FindExit
      */
     public static function getTokens($source, $parse = true, $inclWhitespace = true, $startLine = 1)
     {
-        $addOpen = \strpos($source, '<?php') === false;
-        if ($addOpen) {
-            $source = '<?php ' . $source;
-        }
-        try {
-            $tokens = \defined('TOKEN_PARSE') && $parse
-                ? \token_get_all($source, TOKEN_PARSE)
-                : \token_get_all($source);
-        } catch (\ParseError $e) {
+        // Step 1: Prepare the source code and tokenize it
+        list($tokens, $addedPhpTag) = self::tokenizeSource($source, $parse);
+        if ($tokens === false) {
             return false;
         }
-        if ($addOpen) {
+
+        // Step 2: Remove PHP tag if we added it
+        if ($addedPhpTag) {
             \array_shift($tokens);
         }
+
         $tokens = \array_filter($tokens, static function ($token) use ($inclWhitespace) {
             return $inclWhitespace || \is_array($token) === false || $token[0] !== T_WHITESPACE;
         });
@@ -112,6 +106,7 @@ class FindExit
             $token[2] = $token[2] + $startLine - 1;
             return $token;
         }, $tokens);
+
         return \array_values($tokens);
     }
 
@@ -176,9 +171,7 @@ class FindExit
     private function searchTokenTest($token, $tokenNext)
     {
         if (\is_array($token) === false) {
-            return $this->handleStringToken($token)
-                ? false
-                : null;
+            return $this->handleStringToken($token);
         }
         if ($token[0] === T_FUNCTION) {
             $this->handleTFunction($tokenNext);
@@ -196,23 +189,25 @@ class FindExit
      *
      * @param string $token token string
      *
-     * @return bool
+     * @return false|null
      */
     private function handleStringToken($token)
     {
         if ($token === '{') {
             $this->depth++;
-            return true;
+            return false;
         }
         if ($token !== '}') {
-            return true;
+            return false;
         }
         // token === '}
         $this->depth--;
         if (\end($this->funcStack) === $this->depth) {
             \array_pop($this->funcStack);
         }
-        return !($this->function && $this->depth === 0 && $this->inFunc);
+        return $this->function && $this->depth === 0 && $this->inFunc
+            ? null
+            : false;
     }
 
     /**
@@ -228,11 +223,7 @@ class FindExit
             $this->funcStack[] = $this->depth;
             return;
         }
-        if (
-            \is_array($tokenNext)
-            && $tokenNext[0] === T_STRING
-            && $tokenNext[1] === $this->function
-        ) {
+        if (\is_array($tokenNext) && $tokenNext[0] === T_STRING && $tokenNext[1] === $this->function) {
             $this->depth = 0;
             $this->inFunc = true;
         } elseif ($tokenNext === '(' && \strpos($this->function, '{closure:') !== false) {
@@ -258,8 +249,7 @@ class FindExit
                 'file' => null,
                 'function' => '',
             ), $frame);
-            $found = $this->getLastFrameTest($frame);
-            if ($found) {
+            if ($this->getLastFrameTest($frame)) {
                 break;
             }
         }
@@ -334,7 +324,7 @@ class FindExit
      */
     private function getFrameSourceClosure($file, $lineStart, $lineEnd)
     {
-        $php = \array_slice(
+        $phpLines = \array_slice(
             \file($file),
             $lineStart - 1,
             $lineEnd - $lineStart + 1
@@ -342,7 +332,7 @@ class FindExit
         return [
             $file,
             $lineStart,
-            \implode('', $php),
+            \implode('', $phpLines),
         ];
     }
 
@@ -390,7 +380,32 @@ class FindExit
             return $reflection->isInternal();
         } catch (\ReflectionException $e) {
             // {closure...} or {main}, etc
-            return false;
+        }
+        return false;
+    }
+
+    /**
+     * Tokenize PHP source code
+     *
+     * @param string $source PHP source code
+     * @param bool   $parse  Whether to use TOKEN_PARSE
+     *
+     * @return array{0:array|false,1:bool} Tokens and whether PHP tag was added
+     */
+    private static function tokenizeSource($source, $parse)
+    {
+        $addOpen = \strpos($source, '<?php') === false;
+        if ($addOpen) {
+            $source = '<?php ' . $source;
+        }
+
+        try {
+            $tokens = \defined('TOKEN_PARSE') && $parse
+                ? \token_get_all($source, TOKEN_PARSE)
+                : \token_get_all($source);
+            return [$tokens, $addOpen];
+        } catch (\ParseError $e) {
+            return [false, $addOpen];
         }
     }
 }

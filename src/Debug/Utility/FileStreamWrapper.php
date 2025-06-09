@@ -500,25 +500,41 @@ class FileStreamWrapper extends FileStreamWrapperBase
             static::register();
             return false;
         }
-        if ($flags & STREAM_URL_STAT_QUIET) {
-            // Temporary error handler to discard errors in silent mode
-            // phpcs:ignore Squiz.WhiteSpace.ScopeClosingBrace
-            \set_error_handler(static function () {});
-            try {
-                $result = $flags & STREAM_URL_STAT_LINK
-                    ? \lstat($path)
-                    : \stat($path);
-            } catch (\Exception $e) {
-                $result = false;
-            }
-            \restore_error_handler();
-            static::register();
-            return $result;
-        }
-        $result = $flags & STREAM_URL_STAT_LINK
-            ? \lstat($path)
-            : \stat($path);
+        $result = $this->getUrlStatResult($path, $flags);
         static::register();
+        return $result;
+    }
+
+    /**
+     * Get stat result based on flags
+     *
+     * @param string $path  The file path or URL to stat
+     * @param int    $flags Holds additional flags set by the streams API
+     *
+     * @return array|false
+     */
+    private function getUrlStatResult($path, $flags)
+    {
+        $isLink = (bool) ($flags & STREAM_URL_STAT_LINK);
+        $isQuiet = (bool) ($flags & STREAM_URL_STAT_QUIET);
+
+        if (!$isQuiet) {
+            return $isLink
+                ? \lstat($path)
+                : \stat($path);
+        }
+        // quiet mode
+        // Temporary error handler to discard errors in silent mode
+        // phpcs:ignore Squiz.WhiteSpace.ScopeClosingBrace
+        \set_error_handler(static function () {});
+        try {
+            $result = $isLink
+                ? \lstat($path)
+                : \stat($path);
+        } catch (\Exception $e) {
+            $result = false;
+        }
+        \restore_error_handler();
         return $result;
     }
 }

@@ -22,7 +22,7 @@ if (\trait_exists(__NAMESPACE__ . '\\LoggerCompatTrait', false) === false) {
     /**
      * Method signature for Php < 8.4
      */
-    trait LoggerCompatTrait
+    trait LoggerCompatTrait // @phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter Generic.CodeAnalysis.UnusedFunctionParameter
     {
         /**
          * Logs a SQL statement somewhere.

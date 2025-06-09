@@ -45,7 +45,7 @@ class Html extends AbstractRoute
      */
     public function __construct(Debug $debug)
     {
-        $this->debug = $debug;;
+        $this->debug = $debug;
         $this->errorSummary = new ErrorSummary($this, $debug->errorHandler);
         $this->tabs = new Tabs($this);
         $this->cfg = array(

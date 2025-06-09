@@ -191,15 +191,15 @@ class PhpDoc
         $parsed = \array_merge($parsed, $this->parseTags($strTags, $elementName));
         $parsed = \array_merge($this->parseGetDefaults($parsed), $parsed);
         $parsed = \array_merge($parsed, $this->replaceInheritDoc($parsed, $comment));
-        if ($sanitize) {
-            $parsed = ArrayUtil::mapRecursive(function ($value, $key) {
-                return \is_string($value) && \in_array($key, array('defaultValue', 'type', 'uri'), true) === false
-                    ? \call_user_func($this->cfg['sanitizer'], $value)
-                    : $value;
-            }, $parsed);
-        }
         \ksort($parsed);
-        return $parsed;
+        if (!$sanitize) {
+            return $parsed;
+        }
+        return ArrayUtil::mapRecursive(function ($value, $key) {
+            return \is_string($value) && \in_array($key, array('defaultValue', 'type', 'uri'), true) === false
+                ? \call_user_func($this->cfg['sanitizer'], $value)
+                : $value;
+        }, $parsed);
     }
 
     /**

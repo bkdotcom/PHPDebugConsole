@@ -215,12 +215,12 @@ return array(
     'session.name' => 'Sitzungsname',
     'session.name.assert' => 'sollte nicht PHPSESSID sein (genauso wie {expose_php} deaktiviert sein sollte)',
 
-    'sql.analysis.select_all' => 'Verwenden Sie %cSELECT *%c nur, wenn Sie alle Spalten aus der Tabelle benötigen',
-    'sql.analysis.order_by_rand' => '%cORDER BY RAND()%c ist langsam, vermeiden Sie es, wenn möglich.',
-    'sql.analysis.not_standard' => 'Der Operator %c!=%c ist nicht standardkonform. Verwenden Sie stattdessen den Operator %c<>%c.',
-    'sql.analysis.no_where' => 'Die %cSELECT%c-Anweisung hat keine %cWHERE%c-Klausel und könnte viel mehr Zeilen untersuchen als beabsichtigt',
     'sql.analysis.leading_wildcard' => 'Ein Argument hat ein führendes Platzhalterzeichen: %c{arg}%c und kann keinen Index verwenden, falls einer existiert.',
     'sql.analysis.limit_no_order' => '%cLIMIT%c ohne %cORDER BY%c führt zu nicht-deterministischen Ergebnissen',
+    'sql.analysis.not_standard' => 'Der Operator %c!=%c ist nicht standardkonform. Verwenden Sie stattdessen den Operator %c<>%c.',
+    'sql.analysis.no_where' => 'Die %cSELECT%c-Anweisung hat keine %cWHERE%c-Klausel und könnte viel mehr Zeilen untersuchen als beabsichtigt',
+    'sql.analysis.order_by_rand' => '%cORDER BY RAND()%c ist langsam, vermeiden Sie es, wenn möglich.',
+    'sql.analysis.select_all' => 'Verwenden Sie %cSELECT *%c nur, wenn Sie alle Spalten aus der Tabelle benötigen',
 
     'utility.headers-sent' => 'Header bereits gesendet: {file}, Zeile {line}',
     'utility.html.innerhtml-return' => 'InnerHtml-Schließung sollte einen String zurückgeben. Bekommen {actual}',

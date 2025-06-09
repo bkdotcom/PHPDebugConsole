@@ -57,7 +57,7 @@ class EachPromise extends Promise
      *   aggregate promise that manages all of the promises. The aggregate
      *   promise may be resolved from within the callback to short-circuit
      *   the promise.
-     * - concurrency: (integer) Pass this configuration option to limit the
+     * - concurrency: (int) Pass this configuration option to limit the
      *   allowed number of outstanding concurrently executing promises,
      *   creating a capped pool of promises. There is no limit by default.
      *
@@ -92,15 +92,15 @@ class EachPromise extends Promise
             return $this->aggregate;
         }
 
+        $aggregate = $this->createPromise();
         try {
-            $this->createPromise();
             /** @psalm-assert Promise $this->aggregate */
             $this->iterable->rewind();
             $this->refillPending();
         } catch (Throwable $e) {
-            $this->aggregate->reject($e);
+            $aggregate->reject($e);
         } catch (Exception $e) {
-            $this->aggregate->reject($e);
+            $aggregate->reject($e);
         }
 
         /**
@@ -108,7 +108,7 @@ class EachPromise extends Promise
          *
          * @phpstan-ignore-next-line
          */
-        return $this->aggregate;
+        return $aggregate;
     }
 
     /**
@@ -187,7 +187,7 @@ class EachPromise extends Promise
     }
 
     /**
-     * @return void
+     * @return Promise
      */
     private function createPromise()
     {
@@ -219,6 +219,8 @@ class EachPromise extends Promise
         };
 
         $this->aggregate->then($clearFn, $clearFn);
+
+        return $this->aggregate;
     }
 
     /**
@@ -237,8 +239,18 @@ class EachPromise extends Promise
             ? \call_user_func($this->concurrency, \count($this->pending))
             : $this->concurrency;
         $concurrency = \max($concurrency - \count($this->pending), 0);
-        // Concurrency may be set to 0 to disallow new promises.
+        $this->refillPandingConcurrent($concurrency);
+    }
+
+    /**
+     * @param int $concurrency limit the allowed number of outstanding concurrently executing promise
+     *
+     * @return void
+     */
+    private function refillPandingConcurrent($concurrency)
+    {
         if (!$concurrency) {
+            // Concurrency may be set to 0 to disallow new promises.
             return;
         }
         // Add the first pending promise.

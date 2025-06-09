@@ -87,10 +87,7 @@ class StatementInfoLogger extends AbstractComponent
     public function getPeakMemoryUsage()
     {
         return \array_reduce($this->loggedStatements, static function ($carry, StatementInfo $info) {
-            $mem = $info->memoryUsage;
-            return $mem > $carry
-                ? $mem
-                : $carry;
+            return \max($info->memoryUsage, $carry);
         });
     }
 
@@ -136,7 +133,7 @@ class StatementInfoLogger extends AbstractComponent
     {
         $this->info = $info;
         $this->loggedStatements[] = $info;
-        $label = $this->getGroupLabel();
+        $label = $this->getLabel();
         $this->debug->groupCollapsed($label, $this->debug->meta(\array_merge(array(
             'boldLabel' => false,
             'icon' => $this->debug->getCfg('channelIcon', Debug::CONFIG_DEBUG),
@@ -192,31 +189,54 @@ class StatementInfoLogger extends AbstractComponent
      *
      * @return string
      */
-    private function getGroupLabel()
+    private function getLabel()
     {
-        $label = \preg_replace('/[\r\n\s]+/', ' ', $this->info->sql);
-        $label = $this->debug->sql->replaceParams($label, $this->info->params);
-        $parsed = $this->debug->sql->parse($label);
-        if ($parsed === false) {
-            return $label;
-        }
+        $sql = \preg_replace('/[\r\n\s]+/', ' ', $this->info->sql);
+        $sql = $this->debug->sql->replaceParams($sql, $this->info->params);
+        $parsed = $this->debug->sql->parse($sql);
+        return $parsed
+            ? $this->getLabelFromParsed($parsed)
+            : $sql;
+    }
+
+    /**
+     * Get label from parsed sql
+     *
+     * @param array $parsed Parsed sql
+     *
+     * @return string
+     */
+    private function getLabelFromParsed(array $parsed)
+    {
         $label = $parsed['method']; // method + table
-        $afterWhereKeys = ['groupBy', 'having', 'window', 'orderBy', 'limit', 'for'];
-        $afterWhereValues = \array_intersect_key($parsed, \array_flip($afterWhereKeys));
-        $haveMore = \count($afterWhereValues) > 0;
-        if ($parsed['where'] && \strlen($parsed['where']) < 35) {
-            $label .= $parsed['afterMethod'] ? ' (…)' : '';
-            $label .= ' WHERE ' . $parsed['where'];
-        } elseif (\array_filter([$parsed['afterMethod'], $parsed['where']])) {
-            $haveMore = true;
-        }
-        if ($haveMore) {
-            $label .= '…';
+        $labelInfo = $this->labelInfo($parsed);
+        if ($labelInfo['includeWhere']) {
+            $label .= $labelInfo['beforeWhere'] . ' WHERE ' . $parsed['where'];
         }
         if (\strlen($label) > 100 && $parsed['select']) {
             $label = \str_replace($parsed['select'], ' (…)', $label);
         }
-        return $label;
+        return $label . ($labelInfo['haveMore'] ? '…' : '');
+    }
+
+    /**
+     * Get info about what parts of the query are included in the label
+     *
+     * @param array $parsed Parsed sql
+     *
+     * @return array
+     */
+    private function labelInfo(array $parsed)
+    {
+        $afterWhereKeys = ['groupBy', 'having', 'window', 'orderBy', 'limit', 'for'];
+        $afterWhereValues = \array_intersect_key($parsed, \array_flip($afterWhereKeys));
+        $includeWhere = $parsed['where'] && \strlen($parsed['where']) < 35;
+        return array(
+            'beforeWhere' => $parsed['afterMethod'] ? ' (…)' : '',
+            'haveMore' => \count($afterWhereValues) > 0
+                || (!$includeWhere && \array_filter([$parsed['afterMethod'], $parsed['where']])),
+            'includeWhere' => $includeWhere,
+        );
     }
 
     /**
@@ -247,12 +267,11 @@ class StatementInfoLogger extends AbstractComponent
      */
     protected function logParams()
     {
-        if (!$this->info->params) {
-            return;
+        if ($this->info->params) {
+            $this->info->types
+                ? $this->logParamsTypes()
+                : $this->debug->log($this->debug->i18n->trans('word.parameters'), $this->info->params);
         }
-        $this->info->types
-            ? $this->logParamsTypes()
-            : $this->debug->log($this->debug->i18n->trans('word.parameters'), $this->info->params);
     }
 
     /**
@@ -262,24 +281,24 @@ class StatementInfoLogger extends AbstractComponent
      */
     private function logParamsTypes()
     {
-        $params = array();
-        foreach ($this->info->params as $name => $value) {
-            $params[$name] = array(
+        $params = $this->debug->arrayUtil->mapWithKeys(function ($value, $name) {
+            $param = array(
                 'value' => $value,
             );
             if (!isset($this->info->types[$name])) {
-                continue;
+                return $param;
             }
             $type = $this->info->types[$name];
             $isIntOrString = \is_int($type) || \is_string($type);
-            $params[$name]['type'] = $isIntOrString && isset(self::$constants[$type])
+            $param['type'] = $isIntOrString && isset(self::$constants[$type])
                 ? new Abstraction(Type::TYPE_IDENTIFIER, array(
                     'backedValue' => $type,
                     'typeMore' => Type::TYPE_IDENTIFIER_CONST,
                     'value' => self::$constants[$type],
                 ))
                 : $type; // integer value (or enum)
-        }
+            return $param;
+        }, $this->info->params);
         $this->debug->table($this->debug->i18n->trans('word.parameters'), $params);
     }
 
@@ -329,9 +348,7 @@ class StatementInfoLogger extends AbstractComponent
             [$this->debug->abstracter->crateWithVals('slow', array(
                 'attribs' => array('class' => 'badge bg-warn fw-bold'),
             ))],
-            array(
-                'level' => 'warn',
-            )
+            array('level' => 'warn')
         ));
     }
 
@@ -380,13 +397,13 @@ class StatementInfoLogger extends AbstractComponent
      */
     private function setConstantsPdo()
     {
-        $constants = array();
         $pdoConstants = array();
         /** @psalm-suppress ArgumentTypeCoercion ignore expects class-string */
         if (\class_exists('PDO')) {
             $ref = new \ReflectionClass('PDO');
             $pdoConstants = $ref->getConstants();
         }
+        $constants = array();
         foreach ($pdoConstants as $name => $val) {
             if (\strpos($name, 'PARAM_') === 0 && \strpos($name, 'PARAM_EVT_') !== 0) {
                 $constants[$val] = 'PDO::' . $name;

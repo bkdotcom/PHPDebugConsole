@@ -20,7 +20,7 @@ if (\trait_exists(__NAMESPACE__ . '\\CompatTrait', false) === false) {
     /**
      * Provide method signatures compatible with psr/simple-cache 2.x
      */
-    trait CompatTrait
+    trait CompatTrait // @phpcs:ignore Generic.Classes.DuplicateClassName.Found
     {
         /**
          * {@inheritDoc}
@@ -69,7 +69,7 @@ if (\trait_exists(__NAMESPACE__ . '\\CompatTrait', false) === false) {
         public function setMultiple(iterable $values, null|int|\DateInterval $ttl = null)
         {
             $keysDebug = $this->keysDebug($values, true);
-            return $this->profileCall('setMultiple', \func_get_args(), true, $keysDebug);
+            return $this->profileCall('setMultiple', [$values, $ttl], true, $keysDebug);
         }
 
         /**

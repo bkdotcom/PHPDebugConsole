@@ -91,8 +91,8 @@ class PropertiesInstance extends Properties
     private function addDebugWalk(Abstraction $abs)
     {
         $debugInfo = $abs['debugInfo'];
-        $keys = \array_keys($abs['properties']);
-        $properties = \array_map(static function ($info, $name) use ($abs, &$debugInfo) {
+        $arrayUtil = $this->abstracter->debug->arrayUtil;
+        $properties = $arrayUtil->mapWithKeys(static function ($info, $name) use ($abs, &$debugInfo) {
             if (\array_key_exists($name, $abs['propertyOverrideValues'])) {
                 // we used override value
                 return $info;
@@ -109,8 +109,7 @@ class PropertiesInstance extends Properties
                 && $isInherited;
             $info['debugInfoExcluded'] = $isPrivateAncestor === false;
             return $info;
-        }, $abs['properties'], $keys);
-        $properties = \array_combine($keys, $properties);
+        }, $abs['properties']);
         $abs['debugInfo'] = \array_diff_key($debugInfo, $properties);
         return $properties;
     }
@@ -265,16 +264,10 @@ class PropertiesInstance extends Properties
     private function valueFromReflection(array $propInfo, Abstraction $abs, ReflectionProperty $refProperty)
     {
         $refProperty->setAccessible(true); // only accessible via reflection
-        $obj = $abs->getSubject();
         if ($propInfo['isVirtual']) {
-            if (\in_array('get', $propInfo['hooks'], true) === false) {
-                // virtual property with no getter = write-only
-                return $propInfo['value']; // undefined
-            } elseif ($abs['cfgFlags'] & AbstractObject::PROP_VIRTUAL_VALUE_COLLECT) {
-                return $refProperty->getValue($obj);
-            }
-            return Abstracter::NOT_INSPECTED;
+            return $this->valueFromReflectionVirtual($propInfo, $abs, $refProperty);
         }
+        $obj = $abs->getSubject();
         $isInitialized = PHP_VERSION_ID < 70400 || $refProperty->isInitialized($obj);
         if ($isInitialized === false) {
             return $propInfo['value']; // undefined
@@ -283,5 +276,26 @@ class PropertiesInstance extends Properties
             return $refProperty->getRawValue($obj);
         }
         return $refProperty->getValue($obj);
+    }
+
+    /**
+     * Obtain property value via `getRawValue` or `getValue`
+     *
+     * @param array              $propInfo    propInfo array
+     * @param Abstraction        $abs         Object Abstraction instance
+     * @param ReflectionProperty $refProperty ReflectionProperty
+     *
+     * @return mixed property value
+     */
+    private function valueFromReflectionVirtual(array $propInfo, Abstraction $abs, ReflectionProperty $refProperty)
+    {
+        if (\in_array('get', $propInfo['hooks'], true) === false) {
+            // virtual property with no getter = write-only
+            return $propInfo['value']; // undefined
+        } elseif ($abs['cfgFlags'] & AbstractObject::PROP_VIRTUAL_VALUE_COLLECT) {
+            $obj = $abs->getSubject();
+            return $refProperty->getValue($obj);
+        }
+        return Abstracter::NOT_INSPECTED;
     }
 }

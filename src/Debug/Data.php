@@ -79,9 +79,9 @@ class Data
     /**
      * Advanced usage
      *
-     *    setCfg('key', 'value')
-     *    setCfg('level1.level2', 'value')
-     *    setCfg(array('k1'=>'v1', 'k2'=>'v2'))
+     *    set('key', 'value')
+     *    set('level1.level2', 'value')
+     *    set(array('k1'=>'v1', 'k2'=>'v2'))
      *
      * @param string|array $path  path or array of values to merge
      * @param mixed        $value value
@@ -104,16 +104,7 @@ class Data
         } elseif (\is_array($path)) {
             $this->data = \array_merge($this->data, $path);
         }
-        if ($setLogDest === false) {
-            return;
-        }
-        if (!$this->data['log']) {
-            $this->debug->getPlugin('methodGroup')->reset('main');
-        }
-        if (!$this->data['logSummary']) {
-            $this->debug->getPlugin('methodGroup')->reset('summary');
-        }
-        $this->setLogDest();
+        $this->setFinish($setLogDest);
     }
 
     /**
@@ -127,8 +118,9 @@ class Data
     {
         // note: id (and appendGroup value) should not be numeric
         //    array_merge may be applied to log entries -> numeric keys will be reindexed
-        $id = $logEntry->getMeta('appendGroup');
-        if ($id && $this->appendGroup($logEntry, $id)) {
+        $groupId = $logEntry->getMeta('appendGroup');
+        if ($groupId) {
+            $this->appendGroup($logEntry, $groupId);
             return;
         }
         $attribs = $logEntry->getMeta('attribs');
@@ -146,14 +138,11 @@ class Data
      * @param LogEntry   $logEntry LogEntry instance
      * @param int|string $groupId  id/index of group LogEntry
      *
-     * @return bool
+     * @return void
      */
     private function appendGroup(LogEntry $logEntry, $groupId)
     {
-        $where = $this->findLogEntry($groupId);
-        if ($where === false) {
-            return false;
-        }
+        $dest = &$this->findLogEntry($groupId);
         $attribs = $logEntry->getMeta('attribs');
         $insertId = isset($attribs['id'])
             ? $attribs['id']
@@ -161,33 +150,27 @@ class Data
         $insert = array(
             $insertId => $logEntry,
         );
-        if (\is_int($where)) {
-            $closingId = $this->findGroupEnd($groupId, $this->data['logSummary'][$where]);
-            $this->arrayUtil->spliceAssoc($this->data['logSummary'][$where], $closingId, 0, $insert);
-            return true;
+        if (\preg_match('/^\d+$/', $groupId)) {
+            $groupId = (int) $groupId;
         }
-        $closingId = $this->findGroupEnd($groupId, $this->data[$where]);
-        $this->arrayUtil->spliceAssoc($this->data[$where], $closingId, 0, $insert);
-        return true;
+        $closingId = $this->findGroupEnd($groupId, $dest);
+        $this->arrayUtil->spliceAssoc($dest, $closingId, 0, $insert);
     }
 
     /**
      * Find the groupEnd logEntry for the given group open id
      *
-     * @param int|string $id         id/index of group LogEntry
+     * @param int|string $groupId    id/index of group LogEntry
      * @param LogEntry[] $logEntries log entries
      *
      * @return int|false
      */
-    private function findGroupEnd($id, $logEntries)
+    private function findGroupEnd($groupId, $logEntries)
     {
         $depth = 0;
         $inGroup = false;
-        if (\preg_match('/^\d+$/', $id)) {
-            $id = (int) $id;
-        }
         foreach ($logEntries as $key => $logEntry) {
-            $inGroup = $inGroup || $key === $id;
+            $inGroup = $inGroup || $key === $groupId;
             if ($inGroup === false) {
                 continue;
             }
@@ -222,23 +205,44 @@ class Data
      *
      * @param string $id logEntry id
      *
-     * @return false|int|'log'|'alerts'
+     * @return array // pointer to log destination
      */
-    private function findLogEntry($id)
+    private function &findLogEntry($id)
     {
         if (isset($this->data['log'][$id])) {
-            return 'log';
+            return $this->data['log'];
+        }
+        if (isset($this->data['alerts'][$id])) {
+            return $this->data['alerts'];
         }
         $priorities = \array_keys($this->data['logSummary']);
         foreach ($priorities as $priority) {
             if (isset($this->data['logSummary'][$priority][$id])) {
-                return $priority;
+                return $this->data['logSummary'][$priority];
             }
         }
-        if (isset($this->data['alerts'][$id])) {
-            return 'alerts';
+        // we didn't find the logEntry... just point to the log
+        return $this->data['log'];
+    }
+
+    /**
+     * After reset values after setting data
+     *
+     * @param bool $setLogDest whether to set log destination
+     *
+     * @return void
+     */
+    private function setFinish($setLogDest)
+    {
+        if (!$this->data['log']) {
+            $this->debug->getPlugin('methodGroup')->reset('main');
         }
-        return false;
+        if (!$this->data['logSummary']) {
+            $this->debug->getPlugin('methodGroup')->reset('summary');
+        }
+        if ($setLogDest) {
+            $this->setLogDest();
+        }
     }
 
     /**

@@ -206,24 +206,6 @@ trait CardUtilityTrait
     }
 
     /**
-     * Can value be coerced to string?
-     * (string, numeric, or Stringable)
-     *
-     * @param mixed $val Value to test
-     *
-     * @return bool
-     *
-     * @psalm-assert-if-true string|numeric|\Stringable $val
-     */
-    private static function isStringable($val)
-    {
-        if (\is_string($val) || \is_numeric($val)) {
-            return true;
-        }
-        return \is_object($val) && \method_exists($val, '__toString');
-    }
-
-    /**
      * Assert that value is a URL
      *
      * @param mixed $val          Value to test
@@ -243,11 +225,7 @@ trait CardUtilityTrait
                 self::getDebugType($val)
             ));
         }
-        if (
-            $allowDataUrl
-            && \preg_match('#^data:\w+/\w+;base64,(.*)$#', (string) $val, $matches)
-            && self::isBase64RegexTest($matches[1])
-        ) {
+        if ($allowDataUrl && self::isDataUrl($val)) {
             return;
         }
         $message = $allowDataUrl
@@ -257,6 +235,30 @@ trait CardUtilityTrait
         if ($urlParts === false || isset($urlParts['scheme']) === false) {
             throw new InvalidArgumentException($message);
         }
+    }
+
+    /**
+     * Return all constant values where constant name begins with prefix
+     *
+     * @param string $prefix Constant name prefix
+     *
+     * @return array<string,string>
+     */
+    private static function getConstantsWithPrefix($prefix)
+    {
+        if (self::$constants === array()) {
+            $refClass = new ReflectionClass('bdk\\Teams\\Enums');
+            self::$constants = $refClass->getConstants();
+        }
+        // array_filter / ARRAY_FILTER_USE_KEY is php 5.6
+        $filteredByKey = array();
+        /** @var mixed $value */
+        foreach (self::$constants as $key => $value) {
+            if (\strpos($key, $prefix) === 0) {
+                $filteredByKey[$key] = (string) $value;
+            }
+        }
+        return $filteredByKey;
     }
 
     /**
@@ -276,6 +278,55 @@ trait CardUtilityTrait
             'double' => 'float',
             'integer' => 'int',
         ));
+    }
+
+    /**
+     * Basic test to check if base64 encoded data
+     *
+     * @param string $val string to test
+     *
+     * @return bool
+     */
+    private static function isBase64RegexTest($val)
+    {
+        $val = \trim($val);
+        // only allow whitespace at beginning and end of lines
+        $regex = '#^'
+            . '([ \t]*[a-zA-Z0-9+/]*[ \t]*[\r\n]+)*'
+            . '([ \t]*[a-zA-Z0-9+/]*={0,2})' // last line may have "=" padding at the end"
+            . '$#';
+        return \preg_match($regex, $val) === 1;
+    }
+
+    /**
+     * Test if value is a data url
+     *
+     * @param string|UriInterface $val Url to test
+     *
+     * @return bool
+     */
+    private static function isDataUrl($val)
+    {
+        return \preg_match('#^data:\w+/\w+;base64,(.*)$#', (string) $val, $matches)
+            && self::isBase64RegexTest($matches[1]);
+    }
+
+    /**
+     * Can value be coerced to string?
+     * (string, numeric, or Stringable)
+     *
+     * @param mixed $val Value to test
+     *
+     * @return bool
+     *
+     * @psalm-assert-if-true string|numeric|\Stringable $val
+     */
+    private static function isStringable($val)
+    {
+        if (\is_string($val) || \is_numeric($val)) {
+            return true;
+        }
+        return \is_object($val) && \method_exists($val, '__toString');
     }
 
     /**
@@ -308,47 +359,5 @@ trait CardUtilityTrait
             $values = array('type' => $values['type']) + $values;
         }
         return $values;
-    }
-
-    /**
-     * Return all constant values where constant name begins with prefix
-     *
-     * @param string $prefix Constant name prefix
-     *
-     * @return array<string,string>
-     */
-    private static function getConstantsWithPrefix($prefix)
-    {
-        if (self::$constants === array()) {
-            $refClass = new ReflectionClass('bdk\\Teams\\Enums');
-            self::$constants = $refClass->getConstants();
-        }
-        // array_filter / ARRAY_FILTER_USE_KEY is php 5.6
-        $filteredByKey = array();
-        /** @var mixed $value */
-        foreach (self::$constants as $key => $value) {
-            if (\strpos($key, $prefix) === 0) {
-                $filteredByKey[$key] = (string) $value;
-            }
-        }
-        return $filteredByKey;
-    }
-
-    /**
-     * Basic test to check if base64 encoded data
-     *
-     * @param string $val string to test
-     *
-     * @return bool
-     */
-    private static function isBase64RegexTest($val)
-    {
-        $val = \trim($val);
-        // only allow whitespace at beginning and end of lines
-        $regex = '#^'
-            . '([ \t]*[a-zA-Z0-9+/]*[ \t]*[\r\n]+)*'
-            . '([ \t]*[a-zA-Z0-9+/]*={0,2})' // last line may have "=" padding at the end"
-            . '$#';
-        return \preg_match($regex, $val) === 1;
     }
 }

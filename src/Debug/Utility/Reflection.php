@@ -51,7 +51,7 @@ class Reflection
         )$/x';
 
     /**
-     * Get the reflector's classname
+     * Get the reflectee's classname
      *
      * @param Reflector $reflector Reflector instance
      *
@@ -153,13 +153,9 @@ class Reflection
         if (\is_object($mixed)) {
             return new ReflectionObject($mixed);
         }
-        try {
-            return \is_string($mixed)
-                ? static::getReflectorFromString($mixed)
-                : false;
-        } catch (ReflectionException $e) {
-            return false;
-        }
+        return \is_string($mixed)
+            ? static::getReflectorFromString($mixed)
+            : false;
     }
 
     /**
@@ -345,17 +341,35 @@ class Reflection
         \preg_match(self::$regex, $string, $matches);
         $defaults = \array_fill_keys(['class', 'constant', 'property', 'method', 'function'], null);
         $matches = \array_merge($defaults, $matches);
+        // Handle enum specially due to additional checks
+        try {
+            if ($matches['class'] && PHP_VERSION_ID >= 80100 && \enum_exists($matches['class'])) {
+                return self::getReflectorFromStringEnum($matches);
+            }
+            if ($matches['constant'] && PHP_VERSION_ID >= 70100) {
+                return new ReflectionClassConstant($matches['class'], $matches['constant']);
+            }
+            return self::getReflectorFromMatches($matches);
+        } catch (ReflectionException) {
+            // do nothing
+        }
+        return false;
+    }
+
+    /**
+     * Create a reflector based on parsed components
+     *
+     * @param array $matches Parsed components
+     *
+     * @return Reflector|false
+     */
+    private static function getReflectorFromMatches(array $matches)
+    {
         if ($matches['method']) {
             return new ReflectionMethod($matches['class'], $matches['method']);
         }
         if ($matches['property']) {
             return new ReflectionProperty($matches['class'], $matches['property']);
-        }
-        if ($matches['class'] && PHP_VERSION_ID >= 80100 && \enum_exists($matches['class'])) {
-            return self::getReflectorFromStringEnum($matches);
-        }
-        if ($matches['constant'] && PHP_VERSION_ID >= 70100) {
-            return new ReflectionClassConstant($matches['class'], $matches['constant']);
         }
         if ($matches['class']) {
             return new ReflectionClass($matches['class']);

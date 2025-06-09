@@ -216,12 +216,12 @@ return array(
     'session.name' => 'session name',
     'session.name.assert' => 'should not be PHPSESSID (just as {expose_php} should be disabled)',
 
-    'sql.analysis.select_all' => 'Use %cSELECT *%c only if you need all columns from table',
-    'sql.analysis.order_by_rand' => '%cORDER BY RAND()%c is slow, avoid if you can.',
-    'sql.analysis.not_standard' => 'The %c!=%c operator is not standard. Use the %c<>%c operator instead.',
-    'sql.analysis.no_where' => 'The %cSELECT%c statement has no %cWHERE%c clause and could examine many more rows than intended',
     'sql.analysis.leading_wildcard' => 'An argument has a leading wildcard character: %c{arg}%c and cannot use an index if one exists.',
     'sql.analysis.limit_no_order' => '%cLIMIT%c without %cORDER BY%c causes non-deterministic results',
+    'sql.analysis.not_standard' => 'The %c!=%c operator is not standard. Use the %c<>%c operator instead.',
+    'sql.analysis.no_where' => 'The %cSELECT%c statement has no %cWHERE%c clause and could examine many more rows than intended',
+    'sql.analysis.order_by_rand' => '%cORDER BY RAND()%c is slow, avoid if you can.',
+    'sql.analysis.select_all' => 'Use %cSELECT *%c only if you need all columns from table',
 
     'utility.headers-sent' => 'Headers already sent: {file}, line {line}',
     'utility.html.innerhtml-return' => 'InnerHtml closure should return string.  Got {actual}',

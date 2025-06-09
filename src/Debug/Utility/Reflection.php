@@ -350,7 +350,7 @@ class Reflection
                 return new ReflectionClassConstant($matches['class'], $matches['constant']);
             }
             return self::getReflectorFromMatches($matches);
-        } catch (ReflectionException) {
+        } catch (ReflectionException $e) {
             // do nothing
         }
         return false;

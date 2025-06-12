@@ -38,7 +38,7 @@ class StopWatch
     public function __construct($vals = array())
     {
         $requestTimeDefault = isset($_SERVER['REQUEST_TIME_FLOAT'])
-            ? $_SERVER['REQUEST_TIME_FLOAT']
+            ? (float) $_SERVER['REQUEST_TIME_FLOAT']
             : \microtime(true);
         $this->timers['labels']['requestTime'] = [
             0,

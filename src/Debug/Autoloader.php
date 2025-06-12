@@ -23,6 +23,9 @@ class Autoloader
     /** @var array<string,string> */
     protected $psr4Map = array();
 
+    /** @var bool */
+    private $isRegistered = false;
+
     /**
      * Register autoloader
      *
@@ -30,6 +33,10 @@ class Autoloader
      */
     public function register()
     {
+        if ($this->isRegistered) {
+            // already registered
+            return true;
+        }
         $this->classMap = \array_unique(\array_merge($this->classMap, array(
             'bdk\\Backtrace' => __DIR__ . '/../Backtrace/Backtrace.php',
             'bdk\\Container' => __DIR__ . '/../Container/Container.php',
@@ -52,6 +59,8 @@ class Autoloader
             'bdk\\Teams\\' => __DIR__ . '/../Teams',
             'bdk\\Test\\Debug\\' => __DIR__ . '/../../tests/Debug',
         )));
+        $this->isRegistered = true;
+        $this->sortPsr4();
         return \spl_autoload_register([$this, 'autoload']);
     }
 
@@ -62,6 +71,7 @@ class Autoloader
      */
     public function unregister()
     {
+        $this->isRegistered = false;
         return \spl_autoload_unregister([$this, 'autoload']);
     }
 
@@ -90,6 +100,7 @@ class Autoloader
     public function addPsr4($namespace, $dir)
     {
         $this->psr4Map[$namespace] = $dir;
+        $this->sortPsr4();
         return $this;
     }
 
@@ -129,5 +140,21 @@ class Autoloader
             }
         }
         return false;
+    }
+
+    /**
+     * Sort PSR-4 mappings by length of namespace descending
+     * This ensures that more specific namespaces are matched first
+     *
+     * @return void
+     */
+    private function sortPsr4()
+    {
+        if ($this->isRegistered === false) {
+            // no need to sort until registered
+            return;
+        }
+        $keyLengths = \array_map('strlen', \array_keys($this->psr4Map));
+        \array_multisort($keyLengths, SORT_DESC, $this->psr4Map);
     }
 }

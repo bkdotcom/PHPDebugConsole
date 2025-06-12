@@ -47,16 +47,22 @@ class Output implements SubscriberInterface
      *
      * Note: Log output is handled automatically, and calling output is generally not necessary.
      *
-     * @param array $cfg Override any config values
+     * @param array|bool $returnOrCfg (true)
+     *                                if array, treated as config values,
+     *                                if bool, whether to return (true) or echo output (false)
      *
      * @return string|null
      *
      * @since 1.2 explicitly calling output() is no longer necessary.. log will be output automatically via shutdown function
-     * @since 2.3 `$config` parameter
+     * @since 2.3 `$cfg` parameter
+     * @since 3.5 now accepts array or bool as first parameter
      */
-    public function output($cfg = array())
+    public function output($returnOrCfg = true)
     {
         $debug = $this->debug;
+        $cfg = $this->outputNormalizeCfg($returnOrCfg);
+        $return = $cfg['return'];
+        unset($cfg['return']);
         $cfgRestore = $debug->config->set($cfg);
         if ($debug->getCfg('output', Debug::CONFIG_DEBUG) === false) {
             $debug->config->set($cfgRestore);
@@ -69,7 +75,32 @@ class Output implements SubscriberInterface
         }
         $debug->config->set($cfgRestore);
         $debug->obEnd();
-        return $event['return'];
+        if ($return === true) {
+            return $event['return'];
+        }
+        echo $event['return'];
+    }
+
+    /**
+     * Convert output parameter to array
+     *
+     * @param array|bool $returnOrCfg Return output or config values
+     *
+     * @return array
+     */
+    private function outputNormalizeCfg($returnOrCfg)
+    {
+        if (\is_bool($returnOrCfg)) {
+            return array(
+                'return' => $returnOrCfg,
+            );
+        }
+        if (\is_array($returnOrCfg) === false) {
+            $returnOrCfg = array();
+        }
+        return \array_merge(array(
+            'return' => true,
+        ), $returnOrCfg);
     }
 
     /**

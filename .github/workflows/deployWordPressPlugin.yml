@@ -37,7 +37,7 @@ jobs:
         composer install --no-dev --prefer-dist --no-progress
     - name: Move plugin file
       run: |
-        mv src/Debug/Framework/WordPress/phpdebugconsole.php phpdebugconsole.php
+        php dev/buildWordPressPlugin.php
     - name: WordPress Plugin Deploy
       uses: 10up/action-wordpress-plugin-deploy@stable
       env:

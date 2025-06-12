@@ -12,6 +12,7 @@
 
 namespace bdk\Debug\Utility;
 
+use bdk\Debug\Utility\ArrayUtil;
 use bdk\Debug\Utility\StringUtilHelperTrait;
 use bdk\HttpMessage\Utility\ContentType;
 use bdk\HttpMessage\Utility\Stream as StreamUtility;
@@ -47,7 +48,7 @@ class StringUtil
             return '';
         }
 
-        \bdk\Debug\Utility\ArrayUtil::assertContainsOnly($strings, 'string');
+        ArrayUtil::assertContainsOnly($strings, 'string');
 
         \sort($strings);
         $s1 = $strings[0];    // First string

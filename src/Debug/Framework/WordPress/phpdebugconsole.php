@@ -1,24 +1,22 @@
 <?php
 
 /**
- * Plugin Name: PhpDebugConsole
+ * Plugin Name: PHP Debug Console
  * Plugin URI: https://bradkent.com/php/debug
  * Description: Display query, cache, and other helpful debugging information.  Provides new logging / debugging / inspecting / error-notification functionality
  * Author: Brad Kent
  * Author URI: https://bradkent.com
  * License: MIT
  * License URI: http://opensource.org/licenses/MIT
+ * Version: 3.5
  * Requires PHP: 5.4
  */
 
-// determine where we are - PHPDebugConsole root or FrameWork/WordPress
- $path = \realpath(__DIR__);
- $pathBase = \strpos($path, 'Framework' . DIRECTORY_SEPARATOR . 'WordPress')
-    ? $path . '/../../../..'
-    : $path;
+$pathBase = __DIR__;
 
-require $pathBase . '/src/Debug/Autoloader.php';
+require $pathBase . '/vendor/bdk/Debug/Autoloader.php';
 $autoloader = new \bdk\Debug\Autoloader();
+$autoloader->addPsr4('bdk\\Debug\\Framework\\WordPress\\', $pathBase);
 $autoloader->addPsr4('Psr\\Http\\Message\\', $pathBase . '/vendor/psr/http-message/src');
 $autoloader->addPsr4('bdk\\HttpMessage\\', $pathBase . '/vendor/bdk/http-message/src/HttpMessage');
 $autoloader->addClass('SqlFormatter', $pathBase . '/vendor/jdorn/sql-formatter/lib/SqlFormatter.php');
@@ -95,5 +93,5 @@ $debug = new \bdk\Debug($config);
 });
 
 \add_action('shutdown', static function () use ($debug) {
-    echo $debug->output();
+    $debug->output(false); // false = don't return -> output directly
 }, 0);

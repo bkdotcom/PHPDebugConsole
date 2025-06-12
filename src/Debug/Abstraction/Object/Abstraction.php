@@ -182,9 +182,12 @@ class Abstraction extends BaseAbstraction
         foreach ($order as $what) {
             $multiSortArgs[] = $sortData[$what];
         }
+        // array_multisort reindexes nunmeric keys,
+        // sort the keys as well and combine with the result
+        $multiSortArgs[] = &$sortData['name'];
         $multiSortArgs[] = &$array;
         \call_user_func_array('array_multisort', $multiSortArgs);
-        return $array;
+        return \array_combine($sortData['name'], $array);
     }
 
     /**

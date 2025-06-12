@@ -168,7 +168,9 @@ abstract class AbstractSection
         $items = $abs->sort($items, $abs['sort']);
         $absKeys = $abs['keys'];
         foreach ($items as $name => $info) {
-            $name = \preg_replace('/^debug\./', '', $name);
+            $name = \is_string($name)
+                ? \preg_replace('/^debug\./', '', $name)
+                : $name;
             if (isset($absKeys[$name])) {
                 $name = $absKeys[$name];
             }

@@ -359,11 +359,7 @@ class BasicTest extends DebugTestFramework
                     'error',
                 )),
                 'firephp' => 'X-Wf-1-1-1-3: %d|[{"File":"%s","Label":"a string","Line":%d,"Type":"ERROR"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
-                'html' => '<li class="m_error" data-detect-files="true" data-file="' . \realpath(__DIR__ . '/../../DebugTestFramework.php') . '" data-line="%d"><span class="no-quotes t_string">a string</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>, <div class="groupByInheritance prop-only t_object" data-accessible="public"><span class="t_identifier" data-type-more="className"><span class="classname">stdClass</span></span>
-                    <dl class="object-inner">
-                    <dt class="properties">no properties</dt>
-                    </dl>
-                    </div>, <span class="t_resource">Resource id #%d: stream</span></li>',
+                'html' => '<li class="m_error" data-detect-files="true" data-file="' . \realpath(__DIR__ . '/../../DebugTestFramework.php') . '" data-line="%d"><span class="no-quotes t_string">a string</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>, <div class="t_object"><span class="t_identifier" data-type-more="className"><span class="classname">stdClass</span></span><span class="t_punct">()</span></div>, <span class="t_resource">Resource id #%d: stream</span></li>',
                 'script' => 'console.error("a string",[],{"___class_name":"stdClass"},"Resource id #%i: stream","%s: line %d");',
                 'text' => '⦻ a string, array(), stdClass(), Resource id #%i: stream',
                 'streamAnsi' => "\e[38;5;9m⦻ a string\e[38;5;245m, \e[38;5;9m\e[38;5;45marray\e[38;5;245m(\e[38;5;9m\e[38;5;245m)\e[38;5;9m\e[38;5;245m, \e[38;5;9m\e[1mstdClass\e[22m\e[38;5;245m()\e[38;5;9m\e[38;5;245m, \e[38;5;9mResource id #%d: stream\e[0m",
@@ -423,11 +419,7 @@ class BasicTest extends DebugTestFramework
                     'info',
                 )),
                 'firephp' => 'X-Wf-1-1-1-5: %d|[{"Label":"a string","Type":"INFO"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
-                'html' => '<li class="m_info"><span class="no-quotes t_string">a string</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>, <div class="groupByInheritance prop-only t_object" data-accessible="public"><span class="t_identifier" data-type-more="className"><span class="classname">stdClass</span></span>
-                    <dl class="object-inner">
-                    <dt class="properties">no properties</dt>
-                    </dl>
-                    </div>, <span class="t_resource">Resource id #%d: stream</span></li>',
+                'html' => '<li class="m_info"><span class="no-quotes t_string">a string</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>, <div class="t_object"><span class="t_identifier" data-type-more="className"><span class="classname">stdClass</span></span><span class="t_punct">()</span></div>, <span class="t_resource">Resource id #%d: stream</span></li>',
                 'script' => 'console.info("a string",[],{"___class_name":"stdClass"},"Resource id #%d: stream");',
                 'text' => 'ℹ a string, array(), stdClass(), Resource id #%d: stream',
                 // 'wamp' @todo
@@ -480,11 +472,7 @@ class BasicTest extends DebugTestFramework
                     '',
                 )),
                 'firephp' => 'X-Wf-1-1-1-5: %d|[{"Label":"a string","Type":"LOG"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
-                'html' => '<li class="m_log"><span class="no-quotes t_string">a string</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>, <div class="groupByInheritance prop-only t_object" data-accessible="public"><span class="t_identifier" data-type-more="className"><span class="classname">stdClass</span></span>
-                    <dl class="object-inner">
-                    <dt class="properties">no properties</dt>
-                    </dl>
-                    </div>, <span class="t_resource">Resource id #%d: stream</span></li>',
+                'html' => '<li class="m_log"><span class="no-quotes t_string">a string</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>, <div class="t_object"><span class="t_identifier" data-type-more="className"><span class="classname">stdClass</span></span><span class="t_punct">()</span></div>, <span class="t_resource">Resource id #%d: stream</span></li>',
                 'script' => 'console.log("a string",[],{"___class_name":"stdClass"},"Resource id #%d: stream");',
                 'streamAnsi' => "a string\e[38;5;245m, \e[0m\e[38;5;45marray\e[38;5;245m(\e[0m\e[38;5;245m)\e[0m\e[38;5;245m, \e[0m\e[1mstdClass\e[22m\e[38;5;245m()\e[0m\e[38;5;245m, \e[0mResource id #%d: stream",
                 'text' => 'a string, array(), stdClass(), Resource id #%d: stream',
@@ -667,11 +655,7 @@ class BasicTest extends DebugTestFramework
                     'warn',
                 )),
                 'firephp' => 'X-Wf-1-1-1-5: %d|[{"File":"' . \realpath(__DIR__ . '/../../DebugTestFramework.php') . '","Label":"a string","Line":%d,"Type":"WARN"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
-                'html' => '<li class="m_warn" data-detect-files="true" data-file="' . \realpath(__DIR__ . '/../../DebugTestFramework.php') . '" data-line="%d"><span class="no-quotes t_string">a string</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>, <div class="groupByInheritance prop-only t_object" data-accessible="public"><span class="t_identifier" data-type-more="className"><span class="classname">stdClass</span></span>
-                    <dl class="object-inner">
-                    <dt class="properties">no properties</dt>
-                    </dl>
-                    </div>, <span class="t_resource">Resource id #%d: stream</span></li>',
+                'html' => '<li class="m_warn" data-detect-files="true" data-file="' . \realpath(__DIR__ . '/../../DebugTestFramework.php') . '" data-line="%d"><span class="no-quotes t_string">a string</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>, <div class="t_object"><span class="t_identifier" data-type-more="className"><span class="classname">stdClass</span></span><span class="t_punct">()</span></div>, <span class="t_resource">Resource id #%d: stream</span></li>',
                 'script' => 'console.warn("a string",[],{"___class_name":"stdClass"},"Resource id #%d: stream","' . \realpath(__DIR__ . '/../../DebugTestFramework.php') . ': line %d");',
                 'text' => '⚠ a string, array(), stdClass(), Resource id #%d: stream',
                 // 'wamp' => @todo

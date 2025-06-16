@@ -153,7 +153,9 @@ class Autoloader
     private function resolveFilepath($filepath)
     {
         if (\strpos($filepath, '..') === 0) {
-            $filepath = \dirname(__DIR__, 1) . '/' . \ltrim(\substr($filepath, 2), '/');
+            $pathParts = \explode(DIRECTORY_SEPARATOR, __DIR__);
+            \array_pop($pathParts); // remove last part
+            $filepath = implode('/', $pathParts) . '/' . \ltrim(\substr($filepath, 2), '/');
         } elseif (\strpos($filepath, '.') === 0) {
             $filepath = __DIR__ . '/' . \ltrim(\substr($filepath, 1), '/');
         }

@@ -270,7 +270,7 @@ EOD;
                     },
                     'streamAnsi' => \str_replace('\e', "\e", '\e[1mstdClass\e[22m' . "\n"
                             . '\e[38;5;245m[\e[38;5;83m \e[38;5;245m]\e[0m \e[38;5;224m=>\e[0m \e[38;5;250m"\e[0mspace\e[38;5;250m"\e[0m' . "\n"
-                            . (PHP_VERSION_ID >= 80200
+                            . (PHP_VERSION_ID >= 70000
                                 ? '\e[38;5;245m[\e[38;5;83m\e[96m42\e[0m\e[38;5;245m]\e[0m \e[38;5;224m=>\e[0m \e[38;5;250m"\e[0mint key\e[38;5;250m"\e[0m' . "\n"
                                 : '')
                             . '\e[38;5;245m[\e[38;5;83mnot\e[30;48;5;250m80\e[0m\e[34;48;5;14mυ\e[0mtf8\e[38;5;245m]\e[0m \e[38;5;224m=>\e[0m \e[38;5;250m"\e[0mnot utf8\e[38;5;250m"\e[0m' . "\n"
@@ -281,7 +281,7 @@ EOD;
                     ),
                     'text' => 'stdClass' . "\n"
                         . '[ ] => "space"' . "\n"
-                        . (PHP_VERSION_ID >= 80200
+                        . (PHP_VERSION_ID >= 70000
                             ? '[42] => "int key"' . "\n"
                             : '')
                         . '[not\x80\u{03c5}tf8] => "not utf8"' . "\n"

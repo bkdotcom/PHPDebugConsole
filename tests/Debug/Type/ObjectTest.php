@@ -253,7 +253,7 @@ EOD;
                                 'value' => '',
                             ),
                         ), Helper::deObjectifyData($abs['keys']));
-                        self::assertSame(array(
+                        $keysExpect = array(
                             "\xE2\x80\x8B",
                             "\xef\xbb\xbf",
                             "\xef\xbb\xbfbom\r\n\t\x07 \x1F \x7F \xc2\xa0<i>(nbsp)</i> \xE2\x80\x89(thsp), & \xE2\x80\x8B(zwsp)",
@@ -261,26 +261,34 @@ EOD;
                             // '',
                             42,
                             'ade50251dade9edc27e822ebdc3e9664',
-                        ), \array_keys($abs['properties']));
+                        );
+                        if (PHP_VERSION_ID < 70000) {
+                            $index = \array_search(42, $keysExpect, true);
+                            \array_splice($keysExpect, $index, 1);
+                        }
+                        self::assertSame($keysExpect, \array_keys($abs['properties']));
                     },
-                    'streamAnsi' => \str_replace('\e', "\e", '
-                        \e[1mstdClass\e[22m
-                            \e[38;5;245m[\e[38;5;83m \e[38;5;245m]\e[0m \e[38;5;224m=>\e[0m \e[38;5;250m"\e[0mspace\e[38;5;250m"\e[0m
-                            \e[38;5;245m[\e[38;5;83m\e[96m42\e[0m\e[38;5;245m]\e[0m \e[38;5;224m=>\e[0m \e[38;5;250m"\e[0mint key\e[38;5;250m"\e[0m
-                            \e[38;5;245m[\e[38;5;83mnot\e[30;48;5;250m80\e[0m\e[34;48;5;14mυ\e[0mtf8\e[38;5;245m]\e[0m \e[38;5;224m=>\e[0m \e[38;5;250m"\e[0mnot utf8\e[38;5;250m"\e[0m
-                            \e[38;5;245m[\e[38;5;83m\e[34;48;5;14m\u{200b}\e[0m\e[38;5;245m]\e[0m \e[38;5;224m=>\e[0m \e[38;5;250m"\e[0mzwsp\e[38;5;250m"\e[0m
-                            \e[38;5;245m[\e[38;5;83m\e[34;48;5;14m\u{feff}\e[0m\e[38;5;245m]\e[0m \e[38;5;224m=>\e[0m \e[38;5;250m"\e[0mbom\e[38;5;250m"\e[0m
-                            \e[38;5;245m[\e[38;5;83m\e[34;48;5;14m\u{feff}\e[0mbom[\r]
-                                \e[34;48;5;14m\x07\e[0m \e[34;48;5;14m\x1f\e[0m \e[34;48;5;14m\x7f\e[0m \e[34;48;5;14m\u{00a0}\e[0m<i>(nbsp)</i> \e[34;48;5;14m\u{2009}\e[0m(thsp), & \e[34;48;5;14m\u{200b}\e[0m(zwsp)\e[38;5;245m]\e[0m \e[38;5;224m=>\e[0m \e[38;5;250m"\e[0mctrl chars and whatnot\e[38;5;250m"\e[0m
-                    '),
-                    'text' => 'stdClass
-                        [ ] => "space"
-                        [42] => "int key"
-                        [not\x80\u{03c5}tf8] => "not utf8"
-                        [\u{200b}] => "zwsp"
-                        [\u{feff}] => "bom"
-                        [\u{feff}bom[\r]
-                            \x07 \x1f \x7f \u{00a0}<i>(nbsp)</i> \u{2009}(thsp), & \u{200b}(zwsp)] => "ctrl chars and whatnot"',
+                    'streamAnsi' => \str_replace('\e', "\e", '\e[1mstdClass\e[22m' . "\n"
+                            . '\e[38;5;245m[\e[38;5;83m \e[38;5;245m]\e[0m \e[38;5;224m=>\e[0m \e[38;5;250m"\e[0mspace\e[38;5;250m"\e[0m' . "\n"
+                            . (PHP_VERSION_ID >= 80200
+                                ? '\e[38;5;245m[\e[38;5;83m\e[96m42\e[0m\e[38;5;245m]\e[0m \e[38;5;224m=>\e[0m \e[38;5;250m"\e[0mint key\e[38;5;250m"\e[0m' . "\n"
+                                : '')
+                            . '\e[38;5;245m[\e[38;5;83mnot\e[30;48;5;250m80\e[0m\e[34;48;5;14mυ\e[0mtf8\e[38;5;245m]\e[0m \e[38;5;224m=>\e[0m \e[38;5;250m"\e[0mnot utf8\e[38;5;250m"\e[0m' . "\n"
+                            . '\e[38;5;245m[\e[38;5;83m\e[34;48;5;14m\u{200b}\e[0m\e[38;5;245m]\e[0m \e[38;5;224m=>\e[0m \e[38;5;250m"\e[0mzwsp\e[38;5;250m"\e[0m' . "\n"
+                            . '\e[38;5;245m[\e[38;5;83m\e[34;48;5;14m\u{feff}\e[0m\e[38;5;245m]\e[0m \e[38;5;224m=>\e[0m \e[38;5;250m"\e[0mbom\e[38;5;250m"\e[0m' . "\n"
+                            . '\e[38;5;245m[\e[38;5;83m\e[34;48;5;14m\u{feff}\e[0mbom[\r]' . "\n"
+                                . '\e[34;48;5;14m\x07\e[0m \e[34;48;5;14m\x1f\e[0m \e[34;48;5;14m\x7f\e[0m \e[34;48;5;14m\u{00a0}\e[0m<i>(nbsp)</i> \e[34;48;5;14m\u{2009}\e[0m(thsp), & \e[34;48;5;14m\u{200b}\e[0m(zwsp)\e[38;5;245m]\e[0m \e[38;5;224m=>\e[0m \e[38;5;250m"\e[0mctrl chars and whatnot\e[38;5;250m"\e[0m'
+                    ),
+                    'text' => 'stdClass' . "\n"
+                        . '[ ] => "space"' . "\n"
+                        . (PHP_VERSION_ID >= 80200
+                            ? '[42] => "int key"' . "\n"
+                            : '')
+                        . '[not\x80\u{03c5}tf8] => "not utf8"' . "\n"
+                        . '[\u{200b}] => "zwsp"' . "\n"
+                        . '[\u{feff}] => "bom"' . "\n"
+                        . '[\u{feff}bom[\r]' . "\n"
+                            . '\x07 \x1f \x7f \u{00a0}<i>(nbsp)</i> \u{2009}(thsp), & \u{200b}(zwsp)] => "ctrl chars and whatnot"',
                 ),
             ),
 
@@ -296,10 +304,15 @@ EOD;
                 array(
                     'entry' => static function (LogEntry $logEntry) {
                         $abs = $logEntry['args'][0];
-                        self::assertSame(array(
+                        $keysExpect = array(
                             'foo',
                             42,
-                        ), \array_keys($abs['properties']));
+                        );
+                        if (PHP_VERSION_ID < 70000) {
+                            $index = \array_search(42, $keysExpect, true);
+                            \array_splice($keysExpect, $index, 1);
+                        }
+                        self::assertSame($keysExpect, \array_keys($abs['properties']));
                     },
                     'html' => '<li class="m_log"><div class="groupByInheritance t_object" data-accessible="public"><span class="t_identifier" data-type-more="className"><span class="classname">stdClass</span></span>' . "\n"
                         . '<dl class="object-inner">' . "\n"
@@ -309,21 +322,27 @@ EOD;
                                     . '<dd class="attribute"><span class="classname">AllowDynamicProperties</span></dd>' . "\n"
                                 : '')
                             . '<dt class="properties">properties</dt>' . "\n"
-                            . '<dd class="property public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_int">42</span> <span class="t_operator">=</span> <span class="t_string">int key</span></dd>' . "\n"
+                            . (PHP_VERSION_ID >= 70000
+                                ? '<dd class="property public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_int">42</span> <span class="t_operator">=</span> <span class="t_string">int key</span></dd>' . "\n"
+                                : '')
                             . '<dd class="property public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string">foo</span> <span class="t_operator">=</span> <span class="t_string">bar</span></dd>' . "\n"
                             . '<dt class="methods">no methods</dt>' . "\n"
                         . '</dl>' . "\n"
                         . '</div></li>',
-                    'streamAnsi' => \str_replace('\e', "\e", '\e[1mstdClass\e[22m
-                        \e[4mproperties:\e[24m
-                        \e[38;5;250m(public)\e[0m \e[38;5;83m\e[96m42\e[38;5;83;49m\e[0m \e[38;5;224m=\e[0m \e[38;5;250m"\e[0mint key\e[38;5;250m"\e[0m
-                        \e[38;5;250m(public)\e[0m \e[38;5;83mfoo\e[0m \e[38;5;224m=\e[0m \e[38;5;250m"\e[0mbar\e[38;5;250m"\e[0m
-                        no methods'),
-                    'text' => 'stdClass
-                        properties:
-                          (public) 42 = "int key"
-                          (public) foo = "bar"
-                        no methods',
+                    'streamAnsi' => \str_replace('\e', "\e", '\e[1mstdClass\e[22m' . "\n"
+                        . '\e[4mproperties:\e[24m' . "\n"
+                        . (PHP_VERSION_ID >= 70000
+                            ? '\e[38;5;250m(public)\e[0m \e[38;5;83m\e[96m42\e[38;5;83;49m\e[0m \e[38;5;224m=\e[0m \e[38;5;250m"\e[0mint key\e[38;5;250m"\e[0m' . "\n"
+                            : '')
+                        . '\e[38;5;250m(public)\e[0m \e[38;5;83mfoo\e[0m \e[38;5;224m=\e[0m \e[38;5;250m"\e[0mbar\e[38;5;250m"\e[0m' . "\n"
+                        . 'no methods'),
+                    'text' => 'stdClass' . "\n"
+                        . 'properties:' . "\n"
+                        . (PHP_VERSION_ID >= 70000
+                            ? '  (public) 42 = "int key"' . "\n"
+                            : '')
+                        . '  (public) foo = "bar"' . "\n"
+                        . 'no methods',
                 ),
             ),
 

@@ -90,12 +90,12 @@ class Abstraction extends BaseAbstraction
     /**
      * Remove temporary values
      *
-     * @return void
+     * @return self
      */
     public function clean()
     {
         $this->values = \array_diff_key($this->values, \array_flip(self::$keysTemp));
-        $this->setSubject(null);
+        return $this->setSubject(null);
     }
 
     /**
@@ -183,11 +183,12 @@ class Abstraction extends BaseAbstraction
             $multiSortArgs[] = $sortData[$what];
         }
         // array_multisort reindexes nunmeric keys,
-        // sort the keys as well and combine with the result
-        $multiSortArgs[] = &$sortData['name'];
-        $multiSortArgs[] = &$array;
+        // so... we sort the keys -> array_fill -> array_replace
+        $multiSortArgs[] = &$sortData['key'];
         \call_user_func_array('array_multisort', $multiSortArgs);
-        return \array_combine($sortData['name'], $array);
+        // create an array with keys in the desired order
+        $sorted = \array_fill_keys($sortData['key'], null);
+        return \array_replace($sorted, $array);
     }
 
     /**
@@ -273,10 +274,12 @@ class Abstraction extends BaseAbstraction
     {
         $sortVisOrder = ['public', 'magic', 'magic-read', 'magic-write', 'protected', 'private', 'debug'];
         $sortData = array(
+            'key' => array(),
             'name' => array(),
             'vis' => array(),
         );
         foreach ($array as $name => $info) {
+            $sortData['key'][$name] = $name;
             if ($name === '__construct') {
                 // always place __construct at the top
                 $sortData['name'][$name] = -1;

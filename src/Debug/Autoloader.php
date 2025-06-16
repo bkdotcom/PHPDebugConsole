@@ -18,10 +18,30 @@ namespace bdk\Debug;
 class Autoloader
 {
     /** @var array<string,string> */
-    protected $classMap = array();
+    protected $classMap = array(
+        'bdk\\Backtrace' => '../Backtrace/Backtrace.php',
+        'bdk\\Container' => '../Container/Container.php',
+        'bdk\\Debug' => './Debug.php',
+        'bdk\\Debug\\Utility' => './Utility/Utility.php',
+        'bdk\\ErrorHandler' => '../ErrorHandler/ErrorHandler.php',
+        'bdk\\I18n' => '../I18n/I18n.php',
+        'bdk\\Promise' => '../Promise/Promise.php',
+    );
 
     /** @var array<string,string> */
-    protected $psr4Map = array();
+    protected $psr4Map = array(
+        'bdk\\Backtrace\\' => '../Backtrace',
+        'bdk\\Container\\' => '../Container',
+        'bdk\\CurlHttpMessage\\' => '../CurlHttpMessage',
+        'bdk\\Debug\\' => '.',
+        'bdk\\ErrorHandler\\' => '../ErrorHandler',
+        'bdk\\I18n\\' => '../I18n',
+        'bdk\\Promise\\' => '../Promise',
+        'bdk\\PubSub\\' => '../PubSub',
+        'bdk\\Slack\\' => '../Slack',
+        'bdk\\Teams\\' => '../Teams',
+        'bdk\\Test\\Debug\\' => '../../tests/Debug',
+    );
 
     /** @var bool */
     private $isRegistered = false;
@@ -37,28 +57,9 @@ class Autoloader
             // already registered
             return true;
         }
-        $this->classMap = \array_unique(\array_merge($this->classMap, array(
-            'bdk\\Backtrace' => __DIR__ . '/../Backtrace/Backtrace.php',
-            'bdk\\Container' => __DIR__ . '/../Container/Container.php',
-            'bdk\\Debug' => __DIR__ . '/Debug.php',
-            'bdk\\Debug\\Utility' => __DIR__ . '/Utility/Utility.php',
-            'bdk\\ErrorHandler' => __DIR__ . '/../ErrorHandler/ErrorHandler.php',
-            'bdk\\I18n' => __DIR__ . '/../I18n/I18n.php',
-            'bdk\\Promise' => __DIR__ . '/../Promise/Promise.php',
-        )));
-        $this->psr4Map = \array_unique(\array_merge($this->psr4Map, array(
-            'bdk\\Backtrace\\' => __DIR__ . '/../Backtrace',
-            'bdk\\Container\\' => __DIR__ . '/../Container',
-            'bdk\\CurlHttpMessage\\' => __DIR__ . '/../CurlHttpMessage',
-            'bdk\\Debug\\' => __DIR__,
-            'bdk\\ErrorHandler\\' => __DIR__ . '/../ErrorHandler',
-            'bdk\\I18n\\' => __DIR__ . '/../I18n',
-            'bdk\\Promise\\' => __DIR__ . '/../Promise',
-            'bdk\\PubSub\\' => __DIR__ . '/../PubSub',
-            'bdk\\Slack\\' => __DIR__ . '/../Slack',
-            'bdk\\Teams\\' => __DIR__ . '/../Teams',
-            'bdk\\Test\\Debug\\' => __DIR__ . '/../../tests/Debug',
-        )));
+
+        $this->classMap = \array_map([$this, 'resolveFilepath'], $this->classMap);
+        $this->psr4Map = \array_map([$this, 'resolveFilepath'], $this->psr4Map);
         $this->isRegistered = true;
         $this->sortPsr4();
         return \spl_autoload_register([$this, 'autoload']);
@@ -140,6 +141,23 @@ class Autoloader
             }
         }
         return false;
+    }
+
+    /**
+     * Resolve relative paths
+     *
+     * @param string $filepath Filepath to resolve
+     *
+     * @return string
+     */
+    private function resolveFilepath($filepath)
+    {
+        if (\strpos($filepath, '..') === 0) {
+            $filepath = \dirname(__DIR__, 1) . '/' . \ltrim(\substr($filepath, 2), '/');
+        } elseif (\strpos($filepath, '.') === 0) {
+            $filepath = __DIR__ . '/' . \ltrim(\substr($filepath, 1), '/');
+        }
+        return \rtrim($filepath, '/');
     }
 
     /**

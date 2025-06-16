@@ -247,7 +247,7 @@ class HtmlStringEncoded
     {
         $strLenDiff = $abs['strlen'] - $abs['strlenValue'];
         if ($strLenDiff) {
-            $vals['valRaw'] .= '<span class="maxlen">&hellip; ' . $strLenDiff . ' more bytes (not logged)</span>';
+            $vals['valRaw'] .= '<span class="maxlen">&hellip; ' . $this->debug->i18n->trans('string.more-bytes', array('bytes' => $strLenDiff)) . '</span>';
         }
         $method = 'tabValuesFinish' . \ucfirst($abs['typeMore']);
         if (\method_exists($this, $method)) {

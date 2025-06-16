@@ -30,10 +30,16 @@ class Properties extends AbstractSection
     public function dump(ObjectAbstraction $abs)
     {
         $cfg = array(
+            'asArray' => $abs['className'] === 'stdClass'
+                && ($abs['cfgFlags'] & AbstractObject::METHOD_OUTPUT) === 0
+                && ($abs['cfgFlags'] & AbstractObject::OBJ_ATTRIBUTE_OUTPUT) === 0,
             'attributeOutput' => $abs['cfgFlags'] & AbstractObject::PROP_ATTRIBUTE_OUTPUT,
         );
         if ($abs['isInterface']) {
             return '';
+        }
+        if ($cfg['asArray']) {
+            $this->valDumper->optionSet('attribs.class.__push__', 'prop-only');
         }
         $magicMethods = \array_intersect(['__get', '__set'], \array_keys($abs['methods']));
         $html = '<dt class="properties">' . $this->getLabel($abs) . '</dt>' . "\n";
@@ -94,8 +100,11 @@ class Properties extends AbstractSection
     /**
      * {@inheritDoc}
      */
-    protected function getModifiers(array $info)
+    protected function getModifiers(array $info, array $cfg)
     {
+        if ($cfg['asArray']) {
+            return array();
+        }
         $info = \array_merge(array(
             'isEager' => null, // only collected on isLazy objects
         ), $info);

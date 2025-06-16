@@ -59,9 +59,10 @@
         <exclude name="Generic.Files.LineLength.TooLong" />
         <exclude name="Generic.Files.LowercasedFilename.NotFound" />
         <exclude name="Generic.Formatting.MultipleStatementAlignment.NotSameWarning" />
-        <exclude name="Generic.Formatting.NoSpaceAfterCast.SpaceFound" />
+        <exclude name="Generic.Formatting.NoSpaceAfterCast" /> <!-- deprecated -->
         <exclude name="Generic.Formatting.SpaceAfterNot.Incorrect" />
         <exclude name="Generic.Formatting.SpaceBeforeCast.NoSpace" />
+        <exclude name="Generic.Functions.CallTimePassByReference" /> <!-- deprecated -->
         <exclude name="Generic.Functions.OpeningFunctionBraceKernighanRitchie.BraceOnNewLine" />
         <exclude name="Generic.NamingConventions.CamelCapsFunctionName.ScopeNotCamelCaps" /> <!-- Handled by PSR-12 -->
         <exclude name="Generic.PHP.ClosingPHPTag.NotFound" />
@@ -188,13 +189,19 @@
     </rule>
     <rule ref="Squiz.PHP.DiscouragedFunctions">
         <properties>
-            <property name="forbiddenFunctions" type="array"
-                value="create_function=>null,delete=>unset,print=>echo,sizeof=>count" />
+            <property name="forbiddenFunctions" type="array">
+                <element key="create_function" value="null" />
+                <element key="delete" value="unset" />
+                <element key="print" value="echo" />
+                <element key="sizeof" value="count" />
+            </property>
         </properties>
     </rule>
 
     <rule ref="Squiz.Scope" />
     <rule ref="Squiz.Strings.DoubleQuoteUsage" />
+    <!--
     <rule ref="Zend.Debug.CodeAnalyzer"/>
+    -->
 
 </ruleset>

@@ -235,8 +235,7 @@ class AbstractObject extends AbstractComponent
         $abs->setSubject($obj);
         $abs['hist'][] = $obj;
         $this->doAbstraction($abs);
-        $abs->clean();
-        return $abs;
+        return $abs->clean();
     }
 
     /**
@@ -330,7 +329,7 @@ class AbstractObject extends AbstractComponent
         return \array_merge(
             self::$values,
             array(
-                'cfgFlags' => $this->getCfgFlags(),
+                'cfgFlags' => $this->getCfgFlags($reflector),
                 'className' => $this->helper->getClassName($reflector),
                 'debugMethod' => $method,
                 'interfacesCollapse' => \array_values(\array_intersect($reflector->getInterfaceNames(), $this->cfg['interfacesCollapse'])),
@@ -358,12 +357,13 @@ class AbstractObject extends AbstractComponent
     /**
      * Get configuration flags
      *
+     * @param ReflectionClass $reflector Reflection instance
+     *
      * @return int bitmask
      */
-    protected function getCfgFlags()
+    protected function getCfgFlags(ReflectionClass $reflector)
     {
         $flagVals = \array_intersect_key(self::$cfgFlags, \array_filter($this->cfg));
-        // see Abstracter::__construct which sets initial/default cfgFlags cfg vales
         $bitmask = \array_reduce($flagVals, static function ($carry, $val) {
             return $carry | $val;
         }, 0);
@@ -374,6 +374,12 @@ class AbstractObject extends AbstractComponent
             $bitmask &= ~self::OBJ_ATTRIBUTE_COLLECT;
             $bitmask &= ~self::PROP_ATTRIBUTE_COLLECT;
             $bitmask &= ~self::TO_STRING_OUTPUT;
+        }
+        if ($reflector->getName() === 'stdClass' && $this->cfg['stdClassAsArray']) {
+            // special case for stdClass
+            //  will output like an array vs properties and visibility
+            $bitmask &= ~self::METHOD_OUTPUT;
+            $bitmask &= ~self::OBJ_ATTRIBUTE_OUTPUT;
         }
         return $bitmask;
     }
@@ -392,8 +398,7 @@ class AbstractObject extends AbstractComponent
                 return \get_class($hist[$i]);
             }
         }
-        $callerInfo = $this->debug->backtrace->getCallerInfo();
-        return $callerInfo['classContext'];
+        return $this->debug->backtrace->getCallerInfo()['classContext'];
     }
 
     /**
@@ -420,8 +425,7 @@ class AbstractObject extends AbstractComponent
      */
     private function isObjInList($obj, array $list)
     {
-        $classname = \get_class($obj);
-        if (\array_intersect(['*', $classname], $list)) {
+        if (\array_intersect(['*', \get_class($obj)], $list)) {
             return true;
         }
         foreach ($list as $class) {

@@ -12,6 +12,7 @@
 
 namespace bdk\Debug\Abstraction\Object;
 
+use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\AbstractObject;
 use ReflectionClass;
 use Reflector;
@@ -21,7 +22,7 @@ use Reflector;
  */
 abstract class AbstractInheritable
 {
-    /** @var AbstractObject */
+    /** @var Abstracter */
     protected $abstracter;
 
     /** @var Helper */

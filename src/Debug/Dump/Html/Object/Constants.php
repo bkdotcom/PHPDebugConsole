@@ -66,7 +66,7 @@ class Constants extends AbstractSection
     /**
      * {@inheritDoc}
      */
-    protected function getModifiers(array $info)
+    protected function getModifiers(array $info, array $cfg)
     {
         return \array_merge(\array_keys(\array_filter(array(
             'final' => $info['isFinal'],

@@ -122,21 +122,22 @@ class Value extends TextValue
         $escapeCodes = $this->cfg['escapeCodes'];
         if ($this->optionGet('isMaxDepth')) {
             return $this->cfg['escapeCodes']['keyword'] . 'array '
-                . $this->cfg['escapeCodes']['recursion'] . '*MAX DEPTH*'
+                . $this->cfg['escapeCodes']['recursion'] . '*' . $this->debug->i18n->trans('abs.max-depth') . '*'
                 . $this->escapeReset;
         }
         $absKeys = isset($abs['keys'])
             ? $abs['keys']
             : array();
-        $str = $escapeCodes['keyword'] . 'array' . $escapeCodes['punct'] . '(' . $this->escapeReset . "\n"
-            . $this->dumpArrayValues($array, $absKeys)
-            . $this->cfg['escapeCodes']['punct'] . ')' . $this->escapeReset;
+        $openParen = $escapeCodes['punct'] . '(' . $this->escapeReset;
+        $closeParen = $escapeCodes['punct'] . ')' . $this->escapeReset;
+        $str = $escapeCodes['keyword'] . 'array' . $openParen . "\n"
+            . $this->dumpArrayValues($array, $absKeys);
         if (!$array) {
             $str = \str_replace("\n", '', $str);
         } elseif ($isNested) {
             $str = \str_replace("\n", "\n    ", $str);
         }
-        return $str;
+        return \rtrim($str, ' ') . $closeParen;
     }
 
     /**
@@ -161,7 +162,7 @@ class Value extends TextValue
             $key = (\is_int($key) ? '' : $escapeCodes['arrayKey']) . $this->dump($key, array('addQuotes' => false));
             $key = \preg_replace($regexRemoveKeyReset, '', $key);
             $this->escapeReset = $escapeResetBackup;
-            $str .= '    '
+            $str .= ''
                 . $escapeCodes['punct'] . '[' . $key . $escapeCodes['punct'] . ']'
                 . $escapeCodes['operator'] . ' => ' . $this->escapeReset
                 . $this->dump($val) . "\n";
@@ -249,7 +250,7 @@ class Value extends TextValue
     protected function dumpRecursion()
     {
         return $this->cfg['escapeCodes']['keyword'] . 'array '
-            . $this->cfg['escapeCodes']['recursion'] . '*RECURSION*'
+            . $this->cfg['escapeCodes']['recursion'] . '*' . $this->debug->i18n->trans('abs.recursion') . '*'
             . $this->escapeReset;
     }
 
@@ -297,7 +298,7 @@ class Value extends TextValue
         $strLenDiff = $abs['strlen'] - $abs['strlenValue'];
         if ($abs['strlenValue'] && $strLenDiff) {
             $val .= $this->cfg['escapeCodes']['maxlen']
-            . '[' . $strLenDiff . ' more bytes (not logged)]'
+            . '[' . $this->debug->i18n->trans('string.more-bytes', array('bytes' => $strLenDiff)) . ']'
             . $this->escapeReset;
         }
         return $this->addQuotes($val);
@@ -355,7 +356,7 @@ class Value extends TextValue
      */
     protected function dumpUndefined()
     {
-        return "\e[2m" . 'undefined' . "\e[22m"; // dim & reset dim
+        return "\e[2m" . $this->debug->i18n->trans('abs.undefined') . "\e[22m"; // dim & reset dim
     }
 
     /**

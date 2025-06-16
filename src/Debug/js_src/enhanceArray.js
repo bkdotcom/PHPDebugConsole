@@ -21,18 +21,13 @@ export function enhance ($node) {
   if (($arrayInner.html() || '').trim().length < 1) {
     // empty array -> don't add expand/collapse
     $node.addClass('expanded').find('br').hide()
-    /*
-    if ($node.hasClass('max-depth') === false) {
-      return
-    }
-    */
     return
   }
   enhanceArrayAddMarkup($node)
   $.each(config.iconsArray, function (value, selector) {
     $node.find(selector).prepend(value)
   })
-  $node.debugEnhance(enhanceArrayIsExpanded($node) ? 'expand' : 'collapse')
+  $node.debugEnhance(arrayIsExpanded($node) ? 'expand' : 'collapse')
 }
 
 function enhanceArrayAddMarkup ($node) {
@@ -64,7 +59,7 @@ function enhanceArrayAddMarkup ($node) {
   $node.prepend($expander)
 }
 
-function enhanceArrayIsExpanded ($node) {
+function arrayIsExpanded ($node) {
   var expand = $node.data('expand')
   var numParents = $node.parentsUntil('.m_group', '.t_object, .t_array').length
   var expandDefault = numParents === 0

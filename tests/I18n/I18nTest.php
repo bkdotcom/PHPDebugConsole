@@ -8,6 +8,7 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * @covers bdk\I18n
+ * @covers bdk\I18n\Env
  */
 class I18nTest extends TestCase
 {

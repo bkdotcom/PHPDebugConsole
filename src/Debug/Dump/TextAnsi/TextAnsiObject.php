@@ -26,16 +26,6 @@ class TextAnsiObject extends TextObject
     public $valDumper;
 
     /**
-     * Constructor
-     *
-     * @param ValDumper $valDumper Dump\Html instance
-     */
-    public function __construct(ValDumper $valDumper)
-    {
-        $this->valDumper = $valDumper;
-    }
-
-    /**
      * Dump object as text
      *
      * @param ObjectAbstraction $abs Object Abstraction instance
@@ -45,22 +35,23 @@ class TextAnsiObject extends TextObject
     public function dump(ObjectAbstraction $abs)
     {
         $className = $this->valDumper->markupIdentifier($abs['className'], 'className');
-        $escapeCodes = $this->valDumper->getCfg('escapeCodes');
-        $escapeReset = $this->valDumper->escapeReset;
-        if ($abs['isRecursion']) {
-            return $className . ' ' . $escapeCodes['recursion'] . '*RECURSION*' . $escapeReset;
+        $str = $this->dumpSpecialCases($abs, $className);
+        if ($str) {
+            return $str;
         }
-        if ($abs['isMaxDepth']) {
-            return $className . ' ' . $escapeCodes['recursion'] . '*MAX DEPTH*' . $escapeReset;
-        }
-        if ($abs['isExcluded']) {
-            return $className . ' ' . $escapeCodes['excluded'] . 'NOT INSPECTED' . $escapeReset;
-        }
+        $cfg = array(
+            'asArray' => $abs['className'] === 'stdClass'
+                && ($abs['cfgFlags'] & AbstractObject::METHOD_OUTPUT) === 0
+                && ($abs['cfgFlags'] & AbstractObject::OBJ_ATTRIBUTE_OUTPUT) === 0,
+        );
         $isNested = $this->valDumper->valDepth > 0;
         $this->valDumper->incValDepth();
-        $str = $className . "\n"
-            . $this->dumpObjectProperties($abs)
-            . $this->dumpObjectMethods($abs);
+        $str = $className
+            . ($cfg['asArray'] && \count($abs['properties']) === 0
+                ? $this->valDumper->getCfg('escapeCodes.punct') . '()' . $this->valDumper->escapeReset
+                : '') . "\n"
+            . $this->dumpProperties($abs, $cfg)
+            . $this->dumpMethods($abs, $cfg);
         $str = \trim($str);
         if ($isNested) {
             $str = \str_replace("\n", "\n    ", $str);
@@ -72,14 +63,15 @@ class TextAnsiObject extends TextObject
      * Dump object methods as text
      *
      * @param ObjectAbstraction $abs Object Abstraction instance
+     * @param array             $cfg Configuration options
      *
      * @return string html
      */
-    protected function dumpObjectMethods(ObjectAbstraction $abs)
+    protected function dumpMethods(ObjectAbstraction $abs, array $cfg)
     {
         $methodCollect = $abs['cfgFlags'] & AbstractObject::METHOD_COLLECT;
         $methodOutput = $abs['cfgFlags'] & AbstractObject::METHOD_OUTPUT;
-        if (!$methodCollect || !$methodOutput) {
+        if (!$methodCollect || !$methodOutput || $cfg['asArray']) {
             return '';
         }
         // phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
@@ -100,8 +92,8 @@ class TextAnsiObject extends TextObject
                 . $escapeCodes['numeric'] . $count . $escapeReset . "\n";
         }, \array_keys($counts), $counts);
         $header = $counts
-            ? "\e[4mMethods:\e[24m"
-            : 'Methods: none!';
+            ? "\e[4m" . $this->debug->i18n->trans('object.methods') . ":\e[24m"
+            : $this->debug->i18n->trans('object.methods.none');
         return '  ' . $header . "\n" . \implode('', $counts);
     }
 
@@ -109,23 +101,21 @@ class TextAnsiObject extends TextObject
      * Dump object properties as text with ANSI escape codes
      *
      * @param ObjectAbstraction $abs Object Abstraction instance
+     * @param array             $cfg Configuration options
      *
      * @return string
      */
-    protected function dumpObjectProperties(ObjectAbstraction $abs)
+    protected function dumpProperties(ObjectAbstraction $abs, array $cfg)
     {
-        $header = \count($abs['properties']) > 0
-            ? "\e[4m" . 'Properties:' . "\e[24m"
-            : 'Properties: none!';
-        $subHeader = '';
-        if (isset($abs['methods']['__get'])) {
-            $escapeCodes = $this->valDumper->getCfg('escapeCodes');
-            $escapeReset = $this->valDumper->escapeReset;
-            $subHeader = '    ' . $escapeCodes['muted']
-                . '✨ This object has a __get() method'
-                . $escapeReset . "\n";
+        if ($cfg['asArray']) {
+            return $this->dumpPropertiesBody($abs, $cfg);
         }
-        return '  ' . $header . "\n" . $subHeader . $this->dumpObjectPropertiesBody($abs);
+        $header = \count($abs['properties']) > 0
+            ? "\e[4m" . $this->debug->i18n->trans('object.properties')  . ':' . "\e[24m" . "\n"
+            : $this->debug->i18n->trans('object.properties.none') . "\n";
+        $magicMethods = \array_intersect(['__get', '__set'], \array_keys($abs['methods']));
+        $subHeader = $this->magicMethodInfo($magicMethods);
+        return '  ' . $header . $subHeader . $this->dumpPropertiesBody($abs, $cfg);
     }
 
     /**
@@ -133,32 +123,61 @@ class TextAnsiObject extends TextObject
      *
      * @param string $name Property name
      * @param array  $info Property info
+     * @param array  $cfg  Configuration options
      *
      * @return string
      */
-    protected function dumpProp($name, array $info)
+    protected function dumpProp($name, array $info, array $cfg)
     {
         $escapeCodes = $this->valDumper->getCfg('escapeCodes');
         $escapeReset = $this->valDumper->escapeReset;
-        $this->valDumper->escapeReset = \str_replace('m', ';49m', $escapeCodes['property']);
+        $operator = $cfg['asArray']
+            ? '=>'
+            : '=';
+        return \sprintf(
+            '    %s%s %s%s%s',
+            $this->dumpPropPrefix($info),
+            $cfg['asArray']
+                ? ''
+                : $escapeCodes['muted'] . '(' . $this->dumpPropVis($info) . ')' . $escapeReset,
+            $this->dumpPropName($name, $cfg),
+            $info['debugInfoExcluded']
+                ? ''
+                : ' ' . $escapeCodes['operator'] . $operator . $escapeReset . ' ',
+            $info['debugInfoExcluded']
+                ? ''
+                : $this->valDumper->dump($info['value'])
+        ) . "\n";
+    }
+
+    /**
+     * Dump property name
+     *
+     * @param int|string $name Property name
+     * @param array      $cfg  Configuration options
+     *
+     * @return string
+     */
+    private function dumpPropName($name, array $cfg)
+    {
+        $escapeCodes = $this->valDumper->getCfg('escapeCodes');
+        $escapeReset = $this->valDumper->escapeReset;
+        $escapeColor = \is_int($name)
+            ? $escapeCodes['numeric']
+            : $escapeCodes['property'];
+        if ($cfg['asArray']) {
+            return $escapeCodes['punct'] . '['
+                . $escapeColor . $this->valDumper->dump($name, array(
+                    'addQuotes' => false,
+                ))
+                . $escapeCodes['punct'] . ']' . $escapeReset;
+        }
+        $this->valDumper->escapeReset = \str_replace('m', ';49m', $escapeCodes['property']); // 49 = default background color
         $name = $this->valDumper->dump($name, array(
             'addQuotes' => \preg_match('#[\s\r\n]#u', $name) === 1 || $name === '',
         ));
         $this->valDumper->escapeReset = $escapeReset;
-        return \sprintf(
-            '    %s%s %s%s',
-            $this->dumpPropPrefix($info),
-            $escapeCodes['muted'] . '(' . $this->dumpPropVis($info) . ')' . $escapeReset,
-            $escapeCodes['property'] . $name . $escapeReset,
-            $info['debugInfoExcluded']
-                ? ''
-                : \sprintf(
-                    ' %s=%s %s',
-                    $escapeCodes['operator'],
-                    $escapeReset,
-                    $this->valDumper->dump($info['value'])
-                )
-        ) . "\n";
+        return $escapeColor . $name . $escapeReset;
     }
 
     /**
@@ -178,5 +197,50 @@ class TextAnsiObject extends TextObject
             '⚠' => $escapeCodesMethods['warn'] . '⚠' . $escapeReset,
             '⟳' => $escapeCodes['muted'] . '⟳' . $escapeReset,
         ));
+    }
+
+    /**
+     * Handle special cases
+     *
+     * @param ObjectAbstraction $abs       Object Abstraction instance
+     * @param string            $className Dumped class name
+     *
+     * @return string
+     */
+    protected function dumpSpecialCases(ObjectAbstraction $abs, $className)
+    {
+        $escapeCodes = $this->valDumper->getCfg('escapeCodes');
+        $escapeReset = $this->valDumper->escapeReset;
+        if ($abs['isRecursion']) {
+            return $className . ' ' . $escapeCodes['recursion'] . '*' . $this->debug->i18n->trans('abs.recursion') . '*' . $escapeReset;
+        }
+        if ($abs['isMaxDepth']) {
+            return $className . ' ' . $escapeCodes['recursion'] . '*' . $this->debug->i18n->trans('abs.max-depth') . '*' . $escapeReset;
+        }
+        if ($abs['isExcluded']) {
+            return $className . ' ' . $escapeCodes['excluded'] . $this->debug->i18n->trans('abs.not-inspected') . $escapeReset;
+        }
+        return '';
+    }
+
+    /**
+     * Generate some info regarding the given method names
+     *
+     * @param array $methods method names
+     *
+     * @return string html fragment
+     */
+    protected function magicMethodInfo($methods)
+    {
+        if (!$methods) {
+            return '';
+        }
+        $methods = \array_values($methods);
+        $escapeCodes = $this->valDumper->getCfg('escapeCodes');
+        $escapeReset = $this->valDumper->escapeReset;
+        return '  ' . $escapeCodes['muted'] . '✨ ' . (\count($methods) === 1
+                ? $this->debug->i18n->trans('object.methods.magic.1', array('method' => $methods[0]))
+                : $this->debug->i18n->trans('object.methods.magic.2', array('method1' => $methods[0], 'method2' => $methods[1]))
+            ) . $escapeReset . "\n";
     }
 }

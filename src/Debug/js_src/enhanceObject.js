@@ -89,7 +89,7 @@ export function enhance ($node) {
     var $toggle = $(this)
     var $target = $toggle.next()
     var isEnhanced = $toggle.data('toggle') === 'object'
-    if ($target.is('.t_maxDepth, .t_recursion, .excluded')) {
+    if ($target.is('.t_maxDepth, .t_recursion, .excluded, .t_punct')) {
       $toggle.addClass('empty')
       return
     }
@@ -103,6 +103,7 @@ export function enhance ($node) {
       .after(' <i class="fa ' + config.iconsExpand.expand + '"></i>')
     $target.hide()
   })
+  $node.debugEnhance(objIsExpanded($node) ? 'expand' : 'collapse')
 }
 
 export function enhanceInner ($obj) {
@@ -291,4 +292,17 @@ function postToggle ($obj, allDescendants) {
   })
 
   $obj.trigger('expanded.debug.object')
+}
+
+function objIsExpanded ($node) {
+  var expand = $node.data('expand')
+  var numParents = $node.parentsUntil('.m_group', '.t_object, .t_array').length
+  var expandDefault = numParents === 0 && $node.hasClass('prop-only')
+  if (expand === undefined && numParents !== 0) {
+    // nested obj and expand === undefined
+    expand = $node.closest('.t_object[data-expand]').data('expand')
+  }
+  return expand !== undefined
+    ? expand
+    : expandDefault
 }

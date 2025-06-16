@@ -62,7 +62,7 @@ class Cases extends AbstractSection
     /**
      * {@inheritDoc}
      */
-    protected function getModifiers(array $info)
+    protected function getModifiers(array $info, array $cfg)
     {
         return [];
     }

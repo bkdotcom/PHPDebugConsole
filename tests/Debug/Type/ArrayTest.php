@@ -43,16 +43,10 @@ class ArrayTest extends DebugTestFramework
                 <li><span class="t_int t_key">0</span><span class="t_operator">=&gt;</span><span class="t_string">a</span></li>
                 <li><span class="t_key">foo</span><span class="t_operator">=&gt;</span><span class="t_string">bar</span></li>
                 <li><span class="t_int t_key">1</span><span class="t_operator">=&gt;</span><span class="t_string">c</span></li>
-                <li><span class="t_key">obj</span><span class="t_operator">=&gt;</span><div class="groupByInheritance t_object" data-accessible="public"><span class="t_identifier" data-type-more="className"><span class="classname">stdClass</span></span>
+                <li><span class="t_key">obj</span><span class="t_operator">=&gt;</span><div class="groupByInheritance prop-only t_object" data-accessible="public"><span class="t_identifier" data-type-more="className"><span class="classname">stdClass</span></span>
                     <dl class="object-inner">
-                    ' . (PHP_VERSION_ID >= 80200
-                        ? '<dt class="attributes">attributes</dt>
-                            <dd class="attribute"><span class="classname">AllowDynamicProperties</span></dd>'
-                        : ''
-                    ) . '
                     <dt class="properties">properties</dt>
-                    <dd class="property public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string">foo</span> <span class="t_operator">=</span> <span class="t_string">bar</span></dd>
-                    <dt class="methods">no methods</dt>
+                    <dd class="property public"><span class="t_key">foo</span> <span class="t_operator">=&gt;</span> <span class="t_string">bar</span></dd>
                     </dl>
                     </div></li>
             </ul><span class="t_punct">)</span></span></li>';
@@ -63,9 +57,7 @@ array(
     [foo] => "bar"
     [1] => "c"
     [obj] => stdClass
-        Properties:
-        (public) foo = "bar"
-        Methods: none!
+        [foo] => "bar"
 )
 EOD;
         /*
@@ -95,9 +87,9 @@ EOD;
                         . '\e[38;5;245m[\e[38;5;83mfoo\e[38;5;245m]\e[38;5;224m => \e[0m\e[38;5;250m"\e[0mbar\e[38;5;250m"\e[0m' . "\n"
                         . '\e[38;5;245m[\e[96m1\e[38;5;83;49m\e[38;5;245m]\e[38;5;224m => \e[0m\e[38;5;250m"\e[0mc\e[38;5;250m"\e[0m' . "\n"
                         . '\e[38;5;245m[\e[38;5;83mobj\e[38;5;245m]\e[38;5;224m => \e[0m\e[1mstdClass\e[22m' . "\n"
-                        . '\e[4mProperties:\e[24m' . "\n"
-                        . '\e[38;5;250m(public)\e[0m \e[38;5;83mfoo\e[0m \e[38;5;224m=\e[0m \e[38;5;250m"\e[0mbar\e[38;5;250m"\e[0m' . "\n"
-                        . 'Methods: none!' . "\n"
+                        // . '\e[4mProperties:\e[24m' . "\n"
+                        . '\e[38;5;245m[\e[38;5;83mfoo\e[38;5;245m]\e[0m \e[38;5;224m=>\e[0m \e[38;5;250m"\e[0mbar\e[38;5;250m"\e[0m' . "\n"
+                        // . 'Methods: none!' . "\n"
                         . '\e[38;5;245m)\e[0m'),
                     // 'wamp' => @todo
                 ),
@@ -483,9 +475,9 @@ EOD;
                     '',
                 ),
                 'firephp' => 'X-Wf-1-1-1-37: 56|[{"Type":"LOG"},{"foo":"bar","val":"array *RECURSION*"}]|',
-                'html' => static function ($strHtml) {
-                    self::assertSelectEquals('.array-inner > li > .t_array > .t_keyword', 'array', true, $strHtml);
-                    self::assertSelectEquals('.array-inner > li > .t_array > .t_recursion', '*RECURSION*', true, $strHtml);
+                'html' => static function ($html) {
+                    self::assertSelectEquals('.array-inner > li > .t_array > .t_keyword', 'array', true, $html);
+                    self::assertSelectEquals('.array-inner > li > .t_array > .t_recursion', '*RECURSION*', true, $html);
                 },
                 'script' => 'console.log({"foo":"bar","val":"array *RECURSION*"});',
                 'streamAnsi' => array('contains' => "    \e[38;5;245m[\e[38;5;83mval\e[38;5;245m]\e[38;5;224m => \e[0m\e[38;5;45marray \e[38;5;196m*RECURSION*\e[0m"),

@@ -64,8 +64,8 @@ class ObjectTest extends DebugTestFramework
     {
         $text = <<<'EOD'
 bdk\Test\Debug\Fixture\TestObj
-  Properties:
-    ✨ This object has a __get() method
+  properties:
+    ✨ This object has __get and __set methods
     ⚠ (public) baseDynamic = "duo"
     ⚠ (public) dynamic = "dynomite!"
     ⟳ (public) propPublic = "redefined in Test (public)"
@@ -76,9 +76,7 @@ bdk\Test\Debug\Fixture\TestObj
       [string] => "cheese"
       [bool] => true
       [obj] => stdClass
-        Properties:
-          (public) foo = "bar"
-        Methods: none!
+        [foo] => "bar"
     )
     ↳ (✨ magic excluded) magicProp
     ↳ (✨ magic-read protected) magicReadProp = "not null"
@@ -91,7 +89,7 @@ bdk\Test\Debug\Fixture\TestObj
     (private) toString = "abracadabra"
     (private) toStrThrow = 0
     (debug) debugValue = "This property is debug only"
-  Methods:
+  methods:
     public: 9
     protected: 1
     private: 1
@@ -100,8 +98,8 @@ EOD;
 
         $ansi = <<<'EOD'
 \e[38;5;250mbdk\Test\Debug\Fixture\\e[0m\e[1mTestObj\e[22m
-  \e[4mProperties:\e[24m
-    \e[38;5;250m✨ This object has a __get() method\e[0m
+  \e[4mproperties:\e[24m
+    \e[38;5;250m✨ This object has __get and __set methods\e[0m
     \e[38;5;148m⚠\e[0m \e[38;5;250m(public)\e[0m \e[38;5;83mbaseDynamic\e[0m \e[38;5;224m=\e[0m \e[38;5;250m"\e[0mduo\e[38;5;250m"\e[0m
     \e[38;5;148m⚠\e[0m \e[38;5;250m(public)\e[0m \e[38;5;83mdynamic\e[0m \e[38;5;224m=\e[0m \e[38;5;250m"\e[0mdynomite!\e[38;5;250m"\e[0m
     \e[38;5;250m⟳\e[0m \e[38;5;250m(public)\e[0m \e[38;5;83mpropPublic\e[0m \e[38;5;224m=\e[0m \e[38;5;250m"\e[0mredefined in Test (public)\e[38;5;250m"\e[0m
@@ -112,9 +110,7 @@ EOD;
       \e[38;5;245m[\e[38;5;83mstring\e[38;5;245m]\e[38;5;224m => \e[0m\e[38;5;250m"\e[0mcheese\e[38;5;250m"\e[0m
       \e[38;5;245m[\e[38;5;83mbool\e[38;5;245m]\e[38;5;224m => \e[0m\e[32mtrue\e[0m
       \e[38;5;245m[\e[38;5;83mobj\e[38;5;245m]\e[38;5;224m => \e[0m\e[1mstdClass\e[22m
-        \e[4mProperties:\e[24m
-            \e[38;5;250m(public)\e[0m \e[38;5;83mfoo\e[0m \e[38;5;224m=\e[0m \e[38;5;250m"\e[0mbar\e[38;5;250m"\e[0m
-        Methods: none!
+        \e[38;5;245m[\e[38;5;83mfoo\e[38;5;245m]\e[0m \e[38;5;224m=>\e[0m \e[38;5;250m"\e[0mbar\e[38;5;250m"\e[0m
     \e[38;5;245m)\e[0m
     \e[38;5;250m↳\e[0m \e[38;5;250m(✨ magic excluded)\e[0m \e[38;5;83mmagicProp\e[0m
     \e[38;5;250m↳\e[0m \e[38;5;250m(✨ magic-read protected)\e[0m \e[38;5;83mmagicReadProp\e[0m \e[38;5;224m=\e[0m \e[38;5;250m"\e[0mnot null\e[38;5;250m"\e[0m
@@ -127,7 +123,7 @@ EOD;
     \e[38;5;250m(private)\e[0m \e[38;5;83mtoString\e[0m \e[38;5;224m=\e[0m \e[38;5;250m"\e[0mabracadabra\e[38;5;250m"\e[0m
     \e[38;5;250m(private)\e[0m \e[38;5;83mtoStrThrow\e[0m \e[38;5;224m=\e[0m \e[96m0\e[0m
     \e[38;5;250m(debug)\e[0m \e[38;5;83mdebugValue\e[0m \e[38;5;224m=\e[0m \e[38;5;250m"\e[0mThis property is debug only\e[38;5;250m"\e[0m
-  \e[4mMethods:\e[24m
+  \e[4mmethods:\e[24m
     public\e[38;5;245m: \e[96m9\e[0m
     protected\e[38;5;245m: \e[96m1\e[0m
     private\e[38;5;245m: \e[96m1\e[0m
@@ -137,11 +133,11 @@ EOD;
 
         $text2 = <<<'EOD'
 bdk\Test\Debug\Fixture\Test2
-  Properties:
-    ✨ This object has a __get() method
+  properties:
+    ✨ This object has a __get method
     ↳ (✨ magic) magicProp = undefined
     ↳ (✨ magic-read protected) magicReadProp = "not null"
-  Methods:
+  methods:
     public: 3
     magic: 1
 EOD;
@@ -234,6 +230,7 @@ EOD;
                         "not\x80\xCF\x85tf8" => 'not utf8', // this forces the array to be stored as an abstraction
                         ' ' => 'space',
                         // '' => 'empty', // invalid for php < 7.0
+                        42 => 'int key',
                     ),
                 ),
                 array(
@@ -262,29 +259,80 @@ EOD;
                             "\xef\xbb\xbfbom\r\n\t\x07 \x1F \x7F \xc2\xa0<i>(nbsp)</i> \xE2\x80\x89(thsp), & \xE2\x80\x8B(zwsp)",
                             ' ',
                             // '',
+                            42,
                             'ade50251dade9edc27e822ebdc3e9664',
                         ), \array_keys($abs['properties']));
                     },
                     'streamAnsi' => \str_replace('\e', "\e", '
                         \e[1mstdClass\e[22m
-                           \e[4mProperties:\e[24m
-                             \e[38;5;250m(public)\e[0m \e[38;5;83m\e[38;5;250m"\e[38;5;83;49m \e[38;5;250m"\e[38;5;83;49m\e[0m \e[38;5;224m=\e[0m \e[38;5;250m"\e[0mspace\e[38;5;250m"\e[0m
-                             \e[38;5;250m(public)\e[0m \e[38;5;83mnot\e[30;48;5;250m80\e[38;5;83;49m\e[34;48;5;14mυ\e[38;5;83;49mtf8\e[0m \e[38;5;224m=\e[0m \e[38;5;250m"\e[0mnot utf8\e[38;5;250m"\e[0m
-                             \e[38;5;250m(public)\e[0m \e[38;5;83m\e[34;48;5;14m\u{200b}\e[38;5;83;49m\e[0m \e[38;5;224m=\e[0m \e[38;5;250m"\e[0mzwsp\e[38;5;250m"\e[0m
-                             \e[38;5;250m(public)\e[0m \e[38;5;83m\e[34;48;5;14m\u{feff}\e[38;5;83;49m\e[0m \e[38;5;224m=\e[0m \e[38;5;250m"\e[0mbom\e[38;5;250m"\e[0m
-                             \e[38;5;250m(public)\e[0m \e[38;5;83m\e[38;5;250m"\e[38;5;83;49m\e[34;48;5;14m\u{feff}\e[38;5;83;49mbom[\r]
-                             \e[34;48;5;14m\x07\e[38;5;83;49m \e[34;48;5;14m\x1f\e[38;5;83;49m \e[34;48;5;14m\x7f\e[38;5;83;49m \e[34;48;5;14m\u{00a0}\e[38;5;83;49m<i>(nbsp)</i> \e[34;48;5;14m\u{2009}\e[38;5;83;49m(thsp), & \e[34;48;5;14m\u{200b}\e[38;5;83;49m(zwsp)\e[38;5;250m"\e[38;5;83;49m\e[0m \e[38;5;224m=\e[0m \e[38;5;250m"\e[0mctrl chars and whatnot\e[38;5;250m"\e[0m
-                           Methods: none!
+                            \e[38;5;245m[\e[38;5;83m \e[38;5;245m]\e[0m \e[38;5;224m=>\e[0m \e[38;5;250m"\e[0mspace\e[38;5;250m"\e[0m
+                            \e[38;5;245m[\e[38;5;83m\e[96m42\e[0m\e[38;5;245m]\e[0m \e[38;5;224m=>\e[0m \e[38;5;250m"\e[0mint key\e[38;5;250m"\e[0m
+                            \e[38;5;245m[\e[38;5;83mnot\e[30;48;5;250m80\e[0m\e[34;48;5;14mυ\e[0mtf8\e[38;5;245m]\e[0m \e[38;5;224m=>\e[0m \e[38;5;250m"\e[0mnot utf8\e[38;5;250m"\e[0m
+                            \e[38;5;245m[\e[38;5;83m\e[34;48;5;14m\u{200b}\e[0m\e[38;5;245m]\e[0m \e[38;5;224m=>\e[0m \e[38;5;250m"\e[0mzwsp\e[38;5;250m"\e[0m
+                            \e[38;5;245m[\e[38;5;83m\e[34;48;5;14m\u{feff}\e[0m\e[38;5;245m]\e[0m \e[38;5;224m=>\e[0m \e[38;5;250m"\e[0mbom\e[38;5;250m"\e[0m
+                            \e[38;5;245m[\e[38;5;83m\e[34;48;5;14m\u{feff}\e[0mbom[\r]
+                                \e[34;48;5;14m\x07\e[0m \e[34;48;5;14m\x1f\e[0m \e[34;48;5;14m\x7f\e[0m \e[34;48;5;14m\u{00a0}\e[0m<i>(nbsp)</i> \e[34;48;5;14m\u{2009}\e[0m(thsp), & \e[34;48;5;14m\u{200b}\e[0m(zwsp)\e[38;5;245m]\e[0m \e[38;5;224m=>\e[0m \e[38;5;250m"\e[0mctrl chars and whatnot\e[38;5;250m"\e[0m
                     '),
                     'text' => 'stdClass
-                      Properties:
-                        (public) " " = "space"
-                        (public) not\x80\u{03c5}tf8 = "not utf8"
-                        (public) \u{200b} = "zwsp"
-                        (public) \u{feff} = "bom"
-                        (public) "\u{feff}bom[\r]
-                            \x07 \x1f \x7f \u{00a0}<i>(nbsp)</i> \u{2009}(thsp), & \u{200b}(zwsp)" = "ctrl chars and whatnot"
-                      Methods: none!',
+                        [ ] => "space"
+                        [42] => "int key"
+                        [not\x80\u{03c5}tf8] => "not utf8"
+                        [\u{200b}] => "zwsp"
+                        [\u{feff}] => "bom"
+                        [\u{feff}bom[\r]
+                            \x07 \x1f \x7f \u{00a0}<i>(nbsp)</i> \u{2009}(thsp), & \u{200b}(zwsp)] => "ctrl chars and whatnot"',
+                ),
+            ),
+
+            'stdClass verbose' => array(
+                'log',
+                array(
+                    (object) array(
+                        'foo' => 'bar',
+                        42 => 'int key',
+                    ),
+                    \bdk\Debug::meta('cfg', 'stdClassAsArray', false),
+                ),
+                array(
+                    'entry' => static function (LogEntry $logEntry) {
+                        $abs = $logEntry['args'][0];
+                        self::assertSame(array(
+                            'foo',
+                            42,
+                        ), \array_keys($abs['properties']));
+                    },
+                    'html' => '<li class="m_log"><div class="groupByInheritance t_object" data-accessible="public"><span class="t_identifier" data-type-more="className"><span class="classname">stdClass</span></span>
+                        <dl class="object-inner">
+                            <dt class="attributes">attributes</dt>
+                            <dd class="attribute"><span class="classname">AllowDynamicProperties</span></dd>
+                            <dt class="properties">properties</dt>
+                            <dd class="property public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_int">42</span> <span class="t_operator">=</span> <span class="t_string">int key</span></dd>
+                            <dd class="property public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string">foo</span> <span class="t_operator">=</span> <span class="t_string">bar</span></dd>
+                            <dt class="methods">no methods</dt>
+                        </dl>
+                        </div></li>',
+                    'streamAnsi' => \str_replace('\e', "\e", '\e[1mstdClass\e[22m
+                        \e[4mproperties:\e[24m
+                        \e[38;5;250m(public)\e[0m \e[38;5;83m\e[96m42\e[38;5;83;49m\e[0m \e[38;5;224m=\e[0m \e[38;5;250m"\e[0mint key\e[38;5;250m"\e[0m
+                        \e[38;5;250m(public)\e[0m \e[38;5;83mfoo\e[0m \e[38;5;224m=\e[0m \e[38;5;250m"\e[0mbar\e[38;5;250m"\e[0m
+                        no methods'),
+                    'text' => 'stdClass
+                        properties:
+                          (public) 42 = "int key"
+                          (public) foo = "bar"
+                        no methods',
+                ),
+            ),
+
+            'stdClass empty' => array(
+                'log',
+                array(
+                    (object) array(),
+                ),
+                array(
+                    'html' => '<li class="m_log"><div class="t_object"><span class="t_identifier" data-type-more="className"><span class="classname">stdClass</span></span><span class="t_punct">()</span></div></li>',
+                    'streamAnsi' => \str_replace('\e', "\e", '\e[1mstdClass\e[22m\e[38;5;245m()\e[0m'),
+                    'text' => 'stdClass()',
                 ),
             ),
 
@@ -356,15 +404,10 @@ EOD;
                             "\t" . '<li><span class="t_key">numeric</span><span class="t_operator">=&gt;</span><span class="t_string" data-type-more="numeric">123</span></li>',
                             "\t" . '<li><span class="t_key">string</span><span class="t_operator">=&gt;</span><span class="t_string">cheese</span></li>',
                             "\t" . '<li><span class="t_key">bool</span><span class="t_operator">=&gt;</span><span class="t_bool" data-type-more="true">true</span></li>',
-                            "\t" . '<li><span class="t_key">obj</span><span class="t_operator">=&gt;</span><div class="groupByInheritance t_object" data-accessible="public"><span class="t_identifier" data-type-more="className"><span class="classname">stdClass</span></span>',
-                            (PHP_VERSION_ID >= 80200
-                                ? '<dl class="object-inner">' . "\n"
-                                    . '<dt class="attributes">attributes</dt>' . "\n"
-                                    . '<dd class="attribute"><span class="classname">AllowDynamicProperties</span></dd>'
-                                : '<dl class="object-inner">'),
+                            "\t" . '<li><span class="t_key">obj</span><span class="t_operator">=&gt;</span><div class="groupByInheritance prop-only t_object" data-accessible="public"><span class="t_identifier" data-type-more="className"><span class="classname">stdClass</span></span>',
+                            '<dl class="object-inner">',
                             '<dt class="properties">properties</dt>',
-                            '<dd class="property public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string">foo</span> <span class="t_operator">=</span> <span class="t_string">bar</span></dd>',
-                            '<dt class="methods">no methods</dt>',
+                            '<dd class="property public"><span class="t_key">foo</span> <span class="t_operator">=&gt;</span> <span class="t_string">bar</span></dd>',
                             '</dl>',
                             '</div></li>',
                             '</ul><span class="t_punct">)</span></span></dd>',
@@ -460,7 +503,7 @@ EOD;
                             '</dl>',
                         )), $str);
                     },
-                    'script' => 'console.log({"___class_name":"bdk\\\\Test\\\\Debug\\\\Fixture\\\\TestObj","(public) baseDynamic":"duo","(public) dynamic":"dynomite!","(public) propPublic":"redefined in Test (public)","(public) propStatic":"I\'m Static","(public) someArray":{"int":123,"numeric":"123","string":"cheese","bool":true,"obj":{"___class_name":"stdClass","(public) foo":"bar"}},"(✨ magic excluded) magicProp":undefined,"(✨ magic-read protected) magicReadProp":"not null","(protected) propProtected":"defined only in TestBase (protected)","(private) debug":"(object) bdk\\\\Debug NOT INSPECTED","(private) instance":"(object) bdk\\\\Test\\\\Debug\\\\Fixture\\\\TestObj *RECURSION*","(private excluded) propNoDebug":"not included in __debugInfo","(private) propPrivate":"redefined in Test (private) (alternate value via __debugInfo)","(🔒 private) testBasePrivate":"defined in TestBase (private)","(private) toString":"abracadabra","(private) toStrThrow":0,"(debug) debugValue":"This property is debug only"});',
+                    'script' => 'console.log({"___class_name":"bdk\\\\Test\\\\Debug\\\\Fixture\\\\TestObj","(public) baseDynamic":"duo","(public) dynamic":"dynomite!","(public) propPublic":"redefined in Test (public)","(public) propStatic":"I\'m Static","(public) someArray":{"int":123,"numeric":"123","string":"cheese","bool":true,"obj":{"___class_name":"stdClass","(public) foo":"bar"}},"(✨ magic excluded) magicProp":undefined,"(✨ magic-read protected) magicReadProp":"not null","(protected) propProtected":"defined only in TestBase (protected)","(private) debug":"bdk\\\\Debug NOT INSPECTED","(private) instance":"bdk\\\\Test\\\\Debug\\\\Fixture\\\\TestObj *RECURSION*","(private excluded) propNoDebug":"not included in __debugInfo","(private) propPrivate":"redefined in Test (private) (alternate value via __debugInfo)","(🔒 private) testBasePrivate":"defined in TestBase (private)","(private) toString":"abracadabra","(private) toStrThrow":0,"(debug) debugValue":"This property is debug only"});',
                     'streamAnsi' => $ansi,
                     'text' => $text,
                     'wamp' => array(
@@ -480,7 +523,7 @@ EOD;
                 ),
                 array(
                     'html' => static function ($str) {
-                        self::assertStringContainsString('<span class="t_string t_string_trunc t_stringified" title="__toString()">This is the song that never ends.  Yes, it goes on and on my friend.  Some people started singing it&hellip; <i>(119 more bytes)</i></span>', $str);
+                        self::assertStringContainsString('<span class="t_string t_string_trunc t_stringified" title="__toString()">This is the song that never ends.  Yes, it goes on and on my friend.  Some people started singing it&hellip; <i>(119 more bytes (not logged))</i></span>', $str);
                     },
                 ),
             ),
@@ -642,12 +685,14 @@ EOD;
                         )), $str);
                     },
                     'streamAnsi' => static function ($str) {
-                        $containsMethods = \preg_match('/methods/i', $str) === 1;
-                        self::assertFalse($containsMethods, 'Output should not contain methods');
+                        $substrCount = \substr_count(\strtolower($str), 'methods');
+                        self::assertStringContainsString('This object has __get and __set methods', $str);
+                        self::assertSame(1, $substrCount);
                     },
                     'text' => static function ($str) {
-                        $containsMethods = \preg_match('/methods/i', $str) === 1;
-                        self::assertFalse($containsMethods, 'Output should not contain methods');
+                        $substrCount = \substr_count(\strtolower($str), 'methods');
+                        self::assertStringContainsString('This object has __get and __set methods', $str);
+                        self::assertSame(1, $substrCount);
                     },
                 ),
             ),
@@ -865,27 +910,25 @@ EOD;
                     ),
                 ),
                 array(
-                    'html' => '<li class="m_log"><div class="groupByInheritance t_object" data-accessible="public"><span class="t_identifier" data-type-more="className"><span class="classname">stdClass</span></span>
+                    'html' => '<li class="m_log"><div class="groupByInheritance prop-only t_object" data-accessible="public"><span class="t_identifier" data-type-more="className"><span class="classname">stdClass</span></span>
                         <dl class="object-inner">
                         %A<dt class="properties">properties</dt>
-                        ' . (PHP_VERSION_ID >= 70400 ? '<dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier t_string"></span> <span class="t_operator">=</span> <span class="t_string">empty</span></dd>' . "\n" : '')
-                        . '<dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier t_string"><span class="char-ws" title="whitespace"><span class="ws_s"> </span></span></span> <span class="t_operator">=</span> <span class="t_string">space</span></dd>
-                        <dd class="property public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string"><span class="char-ws" data-code-point="200B" title="U-200B: Zero Width Space">\u{200b}</span></span> <span class="t_operator">=</span> <span class="t_string">zwsp</span></dd>
-                        <dd class="property public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string"><span class="char-ws" data-code-point="FEFF" title="U-FEFF: BOM / Zero Width No-Break Space">\u{feff}</span></span> <span class="t_operator">=</span> <span class="t_string">bom</span></dd>
-                        <dd class="property public"><span class="t_modifier_public">public</span> <span class="t_identifier t_string"><span class="char-ws" data-code-point="FEFF" title="U-FEFF: BOM / Zero Width No-Break Space">\u{feff}</span>bom<span class="ws_r"></span><span class="ws_n"></span>
-                        <span class="ws_t">%s</span><span class="char-control" data-abbr="BEL" title="\x07: BEL (bell)">␇</span> <span class="char-control" data-abbr="US" title="\x1f: US (unit separator)">␟</span> <span class="char-control" data-abbr="DEL" title="\x7f: DEL">␡</span> <span class="char-ws" data-code-point="00A0" title="U-00A0: NBSP">\u{00a0}</span>&lt;i&gt;(nbsp)&lt;/i&gt; <span class="char-ws" data-code-point="2009" title="U-2009: Thin Space">\u{2009}</span>(thsp), &amp; <span class="char-ws" data-code-point="200B" title="U-200B: Zero Width Space">\u{200b}</span>(zwsp)</span> <span class="t_operator">=</span> <span class="t_string">ctrl chars and whatnot</span></dd>
+                        ' . (PHP_VERSION_ID >= 70400 ? '<dd class="property public"><span class="t_key"></span> <span class="t_operator">=&gt;</span> <span class="t_string">empty</span></dd>' . "\n" : '')
+                        . '<dd class="property public"><span class="t_key"><span class="char-ws" title="whitespace"><span class="ws_s"> </span></span></span> <span class="t_operator">=&gt;</span> <span class="t_string">space</span></dd>
+                        <dd class="property public"><span class="t_key"><span class="char-ws" data-code-point="200B" title="U-200B: Zero Width Space">\u{200b}</span></span> <span class="t_operator">=&gt;</span> <span class="t_string">zwsp</span></dd>
+                        <dd class="property public"><span class="t_key"><span class="char-ws" data-code-point="FEFF" title="U-FEFF: BOM / Zero Width No-Break Space">\u{feff}</span></span> <span class="t_operator">=&gt;</span> <span class="t_string">bom</span></dd>
+                        <dd class="property public"><span class="t_key"><span class="char-ws" data-code-point="FEFF" title="U-FEFF: BOM / Zero Width No-Break Space">\u{feff}</span>bom<span class="ws_r"></span><span class="ws_n"></span>
+                        <span class="ws_t">%s</span><span class="char-control" data-abbr="BEL" title="\x07: BEL (bell)">␇</span> <span class="char-control" data-abbr="US" title="\x1f: US (unit separator)">␟</span> <span class="char-control" data-abbr="DEL" title="\x7f: DEL">␡</span> <span class="char-ws" data-code-point="00A0" title="U-00A0: NBSP">\u{00a0}</span>&lt;i&gt;(nbsp)&lt;/i&gt; <span class="char-ws" data-code-point="2009" title="U-2009: Thin Space">\u{2009}</span>(thsp), &amp; <span class="char-ws" data-code-point="200B" title="U-200B: Zero Width Space">\u{200b}</span>(zwsp)</span> <span class="t_operator">=&gt;</span> <span class="t_string">ctrl chars and whatnot</span></dd>
                         %A</dl>
                         </div></li>',
                     'script' => 'console.log({"___class_name":"stdClass",' . (PHP_VERSION_ID >= 70400 ? '"(public) ":"empty",' : '') . '"(public)  ":"space","(public) \\\u{200b}":"zwsp","(public) \\\u{feff}":"bom","(public) \\\u{feff}bom\r\n\t\\\x07 \\\x1f \\\x7f \\\u{00a0}<i>(nbsp)</i> \\\u{2009}(thsp), & \\\u{200b}(zwsp)":"ctrl chars and whatnot"});',
                     'text' => 'stdClass
-                          Properties:
-                            ' . (PHP_VERSION_ID >= 70400 ? '(public) "" = "empty"' . "\n" : '')
-                            . '(public) " " = "space"
-                            (public) \u{200b} = "zwsp"
-                            (public) \u{feff} = "bom"
-                            (public) "\u{feff}bom%A
-                                %A\x07 \x1f \x7f \u{00a0}<i>(nbsp)</i> \u{2009}(thsp), & \u{200b}(zwsp)" = "ctrl chars and whatnot"
-                          Methods: none!',
+                        ' . (PHP_VERSION_ID >= 70400 ? '[] => "empty"' . "\n" : '')
+                        . '[ ] => "space"
+                        [\u{200b}] => "zwsp"
+                        [\u{feff}] => "bom"
+                        [\u{feff}bom%A
+                            %A\x07 \x1f \x7f \u{00a0}<i>(nbsp)</i> \u{2009}(thsp), & \u{200b}(zwsp)] => "ctrl chars and whatnot"',
                 ),
             ),
 
@@ -919,12 +962,12 @@ EOD;
                         </div></li>',
                     'script' => 'console.log({"___class_name":"bdk\\\\Test\\\\Debug\\\\Fixture\\\\ParamConstants"});',
                     'streamAnsi' => "\e[38;5;250mbdk\Test\Debug\Fixture\\\e[0m\e[1mParamConstants\e[22m
-                        Properties: none!
-                        \e[4mMethods:\e[24m
+                        no properties
+                        \e[4mmethods:\e[24m
                         public\e[38;5;245m: \e[96m1\e[0m",
                     'text' => 'bdk\Test\Debug\Fixture\ParamConstants
-                        Properties: none!
-                        Methods:
+                        no properties
+                        methods:
                         public: 1',
                     'wamp' => static function ($messages) {
                         $abs = $messages[0]['args'][1][0]['classDefinitions']['bdk\Test\Debug\Fixture\ParamConstants'];
@@ -1298,11 +1341,11 @@ EOD;
                     </div></li>',
                 'script' => 'console.log("anonymous",{"___class_name":"stdClass@anonymous","(public) thing":"hammer","(debug) file":"' . $filepath . '","(debug) line":' . $line . '});',
                 'text' => 'anonymous = stdClass@anonymous
-                    Properties:
+                    properties:
                     (public) thing = "hammer"
                     (debug) file = "%s/PHPDebugConsole/tests/Debug/Fixture/Anonymous.php"
                     (debug) line = %d
-                    Methods:
+                    methods:
                     public: 2',
             )
         );
@@ -2074,7 +2117,7 @@ EOD;
                         <span class="t_maxDepth">*MAX DEPTH*</span></div></li>
                     <li><span class="t_key">ding</span><span class="t_operator">=&gt;</span><span class="t_string">dong</span></li>
                     </ul><span class="t_punct">)</span></span></li>',
-                'script' => 'console.log("array",{"foo":"bar","tooDeep":"(object) stdClass *MAX DEPTH*","ding":"dong"});',
+                'script' => 'console.log("array",{"foo":"bar","tooDeep":"stdClass *MAX DEPTH*","ding":"dong"});',
                 'streamAnsi' => \str_replace('\e', "\e", 'array \e[38;5;245m=\e[0m \e[38;5;45marray\e[38;5;245m(\e[0m' . "\n"
                     . '\e[38;5;245m[\e[38;5;83mfoo\e[38;5;245m]\e[38;5;224m => \e[0m\e[38;5;250m"\e[0mbar\e[38;5;250m"\e[0m' . "\n"
                     . '\e[38;5;245m[\e[38;5;83mtooDeep\e[38;5;245m]\e[38;5;224m => \e[0m\e[1mstdClass\e[22m \e[38;5;196m*MAX DEPTH*\e[0m' . "\n"

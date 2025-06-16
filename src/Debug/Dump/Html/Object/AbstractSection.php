@@ -76,6 +76,7 @@ abstract class AbstractSection
     public function dumpItems(ObjectAbstraction $abs, $what, array $cfg)
     {
         $cfg = \array_merge(array(
+            'asArray' => false, // used by Properties
             'groupByInheritance' => \strpos($abs['sort'], 'inheritance') === 0,
             'objClassName' => $abs['className'],
             'phpDocOutput' => $abs['cfgFlags'] & AbstractObject::PHPDOC_OUTPUT,
@@ -129,23 +130,20 @@ abstract class AbstractSection
      */
     protected function dumpItemInner($name, array $info, array $cfg)
     {
+        $operator = $cfg['asArray']
+            ? '=&gt;'
+            : '=';
         $parts = \array_filter(array(
-            '1_modifiers' => $this->dumpModifiers($info),
+            '1_modifiers' => $this->dumpModifiers($info, $cfg),
             '2_type' => isset($info['type'])
                 ? $this->helper->markupType($info['type'])
                 : '',
-            '3_name' => $this->valDumper->dump($name, array(
-                'addQuotes' => \preg_match('#[\s\r\n]#u', $name) === 1 || $name === '',
-                'attribs' => array(
-                    'class' => ['t_identifier'],
-                    'title' => $cfg['phpDocOutput']
-                        ? $this->helper->dumpPhpDoc($info['phpDoc']['summary'])
-                        : '',
-                ),
-                'charHighlightTrim' => true,
-            )),
-            '4_value' => $info['value'] !== Abstracter::UNDEFINED
-                ? '<span class="t_operator">=</span> ' . $this->valDumper->dump($info['value'], $cfg)
+            '3_name' => $this->dumpName($name, $info, $cfg),
+            '4_operator' => $info['value'] !== Abstracter::UNDEFINED
+                ? '<span class="t_operator">' . $operator . '</span>'
+                : '',
+            '5_value' => $info['value'] !== Abstracter::UNDEFINED
+                ?  $this->valDumper->dump($info['value'], $cfg)
                 : '',
         ));
         return \implode(' ', $parts);
@@ -167,12 +165,11 @@ abstract class AbstractSection
         $items = \array_intersect_key($items, \array_flip($keys));
         $items = $abs->sort($items, $abs['sort']);
         $absKeys = $abs['keys'];
-        foreach ($items as $name => $info) {
-            $name = \is_string($name)
-                ? \preg_replace('/^debug\./', '', $name)
-                : $name;
+        \array_walk($items, function ($info, $name) use ($absKeys, $cfg, &$html) {
             if (isset($absKeys[$name])) {
                 $name = $absKeys[$name];
+            } elseif (\is_string($name)) {
+                $name = \preg_replace('/^debug\./', '', $name);
             }
             $vis = (array) $info['visibility'];
             $info = \array_merge(array(
@@ -186,7 +183,7 @@ abstract class AbstractSection
                 $info['isInherited'] = false;
             }
             $html .= $this->dumpItem($name, $info, $cfg) . "\n";
-        }
+        });
         return $html;
     }
 
@@ -231,17 +228,51 @@ abstract class AbstractSection
      * Dump "modifiers"
      *
      * @param array<string,mixed> $info Abstraction info
+     * @param array<string,mixed> $cfg  Config options
      *
      * @return string html fragment
      */
-    protected function dumpModifiers(array $info)
+    protected function dumpModifiers(array $info, array $cfg)
     {
-        $modifiers = $this->getModifiers($info);
+        $modifiers = $this->getModifiers($info, $cfg);
         return \implode(' ', \array_map(static function ($modifier) {
             $class = 't_modifier_' . $modifier;
             $modifier = \str_replace('-set', '(set)', $modifier);
             return '<span class="' . $class . '">' . $modifier . '</span>';
         }, $modifiers));
+    }
+
+    /**
+     * Dump property/constant/case name
+     *
+     * @param string|Abstraction $name Property name
+     * @param array              $info Property info
+     * @param array              $cfg  options
+     *
+     * @return string html fragment
+     */
+    private function dumpName($name, array $info, array $cfg)
+    {
+        $classes = array(
+            'no-quotes' => \preg_match('#[\s\r\n]#u', $name) !== 1 && $name !== '' && !$cfg['asArray'],
+            't_identifier' => !$cfg['asArray'],
+            't_int' => \is_int($name),
+            't_key' => $cfg['asArray'],
+            't_string' => \is_string($name) && !$cfg['asArray'],
+        );
+        return $this->html->buildTag(
+            'span',
+            array(
+                'class' => $classes,
+                'title' => $cfg['phpDocOutput']
+                    ? $this->helper->dumpPhpDoc($info['phpDoc']['summary'])
+                    : '',
+            ),
+            $this->valDumper->dump($name, array(
+                'charHighlightTrim' => true, // highlight leading/trailing whitespace
+                'tagName' => null, // don't wrap it
+            ))
+        );
     }
 
     /**
@@ -325,10 +356,11 @@ abstract class AbstractSection
      * Get "modifiers" (abstract, final, readonly, static, etc)
      *
      * @param array<string,mixed> $info Abstraction info
+     * @param array<string,mixed> $cfg  Config options
      *
      * @return string[]
      */
-    abstract protected function getModifiers(array $info);
+    abstract protected function getModifiers(array $info, array $cfg);
 
     /**
      * Generate some info regarding the given method names

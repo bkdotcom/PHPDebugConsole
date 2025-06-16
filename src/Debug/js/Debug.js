@@ -36,18 +36,13 @@ var phpDebugConsole = (function (exports, $) {
     if (($arrayInner.html() || '').trim().length < 1) {
       // empty array -> don't add expand/collapse
       $node.addClass('expanded').find('br').hide();
-      /*
-      if ($node.hasClass('max-depth') === false) {
-        return
-      }
-      */
       return
     }
     enhanceArrayAddMarkup($node);
     $.each(config$a.iconsArray, function (value, selector) {
       $node.find(selector).prepend(value);
     });
-    $node.debugEnhance(enhanceArrayIsExpanded($node) ? 'expand' : 'collapse');
+    $node.debugEnhance(arrayIsExpanded($node) ? 'expand' : 'collapse');
   }
 
   function enhanceArrayAddMarkup ($node) {
@@ -79,7 +74,7 @@ var phpDebugConsole = (function (exports, $) {
     $node.prepend($expander);
   }
 
-  function enhanceArrayIsExpanded ($node) {
+  function arrayIsExpanded ($node) {
     var expand = $node.data('expand');
     var numParents = $node.parentsUntil('.m_group', '.t_object, .t_array').length;
     var expandDefault = numParents === 0;
@@ -182,7 +177,7 @@ var phpDebugConsole = (function (exports, $) {
       var $toggle = $(this);
       var $target = $toggle.next();
       var isEnhanced = $toggle.data('toggle') === 'object';
-      if ($target.is('.t_maxDepth, .t_recursion, .excluded')) {
+      if ($target.is('.t_maxDepth, .t_recursion, .excluded, .t_punct')) {
         $toggle.addClass('empty');
         return
       }
@@ -196,6 +191,7 @@ var phpDebugConsole = (function (exports, $) {
         .after(' <i class="fa ' + config$9.iconsExpand.expand + '"></i>');
       $target.hide();
     });
+    $node.debugEnhance(objIsExpanded($node) ? 'expand' : 'collapse');
   }
 
   function enhanceInner ($obj) {
@@ -384,6 +380,19 @@ var phpDebugConsole = (function (exports, $) {
     });
 
     $obj.trigger('expanded.debug.object');
+  }
+
+  function objIsExpanded ($node) {
+    var expand = $node.data('expand');
+    var numParents = $node.parentsUntil('.m_group', '.t_object, .t_array').length;
+    var expandDefault = numParents === 0 && $node.hasClass('prop-only');
+    if (expand === undefined && numParents !== 0) {
+      // nested obj and expand === undefined
+      expand = $node.closest('.t_object[data-expand]').data('expand');
+    }
+    return expand !== undefined
+      ? expand
+      : expandDefault
   }
 
   var enhanceObject$1 = /*#__PURE__*/Object.freeze({

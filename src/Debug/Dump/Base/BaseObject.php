@@ -12,6 +12,7 @@
 
 namespace bdk\Debug\Dump\Base;
 
+use bdk\Debug;
 use bdk\Debug\Abstraction\Object\Abstraction as ObjectAbstraction;
 use bdk\Debug\Dump\Base\Value as ValDumper;
 
@@ -23,13 +24,17 @@ class BaseObject
     /** @var ValDumper */
     public $valDumper;
 
+    /** @var Debug */
+    protected $debug;
+
     /**
      * Constructor
      *
-     * @param ValDumper $valDumper Dump\Html instance
+     * @param ValDumper $valDumper Value dumper instance
      */
     public function __construct(ValDumper $valDumper)
     {
+        $this->debug = $valDumper->debug;
         $this->valDumper = $valDumper;
     }
 
@@ -42,28 +47,24 @@ class BaseObject
      */
     public function dump(ObjectAbstraction $abs)
     {
-        if ($abs['isRecursion']) {
-            return '(object) ' . $abs['className'] . ' *RECURSION*';
-        }
-        if ($abs['isMaxDepth']) {
-            return '(object) ' . $abs['className'] . ' *MAX DEPTH*';
-        }
-        if ($abs['isExcluded']) {
-            return '(object) ' . $abs['className'] . ' NOT INSPECTED';
+        $str = $this->dumpSpecialCases($abs, $abs['className']);
+        if ($str) {
+            return $str;
         }
         return array(
             '___class_name' => $abs['className'],
-        ) + (array) $this->dumpObjectProperties($abs);
+        ) + (array) $this->dumpProperties($abs, array());
     }
 
     /**
      * Return array of object properties (name->value)
      *
      * @param ObjectAbstraction $abs Object Abstraction instance
+     * @param array             $cfg Configuration options
      *
      * @return array|string
      */
-    protected function dumpObjectProperties(ObjectAbstraction $abs)
+    protected function dumpProperties(ObjectAbstraction $abs, array $cfg) // @phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
     {
         $return = array();
         $properties = $abs->sort($abs['properties'], $abs['sort']);
@@ -96,8 +97,30 @@ class BaseObject
             }
         }
         if ($info['debugInfoExcluded']) {
-            $vis[] = 'excluded';
+            $vis[] = $this->debug->i18n->trans('word.excluded');
         }
         return \implode(' ', $vis);
+    }
+
+    /**
+     * Handle special cases
+     *
+     * @param ObjectAbstraction $abs       Object Abstraction instance
+     * @param string            $className Dumped class name
+     *
+     * @return string
+     */
+    protected function dumpSpecialCases(ObjectAbstraction $abs, $className)
+    {
+        if ($abs['isRecursion']) {
+            return $className . ' *' . $this->debug->i18n->trans('abs.recursion') . '*';
+        }
+        if ($abs['isMaxDepth']) {
+            return $className . ' *' . $this->debug->i18n->trans('abs.max-depth') . '*';
+        }
+        if ($abs['isExcluded']) {
+            return $className . ' ' . $this->debug->i18n->trans('abs.not-inspected');
+        }
+        return '';
     }
 }

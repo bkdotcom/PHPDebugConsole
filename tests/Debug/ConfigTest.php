@@ -109,6 +109,7 @@ class ConfigTest extends DebugTestFramework
             'propAttributeCollect',
             'propAttributeOutput',
             'propVirtualValueCollect',
+            'stdClassAsArray',
             'stringMaxLen',
             'stringMaxLenBrief',
             'stringMinLen',

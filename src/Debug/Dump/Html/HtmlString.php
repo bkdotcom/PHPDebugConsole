@@ -192,7 +192,7 @@ class HtmlString
         $val = $this->doDump((string) $abs);
         $strLenDiff = $abs['strlen'] - $abs['strlenValue'];
         if ($strLenDiff) {
-            $val .= '<span class="maxlen">&hellip; ' . $strLenDiff . ' more bytes (not logged)</span>';
+            $val .= '<span class="maxlen">&hellip; ' . $this->debug->i18n->trans('string.more-bytes', array('bytes' => $strLenDiff)) . '</span>';
         }
         return $val;
     }

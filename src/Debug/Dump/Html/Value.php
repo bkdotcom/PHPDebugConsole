@@ -248,7 +248,7 @@ class Value extends BaseValue
     {
         if (isset($abs['backedValue']) && \in_array($this->optionGet('attribs.title'), [null, ''], true)) {
             $valueAsString = $this->debug->getDump('text')->valDumper->dump($abs['backedValue']);
-            $this->optionSet('attribs.title', 'value: ' . $valueAsString);
+            $this->optionSet('attribs.title', $this->debug->i18n->trans('word.value') . ': ' . $valueAsString);
         }
         return $this->markupIdentifier($abs['value'], $abs['typeMore']);
     }
@@ -283,7 +283,7 @@ class Value extends BaseValue
     protected function dumpRecursion()
     {
         $this->optionSet('type', Type::TYPE_ARRAY);
-        return '<span class="t_keyword">array</span> <span class="t_recursion">*RECURSION*</span>';
+        return '<span class="t_keyword">array</span> <span class="t_recursion">*' . $this->debug->i18n->trans('abs.recursion') . '*</span>';
     }
 
     /**

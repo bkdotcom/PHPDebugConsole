@@ -55,18 +55,9 @@ class HtmlArray
         \bdk\Debug\Utility\PhpType::assertType($abs, 'bdk\Debug\Abstraction\Abstraction|null', 'abs');
 
         $opts = $this->optionsGet();
-        if ($opts['isMaxDepth']) {
-            $this->valDumper->optionSet('attribs.class.__push__', 'max-depth');
-            return '<span class="t_keyword">array</span> <span class="t_maxDepth">*MAX DEPTH*</span>';
-        }
-        if (empty($array)) {
-            return '<span class="t_keyword">array</span><span class="t_punct">()</span>';
-        }
-        if ($opts['expand'] !== null) {
-            $this->valDumper->optionSet('attribs.data-expand', $opts['expand']);
-        }
-        if ($opts['asFileTree']) {
-            $this->valDumper->optionSet('attribs.class.__push__', 'array-file-tree');
+        $html = $this->dumpSpecialCases($opts, empty($array));
+        if ($html) {
+            return $html;
         }
         $keys = isset($abs['keys']) ? $abs['keys'] : array();
         $outputKeys = $opts['showListKeys'] || !$this->debug->arrayUtil->isList($array);
@@ -112,6 +103,32 @@ class HtmlArray
                 : "\t" . $this->valDumper->dump($val, array('tagName' => 'li')) . "\n";
         }
         return $html;
+    }
+
+    /**
+     * Handle special cases
+     *
+     * @param array $opts    Dump options/flags
+     * @param bool  $isEmpty Is array empty?
+     *
+     * @return string html fragment
+     */
+    protected function dumpSpecialCases(array $opts, $isEmpty)
+    {
+        if ($opts['isMaxDepth']) {
+            $this->valDumper->optionSet('attribs.class.__push__', 'max-depth');
+            return '<span class="t_keyword">array</span> <span class="t_maxDepth">*' . $this->debug->i18n->trans('abs.max-depth') . '*</span>';
+        }
+        if ($isEmpty) {
+            return '<span class="t_keyword">array</span><span class="t_punct">()</span>';
+        }
+        if ($opts['expand'] !== null) {
+            $this->valDumper->optionSet('attribs.data-expand', $opts['expand']);
+        }
+        if ($opts['asFileTree']) {
+            $this->valDumper->optionSet('attribs.class.__push__', 'array-file-tree');
+        }
+        return '';
     }
 
     /**

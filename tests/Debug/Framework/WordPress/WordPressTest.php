@@ -4,6 +4,7 @@ namespace bdk\Test\Debug\Framework\WordPress;
 
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
+use bdk\Debug\Abstraction\AbstractObject;
 use bdk\Debug\Abstraction\Type;
 use bdk\PhpUnitPolyfill\AssertionTrait;
 use bdk\PubSub\Event;
@@ -196,7 +197,7 @@ class WordPressTest extends DebugTestFramework
                 'args' => [
                     'Queried Object',
                     array(
-                        'cfgFlags' => 29360127,
+                        'cfgFlags' => 29360127 & ~(AbstractObject::METHOD_OUTPUT) & ~(AbstractObject::OBJ_ATTRIBUTE_OUTPUT),
                         'debug' => Abstracter::ABSTRACTION,
                         'debugMethod' => 'log',
                         'inheritsFrom' => 'stdClass',

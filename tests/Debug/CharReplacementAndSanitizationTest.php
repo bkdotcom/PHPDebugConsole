@@ -68,7 +68,8 @@ class CharReplacementAndSanitizationTest extends DebugTestFramework
                         self::assertStringMatchesFormatNormalized($expect, $html);
                     },
                     'text' => 'bdk\Test\Debug\Fixture\Con\u{1d627}usableIdenti\u{1d627}iers
-                        Properties:
+                        properties:
+                          ✨ This object has a __set method
                           (public) array = array(
                             [int] => 42
                             [password] => "secret"
@@ -80,14 +81,15 @@ class CharReplacementAndSanitizationTest extends DebugTestFramework
                             [n\u{03bf}n\x80utf8] => "test"
                           )
                           (public) \u{0581}\u{1d0f}\u{0251}t = "moun\u{1d42d}ain"
-                        Methods:
+                        methods:
                           public: 6
                           magic: 1
                     ',
                     'script' => \preg_replace('/\\\\([^rnt])/', '\\\\\\\\$1', 'console.log({"___class_name":"bdk\\Test\\Debug\\Fixture\\Con𝘧usableIdenti𝘧iers","(public) array":{"int":42,"password":"secret","poop":"💩","string":"str\\u{0131}ngy\nstring","ctrl chars and whatnot":"\\u{feff}bom\r\n\t\\x07 \\x1f \\x7f \\x00 \\u{00a0}<i>(nbsp)</i> \\u{2009}(thsp), & \\u{200b}(zwsp)","n\\u{03bf}n\\x80utf8":"test"},"(public) \\u{0581}\\u{1d0f}\\u{0251}t":"moun\\u{1d42d}ain"});'),
                     'streamAnsi' => \str_replace('\e', "\e", '
                         \e[38;5;250mbdk\Test\Debug\Fixture\\\e[0m\e[1mCon\e[34;48;5;14m𝘧\e[0;1musableIdenti\e[34;48;5;14m𝘧\e[0;1miers\e[22m
-                        \e[4mProperties:\e[24m
+                        \e[4mproperties:\e[24m
+                          \e[38;5;250m✨ This object has a __set method\e[0m
                             \e[38;5;250m(public)\e[0m \e[38;5;83marray\e[0m \e[38;5;224m=\e[0m \e[38;5;45marray\e[38;5;245m(\e[0m
                                 \e[38;5;245m[\e[38;5;83mint\e[38;5;245m]\e[38;5;224m => \e[0m\e[96m42\e[0m
                                 \e[38;5;245m[\e[38;5;83mpassword\e[38;5;245m]\e[38;5;224m => \e[0m\e[38;5;250m"\e[0msecret\e[38;5;250m"\e[0m
@@ -99,7 +101,7 @@ class CharReplacementAndSanitizationTest extends DebugTestFramework
                                 \e[38;5;245m[\e[38;5;83mn\e[34;48;5;14mο\e[38;5;83;49mn\e[30;48;5;250m80\e[38;5;83;49mutf8\e[38;5;245m]\e[38;5;224m => \e[0m\e[38;5;250m"\e[0mtest\e[38;5;250m"\e[0m
                                 \e[38;5;245m)\e[0m
                             \e[38;5;250m(public)\e[0m \e[38;5;83m\e[34;48;5;14mց\e[38;5;83;49m\e[34;48;5;14mᴏ\e[38;5;83;49m\e[34;48;5;14mɑ\e[38;5;83;49mt\e[0m \e[38;5;224m=\e[0m \e[38;5;250m"\e[0mmoun\e[34;48;5;14m𝐭\e[0main\e[38;5;250m"\e[0m
-                        \e[4mMethods:\e[24m
+                        \e[4mmethods:\e[24m
                             public\e[38;5;245m: \e[96m6\e[0m
                             magic\e[38;5;245m: \e[96m1\e[0m
                     '),

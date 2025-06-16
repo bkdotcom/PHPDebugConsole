@@ -106,18 +106,9 @@ class HtmlObject
     public function dump(ObjectAbstraction $abs)
     {
         $className = $this->dumpClassName($abs);
-        if ($abs['isRecursion']) {
-            return $className . "\n" . '<span class="t_recursion">*' . $this->debug->i18n->trans('abs.recursion') . '*</span>';
-        }
-        if ($abs['isMaxDepth']) {
-            return $className . "\n" . '<span class="t_maxDepth">*' . $this->debug->i18n->trans('abs.max-depth') . '*</span>';
-        }
-        if ($abs['isExcluded']) {
-            return $this->dumpToString($abs)
-                . $className . "\n" . '<span class="excluded">' . $this->debug->i18n->trans('abs.not-inspected') . '</span>';
-        }
-        if (($abs['cfgFlags'] & AbstractObject::BRIEF) && \strpos(\json_encode($abs['implements']), '"UnitEnum"') !== false) {
-            return $this->dumpEnumBrief($abs);
+        $html = $this->dumpSpecialCases($abs, $className);
+        if ($html) {
+            return $this->cleanup($html);
         }
         $html = $this->dumpToString($abs)
             . $className . "\n"
@@ -163,7 +154,7 @@ class HtmlObject
     {
         $className = $this->dumpClassName($abs);
         $parsed = $this->html->parseTag($className);
-        $attribs = $this->valDumper->debug->arrayUtil->mergeDeep(
+        $attribs = $this->debug->arrayUtil->mergeDeep(
             $this->valDumper->optionGet('attribs'),
             $parsed['attribs']
         );
@@ -257,7 +248,7 @@ class HtmlObject
         $isEnum = \strpos(\json_encode($abs['implements']), '"UnitEnum"') !== false;
         $phpDocOutput = $abs['cfgFlags'] & AbstractObject::PHPDOC_OUTPUT;
         $title = $isEnum && isset($abs['properties']['value'])
-            ? 'value: ' . $this->valDumper->debug->getDump('text')->valDumper->dump($abs['properties']['value']['value'])
+            ? $this->debug->i18n->trans('word.value') . ': ' . $this->debug->getDump('text')->valDumper->dump($abs['properties']['value']['value'])
             : '';
         if ($phpDocOutput) {
             $phpDoc = \trim($abs['phpDoc']['summary'] . "\n\n" . $abs['phpDoc']['desc']);
@@ -303,6 +294,39 @@ class HtmlObject
     }
 
     /**
+     * Handle special cases
+     *
+     * @param ObjectAbstraction $abs       Object Abstraction instance
+     * @param string            $className Dumped class name
+     *
+     * @return string
+     */
+    protected function dumpSpecialCases(ObjectAbstraction $abs, $className)
+    {
+        if ($abs['isRecursion']) {
+            return $className . "\n" . '<span class="t_recursion">*' . $this->debug->i18n->trans('abs.recursion') . '*</span>';
+        }
+        if ($abs['isMaxDepth']) {
+            return $className . "\n" . '<span class="t_maxDepth">*' . $this->debug->i18n->trans('abs.max-depth') . '*</span>';
+        }
+        if ($abs['isExcluded']) {
+            return $this->dumpToString($abs)
+                . $className . "\n" . '<span class="excluded">' . $this->debug->i18n->trans('abs.not-inspected') . '</span>';
+        }
+        $emptyAsArray = empty($abs['properties'])
+            && $abs['className'] === 'stdClass'
+            && ($abs['cfgFlags'] & AbstractObject::METHOD_OUTPUT) === 0
+            && ($abs['cfgFlags'] & AbstractObject::OBJ_ATTRIBUTE_OUTPUT) === 0;
+        if ($emptyAsArray) {
+            return $className . '<span class="t_punct">()</span>';
+        }
+        if (($abs['cfgFlags'] & AbstractObject::BRIEF) && \strpos(\json_encode($abs['implements']), '"UnitEnum"') !== false) {
+            return $this->dumpEnumBrief($abs);
+        }
+        return '';
+    }
+
+    /**
      * Dump object's __toString or stringified value
      *
      * @param ObjectAbstraction $abs Object Abstraction instance
@@ -321,7 +345,7 @@ class HtmlObject
         if ($len > 100) {
             $classes[] = 't_string_trunc';   // truncated
             $val = \substr($val, 0, 100);
-            $valAppend = '&hellip; <i>(' . ($len - 100) . ' more bytes)</i>';
+            $valAppend = '&hellip; <i>(' . $this->debug->i18n->trans('string.more-bytes', array('bytes' => $len - 100)) . ')</i>';
         }
         $valDumped = $this->valDumper->dump($val);
         $parsed = $this->html->parseTag($valDumped);

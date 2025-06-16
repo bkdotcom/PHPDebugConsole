@@ -91,6 +91,7 @@ class Abstracter extends AbstractComponent
         ],
         'objectSort' => 'inheritance visibility name',
         'objectsWhitelist' => null,     // will be used if array
+        'stdClassAsArray' => true, // output a stdClass condensed like an array
         'stringMaxLen' => array(
             'base64' => 156, // 2 lines of chunk_split'ed
             'binary' => array(

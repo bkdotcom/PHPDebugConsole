@@ -523,7 +523,7 @@ EOD;
                         [2] => Resource id #%d: stream
                         [3] => callable: bdk\Test\Debug\Plugin\Method\TableTest::providerTestMethod
                         [4] => Closure
-                            Properties:
+                            properties:
                                 (debug) file = "' . __FILE__ . '"
                                 (debug) line = %i
                     )',

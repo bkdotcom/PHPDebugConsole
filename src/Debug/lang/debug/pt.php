@@ -4,6 +4,8 @@ return array(
     'abs.max-depth' => 'PROFUNDIDADE MÁXIMA',
     'abs.not-inspected' => 'NÃO INSPECIONADO',
     'abs.recursion' => 'RECURSÃO',
+    'abs.undefined' => 'indefinido',
+    'abs.unknown' => 'desconhecido',
 
     'assert.disabled' => 'desativado',
     'assert.empty' => 'vazio',
@@ -222,6 +224,9 @@ return array(
     'sql.analysis.order_by_rand' => '%cORDER BY RAND()%c é lento, evite se puder.',
     'sql.analysis.select_all' => 'Use %cSELECT *%c apenas se precisar de todas as colunas da tabela',
 
+    'string.binary-not-collected' => 'Dados binários não coletados',
+    'string.more-bytes' => '{bytes} bytes a mais (não registrado)',
+
     'utility.headers-sent' => 'Cabeçalhos já enviados: {file}, linha {line}',
     'utility.html.innerhtml-return' => 'InnerHtml closure deve retornar string. Recebido {actual}',
     'utility.reflection.instance-prop-get' => 'propGet: objeto deve ser fornecido para recuperar o valor de {property}',
@@ -236,6 +241,7 @@ return array(
     'word.and' => 'e',
     'word.environment' => 'ambiente',
     'word.error' => 'Erro',
+    'word.excluded' => 'excluído',
     'word.locale' => 'localidade',
     'word.no' => 'não',
     'word.omitted' => 'omitido',

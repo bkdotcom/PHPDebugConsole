@@ -274,6 +274,20 @@ li[class*=m_] > .t_array.array-file-tree > .array-inner {
     background-color: var(--color-info-bg);
     color: var(--color-info-fg);
   }
+
+  &.prop-only {
+    > .object-inner {
+      > .properties {
+        // don't display header
+        display: none;
+      }
+      > .property {
+        text-indent: -1em;
+        padding-left: 1em;
+        margin: 0;
+      }
+    }
+  }
 }
 td.t_object {
   display: table-cell;

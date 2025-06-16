@@ -57,7 +57,7 @@ class HtmlStringBinary
         $str = $this->dumpBasic($abs);
         $strLenDiff = $abs['strlen'] - $abs['strlenValue'];
         if ($abs['strlenValue'] && $strLenDiff) {
-            $str .= '<span class="maxlen">&hellip; ' . $strLenDiff . ' more bytes (not logged)</span>';
+            $str .= '<span class="maxlen">&hellip; ' . $this->debug->i18n->trans('string.more-bytes', array('bytes' => $strLenDiff)) . '</span>';
         }
         if ($abs['brief']) {
             $this->valDumper->optionSet('tagName', null);
@@ -129,7 +129,7 @@ class HtmlStringBinary
             $lis[] = '<li>size = <span class="t_int">' . $abs['strlen'] . '</span></li>';
             $lis[] = $dumped
                 ? '<li class="t_string">' . $dumped . '</li>'
-                : '<li>Binary data not collected</li>';
+                : '<li>' . $this->debug->i18n->trans('string.binary-not-collected') . '</li>';
             $wrapped =  '<span class="t_keyword">string</span><span class="text-muted">(binary)</span>' . "\n"
                 . $this->debug->html->buildTag(
                     'ul',

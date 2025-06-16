@@ -68,7 +68,7 @@ class Methods extends AbstractSection
      */
     protected function dumpItemInner($name, array $info, array $cfg)
     {
-        return $this->dumpModifiers($info) . ' '
+        return $this->dumpModifiers($info, $cfg) . ' '
             . $this->dumpName($name, $info)
             . $this->dumpParams($info)
             . $this->dumpReturnType($info)
@@ -318,7 +318,7 @@ class Methods extends AbstractSection
     /**
      * {@inheritDoc}
      */
-    protected function getModifiers(array $info)
+    protected function getModifiers(array $info, array $cfg)
     {
         // phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
         return \array_keys(\array_filter(array(

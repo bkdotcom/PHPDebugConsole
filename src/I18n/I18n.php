@@ -3,6 +3,7 @@
 namespace bdk;
 
 use bdk\I18n\FileLoader;
+use bdk\I18n\UserLocales;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -65,24 +66,20 @@ class I18n
     /** @var array domain => locale => strings */
     private $data = array();
 
-    /**
-     * Domain to user locale mapping
-     *
-     * @var array
-     */
+    /** @var array Domain to locale mapping */
     private $domainLocale = array();
 
     /** @var FileLoader */
     private $fileLoader;
 
+    /** @var list<string> Prioritized preferred locales */
+    private $locales = [];
+
     /** @var classname */
     private $messageFormatterClass = 'MessageFormatter';
 
-    /** @var ServerRequestInterface */
-    private $serverRequest;
-
-    /** @var list<string> User's preferred locales */
-    private $userLocales = [];
+    /** @var UserLocales */
+    private $userLocales;
 
     /**
      * Constructor
@@ -92,8 +89,8 @@ class I18n
      */
     public function __construct(ServerRequestInterface $serverRequest, $cfg = array())
     {
+        $this->userLocales = new UserLocales($serverRequest, $this);
         $this->fileLoader = new FileLoader();
-        $this->serverRequest = $serverRequest;
         $this->messageFormatterClass = \class_exists('MessageFormatter', false) && PHP_VERSION_ID >= 50500
             ? 'MessageFormatter'
             : 'bdk\I18n\MessageFormatter';
@@ -129,6 +126,23 @@ class I18n
     }
 
     /**
+     * Get config value(s)
+     *
+     * @param string $key (optional) key
+     *
+     * @return mixed
+     */
+    public function getCfg($key = null)
+    {
+        if ($key === null) {
+            return $this->cfg;
+        }
+        return isset($this->cfg[$key])
+            ? $this->cfg[$key]
+            : null;
+    }
+
+    /**
      * Get the applied locale for the given domain
      *
      * @param string|null $domain Domain (defaults to configured defaultDomain)
@@ -141,7 +155,7 @@ class I18n
         if (isset($this->domainLocale[$domain])) {
             return $this->domainLocale[$domain];
         }
-        foreach ($this->userLocales as $locale) {
+        foreach ($this->locales as $locale) {
             $filepath = $this->filepathDomainLocale($domain, $locale);
             if (\is_file($filepath)) {
                 $this->domainLocale[$domain] = $locale;
@@ -184,13 +198,19 @@ class I18n
         if (\is_array($mixed) === false) {
             $mixed = array($mixed => $value);
         }
+        if (isset($mixed['domainFilepath'])) {
+            $mixed['domainFilepath'] = \array_merge(
+                $this->cfg['domainFilepath'],
+                $mixed['domainFilepath']
+            );
+        }
         $this->cfg = \array_replace($this->cfg, $mixed);
         $noResetKeys = ['defaultDomain', 'displayNameFromData'];
         $haveResetKey = \count(\array_diff(\array_keys($mixed), $noResetKeys)) > 0;
         if ($haveResetKey) {
             $this->data = array();
             $this->domainLocale = array();
-            $this->userLocales = $this->userLocales();
+            $this->locales = $this->userLocales();
         }
         return $this;
     }
@@ -219,7 +239,7 @@ class I18n
     }
 
     /**
-     * Get user preferred locales (in addition to configured firstChoice and fallback)
+     * Get prioritized locales (in addition to configured firstChoice and fallback)
      *
      * Returns a prioritized list of locales in the format 'en_US'
      *
@@ -227,23 +247,7 @@ class I18n
      */
     public function userLocales()
     {
-        $userLocales = array();
-        foreach ($this->cfg['priority'] as $priority) {
-            list($method, $params) = \array_replace(['', ''], \explode(':', $priority));
-            $method = 'getLocaleFrom' . \ucfirst($method);
-            $params = \explode('.', $params);
-            $locales = \call_user_func_array([$this, $method], $params);
-            $userLocales = \array_merge($userLocales, (array) $locales);
-        }
-        $userLocales = \array_map(function ($locale) {
-            $parsed = $this->parseLocale($locale);
-            return $parsed
-                ? \implode('_', \array_filter([$parsed['lang'], $parsed['region']]))
-                : false;
-        }, $userLocales);
-        $userLocales = \array_filter($userLocales);
-        $userLocales = $this->userLocaleInsertFallbacks($userLocales);
-        return \array_values(\array_unique($userLocales));
+        return $this->userLocales->get();
     }
 
     /**
@@ -336,127 +340,14 @@ class I18n
     }
 
     /**
-     * Get cfg value
-     *
-     * @param string $key cfg key (localeFirstChoice / localeFallback)
-     *
-     * @return string
-     *
-     * @disregard unused private function
-     */
-    private function getLocaleFromCfg($key)
-    {
-        return $this->cfg[$key];
-    }
-
-    /**
-     * Get value from request
-     *
-     * @param string $var request var (cookie, get, session)
-     * @param string $key key (ie 'lang')
-     *
-     * @return string|null
-     *
-     * @disregard unused private function
-     */
-    private function getLocaleFromRequest($var, $key)
-    {
-        $array = array();
-        switch ($var) {
-            case 'cookie':
-                $array = $this->serverRequest->getCookieParams();
-                break;
-            case 'get':
-                $array = $this->serverRequest->getQueryParams();
-                break;
-            case 'header':
-                $headerVal = $this->serverRequest->getHeaderLine($key);
-                return $this->parseHeaderVal($headerVal);
-            case 'post':
-                $array = $this->serverRequest->getParsedBody();
-                break;
-            case 'session':
-                $array = isset($_SESSION) ? $_SESSION : array();
-                break;
-        }
-        return isset($array[$key])
-            ? $array[$key]
-            : null;
-    }
-
-    /**
-     * Parse Accept-Language header value
-     *
-     * @param string $headerValue Accept-Language header value
-     *
-     * @return array
-     */
-    private static function parseHeaderVal($headerValue)
-    {
-        $locales = array();
-        $headerValues = \array_filter(\preg_split('/,\s*/', $headerValue));
-        foreach ($headerValues as $value) {
-            list($locale, $priority) = \array_replace(['', 1], \explode(';q=', $value, 2));
-            if (\is_numeric($priority) === false) {
-                continue;
-            }
-            $locales[$locale] = $priority;
-        }
-        \arsort($locales, SORT_NUMERIC);
-        return \array_keys($locales);
-    }
-
-    /**
      * Parse locale/lang into lang and region
      *
      * @param string $locale locale/language
      *
      * @return array|false
      */
-    private static function parseLocale($locale)
+    private function parseLocale($locale)
     {
-        \preg_match('/^
-            ([a-z]{2,3})  # language
-            (?: [_-] ([a-z]{2}|[0-9]{1,3}) )?  # country-region
-            (?:\.[a-z]+(-?[0-9]+)?)?  # code-page
-            $/xi', \trim($locale), $matches);
-        if (empty($matches)) {
-            return false;
-        }
-        $matches = \array_replace(['', ''], \array_slice($matches, 1, 2));
-        return array(
-            'lang' => \strtolower($matches[0]),
-            'region' => \strtoupper($matches[1]),
-        );
-    }
-
-    /**
-     * Insert non-region specific languages into list
-     *
-     * given ['en_US', 'fr_FR', 'en_GB'], assume 'en' and 'fr' are also acceptable
-     * list will become ['en_US', 'fr_FR', 'en_GB', en', 'fr']
-     *
-     * @param array $userLocales user preferred languages
-     *
-     * @return array
-     */
-    private function userLocaleInsertFallbacks($userLocales)
-    {
-        $fallback = \end($userLocales) === $this->cfg['localeFallback']
-            ? \array_pop($userLocales)
-            : null;
-        $firstChoices = [];
-        if (\reset($userLocales) === $this->cfg['localeFirstChoice']) {
-            $firstChoice = \array_shift($userLocales);
-            $lang = \explode('_', $firstChoice)[0];
-            $firstChoices = [$firstChoice, $lang];
-        }
-        $localesSansRegion = [];
-        foreach ($userLocales as $locale) {
-            $lang = \explode('_', $locale)[0];
-            $localesSansRegion[] = $lang;
-        }
-        $userLocales = \array_merge($firstChoices, $userLocales, $localesSansRegion, [$fallback]);
-        return \array_unique($userLocales);
+        return $this->userLocales->parseLocale($locale);
     }
 }

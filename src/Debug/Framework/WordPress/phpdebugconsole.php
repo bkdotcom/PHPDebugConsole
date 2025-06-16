@@ -36,6 +36,11 @@ $config = \bdk\Debug\Utility\ArrayUtil::mergeDeep(
     array(
         'collect' => true,  // start with collection on as we bootstrap
         'emailFunc' => 'wp_mail',
+        'i18n' => array(
+            'domainFilepath' => array(
+                'wordpress' => $pathBase . '/lang/{locale}.php',
+            ),
+        ),
         'plugins' => array(
             'routeDiscord' => array(
                 'class' => 'bdk\Debug\Route\Discord',

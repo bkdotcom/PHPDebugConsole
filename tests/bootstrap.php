@@ -66,6 +66,11 @@ $debug = \bdk\Debug::getInstance(array(
     'errorStatsFile' => __DIR__ . '/../tmp/error_stats.json',
     'exitCheck' => false,
     'fullyQualifyPhpDocType' => true,
+    'i18n' => array(
+        'domainFilepath' => array(
+            'wordpress' => __DIR__ . '/../src/Debug/Framework/WordPress/lang/{locale}.php',
+        )
+    ),
     'logEnvInfo' => false,
     'logRequestInfo' => false,
     'logResponse' => false,

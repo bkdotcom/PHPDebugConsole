@@ -54,6 +54,7 @@ class ConfigNormalizer
             'propAttributeCollect',
             'propAttributeOutput',
             'propVirtualValueCollect',
+            'stdClassAsArray',
             'stringMaxLen',
             'stringMaxLenBrief',
             'stringMinLen',
@@ -63,6 +64,7 @@ class ConfigNormalizer
         'debug' => [
             // any key not found falls under 'debug'...
         ],
+        // @phpcs:ignore SlevomatCodingStandard.Arrays.DisallowPartiallyKeyed.DisallowedPartiallyKeyed
         'errorHandler' => array(
             'continueToPrevHandler',
             'errorFactory',

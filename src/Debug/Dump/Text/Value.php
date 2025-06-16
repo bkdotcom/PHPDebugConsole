@@ -189,7 +189,7 @@ class Value extends BaseValue
      */
     protected function dumpUndefined()
     {
-        return 'undefined';
+        return $this->debug->i18n->trans('abs.undefined');
     }
 
     /**
@@ -204,7 +204,7 @@ class Value extends BaseValue
     protected function dumpUnknown(Abstraction $abs)
     {
         $values = parent::dumpUnknown($abs);
-        return 'unknown: ' . \print_r($values['value'], true);
+        return $this->debug->i18n->trans('abs.unknown') . ': ' . \print_r($values['value'], true);
     }
 
     /**

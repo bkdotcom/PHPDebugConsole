@@ -51,7 +51,7 @@ class Value extends AbstractValue
         \bdk\Debug\Utility\PhpType::assertType($abs, 'bdk\Debug\Abstraction\Abstraction|null', 'abs');
 
         if ($this->optionGet('isMaxDepth')) {
-            return 'array *MAX DEPTH*';
+            return 'array *' . $this->debug->i18n->trans('abs.max-depth') . '*';
         }
         $arrayNew = array();
         $absKeys = isset($abs['keys'])
@@ -163,7 +163,7 @@ class Value extends AbstractValue
      */
     protected function dumpRecursion()
     {
-        return 'array *RECURSION*';
+        return 'array *' . $this->debug->i18n->trans('abs.recursion') . '*';
     }
 
     /**
@@ -221,7 +221,7 @@ class Value extends AbstractValue
             : (string) $abs;
         $strLenDiff = $abs['strlen'] - $abs['strlenValue'];
         if ($abs['strlenValue'] && $strLenDiff) {
-            $val .= '[' . $strLenDiff . ' more bytes (not logged)]';
+            $val .= '[' . $this->debug->i18n->trans('string.more-bytes', array('bytes' => $strLenDiff))  . ']';
         }
         return $val;
     }

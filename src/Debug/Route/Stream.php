@@ -15,7 +15,7 @@ namespace bdk\Debug\Route;
 use bdk\Debug;
 use bdk\Debug\LogEntry;
 use bdk\PubSub\Event;
-use Exception;
+use ErrorException;
 
 /**
  * Output log to a stream
@@ -85,7 +85,7 @@ class Stream extends AbstractRoute
         if (\function_exists('posix_isatty')) {
             try {
                 return \posix_isatty($streamResource);
-            } catch (Exception $e) {
+            } catch (ErrorException $e) {
                 // do nothing
             }
         }

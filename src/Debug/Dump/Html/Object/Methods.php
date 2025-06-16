@@ -69,7 +69,7 @@ class Methods extends AbstractSection
     protected function dumpItemInner($name, array $info, array $cfg)
     {
         return $this->dumpModifiers($info, $cfg) . ' '
-            . $this->dumpName($name, $info)
+            . $this->dumpName($name, $info, $cfg)
             . $this->dumpParams($info)
             . $this->dumpReturnType($info)
             . $this->dumpStaticVars($info)
@@ -90,10 +90,11 @@ class Methods extends AbstractSection
      *
      * @param Abstraction|string $name Method name
      * @param array              $info Method info
+     * @param array              $cfg  options
      *
      * @return string html fragment
      */
-    protected function dumpName($name, array $info)
+    protected function dumpName($name, array $info, array $cfg)
     {
         return $this->html->buildTag(
             'span',

@@ -15,6 +15,7 @@ namespace bdk\Debug\Route;
 use bdk\Debug;
 use bdk\Debug\LogEntry;
 use bdk\PubSub\Event;
+use Exception;
 
 /**
  * Output log to a stream
@@ -82,7 +83,11 @@ class Stream extends AbstractRoute
         }
 
         if (\function_exists('posix_isatty')) {
-            return \posix_isatty($streamResource);
+            try {
+                return \posix_isatty($streamResource);
+            } catch (Exception $e) {
+                // do nothing
+            }
         }
 
         // See https://github.com/chalk/supports-color/blob/d4f413efaf8da045c5ab440ed418ef02dbb28bf1/index.js#L157

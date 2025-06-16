@@ -194,6 +194,16 @@ class ErrorHandler extends AbstractErrorHandler
     {
         $error = $this->cfg['errorFactory']($this, $errType, $errMsg, $file, $line, $vars);
         $this->data['uncaughtException'] = null;
+        if (true) {
+            \var_dump(array(
+                // 'type' => \sprintf('%s (%d)', $error['typeStr'], $error['type']),
+                'errMsg' => $error['message'],
+                'file' => $error['file'],
+                'line' => $error['line'],
+                // 'evalLine' => $error['evalLine'],
+            ));
+            // var_dump(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS));
+        }
         $this->toStringCheck($error);
         if (!$this->isErrTypeHandled($errType)) {
             // not handled

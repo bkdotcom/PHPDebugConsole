@@ -262,26 +262,26 @@ EOD;
                             42,
                             'ade50251dade9edc27e822ebdc3e9664',
                         );
-                        if (PHP_VERSION_ID < 70000) {
+                        if (PHP_VERSION_ID < 70200) {
                             $index = \array_search(42, $keysExpect, true);
                             \array_splice($keysExpect, $index, 1);
                         }
                         self::assertSame($keysExpect, \array_keys($abs['properties']));
                     },
                     'streamAnsi' => \str_replace('\e', "\e", '\e[1mstdClass\e[22m' . "\n"
-                            . '\e[38;5;245m[\e[38;5;83m \e[38;5;245m]\e[0m \e[38;5;224m=>\e[0m \e[38;5;250m"\e[0mspace\e[38;5;250m"\e[0m' . "\n"
-                            . (PHP_VERSION_ID >= 70000
-                                ? '\e[38;5;245m[\e[38;5;83m\e[96m42\e[0m\e[38;5;245m]\e[0m \e[38;5;224m=>\e[0m \e[38;5;250m"\e[0mint key\e[38;5;250m"\e[0m' . "\n"
-                                : '')
-                            . '\e[38;5;245m[\e[38;5;83mnot\e[30;48;5;250m80\e[0m\e[34;48;5;14mυ\e[0mtf8\e[38;5;245m]\e[0m \e[38;5;224m=>\e[0m \e[38;5;250m"\e[0mnot utf8\e[38;5;250m"\e[0m' . "\n"
-                            . '\e[38;5;245m[\e[38;5;83m\e[34;48;5;14m\u{200b}\e[0m\e[38;5;245m]\e[0m \e[38;5;224m=>\e[0m \e[38;5;250m"\e[0mzwsp\e[38;5;250m"\e[0m' . "\n"
-                            . '\e[38;5;245m[\e[38;5;83m\e[34;48;5;14m\u{feff}\e[0m\e[38;5;245m]\e[0m \e[38;5;224m=>\e[0m \e[38;5;250m"\e[0mbom\e[38;5;250m"\e[0m' . "\n"
-                            . '\e[38;5;245m[\e[38;5;83m\e[34;48;5;14m\u{feff}\e[0mbom[\r]' . "\n"
-                                . '\e[34;48;5;14m\x07\e[0m \e[34;48;5;14m\x1f\e[0m \e[34;48;5;14m\x7f\e[0m \e[34;48;5;14m\u{00a0}\e[0m<i>(nbsp)</i> \e[34;48;5;14m\u{2009}\e[0m(thsp), & \e[34;48;5;14m\u{200b}\e[0m(zwsp)\e[38;5;245m]\e[0m \e[38;5;224m=>\e[0m \e[38;5;250m"\e[0mctrl chars and whatnot\e[38;5;250m"\e[0m'
+                        . '\e[38;5;245m[\e[38;5;83m \e[38;5;245m]\e[0m \e[38;5;224m=>\e[0m \e[38;5;250m"\e[0mspace\e[38;5;250m"\e[0m' . "\n"
+                        . (PHP_VERSION_ID >= 70200
+                            ? '\e[38;5;245m[\e[38;5;83m\e[96m42\e[0m\e[38;5;245m]\e[0m \e[38;5;224m=>\e[0m \e[38;5;250m"\e[0mint key\e[38;5;250m"\e[0m' . "\n"
+                            : '')
+                        . '\e[38;5;245m[\e[38;5;83mnot\e[30;48;5;250m80\e[0m\e[34;48;5;14mυ\e[0mtf8\e[38;5;245m]\e[0m \e[38;5;224m=>\e[0m \e[38;5;250m"\e[0mnot utf8\e[38;5;250m"\e[0m' . "\n"
+                        . '\e[38;5;245m[\e[38;5;83m\e[34;48;5;14m\u{200b}\e[0m\e[38;5;245m]\e[0m \e[38;5;224m=>\e[0m \e[38;5;250m"\e[0mzwsp\e[38;5;250m"\e[0m' . "\n"
+                        . '\e[38;5;245m[\e[38;5;83m\e[34;48;5;14m\u{feff}\e[0m\e[38;5;245m]\e[0m \e[38;5;224m=>\e[0m \e[38;5;250m"\e[0mbom\e[38;5;250m"\e[0m' . "\n"
+                        . '\e[38;5;245m[\e[38;5;83m\e[34;48;5;14m\u{feff}\e[0mbom[\r]' . "\n"
+                            . '\e[34;48;5;14m\x07\e[0m \e[34;48;5;14m\x1f\e[0m \e[34;48;5;14m\x7f\e[0m \e[34;48;5;14m\u{00a0}\e[0m<i>(nbsp)</i> \e[34;48;5;14m\u{2009}\e[0m(thsp), & \e[34;48;5;14m\u{200b}\e[0m(zwsp)\e[38;5;245m]\e[0m \e[38;5;224m=>\e[0m \e[38;5;250m"\e[0mctrl chars and whatnot\e[38;5;250m"\e[0m'
                     ),
                     'text' => 'stdClass' . "\n"
                         . '[ ] => "space"' . "\n"
-                        . (PHP_VERSION_ID >= 70000
+                        . (PHP_VERSION_ID >= 70200
                             ? '[42] => "int key"' . "\n"
                             : '')
                         . '[not\x80\u{03c5}tf8] => "not utf8"' . "\n"
@@ -308,7 +308,7 @@ EOD;
                             'foo',
                             42,
                         );
-                        if (PHP_VERSION_ID < 70000) {
+                        if (PHP_VERSION_ID < 70200) {
                             $index = \array_search(42, $keysExpect, true);
                             \array_splice($keysExpect, $index, 1);
                         }
@@ -322,7 +322,7 @@ EOD;
                                     . '<dd class="attribute"><span class="classname">AllowDynamicProperties</span></dd>' . "\n"
                                 : '')
                             . '<dt class="properties">properties</dt>' . "\n"
-                            . (PHP_VERSION_ID >= 70000
+                            . (PHP_VERSION_ID >= 70200
                                 ? '<dd class="property public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_int">42</span> <span class="t_operator">=</span> <span class="t_string">int key</span></dd>' . "\n"
                                 : '')
                             . '<dd class="property public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string">foo</span> <span class="t_operator">=</span> <span class="t_string">bar</span></dd>' . "\n"
@@ -331,14 +331,14 @@ EOD;
                         . '</div></li>',
                     'streamAnsi' => \str_replace('\e', "\e", '\e[1mstdClass\e[22m' . "\n"
                         . '\e[4mproperties:\e[24m' . "\n"
-                        . (PHP_VERSION_ID >= 70000
+                        . (PHP_VERSION_ID >= 70200
                             ? '\e[38;5;250m(public)\e[0m \e[38;5;83m\e[96m42\e[38;5;83;49m\e[0m \e[38;5;224m=\e[0m \e[38;5;250m"\e[0mint key\e[38;5;250m"\e[0m' . "\n"
                             : '')
                         . '\e[38;5;250m(public)\e[0m \e[38;5;83mfoo\e[0m \e[38;5;224m=\e[0m \e[38;5;250m"\e[0mbar\e[38;5;250m"\e[0m' . "\n"
                         . 'no methods'),
                     'text' => 'stdClass' . "\n"
                         . 'properties:' . "\n"
-                        . (PHP_VERSION_ID >= 70000
+                        . (PHP_VERSION_ID >= 70200
                             ? '  (public) 42 = "int key"' . "\n"
                             : '')
                         . '  (public) foo = "bar"' . "\n"

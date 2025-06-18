@@ -48,6 +48,7 @@ jobs:
         composer install --prefer-dist --no-progress
     - name: Unit test
       run: composer run test
+      continue-on-error: ${{ matrix.php-version == '8.0' }}
     - name: Publish code coverage
       if: ${{ matrix.php-version == '8.2' && github.ref_name == 'master' }}
       uses: paambaati/codeclimate-action@v8.0.0

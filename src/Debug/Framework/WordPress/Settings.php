@@ -127,7 +127,7 @@ class Settings extends AbstractComponent implements AssetProviderInterface, Subs
     /**
      * Sanitize/Validate/Finalize settings
      *
-     * @param array $post submitted group values array
+     * @param array $post Submitted group values array
      *
      * @return array
      */
@@ -139,9 +139,12 @@ class Settings extends AbstractComponent implements AssetProviderInterface, Subs
         $sanitized = FormProcessor::getValues($this->controls, $post);
         $sanitized = $sanitized[self::GROUP_NAME];
         $sanitized['emailMin'] = $sanitized['waitThrottle'];
+        $sanitized['passwordHash'] = $this->getPasswordHash($sanitized);
         $sanitized['plugins']['routeDiscord']['throttleMin'] = $sanitized['waitThrottle'];
         $sanitized['plugins']['routeSlack']['throttleMin'] = $sanitized['waitThrottle'];
         $sanitized['plugins']['routeTeams']['throttleMin'] = $sanitized['waitThrottle'];
+        unset($sanitized['password']);
+        unset($sanitized['previousPasswordHash']);
         unset($sanitized['waitThrottle']);
         return $sanitized;
     }
@@ -236,6 +239,26 @@ class Settings extends AbstractComponent implements AssetProviderInterface, Subs
             }
         }
         return $errors;
+    }
+
+    /**
+     * Get passwordHash value from form submission
+     *
+     * @param array $formValues Submitted form values
+     *
+     * @return string|null
+     */
+    private function getPasswordHash(array $formValues)
+    {
+        if (empty($formValues['password'])) {
+            return null;
+        }
+        if ($formValues['password'] === '_no_change_') {
+            return isset($formValues['previousPasswordHash'])
+                ? $formValues['previousPasswordHash']
+                : null;
+        }
+        return \password_hash($formValues['password'], PASSWORD_DEFAULT);
     }
 
     /**

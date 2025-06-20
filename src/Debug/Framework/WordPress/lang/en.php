@@ -33,8 +33,6 @@ return array(
     'settings.control.enableProfiling' => 'Enable Profile Method',
     'settings.control.enableProfiling.describedBy' => 'If PHPDebugConsole is collecting data <b>AND</b> this option is enabled, then we will set {declareTicks}<br /><b>Only enable this when needed</b>',
     'settings.control.enableProfiling.option.on' => 'Enable PHPDebugConsole\'s <a target="_blank" href="https://bradkent.com/php/debug#methodProfile">profile method</a>',
-    'settings.control.key' => 'Password',
-    'settings.control.key.describedBy' => 'This password may be passed to enable collecting/outputting the log without being logged in as an admin',
     'settings.control.localeFirstChoice' => 'Locale',
     'settings.control.logEnvInfo' => 'Log Environment',
     'settings.control.logEnvInfo.option.errorReporting' => 'Issues with error reporting',
@@ -54,6 +52,9 @@ return array(
     'settings.control.logRuntime.option.on' => 'Log memory usage and request duration',
     'settings.control.maxDepth' => 'Max Depth',
     'settings.control.maxDepth.describedBy' => 'Maximum depth to traverse when logging objects/arrays.  0 = unlimited',
+    'settings.control.password' => 'Password',
+    'settings.control.password.describedBy' => 'This password may be passed in the request to enable collecting/outputting the log without being logged in as an admin.<br />'
+        . 'Enter the plain-text password here.  It will be stored as a hashed value.',
     'settings.control.route' => 'Route',
     'settings.control.route.describedBy' => 'How the log will be output',
     'settings.control.route.option.auto' => 'Automatic',

@@ -188,7 +188,7 @@ class Debug extends AbstractDebug
             'user' => 'fa fa-user-o',
             'warning' => 'fa fa-warning',
         ),
-        'key' => null,
+        'key' => null, // secodary to password option... this is a plaintext password used to enable log collection/output
         'logEnvInfo' => array(  // may be set by passing a list
             'errorReporting' => true,
             'files' => true,
@@ -212,6 +212,7 @@ class Debug extends AbstractDebug
         'onOutput' => null,         // callable
         'output'    => false,       // output the log?
         'outputHeaders' => true,    // ie, ChromeLogger and/or firePHP headers
+        'passwordHash' => null,     // (PHP 5.5+) password (hashed with `password_hash`) used to enable log collection/output
         'plugins' => array(
             'channel' => array( 'class' => 'bdk\Debug\Plugin\Channel' ),
             'configEvents' => array( 'class' => 'bdk\Debug\Plugin\ConfigEvents' ),

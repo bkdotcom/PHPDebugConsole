@@ -72,7 +72,7 @@ class ConfigEvents implements SubscriberInterface
             'emailFrom' => [$this, 'onCfgEmail'],
             'emailFunc' => [$this, 'onCfgEmail'],
             'emailTo' => [$this, 'onCfgEmail'],
-            'key' => [$this, 'onCfgKey'],
+            'key' => [$this, 'onCfgPassword'],
             'logEnvInfo' => [$this, 'onCfgList'],
             'logRequestInfo' => [$this, 'onCfgList'],
             'logResponse' => [$this, 'onCfgLogResponse'],
@@ -80,12 +80,32 @@ class ConfigEvents implements SubscriberInterface
             'onLog' => [$this, 'onCfgReplaceSubscriber'],
             'onMiddleware' => [$this, 'onCfgReplaceSubscriber'],
             'onOutput' => [$this, 'onCfgReplaceSubscriber'],
+            'passwordHash' => [$this, 'onCfgPassword'], // make sure passwordHash is processed after key (has priority over it)
         ), $cfgDebug);
         foreach ($valActions as $key => $callable) {
             /** @psalm-suppress TooManyArguments */
             $cfgDebug[$key] = $callable($cfgDebug[$key], $key, $event);
         }
         $event['debug'] = \array_merge($event['debug'], $cfgDebug);
+    }
+
+    /**
+     * Get key/password passed in request
+     *
+     * @return string|null
+     */
+    private function getRequestPassword()
+    {
+        $request = $this->debug->serverRequest;
+        $cookieParams = $request->getCookieParams();
+        $queryParams = $request->getQueryParams();
+        $requestKey = null;
+        if (isset($queryParams['debug'])) {
+            $requestKey = $queryParams['debug'];
+        } elseif (isset($cookieParams['debug'])) {
+            $requestKey = $cookieParams['debug'];
+        }
+        return $requestKey;
     }
 
     /**
@@ -155,43 +175,6 @@ class ConfigEvents implements SubscriberInterface
         }
         $errorHandlerCfg['emailer'] = $errorEmailerCfg;
         $event['errorHandler'] = $errorHandlerCfg;
-        return $val;
-    }
-
-    /**
-     * Test $_REQUEST['debug'] against passed configured key
-     * Update collect & output values based on key value
-     *
-     * @param string $val   configured debug key
-     * @param string $name  config param name
-     * @param Event  $event The config change event
-     *
-     * @return string
-     *
-     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
-     */
-    private function onCfgKey($val, $name, Event $event) // @phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
-    {
-        if ($val === null || $this->debug->isCli()) {
-            return $val;
-        }
-        $request = $this->debug->serverRequest;
-        $cookieParams = $request->getCookieParams();
-        $queryParams = $request->getQueryParams();
-        $requestKey = null;
-        if (isset($queryParams['debug'])) {
-            $requestKey = $queryParams['debug'];
-        } elseif (isset($cookieParams['debug'])) {
-            $requestKey = $cookieParams['debug'];
-        }
-        $isValidKey = $requestKey === $val;
-        $valsNew = array();
-        if ($isValidKey) {
-            // only enable collect / don't disable it
-            $valsNew['collect'] = true;
-        }
-        $valsNew['output'] = $isValidKey;
-        $event['debug'] = \array_merge($event['debug'], $valsNew);
         return $val;
     }
 
@@ -268,6 +251,37 @@ class ConfigEvents implements SubscriberInterface
         }
         // we're bootstrapping
         $this->debug->eventManager->subscribe(Debug::EVENT_BOOTSTRAP, $val);
+    }
+
+    /**
+     * Test $_REQUEST['debug'] against configured key/passwordHash
+     * Update collect & output values based on key value
+     *
+     * @param string $val   configured debug key
+     * @param string $name  config param name ('key' or 'password')
+     * @param Event  $event The config change event
+     *
+     * @return string
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     */
+    private function onCfgPassword($val, $name, Event $event)
+    {
+        if ($val === null || $this->debug->isCli()) {
+            return $val;
+        }
+        $requestKey = $this->getRequestPassword();
+        $isValidKey = $name === 'passwordHash'
+            ? \password_verify((string) $requestKey, $val)
+            : $requestKey === $val;
+        $valsNew = array();
+        if ($isValidKey) {
+            // only enable collect / don't disable it
+            $valsNew['collect'] = true;
+        }
+        $valsNew['output'] = $isValidKey;
+        $event['debug'] = \array_merge($event['debug'], $valsNew);
+        return $val;
     }
 
     /**

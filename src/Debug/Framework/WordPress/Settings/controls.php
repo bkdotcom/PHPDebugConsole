@@ -1,5 +1,7 @@
 <?php
 
+$currentValues = \get_option(self::GROUP_NAME) ?: array();
+
 $localeDefault = \get_locale();
 $localesAvailable = $this->debug->i18n->availableLocales();
 if (isset($localesAvailable[$localeDefault]) === false) {
@@ -8,13 +10,23 @@ if (isset($localesAvailable[$localeDefault]) === false) {
 
 // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys
 return array(
-    'key' => array(
+    'password' => array(
         'attribs' => array(
             'data-lpignore' => true,
         ),
-        'describedBy' => $this->debug->i18n->trans('settings.control.key.describedBy', [], self::I18N_DOMAIN),
-        'label' => $this->debug->i18n->trans('settings.control.key', [], self::I18N_DOMAIN),
+        'describedBy' => $this->debug->i18n->trans('settings.control.password.describedBy', [], self::I18N_DOMAIN),
+        'label' => $this->debug->i18n->trans('settings.control.password', [], self::I18N_DOMAIN),
         'type' => 'password',
+        'value' => isset($currentValues['passwordHash'])
+            ? '_no_change_'
+            : '',
+    ),
+    'previousPasswordHash' => array(
+        'type' => 'hidden',
+        'value' => isset($currentValues['passwordHash'])
+            ? $currentValues['passwordHash']
+            : null,
+        'wpTrClass' => 'hidden',
     ),
     'i18n[localeFirstChoice]' => array(
         'default' => $localeDefault,

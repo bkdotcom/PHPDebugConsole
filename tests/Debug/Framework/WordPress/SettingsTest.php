@@ -94,8 +94,8 @@ class SettingsTest extends DebugTestFramework
     {
         \ob_start();
         self::$plugin->outputSettingsPage();
-        $output = \ob_get_clean();
-        $expect = \file_get_contents(__DIR__ . '/expect/settings_output.html');
+        $output = \trim(\ob_get_clean());
+        $expect = \trim(\file_get_contents(__DIR__ . '/expect/settings_output.html'));
         // \bdk\Debug::varDump('expected', $expect);
         // \bdk\Debug::varDump('actual', $output);
         self::assertSame($expect, $output);
@@ -170,10 +170,16 @@ class SettingsTest extends DebugTestFramework
 
         self::assertSame(array(
             array(
-                'id' => 'phpdebugconsole_key',
+                'id' => 'phpdebugconsole_password',
                 'page' => 'phpdebugconsole',
                 'section' => 'general',
                 'title' => 'Password',
+            ),
+            array(
+                'id' => 'phpdebugconsole_previousPasswordHash',
+                'page' => 'phpdebugconsole',
+                'section' => 'general',
+                'title' => '',
             ),
             array(
                 'id' => 'phpdebugconsole_i18n_localeFirstChoice',
@@ -314,7 +320,7 @@ class SettingsTest extends DebugTestFramework
     public function testSanitize()
     {
         $return = self::$plugin->sanitize(array(
-            'key' => '1234',
+            'password' => '1234',
             'i18n' => array(
                 'localeFirstChoice' => 'en',
             ),
@@ -330,8 +336,9 @@ class SettingsTest extends DebugTestFramework
             'waitThrottle' => '60',
         ));
         // \bdk\Debug::varDump('return', $return);
+        self::assertTrue(\password_verify('1234', $return['passwordHash']));
+        unset($return['passwordHash']);
         self::assertSame(array(
-            'key' => '1234',
             'i18n' => array(
                 'localeFirstChoice' => 'en',
             ),
@@ -377,6 +384,7 @@ class SettingsTest extends DebugTestFramework
             'enableEmailer' => false,
             'emailTo' => null,
             'emailMin' => 60,
+            // 'passwordHash' => 'xxxxxxxx',
         ), $return);
     }
 }

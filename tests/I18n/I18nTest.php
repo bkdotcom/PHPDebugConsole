@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * @covers bdk\I18n
- * @covers bdk\I18n\Env
+ * @covers bdk\I18n\UserLocales
  */
 class I18nTest extends TestCase
 {

@@ -152,6 +152,7 @@ class ConfigTest extends DebugTestFramework
             'onLog',
             'onOutput',
             'outputHeaders',
+            'passwordHash',
             'plugins',
             'redactKeys',
             // 'redactReplace',
@@ -265,10 +266,12 @@ class ConfigTest extends DebugTestFramework
         ), $debug->getCfg('channels'));
     }
 
-    public function testOnCfgKey()
+    public function testOnCfgPassword()
     {
+        $plainTextPassword = 'swordfish';
+        $passwordHash = \password_hash($plainTextPassword, PASSWORD_DEFAULT);
         $debug = new Debug(array(
-            'key' => 'swordfish',
+            'key' => $plainTextPassword,
             'logResponse' => false,
             'serviceProvider' => array(
                 'serverRequest' => (new ServerRequest(
@@ -279,7 +282,7 @@ class ConfigTest extends DebugTestFramework
                     )
                 ))
                     ->withQueryParams(array(
-                        'debug' => 'swordfish',
+                        'debug' => $plainTextPassword,
                     )),
             ),
         ));
@@ -288,8 +291,8 @@ class ConfigTest extends DebugTestFramework
         $debug->setCfg('output', false);
 
         $debug = new Debug(array(
-            'key' => 'swordfish',
             'logResponse' => false,
+            'passwordHash' => $passwordHash,
             'serviceProvider' => array(
                 'serverRequest' => (new ServerRequest(
                     'GET',
@@ -299,7 +302,7 @@ class ConfigTest extends DebugTestFramework
                     )
                 ))
                     ->withCookieParams(array(
-                        'debug' => 'swordfish',
+                        'debug' => $plainTextPassword,
                     )),
             ),
         ));

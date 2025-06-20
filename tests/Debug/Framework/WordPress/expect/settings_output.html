@@ -4,9 +4,12 @@ settings_fields(phpdebugconsole)
 
 <h2>General Settings</h2>
 
-<label for="phpdebugconsole_key">Password</label>
-<input aria-describedby="phpdebugconsole_key-description" data-lpignore="true" id="phpdebugconsole_key" name="phpdebugconsole[key]" type="password" value="password" />
-<div class="description" id="phpdebugconsole_key-description">This password may be passed to enable collecting/outputting the log without being logged in as an admin</div>
+<label for="phpdebugconsole_password">Password</label>
+<input aria-describedby="phpdebugconsole_password-description" data-lpignore="true" id="phpdebugconsole_password" name="phpdebugconsole[password]" type="password" value="" />
+<div class="description" id="phpdebugconsole_password-description">This password may be passed in the request to enable collecting/outputting the log without being logged in as an admin.<br />Enter the plain-text password here.  It will be stored as a hashed value.</div>
+
+<label for="phpdebugconsole_previousPasswordHash"></label>
+<input id="phpdebugconsole_previousPasswordHash" name="phpdebugconsole[previousPasswordHash]" type="hidden" />
 
 <label for="phpdebugconsole_i18n_localeFirstChoice">Locale</label>
 <select id="phpdebugconsole_i18n_localeFirstChoice" name="phpdebugconsole[i18n][localeFirstChoice]" required="required">

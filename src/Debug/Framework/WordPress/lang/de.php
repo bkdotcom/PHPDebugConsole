@@ -81,6 +81,7 @@ return array(
     'settings.control.wordpress.option.http' => 'HTTP-Anfragen',
     'settings.controlCommon.defaultsToEnvVar' => 'Wenn leer gelassen, wird auf Umgebungsvariable {envVar} zurückgegriffen',
     'settings.controlCommon.webhookUrl' => 'Webhook-URL',
+    'settings.description' => 'PHPDebugConsole Einstellungen',
 
     'settings.section.errors' => 'Fehlerbenachrichtigung',
     'settings.section.general' => 'Allgemeine Einstellungen',

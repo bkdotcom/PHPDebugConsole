@@ -28,6 +28,7 @@ class JavascriptStrings implements AssetProviderInterface, SubscriberInterface
     /** @var list<string> These keys have the prefix js. in the translation file */
     private $jsKeys = [
         'attributes',
+        'clipboard.copied',
         'cfg.cookie',
         'cfg.documentation',
         'cfg.link-files',

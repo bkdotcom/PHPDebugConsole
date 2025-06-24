@@ -177,6 +177,14 @@ function get_settings_errors($setting = '', $sanitize = false)
     return $GLOBALS['wpReturnVals']['settings_errors'];
 }
 
+function plugin_basename($file)
+{
+    $file = \str_replace('\\', '/', $file);
+    $file = \str_replace($_SERVER['DOCUMENT_ROOT'], '', $file);
+    $file = \ltrim($file, '/');
+    return $file;
+}
+
 /**
  * Only meant to sorta mimic the real thing
  *

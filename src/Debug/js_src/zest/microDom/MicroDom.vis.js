@@ -112,9 +112,7 @@ export function extendMicroDom (MicroDom) {
 
   function show () {
     return this.each((el) => {
-      el.style.display = el[helper.rand]?.display
-        ? el[helper.rand].display
-        : ''
+      el.style.display = helper.elInitMicroDomInfo(el).display
     })
   }
 
@@ -128,18 +126,18 @@ export function extendMicroDom (MicroDom) {
       el.style.display = helper.elInitMicroDomInfo(el).display
       el.style.height = el.scrollHeight + 'px'
       el.style.removeProperty('padding-top')
-      // el.style.paddingTop = 0
       el.style.removeProperty('padding-bottom')
-      // el.style.paddingBottom = 0
       el.style.removeProperty('margin-top')
-      // el.style.marginTop = 0
       el.style.removeProperty('margin-bottom')
-      // el.style.marginBottom = 0
       window.setTimeout( () => {
-        el.style.removeProperty('height')
-        el.style.removeProperty('overflow')
-        el.style.removeProperty('transition-duration')
-        el.style.removeProperty('transition-property')
+        const propsRemove = [
+          'box-sizing', 'height',
+          'overflow',
+          'transition-duration', 'transition-property',
+        ]
+        propsRemove.each((prop) => {
+          el.style.removeProperty(prop)
+        })
         if (typeof onComplete === 'function') {
           onComplete.call(el, el)
         }
@@ -160,15 +158,17 @@ export function extendMicroDom (MicroDom) {
       el.style.marginTop = 0
       el.style.marginBottom = 0
       window.setTimeout( () => {
+        const propsRemove = [
+          'box-sizing', 'height',
+          'margin-bottom', 'margin-top',
+          'overflow',
+          'padding-bottom', 'padding-top',
+          'transition-duration', 'transition-property',
+        ]
         el.style.display = 'none'
-        el.style.removeProperty('height')
-        el.style.removeProperty('padding-top')
-        el.style.removeProperty('padding-bottom')
-        el.style.removeProperty('margin-top')
-        el.style.removeProperty('margin-bottom')
-        el.style.removeProperty('overflow')
-        el.style.removeProperty('transition-duration')
-        el.style.removeProperty('transition-property')
+        propsRemove.each((prop) => {
+          el.style.removeProperty(prop)
+        })
         if (typeof onComplete === 'function') {
           onComplete.call(el, el)
         }

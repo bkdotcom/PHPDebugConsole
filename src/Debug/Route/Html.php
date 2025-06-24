@@ -13,7 +13,6 @@
 namespace bdk\Debug\Route;
 
 use bdk\Debug;
-use bdk\Debug\AssetProviderInterface;
 use bdk\Debug\Route\Html\ErrorSummary;
 use bdk\Debug\Route\Html\Tabs;
 use bdk\PubSub\Event;
@@ -32,12 +31,6 @@ class Html extends AbstractRoute
     /** @var array<string,mixed> */
     protected $cfg = array();
 
-    /** @var array{css:array,script:array} */
-    private $assets = array(
-        'css' => array(),
-        'script' => array(),
-    );
-
     /**
      * Constructor
      *
@@ -51,9 +44,9 @@ class Html extends AbstractRoute
         $this->cfg = array(
             'css' => '',            // additional "override" css
             'drawer' => true,
-            'filepathCss' => __DIR__ . '/../css/Debug.css',
-            'filepathScript' => __DIR__ . '/../js/Debug.min.js',
-            'filepathZest' => __DIR__ . '/../js/zest.min.js',
+            'filepathCss' => './css/Debug.css',   // relative paths are relative to Debug dir
+            'filepathScript' => './js/Debug.min.js',
+            'filepathZest' => './js/zest.min.js',
             'outputCss' => true,
             'outputScript' => true,
             'sidebar' => true,
@@ -71,11 +64,12 @@ class Html extends AbstractRoute
      * @param int    $priority (optional) priority of asset
      *
      * @return void
+     *
+     * @deprecated 3.5
      */
     public function addAsset($what, $asset, $priority = 0)
     {
-        $this->assets[$what][$priority][] = $this->normalizeAssetPath($asset);
-        $this->assets[$what][$priority] = \array_unique($this->assets[$what][$priority]);
+        $this->debug->assetManager->addAsset($what, $asset, $priority);
     }
 
     /**
@@ -108,7 +102,7 @@ class Html extends AbstractRoute
         }
         return ''
             . '<script>'
-                . $this->getScript() . "\n"
+                . $this->debug->assetManager->getAssetsAsString('script') . "\n"
             . '</script>' . "\n";
     }
 
@@ -123,7 +117,7 @@ class Html extends AbstractRoute
             return '';
         }
         return '<style type="text/css">' . "\n"
-                . $this->getCss() . "\n"
+                . $this->debug->assetManager->getAssetsAsString('css') . "\n"
             . '</style>' . "\n";
     }
 
@@ -133,46 +127,36 @@ class Html extends AbstractRoute
      * @param string $what (optional) specify "css" or "script"
      *
      * @return array
+     *
+     * @deprecated 3.5
      */
     public function getAssets($what = null)
     {
-        foreach ($this->debug->getAssetProviders() as $assetProvider) {
-            $this->processAssetProvider($assetProvider);
-        }
-        if ($what === null) {
-            return \array_map(static function ($assetsByPriority) {
-                \krsort($assetsByPriority, SORT_NUMERIC);
-                return \call_user_func_array('array_merge', $assetsByPriority);
-            }, $this->assets);
-        }
-        if (isset($this->assets[$what])) {
-            \krsort($this->assets[$what], SORT_NUMERIC);
-            return \call_user_func_array('array_merge', $this->assets[$what]);
-        }
-        return array();
+        return $this->debug->assetManager->getAssets($what);
     }
 
     /**
      * Return CSS
      *
      * @return string
+     *
+     * @deprecated 3.5
      */
     public function getCss()
     {
-        $assets = $this->getAssets('css');
-        return $this->buildAssetOutput($assets)
-            . $this->cfg['css'];
+        return $this->debug->assetManager->getAssetsAsString('css');
     }
 
     /**
      * Return javascript
      *
      * @return string
+     *
+     * @deprecated 3.5
      */
     public function getScript()
     {
-        $assets = $this->getAssets('script');
-        return $this->buildAssetOutput($assets);
+        return $this->debug->assetManager->getAssetsAsString('script');
     }
 
     /**
@@ -208,43 +192,12 @@ class Html extends AbstractRoute
      * @param string $asset css, javascript, or filepath
      *
      * @return bool
+     *
+     * @deprecated 3.5
      */
     public function removeAsset($what, $asset)
     {
-        $asset = $this->normalizeAssetPath($asset);
-        foreach ($this->assets[$what] as $priority => $assets) {
-            $index = \array_search($asset, $assets, true);
-            if ($index !== false) {
-                unset($this->assets[$what][$priority][$index]);
-                $this->assets[$what][$priority] = \array_values($this->assets[$what][$priority]);
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Combine css or script assets into a single string
-     *
-     * @param array $assets array of assets (filepaths / strings)
-     *
-     * @return string
-     */
-    private function buildAssetOutput(array $assets)
-    {
-        $return = '';
-        foreach ($assets as $asset) {
-            // isFile "safely" checks if the value is an existing regular file
-            if ($this->debug->utility->isFile($asset)) {
-                $asset = \ltrim(\file_get_contents($asset), "\xef\xbb\xbf");
-            }
-            if ($asset === false) {
-                $asset = '/* PHPDebugConsole: unable to read file ' . $asset . ' */';
-                $this->debug->alert('unable to read file ' . $asset);
-            }
-            $return .= $asset . "\n";
-        }
-        return $return;
+        return $this->debug->assetManager->removeAsset($what, $asset);
     }
 
     /**
@@ -357,50 +310,21 @@ class Html extends AbstractRoute
     }
 
     /**
-     * Convert "./" relative path to absolute
-     *
-     * @param string $asset css, javascript, or filepath
-     *
-     * @return string
-     */
-    private function normalizeAssetPath($asset)
-    {
-        return \preg_match('#[\r\n]#', $asset) !== 1
-            ? \preg_replace('#^\./?#', __DIR__ . '/../', $asset) // single line... see if begins with "./""
-            : $asset;
-    }
-
-    /**
      * {@inheritDoc}
      */
     protected function postSetCfg($cfg = array(), $prev = array())
     {
         $assetTypeAndPriority = array(
-            'filepathCss' => ['css', 0],
+            'css' => ['css', 0],
+            'filepathCss' => ['css', 1],
             'filepathScript' => ['script', 0],
             'filepathZest' => ['script', 1],
         );
         $assetValues = \array_intersect_key($cfg, $assetTypeAndPriority);
         foreach ($assetValues as $k => $v) {
             list($type, $priority) = $assetTypeAndPriority[$k];
-            $this->removeAsset($type, $prev[$k]);
-            $this->addAsset($type, $v, $priority);
-        }
-    }
-
-    /**
-     * Get and register assets from passed provider
-     *
-     * @param AssetProviderInterface $assetProvider Asset provider
-     *
-     * @return void
-     */
-    private function processAssetProvider(AssetProviderInterface $assetProvider)
-    {
-        foreach ($assetProvider->getAssets() as $type => $assetsOfType) {
-            foreach ((array) $assetsOfType as $asset) {
-                $this->addAsset($type, $asset);
-            }
+            $this->debug->assetManager->removeAsset($type, $prev[$k]);
+            $this->debug->assetManager->addAsset($type, $v, $priority);
         }
     }
 }

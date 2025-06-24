@@ -82,6 +82,7 @@ return array(
     'settings.control.wordpress.option.http' => 'HTTP requests',
     'settings.controlCommon.defaultsToEnvVar' => 'If left empty, will fall back to environment variable {envVar}',
     'settings.controlCommon.webhookUrl' => 'Webhook URL',
+    'settings.description' => 'PHPDebugConsole Settings',
 
     'settings.section.errors' => 'Error Notification',
     'settings.section.general' => 'General Settings',

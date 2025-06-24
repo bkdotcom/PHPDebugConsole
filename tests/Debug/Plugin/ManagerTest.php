@@ -11,6 +11,7 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * @covers \bdk\Debug\Plugin\Manager
+ * @covers \bdk\Debug\Route\Html\AssetManager
  */
 class ManagerTest extends TestCase
 {

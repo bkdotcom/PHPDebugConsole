@@ -10,7 +10,9 @@ use bdk\Test\Debug\DebugTestFramework;
  * @covers \bdk\Debug
  * @covers \bdk\Debug\Route\AbstractRoute
  * @covers \bdk\Debug\Route\Html
+ * @covers \bdk\Debug\Route\Html\AssetManager
  * @covers \bdk\Debug\Plugin\Highlight
+ * @covers \bdk\Debug\Plugin\JavascriptStrings
  */
 class HtmlTest extends DebugTestFramework
 {
@@ -48,26 +50,49 @@ class HtmlTest extends DebugTestFramework
 
     public function testAssets()
     {
-        $dir = \realpath(__DIR__ . '/../../../src/Debug/Route');
-        $css = $dir . '/../css/Debug.css';
-
-        $assets = $this->debug->routeHtml->getAssets();
+        self::assertTrue(true);
+        $debug = new \bdk\Debug(array(
+            'collect' => false,
+            'output' => false,
+            'logResponse' => false,
+            'serviceProvider' => array(
+                'serverRequest' => static function () {
+                    return new \bdk\HttpMessage\ServerRequest(
+                        'GET',
+                        'http://test.example.com/noun/id/verb?lang=es'
+                    );
+                },
+            ),
+        ));
+        $routeHtml = $debug->getRoute('html');
+        $assets = $routeHtml->getAssets();
         $this->assertArrayHasKey('css', $assets);
         $this->assertArrayHasKey('script', $assets);
 
         // test removeAsset
+        $dir = \realpath(__DIR__ . '/../../../src/Debug/Plugin');
+        $css = \realpath($dir . '/../css/Debug.css');
         $assets['css'] = \array_values(\array_diff($assets['css'], array($css)));
-        $this->debug->routeHtml->removeAsset('css', './css/Debug.css');
-        $this->assertSame($assets, $this->debug->routeHtml->getAssets());
+        $routeHtml->removeAsset('css', './css/Debug.css');
+        $this->assertSame($assets, $routeHtml->getAssets(), 'Assets should match after removing Debug.css');
 
         // test add/remove assetProvider
         $highlight = new \bdk\Debug\Plugin\Highlight();
-        $this->debug->addPlugin($highlight);
-        $this->assertCount(2, $this->debug->routeHtml->getAssets('css'));
-        $this->assertCount(4, $this->debug->routeHtml->getAssets('script')); // zest, debug, prism & highlight
-        $this->debug->removePlugin($highlight);
-        $this->assertCount(0, $this->debug->routeHtml->getAssets('css'));
-        $this->assertCount(2, $this->debug->routeHtml->getAssets('script')); // zest & debug
-        $this->assertFalse($this->debug->routeHtml->removeAsset('css', 'does not exist'));
+        $debug->addPlugin($highlight);
+        $assetsCss = $routeHtml->getAssets('css');
+        $assetsScript = $routeHtml->getAssets('script');
+        $this->assertCount(2, $assetsCss);   // prism & highlight  (Debug.css was removed)
+        $this->assertCount(5, $assetsScript); // zest, debug, prism & highlight, & javascriptStrings
+        self::assertStringContainsString('/js/zest.min.js', $assetsScript[0]);
+        self::assertStringContainsString('/js/Debug.min.js', $assetsScript[1]);
+        self::assertStringContainsString('phpDebugConsole.setCfg({', $assetsScript[2]); // javascrptStrings
+        self::assertStringContainsString('"attributes":"Atributos"', $assetsScript[2]);
+        self::assertStringContainsString('/js/prism.js', $assetsScript[3]);
+        self::assertStringContainsString('Prism.manual = true', $assetsScript[4]);
+
+        $debug->removePlugin($highlight);
+        $this->assertCount(0, $routeHtml->getAssets('css'));
+        $this->assertCount(3, $routeHtml->getAssets('script')); // zest, debug, & javascriptStrings
+        $this->assertFalse($routeHtml->removeAsset('css', 'does not exist'));
     }
 }

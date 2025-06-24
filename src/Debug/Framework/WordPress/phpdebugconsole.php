@@ -12,14 +12,11 @@
  * Requires PHP: 5.4
  */
 
-$pathBase = __DIR__;
+$pathBase = \realpath(__DIR__ . '/../../../..');
 
-require $pathBase . '/vendor/bdk/Debug/Autoloader.php';
+require_once $pathBase . '/src/Debug/Autoloader.php';
 $autoloader = new \bdk\Debug\Autoloader();
-$autoloader->addPsr4('bdk\\Debug\\Framework\\WordPress\\', $pathBase);
-$autoloader->addPsr4('Psr\\Http\\Message\\', $pathBase . '/vendor/psr/http-message/src');
-$autoloader->addPsr4('bdk\\HttpMessage\\', $pathBase . '/vendor/bdk/http-message/src/HttpMessage');
-$autoloader->addClass('SqlFormatter', $pathBase . '/vendor/jdorn/sql-formatter/lib/SqlFormatter.php');
+$autoloader->addPsr4('bdk\\Debug\\Framework\\WordPress\\', __DIR__);
 $autoloader->register();
 
 $storedOptions = \get_option(\bdk\Debug\Framework\WordPress\Settings::GROUP_NAME) ?: array(
@@ -38,7 +35,7 @@ $config = \bdk\Debug\Utility\ArrayUtil::mergeDeep(
         'emailFunc' => 'wp_mail',
         'i18n' => array(
             'domainFilepath' => array(
-                'wordpress' => $pathBase . '/lang/{locale}.php',
+                'wordpress' => __DIR__ . '/lang/{locale}.php',
             ),
         ),
         'plugins' => array(

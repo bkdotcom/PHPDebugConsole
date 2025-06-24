@@ -59,24 +59,37 @@ class AutoloaderTest extends DebugTestFramework
         }
     }
 
-    public function testAutloadPsr4()
+    /**
+     * @dataProvider providertestAutloadPsr4
+     */
+    public function testAutloadPsr4($class)
     {
-        $classes = array(
-            'bdk\\Backtrace\\SkipInternal',
-            'bdk\\ErrorHandler\\Error',
-        );
         $autoloadMethod = new \ReflectionMethod(static::$autoloader, 'autoload');
         $autoloadMethod->setAccessible(true);
         $findClassMethod = new \ReflectionMethod(static::$autoloader, 'findClass');
         $findClassMethod->setAccessible(true);
-        foreach ($classes as $class) {
-            self::assertNotFalse($findClassMethod->invoke(static::$autoloader, $class));
-            if (\class_exists($class, false)) {
-                continue;
-            }
-            $autoloadMethod->invoke(static::$autoloader, $class);
-            self::assertTrue(\class_exists($class, false));
+
+        self::assertNotFalse($findClassMethod->invoke(static::$autoloader, $class));
+        if (\class_exists($class, false) || \interface_exists($class, false)) {
+            return;
         }
+        $autoloadMethod->invoke(static::$autoloader, $class);
+        self::assertTrue(\class_exists($class, false) || \interface_exists($class, false), 'Failed to autoload ' . $class);
+    }
+
+    static function providertestAutloadPsr4()
+    {
+        $classes = [
+            ['bdk\\Backtrace\\SkipInternal'],
+            ['bdk\\ErrorHandler\\Error'],
+            ['Psr\\Http\\Message\\MessageInterface'],
+            ['Psr\\Http\\Message\\RequestFactoryInterface'], // only if php >= 7.2
+        ];
+        if (\PHP_VERSION_ID < 70200) {
+            // bdk/http-message only includes message-factory in v2.x & v3.x (php >= 7.2)
+            $classes = \array_slice($classes, 0, -1);
+        }
+        return $classes;
     }
 
     public function testAutoloadNotFound()

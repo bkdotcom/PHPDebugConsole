@@ -48,9 +48,6 @@ class Manager implements SubscriberInterface
     /** @var SplObjectStorage */
     protected $registeredPlugins;
 
-    /** @var AssetProviderInterface[] */
-    private $assetProviders = array();
-
     /** @var bool */
     private $isBootstrapped = false;
 
@@ -85,7 +82,7 @@ class Manager implements SubscriberInterface
             $this->addPluginInterface($plugin);
         }
         if ($plugin instanceof AssetProviderInterface) {
-            $this->assetProviders[] = $plugin;
+            $this->debug->assetManager->addProvider($plugin);
         }
         if ($plugin instanceof SubscriberInterface) {
             $this->addSubscriberInterface($plugin);
@@ -147,12 +144,12 @@ class Manager implements SubscriberInterface
      * Clears the enqueued asset providers
      *
      * @return AssetProviderInterface[]
+     *
+     * @deprecated 3.5
      */
     public function getAssetProviders()
     {
-        $providers = $this->assetProviders;
-        $this->assetProviders = array();
-        return $providers;
+        return $this->debug->assetManager->getProviders();
     }
 
     /**
@@ -234,7 +231,7 @@ class Manager implements SubscriberInterface
         }
         $this->registeredPlugins->detach($plugin);
         if ($plugin instanceof AssetProviderInterface) {
-            $this->removeAssetProvider($plugin);
+            $this->debug->assetManager->removeProvider($plugin);
         }
         if ($plugin instanceof SubscriberInterface) {
             $this->debug->eventManager->removeSubscriberInterface($plugin);
@@ -373,27 +370,5 @@ class Manager implements SubscriberInterface
             $plugin->setCfg($cfg);
         }
         return [$plugin, $cfg];
-    }
-
-    /**
-     * Remove asset provider from list
-     *
-     * @param AssetProviderInterface $assetProvider Asset provider
-     *
-     * @return void
-     */
-    private function removeAssetProvider(AssetProviderInterface $assetProvider)
-    {
-        $key = \array_search($assetProvider, $this->assetProviders, true);
-        if ($key !== false) {
-            unset($this->assetProviders[$key]);
-        }
-        // route may have already pulled assets / remove them
-        $routeHtml = $this->debug->rootInstance->getRoute('html');
-        foreach ($assetProvider->getAssets() as $type => $assetsOfType) {
-            foreach ((array) $assetsOfType as $asset) {
-                $routeHtml->removeAsset($type, $asset);
-            }
-        }
     }
 }

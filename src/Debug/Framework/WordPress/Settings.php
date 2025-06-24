@@ -100,7 +100,7 @@ class Settings extends AbstractComponent implements AssetProviderInterface, Subs
         $this->initControlBuilder();
 
         \register_setting(self::GROUP_NAME, self::GROUP_NAME, array(
-            // 'description' => 'Where does this show up?',
+            'description' => $this->debug->i18n->trans('settings.description', [], self::I18N_DOMAIN),
             'sanitize_callback' => [$this, 'sanitize'],
             'type' => 'array',
         ));

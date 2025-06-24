@@ -212,7 +212,7 @@ function initClipboardJs () {
         })
         return $('<div>')[0]
       }
-      notify('Copied to clipboard')
+      notify(config.dict.get('clipboard.copied'))
       return trigger
     }
   })

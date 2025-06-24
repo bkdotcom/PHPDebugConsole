@@ -103,6 +103,7 @@ return array(
     'js.cfg.theme.auto' => 'Auto',
     'js.cfg.theme.dark' => 'Dunkel',
     'js.cfg.theme.light' => 'Hell',
+    'js.clipboard.copied' => 'In die Zwischenablage kopiert',
     'js.debugInfo-excluded' => 'nicht in __debugInfo enthalten',
     'js.debugInfo-value' => 'über __debugInfo()',
     'js.deprecated' => 'Veraltet',

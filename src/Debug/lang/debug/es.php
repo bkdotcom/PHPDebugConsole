@@ -103,6 +103,7 @@ return array(
     'js.cfg.theme.auto' => 'Automático',
     'js.cfg.theme.dark' => 'Oscuro',
     'js.cfg.theme.light' => 'Claro',
+    'js.clipboard.copied' => 'Copiado al portapapeles',
     'js.debugInfo-excluded' => 'no incluido en __debugInfo',
     'js.debugInfo-value' => 'a través de __debugInfo()',
     'js.deprecated' => 'Obsoleto',

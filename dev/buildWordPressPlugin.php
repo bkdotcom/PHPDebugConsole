@@ -3,35 +3,55 @@
 $baseDir = \realpath(__DIR__ . '/..');
 require $baseDir . '/vendor/autoload.php';
 
-$fsHelper = new FsHelper($baseDir);
+$helper = new WpBuildHelper($baseDir);
 
-// move plugin files to root
-$files = \glob($baseDir . '/src/Debug/FrameWork/WordPress/*');
-foreach ($files as $filepath) {
-    $new = $baseDir . '/' . \basename($filepath);
-    $fsHelper->rename($filepath, $new);
-}
-
-// move src to vendor/bdk
+// move src/* to vendor/bdk
 $files = \glob($baseDir . '/src/*');
 foreach ($files as $filepath) {
     $filepathNew = $baseDir . '/vendor/bdk/' . \basename($filepath);
-    $fsHelper->rename($filepath, $filepathNew);
+    $helper->rename($filepath, $filepathNew);
 }
-$fsHelper->unlink($baseDir . '/src');
+// $helper->unlink($baseDir . '/src');
+
+// move plugin files to root/src
+$files = \glob($baseDir . '/vendor/bdk/Debug/FrameWork/WordPress/*');
+foreach ($files as $filepath) {
+    $new = $baseDir . '/src/' . \basename($filepath);
+    $helper->rename($filepath, $new);
+}
+
+// move main plugin file to root
+$files = [
+    $baseDir . '/src/phpdebugconsole.php',
+    $baseDir . '/src/readme.txt',
+];
+foreach ($files as $filepath) {
+    $filepathNew = $baseDir . '/' . \basename($filepath);
+    $helper->rename($filepath, $filepathNew);
+}
 
 // remove files we don't need for wordpress plugin
 $files = [
-    $baseDir . '/src/Debug/Framework',
+    $baseDir . '/vendor/bdk//Debug/Framework',
 ];
 foreach ($files as $filepath) {
-    $fsHelper->unlink($filepath);
+    $helper->unlink($filepath);
 }
+
+// update phpdebugconsole.php (version & $pathbase)
+$filepath = $baseDir . '/phpdebugconsole.php';
+$helper->modifyFile($filepath, [
+    ['/^(\s*\* Version: ).*$/m', '$1' . \bdk\Debug::VERSION],
+    ['/^(\$pathBase = ).*$/m', '$1__DIR__;'],
+    ['#\'/src/Debug/Autoloader.php\'#', '\'/vendor/bdk/Debug/Autoloader.php\''],
+    ['/^(\$autoloader->addPsr4\(.*?, )__DIR__(\);)/', '$1\$pathBase . \'/src\'$2'],
+    ['#__DIR__ . \'/lang#', '$pathBase . \'/src/lang'],
+]);
 
 /**
  * Helper class
  */
-class FsHelper
+class WpBuildHelper
 {
     /** @var string */
     private $baseDir;
@@ -47,6 +67,32 @@ class FsHelper
     public function __construct($baseDir)
     {
         $this->baseDir = $baseDir;
+    }
+
+    /**
+     * Search and replace in file
+     *
+     * @param string $filepath     Path to file
+     * @param array  $replacements search => replace pairs
+     *
+     * @return void
+     */
+    public function modifyFile($filepath, array $replacements)
+    {
+        $filepathDebug = \strpos($filepath, $this->baseDir) === 0
+            ? './' . \substr($filepath, \strlen($this->baseDir) + 1)
+            : $filepath;
+        echo \sprintf('modify %s', $filepathDebug) . "\n";
+        $contents = \file_get_contents($filepath);
+        foreach ($replacements as $replacement) {
+            list($search, $replace) = $replacement;
+            $contents = \is_callable($replace)
+                ? \preg_replace_callback($search, $replace, $contents)
+                : \preg_replace($search, $replace, $contents);
+        }
+        if ($this->touchFileSystem) {
+            \file_put_contents($filepath, $contents);
+        }
     }
 
     /**

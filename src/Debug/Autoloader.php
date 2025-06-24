@@ -14,6 +14,8 @@ namespace bdk\Debug;
 
 /**
  * PHPDebugConsole autoloader
+ *
+ * Initial mapping assumes bdk/http-message has been installed as if via composer
  */
 class Autoloader
 {
@@ -26,25 +28,34 @@ class Autoloader
         'bdk\\ErrorHandler' => '../ErrorHandler/ErrorHandler.php',
         'bdk\\I18n' => '../I18n/I18n.php',
         'bdk\\Promise' => '../Promise/Promise.php',
+        'SqlFormatter' => '{vendor}/jdorn/sql-formatter/lib/SqlFormatter.php',
     );
 
-    /** @var array<string,string> */
+    /** @var array<string,string|list<string>> */
     protected $psr4Map = array(
         'bdk\\Backtrace\\' => '../Backtrace',
         'bdk\\Container\\' => '../Container',
         'bdk\\CurlHttpMessage\\' => '../CurlHttpMessage',
         'bdk\\Debug\\' => '.',
         'bdk\\ErrorHandler\\' => '../ErrorHandler',
+        'bdk\\HttpMessage\\' => '{vendor}/bdk/http-message/src/HttpMessage',
         'bdk\\I18n\\' => '../I18n',
         'bdk\\Promise\\' => '../Promise',
         'bdk\\PubSub\\' => '../PubSub',
         'bdk\\Slack\\' => '../Slack',
         'bdk\\Teams\\' => '../Teams',
         'bdk\\Test\\Debug\\' => '../../tests/Debug',
+        'Psr\\Http\\Message\\' => [
+            '{vendor}/psr/http-message/src',
+            '{vendor}/psr/http-factory/src',
+        ],
     );
 
     /** @var bool */
     private $isRegistered = false;
+
+    /** @var string */
+    private $vendorDir;
 
     /**
      * Register autoloader
@@ -86,7 +97,7 @@ class Autoloader
      */
     public function addClass($className, $filepath)
     {
-        $this->classMap[$className] = $filepath;
+        $this->classMap[$className] = $this->resolveFilepath($filepath);
         return $this;
     }
 
@@ -100,7 +111,7 @@ class Autoloader
      */
     public function addPsr4($namespace, $dir)
     {
-        $this->psr4Map[$namespace] = $dir;
+        $this->psr4Map[$namespace] = $this->resolveFilepath($dir);
         $this->sortPsr4();
         return $this;
     }
@@ -136,8 +147,28 @@ class Autoloader
         foreach ($this->psr4Map as $namespace => $dir) {
             if (\strpos($className, $namespace) === 0) {
                 $rel = \substr($className, \strlen($namespace));
-                $rel = \str_replace('\\', '/', $rel);
-                return $dir . '/' . $rel . '.php';
+                return $this->findRelativePath($rel, $dir);
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Search for file in PSR-4 dir(s)
+     *
+     * @param string              $rel Relative namespace path
+     * @param string|list<string> $dir Directory or directories to search
+     *
+     * @return string|false
+     */
+    private function findRelativePath($rel, $dir)
+    {
+        $rel = \str_replace('\\', '/', $rel);
+        foreach ((array) $dir as $dir) {
+            $dir = \rtrim($dir, '/');
+            $filepath = $dir . '/' . $rel . '.php';
+            if (\is_file($filepath)) {
+                return $filepath;
             }
         }
         return false;
@@ -146,20 +177,47 @@ class Autoloader
     /**
      * Resolve relative paths
      *
-     * @param string $filepath Filepath to resolve
+     * @param string|list<string> $filepath Filepath(s) to resolve
      *
      * @return string
      */
     private function resolveFilepath($filepath)
     {
+        if (\is_array($filepath)) {
+            return \array_map([$this, 'resolveFilepath'], $filepath);
+        }
         if (\strpos($filepath, '..') === 0) {
             $pathParts = \explode(DIRECTORY_SEPARATOR, __DIR__);
             \array_pop($pathParts); // remove last part
-            $filepath = implode('/', $pathParts) . '/' . \ltrim(\substr($filepath, 2), '/');
-        } elseif (\strpos($filepath, '.') === 0) {
-            $filepath = __DIR__ . '/' . \ltrim(\substr($filepath, 1), '/');
+            $filepath = \implode('/', $pathParts) . '/' . \ltrim(\substr($filepath, 2), '/');
+            return \rtrim($filepath, '/');
         }
+        if (\strpos($filepath, '.') === 0) {
+            $filepath = __DIR__ . '/' . \ltrim(\substr($filepath, 1), '/');
+            return \rtrim($filepath, '/');
+        }
+        $filepath = \strtr($filepath, array(
+            '{vendor}' => $this->resolveVendorDir(),
+        ));
         return \rtrim($filepath, '/');
+    }
+
+    /**
+     * Find vendor directory
+     *
+     * @return string
+     */
+    private function resolveVendorDir()
+    {
+        if ($this->vendorDir) {
+            return $this->vendorDir;
+        }
+        $path = __DIR__;
+        do {
+            $path = \dirname($path);
+        } while ($path && \is_dir($path . '/vendor') === false);
+        $this->vendorDir = $path . '/vendor';
+        return $this->vendorDir;
     }
 
     /**

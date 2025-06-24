@@ -120,6 +120,7 @@ var config = {
     'cfg.theme.auto': 'Auto',
     'cfg.theme.dark': 'Dark',
     'cfg.theme.light': 'Light',
+    'clipboard.copied': 'Copied to clipboard',
     'debugInfo-excluded': 'not included in __debugInfo',
     'debugInfo-value': 'via __debugInfo()',
     deprecated: 'Deprecated',

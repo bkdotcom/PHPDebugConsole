@@ -144,6 +144,10 @@ class ServiceProvider implements ServiceProviderInterface
                 $container['debug']->getCfg('i18n', Debug::CONFIG_DEBUG)
             );
         };
+        $container['assetManager'] = static function (Container $container) {
+            $debug = $container['debug'];
+            return new \bdk\Debug\Route\Html\AssetManager($debug);
+        };
         $container['pluginManager'] = static function () {
             return new \bdk\Debug\Plugin\Manager();
         };

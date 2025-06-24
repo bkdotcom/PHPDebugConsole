@@ -36,6 +36,8 @@
       <directory>src/Debug/lang</directory>
       <directory>src/Debug/Framework/Laravel</directory>
       <directory>src/Debug/Framework/Symfony</directory>
+      <directory>src/Debug/Framework/WordPress/lang</directory>
+      <file>src/Debug/Framework/WordPress/Settings/controls.php</file>
       <directory>src/Debug/Framework/Yii1_1</directory>
       <directory>src/Debug/Framework/Yii2</directory>
       <file>src/Debug/Framework/Cake4.php</file>

@@ -81,6 +81,7 @@ return array(
     'settings.control.wordpress.option.http' => 'Requisições HTTP',
     'settings.controlCommon.defaultsToEnvVar' => 'Se deixado em branco, será usado o valor da variável de ambiente {envVar}',
     'settings.controlCommon.webhookUrl' => 'URL do Webhook',
+    'settings.description' => 'Configurações do PHPDebugConsole',
 
     'settings.section.errors' => 'Notificação de erro',
     'settings.section.general' => 'Configurações gerais',

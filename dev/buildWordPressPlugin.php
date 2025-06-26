@@ -11,9 +11,18 @@ foreach ($files as $filepath) {
     $filepathNew = $baseDir . '/vendor/bdk/' . \basename($filepath);
     $helper->rename($filepath, $filepathNew);
 }
-// $helper->unlink($baseDir . '/src');
 
-// move plugin files to root/src
+// move LICENSE and README.md to vendor/bdk/DEBUG
+$files = [
+    $baseDir . '/LICENSE',
+    $baseDir . '/README.md',
+];
+foreach ($files as $filepath) {
+    $filepathNew = $baseDir . '/vendor/bdk/Debug/' . \basename($filepath);
+    $helper->rename($filepath, $filepathNew);
+}
+
+// move wordpress plugin files to root/src
 $files = \glob($baseDir . '/vendor/bdk/Debug/FrameWork/WordPress/*');
 foreach ($files as $filepath) {
     $new = $baseDir . '/src/' . \basename($filepath);
@@ -40,11 +49,11 @@ foreach ($files as $filepath) {
 
 // update phpdebugconsole.php (version & $pathbase)
 $filepath = $baseDir . '/phpdebugconsole.php';
-$helper->modifyFile($filepath, [
-    ['/^(\s*\* Version: ).*$/m', '$1' . \bdk\Debug::VERSION],
+$helper->edit($filepath, [
+    ['/^(\s*\* Version: ).*$/m', '${1}' . \bdk\Debug::VERSION],
     ['/^(\$pathBase = ).*$/m', '$1__DIR__;'],
     ['#\'/src/Debug/Autoloader.php\'#', '\'/vendor/bdk/Debug/Autoloader.php\''],
-    ['/^(\$autoloader->addPsr4\(.*?, )__DIR__(\);)/', '$1\$pathBase . \'/src\'$2'],
+    ['/^(\$autoloader->addPsr4\(.*?, )__DIR__(\);)/m', '$1\$pathBase . \'/src\'$2'],
     ['#__DIR__ . \'/lang#', '$pathBase . \'/src/lang'],
 ]);
 
@@ -77,12 +86,11 @@ class WpBuildHelper
      *
      * @return void
      */
-    public function modifyFile($filepath, array $replacements)
+    public function edit($filepath, array $replacements)
     {
         $filepathDebug = \strpos($filepath, $this->baseDir) === 0
             ? './' . \substr($filepath, \strlen($this->baseDir) + 1)
             : $filepath;
-        echo \sprintf('modify %s', $filepathDebug) . "\n";
         $contents = \file_get_contents($filepath);
         foreach ($replacements as $replacement) {
             list($search, $replace) = $replacement;
@@ -90,6 +98,7 @@ class WpBuildHelper
                 ? \preg_replace_callback($search, $replace, $contents)
                 : \preg_replace($search, $replace, $contents);
         }
+        echo \sprintf('edit %s - %d edits made', $filepath, \count($replacements)) . "\n";
         if ($this->touchFileSystem) {
             \file_put_contents($filepath, $contents);
         }

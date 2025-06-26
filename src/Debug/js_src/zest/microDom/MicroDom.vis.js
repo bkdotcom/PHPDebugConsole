@@ -135,7 +135,7 @@ export function extendMicroDom (MicroDom) {
           'overflow',
           'transition-duration', 'transition-property',
         ]
-        propsRemove.each((prop) => {
+        propsRemove.forEach((prop) => {
           el.style.removeProperty(prop)
         })
         if (typeof onComplete === 'function') {
@@ -166,7 +166,7 @@ export function extendMicroDom (MicroDom) {
           'transition-duration', 'transition-property',
         ]
         el.style.display = 'none'
-        propsRemove.each((prop) => {
+        propsRemove.forEach((prop) => {
           el.style.removeProperty(prop)
         })
         if (typeof onComplete === 'function') {

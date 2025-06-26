@@ -72,7 +72,10 @@ function addMarkup () {
     '</button>')
 }
 
-function open () {
+function open (e) {
+  if (e) {
+    $root = $(e.target).closest('.debug-drawer')
+  }
   $root.addClass('debug-drawer-open')
   $root.debugEnhance()
   setHeight() // makes sure height within min/max
@@ -82,7 +85,10 @@ function open () {
   }
 }
 
-function close () {
+function close (e) {
+  if (e) {
+    $root = $(e.target).closest('.debug-drawer')
+  }
   $root.removeClass('debug-drawer-open')
   $(window).off('resize', setHeight)
   if (config.get('persistDrawer')) {

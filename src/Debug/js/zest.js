@@ -373,16 +373,16 @@ var zest = (function () {
     if (val === null || val === undefined) {
       return val + ''
     }
-    const class2type = {};
     if (typeof val !== 'object' && typeof val !== 'function') {
       return typeof val
     }
-    'Boolean Number String Function Array Date RegExp Object Error Symbol'
-      .split(' ')
-      .forEach((name) => {
-        class2type[`[object ${name}]`] = name.toLowerCase();
-      });
-    return class2type[ toString.call(val) ] || 'object'
+    if (val instanceof Element) {
+      return 'element'
+    }
+    if (val instanceof Node) {
+      return 'node'
+    }
+    return toString.call(val).match(/^\[object (\w+)\]$/)[1].toLowerCase()
   };
 
   function extendMicroDom$6 (MicroDom) {
@@ -866,6 +866,17 @@ var zest = (function () {
         : value
     };
 
+    const queryHelper = function (microDom, windowProp, elementQuery) {
+      if (microDom.length === 0) {
+        return undefined
+      }
+      const el = microDom[0];
+      if (type(el) === 'window') {
+        return el[windowProp]
+      }
+      return elementQuery(el)
+    };
+
     function style ( ...args ) {
       if (args.length === 0) {
         return this[0]?.style; // return the style object
@@ -895,53 +906,67 @@ var zest = (function () {
       })
     }
 
-    // "helper" methods
-    // height = as defined by the CSS height propert
-    // clientHeight = includes padding / excludes borders, margins, and scrollbars
-    // offsetHeight = includes padding and border / excludes margins
-    // getBoundingClientRect() = includes padding, border, and (for most browsers) the scrollbar's height if it's rendered
-
     function height (value) {
       if (typeof value === 'undefined') {
-        // return "content" height excluding padding, border, and margin.
-
-        // also works on inline elements
-        const el = this[0];
-        const cs = window.getComputedStyle(el);
-        const paddingY = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
-        const borderY = parseFloat(cs.borderTopWidth) + parseFloat(cs.borderBottomWidth);
-        return el.offsetHeight - paddingY - borderY
+        return queryHelper(this, 'innerHeight', function (el) {
+          // return "content" height excluding padding, border, and margin.
+          // also works on inline elements
+          const cs = window.getComputedStyle(el);
+          const paddingY = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
+          const borderY = parseFloat(cs.borderTopWidth) + parseFloat(cs.borderBottomWidth);
+          return el.offsetHeight - paddingY - borderY
+        })
       }
       return this.style('height', addPx(value))
     }
 
+    function width (value) {
+      if (typeof value === 'undefined') {
+        return queryHelper(this, 'innerWidth', function (el) {
+          // return "content" height excluding padding, border, and margin.
+          // also works on inline elements
+          const cs = window.getComputedStyle(el);
+          const paddingX = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
+          const borderX = parseFloat(cs.borderLeftWidth) + parseFloat(cs.borderRightWidth);
+          return el.offsetWidth - paddingX - borderX
+        })
+      }
+      return this.style('width', addPx(value))
+    }
+
     function innerHeight (value) {
       if (typeof value === 'undefined') {
-        // return content height plus padding (excludes border and margin)
-        return this[0]?.clientHeight
+        return queryHelper(this, 'innerHeight', function (el) {
+          // return content height plus padding (excludes border and margin)
+          return el.clientHeight
+        })
       }
       return this.style('height', addPx(value))
     }
 
     function innerWidth (value) {
       if (typeof value === 'undefined') {
-        return this[0]?.clientWidth
+        return queryHelper(this, 'innerWidth', function (el) {
+          // return content width plus padding (excludes border and margin)
+          return el.clientWidth
+        })
       }
       return this.style('width', addPx(value))
     }
 
     function outerHeight (value, includeMargin = false) {
       if (typeof value === 'undefined') {
-        // content height plus padding and border
-        if (!includeMargin) {
-          return this[0]?.offsetHeight
-        }
-        // content height plus padding, border & margin
-        const el = this[0];
-        const cs = getComputedStyle(el);
-        return el.getBoundingClientRect().height
-          + parseFloat(cs.marginTop)
-          + parseFloat(cs.marginBottom)
+        return queryHelper(this, 'innerHeight', function (el) {
+          if (!includeMargin) {
+            // content height plus padding and border
+            return el.offsetHeight
+          }
+          // content height plus padding, border & margin
+          const cs = getComputedStyle(el);
+          return el.getBoundingClientRect().height
+            + parseFloat(cs.marginTop)
+            + parseFloat(cs.marginBottom)
+        })
       }
       return this.style('height', addPx(value))
     }
@@ -949,6 +974,7 @@ var zest = (function () {
     Object.assign(MicroDom.prototype, {
       style,
       height,
+      width,
       innerHeight,
       innerWidth,
       outerHeight,
@@ -1220,7 +1246,7 @@ var zest = (function () {
             'overflow',
             'transition-duration', 'transition-property',
           ];
-          propsRemove.each((prop) => {
+          propsRemove.forEach((prop) => {
             el.style.removeProperty(prop);
           });
           if (typeof onComplete === 'function') {
@@ -1251,7 +1277,7 @@ var zest = (function () {
             'transition-duration', 'transition-property',
           ];
           el.style.display = 'none';
-          propsRemove.each((prop) => {
+          propsRemove.forEach((prop) => {
             el.style.removeProperty(prop);
           });
           if (typeof onComplete === 'function') {
@@ -1476,6 +1502,13 @@ var zest = (function () {
         }
       }
       return this
+    }
+    serialize() {
+      if (this.length === 0) {
+        return ''
+      }
+      const searchParams = new URLSearchParams(new FormData(this[0]));
+      return searchParams.toString();
     }
     text(text) {
       if (typeof text === 'undefined') {

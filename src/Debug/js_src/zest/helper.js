@@ -213,14 +213,14 @@ export const type = function (val) {
   if (val === null || val === undefined) {
     return val + ''
   }
-  const class2type = {}
   if (typeof val !== 'object' && typeof val !== 'function') {
     return typeof val
   }
-  'Boolean Number String Function Array Date RegExp Object Error Symbol'
-    .split(' ')
-    .forEach((name) => {
-      class2type[`[object ${name}]`] = name.toLowerCase()
-    })
-  return class2type[ toString.call(val) ] || 'object'
+  if (val instanceof Element) {
+    return 'element'
+  }
+  if (val instanceof Node) {
+    return 'node'
+  }
+  return toString.call(val).match(/^\[object (\w+)\]$/)[1].toLowerCase()
 }

@@ -1189,7 +1189,10 @@ var phpDebugConsole = (function (exports, $) {
       '</button>');
   }
 
-  function open$2 () {
+  function open$2 (e) {
+    if (e) {
+      $root$2 = $(e.target).closest('.debug-drawer');
+    }
     $root$2.addClass('debug-drawer-open');
     $root$2.debugEnhance();
     setHeight(); // makes sure height within min/max
@@ -1199,7 +1202,10 @@ var phpDebugConsole = (function (exports, $) {
     }
   }
 
-  function close$2 () {
+  function close$2 (e) {
+    if (e) {
+      $root$2 = $(e.target).closest('.debug-drawer');
+    }
     $root$2.removeClass('debug-drawer-open');
     $(window).off('resize', setHeight);
     if (config$6.get('persistDrawer')) {

@@ -1,11 +1,27 @@
 import * as helper from '../helper.js'
 
+// height = as defined by the CSS height propert
+// clientHeight = includes padding / excludes borders, margins, and scrollbars
+// offsetHeight = includes padding and border / excludes margins
+// getBoundingClientRect() = includes padding, border, and (for most browsers) the scrollbar's height if it's rendered
+
 export function extendMicroDom (MicroDom) {
 
   const addPx = function (value) {
     return helper.isNumeric(value)
       ? value + 'px'
       : value
+  }
+
+  const queryHelper = function (microDom, windowProp, elementQuery) {
+    if (microDom.length === 0) {
+      return undefined
+    }
+    const el = microDom[0]
+    if (helper.type(el) === 'window') {
+      return el[windowProp]
+    }
+    return elementQuery(el)
   }
 
   function style ( ...args ) {
@@ -37,53 +53,67 @@ export function extendMicroDom (MicroDom) {
     })
   }
 
-  // "helper" methods
-  // height = as defined by the CSS height propert
-  // clientHeight = includes padding / excludes borders, margins, and scrollbars
-  // offsetHeight = includes padding and border / excludes margins
-  // getBoundingClientRect() = includes padding, border, and (for most browsers) the scrollbar's height if it's rendered
-
   function height (value) {
     if (typeof value === 'undefined') {
-      // return "content" height excluding padding, border, and margin.
-
-      // also works on inline elements
-      const el = this[0]
-      const cs = window.getComputedStyle(el)
-      const paddingY = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom)
-      const borderY = parseFloat(cs.borderTopWidth) + parseFloat(cs.borderBottomWidth)
-      return el.offsetHeight - paddingY - borderY
+      return queryHelper(this, 'innerHeight', function (el) {
+        // return "content" height excluding padding, border, and margin.
+        // also works on inline elements
+        const cs = window.getComputedStyle(el)
+        const paddingY = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom)
+        const borderY = parseFloat(cs.borderTopWidth) + parseFloat(cs.borderBottomWidth)
+        return el.offsetHeight - paddingY - borderY
+      })
     }
     return this.style('height', addPx(value))
   }
 
+  function width (value) {
+    if (typeof value === 'undefined') {
+      return queryHelper(this, 'innerWidth', function (el) {
+        // return "content" height excluding padding, border, and margin.
+        // also works on inline elements
+        const cs = window.getComputedStyle(el)
+        const paddingX = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight)
+        const borderX = parseFloat(cs.borderLeftWidth) + parseFloat(cs.borderRightWidth)
+        return el.offsetWidth - paddingX - borderX
+      })
+    }
+    return this.style('width', addPx(value))
+  }
+
   function innerHeight (value) {
     if (typeof value === 'undefined') {
-      // return content height plus padding (excludes border and margin)
-      return this[0]?.clientHeight
+      return queryHelper(this, 'innerHeight', function (el) {
+        // return content height plus padding (excludes border and margin)
+        return el.clientHeight
+      })
     }
     return this.style('height', addPx(value))
   }
 
   function innerWidth (value) {
     if (typeof value === 'undefined') {
-      return this[0]?.clientWidth
+      return queryHelper(this, 'innerWidth', function (el) {
+        // return content width plus padding (excludes border and margin)
+        return el.clientWidth
+      })
     }
     return this.style('width', addPx(value))
   }
 
   function outerHeight (value, includeMargin = false) {
     if (typeof value === 'undefined') {
-      // content height plus padding and border
-      if (!includeMargin) {
-        return this[0]?.offsetHeight
-      }
-      // content height plus padding, border & margin
-      const el = this[0]
-      const cs = getComputedStyle(el)
-      return el.getBoundingClientRect().height
-        + parseFloat(cs.marginTop)
-        + parseFloat(cs.marginBottom)
+      return queryHelper(this, 'innerHeight', function (el) {
+        if (!includeMargin) {
+          // content height plus padding and border
+          return el.offsetHeight
+        }
+        // content height plus padding, border & margin
+        const cs = getComputedStyle(el)
+        return el.getBoundingClientRect().height
+          + parseFloat(cs.marginTop)
+          + parseFloat(cs.marginBottom)
+      })
     }
     return this.style('height', addPx(value))
   }
@@ -91,6 +121,7 @@ export function extendMicroDom (MicroDom) {
   Object.assign(MicroDom.prototype, {
     style,
     height,
+    width,
     innerHeight,
     innerWidth,
     outerHeight,

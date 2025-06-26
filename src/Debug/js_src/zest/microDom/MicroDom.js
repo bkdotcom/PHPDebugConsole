@@ -197,6 +197,13 @@ export default class MicroDom extends Array {
     }
     return this
   }
+  serialize() {
+    if (this.length === 0) {
+      return ''
+    }
+    const searchParams = new URLSearchParams(new FormData(this[0]))
+    return searchParams.toString();
+  }
   text(text) {
     if (typeof text === 'undefined') {
       return this.length > 0

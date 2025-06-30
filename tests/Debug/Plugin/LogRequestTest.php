@@ -292,118 +292,118 @@ class LogRequestTest extends DebugTestFramework
         $logReqRes = $this->debug->getPlugin('logRequest');
         $logReqRes->logRequest();
 
-        self::assertLogEntries(
+        $expect = array(
             array(
-                array(
-                    'method' => 'table',
-                    'args' => array(
-                        array(
+                'method' => 'table',
+                'args' => array(
+                    array(
+                        'Authorization' => array(
+                            'value' => 'Basic █████████ (base64\'d fred:█████)',
+                        ),
+                        'X-Test' => array(
+                            'value' => array(
+                                'attribs' => array(
+                                    'class' => array('text-left'),
+                                ),
+                                'brief' => false,
+                                'debug' => Abstracter::ABSTRACTION,
+                                // 'strlen' => 3,
+                                // 'strlenValue' => 3,
+                                'type' => Type::TYPE_STRING,
+                                'typeMore' => Type::TYPE_STRING_NUMERIC,
+                                'value' => '123',
+                            ),
+                        ),
+                    ),
+                ),
+                'meta' => array(
+                    'caption' => 'request headers',
+                    'channel' => 'request-response',
+                    'sortable' => true,
+                    'tableInfo' => array(
+                        'class' => null,
+                        'columns' => array(
+                            array(
+                                'key' => 'value',
+                            ),
+                        ),
+                        'haveObjRow' => false,
+                        'indexLabel' => null,
+                        'rows' => array(
                             'Authorization' => array(
-                                'value' => 'Basic █████████ (base64\'d fred:█████)',
+                                'isScalar' => true,
                             ),
                             'X-Test' => array(
-                                'value' => array(
-                                    'attribs' => array(
-                                        'class' => array('text-left'),
-                                    ),
-                                    'brief' => false,
-                                    'debug' => Abstracter::ABSTRACTION,
-                                    // 'strlen' => 3,
-                                    // 'strlenValue' => 3,
-                                    'type' => Type::TYPE_STRING,
-                                    'typeMore' => Type::TYPE_STRING_NUMERIC,
-                                    'value' => '123',
-                                ),
+                                'isScalar' => true,
                             ),
                         ),
-                    ),
-                    'meta' => array(
-                        'caption' => 'request headers',
-                        'channel' => 'request-response',
-                        'sortable' => true,
-                        'tableInfo' => array(
-                            'class' => null,
-                            'columns' => array(
-                                array(
-                                    'key' => 'value',
-                                ),
-                            ),
-                            'haveObjRow' => false,
-                            'indexLabel' => null,
-                            'rows' => array(
-                                'Authorization' => array(
-                                    'isScalar' => true,
-                                ),
-                                'X-Test' => array(
-                                    'isScalar' => true,
-                                ),
-                            ),
-                            'summary' => '',
-                        ),
-
-                    ),
-                ),
-                array(
-                    'method' => 'table',
-                    'args' => array(
-                        array(
-                            'SESSIONID' => array(
-                                'value' => array(
-                                    'attribs' => array(
-                                        'class' => array('text-left'),
-                                    ),
-                                    'brief' => false,
-                                    'debug' => Abstracter::ABSTRACTION,
-                                    // 'strlen' => 3,
-                                    // 'strlenValue' => 3,
-                                    'type' => Type::TYPE_STRING,
-                                    'typeMore' => Type::TYPE_STRING_NUMERIC,
-                                    'value' => '123',
-                                ),
-                            ),
-                        ),
-                    ),
-                    'meta' => array(
-                        'caption' => '$_COOKIE',
-                        'channel' => 'request-response',
-                        'redact' => true,
-                        'sortable' => true,
-                        'tableInfo' => array(
-                            'class' => null,
-                            'columns' => array(
-                                array(
-                                    'key' => 'value',
-                                ),
-                            ),
-                            'haveObjRow' => false,
-                            'indexLabel' => null,
-                            'rows' => array(
-                                'SESSIONID' => array(
-                                    'isScalar' => true,
-                                ),
-                            ),
-                            'summary' => '',
-                        ),
-                    ),
-                ),
-                array(
-                    'method' => 'log',
-                    'args' => array('$_FILES', array(
-                        'foo' => array(
-                            'error' => UPLOAD_ERR_OK,
-                            'name' => 'logo.png',
-                            'size' => \filesize(TEST_DIR . '/assets/logo.png'),
-                            'tmp_name' => TEST_DIR . '/assets/logo.png',
-                            'type' => 'image/png',
-                        ),
-                    )),
-                    'meta' => array(
-                        'channel' => 'request-response',
+                        'summary' => '',
                     ),
                 ),
             ),
-            $this->helper->deObjectifyData(\array_slice($this->debug->data->get('log'), 1))
+            array(
+                'method' => 'table',
+                'args' => array(
+                    array(
+                        'SESSIONID' => array(
+                            'value' => array(
+                                'attribs' => array(
+                                    'class' => array('text-left'),
+                                ),
+                                'brief' => false,
+                                'debug' => Abstracter::ABSTRACTION,
+                                // 'strlen' => 3,
+                                // 'strlenValue' => 3,
+                                'type' => Type::TYPE_STRING,
+                                'typeMore' => Type::TYPE_STRING_NUMERIC,
+                                'value' => '123',
+                            ),
+                        ),
+                    ),
+                ),
+                'meta' => array(
+                    'caption' => '$_COOKIE',
+                    'channel' => 'request-response',
+                    'redact' => true,
+                    'sortable' => true,
+                    'tableInfo' => array(
+                        'class' => null,
+                        'columns' => array(
+                            array(
+                                'key' => 'value',
+                            ),
+                        ),
+                        'haveObjRow' => false,
+                        'indexLabel' => null,
+                        'rows' => array(
+                            'SESSIONID' => array(
+                                'isScalar' => true,
+                            ),
+                        ),
+                        'summary' => '',
+                    ),
+                ),
+            ),
+            array(
+                'method' => 'log',
+                'args' => array('$_FILES', array(
+                    'foo' => array(
+                        'error' => UPLOAD_ERR_OK,
+                        'name' => 'logo.png',
+                        'size' => \filesize(TEST_DIR . '/assets/logo.png'),
+                        'tmp_name' => TEST_DIR . '/assets/logo.png',
+                        'type' => 'image/png',
+                    ),
+                )),
+                'meta' => array(
+                    'channel' => 'request-response',
+                ),
+            ),
         );
+        $actual = $this->helper->deObjectifyData(\array_slice($this->debug->data->get('log'), 1));
+        // \bdk\Debug::varDump('expect', $expect);
+        // \bdk\Debug::varDump('actual', $actual);
+        self::assertLogEntries($expect, $actual);
     }
 
     public function testPostNoBody()

@@ -154,6 +154,13 @@ class DebugTestFramework extends DOMTestCase
 
     public static function setUpBeforeClass(): void
     {
+        if (PHP_VERSION_ID < 50500) {
+            \fwrite(STDERR, \sprintf(
+                'setUpBeforeClass: %s' . "\n",
+                \get_called_class()
+            ));
+        }
+
         self::$errorHandlerPrev = \set_error_handler(static function ($errno, $errstr, $errfile, $errline) {
             $dirVendor = \realpath(__DIR__ . '/../../vendor');
             if (
@@ -541,6 +548,9 @@ class DebugTestFramework extends DOMTestCase
                 if (self::$allowError) {
                     $error['continueToNormal'] = false;
                     return;
+                }
+                if ($error->isFatal()) {
+                    echo $error['message'] . ' @ ' . $error['file'] . ':' . $error['line'];
                 }
                 // throw new \PHPUnit\Framework\Exception($error['message'] . ' @ ' . $error['file'] . ':' . $error['line'], 500);
                 $error['throw'] = true;

@@ -312,7 +312,7 @@ class StringUtil
             $flags |= JSON_UNESCAPED_UNICODE;
         }
         $decoded = \json_decode($json);
-        if (\json_last_error() === JSON_ERROR_INVALID_PROPERTY_NAME) {
+        if (\defined('JSON_ERROR_INVALID_PROPERTY_NAME') && \json_last_error() === JSON_ERROR_INVALID_PROPERTY_NAME) {
             $decoded = \json_decode($json, true);
         }
         return \json_last_error() === JSON_ERROR_NONE

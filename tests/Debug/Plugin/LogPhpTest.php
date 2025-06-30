@@ -236,7 +236,7 @@ class LogPhpTest extends DebugTestFramework
             return $logEntry->export();
         }, $log);
         // echo 'log = ' . \json_encode($log, JSON_PRETTY_PRINT) . "\n";
-        $expect =  array(
+        $expect = array(
             array(
                 'method' => 'warn',
                 'args' => array(
@@ -284,7 +284,7 @@ class LogPhpTest extends DebugTestFramework
         $log = \array_map(static function (LogEntry $logEntry) {
             return $logEntry->export();
         }, $log);
-        $expect =  array(
+        $expect = array(
             array(
                 'method' => 'warn',
                 'args' => array(
@@ -359,7 +359,7 @@ class LogPhpTest extends DebugTestFramework
         $log = \array_map(static function (LogEntry $logEntry) {
             return $logEntry->export();
         }, $log);
-        $expect =  array(
+        $expect = array(
             array(
                 'method' => 'warn',
                 'args' => array(

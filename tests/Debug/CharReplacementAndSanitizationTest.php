@@ -161,10 +161,10 @@ class CharReplacementAndSanitizationTest extends DebugTestFramework
                                     array(
                                         'cfgFlags' => 29360127,
                                         'debugMethod' => 'log',
-                                        'interfacesCollapse' => array(),
-                                        'isLazy' => false,
-                                        'isMaxDepth' => false,
-                                        'isRecursion' => false,
+                                        // 'interfacesCollapse' => array(), // same as inherit value
+                                        // 'isLazy' => false, // same as inherit value
+                                        // 'isMaxDepth' => false, // same as inherit value
+                                        // 'isRecursion' => false, // same as inherit value
                                         'properties' => array(
                                             'array' => array(
                                                 'value' => array(
@@ -214,7 +214,6 @@ class CharReplacementAndSanitizationTest extends DebugTestFramework
                                         ),
                                         'debug' => Abstracter::ABSTRACTION,
                                         'inheritsFrom' => 'bdk\Test\Debug\Fixture\Con𝘧usableIdenti𝘧iers',
-                                        'isLazy' => false,
                                         'type' => Type::TYPE_OBJECT,
                                         // 'typeMore' => null,
                                     ), // abstraction

@@ -189,7 +189,7 @@ class HtmlString
             $this->valDumper->optionSet('visualWhiteSpace', false);
             $this->valDumper->optionSet('postDump', $this->buildPrettifiedPostDump($abs));
         }
-        $val = $this->doDump((string) $abs);
+        $val = $this->doDump($abs);
         $strLenDiff = $abs['strlen'] - $abs['strlenValue'];
         if ($strLenDiff) {
             $val .= '<span class="maxlen">&hellip; ' . $this->debug->i18n->trans('string.more-bytes', array('bytes' => $strLenDiff)) . '</span>';
@@ -285,6 +285,7 @@ class HtmlString
     private function doDump($val)
     {
         $opts = $this->valDumper->optionGet();
+        $val = (string) $val;
         if ($opts['sanitize']) {
             $val = \htmlspecialchars($val);
         }

@@ -167,7 +167,7 @@ function httpdStart($cfg = array())
  */
 function httpdTest($httpdCfg = array())
 {
-    $response =  \file_get_contents('http://127.0.0.1:8080/echo?initServerTest');
+    $response = \file_get_contents('http://127.0.0.1:8080/echo?initServerTest');
     echo "\e[38;5;22;48;5;121;1;4m" . 'Http Test response' . "\e[0m" . "\n" . $response . "\n\n";
     echo outputHttpErrorLog($httpdCfg);
 }

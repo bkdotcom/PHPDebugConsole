@@ -70,7 +70,7 @@ class Statement extends AbstractStatementMiddleware
     public function execute($params = null): ResultInterface
     {
         $info = new StatementInfo($this->sql, $this->params, $this->types);
-        $result  = parent::execute();
+        $result = parent::execute();
 
         $exception = null;
         $result = false;

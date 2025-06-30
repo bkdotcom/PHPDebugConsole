@@ -218,7 +218,7 @@ class ConfigNormalizer
             return $path;
         }
         $pathNew = $this->debug->arrayUtil->searchRecursive($path[0], $this->configKeys, true);
-        $pathNew =  $pathNew
+        $pathNew = $pathNew
             ? $pathNew
             : \array_merge(['debug'], $path);
         if (\end($pathNew) !== \end($path)) {

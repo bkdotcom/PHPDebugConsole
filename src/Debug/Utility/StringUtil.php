@@ -223,7 +223,8 @@ class StringUtil
         if (\function_exists('json_validate')) {
             return \json_validate($val, JSON_INVALID_UTF8_IGNORE);
         }
-        \json_decode($val); // @codeCoverageIgnore
+        // note: it's possible that decoding as array will succeed, but decoding as object will fail with JSON_ERROR_INVALID_PROPERTY_NAME
+        \json_decode($val, true); // @codeCoverageIgnore
         return \json_last_error() === JSON_ERROR_NONE; // @codeCoverageIgnore
     }
 
@@ -311,6 +312,9 @@ class StringUtil
             $flags |= JSON_UNESCAPED_UNICODE;
         }
         $decoded = \json_decode($json);
+        if (\json_last_error() === JSON_ERROR_INVALID_PROPERTY_NAME) {
+            $decoded = \json_decode($json, true);
+        }
         return \json_last_error() === JSON_ERROR_NONE
             ? \json_encode($decoded, $flags)
             : false;

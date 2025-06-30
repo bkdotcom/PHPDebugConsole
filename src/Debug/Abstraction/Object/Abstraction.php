@@ -14,6 +14,12 @@ namespace bdk\Debug\Abstraction\Object;
 
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction as BaseAbstraction;
+use bdk\Debug\Abstraction\AbstractObject;
+use bdk\Debug\Abstraction\Object\Constants;
+use bdk\Debug\Abstraction\Object\Definition;
+use bdk\Debug\Abstraction\Object\MethodParams;
+use bdk\Debug\Abstraction\Object\Methods;
+use bdk\Debug\Abstraction\Object\Properties;
 use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Utility\ArrayUtil;
 use bdk\PubSub\ValueStore;
@@ -80,9 +86,8 @@ class Abstraction extends BaseAbstraction
      */
     public function __unserialize(array $data)
     {
-        $this->inherited = isset($data['inherited'])
-            ? $data['inherited']
-            : new ValueStore();
+        $data = $this->unserializeDataPrep($data);
+        $this->inherited = $data['inherited'];
         unset($data['inherited']);
         $this->values = $data;
     }
@@ -209,9 +214,40 @@ class Abstraction extends BaseAbstraction
     #[\ReturnTypeWillChange]
     public function &offsetGet($key)
     {
+        if ($key === 'inherited') {
+            return $this->inherited;
+        }
         // update our local and return it as a reference
         $this->values[$key] = $this->getCombinedValue($key);
         return $this->values[$key];
+    }
+
+    /**
+     * Make sure property and method info contains expected keys
+     *
+     * @param \ArrayAccess $data Either instance data or inherited data
+     *
+     * @return array
+     */
+    public static function unserializeBuildValues($data)
+    {
+        $data['constants'] = \array_map(static function (array $info) {
+            return Constants::buildValues($info);
+        }, $data['constants']);
+
+        $data['properties'] = \array_map(static function (array $info) {
+            return Properties::buildValues($info);
+        }, $data['properties']);
+
+        $data['methods'] = \array_map(static function (array $info) {
+            $info = Methods::buildValues($info);
+            $info['params'] = \array_map(static function (array $paramInfo) {
+                return MethodParams::buildValues($paramInfo);
+            }, $info['params']);
+            return $info;
+        }, $data['methods']);
+
+        return $data;
     }
 
     /**
@@ -298,5 +334,53 @@ class Abstraction extends BaseAbstraction
             $sortData['vis'][$name] = \array_search($vis, $sortVisOrder, true);
         }
         return $sortData;
+    }
+
+    /**
+     * Ensure data contains all expected keys
+     *
+     * @param array $data Serialized data
+     *
+     * @return array
+     */
+    private function unserializeDataPrep(array $data)
+    {
+        if (empty($data['definition'])) {
+            // we are instance values
+            $data = AbstractObject::buildValues($data);
+        }
+
+        if (empty($data['className'])) {
+            unset($data['className']);
+        }
+
+        $data['inherited'] = $this->unserializeDataInherited($data);
+
+        return $data;
+    }
+
+    /**
+     * Get inherited ValueStore
+     *
+     * @param array $data Serialized data
+     *
+     * @return ValueStore
+     */
+    private function unserializeDataInherited(array &$data)
+    {
+        if (isset($data['inherited'])) {
+            $inherited = $data['inherited'];
+            unset($data['inherited']);
+            return $this->unserializeBuildValues($inherited);
+        }
+        if (isset($data['classDefinition'])) {
+            // maintain backwards compatibility - v3.1 used 'classDefinition'
+            $inherited = $data['classDefinition'];
+            unset($data['classDefinition']);
+            return $this->unserializeBuildValues($inherited);
+        }
+        // maintain backwards compatibility - v3.0 did not inherit
+        $data = $this->unserializeBuildValues($data);
+        return new ValueStore(AbstractObject::buildValues(Definition::buildValues()));
     }
 }

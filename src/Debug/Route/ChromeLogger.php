@@ -104,7 +104,7 @@ class ChromeLogger extends AbstractRoute
         $this->dumper->crateRaw = false;
 
         $this->data = $this->debug->data->get();
-        $this->data['log']  = \array_values($this->data['log']);
+        $this->data['log'] = \array_values($this->data['log']);
         $this->buildJsonData();
         $this->max = $this->getMaxLength();
         $encoded = $this->encode($this->jsonData);

@@ -201,10 +201,10 @@ class WordPressTest extends DebugTestFramework
                         'debug' => Abstracter::ABSTRACTION,
                         'debugMethod' => 'log',
                         'inheritsFrom' => 'stdClass',
-                        'interfacesCollapse' => array(),
-                        'isLazy' => false,
-                        'isMaxDepth' => false,
-                        'isRecursion' => false,
+                        // 'interfacesCollapse' => array(),
+                        // 'isLazy' => false,
+                        // 'isMaxDepth' => false,
+                        // 'isRecursion' => false,
                         'properties' => array(
                             'post_type' => array(
                                 'attributes' => array(),

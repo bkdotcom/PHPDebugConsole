@@ -151,14 +151,7 @@ class Definition
         if ($this->default) {
             return $this->default;
         }
-        $values = self::buildValues(array(
-            'isExcluded' => false,
-            'sectionOrder' => $this->object->getCfg('objectSectionOrder'),
-            'sort' => $this->object->getCfg('objectSort'),
-            'stringified' => null,
-            'traverseValues' => array(),
-            'viaDebugInfo' => false,
-        ));
+        $values = $this->object->buildValues(static::buildValues());
         $classValueStore = new ValueStore($values);
         $this->default = $classValueStore;
         $this->debug->data->set([

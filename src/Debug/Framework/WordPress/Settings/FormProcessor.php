@@ -118,7 +118,7 @@ class FormProcessor
     /**
      * Split name into parts
      *
-     * fruits[tropical][banana]  => ['fruits', 'tropical', 'banana']
+     * fruits[tropical][banana] => ['fruits', 'tropical', 'banana']
      *
      * @param array $attribs Control definition or attributes
      *

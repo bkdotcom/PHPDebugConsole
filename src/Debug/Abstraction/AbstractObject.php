@@ -175,7 +175,7 @@ class AbstractObject extends AbstractComponent
         'cfgFlags' => 0, // will default to everything sans "brief" & 'virtualValueCollect'
         'className' => '',
         'debugMethod' => '',
-        'interfacesCollapse' => array(),  // cfg.interfacesCollapse
+        'interfacesCollapse' => array(),  // cfg.interfacesCollapse (intersected with reflector::getInterfaceNames())
         'isExcluded' => false,  // don't exclude if we're debugging directly
         'isLazy' => false,
         'isMaxDepth' => false,
@@ -211,6 +211,9 @@ class AbstractObject extends AbstractComponent
             $subscriber = new Subscriber($this);
             $abstracter->debug->eventManager->addSubscriberInterface($subscriber);
         }
+
+        self::$values['sectionOrder'] = $abstracter->getCfg('objectSectionOrder');
+        self::$values['sort'] = $abstracter->getCfg('objectSort');
     }
 
     /**
@@ -326,8 +329,7 @@ class AbstractObject extends AbstractComponent
      */
     protected function getAbstractionValues(ReflectionClass $reflector, $obj, $method = null, array $hist = array())
     {
-        return \array_merge(
-            self::$values,
+        return static::buildValues(\array_merge(
             array(
                 'cfgFlags' => $this->getCfgFlags($reflector),
                 'className' => $this->helper->getClassName($reflector),
@@ -351,7 +353,7 @@ class AbstractObject extends AbstractComponent
                 'propertyOverrideValues' => array(),
                 'reflector' => $reflector,
             )
-        );
+        ));
     }
 
     /**

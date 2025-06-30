@@ -17,8 +17,6 @@ use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
 use bdk\Debug\Abstraction\Object\Abstraction as ObjectAbstraction;
-use bdk\Debug\Abstraction\Object\Methods;
-use bdk\Debug\Abstraction\Object\Properties;
 use bdk\Debug\Abstraction\Type;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Utility\Php;
@@ -67,18 +65,20 @@ class SerializeLog
     }
 
     /**
-     * Serialize log for emailing
+     * Serialize log
      *
-     * @param Debug $debug debug instance
+     * @param array|Debug $data debug instance
      *
      * @return string
      */
-    public static function serialize(Debug $debug)
+    public static function serialize($data)
     {
-        $data = \array_merge(static::serializeGetData($debug), array(
-            'config' => static::serializeGetConfig($debug),
-            'version' => Debug::VERSION,
-        ));
+        if ($data instanceof Debug) {
+            $data = \array_merge(static::serializeGetData($data), array(
+                'config' => static::serializeGetConfig($data),
+                'version' => Debug::VERSION,
+            ));
+        }
         $str = \serialize($data);
         if (\function_exists('gzdeflate')) {
             $str = \gzdeflate($str);
@@ -225,22 +225,16 @@ class SerializeLog
     private static function importLegacyObj(array $absValues)
     {
         $absValues['properties'] = self::importLegacy($absValues['properties']);
-        $absValues = AbstractObject::buildValues($absValues);
-        /**
-         * @var array<string,array<string,mixed>> $absValues['methods']
-         * @var array<string,mixed> $meth
-         */
-        foreach ($absValues['methods'] as $name => $info) {
-            $absValues['methods'][$name] = Methods::buildValues($info);
-        }
-        /**
-         * @var array<string,array<string,mixed>> $absValues['properties']
-         * @var array<string,mixed> $prop
-         */
-        foreach ($absValues['properties'] as $name => $info) {
-            $absValues['properties'][$name] = Properties::buildValues($info);
-        }
         $absValues = self::importLegacyObjConvert($absValues);
+        $absValues = AbstractObject::buildValues($absValues);
+        $absValues = ObjectAbstraction::unserializeBuildValues($absValues);
+
+        $absValues['methods'] = \array_map(static function (array $methodInfo) {
+            $methodInfo['phpDoc']['desc'] = $methodInfo['phpDoc']['description'];
+            unset($methodInfo['phpDoc']['description']);
+            return $methodInfo;
+        }, $absValues['methods']);
+
         $valueStore = self::$debug->abstracter->abstractObject->definition->getValueStoreDefault();
         return new ObjectAbstraction($valueStore, $absValues);
     }

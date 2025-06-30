@@ -57,6 +57,7 @@ class Route extends AbstractComponent implements SubscriberInterface
     {
         $interface = $this->debug->rootInstance->getInterface();
         if (\strpos($interface, 'ajax') !== false) {
+            // old-school AJAX request: non-standard `X-Requested-With: XMLHttpRequest` request header present
             return $this->debug->getCfg('routeNonHtml', Debug::CONFIG_DEBUG);
         }
         if ($interface === 'http') {

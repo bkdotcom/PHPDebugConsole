@@ -61,7 +61,7 @@ class Profile
         \uasort($this->data, static function ($valA, $valB) {
             return $valA['totalTime'] < $valB['totalTime'] ? 1 : -1;
         });
-        $data =  \array_map(static function ($row) {
+        $data = \array_map(static function ($row) {
             $row['totalTime'] = \round($row['totalTime'], 6);
             $row['ownTime'] = \round($row['ownTime'], 6);
             return $row;

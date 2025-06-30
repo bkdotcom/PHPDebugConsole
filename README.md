@@ -31,7 +31,7 @@ Log, Debug, Inspect
   * errors (even fatal) are captured / logged / displayed
   * optionally send error notices via email (throttled as to not to send out a flood of emails)
 * password protected
-* send debug log via email
+* send debug log via email / Discord / Slack / MS Teams
 
 ![Screenshot of PHPDebugConsole's Output](http://www.bradkent.com/images/php/screenshot_1.4.png)
 
@@ -59,7 +59,7 @@ See <http://www.bradkent.com/php/debug>
 
 ## PSR-3 Usage
 
-PHPDebugConsole includes a [PSR-3](https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-3-logger-interface.md) implementation (which can be used as a [monolog](https://github.com/Seldaek/monolog) PSR handler).  If you're using a application or library that uses these standards, drop PHPDebugConsole right in.
+PHPDebugConsole includes a [PSR-3](https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-3-logger-interface.md) implementation (which can be used as a [monolog](https://github.com/Seldaek/monolog) PSR handler).  If you're using an application or library that uses these standards, drop PHPDebugConsole right in.
 
 (this library includes neither psr/log or monolog/monolog.  Include separately if needed.)
 

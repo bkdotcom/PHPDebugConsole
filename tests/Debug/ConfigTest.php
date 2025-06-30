@@ -384,7 +384,7 @@ class ConfigTest extends DebugTestFramework
         $this->debug->setCfg('onMiddleware', function () {
         });
         $this->assertCount(1, $this->debug->eventManager->getSubscribers(Debug::EVENT_MIDDLEWARE));
-        $callable =  function () {};
+        $callable = function () {};
         $this->debug->setCfg('onMiddleware', $callable);
         $this->assertSame(array($callable), $this->debug->eventManager->getSubscribers(Debug::EVENT_MIDDLEWARE));
     }

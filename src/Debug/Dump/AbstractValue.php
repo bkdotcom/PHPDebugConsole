@@ -393,7 +393,7 @@ abstract class AbstractValue extends AbstractComponent
             $parts['classname'] = $val[0];
             $parts['operator'] = '::';
             $parts['name'] = $val[1];
-        } elseif (\preg_match('/^(.+)(::|->)(.+)$/', $val, $matches)) {
+        } elseif (\preg_match('/^(.+)(::|->)(.+)$/', (string) $val, $matches)) {
             $parts['classname'] = $matches[1];
             $parts['operator'] = $matches[2];
             $parts['name'] = $matches[3];

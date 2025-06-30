@@ -76,15 +76,15 @@ class SerializeLogTest extends DebugTestFramework
             'requestId' => $debug->data->get('requestId'),
             'version' => Debug::VERSION,
         );
+        $actual = $this->helper->deObjectifyData($unserialized);
+
         self::assertSame(array(
             "\x00default\x00",
             'bdk\\Test\\Debug\\Fixture\\TestObj',
             'stdClass',
         ), \array_keys($unserialized['classDefinitions']));
-        self::assertEquals(
-            $expect,
-            $this->helper->deObjectifyData($unserialized)
-        );
+
+        self::assertEquals($expect, $actual);
         $debug = SerializeLog::import($unserialized);
         $objAbs = $debug->data->get('logSummary.0.1.args.0');
         self::assertInstanceOf('bdk\\Debug\\Abstraction\\Abstraction', $objAbs);
@@ -98,6 +98,39 @@ class SerializeLogTest extends DebugTestFramework
             $expect,
             $this->helper->deObjectifyData($unserialized)
         );
+    }
+
+    /**
+     * Simply test that importing and outputting log serialized with older versions of PHPDebugConsole does not throw an error.
+     *
+     * @doesNotPerformAssertions
+     *
+     * @dataProvider BackwardsCompatibilityDataProvider
+     */
+    public function testBackwardsImportCompatibility($dataFilepath)
+    {
+        $serialized = \file_get_contents($dataFilepath);
+        $data = SerializeLog::unserialize($serialized);
+        $debug = SerializeLog::import($data);
+        $debug->setCfg(array(
+            'output' => true,
+            'route' => 'html',
+        ));
+        $debug->output();
+    }
+
+    public static function BackwardsCompatibilityDataProvider()
+    {
+        $dataDir = TEST_DIR . '/Debug/data/serialized/';
+        $dataFiles = \glob($dataDir . '*.txt');
+        $tests = array();
+        foreach ($dataFiles as $filepath) {
+            $basename = \basename($filepath, '.txt');
+            $tests[$basename] = array(
+                $filepath,
+            );
+        }
+        return $tests;
     }
 
     public function testSerialieNotBase64()
@@ -391,7 +424,7 @@ EOD;
                     'methods',
                     'phpDoc',
                 ),
-                'sort' => '',
+                'sort' => 'inheritance visibility name',
                 'keys' => array(),
                 'typeMore' => null,
             ),

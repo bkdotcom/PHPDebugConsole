@@ -30,7 +30,7 @@ function Zest (mixed, more) {
   // we're a string... are we html/text or a selector?
   if (mixed.includes('<')) {
     const elements = helper.createElements(mixed)
-    const ret =  new MicroDom( ...elements )
+    const ret = new MicroDom( ...elements )
     if (typeof more === 'object') {
       ret.attr(more)
     }

@@ -130,7 +130,7 @@ class HtmlStringBinary
             $lis[] = $dumped
                 ? '<li class="t_string">' . $dumped . '</li>'
                 : '<li>' . $this->debug->i18n->trans('string.binary-not-collected') . '</li>';
-            $wrapped =  '<span class="t_keyword">string</span><span class="text-muted">(binary)</span>' . "\n"
+            $wrapped = '<span class="t_keyword">string</span><span class="text-muted">(binary)</span>' . "\n"
                 . $this->debug->html->buildTag(
                     'ul',
                     \array_filter(array(

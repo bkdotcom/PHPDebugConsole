@@ -39,7 +39,7 @@ class UtilityTest extends TestCase
         // callable
         $callable = static function (Container $container) {
             $container['thing'] = 'stick';
-            $container['service']  = static function () {
+            $container['service'] = static function () {
                 return new \stdClass();
             };
         };

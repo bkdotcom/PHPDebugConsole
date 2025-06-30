@@ -148,7 +148,7 @@ class Methods extends AbstractSection
             'data-attributes' => $info['attributes'],
             'data-chars' => $this->valDumper->findChars(\json_encode($info['attributes'], JSON_UNESCAPED_UNICODE)),
         );
-        $attribs =  \array_intersect_key($attribs, \array_filter(array(
+        $attribs = \array_intersect_key($attribs, \array_filter(array(
             'class' => true,
             'data-attributes' => $this->opts['paramAttributeOutput'] && $info['attributes'],
             'data-chars' => $this->opts['paramAttributeOutput'],

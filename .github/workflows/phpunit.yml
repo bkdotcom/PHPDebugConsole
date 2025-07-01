@@ -2,7 +2,7 @@ name: PHPUnit
 on: [push, pull_request]
 jobs:
   run:
-    runs-on: ${{ matrix.php-version == '5.4' && 'windows-latest' || matrix.operating-system }}
+    runs-on: ${{ matrix.php-version == '5.4' && 'macos-latest' || matrix.operating-system }}
     strategy:
       matrix:
         operating-system: [ubuntu-latest]

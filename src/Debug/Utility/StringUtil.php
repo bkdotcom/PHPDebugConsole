@@ -311,6 +311,7 @@ class StringUtil
             // json doesn't appear to contain encoded unicode
             $flags |= JSON_UNESCAPED_UNICODE;
         }
+        // attempt to decode as object first
         $decoded = \json_decode($json);
         if (\defined('JSON_ERROR_INVALID_PROPERTY_NAME') && \json_last_error() === JSON_ERROR_INVALID_PROPERTY_NAME) {
             $decoded = \json_decode($json, true);

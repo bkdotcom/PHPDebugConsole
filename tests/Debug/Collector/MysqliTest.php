@@ -38,6 +38,7 @@ class MysqliTest extends DebugTestFramework
 
     public static function setUpBeforeClass(): void
     {
+        parent::setUpBeforeClass();
         $createDb = <<<'EOD'
         CREATE DATABASE IF NOT EXISTS `test`
         /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci */
@@ -91,6 +92,7 @@ EOD;
 
     public static function tearDownAfterClass(): void
     {
+        parent::tearDownAfterClass();
         if (self::$client) {
             $debug = Debug::getInstance();
             $debug->getChannel('MySqli')

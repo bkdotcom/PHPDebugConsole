@@ -18,6 +18,7 @@ class HooksTest extends DebugTestFramework
 
     public static function setUpBeforeClass(): void
     {
+        parent::setUpBeforeClass();
         if (!\function_exists('get_option')) {
             require_once __DIR__ . '/mock_wordpress.php';
         }

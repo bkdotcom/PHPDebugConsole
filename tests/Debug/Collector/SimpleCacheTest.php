@@ -20,12 +20,14 @@ class SimpleCacheTest extends DebugTestFramework
 
     public static function setUpBeforeClass(): void
     {
+        parent::setUpBeforeClass();
         $simpleCache = new SimpleCacheMock();
         self::$cache = new SimpleCache($simpleCache);
     }
 
     public static function tearDownAfterClass(): void
     {
+        parent::tearDownAfterClass();
         $debug = \bdk\Debug::getInstance();
         $debug->getChannel('SimpleCache')
             ->eventManager->unsubscribe(Debug::EVENT_OUTPUT, array(self::$cache, 'onDebugOutput'));

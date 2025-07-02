@@ -3,8 +3,10 @@
 namespace bdk\Test\Debug\Collector;
 
 use bdk\Debug\Collector\SwiftMailerLogger;
-use bdk\PubSub\Manager as EventManager;
+use bdk\ErrorHandler;
+use bdk\ErrorHandler\Error;
 use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
+use bdk\PubSub\Manager as EventManager;
 use bdk\Test\Debug\DebugTestFramework;
 use Swift_Events_CommandEvent;
 use Swift_Events_ResponseEvent;
@@ -30,8 +32,9 @@ class SwiftMailerLoggerTest extends DebugTestFramework
 
     public static function setUpBeforeClass(): void
     {
+        // parent::setUpBeforeClass();
         $debug = \bdk\Debug::getInstance();
-        $debug->errorHandler->eventManager->subscribe(\bdk\ErrorHandler::EVENT_ERROR, static function (\bdk\ErrorHandler\Error $error) {
+        $debug->errorHandler->eventManager->subscribe(ErrorHandler::EVENT_ERROR, static function (Error $error) {
             if (\strpos($error['file'], 'vendor/swiftmailer') !== false) {
                 // \bdk\Debug::varDump('Error', $error->getValues());
                 // $error->stopPropagation();
@@ -44,6 +47,7 @@ class SwiftMailerLoggerTest extends DebugTestFramework
 
     public static function tearDownAfterClass(): void
     {
+        // parent::tearDownAfterClass();
         $debug = \bdk\Debug::getInstance();
         $shutDownSubscribers = $debug->eventManager->getSubscribers(EventManager::EVENT_PHP_SHUTDOWN);
         foreach ($shutDownSubscribers as $subscriber) {
@@ -84,6 +88,7 @@ class SwiftMailerLoggerTest extends DebugTestFramework
 
     public function testConstruct()
     {
+        self::fwrite(__FUNCTION__, 'start');
         $transport = $this->getTransport();
 
         /*
@@ -99,10 +104,12 @@ class SwiftMailerLoggerTest extends DebugTestFramework
         $mailer->registerPlugin($logger);
 
         self::assertTrue(true);
+        self::fwrite(__FUNCTION__, 'end');
     }
 
     public function testBeforeSendPerformed()
     {
+        self::fwrite(__FUNCTION__, 'start');
         $logger = $this->getLogger();
         $event = new Swift_Events_SendEvent($this->getTransport(), $this->getMessage());
         $logger->beforeSendPerformed($event);
@@ -138,15 +145,18 @@ Content-Transfer-Encoding: quoted-printable
                 ),
             ),
         ]);
+        self::fwrite(__FUNCTION__, 'end');
     }
 
     public function testSendPerformed()
     {
+        self::fwrite(__FUNCTION__, 'start');
         $logger = $this->getLogger();
         $event = new Swift_Events_SendEvent($this->getTransport(), $this->getMessage());
         $logger->sendPerformed($event);
         $this->assertSame(0, $this->debug->rootInstance->getPlugin('methodGroup')->getDepth());
         $this->assertSame('', $logger->dump());
+        self::fwrite(__FUNCTION__, 'end');
     }
 
     /*
@@ -304,5 +314,12 @@ Content-Transfer-Encoding: quoted-printable
         $logger = $this->getLogger();
         $event = new Swift_Events_TransportExceptionEvent($this->getTransport(), new Swift_TransportException('exception messsage'));
         $logger->exceptionThrown($event);
+    }
+
+    private static function fwrite()
+    {
+        if (PHP_VERSION_ID < 50500) {
+            \fwrite(STDERR, implode(' ', \func_get_args()) . "\n");
+        }
     }
 }

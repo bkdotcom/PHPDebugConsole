@@ -41,6 +41,7 @@ class PdoTest extends DebugTestFramework
 
     public static function setUpBeforeClass(): void
     {
+        parent::setUpBeforeClass();
         $createTableSql = <<<'EOD'
         CREATE TABLE IF NOT EXISTS bob (
                 k VARCHAR(255) NOT NULL PRIMARY KEY,
@@ -60,6 +61,7 @@ EOD;
 
     public static function tearDownAfterClass(): void
     {
+        parent::tearDownAfterClass();
         $debug = \bdk\Debug::getInstance();
         $debug->getChannel('PDO')
             ->eventManager->unsubscribe(Debug::EVENT_OUTPUT, array(self::$client, 'onDebugOutput'));

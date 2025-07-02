@@ -28,6 +28,7 @@ class StringTest extends DebugTestFramework
 {
     public static function setUpBeforeClass(): void
     {
+        parent::setUpBeforeClass();
         $debug = Debug::getInstance();
         $htmlString = $debug->getDump('html')->valDumper->string;
         \bdk\Debug\Utility\Reflection::propSet($htmlString, 'lazy', array());

@@ -13,6 +13,7 @@ class AutoloaderTest extends DebugTestFramework
 
     public static function setUpBeforeClass(): void
     {
+        parent::setUpBeforeClass();
         static::$autoloader = new Autoloader();
     }
 

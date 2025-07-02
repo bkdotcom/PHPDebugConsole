@@ -14,6 +14,7 @@ class ServerLogTest extends DebugTestFramework
 {
     public static function setUpBeforeClass(): void
     {
+        parent::setUpBeforeClass();
         try {
             $logDir = TEST_DIR . '/../tmp/log';
             $files = \glob($logDir . '/*.json');

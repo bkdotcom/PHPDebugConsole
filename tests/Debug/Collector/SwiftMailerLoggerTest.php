@@ -88,6 +88,7 @@ class SwiftMailerLoggerTest extends DebugTestFramework
 
     public function testConstruct()
     {
+        self::fwrite(__FUNCTION__, 'start');
         $transport = $this->getTransport();
 
         /*
@@ -103,10 +104,12 @@ class SwiftMailerLoggerTest extends DebugTestFramework
         $mailer->registerPlugin($logger);
 
         self::assertTrue(true);
+        self::fwrite(__FUNCTION__, 'end');
     }
 
     public function testBeforeSendPerformed()
     {
+        self::fwrite(__FUNCTION__, 'start');
         $logger = $this->getLogger();
         $event = new Swift_Events_SendEvent($this->getTransport(), $this->getMessage());
         $logger->beforeSendPerformed($event);
@@ -142,15 +145,18 @@ Content-Transfer-Encoding: quoted-printable
                 ),
             ),
         ]);
+        self::fwrite(__FUNCTION__, 'end');
     }
 
     public function testSendPerformed()
     {
+        self::fwrite(__FUNCTION__, 'start');
         $logger = $this->getLogger();
         $event = new Swift_Events_SendEvent($this->getTransport(), $this->getMessage());
         $logger->sendPerformed($event);
         $this->assertSame(0, $this->debug->rootInstance->getPlugin('methodGroup')->getDepth());
         $this->assertSame('', $logger->dump());
+        self::fwrite(__FUNCTION__, 'end');
     }
 
     /*
@@ -308,5 +314,12 @@ Content-Transfer-Encoding: quoted-printable
         $logger = $this->getLogger();
         $event = new Swift_Events_TransportExceptionEvent($this->getTransport(), new Swift_TransportException('exception messsage'));
         $logger->exceptionThrown($event);
+    }
+
+    private static function fwrite()
+    {
+        if (PHP_VERSION_ID < 50500) {
+            \fwrite(STDERR, implode(' ', \func_get_args()) . "\n");
+        }
     }
 }

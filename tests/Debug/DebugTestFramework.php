@@ -68,12 +68,14 @@ class DebugTestFramework extends DOMTestCase
      */
     public function setUp(): void
     {
+        /*
         if (PHP_VERSION_ID < 50500) {
             \fwrite(STDERR, \sprintf(
                 '  setUp: %s' . "\n",
                 $this->getName()
             ));
         }
+        */
 
         self::$allowError = false;
         self::$obLevels = \ob_get_level();
@@ -161,12 +163,14 @@ class DebugTestFramework extends DOMTestCase
 
     public static function setUpBeforeClass(): void
     {
+        /*
         if (PHP_VERSION_ID < 50500) {
             \fwrite(STDERR, \sprintf(
                 'setUpBeforeClass: %s' . "\n",
                 \get_called_class()
             ));
         }
+        */
 
         self::$errorHandlerPrev = \set_error_handler(static function ($errno, $errstr, $errfile, $errline) {
             $dirVendor = \realpath(__DIR__ . '/../../vendor');
@@ -196,12 +200,14 @@ class DebugTestFramework extends DOMTestCase
 
     public static function tearDownAfterClass(): void
     {
+        /*
         if (PHP_VERSION_ID < 50500) {
             \fwrite(STDERR, \sprintf(
                 'tearDownAfterClass: %s' . "\n",
                 \get_called_class()
             ));
         }
+        */
 
         if (\is_callable(self::$errorHandlerPrev)) {
             \restore_error_handler();

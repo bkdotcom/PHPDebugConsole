@@ -13,29 +13,29 @@ export function init($root)
  */
 export function enhance ($node) {
   // console.log('enhanceArray', $node[0])
-  var $arrayInner = $node.find('> .array-inner')
+  var $inner = $node.find('> .array-inner')
   var isEnhanced = $node.find(' > .t_array-expand').length > 0
   if (isEnhanced) {
     return
   }
-  if (($arrayInner.html() || '').trim().length < 1) {
+  if (($inner.html() || '').trim().length < 1) {
     // empty array -> don't add expand/collapse
     $node.addClass('expanded').find('br').hide()
     return
   }
-  enhanceArrayAddMarkup($node)
+  addMarkup($node)
   $.each(config.iconsArray, function (value, selector) {
     $node.find(selector).prepend(value)
   })
-  $node.debugEnhance(arrayIsExpanded($node) ? 'expand' : 'collapse')
+  $node.debugEnhance(isExpanded($node) ? 'expand' : 'collapse')
 }
 
-function enhanceArrayAddMarkup ($node) {
-  var $arrayInner = $node.find('> .array-inner')
+function addMarkup ($node) {
+  var $inner = $node.find('> .array-inner')
   var $expander
   if ($node.closest('.array-file-tree').length) {
     $node.find('> .t_keyword, > .t_punct').remove()
-    $arrayInner.find('> li > .t_operator, > li > .t_key.t_int').remove()
+    $inner.find('> li > .t_operator, > li > .t_key.t_int').remove()
     $node.prevAll('.t_key').each(function () {
       var $dir = $(this).attr('data-toggle', 'array')
       $node.prepend($dir)
@@ -53,13 +53,13 @@ function enhanceArrayAddMarkup ($node) {
     '</span>')
   // add expand/collapse
   $node.find('> .t_keyword').first()
-    .wrap('<span class="t_array-collapse" data-toggle="array">')
+    .wrap('<span class="t_array-collapse" data-toggle="array"></span>')
     .after('<span class="t_punct">(</span> <i class="fa ' + config.iconsExpand.collapse + '"></i>')
     .parent().next().remove() // remove original '('
   $node.prepend($expander)
 }
 
-function arrayIsExpanded ($node) {
+function isExpanded ($node) {
   var expand = $node.data('expand')
   var numParents = $node.parentsUntil('.m_group', '.t_object, .t_array').length
   var expandDefault = numParents === 0

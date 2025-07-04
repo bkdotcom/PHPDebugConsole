@@ -20,6 +20,7 @@ use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Dump\Html\Helper;
 use bdk\Debug\Dump\Html\Object\Cases;
 use bdk\Debug\Dump\Html\Object\Constants;
+use bdk\Debug\Dump\Html\Object\Enum;
 use bdk\Debug\Dump\Html\Object\ExtendsImplements;
 use bdk\Debug\Dump\Html\Object\Methods;
 use bdk\Debug\Dump\Html\Object\PhpDoc;
@@ -43,6 +44,9 @@ class HtmlObject
 
     /** @var Debug */
     protected $debug;
+
+    /** @var Enum */
+    protected $enum;
 
     /** @var ExtendsImplements */
     protected $extendsImplements;
@@ -80,6 +84,7 @@ class HtmlObject
         $this->html = $html;
         $this->cases = new Cases($valDumper, $helper, $html);
         $this->constants = new Constants($valDumper, $helper, $html);
+        $this->enum = new Enum($valDumper, $helper, $html);
         $this->extendsImplements = new ExtendsImplements($valDumper, $helper, $html);
         $this->methods = new Methods($valDumper, $helper, $html);
         $this->phpDoc = new PhpDoc($valDumper, $helper);
@@ -134,36 +139,12 @@ class HtmlObject
     {
         // remove <dt>'s that have no <dd>'
         $html = \preg_replace('#(?:<dt>(?:phpDoc)</dt>\n)+(<dt|</dl)#', '$1', $html);
-        $html = \str_replace([
+        return \str_replace([
             ' data-attributes="null"',
             ' data-chars="[]"',
             ' data-declared-prev="null"',
             ' data-inherited-from="null"',
         ], '', $html);
-        return $html;
-    }
-
-    /**
-     * Dump "brief" output for Enum
-     *
-     * @param ObjectAbstraction $abs Object Abstraction instance
-     *
-     * @return string html fragment
-     */
-    private function dumpEnumBrief(ObjectAbstraction $abs)
-    {
-        $className = $this->dumpClassName($abs);
-        $parsed = $this->html->parseTag($className);
-        $attribs = $this->debug->arrayUtil->mergeDeep(
-            $this->valDumper->optionGet('attribs'),
-            $parsed['attribs']
-        );
-        if ($this->valDumper->optionGet('tagName') !== 'td') {
-            $this->valDumper->optionSet('tagName', 'span');
-        }
-        $this->valDumper->optionSet('type', null); // exclude t_object classname
-        $this->valDumper->optionSet('attribs', $attribs);
-        return $parsed['innerhtml'];
     }
 
     /**
@@ -181,7 +162,9 @@ class HtmlObject
             $html .= $this->sectionCallables[$sectionName]($abs);
         }
         $html .= '</dl>' . "\n";
-        return $html;
+        return $this->isAsArray($abs)
+            ? '<span class="t_punct">(</span>' . "\n" . $html . '<span class="t_punct">)</span>' . "\n"
+            : $html;
     }
 
     /**
@@ -245,25 +228,21 @@ class HtmlObject
      */
     protected function dumpClassName(ObjectAbstraction $abs)
     {
-        $isEnum = \strpos(\json_encode($abs['implements']), '"UnitEnum"') !== false;
+        if ($abs->isEnum()) {
+            return $this->enum->dumpClassName($abs);
+        }
         $phpDocOutput = $abs['cfgFlags'] & AbstractObject::PHPDOC_OUTPUT;
-        $title = $isEnum && isset($abs['properties']['value'])
-            ? $this->debug->i18n->trans('word.value') . ': ' . $this->debug->getDump('text')->valDumper->dump($abs['properties']['value']['value'])
-            : '';
+        $title = '';
         if ($phpDocOutput) {
             $phpDoc = \trim($abs['phpDoc']['summary'] . "\n\n" . $abs['phpDoc']['desc']);
-            $title .= "\n\n" . $this->helper->dumpPhpDoc($phpDoc);
+            $title = $this->helper->dumpPhpDoc($phpDoc);
         }
         $absTemp = new Abstraction(Type::TYPE_IDENTIFIER, array(
             'attribs' => array(
                 'title' => \trim($title),
             ),
-            'typeMore' => $isEnum
-                ? Type::TYPE_IDENTIFIER_CONST
-                : Type::TYPE_IDENTIFIER_CLASSNAME,
-            'value' => $isEnum
-                ? $abs['className'] . '::' . $abs['properties']['name']['value']
-                : $abs['className'],
+            'typeMore' => Type::TYPE_IDENTIFIER_CLASSNAME,
+            'value' => $abs['className'],
         ));
         return $this->valDumper->dump($absTemp);
     }
@@ -313,15 +292,11 @@ class HtmlObject
             return $this->dumpToString($abs)
                 . $className . "\n" . '<span class="excluded">' . $this->debug->i18n->trans('abs.not-inspected') . '</span>';
         }
-        $emptyAsArray = empty($abs['properties'])
-            && $abs['className'] === 'stdClass'
-            && ($abs['cfgFlags'] & AbstractObject::METHOD_OUTPUT) === 0
-            && ($abs['cfgFlags'] & AbstractObject::OBJ_ATTRIBUTE_OUTPUT) === 0;
-        if ($emptyAsArray) {
+        if (empty($abs['properties']) && $this->isAsArray($abs)) {
             return $className . '<span class="t_punct">()</span>';
         }
-        if (($abs['cfgFlags'] & AbstractObject::BRIEF) && \strpos(\json_encode($abs['implements']), '"UnitEnum"') !== false) {
-            return $this->dumpEnumBrief($abs);
+        if (($abs['cfgFlags'] & AbstractObject::BRIEF) && $abs->isEnum()) {
+            return $this->enum->dumpBrief($abs);
         }
         return '';
     }
@@ -383,5 +358,19 @@ class HtmlObject
             ? $val['strlen']
             : \strlen((string) $val);
         return $val;
+    }
+
+    /**
+     * Determine if object should be output as an array (condensed prop-only output)
+     *
+     * @param ObjectAbstraction $abs Object Abstraction instance
+     *
+     * @return bool
+     */
+    private function isAsArray(ObjectAbstraction $abs)
+    {
+        return $abs['className'] === 'stdClass'
+            && ($abs['cfgFlags'] & AbstractObject::METHOD_OUTPUT) === 0
+            && ($abs['cfgFlags'] & AbstractObject::OBJ_ATTRIBUTE_OUTPUT) === 0;
     }
 }

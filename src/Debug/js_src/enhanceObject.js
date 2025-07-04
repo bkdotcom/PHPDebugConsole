@@ -85,25 +85,45 @@ export function enhance ($node) {
   var selectors = $node.find('> .t_identifier').length
     ? ['> .t_identifier']
     : ['> .classname', '> .t_const']
+  var $inner = $node.find('> .object-inner')
   $node.find(selectors.join(',')).each(function () {
     var $toggle = $(this)
-    var $target = $toggle.next()
     var isEnhanced = $toggle.data('toggle') === 'object'
-    if ($target.is('.t_maxDepth, .t_recursion, .excluded, .t_punct')) {
+    if ($inner.is('.t_maxDepth, .t_recursion, .excluded, .t_punct')) {
       $toggle.addClass('empty')
       return
     }
     if (isEnhanced) {
       return
     }
-    if ($target.length === 0) {
+    if ($inner.length === 0) {
       return
     }
+    addMarkup($node, $toggle)
+    $inner.hide()
+  })
+  $node.debugEnhance(isExpanded($node) ? 'expand' : 'collapse')
+}
+
+function addMarkup ($wrap, $toggle) {
+  if ($wrap.hasClass('prop-only') === false) {
     $toggle.wrap('<span data-toggle="object"></span>')
       .after(' <i class="fa ' + config.iconsExpand.expand + '"></i>')
-    $target.hide()
-  })
-  $node.debugEnhance(objIsExpanded($node) ? 'expand' : 'collapse')
+    return
+  }
+  var $expander = $('<span class="t_object-expand" data-toggle="object">' +
+      $toggle[0].outerHTML +
+      '<span class="t_punct">(</span> ' +
+      '<i class="fa ' + config.iconsExpand.expand + '"></i>&middot;&middot;&middot; ' +
+      '<span class="t_punct">)</span>' +
+    '</span>')
+  // add expand/collapse
+  $toggle
+    .wrap('<span class="t_object-collapse" data-toggle="object"></span>')
+    .after('<span class="t_punct">(</span> <i class="fa ' + config.iconsExpand.collapse + '"></i>')
+    // parent() is .t_object-collapse
+    .parent().next('.t_punct').remove() // remove original '('
+  $wrap.prepend($expander)
 }
 
 export function enhanceInner ($obj) {
@@ -294,7 +314,7 @@ function postToggle ($obj, allDescendants) {
   $obj.trigger('expanded.debug.object')
 }
 
-function objIsExpanded ($node) {
+function isExpanded ($node) {
   var expand = $node.data('expand')
   var numParents = $node.parentsUntil('.m_group', '.t_object, .t_array').length
   var expandDefault = numParents === 0 && $node.hasClass('prop-only')

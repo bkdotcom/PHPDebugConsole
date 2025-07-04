@@ -38,7 +38,7 @@ export function collapse ($node, immediate) {
   if (info.what === 'array') {
     info.$classTarget.removeClass('expanded')
   } else if (['group', 'object'].indexOf(info.what) > -1) {
-    collapseGroupObject(info.$wrap, info.$toggle, immediate, eventNameDone)
+    collapseGroupObject(info, immediate, eventNameDone)
   } else if (info.what === 'next') {
     collapseNext(info.$toggle, immediate, eventNameDone)
   }
@@ -63,9 +63,7 @@ export function expand ($node) {
 export function toggle (node) {
   var $node = $(node)
   var info = getNodeInfo($node)
-  var isExpanded = info.what === 'next'
-    ? $node.hasClass('expanded')
-    : info.$wrap.hasClass('expanded')
+  var isExpanded = info.$classTarget.hasClass('expanded')
   if (info.what === 'group' && info.$wrap.hasClass('.empty')) {
     return
   }
@@ -122,43 +120,36 @@ function buildReturnValString ($return, typeMore) {
 /**
  * Collapse group or object
  */
-function collapseGroupObject ($wrap, $toggle, immediate, eventNameDone) {
-  var $groupEndValue = $wrap.find('> .group-body > .m_groupEndValue > :last-child')
-  var $afterLabel = $toggle.find('.group-label').last().nextAll().not('i')
+function collapseGroupObject (nodes, immediate, eventNameDone) {
+  var $groupEndValue = nodes.$wrap.find('> .group-body > .m_groupEndValue > :last-child')
+  var $afterLabel = nodes.$toggle.find('.group-label').last().nextAll().not('i')
   if ($groupEndValue.length && $afterLabel.length === 0) {
-    $toggle.find('.group-label').last()
+    nodes.$toggle.find('.group-label').last()
       .after('<span class="t_operator"> : </span>' + buildReturnVal($groupEndValue))
   }
   if (immediate) {
-    return collapseGroupObjectDone($wrap, $toggle, eventNameDone)
+    return collapseDone(nodex, eventNameDone)
   }
-  $toggle.next().slideUp('fast', function () {
-    collapseGroupObjectDone($wrap, $toggle, eventNameDone)
+  nodes.$target.slideUp('fast', function () {
+    collapseDone(nodes, eventNameDone)
   })
 }
 
-function collapseGroupObjectDone ($wrap, $toggle, eventNameDone) {
-  var icon = config.iconsExpand.expand
-  $wrap.removeClass('expanded')
-  iconUpdate($toggle, icon)
-  $wrap.trigger(eventNameDone)
-}
-
-function collapseNext ($toggle, immediate, eventNameDone) {
+function collapseNext (nodes, immediate, eventNameDone) {
   if (immediate) {
-    $toggle.next().hide()
-    return collapseNextDone($toggle, eventNameDone)
+    nodes.$target.hide()
+    return collapseDone(nodes, eventNameDone)
   }
-  $toggle.next().slideUp('fast', function () {
-    collapseNextDone($toggle, eventNameDone)
+  nodes.$target.slideUp('fast', function () {
+    collapseDone(nodes, eventNameDone)
   })
 }
 
-function collapseNextDone ($toggle, eventNameDone) {
+function collapseDone (nodes, eventNameDone) {
   var icon = config.iconsExpand.expand
-  $toggle.removeClass('expanded')
-  iconUpdate($toggle, icon)
-  $toggle.next().trigger(eventNameDone)
+  nodes.$classTarget.removeClass('expanded')
+  iconUpdate(nodes.$toggle, icon)
+  nodes.$evtTarget.trigger(eventNameDone)
 }
 
 /**
@@ -167,7 +158,7 @@ function collapseNextDone ($toggle, eventNameDone) {
  * @param {*} eventNameDone the event name
  */
 function expandGroupObjNext (nodes, icon, eventNameDone) {
-  nodes.$toggle.next().slideDown('fast', function () {
+  nodes.$target.slideDown('fast', function () {
     var $groupEndValue = $(this).find('> .m_groupEndValue')
     if ($groupEndValue.length) {
       // remove value from label
@@ -222,6 +213,9 @@ function getNodeInfo ($node) {
     $evtTarget: what === 'next' // node we trigger events on
       ? $toggle.next()
       : $wrap,
+    $target: what === 'object'
+      ? $wrap.find('> .object-inner')
+      : $toggle.next()
   }
 }
 
@@ -283,6 +277,10 @@ function iconUpdate ($toggle, classNameNew) {
   var $icon = $toggle.children('i').eq(0)
   if ($toggle.hasClass('group-header') && $toggle.parent().hasClass('empty')) {
     classNameNew = config.iconsExpand.empty
+  }
+  if ($toggle.is('.t_object-expand, .t_object-collapse')) {
+    // prop-only object has two separate toggles (like array)... correct one shown via css
+    return
   }
   $.each(config.iconsExpand, function (className) {
     $icon.toggleClass(className, className === classNameNew)

@@ -276,6 +276,10 @@ li[class*=m_] > .t_array.array-file-tree > .array-inner {
   }
 
   &.prop-only {
+    > .t_object-collapse,
+    > .t_punct {
+      display: none;
+    }
     > .object-inner {
       > .properties {
         // don't display header
@@ -286,6 +290,16 @@ li[class*=m_] > .t_array.array-file-tree > .array-inner {
         padding-left: 1em;
         margin: 0;
       }
+    }
+  }
+
+  &.expanded {
+    > .t_object-expand {
+      display: none;
+    }
+    > .t_object-collapse,
+    > .t_punct {
+      display: inline;
     }
   }
 }

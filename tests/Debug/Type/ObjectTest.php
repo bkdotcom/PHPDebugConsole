@@ -42,6 +42,7 @@ use ReflectionObject;
  * @covers \bdk\Debug\Dump\Html\Object\AbstractSection
  * @covers \bdk\Debug\Dump\Html\Object\Cases
  * @covers \bdk\Debug\Dump\Html\Object\Constants
+ * @covers \bdk\Debug\Dump\Html\Object\Enum
  * @covers \bdk\Debug\Dump\Html\Object\ExtendsImplements
  * @covers \bdk\Debug\Dump\Html\Object\Methods
  * @covers \bdk\Debug\Dump\Html\Object\PhpDoc
@@ -427,11 +428,13 @@ EOD;
                             "\t" . '<li><span class="t_key">string</span><span class="t_operator">=&gt;</span><span class="t_string">cheese</span></li>',
                             "\t" . '<li><span class="t_key">bool</span><span class="t_operator">=&gt;</span><span class="t_bool" data-type-more="true">true</span></li>',
                             "\t" . '<li><span class="t_key">obj</span><span class="t_operator">=&gt;</span><div class="groupByInheritance prop-only t_object" data-accessible="public"><span class="t_identifier" data-type-more="className"><span class="classname">stdClass</span></span>',
-                            '<dl class="object-inner">',
-                            '<dt class="properties">properties</dt>',
-                            '<dd class="property public"><span class="t_key">foo</span> <span class="t_operator">=&gt;</span> <span class="t_string">bar</span></dd>',
-                            '</dl>',
-                            '</div></li>',
+                                '<span class="t_punct">(</span>',
+                                '<dl class="object-inner">',
+                                '<dt class="properties">properties</dt>',
+                                '<dd class="property public"><span class="t_key">foo</span> <span class="t_operator">=&gt;</span> <span class="t_string">bar</span></dd>',
+                                '</dl>',
+                                '<span class="t_punct">)</span>',
+                                '</div></li>',
                             '</ul><span class="t_punct">)</span></span></dd>',
                             '<dd class="private property"><span class="t_modifier_private">private</span> <span class="no-quotes t_identifier t_string">debug</span> <span class="t_operator">=</span> <div class="t_object"><span class="t_identifier" data-type-more="className"><span class="classname"><span class="namespace">bdk\</span>Debug</span></span>',
                             '<span class="excluded">NOT INSPECTED</span></div></dd>',
@@ -933,6 +936,7 @@ EOD;
                 ),
                 array(
                     'html' => '<li class="m_log"><div class="groupByInheritance prop-only t_object" data-accessible="public"><span class="t_identifier" data-type-more="className"><span class="classname">stdClass</span></span>
+                        <span class="t_punct">(</span>
                         <dl class="object-inner">
                         %A<dt class="properties">properties</dt>
                         ' . (PHP_VERSION_ID >= 70400 ? '<dd class="property public"><span class="t_key"></span> <span class="t_operator">=&gt;</span> <span class="t_string">empty</span></dd>' . "\n" : '')
@@ -942,6 +946,7 @@ EOD;
                         <dd class="property public"><span class="t_key"><span class="char-ws" data-code-point="FEFF" title="U-FEFF: BOM / Zero Width No-Break Space">\u{feff}</span>bom<span class="ws_r"></span><span class="ws_n"></span>
                         <span class="ws_t">%s</span><span class="char-control" data-abbr="BEL" title="\x07: BEL (bell)">␇</span> <span class="char-control" data-abbr="US" title="\x1f: US (unit separator)">␟</span> <span class="char-control" data-abbr="DEL" title="\x7f: DEL">␡</span> <span class="char-ws" data-code-point="00A0" title="U-00A0: NBSP">\u{00a0}</span>&lt;i&gt;(nbsp)&lt;/i&gt; <span class="char-ws" data-code-point="2009" title="U-2009: Thin Space">\u{2009}</span>(thsp), &amp; <span class="char-ws" data-code-point="200B" title="U-200B: Zero Width Space">\u{200b}</span>(zwsp)</span> <span class="t_operator">=&gt;</span> <span class="t_string">ctrl chars and whatnot</span></dd>
                         %A</dl>
+                        <span class="t_punct">)</span>
                         </div></li>',
                     'script' => 'console.log({"___class_name":"stdClass",' . (PHP_VERSION_ID >= 70400 ? '"(public) ":"empty",' : '') . '"(public)  ":"space","(public) \\\u{200b}":"zwsp","(public) \\\u{feff}":"bom","(public) \\\u{feff}bom\r\n\t\\\x07 \\\x1f \\\x7f \\\u{00a0}<i>(nbsp)</i> \\\u{2009}(thsp), & \\\u{200b}(zwsp)":"ctrl chars and whatnot"});',
                     'text' => 'stdClass

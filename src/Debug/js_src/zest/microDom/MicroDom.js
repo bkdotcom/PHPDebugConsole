@@ -202,7 +202,7 @@ export default class MicroDom extends Array {
       return ''
     }
     const searchParams = new URLSearchParams(new FormData(this[0]))
-    return searchParams.toString();
+    return searchParams.toString()
   }
   text(text) {
     if (typeof text === 'undefined') {

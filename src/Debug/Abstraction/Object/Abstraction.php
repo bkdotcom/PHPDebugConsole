@@ -104,6 +104,16 @@ class Abstraction extends BaseAbstraction
     }
 
     /**
+     * Does abstracted object implement UnitEnum?
+     *
+     * @return bool
+     */
+    public function isEnum()
+    {
+        return \strpos(\json_encode($this->inherited['implements']), '"UnitEnum"') !== false;
+    }
+
+    /**
      * Implements JsonSerializable
      *
      * @return array

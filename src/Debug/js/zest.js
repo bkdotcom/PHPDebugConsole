@@ -858,6 +858,11 @@ var zest = (function () {
     };
   }
 
+  // height = as defined by the CSS height propert
+  // clientHeight = includes padding / excludes borders, margins, and scrollbars
+  // offsetHeight = includes padding and border / excludes margins
+  // getBoundingClientRect() = includes padding, border, and (for most browsers) the scrollbar's height if it's rendered
+
   function extendMicroDom$2 (MicroDom) {
 
     const addPx = function (value) {
@@ -1508,7 +1513,7 @@ var zest = (function () {
         return ''
       }
       const searchParams = new URLSearchParams(new FormData(this[0]));
-      return searchParams.toString();
+      return searchParams.toString()
     }
     text(text) {
       if (typeof text === 'undefined') {
@@ -1590,7 +1595,7 @@ var zest = (function () {
     // we're a string... are we html/text or a selector?
     if (mixed.includes('<')) {
       const elements = createElements(mixed);
-      const ret =  new MicroDom( ...elements );
+      const ret = new MicroDom( ...elements );
       if (typeof more === 'object') {
         ret.attr(more);
       }

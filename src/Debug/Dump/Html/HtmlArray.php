@@ -63,7 +63,7 @@ class HtmlArray
         $outputKeys = $opts['showListKeys'] || !$this->debug->arrayUtil->isList($array);
         return '<span class="t_keyword">array</span><span class="t_punct">(</span>' . "\n"
             . '<ul class="array-inner list-unstyled">' . "\n"
-            . $this->dumpArrayValues($array, $outputKeys, $keys)
+            . $this->dumpValues($array, $outputKeys, $keys)
             . '</ul><span class="t_punct">)</span>';
     }
 
@@ -76,7 +76,7 @@ class HtmlArray
      *
      * @return string
      */
-    private function dumpArrayValues(array $array, $outputKeys, array $absKeys)
+    private function dumpValues(array $array, $outputKeys, array $absKeys)
     {
         $html = '';
         foreach ($array as $key => $val) {

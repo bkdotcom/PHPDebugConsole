@@ -28,29 +28,29 @@ var phpDebugConsole = (function (exports, $) {
    */
   function enhance$1 ($node) {
     // console.log('enhanceArray', $node[0])
-    var $arrayInner = $node.find('> .array-inner');
+    var $inner = $node.find('> .array-inner');
     var isEnhanced = $node.find(' > .t_array-expand').length > 0;
     if (isEnhanced) {
       return
     }
-    if (($arrayInner.html() || '').trim().length < 1) {
+    if (($inner.html() || '').trim().length < 1) {
       // empty array -> don't add expand/collapse
       $node.addClass('expanded').find('br').hide();
       return
     }
-    enhanceArrayAddMarkup($node);
+    addMarkup$3($node);
     $.each(config$a.iconsArray, function (value, selector) {
       $node.find(selector).prepend(value);
     });
-    $node.debugEnhance(arrayIsExpanded($node) ? 'expand' : 'collapse');
+    $node.debugEnhance(isExpanded$1($node) ? 'expand' : 'collapse');
   }
 
-  function enhanceArrayAddMarkup ($node) {
-    var $arrayInner = $node.find('> .array-inner');
+  function addMarkup$3 ($node) {
+    var $inner = $node.find('> .array-inner');
     var $expander;
     if ($node.closest('.array-file-tree').length) {
       $node.find('> .t_keyword, > .t_punct').remove();
-      $arrayInner.find('> li > .t_operator, > li > .t_key.t_int').remove();
+      $inner.find('> li > .t_operator, > li > .t_key.t_int').remove();
       $node.prevAll('.t_key').each(function () {
         var $dir = $(this).attr('data-toggle', 'array');
         $node.prepend($dir);
@@ -68,13 +68,13 @@ var phpDebugConsole = (function (exports, $) {
       '</span>');
     // add expand/collapse
     $node.find('> .t_keyword').first()
-      .wrap('<span class="t_array-collapse" data-toggle="array">')
+      .wrap('<span class="t_array-collapse" data-toggle="array"></span>')
       .after('<span class="t_punct">(</span> <i class="fa ' + config$a.iconsExpand.collapse + '"></i>')
       .parent().next().remove(); // remove original '('
     $node.prepend($expander);
   }
 
-  function arrayIsExpanded ($node) {
+  function isExpanded$1 ($node) {
     var expand = $node.data('expand');
     var numParents = $node.parentsUntil('.m_group', '.t_object, .t_array').length;
     var expandDefault = numParents === 0;
@@ -173,25 +173,45 @@ var phpDebugConsole = (function (exports, $) {
     var selectors = $node.find('> .t_identifier').length
       ? ['> .t_identifier']
       : ['> .classname', '> .t_const'];
+    var $inner = $node.find('> .object-inner');
     $node.find(selectors.join(',')).each(function () {
       var $toggle = $(this);
-      var $target = $toggle.next();
       var isEnhanced = $toggle.data('toggle') === 'object';
-      if ($target.is('.t_maxDepth, .t_recursion, .excluded, .t_punct')) {
+      if ($inner.is('.t_maxDepth, .t_recursion, .excluded, .t_punct')) {
         $toggle.addClass('empty');
         return
       }
       if (isEnhanced) {
         return
       }
-      if ($target.length === 0) {
+      if ($inner.length === 0) {
         return
       }
+      addMarkup$2($node, $toggle);
+      $inner.hide();
+    });
+    $node.debugEnhance(isExpanded($node) ? 'expand' : 'collapse');
+  }
+
+  function addMarkup$2 ($wrap, $toggle) {
+    if ($wrap.hasClass('prop-only') === false) {
       $toggle.wrap('<span data-toggle="object"></span>')
         .after(' <i class="fa ' + config$9.iconsExpand.expand + '"></i>');
-      $target.hide();
-    });
-    $node.debugEnhance(objIsExpanded($node) ? 'expand' : 'collapse');
+      return
+    }
+    var $expander = $('<span class="t_object-expand" data-toggle="object">' +
+        $toggle[0].outerHTML +
+        '<span class="t_punct">(</span> ' +
+        '<i class="fa ' + config$9.iconsExpand.expand + '"></i>&middot;&middot;&middot; ' +
+        '<span class="t_punct">)</span>' +
+      '</span>');
+    // add expand/collapse
+    $toggle
+      .wrap('<span class="t_object-collapse" data-toggle="object"></span>')
+      .after('<span class="t_punct">(</span> <i class="fa ' + config$9.iconsExpand.collapse + '"></i>')
+      // parent() is .t_object-collapse
+      .parent().next('.t_punct').remove(); // remove original '('
+    $wrap.prepend($expander);
   }
 
   function enhanceInner ($obj) {
@@ -382,7 +402,7 @@ var phpDebugConsole = (function (exports, $) {
     $obj.trigger('expanded.debug.object');
   }
 
-  function objIsExpanded ($node) {
+  function isExpanded ($node) {
     var expand = $node.data('expand');
     var numParents = $node.parentsUntil('.m_group', '.t_object, .t_array').length;
     var expandDefault = numParents === 0 && $node.hasClass('prop-only');
@@ -2270,7 +2290,7 @@ var phpDebugConsole = (function (exports, $) {
     if (info.what === 'array') {
       info.$classTarget.removeClass('expanded');
     } else if (['group', 'object'].indexOf(info.what) > -1) {
-      collapseGroupObject(info.$wrap, info.$toggle, immediate, eventNameDone);
+      collapseGroupObject(info, immediate, eventNameDone);
     } else if (info.what === 'next') {
       collapseNext(info.$toggle, immediate, eventNameDone);
     }
@@ -2295,9 +2315,7 @@ var phpDebugConsole = (function (exports, $) {
   function toggle (node) {
     var $node = $(node);
     var info = getNodeInfo($node);
-    var isExpanded = info.what === 'next'
-      ? $node.hasClass('expanded')
-      : info.$wrap.hasClass('expanded');
+    var isExpanded = info.$classTarget.hasClass('expanded');
     if (info.what === 'group' && info.$wrap.hasClass('.empty')) {
       return
     }
@@ -2354,43 +2372,36 @@ var phpDebugConsole = (function (exports, $) {
   /**
    * Collapse group or object
    */
-  function collapseGroupObject ($wrap, $toggle, immediate, eventNameDone) {
-    var $groupEndValue = $wrap.find('> .group-body > .m_groupEndValue > :last-child');
-    var $afterLabel = $toggle.find('.group-label').last().nextAll().not('i');
+  function collapseGroupObject (nodes, immediate, eventNameDone) {
+    var $groupEndValue = nodes.$wrap.find('> .group-body > .m_groupEndValue > :last-child');
+    var $afterLabel = nodes.$toggle.find('.group-label').last().nextAll().not('i');
     if ($groupEndValue.length && $afterLabel.length === 0) {
-      $toggle.find('.group-label').last()
+      nodes.$toggle.find('.group-label').last()
         .after('<span class="t_operator"> : </span>' + buildReturnVal($groupEndValue));
     }
     if (immediate) {
-      return collapseGroupObjectDone($wrap, $toggle, eventNameDone)
+      return collapseDone(nodex, eventNameDone)
     }
-    $toggle.next().slideUp('fast', function () {
-      collapseGroupObjectDone($wrap, $toggle, eventNameDone);
+    nodes.$target.slideUp('fast', function () {
+      collapseDone(nodes, eventNameDone);
     });
   }
 
-  function collapseGroupObjectDone ($wrap, $toggle, eventNameDone) {
-    var icon = config$2.iconsExpand.expand;
-    $wrap.removeClass('expanded');
-    iconUpdate($toggle, icon);
-    $wrap.trigger(eventNameDone);
-  }
-
-  function collapseNext ($toggle, immediate, eventNameDone) {
+  function collapseNext (nodes, immediate, eventNameDone) {
     if (immediate) {
-      $toggle.next().hide();
-      return collapseNextDone($toggle, eventNameDone)
+      nodes.$target.hide();
+      return collapseDone(nodes, eventNameDone)
     }
-    $toggle.next().slideUp('fast', function () {
-      collapseNextDone($toggle, eventNameDone);
+    nodes.$target.slideUp('fast', function () {
+      collapseDone(nodes, eventNameDone);
     });
   }
 
-  function collapseNextDone ($toggle, eventNameDone) {
+  function collapseDone (nodes, eventNameDone) {
     var icon = config$2.iconsExpand.expand;
-    $toggle.removeClass('expanded');
-    iconUpdate($toggle, icon);
-    $toggle.next().trigger(eventNameDone);
+    nodes.$classTarget.removeClass('expanded');
+    iconUpdate(nodes.$toggle, icon);
+    nodes.$evtTarget.trigger(eventNameDone);
   }
 
   /**
@@ -2399,7 +2410,7 @@ var phpDebugConsole = (function (exports, $) {
    * @param {*} eventNameDone the event name
    */
   function expandGroupObjNext (nodes, icon, eventNameDone) {
-    nodes.$toggle.next().slideDown('fast', function () {
+    nodes.$target.slideDown('fast', function () {
       var $groupEndValue = $(this).find('> .m_groupEndValue');
       if ($groupEndValue.length) {
         // remove value from label
@@ -2454,6 +2465,9 @@ var phpDebugConsole = (function (exports, $) {
       $evtTarget: what === 'next' // node we trigger events on
         ? $toggle.next()
         : $wrap,
+      $target: what === 'object'
+        ? $wrap.find('> .object-inner')
+        : $toggle.next()
     }
   }
 
@@ -2515,6 +2529,10 @@ var phpDebugConsole = (function (exports, $) {
     var $icon = $toggle.children('i').eq(0);
     if ($toggle.hasClass('group-header') && $toggle.parent().hasClass('empty')) {
       classNameNew = config$2.iconsExpand.empty;
+    }
+    if ($toggle.is('.t_object-expand, .t_object-collapse')) {
+      // prop-only object has two separate toggles (like array)... correct one shown via css
+      return
     }
     $.each(config$2.iconsExpand, function (className) {
       $icon.toggleClass(className, className === classNameNew);

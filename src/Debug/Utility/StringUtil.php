@@ -313,7 +313,8 @@ class StringUtil
         }
         // attempt to decode as object first
         $decoded = \json_decode($json);
-        if (\defined('JSON_ERROR_INVALID_PROPERTY_NAME') && \json_last_error() === JSON_ERROR_INVALID_PROPERTY_NAME) {
+        // JSON_ERROR_INVALID_PROPERTY_NAME is php 7.0+  just check for error
+        if (\json_last_error() !== JSON_ERROR_NONE) {
             $decoded = \json_decode($json, true);
         }
         return \json_last_error() === JSON_ERROR_NONE

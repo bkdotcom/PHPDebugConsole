@@ -26,7 +26,6 @@ use bdk\Test\Debug\DebugTestFramework;
  */
 class StringEncodedTest extends DebugTestFramework
 {
-
     public static function providerTestMethod()
     {
         $base64snip = \substr(
@@ -36,9 +35,10 @@ class StringEncodedTest extends DebugTestFramework
         );
 
         $array = array(
+            "\x00null" => 'careful',
             'pоop' => '💩',
             'int' => 42,
-            'string' => "strıngy\nstring",
+            'string' => "lıne1\nline2",
             'password' => 'secret',
         );
         $base64snip2 = \base64_encode(
@@ -151,15 +151,17 @@ class StringEncodedTest extends DebugTestFramework
                                     'type' => Type::TYPE_STRING,
                                     'typeMore' => Type::TYPE_STRING_JSON,
                                     'value' => \str_replace('[redacted]', '█████████', \json_encode(array(
+                                        "\x00null" => 'careful',
                                         'pоop' => '💩',
                                         'int' => 42,
-                                        'string' => "strıngy\nstring",
+                                        'string' => "lıne1\nline2",
                                         'password' => '[redacted]',
                                     ), JSON_PRETTY_PRINT)),
                                     'valueDecoded' => array(
+                                        "\x00null" => 'careful',
                                         'pоop' => '💩',
                                         'int' => 42,
-                                        'string' => "strıngy\nstring",
+                                        'string' => "lıne1\nline2",
                                         'password' => '█████████',
                                     ),
                                 ),
@@ -180,17 +182,19 @@ class StringEncodedTest extends DebugTestFramework
                         <nav role="tablist"><a class="nav-link" data-target=".tab-1" data-toggle="tab" role="tab">base64</a><a class="nav-link" data-target=".tab-2" data-toggle="tab" role="tab">json</a><a class="active nav-link" data-target=".tab-3" data-toggle="tab" role="tab">parsed</a></nav>
                         <div class="tab-1 tab-pane" role="tabpanel"><span class="no-quotes t_string">' . $base64snip2 . '</span></div>
                         <div class="tab-2 tab-pane" role="tabpanel"><span class="value-container" data-type="string"><span class="prettified">(prettified)</span> <span class="highlight language-json no-quotes t_string">{
+                            &quot;\u0000null&quot;: &quot;careful&quot;,
                             &quot;p\u043eop&quot;: &quot;\ud83d\udca9&quot;,
                             &quot;int&quot;: 42,
-                            &quot;string&quot;: &quot;str\u0131ngy\nstring&quot;,
+                            &quot;string&quot;: &quot;l\u0131ne1\nline2&quot;,
                             &quot;password&quot;: &quot;█████████&quot;
                         }</span></span></div>
                         <div class="active tab-3 tab-pane" role="tabpanel"><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
                             <ul class="array-inner list-unstyled">
+                                <li><span class="t_key"><span class="char-control" data-abbr="NUL" title="\x00: NUL">␀</span>null</span><span class="t_operator">=&gt;</span><span class="t_string">careful</span></li>
                                 <li><span class="t_key">p<span class="unicode" data-code-point="043E" title="U-043E: CYRILLIC SMALL LETTER O">о</span>op</span><span class="t_operator">=&gt;</span><span class="t_string">💩</span></li>
                                 <li><span class="t_key">int</span><span class="t_operator">=&gt;</span><span class="t_int">42</span></li>
-                                <li><span class="t_key">string</span><span class="t_operator">=&gt;</span><span class="t_string">str<span class="unicode" data-code-point="0131" title="U-0131: LATIN SMALL LETTER DOTLESS I">ı</span>ngy
-                                string</span></li>
+                                <li><span class="t_key">string</span><span class="t_operator">=&gt;</span><span class="t_string">l<span class="unicode" data-code-point="0131" title="U-0131: LATIN SMALL LETTER DOTLESS I">ı</span>ne1
+                                    line2</span></li>
                                 <li><span class="t_key">password</span><span class="t_operator">=&gt;</span><span class="t_string">█████████</span></li>
                             </ul><span class="t_punct">)</span></span></div>
                         </span></li>',
@@ -203,7 +207,12 @@ class StringEncodedTest extends DebugTestFramework
                 'log',
                 array(
                     $base64snip3,
-                    Debug::meta('redact'),
+                    Debug::meta(array(
+                        'redact' => true,
+                        'cfg' => array(
+                            'stringMaxLen' => array('base64' => 200),
+                        ),
+                    )),
                 ),
                 array(
                     'entry' => array(
@@ -220,11 +229,12 @@ class StringEncodedTest extends DebugTestFramework
                                     'debug' => Abstracter::ABSTRACTION,
                                     'type' => Type::TYPE_STRING,
                                     'typeMore' => Type::TYPE_STRING_SERIALIZED,
-                                    'value' => 'a:4:{s:5:"pоop";s:4:"💩";s:3:"int";i:42;s:6:"string";s:15:"strıngy' . "\n" . 'string";s:8:"password";s:6:"█████████";}',
+                                    'value' => 'a:5:{s:5:"' . "\x00" . 'null";s:7:"careful";s:5:"pоop";s:4:"💩";s:3:"int";i:42;s:6:"string";s:12:"lıne1' . "\n" . 'line2";s:8:"password";s:6:"█████████";}',
                                     'valueDecoded' => array(
+                                        "\x00null" => 'careful',
                                         'pоop' => '💩',
                                         'int' => 42,
-                                        'string' => "strıngy\nstring",
+                                        'string' => "lıne1\nline2",
                                         'password' => '█████████',
                                     ),
                                 ),
@@ -232,6 +242,7 @@ class StringEncodedTest extends DebugTestFramework
                         ),
                         'meta' => array(
                             'redact' => true,
+                            // 'stringMaxLen' => 200,
                         ),
                     ),
                     'chromeLogger' => array(
@@ -244,14 +255,15 @@ class StringEncodedTest extends DebugTestFramework
                     'html' => '<li class="m_log"><span class="string-encoded tabs-container" data-type-more="base64">
                         <nav role="tablist"><a class="nav-link" data-target=".tab-1" data-toggle="tab" role="tab">base64</a><a class="nav-link" data-target=".tab-2" data-toggle="tab" role="tab">serialized</a><a class="active nav-link" data-target=".tab-3" data-toggle="tab" role="tab">unserialized</a></nav>
                         <div class="tab-1 tab-pane" role="tabpanel"><span class="no-quotes t_string">' . $base64snip3 . '</span></div>
-                        <div class="tab-2 tab-pane" role="tabpanel"><span class="no-quotes t_string">a:4:{s:5:&quot;p<span class="unicode" data-code-point="043E" title="U-043E: CYRILLIC SMALL LETTER O">о</span>op&quot;;s:4:&quot;💩&quot;;s:3:&quot;int&quot;;i:42;s:6:&quot;string&quot;;s:15:&quot;str<span class="unicode" data-code-point="0131" title="U-0131: LATIN SMALL LETTER DOTLESS I">ı</span>ngy
-                            string&quot;;s:8:&quot;password&quot;;s:6:&quot;█████████&quot;;}</span></div>
+                        <div class="tab-2 tab-pane" role="tabpanel"><span class="no-quotes t_string">a:5:{s:5:&quot;<span class="char-control" data-abbr="NUL" title="\x00: NUL">␀</span>null&quot;;s:7:&quot;careful&quot;;s:5:&quot;p<span class="unicode" data-code-point="043E" title="U-043E: CYRILLIC SMALL LETTER O">о</span>op&quot;;s:4:&quot;💩&quot;;s:3:&quot;int&quot;;i:42;s:6:&quot;string&quot;;s:12:&quot;l<span class="unicode" data-code-point="0131" title="U-0131: LATIN SMALL LETTER DOTLESS I">ı</span>ne1
+                            line2&quot;;s:8:&quot;password&quot;;s:6:&quot;█████████&quot;;}</span></div>
                         <div class="active tab-3 tab-pane" role="tabpanel"><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
                             <ul class="array-inner list-unstyled">
+                                <li><span class="t_key"><span class="char-control" data-abbr="NUL" title="\x00: NUL">␀</span>null</span><span class="t_operator">=&gt;</span><span class="t_string">careful</span></li>
                                 <li><span class="t_key">p<span class="unicode" data-code-point="043E" title="U-043E: CYRILLIC SMALL LETTER O">о</span>op</span><span class="t_operator">=&gt;</span><span class="t_string">💩</span></li>
                                 <li><span class="t_key">int</span><span class="t_operator">=&gt;</span><span class="t_int">42</span></li>
-                                <li><span class="t_key">string</span><span class="t_operator">=&gt;</span><span class="t_string">str<span class="unicode" data-code-point="0131" title="U-0131: LATIN SMALL LETTER DOTLESS I">ı</span>ngy
-                                    string</span></li>
+                                <li><span class="t_key">string</span><span class="t_operator">=&gt;</span><span class="t_string">l<span class="unicode" data-code-point="0131" title="U-0131: LATIN SMALL LETTER DOTLESS I">ı</span>ne1
+                                    line2</span></li>
                                 <li><span class="t_key">password</span><span class="t_operator">=&gt;</span><span class="t_string">█████████</span></li>
                             </ul><span class="t_punct">)</span></span></div>
                         </span></li>',

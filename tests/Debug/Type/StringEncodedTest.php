@@ -340,7 +340,8 @@ class StringEncodedTest extends DebugTestFramework
                         $jsonPrettified = Debug::getInstance()->stringUtil->prettyJson($json);
                         self::assertSame(\strlen($jsonPrettified), $entry['args'][0]['strlen']);
                         $expect = \substr($jsonPrettified, 0, 123);
-                        self::assertSame($expect, $entry['args'][0]['value']);
+                        $actual = $entry['args'][0]['value'];
+                        self::assertSame($expect, $actual);
                     },
                     'html' => static function ($html) {
                         $json = \file_get_contents(TEST_DIR . '/../composer.json');

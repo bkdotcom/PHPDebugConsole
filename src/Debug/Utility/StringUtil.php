@@ -311,12 +311,7 @@ class StringUtil
             // json doesn't appear to contain encoded unicode
             $flags |= JSON_UNESCAPED_UNICODE;
         }
-        // attempt to decode as object first
-        $decoded = \json_decode($json);
-        // JSON_ERROR_INVALID_PROPERTY_NAME is php 7.0+  just check for error
-        if (\json_last_error() !== JSON_ERROR_NONE) {
-            $decoded = \json_decode($json, true);
-        }
+        $decoded = \json_decode($json, true);
         return \json_last_error() === JSON_ERROR_NONE
             ? \json_encode($decoded, $flags)
             : false;

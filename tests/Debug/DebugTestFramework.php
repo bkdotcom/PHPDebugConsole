@@ -402,9 +402,11 @@ class DebugTestFramework extends DOMTestCase
                     if ($test === 'entry') {
                         $output = $this->helper->logEntryToArray($logEntryTemp);
                     }
-                    \bdk\Debug::varDump('expect', $expect);
+                    // \bdk\Debug::varDump('expect', $expect);
+                    \fwrite(STDERR, 'expect: ' . \preg_replace('/=>\s*\n\s*array /', '=> array', \var_export($expect, true)) . "\n");
                     \fwrite(STDERR, "\n");
-                    \bdk\Debug::varDump('actual', $output);
+                    // \bdk\Debug::varDump('actual', $output);
+                    \fwrite(STDERR, 'actual: ' . \preg_replace('/=>\s*\n\s*array /', '=> array', \var_export($output, true)) . "\n");
                 }
                 throw new \PHPUnit\Framework\AssertionFailedError($message);
             }

@@ -80,13 +80,28 @@ class ComposerScripts
     }
 
     /**
+     * Get the composer command we were invoked with
+     *
+     * @return string
+     */
+    private static function getComposerCommand()
+    {
+        $composer = $GLOBALS['argv'][0];
+        if (\substr($composer, -5) === '.phar') {
+            // composer.phar
+            return 'php ' . $composer;
+        }
+        return $composer;
+    }
+
+    /**
      * Install/require development dependencies
      *
      * @return array
      */
     private static function installDependencies()
     {
-        $composer = $GLOBALS['argv'][0];
+        $composer = self::getComposerCommand();
         $info = array(
             'haveSlevomat' => false,
         );
@@ -111,7 +126,7 @@ class ComposerScripts
      */
     private static function installUnitTestDependencies()
     {
-        $composer = $GLOBALS['argv'][0];
+        $composer = self::getComposerCommand();
         \version_compare(self::$phpVersion, '8.0.0', '>=')
             // need a newer version to avoid ReturnTypeWillChange fatal
             // v 2.0 requires php 7.0

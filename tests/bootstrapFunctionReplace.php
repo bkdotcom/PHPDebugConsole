@@ -1,8 +1,15 @@
 <?php
 
 namespace {
-    require __DIR__ . '/Backtrace/bootstrapFunctionReplace.php';
-    require __DIR__ . '/CurlHttpMessage/bootstrapFunctionReplace.php';
+    $files = [
+        __DIR__ . '/Backtrace/bootstrapFunctionReplace.php',
+        __DIR__ . '/CurlHttpMessage/bootstrapFunctionReplace.php',
+    ];
+    \array_map(static function ($filepath) {
+        if (\is_file($filepath)) {
+            require $filepath;
+        }
+    }, $files);
 
     $GLOBALS['collectedHeaders'] = array();
     $GLOBALS['headersSent'] = array(); // set to ['file', line] for true

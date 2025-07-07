@@ -220,7 +220,10 @@ class StringUtil
         if (\preg_match('/^\s*(\[.+\]|\{.+\})\s*$/s', $val) !== 1) {
             return false;
         }
-        if (\function_exists('json_validate')) {
+        if (PHP_VERSION_ID >= 80300) {
+            // don't check function_exists('json_validate')
+            //   improperly implemented polyfill may exist
+            //   https://github.com/symfony/polyfill/issues/533
             return \json_validate($val, JSON_INVALID_UTF8_IGNORE);
         }
         // note: it's possible that decoding as array will succeed, but decoding as object will fail with JSON_ERROR_INVALID_PROPERTY_NAME

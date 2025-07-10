@@ -68,6 +68,7 @@ bdk\Test\Debug\Fixture\TestObj
   properties:
     ✨ This object has __get and __set methods
     ⚠ (public) baseDynamic = "duo"
+    ↓ (public) depDoc = null
     ⚠ (public) dynamic = "dynomite!"
     ⟳ (public) propPublic = "redefined in Test (public)"
     (public) propStatic = "I'm Static"
@@ -91,7 +92,7 @@ bdk\Test\Debug\Fixture\TestObj
     (private) toStrThrow = 0
     (debug) debugValue = "This property is debug only"
   methods:
-    public: 9
+    public: 10
     protected: 1
     private: 1
     magic: 2
@@ -102,6 +103,7 @@ EOD;
   \e[4mproperties:\e[24m
     \e[38;5;250m✨ This object has __get and __set methods\e[0m
     \e[38;5;148m⚠\e[0m \e[38;5;250m(public)\e[0m \e[38;5;83mbaseDynamic\e[0m \e[38;5;224m=\e[0m \e[38;5;250m"\e[0mduo\e[38;5;250m"\e[0m
+    \e[38;5;148m↓\e[0m \e[38;5;250m(public)\e[0m \e[38;5;83mdepDoc\e[0m \e[38;5;224m=\e[0m \e[38;5;250mnull\e[0m
     \e[38;5;148m⚠\e[0m \e[38;5;250m(public)\e[0m \e[38;5;83mdynamic\e[0m \e[38;5;224m=\e[0m \e[38;5;250m"\e[0mdynomite!\e[38;5;250m"\e[0m
     \e[38;5;250m⟳\e[0m \e[38;5;250m(public)\e[0m \e[38;5;83mpropPublic\e[0m \e[38;5;224m=\e[0m \e[38;5;250m"\e[0mredefined in Test (public)\e[38;5;250m"\e[0m
     \e[38;5;250m(public)\e[0m \e[38;5;83mpropStatic\e[0m \e[38;5;224m=\e[0m \e[38;5;250m"\e[0mI'm Static\e[38;5;250m"\e[0m
@@ -125,7 +127,7 @@ EOD;
     \e[38;5;250m(private)\e[0m \e[38;5;83mtoStrThrow\e[0m \e[38;5;224m=\e[0m \e[96m0\e[0m
     \e[38;5;250m(debug)\e[0m \e[38;5;83mdebugValue\e[0m \e[38;5;224m=\e[0m \e[38;5;250m"\e[0mThis property is debug only\e[38;5;250m"\e[0m
   \e[4mmethods:\e[24m
-    public\e[38;5;245m: \e[96m9\e[0m
+    public\e[38;5;245m: \e[96m10\e[0m
     protected\e[38;5;245m: \e[96m1\e[0m
     private\e[38;5;245m: \e[96m1\e[0m
     magic\e[38;5;245m: \e[96m2\e[0m
@@ -418,6 +420,7 @@ EOD;
                             '<dt class="properties">properties <span class="text-muted">(via __debugInfo)</span></dt>',
                             '<dd class="info magic">This object has <code>__get</code> and <code>__set</code> methods</dd>',
                             '<dd class="isDynamic property public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string">baseDynamic</span> <span class="t_operator">=</span> <span class="t_string">duo</span></dd>',
+                            '<dd class="isDeprecated property public" data-deprecated-desc="(phpDoc) this property is bad and should feel bad"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string">depDoc</span> <span class="t_operator">=</span> <span class="t_null">null</span></dd>',
                             '<dd class="isDynamic property public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string">dynamic</span> <span class="t_operator">=</span> <span class="t_string">dynomite!</span></dd>',
                             '<dd class="property public" data-declared-prev="bdk\Test\Debug\Fixture\TestBase"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string" title="Public Property.">propPublic</span> <span class="t_operator">=</span> <span class="t_string">redefined in Test (public)</span></dd>',
                             '<dd class="isStatic property public"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="no-quotes t_identifier t_string">propStatic</span> <span class="t_operator">=</span> <span class="t_string">I\'m Static</span></dd>',
@@ -479,7 +482,13 @@ EOD;
                                 '</ul>',
                                 '<h3>return value</h3>',
                                 '<ul class="list-unstyled"><li><span class="return-value t_string">abracadabra</span></li></ul></dd>',
-                            '<dd class="isDeprecated isFinal method public" data-deprecated-desc="this method is bad and should feel bad"><span class="t_modifier_final">final</span> <span class="t_modifier_public">public</span> <span class="t_identifier" title="This method is public">methodPublic</span><span class="t_punct">(</span><span class="parameter"><span class="t_type"><span class="classname">stdClass</span></span> <span class="t_parameter-name" title="first param',
+                            (PHP_VERSION_ID >= 80400
+                                ? '<dd class="isDeprecated method public" data-attributes="[{&quot;arguments&quot;:{&quot;message&quot;:&quot;(attribute) deprecated via attribute&quot;,&quot;since&quot;:&quot;8.4&quot;},&quot;name&quot;:&quot;Deprecated&quot;}]" data-deprecated-desc="(attribute) deprecated via attribute &lt;em&gt;(since 8.4)&lt;/em&gt;"><span class="t_modifier_public">public</span> <span class="t_identifier" title="Test Deprecated attribute (since php 8.4)">deprecatedAttribute</span><span class="t_punct">(</span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">false</span></dd>'
+                                // deprecated attribute is a php 8.4 thing...
+                                //    so !isDeprecated and no data-deprecated-desc
+                                : '<dd class="method public" data-attributes="[{&quot;arguments&quot;:{&quot;message&quot;:&quot;(attribute) deprecated via attribute&quot;,&quot;since&quot;:&quot;8.4&quot;},&quot;name&quot;:&quot;Deprecated&quot;}]"><span class="t_modifier_public">public</span> <span class="t_identifier" title="Test Deprecated attribute (since php 8.4)">deprecatedAttribute</span><span class="t_punct">(</span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">false</span></dd>'
+                            ),
+                            '<dd class="isDeprecated isFinal method public" data-deprecated-desc="(phpDoc) this method is bad and should feel bad &lt;em&gt;(since 1.0)&lt;/em&gt;"><span class="t_modifier_final">final</span> <span class="t_modifier_public">public</span> <span class="t_identifier" title="This method is public">methodPublic</span><span class="t_punct">(</span><span class="parameter"><span class="t_type"><span class="classname">stdClass</span></span> <span class="t_parameter-name" title="first param',
                                 'two-line description!">$param1</span></span><span class="t_punct">,</span>',
                                     '<span class="parameter"><span class="t_type">array</span> <span class="t_parameter-name" title="second param">$param2</span> <span class="t_operator">=</span> <span class="t_array t_parameter-default"><span class="t_keyword">array</span><span class="t_punct">()</span></span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">void</span>',
                                 '<h3>static variables</h3>',
@@ -528,7 +537,7 @@ EOD;
                             '</dl>',
                         )), $str);
                     },
-                    'script' => 'console.log({"___class_name":"bdk\\\\Test\\\\Debug\\\\Fixture\\\\TestObj","(public) baseDynamic":"duo","(public) dynamic":"dynomite!","(public) propPublic":"redefined in Test (public)","(public) propStatic":"I\'m Static","(public) someArray":{"int":123,"numeric":"123","string":"cheese","bool":true,"obj":{"___class_name":"stdClass","(public) foo":"bar"}},"(✨ magic excluded) magicProp":undefined,"(✨ magic-read protected) magicReadProp":"not null","(protected) propProtected":"defined only in TestBase (protected)","(private) debug":"bdk\\\\Debug NOT INSPECTED","(private) instance":"bdk\\\\Test\\\\Debug\\\\Fixture\\\\TestObj *RECURSION*","(private excluded) propNoDebug":"not included in __debugInfo","(private) propPrivate":"redefined in Test (private) (alternate value via __debugInfo)","(🔒 private) testBasePrivate":"defined in TestBase (private)","(private) toString":"abracadabra","(private) toStrThrow":0,"(debug) debugValue":"This property is debug only"});',
+                    'script' => 'console.log({"___class_name":"bdk\\\\Test\\\\Debug\\\\Fixture\\\\TestObj","(public) baseDynamic":"duo","(public) depDoc":null,"(public) dynamic":"dynomite!","(public) propPublic":"redefined in Test (public)","(public) propStatic":"I\'m Static","(public) someArray":{"int":123,"numeric":"123","string":"cheese","bool":true,"obj":{"___class_name":"stdClass","(public) foo":"bar"}},"(✨ magic excluded) magicProp":undefined,"(✨ magic-read protected) magicReadProp":"not null","(protected) propProtected":"defined only in TestBase (protected)","(private) debug":"bdk\\\\Debug NOT INSPECTED","(private) instance":"bdk\\\\Test\\\\Debug\\\\Fixture\\\\TestObj *RECURSION*","(private excluded) propNoDebug":"not included in __debugInfo","(private) propPrivate":"redefined in Test (private) (alternate value via __debugInfo)","(🔒 private) testBasePrivate":"defined in TestBase (private)","(private) toString":"abracadabra","(private) toStrThrow":0,"(debug) debugValue":"This property is debug only"});',
                     'streamAnsi' => $ansi,
                     'text' => $text,
                     'wamp' => array(
@@ -739,6 +748,7 @@ EOD;
                             'declaredPrev' => PHP_VERSION_ID >= 70100
                                 ? 'bdk\Test\Debug\Fixture\SomeInterface'
                                 : null,
+                            'isDeprecated' => false,
                             'isFinal' => false,
                             'phpDoc' => array(
                                 'desc' => '',
@@ -890,6 +900,7 @@ EOD;
                             'baseDynamic',
                             'debug',
                             'debugValue',
+                            'depDoc',
                             'dynamic',
                             'instance',
                             'magicProp',
@@ -911,6 +922,7 @@ EOD;
                             '__get',
                             '__set',
                             '__toString',
+                            'deprecatedAttribute',
                             'methodPrivate',
                             'methodProtected',
                             'methodPublic',
@@ -1102,6 +1114,7 @@ EOD;
                     : null,
                 'declaredOrig' => 'bdk\Test\Debug\Fixture\TestBase',
                 'declaredPrev' => null,
+                'isDeprecated' => false,
                 'isFinal' => false,
                 'phpDoc' => array(
                     'desc' => '',
@@ -1122,6 +1135,7 @@ EOD;
                 'declaredPrev' => PHP_VERSION_ID >= 70100
                     ? 'bdk\Test\Debug\Fixture\TestBase'
                     : null,
+                'isDeprecated' => false,
                 'isFinal' => false,
                 'phpDoc' => array(
                     'desc' => '',
@@ -1281,8 +1295,8 @@ EOD;
                 'phpDoc' => array(
                     'deprecated' => array(
                         array(
-                            'desc' => 'this method is bad and should feel bad',
-                            'version' => null,
+                            'desc' => '(phpDoc) this method is bad and should feel bad',
+                            'version' => '1.0',
                         ),
                     ),
                     'desc' => '',

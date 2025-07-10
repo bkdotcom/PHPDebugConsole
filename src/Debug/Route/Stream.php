@@ -27,7 +27,7 @@ class Stream extends AbstractRoute
 
     /** @var array<string,mixed> */
     protected $cfg = array(
-        'ansi' => 'default',        // default | true | false
+        'ansi' => 'auto',           // auto | default | true | false
         'channels' => ['*'],
         'channelsExclude' => [
             'events',
@@ -157,7 +157,7 @@ class Stream extends AbstractRoute
     private function ansiCheck()
     {
         return $this->cfg['ansi'] === true
-            || ($this->cfg['ansi'] === 'default' && self::hasColorSupport($this->fileHandle));
+            || (\in_array($this->cfg['ansi'], ['auto', 'default'], true) && self::hasColorSupport($this->fileHandle));
     }
 
     /**
@@ -239,6 +239,16 @@ class Stream extends AbstractRoute
         if (!$this->fileHandle) {
             return;
         }
+        $this->setDumper();
+    }
+
+    /**
+     * Set the dumper based on 'ansi' config value
+     *
+     * @return void
+     */
+    private function setDumper()
+    {
         $this->dumper = $this->ansiCheck()
             ? $this->debug->getDump('textAnsi')
             : $this->debug->getDump('text');
@@ -286,6 +296,9 @@ class Stream extends AbstractRoute
         if (\array_key_exists('stream', $cfg)) {
             // changing stream?
             $this->openStream($cfg['stream']);
+        }
+        if (isset($cfg['ansi'])) {
+            $this->setDumper();
         }
     }
 }

@@ -35,7 +35,13 @@ class TestObj extends TestBase
      */
     public $propPublic = 'redefined in Test (public)';
 
+    /**
+     * @deprecated (phpDoc) this property is bad and should feel bad
+     */
+    public $depDoc;
+
     private $debug;
+
     private $instance;
 
     /**
@@ -133,7 +139,7 @@ class TestObj extends TestBase
      * @param array    $param2 second param
      *
      * @return     void
-     * @deprecated this method is bad and should feel bad
+     * @deprecated v1.0 (phpDoc) this method is bad and should feel bad
      */
     final public function methodPublic(stdClass $param1, array $param2 = array())
     {
@@ -141,6 +147,17 @@ class TestObj extends TestBase
         static $bar = 'test';
         static $baz = null;
         $baz = $this; // test for recursion
+    }
+
+    /**
+     * Test Deprecated attribute (since php 8.4)
+     *
+     * @return false
+     */
+    #[\Deprecated('(attribute) deprecated via attribute', since: '8.4')]
+    public function deprecatedAttribute()
+    {
+        return false;
     }
 
     /**

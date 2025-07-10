@@ -15,6 +15,7 @@ namespace bdk\Debug\Abstraction\Object;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
 use bdk\Debug\Abstraction\Object\Abstraction as ObjectAbstraction;
+use bdk\Debug\Utility\ArrayUtil;
 use bdk\Debug\Utility\Php as PhpUtil;
 use bdk\Debug\Utility\PhpDoc;
 use ReflectionAttribute;
@@ -85,7 +86,12 @@ class Helper
         }
         return \array_map(static function (ReflectionAttribute $attribute) {
             return array(
-                'arguments' => $attribute->getArguments(),
+                'arguments' => $attribute->getName() === 'Deprecated'
+                    ? self::toNamedArguments(
+                        $attribute->getArguments(),
+                        ['message', 'since']
+                    )
+                    : $attribute->getArguments(),
                 'name' => $attribute->getName(),
             );
         }, $reflector->getAttributes());
@@ -244,5 +250,27 @@ class Helper
             return $matches[1];
         }
         return null;
+    }
+
+    /**
+     * Convert positional arguments to named arguments
+     *
+     * @param array $arguments Arguments from getArguments()
+     * @param array $names     Names of the parameters
+     *
+     * @return array
+     */
+    private static function toNamedArguments(array $arguments, array $names)
+    {
+        $namedArgs = \array_intersect_key($arguments, \array_flip($names));
+        $arguments = \array_diff_key($arguments, $namedArgs);
+        foreach ($names as $name) {
+            if (\array_key_exists($name, $namedArgs)) {
+                continue;
+            }
+            $namedArgs[$name] = \array_shift($arguments);
+        }
+        ArrayUtil::sortWithOrder($namedArgs, $names, 'key');
+        return $namedArgs;
     }
 }

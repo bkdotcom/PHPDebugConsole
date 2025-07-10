@@ -17,7 +17,7 @@ use bdk\Debug\Dump\TextAnsi\Value;
 use bdk\Debug\LogEntry;
 
 /**
- * Base output plugin
+ * Output log entries as ANSI text
  */
 class TextAnsi extends Text
 {
@@ -25,7 +25,6 @@ class TextAnsi extends Text
 
     /** @var array<string,mixed> */
     protected $ansiCfg = array(
-        'ansi' => 'default',    // default | true | false  (STDOUT & STDERR streams will default to true)
         'escapeCodes' => array(
             'arrayKey' => "\e[38;5;83m",    // yellow
             'binary' => "\e[30;48;5;250m",  // black foreground / grey background

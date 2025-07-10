@@ -308,7 +308,7 @@ class Parsers
         return array(
             'parts' => ['version', 'desc'],
             'regex' => '/^'
-                . '(?P<version>\d+(?:\.\d+){0,2})?'
+                . '(?:v)?(?P<version>\d+(?:\.\d+){0,2}(-?\w*)?)?'
                 . '\s*'
                 . '(?P<desc>.*)'
                 . '$/s',

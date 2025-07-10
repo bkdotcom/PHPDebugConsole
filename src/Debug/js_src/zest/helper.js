@@ -10,6 +10,45 @@ const computedDisplayValues = {
   'th': 'table-cell',
 }
 
+const getDisplayValue = function (el) {
+  if (el === window) {
+    return undefined
+  }
+
+  let displayVal = window.getComputedStyle(el).display
+
+  if (displayVal !== 'none') {
+    return displayVal
+  }
+
+  // display is "none" - Lets clone the element and check its display value
+  const clone = el.cloneNode()
+  clone.innerHTML = ''
+  clone.removeAttribute('style')
+  clone.style.width = '0px';
+  clone.style.height = '0px';
+  el.after(clone)
+  displayVal = window.getComputedStyle(clone).display
+  clone.remove()
+
+  if (displayVal !== 'none') {
+    return displayVal
+  }
+
+  // we're still "none" so lets check the display value of a temporary element
+  const tagName = el.tagName.toLowerCase()
+  if (computedDisplayValues[tagName]) {
+    return computedDisplayValues[tagName]
+  }
+
+  const elTemp = document.createElement(tagName)
+  document.body.appendChild(elTemp)
+  displayVal = window.getComputedStyle(elTemp).display
+  document.body.removeChild(elTemp)
+  computedDisplayValues[tagName] = displayVal
+  return displayVal
+}
+
 /**
  * convert arguments to elements
  *
@@ -66,33 +105,13 @@ export const each = function (mixed, callback) {
 }
 
 export const elInitMicroDomInfo = function (el) {
-  if (typeof el[rand] !== 'undefined') {
-    return el[rand]
+  if (typeof el[rand] === 'undefined') {
+    el[rand] = {
+      data: {},
+      display: getDisplayValue(el),
+      eventHandlers: [],
+    }
   }
-  el[rand] = {
-    data: {},
-    display: undefined,
-    eventHandlers: [],
-  }
-  if (el === window) {
-    return el[rand]
-  }
-  const tagName = el.tagName.toLowerCase()
-  let displayVal = window.getComputedStyle(el).display
-  if (displayVal !== 'none') {
-    el[rand].display = displayVal
-    return el[rand]
-  }
-  if (computedDisplayValues[tagName]) {
-    el[rand].display = computedDisplayValues[tagName]
-    return el[rand]
-  }
-  const elTemp = document.createElement(tagName)
-  document.body.appendChild(elTemp)
-  displayVal = window.getComputedStyle(elTemp).display
-  document.body.removeChild(elTemp)
-  el[rand].display = displayVal
-  computedDisplayValues[tagName] = displayVal
   return el[rand]
 }
 

@@ -38,6 +38,7 @@ return array(
                 : null,
             'declaredOrig' => 'bdk\Test\Debug\Fixture\Con𝘧usableIdenti𝘧iers',
             'declaredPrev' => null,
+            'isDeprecated' => false,
             'isFinal' => false,
             'phpDoc' => array(
                 'desc' => '',

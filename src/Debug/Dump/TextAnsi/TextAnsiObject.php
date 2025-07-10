@@ -193,6 +193,7 @@ class TextAnsiObject extends TextObject
         $escapeCodesMethods = $this->valDumper->getCfg('escapeCodesMethods');
         $escapeReset = $this->valDumper->escapeReset;
         return \strtr(parent::dumpPropPrefix($info), array(
+            '↓' => $escapeCodesMethods['warn'] . '↓' . $escapeReset,
             '↳' => $escapeCodes['muted'] . '↳' . $escapeReset,
             '⚠' => $escapeCodesMethods['warn'] . '⚠' . $escapeReset,
             '⟳' => $escapeCodes['muted'] . '⟳' . $escapeReset,

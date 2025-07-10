@@ -47,6 +47,7 @@ class EnumTest extends DebugTestFramework
                         $expect = array(
                             'BREAKFAST' => array(
                                 'attributes' => array(),
+                                'isDeprecated' => false,
                                 'isFinal' => false,
                                 'phpDoc' => array(
                                     'desc' => '',
@@ -57,6 +58,7 @@ class EnumTest extends DebugTestFramework
                             ),
                             'DINNER' => array(
                                 'attributes' => array(),
+                                'isDeprecated' => false,
                                 'isFinal' => false,
                                 'phpDoc' => array(
                                     'desc' => '',
@@ -72,6 +74,7 @@ class EnumTest extends DebugTestFramework
                                         'name' => 'bdk\Test\Debug\Fixture\Enum\ExampleCaseAttribute',
                                     ),
                                 ),
+                                'isDeprecated' => false,
                                 'isFinal' => false,
                                 'phpDoc' => array(
                                     'desc' => '',
@@ -136,7 +139,7 @@ class EnumTest extends DebugTestFramework
                 array(
                     array(
                         'enum' => \bdk\Test\Debug\Fixture\Enum\Meals::BREAKFAST,
-                    )
+                    ),
                 ),
                 array(
                     'html' => '<li class="m_table">
@@ -203,6 +206,7 @@ class EnumTest extends DebugTestFramework
                         self::assertSame(array(
                             'BREAKFAST' => array(
                                 'attributes' => array(),
+                                'isDeprecated' => false,
                                 'isFinal' => false,
                                 'phpDoc' => array(
                                     'desc' => '',
@@ -213,6 +217,7 @@ class EnumTest extends DebugTestFramework
                             ),
                             'DINNER' => array(
                                 'attributes' => array(),
+                                'isDeprecated' => false,
                                 'isFinal' => false,
                                 'phpDoc' => array(
                                     'desc' => '',
@@ -223,6 +228,7 @@ class EnumTest extends DebugTestFramework
                             ),
                             'LUNCH' => array(
                                 'attributes' => array(),
+                                'isDeprecated' => false,
                                 'isFinal' => false,
                                 'phpDoc' => array(
                                     'desc' => '',

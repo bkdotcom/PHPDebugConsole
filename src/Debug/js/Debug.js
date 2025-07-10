@@ -2380,7 +2380,7 @@ var phpDebugConsole = (function (exports, $) {
         .after('<span class="t_operator"> : </span>' + buildReturnVal($groupEndValue));
     }
     if (immediate) {
-      return collapseDone(nodex, eventNameDone)
+      return collapseDone(nodes, eventNameDone)
     }
     nodes.$target.slideUp('fast', function () {
       collapseDone(nodes, eventNameDone);

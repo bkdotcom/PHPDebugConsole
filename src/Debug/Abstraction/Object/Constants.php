@@ -42,6 +42,7 @@ class Constants extends AbstractInheritable
         'declaredLast' => null,
         'declaredOrig' => null,
         'declaredPrev' => null,
+        'isDeprecated' => false,
         'isFinal' => false,
         'phpDoc' => array(
             'desc' => '',
@@ -170,6 +171,7 @@ class Constants extends AbstractInheritable
             'attributes' => $this->attributeCollect
                 ? $this->helper->getAttributes($refCase)
                 : array(),
+            'isDeprecated' => (PHP_VERSION_ID >= 80400 && $refCase->isDeprecated()) || isset($phpDoc['deprecated']),
             'isFinal' => $refCase->isFinal(),
             'phpDoc' => $phpDoc,
             'value' => $refCase instanceof ReflectionEnumBackedCase
@@ -199,6 +201,7 @@ class Constants extends AbstractInheritable
             'attributes' => $this->attributeCollect
                 ? $this->helper->getAttributes($refConstant)
                 : array(),
+            'isDeprecated' => (PHP_VERSION_ID >= 80400 && $refConstant->isDeprecated()) || isset($phpDoc['deprecated']),
             'isFinal' => PHP_VERSION_ID >= 80100 && $refConstant->isFinal(),
             'phpDoc' => $phpDoc,
             'type' => $type,

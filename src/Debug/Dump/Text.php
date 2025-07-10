@@ -17,7 +17,7 @@ use bdk\Debug\Dump\Text\Value;
 use bdk\Debug\LogEntry;
 
 /**
- * Base output plugin
+ * Output log entries as text
  */
 class Text extends Base
 {

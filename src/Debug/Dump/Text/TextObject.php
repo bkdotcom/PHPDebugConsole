@@ -203,6 +203,7 @@ class TextObject extends BaseObject
     {
         $info = \array_filter(array(
             'inherited' => $info['isInherited'],
+            'isDeprecated' => $info['isDeprecated'],
             'isDynamic' => $info['declaredLast'] === null
                 && $info['valueFrom'] === 'value'
                 && $info['className'] !== 'stdClass',
@@ -210,6 +211,7 @@ class TextObject extends BaseObject
         ));
         $prefixes = \array_intersect_key(array(
             'inherited' => '↳',
+            'isDeprecated' => '↓',
             'isDynamic' => '⚠',
             'overrides' => '⟳',
         ), $info);

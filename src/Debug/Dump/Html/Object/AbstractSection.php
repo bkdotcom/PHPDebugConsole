@@ -290,6 +290,7 @@ abstract class AbstractSection
             'data-attributes' => $info['attributes'],
             'data-chars' => $this->valDumper->findChars(\json_encode($info['attributes'], JSON_UNESCAPED_UNICODE)),
             'data-declared-prev' => $info['declaredPrev'],
+            'data-deprecated-desc' => !empty($info['isDeprecated']) ? $this->getDeprecatedDesc($info) : '',
             'data-inherited-from' => $info['declaredLast'],
         );
         $filter = \array_filter(array(
@@ -297,9 +298,45 @@ abstract class AbstractSection
             'data-attributes' => $cfg['attributeOutput'] && $info['attributes'],
             'data-chars' => $cfg['attributeOutput'],
             'data-declared-prev' => empty($info['isInherited']) && !empty($info['declaredPrev']),
+            'data-deprecated-desc' => !empty($attribs['data-deprecated-desc']),
             'data-inherited-from' => !empty($info['isInherited']) || $info['isPrivateAncestor'],
         ));
         return \array_intersect_key($attribs, $filter);
+    }
+
+    /**
+     * Get deprecated description from a combination of #Deprecated and @deprecated
+     *
+     * @param array $info Abstraction info
+     *
+     * @return string
+     */
+    protected function getDeprecatedDesc(array $info)
+    {
+        $depAttrs = \array_filter($info['attributes'], static function ($attrInfo) {
+            return $attrInfo['name'] === 'Deprecated';
+        });
+        $depAttr = \array_shift($depAttrs) ?: [];
+        $desc = '';
+        if (isset($depAttr['arguments']['message'])) {
+            $desc = $this->helper->dumpPhpDoc($depAttr['arguments']['message'], array(
+                'sanitize' => true,
+            ));
+        } elseif (isset($info['phpDoc']['deprecated'])) {
+            $desc = $this->helper->dumpPhpDoc($info['phpDoc']['deprecated'][0]['desc']);
+        }
+        $since = '';
+        if (isset($depAttr['arguments']['since'])) {
+            $since = 'since ' . $this->helper->dumpPhpDoc($depAttr['arguments']['since'], array(
+                'sanitize' => true,
+            ));
+        } elseif (isset($info['phpDoc']['deprecated'][0]['version'])) {
+            $since = 'since ' . $info['phpDoc']['deprecated'][0]['version'];
+        }
+        if ($desc && $since) {
+            $since = '<em>(' . $since . ')</em>';
+        }
+        return \implode(' ', \array_filter([$desc, $since]));
     }
 
     /**

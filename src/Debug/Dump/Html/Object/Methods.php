@@ -56,7 +56,6 @@ class Methods extends AbstractSection
         $html .= $this->magicMethodInfo($magicMethods);
         $html .= $this->dumpItems($abs, 'methods', array());
         return \str_replace([
-            ' data-deprecated-desc="null"',
             ' data-implements="null"',
             ' data-throws="null"',
             ' <span class="t_type"></span>',
@@ -269,9 +268,6 @@ class Methods extends AbstractSection
     protected function getAttribs(array $info, array $cfg)
     {
         return \array_merge(parent::getAttribs($info, $this->opts), array(
-            'data-deprecated-desc' => isset($info['phpDoc']['deprecated'])
-                ? $this->helper->dumpPhpDoc($info['phpDoc']['deprecated'][0]['desc'])
-                : null,
             'data-implements' => $info['implements'],
             'data-throws' => $this->opts['phpDocOutput'] && isset($info['phpDoc']['throws'])
                 ? \array_map(function ($info) {

@@ -1,9 +1,7 @@
 <?php
 
 /**
- * This file is part of PHPDebugConsole
- *
- * @package   PHPDebugConsole
+ * @package   bdk/debug
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2025 Brad Kent
@@ -50,7 +48,7 @@ class MySqli extends mysqliBase
      * @param string     $dbname   default database used when performing queries
      * @param int        $port     port number
      * @param string     $socket   socket or named pipe that should be used
-     * @param Debug|null $debug    (optional) Specify PHPDebugConsole instance
+     * @param Debug|null $debug    (optional) Specify Debug instance
      *                               if not passed, will create MySqli channel on singleton instance
      *                               if root channel is specified, will create a MySqli channel
      *

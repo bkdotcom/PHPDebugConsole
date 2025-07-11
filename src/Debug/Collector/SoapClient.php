@@ -1,9 +1,7 @@
 <?php
 
 /**
- * This file is part of PHPDebugConsole
- *
- * @package   PHPDebugConsole
+ * @package   bdk/debug
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2025 Brad Kent
@@ -47,7 +45,7 @@ class SoapClient extends SoapClientBase
      *
      * @param string     $wsdl    URI of the WSDL file or NULL if working in non-WSDL mode.
      * @param array      $options Array of options
-     * @param Debug|null $debug   (optional) Specify PHPDebugConsole instance
+     * @param Debug|null $debug   (optional) Specify Debug instance
      *                              if not passed, will create Soap channel on singleton instance
      *                              if root channel is specified, will create a Soap channel
      *

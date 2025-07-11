@@ -1,9 +1,7 @@
 <?php
 
 /**
- * This file is part of PHPDebugConsole
- *
- * @package   PHPDebugConsole
+ * @package   bdk/debug
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2025 Brad Kent
@@ -173,7 +171,7 @@ trait DatabaseTrait
     /**
      * Initialize Debug and StatementInfoLogger
      *
-     * @param Debug|null $debug       (optional) Specify PHPDebugConsole instance
+     * @param Debug|null $debug       (optional) Specify Debug instance
      *                                  if not passed, will create MySqli channel on singleton instance
      *                                  if root channel is specified, will create a MySqli channel
      * @param string     $channelName Channel name to use for debug instance

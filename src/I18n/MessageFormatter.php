@@ -1,5 +1,13 @@
 <?php
 
+/**
+ * @package   bdk/i18n
+ * @author    Brad Kent <bkfake-github@yahoo.com>
+ * @license   http://opensource.org/licenses/MIT MIT
+ * @copyright 2025-2025 Brad Kent
+ * @since     1.0
+ */
+
 namespace bdk\I18n;
 
 use bdk\I18n\NumberFormatter;

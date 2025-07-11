@@ -93,8 +93,8 @@
     "update-char-data": [
       "bdk\\Debug\\Dev\\UpdateCharData::update"
     ],
-    "update-copyright": [
-      "bdk\\Debug\\Dev\\UpdateCopyright::update"
+    "update-phpdoc": [
+      "bdk\\Debug\\Dev\\UpdatePhpDocFileHeader::update"
     ],
     "update-phpcs": [
       "bdk\\Debug\\Dev\\ComposerScripts::updatePhpCsXml"

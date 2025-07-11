@@ -1,9 +1,7 @@
 <?php
 
 /**
- * This file is part of PHPDebugConsole
- *
- * @package   PHPDebugConsole
+ * @package   bdk/debug
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2025 Brad Kent
@@ -221,11 +219,11 @@ class LogEnv implements SubscriberInterface
         }
         if ($namePrev) {
             /*
-                PHPDebugConsole started session... close it.
+                Debug started session... close it.
                 "<jedi>we were never here</jedi>"
 
                 Note:  There is a side-effect.
-                session_id() will  continue to return the id
+                session_id() will continue to return the id
             */
             if (PHP_VERSION_ID >= 50600) {
                 \session_abort();

@@ -1,9 +1,7 @@
 <?php
 
 /**
- * Manage event subscriptions
- *
- * @package   bdk\PubSub
+ * @package   bdk/pubsub
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2025 Brad Kent

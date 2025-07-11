@@ -1,9 +1,7 @@
 <?php
 
 /**
- * This file is part of PHPDebugConsole
- *
- * @package   PHPDebugConsole
+ * @package   bdk/debug
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2025 Brad Kent
@@ -117,15 +115,16 @@ class AssetManager
         $return = '';
         $assets = $this->getAssets($what);
         foreach ($assets as $asset) {
+            $content = $asset;
             // isFile "safely" checks if the value is an existing regular file
             if ($this->debug->utility->isFile($asset)) {
-                $asset = \ltrim(\file_get_contents($asset), "\xef\xbb\xbf");
+                $content = \ltrim(\file_get_contents($asset), "\xef\xbb\xbf");
             }
-            if ($asset === false) {
-                $asset = '/* PHPDebugConsole: unable to read file ' . $asset . ' */';
+            if ($content === false) {
+                $content = '/* PHPDebugConsole: unable to read file ' . $asset . ' */';
                 $this->debug->alert('unable to read file ' . $asset);
             }
-            $return .= $asset . "\n";
+            $return .= $content . "\n";
         }
         return $return;
     }

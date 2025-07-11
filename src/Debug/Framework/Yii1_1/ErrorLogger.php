@@ -1,9 +1,7 @@
 <?php
 
 /**
- * This file is part of PHPDebugConsole
- *
- * @package   PHPDebugConsole
+ * @package   bdk/debug
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2025 Brad Kent
@@ -44,7 +42,7 @@ class ErrorLogger implements SubscriberInterface
     /**
      * Constructor
      *
-     * @param DebugComponent $debugComponent PHPDebugConsole component
+     * @param DebugComponent $debugComponent Debug component
      */
     public function __construct(DebugComponent $debugComponent)
     {

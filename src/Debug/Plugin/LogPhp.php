@@ -1,9 +1,7 @@
 <?php
 
 /**
- * This file is part of PHPDebugConsole
- *
- * @package   PHPDebugConsole
+ * @package   bdk/debug
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2025 Brad Kent
@@ -111,7 +109,7 @@ class LogPhp implements SubscriberInterface
      * Log Error Reporting settings
      *
      * Log if PHP's error reporting !== E_ALL
-     * Or if PHPDebugConsole is not logging E_ALL
+     * Or if Debug is not logging E_ALL
      *
      * @return void
      */

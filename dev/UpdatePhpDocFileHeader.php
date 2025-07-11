@@ -8,9 +8,9 @@ use RecursiveIteratorIterator;
 use RegexIterator;
 
 /**
- * update @copyright tags
+ * update @copyright tags, etc
  */
-class UpdateCopyright
+class UpdatePhpDocFileHeader
 {
     /**
      * Update copyright year in all PHP files
@@ -31,6 +31,10 @@ class UpdateCopyright
         $updateCount = 0;
         foreach ($files as $file) {
             $filepath = $file->getPathname();
+            if (\preg_match('/node_modules/', $filepath)) {
+                // skip files that are not in the src directory
+                continue;
+            }
             $relPath = \str_replace($directory . '/', '', $filepath);
             $updated = self::updateFile($filepath, $year, $relPath);
             if ($updated) {
@@ -45,26 +49,34 @@ class UpdateCopyright
      *
      * @param string $filepath filepath
      * @param string $year     copyright year
-     * @param string $relpath  relative path
+     * @param string $relPath  relative path
      *
      * @return bool whether updated
      */
     protected static function updateFile($filepath, $year, $relPath)
     {
         $contents = \file_get_contents($filepath);
-        $replacementCount = 0;
-        $contents = \preg_replace_callback('/^(\s*\*\s*@copyright\s+)(.*)$/m', static function ($matches) use (&$replacementCount, $year) {
+        $fileInfo = array(
+            'hasCopyright' => true,
+        );
+        $md5Orig = \md5($contents);
+
+        $contents = \preg_replace_callback('/^(\s*\*\s*@copyright\s+)(.*)$/m', static function ($matches) use ($year) {
             $comment = \preg_replace('/\b(\d{2,4}\-)?(\d{2,4})\b/', '${1}' . $year, $matches[2]);
-            $replacement = $matches[1] . $comment;
-            if ($replacement !== $matches[0]) {
-                $replacementCount++;
-            }
-            return $replacement;
+            return $matches[1] . $comment;
         }, $contents, -1, $count);
         if ($count === 0) {
-            \bdk\Debug::varDump('no copyright: ', $relPath);
+            $fileInfo['hasCopyright'] = false;
         }
-        if ($replacementCount > 0) {
+
+        $fileInfoFalse = \array_filter($fileInfo, static function ($value) {
+            return $value === false;
+        });
+        if ($fileInfoFalse) {
+            \bdk\Debug::varDump($relPath, $fileInfoFalse);
+        }
+
+        if (\md5($contents) !== $md5Orig) {
             \file_put_contents($filepath, $contents);
             return true;
         }

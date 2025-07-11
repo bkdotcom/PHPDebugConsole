@@ -1,7 +1,7 @@
 <?php
 
 /**
- * @package   bdk\ErrorHandler
+ * @package   bdk/errorhandler
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2025 Brad Kent

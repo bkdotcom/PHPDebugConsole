@@ -12,7 +12,7 @@ use stdClass;
  * PhpDoc Description
  *
  * @link    http://www.bradkent.com/php/debug PHPDebugConsole Homepage
- * @package bdk\Debug
+ * @package bdk/debug
  */
 #[\AllowDynamicProperties]
 class TestObj extends TestBase

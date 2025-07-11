@@ -1,7 +1,7 @@
 <?php
 
 /**
- * @package   bdk\promise
+ * @package   bdk/promise
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2023-2025 Brad Kent

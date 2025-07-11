@@ -1,9 +1,7 @@
 <?php
 
 /**
- * This file is part of PHPDebugConsole
- *
- * @package   PHPDebugConsole
+ * @package   bdk/debug
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2025 Brad Kent
@@ -85,7 +83,7 @@ class CollectEvents implements SubscriberInterface
     }
 
     /**
-     * PhpDebugConsole output event listener
+     * Debug::EVENT_OUTPUT output event listener
      *
      * @return void
      */

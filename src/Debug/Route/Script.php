@@ -1,9 +1,7 @@
 <?php
 
 /**
- * This file is part of PHPDebugConsole
- *
- * @package   PHPDebugConsole
+ * @package   bdk/debug
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2025 Brad Kent
@@ -36,7 +34,7 @@ class Script extends AbstractRoute
     /** @var list<string> */
     protected $consoleMethods = [
         'assert',
-        // 'count',    // output as log
+        // 'count', // output as log
         'error',
         'group',
         'groupCollapsed',
@@ -44,7 +42,7 @@ class Script extends AbstractRoute
         'info',
         'log',
         'table',
-        // 'time',     // output as log
+        // 'time',  // output as log
         'timeEnd',  // PHPDebugConsole never generates a timeEnd entry
         'trace',
         'warn',

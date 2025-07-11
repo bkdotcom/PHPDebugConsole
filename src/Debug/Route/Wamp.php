@@ -1,12 +1,12 @@
 <?php
 
 /**
- * Route PHPDebugConsole method calls to
+ * Route Debug method calls to
  * WAMP (Web Application Messaging Protocol) router
  *
  * This plugin requires bdk/wamp-publisher (not included)
  *
- * @package   PHPDebugConsole
+ * @package   bdk/debug
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2025 Brad Kent
@@ -27,7 +27,7 @@ use bdk\PubSub\Manager as EventManager;
 use bdk\WampPublisher;
 
 /**
- * PHPDebugConsole plugin for routing debug messages thru WAMP router
+ * Route debug messages to WAMP router
  *
  * Additional methods sent:
  *    endOutput

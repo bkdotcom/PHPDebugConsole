@@ -1,9 +1,7 @@
 <?php
 
 /**
- * This file is part of PHPDebugConsole
- *
- * @package   PHPDebugConsole
+ * @package   bdk/debug
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2014-2025 Brad Kent
@@ -55,7 +53,7 @@ class AbstractAsyncMiddleware extends AbstractComponent
      * Constructor
      *
      * @param array      $cfg   configuration
-     * @param Debug|null $debug (optional) Specify PHPDebugConsole instance
+     * @param Debug|null $debug (optional) Specify Debug instance
      *                            if not passed, will create Guzzle channel on singleton instance
      *                            if root channel is specified, will create a Guzzle channel
      *

@@ -1,7 +1,7 @@
 <?php
 
 /**
- * @package   Backtrace
+ * @package   bdk/backtrace
  * @author    Brad Kent <bkfake-github@yahoo.com>
  * @license   http://opensource.org/licenses/MIT MIT
  * @copyright 2020-2025 Brad Kent

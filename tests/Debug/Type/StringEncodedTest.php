@@ -348,6 +348,9 @@ class StringEncodedTest extends DebugTestFramework
                         self::assertSame(\strlen($jsonPrettified), $entry['args'][0]['strlen']);
                         $expect = \substr($jsonPrettified, 0, 123);
                         $actual = $entry['args'][0]['value'];
+                        \fwrite(STDERR, 'json length = ' . \strlen($json) . "\n");
+                        \fwrite(STDERR, 'expect = ' . $expect . "\n");
+                        \fwrite(STDERR, 'actual = ' . $actual . "\n");
                         self::assertSame($expect, $actual);
                     },
                     'html' => static function ($html) {

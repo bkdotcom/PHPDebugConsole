@@ -339,7 +339,7 @@ class StringEncodedTest extends DebugTestFramework
                 'log',
                 array(
                     \file_get_contents(TEST_DIR . '/../composer.json'),
-                    Debug::meta('cfg', 'stringMaxLen', array('json' => array(0 => 123, 5000 => 5000))),
+                    Debug::meta('cfg', 'stringMaxLen', array('json' => array(0 => 123, 6000 => 6000))),
                 ),
                 array(
                     'entry' => static function (LogEntry $entry) {
@@ -348,9 +348,10 @@ class StringEncodedTest extends DebugTestFramework
                         self::assertSame(\strlen($jsonPrettified), $entry['args'][0]['strlen']);
                         $expect = \substr($jsonPrettified, 0, 123);
                         $actual = $entry['args'][0]['value'];
-                        \fwrite(STDERR, 'json length = ' . \strlen($json) . "\n");
-                        \fwrite(STDERR, 'expect = ' . $expect . "\n");
-                        \fwrite(STDERR, 'actual = ' . $actual . "\n");
+                        // \fwrite(STDERR, 'json length = ' . \strlen($json) . "\n");
+                        // \fwrite(STDERR, 'json prettified length = ' . \strlen($jsonPrettified) . "\n");
+                        // \fwrite(STDERR, 'expect = ' . $expect . "\n");
+                        // \fwrite(STDERR, 'actual = ' . $actual . "\n");
                         self::assertSame($expect, $actual);
                     },
                     'html' => static function ($html) {

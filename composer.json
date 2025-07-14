@@ -108,7 +108,7 @@
     "cs": "check coding standards",
     "test": "run unit tests",
     "update-char-data": "rebuild confusable char latest unicode data",
-    "update-copyright": "update copyright tags",
+    "update-phpdoc": "update PHPDoc file-header tags",
     "update-phpcs": "update phpcs.xml.dist & phpcs.slevomat.xml",
     "webserver": "run php's internal webserver"
   },

@@ -1,4 +1,4 @@
-=== PHP Debug Console ===
+=== Debug Console for PHP ===
 
 Contributors: bkdotcom
 Tags: debug logging developer
@@ -13,7 +13,6 @@ Log, Debug, Inspect ("Debug Bar" on steroids)
 Adds debug / logging output that by default shows query, cache, and other helpful debugging information.
 
 WebSite:   https://bradkent.com/php/debug
-Github:   https://github.com/bkdotcom/PHPDebugConsole
 
 Adds helpful logging methods and utilties
 

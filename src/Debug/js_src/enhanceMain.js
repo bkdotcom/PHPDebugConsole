@@ -13,7 +13,7 @@ var $root
 
 export function init ($debugRoot) {
   $root = $debugRoot
-  config = $root.data('config').get()
+  config = $root.data('config')
   updateMenuBar()
   addChannelToggles()
   addExpandAll()
@@ -33,7 +33,7 @@ function updateMenuBar () {
   var nav = $menuBar.find('nav').length
     ? $menuBar.find('nav')[0].outerHTML
     : ''
-  $menuBar.html('<span><i class="fa fa-bug"></i> PHPDebugConsole</span>' +
+  $menuBar.html('<span><i class="fa fa-bug"></i> ' + config.dict.get('self.name') + '</span>' +
     nav +
     '<div class="float-right"></div>'
   )
@@ -74,7 +74,7 @@ function addErrorIcons () {
     if (counts[what] === 0) {
       return
     }
-    $icon = $(config.iconsMethods['.m_' + what]).removeClass('fa-lg').addClass('text-' + what)
+    $icon = $(config.get('iconsMethods')['.m_' + what]).removeClass('fa-lg').addClass('text-' + what)
     $icons.append($icon).append($('<span>', {
       class: 'badge',
       html: counts[what]
@@ -256,7 +256,7 @@ function channelsToTreeWalkPath (channel, path, channelTreeRef) {
  */
 function enhanceErrorSummary () {
   var $errorSummary = $root.find('.m_alert.error-summary')
-  $errorSummary.find('h3:first-child').prepend(config.iconsMethods['.m_error'])
+  $errorSummary.find('h3:first-child').prepend(config.get('iconsMethods')['.m_error'])
   $errorSummary.find('.in-console li[class*=error-]').each(function () {
     var category = $(this).attr('class').replace('error-', '')
     var html = $(this).html()

@@ -74,17 +74,17 @@ class WordPress extends AbstractComponent implements SubscriberInterface
         }
         $type = $this->getQueryType();
         if ($type) {
-            $this->debug->log($this->debug->i18n->trans('query.type', [], self::I18N_DOMAIN), $type);
+            $this->debug->log($this->debug->i18n->trans('query.type', self::I18N_DOMAIN), $type);
         }
 
         if (!empty($GLOBALS['template'])) {
-            $this->debug->log($this->debug->i18n->trans('query.template', [], self::I18N_DOMAIN), \basename($GLOBALS['template']));
+            $this->debug->log($this->debug->i18n->trans('query.template', self::I18N_DOMAIN), \basename($GLOBALS['template']));
         }
 
         $this->logShowOnFront();
         $this->logPostType();
 
-        $this->debug->log($this->debug->i18n->trans('query.arguments', [], self::I18N_DOMAIN), $GLOBALS['wp_query']->query);
+        $this->debug->log($this->debug->i18n->trans('query.arguments', self::I18N_DOMAIN), $GLOBALS['wp_query']->query);
 
         $this->logQuerySql();
         $this->logQueriedObject();
@@ -97,11 +97,11 @@ class WordPress extends AbstractComponent implements SubscriberInterface
      */
     public function logRequestInfo()
     {
-        $this->debug->group($this->debug->i18n->trans('request.rewrite', [], self::I18N_DOMAIN), $this->debug->meta('level', 'info'));
+        $this->debug->group($this->debug->i18n->trans('request.rewrite', self::I18N_DOMAIN), $this->debug->meta('level', 'info'));
         $this->debug->log($this->debug->i18n->trans('request'), $GLOBALS['wp']->request);
-        $this->debug->log($this->debug->i18n->trans('request.query', [], self::I18N_DOMAIN), $GLOBALS['wp']->query_string);
-        $this->debug->log($this->debug->i18n->trans('rewrite-rule', [], self::I18N_DOMAIN), $GLOBALS['wp']->matched_rule);
-        $this->debug->log($this->debug->i18n->trans('rewrite-query', [], self::I18N_DOMAIN), $GLOBALS['wp']->matched_query);
+        $this->debug->log($this->debug->i18n->trans('request.query', self::I18N_DOMAIN), $GLOBALS['wp']->query_string);
+        $this->debug->log($this->debug->i18n->trans('rewrite-rule', self::I18N_DOMAIN), $GLOBALS['wp']->matched_rule);
+        $this->debug->log($this->debug->i18n->trans('rewrite-query', self::I18N_DOMAIN), $GLOBALS['wp']->matched_query);
         $this->debug->groupEnd();
     }
 
@@ -142,7 +142,7 @@ class WordPress extends AbstractComponent implements SubscriberInterface
             $postTypeObject = \get_post_type_object($queriedObject->post_type);
         }
         if ($postTypeObject) {
-            $this->debug->log($this->debug->i18n->trans('query.post-type', [], self::I18N_DOMAIN), $postTypeObject->labels->singular_name);
+            $this->debug->log($this->debug->i18n->trans('query.post-type', self::I18N_DOMAIN), $postTypeObject->labels->singular_name);
         }
     }
 
@@ -155,8 +155,8 @@ class WordPress extends AbstractComponent implements SubscriberInterface
     {
         $queriedObject = $GLOBALS['wp_query']->get_queried_object();
         if ($queriedObject !== null) {
-            $this->debug->log($this->debug->i18n->trans('query.object', [], self::I18N_DOMAIN), $queriedObject);
-            $this->debug->log($this->debug->i18n->trans('query.object-id', [], self::I18N_DOMAIN), $GLOBALS['wp_query']->get_queried_object_id());
+            $this->debug->log($this->debug->i18n->trans('query.object', self::I18N_DOMAIN), $queriedObject);
+            $this->debug->log($this->debug->i18n->trans('query.object-id', self::I18N_DOMAIN), $GLOBALS['wp_query']->get_queried_object_id());
         }
     }
 
@@ -178,7 +178,7 @@ class WordPress extends AbstractComponent implements SubscriberInterface
         if ($isPrettified) {
             $sql['prettifiedTag'] = false; // don't add "(prettified)" to output
         }
-        $this->debug->log($this->debug->i18n->trans('query.sql', [], self::I18N_DOMAIN), $sql);
+        $this->debug->log($this->debug->i18n->trans('query.sql', self::I18N_DOMAIN), $sql);
     }
 
     /**
@@ -189,10 +189,10 @@ class WordPress extends AbstractComponent implements SubscriberInterface
     private function logShowOnFront()
     {
         $showOnFront = \get_option('show_on_front');
-        $this->debug->log($this->debug->i18n->trans('option.show_on_front', [], self::I18N_DOMAIN), $showOnFront);
+        $this->debug->log($this->debug->i18n->trans('option.show_on_front', self::I18N_DOMAIN), $showOnFront);
         if ($showOnFront === 'page') {
-            $this->debug->log($this->debug->i18n->trans('option.page_for_posts', [], self::I18N_DOMAIN), \get_option('page_for_posts'));
-            $this->debug->log($this->debug->i18n->trans('option.page_on_front', [], self::I18N_DOMAIN), \get_option('page_on_front'));
+            $this->debug->log($this->debug->i18n->trans('option.page_for_posts', self::I18N_DOMAIN), \get_option('page_for_posts'));
+            $this->debug->log($this->debug->i18n->trans('option.page_on_front', self::I18N_DOMAIN), \get_option('page_on_front'));
         }
     }
 

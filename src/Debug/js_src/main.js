@@ -18,10 +18,6 @@ import loadDeps from './loadDeps.js'
 var listenersRegistered = false
 var config = new Config()
 
-if (typeof $ === 'undefined') {
-  throw new TypeError('PHPDebugConsole\'s JavaScript requires jQuery.')
-}
-
 /*
   Load 'optional' dependencies
 */

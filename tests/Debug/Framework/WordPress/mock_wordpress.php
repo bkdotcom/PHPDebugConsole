@@ -1,5 +1,8 @@
 <?php
 
+if (!defined('ABSPATH')) {
+    define('ABSPATH', __DIR__ . '/');
+}
 if (!defined('WP_DEBUG')) {
     define('WP_DEBUG', false);
 }
@@ -177,10 +180,18 @@ function get_settings_errors($setting = '', $sanitize = false)
     return $GLOBALS['wpReturnVals']['settings_errors'];
 }
 
+/**
+ * Gets the path to a plugin file or directory, relative to the plugins directory
+ *
+ * @param string $file
+ *
+ * @return string
+ */
 function plugin_basename($file)
 {
+    $rootDir = $_SERVER['DOCUMENT_ROOT'] ?: \dirname(TEST_DIR);
     $file = \str_replace('\\', '/', $file);
-    $file = \str_replace($_SERVER['DOCUMENT_ROOT'], '', $file);
+    $file = \str_replace($rootDir, '', $file);
     $file = \ltrim($file, '/');
     return $file;
 }

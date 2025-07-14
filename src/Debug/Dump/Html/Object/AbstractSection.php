@@ -94,7 +94,9 @@ abstract class AbstractSection
      */
     protected function buildInheritedFromHeading($className)
     {
-        return '<dd class="heading">Inherited from '
+        return '<dd class="heading">'
+            . $this->debug->i18n->trans('object.inherited-from')
+            . ' '
             . $this->valDumper->markupIdentifier($className, 'className')
             . '</dd>' . "\n";
     }

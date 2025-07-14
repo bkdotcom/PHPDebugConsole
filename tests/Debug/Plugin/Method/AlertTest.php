@@ -247,7 +247,7 @@ class AlertTest extends DebugTestFramework
                 'level' => 'error',
             ),
         );
-        $button = '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>';
+        $button = '<button type="button" class="close" data-dismiss="alert" aria-label="close"><span aria-hidden="true">&times;</span></button>';
         $style = 'padding: 5px; line-height: 26px; font-size: 125%; font-weight: bold; background-color: #ffbaba; border: 1px solid #d8000c; color: #d8000c;';
         $return['dismissible'] = array(
             'alert',

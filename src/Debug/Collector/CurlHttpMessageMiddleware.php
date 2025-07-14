@@ -16,7 +16,7 @@ use bdk\Promise;
 use Psr\Http\Message\ResponseInterface;
 
 /**
- * PHPDebugConsole Middleware for CurlHttpMEssage
+ * PHPDebugConsole Middleware for CurlHttpMessage
  */
 class CurlHttpMessageMiddleware extends AbstractAsyncMiddleware
 {

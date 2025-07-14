@@ -58,7 +58,7 @@ export function init ($debugRoot) {
 
 function addDropdown () {
   var $menuBar = $root.find('.debug-menu-bar')
-  $menuBar.find('.float-right').prepend('<button class="debug-options-toggle" type="button" data-toggle="debug-options" aria-label="Options" aria-haspopup="true" aria-expanded="false">' +
+  $menuBar.find('.float-right').prepend('<button class="debug-options-toggle" type="button" data-toggle="debug-options" aria-label="' + config.dict.get('word.options') + '" aria-haspopup="true" aria-expanded="false">' +
       '<i class="fa fa-ellipsis-v fa-fw"></i>' +
     '</button>'
   )

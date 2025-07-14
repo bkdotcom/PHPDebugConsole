@@ -124,6 +124,7 @@ var config = {
     'debugInfo-excluded': 'not included in __debugInfo',
     'debugInfo-value': 'via __debugInfo()',
     deprecated: 'Deprecated',
+    'drawer.open': 'Open PHPDebugConsole',
     dynamic: 'Dynamic',
 
     'error.cat.deprecated': 'Deprecated',
@@ -144,13 +145,10 @@ var config = {
     'method.magic': 'Magic method',
     more: 'More',
     overrides: 'Overrides',
-    'object.methods.magic.1': 'This object has a {method} method', // wampClient
-    'object.methods.magic.2': 'This object has {method1} and {method2} methods', // wampClient
-    'object.methods.return-value': 'return value', // wampClient
-    'object.methods.static-variables': 'static variables', // wampClient
     'private-ancestor': 'Private ancestor',
     promoted: 'Promoted',
     'property.magic': 'Magic property',
+    'self.name': 'PHPDebugConsole',
     'side.alert': 'Alert',
     'side.channels': 'Channels',
     'side.error': 'Error',
@@ -161,6 +159,8 @@ var config = {
     'side.warning': 'Warning',
     throws: 'Throws',
     virtual: 'Virtual',
+    'word.close': 'close',
+    'word.options': 'options',
     'write-only': 'Write-only',
   },
   theme: 'auto',

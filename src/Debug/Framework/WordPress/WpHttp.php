@@ -81,7 +81,7 @@ class WpHttp extends AbstractAsyncMiddleware implements SubscriberInterface
         }
 
         if ($args['blocking'] === false) {
-            $this->debug->info($this->debug->i18n->trans('http.async-response', [], self::I18N_DOMAIN), $this->debug->meta(
+            $this->debug->info($this->debug->i18n->trans('http.async-response', self::I18N_DOMAIN), $this->debug->meta(
                 'appendGroup',
                 $this->cfg['idPrefix'] . \md5($args['time_start'])
             ));

@@ -1,18 +1,18 @@
-<h2>PHPDebugConsole Settings</h2>
+<h2>Debug Console for PHP Settings</h2>
 <form action="options.php" method="post">
-settings_fields(phpdebugconsole)
+settings_fields(debugConsoleForPhp)
 
 <h2>General Settings</h2>
 
-<label for="phpdebugconsole_password">Password</label>
-<input aria-describedby="phpdebugconsole_password-description" data-lpignore="true" id="phpdebugconsole_password" name="phpdebugconsole[password]" type="password" value="" />
-<div class="description" id="phpdebugconsole_password-description">This password may be passed in the request to enable collecting/outputting the log without being logged in as an admin.<br />Enter the plain-text password here.  It will be stored as a hashed value.</div>
+<label for="debugConsoleForPhp_password">Password</label>
+<input aria-describedby="debugConsoleForPhp_password-description" data-lpignore="true" id="debugConsoleForPhp_password" name="debugConsoleForPhp[password]" type="password" value="" />
+<div class="description" id="debugConsoleForPhp_password-description">This password may be passed in the request to enable collecting/outputting the log without being logged in as an admin.<br />Enter the plain-text password here.  It will be stored as a hashed value.</div>
 
-<label for="phpdebugconsole_previousPasswordHash"></label>
-<input id="phpdebugconsole_previousPasswordHash" name="phpdebugconsole[previousPasswordHash]" type="hidden" />
+<label for="debugConsoleForPhp_previousPasswordHash"></label>
+<input id="debugConsoleForPhp_previousPasswordHash" name="debugConsoleForPhp[previousPasswordHash]" type="hidden" />
 
-<label for="phpdebugconsole_i18n_localeFirstChoice">Locale</label>
-<select id="phpdebugconsole_i18n_localeFirstChoice" name="phpdebugconsole[i18n][localeFirstChoice]" required="required">
+<label for="debugConsoleForPhp_i18n_localeFirstChoice">Locale</label>
+<select id="debugConsoleForPhp_i18n_localeFirstChoice" name="debugConsoleForPhp[i18n][localeFirstChoice]" required="required">
   <option disabled="disabled" selected="selected">select</option>
   <option value="de">Deutsch</option>
   <option value="en">English</option>
@@ -23,8 +23,8 @@ settings_fields(phpdebugconsole)
   <option value="pt_BR">português (Brasil)</option>
 </select>
 
-<label for="phpdebugconsole_route">Route</label>
-<select aria-describedby="phpdebugconsole_route-description" id="phpdebugconsole_route" name="phpdebugconsole[route]">
+<label for="debugConsoleForPhp_route">Route</label>
+<select aria-describedby="debugConsoleForPhp_route-description" id="debugConsoleForPhp_route" name="debugConsoleForPhp[route]">
   <option selected="selected" value="auto">Automatic</option>
   <option value="html">HTML (appended to page output)</option>
   <option value="chromeLogger">chromeLogger (browser plugin)</option>
@@ -32,85 +32,85 @@ settings_fields(phpdebugconsole)
   <option value="script">Script (output to develoepr console)</option>
   <option value="serverLog">Server Log (browser plugin)</option>
 </select>
-<div class="description" id="phpdebugconsole_route-description">How the log will be output</div>
+<div class="description" id="debugConsoleForPhp_route-description">How the log will be output</div>
 
 WordPress
-<label><input checked="checked" id="phpdebugconsole_plugins_wordpress_enabled_on" name="phpdebugconsole[plugins][wordpress][enabled]" type="checkbox" value="on" /> Query, template, post-type, show_on_front, etc</label><br />
-<label><input id="phpdebugconsole_plugins_wordpressCache_enabled_on" name="phpdebugconsole[plugins][wordpressCache][enabled]" type="checkbox" value="on" /> Cache Information</label><br />
-<label><input id="phpdebugconsole_plugins_wordpressDb_enabled_on" name="phpdebugconsole[plugins][wordpressDb][enabled]" type="checkbox" value="on" /> Database queries</label><br />
-<label><input id="phpdebugconsole_plugins_wordpressHooks_enabled_on" name="phpdebugconsole[plugins][wordpressHooks][enabled]" type="checkbox" value="on" /> Hooks</label><br />
-<label><input id="phpdebugconsole_plugins_wordpressHttp_enabled_on" name="phpdebugconsole[plugins][wordpressHttp][enabled]" type="checkbox" value="on" /> HTTP requests</label>
+<label><input checked="checked" id="debugConsoleForPhp_plugins_wordpress_enabled_on" name="debugConsoleForPhp[plugins][wordpress][enabled]" type="checkbox" value="on" /> Query, template, post-type, show_on_front, etc</label><br />
+<label><input id="debugConsoleForPhp_plugins_wordpressCache_enabled_on" name="debugConsoleForPhp[plugins][wordpressCache][enabled]" type="checkbox" value="on" /> Cache Information</label><br />
+<label><input id="debugConsoleForPhp_plugins_wordpressDb_enabled_on" name="debugConsoleForPhp[plugins][wordpressDb][enabled]" type="checkbox" value="on" /> Database queries</label><br />
+<label><input id="debugConsoleForPhp_plugins_wordpressHooks_enabled_on" name="debugConsoleForPhp[plugins][wordpressHooks][enabled]" type="checkbox" value="on" /> Hooks</label><br />
+<label><input id="debugConsoleForPhp_plugins_wordpressHttp_enabled_on" name="debugConsoleForPhp[plugins][wordpressHttp][enabled]" type="checkbox" value="on" /> HTTP requests</label>
 
 Log Environment
-<label><input id="phpdebugconsole_logEnvInfo_errorReporting" name="phpdebugconsole[logEnvInfo][]" type="checkbox" value="errorReporting" /> Issues with error reporting</label><br />
-<label><input id="phpdebugconsole_logEnvInfo_files" name="phpdebugconsole[logEnvInfo][]" type="checkbox" value="files" /> Files included</label><br />
-<label><input id="phpdebugconsole_logEnvInfo_phpInfo" name="phpdebugconsole[logEnvInfo][]" type="checkbox" value="phpInfo" /> Php information</label><br />
-<label><input id="phpdebugconsole_logEnvInfo_serverVals" name="phpdebugconsole[logEnvInfo][]" type="checkbox" value="serverVals" /> $_SERVER values</label>
+<label><input id="debugConsoleForPhp_logEnvInfo_errorReporting" name="debugConsoleForPhp[logEnvInfo][]" type="checkbox" value="errorReporting" /> Issues with error reporting</label><br />
+<label><input id="debugConsoleForPhp_logEnvInfo_files" name="debugConsoleForPhp[logEnvInfo][]" type="checkbox" value="files" /> Files included</label><br />
+<label><input id="debugConsoleForPhp_logEnvInfo_phpInfo" name="debugConsoleForPhp[logEnvInfo][]" type="checkbox" value="phpInfo" /> Php information</label><br />
+<label><input id="debugConsoleForPhp_logEnvInfo_serverVals" name="debugConsoleForPhp[logEnvInfo][]" type="checkbox" value="serverVals" /> $_SERVER values</label>
 
 Log Response
-<label><input checked="checked" id="phpdebugconsole_logResponse_auto" name="phpdebugconsole[logResponse]" type="radio" value="auto" /> Automatic</label><br />
-<label><input id="phpdebugconsole_logResponse_true" name="phpdebugconsole[logResponse]" type="radio" value="true" /> Always</label><br />
-<label><input id="phpdebugconsole_logResponse_false" name="phpdebugconsole[logResponse]" type="radio" value="false" /> Never</label>
+<label><input checked="checked" id="debugConsoleForPhp_logResponse_auto" name="debugConsoleForPhp[logResponse]" type="radio" value="auto" /> Automatic</label><br />
+<label><input id="debugConsoleForPhp_logResponse_true" name="debugConsoleForPhp[logResponse]" type="radio" value="true" /> Always</label><br />
+<label><input id="debugConsoleForPhp_logResponse_false" name="debugConsoleForPhp[logResponse]" type="radio" value="false" /> Never</label>
 
 Log Request
-<label><input id="phpdebugconsole_logRequestInfo_headers" name="phpdebugconsole[logRequestInfo][]" type="checkbox" value="headers" /> Request headers</label><br />
-<label><input id="phpdebugconsole_logRequestInfo_cookies" name="phpdebugconsole[logRequestInfo][]" type="checkbox" value="cookies" /> Cookies ($_COOKIE)</label><br />
-<label><input id="phpdebugconsole_logRequestInfo_post" name="phpdebugconsole[logRequestInfo][]" type="checkbox" value="post" /> Post data ($_POST)</label><br />
-<label><input id="phpdebugconsole_logRequestInfo_files" name="phpdebugconsole[logRequestInfo][]" type="checkbox" value="files" /> Posted files ($_FILES)</label>
+<label><input id="debugConsoleForPhp_logRequestInfo_headers" name="debugConsoleForPhp[logRequestInfo][]" type="checkbox" value="headers" /> Request headers</label><br />
+<label><input id="debugConsoleForPhp_logRequestInfo_cookies" name="debugConsoleForPhp[logRequestInfo][]" type="checkbox" value="cookies" /> Cookies ($_COOKIE)</label><br />
+<label><input id="debugConsoleForPhp_logRequestInfo_post" name="debugConsoleForPhp[logRequestInfo][]" type="checkbox" value="post" /> Post data ($_POST)</label><br />
+<label><input id="debugConsoleForPhp_logRequestInfo_files" name="debugConsoleForPhp[logRequestInfo][]" type="checkbox" value="files" /> Posted files ($_FILES)</label>
 
-<label for="phpdebugconsole_logRuntime">Log Runtime</label>
-<label><input id="phpdebugconsole_logRuntime" name="phpdebugconsole[logRuntime]" type="checkbox" value="on" /> Log memory usage and request duration</label>
+<label for="debugConsoleForPhp_logRuntime">Log Runtime</label>
+<label><input id="debugConsoleForPhp_logRuntime" name="debugConsoleForPhp[logRuntime]" type="checkbox" value="on" /> Log memory usage and request duration</label>
 
-<label for="phpdebugconsole_enableProfiling">Enable Profile Method</label>
-<label><input id="phpdebugconsole_enableProfiling" name="phpdebugconsole[enableProfiling]" type="checkbox" value="on" /> Enable PHPDebugConsole's <a target="_blank" href="https://bradkent.com/php/debug#methodProfile">profile method</a></label>
-<div class="description" id="phpdebugconsole_enableProfiling-description">If PHPDebugConsole is collecting data <b>AND</b> this option is enabled, then we will set <a target="_blank" href="https://www.php.net/manual/control-structures.declare.php#control-structures.declare.ticks"><code>declare(ticks=1);</code></a><br /><b>Only enable this when needed</b></div>
+<label for="debugConsoleForPhp_enableProfiling">Enable Profile Method</label>
+<label><input id="debugConsoleForPhp_enableProfiling" name="debugConsoleForPhp[enableProfiling]" type="checkbox" value="on" /> Enable DebugConsoleForPhp's <a target="_blank" href="https://bradkent.com/php/debug#methodProfile">profile method</a></label>
+<div class="description" id="debugConsoleForPhp_enableProfiling-description">If DebugConsoleForPhp is collecting data <b>AND</b> this option is enabled, then we will set <a target="_blank" href="https://www.php.net/manual/control-structures.declare.php#control-structures.declare.ticks"><code>declare(ticks=1);</code></a><br /><b>Only enable this when needed</b></div>
 
-<label for="phpdebugconsole_maxDepth">Max Depth</label>
-<input aria-describedby="phpdebugconsole_maxDepth-description" class="small-text" id="phpdebugconsole_maxDepth" min="0" name="phpdebugconsole[maxDepth]" step="1" type="number" value="0" />
-<div class="description" id="phpdebugconsole_maxDepth-description">Maximum depth to traverse when logging objects/arrays.  0 = unlimited</div>
+<label for="debugConsoleForPhp_maxDepth">Max Depth</label>
+<input aria-describedby="debugConsoleForPhp_maxDepth-description" class="small-text" id="debugConsoleForPhp_maxDepth" min="0" name="debugConsoleForPhp[maxDepth]" step="1" type="number" value="0" />
+<div class="description" id="debugConsoleForPhp_maxDepth-description">Maximum depth to traverse when logging objects/arrays.  0 = unlimited</div>
 
 
 <h2>Error Notification</h2>
 
-<label for="phpdebugconsole_waitThrottle">Throttle / Wait</label>
-<input aria-describedby="phpdebugconsole_waitThrottle-description" class="small-text" id="phpdebugconsole_waitThrottle" min="0" name="phpdebugconsole[waitThrottle]" step="1" type="number" value="60" />
-<div class="description" id="phpdebugconsole_waitThrottle-description">Minimum time between notifications (in minutes)</div>
+<label for="debugConsoleForPhp_waitThrottle">Throttle / Wait</label>
+<input aria-describedby="debugConsoleForPhp_waitThrottle-description" class="small-text" id="debugConsoleForPhp_waitThrottle" min="0" name="debugConsoleForPhp[waitThrottle]" step="1" type="number" value="60" />
+<div class="description" id="debugConsoleForPhp_waitThrottle-description">Minimum time between notifications (in minutes)</div>
 
-<label for="phpdebugconsole_enableEmailer">Enable Email</label>
-<label><input id="phpdebugconsole_enableEmailer" name="phpdebugconsole[enableEmailer]" type="checkbox" value="on" /> Send errors to email</label>
+<label for="debugConsoleForPhp_enableEmailer">Enable Email</label>
+<label><input id="debugConsoleForPhp_enableEmailer" name="debugConsoleForPhp[enableEmailer]" type="checkbox" value="on" /> Send errors to email</label>
 
-<label for="phpdebugconsole_emailTo">Email To</label>
-<input class="regular-text" id="phpdebugconsole_emailTo" name="phpdebugconsole[emailTo]" type="email" />
+<label for="debugConsoleForPhp_emailTo">Email To</label>
+<input class="regular-text" id="debugConsoleForPhp_emailTo" name="debugConsoleForPhp[emailTo]" type="email" />
 
-<label for="phpdebugconsole_plugins_routeDiscord_enabled">Enable Discord</label>
-<label><input id="phpdebugconsole_plugins_routeDiscord_enabled" name="phpdebugconsole[plugins][routeDiscord][enabled]" type="checkbox" value="on" /> Send errors to Discord</label>
+<label for="debugConsoleForPhp_plugins_routeDiscord_enabled">Enable Discord</label>
+<label><input id="debugConsoleForPhp_plugins_routeDiscord_enabled" name="debugConsoleForPhp[plugins][routeDiscord][enabled]" type="checkbox" value="on" /> Send errors to Discord</label>
 
-<label for="phpdebugconsole_plugins_routeDiscord_webhookUrl">Webhook URL</label>
-<input aria-describedby="phpdebugconsole_plugins_routeDiscord_webhookUrl-description" class="regular-text" id="phpdebugconsole_plugins_routeDiscord_webhookUrl" name="phpdebugconsole[plugins][routeDiscord][webhookUrl]" placeholder="https://discord.com/api/webhooks/xxxxx" type="url" />
-<div class="description" id="phpdebugconsole_plugins_routeDiscord_webhookUrl-description">If left empty, will fall back to environment variable <code>DISCORD_WEBHOOK_URL</code><br /><a href="https://support.discord.com/hc/articles/228383668-Intro-to-Webhooks" target="_blank">Discord webhook documentation</a></div>
+<label for="debugConsoleForPhp_plugins_routeDiscord_webhookUrl">Webhook URL</label>
+<input aria-describedby="debugConsoleForPhp_plugins_routeDiscord_webhookUrl-description" class="regular-text" id="debugConsoleForPhp_plugins_routeDiscord_webhookUrl" name="debugConsoleForPhp[plugins][routeDiscord][webhookUrl]" placeholder="https://discord.com/api/webhooks/xxxxx" type="url" />
+<div class="description" id="debugConsoleForPhp_plugins_routeDiscord_webhookUrl-description">If left empty, will fall back to environment variable <code>DISCORD_WEBHOOK_URL</code><br /><a href="https://support.discord.com/hc/articles/228383668-Intro-to-Webhooks" target="_blank">Discord webhook documentation</a></div>
 
-<label for="phpdebugconsole_plugins_routeSlack_enabled">Enable Slack</label>
-<label><input id="phpdebugconsole_plugins_routeSlack_enabled" name="phpdebugconsole[plugins][routeSlack][enabled]" type="checkbox" value="on" /> Send errors to Slack</label>
-<div class="description" id="phpdebugconsole_plugins_routeSlack_enabled-description">Must configure either <a href="https://api.slack.com/messaging/webhooks" target="_blank">webhookUrl</a> or <a href="https://api.slack.com/tutorials/tracks/getting-a-token" target="_blank">token</a> &amp; channel</div>
+<label for="debugConsoleForPhp_plugins_routeSlack_enabled">Enable Slack</label>
+<label><input id="debugConsoleForPhp_plugins_routeSlack_enabled" name="debugConsoleForPhp[plugins][routeSlack][enabled]" type="checkbox" value="on" /> Send errors to Slack</label>
+<div class="description" id="debugConsoleForPhp_plugins_routeSlack_enabled-description">Must configure either <a href="https://api.slack.com/messaging/webhooks" target="_blank">webhookUrl</a> or <a href="https://api.slack.com/tutorials/tracks/getting-a-token" target="_blank">token</a> &amp; channel</div>
 
-<label for="phpdebugconsole_plugins_routeSlack_webhookUrl">Webhook URL</label>
-<input aria-describedby="phpdebugconsole_plugins_routeSlack_webhookUrl-description" class="regular-text" id="phpdebugconsole_plugins_routeSlack_webhookUrl" name="phpdebugconsole[plugins][routeSlack][webhookUrl]" placeholder="https://hooks.slack.com/services/xxxxx" type="url" />
-<div class="description" id="phpdebugconsole_plugins_routeSlack_webhookUrl-description">If left empty, will fall back to environment variable <code>SLACK_WEBHOOK_URL</code></div>
+<label for="debugConsoleForPhp_plugins_routeSlack_webhookUrl">Webhook URL</label>
+<input aria-describedby="debugConsoleForPhp_plugins_routeSlack_webhookUrl-description" class="regular-text" id="debugConsoleForPhp_plugins_routeSlack_webhookUrl" name="debugConsoleForPhp[plugins][routeSlack][webhookUrl]" placeholder="https://hooks.slack.com/services/xxxxx" type="url" />
+<div class="description" id="debugConsoleForPhp_plugins_routeSlack_webhookUrl-description">If left empty, will fall back to environment variable <code>SLACK_WEBHOOK_URL</code></div>
 
-<label for="phpdebugconsole_plugins_routeSlack_token">Token</label>
-<input aria-describedby="phpdebugconsole_plugins_routeSlack_token-description" id="phpdebugconsole_plugins_routeSlack_token" name="phpdebugconsole[plugins][routeSlack][token]" type="password" />
-<div class="description" id="phpdebugconsole_plugins_routeSlack_token-description">If left empty, will fall back to environment variable <code>SLACK_TOKEN</code></div>
+<label for="debugConsoleForPhp_plugins_routeSlack_token">Token</label>
+<input aria-describedby="debugConsoleForPhp_plugins_routeSlack_token-description" id="debugConsoleForPhp_plugins_routeSlack_token" name="debugConsoleForPhp[plugins][routeSlack][token]" type="password" />
+<div class="description" id="debugConsoleForPhp_plugins_routeSlack_token-description">If left empty, will fall back to environment variable <code>SLACK_TOKEN</code></div>
 
-<label for="phpdebugconsole_plugins_routeSlack_channel">Channel</label>
-<input aria-describedby="phpdebugconsole_plugins_routeSlack_channel-description" id="phpdebugconsole_plugins_routeSlack_channel" name="phpdebugconsole[plugins][routeSlack][channel]" placeholder="#myChannel" type="text" />
-<div class="description" id="phpdebugconsole_plugins_routeSlack_channel-description">If left empty, will fall back to environment variable <code>SLACK_CHANNEL</code></div>
+<label for="debugConsoleForPhp_plugins_routeSlack_channel">Channel</label>
+<input aria-describedby="debugConsoleForPhp_plugins_routeSlack_channel-description" id="debugConsoleForPhp_plugins_routeSlack_channel" name="debugConsoleForPhp[plugins][routeSlack][channel]" placeholder="#myChannel" type="text" />
+<div class="description" id="debugConsoleForPhp_plugins_routeSlack_channel-description">If left empty, will fall back to environment variable <code>SLACK_CHANNEL</code></div>
 
-<label for="phpdebugconsole_plugins_routeTeams_enabled">Enable Teams</label>
-<label><input id="phpdebugconsole_plugins_routeTeams_enabled" name="phpdebugconsole[plugins][routeTeams][enabled]" type="checkbox" value="on" /> Send errors to Teams</label>
+<label for="debugConsoleForPhp_plugins_routeTeams_enabled">Enable Teams</label>
+<label><input id="debugConsoleForPhp_plugins_routeTeams_enabled" name="debugConsoleForPhp[plugins][routeTeams][enabled]" type="checkbox" value="on" /> Send errors to Teams</label>
 
-<label for="phpdebugconsole_plugins_routeTeams_webhookUrl">Webhook URL</label>
-<input aria-describedby="phpdebugconsole_plugins_routeTeams_webhookUrl-description" class="regular-text" id="phpdebugconsole_plugins_routeTeams_webhookUrl" name="phpdebugconsole[plugins][routeTeams][webhookUrl]" placeholder="https://qwerty.webhook.office.com/webhookb2/xxxxx" type="url" />
-<div class="description" id="phpdebugconsole_plugins_routeTeams_webhookUrl-description">If left empty, will fall back to environment variable <code>TEAMS_WEBHOOK_URL</code><br /><a href="https://learn.microsoft.com/microsoftteams/platform/webhooks-and-connectors/how-to/add-incoming-webhook?tabs=newteams%2Cdotnet#create-an-incoming-webhook" target="_blank">Teams webhook documentation</a></div>
+<label for="debugConsoleForPhp_plugins_routeTeams_webhookUrl">Webhook URL</label>
+<input aria-describedby="debugConsoleForPhp_plugins_routeTeams_webhookUrl-description" class="regular-text" id="debugConsoleForPhp_plugins_routeTeams_webhookUrl" name="debugConsoleForPhp[plugins][routeTeams][webhookUrl]" placeholder="https://qwerty.webhook.office.com/webhookb2/xxxxx" type="url" />
+<div class="description" id="debugConsoleForPhp_plugins_routeTeams_webhookUrl-description">If left empty, will fall back to environment variable <code>TEAMS_WEBHOOK_URL</code><br /><a href="https://learn.microsoft.com/microsoftteams/platform/webhooks-and-connectors/how-to/add-incoming-webhook?tabs=newteams%2Cdotnet#create-an-incoming-webhook" target="_blank">Teams webhook documentation</a></div>
 
 <input name="submit" class="button button-primary" type="submit" value="Save" />
 </form>

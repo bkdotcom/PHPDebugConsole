@@ -1201,10 +1201,10 @@ var phpDebugConsole = (function (exports, $) {
   function addMarkup$1 () {
     var $menuBar = $root$2.find('.debug-menu-bar');
     $menuBar.before(
-      '<div class="debug-pull-tab" title="Open PHPDebugConsole"><i class="fa fa-bug"></i><i class="fa fa-spinner fa-pulse"></i> PHP</div>' +
+      '<div class="debug-pull-tab" title="' + config$6.dict.get('drawer.open') + '"><i class="fa fa-bug"></i><i class="fa fa-spinner fa-pulse"></i> PHP</div>' +
       '<div class="debug-resize-handle"></div>'
     );
-    $menuBar.find('.float-right').append('<button type="button" class="close" data-dismiss="debug-drawer" aria-label="Close">' +
+    $menuBar.find('.float-right').append('<button type="button" class="close" data-dismiss="debug-drawer" aria-label="' + config$6.dict.get('word.close')+ '">' +
         '<span aria-hidden="true">&times;</span>' +
       '</button>');
   }
@@ -1624,7 +1624,7 @@ var phpDebugConsole = (function (exports, $) {
 
   function addDropdown () {
     var $menuBar = $root$1.find('.debug-menu-bar');
-    $menuBar.find('.float-right').prepend('<button class="debug-options-toggle" type="button" data-toggle="debug-options" aria-label="Options" aria-haspopup="true" aria-expanded="false">' +
+    $menuBar.find('.float-right').prepend('<button class="debug-options-toggle" type="button" data-toggle="debug-options" aria-label="' + config$5.dict.get('word.options') + '" aria-haspopup="true" aria-expanded="false">' +
         '<i class="fa fa-ellipsis-v fa-fw"></i>' +
       '</button>'
     );
@@ -1959,7 +1959,7 @@ var phpDebugConsole = (function (exports, $) {
 
   function init$3 ($debugRoot) {
     $root = $debugRoot;
-    config$3 = $root.data('config').get();
+    config$3 = $root.data('config');
     updateMenuBar();
     addChannelToggles();
     addExpandAll();
@@ -1979,7 +1979,7 @@ var phpDebugConsole = (function (exports, $) {
     var nav = $menuBar.find('nav').length
       ? $menuBar.find('nav')[0].outerHTML
       : '';
-    $menuBar.html('<span><i class="fa fa-bug"></i> PHPDebugConsole</span>' +
+    $menuBar.html('<span><i class="fa fa-bug"></i> ' + config$3.dict.get('self.name') + '</span>' +
       nav +
       '<div class="float-right"></div>'
     );
@@ -2020,7 +2020,7 @@ var phpDebugConsole = (function (exports, $) {
       if (counts[what] === 0) {
         return
       }
-      $icon = $(config$3.iconsMethods['.m_' + what]).removeClass('fa-lg').addClass('text-' + what);
+      $icon = $(config$3.get('iconsMethods')['.m_' + what]).removeClass('fa-lg').addClass('text-' + what);
       $icons.append($icon).append($('<span>', {
         class: 'badge',
         html: counts[what]
@@ -2202,7 +2202,7 @@ var phpDebugConsole = (function (exports, $) {
    */
   function enhanceErrorSummary () {
     var $errorSummary = $root.find('.m_alert.error-summary');
-    $errorSummary.find('h3:first-child').prepend(config$3.iconsMethods['.m_error']);
+    $errorSummary.find('h3:first-child').prepend(config$3.get('iconsMethods')['.m_error']);
     $errorSummary.find('.in-console li[class*=error-]').each(function () {
       var category = $(this).attr('class').replace('error-', '');
       var html = $(this).html();
@@ -6552,6 +6552,7 @@ var phpDebugConsole = (function (exports, $) {
       'debugInfo-excluded': 'not included in __debugInfo',
       'debugInfo-value': 'via __debugInfo()',
       deprecated: 'Deprecated',
+      'drawer.open': 'Open PHPDebugConsole',
       dynamic: 'Dynamic',
 
       'error.cat.deprecated': 'Deprecated',
@@ -6572,13 +6573,10 @@ var phpDebugConsole = (function (exports, $) {
       'method.magic': 'Magic method',
       more: 'More',
       overrides: 'Overrides',
-      'object.methods.magic.1': 'This object has a {method} method', // wampClient
-      'object.methods.magic.2': 'This object has {method1} and {method2} methods', // wampClient
-      'object.methods.return-value': 'return value', // wampClient
-      'object.methods.static-variables': 'static variables', // wampClient
       'private-ancestor': 'Private ancestor',
       promoted: 'Promoted',
       'property.magic': 'Magic property',
+      'self.name': 'PHPDebugConsole',
       'side.alert': 'Alert',
       'side.channels': 'Channels',
       'side.error': 'Error',
@@ -6589,6 +6587,8 @@ var phpDebugConsole = (function (exports, $) {
       'side.warning': 'Warning',
       throws: 'Throws',
       virtual: 'Virtual',
+      'word.close': 'close',
+      'word.options': 'options',
       'write-only': 'Write-only',
     },
     theme: 'auto',
@@ -6765,10 +6765,6 @@ var phpDebugConsole = (function (exports, $) {
 
   var listenersRegistered = false;
   var config = new Config();
-
-  if (typeof $ === 'undefined') {
-    throw new TypeError('PHPDebugConsole\'s JavaScript requires jQuery.')
-  }
 
   /*
     Load 'optional' dependencies

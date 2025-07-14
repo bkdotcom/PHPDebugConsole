@@ -63,7 +63,7 @@ class WpDb extends AbstractComponent implements SubscriberInterface
         if (!\defined('SAVEQUERIES')) {
             \define('SAVEQUERIES', true);
         } elseif (!SAVEQUERIES) {
-            $this->debug->warn($this->debug->i18n->trans('savequeries.false', [], self::I18N_DOMAIN));
+            $this->debug->warn($this->debug->i18n->trans('savequeries.false', self::I18N_DOMAIN));
         }
     }
 

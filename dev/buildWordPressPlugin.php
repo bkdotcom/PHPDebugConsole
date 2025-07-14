@@ -29,9 +29,9 @@ foreach ($files as $filepath) {
     $helper->rename($filepath, $new);
 }
 
-// move main plugin file to root
+// move main plugin files to root
 $files = [
-    $baseDir . '/src/phpdebugconsole.php',
+    $baseDir . '/src/debug-console-php.php',
     $baseDir . '/src/readme.txt',
 ];
 foreach ($files as $filepath) {
@@ -47,14 +47,14 @@ foreach ($files as $filepath) {
     $helper->unlink($filepath);
 }
 
-// update phpdebugconsole.php (version & $pathbase)
-$filepath = $baseDir . '/phpdebugconsole.php';
+// update debug-console-php.php
+$filepath = $baseDir . '/debug-console-php.php';
 $helper->edit($filepath, [
     ['/^(\s*\* Version: ).*$/m', '${1}' . \bdk\Debug::VERSION],
-    ['/^(\$pathBase = ).*$/m', '$1__DIR__;'],
-    ['#\'/src/Debug/Autoloader.php\'#', '\'/vendor/bdk/Debug/Autoloader.php\''],
-    ['/^(\$autoloader->addPsr4\(.*?, )__DIR__(\);)/m', '$1\$pathBase . \'/src\'$2'],
-    ['#__DIR__ . \'/lang#', '$pathBase . \'/src/lang'],
+    // ['/^(\$pathBase = ).*$/m', '$1__DIR__;'],
+    // ['#\'/src/Debug/Autoloader.php\'#', '\'/vendor/bdk/Debug/Autoloader.php\''],
+    // ['/^(\$autoloader->addPsr4\(.*?, )__DIR__(\);)/m', '$1\$pathBase . \'/src\'$2'],
+    // ['#__DIR__ . \'/lang#', '$pathBase . \'/src/lang'],
 ]);
 
 /**

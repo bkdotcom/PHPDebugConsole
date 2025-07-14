@@ -64,10 +64,10 @@ function enableScrollLock ($node) {
 function addMarkup () {
   var $menuBar = $root.find('.debug-menu-bar')
   $menuBar.before(
-    '<div class="debug-pull-tab" title="Open PHPDebugConsole"><i class="fa fa-bug"></i><i class="fa fa-spinner fa-pulse"></i> PHP</div>' +
+    '<div class="debug-pull-tab" title="' + config.dict.get('drawer.open') + '"><i class="fa fa-bug"></i><i class="fa fa-spinner fa-pulse"></i> PHP</div>' +
     '<div class="debug-resize-handle"></div>'
   )
-  $menuBar.find('.float-right').append('<button type="button" class="close" data-dismiss="debug-drawer" aria-label="Close">' +
+  $menuBar.find('.float-right').append('<button type="button" class="close" data-dismiss="debug-drawer" aria-label="' + config.dict.get('word.close')+ '">' +
       '<span aria-hidden="true">&times;</span>' +
     '</button>')
 }

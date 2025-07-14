@@ -72,7 +72,7 @@ class Hooks extends AbstractComponent implements SubscriberInterface
         $debug = $event->getSubject();
         $this->debug = $debug->getChannel('hooks', array(
             'channelIcon' => 'fa fa-arrow-up',
-            'channelName' => $debug->i18n->trans('channel.hooks', [], self::I18N_DOMAIN),
+            'channelName' => $debug->i18n->trans('channel.hooks', self::I18N_DOMAIN),
             'channelSort' => 1,
             'nested' => false,
         ));

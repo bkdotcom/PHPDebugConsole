@@ -23,50 +23,6 @@ class JavascriptStrings implements AssetProviderInterface, SubscriberInterface
     /** @var Debug */
     private $debug;
 
-    /** @var list<string> These keys have the prefix js. in the translation file */
-    private $jsKeys = [
-        'attributes',
-        'clipboard.copied',
-        'cfg.cookie',
-        'cfg.documentation',
-        'cfg.link-files',
-        'cfg.link-template',
-        'cfg.persist-drawer',
-        'cfg.theme',
-        'cfg.theme.auto',
-        'cfg.theme.dark',
-        'cfg.theme.light',
-        'debugInfo-excluded',
-        'debugInfo-value',
-        'deprecated',
-        'dynamic',
-        'final',
-        'hook.set',
-        'hook.get',
-        'hook.both',
-        'implements',
-        'inherited',
-        'less',
-        'method.abstract',
-        'method.magic',
-        'more',
-        'overrides',
-        'private-ancestor',
-        'promoted',
-        'property.magic',
-        'side.alert',
-        'side.channels',
-        'side.error',
-        'side.expand-all-groups',
-        'side.info',
-        'side.other',
-        'side.php-errors',
-        'side.warning',
-        'throws',
-        'virtual',
-        'write-only',
-    ];
-
     /** @var list<string> */
     private $sharedKeys = [
         'error.cat.deprecated',
@@ -75,10 +31,9 @@ class JavascriptStrings implements AssetProviderInterface, SubscriberInterface
         'error.cat.notice',
         'error.cat.strict',
         'error.cat.warning',
-        'object.methods.magic.1', // wampClient
-        'object.methods.magic.2', // wampClient
-        'object.methods.return-value', // wampClient
-        'object.methods.static-variables', // wampClient
+        'self.name',
+        'word.close',
+        'word.options',
     ];
 
     /**
@@ -91,7 +46,7 @@ class JavascriptStrings implements AssetProviderInterface, SubscriberInterface
             return array();
         }
         $strings = array();
-        foreach ($this->jsKeys as $key) {
+        foreach ($this->getJsKeys() as $key) {
             $strings[$key] = $i18n->trans('js.' . $key);
         }
         foreach ($this->sharedKeys as $key) {
@@ -100,7 +55,7 @@ class JavascriptStrings implements AssetProviderInterface, SubscriberInterface
         return array(
             'script' => ['
             phpDebugConsole.setCfg({
-                "strings": ' . \json_encode($strings) . ',
+                strings: ' . \json_encode($strings) . ',
             });
             '],
         );
@@ -126,5 +81,23 @@ class JavascriptStrings implements AssetProviderInterface, SubscriberInterface
     public function onPluginInit(Event $event)
     {
         $this->debug = $event->getSubject();
+    }
+
+    /**
+     * Get the keys for javascript strings
+     *
+     * @return list<string>
+     */
+    private function getJsKeys()
+    {
+        $filepath = __DIR__ . '/../lang/debug/en.php';
+        $data = require $filepath;
+        $jsKeys = [];
+        foreach (\array_keys($data) as $key) {
+            if (\strpos($key, 'js.') === 0) {
+                $jsKeys[] = \substr($key, 3); // remove js. prefix
+            }
+        }
+        return $jsKeys;
     }
 }

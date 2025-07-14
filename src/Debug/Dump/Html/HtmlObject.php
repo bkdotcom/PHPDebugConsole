@@ -264,7 +264,7 @@ class HtmlObject
         )));
         return empty($modifiers)
             ? ''
-            : '<dt class="modifiers">' . $this->debug->i18n->trans('modifiers') . '</dt>' . "\n"
+            : '<dt class="modifiers">' . $this->debug->i18n->trans('object.modifiers') . '</dt>' . "\n"
                 . \implode('', \array_map(static function ($modifier) {
                     return '<dd class="t_modifier_' . $modifier . '">' . $modifier . '</dd>' . "\n";
                 }, $modifiers));

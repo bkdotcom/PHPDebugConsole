@@ -266,7 +266,7 @@ class Html extends AbstractRoute
     private function buildHeader()
     {
         return '<header class="debug-bar debug-menu-bar">'
-            . 'PHPDebugConsole'
+            . $this->debug->i18n->trans('self.name')
             . '<nav role="tablist"' . ($this->cfg['outputScript'] ? ' style="display:none;"' : '') . '>'
                 . $this->tabs->buildTabList()
             . '</nav>'

@@ -206,7 +206,7 @@ class Html extends Base
             : $this->helper->buildArgString($args, $meta);
         if ($meta['dismissible']) {
             $attribs['class'][] = 'alert-dismissible';
-            $html = '<button type="button" class="close" data-dismiss="alert" aria-label="Close">'
+            $html = '<button type="button" class="close" data-dismiss="alert" aria-label="' . $this->debug->i18n->trans('word.close') . '">'
                 . '<span aria-hidden="true">&times;</span>'
                 . '</button>'
                 . $html;

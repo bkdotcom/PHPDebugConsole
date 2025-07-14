@@ -227,14 +227,18 @@ class I18n
      * Translate a string
      *
      * @param string $str    string to translate
-     * @param array  $args   optional arguments
+     * @param array  $args   optional arguments (may be omitted if no arguments)
      * @param string $domain optional domain (defaults to defaultDomain)
      * @param string $locale optional locale
      *
      * @return string
      */
-    public function trans($str, array $args = array(), $domain = null, $locale = null)
+    public function trans($str, $args = array(), $domain = null, $locale = null)
     {
+        if (\func_num_args() > 1) {
+            $funcArgs = $this->transResolveArgs([$args, $domain, $locale]);
+            \extract($funcArgs);
+        }
         $domain = $domain ?: $this->cfg['defaultDomain'];
         $locale = $locale ?: $this->getLocale($domain);
         $this->loadDomainLocale($domain, $locale);
@@ -322,17 +326,17 @@ class I18n
      * @param string $domain domain
      * @param string $locale locale
      *
-     * @return void
+     * @return bool
      */
     private function loadDomainLocale($domain, $locale)
     {
         if (isset($this->data[$domain][$locale])) {
             // already loaded
-            return;
+            return true;
         }
         if (empty($locale)) {
             // locale not found
-            return;
+            return false;
         }
         $filepath = $this->filepathDomainLocale($domain, $locale);
         $this->data[$domain][$locale] = $this->fileLoader->load($filepath);
@@ -345,6 +349,7 @@ class I18n
                 $this->data[$domain][$locale]
             );
         }
+        return !empty($this->data[$domain][$locale]);
     }
 
     /**
@@ -357,5 +362,21 @@ class I18n
     private function parseLocale($locale)
     {
         return $this->userLocales->parseLocale($locale);
+    }
+
+    /**
+     * Resolve translation arguments
+     *
+     * @param array $args $args, $domain, & $locale passed to trans() method
+     *
+     * @return array
+     */
+    private function transResolveArgs(array $args)
+    {
+        if (\is_array($args[0]) === false) {
+            \array_unshift($args, []);
+            \array_pop($args);
+        }
+        return \array_combine(['args', 'domain', 'locale'], $args);
     }
 }

@@ -21,14 +21,20 @@ class SettingsTest extends DebugTestFramework
 
     public static function setUpBeforeClass(): void
     {
+        if (PHP_VERSION_ID < 70000) {
+            self::markTestSkipped('Wordpress requires PHP 7.0+');
+            return;
+        }
         parent::setUpBeforeClass();
         if (!\function_exists('get_option')) {
             require_once __DIR__ . '/mock_wordpress.php';
         }
-        \wp_reset_mock();
         self::resetDebug();
+        $mockPluginFile = \dirname(TEST_DIR) . '/myplugindir/debug-console-php.php';
+        $wordpress = new \bdk\Debug\Framework\WordPress\Plugin($mockPluginFile);
         self::$plugin = new WordPressSettings();
-        self::$plugin->setCfg('pluginFile', 'phpDebugConsole/phpdebugconsole.php');
+        self::$plugin->setCfg('wordpress', $wordpress);
+        \wp_reset_mock();
     }
 
     public static function tearDownAfterClass(): void
@@ -61,6 +67,7 @@ class SettingsTest extends DebugTestFramework
         $GLOBALS['wp_actions_filters']['actions']['admin_menu'][0]();
 
         $GLOBALS['wp_actions_filters']['actions']['admin_menu'][0] = 'Closure';
+
         self::assertSame(array(
             'actions' => [
                 'admin_init' => [
@@ -71,7 +78,7 @@ class SettingsTest extends DebugTestFramework
                 ],
             ],
             'filters' => [
-                'plugin_action_links_phpDebugConsole/phpdebugconsole.php' => [
+                'plugin_action_links_myplugindir/debug-console-php.php' => [
                     [self::$plugin, 'pluginActionLinks'],
                 ],
             ],
@@ -79,8 +86,8 @@ class SettingsTest extends DebugTestFramework
 
         self::assertEquals([
             [
-                'PHPDebugConsole Settings',     // page title
-                'PHPDebugConsole',	            // menu title
+                'Debug Console for PHP Settings',  // page title
+                'DebugConsolePhp',	            // menu title
                 'manage_options',	            // capability
                 WordPressSettings::PAGE_SLUG_NAME,      // menu slug
                 [self::$plugin, 'outputSettingsPage'],	// callable
@@ -110,7 +117,7 @@ class SettingsTest extends DebugTestFramework
             'b',
         ));
         self::assertSame(array(
-            '<a href="/wp-admin/options-general.php?page=phpdebugconsole">Settings</a>',
+            '<a href="/wp-admin/options-general.php?page=debugConsoleForPhp">Settings</a>',
             'a',
             'b',
         ), $return);
@@ -118,7 +125,7 @@ class SettingsTest extends DebugTestFramework
 
     public function testRegisterSettings()
     {
-        $GLOBALS['wpReturnVals']['option']['phpdebugconsole'] = array(
+        $GLOBALS['wpReturnVals']['option']['debugConsoleForPhp'] = array(
             'key' => 'password',
             'i18n' => array(
                 'localeFirstChoice' => 'en_US',
@@ -152,12 +159,12 @@ class SettingsTest extends DebugTestFramework
         self::assertSame(array(
             array(
                 'id' => 'general',
-                'page' => 'phpdebugconsole',
+                'page' => 'debugConsoleForPhp',
                 'title' => 'General Settings',
             ),
             array(
                 'id' => 'errors',
-                'page' => 'phpdebugconsole',
+                'page' => 'debugConsoleForPhp',
                 'title' => 'Error Notification',
             ),
         ), \array_map(static function ($values) {
@@ -172,137 +179,137 @@ class SettingsTest extends DebugTestFramework
 
         self::assertSame(array(
             array(
-                'id' => 'phpdebugconsole_password',
-                'page' => 'phpdebugconsole',
+                'id' => 'debugConsoleForPhp_password',
+                'page' => 'debugConsoleForPhp',
                 'section' => 'general',
                 'title' => 'Password',
             ),
             array(
-                'id' => 'phpdebugconsole_previousPasswordHash',
-                'page' => 'phpdebugconsole',
+                'id' => 'debugConsoleForPhp_previousPasswordHash',
+                'page' => 'debugConsoleForPhp',
                 'section' => 'general',
                 'title' => '',
             ),
             array(
-                'id' => 'phpdebugconsole_i18n_localeFirstChoice',
-                'page' => 'phpdebugconsole',
+                'id' => 'debugConsoleForPhp_i18n_localeFirstChoice',
+                'page' => 'debugConsoleForPhp',
                 'section' => 'general',
                 'title' => 'Locale',
             ),
             array(
-                'id' => 'phpdebugconsole_route',
-                'page' => 'phpdebugconsole',
+                'id' => 'debugConsoleForPhp_route',
+                'page' => 'debugConsoleForPhp',
                 'section' => 'general',
                 'title' => 'Route',
             ),
             array(
-                'id' => 'phpdebugconsole_wordpress',
-                'page' => 'phpdebugconsole',
+                'id' => 'debugConsoleForPhp_wordpress',
+                'page' => 'debugConsoleForPhp',
                 'section' => 'general',
                 'title' => 'WordPress',
             ),
             array(
-                'id' => 'phpdebugconsole_logEnvInfo',
-                'page' => 'phpdebugconsole',
+                'id' => 'debugConsoleForPhp_logEnvInfo',
+                'page' => 'debugConsoleForPhp',
                 'section' => 'general',
                 'title' => 'Log Environment',
             ),
             array(
-                'id' => 'phpdebugconsole_logResponse',
-                'page' => 'phpdebugconsole',
+                'id' => 'debugConsoleForPhp_logResponse',
+                'page' => 'debugConsoleForPhp',
                 'section' => 'general',
                 'title' => 'Log Response',
             ),
             array(
-                'id' => 'phpdebugconsole_logRequestInfo',
-                'page' => 'phpdebugconsole',
+                'id' => 'debugConsoleForPhp_logRequestInfo',
+                'page' => 'debugConsoleForPhp',
                 'section' => 'general',
                 'title' => 'Log Request',
             ),
             array(
-                'id' => 'phpdebugconsole_logRuntime',
-                'page' => 'phpdebugconsole',
+                'id' => 'debugConsoleForPhp_logRuntime',
+                'page' => 'debugConsoleForPhp',
                 'section' => 'general',
                 'title' => 'Log Runtime',
             ),
 
             array(
-                'id' => 'phpdebugconsole_enableProfiling',
-                'page' => 'phpdebugconsole',
+                'id' => 'debugConsoleForPhp_enableProfiling',
+                'page' => 'debugConsoleForPhp',
                 'section' => 'general',
                 'title' => 'Enable Profile Method',
             ),
 
             array(
-                'id' => 'phpdebugconsole_maxDepth',
-                'page' => 'phpdebugconsole',
+                'id' => 'debugConsoleForPhp_maxDepth',
+                'page' => 'debugConsoleForPhp',
                 'section' => 'general',
                 'title' => 'Max Depth',
             ),
 
             array(
-                'id' => 'phpdebugconsole_waitThrottle',
-                'page' => 'phpdebugconsole',
+                'id' => 'debugConsoleForPhp_waitThrottle',
+                'page' => 'debugConsoleForPhp',
                 'section' => 'errors',
                 'title' => 'Throttle / Wait',
             ),
             array(
-                'id' => 'phpdebugconsole_enableEmailer',
-                'page' => 'phpdebugconsole',
+                'id' => 'debugConsoleForPhp_enableEmailer',
+                'page' => 'debugConsoleForPhp',
                 'section' => 'errors',
                 'title' => 'Enable Email',
             ),
             array(
-                'id' => 'phpdebugconsole_emailTo',
-                'page' => 'phpdebugconsole',
+                'id' => 'debugConsoleForPhp_emailTo',
+                'page' => 'debugConsoleForPhp',
                 'section' => 'errors',
                 'title' => 'Email To',
             ),
             array(
-                'id' => 'phpdebugconsole_plugins_routeDiscord_enabled',
-                'page' => 'phpdebugconsole',
+                'id' => 'debugConsoleForPhp_plugins_routeDiscord_enabled',
+                'page' => 'debugConsoleForPhp',
                 'section' => 'errors',
                 'title' => 'Enable Discord',
             ),
             array(
-                'id' => 'phpdebugconsole_plugins_routeDiscord_webhookUrl',
-                'page' => 'phpdebugconsole',
+                'id' => 'debugConsoleForPhp_plugins_routeDiscord_webhookUrl',
+                'page' => 'debugConsoleForPhp',
                 'section' => 'errors',
                 'title' => 'Webhook URL',
             ),
             array(
-                'id' => 'phpdebugconsole_plugins_routeSlack_enabled',
-                'page' => 'phpdebugconsole',
+                'id' => 'debugConsoleForPhp_plugins_routeSlack_enabled',
+                'page' => 'debugConsoleForPhp',
                 'section' => 'errors',
                 'title' => 'Enable Slack',
             ),
             array(
-                'id' => 'phpdebugconsole_plugins_routeSlack_webhookUrl',
-                'page' => 'phpdebugconsole',
+                'id' => 'debugConsoleForPhp_plugins_routeSlack_webhookUrl',
+                'page' => 'debugConsoleForPhp',
                 'section' => 'errors',
                 'title' => 'Webhook URL',
             ),
             array(
-                'id' => 'phpdebugconsole_plugins_routeSlack_token',
-                'page' => 'phpdebugconsole',
+                'id' => 'debugConsoleForPhp_plugins_routeSlack_token',
+                'page' => 'debugConsoleForPhp',
                 'section' => 'errors',
                 'title' => 'Token',
             ),
             array(
-                'id' => 'phpdebugconsole_plugins_routeSlack_channel',
-                'page' => 'phpdebugconsole',
+                'id' => 'debugConsoleForPhp_plugins_routeSlack_channel',
+                'page' => 'debugConsoleForPhp',
                 'section' => 'errors',
                 'title' => 'Channel',
             ),
             array(
-                'id' => 'phpdebugconsole_plugins_routeTeams_enabled',
-                'page' => 'phpdebugconsole',
+                'id' => 'debugConsoleForPhp_plugins_routeTeams_enabled',
+                'page' => 'debugConsoleForPhp',
                 'section' => 'errors',
                 'title' => 'Enable Teams',
             ),
             array(
-                'id' => 'phpdebugconsole_plugins_routeTeams_webhookUrl',
-                'page' => 'phpdebugconsole',
+                'id' => 'debugConsoleForPhp_plugins_routeTeams_webhookUrl',
+                'page' => 'debugConsoleForPhp',
                 'section' => 'errors',
                 'title' => 'Webhook URL',
             ),

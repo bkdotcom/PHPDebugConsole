@@ -18,6 +18,10 @@ class HooksTest extends DebugTestFramework
 
     public static function setUpBeforeClass(): void
     {
+        if (PHP_VERSION_ID < 70000) {
+            self::markTestSkipped('Wordpress requires PHP 7.0+');
+            return;
+        }
         parent::setUpBeforeClass();
         if (!\function_exists('get_option')) {
             require_once __DIR__ . '/mock_wordpress.php';

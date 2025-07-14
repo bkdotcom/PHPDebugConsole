@@ -1,14 +1,14 @@
 (function ($) {
   var toggles = {
-    '#phpdebugconsole_enableEmailer': ['#phpdebugconsole_emailTo'],
-    '#phpdebugconsole_plugins_routeDiscord_enabled': ['#phpdebugconsole_plugins_routeDiscord_webhookUrl'],
-    '#phpdebugconsole_plugins_routeSlack_enabled': [
-      '#phpdebugconsole_plugins_routeSlack_enabled-description',
-      '#phpdebugconsole_plugins_routeSlack_webhookUrl',
-      '#phpdebugconsole_plugins_routeSlack_token',
-      '#phpdebugconsole_plugins_routeSlack_channel',
+    '#debugConsoleForPhp_enableEmailer': ['#debugConsoleForPhp_emailTo'],
+    '#debugConsoleForPhp_plugins_routeDiscord_enabled': ['#debugConsoleForPhp_plugins_routeDiscord_webhookUrl'],
+    '#debugConsoleForPhp_plugins_routeSlack_enabled': [
+      '#debugConsoleForPhp_plugins_routeSlack_enabled-description',
+      '#debugConsoleForPhp_plugins_routeSlack_webhookUrl',
+      '#debugConsoleForPhp_plugins_routeSlack_token',
+      '#debugConsoleForPhp_plugins_routeSlack_channel',
     ],
-    '#phpdebugconsole_plugins_routeTeams_enabled': ['#phpdebugconsole_plugins_routeTeams_webhookUrl'],
+    '#debugConsoleForPhp_plugins_routeTeams_enabled': ['#debugConsoleForPhp_plugins_routeTeams_webhookUrl'],
   }
   $(function () {
     $('.debug').on('resize.debug', function () {

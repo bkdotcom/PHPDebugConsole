@@ -154,6 +154,8 @@ class ConfigTest extends DebugTestFramework
             'outputHeaders',
             'passwordHash',
             'plugins',
+            'querySelectLimit',
+            'queryUpdateLimit',
             'redactKeys',
             // 'redactReplace',
             'route',

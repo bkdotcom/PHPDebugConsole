@@ -6,6 +6,7 @@ use bdk\Debug;
 use bdk\Debug\AbstractComponent;
 use bdk\Debug\Collector\StatementInfo;
 use bdk\Debug\Collector\StatementInfoLogger;
+use bdk\Debug\Framework\WordPress\Plugin;
 use bdk\Debug\Utility\Sql;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
@@ -15,8 +16,6 @@ use bdk\PubSub\SubscriberInterface;
  */
 class WpDb extends AbstractComponent implements SubscriberInterface
 {
-    const I18N_DOMAIN = 'wordpress';
-
     /** @var array<string,mixed> */
     protected $cfg = array(
         'enabled' => true,
@@ -63,7 +62,7 @@ class WpDb extends AbstractComponent implements SubscriberInterface
         if (!\defined('SAVEQUERIES')) {
             \define('SAVEQUERIES', true);
         } elseif (!SAVEQUERIES) {
-            $this->debug->warn($this->debug->i18n->trans('savequeries.false', self::I18N_DOMAIN));
+            $this->debug->warn($this->debug->i18n->trans('savequeries.false', Plugin::I18N_DOMAIN));
         }
     }
 

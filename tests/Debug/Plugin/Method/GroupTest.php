@@ -822,7 +822,21 @@ class GroupTest extends DebugTestFramework
 
         $entry = array(
             'method' => 'groupEndValue',
-            'args' => array('return', 'foo'),
+            'args' => [
+                array(
+                    'attribs' => array(
+                        'class' => array(
+                            'return-label',
+                        ),
+                    ),
+                    'brief' => false,
+                    'debug' => Abstracter::ABSTRACTION,
+                    'type' => Type::TYPE_STRING,
+                    'typeMore' => null,
+                    'value' => 'return',
+                ),
+                'foo',
+            ],
             'meta' => array(),
         );
         $this->testMethod(
@@ -838,7 +852,7 @@ class GroupTest extends DebugTestFramework
                     '',
                 ),
                 'firephp' => 'X-Wf-1-1-1-154: 39|[{"Label":"return","Type":"LOG"},"foo"]|',
-                'html' => '<li class="m_groupEndValue"><span class="no-quotes t_string">return</span> = <span class="t_string">foo</span></li>',
+                'html' => '<li class="m_groupEndValue"><span class="no-quotes return-label t_string">return</span> = <span class="t_string">foo</span></li>',
                 'script' => 'console.log("return","foo");',
                 'text' => 'return = "foo"',
                 'wamp' => $entry + array('messageIndex' => 0),

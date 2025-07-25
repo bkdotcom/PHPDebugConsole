@@ -25,8 +25,8 @@ const getDisplayValue = function (el) {
   const clone = el.cloneNode()
   clone.innerHTML = ''
   clone.removeAttribute('style')
-  clone.style.width = '0px';
-  clone.style.height = '0px';
+  clone.style.width = '0px'
+  clone.style.height = '0px'
   el.after(clone)
   displayVal = window.getComputedStyle(clone).display
   clone.remove()
@@ -114,22 +114,6 @@ export const elInitMicroDomInfo = function (el) {
   }
   return el[rand]
 }
-
-/*
-export var elMatches = function (el, selector) {
-  selector = modifySelector(selector)
-  if (selector === ':visible') {
-    return Boolean(el.offsetWidth || el.offsetHeight || el.getClientRects().length)
-  }
-  if (selector === ':hidden') {
-    return !Boolean(el.offsetWidth || el.offsetHeight || el.getClientRects().length)
-  }
-  if (el.matches(selector)) {
-    return true
-  }
-  return false
-}
-*/
 
 export const extend = function ( ...args ) {
   const isDeep = typeof args[0] === 'boolean' ? args.shift() : false

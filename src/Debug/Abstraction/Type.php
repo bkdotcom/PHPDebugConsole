@@ -77,13 +77,7 @@ class Type
      *
      * @param mixed $val value
      *
-     * @return list{self::TYPE_*,self::TYPE_*|null} [$type, $typeMore] typeMore may be
-     *    null
-     *    'raw' indicates value needs crating
-     *    'abstraction'
-     *    'true'  (type bool)
-     *    'false' (type bool)
-     *    'numeric' (type string)
+     * @return list{self::TYPE_*,self::TYPE_*|null} [$type, $typeMore]
      */
     public function getType($val)
     {
@@ -188,13 +182,9 @@ class Type
      */
     private function getTypeObject($object)
     {
-        $type = self::TYPE_OBJECT;
-        $typeMore = self::TYPE_RAW;  // needs abstracted
-        if ($object instanceof Abstraction) {
-            $type = $object['type'];
-            $typeMore = $object['typeMore'];
-        }
-        return [$type, $typeMore];
+        return $object instanceof Abstraction
+            ? [$object['type'], $object['typeMore']]
+            : [self::TYPE_OBJECT, self::TYPE_RAW]; // raw indicates value needs abstracted
     }
 
     /**

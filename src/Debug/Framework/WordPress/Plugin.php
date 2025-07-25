@@ -11,6 +11,8 @@ use bdk\Debug\Utility\ArrayUtil;
  */
 class Plugin
 {
+    const I18N_DOMAIN = 'wordpress';
+
     /** @var Debug */
     public $debug;
 

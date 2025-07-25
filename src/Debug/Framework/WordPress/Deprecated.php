@@ -3,6 +3,7 @@
 namespace bdk\Debug\Framework\WordPress;
 
 use bdk\Debug;
+use bdk\Debug\Framework\WordPress\Plugin;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
 
@@ -11,8 +12,6 @@ use bdk\PubSub\SubscriberInterface;
  */
 class Deprecated implements SubscriberInterface
 {
-    const I18N_DOMAIN = 'wordpress';
-
     /** @var Debug */
     protected $debug;
 
@@ -70,7 +69,7 @@ class Deprecated implements SubscriberInterface
             $this->debug->i18n->trans('deprecated.func.arg', array(
                 'function' => $function,
                 'version' => $version,
-            ), self::I18N_DOMAIN) . '  ' . $message
+            ), Plugin::I18N_DOMAIN) . '  ' . $message
         );
         $this->warn($message);
     }
@@ -92,8 +91,8 @@ class Deprecated implements SubscriberInterface
             'version' => $version,
         );
         $message = $replacement
-            ? $this->debug->i18n->trans('deprecated.has-replacement', $messageArgs, self::I18N_DOMAIN)
-            : $this->debug->i18n->trans('deprecated.no-replacement', $messageArgs, self::I18N_DOMAIN);
+            ? $this->debug->i18n->trans('deprecated.has-replacement', $messageArgs, Plugin::I18N_DOMAIN)
+            : $this->debug->i18n->trans('deprecated.no-replacement', $messageArgs, Plugin::I18N_DOMAIN);
         $this->warn($message);
     }
 
@@ -115,8 +114,8 @@ class Deprecated implements SubscriberInterface
             'version' => $version,
         );
         $message = $parentClass && $parentClass !== $className
-            ? $this->debug->i18n->trans('deprecated.constructor.parent-class', $messageArgs, self::I18N_DOMAIN)
-            : $this->debug->i18n->trans('deprecated.constructor', $messageArgs, self::I18N_DOMAIN);
+            ? $this->debug->i18n->trans('deprecated.constructor.parent-class', $messageArgs, Plugin::I18N_DOMAIN)
+            : $this->debug->i18n->trans('deprecated.constructor', $messageArgs, Plugin::I18N_DOMAIN);
         $this->warn($message);
     }
 
@@ -138,8 +137,8 @@ class Deprecated implements SubscriberInterface
             'version' => $version,
         );
         $message = \trim(($replacement
-            ? $this->debug->i18n->trans('deprecated.has-replacement', $messageArgs, self::I18N_DOMAIN)
-            : $this->debug->i18n->trans('deprecated.no-replacement', $messageArgs, self::I18N_DOMAIN)
+            ? $this->debug->i18n->trans('deprecated.has-replacement', $messageArgs, Plugin::I18N_DOMAIN)
+            : $this->debug->i18n->trans('deprecated.no-replacement', $messageArgs, Plugin::I18N_DOMAIN)
         ) . '  ' . $message);
         $this->warn($message);
     }
@@ -161,8 +160,8 @@ class Deprecated implements SubscriberInterface
             'version' => $version,
         );
         $message = $replacement
-            ? $this->debug->i18n->trans('deprecated.has-replacement', $messageArgs, self::I18N_DOMAIN)
-            : $this->debug->i18n->trans('deprecated.no-replacement', $messageArgs, self::I18N_DOMAIN);
+            ? $this->debug->i18n->trans('deprecated.has-replacement', $messageArgs, Plugin::I18N_DOMAIN)
+            : $this->debug->i18n->trans('deprecated.no-replacement', $messageArgs, Plugin::I18N_DOMAIN);
         $this->warn($message);
     }
 
@@ -184,8 +183,8 @@ class Deprecated implements SubscriberInterface
             'version' => $version,
         );
         $message = \trim(($replacement
-            ? $this->debug->i18n->trans('deprecated.has-replacement', $messageArgs, self::I18N_DOMAIN)
-            : $this->debug->i18n->trans('deprecated.no-replacement', $messageArgs, self::I18N_DOMAIN)
+            ? $this->debug->i18n->trans('deprecated.has-replacement', $messageArgs, Plugin::I18N_DOMAIN)
+            : $this->debug->i18n->trans('deprecated.no-replacement', $messageArgs, Plugin::I18N_DOMAIN)
         ) . '  ' . $message);
         $this->warn($message);
     }

@@ -23,8 +23,15 @@ use bdk\PubSub\Event;
  */
 class StatementInfoLogger extends AbstractComponent
 {
-    /** @var array<string,mixed> */
+    /**
+     * Constructor pulls values from debug config
+     * EVENT_CONFIG subscriber keeps config in sync
+     *
+     * @var array<string,mixed>
+     */
     protected $cfg = array(
+        'querySelectLimit' => 500,
+        'queryUpdateLimit' => 100,
         'slowQueryDurationMs' => 500, // milliseconds
     );
 
@@ -59,7 +66,7 @@ class StatementInfoLogger extends AbstractComponent
         $cfg = \array_merge($cfgDefault, $cfg);
         $this->setCfg($cfg);
         if (!self::$constants) {
-            $this->setConstants();
+            self::$constants = $this->debug->sql->getParamConstants();
         }
         $this->debug->rootInstance->addPlugin($this->debug->pluginHighlight, 'highlight');
         $this->debug->eventManager->subscribe(Debug::EVENT_CONFIG, [$this, 'onConfig']);
@@ -92,7 +99,7 @@ class StatementInfoLogger extends AbstractComponent
     /**
      * Returns the list of executed statements as StatementInfo objects
      *
-     * @return StatementInfo[]
+     * @return int
      */
     public function getLoggedCount()
     {
@@ -150,9 +157,9 @@ class StatementInfoLogger extends AbstractComponent
             $this->debug->warn(\get_class($info->exception) . ': ' . \trim($msg));
             $this->debug->groupUncollapse();
         } elseif ($info->rowCount !== null) {
-            $this->debug->log($this->debug->i18n->trans('db.row-count'), $info->rowCount);
+            $this->logRowCount();
         }
-        $this->logSlowQuery();
+        $this->logNotices();
         $this->debug->groupEnd();
     }
 
@@ -218,6 +225,19 @@ class StatementInfoLogger extends AbstractComponent
     }
 
     /**
+     * Check if rowCount exceeds configured notice limit
+     *
+     * @return bool
+     */
+    private function isOverLimit()
+    {
+        \preg_match('/^\s*(\w+)\b/', $this->info->sql, $matches);
+        $command = \strtolower($matches[1]); // select, update, etc
+        return ($command === 'select' && $this->info->rowCount > $this->cfg['querySelectLimit'])
+            || ($command !== 'select' && $this->info->rowCount > $this->cfg['queryUpdateLimit']);
+    }
+
+    /**
      * Get info about what parts of the query are included in the label
      *
      * @param array $parsed Parsed sql
@@ -248,13 +268,40 @@ class StatementInfoLogger extends AbstractComponent
             $this->debug->time($this->debug->i18n->trans('db.duration'), $this->info->duration, $this->debug->meta(
                 'level',
                 $this->info->duration * 1000 >= $this->cfg['slowQueryDurationMs']
-                    ? 'warn' // highlight duration for slow queries
+                    ? 'warn' // warn if slow
                     : null
             ));
         }
         if ($this->info->memoryUsage !== null) {
             $memory = $this->debug->utility->getBytes($this->info->memoryUsage);
             $this->debug->log($this->debug->i18n->trans('runtime.memory.usage'), $memory);
+        }
+    }
+
+    /**
+     * "Flag" slow queries & limit violations
+     *
+     * @return void
+     */
+    private function logNotices()
+    {
+        $args = [];
+        $badgeVals = array(
+            'attribs' => array('class' => 'badge bg-warn fw-bold no-quotes'),
+        );
+        if ($this->info->duration * 1000 >= $this->cfg['slowQueryDurationMs']) {
+            $args[] = $this->debug->abstracter->crateWithVals($this->debug->i18n->trans('word.slow'), $badgeVals);
+        }
+        if ($this->isOverLimit()) {
+            $args[] = $this->debug->abstracter->crateWithVals($this->debug->i18n->trans('word.limit'), $badgeVals);
+        }
+        if ($args) {
+            $this->debug->log(new LogEntry(
+                $this->debug,
+                'groupEndValue',
+                $args,
+                array('level' => 'warn')
+            ));
         }
     }
 
@@ -301,7 +348,7 @@ class StatementInfoLogger extends AbstractComponent
     }
 
     /**
-     * Log the sql query
+     * Log the sql query (if it differs from the label)
      *
      * @param string $label The abbrev'd sql statement
      *
@@ -331,22 +378,17 @@ class StatementInfoLogger extends AbstractComponent
     }
 
     /**
-     * "Flag" slow queries
+     * Log row count
      *
      * @return void
      */
-    private function logSlowQuery()
+    private function logRowCount()
     {
-        if ($this->info->duration * 1000 < $this->cfg['slowQueryDurationMs']) {
-            return;
-        }
-        $this->debug->log(new LogEntry(
-            $this->debug,
-            'groupEndValue',
-            [$this->debug->abstracter->crateWithVals('slow', array(
-                'attribs' => array('class' => 'badge bg-warn fw-bold'),
-            ))],
-            array('level' => 'warn')
+        $this->debug->log($this->debug->i18n->trans('db.row-count'), $this->info->rowCount, $this->debug->meta(
+            'level',
+            $this->isOverLimit()
+                ? 'warn' // warn if over limit
+                : null
         ));
     }
 
@@ -354,8 +396,6 @@ class StatementInfoLogger extends AbstractComponent
      * Find common query performance issues
      *
      * @return void
-     *
-     * @link https://github.com/rap2hpoutre/mysql-xplain-xplain/blob/master/app/Explainer.php
      */
     protected function performQueryAnalysis()
     {
@@ -370,43 +410,5 @@ class StatementInfoLogger extends AbstractComponent
             $params[] = $this->debug->meta('uncollapse', false);
             \call_user_func_array([$this->debug, 'warn'], $params);
         });
-    }
-
-    /**
-     * Set PDO & Doctrine constants as a static val => constName array
-     *
-     * @return void
-     */
-    private function setConstants()
-    {
-        $this->setConstantsPdo();
-        if (\defined('Doctrine\\DBAL\\Connection::PARAM_INT_ARRAY')) {
-            self::$constants += array(
-                \Doctrine\DBAL\Connection::PARAM_INT_ARRAY => 'Doctrine\\DBAL\\Connection::PARAM_INT_ARRAY',
-                \Doctrine\DBAL\Connection::PARAM_STR_ARRAY => 'Doctrine\\DBAL\\Connection::PARAM_STR_ARRAY',
-            );
-        }
-    }
-
-    /**
-     * Set PDO constants as a static val => constName array
-     *
-     * @return void
-     */
-    private function setConstantsPdo()
-    {
-        $pdoConstants = array();
-        /** @psalm-suppress ArgumentTypeCoercion ignore expects class-string */
-        if (\class_exists('PDO')) {
-            $ref = new \ReflectionClass('PDO');
-            $pdoConstants = $ref->getConstants();
-        }
-        $constants = array();
-        foreach ($pdoConstants as $name => $val) {
-            if (\strpos($name, 'PARAM_') === 0 && \strpos($name, 'PARAM_EVT_') !== 0) {
-                $constants[$val] = 'PDO::' . $name;
-            }
-        }
-        self::$constants += $constants;
     }
 }

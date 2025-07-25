@@ -315,7 +315,7 @@ EOD;
                 "args":[
                     {
                         "attribs": {
-                            "class": [ "badge", "bg-warn", "fw-bold" ]
+                            "class": [ "badge", "bg-warn", "fw-bold", "no-quotes" ]
                         },
                         "brief": false,
                         "debug": "\u0000debug\u0000",

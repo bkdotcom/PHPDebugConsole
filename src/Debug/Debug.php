@@ -238,6 +238,8 @@ class Debug extends AbstractDebug
             'route' => array( 'class' => 'bdk\Debug\Plugin\Route' ),
             'runtime' => array( 'class' => 'bdk\Debug\Plugin\Runtime' ),
         ),
+        'querySelectLimit' => 500,
+        'queryUpdateLimit' => 100,
         'redactKeys' => [           // case-insensitive
             'password',
         ],

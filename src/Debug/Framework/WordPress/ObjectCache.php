@@ -3,6 +3,7 @@
 namespace bdk\Debug\Framework\WordPress;
 
 use bdk\Debug;
+use bdk\Debug\Framework\WordPress\Plugin;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
 
@@ -11,8 +12,6 @@ use bdk\PubSub\SubscriberInterface;
  */
 class ObjectCache implements SubscriberInterface
 {
-    const I18N_DOMAIN = 'wordpress';
-
     /** @var array<string,mixed> */
     protected $cfg = array(
         'enabled' => true,
@@ -54,8 +53,8 @@ class ObjectCache implements SubscriberInterface
             'nested' => false,
         ));
 
-        $this->debug->log($this->debug->i18n->trans('cache.hits', self::I18N_DOMAIN), $GLOBALS['wp_object_cache']->cache_hits);
-        $this->debug->log($this->debug->i18n->trans('cache.misses', self::I18N_DOMAIN), $GLOBALS['wp_object_cache']->cache_misses);
+        $this->debug->log($this->debug->i18n->trans('cache.hits', Plugin::I18N_DOMAIN), $GLOBALS['wp_object_cache']->cache_hits);
+        $this->debug->log($this->debug->i18n->trans('cache.misses', Plugin::I18N_DOMAIN), $GLOBALS['wp_object_cache']->cache_misses);
 
         $cacheInfo = $this->getCacheInfo();
         $this->debug->table($cacheInfo, $this->debug->meta('tableInfo', array(

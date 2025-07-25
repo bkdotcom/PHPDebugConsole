@@ -394,12 +394,16 @@ class Group implements SubscriberInterface
     {
         $this->groupStack->pop();
         $debug = $logEntry->getSubject();
-        $returnValue = $logEntry['args'][0];
-        if ($returnValue !== Abstracter::UNDEFINED) {
+        $args = $logEntry['args'];
+        if ($args[0] !== Abstracter::UNDEFINED) {
             $label = $logEntry->getMeta('label', 'return');
-            $args = $label
-                ? [$label, $returnValue]
-                : [$returnValue];
+            if ($label) {
+                \array_unshift($args, $this->debug->abstracter->crateWithVals($label, array(
+                    'attribs' => array(
+                        'class' => 'return-label',
+                    ),
+                )));
+            }
             $logEntry->setMeta('label', null); // delete label meta
             $debug->log(new LogEntry(
                 $debug,

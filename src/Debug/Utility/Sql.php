@@ -13,6 +13,7 @@ namespace bdk\Debug\Utility;
 use bdk\Debug\Utility\ArrayUtil;
 use bdk\HttpMessage\Utility\Uri as UriUtil;
 use DateTime;
+use ReflectionClass;
 
 /**
  * Utilities for formatting SQL statements
@@ -34,6 +35,23 @@ class Sql
             $dsn = \str_replace('/localhost', '/', $dsn);
         }
         return $dsn;
+    }
+
+    /**
+     * Get PDO & Doctrine constants as a val => name array
+     *
+     * @return array
+     */
+    public static function getParamConstants()
+    {
+        $constants = self::constantsPdo();
+        if (\defined('Doctrine\\DBAL\\Connection::PARAM_INT_ARRAY')) {
+            $constants += array(
+                \Doctrine\DBAL\Connection::PARAM_INT_ARRAY => 'Doctrine\\DBAL\\Connection::PARAM_INT_ARRAY',
+                \Doctrine\DBAL\Connection::PARAM_STR_ARRAY => 'Doctrine\\DBAL\\Connection::PARAM_STR_ARRAY',
+            );
+        }
+        return $constants;
     }
 
     /**
@@ -133,6 +151,28 @@ class Sql
         }
         $parts['scheme'] = \str_replace('_', '-', (string) $parts['scheme']);
         return $parts;
+    }
+
+    /**
+     * Get PDO param constants val => name array
+     *
+     * @return array
+     */
+    private static function constantsPdo()
+    {
+        $pdoConstants = array();
+        /** @psalm-suppress ArgumentTypeCoercion ignore expects class-string */
+        if (\class_exists('PDO')) {
+            $ref = new ReflectionClass('PDO');
+            $pdoConstants = $ref->getConstants();
+        }
+        $constants = array();
+        foreach ($pdoConstants as $name => $val) {
+            if (\strpos($name, 'PARAM_') === 0 && \strpos($name, 'PARAM_EVT_') !== 0) {
+                $constants[$val] = 'PDO::' . $name;
+            }
+        }
+        return $constants;
     }
 
     /**

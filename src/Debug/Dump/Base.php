@@ -27,6 +27,7 @@ class Base extends AbstractComponent
     public $crateRaw = true;    // whether dump() should crate "raw" value
                                 //   when processing log this is set to false
                                 //   so not unnecessarily re-crating arrays
+
     /** @var Debug */
     public $debug;
 

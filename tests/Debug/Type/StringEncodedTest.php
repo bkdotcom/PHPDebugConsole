@@ -473,6 +473,7 @@ class StringEncodedTest extends DebugTestFramework
                 ),
             ),
         );
+        // $tests = \array_intersect_key($tests, \array_flip(['base64.json.redact']));
         return $tests;
     }
 }

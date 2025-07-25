@@ -53,8 +53,8 @@ class Helper
 
         list($glue, $glueAfterFirst) = $this->getArgGlue($args, $meta['glue']);
 
-        if ($glueAfterFirst === false) {
-            // first arg is not glued
+        if ($glueAfterFirst === false && \is_string($args[0])) {
+            // first arg is not glued / don't trim Abstractions
             $args[0] = \rtrim($args[0]) . ' ';
         }
 
@@ -296,7 +296,8 @@ class Helper
     {
         $glueDefault = ', ';
         $glueAfterFirst = true;
-        if (\is_string($args[0]) === false) {
+        $firstArgIsString = $this->debug->abstracter->type->getType($args[0])[0] === Type::TYPE_STRING;
+        if ($firstArgIsString === false) {
             return [$glueDefault, $glueAfterFirst];
         }
         if (\preg_match('/[=:] ?$/', $args[0])) {

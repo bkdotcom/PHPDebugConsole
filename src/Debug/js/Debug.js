@@ -2325,25 +2325,29 @@ var phpDebugConsole = (function (exports, $) {
   }
 
   /**
-   * Build the value displayed when group is collapsed
+   * Build the value(s) displayed when group is collapsed
    */
-  function buildReturnVal ($return) {
-    var type = getNodeType($return);
-    var typeMore = type[1];
-    type = type[0];
-    if (['bool', 'callable', 'const', 'float', 'identifier', 'int', 'null', 'resource', 'unknown'].indexOf(type) > -1 || ['numeric', 'timestamp'].indexOf(typeMore) > -1) {
-      return $return[0].outerHTML
-    }
-    if (type === 'string') {
-      return buildReturnValString($return, typeMore)
-    }
-    if (type === 'object') {
-      return buildReturnValObject($return)
-    }
-    if (type === 'array' && $return[0].textContent === 'array()') {
-      return $return[0].outerHTML.replace('t_array', 't_array expanded')
-    }
-    return '<span class="t_keyword">' + type + '</span>'
+  function buildReturnVals ($returnNodes) {
+    var vals = Object.values($returnNodes).map(function (returnNode) {
+      var $return = $(returnNode);
+      var type = getNodeType($return);
+      var typeMore = type[1];
+      type = type[0];
+      if (['bool', 'callable', 'const', 'float', 'identifier', 'int', 'null', 'resource', 'unknown'].indexOf(type) > -1 || ['numeric', 'timestamp'].indexOf(typeMore) > -1) {
+        return $return[0].outerHTML
+      }
+      if (type === 'string') {
+        return buildReturnValString($return, typeMore)
+      }
+      if (type === 'object') {
+        return buildReturnValObject($return)
+      }
+      if (type === 'array' && $return[0].textContent === 'array()') {
+        return $return[0].outerHTML.replace('t_array', 't_array expanded')
+      }
+      return '<span class="t_keyword">' + type + '</span>'
+    });
+    return vals.join(', ')
   }
 
   function buildReturnValObject ($return) {
@@ -2373,11 +2377,11 @@ var phpDebugConsole = (function (exports, $) {
    * Collapse group or object
    */
   function collapseGroupObject (nodes, immediate, eventNameDone) {
-    var $groupEndValue = nodes.$wrap.find('> .group-body > .m_groupEndValue > :last-child');
+    var $groupEndValues = nodes.$wrap.find('> .group-body > .m_groupEndValue').children().not('.return-label');
     var $afterLabel = nodes.$toggle.find('.group-label').last().nextAll().not('i');
-    if ($groupEndValue.length && $afterLabel.length === 0) {
+    if ($groupEndValues.length && $afterLabel.length === 0) {
       nodes.$toggle.find('.group-label').last()
-        .after('<span class="t_operator"> : </span>' + buildReturnVal($groupEndValue));
+        .after('<span class="t_operator"> : </span>' + buildReturnVals($groupEndValues));
     }
     if (immediate) {
       return collapseDone(nodes, eventNameDone)
@@ -2413,8 +2417,8 @@ var phpDebugConsole = (function (exports, $) {
     nodes.$target.slideDown('fast', function () {
       var $groupEndValue = $(this).find('> .m_groupEndValue');
       if ($groupEndValue.length) {
-        // remove value from label
-        nodes.$toggle.find('.group-label').last().nextAll().remove();
+        // remove value(s) from label
+        nodes.$toggle.find('.group-label').last().nextAll(true).remove();
       }
       nodes.$classTarget.addClass('expanded');
       iconUpdate(nodes.$toggle, icon);

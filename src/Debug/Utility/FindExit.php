@@ -198,7 +198,7 @@ class FindExit
         if ($token !== '}') {
             return false;
         }
-        // token === '}
+        // token === '}'
         $this->depth--;
         if (\end($this->funcStack) === $this->depth) {
             \array_pop($this->funcStack);

@@ -253,7 +253,7 @@ class Utility
      *
      * @return string
      */
-    public static function trans($str, array $args = array(), $domain = null)
+    public static function trans($str, $args = array(), $domain = null)
     {
         return Debug::getInstance()->i18n->trans($str, $args, $domain);
     }

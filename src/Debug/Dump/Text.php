@@ -92,49 +92,84 @@ class Text extends Base
      * Convert all arguments to text and join them together.
      *
      * @param array $args arguments
+     * @param array $meta meta values
      *
      * @return string
      */
-    protected function buildArgString($args)
+    protected function buildArgString($args, array $meta = array())
     {
-        foreach ($args as $i => $v) {
-            list($type, $typeMore) = $this->debug->abstracter->type->getType($v);
-            $isNumericString = $type === Type::TYPE_STRING
-                && \in_array($typeMore, [Type::TYPE_STRING_NUMERIC, Type::TYPE_TIMESTAMP], true);
-            $args[$i] = $this->valDumper->dump($v, array(
-                'addQuotes' => $i !== 0 || $isNumericString || $type !== Type::TYPE_STRING,
-                'type' => $type,
-                'typeMore' => $typeMore,
-            ));
-            $this->valDumper->setValDepth(0);
+        if (\count($args) === 0) {
+            return '';
         }
-        return $this->buildArgStringGlue($args);
-    }
 
-    /**
-     * Implode/"glue" the arguments together
-     *
-     * @param array $args dumped arguments
-     *
-     * @return string
-     */
-    private function buildArgStringGlue($args)
-    {
-        $glue = $this->cfg['glue']['multiple'];
-        $glueAfterFirst = true;
-        $numArgs = \count($args);
-        if ($numArgs > 0 && \is_string($args[0])) {
-            if (\preg_match('/[=:] ?$/', $args[0])) {
-                // first arg ends with "=" or ":"
-                $glueAfterFirst = false;
-                $args[0] = \rtrim($args[0]) . ' ';
-            } elseif ($numArgs === 2) {
-                $glue = $this->cfg['glue']['equal'];
-            }
+        $meta = \array_merge(array(
+            'glue' => null,
+        ), $meta);
+
+        list($glue, $glueAfterFirst) = $this->getArgGlue($args, $meta['glue']);
+
+        if ($glueAfterFirst === false && \is_string($args[0])) {
+            // first arg is not glued / don't trim Abstractions
+            $args[0] = \rtrim($args[0]) . ' ';
         }
+
+        $args = $this->buildArgStringArgs($args);
         return $glueAfterFirst
             ? \implode($glue, $args)
             : $args[0] . \implode($glue, \array_slice($args, 1));
+    }
+
+    /**
+     * Return array of dumped arguments
+     *
+     * @param array $args arguments
+     *
+     * @return array
+     */
+    private function buildArgStringArgs(array $args)
+    {
+        return \array_map(function ($arg, $i) {
+            list($type, $typeMore) = $this->debug->abstracter->type->getType($arg);
+            $isNumericString = $type === Type::TYPE_STRING
+                && \in_array($typeMore, [Type::TYPE_STRING_NUMERIC, Type::TYPE_TIMESTAMP], true);
+            $dumped = $this->valDumper->dump($arg, array(
+                'addQuotes' => $i !== 0 || $isNumericString || $type !== Type::TYPE_STRING,
+                // 'sanitize' => $i === 0
+                    // ? $meta['sanitizeFirst']
+                    // : $meta['sanitize'],
+                'type' => $type,
+                'typeMore' => $typeMore,
+                // 'visualWhiteSpace' => $i !== 0 || $type !== Type::TYPE_STRING,
+            ));
+            $this->valDumper->setValDepth(0);
+            return $dumped;
+        }, $args, \array_keys($args));
+    }
+
+    /**
+     * Get argument "glue" and whether to glue after first arg
+     *
+     * @param array       $args     arguments
+     * @param string|null $metaGlue glue specified in meta values
+     *
+     * @return [string, bool] glue, glueAfterFirst
+     */
+    private function getArgGlue(array $args, $metaGlue)
+    {
+        $glueDefault = $this->cfg['glue']['multiple'];
+        $glueAfterFirst = true;
+        $firstArgIsString = $this->debug->abstracter->type->getType($args[0])[0] === Type::TYPE_STRING;
+        if ($firstArgIsString === false) {
+            return [$glueDefault, $glueAfterFirst];
+        }
+        if (\preg_match('/[=:] ?$/', $args[0])) {
+            // first arg ends with "=" or ":"
+            $glueAfterFirst = false;
+        } elseif (\count($args) === 2) {
+            $glueDefault = $this->cfg['glue']['equal'];
+        }
+        $glue = $metaGlue ?: $glueDefault;
+        return [$glue, $glueAfterFirst];
     }
 
     /**
@@ -198,7 +233,7 @@ class Text extends Base
                 'style' => false,
             ));
         }
-        return $this->buildArgString($args);
+        return $this->buildArgString($args, $logEntry['meta']);
     }
 
     /**
@@ -273,6 +308,6 @@ class Text extends Base
         if ($meta['caption']) {
             \array_unshift($logEntry['args'], $meta['caption']);
         }
-        return $this->buildArgString($logEntry['args']);
+        return $this->buildArgString($logEntry['args'], $meta);
     }
 }

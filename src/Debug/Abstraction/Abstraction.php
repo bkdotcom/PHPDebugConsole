@@ -52,18 +52,8 @@ class Abstraction extends Event
     public function __toString()
     {
         $typeMore = $this->getValue('typeMore');
-        if ($typeMore === Type::TYPE_STRING_BINARY && isset($this->values['chunks'])) {
-            return \implode('', \array_map(static function (array $chunk) {
-                if ($chunk[0] === Utf8::TYPE_UTF8) {
-                    return $chunk[1];
-                }
-                $hex = \str_replace(' ', '', $chunk[1]);
-                return \hex2bin($hex);
-            }, $this->values['chunks']));
-        }
         if ($typeMore === Type::TYPE_STRING_BINARY) {
-            $hex = \str_replace(' ', '', $this->values['value']);
-            return \hex2bin($hex);
+            return $this->toStringBinary();
         }
         if (isset($this->values['value'])) {
             return (string) $this->values['value'];
@@ -127,5 +117,30 @@ class Abstraction extends Event
         } elseif (\is_string($values['attribs']['class'])) {
             $this->values['attribs']['class'] = \explode(' ', $values['attribs']['class']);
         }
+    }
+
+    /**
+     * Return stringified value for binary abstraction
+     *
+     * @return string
+     */
+    private function toStringBinary()
+    {
+        if (isset($this->values['chunks']) === false) {
+            $hex = \str_replace(' ', '', $this->values['value']);
+            return \hex2bin($hex);
+        }
+        return \implode('', \array_map(static function (array $chunk) {
+            if ($chunk[0] === Utf8::TYPE_UTF8) {
+                return $chunk[1];
+            }
+            if ($chunk[0] === Utf8::TYPE_UTF8_CONTROL) {
+                // control character(s)
+                $hex = \bin2hex($chunk[1]);
+                $chunk[1] = \trim(\chunk_split($hex, 2, ' '));
+            }
+            $hex = \str_replace(' ', '', $chunk[1]);
+            return \hex2bin($hex);
+        }, $this->values['chunks']));
     }
 }

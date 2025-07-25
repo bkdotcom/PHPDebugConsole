@@ -4,6 +4,7 @@ namespace bdk\Debug\Framework\WordPress;
 
 use bdk\Debug;
 use bdk\Debug\AbstractComponent;
+use bdk\Debug\Framework\WordPress\Plugin;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
 
@@ -12,8 +13,6 @@ use bdk\PubSub\SubscriberInterface;
  */
 class Hooks extends AbstractComponent implements SubscriberInterface
 {
-    const I18N_DOMAIN = 'wordpress';
-
     /** @var array<string,mixed> */
     protected $cfg = array(
         'enabled' => true,
@@ -72,7 +71,7 @@ class Hooks extends AbstractComponent implements SubscriberInterface
         $debug = $event->getSubject();
         $this->debug = $debug->getChannel('hooks', array(
             'channelIcon' => 'fa fa-arrow-up',
-            'channelName' => $debug->i18n->trans('channel.hooks', self::I18N_DOMAIN),
+            'channelName' => $debug->i18n->trans('channel.hooks', Plugin::I18N_DOMAIN),
             'channelSort' => 1,
             'nested' => false,
         ));

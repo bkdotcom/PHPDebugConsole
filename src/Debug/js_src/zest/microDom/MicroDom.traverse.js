@@ -3,8 +3,31 @@ import * as helper from '../helper.js'
 
 export function extendMicroDom (MicroDom) {
 
-  function children(filter) {
-    return this.alter((el) => el.children, filter)
+  function getArgs (args) {
+    const argsObj = {
+      filter: null,
+      inclTextNodes: false,
+    }
+    for (const val of args) {
+      // console.log(val); // Access the value directly
+      if (typeof val === 'boolean') {
+        argsObj.inclTextNodes = val
+      } else {
+        argsObj.filter = val
+      }
+    }
+    return argsObj
+  }
+
+  /**
+   * @param {*} filter
+   * @param {bool} inclTextNodes (false)
+   */
+  function children(...args) {
+    args = getArgs(args)
+    return args.inclTextNodes
+      ? this.alter((el) => el.childNodes, args.filter)
+      : this.alter((el) => el.children, args.filter)
   }
 
   function closest (selector) {
@@ -31,28 +54,47 @@ export function extendMicroDom (MicroDom) {
     })
   }
 
-  function next (filter) {
-    return this.alter((el) => el.nextElementSibling, filter)
+  /**
+   * @param {*} filter
+   * @param {bool} inclTextNodes (false)
+   */
+  function next (...args) {
+    args = getArgs(args)
+    return  args.inclTextNodes
+      ? this.alter((el) => el.nextSibling, args.filter)
+      : this.alter((el) => el.nextElementSibling, args.filter)
   }
 
-  function nextAll (filter) {
+  /**
+   * @param {*} filter
+   * @param {bool} inclTextNodes (false)
+   */
+  function nextAll (...args) {
+    args = getArgs(args)
     return this.alter((el) => {
       const collected = []
-      while (el = el.nextElementSibling) {
+      while (el = args.inclTextNodes ? el.nextSibling : el.nextElementSibling) {
         collected.push(el)
       }
       return collected
-    }, filter)
+    }, args.filter)
   }
 
-  function nextUntil (selector, filter) {
+  function nextUntil (selector, ...args) {
+    args = getArgs(args)
     return this.alter((el) => {
       const collected = []
-      while ((el = el.nextElementSibling) && customSelectors.matches(el, selector) === false) {
+      while (
+        (el = args.inclTextNodes ? el.nextSibling : el.nextElementSibling)
+        && (
+          el.nodeType !== Node.ELEMENT_NODE
+          || customSelectors.matches(el, selector) === false
+        )
+      ) {
         collected.push(el)
       }
       return collected
-    }, filter)
+    }, args.filter)
   }
 
   function parent (filter) {
@@ -82,34 +124,65 @@ export function extendMicroDom (MicroDom) {
     }, filter)
   }
 
-  function prev (filter) {
-    return this.alter((el) => el.previousElementSibling, filter)
+  /**
+   * @param {*} filter
+   * @param {bool} inclTextNodes (false)
+   */
+  function prev (...args) {
+    args = getArgs(args)
+    return args.inclTextNodes
+      ? this.alter((el) => el.previousSibling, args.filter)
+      : this.alter((el) => el.previousElementSibling, args.filter)
   }
 
-  function prevAll (filter) {
+  /**
+   * @param {*} filter
+   * @param {bool} inclTextNodes (false)
+   */
+  function prevAll (...args) {
+    args = getArgs(args)
     return this.alter((el) => {
       const collected = []
-      while (el = el.previousElementSibling) {
+      while (el = args.inclTextNodes ? el.previousSibling : el.previousElementSibling) {
         collected.push(el)
       }
       return collected
-    }, filter)
+    }, args.filter)
   }
 
-  function prevUntil (selector, filter) {
+  /**
+   * @param {*} filter
+   * @param {bool} inclTextNodes (false)
+   */
+  function prevUntil (selector, ...args) {
+    args = getArgs(args)
     return this.alter((el) => {
       const collected = []
-      while ((el = el.previousElementSibling) && el.matches(selector) === false) {
+      while (
+        (el = args.inclTextNodes ? el.previousSibling : el.previousElementSibling)
+        && (
+          el.nodeType !== Node.ELEMENT_NODE
+          || customSelectors.matches(el, selector) === false
+        )
+      ) {
         collected.push(el)
       }
       return collected
-    }, filter)
+    }, args.filter)
   }
 
-  function siblings (filter) {
+  /**
+   * @param {*} filter
+   * @param {bool} inclTextNodes (false)
+   */
+  function siblings (...args) {
+    args = getArgs(args)
     return this.alter((el) => {
-      return Array.from(el.parentNode.children).filter((child) => child !== el)
-    }, filter)
+      const childNodes = args.inclTextNodes
+        ? el.parentNode.childNodes
+        : el.parentNode.children
+      return Array.from(childNodes).filter((child) => child !== el)
+    }, args.filter)
   }
 
   Object.assign(MicroDom.prototype, {

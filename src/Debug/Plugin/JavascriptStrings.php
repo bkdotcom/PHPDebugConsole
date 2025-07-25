@@ -24,7 +24,7 @@ class JavascriptStrings implements AssetProviderInterface, SubscriberInterface
     private $debug;
 
     /** @var list<string> */
-    private $sharedKeys = [
+    private $keys = [
         'error.cat.deprecated',
         'error.cat.error',
         'error.cat.fatal',
@@ -49,7 +49,7 @@ class JavascriptStrings implements AssetProviderInterface, SubscriberInterface
         foreach ($this->getJsKeys() as $key) {
             $strings[$key] = $i18n->trans('js.' . $key);
         }
-        foreach ($this->sharedKeys as $key) {
+        foreach ($this->keys as $key) {
             $strings[$key] = $i18n->trans($key);
         }
         return array(

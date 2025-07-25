@@ -204,10 +204,10 @@ class AbstractObject extends AbstractComponent
         $this->properties = new Properties($this);
         $this->propertiesInstance = new PropertiesInstance($this);
         $this->definition = new Definition($this);
+
         if ($abstracter->debug->parentInstance === null) {
             // we only need to subscribe to these events from root channel
-            $subscriber = new Subscriber($this);
-            $abstracter->debug->eventManager->addSubscriberInterface($subscriber);
+            $abstracter->debug->eventManager->addSubscriberInterface(new Subscriber($this));
         }
 
         self::$values['sectionOrder'] = $abstracter->getCfg('objectSectionOrder');

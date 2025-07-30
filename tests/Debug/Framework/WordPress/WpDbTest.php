@@ -147,7 +147,7 @@ class WpDbTest extends DebugTestFramework
                 array(
                     'method' => 'log',
                     'args' => [
-                        'Logged operations',
+                        'Logged operations: ',
                         1,
                     ],
                     'meta' => array(

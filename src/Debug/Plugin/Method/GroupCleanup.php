@@ -289,8 +289,8 @@ class GroupCleanup implements SubscriberInterface
         if ($logEntry->getMeta('uncollapse') === false) {
             return;
         }
-        foreach ($groupStack as $logEntry) {
-            $logEntry['method'] = 'group';
+        foreach ($groupStack as $groupLogEntry) {
+            $groupLogEntry['method'] = 'group';
         }
     }
 }

@@ -282,12 +282,33 @@ EOD;
                 }
             },
             "3": {
+                "method": "groupEndValue",
+                "args": [
+                    {
+                        "attribs": {
+                            "class": [ "badge", "bg-warn", "fw-bold", "no-quotes" ]
+                        },
+                        "brief": false,
+                        "debug": "\u0000debug\u0000",
+                        "type": "string",
+                        "typeMore": null,
+                        "value": "slow"
+                    }
+                ],
+                "meta": {
+                    "attribs": {
+                        "class": ["hide"]
+                    }
+                }
+            },
+
+            "4": {
                 "method": "log",
                 "args": ["Memory usage", "6.13 kB"],
                 "meta": []
             },
 
-            "4": {
+            "5": {
                 "method": "warn",
                 "args": [
                     "%cLIMIT%c without %cORDER BY%c causes non-deterministic results",
@@ -304,29 +325,10 @@ EOD;
                 }
             },
 
-            "5": {
+            "6": {
                 "method": "log",
                 "args": ["rowCount", 10],
                 "meta": []
-            },
-
-            "6": {
-                "method": "groupEndValue",
-                "args":[
-                    {
-                        "attribs": {
-                            "class": [ "badge", "bg-warn", "fw-bold", "no-quotes" ]
-                        },
-                        "brief": false,
-                        "debug": "\u0000debug\u0000",
-                        "type": "string",
-                        "typeMore": null,
-                        "value": "slow"
-                    }
-                ],
-                "meta": {
-                    "level": "warn"
-                }
             },
 
             "7": {
@@ -341,9 +343,9 @@ EOD;
         // duration
         // $logEntriesExpect[3]['args'][0] = $logEntries[3]['args'][0];
         // memory usage
-        $logEntriesExpect[3]['args'][1] = $logEntries[3]['args'][1];
-        $logEntriesExpect[4]['meta']['file'] = $logEntries[4]['meta']['file'];
-        $logEntriesExpect[4]['meta']['line'] = $logEntries[4]['meta']['line'];
+        $logEntriesExpect[4]['args'][1] = $logEntries[4]['args'][1];
+        $logEntriesExpect[5]['meta']['file'] = $logEntries[5]['meta']['file'];
+        $logEntriesExpect[5]['meta']['line'] = $logEntries[5]['meta']['line'];
         // \bdk\Debug::varDump('expect', $logEntriesExpect);
         // \bdk\Debug::varDump('actual', $logEntries);
         $this->assertSame($logEntriesExpect, $logEntries);

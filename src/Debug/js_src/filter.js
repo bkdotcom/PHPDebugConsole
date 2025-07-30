@@ -5,9 +5,19 @@
 import $ from 'zest'
 
 var channels = []
+var isInit = true
 var tests = [
   function ($node) {
     var channel = $node.data('channel') || $node.closest('.debug').data('channelKeyRoot')
+    if (isInit) {
+      if ($node.is('.m_warn, .m_error') && $node.data('uncollapse') !== false) {
+        return true // ensure all warn/error entries are visible on initial load
+      }
+      if ($node.is('.m_group') && $node.find('.m_error, .m_warn').not('.filter-hidden').length) {
+        // console.warn('node', $node, $node.find('.m_error, .m_warn').not('.filter-hidden'));
+        return true; // ensure all groups with warn/error entries are visible on initial load
+      }
+    }
     return channels.indexOf(channel) > -1
   }
 ]
@@ -35,6 +45,7 @@ export function init ($delegateNode) {
   }
   */
   applyFilter($delegateNode)
+  isInit = false
   $delegateNode.on('change', 'input[type=checkbox]', onCheckboxChange)
   $delegateNode.on('change', 'input[data-toggle=error]', onToggleErrorChange)
   $delegateNode.on('channelAdded.debug', function (e) {

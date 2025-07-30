@@ -67,30 +67,24 @@ trait DatabaseTrait
     /**
      * Log runtime information
      *
-     * @param Debug  $debug            Debug instance
      * @param string $connectionString (optional) connection string
      *
      * @return void
      */
-    private function logRuntime(Debug $debug, $connectionString = null)
+    private function logRuntime($connectionString = null)
     {
         $currentDatabase = $connectionString
             ? null
             : $this->currentDatabase();
         if ($connectionString) {
-            $debug->log($debug->i18n->trans('db.connection-string'), $connectionString, $debug->meta('redact'));
+            $this->debug->log($this->debug->i18n->trans('db.connection-string'), $connectionString, $this->debug->meta('redact'));
         } elseif ($currentDatabase) {
-            $debug->log('database', $currentDatabase);
+            $this->debug->log('database', $currentDatabase);
         }
-        $debug->log($this->debug->i18n->trans('runtime.logged-operations') . ': ', $this->statementInfoLogger->getLoggedCount());
-        $debug->time($this->debug->i18n->trans('runtime.total-time'), $this->statementInfoLogger->getTimeSpent());
-        $debug->log($this->debug->i18n->trans('runtime.memory.peak'), $debug->utility->getBytes($this->statementInfoLogger->getPeakMemoryUsage()));
+        $this->statementInfoLogger->logStats();
         $serverInfo = $this->serverInfo();
         if ($serverInfo) {
-            $debug->log($this->debug->i18n->trans('db.server-info'), $serverInfo);
-        }
-        if ($this->statementInfoLogger->prettified() === false) {
-            $debug->info('require jdorn/sql-formatter to prettify logged sql statements');
+            $this->debug->log($this->debug->i18n->trans('db.server-info'), $serverInfo);
         }
     }
 

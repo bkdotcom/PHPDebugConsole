@@ -238,8 +238,11 @@ class Debug extends AbstractDebug
             'route' => array( 'class' => 'bdk\Debug\Plugin\Route' ),
             'runtime' => array( 'class' => 'bdk\Debug\Plugin\Runtime' ),
         ),
-        'querySelectLimit' => 500,
-        'queryUpdateLimit' => 100,
+        'queryLimitSelect' => 500,
+        'queryLimitUpdate' => 100,
+        'queryLimitWarn' => 'noClause', // whether to warn when rowCount exceeds queryLimitSelect/queryLimitUpdate
+                                        //   true|false|'noClause'
+                                        //   will "info" when evals false
         'redactKeys' => [           // case-insensitive
             'password',
         ],

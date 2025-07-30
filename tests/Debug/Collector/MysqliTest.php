@@ -812,33 +812,47 @@ EOD;
     {
         self::assertPhpClient();
 
-        self::$client->onDebugOutput(new Event($this->debug));
+        self::$client->onDebugOutput(new Event($this->debug->getChannel('mysqli')));
         $logEntriesExpectJson = <<<'EOD'
         [
             {
                 "method": "groupCollapsed",
                 "args": ["MySqli info", "%s"],
-                "meta": {"argsAsParams": false, "icon": "fa fa-database", "level": "info"}
+                "meta": {
+                    "argsAsParams": false,
+                    "channel": "general.mysqli",
+                    "icon": "fa fa-database",
+                    "level": "info"
+                }
             },
             {
                 "method": "log",
                 "args": ["Connection string", "mysql://root:█████████@localhost:3306/test"],
-                "meta": {"redact": true}
+                "meta": {
+                    "channel": "general.mysqli",
+                    "redact": true
+                }
             },
             {
                 "method": "log",
                 "args": ["Logged operations: ", 4],
-                "meta": []
+                "meta": {
+                    "channel": "general.mysqli"
+                }
             },
             {
                 "method": "time",
                 "args": ["Total time: %s"],
-                "meta": []
+                "meta": {
+                    "channel": "general.mysqli"
+                }
             },
             {
                 "method": "log",
                 "args": ["Peak memory usage", "%s"],
-                "meta": []
+                "meta": {
+                    "channel": "general.mysqli"
+                }
             },
             {
                 "method": "log",
@@ -856,12 +870,16 @@ EOD;
                         "Version": "5.7.36"
                     }
                 ],
-                "meta": []
+                "meta": {
+                    "channel": "general.mysqli"
+                }
             },
             {
                 "method": "groupEnd",
                 "args": [],
-                "meta": []
+                "meta": {
+                    "channel": "general.mysqli"
+                }
             }
         ]
 EOD;

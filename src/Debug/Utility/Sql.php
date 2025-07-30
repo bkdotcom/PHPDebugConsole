@@ -55,6 +55,26 @@ class Sql
     }
 
     /**
+     * Get "label" / condensed sql from parsed sql
+     *
+     * @param array $parsed Parsed sql
+     *
+     * @return string
+     */
+    public static function labelFromParsed(array $parsed)
+    {
+        $label = $parsed['methodPlus']; // method + table
+        $labelInfo = self::labelInfo($parsed);
+        if ($labelInfo['includeWhere']) {
+            $label .= $labelInfo['beforeWhere'] . ' WHERE ' . $parsed['where'];
+        }
+        if (\strlen($label) > 100 && $parsed['select']) {
+            $label = \str_replace($parsed['select'], ' (…)', $label);
+        }
+        return $label . ($labelInfo['haveMore'] ? '…' : '');
+    }
+
+    /**
      * "Parse" the sql statement to get a label
      *
      * This "parser" has a *very* limited scope.  For internal use only.
@@ -65,9 +85,9 @@ class Sql
      */
     public static function parse($sql)
     {
-        $regex = '/^(?<method>
+        $regex = '/^(?P<methodPlus>
                 (?:DROP|SHOW).+|
-                CREATE(?:\sTEMPORARY)?\s+TABLE(?:\sIF\sNOT\sEXISTS)?\s+\S+|
+                CREATE(?:\sTEMPORARY)?\s+(TABLE|DATABASE)(?:\sIF\sNOT\sEXISTS)?\s+\S+|
                 DELETE.*?FROM\s+\S+|
                 INSERT(?:\s+(?:LOW_PRIORITY|DELAYED|HIGH_PRIORITY|IGNORE|INTO))*\s+\S+|
                 SELECT\s+(?P<select>.*?)\s+FROM\s+(?<from>\S+)|
@@ -81,10 +101,9 @@ class Sql
             (?:\s+ORDER BY\s+(?P<orderBy>.*?))?
             (?:\s+LIMIT\s+(?P<limit>.*?))?
             (?:\s+FOR\s+(?P<for>.*?))?
-            $/six';
-        $keysAlwaysReturn = ['method', 'select', 'from', 'afterMethod', 'where'];
+        $/six';
         return \preg_match($regex, $sql, $matches) === 1
-            ? \array_merge(\array_fill_keys($keysAlwaysReturn, ''), $matches)
+            ? self::parseFinalize($matches)
             : false;
     }
 
@@ -203,5 +222,43 @@ class Sql
             $value = $value->format(DateTime::ISO8601);
         }
         return \call_user_func([__CLASS__, __FUNCTION__], (string) $value);
+    }
+
+    /**
+     * Get info about what parts of the query are included in the label
+     *
+     * @param array $parsed Parsed sql
+     *
+     * @return array
+     */
+    private static function labelInfo(array $parsed)
+    {
+        $afterWhereKeys = ['groupBy', 'having', 'window', 'orderBy', 'limit', 'for'];
+        $afterWhereValues = \array_filter(\array_intersect_key($parsed, \array_flip($afterWhereKeys)));
+        $includeWhere = $parsed['where'] && \strlen($parsed['where']) < 35;
+        return array(
+            'beforeWhere' => $parsed['afterMethod'] ? ' (…)' : '',
+            'haveMore' => \count($afterWhereValues) > 0
+                || (!$includeWhere && \array_filter([$parsed['afterMethod'], $parsed['where']])),
+            'includeWhere' => $includeWhere,
+        );
+    }
+
+    /**
+     * Clean up matches
+     *
+     * @param array $matches regex matches
+     *
+     * @return array
+     */
+    private static function parseFinalize(array $matches)
+    {
+        foreach (\range(0, \count($matches) / 2) as $index) {
+            unset($matches[$index]);
+        }
+        $keysAlwaysReturn = ['method', 'select', 'from', 'afterMethod', 'where', 'limit'];
+        \preg_match('/^\s*(\w+)\b/', $matches['methodPlus'], $methodMatches);
+        $matches['method'] = \strtolower($methodMatches[1]);
+        return \array_merge(\array_fill_keys($keysAlwaysReturn, null), $matches);
     }
 }

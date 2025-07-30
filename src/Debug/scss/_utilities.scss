@@ -43,6 +43,10 @@
 
 .fw-bold { font-weight: 700; }
 
+.d-none, .hide {
+  display: none !important;
+}
+
 .logentry-muted {
   opacity: 0.5;
   &.m_group.expanded {

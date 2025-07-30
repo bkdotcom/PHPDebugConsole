@@ -68,7 +68,7 @@ class Connection extends AbstractConnectionMiddleware
             )),
         ]);
         \call_user_func_array([$debug, 'groupCollapsed'], $groupParams);
-        $this->logRuntime($debug);
+        $this->logRuntime();
         $debug->groupEnd();  // groupCollapsed
         $debug->groupEnd();  // groupSummary
     }

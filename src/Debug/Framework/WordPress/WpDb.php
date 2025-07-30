@@ -88,7 +88,7 @@ class WpDb extends AbstractComponent implements SubscriberInterface
             )),
         ]);
         \call_user_func_array([$debug, 'groupCollapsed'], $groupParams);
-        $this->logRuntime($debug);
+        $this->logRuntime();
         $debug->groupEnd();  // groupCollapsed
         $debug->groupEnd();  // groupSummary
     }
@@ -140,21 +140,16 @@ class WpDb extends AbstractComponent implements SubscriberInterface
     /**
      * Log runtime information
      *
-     * @param Debug $debug Debug instance
-     *
      * @return void
      */
-    private function logRuntime(Debug $debug)
+    private function logRuntime()
     {
+        $debug = $this->debug;
         $debug->log($debug->i18n->trans('db.connection-string'), $this->getDsn(), $debug->meta('redact'));
-        $debug->log($debug->i18n->trans('runtime.logged-operations'), $this->statementInfoLogger->getLoggedCount());
-        $debug->time($debug->i18n->trans('runtime.total-time'), $this->statementInfoLogger->getTimeSpent());
+        $this->statementInfoLogger->logStats();
         $serverInfo = $this->serverInfo();
         if ($serverInfo) {
             $debug->log($debug->i18n->trans('db.server-info'), $serverInfo);
-        }
-        if ($this->statementInfoLogger->prettified() === false) {
-            $debug->info('require jdorn/sql-formatter to prettify logged sql statements');
         }
     }
 

@@ -30,8 +30,10 @@ return array(
     'db.connection-error' => 'Error de conexión',
     'db.connection-string' => 'Cadena de conexión',
     'db.duration' => 'duración',
+    'db.limit-exceeded' => 'límite excedido',
     'db.row-count' => 'conteo de filas',
     'db.server-info' => 'Información del servidor',
+    'db.slow-queries' => 'Consultas lentas',
 
     'deprecated.pluginInterface' => '{class} implementa PluginInterface, que está obsoleto. Use SubscriberInterface con el suscriptor EVENT_PLUGIN_INIT O EVENT_BOOTSTRAP en su lugar.',
 

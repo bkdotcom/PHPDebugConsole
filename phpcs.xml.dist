@@ -53,6 +53,12 @@
         <exclude name="Generic.Commenting.DocComment.MissingShort" />
         <exclude name="Generic.Commenting.DocComment.ShortNotCapital" />
         <exclude name="Generic.Commenting.DocComment.SpacingAfterTagGroup" />
+
+        <exclude name="Generic.Debug.ClosureLinter" /> <!-- deprecated -->
+        <exclude name="Generic.Debug.CSSLint" /> <!-- deprecated -->
+        <exclude name="Generic.Debug.ESLint" /> <!-- deprecated -->
+        <exclude name="Generic.Debug.JSHint" /> <!-- deprecated -->
+
         <exclude name="Generic.Files.EndFileNewline.NotFound" /> <!-- handled by PSR-12 -->
         <exclude name="Generic.Files.EndFileNoNewline.Found" />
         <exclude name="Generic.Files.InlineHTML.Found" />

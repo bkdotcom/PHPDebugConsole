@@ -38,6 +38,7 @@ class Group implements SubscriberInterface
         'group',
         'groupCollapsed',
         'groupEnd',
+        'groupEndValue',
         'groupSummary',
         'groupUncollapse',
     ];
@@ -111,8 +112,7 @@ class Group implements SubscriberInterface
      */
     public function group()
     {
-        $this->doGroup(new LogEntry($this->debug, __FUNCTION__, \func_get_args()));
-        return $this->debug;
+        return $this->doGroup(new LogEntry($this->debug, __FUNCTION__, \func_get_args()));
     }
 
     /**
@@ -126,8 +126,7 @@ class Group implements SubscriberInterface
      */
     public function groupCollapsed()
     {
-        $this->doGroup(new LogEntry($this->debug, __FUNCTION__, \func_get_args()));
-        return $this->debug;
+        return $this->doGroup(new LogEntry($this->debug, __FUNCTION__, \func_get_args()));
     }
 
     /**
@@ -164,6 +163,18 @@ class Group implements SubscriberInterface
             $this->debug->errorHandler->setErrorCaller(false);
         }
         return $this->debug;
+    }
+
+    /**
+     * Create "return value" log entry
+     *
+     * This is can also be a accomplished by calling `groupEnd()` with arguments
+     *
+     * @return Debug
+     */
+    public function groupEndValue()
+    {
+        return $this->debug->log(new LogEntry($this->debug, __FUNCTION__, \func_get_args()));
     }
 
     /**
@@ -240,7 +251,7 @@ class Group implements SubscriberInterface
      *
      * @param LogEntry $logEntry LogEntry instance
      *
-     * @return void
+     * @return Debug
      */
     private function doGroup(LogEntry $logEntry)
     {
@@ -248,7 +259,7 @@ class Group implements SubscriberInterface
         $collect = $debug->getCfg('collect', Debug::CONFIG_DEBUG);
         $this->groupStack->push($debug, $collect);
         if ($collect === false) {
-            return;
+            return $debug;
         }
         if ($logEntry['args'] === []) {
             // give a default label
@@ -263,6 +274,7 @@ class Group implements SubscriberInterface
         $briefBak = $debug->abstracter->setCfg('brief', true);
         $debug->log($logEntry);
         $debug->abstracter->setCfg('brief', $briefBak);
+        return $debug;
     }
 
     /**
@@ -338,6 +350,27 @@ class Group implements SubscriberInterface
     }
 
     /**
+     * Perform a rudimentary test to check if group is first statement within {closure}
+     *
+     * @param array $caller caller info
+     *
+     * @return bool
+     */
+    private function autoArgsTestClosure($caller)
+    {
+        if (\preg_match('/\{closure\}$/', $caller['function']) !== 1) {
+            return false;
+        }
+        $lines = $this->debug->backtrace->getFileLines($caller['file'], $caller['line'] - 1, 1);
+        $lines = \implode('', $lines);
+        $tokens = $this->debug->findExit->getTokens($lines, false, false, $caller['line'] - 1);
+        return \end($tokens) === '{'
+            && \count(\array_filter($tokens, static function ($token) {
+                return \is_array($token) && $token[0] === T_FUNCTION;
+            }));
+    }
+
+    /**
      * Get the line number of the first statement within a function/method
      *
      * @param string $file              File path
@@ -363,27 +396,6 @@ class Group implements SubscriberInterface
     }
 
     /**
-     * Perform a rudimentary test to check if group is first statement within {closure}
-     *
-     * @param array $caller caller info
-     *
-     * @return bool
-     */
-    private function autoArgsTestClosure($caller)
-    {
-        if (\preg_match('/\{closure\}$/', $caller['function']) !== 1) {
-            return false;
-        }
-        $lines = $this->debug->backtrace->getFileLines($caller['file'], $caller['line'] - 1, 1);
-        $lines = \implode('', $lines);
-        $tokens = $this->debug->findExit->getTokens($lines, false, false, $caller['line'] - 1);
-        return \end($tokens) === '{'
-            && \count(\array_filter($tokens, static function ($token) {
-                return \is_array($token) && $token[0] === T_FUNCTION;
-            }));
-    }
-
-    /**
      * Close a regular group
      *
      * @param LogEntry $logEntry LogEntry instance
@@ -393,10 +405,10 @@ class Group implements SubscriberInterface
     private function groupEndMain(LogEntry $logEntry)
     {
         $this->groupStack->pop();
-        $debug = $logEntry->getSubject();
         $args = $logEntry['args'];
         if ($args[0] !== Abstracter::UNDEFINED) {
             $label = $logEntry->getMeta('label', 'return');
+            // default label is 'return', but null may have been specified
             if ($label) {
                 \array_unshift($args, $this->debug->abstracter->crateWithVals($label, array(
                     'attribs' => array(
@@ -405,15 +417,11 @@ class Group implements SubscriberInterface
                 )));
             }
             $logEntry->setMeta('label', null); // delete label meta
-            $debug->log(new LogEntry(
-                $debug,
-                'groupEndValue',
-                $args,
-                $logEntry->getMeta()
-            ));
+            $args[] = $this->debug->meta($logEntry->getMeta());
+            \call_user_func_array([$this, 'groupEndValue'], $args);
         }
         $logEntry['args'] = [];
-        $debug->log($logEntry);
+        $this->debug->log($logEntry);
     }
 
     /**
@@ -426,12 +434,11 @@ class Group implements SubscriberInterface
     private function groupEndSummary(LogEntry $logEntry)
     {
         $this->groupStack->popPriority();
-        $debug = $logEntry->getSubject();
-        $debug->data->set('logDest', 'auto');
+        $this->debug->data->set('logDest', 'auto');
         $logEntry['appendLog'] = false;     // don't actually log
         $logEntry['args'] = [];
         $logEntry['forcePublish'] = true;   // Publish the Debug::EVENT_LOG event (regardless of cfg.collect)
         $logEntry->setMeta('closesSummary', true);
-        $debug->log($logEntry);
+        $this->debug->log($logEntry);
     }
 }

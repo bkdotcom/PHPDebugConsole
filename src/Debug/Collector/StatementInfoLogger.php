@@ -14,7 +14,6 @@ use bdk\Debug;
 use bdk\Debug\AbstractComponent;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\Type;
-use bdk\Debug\LogEntry;
 use bdk\HttpMessage\Utility\ContentType;
 use bdk\PubSub\Event;
 
@@ -30,8 +29,11 @@ class StatementInfoLogger extends AbstractComponent
      * @var array<string,mixed>
      */
     protected $cfg = array(
-        'querySelectLimit' => 500,
-        'queryUpdateLimit' => 100,
+        'queryLimitSelect' => 500,
+        'queryLimitUpdate' => 100,
+        'queryLimitWarn' => 'noClause', // whether to warn when rowCount exceeds queryLimitSelect/queryLimitUpdate
+                                        //   true|false|'noClause'
+                                        //   will "info" when evals false
         'slowQueryDurationMs' => 500, // milliseconds
     );
 
@@ -41,17 +43,25 @@ class StatementInfoLogger extends AbstractComponent
     /** @var Debug */
     protected $debug;
 
-    /** @var StatementInfo */
+    /** @var StatementInfo currently being processed */
     protected $info;
 
     /** @var int */
     protected static $id = 0;
 
-    /** @var list<StatementInfo> */
-    protected $loggedStatements = array();
+    /** @var array<string,int|float> */
+    private $stats = array(
+        'duration' => 0, // total duration (in seconds)
+        'limitInfo' => 0,
+        'limitWarn' => 0,
+        'logged' => 0,
+        'peakMemoryUsage' => 0,
+        'prettifyErrors' => 0, // number of times prettifying failed
+        'slow' => 0, // slow query count
+    );
 
-    /** @var int */
-    private $prettifyErrors = 0;
+    /** @var array<string,mixed> currently being processed */
+    private $parsed;
 
     /**
      * Constructor
@@ -73,47 +83,13 @@ class StatementInfoLogger extends AbstractComponent
     }
 
     /**
-     * Returns the accumulated execution time of statements
+     * Get aggregated statistics
      *
-     * @return float
+     * @return array<string,int|float> stats
      */
-    public function getTimeSpent()
+    public function getStats()
     {
-        return \array_reduce($this->loggedStatements, static function ($val, StatementInfo $info) {
-            return $val + $info->duration;
-        });
-    }
-
-    /**
-     * Returns the peak memory usage while performing statements
-     *
-     * @return int
-     */
-    public function getPeakMemoryUsage()
-    {
-        return \array_reduce($this->loggedStatements, static function ($carry, StatementInfo $info) {
-            return \max($info->memoryUsage, $carry);
-        });
-    }
-
-    /**
-     * Returns the list of executed statements as StatementInfo objects
-     *
-     * @return int
-     */
-    public function getLoggedCount()
-    {
-        return \count($this->loggedStatements);
-    }
-
-    /**
-     * Returns the list of executed statements as StatementInfo objects
-     *
-     * @return StatementInfo[]
-     */
-    public function getLoggedStatements()
-    {
-        return $this->loggedStatements;
+        return $this->stats;
     }
 
     /**
@@ -136,9 +112,7 @@ class StatementInfoLogger extends AbstractComponent
      */
     public function log(StatementInfo $info, array $metaOverride = array())
     {
-        $this->info = $info;
-        $this->loggedStatements[] = $info;
-        $label = $this->getLabel();
+        $label = $this->logInit($info);
         $this->debug->groupCollapsed($label, $this->debug->meta(\array_merge(array(
             'boldLabel' => false,
             'icon' => $this->debug->getCfg('channelIcon', Debug::CONFIG_DEBUG),
@@ -146,7 +120,8 @@ class StatementInfoLogger extends AbstractComponent
         ), $metaOverride)));
         $this->logQuery($label);
         $this->logParams();
-        $this->logDurationMemory();
+        $this->logDuration();
+        $this->logMemoryUsage();
         $this->performQueryAnalysis();
         if ($info->exception) {
             $code = $info->exception->getCode();
@@ -159,8 +134,35 @@ class StatementInfoLogger extends AbstractComponent
         } elseif ($info->rowCount !== null) {
             $this->logRowCount();
         }
-        $this->logNotices();
         $this->debug->groupEnd();
+    }
+
+    /**
+     * Log runtime statistics
+     *
+     * @return void
+     */
+    public function logStats()
+    {
+        $debug = $this->debug;
+        $stats = $this->getStats();
+        $debug->log($this->debug->i18n->trans('runtime.logged-operations') . ': ', $stats['logged']);
+        $debug->time($this->debug->i18n->trans('runtime.total-time'), $stats['duration']);
+        if ($stats['peakMemoryUsage']) {
+            $debug->log($this->debug->i18n->trans('runtime.memory.peak'), $debug->utility->getBytes($stats['peakMemoryUsage']));
+        }
+        if ($stats['slow']) {
+            $debug->warn($this->debug->i18n->trans('db.slow-queries') . ': ', $stats['slow'], $debug->meta('file', null));
+        }
+        if ($stats['limitWarn']) {
+            $debug->warn(
+                $this->debug->i18n->trans('db.limit-exceeded') . ': ',
+                $stats['limitInfo'] + $stats['limitWarn'],
+                $debug->meta('file', null)
+            );
+        } elseif ($stats['limitInfo']) {
+            $debug->info($this->debug->i18n->trans('db.limit-exceeded') . ': ', $stats['limitInfo'] + $stats['limitWarn']);
+        }
     }
 
     /**
@@ -180,128 +182,65 @@ class StatementInfoLogger extends AbstractComponent
     }
 
     /**
-     * Were attempts to prettify successful?
+     * Log duration
      *
-     * @return bool
+     * @return void
      */
-    public function prettified()
+    private function logDuration()
     {
-        return $this->prettifyErrors === 0;
+        if ($this->info->duration === null) {
+            return;
+        }
+        $isSlow = $this->info->duration * 1000 >= $this->cfg['slowQueryDurationMs'];
+        $this->debug->time(
+            $this->debug->i18n->trans('db.duration'),
+            $this->info->duration,
+            $this->debug->meta('level', $isSlow ? 'warn' : null)
+        );
+        $this->stats['duration'] += $this->info->duration;
+        if ($isSlow) {
+            $this->stats['slow']++;
+            $this->debug->groupEndValue(
+                $this->debug->abstracter->crateWithVals($this->debug->i18n->trans('word.slow'), array(
+                    'attribs' => array('class' => 'badge bg-warn fw-bold no-quotes'),
+                )),
+                $this->debug->meta('attribs', array(
+                    'class' => 'hide',
+                ))
+            );
+        }
     }
 
     /**
-     * Get group's label
+     * Intake StatementInfo and return label
      *
-     * @return string
+     * @param StatementInfo $info StatementInfo instance
+     *
+     * @return string|false
      */
-    private function getLabel()
+    private function logInit(StatementInfo $info)
     {
-        $sql = \preg_replace('/[\r\n\s]+/', ' ', $this->info->sql);
-        $sql = $this->debug->sql->replaceParams($sql, $this->info->params);
-        $parsed = $this->debug->sql->parse($sql);
-        return $parsed
-            ? $this->getLabelFromParsed($parsed)
+        $sql = \preg_replace('/[\r\n\s]+/', ' ', $info->sql);
+        $sql = $this->debug->sql->replaceParams($sql, $info->params);
+        $this->info = $info;
+        $this->parsed = $this->debug->sql->parse($sql);
+        $this->stats['logged']++;
+        return $this->parsed
+            ? $this->debug->sql->labelFromParsed($this->parsed)
             : $sql;
     }
 
     /**
-     * Get label from parsed sql
-     *
-     * @param array $parsed Parsed sql
-     *
-     * @return string
-     */
-    private function getLabelFromParsed(array $parsed)
-    {
-        $label = $parsed['method']; // method + table
-        $labelInfo = $this->labelInfo($parsed);
-        if ($labelInfo['includeWhere']) {
-            $label .= $labelInfo['beforeWhere'] . ' WHERE ' . $parsed['where'];
-        }
-        if (\strlen($label) > 100 && $parsed['select']) {
-            $label = \str_replace($parsed['select'], ' (…)', $label);
-        }
-        return $label . ($labelInfo['haveMore'] ? '…' : '');
-    }
-
-    /**
-     * Check if rowCount exceeds configured notice limit
-     *
-     * @return bool
-     */
-    private function isOverLimit()
-    {
-        \preg_match('/^\s*(\w+)\b/', $this->info->sql, $matches);
-        $command = \strtolower($matches[1]); // select, update, etc
-        return ($command === 'select' && $this->info->rowCount > $this->cfg['querySelectLimit'])
-            || ($command !== 'select' && $this->info->rowCount > $this->cfg['queryUpdateLimit']);
-    }
-
-    /**
-     * Get info about what parts of the query are included in the label
-     *
-     * @param array $parsed Parsed sql
-     *
-     * @return array
-     */
-    private function labelInfo(array $parsed)
-    {
-        $afterWhereKeys = ['groupBy', 'having', 'window', 'orderBy', 'limit', 'for'];
-        $afterWhereValues = \array_intersect_key($parsed, \array_flip($afterWhereKeys));
-        $includeWhere = $parsed['where'] && \strlen($parsed['where']) < 35;
-        return array(
-            'beforeWhere' => $parsed['afterMethod'] ? ' (…)' : '',
-            'haveMore' => \count($afterWhereValues) > 0
-                || (!$includeWhere && \array_filter([$parsed['afterMethod'], $parsed['where']])),
-            'includeWhere' => $includeWhere,
-        );
-    }
-
-    /**
-     * Log duration & memory usage
+     * Log memory usage
      *
      * @return void
      */
-    private function logDurationMemory()
+    private function logMemoryUsage()
     {
-        if ($this->info->duration !== null) {
-            $this->debug->time($this->debug->i18n->trans('db.duration'), $this->info->duration, $this->debug->meta(
-                'level',
-                $this->info->duration * 1000 >= $this->cfg['slowQueryDurationMs']
-                    ? 'warn' // warn if slow
-                    : null
-            ));
-        }
         if ($this->info->memoryUsage !== null) {
             $memory = $this->debug->utility->getBytes($this->info->memoryUsage);
             $this->debug->log($this->debug->i18n->trans('runtime.memory.usage'), $memory);
-        }
-    }
-
-    /**
-     * "Flag" slow queries & limit violations
-     *
-     * @return void
-     */
-    private function logNotices()
-    {
-        $args = [];
-        $badgeVals = array(
-            'attribs' => array('class' => 'badge bg-warn fw-bold no-quotes'),
-        );
-        if ($this->info->duration * 1000 >= $this->cfg['slowQueryDurationMs']) {
-            $args[] = $this->debug->abstracter->crateWithVals($this->debug->i18n->trans('word.slow'), $badgeVals);
-        }
-        if ($this->isOverLimit()) {
-            $args[] = $this->debug->abstracter->crateWithVals($this->debug->i18n->trans('word.limit'), $badgeVals);
-        }
-        if ($args) {
-            $this->debug->log(new LogEntry(
-                $this->debug,
-                'groupEndValue',
-                $args,
-                array('level' => 'warn')
-            ));
+            $this->stats['peakMemoryUsage'] = \max($this->stats['peakMemoryUsage'], $this->info->memoryUsage);
         }
     }
 
@@ -362,7 +301,7 @@ class StatementInfoLogger extends AbstractComponent
         $stringMaxLenBak = $this->debug->setCfg('stringMaxLen', -1, Debug::CONFIG_NO_PUBLISH);
         $sqlPretty = $this->debug->prettify($this->info->sql, ContentType::SQL);
         $isPrettified = $sqlPretty instanceof Abstraction;
-        $this->prettifyErrors += $isPrettified ? 0 : 1;
+        $this->stats['prettifyErrors'] += $isPrettified ? 0 : 1;
         if ($isPrettified) {
             $sqlPretty['prettifiedTag'] = false; // don't add "(prettified)" to output
         }
@@ -384,12 +323,23 @@ class StatementInfoLogger extends AbstractComponent
      */
     private function logRowCount()
     {
-        $this->debug->log($this->debug->i18n->trans('db.row-count'), $this->info->rowCount, $this->debug->meta(
-            'level',
-            $this->isOverLimit()
-                ? 'warn' // warn if over limit
-                : null
-        ));
+        $level = $this->rowCountLevel();
+        $this->debug->log(
+            $this->debug->i18n->trans('db.row-count'),
+            $this->info->rowCount,
+            $this->debug->meta('level', $level)
+        );
+        if ($level) {
+            $this->stats['limit' . \ucfirst($level)]++;
+            $this->debug->groupEndValue(
+                $this->debug->abstracter->crateWithVals($this->debug->i18n->trans('word.limit'), array(
+                    'attribs' => array('class' => 'badge bg-' . $level . ' fw-bold no-quotes'),
+                )),
+                $this->debug->meta('attribs', array(
+                    'class' => 'hide',
+                ))
+            );
+        }
     }
 
     /**
@@ -410,5 +360,23 @@ class StatementInfoLogger extends AbstractComponent
             $params[] = $this->debug->meta('uncollapse', false);
             \call_user_func_array([$this->debug, 'warn'], $params);
         });
+    }
+
+    /**
+     * Check if rowCount exceeds configured notice limit
+     *
+     * @return null|"info"|"warn"
+     */
+    private function rowCountLevel()
+    {
+        $method = $this->parsed['method'];
+        $isOverLimit = ($method === 'select' && $this->info->rowCount > $this->cfg['queryLimitSelect'])
+            || ($method !== 'select' && $this->info->rowCount > $this->cfg['queryLimitUpdate']);
+        if (!$isOverLimit) {
+            return null;
+        }
+        $isWarn = $this->cfg['queryLimitWarn'] === true
+            || ($this->cfg['queryLimitWarn'] === 'noClause' && !$this->parsed['limit']);
+        return $isWarn ? 'warn' : 'info';
     }
 }

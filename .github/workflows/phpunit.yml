@@ -24,15 +24,17 @@ jobs:
         sudo systemctl start mysql
         # Wait for MySQL to be ready
         sudo mysql --wait --connect-timeout=60 -e "SELECT 1" 2>/dev/null || sleep 5
-        # Create database
+        # Create database using sudo mysql (no password needed initially)
         sudo mysql -e 'CREATE DATABASE IF NOT EXISTS ${{ env.MYSQL_DATABASE }};'
-        # Set up root user with legacy authentication for older PHP versions compatibility
-        sudo mysql -e "ALTER USER '${{ env.MYSQL_USERNAME }}'@'localhost' IDENTIFIED WITH mysql_native_password BY '${{ env.MYSQL_PASSWORD }}';" 2>/dev/null || \
-        sudo mysql -e "SET PASSWORD FOR '${{ env.MYSQL_USERNAME }}'@'localhost' = PASSWORD('${{ env.MYSQL_PASSWORD }}');" 2>/dev/null || \
-        sudo mysql -e "UPDATE mysql.user SET Password=PASSWORD('${{ env.MYSQL_PASSWORD }}') WHERE User='${{ env.MYSQL_USERNAME }}';" 2>/dev/null
+        # Set up root user password and authentication method
+        sudo mysql -e "ALTER USER '${{ env.MYSQL_USERNAME }}'@'localhost' IDENTIFIED WITH mysql_native_password BY '${{ env.MYSQL_PASSWORD }}';" || \
+        sudo mysql -e "UPDATE mysql.user SET plugin='mysql_native_password', Password=PASSWORD('${{ env.MYSQL_PASSWORD }}') WHERE User='${{ env.MYSQL_USERNAME }}' AND Host='localhost';" || \
+        sudo mysql -e "SET PASSWORD FOR '${{ env.MYSQL_USERNAME }}'@'localhost' = PASSWORD('${{ env.MYSQL_PASSWORD }}');"
         sudo mysql -e "FLUSH PRIVILEGES;"
-        # Verify connection works
-        mysql -u${{ env.MYSQL_USERNAME }} -p${{ env.MYSQL_PASSWORD }} -e "SHOW DATABASES;" | grep ${{ env.MYSQL_DATABASE }}
+        # Give MySQL a moment to apply changes
+        sleep 2
+        # Verify connection works with the new password
+        mysql -u"${{ env.MYSQL_USERNAME }}" -p"${{ env.MYSQL_PASSWORD }}" -e "SHOW DATABASES;" | grep ${{ env.MYSQL_DATABASE }}
         echo "MySQL version: $(mysqld --version)"
     - name: Checkout
       uses: actions/checkout@v4.1.1

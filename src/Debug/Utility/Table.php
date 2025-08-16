@@ -39,6 +39,7 @@ class Table
     private $meta = array(
         'caption' => null,
         'columnNames' => array(
+            // specify column header key / name / label  (may also specify via tableInfo/columns)
             TableRow::SCALAR => 'value',
         ),
         'columns' => array(),
@@ -50,10 +51,10 @@ class Table
                 /*
                 array(
                     attribs
-                    key
-                    class
-                    total
+                    key   // specify column header key / label
+                    class // populated if all col values of the same class
                     falseAs: ''
+                    total
                     trueAs: ''
                 )
                 */
@@ -207,14 +208,16 @@ class Table
         $keys = $this->meta['columns'] ?: self::colKeys($this->rows);
         $columns = \array_fill_keys($keys, array());
         \array_walk($columns, function (&$column, $key) use ($columnNames) {
-            $default = isset($this->meta['tableInfo']['columns'][$key])
-                ? $this->meta['tableInfo']['columns'][$key]
-                : array();
-            $column = \array_merge($default, array(
-                'key' => isset($columnNames[$key])
-                    ? $columnNames[$key]
-                    : $key,
-            ));
+            $column = \array_merge(
+                array(
+                    'key' => isset($columnNames[$key])
+                        ? $columnNames[$key]
+                        : $key,
+                ),
+                isset($this->meta['tableInfo']['columns'][$key])
+                    ? $this->meta['tableInfo']['columns'][$key]
+                    : array()
+            );
         });
         foreach ($this->meta['totalCols'] as $i => $key) {
             if (isset($columns[$key]) === false) {
@@ -227,7 +230,10 @@ class Table
          * @psalm-suppress MixedArrayAssignment
          * @psalm-suppress MixedPropertyTypeCoercion
          */
-        $this->meta['tableInfo']['columns'] = $columns;
+        $this->meta['tableInfo']['columns'] = \array_map(static function (array $column) {
+            \ksort($column);
+            return $column;
+        }, $columns);
     }
 
     /**

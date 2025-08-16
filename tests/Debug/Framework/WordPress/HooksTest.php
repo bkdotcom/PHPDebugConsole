@@ -111,8 +111,8 @@ class HooksTest extends DebugTestFramework
                                 'class' => ['text-center'],
                             ),
                             'falseAs' => '',
-                            'trueAs' => '<i class="fa fa-check"></i>',
                             'key' => 'isFilter',
+                            'trueAs' => '<i class="fa fa-check"></i>',
                         ),
                         array(
                             'key' => 'count',

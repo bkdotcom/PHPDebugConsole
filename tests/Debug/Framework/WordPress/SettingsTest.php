@@ -127,9 +127,9 @@ class SettingsTest extends DebugTestFramework
     {
         $GLOBALS['wpReturnVals']['option']['debugConsoleForPhp'] = array(
             'key' => 'password',
-            'i18n' => array(
-                'localeFirstChoice' => 'en_US',
-            ),
+            // 'i18n' => array(
+                // 'localeFirstChoice' => 'en_US',
+            // ),
             'enableProfiling' => false,
             'route' => 'auto',
             'plugins' => array(
@@ -190,12 +190,14 @@ class SettingsTest extends DebugTestFramework
                 'section' => 'general',
                 'title' => '',
             ),
+            /*
             array(
                 'id' => 'debugConsoleForPhp_i18n_localeFirstChoice',
                 'page' => 'debugConsoleForPhp',
                 'section' => 'general',
                 'title' => 'Locale',
             ),
+            */
             array(
                 'id' => 'debugConsoleForPhp_route',
                 'page' => 'debugConsoleForPhp',
@@ -330,9 +332,9 @@ class SettingsTest extends DebugTestFramework
     {
         $return = self::$plugin->sanitize(array(
             'password' => '1234',
-            'i18n' => array(
-                'localeFirstChoice' => 'en',
-            ),
+            // 'i18n' => array(
+                // 'localeFirstChoice' => 'en',
+            // ),
             'bogus' => 'I don\'t belong',
             'enableProfiling' => 'on',
             'route' => 'bogus',
@@ -348,9 +350,9 @@ class SettingsTest extends DebugTestFramework
         self::assertTrue(\password_verify('1234', $return['passwordHash']));
         unset($return['passwordHash']);
         self::assertSame(array(
-            'i18n' => array(
-                'localeFirstChoice' => 'en',
-            ),
+            // 'i18n' => array(
+                // 'localeFirstChoice' => 'en',
+            // ),
             // 'route' => 'route',
             'plugins' => array(
                 'wordpress' => array(

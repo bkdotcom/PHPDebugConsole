@@ -29,20 +29,22 @@ class PhpType
      * Workaround - remove type-hint when we allow null (not ideal) and call assertType
      * When we drop support for php < 7.1, we can remove this method and do proper type-hinting
      *
-     * @param mixed  $value     Value to test
-     * @param string $type      Php type (or class name) to check
-     * @param string $paramName (optional) parameter name
+     * @param mixed  $value       Value to test
+     * @param string $type        Php type (or class name) to check
+     * @param string $paramName   (optional) parameter name
+     * @param int    $frameOffset {@internal}
      *
      * @return void
      *
      * @throws InvalidArgumentException
      */
-    public static function assertType($value, $type, $paramName = null)
+    public static function assertType($value, $type, $paramName = null, $frameOffset = 0)
     {
         if (self::assertTypeCheck($value, $type)) {
             return;
         }
-        $frame = \debug_backtrace(\DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1];
+        $frameIndex = $frameOffset + 1;
+        $frame = \debug_backtrace(\DEBUG_BACKTRACE_IGNORE_ARGS, $frameIndex + 1)[$frameIndex];
         $msg = $paramName
             ? 'exception.method-expects-param'
             : 'exception.method-expects';

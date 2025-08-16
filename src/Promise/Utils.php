@@ -9,6 +9,7 @@
 
 namespace bdk\Promise;
 
+use bdk\Debug\Utility\PhpType;
 use bdk\Promise;
 use bdk\Promise\Exception\AggregateException;
 use bdk\Promise\Exception\RejectionException;
@@ -44,22 +45,7 @@ final class Utils
      */
     public static function assertType($value, $type, $paramName = null)
     {
-        if (self::assertTypeCheck($value, $type)) {
-            return;
-        }
-        $frame = \debug_backtrace(\DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1];
-        $params = array(
-            '{actual}' => self::getDebugType($value),
-            '{expect}' => $type,
-            '{method}' => isset($frame['class'])
-                ? $frame['class'] . '::' . $frame['function'] . '()'
-                : $frame['function'] . '()',
-            '{param}' => '$' . $paramName,
-        );
-        $msg = $paramName
-            ? '{method}: {param} expects {expect}.  {actual} provided'
-            : '{method} expects {expect}.  {actual} provided';
-        throw new InvalidArgumentException(\strtr($msg, $params));
+        PhpType::assertType($value, $type, $paramName, 1);
     }
 
     /**
@@ -324,29 +310,6 @@ final class Utils
             \ksort($results);
             return $results;
         });
-    }
-
-    /**
-     * Test if value is of a certain type
-     *
-     * @param mixed  $value Value to test
-     * @param string $type  php type(s) to check
-     *
-     * @return bool
-     */
-    private static function assertTypeCheck($value, $type)
-    {
-        $types = ['array', 'bool', 'callable', 'float', 'int', 'null', 'numeric', 'object', 'string'];
-        foreach (\explode('|', $type) as $type) {
-            $method = 'is_' . $type;
-            $isType = \in_array($type, $types, true)
-                ? $method($value)
-                : \is_a($value, $type);
-            if ($isType) {
-                return true;
-            }
-        }
-        return false;
     }
 
     /**

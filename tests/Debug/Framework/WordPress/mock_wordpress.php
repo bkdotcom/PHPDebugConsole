@@ -80,6 +80,16 @@ function is_singl() { return $GLOBALS['wpReturnVals']['type'] === 'singl'; }
 function is_tag() { return $GLOBALS['wpReturnVals']['type'] === 'tag'; }
 function is_tax() { return $GLOBALS['wpReturnVals']['type'] === 'tax'; }
 
+function _x($text, $context = '', $domain = 'default')
+{
+    return $text;
+}
+
+function esc_url($url)
+{
+    return htmlspecialchars($url);
+}
+
 function admin_url($path = '', $scheme = 'admin')
 {
     return '/wp-admin/' . $path;

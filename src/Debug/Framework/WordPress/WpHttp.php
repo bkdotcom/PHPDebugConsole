@@ -3,7 +3,6 @@
 namespace bdk\Debug\Framework\WordPress;
 
 use bdk\Debug\Collector\AbstractAsyncMiddleware;
-use bdk\Debug\Framework\WordPress\Plugin;
 use bdk\HttpMessage\Request;
 use bdk\HttpMessage\Response;
 use bdk\HttpMessage\Stream;
@@ -80,7 +79,7 @@ class WpHttp extends AbstractAsyncMiddleware implements SubscriberInterface
         }
 
         if ($args['blocking'] === false) {
-            $this->debug->info($this->debug->i18n->trans('http.async-response', Plugin::I18N_DOMAIN), $this->debug->meta(
+            $this->debug->info(\_x('WordPress does not provide asynchronous response', 'http.async-response', 'debug-console-php'), $this->debug->meta(
                 'appendGroup',
                 $this->cfg['idPrefix'] . \md5($args['time_start'])
             ));

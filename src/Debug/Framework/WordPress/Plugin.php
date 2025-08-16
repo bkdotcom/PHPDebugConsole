@@ -11,8 +11,6 @@ use bdk\Debug\Utility\ArrayUtil;
  */
 class Plugin
 {
-    const I18N_DOMAIN = 'wordpress';
-
     /** @var Debug */
     public $debug;
 
@@ -20,10 +18,8 @@ class Plugin
     protected $configDefault = array(
         'collect' => true,  // start with collection on as we bootstrap
         'emailFunc' => 'wp_mail',
-        'i18n' => array(
-            'domainFilepath' => array(
-                'wordpress' => __DIR__ . '/lang/{locale}.php',
-            ),
+        'logEnvInfo' => array(
+            'session' => false,
         ),
         'plugins' => array(
             'routeDiscord' => array(
@@ -77,18 +73,16 @@ class Plugin
      */
     public function getDebugConfig()
     {
-        $storedOptions = \get_option(Settings::GROUP_NAME) ?: array(
-            'emailTo' => \get_option('admin_email'),
-            'i18n' => array(
-                'localeFirstChoice' => \get_locale(),
-            ),
-            'logEnvInfo' => array(
-                'session' => false,
-            ),
-        );
+        $storedOptions = \get_option(Settings::GROUP_NAME) ?: array();
 
         $config = ArrayUtil::mergeDeep(
             $this->configDefault,
+            array(
+                'emailTo' => \get_option('admin_email'),
+                'i18n' => array(
+                    'localeFirstChoice' => \get_locale(),
+                ),
+            ),
             $storedOptions
         );
         $config['plugins']['wordpressSettings']['wordpress'] = $this;

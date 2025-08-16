@@ -201,14 +201,13 @@ class Table
      */
     protected function buildHeader()
     {
-        $labels = array();
-        foreach ($this->options['tableInfo']['columns'] as $colInfo) {
+        $labels = \array_map(function (array $colInfo) {
             $label = $colInfo['key'];
             if (!empty($colInfo['class'])) {
                 $label .= ' ' . $this->dumper->valDumper->markupIdentifier($colInfo['class'], 'className');
             }
-            $labels[] = $label;
-        }
+            return $label;
+        }, $this->options['tableInfo']['columns']);
         return '<thead>' . "\n"
             . '<tr>'
                 . ($this->options['tableInfo']['indexLabel']

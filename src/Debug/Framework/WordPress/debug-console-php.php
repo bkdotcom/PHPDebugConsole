@@ -4,6 +4,7 @@
  * Plugin Name: Debug Console for PHP
  * Plugin URI: https://bradkent.com/php/debug
  * Description: Display query, cache, and other helpful debugging information.  Provides new logging / debugging / inspecting / error-notification functionality
+ * Text Domain: debug-console-php
  * Author: Brad Kent
  * Author URI: https://bradkent.com
  * License: MIT

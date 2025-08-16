@@ -3,7 +3,6 @@
 namespace bdk\Debug\Framework\WordPress;
 
 use bdk\Debug;
-use bdk\Debug\Framework\WordPress\Plugin;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
 
@@ -66,10 +65,10 @@ class Deprecated implements SubscriberInterface
     public function onDeprecatedArgument($function, $message, $version)
     {
         $message = \trim(
-            $this->debug->i18n->trans('deprecated.func.arg', array(
-                'function' => $function,
-                'version' => $version,
-            ), Plugin::I18N_DOMAIN) . '  ' . $message
+            \strtr(\_x('{function} was called with an argument that is deprecated since version {version}.', 'deprecated.func.arg', 'debug-console-php'), array(
+                '{function}' => $function,
+                '{version}' => $version,
+            )) . '  ' . $message
         );
         $this->warn($message);
     }
@@ -86,13 +85,14 @@ class Deprecated implements SubscriberInterface
     public function onDeprecatedClass($old, $replacement, $version)
     {
         $messageArgs = array(
-            'old' => $old,
-            'replacement' => $replacement,
-            'version' => $version,
+            '{old}' => $old,
+            '{replacement}' => $replacement,
+            '{version}' => $version,
         );
         $message = $replacement
-            ? $this->debug->i18n->trans('deprecated.has-replacement', $messageArgs, Plugin::I18N_DOMAIN)
-            : $this->debug->i18n->trans('deprecated.no-replacement', $messageArgs, Plugin::I18N_DOMAIN);
+            ? \_x('{old} is deprecated since version {version}.  Use {replacement} instead.', 'deprecated.has-replacement', 'debug-console-php')
+            : \_x('{old} is deprecated since version {version}.  No alternative available.', 'deprecated.no-replacement', 'debug-console-php');
+        $message = \strtr($message, $messageArgs);
         $this->warn($message);
     }
 
@@ -108,14 +108,15 @@ class Deprecated implements SubscriberInterface
     public function onDeprecatedConstructor($className, $version, $parentClass)
     {
         $messageArgs = array(
-            'old' => $className,
-            'parentClass' => $parentClass,
-            'replacement' => '__construct',
-            'version' => $version,
+            '{old}' => $className,
+            '{parentClass}' => $parentClass,
+            '{replacement}' => '__construct',
+            '{version}' => $version,
         );
         $message = $parentClass && $parentClass !== $className
-            ? $this->debug->i18n->trans('deprecated.constructor.parent-class', $messageArgs, Plugin::I18N_DOMAIN)
-            : $this->debug->i18n->trans('deprecated.constructor', $messageArgs, Plugin::I18N_DOMAIN);
+            ? \_x('The called constructor method {old} in {parentClass} is deprecated since version {version}.  Use {replacement} instead.', 'deprecated.constructor.parent-class', 'debug-console-php')
+            : \_x('The called constructor method {old} is deprecated since version {version}.  Use {replacement} instead.', 'deprecated.constructor', 'debug-console-php');
+        $message = \strtr($message, $messageArgs);
         $this->warn($message);
     }
 
@@ -132,14 +133,15 @@ class Deprecated implements SubscriberInterface
     public function onDeprecatedFile($old, $replacement, $version, $message = '')
     {
         $messageArgs = array(
-            'old' => $old,
-            'replacement' => $replacement,
-            'version' => $version,
+            '{old}' => $old,
+            '{replacement}' => $replacement,
+            '{version}' => $version,
         );
         $message = \trim(($replacement
-            ? $this->debug->i18n->trans('deprecated.has-replacement', $messageArgs, Plugin::I18N_DOMAIN)
-            : $this->debug->i18n->trans('deprecated.no-replacement', $messageArgs, Plugin::I18N_DOMAIN)
+            ? \_x('{old} is deprecated since version {version}.  Use {replacement} instead.', 'deprecated.has-replacement', 'debug-console-php')
+            : \_x('{old} is deprecated since version {version}.  No alternative available.', 'deprecated.no-replacement', 'debug-console-php')
         ) . '  ' . $message);
+        $message = \strtr($message, $messageArgs);
         $this->warn($message);
     }
 
@@ -155,13 +157,14 @@ class Deprecated implements SubscriberInterface
     public function onDeprecatedFunction($old, $replacement, $version)
     {
         $messageArgs = array(
-            'old' => $old,
-            'replacement' => $replacement,
-            'version' => $version,
+            '{old}' => $old,
+            '{replacement}' => $replacement,
+            '{version}' => $version,
         );
         $message = $replacement
-            ? $this->debug->i18n->trans('deprecated.has-replacement', $messageArgs, Plugin::I18N_DOMAIN)
-            : $this->debug->i18n->trans('deprecated.no-replacement', $messageArgs, Plugin::I18N_DOMAIN);
+            ? \_x('{old} is deprecated since version {version}.  Use {replacement} instead.', 'deprecated.has-replacement', 'debug-console-php')
+            : \_x('{old} is deprecated since version {version}.  No alternative available.', 'deprecated.no-replacement', 'debug-console-php');
+        $message = \strtr($message, $messageArgs);
         $this->warn($message);
     }
 
@@ -178,14 +181,15 @@ class Deprecated implements SubscriberInterface
     public function onDeprecatedHook($old, $replacement, $version, $message = '')
     {
         $messageArgs = array(
-            'old' => $old,
-            'replacement' => $replacement,
-            'version' => $version,
+            '{old}' => $old,
+            '{replacement}' => $replacement,
+            '{version}' => $version,
         );
         $message = \trim(($replacement
-            ? $this->debug->i18n->trans('deprecated.has-replacement', $messageArgs, Plugin::I18N_DOMAIN)
-            : $this->debug->i18n->trans('deprecated.no-replacement', $messageArgs, Plugin::I18N_DOMAIN)
+            ? \_x('{old} is deprecated since version {version}.  Use {replacement} instead.', 'deprecated.has-replacement', 'debug-console-php')
+            : \_x('{old} is deprecated since version {version}.  No alternative available.', 'deprecated.no-replacement', 'debug-console-php')
         ) . '  ' . $message);
+        $message = \strtr($message, $messageArgs);
         $this->warn($message);
     }
 

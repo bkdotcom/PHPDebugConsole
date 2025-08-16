@@ -3,6 +3,8 @@ on:
   push:
     tags:
     - "*"
+permissions:
+  id-token: write
 jobs:
   tag:
     name: New tag
@@ -13,7 +15,7 @@ jobs:
     - name: Install PHP
       uses: shivammathur/setup-php@v2 # https://github.com/marketplace/actions/setup-php-action
       with:
-        php-version: '5.6'
+        php-version: '7.0'
         extensions: iconv, intl, mysqli, oauth
         ini-values: error_reporting=-1, memory_limit=512M, post_max_size=256M, xdebug.mode="coverage,debug,develop"
         coverage: xdebug #optional
@@ -35,7 +37,7 @@ jobs:
     - name: Install dependencies
       run: |
         composer install --no-dev --prefer-dist --no-progress
-    - name: Move plugin file
+    - name: Build WordPress Plugin
       run: |
         php dev/buildWordPressPlugin.php
     - name: WordPress Plugin Deploy

@@ -5,7 +5,6 @@ namespace bdk\Debug\Framework\WordPress;
 use bdk\Debug;
 use bdk\Debug\AbstractComponent;
 use bdk\Debug\AssetProviderInterface;
-use bdk\Debug\Framework\WordPress\Plugin;
 use bdk\Debug\Framework\WordPress\Settings\ControlBuilder;
 use bdk\Debug\Framework\WordPress\Settings\FormProcessor;
 use bdk\PubSub\Event;
@@ -78,7 +77,7 @@ class Settings extends AbstractComponent implements AssetProviderInterface, Subs
         \add_action('admin_init', [$this, 'registerSettings']);
         \add_action('admin_menu', function () {
             \add_options_page(
-                $this->debug->i18n->trans('settings.description', Plugin::I18N_DOMAIN),  // page title
+                \_x('Debug Console for PHP Settings', 'settings.description', 'debug-console-php'),  // page title
                 'DebugConsolePhp',	            // menu title
                 'manage_options',	            // capability
                 self::PAGE_SLUG_NAME,           // menu slug
@@ -100,14 +99,14 @@ class Settings extends AbstractComponent implements AssetProviderInterface, Subs
         $this->initControlBuilder();
 
         \register_setting(self::GROUP_NAME, self::GROUP_NAME, array(
-            'description' => $this->debug->i18n->trans('settings.description', Plugin::I18N_DOMAIN),
+            'description' => \_x('Debug Console for PHP Settings', 'settings.description', 'debug-console-php'),
             'sanitize_callback' => [$this, 'sanitize'],
             'type' => 'array',
         ));
-        \add_settings_section('general', $this->debug->i18n->trans('settings.section.general', Plugin::I18N_DOMAIN), static function () {
+        \add_settings_section('general', \_x('General Settings', 'settings.section.general', 'debug-console-php'), static function () {
             // echo html here
         }, self::PAGE_SLUG_NAME);
-        \add_settings_section('errors', $this->debug->i18n->trans('settings.section.errors', Plugin::I18N_DOMAIN), static function () {
+        \add_settings_section('errors', \_x('Error Notification', 'settings.section.errors', 'debug-console-php'), static function () {
             // echo html here
         }, self::PAGE_SLUG_NAME);
 
@@ -165,11 +164,11 @@ class Settings extends AbstractComponent implements AssetProviderInterface, Subs
                 'outputScript' => false,
             ));
         }
-        echo '<h2>' . $this->debug->i18n->trans('plugin-name', Plugin::I18N_DOMAIN) . ' ' . $this->debug->i18n->trans('settings', Plugin::I18N_DOMAIN) . '</h2>' . "\n";
+        echo '<h2>' . \_x('Debug Console for PHP', 'plugin-name', 'debug-console-php') . ' ' . \_x('Settings', 'settings', 'debug-console-php') . '</h2>' . "\n";
         echo '<form action="options.php" method="post">' . "\n";
         \settings_fields(self::GROUP_NAME);
         \do_settings_sections(self::PAGE_SLUG_NAME);
-        echo '<input name="submit" class="button button-primary" type="submit" value="' . $this->debug->i18n->trans('settings.control.save', Plugin::I18N_DOMAIN) . '" />' . "\n";
+        echo '<input name="submit" class="button button-primary" type="submit" value="' . \_x('Save', 'settings.control.save', 'debug-console-php') . '" />' . "\n";
         echo '</form>';
     }
 
@@ -184,7 +183,7 @@ class Settings extends AbstractComponent implements AssetProviderInterface, Subs
     {
         // other args avail: $plugin_file, $plugin_data, $context
         $settings = '<a href="' . \admin_url('options-general.php?page=' . self::PAGE_SLUG_NAME) . '">'
-            . $this->debug->i18n->trans('settings', Plugin::I18N_DOMAIN) . '</a>';
+            . \_x('Settings', 'settings', 'debug-console-php') . '</a>';
         \array_unshift($actions, $settings);
         return $actions;
     }

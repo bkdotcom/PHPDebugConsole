@@ -89,8 +89,8 @@ class ObjectCacheTest extends DebugTestFramework
                                 'attribs' => array(
                                     'class' => ['no-quotes'],
                                 ),
-                                'total' => '20 B',
                                 'key' => 'size',
+                                'total' => '20 B',
                             ),
                         ],
                         'haveObjRow' => false,

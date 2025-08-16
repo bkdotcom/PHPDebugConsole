@@ -4,7 +4,6 @@ namespace bdk\Debug\Framework\WordPress;
 
 use bdk\Debug;
 use bdk\Debug\AbstractComponent;
-use bdk\Debug\Framework\WordPress\Plugin;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
 
@@ -71,18 +70,22 @@ class Hooks extends AbstractComponent implements SubscriberInterface
         $debug = $event->getSubject();
         $this->debug = $debug->getChannel('hooks', array(
             'channelIcon' => 'fa fa-arrow-up',
-            'channelName' => $debug->i18n->trans('channel.hooks', Plugin::I18N_DOMAIN),
+            'channelName' => \_x('Hooks', 'channel.hooks', 'debug-console-php'),
             'channelSort' => 1,
             'nested' => false,
         ));
-        $this->debug->table('Hooks', $this->hooks, $this->debug->meta(array(
+        $this->debug->table(\_x('Hooks', 'channel.hooks', 'debug-console-php'), $this->hooks, $this->debug->meta(array(
             'columns' => ['isFilter', 'count'],
             'tableInfo' => array(
                 'columns' => array(
                     'isFilter' => array(
                         'attribs' => array('class' => ['text-center']),
                         'falseAs' => '',
+                        'key' => \_x('isFilter', 'hooks.isFilter.label', 'debug-console-php'),
                         'trueAs' => '<i class="fa fa-check"></i>',
+                    ),
+                    'count' => array(
+                        'key' => \_x('count', 'hooks.count.label', 'debug-console-php'),
                     ),
                 ),
             ),

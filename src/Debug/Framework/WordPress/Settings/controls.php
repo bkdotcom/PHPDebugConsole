@@ -1,7 +1,5 @@
 <?php
 
-use bdk\Debug\Framework\WordPress\Plugin;
-
 if (\defined('ABSPATH') === false) {
     exit;
 }
@@ -20,8 +18,8 @@ return array(
         'attribs' => array(
             'data-lpignore' => true,
         ),
-        'describedBy' => $this->debug->i18n->trans('settings.control.password.describedBy', Plugin::I18N_DOMAIN),
-        'label' => $this->debug->i18n->trans('settings.control.password', Plugin::I18N_DOMAIN),
+        'describedBy' => \_x('This password may be passed in the request to enable collecting/outputting the log without being logged in as an admin.<br />Enter the plain-text password here.  It will be stored as a hashed value.', 'settings.control.password.describedBy', 'debug-console-php'),
+        'label' => \_x('Password', 'settings.control.password', 'debug-console-php'),
         'type' => 'password',
         'value' => isset($currentValues['passwordHash'])
             ? '_no_change_'
@@ -34,24 +32,17 @@ return array(
             : null,
         'wpTrClass' => 'hidden',
     ),
-    'i18n[localeFirstChoice]' => array(
-        'default' => $localeDefault,
-        'label' => $this->debug->i18n->trans('settings.control.localeFirstChoice', Plugin::I18N_DOMAIN),
-        'options' => $localesAvailable,
-        'required' => true,
-        'type' => 'select',
-    ),
     'route' => array(
         'default' => 'auto',
-        'describedBy' => $this->debug->i18n->trans('settings.control.route.describedBy', Plugin::I18N_DOMAIN),
-        'label' => $this->debug->i18n->trans('settings.control.route', Plugin::I18N_DOMAIN),
+        'describedBy' => \_x('How the log will be output', 'settings.control.route.describedBy', 'debug-console-php'),
+        'label' => \_x('Route', 'settings.control.route', 'debug-console-php'),
         'options' => array( // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys
-            'auto' => $this->debug->i18n->trans('settings.control.route.option.auto', Plugin::I18N_DOMAIN),
-            'html' => $this->debug->i18n->trans('settings.control.route.option.html', Plugin::I18N_DOMAIN),
-            'chromeLogger' => $this->debug->i18n->trans('settings.control.route.option.chromeLogger', Plugin::I18N_DOMAIN),
-            'firephp' => $this->debug->i18n->trans('settings.control.route.option.firephp', Plugin::I18N_DOMAIN),
-            'script' => $this->debug->i18n->trans('settings.control.route.option.script', Plugin::I18N_DOMAIN),
-            'serverLog' => $this->debug->i18n->trans('settings.control.route.option.serverLog', Plugin::I18N_DOMAIN),
+            'auto' => \_x('Automatic', 'settings.control.route.option.auto', 'debug-console-php'),
+            'html' => \_x('HTML (appended to page output)', 'settings.control.route.option.html', 'debug-console-php'),
+            'chromeLogger' => \_x('chromeLogger (browser plugin)', 'settings.control.route.option.chromeLogger', 'debug-console-php'),
+            'firephp' => \_x('FirePHP (browser plugin)', 'settings.control.route.option.firephp', 'debug-console-php'),
+            'script' => \_x('Script (output to develoepr console)', 'settings.control.route.option.script', 'debug-console-php'),
+            'serverLog' => \_x('Server Log (browser plugin)', 'settings.control.route.option.serverLog', 'debug-console-php'),
         ),
         'type' => 'select',
     ),
@@ -60,23 +51,23 @@ return array(
         'label' => 'WordPress',
         'options' => array( // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys
             'core' => array(
-                'label' => $this->debug->i18n->trans('settings.control.wordpress.option.core', Plugin::I18N_DOMAIN),
+                'label' => \_x('Query, template, post-type, show_on_front, etc', 'settings.control.wordpress.option.core', 'debug-console-php'),
                 'name' => 'plugins[wordpress][enabled]',
             ),
             'cache' => array(
-                'label' => $this->debug->i18n->trans('settings.control.wordpress.option.cache', Plugin::I18N_DOMAIN),
+                'label' => \_x('Cache Information', 'settings.control.wordpress.option.cache', 'debug-console-php'),
                 'name' => 'plugins[wordpressCache][enabled]',
             ),
             'db' => array(
-                'label' => $this->debug->i18n->trans('settings.control.wordpress.option.db', Plugin::I18N_DOMAIN),
+                'label' => \_x('Database queries', 'settings.control.wordpress.option.db', 'debug-console-php'),
                 'name' => 'plugins[wordpressDb][enabled]',
             ),
             'hooks' => array(
-                'label' => $this->debug->i18n->trans('settings.control.wordpress.option.hooks', Plugin::I18N_DOMAIN),
+                'label' => \_x('Hooks', 'settings.control.wordpress.option.hooks', 'debug-console-php'),
                 'name' => 'plugins[wordpressHooks][enabled]',
             ),
             'http' => array(
-                'label' => $this->debug->i18n->trans('settings.control.wordpress.option.http', Plugin::I18N_DOMAIN),
+                'label' => \_x('HTTP requests', 'settings.control.wordpress.option.http', 'debug-console-php'),
                 'name' => 'plugins[wordpressHttp][enabled]',
             ),
         ),
@@ -84,53 +75,55 @@ return array(
     ),
     'logEnvInfo' => array(
         'default' => ['errorReporting', 'files', 'phpInfo', 'serverVals'],
-        'label' => $this->debug->i18n->trans('settings.control.logEnvInfo', Plugin::I18N_DOMAIN),
+        'label' => \_x('Log Environment', 'settings.control.logEnvInfo', 'debug-console-php'),
         'options' => array( // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys
-            'errorReporting' => $this->debug->i18n->trans('settings.control.logEnvInfo.option.errorReporting', Plugin::I18N_DOMAIN),
-            'files' => $this->debug->i18n->trans('settings.control.logEnvInfo.option.files', Plugin::I18N_DOMAIN),
-            'phpInfo' => $this->debug->i18n->trans('settings.control.logEnvInfo.option.phpInfo', Plugin::I18N_DOMAIN),
-            'serverVals' => $this->debug->i18n->trans('settings.control.logEnvInfo.option.serverVals', Plugin::I18N_DOMAIN),
+            'errorReporting' => \_x('Issues with error reporting', 'settings.control.logEnvInfo.option.errorReporting', 'debug-console-php'),
+            'files' => \_x('Files included', 'settings.control.logEnvInfo.option.files', 'debug-console-php'),
+            'phpInfo' => \_x('Php information', 'settings.control.logEnvInfo.option.phpInfo', 'debug-console-php'),
+            'serverVals' => \_x('$_SERVER values', 'settings.control.logEnvInfo.option.serverVals', 'debug-console-php'),
         ),
         'type' => 'checkbox',
     ),
     'logResponse' => array(
         'default' => 'auto',
-        'label' => $this->debug->i18n->trans('settings.control.logResponse', Plugin::I18N_DOMAIN),
+        'label' => \_x('Log Response', 'settings.control.logResponse', 'debug-console-php'),
         'options' => array( // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys
-            'auto' => $this->debug->i18n->trans('settings.control.logResponse.option.auto', Plugin::I18N_DOMAIN),
-            'true' => $this->debug->i18n->trans('settings.control.logResponse.option.true', Plugin::I18N_DOMAIN),
-            'false' => $this->debug->i18n->trans('settings.control.logResponse.option.false', Plugin::I18N_DOMAIN),
+            'auto' => \_x('Automatic', 'settings.control.logResponse.option.auto', 'debug-console-php'),
+            'true' => \_x('Always', 'settings.control.logResponse.option.true', 'debug-console-php'),
+            'false' => \_x('Never', 'settings.control.logResponse.option.false', 'debug-console-php'),
         ),
         'required' => true,
         'type' => 'radio',
     ),
     'logRequestInfo' => array(
         'default' => ['cookies', 'files', 'headers', 'post'],
-        'label' => $this->debug->i18n->trans('settings.control.logRequestInfo', Plugin::I18N_DOMAIN),
+        'label' => \_x('Log Request', 'settings.control.logRequestInfo', 'debug-console-php'),
         'options' => array( // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys
-            'headers' => $this->debug->i18n->trans('settings.control.logRequestInfo.option.headers', Plugin::I18N_DOMAIN),
-            'cookies' => $this->debug->i18n->trans('settings.control.logRequestInfo.option.cookies', Plugin::I18N_DOMAIN),
-            'post' => $this->debug->i18n->trans('settings.control.logRequestInfo.option.post', Plugin::I18N_DOMAIN),
-            'files' => $this->debug->i18n->trans('settings.control.logRequestInfo.option.files', Plugin::I18N_DOMAIN),
+            'headers' => \_x('Request headers', 'settings.control.logRequestInfo.option.headers', 'debug-console-php'),
+            'cookies' => \_x('Cookies ($_COOKIE)', 'settings.control.logRequestInfo.option.cookies', 'debug-console-php'),
+            'post' => \_x('Post data ($_POST)', 'settings.control.logRequestInfo.option.post', 'debug-console-php'),
+            'files' => \_x('Posted files ($_FILES)', 'settings.control.logRequestInfo.option.files', 'debug-console-php'),
         ),
         'type' => 'checkbox',
     ),
     'logRuntime' => array(
         'default' => 'on',
-        'label' => $this->debug->i18n->trans('settings.control.logRuntime', Plugin::I18N_DOMAIN),
+        'label' => \_x('Log Runtime', 'settings.control.logRuntime', 'debug-console-php'),
         'options' => array(
-            'on' => $this->debug->i18n->trans('settings.control.logRuntime.option.on', Plugin::I18N_DOMAIN),
+            'on' => \_x('Log memory usage and request duration', 'settings.control.logRuntime.option.on', 'debug-console-php'),
         ),
         'type' => 'checkbox',
     ),
 
     'enableProfiling' => array(
-        'describedBy' => $this->debug->i18n->trans('settings.control.enableProfiling.describedBy', array(
-            'declareTicks' => '<a target="_blank" href="https://www.php.net/manual/control-structures.declare.php#control-structures.declare.ticks"><code>declare(ticks=1);</code></a>',
-        ), Plugin::I18N_DOMAIN),
-        'label' => $this->debug->i18n->trans('settings.control.enableProfiling', Plugin::I18N_DOMAIN),
+        'describedBy' => \strtr(\_x('If DebugConsoleForPhp is collecting data <b>AND</b> this option is enabled, then we will set {declareTicks}<br /><b>Only enable this when needed</b>', 'settings.control.enableProfiling.describedBy', 'debug-console-php'), array(
+            '{declareTicks}' => '<a target="_blank" href="https://www.php.net/manual/control-structures.declare.php#control-structures.declare.ticks"><code>declare(ticks=1);</code></a>',
+        )),
+        'label' => \_x('Enable Profile Method', 'settings.control.enableProfiling', 'debug-console-php'),
         'options' => array(
-            'on' => $this->debug->i18n->trans('settings.control.enableProfiling.option.on', Plugin::I18N_DOMAIN),
+            'on' => \strtr(\_x('Enable DebugConsoleForPhp\'s <a target="_blank" href="{url}">profile method</a>', 'settings.control.enableProfiling.option.on', 'debug-console-php'), array(
+                '{url}' => \esc_url('https://bradkent.com/php/debug#methodProfile'),
+            )),
         ),
         'type' => 'checkbox',
     ),
@@ -142,8 +135,8 @@ return array(
             'step' => 1,
         ),
         'default' => 0,
-        'describedBy' => $this->debug->i18n->trans('settings.control.maxDepth.describedBy', Plugin::I18N_DOMAIN),
-        'label' => $this->debug->i18n->trans('settings.control.maxDepth', Plugin::I18N_DOMAIN),
+        'describedBy' => \_x('Maximum depth to traverse when logging objects/arrays.  0 = unlimited', 'settings.control.maxDepth.describedBy', 'debug-console-php'),
+        'label' => \_x('Max Depth', 'settings.control.maxDepth', 'debug-console-php'),
         'type' => 'number',
     ),
 
@@ -155,8 +148,8 @@ return array(
             'step' => 1,
         ),
         'default' => 60,
-        'describedBy' => $this->debug->i18n->trans('settings.control.waitThrottle.describedBy', Plugin::I18N_DOMAIN),
-        'label' => $this->debug->i18n->trans('settings.control.waitThrottle', Plugin::I18N_DOMAIN),
+        'describedBy' => \_x('Minimum time between notifications (in minutes)', 'settings.control.waitThrottle.describedBy', 'debug-console-php'),
+        'label' => \_x('Throttle / Wait', 'settings.control.waitThrottle', 'debug-console-php'),
         'section' => 'errors',
         'type' => 'number',
     ),
@@ -164,9 +157,9 @@ return array(
     // email
     'enableEmailer' => array(
         // 'default' => 'on',
-        'label' => $this->debug->i18n->trans('settings.control.enableEmailer', Plugin::I18N_DOMAIN),
+        'label' => \_x('Enable Email', 'settings.control.enableEmailer', 'debug-console-php'),
         'options' => array(
-            'on' => $this->debug->i18n->trans('settings.control.enableEmailer.option.on', Plugin::I18N_DOMAIN),
+            'on' => \_x('Send errors to email', 'settings.control.enableEmailer.option.on', 'debug-console-php'),
         ),
         'section' => 'errors',
         'type' => 'checkbox',
@@ -176,7 +169,7 @@ return array(
             'class' => 'regular-text',
         ),
         'default' => \get_option('admin_email'),
-        'label' => $this->debug->i18n->trans('settings.control.emailTo', Plugin::I18N_DOMAIN),
+        'label' => \_x('Email To', 'settings.control.emailTo', 'debug-console-php'),
         'section' => 'errors',
         'type' => 'email',
         'wpTrClass' => 'indent',
@@ -184,9 +177,9 @@ return array(
 
     // discord
     'plugins[routeDiscord][enabled]' => array(
-        'label' => $this->debug->i18n->trans('settings.control.routeDiscord', Plugin::I18N_DOMAIN),
+        'label' => \_x('Enable Discord', 'settings.control.routeDiscord', 'debug-console-php'),
         'options' => array(
-            'on' => $this->debug->i18n->trans('settings.control.routeDiscord.option.on', Plugin::I18N_DOMAIN),
+            'on' => \_x('Send errors to Discord', 'settings.control.routeDiscord.option.on', 'debug-console-php'),
         ),
         'section' => 'errors',
         'type' => 'checkbox',
@@ -196,10 +189,10 @@ return array(
             'class' => 'regular-text',
             'placeholder' => 'https://discord.com/api/webhooks/xxxxx',
         ),
-        'describedBy' => $this->debug->i18n->trans('settings.controlCommon.defaultsToEnvVar', array(
-            'envVar' => '<code>DISCORD_WEBHOOK_URL</code>',
-        ), Plugin::I18N_DOMAIN) . '<br /><a href="https://support.discord.com/hc/articles/228383668-Intro-to-Webhooks" target="_blank">' . $this->debug->i18n->trans('settings.control.routeDiscord.documentation', Plugin::I18N_DOMAIN) . '</a>',
-        'label' => $this->debug->i18n->trans('settings.controlCommon.webhookUrl', Plugin::I18N_DOMAIN),
+        'describedBy' => \strtr(\_x('If left empty, will fall back to environment variable {envVar}', 'settings.controlCommon.defaultsToEnvVar', 'debug-console-php'), array(
+            '{envVar}' => '<code>DISCORD_WEBHOOK_URL</code>',
+        )) . '<br /><a href="https://support.discord.com/hc/articles/228383668-Intro-to-Webhooks" target="_blank">' . \_x('Discord webhook documentation', 'settings.control.routeDiscord.documentation', 'debug-console-php') . '</a>',
+        'label' => \_x('Webhook URL', 'settings.controlCommon.webhookUrl', 'debug-console-php'),
         'section' => 'errors',
         'type' => 'url',
         'wpTrClass' => 'indent',
@@ -207,9 +200,9 @@ return array(
 
     'plugins[routeSlack][enabled]' => array(
         'describedBy' => 'Must configure either <a href="https://api.slack.com/messaging/webhooks" target="_blank">webhookUrl</a> or <a href="https://api.slack.com/tutorials/tracks/getting-a-token" target="_blank">token</a> &amp; channel',
-        'label' => $this->debug->i18n->trans('settings.control.routeSlack', Plugin::I18N_DOMAIN),
+        'label' => \_x('Enable Slack', 'settings.control.routeSlack', 'debug-console-php'),
         'options' => array(
-            'on' => $this->debug->i18n->trans('settings.control.routeSlack.option.on', Plugin::I18N_DOMAIN),
+            'on' => \_x('Send errors to Slack', 'settings.control.routeSlack.option.on', 'debug-console-php'),
         ),
         'section' => 'errors',
         'type' => 'checkbox',
@@ -219,19 +212,19 @@ return array(
             'class' => 'regular-text',
             'placeholder' => 'https://hooks.slack.com/services/xxxxx',
         ),
-        'describedBy' => $this->debug->i18n->trans('settings.controlCommon.defaultsToEnvVar', array(
-            'envVar' => '<code>SLACK_WEBHOOK_URL</code>',
-        ), Plugin::I18N_DOMAIN),
-        'label' => $this->debug->i18n->trans('settings.controlCommon.webhookUrl', Plugin::I18N_DOMAIN),
+        'describedBy' => \strtr(\_x('If left empty, will fall back to environment variable {envVar}', 'settings.controlCommon.defaultsToEnvVar', 'debug-console-php'), array(
+            '{envVar}' => '<code>SLACK_WEBHOOK_URL</code>',
+        )),
+        'label' => \_x('Webhook URL', 'settings.controlCommon.webhookUrl', 'debug-console-php'),
         'section' => 'errors',
         'type' => 'url',
         'wpTrClass' => 'indent',
     ),
     'plugins[routeSlack][token]' => array(
-        'describedBy' => $this->debug->i18n->trans('settings.controlCommon.defaultsToEnvVar', array(
-            'envVar' => '<code>SLACK_TOKEN</code>',
-        ), Plugin::I18N_DOMAIN),
-        'label' => $this->debug->i18n->trans('settings.control.routeSlackToken', Plugin::I18N_DOMAIN),
+        'describedBy' => \strtr(\_x('If left empty, will fall back to environment variable {envVar}', 'settings.controlCommon.defaultsToEnvVar', 'debug-console-php'), array(
+            '{envVar}' => '<code>SLACK_TOKEN</code>',
+        )),
+        'label' => \_x('Token', 'settings.control.routeSlackToken', 'debug-console-php'),
         'section' => 'errors',
         'type' => 'password',
         'wpTrClass' => 'indent',
@@ -240,19 +233,19 @@ return array(
         'attribs' => array(
             'placeholder' => '#myChannel',
         ),
-        'describedBy' => $this->debug->i18n->trans('settings.controlCommon.defaultsToEnvVar', array(
-            'envVar' => '<code>SLACK_CHANNEL</code>',
-        ), Plugin::I18N_DOMAIN),
-        'label' => $this->debug->i18n->trans('settings.control.routeSlackChannel', Plugin::I18N_DOMAIN),
+        'describedBy' => \strtr(\_x('If left empty, will fall back to environment variable {envVar}', 'settings.controlCommon.defaultsToEnvVar', 'debug-console-php'), array(
+            '{envVar}' => '<code>SLACK_CHANNEL</code>',
+        )),
+        'label' => \_x('Channel', 'settings.control.routeSlackChannel', 'debug-console-php'),
         'section' => 'errors',
         'wpTrClass' => 'indent',
     ),
 
     // Teams
     'plugins[routeTeams][enabled]' => array(
-        'label' => $this->debug->i18n->trans('settings.control.routeTeams', Plugin::I18N_DOMAIN),
+        'label' => \_x('Enable Teams', 'settings.control.routeTeams', 'debug-console-php'),
         'options' => array(
-            'on' => $this->debug->i18n->trans('settings.control.routeTeams.option.on', Plugin::I18N_DOMAIN),
+            'on' => \_x('Send errors to Teams', 'settings.control.routeTeams.option.on', 'debug-console-php'),
         ),
         'section' => 'errors',
         'type' => 'checkbox',
@@ -262,10 +255,10 @@ return array(
             'class' => 'regular-text',
             'placeholder' => 'https://qwerty.webhook.office.com/webhookb2/xxxxx',
         ),
-        'describedBy' => $this->debug->i18n->trans('settings.controlCommon.defaultsToEnvVar', array(
-            'envVar' => '<code>TEAMS_WEBHOOK_URL</code>',
-        ), Plugin::I18N_DOMAIN)  . '<br /><a href="https://learn.microsoft.com/microsoftteams/platform/webhooks-and-connectors/how-to/add-incoming-webhook?tabs=newteams%2Cdotnet#create-an-incoming-webhook" target="_blank">' . $this->debug->i18n->trans('settings.control.routeTeams.documentation', Plugin::I18N_DOMAIN) . '</a>',
-        'label' => $this->debug->i18n->trans('settings.controlCommon.webhookUrl', Plugin::I18N_DOMAIN),
+        'describedBy' => \strtr(\_x('If left empty, will fall back to environment variable {envVar}', 'settings.controlCommon.defaultsToEnvVar', 'debug-console-php'), array(
+            '{envVar}' => '<code>TEAMS_WEBHOOK_URL</code>',
+        ))  . '<br /><a href="https://learn.microsoft.com/microsoftteams/platform/webhooks-and-connectors/how-to/add-incoming-webhook?tabs=newteams%2Cdotnet#create-an-incoming-webhook" target="_blank">' . \_x('Teams webhook documentation', 'settings.control.routeTeams.documentation', 'debug-console-php') . '</a>',
+        'label' => \_x('Webhook URL', 'settings.controlCommon.webhookUrl', 'debug-console-php'),
         'section' => 'errors',
         'type' => 'url',
         'wpTrClass' => 'indent',

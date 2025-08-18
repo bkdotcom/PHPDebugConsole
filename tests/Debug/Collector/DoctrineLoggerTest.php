@@ -67,7 +67,7 @@ class DoctrineLoggerTest extends DebugTestFramework
         $runtimeOutput = <<<'EOD'
 %A
 <li class="level-info m_group" data-channel="general.doctrine" data-icon="fa fa-database">
-<div class="group-header"><span class="font-weight-bold group-label">Doctrine:</span> <span class="t_string">sqlite:///:memory:</span></div>
+<div class="group-header"><span class="font-weight-bold group-label">Doctrine</span>: <span class="t_string">sqlite:///:memory:</span></div>
 <ul class="group-body">
 <li class="m_log" data-channel="general.doctrine"><span class="no-quotes t_string">Logged operations: </span><span class="t_int">3</span></li>
 <li class="m_time" data-channel="general.doctrine"><span class="no-quotes t_string">Total time: %f %s</span></li>

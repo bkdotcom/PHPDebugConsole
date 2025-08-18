@@ -5,8 +5,8 @@ namespace bdk\Test\CurlHttpMessagePhpCond;
 use bdk\CurlHttpMessage\ClientAsync;
 use bdk\CurlHttpMessage\Handler\Mock as MockHandler;
 use bdk\Promise;
+use bdk\Test\CurlHttpMessage\AbstractTestCase;
 use bdk\Test\CurlHttpMessage\ProviderTrait;
-use bdk\Test\CurlHttpMessage\TestCase;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
@@ -14,7 +14,7 @@ use Psr\Http\Message\ResponseInterface;
  * @covers \bdk\CurlHttpMessage\ClientAsync
  * @covers \bdk\CurlHttpMessage\AbstractClient
  */
-class ClientAsyncTest extends TestCase
+class ClientAsyncTest extends AbstractTestCase
 {
     use ProviderTrait;
 

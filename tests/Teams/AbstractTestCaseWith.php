@@ -257,9 +257,8 @@ abstract class AbstractTestCaseWith extends TestCase
                         $tests[$name . ' exception'] = array($name, 'foo', true);
                     }
                 }
-                continue;
-            } // $ref
-        }
+            }//end if
+        }//end foreach
         if (empty(self::$testedSchemaProps)) {
             // provide at least one test
             $tests[] = array(true, true);

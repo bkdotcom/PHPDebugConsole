@@ -319,7 +319,7 @@ class OAuthTest extends DebugTestFramework
         $return = self::$oauthDebug->fetch(self::$oauthEndpoint, array('foo' => 'bar'), OAUTH_HTTP_METHOD_POST);
         $this->assertIsBool($return);
         $logEntriesActual = $this->getLogEntries();
-        $sizeDownload = null;
+        // $sizeDownload = null;
         foreach ($logEntriesActual as $i => $logEntry) {
             if (isset($logEntry['args'][0]) && $logEntry['args'][0] === 'additional info') {
                 // $sizeDownload = $logEntry['args'][1]['size_download'];

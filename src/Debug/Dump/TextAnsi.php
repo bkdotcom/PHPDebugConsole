@@ -79,14 +79,15 @@ class TextAnsi extends Text
     public function processLogEntry(LogEntry $logEntry)
     {
         $escapeCode = $this->logEntryEscapeCode($logEntry);
-        $escapeReset = $escapeCode ?: "\e[0m";
+        $escapeResetDefault = "\e[0m";
+        $escapeReset = $escapeCode ?: $escapeResetDefault;
         $this->valDumper->escapeReset = $escapeReset;
         $str = parent::processLogEntry($logEntry);
         $str = \str_replace(self::ESCAPE_RESET, $escapeReset, $str);
         if ($escapeCode) {
             $strIndent = \str_repeat('    ', $this->depth);
-            $str = \preg_replace('#^(' . $strIndent . ')(.+)$#m', '$1' . $escapeCode . '$2' . "\e[0m", $str);
-            $this->valDumper->escapeReset = "\e[0m";
+            $str = \preg_replace('#^(' . $strIndent . ')(.+)$#m', '$1' . $escapeCode . '$2' . $escapeResetDefault, $str);
+            $this->valDumper->escapeReset = $escapeResetDefault;
         }
         return $str;
     }

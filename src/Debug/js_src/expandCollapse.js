@@ -77,23 +77,22 @@ export function toggle (node) {
  */
 function buildReturnVals ($returnNodes) {
   var vals = Object.values($returnNodes).map(function (returnNode) {
-    var $return = $(returnNode)
-    var type = getNodeType($return)
-    var typeMore = type[1]
+    let $return = $(returnNode)
+    let type = getNodeType($return)
+    let typeMore = type[1]
+    let ret = ''
     type = type[0]
+    ret = '<span class="t_keyword">' + type + '</span>'
     if (['bool', 'callable', 'const', 'float', 'identifier', 'int', 'null', 'resource', 'unknown'].indexOf(type) > -1 || ['numeric', 'timestamp'].indexOf(typeMore) > -1) {
-      return $return[0].outerHTML
+      ret = $return[0].outerHTML
+    } else if (type === 'string') {
+      ret = buildReturnValString($return, typeMore)
+    } else if (type === 'object') {
+      ret = buildReturnValObject($return)
+    } else if (type === 'array' && $return[0].textContent === 'array()') {
+      ret = $return[0].outerHTML.replace('t_array', 't_array expanded')
     }
-    if (type === 'string') {
-      return buildReturnValString($return, typeMore)
-    }
-    if (type === 'object') {
-      return buildReturnValObject($return)
-    }
-    if (type === 'array' && $return[0].textContent === 'array()') {
-      return $return[0].outerHTML.replace('t_array', 't_array expanded')
-    }
-    return '<span class="t_keyword">' + type + '</span>'
+    return ret
   })
   return vals.join(', ')
 }
@@ -248,10 +247,7 @@ function groupHasVisTestChild ($child) {
       ? groupHasVis($child)
       : false
   }
-  if ($child.is('.m_group.hide-if-empty.empty')) {
-    return false
-  }
-  return true
+  return $child.not('.m_group.hide-if-empty.empty')
 }
 
 /**

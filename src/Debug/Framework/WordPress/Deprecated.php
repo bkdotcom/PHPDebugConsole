@@ -48,9 +48,6 @@ class Deprecated implements SubscriberInterface
                 return false;
             });
         }
-
-        // require ABSPATH . '/wp-includes/class-json.php';
-        // $json = new \Services_JSON();
     }
 
     /**

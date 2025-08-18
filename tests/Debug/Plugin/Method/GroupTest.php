@@ -643,7 +643,7 @@ class GroupTest extends DebugTestFramework
                 ),
                 'firephp' => 'X-Wf-1-1-1-4: 61|[{"Collapsed":"false","Label":"a","Type":"GROUP_START"},null]|',
                 'html' => '<li class="expanded m_group">
-                    <div class="group-header"><span class="font-weight-bold group-label">a:</span> <span class="t_int">10</span></div>
+                    <div class="group-header"><span class="font-weight-bold group-label">a</span>: <span class="t_int">10</span></div>
                     <ul class="group-body">',
                 'script' => 'console.group("a",10);',
                 'text' => '▸ a: 10',

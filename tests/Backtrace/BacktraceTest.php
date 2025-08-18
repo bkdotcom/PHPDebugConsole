@@ -153,12 +153,6 @@ class BacktraceTest extends TestCase
 
     public function testGetCallerInfoClassContext()
     {
-        /*
-        \bdk\Test\Backtrace\Fixture\ChildObj::methodStatic();
-        $callerInfo = \bdk\Test\Backtrace\Fixture\ChildObj::$callerInfo;
-        echo \print_r($callerInfo, true) . "\n";
-        */
-
         $child = new ChildObj();
         $parent = new ParentObj();
         $childRef = new \ReflectionObject($child);
@@ -169,7 +163,6 @@ class BacktraceTest extends TestCase
         $line = __LINE__ - 1;
         $callerInfoStack = ChildObj::$callerInfoStack;
         unset($callerInfoStack[1]['line'], $callerInfoStack[2]['line']);
-        // echo 'callerInfoStack = ' . \print_r($callerInfoStack, true) . "\n";
         self::assertSame(array(
             array(
                 'args' => array(),
@@ -206,18 +199,11 @@ class BacktraceTest extends TestCase
             ),
         ), $callerInfoStack);
 
-        /*
-        \bdk\Test\Backtrace\Fixture\ChildObj::method2Static();
-        $callerInfo = \bdk\Test\Backtrace\Fixture\ChildObj::$callerInfo;
-        echo \print_r($callerInfo, true) . "\n";
-        */
-
         ChildObj::$callerInfoStack = array();
         $child->inherited();
         $line = __LINE__ - 1;
         $callerInfoStack = ChildObj::$callerInfoStack;
         unset($callerInfoStack[1]['line']);
-        // echo 'callerInfoStack = ' . \print_r($callerInfoStack, true) . "\n";
         self::assertSame(array(
             array(
                 'args' => array(),

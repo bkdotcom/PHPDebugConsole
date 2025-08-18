@@ -138,8 +138,8 @@ export const findDeepest = function (el) {
   var children = el.children
   var depth = arguments[1] || 0
   var deepestEl = [el, depth]
-  for (let i = 0; i < children.length; i++) {
-    let found = findDeepest(children[i], depth + 1)
+  for (const child of children) {
+    let found = findDeepest(child, depth + 1)
     if (found[1] > deepestEl[1]) {
       deepestEl = found
     }

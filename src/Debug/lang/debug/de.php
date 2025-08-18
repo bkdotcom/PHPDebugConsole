@@ -161,6 +161,9 @@ return array(
     'method.time.not-exist' => 'Timer \'\'{label}\'\' existiert nicht',
     'method.trace' => 'Spur',
     'method.trace.limited' => 'begrenzt auf {limit}',
+
+    'oauth.callback_url' => 'Callback-URL',
+
     'object.attributes' => 'Attribute',
     'object.cases' => 'Fälle',
     'object.cases.none' => 'keine Fälle!',
@@ -179,6 +182,7 @@ return array(
     'object.not-collected' => 'nicht gesammelt',
     'object.properties' => 'Eigenschaften',
     'object.properties.none' => 'keine Eigenschaften',
+
     'php.build-date' => 'Erstellungsdatum',
     'php.exit.token' => 'Möglicherweise heruntergefahren über {token}',
     'php.extension-not-loaded' => '{extension} Erweiterung ist nicht geladen',
@@ -255,6 +259,8 @@ return array(
     'word.omitted' => 'weggelassen',
     'word.options' => 'Optionen',
     'word.parameters' => 'Parameter',
+    'word.prettified' => 'verschönert',
+    'word.size' => 'Größe',
     'word.slow' => 'langsam',
     'word.types' => 'Typen',
     'word.value' => 'wert',

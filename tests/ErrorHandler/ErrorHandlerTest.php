@@ -14,7 +14,7 @@ use bdk\PubSub\Manager as EventManager;
  * @covers \bdk\ErrorHandler\AbstractErrorHandler
  * @covers \bdk\ErrorHandler\Error
  */
-class ErrorHandlerTest extends TestBase
+class ErrorHandlerTest extends AbstractTestCase
 {
     protected $prevErrorHandlerVals = array();
 
@@ -561,7 +561,7 @@ class ErrorHandlerTest extends TestBase
         self::assertSame($backtraceLine, $trace[1]['line']);
         PHP_VERSION_ID >= 70000
             ? self::assertSame('bdk\\Test\\ErrorHandler\\ErrorHandlerTest->raiseError', $trace[1]['function'])
-            : self::assertSame('bdk\\Test\\ErrorHandler\\TestBase->raiseError', $trace[1]['function']);
+            : self::assertSame('bdk\\Test\\ErrorHandler\\AbstractTestCase->raiseError', $trace[1]['function']);
         self::assertSame(__CLASS__ . '->' . __FUNCTION__, $trace[2]['function']);
 
         $errorVals = array(

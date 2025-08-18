@@ -88,18 +88,15 @@ class EventSubscribers implements SubscriberInterface
         $method = $logEntry['method'];
         $args = $logEntry['args'];
         $arg0 = isset($args[0]) ? $args[0] : true;
-        switch ($method) {
-            case 'yiiRouteEnable':
-                $this->component->logRoute = $this->component->logRoute ?: LogRoute::getInstance();
-                $this->component->logRoute->enabled = $arg0;
-                $logEntry->stopPropagation();
-                $logEntry['handled'] = true;
-                break;
-            case 'logPdo':
-                $debug->getChannel('pdo')->setCfg('collect', $arg0, Debug::CONFIG_NO_RETURN);
-                $logEntry->stopPropagation();
-                $logEntry['handled'] = true;
-                break;
+        if ($method === 'yiiRouteEnable') {
+            $this->component->logRoute = $this->component->logRoute ?: LogRoute::getInstance();
+            $this->component->logRoute->enabled = $arg0;
+            $logEntry->stopPropagation();
+            $logEntry['handled'] = true;
+        } elseif ($method === 'logPdo') {
+            $debug->getChannel('pdo')->setCfg('collect', $arg0, Debug::CONFIG_NO_RETURN);
+            $logEntry->stopPropagation();
+            $logEntry['handled'] = true;
         }
     }
 

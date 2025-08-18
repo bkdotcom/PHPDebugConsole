@@ -30,6 +30,8 @@ use Throwable;
  */
 class Promise implements PromiseInterface
 {
+    const TYPE_CALLABLE = 'callable|null';
+
     /** @var mixed */
     protected $result;
 
@@ -54,8 +56,8 @@ class Promise implements PromiseInterface
      */
     public function __construct($waitFn = null, $cancelFn = null)
     {
-        \bdk\Promise\Utils::assertType($waitFn, 'callable|null', 'waitFn');
-        \bdk\Promise\Utils::assertType($cancelFn, 'callable|null', 'cancelFn');
+        \bdk\Promise\Utils::assertType($waitFn, self::TYPE_CALLABLE, 'waitFn');
+        \bdk\Promise\Utils::assertType($cancelFn, self::TYPE_CALLABLE, 'cancelFn');
 
         $this->waitFn = $waitFn;
         $this->cancelFn = $cancelFn;
@@ -118,8 +120,8 @@ class Promise implements PromiseInterface
      */
     public function then($onFulfilled = null, $onRejected = null)
     {
-        \bdk\Promise\Utils::assertType($onFulfilled, 'callable|null', 'onFulfilled');
-        \bdk\Promise\Utils::assertType($onRejected, 'callable|null', 'onRejected');
+        \bdk\Promise\Utils::assertType($onFulfilled, self::TYPE_CALLABLE, 'onFulfilled');
+        \bdk\Promise\Utils::assertType($onRejected, self::TYPE_CALLABLE, 'onRejected');
 
         if ($this->state === self::PENDING) {
             $promise = new static(null, [$this, 'cancel']);

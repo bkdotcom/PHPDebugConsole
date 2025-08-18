@@ -125,8 +125,7 @@ class UpdateCharData
             // remove leading 00 pairs
             return \preg_replace('/^(00)+/', '', $codePoint);
         }, \explode(' ', $parts['charBCodePoint'])));
-
-        \preg_match('/^(?P<category>\w+)\t#(?P<notXid>\*?)\s*(?P<example>\(.*?\))\s*(?P<charADesc>.*?) → (?P<charBDesc>.*?)(\s+#.*)?$/u', $parts['comment'], $matches);
+        \preg_match('/^(?P<category>\w+)\t#(?P<notXid>\*?)\s*(?P<example>\([^\)]*+\))\s*(?P<charADesc>.*?) → (?P<charBDesc>.*?)(\s+#.*)?$/u', $parts['comment'], $matches);
         $parts = \array_merge($parts, $matches);
 
         return array(

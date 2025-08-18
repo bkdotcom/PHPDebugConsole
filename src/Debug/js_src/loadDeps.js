@@ -44,7 +44,6 @@ function loadDepsDoer (deps, checkOnly) {
       // dependency exists
       onDepLoaded(dep)
       deps.splice(i, 1) // remove it
-      continue
     } else if (dep.status !== 'loading' && !checkOnly) {
       dep.status = 'loading'
       addDep(dep)

@@ -77,8 +77,7 @@ var zest = (function () {
       var baseSelector = parts.shift();
       var pseudosCustom = [];
       var pseudosStandard = [];
-      for (let i = 0; i < parts.length; i++) {
-        const part = parts[i];
+      for (const part of parts) {
         customPseudoSelectors.includes(part)
           ? pseudosCustom.push(part)
           : pseudosStandard.push(part);
@@ -298,8 +297,8 @@ var zest = (function () {
     var children = el.children;
     var depth = arguments[1] || 0;
     var deepestEl = [el, depth];
-    for (let i = 0; i < children.length; i++) {
-      let found = findDeepest(children[i], depth + 1);
+    for (const child of children) {
+      let found = findDeepest(child, depth + 1);
       if (found[1] > deepestEl[1]) {
         deepestEl = found;
       }
@@ -388,186 +387,186 @@ var zest = (function () {
     return toString.call(val).match(/^\[object (\w+)\]$/)[1].toLowerCase()
   };
 
-  function extendMicroDom$6 (MicroDom) {
-
-    /**
-     * @param string|Array|fn mixed space separated class names, list of class names, or function that returns either
-     *
-     * @return MicroDom
-     */
-    function addClass (mixed) {
-      if (typeof mixed === 'function') {
-        return this.each((el, i) => {
-          const classes = mixed.call(el, el, i);
-          this.eq(i).addClass(classes);
-        })
-      }
-      if (typeof mixed === 'object' && !Array.isArray(mixed) && mixed !== null) {
-        // object (not array) of classes
-        // classname => boolean
-        return this.toggleClass(mixed)
-      }
-      const classes = typeof mixed === 'string'
-        ? mixed.split(' ').filter((val) => val !== '')
-        : mixed;
-      return this.each((el) => {
-        for (const className of classes) {
-          el.classList.add(className);
-        }
-      })
-    }
-
-    function attr ( ...args ) {
-      if (typeof args[0] === 'string' && args.length === 1) {
-        return this[0]?.getAttribute(args[0])
-      }
-      if (typeof args[0] === 'string') {
-        args[0] = {[args[0]]: args[1]};
-      }
+  /**
+   * @param string|Array|fn mixed space separated class names, list of class names, or function that returns either
+   *
+   * @return MicroDom
+   */
+  function addClass (mixed) {
+    if (typeof mixed === 'function') {
       return this.each((el, i) => {
-        for (const [name, value] of Object.entries(args[0])) {
-          if (typeof value === 'boolean' && name.startsWith('data-') === false) {
-            if (value) {
-              el.setAttribute(name, name);
-            } else {
-              el.removeAttribute(name);
-            }
-          } else if (value === undefined) {
-            el.removeAttribute(name);
-          } else if (value === null && name.startsWith('data-') === false) {
-            el.removeAttribute(name);
-          } else if (name === 'class') {
-            this.eq(i).removeAttr('class').addClass(value);
-          } else if (name === 'html') {
-            this.eq(i).html(value);
-          } else if (name === 'style') {
-            this.eq(i).style(value);
-          } else if (name === 'text') {
-            el.textContent = value;
+        const classes = mixed.call(el, el, i);
+        this.eq(i).addClass(classes);
+      })
+    }
+    if (typeof mixed === 'object' && !Array.isArray(mixed) && mixed !== null) {
+      // object (not array) of classes
+      // classname => boolean
+      return this.toggleClass(mixed)
+    }
+    const classes = typeof mixed === 'string'
+      ? mixed.split(' ').filter((val) => val !== '')
+      : mixed;
+    return this.each((el) => {
+      for (const className of classes) {
+        el.classList.add(className);
+      }
+    })
+  }
+
+  function attr ( ...args ) {
+    if (typeof args[0] === 'string' && args.length === 1) {
+      return this[0]?.getAttribute(args[0])
+    }
+    if (typeof args[0] === 'string') {
+      args[0] = {[args[0]]: args[1]};
+    }
+    return this.each((el, i) => {
+      for (const [name, value] of Object.entries(args[0])) {
+        if (typeof value === 'boolean' && name.startsWith('data-') === false) {
+          if (value) {
+            el.setAttribute(name, name);
           } else {
-            el.setAttribute(name, value);
+            el.removeAttribute(name);
           }
+        } else if (value === undefined) {
+          el.removeAttribute(name);
+        } else if (value === null && name.startsWith('data-') === false) {
+          el.removeAttribute(name);
+        } else if (name === 'class') {
+          this.eq(i).removeAttr('class').addClass(value);
+        } else if (name === 'html') {
+          this.eq(i).html(value);
+        } else if (name === 'style') {
+          this.eq(i).style(value);
+        } else if (name === 'text') {
+          el.textContent = value;
+        } else {
+          el.setAttribute(name, value);
         }
+      }
+    })
+  }
+
+  function hasClass (className) {
+    let classes = typeof className === 'string'
+      ? className.split(' ')
+      : className;
+    for (let el of this) {
+      let classesMatch = classes.filter((className) => el.classList.contains(className));
+      if (classesMatch.length === classes.length) {
+        return true
+      }
+    }
+    return false
+  }
+
+  function prop ( ...args ) {
+    if (typeof args[0] === 'string' && args.length === 1) {
+      let name = args[0];
+      if (name === 'class') {
+        name = 'className';
+      }
+      return this[0]?.[name]
+    }
+    // set one or more properties
+    if (typeof args[0] === 'string') {
+      args[0] = {[args[0]]: args[1]};
+    }
+    return this.each((el) => {
+      for (let [name, value] of Object.entries(args[0])) {
+        let propName = name === 'class'
+          ? 'className'
+          : name;
+        el[propName] = value;
+      }
+    })
+  }
+
+  function removeAttr (name) {
+    return this.each((el) => {
+      el.removeAttribute(name);
+    })
+  }
+
+  function removeClass (mixed) {
+    if (typeof mixed === 'function') {
+      return this.each((el, i) => {
+        const classes = mixed.call(el, el, i);
+        this.eq(i).removeClass(classes);
       })
     }
-
-    function hasClass (className) {
-      let classes = typeof className === 'string'
-        ? className.split(' ')
-        : className;
-      for (let el of this) {
-        let classesMatch = classes.filter((className) => el.classList.contains(className));
-        if (classesMatch.length === classes.length) {
-          return true
-        }
+    const classes = typeof mixed === 'string'
+      ? mixed.split(' ').filter((val) => val !== '')
+      : mixed;
+    return this.each((el) => {
+      for (const className of classes) {
+        el.classList.remove(className);
       }
-      return false
+    })
+  }
+
+  function toggleClass (mixed, state) {
+    if (typeof mixed === 'function') {
+      return this.each((el, i) => {
+        const classes = mixed.call(el, el, i);
+        this.eq(i).toggleClass(classes, state);
+      })
     }
-
-    function prop ( ...args ) {
-      if (typeof args[0] === 'string' && args.length === 1) {
-        let name = args[0];
-        if (name === 'class') {
-          name = 'className';
+    const classes = Array.isArray(mixed) || typeof mixed === 'object'
+      ? mixed
+      : mixed.split(' ').filter((val) => val !== '');
+    return this.each((el) => {
+      each(classes, (value, key) => {
+        var className = value;
+        var classState = typeof state !== 'undefined'
+          ? state
+          : el.classList.contains(className) === false;
+        if (typeof value === 'boolean' && typeof key === 'string') {
+          className = key;
+          classState = value;
         }
-        return this[0]?.[name]
-      }
-      // set one or more properties
-      if (typeof args[0] === 'string') {
-        args[0] = {[args[0]]: args[1]};
-      }
+        classState
+          ? el.classList.add(className)
+          : el.classList.remove(className);
+      });
+    })
+  }
+
+  function val (value) {
+    if (typeof value !== 'undefined') {
+      // set value
       return this.each((el) => {
-        for (let [name, value] of Object.entries(args[0])) {
-          if (name === 'class') {
-            name = 'className';
-          }
-          el[name] = value;
+        if (el.type === 'checkbox' || el.type === 'radio') {
+          el.checked = Boolean(value);
+          return
         }
-      })
-    }
-
-    function removeAttr (name) {
-      return this.each((el) => {
-        el.removeAttribute(name);
-      })
-    }
-
-    function removeClass (mixed) {
-      if (typeof mixed === 'function') {
-        return this.each((el, i) => {
-          const classes = mixed.call(el, el, i);
-          this.eq(i).removeClass(classes);
-        })
-      }
-      const classes = typeof mixed === 'string'
-        ? mixed.split(' ').filter((val) => val !== '')
-        : mixed;
-      return this.each((el) => {
-        for (const className of classes) {
-          el.classList.remove(className);
+        if (el.tagName === 'SELECT' && el.multiple) {
+          if (Array.isArray(value) === false) {
+            value = [value];
+          }
+          Array.from(el.options).forEach((option) => {
+            option.selected = value.includes(option.value);
+          });
+          return
         }
+        el.value = value;
       })
     }
-
-    function toggleClass (mixed, state) {
-      if (typeof mixed === 'function') {
-        return this.each((el, i) => {
-          const classes = mixed.call(el, el, i);
-          this.eq(i).toggleClass(classes, state);
-        })
-      }
-      const classes = Array.isArray(mixed) || typeof mixed === 'object'
-        ? mixed
-        : mixed.split(' ').filter((val) => val !== '');
-      return this.each((el) => {
-        each(classes, (value, key) => {
-          var className = value;
-          var classState = typeof state !== 'undefined'
-            ? state
-            : el.classList.contains(className) === false;
-          if (typeof value === 'boolean' && typeof key === 'string') {
-            className = key;
-            classState = value;
-          }
-          classState
-            ? el.classList.add(className)
-            : el.classList.remove(className);
-        });
-      })
+    // get value
+    if (typeof this[0] === 'undefined') {
+      return undefined
     }
-
-    function val (value) {
-      if (typeof value !== 'undefined') {
-        // set value
-        return this.each((el) => {
-          if (el.type === 'checkbox' || el.type === 'radio') {
-            el.checked = Boolean(value);
-            return
-          }
-          if (el.tagName === 'SELECT' && el.multiple) {
-            if (Array.isArray(value) === false) {
-              value = [value];
-            }
-            Array.from(el.options).forEach((option) => {
-              option.selected = value.includes(option.value);
-            });
-            return
-          }
-          el.value = value;
-        })
-      }
-      // get value
-      if (typeof this[0] === 'undefined') {
-        return undefined
-      }
-      let el = this[0];
-      if (el.options && el.multiple) {
-        return Array.from(el.options)
-          .filter((option) => option.selected)
-          .map((option) => option.value)
-      }
-      return el.value
+    let el = this[0];
+    if (el.options && el.multiple) {
+      return Array.from(el.options)
+        .filter((option) => option.selected)
+        .map((option) => option.value)
     }
+    return el.value
+  }
+
+  function extendMicroDom$6 (MicroDom) {
 
     Object.assign(MicroDom.prototype, {
       addClass,

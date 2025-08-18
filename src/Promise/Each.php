@@ -17,6 +17,8 @@ use bdk\Promise\PromiseInterface;
  */
 final class Each
 {
+    const TYPE_CALLABLE = 'callable|null';
+
     /**
      * Given an iterator that yields promises or values, returns a promise that
      * is fulfilled with a null value when the iterator has been consumed or
@@ -36,8 +38,8 @@ final class Each
      */
     public static function of($iterable, $onFulfilled = null, $onRejected = null)
     {
-        \bdk\Promise\Utils::assertType($onFulfilled, 'callable|null', 'onFulfilled');
-        \bdk\Promise\Utils::assertType($onRejected, 'callable|null', 'onRejected');
+        \bdk\Promise\Utils::assertType($onFulfilled, self::TYPE_CALLABLE, 'onFulfilled');
+        \bdk\Promise\Utils::assertType($onRejected, self::TYPE_CALLABLE, 'onRejected');
 
         return (new EachPromise($iterable, array(
             'fulfilled' => $onFulfilled,
@@ -67,8 +69,8 @@ final class Each
         $onRejected = null
     )
     {
-        \bdk\Promise\Utils::assertType($onFulfilled, 'callable|null', 'onFulfilled');
-        \bdk\Promise\Utils::assertType($onRejected, 'callable|null', 'onRejected');
+        \bdk\Promise\Utils::assertType($onFulfilled, self::TYPE_CALLABLE, 'onFulfilled');
+        \bdk\Promise\Utils::assertType($onRejected, self::TYPE_CALLABLE, 'onRejected');
 
         return (new EachPromise($iterable, array(
             'concurrency' => $concurrency,
@@ -92,7 +94,7 @@ final class Each
      */
     public static function ofLimitAll($iterable, $concurrency, $onFulfilled = null)
     {
-        \bdk\Promise\Utils::assertType($onFulfilled, 'callable|null', 'onFulfilled');
+        \bdk\Promise\Utils::assertType($onFulfilled, self::TYPE_CALLABLE, 'onFulfilled');
 
         return self::ofLimit(
             $iterable,

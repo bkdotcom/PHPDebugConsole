@@ -1,5 +1,5 @@
 (function ($) {
-  var toggles = {
+  const toggles = {
     '#debugConsoleForPhp_enableEmailer': ['#debugConsoleForPhp_emailTo'],
     '#debugConsoleForPhp_plugins_routeDiscord_enabled': ['#debugConsoleForPhp_plugins_routeDiscord_webhookUrl'],
     '#debugConsoleForPhp_plugins_routeSlack_enabled': [
@@ -12,7 +12,7 @@
   }
   $(function () {
     $('.debug').on('resize.debug', function () {
-      var height = $(this).hasClass('debug-drawer-open')
+      const height = $(this).hasClass('debug-drawer-open')
         ? ($(this).height() - 60) + 'px'
         : '';
       $('#wpbody').style('marginBottom', height)
@@ -21,9 +21,9 @@
     })
     $.each(toggles, function (dest, checkbox) {
       $(checkbox).on('change', function () {
-        var isChecked = $(this).is(':checked');
+        const isChecked = $(this).is(':checked');
         $(dest.join(', ')).each(function () {
-          var $this = $(this);
+          const $this = $(this);
           $this.is(':input')
             ? $this.closest('tr').toggle(isChecked)
             : $this.toggle(isChecked);

@@ -273,19 +273,6 @@ class ContainerTest extends TestCase
     {
         $container = new Container();
         $container->registerProvider(new Fixture\ServiceProvider());
-        /*
-        $container['string'] = 'foo';
-        $container['service'] = function () {
-            return new Fixture\Service();
-        };
-        $container['factoryService'] = $container->factory(function () {
-            return new Fixture\Service();
-        });
-        $closure = function () {
-            return 'this is a test';
-        };
-        $container['protected'] = $container->protect($closure);
-        */
         $this->assertSame('value', $container->get('param'));
         $this->assertInstanceOf('bdk\\Test\\Container\\Fixture\\Service', $container->get('service'));
         $this->assertInstanceOf('bdk\\Test\\Container\\Fixture\\Service', $container->get('factory'));

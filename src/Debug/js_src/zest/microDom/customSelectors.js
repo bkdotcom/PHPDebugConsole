@@ -74,8 +74,7 @@ function parseSelector (selector) {
     var baseSelector = parts.shift()
     var pseudosCustom = []
     var pseudosStandard = []
-    for (let i = 0; i < parts.length; i++) {
-      const part = parts[i]
+    for (const part of parts) {
       customPseudoSelectors.includes(part)
         ? pseudosCustom.push(part)
         : pseudosStandard.push(part)

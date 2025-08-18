@@ -161,6 +161,9 @@ return array(
     'method.time.not-exist' => 'El temporizador \'\'{label}\'\' no existe',
     'method.trace' => 'traza',
     'method.trace.limited' => 'limitado a {limit}',
+
+    'oauth.callback_url' => 'URL de callback',
+
     'object.attributes' => 'atributos',
     'object.cases' => 'casos',
     'object.cases.none' => '¡sin casos!',
@@ -179,6 +182,7 @@ return array(
     'object.not-collected' => 'no recolectado',
     'object.properties' => 'propiedades',
     'object.properties.none' => 'sin propiedades',
+
     'php.build-date' => 'Fecha de compilación',
     'php.exit.token' => 'Posiblemente cerrado a través de {token}',
     'php.extension-not-loaded' => 'La extensión {extension} no está cargada',
@@ -255,6 +259,8 @@ return array(
     'word.omitted' => 'omitido',
     'word.options' => 'opciones',
     'word.parameters' => 'parámetros',
+    'word.prettified' => 'embellecido',
+    'word.size' => 'tamaño',
     'word.slow' => 'lento',
     'word.types' => 'tipos',
     'word.value' => 'valor',

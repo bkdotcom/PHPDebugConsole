@@ -49,7 +49,7 @@ It is installable and autoloadable via [Composer](https://getcomposer.org/) as [
 }
 ```
 
-**installation without Composer**
+### installation without Composer
 
 As of v3.3 this is no longer officially supported due to now requiring one or more dependencies.
 

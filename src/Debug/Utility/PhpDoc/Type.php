@@ -10,6 +10,7 @@
 
 namespace bdk\Debug\Utility\PhpDoc;
 
+use bdk\Container\ObjectBuilder as ContainerObjectBuilder;
 use bdk\Container\UseStatements;
 use bdk\Debug\Utility\PhpDoc;
 use bdk\Debug\Utility\Reflection;
@@ -20,25 +21,15 @@ use bdk\Debug\Utility\Reflection;
 class Type
 {
     /** @var list<string> */
-    public $types = [
-        'null',
-        'mixed', 'scalar',
-        'bool', 'boolean', 'true', 'false',
-        'callable', 'callable-array', 'callable-string', 'iterable',
-        'int', 'integer', 'negative-int', 'positive-int', 'non-positive-int', 'non-negative-int', 'non-zero-int',
-        'int-mask', 'int-mask-of',
-        'float', 'double',
-        'numeric', // int, float, or numeric-string
-        'array', 'non-empty-array', 'list', 'non-empty-list',
-        'array-key',
-        'void',
-        'object',
-        'string', 'non-falsy-string', 'numeric-string', 'non-empty-string', 'class-string', 'literal-string',
-        '$this', 'self', 'static',
-        'resource', 'closed-resource', 'open-resource',
-        'key-of', 'value-of',
-        'never', 'never-return', 'never-returns', 'no-return',
-    ];
+    public $types = [];
+
+    /**
+     * Constructor
+     */
+    public function __construct()
+    {
+        $this->types = ContainerObjectBuilder::$phpDocTypes;
+    }
 
     /**
      * Convert "self[]|null" to array

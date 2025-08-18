@@ -298,7 +298,7 @@ class MessageFormatter
                 return $this->parseTokenPlural($value, $token);
 
             default:
-                // 'date': // XXX use DateFormatter?
+                // 'date':  DateFormatter
                 // 'time':
                 // 'spellout':
                 // 'ordinal':

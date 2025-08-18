@@ -26,6 +26,9 @@ class Helper
     /** @var Dumper */
     protected $dumper;
 
+    /** @var \bdk\Debug\Utility\Html */
+    protected $html;
+
     /**
      * Constructor
      *
@@ -35,6 +38,7 @@ class Helper
     {
         $this->debug = $dumper->debug;
         $this->dumper = $dumper;
+        $this->html = $dumper->debug->html;
     }
 
     /**
@@ -74,7 +78,7 @@ class Helper
      */
     public function buildContext(array $lines, $lineNum)
     {
-        return $this->debug->html->buildTag(
+        return $this->html->buildTag(
             'pre',
             array(
                 'class' => 'highlight line-numbers',
@@ -139,12 +143,12 @@ class Helper
         );
         return ($fileParts['docRoot'] ? '<span class="file-docroot">DOCUMENT_ROOT</span>' : '')
             . ($fileParts['relPathCommon']
-                ? '<span class="file-basepath">' . $this->dumper->valDumper->dump($fileParts['relPathCommon'], $dumpOpts) . '</span>'
+                ? $this->html->buildTag('span', array('class' => 'file-basepath'), $this->dumper->valDumper->dump($fileParts['relPathCommon'], $dumpOpts))
                 : '')
             . ($fileParts['relPath']
-                ? '<span class="file-relpath">' . $this->dumper->valDumper->dump($fileParts['relPath'], $dumpOpts) . '</span>'
+                ? $this->html->buildTag('span', array('class' => 'file-relpath'), $this->dumper->valDumper->dump($fileParts['relPath'], $dumpOpts))
                 : '')
-            . '<span class="file-basename">' . $this->dumper->valDumper->dump($fileParts['baseName'], $dumpOpts) . '</span>';
+            . $this->html->buildTag('span', array('class' => 'file-basename'), $this->dumper->valDumper->dump($fileParts['baseName'], $dumpOpts));
     }
 
     /**
@@ -165,11 +169,11 @@ class Helper
         $type = \preg_replace_callback($regex, function ($matches) {
             return $matches[1] !== ''
                 ? $this->markupTypePart($matches[1])
-                : '<span class="t_punct">' . \htmlspecialchars($matches[2]) . '</span>';
+                : $this->html->buildTag('span', array('class' => 't_punct'), \htmlspecialchars($matches[2]));
         }, $type);
         $attribs = \array_filter($attribs);
         if ($attribs) {
-            $type = $this->debug->html->buildTag('span', $attribs, $type);
+            $type = $this->html->buildTag('span', $attribs, $type);
         }
         return $type;
     }
@@ -190,10 +194,10 @@ class Helper
             return $html;
         }
         $html = \preg_replace_callback('/^<tr([^>]*)>/', function ($matches) use ($index) {
-            $attribs = $this->debug->html->parseAttribString($matches[1]);
+            $attribs = $this->html->parseAttribString($matches[1]);
             $attribs['class']['expanded'] = $index === 0;
             $attribs['data-toggle'] = 'next';
-            return '<tr' . $this->debug->html->buildAttribString($attribs) . '>';
+            return '<tr' . $this->html->buildAttribString($attribs) . '>';
         }, $html);
         $html .= '<tr class="context" ' . ($index === 0 ? 'style="display:table-row;"' : '' ) . '>'
             . '<td colspan="4">'
@@ -326,24 +330,25 @@ class Helper
             $type = \substr($type, 0, 0 - $strlen);
         }
         if (\is_numeric($type)) {
-            return '<span class="t_type">' . $type . '</span>';
+            return $this->html->buildTag('span', array('class' => 't_type'), $type);
         }
         if (\substr($type, -1) === ':') {
             // array "shape" key
             $type = \trim($type, ':\'"');
-            return '<span class="t_string">' . $type . '</span><span class="t_punct">:</span>';
+            return $this->html->buildTag('span', array('class' => 't_string'), $type)
+                . $this->html->buildTag('span', array('class' => 't_punct'), ':');
         }
         if (\preg_match('/^[\'"]/', $type)) {
             $type = \trim($type, '\'"');
-            return '<span class="t_string t_type">' . $type . '</span>';
+            return $this->html->buildTag('span', array('class' => 't_string t_type'), $type);
         }
         if (\in_array($type, $this->debug->phpDoc->type->types, true) === false) {
             $type = $this->dumper->valDumper->markupIdentifier($type);
         }
         if ($arrayCount > 0) {
-            $type .= '<span class="t_punct">' . \str_repeat('[]', $arrayCount) . '</span>';
+            $type .= $this->html->buildTag('span', array('class' => 't_punct'), \str_repeat('[]', $arrayCount));
         }
-        return '<span class="t_type">' . $type . '</span>';
+        return $this->html->buildTag('span', array('class' => 't_type'), $type);
     }
 
     /**

@@ -3,12 +3,12 @@
 namespace bdk\Test\CurlHttpMessage;
 
 use bdk\CurlHttpMessage\HandlerStack;
-use bdk\Test\CurlHttpMessage\TestCase;
+use bdk\Test\CurlHttpMessage\AbstractTestCase;
 
 /**
  * @covers \bdk\CurlHttpMessage\HandlerStack
  */
-class HandlerStackTest extends TestCase
+class HandlerStackTest extends AbstractTestCase
 {
     public function testSetsHandlerInConstructor()
     {
@@ -30,16 +30,6 @@ class HandlerStackTest extends TestCase
         $this->expectException($this->classes['InvalidArgumentException']);
         new HandlerStack('bogus');
     }
-
-    /*
-    public function testEnsuresHandlerIsSet()
-    {
-        $this->expectException(\LogicException::class);
-
-        $h = new HandlerStack();
-        $h->resolve();
-    }
-    */
 
     public function testPushInOrder()
     {
@@ -133,7 +123,6 @@ class HandlerStackTest extends TestCase
         $stack->push($meths[4]);
         $stack->push($meths[2]);
         $stack->remove($meths[3]);
-        // $composed = $builder->resolve();
         self::assertSame('Hello - testaaca', $stack('test'));
     }
 
@@ -144,29 +133,6 @@ class HandlerStackTest extends TestCase
         $stack->remove(null);
     }
 
-    /*
-    public function testCanPrintMiddleware()
-    {
-        $meths = $this->getFunctions();
-        $builder = new HandlerStack();
-        $builder->setHandler($meths[1]);
-        $builder->push($meths[2], 'a');
-        $builder->push([__CLASS__, 'foo']);
-        $builder->push([$this, 'bar']);
-        $builder->push(__CLASS__ . '::' . 'foo');
-        $lines = \explode("\n", (string) $builder);
-        self::assertStringContainsString("> 4) Name: 'a', Function: callable(", $lines[0]);
-        self::assertStringContainsString("> 3) Name: '', Function: callable(GuzzleHttp\\Tests\\HandlerStackTest::foo)", $lines[1]);
-        self::assertStringContainsString("> 2) Name: '', Function: callable(['GuzzleHttp\\Tests\\HandlerStackTest', 'bar'])", $lines[2]);
-        self::assertStringContainsString("> 1) Name: '', Function: callable(GuzzleHttp\\Tests\\HandlerStackTest::foo)", $lines[3]);
-        self::assertStringContainsString("< 0) Handler: callable(", $lines[4]);
-        self::assertStringContainsString("< 1) Name: '', Function: callable(GuzzleHttp\\Tests\\HandlerStackTest::foo)", $lines[5]);
-        self::assertStringContainsString("< 2) Name: '', Function: callable(['GuzzleHttp\\Tests\\HandlerStackTest', 'bar'])", $lines[6]);
-        self::assertStringContainsString("< 3) Name: '', Function: callable(GuzzleHttp\\Tests\\HandlerStackTest::foo)", $lines[7]);
-        self::assertStringContainsString("< 4) Name: 'a', Function: callable(", $lines[8]);
-    }
-    */
-
     public function testCanAddBeforeByName()
     {
         $meths = $this->getFunctions();
@@ -176,13 +142,6 @@ class HandlerStackTest extends TestCase
         $stack->before('foo', $meths[3], 'baz');
         $stack->before('baz', $meths[4], 'bar');
         $stack->before('baz', $meths[4], 'qux');
-        /*
-        $lines = \explode("\n", (string) $builder);
-        self::assertStringContainsString('> 4) Name: \'bar\'', $lines[0]);
-        self::assertStringContainsString('> 3) Name: \'qux\'', $lines[1]);
-        self::assertStringContainsString('> 2) Name: \'baz\'', $lines[2]);
-        self::assertStringContainsString('> 1) Name: \'foo\'', $lines[3]);
-        */
         self::assertSame('Hello - testccba', $stack('test'));
     }
 
@@ -204,39 +163,8 @@ class HandlerStackTest extends TestCase
         $stack->push($meths[3], 'b');
         $stack->after('a', $meths[4], 'c');
         $stack->after('b', $meths[4], 'd');
-        /*
-        $lines = \explode("\n", (string) $builder);
-        self::assertStringContainsString('4) Name: \'a\'', $lines[0]);
-        self::assertStringContainsString('3) Name: \'c\'', $lines[1]);
-        self::assertStringContainsString('2) Name: \'b\'', $lines[2]);
-        self::assertStringContainsString('1) Name: \'d\'', $lines[3]);
-        */
         self::assertSame('Hello - testacbc', $stack('test'));
     }
-
-    /*
-    public function testPicksUpCookiesFromRedirects()
-    {
-        $mock = new MockHandler([
-            $this->factory->response(301, '', [
-                'Location'   => 'http://foo.com/baz',
-                'Set-Cookie' => 'foo=bar; Domain=foo.com'
-            ]),
-            $this->factory->response(200)
-        ]);
-        $handler = HandlerStack::create($mock);
-        $request = $this->factory->request('GET', 'http://foo.com/bar');
-        $jar = new CookieJar();
-        $response = $handler($request, [
-            'allow_redirects' => true,
-            'cookies' => $jar
-        ])->wait();
-        self::assertSame(200, $response->getStatusCode());
-        $lastRequest = $mock->getLastRequest();
-        self::assertSame('http://foo.com/baz', (string) $lastRequest->getUri());
-        self::assertSame('foo=bar', $lastRequest->getHeaderLine('Cookie'));
-    }
-    */
 
     private function getFunctions()
     {
@@ -267,14 +195,4 @@ class HandlerStackTest extends TestCase
             },
         );
     }
-
-    /*
-    public static function foo()
-    {
-    }
-
-    public function bar()
-    {
-    }
-    */
 }

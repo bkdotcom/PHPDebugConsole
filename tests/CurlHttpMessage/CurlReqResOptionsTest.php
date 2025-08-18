@@ -2,46 +2,14 @@
 
 namespace bdk\Test\CurlHttpMessage;
 
-use bdk\CurlHttpMessage\Factory;
-use bdk\HttpMessage\Response;
 use bdk\HttpMessage\Uri;
-use bdk\Test\CurlHttpMessage\TestCase;
+use bdk\Test\CurlHttpMessage\AbstractTestCase;
 
 /**
  * @covers \bdk\CurlHttpMessage\CurlReqResOptions
  */
-class CurlReqResOptionsTest extends TestCase
+class CurlReqResOptionsTest extends AbstractTestCase
 {
-    /*
-    public function testBadHeader()
-    {
-        $query = \http_build_query(array(
-            'headers' => array(
-                'Bad Header',
-            ),
-        ));
-        $uri = (new Uri($this->baseUrl . '/echo'))->withQuery($query);
-        $request = $this->factory->request('GET', $uri);
-        $curlReqRes = $this->factory->curlReqRes($request);
-        $curlReqRes->exec();
-    }
-    */
-
-    /*
-    public function testBadStatus()
-    {
-        $query = \http_build_query(array(
-            'headers' => array(
-                'HTTP/1.1',
-            ),
-        ));
-        $uri = (new Uri($this->baseUrl . '/echo'))->withQuery($query);
-        $request = $this->factory->request('GET', $uri);
-        $curlReqRes = $this->factory->curlReqRes($request);
-        $curlReqRes->exec();
-    }
-    */
-
     public function testDefaultReasonPhrase()
     {
         $query = \http_build_query(array(
@@ -58,14 +26,9 @@ class CurlReqResOptionsTest extends TestCase
 
     public function testGet()
     {
-        // $handler = new MockHandler([$this->factory->response()]);
-        // $handler = new CurlHandler();
         $uri = (new Uri($this->baseUrl . '/echo#fragment'))->withUserInfo('user', 'pass');
         $request = $this->factory->request('GET', $uri);
         $curlReqRes = $this->factory->curlReqRes($request);
-        // $middleware = new Curl();
-        // $callable = $middleware($handler);
-        // $response = $callable($curlReqRes)->wait();
         $response = $curlReqRes->exec();
         self::assertInstanceOf($this->classes['Response'], $response);
 
@@ -95,7 +58,6 @@ class CurlReqResOptionsTest extends TestCase
 
     public function testPost()
     {
-        // $handler = new CurlHandler();
         $uri = new Uri($this->baseUrl . '/echo#fragment');
         $request = $this->factory->request('POST', $uri, array(
             // 'Content-Length' => 1,
@@ -106,10 +68,6 @@ class CurlReqResOptionsTest extends TestCase
         ));
         $request = $request->withProtocolVersion('1.0');
         $curlReqRes = $this->factory->curlReqRes($request);
-        // $middleware = new Curl();
-        // $callable = $middleware($handler);
-        // $response = $callable($curlReqRes)->wait();
-
         $response = $curlReqRes->exec();
         self::assertInstanceOf($this->classes['Response'], $response);
 
@@ -149,16 +107,12 @@ class CurlReqResOptionsTest extends TestCase
             self::markTestSkipped('PHP\'s built in server (ver < 7.4) does not handle HEAD request');
         }
 
-        // $handler = new CurlHandler();
         $uri = new Uri($this->baseUrl . '/echo');
         $request = $this->factory->request('HEAD', $uri);
         if (\defined('CURL_HTTP_VERSION_2_0')) {
             $request = $request->withProtocolVersion('2.0');
         }
         $curlReqRes = $this->factory->curlReqRes($request);
-        // $middleware = new Curl();
-        // $callable = $middleware($handler);
-        // $response = $callable($curlReqRes)->wait();
 
         $response = $curlReqRes->exec();
         self::assertInstanceOf($this->classes['Response'], $response);

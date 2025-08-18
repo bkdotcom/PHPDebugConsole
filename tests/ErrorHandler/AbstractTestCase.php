@@ -12,7 +12,7 @@ use PHPUnit\Framework\TestCase;
 /**
  *
  */
-class TestBase extends TestCase
+abstract class AbstractTestCase extends TestCase
 {
     use AssertionTrait;
     use ExpectExceptionTrait;

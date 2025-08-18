@@ -13,7 +13,7 @@ use ReflectionProperty;
 /**
  *
  */
-class TestCase extends TestCaseBase
+abstract class AbstractTestCase extends TestCaseBase
 {
     use ExpectExceptionTrait;
 

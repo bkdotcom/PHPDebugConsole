@@ -14,7 +14,7 @@ use bdk\PubSub\Manager as EventManager;
  * @covers \bdk\ErrorHandler\Plugin\Stats
  * @covers \bdk\ErrorHandler\Plugin\StatsStoreFile
  */
-class EmailerTest extends TestBase
+class EmailerTest extends AbstractTestCase
 {
     public function setUp(): void
     {

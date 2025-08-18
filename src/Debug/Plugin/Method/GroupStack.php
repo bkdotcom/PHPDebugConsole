@@ -240,17 +240,14 @@ class GroupStack
      */
     public function setLogDest($where)
     {
-        switch ($where) {
-            case 'main':
-                $this->groupStacksRef = &$this->groupStacks['main'];
-                break;
-            case 'summary':
-                $priority = \end($this->priorityStack);
-                if (!isset($this->groupStacks[$priority])) {
-                    $this->groupStacks[$priority] = array();
-                }
-                $this->groupStacksRef = &$this->groupStacks[$priority];
-                break;
+        if ($where === 'main') {
+            $this->groupStacksRef = &$this->groupStacks['main'];
+        } elseif ($where === 'summary') {
+            $priority = \end($this->priorityStack);
+            if (!isset($this->groupStacks[$priority])) {
+                $this->groupStacks[$priority] = array();
+            }
+            $this->groupStacksRef = &$this->groupStacks[$priority];
         }
     }
 

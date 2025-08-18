@@ -161,6 +161,9 @@ return array(
     'method.time.not-exist' => 'Le minuteur \'\'{label}\'\' n\'existe pas',
     'method.trace' => 'trace',
     'method.trace.limited' => 'limité à {limit}',
+
+    'oauth.callback_url' => 'URL de rappel',
+
     'object.attributes' => 'attributs',
     'object.cases' => 'cas',
     'object.cases.none' => 'aucun cas!',
@@ -179,6 +182,7 @@ return array(
     'object.not-collected' => 'non collecté',
     'object.properties' => 'propriétés',
     'object.properties.none' => 'aucune propriété',
+
     'php.build-date' => 'Date de compilation',
     'php.exit.token' => 'Arrêt potentiel via {token}',
     'php.extension-not-loaded' => 'L\'extension {extension} n\'est pas chargée',
@@ -255,6 +259,8 @@ return array(
     'word.omitted' => 'omis',
     'word.options' => 'options',
     'word.parameters' => 'paramètres',
+    'word.prettified' => 'embelli',
+    'word.size' => 'taille',
     'word.slow' => 'lent',
     'word.types' => 'types',
     'word.value' => 'valeur',

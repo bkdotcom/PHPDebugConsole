@@ -5,7 +5,7 @@ Object.keys = Object.keys || function (o) {
   var k = []
   var p
   for (p in o) {
-    if (Object.prototype.hasOwnProperty.call(o, p)) {
+    if (Object.hasOwn(o, p)) {
       k.push(p)
     }
   }

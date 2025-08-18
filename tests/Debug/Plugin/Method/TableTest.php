@@ -37,7 +37,7 @@ use ReflectionMethod;
  */
 class TableTest extends DebugTestFramework
 {
-    static protected $captionStyle = 'font-size:1.20em; font-weight:bold;';
+    protected static $captionStyle = 'font-size:1.20em; font-weight:bold;';
 
     /**
      * Test

@@ -61,7 +61,7 @@ function buildFileLink (file, line) {
   return config.linkFilesTemplate.replace(
     /%(\w*)\b/g,
     function (m, key) {
-      return Object.prototype.hasOwnProperty.call(data, key)
+      return Object.hasOwn(data, key)
         ? data[key]
         : ''
     }

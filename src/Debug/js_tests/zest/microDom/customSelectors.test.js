@@ -1,4 +1,3 @@
-import { default as zest } from '../../../js_src/zest/Zest.js';
 import * as customSelectors from '../../../js_src/zest/microDom/customSelectors.js';
 
 describe('MicroDom custom pseudo-selectors', () => {

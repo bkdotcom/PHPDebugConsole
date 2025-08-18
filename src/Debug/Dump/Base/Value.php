@@ -23,6 +23,8 @@ use bdk\Debug\Utility\Utf8;
  */
 class Value extends AbstractValue
 {
+    const TYPE_ABSTRACTION = 'bdk\Debug\Abstraction\Abstraction|null';
+
     /** @var BaseObject */
     protected $lazyObject;
 
@@ -46,7 +48,7 @@ class Value extends AbstractValue
      */
     protected function dumpArray(array $array, $abs = null)
     {
-        \bdk\Debug\Utility\PhpType::assertType($abs, 'bdk\Debug\Abstraction\Abstraction|null', 'abs');
+        \bdk\Debug\Utility\PhpType::assertType($abs, self::TYPE_ABSTRACTION, 'abs');
 
         if ($this->optionGet('isMaxDepth')) {
             return 'array *' . $this->debug->i18n->trans('abs.max-depth') . '*';
@@ -91,7 +93,7 @@ class Value extends AbstractValue
      */
     protected function dumpFloat($val, $abs = null)
     {
-        \bdk\Debug\Utility\PhpType::assertType($abs, 'bdk\Debug\Abstraction\Abstraction|null', 'abs');
+        \bdk\Debug\Utility\PhpType::assertType($abs, self::TYPE_ABSTRACTION, 'abs');
 
         $date = $this->checkTimestamp($val, $abs);
         return $date
@@ -116,7 +118,7 @@ class Value extends AbstractValue
      */
     protected function dumpInt($val, $abs = null)
     {
-        \bdk\Debug\Utility\PhpType::assertType($abs, 'bdk\Debug\Abstraction\Abstraction|null', 'abs');
+        \bdk\Debug\Utility\PhpType::assertType($abs, self::TYPE_ABSTRACTION, 'abs');
 
         $val = $this->dumpFloat($val, $abs);
         return \is_string($val)
@@ -181,7 +183,7 @@ class Value extends AbstractValue
      */
     protected function dumpString($val, $abs = null)
     {
-        \bdk\Debug\Utility\PhpType::assertType($abs, 'bdk\Debug\Abstraction\Abstraction|null', 'abs');
+        \bdk\Debug\Utility\PhpType::assertType($abs, self::TYPE_ABSTRACTION, 'abs');
 
         if (\is_numeric($val)) {
             $date = $this->checkTimestamp($val, $abs);

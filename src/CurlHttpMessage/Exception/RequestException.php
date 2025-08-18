@@ -21,6 +21,8 @@ use Throwable;
  */
 class RequestException extends RuntimeException
 {
+    const TYPE_RESPONSE = 'Psr\Http\Message\ResponseInterface|null';
+
     /** @var RequestInterface */
     private $request;
 
@@ -37,7 +39,7 @@ class RequestException extends RuntimeException
      */
     public function __construct($message, RequestInterface $request, $response = null, $prevException = null)
     {
-        \bdk\Debug\Utility\PhpType::assertType($response, 'Psr\Http\Message\ResponseInterface|null', 'response');
+        \bdk\Debug\Utility\PhpType::assertType($response, self::TYPE_RESPONSE, 'response');
         \bdk\Debug\Utility\PhpType::assertType($prevException, 'Exception|null', 'prevException');
 
         $this->request = $request;
@@ -58,7 +60,7 @@ class RequestException extends RuntimeException
      */
     public static function create(RequestInterface $request, $response = null, $prevException = null)
     {
-        \bdk\Debug\Utility\PhpType::assertType($response, 'Psr\Http\Message\ResponseInterface|null', 'response');
+        \bdk\Debug\Utility\PhpType::assertType($response, self::TYPE_RESPONSE, 'response');
         \bdk\Debug\Utility\PhpType::assertType($prevException, 'Exception|null', 'prevException');
 
         $level = $response
@@ -104,7 +106,7 @@ class RequestException extends RuntimeException
      */
     private static function buildMessage(RequestInterface $request, $response = null)
     {
-        \bdk\Debug\Utility\PhpType::assertType($response, 'Psr\Http\Message\ResponseInterface|null', 'response');
+        \bdk\Debug\Utility\PhpType::assertType($response, self::TYPE_RESPONSE, 'response');
 
         if (!$response) {
             $label = 'Error completing request';

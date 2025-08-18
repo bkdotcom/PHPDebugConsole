@@ -22,6 +22,8 @@ use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Foundation\Auth\User;
 use Illuminate\Routing\Router;
+use ReflectionFunction;
+use ReflectionMethod;
 use Symfony\Component\Debug\Exception\FatalThrowableError;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -277,12 +279,12 @@ class Middleware
             case 'controllerMethod':
                 list($controller, $method) = \explode('@', $info['controller']);
                 if (\class_exists($controller) && \method_exists($controller, $method)) {
-                    $reflector = new \ReflectionMethod($controller, $method);
+                    $reflector = new ReflectionMethod($controller, $method);
                 }
                 unset($info['uses']);
                 break;
             case 'closure':
-                $reflector = new \ReflectionFunction($info['uses']);
+                $reflector = new ReflectionFunction($info['uses']);
         }
         if ($reflector) {
             $relFilename = \ltrim(\str_replace(\base_path(), '', $reflector->getFileName()), '/');

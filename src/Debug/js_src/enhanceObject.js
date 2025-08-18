@@ -21,8 +21,9 @@ export function init ($delegateNode) {
 function addIcons ($node) {
   $.each(config.iconsObject, function (icon, selector) {
     var $found = addIconFind($node, selector)
+    var regex = /^([ap])\s*:(.+)$/
     var matches = typeof icon === 'string'
-      ? icon.match(/^([ap])\s*:(.+)$/)
+      ? regex.exec(icon)
       : null
     var prepend = !matches || matches[1] === 'p'
     if (matches) {

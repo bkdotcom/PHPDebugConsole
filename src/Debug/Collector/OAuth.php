@@ -21,6 +21,8 @@ use OAuthException;
  */
 class OAuth extends OAuthBase
 {
+    const OAUTH_CLASSNAME = 'OAuth';
+
     /** @var Debug */
     protected $debugger;
 
@@ -47,7 +49,7 @@ class OAuth extends OAuthBase
     public function __construct($consumerKey, $consumerSecret, $signatureMethod = OAUTH_SIG_METHOD_HMACSHA1, $authType = OAUTH_AUTH_TYPE_AUTHORIZATION, $debug = null)
     {
         parent::__construct($consumerKey, $consumerSecret, $signatureMethod, $authType);
-        $channelKey = 'OAuth';
+        $channelKey = self::OAUTH_CLASSNAME;
         $channelOptions = array(
             'channelIcon' => $this->icon,
             'channelName' => 'OAuth',
@@ -67,8 +69,8 @@ class OAuth extends OAuthBase
     public function fetch($protectedResourceUrl, $extraParameters = array(), $httpMethod = OAUTH_HTTP_METHOD_GET, $httpHeaders = array())
     {
         $return = $this->profileCall(__FUNCTION__, \func_get_args());
-        if ($this->debug) {
-            $this->debugger->groupCollapsed('OAuth::' . __FUNCTION__, $this->getHttpMethod(), $protectedResourceUrl);
+        if ($this->debugger) {
+            $this->debugger->groupCollapsed(self::OAUTH_CLASSNAME . '::' . __FUNCTION__, $this->getHttpMethod(), $protectedResourceUrl);
             $this->logRequest($protectedResourceUrl);
             $this->debugger->groupEnd();
         }
@@ -84,8 +86,8 @@ class OAuth extends OAuthBase
     public function getAccessToken($accessTokenUrl, $authSessionHandle = null, $verifierToken = null, $httpMethod = OAUTH_HTTP_METHOD_GET)
     {
         $return = $this->profileCall(__FUNCTION__, \func_get_args());
-        if ($this->debug) {
-            $this->debugger->groupCollapsed('OAuth::' . __FUNCTION__, $this->getHttpMethod(), $accessTokenUrl);
+        if ($this->debugger) {
+            $this->debugger->groupCollapsed(self::OAUTH_CLASSNAME . '::' . __FUNCTION__, $this->getHttpMethod(), $accessTokenUrl);
             $this->logRequest($accessTokenUrl);
             $this->debugger->groupEnd();
         }
@@ -101,9 +103,9 @@ class OAuth extends OAuthBase
     public function getRequestToken($requestTokenUrl, $callbackUrl = null, $httpMethod = OAUTH_HTTP_METHOD_GET)
     {
         $return = $this->profileCall(__FUNCTION__, \func_get_args());
-        if ($this->debug) {
-            $this->debugger->groupCollapsed('OAuth::' . __FUNCTION__, $this->getHttpMethod(), $requestTokenUrl);
-            $this->debugger->log('callback url', $callbackUrl);
+        if ($this->debugger) {
+            $this->debugger->groupCollapsed(self::OAUTH_CLASSNAME . '::' . __FUNCTION__, $this->getHttpMethod(), $requestTokenUrl);
+            $this->debugger->log($this->debugger->i18n->trans('oauth.callback_url'), $callbackUrl);
             $this->logRequest($requestTokenUrl);
             $this->debugger->groupEnd();
         }
@@ -199,7 +201,7 @@ class OAuth extends OAuthBase
         $this->debugger->time($this->elapsed);
         $debugInfo = $this->getDebugInfo();
         // values available in the headers or elsewhere
-        $this->debugger->log('OAuth ' . $this->debugger->i18n->trans('word.parameters'), $this->oauthParams(), $this->debugger->meta('cfg', 'abstracter.stringMinLen.encoded', -1));
+        $this->debugger->log(self::OAUTH_CLASSNAME . ' ' . $this->debugger->i18n->trans('word.parameters'), $this->oauthParams(), $this->debugger->meta('cfg', 'abstracter.stringMinLen.encoded', -1));
         $this->debugger->log($this->debugger->i18n->trans('info.additional'), $this->additionalInfo($url));
         $this->debugger->log($this->debugger->i18n->trans('request.headers'), $this->debugger->redactHeaders($debugInfo['headers_sent']), $this->debugger->meta('icon', ':send:'));
         if (isset($debugInfo['body_sent'])) {
@@ -266,7 +268,7 @@ class OAuth extends OAuthBase
         $return = false;
         $this->debugger->time();
         try {
-            $return = \call_user_func_array(['OAuth', $method], $args);
+            $return = \call_user_func_array([self::OAUTH_CLASSNAME, $method], $args);
         } catch (OAuthException $e) {
             $this->exception = $e;
         }

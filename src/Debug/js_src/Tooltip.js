@@ -42,24 +42,33 @@ function tippyContentBuildTitle($ref, title) {
 }
 
 function refTitle($ref, title) {
+  let ret
   switch (title) {
     case 'Deprecated':
-      return refTitleDeprecated($ref, title)
+      ret = refTitleDeprecated($ref, title)
+      break
     case 'Implements':
-      return refTitleImplements($ref, title)
+      ret = refTitleImplements($ref, title)
+      break
     case 'Inherited':
     case 'Private ancestor':
-      return refTitleInherited($ref, title)
+      ret = refTitleInherited($ref, title)
+      break
     case 'Overrides':
-      return refTitleOverrides($ref, title)
+      ret = refTitleOverrides($ref, title)
+      break
     case 'Open in editor':
-      return '<i class="fa fa-pencil"></i> ' + title
+      ret = '<i class="fa fa-pencil"></i> ' + title
+      break
     case 'Throws':
-      return refTitleThrows($ref, title)
+      ret = refTitleThrows($ref, title)
+      break
+    default:
+      ret = title.match(/^\/.+: line \d+( \(eval'd line \d+\))?$/)
+        ? '<i class="fa fa-file-code-o"></i> ' + title
+        : title
   }
-  return title.match(/^\/.+: line \d+( \(eval'd line \d+\))?$/)
-    ? '<i class="fa fa-file-code-o"></i> ' + title
-    : title
+  return ret
 }
 
 function refTitleDeprecated ($ref, title) {
@@ -215,7 +224,8 @@ function dumpSimple (val) {
       ? 'int'
       : 'float'
   }
-  if (typeof val === 'string' && val.length && val.match(/^\d*(\.\d+)?$/) !== null) {
+  const regex = /^\d*(\.\d+)?$/
+  if (typeof val === 'string' && val.length && regex.exec(val) !== null) {
     type = 'string numeric'
   }
   return '<span class="t_' + type + '">' + val + '</span>'

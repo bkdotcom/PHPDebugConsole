@@ -12,7 +12,7 @@ use bdk\ErrorHandler\Error;
  * @covers \bdk\ErrorHandler\AbstractErrorHandler
  * @covers \bdk\ErrorHandler\Error
  */
-class ErrorTest extends TestBase // extends DebugTestFramework
+class ErrorTest extends AbstractTestCase // extends DebugTestFramework
 {
     public function testConstruct()
     {

@@ -3,13 +3,13 @@
 namespace bdk\Test\CurlHttpMessage\Exception;
 
 use bdk\CurlHttpMessage\Exception\NetworkException;
-use bdk\Test\CurlHttpMessage\TestCase;
+use bdk\Test\CurlHttpMessage\AbstractTestCase;
 use Exception;
 
 /**
  * @covers \bdk\CurlHttpMessage\Exception\NetworkException
  */
-class NetworkExceptionTest extends TestCase
+class NetworkExceptionTest extends AbstractTestCase
 {
     public function testHasRequest()
     {

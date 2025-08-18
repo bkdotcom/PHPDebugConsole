@@ -161,6 +161,9 @@ return array(
     'method.time.not-exist' => 'Temporizador \'\'{label}\'\' não existe',
     'method.trace' => 'rastrear',
     'method.trace.limited' => 'limitado a {limit}',
+
+    'oauth.callback_url' => 'URL de callback',
+
     'object.attributes' => 'atributos',
     'object.cases' => 'casos',
     'object.cases.none' => 'sem casos!',
@@ -179,6 +182,7 @@ return array(
     'object.not-collected' => 'não coletado',
     'object.properties' => 'propriedades',
     'object.properties.none' => 'sem propriedades',
+
     'php.build-date' => 'Data de Construção',
     'php.exit.token' => 'Possivelmente encerrado via {token}',
     'php.extension-not-loaded' => 'Extensão {extension} não carregada',
@@ -255,6 +259,8 @@ return array(
     'word.omitted' => 'omitido',
     'word.options' => 'opções',
     'word.parameters' => 'parâmetros',
+    'word.prettified' => 'embelezado',
+    'word.size' => 'tamanho',
     'word.slow' => 'lento',
     'word.types' => 'tipos',
     'word.value' => 'valor',

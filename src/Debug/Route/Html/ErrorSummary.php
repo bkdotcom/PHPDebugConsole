@@ -154,7 +154,7 @@ class ErrorSummary
             return $this->buildInConsoleOneCat();
         }
         $countsInConsole = $this->getCountsInConsole();
-        return '<h3>' . $this->buildInConsoleHeader() . '</h3>' . "\n"
+        return $this->html->buildTag('h3', [], $this->buildInConsoleHeader()) . "\n"
             . '<ul class="list-unstyled in-console">' . "\n"
             . \implode("\n", \array_map(function ($vals) {
                 $category = $vals['name'];
@@ -214,7 +214,7 @@ class ErrorSummary
                     : \htmlspecialchars($error['message'])
             );
         }
-        return '<h3>' . $this->buildInConsoleOneCatHeader() . '</h3>' . "\n"
+        return $this->html->buildTag('h3', [], $this->buildInConsoleOneCatHeader()) . "\n"
             . '<ul class="list-unstyled in-console">'
                 . $this->html->buildTag(
                     'li',
@@ -257,7 +257,7 @@ class ErrorSummary
             'There %s captured while not collecting debug log',
             $count === 1 ? 'was 1 error' : 'were ' . $count . ' errors'
         );
-        return '<h3>' . $header . '</h3>' . "\n"
+        return $this->html->buildTag('h3', [], $header) . "\n"
             . '<ul class="list-unstyled">' . "\n"
             . \implode("\n", \array_map(static function (Error $error) {
                 return \sprintf(

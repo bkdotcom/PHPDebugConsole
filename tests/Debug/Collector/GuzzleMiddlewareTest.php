@@ -373,13 +373,13 @@ class GuzzleMiddlewareTest extends DebugTestFramework
         ));
     }
 
-    function getClient($queue = array(), $middlewareOpts = array())
+    public function getClient($queue = array(), $middlewareOpts = array())
     {
         $client = new Client([
             'allow_redirects' => true,
             'cookies' => true,
-            'verify' => false,
             'handler' => MockHandler::createWithMiddleware($queue),
+            'verify' => false,
         ]);
         $handlerStack = $client->getConfig('handler');
         $middlewareOpts = \array_merge(array(

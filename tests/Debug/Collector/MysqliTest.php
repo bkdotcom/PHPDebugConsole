@@ -234,7 +234,7 @@ EOD;
         do {
             $result = self::$client->store_result();
             if ($result) {
-                while ($row = $result->fetch_row()) {
+                while ($result->fetch_row()) {
                     // printf("%s\n", $row[0]);
                 }
             }

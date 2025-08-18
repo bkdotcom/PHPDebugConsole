@@ -8,7 +8,7 @@ var phpDebugConsole = (function (exports, $) {
     var k = [];
     var p;
     for (p in o) {
-      if (Object.prototype.hasOwnProperty.call(o, p)) {
+      if (Object.hasOwn(o, p)) {
         k.push(p);
       }
     }
@@ -109,8 +109,9 @@ var phpDebugConsole = (function (exports, $) {
   function addIcons$1 ($node) {
     $.each(config$9.iconsObject, function (icon, selector) {
       var $found = addIconFind($node, selector);
+      var regex = /^([ap])\s*:(.+)$/;
       var matches = typeof icon === 'string'
-        ? icon.match(/^([ap])\s*:(.+)$/)
+        ? regex.exec(icon)
         : null;
       var prepend = !matches || matches[1] === 'p';
       if (matches) {
@@ -720,7 +721,7 @@ var phpDebugConsole = (function (exports, $) {
     return config$8.linkFilesTemplate.replace(
       /%(\w*)\b/g,
       function (m, key) {
-        return Object.prototype.hasOwnProperty.call(data, key)
+        return Object.hasOwn(data, key)
           ? data[key]
           : ''
       }
@@ -2340,23 +2341,22 @@ var phpDebugConsole = (function (exports, $) {
    */
   function buildReturnVals ($returnNodes) {
     var vals = Object.values($returnNodes).map(function (returnNode) {
-      var $return = $(returnNode);
-      var type = getNodeType($return);
-      var typeMore = type[1];
+      let $return = $(returnNode);
+      let type = getNodeType($return);
+      let typeMore = type[1];
+      let ret = '';
       type = type[0];
+      ret = '<span class="t_keyword">' + type + '</span>';
       if (['bool', 'callable', 'const', 'float', 'identifier', 'int', 'null', 'resource', 'unknown'].indexOf(type) > -1 || ['numeric', 'timestamp'].indexOf(typeMore) > -1) {
-        return $return[0].outerHTML
+        ret = $return[0].outerHTML;
+      } else if (type === 'string') {
+        ret = buildReturnValString($return, typeMore);
+      } else if (type === 'object') {
+        ret = buildReturnValObject($return);
+      } else if (type === 'array' && $return[0].textContent === 'array()') {
+        ret = $return[0].outerHTML.replace('t_array', 't_array expanded');
       }
-      if (type === 'string') {
-        return buildReturnValString($return, typeMore)
-      }
-      if (type === 'object') {
-        return buildReturnValObject($return)
-      }
-      if (type === 'array' && $return[0].textContent === 'array()') {
-        return $return[0].outerHTML.replace('t_array', 't_array expanded')
-      }
-      return '<span class="t_keyword">' + type + '</span>'
+      return ret
     });
     return vals.join(', ')
   }
@@ -2511,10 +2511,7 @@ var phpDebugConsole = (function (exports, $) {
         ? groupHasVis($child)
         : false
     }
-    if ($child.is('.m_group.hide-if-empty.empty')) {
-      return false
-    }
-    return true
+    return $child.not('.m_group.hide-if-empty.empty')
   }
 
   /**
@@ -6237,24 +6234,33 @@ var phpDebugConsole = (function (exports, $) {
   }
 
   function refTitle($ref, title) {
+    let ret;
     switch (title) {
       case 'Deprecated':
-        return refTitleDeprecated($ref, title)
+        ret = refTitleDeprecated($ref, title);
+        break
       case 'Implements':
-        return refTitleImplements($ref, title)
+        ret = refTitleImplements($ref, title);
+        break
       case 'Inherited':
       case 'Private ancestor':
-        return refTitleInherited($ref, title)
+        ret = refTitleInherited($ref, title);
+        break
       case 'Overrides':
-        return refTitleOverrides($ref, title)
+        ret = refTitleOverrides($ref, title);
+        break
       case 'Open in editor':
-        return '<i class="fa fa-pencil"></i> ' + title
+        ret = '<i class="fa fa-pencil"></i> ' + title;
+        break
       case 'Throws':
-        return refTitleThrows($ref, title)
+        ret = refTitleThrows($ref, title);
+        break
+      default:
+        ret = title.match(/^\/.+: line \d+( \(eval'd line \d+\))?$/)
+          ? '<i class="fa fa-file-code-o"></i> ' + title
+          : title;
     }
-    return title.match(/^\/.+: line \d+( \(eval'd line \d+\))?$/)
-      ? '<i class="fa fa-file-code-o"></i> ' + title
-      : title
+    return ret
   }
 
   function refTitleDeprecated ($ref, title) {
@@ -6410,7 +6416,8 @@ var phpDebugConsole = (function (exports, $) {
         ? 'int'
         : 'float';
     }
-    if (typeof val === 'string' && val.length && val.match(/^\d*(\.\d+)?$/) !== null) {
+    const regex = /^\d*(\.\d+)?$/;
+    if (typeof val === 'string' && val.length && regex.exec(val) !== null) {
       type = 'string numeric';
     }
     return '<span class="t_' + type + '">' + val + '</span>'
@@ -6748,7 +6755,6 @@ var phpDebugConsole = (function (exports, $) {
         // dependency exists
         onDepLoaded(dep);
         deps.splice(i, 1); // remove it
-        continue
       } else if (dep.status !== 'loading' && !checkOnly) {
         dep.status = 'loading';
         addDep(dep);
@@ -6822,21 +6828,28 @@ var phpDebugConsole = (function (exports, $) {
       return buildChannelList(arg1, arg2, arguments[3])
     }
     this.each(function () {
-      var $node = $(this);
+      let $node = $(this);
+      let ret;
       switch (method) {
         case 'sidebar':
-          return debugEnhanceSidebar($node, arg1)
+          ret = debugEnhanceSidebar($node, arg1);
+          break
         case 'collapse':
-          return collapse($node, arg1)
+          ret = collapse($node, arg1);
+          break
         case 'expand':
-          return expand($node)
+          ret = expand($node);
+          break
         case 'init':
-          return debugEnhanceInit($node, arg1)
+          ret = debugEnhanceInit($node, arg1);
+          break
         case 'setConfig':
-          return debugEnhanceSetConfig($node, arg1)
+          ret = debugEnhanceSetConfig($node, arg1);
+          break
         default:
-          return debugEnhanceDefault($node)
+          ret = debugEnhanceDefault($node);
       }
+      return ret
     });
     return this
   };
@@ -6928,7 +6941,6 @@ var phpDebugConsole = (function (exports, $) {
   function addStyle (css) {
     var head = document.head || document.getElementsByTagName('head')[0];
     var style = document.createElement('style');
-    style.type = 'text/css';
     head.appendChild(style);
     if (style.styleSheet) {
       // This is required for IE8 and below.

@@ -5,12 +5,12 @@ namespace bdk\Test\CurlHttpMessage\Middleware;
 use bdk\CurlHttpMessage\Handler\Mock as MockHandler;
 use bdk\CurlHttpMessage\Middleware\Status;
 use bdk\Promise;
-use bdk\Test\CurlHttpMessage\TestCase;
+use bdk\Test\CurlHttpMessage\AbstractTestCase;
 
 /**
  * @covers bdk\CurlHttpMessage\Middleware\Status
  */
-class StatusTest extends TestCase
+class StatusTest extends AbstractTestCase
 {
     public function testNoExceptionOnSuccess()
     {

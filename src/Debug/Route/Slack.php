@@ -156,8 +156,7 @@ class Slack extends AbstractErrorRoute
                 "*{function}*\n{file}:_{line}_",
                 $frame
             );
-            $frame = \preg_replace('/\*\*\n/', '', $frame);
-            $frames[$i] = $frame;
+            $frames[$i] = \str_replace("**\n", '', $frame);
         }
         return (new SlackMessage())
             ->withHeader('Backtrace')

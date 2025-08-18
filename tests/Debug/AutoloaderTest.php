@@ -78,7 +78,7 @@ class AutoloaderTest extends DebugTestFramework
         self::assertTrue(\class_exists($class, false) || \interface_exists($class, false), 'Failed to autoload ' . $class);
     }
 
-    static function providertestAutloadPsr4()
+    public static function providertestAutloadPsr4()
     {
         $classes = [
             ['bdk\\Backtrace\\SkipInternal'],

@@ -252,7 +252,9 @@ class CurlMulti extends Curl
             \usleep(250);
         }
 
-        while (\curl_multi_exec($this->multiHandle, $this->active) === \CURLM_CALL_MULTI_PERFORM);
+        while (\curl_multi_exec($this->multiHandle, $this->active) === \CURLM_CALL_MULTI_PERFORM) {
+            // empty
+        }
 
         $this->curlMultiInfoRead();
     }

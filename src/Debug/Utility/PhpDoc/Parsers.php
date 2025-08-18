@@ -30,6 +30,8 @@ class Parsers
     /** @var array{string,int|string|null} */
     protected static $typeInfo = array();
 
+    private static $regexPartDesc = '(?:\s+(?P<desc>.*))?$/s';
+
     /**
      * Constructor
      *
@@ -223,7 +225,7 @@ class Parsers
         return array(
             'parts' => ['uri', 'desc'],
             'regex' => '/^(?P<uri>\S+)'
-                . '(?:\s+(?P<desc>.*))?$/s',
+                . self::$regexPartDesc,
             'tags' => ['link'],
         );
     }
@@ -274,7 +276,7 @@ class Parsers
             ],
             'parts' => ['type', 'desc'],
             'regex' => '/^(?P<type>.*?)'
-                . '(?:\s+(?P<desc>.*))?$/s',
+                . self::$regexPartDesc,
             'tags' => ['return', 'throws'],
         );
     }
@@ -291,7 +293,7 @@ class Parsers
             'regex' => '/^(?:'
                 . '(?P<uri>https?:\/\/\S+)|(?P<fqsen>\S+)'
                 . ')'
-                . '(?:\s+(?P<desc>.*))?$/s',
+                . self::$regexPartDesc,
             'tags' => ['see'],
         );
     }

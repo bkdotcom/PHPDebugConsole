@@ -20,7 +20,7 @@ class SoapClientTest extends DebugTestFramework
 
     public function testConstruct()
     {
-        $client = new \bdk\Debug\Collector\SoapClient(
+        new \bdk\Debug\Collector\SoapClient(
             $this->wsdl,
             array(
                 'list_functions' => true,

@@ -55,7 +55,8 @@ class HtmlStringBinary
         $str = $this->dumpBasic($abs);
         $strLenDiff = $abs['strlen'] - $abs['strlenValue'];
         if ($abs['strlenValue'] && $strLenDiff) {
-            $str .= '<span class="maxlen">&hellip; ' . $this->debug->i18n->trans('string.more-bytes', array('bytes' => $strLenDiff)) . '</span>';
+            $innerHtml = '&hellip; ' . $this->debug->i18n->trans('string.more-bytes', array('bytes' => $strLenDiff));
+            $str .= $this->debug->html->buildTag('span', array('class' => 'maxlen'), $innerHtml);
         }
         if ($abs['brief']) {
             $this->valDumper->optionSet('tagName', null);
@@ -83,12 +84,10 @@ class HtmlStringBinary
         return isset($abs['chunks'])
             ? \implode('', \array_map(function (array $chunk) {
                 return $chunk[0] === Utf8::TYPE_OTHER
-                    ? '<span class="binary">\x' . \str_replace(' ', ' \\x', $chunk[1]) . '</span>'
+                    ? $this->debug->html->buildTag('span', array('class' => 'binary'), '\x' . \str_replace(' ', ' \\x', $chunk[1]))
                     : $this->htmlString->dump($chunk[1]);
             }, $abs['chunks']))
-            : '<span class="binary">'
-                . \substr(\chunk_split($abs['value'], 3 * 32, '<br />'), 0, -6)
-                . '</span>';
+            : $this->debug->html->buildTag('span', array('class' => 'binary'), \substr(\chunk_split($abs['value'], 3 * 32, '<br />'), 0, -6));
     }
 
     /**
@@ -124,7 +123,7 @@ class HtmlStringBinary
             if ($abs['contentType']) {
                 $lis[] = '<li>mime type = <span class="content-type t_string">' . $abs['contentType'] . '</span></li>';
             }
-            $lis[] = '<li>size = <span class="t_int">' . $abs['strlen'] . '</span></li>';
+            $lis[] = '<li>' . $this->debug->i18n->trans('word.size') . ' = <span class="t_int">' . $abs['strlen'] . '</span></li>';
             $lis[] = $dumped
                 ? '<li class="t_string">' . $dumped . '</li>'
                 : '<li>' . $this->debug->i18n->trans('string.binary-not-collected') . '</li>';

@@ -131,7 +131,6 @@ class CurlReqRes
             $body->rewind();
         }
 
-        // return new FulfilledPromise($this->response);
         return $this->response;
     }
 

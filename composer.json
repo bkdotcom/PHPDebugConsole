@@ -28,16 +28,7 @@
       "src/Promise/Promise.php"
     ],
     "psr-4": {
-      "bdk\\Backtrace\\": "src/Backtrace/",
-      "bdk\\Container\\": "src/Container/",
-      "bdk\\CurlHttpMessage\\": "src/CurlHttpMessage/",
-      "bdk\\Debug\\": "src/Debug/",
-      "bdk\\ErrorHandler\\": "src/ErrorHandler/",
-      "bdk\\I18n\\": "src/I18n/",
-      "bdk\\Promise\\": "src/Promise/",
-      "bdk\\PubSub\\": "src/PubSub/",
-      "bdk\\Slack\\": "src/Slack/",
-      "bdk\\Teams\\": "src/Teams/"
+      "bdk\\": "src/"
     }
   },
   "autoload-dev": {

@@ -66,7 +66,7 @@ class DoctrineMiddlewareTest extends DebugTestFramework
         $runtimeOutput = <<<'EOD'
 %A
 <li class="level-info m_group" data-channel="general.Doctrine" data-icon="fa fa-database">
-<div class="group-header"><span class="font-weight-bold group-label">Doctrine:</span> <span class="t_string">pdo-sqlite:///:memory:</span></div>
+<div class="group-header"><span class="font-weight-bold group-label">Doctrine</span>: <span class="t_string">pdo-sqlite:///:memory:</span></div>
 <ul class="group-body">
 <li class="m_log" data-channel="general.Doctrine"><span class="no-quotes t_string">Logged operations: </span><span class="t_int">3</span></li>
 <li class="m_time" data-channel="general.Doctrine"><span class="no-quotes t_string">Total time: %f %s</span></li>

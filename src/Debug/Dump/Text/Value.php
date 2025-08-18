@@ -21,6 +21,8 @@ use bdk\Debug\Dump\Text\TextObject;
  */
 class Value extends BaseValue
 {
+    const TYPE_ABSTRACTION = 'bdk\Debug\Abstraction\Abstraction|null';
+
     /** @var int used for indentation */
     protected $valDepth = 0;
 
@@ -80,7 +82,7 @@ class Value extends BaseValue
      */
     protected function dumpArray(array $array, $abs = null)
     {
-        \bdk\Debug\Utility\PhpType::assertType($abs, 'bdk\Debug\Abstraction\Abstraction|null', 'abs');
+        \bdk\Debug\Utility\PhpType::assertType($abs, self::TYPE_ABSTRACTION, 'abs');
 
         $isNested = $this->valDepth > 0;
         $this->valDepth++;
@@ -118,7 +120,7 @@ class Value extends BaseValue
      */
     protected function dumpFloat($val, $abs = null)
     {
-        \bdk\Debug\Utility\PhpType::assertType($abs, 'bdk\Debug\Abstraction\Abstraction|null', 'abs');
+        \bdk\Debug\Utility\PhpType::assertType($abs, self::TYPE_ABSTRACTION, 'abs');
 
         if ($val === Type::TYPE_FLOAT_INF) {
             return 'INF';
@@ -164,7 +166,7 @@ class Value extends BaseValue
      */
     protected function dumpString($val, $abs = null)
     {
-        \bdk\Debug\Utility\PhpType::assertType($abs, 'bdk\Debug\Abstraction\Abstraction|null', 'abs');
+        \bdk\Debug\Utility\PhpType::assertType($abs, self::TYPE_ABSTRACTION, 'abs');
 
         $date = \is_numeric($val)
             ? $this->checkTimestamp($val, $abs)

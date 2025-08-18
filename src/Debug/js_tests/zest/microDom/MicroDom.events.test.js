@@ -150,7 +150,9 @@ describe('MicroDom event methods', () => {
 
     test('stores event info in element helper property', () => {
       const $btn = zest('#btn');
-      const handler = function() {};
+      const handler = function() {
+        // empty
+      };
 
       $btn.on('click', handler);
 

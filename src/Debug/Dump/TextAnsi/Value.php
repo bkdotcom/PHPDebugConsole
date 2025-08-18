@@ -23,6 +23,12 @@ use bdk\Debug\Utility\Utf8;
  */
 class Value extends TextValue
 {
+    const TYPE_ABSTRACTION = 'bdk\Debug\Abstraction\Abstraction|null';
+
+    const ANSI_BOLD = "\e[1m";
+    const ANSI_DIM = "\e[2m";
+    const ANSI_BOLD_DIM_RESET = "\e[22m";
+
     /** @var string */
     protected $escapeReset = "\e[0m";
 
@@ -86,7 +92,7 @@ class Value extends TextValue
             : '';
         if ($parts['name']) {
             $this->escapeReset = "\e[0;1m";
-            $identifier = "\e[1m" . $this->highlightChars($parts['name']) . "\e[22m";
+            $identifier = self::ANSI_BOLD . $this->highlightChars($parts['name']) . self::ANSI_BOLD_DIM_RESET;
             $this->escapeReset = $escapeReset;
         }
         $parts = \array_filter([$namespaceOut, $classnameOut, $identifier], 'strlen');
@@ -113,7 +119,7 @@ class Value extends TextValue
      */
     protected function dumpArray(array $array, $abs = null)
     {
-        \bdk\Debug\Utility\PhpType::assertType($abs, 'bdk\Debug\Abstraction\Abstraction|null', 'abs');
+        \bdk\Debug\Utility\PhpType::assertType($abs, self::TYPE_ABSTRACTION, 'abs');
 
         $this->valDepth++;
         $isNested = $this->valDepth > 0;
@@ -192,7 +198,7 @@ class Value extends TextValue
      */
     protected function dumpFloat($val, $abs = null)
     {
-        \bdk\Debug\Utility\PhpType::assertType($abs, 'bdk\Debug\Abstraction\Abstraction|null', 'abs');
+        \bdk\Debug\Utility\PhpType::assertType($abs, self::TYPE_ABSTRACTION, 'abs');
 
         if ($val === Type::TYPE_FLOAT_INF) {
             $val = 'INF';
@@ -262,7 +268,7 @@ class Value extends TextValue
      */
     protected function dumpString($val, $abs = null)
     {
-        \bdk\Debug\Utility\PhpType::assertType($abs, 'bdk\Debug\Abstraction\Abstraction|null', 'abs');
+        \bdk\Debug\Utility\PhpType::assertType($abs, self::TYPE_ABSTRACTION, 'abs');
 
         if (\is_numeric($val)) {
             return $this->dumpStringNumeric($val, $abs);
@@ -336,7 +342,7 @@ class Value extends TextValue
      */
     private function dumpStringNumeric($val, $abs = null)
     {
-        \bdk\Debug\Utility\PhpType::assertType($abs, 'bdk\Debug\Abstraction\Abstraction|null', 'abs');
+        \bdk\Debug\Utility\PhpType::assertType($abs, self::TYPE_ABSTRACTION, 'abs');
 
         $escapeCodes = $this->cfg['escapeCodes'];
         $date = $this->checkTimestamp($val, $abs);
@@ -354,7 +360,7 @@ class Value extends TextValue
      */
     protected function dumpUndefined()
     {
-        return "\e[2m" . $this->debug->i18n->trans('abs.undefined') . "\e[22m"; // dim & reset dim
+        return self::ANSI_DIM . $this->debug->i18n->trans('abs.undefined') . self::ANSI_BOLD_DIM_RESET;
     }
 
     /**
@@ -408,7 +414,7 @@ class Value extends TextValue
         }
         $escapeReset = $this->escapeReset;
         $this->escapeReset = "\e[0;1m";
-        $classnameOut .= "\e[1m" . $this->highlightChars($classname) . "\e[22m";
+        $classnameOut .= self::ANSI_BOLD . $this->highlightChars($classname) . self::ANSI_BOLD_DIM_RESET;
         $this->escapeReset = $escapeReset;
         return $classnameOut;
     }

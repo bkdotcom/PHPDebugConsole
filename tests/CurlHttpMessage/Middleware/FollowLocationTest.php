@@ -7,13 +7,13 @@ use bdk\CurlHttpMessage\Exception\RequestException;
 use bdk\CurlHttpMessage\Handler\Mock as MockHandler;
 use bdk\CurlHttpMessage\Middleware\FollowLocation;
 use bdk\Promise;
-use bdk\Test\CurlHttpMessage\TestCase;
+use bdk\Test\CurlHttpMessage\AbstractTestCase;
 use Psr\Http\Message\RequestInterface;
 
 /**
  * @covers bdk\CurlHttpMessage\Middleware\FollowLocation
  */
-class FollowLocationTest extends TestCase
+class FollowLocationTest extends AbstractTestCase
 {
     public function testIgnoresNonRedirects()
     {

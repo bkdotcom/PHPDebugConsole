@@ -59,21 +59,28 @@ $.fn.debugEnhance = function (method, arg1, arg2) {
     return enhanceMain.buildChannelList(arg1, arg2, arguments[3])
   }
   this.each(function () {
-    var $node = $(this)
+    let $node = $(this)
+    let ret
     switch (method) {
       case 'sidebar':
-        return debugEnhanceSidebar($node, arg1)
+        ret = debugEnhanceSidebar($node, arg1)
+        break
       case 'collapse':
-        return expandCollapse.collapse($node, arg1)
+        ret = expandCollapse.collapse($node, arg1)
+        break
       case 'expand':
-        return expandCollapse.expand($node)
+        ret = expandCollapse.expand($node)
+        break
       case 'init':
-        return debugEnhanceInit($node, arg1)
+        ret = debugEnhanceInit($node, arg1)
+        break
       case 'setConfig':
-        return debugEnhanceSetConfig($node, arg1)
+        ret = debugEnhanceSetConfig($node, arg1)
+        break
       default:
-        return debugEnhanceDefault($node)
+        ret = debugEnhanceDefault($node)
     }
+    return ret
   })
   return this
 }
@@ -165,7 +172,6 @@ function debugEnhanceSidebar ($node, arg1) {
 function addStyle (css) {
   var head = document.head || document.getElementsByTagName('head')[0]
   var style = document.createElement('style')
-  style.type = 'text/css'
   head.appendChild(style)
   if (style.styleSheet) {
     // This is required for IE8 and below.

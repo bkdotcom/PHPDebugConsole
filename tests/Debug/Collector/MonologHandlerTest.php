@@ -34,7 +34,7 @@ class MonologHandlerTest extends DebugTestFramework
     public function testConstructThrowsException()
     {
         $this->expectException('InvalidArgumentException');
-        $handler = new MonologHandler('foo');
+        new MonologHandler('foo');
     }
 
     /**

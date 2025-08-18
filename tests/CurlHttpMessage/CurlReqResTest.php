@@ -5,13 +5,13 @@ namespace bdk\Test\CurlHttpMessage;
 use bdk\CurlHttpMessage\Exception\RequestException;
 use bdk\PhpUnitPolyfill\AssertionTrait;
 use bdk\Promise;
-use bdk\Test\CurlHttpMessage\TestCase;
+use bdk\Test\CurlHttpMessage\AbstractTestCase;
 
 /**
  * @covers \bdk\CurlHttpMessage\CurlReqRes
  * @covers \bdk\CurlHttpMessage\CurlReqResOptions
  */
-class CurlReqResTest extends TestCase
+class CurlReqResTest extends AbstractTestCase
 {
     use AssertionTrait;
 
@@ -58,16 +58,6 @@ class CurlReqResTest extends TestCase
         $curlReqRes->setPromise($promise);
         self::assertSame($promise, $curlReqRes->getPromise());
     }
-
-    /*
-    public function testExecThrowsException()
-    {
-        $request = $this->factory->request();
-        $curlReqRes = new CurlReqRes($request);
-        $this->expectException(\RuntimeException::class);
-        $curlReqRes->exec();
-    }
-    */
 
     public function testEncoding()
     {

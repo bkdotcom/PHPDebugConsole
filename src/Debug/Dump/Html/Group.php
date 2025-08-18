@@ -118,24 +118,23 @@ class Group
             ? $this->dumper->valDumper->markupIdentifier($label, 'method')
             : \preg_replace('#^<span class="t_string">(.+)</span>$#s', '$1', $this->dumper->valDumper->dump($label));
 
-        $labelClasses = \implode(' ', \array_keys(\array_filter(array(
-            'font-weight-bold' => $meta['boldLabel'],
-            'group-label' => true,
-        ))));
-
-        if (!$args) {
-            return '<span class="' . $labelClasses . '">' . $label . '</span>';
-        }
+        $labelAttribs = array(
+            'class' => array(
+                'font-weight-bold' => $meta['boldLabel'],
+                'group-label' => true,
+            ),
+        );
 
         foreach ($args as $k => $v) {
             $args[$k] = $this->dumper->valDumper->dump($v);
         }
         $argStr = \implode(', ', $args);
-        return $meta['argsAsParams']
-            ? '<span class="' . $labelClasses . '">' . $label . '(</span>'
+
+        $out = $args && $meta['argsAsParams']
+            ? $this->html->buildTag('span', $labelAttribs, $label . '(')
                 . $argStr
-                . '<span class="' . $labelClasses . '">)</span>'
-            : '<span class="' . $labelClasses . '">' . $label . ':</span> '
-                . $argStr;
+                . $this->html->buildTag('span', $labelAttribs, ')')
+            : $this->html->buildTag('span', $labelAttribs, $label) . ': ' . $argStr;
+        return \trim($out, ': ');
     }
 }

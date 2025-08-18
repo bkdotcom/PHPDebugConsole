@@ -161,6 +161,9 @@ return array(
     'method.time.not-exist' => 'Timer \'\'{label}\'\' does not exist',
     'method.trace' => 'trace',
     'method.trace.limited' => 'limited to {limit}',
+
+    'oauth.callback_url' => 'callback url',
+
     'object.attributes' => 'attributes',
     'object.cases' => 'cases',
     'object.cases.none' => 'no cases!',
@@ -256,6 +259,8 @@ return array(
     'word.omitted' => 'omitted',
     'word.options' => 'options',
     'word.parameters' => 'parameters',
+    'word.prettified' => 'prettified',
+    'word.size' => 'size',
     'word.slow' => 'slow',
     'word.types' => 'types',
     'word.value' => 'value',

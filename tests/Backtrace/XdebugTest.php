@@ -16,13 +16,6 @@ class XdebugTest extends TestCase
 {
     use AssertionTrait;
 
-    /*
-    public function testIsXdebugFuncStackAvail()
-    {
-        self::assertTrue(Xdebug::isXdebugFuncStackAvail());
-    }
-    */
-
     public function testXdebugGetFunctionStack()
     {
         $propRef = new \ReflectionProperty('bdk\\Backtrace\\Xdebug', 'isXdebugAvail');
@@ -93,10 +86,6 @@ class XdebugTest extends TestCase
             unset($frame['time'], $frame['memory']);
             return $frame;
         }, $stack);
-        // $stack = \array_map(function ($frame) {
-            // unset($frame['object']);
-            // return $frame;
-        // }, $stack);
         self::assertSame(array(
             array(
                 'args' => array(

@@ -98,7 +98,7 @@ class WpBuildHelper
                 ? \preg_replace_callback($search, $replace, $contents)
                 : \preg_replace($search, $replace, $contents);
         }
-        echo \sprintf('edit %s - %d edits made', $filepath, \count($replacements)) . "\n";
+        echo \sprintf('edit %s - %d edits made', $filepathDebug, \count($replacements)) . "\n";
         if ($this->touchFileSystem) {
             \file_put_contents($filepath, $contents);
         }

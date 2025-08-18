@@ -4,13 +4,13 @@ namespace bdk\Test\CurlHttpMessage\Handler;
 
 use bdk\CurlHttpMessage\Handler\CurlMulti;
 use bdk\Promise;
-use bdk\Test\CurlHttpMessage\TestCase;
+use bdk\Test\CurlHttpMessage\AbstractTestCase;
 
 /**
  * @covers bdk\CurlHttpMessage\Handler\CurlMulti
  * @covers bdk\CurlHttpMessage\CurlReqRes
  */
-class CurlMultiTest extends TestCase
+class CurlMultiTest extends AbstractTestCase
 {
     public function testCanAddCustomCurlOptions()
     {
@@ -168,35 +168,4 @@ class CurlMultiTest extends TestCase
         $promises[0]->wait();
         self::assertSame(array(0, 1, 2, 3, 4), $fulfilled);
     }
-
-    /*
-    public function testUsesTimeoutEnvironmentVariables()
-    {
-        unset($_SERVER['CURL_SELECT_TIMEOUT']);
-        \putenv('CURL_SELECT_TIMEOUT=');
-
-        try {
-            $a = new CurlMultiHandler();
-            // Default if no options are given and no environment variable is set
-            self::assertEquals(1, Helpers::readObjectAttribute($a, 'selectTimeout'));
-
-            \putenv("CURL_SELECT_TIMEOUT=3");
-            $a = new CurlMultiHandler();
-            // Handler reads from the environment if no options are given
-            self::assertEquals(3, Helpers::readObjectAttribute($a, 'selectTimeout'));
-        } finally {
-            \putenv('CURL_SELECT_TIMEOUT=');
-        }
-    }
-    */
-
-    /*
-    public function testThrowsWhenAccessingInvalidProperty()
-    {
-        $curlMulti = new CurlMulti();
-
-        $this->expectException(\BadMethodCallException::class);
-        $curlMulti->foo;
-    }
-    */
 }

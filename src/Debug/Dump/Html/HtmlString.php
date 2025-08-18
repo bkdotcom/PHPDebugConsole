@@ -190,7 +190,8 @@ class HtmlString
         $val = $this->doDump($abs);
         $strLenDiff = $abs['strlen'] - $abs['strlenValue'];
         if ($strLenDiff) {
-            $val .= '<span class="maxlen">&hellip; ' . $this->debug->i18n->trans('string.more-bytes', array('bytes' => $strLenDiff)) . '</span>';
+            $innerHtml = '&hellip; ' . $this->debug->i18n->trans('string.more-bytes', array('bytes' => $strLenDiff));
+            $val .= $this->debug->html->buildTag('span', array('class' => 'maxlen'), $innerHtml);
         }
         return $val;
     }
@@ -268,7 +269,7 @@ class HtmlString
                     'data-type' => $abs['type'],
                     'data-type-more' => $abs['typeMore'],
                 )),
-                '<span class="prettified">(prettified)</span> ' . $dumped
+                '<span class="prettified">(' . $this->debug->i18n->trans('word.prettified') . ')</span> ' . $dumped
             );
         };
     }

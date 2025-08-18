@@ -29,8 +29,6 @@ class FormProcessor
     {
         self::$postData = $postData;
         \array_walk($controls, [__CLASS__, 'doControl']);
-        // \add_settings_error(self::GROUP_NAME, 'bdk-debug-options_key', 'This is a test error', 'error');
-        // \add_settings_error(self::GROUP_NAME, 'bdk-debug-options_key', 'This is another error', 'error');
         return self::$values;
     }
 

@@ -320,7 +320,9 @@ describe('helper.type function', () => {
   });
 
   test('identifies custom objects as object', () => {
-    class TestClass {}
+    class TestClass {
+      // empty
+    }
     expect(zest.type(new TestClass())).toBe('object');
   });
 
@@ -433,7 +435,6 @@ describe('helper.argsToElements function', () => {
 
   test('handles mixed argument types', () => {
     const div1 = document.createElement('div');
-    const div2 = document.createElement('div');
     document.body.innerHTML = '<div id="test3"></div>';
 
     const elements = helper.argsToElements([

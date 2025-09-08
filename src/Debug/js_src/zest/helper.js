@@ -91,8 +91,8 @@ export const camelCase = function (str) {
 
 export const createElements = function (html) {
   const element = document.createElement('template')
-  element.innerHTML = html; // do not trim
-  return element.content.childNodes;  // vs element.content.children
+  element.innerHTML = html  // do not trim
+  return element.content.childNodes  // vs element.content.children
 }
 
 export const each = function (mixed, callback) {
@@ -121,6 +121,18 @@ export const extend = function ( ...args ) {
   args.forEach((source) => {
     var curTargetIsObject = false
     var curSourceIsObject = false
+    if (source === undefined || source === null) {
+      // silently skip over undefined/null sources
+      return
+    }
+    if (typeof source !== 'object') {
+      throw new Error('extend: object or array expected, ' + type(source) + ' given')
+    }
+    if (Array.isArray(target) && Array.isArray(source)) {
+      // append arrays
+      Array.prototype.push.apply(target, source)
+      return [...new Set(target)] // unique values
+    }
     for (const [key, value] of Object.entries(source)) {
       curSourceIsObject = typeof value === 'object' && value !== null
       curTargetIsObject = typeof target[key] === 'object' && target[key] !== null
@@ -155,9 +167,9 @@ function hash (str) {
   for (let i = 0, len = str.length; i < len; i++) {
       let chr = str.charCodeAt(i)
       hash = (hash << 5) - hash + chr
-      hash |= 0; // Convert to 32bit integer
+      hash |= 0  // Convert to 32bit integer
   }
-  return hash.toString(16); // convert to hex
+  return hash.toString(16)  // convert to hex
 }
 */
 

@@ -25,9 +25,9 @@ const pseudoSelectors = {
 }
 
 // Define shared regular expressions as global constants
-const REGEX_UNESCAPED_COMMAS = /,(?![^"\[]*\])/; // Matches unescaped commas, ignoring those inside quotes or attribute selectors
-const REGEX_SPACES_OUTSIDE_ATTRIBUTES = /\s+(?![^\[]*\])(?=[^>+~]*(?:$|[>+~]))(?![^:]*\))/; // Matches spaces, ignoring those inside attribute selectors and pseudo-selectors
-const REGEX_PSEUDO_SELECTORS = /:(?![^\[]*\])/; // Matches pseudo-selectors, ignoring those inside attribute selectors
+const REGEX_UNESCAPED_COMMAS = /,(?![^"\[]*\])/   // Matches unescaped commas, ignoring those inside quotes or attribute selectors
+const REGEX_SPACES_OUTSIDE_ATTRIBUTES = /\s+(?![^\[]*\])(?=[^>+~]*(?:$|[>+~]))(?![^:]*\))/ // Matches spaces, ignoring those inside attribute selectors and pseudo-selectors
+const REGEX_PSEUDO_SELECTORS = /:(?![^\[]*\])/    // Matches pseudo-selectors, ignoring those inside attribute selectors
 
 // Utility function to check if a selector contains custom pseudo-selectors
 function containsCustomPseudoSelectors (selector) {
@@ -62,7 +62,7 @@ function parseSelector (selector) {
       containsCustomPseudoSelectors(rejoinedParts[rejoinedParts.length - 1]) === false
         ? rejoinedParts[rejoinedParts.length - 1] += ' ' + combined
         : rejoinedParts.push(combined)
-      i++; // Skip the next part as it has been joined
+      i++  // Skip the next part as it has been joined
     } else {
       rejoinedParts.push(parts[i])
     }
@@ -151,7 +151,7 @@ export function querySelectorAll(selector, context = document) {
     elements = elements.concat(currentContext)
   })
 
-  return [...new Set(elements)]; // Remove duplicates
+  return [ ...new Set(elements) ]  // Remove duplicates
 }
 
 // element.matches() with custom pseudo-selector support

@@ -31,7 +31,7 @@ export default class MicroDom extends Array {
     for (const elNew of elementsNew) {
       elements.push(elNew)
     }
-    elements = [...new Set(elements) ]; // remove duplicates
+    elements = [ ...new Set(elements) ]  // remove duplicates
     return new MicroDom( ...elements )
   }
   /**
@@ -55,7 +55,7 @@ export default class MicroDom extends Array {
         : Array.from(ret)
       elementsNew = elementsNew.concat(ret)
     })
-    elementsNew = [...new Set(elementsNew) ]; // remove duplicates
+    elementsNew = [ ...new Set(elementsNew) ]  // remove duplicates
     const ret = new MicroDom( ...elementsNew )
     return filter
       ? ret.filter(filter)
@@ -208,7 +208,7 @@ export default class MicroDom extends Array {
     if (typeof text === 'undefined') {
       return this.length > 0
         ? this[0].textContent
-        : ''; // return empty string vs undefined
+        : ''  // return empty string vs undefined
     }
     return this.each((el) => {
       el.textContent = text

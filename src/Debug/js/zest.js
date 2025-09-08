@@ -28,9 +28,9 @@ var zest = (function () {
   };
 
   // Define shared regular expressions as global constants
-  const REGEX_UNESCAPED_COMMAS = /,(?![^"\[]*\])/; // Matches unescaped commas, ignoring those inside quotes or attribute selectors
+  const REGEX_UNESCAPED_COMMAS = /,(?![^"\[]*\])/;   // Matches unescaped commas, ignoring those inside quotes or attribute selectors
   const REGEX_SPACES_OUTSIDE_ATTRIBUTES = /\s+(?![^\[]*\])(?=[^>+~]*(?:$|[>+~]))(?![^:]*\))/; // Matches spaces, ignoring those inside attribute selectors and pseudo-selectors
-  const REGEX_PSEUDO_SELECTORS = /:(?![^\[]*\])/; // Matches pseudo-selectors, ignoring those inside attribute selectors
+  const REGEX_PSEUDO_SELECTORS = /:(?![^\[]*\])/;    // Matches pseudo-selectors, ignoring those inside attribute selectors
 
   // Utility function to check if a selector contains custom pseudo-selectors
   function containsCustomPseudoSelectors (selector) {
@@ -65,7 +65,7 @@ var zest = (function () {
         containsCustomPseudoSelectors(rejoinedParts[rejoinedParts.length - 1]) === false
           ? rejoinedParts[rejoinedParts.length - 1] += ' ' + combined
           : rejoinedParts.push(combined);
-        i++; // Skip the next part as it has been joined
+        i++;  // Skip the next part as it has been joined
       } else {
         rejoinedParts.push(parts[i]);
       }
@@ -144,7 +144,7 @@ var zest = (function () {
       elements = elements.concat(currentContext);
     });
 
-    return [...new Set(elements)]; // Remove duplicates
+    return [ ...new Set(elements) ]  // Remove duplicates
   }
 
   // element.matches() with custom pseudo-selector support
@@ -250,8 +250,8 @@ var zest = (function () {
 
   const createElements = function (html) {
     const element = document.createElement('template');
-    element.innerHTML = html; // do not trim
-    return element.content.childNodes;  // vs element.content.children
+    element.innerHTML = html;  // do not trim
+    return element.content.childNodes  // vs element.content.children
   };
 
   const each = function (mixed, callback) {
@@ -280,6 +280,18 @@ var zest = (function () {
     args.forEach((source) => {
       var curTargetIsObject = false;
       var curSourceIsObject = false;
+      if (source === undefined || source === null) {
+        // silently skip over undefined/null sources
+        return
+      }
+      if (typeof source !== 'object') {
+        throw new Error('extend: object or array expected, ' + type(source) + ' given')
+      }
+      if (Array.isArray(target) && Array.isArray(source)) {
+        // append arrays
+        Array.prototype.push.apply(target, source);
+        return [...new Set(target)] // unique values
+      }
       for (const [key, value] of Object.entries(source)) {
         curSourceIsObject = typeof value === 'object' && value !== null;
         curTargetIsObject = typeof target[key] === 'object' && target[key] !== null;
@@ -314,9 +326,9 @@ var zest = (function () {
     for (let i = 0, len = str.length; i < len; i++) {
         let chr = str.charCodeAt(i)
         hash = (hash << 5) - hash + chr
-        hash |= 0; // Convert to 32bit integer
+        hash |= 0  // Convert to 32bit integer
     }
-    return hash.toString(16); // convert to hex
+    return hash.toString(16)  // convert to hex
   }
   */
 
@@ -581,104 +593,104 @@ var zest = (function () {
 
   }
 
-  function extendMicroDom$5 (MicroDom) {
-
-    const setValue = function (el, key, value) {
-      let isStringable = true;
-      let stringified = null;
-      removeDataHelper(el, key); // remove existing key (whether dataset or special property)
-      if (['function', 'undefined'].includes(typeof value)) {
-        isStringable = false;
-      } else if (typeof value === 'object' && value !== null) {
-        // object (or array) value
-        // store object & array values in special element property (regardless of serializability)
-        // this allows user to maintain a reference to the stored value
-        isStringable = false;
-      }
-      if (isStringable) {
-        try {
-          stringified = typeof value === 'string'
-            ? value
-            : JSON.stringify(value);
-        } catch (e) {
-        }
-        isStringable = typeof stringified === 'string';
-      }
-      key = camelCase(key);
-      if (isStringable === false) {
-        // store non-serializable value in special element property
-        elInitMicroDomInfo(el).data[key] = value;
-        return
-      }
-      el.dataset[key] = stringified;
-    };
-
-    const getValue = function (el, name) {
-      name = camelCase(name);
-      if (typeof el === 'undefined') {
-        return undefined
-      }
-      const value = el[rand]?.data?.[name]
-        ? el[rand].data[name]
-        : el.dataset[name];
-      return safeJsonParse(value)
-    };
-
-    const removeDataHelper = function (el, name) {
-      name = camelCase(name);
-      if (el[rand]) {
-        delete el[rand].data[name];
-      }
-      delete el.dataset[name];
-    };
-
-    const safeJsonParse = function (value) {
-      try {
-        value = JSON.parse(value);
-      } catch (e) {
-        // do nothing
-      }
-      return value
-    };
-
-    function data (name, value) {
-      if (typeof name === 'undefined') {
-        // return all data
-        if (typeof this[0] === 'undefined') {
-          return {}
-        }
-        const data = {};
-        const nonSerializable = this[0][rand]?.data || {};
-        for (const key in this[0].dataset) {
-          data[key] = safeJsonParse(this[0].dataset[key]);
-        }
-        return extend(data, nonSerializable)
-      }
-      if (typeof name !== 'object' && typeof value !== 'undefined') {
-        // we're setting a single value -> convert to object
-        name = {[name]: value};
-      }
-      if (typeof name === 'object') {
-        // setting value(s)
-        return this.each((el) => {
-          for (let [key, value] of Object.entries(name)) {
-            setValue(el, key, value);
-          }
-        })
-      }
-      return getValue(this[0], name)
+  const setValue = function (el, key, value) {
+    let isStringable = true;
+    let stringified = null;
+    removeDataHelper(el, key); // remove existing key (whether dataset or special property)
+    if (['function', 'undefined'].includes(typeof value)) {
+      isStringable = false;
+    } else if (typeof value === 'object' && value !== null) {
+      // object (or array) value
+      // store object & array values in special element property (regardless of serializability)
+      // this allows user to maintain a reference to the stored value
+      isStringable = false;
     }
+    if (isStringable) {
+      try {
+        stringified = typeof value === 'string'
+          ? value
+          : JSON.stringify(value);
+      } catch (e) {
+      }
+      isStringable = typeof stringified === 'string';
+    }
+    key = camelCase(key);
+    if (isStringable === false) {
+      // store non-serializable value in special element property
+      elInitMicroDomInfo(el).data[key] = value;
+      return
+    }
+    el.dataset[key] = stringified;
+  };
 
-    function removeData (mixed) {
-      mixed = typeof mixed === 'string'
-        ? mixed.split(' ').filter((val) => val !== '')
-        : mixed;
+  const getValue = function (el, name) {
+    name = camelCase(name);
+    if (typeof el === 'undefined') {
+      return undefined
+    }
+    const value = el[rand]?.data?.[name]
+      ? el[rand].data[name]
+      : el.dataset[name];
+    return safeJsonParse(value)
+  };
+
+  const removeDataHelper = function (el, name) {
+    name = camelCase(name);
+    if (el[rand]) {
+      delete el[rand].data[name];
+    }
+    delete el.dataset[name];
+  };
+
+  const safeJsonParse = function (value) {
+    try {
+      value = JSON.parse(value);
+    } catch (e) {
+      // do nothing
+    }
+    return value
+  };
+
+  function data (name, value) {
+    if (typeof name === 'undefined') {
+      // return all data
+      if (typeof this[0] === 'undefined') {
+        return {}
+      }
+      const data = {};
+      const nonSerializable = this[0][rand]?.data || {};
+      for (const key in this[0].dataset) {
+        data[key] = safeJsonParse(this[0].dataset[key]);
+      }
+      return extend(data, nonSerializable)
+    }
+    if (typeof name !== 'object' && typeof value !== 'undefined') {
+      // we're setting a single value -> convert to object
+      name = {[name]: value};
+    }
+    if (typeof name === 'object') {
+      // setting value(s)
       return this.each((el) => {
-        for (let name of mixed) {
-          removeDataHelper(el, name);
+        for (let [key, value] of Object.entries(name)) {
+          setValue(el, key, value);
         }
       })
     }
+    return getValue(this[0], name)
+  }
+
+  function removeData (mixed) {
+    mixed = typeof mixed === 'string'
+      ? mixed.split(' ').filter((val) => val !== '')
+      : mixed;
+    return this.each((el) => {
+      for (let name of mixed) {
+        removeDataHelper(el, name);
+      }
+    })
+  }
+
+  function extendMicroDom$5 (MicroDom) {
 
     Object.assign(MicroDom.prototype, {
       data,
@@ -714,66 +726,67 @@ var zest = (function () {
     return new Event(eventOrName, {bubbles: true})
   };
 
-  function extendMicroDom$4 (MicroDom) {
-    function off ( ...args ) {
-      var events = args.length ? args.shift().split(' ') : [];
-      var selector = typeof args[0] === 'string' ? args.shift() : null;
-      var handler = args.length ? args.shift() : null;
-      return this.each((el) => {
-        const eventHandlers = findEventHandlerInfo(el, events, selector, handler);
-        for (let i = 0, len = eventHandlers.length; i < len; i++) {
-          el.removeEventListener(eventHandlers[i]['event'], eventHandlers[i]['wrappedHandler']);
-        }
-      })
-    }
-
-    function on ( ...args ) {
-      const events = args.shift().split(' ');
-      const selector = typeof args[0] === 'string' ? args.shift() : null;
-      const handler = args.shift();
-      const captureEvents = ['mouseenter', 'mouseleave', 'pointerenter', 'pointerleave'];
-      return this.each((el) => {
-        const wrappedHandler = (e) => {
-          const target = selector
-            ? (captureEvents.includes(e.type)
-              ? (e.target.matches(selector) ? e.target : null)
-              : e.target?.closest(selector))
-            : el;
-          return target && (target instanceof Window || document.body.contains(target))
-            ? handler.apply(target, [e, ...(e.extraParams || [])])
-            : true
-        };
-        elInitMicroDomInfo(el);
-        for (let i = 0, len = events.length; i < len; i++) {
-          const eventName = events[i];
-          const capture = selector && captureEvents.includes(eventName);
-          el[rand].eventHandlers.push({
-            event: eventName,
-            handler: handler,
-            selector: selector,
-            wrappedHandler: wrappedHandler,
-          });
-          el.addEventListener(eventName, wrappedHandler, capture);
-        }
-      })
-    }
-
-    function one ( ...args ) {
-      return this.on( ...args, true )
-    }
-
-    function trigger (eventName, extraParams) {
-      if (typeof extraParams === 'undefined') {
-        extraParams = [];
+  function off ( ...args ) {
+    var events = args.length ? args.shift().split(' ') : [];
+    var selector = typeof args[0] === 'string' ? args.shift() : null;
+    var handler = args.length ? args.shift() : null;
+    return this.each((el) => {
+      const eventHandlers = findEventHandlerInfo(el, events, selector, handler);
+      for (let i = 0, len = eventHandlers.length; i < len; i++) {
+        el.removeEventListener(eventHandlers[i]['event'], eventHandlers[i]['wrappedHandler']);
       }
-      return this.each((el) => {
-        const event = createEvent(eventName);
-        event.extraParams = Array.isArray(extraParams)
-          ? extraParams
-          : [extraParams];
-        el.dispatchEvent(event);
-      })
+    })
+  }
+
+  function on ( ...args ) {
+    const events = args.shift().split(' ');
+    const selector = typeof args[0] === 'string' ? args.shift() : null;
+    const handler = args.shift();
+    const captureEvents = ['mouseenter', 'mouseleave', 'pointerenter', 'pointerleave'];
+    return this.each((el) => {
+      const wrappedHandler = (e) => {
+        const target = selector
+          ? (captureEvents.includes(e.type)
+            ? (e.target.matches(selector) ? e.target : null)
+            : e.target?.closest(selector))
+          : el;
+        return target && (target instanceof Window || document.body.contains(target))
+          ? handler.apply(target, [e, ...(e.extraParams || [])])
+          : true
+      };
+      elInitMicroDomInfo(el);
+      for (let i = 0, len = events.length; i < len; i++) {
+        const eventName = events[i];
+        const capture = selector && captureEvents.includes(eventName);
+        el[rand].eventHandlers.push({
+          event: eventName,
+          handler: handler,
+          selector: selector,
+          wrappedHandler: wrappedHandler,
+        });
+        el.addEventListener(eventName, wrappedHandler, capture);
+      }
+    })
+  }
+
+  function one ( ...args ) {
+    return this.on( ...args, true )
+  }
+
+  function trigger (eventName, extraParams) {
+    if (typeof extraParams === 'undefined') {
+      extraParams = [];
     }
+    return this.each((el) => {
+      const event = createEvent(eventName);
+      event.extraParams = Array.isArray(extraParams)
+        ? extraParams
+        : [extraParams];
+      el.dispatchEvent(event);
+    })
+  }
+
+  function extendMicroDom$4 (MicroDom) {
 
     Object.assign(MicroDom.prototype, {
       off,
@@ -783,81 +796,90 @@ var zest = (function () {
     });
   }
 
-  function extendMicroDom$3 (MicroDom) {
-
-    MicroDom.prototype.eq = function (index) {
-      if (index < 0) {
-        index = this.length + index;
-      }
-      if (index < 0 || index >= this.length) {
-        return new MicroDom()
-      }
-      return new MicroDom(this[index])
-    };
-
-    MicroDom.prototype.filter = function (mixed, notFilter = false) {
-      return this.alter((el, i) => {
-        let isMatch = false;
-        if (typeof mixed === 'string') {
-          isMatch = matches(el, mixed);
-        } else if (typeof mixed === 'function') {
-          isMatch = mixed.call(el, el, i);
-        } else {
-          isMatch = argsToElements([mixed]).includes(el);
-        }
-        if (notFilter) {
-          isMatch = !isMatch;
-        }
-        return isMatch
-          ? el
-          : []
-      })
-    };
-
-    MicroDom.prototype.first = function () {
-      return new MicroDom( this[0] )
-    };
-
-    /**
-     * Return true if at least one of our elements matches the given arguments
-     * @param {*} mixed
-     * @return bool
-     */
-    MicroDom.prototype.is = function (mixed) {
+  function filter (mixed, notFilter = false) {
+    return this.alter((el, i) => {
+      let isMatch = false;
       if (typeof mixed === 'string') {
-        for (let el of this) {
-          if (matches(el, mixed)) {
-            return true
-          }
-        }
-        return false
+        isMatch = matches(el, mixed);
+      } else if (typeof mixed === 'function') {
+        isMatch = mixed.call(el, el, i);
+      } else {
+        isMatch = argsToElements([mixed]).includes(el);
       }
-      if (typeof mixed === 'function') {
-        for (let i = 0, len = this.length; i < len; i++) {
-          if (mixed.call(this[i], this[i], i)) {
-            return true
-          }
-        }
-        return false
+      if (notFilter) {
+        isMatch = !isMatch;
       }
-      const elements = argsToElements([mixed]);
+      return isMatch
+        ? el
+        : []
+    })
+  }
+
+  function first () {
+    return this.eq(0)
+  }
+
+  /**
+   * Return true if at least one of our elements matches the given arguments
+   * @param {*} mixed
+   * @return bool
+   */
+  function is (mixed) {
+    if (typeof mixed === 'string') {
       for (let el of this) {
-        for (let i = 0, len = elements.length; i < len; i++) {
-          if (elements[i] === el) {
-            return true
-          }
+        if (matches(el, mixed)) {
+          return true
         }
       }
       return false
-    };
+    }
+    if (typeof mixed === 'function') {
+      for (let i = 0, len = this.length; i < len; i++) {
+        if (mixed.call(this[i], this[i], i)) {
+          return true
+        }
+      }
+      return false
+    }
+    const elements = argsToElements([mixed]);
+    for (let el of this) {
+      for (let i = 0, len = elements.length; i < len; i++) {
+        if (elements[i] === el) {
+          return true
+        }
+      }
+    }
+    return false
+  }
 
-    MicroDom.prototype.last = function () {
-      return new MicroDom(this[this.length - 1])
-    };
+  function last () {
+    return this.eq(-1)
+  }
 
-    MicroDom.prototype.not = function (filter) {
-      return this.filter(filter, true)
-    };
+  function not (filter) {
+    return this.filter(filter, true)
+  }
+
+  function extendMicroDom$3 (MicroDom) {
+
+    function eq (index) {
+      if (index < 0) {
+        index = this.length + index;
+      }
+      return index < 0 || index >= this.length
+        ? new MicroDom()
+        : new MicroDom(this[index])
+    }
+
+    Object.assign(MicroDom.prototype, {
+      eq,
+      filter,
+      first,
+      is,
+      last,
+      not,
+    });
+
   }
 
   // height = as defined by the CSS height propert
@@ -865,118 +887,118 @@ var zest = (function () {
   // offsetHeight = includes padding and border / excludes margins
   // getBoundingClientRect() = includes padding, border, and (for most browsers) the scrollbar's height if it's rendered
 
-  function extendMicroDom$2 (MicroDom) {
+  function addPx (value) {
+    return isNumeric(value)
+      ? value + 'px'
+      : value
+  }
 
-    const addPx = function (value) {
-      return isNumeric(value)
-        ? value + 'px'
-        : value
-    };
+  function queryHelper (microDom, windowProp, elementQuery) {
+    if (microDom.length === 0) {
+      return undefined
+    }
+    const el = microDom[0];
+    if (type(el) === 'window') {
+      return el[windowProp]
+    }
+    return elementQuery(el)
+  }
 
-    const queryHelper = function (microDom, windowProp, elementQuery) {
-      if (microDom.length === 0) {
-        return undefined
+  function style ( ...args ) {
+    if (args.length === 0) {
+      return this[0]?.style  // return the style object
+    }
+    if (typeof args[0] === 'string' && args.length === 1) {
+      if (args[0].trim() === '') {
+        return this.removeAttr('style')
       }
-      const el = microDom[0];
-      if (type(el) === 'window') {
-        return el[windowProp]
+      if (args[0].includes(':')) {
+        // if the string contains a colon, we're setting the style attribute
+        return this.each((el) => {
+          el.setAttribute('style', args[0]);
+        })
       }
-      return elementQuery(el)
-    };
+      // return the computed style on the first element for the specified property
+      return typeof this[0] !== 'undefined'
+        ? getComputedStyle(this[0])[args[0]]
+        : undefined
+    }
+    if (typeof args[0] === 'string') {
+      args[0] = {[args[0]]: args[1]};
+    }
+    return this.each((el) => {
+      for (const [name, value] of Object.entries(args[0])) {
+        el.style[name] = value;
+      }
+    })
+  }
 
-    function style ( ...args ) {
-      if (args.length === 0) {
-        return this[0]?.style; // return the style object
-      }
-      if (typeof args[0] === 'string' && args.length === 1) {
-        if (args[0].trim() === '') {
-          return this.removeAttr('style')
-        }
-        if (args[0].includes(':')) {
-          // if the string contains a colon, we're setting the style attribute
-          return this.each((el) => {
-            el.setAttribute('style', args[0]);
-          })
-        }
-        // return the computed style on the first element for the specified property
-        return typeof this[0] !== 'undefined'
-          ? getComputedStyle(this[0])[args[0]]
-          : undefined
-      }
-      if (typeof args[0] === 'string') {
-        args[0] = {[args[0]]: args[1]};
-      }
-      return this.each((el) => {
-        for (const [name, value] of Object.entries(args[0])) {
-          el.style[name] = value;
-        }
+  function height (value) {
+    if (typeof value === 'undefined') {
+      return queryHelper(this, 'innerHeight', function (el) {
+        // return "content" height excluding padding, border, and margin.
+        // also works on inline elements
+        const cs = window.getComputedStyle(el);
+        const paddingY = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
+        const borderY = parseFloat(cs.borderTopWidth) + parseFloat(cs.borderBottomWidth);
+        return el.offsetHeight - paddingY - borderY
       })
     }
+    return this.style('height', addPx(value))
+  }
 
-    function height (value) {
-      if (typeof value === 'undefined') {
-        return queryHelper(this, 'innerHeight', function (el) {
-          // return "content" height excluding padding, border, and margin.
-          // also works on inline elements
-          const cs = window.getComputedStyle(el);
-          const paddingY = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
-          const borderY = parseFloat(cs.borderTopWidth) + parseFloat(cs.borderBottomWidth);
-          return el.offsetHeight - paddingY - borderY
-        })
-      }
-      return this.style('height', addPx(value))
+  function width (value) {
+    if (typeof value === 'undefined') {
+      return queryHelper(this, 'innerWidth', function (el) {
+        // return "content" height excluding padding, border, and margin.
+        // also works on inline elements
+        const cs = window.getComputedStyle(el);
+        const paddingX = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
+        const borderX = parseFloat(cs.borderLeftWidth) + parseFloat(cs.borderRightWidth);
+        return el.offsetWidth - paddingX - borderX
+      })
     }
+    return this.style('width', addPx(value))
+  }
 
-    function width (value) {
-      if (typeof value === 'undefined') {
-        return queryHelper(this, 'innerWidth', function (el) {
-          // return "content" height excluding padding, border, and margin.
-          // also works on inline elements
-          const cs = window.getComputedStyle(el);
-          const paddingX = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
-          const borderX = parseFloat(cs.borderLeftWidth) + parseFloat(cs.borderRightWidth);
-          return el.offsetWidth - paddingX - borderX
-        })
-      }
-      return this.style('width', addPx(value))
+  function innerHeight (value) {
+    if (typeof value === 'undefined') {
+      return queryHelper(this, 'innerHeight', function (el) {
+        // return content height plus padding (excludes border and margin)
+        return el.clientHeight
+      })
     }
+    return this.style('height', addPx(value))
+  }
 
-    function innerHeight (value) {
-      if (typeof value === 'undefined') {
-        return queryHelper(this, 'innerHeight', function (el) {
-          // return content height plus padding (excludes border and margin)
-          return el.clientHeight
-        })
-      }
-      return this.style('height', addPx(value))
+  function innerWidth (value) {
+    if (typeof value === 'undefined') {
+      return queryHelper(this, 'innerWidth', function (el) {
+        // return content width plus padding (excludes border and margin)
+        return el.clientWidth
+      })
     }
+    return this.style('width', addPx(value))
+  }
 
-    function innerWidth (value) {
-      if (typeof value === 'undefined') {
-        return queryHelper(this, 'innerWidth', function (el) {
-          // return content width plus padding (excludes border and margin)
-          return el.clientWidth
-        })
-      }
-      return this.style('width', addPx(value))
+  function outerHeight (value, includeMargin = false) {
+    if (typeof value === 'undefined') {
+      return queryHelper(this, 'innerHeight', function (el) {
+        if (!includeMargin) {
+          // content height plus padding and border
+          return el.offsetHeight
+        }
+        // content height plus padding, border & margin
+        const cs = getComputedStyle(el);
+        return el.getBoundingClientRect().height
+          + parseFloat(cs.marginTop)
+          + parseFloat(cs.marginBottom)
+      })
     }
+    return this.style('height', addPx(value))
+  }
 
-    function outerHeight (value, includeMargin = false) {
-      if (typeof value === 'undefined') {
-        return queryHelper(this, 'innerHeight', function (el) {
-          if (!includeMargin) {
-            // content height plus padding and border
-            return el.offsetHeight
-          }
-          // content height plus padding, border & margin
-          const cs = getComputedStyle(el);
-          return el.getBoundingClientRect().height
-            + parseFloat(cs.marginTop)
-            + parseFloat(cs.marginBottom)
-        })
-      }
-      return this.style('height', addPx(value))
-    }
+  function extendMicroDom$2 (MicroDom) {
 
     Object.assign(MicroDom.prototype, {
       style,
@@ -989,189 +1011,189 @@ var zest = (function () {
 
   }
 
+  function getArgs (args) {
+    const argsObj = {
+      filter: null,
+      inclTextNodes: false,
+    };
+    for (const val of args) {
+      // console.log(val)  // Access the value directly
+      if (typeof val === 'boolean') {
+        argsObj.inclTextNodes = val;
+      } else {
+        argsObj.filter = val;
+      }
+    }
+    return argsObj
+  }
+
+  /**
+   * @param {*} filter
+   * @param {bool} inclTextNodes (false)
+   */
+  function children(...args) {
+    args = getArgs(args);
+    return args.inclTextNodes
+      ? this.alter((el) => el.childNodes, args.filter)
+      : this.alter((el) => el.children, args.filter)
+  }
+
+  function closest (selector) {
+    return this.alter((el) => {
+      return [9, 11].includes(el.nodeType)
+        ? []
+        : el.closest(selector)
+    })
+  }
+
+  function find(mixed) {
+    if (typeof mixed === 'string') {
+      return this.alter((el) => querySelectorAll(mixed, el))
+    }
+    const elements = argsToElements([mixed]);
+    return this.alter((el) => {
+      const collected = [];
+      for (const el2 of elements) {
+        if (el.contains(el2)) {
+          collected.push(el2);
+        }
+      }
+      return collected
+    })
+  }
+
+  /**
+   * @param {*} filter
+   * @param {bool} inclTextNodes (false)
+   */
+  function next (...args) {
+    args = getArgs(args);
+    return  args.inclTextNodes
+      ? this.alter((el) => el.nextSibling, args.filter)
+      : this.alter((el) => el.nextElementSibling, args.filter)
+  }
+
+  /**
+   * @param {*} filter
+   * @param {bool} inclTextNodes (false)
+   */
+  function nextAll (...args) {
+    args = getArgs(args);
+    return this.alter((el) => {
+      const collected = [];
+      while (el = args.inclTextNodes ? el.nextSibling : el.nextElementSibling) {
+        collected.push(el);
+      }
+      return collected
+    }, args.filter)
+  }
+
+  function nextUntil (selector, ...args) {
+    args = getArgs(args);
+    return this.alter((el) => {
+      const collected = [];
+      while (
+        (el = args.inclTextNodes ? el.nextSibling : el.nextElementSibling)
+        && (
+          el.nodeType !== Node.ELEMENT_NODE
+          || matches(el, selector) === false
+        )
+      ) {
+        collected.push(el);
+      }
+      return collected
+    }, args.filter)
+  }
+
+  function parent (filter) {
+    return this.alter((el) => el.parentNode, filter)
+  }
+
+  function parents (filter) {
+    return this.alter((el) => {
+      const collected = [];
+      while ((el = el.parentNode) && el !== document) {
+        collected.push(el);
+      }
+      return collected
+    }, filter)
+  }
+
+  function parentsUntil (selector, filter) {
+    return this.alter((el) => {
+      const collected = [];
+      while ((el = el.parentNode) && matches(el, selector) === false) {
+        collected.push(el);
+        if (el.nodeName === 'BODY') {
+          break
+        }
+      }
+      return collected
+    }, filter)
+  }
+
+  /**
+   * @param {*} filter
+   * @param {bool} inclTextNodes (false)
+   */
+  function prev (...args) {
+    args = getArgs(args);
+    return args.inclTextNodes
+      ? this.alter((el) => el.previousSibling, args.filter)
+      : this.alter((el) => el.previousElementSibling, args.filter)
+  }
+
+  /**
+   * @param {*} filter
+   * @param {bool} inclTextNodes (false)
+   */
+  function prevAll (...args) {
+    args = getArgs(args);
+    return this.alter((el) => {
+      const collected = [];
+      while (el = args.inclTextNodes ? el.previousSibling : el.previousElementSibling) {
+        collected.push(el);
+      }
+      return collected
+    }, args.filter)
+  }
+
+  /**
+   * @param {*} filter
+   * @param {bool} inclTextNodes (false)
+   */
+  function prevUntil (selector, ...args) {
+    args = getArgs(args);
+    return this.alter((el) => {
+      const collected = [];
+      while (
+        (el = args.inclTextNodes ? el.previousSibling : el.previousElementSibling)
+        && (
+          el.nodeType !== Node.ELEMENT_NODE
+          || matches(el, selector) === false
+        )
+      ) {
+        collected.push(el);
+      }
+      return collected
+    }, args.filter)
+  }
+
+  /**
+   * @param {*} filter
+   * @param {bool} inclTextNodes (false)
+   */
+  function siblings (...args) {
+    args = getArgs(args);
+    return this.alter((el) => {
+      const childNodes = args.inclTextNodes
+        ? el.parentNode.childNodes
+        : el.parentNode.children;
+      return Array.from(childNodes).filter((child) => child !== el)
+    }, args.filter)
+  }
+
   function extendMicroDom$1 (MicroDom) {
-
-    function getArgs (args) {
-      const argsObj = {
-        filter: null,
-        inclTextNodes: false,
-      };
-      for (const val of args) {
-        // console.log(val); // Access the value directly
-        if (typeof val === 'boolean') {
-          argsObj.inclTextNodes = val;
-        } else {
-          argsObj.filter = val;
-        }
-      }
-      return argsObj
-    }
-
-    /**
-     * @param {*} filter
-     * @param {bool} inclTextNodes (false)
-     */
-    function children(...args) {
-      args = getArgs(args);
-      return args.inclTextNodes
-        ? this.alter((el) => el.childNodes, args.filter)
-        : this.alter((el) => el.children, args.filter)
-    }
-
-    function closest (selector) {
-      return this.alter((el) => {
-        return [9, 11].includes(el.nodeType)
-          ? []
-          : el.closest(selector)
-      })
-    }
-
-    function find(mixed) {
-      if (typeof mixed === 'string') {
-        return this.alter((el) => querySelectorAll(mixed, el))
-      }
-      const elements = argsToElements([mixed]);
-      return this.alter((el) => {
-        const collected = [];
-        for (const el2 of elements) {
-          if (el.contains(el2)) {
-            collected.push(el2);
-          }
-        }
-        return collected
-      })
-    }
-
-    /**
-     * @param {*} filter
-     * @param {bool} inclTextNodes (false)
-     */
-    function next (...args) {
-      args = getArgs(args);
-      return  args.inclTextNodes
-        ? this.alter((el) => el.nextSibling, args.filter)
-        : this.alter((el) => el.nextElementSibling, args.filter)
-    }
-
-    /**
-     * @param {*} filter
-     * @param {bool} inclTextNodes (false)
-     */
-    function nextAll (...args) {
-      args = getArgs(args);
-      return this.alter((el) => {
-        const collected = [];
-        while (el = args.inclTextNodes ? el.nextSibling : el.nextElementSibling) {
-          collected.push(el);
-        }
-        return collected
-      }, args.filter)
-    }
-
-    function nextUntil (selector, ...args) {
-      args = getArgs(args);
-      return this.alter((el) => {
-        const collected = [];
-        while (
-          (el = args.inclTextNodes ? el.nextSibling : el.nextElementSibling)
-          && (
-            el.nodeType !== Node.ELEMENT_NODE
-            || matches(el, selector) === false
-          )
-        ) {
-          collected.push(el);
-        }
-        return collected
-      }, args.filter)
-    }
-
-    function parent (filter) {
-      return this.alter((el) => el.parentNode, filter)
-    }
-
-    function parents (filter) {
-      return this.alter((el) => {
-        const collected = [];
-        while ((el = el.parentNode) && el !== document) {
-          collected.push(el);
-        }
-        return collected
-      }, filter)
-    }
-
-    function parentsUntil (selector, filter) {
-      return this.alter((el) => {
-        const collected = [];
-        while ((el = el.parentNode) && matches(el, selector) === false) {
-          collected.push(el);
-          if (el.nodeName === 'BODY') {
-            break
-          }
-        }
-        return collected
-      }, filter)
-    }
-
-    /**
-     * @param {*} filter
-     * @param {bool} inclTextNodes (false)
-     */
-    function prev (...args) {
-      args = getArgs(args);
-      return args.inclTextNodes
-        ? this.alter((el) => el.previousSibling, args.filter)
-        : this.alter((el) => el.previousElementSibling, args.filter)
-    }
-
-    /**
-     * @param {*} filter
-     * @param {bool} inclTextNodes (false)
-     */
-    function prevAll (...args) {
-      args = getArgs(args);
-      return this.alter((el) => {
-        const collected = [];
-        while (el = args.inclTextNodes ? el.previousSibling : el.previousElementSibling) {
-          collected.push(el);
-        }
-        return collected
-      }, args.filter)
-    }
-
-    /**
-     * @param {*} filter
-     * @param {bool} inclTextNodes (false)
-     */
-    function prevUntil (selector, ...args) {
-      args = getArgs(args);
-      return this.alter((el) => {
-        const collected = [];
-        while (
-          (el = args.inclTextNodes ? el.previousSibling : el.previousElementSibling)
-          && (
-            el.nodeType !== Node.ELEMENT_NODE
-            || matches(el, selector) === false
-          )
-        ) {
-          collected.push(el);
-        }
-        return collected
-      }, args.filter)
-    }
-
-    /**
-     * @param {*} filter
-     * @param {bool} inclTextNodes (false)
-     */
-    function siblings (...args) {
-      args = getArgs(args);
-      return this.alter((el) => {
-        const childNodes = args.inclTextNodes
-          ? el.parentNode.childNodes
-          : el.parentNode.children;
-        return Array.from(childNodes).filter((child) => child !== el)
-      }, args.filter)
-    }
 
     Object.assign(MicroDom.prototype, {
       children,
@@ -1191,196 +1213,196 @@ var zest = (function () {
 
   }
 
-  function extendMicroDom (MicroDom) {
+  function durationNorm (duration) {
+    if (duration === 'fast') {
+      duration = 200;
+    } else if (duration === 'slow') {
+      duration = 600;
+    }
+    return duration
+  }
 
-    const durationNorm = function (duration) {
-      if (duration === 'fast') {
-        duration = 200;
-      } else if (duration === 'slow') {
-        duration = 600;
-      }
-      return duration
-    };
+  function animate (properties, duration = 400, easing = 'swing', complete) {
+    duration = durationNorm(duration);
+    const startTime = performance.now();
 
-    function animate (properties, duration = 400, easing = 'swing', complete) {
-      duration = durationNorm(duration);
-      const startTime = performance.now();
+    return this.each((el) => {
+      const propInfo = {
+        // for each animated property, store the start value, end value, and unit
+      };
 
-      return this.each((el) => {
-        const propInfo = {
-          // for each animated property, store the start value, end value, and unit
-        };
+      const easingFunctions = {
+        easeIn: (p) => p * p,
+        easeOut: (p) => 1 - Math.cos(p * Math.PI / 2),
+        linear: (p) => p,
+        swing: (p) => 0.5 - Math.cos(p * Math.PI) / 2,
+      };
 
-        const easingFunctions = {
-          easeIn: (p) => p * p,
-          easeOut: (p) => 1 - Math.cos(p * Math.PI / 2),
-          linear: (p) => p,
-          swing: (p) => 0.5 - Math.cos(p * Math.PI) / 2,
-        };
+      const animateStep = (currentTime) => {
+        const elapsedTime = currentTime - startTime;
+        const progress = Math.min(elapsedTime / duration, 1);
+        const easingFunction = typeof easing === 'function'
+          ? easing
+          : easingFunctions[easing] || easingFunctions.swing;
+        const easedProgress = easingFunction(progress);
 
-        const animateStep = (currentTime) => {
-          const elapsedTime = currentTime - startTime;
-          const progress = Math.min(elapsedTime / duration, 1);
-          const easingFunction = typeof easing === 'function'
-            ? easing
-            : easingFunctions[easing] || easingFunctions.swing;
-          const easedProgress = easingFunction(progress);
-
-          for (const property in properties) {
-            const startValue = propInfo[property].start;
-            const endValue = propInfo[property].end;
-            const currentValue = startValue + (endValue - startValue) * easedProgress;
-            el.style[property] = currentValue + (isNaN(endValue) ? '' : propInfo[property].unit);
-          }
-
-          if (progress < 1) {
-            requestAnimationFrame(animateStep);
-          } else if (typeof complete === 'function') {
-            complete.call(el, el);
-          }
-        };
-
-        // populate propInfo with start and end values
-        const computedStyles = getComputedStyle(el);
         for (const property in properties) {
-          const regex = /^(-=|\+=)?([\d\.]+)(\D+)?$/;
-          const matchesUser = properties[property].toString().match(regex) || [];
-          const matchesComputed = computedStyles[property].toString().match(regex) || [];
-          propInfo[property] = {
-            end: parseFloat(properties[property]),
-            start: parseFloat(computedStyles[property]) || 0,
-            unit: matchesUser[3] || matchesComputed[3] || '',
-          };
+          const startValue = propInfo[property].start;
+          const endValue = propInfo[property].end;
+          const currentValue = startValue + (endValue - startValue) * easedProgress;
+          el.style[property] = currentValue + (isNaN(endValue) ? '' : propInfo[property].unit);
         }
 
-        requestAnimationFrame(animateStep);
-      })
-    }
+        if (progress < 1) {
+          requestAnimationFrame(animateStep);
+        } else if (typeof complete === 'function') {
+          complete.call(el, el);
+        }
+      };
 
-    function fadeIn (duration = 400, onComplete) {
-      duration = durationNorm(duration);
+      // populate propInfo with start and end values
+      const computedStyles = getComputedStyle(el);
+      for (const property in properties) {
+        const regex = /^(-=|\+=)?([\d\.]+)(\D+)?$/;
+        const matchesUser = properties[property].toString().match(regex) || [];
+        const matchesComputed = computedStyles[property].toString().match(regex) || [];
+        propInfo[property] = {
+          end: parseFloat(properties[property]),
+          start: parseFloat(computedStyles[property]) || 0,
+          unit: matchesUser[3] || matchesComputed[3] || '',
+        };
+      }
 
-      return this.each((el) => {
-        el.style.transition = `opacity ${duration}ms`;
-        el.style.opacity = 1;
+      requestAnimationFrame(animateStep);
+    })
+  }
 
-        setTimeout(() => {
-          el.style.display = el[rand]?.display
-            ? el[rand].display
-            : '';
-          el.style.transition = ''; // Reset transition
-          if (typeof onComplete === 'function') {
-            onComplete.call(el, el);
-          }
-        }, duration);
-      })
-    }
+  function fadeIn (duration = 400, onComplete) {
+    duration = durationNorm(duration);
 
-    function fadeOut (duration = 400, onComplete) {
-      duration = durationNorm(duration);
+    return this.each((el) => {
+      el.style.transition = `opacity ${duration}ms`;
+      el.style.opacity = 1;
 
-      return this.each((el) => {
-        el.style.transition = `opacity ${duration}ms`;
-        el.style.opacity = 0;
+      setTimeout(() => {
+        el.style.display = el[rand]?.display
+          ? el[rand].display
+          : '';
+        el.style.transition = '';  // Reset transition
+        if (typeof onComplete === 'function') {
+          onComplete.call(el, el);
+        }
+      }, duration);
+    })
+  }
 
-        setTimeout(() => {
-          elInitMicroDomInfo(el);
-          el.style.display = 'none';
-          el.style.transition = ''; // Reset transition
-          if (typeof onComplete === 'function') {
-            onComplete.call(el, el);
-          }
-        }, duration);
-      })
-    }
+  function fadeOut (duration = 400, onComplete) {
+    duration = durationNorm(duration);
 
-    function hide () {
-      return this.each( (el) => {
+    return this.each((el) => {
+      el.style.transition = `opacity ${duration}ms`;
+      el.style.opacity = 0;
+
+      setTimeout(() => {
         elInitMicroDomInfo(el);
         el.style.display = 'none';
-      })
-    }
-
-    function show () {
-      return this.each((el) => {
-        el.style.display = elInitMicroDomInfo(el).display;
-      })
-    }
-
-    function slideDown (duration = 400, onComplete) {
-      duration = durationNorm(duration);
-      return this.each((el) => {
-        el.style.transitionProperty = 'height, margin, padding';
-        el.style.transitionDuration = duration + 'ms';
-        el.style.boxSizing = 'border-box';
-        el.style.overflow = 'hidden';
-        el.style.display = elInitMicroDomInfo(el).display;
-        el.style.height = el.scrollHeight + 'px';
-        el.style.removeProperty('padding-top');
-        el.style.removeProperty('padding-bottom');
-        el.style.removeProperty('margin-top');
-        el.style.removeProperty('margin-bottom');
-        window.setTimeout( () => {
-          const propsRemove = [
-            'box-sizing', 'height',
-            'overflow',
-            'transition-duration', 'transition-property',
-          ];
-          propsRemove.forEach((prop) => {
-            el.style.removeProperty(prop);
-          });
-          if (typeof onComplete === 'function') {
-            onComplete.call(el, el);
-          }
-        }, duration);
-      })
-    }
-
-    function slideUp (duration = 400, onComplete) {
-      duration = durationNorm(duration);
-      return this.each((el) => {
-        el.style.transitionProperty = 'height, margin, padding';
-        el.style.transitionDuration = duration + 'ms';
-        el.style.boxSizing = 'border-box';
-        el.style.overflow = 'hidden';
-        el.style.height = 0;
-        el.style.paddingTop = 0;
-        el.style.paddingBottom = 0;
-        el.style.marginTop = 0;
-        el.style.marginBottom = 0;
-        window.setTimeout( () => {
-          const propsRemove = [
-            'box-sizing', 'height',
-            'margin-bottom', 'margin-top',
-            'overflow',
-            'padding-bottom', 'padding-top',
-            'transition-duration', 'transition-property',
-          ];
-          el.style.display = 'none';
-          propsRemove.forEach((prop) => {
-            el.style.removeProperty(prop);
-          });
-          if (typeof onComplete === 'function') {
-            onComplete.call(el, el);
-          }
-        }, duration);
-      })
-    }
-
-    function toggle ( ...args ) {
-      if (typeof args[0] == 'boolean') {
-        return this[args[0] ? 'show' : 'hide']()
-      }
-      return this.each((el) => {
-        let display = 'none';
-        if (el.style.display === 'none') {
-          display = el[rand]?.display
-            ? el[rand].display
-            : '';
+        el.style.transition = '';  // Reset transition
+        if (typeof onComplete === 'function') {
+          onComplete.call(el, el);
         }
-        el.style.display = display;
-      })
+      }, duration);
+    })
+  }
+
+  function hide () {
+    return this.each( (el) => {
+      elInitMicroDomInfo(el);
+      el.style.display = 'none';
+    })
+  }
+
+  function show () {
+    return this.each((el) => {
+      el.style.display = elInitMicroDomInfo(el).display;
+    })
+  }
+
+  function slideDown (duration = 400, onComplete) {
+    duration = durationNorm(duration);
+    return this.each((el) => {
+      el.style.transitionProperty = 'height, margin, padding';
+      el.style.transitionDuration = duration + 'ms';
+      el.style.boxSizing = 'border-box';
+      el.style.overflow = 'hidden';
+      el.style.display = elInitMicroDomInfo(el).display;
+      el.style.height = el.scrollHeight + 'px';
+      el.style.removeProperty('padding-top');
+      el.style.removeProperty('padding-bottom');
+      el.style.removeProperty('margin-top');
+      el.style.removeProperty('margin-bottom');
+      window.setTimeout( () => {
+        const propsRemove = [
+          'box-sizing', 'height',
+          'overflow',
+          'transition-duration', 'transition-property',
+        ];
+        propsRemove.forEach((prop) => {
+          el.style.removeProperty(prop);
+        });
+        if (typeof onComplete === 'function') {
+          onComplete.call(el, el);
+        }
+      }, duration);
+    })
+  }
+
+  function slideUp (duration = 400, onComplete) {
+    duration = durationNorm(duration);
+    return this.each((el) => {
+      el.style.transitionProperty = 'height, margin, padding';
+      el.style.transitionDuration = duration + 'ms';
+      el.style.boxSizing = 'border-box';
+      el.style.overflow = 'hidden';
+      el.style.height = 0;
+      el.style.paddingTop = 0;
+      el.style.paddingBottom = 0;
+      el.style.marginTop = 0;
+      el.style.marginBottom = 0;
+      window.setTimeout( () => {
+        const propsRemove = [
+          'box-sizing', 'height',
+          'margin-bottom', 'margin-top',
+          'overflow',
+          'padding-bottom', 'padding-top',
+          'transition-duration', 'transition-property',
+        ];
+        el.style.display = 'none';
+        propsRemove.forEach((prop) => {
+          el.style.removeProperty(prop);
+        });
+        if (typeof onComplete === 'function') {
+          onComplete.call(el, el);
+        }
+      }, duration);
+    })
+  }
+
+  function toggle ( ...args ) {
+    if (typeof args[0] == 'boolean') {
+      return this[args[0] ? 'show' : 'hide']()
     }
+    return this.each((el) => {
+      let display = 'none';
+      if (el.style.display === 'none') {
+        display = el[rand]?.display
+          ? el[rand].display
+          : '';
+      }
+      el.style.display = display;
+    })
+  }
+
+  function extendMicroDom (MicroDom) {
 
     Object.assign(MicroDom.prototype, {
       animate,
@@ -1417,7 +1439,7 @@ var zest = (function () {
       for (const elNew of elementsNew) {
         elements.push(elNew);
       }
-      elements = [...new Set(elements) ]; // remove duplicates
+      elements = [ ...new Set(elements) ];  // remove duplicates
       return new MicroDom( ...elements )
     }
     /**
@@ -1441,7 +1463,7 @@ var zest = (function () {
           : Array.from(ret);
         elementsNew = elementsNew.concat(ret);
       });
-      elementsNew = [...new Set(elementsNew) ]; // remove duplicates
+      elementsNew = [ ...new Set(elementsNew) ];  // remove duplicates
       const ret = new MicroDom( ...elementsNew );
       return filter
         ? ret.filter(filter)
@@ -1594,7 +1616,7 @@ var zest = (function () {
       if (typeof text === 'undefined') {
         return this.length > 0
           ? this[0].textContent
-          : ''; // return empty string vs undefined
+          : ''  // return empty string vs undefined
       }
       return this.each((el) => {
         el.textContent = text;

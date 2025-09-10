@@ -55,7 +55,7 @@ class LogRequestTest extends DebugTestFramework
 
         $expect = array(
             'method' => 'log',
-            'args' => array(
+            'args' => [
                 'php://input',
                 array(
                     'attribs' => array(
@@ -73,7 +73,7 @@ class LogRequestTest extends DebugTestFramework
                     'value' => \json_encode(\json_decode($requestBody), JSON_PRETTY_PRINT),
                     'valueDecoded' => \json_decode($requestBody, true),
                 ),
-            ),
+            ],
             'meta' => array(
                 'channel' => 'request-response',
                 'redact' => true,
@@ -100,8 +100,8 @@ class LogRequestTest extends DebugTestFramework
         self::assertSame(
             array(
                 'method' => 'warn',
-                'args' => array('It appears application/json was received with the wrong Content-Type' . "\n"
-                    . 'Pay no attention to $_POST and instead use php://input'),
+                'args' => ['It appears application/json was received with the wrong Content-Type' . "\n"
+                    . 'Pay no attention to $_POST and instead use php://input'],
                 'meta' => array(
                     'channel' => 'request-response',
                     'detectFiles' => false,
@@ -116,7 +116,7 @@ class LogRequestTest extends DebugTestFramework
         self::assertEquals(
             array(
                 'method' => 'log',
-                'args' => array(
+                'args' => [
                     'php://input',
                     array(
                         'attribs' => array(
@@ -134,7 +134,7 @@ class LogRequestTest extends DebugTestFramework
                         'value' => \json_encode(\json_decode($requestBody), JSON_PRETTY_PRINT),
                         'valueDecoded' => \json_decode($requestBody, true),
                     ),
-                ),
+                ],
                 'meta' => array(
                     'channel' => 'request-response',
                     'redact' => true,
@@ -199,7 +199,7 @@ class LogRequestTest extends DebugTestFramework
         self::assertSame(
             array(
                 'method' => 'log',
-                'args' => array('$_POST', $post),
+                'args' => ['$_POST', $post],
                 'meta' => array(
                     'channel' => 'request-response',
                     'redact' => true,
@@ -227,7 +227,7 @@ class LogRequestTest extends DebugTestFramework
         self::assertSame(
             array(
                 'method' => 'log',
-                'args' => array('$_POST', $post),
+                'args' => ['$_POST', $post],
                 'meta' => array(
                     'channel' => 'request-response',
                     'redact' => true,
@@ -257,7 +257,7 @@ class LogRequestTest extends DebugTestFramework
         self::assertSame(
             array(
                 'method' => 'log',
-                'args' => array('$_POST', $post),
+                'args' => ['$_POST', $post],
                 'meta' => array(
                     'channel' => 'request-response',
                     'redact' => true,
@@ -295,7 +295,7 @@ class LogRequestTest extends DebugTestFramework
         $expect = array(
             array(
                 'method' => 'table',
-                'args' => array(
+                'args' => [
                     array(
                         'Authorization' => array(
                             'value' => 'Basic █████████ (base64\'d fred:█████)',
@@ -315,7 +315,7 @@ class LogRequestTest extends DebugTestFramework
                             ),
                         ),
                     ),
-                ),
+                ],
                 'meta' => array(
                     'caption' => 'request headers',
                     'channel' => 'request-response',
@@ -343,7 +343,7 @@ class LogRequestTest extends DebugTestFramework
             ),
             array(
                 'method' => 'table',
-                'args' => array(
+                'args' => [
                     array(
                         'SESSIONID' => array(
                             'value' => array(
@@ -360,7 +360,7 @@ class LogRequestTest extends DebugTestFramework
                             ),
                         ),
                     ),
-                ),
+                ],
                 'meta' => array(
                     'caption' => '$_COOKIE',
                     'channel' => 'request-response',
@@ -386,7 +386,7 @@ class LogRequestTest extends DebugTestFramework
             ),
             array(
                 'method' => 'log',
-                'args' => array('$_FILES', array(
+                'args' => ['$_FILES', array(
                     'foo' => array(
                         'error' => UPLOAD_ERR_OK,
                         'name' => 'logo.png',
@@ -394,7 +394,7 @@ class LogRequestTest extends DebugTestFramework
                         'tmp_name' => TEST_DIR . '/assets/logo.png',
                         'type' => 'image/png',
                     ),
-                )),
+                )],
                 'meta' => array(
                     'channel' => 'request-response',
                 ),
@@ -420,7 +420,7 @@ class LogRequestTest extends DebugTestFramework
         self::assertSame(
             array(
                 'method' => 'warn',
-                'args' => array('POST request with no body'),
+                'args' => ['POST request with no body'],
                 'meta' => array(
                     'channel' => 'request-response',
                     'detectFiles' => false,
@@ -452,7 +452,7 @@ class LogRequestTest extends DebugTestFramework
         self::assertEquals(
             array(
                 'method' => 'log',
-                'args' => array(
+                'args' => [
                     'php://input',
                     // 'font-style: italic; opacity: 0.8;',
                     // '(prettified)',
@@ -472,7 +472,7 @@ class LogRequestTest extends DebugTestFramework
                         'value' => \json_encode(\json_decode($requestBody), JSON_PRETTY_PRINT),
                         'valueDecoded' => \json_decode($requestBody, true),
                     ),
-                ),
+                ],
                 'meta' => array(
                     'channel' => 'request-response',
                     'redact' => true,
@@ -526,7 +526,7 @@ class LogRequestTest extends DebugTestFramework
         self::assertEquals(
             array(
                 'method' => 'warn',
-                'args' => array('GET request with body'),
+                'args' => ['GET request with body'],
                 'meta' => array(
                     'channel' => 'request-response',
                     'detectFiles' => false,

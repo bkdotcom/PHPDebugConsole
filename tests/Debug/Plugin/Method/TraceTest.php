@@ -248,7 +248,7 @@ class TraceTest extends DebugTestFramework
                 $this->debug->meta('cfg', 'objectsExclude', array('*')), // don't inspect any objects
             ),
             array(
-                'entry' => function (LogEntry $logEntry) {
+                'entry' => static function (LogEntry $logEntry) {
                     $tableInfo = $logEntry->getMeta('tableInfo');
                     self::assertSame('trace', $logEntry->getMeta('caption'));
                     self::assertTrue($logEntry->getMeta('detectFiles'));
@@ -258,7 +258,7 @@ class TraceTest extends DebugTestFramework
                     self::assertIsArray($tableInfo['rows'][0]['args']);
                     self::assertIsArray($tableInfo['rows'][0]['context']);
                 },
-                'html' => function ($output, LogEntry $logEntry) {
+                'html' => static function ($output, LogEntry $logEntry) {
                     $expectStartsWith = <<<'EOD'
 <li class="m_trace" data-detect-files="true">
 <table class="table-bordered trace-context">

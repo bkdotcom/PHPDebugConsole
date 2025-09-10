@@ -154,9 +154,7 @@ EOD;
         $tests = array(
             'basic' => array(
                 'log',
-                array(
-                    'string', 'a "string"' . "\r\n\tline 2",
-                ),
+                [ 'string', 'a "string"' . "\r\n\tline 2" ],
                 array(
                     'chromeLogger' => '[["string","a \"string\"\r\n\tline 2"],null,""]',
                     'html' => '<li class="m_log"><span class="no-quotes t_string">string</span> = <span class="t_string">a &quot;string&quot;<span class="ws_r"></span><span class="ws_n"></span>' . "\n"
@@ -168,10 +166,10 @@ EOD;
 
             'whitespace' => array(
                 'log',
-                array(
+                [
                     "\xef\xbb\xbfPesky <abbr title=\"Byte-Order-Mark\">BOM</abbr> and \x07 (a control char).",
                     Debug::meta('sanitize', false),
-                ),
+                ],
                 array(
                     'chromeLogger' => '[["\\\u{feff}Pesky <abbr title=\"Byte-Order-Mark\">BOM<\/abbr> and \\\x07 (a control char)."],null,""]',
                     'entry' => static function (LogEntry $logEntry) {
@@ -191,19 +189,19 @@ EOD;
 
             'highlight' => array(
                 'log',
-                array(
+                [
                     "\tcontrol chars: \x07 \x1F \x7F\r\n",
                     "\teasy-to-miss \xD1\x81haracters such as \xc2\xa0(nbsp), \xE2\x80\x89(thsp), &amp; \xE2\x80\x8B(zwsp)",
-                ),
-                array(
-                    'chromeLogger' => array(
+                ],
                         array(
+                    'chromeLogger' => [
+                        [
                             "\tcontrol chars: \\x07 \\x1f \\x7f\r\n",
                             "\teasy-to-miss \\u{0441}haracters such as \\u{00a0}(nbsp), \\u{2009}(thsp), &amp; \\u{200b}(zwsp)",
-                        ),
+                        ],
                         null,
                         '',
-                    ),
+                    ],
                     'entry' => static function (LogEntry $logEntry) {
                         // assert args are unchanged
                         self::assertSame(array(
@@ -225,14 +223,11 @@ EOD;
 
             'numeric.int' => array(
                 'log',
-                array('numeric string', '10'),
+                ['numeric string', '10'],
                 array(
                     'entry' => array(
                         'method' => 'log',
-                        'args' => array(
-                            'numeric string',
-                            '10',
-                        ),
+                        'args' => [ 'numeric string', '10' ],
                         'meta' => array(),
                     ),
                     'chromeLogger' => array(
@@ -258,7 +253,7 @@ EOD;
 
             'numeric.float' => array(
                 'log',
-                array('numeric string', '10.10'),
+                ['numeric string', '10.10'],
                 array(
                     'chromeLogger' => array(
                         array('numeric string', '10.10'),
@@ -273,7 +268,7 @@ EOD;
 
             'long' => array(
                 'log',
-                array('long string', $longString, Debug::meta('cfg', 'stringMaxLen', 430)), // cut in middle of multi-byte char
+                ['long string', $longString, Debug::meta('cfg', 'stringMaxLen', 430)], // cut in middle of multi-byte char
                 array(
                     'entry' => static function (LogEntry $logEntry) {
                         self::assertSame(2205, $logEntry['args'][1]['strlen']);
@@ -310,13 +305,11 @@ EOD;
 
             'binary' => array(
                 'log',
-                array(
-                    $binary,
-                ),
+                [ $binary ],
                 array(
                     'entry' => array(
                         'method' => 'log',
-                        'args' => array(
+                        'args' => [
                             array(
                                 'brief' => false,
                                 'debug' => Abstracter::ABSTRACTION,
@@ -327,7 +320,7 @@ EOD;
                                 'typeMore' => Type::TYPE_STRING_BINARY,
                                 'value' => \trim(\chunk_split(\bin2hex($binary), 2, ' ')),
                             ),
-                        ),
+                        ],
                         'meta' => array(),
                     ),
                     'html' => '<li class="m_log"><span class="t_keyword">string</span><span class="text-muted">(binary)</span>
@@ -342,13 +335,11 @@ EOD;
 
             'binary.brief' => array(
                 'group',
-                array(
-                    $binary,
-                ),
+                [ $binary ],
                 array(
                     'entry' => array(
                         'method' => 'group',
-                        'args' => array(
+                        'args' => [
                             array(
                                 'brief' => true,
                                 'debug' => Abstracter::ABSTRACTION,
@@ -359,7 +350,7 @@ EOD;
                                 'typeMore' => Type::TYPE_STRING_BINARY,
                                 'value' => \trim(\chunk_split(\bin2hex($binary), 2, ' ')),
                             ),
-                        ),
+                        ],
                         'meta' => array(),
                     ),
                     'html' => '<li class="expanded m_group">
@@ -372,9 +363,9 @@ EOD;
 
             'binary.brief.contentType' => array(
                 'group',
-                array(
+                [
                     \file_get_contents(TEST_DIR . '/assets/logo.png'),
-                ),
+                ],
                 array(
                     'entry' => static function (LogEntry $logEntry) {
                         $expect = array(
@@ -402,9 +393,9 @@ EOD;
 
             'binary.partial' => array(
                 'log',
-                array(
+                [
                     '<b>Brad</b>:' . "\n" . 'w𝔞s ' . "\x80\x00" . 'hеre',
-                ),
+                ],
                 array(
                     'entry' => static function (LogEntry $logEntry) {
                         $abs = $logEntry['args'][0];
@@ -430,11 +421,11 @@ EOD;
 
             'binary.controlChars' => array(
                 'table',
-                array(
+                [
                     array(
                         'binary' => \base64_decode('AAAAAAEBAAAAAAAAAAAA8D8AAAAAAAAAQA==', true),
                     ),
-                ),
+                ],
                 array(
                     'entry' => static function (LogEntry $logEntry) {
                         $abs = $logEntry['args'][0]['binary']['value'];
@@ -468,9 +459,9 @@ EOD;
 
             'dblEncode' => array(
                 'log',
-                array(
+                [
                     '\u0000 / foo \\ bar',  // both are single backslash
-                ),
+                ],
                 array(
                     'script' => 'console.log(' . \json_encode('\u0000 / foo \ bar', JSON_UNESCAPED_SLASHES). ');',
                     'text' => '\u0000 / foo \ bar',

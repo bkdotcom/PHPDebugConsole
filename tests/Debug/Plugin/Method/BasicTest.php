@@ -45,7 +45,7 @@ class BasicTest extends DebugTestFramework
      */
     public function testOverrideOutput()
     {
-        $closure = function (LogEntry $logEntry) {
+        $closure = static function (LogEntry $logEntry) {
             if ($logEntry['method'] === 'trace') {
                 $route = $logEntry['route'];
                 if ($route instanceof \bdk\Debug\Route\ChromeLogger) {
@@ -73,7 +73,7 @@ class BasicTest extends DebugTestFramework
             'trace',
             array(),
             array(
-                'entry' => function (LogEntry $logEntry) {
+                'entry' => static function (LogEntry $logEntry) {
                     // we're doing the custom stuff via Debug::EVENT_OUTPUT_LOG_ENTRY, so logEntry should still be trace
                     self::assertSame('trace', $logEntry['method']);
                     self::assertIsArray($logEntry['args'][0]);
@@ -451,7 +451,7 @@ class BasicTest extends DebugTestFramework
             'log',
             array('a string', array(), new \stdClass(), $resource),
             array(
-                'entry' => function (LogEntry $logEntry) {
+                'entry' => static function (LogEntry $logEntry) {
                     self::assertSame('log', $logEntry['method']);
                     self::assertSame('a string', $logEntry['args'][0]);
                     // check array abstraction
@@ -631,7 +631,7 @@ class BasicTest extends DebugTestFramework
             'warn',
             array('a string', array(), new \stdClass(), $resource),
             array(
-                'entry' => function (LogEntry $logEntry) {
+                'entry' => static function (LogEntry $logEntry) {
                     self::assertSame('warn', $logEntry['method']);
                     self::assertSame('a string', $logEntry['args'][0]);
                     // check array abstraction

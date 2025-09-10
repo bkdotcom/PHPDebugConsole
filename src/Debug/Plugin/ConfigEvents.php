@@ -192,7 +192,7 @@ class ConfigEvents implements SubscriberInterface
         $allKeys = \array_keys($curVal);
         if (\is_bool($val)) {
             $val = \array_fill_keys($allKeys, $val);
-        } elseif ($this->debug->arrayUtil->isList($val)) {
+        } elseif ($this->debug->arrayUtil->isList($val, true)) {
             $val = \array_merge(
                 \array_fill_keys($allKeys, false),
                 \array_fill_keys($val, true)

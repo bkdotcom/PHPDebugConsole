@@ -233,10 +233,6 @@ abstract class AbstractValue extends AbstractComponent
         $type = $abs['type'];
         $method = 'dump' . \ucfirst($type);
         $opts = $this->dumpAbstractionOpts($abs);
-        if ($abs['options']) {
-            $opts = \array_merge($opts, $abs['options']);
-        }
-        $opts['typeMore'] = $abs['typeMore'];
         $this->optionSet($opts);
         if (\method_exists($this, $method) === false) {
             $event = $this->debug->publishBubbleEvent(Debug::EVENT_DUMP_CUSTOM, new Event(
@@ -264,13 +260,16 @@ abstract class AbstractValue extends AbstractComponent
     private function dumpAbstractionOpts(Abstraction $abs)
     {
         $opts = $this->optionGet();
-        foreach (\array_keys($opts) as $k) {
-            // Note:  this has side-effect of adding the key to to the abstraction
-            if ($abs[$k] !== null) {
-                $opts[$k] = $abs[$k];
-            }
-        }
-        return $opts;
+        $absVals = $abs->getValues();
+        $absOpts = \array_intersect_key($absVals, $opts);
+        $absOpts = \array_filter($absOpts, static function ($val) {
+            return $val !== null;
+        });
+        $absOpts['typeMore'] = $abs['typeMore']; // regardless of null
+        $absOpts2 = isset($absVals['options'])
+            ? $absVals['options']
+            : [];
+        return $this->debug->arrayUtil->mergeDeep($opts, $absOpts, $absOpts2);
     }
 
     /**

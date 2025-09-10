@@ -41,8 +41,6 @@ class SkipInternal
     /** @var non-empty-string */
     private static $classMethodRegex = '/^(?<class>\S+)(?<type>::|->)(?<method>\S+)$/';
 
-    private static $viaRemoveInternalFrames = false;
-
     /**
      * Add a new namespace or classname to be used to determine when to
      * stop iterating over the backtrace when determining calling info
@@ -94,9 +92,8 @@ class SkipInternal
                 break;
             }
         }
-
         $i = self::getFirstIndexRewind($backtrace, $i, $level);
-        if ($i === $count && $level > 0) {
+        if ($i === $count - 1 && $level > 0) {
             // every frame was skipped
             return self::getFirstIndex($backtrace, $offset, $level - 1);
         }
@@ -115,9 +112,7 @@ class SkipInternal
      */
     public static function removeInternalFrames($backtrace)
     {
-        self::$viaRemoveInternalFrames = true;
         $index = static::getFirstIndex($backtrace);
-        self::$viaRemoveInternalFrames = false;
         return $index === \count($backtrace) - 1
             ? $backtrace
             : \array_slice($backtrace, $index);
@@ -160,7 +155,8 @@ class SkipInternal
     {
         $count = \count($backtrace);
         $index = \min($index, $count - 1);
-        if ($index === $count - 1 && self::$viaRemoveInternalFrames) {
+        if ($index === $count - 1 && $backtrace[$index]['function'] !== '{main}') {
+            // everything skipped * didn't enter via {main} -> dont rewind
             return $index;
         }
         for ($i = $index; $i > 0; $i--) {
@@ -208,7 +204,7 @@ class SkipInternal
      */
     private static function isPhpDefinedFunction($function)
     {
-        if (\in_array($function, ['include', 'include_once', 'include or require', 'require', 'require_once'], true)) {
+        if (\in_array($function, ['include', 'include_once', 'include or require', 'require', 'require_once', '{main}'], true)) {
             return true;
         }
         if (\function_exists((string) $function) === false) {

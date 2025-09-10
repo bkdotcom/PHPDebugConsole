@@ -56,20 +56,14 @@ class HtmlStringEncoded
             return $vals['valRaw'];
         }
         $tabs = $this->buildTabsAndPanes($abs);
-        $html = $this->debug->html->buildTag(
-            $this->valDumper->optionGet('tagName'),
-            array(
-                'class' => 'string-encoded tabs-container',
-                'data-type-more' => $abs['typeMore'],
-            ),
-            "\n"
+        $this->valDumper->optionSet('attribs.class', ['string-encoded', 'tabs-container']);
+        $this->valDumper->optionSet('type', null); // don't add .t_string to container
+        $this->valDumper->optionSet('addQuotes', true); // don't add .no-quotes to container
+        return "\n"
             . '<nav role="tablist">'
                 . \implode('', $tabs['tabs'])
             . '</nav>' . "\n"
-            . \implode('', $tabs['panes'])
-        );
-        $this->valDumper->optionSet('tagName', null);
-        return $html;
+            . \implode('', $tabs['panes']);
     }
 
     /**

@@ -172,7 +172,7 @@ class HtmlString
     private function dumpAbs(Abstraction $abs)
     {
         if ($abs['strlen'] === null) {
-            $abs['strlen'] = \strlen($abs['value']);
+            $abs['strlen'] = \strlen((string) $abs['value']); // 'value' may be null/unset
         }
         if ($abs['strlenValue'] === null) {
             $abs['strlenValue'] = $abs['strlen'];

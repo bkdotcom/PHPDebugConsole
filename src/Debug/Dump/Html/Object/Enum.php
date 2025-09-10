@@ -100,5 +100,4 @@ class Enum
         ));
         return $this->valDumper->dump($absTemp);
     }
-
 }

@@ -372,18 +372,30 @@ class DebugTestFramework extends DOMTestCase
                 $output = $this->tstMethodOutput($test, $routeObj, $logEntryTemp, $expect);
                 $this->tstMethodTest($test, $logEntryTemp, $expect, $output);
             } catch (\Exception $e) { // ExpectationFailedException
-                $trace = $e->getTrace();
                 $file = $e->getFile();
                 $line = $e->getLine();
-                // \bdk\Debug::varDump('exception', $e->getMessage(), $file, $line);
-                for ($i = 0, $count = \count($trace); $i < $count; $i++) {
-                    $frame = $trace[$i];
-                    if (isset($frame['class']) && \strpos($frame['class'], __NAMESPACE__) === 0 && isset($trace[$i - 1])) {
-                        $file = $trace[$i - 1]['file'];
-                        $line = $trace[$i - 1]['line'];
-                        break;
+
+                // \bdk\Debug::varDump(\get_class($e), $e->getMessage(), $file, $line);
+                if (\strpos(\get_class($e), 'PHPUnit') === 0 || $file === __FILE__) {
+                    // exception thrown within PHPUnit framework... not particularly useful
+                    // find where in the test code the exception originated
+                    $trace = $e->getTrace();
+                    for ($i = 0, $count = \count($trace); $i < $count; $i++) {
+                        $frame = $trace[$i];
+                        unset($frame['args']);
+                        if (
+                            isset($frame['class'])
+                            && \strpos($frame['class'], __NAMESPACE__) === 0
+                            && isset($trace[$i - 1])
+                            && $trace[$i - 1]['file'] !== __FILE__
+                        ) {
+                            $file = $trace[$i - 1]['file'];
+                            $line = $trace[$i - 1]['line'];
+                            break;
+                        }
                     }
                 }
+
                 $message = $test . ' has failed - ' . $file . ':' . $line . ': ' . $e->getMessage();
                 \fwrite(STDERR, "\e[38;5;1;48;5;230;1;4mTest: " . $test .  "\e[0m\n");
                 if ($expect instanceof Closure) {

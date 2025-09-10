@@ -46,11 +46,11 @@ class WampTest extends DebugTestFramework
         );
         $this->testMethod(
             'error',
-            array('Fatal Error', 'trace', __FILE__, $this->debug->meta('trace', $frames)),
+            ['Fatal Error', 'trace', __FILE__, $this->debug->meta('trace', $frames)],
             array(
-                'wamp' => array(
+                'wamp' => [
                     'error',
-                    array('Fatal Error', 'trace'),
+                    ['Fatal Error', 'trace'],
                     array(
                         'caption' => 'trace',
                         'detectFiles' => true,
@@ -82,7 +82,7 @@ class WampTest extends DebugTestFramework
                         'trace' => $frames,
                         'uncollapse' => true,
                     ),
-                ),
+                ],
             )
         );
     }
@@ -93,18 +93,18 @@ class WampTest extends DebugTestFramework
         $binary = \base64_decode($base64);
         $this->testMethod(
             'log',
-            array(
+            [
                 $this->debug->abstracter->crateWithVals(array("\x00" . 'foo' => 'bar')),
                 $binary,
                 \json_encode(array('foo' => 'bar',42,true,false,null)),
                 '',
                 __FILE__,
                 $this->debug->meta('detectFiles'),
-            ),
+            ],
             array(
-                'wamp' => array(
+                'wamp' => [
                     'log',
-                    array(
+                    [
                         array(
                             'debug' => Abstracter::ABSTRACTION,
                             'type' => Type::TYPE_ARRAY,
@@ -139,14 +139,14 @@ class WampTest extends DebugTestFramework
                         ),
                         '',
                         __FILE__,
-                    ),
+                    ],
                     array(
                         'detectFiles' => true,
                         'foundFiles' => array(
                             __FILE__,
                         ),
                     ),
-                ),
+                ],
             )
         );
     }

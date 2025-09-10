@@ -184,12 +184,8 @@ class PhpType
      */
     private static function assertTypeCheck($value, $type)
     {
-        $types = ['array', 'bool', 'callable', 'float', 'int', 'null', 'numeric', 'object', 'string'];
         foreach (\explode('|', $type) as $type) {
-            $method = 'is_' . $type;
-            $isType = \in_array($type, $types, true)
-                ? $method($value)
-                : \is_a($value, $type);
+            $isType = self::isType($value, $type);
             if ($isType) {
                 return true;
             }
@@ -297,5 +293,27 @@ class PhpType
         return $opts & Php::IS_CALLABLE_NO_CALL
             ? false
             : \method_exists($val[0], '__callStatic');
+    }
+
+    /**
+     * Test if value is of a certain type
+     *
+     * @param mixed  $value Value to test
+     * @param string $type  php type to check
+     *
+     * @return bool
+     */
+    private static function isType($value, $type)
+    {
+        $simpleTypes = ['array', 'bool', 'callable', 'float', 'int', 'null', 'numeric', 'object', 'string'];
+        $method = 'is_' . $type;
+        $isType = \in_array($type, $simpleTypes, true)
+            ? $method($value)
+            : \is_a($value, $type);
+        if ($isType) {
+            return true;
+        }
+        // Test stringable for php < 8.0
+        return $type === 'Stringable' && \is_object($value) && \method_exists($value, '__toString');
     }
 }

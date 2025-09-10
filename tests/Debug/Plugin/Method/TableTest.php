@@ -172,11 +172,11 @@ EOD;
         $tests = array(
             'noArgs' => array(
                 'table',
-                array(),
+                [],
                 array(
                     'entry' => array(
                         'method' => 'log',
-                        'args' => array('No arguments passed to table()'),
+                        'args' => ['No arguments passed to table()'],
                         'meta' => array(),
                     ),
                     'html' => '<li class="m_log"><span class="no-quotes t_string">No arguments passed to table()</span></li>',
@@ -188,11 +188,11 @@ EOD;
 
             'null' => array(
                 'table',
-                array(null),
+                [null],
                 array(
                     'entry' => array(
                         'method' => 'log',
-                        'args' => array(null),
+                        'args' => [null],
                         'meta' => array(),
                     ),
                     'html' => '<li class="m_log"><span class="t_null">null</span></li>',
@@ -204,11 +204,11 @@ EOD;
 
             'emptyArray' => array(
                 'table',
-                array('arg1', array()),
+                ['arg1', array()],
                 array(
                     'entry' => array(
                         'method' => 'log',
-                        'args' => array('arg1', array()),
+                        'args' => ['arg1', array()],
                         'meta' => array(),
                     ),
                     'html' => '<li class="m_log">'
@@ -222,11 +222,11 @@ EOD;
 
             'string' => array(
                 'table',
-                array('arg1'),
+                ['arg1'],
                 array(
                     'entry' => array(
                         'method' => 'log',
-                        'args' => array('arg1'),
+                        'args' => ['arg1'],
                         'meta' => array(),
                     ),
                     'html' => '<li class="m_log">'
@@ -244,7 +244,7 @@ EOD;
                 array(
                     'entry' => array(
                         'method' => 'log',
-                        'args' => array('arg1', 'arg2'),
+                        'args' => ['arg1', 'arg2'],
                         'meta' => array(),
                     ),
                     'html' => '<li class="m_log">'
@@ -258,7 +258,7 @@ EOD;
 
             'superfluousArgs' => array(
                 'table',
-                array('arg1', 'arg2 is not logged', $rowsA, 'arg4 is not logged', \bdk\Debug::meta('tableInfo', array(
+                ['arg1', 'arg2 is not logged', $rowsA, 'arg4 is not logged', \bdk\Debug::meta('tableInfo', array(
                     'columns' => array(
                         'Naughty' => array(
                             'attribs' => array('class' => ['text-center']),
@@ -266,11 +266,11 @@ EOD;
                             'trueAs' => '<i class="fa fa-check"></i>',
                         ),
                     ),
-                ))),
+                ))],
                 array(
                     'entry' => array(
                         'method' => 'table',
-                        'args' => array($rowsAProcessed),
+                        'args' => [$rowsAProcessed],
                         'meta' => array(
                             'caption' => 'arg1',
                             'sortable' => true,
@@ -307,15 +307,15 @@ EOD;
 
             'maxDepthCfg' => array(
                 'table',
-                array(
+                [
                     $rowsA,
                     'table caption',
                     Debug::meta('cfg', 'maxDepth', 1),
-                ),
+                ],
                 array(
                     'entry' => array(
                         'method' => 'table',
-                        'args' => array($rowsAProcessed),
+                        'args' => [$rowsAProcessed],
                         'meta' => array(
                             'caption' => 'table caption',
                             'sortable' => true,
@@ -341,7 +341,7 @@ EOD;
             // 5 rowsA
             array(
                 'table',
-                array('table caption', $rowsA, \bdk\Debug::meta('tableInfo', array(
+                ['table caption', $rowsA, \bdk\Debug::meta('tableInfo', array(
                     'columns' => array(
                         'Naughty' => array(
                             'attribs' => array('class' => ['text-center']),
@@ -349,11 +349,11 @@ EOD;
                             'trueAs' => '<i class="fa fa-check"></i>',
                         ),
                     ),
-                ))),
+                ))],
                 array(
                     'entry' => array(
                         'method' => 'table',
-                        'args' => array($rowsAProcessed),
+                        'args' => [$rowsAProcessed],
                         'meta' => array(
                             'caption' => 'table caption',
                             'sortable' => true,
@@ -391,16 +391,16 @@ EOD;
             // 6 rowsA - specify columns
             array(
                 'table',
-                array($rowsA, 'table caption', array('name','extracol')),
+                [$rowsA, 'table caption', ['name', 'extracol']],
                 array(
                     'entry' => array(
                         'method' => 'table',
-                        'args' => array(
+                        'args' => [
                             array(
                                 4 => array('name' => 'Bob', 'extracol' => Abstracter::UNDEFINED),
                                 2 => array('name' => 'Sally', 'extracol' => 'yes'),
-                            ),
                         ),
+                        ],
                         'meta' => array(
                             'caption' => 'table caption',
                             'sortable' => true,
@@ -446,7 +446,7 @@ EOD;
 
             'flat' => array(
                 'table',
-                array(
+                [
                     'flat',
                     array(
                         'a',
@@ -455,19 +455,19 @@ EOD;
                         $vals['callable']['raw'],
                         $vals['closure']['raw'],
                     ),
-                ),
+                ],
                 array(
                     'entry' => array(
                         'method' => 'table',
-                        'args' => array(
+                        'args' => [
                             array(
                                 array('value' => 'a'),
                                 array('value' => $vals['datetime']['crated']['stringified']),
                                 array('value' => $vals['resource']['crated']),
                                 array('value' => $vals['callable']['crated']),
                                 array('value' => $vals['closure']['crated']),
-                            ),
                         ),
+                        ],
                         'meta' => array(
                             'caption' => 'flat',
                             'sortable' => true,
@@ -548,7 +548,7 @@ EOD;
 
             'traversable' => array(
                 'table',
-                array(
+                [
                     'traversable',
                     new \bdk\Test\Debug\Fixture\TestTraversable($rowsA),
                     \bdk\Debug::meta('tableInfo', array(
@@ -560,7 +560,7 @@ EOD;
                             ),
                         ),
                     )),
-                ),
+                ],
                 array(
                     'html' => \str_replace('table caption', 'traversable (<span class="classname" title="I implement Traversable!"><span class="namespace">bdk\Test\Debug\Fixture\</span>TestTraversable</span>)', $rowsAHtml),
                     'text' => \str_replace('table caption', 'traversable', $rowsAText),
@@ -572,13 +572,13 @@ EOD;
 
             'traversableOfTraversable' => array(
                 'table',
-                array(
+                [
                     'traversable -o- traversables',
                     new \bdk\Test\Debug\Fixture\TestTraversable(array(
                         4 => new \bdk\Test\Debug\Fixture\TestTraversable($rowsA[4]),
                         2 => new \bdk\Test\Debug\Fixture\TestTraversable($rowsA[2]),
                     )),
-                ),
+                ],
                 array(
                     'html' => '<li class="m_table">
                         <table class="sortable table-bordered">
@@ -620,13 +620,13 @@ EOD;
 
             'arrayOfObjects' => array(
                 'table',
-                array(
+                [
                     'array -o- objects',
                     array(
                         4 => (object) $rowsA[4],
                         2 => (object) $rowsA[2],
                     ),
-                ),
+                ],
                 array(
                     'html' => '<li class="m_table">
                         <table class="sortable table-bordered">
@@ -668,7 +668,7 @@ EOD;
 
             'object' => array(
                 'table',
-                array(
+                [
                     'object -o- objects',
                     // convoluted example to get abstraction without traverseValues populated
                     // note that columns will be in different order
@@ -684,7 +684,7 @@ EOD;
                             's' => array('key' => 'Sally'),
                         ),
                     )),
-                ),
+                ],
                 array(
                     'html' => '<li class="m_table">
                         <table class="sortable table-bordered">
@@ -703,10 +703,10 @@ EOD;
 
             'differentTypes' => array(
                 'table',
-                array(
+                [
                     'not all col values of same type',
                     $rowsB,
-                ),
+                ],
                 array(
                     'html' => '<li class="m_table">
                         <table class="sortable table-bordered">
@@ -738,7 +738,7 @@ EOD;
 
             'inclContext' => array(
                 'table',
-                array('table caption', $rowsA, \bdk\Debug::meta('inclContext'), \bdk\Debug::meta('tableInfo', array(
+                ['table caption', $rowsA, \bdk\Debug::meta('inclContext'), \bdk\Debug::meta('tableInfo', array(
                     'columns' => array(
                         'Naughty' => array(
                             'attribs' => array('class' => ['text-center']),
@@ -746,11 +746,11 @@ EOD;
                             'trueAs' => '<i class="fa fa-check"></i>',
                         ),
                     ),
-                ))),
+                ))],
                 array(
                     'entry' => array(
                         'method' => 'table',
-                        'args' => array($rowsAProcessed),
+                        'args' => [$rowsAProcessed],
                         'meta' => array(
                             'caption' => 'table caption',
                             'sortable' => true,
@@ -797,16 +797,16 @@ EOD;
 
             'totalRow' => array(
                 'table',
-                array(
+                [
                     'caption',
                     $rowsA,
                     Debug::meta('totalCols', array('age', 'noSuchVal')),
-                ),
+                ],
                 array(
                     'entry' => static function (LogEntry $logEntry) use ($rowsAProcessed) {
-                        self::assertSame(array(
+                        self::assertSame([
                             $rowsAProcessed,
-                        ), $logEntry['args']);
+                        ], $logEntry['args']);
                         self::assertSame(22, $logEntry['meta']['tableInfo']['columns'][1]['total']);
                     },
                     'html' => '%A<tfoot>
@@ -853,15 +853,15 @@ EOD;
 
         $this->testMethod(
             'table',
-            array(
+            [
                 'foo',
-                array(
+                [
                     $binary,
                     $json,
                     $time,
                     $xml,
-                ),
-            ),
+                ],
+            ],
             array(
                 'html' => '<li class="m_table">
                     <table class="sortable table-bordered">
@@ -930,7 +930,7 @@ EOD;
         $this->debug->setCfg('collect', false);
         $this->testMethod(
             'table',
-            array(),
+            [],
             array(
                 'notLogged' => true,
                 'return' => $this->debug,

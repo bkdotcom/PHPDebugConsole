@@ -277,8 +277,7 @@ class Value extends TextValue
             return $this->dumpStringAbs($abs);
         }
         $val = $this->highlightChars($val);
-        $val = $this->addQuotes($val);
-        return $val;
+        return $this->addQuotes($val);
     }
 
     /**
@@ -290,17 +289,15 @@ class Value extends TextValue
      */
     protected function dumpStringAbs(Abstraction $abs)
     {
-        if ($abs['strlen'] === null) {
-            $abs['strlen'] = \strlen($abs['value']);
-        }
-        if ($abs['strlenValue'] === null) {
-            $abs['strlenValue'] = $abs['strlen'];
-        }
         $val = $abs['typeMore'] === Type::TYPE_STRING_BINARY
             ? $this->dumpStringBinary($abs)
             : $this->highlightChars((string) $abs);
-        $strLenDiff = $abs['strlen'] - $abs['strlenValue'];
-        if ($abs['strlenValue'] && $strLenDiff) {
+        $strLenDiff = 0;
+        if ($abs['strlenValue']) {
+            $abs['strlen'] = $abs['strlen'] ?: \strlen((string) $abs['value']);
+            $strLenDiff = $abs['strlen'] - $abs['strlenValue'];
+        }
+        if ($strLenDiff) {
             $val .= $this->cfg['escapeCodes']['maxlen']
             . '[' . $this->debug->i18n->trans('string.more-bytes', array('bytes' => $strLenDiff)) . ']'
             . $this->escapeReset;
@@ -430,9 +427,7 @@ class Value extends TextValue
     {
         $escapeReset = $this->escapeReset;
         $this->escapeReset = $this->cfg['escapeCodes']['muted'];
-        $namespace = $this->cfg['escapeCodes']['muted']
-            . $this->highlightChars($namespace)
-            . $escapeReset;
+        $namespace = $this->cfg['escapeCodes']['muted'] . $this->highlightChars($namespace) . $escapeReset;
         $this->escapeReset = $escapeReset;
         return $namespace;
     }

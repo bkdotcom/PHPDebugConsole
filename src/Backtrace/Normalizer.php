@@ -111,8 +111,8 @@ class Normalizer
     }
 
     /**
-     * Normalize Function Combine class, type, & function
-     * unset if empty
+     * Normalize Function
+     * Combine class, type, & function
      *
      * @param array $frame backtrace frame
      *

@@ -269,9 +269,9 @@ class LoggerTest extends DebugTestFramework
         ));
         $this->assertSame(array(
             'method' => 'table',
-            'args' => array(
+            'args' => [
                 $tableDataLogged
-            ),
+            ],
             'meta' => array(
                 'caption' => 'table caption',
                 'psr3level' => 'info',
@@ -321,13 +321,13 @@ class LoggerTest extends DebugTestFramework
         );
         $this->debug->logger->debug('table caption', array(
             'table' => $tableData,
-            'columns' => array('name', 'age'),
+            'columns' => ['name', 'age'],
         ));
         $this->assertSame(array(
             'method' => 'table',
-            'args' => array(
+            'args' => [
                 $tableDataLogged
-            ),
+            ],
             'meta' => array(
                 'caption' => 'table caption',
                 'psr3level' => 'debug',

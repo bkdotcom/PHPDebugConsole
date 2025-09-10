@@ -2,7 +2,8 @@ name: Push WordPress Plugin to SVN
 on:
   push:
     tags:
-    - "*"
+      - "*"
+  workflow_dispatch:
 permissions:
   id-token: write
 jobs:

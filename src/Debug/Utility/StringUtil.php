@@ -46,7 +46,12 @@ class StringUtil
             return '';
         }
 
-        ArrayUtil::assertContainsOnly($strings, 'string');
+        ArrayUtil::assertContainsOnly($strings, 'string|Stringable');
+
+        // get the string representations (so sort algo doesn't have to keep calling __toString)
+        $strings = \array_map(static function ($stringable) {
+            return (string) $stringable;
+        }, $strings);
 
         \sort($strings);
         $s1 = $strings[0];    // First string

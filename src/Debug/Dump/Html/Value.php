@@ -345,26 +345,23 @@ class Value extends BaseValue
      */
     protected function getPerValueOptions($val, $opts)
     {
-        $attribs = array(
-            'class' => [],
-        );
-        if ($val instanceof Abstraction && \is_array($val['attribs'])) {
-            $attribs = \array_merge(
-                $attribs,
-                $val['attribs']
-            );
-        }
         $parentOptions = parent::getPerValueOptions($val, $opts);
-        return \array_merge(
-            $parentOptions,
+        return $this->debug->arrayUtil->mergeDeep(
             array(
-                'attribs' => $attribs,
+                'attribs' => array(
+                    'class' => [],
+                ),
                 'postDump' => null,
                 'tagName' => $parentOptions['type'] === Type::TYPE_OBJECT
                     ? 'div'
                     : 'span',
             ),
-            $opts
+            $parentOptions,
+            array(
+                'attribs' => $val instanceof Abstraction && \is_array($val['attribs'])
+                    ? $val['attribs']
+                    : [],
+            )
         );
     }
 

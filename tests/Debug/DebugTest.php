@@ -145,7 +145,7 @@ class DebugTest extends DebugTestFramework
             'html' => '<li class="error-' . $errCat . ' m_warn" data-channel="general.phpError">'
                 . '<span class="no-quotes t_string">' . $args[0] . ' </span>'
                 . '<span class="t_string">' . $errMsg . '</span>, '
-                . '<span class="no-quotes t_string" data-type-more="filepath"><span class="t_string"><span class="file-path-rel">/Users/bkent/Dropbox/htdocs/common/vendor/bdk/PHPDebugConsole/tests/Debug/</span><span class="file-basename">DebugTest.php</span></span> (line <span class="t_int">98</span>)</span>'
+                . '<span class="no-quotes t_string" data-type-more="filepath"><span class="t_string"><span class="file-path-rel">' . \dirname(__FILE__) . '/' . '</span><span class="file-basename">' . \basename(__FILE__) . '</span></span> (line <span class="t_int">' . $lastError['line'] . '</span>)</span>'
                 . '</li>',
         ));
     }

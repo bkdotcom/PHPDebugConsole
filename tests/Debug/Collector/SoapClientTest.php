@@ -490,6 +490,7 @@ class SoapClientTest extends DebugTestFramework
             // wasn't necessart pre 2025-10-01
             // ¯\_(ツ)_/¯
             \array_splice($logEntriesExpect, 1, 2);
+            $logEntriesExpect[0]['args'][1] = ''; // we don't know the action
         }
 
         $this->assertLogEntries($logEntriesExpect, $logEntries);

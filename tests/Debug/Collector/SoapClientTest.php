@@ -255,7 +255,7 @@ class SoapClientTest extends DebugTestFramework
             ),
         );
         if (PHP_VERSION_ID < 50500) {
-            // removee request headers and body from php 5.4
+            // remove request headers and body from php 5.4
             // #reasons
             // ¯\_(ツ)_/¯
             \array_splice($logEntriesExpect, 1, 2);
@@ -483,6 +483,14 @@ class SoapClientTest extends DebugTestFramework
                 ),
             ),
         );
+
+        if (PHP_VERSION_ID < 50500) {
+            // remove request headers and body from php 5.4
+            // #reasons
+            // wasn't necessart pre 2025-10-01
+            // ¯\_(ツ)_/¯
+            \array_splice($logEntriesExpect, 1, 2);
+        }
 
         $this->assertLogEntries($logEntriesExpect, $logEntries);
     }

@@ -21,7 +21,6 @@ class PhpTest extends TestCase
     use AssertionTrait;
     use ExpectExceptionTrait;
 
-
     public function testBuildDate()
     {
         $buildDate = Php::buildDate();

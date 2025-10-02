@@ -3,7 +3,9 @@
 namespace bdk\Test\Debug;
 
 use bdk\Debug;
+use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\AbstractObject;
+use bdk\Debug\Abstraction\Type;
 use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 use bdk\PubSub\Manager as EventManager;
 
@@ -99,16 +101,27 @@ class DebugTest extends DebugTestFramework
             ? 'notice'
             : 'strict';
         $errMsg = 'Only variables should be passed by reference';
+        $fileAbs = array(
+            'baseName' => \basename(__FILE__),
+            'debug' => Abstracter::ABSTRACTION,
+            'docRoot' => false,
+            'evalLine' => null,
+            'line' => $lastError['line'],
+            'pathCommon' => '',
+            'pathRel' => \dirname(__FILE__) . '/',
+            'type' => Type::TYPE_STRING,
+            'typeMore' => Type::TYPE_STRING_FILEPATH,
+        );
         $args = \version_compare(PHP_VERSION, '7.0', '>=')
             ? array(
                 'Notice:',
                 $errMsg,
-                __FILE__ . ' (line ' . $lastError['line'] . ')',
+                $fileAbs,
             )
             : array(
                 'Strict:',
                 $errMsg,
-                __FILE__ . ' (line ' . $lastError['line'] . ')',
+                $fileAbs,
             );
         $this->testMethod(null, array(), array(
             'entry' => array(
@@ -117,7 +130,6 @@ class DebugTest extends DebugTestFramework
                 'meta' => array(
                     'channel' => 'general.phpError',
                     // 'context' => null,
-                    'detectFiles' => true,
                     'errorCat' => $errCat,
                     'errorHash' => $lastError['hash'],
                     'errorType' => \version_compare(PHP_VERSION, '7.0', '>=') ? E_NOTICE : E_STRICT,
@@ -130,10 +142,10 @@ class DebugTest extends DebugTestFramework
                     'uncollapse' => true,
                 ),
             ),
-            'html' => '<li class="error-' . $errCat . ' m_warn" data-channel="general.phpError" data-detect-files="true">'
+            'html' => '<li class="error-' . $errCat . ' m_warn" data-channel="general.phpError">'
                 . '<span class="no-quotes t_string">' . $args[0] . ' </span>'
                 . '<span class="t_string">' . $errMsg . '</span>, '
-                . '<span class="t_string">' . $args[2] . '</span>'
+                . '<span class="no-quotes t_string" data-type-more="filepath"><span class="t_string"><span class="file-path-rel">/Users/bkent/Dropbox/htdocs/common/vendor/bdk/PHPDebugConsole/tests/Debug/</span><span class="file-basename">DebugTest.php</span></span> (line <span class="t_int">98</span>)</span>'
                 . '</li>',
         ));
     }

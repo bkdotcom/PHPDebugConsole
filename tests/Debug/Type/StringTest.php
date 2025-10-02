@@ -43,6 +43,8 @@ class StringTest extends DebugTestFramework
         self::assertSame(array(
             'brief' => false,
             'percentBinary' => 0,
+            'strlen' => 0,
+            'strlenValue' => 0,
             'type' => Type::TYPE_STRING,
             'typeMore' => Type::TYPE_STRING_BINARY,
             'value' => '',
@@ -193,7 +195,7 @@ EOD;
                     "\tcontrol chars: \x07 \x1F \x7F\r\n",
                     "\teasy-to-miss \xD1\x81haracters such as \xc2\xa0(nbsp), \xE2\x80\x89(thsp), &amp; \xE2\x80\x8B(zwsp)",
                 ],
-                        array(
+                array(
                     'chromeLogger' => [
                         [
                             "\tcontrol chars: \\x07 \\x1f \\x7f\r\n",
@@ -428,7 +430,7 @@ EOD;
                 ],
                 array(
                     'entry' => static function (LogEntry $logEntry) {
-                        $abs = $logEntry['args'][0]['binary']['value'];
+                        $abs = $logEntry['args'][0]['binary'][0];
                         $expect = array(
                             'brief' => false,
                             'percentBinary' => (float) 96,

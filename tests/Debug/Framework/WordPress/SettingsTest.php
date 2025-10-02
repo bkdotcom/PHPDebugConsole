@@ -370,6 +370,9 @@ class SettingsTest extends DebugTestFramework
                 'wordpressHttp' => array(
                     'enabled' => false,
                 ),
+                'wordpressShortcodes' => array(
+                    'enabled' => false,
+                ),
                 'routeDiscord' => array(
                     'enabled' => false,
                     'webhookUrl' => null,
@@ -395,6 +398,7 @@ class SettingsTest extends DebugTestFramework
             'enableEmailer' => false,
             'emailTo' => null,
             'emailMin' => 60,
+            'logEnvInfo' => array(),
             // 'passwordHash' => 'xxxxxxxx',
         ), $return);
     }

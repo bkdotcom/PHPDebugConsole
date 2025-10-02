@@ -340,7 +340,7 @@ class CurlHttpMessageMiddlewareTest extends DebugTestFramework
                     <div class="group-header">%sCurlHttpMessage(%sGET%shttp://example.com/%s)</span></div>
                     <ul class="group-body">
                         <li class="m_log" data-channel="general.CurlHttpMessage"><span class="no-quotes t_string">request headers</span> = <span class="t_string">GET / HTTP/1.1%A</li>
-                        <li class="m_warn" data-channel="general.CurlHttpMessage" data-detect-files="true" data-file="%s" data-line="%s"><span class="no-quotes t_string">bdk\CurlHttpMessage\Exception\RequestException</span>, <span class="t_int">0</span>, <span class="t_string">Error Communicating with Server</span></li>
+                        <li class="m_warn" data-channel="general.CurlHttpMessage" data-file="%s" data-line="%s"><span class="no-quotes t_string">bdk\CurlHttpMessage\Exception\RequestException</span>, <span class="t_int">0</span>, <span class="t_string">Error Communicating with Server</span></li>
                         <li class="m_time" data-channel="general.CurlHttpMessage"><span class="no-quotes t_string">time: %f %s</span></li>
                     </ul>
                 </li>',
@@ -373,7 +373,7 @@ class CurlHttpMessageMiddlewareTest extends DebugTestFramework
                     <ul class="group-body">
                         <li class="m_info" data-channel="general.CurlHttpMessage" data-icon="fa fa-random"><span class="no-quotes t_string">asynchronous</span></li>
                         <li class="m_log" data-channel="general.CurlHttpMessage"><span class="no-quotes t_string">request headers</span> = <span class="t_string">GET / HTTP/1.1%A</li>
-                        <li class="m_warn" data-channel="general.CurlHttpMessage" data-detect-files="true" data-file="%s" data-line="%s"><span class="no-quotes t_string">bdk\CurlHttpMessage\Exception\RequestException</span>, <span class="t_int">0</span>, <span class="t_string">Error Communicating with Server</span></li>
+                        <li class="m_warn" data-channel="general.CurlHttpMessage" data-file="%s" data-line="%s"><span class="no-quotes t_string">bdk\CurlHttpMessage\Exception\RequestException</span>, <span class="t_int">0</span>, <span class="t_string">Error Communicating with Server</span></li>
                         <li class="m_time" data-channel="general.CurlHttpMessage"><span class="no-quotes t_string">time: %f %s</span></li>
                     </ul>
                 </li>',

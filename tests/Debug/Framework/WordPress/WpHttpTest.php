@@ -285,7 +285,6 @@ class WpHttpTest extends DebugTestFramework
         ], $this->helper->deObjectifyData($this->debug->data->get('log')));
     }
 
-
     public function testOnRequestResponseAsyncError()
     {
         $args = array(
@@ -380,7 +379,7 @@ class WpHttpTest extends DebugTestFramework
                 ),
                 'meta' => array(
                     'channel' => 'general.http',
-                    'detectFiles' => true,
+                    // 'detectFiles' => true,
                     'file' => __FILE__,
                     'line' => $line,
                     'uncollapse' => true,

@@ -73,30 +73,12 @@ class HooksTest extends DebugTestFramework
             'method' => 'table',
             'args' => [
                 array(
-                    'bar' => array(
-                        'isFilter' => false,
-                        'count' => 1,
-                    ),
-                    'baz' => array(
-                        'isFilter' => false,
-                        'count' => 1,
-                    ),
-                    'dang' => array(
-                        'isFilter' => true,
-                        'count' => 1,
-                    ),
-                    'ding' => array(
-                        'isFilter' => true,
-                        'count' => 1,
-                    ),
-                    'dong' => array(
-                        'isFilter' => true,
-                        'count' => 1,
-                    ),
-                    'foo' => array(
-                        'isFilter' => false,
-                        'count' => 3,
-                    ),
+                    'bar' => [false, 1],
+                    'baz' => [false, 1],
+                    'dang' => [true, 1],
+                    'ding' => [true, 1],
+                    'dong' => [true, 1],
+                    'foo' => [false, 3],
                 ),
             ],
             'meta' => array(

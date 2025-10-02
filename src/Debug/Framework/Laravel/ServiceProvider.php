@@ -108,12 +108,12 @@ class ServiceProvider extends BaseServiceProvider
         $modelCounts = $this->buildModelCountTable($tableInfoRows);
         $debug->table('Model Usage', $modelCounts, $debug->meta(array(
             'columnNames' => array(
+                TableRow::INDEX => 'model',
                 TableRow::SCALAR => 'count',
             ),
             'detectFiles' => true,
             'sortable' => true,
             'tableInfo' => array(
-                'indexLabel' => 'model',
                 'rows' => $tableInfoRows,
             ),
             'totalCols' => [TableRow::SCALAR],

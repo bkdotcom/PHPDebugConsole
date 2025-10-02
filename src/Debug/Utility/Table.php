@@ -39,10 +39,10 @@ class Table
     private $meta = array(
         'caption' => null,
         'columnNames' => array(
-            // specify column header key / name / label  (may also specify via tableInfo/columns)
+            // specify column header label  (may also specify via tableInfo/columns)
             TableRow::SCALAR => 'value',
         ),
-        'columns' => array(),
+        'columns' => [],        // specify columns to collect/output
         'inclContext' => false, // for trace tables
         'sortable' => true,
         'tableInfo' => array(
@@ -51,7 +51,7 @@ class Table
                 /*
                 array(
                     attribs
-                    key   // specify column header key / label
+                    key   // specify column header label (defaults to actual key or name specified in columnNames)
                     class // populated if all col values of the same class
                     falseAs: ''
                     total
@@ -59,16 +59,28 @@ class Table
                 )
                 */
             ),
-            'haveObjRow' => false,
+            /*
+            'commonRowInfo' => array(
+                // common info used for all rows.. only utilized when outputting
+                'attribs' => array(),
+                'class' => null,
+                'keyOutput' => true,
+                'summary' => '',
+            ),
+            */
+            'haveObjRow' => false, // if any row is an object (any object row will have rows[key]['class])
             'indexLabel' => null,
             'rows' => array(
                 /*
-                key => array(
-                    'args'     (for traces)
-                    'class'
-                    'context'  (for traces)
+                key/index => array(
+                    'args'     for traces
+                    'attribs
+                    'class'    populated if row is an object
+                    'columns'
+                        attribs
+                    'context'  for traces
                     'isScalar'
-                    'key'      (alternate key to display)
+                    'key'      alternate key to display
                     'summary'
                 )
                 */
@@ -208,16 +220,14 @@ class Table
         $keys = $this->meta['columns'] ?: self::colKeys($this->rows);
         $columns = \array_fill_keys($keys, array());
         \array_walk($columns, function (&$column, $key) use ($columnNames) {
-            $column = \array_merge(
-                array(
-                    'key' => isset($columnNames[$key])
-                        ? $columnNames[$key]
-                        : $key,
-                ),
-                isset($this->meta['tableInfo']['columns'][$key])
-                    ? $this->meta['tableInfo']['columns'][$key]
-                    : array()
+            $default = array(
+                'key' => isset($columnNames[$key])
+                    ? $columnNames[$key]
+                    : $key,
             );
+            $column = \array_merge($default, isset($this->meta['tableInfo']['columns'][$key])
+                ? $this->meta['tableInfo']['columns'][$key]
+                : array());
         });
         foreach ($this->meta['totalCols'] as $i => $key) {
             if (isset($columns[$key]) === false) {
@@ -362,20 +372,37 @@ class Table
             $rowInfo['context'] = $row->getValue('context');
         }
         $this->updateTableInfo($rowKey, $valsTemp, $rowInfo);
-        $values = array();
-        foreach ($valsTemp as $k => $v) {
-            $kNew = $columns[$k]['key'];
-            $values[$kNew] = $v;
-        }
-        return $values;
+        return \array_values($valsTemp);
     }
 
     /**
-     * Set tableInfo meta info
+     * Set meta info
      *
      * @return void
      */
     private function setMeta()
+    {
+        $this->setMetaTableInfoColumns();
+
+        if (isset($this->meta['columnNames'][TableRow::INDEX])) {
+            $this->meta['tableInfo']['indexLabel'] = $this->meta['columnNames'][TableRow::INDEX];
+        }
+
+        $this->meta = \array_diff_key($this->meta, \array_flip(['columnNames', 'columns', 'totalCols']));
+        if (!$this->meta['inclContext']) {
+            unset($this->meta['inclContext']);
+        }
+        if (!$this->haveRows()) {
+            $this->meta = \array_diff_key($this->meta, \array_flip(['caption', 'inclContext', 'sortable', 'tableInfo']));
+        }
+    }
+
+    /**
+     * Set tableInfo['columns'] removing empty values
+     *
+     * @return void
+     */
+    private function setMetaTableInfoColumns()
     {
         $this->meta['tableInfo']['columns'] = \array_values(\array_map(static function ($colInfo) {
             return \array_filter($colInfo, static function ($val) {
@@ -384,23 +411,6 @@ class Table
                     : $val !== null && $val !== false;
             });
         }, $this->meta['tableInfo']['columns']));
-
-        unset(
-            $this->meta['columns'],
-            $this->meta['columnNames'],
-            $this->meta['totalCols']
-        );
-        if (!$this->meta['inclContext']) {
-            unset($this->meta['inclContext']);
-        }
-        if (!$this->haveRows()) {
-            unset(
-                $this->meta['caption'],
-                $this->meta['inclContext'],
-                $this->meta['sortable'],
-                $this->meta['tableInfo']
-            );
-        }
     }
 
     /**

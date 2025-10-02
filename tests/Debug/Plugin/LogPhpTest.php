@@ -48,12 +48,12 @@ class LogPhpTest extends DebugTestFramework
 
         $logEntries = $this->helper->deObjectifyData($this->debug->data->get('log'));
 
-        $tests = array(
+        $tests = [
             ['PHP version', PHP_VERSION],
             ['Server API', PHP_SAPI],
             ['Build Date', '%s'], // php >= 7.0
             ['Thread Safe', PHP_ZTS ? 'yes' : 'no'],
-        );
+        ];
         $buildDate = $this->debug->php->buildDate();
         if ($buildDate === null) {
             \array_splice($tests, 2, 1);
@@ -216,11 +216,10 @@ class LogPhpTest extends DebugTestFramework
                 ),
                 'meta' => array(
                     'channel' => 'php',
-                    'detectFiles' => false,
+                    'uncollapse' => true,
                     // 'evalLine' => null,
                     // 'file' => null,
                     // 'line' => null,
-                    'uncollapse' => true,
                 ),
             ),
         ));
@@ -236,7 +235,7 @@ class LogPhpTest extends DebugTestFramework
             return $logEntry->export();
         }, $log);
         // echo 'log = ' . \json_encode($log, JSON_PRETTY_PRINT) . "\n";
-        $expect = array(
+        $expect = [
             array(
                 'method' => 'warn',
                 'args' => array(
@@ -249,12 +248,11 @@ class LogPhpTest extends DebugTestFramework
                     'font-family:inherit; white-space:pre-wrap;',
                 ),
                 'meta' => array(
-                    'detectFiles' => false,
+                    'channel' => 'php',
+                    'uncollapse' => true,
                     // 'evalLine' => null,
                     // 'file' => null,
                     // 'line' => null,
-                    'uncollapse' => true,
-                    'channel' => 'php',
                 ),
             ),
             array(
@@ -263,15 +261,14 @@ class LogPhpTest extends DebugTestFramework
                     'PHPDebugConsole\'s errorHandler is set to "system" (not all errors will be shown)',
                 ),
                 'meta' => array(
-                    'detectFiles' => false,
+                    'channel' => 'php',
+                    'uncollapse' => true,
                     // 'evalLine' => null,
                     // 'file' => null,
                     // 'line' => null,
-                    'uncollapse' => true,
-                    'channel' => 'php',
                 ),
             ),
-        );
+        ];
         self::assertSame($expect, $log);
 
         /*
@@ -284,7 +281,7 @@ class LogPhpTest extends DebugTestFramework
         $log = \array_map(static function (LogEntry $logEntry) {
             return $logEntry->export();
         }, $log);
-        $expect = array(
+        $expect = [
             array(
                 'method' => 'warn',
                 'args' => array(
@@ -297,12 +294,11 @@ class LogPhpTest extends DebugTestFramework
                     'font-family:inherit; white-space:pre-wrap;',
                 ),
                 'meta' => array(
-                    'detectFiles' => false,
+                    'channel' => 'php',
+                    'uncollapse' => true,
                     // 'evalLine' => null,
                     // 'file' => null,
                     // 'line' => null,
-                    'uncollapse' => true,
-                    'channel' => 'php',
                 ),
             ),
             array(
@@ -313,15 +309,14 @@ class LogPhpTest extends DebugTestFramework
                     'font-family:inherit; white-space:pre-wrap;',
                 ),
                 'meta' => array(
-                    'detectFiles' => false,
+                    'channel' => 'php',
+                    'uncollapse' => true,
                     // 'evalLine' => null,
                     // 'file' => null,
                     // 'line' => null,
-                    'uncollapse' => true,
-                    'channel' => 'php',
                 ),
             ),
-        );
+        ];
         self::assertSame($expect, $log);
 
         /*
@@ -346,7 +341,6 @@ class LogPhpTest extends DebugTestFramework
                     'font-family:inherit; white-space:pre-wrap;',
                 ),
                 'meta' => array(
-                    'detectFiles' => false,
                     'file' => null,
                     'line' => null,
                     'uncollapse' => true,
@@ -359,7 +353,7 @@ class LogPhpTest extends DebugTestFramework
         $log = \array_map(static function (LogEntry $logEntry) {
             return $logEntry->export();
         }, $log);
-        $expect = array(
+        $expect = [
             array(
                 'method' => 'warn',
                 'args' => array(
@@ -372,12 +366,11 @@ class LogPhpTest extends DebugTestFramework
                     'font-family:inherit; white-space:pre-wrap;',
                 ),
                 'meta' => array(
-                    'detectFiles' => false,
+                    'channel' => 'php',
+                    'uncollapse' => true,
                     // 'evalLine' => null,
                     // 'file' => null,
                     // 'line' => null,
-                    'uncollapse' => true,
-                    'channel' => 'php',
                 ),
             ),
             array(
@@ -388,15 +381,14 @@ class LogPhpTest extends DebugTestFramework
                     'font-family:inherit; white-space:pre-wrap;',
                 ),
                 'meta' => array(
-                    'detectFiles' => false,
+                    'channel' => 'php',
+                    'uncollapse' => true,
                     // 'evalLine' => null,
                     // 'file' => null,
                     // 'line' => null,
-                    'uncollapse' => true,
-                    'channel' => 'php',
                 ),
             ),
-        );
+        ];
         self::assertSame($expect, $log);
 
         /*

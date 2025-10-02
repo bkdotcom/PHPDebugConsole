@@ -48,58 +48,56 @@ class ChannelTest extends DebugTestFramework
         $info = array();
         $data = $this->genLog($this->debug, null, $info);
         $dataExpect = array(
-            'alerts' => array(
-                array('alert', array('main: alert'), array('dismissible' => false, 'level' => 'error')),
-                array('alert', array('foo: alert'), array('channel' => 'general.foo', 'dismissible' => false, 'level' => 'error')),
-            ),
-            'log' => array(
-                array('log', array('main: log'), array()),
-                array('group', array('main: group'), array()),
-                array('log', array('main: group / log'), array()),
-                array('group', array('foo: group / group'), array('channel' => 'general.foo')),
-                array('log', array('main: group / group / log'), array()),
-                array('log', array('foo: group / group / log'), array('channel' => 'general.foo')),
-                array('log', array('foo: group / group / after summaries'), array('channel' => 'general.foo')),
-            ),
-            'logSummary' => array(
-                0 => array(
-                    array('group', array('foo: sum 0 / group 1'), array('channel' => 'general.foo')),
-                    array('group', array('main: sum 0 / group 1 / group 2'), array()),
-                    array('log', array('main: sum 0 / group 1 / group 2 / log'), array()),
-                    array('log', array('foo: sum 0 / group 1 / group 2 / log'), array('channel' => 'general.foo')),
-                    array('error', array('main: error'), array(
-                        'detectFiles' => true,
+            'alerts' => [
+                ['alert', array('main: alert'), array('dismissible' => false, 'level' => 'error')],
+                ['alert', array('foo: alert'), array('channel' => 'general.foo', 'dismissible' => false, 'level' => 'error')],
+            ],
+            'log' => [
+                ['log', array('main: log'), array()],
+                ['group', array('main: group'), array()],
+                ['log', array('main: group / log'), array()],
+                ['group', array('foo: group / group'), array('channel' => 'general.foo')],
+                ['log', array('main: group / group / log'), array()],
+                ['log', array('foo: group / group / log'), array('channel' => 'general.foo')],
+                ['log', array('foo: group / group / after summaries'), array('channel' => 'general.foo')],
+            ],
+            'logSummary' => [
+                [
+                    ['group', array('foo: sum 0 / group 1'), array('channel' => 'general.foo')],
+                    ['group', array('main: sum 0 / group 1 / group 2'), array()],
+                    ['log', array('main: sum 0 / group 1 / group 2 / log'), array()],
+                    ['log', array('foo: sum 0 / group 1 / group 2 / log'), array('channel' => 'general.foo')],
+                    ['error', array('main: error'), array(
                         // 'evalLine' => null,
                         'file' => __FILE__,
                         'line' => $info['lines'][0],
                         'uncollapse' => true,
-                    )),
-                    array('error', array('foo: error'), array(
+                    )],
+                    ['error', array('foo: error'), array(
                         'channel' => 'general.foo',
-                        'detectFiles' => true,
                         // 'evalLine' => null,
                         'file' => __FILE__,
                         'line' => $info['lines'][1],
                         'uncollapse' => true,
-                    )),
-                    array('groupEnd', array(), array()),
-                    array('groupEnd', array(), array('channel' => 'general.foo')),
-                ),
-                1 => array(
-                    array('group', array('foo: sum 1 / group 1'), array('channel' => 'general.foo')),
-                    array('group', array('main: sum 1 / group 1 / group 2'), array()),
-                    array('log', array('main: sum 1 / group 1 / group 2 / log'), array()),
-                    array('log', array('foo: sum 1 / group 1 / group 2 / log'), array('channel' => 'general.foo')),
-                    array('groupEnd', array(), array()),
-                    array('groupEnd', array(), array('channel' => 'general.foo')),
-                ),
-            ),
-            'groupPriorityStack' => array(),
+                    )],
+                    ['groupEnd', array(), array()],
+                    ['groupEnd', array(), array('channel' => 'general.foo')],
+                ],
+                [
+                    ['group', array('foo: sum 1 / group 1'), array('channel' => 'general.foo')],
+                    ['group', array('main: sum 1 / group 1 / group 2'), array()],
+                    ['log', array('main: sum 1 / group 1 / group 2 / log'), array()],
+                    ['log', array('foo: sum 1 / group 1 / group 2 / log'), array('channel' => 'general.foo')],
+                    ['groupEnd', array(), array()],
+                    ['groupEnd', array(), array('channel' => 'general.foo')],
+                ],
+            ],
+            'groupPriorityStack' => [],
             'groupStacks' => array(
-                'main' => array(
+                'main' => [
                     array('channel' => 'general', 'collect' => true),
                     array('channel' => 'general.foo', 'collect' => true),
-                ),
+                ],
             ),
         );
 
@@ -114,16 +112,16 @@ class ChannelTest extends DebugTestFramework
         self::assertSame($dataExpect, $data);
 
         $dataFooClearedExpect = array(
-            'alerts' => array(
-                array('alert', array('main: alert'), array('dismissible' => false, 'level' => 'error')),
-            ),
-            'log' => array(
-                array('log', array('main: log'), array()),
-                array('group', array('main: group'), array()),
-                array('log', array('main: group / log'), array()),
-                array('group', array('foo: group / group'), array('channel' => 'general.foo')),
-                array('log', array('main: group / group / log'), array()),
-                array(
+            'alerts' => [
+                ['alert', array('main: alert'), array('dismissible' => false, 'level' => 'error')],
+            ],
+            'log' => [
+                ['log', array('main: log'), array()],
+                ['group', array('main: group'), array()],
+                ['log', array('main: group / log'), array()],
+                ['group', array('foo: group / group'), array('channel' => 'general.foo')],
+                ['log', array('main: group / group / log'), array()],
+                [
                     'clear',
                     array(
                         'Cleared everything %c(%s)',
@@ -145,36 +143,35 @@ class ChannelTest extends DebugTestFramework
                         ),
                         'line' => $info['lines'][2],
                     ),
-                ),
-                array('groupEnd', array(), array('channel' => 'general.foo')),
-                array('log', array('foo: group / group / after summaries'), array('channel' => 'general.foo')),
-            ),
-            'logSummary' => array(
-                0 => array(
-                    array('group', array('main: sum 0 / group 1 / group 2'), array()),
-                    array('log', array('main: sum 0 / group 1 / group 2 / log'), array()),
-                    array('error', array('main: error'), array(
-                        'detectFiles' => true,
+                ],
+                ['groupEnd', array(), array('channel' => 'general.foo')],
+                ['log', array('foo: group / group / after summaries'), array('channel' => 'general.foo')],
+            ],
+            'logSummary' => [
+                [
+                    ['group', array('main: sum 0 / group 1 / group 2'), array()],
+                    ['log', array('main: sum 0 / group 1 / group 2 / log'), array()],
+                    ['error', array('main: error'), array(
                         // 'evalLine' => null,
                         'file' => __FILE__,
                         'line' => $info['lines'][0],
                         'uncollapse' => true,
-                    )),
-                    array('groupEnd', array(), array()),
-                ),
-                1 => array(
-                    array('group', array('foo: sum 1 / group 1'), array('channel' => 'general.foo')),
-                    array('group', array('main: sum 1 / group 1 / group 2'), array()),
-                    array('log', array('main: sum 1 / group 1 / group 2 / log'), array()),
-                    array('groupEnd', array(), array()),
-                    array('groupEnd', array(), array('channel' => 'general.foo')),
-                ),
-            ),
+                    )],
+                    ['groupEnd', array(), array()],
+                ],
+                [
+                    ['group', array('foo: sum 1 / group 1'), array('channel' => 'general.foo')],
+                    ['group', array('main: sum 1 / group 1 / group 2'), array()],
+                    ['log', array('main: sum 1 / group 1 / group 2 / log'), array()],
+                    ['groupEnd', array(), array()],
+                    ['groupEnd', array(), array('channel' => 'general.foo')],
+                ],
+            ],
             'groupPriorityStack' => array(),
             'groupStacks' => array(
-                'main' => array(
+                'main' => [
                     array('channel' => 'general', 'collect' => true),
-                ),
+                ],
             ),
         );
         $data = $this->genLog($this->debugFoo, Debug::CLEAR_ALL);
@@ -186,8 +183,40 @@ class ChannelTest extends DebugTestFramework
     public function testOutput()
     {
         $this->genLog();
+
+        $attribString = $this->debug->html->buildAttribString(array(
+            'class' => 'debug',
+            'data-channel-key-root' => 'general.foo',
+            'data-channels' => array(
+                'general' => array(
+                    'channels' => array(
+                        'foo' => array(
+                            'channels' => array(),
+                            'name' => 'foo',
+                            'options' => array(
+                                'icon' => null,
+                                'show' => true,
+                            ),
+                        ),
+                    ),
+                    'name' => 'general',
+                    'options' => array(
+                        'icon' => 'fa fa-list-ul',
+                        'show' => true,
+                    ),
+                ),
+            ),
+            'data-meta' => array(
+                'DOCUMENT_ROOT' => $this->debug->serverRequest->getServerParam('DOCUMENT_ROOT'),
+            ),
+            'data-options' => array(
+                'drawer' => true,
+                'linkFilesTemplateDefault' => null,
+                'tooltip' => true,
+            ),
+        ));
         $htmlFoo = <<<EOD
-        <div class="debug" data-channel-key-root="general.foo" data-channels="{&quot;general&quot;:{&quot;channels&quot;:{&quot;foo&quot;:{&quot;channels&quot;:{},&quot;name&quot;:&quot;foo&quot;,&quot;options&quot;:{&quot;icon&quot;:null,&quot;show&quot;:true}}},&quot;name&quot;:&quot;general&quot;,&quot;options&quot;:{&quot;icon&quot;:&quot;fa fa-list-ul&quot;,&quot;show&quot;:true}}}" data-options="{&quot;drawer&quot;:true,&quot;linkFilesTemplateDefault&quot;:null,&quot;tooltip&quot;:true}">
+        <div{$attribString}>
             <header class="debug-bar debug-menu-bar">PHPDebugConsole<nav role="tablist"></nav></header>
             <div class="tab-panes">
                 <div class="active debug-tab-general-foo tab-pane tab-primary" data-options="{&quot;sidebar&quot;:true}" role="tabpanel">
@@ -204,7 +233,7 @@ class ChannelTest extends DebugTestFramework
                                 <div class="group-header"><span class="font-weight-bold group-label">foo: sum 0 / group 1</span></div>
                                 <ul class="group-body">
                                     <li class="m_log" data-channel="general.foo"><span class="no-quotes t_string">foo: sum 0 / group 1 / group 2 / log</span></li>
-                                    <li class="m_error" data-channel="general.foo" data-detect-files="true" data-file="%s" data-line="%d"><span class="no-quotes t_string">foo: error</span></li>
+                                    <li class="m_error" data-channel="general.foo" data-file="%s" data-line="%d"><span class="no-quotes t_string">foo: error</span></li>
                                 </ul>
                             </li>
                         </ul>
@@ -223,8 +252,41 @@ class ChannelTest extends DebugTestFramework
             </div>
         </div>
 EOD;
+
+        $attribString = $this->debug->html->buildAttribString(array(
+            'class' => 'debug',
+            'data-channel-key-root' => 'general',
+            'data-channels' => array(
+                'general' => array(
+                    'channels' => array(
+                        'foo' => array(
+                            'channels' => array(),
+                            'name' => 'foo',
+                            'options' => array(
+                                'icon' => null,
+                                'show' => true,
+                            ),
+                        ),
+                    ),
+                    'name' => 'general',
+                    'options' => array(
+                        'icon' => 'fa fa-list-ul',
+                        'show' => true,
+                    ),
+                ),
+            ),
+            'data-meta' => array(
+                'DOCUMENT_ROOT' => $this->debug->serverRequest->getServerParam('DOCUMENT_ROOT'),
+            ),
+            'data-options' => array(
+                'drawer' => true,
+                'linkFilesTemplateDefault' => null,
+                'tooltip' => true,
+            ),
+        ));
+
         $html = <<<EOD
-        <div class="debug" data-channel-key-root="general" data-channels="{&quot;general&quot;:{&quot;channels&quot;:{&quot;foo&quot;:{&quot;channels&quot;:{},&quot;name&quot;:&quot;foo&quot;,&quot;options&quot;:{&quot;icon&quot;:null,&quot;show&quot;:true}}},&quot;name&quot;:&quot;general&quot;,&quot;options&quot;:{&quot;icon&quot;:&quot;fa fa-list-ul&quot;,&quot;show&quot;:true}}}" data-options="{&quot;drawer&quot;:true,&quot;linkFilesTemplateDefault&quot;:null,&quot;tooltip&quot;:true}">
+        <div{$attribString}>
             <header class="debug-bar debug-menu-bar">PHPDebugConsole<nav role="tablist">%A</nav></header>
             <div class="tab-panes">
                 %A<div class="active debug-tab-general tab-pane tab-primary" data-options="{&quot;sidebar&quot;:true}" role="tabpanel">
@@ -254,8 +316,8 @@ EOD;
                                         <ul class="group-body">
                                             <li class="m_log"><span class="no-quotes t_string">main: sum 0 / group 1 / group 2 / log</span></li>
                                             <li class="m_log" data-channel="general.foo"><span class="no-quotes t_string">foo: sum 0 / group 1 / group 2 / log</span></li>
-                                            <li class="m_error" data-detect-files="true" data-file="%s" data-line="%d"><span class="no-quotes t_string">main: error</span></li>
-                                            <li class="m_error" data-channel="general.foo" data-detect-files="true" data-file="%s" data-line="%d"><span class="no-quotes t_string">foo: error</span></li>
+                                            <li class="m_error" data-file="%s" data-line="%d"><span class="no-quotes t_string">main: error</span></li>
+                                            <li class="m_error" data-channel="general.foo" data-file="%s" data-line="%d"><span class="no-quotes t_string">foo: error</span></li>
                                         </ul>
                                     </li>
                                 </ul>

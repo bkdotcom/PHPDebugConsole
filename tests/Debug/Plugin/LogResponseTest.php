@@ -59,7 +59,7 @@ class LogResponseTest extends DebugTestFramework
 
         self::assertSame('table', $logEntries[1]['method']);
         self::assertSame(array(
-            'Content-Type' => array('value' => ContentType::JSON),
+            'Content-Type' => [ContentType::JSON],
         ), $logEntries[1]['args'][0]);
         self::assertSame('response headers', $logEntries[1]['meta']['caption']);
 
@@ -127,7 +127,7 @@ class LogResponseTest extends DebugTestFramework
         self::assertSame('table', $logEntries[1]['method']);
         self::assertSame('response headers', $logEntries[1]['meta']['caption']);
         self::assertSame(array(
-            'Content-Type' => array('value' => ContentType::JSON),
+            'Content-Type' => [ContentType::JSON],
         ), $logEntries[1]['args'][0]);
 
         self::assertSame('response too large (13 B) to output', $logEntries[2]['args'][0]);

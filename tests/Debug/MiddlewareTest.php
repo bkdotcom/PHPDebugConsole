@@ -81,8 +81,11 @@ class MiddlewareTest extends DebugTestFramework
             ? $dispatcher->handle($request)  // middleman 4.0
             : $dispatcher->dispatch($request);  // older
         $body = $response->getBody()->getContents();
+        $file = $this->debug->errorHandler->getLastError()['file'];
+        $line = $this->debug->errorHandler->getLastError()['line'] -
         $this->assertStringContainsString('Middleware caught exception: something went wrong', $body);
         $this->assertStringContainsString('<li class="m_log"><span class="no-quotes t_string">running mock middleware</span></li>', $body);
-        $this->assertStringMatchesFormat('%A<li class="error-fatal m_error" data-channel="general.phpError" data-detect-files="true"><span class="no-quotes t_string">Fatal Error: </span><span class="t_string">Uncaught exception %sException%s with message something went wrong</span>, <span class="t_string">%s/Middleware.php (line %d)</span></li>%A', $body);
+        $this->assertStringMatchesFormat('%A<li class="error-fatal m_error" data-channel="general.phpError"><span class="no-quotes t_string">Fatal Error: </span><span class="t_string">Uncaught exception %sException%s with message something went wrong</span>, '
+            . '<span class="no-quotes t_string" data-type-more="filepath"><span class="t_string"><span class="file-path-rel">' . \dirname($file) . '/' . '</span><span class="file-basename">' . \basename($file) . '</span></span> (line <span class="t_int">' . $line . '</span>)</span></li>%A', $body);
     }
 }

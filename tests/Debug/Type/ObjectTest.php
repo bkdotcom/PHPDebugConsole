@@ -151,14 +151,14 @@ EOD;
         self::$testObj->methodPublic((object) array());
         $abs1 = Debug::getInstance()->abstracter->getAbstraction(self::$testObj, 'log');
         $cratedAbs1 = $crate->crate($abs1);
-        $cratedAbs1 = \bdk\Test\Debug\Helper::crate($cratedAbs1);
+        $cratedAbs1 = \bdk\Test\Debug\Helper::deObjectifyData($cratedAbs1);
         // as provider method is static, but test is not static...
         //   we need to populate "scopeClass"
         $cratedAbs1['scopeClass'] = __CLASS__;
 
         $abs2 = Debug::getInstance()->abstracter->getAbstraction(new \bdk\Test\Debug\Fixture\Test2(), 'log');
         $cratedAbs2 = $crate->crate($abs2);
-        $cratedAbs2 = \bdk\Test\Debug\Helper::crate($cratedAbs2);
+        $cratedAbs2 = \bdk\Test\Debug\Helper::deObjectifyData($cratedAbs2);
         $cratedAbs2['scopeClass'] = __CLASS__;
 
         $tests = array(
@@ -183,15 +183,23 @@ EOD;
                         ), $values['definition']);
                         \array_walk($values['properties'], static function ($propInfo, $propName) use ($line) {
                             // echo \json_encode($propInfo, JSON_PRETTY_PRINT);
-                            $values = \array_intersect_key($propInfo, \array_flip(array(
+                            $values = \bdk\Test\Debug\Helper::deObjectifyData(\array_intersect_key($propInfo, \array_flip(array(
                                 'value',
                                 'valueFrom',
                                 'visibility',
-                            )));
+                            ))));
                             switch ($propName) {
                                 case 'debug.file':
                                     self::assertSame(array(
-                                        'value' => __FILE__,
+                                        'value' => array(
+                                            'baseName' => \basename(__FILE__),
+                                            'debug' => Abstracter::ABSTRACTION,
+                                            'docRoot' => false,
+                                            'pathCommon' => '',
+                                            'pathRel' => \dirname(__FILE__) . '/',
+                                            'type' => Type::TYPE_STRING,
+                                            'typeMore' => Type::TYPE_STRING_FILEPATH,
+                                        ),
                                         'valueFrom' => 'debug',
                                         'visibility' => ['debug'],
                                     ), $values);
@@ -211,7 +219,7 @@ EOD;
                         <dt class="modifiers">modifiers</dt>
                         <dd class="t_modifier_final">final</dd>
                         <dt class="properties">properties</dt>
-                        <dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="t_type">string</span> <span class="no-quotes t_identifier t_string">file</span> <span class="t_operator">=</span> <span class="t_string">' . __FILE__ . '</span></dd>
+                        <dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="t_type">string</span> <span class="no-quotes t_identifier t_string">file</span> <span class="t_operator">=</span> <span class="t_string" data-type-more="filepath"><span class="file-path-rel">' . \dirname(__FILE__) . '/</span><span class="file-basename">' . basename(__FILE__) . '</span></span></dd>
                         <dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="t_type">int</span> <span class="no-quotes t_identifier t_string">line</span> <span class="t_operator">=</span> <span class="t_int">%d</span></dd>
                         <dt class="methods">methods</dt>
                         <dd class="method private"><span class="t_modifier_private">private</span> <span class="t_identifier">__construct</span><span class="t_punct">(</span><span class="t_punct">)</span></dd>
@@ -1376,7 +1384,7 @@ EOD;
                         <dd class="constant public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string">TWELVE</span> <span class="t_operator">=</span> <span class="t_int">12</span></dd>
                     <dt class="properties">properties</dt>
                         <dd class="property public"><span class="t_modifier_public">public</span> <span class="no-quotes t_identifier t_string">thing</span> <span class="t_operator">=</span> <span class="t_string">hammer</span></dd>
-                        <dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="t_type">string</span> <span class="no-quotes t_identifier t_string">file</span> <span class="t_operator">=</span> <span class="t_string">' . $filepath . '</span></dd>
+                        <dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="t_type">string</span> <span class="no-quotes t_identifier t_string">file</span> <span class="t_operator">=</span> <span class="t_string" data-type-more="filepath"><span class="file-path-rel">' . \dirname($filepath) . '/</span><span class="file-basename">' . \basename($filepath) . '</span></span></dd>
                         <dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="t_type">int</span> <span class="no-quotes t_identifier t_string">line</span> <span class="t_operator">=</span> <span class="t_int">' . $line . '</span></dd>
                     <dt class="methods">methods</dt>
                         <dd class="method public" data-implements="IteratorAggregate"><span class="t_modifier_public">public</span> <span class="t_identifier" title="Implements Iterator Aggregate">getIterator</span><span class="t_punct">(</span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type"><span class="classname">Traversable</span></span></dd>

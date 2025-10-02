@@ -6,12 +6,6 @@ if (\defined('ABSPATH') === false) {
 
 $currentValues = \get_option(self::GROUP_NAME) ?: array();
 
-$localeDefault = \get_locale();
-$localesAvailable = $this->debug->i18n->availableLocales();
-if (isset($localesAvailable[$localeDefault]) === false) {
-    $localeDefault = substr($localeDefault, 0, 2);
-}
-
 // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys
 return array(
     'password' => array(
@@ -47,7 +41,7 @@ return array(
         'type' => 'select',
     ),
     'wordpress' => array(
-        'default' => ['cache', 'db', 'hooks', 'http', 'core'],
+        'default' => ['cache', 'db', 'hooks', 'http', 'core', 'shortcodes'],
         'label' => 'WordPress',
         'options' => array( // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys
             'core' => array(
@@ -69,6 +63,10 @@ return array(
             'http' => array(
                 'label' => \_x('HTTP requests', 'settings.control.wordpress.option.http', 'debug-console-php'),
                 'name' => 'plugins[wordpressHttp][enabled]',
+            ),
+            'shortcodes' => array(
+                'label' => \_x('Shortcodes', 'settings.control.wordpress.option.shortcodes', 'debug-console-php'),
+                'name' => 'plugins[wordpressShortcodes][enabled]',
             ),
         ),
         'type' => 'checkbox',

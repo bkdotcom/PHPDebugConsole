@@ -793,7 +793,7 @@ class DebugTestFramework extends DOMTestCase
                     $routeObj = $this->debug->getRoute('wamp');
                     $messages = $routeObj->wamp->messages;
                     $messages = \array_map(function ($message) {
-                        $message['args'][1] = $this->helper->crate($message['args'][1]); // sort abstraction values
+                        $message['args'][1] = $this->helper->deObjectifyData($message['args'][1]); // sort abstraction values
                         \ksort($message['args'][2]); // sort meta
                         return $message;
                     }, $messages);

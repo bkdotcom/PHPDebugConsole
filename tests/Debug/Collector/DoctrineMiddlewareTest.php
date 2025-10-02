@@ -114,7 +114,7 @@ WHERE
 </li>
 <li class="m_time" data-channel="general.Doctrine"><span class="no-quotes t_string">duration: %f %s</span></li>
 <li class="m_log" data-channel="general.Doctrine"><span class="no-quotes t_string">Memory usage</span> = <span class="t_string">%f %s</span></li>
-<li class="m_warn" data-channel="general.Doctrine" data-detect-files="true" data-file="%s" data-line="%d" data-uncollapse="false"><span class="no-quotes t_string">Use <span style="font-family:monospace">SELECT *</span><span> only if you need all columns from table</span></span></li>
+<li class="m_warn" data-channel="general.Doctrine" data-file="%s" data-line="%d" data-uncollapse="false"><span class="no-quotes t_string">Use <span style="font-family:monospace">SELECT *</span><span> only if you need all columns from table</span></span></li>
 <li class="m_log" data-channel="general.Doctrine"><span class="no-quotes t_string">rowCount</span> = <span class="t_int">0</span></li>
 </ul>
 </li>
@@ -159,7 +159,7 @@ where
 </li>
 <li class="m_time" data-channel="general.Doctrine"><span class="no-quotes t_string">duration: %f %s</span></li>
 <li class="m_log" data-channel="general.Doctrine"><span class="no-quotes t_string">Memory usage</span> = <span class="t_string">%f %s</span></li>
-<li class="m_warn" data-channel="general.Doctrine" data-detect-files="true" data-file="%s" data-line="%d" data-uncollapse="false"><span class="no-quotes t_string">Use <span style="font-family:monospace">SELECT *</span><span> only if you need all columns from table</span></span></li>
+<li class="m_warn" data-channel="general.Doctrine" data-file="%s" data-line="%d" data-uncollapse="false"><span class="no-quotes t_string">Use <span style="font-family:monospace">SELECT *</span><span> only if you need all columns from table</span></span></li>
 <li class="m_log" data-channel="general.Doctrine"><span class="no-quotes t_string">rowCount</span> = <span class="t_int">0</span></li>
 </ul>
 </li>

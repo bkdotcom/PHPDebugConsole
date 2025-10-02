@@ -56,7 +56,7 @@ class StringEncodedTest extends DebugTestFramework
                 ),
                 array(
                     'entry' => static function (LogEntry $logEntry) use ($base64snip) {
-                        $jsonExpect = '{"method":"log","args":[{"brief":false,"strlen":10852,"strlenValue":156,"type":"string","typeMore":"base64","value":' . \json_encode($base64snip) . ',"valueDecoded":{"brief":false,"contentType":"%s","percentBinary":%f,"strlen":%d,"strlenValue":0,"type":"string","typeMore":"binary","value":"","debug":"\u0000debug\u0000"},"debug":"\u0000debug\u0000"}],"meta":[]}';
+                        $jsonExpect = '{"method":"log","args":[{"brief":false,"debug":"\u0000debug\u0000","strlen":10852,"strlenValue":156,"type":"string","typeMore":"base64","value":' . \json_encode($base64snip) . ',"valueDecoded":{"brief":false,"contentType":"%s","debug":"\u0000debug\u0000","percentBinary":%f,"strlen":%d,"strlenValue":0,"type":"string","typeMore":"binary","value":""}}],"meta":[]}';
                         $jsonActual = \json_encode($logEntry);
                         // echo 'expect = ' . $jsonExpect . "\n";
                         // echo 'actual = ' . $jsonActual . "\n";

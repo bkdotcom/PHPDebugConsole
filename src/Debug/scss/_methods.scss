@@ -103,8 +103,8 @@ ul.group-body {
 
 li[data-channel="general.phpError"] {
   > i + .t_string:nth-child(2) { font-weight: bold; }
-  > .t_string:nth-child(4) {
-    opacity: 0.7;
+  > .t_string[data-type-more=filepath] {
+    opacity: 0.85;
     &::before {
       content: "\A"; // nl line-feed
     }

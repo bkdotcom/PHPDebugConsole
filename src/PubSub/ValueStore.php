@@ -15,6 +15,7 @@ use ArrayAccess;
 use ArrayIterator;
 use IteratorAggregate;
 use JsonSerializable;
+use ReflectionMethod;
 use Serializable;
 
 /**
@@ -282,13 +283,27 @@ class ValueStore implements ArrayAccess, IteratorAggregate, JsonSerializable, Se
      */
     private function getter($key)
     {
+        static $cache = array();
         $key = (string) $key;
         $getter = \preg_match('/^is[A-Z]/', $key)
             ? $key
             : 'get' . \ucfirst($key);
-        return \method_exists($this, $getter)
+        $cacheKey = \get_class($this) . '::' . $getter;
+        if (isset($cache[$cacheKey])) {
+            return $cache[$cacheKey];
+        }
+        if (\method_exists($this, $getter) === false) {
+            $cache[$cacheKey] = false;
+            return false;
+        }
+        $reflecitonMethod = new ReflectionMethod($this, $getter);
+        // check that the method does not have required parameters..
+        //   ie offsetExists('value') and offsetGet('value') should not call attempt to call getValue() without params
+        $return = $reflecitonMethod->getNumberOfRequiredParameters() === 0
             ? $getter
             : false;
+        $cache[$cacheKey] = $return;
+        return $return;
     }
 
     /**

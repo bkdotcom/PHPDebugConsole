@@ -207,20 +207,18 @@ class Value extends AbstractValue
      */
     protected function dumpStringAbs(Abstraction $abs)
     {
-        if ($abs['strlen'] === null) {
-            $abs['strlen'] = \strlen($abs['value']);
-        }
-        if ($abs['strlenValue'] === null) {
-            $abs['strlenValue'] = $abs['strlen'];
-        }
         if ($abs['prettified']) {
             $this->optionSet('addQuotes', false);
         }
         $val = $abs['typeMore'] === Type::TYPE_STRING_BINARY
             ? $this->dumpStringBinary($abs)
             : (string) $abs;
-        $strLenDiff = $abs['strlen'] - $abs['strlenValue'];
-        if ($abs['strlenValue'] && $strLenDiff) {
+        $strLenDiff = 0;
+        if ($abs['strlenValue']) {
+            $abs['strlen'] = $abs['strlen'] ?: \strlen((string) $abs['value']);
+            $strLenDiff = $abs['strlen'] - $abs['strlenValue'];
+        }
+        if ($strLenDiff) {
             $val .= '[' . $this->debug->i18n->trans('string.more-bytes', array('bytes' => $strLenDiff))  . ']';
         }
         return $val;

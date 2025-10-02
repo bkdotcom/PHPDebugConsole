@@ -297,7 +297,6 @@ EOD;
                 ],
                 "meta": {
                     "channel": "general.mysqli",
-                    "detectFiles": true,
                     "file": "{$file}",
                     "line": {$line},
                     "uncollapse": false
@@ -308,7 +307,6 @@ EOD;
                 "args": ["%%cLIMIT%%c without %%cORDER BY%%c causes non-deterministic results", "font-family:monospace", "", "font-family:monospace", ""],
                 "meta": {
                     "channel": "general.mysqli",
-                    "detectFiles": true,
                     "file": "{$file}",
                     "line": {$line},
                     "uncollapse": false
@@ -362,9 +360,9 @@ EOD;
                 "method": "table",
                 "args": [
                     [
-                        {"value": "brad was here", "type": "s"},
-                        {"value": "%s", "type": "s"},
-                        {"value": 42, "type": "i"}
+                        ["brad was here", "s"],
+                        ["%s", "s"],
+                        [42, "i"]
                     ]
                 ],
                 "meta": {"caption": "parameters", "channel": "general.mysqli", "sortable": true, "tableInfo": {"class": null, "columns": [{"key": "value"}, {"key": "type"} ], "haveObjRow": false, "indexLabel": null, "rows": [], "summary": "" } }
@@ -433,7 +431,6 @@ EOD;
                 "args": ["Use %%cSELECT *%%c only if you need all columns from table", "font-family:monospace", ""],
                 "meta": {
                     "channel": "general.mysqli",
-                    "detectFiles": true,
                     "file": "%s",
                     "line": {$line},
                     "uncollapse": false
@@ -450,7 +447,6 @@ EOD;
                 ],
                 "meta": {
                     "channel": "general.mysqli",
-                    "detectFiles": true,
                     "file": "%s",
                     "line": {$line},
                     "uncollapse": false
@@ -523,7 +519,6 @@ EOD;
                 'args' => array('SAVEPOINT Sally does not exist'),
                 'meta' => array(
                     'channel' => 'general.mysqli',
-                    'detectFiles' => true,
                     // 'evalLine' => null,
                     'file' => __FILE__,
                     'line' => $line,
@@ -588,7 +583,6 @@ EOD;
                 ),
                 'meta' => array(
                     'channel' => 'general.mysqli',
-                    'detectFiles' => true,
                     // 'evalLine' => null,
                     'file' => __FILE__,
                     'line' => $line,
@@ -792,7 +786,6 @@ EOD;
                 "args": ["passing \$name param to mysqli::commit() does nothing!"],
                 "meta": {
                     "channel": "general.mysqli",
-                    "detectFiles": true,
                     "file": "%s",
                     "line": $line,
                     "uncollapse": true

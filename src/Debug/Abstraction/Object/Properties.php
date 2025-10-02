@@ -92,25 +92,41 @@ class Properties extends AbstractInheritable
         foreach ($defaultValues as $name => $value) {
             $properties[$name]['value'] = $value;
         }
-
-        if ($abs['isAnonymous']) {
-            $properties['debug.file'] = static::buildValues(array(
-                'type' => Type::TYPE_STRING,
-                'value' => $abs['definition']['fileName'],
-                'valueFrom' => 'debug',
-                'visibility' => ['debug'],
-            ));
-            $properties['debug.line'] = static::buildValues(array(
-                'type' => Type::TYPE_INT,
-                'value' => (int) $abs['definition']['startLine'],
-                'valueFrom' => 'debug',
-                'visibility' => ['debug'],
-            ));
-        }
-
         $abs['properties'] = $properties;
 
+        if ($abs['isAnonymous']) {
+            $this->addDebugProperties($abs);
+        }
+
         $this->crate($abs);
+    }
+
+    /**
+     * Add debug.file and debug.line properties
+     *
+     * @param Abstraction $abs Abstraction instance
+     *
+     * @return void
+     */
+    public function addDebugProperties(Abstraction $abs)
+    {
+        $properties = $abs['properties'];
+        $properties['debug.file'] = $this->buildValues(array(
+            'type' => Type::TYPE_STRING,
+            'value' => $this->abstracter->crateWithVals($abs['definition']['fileName'], array(
+                'type' => Type::TYPE_STRING,
+                'typeMore' => Type::TYPE_STRING_FILEPATH,
+            )),
+            'valueFrom' => 'debug',
+            'visibility' => ['debug'],
+        ));
+        $properties['debug.line'] = $this->buildValues(array(
+            'type' => Type::TYPE_INT,
+            'value' => (int) $abs['definition']['startLine'],
+            'valueFrom' => 'debug',
+            'visibility' => ['debug'],
+        ));
+        $abs['properties'] = $properties;
     }
 
     /**

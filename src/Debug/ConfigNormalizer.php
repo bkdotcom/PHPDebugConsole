@@ -29,6 +29,7 @@ class ConfigNormalizer
             'constAttributeOutput',
             'constCollect',
             'constOutput',
+            'detectFiles',
             'fullyQualifyPhpDocType',
             'interfacesCollapse',
             'maxDepth',

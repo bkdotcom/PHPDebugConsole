@@ -12,6 +12,9 @@ namespace bdk\Debug\Plugin\Method;
 
 use bdk\Backtrace;
 use bdk\Debug;
+use bdk\Debug\Abstraction\Abstracter;
+use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Abstraction\Type;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Plugin\CustomMethodTrait;
 use bdk\PubSub\SubscriberInterface;
@@ -27,6 +30,9 @@ class Trace implements SubscriberInterface
     protected $methods = [
         'trace',
     ];
+
+    /** @var string[] */
+    private $commonFilePrefix = '';
 
     /**
      * Constructor
@@ -89,15 +95,6 @@ class Trace implements SubscriberInterface
         $this->debug = $logEntry->getSubject();
         $meta = $this->getMeta($logEntry);
         $trace = $this->getTrace($logEntry);
-        $files = [];
-        foreach ($trace as $frame) {
-            if (empty($frame['evalLine']) && !empty($frame['file'])) {
-                $files[] = $frame['file'];
-            }
-        }
-        $meta['tableInfo']['commonRowInfo'] = array(
-            'commonFilePrefix' => $this->debug->stringUtil->commonPrefix($files),
-        );
         if ($meta['inclContext']) {
             $this->debug->addPlugin($this->debug->pluginHighlight, 'highlight');
         }
@@ -151,7 +148,19 @@ class Trace implements SubscriberInterface
         if ($meta['inclContext']) {
             $trace = $this->debug->backtrace->addContext($trace);
         }
-        return $trace;
+        $this->setCommonFilePrefix($trace);
+        return \array_map(function ($frame) {
+            $frame['file'] = $frame['file'] === 'eval()\'d code'
+                ? $frame['file']
+                : $this->parseFilePath($frame['file'], $this->commonFilePrefix);
+            $frame['function'] = isset($frame['function'])
+                ? new Abstraction(Type::TYPE_IDENTIFIER, array(
+                    'typeMore' => Type::TYPE_IDENTIFIER_METHOD,
+                    'value' => $frame['function'],
+                ))
+                : Abstracter::UNDEFINED; // either not set or null
+            return $frame;
+        }, $trace);
     }
 
     /**
@@ -191,7 +200,6 @@ class Trace implements SubscriberInterface
         $meta = \array_merge(array(
             'caption' => $this->debug->i18n->trans('method.trace'),
             'columns' => ['file','line','function'],
-            'detectFiles' => true,
             'inclArgs' => null,  // incl arguments with context?
                                  // will default to $inclContext
                                  //   may want to set meta['cfg']['objectsExclude'] = '*'
@@ -226,7 +234,7 @@ class Trace implements SubscriberInterface
         foreach ($trace as $i => $frame) {
             if (!empty($frame['evalLine'])) {
                 $meta['tableInfo']['rows'][$i]['attribs'] = array(
-                    'data-file' => $frame['file'],
+                    'data-file' => (string) $frame['file'],
                     'data-line' => $frame['line'],
                 );
                 $trace[$i]['file'] = 'eval()\'d code';
@@ -272,5 +280,64 @@ class Trace implements SubscriberInterface
             : $this->debug->i18n->trans('method.trace');
         $args = \array_merge($argsDefault, $argsTyped);
         return \array_values($args);
+    }
+
+    /**
+     * Parse file path into parts
+     *
+     * @param string $filePath     filepath (ie /var/www/html/index.php)
+     * @param string $commonPrefix prefix shared by current group of files
+     *
+     * @return string|Abstraction
+     */
+    private function parseFilePath($filePath, $commonPrefix)
+    {
+        $docRoot = (string) $this->debug->serverRequest->getServerParam('DOCUMENT_ROOT');
+        $baseName = \basename($filePath);
+        $containsDocRoot = $docRoot && \strpos($filePath, $docRoot) === 0;
+        $pathCommon = '';
+        $pathRel = \substr($filePath, 0, 0 - \strlen($baseName));
+        if ($commonPrefix || $containsDocRoot) {
+            $strLengths = \array_intersect_key(
+                [\strlen($commonPrefix), \strlen($docRoot)],
+                \array_filter([$commonPrefix, $containsDocRoot])
+            );
+            $maxLen = \max($strLengths);
+            $pathCommon = \substr($pathRel, 0, $maxLen);
+            $pathRel = \substr($pathRel, $maxLen);
+            if ($containsDocRoot) {
+                $pathCommon = \substr($pathCommon, \strlen($docRoot));
+            }
+        }
+        // phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys
+        return new Abstraction(Type::TYPE_STRING, array(
+            'typeMore' => Type::TYPE_STRING_FILEPATH,
+            'docRoot' => $containsDocRoot,
+            'pathCommon' => $pathCommon,
+            'pathRel' => $pathRel,
+            'baseName' => $baseName,
+        ));
+    }
+
+    /**
+     * Determine the common file prefix for the given trace
+     *
+     * @param array $trace Backtrace frames
+     *
+     * @return void
+     */
+    private function setCommonFilePrefix(array $trace)
+    {
+        $this->commonFilePrefix = '';
+        if (\count($trace) < 2) {
+            return;
+        }
+        $files = [];
+        foreach ($trace as $frame) {
+            if (empty($frame['evalLine']) && !empty($frame['file'])) {
+                $files[] = $frame['file'];
+            }
+        }
+        $this->commonFilePrefix = $this->debug->stringUtil->commonPrefix($files);
     }
 }

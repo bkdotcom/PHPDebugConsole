@@ -16,6 +16,7 @@
 namespace bdk\Debug\Route;
 
 use bdk\Debug;
+use bdk\Debug\Abstraction\Type;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Route\RouteInterface;
 use bdk\Debug\Route\WampCrate;
@@ -182,22 +183,7 @@ class Wamp implements RouteInterface
             }
             $this->publishMeta();
         }
-        $this->processLogEntry(new LogEntry(
-            $this->debug->getChannel('phpError'),
-            'errorNotConsoled',
-            [
-                $this->debug->i18n->trans('error.' . $error['type']) . ':',
-                $error['message'],
-                $error['fileAndLine'],
-            ],
-            array(
-                'attribs' => array(
-                    'class' => $error['type'] & $this->debug->getCfg('errorMask', Debug::CONFIG_DEBUG)
-                        ? 'error'
-                        : 'warn',
-                ),
-            )
-        ));
+        $this->onErrorNotConsoled($error);
     }
 
     /**
@@ -296,6 +282,38 @@ class Wamp implements RouteInterface
         }
         $this->processNewClasses($classesNew, $meta);
         $this->wamp->publish($this->topic, [$logEntry['method'], $args, $meta]);
+    }
+
+    /**
+     * Ensure all errors are sent to WAMP router
+     *
+     * @param Error $error Error instance
+     *
+     * @return void
+     */
+    private function onErrorNotConsoled(Error $error)
+    {
+        $this->processLogEntry(new LogEntry(
+            $this->debug->getChannel('phpError'),
+            'errorNotConsoled',
+            [
+                $this->debug->i18n->trans('error.' . $error['type']) . ':',
+                $error['message'],
+                $this->debug->abstracter->crateWithVals($error['file'], array(
+                    'evalLine' => $error['evalLine'],
+                    'line' => $error['line'],
+                    'type' => Type::TYPE_STRING,
+                    'typeMore' => Type::TYPE_STRING_FILEPATH,
+                )),
+            ],
+            array(
+                'attribs' => array(
+                    'class' => $error['type'] & $this->debug->getCfg('errorMask', Debug::CONFIG_DEBUG)
+                        ? 'error'
+                        : 'warn',
+                ),
+            )
+        ));
     }
 
     /**

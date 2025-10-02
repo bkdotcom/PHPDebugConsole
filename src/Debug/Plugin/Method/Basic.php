@@ -11,6 +11,7 @@
 namespace bdk\Debug\Plugin\Method;
 
 use bdk\Debug;
+use bdk\Debug\Abstraction\Type;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Plugin\CustomMethodTrait;
 use bdk\Debug\Route\Stream;
@@ -73,15 +74,12 @@ class Basic implements SubscriberInterface
         if (!$args) {
             // add default message
             $callerInfo = $this->debug->backtrace->getCallerInfo();
-            $labelLine = $this->debug->i18n->trans('line');
-            $labelLineEvaled = $this->debug->i18n->trans('line.evaled');
-            $args = [
-                $this->debug->i18n->trans('method.assert.failed') . ':',
-                $callerInfo['evalLine']
-                    ? \sprintf('%s (%s %s, %s %s)', $callerInfo['file'], $labelLine, $callerInfo['line'], $labelLineEvaled, $callerInfo['evalLine'])
-                    : \sprintf('%s (%s %s)', $callerInfo['file'], $labelLine, $callerInfo['line']),
-            ];
-            $logEntry->setMeta('detectFiles', true);
+            $lineInfo = \array_intersect_key($callerInfo, \array_flip(['line', 'evalLine']));
+            $file = $this->debug->abstracter->crateWithVals($callerInfo['file'], array(
+                'type' => Type::TYPE_STRING,
+                'typeMore' => Type::TYPE_STRING_FILEPATH,
+            ) + $lineInfo);
+            $args = [$this->debug->i18n->trans('method.assert.failed') . ':', $file];
         }
         $logEntry['args'] = $args;
         $this->appendLog($logEntry);
@@ -294,14 +292,13 @@ class Basic implements SubscriberInterface
             $method,
             $args,
             array(
-                'detectFiles' => true,
                 'evalLine' => null,
                 'file' => $default,
                 'line' => null,
                 'uncollapse' => true,
             )
         );
-        // file & line meta may -already be set (ie coming via errorHandler)
+        // file & line meta may already be set (ie coming via errorHandler)
         // file & line may also be defined as null
         if ($logEntry->getMeta('file', $default) === $default) {
             $callerInfo = $this->debug->backtrace->getCallerInfo();

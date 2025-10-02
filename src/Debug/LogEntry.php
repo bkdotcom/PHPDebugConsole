@@ -100,14 +100,7 @@ class LogEntry extends Event implements JsonSerializable
                 'trace' => $this->subject->backtrace->get(null, 0, $exception),
             ));
         }
-        $cfgRestore = array();
-        if (\in_array($this->values['method'], ['profileEnd', 'table', 'trace'], true)) {
-            $maxDepth = $this->subject->getCfg('maxDepth');
-            if ($maxDepth === 1) {
-                $this->subject->setCfg('maxDepth', 2, Debug::CONFIG_NO_RETURN);
-                $cfgRestore = array('maxDepth' => $maxDepth);
-            }
-        }
+        $cfgRestore = $this->crateSetCfg();
         foreach ($this->values['args'] as $i => $val) {
             $this->values['args'][$i] = $this->subject->abstracter->crate($val, $this->values['method']);
         }
@@ -131,6 +124,7 @@ class LogEntry extends Event implements JsonSerializable
         if ($this->subject->parentInstance) {
             $return['meta']['channel'] = $this->getChannelKey();
         }
+        \ksort($return['meta']);
         return $return;
     }
 
@@ -178,6 +172,16 @@ class LogEntry extends Event implements JsonSerializable
     }
 
     /**
+     * {@inheritDoc}
+     */
+    public function getValues()
+    {
+        $values = parent::getValues();
+        \ksort($values['meta']);
+        return $values;
+    }
+
+    /**
      * Specify data which should be serialized to JSON
      *
      * @return array
@@ -207,6 +211,31 @@ class LogEntry extends Event implements JsonSerializable
             return;
         }
         $this->setValue('meta', \array_merge($this->values['meta'], $mixed));
+    }
+
+    /**
+     * Set temporary crate values
+     *
+     * @return array
+     */
+    private function crateSetCfg()
+    {
+        $cfgRestore = array();
+        if (\in_array($this->values['method'], ['profileEnd', 'table', 'trace'], true)) {
+            $maxDepth = $this->subject->getCfg('maxDepth');
+            if ($maxDepth === 1) {
+                $this->subject->setCfg('maxDepth', 2, Debug::CONFIG_NO_RETURN);
+                $cfgRestore = array('maxDepth' => $maxDepth);
+            }
+        }
+        $detectFiles = $this->getMeta('detectFiles', false);
+        $detectFilesWas = $detectFiles !== null
+            ? $this->subject->abstracter->abstractString->setCfg('detectFiles', true)
+            : $detectFiles;
+        if ($detectFilesWas !== $detectFiles) {
+            $cfgRestore['detectFiles'] = $detectFilesWas;
+        }
+        return $cfgRestore;
     }
 
     /**

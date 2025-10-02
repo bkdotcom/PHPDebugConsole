@@ -41,7 +41,6 @@ class SlackMessageTest extends TestCase
         ));
     }
 
-
     public function testWithData()
     {
         $slackMessage = new SlackMessage([
@@ -79,7 +78,6 @@ class SlackMessageTest extends TestCase
             'blocks' => false,
         ]);
     }
-
 
     public function testWithAttachment()
     {

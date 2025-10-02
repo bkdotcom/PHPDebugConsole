@@ -26,6 +26,7 @@ use bdk\Debug\Abstraction\Type;
  */
 class TableRow
 {
+    const INDEX = "\x00index\x00";
     const SCALAR = "\x00scalar\x00";
 
     /** @var array */

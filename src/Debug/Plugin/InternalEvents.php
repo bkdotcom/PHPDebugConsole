@@ -11,6 +11,7 @@
 namespace bdk\Debug\Plugin;
 
 use bdk\Debug;
+use BDK\Debug\Abstraction\Type;
 use bdk\Debug\Route\Stream;
 use bdk\ErrorHandler;
 use bdk\ErrorHandler\Error;
@@ -278,7 +279,12 @@ class InternalEvents implements SubscriberInterface
         $this->debug->rootInstance->getChannel('phpError')->{$method}(
             $this->debug->i18n->trans('error.' . $error['type']) . ':',
             $error['message'],
-            $error['fileAndLine'],
+            $this->debug->abstracter->crateWithVals($error['file'], array(
+                'evalLine' => $error['evalLine'],
+                'line' => $error['line'],
+                'type' => Type::TYPE_STRING,
+                'typeMore' => Type::TYPE_STRING_FILEPATH,
+            )),
             $this->debug->meta($this->errorMetaValues($error))
         );
         // We've captured the error and are logging / viewing it with debugger.
@@ -308,12 +314,12 @@ class InternalEvents implements SubscriberInterface
             'errorHash' => $error['hash'],
             'errorType' => $error['type'],
             'evalLine' => $error['evalLine'],
-            'file' => $error['file'],
+            'file' => $error['file'], // somewhat redundant... we have filepath argument
             'icon' => $error['isSuppressed']
                 ? ':error-suppressed:'
                 : null,
             'isSuppressed' => $error['isSuppressed'], // set via event subscriber vs "@"" code prefix
-            'line' => $error['line'],
+            'line' => $error['line'], // somewhat redundant... we have filepath argument
             'sanitize' => $error['isHtml'] === false,
             'trace' => $error['backtrace'],
         );

@@ -53,6 +53,7 @@ class Type
     const TYPE_STRING_BASE64 = 'base64';            // "encoded" / auto-detected
     const TYPE_STRING_BINARY = 'binary';            // string that contains non-utf8
     const TYPE_STRING_CLASSNAME = 'classname';      // deprecated (use TYPE_IDENTIFIER)
+    const TYPE_STRING_FILEPATH = 'filepath';        // we store components of filepath (common or docroot, relative, basename)
     const TYPE_STRING_FORM = 'form';                // "encoded" / NOT auto-detected
     const TYPE_STRING_JSON = 'json';                // "encoded" / auto-detected
     const TYPE_STRING_LONG = 'maxLen';

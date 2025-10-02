@@ -38,9 +38,9 @@ class FileTreeTest extends TestCase
                                 'exclude-count',
                             ),
                         ),
+                        'debug' => Abstracter::ABSTRACTION,
                         'type' => 'string',
                         'value' => '2 omitted',
-                        'debug' => Abstracter::ABSTRACTION,
                     ),
                 ),
                 array(
@@ -48,18 +48,18 @@ class FileTreeTest extends TestCase
                         'class' =>  [],
                         'data-file' =>  '/var/www/bootstrap.php',
                     ),
+                    'debug' => Abstracter::ABSTRACTION,
                     'type' => 'string',
                     'value' => 'bootstrap.php',
-                    'debug' => Abstracter::ABSTRACTION,
                 ),
                 array(
                     'attribs' => array(
                         'class' =>  [],
                         'data-file' => '/var/www/index.php',
                     ),
+                    'debug' => Abstracter::ABSTRACTION,
                     'type' => 'string',
                     'value' => 'index.php',
-                    'debug' => Abstracter::ABSTRACTION,
                 ),
             ),
         );

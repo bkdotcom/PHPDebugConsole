@@ -86,6 +86,7 @@ class ConfigTest extends DebugTestFramework
             'constAttributeOutput',
             'constCollect',
             'constOutput',
+            'detectFiles',
             'fullyQualifyPhpDocType',
             'interfacesCollapse',
             'maxDepth',

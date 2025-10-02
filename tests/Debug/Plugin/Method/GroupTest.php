@@ -133,7 +133,7 @@ class GroupTest extends DebugTestFramework
             'propAttributeCollect' => false,
             'toStringOutput' => false,
         ));
-        $objExpect = $this->helper->crate($this->debug->abstracter->crate($obj, 'group'));
+        $objExpect = $this->helper->deObjectifyData($this->debug->abstracter->crate($obj, 'group'));
         $this->debug->abstracter->setCfg($cfgAbsBak);
         /*
         self::assertSame(array(
@@ -154,6 +154,7 @@ class GroupTest extends DebugTestFramework
         self::assertSame(42, $logEntryArray['args'][1]);
         self::assertSame(null, $logEntryArray['args'][2]);
         self::assertSame(false, $logEntryArray['args'][3]);
+        self::assertSame(\get_class($this), $logEntryArray['args'][4]['scopeClass']);
         self::assertSame($objExpect, $logEntryArray['args'][4]);
         self::assertTrue(($logEntry['args'][5]['cfgFlags'] & AbstractObject::BRIEF) === AbstractObject::BRIEF);
         self::assertSame(array(

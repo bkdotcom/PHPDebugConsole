@@ -71,12 +71,8 @@ class ObjectCacheTest extends DebugTestFramework
                 'method' => 'table',
                 'args' => [
                     array(
-                        'baz' => array(
-                            'size' => '10 B',
-                        ),
-                        'foo' => array(
-                            'size' => '10 B',
-                        ),
+                        'baz' => ['10 B'],
+                        'foo' => ['10 B'],
                     ),
                 ],
                 'meta' => array(

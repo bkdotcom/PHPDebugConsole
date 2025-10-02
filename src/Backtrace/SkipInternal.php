@@ -38,9 +38,6 @@ class SkipInternal
         'regex' => null,
     );
 
-    /** @var non-empty-string */
-    private static $classMethodRegex = '/^(?<class>\S+)(?<type>::|->)(?<method>\S+)$/';
-
     /**
      * Add a new namespace or classname to be used to determine when to
      * stop iterating over the backtrace when determining calling info
@@ -154,7 +151,7 @@ class SkipInternal
     private static function getFirstIndexRewind(array $backtrace, $index, $level)
     {
         $count = \count($backtrace);
-        $index = \min($index, $count - 1);
+        $index = \max(\min($index, $count - 1), 0); // make sure between 0 and $count - 1 (inclusive)
         if ($index === $count - 1 && $backtrace[$index]['function'] !== '{main}') {
             // everything skipped * didn't enter via {main} -> dont rewind
             return $index;
@@ -162,7 +159,7 @@ class SkipInternal
         for ($i = $index; $i > 0; $i--) {
             $frame = $backtrace[$i];
             $isPhpFuncOrClosure = self::isPhpDefinedFunction($frame['function']) || $frame['function'] === '{closure}';
-            if (self::isSkippable($frame, $level) && $isPhpFuncOrClosure === false) {
+            if (self::isSkippable($frame, $level) && $isPhpFuncOrClosure === false && $frame['function'] !== 'ReflectionMethod->invokeArgs') {
                 break;
             }
         }

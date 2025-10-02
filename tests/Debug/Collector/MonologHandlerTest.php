@@ -136,14 +136,14 @@ class MonologHandlerTest extends DebugTestFramework
         $handler = new MonologHandler($this->debug);
         $monolog->pushHandler($handler);
 
-        $tableData = array(
+        $tableData = [
             array('name' => 'Bob', 'age' => '12', 'sex' => 'M', 'Naughty' => false),
             array('Naughty' => true, 'name' => 'Sally', 'extracol' => 'yes', 'sex' => 'F', 'age' => '10'),
-        );
-        $tableDataLogged = array(
-            array('name' => 'Bob', 'age' => '12',),
-            array('name' => 'Sally', 'age' => '10', ),
-        );
+        ];
+        $tableDataLogged = [
+            ['Bob', '12'],
+            ['Sally', '10'],
+        ];
 
         $monolog->debug('table caption', array(
             'table' => $tableData,

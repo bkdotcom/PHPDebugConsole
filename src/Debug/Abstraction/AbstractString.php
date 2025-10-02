@@ -21,12 +21,18 @@ use bdk\HttpMessage\Utility\ContentType;
 use bdk\HttpMessage\Utility\ParseStr;
 
 /**
- * Abstracter:  Methods used to abstract objects
+ * Abstract string values
+ * (ie base64, binary, filepath, form-urlencoded, json, serialized)
  */
 class AbstractString extends AbstractComponent
 {
     /** @var Abstracter */
     protected $abstracter;
+
+    /** @var array<string,mixed> */
+    protected $cfg = array(
+        'detectFiles' => false,
+    );
 
     /** @var Debug */
     protected $debug;
@@ -56,23 +62,12 @@ class AbstractString extends AbstractComponent
     public function getAbstraction($string, $typeMore = null, array $crateVals = array())
     {
         $abs = $this->absInit($string, $typeMore);
-        switch ($typeMore) {
-            case Type::TYPE_STRING_BASE64:
-                $abs = $this->getAbsBase64($abs);
-                break;
-            case Type::TYPE_STRING_BINARY:
-                $abs = $this->getAbsBinary($abs);
-                break;
-            case Type::TYPE_STRING_FORM:
-                $abs = $this->getAbsForm($abs);
-                break;
-            case Type::TYPE_STRING_JSON:
-                $abs = $this->getAbsJson($abs, $crateVals);
-                break;
-            case Type::TYPE_STRING_SERIALIZED:
-                $abs = $this->getAbsSerialized($abs);
-                break;
+
+        $method = 'getAbs' . \ucfirst((string) $typeMore);
+        if (\method_exists($this, $method)) {
+            $abs = $this->{$method}($abs, $crateVals);
         }
+
         return $this->absFinish($abs);
     }
 
@@ -108,35 +103,13 @@ class AbstractString extends AbstractComponent
         $this->trimValueIfBrief($abs);
 
         // cleanup length info
-        if ($abs['strlen'] === $abs['strlenValue'] && $abs['strlen'] === \strlen($abs['value'])) {
+        if ($abs['strlen'] && $abs['strlen'] === $abs['strlenValue'] && $abs['strlen'] === \strlen($abs['value'])) {
             unset($abs['strlen'], $abs['strlenValue']);
         }
 
         // remove temporary values
         unset($abs['maxlen'], $abs['valueRaw']);
         return $abs;
-    }
-
-    /**
-     * Trim the abstraction value if in brief mode and not binary
-     *
-     * @param Abstraction $abs Abstraction to modify
-     *
-     * @return void
-     */
-    private function trimValueIfBrief(Abstraction $abs)
-    {
-        if (!$abs['brief'] || $abs['typeMore'] === Type::TYPE_STRING_BINARY) {
-            return;
-        }
-        $maxLen = $abs['maxlen'] > -1 ? $abs['maxlen'] : 128;
-        $matches = [];
-        $regex = '/^([^\r\n]{1,' . $maxLen . '})/';
-        \preg_match($regex, $abs['value'], $matches);
-        $abs['value'] = $matches
-            ? $matches[1]
-            : \substr($abs['value'], 0, $maxLen);
-        $abs['strlenValue'] = \strlen($abs['value']);
     }
 
     /**
@@ -151,17 +124,8 @@ class AbstractString extends AbstractComponent
      */
     protected function absInit($string, $typeMore)
     {
-        $maxLenCats = array(
-            Type::TYPE_STRING_BASE64 => 'base64',
-            Type::TYPE_STRING_BINARY => 'binary',
-            Type::TYPE_STRING_JSON => 'json',
-            Type::TYPE_STRING_SERIALIZED => 'other',
-        );
-        $maxLenCat = isset($maxLenCats[$typeMore])
-            ? $maxLenCats[$typeMore]
-            : 'other';
         $strLen = \strlen($string);
-        $maxLen = $this->getMaxLen($maxLenCat, $strLen);
+        $maxLen = $this->getMaxLen($typeMore, $strLen);
         $value = $maxLen > -1
             ? $this->debug->utf8->strcut($string, 0, $maxLen)
             : $string;
@@ -245,6 +209,34 @@ class AbstractString extends AbstractComponent
             unset($abs['chunks']);
         }
         return $abs;
+    }
+
+    /**
+     * Get filepath abstraction
+     *
+     * @param Abstraction $abs Abstraction
+     *
+     * @return Abstraction
+     */
+    private function getAbsFilepath(Abstraction $abs)
+    {
+        $docRoot = (string) $this->debug->serverRequest->getServerParam('DOCUMENT_ROOT');
+        $filePath = $abs['value'];
+        $containsDocRoot = $docRoot && \strpos($filePath, $docRoot) === 0;
+        $baseName = \basename($filePath);
+        $pathRel = \substr($filePath, 0, 0 - \strlen($baseName));
+        if ($containsDocRoot) {
+            $pathRel = \substr($pathRel, \strlen($docRoot));
+        }
+        // phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys
+        return $abs->setValues(array(
+            'docRoot' => $containsDocRoot,
+            'pathCommon' => '',
+            'pathRel' => $pathRel,
+            'baseName' => $baseName,
+            'type' => Type::TYPE_STRING,
+            'typeMore' => Type::TYPE_STRING_FILEPATH,
+        ));
     }
 
     /**
@@ -374,6 +366,9 @@ class AbstractString extends AbstractComponent
         if ($this->debug->utf8->isUtf8($val) === false) {
             return Type::TYPE_STRING_BINARY;
         }
+        if ($this->cfg['detectFiles'] && $this->debug->utility->isFile($val)) {
+            return Type::TYPE_STRING_FILEPATH;
+        }
         $strLen = \strlen($val);
         $maxlen = $this->getMaxLen('other', $strLen);
         return $maxlen > -1 && $strLen > $maxlen
@@ -390,22 +385,19 @@ class AbstractString extends AbstractComponent
      */
     private function getTypeMoreEncoded($val)
     {
-        $strLen = \strlen($val);
         $minLen = $this->cfg['stringMinLen']['encoded'];
-        if ($minLen < 0 || $strLen < $minLen) {
+        if ($minLen < 0 || \strlen($val) < $minLen) {
             return null; // not long enough to test
         }
-
         if ($this->debug->stringUtil->isBase64Encoded($val)) {
             return Type::TYPE_STRING_BASE64;
         }
         if ($this->debug->stringUtil->isJson($val)) {
             return Type::TYPE_STRING_JSON;
         }
-        if ($this->debug->stringUtil->isSerializedSafe($val)) {
-            return Type::TYPE_STRING_SERIALIZED;
-        }
-        return null;
+        return $this->debug->stringUtil->isSerializedSafe($val)
+            ? Type::TYPE_STRING_SERIALIZED
+            : null;
     }
 
     /**
@@ -420,5 +412,27 @@ class AbstractString extends AbstractComponent
         return $this->abstracter->type->isTimestamp($val)
             ? Type::TYPE_TIMESTAMP
             : Type::TYPE_STRING_NUMERIC;
+    }
+
+    /**
+     * Trim the abstraction value if in brief mode and not binary
+     *
+     * @param Abstraction $abs Abstraction to modify
+     *
+     * @return void
+     */
+    private function trimValueIfBrief(Abstraction $abs)
+    {
+        if (!$abs['brief'] || $abs['typeMore'] === Type::TYPE_STRING_BINARY) {
+            return;
+        }
+        $maxLen = $abs['maxlen'] > -1 ? $abs['maxlen'] : 128;
+        $matches = [];
+        $regex = '/^([^\r\n]{1,' . $maxLen . '})/';
+        \preg_match($regex, $abs['value'], $matches);
+        $abs['value'] = $matches
+            ? $matches[1]
+            : \substr($abs['value'], 0, $maxLen);
+        $abs['strlenValue'] = \strlen($abs['value']);
     }
 }

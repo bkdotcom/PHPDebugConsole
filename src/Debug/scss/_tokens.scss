@@ -130,13 +130,13 @@ $color-stringified-shadow: rgba(0, 200, 200, 0.6);
 }
 
 .file-docroot {
-  opacity: 0.35;
+  opacity: 0.5;
   font-style: italic;
 }
-.file-basepath {
-  opacity: 0.5;
+.file-path-common {
+  opacity: 0.66;
 }
-.file-relpath {
+.file-path-rel {
 }
 .file-basename {
   color: var(--color-identifier);

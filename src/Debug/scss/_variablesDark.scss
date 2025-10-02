@@ -41,8 +41,8 @@
 
   --color-classname: color-mix(in lch, currentColor, #f8b3d5);
   --opacity-namespace: 0.75;
-  --color-identifier: #c8f;
-  --color-numeric: #9980ff;
+  --color-identifier: color-mix(in lch, currentColor, #c8f);
+  --color-numeric: color-mix(in lch, currentColor, #9980ff);
   --color-timestamp: #9980ff;
   // --color-quote: #c7c7c7c7;
   --color-t-null: #c7c7c799;

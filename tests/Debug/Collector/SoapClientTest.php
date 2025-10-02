@@ -106,7 +106,6 @@ class SoapClientTest extends DebugTestFramework
             ),
             'meta' => array(
                 'channel' => 'general.Soap',
-                'detectFiles' => true,
                 // 'evalLine' => null,
                 'file' => __FILE__,
                 'line' => $line,
@@ -285,7 +284,6 @@ class SoapClientTest extends DebugTestFramework
             ),
             'meta' => array(
                 'channel' => 'general.Soap',
-                'detectFiles' => true,
                 // 'evalLine' => null,
                 'file' => __FILE__,
                 'line' => $line,
@@ -315,7 +313,6 @@ class SoapClientTest extends DebugTestFramework
             ),
             'meta' => array(
                 'channel' => 'general.Soap',
-                'detectFiles' => true,
                 // 'evalLine' => null,
                 'file' => __FILE__,
                 'line' => $line,
@@ -472,7 +469,6 @@ class SoapClientTest extends DebugTestFramework
                 ),
                 'meta' => array(
                     'channel' => 'general.Soap',
-                    'detectFiles' => true,
                     // 'evalLine' => null,
                     'file' => __FILE__,
                     'line' => $line,

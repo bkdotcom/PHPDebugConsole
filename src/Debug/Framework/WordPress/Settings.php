@@ -138,6 +138,7 @@ class Settings extends AbstractComponent implements AssetProviderInterface, Subs
         $sanitized = FormProcessor::getValues($this->controls, $post);
         $sanitized = $sanitized[self::GROUP_NAME];
         $sanitized['emailMin'] = $sanitized['waitThrottle'];
+        $sanitized['logEnvInfo'] = \array_fill_keys($this->debug->arrayUtil->pathGet($sanitized, ['logEnvInfo'], []), true);
         $sanitized['passwordHash'] = $this->getPasswordHash($sanitized);
         $sanitized['plugins']['routeDiscord']['throttleMin'] = $sanitized['waitThrottle'];
         $sanitized['plugins']['routeSlack']['throttleMin'] = $sanitized['waitThrottle'];
@@ -273,11 +274,14 @@ class Settings extends AbstractComponent implements AssetProviderInterface, Subs
         $this->controlBuilder = new ControlBuilder(array(
             'getValue' => function (array $control) use ($groupValues) {
                 \preg_match_all('/\[?([^\[\]]+)\]?/', $control['name'], $matches);
-                $nameParts = $matches[1];
+                $nameParts = \array_slice($matches[1], 1);
                 $default = isset($control['default'])
                     ? $control['default']
-                    : null;
-                return $this->debug->arrayUtil->pathGet($groupValues, \array_slice($nameParts, 1), $default);
+                    : [];
+                $return = $this->debug->arrayUtil->pathGet($groupValues, $nameParts, $default);
+                return $nameParts === ['logEnvInfo']
+                    ? \array_keys(\array_filter($return))
+                    : $return;
             },
             'groupName' => self::GROUP_NAME,
             'haveValues' => $haveGroupValues,

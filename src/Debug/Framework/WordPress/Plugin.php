@@ -19,6 +19,10 @@ class Plugin
         'collect' => true,  // start with collection on as we bootstrap
         'emailFunc' => 'wp_mail',
         'logEnvInfo' => array(
+            'errorReporting' => false,
+            'files' => false,
+            'phpInfo' => false,
+            'serverVals' => false,
             'session' => false,
         ),
         'plugins' => array(
@@ -43,6 +47,9 @@ class Plugin
             'wordpressSettings' => array(
                 'class' => 'bdk\Debug\Framework\WordPress\Settings',
                 'wordpress' => null, // set to $this in getDebugConfig()
+            ),
+            'wordpressShortcodes' => array(
+                'class' => 'bdk\Debug\Framework\WordPress\Shortcodes',
             ),
         ),
     );

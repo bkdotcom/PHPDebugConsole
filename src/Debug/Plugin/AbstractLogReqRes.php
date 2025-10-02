@@ -65,7 +65,6 @@ class AbstractLogReqRes
             $message .= "\n" . $this->debug->i18n->trans('request.use.php.input');
         }
         $this->debug->warn($message, $this->debug->meta(array(
-            'detectFiles' => false,
             'file' => null,
             'line' => null,
         )));

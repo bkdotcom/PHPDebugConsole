@@ -246,13 +246,15 @@ class Manager implements SubscriberInterface
      */
     private function addPluginInterface(PluginInterface $plugin)
     {
-        $this->debug->warn($this->debug->i18n->trans('deprecated.pluginInterface', array(
-            'class' => \get_class($plugin),
-        )), $this->debug->meta(array(
-            'detectFiles' => false,
-            'file' => null,
-            'line' => null,
-        )));
+        $this->debug->warn(
+            $this->debug->i18n->trans('deprecated.pluginInterface', array(
+                'class' => \get_class($plugin),
+            )),
+            $this->debug->meta(array(
+                'file' => null,
+                'line' => null,
+            ))
+        );
         $plugin->setDebug($this->debug);
     }
 

@@ -55,6 +55,9 @@ class Abstraction extends Event
         if ($typeMore === Type::TYPE_STRING_BINARY) {
             return $this->toStringBinary();
         }
+        if ($typeMore === Type::TYPE_STRING_FILEPATH) {
+            return $this->toStringFilepath();
+        }
         if (isset($this->values['value'])) {
             return (string) $this->values['value'];
         }
@@ -69,8 +72,9 @@ class Abstraction extends Event
     #[\ReturnTypeWillChange]
     public function jsonSerialize()
     {
-        \ksort($this->values);
-        return $this->values + array('debug' => Abstracter::ABSTRACTION);
+        $values = $this->values + array('debug' => Abstracter::ABSTRACTION);
+        \ksort($values);
+        return $values;
     }
 
     /**
@@ -142,5 +146,28 @@ class Abstraction extends Event
             $hex = \str_replace(' ', '', $chunk[1]);
             return \hex2bin($hex);
         }, $this->values['chunks']));
+    }
+
+    /**
+     * Return stringified value for filepath abstraction
+     *
+     * @return string
+     */
+    private function toStringFilepath()
+    {
+        $vals = $this->getValues();
+        $filepath = ($vals['docRoot'] ? 'DOCUMENT_ROOT' : '')
+            . ($vals['pathCommon'] ? $vals['pathCommon'] : '')
+            . ($vals['pathRel'] ? $vals['pathRel'] : '')
+            . $vals['baseName'];
+        $line = '';
+        if (!isset($vals['line'])) {
+            return $filepath;
+        }
+        $debug = \bdk\Debug::getInstance();
+        $line = isset($vals['evalLine'])
+            ? \sprintf(' (%s %s, %s %s)', $debug->i18n->trans('line'), $vals['line'], $debug->i18n->trans('line.evaled'), $vals['evalLine'])
+            : \sprintf(' (%s %s)', $debug->i18n->trans('line'), $vals['line']);
+        return $filepath . $line;
     }
 }

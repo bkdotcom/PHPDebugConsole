@@ -20,9 +20,6 @@ use DOMNodeList;
 /**
  * Get object property info
  */
-/**
- * Get object property info
- */
 class PropertiesDom
 {
     /** @var Abstracter */

@@ -1,7 +1,6 @@
 import * as customSelectors from './customSelectors.js'
 import * as helper from '../helper.js'
 
-
 function filter (mixed, notFilter = false) {
   return this.alter((el, i) => {
     let isMatch = false

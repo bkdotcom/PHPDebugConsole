@@ -23,12 +23,6 @@ class WampCrate
     /** @var Debug */
     private $debug;
 
-    /** @var bool */
-    private $detectFiles = false;
-
-    /** @var list<string> */
-    private $foundFiles = array();
-
     /** @var list<string> */
     private $classesCrated = array();
 
@@ -68,9 +62,6 @@ class WampCrate
         if (\is_array($mixed)) {
             return $this->crateArray($mixed);
         }
-        if (\is_string($mixed)) {
-            return $this->crateString($mixed);
-        }
         return $mixed;
     }
 
@@ -84,29 +75,13 @@ class WampCrate
     public function crateLogEntry(LogEntry $logEntry)
     {
         $this->classesNew = array();
-        $this->detectFiles = $logEntry->getMeta('detectFiles', false);
         $args = $this->crate($logEntry['args']);
         $meta = $logEntry['meta'];
         if ($logEntry['method'] === 'error' && !empty($meta['trace'])) {
             $meta = $this->getErrorTraceMeta($logEntry);
             unset($args[2]); // error's filepath argument
         }
-        if ($this->detectFiles) {
-            $meta['foundFiles'] = $this->foundFiles();
-        }
         return [$args, $meta, $this->classesNew];
-    }
-
-    /**
-     * Returns files found during crating
-     *
-     * @return array
-     */
-    public function foundFiles()
-    {
-        $foundFiles = $this->foundFiles;
-        $this->foundFiles = array();
-        return $foundFiles;
     }
 
     /**
@@ -126,7 +101,6 @@ class WampCrate
             case Type::TYPE_OBJECT:
                 return $this->crateObject($clone);
             case Type::TYPE_STRING:
-                $clone['value'] = $this->crateString($clone['value']);
                 if (isset($clone['valueDecoded'])) {
                     $clone['valueDecoded'] = $this->crate($clone['valueDecoded']);
                 }
@@ -208,24 +182,6 @@ class WampCrate
             }
         }
         return $info;
-    }
-
-    /**
-     * Base64 encode string if it contains non-utf8 characters
-     *
-     * @param string $str string
-     *
-     * @return string
-     */
-    private function crateString($str)
-    {
-        if (!$str) {
-            return $str;
-        }
-        if ($this->detectFiles && $this->debug->utility->isFile($str)) {
-            $this->foundFiles[] = $str;
-        }
-        return $str;
     }
 
     /**

@@ -74,23 +74,37 @@ class Hooks extends AbstractComponent implements SubscriberInterface
             'channelSort' => 1,
             'nested' => false,
         ));
-        $this->debug->table(\_x('Hooks', 'channel.hooks', 'debug-console-php'), $this->hooks, $this->debug->meta(array(
+        $this->debug->table(
+            \_x('Hooks', 'channel.hooks', 'debug-console-php'),
+            $this->hooks,
+            $this->debug->meta($this->hookTableMeta())
+        );
+    }
+
+    /**
+     * Return table meta information
+     *
+     * @return array<string,mixed>
+     */
+    private function hookTableMeta()
+    {
+        return array(
             'columns' => ['isFilter', 'count'],
             'tableInfo' => array(
                 'columns' => array(
+                    'count' => array(
+                        'key' => \_x('count', 'hooks.count.label', 'debug-console-php'),
+                    ),
                     'isFilter' => array(
                         'attribs' => array('class' => ['text-center']),
                         'falseAs' => '',
                         'key' => \_x('isFilter', 'hooks.isFilter.label', 'debug-console-php'),
                         'trueAs' => '<i class="fa fa-check"></i>',
                     ),
-                    'count' => array(
-                        'key' => \_x('count', 'hooks.count.label', 'debug-console-php'),
-                    ),
                 ),
             ),
             'totalCols' => ['count'],
-        )));
+        );
     }
 
     /**

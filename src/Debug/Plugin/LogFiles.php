@@ -205,7 +205,7 @@ class LogFiles extends AbstractComponent implements SubscriberInterface
     }
 
     /**
-     * Log files files
+     * Log files
      *
      * @param string[] $files array of filepaths
      *

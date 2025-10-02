@@ -3,7 +3,9 @@
 namespace bdk\Test\Debug\Plugin;
 
 use bdk\Debug;
+use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Abstraction\Type;
 use bdk\ErrorHandler\Error;
 use bdk\HttpMessage\ServerRequestExtended as ServerRequest;
 use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
@@ -193,12 +195,21 @@ class InternalEventsTest extends DebugTestFramework
             'args' => array(
                 'Fatal Error:',
                 'fatality',
-                __FILE__ . ' (line ' . $line . ')',
+                array(
+                    'baseName' => \basename(__FILE__),
+                    'debug' => Abstracter::ABSTRACTION,
+                    'docRoot' => false,
+                    'evalLine' => null,
+                    'line' => $line,
+                    'pathCommon' => '',
+                    'pathRel' => \dirname(__FILE__) . '/',
+                    'type' => Type::TYPE_STRING,
+                    'typeMore' => Type::TYPE_STRING_FILEPATH,
+                ),
             ),
             'meta' => array(
                 'channel' => 'general.phpError',
                 // 'context' => null,
-                'detectFiles' => true,
                 'errorCat' => 'fatal',
                 'errorHash' => '',
                 'errorType' => E_ERROR,
@@ -262,25 +273,34 @@ class InternalEventsTest extends DebugTestFramework
         ));
         $this->debug->getPlugin('internalEvents')->onError($error);
         $logEntry = $this->debug->data->get('log/__end__');
-        $logEntryValues = $logEntry->getValues();
+        $logEntryValues = $this->helper->deObjectifyData($logEntry->getValues());
         unset($logEntryValues['meta']['errorHash']);
         self::assertSame(array(
             'appendLog' => true,
             'args' => array(
                 'User Warning:',
                 'stern warning',
-                $file . ' (line ' . $line . ')',
+                array(
+                    'baseName' => \basename($file),
+                    'debug' => Abstracter::ABSTRACTION,
+                    'docRoot' => false,
+                    'evalLine' => null,
+                    'line' => $line,
+                    'pathCommon' => '',
+                    'pathRel' => \dirname($file) . '/',
+                    'type' => Type::TYPE_STRING,
+                    'typeMore' => Type::TYPE_STRING_FILEPATH,
+                ),
             ),
             'meta' => array(
-                'detectFiles' => true,
-                'file' => $file,
-                'line' => $line,
-                'uncollapse' => true,
                 'errorCat' => 'warning',
                 'errorType' => E_USER_WARNING,
+                'file' => $file,
                 'icon' => "fa fa-at fa-lg",
                 'isSuppressed' => true,
+                'line' => $line,
                 'sanitize' => true,
+                'uncollapse' => true,
             ),
             'method' => 'warn',
             'numArgs' => 3,
@@ -347,7 +367,6 @@ class InternalEventsTest extends DebugTestFramework
                     __FILE__ . ' (line ' . $exitLine . ')',
                 ),
                 'meta' => array(
-                    'detectFiles' => true,
                     // 'evalLine' => null,
                     'file' => __FILE__,
                     'line' => $exitLine,

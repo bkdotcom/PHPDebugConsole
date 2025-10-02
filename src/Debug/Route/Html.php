@@ -214,6 +214,9 @@ class Html extends AbstractRoute
             // channel list gets built as log processed...  we'll str_replace this...
             'data-channel-key-root' => $this->channelKeyRoot,
             'data-channels' => '{{channels}}',
+            'data-meta' => array(
+                'DOCUMENT_ROOT' => $this->debug->serverRequest->getServerParam('DOCUMENT_ROOT'),
+            ),
             'data-options' => array(
                 'drawer' => $this->cfg['drawer'],
                 'linkFilesTemplateDefault' => $lftDefault ?: null,
@@ -302,7 +305,7 @@ class Html extends AbstractRoute
 
         $str = \preg_replace('#(<ul[^>]*>)\s+</ul>#', '$1</ul>', $str); // ugly, but want to be able to use :empty
         $str = \strtr($str, array(
-            '{{channels}}' => \htmlspecialchars(\json_encode($this->buildChannelTree(), JSON_FORCE_OBJECT)),
+            '{{channels}}' => \htmlspecialchars(\json_encode($this->buildChannelTree())),
         ));
         return $str;
     }

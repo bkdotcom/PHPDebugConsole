@@ -104,7 +104,6 @@ class LogRequestTest extends DebugTestFramework
                     . 'Pay no attention to $_POST and instead use php://input'],
                 'meta' => array(
                     'channel' => 'request-response',
-                    'detectFiles' => false,
                     // 'evalLine' => null,
                     // 'file' => null,
                     // 'line' => null,
@@ -297,11 +296,9 @@ class LogRequestTest extends DebugTestFramework
                 'method' => 'table',
                 'args' => [
                     array(
-                        'Authorization' => array(
-                            'value' => 'Basic █████████ (base64\'d fred:█████)',
-                        ),
-                        'X-Test' => array(
-                            'value' => array(
+                        'Authorization' => [ 'Basic █████████ (base64\'d fred:█████)' ],
+                        'X-Test' => [
+                            array(
                                 'attribs' => array(
                                     'class' => array('text-left'),
                                 ),
@@ -313,7 +310,7 @@ class LogRequestTest extends DebugTestFramework
                                 'typeMore' => Type::TYPE_STRING_NUMERIC,
                                 'value' => '123',
                             ),
-                        ),
+                        ],
                     ),
                 ],
                 'meta' => array(
@@ -345,8 +342,8 @@ class LogRequestTest extends DebugTestFramework
                 'method' => 'table',
                 'args' => [
                     array(
-                        'SESSIONID' => array(
-                            'value' => array(
+                        'SESSIONID' => [
+                            array(
                                 'attribs' => array(
                                     'class' => array('text-left'),
                                 ),
@@ -358,7 +355,7 @@ class LogRequestTest extends DebugTestFramework
                                 'typeMore' => Type::TYPE_STRING_NUMERIC,
                                 'value' => '123',
                             ),
-                        ),
+                        ],
                     ),
                 ],
                 'meta' => array(
@@ -391,7 +388,15 @@ class LogRequestTest extends DebugTestFramework
                         'error' => UPLOAD_ERR_OK,
                         'name' => 'logo.png',
                         'size' => \filesize(TEST_DIR . '/assets/logo.png'),
-                        'tmp_name' => TEST_DIR . '/assets/logo.png',
+                        'tmp_name' => array(
+                            'baseName' => 'logo.png',
+                            'debug' => Abstracter::ABSTRACTION,
+                            'docRoot' => false,
+                            'pathCommon' => '',
+                            'pathRel' => TEST_DIR . '/assets/',
+                            'type' => Type::TYPE_STRING,
+                            'typeMore' => Type::TYPE_STRING_FILEPATH,
+                        ),
                         'type' => 'image/png',
                     ),
                 )],
@@ -423,7 +428,6 @@ class LogRequestTest extends DebugTestFramework
                 'args' => ['POST request with no body'],
                 'meta' => array(
                     'channel' => 'request-response',
-                    'detectFiles' => false,
                     // 'evalLine' => null,
                     // 'file' => null,
                     // 'line' => null,
@@ -529,7 +533,6 @@ class LogRequestTest extends DebugTestFramework
                 'args' => ['GET request with body'],
                 'meta' => array(
                     'channel' => 'request-response',
-                    'detectFiles' => false,
                     // 'evalLine' => null,
                     // 'file' => null,
                     // 'line' => null,

@@ -83,7 +83,6 @@ class DeprecatedTest extends DebugTestFramework
                 $msgExpected,
             ),
             'meta' => array(
-                'detectFiles' => true,
                 'file' => __FILE__,
                 'icon' => 'fa fa-arrow-down',
                 'line' => $line,

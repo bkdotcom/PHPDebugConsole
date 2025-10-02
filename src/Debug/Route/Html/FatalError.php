@@ -11,6 +11,7 @@
 namespace bdk\Debug\Route\Html;
 
 use bdk\Debug;
+use bdk\Debug\Abstraction\Type;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Route\Html as RouteHtml;
 use bdk\Debug\Utility\Html as HtmlUtil;
@@ -102,25 +103,16 @@ class FatalError
         ), Debug::CONFIG_NO_PUBLISH);
         $logEntry = new LogEntry(
             $this->debug,
-            'table',
+            'trace',
             [],
             array(
-                'attribs' => array(
-                    'class' => 'trace trace-context table-bordered',
-                ),
                 'inclContext' => true,
-                'onBuildRow' => [
-                    [$this->routeHtml->dumper->helper, 'tableTraceRow'],
-                    [$this->routeHtml->dumper->helper, 'tableAddContextRow'],
-                ],
                 'trace' => $trace,
             )
         );
         $this->debug->rootInstance->getPlugin('methodTrace')->doTrace($logEntry);
         $this->debug->setCfg($cfgWas, Debug::CONFIG_NO_PUBLISH | Debug::CONFIG_NO_RETURN);
-        return '<li class="m_trace" data-detect-files="true">'
-            . $this->routeHtml->dumper->table->build($logEntry['args'][0], $logEntry['meta'])
-            . '</li>' . "\n";
+        return $this->routeHtml->dumper->processLogEntry($logEntry);
     }
 
     /**
@@ -134,12 +126,13 @@ class FatalError
     {
         $return = $this->html->buildTag(
             'li',
-            array(
-                'class' => 't_string no-quotes',
-                'data-file' => $error['file'],
-                'data-line' => $error['line'],
-            ),
-            $error['fileAndLine']
+            array(),
+            $this->routeHtml->dumper->valDumper->dump($this->debug->abstracter->crateWithVals($error['file'], array(
+                'evalLine' => $error['evalLine'],
+                'line' => $error['line'],
+                'type' => Type::TYPE_STRING,
+                'typeMore' => Type::TYPE_STRING_FILEPATH,
+            )))
         ) . "\n";
         if ($error['context']) {
             $return .= '<li>'

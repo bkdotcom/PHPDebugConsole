@@ -76,20 +76,20 @@ class TableTest extends DebugTestFramework
             2 => array('Naughty' => true, 'name' => 'Sally', 'extracol' => 'yes', 'sex' => 'F', 'age' => '10'),
         );
         $rowsAProcessed = array(
-            4 => array(
-                'name' => 'Bob',
-                'age' => '12',
-                'sex' => 'M',
-                'Naughty' => false,
-                'extracol' => Abstracter::UNDEFINED,
-            ),
-            2 => array(
-                'name' => 'Sally',
-                'age' => '10',
-                'sex' => 'F',
-                'Naughty' => true,
-                'extracol' => 'yes',
-            ),
+            4 => [
+                'Bob',
+                '12',
+                'M',
+                false,
+                Abstracter::UNDEFINED,
+            ],
+            2 => [
+                'Sally',
+                '10',
+                'F',
+                true,
+                'yes',
+            ],
         );
 
         // not all date2 values of same type
@@ -158,7 +158,7 @@ EOD;
         foreach ($vals as $k => $raw) {
             $crated = $abstracter->crate($raw, 'table');
             if ($crated instanceof Abstraction) {
-                $crated = $crated->jsonSerialize();
+                $crated = \bdk\Test\Debug\Helper::deObjectifyData($crated);
                 if ($crated['type'] === 'object') {
                     $crated['scopeClass'] = __CLASS__;
                 }
@@ -397,9 +397,9 @@ EOD;
                         'method' => 'table',
                         'args' => [
                             array(
-                                4 => array('name' => 'Bob', 'extracol' => Abstracter::UNDEFINED),
-                                2 => array('name' => 'Sally', 'extracol' => 'yes'),
-                        ),
+                                4 => ['Bob', Abstracter::UNDEFINED],
+                                2 => ['Sally', 'yes'],
+                            ),
                         ],
                         'meta' => array(
                             'caption' => 'table caption',
@@ -461,12 +461,12 @@ EOD;
                         'method' => 'table',
                         'args' => [
                             array(
-                                array('value' => 'a'),
-                                array('value' => $vals['datetime']['crated']['stringified']),
-                                array('value' => $vals['resource']['crated']),
-                                array('value' => $vals['callable']['crated']),
-                                array('value' => $vals['closure']['crated']),
-                        ),
+                                ['a'],
+                                [$vals['datetime']['crated']['stringified']],
+                                [$vals['resource']['crated']],
+                                [$vals['callable']['crated']],
+                                [$vals['closure']['crated']],
+                            ),
                         ],
                         'meta' => array(
                             'caption' => 'flat',
@@ -509,7 +509,7 @@ EOD;
                             <dd class="t_modifier_final">final</dd>
                             <dt class="constants">constants <i>not collected</i></dt>
                             <dt class="properties">properties</dt>
-                            <dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="t_type">string</span> <span class="no-quotes t_identifier t_string">file</span> <span class="t_operator">=</span> <span class="t_string">' . __FILE__ . '</span></dd>
+                            <dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="t_type">string</span> <span class="no-quotes t_identifier t_string">file</span> <span class="t_operator">=</span> <span class="t_string" data-type-more="filepath"><span class="file-path-rel">' . \dirname(__FILE__) . '/</span><span class="file-basename">' . \basename(__FILE__) . '</span></span></dd>
                             <dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="t_type">int</span> <span class="no-quotes t_identifier t_string">line</span> <span class="t_operator">=</span> <span class="t_int">%i</span></dd>
                             <dt class="methods">methods <i>not collected</i></dt>
                             </dl>
@@ -833,6 +833,7 @@ EOD;
         );
 
         return $tests;
+        // return \array_intersect_key($tests, \array_flip(['flat']));
     }
 
     public function testSpecialValues()

@@ -104,7 +104,7 @@ WHERE
 </li>
 <li class="m_time" data-channel="general.doctrine"><span class="no-quotes t_string">duration: %f %s</span></li>
 <li class="m_log" data-channel="general.doctrine"><span class="no-quotes t_string">Memory usage</span> = <span class="t_string">%f %s</span></li>
-<li class="m_warn" data-channel="general.doctrine" data-detect-files="true" data-file="%s" data-line="%d" data-uncollapse="false"><span class="no-quotes t_string">Use <span style="font-family:monospace">SELECT *</span><span> only if you need all columns from table</span></span></li>
+<li class="m_warn" data-channel="general.doctrine" data-file="%s" data-line="%d" data-uncollapse="false"><span class="no-quotes t_string">Use <span style="font-family:monospace">SELECT *</span><span> only if you need all columns from table</span></span></li>
 </ul>
 </li>
 %A
@@ -143,7 +143,7 @@ where
 </li>
 <li class="m_time" data-channel="general.doctrine"><span class="no-quotes t_string">duration: %f %s</span></li>
 <li class="m_log" data-channel="general.doctrine"><span class="no-quotes t_string">Memory usage</span> = <span class="t_string">%f %s</span></li>
-<li class="m_warn" data-channel="general.doctrine" data-detect-files="true" data-file="%s" data-line="%d" data-uncollapse="false"><span class="no-quotes t_string">Use <span style="font-family:monospace">SELECT *</span><span> only if you need all columns from table</span></span></li>
+<li class="m_warn" data-channel="general.doctrine" data-file="%s" data-line="%d" data-uncollapse="false"><span class="no-quotes t_string">Use <span style="font-family:monospace">SELECT *</span><span> only if you need all columns from table</span></span></li>
 </ul>
 </li>
 %A

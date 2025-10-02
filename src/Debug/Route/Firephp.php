@@ -222,15 +222,22 @@ class Firephp extends AbstractRoute
         if ($caption) {
             $logEntry['firephpMeta']['Label'] = $caption;
         }
-        $firephpTable = true;
         $args = $logEntry['args'];
-        $value = $args[0];
-        if ($firephpTable) {
-            $value = array();
-            $value[] = \array_merge([''], \array_keys(\current($args[0])));
-            foreach ($args[0] as $k => $row) {
-                $value[] = \array_merge([$k], \array_values($row));
-            }
+        $firephpTable = true;
+        if (!$firephpTable) {
+            return $this->dumper->valDumper->dump($args[0]);
+        }
+        $value = array();
+        $keys = \array_map(static function (array $colInfo) {
+            return $colInfo['key'];
+        }, $logEntry['meta']['tableInfo']['columns']);
+        if ($logEntry['meta']['tableInfo']['haveObjRow']) {
+            \array_unshift($keys, '___class_name');
+        }
+        \array_unshift($keys, ''); // key/index
+        $value[] = $keys;
+        foreach ($args[0] as $k => $row) {
+            $value[] = \array_merge([$k], \array_values($row));
         }
         return $this->dumper->valDumper->dump($value);
     }

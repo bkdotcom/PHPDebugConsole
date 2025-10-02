@@ -77,7 +77,7 @@ class StringUtil
      *
      * @return int|bool
      *
-     * @throws \InvalidArgumentException on invalid operator
+     * @throws InvalidArgumentException on invalid operator
      */
     public static function compare($valA, $valB, $operator = 'strnatcmp')
     {
@@ -142,7 +142,7 @@ class StringUtil
      * @param array             $placeholders gets set to the placeholders found in message
      *
      * @return string
-     * @throws \InvalidArgumentException if $message or $context invalid
+     * @throws InvalidArgumentException if $message or $context invalid
      */
     public static function interpolate($message, $context = array(), &$placeholders = array())
     {

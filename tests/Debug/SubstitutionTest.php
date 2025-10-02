@@ -403,7 +403,6 @@ class SubstitutionTest extends DebugTestFramework
                             \array_shift($test['args']);
                         }
                     } elseif (\in_array($method, array('error', 'warn'))) {
-                        $test['meta']['detectFiles'] = true;
                         // $test['meta']['evalLine'] = null;
                         $test['meta']['file'] = $this->file;
                         $test['meta']['line'] = $this->line;
@@ -464,7 +463,6 @@ class SubstitutionTest extends DebugTestFramework
                             $test
                         );
                     } elseif (\in_array($method, array('error','warn'))) {
-                        $attribs['data-detect-files'] = true;
                         $attribs['data-file'] = $this->file;
                         $attribs['data-line'] = $this->line;
                     }

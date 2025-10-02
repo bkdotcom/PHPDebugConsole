@@ -11,7 +11,6 @@
 namespace bdk\Debug\Dump\Html;
 
 use bdk\Debug;
-use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Dump\Html as Dumper;
 
@@ -71,18 +70,18 @@ class Helper
     /**
      * build php code snippet / context
      *
-     * @param string[] $lines   lines of code
-     * @param int      $lineNum line number to highlight
+     * @param string[] $lines      lines of code
+     * @param int      $lineNumber line number to highlight
      *
      * @return string
      */
-    public function buildContext(array $lines, $lineNum)
+    public function buildContext(array $lines, $lineNumber)
     {
         return $this->html->buildTag(
             'pre',
             array(
                 'class' => 'highlight line-numbers',
-                'data-line' => $lineNum,
+                'data-line' => $lineNumber,
                 'data-line-offset' => \key($lines), // needed for line-highlight
                 'data-start' => \key($lines),
             ),
@@ -90,6 +89,25 @@ class Helper
                 . \htmlspecialchars(\implode($lines))
                 . '</code>'
         );
+    }
+
+    /**
+     * Build context + arguments cell data
+     *
+     * @param array $rowInfo    row meta information
+     * @param int   $lineNumber line number to highlight
+     *
+     * @return Abstraction
+     */
+    public function buildContextCell(array $rowInfo, $lineNumber)
+    {
+        $innerHtml = $this->buildContext($rowInfo['context'], $lineNumber)
+            . $this->buildContextArguments($rowInfo['args']);
+        return $this->debug->abstracter->crateWithVals($innerHtml, array(
+            'dumpType' => false, // don't add t_string css class
+            'sanitize' => false,
+            'visualWhiteSpace' => false,
+        ));
     }
 
     /**
@@ -123,35 +141,6 @@ class Helper
     }
 
     /**
-     * Markup filepath
-     *
-     * Wrap directory components
-     *
-     * @param string $filePath     filepath (ie /var/www/html/index.php)
-     * @param string $commonPrefix prefix shared by current group of files
-     *
-     * @return string
-     */
-    public function markupFilePath($filePath, $commonPrefix = '')
-    {
-        if ($filePath === 'eval()\'d code') {
-            return \htmlspecialchars($filePath);
-        }
-        $fileParts = $this->parseFilePath($filePath, $commonPrefix);
-        $dumpOpts = array(
-            'tagName' => null,
-        );
-        return ($fileParts['docRoot'] ? '<span class="file-docroot">DOCUMENT_ROOT</span>' : '')
-            . ($fileParts['relPathCommon']
-                ? $this->html->buildTag('span', array('class' => 'file-basepath'), $this->dumper->valDumper->dump($fileParts['relPathCommon'], $dumpOpts))
-                : '')
-            . ($fileParts['relPath']
-                ? $this->html->buildTag('span', array('class' => 'file-relpath'), $this->dumper->valDumper->dump($fileParts['relPath'], $dumpOpts))
-                : '')
-            . $this->html->buildTag('span', array('class' => 'file-basename'), $this->dumper->valDumper->dump($fileParts['baseName'], $dumpOpts));
-    }
-
-    /**
      * Markup type-hint / type declaration
      *
      * @param string $type    type declaration
@@ -176,65 +165,6 @@ class Helper
             $type = $this->html->buildTag('span', $attribs, $type);
         }
         return $type;
-    }
-
-    /**
-     * Insert a row containing code snip & arguments after the given row
-     *
-     * @param string $html    <tr>...</tr>
-     * @param array  $row     Row values
-     * @param array  $rowInfo Row info / meta
-     * @param int    $index   Row index
-     *
-     * @return string
-     */
-    public function tableAddContextRow($html, array $row, array $rowInfo, $index)
-    {
-        if (empty($rowInfo['context']) || $rowInfo['context'] === Abstracter::UNDEFINED) {
-            return $html;
-        }
-        $html = \preg_replace_callback('/^<tr([^>]*)>/', function ($matches) use ($index) {
-            $attribs = $this->html->parseAttribString($matches[1]);
-            $attribs['class']['expanded'] = $index === 0;
-            $attribs['data-toggle'] = 'next';
-            return '<tr' . $this->html->buildAttribString($attribs) . '>';
-        }, $html);
-        $html .= '<tr class="context" ' . ($index === 0 ? 'style="display:table-row;"' : '' ) . '>'
-            . '<td colspan="4">'
-                . $this->buildContext($rowInfo['context'], $row['line'])
-                . $this->buildContextArguments($rowInfo['args'])
-            . '</td>' . "\n"
-            . '</tr>' . "\n";
-        return $html;
-    }
-
-    /**
-     * Format trace table's filepath & function columns
-     *
-     * @param string $html    <tr>...</tr>
-     * @param array  $row     Row values
-     * @param array  $rowInfo Row info / meta
-     *
-     * @return string
-     */
-    public function tableTraceRow($html, array $row, array $rowInfo)
-    {
-        \preg_match_all('|
-            <(?P<tagname>t[hd])(?P<attribs>[^>]*)>
-            (?P<innerHtml>.*?)
-            </t[hd]>
-            |xs', $html, $cells, PREG_SET_ORDER);
-
-        $cells[1]['innerHtml'] = $this->markupFilePath($row['file'], $rowInfo['commonFilePrefix']);
-        if (isset($cells[3]) && $row['function'] !== Abstracter::UNDEFINED) {
-            $cells[3]['innerHtml'] = $this->dumper->valDumper->markupIdentifier($row['function'], 'method', 'span', array(), true);
-        }
-        $trAttribs = \strpos($cells[1]['innerHtml'], 'DOCUMENT_ROOT') !== false
-            ? ' data-file="' . \htmlspecialchars($row['file']) . '"'
-            : '';
-        return '<tr' . $trAttribs . '>' . \join('', \array_map(static function ($parts) {
-            return '<' . $parts['tagname'] . $parts['attribs'] . '>' . $parts['innerHtml'] . '</' . $parts['tagname'] . '>';
-        }, $cells)) . '</tr>';
     }
 
     /**
@@ -349,41 +279,5 @@ class Helper
             $type .= $this->html->buildTag('span', array('class' => 't_punct'), \str_repeat('[]', $arrayCount));
         }
         return $this->html->buildTag('span', array('class' => 't_type'), $type);
-    }
-
-    /**
-     * Parse file path into parts
-     *
-     * @param string $filePath     filepath (ie /var/www/html/index.php)
-     * @param string $commonPrefix prefix shared by current group of files
-     *
-     * @return array
-     */
-    private function parseFilePath($filePath, $commonPrefix)
-    {
-        $docRoot = (string) $this->debug->serverRequest->getServerParam('DOCUMENT_ROOT');
-        $baseName = \basename($filePath);
-        $containsDocRoot = \strpos($filePath, $docRoot) === 0;
-        $basePath = '';
-        $relPath = \substr($filePath, 0, 0 - \strlen($baseName));
-        if ($commonPrefix || $containsDocRoot) {
-            $strLengths = \array_intersect_key(
-                [\strlen($commonPrefix), \strlen($docRoot)],
-                \array_filter([$commonPrefix, $containsDocRoot])
-            );
-            $maxLen = \max($strLengths);
-            $basePath = \substr($relPath, 0, $maxLen);
-            $relPath = \substr($relPath, $maxLen);
-            if ($containsDocRoot) {
-                $basePath = \substr($basePath, \strlen($docRoot));
-            }
-        }
-        // phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys
-        return array(
-            'docRoot' => $containsDocRoot ? $docRoot : '',
-            'relPathCommon' => $basePath,
-            'relPath' => $relPath,
-            'baseName' => $baseName,
-        );
     }
 }

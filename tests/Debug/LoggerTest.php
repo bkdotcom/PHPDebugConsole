@@ -59,10 +59,9 @@ class LoggerTest extends DebugTestFramework
     {
         $this->debug->logger->emergency('Emergency broadcast system');
         $metaExpect = array(
-            'detectFiles' => true,
             // 'evalLine' => null,
             'file' => __FILE__,
-            'line' => __LINE__ - 5,
+            'line' => __LINE__ - 4,
             'psr3level' => 'emergency',
             'uncollapse' => true,
         );
@@ -77,10 +76,9 @@ class LoggerTest extends DebugTestFramework
     {
         $this->debug->logger->critical('Critical test');
         $metaExpect = array(
-            'detectFiles' => true,
             // 'evalLine' => null,
             'file' => __FILE__,
-            'line' => __LINE__ - 5,
+            'line' => __LINE__ - 4,
             'psr3level' => 'critical',
             'uncollapse' => true,
         );
@@ -101,10 +99,9 @@ class LoggerTest extends DebugTestFramework
             'foo' => 'bar',
         ));
         $metaSubset = array(
-            'detectFiles' => true,
             // 'evalLine' => null,
             'file' => __FILE__,
-            'line' => __LINE__ - 8, // line of Exception
+            'line' => __LINE__ - 7, // line of Exception
             'uncollapse' => true,
         );
         $this->assertSame('error', $this->debug->data->get('log/__end__/method'));
@@ -128,7 +125,6 @@ class LoggerTest extends DebugTestFramework
                 ),
             ),
             'meta' => array(
-                'detectFiles' => true,
                 // 'evalLine' => null,
                 'file' => __FILE__,
                 'glue' => ', ',
@@ -160,7 +156,6 @@ class LoggerTest extends DebugTestFramework
                 ),
             ),
             'meta' => array(
-                'detectFiles' => true,
                 // 'evalLine' => null,
                 'file' => __FILE__,
                 'glue' => ', ',
@@ -175,10 +170,9 @@ class LoggerTest extends DebugTestFramework
     {
         $this->debug->logger->error('Error test');
         $meta = array(
-            'detectFiles' => true,
             // 'evalLine' => null,
             'file' => __FILE__,
-            'line' => __LINE__ - 5,
+            'line' => __LINE__ - 4,
             'psr3level' => 'error',
             'uncollapse' => true,
         );
@@ -193,10 +187,9 @@ class LoggerTest extends DebugTestFramework
     {
         $this->debug->logger->warning('You\'ve been warned');
         $meta = array(
-            'detectFiles' => true,
             // 'evalLine' => null,
             'file' => __FILE__,
-            'line' => __LINE__ - 5,
+            'line' => __LINE__ - 4,
             'psr3level' => 'warning',
             'uncollapse' => true,
         );
@@ -211,10 +204,9 @@ class LoggerTest extends DebugTestFramework
     {
         $this->debug->logger->notice('Final Notice');
         $meta = array(
-            'detectFiles' => true,
             // 'evalLine' => null,
             'file' => __FILE__,
-            'line' => __LINE__ - 5,
+            'line' => __LINE__ - 4,
             'psr3level' => 'notice',
             'uncollapse' => true,
         );
@@ -255,14 +247,14 @@ class LoggerTest extends DebugTestFramework
 
     public function testInfoWithTable()
     {
-        $tableData = array(
+        $tableData = [
             array('name' => 'Bob', 'age' => '12', 'sex' => 'M', 'Naughty' => false),
             array('Naughty' => true, 'name' => 'Sally', 'extracol' => 'yes', 'sex' => 'F', 'age' => '10'),
-        );
-        $tableDataLogged = array(
-            array('name' => 'Bob', 'age' => '12'),
-            array('name' => 'Sally', 'age' => '10'),
-        );
+        ];
+        $tableDataLogged = [
+            ['Bob', '12'],
+            ['Sally', '10'],
+        ];
         $this->debug->logger->info('table caption', array(
             'table' => $tableData,
             'columns' => array('name', 'age'),
@@ -311,14 +303,14 @@ class LoggerTest extends DebugTestFramework
     {
         // see also testPlaceholders
 
-        $tableData = array(
+        $tableData = [
             array('name' => 'Bob', 'age' => '12', 'sex' => 'M', 'Naughty' => false),
             array('Naughty' => true, 'name' => 'Sally', 'extracol' => 'yes', 'sex' => 'F', 'age' => '10'),
-        );
-        $tableDataLogged = array(
-            array('name' => 'Bob', 'age' => '12',),
-            array('name' => 'Sally', 'age' => '10', ),
-        );
+        ];
+        $tableDataLogged = [
+            ['Bob', '12'],
+            ['Sally', '10'],
+        ];
         $this->debug->logger->debug('table caption', array(
             'table' => $tableData,
             'columns' => ['name', 'age'],

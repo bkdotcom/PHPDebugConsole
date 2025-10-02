@@ -78,7 +78,7 @@ class AbstractionTest extends TestCase
     {
         $abs = new Abstraction('myType', array('foo' => 'bar'));
         $json = \json_encode($abs);
-        $this->assertSame('{"foo":"bar","type":"myType","value":null,"debug":"\u0000debug\u0000"}', $json);
+        $this->assertSame('{"debug":"\u0000debug\u0000","foo":"bar","type":"myType","value":null}', $json);
     }
 
     public function testSerialize()

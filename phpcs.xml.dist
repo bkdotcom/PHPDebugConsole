@@ -134,7 +134,6 @@
         <exclude name="Squiz.Commenting.InlineComment.SpacingBefore" />
         <exclude name="Squiz.Commenting.InlineComment.WrongStyle" />
 
-
         <!-- LongConditionClosingComment -->
         <!--
             refuses to acknowledge @inheritdoc

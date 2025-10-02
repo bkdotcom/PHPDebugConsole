@@ -35,36 +35,12 @@ class Helper
     }
 
     /**
-     * Arrayify abstractions
-     * sort abstract values and meta values for consistency
-     *
-     * @param mixed $val args or value
-     *
-     * @return mixed
-     */
-    public static function crate($val, $mergeWithClass = false)
-    {
-        if ($val instanceof Abstraction) {
-            $val = $mergeWithClass
-                ? $val->getValues() + array('debug' => Abstracter::ABSTRACTION)
-                : $val->jsonSerialize();
-            \ksort($val);
-        }
-        if (\is_array($val)) {
-            foreach ($val as $k => $v) {
-                $val[$k] = self::crate($v, $mergeWithClass);
-            }
-        }
-        return $val;
-    }
-
-    /**
      * Convert data log log entries into simple arrays
      *
      * @param array $data           log data
      * @param bool  $withKeys       whether log entries should be returned with keys or as a list
      * @param bool  $dropEmptyMeta  whether to omit meta if empty
-     * @param bool  $mergeWithClass whether to merge with class values
+     * @param bool  $mergeWithClass whether to merge with inherited class values
      *
      * @return array
      */
@@ -74,12 +50,13 @@ class Helper
             return self::logEntryToArray($data, $withKeys, $dropEmptyMeta, $mergeWithClass);
         }
         if ($data instanceof Abstraction) {
-            return self::crate($data, $mergeWithClass);
+            $data = $mergeWithClass
+                ? $data->getValues() + array('debug' => Abstracter::ABSTRACTION)
+                : $data->jsonSerialize();
+            \ksort($data);
         }
         if ($data instanceof ValueStore) {
-            $data = $data->getValues();
-            \ksort($data);
-            return $data;
+            return $data->getValues();
         }
         if (\is_array($data) === false) {
             return $data;
@@ -88,22 +65,6 @@ class Helper
             $data[$i] = self::deObjectifyData($v, $withKeys, $dropEmptyMeta, $mergeWithClass);
         }
         return $data;
-    }
-
-    public function resetContainerValue($name)
-    {
-        $debug = Debug::getInstance();
-        $container = \bdk\Debug\Utility\Reflection::propGet($debug, 'container');
-        $invoked = \bdk\Debug\Utility\Reflection::propGet($container, 'invoked');
-        if (isset($invoked[$name])) {
-            $raw = \bdk\Debug\Utility\Reflection::propGet($container, 'raw');
-            $values = \bdk\Debug\Utility\Reflection::propGet($container, 'values');
-            $values[$name] = $raw[$name];
-            unset($invoked[$name]);
-            \bdk\Debug\Utility\Reflection::propSet($container, 'invoked', $invoked);
-            \bdk\Debug\Utility\Reflection::propSet($container, 'raw', $raw);
-            \bdk\Debug\Utility\Reflection::propSet($container, 'values', $values);
-        }
     }
 
     /**
@@ -123,15 +84,29 @@ class Helper
             return null;
         }
         $return = $logEntry->export();
-        $return['args'] = self::crate($return['args'], $mergeWithClass);
-        \ksort($return['meta']);
+        $return['args'] = self::deObjectifyData($return['args'], $withKeys, $dropEmptyMeta, $mergeWithClass);
         if ($dropEmptyMeta && empty($return['meta'])) {
             unset($return['meta']);
         }
-        if (!$withKeys) {
-            return \array_values($return);
+        return $withKeys
+            ? $return
+            : array_values($return);
+    }
+
+    public function resetContainerValue($name)
+    {
+        $debug = Debug::getInstance();
+        $container = \bdk\Debug\Utility\Reflection::propGet($debug, 'container');
+        $invoked = \bdk\Debug\Utility\Reflection::propGet($container, 'invoked');
+        if (isset($invoked[$name])) {
+            $raw = \bdk\Debug\Utility\Reflection::propGet($container, 'raw');
+            $values = \bdk\Debug\Utility\Reflection::propGet($container, 'values');
+            $values[$name] = $raw[$name];
+            unset($invoked[$name]);
+            \bdk\Debug\Utility\Reflection::propSet($container, 'invoked', $invoked);
+            \bdk\Debug\Utility\Reflection::propSet($container, 'raw', $raw);
+            \bdk\Debug\Utility\Reflection::propSet($container, 'values', $values);
         }
-        return $return;
     }
 
     private static function backtraceArgs($args, $depth = 0)

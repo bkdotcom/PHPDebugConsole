@@ -59,10 +59,9 @@ EOD;
     public function testCommonPrefixException()
     {
         $this->expectException('InvalidArgumentException');
-        $this->expectExceptionMessage('bdk\Debug\Utility\StringUtil::commonPrefix() expects array of string.  bool found at 1');
+        $this->expectExceptionMessage('bdk\Debug\Utility\StringUtil::commonPrefix() expects array of string|Stringable.  bool found at 1');
         StringUtil::commonPrefix(['foo', false]);
     }
-
 
     /**
      * Test compare method

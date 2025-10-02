@@ -149,7 +149,6 @@ class LogResponse extends AbstractLogReqRes implements SubscriberInterface
 
         if (\headers_sent($file, $line)) {
             $metaVals = array(
-                'detectFiles' => true,
                 'file' => $file,
                 'line' => $line,
             );

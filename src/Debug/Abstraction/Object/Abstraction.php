@@ -119,11 +119,13 @@ class Abstraction extends BaseAbstraction
     #[\ReturnTypeWillChange]
     public function jsonSerialize()
     {
-        return $this->getInstanceValues() + array(
+        $values = $this->getInstanceValues() + array(
             'debug' => Abstracter::ABSTRACTION,
             'inheritsFrom' => $this->inherited['className'],
             'type' => Type::TYPE_OBJECT,
         );
+        \ksort($values);
+        return $values;
     }
 
     /**

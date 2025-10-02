@@ -103,9 +103,9 @@ class Value extends BaseValue
     public function dump($val, $opts = array())
     {
         $opts = $this->getPerValueOptions($val, $opts);
-        $this->optionStackPush($opts);
+        $this->optionStackPush($opts); // sets optionsCurrent
         $val = $this->doDump($val);
-        if ($this->optionsCurrent['type']) {
+        if ($this->optionsCurrent['type'] && $this->optionsCurrent['dumpType']) {
             $this->optionsCurrent['attribs']['class'][] = 't_' . $this->optionsCurrent['type'];
         }
         if (\in_array($this->optionsCurrent['typeMore'], [null, Type::TYPE_RAW], true) === false) {
@@ -139,27 +139,28 @@ class Value extends BaseValue
     {
         $parts = \array_map([$this->string, 'dump'], $this->parseIdentifier($val, $what));
         $class = 'classname';
-        $classOrNamespace = $this->wrapNamespace($parts['classname']);
+        $classOrNamespace = $this->wrapNamespace($parts['classname'], $wbr);
         if ($parts['namespace']) {
             $class = 'namespace';
             $classOrNamespace = $parts['namespace'];
         }
-        $classOrNamespace = $this->html->buildTag(
-            $tagName,
-            $this->debug->arrayUtil->mergeDeep(array(
-                'class' => [$class],
-            ), (array) $attribs),
-            $classOrNamespace
-        ) . '<wbr />';
-        $classOrNamespace = \preg_replace('#<' . $tagName . '[^>]*></' . $tagName . '><wbr />#', '', $classOrNamespace);
+        if ($classOrNamespace) {
+            $classOrNamespace = $this->html->buildTag(
+                $tagName,
+                $this->debug->arrayUtil->mergeDeep(array(
+                    'class' => [$class],
+                ), (array) $attribs),
+                $classOrNamespace
+            );
+        }
         $parts2 = \array_filter(\array_intersect_key($parts, \array_flip(['operator', 'name'])));
         foreach ($parts2 as $key => $value) {
             $parts[$key] = '<span class="t_' . $key . '">' . $value . '</span>';
         }
-        $html = \implode($parts['operator'], \array_filter([$classOrNamespace, $parts['name']]));
-        return $wbr === false
-            ? \str_replace('<wbr />', '', $html)
-            : $html;
+        if ($wbr) {
+            $parts['operator'] = '<wbr />' . $parts['operator'];
+        }
+        return \implode($parts['operator'], \array_filter([$classOrNamespace, $parts['name']]));
     }
 
     /**
@@ -248,7 +249,7 @@ class Value extends BaseValue
             $valueAsString = $this->debug->getDump('text')->valDumper->dump($abs['backedValue']);
             $this->optionSet('attribs.title', $this->debug->i18n->trans('word.value') . ': ' . $valueAsString);
         }
-        return $this->markupIdentifier($abs['value'], $abs['typeMore']);
+        return $this->markupIdentifier($abs['value'], $abs['typeMore'], 'span', [], false);
     }
 
     /**
@@ -351,6 +352,7 @@ class Value extends BaseValue
                 'attribs' => array(
                     'class' => [],
                 ),
+                'dumpType' => true,
                 'postDump' => null,
                 'tagName' => $parentOptions['type'] === Type::TYPE_OBJECT
                     ? 'div'
@@ -369,14 +371,16 @@ class Value extends BaseValue
      * Wrap the namespace portion of the identifier in a span.namespace
      *
      * @param string $identifier (class name or function name)
+     * @param bool   $wbr        (false) whether to add a <wbr /> after each namespace segment
      *
      * @return string html snippet
      */
-    private function wrapNamespace($identifier)
+    private function wrapNamespace($identifier, $wbr = false)
     {
         $idx = \strrpos($identifier, '\\');
+        $wbrTag = $wbr ? '<wbr />' : '';
         return $idx
-            ? '<span class="namespace">' . \str_replace('\\', '\\<wbr />', \substr($identifier, 0, $idx + 1)) . '</span>'
+            ? '<span class="namespace">' . \str_replace('\\', '\\' . $wbrTag, \substr($identifier, 0, $idx + 1)) . '</span>'
                 . \substr($identifier, $idx + 1)
             : $identifier;
     }

@@ -15,7 +15,6 @@ use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\AbstractObject;
 use bdk\Debug\Abstraction\Object\Definition as AbstractObjectDefinition;
 use bdk\Debug\Abstraction\Object\PropertiesDom;
-use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Data;
 use bdk\Debug\Utility\PhpDoc;
 use bdk\PubSub\SubscriberInterface;
@@ -189,27 +188,13 @@ class Subscriber implements SubscriberInterface
     {
         // get the per-instance __invoke signature
         $this->abstractObject->methods->add($abs);
-        $obj = $abs->getSubject();
-        $ref = new ReflectionFunction($obj);
+        $ref = new ReflectionFunction($abs->getSubject());
         $abs['definition'] = array(
             'extensionName' => $ref->getExtensionName(),
             'fileName' => $ref->getFileName(),
             'startLine' => $ref->getStartLine(),
         );
-        $properties = $abs['properties'];
-        $properties['debug.file'] = $this->abstractObject->properties->buildValues(array(
-            'type' => Type::TYPE_STRING,
-            'value' => $abs['definition']['fileName'],
-            'valueFrom' => 'debug',
-            'visibility' => ['debug'],
-        ));
-        $properties['debug.line'] = $this->abstractObject->properties->buildValues(array(
-            'type' => Type::TYPE_INT,
-            'value' => (int) $abs['definition']['startLine'],
-            'valueFrom' => 'debug',
-            'visibility' => ['debug'],
-        ));
-        $abs['properties'] = $properties;
+        $this->abstractObject->properties->addDebugProperties($abs);
     }
 
     /**

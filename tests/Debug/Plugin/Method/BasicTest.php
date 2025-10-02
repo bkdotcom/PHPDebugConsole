@@ -3,6 +3,8 @@
 namespace bdk\Test\Debug\Plugin\Method;
 
 use bdk\Debug;
+use bdk\Debug\Abstraction\Abstracter;
+use bdk\Debug\Abstraction\Type;
 use bdk\Debug\LogEntry;
 use bdk\ErrorHandler\Error;
 use bdk\Test\Debug\DebugTestFramework;
@@ -77,10 +79,9 @@ class BasicTest extends DebugTestFramework
                     // we're doing the custom stuff via Debug::EVENT_OUTPUT_LOG_ENTRY, so logEntry should still be trace
                     self::assertSame('trace', $logEntry['method']);
                     self::assertIsArray($logEntry['args'][0]);
-                    $filepaths = \array_column($logEntry['args'][0], 'file');
+                    $filepaths = \array_column($logEntry['args'][0], 0);
                     $metaExpect = array(
                         'caption' => 'trace',
-                        'detectFiles' => true,
                         'inclArgs' => false,
                         'inclInternal' => false,
                         'limit' => 0,
@@ -96,11 +97,10 @@ class BasicTest extends DebugTestFramework
                             'indexLabel' => null,
                             'rows' => array(),
                             'summary' => '',
-                            'commonRowInfo' => array(
-                                'commonFilePrefix' => \bdk\Debug\Utility\StringUtil::commonPrefix($filepaths),
-                            ),
                         ),
                     );
+                    // \bdk\Debug::varDump('expect', $metaExpect);
+                    // \bdk\Debug::varDump('actual', $logEntry['meta']);
                     self::assertSame($metaExpect, $logEntry['meta']);
                 },
                 'chromeLogger' => array(
@@ -116,11 +116,9 @@ class BasicTest extends DebugTestFramework
                     'log',
                     array('something completely different'),
                     array(
-                        'detectFiles' => true,
                         'inclArgs' => false,
                         'inclInternal' => false,
                         'format' => 'raw',
-                        'foundFiles' => array(),
                     ),
                 ),
             )
@@ -281,11 +279,19 @@ class BasicTest extends DebugTestFramework
             'method' => 'assert',
             'args' => array(
                 'Assertion failed:',
-                $this->file . ' (line ' . $this->line . ')',
+                array(
+                    'baseName' => \basename($this->file),
+                    'debug' => Abstracter::ABSTRACTION,
+                    'docRoot' => false,
+                    'evalLine' => null,
+                    'line' => $this->line,
+                    'pathCommon' => '',
+                    'pathRel' => \dirname($this->file) . '/',
+                    'type' => Type::TYPE_STRING,
+                    'typeMore' => Type::TYPE_STRING_FILEPATH,
+                ),
             ),
-            'meta' => array(
-                'detectFiles' => true,
-            ),
+            'meta' => array(),
         );
         $this->testMethod(
             'assert',
@@ -302,11 +308,11 @@ class BasicTest extends DebugTestFramework
                     'assert',
                 ),
                 'firephp' => 'X-Wf-1-1-1-2: %d|[{"Label":"Assertion failed:","Type":"LOG"},' . \json_encode($this->file . ' (line ' . $this->line . ')', JSON_UNESCAPED_SLASHES) . ']|',
-                'html' => '<li class="m_assert" data-detect-files="true"><span class="no-quotes t_string">Assertion failed: </span><span class="t_string">' . $this->file . ' (line ' . $this->line . ')</span></li>',
+                'html' => '<li class="m_assert"><span class="no-quotes t_string">Assertion failed: </span><span class="no-quotes t_string" data-type-more="filepath"><span class="t_string"><span class="file-path-rel">' . \dirname($this->file) . '/' . '</span><span class="file-basename">' . \basename($this->file) . '</span></span> (line <span class="t_int">' . $this->line . '</span>)</span></li>',
                 'script' => 'console.assert(false,"Assertion failed:",' . \json_encode($this->file . ' (line ' . $this->line . ')', JSON_UNESCAPED_SLASHES) . ');',
                 'text' => '≠ Assertion failed: "' . $this->file . ' (line ' . $this->line . ')"',
                 'wamp' => $this->debug->arrayUtil->mergeDeep($entry, array(
-                    'meta' => array('foundFiles' => array()),
+                    'meta' => array(),
                 )),
             )
         );
@@ -359,7 +365,7 @@ class BasicTest extends DebugTestFramework
                     'error',
                 )),
                 'firephp' => 'X-Wf-1-1-1-3: %d|[{"File":"%s","Label":"a string","Line":%d,"Type":"ERROR"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
-                'html' => '<li class="m_error" data-detect-files="true" data-file="' . \realpath(__DIR__ . '/../../DebugTestFramework.php') . '" data-line="%d"><span class="no-quotes t_string">a string</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>, <div class="t_object"><span class="t_identifier" data-type-more="className"><span class="classname">stdClass</span></span><span class="t_punct">()</span></div>, <span class="t_resource">Resource id #%d: stream</span></li>',
+                'html' => '<li class="m_error" data-file="' . \realpath(__DIR__ . '/../../DebugTestFramework.php') . '" data-line="%d"><span class="no-quotes t_string">a string</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>, <div class="t_object"><span class="t_identifier" data-type-more="className"><span class="classname">stdClass</span></span><span class="t_punct">()</span></div>, <span class="t_resource">Resource id #%d: stream</span></li>',
                 'script' => 'console.error("a string",[],{"___class_name":"stdClass"},"Resource id #%i: stream","%s: line %d");',
                 'text' => '⦻ a string, array(), stdClass(), Resource id #%i: stream',
                 'streamAnsi' => "\e[38;5;9m⦻ a string\e[38;5;245m, \e[38;5;9m\e[38;5;45marray\e[38;5;245m(\e[38;5;9m\e[38;5;245m)\e[38;5;9m\e[38;5;245m, \e[38;5;9m\e[1mstdClass\e[22m\e[38;5;245m()\e[38;5;9m\e[38;5;245m, \e[38;5;9mResource id #%d: stream\e[0m",
@@ -505,12 +511,21 @@ class BasicTest extends DebugTestFramework
                         'args' => array(
                             'Warning:',
                             'this is a warning',
-                            __FILE__ . ' (line 42)',
+                            array(
+                                'baseName' => \basename(__FILE__),
+                                'debug' => Abstracter::ABSTRACTION,
+                                'docRoot' => false,
+                                'evalLine' => null,
+                                'line' => 42,
+                                'pathCommon' => '',
+                                'pathRel' => \dirname(__FILE__) . '/',
+                                'type' => Type::TYPE_STRING,
+                                'typeMore' => Type::TYPE_STRING_FILEPATH,
+                            ),
                         ),
                         'meta' => array(
                             'channel' => 'general.phpError',
                             // 'context' => null,
-                            'detectFiles' => true,
                             'errorCat' => 'warning',
                             'errorHash' => $logEntry->getMeta('errorHash'),
                             'errorType' => 2,
@@ -524,6 +539,8 @@ class BasicTest extends DebugTestFramework
                         ),
                     ), $this->helper->logEntryToArray($logEntry));
                 },
+                // note:  no data-file or data-line attributes
+                'html' => '<li class="error-warning m_error" data-channel="general.phpError"><span class="no-quotes t_string">Warning: </span><span class="t_string">this is a warning</span>, <span class="no-quotes t_string" data-type-more="filepath"><span class="t_string"><span class="file-path-rel">' . \dirname(__FILE__) . '/' . '</span><span class="file-basename">' . \basename(__FILE__) . '</span></span> (line <span class="t_int">42</span>)</span></li>',
             )
         );
 
@@ -655,7 +672,7 @@ class BasicTest extends DebugTestFramework
                     'warn',
                 )),
                 'firephp' => 'X-Wf-1-1-1-5: %d|[{"File":"' . \realpath(__DIR__ . '/../../DebugTestFramework.php') . '","Label":"a string","Line":%d,"Type":"WARN"},[[],{"___class_name":"stdClass"},"Resource id #%d: stream"]]|',
-                'html' => '<li class="m_warn" data-detect-files="true" data-file="' . \realpath(__DIR__ . '/../../DebugTestFramework.php') . '" data-line="%d"><span class="no-quotes t_string">a string</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>, <div class="t_object"><span class="t_identifier" data-type-more="className"><span class="classname">stdClass</span></span><span class="t_punct">()</span></div>, <span class="t_resource">Resource id #%d: stream</span></li>',
+                'html' => '<li class="m_warn" data-file="' . \realpath(__DIR__ . '/../../DebugTestFramework.php') . '" data-line="%d"><span class="no-quotes t_string">a string</span>, <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">()</span></span>, <div class="t_object"><span class="t_identifier" data-type-more="className"><span class="classname">stdClass</span></span><span class="t_punct">()</span></div>, <span class="t_resource">Resource id #%d: stream</span></li>',
                 'script' => 'console.warn("a string",[],{"___class_name":"stdClass"},"Resource id #%d: stream","' . \realpath(__DIR__ . '/../../DebugTestFramework.php') . ': line %d");',
                 'text' => '⚠ a string, array(), stdClass(), Resource id #%d: stream',
                 // 'wamp' => @todo

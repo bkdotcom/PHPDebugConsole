@@ -69,17 +69,17 @@ class ProfileTest extends DebugTestFramework
                     $c = $data['bdk\Test\Debug\Plugin\Method\ProfileTest::c'];
                     // test a
                     self::assertCount(3, $data);
-                    self::assertSame(1, $a['calls']);
-                    self::assertGreaterThanOrEqual(0.25 + 0.75 * 2, $a['totalTime']);
-                    self::assertLessThan(0.01, $a['ownTime']);
+                    self::assertSame(1, $a[0]);
+                    self::assertGreaterThanOrEqual(0.25 + 0.75 * 2, $a[1]);
+                    self::assertLessThan(0.01, $a[2]);
                     // test b
-                    self::assertSame(1, $b['calls']);
-                    self::assertGreaterThanOrEqual(0.25 + 0.75 * 2, $b['totalTime']);
-                    self::assertLessThanOrEqual(0.25 + 0.01, \round($b['ownTime'], 2));
+                    self::assertSame(1, $b[0]);
+                    self::assertGreaterThanOrEqual(0.25 + 0.75 * 2, $b[1]);
+                    self::assertLessThanOrEqual(0.25 + 0.01, \round($b[2], 2));
                     // test c
-                    self::assertSame(2, $c['calls']);
-                    self::assertGreaterThanOrEqual(0.75 * 2, $c['totalTime']);
-                    self::assertLessThanOrEqual(0.75 * 2 + 0.02, \round($c['ownTime'], 2));
+                    self::assertSame(2, $c[0]);
+                    self::assertGreaterThanOrEqual(0.75 * 2, $c[1]);
+                    self::assertLessThanOrEqual(0.75 * 2 + 0.02, \round($c[2], 2));
                     \ksort($logEntry['meta']);
                     $expect = array(
                         'caption' => "Profile 'Profile 1' Results",
@@ -95,7 +95,7 @@ class ProfileTest extends DebugTestFramework
                                     'key' => 'totalTime',
                                 ),
                                 array(
-                                    'total' => $a['ownTime'] + $b['ownTime'] + $c['ownTime'],
+                                    'total' => $a[2] + $b[2] + $c[2],
                                     'key' => 'ownTime',
                                 ),
                             ),

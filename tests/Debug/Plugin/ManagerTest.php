@@ -21,7 +21,6 @@ class ManagerTest extends TestCase
     protected static $debug;
     protected static $manager;
 
-
     public static function setUpBeforeClass(): void
     {
         static::$debug = Debug::getInstance();

@@ -182,16 +182,16 @@ EOD;
                 'method' => 'table',
                 'args' => array(
                     array(
-                        ':datetime' => array(
-                            'value' => $datetime,
-                            'type' => array(
+                        ':datetime' => [
+                            $datetime,
+                            array(
                                 'backedValue' => 2,
                                 'debug' => Abstracter::ABSTRACTION,
                                 'type' => Type::TYPE_IDENTIFIER,
                                 'typeMore' => Type::TYPE_IDENTIFIER_CONST,
                                 'value' => 'PDO::PARAM_STR',
                             ),
-                        ),
+                        ],
                     ),
                 ),
                 'meta' => array(
@@ -241,7 +241,6 @@ EOD;
                 ),
                 'meta' => array(
                     'channel' => 'general.pdo',
-                    'detectFiles' => true,
                     // 'evalLine' => null,
                     'file' => __FILE__,
                     'line' => $line,

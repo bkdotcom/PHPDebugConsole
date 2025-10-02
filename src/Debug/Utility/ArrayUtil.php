@@ -284,7 +284,7 @@ class ArrayUtil
      *                                 * __push__ : append value
      *                                 * __reset__ : first value
      * @param mixed             $val   value to set
-     *                                 * __unset__ to unset
+     *                                 * __unset__ : remove by key
      *
      * @return void
      */

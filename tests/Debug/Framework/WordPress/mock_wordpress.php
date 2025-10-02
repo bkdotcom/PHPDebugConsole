@@ -13,6 +13,8 @@ if (!defined('WP_DEBUG_LOG')) {
     define('WP_DEBUG_LOG', false);
 }
 
+$GLOBALS['shortcode_tags'] = array();
+
 // add_action and add_filter will write to this
 $GLOBALS['wp_actions_filters'] = array(
     'actions' => array(),

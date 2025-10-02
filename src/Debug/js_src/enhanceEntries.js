@@ -68,11 +68,13 @@ export function enhanceValue (node, $entry) {
     enhanceObject.enhance($node)
   } else if ($node.is('table')) {
     tableSort.makeSortable($node)
-  } else if ($node.is('.t_string')) {
-    fileLinks.create($entry, $node)
+  // } else if ($node.is('.t_string')) {
+    // fileLinks.create($entry, $node)
   } else if ($node.is('.string-encoded.tabs-container')) {
     // console.warn('enhanceStringEncoded', $node)
     enhanceValue($node.find('> .tab-pane.active > *'), $entry)
+  } else if ($node.is('[data-type-more=filepath]')) {
+    fileLinks.create($entry, $node)
   }
 }
 
@@ -176,10 +178,17 @@ function enhanceEntryDefault ($entry) {
     }
     fileLinks.create($entry)
   }
+  if ($entry.hasClass('m_error') || $entry.hasClass('m_warn')) {
+    $entry.find('.m_trace').debugEnhance()
+  }
   addIcons($entry)
   $entry.children().each(function () {
     enhanceValue(this, $entry)
   })
+  if ($entry.hasClass('have-fatal')) {
+    // special alert
+    fileLinks.create($entry, $entry.find('[data-type-more=filepath]'))
+  }
 }
 
 function enhanceEntryTabular ($entry) {

@@ -30,7 +30,6 @@ class Table
     private $optionsDefault = array(
         'attribs' => array(),
         'caption' => '',
-        'onBuildRow' => null,   // callable (or array of callables)
         'tableInfo' => array(
             'class' => null,  // class name of table object
             'columns' => array(),
@@ -38,6 +37,7 @@ class Table
                 'attribs' => array(),
                 'class' => null,
                 'key' => null,
+                'keyOutput' => true,
                 'summary' => '',
             ),
             'haveObjRow' => false,
@@ -46,7 +46,6 @@ class Table
             'summary' => '', // title attr on class
         ),
     );
-
 
     /**
      * Constructor
@@ -119,9 +118,6 @@ class Table
     protected function buildBody($rows)
     {
         $tBody = '';
-        $this->options['onBuildRow'] = \is_callable($this->options['onBuildRow'])
-            ? [$this->options['onBuildRow']]
-            : (array) $this->options['onBuildRow'];
         foreach ($rows as $k => $row) {
             $rowInfo = \array_merge(
                 $this->options['tableInfo']['commonRowInfo'],
@@ -187,7 +183,8 @@ class Table
             return '';
         }
         return '<tfoot>' . "\n"
-            . '<tr><td>&nbsp;</td>'
+            . '<tr>'
+                . ($this->options['tableInfo']['commonRowInfo']['keyOutput'] ? '<td>&nbsp;</td>' : '')
                 . ($this->options['tableInfo']['haveObjRow'] ? '<td>&nbsp;</td>' : '')
                 . \implode('', $cells)
             . '</tr>' . "\n"
@@ -208,11 +205,14 @@ class Table
             }
             return $label;
         }, $this->options['tableInfo']['columns']);
+        $keyLabel = $this->options['tableInfo']['commonRowInfo']['keyOutput']
+            ? ($this->options['tableInfo']['indexLabel']
+                ? '<th class="text-right">' . $this->options['tableInfo']['indexLabel'] . '</th>'
+                : '<th>&nbsp;</th>')
+            : '';
         return '<thead>' . "\n"
             . '<tr>'
-                . ($this->options['tableInfo']['indexLabel']
-                    ? '<th class="text-right">' . $this->options['tableInfo']['indexLabel'] . '</th>'
-                    : '<th>&nbsp;</th>')
+                . $keyLabel
                 . ($this->options['tableInfo']['haveObjRow']
                     ? '<th>&nbsp;</th>'
                     : '')
@@ -235,7 +235,7 @@ class Table
         $str = '';
         $rowKey = $rowInfo['key'] ?: $rowKey;
         $str .= '<tr' . $this->debug->html->buildAttribString($rowInfo['attribs']) . '>';
-        $str .= $this->buildRowKey($rowKey);
+        $str .= $rowInfo['keyOutput'] ? $this->buildRowKey($rowKey) : '';
         /*
             Output row's classname (if row is an object)
         */
@@ -249,22 +249,28 @@ class Table
         /*
             Output values
         */
-        $str .= $this->buildRowCells($row);
-        $str .= '</tr>';
-        return $this->onBuildRow($str, $row, $rowInfo, $rowKey) . "\n";
+        $str .= $this->buildRowCells($row, $rowInfo);
+        $str .= '</tr>' . "\n";
+        return $str;
     }
 
     /**
      * Build the row's value cells
      *
-     * @param mixed $row should be array or object abstraction
+     * @param mixed $row     should be array or object abstraction
+     * @param array $rowInfo row info / meta
      *
      * @return string
      */
-    private function buildRowCells($row)
+    private function buildRowCells($row, array $rowInfo)
     {
-        $cells = \array_map(function ($val, $i) {
-            $colInfo = $this->options['tableInfo']['columns'][$i];
+        $cells = \array_map(function ($val, $i) use ($rowInfo) {
+            $colInfo = \array_merge(
+                $this->options['tableInfo']['columns'][$i],
+                isset($rowInfo['columns'][$i])
+                    ? $rowInfo['columns'][$i]
+                    : array()
+            );
             $td = $this->dumper->valDumper->dump($val, array(
                 'attribs' => $colInfo['attribs'],
                 'tagName' => 'td',
@@ -297,25 +303,5 @@ class Table
             )),
             $rowKeyParsed['innerhtml']
         );
-    }
-
-    /**
-     * Call any onBuildRow callbacks
-     *
-     * @param string     $html    built row
-     * @param mixed      $row     should be array or object abstraction
-     * @param array      $rowInfo row info / meta
-     * @param string|int $rowKey  row key
-     *
-     * @return string html fragment
-     */
-    private function onBuildRow($html, $row, $rowInfo, $rowKey)
-    {
-        foreach ($this->options['onBuildRow'] as $callable) {
-            if (\is_callable($callable)) {
-                $html = $callable($html, $row, $rowInfo, $rowKey);
-            }
-        }
-        return $html;
     }
 }

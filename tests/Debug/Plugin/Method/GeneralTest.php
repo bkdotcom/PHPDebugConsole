@@ -3,6 +3,7 @@
 namespace bdk\Test\Debug\Plugin\Method;
 
 use bdk\Debug;
+use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\Type;
 use bdk\Test\Debug\DebugTestFramework;
@@ -88,12 +89,21 @@ class GeneralTest extends DebugTestFramework
             'args' => array(
                 'User Notice:',
                 '"dumpBogus" is not accessible',
-                __FILE__ . ' (line ' . $line . ')',
+                array(
+                    'baseName' => \basename(__FILE__),
+                    'debug' => Abstracter::ABSTRACTION,
+                    'docRoot' => false,
+                    'evalLine' => null,
+                    'line' => $line,
+                    'pathCommon' => '',
+                    'pathRel' => \dirname(__FILE__) . '/',
+                    'type' => Type::TYPE_STRING,
+                    'typeMore' => Type::TYPE_STRING_FILEPATH,
+                ),
             ),
             'meta' => array(
                 'channel' => 'general.phpError',
                 // 'context' => null,
-                'detectFiles' => true,
                 'errorCat' => 'notice',
                 'errorHash' => $logEntry['meta']['errorHash'],
                 'errorType' => E_USER_NOTICE,
@@ -105,7 +115,7 @@ class GeneralTest extends DebugTestFramework
                 // 'trace' => null,
                 'uncollapse' => true,
             ),
-        ), $logEntry);
+        ), $this->helper->deObjectifyData($logEntry));
     }
 
     /*

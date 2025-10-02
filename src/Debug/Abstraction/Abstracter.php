@@ -356,6 +356,7 @@ class Abstracter extends AbstractComponent
             'maxDepth',
         ];
         $keysStr = [
+            'detectFiles',
             'stringMaxLen',
             'stringMaxLenBrief',
             'stringMinLen',

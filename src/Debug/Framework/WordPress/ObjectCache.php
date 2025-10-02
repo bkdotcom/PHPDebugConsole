@@ -3,13 +3,14 @@
 namespace bdk\Debug\Framework\WordPress;
 
 use bdk\Debug;
+use bdk\Debug\AbstractComponent;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
 
 /**
  * Log cache info
  */
-class ObjectCache implements SubscriberInterface
+class ObjectCache extends AbstractComponent implements SubscriberInterface
 {
     /** @var array<string,mixed> */
     protected $cfg = array(

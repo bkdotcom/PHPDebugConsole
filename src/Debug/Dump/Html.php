@@ -71,13 +71,11 @@ class Html extends Base
         if (!isset($this->channels[$channelKey]) && $channelKey !== $this->channelKeyRoot . '.phpError') {
             $this->channels[$channelKey] = $logEntry->getSubject();
         }
-        $this->valDumper->string->detectFiles = $meta['detectFiles'];
         $this->logEntryAttribs = $this->debug->arrayUtil->mergeDeep(array(
             'class' => ['m_' . $logEntry['method']],
             'data-channel' => $channelKey !== $this->channelKeyRoot
                 ? $channelKey
                 : null,
-            'data-detect-files' => $meta['detectFiles'],
             'data-icon' => $meta['icon'],
         ), $meta['attribs']);
         $html = parent::processLogEntry($logEntry);
@@ -299,11 +297,7 @@ class Html extends Base
                     'trace-context' => $logEntry->getMeta('inclContext'),
                 ))),
             ),
-            'onBuildRow' => array(),
         ), $logEntry['meta']);
-        if ($logEntry->getMeta('inclContext')) {
-            $tableOptions['onBuildRow'][] = [$this->helper, 'tableAddContextRow'];
-        }
         return $this->html->buildTag(
             'li',
             $this->logEntryAttribs,
@@ -320,27 +314,71 @@ class Html extends Base
      */
     protected function methodTrace(LogEntry $logEntry)
     {
-        $meta = $this->debug->arrayUtil->mergeDeep(array(
-            'onBuildRow' => array(
-                [$this->helper, 'tableTraceRow'],
-            ),
-        ), $logEntry['meta']);
-        $meta['tableInfo']['columns'] = $this->debug->arrayUtil->mergeDeep(
-            // we may not have function column, so  use \array_intersect_key
-            \array_intersect_key(array(
-                0 => array('attribs' => array(
-                    'class' => ['no-quotes'],
-                )),
-                2 => array('attribs' => array(
-                    'class' => ['no-quotes', 't_identifier'],
-                )),
-            ), $meta['tableInfo']['columns']),
-            $meta['tableInfo']['columns']
-        );
-        // mergeDeep may leave keys out of order
-        \ksort($meta['tableInfo']['columns']);
-        $logEntry['meta'] = $meta;
+        $inclContext = $logEntry->getMeta('inclContext', false);
+        if ($inclContext === false) {
+            // not including context... add no-quotes class to filepath column
+            $meta = $logEntry['meta'];
+            $this->debug->arrayUtil->pathSet($meta, 'tableInfo.columns.0.attribs.class.__push__', 'no-quotes');
+            $logEntry['meta'] = $meta;
+        }
+        if ($inclContext) {
+            $this->addContextRows($logEntry);
+        }
         return $this->methodTabular($logEntry);
+    }
+
+    /**
+     * Move context info from meta to table rows
+     *
+     * @param LogEntry $logEntry LogEntry instance
+     *
+     * @return void
+     */
+    private function addContextRows(LogEntry $logEntry)
+    {
+        $rowsInfo = $logEntry['meta']['tableInfo']['rows'];
+        $rowsNew = [];
+        $rowsInfoNew = [];
+        foreach ($logEntry['args'][0] as $i => $row) {
+            $rowsNew[$i] = $row;
+            $rowsInfoNew[$i] = $rowsInfo[$i];
+            if (isset($rowsInfo[$i]['context']) === false) {
+                continue;
+            }
+
+            $displayContext = $i === 0;
+            $rowsNew[$i . '_context'] = [$this->helper->buildContextCell($rowsInfoNew[$i], $row[1])];
+
+            list($rowsInfoNew[$i], $rowsInfoNew[$i . '_context']) = $this->contextRowInfo($rowsInfoNew[$i], $displayContext);
+        }
+        $logEntry['args'] = [$rowsNew];
+        $logEntry['meta']['tableInfo']['rows'] = $rowsInfoNew;
+    }
+
+    private function contextRowInfo(array $rowInfo, $displayContext)
+    {
+        unset($rowInfo['context']);
+        unset($rowInfo['args']);
+        $rowInfo['attribs']['class']['expanded'] = $displayContext;
+        $rowInfo['attribs']['data-toggle'] = 'next';
+        $rowInfo['columns'][0]['attribs']['class'][] = 'no-quotes'; // no quotes on filepath
+
+        $rowInfoContext = array(
+            'attribs' => array(
+                'class' => ['context'],
+                'style' => $displayContext ? 'display:table-row;' : null,
+            ),
+            'columns' => [
+                array(
+                    'attribs' => array(
+                        'colspan' => 4,
+                    ),
+                ),
+            ],
+            'keyOutput' => false,
+        );
+
+        return [$rowInfo, $rowInfoContext];
     }
 
     /**
@@ -354,7 +392,6 @@ class Html extends Base
     {
         $meta = \array_merge(array(
             'attribs' => array(),
-            'detectFiles' => null,
             'errorCat' => null,         // should only be applicable for error & warn methods
             'glue' => null,
             'icon' => null,

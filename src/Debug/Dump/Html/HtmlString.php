@@ -30,9 +30,6 @@ class HtmlString
     /** @var Debug */
     public $debug;
 
-    /** @var bool */
-    public $detectFiles = false;
-
     /** @var ValDumper */
     public $valDumper;
 
@@ -97,10 +94,7 @@ class HtmlString
         $return = $abs
             ? $this->dumpAbs($abs)
             : $this->doDump($val);
-        if ($this->detectFiles && $this->debug->utility->isFile($val)) {
-            $this->valDumper->optionSet('attribs.data-file', true);
-        }
-        if (!$this->valDumper->optionGet('addQuotes')) {
+        if (!$this->valDumper->optionGet('addQuotes') && $this->valDumper->optionGet('dumpType')) {
             $this->valDumper->optionSet('attribs.class.__push__', 'no-quotes');
         }
         return $return;
@@ -180,6 +174,9 @@ class HtmlString
         if ($abs['typeMore'] === Type::TYPE_STRING_BINARY) {
             return $this->binary->dump($abs);
         }
+        if ($abs['typeMore'] === Type::TYPE_STRING_FILEPATH) {
+            return $this->dumpFilepath($abs);
+        }
         if ($this->isEncoded($abs)) {
             return $this->encoded->dump($abs);
         }
@@ -187,6 +184,50 @@ class HtmlString
             $this->valDumper->optionSet('visualWhiteSpace', false);
             $this->valDumper->optionSet('postDump', $this->buildPrettifiedPostDump($abs));
         }
+        return $this->dumpAbsDefault($abs);
+    }
+
+    /**
+     * Dump filepath
+     *
+     * @param Abstraction $abs Abstraction
+     *
+     * @return string
+     */
+    private function dumpFilepath(Abstraction $abs)
+    {
+        $values = $abs->getValues();
+        $dumpOpts = array(
+            'tagName' => null,
+        );
+        $file = ($values['docRoot'] ? '<span class="file-docroot">DOCUMENT_ROOT</span>' : '')
+            . ($values['pathCommon']
+                ? $this->debug->html->buildTag('span', array('class' => 'file-path-common'), $this->valDumper->dump($values['pathCommon'], $dumpOpts))
+                : '')
+            . ($values['pathRel']
+                ? $this->debug->html->buildTag('span', array('class' => 'file-path-rel'), $this->valDumper->dump($values['pathRel'], $dumpOpts))
+                : '')
+            . $this->debug->html->buildTag('span', array('class' => 'file-basename'), $this->valDumper->dump($values['baseName'], $dumpOpts));
+        $line = $abs['line'];
+        if (!$line) {
+            return $file;
+        }
+        $this->valDumper->optionSet('addQuotes', false);
+        $line = $abs['evalLine']
+            ? \sprintf(' (%s <span class="t_int">%s</span>, %s <span class="t_int">%s</span>)', $this->debug->i18n->trans('line'), $abs['line'], $this->debug->i18n->trans('line.evaled'), $abs['evalLine'])
+            : \sprintf(' (%s <span class="t_int">%s</span>)', $this->debug->i18n->trans('line'), $abs['line']);
+        return '<span class="t_string">' . $file . '</span>' . $line;
+    }
+
+    /**
+     * Dump string abstraction
+     *
+     * @param Abstraction $abs Abstraction
+     *
+     * @return string
+     */
+    private function dumpAbsDefault(Abstraction $abs)
+    {
         $val = $this->doDump($abs);
         $strLenDiff = $abs['strlen'] - $abs['strlenValue'];
         if ($strLenDiff) {

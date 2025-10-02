@@ -116,7 +116,7 @@ class StatementInfoTest extends DebugTestFramework
                 "method": "table",
                 "args": [
                     [
-                        {"value": "bkent", "type": "s"}
+                        ["bkent", "s"]
                     ]
                 ],
                 "meta": {
@@ -155,7 +155,6 @@ class StatementInfoTest extends DebugTestFramework
                     ""
                 ],
                 "meta": {
-                    "detectFiles": true,
                     "file": "\/Users\/bkent\/Dropbox\/htdocs\/common\/vendor\/bdk\/PHPDebugConsole\/tests\/Debug\/Collector\/StatementInfoTest.php",
                     "line": 53,
                     "uncollapse": false
@@ -167,7 +166,6 @@ class StatementInfoTest extends DebugTestFramework
                     "Exception: it broke (code 666)"
                 ],
                 "meta": {
-                    "detectFiles": true,
                     "file": "\/Users\/bkent\/Dropbox\/htdocs\/common\/vendor\/bdk\/PHPDebugConsole\/tests\/Debug\/Collector\/StatementInfoTest.php",
                     "line": 53,
                     "uncollapse": true
@@ -255,7 +253,7 @@ EOD;
                 "method": "table",
                 "args": [
                     [
-                        {"value": "bkent", "type": "s"}
+                        ["bkent", "s"]
                     ]
                 ],
                 "meta": {
@@ -318,7 +316,6 @@ EOD;
                     ""
                 ],
                 "meta": {
-                    "detectFiles": true,
                     "file": "",
                     "line": 53,
                     "uncollapse": false

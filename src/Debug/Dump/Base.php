@@ -13,6 +13,7 @@ namespace bdk\Debug\Dump;
 use bdk\Debug;
 use bdk\Debug\AbstractComponent;
 use bdk\Debug\Abstraction\Abstracter;
+use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Dump\Base\Value;
 use bdk\Debug\Dump\Substitution;
@@ -233,11 +234,12 @@ class Base extends AbstractComponent
      * Ensures each row has all key/values and that they're in the same order
      * if any row is an object, each row will get a ___class_name value
      *
-     * This builds table rows usable by ChromeLogger, Text, and Script
+     * This builds table rows usable by ChromeLogger, FirePhp, Text, and Script
      *
      * undefinedAs values
      *   ChromeLogger: 'unset'
-     *   Text:  'unset'
+     *   FirePhp: null
+     *   Text: 'unset'
      *   Script: Abstracter::UNDEFINED
      *
      * @param LogEntry $logEntry LogEntry instance
@@ -246,7 +248,6 @@ class Base extends AbstractComponent
      */
     protected function methodTabular(LogEntry $logEntry)
     {
-        $logEntry['method'] = 'table';
         $forceArray = $logEntry->getMeta('forceArray', true);
         $undefinedAs = $logEntry->getMeta('undefinedAs', 'unset');
         $this->tableInfo = $logEntry->getMeta('tableInfo');
@@ -259,10 +260,17 @@ class Base extends AbstractComponent
         if ($undefinedAs === 'null') {
             $undefinedAs = null;
         }
+
+        $this->tableInfo['undefinedAs'] = $undefinedAs;
+        $this->tableInfo['columnKeys'] = \array_map(static function (array $colInfo) {
+            return $colInfo['key'];
+        }, $logEntry['meta']['tableInfo']['columns']);
+
         $rows = $logEntry['args'][0];
         foreach ($rows as $rowKey => $row) {
-            $rows[$rowKey] = $this->methodTabularRow($row, $rowKey, $forceArray, $undefinedAs);
+            $rows[$rowKey] = $this->methodTabularRow($row, $rowKey, $logEntry['method'], $forceArray);
         }
+        $logEntry['method'] = 'table';
         $logEntry['args'] = [$rows];
         $this->tableInfo = array();
     }
@@ -270,14 +278,14 @@ class Base extends AbstractComponent
     /**
      * Process table row
      *
-     * @param array      $row         row
-     * @param int|string $rowKey      row's key/index
-     * @param bool       $forceArray  whether "scalar" rows should be wrapped in array
-     * @param mixed      $undefinedAs how "undefined" should be represented
+     * @param array      $row        row
+     * @param int|string $rowKey     row's key/index
+     * @param string     $method     log method (trace|table|profileEnd)
+     * @param bool       $forceArray whether "scalar" rows should be wrapped in array
      *
      * @return array
      */
-    private function methodTabularRow($row, $rowKey, $forceArray, $undefinedAs)
+    private function methodTabularRow(array $row, $rowKey, $method, $forceArray)
     {
         $rowInfo = isset($this->tableInfo['rows'][$rowKey])
             ? $this->tableInfo['rows'][$rowKey]
@@ -292,8 +300,8 @@ class Base extends AbstractComponent
         if ($rowInfo['isScalar'] === true && $forceArray === false) {
             return \current($row);
         }
-        $row = $this->methodTabularUndefinedVals($row, $undefinedAs);
-        if ($rowInfo['class']) {
+        $row = $this->methodTabularRowPrep($row, $method);
+        if ($this->tableInfo['haveObjRow']) {
             $row = \array_merge(
                 array('___class_name' => $rowInfo['class']),
                 $row
@@ -305,24 +313,27 @@ class Base extends AbstractComponent
     /**
      * Set (or unset) any undefined values
      *
-     * @param array       $row         row
-     * @param string|null $undefinedAs value we should assign to undefined
+     * @param array  $row    row
+     * @param string $method log method (trace|table|profileEnd)
      *
      * @return array
      */
-    private function methodTabularUndefinedVals($row, $undefinedAs)
+    private function methodTabularRowPrep(array $row, $method)
     {
         // handle undefined values
-        foreach ($row as $k => $val) {
-            if ($val !== Abstracter::UNDEFINED) {
-                continue;
+        $rowNew = array();
+        \array_walk($row, function ($val, $i) use (&$rowNew) {
+            if ($val === Abstracter::UNDEFINED) {
+                $val = $this->tableInfo['undefinedAs'];
+                if ($this->tableInfo['undefinedAs'] === 'unset') {
+                    return;
+                }
+            } elseif ($val instanceof Abstraction) {
+                $val = $this->valDumper->dump($val, array('addQuotes' => false));
             }
-            if ($undefinedAs === 'unset') {
-                unset($row[$k]);
-                continue;
-            }
-            $row[$k] = $undefinedAs;
-        }
-        return $row;
+            $k = $this->tableInfo['columnKeys'][$i];
+            $rowNew[$k] = $val;
+        });
+        return $rowNew;
     }
 }

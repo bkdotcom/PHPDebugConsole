@@ -661,6 +661,7 @@ var phpDebugConsole = (function (exports, $) {
   }
 
   var config$8;
+  var $debug;
 
   function init$9 ($root) {
     config$8 = $root.data('config').get();
@@ -678,45 +679,43 @@ var phpDebugConsole = (function (exports, $) {
    */
   function update ($group) {
     var remove = !config$8.linkFiles || config$8.linkFilesTemplate.length === 0;
-    $group.find('li[data-detect-files]').each(function () {
-      create($(this), $(this).find('.t_string'), remove);
+    $group.find('li[class*=m_]').each(function () {
+      create($(this), $(this).find('[data-type-more=filepath]'), remove);
     });
   }
 
   /**
-   * Create text editor links for error, warn, & trace
+   * Create text editor links
+   *
+   * $entry logentry node
+   * $filepath optional [data-type-more=filepath] nodes
+   * bool remove  if true, remove links
    */
-  function create ($entry, $strings, remove) {
-    var $objects = $entry.find('.t_object > .object-inner > .property.debug-value > .t_identifier').filter(function () {
-      return this.textContent.match(/^file$/)
-    });
-    var detectFiles = $entry.data('detectFiles') === true || $objects.length > 0;
+  function create ($entry, $filepaths, remove) {
+    $debug = $entry.closest('.debug');
     if (!config$8.linkFiles && !remove) {
       return
     }
-    if (detectFiles === false) {
-      return
-    }
-    // console.warn('createFileLinks', remove, $entry[0], $strings)
     if ($entry.is('.m_trace')) {
       createFileLinksTrace($entry, remove);
       return
     }
-    // don't remove data... link template may change
     if ($entry.is('[data-file]')) {
-      /*
-        Log entry link
-      */
       createFileLinkDataFile($entry, remove);
       return
     }
-    createFileLinksStrings($entry, $strings, remove);
+    $.each($filepaths || $(), function () {
+      createFileLink(this, remove); // , dataFoundFiles
+    });
   }
 
-  function buildFileLink (file, line) {
+  function buildFileHref (file, line, docRoot) {
+    // console.warn('buildfileHref', {file, line, docRoot})
     var data = {
-      file: file,
-      line: line || 1
+      file: docRoot
+        ? file.replace(/^DOCUMENT_ROOT\b/, docRoot)
+        : file,
+      line: line || 1,
     };
     return config$8.linkFilesTemplate.replace(
       /%(\w*)\b/g,
@@ -728,28 +727,16 @@ var phpDebugConsole = (function (exports, $) {
     )
   }
 
-  function createFileLinksStrings ($entry, $strings, remove) {
-    var dataFoundFiles = $entry.data('foundFiles') || [];
-    if ($entry.is('.m_table')) {
-      $strings = $entry.find('> table > tbody > tr > .t_string');
-    }
-    if (!$strings) {
-      $strings = [];
-    }
-    $.each($strings, function () {
-      createFileLink(this, remove, dataFoundFiles);
-    });
-  }
-
   function createFileLinkDataFile ($entry, remove) {
     // console.warn('createFileLinkDataFile', $entry)
+    var docRoot = $debug.data('meta').DOCUMENT_ROOT;
     $entry.find('> .file-link').remove();
     if (remove) {
       return
     }
     $entry.append($('<a>', {
       html: '<i class="fa fa-external-link"></i>',
-      href: buildFileLink($entry.data('file'), $entry.data('line')),
+      href: buildFileHref($entry.data('file'), $entry.data('line'), docRoot),
       title: 'Open in editor',
       class: 'file-link lpad'
     })[0].outerHTML);
@@ -760,7 +747,7 @@ var phpDebugConsole = (function (exports, $) {
     if (!isUpdate) {
       $entry.find('table thead tr > *:last-child').after('<th></th>');
     } else if (remove) {
-      $entry.find('table t:not(.context) > *:last-child').remove();
+      $entry.find('table tr:not(.context) > *:last-child').remove();
       return
     }
     $entry.find('table tbody tr').each(function () {
@@ -774,9 +761,10 @@ var phpDebugConsole = (function (exports, $) {
       file: $tr.data('file') || $tds.eq(0).text(),
       line: $tr.data('line') || $tds.eq(1).text()
     };
+    var docRoot = $debug.data('meta').DOCUMENT_ROOT ?? '';
     var $a = $('<a/>', {
       class: 'file-link',
-      href: buildFileLink(info.file, info.line),
+      href: buildFileHref(info.file, info.line, docRoot),
       html: '<i class="fa fa-fw fa-external-link"></i>',
       style: 'vertical-align: bottom',
       title: 'Open in editor'
@@ -795,46 +783,39 @@ var phpDebugConsole = (function (exports, $) {
     }));
   }
 
-  function createFileLink (string, remove, foundFiles) {
-    var $string = $(string);
-    var matches = createFileLinkMatches($string, foundFiles);
+  function createFileLink (filepath, remove) { // , foundFiles
+    var $filepath = $(filepath);
     var action = 'create';
+    // console.warn('createFileLink', {filepath, remove})
     if (remove) {
       action = 'remove';
-    } else if ($string.hasClass('file-link')) {
+    } else if ($filepath.hasClass('file-link')) {
       action = 'update';
     }
-    if ($string.closest('.m_trace').length) {
+    if ($filepath.closest('.m_trace').length) {
       // not recursion...  will end up calling createFileLinksTrace
-      create($string.closest('.m_trace'));
+      // create($filepath.closest('.m_trace'))
       return
     }
-    if (matches.length < 1) {
-      return
-    }
-    createFileLinkDo($string, matches, action);
+    createFileLinkDo($filepath, action);
   }
 
-  function createFileLinkDo ($string, matches, action) {
-    var text = $string.text().trim();
-    var $replace = createFileLinkReplace($string, matches, text, action);
-    if (action === 'create') {
-      createFileLinkUpdateAttr($string, $replace);
-    }
-    if ($string.is('td, th, li') === false) {
-      $string.replaceWith($replace);
+  function createFileLinkDo ($filepath, action) {
+    var $replace = createFileLinkReplace($filepath, action);
+    if ($filepath.is('li, td, th') === false) {
+      $filepath.replaceWith($replace);
       return
     }
-    $string.html(action === 'remove'
-      ? text
+    $filepath.html(action === 'remove'
+      ? $replace.html()
       : $replace
     );
   }
 
-  function createFileLinkUpdateAttr ($string, $replace) {
+  function createFileLinkMoveAttr ($src, $dest) {
     // attributes is not a plain object, but an array of attribute nodes
     //   which contain both the name and value
-    var attrs = $string[0].attributes;
+    var attrs = $src[0].attributes;
     $.each(attrs, function () {
       if (typeof this === 'undefined') {
         return // continue
@@ -843,66 +824,66 @@ var phpDebugConsole = (function (exports, $) {
       if (['html', 'href', 'title'].indexOf(name) > -1) {
         return // continue
       }
+      $src.removeAttr(name);
       if (name === 'class') {
-        $replace.addClass(this.value);
-        $string.removeClass('t_string');
+        // append to existing dest classes
+        $dest.addClass(this.value);
+        // $filepath.removeClass('t_string')
         return // continue
       }
-      $replace.attr(name, this.value);
-      $string.removeAttr(name);
+      $dest.attr(name, this.value);
     });
+    /*
     if (attrs.style) {
       // why is this necessary?
-      $replace.attr('style', attrs.style.value);
+      $replace.attr('style', attrs.style.value)
     }
+    */
   }
 
-  function createFileLinkReplace ($string, matches, text, action) {
+  function createFileLinkReplace ($filepath, action) {
+    var docRoot = $debug.data('meta').DOCUMENT_ROOT;
     var $replace;
-    if (action === 'remove') {
-      $replace = $('<span>', {
-        text: text
-      });
-      $string.removeClass('file-link'); // remove so doesn't get added to $replace
-    } else if (action === 'update') {
-      $replace = $string;
-      $replace.prop('href', buildFileLink(matches[1], matches[2]));
-    } else {
+    var matches = createFileLinkMatches($filepath);
+    if (action === 'update') {
+      $replace = $filepath.prop('href', buildFileHref(matches[1], matches[2], docRoot));
+    } else if (action === 'create') {
       $replace = $('<a>', {
         class: 'file-link',
-        href: buildFileLink(matches[1], matches[2]),
-        html: text + ' <i class="fa fa-external-link"></i>',
+        href: buildFileHref(matches[1], matches[2], docRoot),
+        html: $filepath.html() + ' <i class="fa fa-external-link"></i>',
         title: 'Open in editor'
       });
+    } else {
+      // remove
+      $filepath.find('i.fa-external-link').remove();
+      $filepath.removeClass('file-link'); // prevent proagation to replace
+      $replace = $('<span>', {
+        // text: text
+        html: $filepath.html()
+      });
     }
+    createFileLinkMoveAttr($filepath, $replace);
     return $replace
   }
 
-  function createFileLinkMatches ($string, foundFiles) {
+  function createFileLinkMatches ($filepath) { // , foundFiles
     var matches = [];
-    var text = $string.text().trim();
-    if ($string.data('file')) {
-      // filepath specified in data-file attr
-      return typeof $string.data('file') === 'boolean'
-        ? [null, text, 1]
-        : [null, $string.data('file'), $string.data('line') || 1]
-    }
-    if (foundFiles.indexOf(text) === 0) {
-      return [null, text, 1]
-    }
-    if ($string.parent('.property.debug-value').find('> .t_identifier').text().match(/^file$/)) {
+    var text = $filepath.text().trim();
+    // console.warn('createFileLinkMatches', text)
+    if ($filepath.parent('.property.debug-value').find('> .t_identifier').text().match(/^file$/)) {
       // object with file .debug-value
       matches = {
         line: 1
       };
-      $string.parent().parent().find('> .property.debug-value').each(function () {
+      $filepath.parent().parent().find('> .property.debug-value').each(function () {
         var prop = $(this).find('> .t_identifier').text().trim();
         var val = $(this).find('> *:last-child').text().trim();
         matches[prop] = val;
       });
       return [null, text, matches.line]
     }
-    return text.match(/^(\/.+\.php)(?: \(line (\d+)(, eval'd line \d+)?\))?$/) || []
+    return text.match(/^(.+?)(?: \(.+? (\d+)(, .+ \d+)?\))?$/) || []
   }
 
   var config$7;
@@ -968,11 +949,13 @@ var phpDebugConsole = (function (exports, $) {
       enhance($node);
     } else if ($node.is('table')) {
       makeSortable($node);
-    } else if ($node.is('.t_string')) {
-      create($entry, $node);
+    // } else if ($node.is('.t_string')) {
+      // fileLinks.create($entry, $node)
     } else if ($node.is('.string-encoded.tabs-container')) {
       // console.warn('enhanceStringEncoded', $node)
       enhanceValue($node.find('> .tab-pane.active > *'), $entry);
+    } else if ($node.is('[data-type-more=filepath]')) {
+      create($entry, $node);
     }
   }
 
@@ -1076,10 +1059,17 @@ var phpDebugConsole = (function (exports, $) {
       }
       create($entry);
     }
+    if ($entry.hasClass('m_error') || $entry.hasClass('m_warn')) {
+      $entry.find('.m_trace').debugEnhance();
+    }
     addIcons($entry);
     $entry.children().each(function () {
       enhanceValue(this, $entry);
     });
+    if ($entry.hasClass('have-fatal')) {
+      // special alert
+      create($entry, $entry.find('[data-type-more=filepath]'));
+    }
   }
 
   function enhanceEntryTabular ($entry) {
@@ -1316,8 +1306,8 @@ var phpDebugConsole = (function (exports, $) {
           return true // ensure all warn/error entries are visible on initial load
         }
         if ($node.is('.m_group') && $node.find('.m_error, .m_warn').not('.filter-hidden').length) {
-          // console.warn('node', $node, $node.find('.m_error, .m_warn').not('.filter-hidden'));
-          return true; // ensure all groups with warn/error entries are visible on initial load
+          // console.warn('node', $node, $node.find('.m_error, .m_warn').not('.filter-hidden'))
+          return true // ensure all groups with warn/error entries are visible on initial load
         }
       }
       return channels.indexOf(channel) > -1
@@ -2273,12 +2263,19 @@ var phpDebugConsole = (function (exports, $) {
 
   function init$2 ($delegateNode) {
     config$2 = $delegateNode.data('config').get();
-    $delegateNode.on('click', '[data-toggle=array], [data-toggle=group], [data-toggle=object]', onClickToggle);
-    $delegateNode.on('click', '[data-toggle=next]', function (e) {
-      if ($(e.target).closest('a, button').length) {
+    $delegateNode.on('click', '[data-toggle]', function (e) {
+      var toggleType = $(this).data('toggle');
+      if (['collapse', 'channel'].indexOf(toggleType) > -1) {
+        // 'collapse' handled by bootstrap
+        // 'channel' handled by filter.js
         return
       }
-      return onClickToggle.call(this)
+      if (toggleType === 'next' && $(e.target).closest('a, button').length) {
+        return
+      }
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      toggle(this);
     });
     $delegateNode.on('collapsed.debug.group updated.debug.group', function (e) {
       groupUpdate($(e.target));
@@ -2303,13 +2300,12 @@ var phpDebugConsole = (function (exports, $) {
       info.$classTarget.removeClass('expanded');
     } else if (['group', 'object'].indexOf(info.what) > -1) {
       collapseGroupObject(info, immediate, eventNameDone);
-    } else if (info.what === 'next') {
-      collapseNext(info.$toggle, immediate, eventNameDone);
+    } else if (['next', 'selector'].indexOf(info.what) > -1) {
+      collapseNextSelector(info, immediate, eventNameDone);
     }
   }
 
   function expand ($node) {
-    var icon = config$2.iconsExpand.collapse;
     var info = getNodeInfo($node);
     var eventNameDone = 'expanded.debug.' + info.what;
     // trigger while still hidden!
@@ -2321,7 +2317,7 @@ var phpDebugConsole = (function (exports, $) {
       return
     }
     // group, object, & next
-    expandGroupObjNext(info, icon, eventNameDone);
+    expandGroupObjNextSelector(info, eventNameDone);
   }
 
   function toggle (node) {
@@ -2387,36 +2383,36 @@ var phpDebugConsole = (function (exports, $) {
   /**
    * Collapse group or object
    */
-  function collapseGroupObject (nodes, immediate, eventNameDone) {
-    var $groupEndValues = nodes.$wrap.find('> .group-body > .m_groupEndValue').children().not('.return-label');
-    var $afterLabel = nodes.$toggle.find('.group-label').last().nextAll().not('i');
+  function collapseGroupObject (info, immediate, eventNameDone) {
+    var $groupEndValues = info.$wrap.find('> .group-body > .m_groupEndValue').children().not('.return-label');
+    var $afterLabel = info.$toggle.find('.group-label').last().nextAll().not('i');
     if ($groupEndValues.length && $afterLabel.length === 0) {
-      nodes.$toggle.find('.group-label').last()
+      info.$toggle.find('.group-label').last()
         .after('<span class="t_operator"> : </span>' + buildReturnVals($groupEndValues));
     }
     if (immediate) {
-      return collapseDone(nodes, eventNameDone)
+      return collapseDone(info, eventNameDone)
     }
-    nodes.$target.slideUp('fast', function () {
-      collapseDone(nodes, eventNameDone);
+    info.$target.slideUp('fast', function () {
+      collapseDone(info, eventNameDone);
     });
   }
 
-  function collapseNext (nodes, immediate, eventNameDone) {
+  function collapseNextSelector (info, immediate, eventNameDone) {
     if (immediate) {
-      nodes.$target.hide();
-      return collapseDone(nodes, eventNameDone)
+      info.$target.hide();
+      return collapseDone(info, eventNameDone)
     }
-    nodes.$target.slideUp('fast', function () {
-      collapseDone(nodes, eventNameDone);
+    info.$target.slideUp('fast', function () {
+      collapseDone(info, eventNameDone);
     });
   }
 
-  function collapseDone (nodes, eventNameDone) {
+  function collapseDone (info, eventNameDone) {
     var icon = config$2.iconsExpand.expand;
-    nodes.$classTarget.removeClass('expanded');
-    iconUpdate(nodes.$toggle, icon);
-    nodes.$evtTarget.trigger(eventNameDone);
+    info.$classTarget.removeClass('expanded');
+    iconUpdate(info.$toggle, icon);
+    info.$evtTarget.trigger(eventNameDone);
   }
 
   /**
@@ -2424,16 +2420,17 @@ var phpDebugConsole = (function (exports, $) {
    * @param {*} icon          the icon to update toggle with
    * @param {*} eventNameDone the event name
    */
-  function expandGroupObjNext (nodes, icon, eventNameDone) {
-    nodes.$target.slideDown('fast', function () {
+  function expandGroupObjNextSelector (info, eventNameDone) {
+    info.$target.slideDown('fast', function () {
       var $groupEndValue = $(this).find('> .m_groupEndValue');
+      var icon = config$2.iconsExpand.collapse;
       if ($groupEndValue.length) {
         // remove value(s) from label
-        nodes.$toggle.find('.group-label').last().nextAll(true).remove();
+        info.$toggle.find('.group-label').last().nextAll(true).remove();
       }
-      nodes.$classTarget.addClass('expanded');
-      iconUpdate(nodes.$toggle, icon);
-      nodes.$evtTarget.trigger(eventNameDone);
+      info.$classTarget.addClass('expanded');
+      iconUpdate(info.$toggle, icon);
+      info.$evtTarget.trigger(eventNameDone);
     });
   }
 
@@ -2470,19 +2467,28 @@ var phpDebugConsole = (function (exports, $) {
     var $toggle = isToggle
       ? $node
       : $wrap.find('> *[data-toggle]');
+    var $classTarget = $wrap; // node that gets "expanded" class
+    var $evtTarget = $wrap; // node we trigger events on
+    var $target = $toggle.next();
+    if (what === 'next') {
+      $classTarget = $toggle;
+      $evtTarget = $toggle.next();
+    } else if (what === 'object') {
+      $target = $wrap.find('> .object-inner');
+    } else if (['array','channel','group'].indexOf(what) < 0) {
+      // note:  we don't handle channel here... filter.js handles it
+      $target = $node.closest('.debug').find(what);
+      $classTarget = $target;
+      $evtTarget = $target;
+      what = 'selector';
+    }
     return {
       what: what,
-      $wrap: $wrap,
+      $target: $target,
       $toggle: $toggle,
-      $classTarget: what === 'next' // node that get's "expanded" class
-        ? $toggle
-        : $wrap,
-      $evtTarget: what === 'next' // node we trigger events on
-        ? $toggle.next()
-        : $wrap,
-      $target: what === 'object'
-        ? $wrap.find('> .object-inner')
-        : $toggle.next()
+      $wrap: $wrap,
+      $classTarget: $classTarget,
+      $evtTarget: $evtTarget,
     }
   }
 
@@ -2538,7 +2544,15 @@ var phpDebugConsole = (function (exports, $) {
   }
 
   function iconUpdate ($toggle, classNameNew) {
-    var $icon = $toggle.children('i').eq(0);
+    // find existing expand/collapse icon
+    var $icon = $toggle.children('i').eq(0).filter(function (icon) {
+      for (const value of Object.values(config$2.iconsExpand)) {
+        if ($(icon).hasClass(value)) {
+          return true
+        }
+      }
+      return false
+    });
     if ($toggle.hasClass('group-header') && $toggle.parent().hasClass('empty')) {
       classNameNew = config$2.iconsExpand.empty;
     }
@@ -2549,11 +2563,6 @@ var phpDebugConsole = (function (exports, $) {
     $.each(config$2.iconsExpand, function (className) {
       $icon.toggleClass(className, className === classNameNew);
     });
-  }
-
-  function onClickToggle () {
-    toggle(this);
-    return false
   }
 
   /**

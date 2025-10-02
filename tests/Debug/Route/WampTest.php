@@ -4,6 +4,7 @@ namespace bdk\Test\Debug\Route;
 
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
+use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Route\Wamp;
 use bdk\ErrorHandler;
@@ -53,12 +54,8 @@ class WampTest extends DebugTestFramework
                     ['Fatal Error', 'trace'],
                     array(
                         'caption' => 'trace',
-                        'detectFiles' => true,
                         // 'evalLine' => null,
                         'file' => $this->file,
-                        'foundFiles' => array(
-                            __FILE__,
-                        ),
                         'inclArgs' => false,
                         'inclInternal' => false,
                         'limit' => 0,
@@ -75,11 +72,21 @@ class WampTest extends DebugTestFramework
                             'indexLabel' => null,
                             'rows' => array(),
                             'summary' => '',
-                            'commonRowInfo' => array(
-                                'commonFilePrefix' => '/path/to/file.php',
-                            ),
                         ),
-                        'trace' => $frames,
+                        'trace' => \array_map(static function ($frame) {
+                            $frame['file'] = (new Abstraction(Type::TYPE_STRING, array(
+                                'typeMore' => Type::TYPE_STRING_FILEPATH,
+                                'docRoot' => false,
+                                'pathCommon' => '',
+                                'pathRel' => \dirname($frame['file']) . '/',
+                                'baseName' => \basename($frame['file']),
+                            )))->jsonSerialize();
+                            $frame['function'] = (new Abstraction(Type::TYPE_IDENTIFIER, array(
+                                'typeMore' => Type::TYPE_IDENTIFIER_METHOD,
+                                'value' => $frame['function'],
+                            )))->jsonSerialize();
+                            return \array_values($frame);
+                        }, $frames),
                         'uncollapse' => true,
                     ),
                 ],
@@ -96,7 +103,7 @@ class WampTest extends DebugTestFramework
             [
                 $this->debug->abstracter->crateWithVals(array("\x00" . 'foo' => 'bar')),
                 $binary,
-                \json_encode(array('foo' => 'bar',42,true,false,null)),
+                \json_encode(array('foo' => 'bar', 42, true, false, null)),
                 '',
                 __FILE__,
                 $this->debug->meta('detectFiles'),
@@ -138,13 +145,18 @@ class WampTest extends DebugTestFramework
                             ),
                         ),
                         '',
-                        __FILE__,
+                        array(
+                            'baseName' => \basename(__FILE__),
+                            'debug' => Abstracter::ABSTRACTION,
+                            'docRoot' => false,
+                            'pathCommon' => '',
+                            'pathRel' => \dirname(__FILE__) . '/',
+                            'type' => Type::TYPE_STRING,
+                            'typeMore' => Type::TYPE_STRING_FILEPATH,
+                        ),
                     ],
                     array(
-                        'detectFiles' => true,
-                        'foundFiles' => array(
-                            __FILE__,
-                        ),
+                        'detectFiles' => true, // @todo - keep around?
                     ),
                 ],
             )
@@ -214,8 +226,18 @@ class WampTest extends DebugTestFramework
         self::assertSame(array(
             'Warning:',
             'bogus error',
-            __FILE__ . ' (line 42)',
-        ), $msg['args'][1]);
+            array(
+                'baseName' => \basename(__FILE__),
+                'debug' => Abstracter::ABSTRACTION,
+                'docRoot' => false,
+                'evalLine' => null,
+                'line' => 42,
+                'pathCommon' => '',
+                'pathRel' => \dirname(__FILE__) . '/',
+                'type' => Type::TYPE_STRING,
+                'typeMore' => Type::TYPE_STRING_FILEPATH,
+            ),
+        ), $this->helper->deObjectifyData($msg['args'][1]));
         self::assertSame(array(
             'class' => array('error'),
         ), $msg['args'][2]['attribs']);

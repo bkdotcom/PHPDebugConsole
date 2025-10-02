@@ -116,7 +116,6 @@ class BlockFactoryTest extends TestCase
                 ],
             ],
 
-
             'actions.elements.tooMany' => [
                 'actions',
                 [
@@ -359,7 +358,6 @@ class BlockFactoryTest extends TestCase
                     'expectExceptionMessage' => 'section block:  fields must be array or null.  stdClass provided.',
                 ],
             ],
-
 
             'section.accessory.typeNotString' => [
                 'section',

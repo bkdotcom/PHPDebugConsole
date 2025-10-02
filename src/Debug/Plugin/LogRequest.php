@@ -140,7 +140,6 @@ class LogRequest extends AbstractLogReqRes implements SubscriberInterface
             return;
         }
         $meta = $this->debug->meta(array(
-            'detectFiles' => false,
             'file' => null,
             'line' => null,
         ));

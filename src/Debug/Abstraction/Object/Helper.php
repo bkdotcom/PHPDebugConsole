@@ -26,10 +26,11 @@ use ReflectionType;
 use Reflector;
 
 /**
- * Get object method info
+ * Object Abstraction Helper methods
  */
 class Helper
 {
+    /** @var PhpDoc */
     private $phpDoc;
 
     /**

@@ -111,7 +111,6 @@ class ErrorSummary
                         'error-summary' => true,
                         'have-fatal' => \array_sum($this->stats['counts']['fatal']) > 0,
                     ),
-                    'data-detect-files' => true,
                 ),
                 'dismissible' => false,
                 'level' => 'error',
@@ -205,14 +204,14 @@ class ErrorSummary
         $msg = \sprintf($this->catStrings[$category]['msg'], $inConsoleCount);
         if ($inConsoleCount === 1) {
             $error = $this->getErrorsInCategory($category)[0];
-            $msg = \sprintf(
-                '%s (line %s): %s',
-                $error['file'],
-                $error['line'],
-                $error['isHtml']
+            $msg = $this->debug->stringUtil->interpolate('{file} ({lineLabel} {line}): {message}', array(
+                'file' => $error['file'],
+                'line' => $error['line'],
+                'lineLabel' => $this->debug->i18n->trans('line'),
+                'message' => $error['isHtml']
                     ? $error['message']
-                    : \htmlspecialchars($error['message'])
-            );
+                    : \htmlspecialchars($error['message']),
+            ));
         }
         return $this->html->buildTag('h3', [], $this->buildInConsoleOneCatHeader()) . "\n"
             . '<ul class="list-unstyled in-console">'

@@ -40,7 +40,6 @@ class LogPhp implements SubscriberInterface
     private $iniValues = array();
     /** @var array<string,mixed> */
     private $detectFilesFalseMeta = array(
-        'detectFiles' => false,
         'file' => null,
         'line' => null,
     );

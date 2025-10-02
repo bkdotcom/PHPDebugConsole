@@ -14,8 +14,8 @@ var tests = [
         return true // ensure all warn/error entries are visible on initial load
       }
       if ($node.is('.m_group') && $node.find('.m_error, .m_warn').not('.filter-hidden').length) {
-        // console.warn('node', $node, $node.find('.m_error, .m_warn').not('.filter-hidden'));
-        return true; // ensure all groups with warn/error entries are visible on initial load
+        // console.warn('node', $node, $node.find('.m_error, .m_warn').not('.filter-hidden'))
+        return true // ensure all groups with warn/error entries are visible on initial load
       }
     }
     return channels.indexOf(channel) > -1

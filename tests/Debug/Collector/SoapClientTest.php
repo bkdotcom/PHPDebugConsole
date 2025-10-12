@@ -341,7 +341,7 @@ class SoapClientTest extends DebugTestFramework
             $soapClient = $this->getClient();
             $soapClient->__doRequest($request, $this->wsdl, '', SOAP_1_1);
         } catch (\Exception $e) {
-            $message = $e->getMessage();
+            $message = $e->getMessage() . ' ' . $e->getFile() . ':' . $e->getLine();
             $this->markTestSkipped($message);
         }
 

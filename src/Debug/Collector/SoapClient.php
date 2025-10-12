@@ -373,17 +373,22 @@ class SoapClient extends SoapClientBase
      */
     private function setLastRequest($request)
     {
-        \bdk\Debug::varDump('setLastRequest', $request);
+        $classRef = new ReflectionClass('SoapClient');
+        \bdk\Debug::varDump('setLastRequest', array(
+            'request' => $request,
+            'hasProperty' => $classRef->hasProperty('__last_request'),
+            '8.1+' => PHP_VERSION_ID >= 80100,
+        ));
         // $objRef = new ReflectionObject($this);
         // if ($objRef->hasProperty('__last_request')) {
             // $lastRequestRef = $objRef->getProperty('__last_request');
-        $classRef = new ReflectionClass('SoapClient');
         if ($classRef->hasProperty('__last_request') || PHP_VERSION_ID >= 80100) {
             $lastRequestRef = new ReflectionProperty('SoapClient', '__last_request');
             $lastRequestRef->setAccessible(true);
             $lastRequestRef->setValue($this, $request);
             return;
         }
+        \bdk\Debug::varDump('setting __last_request directly');
         $this->__last_request = $request;
     }
 

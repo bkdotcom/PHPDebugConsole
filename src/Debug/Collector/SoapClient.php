@@ -254,6 +254,7 @@ class SoapClient extends SoapClientBase
                 'type' => null,
             ), $frame);
             $func = $frame['class'] . $frame['type'] . $frame['function'];
+            \bdk\Debug::varDump('func', $func);
             if ($func === 'SoapClient->__call') {
                 return true;
             }

@@ -15,7 +15,8 @@ use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\Type;
 use DOMDocument;
 use Exception;
-use ReflectionObject;
+use ReflectionClass;
+use ReflectionProperty;
 use SoapClient as SoapClientBase;
 use SoapFault;
 
@@ -362,6 +363,7 @@ class SoapClient extends SoapClientBase
         );
     }
 
+
     /**
      * Set last request so that __getLastRequest() avail from within __doRequest
      *
@@ -372,14 +374,16 @@ class SoapClient extends SoapClientBase
     private function setLastRequest($request)
     {
         \bdk\Debug::varDump('setLastRequest', $request);
-        $objRef = new ReflectionObject($this);
-        if ($objRef->hasProperty('__last_request')) {
-            $lastRequestRef = $objRef->getProperty('__last_request');
+        // $objRef = new ReflectionObject($this);
+        // if ($objRef->hasProperty('__last_request')) {
+            // $lastRequestRef = $objRef->getProperty('__last_request');
+        $classRef = new ReflectionClass('SoapClient');
+        if ($classRef->hasProperty('__last_request') || PHP_VERSION_ID >= 80100) {
+            $lastRequestRef = new ReflectionProperty('SoapClient', '__last_request');
             $lastRequestRef->setAccessible(true);
             $lastRequestRef->setValue($this, $request);
             return;
         }
-        \bdk\Debug::varDump('__last_request is not a property');
         $this->__last_request = $request;
     }
 
@@ -392,9 +396,9 @@ class SoapClient extends SoapClientBase
      */
     private function setLastResponse($response)
     {
-        $objRef = new ReflectionObject($this);
-        if ($objRef->hasProperty('__last_response')) {
-            $lastResponseRef = $objRef->getProperty('__last_response');
+        $classRef = new ReflectionClass('SoapClient');
+        if ($classRef->hasProperty('__last_response') || PHP_VERSION_ID >= 80100) {
+            $lastResponseRef = new ReflectionProperty('SoapClient', '__last_response');
             $lastResponseRef->setAccessible(true);
             $lastResponseRef->setValue($this, $response);
             return;

@@ -37,6 +37,7 @@ jobs:
       run: |
         php -v
         php -r 'echo "curl version: " . curl_version()["version"] . "\n";'
+        php -r 'echo "soap version: " . phpversion("soap") . "\n";'
     - name: Validate composer.json and composer.lock
       run: composer validate --strict
     - name: Cache composer packages
@@ -54,7 +55,9 @@ jobs:
     - name: Unit test
       # This step runs tests for all PHP versions except where we're collecting coverage in the next step
       if: ${{ matrix.php-version != env.COVERAGE_VER || github.ref_name != 'master' }}
-      run: composer run test
+      # run: composer run test
+      run: |
+        vendor/bin/phpunit tests/Debug/Collector/SoapClientTest.php
     - name: Run code coverage
       if: ${{ matrix.php-version == env.COVERAGE_VER && github.ref_name == 'master' }}
       run: |

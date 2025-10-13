@@ -118,7 +118,10 @@ class SoapClient extends SoapClientBase
         $this->setLastResponse($xmlResponse);
         if ($this->isViaCall() === false) {
             // __doRequest called directly
+            \bdk\Debug::varDump('__doReqeust -> logReqRes');
             $this->logReqRes($action, $exception, true);
+        } else {
+            \bdk\Debug::varDump('__doRequest -> NOT logReqRes!!');
         }
         if ($exception) {
             throw $exception;
@@ -254,7 +257,6 @@ class SoapClient extends SoapClientBase
                 'type' => null,
             ), $frame);
             $func = $frame['class'] . $frame['type'] . $frame['function'];
-            \bdk\Debug::varDump('func', $func);
             if ($func === 'SoapClient->__call') {
                 return true;
             }

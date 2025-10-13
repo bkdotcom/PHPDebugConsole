@@ -18,7 +18,7 @@ class SoapClientTest extends DebugTestFramework
     protected $wsdl = 'http://127.0.0.1:8080/soap/wsdl';
     protected static $client;
 
-    public function testConstruct()
+    public function t_estConstruct()
     {
         new \bdk\Debug\Collector\SoapClient(
             $this->wsdl,
@@ -83,7 +83,7 @@ class SoapClientTest extends DebugTestFramework
         ), $this->getLogEntries());
     }
 
-    public function testConstructException()
+    public function t_estConstructException()
     {
         if (PHP_VERSION_ID < 70100) {
             $this->markTestSkipped('PHP <= 7.0 raises E_ERROR instead of throwing exception');
@@ -264,7 +264,7 @@ class SoapClientTest extends DebugTestFramework
         $this->assertLogEntries($logEntriesExpect, $logEntries);
     }
 
-    public function testSoapCallException()
+    public function t_estSoapCallException()
     {
         $exception = null;
         $line = __LINE__ + 3;
@@ -293,7 +293,7 @@ class SoapClientTest extends DebugTestFramework
         $this->assertInstanceOf('SoapFault', $exception);
     }
 
-    public function testSoapCallResponseFault()
+    public function t_estSoapCallResponseFault()
     {
         $exception = null;
         $line = __LINE__ + 3;

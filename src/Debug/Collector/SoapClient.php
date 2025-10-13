@@ -119,10 +119,7 @@ class SoapClient extends SoapClientBase
         $this->setLastResponse($xmlResponse);
         if ($this->isViaCall() === false) {
             // __doRequest called directly
-            \bdk\Debug::varDump('__doReqeust -> logReqRes');
             $this->logReqRes($action, $exception, true);
-        } else {
-            \bdk\Debug::varDump('__doRequest -> NOT logReqRes!!');
         }
         if ($exception) {
             throw $exception;
@@ -178,7 +175,6 @@ class SoapClient extends SoapClientBase
     private function debugGetXmlRequest(&$action)
     {
         $requestXml = $this->__getLastRequest();
-        \bdk\Debug::varDump('debugGetXmlRequest', $requestXml);
         if (!$requestXml) {
             return null;
         }
@@ -377,18 +373,13 @@ class SoapClient extends SoapClientBase
      */
     private function setLastRequest($request)
     {
-        // $objRef = new ReflectionObject($this);
-        // if ($objRef->hasProperty('__last_request')) {
-            // $lastRequestRef = $objRef->getProperty('__last_request');
         $classRef = new ReflectionClass('SoapClient');
         if ($classRef->hasProperty('__last_request') || PHP_VERSION_ID >= 80100) {
-            \bdk\Debug::varDump('setLastRequest - via reflection');
             $lastRequestRef = new ReflectionProperty('SoapClient', '__last_request');
             $lastRequestRef->setAccessible(true);
             $lastRequestRef->setValue($this, $request);
             return;
         }
-        \bdk\Debug::varDump('setting __last_request directly');
         $this->__last_request = $request;
     }
 

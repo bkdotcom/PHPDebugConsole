@@ -181,11 +181,15 @@ class SoapClient extends SoapClientBase
         \bdk\Debug::varDump('debugGetXmlRequest', $requestXml);
         if (!$requestXml) {
             \bdk\Debug::varDump('try __last_request 1');
-            $lastRequestRef = new ReflectionProperty($this, '__last_request');
-            \bdk\Debug::varDump('try __last_request 2');
-            $lastRequestRef->setAccessible(true);
-            \bdk\Debug::varDump('try __last_request 3');
-            $requestXml = $lastRequestRef->getValue($this);
+            $objRef = new \ReflectionObject($this);
+            if ($objRef->hasProperty('__last_request')) {
+                \bdk\Debug::varDump('try __last_request 2');
+                $lastRequestRef = $objRef->getProperty('__last_request');
+                \bdk\Debug::varDump('try __last_request 3');
+                $lastRequestRef->setAccessible(true);
+                \bdk\Debug::varDump('try __last_request 4');
+                $requestXml = $lastRequestRef->getValue($this);
+            }
             \bdk\Debug::varDump('try __last_request 4', $requestXml);
         }
         if (!$requestXml) {

@@ -275,14 +275,17 @@ class SoapClient extends SoapClientBase
 
         $this->debug->groupCollapsed('SoapClient::__construct', $wsdl ?: 'non-WSDL mode', $this->debug->meta('icon', $this->icon));
         if ($wsdl && !empty($options['list_functions'])) {
-            $this->debug->log('functions', $this->debug->abstracter->crateWithVals(
-                $this->debugGetFunctions(),
-                array(
-                    'options' => array(
-                        'showListKeys' => false,
-                    ),
+            $this->debug->log(
+                'functions',
+                $this->debug->abstracter->crateWithVals(
+                    $this->debugGetFunctions(),
+                    array(
+                        'options' => array(
+                            'showListKeys' => false,
+                        ),
+                    )
                 )
-            ));
+            );
         }
         if ($wsdl && !empty($options['list_types'])) {
             $this->debug->log($this->debug->i18n->trans('word.types'), $this->debugGetTypes());

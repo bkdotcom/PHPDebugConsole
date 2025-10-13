@@ -180,7 +180,7 @@ class SoapClient extends SoapClientBase
         $requestXml = $this->__getLastRequest();
         \bdk\Debug::varDump('debugGetXmlRequest', $requestXml);
         if (!$requestXml) {
-            $lastRequestRef = new ReflectionProperty('SoapClient', '__last_request');
+            $lastRequestRef = new ReflectionProperty($this, '__last_request');
             $lastRequestRef->setAccessible(true);
             $requestXml = $lastRequestRef->getValue($this);
             \bdk\Debug::varDump('try __last_request', $requestXml);
@@ -383,16 +383,12 @@ class SoapClient extends SoapClientBase
      */
     private function setLastRequest($request)
     {
-        $classRef = new ReflectionClass('SoapClient');
-        \bdk\Debug::varDump('setLastRequest', array(
-            'request' => $request,
-            'hasProperty' => $classRef->hasProperty('__last_request'),
-            '8.1+' => PHP_VERSION_ID >= 80100,
-        ));
         // $objRef = new ReflectionObject($this);
         // if ($objRef->hasProperty('__last_request')) {
             // $lastRequestRef = $objRef->getProperty('__last_request');
+        $classRef = new ReflectionClass('SoapClient');
         if ($classRef->hasProperty('__last_request') || PHP_VERSION_ID >= 80100) {
+            \bdk\Debug::varDump('setLastRequest - via reflection');
             $lastRequestRef = new ReflectionProperty('SoapClient', '__last_request');
             $lastRequestRef->setAccessible(true);
             $lastRequestRef->setValue($this, $request);

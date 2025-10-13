@@ -91,6 +91,7 @@ class SoapClient extends SoapClientBase
     {
         $exception = null;
         try {
+            $this->setLastRequest('');
             $return = parent::__call($name, $args);
         } catch (SoapFault $exception) {
             // we'll rethrow below
@@ -178,6 +179,12 @@ class SoapClient extends SoapClientBase
     {
         $requestXml = $this->__getLastRequest();
         \bdk\Debug::varDump('debugGetXmlRequest', $requestXml);
+        if (!$requestXml) {
+            $lastRequestRef = new ReflectionProperty('SoapClient', '__last_request');
+            $lastRequestRef->setAccessible(true);
+            $requestXml = $lastRequestRef->getValue($this);
+            \bdk\Debug::varDump('try __last_request', $requestXml);
+        }
         if (!$requestXml) {
             return null;
         }

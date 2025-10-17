@@ -68,12 +68,10 @@ export function enhanceValue (node, $entry) {
     enhanceObject.enhance($node)
   } else if ($node.is('table')) {
     tableSort.makeSortable($node)
-  // } else if ($node.is('.t_string')) {
-    // fileLinks.create($entry, $node)
   } else if ($node.is('.string-encoded.tabs-container')) {
     // console.warn('enhanceStringEncoded', $node)
     enhanceValue($node.find('> .tab-pane.active > *'), $entry)
-  } else if ($node.is('[data-type-more=filepath]')) {
+  } else if ($node.is('[data-type-more=filepath], .t_string[data-file')) {
     fileLinks.create($entry, $node)
   }
 }

@@ -680,7 +680,7 @@ var phpDebugConsole = (function (exports, $) {
   function update ($group) {
     var remove = !config$8.linkFiles || config$8.linkFilesTemplate.length === 0;
     $group.find('li[class*=m_]').each(function () {
-      create($(this), $(this).find('[data-type-more=filepath]'), remove);
+      create($(this), $(this).find('[data-type-more=filepath], .t_string[data-file]'), remove);
     });
   }
 
@@ -692,6 +692,7 @@ var phpDebugConsole = (function (exports, $) {
    * bool remove  if true, remove links
    */
   function create ($entry, $filepaths, remove) {
+    // console.warn('create', {entry: $entry, filepaths: $filepaths, remove})
     $debug = $entry.closest('.debug');
     if (!config$8.linkFiles && !remove) {
       return
@@ -725,6 +726,35 @@ var phpDebugConsole = (function (exports, $) {
           : ''
       }
     )
+  }
+
+  function createFileLink (filepath, remove) { // , foundFiles
+    var $filepath = $(filepath);
+    var action = 'create';
+    // console.warn('createFileLink', {filepath, remove})
+    if (remove) {
+      action = 'remove';
+    } else if ($filepath.hasClass('file-link')) {
+      action = 'update';
+    }
+    if ($filepath.closest('.m_trace').length) {
+      // not recursion...  will end up calling createFileLinksTrace
+      // create($filepath.closest('.m_trace'))
+      return
+    }
+    createFileLinkDo($filepath, action);
+  }
+
+  function createFileLinkDo ($filepath, action) {
+    var $replace = createFileLinkReplace($filepath, action);
+    if ($filepath.is('li, td, th') === false) {
+      $filepath.replaceWith($replace);
+      return
+    }
+    $filepath.html(action === 'remove'
+      ? $replace.html()
+      : $replace
+    );
   }
 
   function createFileLinkDataFile ($entry, remove) {
@@ -781,35 +811,6 @@ var phpDebugConsole = (function (exports, $) {
       class: 'text-center',
       html: $a,
     }));
-  }
-
-  function createFileLink (filepath, remove) { // , foundFiles
-    var $filepath = $(filepath);
-    var action = 'create';
-    // console.warn('createFileLink', {filepath, remove})
-    if (remove) {
-      action = 'remove';
-    } else if ($filepath.hasClass('file-link')) {
-      action = 'update';
-    }
-    if ($filepath.closest('.m_trace').length) {
-      // not recursion...  will end up calling createFileLinksTrace
-      // create($filepath.closest('.m_trace'))
-      return
-    }
-    createFileLinkDo($filepath, action);
-  }
-
-  function createFileLinkDo ($filepath, action) {
-    var $replace = createFileLinkReplace($filepath, action);
-    if ($filepath.is('li, td, th') === false) {
-      $filepath.replaceWith($replace);
-      return
-    }
-    $filepath.html(action === 'remove'
-      ? $replace.html()
-      : $replace
-    );
   }
 
   function createFileLinkMoveAttr ($src, $dest) {
@@ -871,6 +872,14 @@ var phpDebugConsole = (function (exports, $) {
     var matches = [];
     var text = $filepath.text().trim();
     // console.warn('createFileLinkMatches', text)
+    if ($filepath.data('file')) {
+      // data-file (and possibly data-line) present
+      return [
+        null,
+        $filepath.data('file'),
+        $filepath.data('line') || 1
+      ]
+    }
     if ($filepath.parent('.property.debug-value').find('> .t_identifier').text().match(/^file$/)) {
       // object with file .debug-value
       matches = {
@@ -949,12 +958,10 @@ var phpDebugConsole = (function (exports, $) {
       enhance($node);
     } else if ($node.is('table')) {
       makeSortable($node);
-    // } else if ($node.is('.t_string')) {
-      // fileLinks.create($entry, $node)
     } else if ($node.is('.string-encoded.tabs-container')) {
       // console.warn('enhanceStringEncoded', $node)
       enhanceValue($node.find('> .tab-pane.active > *'), $entry);
-    } else if ($node.is('[data-type-more=filepath]')) {
+    } else if ($node.is('[data-type-more=filepath], .t_string[data-file')) {
       create($entry, $node);
     }
   }

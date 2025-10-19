@@ -15,6 +15,33 @@ if (!defined('WP_DEBUG_LOG')) {
 
 $GLOBALS['shortcode_tags'] = array();
 
+class wpEmbed
+{
+	/**
+	 * The do_shortcode() callback function.
+	 *
+	 * Attempts to convert a URL into embed HTML. Starts by checking the URL against the regex of
+	 * the registered embed handlers. If none of the regex matches and it's enabled, then the URL
+	 * will be given to the WP_oEmbed class.
+	 *
+	 * @param array  $attr {
+	 *     Shortcode attributes. Optional.
+	 *
+	 *     @type int $width  Width of the embed in pixels.
+	 *     @type int $height Height of the embed in pixels.
+	 * }
+	 * @param string $url The URL attempting to be embedded.
+	 * @return string|false The embed HTML on success, otherwise the original URL.
+	 *                      `->maybe_make_link()` can return false on failure.
+	 */
+	public function shortcode($attr, $url = '')
+    {
+
+    }
+}
+
+$GLOBALS['wp_embed'] = new wpEmbed();
+
 // add_action and add_filter will write to this
 $GLOBALS['wp_actions_filters'] = array(
     'actions' => array(),
@@ -27,6 +54,7 @@ $GLOBALS['wpReturnVals'] = array(
     'blogInfo' => array(
         'version' => '6.7.2',
     ),
+    'current_user_can' => true,
     'locale' => 'en_US',
     'option' => array(
         'page_for_posts' => 42,
@@ -125,6 +153,11 @@ function remove_filter($name, $callable)
         }
     }
     $GLOBALS['wp_actions_filters']['filters'][$name] = \array_values($GLOBALS['wp_actions_filters']['filters'][$name]);
+}
+
+function current_user_can()
+{
+    return $GLOBALS['wpReturnVals']['current_user_can'];
 }
 
 function get_bloginfo($show = 'name', $filter = 'raw')

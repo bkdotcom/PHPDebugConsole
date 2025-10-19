@@ -305,7 +305,7 @@ class Text extends Base
         $meta = $logEntry['meta'];
         $logEntry->setMeta('forceArray', false);
         parent::methodTabular($logEntry);
-        if ($meta['caption']) {
+        if (!empty($meta['caption'])) {
             \array_unshift($logEntry['args'], $meta['caption']);
         }
         return $this->buildArgString($logEntry['args'], $meta);

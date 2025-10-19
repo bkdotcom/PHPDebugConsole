@@ -13,6 +13,7 @@ namespace bdk\Debug\Dump\Html;
 use bdk\Debug;
 use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Dump\Html as Dumper;
+use bdk\Debug\LogEntry;
 
 /**
  * Html dump helper methods
@@ -38,6 +39,34 @@ class Helper
         $this->debug = $dumper->debug;
         $this->dumper = $dumper;
         $this->html = $dumper->debug->html;
+    }
+
+    /**
+     * Move context info from meta to table rows
+     *
+     * @param LogEntry $logEntry LogEntry instance
+     *
+     * @return void
+     */
+    public function addContextRows(LogEntry $logEntry)
+    {
+        $rowsInfo = $logEntry['meta']['tableInfo']['rows'];
+        $rowsNew = [];
+        $rowsInfoNew = [];
+        foreach ($logEntry['args'][0] as $i => $row) {
+            $rowsNew[$i] = $row;
+            $rowsInfoNew[$i] = $rowsInfo[$i];
+            if (isset($rowsInfo[$i]['context']) === false) {
+                continue;
+            }
+
+            $displayContext = $i === 0;
+            $rowsNew[$i . '_context'] = [$this->buildContextCell($rowsInfoNew[$i], $row[1])];
+
+            list($rowsInfoNew[$i], $rowsInfoNew[$i . '_context']) = $this->contextRowInfo($rowsInfoNew[$i], $displayContext);
+        }
+        $logEntry['args'] = [$rowsNew];
+        $logEntry['meta']['tableInfo']['rows'] = $rowsInfoNew;
     }
 
     /**
@@ -216,6 +245,40 @@ class Helper
         $this->debug->setCfg('maxDepth', $maxDepthBak, Debug::CONFIG_NO_PUBLISH | Debug::CONFIG_NO_RETURN);
         $this->dumper->crateRaw = $crateRawWas;
         return $args;
+    }
+
+    /**
+     * Build context row's info
+     *
+     * @param array $rowInfo        row info
+     * @param bool  $displayContext whether context should be initially expanded
+     *
+     * @return array rowInfo and contextRowInfo
+     */
+    private function contextRowInfo(array $rowInfo, $displayContext = true)
+    {
+        unset($rowInfo['context']);
+        unset($rowInfo['args']);
+        $rowInfo['attribs']['class']['expanded'] = $displayContext;
+        $rowInfo['attribs']['data-toggle'] = 'next';
+        $rowInfo['columns'][0]['attribs']['class'][] = 'no-quotes'; // no quotes on filepath
+
+        $rowInfoContext = array(
+            'attribs' => array(
+                'class' => ['context'],
+                'style' => $displayContext ? 'display:table-row;' : null,
+            ),
+            'columns' => [
+                array(
+                    'attribs' => array(
+                        'colspan' => 4,
+                    ),
+                ),
+            ],
+            'keyOutput' => false,
+        );
+
+        return [$rowInfo, $rowInfoContext];
     }
 
     /**

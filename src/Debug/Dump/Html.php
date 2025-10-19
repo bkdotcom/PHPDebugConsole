@@ -322,63 +322,9 @@ class Html extends Base
             $logEntry['meta'] = $meta;
         }
         if ($inclContext) {
-            $this->addContextRows($logEntry);
+            $this->helper->addContextRows($logEntry);
         }
         return $this->methodTabular($logEntry);
-    }
-
-    /**
-     * Move context info from meta to table rows
-     *
-     * @param LogEntry $logEntry LogEntry instance
-     *
-     * @return void
-     */
-    private function addContextRows(LogEntry $logEntry)
-    {
-        $rowsInfo = $logEntry['meta']['tableInfo']['rows'];
-        $rowsNew = [];
-        $rowsInfoNew = [];
-        foreach ($logEntry['args'][0] as $i => $row) {
-            $rowsNew[$i] = $row;
-            $rowsInfoNew[$i] = $rowsInfo[$i];
-            if (isset($rowsInfo[$i]['context']) === false) {
-                continue;
-            }
-
-            $displayContext = $i === 0;
-            $rowsNew[$i . '_context'] = [$this->helper->buildContextCell($rowsInfoNew[$i], $row[1])];
-
-            list($rowsInfoNew[$i], $rowsInfoNew[$i . '_context']) = $this->contextRowInfo($rowsInfoNew[$i], $displayContext);
-        }
-        $logEntry['args'] = [$rowsNew];
-        $logEntry['meta']['tableInfo']['rows'] = $rowsInfoNew;
-    }
-
-    private function contextRowInfo(array $rowInfo, $displayContext)
-    {
-        unset($rowInfo['context']);
-        unset($rowInfo['args']);
-        $rowInfo['attribs']['class']['expanded'] = $displayContext;
-        $rowInfo['attribs']['data-toggle'] = 'next';
-        $rowInfo['columns'][0]['attribs']['class'][] = 'no-quotes'; // no quotes on filepath
-
-        $rowInfoContext = array(
-            'attribs' => array(
-                'class' => ['context'],
-                'style' => $displayContext ? 'display:table-row;' : null,
-            ),
-            'columns' => [
-                array(
-                    'attribs' => array(
-                        'colspan' => 4,
-                    ),
-                ),
-            ],
-            'keyOutput' => false,
-        );
-
-        return [$rowInfo, $rowInfoContext];
     }
 
     /**

@@ -16,7 +16,6 @@ use bdk\Debug\Abstraction\Type;
 use DOMDocument;
 use Exception;
 use ReflectionClass;
-use ReflectionProperty;
 use SoapClient as SoapClientBase;
 use SoapFault;
 
@@ -372,13 +371,9 @@ class SoapClient extends SoapClientBase
     private function setLastRequest($request)
     {
         $classRef = new ReflectionClass('SoapClient');
-        if ($classRef->hasProperty('__last_request') || PHP_VERSION_ID >= 80100) {
-            $lastRequestRef = new ReflectionProperty('SoapClient', '__last_request');
-            $lastRequestRef->setAccessible(true);
-            $lastRequestRef->setValue($this, $request);
-            return;
-        }
-        $this->__last_request = $request;
+        $classRef->hasProperty('__last_request') || PHP_VERSION_ID >= 80100
+            ? $this->debug->reflection->propSet($this, '__last_request', $request)
+            : $this->__last_request = $request;
     }
 
     /**
@@ -391,12 +386,8 @@ class SoapClient extends SoapClientBase
     private function setLastResponse($response)
     {
         $classRef = new ReflectionClass('SoapClient');
-        if ($classRef->hasProperty('__last_response') || PHP_VERSION_ID >= 80100) {
-            $lastResponseRef = new ReflectionProperty('SoapClient', '__last_response');
-            $lastResponseRef->setAccessible(true);
-            $lastResponseRef->setValue($this, $response);
-            return;
-        }
-        $this->__last_response = $response;
+        $classRef->hasProperty('__last_response') || PHP_VERSION_ID >= 80100
+            ? $this->debug->reflection->propSet($this, '__last_response', $response)
+            : $this->__last_response = $response;
     }
 }

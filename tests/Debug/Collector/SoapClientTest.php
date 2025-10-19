@@ -494,6 +494,7 @@ class SoapClientTest extends DebugTestFramework
             // wasn't happening pre 2025-10-01
             // ¯\_(ツ)_/¯
             // modify expect (remove request headers and body) and retry
+            \bdk\Debug::varDump('SoapClient failed to capture request headers and body - why?');
             \array_splice($logEntriesExpect, 1, 2);
             $logEntriesExpect[0]['args'][1] = ''; // we don't know the action
             $this->assertLogEntries($logEntriesExpect, $logEntries);

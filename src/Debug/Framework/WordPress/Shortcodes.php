@@ -88,7 +88,7 @@ class Shortcodes extends AbstractComponent implements SubscriberInterface
         $dataNew = array();
         $rowsMeta = $logEntry['meta']['tableInfo']['rows'];
         foreach ($logEntry['args'][0] as $shortcode => $row) {
-            $phpDoc = $this->debug->phpDoc->getParsed($row[1] . '()');
+            $phpDoc = $this->debug->phpDoc->getParsed($row[0] . '()');
             $row[1] .= ' <a href="#" data-toggle="#shortcode_' . $shortcode . '_doc" title="handler phpDoc"><i class="fa fa-code"></i></a>';
             $dataNew[$shortcode] = $row;
             $dataNew[$shortcode . ' info'] = [$this->debug->abstracter->crateWithVals(
@@ -99,24 +99,59 @@ class Shortcodes extends AbstractComponent implements SubscriberInterface
                     'visualWhiteSpace' => false,
                 )
             )];
-            $rowsMeta[$shortcode . ' info'] = array(
-                'attribs' => array(
-                    'id' => 'shortcode_' . $shortcode . '_doc',
-                    'style' => 'display: none;',
-                ),
-                'columns' => array(
-                    array(
-                        'attribs' => array(
-                            'colspan' => 3,
-                        ),
-                    ),
-                ),
-                'keyOutput' => false,
-            );
+            $rowsMeta[$shortcode . ' info'] = $this->buildInfoMeta($shortcode);
         }
         $logEntry['args'][0] = $dataNew;
         $logEntry['meta']['tableInfo']['rows'] = $rowsMeta;
         unset($logEntry['meta']['tableInfo']['columns'][2]);
+    }
+
+    /**
+     * Build link to codex documentation
+     *
+     * @param string $shortcode shortcode
+     *
+     * @return string
+     */
+    private function buildCodexLink($shortcode)
+    {
+        $wpShortcodes = ['audio', 'caption', 'embed', 'gallery', 'playlist', 'video'];
+        return \preg_match('/(?:wp_)?(\w+)/', $shortcode, $matches) && \in_array($matches[1], $wpShortcodes, true)
+            ? $this->debug->html->buildTag(
+                'a',
+                array(
+                    'href' => 'http://codex.wordpress.org/' . \ucfirst($matches[1]) . '_Shortcode',
+                    'target' => '_blank',
+                    'title' => \_x('Codex documentation', 'shortcode.codex_doc', 'debug-console-php'),
+                ),
+                '<i class="fa fa-external-link"></i>'
+            )
+            : '';
+    }
+
+    /**
+     * Build the table meta info for the phpdoc row
+     *
+     * @param string $shortcode shortcode
+     *
+     * @return array
+     */
+    private function buildInfoMeta($shortcode)
+    {
+        return array(
+            'attribs' => array(
+                'id' => 'shortcode_' . $shortcode . '_doc',
+                'style' => 'display: none;',
+            ),
+            'columns' => array(
+                array(
+                    'attribs' => array(
+                        'colspan' => 3,
+                    ),
+                ),
+            ),
+            'keyOutput' => false,
+        );
     }
 
     /**
@@ -140,7 +175,7 @@ class Shortcodes extends AbstractComponent implements SubscriberInterface
             . $params . "\n\n"
             . 'Since:' . "\n"
             . \implode("\n", \array_map(static function ($since) {
-                return $since['version'] . ' ' . $since['desc'];
+                return \trim($since['version'] . ' ' . $since['desc']);
             }, $phpDoc['since'] ?: []));
     }
 
@@ -151,11 +186,10 @@ class Shortcodes extends AbstractComponent implements SubscriberInterface
      */
     private function getShortCodeData()
     {
-        $wpShortcodes = ['audio', 'caption', 'embed', 'gallery', 'playlist', 'video'];
         $tags = $GLOBALS['shortcode_tags']; // + array('whatgives' => [$this, 'onBootstrap']
         $tags['embed'] = [$GLOBALS['wp_embed'], 'shortcode'];
 
-        $shortcodeData = $this->debug->arrayUtil->mapWithKeys(function ($callable, $shortcode) use ($wpShortcodes) {
+        $shortcodeData = $this->debug->arrayUtil->mapWithKeys(function ($callable, $shortcode) {
             if (\is_array($callable)) {
                 $callable = \get_class($callable[0]) . '::' . $callable[1];
             }
@@ -168,17 +202,7 @@ class Shortcodes extends AbstractComponent implements SubscriberInterface
                     )
                 ),
                 'links' => $this->debug->abstracter->crateWithVals(
-                    \preg_match('/(?:wp_)?(\w+)/', $shortcode, $matches) && \in_array($matches[1], $wpShortcodes, true)
-                        ? $this->debug->html->buildTag(
-                            'a',
-                            array(
-                                'href' => 'http://codex.wordpress.org/' . \ucfirst($matches[1]) . '_Shortcode',
-                                'target' => '_blank',
-                                'title' => \_x('Codex documentation', 'shortcode.codex_doc', 'debug-console-php'),
-                            ),
-                            '<i class="fa fa-external-link"></i>'
-                        )
-                        : '',
+                    $this->buildCodexLink($shortcode),
                     array(
                         'addQuotes' => false,
                         'sanitize' => false,

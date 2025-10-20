@@ -215,6 +215,7 @@ var zest = (function () {
    */
   const argsToElements = function (args, el, index) {
     const elements = [];
+    args = Array.from(args); // shallow copy so not affecting original
     while (args.length) {
       const arg = args.shift();
       if (typeof arg === 'string') {

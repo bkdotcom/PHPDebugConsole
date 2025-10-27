@@ -91,6 +91,7 @@ class Sql
                 DELETE.*?FROM\s+\S+|
                 INSERT(?:\s+(?:LOW_PRIORITY|DELAYED|HIGH_PRIORITY|IGNORE|INTO))*\s+\S+|
                 SELECT\s+(?P<select>.*?)\s+FROM\s+(?<from>\S+)|
+                SET\s+.+|
                 UPDATE\s+\S+
             )
             (?P<afterMethod>.*?)

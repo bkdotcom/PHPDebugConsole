@@ -56,8 +56,8 @@ class Basic implements SubscriberInterface
      *
      * @return Debug
      *
-     * 2.0 Default message used if none passed
-     * 2.3 Support for substitution & formatting
+     * @since 2.0 Default message used if none passed
+     * @since 2.3 Support for substitution & formatting
      */
     public function assert($assertion, $msg = null)
     {

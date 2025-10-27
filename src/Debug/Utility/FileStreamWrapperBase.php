@@ -27,7 +27,7 @@ class FileStreamWrapperBase
     /** @var string */
     const OUTPUT_DESTINATION = 'php://memory';
     /** @var int */
-    const STREAM_OPEN_FOR_INCLUDE = 128;
+    const STREAM_OPEN_FOR_INCLUDE = 128; // STREAM_REPORT_ERRORS
 
     /** @var resource|null The current context, or null if no context was passed to the caller function */
     public $context;
@@ -275,6 +275,6 @@ class FileStreamWrapperBase
     protected static function shouldTransform($file, $options)
     {
         $including = (bool) ($options & static::STREAM_OPEN_FOR_INCLUDE);
-        return $including && static::isTargeted($file);
+        return static::isTargeted($file) && ($including || \in_array($file, self::$filesTransformed, true));
     }
 }

@@ -16,7 +16,7 @@ use InvalidArgumentException;
 use UnitEnum;
 
 /**
- * Php language utilities
+ * Php type utilities
  */
 class PhpType
 {
@@ -65,14 +65,16 @@ class PhpType
      *  - 'callable' for callable array
      *  - enum name for enum value
      *
-     * @param mixed $val The value being type checked
+     * @param mixed $val      The value being type checked
+     * @param bool  $isObject Set to true if value is an object (but not Closure or UnitEnum)
      *
      * @return string
      *
      * @see https://github.com/symfony/polyfill/blob/main/src/Php80/Php80.php
      */
-    public static function getDebugType($val)
+    public static function getDebugType($val, &$isObject = false)
     {
+        $isObject = false;
         $type = \strtr(\strtolower(\gettype($val)), array(
             'boolean' => 'bool',
             'double' => 'float',
@@ -92,6 +94,7 @@ class PhpType
             case $val instanceof \__PHP_Incomplete_Class:
                 return '__PHP_Incomplete_Class';
             case $type === 'object':
+                $isObject = $val instanceof UnitEnum === false && $val instanceof \Closure === false;
                 return self::getDebugTypeObject($val);
             default:
                 return self::getDebugTypeResource($val);
@@ -101,7 +104,7 @@ class PhpType
     /**
      * Get friendly class name
      *
-     * @param object $obj Object to inspect
+     * @param object|class-string $obj Object to inspect
      *
      * @return string
      */

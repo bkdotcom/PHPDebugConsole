@@ -4,6 +4,7 @@ namespace bdk\Test\Backtrace;
 
 use bdk\Backtrace;
 use bdk\Backtrace\Normalizer;
+use bdk\PhpUnitPolyfill\AssertionTrait;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -14,6 +15,8 @@ use PHPUnit\Framework\TestCase;
  */
 class ContextTest extends TestCase
 {
+    use AssertionTrait;
+
     public function testAddContext()
     {
         $line1 = __LINE__ + 2;
@@ -93,8 +96,8 @@ class ContextTest extends TestCase
     public function testGetFileLines()
     {
         self::assertFalse(Backtrace::getFileLines('/no/such/file.php'));
-        self::assertSame(array(
-            1 => "<?php\n",
-        ), Backtrace::getFileLines(__FILE__, 0, 1));
+        $lines = Backtrace::getFileLines(__FILE__, 0, 1);
+        self::assertCount(1, $lines);
+        self::assertMatchesRegularExpression('/<\?php( declare\(ticks=1\);)?\n/', \implode("\n", $lines));
     }
 }

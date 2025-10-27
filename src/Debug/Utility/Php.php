@@ -10,6 +10,7 @@
 
 namespace bdk\Debug\Utility;
 
+use bdk\Debug\Utility\PhpType;
 use bdk\Debug\Utility\Reflection;
 
 /**
@@ -60,7 +61,7 @@ class Php
         if ($reflector && \method_exists($reflector, 'getDeclaringClass')) {
             $reflector = $reflector->getDeclaringClass();
         }
-        return \bdk\Debug\Utility\PhpType::getDebugTypeObject($reflector->getName());
+        return PhpType::getDebugTypeObject($reflector->getName());
     }
 
     /**
@@ -78,7 +79,7 @@ class Php
      */
     public static function getDebugType($val)
     {
-        return \bdk\Debug\Utility\PhpType::getDebugType($val);
+        return PhpType::getDebugType($val);
     }
 
     /**
@@ -130,7 +131,7 @@ class Php
      */
     public static function isCallable($val, $opts = 0)
     {
-        return \bdk\Debug\Utility\PhpType::isCallable($val, $opts);
+        return PhpType::isCallable($val, $opts);
     }
 
     /**
@@ -142,7 +143,7 @@ class Php
      */
     public static function isThrowable($val)
     {
-        return \bdk\Debug\Utility\PhpType::isThrowable($val);
+        return PhpType::isThrowable($val);
     }
 
     /**

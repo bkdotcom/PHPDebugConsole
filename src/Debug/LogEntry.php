@@ -153,7 +153,7 @@ class LogEntry extends Event implements JsonSerializable
     }
 
     /**
-     * Get meta value
+     * Get meta value(s)
      *
      * @param string $key     key to get
      *                        if not passed, return all meta values (no different than $logEntry['meta'])

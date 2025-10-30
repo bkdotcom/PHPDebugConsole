@@ -63,16 +63,17 @@ class PhpType
      *
      * like php's `get_debug_type`, but will return
      *  - 'callable' for callable array
-     *  - enum name for enum value
+     *  - enumClass::name for enums (unless Php::ENUM_AS_OBJECT flag passed)
      *
      * @param mixed $val      The value being type checked
+     * @param int   $opts     Bitmask of ENUM_AS_OBJECT flag
      * @param bool  $isObject Set to true if value is an object (but not Closure or UnitEnum)
      *
      * @return string
      *
      * @see https://github.com/symfony/polyfill/blob/main/src/Php80/Php80.php
      */
-    public static function getDebugType($val, &$isObject = false)
+    public static function getDebugType($val, $opts = 0, &$isObject = false)
     {
         $isObject = false;
         $type = \strtr(\strtolower(\gettype($val)), array(
@@ -88,14 +89,13 @@ class PhpType
             case \in_array($type, ['bool', 'float', 'int', 'null', 'string'], true):
                 return $type;
             case $type === 'array':
-                return self::isCallable($val)
+                return self::isCallable($val, $opts)
                     ? 'callable'
                     : 'array';
             case $val instanceof \__PHP_Incomplete_Class:
                 return '__PHP_Incomplete_Class';
             case $type === 'object':
-                $isObject = $val instanceof UnitEnum === false && $val instanceof \Closure === false;
-                return self::getDebugTypeObject($val);
+                return self::getDebugTypeObject($val, $opts, $isObject);
             default:
                 return self::getDebugTypeResource($val);
         }
@@ -104,15 +104,23 @@ class PhpType
     /**
      * Get friendly class name
      *
-     * @param object|class-string $obj Object to inspect
+     * @param object|class-string $obj      Object to inspect
+     * @param int                 $opts     Bitmask of ENUM_AS_OBJECT flag
+     * @param bool                $isObject Whether the value is an object
+     *                                         Closure: false
+     *                                         UnitEnum: true if Php::ENUM_AS_OBJECT flag passed
+     *                                         other objects: true
      *
      * @return string
      */
-    public static function getDebugTypeObject($obj)
+    public static function getDebugTypeObject($obj, $opts = 0, &$isObject = false)
     {
-        if ($obj instanceof UnitEnum) {
+        $isObject = false;
+        $enumAsObject = ($opts & Php::ENUM_AS_OBJECT) === Php::ENUM_AS_OBJECT;
+        if ($obj instanceof UnitEnum && !$enumAsObject) {
             return \get_class($obj) . '::' . $obj->name;
         }
+        $isObject = $obj instanceof \Closure === false;
         $class = \is_object($obj)
             ? \get_class($obj)
             : $obj;

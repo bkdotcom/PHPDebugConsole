@@ -145,7 +145,7 @@ class GroupTest extends DebugTestFramework
                 false,
                 $objExpect,
                 'toStringVal',
-                $dateTime->format(\DateTime::ISO8601),
+                $dateTime->format(\DateTime::RFC3339),
             ),
             'meta' => array(),
         ), $logEntry);

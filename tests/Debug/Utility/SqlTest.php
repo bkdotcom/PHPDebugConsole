@@ -28,7 +28,7 @@ class SqlTest extends TestCase
             ':datetime' => $datetime,
             ':types' => array('big', 'shiney'),
         ));
-        $expect = 'SELECT * FROM table WHERE is_active = 1 and count > 10 and type in(\'big\', \'shiney\') and created >= \'' . $datetime->format(\DateTime::ISO8601) . '\'';
+        $expect = 'SELECT * FROM table WHERE is_active = 1 and count > 10 and type in(\'big\', \'shiney\') and created >= \'' . $datetime->format(\DateTime::RFC3339) . '\'';
         self::assertSame($expect, $replaced);
     }
 

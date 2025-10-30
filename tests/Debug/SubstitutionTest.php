@@ -72,7 +72,7 @@ class SubstitutionTest extends DebugTestFramework
                         '%s %s %s',
                         'callable: ' . __CLASS__ . '::' . __FUNCTION__,
                         'Closure',
-                        $datetime->format(\DateTime::ISO8601),
+                        $datetime->format(\DateTime::RFC3339),
                     ),
                     null,
                     '',
@@ -80,15 +80,15 @@ class SubstitutionTest extends DebugTestFramework
                 'firephp' => 'X-Wf-1-1-1-19: %d|[{{meta}},['
                     . \json_encode('callable: ' . __CLASS__ . '::' . __FUNCTION__) . ','
                     . '"Closure",'
-                    . '"' . $datetime->format(\DateTime::ISO8601) . '"'
+                    . '"' . $datetime->format(\DateTime::RFC3339) . '"'
                     . ']]|',
                 'html' => '<li class="m_log"><span class="no-quotes t_string">'
                     . '<span class="t_type">callable</span> <span class="t_identifier" data-type-more="callable"><span class="classname"><span class="namespace">' . __NAMESPACE__ . '\</span>SubstitutionTest</span><span class="t_operator">::</span><span class="t_name">' . __FUNCTION__ . '</span></span>'
                     . ' <span class="classname">Closure</span>'
-                    . ' ' . $datetime->format(\DateTime::ISO8601)
+                    . ' ' . $datetime->format(\DateTime::RFC3339)
                     . '</span></li>',
-                'script' => 'console.log("%%s %%s %%s",' . \json_encode('callable: ' . __CLASS__ . '::' . __FUNCTION__) . ',"Closure","' . $datetime->format(\DateTime::ISO8601) . '");',
-                'text' => 'callable: ' . __CLASS__ . '::' . __FUNCTION__ . ' Closure ' . $datetime->format(\DateTime::ISO8601),
+                'script' => 'console.log("%%s %%s %%s",' . \json_encode('callable: ' . __CLASS__ . '::' . __FUNCTION__) . ',"Closure","' . $datetime->format(\DateTime::RFC3339) . '");',
+                'text' => 'callable: ' . __CLASS__ . '::' . __FUNCTION__ . ' Closure ' . $datetime->format(\DateTime::RFC3339),
                 // 'wamp' => @todo
             )
         );

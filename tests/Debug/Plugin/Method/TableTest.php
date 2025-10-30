@@ -500,7 +500,7 @@ EOD;
                         </thead>
                         <tbody>
                         <tr><th class="t_int t_key text-right" scope="row">0</th><td class="t_string">a</td></tr>
-                        <tr><th class="t_int t_key text-right" scope="row">1</th><td class="t_string">2233-03-22T00:00:00%i</td></tr>
+                        <tr><th class="t_int t_key text-right" scope="row">1</th><td class="t_string">2233-03-22T00:00:00%i:00</td></tr>
                         <tr><th class="t_int t_key text-right" scope="row">2</th><td class="t_resource">Resource id #%d: stream</td></tr>
                         <tr><th class="t_int t_key text-right" scope="row">3</th><td><span class="t_type">callable</span> <span class="t_identifier" data-type-more="callable"><span class="classname"><span class="namespace">bdk\Test\Debug\Plugin\Method\</span>TableTest</span><span class="t_operator">::</span><span class="t_name">providerTestMethod</span></span></td></tr>
                         <tr><th class="t_int t_key text-right" scope="row">4</th><td class="groupByInheritance t_object" data-accessible="public"><span class="t_identifier" data-type-more="className"><span class="classname">Closure</span></span>
@@ -519,7 +519,7 @@ EOD;
                         </li>',
                     'text' => 'flat = array(
                         [0] => "a"
-                        [1] => "2233-03-22T00:00:00%i"
+                        [1] => "2233-03-22T00:00:00%i:00"
                         [2] => Resource id #%d: stream
                         [3] => callable: bdk\Test\Debug\Plugin\Method\TableTest::providerTestMethod
                         [4] => Closure
@@ -530,7 +530,7 @@ EOD;
                     'script' => 'console.log("%%cflat", "' . self::$captionStyle . '")' . "\n"
                         . 'console.table(['
                             . '"a",'
-                            . '"2233-03-22T00:00:00%i",'
+                            . '"2233-03-22T00:00:00%i:00",'
                             . '"Resource id #%d: stream",'
                             . \json_encode('callable: ' . __CLASS__ . '::providerTestMethod') . ','
                             . '{"___class_name":"Closure","(debug) file":"' . __FILE__ . '","(debug) line":%i}'
@@ -538,7 +538,7 @@ EOD;
                     'firephp' => 'X-Wf-1-1-1-4: %d|[{"Label":"flat","Type":"TABLE"},['
                         . '["","value"],'
                         . '[0,"a"],'
-                        . '[1,"2233-03-22T00:00:00%i"],'
+                        . '[1,"2233-03-22T00:00:00%i:00"],'
                         . '[2,"Resource id #%d: stream"],'
                         . '[3,' . \json_encode('callable: ' . __CLASS__ . '::providerTestMethod') . '],'
                         . '[4,{"___class_name":"Closure","(debug) file":"' . __FILE__ . '","(debug) line":%i}]'
@@ -715,24 +715,24 @@ EOD;
                         <tr><th>&nbsp;</th><th scope="col">date <span class="classname">DateTime</span></th><th scope="col">date2</th></tr>
                         </thead>
                         <tbody>
-                        <tr><th class="t_int t_key text-right" scope="row">0</th><td class="t_string">1955-11-05T00:00:00%i</td><td class="t_string">not a datetime</td></tr>
-                        <tr><th class="t_int t_key text-right" scope="row">1</th><td class="t_string">1985-10-26T00:00:00%i</td><td class="t_string">2015-10-21T00:00:00%i</td></tr>
+                        <tr><th class="t_int t_key text-right" scope="row">0</th><td class="t_string">1955-11-05T00:00:00%i:00</td><td class="t_string">not a datetime</td></tr>
+                        <tr><th class="t_int t_key text-right" scope="row">1</th><td class="t_string">1985-10-26T00:00:00%i:00</td><td class="t_string">2015-10-21T00:00:00%i:00</td></tr>
                         </tbody>
                         </table>
                         </li>',
                     'text' => 'not all col values of same type = array(
                         [0] => array(
-                            [date] => "1955-11-05T00:00:00%i"
+                            [date] => "1955-11-05T00:00:00%i:00"
                             [date2] => "not a datetime"
                         )
                         [1] => array(
-                            [date] => "1985-10-26T00:00:00%i"
-                            [date2] => "2015-10-21T00:00:00%i"
+                            [date] => "1985-10-26T00:00:00%i:00"
+                            [date2] => "2015-10-21T00:00:00%i:00"
                         )
                     )',
                     'script' => 'console.log("%%cnot all col values of same type", "' . self::$captionStyle . '")' . "\n"
-                        . 'console.table([{"date":"1955-11-05T00:00:00%i","date2":"not a datetime"},{"date":"1985-10-26T00:00:00%i","date2":"2015-10-21T00:00:00%i"}]);',
-                    'firephp' => 'X-Wf-1-1-1-8: 188|[{"Label":"not all col values of same type","Type":"TABLE"},[["","date","date2"],[0,"1955-11-05T00:00:00%i","not a datetime"],[1,"1985-10-26T00:00:00%i","2015-10-21T00:00:00%i"]]]|',
+                        . 'console.table([{"date":"1955-11-05T00:00:00%i:00","date2":"not a datetime"},{"date":"1985-10-26T00:00:00%i:00","date2":"2015-10-21T00:00:00%i:00"}]);',
+                    'firephp' => 'X-Wf-1-1-1-8: 191|[{"Label":"not all col values of same type","Type":"TABLE"},[["","date","date2"],[0,"1955-11-05T00:00:00%i:00","not a datetime"],[1,"1985-10-26T00:00:00%i:00","2015-10-21T00:00:00%i:00"]]]|',
                 ),
             ),
 

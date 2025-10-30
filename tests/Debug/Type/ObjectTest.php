@@ -1634,10 +1634,10 @@ EOD;
                 'entry' => static function (LogEntry $logEntry) use ($dateTime) {
                     // Note:  DateTime in PHP < 7.4 has public properties!
                     $abs = $logEntry['args'][1];
-                    self::assertSame($dateTime->format(\DateTime::ISO8601), $abs['stringified']);
+                    self::assertSame($dateTime->format(\DateTime::RFC3339), $abs['stringified']);
                 },
                 'html' => static function ($htmlActual) use ($dateTime) {
-                    self::assertStringContainsString('<li class="m_log"><span class="no-quotes t_string">dateTime</span> = <div class="groupByInheritance t_object" data-accessible="public"><span class="t_string t_stringified">' . $dateTime->format(\DateTime::ISO8601) . '</span>', $htmlActual);
+                    self::assertStringContainsString('<li class="m_log"><span class="no-quotes t_string">dateTime</span> = <div class="groupByInheritance t_object" data-accessible="public"><span class="t_string t_stringified">' . $dateTime->format(\DateTime::RFC3339) . '</span>', $htmlActual);
                 },
             )
         );

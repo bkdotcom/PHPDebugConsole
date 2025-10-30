@@ -22,6 +22,7 @@ class Php
     const IS_CALLABLE_OBJ_ONLY = 2;
     const IS_CALLABLE_SYNTAX_ONLY = 4;
     const IS_CALLABLE_NO_CALL = 8; // don't test for __call / __callStatic methods
+    const ENUM_AS_OBJECT = 16; // getDebugType treat enum as plain object (vs returning class::name)
 
     /** @var string[] list of allowed-to-be-unserialized classes passed to unserializeSafe */
     protected static $allowedClasses = [];

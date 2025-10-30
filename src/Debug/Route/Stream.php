@@ -182,7 +182,7 @@ class Stream extends AbstractRoute
     /**
      * Test if environment indicates ANSI support
      *
-     * @param resource $streamResource stream resource
+     * @param resource $streamResource Stream resource
      *
      * @return bool
      */
@@ -192,7 +192,7 @@ class Stream extends AbstractRoute
             || \getenv('ANSICON') !== false
             || \getenv('COLORTERM') !== false
             || \getenv('ConEmuANSI') === 'ON'
-            || (\function_exists('sapi_windows_vt100_support') && \sapi_windows_vt100_support($streamResource));
+            || self::sapiWindowsVt100Support($streamResource);
     }
 
     /**
@@ -238,6 +238,20 @@ class Stream extends AbstractRoute
             return;
         }
         $this->setDumper();
+    }
+
+    /**
+     * Get VT100 support for the specified stream associated to an output buffer of a Windows console.
+     *
+     * @param resource $streamResource Stream resource
+     *
+     * @return bool
+     */
+    private static function sapiWindowsVt100Support($streamResource)
+    {
+        return \function_exists('sapi_windows_vt100_support')
+            ? \sapi_windows_vt100_support($streamResource)
+            : false;
     }
 
     /**

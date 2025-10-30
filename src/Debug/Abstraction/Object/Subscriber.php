@@ -73,7 +73,7 @@ class Subscriber implements SubscriberInterface
                 // check for both DateTime and DateTimeImmutable
                 //   DateTimeInterface (and DateTimeImmutable) not available until Php 5.5
                 $abs['isTraverseOnly'] = false;
-                $abs['stringified'] = $obj->format(\DateTime::ISO8601);
+                $abs['stringified'] = $obj->format(\DateTime::RFC3339);
                 break;
             case $obj instanceof mysqli:
                 $this->onStartMysqli($abs);

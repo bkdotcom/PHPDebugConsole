@@ -29,7 +29,8 @@ table {
     }
   }
   th,
-  tfoot td {
+  thead > td,
+  tfoot > td {
     font-weight: bold;
     background-color: var(--color-table-th-bg);
   }

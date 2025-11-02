@@ -43,16 +43,18 @@ $color-stringified-shadow: rgba(0, 200, 200, 0.6);
 .t_float,
 .t_string[data-type-more=numeric],
 .t_string[data-type-more=timestamp] {
-  font-family: var(--font-family-numeric) !important;
   color: var(--color-numeric);
-  font-size: 1.15em;
-  line-height: 1.15em;
+  font-family: var(--font-family-numeric) !important;
+  // font-size: 1.15em;
+  // line-height: 1.15em;
+  /*
   &::before,
   &::after {
-    // undo font-size increase got
+    // undo font-size increase
     font-family: var(--font-family);
     font-size: 0.8695em;
   }
+  */
 }
 
 .t_key {

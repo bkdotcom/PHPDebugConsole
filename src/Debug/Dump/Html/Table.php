@@ -198,15 +198,7 @@ class Table
      */
     protected function buildHeader()
     {
-        $labels = \array_map(function (array $colInfo) {
-            $label = $this->dumper->valDumper->dump($colInfo['key'], array(
-                'tagName' => null,
-            ));
-            if (!empty($colInfo['class'])) {
-                $label .= ' ' . $this->dumper->valDumper->markupIdentifier($colInfo['class'], 'className');
-            }
-            return $label;
-        }, $this->options['tableInfo']['columns']);
+        $labels = \array_map([$this, 'buildHeaderLabel'], $this->options['tableInfo']['columns']);
         $keyLabel = $this->options['tableInfo']['commonRowInfo']['keyOutput']
             ? ($this->options['tableInfo']['indexLabel']
                 ? '<th class="text-right">' . $this->options['tableInfo']['indexLabel'] . '</th>'
@@ -218,9 +210,33 @@ class Table
                 . ($this->options['tableInfo']['haveObjRow']
                     ? '<th>&nbsp;</th>'
                     : '')
-                . '<th scope="col">' . \implode('</th><th scope="col">', $labels) . '</th>'
+                . \implode('', $labels)
             . '</tr>' . "\n"
             . '</thead>' . "\n";
+    }
+
+    /**
+     * Build header label th tag
+     *
+     * @param array $colInfo Column information
+     *
+     * @return string
+     */
+    protected function buildHeaderLabel($colInfo)
+    {
+        $type = $this->debug->abstracter->type->getType($colInfo['key']);
+        $label = $this->dumper->valDumper->dump($colInfo['key'], array(
+            'tagName' => null,
+        ));
+        if (!empty($colInfo['class'])) {
+            $label .= ' ' . $this->dumper->valDumper->markupIdentifier($colInfo['class'], 'className');
+        }
+        return $this->debug->html->buildTag('th', array(
+            'class' => $type[0] !== 'string'
+                ? 't_' . $type[0]
+                : null,
+            'scope' => 'col',
+        ), $label);
     }
 
     /**

@@ -95,11 +95,11 @@ class TableTest extends DebugTestFramework
         // not all date2 values of same type
         $rowsB = array(
             array(
-                'date' => new \DateTime('1955-11-05'),
+                'dɑte' => new \DateTime('1955-11-05'),
                 'date2' => 'not a datetime',
             ),
             array(
-                'date' => new \DateTime('1985-10-26'),
+                'dɑte' => new \DateTime('1985-10-26'),
                 'date2' => new \DateTime('2015-10-21'),
             ),
         );
@@ -680,6 +680,7 @@ EOD;
                     )),
                     Debug::meta('tableInfo', array(
                         'rows' => array(
+                            // @deprecate this ability to override row keys
                             'b' => array('key' => 'Bob'),
                             's' => array('key' => 'Sally'),
                         ),
@@ -712,7 +713,7 @@ EOD;
                         <table class="sortable table-bordered">
                         <caption>not all col values of same type</caption>
                         <thead>
-                        <tr><th>&nbsp;</th><th scope="col">date <span class="classname">DateTime</span></th><th scope="col">date2</th></tr>
+                        <tr><th>&nbsp;</th><th scope="col">d<span class="unicode" data-code-point="0251" title="U-0251: LATIN SMALL LETTER ALPHA">ɑ</span>te <span class="classname">DateTime</span></th><th scope="col">date2</th></tr>
                         </thead>
                         <tbody>
                         <tr><th class="t_int t_key text-right" scope="row">0</th><td class="t_string">1955-11-05T00:00:00%i:00</td><td class="t_string">not a datetime</td></tr>
@@ -722,17 +723,17 @@ EOD;
                         </li>',
                     'text' => 'not all col values of same type = array(
                         [0] => array(
-                            [date] => "1955-11-05T00:00:00%i:00"
+                            [d\u{0251}te] => "1955-11-05T00:00:00%i:00"
                             [date2] => "not a datetime"
                         )
                         [1] => array(
-                            [date] => "1985-10-26T00:00:00%i:00"
+                            [d\u{0251}te] => "1985-10-26T00:00:00%i:00"
                             [date2] => "2015-10-21T00:00:00%i:00"
                         )
                     )',
                     'script' => 'console.log("%%cnot all col values of same type", "' . self::$captionStyle . '")' . "\n"
-                        . 'console.table([{"date":"1955-11-05T00:00:00%i:00","date2":"not a datetime"},{"date":"1985-10-26T00:00:00%i:00","date2":"2015-10-21T00:00:00%i:00"}]);',
-                    'firephp' => 'X-Wf-1-1-1-8: 191|[{"Label":"not all col values of same type","Type":"TABLE"},[["","date","date2"],[0,"1955-11-05T00:00:00%i:00","not a datetime"],[1,"1985-10-26T00:00:00%i:00","2015-10-21T00:00:00%i:00"]]]|',
+                        . 'console.table([{"d\\\u{0251}te":"1955-11-05T00:00:00%i:00","date2":"not a datetime"},{"d\\\u{0251}te":"1985-10-26T00:00:00%i:00","date2":"2015-10-21T00:00:00%i:00"}]);',
+                    'firephp' => 'X-Wf-1-1-1-8: 199|[{"Label":"not all col values of same type","Type":"TABLE"},[["","d\\\u{0251}te","date2"],[0,"1955-11-05T00:00:00%i:00","not a datetime"],[1,"1985-10-26T00:00:00%i:00","2015-10-21T00:00:00%i:00"]]]|',
                 ),
             ),
 

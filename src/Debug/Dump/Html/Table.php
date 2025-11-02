@@ -199,7 +199,9 @@ class Table
     protected function buildHeader()
     {
         $labels = \array_map(function (array $colInfo) {
-            $label = $colInfo['key'];
+            $label = $this->dumper->valDumper->dump($colInfo['key'], array(
+                'tagName' => null,
+            ));
             if (!empty($colInfo['class'])) {
                 $label .= ' ' . $this->dumper->valDumper->markupIdentifier($colInfo['class'], 'className');
             }

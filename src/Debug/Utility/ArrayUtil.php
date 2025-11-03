@@ -97,13 +97,13 @@ class ArrayUtil
      *
      * @throws InvalidArgumentException
      */
-    public static function diffAssocRecursive(array $array1, $array2) // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
+    public static function diffDeep(array $array1, $array2) // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
     {
         $arrays = \array_slice(\func_get_args(), 1);
         foreach ($arrays as $i => $array) {
             \bdk\Debug\Utility\PhpType::assertType($array, 'array', 'array' . ($i + 2));
         }
-        return \array_reduce($arrays, [__CLASS__, 'diffAssocRecursiveWalk'], $array1);
+        return \array_reduce($arrays, [__CLASS__, 'diffDeepWalk'], $array1);
     }
 
     /**

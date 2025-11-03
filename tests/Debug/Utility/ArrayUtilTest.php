@@ -48,9 +48,9 @@ class ArrayUtilTest extends TestCase
     }
 
     /**
-     * @dataProvider providerDiffAssocRecursive
+     * @dataProvider providerDiffDeep
      */
-    public function testDiffAssocRecursive($argsAndExpect)
+    public function testDiffDeep($argsAndExpect)
     {
         $argsAndExpect = \func_get_args();
         $expect = \array_pop($argsAndExpect);
@@ -62,7 +62,7 @@ class ArrayUtilTest extends TestCase
         }
         self::assertSame(
             $expect,
-            \call_user_func_array('bdk\Debug\Utility\ArrayUtil::diffAssocRecursive', $argsAndExpect)
+            \call_user_func_array('bdk\Debug\Utility\ArrayUtil::diffDeep', $argsAndExpect)
         );
     }
 
@@ -325,7 +325,7 @@ class ArrayUtilTest extends TestCase
         self::assertSame($expectArray, $array, 'updated array not as expected');
     }
 
-    public static function providerDiffAssocRecursive()
+    public static function providerDiffDeep()
     {
         return array(
             'test1' => array(
@@ -359,7 +359,7 @@ class ArrayUtilTest extends TestCase
                 array(
                     'colors' => array(
                         'b' => 'brown',
-                        'red',
+                        // 'red',
                     ),
                 ),
             ),
@@ -370,7 +370,7 @@ class ArrayUtilTest extends TestCase
                 false,
                 array(
                     'expectException' => 'InvalidArgumentException',
-                    'expectExceptionMessage' => 'bdk\Debug\Utility\ArrayUtil::diffAssocRecursive(): $array2 expects array.  bool provided',
+                    'expectExceptionMessage' => 'bdk\Debug\Utility\ArrayUtil::diffDeep(): $array2 expects array.  bool provided',
                 ),
             ),
         );

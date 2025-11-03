@@ -147,7 +147,7 @@ class Abstraction extends BaseAbstraction
      */
     public function getInstanceValues()
     {
-        return ArrayUtil::diffAssocRecursive(
+        return ArrayUtil::diffDeep(
             $this->values,
             $this->getInheritedValues()
         );

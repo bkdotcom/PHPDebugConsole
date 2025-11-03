@@ -89,31 +89,38 @@ trait ArrayUtilHelperTrait
      *
      * @return array An array containing all the values from array that are not present in array2
      */
-    private static function diffAssocRecursiveWalk(array $array, array $array2)
+    private static function diffDeepWalk(array $array, array $array2)
     {
         $diff = array();
+        $allInt = true;
         \array_walk(
             $array,
             /**
              * @param array-key $key
              */
-            static function ($value, $key) use (&$diff, $array2) {
+            static function ($value, $key) use (&$allInt, &$diff, $array2) {
+                $incl = false;
                 if (\array_key_exists($key, $array2) === false) {
-                    $diff[$key] = $value;
-                    return;
+                    $incl = true;
+                } elseif (self::isNonMergeable($value) === false && self::isNonMergeable($array2[$key]) === false) {
+                    $value = self::diffDeep($value, $array2[$key]);
+                    $incl = !empty($value);
+                } elseif (\is_int($key)) {
+                    $foundIndex = \array_search($value, $array2, true);
+                    $incl = $foundIndex === false || \is_int($foundIndex) === false;
+                } elseif ($value !== $array2[$key]) {
+                    // not in $array2 or different value
+                    $incl = true;
                 }
-                if (\is_array($value) && \is_array($array2[$key])) {
-                    $value = self::diffAssocRecursive($value, $array2[$key]);
-                    if ($value) {
-                        $diff[$key] = $value;
-                    }
-                    return;
-                }
-                if ($value !== $array2[$key]) {
+                if ($incl) {
+                    $allInt = $allInt && \is_int($key);
                     $diff[$key] = $value;
                 }
             }
         );
+        if ($allInt) {
+            $diff = \array_values($diff);
+        }
         return $diff;
     }
 

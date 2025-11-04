@@ -201,7 +201,7 @@ class Table
         $labels = \array_map([$this, 'buildHeaderLabel'], $this->options['tableInfo']['columns']);
         $keyLabel = $this->options['tableInfo']['commonRowInfo']['keyOutput']
             ? ($this->options['tableInfo']['indexLabel']
-                ? '<th class="text-right">' . $this->options['tableInfo']['indexLabel'] . '</th>'
+                ? '<th>' . $this->options['tableInfo']['indexLabel'] . '</th>'
                 : '<th>&nbsp;</th>')
             : '';
         return '<thead>' . "\n"
@@ -316,7 +316,7 @@ class Table
         return $this->debug->html->buildTag(
             'th',
             $this->debug->arrayUtil->mergeDeep($rowKeyParsed['attribs'], array(
-                'class' => ['t_key', 'text-right'],
+                'class' => ['t_key'],
                 'scope' => 'row',
             )),
             $rowKeyParsed['innerhtml']

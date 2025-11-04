@@ -137,9 +137,9 @@ class ProfileTest extends DebugTestFramework
                         <tr><th>&nbsp;</th><th scope="col">calls</th><th scope="col">totalTime</th><th scope="col">ownTime</th></tr>
                     </thead>
                     <tbody>
-                        <tr><th class="t_identifier t_key text-right" data-type-more="method" scope="row"><span class="classname"><span class="namespace">bdk\Test\Debug\Plugin\Method\</span>ProfileTest</span><span class="t_operator">::</span><span class="t_name">a</span></th><td class="t_int">1</td><td class="t_float">%f</td><td class="t_float">%f</td></tr>
-                        <tr><th class="t_identifier t_key text-right" data-type-more="method" scope="row"><span class="classname"><span class="namespace">bdk\Test\Debug\Plugin\Method\</span>ProfileTest</span><span class="t_operator">::</span><span class="t_name">b</span></th><td class="t_int">1</td><td class="t_float">%f</td><td class="t_float">%f</td></tr>
-                        <tr><th class="t_identifier t_key text-right" data-type-more="method" scope="row"><span class="classname"><span class="namespace">bdk\Test\Debug\Plugin\Method\</span>ProfileTest</span><span class="t_operator">::</span><span class="t_name">c</span></th><td class="t_int">2</td><td class="t_float">%f</td><td class="t_float">%f</td></tr>
+                        <tr><th class="t_identifier t_key" data-type-more="method" scope="row"><span class="classname"><span class="namespace">bdk\Test\Debug\Plugin\Method\</span>ProfileTest</span><span class="t_operator">::</span><span class="t_name">a</span></th><td class="t_int">1</td><td class="t_float">%f</td><td class="t_float">%f</td></tr>
+                        <tr><th class="t_identifier t_key" data-type-more="method" scope="row"><span class="classname"><span class="namespace">bdk\Test\Debug\Plugin\Method\</span>ProfileTest</span><span class="t_operator">::</span><span class="t_name">b</span></th><td class="t_int">1</td><td class="t_float">%f</td><td class="t_float">%f</td></tr>
+                        <tr><th class="t_identifier t_key" data-type-more="method" scope="row"><span class="classname"><span class="namespace">bdk\Test\Debug\Plugin\Method\</span>ProfileTest</span><span class="t_operator">::</span><span class="t_name">c</span></th><td class="t_int">2</td><td class="t_float">%f</td><td class="t_float">%f</td></tr>
                     </tbody>
                     <tfoot>
                         <tr><td>&nbsp;</td><td></td><td></td><td class="t_float">%f</td></tr>

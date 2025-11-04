@@ -9,6 +9,13 @@ table {
     padding-top: 2px;
     text-align: left;
   }
+  tr[data-toggle] {
+    cursor: default;
+    &:hover {
+      color: var(--color-table-hover-fg);
+      background-color: var(--color-table-hover-bg);
+    }
+  }
   th,
   td {
     padding: 0 0.25em;
@@ -34,6 +41,9 @@ table {
     font-weight: bold;
     background-color: var(--color-table-th-bg);
   }
+  th:first-child {
+    text-align: right;
+  }
   thead th {
     text-align: center;
     .classname {
@@ -41,13 +51,6 @@ table {
       font-style: italic;
       &::before { content: "("; }
       &::after { content: ")"; }
-    }
-  }
-  tr[data-toggle] {
-    cursor: default;
-    &:hover {
-      color: var(--color-table-hover-fg);
-      background-color: var(--color-table-hover-bg);
     }
   }
   tbody th.t_int,

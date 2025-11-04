@@ -448,7 +448,7 @@ EOD;
                             <tr><th>&nbsp;</th><th scope="col">value</th></tr>
                         </thead>
                         <tbody>
-                            <tr><th class="t_key t_string text-right" scope="row">binary</th><td><span class="t_keyword">string</span><span class="text-muted">(binary)</span>
+                            <tr><th class="t_key t_string" scope="row">binary</th><td><span class="t_keyword">string</span><span class="text-muted">(binary)</span>
                             <ul class="list-unstyled value-container" data-type="string" data-type-more="binary">
                             <li>size = <span class="t_int">25</span></li>
                             <li class="t_string"><span class="binary">00 00 00 00 01 01 00 00 00 00 00 00 00 00 00 f0 3f 00 00 00 00 00 00 00 40</span></li>

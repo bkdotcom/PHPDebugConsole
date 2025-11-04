@@ -148,7 +148,7 @@ class EnumTest extends DebugTestFramework
                             <tr><th>&nbsp;</th><th scope="col">value</th></tr>
                         </thead>
                         <tbody>
-                        <tr><th class="t_key t_string text-right" scope="row">enum</th><td class="t_identifier" data-type-more="const" title="The &lt;b&gt;most&lt;/b&gt; important meal
+                        <tr><th class="t_key t_string" scope="row">enum</th><td class="t_identifier" data-type-more="const" title="The &lt;b&gt;most&lt;/b&gt; important meal
                             Meals PHPDoc"><span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\Enum\</span>Meals</span><span class="t_operator">::</span><span class="t_name">BREAKFAST</span></td></tr>
                         </tbody>
                         </table>

@@ -92,32 +92,28 @@ trait ArrayUtilHelperTrait
     private static function diffDeepWalk(array $array, array $array2)
     {
         $diff = array();
-        $allInt = true;
-        \array_walk(
-            $array,
-            /**
-             * @param array-key $key
-             */
-            static function ($value, $key) use (&$allInt, &$diff, $array2) {
-                $incl = false;
-                if (\array_key_exists($key, $array2) === false) {
-                    $incl = true;
-                } elseif (self::isNonMergeable($value) === false && self::isNonMergeable($array2[$key]) === false) {
-                    $value = self::diffDeep($value, $array2[$key]);
-                    $incl = !empty($value);
-                } elseif (\is_int($key)) {
-                    $foundIndex = \array_search($value, $array2, true);
-                    $incl = $foundIndex === false || \is_int($foundIndex) === false;
-                } elseif ($value !== $array2[$key]) {
-                    // not in $array2 or different value
-                    $incl = true;
-                }
-                if ($incl) {
-                    $allInt = $allInt && \is_int($key);
-                    $diff[$key] = $value;
-                }
+        $allInt = true; // true if all kept keys are int
+        $walkFunc = static function ($value, $key) use (&$allInt, &$diff, $array2) {
+            $incl = false;
+            if (\array_key_exists($key, $array2) === false) {
+                $incl = true;
+            } elseif (self::isMergeable($value) && self::isMergeable($array2[$key])) {
+                $value = self::diffDeep($value, $array2[$key]);
+                $incl = !empty($value);
+            } elseif (\is_int($key)) {
+                // integer key... keep value if not in array2 (or if in array2, but with string key / not a list)
+                $foundIndex = \array_search($value, $array2, true);
+                $incl = $foundIndex === false || \is_int($foundIndex) === false;
+            } elseif ($value !== $array2[$key]) {
+                // different value in array2
+                $incl = true;
             }
-        );
+            if ($incl) {
+                $allInt = $allInt && \is_int($key);
+                $diff[$key] = $value;
+            }
+        };
+        \array_walk($array, $walkFunc);
         if ($allInt) {
             $diff = \array_values($diff);
         }
@@ -144,17 +140,17 @@ trait ArrayUtilHelperTrait
     }
 
     /**
-     * Check that value is not an array
+     * Check that value is an array (but not a "callable")
      *
      * @param mixed $value Value to test
      *
      * @return bool
      *
-     * @psalm-assert-if-false array $value
+     * @psalm-assert-if-true array $value
      */
-    private static function isNonMergeable($value)
+    private static function isMergeable($value)
     {
-        return \is_array($value) === false || Php::isCallable($value, Php::IS_CALLABLE_ARRAY_ONLY);
+        return \is_array($value) && Php::isCallable($value, Php::IS_CALLABLE_ARRAY_ONLY) === false;
     }
 
     /**
@@ -188,7 +184,7 @@ trait ArrayUtilHelperTrait
              * @param array-key $key
              */
             static function ($value, $key) use (&$arrayDef) {
-                if (self::isNonMergeable($value)) {
+                if (self::isMergeable($value) === false) {
                     // not array or appears to be a callable
                     if (\is_int($key) === false) {
                         $arrayDef[$key] = $value;
@@ -198,7 +194,7 @@ trait ArrayUtilHelperTrait
                     }
                     return;
                 }
-                if (isset($arrayDef[$key]) === false || self::isNonMergeable($arrayDef[$key])) {
+                if (isset($arrayDef[$key]) === false || self::isMergeable($arrayDef[$key]) === false) {
                     // default not set or can be overwritten without merge
                     $arrayDef[$key] = $value;
                     return;

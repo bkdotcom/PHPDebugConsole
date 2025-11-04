@@ -108,7 +108,7 @@ WHERE
 <tr><th>&nbsp;</th><th scope="col">value</th><th scope="col">type</th></tr>
 </thead>
 <tbody>
-<tr><th class="t_key t_string text-right" scope="row">:datetime</th><td class="t_string">{$datetime}</td>{$parameterTypeTd}</tr>
+<tr><th class="t_key t_string" scope="row">:datetime</th><td class="t_string">{$datetime}</td>{$parameterTypeTd}</tr>
 </tbody>
 </table>
 </li>
@@ -125,15 +125,15 @@ EOD;
         self::assertStringMatchesFormatNormalized($select1expect, $output);
 
         $params =\method_exists($statement, 'bindValue') && \is_int(\Doctrine\DBAL\ParameterType::STRING) === false
-            ? '<tr><th class="t_int t_key text-right" scope="row">1</th><td class="t_string">foo</td><td class="t_identifier" data-type-more="const" title="Represents the SQL INTEGER data type.
+            ? '<tr><th class="t_int t_key" scope="row">1</th><td class="t_string">foo</td><td class="t_identifier" data-type-more="const" title="Represents the SQL INTEGER data type.
                     Statement parameter type."><span class="classname"><span class="namespace">Doctrine\DBAL\</span>ParameterType</span><span class="t_operator">::</span><span class="t_name">INTEGER</span></td></tr>
-                <tr><th class="t_int t_key text-right" scope="row">2</th><td class="t_string">bar</td><td class="t_identifier" data-type-more="const" title="Represents the SQL INTEGER data type.
+                <tr><th class="t_int t_key" scope="row">2</th><td class="t_string">bar</td><td class="t_identifier" data-type-more="const" title="Represents the SQL INTEGER data type.
                     Statement parameter type."><span class="classname"><span class="namespace">Doctrine\DBAL\</span>ParameterType</span><span class="t_operator">::</span><span class="t_name">INTEGER</span></td></tr>
-                <tr><th class="t_int t_key text-right" scope="row">3</th><td class="t_string">declined</td><td class="t_identifier" data-type-more="const" title="Represents the SQL CHAR, VARCHAR, or other string data type.
+                <tr><th class="t_int t_key" scope="row">3</th><td class="t_string">declined</td><td class="t_identifier" data-type-more="const" title="Represents the SQL CHAR, VARCHAR, or other string data type.
                     Statement parameter type."><span class="classname"><span class="namespace">Doctrine\DBAL\</span>ParameterType</span><span class="t_operator">::</span><span class="t_name">STRING</span></td></tr>'
-            : '<tr><th class="t_int t_key text-right" scope="row">1</th><td class="t_string">foo</td><td class="t_identifier" data-type-more="const" title="value: 1"><span class="classname">PDO</span><span class="t_operator">::</span><span class="t_name">PARAM_INT</span></td></tr>
-                <tr><th class="t_int t_key text-right" scope="row">2</th><td class="t_string">bar</td><td class="t_identifier" data-type-more="const" title="value: 1"><span class="classname">PDO</span><span class="t_operator">::</span><span class="t_name">PARAM_INT</span></td></tr>
-                <tr><th class="t_int t_key text-right" scope="row">3</th><td class="t_string">declined</td><td class="t_identifier" data-type-more="const" title="value: 2"><span class="classname">PDO</span><span class="t_operator">::</span><span class="t_name">PARAM_STR</span></td></tr>';
+            : '<tr><th class="t_int t_key" scope="row">1</th><td class="t_string">foo</td><td class="t_identifier" data-type-more="const" title="value: 1"><span class="classname">PDO</span><span class="t_operator">::</span><span class="t_name">PARAM_INT</span></td></tr>
+                <tr><th class="t_int t_key" scope="row">2</th><td class="t_string">bar</td><td class="t_identifier" data-type-more="const" title="value: 1"><span class="classname">PDO</span><span class="t_operator">::</span><span class="t_name">PARAM_INT</span></td></tr>
+                <tr><th class="t_int t_key" scope="row">3</th><td class="t_string">declined</td><td class="t_identifier" data-type-more="const" title="value: 2"><span class="classname">PDO</span><span class="t_operator">::</span><span class="t_name">PARAM_STR</span></td></tr>';
         $select2expect = <<<EOD
 %A
 <li class="m_group" data-channel="general.Doctrine" data-icon="fa fa-database" id="statementInfo3">

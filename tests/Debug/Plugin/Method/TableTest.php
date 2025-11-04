@@ -111,8 +111,8 @@ class TableTest extends DebugTestFramework
 <tr><th>&nbsp;</th><th scope="col">name</th><th scope="col">age</th><th scope="col">sex</th><th scope="col">Naughty</th><th scope="col">extracol</th></tr>
 </thead>
 <tbody>
-<tr><th class="t_int t_key text-right" scope="row">4</th><td class="t_string">Bob</td><td class="t_string" data-type-more="numeric">12</td><td class="t_string">M</td><td class="t_bool text-center" data-type-more="false"></td><td class="t_undefined"></td></tr>
-<tr><th class="t_int t_key text-right" scope="row">2</th><td class="t_string">Sally</td><td class="t_string" data-type-more="numeric">10</td><td class="t_string">F</td><td class="t_bool text-center" data-type-more="true"><i class="fa fa-check"></i></td><td class="t_string">yes</td></tr>
+<tr><th class="t_int t_key" scope="row">4</th><td class="t_string">Bob</td><td class="t_string" data-type-more="numeric">12</td><td class="t_string">M</td><td class="t_bool text-center" data-type-more="false"></td><td class="t_undefined"></td></tr>
+<tr><th class="t_int t_key" scope="row">2</th><td class="t_string">Sally</td><td class="t_string" data-type-more="numeric">10</td><td class="t_string">F</td><td class="t_bool text-center" data-type-more="true"><i class="fa fa-check"></i></td><td class="t_string">yes</td></tr>
 </tbody>
 </table>
 </li>
@@ -424,8 +424,8 @@ EOD;
                         <tr><th>&nbsp;</th><th scope="col">name</th><th scope="col">extracol</th></tr>
                         </thead>
                         <tbody>
-                        <tr><th class="t_int t_key text-right" scope="row">4</th><td class="t_string">Bob</td><td class="t_undefined"></td></tr>
-                        <tr><th class="t_int t_key text-right" scope="row">2</th><td class="t_string">Sally</td><td class="t_string">yes</td></tr>
+                        <tr><th class="t_int t_key" scope="row">4</th><td class="t_string">Bob</td><td class="t_undefined"></td></tr>
+                        <tr><th class="t_int t_key" scope="row">2</th><td class="t_string">Sally</td><td class="t_string">yes</td></tr>
                         </tbody>
                         </table>
                         </li>',
@@ -499,11 +499,11 @@ EOD;
                         <tr><th>&nbsp;</th><th scope="col">value</th></tr>
                         </thead>
                         <tbody>
-                        <tr><th class="t_int t_key text-right" scope="row">0</th><td class="t_string">a</td></tr>
-                        <tr><th class="t_int t_key text-right" scope="row">1</th><td class="t_string">2233-03-22T00:00:00%i:00</td></tr>
-                        <tr><th class="t_int t_key text-right" scope="row">2</th><td class="t_resource">Resource id #%d: stream</td></tr>
-                        <tr><th class="t_int t_key text-right" scope="row">3</th><td><span class="t_type">callable</span> <span class="t_identifier" data-type-more="callable"><span class="classname"><span class="namespace">bdk\Test\Debug\Plugin\Method\</span>TableTest</span><span class="t_operator">::</span><span class="t_name">providerTestMethod</span></span></td></tr>
-                        <tr><th class="t_int t_key text-right" scope="row">4</th><td class="groupByInheritance t_object" data-accessible="public"><span class="t_identifier" data-type-more="className"><span class="classname">Closure</span></span>
+                        <tr><th class="t_int t_key" scope="row">0</th><td class="t_string">a</td></tr>
+                        <tr><th class="t_int t_key" scope="row">1</th><td class="t_string">2233-03-22T00:00:00%i:00</td></tr>
+                        <tr><th class="t_int t_key" scope="row">2</th><td class="t_resource">Resource id #%d: stream</td></tr>
+                        <tr><th class="t_int t_key" scope="row">3</th><td><span class="t_type">callable</span> <span class="t_identifier" data-type-more="callable"><span class="classname"><span class="namespace">bdk\Test\Debug\Plugin\Method\</span>TableTest</span><span class="t_operator">::</span><span class="t_name">providerTestMethod</span></span></td></tr>
+                        <tr><th class="t_int t_key" scope="row">4</th><td class="groupByInheritance t_object" data-accessible="public"><span class="t_identifier" data-type-more="className"><span class="classname">Closure</span></span>
                             <dl class="object-inner">
                             <dt class="modifiers">modifiers</dt>
                             <dd class="t_modifier_final">final</dd>
@@ -587,8 +587,8 @@ EOD;
                         <tr><th>&nbsp;</th><th>&nbsp;</th><th scope="col">name</th><th scope="col">age</th><th scope="col">sex</th><th scope="col">Naughty</th><th scope="col">extracol</th></tr>
                         </thead>
                         <tbody>
-                        <tr><th class="t_int t_key text-right" scope="row">4</th><td class="classname" title="I implement Traversable!"><span class="namespace">bdk\Test\Debug\Fixture\</span>TestTraversable</td><td class="t_string">Bob</td><td class="t_string" data-type-more="numeric">12</td><td class="t_string">M</td><td class="t_bool" data-type-more="false">false</td><td class="t_undefined"></td></tr>
-                        <tr><th class="t_int t_key text-right" scope="row">2</th><td class="classname" title="I implement Traversable!"><span class="namespace">bdk\Test\Debug\Fixture\</span>TestTraversable</td><td class="t_string">Sally</td><td class="t_string" data-type-more="numeric">10</td><td class="t_string">F</td><td class="t_bool" data-type-more="true">true</td><td class="t_string">yes</td></tr>
+                        <tr><th class="t_int t_key" scope="row">4</th><td class="classname" title="I implement Traversable!"><span class="namespace">bdk\Test\Debug\Fixture\</span>TestTraversable</td><td class="t_string">Bob</td><td class="t_string" data-type-more="numeric">12</td><td class="t_string">M</td><td class="t_bool" data-type-more="false">false</td><td class="t_undefined"></td></tr>
+                        <tr><th class="t_int t_key" scope="row">2</th><td class="classname" title="I implement Traversable!"><span class="namespace">bdk\Test\Debug\Fixture\</span>TestTraversable</td><td class="t_string">Sally</td><td class="t_string" data-type-more="numeric">10</td><td class="t_string">F</td><td class="t_bool" data-type-more="true">true</td><td class="t_string">yes</td></tr>
                         </tbody>
                         </table>
                         </li>',
@@ -635,8 +635,8 @@ EOD;
                         <tr><th>&nbsp;</th><th>&nbsp;</th><th scope="col">name</th><th scope="col">age</th><th scope="col">sex</th><th scope="col">Naughty</th><th scope="col">extracol</th></tr>
                         </thead>
                         <tbody>
-                        <tr><th class="t_int t_key text-right" scope="row">4</th><td class="classname">stdClass</td><td class="t_string">Bob</td><td class="t_string" data-type-more="numeric">12</td><td class="t_string">M</td><td class="t_bool" data-type-more="false">false</td><td class="t_undefined"></td></tr>
-                        <tr><th class="t_int t_key text-right" scope="row">2</th><td class="classname">stdClass</td><td class="t_string">Sally</td><td class="t_string" data-type-more="numeric">10</td><td class="t_string">F</td><td class="t_bool" data-type-more="true">true</td><td class="t_string">yes</td></tr>
+                        <tr><th class="t_int t_key" scope="row">4</th><td class="classname">stdClass</td><td class="t_string">Bob</td><td class="t_string" data-type-more="numeric">12</td><td class="t_string">M</td><td class="t_bool" data-type-more="false">false</td><td class="t_undefined"></td></tr>
+                        <tr><th class="t_int t_key" scope="row">2</th><td class="classname">stdClass</td><td class="t_string">Sally</td><td class="t_string" data-type-more="numeric">10</td><td class="t_string">F</td><td class="t_bool" data-type-more="true">true</td><td class="t_string">yes</td></tr>
                         </tbody>
                         </table>
                         </li>',
@@ -694,8 +694,8 @@ EOD;
                         <tr><th>&nbsp;</th><th>&nbsp;</th><th scope="col">age</th><th scope="col">extracol</th><th scope="col">name</th><th scope="col">Naughty</th><th scope="col">sex</th></tr>
                         </thead>
                         <tbody>
-                        <tr><th class="t_key t_string text-right" scope="row">Bob</th><td class="classname">stdClass</td><td class="t_string" data-type-more="numeric">12</td><td class="t_undefined"></td><td class="t_string">Bob</td><td class="t_bool" data-type-more="false">false</td><td class="t_string">M</td></tr>
-                        <tr><th class="t_key t_string text-right" scope="row">Sally</th><td class="classname">stdClass</td><td class="t_string" data-type-more="numeric">10</td><td class="t_string">yes</td><td class="t_string">Sally</td><td class="t_bool" data-type-more="true">true</td><td class="t_string">F</td></tr>
+                        <tr><th class="t_key t_string" scope="row">Bob</th><td class="classname">stdClass</td><td class="t_string" data-type-more="numeric">12</td><td class="t_undefined"></td><td class="t_string">Bob</td><td class="t_bool" data-type-more="false">false</td><td class="t_string">M</td></tr>
+                        <tr><th class="t_key t_string" scope="row">Sally</th><td class="classname">stdClass</td><td class="t_string" data-type-more="numeric">10</td><td class="t_string">yes</td><td class="t_string">Sally</td><td class="t_bool" data-type-more="true">true</td><td class="t_string">F</td></tr>
                         </tbody>
                         </table>
                         </li>',
@@ -716,8 +716,8 @@ EOD;
                         <tr><th>&nbsp;</th><th scope="col">d<span class="unicode" data-code-point="0251" title="U-0251: LATIN SMALL LETTER ALPHA">ɑ</span>te <span class="classname">DateTime</span></th><th scope="col">date2</th></tr>
                         </thead>
                         <tbody>
-                        <tr><th class="t_int t_key text-right" scope="row">0</th><td class="t_string">1955-11-05T00:00:00%i:00</td><td class="t_string">not a datetime</td></tr>
-                        <tr><th class="t_int t_key text-right" scope="row">1</th><td class="t_string">1985-10-26T00:00:00%i:00</td><td class="t_string">2015-10-21T00:00:00%i:00</td></tr>
+                        <tr><th class="t_int t_key" scope="row">0</th><td class="t_string">1955-11-05T00:00:00%i:00</td><td class="t_string">not a datetime</td></tr>
+                        <tr><th class="t_int t_key" scope="row">1</th><td class="t_string">1985-10-26T00:00:00%i:00</td><td class="t_string">2015-10-21T00:00:00%i:00</td></tr>
                         </tbody>
                         </table>
                         </li>',
@@ -872,12 +872,12 @@ EOD;
                         <tr><th>&nbsp;</th><th scope="col">value</th></tr>
                     </thead>
                     <tbody>
-                        <tr><th class="t_int t_key text-right" scope="row">0</th><td><span class="t_keyword">string</span><span class="text-muted">(binary)</span>
+                        <tr><th class="t_int t_key" scope="row">0</th><td><span class="t_keyword">string</span><span class="text-muted">(binary)</span>
                             <ul class="list-unstyled value-container" data-type="string" data-type-more="binary">
                                 <li>size = <span class="t_int">16</span></li>
                                 <li class="t_string"><span class="binary">' . $binaryStr . '</span></li>
                             </ul></td></tr>
-                        <tr><th class="t_int t_key text-right" scope="row">1</th><td class="string-encoded tabs-container" data-type-more="json">
+                        <tr><th class="t_int t_key" scope="row">1</th><td class="string-encoded tabs-container" data-type-more="json">
                             <nav role="tablist"><a class="nav-link" data-target=".tab-1" data-toggle="tab" role="tab">json</a><a class="active nav-link" data-target=".tab-2" data-toggle="tab" role="tab">parsed</a></nav>
                             <div class="tab-1 tab-pane" role="tabpanel"><span class="value-container" data-type="string"><span class="prettified">(prettified)</span> <span class="highlight language-json no-quotes t_string">{
                                 &quot;poop&quot;: &quot;\ud83d\udca9&quot;,
@@ -891,8 +891,8 @@ EOD;
                                     <li><span class="t_key">password</span><span class="t_operator">=&gt;</span><span class="t_string">secret</span></li>
                                 </ul><span class="t_punct">)</span></span></div>
                             </td></tr>
-                        <tr><th class="t_int t_key text-right" scope="row">2</th><td class="timestamp value-container" title="' . \gmdate(self::DATETIME_FORMAT, $time) . '"><span class="t_int" data-type-more="timestamp">' . $time . '</span></td></tr>
-                        <tr><th class="t_int t_key text-right" scope="row">3</th><td class="value-container" data-type="string"><span class="prettified">(prettified)</span> <span class="highlight language-xml no-quotes t_string">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot;?&gt;
+                        <tr><th class="t_int t_key" scope="row">2</th><td class="timestamp value-container" title="' . \gmdate(self::DATETIME_FORMAT, $time) . '"><span class="t_int" data-type-more="timestamp">' . $time . '</span></td></tr>
+                        <tr><th class="t_int t_key" scope="row">3</th><td class="value-container" data-type="string"><span class="prettified">(prettified)</span> <span class="highlight language-xml no-quotes t_string">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot;?&gt;
                         &lt;fart/&gt;
                         </span></td></tr>
                     </tbody>
